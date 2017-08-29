@@ -46,11 +46,10 @@ static GstStaticPadTemplate gst_rtp_h265_depay_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        /* FIXME - hvc1 and hev1 formats are not supported yet */
-        /*"video/x-h265, "
-           "stream-format = (string) hvc1, alignment = (string) au; "
-           "video/x-h265, "
+    GST_STATIC_CAPS
+    ("video/x-h265, stream-format=(string)hvc1, alignment=(string)au; "
+        /* FIXME: hev1 format is not supported yet */
+        /* "video/x-h265, "
            "stream-format = (string) hev1, alignment = (string) au; " */
         "video/x-h265, "
         "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
@@ -274,6 +273,8 @@ parse_sps (GstMapInfo * map, guint32 * sps_id)
   GstBitReader br = GST_BIT_READER_INIT (map->data + 15,
       map->size - 15);
 
+  GST_MEMDUMP ("SPS", map->data, map->size);
+
   if (map->size < 16)
     return FALSE;
 
@@ -288,6 +289,8 @@ parse_pps (GstMapInfo * map, guint32 * sps_id, guint32 * pps_id)
 {                               /* To parse picture_parameter_set_id */
   GstBitReader br = GST_BIT_READER_INIT (map->data + 2,
       map->size - 2);
+
+  GST_MEMDUMP ("PPS", map->data, map->size);
 
   if (map->size < 3)
     return FALSE;
@@ -366,7 +369,6 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     guint num_pps = rtph265depay->pps->len;
     GstMapInfo map, nalmap;
     guint8 *data;
-    gint nl;
     guint8 num_arrays = 0;
     guint new_size;
     GstBitReader br;
@@ -385,7 +387,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     len = 23;
 
     num_arrays = (num_vps > 0) + (num_sps > 0) + (num_pps > 0);
-    len += num_arrays;
+    len += 3 * num_arrays;
 
     /* add size of vps, sps & pps */
     for (i = 0; i < num_vps; i++)
@@ -441,8 +443,6 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
 
     min_spatial_segmentation_idc = 0;   /* NOTE - we ignore this for now, but in a perfect world, we should continue parsing to obtain the real value */
 
-    nl = nalmap.size;
-
     gst_buffer_unmap (g_ptr_array_index (rtph265depay->sps, 0), &nalmap);
 
     /* HEVCDecoderConfigurationVersion = 1 */
@@ -474,9 +474,10 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
      * numTemporalLayers (3 bits): number of temporal layers, value from SPS
      * TemporalIdNested (1 bit): sps_temporal_id_nesting_flag from SPS
      * lengthSizeMinusOne (2 bits): plus 1 indicates the length of the NALUnitLength */
-    data[21] =
-        0x00 | ((max_sub_layers_minus1 +
-            1) << 3) | (temporal_id_nesting_flag << 2) | (nl - 1);
+    /* we always output NALs with 4-byte nal unit length markers (or sync code) */
+    data[21] = rtph265depay->byte_stream ? 0x00 : 0x03;
+    data[21] |= ((max_sub_layers_minus1 + 1) << 3);
+    data[21] |= (temporal_id_nesting_flag << 2);
     GST_WRITE_UINT8 (data + 22, num_arrays);    /* numOfArrays */
 
     data += 23;
@@ -1173,6 +1174,8 @@ gst_rtp_h265_finish_fragmentation_unit (GstRtpH265Depay * rtph265depay)
   GstBuffer *outbuf;
 
   outsize = gst_adapter_available (rtph265depay->adapter);
+  g_assert (outsize >= 4);
+
   outbuf = gst_adapter_take_buffer (rtph265depay->adapter, outsize);
 
   gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
@@ -1181,7 +1184,7 @@ gst_rtp_h265_finish_fragmentation_unit (GstRtpH265Depay * rtph265depay)
   if (rtph265depay->byte_stream) {
     memcpy (map.data, sync_bytes, sizeof (sync_bytes));
   } else {
-    goto not_implemented;
+    GST_WRITE_UINT32_BE (map.data, outsize - 4);
   }
   gst_buffer_unmap (outbuf, &map);
 
@@ -1189,16 +1192,6 @@ gst_rtp_h265_finish_fragmentation_unit (GstRtpH265Depay * rtph265depay)
 
   gst_rtp_h265_depay_handle_nal (rtph265depay, outbuf,
       rtph265depay->fu_timestamp, rtph265depay->fu_marker);
-
-  return;
-
-not_implemented:
-  {
-    GST_ERROR_OBJECT (rtph265depay,
-        ("Only bytestream format is currently supported."));
-    gst_buffer_unmap (outbuf, &map);
-    return;
-  }
 }
 
 static GstBuffer *
@@ -1333,8 +1326,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           if (rtph265depay->byte_stream) {
             memcpy (map.data, sync_bytes, sizeof (sync_bytes));
           } else {
-            gst_buffer_unmap (outbuf, &map);
-            goto not_implemented;
+            GST_WRITE_UINT32_BE (map.data, nalu_size);
           }
 
           /* strip NALU size */
@@ -1428,9 +1420,15 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           outbuf = gst_buffer_new_and_alloc (outsize);
 
           gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+          if (rtph265depay->byte_stream) {
+            GST_WRITE_UINT32_BE (map.data, 0x00000001);
+          } else {
+            /* will be fixed up in finish_fragmentation_unit() */
+            GST_WRITE_UINT32_BE (map.data, 0xffffffff);
+          }
           memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
-          map.data[sizeof (sync_bytes)] = nal_header >> 8;
-          map.data[sizeof (sync_bytes) + 1] = nal_header & 0xff;
+          map.data[4] = nal_header >> 8;
+          map.data[5] = nal_header & 0xff;
           gst_buffer_unmap (outbuf, &map);
 
           gst_rtp_copy_video_meta (rtph265depay, outbuf, rtp->buffer);
@@ -1492,10 +1490,9 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         if (rtph265depay->byte_stream) {
           memcpy (map.data, sync_bytes, sizeof (sync_bytes));
         } else {
-          gst_buffer_unmap (outbuf, &map);
-          goto not_implemented;
+          GST_WRITE_UINT32_BE (map.data, nalu_size);
         }
-        memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
+        memcpy (map.data + 4, payload, nalu_size);
         gst_buffer_unmap (outbuf, &map);
 
         gst_rtp_copy_video_meta (rtph265depay, outbuf, rtp->buffer);
