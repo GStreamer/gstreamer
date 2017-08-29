@@ -33,7 +33,7 @@ namespace GstreamerSharp
 			}
 
 			// Set the URI to play
-			Playbin ["uri"] = "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm";
+			Playbin ["uri"] = "http://docs.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm";
 
 			// Set flags to show Audio and Video but ignore Subtitles
 			var flags = (uint)Playbin ["flags"];

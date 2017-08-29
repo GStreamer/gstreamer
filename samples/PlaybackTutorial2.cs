@@ -33,10 +33,10 @@ namespace GstreamerSharp
 			}
 
 			// Set the URI to play
-			Playbin ["uri"] = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
+			Playbin ["uri"] = "http://docs.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv";
 
 			// Set the subtitle URI to play and some font description
-			Playbin ["suburi"] = "http://docs.gstreamer.com/media/sintel_trailer_gr.srt";
+			Playbin ["suburi"] = "http://docs.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer_gr.srt";
 			Playbin ["subtitle-font-desc"] = "Sans, 18";
 
 			// Set flags to show Audio and Video and Subtitles

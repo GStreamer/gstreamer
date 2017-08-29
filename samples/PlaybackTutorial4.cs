@@ -33,7 +33,7 @@ namespace GstreamerSharp
 			BufferingLevel = 100;
 
 			// Build the pipeline
-			Pipeline = Parse.Launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm");
+			Pipeline = Parse.Launch ("playbin uri=http://docs.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm");
 			var bus = Pipeline.Bus;
 
 			// Set the download flag
