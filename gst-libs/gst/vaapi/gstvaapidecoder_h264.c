@@ -100,6 +100,9 @@ struct _GstVaapiParserInfoH264
 static void
 gst_vaapi_parser_info_h264_finalize (GstVaapiParserInfoH264 * pi)
 {
+  if (!pi->nalu.valid)
+    return;
+
   switch (pi->nalu.type) {
     case GST_H264_NAL_SPS:
     case GST_H264_NAL_SUBSET_SPS:
