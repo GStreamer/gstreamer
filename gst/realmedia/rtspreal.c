@@ -647,6 +647,7 @@ create_request_failed:
   {
     GST_ELEMENT_ERROR (ctx, LIBRARY, INIT,
         ("Could not create request."), (NULL));
+    g_free (req_url);
     goto reset;
   }
 send_error:
