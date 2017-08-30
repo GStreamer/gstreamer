@@ -84,6 +84,8 @@ typedef struct
   void (*state_changed_cb) (gpointer);
   GstState state_target;
 
+  /* used by EXCLUSIVE_CALL() */
+  gint exclusive_call_counter;
 } test_data;
 
 /* All pipelines do not start buffers at exactly zero, so we consider
@@ -174,6 +176,14 @@ disconnect_ipcpipeline_elements (void)
 }
 
 /* helper functions */
+
+#define EXCLUSIVE_CALL(td,func) \
+  G_STMT_START { \
+    if (!td->two_streams || \
+        g_atomic_int_add (&td->exclusive_call_counter, 1) == 1) { \
+      func; \
+    } \
+  } G_STMT_END
 
 static void
 cleanup_bus (GstElement * pipeline)
@@ -751,7 +761,7 @@ test_base (const char *name, TestFeatures features,
   unsigned char x;
   int master_recovery_pid_comm[2] = { -1, -1 };
   test_data td = { input_data, master_data, slave_data, features, FALSE, NULL,
-    NULL, GST_STATE_NULL
+    NULL, GST_STATE_NULL, 0
   };
 
   g_print ("Testing: %s\n", name);
@@ -2699,11 +2709,8 @@ tags_probe_source (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         FAIL_UNLESS (peer);
         send_tags_on_pad (peer, td);
         gst_object_unref (peer);
-
-        if (!td->two_streams || d->tags_sent[idx ? 0 : 1][0]) {
-          g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
-              gst_object_ref (td->p));
-        }
+        EXCLUSIVE_CALL (td, g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
+                gst_object_ref (td->p)));
       }
     }
   }
@@ -3195,10 +3202,8 @@ reconfigure_source_probe (GstPad * pad, GstPadProbeInfo * info,
   if (GST_EVENT_TYPE (info->data) == GST_EVENT_RECONFIGURE) {
     gint idx = pad2idx (pad, td->two_streams);
     d->reconfigure_sent[idx] = TRUE;
-    if (!td->two_streams || d->reconfigure_sent[idx ? 0 : 1]) {
-      g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
-          gst_object_ref (td->p));
-    }
+    EXCLUSIVE_CALL (td, g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
+            gst_object_ref (td->p)));
   }
 
   return GST_PAD_PROBE_OK;
@@ -3982,10 +3987,9 @@ serialized_query_probe_source (GstPad * pad, GstPadProbeInfo * info,
     idx = pad2idx (pad, td->two_streams);
     if (!d->sent_query[idx] && GST_CLOCK_TIME_IS_VALID (ts)
         && ts > STEP_AT * GST_MSECOND) {
-      g_atomic_int_set (&d->sent_query[idx], TRUE);
+      d->sent_query[idx] = TRUE;
       d->pad[idx] = gst_object_ref (pad);
-      if (!td->two_streams || g_atomic_int_get (&d->sent_query[idx ? 0 : 1]))
-        g_idle_add (send_drain, td);
+      EXCLUSIVE_CALL (td, g_idle_add (send_drain, td));
     }
   }
   return GST_PAD_PROBE_OK;
@@ -4179,18 +4183,15 @@ non_serialized_event_probe_source (GstPad * pad, GstPadProbeInfo * info,
   if (GST_IS_BUFFER (info->data)) {
     ts = GST_BUFFER_TIMESTAMP (info->data);
     idx = pad2idx (pad, td->two_streams);
-    if (!g_atomic_int_get (&d->sent_event[idx])
+    if (!d->sent_event[idx]
         && GST_CLOCK_TIME_IS_VALID (ts) && ts > STEP_AT * GST_MSECOND) {
       e = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB,
           gst_structure_new ("name", "field", G_TYPE_INT, 42, NULL));
       FAIL_UNLESS (e);
       FAIL_UNLESS (gst_pad_send_event (pad, e));
-
-      if (!td->two_streams || g_atomic_int_get (&d->sent_event[idx ? 0 : 1])) {
-        g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
-            gst_object_ref (td->p));
-      }
-      g_atomic_int_set (&d->sent_event[idx], TRUE);
+      d->sent_event[idx] = TRUE;
+      EXCLUSIVE_CALL (td, g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
+              gst_object_ref (td->p)));
     }
   }
   return GST_PAD_PROBE_OK;
@@ -5935,8 +5936,8 @@ ipcpipeline_suite (void)
      handled by the slave pipeline. */
   if (1) {
     tcase_add_test (tc_chain, test_empty_serialized_query);
-    tcase_skip_broken_test (tc_chain, test_wavparse_serialized_query);
-    tcase_skip_broken_test (tc_chain, test_mpegts_serialized_query);
+    tcase_add_test (tc_chain, test_wavparse_serialized_query);
+    tcase_add_test (tc_chain, test_mpegts_serialized_query);
     tcase_add_test (tc_chain, test_mpegts_2_serialized_query);
     tcase_add_test (tc_chain, test_live_a_serialized_query);
     tcase_add_test (tc_chain, test_live_av_serialized_query);
