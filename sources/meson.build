@@ -30,7 +30,8 @@ sources = [
     'custom/TagList.cs',
     'custom/Value.cs',
     'custom/Version.cs',
-    'custom/VideoGLUploadMeta.cs'
+    'custom/VideoGLUploadMeta.cs',
+    'custom/Global.cs',
 ]
 
 subdir('generated')
