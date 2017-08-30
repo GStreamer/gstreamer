@@ -3393,9 +3393,6 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
 
   GST_DEBUG_OBJECT (timeline, "commiting changes");
 
-  if (ges_timeline_is_empty (timeline))
-    return FALSE;
-
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GESLayer *layer = tmp->data;
 
@@ -3453,9 +3450,7 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
  * for the signal.
  *
  * Returns: %TRUE if pending changes were commited or %FALSE if nothing needed
- * to be commited. This means that if %FALSE is returned then no "commited" signal
- * will be emited.
- *
+ * to be commited
  */
 gboolean
 ges_timeline_commit (GESTimeline * timeline)
