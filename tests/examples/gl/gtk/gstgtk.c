@@ -107,7 +107,7 @@ gst_video_overlay_set_gtk_window (GstVideoOverlay * videooverlay,
   if (GDK_IS_QUARTZ_DISPLAY (display) && (!user_choice
           || g_strcmp0 (user_choice, "cocoa") == 0)) {
     gst_video_overlay_set_window_handle (videooverlay, (guintptr)
-        gdk_quartz_window_get_nswindow (window));
+        gdk_quartz_window_get_nsview (window));
   } else
 #endif
 #if GST_GL_HAVE_WINDOW_X11 && defined(GDK_WINDOWING_X11)
