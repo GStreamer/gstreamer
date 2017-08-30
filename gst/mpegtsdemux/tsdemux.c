@@ -2675,9 +2675,8 @@ parse_jp2k_access_unit (TSDemuxStream * stream)
   guint8 CollC G_GNUC_UNUSED;
   guint8 b G_GNUC_UNUSED;
 
-  guint8 *packet_data = NULL;
-  guint packet_size;
-  guint remaining = 0;
+  guint data_location;
+  GstBuffer *retbuf = NULL;
 
   if (stream->current_size < header_size) {
     GST_ERROR_OBJECT (stream->pad, "Not enough data for header");
@@ -2685,6 +2684,16 @@ parse_jp2k_access_unit (TSDemuxStream * stream)
   }
 
   gst_byte_reader_init (&reader, stream->data, stream->current_size);
+
+  /* Check for the location of the jp2k magic */
+  data_location =
+      gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff, 0xff4fff51, 0,
+      stream->current_size);
+  GST_DEBUG_OBJECT (stream->pad, "data location %d", data_location);
+  if (data_location == -1) {
+    GST_ERROR_OBJECT (stream->pad, "Stream does not contain jp2k magic header");
+    goto error;
+  }
 
   /* Elementary stream header box 'elsm' == 0x656c736d */
   header_tag = gst_byte_reader_get_uint32_be_unchecked (&reader);
@@ -2759,33 +2768,20 @@ parse_jp2k_access_unit (TSDemuxStream * stream)
   }
   CollC = gst_byte_reader_get_uint8_unchecked (&reader);
   b = gst_byte_reader_get_uint8_unchecked (&reader);
-  remaining = gst_byte_reader_get_remaining (&reader);
-  packet_size = remaining;
 
-  GST_DEBUG_OBJECT (stream->pad,
-      "Size of first codestream in TS stream: %d; bytes remaining: %d", AUF[0],
-      remaining);
-
-  if (!gst_byte_reader_dup_data (&reader, packet_size, &packet_data)) {
-    GST_ERROR ("Required size %d > %d than remaining size in buffer", AUF[0],
-        packet_size);
+  /* Check if we have enough data to create a valid buffer */
+  if ((stream->current_size - data_location) < (AUF[0] + AUF[1])) {
+    GST_ERROR ("Required size (%d) greater than remaining size in buffer (%d)",
+        AUF[0] + AUF[1], (stream->current_size - data_location));
     goto error;
   }
-#ifdef TSDEMUX_JP2K_SUPPORT_INTERLACE
-  if (stream->jp2kInfos.interlace) {
-    remaining = gst_byte_reader_get_remaining (&reader);
-    if (!gst_byte_reader_dup_data (&reader, AUF[1], &packet_data)) {
-      GST_ERROR ("Required size %d > %d than remaining size in buffer", AUF[1],
-          remaining);
-      goto error;
-    }
 
-  }
-#endif
-  g_free (stream->data);
+  retbuf = gst_buffer_new_wrapped_full (0, stream->data, stream->current_size,
+      data_location, stream->current_size - data_location,
+      stream->data, g_free);
   stream->data = NULL;
   stream->current_size = 0;
-  return gst_buffer_new_wrapped (packet_data, packet_size);
+  return retbuf;
 
 error:
   GST_ERROR ("Failed to parse JP2K access unit");
