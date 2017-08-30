@@ -149,6 +149,9 @@ GST_EXPORT
 GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint idx);
 
 GST_EXPORT
+GstBuffer *              gst_buffer_list_get_writable          (GstBufferList *list, guint idx);
+
+GST_EXPORT
 void                     gst_buffer_list_insert                (GstBufferList *list, gint idx, GstBuffer *buffer);
 
 GST_EXPORT

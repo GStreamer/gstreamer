@@ -150,6 +150,7 @@ EXPORTS
 	gst_buffer_list_foreach
 	gst_buffer_list_get
 	gst_buffer_list_get_type
+	gst_buffer_list_get_writable
 	gst_buffer_list_insert
 	gst_buffer_list_length
 	gst_buffer_list_new

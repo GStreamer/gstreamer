@@ -393,6 +393,7 @@ gst_buffer_list_make_writable
 GstBufferListFunc
 gst_buffer_list_foreach
 gst_buffer_list_get
+gst_buffer_list_get_writable
 
 <SUBSECTION Standard>
 GST_BUFFER_LIST
