@@ -286,6 +286,47 @@ stop_pipeline (gpointer user_data)
   return FALSE;
 }
 
+static void
+hook_peer_probe_types (const GValue * sinkv, GstPadProbeCallback probe,
+    unsigned int types, gpointer user_data)
+{
+  GstElement *sink;
+  GstPad *pad, *peer;
+
+  sink = g_value_get_object (sinkv);
+  FAIL_UNLESS (sink);
+  pad = gst_element_get_static_pad (sink, "sink");
+  FAIL_UNLESS (pad);
+  peer = gst_pad_get_peer (pad);
+  FAIL_UNLESS (peer);
+  gst_pad_add_probe (peer, types, probe, user_data, NULL);
+  gst_object_unref (peer);
+  gst_object_unref (pad);
+}
+
+static void
+hook_probe_types (const GValue * sinkv, GstPadProbeCallback probe,
+    unsigned int types, gpointer user_data)
+{
+  GstElement *sink;
+  GstPad *pad;
+
+  sink = g_value_get_object (sinkv);
+  FAIL_UNLESS (sink);
+  pad = gst_element_get_static_pad (sink, "sink");
+  FAIL_UNLESS (pad);
+  gst_pad_add_probe (pad, types, probe, user_data, NULL);
+  gst_object_unref (pad);
+}
+
+static void
+hook_probe (const GValue * sinkv, GstPadProbeCallback probe, gpointer user_data)
+{
+  hook_probe_types (sinkv, probe,
+      GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, user_data);
+}
+
 /* the master process'es async GstBus callback */
 static gboolean
 master_bus_msg (GstBus * bus, GstMessage * message, gpointer user_data)
@@ -1047,29 +1088,6 @@ play_pause_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   }
 
   return GST_PAD_PROBE_OK;
-}
-
-static void
-hook_probe_types (const GValue * sinkv, GstPadProbeCallback probe,
-    unsigned int types, gpointer user_data)
-{
-  GstElement *sink;
-  GstPad *pad;
-
-  sink = g_value_get_object (sinkv);
-  FAIL_UNLESS (sink);
-  pad = gst_element_get_static_pad (sink, "sink");
-  FAIL_UNLESS (pad);
-  gst_pad_add_probe (pad, types, probe, user_data, NULL);
-  gst_object_unref (pad);
-}
-
-static void
-hook_probe (const GValue * sinkv, GstPadProbeCallback probe, gpointer user_data)
-{
-  hook_probe_types (sinkv, probe,
-      GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
-      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, user_data);
 }
 
 static void
@@ -2637,7 +2655,7 @@ enum
 typedef struct
 {
   gboolean got_state_changed_to_playing;
-  gboolean tags_sent[N_TEST_TAGS];
+  gboolean tags_sent[2][N_TEST_TAGS];
 } tags_master_data;
 
 typedef struct
@@ -2646,44 +2664,58 @@ typedef struct
 } tags_slave_data;
 
 static void
-send_tags_on_element (const GValue * v, gpointer user_data)
+send_tags_on_pad (GstPad * pad, gpointer user_data)
 {
   test_data *td = user_data;
   tags_master_data *d = td->md;
-  GstElement *sink;
-  GstPad *pad;
   GstEvent *e;
+  gint idx;
 
-  sink = g_value_get_object (v);
-  FAIL_UNLESS (sink);
-  pad = gst_element_get_static_pad (sink, "sink");
-  FAIL_UNLESS (pad);
+  idx = pad2idx (pad, td->two_streams);
 
   e = gst_event_new_tag (gst_tag_list_new_empty ());
   FAIL_UNLESS (gst_pad_send_event (pad, e));
-  d->tags_sent[TEST_TAG_EMPTY] = TRUE;
+  d->tags_sent[idx][TEST_TAG_EMPTY] = TRUE;
 
   e = gst_event_new_tag (gst_tag_list_new (GST_TAG_TITLE, "title",
           GST_TAG_BITRATE, 56000, NULL));
   FAIL_UNLESS (gst_pad_send_event (pad, e));
-  d->tags_sent[TEST_TAG_TWO_TAGS] = TRUE;
-
-  gst_object_unref (pad);
+  d->tags_sent[idx][TEST_TAG_TWO_TAGS] = TRUE;
 }
 
-static gboolean
-send_tags (gpointer user_data)
+static GstPadProbeReturn
+tags_probe_source (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   test_data *td = user_data;
-  GstIterator *it;
+  tags_master_data *d = td->md;
+  GstClockTime ts;
 
-  it = gst_bin_iterate_sinks (GST_BIN (td->p));
-  while (gst_iterator_foreach (it, send_tags_on_element, user_data))
-    gst_iterator_resync (it);
-  gst_iterator_free (it);
+  if (GST_IS_BUFFER (info->data)) {
+    ts = GST_BUFFER_TIMESTAMP (info->data);
+    if (GST_CLOCK_TIME_IS_VALID (ts) && ts > STEP_AT * GST_MSECOND) {
+      gint idx = pad2idx (pad, td->two_streams);
+      if (!d->tags_sent[idx][0]) {
+        GstPad *peer = gst_pad_get_peer (pad);
+        FAIL_UNLESS (peer);
+        send_tags_on_pad (peer, td);
+        gst_object_unref (peer);
 
-  g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline, td->p);
-  return G_SOURCE_REMOVE;
+        if (!td->two_streams || d->tags_sent[idx ? 0 : 1][0]) {
+          g_timeout_add (STEP_AT, (GSourceFunc) stop_pipeline,
+              gst_object_ref (td->p));
+        }
+      }
+    }
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static void
+hook_tags_probe_source (const GValue * v, gpointer user_data)
+{
+  hook_peer_probe_types (v, tags_probe_source,
+      GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM, user_data);
 }
 
 static void
@@ -2691,11 +2723,15 @@ tags_on_state_changed (gpointer user_data)
 {
   test_data *td = user_data;
   tags_master_data *d = td->md;
+  GstIterator *it;
 
   if (!d->got_state_changed_to_playing) {
     d->got_state_changed_to_playing = TRUE;
-    gst_object_ref (td->p);
-    g_timeout_add (STEP_AT, (GSourceFunc) send_tags, td);
+
+    it = gst_bin_iterate_sinks (GST_BIN (td->p));
+    while (gst_iterator_foreach (it, hook_tags_probe_source, user_data))
+      gst_iterator_resync (it);
+    gst_iterator_free (it);
   }
 }
 
@@ -5853,8 +5889,8 @@ ipcpipeline_suite (void)
   if (1) {
     tcase_add_test (tc_chain, test_empty_tags);
     tcase_add_test (tc_chain, test_wavparse_tags);
-    tcase_skip_broken_test (tc_chain, test_mpegts_tags);
-    tcase_skip_broken_test (tc_chain, test_mpegts_2_tags);
+    tcase_add_test (tc_chain, test_mpegts_tags);
+    tcase_add_test (tc_chain, test_mpegts_2_tags);
     tcase_add_test (tc_chain, test_live_a_tags);
     tcase_add_test (tc_chain, test_live_av_tags);
     tcase_add_test (tc_chain, test_live_av_2_tags);
