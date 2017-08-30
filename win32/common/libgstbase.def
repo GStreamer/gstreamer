@@ -114,6 +114,7 @@ EXPORTS
 	gst_base_src_set_live
 	gst_base_src_start_complete
 	gst_base_src_start_wait
+	gst_base_src_submit_buffer_list
 	gst_base_src_wait_playing
 	gst_base_transform_get_allocator
 	gst_base_transform_get_buffer_pool

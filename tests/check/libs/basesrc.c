@@ -2,7 +2,7 @@
  *
  * some unit tests for GstBaseSrc
  *
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2017 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -768,6 +768,142 @@ GST_START_TEST (basesrc_seek_on_last_buffer)
 
 GST_END_TEST;
 
+typedef GstBaseSrc TestSrc;
+typedef GstBaseSrcClass TestSrcClass;
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static GType test_src_get_type (void);
+
+G_DEFINE_TYPE (TestSrc, test_src, GST_TYPE_BASE_SRC);
+
+static void
+test_src_init (TestSrc * src)
+{
+}
+
+static GstFlowReturn
+test_src_create (GstBaseSrc * src, guint64 offset, guint size,
+    GstBuffer ** p_buf)
+{
+  GstBuffer *buf;
+  static int num = 0;
+
+  fail_if (*p_buf != NULL);
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_OFFSET (buf) = num++;
+
+  if (num == 1 || g_random_boolean ()) {
+    GstBufferList *buflist = gst_buffer_list_new ();
+
+    gst_buffer_list_add (buflist, buf);
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_OFFSET (buf) = num++;
+    gst_buffer_list_add (buflist, buf);
+    gst_base_src_submit_buffer_list (src, buflist);
+  } else {
+    *p_buf = buf;
+  }
+
+  return GST_FLOW_OK;
+}
+
+static void
+test_src_class_init (TestSrcClass * klass)
+{
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &src_template);
+
+  gstbasesrc_class->create = test_src_create;
+}
+
+static GstPad *mysinkpad;
+
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+#define NUM_BUFFERS 100
+static gboolean done;
+static guint expect_offset;
+
+static GstFlowReturn
+chain_____func (GstPad * pad, GstObject * parent, GstBuffer * buf)
+{
+  GST_LOG ("  buffer # %3u", (guint) GST_BUFFER_OFFSET (buf));
+
+  fail_unless_equals_int (GST_BUFFER_OFFSET (buf), expect_offset);
+  ++expect_offset;
+
+  if (GST_BUFFER_OFFSET (buf) > NUM_BUFFERS) {
+    g_mutex_lock (&check_mutex);
+    done = TRUE;
+    g_cond_signal (&check_cond);
+    g_mutex_unlock (&check_mutex);
+  }
+  gst_buffer_unref (buf);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+chainlist_func (GstPad * pad, GstObject * parent, GstBufferList * list)
+{
+  guint i, len;
+
+  len = gst_buffer_list_length (list);
+
+  GST_DEBUG ("buffer list with %u buffers", len);
+  for (i = 0; i < len; ++i) {
+    GstBuffer *buf = gst_buffer_list_get (list, i);
+    GST_LOG ("  buffer # %3u", (guint) GST_BUFFER_OFFSET (buf));
+
+    fail_unless_equals_int (GST_BUFFER_OFFSET (buf), expect_offset);
+    ++expect_offset;
+  }
+
+  gst_buffer_list_unref (list);
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (basesrc_create_bufferlist)
+{
+  GstElement *src;
+
+  src = g_object_new (test_src_get_type (), NULL);
+
+  mysinkpad = gst_check_setup_sink_pad (src, &sinktemplate);
+  gst_pad_set_chain_function (mysinkpad, chain_____func);
+  gst_pad_set_chain_list_function (mysinkpad, chainlist_func);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  done = FALSE;
+  expect_offset = 0;
+
+  gst_element_set_state (src, GST_STATE_PLAYING);
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  gst_element_set_state (src, GST_STATE_NULL);
+
+  gst_check_teardown_sink_pad (src);
+
+  gst_object_unref (src);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -783,6 +919,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesrc_eos_events_pull_live_eos);
   tcase_add_test (tc, basesrc_seek_events_rate_update);
   tcase_add_test (tc, basesrc_seek_on_last_buffer);
+  tcase_add_test (tc, basesrc_create_bufferlist);
 
   return s;
 }

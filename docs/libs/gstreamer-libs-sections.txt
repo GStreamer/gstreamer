@@ -335,6 +335,7 @@ gst_base_src_get_allocator
 gst_base_src_get_buffer_pool
 gst_base_src_is_async
 gst_base_src_set_async
+gst_base_src_submit_buffer_list
 
 GST_BASE_SRC_PAD
 GST_BASE_SRC_IS_STARTED

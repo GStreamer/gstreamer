@@ -261,7 +261,13 @@ struct _GstBaseSrcPrivate
   GstAllocationParams params;   /* OBJECT_LOCK */
 
   GCond async_cond;             /* OBJECT_LOCK */
+
+  /* for _submit_buffer_list() */
+  GstBufferList *pending_bufferlist;
 };
+
+#define BASE_SRC_HAS_PENDING_BUFFER_LIST(src) \
+    ((src)->priv->pending_bufferlist != NULL)
 
 static GstElementClass *parent_class = NULL;
 
@@ -2556,6 +2562,16 @@ again:
     res_buf = in_buf;
   }
 
+  if (res_buf == NULL) {
+    GstBufferList *pending_list = src->priv->pending_bufferlist;
+
+    if (pending_list == NULL || gst_buffer_list_length (pending_list) == 0)
+      goto null_buffer;
+
+    res_buf = gst_buffer_list_get_writable (pending_list, 0);
+    own_res_buf = FALSE;
+  }
+
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
       && GST_BUFFER_DTS (res_buf) == -1 && !src->is_live) {
@@ -2670,6 +2686,14 @@ eos:
   {
     GST_DEBUG_OBJECT (src, "we are EOS");
     return GST_FLOW_EOS;
+  }
+null_buffer:
+  {
+    GST_ELEMENT_ERROR (src, STREAM, FAILED,
+        (_("Internal data flow error.")),
+        ("Subclass %s neither returned a buffer nor submitted a buffer list "
+            "from its create function", G_OBJECT_TYPE_NAME (src)));
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -2803,6 +2827,12 @@ gst_base_src_loop (GstPad * pad)
   GST_LOG_OBJECT (src, "next_ts %" GST_TIME_FORMAT " size %u",
       GST_TIME_ARGS (position), blocksize);
 
+  /* clean up just in case we got interrupted or so last time round */
+  if (src->priv->pending_bufferlist != NULL) {
+    gst_buffer_list_unref (src->priv->pending_bufferlist);
+    src->priv->pending_bufferlist = NULL;
+  }
+
   ret = gst_base_src_get_range (src, position, blocksize, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() = %s",
@@ -2810,9 +2840,11 @@ gst_base_src_loop (GstPad * pad)
     GST_LIVE_UNLOCK (src);
     goto pause;
   }
-  /* this should not happen */
-  if (G_UNLIKELY (buf == NULL))
-    goto null_buffer;
+
+  /* Note: at this point buf might be a single buf returned which we own or
+   * the first buf of a pending buffer list submitted via submit_buffer_list(),
+   * in which case the buffer is owned by the pending buffer list and not us. */
+  g_assert (buf != NULL);
 
   /* push events to close/start our segment before we push the buffer. */
   if (G_UNLIKELY (src->priv->segment_pending)) {
@@ -2917,7 +2949,14 @@ gst_base_src_loop (GstPad * pad)
   }
   GST_LIVE_UNLOCK (src);
 
-  ret = gst_pad_push (pad, buf);
+  /* push buffer or buffer list */
+  if (src->priv->pending_bufferlist != NULL) {
+    ret = gst_pad_push_list (pad, src->priv->pending_bufferlist);
+    src->priv->pending_bufferlist = NULL;
+  } else {
+    ret = gst_pad_push (pad, buf);
+  }
+
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     if (ret == GST_FLOW_NOT_NEGOTIATED) {
       goto not_negotiated;
@@ -3016,13 +3055,6 @@ pause:
       GST_ELEMENT_FLOW_ERROR (src, ret);
       gst_pad_push_event (pad, event);
     }
-    goto done;
-  }
-null_buffer:
-  {
-    GST_ELEMENT_ERROR (src, STREAM, FAILED,
-        (_("Internal data flow error.")), ("element returned NULL buffer"));
-    GST_LIVE_UNLOCK (src);
     goto done;
   }
 }
@@ -3619,6 +3651,11 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   if (bclass->stop)
     result = bclass->stop (basesrc);
 
+  if (basesrc->priv->pending_bufferlist != NULL) {
+    gst_buffer_list_unref (basesrc->priv->pending_bufferlist);
+    basesrc->priv->pending_bufferlist = NULL;
+  }
+
   gst_base_src_set_allocation (basesrc, NULL, NULL, NULL);
 
   return result;
@@ -3958,4 +3995,41 @@ gst_base_src_get_allocator (GstBaseSrc * src,
   if (params)
     *params = src->priv->params;
   GST_OBJECT_UNLOCK (src);
+}
+
+/**
+ * gst_base_src_submit_buffer_list:
+ * @src: a #GstBaseSrc
+ * @buffer_list: (transfer full): a #GstBufferList
+ *
+ * Subclasses can call this from their create virtual method implementation
+ * to submit a buffer list to be pushed out later. This is useful in
+ * cases where the create function wants to produce multiple buffers to be
+ * pushed out in one go in form of a #GstBufferList, which can reduce overhead
+ * drastically, especially for packetised inputs (for data streams where
+ * the packetisation/chunking is not important it is usually more efficient
+ * to return larger buffers instead).
+ *
+ * Subclasses that use this function from their create function must return
+ * %GST_FLOW_OK and no buffer from their create virtual method implementation.
+ * If a buffer is returned after a buffer list has also been submitted via this
+ * function the behaviour is undefined.
+ *
+ * Subclasses must only call this function once per create function call and
+ * subclasses must only call this function when the source operates in push
+ * mode.
+ *
+ * Since: 1.14
+ */
+void
+gst_base_src_submit_buffer_list (GstBaseSrc * src, GstBufferList * buffer_list)
+{
+  g_return_if_fail (GST_IS_BASE_SRC (src));
+  g_return_if_fail (GST_IS_BUFFER_LIST (buffer_list));
+  g_return_if_fail (BASE_SRC_HAS_PENDING_BUFFER_LIST (src) == FALSE);
+
+  src->priv->pending_bufferlist = buffer_list;
+
+  GST_LOG_OBJECT (src, "%u buffers submitted in buffer list",
+      gst_buffer_list_length (buffer_list));
 }

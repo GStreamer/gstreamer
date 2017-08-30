@@ -299,6 +299,9 @@ void            gst_base_src_get_allocator    (GstBaseSrc *src,
                                                GstAllocator **allocator,
                                                GstAllocationParams *params);
 
+GST_EXPORT
+void            gst_base_src_submit_buffer_list (GstBaseSrc    * src,
+                                                 GstBufferList * buffer_list);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseSrc, gst_object_unref)
