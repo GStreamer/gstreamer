@@ -3446,8 +3446,6 @@ typedef struct
   gint n_paused;
   gint n_playing;
   gboolean got_eos;
-  GThread *thread;
-  gint refcount;
 } state_changes_slave_data;
 
 static void
@@ -3618,48 +3616,21 @@ state_changes_source (GstElement * source, gpointer user_data)
   td->state_changed_cb = state_changes_state_changed;
 }
 
-static GstPadProbeReturn
-state_changes_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+static GstBusSyncReply
+state_changes_sink_bus_msg (GstBus * bus, GstMessage * message,
+    gpointer user_data)
 {
   test_data *td = user_data;
   state_changes_slave_data *d = td->sd;
 
-  if (GST_IS_EVENT (info->data)) {
-    if (GST_EVENT_TYPE (info->data) == GST_EVENT_EOS) {
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_EOS:
       d->got_eos = TRUE;
-      if (g_atomic_int_dec_and_test (&d->refcount)) {
-        g_thread_join (d->thread);
-        gst_object_unref (td->p);
-      }
-      return GST_PAD_PROBE_REMOVE;
-    }
-  }
-
-  return GST_PAD_PROBE_OK;
-}
-
-static void
-hook_state_changes_probe (const GValue * v, gpointer user_data)
-{
-  test_data *td = user_data;
-  state_changes_slave_data *d = td->sd;
-
-  d->refcount++;
-  hook_probe (v, state_changes_probe, user_data);
-}
-
-static gpointer
-state_changes_watcher (gpointer user_data)
-{
-  test_data *td = user_data;
-  state_changes_slave_data *d = td->sd;
-  GstState state = GST_STATE_VOID_PENDING, prev_state = GST_STATE_VOID_PENDING;
-  GstStateChangeReturn ret;
-
-  while (!d->got_eos) {
-    ret = gst_element_get_state (td->p, &state, NULL, GST_CLOCK_TIME_NONE);
-    if (ret == GST_STATE_CHANGE_SUCCESS && state != GST_STATE_VOID_PENDING) {
-      if (state != prev_state) {
+      break;
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (td->p)) {
+        GstState state;
+        gst_message_parse_state_changed (message, NULL, &state, NULL);
         switch (state) {
           case GST_STATE_NULL:
             d->n_null++;
@@ -3676,32 +3647,20 @@ state_changes_watcher (gpointer user_data)
           default:
             fail_if (1);
         }
-        prev_state = state;
       }
-    }
-    g_usleep (STEP_AT * 1000 / 4);
+      break;
+    default:
+      break;
   }
-  return NULL;
+  return GST_BUS_PASS;
 }
 
 static void
 setup_sink_state_changes (GstElement * sink, gpointer user_data)
 {
-  test_data *td = user_data;
-  state_changes_slave_data *d = td->sd;
-  GstIterator *it;
-
-  gst_object_ref (sink);
-  d->refcount = 0;
-  d->thread =
-      g_thread_new ("state-changes-watcher",
-      (GThreadFunc) state_changes_watcher, td);
-  FAIL_UNLESS (d->thread);
-
-  it = gst_bin_iterate_sinks (GST_BIN (sink));
-  while (gst_iterator_foreach (it, hook_state_changes_probe, td))
-    gst_iterator_resync (it);
-  gst_iterator_free (it);
+  g_object_set (sink, "auto-flush-bus", FALSE, NULL);
+  gst_bus_set_sync_handler (GST_ELEMENT_BUS (sink), state_changes_sink_bus_msg,
+      user_data, NULL);
 }
 
 static void
@@ -3718,11 +3677,16 @@ check_success_sink_state_changes (gpointer user_data)
 {
   test_data *td = user_data;
   state_changes_slave_data *d = td->sd;
+  GstBus *bus;
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (td->p));
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
 
   FAIL_UNLESS (d->got_eos);
   FAIL_UNLESS_EQUALS_INT (d->n_null, 6);
-  FAIL_UNLESS_EQUALS_INT (d->n_ready, 12);
-  FAIL_UNLESS_EQUALS_INT (d->n_paused, 10);
+  FAIL_UNLESS_EQUALS_INT (d->n_ready, 13);
+  FAIL_UNLESS_EQUALS_INT (d->n_paused, 11);
   FAIL_UNLESS_EQUALS_INT (d->n_playing, 4);
 }
 
@@ -5915,7 +5879,7 @@ ipcpipeline_suite (void)
     tcase_add_test (tc_chain, test_empty_state_changes);
     tcase_add_test (tc_chain, test_wavparse_state_changes);
     tcase_add_test (tc_chain, test_mpegts_state_changes);
-    tcase_skip_broken_test (tc_chain, test_mpegts_2_state_changes);
+    tcase_add_test (tc_chain, test_mpegts_2_state_changes);
     /* live scenarios skipped: live sources will cause no buffer
      * to flow in PAUSED, so the pipeline will only finish READY->PAUSED
      * once switching to PLAYING */
