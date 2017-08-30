@@ -23,11 +23,14 @@
 #endif
 
 #include <string.h>
+
+#include <gdk/gdk.h>
+#if defined (GDK_WINDOWING_X11)
 #include <X11/Xlib.h>
+#endif
 
 #include <gst/gst.h>
 #include <gtk/gtk.h>
-#include <gdk/gdk.h>
 #include <gst/video/video-info.h>
 
 #include "../gstgtk.h"
@@ -273,7 +276,9 @@ main (gint argc, gchar * argv[])
   GtkWidget *area, *combo, *w;
   const gchar *uri;
 
+#if defined (GDK_WINDOWING_X11)
   XInitThreads ();
+#endif
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
