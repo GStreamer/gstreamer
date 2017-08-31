@@ -164,6 +164,9 @@ gboolean                 gst_buffer_list_foreach               (GstBufferList *l
 GST_EXPORT
 GstBufferList *          gst_buffer_list_copy_deep             (const GstBufferList * list);
 
+GST_EXPORT
+gsize                    gst_buffer_list_calculate_size        (GstBufferList * list);
+
 #define gst_buffer_list_add(l,b) gst_buffer_list_insert((l),-1,(b));
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

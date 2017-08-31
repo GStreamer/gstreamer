@@ -436,3 +436,32 @@ gst_buffer_list_copy_deep (const GstBufferList * list)
 
   return result;
 }
+
+/**
+ * gst_buffer_list_calculate_size:
+ * @list: a #GstBufferList
+ *
+ * Calculates the size of the data contained in buffer list by adding the
+ * size of all buffers.
+ *
+ * Returns: the size of the data contained in buffer list in bytes.
+ *
+ * Since: 1.14
+ */
+gsize
+gst_buffer_list_calculate_size (GstBufferList * list)
+{
+  GstBuffer **buffers;
+  gsize size = 0;
+  guint i, n;
+
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (list), 0);
+
+  n = list->n_buffers;
+  buffers = list->buffers;
+
+  for (i = 0; i < n; ++i)
+    size += gst_buffer_get_size (buffers[i]);
+
+  return size;
+}

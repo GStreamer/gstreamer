@@ -460,6 +460,17 @@ GST_START_TEST (test_get_writable)
 
 GST_END_TEST;
 
+GST_START_TEST (test_calc_size)
+{
+  gst_buffer_list_add (list, gst_buffer_new_wrapped (g_strdup ("Hello"), 5));
+  gst_buffer_list_add (list, gst_buffer_new_wrapped (g_strdup (", "), 2));
+  gst_buffer_list_add (list, gst_buffer_new_wrapped (g_strdup ("world!"), 6));
+
+  fail_unless_equals_int (5 + 2 + 6, gst_buffer_list_calculate_size (list));
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_list_suite (void)
 {
@@ -476,6 +487,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_expand_and_remove);
   tcase_add_test (tc_chain, test_get_writable);
+  tcase_add_test (tc_chain, test_calc_size);
 
   return s;
 }

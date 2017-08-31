@@ -395,6 +395,8 @@ gst_buffer_list_foreach
 gst_buffer_list_get
 gst_buffer_list_get_writable
 
+gst_buffer_list_calculate_size
+
 <SUBSECTION Standard>
 GST_BUFFER_LIST
 GST_IS_BUFFER_LIST
