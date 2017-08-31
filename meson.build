@@ -19,7 +19,6 @@ glib_sharp = gtk_sharp.get_variable('glib_sharp')
 
 gio_sharp_dep = gtk_sharp.get_variable('gio_sharp_dep')
 gio_sharp = gtk_sharp.get_variable('gio_sharp')
-gio_glue = gtk_sharp.get_variable('gio_glue')
 
 gapi_fixup = gtk_sharp.get_variable('gapi_fixup')
 gapi_codegen = gtk_sharp.get_variable('gapi_codegen')
@@ -78,9 +77,7 @@ endif
 
 meson.add_install_script(nuget, '--package-name', 'GstSharp',
     '--assembly', gst_sharp.full_path(),
-    '--native', gst_glue.full_path(),
     '--assembly', gio_sharp.full_path(),
-    '--native', gio_glue.full_path(),
     '--assembly', glib_sharp.full_path(),
     '--project-url', 'https://gstreamer.freedesktop.org/modules/gstreamer-sharp.html',
     '--icon-url', 'https://gstreamer.freedesktop.org/images/header-logo-top.png',

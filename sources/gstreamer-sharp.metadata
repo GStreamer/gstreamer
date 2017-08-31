@@ -139,6 +139,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstVideoCodecState']/field[@cname='padding']" name="type">gpointer</attr>
 	<attr path="/api/namespace/object[@cname='GstVideoDecoder']/field[@cname='padding']" name="type">gpointer</attr>
 	<attr path="/api/namespace/object[@cname='GstVideoDecoder']/class_struct/field[@cname='padding']" name="type">gpointer</attr>
+	<attr path="/api/namespace/object[@cname='GstVideoEncoder']/field[@cname='padding']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstByteReader']" name="opaque">1</attr>
 	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method"/>
 	<attr path="//struct[@name='VideoGLTextureUploadMeta']//field[@cname='user_data_copy' or @cname='user_data_free']" name="hidden">true</attr>

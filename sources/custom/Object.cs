@@ -31,6 +31,19 @@ namespace Gst {
 
 	public class PropertyNotFoundException : Exception {}
 	
+	[StructLayout (LayoutKind.Sequential)]
+    struct GstObject {
+        IntPtr _lock;
+        public string name;
+        public Object parent;
+        public uint flags;
+        IntPtr controlBindings;
+        public int control_rate;
+        public int last_sync;
+
+        private IntPtr[] _gstGstReserved;
+    }
+
 	partial class Object 
 	{
 		private Dictionary <string, bool> PropertyNameCache = new Dictionary<string, bool> ();

@@ -183,7 +183,6 @@ AC_SUBST(GST_INCLUDEDIR)
 AC_CONFIG_FILES([
 	Makefile
 	sources/Makefile
-	sources/glue/Makefile
     samples/Makefile
 	sources/AssemblyInfo.cs
 	gstreamer-sharp-1.0.pc

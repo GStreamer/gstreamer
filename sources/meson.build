@@ -41,13 +41,13 @@ gst_sharp = library('gstreamer-sharp', gst_source_gen, sources,
             '-keyfile:' + snk],
         dependencies: [glib_sharp_dep, gio_sharp_dep])
 
-gluegen = custom_target('gluegen',
-        input: raw_api_fname,
-        output: 'generate.c',
-        command: [generate_api, '--fakeglue'],
-        depends: [gst_source_gen])
+#gluegen = custom_target('gluegen',
+        #input: raw_api_fname,
+        #output: 'generate.c',
+        #command: [generate_api, '--fakeglue'],
+        #depends: [gst_source_gen])
 
-gst_glue = library('gstreamersharpglue-1.0.0', gluegen, 'glue/gobject.c', dependencies: gst_deps)
+#gst_glue = library('gstreamersharpglue-1.0.0', gluegen, 'glue/gobject.c', dependencies: gst_deps)
 
 gst_sharp_dep = declare_dependency(dependencies: [glib_sharp_dep, gio_sharp_dep],
         link_with: gst_sharp)

@@ -26,8 +26,6 @@ namespace Gst {
 		static extern void gst_message_parse_error (IntPtr msg, out IntPtr err, out IntPtr debug);
 
 		public void ParseError (out GLib.GException error, out string debug) {
-			if (Type != MessageType.Error)
-				throw new ArgumentException ();
 
 			IntPtr err;
 			IntPtr dbg;
@@ -53,15 +51,11 @@ namespace Gst {
 
 		public GLib.Value StreamStatusObject { 
 			get {
-				if(Type != MessageType.StreamStatus)
-					throw new ArgumentException ();
 				IntPtr raw_ret = gst_message_get_stream_status_object(Handle);
 				GLib.Value ret = (GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (GLib.Value));
 				return ret;
 			}
 			set {
-				if(Type != MessageType.StreamStatus)
-					throw new ArgumentException ();
 				IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
 				gst_message_set_stream_status_object(Handle, native_value);
 				value = (GLib.Value) Marshal.PtrToStructure (native_value, typeof (GLib.Value));

@@ -202,8 +202,6 @@ namespace Gst
 			Connect (o, name, false, handler);
 		}
 
-		static int g_closure_sizeof = gstsharp_g_closure_sizeof ();
-
 		public static void Connect (GLib.Object o, string name,
 		                              bool after, Delegate handler)
 		{
@@ -226,15 +224,13 @@ namespace Gst
 				if (!SignalInfo.IsValidDelegate (handler))
 					throw new Exception ("Invalid delegate");
 
-				IntPtr closure = g_closure_new_simple (g_closure_sizeof, IntPtr.Zero);
+				// Let's allocate 64bytes for the GClosure, it should be more than necessary.
+				IntPtr closure = g_closure_new_simple (64, IntPtr.Zero);
 				g_closure_set_meta_marshal (closure, (IntPtr)GCHandle.Alloc (k), marshalHandler);
 				uint signalId = g_signal_connect_closure (o.Handle, name, closure, after);
 				SignalHandlers.Add (k, new SignalInfo (signalId, closure, handler));
 			}
 		}
-
-		[DllImport ("libgstreamersharpglue-1.0.0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gstsharp_g_closure_sizeof ();
 
 		public static void Disconnect (GLib.Object o, string name, Delegate handler)
 		{
@@ -333,7 +329,11 @@ namespace Gst
 		public static object Emit (GLib.Object o, string name, params object[] parameters)
 		{
 			SignalQuery query;
-			IntPtr type = gstsharp_g_type_from_instance (o.Handle);
+			IntPtr type;
+			unsafe {
+				// GType is the first field of GTypeInstance->g_class
+				type = (*(IntPtr*) ((GLib.Object.GTypeInstance*) o.Handle)->g_class);
+			}
 			GType gtype = new GType (type);
 			string signal_name, signal_detail;
 			uint signal_detail_quark = 0;
@@ -423,9 +423,6 @@ namespace Gst
 
 			return ret;
 		}
-
-		[DllImport ("libgstreamersharpglue-1.0.0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
 
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int g_signal_handler_disconnect (IntPtr o, uint handler_id);
