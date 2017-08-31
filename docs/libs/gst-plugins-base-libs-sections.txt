@@ -72,6 +72,7 @@ gst_app_src_set_emit_signals
 GstAppSrcCallbacks
 gst_app_src_set_callbacks
 gst_app_src_push_buffer
+gst_app_src_push_buffer_list
 gst_app_src_push_sample
 gst_app_src_end_of_stream
 <SUBSECTION Standard>

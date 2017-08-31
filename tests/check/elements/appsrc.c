@@ -485,6 +485,127 @@ GST_START_TEST (test_appsrc_blocked_on_caps)
 
 GST_END_TEST;
 
+static guint expect_offset;
+static gboolean chainlist_called;
+static gboolean done;
+
+static gboolean
+event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_LOG ("event %" GST_PTR_FORMAT, event);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    g_mutex_lock (&check_mutex);
+    done = TRUE;
+    g_cond_signal (&check_cond);
+    g_mutex_unlock (&check_mutex);
+  }
+  gst_event_unref (event);
+  return TRUE;
+}
+
+static GstFlowReturn
+chain_____func (GstPad * pad, GstObject * parent, GstBuffer * buf)
+{
+  GST_LOG ("  buffer # %3u", (guint) GST_BUFFER_OFFSET (buf));
+
+  fail_unless_equals_int (GST_BUFFER_OFFSET (buf), expect_offset);
+  ++expect_offset;
+  gst_buffer_unref (buf);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+chainlist_func (GstPad * pad, GstObject * parent, GstBufferList * list)
+{
+  guint i, len;
+
+  len = gst_buffer_list_length (list);
+
+  GST_DEBUG ("buffer list with %u buffers", len);
+  for (i = 0; i < len; ++i) {
+    GstBuffer *buf = gst_buffer_list_get (list, i);
+    GST_LOG ("  buffer # %3u", (guint) GST_BUFFER_OFFSET (buf));
+
+    fail_unless_equals_int (GST_BUFFER_OFFSET (buf), expect_offset);
+    ++expect_offset;
+  }
+  chainlist_called = TRUE;
+  gst_buffer_list_unref (list);
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_appsrc_push_buffer_list)
+{
+  GstElement *src;
+  guint i;
+
+  src = gst_element_factory_make ("appsrc", "appsrc");
+
+  mysinkpad = gst_check_setup_sink_pad (src, &sinktemplate);
+  gst_pad_set_chain_function (mysinkpad, chain_____func);
+  gst_pad_set_chain_list_function (mysinkpad, chainlist_func);
+  gst_pad_set_event_function (mysinkpad, event_func);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  expect_offset = 0;
+  chainlist_called = FALSE;
+  done = FALSE;
+
+  gst_element_set_state (src, GST_STATE_PLAYING);
+
+#define NUM_BUFFERS 100
+
+  for (i = 0; i < NUM_BUFFERS; ++i) {
+    GstFlowReturn flow;
+    GstBuffer *buf;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_OFFSET (buf) = i;
+
+    if (i == 0 || g_random_boolean ()) {
+      GstBufferList *buflist = gst_buffer_list_new ();
+
+      gst_buffer_list_add (buflist, buf);
+
+      buf = gst_buffer_new ();
+      GST_BUFFER_OFFSET (buf) = ++i;
+      gst_buffer_list_add (buflist, buf);
+      if (g_random_boolean ()) {
+        flow = gst_app_src_push_buffer_list (GST_APP_SRC (src), buflist);
+      } else {
+        g_signal_emit_by_name (src, "push-buffer-list", buflist, &flow);
+        gst_buffer_list_unref (buflist);
+      }
+    } else {
+      flow = gst_app_src_push_buffer (GST_APP_SRC (src), buf);
+    }
+    fail_unless_equals_int (flow, GST_FLOW_OK);
+  }
+
+  gst_app_src_end_of_stream (GST_APP_SRC (src));
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  gst_element_set_state (src, GST_STATE_NULL);
+
+  /* make sure the buffer list was pushed out as list! */
+  fail_unless (chainlist_called);
+
+  /* can be NUM_BUFFERS or NUM_BUFFERS + 1 depending on whether last item
+   * was buffer list or not */
+  fail_unless (expect_offset >= NUM_BUFFERS);
+
+  gst_check_teardown_sink_pad (src);
+
+  gst_object_unref (src);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsrc_suite (void)
 {
@@ -495,6 +616,7 @@ appsrc_suite (void)
   tcase_add_test (tc_chain, test_appsrc_set_caps_twice);
   tcase_add_test (tc_chain, test_appsrc_caps_in_push_modes);
   tcase_add_test (tc_chain, test_appsrc_blocked_on_caps);
+  tcase_add_test (tc_chain, test_appsrc_push_buffer_list);
 
   if (RUNNING_ON_VALGRIND)
     tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 5);

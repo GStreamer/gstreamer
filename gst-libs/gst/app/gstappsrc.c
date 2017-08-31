@@ -149,6 +149,7 @@ enum
   SIGNAL_PUSH_BUFFER,
   SIGNAL_END_OF_STREAM,
   SIGNAL_PUSH_SAMPLE,
+  SIGNAL_PUSH_BUFFER_LIST,
 
   LAST_SIGNAL
 };
@@ -224,6 +225,8 @@ static gboolean gst_app_src_event (GstBaseSrc * src, GstEvent * event);
 
 static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
     GstBuffer * buffer);
+static GstFlowReturn gst_app_src_push_buffer_list_action (GstAppSrc * appsrc,
+    GstBufferList * buffer_list);
 static GstFlowReturn gst_app_src_push_sample_action (GstAppSrc * appsrc,
     GstSample * sample);
 
@@ -465,6 +468,27 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           push_buffer), NULL, NULL, NULL,
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
 
+   /**
+    * GstAppSrc::push-buffer-list:
+    * @appsrc: the appsrc
+    * @buffer_list: a buffer list to push
+    *
+    * Adds a buffer list to the queue of buffers and buffer lists that the
+    * appsrc element will push to its source pad. This function does not take
+    * ownership of the buffer list so the buffer list needs to be unreffed
+    * after calling this function.
+    *
+    * When the block property is TRUE, this function can block until free space
+    * becomes available in the queue.
+    *
+    * Since: 1.14
+    */
+  gst_app_src_signals[SIGNAL_PUSH_BUFFER_LIST] =
+      g_signal_new ("push-buffer-list", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSrcClass,
+          push_buffer_list), NULL, NULL, NULL,
+      GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER_LIST);
+
   /**
     * GstAppSrc::push-sample:
     * @appsrc: the appsrc
@@ -527,6 +551,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->event = gst_app_src_event;
 
   klass->push_buffer = gst_app_src_push_buffer_action;
+  klass->push_buffer_list = gst_app_src_push_buffer_list_action;
   klass->push_sample = gst_app_src_push_sample_action;
   klass->end_of_stream = gst_app_src_end_of_stream;
 
@@ -1152,7 +1177,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       guint buf_size;
       GstMiniObject *obj = g_queue_pop_head (priv->queue);
 
-      if (!GST_IS_BUFFER (obj)) {
+      if (GST_IS_CAPS (obj)) {
         GstCaps *next_caps = GST_CAPS (obj);
         gboolean caps_changed = TRUE;
 
@@ -1181,10 +1206,25 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         continue;
       }
 
-      *buf = GST_BUFFER (obj);
-      buf_size = gst_buffer_get_size (*buf);
+      if (GST_IS_BUFFER (obj)) {
+        *buf = GST_BUFFER (obj);
+        buf_size = gst_buffer_get_size (*buf);
+        GST_LOG_OBJECT (appsrc, "have buffer %p of size %u", *buf, buf_size);
+      } else {
+        GstBufferList *buffer_list;
 
-      GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
+        g_assert (GST_IS_BUFFER_LIST (obj));
+
+        buffer_list = GST_BUFFER_LIST (obj);
+
+        buf_size = gst_buffer_list_calculate_size (buffer_list);
+
+        GST_LOG_OBJECT (appsrc, "have buffer list %p of size %u, %u buffers",
+            buffer_list, buf_size, gst_buffer_list_length (buffer_list));
+
+        gst_base_src_submit_buffer_list (bsrc, buffer_list);
+        *buf = NULL;
+      }
 
       priv->queued_bytes -= buf_size;
 
@@ -1681,16 +1721,27 @@ gst_app_src_get_emit_signals (GstAppSrc * appsrc)
 }
 
 static GstFlowReturn
-gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
-    gboolean steal_ref)
+gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
+    GstBufferList * buflist, gboolean steal_ref)
 {
   gboolean first = TRUE;
   GstAppSrcPrivate *priv;
 
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   priv = appsrc->priv;
+
+  if (buffer != NULL)
+    g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+  else
+    g_return_val_if_fail (GST_IS_BUFFER_LIST (buflist), GST_FLOW_ERROR);
+
+  if (buflist != NULL) {
+    if (gst_buffer_list_length (buflist) == 0)
+      return GST_FLOW_OK;
+
+    buffer = gst_buffer_list_get (buflist, 0);
+  }
 
   if (GST_BUFFER_DTS (buffer) == GST_CLOCK_TIME_NONE &&
       GST_BUFFER_PTS (buffer) == GST_CLOCK_TIME_NONE &&
@@ -1710,14 +1761,25 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
         now = 0;
       gst_object_unref (clock);
 
-      if (!steal_ref)
-        buffer = gst_buffer_copy (buffer);
-      else
-        buffer = gst_buffer_make_writable (buffer);
+      if (buflist == NULL) {
+        if (!steal_ref) {
+          buffer = gst_buffer_copy (buffer);
+          steal_ref = TRUE;
+        } else {
+          buffer = gst_buffer_make_writable (buffer);
+        }
+      } else {
+        if (!steal_ref) {
+          buflist = gst_buffer_list_copy (buflist);
+          steal_ref = TRUE;
+        } else {
+          buflist = gst_buffer_list_make_writable (buflist);
+        }
+        buffer = gst_buffer_list_get_writable (buflist, 0);
+      }
 
       GST_BUFFER_PTS (buffer) = now;
       GST_BUFFER_DTS (buffer) = now;
-      steal_ref = TRUE;
     } else {
       GST_WARNING_OBJECT (appsrc,
           "do-timestamp=TRUE but buffers are provided before "
@@ -1774,11 +1836,19 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
       break;
   }
 
-  GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
-  if (!steal_ref)
-    gst_buffer_ref (buffer);
-  g_queue_push_tail (priv->queue, buffer);
-  priv->queued_bytes += gst_buffer_get_size (buffer);
+  if (buflist != NULL) {
+    GST_DEBUG_OBJECT (appsrc, "queueing buffer list %p", buflist);
+    if (!steal_ref)
+      gst_buffer_list_ref (buflist);
+    g_queue_push_tail (priv->queue, buflist);
+    priv->queued_bytes += gst_buffer_list_calculate_size (buflist);
+  } else {
+    GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
+    if (!steal_ref)
+      gst_buffer_ref (buffer);
+    g_queue_push_tail (priv->queue, buffer);
+    priv->queued_bytes += gst_buffer_get_size (buffer);
+  }
   g_cond_broadcast (&priv->cond);
   g_mutex_unlock (&priv->mutex);
 
@@ -1804,8 +1874,16 @@ eos:
 }
 
 static GstFlowReturn
+gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
+    gboolean steal_ref)
+{
+  return gst_app_src_push_internal (appsrc, buffer, NULL, steal_ref);
+}
+
+static GstFlowReturn
 gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
 {
+  GstBufferList *buffer_list;
   GstBuffer *buffer;
   GstCaps *caps;
 
@@ -1819,12 +1897,15 @@ gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
   }
 
   buffer = gst_sample_get_buffer (sample);
-  if (buffer == NULL) {
-    GST_WARNING_OBJECT (appsrc, "received sample without buffer");
-    return GST_FLOW_OK;
-  }
+  if (buffer != NULL)
+    return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
 
-  return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
+  buffer_list = gst_sample_get_buffer_list (sample);
+  if (buffer_list != NULL)
+    return gst_app_src_push_internal (appsrc, NULL, buffer_list, FALSE);
+
+  GST_WARNING_OBJECT (appsrc, "received sample without buffer or buffer list");
+  return GST_FLOW_OK;
 }
 
 /**
@@ -1846,6 +1927,30 @@ GstFlowReturn
 gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
 {
   return gst_app_src_push_buffer_full (appsrc, buffer, TRUE);
+}
+
+/**
+ * gst_app_src_push_buffer_list:
+ * @appsrc: a #GstAppSrc
+ * @buffer_list: (transfer full): a #GstBufferList to push
+ *
+ * Adds a buffer list to the queue of buffers and buffer lists that the
+ * appsrc element will push to its source pad.  This function takes ownership
+ * of @buffer_list.
+ *
+ * When the block property is TRUE, this function can block until free
+ * space becomes available in the queue.
+ *
+ * Returns: #GST_FLOW_OK when the buffer list was successfuly queued.
+ * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
+ * #GST_FLOW_EOS when EOS occured.
+ *
+ * Since: 1.14
+ */
+GstFlowReturn
+gst_app_src_push_buffer_list (GstAppSrc * appsrc, GstBufferList * buffer_list)
+{
+  return gst_app_src_push_internal (appsrc, NULL, buffer_list, TRUE);
 }
 
 /**
@@ -1881,6 +1986,15 @@ static GstFlowReturn
 gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
 {
   return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
+}
+
+/* push a buffer list without stealing the ref of the buffer list. This is
+ * used for the action signal. */
+static GstFlowReturn
+gst_app_src_push_buffer_list_action (GstAppSrc * appsrc,
+    GstBufferList * buffer_list)
+{
+  return gst_app_src_push_internal (appsrc, NULL, buffer_list, FALSE);
 }
 
 /* push a sample without stealing the ref. This is used for the

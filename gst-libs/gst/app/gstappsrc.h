@@ -111,9 +111,10 @@ struct _GstAppSrcClass
   GstFlowReturn (*push_buffer)     (GstAppSrc *appsrc, GstBuffer *buffer);
   GstFlowReturn (*end_of_stream)   (GstAppSrc *appsrc);
   GstFlowReturn (*push_sample)     (GstAppSrc *appsrc, GstSample *sample);
+  GstFlowReturn (*push_buffer_list) (GstAppSrc *appsrc, GstBufferList *buffer_list);
 
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING-1];
+  gpointer     _gst_reserved[GST_PADDING-2];
 };
 
 GST_EXPORT
@@ -166,6 +167,9 @@ gboolean         gst_app_src_get_emit_signals        (GstAppSrc *appsrc);
 
 GST_EXPORT
 GstFlowReturn    gst_app_src_push_buffer             (GstAppSrc *appsrc, GstBuffer *buffer);
+
+GST_EXPORT
+GstFlowReturn    gst_app_src_push_buffer_list        (GstAppSrc * appsrc, GstBufferList * buffer_list);
 
 GST_EXPORT
 GstFlowReturn    gst_app_src_end_of_stream           (GstAppSrc *appsrc);
