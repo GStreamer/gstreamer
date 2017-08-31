@@ -159,10 +159,17 @@ main (int argc, char **argv)
   int sockets[2];
   pid_t pid;
 
-  if (socketpair (AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockets) < 0) {
+  if (socketpair (AF_UNIX, SOCK_STREAM, 0, sockets)) {
     fprintf (stderr, "Error creating sockets: %s\n", strerror (errno));
     return 1;
   }
+  if (fcntl (sockets[0], F_SETFL, O_NONBLOCK) < 0 ||
+      fcntl (sockets[1], F_SETFL, O_NONBLOCK) < 0) {
+    fprintf (stderr, "Error setting O_NONBLOCK on sockets: %s\n",
+        strerror (errno));
+    return 1;
+  }
+
   pid = fork ();
   if (pid < 0) {
     fprintf (stderr, "Error forking: %s\n", strerror (errno));

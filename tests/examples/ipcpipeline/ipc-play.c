@@ -610,8 +610,14 @@ on_pad_added (GstElement * element, GstPad * pad, GstElement * pipeline)
   g_signal_connect (pad, "unlinked", (GCallback) on_pad_unlinked, pipeline);
 
   if (create_sockets) {
-    if (socketpair (AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockets)) {
+    if (socketpair (AF_UNIX, SOCK_STREAM, 0, sockets)) {
       fprintf (stderr, "Error creating sockets: %s\n", strerror (errno));
+      exit (1);
+    }
+    if (fcntl (sockets[0], F_SETFL, O_NONBLOCK) < 0 ||
+        fcntl (sockets[1], F_SETFL, O_NONBLOCK) < 0) {
+      fprintf (stderr, "Error setting O_NONBLOCK on sockets: %s\n",
+          strerror (errno));
       exit (1);
     }
     g_object_set (ipcpipelinesink, "fdin", sockets[0], "fdout", sockets[0],
