@@ -543,6 +543,7 @@ gst_asm_scan_parse_property (GstASMRule * rule, GstASMScan * scan)
   gst_asm_scan_next_token (scan);
   if (scan->token != GST_ASM_TOKEN_EQUAL) {
     g_warning ("= expected");
+    g_free (key);
     return;
   }
   gst_asm_scan_next_token (scan);
