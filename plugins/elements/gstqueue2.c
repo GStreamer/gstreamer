@@ -2173,18 +2173,6 @@ buffer_list_create_write (GstBuffer ** buf, guint idx, gpointer q)
   return TRUE;
 }
 
-static gboolean
-buffer_list_calc_size (GstBuffer ** buf, guint idx, gpointer data)
-{
-  guint *p_size = data;
-  gsize buf_size;
-
-  buf_size = gst_buffer_get_size (*buf);
-  GST_TRACE ("buffer %u in has size %" G_GSIZE_FORMAT, idx, buf_size);
-  *p_size += buf_size;
-  return TRUE;
-}
-
 /* enqueue an item an update the level stats */
 static void
 gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
@@ -2215,11 +2203,11 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
     }
   } else if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER_LIST) {
     GstBufferList *buffer_list;
-    guint size = 0;
+    guint size;
 
     buffer_list = GST_BUFFER_LIST_CAST (item);
 
-    gst_buffer_list_foreach (buffer_list, buffer_list_calc_size, &size);
+    size = gst_buffer_list_calculate_size (buffer_list);
     GST_LOG_OBJECT (queue, "total size of buffer list: %u bytes", size);
 
     /* add buffer to the statistics */
@@ -2410,10 +2398,10 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
     }
   } else if (GST_IS_BUFFER_LIST (item)) {
     GstBufferList *buffer_list;
-    guint size = 0;
+    guint size;
 
     buffer_list = GST_BUFFER_LIST_CAST (item);
-    gst_buffer_list_foreach (buffer_list, buffer_list_calc_size, &size);
+    size = gst_buffer_list_calculate_size (buffer_list);
     *item_type = GST_QUEUE2_ITEM_TYPE_BUFFER_LIST;
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,

@@ -748,26 +748,14 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
-static gboolean
-buffer_list_calc_size (GstBuffer ** buf, guint idx, gpointer data)
-{
-  guint *p_size = data;
-  gsize buf_size;
-
-  buf_size = gst_buffer_get_size (*buf);
-  GST_TRACE ("buffer %u in has size %" G_GSIZE_FORMAT, idx, buf_size);
-  *p_size += buf_size;
-  return TRUE;
-}
-
 static inline void
 gst_queue_locked_enqueue_buffer_list (GstQueue * queue, gpointer item)
 {
   GstQueueItem qitem;
   GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (item);
-  gsize bsize = 0;
+  gsize bsize;
 
-  gst_buffer_list_foreach (buffer_list, buffer_list_calc_size, &bsize);
+  bsize = gst_buffer_list_calculate_size (buffer_list);
 
   /* add buffer to the statistics */
   queue->cur_level.buffers += gst_buffer_list_length (buffer_list);
