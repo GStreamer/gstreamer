@@ -2451,6 +2451,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   GstClockReturn status;
   GstBuffer *res_buf;
   GstBuffer *in_buf;
+  gboolean own_res_buf;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2499,6 +2500,7 @@ again:
       G_GINT64_FORMAT, offset, length, src->segment.time);
 
   res_buf = in_buf = *buf;
+  own_res_buf = (*buf == NULL);
 
   GST_LIVE_UNLOCK (src);
   ret = bclass->create (src, offset, length, &res_buf);
@@ -2510,7 +2512,7 @@ again:
       GstFlowReturn wait_ret;
       wait_ret = gst_base_src_wait_playing_unlocked (src);
       if (wait_ret != GST_FLOW_OK) {
-        if (ret == GST_FLOW_OK && *buf == NULL)
+        if (ret == GST_FLOW_OK && own_res_buf)
           gst_buffer_unref (res_buf);
         ret = wait_ret;
         goto stopped;
@@ -2523,7 +2525,7 @@ again:
    * discard when the create function returned _OK. */
   if (G_UNLIKELY (g_atomic_int_get (&src->priv->has_pending_eos))) {
     if (ret == GST_FLOW_OK) {
-      if (*buf == NULL)
+      if (own_res_buf)
         gst_buffer_unref (res_buf);
     }
     src->priv->forced_eos = TRUE;
@@ -2582,7 +2584,7 @@ again:
       /* this case is triggered when we were waiting for the clock and
        * it got unlocked because we did a state change. In any case, get rid of
        * the buffer. */
-      if (*buf == NULL)
+      if (own_res_buf)
         gst_buffer_unref (res_buf);
 
       if (!src->live_running) {
@@ -2604,7 +2606,7 @@ again:
       GST_ELEMENT_ERROR (src, CORE, CLOCK,
           (_("Internal clock error.")),
           ("clock returned unexpected return value %d", status));
-      if (*buf == NULL)
+      if (own_res_buf)
         gst_buffer_unref (res_buf);
       ret = GST_FLOW_ERROR;
       break;
@@ -2632,7 +2634,7 @@ map_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, BUSY,
         (_("Failed to map buffer.")),
         ("failed to map result buffer in WRITE mode"));
-    if (*buf == NULL)
+    if (own_res_buf)
       gst_buffer_unref (res_buf);
     return GST_FLOW_ERROR;
   }
@@ -2660,7 +2662,7 @@ reached_num_buffers:
 flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
-    if (*buf == NULL)
+    if (own_res_buf)
       gst_buffer_unref (res_buf);
     return GST_FLOW_FLUSHING;
   }
