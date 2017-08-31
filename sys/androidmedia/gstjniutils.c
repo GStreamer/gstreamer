@@ -869,6 +869,13 @@ gst_amc_jni_get_application_class (JNIEnv * env, const gchar * name,
   jclass class_loader_cls = NULL;
   jmethodID load_class_id = 0;
 
+  GST_LOG ("attempting to retrieve class %s", name);
+
+  if (!get_class_loader) {
+    g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+        "Could not retreive application class loader function");
+    goto done;
+  }
 
   class_loader = get_class_loader ();
   if (!class_loader) {
@@ -887,7 +894,7 @@ gst_amc_jni_get_application_class (JNIEnv * env, const gchar * name,
   load_class_id =
       gst_amc_jni_get_method_id (env, err, class_loader_cls, "loadClass",
       "(Ljava/lang/String;)Ljava/lang/Class;");
-  if (!class_loader_cls) {
+  if (!load_class_id) {
     goto done;
   }
 

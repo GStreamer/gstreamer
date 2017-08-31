@@ -1590,8 +1590,8 @@ _init_classes (void)
 
   if (!org_freedesktop_gstreamer_androidmedia_gstahccallback.klass) {
     org_freedesktop_gstreamer_androidmedia_gstahccallback.klass =
-        gst_amc_jni_get_class (env, &err,
-        "org/freedesktop/gstreamer/androidmedia/GstAhcCallback");
+        gst_amc_jni_get_application_class (env,
+        "org/freedesktop/gstreamer/androidmedia/GstAhcCallback", &err);
   }
   if (!org_freedesktop_gstreamer_androidmedia_gstahccallback.klass)
     goto failed;

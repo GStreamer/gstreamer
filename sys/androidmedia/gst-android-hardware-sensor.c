@@ -569,8 +569,8 @@ _init_classes (void)
   /* org.freedesktop.gstreamer.androidmedia.GstAhsCallback */
   if (!org_freedesktop_gstreamer_androidmedia_gstahscallback.klass) {
     org_freedesktop_gstreamer_androidmedia_gstahscallback.klass =
-        gst_amc_jni_get_class (env, &err,
-        "org/freedesktop/gstreamer/androidmedia/GstAhsCallback");
+        gst_amc_jni_get_application_class (env,
+        "org/freedesktop/gstreamer/androidmedia/GstAhsCallback", &err);
   }
   if (!org_freedesktop_gstreamer_androidmedia_gstahscallback.klass)
     goto failed;
