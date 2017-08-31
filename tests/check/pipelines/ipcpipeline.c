@@ -22,6 +22,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define _GNU_SOURCE             /* See feature_test_macros(7) */
 #include <unistd.h>
 #include <stdio.h>
@@ -32,6 +36,25 @@
 #include <sys/socket.h>
 #include <gst/check/gstcheck.h>
 #include <string.h>
+
+#ifndef HAVE_PIPE2
+static int
+pipe2 (int pipedes[2], int flags)
+{
+  int ret = pipe (pipedes);
+  if (ret < 0)
+    return ret;
+  if (flags != 0) {
+    ret = fcntl (pipedes[0], F_SETFL, flags);
+    if (ret < 0)
+      return ret;
+    ret = fcntl (pipedes[1], F_SETFL, flags);
+    if (ret < 0)
+      return ret;
+  }
+  return 0;
+}
+#endif
 
 /* This enum contains flags that are used to configure the setup that
  * test_base() will do internally */

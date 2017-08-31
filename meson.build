@@ -195,6 +195,7 @@ check_functions = [
 # check token HAVE_ORC
 # check token HAVE_OSX
 # check token HAVE_OSX_VIDEO
+  ['HAVE_PIPE2', 'pipe2'],
 # check token HAVE_PNG
 # check token HAVE_PVR
 # check token HAVE_QUICKTIME

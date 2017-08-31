@@ -171,7 +171,7 @@ dnl *** checks for structures ***
 dnl *** checks for compiler characteristics ***
 
 dnl *** checks for library functions ***
-AC_CHECK_FUNCS([gmtime_r])
+AC_CHECK_FUNCS([gmtime_r pipe2])
 
 dnl *** checks for headers ***
 AC_CHECK_HEADERS([sys/utsname.h])
