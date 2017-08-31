@@ -24,7 +24,7 @@
  * warnings/errors */
 
 #include <gst/gl/gstglconfig.h>
-#include <QtCore/qglobal.h>
+#include <QtGui/qtgui-config.h>
 
 #if defined(QT_OPENGL_ES_2) && GST_GL_HAVE_WINDOW_ANDROID
 #define GLsync gst_qt_GLsync
