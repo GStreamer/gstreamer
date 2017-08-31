@@ -128,6 +128,7 @@ mikey_add_crypto_sessions (GstRTSPStream * stream, GstMIKEYMessage * msg)
   session = gst_rtsp_stream_get_rtpsession (stream);
   if (session == NULL) {
     GST_ERROR ("unable to get RTP session from stream %p", stream);
+    gst_object_unref (encoder);
     return FALSE;
   }
 
