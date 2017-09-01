@@ -24,7 +24,10 @@
  * warnings/errors */
 
 #include <gst/gl/gstglconfig.h>
+#include <QtCore/qglobal.h>
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 9, 0))
 #include <QtGui/qtgui-config.h>
+#endif
 
 #if defined(QT_OPENGL_ES_2) && GST_GL_HAVE_WINDOW_ANDROID
 #define GLsync gst_qt_GLsync
