@@ -1325,9 +1325,6 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
     return FALSE;
   display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
 
-  if (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE (sink) == GST_VAAPI_DISPLAY_TYPE_DRM)
-    return TRUE;
-
   if (!gst_vaapi_plugin_base_set_caps (plugin, caps, NULL))
     return FALSE;
 
@@ -1345,6 +1342,9 @@ gst_vaapisink_set_caps (GstBaseSink * base_sink, GstCaps * caps)
 
   gst_vaapisink_ensure_colorbalance (sink);
   gst_vaapisink_ensure_rotation (sink, FALSE);
+
+  if (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE (sink) == GST_VAAPI_DISPLAY_TYPE_DRM)
+    return TRUE;
 
   gst_vaapisink_ensure_window_size (sink, &win_width, &win_height);
   if (sink->window) {
