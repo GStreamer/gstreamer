@@ -166,6 +166,9 @@ gst_gtk_gl_sink_start (GstBaseSink * bsink)
   if (!gtk_sink->display || !gtk_sink->context || !gtk_sink->gtk_context)
     return FALSE;
 
+  gst_gl_element_propagate_display_context (GST_ELEMENT (bsink),
+      gtk_sink->display);
+
   return TRUE;
 }
 
