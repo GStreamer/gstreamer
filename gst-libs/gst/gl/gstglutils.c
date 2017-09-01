@@ -218,8 +218,9 @@ gst_gl_context_query (GstElement * element)
 /*  4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT
  *     message.
  */
-static void
-gst_gl_display_context_propagate (GstElement * element, GstGLDisplay * display)
+void
+gst_gl_element_propagate_display_context (GstElement * element,
+    GstGLDisplay * display)
 {
   GstContext *context;
   GstMessage *msg;
@@ -295,7 +296,7 @@ gst_gl_ensure_element_data (gpointer element, GstGLDisplay ** display_ptr,
 
   *display_ptr = display;
 
-  gst_gl_display_context_propagate (element, display);
+  gst_gl_element_propagate_display_context (element, display);
 
 get_gl_context:
   if (*other_context_ptr)

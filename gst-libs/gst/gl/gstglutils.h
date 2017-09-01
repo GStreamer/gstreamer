@@ -42,6 +42,9 @@ gboolean gst_gl_query_local_gl_context (GstElement * element, GstPadDirection di
     GstGLContext ** context_ptr);
 
 GST_EXPORT
+void gst_gl_element_propagate_display_context (GstElement * element, GstGLDisplay * display);
+
+GST_EXPORT
 gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
     guint plane);
 GST_EXPORT

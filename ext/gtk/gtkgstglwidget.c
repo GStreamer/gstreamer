@@ -515,12 +515,16 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
     return FALSE;
   }
 
+  GST_OBJECT_LOCK (priv->display);
   if (!gst_gl_display_create_context (priv->display, priv->other_context,
           &priv->context, &error)) {
     g_clear_error (&error);
+    GST_OBJECT_UNLOCK (priv->display);
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
     return FALSE;
   }
+  gst_gl_display_add_context (priv->display, priv->context);
+  GST_OBJECT_UNLOCK (priv->display);
 
   GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
   return TRUE;
