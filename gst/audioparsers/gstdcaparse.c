@@ -446,9 +446,6 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
     gst_base_parse_set_frame_rate (parse, rate, block_size, 0, 0);
   }
 
-cleanup:
-  gst_buffer_unmap (buf, &map);
-
   /* it is possible that DTS HD substream after DTS core */
   if (parse->flags & GST_BASE_PARSE_FLAG_DRAINING || map.size >= size + 9) {
     extra_size = 0;
@@ -480,6 +477,9 @@ cleanup:
   } else {
     ret = GST_FLOW_OK;
   }
+
+cleanup:
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }
