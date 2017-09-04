@@ -52,6 +52,12 @@ else
 WAYLAND_DIR=
 endif
 
+if USE_IPCPIPELINE
+IPCPIPELINE_DIR=ipcpipeline
+else
+IPCPIPELINE_DIR=
+endif
+
 noinst_PROGRAMS = playout
 
 playout_SOURCES = playout.c
@@ -59,7 +65,8 @@ playout_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 playout_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIBS)
 
 SUBDIRS= codecparsers mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) \
-        $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR)
+        $(GL_DIR) $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR) \
+        $(IPCPIPELINE_DIR)
 DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gl gtk \
         avsamplesink waylandsink audiomixmatrix ipcpipeline
 
