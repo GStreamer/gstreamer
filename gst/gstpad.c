@@ -3425,6 +3425,16 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & type) == 0)
     goto no_match;
 
+  if (G_UNLIKELY (data->handled)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "probe previously returned HANDLED, not calling again");
+    goto no_match;
+  } else if (G_UNLIKELY (data->dropped)) {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "probe previously returned DROPPED, not calling again");
+    goto no_match;
+  }
+
   if (type & GST_PAD_PROBE_TYPE_PUSH) {
     /* one of the data types for non-idle probes */
     if ((type & GST_PAD_PROBE_TYPE_IDLE) == 0
