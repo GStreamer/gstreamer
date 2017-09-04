@@ -64,9 +64,9 @@ typedef struct
   GHashTable *waiting_ids;
 
   GThread *reader_thread;
-  gboolean reader_thread_stopping;
-  volatile gint thread_running;
-  int reader_thread_stopping_pipe[2];
+  GstPoll *poll;
+  GstPollFD pollFDin;
+
   GstAdapter *adapter;
   guint8 state;
   guint32 send_id;
