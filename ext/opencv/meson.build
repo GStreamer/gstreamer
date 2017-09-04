@@ -42,14 +42,14 @@ gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
 
 # First, check for the upper version limit and ensure it isn't found
 # FIXME: When 0.37.0 is released, change this to use many-version-conditions
-opencv3_2_dep = dependency('opencv', version : '>3.2.0', required : false)
+opencv3_3_dep = dependency('opencv', version : '>3.3.0', required : false)
 # Then, check if the lower version limit is found
 opencv2_dep = dependency('opencv', version : '>=2.3.0', required : false)
 opencv3_dep = dependency('opencv', version : '>= 3.0 ', required : false)
 
 opencv2_found = false
-if opencv3_2_dep.found()
-  message('OpenCV version is too new: \'' + opencv3_2_dep.version() + '\' (need < 3.2.0)')
+if opencv3_3_dep.found()
+  message('OpenCV version is too new: \'' + opencv3_3_dep.version() + '\' (need < 3.3.0)')
 elif opencv2_dep.found()
   message('OpenCV found, version is \'' + opencv2_dep.version() + '\'')
   opencv2_found = true
