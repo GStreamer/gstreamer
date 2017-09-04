@@ -852,8 +852,9 @@ done:
 
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
-        "Error setting %s state from %d to %d: %s (0x%08x)", comp->name,
-        old_state, state, gst_omx_error_to_string (err), err);
+        "Error setting %s state from %s to %s: %s (0x%08x)", comp->name,
+        gst_omx_state_to_string (old_state), gst_omx_state_to_string (state),
+        gst_omx_error_to_string (err), err);
   }
   return err;
 }
