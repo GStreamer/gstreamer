@@ -969,8 +969,14 @@ main (gint argc, gchar ** argv)
     return 1;
   }
 
-  if (socketpair (AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, pipes)) {
+  if (socketpair (AF_UNIX, SOCK_STREAM, 0, pipes)) {
     fprintf (stderr, "Error creating pipes: %s\n", strerror (errno));
+    return 2;
+  }
+  if (fcntl (pipes[0], F_SETFL, O_NONBLOCK) < 0 ||
+      fcntl (pipes[1], F_SETFL, O_NONBLOCK) < 0) {
+    fprintf (stderr, "Error setting O_NONBLOCK on pipes: %s\n",
+        strerror (errno));
     return 2;
   }
 
