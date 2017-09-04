@@ -73,9 +73,7 @@
 #  include "config.h"
 #endif
 
-#include <unistd.h>
 #include "gstipcpipelinesink.h"
-#include <string.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

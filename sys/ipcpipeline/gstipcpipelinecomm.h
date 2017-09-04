@@ -24,7 +24,6 @@
 #ifndef __GST_IPC_PIPELINE_COMM_H__
 #define __GST_IPC_PIPELINE_COMM_H__
 
-#include <glib.h>
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 

@@ -40,10 +40,6 @@
 #  include "config.h"
 #endif
 
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "gstipcpipelinesrc.h"
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",

@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <stdlib.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/gstprotection.h>
 #include "gstipcpipelinecomm.h"
