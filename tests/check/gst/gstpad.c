@@ -2091,6 +2091,74 @@ GST_START_TEST (test_pad_probe_call_order)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+buffers_probe_handled (GstPad * pad, GstPadProbeInfo * info, gpointer gp)
+{
+  if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+
+    GST_DEBUG_OBJECT (pad, "buffer: %" GST_PTR_FORMAT ", refcount: %d",
+        buffer, (GST_MINI_OBJECT (buffer))->refcount);
+    gst_buffer_unref (buffer);
+  }
+
+  return GST_PAD_PROBE_HANDLED;
+}
+
+static GstPadProbeReturn
+buffers_probe_drop (GstPad * pad, GstPadProbeInfo * info, gboolean * called)
+{
+  if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+
+    GST_DEBUG_OBJECT (pad, "buffer: %" GST_PTR_FORMAT ", refcount: %d",
+        buffer, (GST_MINI_OBJECT (buffer))->refcount);
+    *called = TRUE;
+  }
+
+  return GST_PAD_PROBE_DROP;
+}
+
+GST_START_TEST (test_pad_probe_handled_and_drop)
+{
+  GstFlowReturn flow;
+  GstPad *src, *sink;
+  gboolean called;
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_active (src, TRUE);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+  gst_pad_set_active (sink, TRUE);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_stream_start ("test")) == TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
+  fail_unless_equals_int (gst_pad_link (src, sink), GST_PAD_LINK_OK);
+
+  gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) buffers_probe_handled, NULL, NULL);
+  gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) buffers_probe_drop, &called, NULL);
+
+  called = FALSE;
+  flow = gst_pad_push (src, gst_buffer_new ());
+  fail_unless_equals_int (flow, GST_FLOW_OK);
+  fail_if (called);
+
+  /* no buffer should have made it through to the sink pad, and especially
+   * not a NULL pointer buffer */
+  fail_if (buffers && buffers->data == NULL);
+  fail_unless (buffers == NULL);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 static gboolean got_notify;
 
 static void
@@ -3253,6 +3321,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_pad_probe_flush_events);
   tcase_add_test (tc_chain, test_pad_probe_flush_events_only);
   tcase_add_test (tc_chain, test_pad_probe_call_order);
+  tcase_add_test (tc_chain, test_pad_probe_handled_and_drop);
   tcase_add_test (tc_chain, test_events_query_unlinked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_not_linked);
