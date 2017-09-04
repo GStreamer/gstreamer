@@ -446,6 +446,7 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
     gst_base_parse_set_frame_rate (parse, rate, block_size, 0, 0);
   }
 
+cleanup:
   /* it is possible that DTS HD substream after DTS core */
   if (parse->flags & GST_BASE_PARSE_FLAG_DRAINING || map.size >= size + 9) {
     extra_size = 0;
@@ -469,17 +470,15 @@ gst_dca_parse_handle_frame (GstBaseParse * parse,
         }
       }
     }
+    gst_buffer_unmap (buf, &map);
     if (ret == GST_FLOW_OK && size + extra_size <= map.size) {
       ret = gst_base_parse_finish_frame (parse, frame, size + extra_size);
     } else {
       ret = GST_FLOW_OK;
     }
   } else {
-    ret = GST_FLOW_OK;
+    gst_buffer_unmap (buf, &map);
   }
-
-cleanup:
-  gst_buffer_unmap (buf, &map);
 
   return ret;
 }
