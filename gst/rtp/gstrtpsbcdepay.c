@@ -53,9 +53,22 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
         "encoding-name = (string) SBC")
     );
 
+enum
+{
+  PROP_0,
+  PROP_IGNORE_TIMESTAMPS,
+  PROP_LAST
+};
+
+#define DEFAULT_IGNORE_TIMESTAMPS FALSE
+
 #define gst_rtp_sbc_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSbcDepay, gst_rtp_sbc_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
+static void gst_rtp_sbc_depay_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_rtp_sbc_depay_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_rtp_sbc_depay_finalize (GObject * object);
 
 static gboolean gst_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base,
@@ -72,6 +85,13 @@ gst_rtp_sbc_depay_class_init (GstRtpSbcDepayClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtp_sbc_depay_finalize;
+  gobject_class->set_property = gst_rtp_sbc_depay_set_property;
+  gobject_class->get_property = gst_rtp_sbc_depay_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_IGNORE_TIMESTAMPS,
+      g_param_spec_boolean ("ignore-timestamps", "Ignore Timestamps",
+          "Various statistics", DEFAULT_IGNORE_TIMESTAMPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasertpdepayload_class->set_caps = gst_rtp_sbc_depay_setcaps;
   gstbasertpdepayload_class->process_rtp_packet = gst_rtp_sbc_depay_process;
@@ -95,6 +115,9 @@ static void
 gst_rtp_sbc_depay_init (GstRtpSbcDepay * rtpsbcdepay)
 {
   rtpsbcdepay->adapter = gst_adapter_new ();
+  rtpsbcdepay->stream_align =
+      gst_audio_stream_align_new (48000, 40 * GST_MSECOND, 1 * GST_SECOND);
+  rtpsbcdepay->ignore_timestamps = DEFAULT_IGNORE_TIMESTAMPS;
 }
 
 static void
@@ -102,9 +125,42 @@ gst_rtp_sbc_depay_finalize (GObject * object)
 {
   GstRtpSbcDepay *depay = GST_RTP_SBC_DEPAY (object);
 
+  gst_audio_stream_align_free (depay->stream_align);
   gst_object_unref (depay->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_rtp_sbc_depay_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstRtpSbcDepay *depay = GST_RTP_SBC_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_IGNORE_TIMESTAMPS:
+      depay->ignore_timestamps = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_sbc_depay_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstRtpSbcDepay *depay = GST_RTP_SBC_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_IGNORE_TIMESTAMPS:
+      g_value_set_boolean (value, depay->ignore_timestamps);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 /* FIXME: This duplicates similar functionality rtpsbcpay, but there isn't a
@@ -184,6 +240,9 @@ gst_rtp_sbc_depay_setcaps (GstRTPBaseDepayload * base, GstCaps * caps)
   if (oldcaps)
     gst_caps_unref (oldcaps);
 
+  /* Reset when the caps are changing */
+  gst_audio_stream_align_set_rate (depay->stream_align, depay->rate);
+
   return TRUE;
 
 bad_caps:
@@ -202,6 +261,9 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
   guint8 nframes;
   guint8 *payload;
   guint payload_len;
+  gint samples = 0;
+
+  GstClockTime timestamp;
 
   GST_LOG_OBJECT (depay, "Got %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (rtp->buffer));
@@ -210,6 +272,27 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     /* Marker isn't supposed to be set */
     GST_WARNING_OBJECT (depay, "Marker bit was set");
     goto bad_packet;
+  }
+
+  timestamp = GST_BUFFER_DTS_OR_PTS (rtp->buffer);
+  if (depay->ignore_timestamps && timestamp == GST_CLOCK_TIME_NONE) {
+    GstClockTime initial_timestamp;
+    guint64 n_samples;
+
+    initial_timestamp =
+        gst_audio_stream_align_get_timestamp_at_discont (depay->stream_align);
+    n_samples =
+        gst_audio_stream_align_get_samples_since_discont (depay->stream_align);
+
+    if (initial_timestamp == GST_CLOCK_TIME_NONE) {
+      GST_ERROR_OBJECT (depay,
+          "Can only ignore timestamps on streams without valid initial timestamp");
+      return NULL;
+    }
+
+    timestamp =
+        initial_timestamp + gst_util_uint64_scale (n_samples, GST_SECOND,
+        depay->rate);
   }
 
   payload = gst_rtp_buffer_get_payload (rtp);
@@ -243,15 +326,25 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     gst_adapter_push (depay->adapter, data);
 
     if (last) {
+      gint framelen, samples;
+      guint8 header[4];
+
       data = gst_adapter_take_buffer (depay->adapter,
           gst_adapter_available (depay->adapter));
       gst_rtp_drop_non_audio_meta (depay, data);
-    } else
-      data = NULL;
 
+      if (gst_buffer_extract (data, 0, &header, 4) != 4 ||
+          gst_rtp_sbc_depay_get_params (depay, header,
+              payload_len, &framelen, &samples) < 0) {
+        gst_buffer_unref (data);
+        goto bad_packet;
+      }
+    } else {
+      data = NULL;
+    }
   } else {
     /* !fragment */
-    gint framelen, samples;
+    gint framelen;
 
     GST_LOG_OBJECT (depay, "Got %d frames", nframes);
 
@@ -261,6 +354,8 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
       goto bad_packet;
     }
 
+    samples *= nframes;
+
     GST_LOG_OBJECT (depay, "Got payload of %d", payload_len);
 
     if (nframes * framelen > (gint) payload_len) {
@@ -269,6 +364,18 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     } else if (nframes * framelen < (gint) payload_len) {
       GST_WARNING_OBJECT (depay, "Junk at end of packet");
     }
+  }
+
+  if (depay->ignore_timestamps) {
+    GstClockTime duration;
+
+    gst_audio_stream_align_process (depay->stream_align,
+        GST_BUFFER_IS_DISCONT (rtp->buffer), timestamp, samples, &timestamp,
+        &duration, NULL);
+
+    GST_BUFFER_PTS (data) = timestamp;
+    GST_BUFFER_DTS (data) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (data) = duration;
   }
 
 out:

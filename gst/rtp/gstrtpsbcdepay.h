@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/rtp/gstrtpbasedepayload.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_SBC_DEPAY \
@@ -50,6 +51,10 @@ struct _GstRtpSbcDepay
 
   int rate;
   GstAdapter *adapter;
+  gboolean ignore_timestamps;
+
+  /* Timestamp tracking when ignoring input timestamps */
+  GstAudioStreamAlign *stream_align;
 };
 
 struct _GstRtpSbcDepayClass
