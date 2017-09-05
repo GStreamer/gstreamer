@@ -928,7 +928,15 @@ gst_rtp_h265_complete_au (GstRtpH265Depay * rtph265depay,
 												||  ((nt) == GST_H265_NAL_SLICE_IDR_N_LP)\
 												||  ((nt) == GST_H265_NAL_SLICE_CRA_NUT)		)
 
-#define NAL_TYPE_IS_KEY(nt) (NAL_TYPE_IS_PARAMETER_SET(nt) || NAL_TYPE_IS_CODED_SLICE_SEGMENT(nt))
+/* Intra random access point */
+#define NAL_TYPE_IS_IRAP(nt)   (((nt) == GST_H265_NAL_SLICE_BLA_W_LP)   \
+                             || ((nt) == GST_H265_NAL_SLICE_BLA_W_RADL) \
+                             || ((nt) == GST_H265_NAL_SLICE_BLA_N_LP)   \
+                             || ((nt) == GST_H265_NAL_SLICE_IDR_W_RADL) \
+                             || ((nt) == GST_H265_NAL_SLICE_IDR_N_LP)   \
+                             || ((nt) == GST_H265_NAL_SLICE_CRA_NUT))
+
+#define NAL_TYPE_IS_KEY(nt) (NAL_TYPE_IS_PARAMETER_SET(nt) || NAL_TYPE_IS_IRAP(nt))
 
 static GstBuffer *
 gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
