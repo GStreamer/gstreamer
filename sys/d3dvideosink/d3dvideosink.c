@@ -470,6 +470,7 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   return TRUE;
 #endif
 
+  /* FIXME re-using buffer pool breaks renegotiation */
   GST_OBJECT_LOCK (sink);
   pool = sink->pool ? gst_object_ref (sink->pool) : NULL;
   GST_OBJECT_UNLOCK (sink);
@@ -489,9 +490,7 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       pool = NULL;
     }
     gst_structure_free (config);
-  }
-
-  if (pool == NULL && need_pool) {
+  } else {
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps)) {
@@ -500,11 +499,13 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       return FALSE;
     }
 
-    GST_DEBUG_OBJECT (sink, "create new pool");
-    pool = gst_d3dsurface_buffer_pool_new (sink);
-
     /* the normal size of a frame */
     size = info.size;
+  }
+
+  if (pool == NULL && need_pool) {
+    GST_DEBUG_OBJECT (sink, "create new pool");
+    pool = gst_d3dsurface_buffer_pool_new (sink);
 
     config = gst_buffer_pool_get_config (pool);
     /* we need at least 2 buffer because we hold on to the last one */
@@ -516,11 +517,10 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     }
   }
 
-  if (pool) {
-    /* we need at least 2 buffer because we hold on to the last one */
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool)
     gst_object_unref (pool);
-  }
 
   return TRUE;
 }

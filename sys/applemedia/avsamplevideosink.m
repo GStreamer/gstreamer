@@ -782,6 +782,7 @@ gst_av_sample_video_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
   if (caps == NULL)
     goto no_caps;
 
+  /* FIXME re-using buffer pool breaks renegotiation */
   if ((pool = av_sink->pool))
     gst_object_ref (pool);
 
@@ -800,19 +801,19 @@ gst_av_sample_video_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
       pool = NULL;
     }
     gst_structure_free (config);
-  }
-
-  if (pool == NULL && need_pool) {
+  } else {
     GstVideoInfo info;
 
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
-    GST_DEBUG_OBJECT (av_sink, "create new pool");
-    pool = gst_video_buffer_pool_new ();
-
     /* the normal size of a frame */
     size = info.size;
+  }
+
+  if (pool == NULL && need_pool) {
+    GST_DEBUG_OBJECT (av_sink, "create new pool");
+    pool = gst_video_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
@@ -820,10 +821,9 @@ gst_av_sample_video_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
       goto config_failed;
   }
   /* we need at least 2 buffer because we hold on to the last one */
-  if (pool) {
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool)
     gst_object_unref (pool);
-  }
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);

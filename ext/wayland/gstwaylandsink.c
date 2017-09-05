@@ -536,10 +536,9 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (need_pool)
     pool = gst_wayland_create_pool (sink, caps);
 
-  if (pool) {
-    gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
+  gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
+  if (pool)
     g_object_unref (pool);
-  }
 
   gst_query_add_allocation_param (query, gst_wl_shm_allocator_get (), NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);

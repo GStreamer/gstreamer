@@ -2273,6 +2273,12 @@ gst_dfbvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
+  if (!caps) {
+    GST_WARNING_OBJECT (dfbvideosink, "Missing caps in allocation query.");
+    return FALSE;
+  }
+
+  /* FIXME re-using buffer pool breaks renegotiation */
   if ((pool = dfbvideosink->pool))
     gst_object_ref (pool);
 
@@ -2293,6 +2299,16 @@ gst_dfbvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       return FALSE;
     }
     gst_structure_free (config);
+  } else {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (caps)) {
+      GST_WARNING_OBJECT (dfbvideosink,
+          "Invalid video caps in allocation query");
+      return FALSE;
+    }
+
+    size = info.size;
   }
 
   gst_query_add_allocation_pool (query, pool, size, 1, 0);

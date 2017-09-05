@@ -202,6 +202,7 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
+  GstVideoInfo info;
   guint size;
   gboolean need_pool;
   GstStructure *allocation_meta = NULL;
@@ -215,17 +216,15 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
+
+  /* the normal size of a frame */
+  size = info.size;
+
   if (need_pool) {
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      goto invalid_caps;
-
     GST_DEBUG_OBJECT (gtk_sink, "create new pool");
     pool = gst_gl_buffer_pool_new (gtk_sink->context);
-
-    /* the normal size of a frame */
-    size = info.size;
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
@@ -234,11 +233,12 @@ gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
-
-    /* we need at least 2 buffer because we hold on to the last one */
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-    gst_object_unref (pool);
   }
+
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool)
+    gst_object_unref (pool);
 
   GST_OBJECT_LOCK (gtk_sink);
   display_width = gtk_sink->display_width;

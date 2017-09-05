@@ -730,6 +730,7 @@ gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
+  GstVideoInfo info;
   guint size;
   gboolean need_pool;
 
@@ -741,15 +742,13 @@ gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
   if (caps == NULL)
     goto no_caps;
 
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
+
+  /* the normal size of a frame */
+  size = info.size;
+
   if (need_pool) {
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      goto invalid_caps;
-
-    /* the normal size of a frame */
-    size = info.size;
-
     GST_DEBUG_OBJECT (ca_sink, "create new pool");
 
     pool = gst_gl_buffer_pool_new (ca_sink->context);
@@ -758,11 +757,12 @@ gst_ca_opengl_layer_sink_propose_allocation (GstBaseSink * bsink, GstQuery * que
 
     if (!gst_buffer_pool_set_config (pool, config))
         goto config_failed;
-
-    /* we need at least 2 buffer because we hold on to the last one */
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
-    gst_object_unref (pool);
   }
+
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool)
+    gst_object_unref (pool);
 
   if (ca_sink->context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);

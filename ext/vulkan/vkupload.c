@@ -109,23 +109,23 @@ _buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
   struct BufferUpload *raw = impl;
   gboolean need_pool;
   GstCaps *caps;
+  GstVideoInfo info;
   guint size;
+  GstBufferPool *pool = NULL;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
   if (caps == NULL)
     return;
 
+  if (!gst_video_info_from_caps (&info, caps))
+    return;
+
+  /* the normal size of a frame */
+  size = info.size;
+
   if (need_pool) {
-    GstBufferPool *pool;
     GstStructure *config;
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      return;
-
-    /* the normal size of a frame */
-    size = info.size;
 
     pool = gst_vulkan_buffer_pool_new (raw->upload->device);
 
@@ -136,10 +136,11 @@ _buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
       g_object_unref (pool);
       return;
     }
-
-    gst_query_add_allocation_pool (query, pool, size, 1, 0);
-    g_object_unref (pool);
   }
+
+  gst_query_add_allocation_pool (query, pool, size, 1, 0);
+  if (pool)
+    g_object_unref (pool);
 
   return;
 }
