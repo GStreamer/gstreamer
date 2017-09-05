@@ -56,7 +56,8 @@ struct _GstRtpH265Depay
 {
   GstRTPBaseDepayload depayload;
 
-  gchar *stream_format;
+  const gchar *stream_format;
+  GstH265StreamFormat output_format;  /* bytestream, hvc1 or hev1 */
   gboolean byte_stream;
 
   GstBuffer *codec_data;

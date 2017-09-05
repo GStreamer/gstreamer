@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (rtph265depay_debug);
 
 /* This is what we'll default to when downstream hasn't
  * expressed a restriction or preference via caps */
-#define DEFAULT_BYTE_STREAM   TRUE
+#define DEFAULT_STREAM_FORMAT GST_H265_STREAM_FORMAT_BYTESTREAM
 #define DEFAULT_ACCESS_UNIT   FALSE
 
 /* 3 zero bytes syncword */
@@ -144,7 +144,9 @@ gst_rtp_h265_depay_init (GstRtpH265Depay * rtph265depay)
 {
   rtph265depay->adapter = gst_adapter_new ();
   rtph265depay->picture_adapter = gst_adapter_new ();
-  rtph265depay->byte_stream = DEFAULT_BYTE_STREAM;
+  rtph265depay->output_format = DEFAULT_STREAM_FORMAT;
+  rtph265depay->byte_stream =
+      (DEFAULT_STREAM_FORMAT == GST_H265_STREAM_FORMAT_BYTESTREAM);
   rtph265depay->stream_format = NULL;
   rtph265depay->merge = DEFAULT_ACCESS_UNIT;
   rtph265depay->vps = g_ptr_array_new_with_free_func (
@@ -189,8 +191,6 @@ gst_rtp_h265_depay_finalize (GObject * object)
   if (rtph265depay->codec_data)
     gst_buffer_unref (rtph265depay->codec_data);
 
-  g_free (rtph265depay->stream_format);
-
   g_object_unref (rtph265depay->adapter);
   g_object_unref (rtph265depay->picture_adapter);
 
@@ -201,11 +201,27 @@ gst_rtp_h265_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static inline const gchar *
+stream_format_get_nick (GstH265StreamFormat fmt)
+{
+  switch (fmt) {
+    case GST_H265_STREAM_FORMAT_BYTESTREAM:
+      return "byte-stream";
+    case GST_H265_STREAM_FORMAT_HVC1:
+      return "hvc1";
+    case GST_H265_STREAM_FORMAT_HEV1:
+      return "hev1";
+    default:
+      break;
+  }
+  return "unknown";
+}
+
 static void
 gst_rtp_h265_depay_negotiate (GstRtpH265Depay * rtph265depay)
 {
+  GstH265StreamFormat stream_format = GST_H265_STREAM_FORMAT_UNKNOWN;
   GstCaps *caps;
-  gint byte_stream = -1;
   gint merge = -1;
 
   caps =
@@ -219,15 +235,14 @@ gst_rtp_h265_depay_negotiate (GstRtpH265Depay * rtph265depay)
       const gchar *str = NULL;
 
       if ((str = gst_structure_get_string (s, "stream-format"))) {
-        g_free (rtph265depay->stream_format);
-        rtph265depay->stream_format = g_strdup (str);
+        rtph265depay->stream_format = g_intern_string (str);
 
         if (strcmp (str, "hev1") == 0) {
-          byte_stream = FALSE;
+          stream_format = GST_H265_STREAM_FORMAT_HEV1;
         } else if (strcmp (str, "hvc1") == 0) {
-          byte_stream = FALSE;
+          stream_format = GST_H265_STREAM_FORMAT_HVC1;
         } else if (strcmp (str, "byte-stream") == 0) {
-          byte_stream = TRUE;
+          stream_format = GST_H265_STREAM_FORMAT_BYTESTREAM;
         } else {
           GST_DEBUG_OBJECT (rtph265depay, "unknown stream-format: %s", str);
         }
@@ -246,17 +261,20 @@ gst_rtp_h265_depay_negotiate (GstRtpH265Depay * rtph265depay)
     gst_caps_unref (caps);
   }
 
-  if (byte_stream != -1) {
-    GST_DEBUG_OBJECT (rtph265depay, "downstream requires byte-stream %d",
-        byte_stream);
-    rtph265depay->byte_stream = byte_stream;
+  if (stream_format != GST_H265_STREAM_FORMAT_UNKNOWN) {
+    GST_DEBUG_OBJECT (rtph265depay, "downstream wants stream-format %s",
+        stream_format_get_nick (stream_format));
+    rtph265depay->output_format = stream_format;
   } else {
-    GST_DEBUG_OBJECT (rtph265depay, "defaulting to byte-stream %d",
-        DEFAULT_BYTE_STREAM);
-    g_free (rtph265depay->stream_format);
-    rtph265depay->stream_format = g_strdup ("byte-stream");
-    rtph265depay->byte_stream = DEFAULT_BYTE_STREAM;
+    GST_DEBUG_OBJECT (rtph265depay, "defaulting to output stream-format %s",
+        stream_format_get_nick (DEFAULT_STREAM_FORMAT));
+    rtph265depay->stream_format =
+        stream_format_get_nick (DEFAULT_STREAM_FORMAT);
+    rtph265depay->output_format = DEFAULT_STREAM_FORMAT;
   }
+  rtph265depay->byte_stream =
+      (rtph265depay->output_format == GST_H265_STREAM_FORMAT_BYTESTREAM);
+
   if (merge != -1) {
     GST_DEBUG_OBJECT (rtph265depay, "downstream requires merge %d", merge);
     rtph265depay->merge = merge;
