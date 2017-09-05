@@ -802,7 +802,8 @@ GST_START_TEST (test_allocation_query)
   fail_unless (gst_query_get_n_allocation_pools (query), 1);
   gst_query_parse_nth_allocation_pool (query, 0, NULL, &size, &min, &max);
   fail_unless (size == 130);
-  fail_unless (min == 2);
+  /* The tee will allocate one more buffer when multiplexing */
+  fail_unless (min == 2 + 1);
   fail_unless (max == 0);
 
   fail_unless (gst_query_get_n_allocation_params (query), 1);

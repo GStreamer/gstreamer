@@ -573,6 +573,7 @@ struct AllocQueryCtx
   guint size;
   guint min_buffers;
   gboolean first_query;
+  guint num_pads;
 };
 
 /* This function will aggregate some of the allocation query information with
@@ -715,6 +716,7 @@ gst_tee_query_allocation (const GValue * item, GValue * ret, gpointer user_data)
   }
 
   ctx->first_query = FALSE;
+  ctx->num_pads++;
   gst_query_unref (query);
 
   return TRUE;
@@ -758,6 +760,7 @@ gst_tee_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         gst_allocation_params_init (&ctx.params);
         ctx.size = 0;
         ctx.min_buffers = 0;
+        ctx.num_pads = 0;
         gst_tee_clear_query_allocation_meta (query);
       }
 
@@ -788,6 +791,11 @@ gst_tee_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
                         NULL)));
         }
 #endif
+
+        /* Allocate one more buffers when multiplexing so we don't starve the
+         * downstream threads. */
+        if (ctx.num_pads > 1)
+          ctx.min_buffers++;
 
         gst_query_add_allocation_param (ctx.query, NULL, &ctx.params);
         gst_query_add_allocation_pool (ctx.query, NULL, ctx.size,
