@@ -1,6 +1,10 @@
 # Stream selection
 
-History
+This document describes the events and objects involved in stream
+selection in GStreamer pipelines, elements and applications
+
+## History
+
 ```
 v0.1: Jun 11th 2015
    Initial Draft
@@ -9,9 +13,6 @@ v0.2: Sep 18th 2015
 v1.0: Jun 28th 2016
    Pre-commit revision
 ```
-
-This document describes the events and objects involved in stream
-selection in GStreamer pipelines, elements and applications
 
 ##  Background
 
