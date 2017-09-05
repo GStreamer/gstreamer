@@ -24,7 +24,7 @@
  *
  * This element encodes raw integer PCM audio into a Bluetooth SBC audio.
  *
- * Encoding paramets such as blocks, subbands, bitpool, channel-mode, and
+ * Encoding parameters such as blocks, subbands, bitpool, channel-mode, and
  * allocation-mode can be set by adding a capsfilter element with appropriate
  * filtercaps after the sbcenc encoder element.
  *
