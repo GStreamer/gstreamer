@@ -1,8 +1,12 @@
 gstreamer-sharp
 =========
 
-gstreamer-sharp is a .NET/mono binding for Gstreamer generated from gobject-introspection data using the [bindinator]. gstreamer-sharp currently wraps the API exposed by Gstreamer 1.4 and is compatible with newer gstreamer versions. It was developed under GSoC 2014 for the mono organization.
-gstreamer-sharp covers the core and base gstreamer libraries.
+gstreamer-sharp is a .NET/mono binding for Gstreamer
+generated from gobject-introspection data using the [bindinator].
+gstreamer-sharp currently wraps the API exposed by Gstreamer 1.12
+and is compatible with newer gstreamer versions. It was developed
+under GSoC 2014 for the mono organization. gstreamer-sharp covers
+the core and base gstreamer libraries.
 
 Prerequisites
 ----
@@ -32,7 +36,8 @@ gstreamer-sharp provides ports of all samples from gst-docs in the samples folde
 Documentation
 ----
 
-Since this is a gobject-introspection binding the recommended documentation is the native [gstreamer](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/) documentation. A monodoc generated documentation will be installed.
+Since this is a gobject-introspection binding the recommended documentation is
+the native [gstreamer] documentation. A monodoc generated documentation will be installed.
 
 Roadmap
 ----
@@ -44,5 +49,6 @@ License
 ----
 gstreamer-sharp is licensed under the [LGPL 2.1](https://www.gnu.org/licenses/lgpl-2.1.html)
 
-[bindinator]:https://github.com/shana/bindinator
-[gtk-sharp]:https://github.com/openmedicus/gtk-sharp
+[bindinator]:https://github.com/gtk-sharp/bindinator
+[gtk-sharp]:https://github.com/gtk-sharp/gtk-sharp
+[gstreamer]: http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/
