@@ -661,7 +661,8 @@ gst_jpeg_dec_ensure_buffers (GstJpegDec * dec, guint maxrowbytes)
 }
 
 static void
-gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, GstVideoFrame * frame)
+gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, GstVideoFrame * frame,
+    guint field, guint num_fields)
 {
   guchar *rows[16];
   guchar **scanarray[1] = { rows };
@@ -674,14 +675,18 @@ gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, GstVideoFrame * frame)
   GST_DEBUG_OBJECT (dec, "indirect decoding of grayscale");
 
   width = GST_VIDEO_FRAME_WIDTH (frame);
-  height = GST_VIDEO_FRAME_HEIGHT (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame) / num_fields;
 
   if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
     return;
 
   base[0] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  if (field == 2) {
+    base[0] += GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  }
+
   pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
-  rstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  rstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) * num_fields;
 
   memcpy (rows, dec->idr_y, 16 * sizeof (gpointer));
 
@@ -706,7 +711,8 @@ gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, GstVideoFrame * frame)
 }
 
 static void
-gst_jpeg_dec_decode_rgb (GstJpegDec * dec, GstVideoFrame * frame)
+gst_jpeg_dec_decode_rgb (GstJpegDec * dec, GstVideoFrame * frame,
+    guint field, guint num_fields)
 {
   guchar *r_rows[16], *g_rows[16], *b_rows[16];
   guchar **scanarray[3] = { r_rows, g_rows, b_rows };
@@ -719,16 +725,19 @@ gst_jpeg_dec_decode_rgb (GstJpegDec * dec, GstVideoFrame * frame)
   GST_DEBUG_OBJECT (dec, "indirect decoding of RGB");
 
   width = GST_VIDEO_FRAME_WIDTH (frame);
-  height = GST_VIDEO_FRAME_HEIGHT (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame) / num_fields;
 
   if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
     return;
 
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < 3; i++) {
     base[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+    if (field == 2)
+      base[i] += GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+  }
 
   pstride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
-  rstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  rstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) * num_fields;
 
   memcpy (r_rows, dec->idr_y, 16 * sizeof (gpointer));
   memcpy (g_rows, dec->idr_u, 16 * sizeof (gpointer));
@@ -760,14 +769,14 @@ gst_jpeg_dec_decode_rgb (GstJpegDec * dec, GstVideoFrame * frame)
 
 static void
 gst_jpeg_dec_decode_indirect (GstJpegDec * dec, GstVideoFrame * frame, gint r_v,
-    gint r_h, gint comp)
+    gint r_h, gint comp, guint field, guint num_fields)
 {
   guchar *y_rows[16], *u_rows[16], *v_rows[16];
   guchar **scanarray[3] = { y_rows, u_rows, v_rows };
   gint i, j, k;
   gint lines;
   guchar *base[3], *last[3];
-  gint stride[3];
+  gint rowsize[3], stride[3];
   gint width, height;
 
   GST_DEBUG_OBJECT (dec,
@@ -781,11 +790,16 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, GstVideoFrame * frame, gint r_v,
 
   for (i = 0; i < 3; i++) {
     base[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
-    stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+    stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i) * num_fields;
+    rowsize[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
     /* make sure we don't make jpeglib write beyond our buffer,
      * which might happen if (height % (r_v*DCTSIZE)) != 0 */
     last[i] = base[i] + (GST_VIDEO_FRAME_COMP_STRIDE (frame, i) *
         (GST_VIDEO_FRAME_COMP_HEIGHT (frame, i) - 1));
+
+    if (field == 2) {
+      base[i] += GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+    }
   }
 
   memcpy (y_rows, dec->idr_y, 16 * sizeof (gpointer));
@@ -806,22 +820,22 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, GstVideoFrame * frame, gint r_v,
     if (G_LIKELY (lines > 0)) {
       for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
         if (G_LIKELY (base[0] <= last[0])) {
-          memcpy (base[0], y_rows[j], stride[0]);
+          memcpy (base[0], y_rows[j], rowsize[0]);
           base[0] += stride[0];
         }
         if (r_v == 2) {
           if (G_LIKELY (base[0] <= last[0])) {
-            memcpy (base[0], y_rows[j + 1], stride[0]);
+            memcpy (base[0], y_rows[j + 1], rowsize[0]);
             base[0] += stride[0];
           }
         }
         if (G_LIKELY (base[1] <= last[1] && base[2] <= last[2])) {
           if (r_h == 2) {
-            memcpy (base[1], u_rows[k], stride[1]);
-            memcpy (base[2], v_rows[k], stride[2]);
+            memcpy (base[1], u_rows[k], rowsize[1]);
+            memcpy (base[2], v_rows[k], rowsize[2]);
           } else if (r_h == 1) {
-            hresamplecpy1 (base[1], u_rows[k], stride[1]);
-            hresamplecpy1 (base[2], v_rows[k], stride[2]);
+            hresamplecpy1 (base[1], u_rows[k], rowsize[1]);
+            hresamplecpy1 (base[2], v_rows[k], rowsize[2]);
           } else {
             /* FIXME: implement (at least we avoid crashing by doing nothing) */
           }
@@ -839,7 +853,8 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, GstVideoFrame * frame, gint r_v,
 }
 
 static GstFlowReturn
-gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame)
+gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
+    guint field, guint num_fields)
 {
   guchar **line[3];             /* the jpeg line buffer         */
   guchar *y[4 * DCTSIZE] = { NULL, };   /* alloc enough for the lines   */
@@ -866,11 +881,15 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame)
 
   for (i = 0; i < 3; i++) {
     base[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
-    stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+    stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i) * num_fields;
     /* make sure we don't make jpeglib write beyond our buffer,
      * which might happen if (height % (r_v*DCTSIZE)) != 0 */
     last[i] = base[i] + (GST_VIDEO_FRAME_COMP_STRIDE (frame, i) *
         (GST_VIDEO_FRAME_COMP_HEIGHT (frame, i) - 1));
+
+    if (field == 2) {
+      base[i] += GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+    }
   }
 
   /* let jpeglib decode directly into our final buffer */
@@ -921,7 +940,8 @@ format_not_supported:
 }
 
 static void
-gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
+gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
+    gboolean interlaced)
 {
   GstVideoCodecState *outstate;
   GstVideoInfo *info;
@@ -969,6 +989,12 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
       break;
   }
 
+  if (interlaced) {
+    outstate->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+    GST_VIDEO_INFO_FIELD_ORDER (&outstate->info) =
+        GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+  }
+
   gst_video_codec_state_unref (outstate);
 
   gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
@@ -978,33 +1004,10 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
 }
 
 static GstFlowReturn
-gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
+gst_jpeg_dec_prepare_decode (GstJpegDec * dec)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstJpegDec *dec = (GstJpegDec *) bdec;
-  GstVideoFrame vframe;
-  gint width, height;
-  gint r_h, r_v;
-  guint code, hdr_ok;
-  gboolean need_unmap = TRUE;
-  GstVideoCodecState *state = NULL;
-  gboolean release_frame = TRUE;
-
-  dec->current_frame = frame;
-  gst_buffer_map (frame->input_buffer, &dec->current_frame_map, GST_MAP_READ);
-
-  dec->cinfo.src->next_input_byte = dec->current_frame_map.data;
-  dec->cinfo.src->bytes_in_buffer = dec->current_frame_map.size;
-
-  if (setjmp (dec->jerr.setjmp_buffer)) {
-    code = dec->jerr.pub.msg_code;
-
-    if (code == JERR_INPUT_EOF) {
-      GST_DEBUG ("jpeg input EOF error, we probably need more data");
-      goto need_more_data;
-    }
-    goto decode_error;
-  }
+  G_GNUC_UNUSED GstFlowReturn ret;
+  guint r_h, r_v, hdr_ok;
 
   /* read header */
   hdr_ok = jpeg_read_header (&dec->cinfo, TRUE);
@@ -1082,14 +1085,159 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
       break;
   }
 
+  if (G_UNLIKELY (dec->cinfo.output_width < MIN_WIDTH ||
+          dec->cinfo.output_width > MAX_WIDTH ||
+          dec->cinfo.output_height < MIN_HEIGHT ||
+          dec->cinfo.output_height > MAX_HEIGHT))
+    goto wrong_size;
+
+  return GST_FLOW_OK;
+
+/* ERRORS */
+wrong_size:
+  {
+    ret = GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
+        (_("Failed to decode JPEG image")),
+        ("Picture is too small or too big (%ux%u)", dec->cinfo.output_width,
+            dec->cinfo.output_height), ret);
+    return GST_FLOW_ERROR;
+  }
+components_not_supported:
+  {
+    ret = GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
+        (_("Failed to decode JPEG image")),
+        ("number of components not supported: %d (max 3)",
+            dec->cinfo.num_components), ret);
+    jpeg_abort_decompress (&dec->cinfo);
+    return GST_FLOW_ERROR;
+  }
+unsupported_colorspace:
+  {
+    ret = GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
+        (_("Failed to decode JPEG image")),
+        ("Picture has unknown or unsupported colourspace"), ret);
+    jpeg_abort_decompress (&dec->cinfo);
+    return GST_FLOW_ERROR;
+  }
+invalid_yuvrgbgrayscale:
+  {
+    ret = GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
+        (_("Failed to decode JPEG image")),
+        ("Picture is corrupt or unhandled YUV/RGB/grayscale layout"), ret);
+    jpeg_abort_decompress (&dec->cinfo);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_jpeg_dec_decode (GstJpegDec * dec, GstVideoFrame * vframe, guint width,
+    guint height, guint field, guint num_fields)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (dec->cinfo.jpeg_color_space == JCS_RGB) {
+    gst_jpeg_dec_decode_rgb (dec, vframe, field, num_fields);
+  } else if (dec->cinfo.jpeg_color_space == JCS_GRAYSCALE) {
+    gst_jpeg_dec_decode_grayscale (dec, vframe, field, num_fields);
+  } else {
+    GST_LOG_OBJECT (dec, "decompressing (required scanline buffer height = %u)",
+        dec->cinfo.rec_outbuf_height);
+
+    /* For some widths jpeglib requires more horizontal padding than I420 
+     * provides. In those cases we need to decode into separate buffers and then
+     * copy over the data into our final picture buffer, otherwise jpeglib might
+     * write over the end of a line into the beginning of the next line,
+     * resulting in blocky artifacts on the left side of the picture. */
+    if (G_UNLIKELY (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0
+            || dec->cinfo.comp_info[0].h_samp_factor != 2
+            || dec->cinfo.comp_info[1].h_samp_factor != 1
+            || dec->cinfo.comp_info[2].h_samp_factor != 1)) {
+      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
+          "indirect decoding using extra buffer copy");
+      gst_jpeg_dec_decode_indirect (dec, vframe,
+          dec->cinfo.comp_info[0].v_samp_factor,
+          dec->cinfo.comp_info[0].h_samp_factor, dec->cinfo.num_components,
+          field, num_fields);
+    } else {
+      ret = gst_jpeg_dec_decode_direct (dec, vframe, field, num_fields);
+    }
+  }
+
+  GST_LOG_OBJECT (dec, "decompressing finished: %s", gst_flow_get_name (ret));
+
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    jpeg_abort_decompress (&dec->cinfo);
+  } else {
+    jpeg_finish_decompress (&dec->cinfo);
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstJpegDec *dec = (GstJpegDec *) bdec;
+  GstVideoFrame vframe;
+  gint num_fields;              /* number of fields (1 or 2) */
+  gint output_height;           /* height of output image (one or two fields) */
+  gint height;                  /* height of current frame (whole image or a field) */
+  gint width;
+  guint code;
+  gboolean need_unmap = TRUE;
+  GstVideoCodecState *state = NULL;
+  gboolean release_frame = TRUE;
+
+  dec->current_frame = frame;
+  gst_buffer_map (frame->input_buffer, &dec->current_frame_map, GST_MAP_READ);
+
+  dec->cinfo.src->next_input_byte = dec->current_frame_map.data;
+  dec->cinfo.src->bytes_in_buffer = dec->current_frame_map.size;
+
+  if (setjmp (dec->jerr.setjmp_buffer)) {
+    code = dec->jerr.pub.msg_code;
+
+    if (code == JERR_INPUT_EOF) {
+      GST_DEBUG ("jpeg input EOF error, we probably need more data");
+      goto need_more_data;
+    }
+    goto decode_error;
+  }
+
+  /* read header and check values */
+  ret = gst_jpeg_dec_prepare_decode (dec);
+  if (G_UNLIKELY (ret == GST_FLOW_ERROR))
+    goto done;
+
   width = dec->cinfo.output_width;
   height = dec->cinfo.output_height;
 
-  if (G_UNLIKELY (width < MIN_WIDTH || width > MAX_WIDTH ||
-          height < MIN_HEIGHT || height > MAX_HEIGHT))
-    goto wrong_size;
+  /* is it interlaced MJPEG? (we really don't want to scan the jpeg data
+   * to see if there are two SOF markers in the packet to detect this) */
+  if (gst_video_decoder_get_packetized (bdec) &&
+      dec->input_state->info.height <= (height * 2)
+      && dec->input_state->info.width == width) {
+    GST_LOG_OBJECT (dec,
+        "looks like an interlaced image: "
+        "input width/height of %dx%d with JPEG frame width/height of %dx%d",
+        dec->input_state->info.height, dec->input_state->info.width, width,
+        height);
+    output_height = dec->input_state->info.height;
+    height = dec->input_state->info.height / 2;
+    num_fields = 2;
+    GST_LOG_OBJECT (dec, "field height=%d", height);
+  } else {
+    output_height = height;
+    num_fields = 1;
+  }
 
-  gst_jpeg_dec_negotiate (dec, width, height, dec->cinfo.jpeg_color_space);
+  gst_jpeg_dec_negotiate (dec, width, output_height,
+      dec->cinfo.jpeg_color_space, num_fields == 2);
 
   state = gst_video_decoder_get_output_state (bdec);
   ret = gst_video_decoder_allocate_output_frame (bdec, frame);
@@ -1106,46 +1254,68 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
     goto decode_error;
   }
 
-  GST_LOG_OBJECT (dec, "width %d, height %d", width, height);
+  GST_LOG_OBJECT (dec, "width %d, height %d, fields %d", width, output_height,
+      num_fields);
 
-  if (dec->cinfo.jpeg_color_space == JCS_RGB) {
-    gst_jpeg_dec_decode_rgb (dec, &vframe);
-  } else if (dec->cinfo.jpeg_color_space == JCS_GRAYSCALE) {
-    gst_jpeg_dec_decode_grayscale (dec, &vframe);
-  } else {
-    GST_LOG_OBJECT (dec, "decompressing (reqired scanline buffer height = %u)",
-        dec->cinfo.rec_outbuf_height);
-
-    /* For some widths jpeglib requires more horizontal padding than I420 
-     * provides. In those cases we need to decode into separate buffers and then
-     * copy over the data into our final picture buffer, otherwise jpeglib might
-     * write over the end of a line into the beginning of the next line,
-     * resulting in blocky artifacts on the left side of the picture. */
-    if (G_UNLIKELY (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0
-            || dec->cinfo.comp_info[0].h_samp_factor != 2
-            || dec->cinfo.comp_info[1].h_samp_factor != 1
-            || dec->cinfo.comp_info[2].h_samp_factor != 1)) {
-      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
-          "indirect decoding using extra buffer copy");
-      gst_jpeg_dec_decode_indirect (dec, &vframe, r_v, r_h,
-          dec->cinfo.num_components);
-    } else {
-      ret = gst_jpeg_dec_decode_direct (dec, &vframe);
-
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
-        goto decode_direct_failed;
-    }
+  ret = gst_jpeg_dec_decode (dec, &vframe, width, height, 1, num_fields);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    gst_video_frame_unmap (&vframe);
+    goto decode_failed;
   }
-
-  gst_video_frame_unmap (&vframe);
 
   if (setjmp (dec->jerr.setjmp_buffer)) {
     code = dec->jerr.pub.msg_code;
+    gst_video_frame_unmap (&vframe);
     goto decode_error;
   }
 
-  GST_LOG_OBJECT (dec, "decompressing finished");
-  jpeg_finish_decompress (&dec->cinfo);
+  /* decode second field if there is one */
+  if (num_fields == 2) {
+    GstVideoFormat field2_format;
+
+    /* skip any chunk or padding bytes before the next SOI marker; both fields
+     * are in one single buffer here, so direct access should be fine here */
+    while (dec->jsrc.pub.bytes_in_buffer > 2 &&
+        GST_READ_UINT16_BE (dec->jsrc.pub.next_input_byte) != 0xffd8) {
+      --dec->jsrc.pub.bytes_in_buffer;
+      ++dec->jsrc.pub.next_input_byte;
+    }
+
+    if (gst_jpeg_dec_prepare_decode (dec) != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (dec, "problem reading jpeg header of 2nd field");
+      /* FIXME: post a warning message here? */
+      gst_video_frame_unmap (&vframe);
+      goto decode_failed;
+    }
+
+    /* check if format has changed for the second field */
+    switch (dec->cinfo.jpeg_color_space) {
+      case JCS_RGB:
+        field2_format = GST_VIDEO_FORMAT_RGB;
+        break;
+      case JCS_GRAYSCALE:
+        field2_format = GST_VIDEO_FORMAT_GRAY8;
+        break;
+      default:
+        field2_format = GST_VIDEO_FORMAT_I420;
+        break;
+    }
+
+    if (dec->cinfo.output_width != GST_VIDEO_INFO_WIDTH (&state->info) ||
+        dec->cinfo.output_height * 2 > GST_VIDEO_INFO_HEIGHT (&state->info) ||
+        field2_format != GST_VIDEO_INFO_FORMAT (&state->info)) {
+      GST_WARNING_OBJECT (dec, "second field has different format than first");
+      gst_video_frame_unmap (&vframe);
+      goto decode_failed;
+    }
+
+    ret = gst_jpeg_dec_decode (dec, &vframe, width, height, 2, 2);
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      gst_video_frame_unmap (&vframe);
+      goto decode_failed;
+    }
+  }
+  gst_video_frame_unmap (&vframe);
 
   gst_buffer_unmap (frame->input_buffer, &dec->current_frame_map);
   ret = gst_video_decoder_finish_frame (bdec, frame);
@@ -1175,14 +1345,6 @@ need_more_data:
     goto exit;
   }
   /* ERRORS */
-wrong_size:
-  {
-    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
-        (_("Failed to decode JPEG image")),
-        ("Picture is too small or too big (%ux%u)", width, height), ret);
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
 decode_error:
   {
     gchar err_msg[JMSG_LENGTH_MAX];
@@ -1201,10 +1363,9 @@ decode_error:
 
     goto done;
   }
-decode_direct_failed:
+decode_failed:
   {
     /* already posted an error message */
-    jpeg_abort_decompress (&dec->cinfo);
     goto done;
   }
 alloc_failed:
@@ -1224,31 +1385,6 @@ alloc_failed:
       jpeg_abort_decompress (&dec->cinfo);
     }
     goto exit;
-  }
-components_not_supported:
-  {
-    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
-        (_("Failed to decode JPEG image")),
-        ("number of components not supported: %d (max 3)",
-            dec->cinfo.num_components), ret);
-    jpeg_abort_decompress (&dec->cinfo);
-    goto done;
-  }
-unsupported_colorspace:
-  {
-    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
-        (_("Failed to decode JPEG image")),
-        ("Picture has unknown or unsupported colourspace"), ret);
-    jpeg_abort_decompress (&dec->cinfo);
-    goto done;
-  }
-invalid_yuvrgbgrayscale:
-  {
-    GST_VIDEO_DECODER_ERROR (dec, 1, STREAM, DECODE,
-        (_("Failed to decode JPEG image")),
-        ("Picture is corrupt or unhandled YUV/RGB/grayscale layout"), ret);
-    jpeg_abort_decompress (&dec->cinfo);
-    goto done;
   }
 }
 
