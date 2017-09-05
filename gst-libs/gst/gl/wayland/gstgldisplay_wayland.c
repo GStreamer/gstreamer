@@ -91,6 +91,10 @@ gst_gl_display_wayland_finalize (GObject * object)
 {
   GstGLDisplayWayland *display_wayland = GST_GL_DISPLAY_WAYLAND (object);
 
+  /* Cause eglTerminate() to occur before wl_display_disconnect()
+   * https://bugzilla.gnome.org/show_bug.cgi?id=787293 */
+  g_object_set_data (object, "gst.gl.display.egl", NULL);
+
   if (!display_wayland->foreign_display && display_wayland->display) {
     wl_display_flush (display_wayland->display);
     wl_display_disconnect (display_wayland->display);
