@@ -698,6 +698,151 @@ GST_START_TEST (test_allow_not_linked)
 
 GST_END_TEST;
 
+static gboolean
+allocation_query1 (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstAllocationParams param = { 0, 15, 1, 1 };
+
+  if (GST_QUERY_TYPE (query) != GST_QUERY_ALLOCATION)
+    return gst_pad_query_default (pad, parent, query);
+
+  gst_query_add_allocation_pool (query, NULL, 128, 2, 10);
+  gst_query_add_allocation_param (query, NULL, &param);
+  gst_query_add_allocation_meta (query, GST_PARENT_BUFFER_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_REFERENCE_TIMESTAMP_META_API_TYPE,
+      NULL);
+  gst_query_add_allocation_meta (query, GST_PROTECTION_META_API_TYPE, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+allocation_query2 (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstAllocationParams param = { 0, 7, 2, 1 };
+
+  if (GST_QUERY_TYPE (query) != GST_QUERY_ALLOCATION)
+    return gst_pad_query_default (pad, parent, query);
+
+  gst_query_add_allocation_pool (query, NULL, 129, 1, 15);
+  gst_query_add_allocation_param (query, NULL, &param);
+  gst_query_add_allocation_meta (query, GST_PARENT_BUFFER_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_REFERENCE_TIMESTAMP_META_API_TYPE,
+      NULL);
+  gst_query_add_allocation_meta (query, GST_PROTECTION_META_API_TYPE, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+allocation_query3 (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstStructure *s;
+  GstAllocationParams param = { 0, 7, 1, 2 };
+
+  if (GST_QUERY_TYPE (query) != GST_QUERY_ALLOCATION)
+    return gst_pad_query_default (pad, parent, query);
+
+  gst_query_add_allocation_pool (query, NULL, 130, 1, 20);
+  gst_query_add_allocation_param (query, NULL, &param);
+  gst_query_add_allocation_meta (query, GST_PARENT_BUFFER_META_API_TYPE, NULL);
+  s = gst_structure_new_empty ("test/test");
+  gst_query_add_allocation_meta (query, GST_PROTECTION_META_API_TYPE, s);
+  gst_structure_free (s);
+
+  return TRUE;
+}
+
+static gboolean
+allocation_query_fail (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  if (GST_QUERY_TYPE (query) != GST_QUERY_ALLOCATION)
+    return gst_pad_query_default (pad, parent, query);
+
+  return FALSE;
+}
+
+GST_START_TEST (test_allocation_query)
+{
+  GstElement *tee;
+  GstPad *sink1, *sink2, *sink3;
+  GstPad *sinkpad, *srcpad;
+  GstCaps *caps;
+  GstQuery *query;
+  guint size, min, max;
+  GstAllocationParams param;
+
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS_ANY);
+
+  caps = gst_caps_new_empty_simple ("test/test");
+
+  tee = gst_check_setup_element ("tee");
+  fail_unless (tee);
+
+  sinkpad = gst_element_get_static_pad (tee, "sink");
+
+  sink1 = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
+  fail_unless (sink1 != NULL);
+  gst_pad_set_query_function (sink1, allocation_query1);
+
+  sink2 = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
+  fail_unless (sink2 != NULL);
+  gst_pad_set_query_function (sink2, allocation_query2);
+
+  sink3 = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
+  fail_unless (sink3 != NULL);
+  gst_pad_set_query_function (sink3, allocation_query3);
+
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_unless (gst_pad_query (sinkpad, query));
+
+  fail_unless (gst_query_get_n_allocation_pools (query), 1);
+  gst_query_parse_nth_allocation_pool (query, 0, NULL, &size, &min, &max);
+  fail_unless (size == 130);
+  fail_unless (min == 2);
+  fail_unless (max == 0);
+
+  fail_unless (gst_query_get_n_allocation_params (query), 1);
+  gst_query_parse_nth_allocation_param (query, 0, NULL, &param);
+  fail_unless (param.align == 15);
+  fail_unless (param.prefix == 2);
+  fail_unless (param.padding == 2);
+
+  fail_unless (gst_query_get_n_allocation_metas (query), 1);
+  fail_unless (gst_query_parse_nth_allocation_meta (query, 0, NULL) ==
+      GST_PARENT_BUFFER_META_API_TYPE);
+
+  srcpad = gst_element_get_request_pad (tee, "src_%u");
+  gst_query_unref (query);
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_if (gst_pad_query (sinkpad, query));
+
+  g_object_set (tee, "allow-not-linked", TRUE, NULL);
+  gst_query_unref (query);
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_unless (gst_pad_query (sinkpad, query));
+
+  gst_pad_set_query_function (sink3, allocation_query_fail);
+  gst_query_unref (query);
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_if (gst_pad_query (sinkpad, query));
+
+  gst_caps_unref (caps);
+  gst_query_unref (query);
+  gst_check_teardown_pad_by_name (tee, "src_0");
+  gst_check_teardown_pad_by_name (tee, "src_1");
+  gst_check_teardown_pad_by_name (tee, "src_2");
+  gst_element_release_request_pad (tee, srcpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_check_teardown_element (tee);
+}
+
+GST_END_TEST;
+
 static Suite *
 tee_suite (void)
 {
@@ -716,6 +861,7 @@ tee_suite (void)
   tcase_add_test (tc_chain, test_flow_aggregation);
   tcase_add_test (tc_chain, test_request_pads);
   tcase_add_test (tc_chain, test_allow_not_linked);
+  tcase_add_test (tc_chain, test_allocation_query);
 
   return s;
 }
