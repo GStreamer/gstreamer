@@ -341,11 +341,9 @@ downstream_probe_cb (GstPad * pad, GstPadProbeInfo * info, TestData * test)
         GST_EVENT_FLUSH_STOP)
       g_atomic_int_inc (&test->flush_stop_events);
   }
-
-  gst_mini_object_unref (info->data);
-
-  return GST_PAD_PROBE_HANDLED;
+  return GST_PAD_PROBE_OK;
 }
+
 
 /*
  * Not thread safe, will create a new ChainData which contains
@@ -382,6 +380,14 @@ _chain_data_clear (ChainData * data)
     gst_object_unref (data->sinkpad);
 }
 
+static GstFlowReturn
+_test_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
+{
+  /* accept any buffers */
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
 static void
 _test_data_init (TestData * test, gboolean needs_flushing)
 {
@@ -398,11 +404,11 @@ _test_data_init (TestData * test, gboolean needs_flushing)
 
     num_sink_pads += 1;
     test->sinkpad = gst_pad_new_from_static_template (&sinktemplate, pad_name);
+    gst_pad_set_chain_function (test->sinkpad, _test_chain);
+    gst_pad_set_active (test->sinkpad, TRUE);
     g_free (pad_name);
     fail_unless (gst_pad_link (test->srcpad, test->sinkpad) == GST_PAD_LINK_OK);
-    gst_pad_add_probe (test->srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
-        GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM |
-        GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+    gst_pad_add_probe (test->srcpad, GST_PAD_PROBE_TYPE_EVENT_FLUSH,
         (GstPadProbeCallback) downstream_probe_cb, test, NULL);
   } else {
     gst_pad_add_probe (test->srcpad, GST_PAD_PROBE_TYPE_BUFFER,
