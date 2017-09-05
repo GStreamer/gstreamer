@@ -1220,12 +1220,13 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   /* is it interlaced MJPEG? (we really don't want to scan the jpeg data
    * to see if there are two SOF markers in the packet to detect this) */
   if (gst_video_decoder_get_packetized (bdec) &&
+      dec->input_state->info.height > height &&
       dec->input_state->info.height <= (height * 2)
       && dec->input_state->info.width == width) {
     GST_LOG_OBJECT (dec,
         "looks like an interlaced image: "
         "input width/height of %dx%d with JPEG frame width/height of %dx%d",
-        dec->input_state->info.height, dec->input_state->info.width, width,
+        dec->input_state->info.width, dec->input_state->info.height, width,
         height);
     output_height = dec->input_state->info.height;
     height = dec->input_state->info.height / 2;
@@ -1301,8 +1302,15 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
         break;
     }
 
+    GST_LOG_OBJECT (dec,
+        "got for second field of interlaced image: "
+        "input width/height of %dx%d with JPEG frame width/height of %dx%d",
+        dec->input_state->info.width, dec->input_state->info.height,
+        dec->cinfo.output_width, dec->cinfo.output_height);
+
     if (dec->cinfo.output_width != GST_VIDEO_INFO_WIDTH (&state->info) ||
-        dec->cinfo.output_height * 2 > GST_VIDEO_INFO_HEIGHT (&state->info) ||
+        GST_VIDEO_INFO_HEIGHT (&state->info) <= dec->cinfo.output_height ||
+        GST_VIDEO_INFO_HEIGHT (&state->info) > (dec->cinfo.output_height * 2) ||
         field2_format != GST_VIDEO_INFO_FORMAT (&state->info)) {
       GST_WARNING_OBJECT (dec, "second field has different format than first");
       gst_video_frame_unmap (&vframe);
