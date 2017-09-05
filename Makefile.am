@@ -61,6 +61,7 @@ CRUFT_FILES = \
 	$(top_builddir)/ext/hls/.libs/libgstfragmented* \
 	$(top_builddir)/ext/ivorbis/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/jack/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/ext/libde265/.libs/libgstlibde265.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/teletextdec/.libs/libgstteletextdec.so \
 	$(top_builddir)/gst/opus/.libs/libgstopus.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/mpg123/.libs/*.{so,dll,DLL,dylib} \
