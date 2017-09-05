@@ -101,7 +101,11 @@ struct _GstHLSDemuxStream
 
   /* decryption tooling */
 #if defined(HAVE_OPENSSL)
+# if OPENSSL_VERSION_NUMBER < 0x10100000L
   EVP_CIPHER_CTX aes_ctx;
+# else
+  EVP_CIPHER_CTX *aes_ctx;
+# endif
 #elif defined(HAVE_NETTLE)
   struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
 #else

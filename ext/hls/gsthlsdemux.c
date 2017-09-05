@@ -1656,11 +1656,17 @@ static gboolean
 gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
     const guint8 * key_data, const guint8 * iv_data)
 {
+  EVP_CIPHER_CTX *ctx;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   EVP_CIPHER_CTX_init (&stream->aes_ctx);
-  if (!EVP_DecryptInit_ex (&stream->aes_ctx, EVP_aes_128_cbc (), NULL, key_data,
-          iv_data))
+  ctx = &stream->aes_ctx;
+#else
+  stream->aes_ctx = EVP_CIPHER_CTX_new ();
+  ctx = stream->aes_ctx;
+#endif
+  if (!EVP_DecryptInit_ex (ctx, EVP_aes_128_cbc (), NULL, key_data, iv_data))
     return FALSE;
-  EVP_CIPHER_CTX_set_padding (&stream->aes_ctx, 0);
+  EVP_CIPHER_CTX_set_padding (ctx, 0);
   return TRUE;
 }
 
@@ -1669,15 +1675,21 @@ decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
     const guint8 * encrypted_data, guint8 * decrypted_data)
 {
   int len, flen = 0;
+  EVP_CIPHER_CTX *ctx;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+  ctx = &stream->aes_ctx;
+#else
+  ctx = stream->aes_ctx;
+#endif
 
   if (G_UNLIKELY (length > G_MAXINT || length % 16 != 0))
     return FALSE;
 
   len = (int) length;
-  if (!EVP_DecryptUpdate (&stream->aes_ctx, decrypted_data, &len,
-          encrypted_data, len))
+  if (!EVP_DecryptUpdate (ctx, decrypted_data, &len, encrypted_data, len))
     return FALSE;
-  EVP_DecryptFinal_ex (&stream->aes_ctx, decrypted_data + len, &flen);
+  EVP_DecryptFinal_ex (ctx, decrypted_data + len, &flen);
   g_return_val_if_fail (len + flen == length, FALSE);
   return TRUE;
 }
@@ -1685,7 +1697,12 @@ decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
 static void
 gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
 {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   EVP_CIPHER_CTX_cleanup (&stream->aes_ctx);
+#else
+  EVP_CIPHER_CTX_free (stream->aes_ctx);
+  stream->aes_ctx = NULL;
+#endif
 }
 
 #elif defined(HAVE_NETTLE)
