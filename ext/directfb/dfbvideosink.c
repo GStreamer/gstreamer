@@ -2302,7 +2302,7 @@ gst_dfbvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   } else {
     GstVideoInfo info;
 
-    if (!gst_video_info_from_caps (caps)) {
+    if (!gst_video_info_from_caps (&info, caps)) {
       GST_WARNING_OBJECT (dfbvideosink,
           "Invalid video caps in allocation query");
       return FALSE;
