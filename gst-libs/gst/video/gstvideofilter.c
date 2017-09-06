@@ -128,6 +128,9 @@ gst_video_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
+    if (!pool)
+      gst_query_parse_allocation (query, &outcaps, NULL);
+
     update_pool = TRUE;
   } else {
     GstVideoInfo vinfo;
