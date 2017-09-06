@@ -850,19 +850,24 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
     GstQuery * query)
 {
   GstCaps *caps = NULL;
+  GstBufferPool *pool = NULL;
   gboolean need_pool;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
     goto error_no_caps;
 
+  /* FIXME re-using buffer pool breaks renegotiation */
+  if (!ensure_sinkpad_buffer_pool (plugin, caps))
+    return FALSE;
+
   if (need_pool) {
-    if (!ensure_sinkpad_buffer_pool (plugin, caps))
-      return FALSE;
-    gst_query_add_allocation_pool (query, plugin->sinkpad_buffer_pool,
-        plugin->sinkpad_buffer_size, BUFFER_POOL_SINK_MIN_BUFFERS, 0);
+    pool = plugin->sinkpad_buffer_pool;
     gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
   }
+
+  gst_query_add_allocation_pool (query, pool, plugin->sinkpad_buffer_size,
+      BUFFER_POOL_SINK_MIN_BUFFERS, 0);
 
   gst_query_add_allocation_meta (query, GST_VAAPI_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
