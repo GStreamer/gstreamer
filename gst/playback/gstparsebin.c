@@ -1515,6 +1515,7 @@ unknown_type:
 
     chain->deadend_details = deadend_details;
     chain->deadend = TRUE;
+    chain->drained = TRUE;
     chain->endcaps = caps;
     gst_object_replace ((GstObject **) & chain->current_pad, NULL);
 
@@ -3217,13 +3218,12 @@ drain_and_switch_chains (GstParseChain * chain, GstParsePad * drainpad,
 beach:
   CHAIN_MUTEX_UNLOCK (chain);
 
-  GST_DEBUG ("Chain %p (handled:%d, last_group:%d, drained:%d, switched:%d)",
-      chain, handled, *last_group, chain->drained, *switched);
+  GST_DEBUG
+      ("Chain %p (%s:%s handled:%d, last_group:%d, drained:%d, switched:%d, deadend:%d)",
+      chain, GST_DEBUG_PAD_NAME (chain->pad), handled, *last_group,
+      chain->drained, *switched, chain->deadend);
 
   *drained = chain->drained;
-
-  if (*drained)
-    g_signal_emit (parsebin, gst_parse_bin_signals[SIGNAL_DRAINED], 0, NULL);
 
   return handled;
 }
@@ -3245,11 +3245,18 @@ gst_parse_pad_handle_eos (GstParsePad * pad)
     drain_and_switch_chains (parsebin->parse_chain, pad, &last_group, &drained,
         &switched);
 
+    GST_LOG_OBJECT (parsebin, "drained:%d switched:%d", drained, switched);
     if (switched) {
       /* If we resulted in a group switch, expose what's needed */
       if (gst_parse_chain_is_complete (parsebin->parse_chain))
         gst_parse_bin_expose (parsebin);
     }
+
+    if (drained) {
+      GST_DEBUG_OBJECT (parsebin, "We are fully drained, emitting signal");
+      g_signal_emit (parsebin, gst_parse_bin_signals[SIGNAL_DRAINED], 0, NULL);
+    }
+
   }
   EXPOSE_UNLOCK (parsebin);
 
