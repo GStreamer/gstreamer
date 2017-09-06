@@ -64,6 +64,11 @@ class InitializeSceneGraph;
 class QtGLVideoItem : public QQuickItem, protected QOpenGLFunctions
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool itemInitialized
+               READ itemInitialized
+               NOTIFY itemInitializedChanged)
+
 public:
     QtGLVideoItem();
     ~QtGLVideoItem();
@@ -72,13 +77,14 @@ public:
     void getDAR(gint *, gint *);
     void setForceAspectRatio(bool);
     bool getForceAspectRatio();
+    bool itemInitialized();
 
     QSharedPointer<QtGLVideoItemInterface> getInterface() { return proxy; };
     /* private for C interface ... */
     QtGLVideoItemPrivate *priv;
 
 Q_SIGNALS:
-    void itemInitialized();
+    void itemInitializedChanged();
 
 private Q_SLOTS:
     void handleWindowChanged(QQuickWindow * win);
