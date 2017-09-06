@@ -1463,6 +1463,7 @@ gst_x_image_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstXImageSink *ximagesink = GST_X_IMAGE_SINK (bsink);
   GstBufferPool *pool = NULL;
   GstCaps *caps;
+  GstVideoInfo info;
   guint size;
   gboolean need_pool;
 
@@ -1471,26 +1472,23 @@ gst_x_image_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
+
+  /* the normal size of a frame */
+  size = info.size;
+
   if (need_pool) {
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps (&info, caps))
-      goto invalid_caps;
-
     pool = gst_x_image_sink_create_pool (ximagesink, caps, info.size, 0);
-
-    /* the normal size of a frame */
-    size = info.size;
 
     if (pool == NULL)
       goto no_pool;
   }
 
-  if (pool) {
-    /* we need at least 2 buffer because we hold on to the last one */
-    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool)
     gst_object_unref (pool);
-  }
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
