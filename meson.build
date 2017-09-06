@@ -88,7 +88,7 @@ if not get_option('disable_rtsp_server')
 endif
 
 if not get_option('disable_gstreamer_sharp')
-  if add_languages('cs')
+  if add_languages('cs', required : false)
     if meson.version().version_compare('>=0.43')
       subprojects += ['gstreamer-sharp']
     else
