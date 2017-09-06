@@ -222,12 +222,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 	<!-- Introspection fails -->
 	<attr path="//object[@cname='GstBufferPool']/field[@cname='flushing']" name="type">gboolean</attr>
-	<remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="array"/>
-	<remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
-	<remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="array"/>
-	<remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
-	<remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="array"/>
-	<remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="null_term_array"/>
+	<!-- FIXME Reactivate GstMpegTS when stablized
+		<remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="array"/>
+		<remove-attr path="//boxed[@cname='GstMpegtsSection']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
+		<remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="array"/>
+		<remove-attr path="//object[@cname='GstMpegtsGlobal']//method//return-type[@type='GPtrArray']" name="null_term_array"/>
+		<remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="array"/>
+		<remove-attr path="//boxed[@cname='GstMpegtsDescriptor']//method//parameter[@type='GPtrArray***']" name="null_term_array"/>
+	-->
 	<attr path="//method[@cname='gst_mini_object_replace']" name="hidden">true</attr>
 	<attr path="//method[@cname='gst_mini_object_take']" name="hidden">true</attr>
 	<attr path="//struct[@cname='GstVideoGLTextureUploadMeta']" name="nohash">true</attr>
@@ -301,6 +303,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed/field[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
 	<attr path="/api/namespace/boxed/field[contains(@cname, 'gst_reserved_p')]" name="is-padding">true</attr>
 	<attr path="/api/namespace/boxed/field[contains(@cname, 'gst_reserved_i')]" name="is-padding">true</attr>
+	<attr path="/api/namespace/object/field[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
 </metadata>
-
-
