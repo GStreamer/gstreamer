@@ -494,6 +494,9 @@ Note that all testsuite should be inside python modules, so the directory should
                            help="Number of tests to execute simultaneously"
                            " (Defaults to number of cores of the processor)",
                            type=int)
+    dir_group.add_argument("--ignore-numfailures", dest="ignore_numfailures",
+                           help="Ignore the number of failed test in exit code",
+                           default=False, action='store_true')
 
     http_server_group = parser.add_argument_group(
         "Handle the HTTP server to be created")
@@ -595,6 +598,8 @@ Note that all testsuite should be inside python modules, so the directory should
         pass
     finally:
         res = tests_launcher.final_report()
+        if options.ignore_numfailures:
+            res = 0
         tests_launcher.clean_tests()
         httpsrv.stop()
         vfb_server.stop()
