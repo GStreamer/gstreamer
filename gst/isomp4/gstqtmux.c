@@ -4774,10 +4774,12 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
               qtpad->max_bitrate);
         }
         if (layer == 1) {
-          g_warn_if_fail (format == GST_QT_MUX_FORMAT_MP4);
+          g_warn_if_fail (format == GST_QT_MUX_FORMAT_MP4
+              || format == GST_QT_MUX_FORMAT_QT);
           entry.samples_per_packet = 384;
         } else if (layer == 2) {
-          g_warn_if_fail (format == GST_QT_MUX_FORMAT_MP4);
+          g_warn_if_fail (format == GST_QT_MUX_FORMAT_MP4
+              || format == GST_QT_MUX_FORMAT_QT);
           entry.samples_per_packet = 1152;
         } else {
           g_warn_if_fail (layer == 3);

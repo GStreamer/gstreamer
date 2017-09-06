@@ -200,12 +200,13 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             COMMON_VIDEO_CAPS "; " "video/x-qt-part, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (PCM_CAPS_FULL "; "
             PCM_CAPS_UNPOSITIONED " ; "
-            MP3_CAPS " ; "
+            MP123_CAPS " ; "
             AAC_CAPS " ; "
+            AC3_CAPS " ; "
             ADPCM_CAPS " ; "
             "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
             "audio/x-mulaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
-            AMR_CAPS " ; " ALAC_CAPS),
+            AMR_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
       GST_STATIC_CAPS (TEXT_UTF8)}
   ,
   /* ISO 14496-14: mp42 as ISO base media extension
