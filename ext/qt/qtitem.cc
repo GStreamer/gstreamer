@@ -178,6 +178,12 @@ QtGLVideoItem::getForceAspectRatio()
   return this->priv->force_aspect_ratio;
 }
 
+bool
+QtGLVideoItem::itemInitialized()
+{
+  return m_openGlContextInitialized;
+}
+
 QSGNode *
 QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
     UpdatePaintNodeData * updatePaintNodeData)
@@ -290,7 +296,7 @@ QtGLVideoItem::onSceneGraphInitialized ()
   GST_DEBUG ("%p created wrapped GL context %" GST_PTR_FORMAT, this,
       this->priv->other_context);
 
-  emit itemInitialized();
+  emit itemInitializedChanged();
 }
 
 void
