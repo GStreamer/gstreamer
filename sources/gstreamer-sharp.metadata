@@ -52,6 +52,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstStructure']" name="opaque">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstIterator']" name="opaque">true</attr>
+	<!-- acknowledge that we GstIterator implements the IEnumerator interface -->
+	<add-node path="/api/namespace/boxed[@cname='GstIterator']">
+		<implements>
+			<interface name="IEnumerable" doc="https://docs.microsoft.com/fr-fr/dotnet/api/system.collections.ienumerable"/>
+		</implements>
+	</add-node>
 	<attr path="/api/namespace/boxed[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
 	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']"/>
 	<!-- Fix for GstChildProxy -->
@@ -73,6 +79,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 	<!-- calling oldobj.Handle should fix this -->
 	<remove-attr path="/api/namespace/object[@cname='GstObject']/method[@cname='gst_object_replace']/parameters/parameter[@name='oldobj']" name="pass_as"/>
+	<add-node path="/api/namespace/object[@cname='GstObject']">
+		<method name="Connect">
+		<parameters>
+			<parameter name="o" type="GObject" />
+			<parameter name="handler" type="Delegate" />
+		</parameters>
+		</method>
+	</add-node>
 	<!-- Some glue problems -->
 	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='object']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
