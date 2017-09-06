@@ -74,6 +74,7 @@ enum
 #define DEFAULT_CHECK_IMPERFECT_OFFSET    FALSE
 #define DEFAULT_SIGNAL_HANDOFFS           TRUE
 #define DEFAULT_TS_OFFSET               0
+#define DEFAULT_DROP_ALLOCATION         FALSE
 
 enum
 {
@@ -91,7 +92,8 @@ enum
   PROP_TS_OFFSET,
   PROP_CHECK_IMPERFECT_TIMESTAMP,
   PROP_CHECK_IMPERFECT_OFFSET,
-  PROP_SIGNAL_HANDOFFS
+  PROP_SIGNAL_HANDOFFS,
+  PROP_DROP_ALLOCATION
 };
 
 
@@ -229,6 +231,11 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_boolean ("signal-handoffs",
           "Signal handoffs", "Send a signal before pushing the buffer",
           DEFAULT_SIGNAL_HANDOFFS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DROP_ALLOCATION,
+      g_param_spec_boolean ("drop-allocation", "Drop allocation query",
+          "Don't forward allocation queries", DEFAULT_DROP_ALLOCATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstIdentity::handoff:
@@ -759,6 +766,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case PROP_SIGNAL_HANDOFFS:
       identity->signal_handoffs = g_value_get_boolean (value);
       break;
+    case PROP_DROP_ALLOCATION:
+      identity->drop_allocation = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -821,6 +831,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SIGNAL_HANDOFFS:
       g_value_set_boolean (value, identity->signal_handoffs);
+      break;
+    case PROP_DROP_ALLOCATION:
+      g_value_set_boolean (value, identity->drop_allocation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -886,6 +899,12 @@ gst_identity_query (GstBaseTransform * base, GstPadDirection direction,
   gboolean ret;
 
   identity = GST_IDENTITY (base);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION &&
+      identity->drop_allocation) {
+    GST_DEBUG_OBJECT (identity, "Dropping allocation query.");
+    return FALSE;
+  }
 
   ret = GST_BASE_TRANSFORM_CLASS (parent_class)->query (base, direction, query);
 

@@ -78,6 +78,7 @@ struct _GstIdentity {
   GCond          blocked_cond;
   gboolean       blocked;
   GstClockTimeDiff  ts_offset;
+  gboolean       drop_allocation;
 };
 
 struct _GstIdentityClass {
