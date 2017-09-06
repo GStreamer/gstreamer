@@ -412,10 +412,6 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
 
     fcaps = gst_caps_copy_nth (caps, i);
 
-    /* make sure the caps changed before doing anything */
-    if (gst_v4l2_object_caps_equal (obj, fcaps))
-      break;
-
     if (GST_V4L2_IS_ACTIVE (obj)) {
       /* Just check if the format is acceptable, once we know
        * no buffers should be outstanding we try S_FMT.
@@ -424,6 +420,10 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
        * should indirectly reclaim buffers, after that we can
        * set the format and then configure our pool */
       if (gst_v4l2_object_try_format (obj, fcaps, &error)) {
+        /* make sure the caps changed before doing anything */
+        if (gst_v4l2_object_caps_equal (obj, fcaps))
+          break;
+
         v4l2src->renegotiation_adjust = v4l2src->offset + 1;
         v4l2src->pending_set_fmt = TRUE;
         break;
