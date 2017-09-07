@@ -527,6 +527,7 @@ map_fail:
 copy_failed:
   {
     GST_ERROR_OBJECT (dec, "Failed to copy output frame");
+    gst_video_frame_unmap (&output_frame);
     gst_video_codec_state_unref (state);
     return GST_FLOW_ERROR;
   }
