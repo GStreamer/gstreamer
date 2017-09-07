@@ -44,6 +44,14 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
+#ifndef GST_PACKAGE_NAME
+#define GST_PACKAGE_NAME   "GStreamer Bad Plug-ins (qmake)"
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
+#define GST_LICENSE        "LGPL"
+#define PACKAGE            "gst-plugins-bad (qmake)"
+#define PACKAGE_VERSION    "1.13.0.1"
+#endif
+
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     qt,

@@ -13,12 +13,7 @@ PKGCONFIG = \
 
 DEFINES += \
     GST_USE_UNSTABLE_API \
-    HAVE_QT_WIN32 \
-    'GST_PACKAGE_NAME=\"GStreamer Bad Plug-ins (qmake)\"' \
-    'GST_PACKAGE_ORIGIN=\"Unknown package origin\"' \
-    'GST_LICENSE=\"LGPL\"' \
-    'PACKAGE=\"gst-plugins-bad (qmake)\"' \
-    'PACKAGE_VERSION=\"1.9.0.1\"'
+    HAVE_QT_WIN32
 
 SOURCES += \
     gstplugin.cc \
