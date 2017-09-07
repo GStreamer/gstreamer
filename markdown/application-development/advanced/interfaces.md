@@ -47,17 +47,17 @@ You can convert filenames to and from URIs using GLib's
 
 ## The Color Balance interface
 
-The colorbalance interface is a way to control video-related properties
+The `GstColorBalance` interface is a way to control video-related properties
 on an element, such as brightness, contrast and so on. It's sole reason
 for existence is that, as far as its authors know, there's no way to
 dynamically register properties using `GObject`.
 
 The colorbalance interface is implemented by several plugins, including
-xvimagesink and the Video4linux2 elements.
+`xvimagesink`, `glimagesink` and the `Video4linux2` elements.
 
 ## The Video Overlay interface
 
-The Video Overlay interface was created to solve the problem of
+The `GstVideoOverlay` interface was created to solve the problem of
 embedding video streams in an application window. The application
 provides a window handle to an element implementing this interface,
 and the element will then use this window handle to draw on
@@ -65,4 +65,4 @@ rather than creating a new toplevel window. This is useful to embed
 video in video players.
 
 This interface is implemented by, amongst others, the `Video4linux2`
-elements and by `ximagesink`, `xvimagesink` and `sdlvideosink`.
+elements and by `glimagesink`, `ximagesink`, `xvimagesink` and `sdlvideosink`.
