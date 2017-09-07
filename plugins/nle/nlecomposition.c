@@ -195,7 +195,7 @@ struct _NleCompositionPrivate
 
   /* 0 means that we already received the right caps or segment */
   gint seqnum_to_restart_task;
-  gboolean waiting_for_buffer;
+  gboolean waiting_serialized_query_or_buffer;
 
   gboolean tearing_down_stack;
 
@@ -1227,8 +1227,9 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
   NleCompositionPrivate *priv = comp->priv;
   GstEvent *event;
 
-  if (GST_IS_BUFFER (info->data)) {
-    if (priv->waiting_for_buffer) {
+  if (GST_IS_BUFFER (info->data) ||
+      (GST_IS_QUERY (info->data) && GST_QUERY_IS_SERIALIZED (info->data))) {
+    if (priv->waiting_serialized_query_or_buffer) {
       GST_INFO_OBJECT (comp, "update_pipeline DONE");
       _restart_task (comp);
     }
@@ -1806,7 +1807,8 @@ nle_composition_ghost_pad_set_target (NleComposition * comp, GstPad * target)
     priv->ghosteventprobe =
         gst_pad_add_probe (target,
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
-        GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+        GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM |
+        GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
         (GstPadProbeCallback) ghost_event_probe_handler, comp, NULL);
     GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
   }
@@ -2254,7 +2256,7 @@ _restart_task (NleComposition * comp)
         G_PRIORITY_HIGH);
 
   comp->priv->seqnum_to_restart_task = 0;
-  comp->priv->waiting_for_buffer = FALSE;
+  comp->priv->waiting_serialized_query_or_buffer = FALSE;
 
   comp->priv->updating_reason = COMP_UPDATE_STACK_NONE;
   GST_OBJECT_LOCK (comp);
@@ -2289,7 +2291,7 @@ _is_ready_to_restart_task (NleComposition * comp, GstEvent * event)
       return TRUE;
     }
 
-    priv->waiting_for_buffer = TRUE;
+    priv->waiting_serialized_query_or_buffer = TRUE;
     return FALSE;
 
   } else if (comp->priv->seqnum_to_restart_task) {
