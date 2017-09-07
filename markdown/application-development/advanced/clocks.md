@@ -21,7 +21,7 @@ GStreamer provides support for the following use cases:
 
   - Streaming from (slow) network streams with buffering. This is the
     typical web streaming case where you access content from a streaming
-    server with http.
+    server using HTTP.
 
   - Capture from live source and and playback to live source with
     configurable latency. This is used when, for example, capture from a
@@ -33,33 +33,36 @@ GStreamer provides support for the following use cases:
     recorded audio and record new samples, the purpose is to have the
     new audio perfectly in sync with the previously recorded data.
 
-GStreamer uses a `GstClock` object, buffer timestamps and a SEGMENT
+GStreamer uses a `GstClock` object, buffer timestamps and a `SEGMENT`
 event to synchronize streams in a pipeline as we will see in the next
 sections.
 
 ## Clock running-time
 
 In a typical computer, there are many sources that can be used as a time
-source, e.g., the system time, soundcards, CPU performance counters, ...
-For this reason, there are many `GstClock` implementations available in
-GStreamer. The clock time doesn't always start from 0 or from some known
-value. Some clocks start counting from some known start date, other
-clocks start counting since last reboot, etc...
+source, e.g., the system time, soundcards, CPU performance counters, etc.
+For this reason, GStreamer has many `GstClock` implementations available.
+Note that clock time doesn't have to start from 0 or any other known
+value. Some clocks start counting from a particular start date, others
+from the last reboot, etc.
 
 A `GstClock` returns the **absolute-time** according to that clock with
-`gst_clock_get_time ()`. The absolute-time (or clock time) of a clock is
-monotonically increasing. From the absolute-time is a **running-time**
-calculated, which is simply the difference between a previous snapshot
-of the absolute-time called the **base-time**. So:
+`gst_clock_get_time ()`. The **absolute-time** (or clock time) of a clock
+is monotonically increasing.
 
+A **running-time** is the difference between a previous snapshot of the
+**absolute-time** called the **base-time**, and any other **absolute-time**.
+
+```
 running-time = absolute-time - base-time
+```
 
 A GStreamer `GstPipeline` object maintains a `GstClock` object and a
-base-time when it goes to the PLAYING state. The pipeline gives a handle
+base-time when it goes to the `PLAYING` state. The pipeline gives a handle
 to the selected `GstClock` to each element in the pipeline along with
 selected base-time. The pipeline will select a base-time in such a way
-that the running-time reflects the total time spent in the PLAYING
-state. As a result, when the pipeline is PAUSED, the running-time stands
+that the running-time reflects the total time spent in the `PLAYING`
+state. As a result, when the pipeline is `PAUSED`, the running-time stands
 still.
 
 Because all objects in the pipeline have the same clock and base-time,
@@ -69,16 +72,17 @@ clock.
 ## Buffer running-time
 
 To calculate a buffer running-time, we need a buffer timestamp and the
-SEGMENT event that preceeded the buffer. First we can convert the
-SEGMENT event into a `GstSegment` object and then we can use the
+`SEGMENT` event that preceeded the buffer. First we can convert the
+`SEGMENT` event into a `GstSegment` object and then we can use the
 `gst_segment_to_running_time ()` function to perform the calculation of
 the buffer running-time.
 
 Synchronization is now a matter of making sure that a buffer with a
 certain running-time is played when the clock reaches the same
-running-time. Usually this task is done by sink elements. Sink also have
-to take into account the latency configured in the pipeline and add this
-to the buffer running-time before synchronizing to the pipeline clock.
+running-time. Usually, this task is performed by sink elements. These
+elements also have to take into account the configured pipeline's latency
+and add it to the buffer running-time before synchronizing to the pipeline
+clock.
 
 Non-live sources timestamp buffers with a running-time starting from 0.
 After a flushing seek, they will produce buffers again from a
@@ -90,13 +94,12 @@ pipeline running-time when the first byte of the buffer was captured.
 ## Buffer stream-time
 
 The buffer stream-time, also known as the position in the stream, is
-calculated from the buffer timestamps and the preceding SEGMENT event.
-It represents the time inside the media as a value between 0 and the
-total duration of the media.
+a value between 0 and the total duration of the media and it's calculated
+from the buffer timestamps and the preceding `SEGMENT` event.
 
 The stream-time is used in:
 
-  - Report the current position in the stream with the POSITION query.
+  - Report the current position in the stream with the `POSITION` query.
 
   - The position used in the seek events and queries.
 
@@ -124,8 +127,8 @@ repeating.
 
 A clock provider is an element in the pipeline that can provide a
 `GstClock` object. The clock object needs to report an absolute-time
-that is monotonically increasing when the element is in the PLAYING
-state. It is allowed to pause the clock while the element is PAUSED.
+that is monotonically increasing when the element is in the `PLAYING`
+state. It is allowed to pause the clock while the element is `PAUSED`.
 
 Clock providers exist because they play back media at some rate, and
 this rate is not necessarily the same as the system clock rate. For
@@ -146,7 +149,7 @@ schedule playback. This can be both faster and more accurate. Therefore,
 generally, elements with an internal clock like audio input or output
 devices will be a clock provider for the pipeline.
 
-When the pipeline goes to the PLAYING state, it will go over all
+When the pipeline goes to the `PLAYING` state, it will go over all
 elements in the pipeline from sink to source and ask each element if
 they can provide a clock. The last element that can provide a clock will
 be used as the clock provider in the pipeline. This algorithm prefers a
@@ -155,9 +158,9 @@ source elements in a typical capture pipeline.
 
 There exist some bus messages to let you know about the clock and clock
 providers in the pipeline. You can see what clock is selected in the
-pipeline by looking at the NEW\_CLOCK message on the bus. When a clock
-provider is removed from the pipeline, a CLOCK\_LOST message is posted
-and the application should go to PAUSED and back to PLAYING to select a
+pipeline by looking at the `NEW_CLOCK` message on the bus. When a clock
+provider is removed from the pipeline, a `CLOCK_LOST` message is posted
+and the application should go to `PAUSED` and back to `PLAYING` to select a
 new clock.
 
 ## Latency
@@ -173,19 +176,19 @@ of the way a live source works. Consider an audio source, it will start
 capturing the first sample at time 0. If the source pushes buffers with
 44100 samples at a time at 44100Hz it will have collected the buffer at
 second 1. Since the timestamp of the buffer is 0 and the time of the
-clock is now \>= 1 second, the sink will drop this buffer because it is
+clock is now `>= 1` second, the sink will drop this buffer because it is
 too late. Without any latency compensation in the sink, all buffers will
 be dropped.
 
 ### Latency compensation
 
-Before the pipeline goes to the PLAYING state, it will, in addition to
+Before the pipeline goes to the `PLAYING` state, it will, in addition to
 selecting a clock and calculating a base-time, calculate the latency in
-the pipeline. It does this by doing a LATENCY query on all the sinks in
+the pipeline. It does this by doing a `LATENCY` query on all the sinks in
 the pipeline. The pipeline then selects the maximum latency in the
-pipeline and configures this with a LATENCY event.
+pipeline and configures this with a `LATENCY` event.
 
-All sink elements will delay playback by the value in the LATENCY event.
+All sink elements will delay playback by the value in the `LATENCY` event.
 Since all sinks delay with the same amount of time, they will be
 relative in sync.
 
@@ -193,7 +196,7 @@ relative in sync.
 
 Adding/removing elements to/from a pipeline or changing element
 properties can change the latency in a pipeline. An element can request
-a latency change in the pipeline by posting a LATENCY message on the
+a latency change in the pipeline by posting a `LATENCY` message on the
 bus. The application can then decide to query and redistribute a new
 latency or not. Changing the latency in a pipeline might cause visual or
 audible glitches and should therefore only be done by the application
