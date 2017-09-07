@@ -1,4 +1,4 @@
-scenariosdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate-scenario
+scenariosdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate/scenarios
 
 scenarios_DATA = ges-edit-clip-while-paused.scenario
 
