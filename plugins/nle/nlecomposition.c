@@ -552,6 +552,10 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
   GST_DEBUG_OBJECT (seekd->comp, "Segment now has flags:%d",
       priv->segment->flags);
 
+  /* FIXME: The idea was to avoid seeking on a stack if we know we will endup
+   * passed the end, but then we loose the flush, wich leads to hangs. Long
+   * term, we should just flush the stack instead to avoid the double seek. */
+#if 0
   if (priv->segment->start >= NLE_OBJECT_STOP (seekd->comp)) {
     GST_INFO_OBJECT (seekd->comp,
         "Start %" GST_TIME_FORMAT " > comp->stop: %" GST_TIME_FORMAT
@@ -560,6 +564,7 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
     GST_FIXME_OBJECT (seekd->comp, "HANDLE error async!");
     return;
   }
+#endif
 
   _post_start_composition_update (seekd->comp,
       gst_event_get_seqnum (seekd->event), COMP_UPDATE_STACK_ON_SEEK);
