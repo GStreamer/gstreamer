@@ -28,11 +28,15 @@ particular element implementation details, such as element names for
 particular network source types and so on. Therefore, there is a URI
 interface, which can be used to get the source element that supports a
 particular URI type. There is no strict rule for URI naming, but in
-general we follow naming conventions that others use, too. For example,
-assuming you have the correct plugins installed, GStreamer supports
-“file:///\<path\>/\<file\>”, “http://\<host\>/\<path\>/\<file\>”,
-“mms://\<host\>/\<path\>/\<file\>”, and so on.
+general we follow naming conventions that others use too. For example,
+assuming you have the correct plugins installed, GStreamer supports:
 
+```
+file:///<path>/<file>
+http://<host>/<path>/<file>
+mms://<host>/<path>/<file>
+...
+```
 In order to get the source or sink element supporting a particular URI,
 use `gst_element_make_from_uri ()`, with the URI type being either
 `GST_URI_SRC` for a source element, or `GST_URI_SINK` for a sink
@@ -55,10 +59,10 @@ xvimagesink and the Video4linux2 elements.
 
 The Video Overlay interface was created to solve the problem of
 embedding video streams in an application window. The application
-provides an window handle to the element implementing this interface to
-draw on, and the element will then use this window handle to draw on
+provides a window handle to an element implementing this interface,
+and the element will then use this window handle to draw on
 rather than creating a new toplevel window. This is useful to embed
 video in video players.
 
-This interface is implemented by, amongst others, the Video4linux2
-elements and by ximagesink, xvimagesink and sdlvideosink.
+This interface is implemented by, amongst others, the `Video4linux2`
+elements and by `ximagesink`, `xvimagesink` and `sdlvideosink`.
