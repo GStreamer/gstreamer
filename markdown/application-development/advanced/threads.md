@@ -36,12 +36,12 @@ we can receive notifications of the tasks and pools.
 
 ## Configuring Threads in GStreamer
 
-A STREAM\_STATUS message is posted on the bus to inform you about the
+A `STREAM_STATUS` message is posted on the bus to inform you about the
 status of the streaming threads. You will get the following information
 from the message:
 
   - When a new thread is about to be created, you will be notified of
-    this with a GST\_STREAM\_STATUS\_TYPE\_CREATE type. It is then
+    this with a `GST_STREAM_STATUS_TYPE_CREATE` type. It is then
     possible to configure a `GstTaskPool` in the `GstTask`. The custom
     taskpool will provide custom threads for the task to implement the
     streaming threads.
@@ -64,10 +64,10 @@ We will now look at some examples in the next sections.
 ### Boost priority of a thread
 
 ```
-        .----------.    .----------.
-        | faksesrc |    | fakesink |
-        |         src->sink        |
-        '----------'    '----------'
+.----------.    .----------.
+| faksesrc |    | fakesink |
+|         src->sink        |
+'----------'    '----------'
 
 ```
 
@@ -77,24 +77,24 @@ starts the streaming thread for generating the fake data pushing them to
 the peer fakesink. The flow for changing the priority would go like
 this:
 
-  - When going from READY to PAUSED state, fakesrc will require a
+  - When going from `READY` to `PAUSED` state, fakesrc will require a
     streaming thread for pushing data into the fakesink. It will post a
-    STREAM\_STATUS message indicating its requirement for a streaming
+    `STREAM_STATUS` message indicating its requirement for a streaming
     thread.
 
-  - The application will react to the STREAM\_STATUS messages with a
+  - The application will react to the `STREAM_STATUS` messages with a
     sync bus handler. It will then configure a custom `GstTaskPool` on
     the `GstTask` inside the message. The custom taskpool is responsible
     for creating the threads. In this example we will make a thread with
     a higher priority.
 
   - Alternatively, since the sync message is called in the thread
-    context, you can use thread ENTER/LEAVE notifications to change the
+    context, you can use thread `ENTER`/`LEAVE` notifications to change the
     priority or scheduling pollicy of the current thread.
 
 In a first step we need to implement a custom `GstTaskPool` that we can
 configure on the task. Below is the implementation of a `GstTaskPool`
-subclass that uses pthreads to create a SCHED\_RR real-time thread. Note
+subclass that uses pthreads to create a `SCHED_RR` real-time thread. Note
 that creating real-time threads might require extra priveleges.
 
 ``` c
@@ -190,9 +190,6 @@ test_rt_pool_new (void)
 
   return pool;
 }
-
-
-
 ```
 
 The important function to implement when writing an taskpool is the
@@ -202,12 +199,10 @@ some threads around in a pool because creating and destroying threads is
 not always the fastest operation.
 
 In a next step we need to actually configure the custom taskpool when
-the fakesrc needs it. For this we intercept the STREAM\_STATUS messages
+the fakesrc needs it. For this we intercept the `STREAM_STATUS` messages
 with a sync handler.
 
 ``` c
-
-
 static GMainLoop* loop;
 
 static void
@@ -320,9 +315,6 @@ main (int argc, char *argv[])
 
   return 0;
 }
-
-
-
 ```
 
 Note that this program likely needs root permissions in order to create
@@ -330,7 +322,7 @@ real-time threads. When the thread can't be created, the state change
 function will fail, which we catch in the application above.
 
 When there are multiple threads in the pipeline, you will receive
-multiple STREAM\_STATUS messages. You should use the owner of the
+multiple `STREAM_STATUS` messages. You should use the owner of the
 message, which is likely the pad or the element that starts the thread,
 to figure out what the function of this thread is in the context of the
 application.
