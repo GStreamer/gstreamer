@@ -19,28 +19,31 @@ scope and purpose of each interface.
 
 [element-object]: application-development/basics/elements.md#using-an-element-as-a-gobject
 
-## The URI interface
+## The URI Handler interface
 
-In all examples so far, we have only supported local files through the
-“filesrc” element. GStreamer, obviously, supports many more location
-sources. However, we don't want applications to need to know any
-particular element implementation details, such as element names for
-particular network source types and so on. Therefore, there is a URI
-interface, which can be used to get the source element that supports a
-particular URI type. There is no strict rule for URI naming, but in
-general we follow naming conventions that others use too. For example,
-assuming you have the correct plugins installed, GStreamer supports:
+In the examples so far, we have only showed support for local files
+using the “filesrc” element, but GStreamer supports many more location
+sources.
+
+GStreamer doesn't require applications to know any `URI` specifics, like
+what element to use for a particular network source types. These details
+are abstracted by the `GstURIHandler` interface.
+
+There is no strict rule for `URI` naming, but in general, we follow
+common-usage naming conventions. For example, assuming you have the
+correct plugins installed, GStreamer supports:
 
 ```
 file:///<path>/<file>
 http://<host>/<path>/<file>
 mms://<host>/<path>/<file>
+dvb://<CHANNEL>
 ...
 ```
+
 In order to get the source or sink element supporting a particular URI,
-use `gst_element_make_from_uri ()`, with the URI type being either
-`GST_URI_SRC` for a source element, or `GST_URI_SINK` for a sink
-element.
+use `gst_element_make_from_uri ()` with `GST_URI_SRC` or `GST_URI_SINK`
+as `GstURIType` depending in the direction you need.
 
 You can convert filenames to and from URIs using GLib's
 `g_filename_to_uri ()` and `g_uri_to_filename ()`.
