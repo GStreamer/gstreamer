@@ -1187,9 +1187,8 @@ gst_kms_sink_copy_to_dumb_buffer (GstKMSSink * self, GstBuffer * inbuf)
   GstFlowReturn ret;
   GstVideoFrame inframe, outframe;
   gboolean success;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
 
-  buf = NULL;
   if (!gst_buffer_pool_set_active (self->pool, TRUE))
     goto activate_pool_failed;
 
@@ -1223,13 +1222,13 @@ activate_pool_failed:
   {
     GST_ELEMENT_ERROR (self, STREAM, FAILED, ("failed to activate buffer pool"),
         ("failed to activate buffer pool"));
-    goto bail;
+    return NULL;
   }
 create_buffer_failed:
   {
     GST_ELEMENT_ERROR (self, STREAM, FAILED, ("allocation failed"),
         ("failed to create buffer"));
-    goto bail;
+    return NULL;
   }
 error_copy_buffer:
   {
