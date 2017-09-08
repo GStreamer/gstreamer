@@ -66,6 +66,7 @@ good_tests = [
   [ 'elements/rtph264' ],
   [ 'elements/rtph265' ],
   [ 'elements/rtpopus' ],
+  [ 'elements/rtpvp8' ],
   [ 'elements/rtpvp9' ],
   [ 'elements/rtpbin' ],
   [ 'elements/rtpbin_buffer_list' ],
