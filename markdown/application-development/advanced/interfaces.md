@@ -4,24 +4,22 @@ title: Interfaces
 
 # Interfaces
 
-In [Using an element as a GObject][element-object], you have
-learned how to use `GObject` properties as a simple way to do
-interaction between applications and elements. This method suffices for
-the simple'n'straight settings, but fails for anything more complicated
-than a getter and setter. For the more complicated use cases, GStreamer
-uses interfaces based on the GObject
+[Using an element as a GObject][element-object] presents the use of `GObject`
+properties as a simple way for applications and elements to interact. This
+method suffices for simple getters and setters, but fails for anything more
+complicated. For more complex use cases, GStreamer uses interfaces based on the
+`GObject`
 [`GTypeInterface`](http://library.gnome.org/devel/gobject/stable/gtype-non-instantiable-classed.html)
 type.
 
-Most of the interfaces handled here will not contain any example code.
-See the API references for details. Here, we will just describe the
-scope and purpose of each interface.
+This text is meant to be introductory and does not include source code examples.
+Please take a look a the API reference for additional details.
 
 [element-object]: application-development/basics/elements.md#using-an-element-as-a-gobject
 
 ## The URI Handler interface
 
-In the examples so far, we have only showed support for local files
+In our examples so far, we have only showed support for local files
 using the “filesrc” element, but GStreamer supports many more location
 sources.
 
