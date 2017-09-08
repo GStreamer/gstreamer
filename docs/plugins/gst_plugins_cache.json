@@ -1218,6 +1218,18 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Statistics",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "application/x-identity-stats, num-bytes=(guint64)0, num-buffers=(guint64)0;",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Synchronize to pipeline clock",
                         "conditionally-available": false,

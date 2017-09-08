@@ -95,7 +95,8 @@ enum
   PROP_CHECK_IMPERFECT_OFFSET,
   PROP_SIGNAL_HANDOFFS,
   PROP_DROP_ALLOCATION,
-  PROP_EOS_AFTER
+  PROP_EOS_AFTER,
+  PROP_STATS
 };
 
 
@@ -266,6 +267,36 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
       NULL, G_TYPE_NONE, 1, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  /**
+   * GstIdentity:stats:
+
+   * Various statistics. This property returns a GstStructure
+   * with name application/x-identity-stats with the following fields:
+   *
+   * <itemizedlist>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;num-buffers&quot;</classname>:
+   *   the number of buffers that passed through.
+   *   </para>
+   * </listitem>
+   * <listitem>
+   *   <para>
+   *   #guint64
+   *   <classname>&quot;num-bytes&quot;</classname>:
+   *   the number of bytes that passed through.
+   *   </para>
+   * </listitem>
+   * </itemizedlist>
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Statistics", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_identity_finalize;
 
@@ -786,6 +817,11 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
   }
 
+  GST_OBJECT_LOCK (trans);
+  identity->num_bytes += gst_buffer_get_size (buf);
+  identity->num_buffers++;
+  GST_OBJECT_UNLOCK (trans);
+
   return ret;
 
   /* ERRORS */
@@ -883,6 +919,20 @@ gst_identity_set_property (GObject * object, guint prop_id,
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (identity), TRUE);
 }
 
+static GstStructure *
+gst_identity_create_stats (GstIdentity * identity)
+{
+  GstStructure *s;
+
+  GST_OBJECT_LOCK (identity);
+  s = gst_structure_new ("application/x-identity-stats",
+      "num-bytes", G_TYPE_UINT64, identity->num_bytes,
+      "num-buffers", G_TYPE_UINT64, identity->num_buffers, NULL);
+  GST_OBJECT_UNLOCK (identity);
+
+  return s;
+}
+
 static void
 gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -941,6 +991,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_EOS_AFTER:
       g_value_set_int (value, identity->eos_after);
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_identity_create_stats (identity));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1080,6 +1133,8 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (identity);
       if (identity->sync)
         no_preroll = TRUE;
+      identity->num_bytes = 0;
+      identity->num_buffers = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_OBJECT_LOCK (identity);
