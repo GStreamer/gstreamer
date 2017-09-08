@@ -1400,6 +1400,7 @@ gst_kms_sink_drain (GstKMSSink * self)
     dumb_buf = gst_kms_sink_copy_to_dumb_buffer (self, parent_meta->buffer);
     clear_cached_kmsmem (self);
     gst_kms_sink_show_frame (GST_VIDEO_SINK (self), dumb_buf);
+    gst_buffer_unref (dumb_buf);
   }
 }
 
