@@ -139,14 +139,11 @@ gst_kms_buffer_pool_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   priv = vpool->priv;
   info = &priv->vinfo;
 
-  *buffer = gst_buffer_new ();
-  if (*buffer == NULL)
-    goto no_memory;
   mem = gst_kms_allocator_bo_alloc (priv->allocator, info);
-  if (!mem) {
-    gst_buffer_unref (*buffer);
+  if (!mem)
     goto no_memory;
-  }
+
+  *buffer = gst_buffer_new ();
   gst_buffer_append_memory (*buffer, mem);
 
   if (priv->add_videometa) {
