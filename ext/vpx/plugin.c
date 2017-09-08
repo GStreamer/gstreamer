@@ -33,6 +33,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  static const gchar *tags[] = { NULL };
+
 #ifdef HAVE_VP8_DECODER
   gst_element_register (plugin, "vp8dec", GST_RANK_PRIMARY,
       gst_vp8_dec_get_type ());
@@ -52,6 +54,9 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vp9enc", GST_RANK_PRIMARY,
       gst_vp9_enc_get_type ());
 #endif
+
+  if (!gst_meta_register_custom ("GstVP8Meta", tags, NULL, NULL, NULL))
+    return FALSE;
 
   return TRUE;
 }

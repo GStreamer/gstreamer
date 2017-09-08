@@ -25699,6 +25699,17 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "temporal-scalability-layer-flags": {
+                        "blurb": "Sequence defining coding layer flags",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstValueArray",
+                        "writable": true
+                    },
                     "temporal-scalability-layer-id": {
                         "blurb": "Sequence defining coding layer membership",
                         "conditionally-available": false,
@@ -25708,6 +25719,17 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GValueArray",
+                        "writable": true
+                    },
+                    "temporal-scalability-layer-sync-flags": {
+                        "blurb": "Sequence defining coding layer sync flags",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstValueArray",
                         "writable": true
                     },
                     "temporal-scalability-number-layers": {
