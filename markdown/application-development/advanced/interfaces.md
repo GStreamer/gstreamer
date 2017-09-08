@@ -69,3 +69,22 @@ video in video players.
 
 This interface is implemented by, amongst others, the `Video4linux2`
 elements and by `glimagesink`, `ximagesink`, `xvimagesink` and `sdlvideosink`.
+
+## Other interfaces
+
+There are quite a few other interfaces provided by GStreamer and implemented by
+some of its elements. Among them:
+
+* `GstChildProxy` For access to internal element's properties on multi-child elements
+* `GstNavigation` For the sending and parsing of navigation events
+* `GstPreset` For handling element presets
+* `GstRTSPExtension` An RTSP Extension interface
+* `GstStreamVolume` Interface to provide access and control stream volume levels
+* `GstTagSetter` For handling media metadata
+* `GstTagXmpWriter` For elements that provide XMP serialization
+* `GstTocSetter` For setting and retrieval of TOC-like data
+* `GstTuner` For elements providing RF tunning operations
+* `GstVideoDirection` For video rotation and flipping controls
+* `GstVideoOrientation` For video orientation controls
+* `GstWaylandVideo` Wayland video interface
+
