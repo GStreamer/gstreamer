@@ -25772,7 +25772,7 @@
                         "writable": true
                     },
                     "temporal-scalability-target-bitrate": {
-                        "blurb": "Target bitrates for coding layers (one per layer, decreasing)",
+                        "blurb": "Target bitrates (bits/sec) for coding layers (one per layer)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,

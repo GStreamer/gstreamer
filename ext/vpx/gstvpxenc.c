@@ -553,7 +553,7 @@ gst_vpx_enc_class_init (GstVPXEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_TS_TARGET_BITRATE,
       g_param_spec_value_array ("temporal-scalability-target-bitrate",
           "Coding layer target bitrates",
-          "Target bitrates for coding layers (one per layer, decreasing)",
+          "Target bitrates (bits/sec) for coding layers (one per layer)",
           g_param_spec_int ("target-bitrate", "Target bitrate",
               "Target bitrate", 0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
@@ -1024,7 +1024,7 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
 
         for (i = 0; i < va->n_values; i++)
           gst_vpx_enc->cfg.ts_target_bitrate[i] =
-              g_value_get_int (g_value_array_get_nth (va, i));
+              g_value_get_int (g_value_array_get_nth (va, i)) / 1000;
         gst_vpx_enc->n_ts_target_bitrate = va->n_values;
       }
       global = TRUE;
@@ -1425,7 +1425,7 @@ gst_vpx_enc_get_property (GObject * object, guint prop_id, GValue * value,
           GValue v = { 0, };
 
           g_value_init (&v, G_TYPE_INT);
-          g_value_set_int (&v, gst_vpx_enc->cfg.ts_target_bitrate[i]);
+          g_value_set_int (&v, gst_vpx_enc->cfg.ts_target_bitrate[i] * 1000);
           g_value_array_append (va, &v);
           g_value_unset (&v);
         }
