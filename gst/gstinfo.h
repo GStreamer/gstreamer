@@ -151,7 +151,7 @@ typedef enum {
  * These are some terminal style flags you can use when creating your
  * debugging categories to make them stand out in debugging output.
  */
-typedef enum {
+typedef enum { /*< flags >*/
   /* colors */
   GST_DEBUG_FG_BLACK		= 0x0000,
   GST_DEBUG_FG_RED		= 0x0001,
