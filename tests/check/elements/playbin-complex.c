@@ -2759,8 +2759,11 @@ playbin_complex_suite (void)
       test_raw_compressed_video_stream_demuxer_manual_sink);
 
   tcase_add_test (tc_chain, test_raw_raw_audio_stream_adder_manual_sink);
-  tcase_add_test (tc_chain, test_autoplug_decoder_sink_combination);
 
+  if (gst_registry_check_feature_version (gst_registry_get (),
+          "oggdemux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
+    tcase_add_test (tc_chain, test_autoplug_decoder_sink_combination);
+  }
   /* These tests need something like the stream-activate event
    * and are racy otherwise */
 #if 0
