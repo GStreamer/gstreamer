@@ -570,7 +570,6 @@ GST_START_TEST (test_live_seeking)
   GstPad *srcpad;
   GstPad *sinkpad;
   gint i;
-  GstStateChangeReturn state_res;
   GstStreamConsistency *consist;
   /* don't use autoaudiosrc, as then we can't set anything here */
   const gchar *audio_src_factories[] = {
@@ -591,6 +590,7 @@ GST_START_TEST (test_live_seeking)
   }
   if (!src1) {
     /* normal audiosources behave differently than audiotestsrc */
+    GST_WARNING ("no real audiosrc found, using audiotestsrc is-live");
     src1 = gst_element_factory_make ("audiotestsrc", "src1");
     g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);      /* silence */
   } else {
@@ -605,19 +605,11 @@ GST_START_TEST (test_live_seeking)
   sink = gst_element_factory_make ("fakesink", "sink");
 
   gst_bin_add_many (GST_BIN (bin), src1, cf, audiomixer, sink, NULL);
-  res = gst_element_link (src1, cf);
-  fail_unless (res == TRUE, NULL);
-  res = gst_element_link (cf, audiomixer);
-  fail_unless (res == TRUE, NULL);
-  res = gst_element_link (audiomixer, sink);
+  res = gst_element_link_many (src1, cf, audiomixer, sink, NULL);
   fail_unless (res == TRUE, NULL);
 
-  gst_element_set_state (bin, GST_STATE_PLAYING);
-  /* wait for completion */
-  state_res =
-      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
-      GST_CLOCK_TIME_NONE);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  /* get the caps for the livesrc, we'll reuse this for the non-live source */
+  set_state_and_wait (bin, GST_STATE_PLAYING);
 
   sinkpad = gst_element_get_static_pad (sink, "sink");
   fail_unless (sinkpad != NULL);
