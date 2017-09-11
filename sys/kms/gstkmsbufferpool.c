@@ -87,8 +87,7 @@ gst_kms_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (allocator && GST_IS_KMS_ALLOCATOR (allocator)) {
     if (priv->allocator)
       gst_object_unref (priv->allocator);
-    if ((priv->allocator = allocator))
-      gst_object_ref (allocator);
+    priv->allocator = gst_object_ref (allocator);
   }
   if (!priv->allocator)
     goto no_allocator;
