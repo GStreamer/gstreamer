@@ -1,0 +1,74 @@
+/* GStreamer
+ * Copyright (C) 2017 Sebastian Dröge <sebastian@centricular.com>
+ *
+ * gstaudiostreamalign.h:
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#ifndef __GST_AUDIO_STREAM_ALIGN_H__
+#define __GST_AUDIO_STREAM_ALIGN_H__
+
+#include <gst/gst.h>
+
+#define GST_TYPE_AUDIO_INFO_STREAM_ALIGN (gst_audio_stream_align_get_type ())
+
+typedef struct _GstAudioStreamAlign GstAudioStreamAlign;
+
+GST_EXPORT
+GType                   gst_audio_stream_align_get_type                (void);
+
+GST_EXPORT
+GstAudioStreamAlign *   gst_audio_stream_align_new                     (gint rate,
+                                                                        GstClockTime alignment_threshold,
+                                                                        GstClockTime discont_wait);
+GST_EXPORT
+GstAudioStreamAlign *   gst_audio_stream_align_copy                    (const GstAudioStreamAlign * align);
+GST_EXPORT
+void                    gst_audio_stream_align_free                    (GstAudioStreamAlign * align);
+
+GST_EXPORT
+void                    gst_audio_stream_align_set_rate                (GstAudioStreamAlign * align,
+                                                                        gint rate);
+GST_EXPORT
+gint                    gst_audio_stream_align_get_rate                (GstAudioStreamAlign * align);
+
+GST_EXPORT
+void                    gst_audio_stream_align_set_alignment_threshold (GstAudioStreamAlign * align,
+                                                                        GstClockTime alignment_threshold);
+GST_EXPORT
+GstClockTime            gst_audio_stream_align_get_alignment_threshold (GstAudioStreamAlign * align);
+
+GST_EXPORT
+void                    gst_audio_stream_align_set_discont_wait        (GstAudioStreamAlign * align,
+                                                                        GstClockTime discont_wait);
+GST_EXPORT
+GstClockTime            gst_audio_stream_align_get_discont_wait        (GstAudioStreamAlign * align);
+
+
+GST_EXPORT
+void                    gst_audio_stream_align_mark_discont            (GstAudioStreamAlign * align);
+
+GST_EXPORT
+gboolean                gst_audio_stream_align_process                 (GstAudioStreamAlign * align,
+                                                                        gboolean discont,
+                                                                        GstClockTime timestamp,
+                                                                        guint n_samples,
+                                                                        GstClockTime *out_timestamp,
+                                                                        GstClockTime *out_duration,
+                                                                        guint64 *out_sample_position);
+
+#endif /* __GST_AUDIO_STREAM_ALIGN_H__ */

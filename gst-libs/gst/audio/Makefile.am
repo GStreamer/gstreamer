@@ -54,7 +54,8 @@ libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	gstaudiosrc.c \
 	gstaudioutilsprivate.c \
 	streamvolume.c \
-	gstaudioiec61937.c
+	gstaudioiec61937.c \
+	gstaudiostreamalign.c
 
 nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
@@ -80,7 +81,8 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	gstaudiosink.h \
 	gstaudiosrc.h \
 	streamvolume.h \
-	gstaudioiec61937.h
+	gstaudioiec61937.h \
+	gstaudiostreamalign.h
 
 nodist_libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-enumtypes.h

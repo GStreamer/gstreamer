@@ -21,6 +21,7 @@ audio_src= [
   'gstaudiosrc.c',
   'gstaudioutilsprivate.c',
   'streamvolume.c',
+  'gstaudiostreamalign.c',
 ]
 
 audio_mkenum_headers = [
@@ -36,6 +37,7 @@ audio_mkenum_headers = [
   'gstaudiobasesrc.h',
   'gstaudiocdsrc.h',
   'gstaudiobasesink.h',
+  'gstaudiostreamalign.h',
 ]
 
 # FIXME: check headers

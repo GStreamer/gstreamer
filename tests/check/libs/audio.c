@@ -705,6 +705,184 @@ GST_START_TEST (test_fill_silence)
 
 GST_END_TEST;
 
+GST_START_TEST (test_stream_align)
+{
+  GstAudioStreamAlign *align;
+  guint i;
+  GstClockTime timestamp;
+  GstClockTime out_timestamp, out_duration;
+  gboolean discont;
+
+  align = gst_audio_stream_align_new (1000);
+
+  for (i = 0; i < 500; i++) {
+    timestamp = 10 * GST_MSECOND * i;
+    discont = i == 0;
+
+    discont =
+        gst_audio_stream_align_process (align, discont, timestamp, 10,
+        &out_timestamp, &out_duration, NULL);
+
+    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i == 0)
+      fail_unless (discont);
+    else
+      fail_unless (!discont);
+  }
+
+  /* Drift forwards by 1ms per 10ms buffer for the first 40 buffers.
+   * - after 40 buffers we're above alignment threshold
+   * - after 40 + 100 buffers we're at discont wait
+   */
+  for (i = 0; i < 500; i++) {
+    timestamp = 10 * GST_MSECOND * i;
+    discont = i == 0;
+    if (i > 0)
+      timestamp += 1 * GST_MSECOND * MIN (i, 40);
+
+    discont =
+        gst_audio_stream_align_process (align, discont, timestamp, 10,
+        &out_timestamp, &out_duration, NULL);
+
+    if (i < 140) {
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+      if (i == 0)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+    } else {
+      if (i == 140)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp,
+          10 * GST_MSECOND * i + 40 * GST_MSECOND);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    }
+  }
+
+  /* Drift backwards by 1ms per 10ms buffer for the first 40 buffers.
+   * - after 40 buffers we're above alignment threshold
+   * - after 40 + 100 buffers we're at discont wait
+   */
+  for (i = 0; i < 500; i++) {
+    timestamp = 10 * GST_MSECOND * i;
+    discont = i == 0;
+    if (i > 0)
+      timestamp -= 1 * GST_MSECOND * MIN (i, 40);
+
+    discont =
+        gst_audio_stream_align_process (align, discont, timestamp, 10,
+        &out_timestamp, &out_duration, NULL);
+
+    if (i < 140) {
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+      if (i == 0)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+    } else {
+      if (i == 140)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+
+      fail_unless_equals_uint64 (out_timestamp,
+          10 * GST_MSECOND * i - 40 * GST_MSECOND);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    }
+  }
+
+  /* Shift all buffers but the first by 40ms
+   * - after 1 buffers we're above alignment threshold
+   * - after 101 buffers we're at discont wait
+   */
+  for (i = 0; i < 500; i++) {
+    timestamp = 10 * GST_MSECOND * i;
+    discont = i == 0;
+    if (i > 0)
+      timestamp += 40 * GST_MSECOND;
+
+    discont =
+        gst_audio_stream_align_process (align, discont, timestamp, 10,
+        &out_timestamp, &out_duration, NULL);
+
+    if (i < 101) {
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+      if (i == 0)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+    } else {
+      if (i == 101)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp,
+          10 * GST_MSECOND * i + 40 * GST_MSECOND);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    }
+  }
+
+  /* Shift every second buffer by 40ms:
+   * - never discont!
+   */
+  for (i = 0; i < 500; i++) {
+    timestamp = 10 * GST_MSECOND * i;
+    discont = i == 0;
+
+    if (i % 2 == 0 && i > 0)
+      timestamp += 40 * GST_MSECOND;
+
+    discont =
+        gst_audio_stream_align_process (align, discont, timestamp, 10,
+        &out_timestamp, &out_duration, NULL);
+
+    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i == 0)
+      fail_unless (discont);
+    else
+      fail_unless (!discont);
+  }
+
+  /* Shift every buffer 100 by 2: discont at buffer 200
+   */
+  for (i = 0; i < 500; i++) {
+    timestamp = 10 * GST_MSECOND * i;
+    discont = i == 0;
+    if (i >= 100)
+      timestamp += 2 * GST_SECOND;
+
+    discont =
+        gst_audio_stream_align_process (align, discont, timestamp, 10,
+        &out_timestamp, &out_duration, NULL);
+
+    if (i < 200) {
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+      if (i == 0)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+    } else {
+      fail_unless_equals_uint64 (out_timestamp,
+          10 * GST_MSECOND * i + 2 * GST_SECOND);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+      if (i == 200)
+        fail_unless (discont);
+      else
+        fail_unless (!discont);
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -732,6 +910,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_audio_format_s8);
   tcase_add_test (tc_chain, test_audio_format_u8);
   tcase_add_test (tc_chain, test_fill_silence);
+  tcase_add_test (tc_chain, test_stream_align);
 
   return s;
 }
