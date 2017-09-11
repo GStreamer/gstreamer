@@ -4,39 +4,36 @@ title: Metadata
 
 # Metadata
 
-GStreamer makes a clear distinction between two types of metadata, and
-has support for both types. The first is stream tags, which describe the
-content of a stream in a non-technical way. Examples include the author
-of a song, the title of that very same song or the album it is a part
-of. The other type of metadata is stream-info, which is a somewhat
-technical description of the properties of a stream. This can include
-video size, audio samplerate, codecs used and so on. Tags are handled
-using the GStreamer tagging system. Stream-info can be retrieved from a
-`GstPad` by getting the current (negotiated) `GstCaps` for that pad.
+GStreamer makes a clear distinction between the two types of metadata it
+supports: Stream tags, which describe the content of a stream in a non-technical
+way; and Stream-info, which is a somewhat technical description of the
+properties of a stream. Stream tags examples include the author of a song, the
+song's title or the album it belongs to. Examples for stream-info include video
+size, audio samplerate, codecs used and so on.
+
+Tags are handled using the GStreamer tagging system. Stream-info can be retrieved
+from a `GstPad` by getting the current (negotiated) `GstCaps` for that pad.
 
 ## Metadata reading
 
-Stream information can most easily be read by reading it from a
-`GstPad`. This has already been discussed before in [Using capabilities
-for metadata](application-development/basics/pads.md#using-capabilities-for-metadata).
-Therefore, we will skip it here. Note that this requires access to all
-pads of which you want stream information.
+Stream information can most easily be obtained by reading it from a `GstPad`.
+Note that this requires access to all pads of which you want stream information.
+This approach has already been discussed in [Using capabilities for metadata](application-development/basics/pads.md#using-capabilities-for-metadata).
+Therefore, we will skip it here.
 
-Tag reading is done through a bus in GStreamer, which has been discussed
-previously in [Bus](application-development/basics/bus.md). You can listen for
-`GST_MESSAGE_TAG` messages and handle them as you wish.
+Tag reading is done through a bus in GStreamer. You can listen for
+`GST_MESSAGE_TAG` messages and handle them as you wish. This has been discussed
+previously in [Bus](application-development/basics/bus.md).
 
-Note, however, that the `GST_MESSAGE_TAG` message may be fired multiple
-times in the pipeline. It is the application's responsibility to put all
-those tags together and display them to the user in a nice, coherent
-way. Usually, using `gst_tag_list_merge ()` is a good enough way of
-doing this; make sure to empty the cache when loading a new song, or
-after every few minutes when listening to internet radio. Also, make
-sure you use `GST_TAG_MERGE_PREPEND` as merging mode, so that a new
-title (which came in later) has a preference over the old one for
-display.
+Note, however, that the `GST_MESSAGE_TAG` message may be emitted multiple
+times and it is the application's responsibility to aggregate and display the tags
+in a coherent way. This can be done using `gst_tag_list_merge ()` but make sure
+to empty the cache when loading a new song, or after every few minutes when
+listening to internet radio. Also, make sure you use `GST_TAG_MERGE_PREPEND` as
+merging mode, so that a new title (which came in later) has precedence over
+the old one.
 
-The following example will extract tags from a file and print them:
+The following example shows how to extract tags from a file and print them:
 
 ``` c
 /* compile with:
@@ -167,16 +164,15 @@ main (int argc, char ** argv)
 Tag writing is done using the
 [`GstTagSetter`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstTagSetter.html)
 interface. All that's required is a tag-set-supporting element in your
-pipeline. In order to see if any of the elements in your pipeline
-supports tag writing, you can use the function
-`gst_bin_iterate_all_by_interface (pipeline,
-GST_TYPE_TAG_SETTER)`. On the resulting element, usually an encoder or
-muxer, you can use `gst_tag_setter_merge
-()` (with a taglist) or `gst_tag_setter_add
-()` (with individual tags) to set tags on it.
+pipeline.
 
-A nice extra feature in GStreamer tag support is that tags are preserved
+In order to see if any of the elements in your pipeline supports tag writing,
+you can use the function `gst_bin_iterate_all_by_interface (pipeline, GST_TYPE_TAG_SETTER)`.
+On the resulting element, usually an encoder or muxer, you can use
+`gst_tag_setter_merge ()` with a taglist or `gst_tag_setter_add ()` with
+individual tags, to set tags on it.
+
+A nice extra feature in GStreamer's tag support is that tags are preserved
 in pipelines. This means that if you transcode one file containing tags
-into another media type, and that new media type supports tags too, then
-the tags will be handled as part of the data stream and be merged into
-the newly written media file, too.
+into another tag-supporting media type, then the tags will be handled as part of
+the data stream and will be so merged into the newly written media file.
