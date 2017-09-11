@@ -1789,9 +1789,9 @@ gst_glimage_sink_expose (GstVideoOverlay * overlay)
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
 
   /* redisplay opengl scene */
-  if (glimage_sink->display && glimage_sink->window_id) {
-
-    if (glimage_sink->window_id != glimage_sink->new_window_id) {
+  if (glimage_sink->display) {
+    if (glimage_sink->window_id
+        && glimage_sink->window_id != glimage_sink->new_window_id) {
       GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
       glimage_sink->window_id = glimage_sink->new_window_id;
