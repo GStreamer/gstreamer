@@ -307,8 +307,10 @@ get_drm_caps (GstKMSSink * self)
   ret = drmGetCap (self->fd, DRM_CAP_PRIME, &has_prime);
   if (ret)
     GST_WARNING_OBJECT (self, "could not get prime capability");
-  else
+  else {
     self->has_prime_import = (gboolean) (has_prime & DRM_PRIME_CAP_IMPORT);
+    self->has_prime_export = (gboolean) (has_prime & DRM_PRIME_CAP_EXPORT);
+  }
 
   has_async_page_flip = 0;
   ret = drmGetCap (self->fd, DRM_CAP_ASYNC_PAGE_FLIP, &has_async_page_flip);
@@ -317,8 +319,10 @@ get_drm_caps (GstKMSSink * self)
   else
     self->has_async_page_flip = (gboolean) has_async_page_flip;
 
-  GST_INFO_OBJECT (self, "prime import (%s) / async page flip (%s)",
+  GST_INFO_OBJECT (self,
+      "prime import (%s) / prime export (%s) / async page flip (%s)",
       self->has_prime_import ? "✓" : "✗",
+      self->has_prime_export ? "✓" : "✗",
       self->has_async_page_flip ? "✓" : "✗");
 
   return TRUE;
