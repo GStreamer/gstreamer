@@ -1703,15 +1703,23 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos,
   while (1) {
     GstByteReader reader;
     gint cluster_pos;
+    guint toread = chunk;
 
-    if (!forward)
-      newpos = MAX (0, newpos - chunk);
+    if (!forward) {
+      /* never read beyond the requested target */
+      if (G_UNLIKELY (newpos < chunk)) {
+        toread = newpos;
+        newpos = 0;
+      } else {
+        newpos -= chunk;
+      }
+    }
     if (buf != NULL) {
       gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
       buf = NULL;
     }
-    ret = gst_pad_pull_range (demux->common.sinkpad, newpos, chunk, &buf);
+    ret = gst_pad_pull_range (demux->common.sinkpad, newpos, toread, &buf);
     if (ret != GST_FLOW_OK)
       break;
     GST_DEBUG_OBJECT (demux,
