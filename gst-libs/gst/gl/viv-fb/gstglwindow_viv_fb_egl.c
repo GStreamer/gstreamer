@@ -179,9 +179,7 @@ draw_cb (gpointer data)
 
     gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
     viewport_dim[0] += window_egl->render_rectangle.x;
-    viewport_dim[1] -= window_egl->render_rectangle.y;
-    viewport_dim[2] -= window_egl->render_rectangle.x;
-    viewport_dim[3] -= window_egl->render_rectangle.y;
+    viewport_dim[1] += window_egl->render_rectangle.y;
     gl->Viewport (viewport_dim[0],
         viewport_dim[1], viewport_dim[2], viewport_dim[3]);
   }
@@ -220,13 +218,15 @@ static void
 _set_render_rectangle (gpointer data)
 {
   SetRenderRectangleData *render = data;
+  GstGLWindow *window = GST_GL_WINDOW (render->window_egl);
 
   GST_LOG_OBJECT (render->window_egl, "setting render rectangle %i,%i+%ix%i",
       render->rect.x, render->rect.y, render->rect.w, render->rect.h);
 
   render->window_egl->render_rectangle = render->rect;
-  gst_gl_window_resize (GST_GL_WINDOW (render->window_egl), render->rect.w,
-      render->rect.h);
+  gst_gl_window_resize (window, render->rect.w, render->rect.h);
+
+  window->queue_resize = TRUE;
 }
 
 static gboolean
