@@ -37,7 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_kms_buffer_pool_debug);
 
 struct _GstKMSBufferPoolPrivate
 {
-  gint fd;
   GstVideoInfo vinfo;
   GstAllocator *allocator;
   gboolean add_videometa;
@@ -184,7 +183,6 @@ static void
 gst_kms_buffer_pool_init (GstKMSBufferPool * pool)
 {
   pool->priv = gst_kms_buffer_pool_get_instance_private (pool);
-  pool->priv->fd = -1;
 }
 
 static void
