@@ -215,15 +215,28 @@ _free_set_render_rectangle (SetRenderRectangleData * render)
 }
 
 static void
+_calculate_viewport_coordinates(GstGLWindowVivFBEGL * window_egl,
+    GstVideoRectangle * req, GstVideoRectangle * result)
+{
+  result->x = req->x;
+  result->y = window_egl->window_height - (req->y + req->h);
+  result->w = req->w;
+  result->h = req->h;
+}
+
+static void
 _set_render_rectangle (gpointer data)
 {
   SetRenderRectangleData *render = data;
-  GstGLWindow *window = GST_GL_WINDOW (render->window_egl);
+  GstGLWindowVivFBEGL *window_egl = render->window_egl;
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
 
   GST_LOG_OBJECT (render->window_egl, "setting render rectangle %i,%i+%ix%i",
       render->rect.x, render->rect.y, render->rect.w, render->rect.h);
 
-  render->window_egl->render_rectangle = render->rect;
+  _calculate_viewport_coordinates (window_egl, &render->rect,
+      &window_egl->render_rectangle);
+
   gst_gl_window_resize (window, render->rect.w, render->rect.h);
 
   window->queue_resize = TRUE;
