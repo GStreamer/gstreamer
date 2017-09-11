@@ -85,7 +85,7 @@ gst_timed_value_control_source_set (tv_csource, 1 * GST_SECOND, 1.0);
 
 Now everything is ready to play. If we bound the `GstControlSource` to a volume
 property, we will hear a 1 second fade-in. One word of caution: GStreamer's
-stock volume element has a `volume` property with a range from 0.0 to 4.0. If
+stock volume element has a `volume` property with a range from 0.0 to 10.0. If
 the above `GstControlSource` is attached to this property the volume will ramp
 up to 400%\!
 
