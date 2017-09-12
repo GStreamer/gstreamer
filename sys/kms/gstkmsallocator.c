@@ -56,6 +56,8 @@ struct kms_bo
 struct _GstKMSAllocatorPrivate
 {
   int fd;
+  /* protected by GstKMSAllocator object lock */
+  GList *mem_cache;
 };
 
 #define parent_class gst_kms_allocator_parent_class
@@ -292,6 +294,8 @@ gst_kms_allocator_finalize (GObject * obj)
   GstKMSAllocator *alloc;
 
   alloc = GST_KMS_ALLOCATOR (obj);
+
+  gst_kms_allocator_clear_cache (GST_ALLOCATOR (alloc));
 
   if (check_fd (alloc))
     close (alloc->priv->fd);
@@ -549,4 +553,62 @@ failed:
     gst_memory_unref (mem);
     return NULL;
   }
+}
+
+/* FIXME, using gdata for caching on upstream memory is not tee safe */
+GstMemory *
+gst_kms_allocator_get_cached (GstMemory * mem)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      g_quark_from_static_string ("kmsmem"));
+}
+
+static void
+cached_kmsmem_disposed_cb (GstKMSAllocator * alloc, GstMiniObject * obj)
+{
+  GST_OBJECT_LOCK (alloc);
+  alloc->priv->mem_cache = g_list_remove (alloc->priv->mem_cache, obj);
+  GST_OBJECT_UNLOCK (alloc);
+}
+
+void
+gst_kms_allocator_clear_cache (GstAllocator * allocator)
+{
+  GstKMSAllocator *alloc = GST_KMS_ALLOCATOR (allocator);
+  GList *iter;
+
+  GST_OBJECT_LOCK (alloc);
+
+  iter = alloc->priv->mem_cache;
+  while (iter) {
+    GstMiniObject *obj = iter->data;
+    gst_mini_object_weak_unref (obj,
+        (GstMiniObjectNotify) cached_kmsmem_disposed_cb, alloc);
+    gst_mini_object_set_qdata (obj,
+        g_quark_from_static_string ("kmsmem"), NULL, NULL);
+    iter = iter->next;
+  }
+
+  g_list_free (alloc->priv->mem_cache);
+  alloc->priv->mem_cache = NULL;
+
+  GST_OBJECT_UNLOCK (alloc);
+}
+
+/* @kmsmem is transfer-full */
+void
+gst_kms_allocator_cache (GstAllocator * allocator, GstMemory * mem,
+    GstMemory * kmsmem)
+{
+  GstKMSAllocator *alloc = GST_KMS_ALLOCATOR (allocator);
+
+  GST_OBJECT_LOCK (alloc);
+  gst_mini_object_weak_ref (GST_MINI_OBJECT (mem),
+      (GstMiniObjectNotify) cached_kmsmem_disposed_cb, alloc);
+  alloc->priv->mem_cache = g_list_prepend (alloc->priv->mem_cache, mem);
+  GST_OBJECT_UNLOCK (alloc);
+
+  gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
+      g_quark_from_static_string ("kmsmem"), kmsmem,
+      (GDestroyNotify) gst_memory_unref);
 }
