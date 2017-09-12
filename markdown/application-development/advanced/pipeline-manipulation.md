@@ -4,77 +4,74 @@ title: Pipeline manipulation
 
 # Pipeline manipulation
 
-This chapter will discuss how you can manipulate your pipeline in
-several ways from your application on. Parts of this chapter are very
-lowlevel, so be assured that you'll need some programming knowledge and
-a good understanding of GStreamer before you start reading this.
+This chapter presents many ways in which you can manipulate pipelines from
+your application. These are some of the topics that will be covered:
 
-Topics that will be discussed here include how you can insert data into
-a pipeline from your application, how to read data from a pipeline, how
-to manipulate the pipeline's speed, length, starting point and how to
-listen to a pipeline's data processing.
+- How to insert data from an application into a pipeline
+- How to read data from a pipeline
+- How to manipulate the pipeline's speed, length and starting point
+- How to *listen* to a pipeline's data processing.
+
+Parts of this chapter are very low level so you'll need some programming
+experience and a good understanding of GStreamer to follow them.
 
 ## Using probes
 
-Probing is best envisioned as a pad listener. Technically, a probe is
-nothing more than a callback that can be attached to a pad. You can
-attach a probe using `gst_pad_add_probe ()`. Similarly, one can use the
-`gst_pad_remove_probe ()` to remove the callback again. The probe
-notifies you of any activity that happens on the pad, like buffers,
-events and queries. You can define what kind of notifications you are
-interested in when you add the probe.
+Probing is best envisioned as having access to a pad listener. Technically, a
+probe is nothing more than a callback that can be attached to a pad using
+`gst_pad_add_probe ()`. Conversely, you can use `gst_pad_remove_probe ()` to
+remove the callback. While attached, the probe notifies you of any activity
+on the pad. You can define what kind of notifications you are interested in when
+you add the probe.
 
-The probe can notify you of the following activity on pads:
+Probe types:
 
   - A buffer is pushed or pulled. You want to specify the
-    GST\_PAD\_PROBE\_TYPE\_BUFFER when registering the probe. Because
-    the pad can be scheduled in different ways, it is possible to also
+    `GST_PAD_PROBE_TYPE_BUFFER` when registering the probe. Because
+    the pad can be scheduled in different ways. It is also possible to
     specify in what scheduling mode you are interested with the optional
-    GST\_PAD\_PROBE\_TYPE\_PUSH and GST\_PAD\_PROBE\_TYPE\_PULL flags.
-
+    `GST_PAD_PROBE_TYPE_PUSH` and `GST_PAD_PROBE_TYPE_PULL` flags.
     You can use this probe to inspect, modify or drop the buffer. See
     [Data probes](#data-probes).
 
-  - A bufferlist is pushed. Use the GST\_PAD\_PROBE\_TYPE\_BUFFER\_LIST
+  - A buffer list is pushed. Use the `GST_PAD_PROBE_TYPE_BUFFER_LIST`
     when registering the probe.
 
   - An event travels over a pad. Use the
-    GST\_PAD\_PROBE\_TYPE\_EVENT\_DOWNSTREAM and
-    GST\_PAD\_PROBE\_TYPE\_EVENT\_UPSTREAM flags to select downstream
+    `GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM` and
+    `GST_PAD_PROBE_TYPE_EVENT_UPSTREAM` flags to select downstream
     and upstream events. There is also a convenience
-    GST\_PAD\_PROBE\_TYPE\_EVENT\_BOTH to be notified of events going
-    both upstream and downstream. By default, flush events do not cause
+    `GST_PAD_PROBE_TYPE_EVENT_BOTH` to be notified of events going
+    in both directions. By default, flush events do not cause
     a notification. You need to explicitly enable
-    GST\_PAD\_PROBE\_TYPE\_EVENT\_FLUSH to receive callbacks from
+    `GST_PAD_PROBE_TYPE_EVENT_FLUSH` to receive callbacks from
     flushing events. Events are always only notified in push mode.
-
-    You can use this probe to inspect, modify or drop the event.
+    You can use this type of probe to inspect, modify or drop the event.
 
   - A query travels over a pad. Use the
-    GST\_PAD\_PROBE\_TYPE\_QUERY\_DOWNSTREAM and
-    GST\_PAD\_PROBE\_TYPE\_QUERY\_UPSTREAM flags to select downstream
+    `GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM` and
+    `GST_PAD_PROBE_TYPE_QUERY_UPSTREAM` flags to select downstream
     and upstream queries. The convenience
-    GST\_PAD\_PROBE\_TYPE\_QUERY\_BOTH can also be used to select both
-    directions. Query probes will be notified twice, once when the query
-    travels upstream/downstream and once when the query result is
+    `GST_PAD_PROBE_TYPE_QUERY_BOTH` can also be used to select both
+    directions. Query probes are notified twice: when the query
+    travels upstream/downstream and when the query result is
     returned. You can select in what stage the callback will be called
-    with the GST\_PAD\_PROBE\_TYPE\_PUSH and
-    GST\_PAD\_PROBE\_TYPE\_PULL, respectively when the query is
+    with the `GST_PAD_PROBE_TYPE_PUSH` and
+    `GST_PAD_PROBE_TYPE_PULL`, respectively when the query is
     performed and when the query result is returned.
 
-    You can use this probe to inspect or modify the query. You can also
-    answer the query in the probe callback by placing the result value
-    in the query and by returning GST\_PAD\_PROBE\_DROP from the
-    callback.
+    You can use a query probe to inspect or modify queries, or even to answer
+    them in the probe callback. To answer a query you place the result value
+    in the query and return `GST_PAD_PROBE_DROP` from the callback.
 
   - In addition to notifying you of dataflow, you can also ask the probe
     to block the dataflow when the callback returns. This is called a
     blocking probe and is activated by specifying the
-    GST\_PAD\_PROBE\_TYPE\_BLOCK flag. You can use this flag with the
+    `GST_PAD_PROBE_TYPE_BLOCK` flag. You can use this flag with the
     other flags to only block dataflow on selected activity. A pad
     becomes unblocked again if you remove the probe or when you return
-    GST\_PAD\_PROBE\_REMOVE from the callback. You can let only the
-    currently blocked item pass by returning GST\_PAD\_PROBE\_PASS from
+    `GST_PAD_PROBE_REMOVE` from the callback. You can let only the
+    currently blocked item pass by returning `GST_PAD_PROBE_PASS` from
     the callback, it will block again on the next item.
 
     Blocking probes are used to temporarily block pads because they are
@@ -85,8 +82,8 @@ The probe can notify you of the following activity on pads:
     file](#play-a-region-of-a-media-file).
 
   - Be notified when no activity is happening on a pad. You install this
-    probe with the GST\_PAD\_PROBE\_TYPE\_IDLE flag. You can specify
-    GST\_PAD\_PROBE\_TYPE\_PUSH and/or GST\_PAD\_PROBE\_TYPE\_PULL to
+    probe with the `GST_PAD_PROBE_TYPE_IDLE` flag. You can specify
+    `GST_PAD_PROBE_TYPE_PUSH` and/or `GST_PAD_PROBE_TYPE_PULL` to
     only be notified depending on the pad scheduling mode. The IDLE
     probe is also a blocking probe in that it will not let any data pass
     on the pad for as long as the IDLE probe is installed.
@@ -98,26 +95,26 @@ The probe can notify you of the following activity on pads:
 
 ### Data probes
 
-Data probes allow you to be notified when there is data passing on a
-pad. When adding the probe, specify the GST\_PAD\_PROBE\_TYPE\_BUFFER
-and/or GST\_PAD\_PROBE\_TYPE\_BUFFER\_LIST.
+Data probes notify you when there is data passing on a pad. Pass
+`GST_PAD_PROBE_TYPE_BUFFER` and/or `GST_PAD_PROBE_TYPE_BUFFER_LIST` to
+`gst_pad_add_probe ()` for creating this kind of probe. Most common buffer
+operations elements can do in `_chain ()` functions, can be done in probe
+callbacks.
 
-Data probes run in pipeline streaming thread context, so callbacks
-should try to not block and generally not do any weird stuff, since this
-could have a negative impact on pipeline performance or, in case of
-bugs, cause deadlocks or crashes. More precisely, one should usually not
-call any GUI-related functions from within a probe callback, nor try to
-change the state of the pipeline. An application may post custom
-messages on the pipeline's bus though to communicate with the main
-application thread and have it do things like stop the pipeline.
+Data probes run in the pipeline's streaming thread context, so callbacks
+should try to avoid blocking and generally, avoid doing weird stuff. Doing so
+could have a negative impact on the pipeline's performance or, in case of bugs,
+lead to deadlocks or crashes. More precisely, one should usually avoid calling
+GUI-related functions from within a probe callback, nor try to change the state
+of the pipeline. An application may post custom messages on the pipeline's bus
+to communicate with the main application thread and have it do things like stop
+the pipeline.
 
-In any case, most common buffer operations that elements can do in
-`_chain ()` functions, can be done in probe callbacks as well. The
-example below gives a short impression on how to use them.
+The following is an example on using data probes. Compare this program's output
+with that of `gst-launch-1.0 videotestsrc !  xvimagesink` if you are not
+sure what to look for:
 
 ``` c
-
-
 #include <gst/gst.h>
 
 static GstPadProbeReturn
@@ -226,13 +223,7 @@ main (gint   argc,
 
   return 0;
 }
-
-
-
 ```
-
-Compare that output with the output of “gst-launch-1.0 videotestsrc \!
-xvimagesink”, just so you know what you're looking for.
 
 Strictly speaking, a pad probe callback is only allowed to modify the
 buffer content if the buffer is writable. Whether this is the case or
@@ -245,45 +236,41 @@ different buffer than the one passed in, it is a good idea to make the
 buffer writable in the callback function with `gst_buffer_make_writable
 ()`.
 
-Pad probes are suited best for looking at data as it passes through the
-pipeline. If you need to modify data, you should better write your own
-GStreamer element. Base classes like GstAudioFilter, GstVideoFilter or
-GstBaseTransform make this fairly easy.
+Pad probes are best suited for looking at data as it passes through the
+pipeline. If you need to modify data, you should rather write your own
+GStreamer element. Base classes like `GstAudioFilter`, `GstVideoFilter` or
+`GstBaseTransform` make this fairly easy.
 
 If you just want to inspect buffers as they pass through the pipeline,
 you don't even need to set up pad probes. You could also just insert an
 identity element into the pipeline and connect to its "handoff" signal.
 The identity element also provides a few useful debugging tools like the
-"dump" property or the "last-message" property (the latter is enabled by
-passing the '-v' switch to gst-launch and by setting the silent property
-on the identity to FALSE).
+`dump` and `last-message` properties; the latter is enabled by
+passing the '-v' switch to `gst-launch` and setting the `silent` property
+on the identity to `FALSE`.
 
-### Play a region of a media file
+### Play a section of a media file
 
-In this example we will show you how to play back a region of a media
-file. The goal is to only play the part of a file from 2 seconds to 5
-seconds and then EOS.
+In this example we will show you how to play back a section of a media
+file. The goal is to only play the part from 2 to 5 seconds and then
+quit.
 
-In a first step we will set a uridecodebin element to the PAUSED state
+In a first step we will set a `uridecodebin` element to the `PAUSED` state
 and make sure that we block all the source pads that are created. When
-all the source pads are blocked, we have data on all source pads and we
-say that the uridecodebin is prerolled.
+all the source pads are blocked, we have data on all of them and we say
+that the `uridecodebin` is prerolled.
 
 In a prerolled pipeline we can ask for the duration of the media and we
 can also perform seeks. We are interested in performing a seek operation
-on the pipeline to select the range of media that we are interested in.
+on the pipeline to select the 2-to-5-seconds section.
 
-After we configure the region we are interested in, we can link the sink
-element, unblock the source pads and set the pipeline to the playing
-state. You will see that exactly the requested region is played by the
-sink before it goes to EOS.
+After we configure the section we want, we can link the sink element, unblock the
+source pads and set the pipeline to the `PLAYING` state. You will see that
+exactly the requested region is displayed by the sink before it goes to `EOS`.
 
-What follows is an example application that loosly follows this
-algorithm.
+Here is the code:
 
 ``` c
-
-
 #include <gst/gst.h>
 
 static GMainLoop *loop;
@@ -470,159 +457,152 @@ main (gint   argc,
 
   return 0;
 }
-
 ```
 
-Note that we use a custom application message to signal the main thread
-that the uridecidebin is prerolled. The main thread will then issue a
-flushing seek to the requested region. The flush will temporarily
-unblock the pad and reblock them when new data arrives again. We detect
-this second block to remove the probes. Then we set the pipeline to
-PLAYING and it should play from 2 to 5 seconds, then EOS and exit the
-application.
+Note that we use a custom application message to signal the main thread that the
+`uridecodebin` is prerolled. The main thread will then issue a flushing seek to
+the requested region. The flush will temporarily unblock the pad and reblock
+them when new data arrives again. We detect this second block to remove the
+probes. Then we set the pipeline to `PLAYING` and it should play the selected
+2-to-5-seconds section; the application waits for the `EOS` message and quits.
 
 ## Manually adding or removing data from/to a pipeline
 
-Many people have expressed the wish to use their own sources to inject
-data into a pipeline. Some people have also expressed the wish to grab
-the output in a pipeline and take care of the actual output inside their
-application. While either of these methods are strongly discouraged,
-GStreamer offers support for this. *Beware\! You need to know what you
-are doing.* Since you don't have any support from a base class you need
-to thoroughly understand state changes and synchronization. If it
-doesn't work, there are a million ways to shoot yourself in the foot.
-It's always better to simply write a plugin and have the base class
-manage it. See the Plugin Writer's Guide for more information on this
-topic. Also see the next section, which will explain how to embed
-plugins statically in your application.
+Many people have expressed the wish to use their own sources to inject data into
+a pipeline, others, the wish to grab a pipeline's output and take care of it in
+their application. While these methods are strongly discouraged, GStreamer
+offers support for them -- *Beware\! You need to know what you are doing* --.
+Since you don't have any support from a base class you need to thoroughly
+understand state changes and synchronization. If it doesn't work, there are a
+million ways to shoot yourself in the foot. It's always better to simply write a
+plugin and have the base class manage it. See the Plugin Writer's Guide for more
+information on this topic. Additionally, review the next section, which explains
+how to statically embed plugins in your application.
 
-There's two possible elements that you can use for the above-mentioned
-purposes. Those are called “appsrc” (an imaginary source) and “appsink”
-(an imaginary sink). The same method applies to each of those elements.
-Here, we will discuss how to use those elements to insert (using appsrc)
-or grab (using appsink) data from a pipeline, and how to set
+There are two possible elements that you can use for the above-mentioned
+purposes: `appsrc` (an imaginary source) and `appsink` (an imaginary sink). The
+same method applies to these elements. We will discuss how to use them to insert
+(using `appsrc`) or to grab (using appsink) data from a pipeline, and how to set
 negotiation.
 
-Both appsrc and appsink provide 2 sets of API. One API uses standard
-GObject (action) signals and properties. The same API is also available
-as a regular C api. The C api is more performant but requires you to
+Both `appsrc` and appsink provide 2 sets of API. One API uses standard
+`GObject` (action) signals and properties. The same API is also available
+as a regular C API. The C API is more performant but requires you to
 link to the app library in order to use the elements.
 
 ### Inserting data with appsrc
 
-First we look at some examples for appsrc, which lets you insert data
-into the pipeline from the application. Appsrc has some configuration
-options that define how it will operate. You should decide about the
-following configurations:
+Let's take a look at `appsrc` and how to insert application data into the
+pipeline.
 
-  - Will the appsrc operate in push or pull mode. The stream-type
-    property can be used to control this. stream-type of “random-access”
-    will activate pull mode scheduling while the other stream-types
-    activate push mode.
+`appsrc` has some configuration options that control the way it operates. You
+should decide about the following:
 
-  - The caps of the buffers that appsrc will push out. This needs to be
-    configured with the caps property. The caps must be set to a fixed
+  - Will `appsrc` operate in push or pull mode. The `stream-type`
+    property can be used to control this. A `random-access` `stream-type`
+    will make `appsrc` activate pull mode scheduling while the other
+    `stream-types` activate push mode.
+
+  - The caps of the buffers that `appsrc` will push out. This needs to be
+    configured with the `caps` property. This property must be set to a fixed
     caps and will be used to negotiate a format downstream.
 
-  - If the appsrc operates in live mode or not. This can be configured
-    with the is-live property. When operating in live-mode it is
-    important to configure the min-latency and max-latency in appsrc.
-    The min-latency should be set to the amount of time it takes between
-    capturing a buffer and when it is pushed inside appsrc. In live
-    mode, you should timestamp the buffers with the pipeline
-    running-time when the first byte of the buffer was captured before
-    feeding them to appsrc. You can let appsrc do the timestaping with
-    the do-timestamp property (but then the min-latency must be set to 0
-    because it timestamps based on the running-time when the buffer
-    entered appsrc).
+  - Whether `appsrc` operates in live mode or not. This is configured
+    with the `is-live` property. When operating in live-mode it is
+    also important to set the `min-latency` and `max-latency` properties.
+    `min-latency` should be set to the amount of time it takes between
+    capturing a buffer and when it is pushed inside `appsrc`. In live
+    mode, you should timestamp the buffers with the pipeline `running-time`
+    when the first byte of the buffer was captured before feeding them to
+    `appsrc`. You can let `appsrc` do the timestamping with
+    the `do-timestamp` property, but then the `min-latency` must be set to 0
+    because `appsrc` timestamps based on what was the `running-time` when it got
+    a given buffer.
 
-  - The format of the SEGMENT event that appsrc will push. The format
-    has implications for how the running-time of the buffers will be
-    calculated so you must be sure you understand this. For live sources
-    you probably want to set the format property to GST\_FORMAT\_TIME.
-    For non-live source it depends on the media type that you are
+  - The format of the SEGMENT event that `appsrc` will push. This format
+    has implications for how the buffers' `running-time` will be calculated,
+    so you must be sure you understand this. For live sources
+    you probably want to set the format property to `GST_FORMAT_TIME`.
+    For non-live sources, it depends on the media type that you are
     handling. If you plan to timestamp the buffers, you should probably
-    put a GST\_FORMAT\_TIME format, otherwise GST\_FORMAT\_BYTES might
+    use `GST_FORMAT_TIME` as format, if you don't, `GST_FORMAT_BYTES` might
     be appropriate.
 
-  - If appsrc operates in random-access mode, it is important to
-    configure the size property of appsrc with the number of bytes in
-    the stream. This will allow downstream elements to know the size of
-    the media and alows them to seek to the end of the stream when
-    needed.
+  - If `appsrc` operates in random-access mode, it is important to
+    configure the size property with the number of bytes in the stream. This
+    will allow downstream elements to know the size of the media and seek to the
+    end of the stream when needed.
 
-The main way of handling data to appsrc is by using the function
-`gst_app_src_push_buffer ()` or by emiting the push-buffer action
-signal. This will put the buffer onto a queue from which appsrc will
-read from in its streaming thread. It is important to note that data
-transport will not happen from the thread that performed the push-buffer
+The main way of handling data to `appsrc` is by using the
+`gst_app_src_push_buffer ()` function or by emitting the `push-buffer` action
+signal. This will put the buffer onto a queue from which `appsrc` will
+read in its streaming thread. It's important to note that data
+transport will not happen from the thread that performed the `push-buffer`
 call.
 
-The “max-bytes” property controls how much data can be queued in appsrc
-before appsrc considers the queue full. A filled internal queue will
-always signal the “enough-data” signal, which signals the application
-that it should stop pushing data into appsrc. The “block” property will
-cause appsrc to block the push-buffer method until free data becomes
+The `max-bytes` property controls how much data can be queued in `appsrc`
+before `appsrc` considers the queue full. A filled internal queue will
+always signal the `enough-data` signal, which signals the application
+that it should stop pushing data into `appsrc`. The `block` property will
+cause `appsrc` to block the `push-buffer` method until free data becomes
 available again.
 
-When the internal queue is running out of data, the “need-data” signal
+When the internal queue is running out of data, the `need-data` signal
 is emitted, which signals the application that it should start pushing
-more data into appsrc.
+more data into `appsrc`.
 
-In addition to the “need-data” and “enough-data” signals, appsrc can
-emit the “seek-data” signal when the “stream-mode” property is set to
-“seekable” or “random-access”. The signal argument will contain the
+In addition to the `need-data` and `enough-data` signals, `appsrc` can
+emit `seek-data` when the `stream-mode` property is set to
+`seekable` or `random-access`. The signal argument will contain the
 new desired position in the stream expressed in the unit set with the
-“format” property. After receiving the seek-data signal, the
-application should push-buffers from the new position.
+`format` property. After receiving the `seek-data` signal, the
+application should push buffers from the new position.
 
-When the last byte is pushed into appsrc, you must call
-`gst_app_src_end_of_stream ()` to make it send an EOS downstream.
+When the last byte is pushed into `appsrc`, you must call
+`gst_app_src_end_of_stream ()` to make it send an `EOS` downstream.
 
-These signals allow the application to operate appsrc in push and pull
+These signals allow the application to operate `appsrc` in push and pull
 mode as will be explained next.
 
 #### Using appsrc in push mode
 
-When appsrc is configured in push mode (stream-type is stream or
-seekable), the application repeatedly calls the push-buffer method with
-a new buffer. Optionally, the queue size in the appsrc can be controlled
-with the enough-data and need-data signals by respectively
-stopping/starting the push-buffer calls. The value of the min-percent
-property defines how empty the internal appsrc queue needs to be before
-the need-data signal will be fired. You can set this to some value \>0
+When `appsrc` is configured in push mode (`stream-type` is stream or
+seekable), the application repeatedly calls the `push-buffer` method with
+a new buffer. Optionally, the queue size in the `appsrc` can be controlled
+with the `enough-data` and `need-data` signals by respectively
+stopping/starting the `push-buffer` calls. The value of the min-percent
+property defines how empty the internal `appsrc` queue needs to be before
+the `need-data` signal is issued. You can set this to some positive value
 to avoid completely draining the queue.
 
-When the stream-type is set to seekable, don't forget to implement a
-seek-data callback.
+Don't forget to implement a `seek-data` callback when the `stream-type` is
+set to `GST_APP_STREAM_TYPE_SEEKABLE`.
 
-Use this model when implementing various network protocols or hardware
+Use this mode when implementing various network protocols or hardware
 devices.
 
 #### Using appsrc in pull mode
 
-In the pull model, data is fed to appsrc from the need-data signal
+In pull mode, data is fed to `appsrc` from the `need-data` signal
 handler. You should push exactly the amount of bytes requested in the
-need-data signal. You are only allowed to push less bytes when you are
+`need-data` signal. You are only allowed to push less bytes when you are
 at the end of the stream.
 
-Use this model for file access or other randomly accessable sources.
+Use this mode for file access or other randomly accessible sources.
 
 #### Appsrc example
 
 This example application will generate black/white (it switches every
-second) video to an Xv-window output by using appsrc as a source with
+second) video to an Xv-window output by using `appsrc` as a source with
 caps to force a format. We use a colorspace conversion element to make
-sure that we feed the right format to your X server. We configure a
+sure that we feed the right format to the X server. We configure a
 video stream with a variable framerate (0/1) and we set the timestamps
 on the outgoing buffers in such a way that we play 2 frames per second.
 
-Note how we use the pull mode method of pushing new buffers into appsrc
-although appsrc is running in push mode.
+Note how we use the pull mode method of pushing new buffers into `appsrc`
+although `appsrc` is running in push mode.
 
 ``` c
-
-
 #include <gst/gst.h>
 
 static GMainLoop *loop;
@@ -705,70 +685,65 @@ main (gint   argc,
 
   return 0;
   }
-
-
-
 ```
 
 ### Grabbing data with appsink
 
-Unlike appsrc, appsink is a little easier to use. It also supports a
-pull and push based model of getting data from the pipeline.
+Unlike `appsrc`, `appsink` is a little easier to use. It also supports
+pull and push-based modes for getting data from the pipeline.
 
 The normal way of retrieving samples from appsink is by using the
 `gst_app_sink_pull_sample()` and `gst_app_sink_pull_preroll()` methods
-or by using the “pull-sample” and “pull-preroll” signals. These methods
+or by using the `pull-sample` and `pull-preroll` signals. These methods
 block until a sample becomes available in the sink or when the sink is
-shut down or reaches EOS.
+shut down or reaches `EOS`.
 
-Appsink will internally use a queue to collect buffers from the
+`appsink` will internally use a queue to collect buffers from the
 streaming thread. If the application is not pulling samples fast enough,
-this queue will consume a lot of memory over time. The “max-buffers”
-property can be used to limit the queue size. The “drop” property
+this queue will consume a lot of memory over time. The `max-buffers`
+property can be used to limit the queue size. The `drop` property
 controls whether the streaming thread blocks or if older buffers are
 dropped when the maximum queue size is reached. Note that blocking the
 streaming thread can negatively affect real-time performance and should
 be avoided.
 
-If a blocking behaviour is not desirable, setting the “emit-signals”
-property to TRUE will make appsink emit the “new-sample” and
-“new-preroll” signals when a sample can be pulled without blocking.
+If a blocking behaviour is not desirable, setting the `emit-signals`
+property to `TRUE` will make appsink emit the `new-sample` and
+`new-preroll` signals when a sample can be pulled without blocking.
 
-The “caps” property on appsink can be used to control the formats that
-appsink can receive. This property can contain non-fixed caps, the
+The `caps` property on `appsink` can be used to control the formats that
+the latter can receive. This property can contain non-fixed caps, the
 format of the pulled samples can be obtained by getting the sample caps.
 
-If one of the pull-preroll or pull-sample methods return NULL, the
-appsink is stopped or in the EOS state. You can check for the EOS state
-with the “eos” property or with the `gst_app_sink_is_eos()` method.
+If one of the pull-preroll or pull-sample methods return `NULL`, the
+`appsink` is stopped or in the `EOS` state. You can check for the `EOS` state
+with the `eos` property or with the `gst_app_sink_is_eos()` method.
 
-The eos signal can also be used to be informed when the EOS state is
+The `eos` signal can also be used to be informed when the `EOS` state is
 reached to avoid polling.
 
-Consider configuring the following properties in the appsink:
+Consider configuring the following properties in the `appsink`:
 
-  - The “sync” property if you want to have the sink base class
+  - The `sync` property if you want to have the sink base class
     synchronize the buffer against the pipeline clock before handing you
     the sample.
 
-  - Enable Quality-of-Service with the “qos” property. If you are
-    dealing with raw video frames and let the base class sycnhronize on
-    the clock, it might be a good idea to also let the base class send
-    QOS events upstream.
+  - Enable Quality-of-Service with the `qos` property. If you are
+    dealing with raw video frames and let the base class synchronize on
+    the clock. It might also be a good idea to let the base class send
+    `QOS` events upstream.
 
   - The caps property that contains the accepted caps. Upstream elements
     will try to convert the format so that it matches the configured
-    caps on appsink. You must still check the `GstSample` to get the
+    caps on `appsink`. You must still check the `GstSample` to get the
     actual caps of the buffer.
 
 #### Appsink example
 
 What follows is an example on how to capture a snapshot of a video
-stream using appsink.
+stream using `appsink`.
 
 ``` c
-
-
 #include <gst/gst.h>
 #ifdef HAVE_GTK
 #include <gtk/gtk.h>
@@ -910,37 +885,37 @@ main (int argc, char *argv[])
 
   exit (0);
 }
-
 ```
 
 ## Forcing a format
 
-Sometimes you'll want to set a specific format, for example a video size
-and format or an audio bitsize and number of channels. You can do this
-by forcing a specific `GstCaps` on the pipeline, which is possible by
-using *filtered caps*. You can set a filtered caps on a link by using
-the “capsfilter” element in between the two elements, and specifying a
-`GstCaps` as “caps” property on this element. It will then only allow
-types matching that specified capability set for negotiation. See also
-[Creating capabilities for filtering][filter-caps].
+Sometimes you'll want to set a specific format. You can do this with a
+`capsfilter` element.
+
+If you want, for example, a specific video size and color format or an audio
+bitsize and a number of channels; you can force a specific `GstCaps` on the
+pipeline using *filtered caps*. You set *filtered caps* on a link by putting a
+`capsfilter` between two elements and specifying your desired `GstCaps` in its
+`caps` property. The `capsfilter` will only allow types compatible with these
+capabilities to be negotiated.
+
+See also [Creating capabilities for filtering][filter-caps].
 
 [filter-caps]: application-development/basics/pads.md#creating-capabilities-for-filtering
 
 ### Changing format in a PLAYING pipeline
 
 It is also possible to dynamically change the format in a pipeline while
-PLAYING. This can simply be done by changing the caps property on a
-capsfilter. The capsfilter will send a RECONFIGURE event upstream that
+`PLAYING`. This can simply be done by changing the `caps` property on a
+`capsfilter`. The `capsfilter` will send a `RECONFIGURE` event upstream that
 will make the upstream element attempt to renegotiate a new format and
-allocator. This only works if the upstream element is not using fixed
-caps on the source pad.
+allocator. This only works if the upstream element is not using fixed caps on
+its source pad.
 
 Below is an example of how you can change the caps of a pipeline while
-in the PLAYING state:
+in the `PLAYING` state:
 
 ``` c
-
-
 #include <stdlib.h>
 
 #include <gst/gst.h>
@@ -1016,23 +991,20 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-
-
 ```
 
 Note how we use `gst_bus_poll()` with a small timeout to get messages
 and also introduce a short sleep.
 
 It is possible to set multiple caps for the capsfilter separated with a
-;. The capsfilter will try to renegotiate to the first possible format
+`;`. The capsfilter will try to renegotiate to the first possible format
 from the list.
 
 ## Dynamically changing the pipeline
 
 In this section we talk about some techniques for dynamically modifying
 the pipeline. We are talking specifically about changing the pipeline
-while it is in the PLAYING state without interrupting the flow.
+while in `PLAYING` state and without interrupting the data flow.
 
 There are some important things to consider when building dynamic
 pipelines:
@@ -1045,10 +1017,9 @@ pipelines:
 
   - When adding elements to a pipeline, make sure to put the element
     into the right state, usually the same state as the parent, before
-    allowing dataflow the element. When an element is newly created, it
-    is in the NULL state and will return an error when it receives data.
-    See also [Changing elements in a
-    pipeline](#changing-elements-in-a-pipeline).
+    allowing dataflow. When an element is newly created, it is in the
+    `NULL` state and will return an error when it receives data.
+    See also [Changing elements in a pipeline](#changing-elements-in-a-pipeline).
 
   - When adding elements to a pipeline, GStreamer will by default set
     the clock and base-time on the element to the current values of the
@@ -1059,30 +1030,28 @@ pipelines:
     that matches the other sources.
 
   - When unlinking elements from an upstream chain, always make sure to
-    flush any queued data in the element by sending an EOS event down
-    the element sink pad(s) and by waiting that the EOS leaves the
+    flush any queued data in the element by sending an `EOS` event down
+    the element sink pad(s) and by waiting that the `EOS` leaves the
     elements (with an event probe).
 
-    If you do not do this, you will lose the data which is buffered by
-    the unlinked element. This can result in a simple frame loss (one or
-    more video frames, several milliseconds of audio). However if you
-    remove a muxer (and in some cases an encoder or similar elements)
-    from the pipeline, you risk getting a corrupted file which could not
-    be played properly, as some relevant metadata (header, seek/index
-    tables, internal sync tags) will not be stored or updated properly.
+    If you don't perform a flush, you will lose the data buffered by the
+    unlinked element. This can result in a simple frame loss (a few video frames,
+    several milliseconds of audio, etc) but If you remove a muxer -- and in
+    some cases an encoder or similar elements --, you risk getting a corrupted
+    file which can't be played properly because some relevant metadata (header,
+    seek/index tables, internal sync tags) might not be properly stored or updated.
 
-    See also [Changing elements in a
-    pipeline](#changing-elements-in-a-pipeline).
+    See also [Changing elements in a pipeline](#changing-elements-in-a-pipeline).
 
-  - A live source will produce buffers with a running-time of the
-    current running-time in the pipeline.
+  - A live source will produce buffers with a `running-time` equal to the
+    pipeline's current `running-time`.
 
     A pipeline without a live source produces buffers with a
-    running-time starting from 0. Likewise, after a flushing seek, those
-    pipelines reset the running-time back to 0.
+    `running-time` starting from 0. Likewise, after a flushing seek, these
+    pipelines reset the `running-time` back to 0.
 
-    The running-time can be changed with `gst_pad_set_offset ()`. It is
-    important to know the running-time of the elements in the pipeline
+    The `running-time` can be changed with `gst_pad_set_offset ()`. It is
+    important to know the `running-time` of the elements in the pipeline
     in order to maintain synchronization.
 
   - Adding elements might change the state of the pipeline. Adding a
@@ -1090,42 +1059,42 @@ pipelines:
     prerolling state. Removing a non-prerolled sink, for example, might
     change the pipeline to PAUSED and PLAYING state.
 
-    Adding a live source cancels the preroll stage and put the pipeline
-    to the playing state. Adding a live source or other live elements
-    might also change the latency of a pipeline.
+    Adding a live source cancels the preroll stage and puts the pipeline
+    in the playing state. Adding any live element might also change the
+    pipeline's latency.
 
-    Adding or removing elements to the pipeline might change the clock
+    Adding or removing pipeline's elements might change the clock
     selection of the pipeline. If the newly added element provides a
-    clock, it might be worth changing the clock in the pipeline to the
-    new clock. If, on the other hand, the element that provides the
-    clock for the pipeline is removed, a new clock has to be selected.
+    clock, it might be good for the pipeline to use the new clock. If, on
+    the other hand, the element that is providing the clock for the
+    pipeline is removed, a new clock has to be selected.
 
   - Adding and removing elements might cause upstream or downstream
     elements to renegotiate caps and or allocators. You don't really
     need to do anything from the application, plugins largely adapt
-    themself to the new pipeline topology in order to optimize their
+    themselves to the new pipeline topology in order to optimize their
     formats and allocation strategy.
 
     What is important is that when you add, remove or change elements in
-    the pipeline, it is possible that the pipeline needs to negotiate a
+    a pipeline, it is possible that the pipeline needs to negotiate a
     new format and this can fail. Usually you can fix this by inserting
     the right converter elements where needed. See also [Changing
     elements in a pipeline](#changing-elements-in-a-pipeline).
 
-GStreamer offers support for doing about any dynamic pipeline
-modification but it requires you to know a bit of details before you can
-do this without causing pipeline errors. In the following sections we
-will demonstrate a couple of typical use-cases.
+GStreamer offers support for doing almost any dynamic pipeline modification but
+you need to know a few details before you can do this without causing pipeline
+errors. In the following sections we will demonstrate a few typical modification
+use-cases.
 
 ### Changing elements in a pipeline
 
-In the next example we look at the following chain of elements:
+In this example we have the following element chain:
 
 ```
-            - ----.      .----------.      .---- -
-         element1 |      | element2 |      | element3
-                src -> sink       src -> sink
-            - ----'      '----------'      '---- -
+   - ----.      .----------.      .---- -
+element1 |      | element2 |      | element3
+       src -> sink       src -> sink
+   - ----'      '----------'      '---- -
 
 ```
 
@@ -1149,26 +1118,26 @@ following steps:
   - Unlink element1 and element2.
 
   - Make sure data is flushed out of element2. Some elements might
-    internally keep some data, you need to make sure not to lose data by
-    forcing it out of element2. You can do this by pushing EOS into
+    internally keep some data, you need to make sure not to lose any by
+    forcing it out of element2. You can do this by pushing `EOS` into
     element2, like this:
 
       - Put an event probe on element2's source pad.
 
-      - Send EOS to element2's sinkpad. This makes sure the all the data
+      - Send `EOS` to element2's sinkpad. This makes sure the all the data
         inside element2 is forced out.
 
-      - Wait for the EOS event to appear on element2's source pad. When
-        the EOS is received, drop it and remove the event probe.
+      - Wait for the `EOS` event to appear on element2's source pad. When
+        the `EOS` is received, drop it and remove the event probe.
 
   - Unlink element2 and element3. You can now also remove element2 from
-    the pipeline and set the state to NULL.
+    the pipeline and set the state to `NULL`.
 
   - Add element4 to the pipeline, if not already added. Link element4
     and element3. Link element1 and element4.
 
   - Make sure element4 is in the same state as the rest of the elements
-    in the pipeline. It should be at least in the PAUSED state before it
+    in the pipeline. It should be at least in the `PAUSED` state before it
     can receive buffers and events.
 
   - Unblock element1's source pad probe. This will let new data into
@@ -1177,14 +1146,12 @@ following steps:
 The above algorithm works when the source pad is blocked, i.e. when
 there is dataflow in the pipeline. If there is no dataflow, there is
 also no point in changing the element (just yet) so this algorithm can
-be used in the PAUSED state as well.
+be used in the `PAUSED` state as well.
 
-Let show you how this works with an example. This example changes the
-video effect on a simple pipeline every second.
+This example changes the video effect on a simple pipeline once per
+second:
 
 ``` c
-
-
 #include <gst/gst.h>
 
 static gchar *opt_effects = NULL;
@@ -1393,12 +1360,9 @@ main (int argc, char **argv)
 
   return 0;
 }
-
-
-
 ```
 
-Note how we added videoconvert elements before and after the effect.
+Note how we added `videoconvert` elements before and after the effect.
 This is needed because some elements might operate in different
-colorspaces than other elements. By inserting the conversion elements
-you ensure that the right format can be negotiated at any time.
+colorspaces; by inserting the conversion elements, we can help ensure
+a proper format can be negotiated.
