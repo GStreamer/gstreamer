@@ -64,6 +64,7 @@ struct _GstAudioStreamAlign
  * Allocate a new #GstAudioStreamAlign with the given configuration. All
  * processing happens according to sample rate @rate, until
  * gst_audio_discont_wait_set_rate() is called with a new @rate.
+ * A negative rate can be used for reverse playback.
  *
  * @alignment_threshold gives the tolerance in nanoseconds after which a
  * timestamp difference is considered a discontinuity. Once detected,
@@ -82,7 +83,7 @@ gst_audio_stream_align_new (gint rate, GstClockTime alignment_threshold,
 {
   GstAudioStreamAlign *align;
 
-  g_return_val_if_fail (rate > 0, NULL);
+  g_return_val_if_fail (rate != 0, NULL);
 
   align = g_new0 (GstAudioStreamAlign, 1);
   align->rate = rate;
@@ -147,7 +148,7 @@ void
 gst_audio_stream_align_set_rate (GstAudioStreamAlign * align, gint rate)
 {
   g_return_if_fail (align != NULL);
-  g_return_if_fail (rate > 0);
+  g_return_if_fail (rate != 0);
 
   if (align->rate == rate)
     return;
@@ -283,10 +284,18 @@ gst_audio_stream_align_mark_discont (GstAudioStreamAlign * align)
  * discontinuity differs by more than the alignment threshold for a duration
  * longer than discont wait.
  *
+ * Note: In reverse playback, every buffer is considered discontinuous in the
+ * context of buffer flags because the last sample of the previous buffer is
+ * discontinuous with the first sample of the current one. However for this
+ * function they are only considered discontinuous in reverse playback if the
+ * first sample of the previous buffer is discontinuous with the last sample
+ * of the current one.
+ *
  * Returns: %TRUE if a discontinuity was detected, %FALSE otherwise.
  *
  * Since: 1.14
  */
+#define ABSDIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
 gboolean
 gst_audio_stream_align_process (GstAudioStreamAlign * align,
     gboolean discont, GstClockTime timestamp, guint n_samples,
@@ -299,10 +308,12 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
   g_return_val_if_fail (align != NULL, FALSE);
 
   start_time = timestamp;
-  start_offset = gst_util_uint64_scale (start_time, align->rate, GST_SECOND);
+  start_offset =
+      gst_util_uint64_scale (start_time, ABS (align->rate), GST_SECOND);
 
   end_offset = start_offset + n_samples;
-  end_time = gst_util_uint64_scale_int (end_offset, GST_SECOND, align->rate);
+  end_time =
+      gst_util_uint64_scale_int (end_offset, GST_SECOND, ABS (align->rate));
 
   duration = end_time - start_time;
 
@@ -312,24 +323,27 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
     guint64 diff, max_sample_diff;
 
     /* Check discont */
-    if (start_offset <= align->next_offset)
-      diff = align->next_offset - start_offset;
-    else
-      diff = start_offset - align->next_offset;
+    if (align->rate > 0) {
+      diff = ABSDIFF (start_offset, align->next_offset);
+    } else {
+      diff = ABSDIFF (end_offset, align->next_offset);
+    }
 
     max_sample_diff =
         gst_util_uint64_scale_int (align->alignment_threshold,
-        align->rate, GST_SECOND);
+        ABS (align->rate), GST_SECOND);
 
     /* Discont! */
     if (G_UNLIKELY (diff >= max_sample_diff)) {
       if (align->discont_wait > 0) {
         if (align->discont_time == GST_CLOCK_TIME_NONE) {
-          align->discont_time = start_time;
-        } else if ((start_time >= align->discont_time
-                && start_time - align->discont_time >= align->discont_wait)
-            || (start_time < align->discont_time
-                && align->discont_time - start_time >= align->discont_wait)) {
+          align->discont_time = align->rate > 0 ? start_time : end_time;
+        } else if ((align->rate > 0
+                && ABSDIFF (start_time,
+                    align->discont_time) >= align->discont_wait)
+            || (align->rate < 0
+                && ABSDIFF (end_time,
+                    align->discont_time) >= align->discont_wait)) {
           discont = TRUE;
           align->discont_time = GST_CLOCK_TIME_NONE;
         }
@@ -348,22 +362,41 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
       GST_INFO ("Have discont. Expected %"
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           align->next_offset, start_offset);
-    align->next_offset = end_offset;
+    align->next_offset = align->rate > 0 ? end_offset : start_offset;
 
     /* Got a discont and adjusted, reset the discont_time marker */
     align->discont_time = GST_CLOCK_TIME_NONE;
   } else {
 
     /* No discont, just keep counting */
-    timestamp =
-        gst_util_uint64_scale (align->next_offset, GST_SECOND, align->rate);
+    if (align->rate > 0) {
+      timestamp =
+          gst_util_uint64_scale (align->next_offset, GST_SECOND,
+          ABS (align->rate));
 
-    start_offset = align->next_offset;
-    align->next_offset += n_samples;
+      start_offset = align->next_offset;
+      align->next_offset += n_samples;
 
-    duration =
-        gst_util_uint64_scale (align->next_offset, GST_SECOND,
-        align->rate) - timestamp;
+      duration =
+          gst_util_uint64_scale (align->next_offset, GST_SECOND,
+          ABS (align->rate)) - timestamp;
+    } else {
+      guint64 old_offset = align->next_offset;
+
+      if (align->next_offset > n_samples)
+        align->next_offset -= n_samples;
+      else
+        align->next_offset = 0;
+      start_offset = align->next_offset;
+
+      timestamp =
+          gst_util_uint64_scale (align->next_offset, GST_SECOND,
+          ABS (align->rate));
+
+      duration =
+          gst_util_uint64_scale (old_offset, GST_SECOND,
+          ABS (align->rate)) - timestamp;
+    }
   }
 
   if (out_timestamp)
@@ -375,3 +408,5 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
 
   return discont;
 }
+
+#undef ABSDIFF
