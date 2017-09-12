@@ -37,9 +37,18 @@ G_BEGIN_DECLS
  * GST_BUFFER_POOL_OPTION_KMS_BUFFER:
  *
  * An option that can be activated on buffer pool to request KMS
- * buffers.
+ * buffers. NOT IMPLEMENTED
  */
 #define GST_BUFFER_POOL_OPTION_KMS_BUFFER "GstBufferPoolOptionKMSBuffer"
+
+/**
+ * GST_BUFFER_POOL_OPTION_KMS_PRIME_EXPORT:
+ *
+ * An option that can be activated on buffer pool to request DMABuf
+ * buffers. Callers are responsible to check if this is supported. Dumb buffers
+ * will be returned if not supported.
+ */
+#define GST_BUFFER_POOL_OPTION_KMS_PRIME_EXPORT "GstBufferPoolOptionKMSPrimeExport"
 
 /* video bufferpool */
 typedef struct _GstKMSBufferPool GstKMSBufferPool;

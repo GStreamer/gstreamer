@@ -932,6 +932,14 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     pool = gst_kms_sink_create_pool (self, caps, size, 0);
     if (!pool)
       goto no_pool;
+
+    /* Only export for pool used upstream */
+    if (self->has_prime_export) {
+      GstStructure *config = gst_buffer_pool_get_config (pool);
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_KMS_PRIME_EXPORT);
+      gst_buffer_pool_set_config (pool, config);
+    }
   }
 
   /* we need at least 2 buffer because we hold on to the last one */

@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include <fcntl.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <stdlib.h>
@@ -36,6 +37,8 @@
 
 /* it needs to be below because is internal to libdrm */
 #include <drm.h>
+
+#include <gst/allocators/gstdmabuf.h>
 
 #include "gstkmsallocator.h"
 #include "gstkmsutils.h"
@@ -58,6 +61,7 @@ struct _GstKMSAllocatorPrivate
   int fd;
   /* protected by GstKMSAllocator object lock */
   GList *mem_cache;
+  GstAllocator *dmabuf_alloc;
 };
 
 #define parent_class gst_kms_allocator_parent_class
@@ -296,6 +300,9 @@ gst_kms_allocator_finalize (GObject * obj)
   alloc = GST_KMS_ALLOCATOR (obj);
 
   gst_kms_allocator_clear_cache (GST_ALLOCATOR (alloc));
+
+  if (alloc->priv->dmabuf_alloc)
+    gst_object_unref (alloc->priv->dmabuf_alloc);
 
   if (check_fd (alloc))
     close (alloc->priv->fd);
@@ -551,6 +558,48 @@ import_fd_failed:
 failed:
   {
     gst_memory_unref (mem);
+    return NULL;
+  }
+}
+
+GstMemory *
+gst_kms_allocator_dmabuf_export (GstAllocator * allocator, GstMemory * _kmsmem)
+{
+  GstKMSMemory *kmsmem = (GstKMSMemory *) _kmsmem;
+  GstKMSAllocator *alloc = GST_KMS_ALLOCATOR (allocator);
+  GstMemory *mem;
+  gint ret;
+  gint prime_fd;
+
+  /* We can only export DUMB buffers */
+  g_return_val_if_fail (kmsmem->bo, NULL);
+
+
+  ret = drmPrimeHandleToFD (alloc->priv->fd, kmsmem->bo->handle,
+      DRM_CLOEXEC | DRM_RDWR, &prime_fd);
+  if (ret)
+    goto export_fd_failed;
+
+  if (G_UNLIKELY (alloc->priv->dmabuf_alloc == NULL))
+    alloc->priv->dmabuf_alloc = gst_dmabuf_allocator_new ();
+
+  mem = gst_dmabuf_allocator_alloc (alloc->priv->dmabuf_alloc, prime_fd,
+      gst_memory_get_sizes (_kmsmem, NULL, NULL));
+
+  /* Populate the cache so KMSSink can find the kmsmem back when it receives
+   * one of these DMABuf. This call takes ownership of the kmsmem. */
+  gst_kms_allocator_cache (allocator, mem, _kmsmem);
+
+  GST_DEBUG_OBJECT (alloc, "Exported bo handle %d as %d", kmsmem->bo->handle,
+      prime_fd);
+
+  return mem;
+
+  /* ERRORS */
+export_fd_failed:
+  {
+    GST_ERROR_OBJECT (alloc, "Failed to export bo handle %d: %s (%d)",
+        kmsmem->bo->handle, g_strerror (errno), ret);
     return NULL;
   }
 }
