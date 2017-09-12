@@ -483,14 +483,39 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:{
       GstCaps *caps;
+      GstAudioInfo info;
 
       gst_event_parse_caps (event, &caps);
 
-      ret = gst_audio_info_from_caps (&self->info, caps);
-      gst_audio_stream_align_set_rate (self->stream_align, self->info.rate);
-
+      ret = gst_audio_info_from_caps (&info, caps);
       if (ret) {
         GST_DEBUG_OBJECT (self, "Got caps %" GST_PTR_FORMAT, caps);
+
+        if (!gst_audio_info_is_equal (&info, &self->info)) {
+          if (self->strict_buffer_size) {
+            gst_adapter_clear (self->adapter);
+          } else {
+            GstAudioFormat format;
+            gint rate, bpf, samples_per_buffer;
+
+            GST_OBJECT_LOCK (self);
+            format =
+                self->info.finfo ? GST_AUDIO_INFO_FORMAT (&self->info) :
+                GST_AUDIO_FORMAT_UNKNOWN;
+            rate = GST_AUDIO_INFO_RATE (&self->info);
+            bpf = GST_AUDIO_INFO_BPF (&self->info);
+            samples_per_buffer = self->samples_per_buffer;
+            GST_OBJECT_UNLOCK (self);
+
+            if (format != GST_AUDIO_FORMAT_UNKNOWN && samples_per_buffer != 0)
+              gst_audio_buffer_split_output (self, TRUE, rate, bpf,
+                  samples_per_buffer);
+          }
+        }
+        self->info = info;
+        GST_OBJECT_LOCK (self);
+        gst_audio_stream_align_set_rate (self->stream_align, self->info.rate);
+        GST_OBJECT_UNLOCK (self);
         ret = gst_audio_buffer_split_update_samples_per_buffer (self);
       } else {
         ret = FALSE;
