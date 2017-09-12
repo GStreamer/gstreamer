@@ -147,11 +147,13 @@ gst_audio_buffer_split_init (GstAudioBufferSplit * self)
 
   self->output_buffer_duration_n = DEFAULT_OUTPUT_BUFFER_DURATION_N;
   self->output_buffer_duration_d = DEFAULT_OUTPUT_BUFFER_DURATION_D;
-  self->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
-  self->discont_wait = DEFAULT_DISCONT_WAIT;
   self->strict_buffer_size = DEFAULT_STRICT_BUFFER_SIZE;
 
   self->adapter = gst_adapter_new ();
+
+  self->stream_align =
+      gst_audio_stream_align_new (48000, DEFAULT_ALIGNMENT_THRESHOLD,
+      DEFAULT_DISCONT_WAIT);
 }
 
 static void
@@ -162,6 +164,11 @@ gst_audio_buffer_split_finalize (GObject * object)
   if (self->adapter) {
     gst_object_unref (self->adapter);
     self->adapter = NULL;
+  }
+
+  if (self->stream_align) {
+    gst_audio_stream_align_free (self->stream_align);
+    self->stream_align = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -219,10 +226,16 @@ gst_audio_buffer_split_set_property (GObject * object, guint property_id,
       gst_audio_buffer_split_update_samples_per_buffer (self);
       break;
     case PROP_ALIGNMENT_THRESHOLD:
-      self->alignment_threshold = g_value_get_uint64 (value);
+      GST_OBJECT_LOCK (self);
+      gst_audio_stream_align_set_alignment_threshold (self->stream_align,
+          g_value_get_uint64 (value));
+      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_DISCONT_WAIT:
-      self->discont_wait = g_value_get_uint64 (value);
+      GST_OBJECT_LOCK (self);
+      gst_audio_stream_align_set_discont_wait (self->stream_align,
+          g_value_get_uint64 (value));
+      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_STRICT_BUFFER_SIZE:
       self->strict_buffer_size = g_value_get_boolean (value);
@@ -245,10 +258,16 @@ gst_audio_buffer_split_get_property (GObject * object, guint property_id,
           self->output_buffer_duration_d);
       break;
     case PROP_ALIGNMENT_THRESHOLD:
-      g_value_set_uint64 (value, self->alignment_threshold);
+      GST_OBJECT_LOCK (self);
+      g_value_set_uint64 (value,
+          gst_audio_stream_align_get_alignment_threshold (self->stream_align));
+      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_DISCONT_WAIT:
-      g_value_set_uint64 (value, self->discont_wait);
+      GST_OBJECT_LOCK (self);
+      g_value_set_uint64 (value,
+          gst_audio_stream_align_get_discont_wait (self->stream_align));
+      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_STRICT_BUFFER_SIZE:
       g_value_set_boolean (value, self->strict_buffer_size);
@@ -270,9 +289,9 @@ gst_audio_buffer_split_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_audio_info_init (&self->info);
       gst_segment_init (&self->segment, GST_FORMAT_TIME);
-      self->discont_time = GST_CLOCK_TIME_NONE;
-      self->next_offset = -1;
-      self->resync_time = GST_CLOCK_TIME_NONE;
+      GST_OBJECT_LOCK (self);
+      gst_audio_stream_align_mark_discont (self->stream_align);
+      GST_OBJECT_UNLOCK (self);
       self->current_offset = -1;
       self->accumulated_error = 0;
       self->samples_per_buffer = 0;
@@ -290,6 +309,9 @@ gst_audio_buffer_split_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (self->adapter);
+      GST_OBJECT_LOCK (self);
+      gst_audio_stream_align_mark_discont (self->stream_align);
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       break;
@@ -304,6 +326,12 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
 {
   gint size, avail;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime resync_time;
+
+  GST_OBJECT_LOCK (self);
+  resync_time =
+      gst_audio_stream_align_get_timestamp_at_discont (self->stream_align);
+  GST_OBJECT_UNLOCK (self);
 
   size = samples_per_buffer * bpf;
 
@@ -324,8 +352,8 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
     resync_time_diff =
         gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
     if (self->segment.rate < 0.0) {
-      if (self->resync_time > resync_time_diff)
-        GST_BUFFER_TIMESTAMP (buffer) = self->resync_time - resync_time_diff;
+      if (resync_time > resync_time_diff)
+        GST_BUFFER_TIMESTAMP (buffer) = resync_time - resync_time_diff;
       else
         GST_BUFFER_TIMESTAMP (buffer) = 0;
       GST_BUFFER_DURATION (buffer) =
@@ -333,13 +361,12 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
 
       self->current_offset += size / bpf;
     } else {
-      GST_BUFFER_TIMESTAMP (buffer) = self->resync_time + resync_time_diff;
+      GST_BUFFER_TIMESTAMP (buffer) = resync_time + resync_time_diff;
       self->current_offset += size / bpf;
       resync_time_diff =
           gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
       GST_BUFFER_DURATION (buffer) =
-          resync_time_diff - (GST_BUFFER_TIMESTAMP (buffer) -
-          self->resync_time);
+          resync_time_diff - (GST_BUFFER_TIMESTAMP (buffer) - resync_time);
     }
 
     GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
@@ -367,87 +394,30 @@ static GstFlowReturn
 gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
     GstBuffer * buffer, gint rate, gint bpf, guint samples_per_buffer)
 {
-  GstClockTime timestamp;
-  gsize size;
-  guint64 start_offset, end_offset;
-  gboolean discont = FALSE;
+  gboolean discont;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-  start_offset = gst_util_uint64_scale (timestamp, rate, GST_SECOND);
-  size = gst_buffer_get_size (buffer);
-  end_offset = start_offset + size / bpf;
-
-  if (self->segment.rate < 0.0) {
-    guint64 tmp = end_offset;
-    end_offset = start_offset;
-    start_offset = tmp;
-  }
-
-  if (GST_BUFFER_IS_DISCONT (buffer)
-      || GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_RESYNC)
-      || self->resync_time == GST_CLOCK_TIME_NONE) {
-    discont = TRUE;
-  } else {
-    guint64 diff, max_sample_diff;
-
-    /* Check discont, based on audiobasesink */
-    if (start_offset <= self->next_offset)
-      diff = self->next_offset - start_offset;
-    else
-      diff = start_offset - self->next_offset;
-
-    max_sample_diff =
-        gst_util_uint64_scale_int (self->alignment_threshold, rate, GST_SECOND);
-
-    /* Discont! */
-    if (G_UNLIKELY (diff >= max_sample_diff)) {
-      if (self->discont_wait > 0) {
-        if (self->discont_time == GST_CLOCK_TIME_NONE) {
-          self->discont_time = timestamp;
-        } else if (timestamp - self->discont_time >= self->discont_wait) {
-          discont = TRUE;
-          self->discont_time = GST_CLOCK_TIME_NONE;
-        }
-      } else {
-        discont = TRUE;
-      }
-    } else if (G_UNLIKELY (self->discont_time != GST_CLOCK_TIME_NONE)) {
-      /* we have had a discont, but are now back on track! */
-      self->discont_time = GST_CLOCK_TIME_NONE;
-    }
-  }
+  GST_OBJECT_LOCK (self);
+  discont =
+      gst_audio_stream_align_process (self->stream_align,
+      self->segment.rate < 0 ? FALSE : GST_BUFFER_IS_DISCONT (buffer)
+      || GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_RESYNC),
+      GST_BUFFER_PTS (buffer), gst_buffer_get_size (buffer) / bpf, NULL, NULL,
+      NULL);
+  GST_OBJECT_UNLOCK (self);
 
   if (discont) {
-    /* Have discont, need resync */
-    if (self->next_offset != -1) {
-      GST_INFO_OBJECT (self, "Have discont. Expected %"
-          G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
-          self->next_offset, start_offset);
-      if (self->strict_buffer_size) {
-        gst_adapter_clear (self->adapter);
-        ret = GST_FLOW_OK;
-      } else {
-        ret =
-            gst_audio_buffer_split_output (self, TRUE, rate, bpf,
-            samples_per_buffer);
-      }
+    if (self->strict_buffer_size) {
+      gst_adapter_clear (self->adapter);
+      ret = GST_FLOW_OK;
+    } else {
+      ret =
+          gst_audio_buffer_split_output (self, TRUE, rate, bpf,
+          samples_per_buffer);
     }
-    self->next_offset = end_offset;
-    self->resync_time = timestamp;
+
     self->current_offset = 0;
     self->accumulated_error = 0;
-    gst_adapter_clear (self->adapter);
-  } else {
-    if (self->segment.rate < 0.0) {
-      if (self->next_offset > size / bpf)
-        self->next_offset -= size / bpf;
-      else
-        self->next_offset = 0;
-    } else {
-      self->next_offset += size / bpf;
-    }
   }
 
   return ret;
@@ -517,6 +487,7 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       gst_event_parse_caps (event, &caps);
 
       ret = gst_audio_info_from_caps (&self->info, caps);
+      gst_audio_stream_align_set_rate (self->stream_align, self->info.rate);
 
       if (ret) {
         GST_DEBUG_OBJECT (self, "Got caps %" GST_PTR_FORMAT, caps);
@@ -534,9 +505,9 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&self->segment, GST_FORMAT_TIME);
-      self->discont_time = GST_CLOCK_TIME_NONE;
-      self->next_offset = -1;
-      self->resync_time = GST_CLOCK_TIME_NONE;
+      GST_OBJECT_LOCK (self);
+      gst_audio_stream_align_mark_discont (self->stream_align);
+      GST_OBJECT_UNLOCK (self);
       self->current_offset = -1;
       self->accumulated_error = 0;
       gst_adapter_clear (self->adapter);

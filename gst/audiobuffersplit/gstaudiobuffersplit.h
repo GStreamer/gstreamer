@@ -45,8 +45,6 @@ struct _GstAudioBufferSplit {
   /* Properties */
   gint output_buffer_duration_n;
   gint output_buffer_duration_d;
-  GstClockTime alignment_threshold;
-  GstClockTime discont_wait;
 
   /* State */
   GstSegment segment;
@@ -54,10 +52,7 @@ struct _GstAudioBufferSplit {
 
   GstAdapter *adapter;
 
-  GstClockTime discont_time; /* timestamp of last discont */
-  guint64 next_offset; /* expected next input sample offset */
-
-  GstClockTime resync_time; /* timestamp of resync after discont */
+  GstAudioStreamAlign *stream_align;
   guint64 current_offset; /* offset from start time in samples */
 
   guint samples_per_buffer;
