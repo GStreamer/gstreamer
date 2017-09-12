@@ -79,6 +79,7 @@ enum
   PROP_CONNECTOR_ID,
   PROP_PLANE_ID,
   PROP_FORCE_MODESETTING,
+  PROP_CAN_SCALE,
   PROP_N
 };
 
@@ -524,8 +525,6 @@ gst_kms_sink_start (GstBaseSink * bsink)
   log_drm_version (self);
   if (!get_drm_caps (self))
     goto bail;
-
-  self->can_scale = TRUE;
 
   res = drmModeGetResources (self->fd);
   if (!res)
@@ -1410,6 +1409,9 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
     case PROP_FORCE_MODESETTING:
       sink->modesetting_enabled = g_value_get_boolean (value);
       break;
+    case PROP_CAN_SCALE:
+      sink->can_scale = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1440,6 +1442,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
     case PROP_FORCE_MODESETTING:
       g_value_set_boolean (value, sink->modesetting_enabled);
       break;
+    case PROP_CAN_SCALE:
+      g_value_set_boolean (value, sink->can_scale);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1465,6 +1470,7 @@ gst_kms_sink_init (GstKMSSink * sink)
   sink->fd = -1;
   sink->conn_id = -1;
   sink->plane_id = -1;
+  sink->can_scale = TRUE;
   gst_poll_fd_init (&sink->pollfd);
   sink->poll = gst_poll_new (TRUE);
   gst_video_info_init (&sink->vinfo);
@@ -1559,6 +1565,16 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
   g_properties[PROP_FORCE_MODESETTING] =
       g_param_spec_boolean ("force-modesetting", "Force modesetting",
       "When enabled, the sink try to configure the display mode", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:can-scale:
+   *
+   * User can tell kmssink if the driver can support scale.
+   */
+  g_properties[PROP_CAN_SCALE] =
+      g_param_spec_boolean ("can-scale", "can scale",
+      "User can tell kmssink if the driver can support scale", TRUE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
