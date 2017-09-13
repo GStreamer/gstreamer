@@ -29,7 +29,7 @@
 /* Options */
 static const gchar *device = "/dev/video0";
 static const gchar *videosink = "autovideosink";
-static gboolean enable_dmabuf = FALSE;
+static const gchar *io_mode = "mmap";
 static const gchar *def_resolutions[] = {
   "320x240",
   "1280x720",
@@ -44,8 +44,8 @@ static GOptionEntry entries[] = {
       NULL},
   {"videosink", 's', 0, G_OPTION_ARG_STRING, &videosink, "Video Sink to use",
       NULL},
-  {"enable-dmabuf", 'z', 0, G_OPTION_ARG_NONE, &enable_dmabuf,
-      "Enable DMABuf", NULL},
+  {"io-mode", 'z', 0, G_OPTION_ARG_STRING, &io_mode,
+      "Configure the \"io-mode\" property on v4l2scr", NULL},
   {"resolution", 'r', 0, G_OPTION_ARG_STRING_ARRAY, &resolutions,
       "Add a resolution to the list", NULL},
   {NULL}
@@ -133,8 +133,7 @@ main (gint argc, gchar ** argv)
   loop = g_main_loop_new (NULL, FALSE);
 
   desc = g_strdup_printf ("v4l2src name=src device=\"%s\" io-mode=\"%s\" "
-      "! capsfilter name=cf ! %s", device, enable_dmabuf ? "dmabuf" : "mmap",
-      videosink);
+      "! capsfilter name=cf ! %s", device, io_mode, videosink);
   pipeline = gst_parse_launch (desc, &error);
   if (!pipeline) {
     g_print ("failed to create pipeline: %s", error->message);
