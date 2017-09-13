@@ -51,6 +51,7 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  * @GST_VAAPI_ENCODER_H264_PROP_AUD: Insert AUD as first NAL per frame.
  * @GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE: Relax Compliance restrictions
  * @GST_VAAPI_ENCODER_H264_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
+ * @GST_VAAPI_ENCODER_H264_PROP_MBBRC: Macroblock level Bitrate Control.
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -67,6 +68,7 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_AUD = -10,
   GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE = -11,
   GST_VAAPI_ENCODER_H264_PROP_NUM_REF_FRAMES = -12,
+  GST_VAAPI_ENCODER_H264_PROP_MBBRC = -13,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *
