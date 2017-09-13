@@ -87,7 +87,7 @@ struct _GstAppSinkPrivate
   GCond cond;
   GMutex mutex;
   GQueue *queue;
-  GstBuffer *preroll;
+  GstBuffer *preroll_buffer;
   GstCaps *preroll_caps;
   GstCaps *last_caps;
   GstSegment preroll_segment;
@@ -482,7 +482,7 @@ gst_app_sink_dispose (GObject * obj)
   g_mutex_lock (&priv->mutex);
   while ((queue_obj = g_queue_pop_head (priv->queue)))
     gst_mini_object_unref (queue_obj);
-  gst_buffer_replace (&priv->preroll, NULL);
+  gst_buffer_replace (&priv->preroll_buffer, NULL);
   gst_caps_replace (&priv->preroll_caps, NULL);
   gst_caps_replace (&priv->last_caps, NULL);
   g_mutex_unlock (&priv->mutex);
@@ -615,7 +615,7 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
 
   GST_DEBUG_OBJECT (appsink, "flush stop appsink");
   priv->is_eos = FALSE;
-  gst_buffer_replace (&priv->preroll, NULL);
+  gst_buffer_replace (&priv->preroll_buffer, NULL);
   while ((obj = g_queue_pop_head (priv->queue)))
     gst_mini_object_unref (obj);
   priv->num_buffers = 0;
@@ -650,7 +650,7 @@ gst_app_sink_stop (GstBaseSink * psink)
   priv->flushing = TRUE;
   priv->started = FALSE;
   gst_app_sink_flush_unlocked (appsink);
-  gst_buffer_replace (&priv->preroll, NULL);
+  gst_buffer_replace (&priv->preroll_buffer, NULL);
   gst_caps_replace (&priv->preroll_caps, NULL);
   gst_caps_replace (&priv->last_caps, NULL);
   gst_segment_init (&priv->preroll_segment, GST_FORMAT_UNDEFINED);
@@ -669,7 +669,7 @@ gst_app_sink_setcaps (GstBaseSink * sink, GstCaps * caps)
   g_mutex_lock (&priv->mutex);
   GST_DEBUG_OBJECT (appsink, "receiving CAPS");
   g_queue_push_tail (priv->queue, gst_event_new_caps (caps));
-  if (!priv->preroll)
+  if (!priv->preroll_buffer)
     gst_caps_replace (&priv->preroll_caps, caps);
   g_mutex_unlock (&priv->mutex);
 
@@ -687,7 +687,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
       g_mutex_lock (&priv->mutex);
       GST_DEBUG_OBJECT (appsink, "receiving SEGMENT");
       g_queue_push_tail (priv->queue, gst_event_ref (event));
-      if (!priv->preroll)
+      if (!priv->preroll_buffer)
         gst_event_copy_segment (event, &priv->preroll_segment);
       g_mutex_unlock (&priv->mutex);
       break;
@@ -751,7 +751,7 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
     goto flushing;
 
   GST_DEBUG_OBJECT (appsink, "setting preroll buffer %p", buffer);
-  gst_buffer_replace (&priv->preroll, buffer);
+  gst_buffer_replace (&priv->preroll_buffer, buffer);
 
   g_cond_signal (&priv->cond);
   emit = priv->emit_signals;
@@ -1460,7 +1460,7 @@ gst_app_sink_try_pull_preroll (GstAppSink * appsink, GstClockTime timeout)
     if (!priv->started)
       goto not_started;
 
-    if (priv->preroll != NULL)
+    if (priv->preroll_buffer != NULL)
       break;
 
     if (priv->is_eos)
@@ -1476,8 +1476,8 @@ gst_app_sink_try_pull_preroll (GstAppSink * appsink, GstClockTime timeout)
     }
   }
   sample =
-      gst_sample_new (priv->preroll, priv->preroll_caps, &priv->preroll_segment,
-      NULL);
+      gst_sample_new (priv->preroll_buffer, priv->preroll_caps,
+      &priv->preroll_segment, NULL);
   GST_DEBUG_OBJECT (appsink, "we have the preroll sample %p", sample);
   g_mutex_unlock (&priv->mutex);
 
