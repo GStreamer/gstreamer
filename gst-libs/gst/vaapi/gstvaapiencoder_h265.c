@@ -1965,9 +1965,6 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   if (encoder->idr_period > MAX_IDR_PERIOD)
     encoder->idr_period = MAX_IDR_PERIOD;
 
-  /* FIXME: provide user control for idr_period ?? */
-  encoder->idr_period = base_encoder->keyframe_period * 2;
-
   if (encoder->min_qp > encoder->init_qp ||
       (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
           encoder->min_qp < encoder->init_qp))
