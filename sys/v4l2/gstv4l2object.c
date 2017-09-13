@@ -644,13 +644,17 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       break;
     }
     case PROP_PIXEL_ASPECT_RATIO:
-      g_free (v4l2object->par);
+      if (v4l2object->par) {
+        g_value_unset (v4l2object->par);
+        g_free (v4l2object->par);
+      }
       v4l2object->par = g_new0 (GValue, 1);
       g_value_init (v4l2object->par, GST_TYPE_FRACTION);
       if (!g_value_transform (value, v4l2object->par)) {
         g_warning ("Could not transform string to aspect ratio");
         gst_value_set_fraction (v4l2object->par, 1, 1);
       }
+
       GST_DEBUG_OBJECT (v4l2object->element, "set PAR to %d/%d",
           gst_value_get_fraction_numerator (v4l2object->par),
           gst_value_get_fraction_denominator (v4l2object->par));
@@ -878,6 +882,12 @@ gst_v4l2_object_close (GstV4l2Object * v4l2object)
 
   if (v4l2object->formats) {
     gst_v4l2_object_clear_format_list (v4l2object);
+  }
+
+  if (v4l2object->par) {
+    g_value_unset (v4l2object->par);
+    g_free (v4l2object->par);
+    v4l2object->par = NULL;
   }
 
   return TRUE;
