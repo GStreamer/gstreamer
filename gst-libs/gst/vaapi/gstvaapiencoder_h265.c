@@ -127,6 +127,7 @@ struct _GstVaapiEncoderH265
   guint bitrate_bits;           // bitrate (bits)
   guint cpb_length;             // length of CPB buffer (ms)
   guint cpb_length_bits;        // length of CPB buffer (bits)
+  guint mbbrc;                  // macroblock bitrate control
 
   /* Crop rectangle */
   guint conformance_window_flag:1;
@@ -1814,6 +1815,8 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).window_size = encoder->cpb_length;
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).initial_qp = encoder->init_qp;
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).min_qp = encoder->min_qp;
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).rc_flags.bits.mb_rate_control =
+      encoder->mbbrc;
 
   /* HRD params */
   fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
@@ -2549,6 +2552,9 @@ gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES:
       encoder->num_ref_frames = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H265_PROP_MBBRC:
+      encoder->mbbrc = g_value_get_uint (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -2673,6 +2679,19 @@ gst_vaapi_encoder_h265_get_default_properties (void)
           "CPB Length", "Length of the CPB buffer in milliseconds",
           1, 10000, DEFAULT_CPB_LENGTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH265:mbbrc:
+   *
+   * Macroblock level bitrate control.
+   * This is not compatible with Constant QP rate control.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H265_PROP_MBBRC,
+      g_param_spec_uint ("mbbrc",
+          "Macroblock level Bitrate Control",
+          "Macroblock level Bitrate Control (0: auto, 1: on, 2: off)", 0, 2,
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
