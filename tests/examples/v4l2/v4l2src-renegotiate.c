@@ -135,6 +135,7 @@ main (gint argc, gchar ** argv)
   desc = g_strdup_printf ("v4l2src name=src device=\"%s\" io-mode=\"%s\" "
       "! capsfilter name=cf ! %s", device, io_mode, videosink);
   pipeline = gst_parse_launch (desc, &error);
+  g_free (desc);
   if (!pipeline) {
     g_print ("failed to create pipeline: %s", error->message);
     g_error_free (error);
