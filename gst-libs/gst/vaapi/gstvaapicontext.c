@@ -241,7 +241,7 @@ config_create (GstVaapiContext * context)
       gst_vaapi_entrypoint_get_va_entrypoint (cip->entrypoint);
 
   attrib_index = 0;
-  attrib = &attribs[attrib_index++];
+  attrib = &attribs[attrib_index];
   g_assert (attrib_index < G_N_ELEMENTS (attribs));
 
   /* Validate VA surface format */
@@ -257,7 +257,7 @@ config_create (GstVaapiContext * context)
     goto cleanup;
   }
   attrib->value = va_chroma_format;
-  attrib = &attribs[attrib_index++];
+  attrib = &attribs[++attrib_index];
   g_assert (attrib_index < G_N_ELEMENTS (attribs));
 
   switch (cip->usage) {
@@ -280,7 +280,7 @@ config_create (GstVaapiContext * context)
           goto cleanup;
         }
         attrib->value = va_rate_control;
-        attrib = &attribs[attrib_index++];
+        attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
       /* Packed headers */
@@ -295,7 +295,7 @@ config_create (GstVaapiContext * context)
           goto cleanup;
         }
         attrib->value = config->packed_headers;
-        attrib = &attribs[attrib_index++];
+        attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
 #if VA_CHECK_VERSION(0,37,0)
@@ -304,7 +304,7 @@ config_create (GstVaapiContext * context)
         if (!context_get_attribute (context, attrib->type, &value))
           goto cleanup;
         attrib->value = value;
-        attrib = &attribs[attrib_index++];
+        attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
 #endif
@@ -324,14 +324,14 @@ config_create (GstVaapiContext * context)
           goto cleanup;
         }
         attrib->value = value;
-        attrib = &attribs[attrib_index++];
+        attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
 #endif
 #if USE_H264_FEI_ENCODER
       if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI) {
         attrib->type = (VAConfigAttribType) VAConfigAttribFEIFunctionType;
-        attrib = &attribs[attrib_index++];
+        attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
         /* FIXME: Query the read-only supported MV predictors */
       }
