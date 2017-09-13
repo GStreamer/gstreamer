@@ -50,6 +50,8 @@ struct _GstAudioStreamAlign
 
   /* counter to keep track of timestamps */
   guint64 next_offset;
+  GstClockTime timestamp_at_discont;
+  guint64 samples_since_discont;
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
@@ -90,6 +92,8 @@ gst_audio_stream_align_new (gint rate, GstClockTime alignment_threshold,
   align->alignment_threshold = alignment_threshold;
   align->discont_wait = discont_wait;
 
+  align->timestamp_at_discont = GST_CLOCK_TIME_NONE;
+  align->samples_since_discont = 0;
   gst_audio_stream_align_mark_discont (align);
 
   return align;
@@ -265,6 +269,44 @@ gst_audio_stream_align_mark_discont (GstAudioStreamAlign * align)
 }
 
 /**
+ * gst_audio_stream_align_get_timestamp_at_discont:
+ * @align: a #GstAudioStreamAlign
+ *
+ * Timestamp that was passed when a discontinuity was detected, i.e. the first
+ * timestamp after the discontinuity.
+ *
+ * Returns: The last timestamp at when a discontinuity was detected
+ *
+ * Since: 1.14
+ */
+GstClockTime
+gst_audio_stream_align_get_timestamp_at_discont (GstAudioStreamAlign * align)
+{
+  g_return_val_if_fail (align != NULL, GST_CLOCK_TIME_NONE);
+
+  return align->timestamp_at_discont;
+}
+
+/**
+ * gst_audio_stream_align_get_samples_since_discont:
+ * @align: a #GstAudioStreamAlign
+ *
+ * Returns the number of samples that were processed since the last
+ * discontinuity was detected.
+ *
+ * Returns: The number of samples processed since the last discontinuity.
+ *
+ * Since: 1.14
+ */
+guint64
+gst_audio_stream_align_get_samples_since_discont (GstAudioStreamAlign * align)
+{
+  g_return_val_if_fail (align != NULL, 0);
+
+  return align->samples_since_discont;
+}
+
+/**
  * gst_audio_stream_align_process:
  * @align: a #GstAudioStreamAlign
  * @discont: if this data is considered to be discontinuous
@@ -363,6 +405,8 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
           G_GUINT64_FORMAT ", got %" G_GUINT64_FORMAT,
           align->next_offset, start_offset);
     align->next_offset = align->rate > 0 ? end_offset : start_offset;
+    align->timestamp_at_discont = start_time;
+    align->samples_since_discont = 0;
 
     /* Got a discont and adjusted, reset the discont_time marker */
     align->discont_time = GST_CLOCK_TIME_NONE;
@@ -398,6 +442,8 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
           ABS (align->rate)) - timestamp;
     }
   }
+
+  align->samples_since_discont += n_samples;
 
   if (out_timestamp)
     *out_timestamp = timestamp;

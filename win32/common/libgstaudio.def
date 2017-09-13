@@ -214,6 +214,8 @@ EXPORTS
 	gst_audio_stream_align_get_alignment_threshold
 	gst_audio_stream_align_get_discont_wait
 	gst_audio_stream_align_get_rate
+	gst_audio_stream_align_get_samples_since_discont
+	gst_audio_stream_align_get_timestamp_at_discont
 	gst_audio_stream_align_get_type
 	gst_audio_stream_align_mark_discont
 	gst_audio_stream_align_new

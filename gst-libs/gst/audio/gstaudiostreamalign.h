@@ -29,46 +29,52 @@
 typedef struct _GstAudioStreamAlign GstAudioStreamAlign;
 
 GST_EXPORT
-GType                   gst_audio_stream_align_get_type                (void);
+GType                   gst_audio_stream_align_get_type                  (void);
 
 GST_EXPORT
-GstAudioStreamAlign *   gst_audio_stream_align_new                     (gint rate,
-                                                                        GstClockTime alignment_threshold,
-                                                                        GstClockTime discont_wait);
+GstAudioStreamAlign *   gst_audio_stream_align_new                       (gint rate,
+                                                                          GstClockTime alignment_threshold,
+                                                                          GstClockTime discont_wait);
 GST_EXPORT
-GstAudioStreamAlign *   gst_audio_stream_align_copy                    (const GstAudioStreamAlign * align);
+GstAudioStreamAlign *   gst_audio_stream_align_copy                      (const GstAudioStreamAlign * align);
 GST_EXPORT
-void                    gst_audio_stream_align_free                    (GstAudioStreamAlign * align);
+void                    gst_audio_stream_align_free                      (GstAudioStreamAlign * align);
 
 GST_EXPORT
-void                    gst_audio_stream_align_set_rate                (GstAudioStreamAlign * align,
-                                                                        gint rate);
+void                    gst_audio_stream_align_set_rate                  (GstAudioStreamAlign * align,
+                                                                          gint rate);
 GST_EXPORT
-gint                    gst_audio_stream_align_get_rate                (GstAudioStreamAlign * align);
+gint                    gst_audio_stream_align_get_rate                  (GstAudioStreamAlign * align);
 
 GST_EXPORT
-void                    gst_audio_stream_align_set_alignment_threshold (GstAudioStreamAlign * align,
-                                                                        GstClockTime alignment_threshold);
+void                    gst_audio_stream_align_set_alignment_threshold   (GstAudioStreamAlign * align,
+                                                                          GstClockTime alignment_threshold);
 GST_EXPORT
-GstClockTime            gst_audio_stream_align_get_alignment_threshold (GstAudioStreamAlign * align);
+GstClockTime            gst_audio_stream_align_get_alignment_threshold   (GstAudioStreamAlign * align);
 
 GST_EXPORT
-void                    gst_audio_stream_align_set_discont_wait        (GstAudioStreamAlign * align,
-                                                                        GstClockTime discont_wait);
+void                    gst_audio_stream_align_set_discont_wait          (GstAudioStreamAlign * align,
+                                                                          GstClockTime discont_wait);
 GST_EXPORT
-GstClockTime            gst_audio_stream_align_get_discont_wait        (GstAudioStreamAlign * align);
+GstClockTime            gst_audio_stream_align_get_discont_wait          (GstAudioStreamAlign * align);
 
 
 GST_EXPORT
-void                    gst_audio_stream_align_mark_discont            (GstAudioStreamAlign * align);
+void                    gst_audio_stream_align_mark_discont              (GstAudioStreamAlign * align);
 
 GST_EXPORT
-gboolean                gst_audio_stream_align_process                 (GstAudioStreamAlign * align,
-                                                                        gboolean discont,
-                                                                        GstClockTime timestamp,
-                                                                        guint n_samples,
-                                                                        GstClockTime *out_timestamp,
-                                                                        GstClockTime *out_duration,
-                                                                        guint64 *out_sample_position);
+GstClockTime            gst_audio_stream_align_get_timestamp_at_discont  (GstAudioStreamAlign * align);
+
+GST_EXPORT
+guint64                 gst_audio_stream_align_get_samples_since_discont (GstAudioStreamAlign * align);
+
+GST_EXPORT
+gboolean                gst_audio_stream_align_process                   (GstAudioStreamAlign * align,
+                                                                          gboolean discont,
+                                                                          GstClockTime timestamp,
+                                                                          guint n_samples,
+                                                                          GstClockTime *out_timestamp,
+                                                                          GstClockTime *out_duration,
+                                                                          guint64 *out_sample_position);
 
 #endif /* __GST_AUDIO_STREAM_ALIGN_H__ */
