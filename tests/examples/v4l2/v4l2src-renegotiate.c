@@ -120,11 +120,15 @@ main (gint argc, gchar ** argv)
   GError *error = NULL;
   GOptionContext *context;
   gchar *desc;
+  gboolean ret;
 
   context = g_option_context_new ("- test v4l2src live renegotition");
   g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
   g_option_context_add_group (context, gst_init_get_option_group ());
-  if (!g_option_context_parse (context, &argc, &argv, &error)) {
+  ret = g_option_context_parse (context, &argc, &argv, &error);
+  g_option_context_free (context);
+
+  if (!ret) {
     g_print ("option parsing failed: %s\n", error->message);
     g_error_free (error);
     return 1;
