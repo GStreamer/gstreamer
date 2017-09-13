@@ -277,46 +277,47 @@ gst_vl42_src_fixate_fields (GQuark field_id, GValue * value, gpointer user_data)
 
 static void
 gst_v4l2_src_fixate_struct_with_preference (GstStructure * s,
-    struct PreferedCapsInfo *pref, gint * width, gint * height,
-    gint * fps_n, gint * fps_d)
+    struct PreferedCapsInfo *pref)
 {
-  if (gst_structure_has_field (s, "width")) {
+  if (gst_structure_has_field (s, "width"))
     gst_structure_fixate_field_nearest_int (s, "width", pref->width);
 
-    if (width)
-      gst_structure_get_int (s, "width", width);
-  }
-
-  if (gst_structure_has_field (s, "height")) {
+  if (gst_structure_has_field (s, "height"))
     gst_structure_fixate_field_nearest_int (s, "height", pref->height);
 
-    if (height)
-      gst_structure_get_int (s, "height", height);
-  }
-
-  if (gst_structure_has_field (s, "framerate")) {
+  if (gst_structure_has_field (s, "framerate"))
     gst_structure_fixate_field_nearest_fraction (s, "framerate", pref->fps_n,
         pref->fps_d);
-
-    if (fps_n && fps_d)
-      gst_structure_get_fraction (s, "framerate", fps_n, fps_d);
-  }
 
   /* Finally, fixate everything else except the interlace-mode and colorimetry
    * which still need further negotiation as it wasn't probed */
   gst_structure_map_in_place (s, gst_vl42_src_fixate_fields, s);
 }
 
+static void
+gst_v4l2_src_parse_fixed_struct (GstStructure * s,
+    gint * width, gint * height, gint * fps_n, gint * fps_d)
+{
+  if (gst_structure_has_field (s, "width") && width)
+    gst_structure_get_int (s, "width", width);
+
+  if (gst_structure_has_field (s, "height") && height)
+    gst_structure_get_int (s, "height", height);
+
+  if (gst_structure_has_field (s, "framerate") && fps_n && fps_d)
+    gst_structure_get_fraction (s, "framerate", fps_n, fps_d);
+}
+
 /* TODO Consider framerate */
 static gint
-gst_v4l2src_caps_fixate_and_compare (GstStructure * a, GstStructure * b,
+gst_v4l2src_fixed_caps_compare (GstStructure * a, GstStructure * b,
     struct PreferedCapsInfo *pref)
 {
   gint aw = G_MAXINT, ah = G_MAXINT, ad = G_MAXINT;
   gint bw = G_MAXINT, bh = G_MAXINT, bd = G_MAXINT;
 
-  gst_v4l2_src_fixate_struct_with_preference (a, pref, &aw, &ah, NULL, NULL);
-  gst_v4l2_src_fixate_struct_with_preference (b, pref, &bw, &bh, NULL, NULL);
+  gst_v4l2_src_parse_fixed_struct (a, &aw, &ah, NULL, NULL);
+  gst_v4l2_src_parse_fixed_struct (b, &bw, &bh, NULL, NULL);
 
   /* When both are smaller then pref, just append to the end */
   if ((bw < pref->width || bh < pref->height)
@@ -380,16 +381,19 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
    * transformation to happen downstream. */
   if (pref_s) {
     pref_s = gst_structure_copy (pref_s);
-    gst_v4l2_src_fixate_struct_with_preference (pref_s, &pref, &pref.width,
-        &pref.height, &pref.fps_n, &pref.fps_d);
+    gst_v4l2_src_fixate_struct_with_preference (pref_s, &pref);
+    gst_v4l2_src_parse_fixed_struct (pref_s, &pref.width, &pref.height,
+        &pref.fps_n, &pref.fps_d);
     gst_structure_free (pref_s);
   }
 
   /* Sort the structures to get the caps that is nearest to our preferences,
    * first */
-  while ((s = gst_caps_steal_structure (caps, 0)))
+  while ((s = gst_caps_steal_structure (caps, 0))) {
+    gst_v4l2_src_fixate_struct_with_preference (s, &pref);
     caps_list = g_list_insert_sorted_with_data (caps_list, s,
-        (GCompareDataFunc) gst_v4l2src_caps_fixate_and_compare, &pref);
+        (GCompareDataFunc) gst_v4l2src_fixed_caps_compare, &pref);
+  }
 
   while (caps_list) {
     s = caps_list->data;
