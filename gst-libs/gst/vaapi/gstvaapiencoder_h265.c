@@ -99,6 +99,7 @@ struct _GstVaapiEncoderH265
   guint32 idr_period;
   guint32 init_qp;
   guint32 min_qp;
+  guint32 qp_i;
   guint32 num_slices;
   guint32 num_bframes;
   guint32 ctu_width;            /* CTU == Coding Tree Unit */
@@ -1594,7 +1595,7 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   pic_param->collocated_ref_pic_index = 0xFF;
 
   pic_param->last_picture = 0;
-  pic_param->pic_init_qp = encoder->init_qp;
+  pic_param->pic_init_qp = encoder->qp_i;
   pic_param->num_ref_idx_l0_default_active_minus1 =
       (ref_pool->max_reflist0_count ? (ref_pool->max_reflist0_count - 1) : 0);
   pic_param->num_ref_idx_l1_default_active_minus1 =
@@ -1721,7 +1722,7 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     }
 
     slice_param->max_num_merge_cand = 5;        /* MaxNumMergeCand  */
-    slice_param->slice_qp_delta = encoder->init_qp - encoder->min_qp;
+    slice_param->slice_qp_delta = encoder->qp_i - encoder->init_qp;
 
     slice_param->slice_fields.bits.
         slice_loop_filter_across_slices_enabled_flag = TRUE;
@@ -2006,10 +2007,9 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   if (encoder->idr_period > MAX_IDR_PERIOD)
     encoder->idr_period = MAX_IDR_PERIOD;
 
-  if (encoder->min_qp > encoder->init_qp ||
-      (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
-          encoder->min_qp < encoder->init_qp))
+  if (encoder->min_qp > encoder->init_qp)
     encoder->min_qp = encoder->init_qp;
+  encoder->qp_i = encoder->init_qp;
 
   ctu_size = encoder->ctu_width * encoder->ctu_height;
   g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,

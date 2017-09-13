@@ -708,6 +708,7 @@ struct _GstVaapiEncoderH264
   guint32 idr_period;
   guint32 init_qp;
   guint32 min_qp;
+  guint32 qp_i;
   guint32 num_slices;
   guint32 num_bframes;
   guint32 mb_width;
@@ -2003,7 +2004,7 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   pic_param->seq_parameter_set_id = encoder->view_idx ? 1 : 0;
   pic_param->last_picture = 0;  /* means last encoding picture */
   pic_param->frame_num = picture->frame_num;
-  pic_param->pic_init_qp = encoder->init_qp;
+  pic_param->pic_init_qp = encoder->qp_i;
   pic_param->num_ref_idx_l0_active_minus1 =
       (ref_pool->max_reflist0_count ? (ref_pool->max_reflist0_count - 1) : 0);
   pic_param->num_ref_idx_l1_active_minus1 =
@@ -2152,9 +2153,10 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
         sizeof (slice_param->chroma_offset_l1));
 
     slice_param->cabac_init_idc = 0;
-    slice_param->slice_qp_delta = encoder->init_qp - encoder->min_qp;
+    slice_param->slice_qp_delta = encoder->qp_i - encoder->init_qp;
     if (slice_param->slice_qp_delta > 4)
       slice_param->slice_qp_delta = 4;
+
     slice_param->disable_deblocking_filter_idc = 0;
     slice_param->slice_alpha_c0_offset_div2 = 2;
     slice_param->slice_beta_offset_div2 = 2;
@@ -2535,10 +2537,9 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   if (encoder->idr_period > MAX_IDR_PERIOD)
     encoder->idr_period = MAX_IDR_PERIOD;
 
-  if (encoder->min_qp > encoder->init_qp ||
-      (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
-          encoder->min_qp < encoder->init_qp))
+  if (encoder->min_qp > encoder->init_qp)
     encoder->min_qp = encoder->init_qp;
+  encoder->qp_i = encoder->init_qp;
 
   mb_size = encoder->mb_width * encoder->mb_height;
   g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
