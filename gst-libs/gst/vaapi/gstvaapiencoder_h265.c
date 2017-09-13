@@ -699,10 +699,29 @@ bs_write_slice (GstBitWriter * bs,
         guint num_positive_pics = 0, num_negative_pics = 0;
         guint delta_poc_s0_minus1 = 0, delta_poc_s1_minus1 = 0;
         guint used_by_curr_pic_s0_flag = 0, used_by_curr_pic_s1_flag = 0;
+        guint reflist_0_count = 0, reflist_1_count = 0;
+        gint i;
+
+        /* Get count of ref_pic_list */
+        if (picture->type == GST_VAAPI_PICTURE_TYPE_P
+            || picture->type == GST_VAAPI_PICTURE_TYPE_B) {
+          for (i = 0; i < G_N_ELEMENTS (slice_param->ref_pic_list0); ++i) {
+            if (slice_param->ref_pic_list0[i].picture_id == VA_INVALID_SURFACE)
+              break;
+          }
+          reflist_0_count = i;
+
+          if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
+            for (i = 0; i < G_N_ELEMENTS (slice_param->ref_pic_list1); ++i) {
+              if (slice_param->ref_pic_list1[i].picture_id ==
+                  VA_INVALID_SURFACE)
+                break;
+            }
+            reflist_1_count = i;
+          }
+        }
 
         if (picture->type == GST_VAAPI_PICTURE_TYPE_P) {
-          num_negative_pics = 1;
-          num_positive_pics = 0;
           delta_poc_s0_minus1 =
               picture->poc - slice_param->ref_pic_list0[0].pic_order_cnt - 1;
           used_by_curr_pic_s0_flag = 1;
@@ -710,8 +729,6 @@ bs_write_slice (GstBitWriter * bs,
           used_by_curr_pic_s1_flag = 0;
         }
         if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
-          num_negative_pics = 1;
-          num_positive_pics = 1;
           delta_poc_s0_minus1 =
               picture->poc - slice_param->ref_pic_list0[0].pic_order_cnt - 1;
           used_by_curr_pic_s0_flag = 1;
@@ -720,19 +737,35 @@ bs_write_slice (GstBitWriter * bs,
           used_by_curr_pic_s1_flag = 1;
         }
 
+        num_negative_pics = reflist_0_count;
+        num_positive_pics = reflist_1_count;
+
         /* num_negative_pics */
         WRITE_UE (bs, num_negative_pics);
         /* num_positive_pics */
         WRITE_UE (bs, num_positive_pics);
-        if (num_negative_pics) {
+
+        for (i = 0; i < num_negative_pics; i++) {
           /* delta_poc_s0_minus1 */
-          WRITE_UE (bs, delta_poc_s0_minus1);
+          if (i == 0) {
+            WRITE_UE (bs, delta_poc_s0_minus1);
+          } else {
+            WRITE_UE (bs,
+                slice_param->ref_pic_list0[i - 1].pic_order_cnt -
+                slice_param->ref_pic_list0[i].pic_order_cnt - 1);
+          }
           /* used_by_curr_pic_s0_flag */
           WRITE_UINT32 (bs, used_by_curr_pic_s0_flag, 1);
         }
-        if (num_positive_pics) {
+        for (i = 0; i < num_positive_pics; i++) {
           /* delta_poc_s1_minus1 */
-          WRITE_UE (bs, delta_poc_s1_minus1);
+          if (i == 0) {
+            WRITE_UE (bs, delta_poc_s1_minus1);
+          } else {
+            WRITE_UE (bs,
+                slice_param->ref_pic_list1[i - 1].pic_order_cnt -
+                slice_param->ref_pic_list1[i].pic_order_cnt - 1);
+          }
           /* used_by_curr_pic_s1_flag */
           WRITE_UINT32 (bs, used_by_curr_pic_s1_flag, 1);
         }
@@ -1545,6 +1578,7 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
 
       pic_param->reference_frames[i].picture_id =
           GST_VAAPI_SURFACE_PROXY_SURFACE_ID (ref_pic->pic);
+      pic_param->reference_frames[i].pic_order_cnt = ref_pic->poc;
       ++i;
     }
     g_assert (i <= 15 && i <= ref_pool->max_ref_frames);
@@ -1658,8 +1692,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
     else
       slice_param->num_ref_idx_l1_active_minus1 = 0;
-    g_assert (slice_param->num_ref_idx_l0_active_minus1 == 0);
-    g_assert (slice_param->num_ref_idx_l1_active_minus1 == 0);
 
     i_ref = 0;
     if (picture->type != GST_VAAPI_PICTURE_TYPE_I) {
@@ -1668,7 +1700,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
             GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
         slice_param->ref_pic_list0[i_ref].pic_order_cnt = reflist_0[i_ref]->poc;
       }
-      g_assert (i_ref == 1);
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list0); ++i_ref) {
       slice_param->ref_pic_list0[i_ref].picture_id = VA_INVALID_SURFACE;
@@ -1682,7 +1713,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
             GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_1[i_ref]->pic);
         slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_1[i_ref]->poc;
       }
-      g_assert (i_ref == 1);
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list1); ++i_ref) {
       slice_param->ref_pic_list1[i_ref].picture_id = VA_INVALID_SURFACE;
@@ -1983,6 +2013,20 @@ reset_properties (GstVaapiEncoderH265 * encoder)
           GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, (ctu_size + 1) / 2,
           &encoder->num_slices));
 
+  gst_vaapi_encoder_ensure_max_num_ref_frames (base_encoder, encoder->profile,
+      GST_VAAPI_ENTRYPOINT_SLICE_ENCODE);
+
+  if (base_encoder->max_num_ref_frames_1 < 1 && encoder->num_bframes > 0) {
+    GST_WARNING ("Disabling b-frame since the driver doesn't support it");
+    encoder->num_bframes = 0;
+  }
+
+  if (encoder->num_ref_frames > base_encoder->max_num_ref_frames_0) {
+    GST_INFO ("Lowering the number of reference frames to %d",
+        base_encoder->max_num_ref_frames_0);
+    encoder->num_ref_frames = base_encoder->max_num_ref_frames_0;
+  }
+
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;
 
@@ -2001,16 +2045,15 @@ reset_properties (GstVaapiEncoderH265 * encoder)
 
   /* Only Supporting a maximum of two reference frames */
   if (encoder->num_bframes) {
-    encoder->max_dec_pic_buffering = 3;
+    encoder->max_dec_pic_buffering = encoder->num_ref_frames + 2;
     encoder->max_num_reorder_pics = 1;
   } else {
-    encoder->max_dec_pic_buffering =
-        (GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder) == 1) ? 1 : 2;
+    encoder->max_dec_pic_buffering = encoder->num_ref_frames + 1;
     encoder->max_num_reorder_pics = 0;
   }
 
   ref_pool = &encoder->ref_pool;
-  ref_pool->max_reflist0_count = 1;
+  ref_pool->max_reflist0_count = encoder->num_ref_frames;
   ref_pool->max_reflist1_count = encoder->num_bframes > 0;
   ref_pool->max_ref_frames = ref_pool->max_reflist0_count
       + ref_pool->max_reflist1_count;
@@ -2367,8 +2410,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   if (!ensure_hw_profile (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
-  base_encoder->num_ref_frames =
-      ((encoder->num_bframes ? 2 : 1) + DEFAULT_SURFACES_COUNT);
+  base_encoder->num_ref_frames = (encoder->num_ref_frames
+      + (encoder->num_bframes > 0 ? 1 : 0) + DEFAULT_SURFACES_COUNT);
 
   /* Only YUV 4:2:0 formats are supported for now. */
   base_encoder->codedbuf_size += GST_ROUND_UP_32 (vip->width) *
