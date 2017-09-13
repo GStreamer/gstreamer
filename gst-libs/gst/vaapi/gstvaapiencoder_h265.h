@@ -43,6 +43,8 @@ typedef struct _GstVaapiEncoderH265 GstVaapiEncoderH265;
  * @GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
  * @GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH: Length of the CPB buffer
  * @GST_VAAPI_ENCODER_H265_PROP_MBBRC: Macroblock level Bitrate Control.
+ * @GST_VAAPI_ENCODER_H265_PROP_QP_IP: Difference of QP between I and P frame.
+ * @GST_VAAPI_ENCODER_H265_PROP_QP_IB: Difference of QP between I and B frame.
  *   in milliseconds (uint).
  *
  * The set of H.265 encoder specific configurable properties.
@@ -55,6 +57,8 @@ typedef enum {
   GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES = -5,
   GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH = -7,
   GST_VAAPI_ENCODER_H265_PROP_MBBRC = -8,
+  GST_VAAPI_ENCODER_H265_PROP_QP_IP = -9,
+  GST_VAAPI_ENCODER_H265_PROP_QP_IB = -10,
 } GstVaapiEncoderH265Prop;
 
 GstVaapiEncoder *
