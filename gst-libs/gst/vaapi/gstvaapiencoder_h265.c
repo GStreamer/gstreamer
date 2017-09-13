@@ -661,8 +661,9 @@ bs_write_slice (GstBitWriter * bs,
   guint8 no_output_of_prior_pics_flag = 0;
   guint8 dependent_slice_segment_flag = 0;
   guint8 short_term_ref_pic_set_sps_flag = 0;
-  guint8 num_ref_idx_active_override_flag = 0;
   guint8 slice_deblocking_filter_disabled_flag = 0;
+  guint8 num_ref_idx_active_override_flag =
+      slice_param->slice_fields.bits.num_ref_idx_active_override_flag;
 
   /* first_slice_segment_in_pic_flag */
   WRITE_UINT32 (bs, encoder->first_slice_segment_in_pic_flag, 1);
@@ -752,6 +753,12 @@ bs_write_slice (GstBitWriter * bs,
         slice_param->slice_type == GST_H265_B_SLICE) {
       /* num_ref_idx_active_override_flag */
       WRITE_UINT32 (bs, num_ref_idx_active_override_flag, 1);
+      if (num_ref_idx_active_override_flag) {
+        WRITE_UE (bs, slice_param->num_ref_idx_l0_active_minus1);
+        if (slice_param->slice_type == GST_H265_B_SLICE)
+          WRITE_UE (bs, slice_param->num_ref_idx_l1_active_minus1);
+      }
+
       /* mvd_l1_zero_flag */
       if (slice_param->slice_type == GST_H265_B_SLICE)
         WRITE_UINT32 (bs, slice_param->slice_fields.bits.mvd_l1_zero_flag, 1);
@@ -1640,6 +1647,8 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     slice_param->slice_type = h265_get_slice_type (picture->type);
     slice_param->slice_pic_parameter_set_id = 0;
 
+    slice_param->slice_fields.bits.num_ref_idx_active_override_flag =
+        reflist_0_count || reflist_1_count;
     if (picture->type != GST_VAAPI_PICTURE_TYPE_I && reflist_0_count > 0)
       slice_param->num_ref_idx_l0_active_minus1 = reflist_0_count - 1;
     else
@@ -1681,8 +1690,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
 
     slice_param->max_num_merge_cand = 5;        /* MaxNumMergeCand  */
     slice_param->slice_qp_delta = encoder->init_qp - encoder->min_qp;
-
-    slice_param->slice_fields.value = 0;
 
     slice_param->slice_fields.bits.
         slice_loop_filter_across_slices_enabled_flag = TRUE;

@@ -2080,7 +2080,8 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     /* only works for B frames */
     slice_param->direct_spatial_mv_pred_flag = FALSE;
     /* default equal to picture parameters */
-    slice_param->num_ref_idx_active_override_flag = TRUE;
+    slice_param->num_ref_idx_active_override_flag = reflist_0_count
+        || reflist_1_count;
     if (picture->type != GST_VAAPI_PICTURE_TYPE_I && reflist_0_count > 0)
       slice_param->num_ref_idx_l0_active_minus1 = reflist_0_count - 1;
     else
