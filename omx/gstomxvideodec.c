@@ -1186,11 +1186,11 @@ gst_omx_video_dec_clean_older_frames (GstOMXVideoDec * self,
       GstVideoCodecFrame *tmp = l->data;
 
       if (tmp->pts < timestamp) {
-        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self), tmp);
         GST_LOG_OBJECT (self,
             "discarding ghost frame %p (#%d) PTS:%" GST_TIME_FORMAT " DTS:%"
             GST_TIME_FORMAT, tmp, tmp->system_frame_number,
             GST_TIME_ARGS (tmp->pts), GST_TIME_ARGS (tmp->dts));
+        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self), tmp);
       } else {
         gst_video_codec_frame_unref (tmp);
       }
@@ -1202,11 +1202,11 @@ gst_omx_video_dec_clean_older_frames (GstOMXVideoDec * self,
       GstVideoCodecFrame *tmp = l->data;
 
       if (!GST_CLOCK_TIME_IS_VALID (tmp->pts)) {
-        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self), tmp);
         GST_LOG_OBJECT (self,
             "discarding frame %p (#%d) with invalid PTS:%" GST_TIME_FORMAT
             " DTS:%" GST_TIME_FORMAT, tmp, tmp->system_frame_number,
             GST_TIME_ARGS (tmp->pts), GST_TIME_ARGS (tmp->dts));
+        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self), tmp);
       } else {
         gst_video_codec_frame_unref (tmp);
       }
