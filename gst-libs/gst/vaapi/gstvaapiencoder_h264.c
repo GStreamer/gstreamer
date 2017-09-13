@@ -709,6 +709,8 @@ struct _GstVaapiEncoderH264
   guint32 init_qp;
   guint32 min_qp;
   guint32 qp_i;
+  guint32 qp_ip;
+  guint32 qp_ib;
   guint32 num_slices;
   guint32 num_bframes;
   guint32 mb_width;
@@ -2154,9 +2156,21 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
 
     slice_param->cabac_init_idc = 0;
     slice_param->slice_qp_delta = encoder->qp_i - encoder->init_qp;
-    if (slice_param->slice_qp_delta > 4)
-      slice_param->slice_qp_delta = 4;
-
+    if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP) {
+      if (picture->type == GST_VAAPI_PICTURE_TYPE_P) {
+        slice_param->slice_qp_delta += encoder->qp_ip;
+      } else if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
+        slice_param->slice_qp_delta += encoder->qp_ib;
+      }
+      if ((gint) encoder->init_qp + slice_param->slice_qp_delta <
+          (gint) encoder->min_qp) {
+        slice_param->slice_qp_delta = encoder->min_qp - encoder->init_qp;
+      }
+      /* TODO: max_qp might be provided as a property in the future */
+      if ((gint) encoder->init_qp + slice_param->slice_qp_delta > 51) {
+        slice_param->slice_qp_delta = 51 - encoder->init_qp;
+      }
+    }
     slice_param->disable_deblocking_filter_idc = 0;
     slice_param->slice_alpha_c0_offset_div2 = 2;
     slice_param->slice_beta_offset_div2 = 2;
@@ -3055,6 +3069,12 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_MIN_QP:
       encoder->min_qp = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_QP_IP:
+      encoder->qp_ip = g_value_get_int (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_QP_IB:
+      encoder->qp_ib = g_value_get_int (value);
+      break;
     case GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES:
       encoder->num_slices = g_value_get_uint (value);
       break;
@@ -3199,6 +3219,32 @@ gst_vaapi_encoder_h264_get_default_properties (void)
       g_param_spec_uint ("min-qp",
           "Minimum QP", "Minimum quantizer value", 1, 51, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:qp-ip:
+   *
+   * The difference of QP between I and P Frame.
+   * This is available only on CQP mode.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_QP_IP,
+      g_param_spec_int ("qp-ip",
+          "Difference of QP between I and P frame",
+          "Difference of QP between I and P frame (available only on CQP)",
+          -51, 51, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:qp-ib:
+   *
+   * The difference of QP between I and B Frame.
+   * This is available only on CQP mode.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_QP_IB,
+      g_param_spec_int ("qp-ib",
+          "Difference of QP between I and B frame",
+          "Difference of QP between I and B frame (available only on CQP)",
+          -51, 51, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoderH264:num-slices:
