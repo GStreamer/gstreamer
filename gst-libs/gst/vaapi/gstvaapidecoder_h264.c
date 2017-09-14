@@ -1514,6 +1514,7 @@ ensure_context (GstVaapiDecoderH264 * decoder, GstH264SPS * sps)
   num_views = get_num_views (sps);
   if (priv->max_views < num_views) {
     priv->max_views = num_views;
+    reset_context = TRUE;
     GST_DEBUG ("maximum number of views changed to %u", num_views);
   }
 
