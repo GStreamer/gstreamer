@@ -230,6 +230,10 @@ G_STMT_START {                                   \
 #define GST_RTP_BIN_SHUTDOWN_UNLOCK(bin)         \
   GST_RTP_BIN_DYN_UNLOCK (bin);                  \
 
+/* Minimum time offset to apply. This compensates for rounding errors in NTP to
+ * RTP timestamp conversions */
+#define MIN_TS_OFFSET (4 * GST_MSECOND)
+
 struct _GstRtpBinPrivate
 {
   GMutex bin_lock;
@@ -310,6 +314,7 @@ enum
 #define DEFAULT_RFC7273_SYNC         FALSE
 #define DEFAULT_MAX_STREAMS          G_MAXUINT
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT 0
+#define DEFAULT_MAX_TS_OFFSET        3000000000
 
 enum
 {
@@ -335,7 +340,8 @@ enum
   PROP_MAX_MISORDER_TIME,
   PROP_RFC7273_SYNC,
   PROP_MAX_STREAMS,
-  PROP_MAX_TS_OFFSET_ADJUSTMENT
+  PROP_MAX_TS_OFFSET_ADJUSTMENT,
+  PROP_MAX_TS_OFFSET
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -1261,7 +1267,8 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
 
 static void
 stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
-    gint64 ts_offset, gboolean check)
+    gint64 ts_offset, gint64 max_ts_offset, gint64 min_ts_offset,
+    gboolean allow_positive_ts_offset)
 {
   gint64 prev_ts_offset;
 
@@ -1277,19 +1284,25 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
         "ts-offset %" G_GINT64_FORMAT ", prev %" G_GINT64_FORMAT
         ", diff: %" G_GINT64_FORMAT, ts_offset, prev_ts_offset, diff);
 
-    if (check) {
-      /* only change diff when it changed more than 4 milliseconds. This
-       * compensates for rounding errors in NTP to RTP timestamp
-       * conversions */
-      if (ABS (diff) < 4 * GST_MSECOND) {
-        GST_DEBUG_OBJECT (bin, "offset too small, ignoring");
+    /* ignore minor offsets */
+    if (ABS (diff) < min_ts_offset) {
+      GST_DEBUG_OBJECT (bin, "offset too small, ignoring");
+      return;
+    }
+
+    /* sanity check offset */
+    if (max_ts_offset > 0) {
+      if (ts_offset > 0 && !allow_positive_ts_offset) {
+        GST_DEBUG_OBJECT (bin,
+            "offset is positive (clocks are out of sync), ignoring");
         return;
       }
-      if (ABS (diff) > (3 * GST_SECOND)) {
-        GST_WARNING_OBJECT (bin, "offset unusually large, ignoring");
+      if (ABS (ts_offset) > max_ts_offset) {
+        GST_DEBUG_OBJECT (bin, "offset too large, ignoring");
         return;
       }
     }
+
     g_object_set (stream->buffer, "ts-offset", ts_offset, NULL);
   }
   GST_DEBUG_OBJECT (bin, "stream SSRC %08x, delta %" G_GINT64_FORMAT,
@@ -1430,7 +1443,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     /* combine to get the final diff to apply to the running_time */
     stream->rt_delta = rtdiff - ntpdiff;
 
-    stream_set_ts_offset (bin, stream, stream->rt_delta, FALSE);
+    stream_set_ts_offset (bin, stream, stream->rt_delta, bin->max_ts_offset,
+        0, FALSE);
   } else {
     gint64 min, rtp_min, clock_base = stream->clock_base;
     gboolean all_sync, use_rtp;
@@ -1582,7 +1596,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       else
         ts_offset = ostream->rt_delta - min;
 
-      stream_set_ts_offset (bin, ostream, ts_offset, TRUE);
+      stream_set_ts_offset (bin, ostream, ts_offset, bin->max_ts_offset,
+          MIN_TS_OFFSET, TRUE);
     }
   }
   gst_rtp_bin_send_sync_event (stream);
@@ -2513,6 +2528,20 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           DEFAULT_MAX_TS_OFFSET_ADJUSTMENT, G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:max-ts-offset:
+   *
+   * Used to set an upper limit of how large a time offset may be. This
+   * is used to protect against unrealistic values as a result of either
+   * client,server or clock issues.
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_TS_OFFSET,
+      g_param_spec_int64 ("max-ts-offset", "Max TS Offset",
+          "The maximum absolute value of the time offset in (nanoseconds). "
+          "Note, if the ntp-sync parameter is set the default value is "
+          "changed to 0 (no limit)", 0, G_MAXINT64, DEFAULT_MAX_TS_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2585,6 +2614,8 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->rfc7273_sync = DEFAULT_RFC7273_SYNC;
   rtpbin->max_streams = DEFAULT_MAX_STREAMS;
   rtpbin->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
+  rtpbin->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
+  rtpbin->max_ts_offset_is_set = FALSE;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2700,6 +2731,15 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_NTP_SYNC:
       rtpbin->ntp_sync = g_value_get_boolean (value);
+      /* The default value of max_ts_offset depends on ntp_sync. If user
+       * hasn't set it then change default value */
+      if (!rtpbin->max_ts_offset_is_set) {
+        if (rtpbin->ntp_sync) {
+          rtpbin->max_ts_offset = 0;
+        } else {
+          rtpbin->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
+        }
+      }
       break;
     case PROP_RTCP_SYNC:
       g_atomic_int_set (&rtpbin->rtcp_sync, g_value_get_enum (value));
@@ -2814,6 +2854,10 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
           "max-ts-offset-adjustment", value);
       break;
+    case PROP_MAX_TS_OFFSET:
+      rtpbin->max_ts_offset = g_value_get_int64 (value);
+      rtpbin->max_ts_offset_is_set = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2904,6 +2948,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_TS_OFFSET_ADJUSTMENT:
       g_value_set_uint64 (value, rtpbin->max_ts_offset_adjustment);
+      break;
+    case PROP_MAX_TS_OFFSET:
+      g_value_set_int64 (value, rtpbin->max_ts_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

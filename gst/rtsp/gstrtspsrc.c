@@ -229,6 +229,7 @@ gst_rtsp_src_ntp_time_source_get_type (void)
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_RFC7273_SYNC         FALSE
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT   0
+#define DEFAULT_MAX_TS_OFFSET    3000000000
 
 enum
 {
@@ -269,7 +270,8 @@ enum
   PROP_USER_AGENT,
   PROP_MAX_RTCP_RTP_TIME_DIFF,
   PROP_RFC7273_SYNC,
-  PROP_MAX_TS_OFFSET_ADJUSTMENT
+  PROP_MAX_TS_OFFSET_ADJUSTMENT,
+  PROP_MAX_TS_OFFSET
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -767,6 +769,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpBin:max-ts-offset:
+   *
+   * Used to set an upper limit of how large a time offset may be. This
+   * is used to protect against unrealistic values as a result of either
+   * client,server or clock issues.
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_TS_OFFSET,
+      g_param_spec_int64 ("max-ts-offset", "Max TS Offset",
+          "The maximum absolute value of the time offset in (nanoseconds). "
+          "Note, if the ntp-sync parameter is set the default value is "
+          "changed to 0 (no limit)", 0, G_MAXINT64, DEFAULT_MAX_TS_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -915,6 +931,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->max_rtcp_rtp_time_diff = DEFAULT_MAX_RTCP_RTP_TIME_DIFF;
   src->rfc7273_sync = DEFAULT_RFC7273_SYNC;
   src->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
+  src->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
+  src->max_ts_offset_is_set = FALSE;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1171,6 +1189,15 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_NTP_SYNC:
       rtspsrc->ntp_sync = g_value_get_boolean (value);
+      /* The default value of max_ts_offset depends on ntp_sync. If user
+       * hasn't set it then change default value */
+      if (!rtspsrc->max_ts_offset_is_set) {
+        if (rtspsrc->ntp_sync) {
+          rtspsrc->max_ts_offset = 0;
+        } else {
+          rtspsrc->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
+        }
+      }
       break;
     case PROP_USE_PIPELINE_CLOCK:
       rtspsrc->use_pipeline_clock = g_value_get_boolean (value);
@@ -1207,6 +1234,10 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_MAX_TS_OFFSET_ADJUSTMENT:
       rtspsrc->max_ts_offset_adjustment = g_value_get_uint64 (value);
+      break;
+    case PROP_MAX_TS_OFFSET:
+      rtspsrc->max_ts_offset = g_value_get_int64 (value);
+      rtspsrc->max_ts_offset_is_set = TRUE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1359,6 +1390,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_TS_OFFSET_ADJUSTMENT:
       g_value_set_uint64 (value, rtspsrc->max_ts_offset_adjustment);
+      break;
+    case PROP_MAX_TS_OFFSET:
+      g_value_set_int64 (value, rtspsrc->max_ts_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3194,6 +3228,18 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       if (g_object_class_find_property (klass, "max-ts-offset-adjustment")) {
         g_object_set (src->manager, "max-ts-offset-adjustment",
             src->max_ts_offset_adjustment, NULL);
+      }
+
+      if (g_object_class_find_property (klass, "max-ts-offset")) {
+        gint64 max_ts_offset;
+
+        /* setting max-ts-offset in the manager has side effects so only do it
+         * if the value differs */
+        g_object_get (src->manager, "max-ts-offset", &max_ts_offset, NULL);
+        if (max_ts_offset != src->max_ts_offset) {
+          g_object_set (src->manager, "max-ts-offset", src->max_ts_offset,
+              NULL);
+        }
       }
 
       /* buffer mode pauses are handled by adding offsets to buffer times,

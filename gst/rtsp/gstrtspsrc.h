@@ -251,6 +251,8 @@ struct _GstRTSPSrc {
   GstClockTime      max_rtcp_rtp_time_diff;
   gboolean          rfc7273_sync;
   guint64           max_ts_offset_adjustment;
+  gint64            max_ts_offset;
+  gboolean          max_ts_offset_is_set;
 
   /* state */
   GstRTSPState       state;
