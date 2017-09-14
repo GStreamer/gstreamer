@@ -43,6 +43,7 @@
 #endif
 
 #include <gst/video/video.h>
+#include <gst/video/videooverlay.h>
 #include <gst/allocators/gstdmabuf.h>
 
 #include <drm.h>
@@ -64,13 +65,18 @@ GST_DEBUG_CATEGORY_STATIC (gst_kms_sink_debug);
 GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT gst_kms_sink_debug
 
+static GstFlowReturn gst_kms_sink_show_frame (GstVideoSink * vsink,
+    GstBuffer * buf);
+static void gst_kms_sink_video_overlay_init (GstVideoOverlayInterface * iface);
+static void gst_kms_sink_drain (GstKMSSink * self);
+
 #define parent_class gst_kms_sink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstKMSSink, gst_kms_sink, GST_TYPE_VIDEO_SINK,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, GST_PLUGIN_NAME, 0,
         GST_PLUGIN_DESC);
-    GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE"));
-
-static void gst_kms_sink_drain (GstKMSSink * self);
+    GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_kms_sink_video_overlay_init));
 
 enum
 {
@@ -84,6 +90,84 @@ enum
 };
 
 static GParamSpec *g_properties[PROP_N] = { NULL, };
+
+static void
+gst_kms_sink_set_render_rectangle (GstVideoOverlay * overlay,
+    gint x, gint y, gint width, gint height)
+{
+  GstKMSSink *self = GST_KMS_SINK (overlay);
+
+  if (width == -1 && height == -1) {
+    x = 0;
+    y = 0;
+    width = self->hdisplay;
+    height = self->vdisplay;
+  }
+
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+
+  GST_OBJECT_LOCK (self);
+  if (self->can_scale) {
+    self->render_rect.x = x;
+    self->render_rect.y = y;
+    self->render_rect.w = width;
+    self->render_rect.h = height;
+  } else {
+    GstVideoRectangle src = { 0, };
+    GstVideoRectangle dst = { 0, };
+    GstVideoRectangle result;
+
+    src.w = GST_VIDEO_INFO_WIDTH (&self->vinfo);
+    src.h = GST_VIDEO_INFO_HEIGHT (&self->vinfo);
+
+    dst.w = width;
+    dst.h = height;
+
+    if (src.w != dst.w || src.h != dst.h)
+      self->reconfigure = TRUE;
+
+    gst_video_sink_center_rect (src, dst, &result, TRUE);
+
+    self->pending_rect.x = x + result.x;
+    self->pending_rect.y = y + result.y;
+    self->pending_rect.w = result.w;
+    self->pending_rect.h = result.h;
+
+    GST_DEBUG_OBJECT (self, "pending resize to (%d,%d)-(%dx%d)",
+        self->pending_rect.x, self->pending_rect.y,
+        self->pending_rect.w, self->pending_rect.h);
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+gst_kms_sink_expose (GstVideoOverlay * overlay)
+{
+  GstKMSSink *self = GST_KMS_SINK (overlay);
+
+  if (!self->can_scale) {
+    GST_OBJECT_LOCK (self);
+    if (self->reconfigure) {
+      GST_OBJECT_UNLOCK (self);
+      gst_pad_push_event (GST_BASE_SINK_PAD (self),
+          gst_event_new_reconfigure ());
+    } else {
+      /* size of the rectangle does not change, only the (x,y) position changes */
+      self->render_rect = self->pending_rect;
+      GST_OBJECT_UNLOCK (self);
+    }
+  }
+  gst_kms_sink_show_frame (GST_VIDEO_SINK (self), NULL);
+}
+
+static void
+gst_kms_sink_video_overlay_init (GstVideoOverlayInterface * iface)
+{
+  iface->expose = gst_kms_sink_expose;
+  iface->set_render_rectangle = gst_kms_sink_set_render_rectangle;
+}
 
 static int
 kms_open (gchar ** driver)
@@ -573,8 +657,10 @@ retry_find_plane:
   GST_INFO_OBJECT (self, "connector id = %d / crtc id = %d / plane id = %d",
       self->conn_id, self->crtc_id, self->plane_id);
 
-  self->hdisplay = crtc->mode.hdisplay;
-  self->vdisplay = crtc->mode.vdisplay;
+  self->render_rect.x = 0;
+  self->render_rect.y = 0;
+  self->hdisplay = self->render_rect.w = crtc->mode.hdisplay;
+  self->vdisplay = self->render_rect.h = crtc->mode.vdisplay;
   self->buffer_id = crtc->buffer_id;
 
   self->mm_width = conn->mmWidth;
@@ -719,13 +805,31 @@ gst_kms_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   self = GST_KMS_SINK (bsink);
 
   caps = gst_kms_sink_get_allowed_caps (self);
+
+  GST_OBJECT_LOCK (self);
+  if (caps && self->reconfigure) {
+    GstStructure *s0, *s1;
+    guint dpy_par_n, dpy_par_d;
+
+    gst_video_calculate_device_ratio (self->hdisplay, self->vdisplay,
+        self->mm_width, self->mm_height, &dpy_par_n, &dpy_par_d);
+
+    caps = gst_caps_make_writable (caps);
+    s0 = gst_caps_get_structure (caps, 0);
+    s1 = gst_structure_copy (gst_caps_get_structure (caps, 0));
+
+    gst_structure_set (s0, "width", G_TYPE_INT, self->pending_rect.w,
+        "height", G_TYPE_INT, self->pending_rect.h, NULL);
+    gst_caps_append_structure (caps, s1);
+  }
+  GST_OBJECT_UNLOCK (self);
+
   if (caps && filter) {
     out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (caps);
   } else {
     out_caps = caps;
   }
-
   return out_caps;
 }
 
@@ -787,8 +891,14 @@ gst_kms_sink_calculate_display_ratio (GstKMSSink * self, GstVideoInfo * vinfo)
   video_par_n = GST_VIDEO_INFO_PAR_N (vinfo);
   video_par_d = GST_VIDEO_INFO_PAR_D (vinfo);
 
-  gst_video_calculate_device_ratio (self->hdisplay, self->vdisplay,
-      self->mm_width, self->mm_height, &dpy_par_n, &dpy_par_d);
+  if (self->can_scale) {
+    gst_video_calculate_device_ratio (self->hdisplay, self->vdisplay,
+        self->mm_width, self->mm_height, &dpy_par_n, &dpy_par_d);
+  } else {
+    GST_VIDEO_SINK_WIDTH (self) = video_width;
+    GST_VIDEO_SINK_HEIGHT (self) = video_height;
+    goto out;
+  }
 
   if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, video_width,
           video_height, video_par_n, video_par_d, dpy_par_n, dpy_par_d))
@@ -819,6 +929,8 @@ gst_kms_sink_calculate_display_ratio (GstKMSSink * self, GstVideoInfo * vinfo)
         gst_util_uint64_scale_int (video_height, dar_n, dar_d);
     GST_VIDEO_SINK_HEIGHT (self) = video_height;
   }
+
+out:
   GST_DEBUG_OBJECT (self, "scaling to %dx%d", GST_VIDEO_SINK_WIDTH (self),
       GST_VIDEO_SINK_HEIGHT (self));
 
@@ -867,6 +979,13 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     goto modesetting_failed;
 
   self->vinfo = vinfo;
+
+  GST_OBJECT_LOCK (self);
+  if (self->reconfigure) {
+    self->reconfigure = FALSE;
+    self->render_rect = self->pending_rect;
+  }
+  GST_OBJECT_UNLOCK (self);
 
   GST_DEBUG_OBJECT (self, "negotiated caps = %" GST_PTR_FORMAT, caps);
 
@@ -1232,7 +1351,7 @@ static GstFlowReturn
 gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   gint ret;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
   guint32 fb_id;
   GstKMSSink *self;
   GstVideoCropMeta *crop;
@@ -1245,7 +1364,11 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   res = GST_FLOW_ERROR;
 
-  buffer = gst_kms_sink_get_input_buffer (self, buf);
+  if (buf)
+    buffer = gst_kms_sink_get_input_buffer (self, buf);
+  else if (self->last_buffer)
+    buffer = gst_buffer_ref (self->last_buffer);
+
   if (!buffer)
     return GST_FLOW_ERROR;
   fb_id = gst_kms_memory_get_fb_id (gst_buffer_peek_memory (buffer, 0));
@@ -1254,6 +1377,7 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   GST_TRACE_OBJECT (self, "displaying fb %d", fb_id);
 
+  GST_OBJECT_LOCK (self);
   if (self->modesetting_enabled) {
     self->buffer_id = fb_id;
     goto sync_frame;
@@ -1274,11 +1398,14 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   src.w = GST_VIDEO_SINK_WIDTH (self);
   src.h = GST_VIDEO_SINK_HEIGHT (self);
 
-  dst.w = self->hdisplay;
-  dst.h = self->vdisplay;
+  dst.w = self->render_rect.w;
+  dst.h = self->render_rect.h;
 
 retry_set_plane:
   gst_video_sink_center_rect (src, dst, &result, self->can_scale);
+
+  result.x += self->render_rect.x;
+  result.y += self->render_rect.y;
 
   if (crop) {
     src.w = crop->width;
@@ -1286,6 +1413,24 @@ retry_set_plane:
   } else {
     src.w = GST_VIDEO_INFO_WIDTH (&self->vinfo);
     src.h = GST_VIDEO_INFO_HEIGHT (&self->vinfo);
+  }
+
+  /* handle out of screen case */
+  if ((result.x + result.w) > self->hdisplay)
+    result.w = self->hdisplay - result.x;
+
+  if ((result.y + result.h) > self->vdisplay)
+    result.h = self->vdisplay - result.y;
+
+  if (result.w <= 0 || result.h <= 0) {
+    GST_WARNING_OBJECT (self, "video is out of display range");
+    goto sync_frame;
+  }
+
+  /* to make sure it can be show when driver don't support scale */
+  if (!self->can_scale) {
+    src.w = result.w;
+    src.h = result.h;
   }
 
   GST_TRACE_OBJECT (self,
@@ -1306,12 +1451,16 @@ retry_set_plane:
 
 sync_frame:
   /* Wait for the previous frame to complete redraw */
-  if (!gst_kms_sink_sync (self))
+  if (!gst_kms_sink_sync (self)) {
+    GST_OBJECT_UNLOCK (self);
     goto bail;
+  }
 
-  gst_buffer_replace (&self->last_buffer, buffer);
+  if (buffer != self->last_buffer)
+    gst_buffer_replace (&self->last_buffer, buffer);
   g_clear_pointer (&self->tmp_kmsmem, gst_memory_unref);
 
+  GST_OBJECT_UNLOCK (self);
   res = GST_FLOW_OK;
 
 bail:
@@ -1326,6 +1475,7 @@ buffer_invalid:
   }
 set_plane_failed:
   {
+    GST_OBJECT_UNLOCK (self);
     GST_DEBUG_OBJECT (self, "result = { %d, %d, %d, %d} / "
         "src = { %d, %d, %d %d } / dst = { %d, %d, %d %d }", result.x, result.y,
         result.w, result.h, src.x, src.y, src.w, src.h, dst.x, dst.y, dst.w,
@@ -1336,6 +1486,7 @@ set_plane_failed:
   }
 no_disp_ratio:
   {
+    GST_OBJECT_UNLOCK (self);
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (NULL),
         ("Error calculating the output display ratio of the video."));
     goto bail;

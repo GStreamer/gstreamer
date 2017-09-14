@@ -80,6 +80,13 @@ struct _GstKMSSink {
 
   GstPoll *poll;
   GstPollFD pollfd;
+
+  /* render video rectangle */
+  GstVideoRectangle render_rect;
+
+  /* reconfigure info if driver doesn't scale */
+  GstVideoRectangle pending_rect;
+  gboolean reconfigure;
 };
 
 struct _GstKMSSinkClass {
