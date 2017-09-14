@@ -1280,7 +1280,8 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
     return GST_FLOW_OK;
 
   if (src->pt_set && src->pt != pinfo->pt) {
-    GST_WARNING ("Changing pt from %u to %u for SSRC %u", src->pt, pinfo->pt, src->ssrc);
+    GST_WARNING ("Changing pt from %u to %u for SSRC %u", src->pt, pinfo->pt,
+        src->ssrc);
   }
 
   src->pt = pinfo->pt;

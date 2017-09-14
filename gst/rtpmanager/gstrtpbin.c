@@ -309,6 +309,7 @@ enum
 #define DEFAULT_MAX_MISORDER_TIME    2000
 #define DEFAULT_RFC7273_SYNC         FALSE
 #define DEFAULT_MAX_STREAMS          G_MAXUINT
+#define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT 0
 
 enum
 {
@@ -333,7 +334,8 @@ enum
   PROP_MAX_DROPOUT_TIME,
   PROP_MAX_MISORDER_TIME,
   PROP_RFC7273_SYNC,
-  PROP_MAX_STREAMS
+  PROP_MAX_STREAMS,
+  PROP_MAX_TS_OFFSET_ADJUSTMENT
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -1759,6 +1761,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set (buffer, "max-dropout-time", rtpbin->max_dropout_time,
       "max-misorder-time", rtpbin->max_misorder_time, NULL);
   g_object_set (buffer, "rfc7273-sync", rtpbin->rfc7273_sync, NULL);
+  g_object_set (buffer, "max-ts-offset-adjustment",
+      rtpbin->max_ts_offset_adjustment, NULL);
 
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
       buffer, session->id, ssrc);
@@ -2493,6 +2497,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           0, G_MAXUINT, DEFAULT_MAX_STREAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:max-ts-offset-adjustment:
+   *
+   * Syncing time stamps to NTP time adds a time offset. This parameter
+   * specifies the maximum number of nanoseconds per frame that this time offset
+   * may be adjusted with. This is used to avoid sudden large changes to time
+   * stamps.
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_TS_OFFSET_ADJUSTMENT,
+      g_param_spec_uint64 ("max-ts-offset-adjustment",
+          "Max Timestamp Offset Adjustment",
+          "The maximum number of nanoseconds per frame that time stamp offsets "
+          "may be adjusted (0 = no limit).", 0, G_MAXUINT64,
+          DEFAULT_MAX_TS_OFFSET_ADJUSTMENT, G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -2564,6 +2584,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
   rtpbin->rfc7273_sync = DEFAULT_RFC7273_SYNC;
   rtpbin->max_streams = DEFAULT_MAX_STREAMS;
+  rtpbin->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2788,6 +2809,11 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
     case PROP_MAX_STREAMS:
       rtpbin->max_streams = g_value_get_uint (value);
       break;
+    case PROP_MAX_TS_OFFSET_ADJUSTMENT:
+      rtpbin->max_ts_offset_adjustment = g_value_get_uint64 (value);
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
+          "max-ts-offset-adjustment", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2875,6 +2901,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_STREAMS:
       g_value_set_uint (value, rtpbin->max_streams);
+      break;
+    case PROP_MAX_TS_OFFSET_ADJUSTMENT:
+      g_value_set_uint64 (value, rtpbin->max_ts_offset_adjustment);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
