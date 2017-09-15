@@ -3086,11 +3086,6 @@ gst_player_play_internal (gpointer user_data)
     state_ret = gst_element_set_state (self->playbin, GST_STATE_PAUSED);
   }
 
-  if (state_ret == GST_STATE_CHANGE_NO_PREROLL) {
-    self->is_live = TRUE;
-    GST_DEBUG_OBJECT (self, "Pipeline is live");
-  }
-
   if (state_ret == GST_STATE_CHANGE_FAILURE) {
     emit_error (self, g_error_new (GST_PLAYER_ERROR, GST_PLAYER_ERROR_FAILED,
             "Failed to play"));
