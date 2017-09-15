@@ -1056,7 +1056,6 @@ gst_vaapi_encoder_init_properties (GstVaapiEncoder * encoder)
       return FALSE;
   }
 
-  g_ptr_array_unref (props);
   return TRUE;
 }
 
