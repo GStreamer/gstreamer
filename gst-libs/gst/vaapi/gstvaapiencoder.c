@@ -1263,6 +1263,8 @@ gst_vaapi_encoder_init_properties (GstVaapiEncoder * encoder)
             NULL) != GST_VAAPI_ENCODER_STATUS_SUCCESS)
       return FALSE;
   }
+
+  g_ptr_array_unref (props);
   return TRUE;
 }
 
