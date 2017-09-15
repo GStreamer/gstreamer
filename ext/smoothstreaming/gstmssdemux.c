@@ -580,6 +580,7 @@ gst_mss_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
       if (!selected_system) {
         GST_ERROR_OBJECT (mssdemux, "stream is protected, but no "
             "suitable decryptor element has been found");
+        gst_caps_unref (caps);
         return FALSE;
       }
 
