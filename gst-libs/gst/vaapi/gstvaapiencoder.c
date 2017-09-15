@@ -1122,18 +1122,14 @@ gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate)
 {
   g_return_val_if_fail (encoder != NULL, 0);
 
-  if (encoder->bitrate != bitrate && encoder->num_codedbuf_queued > 0)
-    goto error_operation_failed;
+  if (encoder->bitrate != bitrate && encoder->num_codedbuf_queued > 0) {
+    GST_INFO ("Bitrate is changed to %d on runtime", bitrate);
+    encoder->bitrate = bitrate;
+    return gst_vaapi_encoder_reconfigure_internal (encoder);
+  }
 
   encoder->bitrate = bitrate;
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-
-  /* ERRORS */
-error_operation_failed:
-  {
-    GST_ERROR ("could not change bitrate value after encoding started");
-    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
-  }
 }
 
 /**
