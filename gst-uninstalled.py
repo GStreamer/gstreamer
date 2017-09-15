@@ -13,7 +13,7 @@ import tempfile
 
 from common import get_meson
 
-SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
+SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')
 
 
