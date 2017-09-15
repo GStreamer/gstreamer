@@ -269,6 +269,8 @@ static void *get_from_tags (GstPlayer * self, GstPlayerMediaInfo * media_info,
     void *(*func) (GstTagList *));
 static void *get_cover_sample (GstTagList * tags);
 
+static void remove_seek_source (GstPlayer * self);
+
 static void
 gst_player_init (GstPlayer * self)
 {
@@ -1087,11 +1089,7 @@ emit_error (GstPlayer * self, GError * err)
   }
 
   self->seek_pending = FALSE;
-  if (self->seek_source) {
-    g_source_destroy (self->seek_source);
-    g_source_unref (self->seek_source);
-    self->seek_source = NULL;
-  }
+  remove_seek_source (self);
   self->seek_position = GST_CLOCK_TIME_NONE;
   self->last_seek_time = GST_CLOCK_TIME_NONE;
   g_mutex_unlock (&self->lock);
@@ -1643,11 +1641,7 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 
         if (!self->media_info->seekable) {
           GST_DEBUG_OBJECT (self, "Media is not seekable");
-          if (self->seek_source) {
-            g_source_destroy (self->seek_source);
-            g_source_unref (self->seek_source);
-            self->seek_source = NULL;
-          }
+          remove_seek_source (self);
           self->seek_position = GST_CLOCK_TIME_NONE;
           self->last_seek_time = GST_CLOCK_TIME_NONE;
         } else if (self->seek_source) {
@@ -2989,9 +2983,7 @@ gst_player_main (gpointer data)
     self->media_info = NULL;
   }
 
-  if (self->seek_source)
-    g_source_unref (self->seek_source);
-  self->seek_source = NULL;
+  remove_seek_source (self);
   g_mutex_unlock (&self->lock);
 
   g_main_context_pop_thread_default (self->context);
@@ -3236,11 +3228,7 @@ gst_player_stop_internal (GstPlayer * self, gboolean transient)
     self->global_tags = NULL;
   }
   self->seek_pending = FALSE;
-  if (self->seek_source) {
-    g_source_destroy (self->seek_source);
-    g_source_unref (self->seek_source);
-    self->seek_source = NULL;
-  }
+  remove_seek_source (self);
   self->seek_position = GST_CLOCK_TIME_NONE;
   self->last_seek_time = GST_CLOCK_TIME_NONE;
   self->rate = 1.0;
@@ -3303,11 +3291,7 @@ gst_player_seek_internal_locked (GstPlayer * self)
   GstSeekFlags flags = 0;
   gboolean accurate = FALSE;
 
-  if (self->seek_source) {
-    g_source_destroy (self->seek_source);
-    g_source_unref (self->seek_source);
-    self->seek_source = NULL;
-  }
+  remove_seek_source (self);
 
   /* Only seek in PAUSED */
   if (self->current_state < GST_STATE_PAUSED) {
@@ -3469,6 +3453,17 @@ gst_player_seek (GstPlayer * self, GstClockTime position)
     }
   }
   g_mutex_unlock (&self->lock);
+}
+
+static void
+remove_seek_source (GstPlayer * self)
+{
+  if (!self->seek_source)
+    return;
+
+  g_source_destroy (self->seek_source);
+  g_source_unref (self->seek_source);
+  self->seek_source = NULL;
 }
 
 /**
