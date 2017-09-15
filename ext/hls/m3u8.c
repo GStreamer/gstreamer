@@ -407,34 +407,31 @@ gst_m3u8_update_check_consistent_media_seqnums (GstM3U8 * self,
       /* No match, this means f2 is the last item in the previous playlist
        * and we have to start our new playlist at that sequence */
       mediasequence = f2->sequence + 1;
-
-      for (l = self->files; l; l = l->next) {
-        f1 = l->data;
-        f1->sequence = mediasequence;
-        mediasequence++;
-      }
+      l = self->files;
     } else {
       /* Match, check that all following ones are matching too and continue
        * sequence numbers from there on */
 
       mediasequence = f2->sequence;
 
-      for (; l; l = l->next) {
+      for (; l && m; l = l->next, m = m->next) {
         f1 = l->data;
-        f2 = m ? m->data : NULL;
+        f2 = m->data;
 
         f1->sequence = mediasequence;
         mediasequence++;
 
-        if (f2) {
-          if (!g_str_equal (f1->uri, f2->uri)) {
-            GST_WARNING ("Inconsistent URIs after playlist update");
-          }
+        if (!g_str_equal (f1->uri, f2->uri)) {
+          GST_WARNING ("Inconsistent URIs after playlist update");
         }
-
-        if (m)
-          m = m->next;
       }
+    }
+
+    for (; l; l = l->next) {
+      f1 = l->data;
+
+      f1->sequence = mediasequence;
+      mediasequence++;
     }
   }
 
