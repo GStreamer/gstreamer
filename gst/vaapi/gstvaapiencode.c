@@ -878,6 +878,7 @@ gst_vaapiencode_init_properties (GstVaapiEncode * encode)
       return FALSE;
     g_ptr_array_add (encode->prop_values, prop_value);
   }
+  g_ptr_array_unref (props);
   return TRUE;
 }
 
