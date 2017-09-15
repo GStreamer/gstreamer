@@ -1057,6 +1057,7 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
   gst_buffer_ref (buf);
   if (!gst_buffer_map (buf, &minfo, GST_MAP_READ)) {
     GST_ERROR_OBJECT (mpeg2dec, "Failed to map input buffer");
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 
