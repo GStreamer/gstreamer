@@ -211,7 +211,7 @@ struct _GstAggregatorPadPrivate
 
   gboolean first_buffer;
 
-  GQueue buffers;
+  GQueue data;                  /* buffers, events and queries */
   GstBuffer *clipped_buffer;
   guint num_buffers;
   GstClockTime head_position;
@@ -430,7 +430,7 @@ no_iter:
 static gboolean
 gst_aggregator_pad_queue_is_empty (GstAggregatorPad * pad)
 {
-  return (g_queue_peek_tail (&pad->priv->buffers) == NULL &&
+  return (g_queue_peek_tail (&pad->priv->data) == NULL &&
       pad->priv->clipped_buffer == NULL);
 }
 
@@ -766,11 +766,11 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
       pad->priv->eos = TRUE;
     }
     if (pad->priv->clipped_buffer == NULL &&
-        !GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->buffers))) {
-      if (GST_IS_EVENT (g_queue_peek_tail (&pad->priv->buffers)))
-        event = gst_event_ref (g_queue_peek_tail (&pad->priv->buffers));
-      if (GST_IS_QUERY (g_queue_peek_tail (&pad->priv->buffers)))
-        query = g_queue_peek_tail (&pad->priv->buffers);
+        !GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->data))) {
+      if (GST_IS_EVENT (g_queue_peek_tail (&pad->priv->data)))
+        event = gst_event_ref (g_queue_peek_tail (&pad->priv->data));
+      if (GST_IS_QUERY (g_queue_peek_tail (&pad->priv->data)))
+        query = g_queue_peek_tail (&pad->priv->data);
     }
     PAD_UNLOCK (pad);
     if (event || query) {
@@ -789,8 +789,8 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
         PAD_LOCK (pad);
         if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
           pad->priv->negotiated = ret;
-        if (g_queue_peek_tail (&pad->priv->buffers) == event)
-          gst_event_unref (g_queue_pop_tail (&pad->priv->buffers));
+        if (g_queue_peek_tail (&pad->priv->data) == event)
+          gst_event_unref (g_queue_pop_tail (&pad->priv->data));
         gst_event_unref (event);
       }
 
@@ -799,13 +799,13 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
         ret = klass->sink_query (self, pad, query);
 
         PAD_LOCK (pad);
-        if (g_queue_peek_tail (&pad->priv->buffers) == query) {
+        if (g_queue_peek_tail (&pad->priv->data) == query) {
           GstStructure *s;
 
           s = gst_query_writable_structure (query);
           gst_structure_set (s, "gst-aggregator-retval", G_TYPE_BOOLEAN, ret,
               NULL);
-          g_queue_pop_tail (&pad->priv->buffers);
+          g_queue_pop_tail (&pad->priv->data);
         }
       }
 
@@ -829,7 +829,7 @@ gst_aggregator_pad_set_flushing (GstAggregatorPad * aggpad,
   else
     aggpad->priv->flow_return = flow_return;
 
-  item = g_queue_peek_head_link (&aggpad->priv->buffers);
+  item = g_queue_peek_head_link (&aggpad->priv->data);
   while (item) {
     GList *next = item->next;
 
@@ -842,7 +842,7 @@ gst_aggregator_pad_set_flushing (GstAggregatorPad * aggpad,
         !GST_EVENT_IS_STICKY (item->data)) {
       if (!GST_IS_QUERY (item->data))
         gst_mini_object_unref (item->data);
-      g_queue_delete_link (&aggpad->priv->buffers, item);
+      g_queue_delete_link (&aggpad->priv->data, item);
     }
     item = next;
   }
@@ -1475,8 +1475,8 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_DROPPABLE);
 
       /* Remove GAP event so we can replace it with the buffer */
-      if (g_queue_peek_tail (&aggpad->priv->buffers) == event)
-        gst_event_unref (g_queue_pop_tail (&aggpad->priv->buffers));
+      if (g_queue_peek_tail (&aggpad->priv->data) == event)
+        gst_event_unref (g_queue_pop_tail (&aggpad->priv->data));
 
       if (gst_aggregator_pad_chain_internal (self, aggpad, gapbuf, FALSE) !=
           GST_FLOW_OK) {
@@ -2523,9 +2523,9 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
     if (gst_aggregator_pad_has_space (self, aggpad)
         && aggpad->priv->flow_return == GST_FLOW_OK) {
       if (head)
-        g_queue_push_head (&aggpad->priv->buffers, buffer);
+        g_queue_push_head (&aggpad->priv->data, buffer);
       else
-        g_queue_push_tail (&aggpad->priv->buffers, buffer);
+        g_queue_push_tail (&aggpad->priv->data, buffer);
       apply_buffer (aggpad, buffer, head);
       aggpad->priv->num_buffers++;
       buffer = NULL;
@@ -2650,7 +2650,7 @@ gst_aggregator_pad_query_func (GstPad * pad, GstObject * parent,
       goto flushing;
     }
 
-    g_queue_push_head (&aggpad->priv->buffers, query);
+    g_queue_push_head (&aggpad->priv->data, query);
     SRC_BROADCAST (self);
     SRC_UNLOCK (self);
 
@@ -2664,7 +2664,7 @@ gst_aggregator_pad_query_func (GstPad * pad, GstObject * parent,
     if (gst_structure_get_boolean (s, "gst-aggregator-retval", &ret))
       gst_structure_remove_field (s, "gst-aggregator-retval");
     else
-      g_queue_remove (&aggpad->priv->buffers, query);
+      g_queue_remove (&aggpad->priv->data, query);
 
     if (aggpad->priv->flow_return != GST_FLOW_OK)
       goto flushing;
@@ -2715,7 +2715,7 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
     if (GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
       GST_DEBUG_OBJECT (aggpad, "Store event in queue: %" GST_PTR_FORMAT,
           event);
-      g_queue_push_head (&aggpad->priv->buffers, event);
+      g_queue_push_head (&aggpad->priv->data, event);
       event = NULL;
       SRC_BROADCAST (self);
     }
@@ -2828,7 +2828,7 @@ gst_aggregator_pad_init (GstAggregatorPad * pad)
       G_TYPE_INSTANCE_GET_PRIVATE (pad, GST_TYPE_AGGREGATOR_PAD,
       GstAggregatorPadPrivate);
 
-  g_queue_init (&pad->priv->buffers);
+  g_queue_init (&pad->priv->data);
   g_cond_init (&pad->priv->event_cond);
 
   g_mutex_init (&pad->priv->flush_lock);
@@ -2860,8 +2860,8 @@ gst_aggregator_pad_clip_buffer_unlocked (GstAggregatorPad * pad)
   GstBuffer *buffer = NULL;
 
   while (pad->priv->clipped_buffer == NULL &&
-      GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->buffers))) {
-    buffer = g_queue_pop_tail (&pad->priv->buffers);
+      GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->data))) {
+    buffer = g_queue_pop_tail (&pad->priv->data);
 
     apply_buffer (pad, buffer, FALSE);
 
