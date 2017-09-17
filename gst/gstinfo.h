@@ -179,6 +179,8 @@ typedef enum {
  * GstStackTraceFlags:
  * @GST_STACK_TRACE_SHOW_FULL: Try to retrieve as much information as
  *                             possible when getting the stack trace
+ *
+ * Since: 1.12
  */
 typedef enum {
     GST_STACK_TRACE_SHOW_FULL = 1 << 0
