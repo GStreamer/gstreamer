@@ -466,6 +466,8 @@ static gboolean gst_rtp_jitter_buffer_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_rtp_jitter_buffer_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_jitter_buffer_chain_list (GstPad * pad,
+    GstObject * parent, GstBufferList * buffer_list);
 
 static gboolean gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
@@ -1055,6 +1057,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
 
   gst_pad_set_chain_function (priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_chain));
+  gst_pad_set_chain_list_function (priv->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_chain_list));
   gst_pad_set_event_function (priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_sink_event));
   gst_pad_set_query_function (priv->sinkpad,
@@ -3297,6 +3301,31 @@ rtx_duplicate:
     gst_buffer_unref (buffer);
     goto finished;
   }
+}
+
+/* FIXME: hopefully we can do something more efficient here, especially when
+ * all packets are in order and/or outside of the currently cached range.
+ * Still worthwhile to have it, avoids taking/releasing object lock and pad
+ * stream lock for every single buffer in the default chain_list fallback. */
+static GstFlowReturn
+gst_rtp_jitter_buffer_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * buffer_list)
+{
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+  guint i, n;
+
+  n = gst_buffer_list_length (buffer_list);
+  for (i = 0; i < n; ++i) {
+    GstBuffer *buf = gst_buffer_list_get (buffer_list, i);
+
+    flow_ret = gst_rtp_jitter_buffer_chain (pad, parent, gst_buffer_ref (buf));
+
+    if (flow_ret != GST_FLOW_OK)
+      break;
+  }
+  gst_buffer_list_unref (buffer_list);
+
+  return flow_ret;
 }
 
 static GstClockTime
