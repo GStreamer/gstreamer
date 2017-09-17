@@ -2916,9 +2916,9 @@ gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
   gst_aggregator_pad_clip_buffer_unlocked (pad);
 
   buffer = pad->priv->clipped_buffer;
-  pad->priv->clipped_buffer = NULL;
 
   if (buffer) {
+    pad->priv->clipped_buffer = NULL;
     gst_aggregator_pad_buffer_consumed (pad);
     GST_DEBUG_OBJECT (pad, "Consumed: %" GST_PTR_FORMAT, buffer);
   }
