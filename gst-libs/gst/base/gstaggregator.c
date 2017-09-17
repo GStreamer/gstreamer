@@ -750,8 +750,8 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 }
 
 static gboolean
-do_events_and_queries (GstAggregator * self, GstAggregatorPad * pad,
-    gpointer user_data)
+gst_aggregator_do_events_and_queries (GstAggregator * self,
+    GstAggregatorPad * pad, gpointer user_data)
 {
   GstEvent *event = NULL;
   GstQuery *query = NULL;
@@ -1096,12 +1096,13 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     GstFlowReturn flow_return = GST_FLOW_OK;
     gboolean processed_event = FALSE;
 
-    gst_aggregator_iterate_sinkpads (self, do_events_and_queries, NULL);
+    gst_aggregator_iterate_sinkpads (self, gst_aggregator_do_events_and_queries,
+        NULL);
 
     if (!gst_aggregator_wait_and_check (self, &timeout))
       continue;
 
-    gst_aggregator_iterate_sinkpads (self, do_events_and_queries,
+    gst_aggregator_iterate_sinkpads (self, gst_aggregator_do_events_and_queries,
         &processed_event);
     if (processed_event)
       continue;
@@ -2361,6 +2362,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_stop_pad);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_do_events_and_queries);
 }
 
 static void
