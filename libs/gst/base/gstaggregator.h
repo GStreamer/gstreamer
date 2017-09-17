@@ -60,7 +60,6 @@ typedef struct _GstAggregatorPadPrivate GstAggregatorPadPrivate;
 
 /**
  * GstAggregatorPad:
- * @buffer: currently queued buffer.
  * @segment: last segment received.
  *
  * The implementation the GstPad to use with #GstAggregator
@@ -157,7 +156,7 @@ struct _GstAggregator
  *                  The type of the pads that should be created when
  *                  GstElement.request_new_pad is called.
  * @flush:          Optional.
- *                  Called after a succesful flushing seek, once all the flush
+ *                  Called after a successful flushing seek, once all the flush
  *                  stops have been received. Flush pad-specific data in
  *                  #GstAggregatorPad->flush.
  * @clip:           Optional.
@@ -165,7 +164,7 @@ struct _GstAggregator
  *                  clipping it and translating it to the current segment falls
  *                  on the subclass. The function should use the segment of data
  *                  and the negotiated media type on the pad to perform
- *                  clipping of inbuffer. This function takes ownership of
+ *                  clipping of input buffer. This function takes ownership of
  *                  buf and should output a buffer or return NULL in
  *                  if the buffer should be dropped.
  * @sink_event:     Optional.
@@ -228,7 +227,7 @@ struct _GstAggregator
  *
  * It will also take care of event ordering (stream-start, segment, eos).
  *
- * Basically, a basic implementation will override @aggregate, and call
+ * Basically, a simple implementation will override @aggregate, and call
  * _finish_buffer from inside that function.
  */
 struct _GstAggregatorClass {

@@ -32,7 +32,7 @@
  *  * Base class for mixers and muxers. Subclasses should at least implement
  *    the #GstAggregatorClass.aggregate() virtual method.
  *
- *  * When data is queued on all pads, tha aggregate vmethod is called.
+ *  * When data is queued on all pads, the aggregate vmethod is called.
  *
  *  * One can peek at the data on any given GstAggregatorPad with the
  *    gst_aggregator_pad_get_buffer () method, and take ownership of it
