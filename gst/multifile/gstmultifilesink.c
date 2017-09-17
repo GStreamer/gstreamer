@@ -884,19 +884,6 @@ gst_multi_file_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 }
 
 static gboolean
-buffer_list_calc_size (GstBuffer ** buf, guint idx, gpointer data)
-{
-  guint *p_size = data;
-  gsize buf_size;
-
-  buf_size = gst_buffer_get_size (*buf);
-  GST_TRACE ("buffer %u has size %" G_GSIZE_FORMAT, idx, buf_size);
-  *p_size += buf_size;
-
-  return TRUE;
-}
-
-static gboolean
 buffer_list_copy_data (GstBuffer ** buf, guint idx, gpointer data)
 {
   GstBuffer *dest = data;
@@ -923,9 +910,9 @@ static GstFlowReturn
 gst_multi_file_sink_render_list (GstBaseSink * sink, GstBufferList * list)
 {
   GstBuffer *buf;
-  guint size = 0;
+  guint size;
 
-  gst_buffer_list_foreach (list, buffer_list_calc_size, &size);
+  size = gst_buffer_list_calculate_size (list);
   GST_LOG_OBJECT (sink, "total size of buffer list %p: %u", list, size);
 
   /* copy all buffers in the list into one single buffer, so we can use
