@@ -216,9 +216,9 @@ struct _GstAggregatorPadPrivate
   guint num_buffers;
   GstClockTime head_position;
   GstClockTime tail_position;
-  GstClockTime head_time;
+  GstClockTime head_time;       /* running time */
   GstClockTime tail_time;
-  GstClockTime time_level;
+  GstClockTime time_level;      /* how much head is ahead of tail */
   GstSegment head_segment;      /* segment before the queue */
 
   gboolean negotiated;
