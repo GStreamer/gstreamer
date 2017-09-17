@@ -750,7 +750,8 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 }
 
 static gboolean
-check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
+do_events_and_queries (GstAggregator * self, GstAggregatorPad * pad,
+    gpointer user_data)
 {
   GstEvent *event = NULL;
   GstQuery *query = NULL;
@@ -759,6 +760,7 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
 
   do {
     event = NULL;
+    query = NULL;
 
     PAD_LOCK (pad);
     if (pad->priv->num_buffers == 0 && pad->priv->pending_eos) {
@@ -792,9 +794,7 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
         if (g_queue_peek_tail (&pad->priv->data) == event)
           gst_event_unref (g_queue_pop_tail (&pad->priv->data));
         gst_event_unref (event);
-      }
-
-      if (query) {
+      } else if (query) {
         GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, query);
         ret = klass->sink_query (self, pad, query);
 
@@ -812,7 +812,7 @@ check_events (GstAggregator * self, GstAggregatorPad * pad, gpointer user_data)
       PAD_BROADCAST_EVENT (pad);
       PAD_UNLOCK (pad);
     }
-  } while (event != NULL);
+  } while (event || query);
 
   return TRUE;
 }
@@ -1096,12 +1096,13 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     GstFlowReturn flow_return = GST_FLOW_OK;
     gboolean processed_event = FALSE;
 
-    gst_aggregator_iterate_sinkpads (self, check_events, NULL);
+    gst_aggregator_iterate_sinkpads (self, do_events_and_queries, NULL);
 
     if (!gst_aggregator_wait_and_check (self, &timeout))
       continue;
 
-    gst_aggregator_iterate_sinkpads (self, check_events, &processed_event);
+    gst_aggregator_iterate_sinkpads (self, do_events_and_queries,
+        &processed_event);
     if (processed_event)
       continue;
 
