@@ -94,7 +94,7 @@ gst_vaapi_encoder_h264_compliance_mode_type (void)
        * This will help to get better performance in some of the Intel
        * platforms which has LLC restirictions */
       {GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_RESTRICT_CODED_BUFFER_ALLOC,
-            "Restict the allocation size of coded-buffer",
+            "Restrict the allocation size of coded-buffer",
           "restrict-buf-alloc"},
       {0, NULL, NULL},
     };
