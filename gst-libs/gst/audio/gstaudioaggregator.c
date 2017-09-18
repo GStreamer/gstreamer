@@ -1264,7 +1264,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
     g_assert (pad->priv->buffer);
 
-    /* This pad is lacking behind, we need to update the offset
+    /* This pad is lagging behind, we need to update the offset
      * and maybe drop the current buffer */
     if (pad->priv->output_offset < aagg->priv->offset) {
       gint64 diff = aagg->priv->offset - pad->priv->output_offset;
