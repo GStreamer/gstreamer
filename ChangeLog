@@ -1,9 +1,45 @@
-=== release 1.12.2 ===
+=== release 1.12.3 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.3
+
+2017-08-18 17:37:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* pkgconfig/meson.build:
+	  meson: don't install -uninstalled.pc file
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786457
+
+2017-08-17 12:17:05 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to dd9d403
+
+2017-06-22 07:25:07 -0700  Julien Isorce <julien.isorce@gmail.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix connection delay due to wrong assumption on last-sample
+	  Commit 852cc09f542af5cadd79ffd7fe79d6475cf57e14 assumed that
+	  multiudpsink's last-sample always comes from the payloader. Which
+	  is wrong if auxiliary streams are multiplexed in the same stream.
+	  So check the buffer's ssrc against the caps'ssrc before to use its
+	  seqnum. If not the same ssrc just use the payloader as done prior
+	  the commit above or when there is no last-sample yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784094
+
+=== release 1.12.2 ===
+
+2017-07-14 14:04:48 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.12.2
 
 === release 1.12.1 ===
 
