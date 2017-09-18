@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.12.2"</DEFAULT>
+<DEFAULT>"GStreamer/1.12.3"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2006,6 +2006,26 @@
 <NICK>Timecode Scale</NICK>
 <BLURB>TimecodeScale used to calculate the Raw Timecode of a Block.</BLURB>
 <DEFAULT>1000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMatroskaMux::max-cluster-duration</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum cluster duration</NICK>
+<BLURB>A new cluster will be created if its duration exceeds this value. 0 means no maximum duration.</BLURB>
+<DEFAULT>65535000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMatroskaMux::min-cluster-duration</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum cluster duration</NICK>
+<BLURB>Desidered cluster duration as nanoseconds. A new cluster will be created irrespective of this property if a force key unit event is received. 0 means create a new cluster for each video keyframe or for each audio buffer in audio only streams.</BLURB>
+<DEFAULT>500000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3455,7 +3475,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.12.2 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.12.3 "</DEFAULT>
 </ARG>
 
 <ARG>
