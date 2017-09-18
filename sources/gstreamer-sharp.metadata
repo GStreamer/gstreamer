@@ -31,7 +31,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- structs and objects that should be opaque -->
 	<attr path="/api/namespace/boxed[@cname='GstDateTime']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstBufferList']" name="opaque">true</attr>
+
+	<!-- Explicitly declare GstSample as a GstMiniObject (the opaque struct definition doesn't have GObject-Introspection
+	     annotations) to get ref-counting to work.
+	-->
 	<attr path="/api/namespace/boxed[@cname='GstSample']" name="opaque">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstSample']" name="parent">GstMiniObject</attr>
+
 	<attr path="/api/namespace/boxed[@cname='GstAtomicQueue']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstParseContext']" name="opaque">true</attr>
 	<attr path="/api/namespace/object[@cname='GstElementFactory']" name="opaque">true</attr>
