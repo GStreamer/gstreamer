@@ -5,270 +5,159 @@
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009.
-# Marek Černocký <marek@manet.cz>, 2013, 2015.
+# Marek Černocký <marek@manet.cz>, 2013, 2015, 2017.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.6.0\n"
+"Project-Id-Version: gst-plugins-bad 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-07-14 13:33+0300\n"
-"PO-Revision-Date: 2015-10-15 20:54+0200\n"
+"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"PO-Revision-Date: 2017-09-13 14:36+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
+#: ext/gl/gstgltestsrc.c:489
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "selhalo vykreslení vzoru"
 
+#: ext/gl/gstgltestsrc.c:490
 msgid "A GL error occured"
-msgstr ""
+msgstr "Vyskytla se chyba GL"
 
+#: ext/gl/gstgltestsrc.c:496
 msgid "format wasn't negotiated before get function"
 msgstr "formát nebyl vyjednán před získáním funkce"
 
+#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV selhalo při načítání obrazu šablony"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nezdařilo se přečtení informací o titulu DVD."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nezdařilo se otevření zařízení DVD „%s“."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Nezdařilo se nastavení hledání založeného na PGC."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Nezdařilo se čtení DVD. Může to být tím, že je DVD šifrováno a knihovna pro "
-"dešifrování DVD není nainstalována."
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nezdařilo se čtení DVD. Může to být tím, že je DVD šifrováno a knihovna pro dešifrování DVD není nainstalována."
 
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nezdařilo se čtení DVD."
 
+#: ext/smoothstreaming/gstmssdemux.c:421
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:722
 msgid "This file contains no playable streams."
 msgstr "Tento soubor neobsahuje žádný proud, který by šel přehrát."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Nezdařilo se otevření proudu zvukového souboru ke čtení."
 
+#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než "
-"je délka celého jeho proudu"
+msgstr "Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než je délka celého jeho proudu"
 
+#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
+#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Schází prvek „%s“ – zkontrolujte svoji instalaci systému GStreamer."
 
+#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
-"Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název "
-"souboru"
+msgstr "Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název souboru"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr "Nelze vytvořit prvek digitalzoom"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3352
 msgid "Failed to get fragment URL."
 msgstr "Selhalo získání adresy URL fragmentu."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3724
 msgid "Couldn't download fragments"
 msgstr "Nelze stáhnout fragmenty"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3813
+#: gst/mpegtsdemux/mpegtsbase.c:1610
 msgid "Internal data stream error."
 msgstr "Chyba proudu vnitřních dat."
 
+#: sys/dvb/gstdvbsrc.c:1579 sys/dvb/gstdvbsrc.c:1793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zařízení „%s“ neexistuje."
 
+#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nezdařilo se otevření zařízení rozhraní „%s“."
 
+#: sys/dvb/gstdvbsrc.c:1602
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Ze zařízení rozhraní „%s“ se nezdařilo získat nastavení."
 
+#: sys/dvb/gstdvbsrc.c:1619
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr ""
-"Ze zařízení rozhraní „%s“ se nezdařilo vytvořit seznam doručovacích systémů."
+msgstr "Ze zařízení rozhraní „%s“ se nezdařilo vytvořit seznam doručovacích systémů."
 
+#: sys/dvb/gstdvbsrc.c:1797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nezdařilo se otevření souboru „%s“ ke čtení."
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr "Nelze najít soubor s nastavením kanálů DVB"
+msgstr "Nezdařilo se najít soubor s nastavením kanálů"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nelze načíst soubor s nastavením kanálu DVB: %s"
+msgstr "Nezdařilo se načíst soubor s nastavením kanálu: „%s“"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nelze najít podrobnosti ke kanálu DVB %s"
+msgstr "Nezdařilo se najít podrobnosti ke kanálu „%s“"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:430
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nelze najít podrobnosti ke kanálu DVB %s"
+msgstr "Pro kanál „%s“ nejsou žádné vlastnosti"
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:439
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nelze najít podrobnosti ke kanálu DVB %s"
+msgstr "Nezdařilo se nastavit vlastnosti pro kanál „%s“."
 
-#, fuzzy, c-format
+#: sys/dvb/parsechannels.c:560
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nelze najít soubor s nastavením kanálů DVB"
+msgstr "Nezdařilo se najít soubor s nastavením kanálu: „%s“"
 
-#, fuzzy
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
-
-#~ msgid "Could not establish connection to sndio"
-#~ msgstr "Nelze ustanovit spojení se sndio"
-
-#~ msgid "Failed to query sndio capabilities"
-#~ msgstr "Selhalo dotázání sndio na podporované funkce"
-
-#~ msgid "Could not configure sndio"
-#~ msgstr "Nelze nastavit sndio"
-
-#~ msgid "Could not start sndio"
-#~ msgstr "Nelze spustit sndio"
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "K zápisu nebyl zadán žádný název souboru."
-
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "Zadaný název souboru „%s“ nelze převést do kódování místních názvů "
-#~ "souborů."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Vnitřní chyba datového toku."
-
-#~ msgid "default GStreamer sound events audiosink"
-#~ msgstr "výchozí zvukový cíl GStreamer pro zvukové události"
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
-#~ "be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer umí přehrávat zvuk pomocí mnoha výstupních prvků. Možné volby "
-#~ "jsou osssink, pulsesink a alsasink. Zvukovým cílem může být namísto "
-#~ "jednoho elementu i částečná roura."
-
-#~ msgid "description for default GStreamer sound events audiosink"
-#~ msgstr "popis výchozího zvukového cíle pro zvukové události GStreamer"
-
-#~ msgid "Describes the selected audiosink element."
-#~ msgstr "Popisuje vybraný element sloužící jako cíl pro zvuk."
-
-#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr ""
-#~ "výchozí zvukový cíl GStreamer pro hlasové konference a videokonference"
-
-#~ msgid ""
-#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr ""
-#~ "popis výchozího zvukového cíle GStreamer pro hlasové konference a "
-#~ "videokonference"
-
-#~ msgid "default GStreamer audiosink for Music and Movies"
-#~ msgstr "výchozí zvukový cíl GStreamer pro hudbu a filmy"
-
-#~ msgid "description for default GStreamer audiosink for Music and Movies"
-#~ msgstr "popis výchozího zvukového cíle GStreamer pro hudbu a filmy"
-
-#~ msgid "default GStreamer videosink"
-#~ msgstr "výchozí cíl videa GStreamer"
-
-#~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer umí přehrávat video pomocí mnoha výstupních prvků. Možné volby "
-#~ "jsou xvimagesink, ximagesink, sdlvideosink a aasink. Cílem videa může být "
-#~ "namísto právě jednoho elementu i částečná roura."
-
-#~ msgid "description for default GStreamer videosink"
-#~ msgstr "popis výchozího cíle videa GStreamer"
-
-#~ msgid "Describes the selected videosink element."
-#~ msgstr "Popisuje vybraný element sloužící jako cíl pro video."
-
-#~ msgid "default GStreamer audiosrc"
-#~ msgstr "výchozí zdroj zvuku GStreamer"
-
-#~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
-#~ "be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer umí nahrávat zvuk pomocí mnoha vstupních prvků. Možné volby "
-#~ "jsou osssrc, pulsesrc a alsasrc. Zvukovým zdrojem může být namísto právě "
-#~ "jednoho elementu i částečná roura."
-
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "popis pro výchozí zdroj zvuku GStreamer"
-
-#~ msgid "Describes the selected audiosrc element."
-#~ msgstr "Popisuje vybraný element sloužící jako zdroj zvuku."
-
-#~ msgid "default GStreamer videosrc"
-#~ msgstr "výchozí zdroj videa GStreamer"
-
-#~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
-#~ "can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer umí nahrávat video pomocí mnoha vstupních prvků. Možné volby "
-#~ "jsou v4lsrc, v4l2src a videotestsrc. Zdrojem videa může být namísto právě "
-#~ "jednoho elementu i částečná roura."
-
-#~ msgid "description for default GStreamer videosrc"
-#~ msgstr "popis pro výchozí zdroj videa GStreamer"
-
-#~ msgid "Describes the selected videosrc element."
-#~ msgstr "Popisuje vybraný element sloužící jako zdroj videa."
-
-#~ msgid "default GStreamer visualization"
-#~ msgstr "výchozí vizualizace GStreamer"
-
-#~ msgid ""
-#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
-#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
-#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
-#~ "of just one element."
-#~ msgstr ""
-#~ "GStreamer umí do roury vložit vizualizační zásuvný modul, aby prováděl "
-#~ "změny zvukových proudů ve snímcích videa. Možné volby jsou goom, goom2k1 "
-#~ "a synaesthesia. Vizualizačním zásuvným modulem může být namísto právě "
-#~ "jednoho elementu i částečná roura."
-
-#~ msgid "description for default GStreamer visualization"
-#~ msgstr "popis pro výchozí vizualizaci GStreamer"
-
-#~ msgid "Describes the selected visualization element."
-#~ msgstr "Popisuje vybraný vizualizační element."
+msgstr "Soubor s nastavením kanálů neobsahuje žádné kanály"
