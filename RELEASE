@@ -1,7 +1,7 @@
 
-Release notes for GStreamer 1.12.2
+Release notes for GStreamer 1.12.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -35,8 +35,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 784041 : baseparse: sinkcaps can be NULL in default caps negotiation
-      * 784932 : basesink: buffer leaks if preroll failed
+      * 778193 : Automagic libunwind dependency
+      * 786034 : plugins: *queue* elements: Handle STREAM_START in EOS situation
+      * 786056 : queue/queue2:: Allow re-usability after EOS
+      * 786561 : baseparse: excessive tag updates - totem uses about a quarter more CPU than " gst-play-1.0 --videosink=clutterautovideosink " 
 
 ==== Download ====
 
@@ -73,8 +75,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jason Lin
+      * Carlos Rafael Giani
+      * Edward Hervey
       * Nicolas Dufresne
+      * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller
  
