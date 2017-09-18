@@ -1,9 +1,86 @@
-=== release 1.12.2 ===
+=== release 1.12.3 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.3
+
+2017-07-29 23:05:22 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: Always initialize GIL state
+	  gcc warns about possibly unintialized use of it
+	  (even if it can't actually happen)
+
+2017-07-25 16:17:54 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	* testsuite/test_types.py:
+	  Add support for Gst.Bitmask
+
+2017-07-25 14:35:01 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* testsuite/test_types.py:
+	  tests: Stop using deprecated assertion methods
+
+2017-07-25 14:29:19 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* testsuite/Makefile.am:
+	* testsuite/meson.build:
+	* testsuite/test_doublerange.py:
+	* testsuite/test_fraction.py:
+	* testsuite/test_fractionrange.py:
+	* testsuite/test_int64range.py:
+	* testsuite/test_intrange.py:
+	* testsuite/test_types.py:
+	* testsuite/test_valuearray.py:
+	* testsuite/test_valuelist.py:
+	  tests: Move all Fundamental types tests in a file
+	  No reason to have one file per type and it makes it more complicated
+	  to handle.
+
+2017-07-25 13:00:08 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	  structure: Add a .keys() method and implement __str__
+	  We are making it behave like a dict, so we should provide the
+	  same kind of utilities.
+
+2017-07-24 17:06:06 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  Return a Gst.*Range instead of a python range converting from GValue to python
+	  Otherwise we lose the information about what type of range it is, which
+	  is mandatory, especially when dealing with Structure and Caps.
+
+2017-07-24 12:13:13 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_gst.py:
+	  structures: Override __new__ to make it more pythonic
+
+2017-05-21 18:06:25 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_int64range.py:
+	* testsuite/test_intrange.py:
+	  overrides: Remove IntRange And Int64Range on Python2
+	  They use the range() built-in type which is a Python 3 change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782927
+
+=== release 1.12.2 ===
+
+2017-07-14 14:04:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.12.2
 
 === release 1.12.1 ===
 
