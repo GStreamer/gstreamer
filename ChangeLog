@@ -1,9 +1,125 @@
-=== release 1.12.2 ===
+=== release 1.12.3 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.3
+
+2017-09-18 16:03:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/id.po:
+	* po/it.po:
+	* po/sv.po:
+	  po: Update translations
+
+2017-09-07 13:27:26 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Unmap output video frame if copying to it fails
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787398
+
+2017-08-17 12:13:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to dd9d403
+
+2017-07-25 13:36:17 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: Fix string memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785388
+
+2017-07-15 14:57:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123audiodec: fix caps leak
+	  The pad template takes its own ref, so we should unref the caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784982
+
+2017-07-15 14:59:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix caps leak
+	  Move creation of supported sink pads into class_init function
+	  which is also the only place where they're used. Unref the
+	  caps when no longer needed, the pad template will take its
+	  own ref.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784982
+
+=== release 1.12.2 ===
+
+2017-07-14 14:03:52 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.12.2
+
+2017-07-14 13:36:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-07-14 13:23:18 +0300  Sebastian Dröge <sebastian@centricular.com>
 

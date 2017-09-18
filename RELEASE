@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.12.2
+Release notes for GStreamer Ugly Plugins 1.12.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -55,6 +55,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
+Bugs fixed in this release
+     
+      * 784982 : x264enc, mpg123audiodec: possible template caps leak
+      * 785388 : Memory leak in dvdreadsrc.c
+      * 787398 : mpeg2dec :Fix Memory leak issue in gstmpeg2dec.c
+
 ==== Download ====
 
 You can find source releases of gst-plugins-ugly in the download
@@ -90,6 +96,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
+      * Satya Prakash Gupta
       * Sebastian Dröge
+      * Tim-Philipp Müller
  
