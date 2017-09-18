@@ -5,6 +5,7 @@ GObject
         GstAllocatorSysmem
         GstFdAllocator
           GstWlShmAllocator
+        GstVdpVideoAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -80,6 +81,8 @@ GObject
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
+            GstCurlSshSink
+              GstCurlSftpSink
             GstCurlTlsSink
               GstCurlFtpSink
               GstCurlHttpSink
@@ -347,6 +350,8 @@ GObject
           GstRsvgDec
           GstSchroDec
           GstVMncDec
+          GstVdpDecoder
+            GstVdpMpegDec
           GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
@@ -392,6 +397,7 @@ GObject
     GtkWidget
   GstColorBalanceChannel
   GstEncodingProfile
+  GstVdpDevice
   MXFMetadataBase
     MXFMetadata
       MXFMetadataContentStorage

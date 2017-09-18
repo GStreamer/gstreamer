@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.12.2
+Release notes for GStreamer Bad Plugins 1.12.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -60,18 +60,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 764025 : mxfdemux: Two consecutive seek on a file leads to 'No valid frames decoded before end of stream'
-      * 773159 : hlsdemux: Errors and timeouts with scrubbing and fast forward/reverse
-      * 782774 : kmssink: drop last rendered buffer on ALLOCATION and DRAIN queries
-      * 783028 : gstmpdparser : Crash when playing some of the Dash LIVE URL's with Gstreamer v1.12
-      * 783075 : adaptivedemux: Check live seeking range more often
-      * 783244 : dashdemux: Implement a default presentation delay
-      * 784027 : mxfdemux/mux: Does not handle frame reordering correctly
-      * 784059 : gstglwindow_cocoa.h is missing from tar ball in gst-plugins-bad 1.12.1
-      * 784210 : gl: [regression] GstGLUploadMeta feature doesn't show frame in GLX
-      * 784439 : homebrew fails to build ttmp plugin: library not found for -lgstvideo-1.0
-      * 784510 : HLS/playbin: bus receives EOS on potential re-buffering
-      * 784755 : directsoundsrc: fails to compile with gcc 7.1.0
+      * 767462 : gl: cocoa-videooverlay doesn't work
+      * 782379 : glimagesink: macOS crash when used with autovideosink
+      * 784887 : gsm: Possible Memory leak in gst_buffer_unmap
+      * 785119 : mxfdemux: Wrong PTS on some files
+      * 785941 : fix flushing seek in rtmpsrc
+      * 785957 : adaptivedemux: leaks pad probes, causing gradual increase in CPU
+      * 785987 : adaptivedemux: Deadlock on stopping pipeline
+      * 786036 : vtenc: assume 25 fps for unknown framerate
+      * 786201 : player: media-info duration field not updated upon duration-changed signal
+      * 786250 : openjpeg: Support libopenjp2 v2.2
+      * 787234 : opencv: allow compilation against 3.3.0
+      * 787309 : hlsdemux: fix compilation with openssl 1.1.0
+      * 787442 : kms: fix crash if bo allocation failed when copying to dumb buffer
+      * 787727 : player: cosmetic changes
 
 ==== Download ====
 
@@ -108,13 +110,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Clemens Lang
       * Edward Hervey
-      * Hyunjun Ko
-      * Jan Schmidt
+      * George Kiagiadakis
+      * Guillaume Desmottes
+      * Jan Alexander Steffens (heftig)
       * Matthew Waters
+      * Nicola Murino
       * Nicolas Dufresne
+      * Philippe Normand
       * Philippe Renon
+      * Satya Prakash Gupta
       * Sebastian Dröge
-      * Thiago Santos
+      * Thibault Saunier
       * Tim-Philipp Müller
+      * Tom Bailey
+      * davecraig@unbalancedaudio.com
  

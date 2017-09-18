@@ -1,8 +1,8 @@
 # GStreamer 1.12 Release Notes
 
 GStreamer 1.12.0 was originally released on 4th May 2017.
-The latest bug-fix release in the 1.12 series is [1.12.2](#1.12.2) and was
-released on 14 July 2017.
+The latest bug-fix release in the 1.12 series is [1.12.3](#1.12.3) and was
+released on 18 September 2017.
 
 The GStreamer team is proud to announce a new major feature release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -13,7 +13,7 @@ improvements.
 See [https://gstreamer.freedesktop.org/releases/1.12/][latest] for the latest
 version of this document.
 
-*Last updated: Friday 14 July 2017, 10:00 UTC [(log)][gitlog]*
+*Last updated: Monday 19 September 2017, 12:30 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.12/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.12/release-notes-1.12.md
@@ -779,6 +779,37 @@ GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.12.2]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=225693&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.2
 
+<a name="1.12.3"></a>
+
+### 1.12.3
+
+The second 1.12 bug-fix release (1.12.3) was released on 14 July 2017.
+This release only contains bugfixes and it should be safe to update from 1.12.x.
+
+#### Major bugfixes in 1.12.3
+
+ - Fix for infinite recursion on buffer free in v4l2
+ - Fix for glimagesink crash on macOS when used via autovideosink
+ - Fix for huge overhead in matroskamux caused by writing one Cluster per
+   audio-frame in audio-only streams. Also use SimpleBlocks for Opus and other
+   audio codecs, which works around a bug in VLC that prevented Opus streams
+   to be played and decreases overhead even more
+ - Fix for flushing seeks in rtpmsrc always causing an error
+ - Fix for timestamp overflows in calculations in audio encoder base class
+ - Fix for RTP h265 depayloader marking P-frames as I-frames
+ - Fix for long connection delays of clients in RTSP server
+ - Fixes for event handling in queue and queue2 elements, and updates to
+   buffering levels on NOT_LINKED streams
+ - Various fixes to event and buffering handling in decodebin3/playbin3
+ - Various fixes for memory leaks, deadlocks and crashes in all modules
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.12.3]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.12.3]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=248880&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.3
+
 ## Known Issues
 
 - The `webrtcdsp` element is currently not shipped as part of the Windows
@@ -793,7 +824,7 @@ development version leading up to the stable 1.14 release. The development
 of 1.13/1.14 will happen in the git master branch.
 
 The plan for the 1.14 development cycle is yet to be confirmed, but it is
-expected that feature freeze will be around September 2017
+expected that feature freeze will be around October 2017
 followed by several 1.13 pre-releases and the new 1.14 stable release
 in October.
 
