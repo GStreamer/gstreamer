@@ -329,12 +329,8 @@ namespace Gst
 		public static object Emit (GLib.Object o, string name, params object[] parameters)
 		{
 			SignalQuery query;
-			IntPtr type;
-			unsafe {
-				// GType is the first field of GTypeInstance->g_class
-				type = (*(IntPtr*) ((GLib.Object.GTypeInstance*) o.Handle)->g_class);
-			}
-			GType gtype = new GType (type);
+			GType gtype = o.NativeType;
+			IntPtr type = gtype.Val;
 			string signal_name, signal_detail;
 			uint signal_detail_quark = 0;
 			int colon;
