@@ -4309,6 +4309,9 @@ gst_vaapi_decoder_h264_decode_codec_data (GstVaapiDecoder * base_decoder,
   GstH264ParserResult result;
   guint i, ofs, num_sps, num_pps;
 
+  if (!priv->is_opened)
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
   unit.parsed_info = NULL;
 
   if (buf_size < 7)
