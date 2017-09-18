@@ -1,7 +1,7 @@
 
-Release notes for GStreamer OpenMAX IL wrapper plugin 1.12.2
+Release notes for GStreamer OpenMAX IL wrapper plugin 1.12.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -36,6 +36,13 @@ contains a set of less supported plugins that haven't passed the
 
 
   
+
+Bugs fixed in this release
+     
+      * 784967 : omx: Possible deadlock in gstomxaudioenc
+      * 784972 : omx: Possible deadlock in gstomxvideoenc.c
+      * 784978 : omx: Possible Memory leak in gst_caps_from_string
+      * 787628 : omxvideodec: log info about frame before releasing it
 
 ==== Download ====
 
@@ -73,6 +80,6 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Guillaume Desmottes
-      * Sebastian Dröge
+      * Satya Prakash Gupta
       * Tim-Philipp Müller
  

@@ -1,9 +1,53 @@
-=== release 1.12.2 ===
+=== release 1.12.3 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.3
+
+2017-09-13 15:32:51 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: log info about frame before releasing it
+	  gst_video_decoder_release_frame() takes ownership of the frame and will
+	  destroy it. So we should no longer use it after calling it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787628
+
+2017-08-17 12:16:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to dd9d403
+
+2017-07-17 18:36:36 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* omx/gstomx.c:
+	  omx: Possible Memory leak in gst_caps_from_string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784978
+
+2017-07-17 15:48:44 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Fix deadlock in error case when draining
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784972
+
+2017-07-17 13:44:54 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* omx/gstomxaudioenc.c:
+	  omxaudioenc: Fix deadlock in error case when draining
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784967
+
+=== release 1.12.2 ===
+
+2017-07-14 14:06:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.12.2
 
 === release 1.12.1 ===
 
