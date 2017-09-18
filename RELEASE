@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.12.2
+Release notes for GStreamer libav Plugins 1.12.3
 
-The GStreamer team is proud to announce the second bugfix release in the stable
+The GStreamer team is proud to announce the third bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -34,6 +34,10 @@ contains a set of less supported plugins that haven't passed the
 
 
   
+
+Bugs fixed in this release
+     
+      * 784735 : gst-libav: Memory leak and possible crash in avio_alloc_context.
 
 ==== Download ====
 
@@ -70,5 +74,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Nicolas Dufresne
+      * Satya Prakash Gupta
       * Sebastian Dröge
+      * Tim-Philipp Müller
  
