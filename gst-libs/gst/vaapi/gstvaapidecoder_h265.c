@@ -2653,6 +2653,9 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
   guint num_nal_arrays, num_nals;
   guint i, j, ofs;
 
+  if (!priv->is_opened)
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
   unit.parsed_info = NULL;
   if (buf_size < 23)
     return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
