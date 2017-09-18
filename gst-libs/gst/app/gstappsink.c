@@ -1556,6 +1556,7 @@ gst_app_sink_try_pull_sample (GstAppSink * appsink, GstClockTime timeout)
   priv = appsink->priv;
 
   g_mutex_lock (&priv->mutex);
+  gst_buffer_replace (&priv->preroll_buffer, NULL);
 
   while (TRUE) {
     GST_DEBUG_OBJECT (appsink, "trying to grab a buffer");
