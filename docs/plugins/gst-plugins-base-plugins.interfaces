@@ -1,5 +1,6 @@
 GSocket GInitable
 GSocket GInitable GDatagramBased
+GSocketAddress GSocketConnectable
 GTypeModule GTypePlugin
 GstAdder GstChildProxy
 GstAppSink GstURIHandler

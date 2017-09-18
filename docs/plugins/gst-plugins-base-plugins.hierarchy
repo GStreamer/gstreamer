@@ -135,6 +135,7 @@ GObject
   GInputStream
   GOutputStream
   GSocket
+  GSocketAddress
   GstColorBalanceChannel
   GstEncodingProfile
   PangoContext
@@ -145,6 +146,7 @@ GInterface
   GDatagramBased
   GFile
   GInitable
+  GSocketConnectable
   GTypePlugin
   GstChildProxy
   GstColorBalance

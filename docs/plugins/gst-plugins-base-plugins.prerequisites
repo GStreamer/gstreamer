@@ -1,6 +1,7 @@
 GDatagramBased GObject
 GFile GObject
 GInitable GObject
+GSocketConnectable GObject
 GstChildProxy GObject
 GstStreamVolume GObject
 GstTagSetter GstElement
