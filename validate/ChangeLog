@@ -1,9 +1,38 @@
-=== release 1.12.2 ===
+=== release 1.12.3 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.3
+
+2017-08-26 10:50:44 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/utils.py:
+	  launcher: Automatically disable output coloration if not supported
+
+2017-08-26 09:10:40 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/meson.build:
+	  meson: Fix the way we set the testsuite version
+
+2017-08-18 11:37:28 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	* validate/launcher/reporters.py:
+	  validate:launcher: Use the number of failed test as exit code
+	  We used to always return 0, which was not right!
+
+=== release 1.12.2 ===
+
+2017-07-14 14:05:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.12.2
 
 2017-07-14 10:36:49 +0300  Sebastian Dröge <sebastian@centricular.com>
 
