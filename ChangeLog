@@ -1,9 +1,235 @@
-=== release 1.12.2 ===
+=== release 1.12.3 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-09-18  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.3
+
+2017-09-15 18:31:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: don't unref properties
+	  This patch fixes a regression introduced in commit 148f867c, since the
+	  props variable is set to object's member variable
+	  encoder->properties. And it is set in the instance initialization,
+	  thus it will not be leaked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787733
+
+2017-09-15 15:14:47 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode/libs: encoder: fix leaks of properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786321
+
+2017-08-17 11:03:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: remove spurious assignation
+	  Coverity scan bug:
+	  An assigned value that is never used may represent unnecessary
+	  computation, an incorrect algorithm, or possibly the need for cleanup
+	  or refactoring.
+	  ip_period is assigned first to be rewritter inmediatly after. The
+	  first assignation is spurious.
+
+2017-08-15 17:36:51 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: fix mismatch of the return type
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786307
+
+2017-08-09 19:06:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: remove spurious code
+	  Coverity scan:
+	  Logically dead code: The indicated dead code may have performed some
+	  action; that action will never occur.
+	  By using pointer arithmetic is impossible to get NULL.
+
+2017-08-08 17:29:54 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: windows: wayland: fail if cannot remove last frame
+	  Converity scan bug:
+	  If the function returns an error value, the error value may be
+	  mistaken for a normal value.
+	  If g_atomic_pointer_compare_and_exchange() fails because the frame is
+	  not the last one, the function fails. Thus, logging an info message.
+
+2017-08-08 17:21:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	  libs: utils: glx: check return value
+	  Coverity scan bug:
+	  If the function returns an error value, the error value may be
+	  mistaken for a normal value.
+	  Function sscanf returns the number of assignations done. Validate this
+	  return value with the number of expected variables to match.
+
+2017-08-08 17:12:06 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiobject.c:
+	  libs: vaapi: object: remove unrequired NULL check
+	  Coverity scan bug:
+	  Dereference after null check: Either the check against null is
+	  unnecessary, or there may be a null pointer dereference.
+	  Variable klass has been validated as non-NULL several time before in
+	  gst_vaapi_object_new() function, so there is no need to check it
+	  again.
+
+2017-08-08 17:06:17 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: remove spurious assignation
+	  Coverity scan bug:
+	  An assigned value that is never used may represent unnecessary
+	  computation, an incorrect algorithm, or possibly the need for cleanup
+	  or refactoring.
+	  ip_period is assigned first to be rewritter inmediatly after. The
+	  first assignation is spurious.
+
+2017-08-08 16:33:44 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fix possible integer overflow
+	  Coverity scan bug:
+	  Unintentional integer overflow. The expression's value may not be what
+	  the programmer intended, because the expression is evaluated using a
+	  narrow (i.e. few bits) integer type.
+	  Cast operator to guint64 before computation to avoid narrowing.
+	  merge with 3c5a6add
+
+2017-08-08 16:12:13 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg4.c:
+	  libs: decoder: mpeg4: fail if return value is not OK
+	  Coverity scan bug:
+	  An assigned value that is never used may represent unnecessary
+	  computation, an incorrect algorithm, or possibly the need for cleanup
+	  or refactoring.
+	  In the return value of decode_slice() or
+	  gst_mpeg4_parse_video_packet_header() are not success, thus fail
+	  decode_packet() function.
+
+2017-08-08 15:49:27 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: check for null
+	  Coverity scan bug:
+	  Dereference after null check: Either the check against null is
+	  unnecessary, or there may be a null pointer dereference.
+	  While looking for hte lowest poc, according to rest of the code, the
+	  picture in the dbp (decoded picture buffer) might be NULL, thus we
+	  could check for a NULL picture before assigned as found.
+	  Also, split a comma operator because it is considered as a bad
+	  practice because it possible side effects.
+
+2017-08-08 15:38:16 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: untaint loop control variable
+	  Coverity scan bug:
+	  Scalars (for example, integers) are not properly
+	  bounds-checked (sanitized) before being used as array or pointer
+	  indexes, loop boundaries, or function arguments are considered as
+	  tainted.
+	  In this case, num_nals were not checked before used as loop control.
+
+2017-08-08 13:46:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: remove unrequired NULL check
+	  Coverity scan bug:
+	  Dereference after null check: Either the check against null is
+	  unnecessary, or there may be a null pointer dereference.
+	  In the original commit for fill_picture_gaps() (commit 5abd2b90) the
+	  prev_picture could be NULL, that's why the code did a null check. But,
+	  since commit 52adebe7, the previous reference frames are tracked, thus
+	  there is no need to check null anymore.
+
+2017-08-01 18:38:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  vaapiencode: h265: compare an unsigned int if not zero
+	  An unsigned value can never be negative, so this test (greater than
+	  zero) will always evaluate the same way. Thus change it to just if
+	  it's not zero.
+
+2017-08-01 18:10:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: check gst_gl_ensure_element_data() return value
+	  Refactor gst_vaapi_plugin_base_create_gl_context() in order to check
+	  the return value of gst_gl_ensure_element_data(). The result is a code
+	  bit cleaner.
+
+2017-08-01 17:59:38 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: avoid dead code detection
+	  By using #elif macro, the static code analysis would stop to detect
+	  these lines as dead code. Also it is inforced the mutually exclusive
+	  environments.
+
+2017-08-01 17:39:04 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: don't shift by negative since it's undefined
+	  The function g_bit_nth_lsf() may return -1 if the request bit position
+	  is not avaible. Thus, this patch check if the return value is not -1
+	  in order to continue.
+
+2017-08-01 17:29:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: fix memory leak
+
+2017-08-01 17:23:48 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: fix memory leaks
+
+2017-07-13 10:56:18 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* tests/elements/Makefile.am:
+	* tests/elements/test-vaapipostproc.c:
+	  tests: elements: add test for vaapipostproc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754885
+
+2017-07-12 18:25:15 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  postproc: reconfigure when width or height changes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754885
+
+2017-08-17 12:16:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to dd9d403
+
+2017-07-17 18:53:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp9: array terminated in zeros
+	  There is a crash when setting ref-pic-mode since the #GEnumValue
+	  array is not terminated with a structured with all memvers being
+	  zero.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785032
+
+=== release 1.12.2 ===
+
+2017-07-14 14:06:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.12.2
 
 2017-06-29 12:49:24 +0900  Hyunjun Ko <zzoon@igalia.com>
 
