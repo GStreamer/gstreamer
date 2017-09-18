@@ -215,6 +215,9 @@ G_BEGIN_DECLS
 #define GST_VAAPI_TYPE_ENCODER_TUNE \
   (gst_vaapi_encoder_tune_get_type ())
 
+#define GST_VAAPI_TYPE_ENCODER_MBBRC \
+  (gst_vaapi_encoder_mbbrc_get_type ())
+
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 typedef struct _GstVaapiEncoderClassData GstVaapiEncoderClassData;
 

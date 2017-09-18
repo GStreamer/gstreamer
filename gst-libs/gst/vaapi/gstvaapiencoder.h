@@ -94,6 +94,23 @@ typedef enum {
 } GstVaapiEncoderTune;
 
 /**
+ * GstVaapiEncoderMbbrc:
+ * @GST_VAAPI_ENCODER_MBBRC_AUTO: bitrate control auto
+ * @GST_VAAPI_ENCODER_MBBRC_ON: bitrate control on
+ * @GST_VAAPI_ENCODER_MBBRC_OFF: bitrate control off
+ *
+ * Values for the macroblock level bitrate control.
+ *
+ * This property values are only available for H264 and H265 (HEVC)
+ * encoders, when rate control is not Constant QP.
+ **/
+typedef enum {
+  GST_VAAPI_ENCODER_MBBRC_AUTO = 0,
+  GST_VAAPI_ENCODER_MBBRC_ON = 1,
+  GST_VAAPI_ENCODER_MBBRC_OFF = 2,
+} GstVaapiEncoderMbbrc;
+
+/**
  * GstVaapiEncoderProp:
  * @GST_VAAPI_ENCODER_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @GST_VAAPI_ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
@@ -130,6 +147,9 @@ typedef struct _GstVaapiROI {
 
 GType
 gst_vaapi_encoder_tune_get_type (void) G_GNUC_CONST;
+
+GType
+gst_vaapi_encoder_mbbrc_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder);

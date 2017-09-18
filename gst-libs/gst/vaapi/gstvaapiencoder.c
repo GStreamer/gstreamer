@@ -1702,3 +1702,25 @@ gst_vaapi_encoder_tune_get_type (void)
   }
   return g_type;
 }
+
+/** Returns a GType for the #GstVaapiEncoderMbbrc set */
+GType
+gst_vaapi_encoder_mbbrc_get_type (void)
+{
+  static volatile gsize g_type = 0;
+
+  if (g_once_init_enter (&g_type)) {
+    static const GEnumValue encoder_mbbrc_values[] = {
+      {GST_VAAPI_ENCODER_MBBRC_AUTO, "Auto", "auto"},
+      {GST_VAAPI_ENCODER_MBBRC_ON, "On", "on"},
+      {GST_VAAPI_ENCODER_MBBRC_OFF, "Off", "off"},
+      {0, NULL, NULL},
+    };
+
+    GType type =
+        g_enum_register_static (g_intern_static_string ("GstVaapiEncoderMbbrc"),
+        encoder_mbbrc_values);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
+}
