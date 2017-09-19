@@ -519,6 +519,15 @@ print_element_properties_info (GstElement * element)
               pfraction->max_num, pfraction->max_den,
               gst_value_get_fraction_numerator (&value),
               gst_value_get_fraction_denominator (&value));
+        } else if (param->value_type == GST_TYPE_ARRAY) {
+          GstParamSpecArray *parray = GST_PARAM_SPEC_ARRAY_LIST (param);
+
+          if (parray->element_spec) {
+            n_print ("%-23.23s GstValueArray of GValues of type \"%s\"", "",
+                g_type_name (parray->element_spec->value_type));
+          } else {
+            n_print ("%-23.23s GstValueArray of GValues", "");
+          }
         } else {
           n_print ("%-23.23s Unknown type %ld \"%s\"", "",
               (glong) param->value_type, g_type_name (param->value_type));
