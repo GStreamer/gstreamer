@@ -1058,6 +1058,8 @@ G_STMT_START { \
       g_free (type_name);
       type_name = g_strdup_printf ("v4l2%s%sdec", basename, codec_name);
     }
+
+    g_free (codec_name);
   }
 
   return type_name;
