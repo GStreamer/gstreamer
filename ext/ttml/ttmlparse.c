@@ -1775,7 +1775,7 @@ ttml_assign_region_times (GList * region_trees, GstClockTime doc_begin,
     const gchar *show_background_value =
         ttml_style_set_get_attr (region->style_set, "showBackground");
     gboolean always_visible =
-        (g_strcmp0 (show_background_value, "always") == 0);
+        (g_strcmp0 (show_background_value, "whenActive") != 0);
 
     GstSubtitleColor region_color = { 0, 0, 0, 0 };
     if (ttml_style_set_contains_attr (region->style_set, "backgroundColor"))
