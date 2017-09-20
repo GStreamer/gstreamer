@@ -48,6 +48,7 @@ _pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
   GstPadLinkReturn res;
   gst_element_no_more_pads (element);
   res = gst_pad_link (srcpad, sinkpad);
+#ifndef GST_DISABLE_GST_DEBUG
   if (res != GST_PAD_LINK_OK) {
     GstCaps *srccaps = NULL;
     GstCaps *sinkcaps = NULL;
@@ -59,7 +60,10 @@ _pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
         "conversion bin: %s (srcpad caps %" GST_PTR_FORMAT
         " sinkpad caps: %" GST_PTR_FORMAT ")",
         gst_pad_link_get_name (res), srccaps, sinkcaps);
+    gst_caps_unref (srccaps);
+    gst_caps_unref (sinkcaps);
   }
+#endif
 }
 
 static void
