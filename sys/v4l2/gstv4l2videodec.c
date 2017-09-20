@@ -983,6 +983,8 @@ gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
       "Codec/Decoder/Video", cdata->description,
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
   g_free (cdata);
 }
 
