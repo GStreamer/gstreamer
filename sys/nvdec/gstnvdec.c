@@ -845,7 +845,7 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   packet.flags = CUVID_PKT_TIMESTAMP;
 
   if (GST_BUFFER_IS_DISCONT (frame->input_buffer))
-    packet.flags &= CUVID_PKT_DISCONTINUITY;
+    packet.flags |= CUVID_PKT_DISCONTINUITY;
 
   if (!cuda_OK (cuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
