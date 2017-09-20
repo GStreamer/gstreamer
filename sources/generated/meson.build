@@ -733,3 +733,5 @@ gst_source_gen = custom_target('gst_codegen',
     depends: codegen_dependencies)
 
 gst_api_includes = join_paths(meson.current_build_dir(), 'gstreamer-sharp-api.xml')
+gapis = [gst_api_includes]
+gapis_deps = [gst_source_gen]

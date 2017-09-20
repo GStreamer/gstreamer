@@ -33,7 +33,7 @@ else
   gtk_sharp_dep = dependency('gtk-sharp-3.0', version: gtk_sharp_required_version,
       required: false)
 endif
-codegen_dependencies = [gapi_codegen, gapi_fixup]
+codegen_dependencies = [gapi_codegen, gapi_fixup, glib_sharp, gio_sharp]
 gapi_fixup = gapi_fixup.full_path()
 gapi_codegen = gapi_codegen.full_path()
 

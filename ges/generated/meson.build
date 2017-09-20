@@ -130,4 +130,5 @@ source_gen = custom_target(pkg + '_codegen',
     depend_files: [raw_api_fname],
     depends: codegen_dependencies + [gst_source_gen])
 
-
+gapis += [join_paths(meson.current_build_dir(), pkg + '-api.xml')]
+gapis_deps = [source_gen]
