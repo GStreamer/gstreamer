@@ -304,7 +304,6 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   png_set_write_fn (pngenc->png_struct_ptr, pngenc,
       (png_rw_ptr) user_write_data, user_flush_data);
 
-  row_pointers = g_new (png_byte *, GST_VIDEO_INFO_HEIGHT (info));
   if (!gst_video_frame_map (&vframe, &pngenc->input_state->info,
           frame->input_buffer, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (pngenc, STREAM, FORMAT, (NULL),
@@ -312,6 +311,8 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     ret = GST_FLOW_ERROR;
     goto done;
   }
+
+  row_pointers = g_new (png_byte *, GST_VIDEO_INFO_HEIGHT (info));
 
   for (row_index = 0; row_index < GST_VIDEO_INFO_HEIGHT (info); row_index++) {
     row_pointers[row_index] = GST_VIDEO_FRAME_COMP_DATA (&vframe, 0) +
