@@ -1161,6 +1161,9 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
   if (video_mixer->shader)
     gst_object_unref (video_mixer->shader);
 
+  /* need reconfigure output geometry */
+  video_mixer->output_geo_change = TRUE;
+
   return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
       gst_gl_shader_string_vertex_mat4_vertex_transform,
       video_mixer_f_src, &video_mixer->shader);
@@ -1483,7 +1486,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     _init_vbo_indices (video_mixer);
 
-    if (pad->geometry_change || !pad->vertex_buffer) {
+    if (video_mixer->output_geo_change
+        || pad->geometry_change || !pad->vertex_buffer) {
       gint pad_width, pad_height;
       gfloat w, h;
 
@@ -1551,6 +1555,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     walk = g_list_next (walk);
   }
+
+  video_mixer->output_geo_change = FALSE;
   GST_OBJECT_UNLOCK (video_mixer);
 
   gl->DisableVertexAttribArray (attr_position_loc);
