@@ -90,6 +90,13 @@ gst_video_encoder_tester_handle_frame (GstVideoEncoder * enc,
   guint8 *data;
   GstMapInfo map;
   guint64 input_num;
+  GstClockTimeDiff deadline;
+
+  deadline = gst_video_encoder_get_max_encode_time (enc, frame);
+  if (deadline < 0) {
+    /* Calling finish_frame() with frame->output_buffer == NULL means to drop it */
+    goto out;
+  }
 
   gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
   input_num = *((guint64 *) map.data);
@@ -102,6 +109,7 @@ gst_video_encoder_tester_handle_frame (GstVideoEncoder * enc,
   frame->pts = GST_BUFFER_PTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
 
+out:
   return gst_video_encoder_finish_frame (enc, frame);
 }
 
@@ -534,6 +542,58 @@ GST_START_TEST (videoencoder_pre_push_fails)
 
 GST_END_TEST;
 
+GST_START_TEST (videoencoder_qos)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  GstClockTime ts, rt;
+  GstBus *bus;
+  GstMessage *msg;
+
+  setup_videoencodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  bus = gst_bus_new ();
+  gst_element_set_bus (enc, bus);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push the first buffer */
+  buffer = create_test_buffer (0);
+  ts = GST_BUFFER_PTS (buffer);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* pretend this buffer was late in the sink */
+  rt = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, ts);
+  fail_unless (gst_pad_push_event (mysinkpad,
+          gst_event_new_qos (GST_QOS_TYPE_UNDERFLOW, 1.5, 500 * GST_MSECOND,
+              rt)));
+
+  /* push a second buffer which will be dropped as it's already late */
+  buffer = create_test_buffer (1);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  /* A QoS message was sent by the encoder */
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
+  g_assert (msg != NULL);
+  gst_message_unref (msg);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
+  cleanup_videoencodertest ();
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoencoder_suite (void)
 {
@@ -547,6 +607,7 @@ gst_videoencoder_suite (void)
   tcase_add_test (tc, videoencoder_events_before_eos);
   tcase_add_test (tc, videoencoder_flush_events);
   tcase_add_test (tc, videoencoder_pre_push_fails);
+  tcase_add_test (tc, videoencoder_qos);
 
   return s;
 }

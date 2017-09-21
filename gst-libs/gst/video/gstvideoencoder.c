@@ -152,6 +152,14 @@ struct _GstVideoEncoderPrivate
   /* adjustment needed on pts, dts, segment start and stop to accomodate
    * min_pts */
   GstClockTime time_adjustment;
+
+  /* QoS properties */
+  gdouble proportion;           /* OBJECT_LOCK */
+  GstClockTime earliest_time;   /* OBJECT_LOCK */
+  GstClockTime qos_frame_duration;      /* OBJECT_LOCK */
+  /* qos messages: frames dropped/processed */
+  guint dropped;
+  guint processed;
 };
 
 typedef struct _ForcedKeyUnitEvent ForcedKeyUnitEvent;
@@ -374,6 +382,14 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
     g_list_free (priv->current_frame_events);
     priv->current_frame_events = NULL;
 
+    GST_OBJECT_LOCK (encoder);
+    priv->proportion = 0.5;
+    priv->earliest_time = GST_CLOCK_TIME_NONE;
+    priv->qos_frame_duration = 0;
+    GST_OBJECT_UNLOCK (encoder);
+
+    priv->dropped = 0;
+    priv->processed = 0;
   } else {
     GList *l;
 
@@ -1144,6 +1160,7 @@ gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
     GstEvent * event)
 {
   gboolean ret = FALSE;
+  GstVideoEncoderPrivate *priv = encoder->priv;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
@@ -1172,6 +1189,36 @@ gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
         event = NULL;
         ret = TRUE;
       }
+      break;
+    }
+    case GST_EVENT_QOS:
+    {
+      GstQOSType type;
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
+
+      GST_OBJECT_LOCK (encoder);
+      priv->proportion = proportion;
+      if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
+        if (G_UNLIKELY (diff > 0)) {
+          priv->earliest_time = timestamp + 2 * diff + priv->qos_frame_duration;
+        } else {
+          priv->earliest_time = timestamp + diff;
+        }
+      } else {
+        priv->earliest_time = GST_CLOCK_TIME_NONE;
+      }
+      GST_OBJECT_UNLOCK (encoder);
+
+      GST_DEBUG_OBJECT (encoder,
+          "got QoS %" GST_TIME_FORMAT ", %" GST_STIME_FORMAT ", %g",
+          GST_TIME_ARGS (timestamp), GST_STIME_ARGS (diff), proportion);
+
+      ret = gst_pad_push_event (encoder->sinkpad, event);
+      event = NULL;
       break;
     }
     default:
@@ -1434,6 +1481,10 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_LOG_OBJECT (encoder, "passing frame pfn %d to subclass",
       frame->presentation_frame_number);
+
+  frame->deadline =
+      gst_segment_to_running_time (&encoder->input_segment, GST_FORMAT_TIME,
+      frame->pts);
 
   ret = klass->handle_frame (encoder, frame);
 
@@ -1902,6 +1953,43 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   return TRUE;
 }
 
+static void
+gst_video_encoder_drop_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
+{
+  GstVideoEncoderPrivate *priv = enc->priv;
+  GstClockTime stream_time, jitter, earliest_time, qostime, timestamp;
+  GstSegment *segment;
+  GstMessage *qos_msg;
+  gdouble proportion;
+
+  GST_DEBUG_OBJECT (enc, "dropping frame %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (frame->pts));
+
+  priv->dropped++;
+
+  /* post QoS message */
+  GST_OBJECT_LOCK (enc);
+  proportion = priv->proportion;
+  earliest_time = priv->earliest_time;
+  GST_OBJECT_UNLOCK (enc);
+
+  timestamp = frame->pts;
+  segment = &enc->output_segment;
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
+    segment = &enc->input_segment;
+  stream_time =
+      gst_segment_to_stream_time (segment, GST_FORMAT_TIME, timestamp);
+  qostime = gst_segment_to_running_time (segment, GST_FORMAT_TIME, timestamp);
+  jitter = GST_CLOCK_DIFF (qostime, earliest_time);
+  qos_msg =
+      gst_message_new_qos (GST_OBJECT_CAST (enc), FALSE, qostime, stream_time,
+      timestamp, GST_CLOCK_TIME_NONE);
+  gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+  gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+      priv->processed, priv->dropped);
+  gst_element_post_message (GST_ELEMENT_CAST (enc), qos_msg);
+}
+
 /**
  * gst_video_encoder_finish_frame:
  * @encoder: a #GstVideoEncoder
@@ -1980,10 +2068,11 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   /* no buffer data means this frame is skipped/dropped */
   if (!frame->output_buffer) {
-    GST_DEBUG_OBJECT (encoder, "skipping frame %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (frame->pts));
+    gst_video_encoder_drop_frame (encoder, frame);
     goto done;
   }
+
+  priv->processed++;
 
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit) {
     GstClockTime stream_time, running_time;
@@ -2264,6 +2353,14 @@ gst_video_encoder_set_output_state (GstVideoEncoder * encoder, GstCaps * caps,
     gst_video_codec_state_unref (priv->output_state);
   priv->output_state = gst_video_codec_state_ref (state);
 
+  if (priv->output_state != NULL && priv->output_state->info.fps_n > 0) {
+    priv->qos_frame_duration =
+        gst_util_uint64_scale (GST_SECOND, priv->output_state->info.fps_d,
+        priv->output_state->info.fps_n);
+  } else {
+    priv->qos_frame_duration = 0;
+  }
+
   priv->output_state_changed = TRUE;
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
@@ -2478,4 +2575,42 @@ gst_video_encoder_set_min_pts (GstVideoEncoder * encoder, GstClockTime min_pts)
   g_return_if_fail (GST_IS_VIDEO_ENCODER (encoder));
   encoder->priv->min_pts = min_pts;
   encoder->priv->time_adjustment = GST_CLOCK_TIME_NONE;
+}
+
+/**
+ * gst_video_encoder_get_max_encode_time:
+ * @encoder: a #GstVideoEncoder
+ * @frame: a #GstVideoCodecFrame
+ *
+ * Determines maximum possible encoding time for @frame that will
+ * allow it to encode and arrive in time (as determined by QoS events).
+ * In particular, a negative result means encoding in time is no longer possible
+ * and should therefore occur as soon/skippy as possible.
+ *
+ * Returns: max decoding time.
+ * Since: 1.14
+ */
+GstClockTimeDiff
+gst_video_encoder_get_max_encode_time (GstVideoEncoder *
+    encoder, GstVideoCodecFrame * frame)
+{
+  GstClockTimeDiff deadline;
+  GstClockTime earliest_time;
+
+  GST_OBJECT_LOCK (encoder);
+  earliest_time = encoder->priv->earliest_time;
+  if (GST_CLOCK_TIME_IS_VALID (earliest_time)
+      && GST_CLOCK_TIME_IS_VALID (frame->deadline))
+    deadline = GST_CLOCK_DIFF (earliest_time, frame->deadline);
+  else
+    deadline = G_MAXINT64;
+
+  GST_LOG_OBJECT (encoder, "earliest %" GST_TIME_FORMAT
+      ", frame deadline %" GST_TIME_FORMAT ", deadline %" GST_STIME_FORMAT,
+      GST_TIME_ARGS (earliest_time), GST_TIME_ARGS (frame->deadline),
+      GST_STIME_ARGS (deadline));
+
+  GST_OBJECT_UNLOCK (encoder);
+
+  return deadline;
 }
