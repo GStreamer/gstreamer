@@ -4,47 +4,47 @@ title: Memory allocation
 
 # Memory allocation
 
-Memory allocation and management is a very important topic in
+Memory allocation and management are very important topics in
 multimedia. High definition video uses many megabytes to store one
-single frame of video. It is important to reuse the memory when possible
-instead of constantly allocating and freeing the memory.
+single image frame. It is important to reuse memory when possible
+instead of constantly allocating and freeing it.
 
-Multimedia systems usually use special purpose chips, such as DSPs or
-GPUs to perform the heavy lifting (especially for video). These special
-purpose chips have usually strict requirements for the memory that they
-can operate on and how the memory is accessed.
+Multimedia systems usually use special-purpose chips, such as DSPs or
+GPUs to perform the heavy lifting (especially for video). These
+special-purpose chips usually have strict requirements for the memory
+they operate on and how it is accessed.
 
-This chapter talks about the memory management features that GStreamer
-plugins can use. We will first talk about the lowlevel `GstMemory`
-object that manages access to a piece of memory. We then continue with
-`GstBuffer` that is used to exchange data between plugins (and the
-application) and that uses `GstMemory`. We talk about `GstMeta` that can
-be placed on buffers to give extra info about the buffer and its memory.
-For efficiently managing buffers of the same size, we take a look at
-`GstBufferPool`. To conclude this chapter we take a look at the
-GST\_QUERY\_ALLOCATION query that is used to negotiate memory management
-options between elements.
+This chapter talks about the memory-management features available to
+GStreamer plugins. We will first talk about the lowlevel `GstMemory`
+object that manages access to a piece of memory and then continue with
+one of it's main users, the `GstBuffer`, which is used to exchange data
+between plugins and with the application. We will also discuss the `GstMeta`.
+This object can be placed on buffers to provide extra info about it an
+dits memory. We will also discuss the `GstBufferPool`, which allows to
+more-efficiently manage buffers of the same size.
+
+To conclude this chapter we will take a look at the `GST_QUERY_ALLOCATION`
+query, which is used to negotiate memory management options between
+elements.
 
 ## GstMemory
 
-`GstMemory` is an object that manages a region of memory. The memory
+`GstMemory` is an object that manages a region of memory. This memory
 object points to a region of memory of “maxsize”. The area in this
-memory starting at “offset” and for “size” bytes is the accessible
-region in the memory. the maxsize of the memory can never be changed
-after the object is created, however, the offset and size can be
-changed.
+memory starting at “offset” and size “size” bytes is the accessible
+memory region. After a `GstMemory` is created its maxsize can no longer
+be changed, however, its "offset" and "size" can.
 
 ### GstAllocator
 
 `GstMemory` objects are created by a `GstAllocator` object. Most
 allocators implement the default `gst_allocator_alloc()` method but some
-allocator might implement a different method, for example when
-additional parameters are needed to allocate the specific memory.
+might implement different ones, for example, when additional parameters
+are needed to allocate the specific memory.
 
-Different allocators exist for, for example, system memory, shared
-memory and memory backed by a DMAbuf file descriptor. To implement
-support for a new kind of memory type, you must implement a new
-allocator object as shown below.
+Different allocators exist for system memory, shared memory and memory
+backed by a DMAbuf file descriptor. To implement support for a new kind
+of memory type, you must implement a new allocator object.
 
 ### GstMemory API example
 
@@ -54,11 +54,10 @@ access mode (read/write) must be given when mapping memory. The map
 function returns a pointer to the valid memory region that can then be
 accessed according to the requested access mode.
 
-Below is an example of making a `GstMemory` object and using the
+Below is an example on creating a `GstMemory` object and using the
 `gst_memory_map()` to access the memory region.
 
 ``` c
-
 [...]
 
   GstMemory *mem;
@@ -89,54 +88,53 @@ WRITEME
 
 ## GstBuffer
 
-A `GstBuffer` is an lightweight object that is passed from an upstream
+A `GstBuffer` is a lightweight object that is passed from an upstream
 to a downstream element and contains memory and metadata. It represents
-the multimedia content that is pushed or pull downstream by elements.
+the multimedia content that is pushed to or pulled by downstream elements.
 
-The buffer contains one or more `GstMemory` objects that represent the
-data in the buffer.
+A `GstBuffer` contains one or more `GstMemory` objects. These objects hold
+the buffer's data.
 
 Metadata in the buffer consists of:
 
   - DTS and PTS timestamps. These represent the decoding and
-    presentation timestamps of the buffer content and is used by
-    synchronizing elements to schedule buffers. Both these timestamps
-    can be GST\_CLOCK\_TIME\_NONE when unknown/undefined.
+    presentation timestamps of the buffer content and are used by
+    synchronizing elements to schedule buffers. These timestamps
+    can be `GST_CLOCK_TIME_NONE` when unknown/undefined.
 
   - The duration of the buffer contents. This duration can be
-    GST\_CLOCK\_TIME\_NONE when unknown/undefined.
+    `GST_CLOCK_TIME_NONE` when unknown/undefined.
 
-  - Media specific offsets and offset\_end. For video this is the frame
-    number in the stream and for audio the sample number. Other
-    definitions for other media exist.
+  - Media-specific `offset` and `offset_end` values. For video this is the
+    frame number in the stream, for audio, the sample number. Other media
+    might use different definitions.
 
   - Arbitrary structures via `GstMeta`, see below.
 
-### GstBuffer writability
+### Writability
 
-A buffer is writable when the refcount of the object is exactly 1,
+A `GstBuffer` is writable when the refcount of the object is exactly 1,
 meaning that only one object is holding a ref to the buffer. You can
-only modify anything in the buffer when the buffer is writable. This
-means that you need to call `gst_buffer_make_writable()` before changing
-the timestamps, offsets, metadata or adding and removing memory blocks.
+only modify the buffer when it is writable. This means that you need to
+call `gst_buffer_make_writable()` before changing the timestamps,
+offsets, metadata or adding and removing memory blocks.
 
-### GstBuffer API examples
+### API examples
 
-You can create a buffer with `gst_buffer_new ()` and then add memory
-objects to it or you can use a convenience function
-`gst_buffer_new_allocate ()` which combines the two. It's also possible
-to wrap existing memory with `gst_buffer_new_wrapped_full () ` where you
-can give the function to call when the memory should be freed.
+You can create a `GstBuffer` with `gst_buffer_new ()` and then you can
+add memory objects to it. You can alternatively use the convenience function
+`gst_buffer_new_allocate ()` to perform both operations at once. It's also possible
+to wrap existing memory with `gst_buffer_new_wrapped_full ()` and specify the
+function to call when the memory should be freed.
 
-You can access the memory of the buffer by getting and mapping the
+You can access the memory of a `GstBuffer` by getting and mapping the
 `GstMemory` objects individually or by using `gst_buffer_map ()`. The
 latter merges all the memory into one big block and then gives you a
-pointer to this block.
+pointer to it.
 
 Below is an example of how to create a buffer and access its memory.
 
 ``` c
-
 [...]
   GstBuffer *buffer;
   GstMemory *mem;
@@ -164,25 +162,23 @@ Below is an example of how to create a buffer and access its memory.
   gst_buffer_unref (buffer);
 
 [...]
-
-
 ```
 
 ## GstMeta
 
-With the `GstMeta` system you can add arbitrary structures on buffers.
+With the `GstMeta` system you can add arbitrary structures to buffers.
 These structures describe extra properties of the buffer such as
-cropping, stride, region of interest etc.
+cropping, stride, region of interest, etc.
 
 The metadata system separates API specification (what the metadata and
-its API look like) and the implementation (how it works). This makes it
-possible to make different implementations of the same API, for example,
+its API look like) and its implementation (how it works). This makes it
+possible to have different implementations of the same API, for example,
 depending on the hardware you are running on.
 
-### GstMeta API example
+### API example
 
-After allocating a new buffer, you can add metadata to the buffer with
-the metadata specific API. This means that you will need to link to the
+After allocating a new `GstBuffer`, you can add metadata to it with
+the metadata-specific API. This means that you will need to link to the
 header file where the metadata is defined to use its API.
 
 By convention, a metadata API with name `FooBar` should provide two
@@ -196,7 +192,6 @@ Let's have a look at the metadata that is used to specify a cropping
 region for video frames.
 
 ``` c
-
 #include <gst/video/gstvideometa.h>
 
 [...]
@@ -211,15 +206,12 @@ region for video frames.
   meta->width = 120;
   meta->height = 80;
 [...]
-
-
 ```
 
 An element can then use the metadata on the buffer when rendering the
 frame like this:
 
 ``` c
-
 #include <gst/video/gstvideometa.h>
 
 [...]
@@ -236,9 +228,6 @@ frame like this:
     _render_frame (buffer);
   }
 [...]
-
-
-
 ```
 
 ### Implementing new GstMeta
@@ -248,21 +237,20 @@ and use it on buffers.
 
 #### Define the metadata API
 
-First we need to define what our API will look like and we will have to
-register this API to the system. This is important because this API
+First we need to define what our API will look like and we have to
+register this API to the system. This is important because the API
 definition will be used when elements negotiate what kind of metadata
 they will exchange. The API definition also contains arbitrary tags that
 give hints about what the metadata contains. This is important when we
-see how metadata is preserved when buffers pass through the pipeline.
+see how metadata is preserved as buffers pass through the pipeline.
 
 If you are making a new implementation of an existing API, you can skip
-this step and move on to the implementation step.
+this step and move directly to the implementation.
 
 First we start with making the `my-example-meta.h` header file that will
 contain the definition of the API and structure for our metadata.
 
 ``` c
-
 #include <gst/gst.h>
 
 typedef struct _MyExampleMeta MyExampleMeta;
@@ -279,24 +267,21 @@ GType my_example_meta_api_get_type (void);
 
 #define gst_buffer_get_my_example_meta(b) \
   ((MyExampleMeta*)gst_buffer_get_meta((b),MY_EXAMPLE_META_API_TYPE))
-
-
 ```
 
 The metadata API definition consists of the definition of the structure
-that holds a gint and a string. The first field in the structure must be
-`GstMeta`.
+that holds a `gint` and a string. The first field in the structure must be
+a `GstMeta`.
 
 We also define a `my_example_meta_api_get_type ()` function that will
-register out metadata API definition. We also define a convenience macro
-`gst_buffer_get_my_example_meta ()` that simply finds and returns the
+register our metadata API definition and a convenience
+`gst_buffer_get_my_example_meta ()` macro that simply finds and returns the
 metadata with our new API.
 
-Next let's have a look at how the `my_example_meta_api_get_type ()`
-function is implemented in the `my-example-meta.c` file.
+Let's have a look at how the `my_example_meta_api_get_type ()`
+function is implemented in the `my-example-meta.c` file:
 
 ``` c
-
 #include "my-example-meta.h"
 
 GType
@@ -311,26 +296,24 @@ my_example_meta_api_get_type (void)
   }
   return type;
 }
-
-
 ```
 
 As you can see, it simply uses the `gst_meta_api_type_register ()`
-function to register a name for the api and some tags. The result is a
-new pointer GType that defines the newly registered API.
+function to register a name and some tags for the API. The result is a
+new `GType` pointer that defines the newly registered API.
 
 #### Implementing a metadata API
 
-Next we can make an implementation for a registered metadata API GType.
-The implementation detail of a metadata API are kept in a `GstMetaInfo`
-structure that you will make available to the users of your metadata API
+Next we can make an implementation for a registered metadata API `GType`.
+
+The implementation details of a metadata API are kept in a `GstMetaInfo`
+structure that you make available to the users of your metadata API
 implementation with a `my_example_meta_get_info ()` function and a
-convenience `MY_EXAMPLE_META_INFO` macro. You will also make a method to
+convenience `MY_EXAMPLE_META_INFO` macro. You also provide a method to
 add your metadata implementation to a `GstBuffer`. Your
 `my-example-meta.h` header file will need these additions:
 
 ``` c
-
 [...]
 
 /* implementation */
@@ -340,15 +323,12 @@ const GstMetaInfo *my_example_meta_get_info (void);
 MyExampleMeta * gst_buffer_add_my_example_meta (GstBuffer      *buffer,
                                                 gint            age,
                                                 const gchar    *name);
-
-
 ```
 
 Let's have a look at how these functions are implemented in the
 `my-example-meta.c` file.
 
 ``` c
-
 [...]
 
 static gboolean
@@ -417,12 +397,10 @@ gst_buffer_add_my_example_meta (GstBuffer   *buffer,
 
   return meta;
 }
-
-
 ```
 
 `gst_meta_register ()` registers the implementation details, like the
-API that you implement and the size of the metadata structure along with
+API that you implement and the size of the metadata structure, alongside
 methods to initialize and free the memory area. You can also implement a
 transform function that will be called when a certain transformation
 (identified by the quark and quark specific data) is performed on a
@@ -438,36 +416,34 @@ lists of reusable buffers. Essential for this object is that all the
 buffers have the same properties such as size, padding, metadata and
 alignment.
 
-A bufferpool object can be configured to manage a minimum and maximum
-amount of buffers of a specific size. A bufferpool can also be
-configured to use a specific `GstAllocator` for the memory of the
-buffers. There is support in the bufferpool to enable bufferpool
-specific options, such as adding `GstMeta` to the buffers in the pool or
-such as enabling specific padding on the memory in the buffers.
+A `GstBufferPool` can be configured to manage a minimum and maximum
+amount of buffers of a specific size. It can also be configured to use a
+specific `GstAllocator` for the memory of the buffers. There is also
+support in the bufferpool to enable bufferpool specific options, such as
+adding `GstMeta` to the pool's buffers or enabling specific padding on the
+buffers' memory.
 
-A Bufferpool can be inactivate and active. In the inactive state, you
+A `GstBufferPool` can be either inactivate or active. In the inactive state, you
 can configure the pool. In the active state, you can't change the
 configuration anymore but you can acquire and release buffers from/to
 the pool.
 
-In the following sections we take a look at how you can use a
-bufferpool.
+In the following sections we take a look at how you can use a `GstBufferPool`.
 
-### GstBufferPool API example
+### API example
 
-Many different bufferpool implementations can exist; they are all
-subclasses of the base class `GstBufferPool`. For this example, we will
-assume we somehow have access to a bufferpool, either because we created
-it ourselves or because we were given one as a result of the ALLOCATION
-query as we will see below.
+There can be many different `GstBufferPool` implementations; they are all
+subclasses of the `GstBufferPool` base class. For this example, we will
+assume we somehow have access to a buffer pool, either because we created
+it ourselves or because we were given one as a result of the `ALLOCATION`
+query, as we will see below.
 
-The bufferpool is initially in the inactive state so that we can
-configure it. Trying to configure a bufferpool that is not in the
+The `GstBufferPool` is initially in the inactive state so that we can
+configure it. Trying to configure a `GstBufferPool` that is not in the
 inactive state will fail. Likewise, trying to activate a bufferpool that
-is not configured will fail.
+is not configured will also fail.
 
 ``` c
-
   GstStructure *config;
 
 [...]
@@ -486,17 +462,16 @@ is not configured will fail.
 
 [...]
 
-
 ```
 
-The configuration of the bufferpool is maintained in a generic
+The configuration of a `GstBufferPool` is maintained in a generic
 `GstStructure` that can be obtained with `gst_buffer_pool_get_config()`.
 Convenience methods exist to get and set the configuration options in
 this structure. After updating the structure, it is set as the current
-configuration in the bufferpool again with
+configuration in the `GstBufferPool` again with
 `gst_buffer_pool_set_config()`.
 
-The following options can be configured on a bufferpool:
+The following options can be configured on a `GstBufferPool`:
 
   - The caps of the buffers to allocate.
 
@@ -505,7 +480,7 @@ The following options can be configured on a bufferpool:
     padding.
 
   - The minimum and maximum amount of buffers in the pool. When minimum
-    is set to \> 0, the bufferpool will pre-allocate this amount of
+    is set to `\> 0`, the bufferpool will pre-allocate this amount of
     buffers. When maximum is not 0, the bufferpool will allocate up to
     maximum amount of buffers.
 
@@ -527,7 +502,6 @@ point on you can use `gst_buffer_pool_acquire_buffer ()` to retrieve a
 buffer from the pool, like this:
 
 ``` c
-
   [...]
 
   GstFlowReturn ret;
@@ -538,14 +512,12 @@ buffer from the pool, like this:
     goto pool_failed;
 
   [...]
-
-
 ```
 
 It is important to check the return value of the acquire function
 because it is possible that it fails: When your element shuts down, it
 will deactivate the bufferpool and then all calls to acquire will return
-GST\_FLOW\_FLUSHNG.
+`GST_FLOW_FLUSHING`.
 
 All buffers that are acquired from the pool will have their pool member
 set to the original pool. When the last ref is decremented on the
@@ -560,14 +532,14 @@ WRITEME
 
 ## GST\_QUERY\_ALLOCATION
 
-The ALLOCATION query is used to negotiate `GstMeta`, `GstBufferPool` and
+The `ALLOCATION` query is used to negotiate `GstMeta`, `GstBufferPool` and
 `GstAllocator` between elements. Negotiation of the allocation strategy
 is always initiated and decided by a srcpad after it has negotiated a
 format and before it decides to push buffers. A sinkpad can suggest an
 allocation strategy but it is ultimately the source pad that will decide
 based on the suggestions of the downstream sink pad.
 
-The source pad will do a GST\_QUERY\_ALLOCATION with the negotiated caps
+The source pad will do a `GST_QUERY_ALLOCATION` with the negotiated caps
 as a parameter. This is needed so that the downstream element knows what
 media type is being handled. A downstream sink pad can answer the
 allocation query with the following results:
@@ -575,7 +547,7 @@ allocation query with the following results:
   - An array of possible `GstBufferPool` suggestions with suggested
     size, minimum and maximum amount of buffers.
 
-  - An array of GstAllocator objects along with suggested allocation
+  - An array of `GstAllocator` objects along with suggested allocation
     parameters such as flags, prefix, alignment and padding. These
     allocators can also be configured in a bufferpool when this is
     supported by the bufferpool.
@@ -585,16 +557,15 @@ allocation query with the following results:
     what kind of metadata is supported downstream before it places that
     metadata on buffers.
 
-When the GST\_QUERY\_ALLOCATION returns, the source pad will select from
+When the `GST_QUERY_ALLOCATION` returns, the source pad will select from
 the available bufferpools, allocators and metadata how it will allocate
 buffers.
 
 ### ALLOCATION query example
 
-Below is an example of the ALLOCATION query.
+Below is an example of the `ALLOCATION` query.
 
 ``` c
-
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
@@ -638,19 +609,20 @@ Below is an example of the ALLOCATION query.
   gst_buffer_pool_set_active (pool, TRUE);
 
 [...]
-
-
 ```
 
 This particular implementation will make a custom `GstVideoBufferPool`
 object that is specialized in allocating video buffers. You can also
 enable the pool to put `GstVideoMeta` metadata on the buffers from the
-pool doing `gst_buffer_pool_config_add_option (config,
-GST_BUFFER_POOL_OPTION_VIDEO_META)`.
+pool doing:
+
+``` c
+gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META)
+```
 
 ### The ALLOCATION query in base classes
 
-In many baseclasses you will see the following virtual methods for
+In many base classes you will see the following virtual methods for
 influencing the allocation strategy:
 
   - `propose_allocation ()` should suggest allocation parameters for the
