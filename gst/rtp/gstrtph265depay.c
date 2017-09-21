@@ -1237,6 +1237,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           if (rtph265depay->byte_stream) {
             memcpy (map.data, sync_bytes, sizeof (sync_bytes));
           } else {
+            gst_buffer_unmap (outbuf, &map);
             goto not_implemented;
           }
 
@@ -1402,6 +1403,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         if (rtph265depay->byte_stream) {
           memcpy (map.data, sync_bytes, sizeof (sync_bytes));
         } else {
+          gst_buffer_unmap (outbuf, &map);
           goto not_implemented;
         }
         memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
