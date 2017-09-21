@@ -262,20 +262,22 @@ a new pad from this template using `gst_pad_new_from_static_template
 ()`, you will need to declare the pad template as a global variable. More on
 this subject in [Specifying the pads][pads].
 
-    static GstStaticPadTemplate sink_factory = [..],
-        src_factory = [..];
+```c
+static GstStaticPadTemplate sink_factory = [..],
+    src_factory = [..];
 
-    static void
-    gst_my_filter_class_init (GstMyFilterClass * klass)
-    {
-      GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-    [..]
+static void
+gst_my_filter_class_init (GstMyFilterClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+[..]
 
-      gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&src_factory));
-      gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&sink_factory));
-    }
+  gst_element_class_add_pad_template (element_class,
+    gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+    gst_static_pad_template_get (&sink_factory));
+}
+```
 
 The last argument in a template is its type or list of supported types.
 In this example, we use 'ANY', which means that this element will accept

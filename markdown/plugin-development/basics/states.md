@@ -77,49 +77,50 @@ from one state to another.
 Do not g\_assert for unhandled state changes; this is taken care of by
 the GstElement base class.
 
-    static GstStateChangeReturn
-    gst_my_filter_change_state (GstElement *element, GstStateChange transition);
+```c
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement *element, GstStateChange transition);
 
-    static void
-    gst_my_filter_class_init (GstMyFilterClass *klass)
-    {
-      GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+static void
+gst_my_filter_class_init (GstMyFilterClass *klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-      element_class->change_state = gst_my_filter_change_state;
-    }
+  element_class->change_state = gst_my_filter_change_state;
+}
 
 
 
-    static GstStateChangeReturn
-    gst_my_filter_change_state (GstElement *element, GstStateChange transition)
-    {
-      GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-      GstMyFilter *filter = GST_MY_FILTER (element);
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement *element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstMyFilter *filter = GST_MY_FILTER (element);
 
-      switch (transition) {
-        case GST_STATE_CHANGE_NULL_TO_READY:
-          if (!gst_my_filter_allocate_memory (filter))
-            return GST_STATE_CHANGE_FAILURE;
-          break;
-        default:
-          break;
-      }
+  switch (transition) {
+	case GST_STATE_CHANGE_NULL_TO_READY:
+	  if (!gst_my_filter_allocate_memory (filter))
+		return GST_STATE_CHANGE_FAILURE;
+	  break;
+	default:
+	  break;
+  }
 
-      ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        return ret;
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+	return ret;
 
-      switch (transition) {
-        case GST_STATE_CHANGE_READY_TO_NULL:
-          gst_my_filter_free_memory (filter);
-          break;
-        default:
-          break;
-      }
+  switch (transition) {
+	case GST_STATE_CHANGE_READY_TO_NULL:
+	  gst_my_filter_free_memory (filter);
+	  break;
+	default:
+	  break;
+  }
 
-      return ret;
-    }
-
+  return ret;
+}
+```
 Note that upwards (NULL=\>READY, READY=\>PAUSED, PAUSED=\>PLAYING) and
 downwards (PLAYING=\>PAUSED, PAUSED=\>READY, READY=\>NULL) state changes
 are handled in two separate blocks with the downwards state change

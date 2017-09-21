@@ -291,44 +291,46 @@ access:
 The following example will show how a `_get_range
 ()`-function can be implemented in a source element:
 
-    #include "filter.h"
-    static GstFlowReturn
-            gst_my_filter_get_range (GstPad     * pad,
-                         GstObject  * parent,
-                         guint64      offset,
-                         guint        length,
-                         GstBuffer ** buf);
+```c
+#include "filter.h"
+static GstFlowReturn
+        gst_my_filter_get_range (GstPad     * pad,
+                     GstObject  * parent,
+                     guint64      offset,
+                     guint        length,
+                     GstBuffer ** buf);
 
-    G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
 
 
 
-    static void
-    gst_my_filter_init (GstMyFilter * filter)
-    {
+static void
+gst_my_filter_init (GstMyFilter * filter)
+{
 
-    [..]
+[..]
 
-      gst_pad_set_getrange_function (filter->srcpad,
-          gst_my_filter_get_range);
+  gst_pad_set_getrange_function (filter->srcpad,
+      gst_my_filter_get_range);
 
-    [..]
-    }
+[..]
+}
 
-    static GstFlowReturn
-    gst_my_filter_get_range (GstPad     * pad,
-                 GstObject  * parent,
-                 guint64      offset,
-                 guint        length,
-                 GstBuffer ** buf)
-    {
+static GstFlowReturn
+gst_my_filter_get_range (GstPad     * pad,
+             GstObject  * parent,
+             guint64      offset,
+             guint        length,
+             GstBuffer ** buf)
+{
 
-      GstMyFilter *filter = GST_MY_FILTER (parent);
+  GstMyFilter *filter = GST_MY_FILTER (parent);
 
-      [.. here, you would fill *buf ..]
+  [.. here, you would fill *buf ..]
 
-      return GST_FLOW_OK;
-    }
+  return GST_FLOW_OK;
+}
+```
 
 In practice, many elements that could theoretically do random access,
 may in practice often be activated in push-mode scheduling anyway, since
