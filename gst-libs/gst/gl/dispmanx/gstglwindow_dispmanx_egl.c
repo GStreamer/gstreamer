@@ -192,7 +192,7 @@ gst_gl_window_dispmanx_egl_set_window_handle (GstGLWindow * window,
   GST_DEBUG_OBJECT (window, "set window handle with size %dx%d",
       foreign_window->width, foreign_window->height);
 
-  if (window_egl->native.element) {
+  if (window_egl->native.element && window_egl->native.element != window_egl->foreign.element) {
     dispman_update = vc_dispmanx_update_start (0);
     vc_dispmanx_element_remove (dispman_update, window_egl->native.element);
     vc_dispmanx_update_submit_sync (dispman_update);
