@@ -76,37 +76,6 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_element_class_get_metadata(IntPtr klass, IntPtr key);
-
-		public string GetMetadata(string key) {
-			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
-			IntPtr raw_ret = gst_element_class_get_metadata(LookupGType().GetClassPtr (), native_key);
-			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
-			GLib.Marshaller.Free (native_key);
-			return ret;
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_element_class_get_pad_template(IntPtr element_class, IntPtr name);
-
-		public Gst.PadTemplate GetPadTemplate(string name) {
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
-			IntPtr raw_ret = gst_element_class_get_pad_template(LookupGType().GetClassPtr (), native_name);
-			Gst.PadTemplate ret = GLib.Object.GetObject(raw_ret) as Gst.PadTemplate;
-			GLib.Marshaller.Free (native_name);
-			return ret;
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_element_class_get_pad_template_list(IntPtr element_class);
-
-		public Gst.PadTemplate[] GetPadTemplateList() {
-			IntPtr raw_ret = gst_element_class_get_pad_template_list(LookupGType().GetClassPtr ());
-			Gst.PadTemplate[] ret = (Gst.PadTemplate[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), false, false, typeof(Gst.PadTemplate));
-			return ret;
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_element_class_set_metadata(IntPtr klass, IntPtr longname, IntPtr classification, IntPtr description, IntPtr author);
 
 		public void SetMetadata(string longname, string classification, string description, string author) {

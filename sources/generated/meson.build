@@ -139,6 +139,7 @@ generated_sources = [
     'Gst.PbUtils_DiscovererInfo.cs',
     'Gst.PbUtils_EncodingVideoProfile.cs',
     'Gst.PbUtils_Gst.PbUtilsSharp.InstallPluginsResultFuncNative.cs',
+    'Gst_ReferenceTimestampMeta.cs',
     'Gst_StaticCaps.cs',
     'Gst_MessageType.cs',
     'Gst_GstSharp.PadUnlinkFunctionNative.cs',

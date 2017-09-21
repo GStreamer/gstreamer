@@ -48,17 +48,6 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_device_provider_class_get_metadata(IntPtr klass, IntPtr key);
-
-		public string GetMetadata(string key) {
-			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
-			IntPtr raw_ret = gst_device_provider_class_get_metadata(LookupGType().GetClassPtr (), native_key);
-			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
-			GLib.Marshaller.Free (native_key);
-			return ret;
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_class_set_metadata(IntPtr klass, IntPtr longname, IntPtr classification, IntPtr description, IntPtr author);
 
 		public void SetMetadata(string longname, string classification, string description, string author) {

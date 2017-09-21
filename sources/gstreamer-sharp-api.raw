@@ -52,26 +52,6 @@
       <member cname="GST_CORE_ERROR_DISABLED" name="Disabled" value="14"/>
       <member cname="GST_CORE_ERROR_NUM_ERRORS" name="NumErrors" value="15"/>
     </enum>
-    <enum name="DebugColorFlags" cname="GstDebugColorFlags" type="enum" gtype="gst_debug_color_flags_get_type">
-      <member cname="GST_DEBUG_FG_BLACK" name="FgBlack" value="0"/>
-      <member cname="GST_DEBUG_BG_BLACK" name="BgBlack" value="0"/>
-      <member cname="GST_DEBUG_FG_RED" name="FgRed" value="1"/>
-      <member cname="GST_DEBUG_FG_GREEN" name="FgGreen" value="2"/>
-      <member cname="GST_DEBUG_FG_YELLOW" name="FgYellow" value="3"/>
-      <member cname="GST_DEBUG_FG_BLUE" name="FgBlue" value="4"/>
-      <member cname="GST_DEBUG_FG_MAGENTA" name="FgMagenta" value="5"/>
-      <member cname="GST_DEBUG_FG_CYAN" name="FgCyan" value="6"/>
-      <member cname="GST_DEBUG_FG_WHITE" name="FgWhite" value="7"/>
-      <member cname="GST_DEBUG_BG_RED" name="BgRed" value="16"/>
-      <member cname="GST_DEBUG_BG_GREEN" name="BgGreen" value="32"/>
-      <member cname="GST_DEBUG_BG_YELLOW" name="BgYellow" value="48"/>
-      <member cname="GST_DEBUG_BG_BLUE" name="BgBlue" value="64"/>
-      <member cname="GST_DEBUG_BG_MAGENTA" name="BgMagenta" value="80"/>
-      <member cname="GST_DEBUG_BG_CYAN" name="BgCyan" value="96"/>
-      <member cname="GST_DEBUG_BG_WHITE" name="BgWhite" value="112"/>
-      <member cname="GST_DEBUG_BOLD" name="Bold" value="256"/>
-      <member cname="GST_DEBUG_UNDERLINE" name="Underline" value="512"/>
-    </enum>
     <enum name="DebugColorMode" cname="GstDebugColorMode" type="enum" gtype="gst_debug_color_mode_get_type">
       <member cname="GST_DEBUG_COLOR_MODE_OFF" name="Off" value="0"/>
       <member cname="GST_DEBUG_COLOR_MODE_ON" name="On" value="1"/>
@@ -285,12 +265,16 @@
       <member cname="GST_STATE_PLAYING" name="Playing" value="4"/>
     </enum>
     <enum name="StateChange" cname="GstStateChange" type="enum" gtype="gst_state_change_get_type">
+      <member cname="GST_STATE_CHANGE_NULL_TO_NULL" name="NullToNull" value="9"/>
       <member cname="GST_STATE_CHANGE_NULL_TO_READY" name="NullToReady" value="10"/>
       <member cname="GST_STATE_CHANGE_READY_TO_NULL" name="ReadyToNull" value="17"/>
+      <member cname="GST_STATE_CHANGE_READY_TO_READY" name="ReadyToReady" value="18"/>
       <member cname="GST_STATE_CHANGE_READY_TO_PAUSED" name="ReadyToPaused" value="19"/>
       <member cname="GST_STATE_CHANGE_PAUSED_TO_READY" name="PausedToReady" value="26"/>
+      <member cname="GST_STATE_CHANGE_PAUSED_TO_PAUSED" name="PausedToPaused" value="27"/>
       <member cname="GST_STATE_CHANGE_PAUSED_TO_PLAYING" name="PausedToPlaying" value="28"/>
       <member cname="GST_STATE_CHANGE_PLAYING_TO_PAUSED" name="PlayingToPaused" value="35"/>
+      <member cname="GST_STATE_CHANGE_PLAYING_TO_PLAYING" name="PlayingToPlaying" value="36"/>
     </enum>
     <enum name="StateChangeReturn" cname="GstStateChangeReturn" type="enum" gtype="gst_state_change_return_get_type">
       <member cname="GST_STATE_CHANGE_FAILURE" name="Failure" value="0"/>
@@ -453,6 +437,26 @@
       <member cname="GST_CLOCK_FLAG_CAN_SET_MASTER" name="CanSetMaster" value="512"/>
       <member cname="GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC" name="NeedsStartupSync" value="1024"/>
       <member cname="GST_CLOCK_FLAG_LAST" name="Last" value="4096"/>
+    </enum>
+    <enum name="DebugColorFlags" cname="GstDebugColorFlags" type="flags" gtype="gst_debug_color_flags_get_type">
+      <member cname="GST_DEBUG_FG_BLACK" name="FgBlack" value="0"/>
+      <member cname="GST_DEBUG_BG_BLACK" name="BgBlack" value="0"/>
+      <member cname="GST_DEBUG_FG_RED" name="FgRed" value="1"/>
+      <member cname="GST_DEBUG_FG_GREEN" name="FgGreen" value="2"/>
+      <member cname="GST_DEBUG_FG_YELLOW" name="FgYellow" value="3"/>
+      <member cname="GST_DEBUG_FG_BLUE" name="FgBlue" value="4"/>
+      <member cname="GST_DEBUG_FG_MAGENTA" name="FgMagenta" value="5"/>
+      <member cname="GST_DEBUG_FG_CYAN" name="FgCyan" value="6"/>
+      <member cname="GST_DEBUG_FG_WHITE" name="FgWhite" value="7"/>
+      <member cname="GST_DEBUG_BG_RED" name="BgRed" value="16"/>
+      <member cname="GST_DEBUG_BG_GREEN" name="BgGreen" value="32"/>
+      <member cname="GST_DEBUG_BG_YELLOW" name="BgYellow" value="48"/>
+      <member cname="GST_DEBUG_BG_BLUE" name="BgBlue" value="64"/>
+      <member cname="GST_DEBUG_BG_MAGENTA" name="BgMagenta" value="80"/>
+      <member cname="GST_DEBUG_BG_CYAN" name="BgCyan" value="96"/>
+      <member cname="GST_DEBUG_BG_WHITE" name="BgWhite" value="112"/>
+      <member cname="GST_DEBUG_BOLD" name="Bold" value="256"/>
+      <member cname="GST_DEBUG_UNDERLINE" name="Underline" value="512"/>
     </enum>
     <enum name="DebugGraphDetails" cname="GstDebugGraphDetails" type="flags" gtype="gst_debug_graph_details_get_type">
       <member cname="GST_DEBUG_GRAPH_SHOW_VERBOSE" name="Verbose" value="-1"/>
@@ -663,7 +667,7 @@
       <member cname="GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS" name="TrickmodeKeyUnits" value="128"/>
       <member cname="GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO" name="TrickmodeNoAudio" value="256"/>
     </enum>
-    <enum name="StackTraceFlags" cname="GstStackTraceFlags" type="flags" gtype="gst_stack_trace_flags_get_type">
+    <enum name="StackTraceFlags" cname="GstStackTraceFlags" type="flags" gtype="gst_stack_trace_flags_get_type" version="1.12">
       <member cname="GST_STACK_TRACE_SHOW_FULL" name="Full" value="1"/>
     </enum>
     <enum name="StreamFlags" cname="GstStreamFlags" type="flags" gtype="gst_stream_flags_get_type" version="1.2">
@@ -1813,7 +1817,7 @@
       <method name="Add" cname="gst_bin_add">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="element" type="GstElement*" owned="true"/>
+          <parameter name="element" type="GstElement*"/>
         </parameters>
       </method>
       <method name="FindUnlinkedPad" cname="gst_bin_find_unlinked_pad">
@@ -2274,6 +2278,14 @@
       <method name="EnableSyncMessageEmission" cname="gst_bus_enable_sync_message_emission">
         <return-type type="void"/>
         <parameters/>
+      </method>
+      <method name="GetPollfd" cname="gst_bus_get_pollfd" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="fd" type="GPollFD*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
       </method>
       <method name="HavePending" cname="gst_bus_have_pending">
         <return-type type="gboolean"/>
@@ -3013,7 +3025,7 @@
       <method name="DeviceAdd" cname="gst_device_provider_device_add" version="1.4">
         <return-type type="void"/>
         <parameters>
-          <parameter name="device" type="GstDevice*" owned="true"/>
+          <parameter name="device" type="GstDevice*"/>
         </parameters>
       </method>
       <method name="DeviceRemove" cname="gst_device_provider_device_remove" version="1.4">
@@ -3037,6 +3049,12 @@
       <method name="GetHiddenProviders" cname="gst_device_provider_get_hidden_providers" version="1.6">
         <return-type type="gchar***" owned="true" array="true" null_term_array="true"/>
         <parameters/>
+      </method>
+      <method name="GetMetadata" cname="gst_device_provider_get_metadata" version="1.14">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="key" type="const-gchar*"/>
+        </parameters>
       </method>
       <method name="HideProvider" cname="gst_device_provider_hide_provider" version="1.6">
         <return-type type="void"/>
@@ -3186,7 +3204,7 @@
       <method name="AddPadTemplate" cname="gst_element_class_add_pad_template" shared="true">
         <return-type type="void"/>
         <parameters>
-          <parameter name="templ" type="GstPadTemplate*" owned="true"/>
+          <parameter name="templ" type="GstPadTemplate*"/>
         </parameters>
       </method>
       <method name="AddStaticMetadata" cname="gst_element_class_add_static_metadata" shared="true">
@@ -3370,7 +3388,7 @@
       <method name="AddPad" cname="gst_element_add_pad">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="pad" type="GstPad*" owned="true"/>
+          <parameter name="pad" type="GstPad*"/>
         </parameters>
       </method>
       <method name="AddPropertyDeepNotifyWatch" cname="gst_element_add_property_deep_notify_watch" version="1.10">
@@ -3462,6 +3480,22 @@
       </method>
       <method name="GetFactory" cname="gst_element_get_factory">
         <return-type type="GstElementFactory*"/>
+        <parameters/>
+      </method>
+      <method name="GetMetadata" cname="gst_element_get_metadata" version="1.14">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="key" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="GetPadTemplate" cname="gst_element_get_pad_template" version="1.14">
+        <return-type type="GstPadTemplate*"/>
+        <parameters>
+          <parameter name="name" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="GetPadTemplateList" cname="gst_element_get_pad_template_list" version="1.14">
+        <return-type type="GList*" element_type="GstPadTemplate*"/>
         <parameters/>
       </method>
       <method name="GetRequestPad" cname="gst_element_get_request_pad">
@@ -4057,7 +4091,7 @@
       <method name="AddControlBinding" cname="gst_object_add_control_binding">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="binding" type="GstControlBinding*" owned="true"/>
+          <parameter name="binding" type="GstControlBinding*"/>
         </parameters>
       </method>
       <method name="DefaultError" cname="gst_object_default_error">
@@ -5270,13 +5304,13 @@
       <method name="AddFeature" cname="gst_registry_add_feature">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="feature" type="GstPluginFeature*" owned="true"/>
+          <parameter name="feature" type="GstPluginFeature*"/>
         </parameters>
       </method>
       <method name="AddPlugin" cname="gst_registry_add_plugin">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="plugin" type="GstPlugin*" owned="true"/>
+          <parameter name="plugin" type="GstPlugin*"/>
         </parameters>
       </method>
       <method name="CheckFeatureVersion" cname="gst_registry_check_feature_version">
@@ -6053,6 +6087,18 @@
           </parameter>
         </parameters>
       </method>
+      <method name="AddReferenceTimestampMeta" cname="gst_buffer_add_reference_timestamp_meta" version="1.14">
+        <return-type type="GstReferenceTimestampMeta*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="reference" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="timestamp" type="guint64"/>
+          <parameter name="duration" type="guint64"/>
+        </parameters>
+      </method>
       <method name="Append" cname="gst_buffer_append">
         <return-type type="GstBuffer*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -6185,6 +6231,16 @@
         </return-type>
         <parameters>
           <parameter name="api" type="GType"/>
+        </parameters>
+      </method>
+      <method name="GetReferenceTimestampMeta" cname="gst_buffer_get_reference_timestamp_meta" version="1.14">
+        <return-type type="GstReferenceTimestampMeta*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter allow-none="1" name="reference" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
         </parameters>
       </method>
       <method name="GetSize" cname="gst_buffer_get_size">
@@ -6397,6 +6453,10 @@
           <parameter name="size" type="guint"/>
         </parameters>
       </constructor>
+      <method name="CalculateSize" cname="gst_buffer_list_calculate_size" version="1.14">
+        <return-type type="gsize"/>
+        <parameters/>
+      </method>
       <method name="CopyDeep" cname="gst_buffer_list_copy_deep" version="1.6">
         <return-type type="GstBufferList*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -6411,6 +6471,14 @@
         </parameters>
       </method>
       <method name="Get" cname="gst_buffer_list_get">
+        <return-type type="GstBuffer*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="idx" type="guint"/>
+        </parameters>
+      </method>
+      <method name="GetWritable" cname="gst_buffer_list_get_writable" version="1.14">
         <return-type type="GstBuffer*">
           <warning>missing glib:type-name</warning>
         </return-type>
@@ -9329,6 +9397,21 @@
         <parameters/>
       </method>
     </boxed>
+    <struct name="ReferenceTimestampMeta" cname="GstReferenceTimestampMeta" opaque="false" hidden="false" version="1.14">
+      <field cname="parent" access="public" writeable="true" readable="true" name="Parent" type="GstMeta">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="reference" access="public" writeable="true" readable="true" name="Reference" type="GstCaps*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="timestamp" access="public" writeable="true" readable="true" name="Timestamp" type="guint64"/>
+      <field cname="duration" access="public" writeable="true" readable="true" name="Duration" type="guint64"/>
+      <method name="GetInfo" cname="gst_reference_timestamp_meta_get_info" shared="true" version="1.14">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
+    </struct>
     <struct name="RegistryPrivate" cname="GstRegistryPrivate" opaque="true" hidden="true"/>
     <boxed name="Sample" cname="GstSample" opaque="false" hidden="false">
       <method name="GetType" cname="gst_sample_get_type" shared="true">
@@ -9440,7 +9523,7 @@
           <parameter name="start" type="guint64"/>
           <parameter name="stop_type" type="GstSeekType"/>
           <parameter name="stop" type="guint64"/>
-          <parameter name="update" type="gboolean"/>
+          <parameter allow-none="1" name="update" type="gboolean*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="Free" cname="gst_segment_free">
@@ -9480,7 +9563,7 @@
         <parameters>
           <parameter name="format" type="GstFormat"/>
           <parameter name="running_time" type="guint64"/>
-          <parameter name="position" type="guint64"/>
+          <parameter name="position" type="guint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="PositionFromStreamTime" cname="gst_segment_position_from_stream_time" version="1.8">
@@ -9495,7 +9578,7 @@
         <parameters>
           <parameter name="format" type="GstFormat"/>
           <parameter name="stream_time" type="guint64"/>
-          <parameter name="position" type="guint64"/>
+          <parameter name="position" type="guint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="SetRunningTime" cname="gst_segment_set_running_time">
@@ -9524,7 +9607,7 @@
         <parameters>
           <parameter name="format" type="GstFormat"/>
           <parameter name="position" type="guint64"/>
-          <parameter name="running_time" type="guint64"/>
+          <parameter allow-none="1" name="running_time" type="guint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="ToStreamTime" cname="gst_segment_to_stream_time" version="1.8">
@@ -9539,7 +9622,7 @@
         <parameters>
           <parameter name="format" type="GstFormat"/>
           <parameter name="position" type="guint64"/>
-          <parameter name="stream_time" type="guint64"/>
+          <parameter name="stream_time" type="guint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
     </boxed>
@@ -9568,7 +9651,7 @@
         <warning>missing glib:type-name</warning>
       </field>
       <method name="Get" cname="gst_static_pad_template_get">
-        <return-type type="GstPadTemplate*" owned="true"/>
+        <return-type type="GstPadTemplate*"/>
         <parameters/>
       </method>
       <method name="GetCaps" cname="gst_static_pad_template_get_caps">
@@ -10816,19 +10899,6 @@
       <method name="BufferGetMaxMemory" cname="gst_buffer_get_max_memory" shared="true" version="1.2">
         <return-type type="guint"/>
       </method>
-      <method name="CalculateLinearRegression" cname="gst_calculate_linear_regression" shared="true" version="1.12">
-        <return-type type="gboolean"/>
-        <parameters>
-          <parameter name="xy" type="guint64"/>
-          <parameter name="temp" type="guint64"/>
-          <parameter name="n" type="guint"/>
-          <parameter name="m_num" type="guint64" owned="true" pass_as="out"/>
-          <parameter name="m_denom" type="guint64" owned="true" pass_as="out"/>
-          <parameter name="b" type="guint64" owned="true" pass_as="out"/>
-          <parameter name="xbase" type="guint64" owned="true" pass_as="out"/>
-          <parameter name="r_squared" type="gdouble*" owned="true" pass_as="out"/>
-        </parameters>
-      </method>
       <method name="CapsFeaturesFromString" cname="gst_caps_features_from_string" shared="true" version="1.2">
         <return-type type="GstCapsFeatures*" owned="true">
           <warning>missing glib:type-name</warning>
@@ -10854,6 +10924,13 @@
           <parameter closure="1" destroy="2" scope="notified" name="func" type="GstLogFunction"/>
           <parameter allow-none="1" name="user_data" type="gpointer"/>
           <parameter scope="async" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="DebugAddRingBufferLogger" cname="gst_debug_add_ring_buffer_logger" shared="true" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="max_size_per_thread" type="guint"/>
+          <parameter name="thread_timeout" type="guint"/>
         </parameters>
       </method>
       <method name="DebugBinToDotData" cname="gst_debug_bin_to_dot_data" shared="true">
@@ -10951,6 +11028,12 @@
         <parameters>
           <parameter allow-none="1" name="data" type="gpointer"/>
         </parameters>
+      </method>
+      <method name="DebugRemoveRingBufferLogger" cname="gst_debug_remove_ring_buffer_logger" shared="true" version="1.14">
+        <return-type type="void"/>
+      </method>
+      <method name="DebugRingBufferLoggerGetLogs" cname="gst_debug_ring_buffer_logger_get_logs" shared="true" version="1.14">
+        <return-type type="gchar***" owned="true" array="true" null_term_array="true"/>
       </method>
       <method name="DebugSetActive" cname="gst_debug_set_active" shared="true">
         <return-type type="void"/>
@@ -11313,6 +11396,12 @@
           <parameter name="app_dir" type="const-gchar*"/>
         </parameters>
       </method>
+      <method name="ProtectionFilterSystemsByAvailableDecryptors" cname="gst_protection_filter_systems_by_available_decryptors" shared="true" version="1.14">
+        <return-type type="gchar***" owned="true" array="true" null_term_array="true"/>
+        <parameters>
+          <parameter name="system_identifiers" type="const-gchar*"/>
+        </parameters>
+      </method>
       <method name="ProtectionMetaApiGetType" cname="gst_protection_meta_api_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -11324,7 +11413,7 @@
       <method name="ProtectionSelectSystem" cname="gst_protection_select_system" shared="true" version="1.6">
         <return-type type="const-gchar*"/>
         <parameters>
-          <parameter name="system_identifiers" type="const-gchar*"/>
+          <parameter name="system_identifiers" type="const-gchar**" array="true" null_term_array="true"/>
         </parameters>
       </method>
       <method name="QueryTypeGetFlags" cname="gst_query_type_get_flags" shared="true">
@@ -11345,6 +11434,14 @@
           <parameter name="type" type="GstQueryType"/>
         </parameters>
       </method>
+      <method name="ReferenceTimestampMetaApiGetType" cname="gst_reference_timestamp_meta_api_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="ReferenceTimestampMetaGetInfo" cname="gst_reference_timestamp_meta_get_info" shared="true" version="1.14">
+        <return-type type="GstMetaInfo*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+      </method>
       <method name="ResourceErrorQuark" cname="gst_resource_error_quark" shared="true">
         <return-type type="guint32"/>
       </method>
@@ -11355,6 +11452,12 @@
         <return-type type="void"/>
         <parameters>
           <parameter name="enabled" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="StateChangeGetName" cname="gst_state_change_get_name" shared="true" version="1.14">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="transition" type="GstStateChange"/>
         </parameters>
       </method>
       <method name="StaticCapsGetType" cname="gst_static_caps_get_type" shared="true">
@@ -12431,9 +12534,9 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN"/>
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
-      <constant value="2" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
-      <constant value="12" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
-      <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
+      <constant value="0" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="13" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstApp" library="gstapp-1.0">
@@ -12659,8 +12762,8 @@
       <method name="GetLatency" cname="gst_app_src_get_latency">
         <return-type type="void"/>
         <parameters>
-          <parameter name="min" type="guint64"/>
-          <parameter name="max" type="guint64"/>
+          <parameter name="min" type="guint64*" owned="true" pass_as="out"/>
+          <parameter name="max" type="guint64*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="GetMaxBytes" cname="gst_app_src_get_max_bytes">
@@ -26562,7 +26665,7 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <struct name="VideoAffineTransformationMeta" cname="GstVideoAffineTransformationMeta" opaque="false" hidden="false">
+    <struct name="VideoAffineTransformationMeta" cname="GstVideoAffineTransformationMeta" opaque="false" hidden="false" version="1.8">
       <field cname="meta" access="public" writeable="true" readable="true" name="Meta" type="GstMeta">
         <warning>missing glib:type-name</warning>
       </field>
