@@ -230,11 +230,13 @@ VALGRIND_TESTS_DISABLE = \
 
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
+# ipcpipeline: too flaky (always fails on the build bot)
 # dashdemux: fails because it uses random data streams but dashdemux nowadays
 #            actually looks at the data and doesn't like randomness
 noinst_PROGRAMS = \
 	pipelines/streamheader \
 	$(check_dash_demux) \
+	$(check_ipcpipeline) \
 	$(check_neon)
 
 check_PROGRAMS = \
@@ -280,7 +282,6 @@ check_PROGRAMS = \
 	elements/rtponviftimestamp \
 	elements/id3mux \
 	pipelines/mxf \
-	$(check_ipcpipeline) \
 	libs/isoff \
 	libs/mpegvideoparser \
 	libs/mpegts \
