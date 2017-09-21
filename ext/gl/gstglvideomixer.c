@@ -1076,7 +1076,6 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
       best_fps_d = fps_d;
     }
   }
-  mix->output_geo_changed = TRUE;
   GST_OBJECT_UNLOCK (vagg);
 
   if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
@@ -1086,14 +1085,10 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
   }
 
   s = gst_caps_get_structure (ret, 0);
-  if (!gst_structure_fixate_field_nearest_int (s, "width", best_width))
-    gst_structure_set (s, "width", G_TYPE_INT, best_width, NULL);
-  if (!gst_structure_fixate_field_nearest_int (s, "height", best_height))
-    gst_structure_set (s, "height", G_TYPE_INT, best_height, NULL);
-  if (!gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
-          best_fps_d))
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION, best_fps_n,
-        best_fps_d, NULL);
+  gst_structure_fixate_field_nearest_int (s, "width", best_width);
+  gst_structure_fixate_field_nearest_int (s, "height", best_height);
+  gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
+      best_fps_d);
   ret = gst_caps_fixate (ret);
 
   return ret;
@@ -1488,8 +1483,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     _init_vbo_indices (video_mixer);
 
-    if (video_mixer->output_geo_changed || pad->geometry_change
-        || !pad->vertex_buffer) {
+    if (pad->geometry_change || !pad->vertex_buffer) {
       gint pad_width, pad_height;
       gfloat w, h;
 
@@ -1557,7 +1551,6 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     walk = g_list_next (walk);
   }
-  video_mixer->output_geo_changed = FALSE;
   GST_OBJECT_UNLOCK (video_mixer);
 
   gl->DisableVertexAttribArray (attr_position_loc);
