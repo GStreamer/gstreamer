@@ -29,7 +29,7 @@
 #include <gst/app/app.h>
 
 static GstPad *mysrcpad, *mysinkpad;
-static GstElement *dec;
+static GstElement *enc;
 static GList *events = NULL;
 
 #define TEST_VIDEO_WIDTH 640
@@ -59,22 +59,22 @@ G_DEFINE_TYPE (GstVideoEncoderTester, gst_video_encoder_tester,
     GST_TYPE_VIDEO_ENCODER);
 
 static gboolean
-gst_video_encoder_tester_start (GstVideoEncoder * dec)
+gst_video_encoder_tester_start (GstVideoEncoder * enc)
 {
   return TRUE;
 }
 
 static gboolean
-gst_video_encoder_tester_stop (GstVideoEncoder * dec)
+gst_video_encoder_tester_stop (GstVideoEncoder * enc)
 {
   return TRUE;
 }
 
 static gboolean
-gst_video_encoder_tester_set_format (GstVideoEncoder * dec,
+gst_video_encoder_tester_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state)
 {
-  GstVideoCodecState *res = gst_video_encoder_set_output_state (dec,
+  GstVideoCodecState *res = gst_video_encoder_set_output_state (enc,
       gst_caps_new_simple ("video/x-test-custom", "width", G_TYPE_INT,
           480, "height", G_TYPE_INT, 360, NULL),
       NULL);
@@ -84,7 +84,7 @@ gst_video_encoder_tester_set_format (GstVideoEncoder * dec,
 }
 
 static GstFlowReturn
-gst_video_encoder_tester_handle_frame (GstVideoEncoder * dec,
+gst_video_encoder_tester_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame)
 {
   guint8 *data;
@@ -102,7 +102,7 @@ gst_video_encoder_tester_handle_frame (GstVideoEncoder * dec,
   frame->pts = GST_BUFFER_PTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
 
-  return gst_video_encoder_finish_frame (dec, frame);
+  return gst_video_encoder_finish_frame (enc, frame);
 }
 
 static GstFlowReturn
@@ -168,9 +168,9 @@ setup_videoencodertester (void)
       GST_STATIC_CAPS ("video/x-raw")
       );
 
-  dec = g_object_new (GST_VIDEO_ENCODER_TESTER_TYPE, NULL);
-  mysrcpad = gst_check_setup_src_pad (dec, &srctemplate);
-  mysinkpad = gst_check_setup_sink_pad (dec, &sinktemplate);
+  enc = g_object_new (GST_VIDEO_ENCODER_TESTER_TYPE, NULL);
+  mysrcpad = gst_check_setup_src_pad (enc, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (enc, &sinktemplate);
 
   gst_pad_set_event_function (mysinkpad, _mysinkpad_event);
 }
@@ -181,11 +181,11 @@ cleanup_videoencodertest (void)
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
 
-  gst_element_set_state (dec, GST_STATE_NULL);
+  gst_element_set_state (enc, GST_STATE_NULL);
 
-  gst_check_teardown_src_pad (dec);
-  gst_check_teardown_sink_pad (dec);
-  gst_check_teardown_element (dec);
+  gst_check_teardown_src_pad (enc);
+  gst_check_teardown_sink_pad (enc);
+  gst_check_teardown_element (enc);
 
   g_list_free_full (events, (GDestroyNotify) gst_event_unref);
   events = NULL;
@@ -245,7 +245,7 @@ GST_START_TEST (videoencoder_playback)
   setup_videoencodertester ();
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
 
   send_startup_events ();
@@ -304,7 +304,7 @@ GST_START_TEST (videoencoder_tags_before_eos)
   setup_videoencodertester ();
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
 
   send_startup_events ();
@@ -359,7 +359,7 @@ GST_START_TEST (videoencoder_events_before_eos)
   setup_videoencodertester ();
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
 
   send_startup_events ();
@@ -419,7 +419,7 @@ GST_START_TEST (videoencoder_flush_events)
   setup_videoencodertester ();
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
 
   send_startup_events ();
