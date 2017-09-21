@@ -52,57 +52,59 @@ want to additionally specify an event handling function, which will be
 called when stream-events are sent (such as caps, end-of-stream,
 newsegment, tags, etc.).
 
-    static void
-    gst_my_filter_init (GstMyFilter * filter)
-    {
-    [..]
-      gst_pad_set_event_function (filter->sinkpad,
-          gst_my_filter_sink_event);
-    [..]
-    }
+```c
+static void
+gst_my_filter_init (GstMyFilter * filter)
+{
+[..]
+  gst_pad_set_event_function (filter->sinkpad,
+      gst_my_filter_sink_event);
+[..]
+}
 
 
 
-    static gboolean
-    gst_my_filter_sink_event (GstPad    *pad,
-                      GstObject *parent,
-                      GstEvent  *event)
-    {
-      GstMyFilter *filter = GST_MY_FILTER (parent);
+static gboolean
+gst_my_filter_sink_event (GstPad    *pad,
+                  GstObject *parent,
+                  GstEvent  *event)
+{
+  GstMyFilter *filter = GST_MY_FILTER (parent);
 
-      switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_CAPS:
-          /* we should handle the format here */
-          break;
-        case GST_EVENT_EOS:
-          /* end-of-stream, we should close down all stream leftovers here */
-          gst_my_filter_stop_processing (filter);
-          break;
-        default:
-          break;
-      }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      /* we should handle the format here */
+      break;
+    case GST_EVENT_EOS:
+      /* end-of-stream, we should close down all stream leftovers here */
+      gst_my_filter_stop_processing (filter);
+      break;
+    default:
+      break;
+  }
 
-      return gst_pad_event_default (pad, parent, event);
-    }
+  return gst_pad_event_default (pad, parent, event);
+}
 
-    static GstFlowReturn
-    gst_my_filter_chain (GstPad    *pad,
-                 GstObject *parent,
-                 GstBuffer *buf)
-    {
-      GstMyFilter *filter = GST_MY_FILTER (parent);
-      GstBuffer *outbuf;
+static GstFlowReturn
+gst_my_filter_chain (GstPad    *pad,
+             GstObject *parent,
+             GstBuffer *buf)
+{
+  GstMyFilter *filter = GST_MY_FILTER (parent);
+  GstBuffer *outbuf;
 
-      outbuf = gst_my_filter_process_data (filter, buf);
-      gst_buffer_unref (buf);
-      if (!outbuf) {
-        /* something went wrong - signal an error */
-        GST_ELEMENT_ERROR (GST_ELEMENT (filter), STREAM, FAILED, (NULL), (NULL));
-        return GST_FLOW_ERROR;
-      }
+  outbuf = gst_my_filter_process_data (filter, buf);
+  gst_buffer_unref (buf);
+  if (!outbuf) {
+    /* something went wrong - signal an error */
+    GST_ELEMENT_ERROR (GST_ELEMENT (filter), STREAM, FAILED, (NULL), (NULL));
+    return GST_FLOW_ERROR;
+  }
 
-      return gst_pad_push (filter->srcpad, outbuf);
-    }
+  return gst_pad_push (filter->srcpad, outbuf);
+}
+```
 
 In some cases, it might be useful for an element to have control over
 the input data rate, too. In that case, you probably want to write a
