@@ -140,7 +140,7 @@ for m in $CORE; do
 done
 
 # build other modules in parallel
-for m in $MODULES; do
+for m in $MODULES $EXTRA_MODULES; do
   build $m &
   PIDS="$PIDS $!"
 done
