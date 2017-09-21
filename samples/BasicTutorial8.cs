@@ -220,7 +220,9 @@ namespace GstreamerSharp
 			Tee.ReleaseRequestPad(teeAppPad);
 
 			// Free resources
-			pipeline.SetState (State.Playing);
+			pipeline.SetState (State.Null);
+
+			Gst.Global.Deinit();
 		}
 	}
 }
