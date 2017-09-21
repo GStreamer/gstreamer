@@ -292,6 +292,7 @@ gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
     out_buffer = gst_buffer_new_allocate (NULL, enc->webp_writer.size, NULL);
     if (!out_buffer) {
       GST_ERROR_OBJECT (enc, "Failed to create output buffer");
+      gst_video_frame_unmap (&vframe);
       return GST_FLOW_ERROR;
     }
     gst_buffer_fill (out_buffer, 0, enc->webp_writer.mem,
@@ -299,6 +300,7 @@ gst_webp_enc_handle_frame (GstVideoEncoder * encoder,
     free (enc->webp_writer.mem);
   } else {
     GST_ERROR_OBJECT (enc, "Failed to encode WebPPicture");
+    gst_video_frame_unmap (&vframe);
     return GST_FLOW_ERROR;
   }
 
