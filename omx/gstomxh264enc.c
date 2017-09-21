@@ -605,10 +605,6 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   const gchar *profile, *level;
 
-  caps = gst_caps_new_simple ("video/x-h264",
-      "stream-format", G_TYPE_STRING, "byte-stream",
-      "alignment", G_TYPE_STRING, "au", NULL);
-
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
 
@@ -617,6 +613,10 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
       OMX_IndexParamVideoProfileLevelCurrent, &param);
   if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex)
     return NULL;
+
+  caps = gst_caps_new_simple ("video/x-h264",
+      "stream-format", G_TYPE_STRING, "byte-stream",
+      "alignment", G_TYPE_STRING, "au", NULL);
 
   if (err == OMX_ErrorNone) {
     switch (param.eProfile) {
@@ -643,6 +643,7 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         break;
       default:
         g_assert_not_reached ();
+        gst_caps_unref (caps);
         return NULL;
     }
 
@@ -697,6 +698,7 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         break;
       default:
         g_assert_not_reached ();
+        gst_caps_unref (caps);
         return NULL;
     }
     gst_caps_set_simple (caps,
