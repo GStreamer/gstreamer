@@ -69,6 +69,8 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 #define GST_SPLITMUX_WAIT_OUTPUT(s) g_cond_wait (&(s)->output_cond, &(s)->lock)
 #define GST_SPLITMUX_BROADCAST_OUTPUT(s) g_cond_broadcast (&(s)->output_cond)
 
+static void split_now (GstSplitMuxSink * splitmux);
+
 enum
 {
   PROP_0,
@@ -99,6 +101,7 @@ enum
 {
   SIGNAL_FORMAT_LOCATION,
   SIGNAL_FORMAT_LOCATION_FULL,
+  SIGNAL_SPLIT_NOW,
   SIGNAL_LAST
 };
 
@@ -305,6 +308,23 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       g_signal_new ("format-location-full", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_STRING, 2, G_TYPE_UINT,
       GST_TYPE_SAMPLE);
+
+  /**
+   * GstSplitMuxSink::split-now:
+   * @splitmux: the #GstSplitMuxSink
+   *
+   * When called by the user, this action signal splits the video file (and begins a new one) immediately.
+   *
+   *
+   * Since: 1.14
+   */
+
+  signals[SIGNAL_SPLIT_NOW] =
+      g_signal_new ("split-now", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
+          split_now), NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  klass->split_now = split_now;
 }
 
 static void
@@ -327,6 +347,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->threshold_timecode_str = NULL;
 
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
+  splitmux->split_now = FALSE;
 }
 
 static void
@@ -1262,6 +1283,10 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   if (splitmux->fragment_total_bytes <= 0)
     return FALSE;
 
+  /* User told us to split now */
+  if (g_atomic_int_get (&(splitmux->split_now)) == TRUE)
+    return TRUE;
+
   if (thresh_bytes > 0 && queued_bytes >= thresh_bytes)
     return TRUE;                /* Would overrun byte limit */
 
@@ -1358,6 +1383,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   /* Check for overrun - have we output at least one byte and overrun
    * either threshold? */
   if (need_new_fragment (splitmux, queued_time, queued_gop_time, queued_bytes)) {
+    g_atomic_int_set (&(splitmux->split_now), FALSE);
     /* Tell the output side to start a new fragment */
     GST_INFO_OBJECT (splitmux,
         "This GOP (dur %" GST_STIME_FORMAT
@@ -2354,6 +2380,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_atomic_int_set (&(splitmux->split_now), FALSE);
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_SPLITMUX_LOCK (splitmux);
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_STOPPED;
@@ -2431,4 +2458,10 @@ gst_splitmux_sink_ensure_max_files (GstSplitMuxSink * splitmux)
   if (splitmux->max_files && splitmux->fragment_id >= splitmux->max_files) {
     splitmux->fragment_id = 0;
   }
+}
+
+static void
+split_now (GstSplitMuxSink * splitmux)
+{
+  g_atomic_int_set (&(splitmux->split_now), TRUE);
 }

@@ -168,11 +168,16 @@ struct _GstSplitMuxSink
 
   gboolean use_robust_muxing;
   gboolean muxer_has_reserved_props;
+
+  gboolean split_now;
 };
 
 struct _GstSplitMuxSinkClass
 {
   GstBinClass parent_class;
+
+  /* actions */
+  void     (*split_now)   (GstSplitMuxSink * splitmux);
 };
 
 G_END_DECLS
