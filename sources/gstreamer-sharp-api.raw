@@ -8512,6 +8512,10 @@
           <parameter name="flags" type="GstLockFlags"/>
         </parameters>
       </method>
+      <method name="Unref" cname="gst_mini_object_unref">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
       <method name="Replace" cname="gst_mini_object_replace" shared="true">
         <return-type type="gboolean"/>
         <parameters>
