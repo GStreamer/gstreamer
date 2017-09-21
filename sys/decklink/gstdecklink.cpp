@@ -1030,7 +1030,7 @@ public:
     if (size == m_lastBufferSize) {
       gst_queue_array_push_tail (m_buffers, buffer);
     } else {
-      g_free (buffer);
+      g_free (((uint8_t *) buffer) - 128);
     }
 
     g_mutex_unlock (&m_mutex);
