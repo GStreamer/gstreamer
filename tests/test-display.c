@@ -140,91 +140,29 @@ print_formats (GArray * formats, const gchar * name)
   }
 }
 
-typedef struct _GstVaapiDisplayProperty GstVaapiDisplayProperty;
-struct _GstVaapiDisplayProperty
-{
-  const gchar *name;
-  GValue value;
-};
-
-static void
-gst_vaapi_display_property_free (GstVaapiDisplayProperty * prop)
-{
-  if (!prop)
-    return;
-  g_value_unset (&prop->value);
-  g_slice_free (GstVaapiDisplayProperty, prop);
-}
-
-static GstVaapiDisplayProperty *
-gst_vaapi_display_property_new (const gchar * name)
-{
-  GstVaapiDisplayProperty *prop;
-
-  prop = g_slice_new0 (GstVaapiDisplayProperty);
-  if (!prop)
-    return NULL;
-  prop->name = name;
-  return prop;
-}
-
-static void
-free_property_cb (gpointer data, gpointer user_data)
-{
-  gst_vaapi_display_property_free (data);
-}
-
 static void
 dump_properties (GstVaapiDisplay * display)
 {
-  GstVaapiDisplayProperty *prop;
-  GPtrArray *properties;
-  guint i;
+  GParamSpec **properties;
+  guint i, n_properties;
 
-  static const gchar *g_properties[] = {
-    GST_VAAPI_DISPLAY_PROP_RENDER_MODE,
-    GST_VAAPI_DISPLAY_PROP_ROTATION,
-    GST_VAAPI_DISPLAY_PROP_HUE,
-    GST_VAAPI_DISPLAY_PROP_SATURATION,
-    GST_VAAPI_DISPLAY_PROP_BRIGHTNESS,
-    GST_VAAPI_DISPLAY_PROP_CONTRAST,
-    NULL
-  };
+  properties =
+      g_object_class_list_properties (G_OBJECT_GET_CLASS (display),
+      &n_properties);
 
-  properties = g_ptr_array_new ();
-  if (!properties)
-    return;
-
-  for (i = 0; g_properties[i] != NULL; i++) {
-    const gchar *const name = g_properties[i];
+  for (i = 0; i < n_properties; i++) {
+    const gchar *const name = g_param_spec_get_nick (properties[i]);
+    GValue value = G_VALUE_INIT;
 
     if (!gst_vaapi_display_has_property (display, name))
       continue;
 
-    prop = gst_vaapi_display_property_new (name);
-    if (!prop) {
-      GST_ERROR ("failed to allocate GstVaapiDisplayProperty");
-      goto end;
-    }
-
-    if (!gst_vaapi_display_get_property (display, name, &prop->value)) {
-      GST_ERROR ("failed to get property '%s'", name);
-      goto end;
-    }
-    g_ptr_array_add (properties, prop);
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (properties[i]));
+    g_object_get_property (G_OBJECT (display), name, &value);
+    print_value (&value, name);
   }
 
-  g_print ("%u properties\n", properties->len);
-  for (i = 0; i < properties->len; i++) {
-    prop = g_ptr_array_index (properties, i);
-    print_value (&prop->value, prop->name);
-  }
-
-end:
-  if (properties) {
-    g_ptr_array_foreach (properties, free_property_cb, NULL);
-    g_ptr_array_free (properties, TRUE);
-  }
+  g_free (properties);
 }
 
 static void
