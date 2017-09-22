@@ -412,7 +412,6 @@ struct _GstPlayBin3
   /* Decodebin signals */
   gulong db_pad_added_id;
   gulong db_pad_removed_id;
-  gulong db_no_more_pads_id;
   gulong db_drained_id;
   gulong db_select_stream_id;
 
@@ -583,7 +582,7 @@ static GstSample *gst_play_bin3_convert_sample (GstPlayBin3 * playbin,
 static GstStateChangeReturn setup_next_source (GstPlayBin3 * playbin,
     GstState target);
 
-static void no_more_pads_cb (GstElement * decodebin, GstPlayBin3 * playbin);
+static void no_more_pads (GstPlayBin3 * playbin);
 static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
     GstPlayBin3 * playbin);
 
@@ -2764,7 +2763,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstPlayBin3 * playbin)
   } else if ((playbin->selected_stream_types & ~playbin->active_stream_types &
           (GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO))
       == 0) {
-    no_more_pads_cb (decodebin, playbin);
+    no_more_pads (playbin);
   } else {
     GST_LOG_OBJECT (playbin, "Active stream types 0x%x, want 0x%x. Waiting",
         playbin->active_stream_types, playbin->selected_stream_types);
@@ -2883,7 +2882,7 @@ exit:
   if ((playbin->selected_stream_types & ~playbin->active_stream_types &
           (GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO))
       == 0) {
-    no_more_pads_cb (decodebin, playbin);
+    no_more_pads (playbin);
   }
 
   return;
@@ -2930,7 +2929,7 @@ select_stream_cb (GstElement * decodebin, GstStreamCollection * collection,
  * visualisation, video or/and audio.
  */
 static void
-no_more_pads_cb (GstElement * decodebin, GstPlayBin3 * playbin)
+no_more_pads (GstPlayBin3 * playbin)
 {
   GstSourceGroup *group;
   GstPadLinkReturn res;
@@ -4321,8 +4320,6 @@ activate_decodebin (GstPlayBin3 * playbin, GstState target)
       G_CALLBACK (pad_added_cb), playbin);
   playbin->db_pad_removed_id = g_signal_connect (decodebin, "pad-removed",
       G_CALLBACK (pad_removed_cb), playbin);
-  playbin->db_no_more_pads_id = g_signal_connect (decodebin, "no-more-pads",
-      G_CALLBACK (no_more_pads_cb), playbin);
   playbin->db_select_stream_id = g_signal_connect (decodebin, "select-stream",
       G_CALLBACK (select_stream_cb), playbin);
   /* is called when the decodebin is out of data and we can switch to the
@@ -4368,7 +4365,6 @@ error_cleanup:{
     if (decodebin) {
       REMOVE_SIGNAL (playbin->decodebin, playbin->db_pad_added_id);
       REMOVE_SIGNAL (playbin->decodebin, playbin->db_pad_removed_id);
-      REMOVE_SIGNAL (playbin->decodebin, playbin->db_no_more_pads_id);
       REMOVE_SIGNAL (playbin->decodebin, playbin->db_drained_id);
       REMOVE_SIGNAL (playbin->decodebin, playbin->db_select_stream_id);
       gst_element_set_state (decodebin, GST_STATE_NULL);
@@ -4386,7 +4382,6 @@ deactivate_decodebin (GstPlayBin3 * playbin)
     GST_LOG_OBJECT (playbin, "Deactivating and removing decodebin");
     REMOVE_SIGNAL (playbin->decodebin, playbin->db_pad_added_id);
     REMOVE_SIGNAL (playbin->decodebin, playbin->db_pad_removed_id);
-    REMOVE_SIGNAL (playbin->decodebin, playbin->db_no_more_pads_id);
     REMOVE_SIGNAL (playbin->decodebin, playbin->db_drained_id);
     REMOVE_SIGNAL (playbin->decodebin, playbin->db_select_stream_id);
     gst_bin_remove (GST_BIN_CAST (playbin), playbin->decodebin);
