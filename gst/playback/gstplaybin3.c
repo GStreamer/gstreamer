@@ -159,16 +159,16 @@
  * video sinks implement. See the documentation there for more details.
  *
  * ## Specifying which CD/DVD device to use
- * The device to use for CDs/DVDs needs to be set on the source element
- * playbin3 creates before it is opened. The most generic way of doing this
- * is to connect to playbin3's "source-setup" (or "notify::source") signal,
- * which will be emitted by playbin3 when it has created the source element
- * for a particular URI. In the signal callback you can check if the source
- * element has a "device" property and set it appropriately. In some cases
- * the device can also be set as part of the URI, but it depends on the
- * elements involved if this will work or not. For example, for DVD menu
- * playback, the following syntax might work (if the resindvd plugin is used):
- * dvd://[/path/to/device]
+ *
+ * The device to use for CDs/DVDs needs to be set on the source element playbin3
+ * creates before it is opened. The most generic way of doing this is to connect
+ * to playbin3's "source-setup" signal, which will be emitted by playbin3 when
+ * it has created the source element for a particular URI. In the signal
+ * callback you can check if the source element has a "device" property and set
+ * it appropriately. In some cases the device can also be set as part of the
+ * URI, but it depends on the elements involved if this will work or not. For
+ * example, for DVD menu playback, the following syntax might work (if the
+ * resindvd plugin is used): dvd://[/path/to/device]
  *
  * ## Handling redirects
  *
@@ -315,8 +315,6 @@ struct _GstSourceGroup
   gchar *uri;
   gchar *suburi;
   GValueArray *streaminfo;
-  GstElement *source;
-
 
   /* urisourcebins for uri and subtitle uri */
   /* FIXME: Just make this an array of uris */
@@ -337,7 +335,7 @@ struct _GstSourceGroup
   /* primary uri signals */
   gulong urisrc_pad_added_id;
   gulong urisrc_pad_removed_id;
-  gulong notify_source_id;
+  gulong urisrc_source_setup_id;
   gulong autoplug_factories_id;
   gulong autoplug_select_id;
   gulong autoplug_continue_id;
@@ -438,8 +436,6 @@ struct _GstPlayBin3
   /* our play sink */
   GstPlaySink *playsink;
 
-  /* the last activated source */
-  GstElement *source;
 
   /* lock protecting dynamic adding/removing */
   GMutex dyn_lock;
@@ -506,7 +502,6 @@ struct _GstPlayBin3Class
 /* props */
 #define DEFAULT_URI               NULL
 #define DEFAULT_SUBURI            NULL
-#define DEFAULT_SOURCE            NULL
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
                                   GST_PLAY_FLAG_SOFT_VOLUME | GST_PLAY_FLAG_DEINTERLACE | \
                                   GST_PLAY_FLAG_SOFT_COLORBALANCE | GST_PLAY_FLAG_BUFFERING
@@ -535,7 +530,6 @@ enum
   PROP_CURRENT_URI,
   PROP_SUBURI,
   PROP_CURRENT_SUBURI,
-  PROP_SOURCE,
   PROP_FLAGS,
   PROP_SUBTITLE_ENCODING,
   PROP_AUDIO_SINK,
@@ -735,10 +729,6 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_param_spec_string ("current-suburi", "Current .sub-URI",
           "The currently playing URI of a subtitle",
           NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_klass, PROP_SOURCE,
-      g_param_spec_object ("source", "Source", "Source element",
-          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstPlayBin3:flags
@@ -1383,9 +1373,6 @@ gst_play_bin3_finalize (GObject * object)
   for (i = 0; i < PLAYBIN_STREAM_LAST; i++)
     g_ptr_array_free (playbin->channels[i], TRUE);
 
-  if (playbin->source)
-    gst_object_unref (playbin->source);
-
   /* Setting states to NULL is safe here because playsink
    * will already be gone and none of these sinks will be
    * a child of playsink
@@ -2022,13 +2009,6 @@ gst_play_bin3_get_property (GObject * object, guint prop_id, GValue * value,
       group = get_group (playbin);
       g_value_set_string (value, group->suburi);
       GST_PLAY_BIN3_UNLOCK (playbin);
-      break;
-    }
-    case PROP_SOURCE:
-    {
-      GST_OBJECT_LOCK (playbin);
-      g_value_set_object (value, playbin->source);
-      GST_OBJECT_UNLOCK (playbin);
       break;
     }
     case PROP_FLAGS:
@@ -4453,29 +4433,6 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad,
   }
 }
 
-static void
-notify_source_cb (GstElement * urisourcebin, GParamSpec * pspec,
-    GstSourceGroup * group)
-{
-  GstPlayBin3 *playbin;
-  GstElement *source;
-
-  playbin = group->playbin;
-
-  g_object_get (urisourcebin, "source", &source, NULL);
-
-  GST_OBJECT_LOCK (playbin);
-  if (playbin->source)
-    gst_object_unref (playbin->source);
-  playbin->source = source;
-  GST_OBJECT_UNLOCK (playbin);
-
-  g_object_notify (G_OBJECT (playbin), "source");
-
-  g_signal_emit (playbin, gst_play_bin3_signals[SIGNAL_SOURCE_SETUP],
-      0, playbin->source);
-}
-
 /* must be called with the group lock */
 static gboolean
 group_set_locked_state_unlocked (GstPlayBin3 * playbin, GstSourceGroup * group,
@@ -4664,6 +4621,14 @@ deactivate_decodebin (GstPlayBin3 * playbin)
   }
 }
 
+static void
+source_setup_cb (GstElement * element, GstElement * source,
+    GstSourceGroup * group)
+{
+  g_signal_emit (group->playbin, gst_play_bin3_signals[SIGNAL_SOURCE_SETUP], 0,
+      0, source);
+}
+
 /* must be called with PLAY_BIN_LOCK */
 static GstStateChangeReturn
 activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
@@ -4759,8 +4724,8 @@ activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
   /* we have 1 pending no-more-pads */
   group->pending = 1;
 
-  group->notify_source_id = g_signal_connect (urisrcbin, "notify::source",
-      G_CALLBACK (notify_source_cb), group);
+  group->urisrc_source_setup_id = g_signal_connect (urisrcbin, "source-setup",
+      G_CALLBACK (source_setup_cb), group);
 
   /* will be called when a new media type is found. We return a list of decoders
    * including sinks for decodebin to try */
@@ -4918,7 +4883,7 @@ error_cleanup:
     if (urisrcbin) {
       REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_added_id);
       REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_removed_id);
-      REMOVE_SIGNAL (group->urisourcebin, group->notify_source_id);
+      REMOVE_SIGNAL (group->urisourcebin, group->urisrc_source_setup_id);
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_factories_id);
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_select_id);
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_continue_id);
@@ -5006,7 +4971,7 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
   if (group->urisourcebin) {
     REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_added_id);
     REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_removed_id);
-    REMOVE_SIGNAL (group->urisourcebin, group->notify_source_id);
+    REMOVE_SIGNAL (group->urisourcebin, group->urisrc_source_setup_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_select_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_continue_id);
@@ -5288,12 +5253,6 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
           l = l->next;
         }
       }
-
-      if (playbin->source) {
-        gst_object_unref (playbin->source);
-        playbin->source = NULL;
-      }
-
       GST_OBJECT_UNLOCK (playbin);
       break;
     }
