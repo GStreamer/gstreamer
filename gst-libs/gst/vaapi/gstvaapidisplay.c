@@ -937,6 +937,43 @@ gst_vaapi_display_init (GstVaapiDisplay * display)
   g_rec_mutex_init (&priv->mutex);
 }
 
+static gboolean
+_set_property (GstVaapiDisplay * display, const GstVaapiProperty * prop,
+    const GValue * value)
+{
+  switch (prop->attribute.type) {
+    case VADisplayAttribRenderMode:{
+      GstVaapiRenderMode mode;
+      if (!G_VALUE_HOLDS (value, GST_VAAPI_TYPE_RENDER_MODE))
+        return FALSE;
+      mode = g_value_get_enum (value);
+      return gst_vaapi_display_set_render_mode (display, mode);
+    }
+    case VADisplayAttribRotation:{
+      GstVaapiRotation rotation;
+      if (!G_VALUE_HOLDS (value, GST_VAAPI_TYPE_ROTATION))
+        return FALSE;
+      rotation = g_value_get_enum (value);
+      return gst_vaapi_display_set_rotation (display, rotation);
+    }
+    case VADisplayAttribHue:
+    case VADisplayAttribSaturation:
+    case VADisplayAttribBrightness:
+    case VADisplayAttribContrast:{
+      gfloat v;
+      if (!G_VALUE_HOLDS (value, G_TYPE_FLOAT))
+        return FALSE;
+      v = g_value_get_float (value);
+      return set_color_balance (display, find_property_id (prop->name), v);
+    }
+    default:
+      break;
+  }
+
+  GST_WARNING ("unsupported property '%s'", prop->name);
+  return FALSE;
+}
+
 static void
 _gst_vaapi_display_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
@@ -944,13 +981,54 @@ _gst_vaapi_display_set_property (GObject * object, guint property_id,
   GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
   const GstVaapiProperty *prop;
 
+  if (!ensure_properties (display))
+    return;
+
   prop = find_property_by_pspec (display, pspec);
   if (!prop) {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     return;
   }
 
-  gst_vaapi_display_set_property (display, prop->name, value);
+  _set_property (display, prop, value);
+}
+
+static gboolean
+_get_property (GstVaapiDisplay * display, const GstVaapiProperty * prop,
+    GValue * value)
+{
+  switch (prop->attribute.type) {
+    case VADisplayAttribRenderMode:{
+      GstVaapiRenderMode mode;
+      if (!gst_vaapi_display_get_render_mode (display, &mode))
+        return FALSE;
+      g_value_init (value, GST_VAAPI_TYPE_RENDER_MODE);
+      g_value_set_enum (value, mode);
+      break;
+    }
+    case VADisplayAttribRotation:{
+      GstVaapiRotation rotation;
+      rotation = gst_vaapi_display_get_rotation (display);
+      g_value_init (value, GST_VAAPI_TYPE_ROTATION);
+      g_value_set_enum (value, rotation);
+      break;
+    }
+    case VADisplayAttribHue:
+    case VADisplayAttribSaturation:
+    case VADisplayAttribBrightness:
+    case VADisplayAttribContrast:{
+      gfloat val;
+      if (!get_color_balance (display, find_property_id (prop->name), &val))
+        return FALSE;
+      g_value_init (value, G_TYPE_FLOAT);
+      g_value_set_float (value, val);
+      break;
+    }
+    default:
+      GST_WARNING ("unsupported property '%s'", prop->name);
+      return FALSE;
+  }
+  return TRUE;
 }
 
 static void
@@ -960,13 +1038,16 @@ _gst_vaapi_display_get_property (GObject * object, guint property_id,
   GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
   const GstVaapiProperty *prop;
 
+  if (!ensure_properties (display))
+    return;
+
   prop = find_property_by_pspec (display, pspec);
   if (!prop) {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
     return;
   }
 
-  gst_vaapi_display_get_property (display, prop->name, value);
+  _get_property (display, prop, value);
 }
 
 static void
@@ -1648,38 +1729,7 @@ gst_vaapi_display_get_property (GstVaapiDisplay * display, const gchar * name,
   if (!prop)
     return FALSE;
 
-  switch (prop->attribute.type) {
-    case VADisplayAttribRenderMode:{
-      GstVaapiRenderMode mode;
-      if (!gst_vaapi_display_get_render_mode (display, &mode))
-        return FALSE;
-      g_value_init (out_value, GST_VAAPI_TYPE_RENDER_MODE);
-      g_value_set_enum (out_value, mode);
-      break;
-    }
-    case VADisplayAttribRotation:{
-      GstVaapiRotation rotation;
-      rotation = gst_vaapi_display_get_rotation (display);
-      g_value_init (out_value, GST_VAAPI_TYPE_ROTATION);
-      g_value_set_enum (out_value, rotation);
-      break;
-    }
-    case VADisplayAttribHue:
-    case VADisplayAttribSaturation:
-    case VADisplayAttribBrightness:
-    case VADisplayAttribContrast:{
-      gfloat value;
-      if (!get_color_balance (display, find_property_id (name), &value))
-        return FALSE;
-      g_value_init (out_value, G_TYPE_FLOAT);
-      g_value_set_float (out_value, value);
-      break;
-    }
-    default:
-      GST_WARNING ("unsupported property '%s'", name);
-      return FALSE;
-  }
-  return TRUE;
+  return _get_property (display, prop, out_value);
 }
 
 gboolean
@@ -1700,37 +1750,7 @@ gst_vaapi_display_set_property (GstVaapiDisplay * display, const gchar * name,
   if (!prop)
     return FALSE;
 
-  switch (prop->attribute.type) {
-    case VADisplayAttribRenderMode:{
-      GstVaapiRenderMode mode;
-      if (!G_VALUE_HOLDS (value, GST_VAAPI_TYPE_RENDER_MODE))
-        return FALSE;
-      mode = g_value_get_enum (value);
-      return gst_vaapi_display_set_render_mode (display, mode);
-    }
-    case VADisplayAttribRotation:{
-      GstVaapiRotation rotation;
-      if (!G_VALUE_HOLDS (value, GST_VAAPI_TYPE_ROTATION))
-        return FALSE;
-      rotation = g_value_get_enum (value);
-      return gst_vaapi_display_set_rotation (display, rotation);
-    }
-    case VADisplayAttribHue:
-    case VADisplayAttribSaturation:
-    case VADisplayAttribBrightness:
-    case VADisplayAttribContrast:{
-      gfloat v;
-      if (!G_VALUE_HOLDS (value, G_TYPE_FLOAT))
-        return FALSE;
-      v = g_value_get_float (value);
-      return set_color_balance (display, find_property_id (name), v);
-    }
-    default:
-      break;
-  }
-
-  GST_WARNING ("unsupported property '%s'", name);
-  return FALSE;
+  return _set_property (display, prop, value);
 }
 
 static gboolean
