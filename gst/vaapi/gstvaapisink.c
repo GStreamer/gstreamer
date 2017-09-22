@@ -652,14 +652,14 @@ cb_get_gvalue (GstVaapiSink * sink, guint id)
 }
 
 static gboolean
-cb_set_gvalue (GstVaapiSink * sink, guint id, const GValue * value)
+cb_set_value (GstVaapiSink * sink, guint id, gfloat value)
 {
   GValue *const v_value = cb_get_gvalue (sink, id);
 
   if (!v_value)
     return FALSE;
 
-  g_value_set_float (v_value, g_value_get_float (value));
+  g_value_set_float (v_value, value);
   sink->cb_changed |= (1U << id);
   return TRUE;
 }
@@ -673,56 +673,39 @@ cb_get_value (GstVaapiSink * sink, guint id)
 }
 
 static gboolean
-cb_set_value (GstVaapiSink * sink, guint id, gfloat value)
-{
-  GValue v_value = G_VALUE_INIT;
-  gboolean success;
-
-  g_value_init (&v_value, G_TYPE_FLOAT);
-  g_value_set_float (&v_value, value);
-  success = cb_set_gvalue (sink, id, &v_value);
-  g_value_unset (&v_value);
-  return success;
-}
-
-static gboolean
 cb_sync_values_from_display (GstVaapiSink * sink, GstVaapiDisplay * display)
 {
-  GValue v_value = G_VALUE_INIT;
-  guint i, failures = 0;
+  guint i;
+  gfloat value;
 
   for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
     const guint cb_id = CB_HUE + i;
     if (!gst_vaapi_display_has_property (display, cb_map[i].prop_name))
       continue;
 
-    if (G_IS_VALUE (&v_value))
-      g_value_unset (&v_value);
-    if (gst_vaapi_display_get_property (display, cb_map[i].prop_name, &v_value))
-      cb_set_gvalue (sink, cb_id, &v_value);
-    else
-      failures++;
+    value = 0.0;
+    g_object_get (display, cb_map[i].prop_name, &value, NULL);
+    cb_set_value (sink, cb_id, value);
   }
   sink->cb_changed = 0;
-  return failures == 0;
+  return TRUE;
 }
 
 static gboolean
 cb_sync_values_to_display (GstVaapiSink * sink, GstVaapiDisplay * display)
 {
-  guint i, failures = 0;
+  guint i;
 
   for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
     const guint cb_id = CB_HUE + i;
     if (!(sink->cb_changed & (1U << cb_id)))
       continue;
 
-    if (!gst_vaapi_display_set_property (display, cb_map[i].prop_name,
-            cb_get_gvalue (sink, cb_id)))
-      failures++;
+    g_object_set_property (G_OBJECT (display), cb_map[i].prop_name,
+        cb_get_gvalue (sink, cb_id));
   }
   sink->cb_changed = 0;
-  return failures == 0;
+  return TRUE;
 }
 
 #define CB_CHANNEL_FACTOR (1000.0)
@@ -1602,7 +1585,8 @@ gst_vaapisink_set_property (GObject * object,
     case PROP_SATURATION:
     case PROP_BRIGHTNESS:
     case PROP_CONTRAST:
-      cb_set_gvalue (sink, (prop_id - PROP_HUE) + CB_HUE, value);
+      cb_set_value (sink, (prop_id - PROP_HUE) + CB_HUE,
+          g_value_get_float (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
