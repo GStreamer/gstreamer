@@ -84,9 +84,7 @@ struct _GstVaapiFormatInfo
 
 enum
 {
-  PROP_0,
-
-  PROP_RENDER_MODE,
+  PROP_RENDER_MODE = 1,
   PROP_ROTATION,
   PROP_HUE,
   PROP_SATURATION,
@@ -97,8 +95,6 @@ enum
 };
 
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
-
-static void gst_vaapi_display_properties_init (void);
 
 static gboolean
 get_attribute (GstVaapiDisplay * display, VADisplayAttribType type,
@@ -963,12 +959,6 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
   klass->lock = gst_vaapi_display_lock_default;
   klass->unlock = gst_vaapi_display_unlock_default;
 
-  gst_vaapi_display_properties_init ();
-}
-
-static void
-gst_vaapi_display_properties_init (void)
-{
   /**
    * GstVaapiDisplay:render-mode:
    *
