@@ -2801,16 +2801,16 @@ set_caps_failed:
     GST_ERROR_OBJECT (pad, "Failed to set caps: %" GST_PTR_FORMAT, srccaps);
     if (peercaps)
       gst_caps_unref (peercaps);
-    if (srccaps)
-      gst_caps_unref (srccaps);
+    gst_caps_unref (srccaps);
     gst_pad_mark_reconfigure (self->srcpad);
     return FALSE;
   }
 no_bufferpool:
   {
     GST_ERROR_OBJECT (pad, "could not negotiate bufferpool");
-    if (srccaps)
-      gst_caps_unref (srccaps);
+    if (peercaps)
+      gst_caps_unref (peercaps);
+    gst_caps_unref (srccaps);
     gst_pad_mark_reconfigure (self->srcpad);
     return FALSE;
   }
