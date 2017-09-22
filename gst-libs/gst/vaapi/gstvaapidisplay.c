@@ -938,6 +938,38 @@ gst_vaapi_display_init (GstVaapiDisplay * display)
 }
 
 static void
+_gst_vaapi_display_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
+  const GstVaapiProperty *prop;
+
+  prop = find_property_by_pspec (display, pspec);
+  if (!prop) {
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    return;
+  }
+
+  gst_vaapi_display_set_property (display, prop->name, value);
+}
+
+static void
+_gst_vaapi_display_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
+  const GstVaapiProperty *prop;
+
+  prop = find_property_by_pspec (display, pspec);
+  if (!prop) {
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    return;
+  }
+
+  gst_vaapi_display_get_property (display, prop->name, value);
+}
+
+static void
 gst_vaapi_display_finalize (GObject * object)
 {
   GstVaapiDisplay *const display = GST_VAAPI_DISPLAY (object);
@@ -955,6 +987,8 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_vaapi_display_finalize;
+  object_class->set_property = _gst_vaapi_display_set_property;
+  object_class->get_property = _gst_vaapi_display_get_property;
 
   klass->lock = gst_vaapi_display_lock_default;
   klass->unlock = gst_vaapi_display_unlock_default;
@@ -1023,6 +1057,8 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
       g_param_spec_float (GST_VAAPI_DISPLAY_PROP_CONTRAST,
       "contrast",
       "The display contrast value", 0.0, 2.0, 1.0, G_PARAM_READWRITE);
+
+  g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
 }
 
 GstVaapiDisplay *
