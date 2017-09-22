@@ -156,7 +156,6 @@ static void
 gst_vtdec_init (GstVtdec * vtdec)
 {
   vtdec->reorder_queue = g_async_queue_new ();
-  vtdec->ctxh = gst_gl_context_helper_new (GST_ELEMENT (vtdec));
 }
 
 void
@@ -167,7 +166,6 @@ gst_vtdec_finalize (GObject * object)
   GST_DEBUG_OBJECT (vtdec, "finalize");
 
   g_async_queue_unref (vtdec->reorder_queue);
-  gst_gl_context_helper_free (vtdec->ctxh);
 
   G_OBJECT_CLASS (gst_vtdec_parent_class)->finalize (object);
 }
@@ -178,6 +176,9 @@ gst_vtdec_start (GstVideoDecoder * decoder)
   GstVtdec *vtdec = GST_VTDEC (decoder);
 
   GST_DEBUG_OBJECT (vtdec, "start");
+
+  if (!vtdec->ctxh)
+    vtdec->ctxh = gst_gl_context_helper_new (GST_ELEMENT (decoder));
 
   return TRUE;
 }
@@ -199,6 +200,10 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
   if (vtdec->texture_cache)
     gst_video_texture_cache_free (vtdec->texture_cache);
   vtdec->texture_cache = NULL;
+
+  if (vtdec->ctxh)
+    gst_gl_context_helper_free (vtdec->ctxh);
+  vtdec->ctxh = NULL;
 
   GST_DEBUG_OBJECT (vtdec, "stop");
 
@@ -322,6 +327,8 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     /* call this regardless of whether caps have changed or not since a new
      * local context could have become available
      */
+    if (!vtdec->ctxh)
+      vtdec->ctxh = gst_gl_context_helper_new (GST_ELEMENT (vtdec));
     gst_gl_context_helper_ensure_context (vtdec->ctxh);
 
     GST_INFO_OBJECT (vtdec, "pushing textures, context %p old context %p",
@@ -1018,6 +1025,8 @@ gst_vtdec_set_context (GstElement * element, GstContext * context)
 
   GST_INFO_OBJECT (element, "setting context %s",
       gst_context_get_context_type (context));
+  if (!vtdec->ctxh)
+    vtdec->ctxh = gst_gl_context_helper_new (element);
   gst_gl_handle_set_context (element, context,
       &vtdec->ctxh->display, &vtdec->ctxh->other_context);
   GST_ELEMENT_CLASS (gst_vtdec_parent_class)->set_context (element, context);
