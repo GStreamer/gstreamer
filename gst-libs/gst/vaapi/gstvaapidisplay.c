@@ -43,10 +43,11 @@ GST_DEBUG_CATEGORY (gst_debug_vaapi);
 GST_DEBUG_CATEGORY (gst_debug_vaapi_display);
 #define GST_CAT_DEFAULT gst_debug_vaapi_display
 
-#define _do_init \
-    G_ADD_PRIVATE (GstVaapiDisplay); \
-    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_display, \
-        "vaapidisplay", 0, "VA-API Display");
+#define _do_init                                        \
+    G_ADD_PRIVATE (GstVaapiDisplay);                    \
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_display,   \
+        "vaapidisplay", 0, "VA-API Display");           \
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi, "vaapi", 0, "VA-API helper");
 
 G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplay, gst_vaapi_display, GST_TYPE_OBJECT,
     _do_init);
@@ -111,21 +112,6 @@ get_color_balance (GstVaapiDisplay * display, guint prop_id, gfloat * v);
 
 static gboolean
 set_color_balance (GstVaapiDisplay * display, guint prop_id, gfloat v);
-
-static void
-libgstvaapi_init_once (void)
-{
-  static gsize g_once = FALSE;
-
-  if (!g_once_init_enter (&g_once))
-    return;
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi, "vaapi", 0, "VA-API helper");
-
-  gst_vaapi_display_properties_init ();
-
-  g_once_init_leave (&g_once, TRUE);
-}
 
 /* GstVaapiDisplayType enumerations */
 GType
@@ -972,11 +958,12 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
-  libgstvaapi_init_once ();
-
   object_class->finalize = gst_vaapi_display_finalize;
+
   klass->lock = gst_vaapi_display_lock_default;
   klass->unlock = gst_vaapi_display_unlock_default;
+
+  gst_vaapi_display_properties_init ();
 }
 
 static void
