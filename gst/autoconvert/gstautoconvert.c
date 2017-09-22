@@ -923,6 +923,7 @@ gst_auto_convert_sink_chain (GstPad * pad, GstObject * parent,
   } else {
     GST_ERROR_OBJECT (autoconvert, "Got buffer without an negotiated element,"
         " returning not-negotiated");
+    gst_buffer_unref (buffer);
   }
 
   return ret;
@@ -944,6 +945,7 @@ gst_auto_convert_sink_chain_list (GstPad * pad, GstObject * parent,
   } else {
     GST_ERROR_OBJECT (autoconvert, "Got buffer without an negotiated element,"
         " returning not-negotiated");
+    gst_buffer_list_unref (list);
   }
 
   return ret;
