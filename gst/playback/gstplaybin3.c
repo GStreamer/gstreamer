@@ -286,9 +286,11 @@ static const gchar *stream_type_names[] = {
   "audio", "video", "text"
 };
 
+#if 0                           /* AUTOPLUG DISABLED */
 static void avelements_free (gpointer data);
 static GSequence *avelements_create (GstPlayBin3 * playbin,
     gboolean isaudioelement);
+#endif
 
 /* The GstAudioVideoElement structure holding the audio/video decoder
  * and the audio/video sink factories together with field indicating
@@ -336,16 +338,20 @@ struct _GstSourceGroup
   gulong urisrc_pad_added_id;
   gulong urisrc_pad_removed_id;
   gulong urisrc_source_setup_id;
+#if 0                           /* AUTOPLUG DISABLED */
   gulong autoplug_factories_id;
   gulong autoplug_select_id;
   gulong autoplug_continue_id;
   gulong autoplug_query_id;
+#endif
 
   /* subtitle uri signals */
   gulong sub_pad_added_id;
   gulong sub_pad_removed_id;
+#if 0                           /* AUTOPLUG DISABLED */
   gulong sub_autoplug_continue_id;
   gulong sub_autoplug_query_id;
+#endif
 
   gulong block_id;
 
@@ -555,8 +561,10 @@ enum
   LAST_SIGNAL
 };
 
+#if 0                           /* AUTOPLUG DISABLED */
 static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw(ANY)");
 static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw(ANY)");
+#endif
 
 static void gst_play_bin3_class_init (GstPlayBin3Class * klass);
 static void gst_play_bin3_init (GstPlayBin3 * playbin);
@@ -1221,6 +1229,7 @@ colorbalance_value_changed_cb (GstColorBalance * balance,
   gst_color_balance_value_changed (GST_COLOR_BALANCE (playbin), channel, value);
 }
 
+#if 0                           /* AUTOPLUG DISABLED */
 static gint
 compare_factories_func (gconstpointer p1, gconstpointer p2)
 {
@@ -1295,6 +1304,7 @@ gst_play_bin3_update_elements_list (GstPlayBin3 * playbin)
 
   playbin->elements_cookie = cookie;
 }
+#endif
 
 static void
 gst_play_bin3_init (GstPlayBin3 * playbin)
@@ -2343,6 +2353,8 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
   GstPlayBin3 *playbin = GST_PLAY_BIN3 (bin);
 
+  /* FIXME: REENABLE ONCE WE HAVE CROSSFADE SUPPORT */
+#if 0
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
     GstSourceGroup *new_group = playbin->curr_group;
     GstMessage *buffering_msg = NULL;
@@ -2382,7 +2394,9 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       msg = NULL;
     }
     GST_SOURCE_GROUP_UNLOCK (group);
-  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_COLLECTION) {
+  }
+#endif
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_COLLECTION) {
     GstStreamCollection *collection = NULL;
     GstObject *src = GST_MESSAGE_SRC (msg);
     gboolean pstate = playbin->do_stream_selections;
@@ -3083,6 +3097,7 @@ shutdown:
   }
 }
 
+/* FIXME : DISABLED UNTIL GAPLESS IS IMPLEMENTED */
 #if 0
 static void
 drained_cb (GstElement * decodebin, GstSourceGroup * group)
@@ -3103,6 +3118,7 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 }
 #endif
 
+#if 0                           /* AUTOPLUG DISABLED */
 /* Like gst_element_factory_can_sink_any_caps() but doesn't
  * allow ANY caps on the sinkpad template */
 static gboolean
@@ -3508,7 +3524,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
 
   return result;
 }
-
+#endif
 
 static GstBusSyncReply
 activate_sink_bus_handler (GstBus * bus, GstMessage * msg,
@@ -3582,6 +3598,7 @@ done:
   return ret;
 }
 
+#if 0                           /* AUTOPLUG DISABLED */
 /* autoplug-continue decides, if a pad has raw caps that can be exposed
  * directly or if further decoding is necessary. We use this to expose
  * supported subtitles directly */
@@ -4205,6 +4222,7 @@ autoplug_query_cb (GstElement * uridecodebin, GstPad * pad,
       return FALSE;
   }
 }
+#endif
 
 /* must be called with the group lock */
 static gboolean
@@ -4496,6 +4514,7 @@ activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
   group->urisrc_source_setup_id = g_signal_connect (urisrcbin, "source-setup",
       G_CALLBACK (source_setup_cb), group);
 
+#if 0                           /* AUTOPLUG DISABLED */
   /* will be called when a new media type is found. We return a list of decoders
    * including sinks for decodebin to try */
   group->autoplug_factories_id =
@@ -4510,6 +4529,7 @@ activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
   group->autoplug_query_id =
       g_signal_connect (urisrcbin, "autoplug-query",
       G_CALLBACK (autoplug_query_cb), group);
+#endif
 
   group->urisrc_pad_added_id = g_signal_connect (urisrcbin, "pad-added",
       G_CALLBACK (urisrc_pad_added), group);
@@ -4535,6 +4555,7 @@ activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
     group->sub_pad_removed_id = g_signal_connect (suburisrcbin,
         "pad-removed", G_CALLBACK (urisrc_pad_removed_cb), group);
 
+#if 0
     group->sub_autoplug_continue_id =
         g_signal_connect (suburisrcbin, "autoplug-continue",
         G_CALLBACK (autoplug_continue_cb), group);
@@ -4542,6 +4563,7 @@ activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
     group->sub_autoplug_query_id =
         g_signal_connect (suburisrcbin, "autoplug-query",
         G_CALLBACK (autoplug_query_cb), group);
+#endif
 
     /* we have 2 pending no-more-pads */
     group->pending = 2;
@@ -4564,8 +4586,10 @@ activate_group (GstPlayBin3 * playbin, GstSourceGroup * group, GstState target)
 
       REMOVE_SIGNAL (suburisrcbin, group->sub_pad_added_id);
       REMOVE_SIGNAL (suburisrcbin, group->sub_pad_removed_id);
+#if 0
       REMOVE_SIGNAL (suburisrcbin, group->sub_autoplug_continue_id);
       REMOVE_SIGNAL (suburisrcbin, group->sub_autoplug_query_id);
+#endif
       /* Might already be removed because of an error message */
       if (GST_OBJECT_PARENT (suburisrcbin) == GST_OBJECT_CAST (playbin))
         gst_bin_remove (GST_BIN_CAST (playbin), suburisrcbin);
@@ -4653,10 +4677,12 @@ error_cleanup:
       REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_added_id);
       REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_removed_id);
       REMOVE_SIGNAL (group->urisourcebin, group->urisrc_source_setup_id);
+#if 0
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_factories_id);
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_select_id);
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_continue_id);
       REMOVE_SIGNAL (group->urisourcebin, group->autoplug_query_id);
+#endif
 
       gst_element_set_state (urisrcbin, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (playbin), urisrcbin);
@@ -4741,18 +4767,22 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_added_id);
     REMOVE_SIGNAL (group->urisourcebin, group->urisrc_pad_removed_id);
     REMOVE_SIGNAL (group->urisourcebin, group->urisrc_source_setup_id);
+#if 0
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_select_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_continue_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_query_id);
+#endif
     gst_bin_remove (GST_BIN_CAST (playbin), group->urisourcebin);
   }
 
   if (group->suburisourcebin) {
     REMOVE_SIGNAL (group->suburisourcebin, group->sub_pad_added_id);
     REMOVE_SIGNAL (group->suburisourcebin, group->sub_pad_removed_id);
+#if 0
     REMOVE_SIGNAL (group->suburisourcebin, group->sub_autoplug_continue_id);
     REMOVE_SIGNAL (group->suburisourcebin, group->sub_autoplug_query_id);
+#endif
 
     /* Might already be removed because of errors */
     if (GST_OBJECT_PARENT (group->suburisourcebin) == GST_OBJECT_CAST (playbin))
