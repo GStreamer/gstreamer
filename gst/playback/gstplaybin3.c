@@ -481,8 +481,6 @@ struct _GstPlayBin3
 
   guint64 ring_buffer_max_size; /* 0 means disabled */
 
-  GList *contexts;
-
   /* Active stream collection */
   GstStreamCollection *collection;
 };
@@ -584,8 +582,6 @@ static void gst_play_bin3_handle_message (GstBin * bin, GstMessage * message);
 static void gst_play_bin3_deep_element_added (GstBin * playbin,
     GstBin * sub_bin, GstElement * child);
 static gboolean gst_play_bin3_query (GstElement * element, GstQuery * query);
-static void gst_play_bin3_set_context (GstElement * element,
-    GstContext * context);
 static gboolean gst_play_bin3_send_event (GstElement * element,
     GstEvent * event);
 
@@ -1028,7 +1024,6 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin3_change_state);
   gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_play_bin3_query);
-  gstelement_klass->set_context = GST_DEBUG_FUNCPTR (gst_play_bin3_set_context);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_bin3_send_event);
 
   gstbin_klass->handle_message =
@@ -1421,8 +1416,6 @@ gst_play_bin3_finalize (GObject * object)
 
   if (playbin->collection)
     gst_object_unref (playbin->collection);
-
-  g_list_free_full (playbin->contexts, (GDestroyNotify) gst_context_unref);
 
   g_rec_mutex_clear (&playbin->lock);
   g_mutex_clear (&playbin->dyn_lock);
@@ -3648,63 +3641,6 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   return result;
 }
 
-static void
-gst_play_bin3_set_context (GstElement * element, GstContext * context)
-{
-  GstPlayBin3 *playbin = GST_PLAY_BIN3 (element);
-
-  /* Proxy contexts to the sinks, they might not be in playsink yet */
-  GST_PLAY_BIN3_LOCK (playbin);
-  if (playbin->audio_sink)
-    gst_element_set_context (playbin->audio_sink, context);
-  if (playbin->video_sink)
-    gst_element_set_context (playbin->video_sink, context);
-  if (playbin->text_sink)
-    gst_element_set_context (playbin->text_sink, context);
-
-  GST_SOURCE_GROUP_LOCK (playbin->curr_group);
-
-  if (playbin->curr_group->audio_sink)
-    gst_element_set_context (playbin->curr_group->audio_sink, context);
-  if (playbin->curr_group->video_sink)
-    gst_element_set_context (playbin->curr_group->video_sink, context);
-  if (playbin->curr_group->text_sink)
-    gst_element_set_context (playbin->curr_group->text_sink, context);
-
-  GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
-  GST_PLAY_BIN3_UNLOCK (playbin);
-
-  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
-}
-
-/* Pass sink messages to the application, e.g. NEED_CONTEXT messages */
-static void
-gst_play_bin3_update_context (GstPlayBin3 * playbin, GstContext * context)
-{
-  GList *l;
-  const gchar *context_type;
-
-  GST_OBJECT_LOCK (playbin);
-  context_type = gst_context_get_context_type (context);
-  for (l = playbin->contexts; l; l = l->next) {
-    GstContext *tmp = l->data;
-    const gchar *tmp_type = gst_context_get_context_type (tmp);
-
-    /* Always store newest context but never replace
-     * a persistent one by a non-persistent one */
-    if (strcmp (context_type, tmp_type) == 0 &&
-        (gst_context_is_persistent (context) ||
-            !gst_context_is_persistent (tmp))) {
-      gst_context_replace ((GstContext **) & l->data, context);
-      break;
-    }
-  }
-  /* Not found? Add */
-  if (l == NULL)
-    playbin->contexts =
-        g_list_prepend (playbin->contexts, gst_context_ref (context));
-  GST_OBJECT_UNLOCK (playbin);
-}
 
 static GstBusSyncReply
 activate_sink_bus_handler (GstBus * bus, GstMessage * msg,
@@ -3727,37 +3663,6 @@ activate_sink_bus_handler (GstBus * bus, GstMessage * msg,
       gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
     else
       gst_message_unref (msg);
-  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_NEED_CONTEXT) {
-    const gchar *context_type;
-    GList *l;
-
-    gst_message_parse_context_type (msg, &context_type);
-    GST_OBJECT_LOCK (playbin);
-    for (l = playbin->contexts; l; l = l->next) {
-      GstContext *tmp = l->data;
-      const gchar *tmp_type = gst_context_get_context_type (tmp);
-
-      if (strcmp (context_type, tmp_type) == 0) {
-        gst_element_set_context (GST_ELEMENT (GST_MESSAGE_SRC (msg)), l->data);
-        break;
-      }
-    }
-    GST_OBJECT_UNLOCK (playbin);
-
-    /* Forward if we couldn't answer the message */
-    if (l == NULL) {
-      gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
-    } else {
-      gst_message_unref (msg);
-    }
-  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_HAVE_CONTEXT) {
-    GstContext *context;
-
-    gst_message_parse_have_context (msg, &context);
-    gst_play_bin3_update_context (playbin, context);
-    gst_context_unref (context);
-
-    gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
   } else {
     gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
   }
@@ -5181,7 +5086,6 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
     {
       guint i;
-      GList *l;
 
       /* also do missed state change down to READY */
       if (do_save)
@@ -5235,25 +5139,6 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
       /* make sure the groups don't perform a state change anymore until we
        * enable them again */
       groups_set_locked_state (playbin, TRUE);
-
-      /* Remove all non-persistent contexts */
-      GST_OBJECT_LOCK (playbin);
-      for (l = playbin->contexts; l;) {
-        GstContext *context = l->data;
-
-        if (!gst_context_is_persistent (context)) {
-          GList *next;
-
-          gst_context_unref (context);
-
-          next = l->next;
-          playbin->contexts = g_list_delete_link (playbin->contexts, l);
-          l = next;
-        } else {
-          l = l->next;
-        }
-      }
-      GST_OBJECT_UNLOCK (playbin);
       break;
     }
     default:
