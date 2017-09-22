@@ -169,9 +169,6 @@ struct _GstURISourceBinClass
 {
   GstBinClass parent_class;
 
-  /* signal fired when we found a pad that we cannot decode */
-  void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
-
   /* signal fired to know if we continue trying to decode the given caps */
     gboolean (*autoplug_continue) (GstElement * element, GstPad * pad,
       GstCaps * caps);
@@ -206,7 +203,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_uri_source_bin_debug);
 /* signals */
 enum
 {
-  SIGNAL_UNKNOWN_TYPE,
   SIGNAL_AUTOPLUG_CONTINUE,
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
@@ -518,22 +514,6 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
           "Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled)",
           0, G_MAXUINT, DEFAULT_RING_BUFFER_MAX_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstURISourceBin::unknown-type:
-   * @bin: The urisourcebin.
-   * @pad: the new pad containing caps that cannot be resolved to a 'final'.
-   * stream type.
-   * @caps: the #GstCaps of the pad that cannot be resolved.
-   *
-   * This signal is emitted when a pad for which there is no further possible
-   * decoding is added to the urisourcebin.
-   */
-  gst_uri_source_bin_signals[SIGNAL_UNKNOWN_TYPE] =
-      g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURISourceBinClass, unknown_type),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstURISourceBin::autoplug-continue:
