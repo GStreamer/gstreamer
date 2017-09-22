@@ -2450,32 +2450,12 @@ do_stream_selection (GstPlayBin3 * playbin)
   playbin->selected_stream_types = chosen_stream_types;
 }
 
-/* mime types we are not handling on purpose right now, don't post a
- * missing-plugin message for these */
-static const gchar *blacklisted_mimes[] = {
-  NULL
-};
-
 static void
 gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
   GstPlayBin3 *playbin = GST_PLAY_BIN3 (bin);
 
-  if (gst_is_missing_plugin_message (msg)) {
-    gchar *detail;
-    guint i;
-
-    detail = gst_missing_plugin_message_get_installer_detail (msg);
-    for (i = 0; detail != NULL && blacklisted_mimes[i] != NULL; ++i) {
-      if (strstr (detail, "|decoder-") && strstr (detail, blacklisted_mimes[i])) {
-        GST_LOG_OBJECT (bin, "suppressing message %" GST_PTR_FORMAT, msg);
-        gst_message_unref (msg);
-        g_free (detail);
-        return;
-      }
-    }
-    g_free (detail);
-  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
     GstSourceGroup *new_group = playbin->curr_group;
     GstMessage *buffering_msg = NULL;
 
