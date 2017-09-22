@@ -1716,6 +1716,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
   GstOMXPort *port;
   GstOMXBuffer *buf;
   OMX_ERRORTYPE err;
+  GstClockTimeDiff deadline;
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
@@ -1724,6 +1725,16 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
   if (self->downstream_flow_ret != GST_FLOW_OK) {
     gst_video_codec_frame_unref (frame);
     return self->downstream_flow_ret;
+  }
+
+  deadline = gst_video_encoder_get_max_encode_time (encoder, frame);
+  if (deadline < 0) {
+    GST_WARNING_OBJECT (self,
+        "Input frame is too late, dropping (deadline %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (-deadline));
+
+    /* Calling finish_frame with frame->output_buffer == NULL will drop it */
+    return gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
   }
 
   if (!self->started) {
