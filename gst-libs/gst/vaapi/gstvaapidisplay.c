@@ -1002,14 +1002,16 @@ _get_property (GstVaapiDisplay * display, const GstVaapiProperty * prop,
       GstVaapiRenderMode mode;
       if (!gst_vaapi_display_get_render_mode (display, &mode))
         return FALSE;
-      g_value_init (value, GST_VAAPI_TYPE_RENDER_MODE);
+      if (!G_IS_VALUE (value))
+        g_value_init (value, GST_VAAPI_TYPE_RENDER_MODE);
       g_value_set_enum (value, mode);
       break;
     }
     case VADisplayAttribRotation:{
       GstVaapiRotation rotation;
       rotation = gst_vaapi_display_get_rotation (display);
-      g_value_init (value, GST_VAAPI_TYPE_ROTATION);
+      if (!G_IS_VALUE (value))
+        g_value_init (value, GST_VAAPI_TYPE_ROTATION);
       g_value_set_enum (value, rotation);
       break;
     }
@@ -1020,7 +1022,8 @@ _get_property (GstVaapiDisplay * display, const GstVaapiProperty * prop,
       gfloat val;
       if (!get_color_balance (display, find_property_id (prop->name), &val))
         return FALSE;
-      g_value_init (value, G_TYPE_FLOAT);
+      if (!G_IS_VALUE (value))
+        g_value_init (value, G_TYPE_FLOAT);
       g_value_set_float (value, val);
       break;
     }
