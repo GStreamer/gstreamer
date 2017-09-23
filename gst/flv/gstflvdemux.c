@@ -2570,6 +2570,9 @@ gst_flv_demux_get_metadata (GstFlvDemux * demux)
   gst_buffer_unref (buffer);
   buffer = NULL;
 
+  if (G_UNLIKELY (offset < tag_size))
+    goto exit;
+
   offset -= tag_size;
   if (GST_FLOW_OK != gst_flv_demux_pull_range (demux, demux->sinkpad, offset,
           12, &buffer))
