@@ -1502,6 +1502,12 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     cts = GST_READ_UINT24_BE (data + 9);
     cts = (cts + 0xff800000) ^ 0xff800000;
 
+    if (cts < 0 && ABS (cts) > dts) {
+      GST_ERROR_OBJECT (demux, "Detected a negative composition time offset "
+          "'%d' that would lead to negative PTS, fixing", cts);
+      cts += ABS (cts) - dts;
+    }
+
     GST_LOG_OBJECT (demux, "got cts %d", cts);
   }
 
