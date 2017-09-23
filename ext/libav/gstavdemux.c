@@ -1394,6 +1394,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   gint outsize;
   gboolean rawvideo;
   GstFlowReturn stream_last_flow;
+  gint64 pts;
 
   /* open file if we didn't so already */
   if (!demux->opened)
@@ -1421,7 +1422,21 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 
   /* do timestamps, we do this first so that we can know when we
    * stepped over the segment stop position. */
-  timestamp = gst_ffmpeg_time_ff_to_gst (pkt.pts, avstream->time_base);
+  pts = pkt.pts;
+  if (G_UNLIKELY (pts < 0)) {
+    /* some streams have pts such this:
+     * 0
+     * -2
+     * -1
+     * 1
+     *
+     * we reset pts to 0 since for us timestamp are unsigned
+     */
+    GST_WARNING_OBJECT (demux,
+        "negative pts detected: %" G_GINT64_FORMAT " resetting to 0", pts);
+    pts = 0;
+  }
+  timestamp = gst_ffmpeg_time_ff_to_gst (pts, avstream->time_base);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     stream->last_ts = timestamp;
   }
