@@ -1520,6 +1520,11 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     switch (avc_packet_type) {
       case 0:
       {
+        if (demux->tag_data_size < codec_data) {
+          GST_ERROR_OBJECT (demux, "Got invalid H.264 codec, ignoring.");
+          break;
+        }
+
         /* AVCDecoderConfigurationRecord data */
         GST_LOG_OBJECT (demux, "got an H.264 codec data packet");
         if (demux->video_codec_data) {
