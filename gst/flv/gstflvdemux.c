@@ -1364,8 +1364,10 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
     goto beach;
   }
 
-  gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-      demux->par_x, demux->par_y, NULL);
+  if (demux->got_par) {
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        demux->par_x, demux->par_y, NULL);
+  }
 
   if (G_LIKELY (demux->w)) {
     gst_caps_set_simple (caps, "width", G_TYPE_INT, demux->w, NULL);
