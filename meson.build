@@ -11,6 +11,13 @@ endif
 
 gtk_sharp_required_version = '>=3.22.6'
 
+csc = meson.get_compiler('cs')
+if csc.get_id() == 'mono'
+    add_project_arguments('-keyfile:' + join_paths(meson.current_source_dir(), meson.project_name() + '.snk'),
+        language: ['cs'])
+endif
+
+
 subproject('gtk-sharp', default_options: ['install=false'])
 gtk_sharp = subproject('gtk-sharp')
 
