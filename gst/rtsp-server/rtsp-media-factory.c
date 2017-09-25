@@ -1216,7 +1216,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
           NULL);
 
       /* check if we can cache this media */
-      if (gst_rtsp_media_is_shared (media)) {
+      if (gst_rtsp_media_is_shared (media) && key) {
         /* insert in the hashtable, takes ownership of the key */
         g_object_ref (media);
         g_hash_table_insert (priv->medias, key, media);
