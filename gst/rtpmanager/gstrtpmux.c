@@ -624,6 +624,11 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
         GST_INFO_OBJECT (pad, "Use downstream ssrc: %x", rtp_mux->current_ssrc);
         rtp_mux->have_ssrc = TRUE;
       }
+      if (gst_structure_get_uint (structure,
+          "timestamp-offset", &rtp_mux->ts_base)) {
+        GST_INFO_OBJECT (pad, "Use downstream timestamp-offset: %u",
+            rtp_mux->ts_base);
+      }
       GST_OBJECT_UNLOCK (rtp_mux);
     }
 
