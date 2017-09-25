@@ -94,6 +94,12 @@ init_seq (GstAlsaMidiSrc * alsamidisrc)
     goto error;
   }
 
+  /*
+   * Prevent Valgrind from reporting cached configuration as memory leaks, see:
+   * http://git.alsa-project.org/?p=alsa-lib.git;a=blob;f=MEMORY-LEAK;hb=HEAD
+   */
+  snd_config_update_free_global ();
+
   ret = snd_seq_set_client_name (alsamidisrc->seq, DEFAULT_CLIENT_NAME);
   if (ret < 0) {
     GST_ERROR_OBJECT (alsamidisrc, "Cannot set client name - %s",
