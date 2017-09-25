@@ -1071,6 +1071,8 @@ gst_vaapidecode_set_format (GstVideoDecoder * vdec, GstVideoCodecState * state)
 
   if (!gst_vaapi_decode_input_state_replace (decode, state))
     return TRUE;
+  if (gst_vaapidecode_drain (vdec) == GST_FLOW_ERROR)
+    return FALSE;
   if (!gst_vaapidecode_update_sink_caps (decode, state->caps))
     return FALSE;
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
