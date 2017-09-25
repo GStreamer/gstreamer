@@ -633,4 +633,5 @@ def deinit():
 
 Gst.deinit = deinit
 
-deinit_pygst()
+if not Gst.is_initialized():
+    deinit_pygst()
