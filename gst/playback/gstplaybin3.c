@@ -355,7 +355,6 @@ struct _GstSourceGroup
 
   gulong block_id;
 
-  GMutex stream_changed_pending_lock;
   gboolean stream_changed_pending;
 
   /* buffering message stored for after switching */
@@ -1186,7 +1185,6 @@ init_group (GstPlayBin3 * playbin, GstSourceGroup * group)
   g_mutex_init (&group->lock);
 
   group->stream_changed_pending = FALSE;
-  g_mutex_init (&group->stream_changed_pending_lock);
 
   group->playbin = playbin;
 }
@@ -1199,7 +1197,6 @@ free_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 
   g_mutex_clear (&group->lock);
   group->stream_changed_pending = FALSE;
-  g_mutex_clear (&group->stream_changed_pending_lock);
 
   if (group->pending_buffering_msg)
     gst_message_unref (group->pending_buffering_msg);
