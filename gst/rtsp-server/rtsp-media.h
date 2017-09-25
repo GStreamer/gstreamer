@@ -332,7 +332,6 @@ gboolean              gst_rtsp_media_setup_sdp        (GstRTSPMedia * media, Gst
 GST_EXPORT
 gboolean              gst_rtsp_media_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp);
 
-
 /* creating streams */
 
 GST_EXPORT

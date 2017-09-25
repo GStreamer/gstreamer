@@ -17,7 +17,11 @@ public_headers = \
 		rtsp-session-pool.h \
 		rtsp-token.h \
 		rtsp-client.h \
-		rtsp-server.h
+		rtsp-server.h \
+		rtsp-onvif-server.h \
+		rtsp-onvif-client.h \
+		rtsp-onvif-media-factory.h \
+		rtsp-onvif-media.h
 
 c_sources = \
 	rtsp-auth.c \
@@ -38,7 +42,11 @@ c_sources = \
 	rtsp-session-pool.c \
 	rtsp-token.c \
 	rtsp-client.c \
-	rtsp-server.c
+	rtsp-server.c \
+	rtsp-onvif-server.c \
+	rtsp-onvif-client.c \
+	rtsp-onvif-media-factory.c \
+	rtsp-onvif-media.c
 
 noinst_HEADERS = 
 

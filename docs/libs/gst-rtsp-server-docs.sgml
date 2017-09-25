@@ -33,6 +33,10 @@
     <xi:include href="xml/rtsp-token.xml"/>
     <xi:include href="xml/rtsp-permissions.xml"/>
     <xi:include href="xml/rtsp-params.xml"/>
+    <xi:include href="xml/rtsp-onvif-server.xml"/>
+    <xi:include href="xml/rtsp-onvif-client.xml"/>
+    <xi:include href="xml/rtsp-onvif-media-factory.xml"/>
+    <xi:include href="xml/rtsp-onvif-media.xml"/>
   </chapter>
 
   <chapter id="rtsp-server-hierarchy">

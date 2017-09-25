@@ -2,7 +2,8 @@ noinst_PROGRAMS = test-video test-ogg test-mp4 test-readme \
 		  test-launch test-sdp test-uri test-auth test-auth-digest \
 		  test-multicast test-multicast2 test-appsrc \
 		  test-video-rtx test-record test-record-auth \
-		  test-netclock test-netclock-client
+		  test-netclock test-netclock-client \
+		  test-onvif-backchannel
 
 #INCLUDES = -I$(top_srcdir) -I$(srcdir)
 
@@ -27,4 +28,11 @@ test_netclock_client_CFLAGS = \
 test_netclock_client_LDADD = \
 	$(LDADD) \
 	$(GST_NET_LIBS)
+
+test_onvif_backchannel_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS)
+test_onvif_backchannel_LDADD = \
+	$(LDADD) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstrtsp-1.0 -lgstsdp-1.0
 

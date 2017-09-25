@@ -13,3 +13,4 @@ test-uri
 test-auth
 test-netclock
 test-netclock-client
+test-onvif-backchannel

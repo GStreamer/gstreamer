@@ -40,6 +40,10 @@ gboolean            gst_rtsp_sdp_from_media  (GstSDPMessage *sdp, GstSDPInfo *in
 GST_EXPORT
 gboolean            gst_rtsp_sdp_from_stream (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPStream *stream);
 
+GST_EXPORT
+gboolean
+gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPStream * stream, GstCaps * caps, GstRTSPProfile profile);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SDP_H__ */

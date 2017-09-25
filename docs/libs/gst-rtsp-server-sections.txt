@@ -182,7 +182,9 @@ gst_rtsp_media_set_latency
 gst_rtsp_media_get_latency
 
 gst_rtsp_media_setup_sdp
+gst_rtsp_media_setup_sdp_full
 gst_rtsp_media_handle_sdp
+gst_rtsp_media_handle_sdp_full
 
 <SUBSECTION MediaPrepare>
 gst_rtsp_media_prepare
@@ -281,7 +283,9 @@ gst_rtsp_media_factory_set_media_gtype
 gst_rtsp_media_factory_get_media_gtype
 
 gst_rtsp_media_factory_construct
+gst_rtsp_media_factory_construct_full
 gst_rtsp_media_factory_create_element
+gst_rtsp_media_factory_create_element_full
 
 <SUBSECTION Standard>
 GST_RTSP_MEDIA_FACTORY_CAST
@@ -739,3 +743,106 @@ GST_TYPE_RTSP_TOKEN
 gst_rtsp_token_get_type
 </SECTION>
 
+<SECTION>
+<FILE>rtsp-onvif-server</FILE>
+<TITLE>GstRTSPOnvifServer</TITLE>
+GstRTSPOnvifServer
+GstRTSPOnvifServerClass
+
+gst_rtsp_onvif_server_new
+
+GST_RTSP_ONVIF_BACKCHANNEL_REQUIREMENT
+<SUBSECTION Standard>
+gst_rtsp_onvif_server_get_type
+GST_TYPE_RTSP_ONVIF_SERVER
+GST_RTSP_ONVIF_SERVER
+GST_RTSP_ONVIF_SERVER_CAST
+GST_RTSP_ONVIF_SERVER_CLASS
+GST_RTSP_ONVIF_SERVER_CLASS_CAST
+GST_RTSP_ONVIF_SERVER_GET_CLASS
+GST_IS_RTSP_ONVIF_SERVER
+GST_IS_RTSP_ONVIF_SERVER_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>rtsp-onvif-server</FILE>
+<TITLE>GstRTSPOnvifServer</TITLE>
+GstRTSPOnvifServer
+GstRTSPOnvifServerClass
+
+gst_rtsp_onvif_server_new
+<SUBSECTION Standard>
+gst_rtsp_onvif_server_get_type
+GST_TYPE_RTSP_ONVIF_SERVER
+GST_RTSP_ONVIF_SERVER
+GST_RTSP_ONVIF_SERVER_CAST
+GST_RTSP_ONVIF_SERVER_CLASS
+GST_RTSP_ONVIF_SERVER_CLASS_CAST
+GST_RTSP_ONVIF_SERVER_GET_CLASS
+GST_IS_RTSP_ONVIF_SERVER
+GST_IS_RTSP_ONVIF_SERVER_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>rtsp-onvif-client</FILE>
+<TITLE>GstRTSPOnvifClient</TITLE>
+GstRTSPOnvifClient
+GstRTSPOnvifClientClass
+<SUBSECTION Standard>
+gst_rtsp_onvif_client_get_type
+GST_TYPE_RTSP_ONVIF_CLIENT
+GST_RTSP_ONVIF_CLIENT
+GST_RTSP_ONVIF_CLIENT_CAST
+GST_RTSP_ONVIF_CLIENT_CLASS
+GST_RTSP_ONVIF_CLIENT_CLASS_CAST
+GST_RTSP_ONVIF_CLIENT_GET_CLASS
+GST_IS_RTSP_ONVIF_CLIENT
+GST_IS_RTSP_ONVIF_CLIENT_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>rtsp-onvif-media-factory</FILE>
+<TITLE>GstRTSPOnvifMediaFactory</TITLE>
+GstRTSPOnvifMediaFactory
+GstRTSPOnvifMediaFactoryClass
+
+gst_rtsp_onvif_media_factory_new
+gst_rtsp_onvif_media_factory_has_backchannel_support
+gst_rtsp_onvif_media_factory_set_backchannel_bandwidth
+gst_rtsp_onvif_media_factory_get_backchannel_bandwidth
+gst_rtsp_onvif_media_factory_set_backchannel_launch
+gst_rtsp_onvif_media_factory_get_backchannel_launch
+<SUBSECTION Standard>
+GstRTSPOnvifMediaFactoryPrivate
+gst_rtsp_onvif_media_factory_get_type
+GST_TYPE_RTSP_ONVIF_MEDIA_FACTORY
+GST_RTSP_ONVIF_MEDIA_FACTORY
+GST_RTSP_ONVIF_MEDIA_FACTORY_CAST
+GST_RTSP_ONVIF_MEDIA_FACTORY_CLASS
+GST_RTSP_ONVIF_MEDIA_FACTORY_CLASS_CAST
+GST_RTSP_ONVIF_MEDIA_FACTORY_GET_CLASS
+GST_IS_RTSP_ONVIF_MEDIA_FACTORY
+GST_IS_RTSP_ONVIF_MEDIA_FACTORY_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>rtsp-onvif-media</FILE>
+<TITLE>GstRTSPOnvifMedia</TITLE>
+GstRTSPOnvifMedia
+GstRTSPOnvifMediaClass
+
+gst_rtsp_onvif_media_collect_backchannel
+gst_rtsp_onvif_media_get_backchannel_bandwidth
+gst_rtsp_onvif_media_set_backchannel_bandwidth
+<SUBSECTION Standard>
+GstRTSPOnvifMediaPrivate
+gst_rtsp_onvif_media_get_type
+GST_TYPE_RTSP_ONVIF_MEDIA
+GST_RTSP_ONVIF_MEDIA
+GST_RTSP_ONVIF_MEDIA_CAST
+GST_RTSP_ONVIF_MEDIA_CLASS
+GST_RTSP_ONVIF_MEDIA_CLASS_CAST
+GST_RTSP_ONVIF_MEDIA_GET_CLASS
+GST_IS_RTSP_ONVIF_MEDIA
+GST_IS_RTSP_ONVIF_MEDIA_CLASS
+</SECTION>

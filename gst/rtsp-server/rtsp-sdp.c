@@ -70,6 +70,8 @@ update_sdp_from_tags (GstRTSPStream * stream, GstSDPMedia * stream_media)
   GstPad *src_pad;
 
   src_pad = gst_rtsp_stream_get_srcpad (stream);
+  if (!src_pad)
+    return;
 
   gst_pad_sticky_events_foreach (src_pad, get_info_from_tags, stream_media);
 
@@ -179,8 +181,8 @@ cleanup:
   }
 }
 
-static gboolean
-make_media (GstSDPMessage * sdp, GstSDPInfo * info,
+gboolean
+gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
     GstRTSPStream * stream, GstCaps * caps, GstRTSPProfile profile)
 {
   GstSDPMedia *smedia;
@@ -557,7 +559,7 @@ gst_rtsp_sdp_from_stream (GstSDPMessage * sdp, GstSDPInfo * info,
     GstRTSPProfile prof = profiles & mask;
 
     if (prof)
-      res = make_media (sdp, info, stream, caps, prof);
+      res = gst_rtsp_sdp_make_media (sdp, info, stream, caps, prof);
 
     mask <<= 1;
   }
