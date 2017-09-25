@@ -50,6 +50,7 @@ EXPORTS
 	_gst_debug_nameof_funcptr
 	_gst_debug_register_funcptr
 	_gst_disable_registry_cache DATA
+	_gst_executable_path DATA
 	_gst_double_range_type DATA
 	_gst_element_error_printf
 	_gst_event_type DATA

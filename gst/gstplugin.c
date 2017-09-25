@@ -1702,6 +1702,7 @@ static guint
 gst_plugin_ext_dep_get_stat_hash (GstPlugin * plugin, GstPluginDep * dep)
 {
   gboolean paths_are_default_only;
+  gboolean paths_are_relative_to_exe;
   GQueue scan_paths = G_QUEUE_INIT;
   guint scan_hash = 0;
   gchar *path;
@@ -1710,6 +1711,8 @@ gst_plugin_ext_dep_get_stat_hash (GstPlugin * plugin, GstPluginDep * dep)
 
   paths_are_default_only =
       dep->flags & GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY;
+  paths_are_relative_to_exe =
+      dep->flags & GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_RELATIVE_TO_EXE;
 
   gst_plugin_ext_dep_extract_env_vars_paths (plugin, dep, &scan_paths);
 
@@ -1718,12 +1721,26 @@ gst_plugin_ext_dep_get_stat_hash (GstPlugin * plugin, GstPluginDep * dep)
 
     for (paths = dep->paths; paths != NULL && *paths != NULL; ++paths) {
       const gchar *path = *paths;
+      gchar *full_path;
 
-      if (!g_queue_find_custom (&scan_paths, path, (GCompareFunc) strcmp)) {
-        GST_LOG_OBJECT (plugin, "path: '%s'", path);
-        g_queue_push_tail (&scan_paths, g_strdup (path));
+      if (paths_are_relative_to_exe && !g_path_is_absolute (path)) {
+        if (!_gst_executable_path) {
+          GST_FIXME_OBJECT (plugin,
+              "Path dependency %s relative to executable path but could not retrieve executable path",
+              path);
+          continue;
+        }
+        full_path = g_build_filename (_gst_executable_path, path, NULL);
       } else {
-        GST_LOG_OBJECT (plugin, "path: '%s' (duplicate, ignoring)", path);
+        full_path = g_strdup (path);
+      }
+
+      if (!g_queue_find_custom (&scan_paths, full_path, (GCompareFunc) strcmp)) {
+        GST_LOG_OBJECT (plugin, "path: '%s'", full_path);
+        g_queue_push_tail (&scan_paths, full_path);
+      } else {
+        GST_LOG_OBJECT (plugin, "path: '%s' (duplicate, ignoring)", full_path);
+        g_free (full_path);
       }
     }
   }

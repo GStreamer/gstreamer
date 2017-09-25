@@ -408,7 +408,7 @@ gst_plugin_loader_use_usr_bin_arch (void)
 static gboolean
 gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
-  char *argv[5] = { NULL, };
+  char *argv[6] = { NULL, };
   int c = 0;
 
 #if defined (__APPLE__) && defined (USR_BIN_ARCH_SWITCH)
@@ -419,9 +419,10 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 #endif
   argv[c++] = location;
   argv[c++] = (char *) "-l";
+  argv[c++] = _gst_executable_path;
   argv[c++] = NULL;
 
-  if (c > 3) {
+  if (c > 4) {
     GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s with arch %s",
         location, argv[1]);
   } else {

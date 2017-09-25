@@ -106,6 +106,10 @@
 #define WIN32_LEAN_AND_MEAN     /* prevents from including too many things */
 #include <windows.h>            /* GetStdHandle, windows console */
 #endif
+#if defined (__APPLE__)
+#include <errno.h>
+#include <libproc.h>            /* proc_pidpath, PROC_PIDPATHINFO_MAXSIZE */
+#endif
 
 #include "gst-i18n-lib.h"
 #include <locale.h>             /* for LC_ALL */
@@ -132,6 +136,8 @@ GList *_priv_gst_plugin_paths = NULL;   /* for delayed processing in init_post *
 extern gboolean _priv_gst_disable_registry;
 extern gboolean _priv_gst_disable_registry_update;
 #endif
+
+gchar *_gst_executable_path = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
 const gchar *priv_gst_dump_dot_dir;
@@ -311,6 +317,56 @@ gst_init_get_option_group (void)
 #endif
 }
 
+#if defined(__linux__)
+static void
+find_executable_path (void)
+{
+  GError *error = NULL;
+  gchar *path;
+
+  if (_gst_executable_path)
+    return;
+
+  path = g_file_read_link ("/proc/self/exe", &error);
+
+  if (path) {
+    _gst_executable_path = g_path_get_dirname (path);
+    g_free (path);
+  }
+}
+#elif defined(G_OS_WIN32)
+static void
+find_executable_path (void)
+{
+  char buffer[MAX_PATH];
+
+  if (!GetModuleFilename (NULL, buffer, MAX_PATH))
+    return;
+
+  _gst_executable_path = g_strdup (buffer);
+}
+#elif defined(__APPLE__)
+static void
+find_executable_path (void)
+{
+  int ret;
+  pid_t pid;
+  char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+
+  pid = getpid ();
+  ret = proc_pidpath (pid, pathbuf, sizeof (pathbuf));
+  if (ret > 0)
+    _gst_executable_path = g_strdup (pathbuf)
+    }
+#else
+static void
+find_executable_path (void)
+{
+  GST_FIXME ("Couldn't look up executable path, add support for this platform");
+}
+#endif
+
+
 /**
  * gst_init_check:
  * @argc: (inout) (allow-none): pointer to application's argc
@@ -343,6 +399,9 @@ gst_init_check (int *argc, char **argv[], GError ** err)
     g_mutex_unlock (&init_lock);
     return TRUE;
   }
+
+  find_executable_path ();
+
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("- GStreamer initialization");
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
@@ -1018,6 +1077,11 @@ gst_deinit (void)
   g_list_free (_priv_gst_plugin_paths);
   _priv_gst_plugin_paths = NULL;
 #endif
+
+  if (_gst_executable_path) {
+    g_free (_gst_executable_path);
+    _gst_executable_path = NULL;
+  }
 
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
