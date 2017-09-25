@@ -14,9 +14,9 @@ if __name__ == "__main__":
     parser.add_argument("--gapi-fixup")
     parser.add_argument("--metadata")
     parser.add_argument("--gapi-codegen")
-    parser.add_argument("--glue-file", default='')
-    parser.add_argument("--glue-includes", default='')
-    parser.add_argument("--glue-libname", default='')
+    parser.add_argument("--glue-file", default="")
+    parser.add_argument("--glue-includes", default="")
+    parser.add_argument("--glue-libname", default="")
     parser.add_argument("--assembly-name")
     parser.add_argument("--extra-includes", action='append', default=[])
     parser.add_argument("--out")
@@ -37,11 +37,17 @@ if __name__ == "__main__":
 
     shutil.copyfile(opts.api_raw, api_xml)
 
-    cmd = [opts.gapi_fixup, "--api=" + api_xml,
-                           "--metadata=" + opts.metadata]
+    if shutil.which('mono'):
+        launcher = ['mono']
+    else:
+        launcher = []
+
+    cmd = [opts.gapi_fixup, "--api=" + api_xml]
+    if opts.metadata:
+        cmd += ["--metadata=" + opts.metadata]
     if opts.symbols:
         cmd.extend(['--symbols=' + opts.symbols])
-    subprocess.check_call(cmd)
+    subprocess.check_call(launcher + cmd)
 
     cmd = [
         opts.gapi_codegen, '--generate', api_xml,
@@ -54,15 +60,9 @@ if __name__ == "__main__":
     if opts.schema:
         cmd += ['--schema=' + opts.schema]
 
-    for flag in opts.extra_includes:
-        flags = flag.split()
-        for flag in flags:
-            if not flag.startswith('-I'):
-                flag = '-I' + flag
-            cmd.append(flag)
+    cmd += ['-I' + i for i in opts.extra_includes]
 
-    print(' '.join(cmd))
-    subprocess.check_call(cmd)
+    subprocess.check_call(launcher + cmd)
 
     # WORKAROUND: Moving files into the out directory with special names
     # as meson doesn't like path separator in output names.
