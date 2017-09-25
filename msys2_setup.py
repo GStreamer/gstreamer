@@ -64,7 +64,8 @@ class Msys2Configurer(GstBuildConfigurer):
             suffix='.def', delete=False, mode='w')
         def_file.write('LIBRARY ' + dll_name + '\r\n')
         def_file.write('EXPORTS\r\n')
-        for ordinal, _, _, name in exports:
+        for tmp in exports:
+            ordinal, name = tmp[0], tmp[3]
             def_file.write(name + ' @' + ordinal + '\r\n')
         def_file.close()
         subprocess.check_output(['lib', '/def:' + def_file.name,
