@@ -616,8 +616,10 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   out_tex = (GstGLMemory *) out_frame.map[0].memory;
 
   if (!gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (mix),
-          (GstAggregatorPadForeachFunc) _upload_frames, NULL))
-    return FALSE;
+          (GstAggregatorPadForeachFunc) _upload_frames, NULL)) {
+    res = FALSE;
+    goto out;
+  }
 
   g_mutex_lock (&priv->gl_resource_lock);
   if (!priv->gl_resource_ready)
