@@ -565,6 +565,22 @@ set_codec_state (GstVaapiEncode * encode, GstVideoCodecState * state)
 }
 
 static gboolean
+gst_vaapiencode_drain (GstVaapiEncode * encode)
+{
+  GstVaapiEncoderStatus status;
+
+  if (!encode->encoder)
+    return TRUE;
+
+  status = gst_vaapi_encoder_flush (encode->encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return FALSE;
+  gst_vaapiencode_purge (encode);
+
+  return TRUE;
+}
+
+static gboolean
 gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
@@ -577,6 +593,9 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 
   if (!gst_vaapi_plugin_base_set_caps (GST_VAAPI_PLUGIN_BASE (encode),
           state->caps, NULL))
+    return FALSE;
+
+  if (!gst_vaapiencode_drain (encode))
     return FALSE;
 
   if (encode->input_state)
@@ -824,17 +843,14 @@ static gboolean
 gst_vaapiencode_flush (GstVideoEncoder * venc)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-  GstVaapiEncoderStatus status;
 
   if (!encode->encoder)
     return FALSE;
 
   GST_LOG_OBJECT (encode, "flushing");
 
-  status = gst_vaapi_encoder_flush (encode->encoder);
-  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+  if (!gst_vaapiencode_drain (encode))
     return FALSE;
-  gst_vaapiencode_purge (encode);
 
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
   if (!ensure_encoder (encode))
