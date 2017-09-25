@@ -125,7 +125,7 @@ namespace GstreamerSharp
 		{
 			b = 1;
 			d = 1;
-			Gst.Audio.AudioInfo info = Gst.Audio.AudioInfo.Zero;
+			Gst.Audio.AudioInfo info = new Gst.Audio.AudioInfo();
 
 			// Initialize Gstreamer
 			Gst.Application.Init(ref args);
