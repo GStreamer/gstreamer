@@ -484,6 +484,7 @@ AG_GST_CHECK_PLUGIN(netsim)
 AG_GST_CHECK_PLUGIN(onvif)
 AG_GST_CHECK_PLUGIN(pcapparse)
 AG_GST_CHECK_PLUGIN(pnm)
+AG_GST_CHECK_PLUGIN(proxy)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(removesilence)
 AG_GST_CHECK_PLUGIN(sdp)
@@ -3659,6 +3660,7 @@ gst/netsim/Makefile
 gst/onvif/Makefile
 gst/pcapparse/Makefile
 gst/pnm/Makefile
+gst/proxy/Makefile
 gst/rawparse/Makefile
 gst/removesilence/Makefile
 gst/sdp/Makefile
