@@ -625,6 +625,7 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
             ("error decoding block %d", i), result);
         if (result != GST_FLOW_OK) {
           gst_buffer_unmap (outbuf, &map);
+          gst_buffer_unref (outbuf);
           goto exit;
         }
       } else {
