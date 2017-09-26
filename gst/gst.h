@@ -132,6 +132,9 @@ void            gst_registry_fork_set_enabled   (gboolean enabled);
 GST_EXPORT
 gboolean        gst_update_registry             (void);
 
+GST_EXPORT
+const gchar *   gst_get_main_executable_path    (void);
+
 G_END_DECLS
 
 #endif /* __GST_H__ */

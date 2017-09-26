@@ -368,6 +368,27 @@ find_executable_path (void)
 }
 #endif
 
+/**
+ * gst_get_main_executable_path:
+ *
+ * This helper is mostly helpful for plugins that need to
+ * inspect the folder of the main executable to determine
+ * their set of features.
+ *
+ * When a plugin is initialized from the gst-plugin-scanner
+ * external process, the returned path will be the same as from the
+ * parent process.
+ *
+ * Returns: (transfer none): The path of the executable that
+ *   initialized GStreamer, or %NULL if it could not be determined.
+ *
+ * Since: 1.14
+ */
+const gchar *
+gst_get_main_executable_path (void)
+{
+  return _gst_executable_path;
+}
 
 /**
  * gst_init_check:
