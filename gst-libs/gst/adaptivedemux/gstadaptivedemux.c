@@ -31,7 +31,7 @@
  *
  * Adaptive formats (HLS, DASH, MSS) are composed of a manifest file and
  * a set of fragments. The manifest describes the available media and
- * the sequence of fragments to use. Each fragments contains a small
+ * the sequence of fragments to use. Each fragment contains a small
  * part of the media (typically only a few seconds). It is possible for
  * the manifest to have the same media available in different configurations
  * (bitrates for example) so that the client can select the one that

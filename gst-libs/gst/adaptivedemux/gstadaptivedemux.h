@@ -352,7 +352,7 @@ struct _GstAdaptiveDemuxClass
    * need_another_chunk:
    * @stream: #GstAdaptiveDemuxStream
    *
-   * If chunked downloading is used (chunk_size != 0) this is called once as
+   * If chunked downloading is used (chunk_size != 0) this is called once a
    * chunk is finished to decide whether more has to be downloaded or not.
    * May update chunk_size to a different value
    */
@@ -391,7 +391,7 @@ struct _GstAdaptiveDemuxClass
    * to download the fragment. This is useful to avoid downloading a fragment that
    * isn't available yet.
    *
-   * Returns: The waiting time in microsseconds
+   * Returns: The waiting time in microseconds
    */
   gint64        (*stream_get_fragment_waiting_time) (GstAdaptiveDemuxStream * stream);
 
