@@ -356,8 +356,8 @@ find_executable_path (void)
   pid = getpid ();
   ret = proc_pidpath (pid, pathbuf, sizeof (pathbuf));
   if (ret > 0)
-    _gst_executable_path = g_strdup (pathbuf)
-    }
+    _gst_executable_path = g_strdup (pathbuf);
+}
 #else
 static void
 find_executable_path (void)
@@ -399,9 +399,6 @@ gst_init_check (int *argc, char **argv[], GError ** err)
     g_mutex_unlock (&init_lock);
     return TRUE;
   }
-
-  find_executable_path ();
-
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("- GStreamer initialization");
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
@@ -532,6 +529,8 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GST_DEBUG ("already initialized");
     return TRUE;
   }
+
+  find_executable_path ();
 
   _priv_gst_start_time = gst_util_get_timestamp ();
 
