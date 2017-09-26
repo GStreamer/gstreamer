@@ -46,7 +46,7 @@ gapi_codegen = gapi_codegen.full_path()
 
 gacutil = find_program('gacutil')
 generate_api = find_program('generate_code.py')
-nuget = join_paths(meson.current_source_dir(), 'nuget.py')
+nuget = find_program('nuget.py')
 
 # TODO Handle monodoc
 
@@ -80,18 +80,38 @@ ges_dep = dependency('gst-editing-services-' + apiversion, version: gst_required
 subdir('sources')
 if ges_dep.found()
   subdir('ges')
+  custom_target('GESSharp-nuget',
+      command: [nuget, '--package-name', 'GESSharp',
+          '--assembly', ges_sharp.full_path(),
+          '--assembly', gst_sharp.full_path(),
+          '--assembly', gio_sharp.full_path(),
+          '--assembly', glib_sharp.full_path(),
+          '--dependency=GstSharp:' + meson.project_version(),
+          '--project-url', 'https://gstreamer.freedesktop.org/modules/gstreamer-sharp.html',
+          '--icon-url', 'https://gstreamer.freedesktop.org/images/header-logo-top.png',
+          '--license-url', 'https://cgit.freedesktop.org/gstreamer/gstreamer-sharp/plain/COPYING',
+          '--version', meson.project_version(),
+          '--tags', 'GStreamer GES GstSharp bindings',
+          '--builddir', meson.current_build_dir(),
+      ],
+      output: 'GESSharp.' + meson.project_version() + '.nupkg'
+  )
 endif
 
-meson.add_install_script(nuget, '--package-name', 'GstSharp',
-    '--assembly', gst_sharp.full_path(),
-    '--assembly', gio_sharp.full_path(),
-    '--assembly', glib_sharp.full_path(),
-    '--project-url', 'https://gstreamer.freedesktop.org/modules/gstreamer-sharp.html',
-    '--icon-url', 'https://gstreamer.freedesktop.org/images/header-logo-top.png',
-    '--license-url', 'https://cgit.freedesktop.org/gstreamer/gstreamer-sharp/plain/COPYING',
-    '--version', meson.project_version(),
-    '--tags', 'GStreamer GstSharp bindings',
-    )
+custom_target('GstSharp-nuget',
+    command: [nuget, '--package-name', 'GstSharp',
+        '--assembly', gst_sharp.full_path(),
+        '--assembly', gio_sharp.full_path(),
+        '--assembly', glib_sharp.full_path(),
+        '--project-url', 'https://gstreamer.freedesktop.org/modules/gstreamer-sharp.html',
+        '--icon-url', 'https://gstreamer.freedesktop.org/images/header-logo-top.png',
+        '--license-url', 'https://cgit.freedesktop.org/gstreamer/gstreamer-sharp/plain/COPYING',
+        '--version', meson.project_version(),
+        '--tags', 'GStreamer GstSharp bindings',
+        '--builddir', meson.current_build_dir(),
+    ],
+    output: 'GstSharp.' + meson.project_version() + '.nupkg',
+)
 
 subdir('samples')
 

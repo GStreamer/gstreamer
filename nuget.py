@@ -28,10 +28,10 @@ NUSPEC_TEMPLATE ="""<?xml version="1.0" encoding="utf-8"?>
 </package>
 """
 
-TARGETS_TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
+TARGETS_TEMPLATE = r"""<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="CopyMapConfigs" AfterTargets="AfterBuild">
-    <CreateItem Include="$(MSBuildThisFileDirectory)\*.config">
+  <Target Name="{package_name}CopyMapConfigs" AfterTargets="AfterBuild">
+    <CreateItem Include="$(MSBuildThisFileDirectory)\{frameworkdir}\*.config">
       <Output TaskParameter="Include" ItemName="MapConfigs" />
     </CreateItem>
 
@@ -42,9 +42,8 @@ TARGETS_TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
 
 class Nugetifier:
     def cleanup_args(self):
-        self.builddir = os.path.abspath(os.path.curdir)
         self.nugetdir = os.path.join(self.builddir,
-                                       self.package_name + 'nupkg')
+                                     self.package_name + 'nupkg')
         self.frameworkdir = 'net45'
         self.nuget_build_dir = os.path.join(self.nugetdir, 'build', self.frameworkdir)
         self.nuget_lib_dir = os.path.join(self.nugetdir, 'lib', self.frameworkdir)
@@ -74,7 +73,7 @@ class Nugetifier:
         self.files = ''
         def add_file(path, target="lib"):
             f =  '    <file src="%s" target="%s"/>\n' % (
-                path, os.path.join(target, self.frameworkdir, os.path.basename(path)))
+                path, os.path.join(target, os.path.basename(path)))
             self.files += f
 
         self.dependencies = ''
@@ -84,11 +83,11 @@ class Nugetifier:
                 _id, version)
 
         for assembly in self.assembly:
-            add_file(assembly)
+            add_file(assembly, os.path.join('lib', self.frameworkdir))
 
             for f in [assembly + '.config', assembly[:-3] + 'pdb']:
                 if os.path.exists(f):
-                    add_file(f, 'build')
+                    add_file(f, os.path.join('build', self.frameworkdir))
 
         with open(self.nugettargets, 'w') as _:
             print(TARGETS_TEMPLATE.format(**self.__dict__), file=_)
@@ -103,6 +102,7 @@ class Nugetifier:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--builddir')
     parser.add_argument('--package-name')
     parser.add_argument('--author', default=getpass.getuser())
     parser.add_argument('--owner', default=getpass.getuser())
@@ -116,6 +116,7 @@ if __name__ == "__main__":
     parser.add_argument('--project-url', default='')
     parser.add_argument('--license-url', default='')
     parser.add_argument('--tags', default='')
+    parser.add_argument('--dependency', default=[], action='append')
 
     nugetifier = Nugetifier()
     options = parser.parse_args(namespace=nugetifier)
