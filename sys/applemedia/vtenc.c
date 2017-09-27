@@ -101,6 +101,7 @@ static gboolean gst_vtenc_set_format (GstVideoEncoder * enc,
 static GstFlowReturn gst_vtenc_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_vtenc_finish (GstVideoEncoder * enc);
+static gboolean gst_vtenc_flush (GstVideoEncoder * enc);
 
 static void gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self);
 
@@ -217,6 +218,7 @@ gst_vtenc_class_init (GstVTEncClass * klass)
   gstvideoencoder_class->set_format = gst_vtenc_set_format;
   gstvideoencoder_class->handle_frame = gst_vtenc_handle_frame;
   gstvideoencoder_class->finish = gst_vtenc_finish;
+  gstvideoencoder_class->flush = gst_vtenc_flush;
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
@@ -499,6 +501,50 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
   }
 }
 
+static GstFlowReturn
+gst_vtenc_finish_encoding (GstVTEnc * self, gboolean is_flushing)
+{
+  GST_DEBUG_OBJECT (self,
+      "complete enconding and clean buffer queue, is flushing %d", is_flushing);
+  GstVideoCodecFrame *outframe;
+  GstFlowReturn ret = GST_FLOW_OK;
+  OSStatus vt_status;
+
+  /* We need to unlock the stream lock here because
+   * it can wait for gst_vtenc_enqueue_buffer() to
+   * handle a buffer... which will take the stream
+   * lock from another thread and then deadlock */
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+  GST_DEBUG_OBJECT (self, "starting VTCompressionSessionCompleteFrames");
+  vt_status =
+      VTCompressionSessionCompleteFrames (self->session,
+      kCMTimePositiveInfinity);
+  GST_DEBUG_OBJECT (self, "VTCompressionSessionCompleteFrames ended");
+  GST_VIDEO_ENCODER_STREAM_LOCK (self);
+  if (vt_status != noErr) {
+    GST_WARNING_OBJECT (self, "VTCompressionSessionCompleteFrames returned %d",
+        (int) vt_status);
+  }
+
+  while ((outframe = g_async_queue_try_pop (self->cur_outframes))) {
+    if (is_flushing) {
+      GST_DEBUG_OBJECT (self, "flushing frame number %d",
+          outframe->system_frame_number);
+      gst_video_codec_frame_unref (outframe);
+    } else {
+      GST_DEBUG_OBJECT (self, "finish frame number %d",
+          outframe->system_frame_number);
+      ret =
+          gst_video_encoder_finish_frame (GST_VIDEO_ENCODER_CAST (self),
+          outframe);
+    }
+  }
+
+  GST_DEBUG_OBJECT (self, "buffer queue cleaned");
+
+  return ret;
+}
+
 static gboolean
 gst_vtenc_start (GstVideoEncoder * enc)
 {
@@ -757,31 +803,18 @@ static GstFlowReturn
 gst_vtenc_finish (GstVideoEncoder * enc)
 {
   GstVTEnc *self = GST_VTENC_CAST (enc);
-  GstVideoCodecFrame *outframe;
-  GstFlowReturn ret = GST_FLOW_OK;
-  OSStatus vt_status;
+  return gst_vtenc_finish_encoding (self, FALSE);
+}
 
-  /* We need to unlock the stream lock here because
-   * it can wait for gst_vtenc_enqueue_buffer() to
-   * handle a buffer... which will take the stream
-   * lock from another thread and then deadlock */
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
-  vt_status =
-      VTCompressionSessionCompleteFrames (self->session,
-      kCMTimePositiveInfinity);
-  GST_VIDEO_ENCODER_STREAM_LOCK (self);
-  if (vt_status != noErr) {
-    GST_WARNING_OBJECT (self, "VTCompressionSessionCompleteFrames returned %d",
-        (int) vt_status);
-  }
+static gboolean
+gst_vtenc_flush (GstVideoEncoder * enc)
+{
+  GstVTEnc *self = GST_VTENC_CAST (enc);
+  GstFlowReturn ret;
 
-  while ((outframe = g_async_queue_try_pop (self->cur_outframes))) {
-    ret =
-        gst_video_encoder_finish_frame (GST_VIDEO_ENCODER_CAST (self),
-        outframe);
-  }
+  ret = gst_vtenc_finish_encoding (self, TRUE);
 
-  return ret;
+  return (ret == GST_FLOW_OK);
 }
 
 static VTCompressionSessionRef
