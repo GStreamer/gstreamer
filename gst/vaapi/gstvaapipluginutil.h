@@ -113,7 +113,7 @@ gst_vaapi_caps_feature_contains (const GstCaps * caps,
 
 #define GST_VAAPI_MAKE_DMABUF_CAPS					\
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
-        GST_CAPS_FEATURE_MEMORY_DMABUF, "{ NV12, I420, YV12 }")
+        GST_CAPS_FEATURE_MEMORY_DMABUF, "{ I420, YV12, RGBA }")
 
 G_GNUC_INTERNAL
 gboolean
