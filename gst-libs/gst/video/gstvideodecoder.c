@@ -2494,6 +2494,11 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
       if (decoder_class->start && !decoder_class->start (decoder))
         goto start_failed;
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      gst_video_decoder_flush (decoder, TRUE);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      break;
     default:
       break;
   }
