@@ -340,7 +340,7 @@ find_executable_path (void)
 {
   char buffer[MAX_PATH];
 
-  if (!GetModuleFilename (NULL, buffer, MAX_PATH))
+  if (!GetModuleFileName (NULL, buffer, MAX_PATH))
     return;
 
   _gst_executable_path = g_strdup (buffer);
