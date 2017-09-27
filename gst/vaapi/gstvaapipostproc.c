@@ -1158,24 +1158,22 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
 
   if (direction == GST_PAD_SRC) {
     /* @TODO: we can do better */
-    othercaps = gst_caps_fixate (othercaps);
+    outcaps = gst_caps_fixate (othercaps);
     goto done;
   }
 
   g_mutex_lock (&postproc->postproc_lock);
-  if ((outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps, othercaps)))
-    gst_caps_replace (&othercaps, outcaps);
+  outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps, othercaps);
   g_mutex_unlock (&postproc->postproc_lock);
 
   /* set passthrough according to caps changes or filter changes */
   gst_vaapipostproc_set_passthrough (trans);
 
 done:
-  GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
-  if (outcaps)
-    gst_caps_unref (outcaps);
+  GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, outcaps);
+  gst_caps_unref (othercaps);
 
-  return othercaps;
+  return outcaps;
 }
 
 static gboolean
