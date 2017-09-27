@@ -346,7 +346,8 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
   if (!l) {
     /* No match, no sequence in the new playlist was higher than
      * any in the old. This is bad! */
-    GST_ERROR ("Media sequences inconsistent, ignoring");
+    GST_ERROR ("Media sequence doesn't continue: last new %" G_GINT64_FORMAT
+        " < last old %" G_GINT64_FORMAT, f1->sequence, f2->sequence);
     return FALSE;
   }
 
@@ -356,13 +357,16 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
 
     if (f1->sequence == f2->sequence && !g_str_equal (f1->uri, f2->uri)) {
       /* Same sequence, different URI. This is bad! */
-      GST_ERROR ("Media sequences inconsistent, ignoring");
+      GST_ERROR ("Media URIs inconsistent (sequence %" G_GINT64_FORMAT
+          "): had '%s', got '%s'", f1->sequence, f2->uri, f1->uri);
       return FALSE;
     } else if (f1->sequence < f2->sequence) {
       /* Not same sequence but by construction sequence must be higher in the
        * new one. All good in that case, if it isn't then this means that
        * sequence numbers are decreasing or files were inserted */
-      GST_ERROR ("Media sequences inconsistent, ignoring");
+      GST_ERROR ("Media sequences inconsistent: %" G_GINT64_FORMAT " < %"
+          G_GINT64_FORMAT ": URIs new '%s' old '%s'", f1->sequence,
+          f2->sequence, f1->uri, f2->uri);
       return FALSE;
     }
   }
@@ -417,7 +421,8 @@ generate_media_seqnums (GstM3U8 * self, GList * previous_files)
       mediasequence++;
 
       if (!g_str_equal (f1->uri, f2->uri)) {
-        GST_WARNING ("Inconsistent URIs after playlist update");
+        GST_WARNING ("Inconsistent URIs after playlist update: '%s' != '%s'",
+            f1->uri, f2->uri);
       }
     }
   } else {
