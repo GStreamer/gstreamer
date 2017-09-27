@@ -1103,7 +1103,7 @@ ensure_allowed_srcpad_caps (GstVaapiPostproc * postproc)
 
 static GstCaps *
 gst_vaapipostproc_transform_caps_impl (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
 
@@ -1132,7 +1132,7 @@ gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
   g_mutex_lock (&postproc->postproc_lock);
-  caps = gst_vaapipostproc_transform_caps_impl (trans, direction, caps);
+  caps = gst_vaapipostproc_transform_caps_impl (trans, direction);
   g_mutex_unlock (&postproc->postproc_lock);
   if (caps && filter) {
     out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
