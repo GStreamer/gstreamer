@@ -1724,13 +1724,17 @@ gst_plugin_ext_dep_get_stat_hash (GstPlugin * plugin, GstPluginDep * dep)
       gchar *full_path;
 
       if (paths_are_relative_to_exe && !g_path_is_absolute (path)) {
+        gchar *appdir;
+
         if (!_gst_executable_path) {
           GST_FIXME_OBJECT (plugin,
               "Path dependency %s relative to executable path but could not retrieve executable path",
               path);
           continue;
         }
-        full_path = g_build_filename (_gst_executable_path, path, NULL);
+        appdir = g_path_get_dirname (_gst_executable_path);
+        full_path = g_build_filename (appdir, path, NULL);
+        g_free (appdir);
       } else {
         full_path = g_strdup (path);
       }

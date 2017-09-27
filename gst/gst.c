@@ -324,17 +324,13 @@ static void
 find_executable_path (void)
 {
   GError *error = NULL;
-  gchar *path;
 
   if (_gst_executable_path)
     return;
 
-  path = g_file_read_link ("/proc/self/exe", &error);
-
-  if (path) {
-    _gst_executable_path = g_path_get_dirname (path);
-    g_free (path);
-  }
+  _gst_executable_path = g_file_read_link ("/proc/self/exe", &error);
+  if (error)
+    g_error_free (error);
 }
 #elif defined(G_OS_WIN32)
 static void
