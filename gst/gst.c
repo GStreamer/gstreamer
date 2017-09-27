@@ -107,8 +107,10 @@
 #include <windows.h>            /* GetStdHandle, windows console */
 #endif
 #if defined (__APPLE__)
-#include <errno.h>
+#include "TargetConditionals.h"
+#if !TARGET_OS_IPHONE && !TARGET_OS_SIMULATOR && !TARGET_OS_EMBEDDED
 #include <libproc.h>            /* proc_pidpath, PROC_PIDPATHINFO_MAXSIZE */
+#endif
 #endif
 
 #include "gst-i18n-lib.h"
@@ -345,7 +347,7 @@ find_executable_path (void)
 
   _gst_executable_path = g_strdup (buffer);
 }
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !TARGET_OS_IPHONE && !TARGET_OS_SIMULATOR && !TARGET_OS_EMBEDDED
 static void
 find_executable_path (void)
 {
