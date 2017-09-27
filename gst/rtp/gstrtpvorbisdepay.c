@@ -134,6 +134,22 @@ gst_rtp_vorbis_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_rtp_vorbis_depay_has_ident (GstRtpVorbisDepay * rtpvorbisdepay,
+    guint32 ident)
+{
+  GList *walk;
+
+  for (walk = rtpvorbisdepay->configs; walk; walk = g_list_next (walk)) {
+    GstRtpVorbisConfig *conf = (GstRtpVorbisConfig *) walk->data;
+
+    if (conf->ident == ident)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 /* takes ownership of confbuf */
 static gboolean
 gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
@@ -227,6 +243,13 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
     /* length might also include count of following size fields */
     if (size < length && size + 1 != length)
       goto too_small;
+
+    if (gst_rtp_vorbis_depay_has_ident (rtpvorbisdepay, ident)) {
+      size -= length;
+      data += length;
+      offset += length;
+      continue;
+    }
 
     /* read header sizes we read 2 sizes, the third size (for which we allocate
      * space) must be derived from the total packed header length. */
