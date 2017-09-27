@@ -316,6 +316,11 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
 
   g_return_val_if_fail (previous_files, FALSE);
 
+  if (!self->files) {
+    /* Empty playlists are trivially consistent */
+    return TRUE;
+  }
+
   /* Find first case of higher/equal sequence number in new playlist or
    * same URI. From there on we can linearly step ahead */
   for (l = self->files; l; l = l->next) {
@@ -334,15 +339,16 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
       break;
   }
 
+  /* We must have seen at least one entry on each list */
+  g_assert (f1 != NULL);
+  g_assert (f2 != NULL);
+
   if (!l) {
     /* No match, no sequence in the new playlist was higher than
      * any in the old, and no URI was found again. This is bad! */
     GST_ERROR ("Media sequences inconsistent, ignoring");
     return FALSE;
   }
-
-  g_assert (f1 != NULL);
-  g_assert (f2 != NULL);
 
   for (; l && m; l = l->next, m = m->next) {
     f1 = l->data;
