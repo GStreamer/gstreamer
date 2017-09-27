@@ -262,6 +262,7 @@ gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         break;
       default:
         g_assert_not_reached ();
+        gst_caps_unref (caps);
         return NULL;
     }
 
@@ -289,6 +290,7 @@ gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         break;
       default:
         g_assert_not_reached ();
+        gst_caps_unref (caps);
         return NULL;
     }
 
