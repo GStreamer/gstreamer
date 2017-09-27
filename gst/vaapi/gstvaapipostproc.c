@@ -1132,17 +1132,21 @@ gst_vaapipostproc_transform_caps (GstBaseTransform * trans,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
   g_mutex_lock (&postproc->postproc_lock);
-  caps = gst_vaapipostproc_transform_caps_impl (trans, direction);
+  out_caps = gst_vaapipostproc_transform_caps_impl (trans, direction);
   g_mutex_unlock (&postproc->postproc_lock);
-  if (caps && filter) {
-    out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (caps);
-    caps = out_caps;
+
+  if (out_caps && filter) {
+    GstCaps *intersection;
+
+    intersection = gst_caps_intersect_full (out_caps, filter,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (out_caps);
+    out_caps = intersection;
   }
 
-  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, out_caps);
 
-  return caps;
+  return out_caps;
 }
 
 static GstCaps *
