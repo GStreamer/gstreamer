@@ -321,8 +321,8 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
     return TRUE;
   }
 
-  /* Find first case of higher/equal sequence number in new playlist or
-   * same URI. From there on we can linearly step ahead */
+  /* Find first case of higher/equal sequence number in new playlist.
+   * From there on we can linearly step ahead */
   for (l = self->files; l; l = l->next) {
     gboolean match = FALSE;
 
@@ -330,7 +330,7 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
     for (m = previous_files; m; m = m->next) {
       f2 = m->data;
 
-      if (f1->sequence >= f2->sequence || g_str_equal (f1->uri, f2->uri)) {
+      if (f1->sequence >= f2->sequence) {
         match = TRUE;
         break;
       }
@@ -345,7 +345,7 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
 
   if (!l) {
     /* No match, no sequence in the new playlist was higher than
-     * any in the old, and no URI was found again. This is bad! */
+     * any in the old. This is bad! */
     GST_ERROR ("Media sequences inconsistent, ignoring");
     return FALSE;
   }
@@ -354,27 +354,16 @@ check_media_seqnums (GstM3U8 * self, GList * previous_files)
     f1 = l->data;
     f2 = m->data;
 
-    if (f1->sequence == f2->sequence) {
-      if (!g_str_equal (f1->uri, f2->uri)) {
-        /* Same sequence, different URI. This is bad! */
-        GST_ERROR ("Media sequences inconsistent, ignoring");
-        return FALSE;
-      } else {
-        /* Good case, we advance and check the next one */
-      }
-    } else if (g_str_equal (f1->uri, f2->uri)) {
-      /* Same URIs but different sequences, this is bad! */
+    if (f1->sequence == f2->sequence && !g_str_equal (f1->uri, f2->uri)) {
+      /* Same sequence, different URI. This is bad! */
       GST_ERROR ("Media sequences inconsistent, ignoring");
       return FALSE;
-    } else {
-      /* Not same URI, not same sequence but by construction sequence
-       * must be higher in the new one. All good in that case, if it
-       * isn't then this means that sequence numbers are decreasing
-       * or files were inserted */
-      if (f1->sequence < f2->sequence) {
-        GST_ERROR ("Media sequences inconsistent, ignoring");
-        return FALSE;
-      }
+    } else if (f1->sequence < f2->sequence) {
+      /* Not same sequence but by construction sequence must be higher in the
+       * new one. All good in that case, if it isn't then this means that
+       * sequence numbers are decreasing or files were inserted */
+      GST_ERROR ("Media sequences inconsistent, ignoring");
+      return FALSE;
     }
   }
 
