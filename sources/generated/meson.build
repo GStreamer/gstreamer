@@ -728,7 +728,6 @@ gst_source_gen = custom_target('gst_codegen',
         '--out', meson.current_build_dir(),
         '--files', ';'.join(generated_sources),
         '--assembly-name', meson.project_name(),
-        '--glue-libname', 'libgstreamersharpglue-1.0.0.dll',
     ],
     depend_files: [raw_api_fname],
     depends: codegen_dependencies)
