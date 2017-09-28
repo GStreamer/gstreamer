@@ -813,8 +813,7 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
   }
 
   if (priv->display) {
-    if (!priv->parent)
-      vaTerminate (priv->display);
+    vaTerminate (priv->display);
     priv->display = NULL;
   }
 
@@ -829,8 +828,6 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
 
   g_free (priv->vendor_string);
   priv->vendor_string = NULL;
-
-  gst_vaapi_display_replace_internal (&priv->parent, NULL);
 }
 
 static gboolean
@@ -885,10 +882,8 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
   if (!priv->display)
     return FALSE;
 
-  if (!priv->parent) {
-    if (!vaapi_initialize (priv->display))
-      return FALSE;
-  }
+  if (!vaapi_initialize (priv->display))
+    return FALSE;
 
   GST_INFO_OBJECT (display, "new display addr=%p", display);
   g_free (priv->display_name);
@@ -908,8 +903,6 @@ gst_vaapi_display_lock_default (GstVaapiDisplay * display)
 {
   GstVaapiDisplayPrivate *priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
 
-  if (priv->parent)
-    priv = GST_VAAPI_DISPLAY_GET_PRIVATE (priv->parent);
   g_rec_mutex_lock (&priv->mutex);
 }
 
@@ -918,8 +911,6 @@ gst_vaapi_display_unlock_default (GstVaapiDisplay * display)
 {
   GstVaapiDisplayPrivate *priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
 
-  if (priv->parent)
-    priv = GST_VAAPI_DISPLAY_GET_PRIVATE (priv->parent);
   g_rec_mutex_unlock (&priv->mutex);
 }
 
