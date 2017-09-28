@@ -127,7 +127,6 @@ gst_vaapi_display_type_is_compatible (GstVaapiDisplayType type1,
 struct _GstVaapiDisplayInfo
 {
   GstVaapiDisplay *display;
-  GstVaapiDisplayType display_type;
   gchar *display_name;
   VADisplay va_display;
   gpointer native_display;

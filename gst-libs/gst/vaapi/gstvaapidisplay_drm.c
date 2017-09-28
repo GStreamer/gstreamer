@@ -311,7 +311,6 @@ gst_vaapi_display_drm_get_display_info (GstVaapiDisplay * display,
     info->va_display = vaGetDisplayDRM (priv->drm_device);
     if (!info->va_display)
       return FALSE;
-    info->display_type = GST_VAAPI_DISPLAY_TYPE_DRM;
   }
   return TRUE;
 }

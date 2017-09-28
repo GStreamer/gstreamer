@@ -239,7 +239,6 @@ gst_vaapi_display_wayland_get_display_info (GstVaapiDisplay * display,
     info->va_display = vaGetDisplayWl (priv->wl_display);
     if (!info->va_display)
       return FALSE;
-    info->display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
   }
   return TRUE;
 }

@@ -839,7 +839,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
       GST_VAAPI_DISPLAY_GET_CLASS (display);
   GstVaapiDisplayInfo info = {
     .display = display,
-    .display_type = klass->display_type,
   };
 
   switch (init_type) {
@@ -847,7 +846,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
       GstVaapiDisplayInfo *p_info = data;
 
       info.va_display = p_info->va_display;
-      info.display_type = p_info->display_type;
       priv->display = p_info->va_display;
       priv->use_foreign_display = TRUE;
 
@@ -1166,7 +1164,6 @@ gst_vaapi_display_new_with_display (VADisplay va_display)
 {
   GstVaapiDisplayInfo info = {
     .va_display = va_display,
-    .display_type = GST_VAAPI_DISPLAY_TYPE_ANY,
   };
 
   return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY, NULL),

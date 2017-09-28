@@ -225,7 +225,6 @@ gst_vaapi_display_x11_get_display_info (GstVaapiDisplay * display,
     info->va_display = vaGetDisplay (priv->x11_display);
     if (!info->va_display)
       return FALSE;
-    info->display_type = GST_VAAPI_DISPLAY_TYPE_X11;
   }
   return TRUE;
 }
@@ -380,7 +379,6 @@ gst_vaapi_display_x11_new_with_va_display (VADisplay va_display,
   GstVaapiDisplayInfo info = {
     .va_display = va_display,
     .native_display = x11_display,
-    .display_type = GST_VAAPI_DISPLAY_TYPE_X11,
   };
 
   g_return_val_if_fail (x11_display, NULL);
