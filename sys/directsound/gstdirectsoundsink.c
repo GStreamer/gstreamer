@@ -564,7 +564,8 @@ gst_directsound_sink_prepare (GstAudioSink * asink,
     return FALSE;
   }
 
-  gst_directsound_sink_set_volume (dsoundsink, dsoundsink->volume, FALSE);
+  gst_directsound_sink_set_volume (dsoundsink,
+      gst_directsound_sink_get_volume (dsoundsink), FALSE);
   gst_directsound_sink_set_mute (dsoundsink, dsoundsink->mute);
 
   return TRUE;
