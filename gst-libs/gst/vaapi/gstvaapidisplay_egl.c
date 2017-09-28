@@ -189,6 +189,8 @@ gst_vaapi_display_egl_get_display_info (GstVaapiDisplay * base_display,
   GstVaapiDisplayClass *const klass =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
 
+  info->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display->display);
+
   if (klass->get_display && !klass->get_display (display->display, info))
     return FALSE;
   return TRUE;
@@ -279,6 +281,11 @@ gst_vaapi_display_egl_finalize (GObject * object)
 
   if (dpy->texture_map)
     gst_object_unref (dpy->texture_map);
+
+  /* HACK to avoid to call twice vaTerminate() since this and the
+   * proxied display share the same vaDisplay */
+  GST_VAAPI_DISPLAY_VADISPLAY (object) = NULL;
+
   G_OBJECT_CLASS (gst_vaapi_display_egl_parent_class)->finalize (object);
 }
 
