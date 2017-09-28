@@ -418,11 +418,9 @@ gst_video_encoder_flush (GstVideoEncoder * encoder)
   GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
   gboolean ret = TRUE;
 
-  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (klass->flush)
     ret = klass->flush (encoder);
 
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
   return ret;
 }
 
