@@ -926,7 +926,7 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   if (!gst_is_gl_memory (in_tex)) {
     ret = FALSE;
     GST_ERROR_OBJECT (filter, "Input memory must be GstGLMemory");
-    goto inbuf_error;
+    goto unmap_out_error;
   }
 
   if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
