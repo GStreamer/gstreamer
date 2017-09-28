@@ -1526,6 +1526,11 @@ gst_video_encoder_change_state (GstElement * element, GstStateChange transition)
       if (encoder_class->start && !encoder_class->start (encoder))
         goto start_failed;
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+      gst_video_encoder_flush (encoder);
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+      break;
     default:
       break;
   }
