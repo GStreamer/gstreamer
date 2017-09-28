@@ -815,7 +815,7 @@ gst_directsound_sink_reset (GstAudioSink * asink)
 
     /*reset the buffer */
     hRes = IDirectSoundBuffer_Lock (dsoundsink->pDSBSecondary,
-        dsoundsink->current_circular_offset, dsoundsink->buffer_size,
+        0, dsoundsink->buffer_size,
         &pLockedBuffer, &dwSizeBuffer, NULL, NULL, 0L);
 
     if (SUCCEEDED (hRes)) {
