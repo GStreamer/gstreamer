@@ -229,7 +229,6 @@ gst_directsound_sink_init (GstDirectSoundSink * dsoundsink)
   dsoundsink->pDSBSecondary = NULL;
   dsoundsink->current_circular_offset = 0;
   dsoundsink->buffer_size = DSBSIZE_MIN;
-  dsoundsink->volume = 100;
   g_mutex_init (&dsoundsink->dsound_lock);
   dsoundsink->system_clock = gst_system_clock_obtain ();
   dsoundsink->write_wait_clock_id = NULL;
