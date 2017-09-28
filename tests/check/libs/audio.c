@@ -713,7 +713,7 @@ GST_START_TEST (test_stream_align)
   GstClockTime out_timestamp, out_duration;
   gboolean discont;
 
-  align = gst_audio_stream_align_new (1000);
+  align = gst_audio_stream_align_new (1000, 40 * GST_MSECOND, 1 * GST_SECOND);
 
   for (i = 0; i < 500; i++) {
     timestamp = 10 * GST_MSECOND * i;
@@ -891,7 +891,7 @@ GST_START_TEST (test_stream_align_reverse)
   GstClockTime out_timestamp, out_duration;
   gboolean discont;
 
-  align = gst_audio_stream_align_new (-1000);
+  align = gst_audio_stream_align_new (-1000, 40 * GST_MSECOND, 1 * GST_SECOND);
 
   for (i = 499; i >= 0; i--) {
     timestamp = 10 * GST_MSECOND * i;
