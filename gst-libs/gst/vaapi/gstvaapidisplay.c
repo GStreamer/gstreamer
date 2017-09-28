@@ -839,7 +839,7 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
       GST_VAAPI_DISPLAY_GET_CLASS (display);
   GstVaapiDisplayInfo info = {
     .display = display,
-    .display_type = priv->display_type,
+    .display_type = klass->display_type,
   };
 
   switch (init_type) {
@@ -870,7 +870,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
       if (!klass->get_display || !klass->get_display (display, &info))
         return FALSE;
       priv->display = info.va_display;
-      priv->display_type = info.display_type;
       priv->native_display = info.native_display;
       if (klass->get_size)
         klass->get_size (display, &priv->width, &priv->height);
@@ -921,7 +920,6 @@ gst_vaapi_display_init (GstVaapiDisplay * display)
       gst_vaapi_display_get_instance_private (display);
 
   display->priv = priv;
-  priv->display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
   priv->par_n = 1;
   priv->par_d = 1;
 
@@ -1824,9 +1822,7 @@ get_render_mode_VADisplayAttribDirectSurface (GstVaapiDisplay * display,
 static gboolean
 get_render_mode_default (GstVaapiDisplay * display, GstVaapiRenderMode * pmode)
 {
-  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
-
-  switch (priv->display_type) {
+  switch (GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display)) {
 #if USE_WAYLAND
     case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
       /* wl_buffer mapped from VA surface through vaGetSurfaceBufferWl() */

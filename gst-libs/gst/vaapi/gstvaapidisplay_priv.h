@@ -94,7 +94,7 @@ typedef enum _GstVaapiDisplayInitType           GstVaapiDisplayInitType;
  */
 #undef  GST_VAAPI_DISPLAY_VADISPLAY_TYPE
 #define GST_VAAPI_DISPLAY_VADISPLAY_TYPE(display) \
-  (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->display_type)
+  (GST_VAAPI_DISPLAY_GET_CLASS (display)->display_type)
 
 /**
  * GST_VAAPI_DISPLAY_HAS_VPP:
@@ -110,7 +110,6 @@ typedef enum _GstVaapiDisplayInitType           GstVaapiDisplayInitType;
 struct _GstVaapiDisplayPrivate
 {
   GRecMutex mutex;
-  GstVaapiDisplayType display_type;
   gchar *display_name;
   VADisplay display;
   gpointer native_display;
