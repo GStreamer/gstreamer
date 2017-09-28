@@ -67,6 +67,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 		</implements>
 	</add-node>
 	<attr path="/api/namespace/boxed[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstIterator']/field[@cname='master_cookie']" name="type">guint32*</attr>
 	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']"/>
 	<!-- Fix for GstChildProxy -->
 	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_get_property']" name="hidden">1</attr>
