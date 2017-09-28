@@ -809,11 +809,13 @@ public:
     void (*got_video_frame) (GstElement * videosrc,
         IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
         GstClockTime capture_time, GstClockTime stream_time,
-        GstClockTime stream_duration, IDeckLinkTimecode * dtc, gboolean
-        no_signal) = NULL;
+        GstClockTime stream_duration, GstClockTime hardware_time,
+        GstClockTime hardware_duration, IDeckLinkTimecode * dtc,
+        gboolean no_signal) = NULL;
     void (*got_audio_packet) (GstElement * videosrc,
         IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
         GstClockTime stream_time, GstClockTime stream_duration,
+        GstClockTime hardware_time, GstClockTime hardware_duration,
         gboolean no_signal) = NULL;
     GstDecklinkModeEnum mode;
     GstClockTime capture_time = GST_CLOCK_TIME_NONE;
@@ -823,6 +825,8 @@ public:
     HRESULT res;
     BMDTimeValue stream_time = GST_CLOCK_TIME_NONE;
     BMDTimeValue stream_duration = GST_CLOCK_TIME_NONE;
+    BMDTimeValue hardware_time = GST_CLOCK_TIME_NONE;
+    BMDTimeValue hardware_duration = GST_CLOCK_TIME_NONE;
 
     g_mutex_lock (&m_input->lock);
     if (m_input->videosrc) {
@@ -872,6 +876,15 @@ public:
         stream_duration = GST_CLOCK_TIME_NONE;
       }
 
+      res =
+          video_frame->GetHardwareReferenceTimestamp (GST_SECOND,
+          &hardware_time, &hardware_duration);
+      if (res != S_OK) {
+        GST_ERROR ("Failed to get hardware time: 0x%08lx", (unsigned long) res);
+        hardware_time = GST_CLOCK_TIME_NONE;
+        hardware_duration = GST_CLOCK_TIME_NONE;
+      }
+
       if (m_input->videosrc) {
         /* FIXME: Avoid circularity between gstdecklink.cpp and
          * gstdecklinkvideosrc.cpp */
@@ -889,12 +902,14 @@ public:
 
       /* passing dtc reference */
       got_video_frame (videosrc, video_frame, mode, capture_time,
-          stream_time, stream_duration, dtc, no_signal);
+          stream_time, stream_duration, hardware_time, hardware_duration, dtc,
+          no_signal);
     }
 
     if (got_audio_packet && audiosrc && audio_packet) {
       m_input->got_audio_packet (audiosrc, audio_packet, capture_time,
-          stream_time, stream_duration, no_signal);
+          stream_time, stream_duration, hardware_time, hardware_duration,
+          no_signal);
     } else {
       if (!audio_packet)
         GST_DEBUG ("Received no audio packet at %" GST_TIME_FORMAT,

@@ -57,6 +57,8 @@ typedef struct
   GstClockTime timestamp, duration;
   GstClockTime stream_timestamp;
   GstClockTime stream_duration;
+  GstClockTime hardware_timestamp;
+  GstClockTime hardware_duration;
   GstDecklinkModeEnum mode;
   BMDPixelFormat format;
   GstVideoTimeCode *tc;
@@ -626,7 +628,8 @@ static void
 gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
     GstClockTime capture_time, GstClockTime stream_time,
-    GstClockTime stream_duration, IDeckLinkTimecode * dtc, gboolean no_signal)
+    GstClockTime stream_duration, GstClockTime hardware_time,
+    GstClockTime hardware_duration, IDeckLinkTimecode * dtc, gboolean no_signal)
 {
   GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (element);
   GstClockTime timestamp, duration;
@@ -692,6 +695,8 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f.duration = duration;
     f.stream_timestamp = stream_time;
     f.stream_duration = stream_duration;
+    f.hardware_timestamp = hardware_time;
+    f.hardware_duration = hardware_duration;
     f.mode = mode;
     f.format = frame->GetPixelFormat ();
     f.no_signal = no_signal;
@@ -753,6 +758,8 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   const GstDecklinkMode *mode;
   static GstStaticCaps stream_reference =
       GST_STATIC_CAPS ("timestamp/x-decklink-stream");
+  static GstStaticCaps hardware_reference =
+      GST_STATIC_CAPS ("timestamp/x-decklink-hardware");
 
   g_mutex_lock (&self->lock);
   while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {
@@ -853,6 +860,9 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   gst_buffer_add_reference_timestamp_meta (*buffer,
       gst_static_caps_get (&stream_reference), f.stream_timestamp,
       f.stream_duration);
+  gst_buffer_add_reference_timestamp_meta (*buffer,
+      gst_static_caps_get (&hardware_reference), f.hardware_timestamp,
+      f.hardware_duration);
 
   mode = gst_decklink_get_mode (self->mode);
   if (mode->interlaced && mode->tff)

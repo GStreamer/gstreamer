@@ -63,6 +63,8 @@ typedef struct
   GstClockTime timestamp;
   GstClockTime stream_timestamp;
   GstClockTime stream_duration;
+  GstClockTime hardware_timestamp;
+  GstClockTime hardware_duration;
   gboolean no_signal;
 } CapturePacket;
 
@@ -471,7 +473,9 @@ gst_decklink_audio_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 static void
 gst_decklink_audio_src_got_packet (GstElement * element,
     IDeckLinkAudioInputPacket * packet, GstClockTime capture_time,
-    GstClockTime stream_time, GstClockTime stream_duration, gboolean no_signal)
+    GstClockTime stream_time, GstClockTime stream_duration,
+    GstClockTime hardware_time, GstClockTime hardware_duration,
+    gboolean no_signal)
 {
   GstDecklinkAudioSrc *self = GST_DECKLINK_AUDIO_SRC_CAST (element);
   GstClockTime timestamp;
@@ -537,6 +541,8 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     p.timestamp = timestamp;
     p.stream_timestamp = stream_time;
     p.stream_duration = stream_duration;
+    p.hardware_timestamp = hardware_time;
+    p.hardware_duration = hardware_duration;
     p.no_signal = no_signal;
     packet->AddRef ();
     gst_queue_array_push_tail_struct (self->current_packets, &p);
@@ -561,6 +567,8 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   gboolean discont = FALSE;
   static GstStaticCaps stream_reference =
       GST_STATIC_CAPS ("timestamp/x-decklink-stream");
+  static GstStaticCaps hardware_reference =
+      GST_STATIC_CAPS ("timestamp/x-decklink-hardware");
 
 retry:
   g_mutex_lock (&self->lock);
@@ -678,6 +686,9 @@ retry:
   gst_buffer_add_reference_timestamp_meta (*buffer,
       gst_static_caps_get (&stream_reference), p.stream_timestamp,
       p.stream_duration);
+  gst_buffer_add_reference_timestamp_meta (*buffer,
+      gst_static_caps_get (&hardware_reference), p.hardware_timestamp,
+      p.hardware_duration);
 
   GST_DEBUG_OBJECT (self,
       "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"
