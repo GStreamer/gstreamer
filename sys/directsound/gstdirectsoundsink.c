@@ -446,7 +446,7 @@ gst_directsound_sink_open (GstAudioSink * asink)
     }
   }
 
-  /* create and initialize a DirecSound object */
+  /* create and initialize a DirectSound object */
   if (FAILED (hRes = DirectSoundCreate (lpGuid, &dsoundsink->pDS, NULL))) {
     gchar *error_text = gst_hres_to_string (hRes);
     GST_ELEMENT_ERROR (dsoundsink, RESOURCE, OPEN_READ,
