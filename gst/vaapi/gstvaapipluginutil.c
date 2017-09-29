@@ -790,12 +790,32 @@ gst_video_info_force_nv12_if_encoded (GstVideoInfo * vinfo)
  * supported features.
  *
  * Returns: a new #GstVaapiDisplay instances. Free with
- * gst_vaapi_display_unref () after use.
+ * gst_vaapi_display_unref () after use. Or %NULL if no VA display is
+ * available.
  **/
 GstVaapiDisplay *
 gst_vaapi_create_test_display (void)
 {
-  return gst_vaapi_create_display (GST_VAAPI_DISPLAY_TYPE_ANY, NULL);
+  guint i;
+  GstVaapiDisplay *display = NULL;
+  const GstVaapiDisplayType test_display_map[] = {
+#if USE_DRM
+    GST_VAAPI_DISPLAY_TYPE_DRM,
+#endif
+#if USE_WAYLAND
+    GST_VAAPI_DISPLAY_TYPE_WAYLAND,
+#endif
+#if USE_X11
+    GST_VAAPI_DISPLAY_TYPE_X11,
+#endif
+  };
+
+  for (i = 0; G_N_ELEMENTS (test_display_map); i++) {
+    display = gst_vaapi_create_display (test_display_map[i], NULL);
+    if (display)
+      break;
+  }
+  return display;
 }
 
 /**
