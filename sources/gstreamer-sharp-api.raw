@@ -13207,9 +13207,11 @@
       <property name="Mute" cname="mute" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Volume" cname="volume" type="gdouble" readable="true" writeable="true" construct="false" construct-only="false"/>
     </interface>
-    <object name="AudioBaseSink" cname="GstAudioBaseSink" opaque="false" hidden="false" parent="GstElement">
+    <object name="AudioBaseSink" cname="GstAudioBaseSink" opaque="false" hidden="false" parent="GstBaseSink">
       <class_struct cname="GstAudioBaseSinkClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" name="ParentClass" type="GstBaseSinkClass"/>
+        <field cname="parent_class" access="public" writeable="false" readable="true" name="ParentClass" type="GstBaseSinkClass">
+          <warning>missing glib:type-name</warning>
+        </field>
         <method vm="create_ringbuffer"/>
         <method vm="payload"/>
         <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
@@ -13317,7 +13319,7 @@
       </field>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="AudioBaseSrc" cname="GstAudioBaseSrc" opaque="false" hidden="false" parent="GstElement">
+    <object name="AudioBaseSrc" cname="GstAudioBaseSrc" opaque="false" hidden="false" parent="GstPushSrc">
       <class_struct cname="GstAudioBaseSrcClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" name="ParentClass" type="GstPushSrcClass"/>
         <method vm="create_ringbuffer"/>
