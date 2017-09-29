@@ -58,12 +58,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstElement']/field[@cname='object']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstBin']/field[@cname='element']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstPipeline']/field[@cname='bin']" name="hidden">true</attr>
+
 	<!-- add opaque attribute to all structs which need special handling -->
 	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="opaque">true</attr>
 	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="parent">GstMiniObject</attr>
 	<attr path="/api/namespace//boxed/field[@type='GstMiniObject']" name="hidden">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstStructure']" name="opaque">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']" name="opaque">true</attr>
+
+	<attr path="/api/namespace/struct[@cname='GstTypeFind']" name="opaque">true</attr>
+    <!-- Add callback nodes that are not handled in structures (remove the data which is in the middle) -->
+	<remove-node path="/api/namespace/struct[@cname='GstTypeFind']/field[@cname='data']"/>
+	<remove-node path="/api/namespace/struct[@cname='GstTypeFind']/field[@cname='_gst_reserved']"/>
+	<add-node path="/api/namespace/struct[@cname='GstTypeFind']">
+      <field cname="peek" access="private" writeable="false" readable="false" name="Peek" type="gpointer" hidden="true"/>
+      <field cname="suggest" access="private" writeable="false" readable="false" name="Suggest" type="gpointer" hidden="true"/>
+      <field cname="data" access="public" writeable="true" readable="true" name="Data" type="gpointer" />
+      <field cname="get_length" access="private" writeable="false" readable="false" name="GetLengtk" type="gpointer" hidden="true"/>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" is-padding="true" />
+	</add-node>
+
 	<attr path="/api/namespace/boxed[@cname='GstIterator']" name="opaque">true</attr>
 	<!-- acknowledge that we GstIterator implements the IEnumerator interface -->
 	<add-node path="/api/namespace/boxed[@cname='GstIterator']">
