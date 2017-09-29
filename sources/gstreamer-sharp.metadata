@@ -23,6 +23,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<remove-node path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']"/>
 	<!-- Error with array -->
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_formats_contains']" name="hidden">true</attr>
+
+	<!-- GParamSpec are not handled in the generator -->
+	<attr path="/api/namespace/struct[@cname='GstParamSpecArray']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstParamSpecFraction']" name="hidden">true</attr>
+
 	<!-- MiniObject issues -->
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']" name="opaque">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='copy']" name="type">gpointer</attr>
