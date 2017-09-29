@@ -55,7 +55,9 @@ if __name__ == "__main__":
         '--glue-filename=' + opts.glue_file,
         '--gluelib-name=' + opts.glue_libname,
         '--glue-includes=' + opts.glue_includes,
-        '--assembly-name=' + opts.assembly_name,]
+        '--assembly-name=' + opts.assembly_name,
+        '--all-opaque',
+    ]
 
     if opts.schema:
         cmd += ['--schema=' + opts.schema]

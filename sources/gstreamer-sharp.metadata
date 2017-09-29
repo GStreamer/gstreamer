@@ -87,10 +87,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	</add-node>
 	<attr path="/api/namespace/boxed[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstIterator']/field[@cname='master_cookie']" name="type">guint32*</attr>
-	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']"/>
+	<attr path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']" name="hidden">true</attr>
 	<!-- Fix for GstChildProxy -->
 	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_get_property']" name="hidden">1</attr>
 	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_set_property']" name="hidden">1</attr>
+
 	<!-- FIXME: array handling -->
 	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_copy_entry']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_get_entry']" name="hidden">true</attr>
@@ -101,6 +102,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/struct[@cname='GstFFTF32']/method[@cname='gst_fft_f32_fft']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstFFTF32']/method[@cname='gst_fft_f32_window']" name="hidden">true</attr>
 	<attr path="//virtual_method[@cname='get_g_value_array']" name="hidden">true</attr>
+
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm"/>
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden"/>
@@ -115,11 +117,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 		</parameters>
 		</method>
 	</add-node>
+
 	<!-- Some glue problems -->
 	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='object']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='destroy_data']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
+
+	<!-- Hide structure callbacks -->
+	<attr path="/api/namespace/struct[@cname='GstDataQueueItem']/field[@cname='destroy']" name="hidden">true</attr>
 
 	<!-- hide user data; FIXME: already removed in 1.2 GIR file, remove when we update to this version -->
 	<attr path="/api/namespace/object[@cname='GstBus']/method[@cname='gst_bus_sync_signal_handler']/parameters/parameter[@name='data']" name="hidden">1</attr>
@@ -275,8 +281,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//constant[@name='SECOND']" name="ctype">gint64</attr>
 	<attr path="//constant[@name='MSECOND']" name="ctype">gint64</attr>
 	<attr path="//method[parameters/parameter[contains(@type, 'Class*')]]" name="hidden">true</attr>
-	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="type">gpointer</attr>
-	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="array">false</attr>
+	<attr path="//struct[@cname='GstMapInfo']/field[@name='Data']" name="hidden">true</attr>
 	<attr path="//method[@cname='gst_tag_list_copy_value']/parameters/parameter[@name='dest']" name="pass_as">ref</attr>
 	<attr path="//object/field[@cname='parent']" name="hidden">true</attr>
     <!-- buffer fixes -->
