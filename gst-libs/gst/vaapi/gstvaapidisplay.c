@@ -783,6 +783,25 @@ gst_vaapi_display_calculate_pixel_aspect_ratio (GstVaapiDisplay * display)
 }
 
 static void
+gst_vaapi_display_ensure_screen_resolution (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
+  const GstVaapiDisplayClass *const klass =
+      GST_VAAPI_DISPLAY_GET_CLASS (display);
+
+  if (priv->got_scrres)
+    return;
+
+  if (klass->get_size)
+    klass->get_size (display, &priv->width, &priv->height);
+  if (klass->get_size_mm)
+    klass->get_size_mm (display, &priv->width_mm, &priv->height_mm);
+
+  gst_vaapi_display_calculate_pixel_aspect_ratio (display);
+  priv->got_scrres = TRUE;
+}
+
+static void
 gst_vaapi_display_destroy (GstVaapiDisplay * display)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
@@ -869,11 +888,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
         return FALSE;
       priv->display = info.va_display;
       priv->native_display = info.native_display;
-      if (klass->get_size)
-        klass->get_size (display, &priv->width, &priv->height);
-      if (klass->get_size_mm)
-        klass->get_size_mm (display, &priv->width_mm, &priv->height_mm);
-      gst_vaapi_display_calculate_pixel_aspect_ratio (display);
       break;
   }
   if (!priv->display)
@@ -1379,6 +1393,8 @@ gst_vaapi_display_get_width (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, 0);
 
+  gst_vaapi_display_ensure_screen_resolution (display);
+
   return GST_VAAPI_DISPLAY_GET_PRIVATE (display)->width;
 }
 
@@ -1394,6 +1410,8 @@ guint
 gst_vaapi_display_get_height (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, 0);
+
+  gst_vaapi_display_ensure_screen_resolution (display);
 
   return GST_VAAPI_DISPLAY_GET_PRIVATE (display)->height;
 }
@@ -1411,6 +1429,8 @@ gst_vaapi_display_get_size (GstVaapiDisplay * display, guint * pwidth,
     guint * pheight)
 {
   g_return_if_fail (GST_VAAPI_DISPLAY (display));
+
+  gst_vaapi_display_ensure_screen_resolution (display);
 
   if (pwidth)
     *pwidth = GST_VAAPI_DISPLAY_GET_PRIVATE (display)->width;
@@ -1432,6 +1452,8 @@ gst_vaapi_display_get_pixel_aspect_ratio (GstVaapiDisplay * display,
     guint * par_n, guint * par_d)
 {
   g_return_if_fail (display != NULL);
+
+  gst_vaapi_display_ensure_screen_resolution (display);
 
   if (par_n)
     *par_n = GST_VAAPI_DISPLAY_GET_PRIVATE (display)->par_n;

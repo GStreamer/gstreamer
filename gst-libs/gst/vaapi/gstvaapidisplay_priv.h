@@ -128,6 +128,7 @@ struct _GstVaapiDisplayPrivate
   guint use_foreign_display:1;
   guint has_vpp:1;
   guint has_profiles:1;
+  guint got_scrres:1;
 };
 
 /**
