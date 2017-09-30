@@ -37,6 +37,7 @@
 #include <gudev/gudev.h>
 #endif
 
+#include "ext/videodev2.h"
 #include "gstv4l2object.h"
 #include "gstv4l2tuner.h"
 #include "gstv4l2colorbalance.h"
@@ -2852,6 +2853,25 @@ error:
 }
 
 static gboolean
+gst_v4l2_object_is_dmabuf_supported (GstV4l2Object * v4l2object)
+{
+  gboolean ret = TRUE;
+  struct v4l2_exportbuffer expbuf = {
+    .type = v4l2object->type,
+    .index = -1,
+    .plane = -1,
+    .flags = O_CLOEXEC | O_RDWR,
+  };
+
+  /* Expected to fail, but ENOTTY tells us that it is not implemented. */
+  v4l2_ioctl (v4l2object->video_fd, VIDIOC_EXPBUF, &expbuf);
+  if (errno == -ENOTTY)
+    ret = FALSE;
+
+  return ret;
+}
+
+static gboolean
 gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
 {
   GstV4l2IOMode mode;
@@ -2872,8 +2892,14 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
     goto method_not_supported;
 
   if (v4l2object->device_caps & V4L2_CAP_STREAMING) {
-    if (v4l2object->req_mode == GST_V4L2_IO_AUTO)
-      mode = GST_V4L2_IO_MMAP;
+    if (v4l2object->req_mode == GST_V4L2_IO_AUTO) {
+      if (!V4L2_TYPE_IS_OUTPUT (v4l2object->type) &&
+          gst_v4l2_object_is_dmabuf_supported (v4l2object)) {
+        mode = GST_V4L2_IO_DMABUF;
+      } else {
+        mode = GST_V4L2_IO_MMAP;
+      }
+    }
   } else if (v4l2object->req_mode == GST_V4L2_IO_MMAP)
     goto method_not_supported;
 
