@@ -82,7 +82,7 @@ static GCond _run_loop_cond;
 static GstOSXVideoSinkClass *sink_class = NULL;
 static GstVideoSinkClass *parent_class = NULL;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSEventMaskAny                       NSAnyEventMask
 #define NSWindowStyleMaskTitled              NSTitledWindowMask
 #define NSWindowStyleMaskClosable            NSClosableWindowMask
