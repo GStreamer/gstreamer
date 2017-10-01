@@ -22,7 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSEventMaskAny                       NSAnyEventMask
 #define NSWindowStyleMaskTitled              NSTitledWindowMask
 #define NSWindowStyleMaskClosable            NSClosableWindowMask
