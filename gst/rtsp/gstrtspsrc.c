@@ -1535,6 +1535,9 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
   else
     goto unknown_proto;
 
+  if (gst_sdp_media_get_attribute_val (media, "sendonly") != NULL)
+    goto sendonly_media;
+
   /* Parse global SDP attributes once */
   global_caps = gst_caps_new_empty_simple ("application/x-unknown");
   GST_DEBUG ("mapping sdp session level attributes to caps");
@@ -1600,6 +1603,11 @@ no_proto:
 unknown_proto:
   {
     GST_ERROR_OBJECT (src, "unknown proto in media: '%s'", proto);
+    return;
+  }
+sendonly_media:
+  {
+    GST_DEBUG_OBJECT (src, "sendonly media ignored");
     return;
   }
 }
