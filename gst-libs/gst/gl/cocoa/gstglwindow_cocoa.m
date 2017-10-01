@@ -28,7 +28,7 @@
 
 #include "gstgl_cocoa_private.h"
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSWindowStyleMaskTitled              NSTitledWindowMask
 #define NSWindowStyleMaskClosable            NSClosableWindowMask
 #define NSWindowStyleMaskResizable           NSResizableWindowMask

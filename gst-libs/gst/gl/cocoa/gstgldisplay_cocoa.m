@@ -34,7 +34,7 @@ G_DEFINE_TYPE (GstGLDisplayCocoa, gst_gl_display_cocoa, GST_TYPE_GL_DISPLAY);
 static void gst_gl_display_cocoa_finalize (GObject * object);
 static guintptr gst_gl_display_cocoa_get_handle (GstGLDisplay * display);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
 #define NSEventMaskAny                       NSAnyEventMask
 #endif
 
