@@ -1691,7 +1691,7 @@ gst_query_parse_nth_allocation_pool (GstQuery * query, guint index,
  * @index: index to modify
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @pool: (transfer none) (allow-none): the #GstBufferPool
- * @size: the size
+ * @size: the buffer size
  * @min_buffers: the min buffers
  * @max_buffers: the max buffers
  *
