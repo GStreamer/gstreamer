@@ -797,9 +797,16 @@ gst_tee_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         if (ctx.num_pads > 1)
           ctx.min_buffers++;
 
-        gst_query_add_allocation_param (ctx.query, NULL, &ctx.params);
-        gst_query_add_allocation_pool (ctx.query, NULL, ctx.size,
-            ctx.min_buffers, 0);
+        /* Check that we actually have parameters besides the defaults. */
+        if (ctx.params.align || ctx.params.prefix || ctx.params.padding) {
+          gst_query_add_allocation_param (ctx.query, NULL, &ctx.params);
+        }
+        /* When size == 0, buffers created from this pool would have no memory
+         * allocated. */
+        if (ctx.size) {
+          gst_query_add_allocation_pool (ctx.query, NULL, ctx.size,
+              ctx.min_buffers, 0);
+        }
       } else {
         gst_tee_clear_query_allocation_meta (query);
       }
