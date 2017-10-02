@@ -762,44 +762,43 @@ allocation_query_fail (GstPad * pad, GstObject * parent, GstQuery * query)
   return FALSE;
 }
 
-GST_START_TEST (test_allocation_query)
+static void
+add_sink_pad_and_setup_query_func (GstElement * tee,
+    GstPadQueryFunction query_func)
+{
+  GstPad *sink;
+  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS_ANY);
+
+  sink = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
+  fail_unless (sink != NULL);
+  gst_pad_set_query_function (sink, query_func);
+}
+
+GST_START_TEST (test_allocation_query_aggregation)
 {
   GstElement *tee;
-  GstPad *sink1, *sink2, *sink3;
   GstPad *sinkpad, *srcpad;
   GstCaps *caps;
   GstQuery *query;
   guint size, min, max;
   GstAllocationParams param;
 
-  static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS_ANY);
-
-  caps = gst_caps_new_empty_simple ("test/test");
-
   tee = gst_check_setup_element ("tee");
   fail_unless (tee);
 
   sinkpad = gst_element_get_static_pad (tee, "sink");
+  add_sink_pad_and_setup_query_func (tee, allocation_query1);
+  add_sink_pad_and_setup_query_func (tee, allocation_query2);
+  add_sink_pad_and_setup_query_func (tee, allocation_query3);
 
-  sink1 = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
-  fail_unless (sink1 != NULL);
-  gst_pad_set_query_function (sink1, allocation_query1);
-
-  sink2 = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
-  fail_unless (sink2 != NULL);
-  gst_pad_set_query_function (sink2, allocation_query2);
-
-  sink3 = gst_check_setup_sink_pad_by_name (tee, &sinktemplate, "src_%u");
-  fail_unless (sink3 != NULL);
-  gst_pad_set_query_function (sink3, allocation_query3);
-
+  caps = gst_caps_new_empty_simple ("test/test");
   query = gst_query_new_allocation (caps, TRUE);
   fail_unless (gst_pad_query (sinkpad, query));
 
-  fail_unless (gst_query_get_n_allocation_pools (query), 1);
+  ck_assert_int_eq (gst_query_get_n_allocation_pools (query), 1);
   gst_query_parse_nth_allocation_pool (query, 0, NULL, &size, &min, &max);
   fail_unless (size == 130);
   /* The tee will allocate one more buffer when multiplexing */
@@ -816,17 +815,8 @@ GST_START_TEST (test_allocation_query)
   fail_unless (gst_query_parse_nth_allocation_meta (query, 0, NULL) ==
       GST_PARENT_BUFFER_META_API_TYPE);
 
+  /* TODO: what is this testing? move to a new test? */
   srcpad = gst_element_get_request_pad (tee, "src_%u");
-  gst_query_unref (query);
-  query = gst_query_new_allocation (caps, TRUE);
-  fail_if (gst_pad_query (sinkpad, query));
-
-  g_object_set (tee, "allow-not-linked", TRUE, NULL);
-  gst_query_unref (query);
-  query = gst_query_new_allocation (caps, TRUE);
-  fail_unless (gst_pad_query (sinkpad, query));
-
-  gst_pad_set_query_function (sink3, allocation_query_fail);
   gst_query_unref (query);
   query = gst_query_new_allocation (caps, TRUE);
   fail_if (gst_pad_query (sinkpad, query));
@@ -838,6 +828,70 @@ GST_START_TEST (test_allocation_query)
   gst_check_teardown_pad_by_name (tee, "src_2");
   gst_element_release_request_pad (tee, srcpad);
   gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_check_teardown_element (tee);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_allocation_query_allow_not_linked)
+{
+  GstElement *tee;
+  GstPad *sinkpad;
+  GstCaps *caps;
+  GstQuery *query;
+
+  tee = gst_check_setup_element ("tee");
+  fail_unless (tee);
+  g_object_set (tee, "allow-not-linked", TRUE, NULL);
+
+  sinkpad = gst_element_get_static_pad (tee, "sink");
+  add_sink_pad_and_setup_query_func (tee, allocation_query1);
+  add_sink_pad_and_setup_query_func (tee, allocation_query2);
+  add_sink_pad_and_setup_query_func (tee, allocation_query3);
+
+  caps = gst_caps_new_empty_simple ("test/test");
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_unless (gst_pad_query (sinkpad, query));
+
+  gst_caps_unref (caps);
+  gst_query_unref (query);
+  gst_check_teardown_pad_by_name (tee, "src_0");
+  gst_check_teardown_pad_by_name (tee, "src_1");
+  gst_check_teardown_pad_by_name (tee, "src_2");
+  gst_object_unref (sinkpad);
+  gst_check_teardown_element (tee);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_allocation_query_failure)
+{
+  GstElement *tee;
+  GstPad *sinkpad;
+  GstCaps *caps;
+  GstQuery *query;
+
+  tee = gst_check_setup_element ("tee");
+  fail_unless (tee);
+  g_object_set (tee, "allow-not-linked", TRUE, NULL);
+
+  sinkpad = gst_element_get_static_pad (tee, "sink");
+  add_sink_pad_and_setup_query_func (tee, allocation_query1);
+  add_sink_pad_and_setup_query_func (tee, allocation_query2);
+  add_sink_pad_and_setup_query_func (tee, allocation_query_fail);
+
+  caps = gst_caps_new_empty_simple ("test/test");
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_if (gst_pad_query (sinkpad, query));
+
+  gst_caps_unref (caps);
+  gst_query_unref (query);
+  gst_check_teardown_pad_by_name (tee, "src_0");
+  gst_check_teardown_pad_by_name (tee, "src_1");
+  gst_check_teardown_pad_by_name (tee, "src_2");
   gst_object_unref (sinkpad);
   gst_check_teardown_element (tee);
 }
@@ -862,7 +916,9 @@ tee_suite (void)
   tcase_add_test (tc_chain, test_flow_aggregation);
   tcase_add_test (tc_chain, test_request_pads);
   tcase_add_test (tc_chain, test_allow_not_linked);
-  tcase_add_test (tc_chain, test_allocation_query);
+  tcase_add_test (tc_chain, test_allocation_query_aggregation);
+  tcase_add_test (tc_chain, test_allocation_query_allow_not_linked);
+  tcase_add_test (tc_chain, test_allocation_query_failure);
 
   return s;
 }
