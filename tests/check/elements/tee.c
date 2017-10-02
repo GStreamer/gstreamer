@@ -699,15 +699,10 @@ GST_START_TEST (test_allow_not_linked)
 GST_END_TEST;
 
 static gboolean
-allocation_query0 (GstPad * pad, GstObject * parent, GstQuery * query)
+allocation_query_empty (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstAllocationParams param = { 0, 0, 0, 0 };
-
   if (GST_QUERY_TYPE (query) != GST_QUERY_ALLOCATION)
     return gst_pad_query_default (pad, parent, query);
-
-  gst_query_add_allocation_pool (query, NULL, 0, 0, 0);
-  gst_query_add_allocation_param (query, NULL, &param);
 
   return TRUE;
 }
@@ -916,7 +911,7 @@ GST_START_TEST (test_allocation_query_failure)
 GST_END_TEST;
 
 
-GST_START_TEST (test_allocation_query_no_pool)
+GST_START_TEST (test_allocation_query_empty)
 {
   GstElement *tee;
   GstPad *sinkpad;
@@ -927,7 +922,7 @@ GST_START_TEST (test_allocation_query_no_pool)
   fail_unless (tee);
 
   sinkpad = gst_element_get_static_pad (tee, "sink");
-  add_sink_pad_and_setup_query_func (tee, allocation_query0);
+  add_sink_pad_and_setup_query_func (tee, allocation_query_empty);
 
   caps = gst_caps_new_empty_simple ("test/test");
 
@@ -935,6 +930,7 @@ GST_START_TEST (test_allocation_query_no_pool)
   fail_unless (gst_pad_query (sinkpad, query));
 
   ck_assert_int_eq (gst_query_get_n_allocation_pools (query), 0);
+  ck_assert_int_eq (gst_query_get_n_allocation_params (query), 0);
 
   gst_caps_unref (caps);
   gst_query_unref (query);
@@ -967,7 +963,7 @@ tee_suite (void)
   tcase_add_test (tc_chain, test_allocation_query_aggregation);
   tcase_add_test (tc_chain, test_allocation_query_allow_not_linked);
   tcase_add_test (tc_chain, test_allocation_query_failure);
-  tcase_add_test (tc_chain, test_allocation_query_no_pool);
+  tcase_add_test (tc_chain, test_allocation_query_empty);
 
   return s;
 }
