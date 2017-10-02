@@ -1098,6 +1098,54 @@ GST_START_TEST (test_iterate_sorted)
 
 GST_END_TEST;
 
+GST_START_TEST (test_iterate_sorted_unlinked)
+{
+  GstElement *pipeline, *src, *sink, *identity;
+  GstIterator *it;
+  GValue elem = { 0, };
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink == NULL, "Could not create fakesink1");
+
+  identity = gst_element_factory_make ("identity", NULL);
+  fail_if (identity == NULL, "Could not create identity");
+
+  gst_bin_add_many (GST_BIN (pipeline), sink, identity, src, NULL);
+
+  /* If elements aren't linked, we should end up with:
+   * * sink elements always first
+   * * source elements always last
+   * * any other elements in between
+   */
+
+  it = gst_bin_iterate_sorted (GST_BIN (pipeline));
+  fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
+  fail_unless (g_value_get_object (&elem) == (gpointer) sink);
+  g_value_reset (&elem);
+
+  fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
+  fail_unless (g_value_get_object (&elem) == (gpointer) identity);
+  g_value_reset (&elem);
+
+  fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
+  fail_unless (g_value_get_object (&elem) == (gpointer) src);
+  g_value_reset (&elem);
+
+  g_value_unset (&elem);
+  gst_iterator_free (it);
+
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static void
 test_link_structure_change_state_changed_sync_cb (GstBus * bus,
     GstMessage * message, gpointer data)
@@ -1751,6 +1799,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_add_linked);
   tcase_add_test (tc_chain, test_add_self);
   tcase_add_test (tc_chain, test_iterate_sorted);
+  tcase_add_test (tc_chain, test_iterate_sorted_unlinked);
   tcase_add_test (tc_chain, test_link_structure_change);
   tcase_add_test (tc_chain, test_state_failure_remove);
   tcase_add_test (tc_chain, test_state_failure_unref);
