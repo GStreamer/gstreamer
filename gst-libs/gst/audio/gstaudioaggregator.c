@@ -1086,12 +1086,8 @@ sync_pad_values (GstAudioAggregator * aagg, GstAudioAggregatorPad * pad)
 static GstFlowReturn
 gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 {
-  /* Get all pads that have data for us and store them in a
-   * new list.
-   *
-   * Calculate the current output offset/timestamp and
-   * offset_end/timestamp_end. Allocate a silence buffer
-   * for this and store it.
+  /* Calculate the current output offset/timestamp and offset_end/timestamp_end.
+   * Allocate a silence buffer for this and store it.
    *
    * For all pads:
    * 1) Once per input buffer (cached)
@@ -1108,11 +1104,11 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
    *    buffer and advance the pad's position. Remember if this pad needs
    *    a new buffer to advance behind the output offset_end.
    *
-   * 3) If we had no pad with a buffer, go EOS.
+   * If we had no pad with a buffer, go EOS.
    *
-   * 4) If we had at least one pad that did not advance behind output
-   *    offset_end, let collected be called again for the current
-   *    output offset/offset_end.
+   * If we had at least one pad that did not advance behind output
+   * offset_end, let aggregate be called again for the current
+   * output offset/offset_end.
    */
   GstElement *element;
   GstAudioAggregator *aagg;
