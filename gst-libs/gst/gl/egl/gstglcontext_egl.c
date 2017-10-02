@@ -32,6 +32,7 @@
 
 #include <gst/gl/gstglcontext_private.h>
 #include <gst/gl/gstglfeature.h>
+#include <gst/gl/gstglwindow.h>
 
 #include "gstegl.h"
 #include "../utils/opengl_versions.h"
