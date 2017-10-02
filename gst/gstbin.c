@@ -2313,6 +2313,12 @@ find_element (GstElement * element, GstBinSortIterator * bit)
   if (bit->best == NULL || bit->best_deg > degree) {
     bit->best = element;
     bit->best_deg = degree;
+  } else if (bit->best_deg == degree
+      && GST_OBJECT_FLAG_IS_SET (bit->best, GST_ELEMENT_FLAG_SOURCE)
+      && !GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE)) {
+    /* If two elements have the same degree, we want to ensure we
+     * return non-source elements first. */
+    bit->best = element;
   }
 }
 
