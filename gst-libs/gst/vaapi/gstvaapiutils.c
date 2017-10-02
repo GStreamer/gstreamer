@@ -65,6 +65,18 @@ gst_vaapi_err (void *data, const char *message)
   GST_ERROR ("%s", msg);
   g_free (msg);
 }
+
+static void
+gst_vaapi_warning (void *data, const char *message)
+{
+  gchar *msg;
+
+  msg = strip_msg (message);
+  if (!msg)
+    return;
+  GST_WARNING ("%s", msg);
+  g_free (msg);
+}
 #endif
 
 static void
@@ -91,13 +103,18 @@ vaapi_initialize (VADisplay dpy)
   VAStatus status;
 
 #if VA_CHECK_VERSION (1,0,0)
-  vaSetErrorCallback (dpy, gst_vaapi_err, NULL);
+  vaSetErrorCallback (dpy, gst_vaapi_warning, NULL);
   vaSetInfoCallback (dpy, gst_vaapi_log, NULL);
 #elif VA_CHECK_VERSION (0,40,0)
   vaSetInfoCallback (gst_vaapi_log);
 #endif
 
   status = vaInitialize (dpy, &major_version, &minor_version);
+
+#if VA_CHECK_VERSION (1,0,0)
+  vaSetErrorCallback (dpy, gst_vaapi_err, NULL);
+#endif
+
   if (!vaapi_check_status (status, "vaInitialize()"))
     return FALSE;
 
