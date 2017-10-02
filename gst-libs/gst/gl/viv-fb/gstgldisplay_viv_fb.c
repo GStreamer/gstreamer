@@ -29,75 +29,26 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
 
-G_DEFINE_TYPE (GstGLDisplayVivFB, gst_gl_display_viv_fb, GST_TYPE_GL_DISPLAY);
-
-static void gst_gl_display_viv_fb_finalize (GObject * object);
-static guintptr gst_gl_display_viv_fb_get_handle (GstGLDisplay * display);
-
-static void
-gst_gl_display_viv_fb_class_init (GstGLDisplayVivFBClass * klass)
-{
-  GST_GL_DISPLAY_CLASS (klass)->get_handle =
-      GST_DEBUG_FUNCPTR (gst_gl_display_viv_fb_get_handle);
-
-  G_OBJECT_CLASS (klass)->finalize = gst_gl_display_viv_fb_finalize;
-}
-
-static void
-gst_gl_display_viv_fb_init (GstGLDisplayVivFB * display_viv_fb)
-{
-  GstGLDisplay *display = (GstGLDisplay *) display_viv_fb;
-
-  display->type = GST_GL_DISPLAY_TYPE_VIV_FB;
-
-  display_viv_fb->disp_idx = 0;
-  display_viv_fb->display = NULL;
-}
-
-static void
-gst_gl_display_viv_fb_finalize (GObject * object)
-{
-  GstGLDisplayVivFB *display_viv_fb = GST_GL_DISPLAY_VIV_FB (object);
-
-  if (display_viv_fb->display)
-    fbDestroyDisplay (display_viv_fb->display);
-
-  G_OBJECT_CLASS (gst_gl_display_viv_fb_parent_class)->finalize (object);
-}
-
 /**
  * gst_gl_display_viv_fb_new:
  * @disp_idx: a display index
  *
- * Create a new #GstGLDisplayVivFB from the FB display index.
+ * Create a new #GstGLDisplay from the FB display index.
  *
  * Returns: (transfer full): a new #GstGLDisplayVivFB or %NULL
  */
-GstGLDisplayVivFB *
+GstGLDisplayEGL *
 gst_gl_display_viv_fb_new (gint disp_idx)
 {
-  GstGLDisplayVivFB *display;
+  EGLDisplay display;
 
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
   GST_DEBUG ("creating Vivante FB EGL display %d", disp_idx);
 
-  display = g_object_new (GST_TYPE_GL_DISPLAY_VIV_FB, NULL);
-  gst_object_ref_sink (display);
-  display->disp_idx = disp_idx;
-  display->display = fbGetDisplayByIndex (display->disp_idx);
-  if (!display->display) {
-    GST_ERROR ("Failed to open Vivante FB display %d", disp_idx);
-    return NULL;
-  }
-
+  display = fbGetDisplayByIndex (disp_idx);
   GST_DEBUG ("Created Vivante FB EGL display %p", (gpointer) display->display);
-
-  return display;
-}
-
-static guintptr
-gst_gl_display_viv_fb_get_handle (GstGLDisplay * display)
-{
-  return (guintptr) GST_GL_DISPLAY_VIV_FB (display)->display;
+  return
+      gst_gl_display_egl_new_with_egl_display (eglGetDisplay (
+          (EGLNativeDisplayType) display));
 }
