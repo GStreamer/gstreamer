@@ -1212,7 +1212,6 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GstBuffer *inbuf;
     GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
     GstAggregatorPad *aggpad = (GstAggregatorPad *) iter->data;
-    gboolean drop_buf = FALSE;
     gboolean pad_eos = gst_aggregator_pad_is_eos (aggpad);
 
     if (!pad_eos)
@@ -1289,6 +1288,8 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     if (pad->priv->output_offset >= aagg->priv->offset
         && pad->priv->output_offset <
         aagg->priv->offset + blocksize && pad->priv->buffer) {
+      gboolean drop_buf = FALSE;
+
       GST_LOG_OBJECT (aggpad, "Mixing buffer for current offset");
       drop_buf = !gst_audio_aggregator_mix_buffer (aagg, pad, pad->priv->buffer,
           outbuf);
@@ -1299,12 +1300,14 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       } else {
         is_done = FALSE;
       }
+      if (drop_buf) {
+        GST_OBJECT_UNLOCK (pad);
+        gst_aggregator_pad_drop_buffer (aggpad);
+        continue;
+      }
     }
 
     GST_OBJECT_UNLOCK (pad);
-    if (drop_buf)
-      gst_aggregator_pad_drop_buffer (aggpad);
-
   }
   GST_OBJECT_UNLOCK (agg);
 
