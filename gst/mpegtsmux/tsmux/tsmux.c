@@ -267,7 +267,7 @@ tsmux_get_si_interval (TsMux * mux)
  *
  * Add a Service Information #GstMpegtsSection to the stream
  *
- * Returns: #TRUE on success, #FALSE otherwise
+ * Returns: %TRUE on success, %FALSE otherwise
  */
 gboolean
 tsmux_add_mpegts_si_section (TsMux * mux, GstMpegtsSection * section)

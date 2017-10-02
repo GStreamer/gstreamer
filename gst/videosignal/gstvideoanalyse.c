@@ -21,7 +21,7 @@
  * @title: videoanalyse
  *
  * This plugin analyses every video frame and if the #GstVideoAnalyse:message
- * property is #TRUE, posts an element message with video statistics called
+ * property is %TRUE, posts an element message with video statistics called
  * `GstVideoAnalyse`.
  *
  * The message's structure contains these fields:

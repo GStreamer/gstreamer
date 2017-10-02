@@ -34,12 +34,12 @@
  * After the pattern has been found and the data pattern has been read, an
  * element message called `GstSimpleVideoMarkDetect` will
  * be posted on the bus. If the pattern is no longer found in the frame, the
- * same element message is posted with the have-pattern field set to #FALSE.
- * The message is only posted if the #GstSimpleVideoMarkDetect:message property is #TRUE.
+ * same element message is posted with the have-pattern field set to %FALSE.
+ * The message is only posted if the #GstSimpleVideoMarkDetect:message property is %TRUE.
  *
  * The message's structure contains these fields:
  *
- * * #gboolean`have-pattern`: if the pattern was found. This field will be set to #TRUE for as long as
+ * * #gboolean`have-pattern`: if the pattern was found. This field will be set to %TRUE for as long as
  *   the pattern was found in the frame and set to FALSE for the first frame
  *   that does not contain the pattern anymore.
  *
@@ -51,7 +51,7 @@
  *
  * * #GstClockTime `duration`: the duration of the buffer.
  *
- * * #guint64 `data`: the data-pattern found after the pattern or 0 when have-signal is #FALSE.
+ * * #guint64 `data`: the data-pattern found after the pattern or 0 when have-signal is %FALSE.
  *
  * ## Example launch line
  * |[

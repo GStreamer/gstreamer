@@ -73,7 +73,7 @@ typedef struct _GstAdaptiveDemuxTestCallbacks
    * @stream: #GstAdaptiveDemuxTestOutputStream
    * @buffer: the #GstBuffer that was recevied by #GstAppSink
    * @user_data: the user_data passed to gst_adaptive_demux_test_run()
-   * Returns: #TRUE to continue processing, #FALSE to cause EOS
+   * Returns: %TRUE to continue processing, %FALSE to cause EOS
    *
    * Can be used by a test to perform additional operations (eg validate
    * output data)

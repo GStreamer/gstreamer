@@ -257,7 +257,7 @@ struct _GstAdaptiveDemuxClass
    * Parse the manifest and add the created streams using
    * gst_adaptive_demux_stream_new()
    *
-   * Returns: #TRUE if successful
+   * Returns: %TRUE if successful
    */
   gboolean      (*process_manifest) (GstAdaptiveDemux * demux, GstBuffer * manifest);
 
@@ -318,7 +318,7 @@ struct _GstAdaptiveDemuxClass
    * The demuxer should seek on all its streams to the specified position
    * in the seek event
    *
-   * Returns: #TRUE if successful
+   * Returns: %TRUE if successful
    */
   gboolean      (*seek)             (GstAdaptiveDemux * demux, GstEvent * seek);
 
@@ -331,7 +331,7 @@ struct _GstAdaptiveDemuxClass
    * this function is called to verify if there is a new period to be played
    * in sequence.
    *
-   * Returns: #TRUE if there is another period
+   * Returns: %TRUE if there is another period
    */
   gboolean      (*has_next_period)  (GstAdaptiveDemux * demux);
   /**
@@ -380,7 +380,7 @@ struct _GstAdaptiveDemuxClass
    * needs a caps change it should set the new caps using
    * gst_adaptive_demux_stream_set_caps().
    *
-   * Returns: #TRUE if the stream changed bitrate, #FALSE otherwise
+   * Returns: %TRUE if the stream changed bitrate, %FALSE otherwise
    */
   gboolean      (*stream_select_bitrate) (GstAdaptiveDemuxStream * stream, guint64 bitrate);
   /**
@@ -404,7 +404,7 @@ struct _GstAdaptiveDemuxClass
    * of a new fragment. Can be used to reset/init internal state that is
    * needed before each fragment, like decryption engines.
    *
-   * Returns: #TRUE if successful.
+   * Returns: %TRUE if successful.
    */
   gboolean      (*start_fragment) (GstAdaptiveDemux * demux, GstAdaptiveDemuxStream * stream);
   /**
