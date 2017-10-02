@@ -1829,6 +1829,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
         GST_WARNING ("No value transform to serialize field '%s' of type '%s'",
             g_quark_to_string (field->name),
             _priv_gst_value_gtype_to_abbr (type));
+      /* TODO(ensonic): don't print NULL if field->value is not empty */
       g_string_append (s, "NULL");
     }
   }
