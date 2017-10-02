@@ -780,7 +780,7 @@ add_sink_pad_and_setup_query_func (GstElement * tee,
 GST_START_TEST (test_allocation_query_aggregation)
 {
   GstElement *tee;
-  GstPad *sinkpad, *srcpad;
+  GstPad *sinkpad;
   GstCaps *caps;
   GstQuery *query;
   guint size, min, max;
@@ -815,19 +815,11 @@ GST_START_TEST (test_allocation_query_aggregation)
   fail_unless (gst_query_parse_nth_allocation_meta (query, 0, NULL) ==
       GST_PARENT_BUFFER_META_API_TYPE);
 
-  /* TODO: what is this testing? move to a new test? */
-  srcpad = gst_element_get_request_pad (tee, "src_%u");
-  gst_query_unref (query);
-  query = gst_query_new_allocation (caps, TRUE);
-  fail_if (gst_pad_query (sinkpad, query));
-
   gst_caps_unref (caps);
   gst_query_unref (query);
   gst_check_teardown_pad_by_name (tee, "src_0");
   gst_check_teardown_pad_by_name (tee, "src_1");
   gst_check_teardown_pad_by_name (tee, "src_2");
-  gst_element_release_request_pad (tee, srcpad);
-  gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
   gst_check_teardown_element (tee);
 }
@@ -838,20 +830,29 @@ GST_END_TEST;
 GST_START_TEST (test_allocation_query_allow_not_linked)
 {
   GstElement *tee;
-  GstPad *sinkpad;
+  GstPad *sinkpad, *srcpad;
   GstCaps *caps;
   GstQuery *query;
 
   tee = gst_check_setup_element ("tee");
   fail_unless (tee);
-  g_object_set (tee, "allow-not-linked", TRUE, NULL);
 
   sinkpad = gst_element_get_static_pad (tee, "sink");
   add_sink_pad_and_setup_query_func (tee, allocation_query1);
   add_sink_pad_and_setup_query_func (tee, allocation_query2);
   add_sink_pad_and_setup_query_func (tee, allocation_query3);
-
+  /* This unlinked pad is what will make a difference between having
+   * allow-not-linked set or not */
+  srcpad = gst_element_get_request_pad (tee, "src_%u");
   caps = gst_caps_new_empty_simple ("test/test");
+
+  /* Without allow-not-linked the query should fail */
+  query = gst_query_new_allocation (caps, TRUE);
+  fail_if (gst_pad_query (sinkpad, query));
+
+  /* While with allow-not-linked it should succeed (ignoring that pad) */
+  g_object_set (tee, "allow-not-linked", TRUE, NULL);
+  gst_query_unref (query);
   query = gst_query_new_allocation (caps, TRUE);
   fail_unless (gst_pad_query (sinkpad, query));
 
@@ -860,6 +861,8 @@ GST_START_TEST (test_allocation_query_allow_not_linked)
   gst_check_teardown_pad_by_name (tee, "src_0");
   gst_check_teardown_pad_by_name (tee, "src_1");
   gst_check_teardown_pad_by_name (tee, "src_2");
+  gst_element_release_request_pad (tee, srcpad);
+  gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
   gst_check_teardown_element (tee);
 }
