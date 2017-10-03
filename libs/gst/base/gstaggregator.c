@@ -320,13 +320,16 @@ struct _GstAggregatorPrivate
   gint64 latency;               /* protected by both src_lock and all pad locks */
 };
 
+/* Seek event forwarding helper */
 typedef struct
 {
+  /* parameters */
   GstEvent *event;
-  gboolean result;
   gboolean flush;
   gboolean only_to_active_pads;
 
+  /* results */
+  gboolean result;
   gboolean one_actually_seeked;
 } EventData;
 
@@ -1944,22 +1947,17 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
   return FALSE;
 }
 
-static EventData
+static void
 gst_aggregator_forward_event_to_all_sinkpads (GstAggregator * self,
-    GstEvent * event, gboolean flush, gboolean only_to_active_pads)
+    EventData * evdata)
 {
-  EventData evdata;
-
-  evdata.event = event;
-  evdata.result = TRUE;
-  evdata.flush = flush;
-  evdata.one_actually_seeked = FALSE;
-  evdata.only_to_active_pads = only_to_active_pads;
+  evdata->result = TRUE;
+  evdata->one_actually_seeked = FALSE;
 
   /* We first need to set all pads as flushing in a first pass
    * as flush_start flush_stop is sometimes sent synchronously
    * while we send the seek event */
-  if (flush) {
+  if (evdata->flush) {
     GList *l;
 
     GST_OBJECT_LOCK (self);
@@ -1974,11 +1972,9 @@ gst_aggregator_forward_event_to_all_sinkpads (GstAggregator * self,
     GST_OBJECT_UNLOCK (self);
   }
 
-  gst_pad_forward (self->srcpad, gst_aggregator_event_forward_func, &evdata);
+  gst_pad_forward (self->srcpad, gst_aggregator_event_forward_func, evdata);
 
-  gst_event_unref (event);
-
-  return evdata;
+  gst_event_unref (evdata->event);
 }
 
 static gboolean
@@ -1990,7 +1986,7 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gboolean flush;
-  EventData evdata;
+  EventData evdata = { 0, };
   GstAggregatorPrivate *priv = self->priv;
 
   gst_event_parse_seek (event, &rate, &fmt, &flags, &start_type,
@@ -2014,8 +2010,10 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
   GST_OBJECT_UNLOCK (self);
 
   /* forward the seek upstream */
-  evdata =
-      gst_aggregator_forward_event_to_all_sinkpads (self, event, flush, FALSE);
+  evdata.event = event;
+  evdata.flush = flush;
+  evdata.only_to_active_pads = FALSE;
+  gst_aggregator_forward_event_to_all_sinkpads (self, &evdata);
   event = NULL;
 
   if (!evdata.result || !evdata.one_actually_seeked) {
@@ -2033,7 +2031,7 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
 static gboolean
 gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
 {
-  EventData evdata;
+  EventData evdata = { 0, };
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -2050,9 +2048,10 @@ gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
   /* Don't forward QOS events to pads that had no active buffer yet. Otherwise
    * they will receive a QOS event that has earliest_time=0 (because we can't
    * have negative timestamps), and consider their buffer as too late */
-  evdata =
-      gst_aggregator_forward_event_to_all_sinkpads (self, event, FALSE,
-      GST_EVENT_TYPE (event) == GST_EVENT_QOS);
+  evdata.event = event;
+  evdata.flush = FALSE;
+  evdata.only_to_active_pads = GST_EVENT_TYPE (event) == GST_EVENT_QOS;
+  gst_aggregator_forward_event_to_all_sinkpads (self, &evdata);
   return evdata.result;
 }
 
