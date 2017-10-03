@@ -223,10 +223,10 @@ plugin_init (GstPlugin * plugin)
     g_array_unref (decoders);
   }
 
-  if (gst_vaapi_display_has_video_processing (display)) {
-    gst_element_register (plugin, "vaapipostproc",
-        GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
+  gst_element_register (plugin, "vaapipostproc",
+      GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
 
+  if (gst_vaapi_display_has_video_processing (display)) {
     gst_element_register (plugin, "vaapidecodebin",
         GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
   }
