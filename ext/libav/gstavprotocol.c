@@ -244,6 +244,7 @@ gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context)
   /* we don't support R/W together */
   if ((flags & AVIO_FLAG_WRITE) && (flags & AVIO_FLAG_READ)) {
     GST_WARNING ("Only read-only or write-only are supported");
+    g_free (info);
     return -EINVAL;
   }
 
@@ -262,6 +263,7 @@ gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context)
   buffer = av_malloc (buffer_size);
   if (buffer == NULL) {
     GST_WARNING ("Failed to allocate buffer");
+    g_free (info);
     return -ENOMEM;
   }
 
@@ -270,6 +272,7 @@ gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context)
       gst_ffmpegdata_read, gst_ffmpegdata_write, gst_ffmpegdata_seek);
   if (*context == NULL) {
     GST_WARNING ("Failed to allocate memory");
+    g_free (info);
     av_free (buffer);
     return -ENOMEM;
   }
