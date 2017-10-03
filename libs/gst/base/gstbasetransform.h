@@ -198,7 +198,7 @@ struct _GstBaseTransform {
  *                  member variable. If the buffer is dropped due to QoS, it returns
  *                  GST_BASE_TRANSFORM_FLOW_DROPPED. If this input buffer is not
  *                  contiguous with any previous input buffer, then @is_discont
- *                  is set to #TRUE. (Since 1.6)
+ *                  is set to %TRUE. (Since 1.6)
  * @generate_output: Called after each new input buffer is submitted repeatedly
  *                   until it either generates an error or fails to generate an output
  *                   buffer. The default implementation takes the contents of the

@@ -85,7 +85,7 @@ gst_clock_time_to_ntp_timestamp_fraction (GstClockTime gst)
  * caller is responsible for ensuring that @buffer is at least
  * #GST_NTP_PACKET_SIZE bytes long.
  *
- * If @buffer is #NULL, the local and remote times will be set to
+ * If @buffer is %NULL, the local and remote times will be set to
  * #GST_CLOCK_TIME_NONE.
  *
  * MT safe. Caller owns return value (gst_ntp_packet_free to free).
