@@ -2034,28 +2034,17 @@ static gboolean
 gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
 {
   EventData evdata;
-  gboolean res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-    {
-      gst_event_ref (event);
-      res = gst_aggregator_do_seek (self, event);
-      gst_event_unref (event);
-      event = NULL;
-      goto done;
-    }
+      /* _do_seek() unrefs the event. */
+      return gst_aggregator_do_seek (self, event);
     case GST_EVENT_NAVIGATION:
-    {
       /* navigation is rather pointless. */
-      res = FALSE;
       gst_event_unref (event);
-      goto done;
-    }
+      return FALSE;
     default:
-    {
       break;
-    }
   }
 
   /* Don't forward QOS events to pads that had no active buffer yet. Otherwise
@@ -2064,10 +2053,7 @@ gst_aggregator_default_src_event (GstAggregator * self, GstEvent * event)
   evdata =
       gst_aggregator_forward_event_to_all_sinkpads (self, event, FALSE,
       GST_EVENT_TYPE (event) == GST_EVENT_QOS);
-  res = evdata.result;
-
-done:
-  return res;
+  return evdata.result;
 }
 
 static gboolean
