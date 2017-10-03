@@ -209,7 +209,7 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
    * skip the processing of streams that already contain the necessary tags.
    * Data will flow as usual but the element will not consume CPU time and will
    * not generate result tags.  To enable possible skipping, set this property
-   * to #FALSE.
+   * to %FALSE.
    *
    * If used in conjunction with <link linkend="GstRgAnalysis--num-tracks">album
    * processing</link>, the element will skip the number of remaining album

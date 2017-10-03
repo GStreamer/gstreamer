@@ -40,7 +40,7 @@
  * The filename property should contain a string with a \%d placeholder that will
  * be substituted with the index for each filename.
  *
- * If the #GstMultiFileSink:post-messages property is #TRUE, it sends an application
+ * If the #GstMultiFileSink:post-messages property is %TRUE, it sends an application
  * message named
  * <classname>&quot;GstMultiFileSink&quot;</classname> after writing each
  * buffer.

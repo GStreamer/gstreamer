@@ -23,7 +23,7 @@
  * SECTION:element-level
  *
  * Level analyses incoming audio buffers and, if the #GstLevel:message property
- * is #TRUE, generates an element message named
+ * is %TRUE, generates an element message named
  * <classname>&quot;level&quot;</classname>:
  * after each interval of time given by the #GstLevel:interval property.
  * The message's structure contains these fields:

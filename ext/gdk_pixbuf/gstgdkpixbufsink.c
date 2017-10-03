@@ -41,7 +41,7 @@
  * purposes - just wait until the pipeline is prerolled (ASYNC_DONE message
  * on the bus), then read the property. If you use this method, you may want
  * to disable message posting by setting the #GstGdkPixbufSink:post-messages
- * property to #FALSE. This avoids unnecessary memory overhead.
+ * property to %FALSE. This avoids unnecessary memory overhead.
  * </listitem>
  * </itemizedlist>
  *
@@ -60,7 +60,7 @@
  * containing structures named <classname>&quot;preroll-pixbuf&quot;
  * </classname> or <classname>&quot;pixbuf&quot;</classname> on the bus (this
  * can be disabled by setting the #GstGdkPixbufSink:post-messages property
- * to #FALSE though). The element message structure has the following fields:
+ * to %FALSE though). The element message structure has the following fields:
  * <itemizedlist>
  * <listitem>
  *   <classname>&quot;pixbuf&quot;</classname>: the #GdkPixbuf object

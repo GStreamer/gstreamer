@@ -715,7 +715,7 @@ gst_matroska_mux_reset (GstElement * element)
  *
  * handle events - copied from oggmux without understanding
  *
- * Returns: #TRUE on success.
+ * Returns: %TRUE on success.
  */
 static gboolean
 gst_matroska_mux_handle_src_event (GstPad * pad, GstObject * parent,
@@ -792,7 +792,7 @@ gst_matroska_mux_build_vobsub_private (GstMatroskaTrackContext * context,
  *
  * handle events - informational ones like tags
  *
- * Returns: #TRUE on success.
+ * Returns: %TRUE on success.
  */
 static gboolean
 gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
@@ -948,7 +948,7 @@ gst_matroska_mux_set_codec_id (GstMatroskaTrackContext * context,
  *
  * Setcaps function for video sink pad.
  *
- * Returns: #TRUE on success.
+ * Returns: %TRUE on success.
  */
 static gboolean
 gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
@@ -1760,7 +1760,7 @@ opus_make_codecdata (GstMatroskaTrackContext * context, GstCaps * caps)
  *
  * Setcaps function for audio sink pad.
  *
- * Returns: #TRUE on success.
+ * Returns: %TRUE on success.
  */
 static gboolean
 gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
@@ -2181,7 +2181,7 @@ refuse_caps:
  *
  * Setcaps function for subtitle sink pad.
  *
- * Returns: #TRUE on success.
+ * Returns: %TRUE on success.
  */
 static gboolean
 gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
