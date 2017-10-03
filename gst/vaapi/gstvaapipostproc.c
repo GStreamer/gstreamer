@@ -306,8 +306,8 @@ gst_vaapipostproc_start (GstBaseTransform * trans)
   ds_reset (&postproc->deinterlace_state);
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (postproc)))
     return FALSE;
-  if (!gst_vaapipostproc_ensure_filter (postproc))
-    return FALSE;
+  gst_vaapipostproc_ensure_filter (postproc);
+
   return TRUE;
 }
 
