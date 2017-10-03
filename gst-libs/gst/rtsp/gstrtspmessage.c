@@ -199,7 +199,7 @@ gst_rtsp_message_init_request (GstRTSPMessage * msg, GstRTSPMethod method,
  * @version: (out) (allow-none): location to hold the version
  *
  * Parse the request message @msg and store the values @method, @uri and
- * @version. The result locations can be #NULL if one is not interested in its
+ * @version. The result locations can be %NULL if one is not interested in its
  * value.
  *
  * @uri remains valid for as long as @msg is valid and unchanged.
@@ -234,9 +234,9 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
  * Create a new response #GstRTSPMessage with @code and @reason and store the
  * result message in @msg. Free with gst_rtsp_message_free().
  *
- * When @reason is #NULL, the default reason for @code will be used.
+ * When @reason is %NULL, the default reason for @code will be used.
  *
- * When @request is not #NULL, the relevant headers will be copied to the new
+ * When @request is not %NULL, the relevant headers will be copied to the new
  * response message.
  *
  * Returns: a #GstRTSPResult.
@@ -265,9 +265,9 @@ gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
  *
  * Initialize @msg with @code and @reason.
  *
- * When @reason is #NULL, the default reason for @code will be used.
+ * When @reason is %NULL, the default reason for @code will be used.
  *
- * When @request is not #NULL, the relevant headers will be copied to the new
+ * When @request is not %NULL, the relevant headers will be copied to the new
  * response message.
  *
  * Returns: a #GstRTSPResult.
@@ -333,7 +333,7 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
  * @version: (out) (allow-none): location to hold the version
  *
  * Parse the response message @msg and store the values @code, @reason and
- * @version. The result locations can be #NULL if one is not interested in its
+ * @version. The result locations can be %NULL if one is not interested in its
  * value.
  *
  * @reason remains valid for as long as @msg is valid and unchanged.
@@ -904,7 +904,7 @@ gst_rtsp_message_get_body (const GstRTSPMessage * msg, guint8 ** data,
  * @size: (out): location for the size of @data
  *
  * Take the body of @msg and store it in @data and @size. After this method,
- * the body and size of @msg will be set to #NULL and 0 respectively.
+ * the body and size of @msg will be set to %NULL and 0 respectively.
  *
  * Returns: #GST_RTSP_OK.
  */

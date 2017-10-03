@@ -282,7 +282,7 @@ get_default_lower_trans (GstRTSPTransport * transport)
  * It is possible that there are several managers available, use @option to
  * selected one.
  *
- * @manager will contain an element name or #NULL when no manager is
+ * @manager will contain an element name or %NULL when no manager is
  * needed/available for @trans.
  *
  * Returns: #GST_RTSP_OK.
@@ -587,7 +587,7 @@ invalid_transport:
  * Convert @transport into a string that can be used to signal the transport in
  * an RTSP SETUP response.
  *
- * Returns: a string describing the RTSP transport or #NULL when the transport
+ * Returns: a string describing the RTSP transport or %NULL when the transport
  * is invalid.
  */
 gchar *

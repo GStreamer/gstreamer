@@ -2800,7 +2800,7 @@ gst_audio_encoder_negotiate_unlocked (GstAudioEncoder * enc)
  * Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
  * negotiate fails.
  *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ * Returns: %TRUE if the negotiation succeeded, else %FALSE.
  */
 gboolean
 gst_audio_encoder_negotiate (GstAudioEncoder * enc)

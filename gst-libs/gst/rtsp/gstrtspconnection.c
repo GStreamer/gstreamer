@@ -870,7 +870,7 @@ remote_address_failed:
  * @response: a #GstRTSPMessage
  *
  * Attempt to connect to the url of @conn made with
- * gst_rtsp_connection_create(). If @timeout is #NULL this function can block
+ * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
  * forever. If @timeout contains a valid timeout, this function will return
  * #GST_RTSP_ETIMEOUT after the timeout expired.  If @conn is set to tunneled,
  * @response will contain a response to the tunneling request messages.
@@ -1060,7 +1060,7 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
  * @timeout: a #GTimeVal timeout
  *
  * Attempt to connect to the url of @conn made with
- * gst_rtsp_connection_create(). If @timeout is #NULL this function can block
+ * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
  * forever. If @timeout contains a valid timeout, this function will return
  * #GST_RTSP_ETIMEOUT after the timeout expired.
  *
@@ -1409,10 +1409,10 @@ read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size,
  * @conn: a #GstRTSPConnection
  * @data: the data to write
  * @size: the size of @data
- * @timeout: a timeout value or #NULL
+ * @timeout: a timeout value or %NULL
  *
  * Attempt to write @size bytes of @data to the connected @conn, blocking up to
- * the specified @timeout. @timeout can be #NULL, in which case this function
+ * the specified @timeout. @timeout can be %NULL, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
@@ -1549,10 +1549,10 @@ message_to_string (GstRTSPConnection * conn, GstRTSPMessage * message)
  * gst_rtsp_connection_send:
  * @conn: a #GstRTSPConnection
  * @message: the message to send
- * @timeout: a timeout value or #NULL
+ * @timeout: a timeout value or %NULL
  *
  * Attempt to send @message to the connected @conn, blocking up to
- * the specified @timeout. @timeout can be #NULL, in which case this function
+ * the specified @timeout. @timeout can be %NULL, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
@@ -2127,10 +2127,10 @@ invalid_body_len:
  * @conn: a #GstRTSPConnection
  * @data: the data to read
  * @size: the size of @data
- * @timeout: a timeout value or #NULL
+ * @timeout: a timeout value or %NULL
  *
  * Attempt to read @size bytes into @data from the connected @conn, blocking up to
- * the specified @timeout. @timeout can be #NULL, in which case this function
+ * the specified @timeout. @timeout can be %NULL, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
@@ -2206,10 +2206,10 @@ no_message:
  * gst_rtsp_connection_receive:
  * @conn: a #GstRTSPConnection
  * @message: the message to read
- * @timeout: a timeout value or #NULL
+ * @timeout: a timeout value or %NULL
  *
  * Attempt to read into @message from the connected @conn, blocking up to
- * the specified @timeout. @timeout can be #NULL, in which case this function
+ * the specified @timeout. @timeout can be %NULL, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
@@ -2393,7 +2393,7 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
  * with #GST_RTSP_OK, @revents will contain a bitmask of available operations on
  * @conn.
  *
- * @timeout can be #NULL, in which case this function might block forever.
+ * @timeout can be %NULL, in which case this function might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *

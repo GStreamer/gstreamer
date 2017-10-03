@@ -109,7 +109,7 @@ gst_video_get_colorimetry (const gchar * s)
  * Parse the colorimetry string and update @cinfo with the parsed
  * values.
  *
- * Returns: #TRUE if @color points to valid colorimetry info.
+ * Returns: %TRUE if @color points to valid colorimetry info.
  */
 gboolean
 gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
@@ -168,7 +168,7 @@ gst_video_colorimetry_to_string (const GstVideoColorimetry * cinfo)
  * Check if the colorimetry information in @info matches that of the
  * string @color.
  *
- * Returns: #TRUE if @color conveys the same colorimetry info as the color
+ * Returns: %TRUE if @color conveys the same colorimetry info as the color
  * information in @info.
  */
 gboolean
@@ -253,7 +253,7 @@ gst_video_color_range_offsets (GstVideoColorRange range,
  *
  * Compare the 2 colorimetry sets for equality
  *
- * Returns: #TRUE if @cinfo and @other are equal.
+ * Returns: %TRUE if @cinfo and @other are equal.
  *
  * Since: 1.6
  */

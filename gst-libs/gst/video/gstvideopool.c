@@ -71,7 +71,7 @@ gst_buffer_pool_config_set_video_alignment (GstStructure * config,
  * Get the video alignment from the bufferpool configuration @config in
  * in @align
  *
- * Returns: #TRUE if @config could be parsed correctly.
+ * Returns: %TRUE if @config could be parsed correctly.
  */
 gboolean
 gst_buffer_pool_config_get_video_alignment (GstStructure * config,

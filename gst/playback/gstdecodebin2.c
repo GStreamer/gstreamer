@@ -720,11 +720,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * emitted before looking for any elements that can handle that stream.
    *
    * >   Invocation of signal handlers stops after the first signal handler
-   * >   returns #FALSE. Signal handlers are invoked in the order they were
+   * >   returns %FALSE. Signal handlers are invoked in the order they were
    * >   connected in.
    *
-   * Returns: #TRUE if you wish decodebin to look for elements that can
-   * handle the given @caps. If #FALSE, those caps will be considered as
+   * Returns: %TRUE if you wish decodebin to look for elements that can
+   * handle the given @caps. If %FALSE, those caps will be considered as
    * final and the pad will be exposed as such (see 'pad-added' signal of
    * #GstElement).
    */
@@ -776,11 +776,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * the application to perform additional sorting or filtering on the element
    * factory array.
    *
-   * The callee should copy and modify @factories or return #NULL if the
+   * The callee should copy and modify @factories or return %NULL if the
    * order should not change.
    *
    * >   Invocation of signal handlers stops after one signal handler has
-   * >   returned something else than #NULL. Signal handlers are invoked in
+   * >   returned something else than %NULL. Signal handlers are invoked in
    * >   the order they were connected in.
    * >   Don't connect signal handlers with the #G_CONNECT_AFTER flag to this
    * >   signal, they will never be invoked!
@@ -847,7 +847,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * be used to tell the element about the downstream supported caps
    * for example.
    *
-   * Returns: #TRUE if the query was handled, #FALSE otherwise.
+   * Returns: %TRUE if the query was handled, %FALSE otherwise.
    */
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY] =
       g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),

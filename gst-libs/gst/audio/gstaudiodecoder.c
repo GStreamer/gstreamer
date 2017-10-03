@@ -719,7 +719,7 @@ gst_audio_decoder_negotiate_unlocked (GstAudioDecoder * dec)
  * Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
  * negotiate fails.
  *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ * Returns: %TRUE if the negotiation succeeded, else %FALSE.
  */
 gboolean
 gst_audio_decoder_negotiate (GstAudioDecoder * dec)

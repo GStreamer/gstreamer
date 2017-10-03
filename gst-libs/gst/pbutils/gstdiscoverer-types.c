@@ -899,7 +899,7 @@ VIDEO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
  * gst_discoverer_video_info_is_image:
  * @info: a #GstDiscovererVideoInfo
  *
- * Returns: #TRUE if the video stream corresponds to an image (i.e. only contains
+ * Returns: %TRUE if the video stream corresponds to an image (i.e. only contains
  * one frame).
  */
 gboolean

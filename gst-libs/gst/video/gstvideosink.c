@@ -163,7 +163,7 @@ gst_video_sink_class_init (GstVideoSinkClass * klass)
   /**
    * GstVideoSink:show-preroll-frame:
    *
-   * Whether to show video frames during preroll. If set to #FALSE, video
+   * Whether to show video frames during preroll. If set to %FALSE, video
    * frames will only be rendered in PLAYING state.
    */
   g_object_class_install_property (gobject_class, PROP_SHOW_PREROLL_FRAME,

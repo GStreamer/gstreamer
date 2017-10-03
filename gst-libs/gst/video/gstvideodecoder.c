@@ -3883,7 +3883,7 @@ gst_video_decoder_negotiate_unlocked (GstVideoDecoder * decoder)
  * Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
  * negotiate fails.
  *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ * Returns: %TRUE if the negotiation succeeded, else %FALSE.
  */
 gboolean
 gst_video_decoder_negotiate (GstVideoDecoder * decoder)
