@@ -30,6 +30,8 @@
 #include <glib-object.h>
 #include <glib/gprintf.h>
 #include <gst/gst.h>
+
+#define GST_USE_UNSTABLE_API
 #include <gst/mpegts/mpegts.h>
 
 static void
