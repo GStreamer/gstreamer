@@ -261,6 +261,18 @@ gst_vaapi_video_context_propagate (GstElement * element,
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element, "No bus attached");
 }
 
+/**
+ * gst_vaapi_find_gl_local_context:
+ * @element: the #GstElement where the search begins
+ * @gl_context_ptr: the pointer where the GstGL context is going to be
+ * stored
+ * @direction_ptr: the pointer of the #GstPadDirection where the GstGL
+ * context was found
+ *
+ * Query the pipeline, downstream and upstream for a GstGL context
+ *
+ * Returns: %TRUE if found; otherwise %FALSE
+ **/
 gboolean
 gst_vaapi_find_gl_local_context (GstElement * element,
     GstObject ** gl_context_ptr, GstPadDirection * direction_ptr)
