@@ -31,7 +31,6 @@ gstplayer = library('gstplayer-' + api_version,
   install : true,
   dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
                   gsttag_dep, gstpbutils_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstplayer.def',
 )
 
 gen_sources = []

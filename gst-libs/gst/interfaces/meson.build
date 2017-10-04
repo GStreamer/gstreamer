@@ -24,7 +24,6 @@ gstphotography = library('gstphotography-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gst_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstphotography.def',
 )
 
 gstphotography_dep = declare_dependency(link_with : gstphotography,

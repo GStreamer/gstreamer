@@ -17,7 +17,6 @@ gsturidownloader = library('gsturidownloader-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gstbase_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgsturidownloader.def',
 )
 
 gsturidownloader_dep = declare_dependency(link_with : gsturidownloader,

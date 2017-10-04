@@ -407,8 +407,6 @@ gst_plugins_bad_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
 
-vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
-
 # Used by the *_mkenum.py helper scripts
 glib_mkenums = find_program('glib-mkenums')
 

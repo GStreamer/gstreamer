@@ -40,7 +40,6 @@ gstmpegts = library('gstmpegts-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gst_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstmpegts.def',
 )
 if build_gir
   mpegts_gir = gnome.generate_gir(gstmpegts,

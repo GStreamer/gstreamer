@@ -10,7 +10,6 @@ gstinsertbin = library('gstinsertbin-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gst_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstinsertbin.def',
 )
 
 gen_sources = []

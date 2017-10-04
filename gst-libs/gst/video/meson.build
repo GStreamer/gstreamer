@@ -16,7 +16,6 @@ gstbadvideo = library('gstbadvideo-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gstvideo_dep, gstbadbase_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstbadvideo.def',
 )
 
 gstbadvideo_dep = declare_dependency(link_with : gstbadvideo,

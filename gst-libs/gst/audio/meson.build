@@ -11,7 +11,6 @@ gstbadaudio = library('gstbadaudio-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gstbadbase_dep, gstaudio_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstbadaudio.def',
 )
 
 gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,

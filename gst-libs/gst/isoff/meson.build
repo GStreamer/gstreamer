@@ -14,7 +14,6 @@ gstisoff = library('gstisoff-' + api_version,
   soversion : soversion,
   install : true,
   dependencies : [gstbase_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstisoff.def',
 )
 
 gstisoff_dep = declare_dependency(link_with : gstisoff,
