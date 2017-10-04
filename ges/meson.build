@@ -16,7 +16,7 @@ configure_file(
     output: pkg + '-sharp.dll.config',
     configuration: configuration_data())
 
-if add_languages('c', required: false)
+if add_languages('c', required: false) and csc.get_id() == 'mono'
     c_abi_exe = executable(pkg + '_c_abi', c_abi,
             c_args: ['-Wno-deprecated', '-Wno-deprecated-declarations'],
             dependencies: [gst_deps, ges_dep])
@@ -25,6 +25,10 @@ if add_languages('c', required: false)
             cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-nowarn:0618', '-unsafe'],
             dependencies: [ges_sharp_dep])
 
-    test(pkg + 'abi', diff, args: [c_abi_exe.full_path(), cs_abi_exe.full_path()])
+    env = environment()
+    env.prepend('MONO_PATH', mono_path)
+    test(pkg + 'abi', diff, args: [c_abi_exe.full_path(), cs_abi_exe.full_path()],
+            env: env)
+else
+    message('Not running tests ' + csc.get_id())
 endif
-

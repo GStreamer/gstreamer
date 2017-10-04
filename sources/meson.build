@@ -41,7 +41,7 @@ gst_sharp = library('gstreamer-sharp', gst_source_gen, sources,
 gst_sharp_dep = declare_dependency(dependencies: [glib_sharp_dep, gio_sharp_dep],
         link_with: gst_sharp)
 
-if add_languages('c', required: false)
+if add_languages('c', required: false) and csc.get_id() == 'mono'
     c_abi_exe = executable('gst_sharp_c_abi', c_abi,
             cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
             dependencies: [gst_deps])
@@ -50,7 +50,12 @@ if add_languages('c', required: false)
             cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
             dependencies: [gst_sharp_dep])
 
-    test('gstreamer_sharp_abi', diff, args: [c_abi_exe.full_path(), cs_abi_exe.full_path()])
+    env = environment()
+    env.prepend('MONO_PATH', mono_path)
+    test('gstreamer_sharp_abi', diff, args: [c_abi_exe.full_path(), cs_abi_exe.full_path()],
+            env: env)
+else
+    message('Not running tests ' + csc.get_id())
 endif
 
 configure_file(

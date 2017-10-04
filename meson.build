@@ -40,6 +40,15 @@ else
   gtk_sharp_dep = dependency('gtk-sharp-3.0', version: gtk_sharp_required_version,
       required: false)
 endif
+
+if host_machine.system() == 'windows'
+    pathsep = ';'
+else
+    pathsep = ':'
+endif
+mono_path = gtk_sharp.get_variable('mono_path') + pathsep
+mono_path += pathsep + join_paths(meson.current_build_dir(), 'sources')
+
 codegen_dependencies = [gapi_codegen, gapi_fixup, glib_sharp, gio_sharp]
 gapi_fixup = gapi_fixup.full_path()
 gapi_codegen = gapi_codegen.full_path()
@@ -80,6 +89,7 @@ ges_dep = dependency('gst-editing-services-' + apiversion, version: gst_required
 
 subdir('sources')
 if ges_dep.found()
+  mono_path += pathsep + join_paths(meson.current_build_dir(), 'ges')
   subdir('ges')
   custom_target('GESSharp-nuget',
       command: [nuget, '--package-name', 'GESSharp',
