@@ -55,22 +55,30 @@ do_create_surface_with_egl_image_unlocked (GstVaapiDisplayEGL * display,
   memset (offset, 0, sizeof (offset));
   memset (stride, 0, sizeof (stride));
 
-  if (vtable->has_EGL_MESA_drm_image) {
-    /* EGL_MESA_drm_image extension */
-    if (!vtable->eglExportDRMImageMESA (ctx->display->base.handle.p, image,
-            &name, NULL, &stride[0]))
-      goto error_export_image_gem_buf;
+  if (!vtable->has_EGL_MESA_drm_image)
+    goto error_mission_extension;
 
-    size = height * stride[0];
-    return gst_vaapi_surface_new_with_gem_buf_handle (base_display, name, size,
-        format, width, height, offset, stride);
-  }
-  return NULL;
+  /* EGL_MESA_drm_image extension */
+  if (!vtable->eglExportDRMImageMESA (ctx->display->base.handle.p, image,
+          &name, NULL, &stride[0]))
+    goto error_export_image_gem_buf;
+
+  size = height * stride[0];
+  return gst_vaapi_surface_new_with_gem_buf_handle (base_display, name, size,
+      format, width, height, offset, stride);
 
   /* ERRORS */
 error_export_image_gem_buf:
-  GST_ERROR ("failed to export EGL image to GEM buffer");
-  return NULL;
+  {
+    GST_ERROR ("failed to export EGL image to GEM buffer");
+    return NULL;
+  }
+
+error_mission_extension:
+  {
+    GST_ERROR ("missing EGL_MESA_drm_image extension");
+    return NULL;
+  }
 }
 
 static void
