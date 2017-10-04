@@ -55,6 +55,7 @@ struct _GstAlsaMidiSrc
 
   /*< private > */
   snd_seq_t *seq;
+  int queue;
   int port_count;
   snd_seq_addr_t *seq_ports;
   snd_midi_event_t *parser;

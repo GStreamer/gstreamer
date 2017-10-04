@@ -163,17 +163,77 @@ out_free_ports_list:
 }
 
 static int
-create_port (GstAlsaMidiSrc * alsamidisrc)
+start_queue_timer (GstAlsaMidiSrc * alsamidisrc)
 {
   int ret;
 
-  ret = snd_seq_create_simple_port (alsamidisrc->seq, DEFAULT_CLIENT_NAME,
-      SND_SEQ_PORT_CAP_WRITE |
-      SND_SEQ_PORT_CAP_SUBS_WRITE,
-      SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
+  ret = snd_seq_start_queue (alsamidisrc->seq, alsamidisrc->queue, NULL);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (alsamidisrc, "Timer event output error: %s\n",
+        snd_strerror (ret));
+    return ret;
+  }
+
+  ret = snd_seq_drain_output (alsamidisrc->seq);
   if (ret < 0)
+    GST_ERROR_OBJECT (alsamidisrc, "Drain output error: %s\n",
+        snd_strerror (ret));
+
+  return ret;
+}
+
+static int
+create_port (GstAlsaMidiSrc * alsamidisrc)
+{
+  snd_seq_port_info_t *pinfo;
+  int ret;
+
+  snd_seq_port_info_alloca (&pinfo);
+  snd_seq_port_info_set_name (pinfo, DEFAULT_CLIENT_NAME);
+  snd_seq_port_info_set_type (pinfo,
+      SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
+  snd_seq_port_info_set_capability (pinfo,
+      SND_SEQ_PORT_CAP_WRITE | SND_SEQ_PORT_CAP_SUBS_WRITE);
+
+  ret = snd_seq_alloc_named_queue (alsamidisrc->seq, DEFAULT_CLIENT_NAME);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (alsamidisrc, "Cannot allocate queue: %s\n",
+        snd_strerror (ret));
+    return ret;
+  }
+
+  /*
+   * Sequencer queues are "per-system" entities, so it's important to remember
+   * the queue id to make sure alsamidisrc refers to this very one in future
+   * operations, and not to some other port created by another sequencer user.
+   */
+  alsamidisrc->queue = ret;
+
+  snd_seq_port_info_set_timestamping (pinfo, 1);
+  snd_seq_port_info_set_timestamp_real (pinfo, 1);
+  snd_seq_port_info_set_timestamp_queue (pinfo, alsamidisrc->queue);
+
+  ret = snd_seq_create_port (alsamidisrc->seq, pinfo);
+  if (ret < 0) {
     GST_ERROR_OBJECT (alsamidisrc, "Cannot create port - %s",
         snd_strerror (ret));
+    return ret;
+  }
+
+  /*
+   * Conversely, it's not strictly necessary to remember the port id because
+   * ports are per-client and alsamidisrc is only creating one port (id = 0).
+   *
+   * If multiple ports were to be created, the ids could be retrieved with
+   * something like:
+   *
+   *   alsamidisrc->port = snd_seq_port_info_get_port(pinfo);
+   */
+
+  ret = start_queue_timer (alsamidisrc);
+  if (ret < 0)
+    GST_ERROR_OBJECT (alsamidisrc, "Cannot start timer for queue: %d - %s",
+        alsamidisrc->queue, snd_strerror (ret));
 
   return ret;
 }
