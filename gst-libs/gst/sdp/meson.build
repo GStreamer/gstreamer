@@ -16,7 +16,6 @@ gstsdp = library('gstsdp-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : rtsp_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstsdp.def',
 )
 
 sdp_gen_sources  = []

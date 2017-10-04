@@ -21,7 +21,6 @@ gstriff = library('gstriff-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : riff_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstriff.def',
 )
 
 riff_gen_sources  = []

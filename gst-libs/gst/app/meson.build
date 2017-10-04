@@ -30,7 +30,6 @@ gstapp = library('gstapp-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : [gst_base_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstapp.def',
 )
 
 if build_gir

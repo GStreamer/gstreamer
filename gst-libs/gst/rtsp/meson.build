@@ -48,7 +48,6 @@ gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : gstrtsp_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstrtsp.def',
 )
 
 rtsp_gen_sources = [gstrtsp_h]

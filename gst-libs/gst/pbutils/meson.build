@@ -60,7 +60,6 @@ pbutils = library('gstpbutils-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : gstpbutils_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstpbutils.def',
 )
 
 pbutils_gen_sources = [gstpbutils_h, gst_pbutils_version_h]

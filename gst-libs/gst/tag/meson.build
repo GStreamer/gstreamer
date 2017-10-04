@@ -49,7 +49,6 @@ gsttag = library('gsttag-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : tag_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgsttag.def',
 )
 
 if build_gir

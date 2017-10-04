@@ -127,7 +127,6 @@ gstvideo = library('gstvideo-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : gstvideo_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstvideo.def',
 )
 
 if build_gir

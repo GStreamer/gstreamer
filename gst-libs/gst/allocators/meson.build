@@ -14,7 +14,6 @@ gstallocators = library('gstallocators-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : [gst_dep],
-  vs_module_defs: vs_module_defs_dir + 'libgstallocators.def',
 )
 
 allocators_gen_sources  = []

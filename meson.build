@@ -184,8 +184,6 @@ endif
 gst_controller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
 
-vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
-
 # Used by the *_mkenum.py helper scripts
 glib_mkenums = find_program('glib-mkenums')
 

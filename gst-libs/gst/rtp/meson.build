@@ -45,7 +45,6 @@ gst_rtp = library('gstrtp-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : gstrtp_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstrtp.def',
 )
 
 rtp_gen_sources = [gstrtp_enum_h]

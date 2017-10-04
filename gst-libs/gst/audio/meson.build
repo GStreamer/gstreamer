@@ -144,7 +144,6 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
   soversion : soversion,
   install : true,
   dependencies : gstaudio_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstaudio.def',
 )
 
 if build_gir
