@@ -118,7 +118,7 @@ source_gen = custom_target(pkg + '_codegen',
         generate_api,
         '--api-raw', '@INPUT@',
         '--gapi-fixup', gapi_fixup,
-        '--metadata', metadata_fname,
+        '--metadata', metadata,
         '--gapi-codegen', gapi_codegen,
         '--extra-includes=' + glib_api_includes,
         '--extra-includes=' + gio_api_includes,
@@ -126,9 +126,24 @@ source_gen = custom_target(pkg + '_codegen',
         '--out', meson.current_build_dir(),
         '--files', ';'.join(generated_sources),
         '--assembly-name', pkg,
+        '--glue-includes', 'ges/ges.h',
+        '--abi-cs-usings', 'Gst,Gst.Video,Gst.Sdp,Gst.Tags,Gst.Rtsp,Gst.PbUtils,Gst.Net,Gst.FFT,Gst.Controller,Gst.Base,Gst.Audio,Gst.App,GES',
     ],
     depend_files: [raw_api_fname],
     depends: codegen_dependencies + [gst_source_gen])
+
+c_abi = custom_target(pkg + '_c_abi',
+        input: raw_api_fname,
+        output: pkg + '-abi.c',
+        command: [generate_api, '--fakeglue'],
+        depends: [source_gen])
+
+cs_abi = custom_target(pkg + '_cs_abi',
+        input: raw_api_fname,
+        output: pkg + '-abi.cs',
+        command: [generate_api, '--fakeglue'],
+        depends: [source_gen])
+
 
 gapis += [join_paths(meson.current_build_dir(), pkg + '-api.xml')]
 gapis_deps = [source_gen]

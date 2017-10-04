@@ -1,8 +1,7 @@
 raw_api_fname = join_paths(meson.current_source_dir(), meson.project_name() + '-api.raw')
-metadata_fname = join_paths(meson.current_source_dir(), meson.project_name() + '.metadata')
+metadata = files(meson.project_name() + '.metadata')
 
-glueincludes = 'gst/gst.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/net/net.h,gst/pbutils/gstaudiovisualizer.h,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h'
-gluefile = join_paths(meson.current_build_dir(), 'generate.c')
+glueincludes = 'glib.h,gst/gst.h,gst/video/video.h,gst/audio/audio.h,gst/rtsp/rtsp.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/net/net.h,gst/pbutils/gstaudiovisualizer.h,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h,gst/video/gstvideoaffinetransformationmeta.h,gst/net/gstnetcontrolmessagemeta.h'
 
 sources = [
     'custom/Adapter.cs',
@@ -41,6 +40,18 @@ gst_sharp = library('gstreamer-sharp', gst_source_gen, sources,
 
 gst_sharp_dep = declare_dependency(dependencies: [glib_sharp_dep, gio_sharp_dep],
         link_with: gst_sharp)
+
+if add_languages('c', required: false)
+    c_abi_exe = executable('gst_sharp_c_abi', c_abi,
+            cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
+            dependencies: [gst_deps])
+
+    cs_abi_exe = executable('gst_sharp_cs_abi', cs_abi,
+            cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
+            dependencies: [gst_sharp_dep])
+
+    test('gstreamer_sharp_abi', diff, args: [c_abi_exe.full_path(), cs_abi_exe.full_path()])
+endif
 
 configure_file(
     input: '../out/gstreamer-sharp.dll.config',

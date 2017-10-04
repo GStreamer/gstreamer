@@ -93,7 +93,7 @@ namespace GstreamerSharp
 
 		// This function is called when playbin has created the appsrc element, so we have a chance to configure it.
 		static void SourceSetup (object sender, GLib.SignalArgs args) {
-			var info = new Gst.Audio.AudioInfo();
+			var info = new Gst.Audio.AudioInfo ();
 			var source = new Gst.App.AppSrc(((Element)args.Args [0]).Handle);
 			Console.WriteLine ("Source has been created. Configuring.");
 			AppSource = source;

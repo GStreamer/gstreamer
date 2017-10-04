@@ -47,6 +47,7 @@ gapi_codegen = gapi_codegen.full_path()
 gacutil = find_program('gacutil')
 generate_api = find_program('generate_code.py')
 nuget = find_program('nuget.py')
+diff = find_program('Tests/test_abi.py')
 
 # TODO Handle monodoc
 

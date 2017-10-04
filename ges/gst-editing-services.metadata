@@ -32,4 +32,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@name='TimelineElement']/field[@cname='parent_instance']" name="access">private</attr>
 	<attr path="/api/namespace/object[@name='Layer']/field[@cname='parent']" name="access">private</attr>
 	<attr path="/api/namespace/object[@name='Formatter']/field[@cname='parent']" name="access">private</attr>
+	<attr path="/api/namespace/object/class_struct[@cname='GESBaseXmlFormatterClass']/field[@cname='content_parser']" name="type">GMarkupParser</attr>
+
+	<attr path="/api/namespace/object/class_struct[@cname='GESEffectAssetClass']" name="private">true</attr>
+	<add-node path="/api/namespace/object/class_struct[@cname='GESVideoSourceClass']">
+      <union name="ABI" cname="ABI">
+        <struct name="abi" cname="abi" opaque="false" hidden="false">
+          <field cname="disable_scale_in_compositor" access="public" writeable="true" readable="true" name="DisableScaleInCompositor" type="gint64"/>
+        </struct>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+      </union>
+	</add-node>
 </metadata>

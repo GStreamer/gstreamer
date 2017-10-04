@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--gapi-codegen")
     parser.add_argument("--glue-file", default="")
     parser.add_argument("--glue-includes", default="")
+    parser.add_argument("--abi-cs-usings", default="")
     parser.add_argument("--glue-libname", default="")
     parser.add_argument("--assembly-name")
     parser.add_argument("--extra-includes", action='append', default=[])
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     shutil.copyfile(opts.api_raw, api_xml)
 
     if shutil.which('mono'):
-        launcher = ['mono']
+        launcher = ['mono', '--debug']
     else:
         launcher = []
 
@@ -56,11 +57,15 @@ if __name__ == "__main__":
         '--gluelib-name=' + opts.glue_libname,
         '--glue-includes=' + opts.glue_includes,
         '--assembly-name=' + opts.assembly_name,
-        '--all-opaque',
+        '--abi-c-filename=' + os.path.join(opts.out, opts.assembly_name + "-abi.c"),
+        '--abi-cs-filename=' + os.path.join(opts.out, opts.assembly_name + "-abi.cs"),
     ]
 
     if opts.schema:
         cmd += ['--schema=' + opts.schema]
+
+    if opts.abi_cs_usings:
+        cmd += ['--abi-cs-usings=' + opts.abi_cs_usings]
 
     cmd += ['-I' + i for i in opts.extra_includes]
 
