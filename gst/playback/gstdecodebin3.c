@@ -940,13 +940,13 @@ gst_decodebin3_request_new_pad (GstElement * element, GstPadTemplate * temp,
 
   /* We are ignoring names for the time being, not sure it makes any sense
    * within the context of decodebin3 ... */
-  INPUT_LOCK (dbin);
   input = create_new_input (dbin, FALSE);
   if (input) {
+    INPUT_LOCK (dbin);
     dbin->other_inputs = g_list_append (dbin->other_inputs, input);
     res = input->ghost_sink;
+    INPUT_UNLOCK (dbin);
   }
-  INPUT_UNLOCK (dbin);
 
   return res;
 }
