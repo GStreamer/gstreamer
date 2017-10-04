@@ -247,6 +247,11 @@ G_GNUC_INTERNAL
 GstCaps *
 gst_vaapi_plugin_base_get_allowed_raw_caps (GstVaapiPluginBase * plugin);
 
+G_GNUC_INTERNAL
+void
+gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
+    GstObject * object);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_PLUGIN_BASE_H */

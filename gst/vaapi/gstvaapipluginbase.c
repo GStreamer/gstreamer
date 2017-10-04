@@ -1182,12 +1182,7 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
       break;
 #endif
     case GST_GL_PLATFORM_EGL:
-#if VA_CHECK_VERSION (0,36,0) && USE_GST_GL_HELPERS
-      plugin->srcpad_can_dmabuf =
-          (!(gst_gl_context_get_gl_api (gl_context) & GST_GL_API_GLES1)
-          && gst_gl_context_check_feature (gl_context,
-              "EGL_EXT_image_dma_buf_import"));
-#endif
+      gst_vaapi_plugin_base_set_srcpad_can_dmabuf (plugin, object);
 #if USE_EGL
       display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
       break;
@@ -1336,4 +1331,28 @@ gst_vaapi_plugin_base_get_allowed_raw_caps (GstVaapiPluginBase * plugin)
   if (!ensure_allowed_raw_caps (plugin))
     return NULL;
   return plugin->allowed_raw_caps;
+}
+
+/**
+ * gst_vaapi_plugin_base_set_srcpad_can_dmabuf:
+ * @plugin: a #GstVaapiPluginBase
+ * @object: the GL context from gst-gl
+ *
+ * This function will determine if @object supports dmabuf
+ * importing.
+ *
+ * Please note that the context @object should come from downstream.
+ **/
+void
+gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
+    GstObject * object)
+{
+#if VA_CHECK_VERSION (0,36,0) && USE_EGL && USE_GST_GL_HELPERS
+  GstGLContext *const gl_context = GST_GL_CONTEXT (object);
+
+  plugin->srcpad_can_dmabuf =
+      (!(gst_gl_context_get_gl_api (gl_context) & GST_GL_API_GLES1)
+      && gst_gl_context_check_feature (gl_context,
+          "EGL_EXT_image_dma_buf_import"));
+#endif
 }
