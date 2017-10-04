@@ -931,6 +931,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
       if (gst_structure_get (params, "gst.gl.GstGLContext", GST_TYPE_GL_CONTEXT,
               &gl_context, NULL) && gl_context) {
         gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
+        gst_vaapi_plugin_base_set_srcpad_can_dmabuf (plugin, gl_context);
         gst_object_unref (gl_context);
       }
     }
@@ -1182,7 +1183,6 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
       break;
 #endif
     case GST_GL_PLATFORM_EGL:
-      gst_vaapi_plugin_base_set_srcpad_can_dmabuf (plugin, object);
 #if USE_EGL
       display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
       break;

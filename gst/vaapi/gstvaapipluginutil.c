@@ -263,6 +263,8 @@ gst_vaapi_find_gl_context (GstElement * element)
 
   if (gl_context) {
     gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
+    if (direction == GST_PAD_SRC)
+      gst_vaapi_plugin_base_set_srcpad_can_dmabuf (plugin, gl_context);
     gst_object_unref (gl_context);
   }
 }
