@@ -169,8 +169,6 @@ struct _GstParseBin
   gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
 
-  gboolean async_pending;       /* async-start has been emitted */
-
   GMutex dyn_lock;              /* lock protecting pad blocking */
   gboolean shutdown;            /* if we are shutting down */
   GList *blocked_pads;          /* pads that have set to block */
@@ -249,9 +247,6 @@ enum
 
 static GstBinClass *parent_class;
 static guint gst_parse_bin_signals[LAST_SIGNAL] = { 0 };
-
-static void do_async_start (GstParseBin * parsebin);
-static void do_async_done (GstParseBin * parsebin);
 
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstParseBin * parse_bin);
@@ -1550,7 +1545,6 @@ unknown_type:
         GST_ELEMENT_ERROR (parsebin, STREAM, TYPE_NOT_FOUND,
             (_("Could not determine type of stream")), (NULL));
       }
-      do_async_done (parsebin);
     }
     return;
   }
@@ -3515,7 +3509,6 @@ retry:
       }
     }
 
-    do_async_done (parsebin);
     return FALSE;
   }
 
@@ -3638,7 +3631,6 @@ retry:
   /* Remove old groups */
   chain_remove_old_groups (parsebin->parse_chain);
 
-  do_async_done (parsebin);
   GST_DEBUG_OBJECT (parsebin, "Exposed everything");
   return TRUE;
 }
@@ -4237,32 +4229,6 @@ gst_pending_pad_free (GstPendingPad * ppad)
  * Element add/remove
  *****/
 
-static void
-do_async_start (GstParseBin * parsebin)
-{
-  GstMessage *message;
-
-  parsebin->async_pending = TRUE;
-
-  message = gst_message_new_async_start (GST_OBJECT_CAST (parsebin));
-  parent_class->handle_message (GST_BIN_CAST (parsebin), message);
-}
-
-static void
-do_async_done (GstParseBin * parsebin)
-{
-  GstMessage *message;
-
-  if (parsebin->async_pending) {
-    message =
-        gst_message_new_async_done (GST_OBJECT_CAST (parsebin),
-        GST_CLOCK_TIME_NONE);
-    parent_class->handle_message (GST_BIN_CAST (parsebin), message);
-
-    parsebin->async_pending = FALSE;
-  }
-}
-
 /* call with dyn_lock held */
 static void
 unblock_pads (GstParseBin * parsebin)
@@ -4322,8 +4288,6 @@ gst_parse_bin_change_state (GstElement * element, GstStateChange transition)
       parsebin->shutdown = FALSE;
       DYN_UNLOCK (parsebin);
       parsebin->have_type = FALSE;
-      ret = GST_STATE_CHANGE_ASYNC;
-      do_async_start (parsebin);
 
 
       /* connect a signal to find out when the typefind element found
@@ -4346,20 +4310,12 @@ gst_parse_bin_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  {
-    GstStateChangeReturn bret;
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (G_UNLIKELY (ret == GST_STATE_CHANGE_FAILURE))
+    goto activate_failed;
 
-    bret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-    if (G_UNLIKELY (bret == GST_STATE_CHANGE_FAILURE))
-      goto activate_failed;
-    else if (G_UNLIKELY (bret == GST_STATE_CHANGE_NO_PREROLL)) {
-      do_async_done (parsebin);
-      ret = bret;
-    }
-  }
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      do_async_done (parsebin);
       EXPOSE_LOCK (parsebin);
       if (parsebin->parse_chain) {
         chain_to_free = parsebin->parse_chain;
@@ -4396,7 +4352,6 @@ activate_failed:
   {
     GST_DEBUG_OBJECT (element,
         "element failed to change states -- activation problem?");
-    do_async_done (parsebin);
     return GST_STATE_CHANGE_FAILURE;
   }
 }
