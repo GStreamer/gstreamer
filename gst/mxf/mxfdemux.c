@@ -2178,6 +2178,7 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
 
   if (!ret) {
     GST_ERROR_OBJECT (demux, "Parsing index table segment failed");
+    g_free (segment);
     return GST_FLOW_ERROR;
   }
 
