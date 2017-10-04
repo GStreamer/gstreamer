@@ -48,7 +48,8 @@ enum
   PROP_OUTPUT_STREAM_TIME,
   PROP_SKIP_FIRST_TIME,
   PROP_DROP_NO_SIGNAL_FRAMES,
-  PROP_SIGNAL
+  PROP_SIGNAL,
+  PROP_HW_SERIAL_NUMBER
 };
 
 typedef struct
@@ -211,6 +212,11 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           "True if there is a valid input signal available",
           FALSE, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_HW_SERIAL_NUMBER,
+      g_param_spec_string ("hw-serial-number", "Hardware serial number",
+          "The serial number (hardware ID) of the Decklink card",
+          NULL, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps (TRUE);
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
@@ -358,6 +364,12 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_SIGNAL:
       g_value_set_boolean (value, !self->no_signal);
+      break;
+    case PROP_HW_SERIAL_NUMBER:
+      if (self->input)
+        g_value_set_string (value, self->input->hw_serial_number);
+      else
+        g_value_set_string (value, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -969,6 +981,8 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
     GST_ERROR_OBJECT (self, "Failed to acquire input");
     return FALSE;
   }
+
+  g_object_notify (G_OBJECT (self), "hw-serial-number");
 
   mode = gst_decklink_get_mode (self->mode);
   g_assert (mode != NULL);

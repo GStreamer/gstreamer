@@ -45,6 +45,7 @@ enum
   PROP_DISCONT_WAIT,
   PROP_BUFFER_SIZE,
   PROP_CHANNELS,
+  PROP_HW_SERIAL_NUMBER
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -184,6 +185,11 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_HW_SERIAL_NUMBER,
+      g_param_spec_string ("hw-serial-number", "Hardware serial number",
+          "The serial number (hardware ID) of the Decklink card",
+          NULL, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Decklink Audio Source",
@@ -270,6 +276,12 @@ gst_decklink_audio_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_CHANNELS:
       g_value_set_enum (value, self->channels);
+      break;
+    case PROP_HW_SERIAL_NUMBER:
+      if (self->input)
+        g_value_set_string (value, self->input->hw_serial_number);
+      else
+        g_value_set_string (value, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -791,6 +803,8 @@ gst_decklink_audio_src_open (GstDecklinkAudioSrc * self)
     GST_ERROR_OBJECT (self, "Failed to acquire input");
     return FALSE;
   }
+
+  g_object_notify (G_OBJECT (self), "hw-serial-number");
 
   g_mutex_lock (&self->input->lock);
   if (self->channels > 0) {

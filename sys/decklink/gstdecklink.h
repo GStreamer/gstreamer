@@ -209,6 +209,9 @@ struct _GstDecklinkOutput {
   IDeckLinkOutput *output;
   IDeckLinkAttributes *attributes;
   IDeckLinkKeyer *keyer;
+
+  gchar *hw_serial_number;
+
   GstClock *clock;
   GstClockTime clock_start_time, clock_last_time, clock_epoch;
   GstClockTimeDiff clock_offset;
@@ -237,6 +240,8 @@ struct _GstDecklinkInput {
   IDeckLinkInput *input;
   IDeckLinkConfiguration *config;
   IDeckLinkAttributes *attributes;
+
+  gchar *hw_serial_number;
 
   /* Everything below protected by mutex */
   GMutex lock;

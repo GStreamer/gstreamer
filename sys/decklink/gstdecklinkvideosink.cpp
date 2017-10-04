@@ -122,7 +122,8 @@ enum
   PROP_VIDEO_FORMAT,
   PROP_TIMECODE_FORMAT,
   PROP_KEYER_MODE,
-  PROP_KEYER_LEVEL
+  PROP_KEYER_LEVEL,
+  PROP_HW_SERIAL_NUMBER
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -243,6 +244,11 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_HW_SERIAL_NUMBER,
+      g_param_spec_string ("hw-serial-number", "Hardware serial number",
+          "The serial number (hardware ID) of the Decklink card",
+          NULL, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   templ_caps = gst_decklink_mode_get_template_caps (FALSE);
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
@@ -345,6 +351,12 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
       break;
     case PROP_KEYER_LEVEL:
       g_value_set_int (value, self->keyer_level);
+      break;
+    case PROP_HW_SERIAL_NUMBER:
+      if (self->output)
+        g_value_set_string (value, self->output->hw_serial_number);
+      else
+        g_value_set_string (value, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -761,6 +773,8 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
     GST_ERROR_OBJECT (self, "Failed to acquire output");
     return FALSE;
   }
+
+  g_object_notify (G_OBJECT (self), "hw-serial-number");
 
   mode = gst_decklink_get_mode (self->mode);
   g_assert (mode != NULL);

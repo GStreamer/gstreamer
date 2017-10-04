@@ -487,6 +487,8 @@ gst_decklink_audio_sink_ringbuffer_open_device (GstAudioRingBuffer * rb)
     return FALSE;
   }
 
+  g_object_notify (G_OBJECT (self->sink), "hw-serial-number");
+
   gst_decklink_output_set_audio_clock (self->output,
       GST_AUDIO_BASE_SINK_CAST (self->sink)->provided_clock);
 
@@ -514,7 +516,8 @@ gst_decklink_audio_sink_ringbuffer_close_device (GstAudioRingBuffer * rb)
 enum
 {
   PROP_0,
-  PROP_DEVICE_NUMBER
+  PROP_DEVICE_NUMBER,
+  PROP_HW_SERIAL_NUMBER
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -570,6 +573,11 @@ gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_HW_SERIAL_NUMBER,
+      g_param_spec_string ("hw-serial-number", "Hardware serial number",
+          "The serial number (hardware ID) of the Decklink card",
+          NULL, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Decklink Audio Sink",
@@ -619,6 +627,16 @@ gst_decklink_audio_sink_get_property (GObject * object, guint property_id,
     case PROP_DEVICE_NUMBER:
       g_value_set_int (value, self->device_number);
       break;
+    case PROP_HW_SERIAL_NUMBER:{
+      GstDecklinkAudioSinkRingBuffer *buf =
+          GST_DECKLINK_AUDIO_SINK_RING_BUFFER_CAST (GST_AUDIO_BASE_SINK_CAST
+          (self)->ringbuffer);
+      if (buf && buf->output)
+        g_value_set_string (value, buf->output->hw_serial_number);
+      else
+        g_value_set_string (value, NULL);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
