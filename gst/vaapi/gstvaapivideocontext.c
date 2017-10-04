@@ -263,16 +263,18 @@ gst_vaapi_video_context_propagate (GstElement * element,
 
 gboolean
 gst_vaapi_find_gl_local_context (GstElement * element,
-    GstObject ** gl_context_ptr)
+    GstObject ** gl_context_ptr, GstPadDirection * direction_ptr)
 {
 #if USE_GST_GL_HELPERS
   GstQuery *query;
   GstContext *context;
   const GstStructure *s;
   GstObject *gl_context;
+  GstPadDirection direction;
 
   g_return_val_if_fail (gl_context_ptr, FALSE);
 
+  direction = GST_PAD_UNKNOWN;
   gl_context = NULL;
   query = gst_query_new_context ("gst.gl.local_context");
   if (_gst_context_run_query (element, query, GST_PAD_SRC)) {
@@ -280,6 +282,7 @@ gst_vaapi_find_gl_local_context (GstElement * element,
     if (context) {
       s = gst_context_get_structure (context);
       gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
+      direction = GST_PAD_SRC;
     }
   }
   if (!gl_context && _gst_context_run_query (element, query, GST_PAD_SINK)) {
@@ -287,11 +290,13 @@ gst_vaapi_find_gl_local_context (GstElement * element,
     if (context) {
       s = gst_context_get_structure (context);
       gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
+      direction = GST_PAD_SINK;
     }
   }
   gst_query_unref (query);
   if (gl_context) {
     *gl_context_ptr = gl_context;
+    *direction_ptr = direction;
     return TRUE;
   }
 #endif

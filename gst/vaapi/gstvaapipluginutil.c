@@ -248,6 +248,7 @@ gst_vaapi_find_gl_context (GstElement * element)
 {
   GstObject *gl_context;
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
+  GstPadDirection direction = GST_PAD_UNKNOWN;
 
   /* if the element is vaapisink or any vaapi encoder it doesn't need
    * to know a GstGLContext in order to create an appropriate
@@ -257,7 +258,7 @@ gst_vaapi_find_gl_context (GstElement * element)
     return;
 
   gl_context = NULL;
-  if (!gst_vaapi_find_gl_local_context (element, &gl_context))
+  if (!gst_vaapi_find_gl_local_context (element, &gl_context, &direction))
     gl_context = gst_vaapi_plugin_base_create_gl_context (plugin);
 
   if (gl_context) {
