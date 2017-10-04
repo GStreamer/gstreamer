@@ -322,8 +322,6 @@ prepare_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size)
 
   GST_BUFFER_DTS (buffer) = time;
   GST_BUFFER_PTS (buffer) = time;
-  GST_BUFFER_OFFSET (buffer) = time;
-  GST_BUFFER_DURATION (buffer) = MIDI_TICK_PERIOD_MS * GST_MSECOND;
 
   local_data = g_memdup (data, size);
 
