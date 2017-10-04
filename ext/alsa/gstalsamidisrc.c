@@ -517,6 +517,7 @@ gst_alsa_midi_src_stop (GstBaseSrc * basesrc)
 
   alsamidisrc = GST_ALSA_MIDI_SRC (basesrc);
 
+  g_free (alsamidisrc->ports);
   g_free (alsamidisrc->pfds);
   g_free (alsamidisrc->buffer);
   snd_midi_event_free (alsamidisrc->parser);
