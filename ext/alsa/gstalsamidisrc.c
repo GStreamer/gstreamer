@@ -309,8 +309,9 @@ gst_alsa_midi_src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstBuffer *
-prepare_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size)
+static void
+push_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size,
+    GstBufferList * buffer_list)
 {
   GstClockTime time;
   gpointer local_data;
@@ -333,14 +334,7 @@ prepare_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size)
 
   alsamidisrc->tick += 1;
 
-  return buffer;
-}
-
-static void
-push_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size,
-    GstBufferList * buffer_list)
-{
-  gst_buffer_list_add (buffer_list, prepare_buffer (alsamidisrc, data, size));
+  gst_buffer_list_add (buffer_list, buffer);
 }
 
 static void
@@ -377,7 +371,7 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
    *
    * If new events are present, then they are decoded and queued in
    * a buffer_list. One buffer per event will be queued, all with different
-   * timestamps (see the prepare_buffer() function); maybe this can be
+   * timestamps (see the push_buffer() function); maybe this can be
    * optimized but a as a proof-of-concept mechanism it works OK.
    */
   ret = poll (alsamidisrc->pfds, alsamidisrc->npfds, DEFAULT_POLL_TIMEOUT_MS);
