@@ -41,7 +41,6 @@ if libtype != 'static'
     soversion : soversion,
     install : true,
     dependencies : [gio_dep, gst_base_dep],
-    vs_module_defs: vs_module_defs_dir + 'libgstnet.def',
   )
   gst_net = gst_net_shared
   if build_gir

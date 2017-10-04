@@ -381,7 +381,6 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'gst_init(NULL,NULL);' ]
-vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
 
 # Used by the *_mkenum.py helper scripts
 glib_mkenums = find_program('glib-mkenums')

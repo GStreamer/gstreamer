@@ -62,7 +62,6 @@ if libtype != 'static'
     soversion : soversion,
     include_directories : [configinc, libsinc],
     dependencies : [gobject_dep, glib_dep, mathlib, gst_dep],
-    vs_module_defs: vs_module_defs_dir + 'libgstcontroller.def',
   )
   gst_controller = gst_controller_shared
   if build_gir
