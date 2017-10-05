@@ -120,14 +120,20 @@ create_objects (GstVaapiTextureEGL * texture, GLuint texture_id)
 
   /* ERRORS */
 error_create_image:
-  GST_ERROR ("failed to create EGL image from 2D texture %u", texture_id);
-  return FALSE;
+  {
+    GST_ERROR ("failed to create EGL image from 2D texture %u", texture_id);
+    return FALSE;
+  }
 error_create_surface:
-  GST_ERROR ("failed to create VA surface from 2D texture %u", texture_id);
-  return FALSE;
+  {
+    GST_ERROR ("failed to create VA surface from 2D texture %u", texture_id);
+    return FALSE;
+  }
 error_create_filter:
-  GST_ERROR ("failed to create VPP filter for color conversion");
-  return FALSE;
+  {
+    GST_ERROR ("failed to create VPP filter for color conversion");
+    return FALSE;
+  }
 }
 
 static gboolean
