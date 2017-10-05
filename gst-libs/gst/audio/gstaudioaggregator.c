@@ -47,18 +47,20 @@ struct _GstAudioAggregatorPadPrivate
 {
   /* All members are protected by the pad object lock */
 
-  GstBuffer *buffer;            /* current buffer we're mixing,
-                                   for comparison with collect.buffer
-                                   to see if we need to update our
+  GstBuffer *buffer;            /* current input buffer we're mixing, for
+                                   comparison with a new input buffer from
+                                   aggregator to see if we need to update our
                                    cached values. */
-  guint position, size;
+
+  guint position, size;         /* position in the input buffer and size of the
+                                   input buffer in number of samples */
 
   guint64 output_offset;        /* Sample offset in output segment relative to
-                                   segment.start that collect.pos refers to in the
-                                   current buffer. */
+                                   pad.segment.start that position refers to
+                                   in the current buffer. */
 
-  guint64 next_offset;          /* Next expected sample offset in the input segment
-                                   relative to segment.start */
+  guint64 next_offset;          /* Next expected sample offset relative to
+                                   pad.segment.start */
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
@@ -151,13 +153,15 @@ struct _GstAudioAggregatorPrivate
   GstClockTime discont_wait;
 
   /* Protected by srcpad stream clock */
-  /* Buffer starting at offset containing block_size frames */
+  /* Output buffer starting at offset containing blocksize frames (calculated
+   * from output_buffer_duration) */
   GstBuffer *current_buffer;
 
   /* counters to keep track of timestamps */
   /* Readable with object lock, writable with both aag lock and object lock */
 
-  gint64 offset;                /* Sample offset starting from 0 at segment.start */
+  /* Sample offset starting from 0 at aggregator.segment.start */
+  gint64 offset;
 };
 
 #define GST_AUDIO_AGGREGATOR_LOCK(self)   g_mutex_lock (&(self)->priv->mutex);
