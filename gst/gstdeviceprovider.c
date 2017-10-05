@@ -714,7 +714,7 @@ gst_device_provider_unhide_provider (GstDeviceProvider * provider,
   gchar *unhidden_name = NULL;
 
   g_return_if_fail (GST_IS_DEVICE_PROVIDER (provider));
-  g_return_if_fail (unhidden_name != NULL);
+  g_return_if_fail (name != NULL);
 
   GST_OBJECT_LOCK (provider);
   find =
