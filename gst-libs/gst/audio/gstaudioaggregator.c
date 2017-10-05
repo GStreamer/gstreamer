@@ -763,9 +763,12 @@ gst_audio_aggregator_do_clip (GstAggregator * agg,
 
 /* Called with the object lock for both the element and pad held,
  * as well as the aagg lock
+ *
+ * Replace the current buffer with input and update GstAudioAggregatorPadPrivate
+ * values.
  */
 static gboolean
-gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
+gst_audio_aggregator_queue_new_buffer (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad, GstBuffer * inbuf)
 {
   GstClockTime start_time, end_time;
@@ -1241,7 +1244,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     /* New buffer? */
     if (!pad->priv->buffer) {
       /* Takes ownership of buffer */
-      if (!gst_audio_aggregator_fill_buffer (aagg, pad, inbuf)) {
+      if (!gst_audio_aggregator_queue_new_buffer (aagg, pad, inbuf)) {
         dropped = TRUE;
         GST_OBJECT_UNLOCK (pad);
         gst_aggregator_pad_drop_buffer (aggpad);
