@@ -61,7 +61,7 @@ if build_gir
     identifier_prefix : 'Gst',
     symbol_prefix : 'gst',
     export_packages : 'gstreamer-tag-1.0',
-    includes : ['Gst-1.0'],
+    includes : ['Gst-1.0', 'GstBase-1.0'],
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : tag_deps
