@@ -1181,9 +1181,6 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       rate, GST_SECOND);
   blocksize = MAX (1, blocksize);
 
-  /* for the next timestamp, use the sample counter, which will
-   * never accumulate rounding errors */
-
   /* FIXME: Reverse mixing does not work at all yet */
   if (agg->segment.rate > 0.0) {
     next_offset = aagg->priv->offset + blocksize;
@@ -1191,6 +1188,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     next_offset = aagg->priv->offset - blocksize;
   }
 
+  /* Use the sample counter, which will never accumulate rounding errors */
   next_timestamp =
       agg->segment.start + gst_util_uint64_scale (next_offset, GST_SECOND,
       rate);
