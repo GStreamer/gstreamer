@@ -213,6 +213,9 @@ gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
         GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i));
   }
 
+  /* Update with the size use for display, excluding any padding at the end */
+  GST_VIDEO_INFO_SIZE (vinfo) = offs;
+
 done:
   kmsmem->bo->handle = arg.handle;
   /* will be used a memory maxsize */
