@@ -139,7 +139,7 @@ if build_gir
     identifier_prefix : 'Gst',
     symbol_prefix : 'gst',
     export_packages : 'gstreamer-video-1.0',
-    includes : ['Gst-1.0', 'GLib-2.0', 'GObject-2.0', 'GModule-2.0' ],
+    includes : ['Gst-1.0', 'GstBase-1.0'],
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstvideo_deps

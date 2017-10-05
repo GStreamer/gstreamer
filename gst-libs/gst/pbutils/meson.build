@@ -17,7 +17,7 @@ pbconf.set('PACKAGE_VERSION_MAJOR', gst_version_major)
 pbconf.set('PACKAGE_VERSION_MINOR', gst_version_minor)
 pbconf.set('PACKAGE_VERSION_MICRO', gst_version_micro)
 pbconf.set('PACKAGE_VERSION_NANO', gst_version_nano)
-configure_file(input : 'gstpluginsbaseversion.h.in',
+gst_pbutils_version_h = configure_file(input : 'gstpluginsbaseversion.h.in',
   output: 'gstpluginsbaseversion.h',
   install_dir : 'include/gstreamer-1.0/gst/pbutils/',
   configuration: pbconf)
@@ -63,17 +63,17 @@ pbutils = library('gstpbutils-@0@'.format(api_version),
   vs_module_defs: vs_module_defs_dir + 'libgstpbutils.def',
 )
 
-pbutils_gen_sources = [gstpbutils_h]
+pbutils_gen_sources = [gstpbutils_h, gst_pbutils_version_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/pbutils/pbutils.h' ]
   pbutils_gen_sources += [gnome.generate_gir(pbutils,
-    sources : pbutils_sources + pbutils_headers + [gstpbutils_h],
+    sources : pbutils_sources + pbutils_headers + [gstpbutils_h, gst_pbutils_version_h],
     namespace : 'GstPbutils',
     nsversion : api_version,
     identifier_prefix : 'Gst',
     symbol_prefix : 'gst',
     export_packages : 'gstreamer-pbutils-1.0',
-    includes : ['Gst-1.0', 'GstBase-1.0'],
+    includes : ['Gst-1.0', 'GstBase-1.0', 'GstAudio-1.0', 'GstVideo-1.0'],
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstpbutils_deps
