@@ -1039,6 +1039,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::default-rtsp-version</NAME>
+<TYPE>GstRTSPVersion</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The RTSP version to try first</NICK>
+<BLURB>The RTSP version that should be tried first when negotiating version.</BLURB>
+<DEFAULT>GST_RTSP_VERSION_1_0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::max-ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max TS Offset</NICK>
+<BLURB>The maximum absolute value of the time offset in (nanoseconds). Note, if the ntp-sync parameter is set the default value is changed to 0 (no limit).</BLURB>
+<DEFAULT>3000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::max-ts-offset-adjustment</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Timestamp Offset Adjustment</NICK>
+<BLURB>The maximum number of nanoseconds per frame that time stamp offsets may be adjusted (0 = no limit).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::latency</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
@@ -20619,6 +20649,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::max-ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max TS Offset</NICK>
+<BLURB>The maximum absolute value of the time offset in (nanoseconds). Note, if the ntp-sync parameter is set the default value is changed to 0 (no limit).</BLURB>
+<DEFAULT>3000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::max-ts-offset-adjustment</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Timestamp Offset Adjustment</NICK>
+<BLURB>The maximum number of nanoseconds per frame that time stamp offsets may be adjusted (0 = no limit).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20845,6 +20895,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Faststart minimum packets</NICK>
 <BLURB>The number of consecutive packets needed to start (set to 0 to disable faststart. The jitterbuffer will by default start after the latency has elapsed).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::max-ts-offset-adjustment</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Timestamp Offset Adjustment</NICK>
+<BLURB>The maximum number of nanoseconds per frame that time stamp offsets may be adjusted (0 = no limit).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -24496,5 +24556,15 @@
 <NICK>VBR max bitrate</NICK>
 <BLURB>Specify maximum VBR bitrate (0=off, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 192, 224, 256, 320, 384).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSbcDepay::ignore-timestamps</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore Timestamps</NICK>
+<BLURB>Various statistics.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
