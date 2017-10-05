@@ -1287,11 +1287,11 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       }
     }
 
+    g_assert (pad->priv->buffer);
 
     if (pad->priv->output_offset >= aagg->priv->offset
-        && pad->priv->output_offset <
-        aagg->priv->offset + blocksize && pad->priv->buffer) {
-      gboolean drop_buf = FALSE;
+        && pad->priv->output_offset < aagg->priv->offset + blocksize) {
+      gboolean drop_buf;
 
       GST_LOG_OBJECT (aggpad, "Mixing buffer for current offset");
       drop_buf = !gst_audio_aggregator_mix_buffer (aagg, pad, pad->priv->buffer,
