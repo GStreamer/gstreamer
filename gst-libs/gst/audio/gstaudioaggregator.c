@@ -973,18 +973,14 @@ done:
 
 static gboolean
 gst_audio_aggregator_mix_buffer (GstAudioAggregator * aagg,
-    GstAudioAggregatorPad * pad, GstBuffer * inbuf, GstBuffer * outbuf)
+    GstAudioAggregatorPad * pad, GstBuffer * inbuf, GstBuffer * outbuf,
+    guint blocksize)
 {
   guint overlap;
   guint out_start;
   gboolean filled;
-  guint blocksize;
   guint in_offset;
   gboolean pad_changed = FALSE;
-
-  blocksize = gst_util_uint64_scale (aagg->priv->output_buffer_duration,
-      GST_AUDIO_INFO_RATE (&aagg->info), GST_SECOND);
-  blocksize = MAX (1, blocksize);
 
   /* Overlap => mix */
   if (aagg->priv->offset < pad->priv->output_offset)
@@ -1295,7 +1291,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
       GST_LOG_OBJECT (aggpad, "Mixing buffer for current offset");
       drop_buf = !gst_audio_aggregator_mix_buffer (aagg, pad, pad->priv->buffer,
-          outbuf);
+          outbuf, blocksize);
       if (pad->priv->output_offset >= next_offset) {
         GST_LOG_OBJECT (pad,
             "Pad is at or after current offset: %" G_GUINT64_FORMAT " >= %"
