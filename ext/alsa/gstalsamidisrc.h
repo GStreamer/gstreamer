@@ -65,6 +65,7 @@ struct _GstAlsaMidiSrc
   int npfds;
 
   guint64 tick;
+  guint64 delay;
 };
 
 struct _GstAlsaMidiSrcClass

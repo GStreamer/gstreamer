@@ -80,7 +80,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_alsa_midi_src_debug);
 
 #define DEFAULT_BUFSIZE 65536
 #define DEFAULT_CLIENT_NAME "alsamidisrc"
-#define DEFAULT_POLL_TIMEOUT_MS (MIDI_TICK_PERIOD_MS / 2)
 
 static int
 init_seq (GstAlsaMidiSrc * alsamidisrc)
@@ -180,6 +179,37 @@ start_queue_timer (GstAlsaMidiSrc * alsamidisrc)
         snd_strerror (ret));
 
   return ret;
+}
+
+static void
+schedule_next_tick (GstAlsaMidiSrc * alsamidisrc)
+{
+  snd_seq_event_t ev;
+  snd_seq_real_time_t time;
+  int ret;
+
+  snd_seq_ev_clear (&ev);
+  snd_seq_ev_set_source (&ev, 0);
+  snd_seq_ev_set_dest (&ev, snd_seq_client_id (alsamidisrc->seq), 0);
+
+  ev.type = SND_SEQ_EVENT_TICK;
+
+  alsamidisrc->tick += 1;
+  GST_TIME_TO_TIMESPEC (alsamidisrc->tick * MIDI_TICK_PERIOD_MS * GST_MSECOND,
+      time);
+
+  snd_seq_ev_schedule_real (&ev, alsamidisrc->queue, SND_SEQ_TIME_MODE_ABS,
+      &time);
+
+  ret = snd_seq_event_output (alsamidisrc->seq, &ev);
+  if (ret < 0)
+    GST_ERROR_OBJECT (alsamidisrc, "Event output error: %s\n",
+        snd_strerror (ret));
+
+  ret = snd_seq_drain_output (alsamidisrc->seq);
+  if (ret < 0)
+    GST_ERROR_OBJECT (alsamidisrc, "Event drain error: %s\n",
+        snd_strerror (ret));
 }
 
 static int
@@ -285,6 +315,8 @@ static void gst_alsa_midi_src_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_alsa_midi_src_start (GstBaseSrc * basesrc);
 static gboolean gst_alsa_midi_src_stop (GstBaseSrc * basesrc);
+static void gst_alsa_midi_src_state_changed (GstElement * element,
+    GstState oldstate, GstState newstate, GstState pending);
 
 static GstFlowReturn
 gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf);
@@ -319,6 +351,8 @@ gst_alsa_midi_src_class_init (GstAlsaMidiSrcClass * klass)
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_start);
   gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_stop);
   gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_create);
+  gstelement_class->state_changed =
+      GST_DEBUG_FUNCPTR (gst_alsa_midi_src_state_changed);
 }
 
 static void
@@ -371,15 +405,12 @@ gst_alsa_midi_src_get_property (GObject * object, guint prop_id, GValue * value,
 
 static void
 push_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size,
-    GstBufferList * buffer_list)
+    GstClockTime time, GstBufferList * buffer_list)
 {
-  GstClockTime time;
   gpointer local_data;
   GstBuffer *buffer;
 
   buffer = gst_buffer_new ();
-
-  time = alsamidisrc->tick * MIDI_TICK_PERIOD_MS * GST_MSECOND;
 
   GST_BUFFER_DTS (buffer) = time;
   GST_BUFFER_PTS (buffer) = time;
@@ -392,16 +423,15 @@ push_buffer (GstAlsaMidiSrc * alsamidisrc, gpointer data, guint size,
 
   GST_MEMDUMP_OBJECT (alsamidisrc, "MIDI data:", local_data, size);
 
-  alsamidisrc->tick += 1;
-
   gst_buffer_list_add (buffer_list, buffer);
 }
 
 static void
-push_tick_buffer (GstAlsaMidiSrc * alsamidisrc, GstBufferList * buffer_list)
+push_tick_buffer (GstAlsaMidiSrc * alsamidisrc, GstClockTime time,
+    GstBufferList * buffer_list)
 {
   alsamidisrc->buffer[0] = MIDI_TICK;
-  push_buffer (alsamidisrc, alsamidisrc->buffer, 1, buffer_list);
+  push_buffer (alsamidisrc, alsamidisrc->buffer, 1, time, buffer_list);
 }
 
 static GstFlowReturn
@@ -409,6 +439,7 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstAlsaMidiSrc *alsamidisrc;
   GstBufferList *buffer_list;
+  GstClockTime time;
   long size_ev = 0;
   int err;
   int ret;
@@ -418,27 +449,12 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
 
   buffer_list = gst_buffer_list_new ();
 
+poll:
   snd_seq_poll_descriptors (alsamidisrc->seq, alsamidisrc->pfds,
       alsamidisrc->npfds, POLLIN);
-
-  /*
-   * The file descriptors are polled with a timeout _less_ than 10ms (the MIDI
-   * tick period) in order not to loose events because of possible overlaps
-   * with MIDI ticks.
-   *
-   * If the polling times out (no new events) then a MIDI-tick event gets
-   * generated in order to keep the pipeline alive and progressing.
-   *
-   * If new events are present, then they are decoded and queued in
-   * a buffer_list. One buffer per event will be queued, all with different
-   * timestamps (see the push_buffer() function); maybe this can be
-   * optimized but a as a proof-of-concept mechanism it works OK.
-   */
-  ret = poll (alsamidisrc->pfds, alsamidisrc->npfds, DEFAULT_POLL_TIMEOUT_MS);
-  if (ret < 0) {
+  ret = poll (alsamidisrc->pfds, alsamidisrc->npfds, -1);
+  if (ret <= 0) {
     GST_ERROR_OBJECT (alsamidisrc, "ERROR in poll: %s", strerror (errno));
-  } else if (ret == 0) {
-    push_tick_buffer (alsamidisrc, buffer_list);
   } else {
     /* There are events available */
     do {
@@ -448,6 +464,18 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
         break;                  /* Processed all events */
 
       if (event) {
+        time = GST_TIMESPEC_TO_TIME (event->time.time) - alsamidisrc->delay;
+
+        /*
+         * Special handling is needed because decoding SND_SEQ_EVENT_TICK is
+         * not supported by alsa-lib.
+         */
+        if (event->type == SND_SEQ_EVENT_TICK) {
+          push_tick_buffer (alsamidisrc, time, buffer_list);
+          schedule_next_tick (alsamidisrc);
+          continue;
+        }
+
         size_ev =
             snd_midi_event_decode (alsamidisrc->parser, alsamidisrc->buffer,
             DEFAULT_BUFSIZE, event);
@@ -456,7 +484,7 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
           if (-ENOENT == size_ev) {
             GST_WARNING_OBJECT (alsamidisrc,
                 "Warning: Received non-MIDI message");
-            push_tick_buffer (alsamidisrc, buffer_list);
+            goto poll;
           } else {
             GST_ERROR_OBJECT (alsamidisrc,
                 "Error decoding event from ALSA to output: %s",
@@ -464,7 +492,8 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
             goto error;
           }
         } else {
-          push_buffer (alsamidisrc, alsamidisrc->buffer, size_ev, buffer_list);
+          push_buffer (alsamidisrc, alsamidisrc->buffer, size_ev, time,
+              buffer_list);
         }
       }
     } while (err > 0);
@@ -577,4 +606,45 @@ gst_alsa_midi_src_stop (GstBaseSrc * basesrc)
   snd_seq_close (alsamidisrc->seq);
 
   return TRUE;
+}
+
+static void
+gst_alsa_midi_src_state_changed (GstElement * element, GstState oldstate,
+    GstState newstate, GstState pending)
+{
+  GstAlsaMidiSrc *alsamidisrc;
+
+  alsamidisrc = GST_ALSA_MIDI_SRC (element);
+
+  if (newstate == GST_STATE_PLAYING) {
+    GstClockTime gst_time;
+    GstClockTime base_time;
+    GstClockTime running_time;
+    GstClockTime queue_time;
+    GstClock *clock;
+    snd_seq_queue_status_t *status;
+
+    clock = gst_element_get_clock (element);
+    gst_time = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+    base_time = gst_element_get_base_time (element);
+    running_time = gst_time - base_time;
+
+    snd_seq_queue_status_malloc (&status);
+    snd_seq_get_queue_status (alsamidisrc->seq, alsamidisrc->queue, status);
+    queue_time =
+        GST_TIMESPEC_TO_TIME (*snd_seq_queue_status_get_real_time (status));
+    snd_seq_queue_status_free (status);
+
+    /*
+     * The fact that the ALSA sequencer queue started before the pipeline
+     * transition to the PLAYING state ensures that the pipeline delay is
+     * always positive.
+     */
+    alsamidisrc->delay = queue_time - running_time;
+
+    if (alsamidisrc->tick == 0) {
+      schedule_next_tick (alsamidisrc);
+    }
+  }
 }
