@@ -24,7 +24,7 @@ if build_gir
     export_packages : 'gstreamer-insertbin-1.0',
     includes : ['Gst-1.0'],
     install : true,
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/insertbin/gstinsertbin.h'],
     dependencies : [gst_dep]
   )
   gen_sources += insertbin_gir

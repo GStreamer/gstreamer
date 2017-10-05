@@ -46,7 +46,7 @@ if build_gir
     includes : ['Gst-1.0', 'GstPbutils-1.0', 'GstBase-1.0', 'GstVideo-1.0',
       'GstAudio-1.0', 'GstTag-1.0'],
     install : true,
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/player/player.h'],
     dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
                   gsttag_dep, gstpbutils_dep]
   )

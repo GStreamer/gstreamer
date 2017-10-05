@@ -47,12 +47,12 @@ if build_gir
     sources : mpegts_sources + mpegts_headers,
     namespace : 'GstMpegts',
     nsversion : api_version,
-    identifier_prefix : 'Gst',
-    symbol_prefix : 'gst',
+    identifier_prefix : 'GstMpegts',
+    symbol_prefix : 'gst_mpegts', #FIXME ['gst_mpegts', 'gst'],
     export_packages : 'gstreamer-mpegts-1.0',
     includes : ['Gst-1.0'],
     install : true,
-    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/mpegts/mpegts.h'],
     dependencies : [gst_dep]
   )
   gen_sources += mpegts_gir
