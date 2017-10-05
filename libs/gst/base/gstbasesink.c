@@ -3343,13 +3343,6 @@ gst_base_sink_needs_preroll (GstBaseSink * basesink)
   return res;
 }
 
-static gboolean
-count_list_bytes (GstBuffer ** buffer, guint idx, GstBaseSinkPrivate * priv)
-{
-  priv->rc_accumulated += gst_buffer_get_size (*buffer);
-  return TRUE;
-}
-
 /* with STREAM_LOCK, PREROLL_LOCK
  *
  * Takes a buffer and compare the timestamps with the last segment.
@@ -3530,12 +3523,14 @@ again:
     goto dropped;
 
   if (priv->max_bitrate) {
-    if (is_list) {
-      gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
-          (GstBufferListFunc) count_list_bytes, priv);
-    } else {
-      priv->rc_accumulated += gst_buffer_get_size (GST_BUFFER_CAST (obj));
-    }
+    gsize size;
+
+    if (is_list)
+      size = gst_buffer_list_calculate_size (GST_BUFFER_LIST_CAST (obj));
+    else
+      size = gst_buffer_get_size (GST_BUFFER_CAST (obj));
+
+    priv->rc_accumulated += size;
     priv->rc_next = priv->rc_time + gst_util_uint64_scale (priv->rc_accumulated,
         8 * GST_SECOND, priv->max_bitrate);
   }
