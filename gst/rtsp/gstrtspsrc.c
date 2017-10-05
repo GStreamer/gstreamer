@@ -2244,7 +2244,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   gboolean playing;
   GstSegment seeksegment = { 0, };
   GList *walk;
-  gchar *seek_style = NULL;
+  const gchar *seek_style = NULL;
 
   if (event) {
     GST_DEBUG_OBJECT (src, "doing seek with event");
@@ -2571,7 +2571,7 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
       if (format == GST_FORMAT_TIME) {
         gboolean seekable =
             src->cur_protocols != GST_RTSP_LOWER_TRANS_UDP_MCAST;
-        GstClockTime start, duration = src->segment.duration;
+        GstClockTime start = 0, duration = src->segment.duration;
 
         /* seeking without duration is unlikely */
         seekable = seekable && src->seekable >= 0.0 && src->segment.duration &&
