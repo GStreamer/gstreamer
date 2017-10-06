@@ -125,6 +125,8 @@ EXPORTS
 	gst_rtsp_media_new
 	gst_rtsp_media_prepare
 	gst_rtsp_media_seek
+	gst_rtsp_media_seek_full
+	gst_rtsp_media_seekable
 	gst_rtsp_media_set_address_pool
 	gst_rtsp_media_set_buffer_size
 	gst_rtsp_media_set_clock
