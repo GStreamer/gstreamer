@@ -2370,12 +2370,16 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
       else
         prev->next = next;
 
+      prev = next;
+
       /* call free_func if any */
       if (info->free_func)
         info->free_func (m, buffer);
 
       /* and free the slice */
       g_slice_free1 (ITEM_SIZE (info), walk);
+    } else {
+      prev = walk;
     }
     if (!res)
       break;

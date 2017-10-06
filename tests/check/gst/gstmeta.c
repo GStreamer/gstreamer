@@ -314,6 +314,57 @@ GST_START_TEST (test_meta_locked)
 
 GST_END_TEST;
 
+static gboolean
+foreach_meta_remove_one (GstBuffer * buffer, GstMeta ** meta,
+    gpointer to_remove)
+{
+  if (*meta == to_remove) {
+    *meta = NULL;
+  }
+
+  return TRUE;
+}
+
+static gint
+count_buffer_meta (GstBuffer * buffer)
+{
+  gint ret = 0;
+  gpointer state = NULL;
+
+  while (gst_buffer_iterate_meta (buffer, &state))
+    ret++;
+
+  return ret;
+}
+
+GST_START_TEST (test_meta_foreach_remove_one)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta1, *meta2, *meta3;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_if (meta1 == NULL);
+  meta2 = GST_META_TEST_ADD (buffer);
+  fail_if (meta2 == NULL);
+  meta3 = GST_META_TEST_ADD (buffer);
+  fail_if (meta3 == NULL);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 3);
+
+  gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta1);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 2);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_meta_iterate)
 {
   GstBuffer *buffer;
@@ -421,6 +472,7 @@ gst_buffermeta_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_meta_test);
   tcase_add_test (tc_chain, test_meta_locked);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_one);
   tcase_add_test (tc_chain, test_meta_iterate);
 
   return s;
