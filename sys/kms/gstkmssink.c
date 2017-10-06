@@ -683,7 +683,8 @@ gst_kms_sink_stop (GstBaseSink * bsink)
 
   self = GST_KMS_SINK (bsink);
 
-  gst_kms_allocator_clear_cache (self->allocator);
+  if (self->allocator)
+    gst_kms_allocator_clear_cache (self->allocator);
 
   gst_buffer_replace (&self->last_buffer, NULL);
   gst_caps_replace (&self->allowed_caps, NULL);
