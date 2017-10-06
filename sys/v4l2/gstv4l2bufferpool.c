@@ -1119,6 +1119,8 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   GstV4l2Object *obj = pool->obj;
   GstClockTime timestamp;
   GstV4l2MemoryGroup *group;
+  GstVideoMeta *vmeta;
+  gsize size;
   gint i;
 
   if ((res = gst_v4l2_buffer_pool_poll (pool)) != GST_FLOW_OK)
@@ -1149,7 +1151,8 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
 
   timestamp = GST_TIMEVAL_TO_TIME (group->buffer.timestamp);
 
-#ifndef GST_DISABLE_GST_DEBUG
+  size = 0;
+  vmeta = gst_buffer_get_video_meta (outbuf);
   for (i = 0; i < group->n_mem; i++) {
     GST_LOG_OBJECT (pool,
         "dequeued buffer %p seq:%d (ix=%d), mem %p used %d, plane=%d, flags %08x, ts %"
@@ -1157,8 +1160,12 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
         group->buffer.sequence, group->buffer.index, group->mem[i],
         group->planes[i].bytesused, i, group->buffer.flags,
         GST_TIME_ARGS (timestamp), pool->num_queued, outbuf);
+
+    if (vmeta) {
+      vmeta->offset[i] = size;
+      size += gst_memory_get_sizes (group->mem[i], NULL, NULL);
+    }
   }
-#endif
 
   /* Ignore timestamp and field for OUTPUT device */
   if (V4L2_TYPE_IS_OUTPUT (obj->type))
@@ -1710,14 +1717,6 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
                 goto buffer_corrupted;
               else
                 goto eos;
-            }
-
-            /* verify that buffer contains a full frame for raw video */
-            if (GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED
-                && size < GST_VIDEO_INFO_SIZE (&obj->info)) {
-              GST_WARNING_OBJECT (pool, "Invalid buffer size, this is likely "
-                  "due to a bug in your driver, dropping");
-              goto buffer_corrupted;
             }
 
             num_queued = g_atomic_int_get (&pool->num_queued);

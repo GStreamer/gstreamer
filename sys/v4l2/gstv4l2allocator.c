@@ -295,6 +295,7 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
   if (!V4L2_TYPE_IS_MULTIPLANAR (format->type)) {
     group->planes[0].bytesused = group->buffer.bytesused;
     group->planes[0].length = group->buffer.length;
+    group->planes[0].data_offset = 0;
     g_assert (sizeof (group->planes[0].m) == sizeof (group->buffer.m));
     memcpy (&group->planes[0].m, &group->buffer.m, sizeof (group->buffer.m));
   }
@@ -311,8 +312,10 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
   if (memory == V4L2_MEMORY_MMAP) {
     gint i;
     for (i = 0; i < group->n_mem; i++) {
-      GST_LOG_OBJECT (allocator, "  [%u] bytesused: %u, length: %u", i,
-          group->planes[i].bytesused, group->planes[i].length);
+      GST_LOG_OBJECT (allocator,
+          "  [%u] bytesused: %u, length: %u, offset: %u", i,
+          group->planes[i].bytesused, group->planes[i].length,
+          group->planes[i].data_offset);
       GST_LOG_OBJECT (allocator, "  [%u] MMAP offset:  %u", i,
           group->planes[i].m.mem_offset);
     }
@@ -581,36 +584,11 @@ static void
 gst_v4l2_allocator_reset_size (GstV4l2Allocator * allocator,
     GstV4l2MemoryGroup * group)
 {
-  GstV4l2Object *obj = allocator->obj;
-  gsize size;
-  gboolean imported = FALSE;
-
-  switch (allocator->memory) {
-    case V4L2_MEMORY_USERPTR:
-    case V4L2_MEMORY_DMABUF:
-      imported = TRUE;
-      break;
-  }
-
-  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-    gint i;
-
-    for (i = 0; i < group->n_mem; i++) {
-      size = obj->format.fmt.pix_mp.plane_fmt[i].sizeimage;
-
-      if (imported)
-        group->mem[i]->maxsize = size;
-
-      gst_memory_resize (group->mem[i], 0, size);
-    }
-
-  } else {
-    size = obj->format.fmt.pix.sizeimage;
-
-    if (imported)
-      group->mem[0]->maxsize = size;
-
-    gst_memory_resize (group->mem[0], 0, size);
+  gint i;
+  for (i = 0; i < group->n_mem; i++) {
+    group->mem[i]->maxsize = group->planes[i].length;
+    group->mem[i]->offset = 0;
+    group->mem[i]->size = group->planes[i].length;
   }
 }
 
@@ -829,8 +807,8 @@ gst_v4l2_allocator_alloc_mmap (GstV4l2Allocator * allocator)
           group->planes[i].length, group->planes[i].data_offset, i);
 
       group->mem[i] = (GstMemory *) _v4l2mem_new (0, GST_ALLOCATOR (allocator),
-          NULL, group->planes[i].length, 0, 0, group->planes[i].length, i,
-          data, -1, group);
+          NULL, group->planes[i].length, 0, 0, group->planes[i].length, i, data,
+          -1, group);
     } else {
       /* Take back the allocator reference */
       gst_object_ref (allocator);
@@ -891,8 +869,9 @@ gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
           expbuf.fd, i);
 
       group->mem[i] = (GstMemory *) _v4l2mem_new (0, GST_ALLOCATOR (allocator),
-          NULL, group->planes[i].length, 0, 0, group->planes[i].length, i,
-          NULL, expbuf.fd, group);
+          NULL, group->planes[i].length, 0, group->planes[i].data_offset,
+          group->planes[i].length - group->planes[i].data_offset, i, NULL,
+          expbuf.fd, group);
     } else {
       /* Take back the allocator reference */
       gst_object_ref (allocator);
@@ -907,7 +886,9 @@ gst_v4l2_allocator_alloc_dmabuf (GstV4l2Allocator * allocator,
       goto dup_failed;
 
     dma_mem = gst_dmabuf_allocator_alloc (dmabuf_allocator, dmafd,
-        mem->mem.maxsize);
+        group->planes[i].length);
+    gst_memory_resize (dma_mem, group->planes[i].data_offset,
+        group->planes[i].length - group->planes[i].data_offset);
 
     gst_mini_object_set_qdata (GST_MINI_OBJECT (dma_mem),
         GST_V4L2_MEMORY_QUARK, mem, (GDestroyNotify) gst_memory_unref);
@@ -1112,7 +1093,7 @@ gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
 
     /* Update v4l2 structure */
     group->planes[i].length = maxsize;
-    group->planes[i].bytesused = size;
+    group->planes[i].bytesused = size + offset;
     group->planes[i].m.fd = dmafd;
     group->planes[i].data_offset = offset;
   }
@@ -1122,6 +1103,9 @@ gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
     group->buffer.bytesused = group->planes[0].bytesused;
     group->buffer.length = group->planes[0].length;
     group->buffer.m.fd = group->planes[0].m.userptr;
+
+    /* FIXME Check if data_offset > 0 and fail for non-multi-planar */
+    g_assert (group->planes[0].data_offset == 0);
   } else {
     group->buffer.length = group->n_mem;
   }
@@ -1166,11 +1150,10 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
     gsize maxsize, psize;
 
     if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-      struct v4l2_pix_format_mplane *pix = &obj->format.fmt.pix_mp;
-      maxsize = pix->plane_fmt[i].sizeimage;
+      maxsize = group->planes[i].length;
       psize = size[i];
     } else {
-      maxsize = obj->format.fmt.pix.sizeimage;
+      maxsize = group->planes[i].length;
       psize = img_size;
     }
 
@@ -1350,14 +1333,33 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
   } else {
     /* for capture, simply read the size */
     for (i = 0; i < group->n_mem; i++) {
-      if (G_LIKELY (group->planes[i].bytesused <= group->mem[i]->maxsize))
-        gst_memory_resize (group->mem[i], 0, group->planes[i].bytesused);
+      gsize size, offset;
+
+      GST_LOG_OBJECT (allocator,
+          "Dequeued capture buffer, length: %u bytesused: %u data_offset: %u",
+          group->planes[i].length, group->planes[i].bytesused,
+          group->planes[i].data_offset);
+
+      offset = group->planes[i].data_offset;
+
+      if (group->planes[i].bytesused > group->planes[i].data_offset) {
+        size = group->planes[i].bytesused - group->planes[i].data_offset;
+      } else {
+        GST_WARNING_OBJECT (allocator, "V4L2 provided buffer has bytesused %"
+            G_GUINT32_FORMAT " which is too small to include data_offset %"
+            G_GUINT32_FORMAT, group->planes[i].bytesused,
+            group->planes[i].data_offset);
+        size = group->planes[i].bytesused;
+      }
+
+      if (G_LIKELY (size + offset <= group->mem[i]->maxsize))
+        gst_memory_resize (group->mem[i], offset, size);
       else {
         GST_WARNING_OBJECT (allocator,
             "v4l2 provided buffer that is too big for the memory it was "
-            "writing into.  v4l2 claims %" G_GUINT32_FORMAT " bytes used but "
+            "writing into.  v4l2 claims %" G_GSIZE_FORMAT " bytes used but "
             "memory is only %" G_GSIZE_FORMAT "B.  This is probably a driver "
-            "bug.", group->planes[i].bytesused, group->mem[i]->maxsize);
+            "bug.", size, group->mem[i]->maxsize);
         gst_memory_resize (group->mem[i], 0, group->mem[i]->maxsize);
       }
     }
