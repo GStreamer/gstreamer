@@ -43,6 +43,10 @@
 #include "gstkmsallocator.h"
 #include "gstkmsutils.h"
 
+#ifndef DRM_RDWR
+#define DRM_RDWR O_RDWR
+#endif
+
 #define GST_CAT_DEFAULT kmsallocator_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
