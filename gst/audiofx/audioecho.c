@@ -385,37 +385,66 @@ gst_audio_echo_transform_##name (GstAudioEcho * self, \
   guint channels = GST_AUDIO_FILTER_CHANNELS (self); \
   guint i, j; \
   guint echo_offset = self->buffer_size_frames - self->delay_frames; \
+  gdouble intensity = self->intensity; \
+  gdouble feedback = self->feedback; \
+  guint buffer_pos = self->buffer_pos; \
+  guint buffer_size_frames = self->buffer_size_frames; \
   \
-  num_samples /= channels; \
-  \
-  for (i = 0; i < num_samples; i++) { \
-    guint echo_index = ((echo_offset + self->buffer_pos) % self->buffer_size_frames) * channels; \
-    guint rbout_index = (self->buffer_pos % self->buffer_size_frames) * channels; \
-    guint64 channel_mask = 1; \
-    for (j = 0; j < channels; j++) { \
-      if (self->surdelay == FALSE) { \
-        gdouble in = data[i*channels + j]; \
-        gdouble echo = buffer[echo_index + j]; \
-        type out = in + self->intensity * echo; \
-        \
-        GST_DEBUG ( "not adding delay on Surround Channel %d", j); \
-        data[i*channels + j] = out; \
-        \
-        buffer[rbout_index + j] = in + self->feedback * echo; \
-      } else if (channel_mask & self->surround_mask) { \
-        gdouble in = data[i*channels + j]; \
-        gdouble echo = buffer[echo_index + j]; \
-        type out = echo; \
-        GST_DEBUG ( "Adding delay on Surround Channel %d", j); \
-        \
-        data[i*channels + j] = out; \
-        \
-        buffer[rbout_index + j] = in; \
-      } \
-      channel_mask <<= 1; \
+  if (self->surdelay == FALSE) { \
+    guint read_pos = ((echo_offset + buffer_pos) % buffer_size_frames) * channels; \
+    guint write_pos = (buffer_pos % buffer_size_frames) * channels; \
+    guint buffer_size = buffer_size_frames * channels; \
+    for (i = 0; i < num_samples; i++) { \
+      gdouble in = *data; \
+      gdouble echo = buffer[read_pos]; \
+      type out = in + intensity * echo; \
+      \
+      *data = out; \
+      \
+      buffer[write_pos] = in + feedback * echo; \
+      read_pos = (read_pos + 1) % buffer_size; \
+      write_pos = (write_pos + 1) % buffer_size; \
+      data++; \
     } \
-    self->buffer_pos = (self->buffer_pos + 1) % self->buffer_size_frames; \
+    buffer_pos = write_pos / channels; \
+  } else { \
+    guint64 surround_mask = self->surround_mask; \
+    guint read_pos = ((echo_offset + buffer_pos) % buffer_size_frames) * channels; \
+    guint write_pos = (buffer_pos % buffer_size_frames) * channels; \
+    guint buffer_size = buffer_size_frames * channels; \
+    \
+    num_samples /= channels; \
+    \
+    for (i = 0; i < num_samples; i++) { \
+      guint64 channel_mask = 1; \
+      \
+      for (j = 0; j < channels; j++) { \
+        if (channel_mask & surround_mask) { \
+          gdouble in = data[j]; \
+          gdouble echo = buffer[read_pos + j]; \
+          type out = echo; \
+          \
+          data[j] = out; \
+          \
+          buffer[write_pos + j] = in; \
+        } else { \
+          gdouble in = data[j]; \
+          gdouble echo = buffer[read_pos + j]; \
+          type out = in + intensity * echo; \
+          \
+          data[j] = out; \
+          \
+          buffer[write_pos + j] = in + feedback * echo; \
+        } \
+        channel_mask <<= 1; \
+      } \
+      read_pos = (read_pos + channels) % buffer_size; \
+      write_pos = (write_pos + channels) % buffer_size; \
+      data += channels; \
+    } \
+    buffer_pos = write_pos / channels; \
   } \
+  self->buffer_pos = buffer_pos; \
 }
 
 TRANSFORM_FUNC (float, gfloat);
