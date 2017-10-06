@@ -383,27 +383,19 @@ gst_audio_echo_transform_##name (GstAudioEcho * self, \
 { \
   type *buffer = (type *) self->buffer; \
   guint channels = GST_AUDIO_FILTER_CHANNELS (self); \
-  guint rate = GST_AUDIO_FILTER_RATE (self); \
   guint i, j; \
-  guint echo_index = self->buffer_size_frames - self->delay_frames; \
-  gdouble echo_off = ((((gdouble) self->delay) * rate) / GST_SECOND) - self->delay_frames; \
-  \
-  if (echo_off < 0.0) \
-    echo_off = 0.0; \
+  guint echo_offset = self->buffer_size_frames - self->delay_frames; \
   \
   num_samples /= channels; \
   \
   for (i = 0; i < num_samples; i++) { \
-    guint echo0_index = ((echo_index + self->buffer_pos) % self->buffer_size_frames) * channels; \
-    guint echo1_index = ((echo_index + self->buffer_pos +1) % self->buffer_size_frames) * channels; \
+    guint echo_index = ((echo_offset + self->buffer_pos) % self->buffer_size_frames) * channels; \
     guint rbout_index = (self->buffer_pos % self->buffer_size_frames) * channels; \
     guint64 channel_mask = 1; \
     for (j = 0; j < channels; j++) { \
       if (self->surdelay == FALSE) { \
         gdouble in = data[i*channels + j]; \
-        gdouble echo0 = buffer[echo0_index + j]; \
-        gdouble echo1 = buffer[echo1_index + j]; \
-        gdouble echo = echo0 + (echo1-echo0)*echo_off; \
+        gdouble echo = buffer[echo_index + j]; \
         type out = in + self->intensity * echo; \
         \
         GST_DEBUG ( "not adding delay on Surround Channel %d", j); \
@@ -412,8 +404,8 @@ gst_audio_echo_transform_##name (GstAudioEcho * self, \
         buffer[rbout_index + j] = in + self->feedback * echo; \
       } else if (channel_mask & self->surround_mask) { \
         gdouble in = data[i*channels + j]; \
-        gdouble echo0 = buffer[echo0_index + j]; \
-        type out = echo0; \
+        gdouble echo = buffer[echo_index + j]; \
+        type out = echo; \
         GST_DEBUG ( "Adding delay on Surround Channel %d", j); \
         \
         data[i*channels + j] = out; \
