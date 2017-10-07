@@ -218,8 +218,10 @@ gst_v4l2_video_enc_stop (GstVideoEncoder * encoder)
   gst_v4l2_object_stop (self->v4l2output);
   gst_v4l2_object_stop (self->v4l2capture);
 
-  gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
-  gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
+  if (self->v4l2output->pool)
+    gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
+  if (self->v4l2capture->pool)
+    gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
 
   if (self->input_state) {
     gst_video_codec_state_unref (self->input_state);
