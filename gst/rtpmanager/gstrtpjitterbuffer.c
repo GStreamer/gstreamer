@@ -1416,7 +1416,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   if (gst_structure_get_int (caps_struct, "payload", &payload) && pt != -1
       && payload != pt) {
     GST_ERROR_OBJECT (jitterbuffer,
-        "Got caps with wrong payload type (got %d, expected %d)", payload, pt);
+        "Got caps with wrong payload type (got %d, expected %d)", pt, payload);
     return FALSE;
   }
 
