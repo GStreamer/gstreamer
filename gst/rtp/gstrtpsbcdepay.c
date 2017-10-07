@@ -366,7 +366,7 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     }
   }
 
-  if (depay->ignore_timestamps) {
+  if (depay->ignore_timestamps && data) {
     GstClockTime duration;
 
     gst_audio_stream_align_process (depay->stream_align,
