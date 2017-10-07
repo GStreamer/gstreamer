@@ -1628,7 +1628,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   GstVideoInfo *info = &nvenc->input_state->info;
   GstFlowReturn flow = GST_FLOW_OK;
   GstMapFlags in_map_flags = GST_MAP_READ;
-  struct frame_state *state;
+  struct frame_state *state = NULL;
   guint frame_n = 0;
 
   g_assert (nvenc->encoder != NULL);
@@ -1649,9 +1649,9 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 
   flow = _acquire_input_buffer (nvenc, &input_buffer);
   if (flow != GST_FLOW_OK)
-    return flow;
+    goto out;
   if (input_buffer == NULL)
-    return GST_FLOW_ERROR;
+    goto error;
 
   state = frame->user_data;
   if (!state)
@@ -1806,6 +1806,10 @@ out:
 
 error:
   flow = GST_FLOW_ERROR;
+  if (state)
+    g_free (state);
+  if (input_buffer)
+    g_free (input_buffer);
   goto out;
 }
 
