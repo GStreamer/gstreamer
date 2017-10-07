@@ -1137,7 +1137,7 @@ gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps,
   }
 
   if (gst_caps_is_subset (sink_caps, gst_v4l2_object_get_raw_caps ())
-      && check_caps (src_caps, gst_v4l2_object_get_codec_caps ()))
+      && check_caps (src_caps, codec_caps))
     ret = TRUE;
 
   return ret;
