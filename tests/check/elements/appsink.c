@@ -559,10 +559,12 @@ typedef struct
   GCond cond;
   GstAppSink *appsink;
   gboolean check;
-} TestQeuryDrainContext;
+} TestQueryDrainContext;
+
+#define TEST_QUERY_DRAIN_CONTEXT_INIT { { 0, }, }
 
 static gpointer
-my_app_thread (TestQeuryDrainContext * ctx)
+my_app_thread (TestQueryDrainContext * ctx)
 {
   GstSample *pulled_preroll = NULL;
   GstSample *pulled_sample = NULL;
@@ -592,7 +594,7 @@ static GstPadProbeReturn
 query_handler (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
-  TestQeuryDrainContext *ctx = (TestQeuryDrainContext *) user_data;
+  TestQueryDrainContext *ctx = (TestQueryDrainContext *) user_data;
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DRAIN:
     {
@@ -621,7 +623,7 @@ GST_START_TEST (test_query_drain)
   GstPad *sinkpad = NULL;
   GThread *thread = NULL;
   GstQuery *query = NULL;
-  TestQeuryDrainContext ctx = { 0 };
+  TestQueryDrainContext ctx = TEST_QUERY_DRAIN_CONTEXT_INIT;
 
   sink = setup_appsink ();
 
