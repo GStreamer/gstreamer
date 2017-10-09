@@ -55,6 +55,10 @@ GST_DEBUG_CATEGORY (gstomx_debug);
 G_LOCK_DEFINE_STATIC (core_handles);
 static GHashTable *core_handles;
 
+/* Cache used by gst_omx_buffer_flags_to_string() */
+G_LOCK_DEFINE_STATIC (buffer_flags_str);
+static GHashTable *buffer_flags_str;
+
 GstOMXCore *
 gst_omx_core_acquire (const gchar * filename)
 {
@@ -197,6 +201,10 @@ gst_omx_core_release (GstOMXCore * core)
   if (core->user_count == 0) {
     GST_DEBUG ("Deinit core %p", core);
     core->deinit ();
+
+    G_LOCK (buffer_flags_str);
+    g_clear_pointer (&buffer_flags_str, g_hash_table_unref);
+    G_UNLOCK (buffer_flags_str);
   }
 
   g_mutex_unlock (&core->lock);
@@ -343,8 +351,9 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
         if (!port)
           break;
 
-        GST_DEBUG_OBJECT (comp->parent, "%s port %u got buffer flags 0x%08x",
-            comp->name, port->index, (guint) flags);
+        GST_DEBUG_OBJECT (comp->parent,
+            "%s port %u got buffer flags 0x%08x (%s)", comp->name, port->index,
+            (guint) flags, gst_omx_buffer_flags_to_string (flags));
         if ((flags & OMX_BUFFERFLAG_EOS)
             && port->port_def.eDir == OMX_DirOutput)
           port->eos = TRUE;
@@ -577,9 +586,10 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
       msg->type = GST_OMX_MESSAGE_BUFFER_FLAG;
       msg->content.buffer_flag.port = nData1;
       msg->content.buffer_flag.flags = nData2;
-      GST_DEBUG_OBJECT (comp->parent, "%s port %u got buffer flags 0x%08x",
+      GST_DEBUG_OBJECT (comp->parent, "%s port %u got buffer flags 0x%08x (%s)",
           comp->name, (guint) msg->content.buffer_flag.port,
-          (guint) msg->content.buffer_flag.flags);
+          (guint) msg->content.buffer_flag.flags,
+          gst_omx_buffer_flags_to_string (msg->content.buffer_flag.flags));
 
       gst_omx_component_send_message (comp, msg);
       break;
@@ -2482,6 +2492,85 @@ gst_omx_command_to_string (OMX_COMMANDTYPE cmd)
       break;
   }
   return "Unknown command";
+}
+
+struct BufferFlagString
+{
+  guint32 flag;
+  const gchar *str;
+};
+
+struct BufferFlagString buffer_flags_map[] = {
+  {OMX_BUFFERFLAG_EOS, "eos"},
+  {OMX_BUFFERFLAG_STARTTIME, "start-time"},
+  {OMX_BUFFERFLAG_DECODEONLY, "decode-only"},
+  {OMX_BUFFERFLAG_DATACORRUPT, "data-corrupt"},
+  {OMX_BUFFERFLAG_ENDOFFRAME, "end-of-frame"},
+  {OMX_BUFFERFLAG_SYNCFRAME, "sync-frame"},
+  {OMX_BUFFERFLAG_EXTRADATA, "extra-data"},
+  {OMX_BUFFERFLAG_CODECCONFIG, "codec-config"},
+  /* Introduced in OMX 1.2.0 */
+#ifdef OMX_BUFFERFLAG_TIMESTAMPINVALID
+  {OMX_BUFFERFLAG_TIMESTAMPINVALID, "timestamp-invalid"},
+#endif
+#ifdef OMX_BUFFERFLAG_READONLY
+  {OMX_BUFFERFLAG_READONLY, "read-only"},
+#endif
+#ifdef OMX_BUFFERFLAG_ENDOFSUBFRAME
+  {OMX_BUFFERFLAG_ENDOFSUBFRAME, "end-of-subframe"},
+#endif
+#ifdef OMX_BUFFERFLAG_SKIPFRAME
+  {OMX_BUFFERFLAG_SKIPFRAME, "skip-frame"},
+#endif
+  {0, NULL},
+};
+
+
+const gchar *
+gst_omx_buffer_flags_to_string (guint32 flags)
+{
+  GString *s = NULL;
+  guint i;
+  const gchar *str;
+
+  if (flags == 0)
+    return "";
+
+  /* Keep a cache of the string representation of the flags so we don't allocate
+   * and free strings for each buffer. In practice we should only have a handfull
+   * of flags so the cache won't consume much memory. */
+  if (!buffer_flags_str) {
+    G_LOCK (buffer_flags_str);
+    buffer_flags_str = g_hash_table_new_full (NULL, NULL, NULL, g_free);
+    G_UNLOCK (buffer_flags_str);
+  }
+
+  str = g_hash_table_lookup (buffer_flags_str, GUINT_TO_POINTER (flags));
+  if (str)
+    return str;
+
+  for (i = 0; buffer_flags_map[i].str != NULL; i++) {
+    if ((flags & buffer_flags_map[i].flag) == 0)
+      continue;
+
+    if (!s)
+      s = g_string_new (buffer_flags_map[i].str);
+    else
+      g_string_append_printf (s, ", %s", buffer_flags_map[i].str);
+  }
+
+  if (!s)
+    return "<unknown>";
+
+  str = g_string_free (s, FALSE);
+
+  G_LOCK (buffer_flags_str);
+  /* Transfer ownership of str to hash table */
+  g_hash_table_insert (buffer_flags_str, GUINT_TO_POINTER (flags),
+      (gchar *) str);
+  G_UNLOCK (buffer_flags_str);
+
+  return str;
 }
 
 #if defined(USE_OMX_TARGET_RPI)

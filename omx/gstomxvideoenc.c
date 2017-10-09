@@ -752,8 +752,9 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     goto flushing;
   }
 
-  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %" G_GUINT64_FORMAT,
+  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x (%s) %" G_GUINT64_FORMAT,
       (guint) buf->omx_buf->nFlags,
+      gst_omx_buffer_flags_to_string (buf->omx_buf->nFlags),
       (guint64) GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp));
 
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
