@@ -5746,7 +5746,8 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
         break;
       case GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED:
         GST_INFO_OBJECT (src, "Version %s not supported by the server",
-            gst_rtsp_version_as_text (versions[version_retry]));
+            versions ? gst_rtsp_version_as_text (versions[version_retry]) :
+            "unknown");
         if (versions && versions[version_retry] != GST_RTSP_VERSION_INVALID) {
           GST_INFO_OBJECT (src, "Unsupported version %s => trying %s",
               gst_rtsp_version_as_text (request->type_data.request.version),
