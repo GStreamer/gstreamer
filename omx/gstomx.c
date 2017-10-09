@@ -231,6 +231,7 @@ gst_omx_buffer_reset (GstOMXBuffer * buf)
   buf->omx_buf->nFlags = 0;
   buf->omx_buf->nOffset = 0;
   buf->omx_buf->nFilledLen = 0;
+  buf->omx_buf->nTimeStamp = 0;
 }
 
 /* NOTE: Call with comp->lock, comp->messages_lock will be used */
