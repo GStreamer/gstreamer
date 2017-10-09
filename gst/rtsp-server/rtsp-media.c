@@ -625,7 +625,7 @@ typedef struct
 static void
 do_query_stop (GstRTSPStream * stream, DoQueryStopData * data)
 {
-  gint64 tmp;
+  gint64 tmp = 0;
 
   if (gst_rtsp_stream_query_stop (stream, &tmp)) {
     data->stop = MAX (data->stop, tmp);
