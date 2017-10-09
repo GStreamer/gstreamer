@@ -368,6 +368,7 @@ gst_opus_enc_init (GstOpusEnc * enc)
   enc->n_channels = -1;
   enc->sample_rate = -1;
   enc->frame_samples = 0;
+  enc->unpositioned = FALSE;
 
   enc->bitrate = DEFAULT_BITRATE;
   enc->bandwidth = DEFAULT_BANDWIDTH;
@@ -517,7 +518,7 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
   gst_opus_enc_setup_trivial_mapping (enc, enc->decoding_channel_mapping);
 
   /* For one channel, use the basic RTP mapping */
-  if (enc->n_channels == 1) {
+  if (enc->n_channels == 1 && !enc->unpositioned) {
     GST_INFO_OBJECT (enc, "Mono, trivial RTP mapping");
     enc->channel_mapping_family = 0;
     /* implicit mapping for family 0 */
@@ -526,7 +527,7 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
 
   /* For two channels, use the basic RTP mapping if the channels are
      mapped as left/right. */
-  if (enc->n_channels == 2) {
+  if (enc->n_channels == 2 && !enc->unpositioned) {
     GST_INFO_OBJECT (enc, "Stereo, trivial RTP mapping");
     enc->channel_mapping_family = 0;
     enc->n_stereo_streams = 1;
@@ -540,7 +541,7 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
      One maps the input channels to an ordering which has the natural pairs
      first so they can benefit from the Opus stereo channel coupling, and the
      other maps this ordering to the Vorbis ordering. */
-  if (enc->n_channels >= 3 && enc->n_channels <= 8) {
+  if (enc->n_channels >= 3 && enc->n_channels <= 8 && !enc->unpositioned) {
     int c0, c1, c0v, c1v;
     int mapped;
     gboolean positions_done[256];
@@ -638,7 +639,11 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
 
   /* For other cases, we use undefined, with the default trivial mapping
      and all mono streams */
-  GST_WARNING_OBJECT (enc, "Unknown mapping");
+  if (!enc->unpositioned)
+    GST_WARNING_OBJECT (enc, "Unknown mapping");
+  else
+    GST_INFO_OBJECT (enc, "Unpositioned mapping, all channels mono");
+
   enc->channel_mapping_family = 255;
   enc->n_stereo_streams = 0;
 
@@ -655,6 +660,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   g_mutex_lock (&enc->property_lock);
 
   enc->n_channels = GST_AUDIO_INFO_CHANNELS (info);
+  enc->unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (info);
   enc->sample_rate = GST_AUDIO_INFO_RATE (info);
   gst_opus_enc_setup_channel_mappings (enc, info);
   GST_DEBUG_OBJECT (benc, "Setup with %d channels, %d Hz", enc->n_channels,
@@ -865,6 +871,18 @@ gst_opus_enc_get_sink_template_caps (void)
       s = gst_structure_copy (s2);
       gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
           GST_TYPE_BITMASK, channel_mask, NULL);
+      gst_caps_append_structure (caps, s);
+
+      /* We also allow unpositioned channels, input will be
+       * treated as a set of individual mono channels */
+      s = gst_structure_copy (s2);
+      gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
+          GST_TYPE_BITMASK, 0x0, NULL);
+      gst_caps_append_structure (caps, s);
+
+      s = gst_structure_copy (s1);
+      gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
+          GST_TYPE_BITMASK, 0x0, NULL);
       gst_caps_append_structure (caps, s);
     }
 
