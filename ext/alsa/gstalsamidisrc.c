@@ -122,7 +122,7 @@ parse_ports (const char *arg, GstAlsaMidiSrc * alsamidisrc)
   /*
    * Assume that ports are separated by commas.
    *
-   * Commas are used instead of spaces because those are valid in client
+   * Commas are used instead of spaces because spaces are valid in client
    * names.
    */
   ports_list = g_strsplit (arg, ",", 0);
@@ -421,7 +421,7 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
   gst_buffer_list_remove (buffer_list, len - 1, 1);
   --len;
 
-  /* 
+  /*
    * If there are no more buffers left, free the list, otherwise push all the
    * _previous_ buffers left in the list.
    *
