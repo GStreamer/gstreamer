@@ -696,6 +696,7 @@ gst_rtsp_client_finalize (GObject * obj)
   g_assert (priv->session_removed_id == 0);
 
   g_hash_table_unref (priv->transports);
+  g_hash_table_unref (priv->pipelined_requests);
 
   if (priv->connection)
     gst_rtsp_connection_free (priv->connection);
