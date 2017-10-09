@@ -80,7 +80,11 @@ enum
   PROP_KERNELWIDTH,
   PROP_KERNELHEIGHT,
   PROP_COLORSIGMA,
-  PROP_SPATIALSIGMA
+  PROP_SPATIALSIGMA,
+  PROP_POSITION_X,
+  PROP_POSITION_Y,
+  PROP_WIDTH,
+  PROP_HEIGHT
 };
 
 /* blur-no-scale only handle: gray 8bits -> gray 16bits
@@ -118,6 +122,10 @@ gst_cv_smooth_type_get_type (void)
 #define DEFAULT_KERNELHEIGHT 3
 #define DEFAULT_COLORSIGMA 0.0
 #define DEFAULT_SPATIALSIGMA 0.0
+#define DEFAULT_POSITION_X 0
+#define DEFAULT_POSITION_Y 0
+#define DEFAULT_WIDTH G_MAXINT
+#define DEFAULT_HEIGHT G_MAXINT
 
 G_DEFINE_TYPE (GstCvSmooth, gst_cv_smooth, GST_TYPE_OPENCV_VIDEO_FILTER);
 
@@ -181,6 +189,26 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           "Only used in bilateral type, means the spatial-sigma.",
           0, G_MAXDOUBLE, DEFAULT_SPATIALSIGMA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_POSITION_X,
+      g_param_spec_int ("position-x", "starting x position for blur",
+          "Starting x position for blur (in pixels).",
+          0, G_MAXINT, DEFAULT_POSITION_X,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_POSITION_Y,
+      g_param_spec_int ("position-y", "starting y position for blur",
+          "Starting y position for blur (in pixels).",
+          0, G_MAXINT, DEFAULT_POSITION_Y,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_WIDTH,
+      g_param_spec_int ("width", "width of area to blur",
+          "Width of the area to blur (in pixels).",
+          0, G_MAXINT, DEFAULT_WIDTH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_HEIGHT,
+      g_param_spec_int ("height", "height of area to blur",
+          "Height of the area to blur (in pixels).",
+          0, G_MAXINT, DEFAULT_HEIGHT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "cvsmooth",
@@ -212,6 +240,10 @@ gst_cv_smooth_init (GstCvSmooth * filter)
   filter->kernelheight = DEFAULT_KERNELHEIGHT;
   filter->colorsigma = DEFAULT_COLORSIGMA;
   filter->spatialsigma = DEFAULT_SPATIALSIGMA;
+  filter->positionx = DEFAULT_POSITION_X;
+  filter->positiony = DEFAULT_POSITION_Y;
+  filter->width = DEFAULT_WIDTH;
+  filter->height = DEFAULT_HEIGHT;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
       TRUE);
@@ -276,6 +308,18 @@ gst_cv_smooth_set_property (GObject * object, guint prop_id,
     case PROP_SPATIALSIGMA:
       filter->spatialsigma = g_value_get_double (value);
       break;
+    case PROP_POSITION_X:
+      filter->positionx = g_value_get_int (value);
+      break;
+    case PROP_POSITION_Y:
+      filter->positiony = g_value_get_int (value);
+      break;
+    case PROP_WIDTH:
+      filter->width = g_value_get_int (value);
+      break;
+    case PROP_HEIGHT:
+      filter->height = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -304,6 +348,18 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
     case PROP_SPATIALSIGMA:
       g_value_set_double (value, filter->spatialsigma);
       break;
+    case PROP_POSITION_X:
+      g_value_set_int (value, filter->positionx);
+      break;
+    case PROP_POSITION_Y:
+      g_value_set_int (value, filter->positiony);
+      break;
+    case PROP_WIDTH:
+      g_value_set_int (value, filter->width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_int (value, filter->height);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -315,21 +371,42 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img)
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
+  Mat mat = cvarrToMat(img);
+
+  if (filter->positionx != 0 || filter->positiony != 0 ||
+      filter->width != G_MAXINT || filter->height != G_MAXINT) {
+    Size mat_size = mat.size();
+
+    /* if the effect would start outside the image, just skip it */
+    if (filter->positionx >= mat_size.width
+        || filter->positiony >= mat_size.height)
+      return GST_FLOW_OK;
+    /* explicitly account for empty area */
+    if (filter->width <= 0 || filter->height <= 0)
+      return GST_FLOW_OK;
+
+    Rect mat_rect(filter->positionx,
+        filter->positiony,
+        MIN(filter->width, mat_size.width - filter->positionx),
+        MIN(filter->height, mat_size.height - filter->positiony));
+
+    mat = mat(mat_rect);
+  }
 
   switch (filter->type) {
     case CV_BLUR:
-      blur (cvarrToMat(img), cvarrToMat(img), Size (filter->kernelwidth, filter->kernelheight),
+      blur (mat, mat, Size (filter->kernelwidth, filter->kernelheight),
           Point (-1, -1));
       break;
     case CV_GAUSSIAN:
-      GaussianBlur (cvarrToMat(img), cvarrToMat(img), Size (filter->kernelwidth, filter->kernelheight),
+      GaussianBlur (mat, mat, Size (filter->kernelwidth, filter->kernelheight),
           filter->colorsigma, filter->colorsigma);
       break;
     case CV_MEDIAN:
-      medianBlur (cvarrToMat(img), cvarrToMat(img), filter->kernelwidth);
+      medianBlur (mat, mat, filter->kernelwidth);
       break;
     case CV_BILATERAL:
-      bilateralFilter (cvarrToMat(img), cvarrToMat(img), -1, filter->colorsigma, 0.0);
+      bilateralFilter (mat, mat, -1, filter->colorsigma, 0.0);
       break;
     default:
       break;
