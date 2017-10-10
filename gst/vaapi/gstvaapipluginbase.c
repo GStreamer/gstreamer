@@ -59,6 +59,21 @@ plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
   gst_vaapi_display_unref (display);
 }
 
+#if USE_GST_GL_HELPERS
+static void
+plugin_set_gst_gl (GstVaapiPluginBase * plugin, GstGLDisplay * gl_display,
+    GstGLContext * gl_context, GstGLContext * gl_other_context)
+{
+  gst_object_replace (&plugin->gl_display, NULL);
+  plugin->gl_display = (GstObject *) gl_display;
+
+  gst_object_replace (&plugin->gl_context, (GstObject *) gl_context);
+
+  gst_object_replace (&plugin->gl_other_context, NULL);
+  plugin->gl_other_context = (GstObject *) gl_other_context;
+}
+#endif
+
 /**
  * gst_vaapi_plugin_base_set_context:
  * @plugin: a #GstVaapiPluginBase instance
@@ -85,10 +100,8 @@ gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
     GstGLContext *gl_other_context = NULL;
     GstElement *el = GST_ELEMENT_CAST (plugin);
 
-    if (gst_gl_handle_set_context (el, context, &gl_display, &gl_other_context)) {
-      plugin->gl_display = (GstObject *) gl_display;
-      plugin->gl_other_context = (GstObject *) gl_other_context;
-    }
+    if (gst_gl_handle_set_context (el, context, &gl_display, &gl_other_context))
+      plugin_set_gst_gl (plugin, gl_display, NULL, gl_other_context);
   }
 #endif
 }
@@ -1243,9 +1256,7 @@ gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin)
   } while (!gst_gl_display_add_context (gl_display, gl_context));
   GST_OBJECT_UNLOCK (gl_display);
 
-  plugin->gl_display = (GstObject *) gl_display;
-  plugin->gl_other_context = (GstObject *) gl_context;
-  gst_object_replace (&plugin->gl_context, (GstObject *) gl_context);
+  plugin_set_gst_gl (plugin, gl_display, gl_context, gl_other_context);
 
   return GST_OBJECT_CAST (gl_context);
 
