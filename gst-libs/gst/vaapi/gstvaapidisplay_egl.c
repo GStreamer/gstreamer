@@ -286,6 +286,11 @@ gst_vaapi_display_egl_finalize (GObject * object)
    * proxied display share the same vaDisplay */
   GST_VAAPI_DISPLAY_VADISPLAY (object) = NULL;
 
+  egl_object_replace (&dpy->egl_display, NULL);
+  egl_object_replace (&dpy->egl_context, NULL);
+
+  gst_vaapi_display_replace (&dpy->display, NULL);
+
   G_OBJECT_CLASS (gst_vaapi_display_egl_parent_class)->finalize (object);
 }
 
