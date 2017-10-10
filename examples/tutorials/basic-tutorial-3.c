@@ -118,7 +118,7 @@ static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *dat
 
   /* If our converter is already linked, we have nothing to do here */
   if (gst_pad_is_linked (sink_pad)) {
-    g_print ("  We are already linked. Ignoring.\n");
+    g_print ("We are already linked. Ignoring.\n");
     goto exit;
   }
 
@@ -127,16 +127,16 @@ static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *dat
   new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
   new_pad_type = gst_structure_get_name (new_pad_struct);
   if (!g_str_has_prefix (new_pad_type, "audio/x-raw")) {
-    g_print ("  It has type '%s' which is not raw audio. Ignoring.\n", new_pad_type);
+    g_print ("It has type '%s' which is not raw audio. Ignoring.\n", new_pad_type);
     goto exit;
   }
 
   /* Attempt the link */
   ret = gst_pad_link (new_pad, sink_pad);
   if (GST_PAD_LINK_FAILED (ret)) {
-    g_print ("  Type is '%s' but link failed.\n", new_pad_type);
+    g_print ("Type is '%s' but link failed.\n", new_pad_type);
   } else {
-    g_print ("  Link succeeded (type '%s').\n", new_pad_type);
+    g_print ("Link succeeded (type '%s').\n", new_pad_type);
   }
 
 exit:
