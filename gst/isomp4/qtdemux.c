@@ -7761,7 +7761,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
      * qt does not have a fixed framerate. */
     gboolean fps_available = TRUE;
 
-    if ((stream->n_samples == 1) && (stream->first_duration == 0)
+    if ((stream->n_samples == 1 && stream->first_duration == 0)
         || (qtdemux->fragmented && stream->n_samples_moof == 1)) {
       /* still frame */
       CUR_STREAM (stream)->fps_n = 0;
