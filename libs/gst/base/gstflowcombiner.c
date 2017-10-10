@@ -118,6 +118,16 @@ gst_flow_combiner_free (GstFlowCombiner * combiner)
   gst_flow_combiner_unref (combiner);
 }
 
+/**
+ * gst_flow_combiner_ref:
+ * @combiner: the #GstFlowCombiner to add a reference to.
+ *
+ * Increments the reference count on the #GstFlowCombiner.
+ *
+ * Returns: the #GstFlowCombiner.
+ *
+ * Since: 1.12.1
+ */
 GstFlowCombiner *
 gst_flow_combiner_ref (GstFlowCombiner * combiner)
 {
@@ -128,6 +138,14 @@ gst_flow_combiner_ref (GstFlowCombiner * combiner)
   return combiner;
 }
 
+/**
+ * gst_flow_combiner_unref:
+ * @combiner: the #GstFlowCombiner to unreference.
+ *
+ * Decrements the reference count on the #GstFlowCombiner.
+ *
+ * Since: 1.12.1
+ */
 void
 gst_flow_combiner_unref (GstFlowCombiner * combiner)
 {
