@@ -80,9 +80,16 @@ gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
     plugin_set_display (plugin, display);
 
 #if USE_GST_GL_HELPERS
-  gst_gl_handle_set_context (GST_ELEMENT_CAST (plugin), context,
-      (GstGLDisplay **) & plugin->gl_display,
-      (GstGLContext **) & plugin->gl_other_context);
+  {
+    GstGLDisplay *gl_display = NULL;
+    GstGLContext *gl_other_context = NULL;
+    GstElement *el = GST_ELEMENT_CAST (plugin);
+
+    if (gst_gl_handle_set_context (el, context, &gl_display, &gl_other_context)) {
+      plugin->gl_display = (GstObject *) gl_display;
+      plugin->gl_other_context = (GstObject *) gl_other_context;
+    }
+  }
 #endif
 }
 
