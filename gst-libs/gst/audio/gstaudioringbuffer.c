@@ -1291,6 +1291,12 @@ gst_audio_ring_buffer_set_sample (GstAudioRingBuffer * buf, guint64 sample)
       sample, buf->segbase);
 }
 
+/**
+ * default_clear_all:
+ * @buf: the #GstAudioRingBuffer to clear
+ *
+ * Fill the ringbuffer with silence.
+ */
 static void
 default_clear_all (GstAudioRingBuffer * buf)
 {
@@ -1311,7 +1317,7 @@ default_clear_all (GstAudioRingBuffer * buf)
  * gst_audio_ring_buffer_clear_all:
  * @buf: the #GstAudioRingBuffer to clear
  *
- * Fill the ringbuffer with silence.
+ * Clear all samples from the ringbuffer.
  *
  * MT safe.
  */

@@ -66,12 +66,25 @@ struct _GstAudioSink {
  * @unprepare: Undo operations done in prepare.
  * @close: Close the device.
  * @write: Write data to the device.
- * @delay: Return how many frames are still in the device. This is used to
- *         drive the synchronisation.
+ *         This vmethod is allowed to block until all the data is written.
+ *         If such is the case then it is expected that pause, stop and
+ *         reset will unblock the write when called.
+ * @delay: Return how many frames are still in the device. Participates in
+ *         computing the time for audio clocks and drives the synchronisation.
  * @reset: Returns as quickly as possible from a write and flush any pending
  *         samples from the device.
- *
- * #GstAudioSink class. Override the vmethods to implement functionality.
+ *         This vmethod is deprecated. Please provide pause and stop instead.
+ * @pause: Pause the device and unblock write as fast as possible.
+ *         For retro compatibility, the audio sink will fallback
+ *         to calling reset if this vmethod is not provided.
+ * @resume: Resume the device.
+ *          For retro compatibility, the audio sink will fallback
+ *          to calling start if this vmethod is not provided.
+ * @stop: Stop the device and unblock write as fast as possible.
+ *        Pending samples are flushed from the device.
+ *        For retro compatibility, the audio sink will fallback
+ *        to calling reset if this vmethod is not provided.
+ * @clear-all: Clear the device.
  */
 struct _GstAudioSinkClass {
   GstAudioBaseSinkClass parent_class;
@@ -90,11 +103,19 @@ struct _GstAudioSinkClass {
   gint     (*write)     (GstAudioSink *sink, gpointer data, guint length);
   /* get number of frames queued in the device */
   guint    (*delay)     (GstAudioSink *sink);
-  /* reset the audio device, unblock from a write */
+  /* deprecated: reset the audio device, unblock from a write */
   void     (*reset)     (GstAudioSink *sink);
+  /* pause the audio device, unblock from a write */
+  void     (*pause)     (GstAudioSink *sink);
+  /* resume the audio device */
+  void     (*resume)    (GstAudioSink *sink);
+  /* stop the audio device, unblock from a write */
+  void     (*stop)      (GstAudioSink *sink);
+  /* clear the audio device */
+  void     (*clear_all) (GstAudioSink *sink);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 4];
 };
 
 GST_AUDIO_API

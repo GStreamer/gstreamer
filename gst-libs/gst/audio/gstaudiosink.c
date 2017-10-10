@@ -117,10 +117,12 @@ static gboolean gst_audio_sink_ring_buffer_acquire (GstAudioRingBuffer * buf,
 static gboolean gst_audio_sink_ring_buffer_release (GstAudioRingBuffer * buf);
 static gboolean gst_audio_sink_ring_buffer_start (GstAudioRingBuffer * buf);
 static gboolean gst_audio_sink_ring_buffer_pause (GstAudioRingBuffer * buf);
+static gboolean gst_audio_sink_ring_buffer_resume (GstAudioRingBuffer * buf);
 static gboolean gst_audio_sink_ring_buffer_stop (GstAudioRingBuffer * buf);
 static guint gst_audio_sink_ring_buffer_delay (GstAudioRingBuffer * buf);
 static gboolean gst_audio_sink_ring_buffer_activate (GstAudioRingBuffer * buf,
     gboolean active);
+static void gst_audio_sink_ring_buffer_clear_all (GstAudioRingBuffer * buf);
 
 /* ringbuffer abstract base class */
 static GType
@@ -176,14 +178,15 @@ gst_audio_sink_ring_buffer_class_init (GstAudioSinkRingBufferClass * klass)
   gstringbuffer_class->pause =
       GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_pause);
   gstringbuffer_class->resume =
-      GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_start);
+      GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_resume);
   gstringbuffer_class->stop =
       GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_stop);
-
   gstringbuffer_class->delay =
       GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_delay);
   gstringbuffer_class->activate =
       GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_activate);
+  gstringbuffer_class->clear_all =
+      GST_DEBUG_FUNCPTR (gst_audio_sink_ring_buffer_clear_all);
 }
 
 typedef gint (*WriteFunc) (GstAudioSink * sink, gpointer data, guint length);
@@ -531,12 +534,36 @@ gst_audio_sink_ring_buffer_pause (GstAudioRingBuffer * buf)
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
 
   /* unblock any pending writes to the audio device */
-  if (csink->reset) {
+  if (csink->pause) {
+    GST_DEBUG_OBJECT (sink, "pause...");
+    csink->pause (sink);
+    GST_DEBUG_OBJECT (sink, "pause done");
+  } else if (csink->reset) {
+    /* fallback to reset for audio sinks that don't provide pause */
     GST_DEBUG_OBJECT (sink, "reset...");
     csink->reset (sink);
     GST_DEBUG_OBJECT (sink, "reset done");
   }
+  return TRUE;
+}
 
+static gboolean
+gst_audio_sink_ring_buffer_resume (GstAudioRingBuffer * buf)
+{
+  GstAudioSink *sink;
+  GstAudioSinkClass *csink;
+
+  sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  csink = GST_AUDIO_SINK_GET_CLASS (sink);
+
+  if (csink->resume) {
+    GST_DEBUG_OBJECT (sink, "resume...");
+    csink->resume (sink);
+    GST_DEBUG_OBJECT (sink, "resume done");
+  } else {
+    /* fallback to start for audio sinks that don't provide resume */
+    gst_audio_sink_ring_buffer_start (buf);
+  }
   return TRUE;
 }
 
@@ -550,7 +577,12 @@ gst_audio_sink_ring_buffer_stop (GstAudioRingBuffer * buf)
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
 
   /* unblock any pending writes to the audio device */
-  if (csink->reset) {
+  if (csink->stop) {
+    GST_DEBUG_OBJECT (sink, "stop...");
+    csink->stop (sink);
+    GST_DEBUG_OBJECT (sink, "stop done");
+  } else if (csink->reset) {
+    /* fallback to reset for audio sinks that don't provide stop */
     GST_DEBUG_OBJECT (sink, "reset...");
     csink->reset (sink);
     GST_DEBUG_OBJECT (sink, "reset done");
@@ -580,6 +612,24 @@ gst_audio_sink_ring_buffer_delay (GstAudioRingBuffer * buf)
     res = csink->delay (sink);
 
   return res;
+}
+
+static void
+gst_audio_sink_ring_buffer_clear_all (GstAudioRingBuffer * buf)
+{
+  GstAudioSink *sink;
+  GstAudioSinkClass *csink;
+
+  sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  csink = GST_AUDIO_SINK_GET_CLASS (sink);
+
+  if (csink->clear_all) {
+    GST_DEBUG_OBJECT (sink, "clear all");
+    csink->clear_all (sink);
+  }
+
+  /* chain up to the parent implementation */
+  ring_parent_class->clear_all (buf);
 }
 
 /* AudioSink signals and args */

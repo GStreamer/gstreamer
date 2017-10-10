@@ -234,7 +234,10 @@ struct _GstAudioRingBuffer {
  * @activate: activate the thread that starts pulling and monitoring the
  * consumed segments in the device.
  * @commit: write samples into the ringbuffer
- * @clear_all: clear the entire ringbuffer.
+ * @clear_all: Optional.
+ *             Clear the entire ringbuffer.
+ *             Subclasses should chain up to the parent implementation to
+ *             invoke the default handler.
  *
  * The vmethods that subclasses can override to implement the ringbuffer.
  */
