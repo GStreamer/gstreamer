@@ -1240,6 +1240,8 @@ gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin)
   } while (!gst_gl_display_add_context (gl_display, gl_context));
   GST_OBJECT_UNLOCK (gl_display);
 
+  gst_object_replace (&plugin->gl_context, (GstObject *) gl_context);
+
   return GST_OBJECT_CAST (gl_context);
 
   /* ERRORS */
