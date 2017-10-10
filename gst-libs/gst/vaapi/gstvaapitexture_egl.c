@@ -256,20 +256,8 @@ gst_vaapi_texture_egl_create (GstVaapiTextureEGL * texture)
       GST_VAAPI_DISPLAY_EGL (GST_VAAPI_OBJECT_DISPLAY (texture));
 
   if (GST_VAAPI_TEXTURE (texture)->is_wrapped) {
-    if (G_UNLIKELY (display->egl_display->base.handle.p !=
-            eglGetCurrentDisplay ())) {
-      EglDisplay *current_egl_display =
-          egl_display_new_wrapped (eglGetCurrentDisplay ());
-      if (!current_egl_display)
-        return FALSE;
-
-      egl_object_replace (&display->egl_display, current_egl_display);
-      egl_object_unref (current_egl_display);
-
-      if (!gst_vaapi_display_egl_set_gl_context (display,
-              eglGetCurrentContext ()))
-        return FALSE;
-    }
+    if (!gst_vaapi_display_egl_set_current_display (display))
+      return FALSE;
   }
 
   egl_object_replace (&texture->egl_context,

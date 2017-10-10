@@ -414,3 +414,26 @@ gst_vaapi_display_egl_set_gl_context (GstVaapiDisplayEGL * display,
 
   return ensure_context_is_wrapped (display, gl_context);
 }
+
+gboolean
+gst_vaapi_display_egl_set_current_display (GstVaapiDisplayEGL * display)
+{
+  EglDisplay *egl_display;
+
+  g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_EGL (display), FALSE);
+
+  if (G_UNLIKELY (eglGetCurrentDisplay () == EGL_NO_DISPLAY))
+    return TRUE;
+  if (G_LIKELY (display->egl_display->base.handle.p == eglGetCurrentDisplay ()))
+    return TRUE;
+
+  egl_display = egl_display_new_wrapped (eglGetCurrentDisplay ());
+  if (!egl_display)
+    return FALSE;
+  egl_object_replace (&display->egl_display, egl_display);
+  egl_object_unref (egl_display);
+  if (!gst_vaapi_display_egl_set_gl_context (display, eglGetCurrentContext ()))
+    return FALSE;
+
+  return TRUE;
+}

@@ -51,6 +51,9 @@ gboolean
 gst_vaapi_display_egl_set_gl_context (GstVaapiDisplayEGL * display,
     EGLContext gl_context);
 
+gboolean
+gst_vaapi_display_egl_set_current_display (GstVaapiDisplayEGL * display);
+
 GType
 gst_vaapi_display_egl_get_type (void) G_GNUC_CONST;
 
