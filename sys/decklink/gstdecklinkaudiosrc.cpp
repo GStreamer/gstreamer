@@ -526,15 +526,26 @@ gst_decklink_audio_src_got_packet (GstElement * element,
   g_mutex_lock (&self->lock);
   if (!self->flushing) {
     CapturePacket p;
+    guint skipped_packets = 0;
+    GstClockTime from_timestamp = GST_CLOCK_TIME_NONE;
+    GstClockTime to_timestamp = GST_CLOCK_TIME_NONE;
 
     while (gst_queue_array_get_length (self->current_packets) >=
         self->buffer_size) {
       CapturePacket *tmp = (CapturePacket *)
           gst_queue_array_pop_head_struct (self->current_packets);
-      GST_WARNING_OBJECT (self, "Dropping old packet at %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (tmp->timestamp));
+      if (skipped_packets == 0)
+        from_timestamp = tmp->timestamp;
+      skipped_packets++;
+      to_timestamp = tmp->timestamp;
       capture_packet_clear (tmp);
     }
+
+    if (skipped_packets > 0)
+      GST_WARNING_OBJECT (self,
+          "Dropped %u old packets from %" GST_TIME_FORMAT " to %"
+          GST_TIME_FORMAT, skipped_packets, GST_TIME_ARGS (from_timestamp),
+          GST_TIME_ARGS (to_timestamp));
 
     memset (&p, 0, sizeof (p));
     p.packet = packet;
