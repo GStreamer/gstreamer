@@ -50,6 +50,7 @@
 #include "gstvaapidecodebin.h"
 #include "gstvaapivideocontext.h"
 #include "gstvaapipluginbase.h"
+#include "gstvaapi.h"
 
 #define GST_PLUGIN_NAME "vaapidecodebin"
 #define GST_PLUGIN_DESC "A VA-API based bin with a decoder and a postprocessor"
@@ -296,6 +297,7 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
   GstCaps *caps;
   GstPad *queue_srcpad, *bin_srcpad, *capsfilter_sinkpad, *vpp_srcpad;
   gboolean res;
+  gboolean has_vpp;
 
   g_object_set (G_OBJECT (vaapidecbin->queue),
       "max-size-bytes", vaapidecbin->max_size_bytes,
@@ -304,6 +306,17 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 
   if (vaapidecbin->disable_vpp || vaapidecbin->configured)
     return TRUE;
+
+  has_vpp = _gst_vaapi_has_video_processing;
+
+  if (!has_vpp && (vaapidecbin->deinterlace_method ==
+          GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE
+          || vaapidecbin->deinterlace_method ==
+          GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED)) {
+    GST_ERROR_OBJECT (vaapidecbin,
+        "Don't have VPP support but advanced deinterlacing selected");
+    return FALSE;
+  }
 
   GST_INFO_OBJECT (vaapidecbin, "enabling VPP");
 

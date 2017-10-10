@@ -54,6 +54,8 @@
 
 #endif
 
+gboolean _gst_vaapi_has_video_processing = FALSE;
+
 #define PLUGIN_NAME     "vaapi"
 #define PLUGIN_DESC     "VA-API based elements"
 #define PLUGIN_LICENSE  "LGPL"
@@ -217,6 +219,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_vaapi_driver_is_whitelisted (display))
     goto unsupported_driver;
 
+  _gst_vaapi_has_video_processing =
+      gst_vaapi_display_has_video_processing (display);
+
   decoders = display_get_decoder_codecs (display);
   if (decoders) {
     gst_vaapidecode_register (plugin, decoders);
@@ -226,10 +231,8 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vaapipostproc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);
 
-  if (gst_vaapi_display_has_video_processing (display)) {
-    gst_element_register (plugin, "vaapidecodebin",
-        GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
-  }
+  gst_element_register (plugin, "vaapidecodebin",
+      GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
 
   gst_element_register (plugin, "vaapisink",
       GST_RANK_PRIMARY, GST_TYPE_VAAPISINK);
