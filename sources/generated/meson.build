@@ -725,7 +725,7 @@ gst_source_gen = custom_target('gst_codegen',
         '--out', meson.current_build_dir(),
         '--files', ';'.join(generated_sources),
         '--assembly-name', meson.project_name(),
-        '--glue-includes', glueincludes,
+        '--abi-includes', abi_includes,
         '--abi-cs-usings', 'Gst,Gst.Video,Gst.Sdp,Gst.Tags,Gst.Rtsp,Gst.PbUtils,Gst.Net,Gst.FFT,Gst.Controller,Gst.Base,Gst.Audio,Gst.App',
     ],
     depend_files: [raw_api_fname],
@@ -734,13 +734,13 @@ gst_source_gen = custom_target('gst_codegen',
 c_abi = custom_target('gst_sharp_c_abi',
         input: raw_api_fname,
         output: 'gstreamer-sharp-abi.c',
-        command: [generate_api, '--fakeglue'],
+        command: [generate_api, '--fake'],
         depends: [gst_source_gen])
 
 cs_abi = custom_target('gst_sharp_cs_abi',
         input: raw_api_fname,
         output: 'gstreamer-sharp-abi.cs',
-        command: [generate_api, '--fakeglue'],
+        command: [generate_api, '--fake'],
         depends: [gst_source_gen])
 
 gst_api_includes = join_paths(meson.current_build_dir(), 'gstreamer-sharp-api.xml')

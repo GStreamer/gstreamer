@@ -71,7 +71,7 @@ generated-stamp: $(API)
 	$(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) $(GIO_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.0.dll \
-		--glue-includes=$(glue_list) \
+		--abi-includes=$(glue_list) \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
