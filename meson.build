@@ -94,9 +94,6 @@ if ges_dep.found()
   custom_target('GESSharp-nuget',
       command: [nuget, '--package-name', 'GESSharp',
           '--assembly', ges_sharp.full_path(),
-          '--assembly', gst_sharp.full_path(),
-          '--assembly', gio_sharp.full_path(),
-          '--assembly', glib_sharp.full_path(),
           '--dependency=GstSharp:' + meson.project_version(),
           '--project-url', 'https://gstreamer.freedesktop.org/modules/gstreamer-sharp.html',
           '--icon-url', 'https://gstreamer.freedesktop.org/images/header-logo-top.png',
@@ -104,6 +101,8 @@ if ges_dep.found()
           '--version', meson.project_version(),
           '--tags', 'GStreamer GES GstSharp bindings',
           '--builddir', meson.current_build_dir(),
+          '--dependency', 'GLibSharp:3.22',
+          '--dependency', 'GioSharp:3.22',
       ],
       output: 'GESSharp.' + meson.project_version() + '.nupkg'
   )
@@ -120,6 +119,7 @@ custom_target('GstSharp-nuget',
         '--version', meson.project_version(),
         '--tags', 'GStreamer GstSharp bindings',
         '--builddir', meson.current_build_dir(),
+        '--dependency', 'GstSharp:' + meson.project_version(),
     ],
     output: 'GstSharp.' + meson.project_version() + '.nupkg',
 )
