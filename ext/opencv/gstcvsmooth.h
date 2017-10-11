@@ -69,8 +69,8 @@ struct _GstCvSmooth
 
   gint type;
 
-  gint width;
-  gint height;
+  gint kernelwidth;
+  gint kernelheight;
   gdouble colorsigma;
   gdouble spatialsigma;
 };
