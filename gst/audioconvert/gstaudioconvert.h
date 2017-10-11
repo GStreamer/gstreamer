@@ -48,6 +48,7 @@ struct _GstAudioConvert
   GstAudioDitherMethod dither;
   GstAudioNoiseShapingMethod ns;
   GValue mix_matrix;
+  gboolean mix_matrix_was_set;
 
   GstAudioInfo in_info;
   GstAudioInfo out_info;

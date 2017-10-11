@@ -637,6 +637,10 @@ check_mix_matrix (guint in_channels, guint out_channels, const GValue * value)
 {
   guint i, j;
 
+  /* audio-channel-mixer will generate an identity matrix */
+  if (gst_value_array_get_size (value) == 0)
+    return TRUE;
+
   if (gst_value_array_get_size (value) != out_channels) {
     GST_ERROR ("Invalid mix matrix size, should be %d", out_channels);
     goto fail;
@@ -704,8 +708,11 @@ chain_mix (GstAudioConverter * convert, AudioChain * prev)
   convert->current_channels = out->channels;
 
   if (opt_matrix) {
-    gfloat **matrix =
-        mix_matrix_from_g_value (in->channels, out->channels, opt_matrix);
+    gfloat **matrix = NULL;
+
+    if (gst_value_array_get_size (opt_matrix))
+      matrix =
+          mix_matrix_from_g_value (in->channels, out->channels, opt_matrix);
 
     convert->mix =
         gst_audio_channel_mixer_new_with_matrix (0, format, in->channels,

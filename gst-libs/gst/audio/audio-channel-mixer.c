@@ -796,8 +796,8 @@ gst_audio_channel_mixer_mix_double (GstAudioChannelMixer * mix,
  * @in_channels: number of input channels
  * @out_channels: number of output channels
  * @matrix: (transfer full) (nullable): channel conversion matrix, m[@in_channels][@out_channels].
- *   If identity matrix, passthrough applies. If %NULL, @in_channels must be
- *   equal to @out_channels, in which case an identity matrix is generated.
+ *   If identity matrix, passthrough applies. If %NULL, a (potentially truncated)
+ *   identity matrix is generated.
  *
  * Create a new channel mixer object for the given parameters.
  *
@@ -820,14 +820,13 @@ gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
       || format == GST_AUDIO_FORMAT_F64, NULL);
   g_return_val_if_fail (in_channels > 0 && in_channels < 64, NULL);
   g_return_val_if_fail (out_channels > 0 && out_channels < 64, NULL);
-  g_return_val_if_fail (matrix != NULL || in_channels == out_channels, NULL);
 
   mix = g_slice_new0 (GstAudioChannelMixer);
   mix->in_channels = in_channels;
   mix->out_channels = out_channels;
 
   if (!matrix) {
-    /* Generate identity matrix */
+    /* Generate (potentially truncated) identity matrix */
     gint i, j;
 
     mix->matrix = g_new0 (gfloat *, in_channels);

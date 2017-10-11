@@ -72,6 +72,9 @@
  * |[
  * gst-launch-1.0 audiotestsrc ! audio/x-raw, channels=4 ! audioconvert mix-matrix="<<(float)1.0, (float)0.0, (float)0.0, (float)0.0>, <(float)0.0, (float)1.0, (float)0.0, (float)0.0>>" ! audio/x-raw,channels=2 ! autoaudiosink
  * ]|
+ *
+ * > If an empty mix matrix is specified, a (potentially truncated)
+ * > identity matrix will be generated.
  */
 
 /*
@@ -300,7 +303,7 @@ remove_channels_from_structure (GstCapsFeatures * features, GstStructure * s,
 
   /* Only remove the channels and channel-mask for non-NONE layouts,
    * or if a mix matrix was manually specified */
-  if (gst_value_array_get_size (&this->mix_matrix) ||
+  if (this->mix_matrix_was_set ||
       !gst_structure_get (s, "channel-mask", GST_TYPE_BITMASK, &mask, NULL) ||
       (mask != 0 || (gst_structure_get_int (s, "channels", &channels)
               && channels == 1))) {
@@ -733,7 +736,7 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
       GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
       GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL);
 
-  if (gst_value_array_get_size (&this->mix_matrix))
+  if (this->mix_matrix_was_set)
     gst_structure_set_value (config, GST_AUDIO_CONVERTER_OPT_MIX_MATRIX,
         &this->mix_matrix);
 
@@ -933,7 +936,8 @@ gst_audio_convert_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MIX_MATRIX:
       if (!gst_value_array_get_size (value)) {
-        g_warning ("Empty mix matrix");
+        g_value_copy (value, &this->mix_matrix);
+        this->mix_matrix_was_set = TRUE;
       } else {
         const GValue *first_row = gst_value_array_get_value (value, 0);
 
@@ -942,6 +946,7 @@ gst_audio_convert_set_property (GObject * object, guint prop_id,
             g_value_unset (&this->mix_matrix);
 
           g_value_copy (value, &this->mix_matrix);
+          this->mix_matrix_was_set = TRUE;
         } else {
           g_warning ("Empty mix matrix's first row");
         }
@@ -967,7 +972,7 @@ gst_audio_convert_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, this->ns);
       break;
     case PROP_MIX_MATRIX:
-      if (gst_value_array_get_size (&this->mix_matrix))
+      if (this->mix_matrix_was_set)
         g_value_copy (&this->mix_matrix, value);
       break;
     default:
