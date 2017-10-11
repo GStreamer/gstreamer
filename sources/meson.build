@@ -59,6 +59,6 @@ else
 endif
 
 configure_file(
-    input: '../out/gstreamer-sharp.dll.config',
+    input: 'gstreamer-sharp.dll.config',
     output: 'gstreamer-sharp.dll.config',
     configuration: configuration_data())
