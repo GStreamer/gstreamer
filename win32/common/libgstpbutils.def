@@ -26,8 +26,8 @@ EXPORTS
 	gst_codec_utils_opus_parse_caps
 	gst_codec_utils_opus_parse_header
 	gst_discoverer_audio_info_get_bitrate
-	gst_discoverer_audio_info_get_channels
 	gst_discoverer_audio_info_get_channel_mask
+	gst_discoverer_audio_info_get_channels
 	gst_discoverer_audio_info_get_depth
 	gst_discoverer_audio_info_get_language
 	gst_discoverer_audio_info_get_max_bitrate
@@ -43,11 +43,11 @@ EXPORTS
 	gst_discoverer_info_get_audio_streams
 	gst_discoverer_info_get_container_streams
 	gst_discoverer_info_get_duration
+	gst_discoverer_info_get_live
 	gst_discoverer_info_get_misc
 	gst_discoverer_info_get_missing_elements_installer_details
 	gst_discoverer_info_get_result
 	gst_discoverer_info_get_seekable
-	gst_discoverer_info_get_live
 	gst_discoverer_info_get_stream_info
 	gst_discoverer_info_get_stream_list
 	gst_discoverer_info_get_streams
