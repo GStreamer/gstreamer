@@ -120,7 +120,6 @@ struct _GstAudioConverter
 
   /* channel mix */
   gboolean mix_passthrough;
-  gfloat **mix_matrix;
   GstAudioChannelMixer *mix;
 
   /* resample */
