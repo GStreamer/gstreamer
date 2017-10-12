@@ -407,6 +407,8 @@ native_set_surface (JNIEnv * env, jobject thiz, jobject surface)
   gst_player_video_overlay_video_renderer_set_window_handle
       (GST_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER (player->renderer),
       (gpointer) new_native_window);
+  gst_player_video_overlay_video_renderer_expose
+      (GST_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER (player->renderer));
 }
 
 static void
