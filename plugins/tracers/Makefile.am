@@ -9,10 +9,8 @@ endif
 
 if GST_DISABLE_GST_DEBUG
 LOG_SOURCES =
-GST_PRINTF_LA =
 else
 LOG_SOURCES = gstlog.c
-GST_PRINTF_LA = $(top_builddir)/gst/printf/libgstprintf.la
 endif
 
 libgstcoretracers_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
@@ -26,9 +24,7 @@ libgstcoretracers_la_SOURCES = \
 
 libgstcoretracers_la_CFLAGS = $(GST_OBJ_CFLAGS) \
   -DGST_USE_UNSTABLE_API
-libgstcoretracers_la_LIBADD = \
-	$(GST_PRINTF_LA) \
-	$(GST_OBJ_LIBS)
+libgstcoretracers_la_LIBADD = $(GST_OBJ_LIBS)
 libgstcoretracers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \

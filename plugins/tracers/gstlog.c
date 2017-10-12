@@ -31,8 +31,6 @@
 
 #include "gstlog.h"
 
-#include <gst/printf/printf.h>
-
 GST_DEBUG_CATEGORY_STATIC (gst_log_debug);
 #define GST_CAT_DEFAULT gst_log_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_BIN);
