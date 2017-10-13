@@ -1,8 +1,8 @@
 TEMPLATE = lib
 
-TARGET = libgstqtsink
+TARGET = gstqmlgl
 
-QT += qml quick widgets
+QT += qml quick widgets gui
 
 QT_CONFIG -= no-pkg-config
 CONFIG += link_pkgconfig debug plugin
@@ -17,14 +17,20 @@ DEFINES += \
 
 SOURCES += \
     gstplugin.cc \
+    gstqtglutility.cc \
     gstqsgtexture.cc \
     gstqtsink.cc \
+    gstqtsrc.cc \
+    qtwindow.cc \
     qtitem.cc
 
 HEADERS += \
     gstqsgtexture.h \
     gstqtgl.h \
+    gstqtglutility.h \
     gstqtsink.h \
+    gstqtsrc.h \
+    qtwindow.h \
     qtitem.h
 
 INCLUDEPATH += \
