@@ -4,6 +4,7 @@ subdir('cairo')
 subdir('level')
 #FIXME: subdir('qt')
 subdir('rtp')
+subdir('rtsp')
 subdir('shapewipe')
 subdir('v4l2')
 

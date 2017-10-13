@@ -17,9 +17,9 @@ CAIRO_DIR=
 endif
 
 SUBDIRS = audiofx equalizer $(GTK_DIR) $(JACK_DIR) level \
-	rtp shapewipe spectrum v4l2 $(CAIRO_DIR)
+	rtp rtsp shapewipe spectrum v4l2 $(CAIRO_DIR)
 
 DIST_SUBDIRS = audiofx equalizer gtk jack level \
-	rtp shapewipe spectrum v4l2 cairo
+	rtp rtsp shapewipe spectrum v4l2 cairo
 
 include $(top_srcdir)/common/parallel-subdirs.mak

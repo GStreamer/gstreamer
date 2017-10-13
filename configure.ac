@@ -1294,6 +1294,7 @@ tests/examples/gtk/Makefile
 tests/examples/jack/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile
+tests/examples/rtsp/Makefile
 tests/examples/shapewipe/Makefile
 tests/examples/spectrum/Makefile
 tests/examples/v4l2/Makefile

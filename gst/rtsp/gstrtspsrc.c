@@ -126,6 +126,7 @@ enum
   SIGNAL_REQUEST_RTCP_KEY,
   SIGNAL_ACCEPT_CERTIFICATE,
   SIGNAL_BEFORE_SEND,
+  SIGNAL_PUSH_BACKCHANNEL_BUFFER,
   LAST_SIGNAL
 };
 
@@ -200,6 +201,32 @@ gst_rtsp_src_ntp_time_source_get_type (void)
   return ntp_time_source_type;
 }
 
+enum _GstRtspBackchannel
+{
+  BACKCHANNEL_NONE,
+  BACKCHANNEL_ONVIF
+};
+
+#define GST_TYPE_RTSP_BACKCHANNEL (gst_rtsp_backchannel_get_type())
+static GType
+gst_rtsp_backchannel_get_type (void)
+{
+  static GType backchannel_type = 0;
+  static const GEnumValue backchannel_values[] = {
+    {BACKCHANNEL_NONE, "No backchannel", "none"},
+    {BACKCHANNEL_ONVIF, "ONVIF audio backchannel", "onvif"},
+    {0, NULL, NULL},
+  };
+
+  if (G_UNLIKELY (backchannel_type == 0)) {
+    backchannel_type =
+        g_enum_register_static ("GstRTSPBackchannel", backchannel_values);
+  }
+  return backchannel_type;
+}
+
+#define BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL "www.onvif.org/ver20/backchannel"
+
 #define DEFAULT_LOCATION         NULL
 #define DEFAULT_PROTOCOLS        GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_DEBUG            FALSE
@@ -236,6 +263,7 @@ gst_rtsp_src_ntp_time_source_get_type (void)
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT   G_GUINT64_CONSTANT(0)
 #define DEFAULT_MAX_TS_OFFSET   G_GINT64_CONSTANT(3000000000)
 #define DEFAULT_VERSION         GST_RTSP_VERSION_1_0
+#define DEFAULT_BACKCHANNEL  GST_RTSP_BACKCHANNEL_NONE
 
 enum
 {
@@ -279,6 +307,7 @@ enum
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_MAX_TS_OFFSET,
   PROP_DEFAULT_VERSION,
+  PROP_BACKCHANNEL,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -358,6 +387,9 @@ static void
 gst_rtspsrc_print_rtsp_message (GstRTSPSrc * src, const GstRTSPMessage * msg);
 static void
 gst_rtspsrc_print_sdp_message (GstRTSPSrc * src, const GstSDPMessage * msg);
+
+static GstFlowReturn gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src,
+    guint id, GstSample * sample);
 
 typedef struct
 {
@@ -830,6 +862,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpSrc:backchannel
+   *
+   * Select a type of backchannel to setup with the RTSP server.
+   * Default value is "none". Allowed values are "none" and "onvif".
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_BACKCHANNEL,
+      g_param_spec_enum ("backchannel", "Backchannel type",
+          "The type of backchannel to setup. Default is 'none'.",
+          GST_TYPE_RTSP_BACKCHANNEL, BACKCHANNEL_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -965,6 +1011,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
       1, GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
+  /**
+   * GstRTSPSrc::push-backchannel-buffer:
+   * @rtspsrc: a #GstRTSPSrc
+   * @buffer: RTP buffer to send back
+   *
+   *
+   */
+  gst_rtspsrc_signals[SIGNAL_PUSH_BACKCHANNEL_BUFFER] =
+      g_signal_new ("push-backchannel-buffer", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          push_backchannel_buffer), NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 2,
+      G_TYPE_UINT, GST_TYPE_BUFFER);
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -979,6 +1038,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       "Lutz Mueller <lutz@topfrose.de>");
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
+
+  klass->push_backchannel_buffer = gst_rtspsrc_push_backchannel_buffer;
 
   gst_rtsp_ext_list_init ();
 }
@@ -1334,6 +1395,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_DEFAULT_VERSION:
       rtspsrc->default_version = g_value_get_enum (value);
+      break;
+    case PROP_BACKCHANNEL:
+      rtspsrc->backchannel = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1705,7 +1769,9 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
   else
     goto unknown_proto;
 
-  if (gst_sdp_media_get_attribute_val (media, "recvonly") != NULL)
+  if (gst_sdp_media_get_attribute_val (media, "recvonly") != NULL &&
+      /* We want to setup caps for streams configured as backchannel */
+      !stream->is_backchannel)
     goto recvonly_media;
 
   /* Parse global SDP attributes once */
@@ -1779,7 +1845,7 @@ unknown_proto:
   }
 recvonly_media:
   {
-    GST_DEBUG_OBJECT (src, "recvonly media ignored");
+    GST_WARNING_OBJECT (src, "recvonly media ignored, no backchannel");
     return;
   }
 }
@@ -1839,9 +1905,15 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
   stream->ptmap = g_array_new (FALSE, FALSE, sizeof (PtMapItem));
   stream->mikey = NULL;
   stream->stream_id = NULL;
+  stream->is_backchannel = FALSE;
   g_mutex_init (&stream->conninfo.send_lock);
   g_mutex_init (&stream->conninfo.recv_lock);
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
+
+  /* stream is recvonly and onvif backchannel is requested */
+  if (gst_sdp_media_get_attribute_val (media, "recvonly") != NULL &&
+      src->backchannel != BACKCHANNEL_NONE)
+    stream->is_backchannel = TRUE;
 
   /* collect bandwidth information for this steam. FIXME, configure in the RTP
    * session manager to scale RTCP. */
@@ -1940,10 +2012,10 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       gst_object_unref (stream->udpsink[i]);
     }
   }
-  if (stream->fakesrc) {
-    gst_element_set_state (stream->fakesrc, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (src), stream->fakesrc);
-    gst_object_unref (stream->fakesrc);
+  if (stream->rtpsrc) {
+    gst_element_set_state (stream->rtpsrc, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (src), stream->rtpsrc);
+    gst_object_unref (stream->rtpsrc);
   }
   if (stream->srcpad) {
     gst_pad_set_active (stream->srcpad, FALSE);
@@ -2763,6 +2835,32 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   return res;
 }
 
+static GstFlowReturn
+gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src, guint id,
+    GstSample * sample)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GstRTSPStream *stream;
+
+  if (!src->conninfo.connected || src->state != GST_RTSP_STATE_PLAYING)
+    goto out;
+
+  stream = find_stream (src, &id, (gpointer) find_stream_by_id);
+  if (stream == NULL) {
+    GST_ERROR_OBJECT (src, "no stream with id %u", id);
+    goto out;
+  }
+
+  g_signal_emit_by_name (stream->rtpsrc, "push-sample", sample, &res);
+  GST_DEBUG_OBJECT (src, "sent backchannel RTP sample %p: %s", sample,
+      gst_flow_get_name (res));
+
+out:
+  gst_sample_unref (sample);
+
+  return res;
+}
+
 static GstPadProbeReturn
 pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
@@ -2798,6 +2896,35 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
   gst_pad_store_sticky_event (gpad, *event);
 
+  return TRUE;
+}
+
+static gboolean
+add_backchannel_fakesink (GstRTSPSrc * src, GstRTSPStream * stream,
+    GstPad * srcpad)
+{
+  GstPad *sinkpad;
+  GstElement *fakesink;
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  if (fakesink == NULL) {
+    GST_ERROR_OBJECT (src, "no fakesink");
+    return FALSE;
+  }
+
+  sinkpad = gst_element_get_static_pad (fakesink, "sink");
+
+  GST_DEBUG_OBJECT (src, "backchannel stream %p, hooking fakesink", stream);
+
+  gst_bin_add (GST_BIN_CAST (src), fakesink);
+  if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
+    GST_WARNING_OBJECT (src, "could not link to fakesink");
+    return FALSE;
+  }
+
+  gst_object_unref (sinkpad);
+
+  gst_element_sync_state_with_parent (fakesink);
   return TRUE;
 }
 
@@ -2868,7 +2995,12 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
   gst_pad_set_active (stream->srcpad, TRUE);
   gst_pad_sticky_events_foreach (pad, copy_sticky_events, stream->srcpad);
-  gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+
+  /* don't add the srcpad if this is a recvonly stream */
+  if (stream->is_backchannel)
+    add_backchannel_fakesink (src, stream, stream->srcpad);
+  else
+    gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
 
   if (all_added) {
     GST_DEBUG_OBJECT (src, "We added all streams");
@@ -3898,7 +4030,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     goto no_destination;
 
   /* try to construct the fakesrc to the RTP port of the server to open up any
-   * NAT firewalls */
+   * NAT firewalls or, if backchannel, construct an appsrc */
   if (do_rtp) {
     GST_DEBUG_OBJECT (src, "configure RTP UDP sink for %s:%d", destination,
         rtp_port);
@@ -3932,25 +4064,36 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
       g_object_unref (socket);
     }
 
-    /* the source for the dummy packets to open up NAT */
-    stream->fakesrc = gst_element_factory_make ("fakesrc", NULL);
-    if (stream->fakesrc == NULL)
-      goto no_fakesrc_element;
+    if (stream->is_backchannel) {
+      /* appsrc is for the app to shovel data using push-backchannel-buffer */
+      stream->rtpsrc = gst_element_factory_make ("appsrc", NULL);
+      if (stream->rtpsrc == NULL)
+        goto no_appsrc_element;
 
-    /* random data in 5 buffers, a size of 200 bytes should be fine */
-    g_object_set (G_OBJECT (stream->fakesrc), "filltype", 3, "num-buffers", 5,
-        "sizetype", 2, "sizemax", 200, "silent", TRUE, NULL);
+      /* interal use only, don't emit signals */
+      g_object_set (G_OBJECT (stream->rtpsrc), "emit-signals", TRUE,
+          "is-live", TRUE, NULL);
+    } else {
+      /* the source for the dummy packets to open up NAT */
+      stream->rtpsrc = gst_element_factory_make ("fakesrc", NULL);
+      if (stream->rtpsrc == NULL)
+        goto no_fakesrc_element;
+
+      /* random data in 5 buffers, a size of 200 bytes should be fine */
+      g_object_set (G_OBJECT (stream->rtpsrc), "filltype", 3, "num-buffers", 5,
+          "sizetype", 2, "sizemax", 200, "silent", TRUE, NULL);
+    }
 
     /* keep everything locked */
     gst_element_set_locked_state (stream->udpsink[0], TRUE);
-    gst_element_set_locked_state (stream->fakesrc, TRUE);
+    gst_element_set_locked_state (stream->rtpsrc, TRUE);
 
     gst_object_ref (stream->udpsink[0]);
     gst_bin_add (GST_BIN_CAST (src), stream->udpsink[0]);
-    gst_object_ref (stream->fakesrc);
-    gst_bin_add (GST_BIN_CAST (src), stream->fakesrc);
+    gst_object_ref (stream->rtpsrc);
+    gst_bin_add (GST_BIN_CAST (src), stream->rtpsrc);
 
-    gst_element_link_pads_full (stream->fakesrc, "src", stream->udpsink[0],
+    gst_element_link_pads_full (stream->rtpsrc, "src", stream->udpsink[0],
         "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
   if (do_rtcp) {
@@ -4019,6 +4162,11 @@ no_destination:
 no_sink_element:
   {
     GST_ERROR_OBJECT (src, "no UDP sink element found");
+    return FALSE;
+  }
+no_appsrc_element:
+  {
+    GST_ERROR_OBJECT (src, "no appsrc element found");
     return FALSE;
   }
 no_fakesrc_element:
@@ -4094,8 +4242,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     case GST_RTSP_LOWER_TRANS_UDP:
       if (!gst_rtspsrc_stream_configure_udp (src, stream, transport, &outpad))
         goto transport_failed;
-      /* configure udpsinks back to the server for RTCP messages and for the
-       * dummy RTP messages to open NAT. */
+      /* configure udpsinks back to the server for RTCP messages, for the
+       * dummy RTP messages to open NAT, and for the backchannel */
       if (!gst_rtspsrc_stream_configure_udp_sinks (src, stream, transport))
         goto transport_failed;
       break;
@@ -4103,8 +4251,12 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       goto unknown_transport;
   }
 
-  if (outpad) {
-    GST_DEBUG_OBJECT (src, "creating ghostpad");
+  /* using backchannel and no manager, hence no srcpad for this stream */
+  if (outpad && stream->is_backchannel) {
+    add_backchannel_fakesink (src, stream, outpad);
+    gst_object_unref (outpad);
+  } else if (outpad) {
+    GST_DEBUG_OBJECT (src, "creating ghostpad for stream %p", stream);
 
     gst_pad_use_fixed_caps (outpad);
 
@@ -4128,17 +4280,17 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   /* ERRORS */
 transport_failed:
   {
-    GST_DEBUG_OBJECT (src, "failed to configure transport");
+    GST_WARNING_OBJECT (src, "failed to configure transport");
     return FALSE;
   }
 unknown_transport:
   {
-    GST_DEBUG_OBJECT (src, "unknown transport");
+    GST_WARNING_OBJECT (src, "unknown transport");
     return FALSE;
   }
 no_manager:
   {
-    GST_DEBUG_OBJECT (src, "cannot get a session manager");
+    GST_WARNING_OBJECT (src, "cannot get a session manager");
     return FALSE;
   }
 }
@@ -4157,13 +4309,18 @@ gst_rtspsrc_send_dummy_packets (GstRTSPSrc * src)
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
-    if (stream->fakesrc && stream->udpsink[0]) {
+    if (!stream->rtpsrc || !stream->udpsink[0])
+      continue;
+
+    if (stream->is_backchannel)
+      GST_DEBUG_OBJECT (src, "starting backchannel stream %p", stream);
+    else
       GST_DEBUG_OBJECT (src, "sending dummy packet to stream %p", stream);
-      gst_element_set_state (stream->udpsink[0], GST_STATE_NULL);
-      gst_element_set_state (stream->fakesrc, GST_STATE_NULL);
-      gst_element_set_state (stream->udpsink[0], GST_STATE_PLAYING);
-      gst_element_set_state (stream->fakesrc, GST_STATE_PLAYING);
-    }
+
+    gst_element_set_state (stream->udpsink[0], GST_STATE_NULL);
+    gst_element_set_state (stream->rtpsrc, GST_STATE_NULL);
+    gst_element_set_state (stream->udpsink[0], GST_STATE_PLAYING);
+    gst_element_set_state (stream->rtpsrc, GST_STATE_PLAYING);
   }
   return TRUE;
 }
@@ -4205,7 +4362,10 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
       /* add the pad */
       if (!stream->added) {
         GST_DEBUG_OBJECT (src, "adding stream pad %p", stream);
-        gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+        if (stream->is_backchannel)
+          add_backchannel_fakesink (src, stream, stream->srcpad);
+        else
+          gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
         stream->added = TRUE;
       }
     }
@@ -6529,7 +6689,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
 
     caps = stream_get_caps_for_pt (stream, stream->default_pt);
     if (caps == NULL) {
-      GST_DEBUG_OBJECT (src, "skipping stream %p, no caps", stream);
+      GST_WARNING_OBJECT (src, "skipping stream %p, no caps", stream);
       continue;
     }
 
@@ -6574,13 +6734,14 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
 
     /* skip setup if we have no URL for it */
     if (stream->conninfo.location == NULL) {
-      GST_DEBUG_OBJECT (src, "skipping stream %p, no setup", stream);
+      GST_WARNING_OBJECT (src, "skipping stream %p, no setup", stream);
       continue;
     }
 
     if (src->conninfo.connection == NULL) {
       if (!gst_rtsp_conninfo_connect (src, &stream->conninfo, async)) {
-        GST_DEBUG_OBJECT (src, "skipping stream %p, failed to connect", stream);
+        GST_WARNING_OBJECT (src, "skipping stream %p, failed to connect",
+            stream);
         continue;
       }
       conninfo = &stream->conninfo;
@@ -6652,6 +6813,10 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
 
     /* select transport */
     gst_rtsp_message_take_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
+
+    if (stream->is_backchannel && src->backchannel == BACKCHANNEL_ONVIF)
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE,
+          BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL);
 
     /* set up keys */
     if (stream->profile == GST_RTSP_PROFILE_SAVP ||
@@ -7168,6 +7333,11 @@ restart:
   gst_rtsp_message_add_header (&request, GST_RTSP_HDR_ACCEPT,
       "application/sdp");
 
+  if (src->backchannel == BACKCHANNEL_ONVIF)
+    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE,
+        BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL);
+  /* TODO: Handle the case when backchannel is unsupported and goto restart */
+
   /* send DESCRIBE */
   GST_DEBUG_OBJECT (src, "send describe...");
 
@@ -7394,6 +7564,10 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
         gst_rtspsrc_init_request (src, &request, GST_RTSP_TEARDOWN, setup_url);
     if (res < 0)
       goto create_request_failed;
+
+    if (stream->is_backchannel && src->backchannel == BACKCHANNEL_ONVIF)
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE,
+          BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL);
 
     if (async)
       GST_ELEMENT_PROGRESS (src, CONTINUE, "close", ("Closing stream"));
@@ -7736,6 +7910,13 @@ restart:
       gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SEEK_STYLE,
           seek_style);
 
+    /* when we have an ONVIF audio backchannel, the PLAY request must have the
+     * Require: header when doing either aggregate or non-aggregate control */
+    if (src->backchannel == BACKCHANNEL_ONVIF &&
+        (control || stream->is_backchannel))
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE,
+          BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL);
+
     if (async)
       GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("Sending PLAY request"));
 
@@ -7856,17 +8037,17 @@ done:
   /* ERRORS */
 open_failed:
   {
-    GST_DEBUG_OBJECT (src, "failed to open stream");
+    GST_WARNING_OBJECT (src, "failed to open stream");
     goto done;
   }
 not_supported:
   {
-    GST_DEBUG_OBJECT (src, "PLAY is not supported");
+    GST_WARNING_OBJECT (src, "PLAY is not supported");
     goto done;
   }
 was_playing:
   {
-    GST_DEBUG_OBJECT (src, "we were already PLAYING");
+    GST_WARNING_OBJECT (src, "we were already PLAYING");
     goto done;
   }
 create_request_failed:
@@ -7949,6 +8130,13 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
             gst_rtspsrc_init_request (src, &request, GST_RTSP_PAUSE,
                 setup_url)) < 0)
       goto create_request_failed;
+
+    /* when we have an ONVIF audio backchannel, the PAUSE request must have the
+     * Require: header when doing either aggregate or non-aggregate control */
+    if (src->backchannel == BACKCHANNEL_ONVIF &&
+        (control || stream->is_backchannel))
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE,
+          BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL);
 
     if ((res =
             gst_rtspsrc_send (src, conninfo, &request, &response, NULL,

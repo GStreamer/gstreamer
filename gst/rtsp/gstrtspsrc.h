@@ -123,8 +123,8 @@ struct _GstRTSPStream {
   GstElement   *udpsink[2];
   GstPad       *rtcppad;
 
-  /* fakesrc for sending dummy data */
-  GstElement   *fakesrc;
+  /* fakesrc for sending dummy data or appsrc for sending backchannel data */
+  GstElement   *rtpsrc;
 
   /* state */
   guint         port;
@@ -161,6 +161,7 @@ struct _GstRTSPStream {
   gchar        *destination;
   gboolean      is_multicast;
   guint         ttl;
+  gboolean      is_backchannel;
 
   /* A unique and stable id we will use for the stream start event */
   gchar *stream_id;
@@ -254,6 +255,7 @@ struct _GstRTSPSrc {
   guint64           max_ts_offset_adjustment;
   gint64            max_ts_offset;
   gboolean          max_ts_offset_is_set;
+  gint              backchannel;
 
   /* state */
   GstRTSPState       state;
@@ -298,6 +300,8 @@ struct _GstRTSPSrc {
 
 struct _GstRTSPSrcClass {
   GstBinClass parent_class;
+
+  GstFlowReturn (*push_backchannel_buffer) (GstRTSPSrc *src, guint id, GstSample *sample);
 };
 
 GType gst_rtspsrc_get_type(void);
