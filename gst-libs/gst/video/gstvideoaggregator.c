@@ -1046,7 +1046,7 @@ gst_video_aggregator_reset (GstVideoAggregator * vagg)
   GST_OBJECT_UNLOCK (vagg);
 }
 
-static gint
+static GstFlowReturn
 gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     GstClockTime output_start_running_time,
     GstClockTime output_end_running_time)
