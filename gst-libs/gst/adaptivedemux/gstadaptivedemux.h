@@ -157,7 +157,8 @@ struct _GstAdaptiveDemuxStream
   GMutex fragment_download_lock;
   GCond fragment_download_cond;
   gboolean download_finished;   /* protected by fragment_download_lock */
-  gboolean cancelled;           /* protected by fragment_download_lock */
+  gboolean cancelled; /* protected by fragment_download_lock */
+  gboolean replaced; /* replaced in a bitrate switch (used with cancelled) */
   gboolean src_at_ready;     /* protected by fragment_download_lock */
   gboolean starting_fragment;
   gboolean first_fragment_buffer;

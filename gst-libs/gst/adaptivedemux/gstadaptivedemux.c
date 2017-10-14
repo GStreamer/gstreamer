@@ -1260,6 +1260,7 @@ gst_adaptive_demux_expose_streams (GstAdaptiveDemux * demux)
       gst_task_stop (stream->download_task);
       g_mutex_lock (&stream->fragment_download_lock);
       stream->cancelled = TRUE;
+      stream->replaced = TRUE;
       g_cond_signal (&stream->fragment_download_cond);
       g_mutex_unlock (&stream->fragment_download_lock);
     }
@@ -1923,6 +1924,7 @@ gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux,
     if (!start_preroll_streams) {
       g_mutex_lock (&stream->fragment_download_lock);
       stream->cancelled = FALSE;
+      stream->replaced = FALSE;
       g_mutex_unlock (&stream->fragment_download_lock);
     }
 
@@ -3639,6 +3641,9 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
           goto end;
         }
         gst_task_stop (stream->download_task);
+        if (stream->replaced) {
+          goto end;
+        }
       } else {
         gst_task_stop (stream->download_task);
         if (gst_adaptive_demux_combine_flows (demux) == GST_FLOW_EOS) {
