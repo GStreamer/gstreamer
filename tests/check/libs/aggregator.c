@@ -190,6 +190,8 @@ gst_test_aggregator_plugin_register (void)
       VERSION, GST_LICENSE, PACKAGE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 }
 
+/* test helpers */
+
 typedef struct
 {
   GstEvent *event;
@@ -259,8 +261,8 @@ push_buffer (gpointer user_data)
 
   start_flow (chain_data);
 
-  GST_DEBUG ("Pushing buffer on pad: %s:%s",
-      GST_DEBUG_PAD_NAME (chain_data->sinkpad));
+  GST_INFO_OBJECT (chain_data->sinkpad, "Pushing buffer %" GST_PTR_FORMAT,
+      chain_data->buffer);
   flow = gst_pad_push (chain_data->srcpad, chain_data->buffer);
   fail_unless (flow == chain_data->expected_result,
       "got flow %s instead of %s on %s:%s", gst_flow_get_name (flow),
@@ -276,14 +278,13 @@ push_event (gpointer user_data)
 {
   ChainData *chain_data = (ChainData *) user_data;
   GstTestAggregator *aggregator = (GstTestAggregator *) chain_data->aggregator;
-  GstEventType event_type;
+  GstEventType event_type = GST_EVENT_TYPE (chain_data->event);
 
   start_flow (chain_data);
 
-  GST_INFO_OBJECT (chain_data->srcpad, "Pushing event: %"
-      GST_PTR_FORMAT, chain_data->event);
+  GST_INFO_OBJECT (chain_data->sinkpad, "Pushing event: %" GST_PTR_FORMAT,
+      chain_data->event);
 
-  event_type = GST_EVENT_TYPE (chain_data->event);
   switch (event_type) {
     case GST_EVENT_GAP:
       aggregator->gap_expected = TRUE;
@@ -294,7 +295,7 @@ push_event (gpointer user_data)
 
   fail_unless (gst_pad_push_event (chain_data->srcpad,
           chain_data->event) == TRUE);
-
+  chain_data->event = NULL;
 
   return NULL;
 }
@@ -328,7 +329,7 @@ _aggregated_cb (GstPad * pad, GstPadProbeInfo * info, GMainLoop * ml)
 }
 
 static GstPadProbeReturn
-downstream_probe_cb (GstPad * pad, GstPadProbeInfo * info, TestData * test)
+_downstream_probe_cb (GstPad * pad, GstPadProbeInfo * info, TestData * test)
 {
   GST_DEBUG ("PROBING ");
   if (info->type & GST_PAD_PROBE_TYPE_EVENT_FLUSH) {
@@ -343,7 +344,6 @@ downstream_probe_cb (GstPad * pad, GstPadProbeInfo * info, TestData * test)
   }
   return GST_PAD_PROBE_OK;
 }
-
 
 /*
  * Not thread safe, will create a new ChainData which contains
@@ -372,8 +372,8 @@ _chain_data_init (ChainData * data, GstElement * agg)
 static void
 _chain_data_clear (ChainData * data)
 {
-  if (data->buffer)
-    gst_buffer_unref (data->buffer);
+  gst_buffer_replace (&data->buffer, NULL);
+  gst_event_replace (&data->event, NULL);
   if (data->srcpad)
     gst_object_unref (data->srcpad);
   if (data->sinkpad)
@@ -396,7 +396,7 @@ _test_data_init (TestData * test, gboolean needs_flushing)
   test->ml = g_main_loop_new (NULL, TRUE);
   test->srcpad = GST_AGGREGATOR (test->aggregator)->srcpad;
 
-  GST_DEBUG ("Srcpad: %p", test->srcpad);
+  GST_DEBUG_OBJECT (test->srcpad, "Init test data for srcpad");
 
   if (needs_flushing) {
     static gint num_sink_pads = 0;
@@ -409,12 +409,11 @@ _test_data_init (TestData * test, gboolean needs_flushing)
     g_free (pad_name);
     fail_unless (gst_pad_link (test->srcpad, test->sinkpad) == GST_PAD_LINK_OK);
     gst_pad_add_probe (test->srcpad, GST_PAD_PROBE_TYPE_EVENT_FLUSH,
-        (GstPadProbeCallback) downstream_probe_cb, test, NULL);
+        (GstPadProbeCallback) _downstream_probe_cb, test, NULL);
   } else {
     gst_pad_add_probe (test->srcpad, GST_PAD_PROBE_TYPE_BUFFER,
         (GstPadProbeCallback) _aggregated_cb, test->ml, NULL);
   }
-
 
   test->timeout_id =
       g_timeout_add (1000, (GSourceFunc) _aggregate_timeout, test->ml);
@@ -432,10 +431,11 @@ _test_data_clear (TestData * test)
   g_main_loop_unref (test->ml);
 }
 
+/* tests */
+
 GST_START_TEST (test_aggregate)
 {
   GThread *thread1, *thread2;
-
   ChainData data1 = { 0, };
   ChainData data2 = { 0, };
   TestData test = { 0, };
@@ -449,7 +449,6 @@ GST_START_TEST (test_aggregate)
 
   g_main_loop_run (test.ml);
   g_source_remove (test.timeout_id);
-
 
   /* these will return immediately as when the data is popped the threads are
    * unlocked and will terminate */
@@ -466,7 +465,6 @@ GST_END_TEST;
 GST_START_TEST (test_aggregate_eos)
 {
   GThread *thread1, *thread2;
-
   ChainData data1 = { 0, };
   ChainData data2 = { 0, };
   TestData test = { 0, };
@@ -498,7 +496,6 @@ GST_END_TEST;
 GST_START_TEST (test_aggregate_gap)
 {
   GThread *thread;
-
   ChainData data = { 0, };
   TestData test = { 0, };
 
@@ -536,7 +533,6 @@ GST_START_TEST (test_linear_pipeline)
   GstBus *bus;
   GstMessage *msg;
   GstElement *pipeline, *src, *agg, *sink;
-
   gint count = 0;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -576,7 +572,6 @@ GST_START_TEST (test_two_src_pipeline)
   GstBus *bus;
   GstMessage *msg;
   GstElement *pipeline, *src, *src1, *agg, *sink;
-
   gint count = 0;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -641,7 +636,6 @@ _test_timeout (gint buffer_wait)
   GstMessage *msg;
   GstElement *pipeline, *src, *src1, *agg, *sink;
   GstPad *src1pad;
-
   gint count = 0;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -711,7 +705,6 @@ GST_START_TEST (test_flushing_seek)
 {
   GstEvent *event;
   GThread *thread1, *thread2;
-
   ChainData data1 = { 0, };
   ChainData data2 = { 0, };
   TestData test = { 0, };
@@ -805,11 +798,8 @@ infinite_seek (guint num_srcs, guint num_seeks, gboolean is_live)
   GstBus *bus;
   GstMessage *message;
   GstElement *pipeline, *src, *agg, *sink;
-
   gint count = 0, i;
   gboolean seek_res, carry_on = TRUE;
-
-  gst_init (NULL, NULL);
 
   pipeline = gst_pipeline_new ("pipeline");
 
@@ -938,19 +928,15 @@ GST_START_TEST (test_add_remove)
   /* Used to notify that we removed the pad from  */
   GCond cond;
   GMutex lock;
-
   GstBus *bus;
   GstState state;
   GstMessage *message;
   gboolean carry_on = TRUE;
   guint num_iterations = 100;
-
   GstPad *pad;
   GstElement *pipeline, *src, *src1 = NULL, *agg, *sink;
-
   gint count = 0;
 
-  gst_init (NULL, NULL);
   g_mutex_init (&lock);
   g_cond_init (&cond);
 
@@ -1067,7 +1053,6 @@ GST_START_TEST (test_change_state_intensive)
   GstBus *bus;
   GstMessage *message;
   GstElement *pipeline, *src, *agg, *sink;
-
   gint i, state_i = 0, num_srcs = 3;
   gboolean carry_on = TRUE, ready = FALSE;
   GstStateChangeReturn state_return;
@@ -1084,8 +1069,6 @@ GST_START_TEST (test_change_state_intensive)
     GST_STATE_PLAYING, GST_STATE_NULL, GST_STATE_PLAYING, GST_STATE_NULL,
     GST_STATE_PLAYING, GST_STATE_NULL, GST_STATE_PLAYING, GST_STATE_NULL,
   };
-
-  gst_init (NULL, NULL);
 
   pipeline = gst_pipeline_new ("pipeline");
 
