@@ -317,6 +317,7 @@ _quit (GMainLoop * ml)
 static GstPadProbeReturn
 _aggregated_cb (GstPad * pad, GstPadProbeInfo * info, GMainLoop * ml)
 {
+  GST_DEBUG ("Received data %" GST_PTR_FORMAT, info->data);
   GST_DEBUG ("Should quit ML");
   g_idle_add ((GSourceFunc) _quit, ml);
 
@@ -533,6 +534,69 @@ GST_START_TEST (test_aggregate_gap)
   g_thread_join (thread);
 
   _chain_data_clear (&data);
+  _test_data_clear (&test);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_aggregate_handle_events)
+{
+  GThread *thread1, *thread2;
+  ChainData data1 = { 0, };
+  ChainData data2 = { 0, };
+  TestData test = { 0, };
+
+  _test_data_init (&test, FALSE);
+  _chain_data_init (&data1, test.aggregator,
+      gst_event_new_tag (gst_tag_list_new_empty ()), gst_buffer_new (), NULL);
+  _chain_data_init (&data2, test.aggregator, gst_buffer_new (), NULL);
+
+  thread1 = g_thread_try_new ("gst-check", push_data, &data1, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_data, &data2, NULL);
+
+  g_main_loop_run (test.ml);
+  g_source_remove (test.timeout_id);
+
+  /* these will return immediately as when the data is popped the threads are
+   * unlocked and will terminate */
+  g_thread_join (thread1);
+  g_thread_join (thread2);
+
+  _chain_data_clear (&data1);
+  _chain_data_clear (&data2);
+  _test_data_clear (&test);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_aggregate_handle_queries)
+{
+  GThread *thread1, *thread2;
+  ChainData data1 = { 0, };
+  ChainData data2 = { 0, };
+  TestData test = { 0, };
+
+  _test_data_init (&test, FALSE);
+  _chain_data_init (&data1, test.aggregator,
+      gst_query_new_allocation (gst_caps_new_empty_simple ("foo/x-bar"), FALSE),
+      gst_buffer_new (), NULL);
+  _chain_data_init (&data2, test.aggregator, gst_buffer_new (), NULL);
+
+  thread1 = g_thread_try_new ("gst-check", push_data, &data1, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_data, &data2, NULL);
+
+  g_main_loop_run (test.ml);
+  g_source_remove (test.timeout_id);
+
+  /* these will return immediately as when the data is popped the threads are
+   * unlocked and will terminate */
+  g_thread_join (thread1);
+  g_thread_join (thread2);
+
+  // FIXME: need to make sure all data was aggregated
+
+  _chain_data_clear (&data1);
+  _chain_data_clear (&data2);
   _test_data_clear (&test);
 }
 
@@ -1190,6 +1254,8 @@ gst_aggregator_suite (void)
   tcase_add_test (general, test_aggregate);
   tcase_add_test (general, test_aggregate_eos);
   tcase_add_test (general, test_aggregate_gap);
+  tcase_add_test (general, test_aggregate_handle_events);
+  tcase_add_test (general, test_aggregate_handle_queries);
   tcase_add_test (general, test_flushing_seek);
   tcase_add_test (general, test_infinite_seek);
   tcase_add_test (general, test_infinite_seek_50_src);
