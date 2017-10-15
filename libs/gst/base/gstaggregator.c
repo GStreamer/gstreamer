@@ -2602,7 +2602,6 @@ gst_aggregator_pad_query_func (GstPad * pad, GstObject * parent,
 {
   GstAggregator *self = GST_AGGREGATOR (parent);
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
-  GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
 
   if (GST_QUERY_IS_SERIALIZED (query)) {
     GstStructure *s;
@@ -2638,9 +2637,11 @@ gst_aggregator_pad_query_func (GstPad * pad, GstObject * parent,
     PAD_UNLOCK (aggpad);
 
     return ret;
-  }
+  } else {
+    GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
 
-  return klass->sink_query (self, aggpad, query);
+    return klass->sink_query (self, aggpad, query);
+  }
 
 flushing:
   GST_DEBUG_OBJECT (aggpad, "Pad is %s, dropping query",
@@ -2661,17 +2662,14 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_OK;
   GstAggregator *self = GST_AGGREGATOR (parent);
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
-  GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
 
   if (GST_EVENT_IS_SERIALIZED (event)
       && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
     SRC_LOCK (self);
     PAD_LOCK (aggpad);
 
-    if (aggpad->priv->flow_return != GST_FLOW_OK) {
-      ret = aggpad->priv->flow_return;
+    if (aggpad->priv->flow_return != GST_FLOW_OK)
       goto flushing;
-    }
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
       GST_OBJECT_LOCK (aggpad);
@@ -2687,6 +2685,8 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
     PAD_UNLOCK (aggpad);
     SRC_UNLOCK (self);
   } else {
+    GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
+
     if (!klass->sink_event (self, aggpad, event)) {
       /* Copied from GstPad to convert boolean to a GstFlowReturn in
        * the event handling func */
@@ -2705,7 +2705,7 @@ flushing:
     gst_pad_store_sticky_event (pad, event);
   gst_event_unref (event);
 
-  return ret;
+  return aggpad->priv->flow_return;
 }
 
 static gboolean
