@@ -106,6 +106,10 @@ static void gst_aggregator_set_latency_property (GstAggregator * agg,
     gint64 latency);
 static gint64 gst_aggregator_get_latency_property (GstAggregator * agg);
 
+static GstClockTime gst_aggregator_get_latency_unlocked (GstAggregator * self);
+
+GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
+#define GST_CAT_DEFAULT aggregator_debug
 
 /* Locking order, locks in this element must always be taken in this order
  *
@@ -118,12 +122,6 @@ static gint64 gst_aggregator_get_latency_property (GstAggregator * agg);
  * standard src pad object lock -> GST_OBJECT_LOCK(srcpad)
  * standard sink pad object lock -> GST_OBJECT_LOCK(aggpad)
  */
-
-
-static GstClockTime gst_aggregator_get_latency_unlocked (GstAggregator * self);
-
-GST_DEBUG_CATEGORY_STATIC (aggregator_debug);
-#define GST_CAT_DEFAULT aggregator_debug
 
 /* GstAggregatorPad definitions */
 #define PAD_LOCK(pad)   G_STMT_START {                                  \
