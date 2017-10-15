@@ -2685,8 +2685,8 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
 
-  if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_TYPE (event) != GST_EVENT_EOS
-      /* && GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT_DONE */ ) {
+  if (GST_EVENT_IS_SERIALIZED (event)
+      && GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
     SRC_LOCK (self);
     PAD_LOCK (aggpad);
 
