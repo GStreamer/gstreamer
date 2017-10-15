@@ -33,10 +33,10 @@
  *     be installed with gst_collect_pads_set_function ().
  *
  *   * Pads are added to the collection with gst_collect_pads_add_pad()/
- *     gst_collect_pads_remove_pad(). The pad
- *     has to be a sinkpad. The chain and event functions of the pad are
- *     overridden. The element_private of the pad is used to store
- *     private information for the collectpads.
+ *     gst_collect_pads_remove_pad(). The pad has to be a sinkpad. When added,
+ *     the chain, event and query functions of the pad are overridden. The
+ *     element_private of the pad is used to store private information for the
+ *     collectpads.
  *
  *   * For each pad, data is queued in the _chain function or by
  *     performing a pull_range.
