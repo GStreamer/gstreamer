@@ -32,6 +32,12 @@
  *  * Base class for mixers and muxers. Subclasses should at least implement
  *    the #GstAggregatorClass.aggregate() virtual method.
  *
+ *  * Installs a #GstPadChainFunction, a #GstPadEventFullFunction and a
+ *    #GstPadQueryFunction to queue all serialized data packets per sink pad.
+ *    Subclasses should not overwrite those, but instead implement
+ *    #GstAggregatorClass.sink_event() and #GstAggregatorClass.sink_query() as
+ *    needed.
+ *
  *  * When data is queued on all pads, the aggregate vmethod is called.
  *
  *  * One can peek at the data on any given GstAggregatorPad with the
