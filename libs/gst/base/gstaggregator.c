@@ -2676,6 +2676,10 @@ flushing:
   return FALSE;
 }
 
+/* Queue serialized events and let the others go though directly.
+ * The queued events with be handled from the src-pad task in
+ * gst_aggregator_do_events_and_queries().
+ */
 static GstFlowReturn
 gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
     GstEvent * event)
