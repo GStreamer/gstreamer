@@ -447,7 +447,7 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
   GstAggregatorPad *pad;
   GList *l, *sinkpads;
   gboolean have_buffer = TRUE;
-  gboolean have_event = FALSE;
+  gboolean have_event_or_query = FALSE;
 
   GST_LOG_OBJECT (self, "checking pads");
 
@@ -464,7 +464,7 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
 
     if (pad->priv->num_buffers == 0) {
       if (!gst_aggregator_pad_queue_is_empty (pad))
-        have_event = TRUE;
+        have_event_or_query = TRUE;
       if (!pad->priv->eos) {
         have_buffer = FALSE;
 
@@ -485,7 +485,7 @@ gst_aggregator_check_pads_ready (GstAggregator * self)
     PAD_UNLOCK (pad);
   }
 
-  if (!have_buffer && !have_event)
+  if (!have_buffer && !have_event_or_query)
     goto pad_not_ready;
 
   if (have_buffer)
@@ -503,13 +503,13 @@ no_sinkpads:
   }
 pad_not_ready:
   {
-    if (have_event)
+    if (have_event_or_query)
       GST_LOG_OBJECT (pad, "pad not ready to be aggregated yet,"
           " but waking up for serialized event");
     else
       GST_LOG_OBJECT (pad, "pad not ready to be aggregated yet");
     GST_OBJECT_UNLOCK (self);
-    return have_event;
+    return have_event_or_query;
   }
 }
 
