@@ -211,7 +211,6 @@ struct _GstAggregatorPadPrivate
   GstFlowReturn flow_return;
   gboolean pending_flush_start;
   gboolean pending_flush_stop;
-  gboolean pending_eos;
 
   gboolean first_buffer;
 
@@ -241,7 +240,6 @@ struct _GstAggregatorPadPrivate
 static void
 gst_aggregator_pad_reset_unlocked (GstAggregatorPad * aggpad)
 {
-  aggpad->priv->pending_eos = FALSE;
   aggpad->priv->eos = FALSE;
   aggpad->priv->flow_return = GST_FLOW_OK;
   GST_OBJECT_LOCK (aggpad);
@@ -770,10 +768,6 @@ gst_aggregator_do_events_and_queries (GstAggregator * self,
     query = NULL;
 
     PAD_LOCK (pad);
-    if (pad->priv->num_buffers == 0 && pad->priv->pending_eos) {
-      pad->priv->pending_eos = FALSE;
-      pad->priv->eos = TRUE;
-    }
     if (pad->priv->clipped_buffer == NULL &&
         !GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->data))) {
       if (GST_IS_EVENT (g_queue_peek_tail (&pad->priv->data)))
@@ -1410,19 +1404,11 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_EOS:
     {
-      /* We still have a buffer, and we don't want the subclass to have to
-       * check for it. Mark pending_eos, eos will be set when steal_buffer is
-       * called
-       */
       SRC_LOCK (self);
       PAD_LOCK (aggpad);
-      if (aggpad->priv->num_buffers == 0) {
-        aggpad->priv->eos = TRUE;
-      } else {
-        aggpad->priv->pending_eos = TRUE;
-      }
+      g_assert (aggpad->priv->num_buffers == 0);
+      aggpad->priv->eos = TRUE;
       PAD_UNLOCK (aggpad);
-
       SRC_BROADCAST (self);
       SRC_UNLOCK (self);
       goto eat;
@@ -2495,9 +2481,6 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   if (flow_return != GST_FLOW_OK)
     goto flushing;
 
-  if (aggpad->priv->pending_eos == TRUE)
-    goto eos;
-
   PAD_UNLOCK (aggpad);
 
   buf_pts = GST_BUFFER_PTS (buffer);
@@ -2604,15 +2587,6 @@ flushing:
     gst_buffer_unref (buffer);
 
   return flow_return;
-
-eos:
-  PAD_UNLOCK (aggpad);
-  PAD_FLUSH_UNLOCK (aggpad);
-
-  gst_buffer_unref (buffer);
-  GST_DEBUG_OBJECT (aggpad, "We are EOS already...");
-
-  return GST_FLOW_EOS;
 }
 
 static GstFlowReturn
@@ -2689,8 +2663,7 @@ gst_aggregator_pad_event_func (GstPad * pad, GstObject * parent,
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (parent);
 
-  if (GST_EVENT_IS_SERIALIZED (event)
-      && GST_EVENT_TYPE (event) != GST_EVENT_EOS) {
+  if (GST_EVENT_IS_SERIALIZED (event)) {
     SRC_LOCK (self);
     PAD_LOCK (aggpad);
 
@@ -2840,10 +2813,6 @@ gst_aggregator_pad_buffer_consumed (GstAggregatorPad * pad)
 {
   pad->priv->num_buffers--;
   GST_TRACE_OBJECT (pad, "Consuming buffer");
-  if (gst_aggregator_pad_queue_is_empty (pad) && pad->priv->pending_eos) {
-    pad->priv->pending_eos = FALSE;
-    pad->priv->eos = TRUE;
-  }
   PAD_BROADCAST_EVENT (pad);
 }
 
