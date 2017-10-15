@@ -866,8 +866,9 @@ gst_audio_aggregator_queue_new_buffer (GstAudioAggregator * aagg,
   if (pad->priv->output_offset == -1) {
     GstClockTime start_running_time;
     GstClockTime end_running_time;
-    guint64 start_output_offset;
-    guint64 end_output_offset;
+    GstClockTime segment_pos;
+    guint64 start_output_offset = -1;
+    guint64 end_output_offset = -1;
 
     start_running_time =
         gst_segment_to_running_time (&aggpad->segment,
@@ -877,20 +878,20 @@ gst_audio_aggregator_queue_new_buffer (GstAudioAggregator * aagg,
         GST_FORMAT_TIME, end_time);
 
     /* Convert to position in the output segment */
-    start_output_offset =
+    segment_pos =
         gst_segment_position_from_running_time (&agg->segment, GST_FORMAT_TIME,
         start_running_time);
-    if (start_output_offset != -1)
+    if (GST_CLOCK_TIME_IS_VALID (segment_pos))
       start_output_offset =
-          gst_util_uint64_scale (start_output_offset - agg->segment.start, rate,
+          gst_util_uint64_scale (segment_pos - agg->segment.start, rate,
           GST_SECOND);
 
-    end_output_offset =
+    segment_pos =
         gst_segment_position_from_running_time (&agg->segment, GST_FORMAT_TIME,
         end_running_time);
-    if (end_output_offset != -1)
+    if (GST_CLOCK_TIME_IS_VALID (segment_pos))
       end_output_offset =
-          gst_util_uint64_scale (end_output_offset - agg->segment.start, rate,
+          gst_util_uint64_scale (segment_pos - agg->segment.start, rate,
           GST_SECOND);
 
     if (start_output_offset == -1 && end_output_offset == -1) {
