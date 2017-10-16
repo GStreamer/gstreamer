@@ -12,7 +12,7 @@ AC_INIT(GStreamer OpenMAX Plug-ins, 1.13.0.1,
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar])
+AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar subdir-objects])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
@@ -411,6 +411,8 @@ config/zynqultrascaleplus/Makefile
 examples/Makefile
 examples/egl/Makefile
 m4/Makefile
+tests/Makefile
+tests/check/Makefile
 )
 
 AC_OUTPUT

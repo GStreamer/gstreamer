@@ -1,4 +1,4 @@
-SUBDIRS = common omx tools config m4
+SUBDIRS = common omx tools config m4 tests
 
 if BUILD_EXAMPLES
 SUBDIRS += examples

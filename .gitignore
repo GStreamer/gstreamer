@@ -43,3 +43,7 @@ tools/listcomponents
 /m4/lt~obsolete.m4
 Makefile.in
 Makefile
+
+test-driver
+*.log
+*.trs
