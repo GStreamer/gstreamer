@@ -152,6 +152,9 @@ struct _GstRTSPStreamPrivate
   gulong blocked_id[2];
   gboolean blocking;
 
+  /* current stream postion */
+  GstClockTime position;
+
   /* pt->caps map for RECORD streams */
   GHashTable *ptmap;
 
@@ -3746,6 +3749,7 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstRTSPStreamPrivate *priv;
   GstRTSPStream *stream;
+  GstBuffer *buffer = NULL;
 
   stream = user_data;
   priv = stream->priv;
@@ -3754,6 +3758,20 @@ pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   g_mutex_lock (&priv->lock);
   priv->blocking = TRUE;
+
+  if ((info->type & GST_PAD_PROBE_TYPE_BUFFER)) {
+    buffer = gst_pad_probe_info_get_buffer (info);
+  } else if ((info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST)) {
+    GstBufferList *list = gst_pad_probe_info_get_buffer_list (info);
+    buffer = gst_buffer_list_get (list, 0);
+  } else {
+    g_assert_not_reached ();
+  }
+
+  g_assert (buffer);
+  priv->position = GST_BUFFER_TIMESTAMP (buffer);
+  GST_DEBUG_OBJECT (stream, "buffer position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   g_mutex_unlock (&priv->lock);
 
   gst_element_post_message (priv->payloader,
@@ -3835,6 +3853,7 @@ gst_rtsp_stream_is_blocking (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_query_position:
  * @stream: a #GstRTSPStream
+ * @position: current position of a #GstRTSPStream
  *
  * Query the position of the stream in %GST_FORMAT_TIME. This only considers
  * the RTP parts of the pipeline and not the RTCP parts.
@@ -3846,36 +3865,74 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
 {
   GstRTSPStreamPrivate *priv;
   GstElement *sink;
-  gboolean ret;
+  GstPad *pad = NULL;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  /* query position: if no sinks have been added yet,
+   * we obtain the position from the pad otherwise we query the sinks */
 
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
   /* depending on the transport type, it should query corresponding sink */
-  if ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
-      (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST))
+  if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP)
     sink = priv->udpsink[0];
+  else if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+    sink = priv->mcast_udpsink[0];
   else
     sink = priv->appsink[0];
 
-  if (sink)
+  if (sink) {
     gst_object_ref (sink);
+  } else if (priv->send_src[0]) {
+    pad = gst_object_ref (priv->send_src[0]);
+  } else {
+    g_mutex_unlock (&priv->lock);
+    GST_WARNING_OBJECT (stream, "Couldn't obtain postion: erroneous pipeline");
+    return FALSE;
+  }
   g_mutex_unlock (&priv->lock);
 
-  if (!sink)
-    return FALSE;
+  if (sink) {
+    if (!gst_element_query_position (sink , GST_FORMAT_TIME, position)) {
+      GST_WARNING_OBJECT (stream, "Couldn't obtain postion: position query failed");
+      gst_object_unref (sink);
+      return FALSE;
+    }
+    gst_object_unref (sink);
+  } else if (pad) {
+    GstEvent *event;
+    const GstSegment *segment;
 
-  ret = gst_element_query_position (sink, GST_FORMAT_TIME, position);
-  gst_object_unref (sink);
+    event = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+    if (!event) {
+      GST_WARNING_OBJECT (stream, "Couldn't obtain postion: no segment event");
+      gst_object_unref (pad);
+      return FALSE;
+    }
 
-  return ret;
+    gst_event_parse_segment (event, &segment);
+    if (segment->format != GST_FORMAT_TIME) {
+      *position = -1;
+    } else {
+      g_mutex_lock (&priv->lock);
+      *position = priv->position;
+      g_mutex_unlock (&priv->lock);
+      *position =
+        gst_segment_to_stream_time (segment, GST_FORMAT_TIME, *position);
+    }
+    gst_event_unref (event);
+    gst_object_unref (pad);
+  }
+
+  return TRUE;
 }
 
 /**
  * gst_rtsp_stream_query_stop:
  * @stream: a #GstRTSPStream
+ * @stop: current stop of a #GstRTSPStream
  *
  * Query the stop of the stream in %GST_FORMAT_TIME. This only considers
  * the RTP parts of the pipeline and not the RTCP parts.
@@ -3887,52 +3944,74 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
 {
   GstRTSPStreamPrivate *priv;
   GstElement *sink;
-  GstQuery *query;
-  gboolean ret;
+  GstPad *pad = NULL;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  /* query stop position: if no sinks have been added yet,
+   * we obtain the stop position from the pad otherwise we query the sinks */
 
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
   /* depending on the transport type, it should query corresponding sink */
-  if ((priv->protocols & GST_RTSP_LOWER_TRANS_UDP) ||
-      (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST))
+  if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP)
     sink = priv->udpsink[0];
+  else if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+    sink = priv->mcast_udpsink[0];
   else
     sink = priv->appsink[0];
 
-  if (sink)
+  if (sink) {
     gst_object_ref (sink);
+  } else if (priv->send_src[0]) {
+    pad = gst_object_ref (priv->send_src[0]);
+  } else {
+    g_mutex_unlock (&priv->lock);
+    GST_WARNING_OBJECT (stream, "Couldn't obtain stop: erroneous pipeline");
+    return FALSE;
+  }
   g_mutex_unlock (&priv->lock);
 
-  if (!sink)
-    return FALSE;
-
-  query = gst_query_new_segment (GST_FORMAT_TIME);
-  if ((ret = gst_element_query (sink, query))) {
+  if (sink) {
+    GstQuery *query;
     GstFormat format;
 
+    query = gst_query_new_segment (GST_FORMAT_TIME);
+    if (!gst_element_query (sink, query)) {
+      GST_WARNING_OBJECT (stream, "Couldn't obtain stop: element query failed");
+      gst_query_unref (query);
+      gst_object_unref (sink);
+      return FALSE;
+    }
     gst_query_parse_segment (query, NULL, &format, NULL, stop);
     if (format != GST_FORMAT_TIME)
       *stop = -1;
-  }
-
-  gst_query_unref (query);
-  if (!GST_CLOCK_TIME_IS_VALID (*stop)) {
-    query = gst_query_new_duration (GST_FORMAT_TIME);
-    if ((ret = gst_element_query (sink, query))) {
-      GstFormat format;
-
-      gst_query_parse_duration (query, &format, stop);
-      if (format != GST_FORMAT_TIME)
-        *stop = -1;
-    }
     gst_query_unref (query);
+    gst_object_unref (sink);
+  } else if (pad) {
+    GstEvent *event;
+    const GstSegment *segment;
+
+    event = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+    if (!event) {
+      GST_WARNING_OBJECT (stream, "Couldn't obtain stop: no segment event");
+      gst_object_unref (pad);
+      return FALSE;
+    }
+    gst_event_parse_segment (event, &segment);
+    if (segment->format != GST_FORMAT_TIME) {
+      *stop = -1;
+    } else {
+      *stop = segment->stop;
+      if (*stop == -1)
+        *stop = segment->duration;
+      else
+        *stop = gst_segment_to_stream_time (segment, GST_FORMAT_TIME, *stop);
+    }
+    gst_event_unref (event);
+    gst_object_unref (pad);
   }
 
-  gst_object_unref (sink);
-
-  return ret;
-
+  return TRUE;
 }
