@@ -177,7 +177,7 @@ static struct rtsp_header rtsp_headers[] = {
   /* Since 1.4 */
   {"KeyMgmt", FALSE},
 
-  /* Since 1.XX */
+  /* Since 1.14 */
   {"Pipelined-Requests", FALSE},
   {"Media-Properties", FALSE},
   {"Seek-Style", FALSE},

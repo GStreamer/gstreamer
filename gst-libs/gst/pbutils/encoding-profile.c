@@ -575,6 +575,8 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
  * @profile: a #GstEncodingProfile
  *
  * Returns: Whther @profile is enabled or not
+ *
+ * Since 1.6
  */
 gboolean
 gst_encoding_profile_is_enabled (GstEncodingProfile * profile)
@@ -747,6 +749,8 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
  * @enabled: %FALSE to disable #profile, %TRUE to enable it
  *
  * Set whether the profile should be used or not.
+ *
+ * Since 1.6
  */
 void
 gst_encoding_profile_set_enabled (GstEncodingProfile * profile,
