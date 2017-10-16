@@ -810,7 +810,7 @@ gst_vaapi_create_test_display (void)
 #endif
   };
 
-  for (i = 0; G_N_ELEMENTS (test_display_map); i++) {
+  for (i = 0; i < G_N_ELEMENTS (test_display_map); i++) {
     display = gst_vaapi_create_display (test_display_map[i], NULL);
     if (display)
       break;
