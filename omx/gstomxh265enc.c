@@ -268,9 +268,18 @@ update_param_hevc (GstOMXH265Enc * self,
   }
 
   if (profile != OMX_VIDEO_HEVCProfileUnknown)
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+    param.eProfile = (OMX_ALG_VIDEO_HEVCPROFILETYPE) profile;
+#else
     param.eProfile = profile;
+#endif
+
   if (level != OMX_VIDEO_HEVCLevelUnknown)
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+    param.eLevel = (OMX_ALG_VIDEO_HEVCLEVELTYPE) level;
+#else
     param.eLevel = level;
+#endif
 
   /* GOP pattern */
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
