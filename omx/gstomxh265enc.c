@@ -341,7 +341,8 @@ set_intra_period (GstOMXH265Enc * self)
 
   err =
       gst_omx_component_set_parameter (GST_OMX_VIDEO_ENC (self)->enc,
-      OMX_ALG_IndexParamVideoInstantaneousDecodingRefresh, &config_idr);
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoInstantaneousDecodingRefresh,
+      &config_idr);
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (self,
         "can't set OMX_IndexConfigVideoAVCIntraPeriod %s (0x%08x)",

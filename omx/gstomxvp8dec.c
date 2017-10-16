@@ -91,7 +91,8 @@ gst_omx_vp8_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
 
   gst_omx_port_get_port_definition (port, &port_def);
-  port_def.format.video.eCompressionFormat = OMX_VIDEO_CodingVP8;
+  port_def.format.video.eCompressionFormat =
+      (OMX_VIDEO_CODINGTYPE) OMX_VIDEO_CodingVP8;
   ret = gst_omx_port_update_port_definition (port, &port_def) == OMX_ErrorNone;
 
   return ret;
