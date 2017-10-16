@@ -11,6 +11,8 @@ libparser_dep = declare_dependency(link_with: libparser,
 
 exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
 
+enable_gst_player_tests = get_option('enable_gst_player_tests')
+
 # name, condition when to skip the test and extra dependencies
 base_tests = [
   [['elements/aiffparse.c']],
@@ -55,7 +57,22 @@ base_tests = [
   [['elements/voaacenc.c'], not voaac_dep.found(), [voaac_dep]],
   [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
   [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
+  [['libs/gstglcolorconvert.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglcontext.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglheaders.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglmatrix.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglmemory.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglquery.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglsl.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/gstglupload.c'], not build_gstgl, [gstgl_dep]],
+  [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
+  [['libs/insertbin.c'], false, [gstinsertbin_dep]],
   [['libs/isoff.c'], not xml2_dep.found(), [gstisoff_dep, xml2_dep]],
+  [['libs/mpegts.c'], false, [gstmpegts_dep]],
+  [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
+  [['libs/player.c'], not enable_gst_player_tests, [gstplayer_dep]],
+  [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
+  [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],
 ]
 
 test_defines = [
@@ -63,6 +80,7 @@ test_defines = [
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
   '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
+  '-DTEST_PATH="' + meson.current_build_dir() + '/media"',
   '-DDASH_MPD_DATADIR=' + meson.current_source_dir() + '/elements/dash_mpd_data',
   '-DGST_USE_UNSTABLE_API',
 ]
@@ -113,3 +131,7 @@ foreach t : base_tests
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
 endforeach
+
+if enable_gst_player_tests
+  subdir ('media')
+endif
