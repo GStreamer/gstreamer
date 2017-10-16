@@ -2437,8 +2437,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
       + (encoder->num_bframes > 0 ? 1 : 0) + DEFAULT_SURFACES_COUNT);
 
   /* Only YUV 4:2:0 formats are supported for now. */
-  base_encoder->codedbuf_size += GST_ROUND_UP_32 (vip->width) *
-      GST_ROUND_UP_32 (vip->height) * 3 / 2;
+  base_encoder->codedbuf_size += GST_ROUND_UP_16 (vip->width) *
+      GST_ROUND_UP_16 (vip->height) * 3 / 2;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
@@ -2456,15 +2456,15 @@ gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
   if (luma_width != encoder->luma_width || luma_height != encoder->luma_height) {
     GST_DEBUG ("resolution: %d %d", GST_VAAPI_ENCODER_WIDTH (encoder),
         GST_VAAPI_ENCODER_HEIGHT (encoder));
-    encoder->luma_width = GST_ROUND_UP_32 (luma_width);
-    encoder->luma_height = GST_ROUND_UP_32 (luma_height);
+    encoder->luma_width = GST_ROUND_UP_16 (luma_width);
+    encoder->luma_height = GST_ROUND_UP_16 (luma_height);
     encoder->ctu_width = (encoder->luma_width + 31) / 32;
     encoder->ctu_height = (encoder->luma_height + 31) / 32;
     encoder->config_changed = TRUE;
 
     /* Frame Cropping */
-    if ((GST_VAAPI_ENCODER_WIDTH (encoder) & 31) ||
-        (GST_VAAPI_ENCODER_HEIGHT (encoder) & 31)) {
+    if ((GST_VAAPI_ENCODER_WIDTH (encoder) & 15) ||
+        (GST_VAAPI_ENCODER_HEIGHT (encoder) & 15)) {
       static const guint SubWidthC[] = { 1, 2, 2, 1 };
       static const guint SubHeightC[] = { 1, 2, 1, 1 };
       encoder->conformance_window_flag = 1;
