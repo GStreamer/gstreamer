@@ -2865,6 +2865,11 @@ AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
         AG_GST_PKG_CHECK_MODULES(OPENJPEG_2_2, libopenjp2 >= 2.2)
         if test x"$HAVE_OPENJPEG_2_2" = x"yes"; then
           AC_DEFINE([HAVE_OPENJPEG_2_2], 1, [Define if OpenJPEG 2.2 is used])
+
+          AG_GST_PKG_CHECK_MODULES(OPENJPEG_2_3, libopenjp2 >= 2.3 libopenjp2 < 2.4)
+          if test x"$HAVE_OPENJPEG_2_3" = x"yes"; then
+            AC_DEFINE([HAVE_OPENJPEG_2_3], 1, [Define if OpenJPEG 2.3 is used])
+          fi
         fi
     fi
   else

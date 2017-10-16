@@ -6,22 +6,23 @@ openjpeg_sources = [
 
 openjpeg_cargs = []
 
-# Check for 2.2, 2.1, then 2.0
-openjpeg_dep = dependency('libopenjp2', version : '>=2.2', required : false)
-if openjpeg_dep.found()
-  openjpeg_cargs += ['-DHAVE_OPENJPEG_2_2', '-DHAVE_OPENJPEG_2_1']
-else
-  openjpeg_dep = dependency('libopenjp2', version : '>=2.1', required : false)
+max_supported_version = '<2.4'
+supported_versions = [ '2.3', '2.2', '2.1' ]
+foreach version: supported_versions
+  openjpeg_dep = dependency('libopenjp2', version : ['>=' + version, max_supported_version],
+      required : false)
   if openjpeg_dep.found()
-    openjpeg_cargs += ['-DHAVE_OPENJPEG_2_1']
-  else
+    openjpeg_cargs += ['-DHAVE_OPENJPEG_' + version.underscorify()]
+  endif
+endforeach
+
+if not openjpeg_dep.found()
     openjpeg_dep = dependency('libopenjp2', required : false)
     # Fallback to 1.5
     if not openjpeg_dep.found()
       openjpeg_dep = dependency('libopenjpeg1', required : false)
       openjpeg_cargs += ['-DHAVE_OPENJPEG_1']
     endif
-  endif
 endif
 
 if openjpeg_dep.found()
