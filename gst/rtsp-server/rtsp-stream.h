@@ -220,6 +220,14 @@ GSocket *         gst_rtsp_stream_get_rtcp_socket  (GstRTSPStream *stream,
                                                     GSocketFamily family);
 
 GST_EXPORT
+GSocket *         gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream *stream,
+                                                            GSocketFamily family);
+
+GST_EXPORT
+GSocket *         gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream *stream,
+                                                             GSocketFamily family);
+
+GST_EXPORT
 gboolean          gst_rtsp_stream_update_crypto    (GstRTSPStream * stream,
                                                     guint ssrc, GstCaps * crypto);
 

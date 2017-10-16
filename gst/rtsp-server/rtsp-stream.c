@@ -3546,6 +3546,70 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 }
 
 /**
+ * gst_rtsp_stream_get_rtp_multicast_socket:
+ * @stream: a #GstRTSPStream
+ * @family: the socket family
+ *
+ * Get the multicast RTP socket from @stream for a @family.
+ *
+ * Returns: (transfer full) (nullable): the multicast RTP socket or %NULL if no
+ * socket could be allocated for @family. Unref after usage
+ */
+GSocket *
+gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream, GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GSocket *socket;
+  const gchar *name;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
+      family == G_SOCKET_FAMILY_IPV6, NULL);
+  g_return_val_if_fail (priv->mcast_udpsink[0], NULL);
+
+  if (family == G_SOCKET_FAMILY_IPV6)
+    name = "socket-v6";
+  else
+    name = "socket";
+
+  g_object_get (priv->mcast_udpsink[0], name, &socket, NULL);
+
+  return socket;
+}
+
+/**
+ * gst_rtsp_stream_get_rtcp_multicast_socket:
+ * @stream: a #GstRTSPStream
+ * @family: the socket family
+ *
+ * Get the multicast RTCP socket from @stream for a @family.
+ *
+ * Returns: (transfer full) (nullable): the multicast RTCP socket or %NULL if no
+ * socket could be allocated for @family. Unref after usage
+ */
+GSocket *
+gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream, GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GSocket *socket;
+  const gchar *name;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
+      family == G_SOCKET_FAMILY_IPV6, NULL);
+  g_return_val_if_fail (priv->mcast_udpsink[1], NULL);
+
+  if (family == G_SOCKET_FAMILY_IPV6)
+    name = "socket-v6";
+  else
+    name = "socket";
+
+  g_object_get (priv->mcast_udpsink[1], name, &socket, NULL);
+
+  return socket;
+}
+
+/**
  * gst_rtsp_stream_set_seqnum:
  * @stream: a #GstRTSPStream
  * @seqnum: a new sequence number
