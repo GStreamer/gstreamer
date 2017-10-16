@@ -593,9 +593,12 @@ do_query_position (GstRTSPStream * stream, DoQueryPositionData * data)
   gint64 tmp;
 
   if (gst_rtsp_stream_query_position (stream, &tmp)) {
-    data->position = MAX (data->position, tmp);
+    data->position = MIN (data->position, tmp);
     data->ret = TRUE;
   }
+
+  GST_INFO_OBJECT (stream, "media position: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (data->position));
 }
 
 static gboolean
@@ -606,12 +609,15 @@ default_query_position (GstRTSPMedia * media, gint64 * position)
 
   priv = media->priv;
 
-  data.position = -1;
+  data.position = G_MAXINT64;
   data.ret = FALSE;
 
   g_ptr_array_foreach (priv->streams, (GFunc) do_query_position, &data);
 
-  *position = data.position;
+  if (!data.ret)
+    *position = GST_CLOCK_TIME_NONE;
+  else
+    *position = data.position;
 
   return data.ret;
 }
