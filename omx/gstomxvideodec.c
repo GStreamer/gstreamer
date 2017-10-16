@@ -1670,8 +1670,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     frame = NULL;
   }
 
-  GST_DEBUG_OBJECT (self, "Read frame from component");
-
   GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
 
   if (buf) {
