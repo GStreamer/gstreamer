@@ -757,6 +757,13 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "(requires clock and offset to be provided)", DEFAULT_RFC7273_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc:default-rtsp-version:
+   *
+   * The preferred RTSP version to use while negotiating the version with the server.
+   *
+   * Since: 1.14
+   */
   g_object_class_install_property (gobject_class, PROP_DEFAULT_VERSION,
       g_param_spec_enum ("default-rtsp-version",
           "The RTSP version to try first",
