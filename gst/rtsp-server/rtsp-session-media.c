@@ -408,6 +408,30 @@ gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)
 }
 
 /**
+ * gst_rtsp_session_media_get_transports:
+ * @media: a #GstRTSPSessionMedia
+ *
+ * Get a list of all available #GstRTSPStreamTransport in this session.
+ *
+ * Returns: (transfer full): a list of #GstRTSPStreamTransport,
+ * g_ptr_array_unref () after usage.
+ */
+GPtrArray *
+gst_rtsp_session_media_get_transports (GstRTSPSessionMedia * media)
+{
+  GstRTSPSessionMediaPrivate *priv;
+  GPtrArray *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), NULL);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  result = g_ptr_array_ref (priv->transports);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+/**
  * gst_rtsp_session_media_alloc_channels:
  * @media: a #GstRTSPSessionMedia
  * @range: (out): a #GstRTSPRange

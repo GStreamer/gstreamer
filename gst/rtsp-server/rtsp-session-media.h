@@ -103,6 +103,9 @@ GstRTSPStreamTransport * gst_rtsp_session_media_get_transport  (GstRTSPSessionMe
                                                                 guint idx);
 
 GST_EXPORT
+GPtrArray *              gst_rtsp_session_media_get_transports (GstRTSPSessionMedia *media);
+
+GST_EXPORT
 gboolean                 gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media,
                                                                 GstRTSPRange *range);
 
