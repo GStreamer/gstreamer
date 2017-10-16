@@ -109,6 +109,7 @@ gst_queue_array_new (guint initial_size)
 void
 gst_queue_array_free (GstQueueArray * array)
 {
+  g_return_if_fail (array != NULL);
   g_free (array->array);
   g_slice_free (GstQueueArray, array);
 }
@@ -129,7 +130,7 @@ gpointer
 gst_queue_array_pop_head_struct (GstQueueArray * array)
 {
   gpointer p_struct;
-
+  g_return_val_if_fail (array != NULL, NULL);
   /* empty array */
   if (G_UNLIKELY (array->length == 0))
     return NULL;
@@ -158,7 +159,7 @@ gpointer
 gst_queue_array_pop_head (GstQueueArray * array)
 {
   gpointer ret;
-
+  g_return_val_if_fail (array != NULL, NULL);
   /* empty array */
   if (G_UNLIKELY (array->length == 0))
     return NULL;
@@ -185,6 +186,7 @@ gst_queue_array_pop_head (GstQueueArray * array)
 gpointer
 gst_queue_array_peek_head_struct (GstQueueArray * array)
 {
+  g_return_val_if_fail (array != NULL, NULL);
   /* empty array */
   if (G_UNLIKELY (array->length == 0))
     return NULL;
@@ -206,6 +208,7 @@ gst_queue_array_peek_head_struct (GstQueueArray * array)
 gpointer
 gst_queue_array_peek_head (GstQueueArray * array)
 {
+  g_return_val_if_fail (array != NULL, NULL);
   /* empty array */
   if (G_UNLIKELY (array->length == 0))
     return NULL;
@@ -269,7 +272,7 @@ gst_queue_array_push_tail_struct (GstQueueArray * array, gpointer p_struct)
   guint elt_size;
 
   g_return_if_fail (p_struct != NULL);
-
+  g_return_if_fail (array != NULL);
   elt_size = array->elt_size;
 
   /* Check if we need to make room */
@@ -294,6 +297,7 @@ gst_queue_array_push_tail_struct (GstQueueArray * array, gpointer p_struct)
 void
 gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
 {
+  g_return_if_fail (array != NULL);
   /* Check if we need to make room */
   if (G_UNLIKELY (array->length == array->size))
     gst_queue_array_do_expand (array);
@@ -317,6 +321,7 @@ gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
 gboolean
 gst_queue_array_is_empty (GstQueueArray * array)
 {
+  g_return_val_if_fail (array != NULL, FALSE);
   return (array->length == 0);
 }
 
@@ -342,6 +347,7 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   int first_item_index, last_item_index;
   guint elt_size;
 
+  g_return_val_if_fail (array != NULL, FALSE);
   g_return_val_if_fail (array->length > 0, FALSE);
   g_return_val_if_fail (idx < array->size, FALSE);
 
@@ -466,6 +472,8 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
   /* For struct arrays we need to implement this differently so that
    * the user gets a pointer to the element data not the dereferenced
    * pointer itself */
+
+  g_return_val_if_fail (array != NULL, -1);
   g_return_val_if_fail (array->struct_array == FALSE, -1);
 
   elt_size = array->elt_size;
@@ -501,5 +509,6 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
 guint
 gst_queue_array_get_length (GstQueueArray * array)
 {
+  g_return_val_if_fail (array != NULL, 0);
   return array->length;
 }
