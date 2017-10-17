@@ -1546,7 +1546,7 @@ gst_aggregator_stop (GstAggregator * agg)
 
   agg->priv->has_peer_latency = FALSE;
   agg->priv->peer_latency_live = FALSE;
-  agg->priv->peer_latency_min = agg->priv->peer_latency_max = FALSE;
+  agg->priv->peer_latency_min = agg->priv->peer_latency_max = 0;
 
   if (agg->priv->tags)
     gst_tag_list_unref (agg->priv->tags);
