@@ -9,8 +9,8 @@ operating system is. The following is mostly aimed at Linux/unix setups.
 
 GStreamer uses the `pkg-config` utility to provide applications with the right
 compiler and linker flags. `pkg-config` is a standard build tool that is widely
-used in unix systems to locate libraries and retrieve build settings, so if you're
-familiar with using it already then you're basically set.
+used in unix systems to locate libraries and retrieve build settings. If
+you're already familiar with it, then you're basically set.
 
 If you're not familiar with `pkg-config`, to compile and link a small
 one-file program, pass the `--cflags` and `--libs` arguments to `pkg-config`.
@@ -29,8 +29,8 @@ $ libtool --mode=link gcc `pkg-config --cflags --libs gstreamer-1.0 gtk+-3.0` -o
 Those are back-ticks (on the same key with the tilde on US keyboards),
 not single quotes.
 
-For bigger projects, you should integrate pkg-config use in your
-Makefile, or integrate with autoconf using the pkg.m4 macro (providing
+For bigger projects, you should integrate `pkg-config` use in your
+Makefile, or with autoconf using the pkg.m4 macro (providing
 `PKG_CONFIG_CHECK`).
 
 ## How do I develop against an uninstalled GStreamer copy?
@@ -38,7 +38,7 @@ Makefile, or integrate with autoconf using the pkg.m4 macro (providing
 It is possible to develop and compile against an uninstalled copy of GStreamer
 and its plugins, for example, against git checkouts. This enables you to test
 the latest version of GStreamer without interfering with your system-wide
-GStreamer installation.
+installation.
 
 There are two ways to achieve such a setup:
 
@@ -46,18 +46,19 @@ There are two ways to achieve such a setup:
    [Meson build system][meson]. This is the shiny new option. It's fast and
    simple to get started with, but you will need a recent version of Meson
    installed. Just check out the git repository and run the `setup.py` script.
-   Once the initial meson configure stage has passed, you can enter an
+   Once the initial Meson configure stage has passed, you can enter an
    uninstalled environment by running `ninja uninstalled` in the build
    directory. This will make sure tools and plugins from the uninstalled build
    tree are used. Any problems, let us know.
 
-2. [`gst-uninstalled`][gst-uninstalled] is our traditional autotools-
-   and libtool-based, uninstalled setup tool, but it requires a few extra steps
-   like manually downloading the needed GStreamer repositories. The [`create-uninstalled-setup.sh`][create-uninstalled]
-   script automates this process. Run `create-uninstalled.sh` and
-   follow its instructions to gain access to an environment where
-   uninstalled GStreamer tools and plugins are used by default. Also,
-   `pkg-config` will prefer uninstalled library copies over installed ones.
+2. [`gst-uninstalled`][gst-uninstalled] is our traditional autotools
+   and libtool-based uninstalled setup tool, but it requires a few extra steps,
+   like manually downloading the needed GStreamer repositories. The
+   [`create-uninstalled-setup.sh`][create-uninstalled] script automates this
+   process. Run `create-uninstalled.sh` and follow its instructions to gain
+   access to an environment where uninstalled GStreamer tools and plugins are
+   used by default. Also, `pkg-config` will prefer uninstalled library copies
+   over installed ones.
 
 Multiple uninstalled setups can be used in parallel, e.g. one for the
 latest stable branch and one for git master. Have a look at the
