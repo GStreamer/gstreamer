@@ -217,6 +217,9 @@ struct _GstAggregatorPadPrivate
   GQueue data;                  /* buffers, events and queries */
   GstBuffer *clipped_buffer;
   guint num_buffers;
+
+  /* used to track fill state of queues, only used with live-src and when
+   * latency property is set to > 0 */
   GstClockTime head_position;
   GstClockTime tail_position;
   GstClockTime head_time;       /* running time */
@@ -1317,38 +1320,37 @@ gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
 static void
 update_time_level (GstAggregatorPad * aggpad, gboolean head)
 {
-  if (head) {
-    if (GST_CLOCK_TIME_IS_VALID (aggpad->priv->head_position) &&
-        aggpad->priv->head_segment.format == GST_FORMAT_TIME)
-      aggpad->priv->head_time =
-          gst_segment_to_running_time (&aggpad->priv->head_segment,
-          GST_FORMAT_TIME, aggpad->priv->head_position);
-    else
-      aggpad->priv->head_time = GST_CLOCK_TIME_NONE;
+  GstAggregatorPadPrivate *priv = aggpad->priv;
 
-    if (!GST_CLOCK_TIME_IS_VALID (aggpad->priv->tail_time))
-      aggpad->priv->tail_time = aggpad->priv->head_time;
-  } else {
-    if (GST_CLOCK_TIME_IS_VALID (aggpad->priv->tail_position) &&
-        aggpad->segment.format == GST_FORMAT_TIME)
-      aggpad->priv->tail_time =
-          gst_segment_to_running_time (&aggpad->segment,
-          GST_FORMAT_TIME, aggpad->priv->tail_position);
+  if (head) {
+    if (GST_CLOCK_TIME_IS_VALID (priv->head_position) &&
+        priv->head_segment.format == GST_FORMAT_TIME)
+      priv->head_time = gst_segment_to_running_time (&priv->head_segment,
+          GST_FORMAT_TIME, priv->head_position);
     else
-      aggpad->priv->tail_time = aggpad->priv->head_time;
+      priv->head_time = GST_CLOCK_TIME_NONE;
+
+    if (!GST_CLOCK_TIME_IS_VALID (priv->tail_time))
+      priv->tail_time = priv->head_time;
+  } else {
+    if (GST_CLOCK_TIME_IS_VALID (priv->tail_position) &&
+        aggpad->segment.format == GST_FORMAT_TIME)
+      priv->tail_time = gst_segment_to_running_time (&aggpad->segment,
+          GST_FORMAT_TIME, priv->tail_position);
+    else
+      priv->tail_time = priv->head_time;
   }
 
-  if (aggpad->priv->head_time == GST_CLOCK_TIME_NONE ||
-      aggpad->priv->tail_time == GST_CLOCK_TIME_NONE) {
-    aggpad->priv->time_level = 0;
+  if (priv->head_time == GST_CLOCK_TIME_NONE ||
+      priv->tail_time == GST_CLOCK_TIME_NONE) {
+    priv->time_level = 0;
     return;
   }
 
-  if (aggpad->priv->tail_time > aggpad->priv->head_time)
-    aggpad->priv->time_level = 0;
+  if (priv->tail_time > priv->head_time)
+    priv->time_level = 0;
   else
-    aggpad->priv->time_level = aggpad->priv->head_time -
-        aggpad->priv->tail_time;
+    priv->time_level = priv->head_time - priv->tail_time;
 }
 
 
@@ -1716,8 +1718,6 @@ gst_aggregator_query_latency_unlocked (GstAggregator * self, GstQuery * query)
 
   gst_query_parse_latency (query, &live, &min, &max);
 
-  our_latency = self->priv->latency;
-
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (min))) {
     GST_ERROR_OBJECT (self, "Invalid minimum latency %" GST_TIME_FORMAT
         ". Please file a bug at " PACKAGE_BUGREPORT ".", GST_TIME_ARGS (min));
@@ -1731,6 +1731,8 @@ gst_aggregator_query_latency_unlocked (GstAggregator * self, GstQuery * query)
             GST_TIME_ARGS (max), GST_TIME_ARGS (min)));
     return FALSE;
   }
+
+  our_latency = self->priv->latency;
 
   self->priv->peer_latency_live = live;
   self->priv->peer_latency_min = min;
