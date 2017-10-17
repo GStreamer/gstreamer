@@ -1518,6 +1518,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gint matched;
   gchar *seek_style = NULL;
   GstRTSPStatusCode sig_result;
+  GPtrArray *transports;
 
   if (!(session = ctx->session))
     goto no_session;
@@ -1555,6 +1556,14 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
   if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
     goto invalid_state;
+
+  /* update the pipeline */
+  transports = gst_rtsp_session_media_get_transports (sessmedia);
+  if (!gst_rtsp_media_complete_pipeline (media, transports)) {
+    g_ptr_array_unref (transports);
+    goto pipeline_error;
+  }
+  g_ptr_array_unref (transports);
 
   /* in play we first unsuspend, media could be suspended from SDP or PAUSED */
   if (!gst_rtsp_media_unsuspend (media))
@@ -1662,6 +1671,13 @@ sig_failed:
 invalid_state:
   {
     GST_ERROR ("client %p: not PLAYING or READY", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
+        ctx);
+    return FALSE;
+  }
+pipeline_error:
+  {
+    GST_ERROR ("client %p: failed to configure the pipeline", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
     return FALSE;
@@ -1784,39 +1800,52 @@ default_configure_client_transport (GstRTSPClient * client,
   GstRTSPClientPrivate *priv = client->priv;
 
   /* we have a valid transport now, set the destination of the client. */
-  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    gboolean use_client_settings;
+  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST ||
+      ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP) {
 
-    use_client_settings =
-        gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS);
+    /* allocate UDP ports */
+    GSocketFamily family;
+    gboolean use_client_settings = FALSE;
 
-    if (ct->destination && use_client_settings) {
-      GstRTSPAddress *addr;
+    family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
+    if ((ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) &&
+        gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS) &&
+        (ct->destination != NULL))
+      use_client_settings = TRUE;
 
-      addr = gst_rtsp_stream_reserve_address (ctx->stream, ct->destination,
-          ct->port.min, ct->port.max - ct->port.min + 1, ct->ttl);
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct,
+          use_client_settings))
+      goto error_allocating_ports;
 
-      if (addr == NULL)
-        goto no_address;
+    if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+      GstRTSPAddress *addr = NULL;
 
-      gst_rtsp_address_free (addr);
+      if (use_client_settings) {
+        /* the address has been successfully allocated, let's check if it's
+         * the one requested by the client */
+        addr = gst_rtsp_stream_reserve_address (ctx->stream, ct->destination,
+            ct->port.min, ct->port.max - ct->port.min + 1, ct->ttl);
+
+        if (addr == NULL)
+          goto no_address;
+      } else {
+        g_free (ct->destination);
+        addr = gst_rtsp_stream_get_multicast_address (ctx->stream, family);
+        if (addr == NULL)
+          goto no_address;
+        ct->destination = g_strdup (addr->address);
+        ct->port.min = addr->port;
+        ct->port.max = addr->port + addr->n_ports - 1;
+        ct->ttl = addr->ttl;
+
+        gst_rtsp_address_free (addr);
+      }
     } else {
-      GstRTSPAddress *addr;
-      GSocketFamily family;
+      GstRTSPUrl *url;
 
-      family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
-
-      addr = gst_rtsp_stream_get_multicast_address (ctx->stream, family);
-      if (addr == NULL)
-        goto no_address;
-
+      url = gst_rtsp_connection_get_url (priv->connection);
       g_free (ct->destination);
-      ct->destination = g_strdup (addr->address);
-      ct->port.min = addr->port;
-      ct->port.max = addr->port + addr->n_ports - 1;
-      ct->ttl = addr->ttl;
-
-      gst_rtsp_address_free (addr);
+      ct->destination = g_strdup (url->host);
     }
   } else {
     GstRTSPUrl *url;
@@ -1863,9 +1892,14 @@ default_configure_client_transport (GstRTSPClient * client,
   return TRUE;
 
   /* ERRORS */
+error_allocating_ports:
+  {
+    GST_ERROR_OBJECT (client, "Failed to allocate UDP ports");
+    return FALSE;
+  }
 no_address:
   {
-    GST_ERROR_OBJECT (client, "failed to acquire address for stream");
+    GST_ERROR_OBJECT (client, "Failed to acquire address for stream");
     return FALSE;
   }
 }
@@ -3036,6 +3070,7 @@ handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *path;
   gint matched;
   GstRTSPStatusCode sig_result;
+  GPtrArray *transports;
 
   if (!(session = ctx->session))
     goto no_session;
@@ -3074,7 +3109,15 @@ handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
     goto invalid_state;
 
-  /* in play we first unsuspend, media could be suspended from SDP or PAUSED */
+  /* update the pipeline */
+  transports = gst_rtsp_session_media_get_transports (sessmedia);
+  if (!gst_rtsp_media_complete_pipeline (media, transports)) {
+    g_ptr_array_unref (transports);
+    goto pipeline_error;
+  }
+  g_ptr_array_unref (transports);
+
+  /* in record we first unsuspend, media could be suspended from SDP or PAUSED */
   if (!gst_rtsp_media_unsuspend (media))
     goto unsuspend_failed;
 
@@ -3136,6 +3179,13 @@ unsupported_mode:
 invalid_state:
   {
     GST_ERROR ("client %p: not PLAYING or READY", client);
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
+        ctx);
+    return FALSE;
+  }
+pipeline_error:
+  {
+    GST_ERROR ("client %p: failed to configure the pipeline", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
     return FALSE;

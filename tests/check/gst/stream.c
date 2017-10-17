@@ -22,7 +22,8 @@
 #include <rtsp-stream.h>
 #include <rtsp-address-pool.h>
 
-GST_START_TEST (test_get_sockets)
+static void
+get_sockets (GstRTSPLowerTrans lower_transport, GSocketFamily socket_family)
 {
   GstPad *srcpad;
   GstElement *pay;
@@ -33,6 +34,7 @@ GST_START_TEST (test_get_sockets)
   GSocket *socket;
   gboolean have_ipv4;
   gboolean have_ipv6;
+  GstRTSPTransport *transport;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
@@ -57,18 +59,44 @@ GST_START_TEST (test_get_sockets)
   fail_unless (gst_rtsp_address_pool_add_range (pool,
           GST_RTSP_ADDRESS_POOL_ANY_IPV6, GST_RTSP_ADDRESS_POOL_ANY_IPV6, 50000,
           60000, 0));
+  fail_unless (gst_rtsp_address_pool_add_range (pool, "233.252.0.0",
+          "233.252.0.0", 50000, 60000, 1));
+  fail_unless (gst_rtsp_address_pool_add_range (pool, "FF11:DB8::1",
+          "FF11:DB8::1", 50000, 60000, 1));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
   fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
 
-  socket = gst_rtsp_stream_get_rtp_socket (stream, G_SOCKET_FAMILY_IPV4);
+  /* allocate udp ports first */
+  fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
+  transport->lower_transport = lower_transport;
+
+  /* no ports allocated, complete stream should fail */
+  fail_if (gst_rtsp_stream_complete_stream (stream, transport));
+
+  /* allocate ports */
+  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
+      socket_family, transport, FALSE));
+
+  fail_unless (gst_rtsp_stream_complete_stream (stream, transport));
+  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
+
+  if (lower_transport == GST_RTSP_LOWER_TRANS_UDP)
+    socket = gst_rtsp_stream_get_rtp_socket (stream, G_SOCKET_FAMILY_IPV4);
+  else
+    socket = gst_rtsp_stream_get_rtp_multicast_socket (stream,
+        G_SOCKET_FAMILY_IPV4);
   have_ipv4 = (socket != NULL);
   if (have_ipv4) {
     fail_unless (g_socket_get_fd (socket) >= 0);
     g_object_unref (socket);
   }
 
-  socket = gst_rtsp_stream_get_rtcp_socket (stream, G_SOCKET_FAMILY_IPV4);
+  if (lower_transport == GST_RTSP_LOWER_TRANS_UDP)
+    socket = gst_rtsp_stream_get_rtcp_socket (stream, G_SOCKET_FAMILY_IPV4);
+  else
+    socket = gst_rtsp_stream_get_rtcp_multicast_socket (stream,
+        G_SOCKET_FAMILY_IPV4);
   if (have_ipv4) {
     fail_unless (socket != NULL);
     fail_unless (g_socket_get_fd (socket) >= 0);
@@ -77,14 +105,22 @@ GST_START_TEST (test_get_sockets)
     fail_unless (socket == NULL);
   }
 
-  socket = gst_rtsp_stream_get_rtp_socket (stream, G_SOCKET_FAMILY_IPV6);
+  if (lower_transport == GST_RTSP_LOWER_TRANS_UDP)
+    socket = gst_rtsp_stream_get_rtp_socket (stream, G_SOCKET_FAMILY_IPV6);
+  else
+    socket = gst_rtsp_stream_get_rtp_multicast_socket (stream,
+        G_SOCKET_FAMILY_IPV6);
   have_ipv6 = (socket != NULL);
   if (have_ipv6) {
     fail_unless (g_socket_get_fd (socket) >= 0);
     g_object_unref (socket);
   }
 
-  socket = gst_rtsp_stream_get_rtcp_socket (stream, G_SOCKET_FAMILY_IPV6);
+  if (lower_transport == GST_RTSP_LOWER_TRANS_UDP)
+    socket = gst_rtsp_stream_get_rtcp_socket (stream, G_SOCKET_FAMILY_IPV6);
+  else
+    socket = gst_rtsp_stream_get_rtcp_multicast_socket (stream,
+        G_SOCKET_FAMILY_IPV6);
   if (have_ipv6) {
     fail_unless (socket != NULL);
     fail_unless (g_socket_get_fd (socket) >= 0);
@@ -104,8 +140,25 @@ GST_START_TEST (test_get_sockets)
   gst_object_unref (stream);
 }
 
+GST_START_TEST (test_get_sockets_udp)
+{
+  get_sockets (GST_RTSP_LOWER_TRANS_UDP, G_SOCKET_FAMILY_IPV4);
+  get_sockets (GST_RTSP_LOWER_TRANS_UDP, G_SOCKET_FAMILY_IPV6);
+}
+
 GST_END_TEST;
 
+GST_START_TEST (test_get_sockets_mcast)
+{
+  get_sockets (GST_RTSP_LOWER_TRANS_UDP_MCAST, G_SOCKET_FAMILY_IPV4);
+  get_sockets (GST_RTSP_LOWER_TRANS_UDP_MCAST, G_SOCKET_FAMILY_IPV6);
+}
+
+GST_END_TEST;
+
+/* The purpose of this test is to make sure that it's not possible to allocate
+ * multicast UDP ports if the address pool does not contain multicast UDP
+ * addresses. */
 GST_START_TEST (test_allocate_udp_ports_fail)
 {
   GstPad *srcpad;
@@ -114,6 +167,7 @@ GST_START_TEST (test_allocate_udp_ports_fail)
   GstBin *bin;
   GstElement *rtpbin;
   GstRTSPAddressPool *pool;
+  GstRTSPTransport *transport;
 
   srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
@@ -135,7 +189,13 @@ GST_START_TEST (test_allocate_udp_ports_fail)
           "192.168.1.1", 6000, 6001, 0));
   gst_rtsp_stream_set_address_pool (stream, pool);
 
-  fail_if (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+
+  fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
+  transport->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
+  fail_if (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
+      transport, FALSE));
+  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
 
   g_object_unref (pool);
   fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
@@ -433,7 +493,8 @@ rtspstream_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
-  tcase_add_test (tc, test_get_sockets);
+  tcase_add_test (tc, test_get_sockets_udp);
+  tcase_add_test (tc, test_get_sockets_mcast);
   tcase_add_test (tc, test_allocate_udp_ports_fail);
   tcase_add_test (tc, test_get_multicast_address);
   tcase_add_test (tc, test_multicast_address_and_unicast_udp);

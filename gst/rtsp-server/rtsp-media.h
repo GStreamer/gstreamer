@@ -382,6 +382,9 @@ GST_EXPORT
 void                  gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media,
                                                          GstState state);
 
+GST_EXPORT
+gboolean              gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPMedia, gst_object_unref)
 #endif

@@ -160,6 +160,10 @@ gboolean          gst_rtsp_stream_set_blocked      (GstRTSPStream * stream,
 GST_EXPORT
 gboolean          gst_rtsp_stream_is_blocking      (GstRTSPStream * stream);
 
+
+GST_EXPORT
+gboolean          gst_rtsp_stream_unblock_linked   (GstRTSPStream * stream);
+
 GST_EXPORT
 void              gst_rtsp_stream_set_client_side (GstRTSPStream *stream, gboolean client_side);
 
@@ -272,13 +276,16 @@ GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * st
 
 GST_EXPORT
 gboolean          gst_rtsp_stream_allocate_udp_sockets       (GstRTSPStream * stream, GSocketFamily family,
-                                                              GstRTSPTransport *transport, gboolean use_client_setttings);
+                                                              GstRTSPTransport *transport, gboolean use_client_settings);
 
 GST_EXPORT
 void                    gst_rtsp_stream_set_publish_clock_mode (GstRTSPStream * stream, GstRTSPPublishClockMode mode);
 
 GST_EXPORT
 GstRTSPPublishClockMode gst_rtsp_stream_get_publish_clock_mode (GstRTSPStream * stream);
+
+GST_EXPORT
+gboolean          gst_rtsp_stream_complete_stream (GstRTSPStream * stream, const GstRTSPTransport * transport);
 
 /**
  * GstRTSPStreamTransportFilterFunc:

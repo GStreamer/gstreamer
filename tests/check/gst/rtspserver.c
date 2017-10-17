@@ -1059,6 +1059,74 @@ done:
 }
 
 static void
+do_test_play_tcp_full (const gchar * range)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+  gchar *range_out = NULL;
+  GstRTSPLowerTrans lower_transport = GST_RTSP_LOWER_TRANS_TCP;
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+  get_client_ports (&client_port);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  /* do SETUP for video and audio */
+  fail_unless (do_setup_full (conn, video_control, lower_transport,
+          &client_port, NULL, &session, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn, audio_control, lower_transport,
+          &client_port, NULL, &session, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_request (conn, GST_RTSP_PLAY, NULL, session, NULL, range,
+          NULL, NULL, NULL, NULL, NULL, &range_out) == GST_RTSP_STS_OK);
+
+  if (range)
+    fail_unless_equals_string (range, range_out);
+  g_free (range_out);
+
+  {
+    GstRTSPMessage *message;
+    fail_unless (gst_rtsp_message_new (&message) == GST_RTSP_OK);
+    fail_unless (gst_rtsp_connection_receive (conn, message, NULL) == GST_RTSP_OK);
+    fail_unless (gst_rtsp_message_get_type (message) == GST_RTSP_MESSAGE_DATA);
+    gst_rtsp_message_free (message);
+  }
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* FIXME: The rtsp-server always disconnects the transport before
+   * sending the RTCP BYE
+   * receive_rtcp (rtcp_socket, NULL, GST_RTCP_TYPE_BYE);
+   */
+
+  /* clean up and iterate so the clean-up can finish */
+  g_free (session);
+  gst_rtsp_transport_free (video_transport);
+  gst_rtsp_transport_free (audio_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+}
+
+static void
 do_test_play_full (const gchar * range, GstRTSPLowerTrans lower_transport,
     GMutex * lock)
 {
@@ -1579,6 +1647,70 @@ GST_START_TEST (test_no_session_timeout)
 
 GST_END_TEST;
 
+/* media contains two streams: video and audio but only one
+ * stream is requested */
+GST_START_TEST (test_play_one_active_stream)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPSessionPool *pool;
+  GstRTSPThreadPool *thread_pool;
+
+  thread_pool = gst_rtsp_server_get_thread_pool (server);
+  gst_rtsp_thread_pool_set_max_threads (thread_pool, 2);
+  g_object_unref (thread_pool);
+
+  pool = gst_rtsp_server_get_session_pool (server);
+  g_signal_connect (server, "client-connected",
+      G_CALLBACK (session_connected_new_session_cb), new_session_timeout_one);
+
+  start_server (FALSE);
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  gst_rtsp_connection_set_remember_session_id (conn, FALSE);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_port);
+
+  /* do SETUP for video only */
+  fail_unless (do_setup (conn, video_control, &client_port, &session,
+          &video_transport) == GST_RTSP_STS_OK);
+
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 1);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+
+  /* send TEARDOWN request */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (pool);
+  g_free (session);
+  gst_rtsp_transport_free (video_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_play_disconnect)
 {
@@ -1765,6 +1897,22 @@ GST_START_TEST (test_play_smpte_range)
   do_test_play ("smpte=1:00:00-");
   do_test_play ("smpte=1:00:03-");
   do_test_play ("clock=20120321T152256Z-");
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_play_smpte_range_tcp)
+{
+  start_tcp_server ();
+
+  do_test_play_tcp_full ("npt=5-");
+  do_test_play_tcp_full ("smpte=0:00:00-");
+  do_test_play_tcp_full ("smpte=1:00:00-");
+  do_test_play_tcp_full ("smpte=1:00:03-");
+  do_test_play_tcp_full ("clock=20120321T152256Z-");
 
   stop_server ();
   iterate ();
@@ -2112,6 +2260,113 @@ GST_START_TEST (test_record_tcp)
 
 GST_END_TEST;
 
+static void
+do_test_multiple_transports (GstRTSPLowerTrans trans1, GstRTSPLowerTrans trans2)
+{
+  GstRTSPConnection *conn1;
+  GstRTSPConnection *conn2;
+  GstSDPMessage *sdp_message1 = NULL;
+  GstSDPMessage *sdp_message2 = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  const gchar *audio_control;
+  GstRTSPRange client_port1, client_port2;
+  gchar *session1 = NULL;
+  gchar *session2 = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+  GSocket *rtp_socket, *rtcp_socket;
+
+  conn1 = connect_to_server (test_port, TEST_MOUNT_POINT);
+  conn2 = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message1 = do_describe (conn1, TEST_MOUNT_POINT);
+
+  get_client_ports_full (&client_port1, &rtp_socket, &rtcp_socket);
+  /* get control strings from DESCRIBE response */
+  sdp_media = gst_sdp_message_get_media (sdp_message1, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message1, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  /* do SETUP for video and audio */
+  fail_unless (do_setup_full (conn1, video_control, trans1,
+          &client_port1, NULL, &session1, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn1, audio_control, trans1,
+          &client_port1, NULL, &session1, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
+
+  gst_rtsp_transport_free (video_transport);
+  gst_rtsp_transport_free (audio_transport);
+
+  sdp_message2 = do_describe (conn2, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  sdp_media = gst_sdp_message_get_media (sdp_message2, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+  sdp_media = gst_sdp_message_get_media (sdp_message2, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports_full (&client_port2, NULL, NULL);
+  /* do SETUP for video and audio */
+  fail_unless (do_setup_full (conn2, video_control, trans2,
+          &client_port2, NULL, &session2, &video_transport,
+          NULL) == GST_RTSP_STS_OK);
+  fail_unless (do_setup_full (conn2, audio_control, trans2,
+          &client_port2, NULL, &session2, &audio_transport,
+          NULL) == GST_RTSP_STS_OK);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_request (conn1, GST_RTSP_PLAY, NULL, session1, NULL, NULL,
+          NULL, NULL, NULL, NULL, NULL, NULL) == GST_RTSP_STS_OK);
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_request (conn2, GST_RTSP_PLAY, NULL, session2, NULL, NULL,
+          NULL, NULL, NULL, NULL, NULL, NULL) == GST_RTSP_STS_OK);
+
+
+  /* receive UDP data */
+  receive_rtp (rtp_socket, NULL);
+  receive_rtcp (rtcp_socket, NULL, 0);
+
+  /* receive TCP data */
+  {
+    GstRTSPMessage *message;
+    fail_unless (gst_rtsp_message_new (&message) == GST_RTSP_OK);
+    fail_unless (gst_rtsp_connection_receive (conn2, message, NULL) == GST_RTSP_OK);
+    fail_unless (gst_rtsp_message_get_type (message) == GST_RTSP_MESSAGE_DATA);
+    gst_rtsp_message_free (message);
+  }
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn1, GST_RTSP_TEARDOWN,
+          session1) == GST_RTSP_STS_OK);
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn2, GST_RTSP_TEARDOWN,
+          session2) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
+  g_free (session1);
+  g_free (session2);
+  gst_rtsp_transport_free (video_transport);
+  gst_rtsp_transport_free (audio_transport);
+  gst_sdp_message_free (sdp_message1);
+  gst_sdp_message_free (sdp_message2);
+  gst_rtsp_connection_free (conn1);
+  gst_rtsp_connection_free (conn2);
+}
+
+GST_START_TEST (test_multiple_transports)
+{
+  start_server (TRUE);
+  do_test_multiple_transports (GST_RTSP_LOWER_TRANS_UDP, GST_RTSP_LOWER_TRANS_TCP);
+  stop_server ();
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -2140,12 +2395,16 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_multithreaded_timeout_client);
   tcase_add_test (tc, test_play_multithreaded_timeout_session);
   tcase_add_test (tc, test_no_session_timeout);
+  tcase_add_test (tc, test_play_one_active_stream);
   tcase_add_test (tc, test_play_disconnect);
   tcase_add_test (tc, test_play_specific_server_port);
   tcase_add_test (tc, test_play_smpte_range);
+  tcase_add_test (tc, test_play_smpte_range_tcp);
   tcase_add_test (tc, test_shared);
   tcase_add_test (tc, test_announce_without_sdp);
   tcase_add_test (tc, test_record_tcp);
+  tcase_add_test (tc, test_multiple_transports);
+
   return s;
 }
 

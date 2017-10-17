@@ -793,7 +793,6 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   g_object_unref (session_pool);
 
 
-
   /* simple SETUP with a valid URI and multicast, but an invalid prt */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
           "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
@@ -813,7 +812,6 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   g_object_unref (session_pool);
 
 
-
   /* simple SETUP with a valid URI and multicast, but an invalid ttl */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
           "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
@@ -831,7 +829,6 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   fail_unless (session_pool != NULL);
   fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0);
   g_object_unref (session_pool);
-
 
   teardown_client (client);
   g_object_unref (ctx.auth);

@@ -2115,6 +2115,21 @@ media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
 }
 
 static void
+stream_unblock (GstRTSPStream * stream, GstRTSPMedia * media)
+{
+  gst_rtsp_stream_unblock_linked (stream);
+}
+
+static void
+media_unblock_linked (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  GST_DEBUG ("media %p unblocking linked streams", media);
+  g_ptr_array_foreach (priv->streams, (GFunc) stream_unblock, media);
+}
+
+static void
 gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
 {
   GstRTSPMediaPrivate *priv = media->priv;
@@ -2526,8 +2541,6 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
         GST_INFO ("%p: ignoring ASYNC_DONE", media);
       } else {
         GST_INFO ("%p: got ASYNC_DONE", media);
-        collect_media_stats (media);
-
         if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
           gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       }
@@ -2642,6 +2655,9 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
     GST_WARNING ("failed to join bin element");
   }
 
+  if (priv->blocked)
+    gst_rtsp_stream_set_blocked (stream, TRUE);
+
   priv->adding = FALSE;
   g_rec_mutex_unlock (&priv->state_lock);
 
@@ -2720,7 +2736,9 @@ start_preroll (GstRTSPMedia * media)
   GstStateChangeReturn ret;
 
   GST_INFO ("setting pipeline to PAUSED for media %p", media);
-  /* first go to PAUSED */
+
+  /* start blocked since it is possible that there are no sink elements yet */
+  media_streams_set_blocked (media, TRUE);
   ret = set_target_state (media, GST_STATE_PAUSED, TRUE);
 
   switch (ret) {
@@ -2737,10 +2755,7 @@ start_preroll (GstRTSPMedia * media)
        * seeking query in preroll instead */
       priv->seekable = -1;
       priv->is_live = TRUE;
-      if (!(priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD)) {
-        /* start blocked  to make sure nothing goes to the sink */
-        media_streams_set_blocked (media, TRUE);
-      }
+
       ret = set_state (media, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
@@ -3100,6 +3115,8 @@ finish_unprepare (GstRTSPMedia * media)
   set_state (media, GST_STATE_NULL);
   g_rec_mutex_lock (&priv->state_lock);
 
+  media_streams_set_blocked (media, FALSE);
+
   if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARING)
     return;
 
@@ -3209,8 +3226,6 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
     goto is_busy;
 
   GST_INFO ("unprepare media %p", media);
-  if (priv->blocked)
-    media_streams_set_blocked (media, FALSE);
   set_target_state (media, GST_STATE_NULL, FALSE);
   success = TRUE;
 
@@ -3563,7 +3578,6 @@ default_suspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
   GstStateChangeReturn ret;
-  gboolean unblock = FALSE;
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
@@ -3574,7 +3588,6 @@ default_suspend (GstRTSPMedia * media)
       ret = set_target_state (media, GST_STATE_PAUSED, TRUE);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
-      unblock = TRUE;
       break;
     case GST_RTSP_SUSPEND_MODE_RESET:
       GST_DEBUG ("media %p suspend to NULL", media);
@@ -3587,15 +3600,10 @@ default_suspend (GstRTSPMedia * media)
        * is actually from NULL to PLAY will create a new sequence
        * number. */
       g_ptr_array_foreach (priv->streams, (GFunc) do_set_seqnum, NULL);
-      unblock = TRUE;
       break;
     default:
       break;
   }
-
-  /* let the streams do the state changes freely, if any */
-  if (unblock)
-    media_streams_set_blocked (media, FALSE);
 
   return TRUE;
 
@@ -3674,7 +3682,19 @@ default_unsuspend (GstRTSPMedia * media)
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
-      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+      if ((priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD))
+        break;
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+      /* at this point the media pipeline has been updated and contain all
+       * specific transport parts: all active streams contain at least one sink
+       * element and it's safe to unblock any blocked streams that are active */
+      media_unblock_linked (media);
+      g_rec_mutex_unlock (&priv->state_lock);
+      if (gst_rtsp_media_get_status (media) == GST_RTSP_MEDIA_STATUS_ERROR) {
+        g_rec_mutex_lock (&priv->state_lock);
+        goto preroll_failed;
+      }
+      g_rec_mutex_lock (&priv->state_lock);
       break;
     case GST_RTSP_SUSPEND_MODE_PAUSE:
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
@@ -3682,6 +3702,10 @@ default_unsuspend (GstRTSPMedia * media)
     case GST_RTSP_SUSPEND_MODE_RESET:
     {
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+      /* at this point the media pipeline has been updated and contain all
+       * specific transport parts: all active streams contain at least one sink
+       * element and it's safe to unblock any blocked streams that are active */
+      media_unblock_linked (media);
       if (!start_preroll (media))
         goto start_failed;
 
@@ -3771,7 +3795,7 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
     } else {
       if (state == GST_STATE_PLAYING)
         /* make sure pads are not blocking anymore when going to PLAYING */
-        media_streams_set_blocked (media, FALSE);
+        media_unblock_linked (media);
 
       set_state (media, state);
 
@@ -4006,4 +4030,53 @@ gst_rtsp_media_seekable (GstRTSPMedia * media)
   /* Currently we are not able to seek on live streams,
    * and no stream is seekable only to the beginning */
   return media->priv->seekable;
+}
+
+/**
+ * gst_rtsp_media_complete_pipeline:
+ * @media: a #GstRTSPMedia
+ * @transports: a list of #GstRTSPTransport
+ *
+ * Add a receiver and sender parts to the pipeline based on the transport from
+ * SETUP.
+ *
+ * Returns: %TRUE if the media pipeline has been sucessfully updated.
+ */
+gboolean
+gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (transports, FALSE);
+
+  GST_DEBUG_OBJECT (media, "complete pipeline");
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStreamTransport *transport;
+    GstRTSPStream *stream;
+    const GstRTSPTransport *rtsp_transport;
+
+    transport = g_ptr_array_index (transports, i);
+    if (!transport)
+      continue;
+
+    stream = gst_rtsp_stream_transport_get_stream (transport);
+    if (!stream)
+      continue;
+
+    rtsp_transport = gst_rtsp_stream_transport_get_transport (transport);
+
+    if (!gst_rtsp_stream_complete_stream (stream, rtsp_transport)) {
+      g_mutex_unlock (&priv->lock);
+      return FALSE;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
 }

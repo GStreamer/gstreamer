@@ -21,7 +21,73 @@
 
 #include <rtsp-media-factory.h>
 
-GST_START_TEST (test_launch)
+GST_START_TEST (test_media_seek)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPStream *stream;
+  GstRTSPTimeRange *range;
+  gchar *str;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+  GstRTSPTransport *transport;
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 1);
+
+  stream = gst_rtsp_media_get_stream (media, 0);
+  fail_unless (stream != NULL);
+
+  pool = gst_rtsp_thread_pool_new ();
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+
+  /* define transport */
+  fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
+  transport->lower_transport = GST_RTSP_LOWER_TRANS_TCP;
+
+  fail_unless (gst_rtsp_stream_complete_stream (stream, transport));
+
+  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_parse ("npt=5.0-", &range) == GST_RTSP_OK);
+
+  /* the media is seekable now */
+  fail_unless (gst_rtsp_media_seek (media, range));
+
+  str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
+  fail_unless (g_str_equal (str, "npt=5-"));
+
+  gst_rtsp_range_free (range);
+  g_free (str);
+
+  fail_unless (gst_rtsp_media_unprepare (media));
+  g_object_unref (media);
+
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+
+  g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_media_seek_no_sinks)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
@@ -70,15 +136,8 @@ GST_START_TEST (test_launch)
   fail_unless (g_str_equal (str, "npt=0-"));
   g_free (str);
 
-  fail_unless (gst_rtsp_media_seek (media, range));
-
-  str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
-  fail_unless (g_str_equal (str, "npt=5-"));
-  g_free (str);
-
-  str = gst_rtsp_media_get_range_string (media, TRUE, GST_RTSP_RANGE_NPT);
-  fail_unless (g_str_equal (str, "npt=5-"));
-  g_free (str);
+  /* fails, need to be prepared and contain sink elements */
+  fail_if (gst_rtsp_media_seek (media, range));
 
   fail_unless (gst_rtsp_media_unprepare (media));
 
@@ -126,12 +185,13 @@ GST_START_TEST (test_media)
 GST_END_TEST;
 
 static void
-test_prepare_reusable (GstRTSPThreadPool * pool, const gchar * launch_line)
+test_prepare_reusable (const gchar * launch_line)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
   GstRTSPUrl *url;
   GstRTSPThread *thread;
+  GstRTSPThreadPool *pool;
 
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
@@ -146,6 +206,7 @@ test_prepare_reusable (GstRTSPThreadPool * pool, const gchar * launch_line)
 
   g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
 
+  pool = gst_rtsp_thread_pool_new ();
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
@@ -161,6 +222,17 @@ test_prepare_reusable (GstRTSPThreadPool * pool, const gchar * launch_line)
   gst_rtsp_url_free (url);
   g_object_unref (factory);
 }
+
+GST_START_TEST (test_media_reusable)
+{
+
+  /* test reusable media */
+  test_prepare_reusable ("( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+  test_prepare_reusable (
+      "( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )");
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_media_prepare)
 {
@@ -198,11 +270,6 @@ GST_START_TEST (test_media_prepare)
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);
-
-  /* test reusable media */
-  test_prepare_reusable (pool, "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
-  test_prepare_reusable (pool,
-      "( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )");
 
   g_object_unref (pool);
   gst_rtsp_thread_pool_cleanup ();
@@ -454,9 +521,11 @@ rtspmedia_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_set_timeout (tc, 20);
-  tcase_add_test (tc, test_launch);
+  tcase_add_test (tc, test_media_seek);
+  tcase_add_test (tc, test_media_seek_no_sinks);
   tcase_add_test (tc, test_media);
   tcase_add_test (tc, test_media_prepare);
+  tcase_add_test (tc, test_media_reusable);
   tcase_add_test (tc, test_media_dyn_prepare);
   tcase_add_test (tc, test_media_take_pipeline);
   tcase_add_test (tc, test_media_reset);
