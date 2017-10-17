@@ -296,6 +296,10 @@ AC_CHECK_DECLS([OMX_VIDEO_CodingHEVC],
   ], [[$VIDEO_HEADERS]])
 AM_CONDITIONAL(HAVE_HEVC, test "x$HAVE_HEVC" = "xyes")
 
+if test "x$ac_cv_omx_target" = "xzynqultrascaleplus"; then
+    AC_CHECK_HEADER([OMX_Allegro.h], [], [AC_ERROR([Need Allegro OMX headers to build for Zynq UltraScale+. Use --with-omx-header-path= argument to specify the path of those headers.])], [AC_INCLUDES_DEFAULT])
+fi
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice
