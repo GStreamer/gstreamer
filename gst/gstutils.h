@@ -96,6 +96,8 @@ guint64         gst_util_uint64_scale_int_round (guint64 val, gint num, gint den
 GST_EXPORT
 guint64         gst_util_uint64_scale_int_ceil  (guint64 val, gint num, gint denom);
 
+#define GST_SEQNUM_INVALID (0)
+
 GST_EXPORT
 guint32         gst_util_seqnum_next            (void);
 
