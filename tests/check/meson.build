@@ -75,6 +75,7 @@ good_tests = [
   [ 'elements/rtpbin_buffer_list' ],
   [ 'elements/rtpbundle' ],
   [ 'elements/rtpcollision' ],
+  [ 'elements/rtpfunnel' ],
   [ 'elements/rtpjitterbuffer' ],
   [ 'elements/rtpmux' ],
   [ 'elements/rtprtx' ],

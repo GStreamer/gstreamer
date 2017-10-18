@@ -14,7 +14,8 @@ libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      rtpsession.c      \
 			      rtpsource.c      \
 			      rtpstats.c      \
-			      gstrtpsession.c
+			      gstrtpsession.c \
+			      gstrtpfunnel.c
 
 noinst_HEADERS = gstrtpbin.h \
 		 gstrtpdtmfmux.h \
@@ -29,7 +30,9 @@ noinst_HEADERS = gstrtpbin.h \
 		 rtpsession.h  \
 		 rtpsource.h  \
 		 rtpstats.h  \
-		 gstrtpsession.h
+		 gstrtpsession.h \
+		 gstrtpfunnel.h
+
 
 libgstrtpmanager_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(GST_NET_CFLAGS) $(WARNING_CFLAGS) $(ERROR_CFLAGS)

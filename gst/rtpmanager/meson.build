@@ -14,6 +14,7 @@ rtpmanager_sources = [
   'rtpsource.c',
   'rtpstats.c',
   'gstrtpsession.c',
+  'gstrtpfunnel.c',
 ]
 
 gstrtpmanager = library('gstrtpmanager',

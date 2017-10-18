@@ -31,6 +31,7 @@
 #include "gstrtpssrcdemux.h"
 #include "gstrtpdtmfmux.h"
 #include "gstrtpmux.h"
+#include "gstrtpfunnel.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -67,6 +68,10 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_dtmf_mux_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpfunnel", GST_RANK_NONE,
+          GST_TYPE_RTP_FUNNEL))
     return FALSE;
 
   return TRUE;
