@@ -249,7 +249,7 @@ The following Package attributes are used to describe your package:
 |                     | the form           |          |                        |
 |                     | "recipe_name:      |          |                        |
 |                     | category1:category2|          |                        |
-|                     | :...” [2]          |          |                        |
+|                     | :..." [2]          |          |                        |
 |                     |                    |          |                        |
 | files_devel         | A list of files    | Yes      | files_devel =          |
 |                     | included in the    |          | ['my-app:category_devel|
