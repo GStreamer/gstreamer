@@ -207,23 +207,71 @@ This will create an initial package file in `packages/my-app.package`.
 
 The following Package attributes are used to describe your package:
 
-| Attribute Name | Description | Required | Example |
-|----------------|-------------|----------|---------|
-| `name` | The package name. | Yes | *name = 'my-app'* |
-| `shortdesc` | A short description of the package. | No | *shortdesc = 'some-short-desc'* |
-| `longdesc` | A long description of the package. | No | *longdesc = 'Some Longer Description'* |
-| `codename` | The release codename. | No | *codename = 'MyAppReleaseName'* |
-| `vendor` | Vendor for this package.| No | *vendor = 'MyCompany'* |
-| `url` | The package url | No | *url = 'http://www.my-app.com'* |
-| `version` | The package version. | Yes | *version = '1.0'* |
-| `license` | The package license (see `cerbero/enums.py:License` for allowed licenses). | Yes | *license = License.LGPLv2Plus* |
-| `uuid` | The package unique id | Yes  | *uuid = '6cd161c2-4535-411f-8287-e8f6a892f853'* |
-| `deps` | A list of package dependencies as package names.  | No | *deps = \['other', 'package', 'names'\]* |
-| `sys_deps` | The system dependencies for this package. | No | *sys\_deps= {Distro.DEBIAN: \['python'\]}* |
-| `files` | A list of files included in the **runtime** package in the form *“recipe\_name:category1:category2:...”* *If the recipe category is omitted, all categories are included.* | Yes\* | *files = \['my-app'\]* *files = \['my-app:category1'\]* |
-| `files_devel` | A list of files included in the **devel** package in the form *“recipe\_name:category1:category2:...”* | Yes\* | *files\_devel = \['my-app:category\_devel'\]* |
-| `platform_files` | Same as *files* but allowing to specify different files for different platforms. | Yes\* | *platform\_files = {Platform.WINDOWS: \['my-app:windows\_only\_category'\]}* |
-| `platform_files_devel` | Same as *files\_devel* but allowing to specify different files for different platforms. | Yes\* | *platform\_files\_devel = {Platform.WINDOWS: \['my-app:windows\_only\_category\_devel'\]}* |
+```
++---------------------+--------------------+----------+------------------------+
+| Attribute Name      | Description        | Required | Example                |
+|---------------------|--------------------|----------|------------------------|
+| name                | The package name   | Yes      | name = 'my-app'        |
+|                     |                    |          |                        |
+| shortdesc           | A short description| No       | shortdesc = 'some-short|
+|                     | of the package     |          | -desc'                 |
+|                     |                    |          |                        |
+| longdesc            | A long description | No       | longdesc = 'Some Longer|
+|                     |                    |          | Description'           |
+|                     |                    |          |                        |
+| codename            | Release codename.  | No       | codename =             |
+|                     |                    |          | 'MyAppReleaseName'     |
+|                     |                    |          |                        |
+| vendor              | Package Vendor     | No       | vendor = 'MyCompany'   |
+|                     |                    |          |                        |
+| url                 | Package URL        | No       | url =                  |
+|                     |                    |          |'http://www.my-app.com' |
+|                     |                    |          |                        |
+| version             | Package version    | Yes      | version = '1.0'        |
+|                     |                    |          |                        |
+| license             | Package license [1]| Yes      | license =              |
+|                     |                    |          | License.LGPLv2Plus     |
+|                     |                    |          |                        |
+| uuid                | Package unique id  | Yes      | uuid =                 |
+|                     |                    |          | '6cd161c2-4535-411f-82'|
+|                     |                    |          |                        |
+| deps                | List of package    | No       | deps = ['other',       |
+|                     | dependencies as    |          | 'package', 'names']    |
+|                     | package names      |          |                        |
+|                     |                    |          |                        |
+| sys_deps            | System dependencies| No       | sys_deps=              |
+|                     | for this package   |          | {Distro.DEBIAN:        |
+|                     |                    |          | ['python']}            |
+|                     |                    |          |                        |
+| files               | A list of files    | Yes      | files = ['my-app']     |
+|                     | included in the    |          | files = ['my-app:      |
+|                     | runtime package in |          | category1']            |
+|                     | the form           |          |                        |
+|                     | "recipe_name:      |          |                        |
+|                     | category1:category2|          |                        |
+|                     | :...” [2]          |          |                        |
+|                     |                    |          |                        |
+| files_devel         | A list of files    | Yes      | files_devel =          |
+|                     | included in the    |          | ['my-app:category_devel|
+|                     | devel package. Same|          | ']                     |
+|                     | format as above    |          |                        |
+|                     |                    |          |                        |
+| platform_files      | Same as *files* but| Yes      | platform_files =       |
+|                     | allowing to specify|          | {Platform.WINDOWS:     |
+|                     | different files for|          | ['my-app:              |
+|                     | different platforms|          | windows_only_category']|
+|                     |                    |          | }                      |
+|                     |                    |          |                        |
+| platform_files_devel| As above but for   | Yes      | platform_files_devel = |
+|                     | files_devel        |          | {Platform.WINDOWS:     |
+|                     |                    |          | ['my-app:windows_only_c|
+|                     |                    |          | ategory_devel']}       |
++---------------------+--------------------+----------+------------------------+
+
+[1] See cerbero/enums.py:License for allowed licenses.
+[2] If the recipe category is omitted, all categories are included.
+
+```
 
 > ![warning] At least one of the “files” attributes should be set.
 
