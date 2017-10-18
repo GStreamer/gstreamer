@@ -129,9 +129,8 @@ to do anything before the software is built, or the `install` and
 after installation. Take a look at the existing recipes in
 `cerbero/recipes` for example.
 
-Alternatively, you can pass some options to cerbero-uninstalled so some
-of these attributes are already set for you. For
-example:
+Alternatively, you can pass some options to `cerbero-uninstalled` so some
+of these attributes are already set for you. For example:
 
 ```
 ./cerbero-uninstalled add-recipe --licenses "LGPL" --deps "glib" --origin "git://git.my-app.com" --commit "git-commit-to-use" my-app 1.0
@@ -229,8 +228,7 @@ The following Package attributes are used to describe your package:
 > ![warning] At least one of the “files” attributes should be set.
 
 Alternatively you can also pass some options to `cerbero-uninstalled`,
-for
-example:
+for example:
 
 ``` bash
 ./cerbero-uninstalled add-package my-app 1.0 --license "LGPL" --codename MyApp --vendor MyAppVendor --url "http://www.my-app.com" --files=my-app:bins:libs --files-devel=my-app:devel --platform-files=linux:my-app:linux_specific --platform-files-devel=linux:my-app:linux_specific_devel,windows:my-app:windows_specific_devel --deps base-system --includes gstreamer-core
@@ -260,9 +258,10 @@ class Package(package.Package):
             'libtheora:libs', 'wavpack:libs', 'libvpx:libs',
             'taglib:libs', 'opus:libs', 'libvorbis:libs',
             'openjpeg:libs', 'openh264:libs', 'spandsp:libs',
-            'gst-plugins-base-1.0:plugins_codecs', 'gst-plugins-good-1.0:plugins_codecs',
-            'gst-plugins-bad-1.0:plugins_codecs', 'gst-plugins-ugly-1.0:plugins_codecs',
-            ]
+            'gst-plugins-base-1.0:plugins_codecs',
+            'gst-plugins-good-1.0:plugins_codecs',
+            'gst-plugins-bad-1.0:plugins_codecs',
+            'gst-plugins-ugly-1.0:plugins_codecs']
     files_devel = ['gst-plugins-base-1.0-static:plugins_codecs_devel',
             'gst-plugins-good-1.0-static:plugins_codecs_devel',
             'gst-plugins-bad-1.0-static:plugins_codecs_devel',
@@ -294,7 +293,7 @@ package file like the other package files in GStreamer. Just
 list all packages you need in the `deps` variable and put the files your
 software needs inside the `files` variables. When building a package
 this way you must make sure that you use the same prefix and
-packages\_prefix as the ones in your Cerbero configuration file.
+`packages_prefix` as the ones in your Cerbero configuration file.
 
 Finally, build your package by using:
 
