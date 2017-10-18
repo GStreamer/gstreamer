@@ -41,22 +41,84 @@ This will create an initial recipe file in `recipes/my-app.recipe`,
 which contains the smallest necessary recipe. This file is a Python
 script; set the following attributes to describe your application:
 
-| Attribute Name | Description | Required | Example |
-|----------------|-------------|----------|---------|
-| `name` | The recipe name.    | Yes      | *name = 'my-app'* |
-| `version` | The software version. | Yes | *version = '1.0'* |
-| `licenses` | A list of licenses of the software (see `cerbero/enums.py:License` for allowed licenses). | Yes | *licenses = \[License.LGPLv2Plus\]* |
-| `deps` | A list of build dependencies of the software as recipe names. | No | *deps = \['other', 'recipe', 'names'\]* |
-| `platform_deps` | Platform specific build dependencies (see `cerbero/enums.py:Platform` for allowed platforms). | No | *platform\_deps = {Platform.LINUX: \['some-recipe'\], Platform.WINDOWS: \['another-recipe'\]}* |
-| `remotes` | A dictionary specifying the git remote urls where sources are pulled from. | No | *remotes = {'origin': '<git://somewhere>'}* |
-| `commit` | The git commit, tag or branch to use, defaulting to "sdk-*`version`*"*.* | No | *commit = 'my-app-branch'* |
-| `config_sh` | Used to select the configuration script. | No | *config\_sh = 'autoreconf -fiv && sh ./configure'* |
-| `configure_options` | Additional options that should be passed to the `configure` script. | No | *configure\_options = '--enable-something'* |
-| `use_system_libs` | Whether to use system provided libs. | No | *use\_system\_libs = True* |
-| `btype` | The build type (see `cerbero/build/build.py:BuildType` for allowed build types). | No | *btype = BuildType.CUSTOM* |
-| `stype` | The source type (see `cerbero/build/source.py:SourceType` for allowed source types). | No | *stype = SourceType.CUSTOM* |
-| `files_category` | A list of files that should be shipped with packages including this recipe *category*. See below for more details. Cerbero comes with some predefined categories that should be used if the files being installed match a category criteria. The predefined categories are: `libs` (for libraries), `bins` (for binaries), `devel` (for development files - header, pkgconfig files, etc), `python` (for python files) and `lang` (for language files). *Note that for the `bins` and `libs` categories there is no need to specify the files extensions as Cerbero will do it for you.* | Yes\* | *files\_bins = \['some-binary'\]*  *files\_libs = \['libsomelib'\]* *files\_devel = \['include/something'\] files\_python = \['site-packages/some/pythonfile%(pext)s'\]* *files\_lang = \['foo'\]* |
-| `platform_files_category` | Same as *`files_category`* but for platform specific files. | No  | *platform\_files\_some\_category = {Platform.LINUX: \['/some/file'\]}* |
+```
++-------------------+-----------------------+----------+----------------------+
+| Attribute Name    | Description           | Required | Example              |
+|-------------------|-----------------------|----------|----------------------|
+| name              | The recipe name       | Yes      | name = 'my-app'      |
+|                   |                       |          |                      |
+| version           | The software version  | Yes      | version = '1.0'      |
+|                   |                       |          |                      |
+| licenses          | A list of licenses of | Yes      | licenses =           |
+|                   | the software [1]      |          | [License.LGPLv2Plus] |
+|                   |                       |          |                      |
+| deps              | A list of build       | No       | deps = ['other',     |
+|                   | dependencies of the   |          | 'recipe', 'names']   |
+|                   | software as recipe    |          |                      |
+|                   | names.                |          |                      |
+|                   |                       |          |                      |
+| platform_deps     | Platform specific     | No       | platform_deps =      |
+|                   | build dependencies    |          | {Platform.LINUX:     |
+|                   |                       |          | ['some-recipe'],     |
+|                   |                       |          | Platform.WINDOWS:    |
+|                   |                       |          | ['another-recipe']}  |
+|                   |                       |          |                      |
+| remotes           | Dictionary specifying | No       | remotes = {'origin': |
+|                   | the git remote URLs   |          | '<git://somewhere>'} |
+|                   | where sources are     |          |                      |
+|                   | pulled from           |          |                      |
+|                   |                       |          |                      |
+| commit            | The git commit, tag or| No       | commit =             |
+|                   | branch to use,        |          | 'my-app-branch'      |
+|                   | defaulting to         |          |                      |
+|                   | "sdk-*`version`*"     |          |                      |
+|                   |                       |          |                      |
+| config_sh         | Used to select the    | No       | config_sh =          |
+|                   | configuration script  |          | 'autoreconf -fiv &&  |
+|                   |                       |          | sh ./configure'      |
+|                   |                       |          |                      |
+| configure_options | Additional options    | No       | configure_options =  |
+|                   | that should be passed |          | '--enable-something' |
+|                   | to the `configure`    |          |                      |
+|                   | script                |          |                      |
+|                   |                       |          |                      |
+| use_system_libs   | Whether to use system | No       | use_system_libs =    |
+|                   | provided libs         |          | True                 |
+|                   |                       |          |                      |
+| btype             | The build type        | No       | btype =              |
+|                   |                       |          | BuildType.CUSTOM     |
+|                   |                       |          |                      |
+| stype             | The source type       | No       | stype =              |
+|                   |                       |          | SourceType.CUSTOM    |
+|                   |                       |          |                      |
+| files_category    | A list of files that  | Yes      | files_bins =         |
+|                   | should be shipped with|          | ['some-binary']      |
+|                   | packages including    |          | files_libs =         |
+|                   | this recipe *category*|          | ['libsomelib']       |
+|                   | [5]                   |          | files_devel =        |
+|                   |                       |          | ['include/something']|
+|                   |                       |          | files_python =       |
+|                   |                       |          | ['site-packages/     |
+|                   |                       |          | some/pythonfile%(pext|
+|                   |                       |          | )s']                 |
+|                   |                       |          | files_lang = ['foo'] |
+|                   |                       |          |                      |
+| platform_files_   | Same as files_category| No       | platform_files_some_ |
+| category          | but for platform      |          | category =           |
+|                   | specific files        |          | {Platform.LINUX:     |
+|                   |                       |          | ['/some/file']}      |
++-------------------+-----------------------+----------+----------------------+
+
+[1] See cerbero/enums.py:License for allowed licenses
+[2] See cerbero/enums.py:Platform for allowed platforms
+[3] See cerbero/build/build.py:BuildType for allowed build types
+[4] See cerbero/build/source.py:SourceType for allowed source types
+[5] Cerbero comes with some predefined categories that should be used if the
+files being installed match a category criteria. The predefined categories are: `libs` (for libraries), `bins` (for binaries), `devel` (for development files:
+header, pkgconfig files, etc), `python` (for python files) and `lang` (for
+language files). Note that for the `bins` and `libs` categories there is no need
+to specify the files extensions as Cerbero will do it for you.
+```
 
 > ![warning] At least one “files” category should be set.
 
