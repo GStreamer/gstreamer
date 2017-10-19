@@ -3498,6 +3498,10 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("audio/x-voc");
   } else if (!strcmp (format_name, "pva")) {
     caps = gst_caps_from_string ("video/x-pva");
+  } else if (!strcmp (format_name, "brstm")) {
+    caps = gst_caps_from_string ("audio/x-brstm");
+  } else if (!strcmp (format_name, "bfstm")) {
+    caps = gst_caps_from_string ("audio/x-bfstm");
   } else {
     gchar *name;
 
