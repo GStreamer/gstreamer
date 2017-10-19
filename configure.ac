@@ -701,6 +701,11 @@ dnl *** libpng ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
 AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
   AG_GST_PKG_CHECK_MODULES(LIBPNG, libpng >= 1.2)
+  if test $HAVE_LIBPNG = "yes"; then
+    PKG_CHECK_MODULES(LIBPNG, libpng >= 1.5.1, [
+        AC_DEFINE(HAVE_LIBPNG_1_5, 1, [Defined if libpng version is 1.5.1 or newer])
+      ], [true])
+  fi
 ])
 
 dnl *** mpg123 ***
