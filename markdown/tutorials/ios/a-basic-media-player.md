@@ -969,11 +969,11 @@ the `app_function` that fires 4 times per second (or every 250ms),
 right before entering the main loop:
 
 ```
-    /* Register a function that GLib will call 4 times per second */
-    timeout_source = g_timeout_source_new (250);
-    g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, (__bridge void *)self, NULL);
-    g_source_attach (timeout_source, context);
-    g_source_unref (timeout_source);
+/* Register a function that GLib will call 4 times per second */
+timeout_source = g_timeout_source_new (250);
+g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, (__bridge void *)self, NULL);
+g_source_attach (timeout_source, context);
+g_source_unref (timeout_source);
 ```
 
 Then, in the refresh_ui method:
@@ -1047,14 +1047,14 @@ the `desired_position` variable. Then, in
 the `state_changed_cb()` callback:
 
 ```
-        if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED)
-        {
-            check_media_size(self);
+if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED)
+{
+    check_media_size(self);
 
-            /* If there was a scheduled seek, perform it now that we have moved to the Paused state */
-            if (GST_CLOCK_TIME_IS_VALID (self->desired_position))
-                execute_seek (self->desired_position, self);
-        }
+    /* If there was a scheduled seek, perform it now that we have moved to the Paused state */
+    if (GST_CLOCK_TIME_IS_VALID (self->desired_position))
+        execute_seek (self->desired_position, self);
+}
 ```
 
 Once the pipeline moves from the `READY` to the `PAUSED` state, we check if
