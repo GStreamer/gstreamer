@@ -1,7 +1,7 @@
 # gst-launch-1.0
 
 > ![information] This is the Linux man page for
-> the `gst-inspect-1.0` tool. As such, it is very Linux-centric
+> the `gst-launch-1.0` tool. As such, it is very Linux-centric
 > regarding path specification and plugin names. Please be patient while
 > it is rewritten to be more generic.
 
