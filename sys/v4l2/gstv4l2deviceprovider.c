@@ -136,8 +136,13 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
       v4l2obj->vcap.device_caps, NULL);
 
   if (v4l2obj->device_caps &
-      (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))
+      (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)) {
+    /* We ignore touch sensing devices; those are't really video */
+    if (v4l2obj->device_caps & V4L2_CAP_TOUCH)
+      goto close;
+
     type = GST_V4L2_DEVICE_TYPE_SOURCE;
+  }
 
   if (v4l2obj->device_caps &
       (V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE)) {
