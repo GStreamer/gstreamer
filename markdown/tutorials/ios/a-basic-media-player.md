@@ -964,7 +964,7 @@ its `mediaSizeChanged` callback.
 
 ### Refreshing the Seek Bar
 
-To keep the UI updated, a GLib timer is installed in
+To keep the UI updated, a `GLib` timer is installed in
 the `app_function` that fires 4 times per second (or every 250ms),
 right before entering the main loop:
 
@@ -976,7 +976,7 @@ g_source_attach (timeout_source, context);
 g_source_unref (timeout_source);
 ```
 
-Then, in the refresh_ui method:
+Then, in the `refresh_ui` method:
 
 ```
 /* If we have pipeline and it is running, query the current position and clip duration and inform
