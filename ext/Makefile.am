@@ -22,6 +22,12 @@ else
 BZ2_DIR=
 endif
 
+if USE_LCMS2
+COLORMANAGEMENT_DIR=colormanagement
+else
+COLORMANAGEMENT_DIR=
+endif
+
 if USE_CHROMAPRINT
 CHROMAPRINT_DIR=chromaprint
 else
@@ -401,6 +407,7 @@ SUBDIRS=\
 	$(AUDIOFILE_DIR) \
 	$(BS2B_DIR) \
 	$(BZ2_DIR) \
+	$(COLORMANAGEMENT_DIR) \
 	$(CHROMAPRINT_DIR) \
 	$(CURL_DIR) \
 	$(DASH_DIR) \
@@ -467,6 +474,7 @@ DIST_SUBDIRS = \
 	assrender \
 	bs2b \
 	bz2 \
+	colormanagement \
 	chromaprint \
 	curl \
 	dash \

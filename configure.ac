@@ -2480,6 +2480,15 @@ AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_SUBST(LRDF_CFLAGS)
 ])
 
+dnl *** LCM2  ***
+#translit(dnm, m, l) AM_CONDITIONAL(USE_LCMS2, true)
+AG_GST_CHECK_FEATURE(LCMS2, [LCMS colormanagement plugin], lcms2, [
+  PKG_CHECK_MODULES(LCMS2, lcms2 >= 2.7, HAVE_LCMS2="yes", [
+    HAVE_LCMS2="no"
+  ])
+   AC_SUBST(LCMS2_LIBS)
+])
+
 dnl *** LV2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LV2, true)
 AG_GST_CHECK_FEATURE(LV2, [lv2], lv2, [
@@ -3454,6 +3463,7 @@ AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_KMS, false)
 AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
+AM_CONDITIONAL(USE_LCMS2, false)
 AM_CONDITIONAL(USE_LV2, false)
 AM_CONDITIONAL(USE_LIBDE265, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
@@ -3739,6 +3749,7 @@ ext/assrender/Makefile
 ext/bs2b/Makefile
 ext/bz2/Makefile
 ext/chromaprint/Makefile
+ext/colormanagement/Makefile
 ext/curl/Makefile
 ext/dash/Makefile
 ext/dc1394/Makefile
