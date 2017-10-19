@@ -342,6 +342,51 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     gst_video_codec_state_unref (pngdec->output_state);
   }
 
+  if ((pngdec->color_type & PNG_COLOR_MASK_COLOR)
+      && !(pngdec->color_type & PNG_COLOR_MASK_PALETTE)
+      && png_get_valid (pngdec->png, pngdec->info, PNG_INFO_iCCP)) {
+    png_charp icc_name;
+    png_bytep icc_profile;
+    int icc_compression_type;
+    png_uint_32 icc_proflen = 0;
+    png_uint_32 ret = png_get_iCCP (pngdec->png, pngdec->info, &icc_name,
+        &icc_compression_type, &icc_profile, &icc_proflen);
+
+    if ((ret & PNG_INFO_iCCP)) {
+      gpointer gst_icc_prof = g_memdup (icc_profile, icc_proflen);
+      GstBuffer *tagbuffer = NULL;
+      GstSample *tagsample = NULL;
+      GstTagList *taglist = NULL;
+      GstStructure *info = NULL;
+      GstCaps *caps;
+
+      GST_DEBUG_OBJECT (pngdec, "extracted ICC profile '%s' length=%i",
+          icc_name, (guint32) icc_proflen);
+
+      tagbuffer = gst_buffer_new_wrapped (gst_icc_prof, icc_proflen);
+
+      caps = gst_caps_new_empty_simple ("application/vnd.iccprofile");
+      info = gst_structure_new_empty ("application/vnd.iccprofile");
+
+      if (icc_name)
+        gst_structure_set (info, "icc-name", G_TYPE_STRING, icc_name, NULL);
+
+      tagsample = gst_sample_new (tagbuffer, caps, NULL, info);
+
+      gst_buffer_unref (tagbuffer);
+      gst_caps_unref (caps);
+
+      taglist = gst_tag_list_new_empty ();
+      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ATTACHMENT,
+          tagsample, NULL);
+      gst_sample_unref (tagsample);
+
+      gst_video_decoder_merge_tags (GST_VIDEO_DECODER (pngdec), taglist,
+          GST_TAG_MERGE_APPEND);
+      gst_tag_list_unref (taglist);
+    }
+  }
+
   pngdec->output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (pngdec), format,
       width, height, pngdec->input_state);
