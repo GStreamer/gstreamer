@@ -30,6 +30,7 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "tools.h"
+#include <gst/gst_private.h>    /* for internal Factories */
 
 #include <string.h>
 #include <locale.h>
@@ -39,6 +40,9 @@ static char *_name = NULL;
 
 static int print_element_info (GstPluginFeature * feature,
     gboolean print_names);
+static int print_typefind_info (GstPluginFeature * feature,
+    gboolean print_names);
+static int print_tracer_info (GstPluginFeature * feature, gboolean print_names);
 
 /* *INDENT-OFF* */
 G_GNUC_PRINTF (1, 2)
@@ -938,6 +942,17 @@ print_blacklist (void)
 }
 
 static void
+print_typefind_extensions (const gchar * const *extensions)
+{
+  guint i = 0;
+
+  while (extensions[i]) {
+    g_print ("%s%s", i > 0 ? ", " : "", extensions[i]);
+    i++;
+  }
+}
+
+static void
 print_element_list (gboolean print_all, gchar * ftypes)
 {
   int plugincount = 0, featurecount = 0, blacklistcount = 0;
@@ -952,7 +967,6 @@ print_element_list (gboolean print_all, gchar * ftypes)
       *types[i] = g_ascii_toupper (*types[i]);
 
   }
-
 
   orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
   while (plugins) {
@@ -1021,15 +1035,10 @@ print_element_list (gboolean print_all, gchar * ftypes)
 
         extensions = gst_type_find_factory_get_extensions (factory);
         if (extensions != NULL) {
-          guint i = 0;
-
-          while (extensions[i]) {
-            if (!print_all)
-              g_print ("%s%s", i > 0 ? ", " : "", extensions[i]);
-            i++;
-          }
-          if (!print_all)
+          if (!print_all) {
+            print_typefind_extensions (extensions);
             g_print ("\n");
+          }
         } else {
           if (!print_all)
             g_print ("no extensions\n");
@@ -1273,31 +1282,31 @@ print_feature_info (const gchar * feature_name, gboolean print_all)
 {
   GstPluginFeature *feature;
   GstRegistry *registry = gst_registry_get ();
+  int ret;
 
-  feature = gst_registry_find_feature (registry, feature_name,
-      GST_TYPE_ELEMENT_FACTORY);
-  if (feature) {
-    int ret = print_element_info (feature, print_all);
-    gst_object_unref (feature);
-    return ret;
+  if ((feature = gst_registry_find_feature (registry, feature_name,
+              GST_TYPE_ELEMENT_FACTORY))) {
+    ret = print_element_info (feature, print_all);
+    goto handled;
   }
-  /* FIXME implement other pretty print function for these */
-  feature = gst_registry_find_feature (registry, feature_name,
-      GST_TYPE_TYPE_FIND_FACTORY);
-  if (feature) {
-    n_print ("%s: a typefind function\n", feature_name);
-    gst_object_unref (feature);
-    return 0;
+  if ((feature = gst_registry_find_feature (registry, feature_name,
+              GST_TYPE_TYPE_FIND_FACTORY))) {
+    ret = print_typefind_info (feature, print_all);
+    goto handled;
   }
-  feature = gst_registry_find_feature (registry, feature_name,
-      GST_TYPE_TRACER_FACTORY);
-  if (feature) {
-    n_print ("%s: a tracer module\n", feature_name);
-    gst_object_unref (feature);
-    return 0;
+  if ((feature = gst_registry_find_feature (registry, feature_name,
+              GST_TYPE_TRACER_FACTORY))) {
+    ret = print_tracer_info (feature, print_all);
+    goto handled;
   }
+
+  /* TODO: handle DEVICE_PROVIDER_FACTORY */
 
   return -1;
+
+handled:
+  gst_object_unref (feature);
+  return ret;
 }
 
 static int
@@ -1351,10 +1360,119 @@ print_element_info (GstPluginFeature * feature, gboolean print_names)
   gst_object_unref (element);
   gst_object_unref (factory);
   g_free (_name);
-
   return 0;
 }
 
+static int
+print_typefind_info (GstPluginFeature * feature, gboolean print_names)
+{
+  GstTypeFindFactory *factory;
+  GstPlugin *plugin;
+  GstCaps *caps;
+  GstRank rank;
+  char s[20];
+  const gchar *const *extensions;
+
+  factory = GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (feature));
+  if (!factory) {
+    g_print ("typefind plugin couldn't be loaded\n");
+    return -1;
+  }
+
+  if (print_names)
+    _name = g_strdup_printf ("%s: ", GST_OBJECT_NAME (factory));
+  else
+    _name = NULL;
+
+  n_print ("Factory Details:\n");
+  rank = gst_plugin_feature_get_rank (feature);
+  n_print ("  %-25s%s (%d)\n", "Rank", get_rank_name (s, rank), rank);
+  n_print ("  %-25s%s\n", "Name", GST_OBJECT_NAME (factory));
+  caps = gst_type_find_factory_get_caps (factory);
+  if (caps) {
+    gchar *caps_str = gst_caps_to_string (factory->caps);
+
+    n_print ("  %-25s%s\n", "Caps", caps_str);
+    g_free (caps_str);
+  }
+  extensions = gst_type_find_factory_get_extensions (factory);
+  if (extensions) {
+    n_print ("  %-25s", "Extensions");
+    print_typefind_extensions (extensions);
+    n_print ("\n");
+  }
+  n_print ("\n");
+
+  plugin = gst_plugin_feature_get_plugin (GST_PLUGIN_FEATURE (factory));
+  if (plugin) {
+    print_plugin_info (plugin);
+    gst_object_unref (plugin);
+  }
+
+  gst_object_unref (factory);
+  g_free (_name);
+  return 0;
+}
+
+static int
+print_tracer_info (GstPluginFeature * feature, gboolean print_names)
+{
+  GstTracerFactory *factory;
+  GstTracer *tracer;
+  GstPlugin *plugin;
+  gint maxlevel = 0;
+
+  factory = GST_TRACER_FACTORY (gst_plugin_feature_load (feature));
+  if (!factory) {
+    g_print ("tracer plugin couldn't be loaded\n");
+    return -1;
+  }
+
+  tracer = (GstTracer *) g_object_new (factory->type, NULL);
+  if (!tracer) {
+    gst_object_unref (factory);
+    g_print ("couldn't construct tracer for some reason\n");
+    return -1;
+  }
+
+  if (print_names)
+    _name = g_strdup_printf ("%s: ", GST_OBJECT_NAME (factory));
+  else
+    _name = NULL;
+
+  n_print ("Factory Details:\n");
+  n_print ("  %-25s%s\n", "Name", GST_OBJECT_NAME (factory));
+  n_print ("\n");
+
+  plugin = gst_plugin_feature_get_plugin (GST_PLUGIN_FEATURE (factory));
+  if (plugin) {
+    print_plugin_info (plugin);
+    gst_object_unref (plugin);
+  }
+
+  print_hierarchy (G_OBJECT_TYPE (tracer), 0, &maxlevel);
+  print_interfaces (G_OBJECT_TYPE (tracer));
+
+  /* TODO: list what hooks it registers
+   * - the data is available in gsttracerutils, we need to iterate the
+   *   _priv_tracers hashtable for each probe and then check the list of hooks
+   *  for each probe whether hook->tracer == tracer :/
+   */
+
+  /* TODO: list what records it emits
+   * - in class_init tracers can create GstTracerRecord instances
+   * - those only get logged right now and there is no association with the
+   *   tracer that created them
+   * - we'd need to add them to GstTracerFactory
+   *   gst_tracer_class_add_record (klass, record);
+   *   - needs work in gstregistrychunks.
+   */
+
+  gst_object_unref (tracer);
+  gst_object_unref (factory);
+  g_free (_name);
+  return 0;
+}
 
 static void
 print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
