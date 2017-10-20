@@ -364,12 +364,6 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
       segment->offset = 0;
   }
 
-  if (start != -1 && stop != -1) {
-    segment->duration = stop - start;
-  } else {
-    segment->duration = -1;
-  }
-
   segment->start = start;
   segment->stop = stop;
   segment->time = start;
