@@ -21,8 +21,9 @@
 #ifndef __GST_OPENJPEG_H__
 #define __GST_OPENJPEG_H__
 
-#ifdef HAVE_OPENJPEG_1
 #include <openjpeg.h>
+
+#ifdef HAVE_OPENJPEG_1
 #define OPJ_CLRSPC_UNKNOWN CLRSPC_UNKNOWN
 #define OPJ_CLRSPC_SRGB CLRSPC_SRGB
 #define OPJ_CLRSPC_GRAY CLRSPC_GRAY
@@ -36,13 +37,6 @@
 #define OPJ_RPCL RPCL
 #define OPJ_PCRL PCRL
 #define OPJ_CPRL CPRL
-#else
-#include <stdio.h>
-# if defined(HAVE_OPENJPEG_2_1)
-#  include <openjpeg.h>
-# else
-#  include <openjpeg-2.0/openjpeg.h>
-# endif
 #endif
 
 #endif /* __GST_OPENJPEG_H__ */
