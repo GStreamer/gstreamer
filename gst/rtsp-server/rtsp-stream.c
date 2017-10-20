@@ -2463,7 +2463,8 @@ create_sender_part (GstRTSPStream * stream, GstBin * bin, GstState state)
             &priv->mcast_udpqueue[i]);
 
       if (is_tcp) {
-        g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
+        if (i == 1)
+          g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
         plug_sink (bin, priv->tee[i], priv->appsink[i], &priv->appqueue[i]);
       }
     } else if (is_tcp) {
