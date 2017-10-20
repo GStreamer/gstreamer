@@ -1167,8 +1167,10 @@ check_success_sink_play_pause (void *user_data)
 
 GST_START_TEST (test_empty_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, play_pause_source, setup_sink_play_pause,
       check_success_source_play_pause, check_success_sink_play_pause, NULL, &md,
@@ -1179,8 +1181,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, play_pause_source, setup_sink_play_pause,
       check_success_source_play_pause, check_success_sink_play_pause, NULL, &md,
@@ -1191,8 +1195,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, play_pause_source,
       setup_sink_play_pause, check_success_source_play_pause,
@@ -1203,8 +1209,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       play_pause_source, setup_sink_play_pause, check_success_source_play_pause,
@@ -1215,8 +1223,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, play_pause_source,
       setup_sink_play_pause, check_success_source_play_pause,
@@ -1227,8 +1237,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, play_pause_source,
       setup_sink_play_pause, check_success_source_play_pause,
@@ -1239,8 +1251,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_play_pause)
 {
-  play_pause_master_data md = { 0 };
-  play_pause_slave_data sd = { 0 };
+  play_pause_master_data md = { {0}
+  };
+  play_pause_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       play_pause_source, setup_sink_play_pause, check_success_source_play_pause,
@@ -1462,7 +1476,8 @@ GST_START_TEST (test_empty_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1475,7 +1490,8 @@ GST_START_TEST (test_wavparse_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1488,7 +1504,8 @@ GST_START_TEST (test_mpegts_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1501,7 +1518,8 @@ GST_START_TEST (test_mpegts_2_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1515,7 +1533,8 @@ GST_START_TEST (test_live_a_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1528,7 +1547,8 @@ GST_START_TEST (test_live_av_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1541,7 +1561,8 @@ GST_START_TEST (test_live_av_2_flushing_seek)
 {
   flushing_seek_input_data id = { FALSE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1555,7 +1576,8 @@ GST_START_TEST (test_empty_flushing_seek_in_pause)
 {
   flushing_seek_input_data id = { FALSE, TRUE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1568,7 +1590,8 @@ GST_START_TEST (test_wavparse_flushing_seek_in_pause)
 {
   flushing_seek_input_data id = { FALSE, TRUE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1581,7 +1604,8 @@ GST_START_TEST (test_mpegts_flushing_seek_in_pause)
 {
   flushing_seek_input_data id = { FALSE, TRUE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1594,7 +1618,8 @@ GST_START_TEST (test_mpegts_2_flushing_seek_in_pause)
 {
   flushing_seek_input_data id = { FALSE, TRUE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1608,7 +1633,8 @@ GST_START_TEST (test_empty_segment_seek)
 {
   flushing_seek_input_data id = { TRUE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1621,7 +1647,8 @@ GST_START_TEST (test_wavparse_segment_seek)
 {
   flushing_seek_input_data id = { TRUE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1634,7 +1661,8 @@ GST_START_TEST (test_live_a_segment_seek)
 {
   flushing_seek_input_data id = { TRUE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1648,7 +1676,8 @@ GST_START_TEST (test_live_av_segment_seek)
 {
   flushing_seek_input_data id = { TRUE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1662,7 +1691,8 @@ GST_START_TEST (test_live_av_2_segment_seek)
 {
   flushing_seek_input_data id = { TRUE, FALSE };
   flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { 0 };
+  flushing_seek_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -2057,7 +2087,8 @@ GST_START_TEST (test_empty_upstream_query)
 {
   upstream_query_input_data id = { GST_CLOCK_TIME_NONE, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, upstream_query_source,
@@ -2073,7 +2104,8 @@ GST_START_TEST (test_wavparse_upstream_query)
 {
   upstream_query_input_data id = { WAV_SAMPLE_ROUGH_DURATION, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, upstream_query_source,
@@ -2089,7 +2121,8 @@ GST_START_TEST (test_mpegts_upstream_query)
 {
   upstream_query_input_data id = { MPEGTS_SAMPLE_ROUGH_DURATION, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, upstream_query_source,
@@ -2105,7 +2138,8 @@ GST_START_TEST (test_mpegts_2_upstream_query)
 {
   upstream_query_input_data id = { MPEGTS_SAMPLE_ROUGH_DURATION, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
@@ -2122,7 +2156,8 @@ GST_START_TEST (test_live_a_upstream_query)
 {
   upstream_query_input_data id = { GST_CLOCK_TIME_NONE, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE,
@@ -2139,7 +2174,8 @@ GST_START_TEST (test_live_av_upstream_query)
 {
   upstream_query_input_data id = { GST_CLOCK_TIME_NONE, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE,
@@ -2156,7 +2192,8 @@ GST_START_TEST (test_live_av_2_upstream_query)
 {
   upstream_query_input_data id = { GST_CLOCK_TIME_NONE, };
   upstream_query_master_data md = { 0 };
-  upstream_query_slave_data sd = { 0 };
+  upstream_query_slave_data sd = { {0}
+  };
 
   FAIL_UNLESS (pipe2 (id.ts_pipes, O_NONBLOCK) == 0);
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
@@ -2411,7 +2448,8 @@ check_success_sink_end_of_stream (gpointer user_data)
 GST_START_TEST (test_empty_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE | TEST_FEATURE_ASYNC_SINK,
       end_of_stream_source, setup_sink_end_of_stream,
@@ -2424,7 +2462,8 @@ GST_END_TEST;
 GST_START_TEST (test_wavparse_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE | TEST_FEATURE_ASYNC_SINK,
       end_of_stream_source, setup_sink_end_of_stream,
@@ -2437,7 +2476,8 @@ GST_END_TEST;
 GST_START_TEST (test_mpegts_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_ASYNC_SINK,
       end_of_stream_source, setup_sink_end_of_stream,
@@ -2450,7 +2490,8 @@ GST_END_TEST;
 GST_START_TEST (test_mpegts_2_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS |
       TEST_FEATURE_ASYNC_SINK,
@@ -2464,7 +2505,8 @@ GST_END_TEST;
 GST_START_TEST (test_live_a_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE,
       end_of_stream_source, setup_sink_end_of_stream,
@@ -2477,7 +2519,8 @@ GST_END_TEST;
 GST_START_TEST (test_live_av_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE,
       end_of_stream_source, setup_sink_end_of_stream,
@@ -2490,7 +2533,8 @@ GST_END_TEST;
 GST_START_TEST (test_live_av_2_end_of_stream)
 {
   end_of_stream_master_data md = { 0 };
-  end_of_stream_slave_data sd = { 0 };
+  end_of_stream_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       end_of_stream_source, setup_sink_end_of_stream,
@@ -2850,7 +2894,8 @@ check_success_sink_tags (gpointer user_data)
 GST_START_TEST (test_empty_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, tags_source, setup_sink_tags,
       check_success_source_tags, check_success_sink_tags, NULL, &md, &sd);
@@ -2861,7 +2906,8 @@ GST_END_TEST;
 GST_START_TEST (test_wavparse_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, tags_source, setup_sink_tags,
       check_success_source_tags, check_success_sink_tags, NULL, &md, &sd);
@@ -2872,7 +2918,8 @@ GST_END_TEST;
 GST_START_TEST (test_mpegts_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, tags_source, setup_sink_tags,
       check_success_source_tags, check_success_sink_tags, NULL, &md, &sd);
@@ -2883,7 +2930,8 @@ GST_END_TEST;
 GST_START_TEST (test_mpegts_2_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS, tags_source,
       setup_sink_tags, check_success_source_tags, check_success_sink_tags, NULL,
@@ -2895,7 +2943,8 @@ GST_END_TEST;
 GST_START_TEST (test_live_a_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, tags_source, setup_sink_tags,
       check_success_source_tags, check_success_sink_tags, NULL, &md, &sd);
@@ -2906,7 +2955,8 @@ GST_END_TEST;
 GST_START_TEST (test_live_av_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, tags_source, setup_sink_tags,
       check_success_source_tags, check_success_sink_tags, NULL, &md, &sd);
@@ -2917,7 +2967,8 @@ GST_END_TEST;
 GST_START_TEST (test_live_av_2_tags)
 {
   tags_master_data md = { 0 };
-  tags_slave_data sd = { 0 };
+  tags_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       tags_source, setup_sink_tags, check_success_source_tags,
@@ -4061,7 +4112,7 @@ check_success_sink_serialized_query (gpointer user_data)
 
 GST_START_TEST (test_empty_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, serialized_query_source,
@@ -4073,7 +4124,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, serialized_query_source,
@@ -4085,7 +4136,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, serialized_query_source,
@@ -4097,7 +4148,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
@@ -4110,7 +4161,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, serialized_query_source,
@@ -4122,7 +4173,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, serialized_query_source,
@@ -4134,7 +4185,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_serialized_query)
 {
-  serialized_query_master_data md = { 0 };
+  serialized_query_master_data md = { {0} };
   serialized_query_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
@@ -4268,7 +4319,7 @@ check_success_sink_non_serialized_event (gpointer user_data)
 
 GST_START_TEST (test_empty_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, non_serialized_event_source,
@@ -4281,7 +4332,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, non_serialized_event_source,
@@ -4294,7 +4345,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, non_serialized_event_source,
@@ -4307,7 +4358,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
@@ -4320,7 +4371,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, non_serialized_event_source,
@@ -4333,7 +4384,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, non_serialized_event_source,
@@ -4346,7 +4397,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_non_serialized_event)
 {
-  non_serialized_event_master_data md = { 0 };
+  non_serialized_event_master_data md = { {0} };
   non_serialized_event_slave_data sd = { 0 };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
@@ -4489,8 +4540,10 @@ check_success_sink_meta (gpointer user_data)
 
 GST_START_TEST (test_empty_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, meta_source, setup_sink_meta,
       check_success_source_meta, check_success_sink_meta, NULL, &md, &sd);
@@ -4500,8 +4553,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, meta_source, setup_sink_meta,
       check_success_source_meta, check_success_sink_meta, NULL, &md, &sd);
@@ -4511,8 +4566,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, meta_source, setup_sink_meta,
       check_success_source_meta, check_success_sink_meta, NULL, &md, &sd);
@@ -4522,8 +4579,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS, meta_source,
       setup_sink_meta, check_success_source_meta, check_success_sink_meta,
@@ -4534,8 +4593,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, meta_source, setup_sink_meta,
       check_success_source_meta, check_success_sink_meta, NULL, &md, &sd);
@@ -4545,8 +4606,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, meta_source, setup_sink_meta,
       check_success_source_meta, check_success_sink_meta, NULL, &md, &sd);
@@ -4556,8 +4619,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_meta)
 {
-  meta_master_data md = { 0 };
-  meta_slave_data sd = { 0 };
+  meta_master_data md = { {0}
+  };
+  meta_slave_data sd = { {0}
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       meta_source, setup_sink_meta, check_success_source_meta,
@@ -4876,7 +4941,9 @@ GST_START_TEST (test_non_live_source_change)
 {
   source_change_input_data id = { switch_to_aiff };
   source_change_master_data md = { 0 };
-  source_change_slave_data sd = { 0 };
+  source_change_slave_data sd = { {{0}
+      }
+  };
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, source_change_source,
       setup_sink_source_change, check_success_source_source_change,
@@ -4889,7 +4956,9 @@ GST_START_TEST (test_live_av_source_change)
 {
   source_change_input_data id = { switch_live_av };
   source_change_master_data md = { 0 };
-  source_change_slave_data sd = { 0 };
+  source_change_slave_data sd = { {{0}
+      }
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, source_change_source,
       setup_sink_source_change, check_success_source_source_change,
@@ -4902,7 +4971,9 @@ GST_START_TEST (test_live_av_2_source_change)
 {
   source_change_input_data id = { switch_live_av };
   source_change_master_data md = { 0 };
-  source_change_slave_data sd = { 0 };
+  source_change_slave_data sd = { {{0}
+      }
+  };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       source_change_source, setup_sink_source_change,
@@ -5246,7 +5317,7 @@ GST_START_TEST (test_non_live_av_dynamic_pipeline_change_stress)
     dynamic_pipeline_change_stress_swap_source, 100,
     dynamic_pipeline_change_stress_change_audio_channel
   };
-  dynamic_pipeline_change_stress_master_data md = { 0 };
+  dynamic_pipeline_change_stress_master_data md = { {0} };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE | TEST_FEATURE_HAS_VIDEO,
       dynamic_pipeline_change_stress, NULL,
@@ -5262,7 +5333,7 @@ GST_START_TEST (test_non_live_av_2_dynamic_pipeline_change_stress)
     dynamic_pipeline_change_stress_swap_source, 100,
     dynamic_pipeline_change_stress_change_audio_channel
   };
-  dynamic_pipeline_change_stress_master_data md = { 0 };
+  dynamic_pipeline_change_stress_master_data md = { {0} };
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE | TEST_FEATURE_HAS_VIDEO |
       TEST_FEATURE_SPLIT_SINKS, dynamic_pipeline_change_stress, NULL,
@@ -5278,7 +5349,7 @@ GST_START_TEST (test_live_av_dynamic_pipeline_change_stress)
     dynamic_pipeline_change_stress_swap_source, 100,
     dynamic_pipeline_change_stress_change_audio_channel
   };
-  dynamic_pipeline_change_stress_master_data md = { 0 };
+  dynamic_pipeline_change_stress_master_data md = { {0} };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, dynamic_pipeline_change_stress, NULL,
       check_success_source_dynamic_pipeline_change_stress, NULL, &id, &md,
@@ -5293,7 +5364,7 @@ GST_START_TEST (test_live_av_2_dynamic_pipeline_change_stress)
     dynamic_pipeline_change_stress_swap_source, 100,
     dynamic_pipeline_change_stress_change_audio_channel
   };
-  dynamic_pipeline_change_stress_master_data md = { 0 };
+  dynamic_pipeline_change_stress_master_data md = { {0} };
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       dynamic_pipeline_change_stress, NULL,
