@@ -175,11 +175,18 @@ gst_vaapiencode_default_set_property (GstVaapiEncode * encode, guint prop_id,
     const GValue * value)
 {
   PropValue *const prop_value = prop_value_lookup (encode, prop_id);
+  GstVaapiEncoder *encoder = encode->encoder;
 
   if (prop_value) {
     g_value_copy (value, &prop_value->value);
+
+    if (encoder)
+      return (gst_vaapi_encoder_set_property (encoder, prop_id,
+              value) == GST_VAAPI_ENCODER_STATUS_SUCCESS);
+
     return TRUE;
   }
+
   return FALSE;
 }
 
