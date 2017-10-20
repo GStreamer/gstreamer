@@ -3,6 +3,7 @@ import argparse
 import os
 import subprocess
 import xml.etree.ElementTree as ET
+import sys
 
 from common import git
 from common import Colors
@@ -113,6 +114,9 @@ if __name__ == "__main__":
     options = parser.parse_args()
     if options.no_color:
         Colors.disable()
+
+    if options.no_interaction:
+        sys.stdin.close()
 
     if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction):
         exit(1)
