@@ -183,7 +183,7 @@ typedef enum { /*< flags >*/
  * @time: the stream time of the segment start
  * @position: the buffer timestamp position in the segment (used internally by
  *     elements such as sources, demuxers or parsers to track progress)
- * @duration: the duration of the segment
+ * @duration: the duration of the stream
  *
  * A helper structure that holds the configured region of
  * interest in a media file.
