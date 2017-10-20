@@ -1269,21 +1269,31 @@ print_plugin_features (GstPlugin * plugin)
 }
 
 static int
-print_element_features (const gchar * element_name)
+print_feature_info (const gchar * feature_name, gboolean print_all)
 {
   GstPluginFeature *feature;
+  GstRegistry *registry = gst_registry_get ();
 
+  feature = gst_registry_find_feature (registry, feature_name,
+      GST_TYPE_ELEMENT_FACTORY);
+  if (feature) {
+    int ret = print_element_info (GST_ELEMENT_FACTORY (feature), print_all);
+    gst_object_unref (feature);
+    return ret;
+  }
   /* FIXME implement other pretty print function for these */
-  feature = gst_registry_find_feature (gst_registry_get (), element_name,
+  feature = gst_registry_find_feature (registry, feature_name,
       GST_TYPE_TYPE_FIND_FACTORY);
   if (feature) {
-    n_print ("%s: a typefind function\n", element_name);
+    n_print ("%s: a typefind function\n", feature_name);
+    gst_object_unref (feature);
     return 0;
   }
-  feature = gst_registry_find_feature (gst_registry_get (), element_name,
+  feature = gst_registry_find_feature (registry, feature_name,
       GST_TYPE_TRACER_FACTORY);
   if (feature) {
-    n_print ("%s: a tracer module\n", element_name);
+    n_print ("%s: a tracer module\n", feature_name);
+    gst_object_unref (feature);
     return 0;
   }
 
@@ -1636,28 +1646,16 @@ main (int argc, char *argv[])
     }
   } else {
     /* else we try to get a factory */
-    GstElementFactory *factory;
-    GstPlugin *plugin;
     const char *arg = argv[argc - 1];
-    int retval;
+    int retval = -1;
 
     if (!plugin_name) {
-      factory = gst_element_factory_find (arg);
-
-      /* if there's a factory, print out the info */
-      if (factory) {
-        retval = print_element_info (factory, print_all);
-        gst_object_unref (factory);
-      } else {
-        retval = print_element_features (arg);
-      }
-    } else {
-      retval = -1;
+      retval = print_feature_info (arg, print_all);
     }
 
     /* otherwise check if it's a plugin */
     if (retval) {
-      plugin = gst_registry_find_plugin (gst_registry_get (), arg);
+      GstPlugin *plugin = gst_registry_find_plugin (gst_registry_get (), arg);
 
       /* if there is such a plugin, print out info */
       if (plugin) {
