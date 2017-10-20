@@ -4560,7 +4560,6 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page, gboolean discont)
       }
 
       /* only once we seeked back */
-      GST_PUSH_LOCK (ogg);
       ogg->push_disable_seeking = TRUE;
     } else {
       GST_PUSH_UNLOCK (ogg);
