@@ -37,7 +37,7 @@
 
 static char *_name = NULL;
 
-static int print_element_info (GstElementFactory * factory,
+static int print_element_info (GstPluginFeature * feature,
     gboolean print_names);
 
 /* *INDENT-OFF* */
@@ -1002,7 +1002,7 @@ print_element_list (gboolean print_all, gchar * ftypes)
             goto next;
         }
         if (print_all)
-          print_element_info (factory, TRUE);
+          print_element_info (feature, TRUE);
         else
           g_print ("%s:  %s: %s\n", gst_plugin_get_name (plugin),
               GST_OBJECT_NAME (factory),
@@ -1277,7 +1277,7 @@ print_feature_info (const gchar * feature_name, gboolean print_all)
   feature = gst_registry_find_feature (registry, feature_name,
       GST_TYPE_ELEMENT_FACTORY);
   if (feature) {
-    int ret = print_element_info (GST_ELEMENT_FACTORY (feature), print_all);
+    int ret = print_element_info (feature, print_all);
     gst_object_unref (feature);
     return ret;
   }
@@ -1301,16 +1301,14 @@ print_feature_info (const gchar * feature_name, gboolean print_all)
 }
 
 static int
-print_element_info (GstElementFactory * factory, gboolean print_names)
+print_element_info (GstPluginFeature * feature, gboolean print_names)
 {
+  GstElementFactory *factory;
   GstElement *element;
   GstPlugin *plugin;
   gint maxlevel = 0;
 
-  factory =
-      GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
-          (factory)));
-
+  factory = GST_ELEMENT_FACTORY (gst_plugin_feature_load (feature));
   if (!factory) {
     g_print ("element plugin couldn't be loaded\n");
     return -1;
