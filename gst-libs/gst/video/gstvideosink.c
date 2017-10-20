@@ -142,7 +142,9 @@ gst_video_sink_init (GstVideoSink * videosink)
   videosink->height = 0;
 
   /* 20ms is more than enough, 80-130ms is noticable */
-  gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), 20 * GST_MSECOND);
+  gst_base_sink_set_processing_deadline (GST_BASE_SINK (videosink),
+      15 * GST_MSECOND);
+  gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), 5 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK (videosink), TRUE);
 
   videosink->priv = gst_video_sink_get_instance_private (videosink);
