@@ -4655,6 +4655,9 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
     }
   } else {
     GST_WARNING_OBJECT (ogg, "No chain to forward event to");
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+      GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+          ("EOS before finding a chain"));
   }
   gst_event_unref (event);
 
