@@ -44,7 +44,7 @@ node('docker') {
 		    testTimeMargin: '3000', thresholdMode: 1,
 		    thresholds: [[$class: 'FailedThreshold',
 			    failureNewThreshold: '',
-			    failureThreshold: '400',
+			    failureThreshold: '5',
 			    unstableNewThreshold: '',
 			    unstableThreshold: '1'],
 			[$class: 'SkippedThreshold',
@@ -61,7 +61,7 @@ node('docker') {
 	}
 
 	stage('install') {
-	    sh 'mkdir dest'
+	    sh 'mkdir -p dest'
 	    sh 'DESTDIR=$PWD/dest ninja -C build install'
 	}
 
