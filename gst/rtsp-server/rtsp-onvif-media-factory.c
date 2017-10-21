@@ -55,12 +55,26 @@ struct GstRTSPOnvifMediaFactoryPrivate
 G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPOnvifMediaFactory,
     gst_rtsp_onvif_media_factory, GST_TYPE_RTSP_MEDIA_FACTORY);
 
-static gboolean
-requires_backchannel (GstRTSPMessage * msg)
+/**
+ * gst_rtsp_onvif_media_factory_requires_backchannel:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Checks whether the client request requires backchannel.
+ *
+ * Returns: %TRUE if the client request requires backchannel.
+ *
+ * Since: 1.14
+ */
+gboolean
+gst_rtsp_onvif_media_factory_requires_backchannel (GstRTSPMediaFactory *
+    factory, GstRTSPContext * ctx)
 {
+  GstRTSPMessage *msg = ctx->request;
   GstRTSPResult res;
   gint i;
   gchar *reqs = NULL;
+
+  g_return_val_if_fail (GST_IS_RTSP_ONVIF_MEDIA_FACTORY (factory), FALSE);
 
   i = 0;
   do {
@@ -81,10 +95,9 @@ gst_rtsp_onvif_media_factory_gen_key (GstRTSPMediaFactory * factory,
     const GstRTSPUrl * url)
 {
   GstRTSPContext *ctx = gst_rtsp_context_get_current ();
-  GstRTSPMessage *msg = ctx->request;
 
   /* Only medias where no backchannel was requested can be shared */
-  if (requires_backchannel (msg))
+  if (gst_rtsp_onvif_media_factory_requires_backchannel (factory, ctx))
     return NULL;
 
   return
@@ -139,7 +152,8 @@ gst_rtsp_onvif_media_factory_construct (GstRTSPMediaFactory * factory,
   got_backchannel_stream =
       gst_rtsp_onvif_media_collect_backchannel (GST_RTSP_ONVIF_MEDIA (media));
   /* FIXME: This should not happen! We checked for that before */
-  if (requires_backchannel (ctx->request) && !got_backchannel_stream) {
+  if (gst_rtsp_onvif_media_factory_requires_backchannel (factory, ctx) &&
+      !got_backchannel_stream) {
     g_object_unref (media);
     return NULL;
   }
@@ -206,7 +220,7 @@ gst_rtsp_onvif_media_factory_create_element (GstRTSPMediaFactory * factory,
   }
 
   /* add backchannel pipeline part, if requested */
-  if (requires_backchannel (ctx->request)) {
+  if (gst_rtsp_onvif_media_factory_requires_backchannel (factory, ctx)) {
     GstRTSPOnvifMediaFactory *onvif_factory =
         GST_RTSP_ONVIF_MEDIA_FACTORY (factory);
     GstElement *backchannel_bin;
