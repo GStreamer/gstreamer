@@ -2960,11 +2960,6 @@ gst_audio_decoder_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_AUDIO_DECODER_STREAM_LOCK (codec);
-      gst_audio_decoder_flush (codec, TRUE);
-      GST_AUDIO_DECODER_STREAM_UNLOCK (codec);
-      break;
     default:
       break;
   }
