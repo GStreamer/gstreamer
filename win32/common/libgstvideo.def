@@ -150,6 +150,7 @@ EXPORTS
 	gst_video_encoder_get_frame
 	gst_video_encoder_get_frames
 	gst_video_encoder_get_latency
+	gst_video_encoder_get_max_encode_time
 	gst_video_encoder_get_oldest_frame
 	gst_video_encoder_get_output_state
 	gst_video_encoder_get_type
