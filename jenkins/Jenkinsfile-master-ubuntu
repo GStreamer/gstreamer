@@ -1,0 +1,66 @@
+node('docker') {
+    docker.image('gstreamer/build-base-ubuntu:latest').inside {
+	
+	env.CCACHE_DIR = "${env.WORKSPACE}/.ccache"
+	env.CCACHE_MAXSIZE = "2G"
+	env.CC = "ccache gcc"
+	env.CXX = "ccache g++"
+	env.MAKEFLAGS = "-j6"
+	env.PATH = "${env.WORKSPACE}:${env.PATH}"
+	env.GST_UNINSTALLED_ROOT="${env.WORKSPACE}"
+	env.HOME="${env.WORKSPACE}"
+	env.DISPLAY=":0"
+
+	stage('Checkout') {
+	    if (params.wipe) {
+		sh 'rm -Rf *'
+	    }
+	    checkout([$class: 'RepoScm',
+		      manifestRepositoryUrl:'https://git.arracacha.collabora.co.uk/git/gst-manifest.git',
+		      manifestBranch:"refs/tags/${params.build_tag}",
+		      jobs:4,
+		      currentBranch:true,
+		      quiet:true,
+		      depth:0,
+		      mirrorDir:'/repositories'])
+	}
+	
+	stage('Cleanup') {
+	    sh 'rm -f **/tests/check/*/*.xml'
+	}
+	
+	stage ('Build') {
+	    sh "uname -a"
+	    sh "./gstreamer/scripts/gst-uninstalled ./gst-ci-scripts/ci-build.sh fast-build-only"
+	}
+
+	withEnv(['DISPLAY=:0']) {
+	    stage ('Check') {
+		env.GST_CHECKS_IGNORE="test_allocate_udp_ports_multicast,test_allocate_udp_ports_client_settings,test_reorder_buffer,test_redirect_yes"
+		env.GST_CHECK_XML=1
+		sh 'Xvfb :0 -screen 0 1024x768x24 -fbdir /tmp &'
+		sh 'env'
+		sh "./gstreamer/scripts/gst-uninstalled ./gst-ci-scripts/ci-build.sh check"
+
+		step([$class: 'XUnitBuilder',
+		      testTimeMargin: '3000', thresholdMode: 1,
+		      thresholds: [[$class: 'FailedThreshold',
+				    failureNewThreshold: '',
+				    failureThreshold: '400',
+				    unstableNewThreshold: '',
+				    unstableThreshold: '1'],
+				   [$class: 'SkippedThreshold',
+				    failureNewThreshold: '',
+				    failureThreshold: '',
+				    unstableNewThreshold: '',
+				    unstableThreshold: '']],
+		      tools: [[$class: 'CheckType',
+			       deleteOutputFiles: true,
+			       failIfNotNew: true,
+			       pattern: '**/tests/check/*/*.xml',
+			       skipNoTestFiles: true,
+			       stopProcessingIfError: true]]])
+	    }
+	}
+    }
+}
