@@ -1,4 +1,4 @@
-node("debian") {
+node("docker") {
     docker.image('gstreamer/build-base-ubuntu:latest').inside {
 
 	env.OUTPREFIX="${env.WORKSPACE}/../output/${params.build_tag}/linux_x86_64/"
