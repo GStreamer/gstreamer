@@ -530,14 +530,6 @@ gst_audio_encoder_change_state (GstElement * element, GstStateChange transition)
         if (!klass->open (enc))
           goto open_failed;
       }
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (klass->flush) {
-        GST_AUDIO_ENCODER_STREAM_LOCK (enc);
-        klass->flush (enc);
-        GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
-      }
-      break;
     default:
       break;
   }
