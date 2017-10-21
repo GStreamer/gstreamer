@@ -18,6 +18,7 @@ RUN  \
 	gstreamer-editing-services1.0 && \
      apt-get -y install \
         ccache \
+	gdb \
         git \
 	xvfb \
 	wget

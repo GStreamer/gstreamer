@@ -24,6 +24,7 @@ RUN dnf builddep -y \
     dnf install -y \
     	ccache \
 	gcc-c++ \
+	gdb \
 	git \
 	json-glib-devel \
 	libunwind-devel \
