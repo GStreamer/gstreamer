@@ -237,7 +237,7 @@ DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  * threading system as one of the very first things in your program
  * (see the example at the beginning of this section).
  *
- * Returns: (transfer full): a pointer to GStreamer's option group.
+ * Returns: (transfer full) (nullable): a pointer to GStreamer's option group.
  */
 
 GOptionGroup *
@@ -375,7 +375,7 @@ find_executable_path (void)
  * external process, the returned path will be the same as from the
  * parent process.
  *
- * Returns: (transfer none): The path of the executable that
+ * Returns: (transfer none) (nullable): The path of the executable that
  *   initialized GStreamer, or %NULL if it could not be determined.
  *
  * Since: 1.14

@@ -1080,7 +1080,7 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
  * the memory block in @buffer is removed, replaced or merged, typically with
  * any call that modifies the memory in @buffer.
  *
- * Returns: (transfer none): the #GstMemory at @idx.
+ * Returns: (transfer none) (nullable): the #GstMemory at @idx.
  */
 GstMemory *
 gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
@@ -1101,7 +1101,7 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
  *
  * Get the memory block at index @idx in @buffer.
  *
- * Returns: (transfer full): a #GstMemory that contains the data of the
+ * Returns: (transfer full) (nullable): a #GstMemory that contains the data of the
  * memory block at @idx. Use gst_memory_unref () after usage.
  */
 GstMemory *
@@ -1117,7 +1117,7 @@ gst_buffer_get_memory (GstBuffer * buffer, guint idx)
  * Get all the memory block in @buffer. The memory blocks will be merged
  * into one large #GstMemory.
  *
- * Returns: (transfer full): a #GstMemory that contains the merged memory.
+ * Returns: (transfer full) (nullable): a #GstMemory that contains the merged memory.
  * Use gst_memory_unref () after usage.
  */
 GstMemory *
@@ -1137,7 +1137,7 @@ gst_buffer_get_all_memory (GstBuffer * buffer)
  *
  * If @length is -1, all memory starting from @idx is merged.
  *
- * Returns: (transfer full): a #GstMemory that contains the merged data of @length
+ * Returns: (transfer full) (nullable): a #GstMemory that contains the merged data of @length
  *    blocks starting at @idx. Use gst_memory_unref () after usage.
  */
 GstMemory *
@@ -2147,7 +2147,7 @@ gst_buffer_get_meta (GstBuffer * buffer, GType api)
  *
  * Add metadata for @info to @buffer using the parameters in @params.
  *
- * Returns: (transfer none): the metadata for the api in @info on @buffer.
+ * Returns: (transfer none) (nullable): the metadata for the api in @info on @buffer.
  */
 GstMeta *
 gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
@@ -2430,7 +2430,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_parent_buffer_meta_debug);
  * Add a #GstParentBufferMeta to @buffer that holds a reference on
  * @ref until the buffer is freed.
  *
- * Returns: (transfer none): The #GstParentBufferMeta that was added to the buffer
+ * Returns: (transfer none) (nullable): The #GstParentBufferMeta that was added to the buffer
  *
  * Since: 1.6
  */
@@ -2561,7 +2561,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_reference_timestamp_meta_debug);
  * optionally @duration based on a specific timestamp @reference. See the
  * documentation of #GstReferenceTimestampMeta for details.
  *
- * Returns: (transfer none): The #GstReferenceTimestampMeta that was added to the buffer
+ * Returns: (transfer none) (nullable): The #GstReferenceTimestampMeta that was added to the buffer
  *
  * Since: 1.14
  */
@@ -2599,7 +2599,7 @@ gst_buffer_add_reference_timestamp_meta (GstBuffer * buffer,
  *
  * Buffers can contain multiple #GstReferenceTimestampMeta metadata items.
  *
- * Returns: (transfer none): the #GstReferenceTimestampMeta or %NULL when there
+ * Returns: (transfer none) (nullable): the #GstReferenceTimestampMeta or %NULL when there
  * is no such metadata on @buffer.
  *
  * Since: 1.14

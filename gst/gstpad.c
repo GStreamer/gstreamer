@@ -2759,7 +2759,7 @@ gst_pad_get_pad_template_caps (GstPad * pad)
  * Gets the peer of @pad. This function refs the peer pad so
  * you need to unref it after use.
  *
- * Returns: (transfer full): the peer #GstPad. Unref after usage.
+ * Returns: (transfer full) (nullable): the peer #GstPad. Unref after usage.
  *
  * MT safe.
  */
@@ -5905,7 +5905,7 @@ gst_pad_set_element_private (GstPad * pad, gpointer priv)
  * Gets the private data of a pad.
  * No locking is performed in this function.
  *
- * Returns: (transfer none): a #gpointer to the private data.
+ * Returns: (transfer none) (nullable): a #gpointer to the private data.
  */
 gpointer
 gst_pad_get_element_private (GstPad * pad)
@@ -6271,7 +6271,7 @@ join_failed:
  * gst_pad_probe_info_get_event:
  * @info: a #GstPadProbeInfo
  *
- * Returns: (transfer none): The #GstEvent from the probe
+ * Returns: (transfer none) (nullable): The #GstEvent from the probe
  */
 
 GstEvent *
@@ -6288,7 +6288,7 @@ gst_pad_probe_info_get_event (GstPadProbeInfo * info)
  * gst_pad_probe_info_get_query:
  * @info: a #GstPadProbeInfo
  *
- * Returns: (transfer none): The #GstQuery from the probe
+ * Returns: (transfer none) (nullable): The #GstQuery from the probe
  */
 
 GstQuery *
@@ -6304,7 +6304,7 @@ gst_pad_probe_info_get_query (GstPadProbeInfo * info)
  * gst_pad_probe_info_get_buffer:
  * @info: a #GstPadProbeInfo
  *
- * Returns: (transfer none): The #GstBuffer from the probe
+ * Returns: (transfer none) (nullable): The #GstBuffer from the probe
  */
 
 GstBuffer *
@@ -6319,7 +6319,7 @@ gst_pad_probe_info_get_buffer (GstPadProbeInfo * info)
  * gst_pad_probe_info_get_buffer_list:
  * @info: a #GstPadProbeInfo
  *
- * Returns: (transfer none): The #GstBufferList from the probe
+ * Returns: (transfer none) (nullable): The #GstBufferList from the probe
  */
 
 GstBufferList *

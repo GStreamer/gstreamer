@@ -525,7 +525,7 @@ gst_stream_get_property (GObject * object, guint prop_id,
  *
  * Get a descriptive string for a given #GstStreamType
  *
- * Returns: A string describing the stream type
+ * Returns: (nullable): A string describing the stream type
  *
  * Since: 1.10
  */

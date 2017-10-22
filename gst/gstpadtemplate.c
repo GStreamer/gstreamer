@@ -299,7 +299,7 @@ G_DEFINE_POINTER_TYPE (GstStaticPadTemplate, gst_static_pad_template);
  *
  * Converts a #GstStaticPadTemplate into a #GstPadTemplate.
  *
- * Returns: (transfer floating): a new #GstPadTemplate.
+ * Returns: (transfer floating) (nullable): a new #GstPadTemplate.
  */
 /* FIXME0.11: rename to gst_pad_template_new_from_static_pad_template() */
 GstPadTemplate *
@@ -369,7 +369,7 @@ gst_pad_template_new_from_static_pad_template_with_gtype (GstStaticPadTemplate *
  * Creates a new pad template with a name according to the given template
  * and with the given arguments.
  *
- * Returns: (transfer floating): a new #GstPadTemplate.
+ * Returns: (transfer floating) (nullable): a new #GstPadTemplate.
  */
 GstPadTemplate *
 gst_pad_template_new (const gchar * name_template,

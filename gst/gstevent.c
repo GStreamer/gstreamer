@@ -293,7 +293,7 @@ gst_event_init (GstEventImpl * event, GstEventType type)
  * New custom events can also be created by subclassing the event type if
  * needed.
  *
- * Returns: (transfer full): the new custom event.
+ * Returns: (transfer full) (nullable): the new custom event.
  */
 GstEvent *
 gst_event_new_custom (GstEventType type, GstStructure * structure)
@@ -801,7 +801,7 @@ gst_event_parse_gap (GstEvent * event, GstClockTime * timestamp,
  * synchronized with the buffer flow and contains the format of the buffers
  * that will follow after the event.
  *
- * Returns: (transfer full): the new CAPS event.
+ * Returns: (transfer full) (nullable): the new CAPS event.
  */
 GstEvent *
 gst_event_new_caps (GstCaps * caps)
@@ -879,7 +879,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
  *
  *   time + (TIMESTAMP(buf) - start) * ABS (rate * applied_rate)
  *
- * Returns: (transfer full): the new SEGMENT event.
+ * Returns: (transfer full) (nullable): the new SEGMENT event.
  */
 GstEvent *
 gst_event_new_segment (const GstSegment * segment)
@@ -1128,7 +1128,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * The application can use general event probes to intercept the QoS
  * event and implement custom application specific QoS handling.
  *
- * Returns: (transfer full): a new QOS event.
+ * Returns: (transfer full) (nullable): a new QOS event.
  */
 GstEvent *
 gst_event_new_qos (GstQOSType type, gdouble proportion,
@@ -1254,7 +1254,7 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
  * #GST_QUERY_POSITION and update the playback segment current position with a
  * #GST_SEEK_TYPE_SET to the desired position.
  *
- * Returns: (transfer full): a new seek event.
+ * Returns: (transfer full) (nullable): a new seek event.
  */
 GstEvent *
 gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
@@ -1435,7 +1435,7 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
  * The @intermediate flag instructs the pipeline that this step operation is
  * part of a larger step operation.
  *
- * Returns: (transfer full): a new #GstEvent
+ * Returns: (transfer full) (nullable): a new #GstEvent
  */
 GstEvent *
 gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,

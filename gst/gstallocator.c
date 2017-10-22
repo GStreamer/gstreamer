@@ -159,13 +159,13 @@ gst_allocation_params_init (GstAllocationParams * params)
 
 /**
  * gst_allocation_params_copy:
- * @params: (transfer none): a #GstAllocationParams
+ * @params: (transfer none) (nullable): a #GstAllocationParams
  *
  * Create a copy of @params.
  *
  * Free-function: gst_allocation_params_free
  *
- * Returns: (transfer full): a new ##GstAllocationParams, free with
+ * Returns: (transfer full) (nullable): a new ##GstAllocationParams, free with
  * gst_allocation_params_free().
  */
 GstAllocationParams *
@@ -290,7 +290,7 @@ gst_allocator_set_default (GstAllocator * allocator)
  * the amount of bytes to align to. For example, to align to 8 bytes,
  * use an alignment of 7.
  *
- * Returns: (transfer full): a new #GstMemory.
+ * Returns: (transfer full) (nullable): a new #GstMemory.
  */
 GstMemory *
 gst_allocator_alloc (GstAllocator * allocator, gsize size,
@@ -631,7 +631,7 @@ _priv_gst_allocator_cleanup (void)
  * The prefix/padding must be filled with 0 if @flags contains
  * #GST_MEMORY_FLAG_ZERO_PREFIXED and #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
- * Returns: (transfer full): a new #GstMemory.
+ * Returns: (transfer full) (nullable): a new #GstMemory.
  */
 GstMemory *
 gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,

@@ -879,7 +879,8 @@ gst_structure_get_field (const GstStructure * structure,
  *
  * Get the value of the field with name @fieldname.
  *
- * Returns: the #GValue corresponding to the field with the given name.
+ * Returns: (nullable): the #GValue corresponding to the field with the given
+ * name.
  */
 const GValue *
 gst_structure_get_value (const GstStructure * structure,
@@ -904,8 +905,8 @@ gst_structure_get_value (const GstStructure * structure,
  *
  * Get the value of the field with GQuark @field.
  *
- * Returns: the #GValue corresponding to the field with the given name
- *          identifier.
+ * Returns: (nullable): the #GValue corresponding to the field with the given
+ * name identifier.
  */
 const GValue *
 gst_structure_id_get_value (const GstStructure * structure, GQuark field)
@@ -2848,7 +2849,7 @@ gst_structure_intersect_field2 (GQuark id, const GValue * val1, gpointer data)
  *
  * Intersects @struct1 and @struct2 and returns the intersection.
  *
- * Returns: Intersection of @struct1 and @struct2
+ * Returns: (nullable): Intersection of @struct1 and @struct2
  */
 GstStructure *
 gst_structure_intersect (const GstStructure * struct1,

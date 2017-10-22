@@ -164,7 +164,7 @@ gst_param_spec_fraction_get_type (void)
  * used in connection with g_object_class_install_property() in a GObjects's
  * instance_init function.
  *
- * Returns: (transfer full): a newly created parameter specification
+ * Returns: (transfer full) (nullable): a newly created parameter specification
  */
 GParamSpec *
 gst_param_spec_fraction (const gchar * name, const gchar * nick,

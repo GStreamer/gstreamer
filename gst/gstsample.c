@@ -207,7 +207,7 @@ gst_sample_get_segment (GstSample * sample)
  *
  * Get extra information associated with @sample.
  *
- * Returns: (transfer none): the extra info of @sample.
+ * Returns: (transfer none) (nullable): the extra info of @sample.
  *  The info remains valid as long as @sample is valid.
  */
 const GstStructure *

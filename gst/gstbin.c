@@ -4549,7 +4549,8 @@ compare_interface (const GValue * velement, GValue * interface)
  *
  * MT safe.  Caller owns returned reference.
  *
- * Returns: (transfer full): A #GstElement inside the bin implementing the interface
+ * Returns: (transfer full) (nullable): A #GstElement inside the bin
+ * implementing the interface
  */
 GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType iface)

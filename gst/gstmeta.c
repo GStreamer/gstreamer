@@ -158,7 +158,8 @@ gst_meta_api_type_get_tags (GType api)
  * The same @info can be retrieved later with gst_meta_get_info() by using
  * @impl as the key.
  *
- * Returns: (transfer none): a #GstMetaInfo that can be used to access metadata.
+ * Returns: (transfer none) (nullable): a #GstMetaInfo that can be used to
+ * access metadata.
  */
 
 const GstMetaInfo *

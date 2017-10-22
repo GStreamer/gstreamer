@@ -342,7 +342,7 @@ gst_device_monitor_dispose (GObject * object)
  * Gets a list of devices from all of the relevant monitors. This may actually
  * probe the hardware if the monitor is not currently started.
  *
- * Returns: (transfer full) (element-type GstDevice): a #GList of
+ * Returns: (transfer full) (element-type GstDevice) (nullable): a #GList of
  *   #GstDevice
  *
  * Since: 1.4

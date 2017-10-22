@@ -604,7 +604,7 @@ gst_tag_get_type (const gchar * tag)
  * Returns the human-readable name of this tag, You must not change or free
  * this string.
  *
- * Returns: the human-readable name of this tag
+ * Returns: (nullable): the human-readable name of this tag
  */
 const gchar *
 gst_tag_get_nick (const gchar * tag)
@@ -629,7 +629,7 @@ gst_tag_get_nick (const gchar * tag)
  * Returns the human-readable description of this tag, You must not change or
  * free this string.
  *
- * Returns: the human-readable description of this tag
+ * Returns: (nullable): the human-readable description of this tag
  */
 const gchar *
 gst_tag_get_description (const gchar * tag)

@@ -663,7 +663,7 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
  *
  * Free-function: gst_query_unref()
  *
- * Returns: (transfer full): a new #GstQuery
+ * Returns: (transfer full) (nullable): a new #GstQuery
  */
 GstQuery *
 gst_query_new_custom (GstQueryType type, GstStructure * structure)

@@ -337,7 +337,7 @@ gst_device_provider_class_set_static_metadata (GstDeviceProviderClass * klass,
  *
  * Get metadata with @key in @klass.
  *
- * Returns: the metadata for @key.
+ * Returns: (nullable): the metadata for @key.
  *
  * Since: 1.4
  */

@@ -342,7 +342,7 @@ gst_stream_collection_get_size (GstStreamCollection * collection)
  *
  * The caller should not modify the returned #GstStream
  *
- * Returns: (transfer none): A #GstStream
+ * Returns: (transfer none) (nullable): A #GstStream
  *
  * Since: 1.10
  */

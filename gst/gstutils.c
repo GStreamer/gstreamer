@@ -3375,7 +3375,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: (transfer floating) (type Gst.Element): a newly-created
+ * Returns: (transfer floating) (type Gst.Element) (nullable): a newly-created
  *   element, which is guaranteed to be a bin unless
  *   GST_FLAG_NO_SINGLE_ELEMENT_BINS was passed, or %NULL if an error
  *   occurred.

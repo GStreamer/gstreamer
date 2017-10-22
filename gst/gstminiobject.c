@@ -132,7 +132,8 @@ gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
  *
  * MT safe
  *
- * Returns: (transfer full): the new mini-object.
+ * Returns: (transfer full) (nullable): the new mini-object if copying is
+ * possible, %NULL otherwise.
  */
 GstMiniObject *
 gst_mini_object_copy (const GstMiniObject * mini_object)
@@ -521,7 +522,7 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
  * Replace the current #GstMiniObject pointer to by @olddata with %NULL and
  * return the old value.
  *
- * Returns: the #GstMiniObject at @oldata
+ * Returns: (nullable): the #GstMiniObject at @oldata
  */
 GstMiniObject *
 gst_mini_object_steal (GstMiniObject ** olddata)

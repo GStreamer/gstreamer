@@ -444,7 +444,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * Elements in a pipeline will only have their clock set when the
  * pipeline is in the PLAYING state.
  *
- * Returns: (transfer full): the #GstClock of the element. unref after usage.
+ * Returns: (transfer full) (nullable): the #GstClock of the element. unref after usage.
  *
  * MT safe.
  */
@@ -3381,7 +3381,8 @@ gst_element_set_bus (GstElement * element, GstBus * bus)
  * Returns the bus of the element. Note that only a #GstPipeline will provide a
  * bus for the application.
  *
- * Returns: (transfer full): the element's #GstBus. unref after usage.
+ * Returns: (transfer full) (nullable): the element's #GstBus. unref after
+ * usage.
  *
  * MT safe.
  */
@@ -3505,7 +3506,7 @@ _match_context_type (GstContext * c1, const gchar * context_type)
  *
  * Gets the context with @context_type set on the element or NULL.
  *
- * Returns: (transfer full): A #GstContext or NULL
+ * Returns: (transfer full) (nullable): A #GstContext or NULL
  *
  * Since: 1.8
  */

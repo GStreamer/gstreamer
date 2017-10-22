@@ -1309,7 +1309,8 @@ gst_plugin_find_feature_by_name (GstPlugin * plugin, const gchar * name)
  *
  * Load the named plugin. Refs the plugin.
  *
- * Returns: (transfer full): a reference to a loaded plugin, or %NULL on error.
+ * Returns: (transfer full) (nullable): a reference to a loaded plugin, or
+ * %NULL on error.
  */
 GstPlugin *
 gst_plugin_load_by_name (const gchar * name)
@@ -1352,7 +1353,8 @@ gst_plugin_load_by_name (const gchar * name)
  * plugin = loaded_plugin;
  * ]|
  *
- * Returns: (transfer full): a reference to a loaded plugin, or %NULL on error.
+ * Returns: (transfer full) (nullable): a reference to a loaded plugin, or
+ * %NULL on error.
  */
 GstPlugin *
 gst_plugin_load (GstPlugin * plugin)

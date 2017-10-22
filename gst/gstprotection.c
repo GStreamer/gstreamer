@@ -166,9 +166,10 @@ gst_buffer_add_protection_meta (GstBuffer * buffer, GstStructure * info)
  * an element that supports one of the supplied UUIDs. If more than one
  * element matches, the system ID of the highest ranked element is selected.
  *
- * Returns: (transfer none): One of the strings from @system_identifiers that
- * indicates the highest ranked element that implements the protection system
- * indicated by that system ID, or %NULL if no element has been found.
+ * Returns: (transfer none) (nullable): One of the strings from
+ * @system_identifiers that indicates the highest ranked element that
+ * implements the protection system indicated by that system ID, or %NULL if no
+ * element has been found.
  *
  * Since: 1.6
  */
@@ -202,9 +203,9 @@ gst_protection_select_system (const gchar ** system_identifiers)
  * Iterates the supplied list of UUIDs and checks the GstRegistry for
  * all the decryptors supporting one of the supplied UUIDs.
  *
- * Returns: (transfer full): A null terminated array containing all the
- * @system_identifiers supported by the set of available decryptors, or %NULL
- * if no matches were found.
+ * Returns: (transfer full) (nullable): A null terminated array containing all
+ * the @system_identifiers supported by the set of available decryptors, or
+ * %NULL if no matches were found.
  *
  * Since: 1.14
  */

@@ -284,7 +284,7 @@ gst_message_init (GstMessageImpl * message, GstMessageType type,
  * handled by other message-specific functions to pass a message to the
  * app. The structure field can be %NULL.
  *
- * Returns: (transfer full): The new message.
+ * Returns: (transfer full) (nullable): The new message.
  *
  * MT safe.
  */
@@ -405,7 +405,7 @@ gst_message_new_eos (GstObject * src)
  * occurred. The pipeline will probably (partially) stop. The application
  * receiving this message should stop the pipeline.
  *
- * Returns: (transfer full): the new error message.
+ * Returns: (transfer full) (nullable): the new error message.
  *
  * Since: 1.10
  */
@@ -497,7 +497,7 @@ gst_message_parse_error_details (GstMessage * message,
  * Create a new warning message. The message will make copies of @error and
  * @debug.
  *
- * Returns: (transfer full): the new warning message.
+ * Returns: (transfer full) (nullable): the new warning message.
  *
  * Since: 1.10
  */
@@ -587,7 +587,7 @@ gst_message_parse_warning_details (GstMessage * message,
  * Create a new info message. The message will make copies of @error and
  * @debug.
  *
- * Returns: (transfer full): the new warning message.
+ * Returns: (transfer full) (nullable): the new warning message.
  *
  * Since: 1.10
  */
@@ -714,7 +714,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  *
  * MT safe.
  *
- * Returns: (transfer full): The new buffering message.
+ * Returns: (transfer full) (nullable): The new buffering message.
  */
 GstMessage *
 gst_message_new_buffering (GstObject * src, gint percent)
@@ -984,7 +984,7 @@ gst_message_new_segment_done (GstObject * src, GstFormat format,
  * Create a new application-typed message. GStreamer will never create these
  * messages; they are a gift from us to you. Enjoy.
  *
- * Returns: (transfer full): The new application message.
+ * Returns: (transfer full) (nullable): The new application message.
  *
  * MT safe.
  */
@@ -1007,7 +1007,7 @@ gst_message_new_application (GstObject * src, GstStructure * structure)
  * "the firewire cable was unplugged". The format of the message should be
  * documented in the element's documentation. The structure field can be %NULL.
  *
- * Returns: (transfer full): The new element message.
+ * Returns: (transfer full) (nullable): The new element message.
  *
  * MT safe.
  */
@@ -1815,9 +1815,10 @@ gst_message_set_stream_status_object (GstMessage * message,
  *
  * Extracts the object managing the streaming thread from @message.
  *
- * Returns: a GValue containing the object that manages the streaming thread.
- * This object is usually of type GstTask but other types can be added in the
- * future. The object remains valid as long as @message is valid.
+ * Returns: (nullable): a GValue containing the object that manages the
+ * streaming thread. This object is usually of type GstTask but other types can
+ * be added in the future. The object remains valid as long as @message is
+ * valid.
  */
 const GValue *
 gst_message_get_stream_status_object (GstMessage * message)
@@ -2226,7 +2227,7 @@ gst_message_parse_qos_stats (GstMessage * message, GstFormat * format,
  * @code contains a well defined string describing the action.
  * @text should contain a user visible string detailing the current action.
  *
- * Returns: (transfer full): The new qos message.
+ * Returns: (transfer full) (nullable): The new qos message.
  */
 GstMessage *
 gst_message_new_progress (GstObject * src, GstProgressType type,
@@ -2911,7 +2912,7 @@ gst_message_streams_selected_add (GstMessage * msg, GstStream * stream)
  *
  * Retrieves the #GstStream with index @index from the @message.
  *
- * Returns: (transfer full): A #GstStream
+ * Returns: (transfer full) (nullable): A #GstStream
  *
  * Since: 1.10
  */

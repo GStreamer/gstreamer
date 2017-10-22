@@ -888,7 +888,7 @@ static GSourceFuncs gst_bus_source_funcs = {
  * a message is on the bus. After the GSource is dispatched, the
  * message is popped off the bus and unreffed.
  *
- * Returns: (transfer full): a #GSource that can be added to a mainloop.
+ * Returns: (transfer full) (nullable): a #GSource that can be added to a mainloop.
  */
 GSource *
 gst_bus_create_watch (GstBus * bus)

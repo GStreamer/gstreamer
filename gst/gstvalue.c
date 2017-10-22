@@ -1939,7 +1939,7 @@ gst_value_set_fraction_range_full (GValue * value,
  *
  * Gets the minimum of the range specified by @value.
  *
- * Returns: the minimum of the range
+ * Returns: (nullable): the minimum of the range
  */
 const GValue *
 gst_value_get_fraction_range_min (const GValue * value)
@@ -1962,7 +1962,7 @@ gst_value_get_fraction_range_min (const GValue * value)
  *
  * Gets the maximum of the range specified by @value.
  *
- * Returns: the maximum of the range
+ * Returns: (nullable): the maximum of the range
  */
 const GValue *
 gst_value_get_fraction_range_max (const GValue * value)

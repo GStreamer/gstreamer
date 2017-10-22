@@ -574,7 +574,7 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
  * Gets the string representation of a #GstDebugMessage. This function is used
  * in debug handlers to extract the message.
  *
- * Returns: the string representation of a #GstDebugMessage.
+ * Returns: (nullable): the string representation of a #GstDebugMessage.
  */
 const gchar *
 gst_debug_message_get (GstDebugMessage * message)
@@ -2439,7 +2439,7 @@ gst_info_vasprintf (gchar ** result, const gchar * format, va_list args)
  *
  * Free with g_free().
  *
- * Returns: a newly allocated null terminated string or %NULL on any error
+ * Returns: (nullable): a newly allocated null terminated string or %NULL on any error
  *
  * Since: 1.8
  */
@@ -2466,7 +2466,7 @@ gst_info_strdup_vprintf (const gchar * format, va_list args)
  *
  * Free with g_free().
  *
- * Returns: a newly allocated null terminated string or %NULL on any error
+ * Returns: (nullable): a newly allocated null terminated string or %NULL on any error
  *
  * Since: 1.8
  */
@@ -2771,8 +2771,8 @@ generate_backtrace_trace (void)
  * @flags: A set of #GstStackTraceFlags to determine how the stack
  * trace should look like. Pass 0 to retrieve a minimal backtrace.
  *
- * If libunwind or glibc backtrace are present, a stack trace
- * is returned.
+ * Returns: (nullable): a stack trace, if libunwind or glibc backtrace are
+ * present, else %NULL.
  *
  * Since: 1.12
  */

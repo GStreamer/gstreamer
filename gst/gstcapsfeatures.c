@@ -593,7 +593,7 @@ gst_caps_features_get_size (const GstCapsFeatures * features)
  *
  * Returns the @i-th feature of @features.
  *
- * Returns: The @i-th feature of @features.
+ * Returns: (nullable): The @i-th feature of @features.
  *
  * Since: 1.2
  */

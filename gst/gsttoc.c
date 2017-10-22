@@ -777,7 +777,7 @@ gst_toc_entry_get_toc (GstTocEntry * entry)
  *
  * Gets the parent #GstTocEntry of @entry.
  *
- * Returns: (transfer none): The parent #GstTocEntry of @entry
+ * Returns: (transfer none) (nullable): The parent #GstTocEntry of @entry
  */
 GstTocEntry *
 gst_toc_entry_get_parent (GstTocEntry * entry)

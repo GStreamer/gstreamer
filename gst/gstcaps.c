@@ -395,9 +395,10 @@ G_DEFINE_POINTER_TYPE (GstStaticCaps, gst_static_caps);
  *
  * Converts a #GstStaticCaps to a #GstCaps.
  *
- * Returns: (transfer full): a pointer to the #GstCaps. Unref after usage.
- *     Since the core holds an additional ref to the returned caps,
- *     use gst_caps_make_writable() on the returned caps to modify it.
+ * Returns: (transfer full) (nullable): a pointer to the #GstCaps. Unref
+ *     after usage. Since the core holds an additional ref to the
+ *     returned caps, use gst_caps_make_writable() on the returned caps
+ *     to modify it.
  */
 GstCaps *
 gst_static_caps_get (GstStaticCaps * static_caps)
@@ -513,8 +514,8 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
  * Retrieves the structure with the given index from the list of structures
  * contained in @caps. The caller becomes the owner of the returned structure.
  *
- * Returns: (transfer full): a pointer to the #GstStructure corresponding
- *     to @index.
+ * Returns: (transfer full) (nullable): a pointer to the #GstStructure
+ *     corresponding to @index.
  */
 GstStructure *
 gst_caps_steal_structure (GstCaps * caps, guint index)
@@ -856,8 +857,8 @@ gst_caps_get_structure (const GstCaps * caps, guint index)
  * You do not need to free or unref the structure returned, it
  * belongs to the #GstCaps.
  *
- * Returns: (transfer none): a pointer to the #GstCapsFeatures corresponding
- *     to @index
+ * Returns: (transfer none) (nullable): a pointer to the #GstCapsFeatures
+ *     corresponding to @index
  *
  * Since: 1.2
  */
@@ -2361,7 +2362,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
  * The current implementation of serialization will lead to unexpected results
  * when there are nested #GstCaps / #GstStructure deeper than one level.
  *
- * Returns: (transfer full): a newly allocated #GstCaps
+ * Returns: (transfer full) (nullable): a newly allocated #GstCaps
  */
 GstCaps *
 gst_caps_from_string (const gchar * string)
