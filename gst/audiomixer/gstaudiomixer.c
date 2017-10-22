@@ -837,9 +837,9 @@ gst_live_adder_set_property (GObject * object, guint prop_id,
       GObjectClass *pspec_class = g_type_class_peek (parent_spec->owner_type);
       GValue v = { 0 };
 
-      g_value_init (&v, G_TYPE_INT64);
+      g_value_init (&v, G_TYPE_UINT64);
 
-      g_value_set_int64 (&v, g_value_get_uint (value) * GST_MSECOND);
+      g_value_set_uint64 (&v, g_value_get_uint (value) * GST_MSECOND);
 
       G_OBJECT_CLASS (pspec_class)->set_property (object,
           parent_spec->param_id, &v, parent_spec);
@@ -864,12 +864,12 @@ gst_live_adder_get_property (GObject * object, guint prop_id, GValue * value,
       GObjectClass *pspec_class = g_type_class_peek (parent_spec->owner_type);
       GValue v = { 0 };
 
-      g_value_init (&v, G_TYPE_INT64);
+      g_value_init (&v, G_TYPE_UINT64);
 
       G_OBJECT_CLASS (pspec_class)->get_property (object,
           parent_spec->param_id, &v, parent_spec);
 
-      g_value_set_uint (value, g_value_get_int64 (&v) / GST_MSECOND);
+      g_value_set_uint (value, g_value_get_uint64 (&v) / GST_MSECOND);
       break;
     }
     default:
