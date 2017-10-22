@@ -103,8 +103,8 @@ gst_aggregator_start_time_selection_get_type (void)
 static void gst_aggregator_merge_tags (GstAggregator * aggregator,
     const GstTagList * tags, GstTagMergeMode mode);
 static void gst_aggregator_set_latency_property (GstAggregator * agg,
-    gint64 latency);
-static gint64 gst_aggregator_get_latency_property (GstAggregator * agg);
+    GstClockTime latency);
+static GstClockTime gst_aggregator_get_latency_property (GstAggregator * agg);
 
 static GstClockTime gst_aggregator_get_latency_unlocked (GstAggregator * self);
 
@@ -2170,7 +2170,7 @@ gst_aggregator_finalize (GObject * object)
  * as unresponsive.
  */
 static void
-gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
+gst_aggregator_set_latency_property (GstAggregator * self, GstClockTime latency)
 {
   gboolean changed;
 
@@ -2221,12 +2221,12 @@ gst_aggregator_set_latency_property (GstAggregator * self, gint64 latency)
  * before a pad is deemed unresponsive. A value of -1 means an
  * unlimited time.
  */
-static gint64
+static GstClockTime
 gst_aggregator_get_latency_property (GstAggregator * agg)
 {
-  gint64 res;
+  GstClockTime res;
 
-  g_return_val_if_fail (GST_IS_AGGREGATOR (agg), -1);
+  g_return_val_if_fail (GST_IS_AGGREGATOR (agg), GST_CLOCK_TIME_NONE);
 
   GST_OBJECT_LOCK (agg);
   res = agg->priv->latency;
@@ -2243,7 +2243,7 @@ gst_aggregator_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LATENCY:
-      gst_aggregator_set_latency_property (agg, g_value_get_int64 (value));
+      gst_aggregator_set_latency_property (agg, g_value_get_uint64 (value));
       break;
     case PROP_START_TIME_SELECTION:
       agg->priv->start_time_selection = g_value_get_enum (value);
@@ -2265,7 +2265,7 @@ gst_aggregator_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LATENCY:
-      g_value_set_int64 (value, gst_aggregator_get_latency_property (agg));
+      g_value_set_uint64 (value, gst_aggregator_get_latency_property (agg));
       break;
     case PROP_START_TIME_SELECTION:
       g_value_set_enum (value, agg->priv->start_time_selection);
@@ -2318,11 +2318,10 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   gobject_class->finalize = gst_aggregator_finalize;
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
-      g_param_spec_int64 ("latency", "Buffer latency",
+      g_param_spec_uint64 ("latency", "Buffer latency",
           "Additional latency in live mode to allow upstream "
           "to take longer to produce buffers for the current "
-          "position (in nanoseconds)", 0,
-          (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
+          "position (in nanoseconds)", 0, G_MAXUINT64,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
