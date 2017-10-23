@@ -593,8 +593,6 @@ GST_START_TEST (test_aggregate_handle_queries)
   g_thread_join (thread1);
   g_thread_join (thread2);
 
-  // FIXME: need to make sure all data was aggregated
-
   _chain_data_clear (&data1);
   _chain_data_clear (&data2);
   _test_data_clear (&test);
@@ -819,20 +817,24 @@ GST_START_TEST (test_flushing_seek)
   fail_unless_equals_int (test.flush_start_events, 0);
   fail_unless_equals_int (test.flush_stop_events, 0);
 
-  /* flush ogg:sink_0. This flushs collectpads, calls ::flush() and sends
-   * FLUSH_START downstream */
-  GST_DEBUG ("Flushing: %s:%s", GST_DEBUG_PAD_NAME (data2.sinkpad));
+  /* send a first FLUSH_START on agg:sink_0, will be sent downstream */
+  GST_DEBUG_OBJECT (data2.sinkpad, "send flush_start");
   fail_unless (gst_pad_push_event (data2.srcpad, gst_event_new_flush_start ()));
+  fail_unless_equals_int (test.flush_start_events, 1);
+  fail_unless_equals_int (test.flush_stop_events, 0);
 
   /* expect this buffer to be flushed */
   data2.expected_result = GST_FLOW_FLUSHING;
   thread2 = g_thread_try_new ("gst-check", push_data, &data2, NULL);
 
+  /* this should send not additional flush_start */
+  GST_DEBUG_OBJECT (data1.sinkpad, "send flush_start");
   fail_unless (gst_pad_push_event (data1.srcpad, gst_event_new_flush_start ()));
   fail_unless_equals_int (test.flush_start_events, 1);
   fail_unless_equals_int (test.flush_stop_events, 0);
 
   /* the first FLUSH_STOP is not forwarded downstream */
+  GST_DEBUG_OBJECT (data1.srcpad, "send flush_stop");
   fail_unless (gst_pad_push_event (data1.srcpad,
           gst_event_new_flush_stop (TRUE)));
   fail_unless_equals_int (test.flush_start_events, 1);
@@ -848,6 +850,7 @@ GST_START_TEST (test_flushing_seek)
 
   /* flush agg:sink_1 as well. This completes the flushing seek so a FLUSH_STOP is
    * sent downstream */
+  GST_DEBUG_OBJECT (data2.srcpad, "send flush_stop");
   gst_pad_push_event (data2.srcpad, gst_event_new_flush_stop (TRUE));
 
   /* and the last FLUSH_STOP is forwarded downstream */
