@@ -90,7 +90,7 @@ struct _GstAudioAggregatorPadClass
   GstAggregatorPadClass   parent_class;
 
   /*< private >*/
-  gpointer      _gst_reserved[GST_PADDING];
+  gpointer      _gst_reserved[GST_PADDING_LARGE];
 };
 
 GST_EXPORT
@@ -148,7 +148,7 @@ struct _GstAudioAggregatorClass {
       GstBuffer * outbuf, guint out_offset, guint num_frames);
 
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING];
+  gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
 /*************************
