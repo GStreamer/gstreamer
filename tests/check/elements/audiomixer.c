@@ -1596,6 +1596,7 @@ GST_START_TEST (test_segment_base_handling)
   sink = gst_element_factory_make ("appsink", "sink");
   g_object_set (sink, "caps", caps, "sync", FALSE, NULL);
   gst_caps_unref (caps);
+  /* 50 buffers of 1/10 sec = 5 sec */
   src1 = gst_element_factory_make ("audiotestsrc", "src1");
   g_object_set (src1, "samplesperbuffer", 4410, "num-buffers", 50, NULL);
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
@@ -1612,6 +1613,7 @@ GST_START_TEST (test_segment_base_handling)
   srcpad = gst_element_get_static_pad (src2, "src");
   sinkpad = gst_element_get_request_pad (mix, "sink_2");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  /* set a pad offset of another 5 seconds */
   gst_pad_set_offset (sinkpad, 5 * GST_SECOND);
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
