@@ -77,6 +77,9 @@ struct _GstRTSPStreamPrivate
   gboolean client_side;
   gchar *control;
 
+  /* TRUE if stream is complete. This means that the receiver and the sender
+   * parts are present in the stream. */
+  gboolean is_complete;
   GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
 
@@ -273,6 +276,7 @@ gst_rtsp_stream_finalize (GObject * obj)
 {
   GstRTSPStream *stream;
   GstRTSPStreamPrivate *priv;
+  guint i;
 
   stream = GST_RTSP_STREAM (obj);
   priv = stream->priv;
@@ -295,22 +299,16 @@ gst_rtsp_stream_finalize (GObject * obj)
   if (priv->rtxsend)
     g_object_unref (priv->rtxsend);
 
-  if (priv->socket_v4[0])
-    g_object_unref (priv->socket_v4[0]);
-  if (priv->socket_v4[1])
-    g_object_unref (priv->socket_v4[1]);
-  if (priv->socket_v6[0])
-    g_object_unref (priv->socket_v6[0]);
-  if (priv->socket_v6[1])
-    g_object_unref (priv->socket_v6[1]);
-  if (priv->mcast_socket_v4[0])
-    g_object_unref (priv->mcast_socket_v4[0]);
-  if (priv->mcast_socket_v4[1])
-    g_object_unref (priv->mcast_socket_v4[1]);
-  if (priv->mcast_socket_v6[0])
-    g_object_unref (priv->mcast_socket_v6[0]);
-  if (priv->mcast_socket_v6[1])
-    g_object_unref (priv->mcast_socket_v6[1]);
+  for (i = 0; i < 2; i++) {
+    if (priv->socket_v4[i])
+      g_object_unref (priv->socket_v4[i]);
+    if (priv->socket_v6[i])
+      g_object_unref (priv->socket_v6[i]);
+    if (priv->mcast_socket_v4[i])
+      g_object_unref (priv->mcast_socket_v4[i]);
+    if (priv->mcast_socket_v6[i])
+      g_object_unref (priv->mcast_socket_v6[i]);
+  }
 
   g_free (priv->multicast_iface);
 
@@ -4455,7 +4453,7 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
  * Add a receiver and sender part to the pipeline based on the transport from
  * SETUP.
  *
- * Returns: %TRUE if the pipeline has been sucessfully updated.
+ * Returns: %TRUE if the stream has been sucessfully updated.
  */
 gboolean
 gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
@@ -4480,6 +4478,7 @@ gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
   if (!create_sender_part (stream, transport))
     goto create_sender_error;
 
+  priv->is_complete = TRUE;
   g_mutex_unlock (&priv->lock);
 
   GST_DEBUG_OBJECT (stream, "pipeline sucsessfully updated");
@@ -4492,4 +4491,30 @@ unallowed_transport:
     g_mutex_unlock (&priv->lock);
     return FALSE;
   }
+}
+
+/**
+ * gst_rtsp_stream_is_complete:
+ * @stream: a #GstRTSPStream
+ *
+ * Checks whether the stream is complete, contains the receiver and the sender
+ * parts. As the stream contains sink(s) element(s), it's possible to perform
+ * seek operations on it.
+ *
+ * Returns: %TRUE if the stream contains at least one sink element.
+ */
+gboolean
+gst_rtsp_stream_is_complete (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  ret = priv->is_complete;
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
 }

@@ -705,6 +705,23 @@ check_seekable (GstRTSPMedia * media)
   gst_query_unref (query);
 }
 
+/* must be called with state lock */
+static gboolean
+check_complete (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  guint i, n = priv->streams->len;
+
+  for (i = 0; i < n; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+
+    if (gst_rtsp_stream_is_complete (stream))
+      return TRUE;
+  }
+
+  return FALSE;
+}
 
 /* must be called with state lock */
 static void
@@ -2209,6 +2226,11 @@ gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
     goto not_prepared;
 
+  /* check if the media pipeline is complete in order to perform a
+   * seek operation on it */
+  if (!check_complete (media))
+    goto not_complete;
+
   /* Update the seekable state of the pipeline in case it changed */
   check_seekable (media);
 
@@ -2320,6 +2342,12 @@ not_prepared:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("media %p is not prepared", media);
+    return FALSE;
+  }
+not_complete:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_INFO ("pipeline is not complete");
     return FALSE;
   }
 not_seekable:

@@ -287,6 +287,9 @@ GstRTSPPublishClockMode gst_rtsp_stream_get_publish_clock_mode (GstRTSPStream * 
 GST_EXPORT
 gboolean          gst_rtsp_stream_complete_stream (GstRTSPStream * stream, const GstRTSPTransport * transport);
 
+GST_EXPORT
+gboolean           gst_rtsp_stream_is_complete (GstRTSPStream * stream);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object
