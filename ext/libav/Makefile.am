@@ -17,6 +17,7 @@ libgstlibav_la_SOURCES = gstav.c	\
 # 	\
 # 			  gstavscale.c
 
+libgstlibav_la_CPPFLAGS = $(LIBAV_CPPFLAGS) $(GST_PLUGINS_BASE_CPPFLAGS) $(GST_CPPFLAGS)
 libgstlibav_la_CFLAGS = $(LIBAV_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstlibav_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
