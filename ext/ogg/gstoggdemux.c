@@ -4652,10 +4652,9 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
 
       gst_event_ref (event);
       GST_DEBUG_OBJECT (pad, "Pushing event %" GST_PTR_FORMAT, event);
-      if (pad->added) {
-        res &= gst_pad_push_event (GST_PAD (pad), event);
+      res &= gst_pad_push_event (GST_PAD (pad), event);
+      if (pad->added)
         event_sent = TRUE;
-      }
     }
   }
 
