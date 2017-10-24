@@ -1562,14 +1562,19 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
     signalled = TRUE;
     last_error = OMX_ErrorNone;
     gst_omx_component_handle_messages (comp);
-    while (signalled && last_error == OMX_ErrorNone && !port->flushed
-        && port->buffers
-        && port->buffers->len > g_queue_get_length (&port->pending_buffers)) {
+    while (!port->flushed &&
+        (port->buffers
+            && port->buffers->len >
+            g_queue_get_length (&port->pending_buffers))) {
       signalled = gst_omx_component_wait_message (comp, timeout);
       if (signalled)
         gst_omx_component_handle_messages (comp);
 
       last_error = comp->last_error;
+
+      if (!signalled || last_error != OMX_ErrorNone)
+        /* Something gone wrong or we timed out */
+        break;
     }
     port->flushed = FALSE;
 
