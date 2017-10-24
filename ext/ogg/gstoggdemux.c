@@ -4638,6 +4638,7 @@ static gboolean
 gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
 {
   GstOggChain *chain = ogg->current_chain;
+  gboolean event_sent = FALSE;
   gboolean res = TRUE;
 
   if (!chain)
@@ -4651,15 +4652,19 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
 
       gst_event_ref (event);
       GST_DEBUG_OBJECT (pad, "Pushing event %" GST_PTR_FORMAT, event);
-      res &= gst_pad_push_event (GST_PAD (pad), event);
+      if (pad->added) {
+        res &= gst_pad_push_event (GST_PAD (pad), event);
+        event_sent = TRUE;
+      }
     }
-  } else {
-    GST_WARNING_OBJECT (ogg, "No chain to forward event to");
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
-      GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
-          ("EOS before finding a chain"));
   }
+
   gst_event_unref (event);
+
+  if (!event_sent && GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+        ("EOS before finding a chain"));
+  }
 
   return res;
 }
