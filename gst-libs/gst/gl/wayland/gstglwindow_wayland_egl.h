@@ -72,6 +72,7 @@ struct window {
   struct wl_callback        *callback;
   int fullscreen, configured;
   int window_width, window_height;
+  int preferred_width, preferred_height;
   int window_x, window_y;
 };
 

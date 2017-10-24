@@ -57,6 +57,8 @@ static gboolean gst_gl_window_wayland_egl_open (GstGLWindow * window,
 static guintptr gst_gl_window_wayland_egl_get_display (GstGLWindow * window);
 static gboolean gst_gl_window_wayland_egl_set_render_rectangle (GstGLWindow *
     window, gint x, gint y, gint width, gint height);
+static void gst_gl_window_wayland_egl_set_preferred_size (GstGLWindow * window,
+    gint width, gint height);
 
 #if 0
 static void
@@ -306,12 +308,16 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
 
   if (window_egl->window.window_width > 0)
     width = window_egl->window.window_width;
+  else if (window_egl->window.preferred_width > 0)
+    width = window_egl->window.preferred_width;
   else
     width = 320;
   window_egl->window.window_width = width;
 
   if (window_egl->window.window_height > 0)
     height = window_egl->window.window_height;
+  else if (window_egl->window.preferred_height > 0)
+    height = window_egl->window.preferred_height;
   else
     height = 240;
   window_egl->window.window_height = height;
@@ -344,6 +350,8 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_display);
   window_class->set_render_rectangle =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_set_render_rectangle);
+  window_class->set_preferred_size =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_set_preferred_size);
 }
 
 static void
@@ -582,6 +590,20 @@ gst_gl_window_wayland_egl_set_render_rectangle (GstGLWindow * window,
       (GDestroyNotify) _free_set_render_rectangle);
 
   return TRUE;
+}
+
+static void
+gst_gl_window_wayland_egl_set_preferred_size (GstGLWindow * window, gint width,
+    gint height)
+{
+  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+
+  window_egl->window.preferred_width = width;
+  window_egl->window.preferred_height = height;
+  if (window_egl->window.window_height != height
+      || window_egl->window.window_width != width) {
+    window_resize (window_egl, width, height);
+  }
 }
 
 static guintptr
