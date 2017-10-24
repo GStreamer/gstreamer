@@ -112,7 +112,9 @@ atoms_recov_write_ftyp_info (FILE * f, AtomFTYP * ftyp, GstBuffer * prefix)
   if (prefix) {
     GstMapInfo map;
 
-    gst_buffer_map (prefix, &map, GST_MAP_READ);
+    if (!gst_buffer_map (prefix, &map, GST_MAP_READ)) {
+      return FALSE;
+    }
     if (fwrite (map.data, 1, map.size, f) != map.size) {
       gst_buffer_unmap (prefix, &map);
       return FALSE;
