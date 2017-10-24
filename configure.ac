@@ -312,9 +312,10 @@ else
   fi
 
   dnl libgstlibav.la: include dirs
-  LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
-                -I \$(top_builddir)/gst-libs/ext/libav \
-                 -Wno-deprecated-declarations"
+  LIBAV_CPPFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
+                -I \$(top_builddir)/gst-libs/ext/libav"
+
+  LIBAV_CFLAGS="-Wno-deprecated-declarations"
 
   LIBAV_DEPS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
               \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
@@ -478,6 +479,7 @@ fi
 AM_CONDITIONAL(HAVE_BZ2, test "x$HAVE_BZ2" = "xyes")
 AM_CONDITIONAL(HAVE_LZMA, test "x$HAVE_LZMA" = "xyes")
 
+AC_SUBST(LIBAV_CPPFLAGS)
 AC_SUBST(LIBAV_CFLAGS)
 AC_SUBST(LIBAV_DEPS)
 AC_SUBST(LIBAV_LIBS)
