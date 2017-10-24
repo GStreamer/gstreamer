@@ -84,6 +84,7 @@ enum
   PROP_TARGET_TIME_CODE,
   PROP_TARGET_TIME_CODE_STRING,
   PROP_TARGET_RUNNING_TIME,
+  PROP_END_TIME_CODE,
   PROP_MODE
 };
 
@@ -173,6 +174,12 @@ gst_avwait_class_init (GstAvWaitClass * klass)
           GST_TYPE_AVWAIT_MODE,
           DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_END_TIME_CODE,
+      g_param_spec_boxed ("end-timecode", "End timecode (object)",
+          "Timecode to end at in timecode mode (object)",
+          GST_TYPE_VIDEO_TIME_CODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_avwait_finalize;
   gstelement_class->change_state = gst_avwait_change_state;
 
@@ -241,6 +248,8 @@ gst_avwait_init (GstAvWait * self)
   self->shutdown_flag = FALSE;
   self->from_string = FALSE;
   self->tc = gst_video_time_code_new_empty ();
+  self->end_tc = NULL;
+  self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
 
   self->target_running_time = DEFAULT_TARGET_RUNNING_TIME;
   self->mode = DEFAULT_MODE;
@@ -280,6 +289,7 @@ gst_avwait_change_state (GstElement * element, GstStateChange transition)
       if (self->mode != MODE_RUNNING_TIME) {
         GST_DEBUG_OBJECT (self, "First time reset in paused to ready");
         self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+        self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
       }
       gst_segment_init (&self->asegment, GST_FORMAT_UNDEFINED);
       self->asegment.position = GST_CLOCK_TIME_NONE;
@@ -304,6 +314,11 @@ gst_avwait_finalize (GObject * object)
     self->tc = NULL;
   }
 
+  if (self->end_tc) {
+    gst_video_time_code_free (self->end_tc);
+    self->end_tc = NULL;
+  }
+
   g_mutex_clear (&self->mutex);
   g_cond_clear (&self->cond);
 
@@ -326,6 +341,10 @@ gst_avwait_get_property (GObject * object, guint prop_id,
     }
     case PROP_TARGET_TIME_CODE:{
       g_value_set_boxed (value, self->tc);
+      break;
+    }
+    case PROP_END_TIME_CODE:{
+      g_value_set_boxed (value, self->end_tc);
       break;
     }
     case PROP_TARGET_RUNNING_TIME:{
@@ -373,7 +392,20 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         self->tc->config.fps_n = self->vinfo.fps_n;
         self->tc->config.fps_d = self->vinfo.fps_d;
       }
-      self->from_string = TRUE;
+      if (self->end_tc
+          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
+        gchar *end_tc;
+
+        end_tc = gst_video_time_code_to_string (self->end_tc);
+        g_warning
+            ("ERROR: End timecode %s must be before start timecode %s. Start timecode rejected",
+            end_tc, tc_str);
+        gst_video_time_code_free (self->tc);
+        g_free (end_tc);
+        self->tc = gst_video_time_code_new_empty ();
+      } else {
+        self->from_string = TRUE;
+      }
       g_strfreev (parts);
       break;
     }
@@ -382,6 +414,40 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         gst_video_time_code_free (self->tc);
       self->tc = g_value_dup_boxed (value);
       self->from_string = FALSE;
+      if (self->end_tc
+          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
+        gchar *start_tc, *end_tc;
+
+        start_tc = gst_video_time_code_to_string (self->tc);
+        end_tc = gst_video_time_code_to_string (self->end_tc);
+        g_warning
+            ("ERROR: End timecode %s must be before start timecode %s. Start timecode rejected",
+            end_tc, start_tc);
+        gst_video_time_code_free (self->tc);
+        g_free (start_tc);
+        g_free (end_tc);
+        self->tc = gst_video_time_code_new_empty ();
+      }
+      break;
+    }
+    case PROP_END_TIME_CODE:{
+      if (self->end_tc)
+        gst_video_time_code_free (self->end_tc);
+      self->end_tc = g_value_dup_boxed (value);
+      if (self->tc
+          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
+        gchar *start_tc, *end_tc;
+
+        start_tc = gst_video_time_code_to_string (self->tc);
+        end_tc = gst_video_time_code_to_string (self->end_tc);
+        g_warning
+            ("ERROR: End timecode %s must be before start timecode %s. End timecode rejected",
+            end_tc, start_tc);
+        gst_video_time_code_free (self->end_tc);
+        self->end_tc = NULL;
+        g_free (start_tc);
+        g_free (end_tc);
+      }
       break;
     }
     case PROP_TARGET_RUNNING_TIME:{
@@ -427,6 +493,7 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (self->mode != MODE_RUNNING_TIME) {
         GST_DEBUG_OBJECT (self, "First time reset in video segment");
         self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+        self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
       }
       self->vsegment.position = GST_CLOCK_TIME_NONE;
       g_mutex_unlock (&self->mutex);
@@ -443,8 +510,9 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&self->mutex);
       if (self->mode != MODE_RUNNING_TIME) {
-        GST_DEBUG_OBJECT (self, "First time reset in video segment");
+        GST_DEBUG_OBJECT (self, "First time reset in video flush");
         self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+        self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
       }
       gst_segment_init (&self->vsegment, GST_FORMAT_UNDEFINED);
       self->vsegment.position = GST_CLOCK_TIME_NONE;
@@ -556,6 +624,17 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
               gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
               self->vsegment.position);
         }
+        if (self->end_tc && gst_video_time_code_compare (tc, self->end_tc) >= 0) {
+          if (self->running_time_to_end_at == GST_CLOCK_TIME_NONE) {
+            GST_INFO_OBJECT (self, "End timecode reached at %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (self->vsegment.position));
+            self->running_time_to_end_at =
+                gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
+                self->vsegment.position);
+          }
+          gst_buffer_unref (inbuf);
+          inbuf = NULL;
+        }
       }
       break;
     }
@@ -651,9 +730,14 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     }
   }
   while (!(self->video_eos_flag || self->audio_flush_flag
-          || self->shutdown_flag) && (video_running_time == GST_CLOCK_TIME_NONE
+          || self->shutdown_flag) &&
+      /* Start at timecode */
+      /* Wait if we haven't received video yet */
+      (video_running_time == GST_CLOCK_TIME_NONE
+          /* Wait if audio is after the video: dunno what to do */
           || gst_avwait_compare_guint64_with_signs (asign,
               current_running_time, vsign, video_running_time) == 1
+          /* Wait if we don't even know what to wait for yet */
           || self->running_time_to_wait_for == GST_CLOCK_TIME_NONE)) {
     g_cond_wait (&self->cond, &self->mutex);
     vsign =
@@ -684,8 +768,11 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     }
   }
   if (self->running_time_to_wait_for == GST_CLOCK_TIME_NONE
+      /* Audio ends before start : drop */
       || gst_avwait_compare_guint64_with_signs (esign,
-          running_time_at_end, 1, self->running_time_to_wait_for) == -1) {
+          running_time_at_end, 1, self->running_time_to_wait_for) == -1
+      /* Audio starts after end: drop */
+      || current_running_time >= self->running_time_to_end_at) {
     GST_DEBUG_OBJECT (self,
         "Dropped an audio buf at %" GST_TIME_FORMAT " waiting for %"
         GST_TIME_FORMAT " video time %" GST_TIME_FORMAT,
@@ -696,7 +783,11 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         esign, GST_TIME_ARGS (running_time_at_end));
     gst_buffer_unref (inbuf);
     inbuf = NULL;
-  } else {
+  } else if (gst_avwait_compare_guint64_with_signs (esign, running_time_at_end,
+          1, self->running_time_to_wait_for) >= 0
+      && gst_avwait_compare_guint64_with_signs (esign, running_time_at_end, 1,
+          self->running_time_to_end_at) == -1) {
+    /* Audio ends after start, but before end: clip */
     GstSegment asegment2 = self->asegment;
 
     gst_segment_set_running_time (&asegment2, GST_FORMAT_TIME,
@@ -704,6 +795,33 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     inbuf =
         gst_audio_buffer_clip (inbuf, &asegment2, self->ainfo.rate,
         self->ainfo.bpf);
+  } else if (gst_avwait_compare_guint64_with_signs (esign, running_time_at_end,
+          1, self->running_time_to_end_at) >= 0) {
+    /* Audio starts after start, but before end: clip from the other side */
+    GstSegment asegment2 = self->asegment;
+    guint64 stop;
+    gint ssign;
+
+    ssign =
+        gst_segment_position_from_running_time_full (&asegment2,
+        GST_FORMAT_TIME, self->running_time_to_end_at, &stop);
+    if (ssign > 0) {
+      asegment2.stop = stop;
+    } else {
+      /* Stopping before the start of the audio segment?! */
+      /* This shouldn't happen: we already know that the current audio is
+       * inside the segment, and that the end is after the current audio
+       * position */
+      GST_ELEMENT_ERROR (self, CORE, FAILED,
+          ("Failed to clip audio: it should have ended before the current segment"),
+          NULL);
+    }
+    inbuf =
+        gst_audio_buffer_clip (inbuf, &asegment2, self->ainfo.rate,
+        self->ainfo.bpf);
+  } else {
+    /* Programming error? Shouldn't happen */
+    g_assert_not_reached ();
   }
   g_mutex_unlock (&self->mutex);
   if (inbuf)

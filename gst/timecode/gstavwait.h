@@ -52,6 +52,9 @@ struct _GstAvWait
   GstClockTime target_running_time;
   GstAvWaitMode mode;
 
+  GstVideoTimeCode *end_tc;
+  GstClockTime running_time_to_end_at;
+
   GstPad *asrcpad, *asinkpad, *vsrcpad, *vsinkpad;
 
   GstAudioInfo ainfo;
