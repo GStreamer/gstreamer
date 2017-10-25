@@ -492,7 +492,8 @@ gst_is_initialized (void)
   return gst_initialized;
 }
 
-#ifndef GST_DISABLE_REGISTRY
+#ifndef GST_DISABLE_OPTION_PARSING
+#  ifndef GST_DISABLE_REGISTRY
 static void
 add_path_func (gpointer data, gpointer user_data)
 {
@@ -500,6 +501,7 @@ add_path_func (gpointer data, gpointer user_data)
   _priv_gst_plugin_paths =
       g_list_append (_priv_gst_plugin_paths, g_strdup (data));
 }
+#  endif
 #endif
 
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -813,7 +815,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   return TRUE;
 }
 
-#ifndef GST_DISABLE_GST_DEBUG
+#ifndef GST_DISABLE_OPTION_PARSING
+#  ifndef GST_DISABLE_GST_DEBUG
 static gboolean
 select_all (GstPlugin * plugin, gpointer user_data)
 {
@@ -935,7 +938,8 @@ gst_debug_help (void)
   g_slist_free (list);
   g_print ("\n");
 }
-#endif
+#  endif /* GST_DISABLE_OPTION_PARSING */
+#endif /* GST_DISABLE_GST_DEBUG */
 
 #ifndef GST_DISABLE_OPTION_PARSING
 static gboolean
