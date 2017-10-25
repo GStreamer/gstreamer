@@ -2401,7 +2401,7 @@ AG_GST_CHECK_FEATURE(FDK_AAC, [fdkaac plugin], fdkaac, [
   PKG_CHECK_MODULES(FDK_AAC, fdk-aac >= 0.1.4, [
     HAVE_FDK_AAC="yes",
     HAVE_FDK_AAC_0_1_4="yes"
-    AC_DEFINE(HAVE_FDK_AAC_0_1_4 1, [Define if we have fdk-aac >= 0.1.4])
+    AC_DEFINE(HAVE_FDK_AAC_0_1_4, 1, [Define if we have fdk-aac >= 0.1.4])
   ],[
     PKG_CHECK_MODULES(FDK_AAC, fdk-aac, HAVE_FDK_AAC="yes", HAVE_FDK_AAC="no")
   ])
