@@ -277,7 +277,8 @@ gst_audio_buffer_reorder_channels (GstBuffer * buffer,
   if (gst_audio_channel_positions_equal (from, to, channels))
     return TRUE;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READWRITE))
+    return FALSE;
 
   ret =
       gst_audio_reorder_channels (info.data, info.size, format, channels, from,
