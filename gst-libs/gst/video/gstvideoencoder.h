@@ -369,6 +369,12 @@ GST_EXPORT
 void                 gst_video_encoder_set_min_pts(GstVideoEncoder *encoder, GstClockTime min_pts);
 
 GST_EXPORT
+void                 gst_video_encoder_set_qos_enabled (GstVideoEncoder * encoder, gboolean enabled);
+
+GST_EXPORT
+gboolean             gst_video_encoder_is_qos_enabled (GstVideoEncoder * encoder);
+
+GST_EXPORT
 GstClockTimeDiff     gst_video_encoder_get_max_encode_time (GstVideoEncoder *encoder, GstVideoCodecFrame * frame);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

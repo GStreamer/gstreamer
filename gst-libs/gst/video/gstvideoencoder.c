@@ -79,6 +79,13 @@
  *   * Accept data in @handle_frame and provide encoded results to
  *      @gst_video_encoder_finish_frame.
  *
+ *
+ * The #GstVideoEncoder:qos property will enable the Quality-of-Service
+ * features of the encoder which gather statistics about the real-time
+ * performance of the downstream elements. If enabled, subclasses can
+ * use gst_video_encoder_get_max_encode_time() to check if input frames
+ * are already late and drop them right away to give a chance to the
+ * pipeline to catch up.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -107,6 +114,17 @@ GST_DEBUG_CATEGORY (videoencoder_debug);
 #define GST_VIDEO_ENCODER_GET_PRIVATE(obj)  \
     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_VIDEO_ENCODER, \
         GstVideoEncoderPrivate))
+
+/* properties */
+
+#define DEFAULT_QOS                 FALSE
+
+enum
+{
+  PROP_0,
+  PROP_QOS,
+  PROP_LAST
+};
 
 struct _GstVideoEncoderPrivate
 {
@@ -154,6 +172,7 @@ struct _GstVideoEncoderPrivate
   GstClockTime time_adjustment;
 
   /* QoS properties */
+  gint qos_enabled;             /* ATOMIC */
   gdouble proportion;           /* OBJECT_LOCK */
   GstClockTime earliest_time;   /* OBJECT_LOCK */
   GstClockTime qos_frame_duration;      /* OBJECT_LOCK */
@@ -274,6 +293,38 @@ gst_video_encoder_get_type (void)
 }
 
 static void
+gst_video_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoEncoder *sink = GST_VIDEO_ENCODER (object);
+
+  switch (prop_id) {
+    case PROP_QOS:
+      gst_video_encoder_set_qos_enabled (sink, g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_encoder_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstVideoEncoder *sink = GST_VIDEO_ENCODER (object);
+
+  switch (prop_id) {
+    case PROP_QOS:
+      g_value_set_boolean (value, gst_video_encoder_is_qos_enabled (sink));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 {
   GObjectClass *gobject_class;
@@ -289,6 +340,8 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstVideoEncoderPrivate));
 
+  gobject_class->set_property = gst_video_encoder_set_property;
+  gobject_class->get_property = gst_video_encoder_get_property;
   gobject_class->finalize = gst_video_encoder_finalize;
 
   gstelement_class->change_state =
@@ -302,6 +355,11 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   klass->sink_query = gst_video_encoder_sink_query_default;
   klass->src_query = gst_video_encoder_src_query_default;
   klass->transform_meta = gst_video_encoder_transform_meta_default;
+
+  g_object_class_install_property (gobject_class, PROP_QOS,
+      g_param_spec_boolean ("qos", "Qos",
+          "Handle Quality-of-Service events from downstream", DEFAULT_QOS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static GList *
@@ -1195,6 +1253,9 @@ gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
       gdouble proportion;
       GstClockTimeDiff diff;
       GstClockTime timestamp;
+
+      if (!g_atomic_int_get (&priv->qos_enabled))
+        break;
 
       gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
 
@@ -2585,6 +2646,9 @@ gst_video_encoder_set_min_pts (GstVideoEncoder * encoder, GstClockTime min_pts)
  * In particular, a negative result means encoding in time is no longer possible
  * and should therefore occur as soon/skippy as possible.
  *
+ * If no QoS events have been received from downstream, or if
+ * #GstVideoEncoder:qos is disabled this function returns #G_MAXINT64.
+ *
  * Returns: max decoding time.
  * Since: 1.14
  */
@@ -2594,6 +2658,9 @@ gst_video_encoder_get_max_encode_time (GstVideoEncoder *
 {
   GstClockTimeDiff deadline;
   GstClockTime earliest_time;
+
+  if (!g_atomic_int_get (&encoder->priv->qos_enabled))
+    return G_MAXINT64;
 
   GST_OBJECT_LOCK (encoder);
   earliest_time = encoder->priv->earliest_time;
@@ -2611,4 +2678,42 @@ gst_video_encoder_get_max_encode_time (GstVideoEncoder *
   GST_OBJECT_UNLOCK (encoder);
 
   return deadline;
+}
+
+/**
+ * gst_video_encoder_set_qos_enabled:
+ * @encoder: the encoder
+ * @enabled: the new qos value.
+ *
+ * Configures @encoder to handle Quality-of-Service events from downstream.
+ * Since: 1.14
+ */
+void
+gst_video_encoder_set_qos_enabled (GstVideoEncoder * encoder, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_VIDEO_ENCODER (encoder));
+
+  g_atomic_int_set (&encoder->priv->qos_enabled, enabled);
+}
+
+/**
+ * gst_video_encoder_is_qos_enabled:
+ * @encoder: the encoder
+ *
+ * Checks if @encoder is currently configured to handle Quality-of-Service
+ * events from downstream.
+ *
+ * Returns: %TRUE if the encoder is configured to perform Quality-of-Service.
+ * Since: 1.14
+ */
+gboolean
+gst_video_encoder_is_qos_enabled (GstVideoEncoder * encoder)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_VIDEO_ENCODER (encoder), FALSE);
+
+  res = g_atomic_int_get (&encoder->priv->qos_enabled);
+
+  return res;
 }

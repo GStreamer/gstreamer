@@ -552,6 +552,8 @@ GST_START_TEST (videoencoder_qos)
 
   setup_videoencodertester ();
 
+  gst_video_encoder_set_qos_enabled (GST_VIDEO_ENCODER (enc), TRUE);
+
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (enc, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
