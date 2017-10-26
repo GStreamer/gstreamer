@@ -879,6 +879,8 @@ GST_START_TEST (test_stream_align)
         fail_unless (!discont);
     }
   }
+
+  gst_audio_stream_align_free (align);
 }
 
 GST_END_TEST;
@@ -1057,6 +1059,8 @@ GST_START_TEST (test_stream_align_reverse)
         fail_unless (!discont);
     }
   }
+
+  gst_audio_stream_align_free (align);
 }
 
 GST_END_TEST;
