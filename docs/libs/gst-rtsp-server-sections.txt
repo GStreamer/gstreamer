@@ -256,6 +256,9 @@ gst_rtsp_media_factory_set_eos_shutdown
 gst_rtsp_media_factory_get_protocols
 gst_rtsp_media_factory_set_protocols
 
+gst_rtsp_media_factory_get_transport_mode
+gst_rtsp_media_factory_set_transport_mode
+
 gst_rtsp_media_factory_set_profiles
 gst_rtsp_media_factory_get_profiles
 

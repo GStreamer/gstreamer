@@ -1644,7 +1644,7 @@ gst_rtsp_media_factory_set_transport_mode (GstRTSPMediaFactory * factory,
  * Get if media created from this factory can be used for PLAY or RECORD
  * methods.
  *
- * Returns: The supported transport modes.
+ * Returns: The transport mode.
  */
 GstRTSPTransportMode
 gst_rtsp_media_factory_get_transport_mode (GstRTSPMediaFactory * factory)
