@@ -75,6 +75,20 @@
  *
  * > If an empty mix matrix is specified, a (potentially truncated)
  * > identity matrix will be generated.
+ *
+ * ## Example empty matrix generation code
+ * |[
+ * GValue v = G_VALUE_INIT;
+ *
+ * g_value_init (&v2, GST_TYPE_ARRAY);
+ * g_object_set_property (G_OBJECT (audioconvert), "mix-matrix", &v);
+ * g_value_unset (&v);
+ * ]|
+ *
+ * ## Example empty matrix launch line
+ * |[
+ * gst-launch-1.0 -v audiotestsrc ! audio/x-raw,channels=8 ! audioconvert mix-matrix="<>" ! audio/x-raw,channels=16,channel-mask=\(bitmask\)0x0000000000000000 ! fakesink
+ * ]|
  */
 
 /*
