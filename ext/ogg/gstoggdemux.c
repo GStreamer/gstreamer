@@ -4555,6 +4555,8 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page, gboolean discont)
         GstFlowReturn res;
 
         res = gst_ogg_demux_seek_back_after_push_duration_check_unlock (ogg);
+        /* Call to function above unlocks, relock */
+        GST_PUSH_LOCK (ogg);
         if (res != GST_FLOW_OK)
           return res;
       }
