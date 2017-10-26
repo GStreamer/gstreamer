@@ -1581,6 +1581,7 @@ EXPORTS
 	gst_uri_type_get_type
 	gst_util_array_binary_search
 	gst_util_double_to_fraction
+	gst_util_dump_buffer
 	gst_util_dump_mem
 	gst_util_fraction_add
 	gst_util_fraction_compare

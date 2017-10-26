@@ -3574,6 +3574,7 @@ GFLOAT_TO_LE
 
 gst_guint64_to_gdouble
 gst_gdouble_to_guint64
+gst_util_dump_buffer
 gst_util_dump_mem
 gst_util_uint64_scale
 gst_util_uint64_scale_round

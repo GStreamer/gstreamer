@@ -48,6 +48,9 @@ GST_EXPORT
 void            gst_util_dump_mem               (const guchar *mem, guint size);
 
 GST_EXPORT
+void            gst_util_dump_buffer            (GstBuffer * buf);
+
+GST_EXPORT
 guint64         gst_util_gdouble_to_guint64     (gdouble value)  G_GNUC_CONST;
 
 GST_EXPORT
