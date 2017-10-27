@@ -545,10 +545,15 @@ static gboolean
 log_leaked (GstLeaksTracer * self)
 {
   GList *ref, *leaks, *l;
+  gboolean ret = FALSE;
+
+  GST_TRACE_OBJECT (self, "start listing currently alive objects");
 
   leaks = create_leaks_list (self);
-  if (!leaks)
-    return FALSE;
+  if (!leaks) {
+    GST_TRACE_OBJECT (self, "No objects alive currently");
+    goto done;
+  }
 
   for (l = leaks; l != NULL; l = g_list_next (l)) {
     Leak *leak = l->data;
@@ -569,7 +574,12 @@ log_leaked (GstLeaksTracer * self)
 
   g_list_free_full (leaks, (GDestroyNotify) leak_free);
 
-  return TRUE;
+  ret = TRUE;
+
+done:
+  GST_TRACE_OBJECT (self, "done listing currently alive objects");
+
+  return ret;
 }
 
 static void
@@ -650,9 +660,7 @@ sig_usr1_handler_foreach (gpointer data, gpointer user_data)
   GstLeaksTracer *tracer = data;
 
   GST_OBJECT_LOCK (tracer);
-  GST_TRACE_OBJECT (tracer, "start listing currently alive objects");
   log_leaked (tracer);
-  GST_TRACE_OBJECT (tracer, "done listing currently alive objects");
   GST_OBJECT_UNLOCK (tracer);
 }
 
