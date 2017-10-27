@@ -30,7 +30,7 @@ def extract_info(xmlfile):
 
 if "__main__" == __name__:
     if len(sys.argv) < 2:
-        print "Usage : %s [<old run xml>] <new run xml>" % sys.argv[0]
+        print("Usage : %s [<old run xml>] <new run xml>" % sys.argv[0])
     if len(sys.argv) == 3:
         oldfile = extract_info(sys.argv[1])
         newfile = extract_info(sys.argv[2])
@@ -67,8 +67,7 @@ if "__main__" == __name__:
         tn, fn = k
         if not fn in allfiles:
             allfiles.append(fn)
-
-        newf = v.findall("failure")
+        newf = v.findall("error")
         if newf:
             # extract the failure reason
             r = newf[0].get("message")
@@ -87,7 +86,7 @@ if "__main__" == __name__:
             oldone = oldfile.get(k)
 
             # compare failures
-            oldf = oldone.findall("failure")
+            oldf = oldone.findall("error")
             if newf and not oldf:
                 newfail.append(k)
             if oldf and not newf:
@@ -96,6 +95,7 @@ if "__main__" == __name__:
                 stillfail.append(k)
                 a = oldf[0]
                 b = newf[0]
+                print a, b
                 # check if the failure reasons are the same
                 if a.get("type") != b.get("type"):
                     failchange.append(k)
@@ -104,11 +104,11 @@ if "__main__" == __name__:
 
 
     if newfail:
-        print "New failures", len(newfail)
+        print("New failures", len(newfail))
         newfail.sort()
         for i in newfail:
             print "   %s : %s" % (i[0], i[1])
-            f = newfile[i].find("failure")
+            f = newfile[i].find("error")
             print "     ", f.get("type"), f.get("message")
         print
 
@@ -124,12 +124,12 @@ if "__main__" == __name__:
         failchange.sort()
         for i in failchange:
             print "   %s : %s" % (i[0], i[1])
-            oldt = oldfile[i].find("failure").get("type")
-            newt = newfile[i].find("failure").get("type")
+            oldt = oldfile[i].find("error").get("type")
+            newt = newfile[i].find("error").get("type")
             if oldt != newt:
                 print "       Went from '%s' to '%s'" % (oldt, newt)
-            print "       Previous message :", oldfile[i].find("failure").get("message")
-            print "       New message      :", newfile[i].find("failure").get("message")
+            print "       Previous message :", oldfile[i].find("error").get("message")
+            print "       New message      :", newfile[i].find("error").get("message")
         print
 
     for k,v in reasons.iteritems():
