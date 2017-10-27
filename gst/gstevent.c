@@ -593,7 +593,10 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
  * in #GST_EVENT_STREAM_START, #GST_EVENT_STREAM_COLLECTION or
  * #GST_MESSSAGE_STREAM_COLLECTION.
  *
- * Returns: (transfer full): a new select-streams event.
+ * Note: The list of @streams can not be empty.
+ *
+ * Returns: (transfer full): a new select-streams event or %NULL in case of
+ * an error (like an empty streams list).
  *
  * Since: 1.10
  */
@@ -604,6 +607,8 @@ gst_event_new_select_streams (GList * streams)
   GValue val = G_VALUE_INIT;
   GstStructure *struc;
   GList *tmpl;
+
+  g_return_val_if_fail (streams != NULL, NULL);
 
   GST_CAT_INFO (GST_CAT_EVENT, "Creating new select-streams event");
   struc = gst_structure_new_id_empty (GST_QUARK (EVENT_SELECT_STREAMS));
