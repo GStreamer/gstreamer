@@ -1259,8 +1259,11 @@ play_cycle_track_selection (GstPlay * play, GstPlayTrackType track_type)
     g_mutex_unlock (&play->selection_lock);
 
     if (play->is_playbin3) {
-      gst_element_send_event (play->playbin,
-          gst_event_new_select_streams (selected_streams));
+      if (selected_streams)
+        gst_element_send_event (play->playbin,
+            gst_event_new_select_streams (selected_streams));
+      else
+        g_print ("Can't disable all streams !\n");
     } else {
       g_object_set (play->playbin, prop_cur, cur, NULL);
     }
