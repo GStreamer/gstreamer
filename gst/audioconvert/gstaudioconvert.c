@@ -80,7 +80,7 @@
  * |[
  * GValue v = G_VALUE_INIT;
  *
- * g_value_init (&v2, GST_TYPE_ARRAY);
+ * g_value_init (&v, GST_TYPE_ARRAY);
  * g_object_set_property (G_OBJECT (audioconvert), "mix-matrix", &v);
  * g_value_unset (&v);
  * ]|
