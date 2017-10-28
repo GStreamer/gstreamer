@@ -90,7 +90,6 @@ _gst_gl_query_type_to_gl (GstGLQueryType query_type)
   if (query_type == GST_GL_QUERY_TIMESTAMP)
     return GL_TIMESTAMP;
 
-  g_assert_not_reached ();
   return 0;
 }
 
@@ -136,17 +135,20 @@ gst_gl_query_init (GstGLQuery * query, GstGLContext * context,
     GstGLQueryType query_type)
 {
   const GstGLFuncs *gl;
+  GLenum gl_query_type;
 
   g_return_if_fail (query != NULL);
   g_return_if_fail (GST_IS_GL_CONTEXT (context));
   gl = context->gl_vtable;
+  gl_query_type = _gst_gl_query_type_to_gl (query_type);
+  g_return_if_fail (gl_query_type != GL_NONE);
 
   memset (query, 0, sizeof (*query));
 
   _init_debug ();
 
+  query->query_type = gl_query_type;
   query->context = gst_object_ref (context);
-  query->query_type = _gst_gl_query_type_to_gl (query_type);
   query->supported = _context_supports_query_type (context, query->query_type);
 
   if (query->supported)
@@ -241,11 +243,13 @@ gst_gl_query_start (GstGLQuery * query)
 
   g_return_if_fail (query != NULL);
   g_return_if_fail (_query_type_supports_begin_end (query->query_type));
+  g_return_if_fail (query->start_called == FALSE);
+
+  query->start_called = TRUE;
 
   if (!query->supported)
     return;
 
-  query->start_called = TRUE;
   gst_gl_async_debug_output_log_msg (&query->debug);
 
   GST_TRACE ("%p start query type \'%s\' id %u", query,
@@ -270,10 +274,12 @@ gst_gl_query_end (GstGLQuery * query)
 
   g_return_if_fail (query != NULL);
   g_return_if_fail (_query_type_supports_begin_end (query->query_type));
+  g_return_if_fail (query->start_called);
+
+  query->start_called = FALSE;
 
   if (!query->supported)
     return;
-  g_return_if_fail (query->start_called);
 
   GST_TRACE ("%p end query type \'%s\' id %u", query,
       _query_type_to_string (query->query_type), query->query_id);
@@ -281,7 +287,6 @@ gst_gl_query_end (GstGLQuery * query)
   gl = query->context->gl_vtable;
 
   gl->EndQuery (query->query_type);
-  query->start_called = FALSE;
 }
 
 /**
