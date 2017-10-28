@@ -1336,7 +1336,6 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   gl->UniformMatrix4fv (location, count, transpose, value);
 }
 
-#if GST_GL_HAVE_OPENGL
 /**
  * gst_gl_shader_set_uniform_matrix_2x3fv:
  * @shader: a #GstGLShader
@@ -1504,7 +1503,6 @@ gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
 
   gl->UniformMatrix4x3fv (location, count, transpose, value);
 }
-#endif /* GST_GL_HAVE_OPENGL */
 
 /**
  * gst_gl_shader_get_attribute_location:
