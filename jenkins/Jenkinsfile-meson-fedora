@@ -15,14 +15,14 @@ node('docker') {
 		sh 'rm -Rf build/'
 	    }
 	    checkout([$class: 'GitSCM', branches: [[name: '*/master']],
-		    doGenerateSubmoduleConfigurations: false,
-		    extensions: [[$class: 'CloneOption',
-			    depth: 0,
-			    noTags: false,
-			    reference: '/gstbuild/gst-build/',
-			    shallow: false]],
-		    submoduleCfg: [],
-		    userRemoteConfigs: [[url: 'git://anongit.freedesktop.org/gstreamer/gst-build']]]
+		      doGenerateSubmoduleConfigurations: false,
+		      extensions: [[$class: 'CloneOption',
+				    depth: 0,
+				    noTags: false,
+				    reference: '/gstbuild/gst-build/',
+				    shallow: false]],
+		      submoduleCfg: [],
+		      userRemoteConfigs: [[url: 'git://anongit.freedesktop.org/gstreamer/gst-build']]]
 	    )
 	    sh 'git checkout master && git reset --hard origin/master'
 	    sh 'curl "https://git.arracacha.collabora.co.uk/cgit/gst-manifest.git/plain/default.xml?id=$BUILD_TAG" -k -o manifest.xml'
@@ -41,29 +41,31 @@ node('docker') {
             sh "./gst-uninstalled.py gst-validate-launcher --check-bugs --no-display --mute -n check --xunit-file $WORKSPACE/xunit.xml -M $WORKSPACE/validate-output --ignore-numfailures"
 
 	    step([$class: 'XUnitBuilder',
-		    testTimeMargin: '3000', thresholdMode: 1,
-		    thresholds: [[$class: 'FailedThreshold',
-			    failureNewThreshold: '',
-			    failureThreshold: '5',
-			    unstableNewThreshold: '',
-			    unstableThreshold: '1'],
-			[$class: 'SkippedThreshold',
-			    failureNewThreshold: '',
-			    failureThreshold: '',
-			    unstableNewThreshold: '',
-			    unstableThreshold: '']],
-		    tools: [[$class: 'JUnitType',
-			    deleteOutputFiles: true,
-			    failIfNotNew: true,
-			    pattern: 'xunit.xml',
-			    skipNoTestFiles: true,
-			    stopProcessingIfError: true]]])
+		  testTimeMargin: '3000', thresholdMode: 1,
+		  thresholds: [[$class: 'FailedThreshold',
+				failureNewThreshold: '',
+				failureThreshold: '5',
+				unstableNewThreshold: '',
+				unstableThreshold: '1'],
+			       [$class: 'SkippedThreshold',
+				failureNewThreshold: '',
+				failureThreshold: '',
+				unstableNewThreshold: '',
+				unstableThreshold: '']],
+		  tools: [[$class: 'JUnitType',
+			   deleteOutputFiles: true,
+			   failIfNotNew: true,
+			   pattern: 'xunit.xml',
+			   skipNoTestFiles: true,
+			   stopProcessingIfError: true]]])
 	}
 
 	stage('install') {
 	    sh 'mkdir -p dest'
 	    sh 'DESTDIR=$PWD/dest ninja -C build install'
 	}
-
+	stage('package') {
+	    sh 'cd dest && tar caJf gstreamer-$BUILD_TAG.tar.xz usr'
+	}
     }
 }
