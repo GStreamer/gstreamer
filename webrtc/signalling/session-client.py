@@ -51,27 +51,29 @@ async def hello():
 
         # Initiate call if requested
         if CALLEE_ID:
-            await ws.send('CALL {}'.format(CALLEE_ID))
+            await ws.send('SESSION {}'.format(CALLEE_ID))
 
         # Receive messages
+        sent_sdp = False
         while True:
             msg = await ws.recv()
             if msg.startswith('ERROR'):
                 # On error, we bring down the webrtc pipeline, etc
                 print('{!r}, exiting'.format(msg))
                 return
+            if sent_sdp:
+                print('Got reply sdp: ' + msg)
+                return # Done
             if CALLEE_ID:
-                if msg == 'CALL_OK':
+                if msg == 'SESSION_OK':
                     await ws.send(send_sdp_ice())
-                    # Return so we don't have an infinite loop
-                    return
+                    sent_sdp = True
                 else:
                     print('Unknown reply: {!r}, exiting'.format(msg))
                     return
             else:
                 await ws.send(reply_sdp_ice(msg))
-                # Return so we don't have an infinite loop
-                return
+                return # Done
 
 print('Our uid is {!r}'.format(PEER_ID))
 
