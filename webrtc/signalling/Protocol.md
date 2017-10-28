@@ -20,7 +20,7 @@ Basic websockets server implemented in Python that manages the peers list and sh
 
 This is a basic protocol for doing 1-1 audio+video calls between a gstreamer app and a JS app in a browser.
 
-### Peer registration and calling
+### Peer registration
 
 Peers must register with the signalling server before a call can be initiated. The server connection should stay open as long as the peer is available or in a call.
 
@@ -31,12 +31,28 @@ This protocol builds upon https://github.com/shanet/WebRTC-Example/
 * Receive `HELLO`
 * Any other message starting with `ERROR` is an error.
 
-* To connect to a peer, send `SESSION <uid>` where `<uid>` identifies the peer to connect to, and receive `SESSION_OK`
+### 1-1 calls with a 'session'
+
+* To connect to a single peer, send `SESSION <uid>` where `<uid>` identifies the peer to connect to, and receive `SESSION_OK`
 * All further messages will be forwarded to the peer
 * The call negotiation with the peer can be started by sending JSON encoded SDP and ICE
 
 * Closure of the server connection means the call has ended; either because the other peer ended it or went away
 * To end the call, disconnect from the server. You may reconnect again whenever you wish.
+
+### Multi-party calls with a 'room'
+
+* To create a multi-party call, you must first register (or join) a room. Send `ROOM <room_id>` where `<room_id>` is a unique room name
+* Receive `ROOM_OK ` from the server if this is a new room, or `ROOM_OK <peer1_id> <peer2_id> ...` where `<peerN_id>` are unique identifiers for the peers already in the room
+* To send messages to a specific peer within the room for call negotiation (or any other purpose, use `ROOM_PEER_MSG <peer_id> <msg>`
+* When a new peer joins the room, you will receive a `ROOM_PEER_JOINED <peer_id>` message
+ - For the purposes of convention and to avoid overwhelming newly-joined peers, offers must only be sent by the newly-joined peer
+* When a peer leaves the room, you will receive a `ROOM_PEER_LEFT <peer_id>` message
+ - You should stop sending/receiving media from/to this peer
+* To get a list of all peers currently in the room, send `ROOM_PEER_LIST` and receive `ROOM_PEER_LIST <peer1_id> ...`
+ - This list will never contain your own `<uid>`
+ - In theory you should never need to use this since you are guaranteed to receive JOINED and LEFT messages for all peers in a room
+* You may stay connected to a room for as long as you like
 
 ### Negotiation
 

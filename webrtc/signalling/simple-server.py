@@ -28,12 +28,19 @@ options = parser.parse_args(sys.argv[1:])
 ADDR_PORT = (options.addr, options.port)
 KEEPALIVE_TIMEOUT = options.keepalive_timeout
 
-# Format: {uid: (Peer WebSocketServerProtocol, remote_address)}
+############### Global data ###############
+
+# Format: {uid: (Peer WebSocketServerProtocol,
+#                remote_address,
+#                <'session'|room_id|None>)}
 peers = dict()
 # Format: {caller_uid: callee_uid,
 #          callee_uid: caller_uid}
 # Bidirectional mapping between the two peers
 sessions = dict()
+# Format: {room_id: {peer1_id, peer2_id, peer3_id, ...}}
+# Room dict with a set of peers in each room
+rooms = dict()
 
 ############### Helper functions ###############
 
@@ -65,7 +72,7 @@ async def disconnect(ws, peer_id):
         # Don't care about errors
         asyncio.ensure_future(ws.close(reason='hangup'))
 
-async def remove_peer(uid):
+async def cleanup_session(uid):
     if uid in sessions:
         other_id = sessions[uid]
         del sessions[uid]
@@ -77,47 +84,129 @@ async def remove_peer(uid):
             # close the connection to reset its state.
             if other_id in peers:
                 print("Closing connection to {}".format(other_id))
-                wso, oaddr = peers[other_id]
+                wso, oaddr, _ = peers[other_id]
                 del peers[other_id]
                 await wso.close()
+
+async def cleanup_room(uid, room_id):
+    room_peers = rooms[room_id]
+    if uid not in room_peers:
+        return
+    room_peers.remove(uid)
+    for pid in room_peers:
+        wsp, paddr, _ = peers[pid]
+        msg = 'ROOM_PEER_LEFT {}'.format(uid)
+        print('room {}: {} -> {}: {}'.format(room_id, uid, pid, msg))
+        await wsp.send(msg)
+
+async def remove_peer(uid):
+    await cleanup_session(uid)
     if uid in peers:
-        ws, raddr = peers[uid]
+        ws, raddr, status = peers[uid]
+        if status and status != 'session':
+            await cleanup_room(uid, status)
         del peers[uid]
         await ws.close()
         print("Disconnected from peer {!r} at {!r}".format(uid, raddr))
 
 ############### Handler functions ###############
 
-async def connection_handler(ws, peer_id):
-    global peers, sessions
+async def connection_handler(ws, uid):
+    global peers, sessions, rooms
     raddr = ws.remote_address
-    peers[peer_id] = (ws, raddr)
-    print("Registered peer {!r} at {!r}".format(peer_id, raddr))
+    peer_status = None
+    peers[uid] = [ws, raddr, peer_status]
+    print("Registered peer {!r} at {!r}".format(uid, raddr))
     while True:
         # Receive command, wait forever if necessary
         msg = await recv_msg_ping(ws, raddr)
-        if msg.startswith('SESSION'):
-            print("{!r} command {!r}".format(peer_id, msg))
+        # Update current status
+        peer_status = peers[uid][2]
+        # We are in a session or a room, messages must be relayed
+        if peer_status is not None:
+            # We're in a session, route message to connected peer
+            if peer_status == 'session':
+                other_id = sessions[uid]
+                wso, oaddr, status = peers[other_id]
+                assert(status == 'session')
+                print("{} -> {}: {}".format(uid, other_id, msg))
+                await wso.send(msg)
+            # We're in a room, accept room-specific commands
+            elif peer_status:
+                # ROOM_PEER_MSG peer_id MSG
+                if msg.startswith('ROOM_PEER_MSG'):
+                    _, other_id, msg = msg.split(maxsplit=2)
+                    if other_id not in peers:
+                        await ws.send('ERROR peer {!r} not found'
+                                      ''.format(other_id))
+                        continue
+                    wso, oaddr, status = peers[other_id]
+                    if status != room_id:
+                        await ws.send('ERROR peer {!r} is not in the room'
+                                      ''.format(other_id))
+                        continue
+                    msg = 'ROOM_PEER_MSG {} {}'.format(uid, msg)
+                    print('room {}: {} -> {}: {}'.format(room_id, uid, other_id, msg))
+                    await wso.send(msg)
+                elif msg == 'ROOM_PEER_LIST':
+                    room_id = peers[peer_id][2]
+                    room_peers = ' '.join([pid for pid in rooms[room_id] if pid != peer_id])
+                    msg = 'ROOM_PEER_LIST {}'.format(room_peers)
+                    print('room {}: -> {}: {}'.format(room_id, uid, msg))
+                    await ws.send(msg)
+                else:
+                    await ws.send('ERROR invalid msg, already in room')
+                    continue
+            else:
+                raise AssertionError('Unknown peer status {!r}'.format(peer_status))
+        # Requested a session with a specific peer
+        elif msg.startswith('SESSION'):
+            print("{!r} command {!r}".format(uid, msg))
             _, callee_id = msg.split(maxsplit=1)
             if callee_id not in peers:
                 await ws.send('ERROR peer {!r} not found'.format(callee_id))
                 continue
-            if callee_id in sessions:
+            if peer_status is not None:
                 await ws.send('ERROR peer {!r} busy'.format(callee_id))
                 continue
             await ws.send('SESSION_OK')
             wsc = peers[callee_id][0]
-            print("Session from {!r} ({!r}) to {!r} ({!r})".format(peer_id, raddr, callee_id,
-                                                                    wsc.remote_address))
-            # Register call
-            sessions[peer_id] = callee_id
-            sessions[callee_id] = peer_id
-        # We're in a session, route message to connected peer
-        elif peer_id in sessions:
-            other_id = sessions[peer_id]
-            wso, oaddr = peers[other_id]
-            print("{} -> {}: {}".format(peer_id, other_id, msg))
-            await wso.send(msg)
+            print('Session from {!r} ({!r}) to {!r} ({!r})'
+                  ''.format(uid, raddr, callee_id, wsc.remote_address))
+            # Register session
+            peers[uid][2] = peer_status = 'session'
+            sessions[uid] = callee_id
+            peers[callee_id][2] = 'session'
+            sessions[callee_id] = uid
+        # Requested joining or creation of a room
+        elif msg.startswith('ROOM'):
+            print('{!r} command {!r}'.format(uid, msg))
+            _, room_id = msg.split(maxsplit=1)
+            # Room name cannot be 'session', empty, or contain whitespace
+            if room_id == 'session' or room_id.split() != [room_id]:
+                await ws.send('ERROR invalid room id {!r}'.format(room_id))
+                continue
+            if room_id in rooms:
+                if uid in rooms[room_id]:
+                    raise AssertionError('How did we accept a ROOM command '
+                                         'despite already being in a room?')
+            else:
+                # Create room if required
+                rooms[room_id] = set()
+            room_peers = ' '.join([pid for pid in rooms[room_id]])
+            await ws.send('ROOM_OK {}'.format(room_peers))
+            # Enter room
+            peers[uid][2] = peer_status = room_id
+            rooms[room_id].add(uid)
+            for pid in rooms[room_id]:
+                if pid == uid:
+                    continue
+                wsp, paddr, _ = peers[pid]
+                msg = 'ROOM_PEER_JOINED {}'.format(uid)
+                print('room {}: {} -> {}: {}'.format(room_id, uid, pid, msg))
+                await wsp.send(msg)
+        else:
+            print('Ignoring unknown message {!r} from {!r}'.format(msg, uid))
 
 async def hello_peer(ws):
     '''
@@ -129,7 +218,7 @@ async def hello_peer(ws):
     if hello != 'HELLO':
         await ws.close(code=1002, reason='invalid protocol')
         raise Exception("Invalid hello from {!r}".format(raddr))
-    if not uid or uid in peers:
+    if not uid or uid in peers or uid.split() != [uid]: # no whitespace
         await ws.close(code=1002, reason='invalid peer uid')
         raise Exception("Invalid uid {!r} from {!r}".format(uid, raddr))
     # Send back a HELLO
