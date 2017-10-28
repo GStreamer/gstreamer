@@ -135,7 +135,6 @@ GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_3fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
 GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_4fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
-#if GST_GL_HAVE_OPENGL
 GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
 GST_EXPORT
@@ -148,7 +147,6 @@ GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
 GST_EXPORT
 void gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
-#endif
 
 GST_EXPORT
 gint gst_gl_shader_get_attribute_location  (GstGLShader *shader, const gchar *name);
