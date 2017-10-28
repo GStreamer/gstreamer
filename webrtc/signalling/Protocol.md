@@ -48,10 +48,10 @@ This protocol builds upon https://github.com/shanet/WebRTC-Example/
 * When a new peer joins the room, you will receive a `ROOM_PEER_JOINED <peer_id>` message
  - For the purposes of convention and to avoid overwhelming newly-joined peers, offers must only be sent by the newly-joined peer
 * When a peer leaves the room, you will receive a `ROOM_PEER_LEFT <peer_id>` message
- - You should stop sending/receiving media from/to this peer
+  - You should stop sending/receiving media from/to this peer
 * To get a list of all peers currently in the room, send `ROOM_PEER_LIST` and receive `ROOM_PEER_LIST <peer1_id> ...`
- - This list will never contain your own `<uid>`
- - In theory you should never need to use this since you are guaranteed to receive JOINED and LEFT messages for all peers in a room
+  - This list will never contain your own `<uid>`
+  - In theory you should never need to use this since you are guaranteed to receive JOINED and LEFT messages for all peers in a room
 * You may stay connected to a room for as long as you like
 
 ### Negotiation
