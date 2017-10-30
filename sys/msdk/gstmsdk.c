@@ -42,6 +42,7 @@
 #include "gstmsdkmjpegdec.h"
 #include "gstmsdkmjpegenc.h"
 #include "gstmsdkmpeg2enc.h"
+#include "gstmsdkvp8dec.h"
 #include "gstmsdkvp8enc.h"
 
 GST_DEBUG_CATEGORY (gst_msdkdec_debug);
@@ -53,6 +54,7 @@ GST_DEBUG_CATEGORY (gst_msdkh265enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkmjpegdec_debug);
 GST_DEBUG_CATEGORY (gst_msdkmjpegenc_debug);
 GST_DEBUG_CATEGORY (gst_msdkmpeg2enc_debug);
+GST_DEBUG_CATEGORY (gst_msdkvp8dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp8enc_debug);
 
 static gboolean
@@ -76,6 +78,7 @@ plugin_init (GstPlugin * plugin)
       "msdkmjpegenc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkmpeg2enc_debug, "msdkmpeg2enc", 0,
       "msdkmpeg2enc");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkvp8dec_debug, "msdkvp8dec", 0, "msdkvp8dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp8enc_debug, "msdkvp8enc", 0, "msdkvp8enc");
 
 
@@ -102,6 +105,9 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "msdkmpeg2enc", GST_RANK_NONE,
       GST_TYPE_MSDKMPEG2ENC);
+
+  ret = gst_element_register (plugin, "msdkvp8dec", GST_RANK_NONE,
+      GST_TYPE_MSDKVP8DEC);
 
   ret = gst_element_register (plugin, "msdkvp8enc", GST_RANK_NONE,
       GST_TYPE_MSDKVP8ENC);
