@@ -220,7 +220,7 @@ send_room_peer_sdp (GstWebRTCSessionDescription * desc, const gchar * peer_id)
   JsonObject *msg, *sdp;
   gchar *text, *sdptype, *sdptext;
 
-  g_assert_cmpint (app_state, <, ROOM_CALL_OFFERING);
+  g_assert_cmpint (app_state, >=, ROOM_CALL_OFFERING);
 
   if (desc->type == GST_WEBRTC_SDP_TYPE_OFFER)
     sdptype = "offer";
@@ -284,24 +284,71 @@ on_negotiation_needed (GstElement * webrtc, const gchar * peer_id)
 }
 
 static void
-add_webrtcbin_to_pipeline (const gchar * peer_id, gboolean offer)
+remove_peer_from_pipeline (const gchar * peer_id)
+{
+  gchar *qname;
+  GstPad *srcpad, *sinkpad;
+  GstElement *webrtc, *q, *tee;
+
+  webrtc = gst_bin_get_by_name (GST_BIN (pipeline), peer_id);
+  if (!webrtc)
+    return;
+
+  gst_bin_remove (GST_BIN (pipeline), webrtc);
+  gst_object_unref (webrtc);
+
+  qname = g_strdup_printf ("queue-%s", peer_id);
+  q = gst_bin_get_by_name (GST_BIN (pipeline), qname);
+  g_free (qname);
+
+  sinkpad = gst_element_get_static_pad (q, "sink");
+  g_assert_nonnull (sinkpad);
+  srcpad = gst_pad_get_peer (sinkpad);
+  g_assert_nonnull (srcpad);
+  gst_object_unref (sinkpad);
+
+  gst_bin_remove (GST_BIN (pipeline), q);
+  gst_object_unref (q);
+
+  tee = gst_bin_get_by_name (GST_BIN (pipeline), "audiotee");
+  g_assert_nonnull (tee);
+  gst_element_release_request_pad (tee, srcpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (tee);
+}
+
+static void
+add_peer_to_pipeline (const gchar * peer_id, gboolean offer)
 {
   int ret;
-  GstElement *tee, *webrtc;
+  gchar *tmp;
+  GstElement *tee, *webrtc, *q;
   GstPad *srcpad, *sinkpad;
+  GError *error = NULL;
 
+  tmp = g_strdup_printf ("queue-%s", peer_id);
+  q = gst_element_factory_make ("queue", tmp);
+  g_free (tmp);
   webrtc = gst_element_factory_make ("webrtcbin", peer_id);
-  g_assert_nonnull (webrtc);
+
+  gst_bin_add_many (GST_BIN (pipeline), q, webrtc, NULL);
+
+  srcpad = gst_element_get_static_pad (q, "src");
+  g_assert_nonnull (srcpad);
+  sinkpad = gst_element_get_request_pad (webrtc, "sink_%u");
+  g_assert_nonnull (sinkpad);
+  ret = gst_pad_link (srcpad, sinkpad);
+  g_assert_cmpint (ret, ==, GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
 
   tee = gst_bin_get_by_name (GST_BIN (pipeline), "audiotee");
   g_assert_nonnull (tee);
   srcpad = gst_element_get_request_pad (tee, "src_%u");
+  g_assert_nonnull (srcpad);
   gst_object_unref (tee);
-  sinkpad = gst_element_get_request_pad (webrtc, "sink_%u");
-
-  /* Add the bin to the pipeline and connect it */
-  gst_bin_add (GST_BIN (pipeline), webrtc);
-
+  sinkpad = gst_element_get_static_pad (q, "sink");
+  g_assert_nonnull (sinkpad);
   ret = gst_pad_link (srcpad, sinkpad);
   g_assert_cmpint (ret, ==, GST_PAD_LINK_OK);
   gst_object_unref (srcpad);
@@ -310,8 +357,8 @@ add_webrtcbin_to_pipeline (const gchar * peer_id, gboolean offer)
   /* This is the gstwebrtc entry point where we create the offer and so on. It
    * will be called when the pipeline goes to PLAYING.
    * XXX: We must connect this after webrtcbin has been linked to a source via
-   * get_request_pad() otherwise webrtcbin will create an SDP offer with no
-   * media lines in it. */
+   * get_request_pad() and before we go from NULL->READY otherwise webrtcbin
+   * will create an SDP offer with no media lines in it. */
   if (offer)
     g_signal_connect (webrtc, "on-negotiation-needed",
         G_CALLBACK (on_negotiation_needed), (gpointer) peer_id);
@@ -325,22 +372,23 @@ add_webrtcbin_to_pipeline (const gchar * peer_id, gboolean offer)
   g_signal_connect (webrtc, "pad-added", G_CALLBACK (on_incoming_stream),
       pipeline);
 
-  /* Set to bin to PLAYING */
+  /* Set to pipeline branch to PLAYING */
+  ret = gst_element_sync_state_with_parent (q);
+  g_assert_true (ret);
   ret = gst_element_sync_state_with_parent (webrtc);
-  gst_object_unref (webrtc);
   g_assert_true (ret);
 }
 
 static void
 call_peer (const gchar * peer_id)
 {
-  add_webrtcbin_to_pipeline (peer_id, TRUE);
+  add_peer_to_pipeline (peer_id, TRUE);
 }
 
 static void
 incoming_call_from_peer (const gchar * peer_id)
 {
-  add_webrtcbin_to_pipeline (peer_id, FALSE);
+  add_peer_to_pipeline (peer_id, FALSE);
 }
 
 #define STR(x) #x
@@ -755,6 +803,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         g_assert_nonnull (peer_id);
         peers = g_list_remove (peers, peer_id);
         g_print ("Peer %s has left the room\n", peer_id);
+        remove_peer_from_pipeline (peer_id);
         g_free ((gchar*) peer_id);
         /* TODO: cleanup pipeline */
       } else {
