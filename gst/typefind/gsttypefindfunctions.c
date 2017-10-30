@@ -1716,7 +1716,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
    * frame is followed by a second frame at the expected offset.
    * We could also check the two ac3 CRCs, but we don't do that right now */
   while (c.offset < 1024) {
-    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 5)))
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 6)))
       break;
 
     if (c.data[0] == 0x0b && c.data[1] == 0x77) {
@@ -3012,7 +3012,7 @@ static GstStaticCaps aiff_caps = GST_STATIC_CAPS ("audio/x-aiff");
 static void
 aiff_type_find (GstTypeFind * tf, gpointer unused)
 {
-  const guint8 *data = gst_type_find_peek (tf, 0, 4);
+  const guint8 *data = gst_type_find_peek (tf, 0, 16);
 
   if (data && memcmp (data, "FORM", 4) == 0) {
     data += 8;
@@ -3029,7 +3029,7 @@ static GstStaticCaps svx_caps = GST_STATIC_CAPS ("audio/x-svx");
 static void
 svx_type_find (GstTypeFind * tf, gpointer unused)
 {
-  const guint8 *data = gst_type_find_peek (tf, 0, 4);
+  const guint8 *data = gst_type_find_peek (tf, 0, 16);
 
   if (data && memcmp (data, "FORM", 4) == 0) {
     data += 8;
@@ -3266,7 +3266,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     if ((STRNCMP (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
       new_offset = offset + 12;
       while (new_offset + 4 <= offset + size) {
-        data = gst_type_find_peek (tf, new_offset, 4);
+        data = gst_type_find_peek (tf, new_offset, 8);
         if (data == NULL)
           goto done;
         if (STRNCMP (&data[4], "isom", 4) == 0 ||
