@@ -172,8 +172,8 @@ enum _GstRtspSrcNtpTimeSource
   NTP_TIME_SOURCE_CLOCK_TIME
 };
 
-#define DEBUG_RTSP(__self,msg) if (__self->debug) gst_rtsp_message_dump (msg)
-#define DEBUG_SDP(__self,msg) if (__self->debug) gst_sdp_message_dump (msg)
+#define DEBUG_RTSP(__self,msg) gst_rtspsrc_print_rtsp_message (__self, msg)
+#define DEBUG_SDP(__self,msg) gst_rtspsrc_print_sdp_message (__self, msg)
 
 #define GST_TYPE_RTSP_SRC_NTP_TIME_SOURCE (gst_rtsp_src_ntp_time_source_get_type())
 static GType
@@ -352,6 +352,10 @@ static gboolean gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
 static void gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush);
 static GstRTSPResult gst_rtsp_conninfo_close (GstRTSPSrc * src,
     GstRTSPConnInfo * info, gboolean free);
+static void
+gst_rtspsrc_print_rtsp_message (GstRTSPSrc * src, const GstRTSPMessage * msg);
+static void
+gst_rtspsrc_print_sdp_message (GstRTSPSrc * src, const GstSDPMessage * msg);
 
 typedef struct
 {
@@ -462,8 +466,10 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEBUG,
       g_param_spec_boolean ("debug", "Debug",
-          "Dump request and response messages to stdout",
-          DEFAULT_DEBUG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Dump request and response messages to stdout"
+          "(DEPRECATED: Printed all RTSP message to gstreamer log as 'log' level)",
+          DEFAULT_DEBUG,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 
   g_object_class_install_property (gobject_class, PROP_RETRY,
       g_param_spec_uint ("retry", "Retry",
@@ -8334,4 +8340,306 @@ gst_rtspsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_rtspsrc_uri_get_protocols;
   iface->get_uri = gst_rtspsrc_uri_get_uri;
   iface->set_uri = gst_rtspsrc_uri_set_uri;
+}
+
+typedef struct _RTSPKeyValue
+{
+  GstRTSPHeaderField field;
+  gchar *value;
+  gchar *custom_key;            /* custom header string (field is INVALID then) */
+} RTSPKeyValue;
+
+static void
+key_value_foreach (GArray * array, GFunc func, gpointer user_data)
+{
+  guint i;
+
+  g_return_if_fail (array != NULL);
+
+  for (i = 0; i < array->len; i++) {
+    (*func) (&g_array_index (array, RTSPKeyValue, i), user_data);
+  }
+}
+
+static void
+dump_key_value (gpointer data, gpointer user_data G_GNUC_UNUSED)
+{
+  RTSPKeyValue *key_value = (RTSPKeyValue *) data;
+  GstRTSPSrc *src = GST_RTSPSRC (user_data);
+  const gchar *key_string;
+
+  if (key_value->custom_key != NULL)
+    key_string = key_value->custom_key;
+  else
+    key_string = gst_rtsp_header_as_text (key_value->field);
+
+  GST_LOG_OBJECT (src, "   key: '%s', value: '%s'", key_string,
+      key_value->value);
+}
+
+static void
+gst_rtspsrc_print_rtsp_message (GstRTSPSrc * src, const GstRTSPMessage * msg)
+{
+  guint8 *data;
+  guint size;
+  GString *body_string = NULL;
+
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (msg != NULL);
+
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) < GST_LEVEL_LOG)
+    return;
+
+  GST_LOG_OBJECT (src, "--------------------------------------------");
+  switch (msg->type) {
+    case GST_RTSP_MESSAGE_REQUEST:
+      GST_LOG_OBJECT (src, "RTSP request message %p", msg);
+      GST_LOG_OBJECT (src, " request line:");
+      GST_LOG_OBJECT (src, "   method: '%s'",
+          gst_rtsp_method_as_text (msg->type_data.request.method));
+      GST_LOG_OBJECT (src, "   uri:    '%s'", msg->type_data.request.uri);
+      GST_LOG_OBJECT (src, "   version: '%s'",
+          gst_rtsp_version_as_text (msg->type_data.request.version));
+      GST_LOG_OBJECT (src, " headers:");
+      key_value_foreach (msg->hdr_fields, dump_key_value, src);
+      GST_LOG_OBJECT (src, " body:");
+      gst_rtsp_message_get_body (msg, &data, &size);
+      if (size > 0) {
+        body_string = g_string_new_len ((const gchar *) data, size);
+        GST_LOG_OBJECT (src, " %s(%d)", body_string->str, size);
+        g_string_free (body_string, TRUE);
+        body_string = NULL;
+      }
+      break;
+    case GST_RTSP_MESSAGE_RESPONSE:
+      GST_LOG_OBJECT (src, "RTSP response message %p", msg);
+      GST_LOG_OBJECT (src, " status line:");
+      GST_LOG_OBJECT (src, "   code:   '%d'", msg->type_data.response.code);
+      GST_LOG_OBJECT (src, "   reason: '%s'", msg->type_data.response.reason);
+      GST_LOG_OBJECT (src, "   version: '%s",
+          gst_rtsp_version_as_text (msg->type_data.response.version));
+      GST_LOG_OBJECT (src, " headers:");
+      key_value_foreach (msg->hdr_fields, dump_key_value, src);
+      gst_rtsp_message_get_body (msg, &data, &size);
+      GST_LOG_OBJECT (src, " body: length %d", size);
+      if (size > 0) {
+        body_string = g_string_new_len ((const gchar *) data, size);
+        GST_LOG_OBJECT (src, " %s(%d)", body_string->str, size);
+        g_string_free (body_string, TRUE);
+        body_string = NULL;
+      }
+      break;
+    case GST_RTSP_MESSAGE_HTTP_REQUEST:
+      GST_LOG_OBJECT (src, "HTTP request message %p", msg);
+      GST_LOG_OBJECT (src, " request line:");
+      GST_LOG_OBJECT (src, "   method:  '%s'",
+          gst_rtsp_method_as_text (msg->type_data.request.method));
+      GST_LOG_OBJECT (src, "   uri:     '%s'", msg->type_data.request.uri);
+      GST_LOG_OBJECT (src, "   version: '%s'",
+          gst_rtsp_version_as_text (msg->type_data.request.version));
+      GST_LOG_OBJECT (src, " headers:");
+      key_value_foreach (msg->hdr_fields, dump_key_value, src);
+      GST_LOG_OBJECT (src, " body:");
+      gst_rtsp_message_get_body (msg, &data, &size);
+      if (size > 0) {
+        body_string = g_string_new_len ((const gchar *) data, size);
+        GST_LOG_OBJECT (src, " %s(%d)", body_string->str, size);
+        g_string_free (body_string, TRUE);
+        body_string = NULL;
+      }
+      break;
+    case GST_RTSP_MESSAGE_HTTP_RESPONSE:
+      GST_LOG_OBJECT (src, "HTTP response message %p", msg);
+      GST_LOG_OBJECT (src, " status line:");
+      GST_LOG_OBJECT (src, "   code:    '%d'", msg->type_data.response.code);
+      GST_LOG_OBJECT (src, "   reason:  '%s'", msg->type_data.response.reason);
+      GST_LOG_OBJECT (src, "   version: '%s'",
+          gst_rtsp_version_as_text (msg->type_data.response.version));
+      GST_LOG_OBJECT (src, " headers:");
+      key_value_foreach (msg->hdr_fields, dump_key_value, src);
+      gst_rtsp_message_get_body (msg, &data, &size);
+      GST_LOG_OBJECT (src, " body: length %d", size);
+      if (size > 0) {
+        body_string = g_string_new_len ((const gchar *) data, size);
+        GST_LOG_OBJECT (src, " %s(%d)", body_string->str, size);
+        g_string_free (body_string, TRUE);
+        body_string = NULL;
+      }
+      break;
+    case GST_RTSP_MESSAGE_DATA:
+      GST_LOG_OBJECT (src, "RTSP data message %p", msg);
+      GST_LOG_OBJECT (src, " channel: '%d'", msg->type_data.data.channel);
+      GST_LOG_OBJECT (src, " size:    '%d'", msg->body_size);
+      gst_rtsp_message_get_body (msg, &data, &size);
+      if (size > 0) {
+        body_string = g_string_new_len ((const gchar *) data, size);
+        GST_LOG_OBJECT (src, " %s(%d)", body_string->str, size);
+        g_string_free (body_string, TRUE);
+        body_string = NULL;
+      }
+      break;
+    default:
+      GST_LOG_OBJECT (src, "unsupported message type %d", msg->type);
+      break;
+  }
+  GST_LOG_OBJECT (src, "--------------------------------------------");
+}
+
+static void
+gst_rtspsrc_print_sdp_media (GstRTSPSrc * src, GstSDPMedia * media)
+{
+  GST_LOG_OBJECT (src, "   media:       '%s'", GST_STR_NULL (media->media));
+  GST_LOG_OBJECT (src, "   port:        '%u'", media->port);
+  GST_LOG_OBJECT (src, "   num_ports:   '%u'", media->num_ports);
+  GST_LOG_OBJECT (src, "   proto:       '%s'", GST_STR_NULL (media->proto));
+  if (media->fmts && media->fmts->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, "   formats:");
+    for (i = 0; i < media->fmts->len; i++) {
+      GST_LOG_OBJECT (src, "    format  '%s'", g_array_index (media->fmts,
+              gchar *, i));
+    }
+  }
+  GST_LOG_OBJECT (src, "   information: '%s'",
+      GST_STR_NULL (media->information));
+  if (media->connections && media->connections->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, "   connections:");
+    for (i = 0; i < media->connections->len; i++) {
+      GstSDPConnection *conn =
+          &g_array_index (media->connections, GstSDPConnection, i);
+
+      GST_LOG_OBJECT (src, "    nettype:      '%s'",
+          GST_STR_NULL (conn->nettype));
+      GST_LOG_OBJECT (src, "    addrtype:     '%s'",
+          GST_STR_NULL (conn->addrtype));
+      GST_LOG_OBJECT (src, "    address:      '%s'",
+          GST_STR_NULL (conn->address));
+      GST_LOG_OBJECT (src, "    ttl:          '%u'", conn->ttl);
+      GST_LOG_OBJECT (src, "    addr_number:  '%u'", conn->addr_number);
+    }
+  }
+  if (media->bandwidths && media->bandwidths->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, "   bandwidths:");
+    for (i = 0; i < media->bandwidths->len; i++) {
+      GstSDPBandwidth *bw =
+          &g_array_index (media->bandwidths, GstSDPBandwidth, i);
+
+      GST_LOG_OBJECT (src, "    type:         '%s'", GST_STR_NULL (bw->bwtype));
+      GST_LOG_OBJECT (src, "    bandwidth:    '%u'", bw->bandwidth);
+    }
+  }
+  GST_LOG_OBJECT (src, "   key:");
+  GST_LOG_OBJECT (src, "    type:       '%s'", GST_STR_NULL (media->key.type));
+  GST_LOG_OBJECT (src, "    data:       '%s'", GST_STR_NULL (media->key.data));
+  if (media->attributes && media->attributes->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, "   attributes:");
+    for (i = 0; i < media->attributes->len; i++) {
+      GstSDPAttribute *attr =
+          &g_array_index (media->attributes, GstSDPAttribute, i);
+
+      GST_LOG_OBJECT (src, "    attribute '%s' : '%s'", attr->key, attr->value);
+    }
+  }
+}
+
+void
+gst_rtspsrc_print_sdp_message (GstRTSPSrc * src, const GstSDPMessage * msg)
+{
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (msg != NULL);
+
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) < GST_LEVEL_LOG)
+    return;
+
+  GST_LOG_OBJECT (src, "--------------------------------------------");
+  GST_LOG_OBJECT (src, "sdp packet %p:", msg);
+  GST_LOG_OBJECT (src, " version:       '%s'", GST_STR_NULL (msg->version));
+  GST_LOG_OBJECT (src, " origin:");
+  GST_LOG_OBJECT (src, "  username:     '%s'",
+      GST_STR_NULL (msg->origin.username));
+  GST_LOG_OBJECT (src, "  sess_id:      '%s'",
+      GST_STR_NULL (msg->origin.sess_id));
+  GST_LOG_OBJECT (src, "  sess_version: '%s'",
+      GST_STR_NULL (msg->origin.sess_version));
+  GST_LOG_OBJECT (src, "  nettype:      '%s'",
+      GST_STR_NULL (msg->origin.nettype));
+  GST_LOG_OBJECT (src, "  addrtype:     '%s'",
+      GST_STR_NULL (msg->origin.addrtype));
+  GST_LOG_OBJECT (src, "  addr:         '%s'", GST_STR_NULL (msg->origin.addr));
+  GST_LOG_OBJECT (src, " session_name:  '%s'",
+      GST_STR_NULL (msg->session_name));
+  GST_LOG_OBJECT (src, " information:   '%s'", GST_STR_NULL (msg->information));
+  GST_LOG_OBJECT (src, " uri:           '%s'", GST_STR_NULL (msg->uri));
+
+  if (msg->emails && msg->emails->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, " emails:");
+    for (i = 0; i < msg->emails->len; i++) {
+      GST_LOG_OBJECT (src, "  email '%s'", g_array_index (msg->emails, gchar *,
+              i));
+    }
+  }
+  if (msg->phones && msg->phones->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, " phones:");
+    for (i = 0; i < msg->phones->len; i++) {
+      GST_LOG_OBJECT (src, "  phone '%s'", g_array_index (msg->phones, gchar *,
+              i));
+    }
+  }
+  GST_LOG_OBJECT (src, " connection:");
+  GST_LOG_OBJECT (src, "  nettype:      '%s'",
+      GST_STR_NULL (msg->connection.nettype));
+  GST_LOG_OBJECT (src, "  addrtype:     '%s'",
+      GST_STR_NULL (msg->connection.addrtype));
+  GST_LOG_OBJECT (src, "  address:      '%s'",
+      GST_STR_NULL (msg->connection.address));
+  GST_LOG_OBJECT (src, "  ttl:          '%u'", msg->connection.ttl);
+  GST_LOG_OBJECT (src, "  addr_number:  '%u'", msg->connection.addr_number);
+  if (msg->bandwidths && msg->bandwidths->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, " bandwidths:");
+    for (i = 0; i < msg->bandwidths->len; i++) {
+      GstSDPBandwidth *bw =
+          &g_array_index (msg->bandwidths, GstSDPBandwidth, i);
+
+      GST_LOG_OBJECT (src, "  type:         '%s'", GST_STR_NULL (bw->bwtype));
+      GST_LOG_OBJECT (src, "  bandwidth:    '%u'", bw->bandwidth);
+    }
+  }
+  GST_LOG_OBJECT (src, " key:");
+  GST_LOG_OBJECT (src, "  type:         '%s'", GST_STR_NULL (msg->key.type));
+  GST_LOG_OBJECT (src, "  data:         '%s'", GST_STR_NULL (msg->key.data));
+  if (msg->attributes && msg->attributes->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, " attributes:");
+    for (i = 0; i < msg->attributes->len; i++) {
+      GstSDPAttribute *attr =
+          &g_array_index (msg->attributes, GstSDPAttribute, i);
+
+      GST_LOG_OBJECT (src, "  attribute '%s' : '%s'", attr->key, attr->value);
+    }
+  }
+  if (msg->medias && msg->medias->len > 0) {
+    guint i;
+
+    GST_LOG_OBJECT (src, " medias:");
+    for (i = 0; i < msg->medias->len; i++) {
+      GST_LOG_OBJECT (src, "  media %u:", i);
+      gst_rtspsrc_print_sdp_media (src, &g_array_index (msg->medias,
+              GstSDPMedia, i));
+    }
+  }
+  GST_LOG_OBJECT (src, "--------------------------------------------");
 }
