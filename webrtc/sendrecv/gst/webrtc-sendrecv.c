@@ -216,7 +216,7 @@ send_sdp_offer (GstWebRTCSessionDescription * offer)
 
 /* Offer created by our pipeline, to be sent to the peer */
 static void
-on_offer_received (GstPromise * promise, gpointer user_data)
+on_offer_created (GstPromise * promise, gpointer user_data)
 {
   GstWebRTCSessionDescription *offer = NULL;
   gchar *desc;
@@ -245,7 +245,7 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
 
   app_state = PEER_CALL_NEGOTIATING;
   g_signal_emit_by_name (webrtc1, "create-offer", NULL, promise);
-  gst_promise_set_change_callback (promise, on_offer_received, user_data,
+  gst_promise_set_change_callback (promise, on_offer_created, user_data,
       NULL);
 }
 
