@@ -18,9 +18,10 @@ libgstnet_@GST_API_VERSION@_la_SOURCES = \
     gstnettimepacket.c \
     gstnettimeprovider.c \
     gstptpclock.c \
-    gstntppacket.c
+    gstntppacket.c \
+    gstnetutils.c
 
-noinst_HEADERS = gstptp_private.h gstntppacket.h
+noinst_HEADERS = gstptp_private.h gstntppacket.h gstnetutils.h
 
 libgstnet_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
 libgstnet_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS) \

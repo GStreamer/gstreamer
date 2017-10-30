@@ -38,16 +38,9 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-
-#ifndef G_OS_WIN32
-#include <netinet/in.h>
-#endif
-
 #include "gstnettimeprovider.h"
 #include "gstnettimepacket.h"
+#include "gstnetutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (ntp_debug);
 #define GST_CAT_DEFAULT (ntp_debug)
@@ -225,17 +218,8 @@ gst_net_time_provider_thread (gpointer data)
 
     /* before next sending check if need to change QoS */
     new_qos_dscp = self->priv->qos_dscp;
-    if (cur_qos_dscp != new_qos_dscp) {
-      gint tos, fd;
-      fd = g_socket_get_fd (socket);
-
-      /* Extract and shift 6 bits of DSFIELD */
-      tos = (new_qos_dscp & 0x3f) << 2;
-
-      if (setsockopt (fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
-        GST_ERROR_OBJECT (self, "could not set TOS: %s", g_strerror (errno));
-      }
-
+    if (cur_qos_dscp != new_qos_dscp &&
+        gst_net_utils_set_socket_dscp (socket, new_qos_dscp)) {
       GST_DEBUG_OBJECT (self, "changed QoS DSCP to: %d", new_qos_dscp);
       cur_qos_dscp = new_qos_dscp;
     }
