@@ -53,6 +53,8 @@
 GST_DEBUG_CATEGORY (gstomx_debug);
 #define GST_CAT_DEFAULT gstomx_debug
 
+GST_DEBUG_CATEGORY_STATIC (OMX_PERFORMANCE);
+
 G_LOCK_DEFINE_STATIC (core_handles);
 static GHashTable *core_handles;
 
@@ -634,6 +636,37 @@ gst_omx_buffer_unmap (GstOMXBuffer * buffer)
   }
 }
 
+static void
+log_omx_performance (GstOMXComponent * comp, const gchar * event,
+    GstOMXBuffer * buf)
+{
+  GstStructure *s;
+
+  /* Don't bother creating useless structs if not needed */
+  if (gst_debug_category_get_threshold (OMX_PERFORMANCE) < GST_LEVEL_TRACE)
+    return;
+
+  if (buf) {
+    /* *INDENT-OFF* */
+    s = gst_structure_new (event,
+        "GstOMXBuffer", G_TYPE_POINTER, buf,
+        "OMX-buffer", G_TYPE_POINTER, buf->omx_buf,
+        "TimeStamp", G_TYPE_UINT64, GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp),
+        "AllocLen", G_TYPE_UINT, buf->omx_buf->nAllocLen,
+        "FilledLen", G_TYPE_UINT, buf->omx_buf->nFilledLen,
+        "flags", G_TYPE_UINT, buf->omx_buf->nFlags,
+        "flags-str", G_TYPE_STRING, gst_omx_buffer_flags_to_string (buf->omx_buf->nFlags),
+        NULL);
+    /* *INDENT-ON* */
+  } else {
+    s = gst_structure_new_empty (event);
+  }
+
+  GST_CAT_TRACE_OBJECT (OMX_PERFORMANCE, comp->parent, "%" GST_PTR_FORMAT, s);
+
+  gst_structure_free (s);
+}
+
 static OMX_ERRORTYPE
 EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
     OMX_BUFFERHEADERTYPE * pBuffer)
@@ -667,6 +700,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   msg->content.buffer_done.buffer = pBuffer;
   msg->content.buffer_done.empty = OMX_TRUE;
 
+  log_omx_performance (comp, "EmptyBufferDone", buf);
   GST_LOG_OBJECT (comp->parent, "%s port %u emptied buffer %p (%p)",
       comp->name, buf->port->index, buf, buf->omx_buf->pBuffer);
 
@@ -705,6 +739,7 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   msg->content.buffer_done.buffer = pBuffer;
   msg->content.buffer_done.empty = OMX_FALSE;
 
+  log_omx_performance (comp, "FillBufferDone", buf);
   GST_LOG_OBJECT (comp->parent, "%s port %u filled buffer %p (%p)", comp->name,
       buf->port->index, buf, buf->omx_buf->pBuffer);
 
@@ -1498,8 +1533,10 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   buf->used = TRUE;
 
   if (port->port_def.eDir == OMX_DirInput) {
+    log_omx_performance (comp, "EmptyThisBuffer", buf);
     err = OMX_EmptyThisBuffer (comp->handle, buf->omx_buf);
   } else {
+    log_omx_performance (comp, "FillThisBuffer", buf);
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
   GST_DEBUG_OBJECT (comp->parent, "Released buffer %p to %s port %u: %s "
@@ -2280,6 +2317,7 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
        */
       gst_omx_buffer_reset (buf);
 
+      log_omx_performance (comp, "FillThisBuffer", buf);
       err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
 
       if (err != OMX_ErrorNone) {
@@ -2981,6 +3019,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
   GST_DEBUG_CATEGORY_INIT (gst_omx_video_debug_category, "omxvideo", 0,
       "gst-omx-video");
+  GST_DEBUG_CATEGORY_INIT (OMX_PERFORMANCE, "OMX_PERFORMANCE", 0,
+      "gst-omx performace");
 
   /* Read configuration file gstomx.conf from the preferred
    * configuration directories */
