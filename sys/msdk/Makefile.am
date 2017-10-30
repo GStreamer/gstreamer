@@ -33,13 +33,15 @@ libgstmsdk_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(GST_PBUTILS_CFLAGS) \
 	$(GST_VIDEO_CFLAGS) \
-	$(MSDK_CFLAGS)
+	$(MSDK_CFLAGS) \
+	$(LIBMFX_CFLAGS)
 
 libgstmsdk_la_LIBADD = \
 	$(GST_LIBS) \
 	$(GST_PBUTILS_LIBS) \
 	$(GST_VIDEO_LIBS) \
-	$(MSDK_LIBS)
+	$(MSDK_LIBS) \
+	$(LIBMFX_LIBS)
 
 if USE_MSDK_LIBVA
 libgstmsdk_la_SOURCES += \

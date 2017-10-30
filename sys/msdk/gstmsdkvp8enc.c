@@ -32,8 +32,14 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <mfxplugin.h>
-#include <mfxvp8.h>
+
+#ifdef HAVE_LIBMFX
+#  include <mfx/mfxplugin.h>
+#  include <mfx/mfxvp8.h>
+#else
+#  include "mfxplugin.h"
+#  include "mfxvp8.h"
+#endif
 
 #include "gstmsdkvp8enc.h"
 

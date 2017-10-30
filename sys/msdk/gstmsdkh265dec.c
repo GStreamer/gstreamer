@@ -32,7 +32,12 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <mfxplugin.h>
+
+#ifdef HAVE_LIBMFX
+#  include <mfx/mfxplugin.h>
+#else
+#  include "mfxplugin.h"
+#endif
 
 #include "gstmsdkh265dec.h"
 

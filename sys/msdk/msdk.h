@@ -32,11 +32,20 @@
 #ifndef __MSDK_H__
 #define __MSDK_H__
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "mfxvideo.h"
+
+#ifdef HAVE_LIBMFX
+#  include <mfx/mfxvideo.h>
+#else
+#  include "mfxvideo.h"
+#endif
 
 G_BEGIN_DECLS
 

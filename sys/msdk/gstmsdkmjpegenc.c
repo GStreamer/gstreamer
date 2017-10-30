@@ -32,8 +32,14 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-#include <mfxstructures.h>
-#include <mfxjpeg.h>
+
+#ifdef HAVE_LIBMFX
+#  include <mfx/mfxstructures.h>
+#  include <mfx/mfxjpeg.h>
+#else
+#  include "mfxstructures.h"
+#  include "mfxjpeg.h"
+#endif
 
 #include "gstmsdkmjpegenc.h"
 
