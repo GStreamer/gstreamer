@@ -42,7 +42,8 @@ G_BEGIN_DECLS
  * ]|
  *
  */
-#define GST_MAKE_FOURCC(a,b,c,d)        ((guint32)((a)|(b)<<8|(c)<<16|(d)<<24))
+#define GST_MAKE_FOURCC(a,b,c,d) \
+  ( (guint32)(a) | ((guint32) (b)) << 8  | ((guint32) (c)) << 16 | ((guint32) (d)) << 24 )
 
 /**
  * GST_STR_FOURCC:
