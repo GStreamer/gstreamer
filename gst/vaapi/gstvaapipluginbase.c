@@ -600,8 +600,6 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
 {
   gboolean different_caps;
   const GstVideoInfo *image_info;
-  GstVaapiImageUsageFlags usage_flag =
-      GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
 
   if (!reset_allocator (plugin->srcpad_allocator, vinfo))
     goto valid_allocator;
@@ -610,10 +608,6 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
   if (caps && gst_caps_is_video_raw (caps)) {
     GstAllocator *allocator = create_dmabuf_srcpad_allocator (plugin, vinfo,
         !plugin->srcpad_can_dmabuf);
-    if (!allocator && plugin->enable_direct_rendering) {
-      usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
-      GST_INFO_OBJECT (plugin, "enabling direct rendering in source allocator");
-    }
     plugin->srcpad_allocator = allocator;
   } else if (caps && gst_vaapi_caps_feature_contains (caps,
           GST_VAAPI_CAPS_FEATURE_DMABUF)) {
@@ -624,6 +618,14 @@ ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
   }
 
   if (!plugin->srcpad_allocator) {
+    GstVaapiImageUsageFlags usage_flag =
+        GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+
+    if (plugin->enable_direct_rendering) {
+      usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
+      GST_INFO_OBJECT (plugin, "enabling direct rendering in source allocator");
+    }
+
     plugin->srcpad_allocator =
         gst_vaapi_video_allocator_new (plugin->display, vinfo, 0, usage_flag);
   }
