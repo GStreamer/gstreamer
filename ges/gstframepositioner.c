@@ -99,6 +99,10 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, pos->fps_n,
         pos->fps_d, NULL);
 
+  if (pos->par_n != -1)
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        pos->par_n, pos->par_d, NULL);
+
   if (old_track_width && pos->width == old_track_width &&
       old_track_height && pos->height == old_track_height &&
       pos->track_height && pos->track_width &&
@@ -142,6 +146,10 @@ sync_properties_from_track (GstFramePositioner * pos, GESTrack * track)
     if (!gst_structure_get_fraction (structure, "framerate", &(pos->fps_n),
             &(pos->fps_d)))
       pos->fps_n = -1;
+
+    if (!gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+            &(pos->par_n), &(pos->par_d)))
+      pos->par_n = -1;
   }
 
   old_track_width = pos->track_width;
@@ -341,6 +349,9 @@ gst_frame_positioner_init (GstFramePositioner * framepositioner)
   framepositioner->track_source = NULL;
   framepositioner->current_track = NULL;
   framepositioner->scale_in_compositor = TRUE;
+
+  framepositioner->par_n = -1;
+  framepositioner->par_d = 1;
 }
 
 void
