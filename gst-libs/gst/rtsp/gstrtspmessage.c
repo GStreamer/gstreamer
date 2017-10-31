@@ -75,6 +75,40 @@ key_value_foreach (GArray * array, GFunc func, gpointer user_data)
   }
 }
 
+static void
+key_value_append (const RTSPKeyValue * kv, GArray * array)
+{
+  RTSPKeyValue kvcopy;
+  g_return_if_fail (kv != NULL);
+  g_return_if_fail (array != NULL);
+
+  kvcopy.field = kv->field;
+  kvcopy.value = g_strdup (kv->value);
+  kvcopy.custom_key = g_strdup (kv->custom_key);
+
+  g_array_append_val (array, kvcopy);
+}
+
+static GstRTSPMessage *
+gst_rtsp_message_boxed_copy (GstRTSPMessage * orig)
+{
+  GstRTSPMessage *copy;
+
+  if (gst_rtsp_message_copy (orig, &copy) == GST_RTSP_OK)
+    return copy;
+
+  return NULL;
+}
+
+static void
+gst_rtsp_message_boxed_free (GstRTSPMessage * msg)
+{
+  gst_rtsp_message_free (msg);
+}
+
+G_DEFINE_BOXED_TYPE (GstRTSPMessage, gst_rtsp_msg, gst_rtsp_message_boxed_copy,
+    gst_rtsp_message_boxed_free);
+
 /**
  * gst_rtsp_message_new:
  * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
@@ -497,6 +531,63 @@ gst_rtsp_message_free (GstRTSPMessage * msg)
 
   return res;
 }
+
+/**
+ * gst_rtsp_message_copy:
+ * @msg: a #GstRTSPMessage
+ * @copy: (out) (transfer full): pointer to new #GstRTSPMessage
+ *
+ * Allocate a new copy of @msg and store the result in @copy. The value in
+ * @copy should be release with gst_rtsp_message_free function.
+ *
+ * Returns: a #GstRTSPResult
+ *
+ * Since: 1.14
+ */
+GstRTSPResult
+gst_rtsp_message_copy (const GstRTSPMessage * msg, GstRTSPMessage ** copy)
+{
+  GstRTSPResult ret;
+  GstRTSPMessage *cp;
+
+  if (msg == NULL)
+    return GST_RTSP_EINVAL;
+
+  ret = gst_rtsp_message_new (copy);
+  if (ret != GST_RTSP_OK)
+    return ret;
+
+  cp = *copy;
+
+  cp->type = msg->type;
+  switch (cp->type) {
+    case GST_RTSP_MESSAGE_INVALID:
+      break;
+    case GST_RTSP_MESSAGE_REQUEST:
+    case GST_RTSP_MESSAGE_HTTP_REQUEST:
+      cp->type_data.request.method = msg->type_data.request.method;
+      cp->type_data.request.uri = g_strdup (msg->type_data.request.uri);
+      cp->type_data.request.version = msg->type_data.request.version;
+      break;
+    case GST_RTSP_MESSAGE_RESPONSE:
+    case GST_RTSP_MESSAGE_HTTP_RESPONSE:
+      cp->type_data.response.code = msg->type_data.response.code;
+      cp->type_data.response.reason = g_strdup (msg->type_data.response.reason);
+      cp->type_data.response.version = msg->type_data.response.version;
+      break;
+    case GST_RTSP_MESSAGE_DATA:
+      cp->type_data.data.channel = msg->type_data.data.channel;
+      break;
+    default:
+      return GST_RTSP_EINVAL;
+  }
+
+  key_value_foreach (msg->hdr_fields, (GFunc) key_value_append, cp->hdr_fields);
+  gst_rtsp_message_set_body (cp, msg->body, msg->body_size);
+
+  return GST_RTSP_OK;
+}
+
 
 /**
  * gst_rtsp_message_take_header:

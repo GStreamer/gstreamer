@@ -107,6 +107,13 @@ struct _GstRTSPMessage
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_EXPORT
+GType                   gst_rtsp_msg_get_type            (void);
+
+#define GST_TYPE_RTSP_MESSAGE           (gst_rtsp_msg_get_type())
+#define GST_RTSP_MESSAGE_CAST(object)   ((GstRTSPMessage *)(object))
+#define GST_RTSP_MESSAGE(object)        (GST_RTSP_MESSAGE_CAST(object))
+
 /* memory management */
 
 GST_EXPORT
@@ -120,6 +127,9 @@ GstRTSPResult      gst_rtsp_message_unset           (GstRTSPMessage *msg);
 
 GST_EXPORT
 GstRTSPResult      gst_rtsp_message_free            (GstRTSPMessage *msg);
+GST_EXPORT
+GstRTSPResult      gst_rtsp_message_copy            (const GstRTSPMessage *msg,
+                                                     GstRTSPMessage **copy);
 
 GST_EXPORT
 GstRTSPMsgType     gst_rtsp_message_get_type        (GstRTSPMessage *msg);
@@ -140,7 +150,7 @@ GST_EXPORT
 GstRTSPResult      gst_rtsp_message_parse_request   (GstRTSPMessage *msg,
                                                      GstRTSPMethod *method,
                                                      const gchar **uri,
-						     GstRTSPVersion *version);
+                                                     GstRTSPVersion *version);
 
 /* response */
 
