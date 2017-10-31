@@ -811,6 +811,9 @@ extract_tags_vp8 (GstOggStream * pad, ogg_packet * packet)
     tag_list_from_vorbiscomment_packet (packet,
         (const guint8 *) "OVP80\2 ", 7, &pad->taglist);
 
+    if (!pad->taglist)
+      pad->taglist = gst_tag_list_new_empty ();
+
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_VIDEO_CODEC, "VP8", NULL);
   }
@@ -1141,6 +1144,9 @@ extract_tags_flac (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes > 4 && ((packet->packet[0] & 0x7F) == 0x4)) {
     tag_list_from_vorbiscomment_packet (packet,
         packet->packet, 4, &pad->taglist);
+
+    if (!pad->taglist)
+      pad->taglist = gst_tag_list_new_empty ();
 
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, "FLAC", NULL);
@@ -2101,6 +2107,9 @@ extract_tags_opus (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes >= 8 && memcmp (packet->packet, "OpusTags", 8) == 0) {
     tag_list_from_vorbiscomment_packet (packet,
         (const guint8 *) "OpusTags", 8, &pad->taglist);
+
+    if (!pad->taglist)
+      pad->taglist = gst_tag_list_new_empty ();
 
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, "Opus", NULL);
