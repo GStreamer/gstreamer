@@ -66,6 +66,7 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
   }
 
   /* Create the pipeline */
+  pipeline = gst_pipeline_new ("pipeline");
   source = gst_element_factory_make ("appsrc", "source");
   typefind = gst_element_factory_make ("typefind", "typefind");
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
