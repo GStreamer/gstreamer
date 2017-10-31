@@ -82,6 +82,10 @@ gst_playback_utils_get_n_common_capsfeatures (GstElementFactory * fact1,
   fact2_tmpl_caps = get_template_caps (fact2, GST_PAD_SINK);
   if (!fact1_tmpl_caps || !fact2_tmpl_caps) {
     GST_ERROR ("Failed to get template caps from decoder or sink");
+    if (fact1_tmpl_caps)
+      gst_caps_unref (fact1_tmpl_caps);
+    else if (fact2_tmpl_caps)
+      gst_caps_unref (fact2_tmpl_caps);
     return 0;
   }
 
