@@ -57,6 +57,9 @@ struct _GstFramePositioner
   gint fps_n;
   gint fps_d;
 
+  gint par_n;
+  gint par_d;
+
   /*  This should never be made public, no padding needed */
 };
 
