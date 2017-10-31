@@ -35,6 +35,7 @@
 
 #include "gstmsdkh264enc.h"
 
+#include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh264enc_debug);
@@ -44,11 +45,14 @@ enum
 {
   PROP_0,
   PROP_CABAC,
-  PROP_LOW_POWER
+  PROP_LOW_POWER,
+  PROP_FRAME_PACKING,
 };
 
 #define PROP_CABAC_DEFAULT            TRUE
 #define PROP_LOWPOWER_DEFAULT         FALSE
+#define PROP_FRAME_PACKING_DEFAULT    -1
+
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -60,8 +64,140 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "profile = (string) { high, main, baseline, constrained-baseline }")
     );
 
+static GType
+gst_msdkh264enc_frame_packing_get_type (void)
+{
+  static GType format_type = 0;
+  static const GEnumValue format_types[] = {
+    {GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE, "None (default)", "none"},
+    {GST_VIDEO_MULTIVIEW_FRAME_PACKING_SIDE_BY_SIDE, "Side by Side",
+        "side-by-side"},
+    {GST_VIDEO_MULTIVIEW_FRAME_PACKING_TOP_BOTTOM, "Top Bottom", "top-bottom"},
+    {0, NULL, NULL}
+  };
+
+  if (!format_type) {
+    format_type =
+        g_enum_register_static ("GstMsdkH264EncFramePacking", format_types);
+  }
+
+  return format_type;
+}
+
 #define gst_msdkh264enc_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkH264Enc, gst_msdkh264enc, GST_TYPE_MSDKENC);
+
+static void
+insert_frame_packing_sei (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame,
+    GstVideoMultiviewMode mode)
+{
+  GstMapInfo map;
+  GstByteReader reader;
+  guint offset;
+
+  if (mode != GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE
+      && mode != GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM) {
+    GST_ERROR_OBJECT (thiz, "Unsupported multiview mode %d", mode);
+    return;
+  }
+
+  GST_DEBUG ("Inserting SEI Frame Packing for multiview mode %d", mode);
+
+  gst_buffer_map (frame->output_buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
+
+  while ((offset =
+          gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100,
+              0, gst_byte_reader_get_remaining (&reader))) != -1) {
+    guint8 type;
+    guint offset2;
+
+    gst_byte_reader_skip_unchecked (&reader, offset + 3);
+    if (!gst_byte_reader_get_uint8 (&reader, &type))
+      goto done;
+    type = type & 0x1f;
+
+    offset2 =
+        gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100, 0,
+        gst_byte_reader_get_remaining (&reader));
+    if (offset2 == -1)
+      offset2 = gst_byte_reader_get_remaining (&reader);
+
+    /* Slice, should really be an IDR slice (5) */
+    if (type >= 1 && type <= 5) {
+      GstBuffer *new_buffer;
+      GstMemory *mem;
+      static const guint8 sei_top_bottom[] =
+          { 0x00, 0x00, 0x01, 0x06, 0x2d, 0x07, 0x82, 0x01,
+        0x00, 0x00, 0x03, 0x00, 0x01, 0x20, 0x80
+      };
+      static const guint8 sei_side_by_side[] =
+          { 0x00, 0x00, 0x01, 0x06, 0x2d, 0x07, 0x81, 0x81,
+        0x00, 0x00, 0x03, 0x00, 0x01, 0x20, 0x80
+      };
+      const guint8 *sei;
+      guint sei_size;
+
+      if (mode == GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE) {
+        sei = sei_side_by_side;
+        sei_size = sizeof (sei_side_by_side);
+      } else {
+        sei = sei_top_bottom;
+        sei_size = sizeof (sei_top_bottom);
+      }
+
+      /* Create frame packing SEI
+       * FIXME: This assumes it does not exist in the stream, which is not
+       * going to be true anymore once this is fixed:
+       * https://github.com/Intel-Media-SDK/MediaSDK/issues/13
+       */
+      new_buffer = gst_buffer_new ();
+
+      /* Copy all metadata */
+      gst_buffer_copy_into (new_buffer, frame->output_buffer,
+          GST_BUFFER_COPY_METADATA, 0, -1);
+
+      /* Copy previous NALs */
+      gst_buffer_copy_into (new_buffer, frame->output_buffer,
+          GST_BUFFER_COPY_MEMORY, 0, gst_byte_reader_get_pos (&reader) - 4);
+
+      mem =
+          gst_memory_new_wrapped (0, g_memdup (sei, sei_size), sei_size, 0,
+          sei_size, NULL, g_free);
+      gst_buffer_append_memory (new_buffer, mem);
+      gst_buffer_copy_into (new_buffer, frame->output_buffer,
+          GST_BUFFER_COPY_MEMORY, gst_byte_reader_get_pos (&reader) - 4, -1);
+
+      gst_buffer_unmap (frame->output_buffer, &map);
+      gst_buffer_unref (frame->output_buffer);
+      frame->output_buffer = new_buffer;
+      return;
+    }
+  }
+
+done:
+  gst_buffer_unmap (frame->output_buffer, &map);
+}
+
+static GstFlowReturn
+gst_msdkh264enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
+{
+  GstMsdkH264Enc *thiz = GST_MSDKH264ENC (encoder);
+
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) &&
+      (thiz->frame_packing != GST_VIDEO_MULTIVIEW_MODE_NONE ||
+          ((GST_VIDEO_INFO_MULTIVIEW_MODE (&thiz->base.input_state->info) !=
+                  GST_VIDEO_MULTIVIEW_MODE_NONE)
+              && GST_VIDEO_INFO_MULTIVIEW_MODE (&thiz->base.
+                  input_state->info) != GST_VIDEO_MULTIVIEW_MODE_MONO))) {
+    insert_frame_packing_sei (thiz, frame,
+        thiz->frame_packing !=
+        GST_VIDEO_MULTIVIEW_MODE_NONE ? thiz->frame_packing :
+        GST_VIDEO_INFO_MULTIVIEW_MODE (&thiz->base.input_state->info));
+  }
+
+  return GST_FLOW_OK;
+}
 
 static gboolean
 gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
@@ -262,6 +398,9 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_LOW_POWER:
       thiz->lowpower = g_value_get_boolean (value);
       break;
+    case PROP_FRAME_PACKING:
+      thiz->frame_packing = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -291,6 +430,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_LOW_POWER:
       g_value_set_boolean (value, thiz->lowpower);
       break;
+    case PROP_FRAME_PACKING:
+      g_value_set_enum (value, thiz->frame_packing);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -303,14 +445,18 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
+  GstVideoEncoderClass *videoencoder_class;
   GstMsdkEncClass *encoder_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+  videoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
   encoder_class = GST_MSDKENC_CLASS (klass);
 
   gobject_class->set_property = gst_msdkh264enc_set_property;
   gobject_class->get_property = gst_msdkh264enc_get_property;
+
+  videoencoder_class->pre_push = gst_msdkh264enc_pre_push;
 
   encoder_class->set_format = gst_msdkh264enc_set_format;
   encoder_class->configure = gst_msdkh264enc_configure;
@@ -323,6 +469,12 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOW_POWER,
       g_param_spec_boolean ("low-power", "Low power", "Enable low power mode",
           PROP_LOWPOWER_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FRAME_PACKING,
+      g_param_spec_enum ("frame-packing", "Frame Packing",
+          "Set frame packing mode for Stereoscopic content",
+          gst_msdkh264enc_frame_packing_get_type (), PROP_FRAME_PACKING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder",
@@ -338,4 +490,5 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
 {
   thiz->cabac = PROP_CABAC_DEFAULT;
   thiz->lowpower = PROP_LOWPOWER_DEFAULT;
+  thiz->frame_packing = PROP_FRAME_PACKING_DEFAULT;
 }

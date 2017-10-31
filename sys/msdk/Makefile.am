@@ -33,6 +33,7 @@ noinst_HEADERS = \
 
 libgstmsdk_la_CFLAGS = \
 	$(GST_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
 	$(GST_PBUTILS_CFLAGS) \
 	$(GST_VIDEO_CFLAGS) \
 	$(MSDK_CFLAGS) \
@@ -40,6 +41,7 @@ libgstmsdk_la_CFLAGS = \
 
 libgstmsdk_la_LIBADD = \
 	$(GST_LIBS) \
+	$(GST_BASE_LIBS) \
 	$(GST_PBUTILS_LIBS) \
 	$(GST_VIDEO_LIBS) \
 	$(MSDK_LIBS) \
