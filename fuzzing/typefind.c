@@ -26,9 +26,9 @@
 #include <glib.h>
 #include <gst/gst.h>
 
-GST_PLUGIN_STATIC_DECLARE(coreelements);
-GST_PLUGIN_STATIC_DECLARE(typefindfunctions);
-GST_PLUGIN_STATIC_DECLARE(app);
+GST_PLUGIN_STATIC_DECLARE (coreelements);
+GST_PLUGIN_STATIC_DECLARE (typefindfunctions);
+GST_PLUGIN_STATIC_DECLARE (app);
 
 /* push-based typefind fuzzing target
  *
@@ -42,22 +42,15 @@ GST_PLUGIN_STATIC_DECLARE(app);
  *
  **/
 
-static void
-appsrc_configuration (GstDiscoverer *dc, GstElement *source, gpointer data)
-{
-  GstBuffer *buf;
-  GstFlowReturn ret;
-  
-  /* Create buffer from fuzztesting_data which shouldn't be freed */
-}
-
-int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
+int
+LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 {
   GError *err = NULL;
   static gboolean initialized = 0;
   GstElement *pipeline, *source, *typefind, *fakesink;
   GstBuffer *buf;
   GstFlowReturn flowret;
+  GstState state;
 
   if (!initialized) {
     /* We want critical warnings to assert so we can fix them
@@ -66,12 +59,12 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
 
     /* Only initialize and register plugins once */
     gst_init (NULL, NULL);
-    
-    GST_PLUGIN_STATIC_REGISTER(coreelements);
-    GST_PLUGIN_STATIC_REGISTER(typefindfunctions);
-    GST_PLUGIN_STATIC_REGISTER(app);
+
+    GST_PLUGIN_STATIC_REGISTER (coreelements);
+    GST_PLUGIN_STATIC_REGISTER (typefindfunctions);
+    GST_PLUGIN_STATIC_REGISTER (app);
   }
-  
+
   /* Create the pipeline */
   source = gst_element_factory_make ("appsrc", "source");
   typefind = gst_element_factory_make ("typefind", "typefind");
@@ -83,23 +76,22 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
   /* Set pipeline to READY so we can provide data to appsrc */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
   buf = gst_buffer_new_wrapped_full (0, (gpointer) data, size,
-				     0, size, NULL, NULL);
+      0, size, NULL, NULL);
   g_object_set (G_OBJECT (source), "size", size, NULL);
-  g_signal_emit_by_name (G_OBJECT(source), "push-buffer", buf, &ret);
+  g_signal_emit_by_name (G_OBJECT (source), "push-buffer", buf, &flowret);
   gst_buffer_unref (buf);
-  
+
   /* Set pipeline to PAUSED and wait (typefind will either fail or succeed) */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 
   /* wait until state change either completes or fails */
-  sret = gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, -1);
+  gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, -1);
 
   /* Go back to NULL */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
   /* And release the pipeline */
   gst_object_unref (pipeline);
-  
+
   return 0;
- }
- 
+}
