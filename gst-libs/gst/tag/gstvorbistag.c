@@ -489,6 +489,10 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
   return list;
 
 error:
+  if (vendor_string && *vendor_string) {
+    g_free (*vendor_string);
+    *vendor_string = NULL;
+  }
   gst_tag_list_unref (list);
   return NULL;
 #undef ADVANCE
