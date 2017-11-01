@@ -4549,6 +4549,161 @@ pack_P010_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_NV12_10LE32 GST_VIDEO_FORMAT_AYUV64, unpack_NV12_10LE32, 1, pack_NV12_10LE32
+static void
+unpack_NV12_10LE32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  gint i;
+  gint uv = GET_UV_420 (y, flags);
+  const guint32 *restrict sy = GET_PLANE_LINE (0, y);
+  const guint32 *restrict suv = GET_PLANE_LINE (1, uv);
+  guint16 *restrict d = dest;
+  gint num_words = (width + 2) / 3;
+  guint32 UV = 0;
+  guint16 Un = 0, Vn = 0;
+
+  /* Y data is packed into little endian 32bit words, with the 2 MSB being
+   * padding. There is only 1 pattern.
+   * -> padding | Y1 | Y2 | Y3
+   *
+   * UV is packed the same way, though we end up with 2 patterns:
+   * -> U | V | U | padding
+   * -> V | U | V | padding
+   */
+
+  /* FIXME unroll the 6 states ? */
+
+  for (i = 0; i < num_words; i++) {
+    gint num_comps = MIN (3, width - i * 3);
+    guint pix = i * 3;
+    gsize doff = pix * 4;
+    gint c;
+    guint32 Y;
+
+    Y = GST_READ_UINT32_LE (sy + i);
+
+    for (c = 0; c < num_comps; c++) {
+      guint16 Yn;
+
+      /* For Y, we simply read 10 bit and shift it out */
+      Yn = (Y & 0x03ff) << 6;
+      Y >>= 10;
+
+      /* Unpacking UV has been reduced to a cycle of 6 states. The following
+       * code is a reduce version of:
+       * 0: - Read first UV word (UVU)
+       *      Unpack U and V
+       * 1: - Resued U/V from 1 (sub-sampling)
+       * 2: - Unpack remaining U value
+       *    - Read following UV word (VUV)
+       *    - Unpack V value
+       * 3: - Reuse U/V from 2 (sub-sampling)
+       * 4: - Unpack remaining U
+       *    - Unpack remaining V
+       * 5: - Reuse UV/V from 4 (sub-sampling)
+       */
+      switch ((pix + c) % 6) {
+        case 0:
+          UV = GST_READ_UINT32_LE (suv + i);
+          /* fallthrough */
+        case 4:
+          Un = (UV & 0x03ff) << 6;
+          UV >>= 10;
+          Vn = (UV & 0x03ff) << 6;
+          UV >>= 10;
+          break;
+        case 2:
+          Un = (UV & 0x03ff) << 6;
+          UV = GST_READ_UINT32_LE (suv + i + 1);
+          Vn = (UV & 0x03ff) << 6;
+          UV >>= 10;
+          break;
+        default:
+          /* keep value */
+          break;
+      }
+
+      if (G_UNLIKELY (pix + c < x))
+        continue;
+
+      if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+        Yn |= Yn >> 10;
+        Un |= Un >> 10;
+        Vn |= Vn >> 10;
+      }
+
+      d[doff + 0] = 0xffff;
+      d[doff + 1] = Yn;
+      d[doff + 2] = Un;
+      d[doff + 3] = Vn;
+
+      doff += 4;
+    }
+  }
+}
+
+static void
+pack_NV12_10LE32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  gint i;
+  gint uv = GET_UV_420 (y, flags);
+  guint32 *restrict dy = GET_PLANE_LINE (0, y);
+  guint32 *restrict duv = GET_PLANE_LINE (1, uv);
+  const guint16 *restrict s = src;
+  gint num_words = (width + 2) / 3;
+  guint32 UV = 0;
+
+  /* FIXME unroll the 6 states ? */
+
+  for (i = 0; i < num_words; i++) {
+    gint num_comps = MIN (3, width - i * 3);
+    guint pix = i * 3;
+    gsize soff = pix * 4;
+    gint c;
+    guint32 Y = 0;
+
+    for (c = 0; c < num_comps; c++) {
+      Y <<= 10;
+      Y |= s[soff + 1] >> 6;
+
+      if (!IS_CHROMA_LINE_420 (y, flags))
+        continue;
+
+      switch ((pix + c) % 6) {
+        case 0:
+          UV = s[soff + 2] >> 6;
+          UV |= s[soff + 3] >> 6 << 10;
+          break;
+        case 2:
+          UV |= s[soff + 2] >> 6 << 20;
+          GST_WRITE_UINT32_LE (duv + i, UV);
+          UV = s[soff + 3] >> 6;
+          break;
+        case 4:
+          UV |= s[soff + 2] >> 6 << 10;
+          UV |= s[soff + 3] >> 6 << 20;
+          GST_WRITE_UINT32_LE (duv + i, UV);
+          break;
+        default:
+          /* keep value */
+          break;
+      }
+    }
+
+    GST_WRITE_UINT32_LE (dy + i, Y);
+
+    if (IS_CHROMA_LINE_420 (y, flags) && num_comps < 3)
+      GST_WRITE_UINT32_LE (duv + i, UV);
+
+    soff += 4;
+  }
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -4649,6 +4804,8 @@ typedef struct
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUV_C_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_YUV_C_LE_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUV_T_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack, tile) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX | GST_VIDEO_FORMAT_FLAG_TILED, depth, pstride, plane, offs, sub, pack, tile } }
 
@@ -4856,6 +5013,9 @@ static const VideoFormat formats[] = {
       PSTR222, PLANE012, OFFS0, SUB444, PACK_Y444_12BE),
   MAKE_YUV_LE_FORMAT (Y444_12LE, "raw video", 0x00000000, DPTH12_12_12,
       PSTR222, PLANE012, OFFS0, SUB444, PACK_Y444_12LE),
+  MAKE_YUV_C_LE_FORMAT (NV12_10LE32, "raw video",
+      GST_MAKE_FOURCC ('X', 'V', '1', '5'), DPTH10_10_10, PSTR0, PLANE011,
+      OFFS001, SUB420, PACK_NV12_10LE32),
 };
 
 static GstVideoFormat
@@ -5088,6 +5248,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_IYU1;
     case GST_MAKE_FOURCC ('A', 'Y', '6', '4'):
       return GST_VIDEO_FORMAT_AYUV64;
+    case GST_MAKE_FOURCC ('X', 'V', '1', '5'):
+      return GST_VIDEO_FORMAT_NV12_10LE32;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
