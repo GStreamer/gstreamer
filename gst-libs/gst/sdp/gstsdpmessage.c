@@ -570,7 +570,7 @@ gst_sdp_message_as_text (const GstSDPMessage * msg)
 
     if (attr->key) {
       g_string_append_printf (lines, "a=%s", attr->key);
-      if (attr->value)
+      if (attr->value && attr->value[0] != '\0')
         g_string_append_printf (lines, ":%s", attr->value);
       g_string_append_printf (lines, "\r\n");
     }
