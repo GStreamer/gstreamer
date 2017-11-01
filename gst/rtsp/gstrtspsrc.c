@@ -125,6 +125,7 @@ enum
   SIGNAL_NEW_MANAGER,
   SIGNAL_REQUEST_RTCP_KEY,
   SIGNAL_ACCEPT_CERTIFICATE,
+  SIGNAL_BEFORE_SEND,
   LAST_SIGNAL
 };
 
@@ -434,6 +435,26 @@ select_stream_accum (GSignalInvocationHint * ihint,
   g_value_set_boolean (return_accu, myboolean);
 
   /* stop emission if FALSE */
+  return myboolean;
+}
+
+static gboolean
+default_before_send (GstRTSPSrc * src, GstRTSPMessage * msg)
+{
+  GST_DEBUG_OBJECT (src, "default handler");
+  return TRUE;
+}
+
+static gboolean
+before_send_accum (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer data)
+{
+  gboolean myboolean;
+
+  myboolean = g_value_get_boolean (handler_return);
+  g_value_set_boolean (return_accu, myboolean);
+
+  /* prevent send if FALSE */
   return myboolean;
 }
 
@@ -920,6 +941,29 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       G_SIGNAL_RUN_LAST, 0, g_signal_accumulator_true_handled, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_TLS_CONNECTION, G_TYPE_TLS_CERTIFICATE,
       G_TYPE_TLS_CERTIFICATE_FLAGS);
+
+  /*
+   * GstRTSPSrc::before-send
+   * @rtspsrc: a #GstRTSPSrc
+   * @num: the stream number
+   *
+   * Emitted before each RTSP request is sent, in order to allow
+   * the application to modify send parameters or to skip the message entirely.
+   * This can be used, for example, to work with ONVIF Profile G servers,
+   * which need a different/additional range, rate-control, and intra/x
+   * parameters.
+   *
+   * Returns: %TRUE when the command should be sent, %FALSE when the
+   * command should be dropped.
+   *
+   * Since: 1.14
+   */
+  gst_rtspsrc_signals[SIGNAL_BEFORE_SEND] =
+      g_signal_new_class_handler ("before-send", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP,
+      (GCallback) default_before_send, before_send_accum, NULL,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
+      1, GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -5697,10 +5741,18 @@ gst_rtspsrc_try_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 {
   GstRTSPResult res;
   gint try = 0;
+  gboolean allow_send = TRUE;
 
 again:
   if (!src->short_header)
     gst_rtsp_ext_list_before_send (src->extensions, request);
+
+  g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_BEFORE_SEND], 0,
+      request, &allow_send);
+  if (!allow_send) {
+    GST_DEBUG_OBJECT (src, "skipping message, disabled by signal");
+    return GST_RTSP_OK;
+  }
 
   GST_DEBUG_OBJECT (src, "sending message");
 
