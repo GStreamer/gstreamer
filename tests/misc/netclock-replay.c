@@ -28,6 +28,7 @@
  * captured samples, plus its dependencies for the build to succeed. */
 #include "../../libs/gst/net/gstntppacket.c"
 #include "../../libs/gst/net/gstnetclientclock.c"
+#include "../../libs/gst/net/gstnetutils.c"
 
 static gchar *input = NULL;
 static gboolean debug = FALSE;
