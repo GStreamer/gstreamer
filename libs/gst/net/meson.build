@@ -6,6 +6,7 @@ gst_net_sources = [
   'gstnettimeprovider.c',
   'gstptpclock.c',
   'gstntppacket.c',
+  'gstnetutils.c',
 ]
 
 gst_net_headers = [
