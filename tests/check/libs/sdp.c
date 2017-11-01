@@ -278,6 +278,34 @@ GST_START_TEST (modify)
 }
 
 GST_END_TEST
+GST_START_TEST (null)
+{
+  GstSDPMessage *message;
+  const GstSDPMedia *media;
+  glong length = -1;
+  const gchar *val;
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp, length, message);
+
+  fail_unless (gst_sdp_message_add_attribute (message,
+          "test_attr_session", NULL) == GST_SDP_OK);
+
+  val = gst_sdp_message_get_attribute_val (message, "test_attr_session");
+  fail_unless (val == NULL);
+
+  media = gst_sdp_message_get_media (message, 0);
+
+  fail_unless (gst_sdp_media_add_attribute ((GstSDPMedia *) media,
+          "test_attr_media", NULL) == GST_SDP_OK);
+
+  val = gst_sdp_media_get_attribute_val (media, "test_attr_media");
+  fail_unless (val == NULL);
+
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 GST_START_TEST (caps_from_media)
 {
   GstSDPMessage *message;
@@ -573,6 +601,7 @@ sdp_suite (void)
   tcase_add_test (tc_chain, copy);
   tcase_add_test (tc_chain, boxed);
   tcase_add_test (tc_chain, modify);
+  tcase_add_test (tc_chain, null);
   tcase_add_test (tc_chain, caps_from_media);
   tcase_add_test (tc_chain, caps_from_media_really_const);
   tcase_add_test (tc_chain, media_from_caps);

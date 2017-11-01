@@ -1537,7 +1537,7 @@ gst_sdp_message_get_key (const GstSDPMessage * msg)
  * gst_sdp_attribute_set:
  * @attr: a #GstSDPAttribute
  * @key: the key
- * @value: the value
+ * @value: (nullable): the value
  *
  * Set the attribute with @key and @value.
  *
@@ -1698,7 +1698,7 @@ DEFINE_ARRAY_REMOVE (attribute, attributes, GstSDPAttribute, FREE_ATTRIBUTE);
  * gst_sdp_message_add_attribute:
  * @msg: a #GstSDPMessage
  * @key: the key
- * @value: the value
+ * @value: (nullable): the value
  *
  * Add the attribute with @key and @value to @msg.
  *
@@ -1712,7 +1712,6 @@ gst_sdp_message_add_attribute (GstSDPMessage * msg, const gchar * key,
 
   g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
   g_return_val_if_fail (key != NULL, GST_SDP_EINVAL);
-  g_return_val_if_fail (value != NULL, GST_SDP_EINVAL);
 
   gst_sdp_attribute_set (&attr, key, value);
   g_array_append_val (msg->attributes, attr);
@@ -2732,7 +2731,7 @@ gst_sdp_media_attributes_len (const GstSDPMedia * media)
  * gst_sdp_media_add_attribute:
  * @media: a #GstSDPMedia
  * @key: a key
- * @value: a value
+ * @value: (nullable): a value
  *
  * Add the attribute with @key and @value to @media.
  *
@@ -2746,7 +2745,6 @@ gst_sdp_media_add_attribute (GstSDPMedia * media, const gchar * key,
 
   g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
   g_return_val_if_fail (key != NULL, GST_SDP_EINVAL);
-  g_return_val_if_fail (value != NULL, GST_SDP_EINVAL);
 
   gst_sdp_attribute_set (&attr, key, value);
   g_array_append_val (media->attributes, attr);
