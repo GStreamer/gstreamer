@@ -59,7 +59,7 @@ int
 LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 {
   GError *err = NULL;
-  static gboolean initialized = 0;
+  static gboolean initialized = FALSE;
   GstElement *pipeline, *source, *typefind, *fakesink;
   GstBuffer *buf;
   GstFlowReturn flowret;
@@ -76,6 +76,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
     GST_PLUGIN_STATIC_REGISTER (coreelements);
     GST_PLUGIN_STATIC_REGISTER (typefindfunctions);
     GST_PLUGIN_STATIC_REGISTER (app);
+
+    initialized = TRUE;
   }
 
   /* Create the pipeline */

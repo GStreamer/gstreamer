@@ -88,7 +88,7 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
   GstDiscoverer *dc;
   gint timeout = 10;
   GstDiscovererInfo *info;
-  static gboolean initialized = 0;
+  static gboolean initialized = FALSE;
 
   if (!initialized) {
     /* We want critical warnings to assert so we can fix them */
@@ -105,6 +105,8 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
     GST_PLUGIN_STATIC_REGISTER(ogg);
     GST_PLUGIN_STATIC_REGISTER(theora);
     GST_PLUGIN_STATIC_REGISTER(vorbis);
+
+    initialized = TRUE;
   }
   
   dc = gst_discoverer_new (timeout * GST_SECOND, &err);
