@@ -1410,7 +1410,7 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
 {
   GstClockTime cinternal, cexternal, crate_num, crate_denom;
   GstClockTime etime, itime;
-  GstClockTimeDiff skew, mdrift, mdrift2;
+  GstClockTimeDiff skew, drift, mdrift2;
   gint driftsamples;
   gint64 last_align;
 
@@ -1452,25 +1452,27 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
       GST_STIME_ARGS (sink->priv->avg_skew));
 
   /* the max drift we allow */
-  mdrift = sink->priv->drift_tolerance * 1000;
-  mdrift2 = mdrift / 2;
+  mdrift2 = (sink->priv->drift_tolerance * 1000) / 2;
 
   /* adjust playout pointer based on skew */
   if (sink->priv->avg_skew > mdrift2) {
-    /* master is running slower, move internal time forward */
+    /* master is running slower, move external time backwards */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" GST_STIME_FORMAT " > %" GST_STIME_FORMAT,
         GST_STIME_ARGS (sink->priv->avg_skew), GST_STIME_ARGS (mdrift2));
 
-    if (sink->priv->avg_skew > (2 * mdrift)) {
-      cexternal -= sink->priv->avg_skew;
-      sink->priv->avg_skew = 0;
-    } else {
-      cexternal = cexternal > mdrift ? cexternal - mdrift : 0;
-      sink->priv->avg_skew -= mdrift;
-    }
+    /* Move the external time backward by the average skew, but don't ever
+     * go negative.  Moving the average skew by the same distance defines
+     * the new clock skew window center point.  This allows the clock to
+     * drift equally into either direction after the correction. */
+    if (G_LIKELY (cexternal > sink->priv->avg_skew))
+      drift = sink->priv->avg_skew;
+    else
+      drift = cexternal;
+    cexternal -= drift;
+    sink->priv->avg_skew -= drift;
 
-    driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
+    driftsamples = (sink->ringbuffer->spec.info.rate * drift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
     /* if we were aligning in the wrong direction or we aligned more than what
@@ -1490,15 +1492,15 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
         "correct clock skew %" GST_STIME_FORMAT " < -%" GST_STIME_FORMAT,
         GST_STIME_ARGS (sink->priv->avg_skew), GST_STIME_ARGS (mdrift2));
 
-    if (sink->priv->avg_skew < (2 * -mdrift)) {
-      cexternal -= sink->priv->avg_skew;
-      sink->priv->avg_skew = 0;
-    } else {
-      cexternal += mdrift;
-      sink->priv->avg_skew += mdrift;
-    }
+    /* Move the external time forward by the average skew, and move the
+     * average skew by the same distance (which equals a reset to 0). This
+     * defines the new clock skew window center point.  This allows the
+     * clock to drift equally into either direction after the correction. */
+    drift = -sink->priv->avg_skew;
+    cexternal += drift;
+    sink->priv->avg_skew = 0;
 
-    driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
+    driftsamples = (sink->ringbuffer->spec.info.rate * drift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
     /* if we were aligning in the wrong direction or we aligned more than what
