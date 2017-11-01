@@ -590,10 +590,10 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
           ogm->hdr.buffersize, ogm->hdr.bits_per_sample, caps);
 
       /* GST_TYPE_FRACTION contains gint */
-      if (ogm->hdr.time_unit > G_MAXINT || ogm->hdr.time_unit < G_MININT)
+      if (ogm->hdr.time_unit > G_MAXINT || ogm->hdr.time_unit < 1)
         GST_WARNING_OBJECT (ogm, "timeunit is out of range");
 
-      time_unit = (gint) CLAMP (ogm->hdr.time_unit, G_MININT, G_MAXINT);
+      time_unit = (gint) CLAMP (ogm->hdr.time_unit, 1, G_MAXINT);
       gst_caps_set_simple (caps,
           "width", G_TYPE_INT, ogm->hdr.s.video.width,
           "height", G_TYPE_INT, ogm->hdr.s.video.height,
