@@ -76,7 +76,7 @@ custom_logger (const gchar   *log_domain,
 {
   if (log_level & G_LOG_LEVEL_CRITICAL) {
     g_printerr ("CRITICAL ERROR : %s\n", message);
-    g_abort();
+    abort();
   } else if (log_level & G_LOG_LEVEL_WARNING) {
     g_printerr ("WARNING : %s\n", message);
   }
