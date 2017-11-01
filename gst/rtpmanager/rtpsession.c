@@ -2858,6 +2858,12 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
       case GST_RTCP_TYPE_PSFB:
         rtp_session_process_feedback (sess, &packet, &pinfo, current_time);
         break;
+      case GST_RTCP_TYPE_XR:
+        /* FIXME: This block is added to downgrade warning level.
+         * Once the parser is implemented, it should be replaced with
+         * a proper process function. */
+        GST_DEBUG ("got RTCP XR packet, but ignored");
+        break;
       default:
         GST_WARNING ("got unknown RTCP packet type: %d", type);
         break;
