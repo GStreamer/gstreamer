@@ -2252,6 +2252,23 @@ extract_tags_daala (GstOggStream * pad, ogg_packet * packet)
 /* indent hates our freedoms */
 const GstOggMap mappers[] = {
   {
+    /* Empty mapper for uninitialized pads/streams */
+    NULL, 0, G_MAXINT32,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  },
+  {
     "\200theora", 7, 42,
     "video/x-theora",
     setup_theora_mapper,
