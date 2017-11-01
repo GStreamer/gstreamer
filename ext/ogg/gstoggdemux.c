@@ -1652,7 +1652,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
   ogg_int64_t granpos = ogg_page_granulepos (page);
 
   GST_PUSH_LOCK (ogg);
-  if (granpos >= 0) {
+  if (granpos >= 0 && pad->have_type) {
     if (ogg->push_start_time == GST_CLOCK_TIME_NONE) {
       ogg->push_start_time =
           gst_ogg_stream_get_start_time_for_granulepos (&pad->map, granpos);
