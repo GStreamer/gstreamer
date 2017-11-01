@@ -286,6 +286,8 @@ struct _GstAggregatorPrivate
   /* Our state is >= PAUSED */
   gboolean running;             /* protected by src_lock */
 
+  /* seqnum from seek or segment,
+   * to be applied to synthetic segment/eos events */
   gint seqnum;
   gboolean send_stream_start;   /* protected by srcpad stream lock */
   gboolean send_segment;
@@ -561,6 +563,8 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
     segment = gst_event_new_segment (&self->segment);
 
     if (!self->priv->seqnum)
+      /* This code-path is in preparation to be able to run without a source
+       * connected. Then we won't have a seq-num from a segment event. */
       self->priv->seqnum = gst_event_get_seqnum (segment);
     else
       gst_event_set_seqnum (segment, self->priv->seqnum);
@@ -1103,6 +1107,8 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     gst_aggregator_iterate_sinkpads (self, gst_aggregator_do_events_and_queries,
         NULL);
 
+    /* Ensure we have buffers ready (either in clipped_buffer or at the head of
+     * the queue */
     if (!gst_aggregator_wait_and_check (self, &timeout))
       continue;
 
