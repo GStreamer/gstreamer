@@ -41,6 +41,19 @@ GST_PLUGIN_STATIC_DECLARE (app);
  * The goal is to cover typefind code and implementation.
  *
  **/
+static void
+custom_logger (const gchar   *log_domain,
+	       GLogLevelFlags log_level,
+	       const gchar   *message,
+	       gpointer       unused_data)
+{
+  if (log_level & G_LOG_LEVEL_CRITICAL) {
+    g_printerr ("CRITICAL ERROR : %s\n", message);
+    g_abort();
+  } else if (log_level & G_LOG_LEVEL_WARNING) {
+    g_printerr ("WARNING : %s\n", message);
+  }
+}
 
 int
 LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
@@ -55,6 +68,7 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
   if (!initialized) {
     /* We want critical warnings to assert so we can fix them */
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
+    g_log_set_default_handler (custom_logger, NULL);
 
     /* Only initialize and register plugins once */
     gst_init (NULL, NULL);
