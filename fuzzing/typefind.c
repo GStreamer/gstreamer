@@ -53,9 +53,8 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
   GstState state;
 
   if (!initialized) {
-    /* We want critical warnings to assert so we can fix them
-     * But somehow it's not causing oss-fuzz to crash ... */
-    g_setenv ("G_DEBUG", "fatal-criticals", TRUE);
+    /* We want critical warnings to assert so we can fix them */
+    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
 
     /* Only initialize and register plugins once */
     gst_init (NULL, NULL);
