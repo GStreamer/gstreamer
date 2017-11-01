@@ -4988,11 +4988,23 @@ gst_ogg_demux_clear_chains (GstOggDemux * ogg)
   for (i = 0; i < ogg->chains->len; i++) {
     GstOggChain *chain = g_array_index (ogg->chains, GstOggChain *, i);
 
+    if (chain == ogg->current_chain)
+      ogg->current_chain = NULL;
+    if (chain == ogg->building_chain)
+      ogg->building_chain = NULL;
     gst_ogg_chain_free (chain);
   }
   ogg->chains = g_array_set_size (ogg->chains, 0);
-  ogg->current_chain = NULL;
-  ogg->building_chain = NULL;
+  if (ogg->current_chain != NULL) {
+    GST_FIXME_OBJECT (ogg, "current chain was tracked in existing chains !");
+    gst_ogg_chain_free (ogg->current_chain);
+    ogg->current_chain = NULL;
+  }
+  if (ogg->building_chain != NULL) {
+    GST_FIXME_OBJECT (ogg, "building chain was tracked in existing chains !");
+    gst_ogg_chain_free (ogg->building_chain);
+    ogg->building_chain = NULL;
+  }
   GST_CHAIN_UNLOCK (ogg);
 }
 
