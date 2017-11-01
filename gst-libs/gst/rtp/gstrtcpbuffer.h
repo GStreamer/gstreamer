@@ -138,6 +138,34 @@ typedef enum
 } GstRTCPSDESType;
 
 /**
+ * GstRTCPXRType:
+ * @GST_RTCP_XR_TYPE_INVALID: Invalid XR Report Block
+ * @GST_RTCP_XR_TYPE_LRLE: Loss RLE Report Block
+ * @GST_RTCP_XR_TYPE_DRLE: Duplicate RLE Report Block
+ * @GST_RTCP_XR_TYPE_PRT: Packet Receipt Times Report Block
+ * @GST_RTCP_XR_TYPE_RRT: Receiver Reference Time Report Block
+ * @GST_RTCP_XR_TYPE_DLRR: Delay since the last Receiver Report
+ * @GST_RTCP_XR_TYPE_SSUMM: Statistics Summary Report Block
+ * @GST_RTCP_XR_TYPE_VOIP_METRICS: VoIP Metrics Report Block
+ *
+ * Types of RTCP Extended Reports, those are defined in RFC 3611 and other RFCs
+ * according to the [IANA registry](https://www.iana.org/assignments/rtcp-xr-block-types/rtcp-xr-block-types.xhtml).
+ *
+ * Since: 1.16
+ */
+typedef enum
+{
+  GST_RTCP_XR_TYPE_INVALID      = -1,
+  GST_RTCP_XR_TYPE_LRLE         = 1,
+  GST_RTCP_XR_TYPE_DRLE         = 2,
+  GST_RTCP_XR_TYPE_PRT          = 3,
+  GST_RTCP_XR_TYPE_RRT          = 4,
+  GST_RTCP_XR_TYPE_DLRR         = 5,
+  GST_RTCP_XR_TYPE_SSUMM        = 6,
+  GST_RTCP_XR_TYPE_VOIP_METRICS = 7
+} GstRTCPXRType;
+
+/**
  * GST_RTCP_MAX_SDES:
  *
  * The maximum text length for an SDES item.
@@ -217,7 +245,7 @@ struct _GstRTCPPacket
   gboolean       padding;      /* padding field of current packet */
   guint8         count;        /* count field of current packet */
   GstRTCPType    type;         /* type of current packet */
-  guint16        length;       /* length of current packet in 32-bits words */
+  guint16        length;       /* length of current packet in 32-bits words minus one, this is validated when doing _get_first_packet() and _move_to_next() */
 
   guint          item_offset;  /* current item offset for navigating SDES */
   guint          item_count;   /* current item count */
@@ -478,6 +506,105 @@ const gchar *   gst_rtcp_sdes_type_to_name            (GstRTCPSDESType type);
 
 GST_RTP_API
 GstRTCPSDESType gst_rtcp_sdes_name_to_type            (const gchar *name);
+
+/* extended report */
+
+GST_RTP_API
+guint32         gst_rtcp_packet_xr_get_ssrc           (GstRTCPPacket *packet);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_first_rb           (GstRTCPPacket *packet);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_next_rb            (GstRTCPPacket * packet);
+
+GST_RTP_API
+GstRTCPXRType   gst_rtcp_packet_xr_get_block_type     (GstRTCPPacket * packet);
+
+GST_RTP_API
+guint16         gst_rtcp_packet_xr_get_block_length   (GstRTCPPacket * packet);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_rle_info       (GstRTCPPacket * packet,
+                                                       guint32 * ssrc, guint8 * thining,
+                                                       guint16 * begin_seq, guint16 * end_seq,
+                                                       guint32 * chunk_count);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_rle_nth_chunk  (GstRTCPPacket * packet, guint nth,
+                                                       guint16 * chunk);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_prt_info       (GstRTCPPacket * packet,
+                                                       guint32 * ssrc, guint8 * thining,
+                                                       guint16 * begin_seq, guint16 * end_seq);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_prt_by_seq     (GstRTCPPacket * packet, guint16 seq,
+                                                       guint32 * receipt_time);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_rrt            (GstRTCPPacket * packet, guint64 * timestamp);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_dlrr_block     (GstRTCPPacket * packet,
+                                                       guint nth, guint32 * ssrc,
+                                                       guint32 * last_rr, guint32 * delay);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_summary_info   (GstRTCPPacket * packet, guint32 * ssrc,
+                                                       guint16 * begin_seq, guint16 * end_seq);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_summary_pkt    (GstRTCPPacket * packet,
+                                                       guint32 * lost_packets, guint32 * dup_packets);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_summary_jitter (GstRTCPPacket * packet,
+                                                       guint32 * min_jitter, guint32 * max_jitter,
+                                                       guint32 * mean_jitter, guint32 * dev_jitter);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_summary_ttl    (GstRTCPPacket * packet, gboolean * is_ipv4,
+                                                       guint8 * min_ttl, guint8 * max_ttl,
+                                                       guint8 * mean_ttl, guint8 * dev_ttl);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_metrics_ssrc        (GstRTCPPacket * packet, guint32 * ssrc);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_packet_metrics      (GstRTCPPacket * packet,
+                                                                 guint8 * loss_rate, guint8 * discard_rate);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_burst_metrics       (GstRTCPPacket * packet,
+                                                                 guint8 * burst_density, guint8 * gap_density,
+                                                                 guint16 * burst_duration, guint16 * gap_duration);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_delay_metrics       (GstRTCPPacket * packet,
+                                                                 guint16 * roundtrip_delay,
+                                                                 guint16 * end_system_delay);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_signal_metrics      (GstRTCPPacket * packet,
+                                                                 guint8 * signal_level, guint8 * noise_level,
+                                                                 guint8 * rerl, guint8 * gmin);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_quality_metrics     (GstRTCPPacket * packet,
+                                                                 guint8 * r_factor, guint8 * ext_r_factor,
+                                                                 guint8 * mos_lq, guint8 * mos_cq);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_configuration_params        (GstRTCPPacket * packet,
+                                                                         guint8 * gmin, guint8 * rx_config);
+
+GST_RTP_API
+gboolean        gst_rtcp_packet_xr_get_voip_jitter_buffer_params        (GstRTCPPacket * packet,
+                                                                         guint16 * jb_nominal,
+                                                                         guint16 * jb_maximum,
+                                                                         guint16 * jb_abs_max);
 
 G_END_DECLS
 

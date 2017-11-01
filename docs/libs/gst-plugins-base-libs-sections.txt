@@ -1457,6 +1457,7 @@ GstRTCPType
 GstRTCPPacket
 GstRTCPSDESType
 GstRTCPFBType
+GstRTCPXRType
 
 gst_rtcp_buffer_new_take_data
 gst_rtcp_buffer_new_copy_data
@@ -1550,6 +1551,36 @@ gst_rtcp_unix_to_ntp
 gst_rtcp_sdes_name_to_type
 gst_rtcp_sdes_type_to_name
 
+gst_rtcp_packet_xr_first_rb
+gst_rtcp_packet_xr_next_rb
+gst_rtcp_packet_xr_get_ssrc
+gst_rtcp_packet_xr_get_block_length
+gst_rtcp_packet_xr_get_block_type
+
+gst_rtcp_packet_xr_get_dlrr_block
+
+gst_rtcp_packet_xr_get_prt_by_seq
+gst_rtcp_packet_xr_get_prt_info
+
+gst_rtcp_packet_xr_get_rle_info
+gst_rtcp_packet_xr_get_rle_nth_chunk
+
+gst_rtcp_packet_xr_get_rrt
+
+gst_rtcp_packet_xr_get_summary_info
+gst_rtcp_packet_xr_get_summary_jitter
+gst_rtcp_packet_xr_get_summary_pkt
+gst_rtcp_packet_xr_get_summary_ttl
+
+gst_rtcp_packet_xr_get_voip_burst_metrics
+gst_rtcp_packet_xr_get_voip_configuration_params
+gst_rtcp_packet_xr_get_voip_delay_metrics
+gst_rtcp_packet_xr_get_voip_jitter_buffer_params
+gst_rtcp_packet_xr_get_voip_metrics_ssrc
+gst_rtcp_packet_xr_get_voip_packet_metrics
+gst_rtcp_packet_xr_get_voip_quality_metrics
+gst_rtcp_packet_xr_get_voip_signal_metrics
+
 <SUBSECTION Standard>
 GST_RTCP_RTPFB_TYPE_RCTP_SR_REQ
 GST_TYPE_RTCPFB_TYPE
@@ -1558,6 +1589,7 @@ GST_TYPE_RTCP_TYPE
 gst_rtcp_type_get_type
 gst_rtcpfb_type_get_type
 gst_rtcpsdes_type_get_type
+gst_rtcpxr_type_get_type
 </SECTION>
 
 <SECTION>

@@ -550,7 +550,7 @@ gst_rtcp_buffer_add_packet (GstRTCPBuffer * rtcp, GstRTCPType type,
       len = 12;
       break;
     case GST_RTCP_TYPE_XR:
-      len = 4;
+      len = 8;
       break;
     default:
       goto unknown_type;
@@ -2543,4 +2543,1016 @@ gst_rtcp_packet_app_get_data (GstRTCPPacket * packet)
     return NULL;
 
   return data + 12;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_ssrc:
+ * @packet: a valid XR #GstRTCPPacket
+ *
+ * Get the ssrc field of the XR @packet.
+ *
+ * Returns: the ssrc.
+ *
+ * Since: 1.16
+ */
+guint32
+gst_rtcp_packet_xr_get_ssrc (GstRTCPPacket * packet)
+{
+  guint8 *data;
+  guint32 ssrc;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_XR, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, 0);
+
+  data = packet->rtcp->map.data;
+
+  /* skip header */
+  data += packet->offset + 4;
+  ssrc = GST_READ_UINT32_BE (data);
+
+  return ssrc;
+}
+
+/**
+ * gst_rtcp_packet_xr_first_rb:
+ * @packet: a valid XR #GstRTCPPacket
+ *
+ * Move to the first extended report block in XR @packet.
+ *
+ * Returns: TRUE if there was a first extended report block.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_first_rb (GstRTCPPacket * packet)
+{
+  guint16 block_len;
+  guint offset, len;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_XR, FALSE);
+
+  if (packet->length < 2)
+    return FALSE;
+
+  /* skip header + ssrc */
+  packet->item_offset = 8;
+
+  /* Validate the block's length */
+  block_len = gst_rtcp_packet_xr_get_block_length (packet);
+  offset = 8 + (block_len * 1) + 4;
+
+  len = packet->length << 2;
+
+  if (offset >= len) {
+    packet->item_offset = 0;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_next_rb:
+ * @packet: a valid XR #GstRTCPPacket
+ *
+ * Move to the next extended report block in XR @packet.
+ *
+ * Returns: TRUE if there was a next extended report block.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_next_rb (GstRTCPPacket * packet)
+{
+  guint16 block_len;
+  guint offset;
+  guint len;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_XR, FALSE);
+  g_return_val_if_fail (packet->rtcp != NULL, FALSE);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, FALSE);
+
+  block_len = gst_rtcp_packet_xr_get_block_length (packet);
+
+  offset = packet->item_offset;
+  offset += (block_len + 1) * 4;
+
+  /* don't overrun */
+  len = (packet->length << 2);
+
+  if (offset >= len)
+    return FALSE;
+
+  packet->item_offset = offset;
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_block_type:
+ * @packet: a valid XR #GstRTCPPacket
+ *
+ * Get the extended report block type of the XR @packet.
+ *
+ * Returns: The extended report block type.
+ *
+ * Since: 1.16
+ */
+GstRTCPXRType
+gst_rtcp_packet_xr_get_block_type (GstRTCPPacket * packet)
+{
+  guint8 *data;
+  guint8 type;
+  GstRTCPXRType xr_type = GST_RTCP_XR_TYPE_INVALID;
+
+  g_return_val_if_fail (packet != NULL, GST_RTCP_XR_TYPE_INVALID);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_XR,
+      GST_RTCP_XR_TYPE_INVALID);
+  g_return_val_if_fail (packet->rtcp != NULL, GST_RTCP_XR_TYPE_INVALID);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ,
+      GST_RTCP_XR_TYPE_INVALID);
+  g_return_val_if_fail (packet->length >= (packet->item_offset >> 2),
+      GST_RTCP_XR_TYPE_INVALID);
+
+  data = packet->rtcp->map.data;
+
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* XR block type can be defined more than described in RFC3611.
+   * If undefined type is detected, user might want to know. */
+  type = GST_READ_UINT8 (data);
+  switch (type) {
+    case GST_RTCP_XR_TYPE_LRLE:
+    case GST_RTCP_XR_TYPE_DRLE:
+    case GST_RTCP_XR_TYPE_PRT:
+    case GST_RTCP_XR_TYPE_RRT:
+    case GST_RTCP_XR_TYPE_DLRR:
+    case GST_RTCP_XR_TYPE_SSUMM:
+    case GST_RTCP_XR_TYPE_VOIP_METRICS:
+      xr_type = type;
+      break;
+    default:
+      GST_DEBUG ("got 0x%x type, but that might be out of scope of RFC3611",
+          type);
+      break;
+  }
+
+  return xr_type;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_block_length:
+ * @packet: a valid XR #GstRTCPPacket
+ *
+ * Returns: The number of 32-bit words containing type-specific block
+ *          data from @packet.
+ *
+ * Since: 1.16
+ */
+guint16
+gst_rtcp_packet_xr_get_block_length (GstRTCPPacket * packet)
+{
+  guint8 *data;
+  guint16 len;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_XR, 0);
+  g_return_val_if_fail (packet->rtcp != NULL, 0);
+  g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, 0);
+  g_return_val_if_fail (packet->length >= (packet->item_offset >> 2), 0);
+
+  data = packet->rtcp->map.data;
+  data += packet->offset + packet->item_offset + 2;
+
+  len = GST_READ_UINT16_BE (data);
+
+  return len;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_rle_info:
+ * @packet: a valid XR #GstRTCPPacket which is Loss RLE or Duplicate RLE report.
+ * @ssrc: the SSRC of the RTP data packet source being reported upon by this report block.
+ * @thining: the amount of thinning performed on the sequence number space.
+ * @begin_seq: the first sequence number that this block reports on.
+ * @end_seq: the last sequence number that this block reports on plus one.
+ * @chunk_count: the number of chunks calculated by block length.
+ *
+ * Parse the extended report block for Loss RLE and Duplicated LRE block type.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_rle_info (GstRTCPPacket * packet, guint32 * ssrc,
+    guint8 * thining, guint16 * begin_seq, guint16 * end_seq,
+    guint32 * chunk_count)
+{
+  guint8 *data;
+  guint16 block_len;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_LRLE
+      || gst_rtcp_packet_xr_get_block_type (packet) == GST_RTCP_XR_TYPE_DRLE,
+      FALSE);
+
+  block_len = gst_rtcp_packet_xr_get_block_length (packet);
+  if (block_len < 3)
+    return FALSE;
+
+  if (chunk_count)
+    *chunk_count = (block_len - 2) * 2;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  if (thining)
+    *thining = data[1] & 0x0f;
+
+  /* go to ssrc */
+  data += 4;
+  if (ssrc)
+    *ssrc = GST_READ_UINT32_BE (data);
+  /* go to begin_seq */
+  data += 4;
+  if (begin_seq)
+    *begin_seq = ((data[0] << 8) | data[1]);
+  /* go to end_seq */
+  data += 2;
+  if (end_seq)
+    *end_seq = ((data[0] << 8) | data[1]);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_rle_nth_chunk:
+ * @packet: a valid XR #GstRTCPPacket which is Loss RLE or Duplicate RLE report.
+ * @nth: the index of chunk to retrieve.
+ * @chunk: the @nth chunk.
+ *
+ * Retrieve actual chunk data.
+ *
+ * Returns: %TRUE if the report block returns chunk correctly.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_rle_nth_chunk (GstRTCPPacket * packet,
+    guint nth, guint16 * chunk)
+{
+  guint32 chunk_count;
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_rle_info (packet, NULL, NULL,
+          NULL, NULL, &chunk_count), FALSE);
+
+  if (nth >= chunk_count)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip ssrc, {begin,end}_seq */
+  data += 12;
+
+  /* goto nth chunk */
+  data += nth * 2;
+  if (chunk)
+    *chunk = ((data[0] << 8) | data[1]);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_prt_info:
+ * @packet: a valid XR #GstRTCPPacket which has a Packet Receipt Times Report Block
+ * @ssrc: the SSRC of the RTP data packet source being reported upon by this report block.
+ * @thining: the amount of thinning performed on the sequence number space.
+ * @begin_seq: the first sequence number that this block reports on.
+ * @end_seq: the last sequence number that this block reports on plus one.
+ *
+ * Parse the Packet Recept Times Report Block from a XR @packet
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_prt_info (GstRTCPPacket * packet,
+    guint32 * ssrc, guint8 * thining, guint16 * begin_seq, guint16 * end_seq)
+{
+  guint8 *data;
+  guint16 block_len;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_PRT, FALSE);
+
+  block_len = gst_rtcp_packet_xr_get_block_length (packet);
+  if (block_len < 3)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  if (thining)
+    *thining = data[1] & 0x0f;
+
+  /* go to ssrc */
+  data += 4;
+  if (ssrc)
+    *ssrc = GST_READ_UINT32_BE (data);
+
+  /* go to begin_seq */
+  data += 4;
+  if (begin_seq)
+    *begin_seq = ((data[0] << 8) | data[1]);
+  /* go to end_seq */
+  data += 2;
+  if (end_seq)
+    *end_seq = ((data[0] << 8) | data[1]);
+
+  if (block_len < (end_seq - begin_seq) + 2)
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_prt_by_seq:
+ * @packet: a valid XR #GstRTCPPacket which has the Packet Recept Times Report Block.
+ * @seq: the sequence to retrieve the time.
+ * @receipt_time: the packet receipt time of @seq.
+ *
+ * Retrieve the packet receipt time of @seq which ranges in [begin_seq, end_seq).
+ *
+ * Returns: %TRUE if the report block returns the receipt time correctly.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_prt_by_seq (GstRTCPPacket * packet,
+    guint16 seq, guint32 * receipt_time)
+{
+  guint16 begin_seq, end_seq;
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_prt_info (packet, NULL, NULL,
+          &begin_seq, &end_seq), FALSE);
+
+  if (seq >= end_seq || seq < begin_seq)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip ssrc, {begin,end}_seq */
+  data += 12;
+
+  data += (seq - begin_seq) * 4;
+
+  if (receipt_time)
+    *receipt_time = GST_READ_UINT32_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_rrt:
+ * @packet: a valid XR #GstRTCPPacket which has the Receiver Reference Time.
+ * @timestamp: NTP timestamp
+ *
+ * Returns: %TRUE if the report block returns the reference time correctly.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_rrt (GstRTCPPacket * packet, guint64 * timestamp)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_RRT, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 2)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header */
+  data += 4;
+  if (timestamp)
+    *timestamp = GST_READ_UINT64_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_dlrr_block:
+ * @packet: a valid XR #GstRTCPPacket which has DLRR Report Block.
+ * @nth: the index of sub-block to retrieve.
+ * @ssrc: the SSRC of the receiver.
+ * @last_rr: the last receiver reference timestamp of @ssrc.
+ * @delay: the delay since @last_rr.
+ *
+ * Parse the extended report block for DLRR report block type.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_dlrr_block (GstRTCPPacket * packet,
+    guint nth, guint32 * ssrc, guint32 * last_rr, guint32 * delay)
+{
+  guint8 *data;
+  guint16 block_len;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_DLRR, FALSE);
+
+  block_len = gst_rtcp_packet_xr_get_block_length (packet);
+
+  if (nth * 3 >= block_len)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+  /* skip block header */
+  data += 4;
+  data += nth * 3 * 4;
+
+  if (ssrc)
+    *ssrc = GST_READ_UINT32_BE (data);
+
+  data += 4;
+  if (last_rr)
+    *last_rr = GST_READ_UINT32_BE (data);
+
+  data += 4;
+  if (delay)
+    *delay = GST_READ_UINT32_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_summary_info:
+ * @packet: a valid XR #GstRTCPPacket which has Statics Summary Report Block.
+ * @ssrc: the SSRC of the source.
+ * @begin_seq: the first sequence number that this block reports on.
+ * @end_seq: the last sequence number that this block reports on plus one.
+ *
+ * Extract a basic information from static summary report block of XR @packet.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_summary_info (GstRTCPPacket * packet, guint32 * ssrc,
+    guint16 * begin_seq, guint16 * end_seq)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_SSUMM, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 9)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+  /* skip block header */
+  data += 4;
+
+  if (ssrc)
+    *ssrc = GST_READ_UINT32_BE (data);
+
+  /* go to begin_seq */
+  data += 4;
+  if (begin_seq)
+    *begin_seq = ((data[0] << 8) | data[1]);
+  /* go to end_seq */
+  data += 2;
+  if (end_seq)
+    *end_seq = ((data[0] << 8) | data[1]);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_summary_pkt:
+ * @packet: a valid XR #GstRTCPPacket which has Statics Summary Report Block.
+ * @lost_packets: the number of lost packets between begin_seq and end_seq.
+ * @dup_packets: the number of duplicate packets between begin_seq and end_seq.
+ *
+ * Get the number of lost or duplicate packets. If the flag in a block header
+ * is set as zero, @lost_packets or @dup_packets will be zero.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_summary_pkt (GstRTCPPacket * packet,
+    guint32 * lost_packets, guint32 * dup_packets)
+{
+  guint8 *data;
+  guint8 flags;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_SSUMM, FALSE);
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 9)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+  flags = data[1];
+  /* skip block header,ssrc, {begin,end}_seq */
+  data += 12;
+
+  if (lost_packets) {
+    if (!(flags & 0x80))
+      *lost_packets = 0;
+    else
+      *lost_packets = GST_READ_UINT32_BE (data);
+  }
+
+  data += 4;
+  if (dup_packets) {
+    if (!(flags & 0x40))
+      *dup_packets = 0;
+    else
+      *dup_packets = GST_READ_UINT32_BE (data);
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_summary_jitter:
+ * @packet: a valid XR #GstRTCPPacket which has Statics Summary Report Block.
+ * @min_jitter: the minimum relative transit time between two sequences.
+ * @max_jitter: the maximum relative transit time between two sequences.
+ * @mean_jitter: the mean relative transit time between two sequences.
+ * @dev_jitter: the standard deviation of the relative transit time between two sequences.
+ *
+ * Extract jitter information from the statistics summary. If the jitter flag in
+ * a block header is set as zero, all of jitters will be zero.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_summary_jitter (GstRTCPPacket * packet,
+    guint32 * min_jitter, guint32 * max_jitter,
+    guint32 * mean_jitter, guint32 * dev_jitter)
+{
+  guint8 *data;
+  guint8 flags;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_SSUMM, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 9)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+  flags = data[1];
+
+  if (!(flags & 0x20)) {
+    if (min_jitter)
+      *min_jitter = 0;
+    if (max_jitter)
+      *max_jitter = 0;
+    if (mean_jitter)
+      *mean_jitter = 0;
+    if (dev_jitter)
+      *dev_jitter = 0;
+
+    return TRUE;
+  }
+
+  /* skip block header,ssrc, {begin,end}_seq, packets */
+  data += 20;
+  if (min_jitter)
+    *min_jitter = GST_READ_UINT32_BE (data);
+
+  data += 4;
+  if (max_jitter)
+    *max_jitter = GST_READ_UINT32_BE (data);
+
+  data += 4;
+  if (mean_jitter)
+    *mean_jitter = GST_READ_UINT32_BE (data);
+
+  data += 4;
+  if (dev_jitter)
+    *dev_jitter = GST_READ_UINT32_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_summary_ttl:
+ * @packet: a valid XR #GstRTCPPacket which has Statics Summary Report Block.
+ * @is_ipv4: the flag to indicate that the return values are ipv4 ttl or ipv6 hop limits.
+ * @min_ttl: the minimum TTL or Hop Limit value of data packets between two sequences.
+ * @max_ttl: the maximum TTL or Hop Limit value of data packets between two sequences.
+ * @mean_ttl: the mean TTL or Hop Limit value of data packets between two sequences.
+ * @dev_ttl: the standard deviation of the TTL or Hop Limit value of data packets between two sequences.
+ *
+ * Extract the value of ttl for ipv4, or hop limit for ipv6.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_summary_ttl (GstRTCPPacket * packet,
+    gboolean * is_ipv4, guint8 * min_ttl, guint8 * max_ttl, guint8 * mean_ttl,
+    guint8 * dev_ttl)
+{
+  guint8 *data;
+  guint8 flags;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_SSUMM, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 9)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+  flags = (data[1] & 0x18) >> 3;
+
+  if (flags > 2)
+    return FALSE;
+
+  if (is_ipv4)
+    *is_ipv4 = (flags == 1);
+
+  /* skip block header,ssrc, {begin,end}_seq, packets, jitters */
+  data += 36;
+  if (min_ttl)
+    *min_ttl = data[0];
+
+  if (max_ttl)
+    *max_ttl = data[1];
+
+  if (mean_ttl)
+    *mean_ttl = data[2];
+
+  if (dev_ttl)
+    *dev_ttl = data[3];
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_metrics_ssrc:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @ssrc: the SSRC of source
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_metrics_ssrc (GstRTCPPacket * packet,
+    guint32 * ssrc)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header */
+  data += 4;
+  if (ssrc)
+    *ssrc = GST_READ_UINT32_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_packet_metrics:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @loss_rate: the fraction of RTP data packets from the source lost.
+ * @discard_rate: the fraction of RTP data packets from the source that have been discarded.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_packet_metrics (GstRTCPPacket * packet,
+    guint8 * loss_rate, guint8 * discard_rate)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header, ssrc */
+  data += 8;
+  if (loss_rate)
+    *loss_rate = data[0];
+
+  if (discard_rate)
+    *discard_rate = data[1];
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_burst_metrics:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @burst_density: the fraction of RTP data packets within burst periods.
+ * @gap_density: the fraction of RTP data packets within inter-burst gaps.
+ * @burst_duration: the mean duration(ms) of the burst periods.
+ * @gap_duration: the mean duration(ms) of the gap periods.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_burst_metrics (GstRTCPPacket * packet,
+    guint8 * burst_density, guint8 * gap_density, guint16 * burst_duration,
+    guint16 * gap_duration)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header, ssrc, packet metrics */
+  data += 10;
+  if (burst_density)
+    *burst_density = data[0];
+
+  if (gap_density)
+    *gap_density = data[1];
+
+  data += 2;
+  if (burst_duration)
+    *burst_duration = GST_READ_UINT16_BE (data);
+
+  data += 2;
+  if (gap_duration)
+    *gap_duration = GST_READ_UINT16_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_delay_metrics:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @roundtrip_delay: the most recently calculated round trip time between RTP interfaces(ms)
+ * @end_system_delay: the most recently estimated end system delay(ms)
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_delay_metrics (GstRTCPPacket * packet,
+    guint16 * roundtrip_delay, guint16 * end_system_delay)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header, ssrc, packet metrics, burst metrics */
+  data += 16;
+  if (roundtrip_delay)
+    *roundtrip_delay = GST_READ_UINT16_BE (data);
+
+  data += 2;
+  if (end_system_delay)
+    *end_system_delay = GST_READ_UINT16_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_signal_metrics:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @signal_level: the ratio of the signal level to a 0 dBm reference.
+ * @noise_level: the ratio of the silent period background noise level to a 0 dBm reference.
+ * @rerl: the residual echo return loss value.
+ * @gmin: the gap threshold.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_signal_metrics (GstRTCPPacket * packet,
+    guint8 * signal_level, guint8 * noise_level, guint8 * rerl, guint8 * gmin)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header, ssrc, packet metrics, burst metrics,
+   * delay metrics */
+  data += 20;
+  if (signal_level)
+    *signal_level = data[0];
+
+  if (noise_level)
+    *noise_level = data[1];
+
+  if (rerl)
+    *rerl = data[2];
+
+  if (gmin)
+    *gmin = data[3];
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_quality_metrics:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @r_factor: the R factor is a voice quality metric describing the segment of the call.
+ * @ext_r_factor: the external R factor is a voice quality metric.
+ * @mos_lq: the estimated mean opinion score for listening quality.
+ * @mos_cq: the estimated mean opinion score for conversational quality.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_quality_metrics (GstRTCPPacket * packet,
+    guint8 * r_factor, guint8 * ext_r_factor, guint8 * mos_lq, guint8 * mos_cq)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header, ssrc, packet metrics, burst metrics,
+   * delay metrics, signal metrics */
+  data += 24;
+  if (r_factor)
+    *r_factor = data[0];
+
+  if (ext_r_factor)
+    *ext_r_factor = data[1];
+
+  if (mos_lq)
+    *mos_lq = data[2];
+
+  if (mos_cq)
+    *mos_cq = data[3];
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_configuration_params:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @gmin: the gap threshold.
+ * @rx_config: the receiver configuration byte.
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_configuration_params (GstRTCPPacket * packet,
+    guint8 * gmin, guint8 * rx_config)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  if (gmin)
+    *gmin = data[23];
+
+  if (rx_config)
+    *rx_config = data[28];
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_xr_get_voip_jitter_buffer_params:
+ * @packet: a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.
+ * @jb_nominal: the current nominal jitter buffer delay(ms)
+ * @jb_maximum: the current maximum jitter buffer delay(ms)
+ * @jb_abs_max: the absolute maximum delay(ms)
+ *
+ * Returns: %TRUE if the report block is correctly parsed.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtcp_packet_xr_get_voip_jitter_buffer_params (GstRTCPPacket * packet,
+    guint16 * jb_nominal, guint16 * jb_maximum, guint16 * jb_abs_max)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (gst_rtcp_packet_xr_get_block_type (packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS, FALSE);
+
+  if (gst_rtcp_packet_xr_get_block_length (packet) != 8)
+    return FALSE;
+
+  data = packet->rtcp->map.data;
+  /* skip header + current item offset */
+  data += packet->offset + packet->item_offset;
+
+  /* skip block header, ssrc, packet metrics, burst metrics,
+   * delay metrics, signal metrics, config */
+  data += 30;
+
+  if (jb_nominal)
+    *jb_nominal = GST_READ_UINT16_BE (data);
+
+  data += 2;
+  if (jb_maximum)
+    *jb_maximum = GST_READ_UINT16_BE (data);
+
+  data += 2;
+  if (jb_abs_max)
+    *jb_abs_max = GST_READ_UINT16_BE (data);
+
+  return TRUE;
 }

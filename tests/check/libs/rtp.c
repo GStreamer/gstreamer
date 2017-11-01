@@ -1137,6 +1137,467 @@ GST_START_TEST (test_rtcp_buffer_app)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtcp_buffer_xr)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x0e,     /* Type XR, length = 14 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x01, 0x00, 0x00, 0x03,     /* Loss RLE, No thining, length = 3 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x02,
+    0xcf, 0xb7, 0x8f, 0xb7,
+    0x02, 0x00, 0x00, 0x03,     /* Dup RLE, No thining, length = 3 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x02,
+    0xcf, 0xb7, 0x8f, 0xb7,
+    0x03, 0x00, 0x00, 0x04,     /* Packet Receipt Times, No thining, length = 4 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x02,
+    0x59, 0xf9, 0xdd, 0x7e,
+    0x59, 0xf9, 0xdd, 0x7e,
+  };
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+
+  fail_unless (gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp));
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+  fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_XR);
+  fail_unless (gst_rtcp_packet_xr_get_ssrc (&packet) ==
+      GST_READ_UINT32_BE (rtcp_pkt + 12));
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_LRLE);
+  fail_unless (gst_rtcp_packet_xr_next_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_DRLE);
+  fail_unless (gst_rtcp_packet_xr_next_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_PRT);
+
+  fail_if (gst_rtcp_packet_xr_next_rb (&packet));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_buffer_xr_rle)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  guint32 ssrc, chunk_count;
+  guint8 thining;
+  guint16 begin_seq, end_seq, chunk;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x0a,     /* Type XR, length = 10 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x01, 0x00, 0x00, 0x03,     /* Loss RLE, No thining, length = 3 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x02,
+    0x80, 0x12, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x04,     /* Dup RLE, No thining, length = 4 */
+    0x97, 0x6d, 0x21, 0x7b,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x04,
+    0x8f, 0x21, 0x8f, 0x22,
+    0x8f, 0x23, 0x8f, 0x24
+  };
+  guint8 rtcp_pkt_invalid_pkt_length[] = {
+    0x80, 0xCF, 0x00, 0x04,     /* Type XR, length = 4 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x01, 0x00, 0x00, 0x02,     /* Loss RLE, No thining, length = 1 (but really 3) */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x02,
+  };
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  /* check LRLE */
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_LRLE);
+  fail_unless (gst_rtcp_packet_xr_get_rle_info (&packet, &ssrc, &thining,
+          &begin_seq, &end_seq, &chunk_count));
+  fail_unless_equals_int (ssrc, GST_READ_UINT32_BE (rtcp_pkt + 12));
+  fail_unless_equals_int (thining, 0);
+  fail_unless_equals_int (begin_seq, 0x0001);
+  fail_unless_equals_int (end_seq, 0x0002);
+  fail_unless_equals_int (chunk_count, 2);
+
+  gst_rtcp_packet_xr_get_rle_nth_chunk (&packet, 0, &chunk);
+  fail_unless_equals_int (chunk, 0x8012);
+
+  gst_rtcp_packet_xr_get_rle_nth_chunk (&packet, 1, &chunk);
+  fail_unless_equals_int (chunk, 0x0);
+
+  /* check DRLE */
+  fail_unless (gst_rtcp_packet_xr_next_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_DRLE);
+  fail_unless (gst_rtcp_packet_xr_get_rle_info (&packet, &ssrc, &thining,
+          &begin_seq, &end_seq, &chunk_count));
+  fail_unless_equals_int (ssrc, GST_READ_UINT32_BE (rtcp_pkt + 28));
+  fail_unless_equals_int (thining, 0);
+  fail_unless_equals_int (begin_seq, 0x0001);
+  fail_unless_equals_int (end_seq, 0x0004);
+  fail_unless_equals_int (chunk_count, 4);
+
+  gst_rtcp_packet_xr_get_rle_nth_chunk (&packet, 1, &chunk);
+  fail_unless_equals_int (chunk, 0x8f22);
+
+  gst_rtcp_packet_xr_get_rle_nth_chunk (&packet, 2, &chunk);
+  fail_unless_equals_int (chunk, 0x8f23);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+
+  /* Test invalid length */
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt_invalid_pkt_length, sizeof (rtcp_pkt_invalid_pkt_length), 0,
+      sizeof (rtcp_pkt_invalid_pkt_length), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  /* check LRLE (should fail because length is too short) */
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_LRLE);
+  fail_if (gst_rtcp_packet_xr_get_rle_info (&packet, &ssrc, &thining,
+          &begin_seq, &end_seq, &chunk_count));
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_buffer_xr_prt)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  guint32 ssrc, receipt_time;
+  guint8 thining;
+  guint16 begin_seq, end_seq;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x06,     /* Type XR, length = 6 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x03, 0x00, 0x00, 0x04,     /* Packet Receipt Times, No thining, length = 4 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x03,
+    0x59, 0xf9, 0xdd, 0x7e,
+    0x59, 0xf9, 0xde, 0x00,
+  };
+  guint8 rtcp_pkt_invalid_pkt_length[] = {
+    0x80, 0xCF, 0x00, 0x04,     /* Type XR, length = 4 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x03, 0x00, 0x00, 0x02,     /* Packet Receipt Times, No thining, length = 2 (but should be 4) */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x03,
+  };
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_PRT);
+
+  fail_unless (gst_rtcp_packet_xr_get_prt_info (&packet, &ssrc, &thining,
+          &begin_seq, &end_seq));
+  fail_unless (gst_rtcp_packet_xr_get_prt_by_seq (&packet, 2, &receipt_time));
+  fail_unless_equals_int_hex (receipt_time, 0x59f9de00L);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+
+  /* Test for invalid length */
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt_invalid_pkt_length, sizeof (rtcp_pkt_invalid_pkt_length), 0,
+      sizeof (rtcp_pkt_invalid_pkt_length), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_PRT);
+
+  fail_if (gst_rtcp_packet_xr_get_prt_info (&packet, &ssrc, &thining,
+          &begin_seq, &end_seq));
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_buffer_xr_rrt)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  guint64 ntptime;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x04,     /* Type XR, length = 4 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x04, 0x00, 0x00, 0x02,     /* Receiver Reference Time, length = 2 */
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0x01, 0x23, 0x45
+  };
+  guint8 rtcp_pkt_invalid_pkt_length[] = {
+    0x80, 0xCF, 0x00, 0x04,     /* Type XR, length = 4 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x04, 0x00, 0x00, 0x01,     /* Receiver Reference Time, length = 1 */
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0x01, 0x23, 0x45
+  };
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_RRT);
+
+  fail_unless (gst_rtcp_packet_xr_get_rrt (&packet, &ntptime));
+  fail_unless_equals_uint64_hex (ntptime, 0x0123456789012345LL);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+
+  /* Test invalid length */
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt_invalid_pkt_length, sizeof (rtcp_pkt_invalid_pkt_length), 0,
+      sizeof (rtcp_pkt_invalid_pkt_length), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_RRT);
+
+  fail_if (gst_rtcp_packet_xr_get_rrt (&packet, &ntptime));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_buffer_xr_dlrr)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  guint32 ssrc, last_rr, delay;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x08,     /* Type XR, length = 8 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x05, 0x00, 0x00, 0x06,     /* DLRR, length = 6 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0x01, 0x23, 0x45,
+    0x97, 0x6d, 0x21, 0x6b,     /* SSRC of source */
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0x01, 0x23, 0x45
+  };
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_DLRR);
+
+  fail_unless (gst_rtcp_packet_xr_get_dlrr_block (&packet, 0, &ssrc, &last_rr,
+          &delay));
+  fail_unless_equals_int_hex (ssrc, GST_READ_UINT32_BE (rtcp_pkt + 12));
+  fail_unless (gst_rtcp_packet_xr_get_dlrr_block (&packet, 1, &ssrc, &last_rr,
+          &delay));
+  fail_unless_equals_int_hex (ssrc, GST_READ_UINT32_BE (rtcp_pkt + 24));
+
+  /* it has only two sub-blocks. */
+  fail_if (gst_rtcp_packet_xr_get_dlrr_block (&packet, 2, &ssrc, &last_rr,
+          &delay));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_buffer_xr_ssumm)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  guint32 ssrc, lost_packets, dup_packets;
+  guint16 begin_seq, end_seq;
+  guint32 min_jitter, max_jitter, mean_jitter, dev_jitter;
+  guint8 min_ttl, max_ttl, mean_ttl, dev_ttl;
+  gboolean ipv4;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x0b,     /* Type XR, length = 11 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x06, 0xe8, 0x00, 0x09,     /* Statistics summary, length = 9 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x00, 0x01, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00, 0x02,
+    0x00, 0x00, 0x00, 0x03,
+    0x00, 0x00, 0x00, 0x04,
+    0x00, 0x00, 0x00, 0x05,
+    0x00, 0x00, 0x00, 0x06,
+    0x01, 0x80, 0x0f, 0x8f
+  };
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_SSUMM);
+
+  fail_unless (gst_rtcp_packet_xr_get_summary_info (&packet, &ssrc, &begin_seq,
+          &end_seq));
+  fail_unless_equals_int_hex (ssrc, GST_READ_UINT32_BE (rtcp_pkt + 12));
+  fail_unless_equals_int (begin_seq, GST_READ_UINT16_BE (rtcp_pkt + 16));
+  fail_unless_equals_int (end_seq, GST_READ_UINT16_BE (rtcp_pkt + 18));
+
+  fail_unless (gst_rtcp_packet_xr_get_summary_pkt (&packet, &lost_packets,
+          &dup_packets));
+  fail_unless_equals_int (lost_packets, GST_READ_UINT32_BE (rtcp_pkt + 20));
+  fail_unless_equals_int (dup_packets, GST_READ_UINT32_BE (rtcp_pkt + 24));
+
+  fail_unless (gst_rtcp_packet_xr_get_summary_jitter (&packet, &min_jitter,
+          &max_jitter, &mean_jitter, &dev_jitter));
+  fail_unless_equals_int (min_jitter, GST_READ_UINT32_BE (rtcp_pkt + 28));
+  fail_unless_equals_int (max_jitter, GST_READ_UINT32_BE (rtcp_pkt + 32));
+  fail_unless_equals_int (mean_jitter, GST_READ_UINT32_BE (rtcp_pkt + 36));
+  fail_unless_equals_int (dev_jitter, GST_READ_UINT32_BE (rtcp_pkt + 40));
+
+  fail_unless (gst_rtcp_packet_xr_get_summary_ttl (&packet, &ipv4, &min_ttl,
+          &max_ttl, &mean_ttl, &dev_ttl));
+  fail_unless (ipv4);
+  fail_unless_equals_int (min_ttl, rtcp_pkt[44]);
+  fail_unless_equals_int (max_ttl, rtcp_pkt[45]);
+  fail_unless_equals_int (mean_ttl, rtcp_pkt[46]);
+  fail_unless_equals_int (dev_ttl, rtcp_pkt[47]);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtcp_buffer_xr_voipmtrx)
+{
+  GstBuffer *buffer;
+  GstRTCPPacket packet;
+  guint32 ssrc;
+  guint8 loss_rate, discard_rate, burst_density, gap_density;
+  guint8 signal_level, noise_level, rerl, gmin;
+  guint8 r_factor, ext_r_factor, mos_lq, mos_cq, rx_config;
+  guint16 burst_duration, gap_duration;
+  guint16 roundtrip_delay, end_system_delay;
+  guint16 jb_nominal, jb_maximum, jb_abs_max;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  guint8 rtcp_pkt[] = {
+    0x80, 0xCF, 0x00, 0x0a,     /* Type XR, length = 10 */
+    0x97, 0x6d, 0x21, 0x6a,
+    0x07, 0x00, 0x00, 0x08,     /* VoIP Metrics, length = 8 */
+    0x97, 0x6d, 0x21, 0x6a,     /* SSRC of source */
+    0x01, 0x02, 0x03, 0x04,
+    0x05, 0x06, 0x07, 0x08,
+    0x09, 0x0a, 0x0b, 0x0c,
+    0x0d, 0x0e, 0x0f, 0x10,
+    0x11, 0x12, 0x13, 0x14,
+    0x15, 0x00, 0x16, 0x17,
+    0x18, 0x19, 0x1a, 0x1b
+  };
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      rtcp_pkt, sizeof (rtcp_pkt), 0, sizeof (rtcp_pkt), NULL, NULL);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+
+  fail_unless (gst_rtcp_packet_xr_first_rb (&packet));
+  fail_unless (gst_rtcp_packet_xr_get_block_type (&packet) ==
+      GST_RTCP_XR_TYPE_VOIP_METRICS);
+  fail_unless (gst_rtcp_packet_xr_get_voip_metrics_ssrc (&packet, &ssrc));
+  fail_unless_equals_int_hex (ssrc, GST_READ_UINT32_BE (rtcp_pkt + 12));
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_packet_metrics (&packet, &loss_rate,
+          &discard_rate));
+  fail_unless_equals_int (loss_rate, rtcp_pkt[16]);
+  fail_unless_equals_int (discard_rate, rtcp_pkt[17]);
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_burst_metrics (&packet,
+          &burst_density, &gap_density, &burst_duration, &gap_duration));
+  fail_unless_equals_int (burst_density, rtcp_pkt[18]);
+  fail_unless_equals_int (gap_density, rtcp_pkt[19]);
+  fail_unless_equals_int (burst_duration, GST_READ_UINT16_BE (rtcp_pkt + 20));
+  fail_unless_equals_int (gap_duration, GST_READ_UINT16_BE (rtcp_pkt + 22));
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_delay_metrics (&packet,
+          &roundtrip_delay, &end_system_delay));
+  fail_unless_equals_int (roundtrip_delay, GST_READ_UINT16_BE (rtcp_pkt + 24));
+  fail_unless_equals_int (end_system_delay, GST_READ_UINT16_BE (rtcp_pkt + 26));
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_signal_metrics (&packet,
+          &signal_level, &noise_level, &rerl, &gmin));
+  fail_unless_equals_int (signal_level, rtcp_pkt[28]);
+  fail_unless_equals_int (noise_level, rtcp_pkt[29]);
+  fail_unless_equals_int (rerl, rtcp_pkt[30]);
+  fail_unless_equals_int (gmin, rtcp_pkt[31]);
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_quality_metrics (&packet, &r_factor,
+          &ext_r_factor, &mos_lq, &mos_cq));
+  fail_unless_equals_int (r_factor, rtcp_pkt[32]);
+  fail_unless_equals_int (ext_r_factor, rtcp_pkt[33]);
+  fail_unless_equals_int (mos_lq, rtcp_pkt[34]);
+  fail_unless_equals_int (mos_cq, rtcp_pkt[35]);
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_configuration_params (&packet, &gmin,
+          &rx_config));
+  fail_unless_equals_int (gmin, rtcp_pkt[31]);
+  fail_unless_equals_int (rx_config, rtcp_pkt[36]);
+
+  fail_unless (gst_rtcp_packet_xr_get_voip_jitter_buffer_params (&packet,
+          &jb_nominal, &jb_maximum, &jb_abs_max));
+  fail_unless_equals_int (jb_nominal, GST_READ_UINT16_BE (rtcp_pkt + 38));
+  fail_unless_equals_int (jb_maximum, GST_READ_UINT16_BE (rtcp_pkt + 40));
+  fail_unless_equals_int (jb_abs_max, GST_READ_UINT16_BE (rtcp_pkt + 42));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtp_ntp64_extension)
 {
   GstBuffer *buf;
@@ -1463,6 +1924,13 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtcp_validate_reduced_with_padding);
   tcase_add_test (tc_chain, test_rtcp_buffer_profile_specific_extension);
   tcase_add_test (tc_chain, test_rtcp_buffer_app);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr_rle);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr_prt);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr_rrt);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr_dlrr);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr_ssumm);
+  tcase_add_test (tc_chain, test_rtcp_buffer_xr_voipmtrx);
 
   tcase_add_test (tc_chain, test_rtp_ntp64_extension);
   tcase_add_test (tc_chain, test_rtp_ntp56_extension);
