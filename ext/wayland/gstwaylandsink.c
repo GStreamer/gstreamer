@@ -455,18 +455,20 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
   GstBufferPool *pool = NULL;
   GstStructure *structure;
   gsize size = sink->video_info.size;
+  GstAllocator *alloc;
 
   pool = gst_video_buffer_pool_new ();
 
   structure = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
-  gst_buffer_pool_config_set_allocator (structure, gst_wl_shm_allocator_get (),
-      NULL);
 
+  alloc = gst_wl_shm_allocator_get ();
+  gst_buffer_pool_config_set_allocator (structure, alloc, NULL);
   if (!gst_buffer_pool_set_config (pool, structure)) {
     g_object_unref (pool);
     pool = NULL;
   }
+  g_object_unref (alloc);
 
   return pool;
 }
@@ -530,6 +532,7 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   GstBufferPool *pool = NULL;
   gboolean need_pool;
+  GstAllocator *alloc;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -540,9 +543,10 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     gst_query_add_allocation_pool (query, pool, sink->video_info.size, 2, 0);
     g_object_unref (pool);
   }
-
-  gst_query_add_allocation_param (query, gst_wl_shm_allocator_get (), NULL);
+  alloc = gst_wl_shm_allocator_get ();
+  gst_query_add_allocation_param (query, alloc, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  g_object_unref (alloc);
 
   return TRUE;
 }
