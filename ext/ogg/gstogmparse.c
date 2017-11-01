@@ -615,6 +615,9 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
   if (caps == NULL)
     goto cannot_decode;
 
+  if (!gst_caps_is_fixed (caps))
+    goto non_fixed_caps;
+
   if (ogm->srcpad) {
     GstCaps *current_caps = gst_pad_get_current_caps (ogm->srcpad);
 
@@ -677,6 +680,12 @@ buffer_too_small:
 cannot_decode:
   {
     GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL), ("unknown ogm format"));
+    return GST_FLOW_ERROR;
+  }
+non_fixed_caps:
+  {
+    gst_caps_unref (caps);
+    GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL), ("broken ogm format"));
     return GST_FLOW_ERROR;
   }
 }
