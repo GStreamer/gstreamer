@@ -44,6 +44,7 @@ G_BEGIN_DECLS
  * @GST_RTCP_TYPE_APP: Application defined
  * @GST_RTCP_TYPE_RTPFB: Transport layer feedback.
  * @GST_RTCP_TYPE_PSFB: Payload-specific feedback.
+ * @GST_RTCP_TYPE_XR: Extended report.
  *
  * Different RTCP packet types.
  */
@@ -56,7 +57,8 @@ typedef enum
   GST_RTCP_TYPE_BYE     = 203,
   GST_RTCP_TYPE_APP     = 204,
   GST_RTCP_TYPE_RTPFB   = 205,
-  GST_RTCP_TYPE_PSFB    = 206
+  GST_RTCP_TYPE_PSFB    = 206,
+  GST_RTCP_TYPE_XR      = 207
 } GstRTCPType;
 
 /* FIXME 2.0: backwards compatibility define for enum typo */
