@@ -195,7 +195,7 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_CROSSFADE_RATIO:
       pad->crossfade = g_value_get_double (value);
-      GST_VIDEO_AGGREGATOR_PAD (pad)->ABI.needs_alpha = pad->crossfade >= 0.0f;
+      GST_VIDEO_AGGREGATOR_PAD (pad)->needs_alpha = pad->crossfade >= 0.0f;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

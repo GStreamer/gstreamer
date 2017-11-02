@@ -68,14 +68,14 @@ struct _GstVideoAggregatorPad
   guint zorder;
   gboolean ignore_eos;
 
+  /* Subclasses can force an alpha channel in the (input thus output)
+   * colorspace format */
+  gboolean needs_alpha;
+
   /* < private > */
   GstVideoAggregatorPadPrivate *priv;
-  union {
-    /* Subclasses can force an alpha channel in the (input thus output)
-     * colorspace format */
-    gboolean needs_alpha;
-    gpointer          _gst_reserved[GST_PADDING];
-  } ABI;
+
+  gpointer          _gst_reserved[GST_PADDING];
 };
 
 /**
