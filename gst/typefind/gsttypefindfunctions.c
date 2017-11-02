@@ -4054,15 +4054,24 @@ pnm_type_find (GstTypeFind * tf, gpointer ununsed)
 
     /* need to skip any comment lines first */
     data_scan_ctx_advance (tf, &c, 3);
+
+    if (!data_scan_ctx_ensure_data (tf, &c, 1))
+      return;
+
     while (c.data[0] == '#') {  /* we know there's still data left */
       data_scan_ctx_advance (tf, &c, 1);
+      if (!data_scan_ctx_ensure_data (tf, &c, 1))
+        return;
+
       while (c.data[0] != '\n' && c.data[0] != '\r') {
-        if (!data_scan_ctx_ensure_data (tf, &c, 4))
-          return;
         data_scan_ctx_advance (tf, &c, 1);
+        if (!data_scan_ctx_ensure_data (tf, &c, 1))
+          return;
       }
       data_scan_ctx_advance (tf, &c, 1);
       GST_LOG ("skipped comment line in PNM header");
+      if (!data_scan_ctx_ensure_data (tf, &c, 1))
+        return;
     }
 
     if (!data_scan_ctx_ensure_data (tf, &c, 32) &&
