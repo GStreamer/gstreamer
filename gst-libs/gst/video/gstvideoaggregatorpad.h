@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_VIDEO_AGGREGATOR_PAD (gst_video_aggregator_pad_get_type())
 #define GST_VIDEO_AGGREGATOR_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD, GstVideoAggregatorPad))
+#define GST_VIDEO_AGGREGATOR_PAD_CAST(obj) ((GstVideoAggregatorPad *)(obj))
 #define GST_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COMPOSITOR_PAD, GstVideoAggregatorPadClass))
 #define GST_IS_VIDEO_AGGREGATOR_PAD(obj) \
