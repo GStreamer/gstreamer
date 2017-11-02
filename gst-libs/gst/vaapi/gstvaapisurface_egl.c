@@ -64,6 +64,16 @@ do_create_surface_with_egl_image_unlocked (GstVaapiDisplayEGL * display,
     goto error_export_image_gem_buf;
 
   size = height * stride[0];
+  /*
+   * XXX: The below surface creation may fail on Intel due to:
+   *   https://github.com/01org/intel-vaapi-driver/issues/222
+   * A permanent fix for that problem will be released in intel-vaapi-driver
+   * version 1.8.4 and later, and also in 1.8.3-1ubuntu1.
+   * However if you don't have that fix then a simple workaround is to
+   * uncomment this line of code:
+   *   size = GST_ROUND_UP_32 (height) * stride[0];
+   */
+
   return gst_vaapi_surface_new_with_gem_buf_handle (base_display, name, size,
       format, width, height, offset, stride);
 
