@@ -2877,6 +2877,12 @@ gst_aggregator_pad_get_buffer (GstAggregatorPad * pad)
   return buffer;
 }
 
+/**
+ * gst_aggregator_pad_is_eos:
+ * @pad: an aggregator pad
+ *
+ * Returns: %TRUE if the pad is EOS, otherwise %FALSE.
+ */
 gboolean
 gst_aggregator_pad_is_eos (GstAggregatorPad * pad)
 {
