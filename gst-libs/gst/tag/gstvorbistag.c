@@ -480,7 +480,7 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
       gst_vorbis_tag_add_coverart (list, value, value_len);
     } else if (g_ascii_strcasecmp (cur, "METADATA_BLOCK_PICTURE") == 0) {
       gst_vorbis_tag_add_metadata_block_picture (list, value, value_len);
-    } else {
+    } else if (g_utf8_validate (cur, cur_size, NULL)) {
       gst_vorbis_tag_add (list, cur, value);
     }
     g_free (cur);
