@@ -561,12 +561,12 @@ context_error:
 }
 
 static gboolean
-_upload_frames (GstAggregator * agg, GstAggregatorPad * agg_pad,
+gst_gl_mixer_upload_frames (GstElement * element, GstPad * sink_pad,
     gpointer user_data)
 {
-  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (agg_pad);
-  GstGLMixerPad *pad = GST_GL_MIXER_PAD (agg_pad);
-  GstGLMixer *mix = GST_GL_MIXER (agg);
+  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (sink_pad);
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (sink_pad);
+  GstGLMixer *mix = GST_GL_MIXER (element);
 
   pad->current_texture = 0;
   if (vaggpad->buffer != NULL) {
@@ -585,7 +585,7 @@ _upload_frames (GstAggregator * agg, GstAggregatorPad * agg_pad,
 
     if (!gst_video_frame_map (&gl_frame, &gl_info, vaggpad->buffer,
             GST_MAP_READ | GST_MAP_GL)) {
-      GST_ERROR_OBJECT (agg_pad, "Failed to map input frame");
+      GST_ERROR_OBJECT (pad, "Failed to map input frame");
       return FALSE;
     }
 
@@ -615,8 +615,8 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
   out_tex = (GstGLMemory *) out_frame.map[0].memory;
 
-  if (!gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (mix),
-          (GstAggregatorPadForeachFunc) _upload_frames, NULL)) {
+  if (!gst_element_foreach_sink_pad (GST_ELEMENT_CAST (mix),
+          gst_gl_mixer_upload_frames, NULL)) {
     res = FALSE;
     goto out;
   }

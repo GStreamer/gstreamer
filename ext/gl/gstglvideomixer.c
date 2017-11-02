@@ -1095,7 +1095,7 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
 }
 
 static gboolean
-_reset_pad_gl (GstAggregator * agg, GstAggregatorPad * aggpad, gpointer udata)
+_reset_pad_gl (GstElement * agg, GstPad * aggpad, gpointer udata)
 {
   const GstGLFuncs *gl = GST_GL_BASE_MIXER (agg)->context->gl_vtable;
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (aggpad);
@@ -1128,8 +1128,7 @@ _reset_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
     video_mixer->checker_vbo = 0;
   }
 
-  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (video_mixer), _reset_pad_gl,
-      NULL);
+  gst_element_foreach_sink_pad (GST_ELEMENT (video_mixer), _reset_pad_gl, NULL);
 }
 
 static void
