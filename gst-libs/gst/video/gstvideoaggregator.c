@@ -521,7 +521,7 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
         GINT_TO_POINTER (format_number));
 
     /* If that pad is the first with alpha, set it as the new best format */
-    if (!need_alpha && (pad->ABI.needs_alpha
+    if (!need_alpha && (pad->needs_alpha
             && (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (pad->info.finfo)))) {
       need_alpha = TRUE;
       /* Just fallback to ARGB in case we require alpha but the input pad
