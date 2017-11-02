@@ -608,6 +608,8 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   PrivateStream *ps;
   GstPad *sinkpad = NULL;
   GstCaps *caps;
+  gchar *padname;
+  gchar *tmpname;
 
   GST_DEBUG_OBJECT (dc, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -615,8 +617,14 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
 
   ps->dc = dc;
   ps->pad = pad;
-  ps->queue = gst_element_factory_make ("queue", NULL);
-  ps->sink = gst_element_factory_make ("fakesink", NULL);
+  padname = gst_pad_get_name (pad);
+  tmpname = g_strdup_printf ("discoverer-queue-%s", padname);
+  ps->queue = gst_element_factory_make ("queue", tmpname);
+  g_free (tmpname);
+  tmpname = g_strdup_printf ("discoverer-sink-%s", padname);
+  ps->sink = gst_element_factory_make ("fakesink", tmpname);
+  g_free (tmpname);
+  g_free (padname);
 
   if (G_UNLIKELY (ps->queue == NULL || ps->sink == NULL))
     goto error;
