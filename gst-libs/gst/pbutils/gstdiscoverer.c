@@ -1076,6 +1076,8 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
     ps = (PrivateStream *) tmp->data;
 
     target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ps->pad));
+    if (target_pad == NULL)
+      continue;
     gst_object_unref (target_pad);
 
     if (target_pad == pad)
