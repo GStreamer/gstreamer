@@ -762,9 +762,11 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
 }
 
 static gboolean
-gst_aggregator_do_events_and_queries (GstAggregator * self,
-    GstAggregatorPad * pad, gpointer user_data)
+gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
+    gpointer user_data)
 {
+  GstAggregatorPad *pad = GST_AGGREGATOR_PAD_CAST (epad);
+  GstAggregator *aggregator = GST_AGGREGATOR_CAST (self);
   GstEvent *event = NULL;
   GstQuery *query = NULL;
   GstAggregatorClass *klass = NULL;
@@ -794,7 +796,7 @@ gst_aggregator_do_events_and_queries (GstAggregator * self,
       if (event) {
         GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, event);
         gst_event_ref (event);
-        ret = klass->sink_event (self, pad, event);
+        ret = klass->sink_event (aggregator, pad, event);
 
         PAD_LOCK (pad);
         if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
@@ -804,7 +806,7 @@ gst_aggregator_do_events_and_queries (GstAggregator * self,
         gst_event_unref (event);
       } else if (query) {
         GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, query);
-        ret = klass->sink_query (self, pad, query);
+        ret = klass->sink_query (aggregator, pad, query);
 
         PAD_LOCK (pad);
         if (g_queue_peek_tail (&pad->priv->data) == query) {
@@ -1104,16 +1106,17 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     GstFlowReturn flow_return = GST_FLOW_OK;
     gboolean processed_event = FALSE;
 
-    gst_aggregator_iterate_sinkpads (self, gst_aggregator_do_events_and_queries,
-        NULL);
+    gst_element_foreach_sink_pad (GST_ELEMENT_CAST (self),
+        gst_aggregator_do_events_and_queries, NULL);
 
     /* Ensure we have buffers ready (either in clipped_buffer or at the head of
      * the queue */
     if (!gst_aggregator_wait_and_check (self, &timeout))
       continue;
 
-    gst_aggregator_iterate_sinkpads (self, gst_aggregator_do_events_and_queries,
-        &processed_event);
+    gst_element_foreach_sink_pad (GST_ELEMENT_CAST (self),
+        gst_aggregator_do_events_and_queries, &processed_event);
+
     if (processed_event)
       continue;
 
@@ -1520,11 +1523,13 @@ eat:
   return res;
 }
 
-static inline gboolean
-gst_aggregator_stop_pad (GstAggregator * self, GstAggregatorPad * pad,
-    gpointer unused_udata)
+static gboolean
+gst_aggregator_stop_pad (GstElement * self, GstPad * epad, gpointer user_data)
 {
-  gst_aggregator_pad_flush (pad, self);
+  GstAggregatorPad *pad = GST_AGGREGATOR_PAD_CAST (epad);
+  GstAggregator *agg = GST_AGGREGATOR_CAST (self);
+
+  gst_aggregator_pad_flush (pad, agg);
 
   PAD_LOCK (pad);
   pad->priv->flow_return = GST_FLOW_FLUSHING;
@@ -1543,7 +1548,9 @@ gst_aggregator_stop (GstAggregator * agg)
 
   gst_aggregator_reset_flow_values (agg);
 
-  gst_aggregator_iterate_sinkpads (agg, gst_aggregator_stop_pad, NULL);
+  /* Application needs to make sure no pads are added while it shuts us down */
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (agg),
+      gst_aggregator_stop_pad, NULL);
 
   klass = GST_AGGREGATOR_GET_CLASS (agg);
 
@@ -2343,7 +2350,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           G_MAXUINT64,
           DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_stop_pad);
   GST_DEBUG_REGISTER_FUNCPTR (gst_aggregator_do_events_and_queries);
 }
 
@@ -2668,7 +2674,7 @@ flushing:
   return FALSE;
 }
 
-/* Queue serialized events and let the others go though directly.
+/* Queue serialized events and let the others go through directly.
  * The queued events with be handled from the src-pad task in
  * gst_aggregator_do_events_and_queries().
  */
