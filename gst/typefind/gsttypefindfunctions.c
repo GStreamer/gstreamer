@@ -4790,7 +4790,7 @@ webvtt_type_find (GstTypeFind * tf, gpointer private)
 {
   const guint8 *data;
 
-  data = gst_type_find_peek (tf, 0, 9);
+  data = gst_type_find_peek (tf, 0, 10);
 
   if (data == NULL)
     return;
