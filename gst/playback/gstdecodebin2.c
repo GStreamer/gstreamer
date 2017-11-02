@@ -4588,6 +4588,14 @@ retry:
     g_list_foreach (endpads, (GFunc) gst_object_unref, NULL);
     g_list_free (endpads);
     g_string_free (missing_plugin_details, TRUE);
+    /* Failures could be due to the fact that we are currently shutting down (recheck) */
+    DYN_LOCK (dbin);
+    if (G_UNLIKELY (dbin->shutdown)) {
+      GST_WARNING_OBJECT (dbin, "Currently, shutting down, aborting exposing");
+      DYN_UNLOCK (dbin);
+      return FALSE;
+    }
+    DYN_UNLOCK (dbin);
     GST_ERROR_OBJECT (dbin, "Broken chain/group tree");
     g_return_val_if_reached (FALSE);
     return FALSE;
