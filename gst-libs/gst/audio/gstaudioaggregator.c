@@ -189,8 +189,7 @@ static GstBuffer *gst_audio_aggregator_do_clip (GstAggregator * agg,
     GstAggregatorPad * bpad, GstBuffer * buffer);
 static GstFlowReturn gst_audio_aggregator_aggregate (GstAggregator * agg,
     gboolean timeout);
-static gboolean sync_pad_values (GstAudioAggregator * aagg,
-    GstAudioAggregatorPad * pad);
+static gboolean sync_pad_values (GstElement * aagg, GstPad * pad, gpointer ud);
 static gboolean gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg,
     GstCaps * caps);
 
@@ -259,8 +258,6 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
       gst_audio_aggregator_negotiated_src_caps;
 
   klass->create_output_buffer = gst_audio_aggregator_create_output_buffer;
-
-  GST_DEBUG_REGISTER_FUNCPTR (sync_pad_values);
 
   GST_DEBUG_CATEGORY_INIT (audio_aggregator_debug, "audioaggregator",
       GST_DEBUG_FG_MAGENTA, "GstAudioAggregator");
@@ -1077,15 +1074,16 @@ gst_audio_aggregator_create_output_buffer (GstAudioAggregator * aagg,
 }
 
 static gboolean
-sync_pad_values (GstAudioAggregator * aagg, GstAudioAggregatorPad * pad)
+sync_pad_values (GstElement * aagg, GstPad * pad, gpointer user_data)
 {
-  GstAggregatorPad *bpad = GST_AGGREGATOR_PAD (pad);
+  GstAudioAggregatorPad *aapad = GST_AUDIO_AGGREGATOR_PAD (pad);
+  GstAggregatorPad *bpad = GST_AGGREGATOR_PAD_CAST (pad);
   GstClockTime timestamp, stream_time;
 
-  if (pad->priv->buffer == NULL)
+  if (aapad->priv->buffer == NULL)
     return TRUE;
 
-  timestamp = GST_BUFFER_PTS (pad->priv->buffer);
+  timestamp = GST_BUFFER_PTS (aapad->priv->buffer);
   GST_OBJECT_LOCK (bpad);
   stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
       timestamp);
@@ -1094,7 +1092,7 @@ sync_pad_values (GstAudioAggregator * aagg, GstAudioAggregatorPad * pad)
   /* sync object properties on stream time */
   /* TODO: Ideally we would want to do that on every sample */
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT (pad), stream_time);
+    gst_object_sync_values (GST_OBJECT_CAST (pad), stream_time);
 
   return TRUE;
 }
@@ -1143,8 +1141,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   aagg = GST_AUDIO_AGGREGATOR (agg);
 
   /* Sync pad properties to the stream time */
-  gst_aggregator_iterate_sinkpads (agg,
-      (GstAggregatorPadForeachFunc) sync_pad_values, NULL);
+  gst_element_foreach_sink_pad (element, sync_pad_values, NULL);
 
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (agg);
