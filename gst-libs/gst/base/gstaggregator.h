@@ -325,11 +325,6 @@ void           gst_aggregator_set_latency           (GstAggregator              
 GST_EXPORT
 GType gst_aggregator_get_type(void);
 
-/* API that should eventually land in GstElement itself (FIXME) */
-typedef gboolean (*GstAggregatorPadForeachFunc)    (GstAggregator                 *  aggregator,
-                                                    GstAggregatorPad              *  aggregator_pad,
-                                                    gpointer                         user_data);
-
 GST_EXPORT
 GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
 
