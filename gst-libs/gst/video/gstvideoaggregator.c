@@ -1261,16 +1261,17 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 }
 
 static gboolean
-sync_pad_values (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
+sync_pad_values (GstElement * vagg, GstPad * pad, gpointer user_data)
 {
-  GstAggregatorPad *bpad = GST_AGGREGATOR_PAD (pad);
+  GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD (pad);
+  GstAggregatorPad *bpad = GST_AGGREGATOR_PAD_CAST (pad);
   GstClockTime timestamp;
   gint64 stream_time;
 
-  if (pad->buffer == NULL)
+  if (vpad->buffer == NULL)
     return TRUE;
 
-  timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (vpad->buffer);
   GST_OBJECT_LOCK (bpad);
   stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
       timestamp);
@@ -1278,30 +1279,33 @@ sync_pad_values (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
 
   /* sync object properties on stream time */
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT (pad), stream_time);
+    gst_object_sync_values (GST_OBJECT_CAST (pad), stream_time);
 
   return TRUE;
 }
 
 static gboolean
-prepare_frames (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
+prepare_frames (GstElement * agg, GstPad * pad, gpointer user_data)
 {
+  GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD_CAST (pad);
   GstVideoAggregatorPadClass *vaggpad_class =
       GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (pad);
 
-  if (pad->buffer == NULL || !vaggpad_class->prepare_frame)
+  if (vpad->buffer == NULL || !vaggpad_class->prepare_frame)
     return TRUE;
 
-  return vaggpad_class->prepare_frame (pad, vagg);
+  return vaggpad_class->prepare_frame (vpad, GST_VIDEO_AGGREGATOR_CAST (agg));
 }
 
 static gboolean
-clean_pad (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad)
+clean_pad (GstElement * agg, GstPad * pad, gpointer user_data)
 {
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR_CAST (agg);
+  GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD_CAST (pad);
   GstVideoAggregatorPadClass *vaggpad_class =
       GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (pad);
 
-  vaggpad_class->clean_frame (pad, vagg);
+  vaggpad_class->clean_frame (vpad, vagg);
 
   return TRUE;
 }
@@ -1334,18 +1338,15 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
 
   /* Sync pad properties to the stream time */
-  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
-      (GstAggregatorPadForeachFunc) sync_pad_values, NULL);
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), sync_pad_values, NULL);
 
   /* Convert all the frames the subclass has before aggregating */
-  gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
-      (GstAggregatorPadForeachFunc) prepare_frames, NULL);
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), prepare_frames, NULL);
 
   ret = vagg_klass->aggregate_frames (vagg, *outbuf);
 
   if (vaggpad_class->clean_frame) {
-    gst_aggregator_iterate_sinkpads (GST_AGGREGATOR (vagg),
-        (GstAggregatorPadForeachFunc) clean_pad, NULL);
+    gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), clean_pad, NULL);
   }
 
   return ret;
