@@ -4663,7 +4663,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
                   gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (ave->sink)));
               continue;
             }
-            gst_object_ref_sink (*sinkp);
             created_sink = TRUE;
           }
         }
