@@ -856,6 +856,12 @@ gst_preset_default_save_preset (GstPreset * preset, const gchar * name)
       continue;
     }
 
+    if (property->flags & G_PARAM_DEPRECATED) {
+      GST_INFO_OBJECT (preset, "Not saving property %s as it is deprecated",
+          property->name);
+      continue;
+    }
+
     g_value_init (&gvalue, property->value_type);
     if (is_child_proxy) {
       gst_child_proxy_get_property ((GstChildProxy *) preset, props[i],
