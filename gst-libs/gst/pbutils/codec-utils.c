@@ -1276,7 +1276,8 @@ gst_codec_utils_opus_parse_caps (GstCaps * caps,
  *
  * Creates Opus caps from the given parameters.
  *
- * Returns: The #GstCaps.
+ * Returns: The #GstCaps, or %NULL if the parameters would lead to
+ * invalid Opus caps.
  *
  * Since: 1.8
  */
@@ -1286,7 +1287,7 @@ gst_codec_utils_opus_create_caps (guint32 rate,
     guint8 channel_mapping_family,
     guint8 stream_count, guint8 coupled_count, const guint8 * channel_mapping)
 {
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   GValue va = G_VALUE_INIT;
   GValue v = G_VALUE_INIT;
   gint i;
@@ -1295,15 +1296,30 @@ gst_codec_utils_opus_create_caps (guint32 rate,
     rate = 48000;
 
   if (channel_mapping_family == 0) {
-    g_return_val_if_fail (channels <= 2, NULL);
+    if (channels > 2) {
+      GST_ERROR ("Invalid channels count for channel_mapping_family 0: %d",
+          channels);
+      goto done;
+    }
+
+    if (stream_count > 1) {
+      GST_ERROR ("Invalid stream count for channel_mapping_family 0: %d",
+          stream_count);
+      goto done;
+    }
+
+    if (coupled_count > 1) {
+      GST_ERROR ("Invalid coupled count for channel_mapping_family 0: %d",
+          coupled_count);
+      goto done;
+    }
+
     if (channels == 0)
       channels = 2;
 
-    g_return_val_if_fail (stream_count == 0 || stream_count == 1, NULL);
     if (stream_count == 0)
       stream_count = 1;
 
-    g_return_val_if_fail (coupled_count == 0 || coupled_count == 1, NULL);
     if (coupled_count == 0)
       coupled_count = channels == 2 ? 1 : 0;
 
@@ -1315,10 +1331,27 @@ gst_codec_utils_opus_create_caps (guint32 rate,
         "coupled-count", G_TYPE_INT, coupled_count, NULL);
   }
 
-  g_return_val_if_fail (channels > 0, NULL);
-  g_return_val_if_fail (stream_count > 0, NULL);
-  g_return_val_if_fail (coupled_count <= stream_count, NULL);
-  g_return_val_if_fail (channel_mapping != NULL, NULL);
+  if (channels == 0) {
+    GST_ERROR ("Invalid channels count: %d", channels);
+    goto done;
+  }
+
+  if (stream_count == 0) {
+    GST_ERROR ("Invalid stream count: %d", stream_count);
+    goto done;
+  }
+
+  if (coupled_count > stream_count) {
+    GST_ERROR ("Coupled count %d > stream count: %d", coupled_count,
+        stream_count);
+    goto done;
+  }
+
+  if (channel_mapping == NULL) {
+    GST_ERROR
+        ("A non NULL channel-mapping is needed for channel_mapping_family != 0");
+    goto done;
+  }
 
   caps = gst_caps_new_simple ("audio/x-opus",
       "rate", G_TYPE_INT, rate,
@@ -1338,6 +1371,7 @@ gst_codec_utils_opus_create_caps (guint32 rate,
   g_value_unset (&va);
   g_value_unset (&v);
 
+done:
   return caps;
 }
 
@@ -1433,9 +1467,11 @@ gst_codec_utils_opus_create_caps_from_header (GstBuffer * header,
           channel_mapping, NULL, NULL))
     return NULL;
 
-  caps =
-      gst_codec_utils_opus_create_caps (rate, channels, channel_mapping_family,
-      stream_count, coupled_count, channel_mapping);
+  if (!(caps =
+          gst_codec_utils_opus_create_caps (rate, channels,
+              channel_mapping_family, stream_count, coupled_count,
+              channel_mapping)))
+    return NULL;
 
   if (!comments) {
     GstTagList *tags = gst_tag_list_new_empty ();
