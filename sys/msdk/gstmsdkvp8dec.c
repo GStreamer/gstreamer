@@ -34,9 +34,15 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_LIBMFX
+#  include <mfx/mfxplugin.h>
+#  include <mfx/mfxvp8.h>
+#else
+#  include "mfxplugin.h"
+#  include "mfxvp8.h"
+#endif
+
 #include "gstmsdkvp8dec.h"
-#include <mfxvp8.h>
-#include <mfxplugin.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp8dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp8dec_debug
