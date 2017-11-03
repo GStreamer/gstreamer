@@ -1021,6 +1021,13 @@ fill_planes (GstVideoInfo * info)
         cr_h = GST_ROUND_UP_2 (cr_h);
       info->size = info->offset[1] + info->stride[0] * cr_h;
       break;
+    case GST_VIDEO_FORMAT_NV16_10LE32:
+      info->stride[0] = (width + 2) / 3 * 4;
+      info->stride[1] = info->stride[0];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * height;
+      info->size = info->stride[0] * height * 2;
+      break;
 
     case GST_VIDEO_FORMAT_ENCODED:
       break;
