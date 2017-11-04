@@ -613,14 +613,6 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
 
   GST_DEBUG_OBJECT (dc, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  DISCO_LOCK (dc);
-
-  if (dc->priv->running == FALSE) {
-    GST_DEBUG_OBJECT (dc, "We are stopping");
-    DISCO_UNLOCK (dc);
-    return;
-  }
-
   ps = g_slice_new0 (PrivateStream);
 
   ps->dc = dc;
@@ -652,7 +644,9 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
         (GstPadProbeCallback) got_subtitle_data, dc, NULL);
     g_object_set (ps->sink, "async", FALSE, NULL);
+    DISCO_LOCK (dc);
     dc->priv->pending_subtitle_pads++;
+    DISCO_UNLOCK (dc);
   }
 
   gst_caps_unref (caps);
@@ -676,6 +670,7 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) _event_probe, ps, NULL);
 
+  DISCO_LOCK (dc);
   dc->priv->streams = g_list_append (dc->priv->streams, ps);
   DISCO_UNLOCK (dc);
 
@@ -692,7 +687,6 @@ error:
   if (ps->sink)
     gst_object_unref (ps->sink);
   g_slice_free (PrivateStream, ps);
-  DISCO_UNLOCK (dc);
   return;
 }
 
