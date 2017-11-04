@@ -311,7 +311,7 @@ granulepos_to_granule_default (GstOggStream * pad, gint64 granulepos)
 {
   gint64 keyindex, keyoffset;
 
-  if (pad->granuleshift != 0) {
+  if (pad->granuleshift != 0 && pad->granuleshift != -1) {
     keyindex = granulepos >> pad->granuleshift;
     keyoffset = granulepos - (keyindex << pad->granuleshift);
     return keyindex + keyoffset;
@@ -327,7 +327,7 @@ granule_to_granulepos_default (GstOggStream * pad, gint64 granule,
 {
   gint64 keyoffset;
 
-  if (pad->granuleshift != 0) {
+  if (pad->granuleshift != 0 && pad->granuleshift != -1) {
     /* If we don't know where the previous keyframe is yet, assume it is
        at 0 or 1, depending on bitstream version. If nothing else, this
        avoids getting negative granpos back. */
