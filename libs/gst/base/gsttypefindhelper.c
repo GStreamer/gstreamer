@@ -446,7 +446,15 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
     return NULL;
   }
 
-  if (((guint64) off + size) <= helper->size)
+  /* If we request beyond the available size, we're sure we can't return
+   * anything regardless of the requested offset */
+  if (size > helper->size)
+    return NULL;
+
+  /* Only return data if there's enough room left for the given offset.
+   * This is the same as "if (off + size <= helper->size)" except that
+   * it doesn't exceed type limits */
+  if (off <= helper->size - size)
     return helper->data + off;
 
   return NULL;
