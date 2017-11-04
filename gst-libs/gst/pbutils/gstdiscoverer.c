@@ -1312,8 +1312,10 @@ discoverer_collect (GstDiscoverer * dc)
       if (gst_element_query_duration (pipeline, GST_FORMAT_TIME, &dur)) {
         GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
         dc->priv->current_info->duration = (guint64) dur;
-      } else {
+      } else if (dc->priv->current_info->result != GST_DISCOVERER_ERROR) {
         GstStateChangeReturn sret;
+        /* Note: We don't switch to PLAYING if we previously saw an ERROR since
+         * the state of various element isn't guaranteed anymore */
 
         /* Some parsers may not even return a rough estimate right away, e.g.
          * because they've only processed a single frame so far, so if we
