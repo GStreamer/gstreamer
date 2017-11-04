@@ -2175,7 +2175,7 @@ setup_borderline (GstVideoConverter * convert)
       u = CLAMP (u, 0, 255);
       v = CLAMP (v, 0, 255);
 
-      border_val = a | (y << 8) | (u << 16) | (v << 24);
+      border_val = a | (y << 8) | (u << 16) | ((guint32) v << 24);
     } else {
       border_val = GINT32_FROM_BE (convert->border_argb);
     }
