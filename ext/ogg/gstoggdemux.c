@@ -662,7 +662,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     out_offset = 0;
     out_offset_end = -1;
   } else {
-    if (packet->granulepos != -1) {
+    if (packet->granulepos > -1) {
       gint64 granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
           packet->granulepos);
       if (granule < 0) {
@@ -1271,6 +1271,15 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
         break;
       case 1:
         GST_LOG_OBJECT (ogg, "packetout gave packet of size %ld", packet.bytes);
+
+        if (packet.granulepos < -1) {
+          GST_WARNING_OBJECT (ogg,
+              "Invalid granulepos (%" G_GINT64_FORMAT "), resetting stream",
+              packet.granulepos);
+          gst_ogg_pad_reset (pad);
+          break;
+        }
+
         if (packet.bytes > ogg->max_packet_size)
           ogg->max_packet_size = packet.bytes;
         result = gst_ogg_pad_submit_packet (pad, &packet);
