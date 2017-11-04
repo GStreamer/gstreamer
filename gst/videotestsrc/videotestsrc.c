@@ -1206,9 +1206,9 @@ paint_tmpline_ARGB (paintinfo * p, int x, int w)
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   value = (p->color->A << 0) | (p->color->R << 8) |
-      (p->color->G << 16) | (p->color->B << 24);
+      (p->color->G << 16) | ((guint32) p->color->B << 24);
 #else
-  value = (p->color->A << 24) | (p->color->R << 16) |
+  value = ((guint32) p->color->A << 24) | (p->color->R << 16) |
       (p->color->G << 8) | (p->color->B << 0);
 #endif
 
