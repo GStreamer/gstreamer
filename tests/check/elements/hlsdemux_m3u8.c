@@ -320,6 +320,21 @@ http://example.com/hi.m3u8\r\n\
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=65000,CODECS=\"mp4a.40.5\"\r\n\
 http://example.com/audio-only.m3u8";
 
+static const gchar *MAP_TAG_PLAYLIST = "#EXTM3U \n\
+#EXT-X-VERSION:7\n\
+#EXT-X-MAP:URI=\"init1.mp4\",BYTERANGE=\"50@50\"\n\
+#EXTINF:6.00000,\n\
+#EXT-X-BYTERANGE:100@50\n\
+main.mp4\n\
+#EXTINF:6.00000,\n\
+#EXT-X-BYTERANGE:100@150\n\
+main.mp4\n\
+#EXT-X-MAP:URI=\"init2.mp4\"\n\
+#EXTINF:6.00000,\n\
+#EXT-X-BYTERANGE:100@300\n\
+main.mp4\n\
+#EXT-X-ENDLIST";
+
 static GstHLSMasterPlaylist *
 load_playlist (const gchar * data)
 {
@@ -1393,6 +1408,67 @@ GST_START_TEST (test_stream_inf_tag)
 
 GST_END_TEST;
 
+GST_START_TEST (test_map_tag)
+{
+  GstHLSMasterPlaylist *master;
+  GstHLSVariantStream *stream;
+  GstM3U8 *m3u8;
+  GList *files, *walk;
+  GstM3U8MediaFile *seg1, *seg2, *seg3;
+  GstM3U8InitFile *init1, *init2;
+
+  /* Test EXT-X-MAP tag
+   * This M3U8 has two EXT-X-MAP tag.
+   * the first one is applied to the 1st and 2nd segments, and the other is
+   * applied only to the 3rd segment
+   */
+
+  master = load_playlist (MAP_TAG_PLAYLIST);
+
+  assert_equals_int (master->is_simple, TRUE);
+  assert_equals_int (g_list_length (master->variants), 1);
+  stream = g_list_nth_data (master->variants, 0);
+
+  m3u8 = stream->m3u8;
+  fail_unless (m3u8 != NULL);
+
+  files = m3u8->files;
+  fail_unless (m3u8 != NULL);
+  assert_equals_int (g_list_length (files), 3);
+  for (walk = files; walk; walk = g_list_next (walk)) {
+    GstM3U8MediaFile *file = (GstM3U8MediaFile *) walk->data;
+
+    GstM3U8InitFile *init_file = file->init_file;
+    fail_unless (init_file != NULL);
+    fail_unless (init_file->uri != NULL);
+  }
+
+  seg1 = g_list_nth_data (files, 0);
+  seg2 = g_list_nth_data (files, 1);
+  seg3 = g_list_nth_data (files, 2);
+
+  /* Segment 1 and 2 share the identical init segment */
+  fail_unless (seg1->init_file == seg2->init_file);
+  assert_equals_int (seg1->init_file->ref_count, 2);
+
+  fail_unless (seg2->init_file != seg3->init_file);
+  assert_equals_int (seg3->init_file->ref_count, 1);
+
+  init1 = seg1->init_file;
+  init2 = seg3->init_file;
+
+  fail_unless (g_strcmp0 (init1->uri, init2->uri));
+  assert_equals_int (init1->offset, 50);
+  assert_equals_int (init1->size, 50);
+
+  assert_equals_int (init2->offset, 0);
+  assert_equals_int (init2->size, -1);
+
+  gst_hls_master_playlist_unref (master);
+}
+
+GST_END_TEST;
+
 static Suite *
 hlsdemux_suite (void)
 {
@@ -1435,6 +1511,7 @@ hlsdemux_suite (void)
 #endif
   tcase_add_test (tc_m3u8, test_url_with_slash_query_param);
   tcase_add_test (tc_m3u8, test_stream_inf_tag);
+  tcase_add_test (tc_m3u8, test_map_tag);
   return s;
 }
 
