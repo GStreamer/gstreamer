@@ -33,6 +33,7 @@
 
 static GstM3U8MediaFile *gst_m3u8_media_file_new (gchar * uri,
     gchar * title, GstClockTime duration, guint sequence);
+static void gst_m3u8_init_file_unref (GstM3U8InitFile * self);
 static gchar *uri_join (const gchar * uri, const gchar * path);
 
 GstM3U8 *
@@ -144,9 +145,43 @@ gst_m3u8_media_file_unref (GstM3U8MediaFile * self)
   g_return_if_fail (self != NULL && self->ref_count > 0);
 
   if (g_atomic_int_dec_and_test (&self->ref_count)) {
+    if (self->init_file)
+      gst_m3u8_init_file_unref (self->init_file);
     g_free (self->title);
     g_free (self->uri);
     g_free (self->key);
+    g_free (self);
+  }
+}
+
+static GstM3U8InitFile *
+gst_m3u8_init_file_new (gchar * uri)
+{
+  GstM3U8InitFile *file;
+
+  file = g_new0 (GstM3U8InitFile, 1);
+  file->uri = uri;
+  file->ref_count = 1;
+
+  return file;
+}
+
+static GstM3U8InitFile *
+gst_m3u8_init_file_ref (GstM3U8InitFile * ifile)
+{
+  g_assert (ifile != NULL && ifile->ref_count > 0);
+
+  g_atomic_int_add (&ifile->ref_count, 1);
+  return ifile;
+}
+
+static void
+gst_m3u8_init_file_unref (GstM3U8InitFile * self)
+{
+  g_return_if_fail (self != NULL && self->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&self->ref_count)) {
+    g_free (self->uri);
     g_free (self);
   }
 }
@@ -458,6 +493,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
   gint64 mediasequence;
   GList *previous_files = NULL;
   gboolean have_mediasequence = FALSE;
+  GstM3U8InitFile *last_init_file = NULL;
 
   g_return_val_if_fail (self != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
@@ -555,6 +591,8 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
         }
 
         file->discont = discontinuity;
+        if (last_init_file)
+          file->init_file = gst_m3u8_init_file_ref (last_init_file);
 
         duration = 0;
         title = NULL;
@@ -672,6 +710,47 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
         } else {
           goto next_line;
         }
+      } else if (g_str_has_prefix (data_ext_x, "MAP:")) {
+        gchar *v, *a, *header_uri = NULL;
+
+        data = data + 11;
+
+        while (data != NULL && parse_attributes (&data, &a, &v)) {
+          if (strcmp (a, "URI") == 0) {
+            header_uri =
+                uri_join (self->base_uri ? self->base_uri : self->uri, v);
+          } else if (strcmp (a, "BYTERANGE") == 0) {
+            if (int64_from_string (v, &v, &size)) {
+              if (*v == '@' && !int64_from_string (v + 1, &v, &offset)) {
+                g_free (header_uri);
+                goto next_line;
+              }
+            } else {
+              g_free (header_uri);
+              goto next_line;
+            }
+          }
+        }
+
+        if (header_uri) {
+          GstM3U8InitFile *init_file;
+          init_file = gst_m3u8_init_file_new (header_uri);
+
+          if (size != -1) {
+            init_file->size = size;
+            if (offset != -1)
+              init_file->offset = offset;
+            else
+              init_file->offset = 0;
+          } else {
+            init_file->size = -1;
+            init_file->offset = 0;
+          }
+          if (last_init_file)
+            gst_m3u8_init_file_unref (last_init_file);
+
+          last_init_file = init_file;
+        }
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
@@ -689,6 +768,9 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
   current_key = NULL;
 
   self->files = g_list_reverse (self->files);
+
+  if (last_init_file)
+    gst_m3u8_init_file_unref (last_init_file);
 
   if (previous_files) {
     gboolean consistent = TRUE;
