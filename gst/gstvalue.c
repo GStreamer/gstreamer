@@ -1450,33 +1450,28 @@ gst_value_transform_int_range_string (const GValue * src_value,
 static gint
 gst_value_compare_int_range (const GValue * value1, const GValue * value2)
 {
-  /* calculate the number of values in each range */
-  gint n1 = INT_RANGE_MAX (value1) - INT_RANGE_MIN (value1) + 1;
-  gint n2 = INT_RANGE_MAX (value2) - INT_RANGE_MIN (value2) + 1;
-
-  /* they must be equal */
-  if (n1 != n2)
+#if 0
+  /* Compare the ranges. (Kept for clarity for the below comparision) */
+  if (INT_RANGE_MIN (value1) != INT_RANGE_MIN (value2) ||
+      INT_RANGE_MAX (value1) != INT_RANGE_MAX (value2))
     return GST_VALUE_UNORDERED;
+#else
+  /* The MIN and MAX of the range are actually stored packed into one 64bit
+   * value. We can therefore compare them directly */
+  if (value1->data[0].v_uint64 != value2->data[0].v_uint64)
+    return GST_VALUE_UNORDERED;
+#endif
 
-  /* if empty, equal */
-  if (n1 == 0)
+  /* The extents are equal */
+  /* If there is only one value (min == max), we ignore the step for
+   * comparison */
+  if (INT_RANGE_MIN (value1) == INT_RANGE_MAX (value1))
     return GST_VALUE_EQUAL;
 
-  /* if more than one value, then it is only equal if the step is equal
-     and bounds lie on the same value */
-  if (n1 > 1) {
-    if (INT_RANGE_STEP (value1) == INT_RANGE_STEP (value2) &&
-        INT_RANGE_MIN (value1) == INT_RANGE_MIN (value2) &&
-        INT_RANGE_MAX (value1) == INT_RANGE_MAX (value2)) {
-      return GST_VALUE_EQUAL;
-    }
-    return GST_VALUE_UNORDERED;
-  } else {
-    /* if just one, only if the value is equal */
-    if (INT_RANGE_MIN (value1) == INT_RANGE_MIN (value2))
-      return GST_VALUE_EQUAL;
-    return GST_VALUE_UNORDERED;
-  }
+  /* Else the ranges are only equal if their step is also equal */
+  if (INT_RANGE_STEP (value1) == INT_RANGE_STEP (value2))
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
 }
 
 static gchar *
@@ -1704,33 +1699,21 @@ gst_value_transform_int64_range_string (const GValue * src_value,
 static gint
 gst_value_compare_int64_range (const GValue * value1, const GValue * value2)
 {
-  /* calculate the number of values in each range */
-  gint64 n1 = INT64_RANGE_MAX (value1) - INT64_RANGE_MIN (value1) + 1;
-  gint64 n2 = INT64_RANGE_MAX (value2) - INT64_RANGE_MIN (value2) + 1;
-
-  /* they must be equal */
-  if (n1 != n2)
+  /* Compare the ranges. */
+  if (INT64_RANGE_MIN (value1) != INT64_RANGE_MIN (value2) ||
+      INT64_RANGE_MAX (value1) != INT64_RANGE_MAX (value2))
     return GST_VALUE_UNORDERED;
 
-  /* if empty, equal */
-  if (n1 == 0)
+  /* The extents are equal */
+  /* If there is only one value (min == max), we ignore the step for
+   * comparison */
+  if (INT64_RANGE_MIN (value1) == INT64_RANGE_MAX (value1))
     return GST_VALUE_EQUAL;
 
-  /* if more than one value, then it is only equal if the step is equal
-     and bounds lie on the same value */
-  if (n1 > 1) {
-    if (INT64_RANGE_STEP (value1) == INT64_RANGE_STEP (value2) &&
-        INT64_RANGE_MIN (value1) == INT64_RANGE_MIN (value2) &&
-        INT64_RANGE_MAX (value1) == INT64_RANGE_MAX (value2)) {
-      return GST_VALUE_EQUAL;
-    }
-    return GST_VALUE_UNORDERED;
-  } else {
-    /* if just one, only if the value is equal */
-    if (INT64_RANGE_MIN (value1) == INT64_RANGE_MIN (value2))
-      return GST_VALUE_EQUAL;
-    return GST_VALUE_UNORDERED;
-  }
+  /* Else the ranges are only equal if their step is also equal */
+  if (INT64_RANGE_STEP (value1) == INT64_RANGE_STEP (value2))
+    return GST_VALUE_EQUAL;
+  return GST_VALUE_UNORDERED;
 }
 
 static gchar *

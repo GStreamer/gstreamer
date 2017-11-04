@@ -3097,6 +3097,9 @@ GST_START_TEST (test_stepped_int_range_parsing)
     "[1, 2, 2]",
     "[2, 3, 2]",
     "[0, 0, 0]",
+    "[0, 0, 1]",
+    "[1, 2, 0]",
+    "[1, 1, 1]",
   };
 
   /* check we can parse good ranges */
