@@ -993,7 +993,8 @@ gst_rtcp_packet_add_rb (GstRTCPPacket * packet, guint32 ssrc,
 
   GST_WRITE_UINT32_BE (data, ssrc);
   data += 4;
-  GST_WRITE_UINT32_BE (data, (fractionlost << 24) | (packetslost & 0xffffff));
+  GST_WRITE_UINT32_BE (data,
+      ((guint32) fractionlost << 24) | (packetslost & 0xffffff));
   data += 4;
   GST_WRITE_UINT32_BE (data, exthighestseq);
   data += 4;
