@@ -446,7 +446,7 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
     return NULL;
   }
 
-  if ((off + size) <= helper->size)
+  if (((guint64) off + size) <= helper->size)
     return helper->data + off;
 
   return NULL;
