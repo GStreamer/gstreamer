@@ -1090,6 +1090,18 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
     return GST_FLOW_EOS;
   }
 
+  if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream) && file->init_file) {
+    GstM3U8InitFile *header_file = file->init_file;
+    stream->fragment.header_uri = g_strdup (header_file->uri);
+    stream->fragment.header_range_start = header_file->offset;
+    if (header_file->size != -1) {
+      stream->fragment.header_range_end =
+          header_file->offset + header_file->size - 1;
+    } else {
+      stream->fragment.header_range_end = -1;
+    }
+  }
+
   if (stream->discont)
     discont = TRUE;
 
