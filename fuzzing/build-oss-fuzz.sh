@@ -107,7 +107,7 @@ PLUGINS="$PLUGIN_DIR/libgstcoreelements.a \
        $PLUGIN_DIR/libgstogg.a"
 
 echo
-echo ">>>> BUILDING gst-discoverer.o"
+echo ">>>> BUILDING gst-discoverer"
 echo
 BUILD_CFLAGS="$CFLAGS `pkg-config --static --cflags $COMMON_DEPS $TARGET_DEPS`"
 BUILD_LDFLAGS="-Wl,-static `pkg-config --static --libs $COMMON_DEPS $TARGET_DEPS`"
@@ -137,7 +137,7 @@ PLUGINS="$PLUGIN_DIR/libgstcoreelements.a \
        $PLUGIN_DIR/libgstapp.a"
 
 echo
-echo ">>>> BUILDING gst-discoverer.o"
+echo ">>>> BUILDING typefind"
 echo
 BUILD_CFLAGS="$CFLAGS `pkg-config --static --cflags $COMMON_DEPS $TARGET_DEPS`"
 BUILD_LDFLAGS="-Wl,-static `pkg-config --static --libs $COMMON_DEPS $TARGET_DEPS`"
