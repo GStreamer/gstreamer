@@ -172,7 +172,7 @@ gst_ogg_stream_granulepos_to_key_granule (GstOggStream * pad, gint64 granulepos)
   if (mappers[pad->map].granulepos_to_key_granule_func)
     return mappers[pad->map].granulepos_to_key_granule_func (pad, granulepos);
 
-  if (granulepos == -1 || granulepos == 0) {
+  if (granulepos == -1 || granulepos == 0 || pad->granuleshift == G_MAXUINT32) {
     return granulepos;
   }
 
@@ -311,7 +311,7 @@ granulepos_to_granule_default (GstOggStream * pad, gint64 granulepos)
 {
   gint64 keyindex, keyoffset;
 
-  if (pad->granuleshift != 0 && pad->granuleshift != -1) {
+  if (pad->granuleshift != 0 && pad->granuleshift != G_MAXUINT32) {
     keyindex = granulepos >> pad->granuleshift;
     keyoffset = granulepos - (keyindex << pad->granuleshift);
     return keyindex + keyoffset;
@@ -327,7 +327,7 @@ granule_to_granulepos_default (GstOggStream * pad, gint64 granule,
 {
   gint64 keyoffset;
 
-  if (pad->granuleshift != 0 && pad->granuleshift != -1) {
+  if (pad->granuleshift != 0 && pad->granuleshift != G_MAXUINT32) {
     /* If we don't know where the previous keyframe is yet, assume it is
        at 0 or 1, depending on bitstream version. If nothing else, this
        avoids getting negative granpos back. */
@@ -478,7 +478,7 @@ granulepos_to_granule_theora (GstOggStream * pad, gint64 granulepos)
 {
   gint64 keyindex, keyoffset;
 
-  if (pad->granuleshift != 0) {
+  if (pad->granuleshift != 0 && pad->granuleshift != G_MAXUINT32) {
     keyindex = granulepos >> pad->granuleshift;
     keyoffset = granulepos - (keyindex << pad->granuleshift);
     if (pad->theora_has_zero_keyoffset) {
@@ -495,7 +495,7 @@ is_granulepos_keyframe_theora (GstOggStream * pad, gint64 granulepos)
 {
   gint64 frame_mask;
 
-  if (granulepos == (gint64) - 1)
+  if (granulepos == (gint64) - 1 || pad->granuleshift == G_MAXUINT32)
     return FALSE;
 
   frame_mask = (G_GUINT64_CONSTANT (1) << pad->granuleshift) - 1;
@@ -2193,7 +2193,7 @@ granulepos_to_granule_daala (GstOggStream * pad, gint64 granulepos)
 {
   gint64 keyindex, keyoffset;
 
-  if (pad->granuleshift != 0) {
+  if (pad->granuleshift != 0 && pad->granuleshift != G_MAXUINT32) {
     keyindex = granulepos >> pad->granuleshift;
     keyoffset = granulepos - (keyindex << pad->granuleshift);
     return keyindex + keyoffset;
@@ -2207,7 +2207,7 @@ is_granulepos_keyframe_daala (GstOggStream * pad, gint64 granulepos)
 {
   gint64 frame_mask;
 
-  if (granulepos == (gint64) - 1)
+  if (granulepos == (gint64) - 1 || pad->granuleshift == G_MAXUINT32)
     return FALSE;
 
   frame_mask = (G_GUINT64_CONSTANT (1) << pad->granuleshift) - 1;
