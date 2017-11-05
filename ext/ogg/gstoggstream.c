@@ -1570,7 +1570,7 @@ static gint64
 packet_duration_ogm (GstOggStream * pad, ogg_packet * packet)
 {
   const guint8 *data;
-  int samples;
+  gint64 samples;
   int offset;
   int n;
 
