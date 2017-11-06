@@ -55,6 +55,14 @@
 #define GST_CAT_DEFAULT gst_gl_video_mixer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+            "RGBA"))
+    );
+
 #define GST_TYPE_GL_VIDEO_MIXER_BACKGROUND (gst_gl_video_mixer_background_get_type())
 static GType
 gst_gl_video_mixer_background_get_type (void)
@@ -862,6 +870,9 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
       "Filter/Effect/Video/Compositor", "OpenGL video_mixer",
       "Matthew Waters <matthew@centricular.com>");
 
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &sink_factory, GST_TYPE_GL_VIDEO_MIXER_PAD);
+
   g_object_class_install_property (gobject_class, PROP_BACKGROUND,
       g_param_spec_enum ("background", "Background", "Background type",
           GST_TYPE_GL_VIDEO_MIXER_BACKGROUND,
@@ -875,7 +886,6 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   vagg_class->update_caps = _update_caps;
 
-  agg_class->sinkpads_type = GST_TYPE_GL_VIDEO_MIXER_PAD;
   agg_class->fixate_src_caps = _fixate_caps;
   agg_class->propose_allocation = gst_gl_video_mixer_propose_allocation;
 

@@ -1223,7 +1223,6 @@ gst_compositor_class_init (GstCompositorClass * klass)
   gobject_class->get_property = gst_compositor_get_property;
   gobject_class->set_property = gst_compositor_set_property;
 
-  agg_class->sinkpads_type = GST_TYPE_COMPOSITOR_PAD;
   agg_class->sink_query = _sink_query;
   agg_class->fixate_src_caps = _fixate_caps;
   agg_class->negotiated_src_caps = _negotiated_caps;
@@ -1235,7 +1234,8 @@ gst_compositor_class_init (GstCompositorClass * klass)
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
-  gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &sink_factory, GST_TYPE_COMPOSITOR_PAD);
 
   gst_element_class_set_static_metadata (gstelement_class, "Compositor",
       "Filter/Editor/Video/Compositor",

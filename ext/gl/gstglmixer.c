@@ -365,9 +365,9 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   gobject_class->set_property = gst_gl_mixer_set_property;
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &sink_factory, GST_TYPE_GL_MIXER_PAD);
 
-  agg_class->sinkpads_type = GST_TYPE_GL_MIXER_PAD;
   agg_class->sink_query = gst_gl_mixer_sink_query;
   agg_class->src_query = gst_gl_mixer_src_query;
   agg_class->stop = gst_gl_mixer_stop;

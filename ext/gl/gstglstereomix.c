@@ -180,9 +180,9 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &sink_factory, GST_TYPE_GL_STEREO_MIX_PAD);
 
-  agg_class->sinkpads_type = GST_TYPE_GL_STEREO_MIX_PAD;
   agg_class->stop = gst_gl_stereo_mix_stop;
   agg_class->start = gst_gl_stereo_mix_start;
   agg_class->src_query = gst_gl_stereo_mix_src_query;
