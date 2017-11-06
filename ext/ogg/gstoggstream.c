@@ -1162,6 +1162,11 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   gint64 prestime_n, prestime_d;
   gint64 basetime_n, basetime_d;
 
+  if (packet->bytes < 44) {
+    GST_DEBUG ("Not enough data for fishead header");
+    return FALSE;
+  }
+
   data = packet->packet;
 
   data += 8;                    /* header */
