@@ -152,9 +152,6 @@ struct _GstAggregator
 
 /**
  * GstAggregatorClass:
- * @sinkpads_type:  Optional.
- *                  The type of the pads that should be created when
- *                  GstElement.request_new_pad is called.
  * @flush:          Optional.
  *                  Called after a successful flushing seek, once all the flush
  *                  stops have been received. Flush pad-specific data in
@@ -232,8 +229,6 @@ struct _GstAggregator
  */
 struct _GstAggregatorClass {
   GstElementClass   parent_class;
-
-  GType             sinkpads_type;
 
   GstFlowReturn     (*flush)          (GstAggregator    *  aggregator);
 

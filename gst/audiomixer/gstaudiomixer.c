@@ -502,8 +502,8 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_audiomixer_src_template);
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_audiomixer_sink_template);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_audiomixer_sink_template, GST_TYPE_AUDIO_MIXER_PAD);
   gst_element_class_set_static_metadata (gstelement_class, "AudioMixer",
       "Generic/Audio", "Mixes multiple audio streams",
       "Sebastian Dröge <sebastian@centricular.com>");
@@ -512,8 +512,6 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_audiomixer_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_audiomixer_release_pad);
-
-  agg_class->sinkpads_type = GST_TYPE_AUDIO_MIXER_PAD;
 
   agg_class->sink_query = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_query);
   agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_audiomixer_sink_event);

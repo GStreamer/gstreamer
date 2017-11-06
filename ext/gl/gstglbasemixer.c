@@ -270,7 +270,6 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_base_mixer_set_context);
   element_class->change_state = gst_gl_base_mixer_change_state;
 
-  agg_class->sinkpads_type = GST_TYPE_GL_BASE_MIXER_PAD;
   agg_class->sink_query = gst_gl_base_mixer_sink_query;
   agg_class->src_query = gst_gl_base_mixer_src_query;
   agg_class->src_activate = gst_gl_base_mixer_src_activate_mode;
