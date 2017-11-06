@@ -236,7 +236,7 @@ bus_sync_message (GstBus * bus, GstMessage * message,
   GstMessageType type = GST_MESSAGE_TYPE (message);
 
   if (type == GST_MESSAGE_DEVICE_ADDED || type == GST_MESSAGE_DEVICE_REMOVED) {
-    gboolean matches;
+    gboolean matches = TRUE;
     GstDevice *device;
     GstDeviceProvider *provider;
 
@@ -250,7 +250,7 @@ bus_sync_message (GstBus * bus, GstMessage * message,
         GST_DEVICE_PROVIDER (gst_object_get_parent (GST_OBJECT (device)));
     if (is_provider_hidden (monitor, monitor->priv->hidden, provider)) {
       matches = FALSE;
-    } else if (monitor->priv->filters->len) {
+    } else {
       guint i;
 
       for (i = 0; i < monitor->priv->filters->len; i++) {
@@ -265,8 +265,6 @@ bus_sync_message (GstBus * bus, GstMessage * message,
         if (matches)
           break;
       }
-    } else {
-      matches = TRUE;
     }
     GST_OBJECT_UNLOCK (monitor);
 
