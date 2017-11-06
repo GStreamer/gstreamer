@@ -95,6 +95,16 @@ typedef enum {
 #define GST_PAD_TEMPLATE_CAPS(templ)		(((GstPadTemplate *)(templ))->caps)
 
 /**
+ * GST_PAD_TEMPLATE_GTYPE:
+ * @templ: the template to query
+ *
+ * Get the #GType of the padtemplate
+ *
+ * Since: 1.14
+ */
+#define GST_PAD_TEMPLATE_GTYPE(templ)		(((GstPadTemplate *)(templ))->ABI.abi.gtype)
+
+/**
  * GstPadTemplateFlags:
  * @GST_PAD_TEMPLATE_FLAG_LAST: first flag that can be used by subclasses.
  *
@@ -127,7 +137,12 @@ struct _GstPadTemplate {
   GstCaps	  *caps;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    gpointer _gst_reserved[GST_PADDING];
+    struct {
+      GType gtype;
+    } abi;
+  } ABI;
 };
 
 struct _GstPadTemplateClass {
@@ -188,6 +203,11 @@ GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 								 GstCaps *caps) G_GNUC_MALLOC;
 GST_EXPORT
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
+
+GST_EXPORT
+GstPadTemplate * gst_pad_template_new_from_static_pad_template_with_gtype (
+    GstStaticPadTemplate * pad_template,
+    GType pad_type);
 
 GST_EXPORT
 GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);

@@ -1427,6 +1427,28 @@ gst_element_class_add_static_pad_template (GstElementClass * klass,
 }
 
 /**
+ * gst_element_class_add_static_pad_template_with_gtype:
+ * @klass: the #GstElementClass to add the pad template to.
+ * @static_templ: #GstStaticPadTemplate to add as pad template to the element class.
+ * @pad_type: The #GType of the pad to create
+ *
+ * Adds a pad template to an element class based on the static pad template
+ * @templ. This is mainly used in the _class_init functions of element
+ * implementations. If a pad template with the same name already exists,
+ * the old one is replaced by the new one.
+ *
+ * Since: 1.14
+ */
+void
+gst_element_class_add_static_pad_template_with_gtype (GstElementClass * klass,
+    GstStaticPadTemplate * static_templ, GType pad_type)
+{
+  gst_element_class_add_pad_template (klass,
+      gst_pad_template_new_from_static_pad_template_with_gtype (static_templ,
+          pad_type));
+}
+
+/**
  * gst_element_class_add_metadata:
  * @klass: class to set metadata for
  * @key: the key to set

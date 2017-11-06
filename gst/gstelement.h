@@ -752,6 +752,11 @@ GST_EXPORT
 void                    gst_element_class_add_static_pad_template (GstElementClass *klass, GstStaticPadTemplate *static_templ);
 
 GST_EXPORT
+void                    gst_element_class_add_static_pad_template_with_gtype (GstElementClass *klass,
+                                                                              GstStaticPadTemplate *static_templ,
+                                                                              GType pad_type);
+
+GST_EXPORT
 GstPadTemplate*         gst_element_class_get_pad_template      (GstElementClass *element_class, const gchar *name);
 
 GST_EXPORT
