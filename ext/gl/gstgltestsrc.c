@@ -522,31 +522,36 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
   return TRUE;
 }
 
+static void
+gst_gl_test_src_gl_stop (GstGLContext * context, GstGLTestSrc * src)
+{
+  if (src->fbo)
+    gst_object_unref (src->fbo);
+  src->fbo = NULL;
+
+  if (src->shader)
+    gst_object_unref (src->shader);
+  src->shader = NULL;
+
+
+  if (src->src_impl)
+    src->src_funcs->free (src->src_impl);
+  src->src_impl = NULL;
+}
+
 static gboolean
 gst_gl_test_src_stop (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
 
+  gst_gl_context_thread_add (src->context,
+      (GstGLContextThreadFunc) gst_gl_test_src_gl_stop, src);
+
   gst_caps_replace (&src->out_caps, NULL);
 
-  if (src->context) {
-    if (src->shader) {
-      gst_object_unref (src->shader);
-      src->shader = NULL;
-    }
-
-    if (src->fbo)
-      gst_object_unref (src->fbo);
-    src->fbo = NULL;
-
+  if (src->context)
     gst_object_unref (src->context);
-    src->context = NULL;
-  }
-
-  if (src->src_impl) {
-    src->src_funcs->free (src->src_impl);
-    src->src_impl = NULL;
-  }
+  src->context = NULL;
 
   return TRUE;
 }
