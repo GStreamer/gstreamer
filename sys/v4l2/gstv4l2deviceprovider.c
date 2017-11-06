@@ -38,6 +38,11 @@
 #include <gudev/gudev.h>
 #endif
 
+/* Only available since Linux 4.8 */
+#ifndef V4L2_CAP_TOUCH
+#define V4L2_CAP_TOUCH 0x10000000
+#endif
+
 static GstV4l2Device *gst_v4l2_device_new (const gchar * device_path,
     const gchar * device_name, GstCaps * caps, GstV4l2DeviceType type,
     GstStructure * props);
