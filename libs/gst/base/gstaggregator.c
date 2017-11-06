@@ -1564,6 +1564,9 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   GstAggregatorPrivate *priv = self->priv;
   gint serial = 0;
   gchar *name = NULL;
+  GType pad_type =
+      GST_PAD_TEMPLATE_GTYPE (templ) ==
+      G_TYPE_NONE ? GST_TYPE_AGGREGATOR_PAD : GST_PAD_TEMPLATE_GTYPE (templ);
 
   if (templ->direction != GST_PAD_SINK)
     goto not_sink;
@@ -1584,7 +1587,7 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   }
 
   name = g_strdup_printf ("sink_%u", serial);
-  agg_pad = g_object_new (GST_AGGREGATOR_GET_CLASS (self)->sinkpads_type,
+  agg_pad = g_object_new (pad_type,
       "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
   g_free (name);
 
@@ -2223,8 +2226,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (aggregator_debug, "aggregator",
       GST_DEBUG_FG_MAGENTA, "GstAggregator");
-
-  klass->sinkpads_type = GST_TYPE_AGGREGATOR_PAD;
 
   klass->sink_event = gst_aggregator_default_sink_event;
   klass->sink_query = gst_aggregator_default_sink_query;
