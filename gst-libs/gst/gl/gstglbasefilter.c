@@ -280,7 +280,7 @@ gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data)
   gst_gl_insert_debug_marker (filter->context,
       "starting element %s", GST_OBJECT_NAME (filter));
 
-  filter->priv->gl_result = filter_class->gl_start (filter);
+  filter->priv->gl_started = filter_class->gl_start (filter);
 }
 
 static void
@@ -360,14 +360,16 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_start,
         filter);
 
-    if (!filter->priv->gl_result)
+    if (!filter->priv->gl_started)
       goto error;
   }
 
-  gst_gl_context_thread_add (filter->context,
-      (GstGLContextThreadFunc) _gl_set_caps, filter);
-  if (!filter->priv->gl_result)
-    goto error;
+  if (filter_class->gl_set_caps) {
+    gst_gl_context_thread_add (filter->context,
+        (GstGLContextThreadFunc) _gl_set_caps, filter);
+    if (!filter->priv->gl_result)
+      goto error;
+  }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
