@@ -1825,6 +1825,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       const gchar *caps_mview_mode = NULL;
       GstVideoMultiviewMode mview_mode = h264parse->multiview_mode;
       GstVideoMultiviewFlags mview_flags = h264parse->multiview_flags;
+      const gchar *chroma_format = NULL;
+      guint bit_depth_chroma;
 
       fps_num = h264parse->fps_num;
       fps_den = h264parse->fps_den;
@@ -1900,6 +1902,32 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       if (s && !gst_structure_has_field (s, "interlace-mode"))
         gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
             gst_video_interlace_mode_to_string (imode), NULL);
+
+      bit_depth_chroma = sps->bit_depth_chroma_minus8 + 8;
+
+      switch (sps->chroma_format_idc) {
+        case 0:
+          chroma_format = "4:0:0";
+          bit_depth_chroma = 0;
+          break;
+        case 1:
+          chroma_format = "4:2:0";
+          break;
+        case 2:
+          chroma_format = "4:2:2";
+          break;
+        case 3:
+          chroma_format = "4:4:4";
+          break;
+        default:
+          break;
+      }
+
+      if (chroma_format)
+        gst_caps_set_simple (caps,
+            "chroma-format", G_TYPE_STRING, chroma_format,
+            "bit-depth-luma", G_TYPE_UINT, sps->bit_depth_luma_minus8 + 8,
+            "bit-depth-chroma", G_TYPE_UINT, bit_depth_chroma, NULL);
     }
   }
 
