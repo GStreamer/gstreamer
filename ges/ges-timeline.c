@@ -1306,6 +1306,10 @@ ges_timeline_snap_position (GESTimeline * timeline,
     if (tmp_container == container)
       continue;
 
+    if (g_hash_table_lookup (priv->movecontext.toplevel_containers,
+            tmp_container))
+      continue;
+
     if (timecode > *iter_tc)
       diff = timecode - *iter_tc;
     else
@@ -1464,11 +1468,14 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackElement * obj,
     return TRUE;
   }
 
+
   GST_DEBUG_OBJECT (clip,
       "Changing context:\nold: obj: %p, mode: %d, edge: %d \n"
       "new: obj: %p, mode: %d, edge: %d ! Has changed %i", mv_ctx->clip,
       mv_ctx->mode, mv_ctx->edge, clip, mode, edge, mv_ctx->needs_move_ctx);
 
+  /* Make sure snapping context is reset when changing the moving context */
+  ges_timeline_emit_snappig (timeline, NULL, NULL);
   clean_movecontext (mv_ctx);
   mv_ctx->edge = edge;
   mv_ctx->mode = mode;
