@@ -162,7 +162,7 @@ directory that has the source code, e.g. the directory created when unpacking
 the source tarball (using `git init`, then `git add .` and
 `git commit -m 'import tarball as initial revision'`).
 
-Once you have a git repository with the original code in in it, you can make
+Once you have a git repository with the original code in it, you can make
 your modifications and create a local commit with e.g.
 
     git commit path/to/file1.[ch]
