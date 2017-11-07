@@ -1,7 +1,6 @@
 debugutilsbad_sources = [
   'gstdebugspy.c',
   'gsterrorignore.c',
-  'gstjitterer.c',
   'debugutilsbad.c',
   'fpsdisplaysink.c',
   'gstchecksumsink.c',
