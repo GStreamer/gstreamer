@@ -1687,6 +1687,12 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
         ogg->push_time_length = t;
       }
 
+      /* If we're still receiving data from before the seek segment, drop it */
+      if (ogg->seek_event_drop_till != 0) {
+        GST_PUSH_UNLOCK (ogg);
+        return GST_FLOW_SKIP_PUSH;
+      }
+
       /* If we were determining the duration of the stream, we're now done,
          and can get back to sending the original event we delayed.
          We stop a bit before the end of the stream, as if we get a EOS
