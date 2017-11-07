@@ -212,6 +212,8 @@ check_gl=libs/gstglcontext \
     libs/gstglmatrix \
     libs/gstglquery \
     libs/gstglsl \
+    libs/gstglslstage \
+    libs/gstglshader \
     libs/gstglheaders \
     elements/glimagesink \
     pipelines/simple-launch-lines
@@ -617,6 +619,24 @@ libs_gstglsl_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 libs_gstglsl_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglslstage_LDADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_gstglslstage_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglshader_LDADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+libs_gstglshader_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
