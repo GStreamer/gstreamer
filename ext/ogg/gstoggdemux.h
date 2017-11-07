@@ -209,6 +209,8 @@ struct _GstOggDemux
   GMutex seek_event_mutex;
   GCond seek_event_cond;
   gboolean seek_event_thread_stop;
+  gboolean seek_thread_started;
+  GCond thread_started_cond;
   guint32 seek_event_drop_till;
 };
 

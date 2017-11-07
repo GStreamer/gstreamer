@@ -4947,6 +4947,10 @@ gst_ogg_demux_loop_push (GstOggDemux * ogg)
 
   while (1) {
     g_mutex_lock (&ogg->seek_event_mutex);
+    /* Inform other threads that we started */
+    ogg->seek_thread_started = TRUE;
+    g_cond_broadcast (&ogg->thread_started_cond);
+
     if (ogg->seek_event_thread_stop) {
       g_mutex_unlock (&ogg->seek_event_mutex);
       break;
@@ -5070,8 +5074,18 @@ gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         ogg->seek_event_thread_stop = FALSE;
         g_mutex_init (&ogg->seek_event_mutex);
         g_cond_init (&ogg->seek_event_cond);
+        g_cond_init (&ogg->thread_started_cond);
+        ogg->seek_thread_started = FALSE;
         ogg->seek_event_thread = g_thread_new ("seek_event_thread",
             (GThreadFunc) gst_ogg_demux_loop_push, gst_object_ref (ogg));
+        /* And wait for the thread to start.
+         * FIXME : This is hackish. And one wonders why we need a separate thread to
+         * seek to a certain offset */
+        g_mutex_lock (&ogg->seek_event_mutex);
+        while (!ogg->seek_thread_started) {
+          g_cond_wait (&ogg->thread_started_cond, &ogg->seek_event_mutex);
+        }
+        g_mutex_unlock (&ogg->seek_event_mutex);
       } else {
         g_mutex_lock (&ogg->seek_event_mutex);
         ogg->seek_event_thread_stop = TRUE;
@@ -5079,6 +5093,7 @@ gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         g_mutex_unlock (&ogg->seek_event_mutex);
         g_thread_join (ogg->seek_event_thread);
         g_cond_clear (&ogg->seek_event_cond);
+        g_cond_clear (&ogg->thread_started_cond);
         g_mutex_clear (&ogg->seek_event_mutex);
         ogg->seek_event_thread = NULL;
       }
