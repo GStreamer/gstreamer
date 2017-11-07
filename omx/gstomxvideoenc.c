@@ -549,6 +549,17 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+static GstCaps *
+get_output_caps (GstOMXVideoEnc * self)
+{
+  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+  GstCaps *caps;
+
+  caps = klass->get_caps (self, self->enc_out_port, self->input_state);
+
+  return caps;
+}
+
 static GstFlowReturn
 gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     GstOMXBuffer * buf, GstVideoCodecFrame * frame)
@@ -565,7 +576,7 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
 
     GST_DEBUG_OBJECT (self, "Handling codec data");
 
-    caps = klass->get_caps (self, self->enc_out_port, self->input_state);
+    caps = get_output_caps (self);
     codec_data = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
 
     gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
@@ -690,7 +701,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 
     GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
-    caps = klass->get_caps (self, self->enc_out_port, self->input_state);
+    caps = get_output_caps (self);
     if (!caps) {
       if (buf)
         gst_omx_port_release_buffer (self->enc_out_port, buf);
