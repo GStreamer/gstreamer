@@ -169,9 +169,9 @@ ges_auto_transition_new (GESTrackElement * transition,
       G_CALLBACK (_track_changed_cb), self);
 
   GST_DEBUG_OBJECT (self, "Created transition %" GST_PTR_FORMAT
-      " between %" GST_PTR_FORMAT "[% " GST_TIME_FORMAT
+      " between %" GST_PTR_FORMAT "[%" GST_TIME_FORMAT
       " - %" GST_TIME_FORMAT "] and: %" GST_PTR_FORMAT
-      "[% " GST_TIME_FORMAT " - %" GST_TIME_FORMAT "]"
+      "[%" GST_TIME_FORMAT " - %" GST_TIME_FORMAT "]"
       " in layer nb %i, start: %" GST_TIME_FORMAT " duration: %"
       GST_TIME_FORMAT, transition, previous_source,
       GST_TIME_ARGS (_START (previous_source)),
