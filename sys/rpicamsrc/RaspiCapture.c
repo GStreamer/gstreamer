@@ -752,8 +752,9 @@ static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
          break;
       }
    }
-   else
-   {
+   else if (buffer->cmd == MMAL_EVENT_ERROR) {
+      vcos_log_error("Camera control callback got an error");
+   } else {
       vcos_log_error("Received unexpected camera control callback event, 0x%08x", buffer->cmd);
    }
 
