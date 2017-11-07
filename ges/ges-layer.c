@@ -268,6 +268,8 @@ ges_layer_resync_priorities (GESLayer * layer)
 {
   gint min_source_prios;
 
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+
   GST_INFO_OBJECT (layer, "Resync priorities (prio: %d)",
       layer->priv->priority);
 
@@ -341,6 +343,8 @@ ges_layer_get_duration (GESLayer * layer)
 {
   GList *tmp;
   GstClockTime duration = 0;
+
+  g_return_val_if_fail (GES_IS_LAYER (layer), 0);
 
   for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
     duration = MAX (duration, _END (tmp->data));
@@ -728,6 +732,8 @@ ges_layer_set_timeline (GESLayer * layer, GESTimeline * timeline)
 {
   GList *tmp;
 
+  g_return_if_fail (GES_IS_LAYER (layer));
+
   GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
 
   for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
@@ -755,6 +761,9 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
   GList *intersecting_clips = NULL;
   GstClockTime clip_start, clip_end;
   gboolean clip_intersects;
+
+  g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
+
   for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
     clip_intersects = FALSE;
     clip_start = ges_timeline_element_get_start (tmp->data);

@@ -641,6 +641,8 @@ gboolean
 ges_asset_request_id_update (GESAsset * asset, gchar ** proposed_id,
     GError * error)
 {
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
+
   return GES_ASSET_GET_CLASS (asset)->request_id_update (asset, proposed_id,
       error);
 }
@@ -649,6 +651,8 @@ gboolean
 ges_asset_try_proxy (GESAsset * asset, const gchar * new_id)
 {
   GESAssetClass *class;
+
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
 
   if (g_strcmp0 (asset->priv->id, new_id) == 0) {
     GST_WARNING_OBJECT (asset, "Trying to proxy to itself (%s),"
@@ -868,7 +872,11 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
 
   gpointer orig_id = NULL;
   GESAssetCacheEntry *entry = NULL;
-  GESAssetPrivate *priv = asset->priv;
+  GESAssetPrivate *priv = NULL;
+
+  g_return_if_fail (GES_IS_ASSET (asset));
+
+  priv = asset->priv;
 
   if (priv->state != ASSET_INITIALIZED) {
     GST_WARNING_OBJECT (asset, "Trying to rest ID on an object that is"
@@ -935,6 +943,8 @@ _unsure_material_for_wrong_id (const gchar * wrong_id, GType extractable_type,
 GType
 ges_asset_get_extractable_type (GESAsset * self)
 {
+  g_return_val_if_fail (GES_IS_ASSET (self), G_TYPE_INVALID);
+
   return self->priv->extractable_type;
 }
 
