@@ -549,13 +549,69 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+static gboolean
+get_chroma_info_from_input (GstOMXVideoEnc * self, const gchar ** chroma_format,
+    guint * bit_depth_luma, guint * bit_depth_chroma)
+{
+  switch (self->input_state->info.finfo->format) {
+    case GST_VIDEO_FORMAT_GRAY8:
+      *chroma_format = "4:0:0";
+      *bit_depth_luma = 8;
+      *bit_depth_chroma = 0;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_NV12:
+      *chroma_format = "4:2:0";
+      *bit_depth_luma = *bit_depth_chroma = 8;
+      break;
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_UYVY:
+      *chroma_format = "4:2:2";
+      *bit_depth_luma = *bit_depth_chroma = 8;
+      break;
+    case GST_VIDEO_FORMAT_GRAY10_LE32:
+      *chroma_format = "4:0:0";
+      *bit_depth_luma = 10;
+      *bit_depth_chroma = 0;
+      break;
+    case GST_VIDEO_FORMAT_NV12_10LE32:
+      *chroma_format = "4:2:0";
+      *bit_depth_luma = *bit_depth_chroma = 10;
+      break;
+    case GST_VIDEO_FORMAT_NV16_10LE32:
+      *chroma_format = "4:2:2";
+      *bit_depth_luma = *bit_depth_chroma = 10;
+      break;
+    default:
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstCaps *
 get_output_caps (GstOMXVideoEnc * self)
 {
   GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
   GstCaps *caps;
+  const gchar *chroma_format;
+  guint bit_depth_luma, bit_depth_chroma;
 
   caps = klass->get_caps (self, self->enc_out_port, self->input_state);
+
+  /* Add chroma info about the encoded stream inferred from the format of the input */
+  if (get_chroma_info_from_input (self, &chroma_format, &bit_depth_luma,
+          &bit_depth_chroma)) {
+    GST_DEBUG_OBJECT (self,
+        "adding chroma info to output caps: %s (luma %d bits) (chroma %d bits)",
+        chroma_format, bit_depth_luma, bit_depth_chroma);
+
+    gst_caps_set_simple (caps, "chroma-format", G_TYPE_STRING, chroma_format,
+        "bit-depth-luma", G_TYPE_UINT, bit_depth_luma,
+        "bit-depth-chroma", G_TYPE_UINT, bit_depth_chroma, NULL);
+  }
 
   return caps;
 }
