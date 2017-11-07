@@ -544,8 +544,9 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
 
-  gst_gl_context_thread_add (src->context,
-      (GstGLContextThreadFunc) gst_gl_test_src_gl_stop, src);
+  if (src->context)
+    gst_gl_context_thread_add (src->context,
+        (GstGLContextThreadFunc) gst_gl_test_src_gl_stop, src);
 
   gst_caps_replace (&src->out_caps, NULL);
 
