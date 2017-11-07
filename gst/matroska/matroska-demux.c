@@ -392,6 +392,189 @@ gst_matroska_demux_add_stream_headers_to_caps (GstMatroskaDemux * demux,
 }
 
 static GstFlowReturn
+gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
+    GstMatroskaTrackVideoContext * video_context)
+{
+  GstFlowReturn ret;
+  GstVideoColorimetry colorimetry;
+  guint32 id;
+  guint64 num;
+
+  colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+  colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+  colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+  colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+
+  DEBUG_ELEMENT_START (demux, ebml, "TrackVideoColour");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    goto beach;
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      goto beach;
+
+    switch (id) {
+      case GST_MATROSKA_ID_VIDEOMATRIXCOEFFICIENTS:{
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto beach;
+
+        switch (num) {
+          case 0:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+            break;
+          case 1:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+            break;
+          case 2:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+            break;
+          case 4:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_FCC;
+            break;
+            /* FIXME: "5: BT470BG" is undefined in GstVideoColorMatrix
+             * but it's functionally same as "6: BT601" */
+          case 5:
+          case 6:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+            break;
+          case 7:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
+            break;
+          case 9:
+            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+            break;
+          default:
+            GST_FIXME_OBJECT (demux, "Unsupported color matrix coefficients  %"
+                G_GUINT64_FORMAT, num);
+            break;
+        }
+        break;
+      }
+
+      case GST_MATROSKA_ID_VIDEORANGE:{
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto beach;
+
+        switch (num) {
+          case 0:
+            colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+            break;
+          case 1:
+            colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+            break;
+          case 2:
+            colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+            break;
+          default:
+            GST_FIXME_OBJECT (demux, "Unsupported color range  %"
+                G_GUINT64_FORMAT, num);
+            break;
+        }
+        break;
+      }
+
+      case GST_MATROSKA_ID_VIDEOTRANSFERCHARACTERISTICS:{
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto beach;
+
+        switch (num) {
+            /* FIXME: "6: BT601" and "14: BT2020_10" are undefined in
+             * GstVideoTransferFunction, but functionally same as "1: BT709" */
+          case 1:
+          case 6:
+          case 14:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+            break;
+          case 2:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+            break;
+          case 4:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA22;
+            break;
+          case 5:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA28;
+            break;
+          case 7:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE240M;
+            break;
+          case 8:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA10;
+            break;
+          case 9:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_LOG100;
+            break;
+          case 10:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_LOG316;
+            break;
+          case 13:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_SRGB;
+            break;
+          case 15:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+            break;
+          default:
+            GST_FIXME_OBJECT (demux,
+                "Unsupported color transfer characteristics  %"
+                G_GUINT64_FORMAT, num);
+            break;
+        }
+        break;
+      }
+
+      case GST_MATROSKA_ID_VIDEOPRIMARIES:{
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto beach;
+
+        switch (num) {
+          case 1:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+            break;
+          case 2:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+            break;
+          case 4:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+            break;
+          case 5:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+            break;
+          case 6:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+            break;
+          case 7:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE240M;
+            break;
+          case 8:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_FILM;
+            break;
+          case 9:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+            break;
+          default:
+            GST_FIXME_OBJECT (demux, "Unsupported color primaries  %"
+                G_GUINT64_FORMAT, num);
+            break;
+        }
+        break;
+      }
+
+      default:
+        GST_FIXME_OBJECT (demux, "Unsupported subelement 0x%x in Colour", id);
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+  }
+
+  memcpy (&video_context->colorimetry, &colorimetry,
+      sizeof (GstVideoColorimetry));
+
+beach:
+  DEBUG_ELEMENT_STOP (demux, ebml, "TrackVideoColour", ret);
+  return ret;
+}
+
+static GstFlowReturn
 gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (demux);
@@ -734,6 +917,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
               g_free (data);
               break;
             }
+
+              /* color info */
+            case GST_MATROSKA_ID_VIDEOCOLOUR:{
+              ret = gst_matroska_demux_parse_colour (demux, ebml, videocontext);
+              break;
+            }
+
             case GST_MATROSKA_ID_VIDEOSTEREOMODE:
             {
               guint64 num;
@@ -5547,6 +5737,19 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
           (videocontext->multiview_mode), "multiview-flags",
           GST_TYPE_VIDEO_MULTIVIEW_FLAGSET, videocontext->multiview_flags,
           GST_FLAG_SET_MASK_EXACT, NULL);
+    }
+
+    if (videocontext->colorimetry.range != GST_VIDEO_COLOR_RANGE_UNKNOWN ||
+        videocontext->colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
+        videocontext->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN ||
+        videocontext->colorimetry.primaries !=
+        GST_VIDEO_COLOR_PRIMARIES_UNKNOWN) {
+      gchar *colorimetry =
+          gst_video_colorimetry_to_string (&videocontext->colorimetry);
+      gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, colorimetry,
+          NULL);
+      GST_DEBUG ("setting colorimetry to %s", colorimetry);
+      g_free (colorimetry);
     }
 
     caps = gst_caps_simplify (caps);

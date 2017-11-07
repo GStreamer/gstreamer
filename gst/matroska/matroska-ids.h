@@ -139,6 +139,13 @@
 /* semi-draft */
 #define GST_MATROSKA_ID_VIDEOGAMMAVALUE            0x2FB523
 
+#define GST_MATROSKA_ID_VIDEOCOLOUR                0x55B0
+/* IDs in the Colour master*/
+#define GST_MATROSKA_ID_VIDEOMATRIXCOEFFICIENTS    0x55B1
+#define GST_MATROSKA_ID_VIDEORANGE                 0x55B9
+#define GST_MATROSKA_ID_VIDEOTRANSFERCHARACTERISTICS  0x55BA
+#define GST_MATROSKA_ID_VIDEOPRIMARIES             0x55BB
+
 /* IDs in the TrackAudio master */
 #define GST_MATROSKA_ID_AUDIOSAMPLINGFREQ          0xB5
 #define GST_MATROSKA_ID_AUDIOBITDEPTH              0x6264
@@ -594,6 +601,7 @@ typedef struct _GstMatroskaTrackVideoContext {
   GstClockTime  earliest_time;
 
   GstBuffer     *dirac_unit;
+  GstVideoColorimetry colorimetry;
 } GstMatroskaTrackVideoContext;
 
 typedef struct _GstMatroskaTrackAudioContext {
