@@ -434,7 +434,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       if (self->end_tc)
         gst_video_time_code_free (self->end_tc);
       self->end_tc = g_value_dup_boxed (value);
-      if (self->tc
+      if (self->tc && self->end_tc
           && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
         gchar *start_tc, *end_tc;
 
