@@ -226,9 +226,6 @@ struct _GstDecklinkOutput {
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
 
-  /* Set by the audio sink */
-  GstClock *audio_clock;
-
   GstElement *audiosink;
   gboolean audio_enabled;
   GstElement *videosink;
@@ -266,9 +263,6 @@ struct _GstDecklinkInput {
 
 GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio);
 void                gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio);
-
-void                gst_decklink_output_set_audio_clock (GstDecklinkOutput * output, GstClock * clock);
-GstClock *          gst_decklink_output_get_audio_clock (GstDecklinkOutput * output);
 
 GstDecklinkInput *  gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio);
 void                gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio);

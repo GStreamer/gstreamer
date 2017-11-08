@@ -526,17 +526,16 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static void
-convert_to_internal_clock (GstDecklinkVideoSink * self,
+void
+gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
     GstClockTime * timestamp, GstClockTime * duration)
 {
-  GstClock *clock, *audio_clock;
+  GstClock *clock;
 
   g_assert (timestamp != NULL);
 
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-  audio_clock = gst_decklink_output_get_audio_clock (self->output);
-  if (clock && clock != self->output->clock && clock != audio_clock) {
+  if (clock && clock != self->output->clock) {
     GstClockTime internal, external, rate_n, rate_d;
     gst_clock_get_calibration (self->output->clock, &internal, &external,
         &rate_n, &rate_d);
@@ -729,7 +728,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     g_free (tc_str);
   }
 
-  convert_to_internal_clock (self, &running_time, &running_time_duration);
+  gst_decklink_video_sink_convert_to_internal_clock (self, &running_time, &running_time_duration);
 
   if (!self->output->started) {
     GST_LOG_OBJECT (self, "Showing video frame synchronously because PAUSED");
@@ -882,7 +881,7 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
         gst_clock_get_internal_time (self->output->clock);
     self->external_base_time = gst_clock_get_internal_time (clock);
 
-    convert_to_internal_clock (self, &start_time, NULL);
+    gst_decklink_video_sink_convert_to_internal_clock (self, &start_time, NULL);
 
     g_mutex_lock (&self->output->lock);
     // Check if someone else started in the meantime
@@ -970,7 +969,7 @@ gst_decklink_video_sink_stop_scheduled_playback (GstDecklinkVideoSink * self)
     if (start_time == GST_CLOCK_TIME_NONE)
       start_time = 0;
 
-    convert_to_internal_clock (self, &start_time, NULL);
+    gst_decklink_video_sink_convert_to_internal_clock (self, &start_time, NULL);
 
     // The start time is now the running time when we stopped
     // playback
@@ -1030,17 +1029,14 @@ gst_decklink_video_sink_change_state (GstElement * element,
               self->output->clock, TRUE));
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
-      GstClock *clock, *audio_clock;
+      GstClock *clock;
 
       clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
       if (clock) {
-        audio_clock = gst_decklink_output_get_audio_clock (self->output);
-        if (clock && clock != self->output->clock && clock != audio_clock) {
+        if (clock && clock != self->output->clock) {
           gst_clock_set_master (self->output->clock, clock);
         }
         gst_object_unref (clock);
-        if (audio_clock)
-          gst_object_unref (audio_clock);
       } else {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
             (NULL), ("Need a clock to go to PLAYING"));

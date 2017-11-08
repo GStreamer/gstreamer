@@ -23,6 +23,7 @@
 #define __GST_DECKLINK_AUDIO_SINK_H__
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 #include <gst/audio/audio.h>
 #include "gstdecklink.h"
 
@@ -46,15 +47,20 @@ typedef struct _GstDecklinkAudioSinkClass GstDecklinkAudioSinkClass;
 
 struct _GstDecklinkAudioSink
 {
-  GstAudioBaseSink parent;
+  GstBaseSink parent;
 
   GstDecklinkModeEnum mode;
   gint device_number;
+  GstClockTime buffer_time;
+
+  GstDecklinkOutput *output;
+  GstAudioInfo info;
+  GstAudioStreamAlign *stream_align;
 };
 
 struct _GstDecklinkAudioSinkClass
 {
-  GstAudioBaseSinkClass parent_class;
+  GstBaseSinkClass parent_class;
 };
 
 GType gst_decklink_audio_sink_get_type (void);

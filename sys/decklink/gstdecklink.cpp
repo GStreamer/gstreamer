@@ -1339,33 +1339,6 @@ gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio)
   g_mutex_unlock (&output->lock);
 }
 
-void
-gst_decklink_output_set_audio_clock (GstDecklinkOutput * output,
-    GstClock * clock)
-{
-  g_mutex_lock (&output->lock);
-  if (output->audio_clock)
-    gst_object_unref (output->audio_clock);
-  output->audio_clock = clock;
-  if (clock)
-    gst_object_ref (clock);
-  g_mutex_unlock (&output->lock);
-}
-
-
-GstClock *
-gst_decklink_output_get_audio_clock (GstDecklinkOutput * output)
-{
-  GstClock *ret = NULL;
-
-  g_mutex_lock (&output->lock);
-  if (output->audio_clock)
-    ret = GST_CLOCK_CAST (gst_object_ref (output->audio_clock));
-  g_mutex_unlock (&output->lock);
-
-  return ret;
-}
-
 GstDecklinkInput *
 gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
 {
