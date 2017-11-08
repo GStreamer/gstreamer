@@ -31,6 +31,9 @@
 #if USE_X11
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
+#if USE_WAYLAND
+#include <gst/vaapi/gstvaapidisplay_wayland.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -101,6 +104,17 @@ gst_vaapi_video_context_get_display (GstContext * context, gboolean app_context,
               &x11_display, NULL)) {
         display =
             gst_vaapi_display_x11_new_with_va_display (va_display, x11_display);
+      }
+#endif
+#if USE_WAYLAND
+      if (!display) {
+        struct wl_display *wl_display = NULL;
+        if (gst_structure_get (structure, "wl-display", G_TYPE_POINTER,
+                &wl_display, NULL)) {
+          display =
+              gst_vaapi_display_wayland_new_with_va_display (va_display,
+              wl_display);
+        }
       }
 #endif
 
