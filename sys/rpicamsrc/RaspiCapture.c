@@ -938,8 +938,12 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
   GstClockTime gst_pts = GST_CLOCK_TIME_NONE;
 
   /* FIXME: Use our own interruptible cond wait: */
-  buffer = mmal_queue_wait(state->encoded_buffer_q);
 
+  buffer = mmal_queue_timedwait(state->encoded_buffer_q, 100);
+
+  if (G_UNLIKELY(buffer == NULL)) {
+      return GST_FLOW_ERROR;
+  }
 
   if (G_LIKELY (config->useSTC && clock)) {
     MMAL_PARAMETER_INT64_T param;
