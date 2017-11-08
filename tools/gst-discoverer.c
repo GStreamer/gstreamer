@@ -582,9 +582,12 @@ main (int argc, char **argv)
   GError *err = NULL;
   GstDiscoverer *dc;
   gint timeout = 10;
+  gboolean use_cache = FALSE;
   GOptionEntry options[] = {
     {"async", 'a', 0, G_OPTION_ARG_NONE, &async,
         "Run asynchronously", NULL},
+    {"use-cache", 'a', 0, G_OPTION_ARG_NONE, &use_cache,
+        "Use GstDiscovererInfo from our cache.", NULL},
     {"timeout", 't', 0, G_OPTION_ARG_INT, &timeout,
         "Specify timeout (in seconds, default 10)", "T"},
     /* {"elem", 'e', 0, G_OPTION_ARG_NONE, &elem_seek, */
@@ -625,6 +628,8 @@ main (int argc, char **argv)
     g_clear_error (&err);
     exit (1);
   }
+
+  g_object_set (dc, "use-cache", use_cache, NULL);
 
   if (!async) {
     gint i;

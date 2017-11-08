@@ -106,7 +106,10 @@ struct _GstDiscovererInfo {
   gboolean seekable;
   GPtrArray *missing_elements_details;
 
-  gpointer _gst_reserved[GST_PADDING];
+  gchar *cachefile;
+  gpointer from_cache;
+
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 /* missing-plugins.c */
