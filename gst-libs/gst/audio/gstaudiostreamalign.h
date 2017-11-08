@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_AUDIO_INFO_STREAM_ALIGN (gst_audio_stream_align_get_type ())
 
 typedef struct _GstAudioStreamAlign GstAudioStreamAlign;
@@ -76,5 +78,7 @@ gboolean                gst_audio_stream_align_process                   (GstAud
                                                                           GstClockTime *out_timestamp,
                                                                           GstClockTime *out_duration,
                                                                           guint64 *out_sample_position);
+
+G_END_DECLS
 
 #endif /* __GST_AUDIO_STREAM_ALIGN_H__ */
