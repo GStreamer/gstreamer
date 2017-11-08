@@ -58,7 +58,11 @@ internal_check_h_inc = include_directories('..')
 if have_visibility_hidden
   libcheck_visibility_args = ['-DCK_DLL_EXP=extern __attribute__ ((visibility ("default")))']
 else
-  libcheck_visibility_args = ['-DCK_DLL_EXP=extern']
+  if host_system == 'windows'
+    libcheck_visibility_args = ['-DCK_DLL_EXP=__declspec(dllexport)']
+  else
+    libcheck_visibility_args = ['-DCK_DLL_EXP=extern']
+  endif
 endif
 
 libcheck = static_library('check',

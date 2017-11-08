@@ -54,19 +54,26 @@ CK_CPPSTART
 #define CK_ATTRIBUTE_NORETURN
 #endif /* GCC 2.5 */
 #include <sys/types.h>
+
 /*
  * Used to create the linker script for hiding lib-local symbols. Shall
  * be put directly in front of the exported symbol.
  */
 #define CK_EXPORT
+
 /*
  * Used for MSVC to create the export attribute
  * CK_DLL_EXP is defined during the compilation of the library
  * on the command line.
  */
 #ifndef CK_DLL_EXP
-#define CK_DLL_EXP extern
+#  if defined(_MSC_VER)
+#    define CK_DLL_EXP __declspec(dllimport)
+#  else
+#    define CK_DLL_EXP extern
+#  endif
 #endif
+
 /* check version numbers */
 #define CHECK_MAJOR_VERSION (@CHECK_MAJOR_VERSION@)
 #define CHECK_MINOR_VERSION (@CHECK_MINOR_VERSION@)
@@ -77,6 +84,10 @@ CK_DLL_EXP /*extern*/ int CK_EXPORT check_micro_version;
 
 #ifndef NULL
 #define NULL ((void*)0)
+#endif
+
+#if defined(_MSC_VER)
+#define pid_t int
 #endif
 
 /**
@@ -1296,7 +1307,9 @@ CK_DLL_EXP void CK_EXPORT srunner_set_fork_status (SRunner * sr,
  *
  * @since 0.9.3
  */
+#if !defined(_MSC_VER)
 CK_DLL_EXP pid_t CK_EXPORT check_fork (void);
+#endif
 
 /**
  * Wait for the pid and exit.
@@ -1313,9 +1326,11 @@ CK_DLL_EXP pid_t CK_EXPORT check_fork (void);
  *
  * @since 0.9.3
  */
+#if !defined(_MSC_VER)
 CK_DLL_EXP void CK_EXPORT
 check_waitpid_and_exit (pid_t pid)
     CK_ATTRIBUTE_NORETURN;
+#endif
 
 #ifdef __cplusplus
 CK_CPPEND

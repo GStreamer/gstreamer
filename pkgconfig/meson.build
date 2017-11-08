@@ -24,14 +24,12 @@ pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
 pkg_files = ['gstreamer-base',
   'gstreamer-controller',
+  'gstreamer-check',
   'gstreamer-net',
   'gstreamer'
 ]
 
-if host_machine.system() != 'windows'
-    pkgconf.set('checklibdir', join_paths(meson.build_root(), gst_check.outdir()))
-    pkg_files += ['gstreamer-check']
-endif
+pkgconf.set('checklibdir', join_paths(meson.build_root(), gst_check.outdir()))
 
 foreach p : pkg_files
   infile = p + '.pc.in'
