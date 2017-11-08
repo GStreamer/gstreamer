@@ -561,11 +561,31 @@ gst_vaapisink_wayland_create_window (GstVaapiSink * sink, guint width,
   return TRUE;
 }
 
+static gboolean
+gst_vaapisink_wayland_create_window_from_handle (GstVaapiSink * sink,
+    guintptr window)
+{
+  GstVaapiDisplay *display;
+
+  if (!gst_vaapisink_ensure_display (sink))
+    return FALSE;
+  display = GST_VAAPI_PLUGIN_BASE_DISPLAY (sink);
+
+  if (sink->window == NULL || (guintptr) sink->window != window) {
+    gst_vaapi_window_replace (&sink->window, NULL);
+    sink->window = gst_vaapi_window_wayland_new_with_surface (display, window);
+  }
+
+  return sink->window != NULL;
+}
+
 static const inline GstVaapiSinkBackend *
 gst_vaapisink_backend_wayland (void)
 {
   static const GstVaapiSinkBackend GstVaapiSinkBackendWayland = {
     .create_window = gst_vaapisink_wayland_create_window,
+    .create_window_from_handle =
+        gst_vaapisink_wayland_create_window_from_handle,
     .render_surface = gst_vaapisink_render_surface,
   };
   return &GstVaapiSinkBackendWayland;
