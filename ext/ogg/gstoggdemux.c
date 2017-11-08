@@ -4949,35 +4949,36 @@ pause:
 static gpointer
 gst_ogg_demux_loop_push (GstOggDemux * ogg)
 {
-  GstEvent *event;
+  GstEvent *event = NULL;
 
-  while (1) {
-    g_mutex_lock (&ogg->seek_event_mutex);
-    /* Inform other threads that we started */
-    ogg->seek_thread_started = TRUE;
-    g_cond_broadcast (&ogg->thread_started_cond);
+  g_mutex_lock (&ogg->seek_event_mutex);
+  /* Inform other threads that we started */
+  ogg->seek_thread_started = TRUE;
+  g_cond_broadcast (&ogg->thread_started_cond);
+
+
+  while (!ogg->seek_event_thread_stop) {
+
+    while (!ogg->seek_event_thread_stop) {
+      GST_PUSH_LOCK (ogg);
+      event = ogg->seek_event;
+      ogg->seek_event = NULL;
+      if (event)
+        ogg->seek_event_drop_till = gst_event_get_seqnum (event);
+      GST_PUSH_UNLOCK (ogg);
+
+      if (event)
+        break;
+
+      g_cond_wait (&ogg->seek_event_cond, &ogg->seek_event_mutex);
+    }
 
     if (ogg->seek_event_thread_stop) {
-      g_mutex_unlock (&ogg->seek_event_mutex);
       break;
     }
-    g_cond_wait (&ogg->seek_event_cond, &ogg->seek_event_mutex);
-    if (ogg->seek_event_thread_stop) {
-      g_mutex_unlock (&ogg->seek_event_mutex);
-      break;
-    }
+    g_assert (event);
+
     g_mutex_unlock (&ogg->seek_event_mutex);
-
-    GST_PUSH_LOCK (ogg);
-    event = ogg->seek_event;
-    ogg->seek_event = NULL;
-    if (event) {
-      ogg->seek_event_drop_till = gst_event_get_seqnum (event);
-    }
-    GST_PUSH_UNLOCK (ogg);
-
-    if (!event)
-      continue;
 
     GST_DEBUG_OBJECT (ogg->sinkpad, "Pushing event %" GST_PTR_FORMAT, event);
     if (!gst_pad_push_event (ogg->sinkpad, event)) {
@@ -4991,7 +4992,12 @@ gst_ogg_demux_loop_push (GstOggDemux * ogg)
     } else {
       GST_DEBUG_OBJECT (ogg->sinkpad, "Pushed event ok");
     }
+
+    g_mutex_lock (&ogg->seek_event_mutex);
   }
+
+  g_mutex_unlock (&ogg->seek_event_mutex);
+
   gst_object_unref (ogg);
   return NULL;
 }
