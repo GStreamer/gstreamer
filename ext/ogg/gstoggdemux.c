@@ -2475,8 +2475,8 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
               res);
         }
         break;
-      }
-      GST_PUSH_UNLOCK (ogg);
+      } else
+        GST_PUSH_UNLOCK (ogg);
       res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->current_chain == NULL) {
         GST_WARNING_OBJECT (ogg,
