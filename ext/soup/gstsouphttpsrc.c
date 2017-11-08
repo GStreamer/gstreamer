@@ -1458,6 +1458,12 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method)
         src->stop_position);
   }
 
+  /* add_range_header() has the side effect of setting read_position to
+   * the requested position. This *needs* to be set regardless of having
+   * a message or not. Failure to do so would result in calculation being
+   * done with stale/wrong read position */
+  src->read_position = src->request_position;
+
   if (!src->msg) {
     if (!gst_soup_http_src_build_message (src, method)) {
       return GST_FLOW_ERROR;
