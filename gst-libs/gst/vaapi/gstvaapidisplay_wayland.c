@@ -351,6 +351,35 @@ gst_vaapi_display_wayland_new_with_display (struct wl_display * wl_display)
 }
 
 /**
+ * gst_vaapi_display_wayland_new_with_va_display:
+ * @va_display: a VADisplay #va_display
+ * @wl_display: an Wayland #wl_display
+ *
+ * Creates a #GstVaapiDisplay based on the VADisplay @va_display and
+ * the Wayland @wl_display display.
+ * The caller still owns the display and must call
+ * wl_display_disconnect() when all #GstVaapiDisplay references are
+ * released.
+ *
+ * Return value: a newly allocated #GstVaapiDisplay object
+ */
+
+GstVaapiDisplay *
+gst_vaapi_display_wayland_new_with_va_display (VADisplay va_display,
+    struct wl_display * wl_display)
+{
+  GstVaapiDisplayInfo info = {
+    .va_display = va_display,
+    .native_display = wl_display,
+  };
+
+  g_return_val_if_fail (wl_display, NULL);
+
+  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND,
+          NULL), GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info);
+}
+
+/**
  * gst_vaapi_display_wayland_get_display:
  * @display: a #GstVaapiDisplayWayland
  *

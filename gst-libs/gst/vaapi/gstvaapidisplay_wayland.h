@@ -41,6 +41,10 @@ gst_vaapi_display_wayland_new (const gchar * display_name);
 GstVaapiDisplay *
 gst_vaapi_display_wayland_new_with_display (struct wl_display * wl_display);
 
+GstVaapiDisplay *
+gst_vaapi_display_wayland_new_with_va_display (VADisplay va_display,
+    struct wl_display * wl_display);
+
 struct wl_display *
 gst_vaapi_display_wayland_get_display (GstVaapiDisplayWayland * display);
 
