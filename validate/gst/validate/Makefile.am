@@ -110,6 +110,8 @@ gir_sources+=$(patsubst %,$(builddir)/%, $(built_source_make))
 gir_cincludes=$(patsubst %,--c-include='gst/validate/%',$(libgstvalidate@GST_API_VERSION@include_HEADERS))
 
 GstValidate-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstvalidate-@GST_API_VERSION@.la
+		$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_DISABLE=yes GI_SCANNER_DISABLE_CACHE=yes \
+		CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" CC="$(CC)" PKG_CONFIG="$(PKG_CONFIG)" DLLTOOL="$(DLLTOOL)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstValidate \
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
