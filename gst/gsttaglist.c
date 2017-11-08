@@ -613,7 +613,11 @@ gst_tag_get_nick (const gchar * tag)
 
   g_return_val_if_fail (tag != NULL, NULL);
   info = gst_tag_lookup (tag);
-  g_return_val_if_fail (info != NULL, NULL);
+  if (!info) {
+    GST_WARNING ("Uknown tag: %s", tag);
+
+    return tag;
+  }
 
   return info->nick;
 }
