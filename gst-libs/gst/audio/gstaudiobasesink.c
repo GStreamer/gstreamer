@@ -2041,7 +2041,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (G_UNLIKELY (time_offset != 0)) {
     GST_DEBUG_OBJECT (sink,
-        "apply time offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
+        "apply time offset %" GST_STIME_FORMAT, GST_STIME_ARGS (time_offset));
 
     if (render_start > time_offset)
       render_start -= time_offset;
