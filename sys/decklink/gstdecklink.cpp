@@ -1239,11 +1239,13 @@ init_devices (gpointer data)
           devices[i].input.
           config->GetString (bmdDeckLinkConfigDeviceInformationSerialNumber,
           (COMSTR_T *) & serial_number);
-      CONVERT_COM_STRING (serial_number);
-      devices[i].output.hw_serial_number = g_strdup (serial_number);
-      devices[i].input.hw_serial_number = g_strdup (serial_number);
-      GST_DEBUG ("device %d has serial number %s", i, serial_number);
-      FREE_COM_STRING (serial_number);
+      if (ret == S_OK) {
+        CONVERT_COM_STRING (serial_number);
+        devices[i].output.hw_serial_number = g_strdup (serial_number);
+        devices[i].input.hw_serial_number = g_strdup (serial_number);
+        GST_DEBUG ("device %d has serial number %s", i, serial_number);
+        FREE_COM_STRING (serial_number);
+      }
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkAttributes,
