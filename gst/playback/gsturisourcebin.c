@@ -167,8 +167,12 @@ struct _GstURISourceBinClass
 {
   GstBinClass parent_class;
 
-  /* emitted when all data is decoded */
+  /* emitted when all data has been drained out
+   * FIXME : What do we need this for ?? */
   void (*drained) (GstElement * element);
+  /* emitted when all data has been fed into buffering slots (i.e the
+   * actual sources are done) */
+  void (*about_to_finish) (GstElement * element);
 };
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
@@ -185,6 +189,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_uri_source_bin_debug);
 enum
 {
   SIGNAL_DRAINED,
+  SIGNAL_ABOUT_TO_FINISH,
   SIGNAL_SOURCE_SETUP,
   LAST_SIGNAL
 };
@@ -334,6 +339,17 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstURISourceBinClass, drained), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+    /**
+   * GstURISourceBin::about-to-finish:
+   *
+   * This signal is emitted when the data for the current uri is played.
+   */
+  gst_uri_source_bin_signals[SIGNAL_ABOUT_TO_FINISH] =
+      g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstURISourceBinClass, about_to_finish), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
@@ -695,6 +711,20 @@ link_pending_pad_to_output (GstURISourceBin * urisrc, OutputSlotInfo * slot)
   return res;
 }
 
+/* Called with lock held */
+static gboolean
+all_slots_are_eos (GstURISourceBin * urisrc)
+{
+  GSList *tmp;
+
+  for (tmp = urisrc->out_slots; tmp; tmp = tmp->next) {
+    OutputSlotInfo *slot = (OutputSlotInfo *) tmp->data;
+    if (slot->is_eos == FALSE)
+      return FALSE;
+  }
+  return TRUE;
+}
+
 static GstPadProbeReturn
 demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
@@ -718,6 +748,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     case GST_EVENT_EOS:
     {
       GstStructure *s;
+      gboolean all_streams_eos;
 
       GST_LOG_OBJECT (urisrc, "EOS on pad %" GST_PTR_FORMAT, pad);
 
@@ -732,6 +763,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       BUFFERING_LOCK (urisrc);
       /* Mark that we fed an EOS to this slot */
       child_info->output_slot->is_eos = TRUE;
+      all_streams_eos = all_slots_are_eos (urisrc);
       BUFFERING_UNLOCK (urisrc);
 
       /* EOS means this element is no longer buffering */
@@ -744,6 +776,11 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       s = gst_event_writable_structure (ev);
       gst_structure_set (s, "urisourcebin-custom-eos", G_TYPE_BOOLEAN, TRUE,
           NULL);
+      if (all_streams_eos) {
+        GST_DEBUG_OBJECT (urisrc, "POSTING ABOUT TO FINISH");
+        g_signal_emit (urisrc,
+            gst_uri_source_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
+      }
     }
       break;
     case GST_EVENT_CAPS:
@@ -766,6 +803,28 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
 done:
+  return ret;
+}
+
+static GstPadProbeReturn
+pre_queue_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (user_data);
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+  GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
+
+  switch (GST_EVENT_TYPE (ev)) {
+    case GST_EVENT_EOS:
+    {
+      GST_LOG_OBJECT (urisrc, "EOS on pad %" GST_PTR_FORMAT, pad);
+      GST_DEBUG_OBJECT (urisrc, "POSTING ABOUT TO FINISH");
+      g_signal_emit (urisrc,
+          gst_uri_source_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
+    }
+      break;
+    default:
+      break;
+  }
   return ret;
 }
 
@@ -975,6 +1034,9 @@ create_output_pad (GstURISourceBin * urisrc, GstPad * pad)
   newpad = gst_ghost_pad_new_from_template (padname, pad, pad_tmpl);
   gst_object_unref (pad_tmpl);
   g_free (padname);
+
+  GST_DEBUG_OBJECT (urisrc, "Created output pad %s:%s for pad %s:%s",
+      GST_DEBUG_PAD_NAME (newpad), GST_DEBUG_PAD_NAME (pad));
 
   return newpad;
 }
@@ -1595,7 +1657,7 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
       gst_query_unref (query);
     }
 
-    GST_DEBUG_OBJECT (urisrc, "check media-type %s, %d", media_type,
+    GST_DEBUG_OBJECT (urisrc, "check media-type %s, do_download:%d", media_type,
         do_download);
 
     GST_URI_SOURCE_BIN_LOCK (urisrc);
@@ -1603,6 +1665,9 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
 
     if (slot == NULL || gst_pad_link (srcpad, slot->sinkpad) != GST_PAD_LINK_OK)
       goto could_not_link;
+
+    gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        pre_queue_event_probe, urisrc, NULL);
 
     expose_output_pad (urisrc, slot->srcpad);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
