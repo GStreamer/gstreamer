@@ -1788,14 +1788,7 @@ gst_play_bin3_set_stream_combiner (GstPlayBin3 * playbin, GstElement ** elem,
 static void
 gst_play_bin3_set_encoding (GstPlayBin3 * playbin, const gchar * encoding)
 {
-  GstElement *elem;
-
   GST_PLAY_BIN3_LOCK (playbin);
-
-  /* set subtitles on decodebin. */
-  if ((elem = playbin->decodebin))
-    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
-
   gst_play_sink_set_subtitle_encoding (playbin->playsink, encoding);
   GST_PLAY_BIN3_UNLOCK (playbin);
 }
