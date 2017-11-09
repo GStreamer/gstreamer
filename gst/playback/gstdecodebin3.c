@@ -347,8 +347,6 @@ typedef struct _PendingPad
 } PendingPad;
 
 /* properties */
-#define DEFAULT_CAPS (gst_static_caps_get (&default_raw_caps))
-
 enum
 {
   PROP_0,
