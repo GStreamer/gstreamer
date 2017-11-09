@@ -702,16 +702,11 @@ gst_decklink_video_src_got_frame (GstElement * element,
         GST_DEBUG_OBJECT (self, "Got timecode %02d:%02d:%02d:%02d",
             hours, minutes, seconds, frames);
         bmode = gst_decklink_get_mode (mode);
-        if (bmode->interlaced) {
+        if (bmode->interlaced)
           flags =
               (GstVideoTimeCodeFlags) (flags |
               GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
-          if (bflags & bmdTimecodeFieldMark)
-            field_count = 2;
-          else
-            field_count = 1;
-        }
-        if (bflags & bmdTimecodeIsDropFrame)
+        if (bmode->fps_d == 1001 && (bmode->fps_n == 30000 || bmode->fps_n == 60000))
           flags =
               (GstVideoTimeCodeFlags) (flags |
               GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
