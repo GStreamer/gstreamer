@@ -802,19 +802,17 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
-  GstMapInfo info;
   GstClockTime first_pcr, last_pcr;
   GstTagList *tags;
 
   if (buffer == NULL)
     return GST_FLOW_OK;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
-
   if (G_UNLIKELY (hls_stream->do_typefind)) {
     GstCaps *caps = NULL;
     guint buffer_size;
     GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
+    GstMapInfo info;
 
     if (hls_stream->pending_typefind_buffer)
       buffer = gst_buffer_append (hls_stream->pending_typefind_buffer, buffer);
@@ -859,10 +857,10 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     gst_adaptive_demux_stream_set_caps (stream, caps);
 
     hls_stream->do_typefind = FALSE;
+
+    gst_buffer_unmap (buffer, &info);
   }
   g_assert (hls_stream->pending_typefind_buffer == NULL);
-
-  gst_buffer_unmap (buffer, &info);
 
   // Accumulate this buffer
   if (hls_stream->pending_pcr_buffer) {
