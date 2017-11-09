@@ -700,7 +700,6 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f.no_signal = no_signal;
     if (dtc != NULL) {
       uint8_t hours, minutes, seconds, frames;
-      BMDTimecodeFlags bflags;
       HRESULT res;
 
       res = dtc->GetComponents (&hours, &minutes, &seconds, &frames);
@@ -709,7 +708,6 @@ gst_decklink_video_src_got_frame (GstElement * element,
             res);
         f.tc = NULL;
       } else {
-        bflags = dtc->GetFlags ();
         GST_DEBUG_OBJECT (self, "Got timecode %02d:%02d:%02d:%02d",
             hours, minutes, seconds, frames);
         bmode = gst_decklink_get_mode (mode);
