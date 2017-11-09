@@ -693,7 +693,7 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_param_spec_string ("uri", "URI", "URI of the media to play",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-   /**
+  /**
    * GstPlayBin3:current-uri
    *
    * The currently playing uri.
@@ -784,32 +784,34 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
   /**
    * GstPlayBin3:video-stream-combiner
    *
-   * Get or set the current video stream combiner. By default, an input-selector
-   * is created and deleted as-needed.
+   * Get or set the current video stream combiner. By default, no
+   * element is used and the selected stream is used directly.
    */
   g_object_class_install_property (gobject_klass, PROP_VIDEO_STREAM_COMBINER,
       g_param_spec_object ("video-stream-combiner", "Video stream combiner",
-          "Current video stream combiner (NULL = input-selector)",
+          "Current video stream combiner (default: none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstPlayBin3:audio-stream-combiner
    *
-   * Get or set the current audio stream combiner. By default, an input-selector
-   * is created and deleted as-needed.
+   * Get or set the current audio stream combiner. By default, no
+   * element is used and the selected stream is used directly.
    */
   g_object_class_install_property (gobject_klass, PROP_AUDIO_STREAM_COMBINER,
       g_param_spec_object ("audio-stream-combiner", "Audio stream combiner",
-          "Current audio stream combiner (NULL = input-selector)",
+          "Current audio stream combiner (default: none))",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstPlayBin3:text-stream-combiner
    *
-   * Get or set the current text stream combiner. By default, an input-selector
-   * is created and deleted as-needed.
+   * Get or set the current text stream combiner. By default, no
+   * element is used and the selected stream is used directly.
    */
   g_object_class_install_property (gobject_klass, PROP_TEXT_STREAM_COMBINER,
       g_param_spec_object ("text-stream-combiner", "Text stream combiner",
-          "Current text stream combiner (NULL = input-selector)",
+          "Current text stream combiner (default: none)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
