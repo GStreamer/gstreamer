@@ -63,6 +63,7 @@ plugin_init (GstPlugin * plugin)
   res &= gst_decode_bin_plugin_init (plugin);
   res &= gst_decodebin3_plugin_init (plugin);
   res &= gst_uri_decode_bin_plugin_init (plugin);
+  res &= gst_uri_decode_bin3_plugin_init (plugin);
   res &= gst_uri_source_bin_plugin_init (plugin);
   res &= gst_parse_bin_plugin_init (plugin);
 

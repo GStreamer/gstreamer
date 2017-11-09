@@ -6,6 +6,7 @@ libgstplayback_la_SOURCES = \
 	gstdecodebin2.c \
 	gstdecodebin3.c \
 	gsturidecodebin.c \
+	gsturidecodebin3.c \
 	gsturisourcebin.c \
 	gstparsebin.c \
 	gstplayback.c \
