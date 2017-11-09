@@ -2469,11 +2469,47 @@ gst_play_bin3_deep_element_added (GstBin * playbin, GstBin * sub_bin,
   GST_BIN_CLASS (parent_class)->deep_element_added (playbin, sub_bin, child);
 }
 
+/* Returns current stream number, or -1 if none has been selected yet */
+static int
+get_current_stream_number (GstPlayBin3 * playbin, GstSourceCombine * combine,
+    GPtrArray * channels)
+{
+  /* Internal API cleanup would make this easier... */
+  int i;
+  GstPad *pad, *current;
+  GstObject *combiner = NULL;
+  int ret = -1;
+
+  if (!combine->has_active_pad) {
+    GST_WARNING_OBJECT (playbin,
+        "combiner doesn't have the \"active-pad\" property");
+    return ret;
+  }
+
+  for (i = 0; i < channels->len; i++) {
+    pad = g_ptr_array_index (channels, i);
+    if ((combiner = gst_pad_get_parent (pad))) {
+      g_object_get (combiner, "active-pad", &current, NULL);
+      gst_object_unref (combiner);
+
+      if (pad == current) {
+        gst_object_unref (current);
+        ret = i;
+        break;
+      }
+
+      if (current)
+        gst_object_unref (current);
+    }
+  }
+
+  return ret;
+}
+
 static void
 combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
     GstPlayBin3 * playbin)
 {
-  const gchar *property;
   GstSourceCombine *combine = NULL;
   GPtrArray *channels = NULL;
   int i;
@@ -2496,7 +2532,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
   switch (combine->type) {
     case GST_PLAY_SINK_TYPE_VIDEO:
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
-      property = "current-video";
       playbin->current_video = get_current_stream_number (playbin,
           combine, channels);
 
@@ -2505,12 +2540,10 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
         GST_PLAY_BIN3_UNLOCK (playbin);
         gst_play_bin3_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-video-flush-finish");
-        goto notify;
       }
       break;
     case GST_PLAY_SINK_TYPE_AUDIO:
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
-      property = "current-audio";
       playbin->current_audio = get_current_stream_number (playbin,
           combine, channels);
 
@@ -2519,11 +2552,9 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
         GST_PLAY_BIN3_UNLOCK (playbin);
         gst_play_bin3_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-audio-flush-finish");
-        goto notify;
       }
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
-      property = "current-text";
       playbin->current_text = get_current_stream_number (playbin,
           combine, channels);
 
@@ -2532,17 +2563,12 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
         GST_PLAY_BIN3_UNLOCK (playbin);
         gst_play_bin3_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-subtitle-flush-finish");
-        goto notify;
       }
       break;
     default:
-      property = NULL;
+      break;
   }
   GST_PLAY_BIN3_UNLOCK (playbin);
-
-notify:
-  if (property)
-    g_object_notify (G_OBJECT (playbin), property);
 }
 
 static GstCaps *
