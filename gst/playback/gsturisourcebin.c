@@ -151,8 +151,6 @@ struct _GstURISourceBin
   /* for dynamic sources */
   guint src_np_sig_id;          /* new-pad signal id */
 
-  gboolean async_pending;       /* async-start has been emitted */
-
   guint64 ring_buffer_max_size; /* 0 means disabled */
 
   GList *pending_pads;          /* Pads we have blocked pending assignment
@@ -845,32 +843,6 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-do_async_start (GstURISourceBin * dbin)
-{
-  GstMessage *message;
-
-  dbin->async_pending = TRUE;
-
-  message = gst_message_new_async_start (GST_OBJECT_CAST (dbin));
-  GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (dbin), message);
-}
-
-static void
-do_async_done (GstURISourceBin * dbin)
-{
-  GstMessage *message;
-
-  if (dbin->async_pending) {
-    GST_DEBUG_OBJECT (dbin, "posting ASYNC_DONE");
-    message =
-        gst_message_new_async_done (GST_OBJECT_CAST (dbin),
-        GST_CLOCK_TIME_NONE);
-    GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (dbin), message);
-
-    dbin->async_pending = FALSE;
-  }
-}
 
 #define DEFAULT_QUEUE_SIZE          (3 * GST_SECOND)
 #define DEFAULT_QUEUE_MIN_THRESHOLD ((DEFAULT_QUEUE_SIZE * 30) / 100)
@@ -1368,9 +1340,6 @@ expose_output_pad (GstURISourceBin * urisrc, GstPad * pad)
 
   gst_pad_set_active (pad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (urisrc), pad);
-
-  /* Once we expose a pad, we're no longer async */
-  do_async_done (urisrc);
 }
 
 static void
@@ -1689,7 +1658,6 @@ post_missing_plugin_error (GstElement * dec, const gchar * element_name)
   GST_ELEMENT_ERROR (dec, CORE, MISSING_PLUGIN,
       (_("Missing element '%s' - check your GStreamer installation."),
           element_name), (NULL));
-  do_async_done (GST_URI_SOURCE_BIN (dec));
 }
 
 /**
@@ -1899,7 +1867,6 @@ no_demuxer:
     /* FIXME: Fire the right error */
     GST_ELEMENT_ERROR (urisrc, CORE, MISSING_PLUGIN, (NULL),
         ("No demuxer element, check your installation"));
-    do_async_done (urisrc);
     return NULL;
   }
 }
@@ -1999,7 +1966,6 @@ no_demuxer_sink:
   {
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
         (NULL), ("Adaptive demuxer element has no 'sink' pad"));
-    do_async_done (urisrc);
     return;
   }
 could_not_link:
@@ -2007,7 +1973,6 @@ could_not_link:
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
         (NULL), ("Can't link typefind to adaptive demuxer element"));
-    do_async_done (urisrc);
     return;
   }
 }
@@ -2076,7 +2041,6 @@ no_typefind:
     post_missing_plugin_error (GST_ELEMENT_CAST (urisrc), "typefind");
     GST_ELEMENT_ERROR (urisrc, CORE, MISSING_PLUGIN, (NULL),
         ("No typefind element, check your installation"));
-    do_async_done (urisrc);
     return FALSE;
   }
 could_not_link:
@@ -2084,7 +2048,6 @@ could_not_link:
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
         (NULL), ("Can't link source to typefind element"));
     gst_bin_remove (GST_BIN_CAST (urisrc), typefind);
-    do_async_done (urisrc);
     return FALSE;
   }
 }
@@ -2252,7 +2215,6 @@ setup_source (GstURISourceBin * urisrc)
     /* source provides raw data, we added the pads and we can now signal a
      * no_more pads because we are done. */
     gst_element_no_more_pads (GST_ELEMENT_CAST (urisrc));
-    do_async_done (urisrc);
     return TRUE;
   }
   if (!have_out && !is_dynamic) {
@@ -2886,12 +2848,6 @@ done:
   return res;
 }
 
-static void
-sync_slot_queue (OutputSlotInfo * slot)
-{
-  gst_element_sync_state_with_parent (slot->queue);
-}
-
 static GstStateChangeReturn
 gst_uri_source_bin_change_state (GstElement * element,
     GstStateChange transition)
@@ -2901,7 +2857,9 @@ gst_uri_source_bin_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      do_async_start (urisrc);
+      GST_DEBUG ("ready to paused");
+      if (!setup_source (urisrc))
+        goto source_failed;
       break;
     default:
       break;
@@ -2910,44 +2868,14 @@ gst_uri_source_bin_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto setup_failed;
-  else if (ret == GST_STATE_CHANGE_NO_PREROLL)
-    do_async_done (urisrc);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_DEBUG ("ready to paused");
-      if (!setup_source (urisrc))
-        goto source_failed;
-
-      ret = GST_STATE_CHANGE_ASYNC;
-
-      /* And now sync the states of everything we added */
-      g_slist_foreach (urisrc->out_slots, (GFunc) sync_slot_queue, NULL);
-      if (urisrc->typefinds) {
-        GList *iter;
-        for (iter = urisrc->typefinds; iter; iter = iter->next) {
-          GstElement *typefind = iter->data;
-          ret = gst_element_set_state (typefind, GST_STATE_PAUSED);
-          if (ret == GST_STATE_CHANGE_FAILURE)
-            goto setup_failed;
-        }
-      }
-      if (urisrc->source)
-        ret = gst_element_set_state (urisrc->source, GST_STATE_PAUSED);
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto setup_failed;
-
-      if (ret == GST_STATE_CHANGE_SUCCESS)
-        ret = GST_STATE_CHANGE_ASYNC;
-      else if (ret == GST_STATE_CHANGE_NO_PREROLL)
-        do_async_done (urisrc);
-
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
       remove_demuxer (urisrc);
       remove_source (urisrc);
-      do_async_done (urisrc);
       g_list_free_full (urisrc->buffering_status,
           (GDestroyNotify) gst_message_unref);
       urisrc->buffering_status = NULL;
@@ -2966,13 +2894,11 @@ gst_uri_source_bin_change_state (GstElement * element,
   /* ERRORS */
 source_failed:
   {
-    do_async_done (urisrc);
     return GST_STATE_CHANGE_FAILURE;
   }
 setup_failed:
   {
     /* clean up leftover groups */
-    do_async_done (urisrc);
     return GST_STATE_CHANGE_FAILURE;
   }
 }
