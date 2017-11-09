@@ -715,16 +715,28 @@ gst_concat_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstClockTimeDiff diff;
       GstClockTime timestamp;
       gdouble proportion;
+      GstPad *sinkpad = NULL;
 
-      gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
-      gst_event_unref (event);
+      g_mutex_lock (&self->lock);
+      if ((sinkpad = self->current_sinkpad))
+        gst_object_ref (sinkpad);
+      g_mutex_unlock (&self->lock);
 
-      if (timestamp != GST_CLOCK_TIME_NONE
-          && timestamp > self->current_start_offset) {
-        timestamp -= self->current_start_offset;
-        event = gst_event_new_qos (type, proportion, diff, timestamp);
-        ret = gst_pad_push_event (self->current_sinkpad, event);
+      if (sinkpad) {
+        gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
+        gst_event_unref (event);
+
+        if (timestamp != GST_CLOCK_TIME_NONE
+            && timestamp > self->current_start_offset) {
+          timestamp -= self->current_start_offset;
+          event = gst_event_new_qos (type, proportion, diff, timestamp);
+          ret = gst_pad_push_event (self->current_sinkpad, event);
+        } else {
+          ret = FALSE;
+        }
+        gst_object_unref (sinkpad);
       } else {
+        gst_event_unref (event);
         ret = FALSE;
       }
       break;
