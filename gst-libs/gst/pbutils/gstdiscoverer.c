@@ -2367,7 +2367,8 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
   _parse_common_stream_info (sinfo, g_variant_get_child_value (common, 0),
       info);
 
-  info->stream_list = g_list_append (info->stream_list, sinfo);
+  if (!GST_IS_DISCOVERER_CONTAINER_INFO (sinfo))
+    info->stream_list = g_list_append (info->stream_list, sinfo);
 
   if (!info->stream_info) {
     info->stream_info = sinfo;
