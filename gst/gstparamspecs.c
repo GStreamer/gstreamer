@@ -352,8 +352,8 @@ gst_param_spec_array (const gchar * name,
 {
   GstParamSpecArray *aspec;
 
-  if (element_spec)
-    g_return_val_if_fail (G_IS_PARAM_SPEC (element_spec), NULL);
+  g_return_val_if_fail (element_spec == NULL
+      || G_IS_PARAM_SPEC (element_spec), NULL);
 
   aspec = g_param_spec_internal (GST_TYPE_PARAM_ARRAY_LIST,
       name, nick, blurb, flags);
