@@ -2541,6 +2541,8 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
         SELECTION_UNLOCK (dbin);
         GST_DEBUG_OBJECT (pad,
             "Already handled/handling that SELECT_STREAMS event");
+        gst_event_unref (event);
+        ret = GST_PAD_PROBE_HANDLED;
         break;
       }
       dbin->select_streams_seqnum = seqnum;
