@@ -341,6 +341,8 @@ gst_param_spec_array_get_type (void)
  * GObjects's instance_init function.
  *
  * Returns: (transfer full): a newly created parameter specification
+ *
+ * Since: 1.14
  */
 
 GParamSpec *
