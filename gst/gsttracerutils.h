@@ -697,6 +697,17 @@ typedef void (*GstTracerHookObjectDestroyed) (GObject *self, GstClockTime ts,
 
 #else /* !GST_DISABLE_GST_TRACER_HOOKS */
 
+static inline void
+_priv_gst_tracing_init (void)
+{
+  GST_DEBUG ("Tracing hooks are disabled");
+}
+
+static inline void
+_priv_gst_tracing_deinit (void)
+{
+}
+
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer)
 #define GST_TRACER_PAD_PUSH_POST(pad, res)
 #define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list)
