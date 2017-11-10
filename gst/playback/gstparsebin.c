@@ -179,6 +179,13 @@ struct _GstParseBin
 
   GList *filtered;              /* elements for which error messages are filtered */
   GList *filtered_errors;       /* filtered error messages */
+
+  GMutex cleanup_lock;          /* Mutex used to protect the cleanup thread */
+  GThread *cleanup_thread;      /* thread used to free chains asynchronously.
+                                 * We store it to make sure we end up joining it
+                                 * before stopping the element.
+                                 * Protected by the object lock */
+
 };
 
 struct _GstParseBinClass
@@ -939,6 +946,9 @@ gst_parse_bin_init (GstParseBin * parse_bin)
   parse_bin->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
   parse_bin->connection_speed = DEFAULT_CONNECTION_SPEED;
 
+  g_mutex_init (&parse_bin->cleanup_lock);
+  parse_bin->cleanup_thread = NULL;
+
   GST_OBJECT_FLAG_SET (parse_bin, GST_BIN_FLAG_STREAMS_AWARE);
 }
 
@@ -977,6 +987,7 @@ gst_parse_bin_finalize (GObject * object)
   g_mutex_clear (&parse_bin->dyn_lock);
   g_mutex_clear (&parse_bin->subtitle_lock);
   g_mutex_clear (&parse_bin->factories_lock);
+  g_mutex_clear (&parse_bin->cleanup_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2946,10 +2957,18 @@ gst_parse_chain_start_free_hidden_groups_thread (GstParseChain * chain)
   GThread *thread;
   GError *error = NULL;
   GList *old_groups;
+  GstParseBin *parsebin = chain->parsebin;
 
   old_groups = chain->old_groups;
   if (!old_groups)
     return;
+
+  /* If we already have a thread running, wait for it to finish */
+  g_mutex_lock (&parsebin->cleanup_lock);
+  if (parsebin->cleanup_thread) {
+    g_thread_join (parsebin->cleanup_thread);
+    parsebin->cleanup_thread = NULL;
+  }
 
   chain->old_groups = NULL;
   thread = g_thread_try_new ("free-hidden-groups",
@@ -2959,11 +2978,14 @@ gst_parse_chain_start_free_hidden_groups_thread (GstParseChain * chain)
         error ? error->message : "unknown reason");
     g_clear_error (&error);
     chain->old_groups = old_groups;
+    g_mutex_unlock (&parsebin->cleanup_lock);
     return;
   }
+
+  parsebin->cleanup_thread = thread;
+  g_mutex_unlock (&parsebin->cleanup_lock);
+
   GST_DEBUG_OBJECT (chain->parsebin, "Started free-hidden-groups thread");
-  /* We do not need to wait for it or get any results from it */
-  g_thread_unref (thread);
 }
 
 /* gst_parse_group_new:
@@ -4349,6 +4371,12 @@ gst_parse_bin_change_state (GstElement * element, GstStateChange transition)
         gst_parse_chain_free (chain_to_free);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      g_mutex_lock (&parsebin->cleanup_lock);
+      if (parsebin->cleanup_thread) {
+        g_thread_join (parsebin->cleanup_thread);
+        parsebin->cleanup_thread = NULL;
+      }
+      g_mutex_unlock (&parsebin->cleanup_lock);
     default:
       break;
   }
