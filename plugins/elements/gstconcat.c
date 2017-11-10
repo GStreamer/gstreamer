@@ -395,6 +395,12 @@ gst_concat_pad_wait (GstConcatPad * spad, GstConcat * self)
 
   while (spad != GST_CONCAT_PAD_CAST (self->current_sinkpad)) {
     GST_TRACE_OBJECT (spad, "Not the current sinkpad - waiting");
+    if (self->current_sinkpad == NULL && g_list_length (self->sinkpads) == 1) {
+      GST_LOG_OBJECT (spad, "Sole pad waiting, switching");
+      /* If we are the only sinkpad, take active pad ownership */
+      self->current_sinkpad = gst_object_ref (self->sinkpads->data);
+      break;
+    }
     g_cond_wait (&self->cond, &self->lock);
     if (spad->flushing) {
       g_mutex_unlock (&self->lock);
@@ -614,6 +620,8 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       spad->flushing = TRUE;
       g_cond_broadcast (&self->cond);
       forward = (self->current_sinkpad == GST_PAD_CAST (spad));
+      if (!forward && g_list_length (self->sinkpads) == 1)
+        forward = TRUE;
       g_mutex_unlock (&self->lock);
 
       if (forward)
@@ -630,6 +638,8 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       g_mutex_lock (&self->lock);
       forward = (self->current_sinkpad == GST_PAD_CAST (spad));
+      if (!forward && g_list_length (self->sinkpads) == 1)
+        forward = TRUE;
       g_mutex_unlock (&self->lock);
 
       if (forward) {
@@ -700,6 +710,10 @@ gst_concat_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       g_mutex_lock (&self->lock);
       if ((sinkpad = self->current_sinkpad))
         gst_object_ref (sinkpad);
+      /* If no current active sinkpad but only one sinkpad, try reactivating that pad */
+      if (sinkpad == NULL && g_list_length (self->sinkpads) == 1) {
+        sinkpad = gst_object_ref (self->sinkpads->data);
+      }
       g_mutex_unlock (&self->lock);
       if (sinkpad) {
         ret = gst_pad_push_event (sinkpad, event);
