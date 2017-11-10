@@ -397,7 +397,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
 
         end_tc = gst_video_time_code_to_string (self->end_tc);
         g_warning
-            ("ERROR: End timecode %s must be before start timecode %s. Start timecode rejected",
+            ("ERROR: End timecode %s must be after start timecode %s. Start timecode rejected",
             end_tc, tc_str);
         gst_video_time_code_free (self->tc);
         g_free (end_tc);
@@ -417,7 +417,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         start_tc = gst_video_time_code_to_string (self->tc);
         end_tc = gst_video_time_code_to_string (self->end_tc);
         g_warning
-            ("ERROR: End timecode %s must be before start timecode %s. Start timecode rejected",
+            ("ERROR: End timecode %s must be after start timecode %s. Start timecode rejected",
             end_tc, start_tc);
         gst_video_time_code_free (self->tc);
         g_free (start_tc);
@@ -437,7 +437,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         start_tc = gst_video_time_code_to_string (self->tc);
         end_tc = gst_video_time_code_to_string (self->end_tc);
         g_warning
-            ("ERROR: End timecode %s must be before start timecode %s. End timecode rejected",
+            ("ERROR: End timecode %s must be after start timecode %s. End timecode rejected",
             end_tc, start_tc);
         gst_video_time_code_free (self->end_tc);
         self->end_tc = NULL;
