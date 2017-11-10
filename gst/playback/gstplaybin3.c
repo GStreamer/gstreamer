@@ -265,7 +265,7 @@ struct _GstSourceCombine
 
   gboolean has_active_pad;      /* stream combiner has the "active-pad" property */
 
-  gboolean has_always_ok;       /* stream combiner's sink pads have the "always-ok" property */
+  gboolean is_concat;           /* The stream combiner is the 'concat' element */
 };
 
 #define GST_SOURCE_GROUP_GET_LOCK(group) (&((GstSourceGroup*)(group))->lock)
@@ -313,6 +313,7 @@ typedef struct
 struct _SourcePad
 {
   GstPad *pad;                  /* The controlled pad */
+  GstStreamType stream_type;    /* stream type of the controlled pad */
   gulong event_probe_id;
 };
 
@@ -327,12 +328,27 @@ struct _GstSourceGroup
   gboolean valid;               /* the group has valid info to start playback */
   gboolean active;              /* the group is active */
 
+  gboolean playing;             /* the group is currently playing
+                                 * (outputted on the sinks) */
+
   /* properties */
   gchar *uri;
   gchar *suburi;
 
+  /* The currently outputted group_id */
+  guint group_id;
+
   /* Bit-wise set of stream types we have requested from uridecodebin3 */
   GstStreamType selected_stream_types;
+
+  /* Bit-wise set of stream types for which pads are present */
+  GstStreamType present_stream_types;
+
+  /* TRUE if a 'about-to-finish' needs to be posted once we have
+   * got source pads for all requested stream types
+   *
+   * FIXME : Move this logic to uridecodebin3 later */
+  gboolean pending_about_to_finish;
 
   /* uridecodebin to handle uri and suburi */
   GstElement *uridecodebin;
@@ -447,6 +463,9 @@ struct _GstPlayBin3
   /* our play sink */
   GstPlaySink *playsink;
 
+  /* Task for (de)activating groups, protected by the activation lock */
+  GstTask *activation_task;
+  GRecMutex activation_lock;
 
   /* lock protecting dynamic adding/removing */
   GMutex dyn_lock;
@@ -591,6 +610,8 @@ static GstSample *gst_play_bin3_convert_sample (GstPlayBin3 * playbin,
 
 static GstStateChangeReturn setup_next_source (GstPlayBin3 * playbin);
 
+static void gst_play_bin3_check_group_status (GstPlayBin3 * playbin);
+static void emit_about_to_finish (GstPlayBin3 * playbin);
 static void reconfigure_output (GstPlayBin3 * playbin);
 static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
     GstSourceGroup * group);
@@ -1147,12 +1168,32 @@ update_combiner_info (GstPlayBin3 * playbin, GstStreamCollection * collection)
       playbin->combiner[PLAYBIN_STREAM_TEXT].streams->len);
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define debug_groups(playbin) G_STMT_START {	\
+    guint i;					\
+    						\
+    for (i = 0; i < 2; i++) {				\
+      GstSourceGroup *group = &playbin->groups[i];	\
+      							\
+      GST_DEBUG ("GstSourceGroup #%d (%s)", i, (group == playbin->curr_group) ? "current" : (group == playbin->next_group) ? "next" : "unused"); \
+      GST_DEBUG ("  valid:%d , active:%d , playing:%d", group->valid, group->active, group->playing); \
+      GST_DEBUG ("  uri:%s", group->uri);				\
+      GST_DEBUG ("  suburi:%s", group->suburi);				\
+      GST_DEBUG ("  group_id:%d", group->group_id);			\
+      GST_DEBUG ("  pending_about_to_finish:%d", group->pending_about_to_finish); \
+    }									\
+  } G_STMT_END
+#else
+#define debug_groups(p) {}
+#endif
+
 static void
 init_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 {
   g_mutex_init (&group->lock);
 
   group->stream_changed_pending = FALSE;
+  group->group_id = GST_GROUP_ID_INVALID;
 
   group->playbin = playbin;
 }
@@ -1292,6 +1333,8 @@ gst_play_bin3_init (GstPlayBin3 * playbin)
 
   /* first filter out the interesting element factories */
   g_mutex_init (&playbin->elements_lock);
+
+  g_rec_mutex_init (&playbin->activation_lock);
 
   /* add sink */
   playbin->playsink =
@@ -1551,7 +1594,7 @@ gst_play_bin3_set_current_stream (GstPlayBin3 * playbin,
   GST_DEBUG_OBJECT (playbin, "Changing current %s stream %d -> %d",
       stream_type_names[stream_type], *current_value, stream);
 
-  if (combine->combiner == NULL) {
+  if (combine->combiner == NULL || combine->is_concat) {
     /* FIXME: Check that the current_value is within range */
     *current_value = stream;
     do_stream_selection (playbin, playbin->curr_group);
@@ -1836,7 +1879,10 @@ gst_play_bin3_get_current_stream_combiner (GstPlayBin3 * playbin,
   GstElement *combiner;
 
   GST_PLAY_BIN3_LOCK (playbin);
-  if ((combiner = playbin->combiner[stream_type].combiner))
+  /* The special concat element should never be returned */
+  if (playbin->combiner[stream_type].is_concat)
+    combiner = NULL;
+  else if ((combiner = playbin->combiner[stream_type].combiner))
     gst_object_ref (combiner);
   else if ((combiner = *elem))
     gst_object_ref (combiner);
@@ -2381,29 +2427,57 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
   GstPlayBin3 *playbin = GST_PLAY_BIN3 (bin);
 
-  /* FIXME: REENABLE ONCE WE HAVE CROSSFADE SUPPORT */
-#if 0
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
-    GstSourceGroup *new_group = playbin->curr_group;
-    GstMessage *buffering_msg = NULL;
+    GstSourceGroup *group = NULL, *other_group = NULL;
+    gboolean changed = FALSE;
+    guint group_id;
 
-    GST_SOURCE_GROUP_LOCK (new_group);
-    new_group->stream_changed_pending = FALSE;
-    if (new_group->pending_buffering_msg) {
-      buffering_msg = new_group->pending_buffering_msg;
-      new_group->pending_buffering_msg = NULL;
+    if (!gst_message_parse_group_id (msg, &group_id)) {
+      GST_ERROR_OBJECT (bin,
+          "Could not get group_id from STREAM_START message !");
+      goto beach;
     }
-    GST_SOURCE_GROUP_UNLOCK (new_group);
+    GST_DEBUG_OBJECT (bin, "STREAM_START group_id:%u", group_id);
 
-    GST_DEBUG_OBJECT (playbin, "Stream start from new group %p", new_group);
-
-    if (buffering_msg) {
-      GST_DEBUG_OBJECT (playbin, "Posting pending buffering message: %"
-          GST_PTR_FORMAT, buffering_msg);
-      GST_BIN_CLASS (parent_class)->handle_message (bin, buffering_msg);
+    /* Figure out to which group this group_id corresponds */
+    GST_PLAY_BIN3_LOCK (playbin);
+    if (playbin->groups[0].group_id == group_id) {
+      group = &playbin->groups[0];
+      other_group = &playbin->groups[1];
+    } else if (playbin->groups[1].group_id == group_id) {
+      group = &playbin->groups[1];
+      other_group = &playbin->groups[0];
+    }
+    if (group == NULL) {
+      GST_ERROR_OBJECT (bin, "group_id %u is not provided by any group !",
+          group_id);
+      GST_PLAY_BIN3_UNLOCK (playbin);
+      goto beach;
     }
 
-  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
+    debug_groups (playbin);
+
+    /* Do the switch now ! */
+    playbin->curr_group = group;
+    playbin->next_group = other_group;
+
+    GST_SOURCE_GROUP_LOCK (group);
+    if (group->playing == FALSE)
+      changed = TRUE;
+    group->playing = TRUE;
+    GST_SOURCE_GROUP_UNLOCK (group);
+    GST_SOURCE_GROUP_LOCK (other_group);
+    other_group->playing = FALSE;
+    GST_SOURCE_GROUP_UNLOCK (other_group);
+    debug_groups (playbin);
+    GST_PLAY_BIN3_UNLOCK (playbin);
+    if (changed)
+      gst_play_bin3_check_group_status (playbin);
+    else
+      GST_DEBUG_OBJECT (bin, "Groups didn't changed");
+  }
+#if 0
+  else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
     GstSourceGroup *group = playbin->curr_group;
     gboolean pending;
 
@@ -2455,6 +2529,7 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     }
   }
 
+beach:
   if (msg)
     GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
@@ -2620,6 +2695,22 @@ update_video_multiview_caps (GstPlayBin3 * playbin, GstCaps * caps)
   return out_caps;
 }
 
+static void
+emit_about_to_finish (GstPlayBin3 * playbin)
+{
+  GST_DEBUG_OBJECT (playbin, "Emitting about-to-finish");
+
+  /* after this call, we should have a next group to activate or we EOS */
+  g_signal_emit (G_OBJECT (playbin),
+      gst_play_bin3_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
+
+  debug_groups (playbin);
+
+  /* now activate the next group. If the app did not set a uri, this will
+   * fail and we can do EOS */
+  setup_next_source (playbin);
+}
+
 static SourcePad *
 find_source_pad (GstSourceGroup * group, GstPad * target)
 {
@@ -2662,6 +2753,21 @@ _decodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
       }
       break;
     }
+    case GST_EVENT_STREAM_START:
+    {
+      guint group_id;
+      if (gst_event_parse_group_id (event, &group_id)) {
+        GST_LOG_OBJECT (pad, "STREAM_START group_id:%u", group_id);
+        if (group->group_id == GST_GROUP_ID_INVALID)
+          group->group_id = group_id;
+        else if (group->group_id != group_id) {
+          GST_DEBUG_OBJECT (pad, "group_id changing from %u to %u",
+              group->group_id, group_id);
+          group->group_id = group_id;
+        }
+      }
+      break;
+    }
     default:
       break;
   }
@@ -2670,7 +2776,8 @@ _decodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
 }
 
 static void
-control_source_pad (GstSourceGroup * group, GstPad * pad)
+control_source_pad (GstSourceGroup * group, GstPad * pad,
+    GstStreamType stream_type)
 {
   SourcePad *sourcepad = g_slice_new0 (SourcePad);
 
@@ -2678,6 +2785,7 @@ control_source_pad (GstSourceGroup * group, GstPad * pad)
   sourcepad->event_probe_id =
       gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       _decodebin_event_probe, group, NULL);
+  sourcepad->stream_type = stream_type;
   group->source_pads = g_list_append (group->source_pads, sourcepad);
 }
 
@@ -2727,19 +2835,30 @@ create_combiner (GstPlayBin3 * playbin, GstSourceCombine * combine)
   combine->combiner = custom_combiner;
 
   if (!combine->combiner) {
-    GST_DEBUG_OBJECT (playbin, "No custom combiner requested");
-    return;
+    gchar *concat_name;
+    GST_DEBUG_OBJECT (playbin,
+        "No custom combiner requested, using 'concat' element");
+    concat_name = g_strdup_printf ("%s-concat", combine->media_type);
+    combine->combiner = gst_element_factory_make ("concat", concat_name);
+    g_object_set (combine->combiner, "adjust-base", FALSE, NULL);
+    g_free (concat_name);
+    combine->is_concat = TRUE;
   }
 
   combine->srcpad = gst_element_get_static_pad (combine->combiner, "src");
 
-  combine->has_active_pad =
-      g_object_class_find_property (G_OBJECT_GET_CLASS (combine->combiner),
-      "active-pad") != NULL;
+  /* We only want to use 'active-pad' if it's a regular combiner that
+   * will consume all streams, and not concat (which is just used for
+   * gapless) */
+  if (!combine->is_concat) {
+    combine->has_active_pad =
+        g_object_class_find_property (G_OBJECT_GET_CLASS (combine->combiner),
+        "active-pad") != NULL;
 
-  if (combine->has_active_pad)
-    g_signal_connect (combine->combiner, "notify::active-pad",
-        G_CALLBACK (combiner_active_pad_changed), playbin);
+    if (combine->has_active_pad)
+      g_signal_connect (combine->combiner, "notify::active-pad",
+          G_CALLBACK (combiner_active_pad_changed), playbin);
+  }
 
   GST_DEBUG_OBJECT (playbin, "adding new stream combiner %" GST_PTR_FORMAT,
       combine->combiner);
@@ -2764,11 +2883,6 @@ combiner_control_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
 
     GST_DEBUG_OBJECT (playbin, "Got new combiner pad %" GST_PTR_FORMAT,
         sinkpad);
-
-    /* find out which properties the sink pad supports */
-    combine->has_always_ok =
-        g_object_class_find_property (G_OBJECT_GET_CLASS (sinkpad),
-        "always-ok") != NULL;
 
     /* store the pad in the array */
     GST_DEBUG_OBJECT (playbin, "pad %" GST_PTR_FORMAT " added to array",
@@ -2855,6 +2969,8 @@ static void
 release_source_pad (GstPlayBin3 * playbin, GstSourceGroup * group, GstPad * pad)
 {
   SourcePad *sourcepad;
+  GList *tmp;
+  GstStreamType alltype = 0;
 
   sourcepad = find_source_pad (group, pad);
   if (!sourcepad) {
@@ -2870,6 +2986,13 @@ release_source_pad (GstPlayBin3 * playbin, GstSourceGroup * group, GstPad * pad)
   /* Remove from list of controlled pads and check again for EOS status */
   group->source_pads = g_list_remove (group->source_pads, sourcepad);
   g_slice_free (SourcePad, sourcepad);
+
+  /* Update present stream types */
+  for (tmp = group->source_pads; tmp; tmp = tmp->next) {
+    SourcePad *cand = (SourcePad *) tmp->data;
+    alltype |= cand->stream_type;
+  }
+  group->present_stream_types = alltype;
 }
 
 /* this function is called when a new pad is added to decodebin. We check the
@@ -2913,7 +3036,16 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
 
   combiner_control_pad (playbin, combine, pad);
 
-  control_source_pad (group, pad);
+  control_source_pad (group, pad, combine->stream_type);
+
+  /* Update present stream_types and check whether we should post a pending about-to-finish */
+  group->present_stream_types |= combine->stream_type;
+
+  if (group->playing && group->pending_about_to_finish
+      && group->present_stream_types == group->selected_stream_types) {
+    group->pending_about_to_finish = FALSE;
+    emit_about_to_finish (playbin);
+  }
 
   GST_PLAY_BIN3_SHUTDOWN_UNLOCK (playbin);
 
@@ -2933,7 +3065,7 @@ shutdown:
 }
 
 /* called when a pad is removed from the decodebin. We unlink the pad from
- * the combiner. This will make the combiner select a new pad. */
+ * the combiner. */
 static void
 pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 {
@@ -3099,15 +3231,18 @@ about_to_finish_cb (GstElement * uridecodebin, GstSourceGroup * group)
   GstPlayBin3 *playbin = group->playbin;
   GST_DEBUG_OBJECT (playbin, "about to finish in group %p", group);
 
-  /* after this call, we should have a next group to activate or we EOS */
-  g_signal_emit (G_OBJECT (playbin),
-      gst_play_bin3_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
+  GST_LOG_OBJECT (playbin, "selected_stream_types:%" STREAM_TYPES_FORMAT,
+      STREAM_TYPES_ARGS (group->selected_stream_types));
+  GST_LOG_OBJECT (playbin, "present_stream_types:%" STREAM_TYPES_FORMAT,
+      STREAM_TYPES_ARGS (group->present_stream_types));
 
-#if 0
-  /* now activate the next group. If the app did not set a uri, this will
-   * fail and we can do EOS */
-  setup_next_source (playbin);
-#endif
+  if (group->selected_stream_types == 0
+      || (group->selected_stream_types != group->present_stream_types)) {
+    GST_LOG_OBJECT (playbin,
+        "Delaying emission of signal until this group is ready");
+    group->pending_about_to_finish = TRUE;
+  } else
+    emit_about_to_finish (playbin);
 }
 
 #if 0                           /* AUTOPLUG DISABLED */
@@ -4469,8 +4604,7 @@ error_cleanup:
   }
 }
 
-/* unlink a group of uridecodebin from the decodebin.
- * must be called with PLAY_BIN_LOCK */
+/* must be called with PLAY_BIN_LOCK */
 static gboolean
 deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 {
@@ -4481,6 +4615,8 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
   group->active = FALSE;
+  group->playing = FALSE;
+  group->group_id = GST_GROUP_ID_INVALID;
 
   group->selected_stream_types = 0;
   /* Update global selected_stream_types */
@@ -4520,22 +4656,26 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 #endif
 
   if (group->uridecodebin) {
-    REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
     REMOVE_SIGNAL (group->uridecodebin, group->select_stream_id);
     REMOVE_SIGNAL (group->uridecodebin, group->source_setup_id);
     REMOVE_SIGNAL (group->uridecodebin, group->about_to_finish_id);
+
+    gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
+
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
 #if 0
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_select_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_continue_id);
     REMOVE_SIGNAL (group->urisourcebin, group->autoplug_query_id);
 #endif
-    gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
   }
 
   GST_SOURCE_GROUP_UNLOCK (group);
+
+  GST_DEBUG_OBJECT (playbin, "Done");
 
   return TRUE;
 }
@@ -4546,30 +4686,18 @@ deactivate_group (GstPlayBin3 * playbin, GstSourceGroup * group)
 static GstStateChangeReturn
 setup_next_source (GstPlayBin3 * playbin)
 {
-  GstSourceGroup *new_group, *old_group;
+  GstSourceGroup *new_group;
   GstStateChangeReturn state_ret;
 
-  GST_DEBUG_OBJECT (playbin, "setup sources");
+  GST_DEBUG_OBJECT (playbin, "setup next source");
+
+  debug_groups (playbin);
 
   /* see if there is a next group */
   GST_PLAY_BIN3_LOCK (playbin);
   new_group = playbin->next_group;
-  if (!new_group || !new_group->valid)
+  if (!new_group || !new_group->valid || new_group->active)
     goto no_next_group;
-
-  /* first unlink the current source, if any */
-  old_group = playbin->curr_group;
-  if (old_group && old_group->valid && old_group->active) {
-    new_group->stream_changed_pending = TRUE;
-
-    /* unlink our pads with the sink */
-    deactivate_group (playbin, old_group);
-    old_group->valid = FALSE;
-  }
-
-  /* swap old and new */
-  playbin->curr_group = new_group;
-  playbin->next_group = old_group;
 
   /* activate the new group */
   state_ret = activate_group (playbin, new_group);
@@ -4577,6 +4705,8 @@ setup_next_source (GstPlayBin3 * playbin)
     goto activate_failed;
 
   GST_PLAY_BIN3_UNLOCK (playbin);
+
+  debug_groups (playbin);
 
   return state_ret;
 
@@ -4642,6 +4772,117 @@ groups_set_locked_state (GstPlayBin3 * playbin, gboolean locked)
   return TRUE;
 }
 
+static void
+gst_play_bin3_check_group_status (GstPlayBin3 * playbin)
+{
+  if (playbin->activation_task)
+    gst_task_start (playbin->activation_task);
+}
+
+static void
+gst_play_bin3_activation_thread (GstPlayBin3 * playbin)
+{
+  GST_DEBUG_OBJECT (playbin, "starting");
+
+  debug_groups (playbin);
+
+  /* Check if next_group needs to be deactivated */
+  GST_PLAY_BIN3_LOCK (playbin);
+  if (playbin->next_group->active) {
+    deactivate_group (playbin, playbin->next_group);
+    playbin->next_group->valid = FALSE;
+  }
+
+  /* Is there a pending about-to-finish to be emitted ? */
+  GST_SOURCE_GROUP_LOCK (playbin->curr_group);
+  if (playbin->curr_group->pending_about_to_finish) {
+    GST_LOG_OBJECT (playbin, "Propagating about-to-finish");
+    playbin->curr_group->pending_about_to_finish = FALSE;
+    GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+    /* This will activate the next source afterwards */
+    emit_about_to_finish (playbin);
+  } else
+    GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+
+  GST_LOG_OBJECT (playbin, "Pausing task");
+  if (playbin->activation_task)
+    gst_task_pause (playbin->activation_task);
+  GST_PLAY_BIN3_UNLOCK (playbin);
+
+  GST_DEBUG_OBJECT (playbin, "done");
+  return;
+}
+
+static gboolean
+gst_play_bin3_start (GstPlayBin3 * playbin)
+{
+  GST_DEBUG_OBJECT (playbin, "starting");
+
+  GST_PLAY_BIN3_LOCK (playbin);
+
+  if (playbin->activation_task == NULL) {
+    playbin->activation_task =
+        gst_task_new ((GstTaskFunction) gst_play_bin3_activation_thread,
+        playbin, NULL);
+    if (playbin->activation_task == NULL)
+      goto task_error;
+    gst_task_set_lock (playbin->activation_task, &playbin->activation_lock);
+  }
+  GST_LOG_OBJECT (playbin, "clearing shutdown flag");
+  g_atomic_int_set (&playbin->shutdown, 0);
+  do_async_start (playbin);
+
+  GST_PLAY_BIN3_UNLOCK (playbin);
+
+  return TRUE;
+
+task_error:
+  {
+    GST_PLAY_BIN3_UNLOCK (playbin);
+    GST_ERROR_OBJECT (playbin, "Failed to create task");
+    return FALSE;
+  }
+}
+
+static void
+gst_play_bin3_stop (GstPlayBin3 * playbin)
+{
+  GstTask *task;
+
+  GST_DEBUG_OBJECT (playbin, "stopping");
+
+  /* FIXME unlock our waiting groups */
+  GST_LOG_OBJECT (playbin, "setting shutdown flag");
+  g_atomic_int_set (&playbin->shutdown, 1);
+
+  /* wait for all callbacks to end by taking the lock.
+   * No dynamic (critical) new callbacks will
+   * be able to happen as we set the shutdown flag. */
+  GST_PLAY_BIN3_DYN_LOCK (playbin);
+  GST_LOG_OBJECT (playbin, "dynamic lock taken, we can continue shutdown");
+  GST_PLAY_BIN3_DYN_UNLOCK (playbin);
+
+  /* Stop the activation task */
+  GST_PLAY_BIN3_LOCK (playbin);
+  if ((task = playbin->activation_task)) {
+    playbin->activation_task = NULL;
+    GST_PLAY_BIN3_UNLOCK (playbin);
+
+    gst_task_stop (task);
+
+    /* Make sure task is not running */
+    g_rec_mutex_lock (&playbin->activation_lock);
+    g_rec_mutex_unlock (&playbin->activation_lock);
+
+    /* Wait for task to finish and unref it */
+    gst_task_join (task);
+    gst_object_unref (task);
+
+    GST_PLAY_BIN3_LOCK (playbin);
+  }
+  GST_PLAY_BIN3_UNLOCK (playbin);
+}
+
 static GstStateChangeReturn
 gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
 {
@@ -4653,22 +4894,12 @@ gst_play_bin3_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_LOG_OBJECT (playbin, "clearing shutdown flag");
-      g_atomic_int_set (&playbin->shutdown, 0);
-      do_async_start (playbin);
+      if (!gst_play_bin3_start (playbin))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     async_down:
-      /* FIXME unlock our waiting groups */
-      GST_LOG_OBJECT (playbin, "setting shutdown flag");
-      g_atomic_int_set (&playbin->shutdown, 1);
-
-      /* wait for all callbacks to end by taking the lock.
-       * No dynamic (critical) new callbacks will
-       * be able to happen as we set the shutdown flag. */
-      GST_PLAY_BIN3_DYN_LOCK (playbin);
-      GST_LOG_OBJECT (playbin, "dynamic lock taken, we can continue shutdown");
-      GST_PLAY_BIN3_DYN_UNLOCK (playbin);
+      gst_play_bin3_stop (playbin);
       if (!do_save)
         break;
     case GST_STATE_CHANGE_READY_TO_NULL:
