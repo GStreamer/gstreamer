@@ -48,7 +48,6 @@ struct _GstAvWait
   GstElement parent;
 
   GstVideoTimeCode *tc;
-  gboolean from_string;
   GstClockTime target_running_time;
   GstAvWaitMode mode;
 

@@ -246,7 +246,6 @@ gst_avwait_init (GstAvWait * self)
   self->video_eos_flag = FALSE;
   self->audio_flush_flag = FALSE;
   self->shutdown_flag = FALSE;
-  self->from_string = FALSE;
   self->tc = gst_video_time_code_new_empty ();
   self->end_tc = NULL;
   self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
@@ -403,8 +402,6 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         gst_video_time_code_free (self->tc);
         g_free (end_tc);
         self->tc = gst_video_time_code_new_empty ();
-      } else {
-        self->from_string = TRUE;
       }
       g_strfreev (parts);
       break;
@@ -413,7 +410,6 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       if (self->tc)
         gst_video_time_code_free (self->tc);
       self->tc = g_value_dup_boxed (value);
-      self->from_string = FALSE;
       if (self->end_tc
           && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
         gchar *start_tc, *end_tc;
@@ -527,9 +523,13 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         return FALSE;
       }
       g_mutex_lock (&self->mutex);
-      if (self->from_string) {
+      if (self->tc && self->tc->config.fps_n == 0) {
         self->tc->config.fps_n = self->vinfo.fps_n;
         self->tc->config.fps_d = self->vinfo.fps_d;
+      }
+      if (self->end_tc && self->end_tc->config.fps_n == 0) {
+        self->end_tc->config.fps_n = self->vinfo.fps_n;
+        self->end_tc->config.fps_d = self->vinfo.fps_d;
       }
       g_mutex_unlock (&self->mutex);
       break;
