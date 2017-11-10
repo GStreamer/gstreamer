@@ -187,6 +187,12 @@ struct _GstDecodeBin
   GList *buffering_status;      /* element currently buffering messages */
   GMutex buffering_lock;
   GMutex buffering_post_lock;
+
+  GMutex cleanup_lock;          /* Mutex used to protect the cleanup thread */
+  GThread *cleanup_thread;      /* thread used to free chains asynchronously.
+                                 * We store it to make sure we end up joining it
+                                 * before stopping the element.
+                                 * Protected by the object lock */
 };
 
 struct _GstDecodeBinClass
@@ -1084,6 +1090,9 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   g_mutex_init (&decode_bin->buffering_lock);
   g_mutex_init (&decode_bin->buffering_post_lock);
 
+  g_mutex_init (&decode_bin->cleanup_lock);
+  decode_bin->cleanup_thread = NULL;
+
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps = gst_static_caps_get (&default_raw_caps);
   decode_bin->use_buffering = DEFAULT_USE_BUFFERING;
@@ -1141,6 +1150,7 @@ gst_decode_bin_finalize (GObject * object)
   g_mutex_clear (&decode_bin->buffering_lock);
   g_mutex_clear (&decode_bin->buffering_post_lock);
   g_mutex_clear (&decode_bin->factories_lock);
+  g_mutex_clear (&decode_bin->cleanup_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -3664,10 +3674,18 @@ gst_decode_chain_start_free_hidden_groups_thread (GstDecodeChain * chain)
   GThread *thread;
   GError *error = NULL;
   GList *old_groups;
+  GstDecodeBin *dbin = chain->dbin;
 
   old_groups = chain->old_groups;
   if (!old_groups)
     return;
+
+  /* If we already have a thread running, wait for it to finish */
+  g_mutex_lock (&dbin->cleanup_lock);
+  if (dbin->cleanup_thread) {
+    g_thread_join (dbin->cleanup_thread);
+    dbin->cleanup_thread = NULL;
+  }
 
   chain->old_groups = NULL;
   thread = g_thread_try_new ("free-hidden-groups",
@@ -3677,11 +3695,14 @@ gst_decode_chain_start_free_hidden_groups_thread (GstDecodeChain * chain)
         error ? error->message : "unknown reason");
     g_clear_error (&error);
     chain->old_groups = old_groups;
+    g_mutex_unlock (&dbin->cleanup_lock);
     return;
   }
+
+  dbin->cleanup_thread = thread;
+  g_mutex_unlock (&dbin->cleanup_lock);
+
   GST_DEBUG_OBJECT (chain->dbin, "Started free-hidden-groups thread");
-  /* We do not need to wait for it or get any results from it */
-  g_thread_unref (thread);
 }
 
 static void
@@ -5373,6 +5394,12 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       dbin->buffering_status = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      g_mutex_lock (&dbin->cleanup_lock);
+      if (dbin->cleanup_thread) {
+        g_thread_join (dbin->cleanup_thread);
+        dbin->cleanup_thread = NULL;
+      }
+      g_mutex_unlock (&dbin->cleanup_lock);
     default:
       break;
   }
