@@ -3539,6 +3539,15 @@ retry:
   /* re-order pads : video, then audio, then others */
   endpads = g_list_sort (endpads, (GCompareFunc) sort_end_pads);
 
+  /* Don't expose if we're currently shutting down */
+  DYN_LOCK (parsebin);
+  if (G_UNLIKELY (parsebin->shutdown)) {
+    GST_WARNING_OBJECT (parsebin,
+        "Currently, shutting down, aborting exposing");
+    DYN_UNLOCK (parsebin);
+    return FALSE;
+  }
+
   /* Expose pads */
   for (tmp = endpads; tmp; tmp = tmp->next) {
     GstParsePad *parsepad = (GstParsePad *) tmp->data;
@@ -3577,6 +3586,8 @@ retry:
 
     GST_INFO_OBJECT (parsepad, "added new parsed pad");
   }
+
+  DYN_UNLOCK (parsebin);
 
   /* Unblock internal pads. The application should have connected stuff now
    * so that streaming can continue. */
