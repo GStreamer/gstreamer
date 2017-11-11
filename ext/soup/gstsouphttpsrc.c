@@ -1835,6 +1835,13 @@ done:
       goto retry;
     }
   }
+
+  if (ret == GST_FLOW_FLUSHING) {
+    g_mutex_lock (&src->mutex);
+    src->retry_count = 0;
+    g_mutex_unlock (&src->mutex);
+  }
+
   return ret;
 }
 
