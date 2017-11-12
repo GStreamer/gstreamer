@@ -24,6 +24,7 @@ executable('gst-validate-media-check-' + apiversion,
 
 rtsp_server_dep = dependency('gstreamer-rtsp-server-' + apiversion,
   fallback: ['gst-rtsp-server', 'gst_rtsp_server_dep'],
+  version : gst_req,
   required: false)
 
 if rtsp_server_dep.found()
