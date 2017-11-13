@@ -13937,6 +13937,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_from_string ("video/x-dnxhd");
       break;
     case FOURCC_VP80:
+    case FOURCC_vp08:
       _codec ("On2 VP8");
       caps = gst_caps_from_string ("video/x-vp8");
       break;

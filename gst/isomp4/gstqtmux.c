@@ -5346,8 +5346,7 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       goto refuse_caps;
     }
   } else if (strcmp (mimetype, "video/x-vp8") == 0) {
-    entry.fourcc = FOURCC_VP80;
-    sync = FALSE;
+    entry.fourcc = FOURCC_vp08;
   } else if (strcmp (mimetype, "video/x-vp9") == 0) {
     entry.fourcc = FOURCC_vp09;
   } else if (strcmp (mimetype, "video/x-dirac") == 0) {
