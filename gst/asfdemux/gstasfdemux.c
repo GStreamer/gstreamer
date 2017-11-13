@@ -1304,6 +1304,7 @@ all_streams_prerolled (GstASFDemux * demux)
 {
   GstClockTime preroll_time;
   guint i, num_no_data = 0;
+  AsfStreamType prerolled_types = 0, all_types = 0;
 
   /* Allow at least 500ms of preroll_time  */
   preroll_time = MAX (demux->preroll, 500 * GST_MSECOND);
@@ -1317,11 +1318,16 @@ all_streams_prerolled (GstASFDemux * demux)
     gint last_idx;
 
     stream = &demux->stream[i];
+
+    all_types |= stream->type;
+
     if (G_UNLIKELY (stream->payloads->len == 0)) {
       ++num_no_data;
       GST_LOG_OBJECT (stream->pad, "no data queued");
       continue;
     }
+
+    prerolled_types |= stream->type;
 
     /* find last payload with timestamp */
     for (last_idx = stream->payloads->len - 1;
@@ -1339,6 +1345,13 @@ all_streams_prerolled (GstASFDemux * demux)
       return FALSE;
     }
   }
+
+  GST_LOG_OBJECT (demux, "all_types:%d prerolled_types:%d",
+      all_types, prerolled_types);
+
+  /* If streams of each present type have prerolled, we are good to go */
+  if (all_types != 0 && prerolled_types == all_types)
+    return TRUE;
 
   if (G_UNLIKELY (num_no_data > 0))
     return FALSE;
@@ -1403,7 +1416,7 @@ gst_asf_demux_check_segment_ts (GstASFDemux * demux, GstClockTime payload_ts)
 }
 
 static gboolean
-gst_asf_demux_check_first_ts (GstASFDemux * demux, gboolean force)
+gst_asf_demux_get_first_ts (GstASFDemux * demux)
 {
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (demux->first_ts))) {
     GstClockTime first_ts = GST_CLOCK_TIME_NONE;
@@ -1438,22 +1451,20 @@ gst_asf_demux_check_first_ts (GstASFDemux * demux, gboolean force)
          from it. I havent found a better way to distinguish between these two, except to set an arbitrary boundary
          and disregard the first 0 timestamp if the second timestamp is bigger than the boundary) */
 
-      if (stream_min_ts == 0 && stream_min_ts2 == GST_CLOCK_TIME_NONE && !force)        /* still waiting for the second timestamp */
-        return FALSE;
+      GST_DEBUG_OBJECT (demux,
+          "stream #%u stream_min_ts %" GST_TIME_FORMAT " stream_min_ts2 %"
+          GST_TIME_FORMAT, stream->id, GST_TIME_ARGS (stream_min_ts),
+          GST_TIME_ARGS (stream_min_ts2));
 
       if (stream_min_ts == 0 && stream_min_ts2 > GST_SECOND)    /* first timestamp is 0 and second is significantly larger, disregard the 0 */
         stream_min_ts = stream_min_ts2;
-
-      /* if we don't have timestamp for this stream, wait for more data */
-      if (!GST_CLOCK_TIME_IS_VALID (stream_min_ts) && !force)
-        return FALSE;
 
       if (GST_CLOCK_TIME_IS_VALID (stream_min_ts) &&
           (!GST_CLOCK_TIME_IS_VALID (first_ts) || first_ts > stream_min_ts))
         first_ts = stream_min_ts;
     }
 
-    if (!GST_CLOCK_TIME_IS_VALID (first_ts))    /* can happen with force = TRUE */
+    if (!GST_CLOCK_TIME_IS_VALID (first_ts))    /* can happen */
       first_ts = 0;
 
     demux->first_ts = first_ts;
@@ -1547,13 +1558,13 @@ gst_asf_demux_check_activate_streams (GstASFDemux * demux, gboolean force)
   if (demux->activated_streams)
     return TRUE;
 
-  if (G_UNLIKELY (!gst_asf_demux_check_first_ts (demux, force)))
-    return FALSE;
-
   if (!all_streams_prerolled (demux) && !force) {
     GST_DEBUG_OBJECT (demux, "not all streams with data beyond preroll yet");
     return FALSE;
   }
+
+  if (G_UNLIKELY (!gst_asf_demux_get_first_ts (demux)))
+    return FALSE;
 
   for (i = 0; i < demux->num_streams; ++i) {
     AsfStream *stream = &demux->stream[i];
