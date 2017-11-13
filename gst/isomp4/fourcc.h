@@ -251,6 +251,7 @@ G_BEGIN_DECLS
 #define FOURCC_vc_1     GST_MAKE_FOURCC('v','c','-','1')
 #define FOURCC_vide     GST_MAKE_FOURCC('v','i','d','e')
 #define FOURCC_vmhd     GST_MAKE_FOURCC('v','m','h','d')
+#define FOURCC_vp09     GST_MAKE_FOURCC('v','p','0','9')
 #define FOURCC_xvid     GST_MAKE_FOURCC('x','v','i','d')
 #define FOURCC_wave     GST_MAKE_FOURCC('w','a','v','e')
 #define FOURCC_wide     GST_MAKE_FOURCC('w','i','d','e')

@@ -13940,6 +13940,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("On2 VP8");
       caps = gst_caps_from_string ("video/x-vp8");
       break;
+    case FOURCC_vp09:
+      _codec ("Google VP9");
+      caps = gst_caps_from_string ("video/x-vp9");
+      break;
     case FOURCC_apcs:
       _codec ("Apple ProRes LT");
       caps =
