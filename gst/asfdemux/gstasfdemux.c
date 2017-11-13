@@ -3144,8 +3144,10 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
       break;
   }
 
-  if (stream)
+  if (stream) {
     stream->inspect_payload = inspect_payload;
+    stream->type = stream_type;
+  }
   return stream;
 
 not_enough_data:
