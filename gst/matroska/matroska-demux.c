@@ -6159,7 +6159,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       guint sample_width;
       guint extra_data_size;
 
-      GST_ERROR ("real audio raversion:%d", raversion);
+      GST_DEBUG ("real audio raversion:%d", raversion);
       if (raversion == 8) {
         /* COOK */
         flavor = GST_READ_UINT16_BE (data + 22);
@@ -6169,7 +6169,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         sample_width = GST_READ_UINT16_BE (data + 58);
         extra_data_size = GST_READ_UINT32_BE (data + 74);
 
-        GST_ERROR
+        GST_DEBUG
             ("flavor:%d, packet_size:%d, height:%d, leaf_size:%d, sample_width:%d, extra_data_size:%d",
             flavor, packet_size, height, leaf_size, sample_width,
             extra_data_size);
