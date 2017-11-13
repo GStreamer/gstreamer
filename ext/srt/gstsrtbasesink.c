@@ -37,6 +37,9 @@ enum
 {
   PROP_URI = 1,
   PROP_LATENCY,
+  PROP_PASSPHRASE,
+  PROP_KEY_LENGTH,
+
   /*< private > */
   PROP_LAST
 };
@@ -73,6 +76,12 @@ gst_srt_base_sink_get_property (GObject * object,
     case PROP_LATENCY:
       g_value_set_int (value, self->latency);
       break;
+    case PROP_PASSPHRASE:
+      g_value_set_string (value, self->passphrase);
+      break;
+    case PROP_KEY_LENGTH:
+      g_value_set_int (value, self->key_length);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -93,6 +102,18 @@ gst_srt_base_sink_set_property (GObject * object,
     case PROP_LATENCY:
       self->latency = g_value_get_int (value);
       break;
+    case PROP_PASSPHRASE:
+      g_free (self->passphrase);
+      self->passphrase = g_value_dup_string (value);
+      break;
+    case PROP_KEY_LENGTH:
+    {
+      gint key_length = g_value_get_int (value);
+      g_return_if_fail (key_length == 16 || key_length == 24
+          || key_length == 32);
+      self->key_length = key_length;
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -105,6 +126,7 @@ gst_srt_base_sink_finalize (GObject * object)
   GstSRTBaseSink *self = GST_SRT_BASE_SINK (object);
 
   g_clear_pointer (&self->uri, gst_uri_unref);
+  g_clear_pointer (&self->passphrase, g_free);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -166,6 +188,15 @@ gst_srt_base_sink_class_init (GstSRTBaseSinkClass * klass)
       G_MAXINT32, SRT_DEFAULT_LATENCY,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  properties[PROP_PASSPHRASE] = g_param_spec_string ("passphrase", "Passphrase",
+      "The password for the encrypted transmission", NULL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_KEY_LENGTH] =
+      g_param_spec_int ("key-length", "key length",
+      "Crypto key length in bytes{16,24,32}", 16,
+      32, SRT_DEFAULT_KEY_LENGTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_srt_base_sink_render);
@@ -177,6 +208,8 @@ gst_srt_base_sink_init (GstSRTBaseSink * self)
   self->uri = gst_uri_from_string (SRT_DEFAULT_URI);
   self->queued_buffers = NULL;
   self->latency = SRT_DEFAULT_LATENCY;
+  self->passphrase = NULL;
+  self->key_length = SRT_DEFAULT_KEY_LENGTH;
 }
 
 static GstURIType

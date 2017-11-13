@@ -321,6 +321,13 @@ gst_srt_server_sink_start (GstBaseSink * sink)
 
   srt_setsockopt (priv->sock, 0, SRTO_TSBPDDELAY, &lat, sizeof (int));
 
+  if (base->passphrase != NULL && base->passphrase[0] != '\0') {
+    srt_setsockopt (priv->sock, 0, SRTO_PASSPHRASE,
+        base->passphrase, strlen (base->passphrase));
+    srt_setsockopt (priv->sock, 0, SRTO_PBKEYLEN,
+        &base->key_length, sizeof (int));
+  }
+
   priv->poll_id = srt_epoll_create ();
   if (priv->poll_id == -1) {
     GST_WARNING_OBJECT (self,

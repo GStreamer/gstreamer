@@ -47,6 +47,8 @@ struct _GstSRTBaseSink {
   GstUri *uri;
   GList *queued_buffers;
   gint latency;
+  gchar *passphrase;
+  gint key_length;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

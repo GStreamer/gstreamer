@@ -33,10 +33,11 @@
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 SRTSOCKET
-gst_srt_client_connect (GstElement * elem, int sender,
+gst_srt_client_connect_full (GstElement * elem, int sender,
     const gchar * host, guint16 port, int rendez_vous,
     const gchar * bind_address, guint16 bind_port, int latency,
-    GSocketAddress ** socket_address, gint * poll_id)
+    GSocketAddress ** socket_address, gint * poll_id, gchar * passphrase,
+    int key_length)
 {
   SRTSOCKET sock;
   GError *error = NULL;
@@ -77,6 +78,11 @@ gst_srt_client_connect (GstElement * elem, int sender,
   srt_setsockopt (sock, 0, SRTO_TSBPDDELAY, &latency, sizeof (int));
 
   srt_setsockopt (sock, 0, SRTO_RENDEZVOUS, &rendez_vous, sizeof (int));
+
+  if (passphrase != NULL && passphrase[0] != '\0') {
+    srt_setsockopt (sock, 0, SRTO_PASSPHRASE, passphrase, strlen (passphrase));
+    srt_setsockopt (sock, 0, SRTO_PBKEYLEN, &key_length, sizeof (int));
+  }
 
   if (bind_address || bind_port || rendez_vous) {
     gpointer bsa;
@@ -151,6 +157,17 @@ failed:
   g_clear_object (socket_address);
 
   return SRT_INVALID_SOCK;
+}
+
+SRTSOCKET
+gst_srt_client_connect (GstElement * elem, int sender,
+    const gchar * host, guint16 port, int rendez_vous,
+    const gchar * bind_address, guint16 bind_port, int latency,
+    GSocketAddress ** socket_address, gint * poll_id)
+{
+  return gst_srt_client_connect_full (elem, sender, host, port,
+      rendez_vous, bind_address, bind_port, latency, socket_address, poll_id,
+      NULL, 0);
 }
 
 static gboolean
