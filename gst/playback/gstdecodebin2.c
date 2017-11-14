@@ -5211,14 +5211,14 @@ find_sink_pad (GstElement * element)
 static void
 unblock_pads (GstDecodeBin * dbin)
 {
-  GList *tmp;
-
   GST_LOG_OBJECT (dbin, "unblocking pads");
 
-  for (tmp = dbin->blocked_pads; tmp; tmp = tmp->next) {
+  while (dbin->blocked_pads) {
+    GList *tmp = dbin->blocked_pads;
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
     GstPad *opad;
 
+    dbin->blocked_pads = g_list_delete_link (dbin->blocked_pads, tmp);
     opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
     if (opad) {
 
@@ -5231,15 +5231,17 @@ unblock_pads (GstDecodeBin * dbin)
     }
 
     dpad->blocked = FALSE;
+
+    /* We release the dyn lock since we want to allow the streaming threads
+     * to properly stop and not be blocked in our various probes */
+    DYN_UNLOCK (dbin);
     /* make flushing, prevent NOT_LINKED */
     gst_pad_set_active (GST_PAD_CAST (dpad), FALSE);
-    gst_object_unref (dpad);
-    GST_DEBUG_OBJECT (dpad, "unblocked");
-  }
+    DYN_LOCK (dbin);
 
-  /* clear, no more blocked pads */
-  g_list_free (dbin->blocked_pads);
-  dbin->blocked_pads = NULL;
+    GST_DEBUG_OBJECT (dpad, "unblocked");
+    gst_object_unref (dpad);
+  }
 }
 
 static void
