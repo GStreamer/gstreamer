@@ -350,7 +350,9 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
   GstXvContext *context;
   gint align, offset;
   GstXvImageMemory *mem;
+#ifdef HAVE_XSHM
   gint expected_size = 0;
+#endif
 
   context = allocator->context;
 
@@ -528,14 +530,6 @@ beach:
   return GST_MEMORY_CAST (mem);
 
   /* ERRORS */
-unexpected_size:
-  {
-    g_mutex_unlock (&context->lock);
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
-        "unexpected XShm image size (got %d, expected %d)",
-        mem->xvimage->data_size, expected_size);
-    goto beach;
-  }
 create_failed:
   {
     g_mutex_unlock (&context->lock);
@@ -549,6 +543,14 @@ create_failed:
     goto beach;
   }
 #ifdef HAVE_XSHM
+unexpected_size:
+  {
+    g_mutex_unlock (&context->lock);
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
+        "unexpected XShm image size (got %d, expected %d)",
+        mem->xvimage->data_size, expected_size);
+    goto beach;
+  }
 shmget_failed:
   {
     g_mutex_unlock (&context->lock);
