@@ -387,10 +387,6 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       frames = g_ascii_strtoll (parts[3], NULL, 10);
       gst_video_time_code_init (self->tc, 0, 1, NULL, 0, hours, minutes,
           seconds, frames, 0);
-      if (self->vinfo.finfo != NULL) {
-        self->tc->config.fps_n = self->vinfo.fps_n;
-        self->tc->config.fps_d = self->vinfo.fps_d;
-      }
       if (self->end_tc
           && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
         gchar *end_tc;
@@ -402,6 +398,12 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         gst_video_time_code_free (self->tc);
         g_free (end_tc);
         self->tc = gst_video_time_code_new_empty ();
+      } else {
+        if (GST_VIDEO_INFO_FORMAT (&self->vinfo) != GST_VIDEO_FORMAT_UNKNOWN
+            && self->vinfo.fps_n != 0) {
+          self->tc->config.fps_n = self->vinfo.fps_n;
+          self->tc->config.fps_d = self->vinfo.fps_d;
+        }
       }
       g_strfreev (parts);
       break;
@@ -423,6 +425,13 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         g_free (start_tc);
         g_free (end_tc);
         self->tc = gst_video_time_code_new_empty ();
+      } else {
+        if (self->tc->config.fps_n == 0
+            && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
+            GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
+          self->tc->config.fps_n = self->vinfo.fps_n;
+          self->tc->config.fps_d = self->vinfo.fps_d;
+        }
       }
       break;
     }
@@ -443,6 +452,13 @@ gst_avwait_set_property (GObject * object, guint prop_id,
         self->end_tc = NULL;
         g_free (start_tc);
         g_free (end_tc);
+      } else {
+        if (self->end_tc->config.fps_n == 0
+            && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
+            GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
+          self->end_tc->config.fps_n = self->vinfo.fps_n;
+          self->end_tc->config.fps_d = self->vinfo.fps_d;
+        }
       }
       break;
     }
@@ -523,11 +539,12 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         return FALSE;
       }
       g_mutex_lock (&self->mutex);
-      if (self->tc && self->tc->config.fps_n == 0) {
+      if (self->tc && self->tc->config.fps_n == 0 && self->vinfo.fps_n != 0) {
         self->tc->config.fps_n = self->vinfo.fps_n;
         self->tc->config.fps_d = self->vinfo.fps_d;
       }
-      if (self->end_tc && self->end_tc->config.fps_n == 0) {
+      if (self->end_tc && self->end_tc->config.fps_n == 0
+          && self->vinfo.fps_n != 0) {
         self->end_tc->config.fps_n = self->vinfo.fps_n;
         self->end_tc->config.fps_d = self->vinfo.fps_d;
       }
