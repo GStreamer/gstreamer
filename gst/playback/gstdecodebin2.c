@@ -4697,6 +4697,14 @@ retry:
   /* re-order pads : video, then audio, then others */
   endpads = g_list_sort (endpads, (GCompareFunc) sort_end_pads);
 
+  /* Don't add pads if we are shutting down */
+  DYN_LOCK (dbin);
+  if (G_UNLIKELY (dbin->shutdown)) {
+    GST_WARNING_OBJECT (dbin, "Currently, shutting down, aborting exposing");
+    DYN_UNLOCK (dbin);
+    return FALSE;
+  }
+
   /* Expose pads */
   for (tmp = endpads; tmp; tmp = tmp->next) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
@@ -4727,6 +4735,7 @@ retry:
     /* 3. emit signal */
     GST_INFO_OBJECT (dpad, "added new decoded pad");
   }
+  DYN_UNLOCK (dbin);
 
   /* 4. Signal no-more-pads. This allows the application to hook stuff to the
    * exposed pads */
