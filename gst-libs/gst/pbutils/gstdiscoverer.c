@@ -75,6 +75,7 @@ typedef struct
   GstTagList *tags;
   GstToc *toc;
   gchar *stream_id;
+  gulong probe_id;
 } PrivateStream;
 
 struct _GstDiscovererPrivate
@@ -641,7 +642,8 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   if (is_subtitle_caps (caps)) {
     /* Subtitle streams are sparse and may not provide any information - don't
      * wait for data to preroll */
-    gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+    ps->probe_id =
+        gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
         (GstPadProbeCallback) got_subtitle_data, dc, NULL);
     g_object_set (ps->sink, "async", FALSE, NULL);
     DISCO_LOCK (dc);
@@ -725,6 +727,9 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
     GST_DEBUG ("The removed pad wasn't controlled by us !");
     return;
   }
+
+  if (ps->probe_id)
+    gst_pad_remove_probe (pad, ps->probe_id);
 
   dc->priv->streams = g_list_delete_link (dc->priv->streams, tmp);
   DISCO_UNLOCK (dc);
