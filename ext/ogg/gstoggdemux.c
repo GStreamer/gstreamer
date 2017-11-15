@@ -2313,6 +2313,10 @@ gst_ogg_demux_init (GstOggDemux * ogg)
 
   g_mutex_init (&ogg->chain_lock);
   g_mutex_init (&ogg->push_lock);
+  g_mutex_init (&ogg->seek_event_mutex);
+  g_cond_init (&ogg->seek_event_cond);
+  g_cond_init (&ogg->thread_started_cond);
+
   ogg->chains = g_array_new (FALSE, TRUE, sizeof (GstOggChain *));
 
   ogg->stats_nbisections = 0;
@@ -2337,6 +2341,10 @@ gst_ogg_demux_finalize (GObject * object)
   g_array_free (ogg->chains, TRUE);
   g_mutex_clear (&ogg->chain_lock);
   g_mutex_clear (&ogg->push_lock);
+  g_cond_clear (&ogg->seek_event_cond);
+  g_cond_clear (&ogg->thread_started_cond);
+  g_mutex_clear (&ogg->seek_event_mutex);
+
   ogg_sync_clear (&ogg->sync);
 
   if (ogg->newsegment)
@@ -5084,9 +5092,6 @@ gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       ogg->resync = FALSE;
       if (active) {
         ogg->seek_event_thread_stop = FALSE;
-        g_mutex_init (&ogg->seek_event_mutex);
-        g_cond_init (&ogg->seek_event_cond);
-        g_cond_init (&ogg->thread_started_cond);
         ogg->seek_thread_started = FALSE;
         ogg->seek_event_thread = g_thread_new ("seek_event_thread",
             (GThreadFunc) gst_ogg_demux_loop_push, gst_object_ref (ogg));
@@ -5104,9 +5109,6 @@ gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         g_cond_broadcast (&ogg->seek_event_cond);
         g_mutex_unlock (&ogg->seek_event_mutex);
         g_thread_join (ogg->seek_event_thread);
-        g_cond_clear (&ogg->seek_event_cond);
-        g_cond_clear (&ogg->thread_started_cond);
-        g_mutex_clear (&ogg->seek_event_mutex);
         ogg->seek_event_thread = NULL;
       }
       res = TRUE;
