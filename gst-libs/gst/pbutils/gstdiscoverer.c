@@ -743,7 +743,6 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
     gst_pad_remove_probe (pad, ps->probe_id);
 
   dc->priv->streams = g_list_delete_link (dc->priv->streams, tmp);
-  DISCO_UNLOCK (dc);
 
   gst_element_set_state (ps->sink, GST_STATE_NULL);
   gst_element_set_state (ps->queue, GST_STATE_NULL);
@@ -756,6 +755,7 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
   /* references removed here */
   gst_bin_remove_many (dc->priv->pipeline, ps->sink, ps->queue, NULL);
 
+  DISCO_UNLOCK (dc);
   if (ps->tags) {
     gst_tag_list_unref (ps->tags);
   }
@@ -1340,7 +1340,10 @@ discoverer_collect (GstDiscoverer * dc)
          * completely bogus values. We need some API extensions to solve this
          * better. */
         GST_INFO ("No duration yet, try a bit harder..");
+        /* Make sure we don't add/remove elements while switching to PLAYING itself */
+        DISCO_LOCK (dc);
         sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+        DISCO_UNLOCK (dc);
         if (sret != GST_STATE_CHANGE_FAILURE) {
           int i;
 
