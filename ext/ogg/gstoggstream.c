@@ -1583,7 +1583,7 @@ packet_duration_ogm (GstOggStream * pad, ogg_packet * packet)
   offset = 1 + (((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1));
 
   if (offset > packet->bytes) {
-    GST_ERROR ("buffer too small");
+    GST_WARNING ("buffer too small");
     return -1;
   }
 
