@@ -3725,16 +3725,19 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
       if (add) {
         if (ttl > 0) {
           GST_INFO ("setting ttl-mc %d", ttl);
-          g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", ttl, NULL);
+          if (priv->udpsink[0])
+            g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", ttl, NULL);
           g_object_set (G_OBJECT (priv->udpsink[1]), "ttl-mc", ttl, NULL);
         }
         GST_INFO ("adding %s:%d-%d", dest, min, max);
-        g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
+        if (priv->udpsink[0])
+          g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
         g_signal_emit_by_name (priv->udpsink[1], "add", dest, max, NULL);
         priv->transports = g_list_prepend (priv->transports, trans);
       } else {
         GST_INFO ("removing %s:%d-%d", dest, min, max);
-        g_signal_emit_by_name (priv->udpsink[0], "remove", dest, min, NULL);
+        if (priv->udpsink[0])
+          g_signal_emit_by_name (priv->udpsink[0], "remove", dest, min, NULL);
         g_signal_emit_by_name (priv->udpsink[1], "remove", dest, max, NULL);
         priv->transports = g_list_remove (priv->transports, trans);
       }
