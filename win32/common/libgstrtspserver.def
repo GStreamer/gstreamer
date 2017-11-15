@@ -51,10 +51,13 @@ EXPORTS
 	gst_rtsp_context_pop_current
 	gst_rtsp_context_push_current
 	gst_rtsp_media_collect_streams
+	gst_rtsp_media_complete_pipeline
 	gst_rtsp_media_create_stream
 	gst_rtsp_media_factory_add_role
 	gst_rtsp_media_factory_construct
+	gst_rtsp_media_factory_construct_full
 	gst_rtsp_media_factory_create_element
+	gst_rtsp_media_factory_create_element_full
 	gst_rtsp_media_factory_get_address_pool
 	gst_rtsp_media_factory_get_buffer_size
 	gst_rtsp_media_factory_get_clock
@@ -116,6 +119,7 @@ EXPORTS
 	gst_rtsp_media_get_transport_mode
 	gst_rtsp_media_get_type
 	gst_rtsp_media_handle_sdp
+	gst_rtsp_media_handle_sdp_full
 	gst_rtsp_media_is_eos_shutdown
 	gst_rtsp_media_is_reusable
 	gst_rtsp_media_is_shared
@@ -146,6 +150,7 @@ EXPORTS
 	gst_rtsp_media_set_suspend_mode
 	gst_rtsp_media_set_transport_mode
 	gst_rtsp_media_setup_sdp
+	gst_rtsp_media_setup_sdp_full
 	gst_rtsp_media_suspend
 	gst_rtsp_media_take_pipeline
 	gst_rtsp_media_unprepare
@@ -157,6 +162,20 @@ EXPORTS
 	gst_rtsp_mount_points_match
 	gst_rtsp_mount_points_new
 	gst_rtsp_mount_points_remove_factory
+	gst_rtsp_onvif_client_get_type
+	gst_rtsp_onvif_media_collect_backchannel
+	gst_rtsp_onvif_media_factory_get_backchannel_bandwidth
+	gst_rtsp_onvif_media_factory_get_backchannel_launch
+	gst_rtsp_onvif_media_factory_get_type
+	gst_rtsp_onvif_media_factory_has_backchannel_support
+	gst_rtsp_onvif_media_factory_new
+	gst_rtsp_onvif_media_factory_set_backchannel_bandwidth
+	gst_rtsp_onvif_media_factory_set_backchannel_launch
+	gst_rtsp_onvif_media_get_backchannel_bandwidth
+	gst_rtsp_onvif_media_get_type
+	gst_rtsp_onvif_media_set_backchannel_bandwidth
+	gst_rtsp_onvif_server_get_type
+	gst_rtsp_onvif_server_new
 	gst_rtsp_params_get
 	gst_rtsp_params_set
 	gst_rtsp_permissions_add_role
@@ -169,6 +188,7 @@ EXPORTS
 	gst_rtsp_publish_clock_mode_get_type
 	gst_rtsp_sdp_from_media
 	gst_rtsp_sdp_from_stream
+	gst_rtsp_sdp_make_media
 	gst_rtsp_server_attach
 	gst_rtsp_server_client_filter
 	gst_rtsp_server_create_socket
@@ -208,6 +228,7 @@ EXPORTS
 	gst_rtsp_session_media_get_rtpinfo
 	gst_rtsp_session_media_get_rtsp_state
 	gst_rtsp_session_media_get_transport
+	gst_rtsp_session_media_get_transports
 	gst_rtsp_session_media_get_type
 	gst_rtsp_session_media_matches
 	gst_rtsp_session_media_new
@@ -234,6 +255,7 @@ EXPORTS
 	gst_rtsp_session_touch
 	gst_rtsp_stream_add_transport
 	gst_rtsp_stream_allocate_udp_sockets
+	gst_rtsp_stream_complete_stream
 	gst_rtsp_stream_get_address_pool
 	gst_rtsp_stream_get_buffer_size
 	gst_rtsp_stream_get_caps
@@ -251,7 +273,9 @@ EXPORTS
 	gst_rtsp_stream_get_publish_clock_mode
 	gst_rtsp_stream_get_retransmission_pt
 	gst_rtsp_stream_get_retransmission_time
+	gst_rtsp_stream_get_rtcp_multicast_socket
 	gst_rtsp_stream_get_rtcp_socket
+	gst_rtsp_stream_get_rtp_multicast_socket
 	gst_rtsp_stream_get_rtp_socket
 	gst_rtsp_stream_get_rtpinfo
 	gst_rtsp_stream_get_rtpsession
@@ -264,6 +288,7 @@ EXPORTS
 	gst_rtsp_stream_has_control
 	gst_rtsp_stream_is_blocking
 	gst_rtsp_stream_is_client_side
+	gst_rtsp_stream_is_complete
 	gst_rtsp_stream_is_transport_supported
 	gst_rtsp_stream_join_bin
 	gst_rtsp_stream_leave_bin
@@ -308,6 +333,7 @@ EXPORTS
 	gst_rtsp_stream_transport_set_timed_out
 	gst_rtsp_stream_transport_set_transport
 	gst_rtsp_stream_transport_set_url
+	gst_rtsp_stream_unblock_linked
 	gst_rtsp_stream_update_crypto
 	gst_rtsp_suspend_mode_get_type
 	gst_rtsp_thread_get_type
