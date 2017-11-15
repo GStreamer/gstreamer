@@ -641,7 +641,6 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
     gst_pad_use_fixed_caps (ogm->srcpad);
     gst_pad_set_active (ogm->srcpad, TRUE);
-    gst_pad_set_caps (ogm->srcpad, caps);
     gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
     GST_INFO_OBJECT (ogm, "Added pad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (ogm->srcpad), caps);
@@ -659,6 +658,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     }
     g_list_free (cached_events);
 
+    gst_pad_set_caps (ogm->srcpad, caps);
     {
       GstTagList *tags;
 
