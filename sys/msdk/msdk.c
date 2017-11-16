@@ -77,39 +77,134 @@ msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface)
   guint8 *src, *dst;
   guint sstride, dstride;
   guint width, height;
-  guint i;
+  guint i, p;
 
   if (!surface->Data.MemId) {
-    surface->Data.Y = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-    surface->Data.UV = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
-    surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+    switch (frame->info.finfo->format) {
+      case GST_VIDEO_FORMAT_NV12:
+        surface->Data.Y = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+        surface->Data.UV = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+        surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+        break;
+
+      case GST_VIDEO_FORMAT_YV12:
+      case GST_VIDEO_FORMAT_I420:
+        surface->Data.Y = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+        surface->Data.U = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+        surface->Data.V = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
+        surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+        break;
+
+      case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_UYVY:
+        surface->Data.Y = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+        surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+        break;
+
+      case GST_VIDEO_FORMAT_BGRA:
+        surface->Data.R = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+        surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+        break;
+
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
     return;
   }
 
-  /* Y Plane */
-  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-  src = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-  sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
-  dst = surface->Data.Y;
-  dstride = surface->Data.Pitch;
 
-  for (i = 0; i < height; i++) {
-    memcpy (dst, src, width);
-    src += sstride;
-    dst += dstride;
-  }
+  switch (frame->info.finfo->format) {
+    case GST_VIDEO_FORMAT_NV12:
+      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+      for (p = 0; p < 2; p++) {
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, p);
+        src = GST_VIDEO_FRAME_COMP_DATA (frame, p);
+        sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, p);
+        dst = p == 0 ? surface->Data.Y : surface->Data.UV;
+        dstride = surface->Data.Pitch;
 
-  /* UV Plane */
-  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1);
-  src = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
-  sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
-  dst = surface->Data.UV;
+        for (i = 0; i < height; i++) {
+          memcpy (dst, src, width);
+          src += sstride;
+          dst += dstride;
+        }
+      }
+      break;
 
-  for (i = 0; i < height; i++) {
-    memcpy (dst, src, width);
-    src += sstride;
-    dst += dstride;
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420:
+      for (p = 0; p < 3; p++) {
+        width = GST_VIDEO_FRAME_COMP_WIDTH (frame, p);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, p);
+        src = GST_VIDEO_FRAME_COMP_DATA (frame, p);
+        sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, p);
+        switch (p) {
+          case 0:
+            dst = surface->Data.Y;
+            break;
+          case 1:
+            dst = surface->Data.U;
+            break;
+          case 2:
+            dst = surface->Data.V;
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+        dstride = surface->Data.Pitch;
+        if (p > 0)
+          dstride = dstride / 2;
+
+        for (i = 0; i < height; i++) {
+          memcpy (dst, src, width);
+          src += sstride;
+          dst += dstride;
+        }
+      }
+      break;
+
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+      src = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+      sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+      dst = surface->Data.Y;
+      dstride = surface->Data.Pitch;
+
+      width *= 2;
+      width = MIN (sstride, width);
+
+      for (i = 0; i < height; i++) {
+        memcpy (dst, src, width);
+        src += sstride;
+        dst += dstride;
+      }
+      break;
+
+    case GST_VIDEO_FORMAT_BGRA:
+      width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+      height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+      src = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+      sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+      dst = surface->Data.R;
+      dstride = surface->Data.Pitch;
+
+      width *= 4;
+
+      for (i = 0; i < height; i++) {
+        memcpy (dst, src, width);
+        src += sstride;
+        dst += dstride;
+      }
+      break;
+
+    default:
+      g_assert_not_reached ();
+      break;
   }
 }
 

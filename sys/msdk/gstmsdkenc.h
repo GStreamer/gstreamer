@@ -77,6 +77,12 @@ struct _GstMsdkEnc
   MsdkEncTask *tasks;
   guint next_task;
 
+  gboolean has_vpp;
+  mfxVideoParam vpp_param;
+  guint num_vpp_surfaces;
+  /* Input interfaces, output above */
+  mfxFrameSurface1 *vpp_surfaces;
+
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
 
