@@ -959,12 +959,19 @@ gst_pad_mode_get_name (GstPadMode mode)
   return "unknown";
 }
 
-static void
+/* Returns TRUE if pad wasn't already in the new_mode */
+static gboolean
 pre_activate (GstPad * pad, GstPadMode new_mode)
 {
   switch (new_mode) {
     case GST_PAD_MODE_NONE:
       GST_OBJECT_LOCK (pad);
+      if (new_mode == GST_PAD_MODE (pad)) {
+        GST_WARNING_OBJECT (pad,
+            "Pad is already in the process of being deactivated");
+        GST_OBJECT_UNLOCK (pad);
+        return FALSE;
+      }
       GST_DEBUG_OBJECT (pad, "setting PAD_MODE NONE, set flushing");
       GST_PAD_SET_FLUSHING (pad);
       pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
@@ -976,6 +983,12 @@ pre_activate (GstPad * pad, GstPadMode new_mode)
     case GST_PAD_MODE_PUSH:
     case GST_PAD_MODE_PULL:
       GST_OBJECT_LOCK (pad);
+      if (new_mode == GST_PAD_MODE (pad)) {
+        GST_WARNING_OBJECT (pad,
+            "Pad is already in the process of being activated");
+        GST_OBJECT_UNLOCK (pad);
+        return FALSE;
+      }
       GST_DEBUG_OBJECT (pad, "setting pad into %s mode, unset flushing",
           gst_pad_mode_get_name (new_mode));
       GST_PAD_UNSET_FLUSHING (pad);
@@ -1004,6 +1017,7 @@ pre_activate (GstPad * pad, GstPadMode new_mode)
       }
       break;
   }
+  return TRUE;
 }
 
 static void
@@ -1173,17 +1187,21 @@ activate_mode_internal (GstPad * pad, GstObject * parent, GstPadMode mode,
   /* Mark pad as needing reconfiguration */
   if (active)
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
-  pre_activate (pad, new);
 
-  if (GST_PAD_ACTIVATEMODEFUNC (pad)) {
-    if (G_UNLIKELY (!GST_PAD_ACTIVATEMODEFUNC (pad) (pad, parent, mode,
-                active)))
-      goto failure;
-  } else {
-    /* can happen for sinks of passthrough elements */
+  /* pre_activate returns TRUE if we weren't already in the process of
+   * switching to the 'new' mode */
+  if (pre_activate (pad, new)) {
+
+    if (GST_PAD_ACTIVATEMODEFUNC (pad)) {
+      if (G_UNLIKELY (!GST_PAD_ACTIVATEMODEFUNC (pad) (pad, parent, mode,
+                  active)))
+        goto failure;
+    } else {
+      /* can happen for sinks of passthrough elements */
+    }
+
+    post_activate (pad, new);
   }
-
-  post_activate (pad, new);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in %s mode",
       active ? "activated" : "deactivated", gst_pad_mode_get_name (mode));
