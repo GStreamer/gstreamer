@@ -149,6 +149,11 @@ struct _GstPadPrivate
    * call. Used to block any data flowing in the pad while the idle callback
    * Doesn't finish its work */
   gint idle_running;
+
+  /* conditional and variable used to ensure pads only get (de)activated
+   * by a single thread at a time. Protected by the object lock */
+  GCond activation_cond;
+  gboolean in_activation;
 };
 
 typedef struct
@@ -417,6 +422,8 @@ gst_pad_init (GstPad * pad)
   pad->priv->events = g_array_sized_new (FALSE, TRUE, sizeof (PadEvent), 16);
   pad->priv->events_cookie = 0;
   pad->priv->last_cookie = -1;
+  g_cond_init (&pad->priv->activation_cond);
+
   pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
 }
 
@@ -762,6 +769,7 @@ gst_pad_finalize (GObject * object)
 
   g_rec_mutex_clear (&pad->stream_rec_lock);
   g_cond_clear (&pad->block_cond);
+  g_cond_clear (&pad->priv->activation_cond);
   g_array_free (pad->priv->events, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -966,12 +974,15 @@ pre_activate (GstPad * pad, GstPadMode new_mode)
   switch (new_mode) {
     case GST_PAD_MODE_NONE:
       GST_OBJECT_LOCK (pad);
+      while (G_UNLIKELY (pad->priv->in_activation))
+        g_cond_wait (&pad->priv->activation_cond, GST_OBJECT_GET_LOCK (pad));
       if (new_mode == GST_PAD_MODE (pad)) {
         GST_WARNING_OBJECT (pad,
             "Pad is already in the process of being deactivated");
         GST_OBJECT_UNLOCK (pad);
         return FALSE;
       }
+      pad->priv->in_activation = TRUE;
       GST_DEBUG_OBJECT (pad, "setting PAD_MODE NONE, set flushing");
       GST_PAD_SET_FLUSHING (pad);
       pad->ABI.abi.last_flowret = GST_FLOW_FLUSHING;
@@ -983,12 +994,15 @@ pre_activate (GstPad * pad, GstPadMode new_mode)
     case GST_PAD_MODE_PUSH:
     case GST_PAD_MODE_PULL:
       GST_OBJECT_LOCK (pad);
+      while (G_UNLIKELY (pad->priv->in_activation))
+        g_cond_wait (&pad->priv->activation_cond, GST_OBJECT_GET_LOCK (pad));
       if (new_mode == GST_PAD_MODE (pad)) {
         GST_WARNING_OBJECT (pad,
             "Pad is already in the process of being activated");
         GST_OBJECT_UNLOCK (pad);
         return FALSE;
       }
+      pad->priv->in_activation = TRUE;
       GST_DEBUG_OBJECT (pad, "setting pad into %s mode, unset flushing",
           gst_pad_mode_get_name (new_mode));
       GST_PAD_UNSET_FLUSHING (pad);
@@ -1029,12 +1043,18 @@ post_activate (GstPad * pad, GstPadMode new_mode)
       GST_PAD_STREAM_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "stopped streaming");
       GST_OBJECT_LOCK (pad);
+      pad->priv->in_activation = FALSE;
+      g_cond_broadcast (&pad->priv->activation_cond);
       remove_events (pad);
       GST_OBJECT_UNLOCK (pad);
       GST_PAD_STREAM_UNLOCK (pad);
       break;
     case GST_PAD_MODE_PUSH:
     case GST_PAD_MODE_PULL:
+      GST_OBJECT_LOCK (pad);
+      pad->priv->in_activation = FALSE;
+      g_cond_broadcast (&pad->priv->activation_cond);
+      GST_OBJECT_UNLOCK (pad);
       /* NOP */
       break;
   }
@@ -1256,6 +1276,8 @@ failure:
         active ? "activate" : "deactivate", gst_pad_mode_get_name (mode));
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_MODE (pad) = old;
+    pad->priv->in_activation = FALSE;
+    g_cond_broadcast (&pad->priv->activation_cond);
     GST_OBJECT_UNLOCK (pad);
     goto exit;
   }
