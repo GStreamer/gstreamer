@@ -5372,6 +5372,17 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       dbin->shutdown = TRUE;
       unblock_pads (dbin);
       DYN_UNLOCK (dbin);
+
+      /* Make sure we don't have cleanup races where
+       * we might be trying to deactivate pads (in the cleanup thread)
+       * at the same time as the default element deactivation
+       * (in PAUSED=>READY)  */
+      g_mutex_lock (&dbin->cleanup_lock);
+      if (dbin->cleanup_thread) {
+        g_thread_join (dbin->cleanup_thread);
+        dbin->cleanup_thread = NULL;
+      }
+      g_mutex_unlock (&dbin->cleanup_lock);
     default:
       break;
   }
@@ -5405,12 +5416,6 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       dbin->buffering_status = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      g_mutex_lock (&dbin->cleanup_lock);
-      if (dbin->cleanup_thread) {
-        g_thread_join (dbin->cleanup_thread);
-        dbin->cleanup_thread = NULL;
-      }
-      g_mutex_unlock (&dbin->cleanup_lock);
     default:
       break;
   }
