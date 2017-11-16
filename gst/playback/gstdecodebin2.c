@@ -193,6 +193,7 @@ struct _GstDecodeBin
                                  * We store it to make sure we end up joining it
                                  * before stopping the element.
                                  * Protected by the object lock */
+  GList *cleanup_groups;        /* List of groups to free  */
 };
 
 struct _GstDecodeBinClass
@@ -3688,6 +3689,16 @@ gst_decode_chain_start_free_hidden_groups_thread (GstDecodeChain * chain)
   }
 
   chain->old_groups = NULL;
+
+  if (dbin->shutdown) {
+    /* If we're shutting down, add the groups to be cleaned up in the
+     * state change handler (which *is* another thread). Also avoids
+     * playing racy games with the state change handler */
+    dbin->cleanup_groups = g_list_concat (dbin->cleanup_groups, old_groups);
+    g_mutex_unlock (&dbin->cleanup_lock);
+    return;
+  }
+
   thread = g_thread_try_new ("free-hidden-groups",
       (GThreadFunc) gst_decode_chain_free_hidden_groups, old_groups, &error);
   if (!thread || error) {
@@ -5414,8 +5425,23 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       g_list_free_full (dbin->buffering_status,
           (GDestroyNotify) gst_message_unref);
       dbin->buffering_status = NULL;
+      /* Let's do a final check of leftover groups to free */
+      g_mutex_lock (&dbin->cleanup_lock);
+      if (dbin->cleanup_groups) {
+        gst_decode_chain_free_hidden_groups (dbin->cleanup_groups);
+        dbin->cleanup_groups = NULL;
+      }
+      g_mutex_unlock (&dbin->cleanup_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* Let's do a final check of leftover groups to free */
+      g_mutex_lock (&dbin->cleanup_lock);
+      if (dbin->cleanup_groups) {
+        gst_decode_chain_free_hidden_groups (dbin->cleanup_groups);
+        dbin->cleanup_groups = NULL;
+      }
+      g_mutex_unlock (&dbin->cleanup_lock);
+      break;
     default:
       break;
   }
