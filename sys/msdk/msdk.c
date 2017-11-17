@@ -96,13 +96,23 @@ msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface)
         break;
 
       case GST_VIDEO_FORMAT_YUY2:
+        surface->Data.Y = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+        surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+        surface->Data.U = surface->Data.Y + 1;
+        surface->Data.V = surface->Data.Y + 3;
+        break;
       case GST_VIDEO_FORMAT_UYVY:
         surface->Data.Y = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
         surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+        surface->Data.U = surface->Data.Y;
+        surface->Data.Y = surface->Data.U + 1;
+        surface->Data.V = surface->Data.U + 2;
         break;
 
       case GST_VIDEO_FORMAT_BGRA:
         surface->Data.R = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+        surface->Data.G = surface->Data.R - 1;
+        surface->Data.B = surface->Data.R - 2;
         surface->Data.Pitch = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
         break;
 
@@ -190,7 +200,7 @@ msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface)
       height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
       src = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
       sstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
-      dst = surface->Data.R;
+      dst = surface->Data.B;
       dstride = surface->Data.Pitch;
 
       width *= 4;

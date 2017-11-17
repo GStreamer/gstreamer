@@ -196,6 +196,19 @@ gst_msdkenc_alloc_surfaces (GstMsdkEnc * thiz, GstVideoFormat format,
     } else if (Y_size) {
       surface->Data.UV = data + Y_size;
     }
+
+    if (format == GST_VIDEO_FORMAT_YUY2) {
+      surface->Data.U = data + 1;
+      surface->Data.V = data + 3;
+    } else if (format == GST_VIDEO_FORMAT_UYVY) {
+      surface->Data.U = data + 1;
+      surface->Data.Y = data + 2;
+      surface->Data.V = data + 3;
+    } else if (format == GST_VIDEO_FORMAT_BGRA) {
+      surface->Data.R = data;
+      surface->Data.G = data + 1;
+      surface->Data.B = data + 2;
+    }
   }
 }
 
