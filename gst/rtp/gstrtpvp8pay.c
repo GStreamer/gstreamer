@@ -39,11 +39,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_pay_debug
 
 #define DEFAULT_PICTURE_ID_MODE VP8_PAY_NO_PICTURE_ID
+#define DEFAULT_PICTURE_ID_OFFSET (-1)
 
 enum
 {
   PROP_0,
-  PROP_PICTURE_ID_MODE
+  PROP_PICTURE_ID_MODE,
+  PROP_PICTURE_ID_OFFSET
 };
 
 #define GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE (gst_rtp_vp8_pay_picture_id_mode_get_type())
@@ -93,7 +95,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-vp8"));
 
 static gint
-picture_id_bitsize_from_mode (PictureIDMode mode)
+picture_id_field_len (PictureIDMode mode)
 {
   if (VP8_PAY_NO_PICTURE_ID == mode)
     return 0;
@@ -105,20 +107,28 @@ picture_id_bitsize_from_mode (PictureIDMode mode)
 static void
 gst_rtp_vp8_pay_picture_id_reset (GstRtpVP8Pay * obj)
 {
-  gint picture_id_bitsize = picture_id_bitsize_from_mode (obj->picture_id_mode);
-  if (0 == picture_id_bitsize)
-      return;
-  obj->picture_id = g_random_int_range (0, 1 << picture_id_bitsize);
+  gint nbits;
+
+  if (obj->picture_id_offset == -1)
+    obj->picture_id = g_random_int ();
+  else
+    obj->picture_id = obj->picture_id_offset;
+
+  nbits = picture_id_field_len (obj->picture_id_mode);
+  obj->picture_id &= (1 << nbits) - 1;
 }
 
 static void
 gst_rtp_vp8_pay_picture_id_increment (GstRtpVP8Pay * obj)
 {
-  gint picture_id_bitsize = picture_id_bitsize_from_mode (obj->picture_id_mode);
-  if (0 == picture_id_bitsize)
-      return;
-  ++obj->picture_id;
-  obj->picture_id &= (1 << picture_id_bitsize) - 1;
+  gint nbits;
+
+  if (obj->picture_id_mode == VP8_PAY_NO_PICTURE_ID)
+    return;
+
+  nbits = picture_id_field_len (obj->picture_id_mode);
+  obj->picture_id++;
+  obj->picture_id &= (1 << nbits) - 1;
 }
 
 static void
@@ -126,6 +136,7 @@ gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj)
 {
   obj->picture_id_mode = DEFAULT_PICTURE_ID_MODE;
   gst_rtp_vp8_pay_picture_id_reset (obj);
+  obj->picture_id_offset = DEFAULT_PICTURE_ID_OFFSET;
 }
 
 static void
@@ -143,6 +154,18 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
       g_param_spec_enum ("picture-id-mode", "Picture ID Mode",
           "The picture ID mode for payloading",
           GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE, DEFAULT_PICTURE_ID_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * rtpvp8pay:picture-id-offset:
+   *
+   * Offset to add to the initial picture-id (-1 = random)
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_PICTURE_ID_OFFSET,
+      g_param_spec_int ("picture-id-offset", "Picture ID offset",
+          "Offset to add to the initial picture-id (-1 = random)",
+          -1, 0x7FFF, DEFAULT_PICTURE_ID_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class,
@@ -175,6 +198,10 @@ gst_rtp_vp8_pay_set_property (GObject * object,
       rtpvp8pay->picture_id_mode = g_value_get_enum (value);
       gst_rtp_vp8_pay_picture_id_reset (rtpvp8pay);
       break;
+    case PROP_PICTURE_ID_OFFSET:
+      rtpvp8pay->picture_id_offset = g_value_get_int (value);
+      gst_rtp_vp8_pay_picture_id_reset (rtpvp8pay);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -190,6 +217,9 @@ gst_rtp_vp8_pay_get_property (GObject * object,
   switch (prop_id) {
     case PROP_PICTURE_ID_MODE:
       g_value_set_enum (value, rtpvp8pay->picture_id_mode);
+      break;
+    case PROP_PICTURE_ID_OFFSET:
+      g_value_set_int (value, rtpvp8pay->picture_id_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

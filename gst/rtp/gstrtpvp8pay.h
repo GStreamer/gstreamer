@@ -62,6 +62,7 @@ struct _GstRtpVP8Pay
   guint partition_offset[10];
   guint partition_size[9];
   PictureIDMode picture_id_mode;
+  gint picture_id_offset;
   guint16 picture_id;
 };
 

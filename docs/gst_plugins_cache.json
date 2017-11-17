@@ -15764,6 +15764,20 @@
                         "readable": true,
                         "type": "GstVP8RTPPayMode",
                         "writable": true
+                    },
+                    "picture-id-offset": {
+                        "blurb": "Offset to add to the initial picture-id (-1 = random)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "-1",
+                        "max": "32767",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
                     }
                 },
                 "rank": "marginal"
