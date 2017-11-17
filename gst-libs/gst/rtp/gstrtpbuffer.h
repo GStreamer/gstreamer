@@ -72,7 +72,7 @@ GST_EXPORT
 GstBuffer*      gst_rtp_buffer_new_take_data         (gpointer data, gsize len);
 
 GST_EXPORT
-GstBuffer*      gst_rtp_buffer_new_copy_data         (gpointer data, gsize len);
+GstBuffer*      gst_rtp_buffer_new_copy_data         (gconstpointer data, gsize len);
 
 GST_EXPORT
 GstBuffer*      gst_rtp_buffer_new_allocate          (guint payload_len, guint8 pad_len, guint8 csrc_count);

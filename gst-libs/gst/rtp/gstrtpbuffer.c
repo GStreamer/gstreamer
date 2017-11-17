@@ -179,7 +179,7 @@ gst_rtp_buffer_new_take_data (gpointer data, gsize len)
  * Returns: A newly allocated buffer with a copy of @data and of size @len.
  */
 GstBuffer *
-gst_rtp_buffer_new_copy_data (gpointer data, gsize len)
+gst_rtp_buffer_new_copy_data (gconstpointer data, gsize len)
 {
   return gst_rtp_buffer_new_take_data (g_memdup (data, len), len);
 }
