@@ -216,6 +216,8 @@ static gboolean gst_nvdec_decide_allocation (GstVideoDecoder * decoder,
 static void gst_nvdec_set_context (GstElement * element, GstContext * context);
 static gboolean gst_nvdec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
+static gboolean gst_nvdec_flush (GstVideoDecoder * decoder);
+static GstFlowReturn gst_nvdec_drain (GstVideoDecoder * decoder);
 
 static GstStaticPadTemplate gst_nvdec_sink_template =
     GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
@@ -260,6 +262,8 @@ gst_nvdec_class_init (GstNvDecClass * klass)
   video_decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_nvdec_decide_allocation);
   video_decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_nvdec_src_query);
+  video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_nvdec_drain);
+  video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_nvdec_flush);
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nvdec_set_context);
 }
@@ -852,6 +856,44 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   gst_buffer_unmap (frame->input_buffer, &map_info);
   gst_video_codec_frame_unref (frame);
+
+  return handle_pending_frames (nvdec);
+}
+
+static gboolean
+gst_nvdec_flush (GstVideoDecoder * decoder)
+{
+  GstNvDec *nvdec = GST_NVDEC (decoder);
+  CUVIDSOURCEDATAPACKET packet = { 0, };
+
+  GST_DEBUG_OBJECT (nvdec, "flush");
+
+  packet.payload_size = 0;
+  packet.payload = NULL;
+  packet.flags = CUVID_PKT_ENDOFSTREAM;
+
+  if (!cuda_OK (cuvidParseVideoData (nvdec->parser, &packet)))
+    GST_WARNING_OBJECT (nvdec, "parser failed");
+
+  handle_pending_frames (nvdec);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_nvdec_drain (GstVideoDecoder * decoder)
+{
+  GstNvDec *nvdec = GST_NVDEC (decoder);
+  CUVIDSOURCEDATAPACKET packet = { 0, };
+
+  GST_DEBUG_OBJECT (nvdec, "draining decoder");
+
+  packet.payload_size = 0;
+  packet.payload = NULL;
+  packet.flags = CUVID_PKT_ENDOFSTREAM;
+
+  if (!cuda_OK (cuvidParseVideoData (nvdec->parser, &packet)))
+    GST_WARNING_OBJECT (nvdec, "parser failed");
 
   return handle_pending_frames (nvdec);
 }
