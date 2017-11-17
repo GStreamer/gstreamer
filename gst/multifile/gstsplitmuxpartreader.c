@@ -456,12 +456,8 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP)
     goto drop_event;
 
-  if (!block_until_can_push (reader)) {
-    SPLITMUX_PART_UNLOCK (reader);
-    gst_object_unref (target);
-    gst_event_unref (event);
-    return FALSE;
-  }
+  if (!block_until_can_push (reader))
+    goto drop_event;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_GAP:{
@@ -1360,6 +1356,8 @@ bus_handler (GstBin * bin, GstMessage * message)
       /* Make sure to set the state to failed and wake up the listener
        * on error */
       SPLITMUX_PART_LOCK (reader);
+      GST_ERROR_OBJECT (reader, "Got error message from child %" GST_PTR_FORMAT
+          " marking this reader as failed", GST_MESSAGE_SRC (message));
       reader->prep_state = PART_STATE_FAILED;
       SPLITMUX_PART_BROADCAST (reader);
       SPLITMUX_PART_UNLOCK (reader);
