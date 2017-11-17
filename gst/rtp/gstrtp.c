@@ -113,6 +113,13 @@
 #include "gstrtpvrawpay.h"
 #include "gstrtpstreampay.h"
 #include "gstrtpstreamdepay.h"
+#include "gstrtpredenc.h"
+#include "gstrtpreddec.h"
+#include "gstrtpulpfecdec.h"
+#include "gstrtpulpfecenc.h"
+#include "gstrtpreddec.h"
+#include "gstrtpredenc.h"
+#include "gstrtpstorage.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -386,6 +393,34 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_stream_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpredenc", GST_RANK_NONE,
+          GST_TYPE_RTP_RED_ENC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpreddec", GST_RANK_NONE,
+          GST_TYPE_RTP_RED_DEC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpulpfecdec", GST_RANK_NONE,
+          GST_TYPE_RTP_ULPFEC_DEC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpulpfecenc", GST_RANK_NONE,
+          GST_TYPE_RTP_ULPFEC_ENC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpreddec", GST_RANK_NONE,
+          GST_TYPE_RTP_RED_DEC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpredenc", GST_RANK_NONE,
+          GST_TYPE_RTP_RED_ENC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpstorage", GST_RANK_NONE,
+          GST_TYPE_RTP_STORAGE))
     return FALSE;
 
   return TRUE;

@@ -1,0 +1,175 @@
+/* GStreamer plugin for forward error correction
+ * Copyright (C) 2017 Pexip
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * Author: Mikhail Fludkov <misha@pexip.com>
+ */
+
+#include "gstrtpstorage.h"
+
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp")
+    );
+
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtp")
+    );
+
+enum
+{
+  PROP_0,
+  PROP_SIZE_TIME,
+  PROP_INTERNAL_STORAGE,
+  N_PROPERTIES
+};
+
+static GParamSpec *klass_properties[N_PROPERTIES] = { NULL, };
+
+#define DEFAULT_SIZE_TIME (0)
+
+GST_DEBUG_CATEGORY_STATIC (gst_rtp_storage_debug);
+#define GST_CAT_DEFAULT (gst_rtp_storage_debug)
+
+G_DEFINE_TYPE (GstRtpStorage, gst_rtp_storage, GST_TYPE_ELEMENT);
+
+static GstFlowReturn
+gst_rtp_storage_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+{
+  GstRtpStorage *self = GST_RTP_STORAGE (parent);;
+
+  if (rtp_storage_append_buffer (self->storage, buf))
+    return gst_pad_push (self->srcpad, buf);
+  return GST_FLOW_OK;
+}
+
+static void
+gst_rtp_storage_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpStorage *self = GST_RTP_STORAGE (object);
+
+  if (GST_LEVEL_DEBUG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    gchar *val_str = gst_value_serialize (value);
+    GST_DEBUG_OBJECT (object, "Setting property \"%s\" to %s", pspec->name,
+        val_str);
+    g_free (val_str);
+  }
+
+  switch (prop_id) {
+    case PROP_SIZE_TIME:
+      rtp_storage_set_size (self->storage, g_value_get_uint64 (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_storage_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpStorage *self = GST_RTP_STORAGE (object);
+  switch (prop_id) {
+    case PROP_SIZE_TIME:
+      g_value_set_uint64 (value, rtp_storage_get_size (self->storage));
+      break;
+    case PROP_INTERNAL_STORAGE:
+    {
+      g_value_set_object (value, self->storage);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  if (GST_LEVEL_LOG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    gchar *val_str = gst_value_serialize (value);
+    GST_LOG_OBJECT (object, "Returning property \"%s\" %s", pspec->name,
+        val_str);
+    g_free (val_str);
+  }
+}
+
+static void
+gst_rtp_storage_init (GstRtpStorage * self)
+{
+  self->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  self->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
+  GST_PAD_SET_PROXY_CAPS (self->sinkpad);
+  GST_PAD_SET_PROXY_ALLOCATION (self->sinkpad);
+  gst_pad_set_chain_function (self->sinkpad, gst_rtp_storage_chain);
+
+  gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+  gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
+
+  self->storage = rtp_storage_new ();
+}
+
+static void
+gst_rtp_storage_dispose (GObject * obj)
+{
+  GstRtpStorage *self = GST_RTP_STORAGE (obj);
+  g_object_unref (self->storage);
+  G_OBJECT_CLASS (gst_rtp_storage_parent_class)->dispose (obj);
+}
+
+static void
+gst_rtp_storage_class_init (GstRtpStorageClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_rtp_storage_debug,
+      "rtpstorage", 0, "RTP Storage");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_static_metadata (element_class,
+      "RTP storage",
+      "Analyzer/RTP",
+      "Helper element for various purposes "
+      "(ex. recovering from packet loss using RED/FEC). "
+      "Saves given number of RTP packets. "
+      "Should be instantiated before jitterbuffer",
+      "Mikhail Fludkov <misha@pexip.com>");
+
+  gobject_class->set_property = gst_rtp_storage_set_property;
+  gobject_class->get_property = gst_rtp_storage_get_property;
+  gobject_class->dispose = gst_rtp_storage_dispose;
+
+  klass_properties[PROP_SIZE_TIME] =
+      g_param_spec_uint64 ("size-time", "Storage size (in ns)",
+      "The amount of data to keep in the storage (in ns, 0-disable)", 0,
+      G_MAXUINT64, DEFAULT_SIZE_TIME,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+
+  klass_properties[PROP_INTERNAL_STORAGE] =
+      g_param_spec_object ("internal-storage", "Internal storage",
+      "Internal RtpStorage object", G_TYPE_OBJECT,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES,
+      klass_properties);
+}

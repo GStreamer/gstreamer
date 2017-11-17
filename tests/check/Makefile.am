@@ -251,7 +251,10 @@ check_rtpmanager = \
 	elements/rtpjitterbuffer \
 	elements/rtpmux \
 	elements/rtprtx \
-	elements/rtpsession
+	elements/rtpsession \
+	elements/rtpstorage \
+	elements/rtpred \
+	elements/rtpfec
 else
 check_rtpmanager =
 endif
@@ -610,6 +613,15 @@ elements_rtpaux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(L
 
 elements_rtpbundle_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_rtpbundle_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(LDADD)
+
+elements_rtpstorage_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_rtpstorage_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) -lgstrtp-$(GST_API_VERSION) $(GIO_LIBS) $(LDADD)
+
+elements_rtpred_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_rtpred_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) -lgstrtp-$(GST_API_VERSION) $(GIO_LIBS) $(LDADD)
+
+elements_rtpfec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_rtpfec_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) -lgstrtp-$(GST_API_VERSION) $(GIO_LIBS) $(LDADD)
 
 # FIXME: configure should check for gdk-pixbuf not gtk
 # only need video.h header, not the lib
