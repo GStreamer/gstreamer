@@ -617,20 +617,6 @@ print_element_flag_info (GstElement * element)
 }
 
 static void
-print_implementation_info (GstElement * element)
-{
-  GstElementClass *gstelement_class;
-
-  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
-
-  n_print ("\n");
-  n_print ("Element Implementation:\n");
-
-  n_print ("  Has change_state() function: %s\n",
-      GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
-}
-
-static void
 print_clocking_info (GstElement * element)
 {
   gboolean requires_clock, provides_clock;
@@ -1349,7 +1335,6 @@ print_element_info (GstPluginFeature * feature, gboolean print_names)
 
   print_pad_templates_info (element, factory);
   print_element_flag_info (element);
-  print_implementation_info (element);
   print_clocking_info (element);
   print_uri_handler_info (element);
   print_pad_info (element);
