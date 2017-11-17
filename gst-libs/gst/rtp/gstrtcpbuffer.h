@@ -222,7 +222,7 @@ struct _GstRTCPPacket
 
 /* creating buffers */
 GstBuffer*      gst_rtcp_buffer_new_take_data     (gpointer data, guint len);
-GstBuffer*      gst_rtcp_buffer_new_copy_data     (gpointer data, guint len);
+GstBuffer*      gst_rtcp_buffer_new_copy_data     (gconstpointer data, guint len);
 
 gboolean        gst_rtcp_buffer_validate_data     (guint8 *data, guint len);
 gboolean        gst_rtcp_buffer_validate          (GstBuffer *buffer);
