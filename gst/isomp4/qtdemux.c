@@ -1625,7 +1625,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   gboolean flush;
   gboolean update;
   GstSegment seeksegment;
-  guint32 seqnum = 0;
+  guint32 seqnum = GST_SEQNUM_INVALID;
   GstEvent *flush_event;
   gboolean ret;
 
@@ -1653,7 +1653,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   /* stop streaming, either by flushing or by pausing the task */
   if (flush) {
     flush_event = gst_event_new_flush_start ();
-    if (seqnum)
+    if (seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (flush_event, seqnum);
     /* unlock upstream pull_range */
     gst_pad_push_event (qtdemux->sinkpad, gst_event_ref (flush_event));
@@ -1690,7 +1690,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   /* prepare for streaming again */
   if (flush) {
     flush_event = gst_event_new_flush_stop (TRUE);
-    if (seqnum)
+    if (seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (flush_event, seqnum);
 
     gst_pad_push_event (qtdemux->sinkpad, gst_event_ref (flush_event));
@@ -1703,7 +1703,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     GstMessage *msg = gst_message_new_segment_start (GST_OBJECT_CAST (qtdemux),
         qtdemux->segment.format, qtdemux->segment.position);
-    if (seqnum)
+    if (seqnum != GST_SEQNUM_INVALID)
       gst_message_set_seqnum (msg, seqnum);
     gst_element_post_message (GST_ELEMENT_CAST (qtdemux), msg);
   }
@@ -2092,7 +2092,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
-  qtdemux->segment_seqnum = 0;
+  qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
 
   if (hard) {
     for (n = 0; n < qtdemux->n_streams; n++) {
@@ -2126,7 +2126,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     }
     if (!qtdemux->pending_newsegment) {
       qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
-      if (qtdemux->segment_seqnum)
+      if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
         gst_event_set_seqnum (qtdemux->pending_newsegment,
             qtdemux->segment_seqnum);
     }
@@ -4782,7 +4782,7 @@ gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* now prepare and send the segment */
   if (stream->pad) {
     event = gst_event_new_segment (&stream->segment);
-    if (qtdemux->segment_seqnum) {
+    if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID) {
       gst_event_set_seqnum (event, qtdemux->segment_seqnum);
     }
     gst_pad_push_event (stream->pad, event);
@@ -5153,7 +5153,7 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
           GST_PAD_NAME (stream->pad));
       stream->sent_eos = TRUE;
       event = gst_event_new_eos ();
-      if (demux->segment_seqnum)
+      if (demux->segment_seqnum != GST_SEQNUM_INVALID)
         gst_event_set_seqnum (event, demux->segment_seqnum);
       gst_pad_push_event (stream->pad, event);
     }
@@ -6020,7 +6020,7 @@ pause:
           message = gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
               GST_FORMAT_TIME, stop);
           event = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
-          if (qtdemux->segment_seqnum) {
+          if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID) {
             gst_message_set_seqnum (message, qtdemux->segment_seqnum);
             gst_event_set_seqnum (event, qtdemux->segment_seqnum);
           }
@@ -6036,7 +6036,7 @@ pause:
               GST_FORMAT_TIME, qtdemux->segment.start);
           event = gst_event_new_segment_done (GST_FORMAT_TIME,
               qtdemux->segment.start);
-          if (qtdemux->segment_seqnum) {
+          if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID) {
             gst_message_set_seqnum (message, qtdemux->segment_seqnum);
             gst_event_set_seqnum (event, qtdemux->segment_seqnum);
           }
@@ -6048,7 +6048,7 @@ pause:
 
         GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
         event = gst_event_new_eos ();
-        if (qtdemux->segment_seqnum)
+        if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
           gst_event_set_seqnum (event, qtdemux->segment_seqnum);
         gst_qtdemux_push_event (qtdemux, event);
       }
@@ -6190,7 +6190,7 @@ qtdemux_seek_offset (GstQTDemux * demux, guint64 offset)
   /* store seqnum to drop flush events, they don't need to reach downstream */
   demux->offset_seek_seqnum = gst_event_get_seqnum (event);
   res = gst_pad_push_event (demux->sinkpad, event);
-  demux->offset_seek_seqnum = 0;
+  demux->offset_seek_seqnum = GST_SEQNUM_INVALID;
 
   return res;
 }
@@ -6581,7 +6581,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               if (!demux->pending_newsegment) {
                 demux->pending_newsegment =
                     gst_event_new_segment (&demux->segment);
-                if (demux->segment_seqnum)
+                if (demux->segment_seqnum != GST_SEQNUM_INVALID)
                   gst_event_set_seqnum (demux->pending_newsegment,
                       demux->segment_seqnum);
               }
@@ -6702,7 +6702,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                 GST_DEBUG_OBJECT (demux, "new pending_newsegment");
                 demux->pending_newsegment =
                     gst_event_new_segment (&demux->segment);
-                if (demux->segment_seqnum)
+                if (demux->segment_seqnum != GST_SEQNUM_INVALID)
                   gst_event_set_seqnum (demux->pending_newsegment,
                       demux->segment_seqnum);
               }
@@ -11909,7 +11909,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     GstEvent *event;
 
     event = gst_event_new_eos ();
-    if (qtdemux->segment_seqnum)
+    if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (event, qtdemux->segment_seqnum);
 
     gst_pad_push_event (oldpad, event);
