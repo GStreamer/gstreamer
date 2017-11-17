@@ -232,6 +232,10 @@ gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer *rtp,
  * GstRTPBufferFlags:
  * @GST_RTP_BUFFER_FLAG_RETRANSMISSION: The #GstBuffer was once wrapped
  *           in a retransmitted packet as specified by RFC 4588.
+ * @GST_RTP_BUFFER_FLAG_REDUNDANT:      The packet represents redundant RTP packet.
+ *           The flag is used in gstrtpstorage to be able to hold the packetback
+ *           and use it only for recovery from packet loss.
+ *           Since: 1.14
  * @GST_RTP_BUFFER_FLAG_LAST:           Offset to define more flags.
  *
  * Additional RTP buffer flags. These flags can potentially be used on any
@@ -244,6 +248,7 @@ gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer *rtp,
  */
 typedef enum {
   GST_RTP_BUFFER_FLAG_RETRANSMISSION = (GST_BUFFER_FLAG_LAST << 0),
+  GST_RTP_BUFFER_FLAG_REDUNDANT      = (GST_BUFFER_FLAG_LAST << 1),
   GST_RTP_BUFFER_FLAG_LAST           = (GST_BUFFER_FLAG_LAST << 8)
 } GstRTPBufferFlags;
 
