@@ -592,7 +592,8 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
       gst_caps_unref (caps);
     }
 
-    n_print ("\n");
+    if (pads != NULL)
+      n_print ("\n");
   }
 }
 
