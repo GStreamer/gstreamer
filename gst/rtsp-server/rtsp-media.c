@@ -142,6 +142,10 @@ struct _GstRTSPMediaPrivate
   guint latency;                /* protected by lock */
   GstClock *clock;              /* protected by lock */
   GstRTSPPublishClockMode publish_clock_mode;
+
+  /* Dynamic element handling */
+  guint nb_dynamic_elements;
+  guint no_more_pads_pending;
 };
 
 #define DEFAULT_SHARED          FALSE
@@ -1740,6 +1744,8 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       priv->dynamic = g_list_prepend (priv->dynamic, elem);
       g_mutex_unlock (&priv->lock);
 
+      priv->nb_dynamic_elements++;
+
       have_elem = TRUE;
       more_elem_remaining = TRUE;
       mode |= GST_RTSP_TRANSPORT_MODE_PLAY;
@@ -2648,9 +2654,15 @@ static void
 no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
+  gboolean remaining_dynamic;
 
-  GST_INFO ("no more pads");
-  remove_fakesink (priv);
+  GST_INFO_OBJECT (element, "no more pads");
+  g_mutex_lock (&priv->lock);
+  priv->no_more_pads_pending--;
+  remaining_dynamic = priv->no_more_pads_pending;
+  g_mutex_unlock (&priv->lock);
+  if (remaining_dynamic == 0)
+    remove_fakesink (priv);
 }
 
 typedef struct _DynPaySignalHandlers DynPaySignalHandlers;
@@ -2955,6 +2967,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   priv->is_live = FALSE;
   priv->seekable = FALSE;
   priv->buffering = FALSE;
+  priv->no_more_pads_pending = priv->nb_dynamic_elements;
 
   /* we're preparing now */
   gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
