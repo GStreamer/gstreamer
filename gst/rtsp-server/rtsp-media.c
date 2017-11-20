@@ -703,7 +703,7 @@ check_seekable (GstRTSPMedia * media)
     gint64 start, end;
 
     gst_query_parse_seeking (query, &format, &seekable, &start, &end);
-    priv->seekable = seekable ? G_MAXINT64 : 0.0;
+    priv->seekable = seekable ? G_MAXINT64 : 0;
   }
 
   gst_query_unref (query);
