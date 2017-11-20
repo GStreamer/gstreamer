@@ -2149,7 +2149,7 @@ refuse_caps:
 }
 
 static void
-remove_fields (GstCaps * caps)
+remove_fields (GstCaps * caps, gboolean all)
 {
   guint i, n;
 
@@ -2157,8 +2157,10 @@ remove_fields (GstCaps * caps)
   for (i = 0; i < n; i++) {
     GstStructure *s = gst_caps_get_structure (caps, i);
 
-    gst_structure_remove_field (s, "alignment");
-    gst_structure_remove_field (s, "stream-format");
+    if (all) {
+      gst_structure_remove_field (s, "alignment");
+      gst_structure_remove_field (s, "stream-format");
+    }
     gst_structure_remove_field (s, "parsed");
   }
 }
@@ -2167,28 +2169,24 @@ static GstCaps *
 gst_h265_parse_get_caps (GstBaseParse * parse, GstCaps * filter)
 {
   GstCaps *peercaps, *templ;
-  GstCaps *res;
+  GstCaps *res, *tmp, *pcopy;
 
   templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse));
   if (filter) {
     GstCaps *fcopy = gst_caps_copy (filter);
     /* Remove the fields we convert */
-    remove_fields (fcopy);
+    remove_fields (fcopy, TRUE);
     peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), fcopy);
     gst_caps_unref (fcopy);
   } else
     peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), NULL);
 
-  if (peercaps) {
-    peercaps = gst_caps_make_writable (peercaps);
-    remove_fields (peercaps);
+  pcopy = gst_caps_copy (peercaps);
+  remove_fields (pcopy, TRUE);
 
-    res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (peercaps);
-    gst_caps_unref (templ);
-  } else {
-    res = templ;
-  }
+  res = gst_caps_intersect_full (pcopy, templ, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (pcopy);
+  gst_caps_unref (templ);
 
   if (filter) {
     GstCaps *tmp = gst_caps_intersect_full (res, filter,
@@ -2197,6 +2195,15 @@ gst_h265_parse_get_caps (GstBaseParse * parse, GstCaps * filter)
     res = tmp;
   }
 
+  /* Try if we can put the downstream caps first */
+  remove_fields (peercaps, FALSE);
+  tmp = gst_caps_intersect_full (peercaps, res, GST_CAPS_INTERSECT_FIRST);
+  if (!gst_caps_is_empty (tmp))
+    res = gst_caps_merge (tmp, res);
+  else
+    gst_caps_unref (tmp);
+
+  gst_caps_unref (peercaps);
   return res;
 }
 
