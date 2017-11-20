@@ -4053,7 +4053,7 @@ gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_get_seekbale:
+ * gst_rtsp_media_get_seekable:
  * @media: a #GstRTSPMedia
  *
  * Check if the pipeline for @media seek and up to what point in time,
@@ -4061,7 +4061,7 @@ gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
  *
  * Returns: -1 if the stream is not seekable, 0 if seekable only to the beginning
  * and > 0 to indicate the longest duration between any two random access points.
- * G_MAXINT64 means any value is possible.
+ * %G_MAXINT64 means any value is possible.
  */
 GstClockTimeDiff
 gst_rtsp_media_seekable (GstRTSPMedia * media)
