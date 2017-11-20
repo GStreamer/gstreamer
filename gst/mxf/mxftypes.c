@@ -250,9 +250,7 @@ mxf_uuid_hash (const MXFUUID * uuid)
   g_return_val_if_fail (uuid != NULL, 0);
 
   for (i = 0; i < 4; i++)
-    ret ^= (uuid->u[i * 4 + 0] << 24) |
-        (uuid->u[i * 4 + 1] << 16) |
-        (uuid->u[i * 4 + 2] << 8) | (uuid->u[i * 4 + 3] << 0);
+    ret ^= GST_READ_UINT32_BE (uuid->u + i * 4);
 
   return ret;
 }
