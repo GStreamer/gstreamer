@@ -2555,8 +2555,9 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       s = gst_message_get_structure (message);
       if (gst_structure_has_name (s, "GstRTSPStreamBlocking")) {
         GST_DEBUG ("media received blocking message");
-        if (priv->blocked && media_streams_blocking (media)) {
-          GST_DEBUG ("media is blocking");
+        if (priv->blocked && media_streams_blocking (media) &&
+            priv->no_more_pads_pending == 0) {
+          GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "media is blocking");
           collect_media_stats (media);
 
           if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
