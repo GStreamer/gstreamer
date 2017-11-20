@@ -344,6 +344,59 @@ GST_START_TEST (test_parse_detect_stream)
 
 GST_END_TEST;
 
+static GstStaticPadTemplate srctemplate_avc_au_and_bs_au =
+    GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SRC_CAPS_TMPL
+        ", stream-format = (string) avc, alignment = (string) au; "
+        SRC_CAPS_TMPL
+        ", stream-format = (string) byte-stream, alignment = (string) au")
+    );
+
+GST_START_TEST (test_sink_caps_reordering)
+{
+  /* Upstream can handle avc and byte-stream format (in that preference order)
+   * and downstream requires byte-stream.
+   * Parser reorder upstream's caps to prefer the format requested downstream
+   * and so avoid doing useless conversions. */
+  GstElement *parser;
+  GstPad *sink, *src;
+  GstCaps *src_caps, *sink_caps;
+  GstStructure *s;
+
+  parser = gst_check_setup_element ("h264parse");
+  fail_unless (parser);
+
+  src = gst_check_setup_src_pad (parser, &srctemplate_avc_au_and_bs_au);
+  sink = gst_check_setup_sink_pad (parser, &sinktemplate_bs_au);
+
+  src_caps = gst_pad_get_pad_template_caps (src);
+  sink_caps = gst_pad_peer_query_caps (src, src_caps);
+
+  /* Sink pad has both format on its sink caps but prefer to use byte-stream */
+  g_assert_cmpuint (gst_caps_get_size (sink_caps), ==, 2);
+
+  s = gst_caps_get_structure (sink_caps, 0);
+  g_assert_cmpstr (gst_structure_get_name (s), ==, "video/x-h264");
+  g_assert_cmpstr (gst_structure_get_string (s, "alignment"), ==, "au");
+  g_assert_cmpstr (gst_structure_get_string (s, "stream-format"), ==,
+      "byte-stream");
+
+  s = gst_caps_get_structure (sink_caps, 1);
+  g_assert_cmpstr (gst_structure_get_name (s), ==, "video/x-h264");
+  g_assert_cmpstr (gst_structure_get_string (s, "alignment"), ==, "au");
+  g_assert_cmpstr (gst_structure_get_string (s, "stream-format"), ==, "avc");
+
+  gst_caps_unref (src_caps);
+  gst_caps_unref (sink_caps);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  gst_object_unref (parser);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 h264parse_suite (void)
@@ -358,6 +411,7 @@ h264parse_suite (void)
   tcase_add_test (tc_chain, test_parse_split);
   tcase_add_test (tc_chain, test_parse_skip_garbage);
   tcase_add_test (tc_chain, test_parse_detect_stream);
+  tcase_add_test (tc_chain, test_sink_caps_reordering);
 
   return s;
 }
