@@ -709,6 +709,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
   } else if (GST_IS_DYNAMIC_TYPE_FACTORY (feature)) {
     GstRegistryChunkDynamicTypeFactory *tmp;
 
+    align (*in);
     unpack_element (*in, tmp, GstRegistryChunkDynamicTypeFactory, end, fail);
 
     pf = (GstRegistryChunkPluginFeature *) tmp;
