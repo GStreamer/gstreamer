@@ -1808,6 +1808,8 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       priv->dynamic = g_list_prepend (priv->dynamic, elem);
       g_mutex_unlock (&priv->lock);
 
+      priv->nb_dynamic_elements++;
+
       have_elem = TRUE;
       more_elem_remaining = TRUE;
       mode |= GST_RTSP_TRANSPORT_MODE_PLAY;
@@ -1824,8 +1826,6 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       gst_rtsp_media_create_stream (media, elem, pad);
       gst_object_unref (pad);
       gst_object_unref (elem);
-
-      priv->nb_dynamic_elements++;
 
       have_elem = TRUE;
       more_elem_remaining = TRUE;
