@@ -569,7 +569,7 @@ gst_gl_context_get_current_gl_api (GstGLPlatform platform, guint * major,
 #endif
   const gchar *version;
   gint maj, min, n;
-  GstGLAPI ret = (1 << 31);
+  GstGLAPI ret = (1U << 31);
 
   _init_debug ();
 

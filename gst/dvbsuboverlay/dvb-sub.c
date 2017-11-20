@@ -54,7 +54,7 @@ static void dvb_sub_init (void);
  */
 
 #define AYUV(y,u,v,a) (((a) << 24) | ((y) << 16) | ((u) << 8) | (v))
-#define RGBA_TO_AYUV(r,g,b,a) (((a) << 24) | ((rgb_to_y(r,g,b)) << 16) | ((rgb_to_u(r,g,b)) << 8) | (rgb_to_v(r,g,b)))
+#define RGBA_TO_AYUV(r,g,b,a) ((((guint32)(a)) << 24) | ((rgb_to_y(r,g,b)) << 16) | ((rgb_to_u(r,g,b)) << 8) | (rgb_to_v(r,g,b)))
 
 
 typedef struct DVBSubCLUT
