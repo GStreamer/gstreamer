@@ -354,6 +354,11 @@ gst_mss_manifest_new (GstBuffer * data)
   manifest->xml = xmlReadMemory ((const gchar *) mapinfo.data,
       mapinfo.size, "manifest", NULL, 0);
   root = manifest->xmlrootnode = xmlDocGetRootElement (manifest->xml);
+  if (root == NULL) {
+    GST_WARNING ("No root node ! Invalid manifest");
+    gst_mss_manifest_free (manifest);
+    return NULL;
+  }
 
   live_str = (gchar *) xmlGetProp (root, (xmlChar *) "IsLive");
   if (live_str) {
