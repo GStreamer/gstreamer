@@ -5954,7 +5954,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
    * this */
   src->methods |= GST_RTSP_PLAY;
   /* also assume it will support Range */
-  src->seekable = G_MAXDOUBLE;
+  src->seekable = G_MAXFLOAT;
 
   /* we need describe and setup */
   if (!(src->methods & GST_RTSP_DESCRIBE))
@@ -6333,7 +6333,7 @@ gst_rtsp_src_setup_stream_from_response (GstRTSPSrc * src,
         gchar **random_seekable_val = g_strsplit (prop, "=", 2);
 
         if (!random_seekable_val[1])
-          src->seekable = G_MAXDOUBLE;
+          src->seekable = G_MAXFLOAT;
         else
           src->seekable = g_ascii_strtod (random_seekable_val[1], NULL);
 
