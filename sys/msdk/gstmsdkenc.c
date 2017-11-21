@@ -630,6 +630,7 @@ gst_msdkenc_reset_task (MsdkEncTask * task)
   task->input_frame = NULL;
   task->output_bitstream.DataLength = 0;
   task->sync_point = NULL;
+  task->more_data = FALSE;
 }
 
 static GstFlowReturn
@@ -637,6 +638,25 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     gboolean discard)
 {
   GstVideoCodecFrame *frame = task->input_frame;
+
+  if (task->more_data) {
+    GstVideoCodecFrame *frame;
+
+    frame =
+        gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (thiz),
+        task->pending_frame_number);
+    if (frame) {
+      gst_msdkenc_dequeue_frame (thiz, frame);
+      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (thiz), frame);
+      gst_msdkenc_reset_task (task);
+      return GST_FLOW_OK;
+    } else {
+      GST_ERROR_OBJECT (thiz,
+          "Couldn't find the pending frame %d to be finished",
+          task->pending_frame_number);
+      return GST_FLOW_ERROR;
+    }
+  }
 
   if (!task->sync_point) {
     return GST_FLOW_OK;
@@ -699,17 +719,22 @@ gst_msdkenc_encode_frame (GstMsdkEnc * thiz, mfxFrameSurface1 * surface,
     g_usleep (1000);
   };
 
-  if (task->sync_point) {
-    task->input_frame = input_frame;
-    thiz->next_task = ((task - thiz->tasks) + 1) % thiz->num_tasks;
-  }
-
   if (status != MFX_ERR_NONE && status != MFX_ERR_MORE_DATA) {
     GST_ELEMENT_ERROR (thiz, STREAM, ENCODE, ("Encode frame failed."),
         ("MSDK encode error (%s)", msdk_status_to_string (status)));
     gst_msdkenc_dequeue_frame (thiz, input_frame);
     gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (thiz), input_frame);
     return GST_FLOW_ERROR;
+  }
+
+  if (task->sync_point) {
+    task->input_frame = input_frame;
+    thiz->next_task = ((task - thiz->tasks) + 1) % thiz->num_tasks;
+  } else if (status == MFX_ERR_MORE_DATA) {
+    task->more_data = TRUE;
+    task->pending_frame_number = input_frame->system_frame_number;
+    gst_video_codec_frame_unref (input_frame);
+    thiz->next_task = ((task - thiz->tasks) + 1) % thiz->num_tasks;
   }
 
   /* Ensure that next task is available */
