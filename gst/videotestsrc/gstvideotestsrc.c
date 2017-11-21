@@ -1138,7 +1138,7 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   }
 
   GST_LOG_OBJECT (src,
-      "creating buffer from pool for frame %d", (gint) src->n_frames);
+      "creating buffer from pool for frame %" G_GINT64_FORMAT, src->n_frames);
 
   if (!gst_video_frame_map (&frame, &src->info, buffer, GST_MAP_WRITE))
     goto invalid_frame;
@@ -1172,8 +1172,8 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   }
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + 1;
   if (src->info.fps_n) {
-    next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-        src->info.fps_d, src->info.fps_n);
+    next_time = gst_util_uint64_scale (src->n_frames,
+        src->info.fps_d * GST_SECOND, src->info.fps_n);
     if (src->reverse) {
       GST_BUFFER_DURATION (buffer) = src->running_time - next_time;
     } else {
