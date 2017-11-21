@@ -1259,6 +1259,10 @@ gst_curl_http_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_curl_http_src_ref_multi (source);
       break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (source->uri == NULL)
+        return GST_STATE_CHANGE_FAILURE;
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* The pipeline has ended, so signal any running request to end. */
       gst_curl_http_src_request_remove (source);
