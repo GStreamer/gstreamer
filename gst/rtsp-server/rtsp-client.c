@@ -1837,9 +1837,9 @@ default_configure_client_transport (GstRTSPClient * client,
         ct->port.min = addr->port;
         ct->port.max = addr->port + addr->n_ports - 1;
         ct->ttl = addr->ttl;
-
-        gst_rtsp_address_free (addr);
       }
+
+      gst_rtsp_address_free (addr);
     } else {
       GstRTSPUrl *url;
 
