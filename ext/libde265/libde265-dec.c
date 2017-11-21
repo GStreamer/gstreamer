@@ -519,6 +519,7 @@ _gst_libde265_image_available (GstVideoDecoder * decoder, int width, int height)
     }
     if (!gst_video_decoder_negotiate (decoder)) {
       GST_ERROR_OBJECT (dec, "Failed to negotiate format");
+      gst_video_codec_state_unref (state);
       return GST_FLOW_ERROR;
     }
     if (dec->output_state != NULL) {
