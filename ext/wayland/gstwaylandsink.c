@@ -121,6 +121,42 @@ G_DEFINE_TYPE_WITH_CODE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_WAYLAND_VIDEO,
         gst_wayland_sink_waylandvideo_init));
 
+/* A tiny GstVideoBufferPool subclass that modify the options to remove
+ * VideoAlignment. To support VideoAlignment we would need to pass the padded
+ * width/height + stride and use the viewporter interface to crop, a bit like
+ * we use to do with XV. It would still be quite limited. It's a bit retro,
+ * hopefully there will be a better Wayland interface in the future. */
+typedef struct
+{
+  GstVideoBufferPool parent;
+} GstWaylandPool;
+
+typedef struct
+{
+  GstVideoBufferPoolClass parent;
+} GstWaylandPoolClass;
+
+G_DEFINE_TYPE (GstWaylandPool, gst_wayland_pool, GST_TYPE_VIDEO_BUFFER_POOL);
+
+static const gchar **
+gst_wayland_pool_get_options (GstBufferPool * pool)
+{
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
+  return options;
+}
+
+static void
+gst_wayland_pool_class_init (GstWaylandPoolClass * klass)
+{
+  GstBufferPoolClass *pool_class = GST_BUFFER_POOL_CLASS (klass);
+  pool_class->get_options = gst_wayland_pool_get_options;
+}
+
+static void
+gst_wayland_pool_init (GstWaylandPool * pool)
+{
+}
+
 static void
 gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 {
@@ -456,7 +492,7 @@ gst_wayland_create_pool (GstWaylandSink * sink, GstCaps * caps)
   GstStructure *structure;
   gsize size = sink->video_info.size;
 
-  pool = gst_video_buffer_pool_new ();
+  pool = g_object_new (gst_wayland_pool_get_type (), NULL);
 
   structure = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
