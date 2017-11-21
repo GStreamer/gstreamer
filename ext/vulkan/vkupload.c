@@ -776,7 +776,7 @@ _upload_find_method (GstVulkanUpload * vk_upload)
 {
   vk_upload->current_impl++;
 
-  if (vk_upload->current_impl > G_N_ELEMENTS (upload_methods))
+  if (vk_upload->current_impl >= G_N_ELEMENTS (upload_methods))
     return FALSE;
 
   GST_DEBUG_OBJECT (vk_upload, "attempting upload with uploader %s",
