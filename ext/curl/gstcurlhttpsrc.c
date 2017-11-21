@@ -1262,8 +1262,11 @@ gst_curl_http_src_change_state (GstElement * element, GstStateChange transition)
       gst_curl_http_src_ref_multi (source);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (source->uri == NULL)
+      if (source->uri == NULL) {
+        GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ, (_("No URL set.")),
+            ("Missing URL"));
         return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* The pipeline has ended, so signal any running request to end. */
