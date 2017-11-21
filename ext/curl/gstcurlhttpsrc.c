@@ -1412,7 +1412,7 @@ gst_curl_http_src_urihandler_get_uri (GstURIHandler * handler)
   gchar *ret;
   GstCurlHttpSrc *source;
 
-  g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
+  g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
   source = GST_CURLHTTPSRC (handler);
 
   GSTCURL_FUNCTION_ENTRY (source);
