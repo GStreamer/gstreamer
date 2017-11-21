@@ -77,6 +77,8 @@
 #include <config.h>
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstcurlhttpsrc.h"
 #include "gstcurlqueue.h"
 #include "gstcurldefaults.h"
