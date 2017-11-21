@@ -115,6 +115,9 @@ roc_check_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   roc_check_data *data = user_data;
   GstElement *e = GST_PAD_PARENT (pad);
 
+  if (G_UNLIKELY (data->counter % 8192 == 0))
+    GST_DEBUG_OBJECT (pad, "counter at %d", data->counter);
+
   /* record first roc, then wait for 2^16 packets to pass */
   if (data->counter == 0) {
     data->start_roc = get_roc (e);
@@ -211,6 +214,7 @@ srtp_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_set_timeout (tc_chain, 180);
   tcase_add_test (tc_chain, test_create_and_unref);
   tcase_add_test (tc_chain, test_play);
   tcase_add_test (tc_chain, test_roc);
