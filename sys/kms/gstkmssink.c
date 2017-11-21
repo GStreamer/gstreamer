@@ -89,7 +89,7 @@ kms_open (gchar ** driver)
 {
   static const char *drivers[] = { "i915", "radeon", "nouveau", "vmwgfx",
     "exynos", "amdgpu", "imx-drm", "rockchip", "atmel-hlcdc", "msm",
-    "xilinx_drm",
+    "xilinx_drm", "vc4",
   };
   int i, fd = -1;
 
