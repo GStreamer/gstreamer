@@ -1814,7 +1814,7 @@ default_configure_client_transport (GstRTSPClient * client,
       use_client_settings = TRUE;
 
     if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct,
-          use_client_settings))
+            use_client_settings))
       goto error_allocating_ports;
 
     if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {

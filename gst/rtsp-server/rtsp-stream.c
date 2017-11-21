@@ -1124,8 +1124,7 @@ set_multicast_socket_for_udpsink (GstElement * udpsink, GSocket * socket,
   set_socket_for_udpsink (udpsink, socket, family);
 
   if (multicast_iface) {
-    g_object_set (G_OBJECT (udpsink), "multicast-iface",
-        multicast_iface, NULL);
+    g_object_set (G_OBJECT (udpsink), "multicast-iface", multicast_iface, NULL);
   }
 
   g_signal_emit_by_name (udpsink, "add", addr_str, port, NULL);
@@ -1165,7 +1164,8 @@ get_port_from_socket (GSocket * socket)
 
 static gboolean
 create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
-    GSocket *socket_v4, GSocket *socket_v6, gboolean multicast, gboolean is_rtp)
+    GSocket * socket_v4, GSocket * socket_v6, gboolean multicast,
+    gboolean is_rtp)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
 
@@ -1204,17 +1204,13 @@ create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
   update_dscp_qos (stream, udpsink);
 
   if (priv->server_addr_v4) {
-    GST_DEBUG_OBJECT (stream,
-        "udp IPv4, configure udpsinks");
-    set_unicast_socket_for_udpsink (*udpsink, socket_v4,
-        G_SOCKET_FAMILY_IPV4);
+    GST_DEBUG_OBJECT (stream, "udp IPv4, configure udpsinks");
+    set_unicast_socket_for_udpsink (*udpsink, socket_v4, G_SOCKET_FAMILY_IPV4);
   }
 
   if (priv->server_addr_v6) {
-    GST_DEBUG_OBJECT (stream,
-        "udp IPv6, configure udpsinks");
-    set_unicast_socket_for_udpsink (*udpsink, socket_v6,
-        G_SOCKET_FAMILY_IPV6);
+    GST_DEBUG_OBJECT (stream, "udp IPv6, configure udpsinks");
+    set_unicast_socket_for_udpsink (*udpsink, socket_v6, G_SOCKET_FAMILY_IPV6);
   }
 
   if (multicast) {
@@ -1225,7 +1221,8 @@ create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
       if (!port)
         goto get_port_failed;
       set_multicast_socket_for_udpsink (*udpsink, socket_v4,
-          G_SOCKET_FAMILY_IPV4, priv->multicast_iface, priv->mcast_addr_v4->address, port);
+          G_SOCKET_FAMILY_IPV4, priv->multicast_iface,
+          priv->mcast_addr_v4->address, port);
     }
 
     if (priv->mcast_addr_v6) {
@@ -1234,7 +1231,8 @@ create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
       if (!port)
         goto get_port_failed;
       set_multicast_socket_for_udpsink (*udpsink, socket_v6,
-          G_SOCKET_FAMILY_IPV6, priv->multicast_iface, priv->mcast_addr_v6->address, port);
+          G_SOCKET_FAMILY_IPV6, priv->multicast_iface,
+          priv->mcast_addr_v6->address, port);
     }
 
   }
@@ -1256,8 +1254,7 @@ get_port_failed:
 
 /* must be called with lock */
 static gboolean
-create_and_configure_udpsource (GstElement ** udpsrc,
-    GSocket * socket)
+create_and_configure_udpsource (GstElement ** udpsrc, GSocket * socket)
 {
   GstStateChangeReturn ret;
 
@@ -1296,7 +1293,7 @@ error:
 
 static gboolean
 alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
-    GSocket *socket_out[2], GstRTSPAddress ** server_addr_out,
+    GSocket * socket_out[2], GstRTSPAddress ** server_addr_out,
     gboolean multicast, GstRTSPTransport * ct)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
@@ -1431,7 +1428,8 @@ again:
   socket_out[1] = rtcp_socket;
   *server_addr_out = addr;
 
-  GST_DEBUG_OBJECT (stream, "allocated address: %s and ports: %d, %d", addr->address, tmp_rtp, tmp_rtcp);
+  GST_DEBUG_OBJECT (stream, "allocated address: %s and ports: %d, %d",
+      addr->address, tmp_rtp, tmp_rtcp);
 
   g_list_free_full (rejected_addresses, (GDestroyNotify) gst_rtsp_address_free);
 
@@ -1445,7 +1443,8 @@ no_udp_protocol:
   }
 no_pool:
   {
-    GST_ERROR_OBJECT (stream, "failed to allocate UDP ports: no address pool specified");
+    GST_ERROR_OBJECT (stream,
+        "failed to allocate UDP ports: no address pool specified");
     goto cleanup;
   }
 no_address:
@@ -2494,8 +2493,8 @@ free_cb_data (gpointer user_data)
 
 
 static void
-create_and_plug_queue_to_unlinked_stream (GstRTSPStream * stream, GstElement *tee,
-    GstElement *sink, GstElement ** queue)
+create_and_plug_queue_to_unlinked_stream (GstRTSPStream * stream,
+    GstElement * tee, GstElement * sink, GstElement ** queue)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   GstPad *tee_pad;
@@ -2597,8 +2596,8 @@ create_and_plug_queue_to_linked_stream_probe_cb (GstPad * inpad,
 }
 
 static void
-create_and_plug_queue_to_linked_stream (GstRTSPStream * stream, GstElement * sink1,
-    GstElement * sink2, guint index, GstElement ** queue1,
+create_and_plug_queue_to_linked_stream (GstRTSPStream * stream,
+    GstElement * sink1, GstElement * sink2, guint index, GstElement ** queue1,
     GstElement ** queue2)
 {
   ProbeData *data;
@@ -2611,7 +2610,7 @@ create_and_plug_queue_to_linked_stream (GstRTSPStream * stream, GstElement * sin
   data->queue2 = queue2;
   data->index = index;
 
-  data->sink_pad =  gst_element_get_static_pad (sink1, "sink");
+  data->sink_pad = gst_element_get_static_pad (sink1, "sink");
   g_assert (data->sink_pad);
   data->tee_pad = gst_pad_get_peer (data->sink_pad);
   g_assert (data->tee_pad);
@@ -2661,8 +2660,8 @@ plug_udp_sink (GstRTSPStream * stream, GstElement * sink_to_plug,
         queue = &priv->mcast_udpqueue[index];
     }
 
-    create_and_plug_queue_to_linked_stream (stream, element, sink_to_plug, index,
-        queue, queue_to_plug);
+    create_and_plug_queue_to_linked_stream (stream, element, sink_to_plug,
+        index, queue, queue_to_plug);
 
   } else {
     GstPad *tee_pad;
@@ -2696,7 +2695,7 @@ plug_tcp_sink (GstRTSPStream * stream, guint index)
     /* queues are already added for the existing stream, add one for
        the newly added tcp stream */
     create_and_plug_queue_to_unlinked_stream (stream,
-      priv->tee[index], priv->appsink[index], &priv->appqueue[index]);
+        priv->tee[index], priv->appsink[index], &priv->appqueue[index]);
 
   } else if (priv->mcast_udpsink[index] || priv->udpsink[index]) {
     GstElement **queue;
@@ -2712,8 +2711,8 @@ plug_tcp_sink (GstRTSPStream * stream, guint index)
       queue = &priv->udpqueue[index];
     }
 
-    create_and_plug_queue_to_linked_stream (stream, element, priv->appsink[index], index,
-        queue, &priv->appqueue[index]);
+    create_and_plug_queue_to_linked_stream (stream, element,
+        priv->appsink[index], index, queue, &priv->appqueue[index]);
 
   } else {
     GstPad *tee_pad;
@@ -2828,8 +2827,8 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
 
     if (is_udp && !priv->udpsink[i]) {
       /* we create only one pair of udpsinks for IPv4 and IPv6 */
-      create_and_configure_udpsink (stream, &priv->udpsink[i], priv->socket_v4[i],
-          priv->socket_v6[i], FALSE, (i == 0));
+      create_and_configure_udpsink (stream, &priv->udpsink[i],
+          priv->socket_v4[i], priv->socket_v6[i], FALSE, (i == 0));
       plug_sink (stream, transport, i);
     } else if (is_mcast && !priv->mcast_udpsink[i]) {
       /* we create only one pair of mcast-udpsinks for IPv4 and IPv6 */
@@ -2844,8 +2843,7 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
       /* we need to set sync and preroll to FALSE for the sink to avoid
        * deadlock. This is only needed for sink sending RTCP data. */
       if (i == 1)
-        g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE,
-         NULL);
+        g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
 
       gst_app_sink_set_callbacks (GST_APP_SINK_CAST (priv->appsink[i]),
           &sink_cb, stream, NULL);
@@ -2955,7 +2953,7 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     if (udp && !priv->udpsrc_v4[i] && priv->server_addr_v4) {
       GST_DEBUG_OBJECT (stream, "udp IPv4, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->udpsrc_v4[i],
-            priv->socket_v4[i]))
+              priv->socket_v4[i]))
         goto udpsrc_error;
 
       plug_src (stream, bin, priv->udpsrc_v4[i], priv->funnel[i]);
@@ -2964,7 +2962,7 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     if (udp && !priv->udpsrc_v6[i] && priv->server_addr_v6) {
       GST_DEBUG_OBJECT (stream, "udp IPv6, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->udpsrc_v6[i],
-            priv->socket_v6[i]))
+              priv->socket_v6[i]))
         goto udpsrc_error;
 
       plug_src (stream, bin, priv->udpsrc_v6[i], priv->funnel[i]);
@@ -2973,7 +2971,7 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     if (mcast && !priv->mcast_udpsrc_v4[i] && priv->mcast_addr_v4) {
       GST_DEBUG_OBJECT (stream, "mcast IPv4, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->mcast_udpsrc_v4[i],
-            priv->mcast_socket_v4[i]))
+              priv->mcast_socket_v4[i]))
         goto mcast_udpsrc_error;
       plug_src (stream, bin, priv->mcast_udpsrc_v4[i], priv->funnel[i]);
     }
@@ -2981,7 +2979,7 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     if (mcast && !priv->mcast_udpsrc_v6[i] && priv->mcast_addr_v6) {
       GST_DEBUG_OBJECT (stream, "mcast IPv6, create and configure udpsources");
       if (!create_and_configure_udpsource (&priv->mcast_udpsrc_v6[i],
-            priv->mcast_socket_v6[i]))
+              priv->mcast_socket_v6[i]))
         goto mcast_udpsrc_error;
       plug_src (stream, bin, priv->mcast_udpsrc_v6[i], priv->funnel[i]);
     }
@@ -3954,7 +3952,8 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
  * socket could be allocated for @family. Unref after usage
  */
 GSocket *
-gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream, GSocketFamily family)
+gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream,
+    GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
   GSocket *socket;
@@ -3986,7 +3985,8 @@ gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream, GSocketFamily 
  * socket could be allocated for @family. Unref after usage
  */
 GSocket *
-gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream, GSocketFamily family)
+gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream,
+    GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
   GSocket *socket;
@@ -4327,8 +4327,9 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
   g_mutex_unlock (&priv->lock);
 
   if (sink) {
-    if (!gst_element_query_position (sink , GST_FORMAT_TIME, position)) {
-      GST_WARNING_OBJECT (stream, "Couldn't obtain postion: position query failed");
+    if (!gst_element_query_position (sink, GST_FORMAT_TIME, position)) {
+      GST_WARNING_OBJECT (stream,
+          "Couldn't obtain postion: position query failed");
       gst_object_unref (sink);
       return FALSE;
     }
@@ -4352,7 +4353,7 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
       *position = priv->position;
       g_mutex_unlock (&priv->lock);
       *position =
-        gst_segment_to_stream_time (segment, GST_FORMAT_TIME, *position);
+          gst_segment_to_stream_time (segment, GST_FORMAT_TIME, *position);
     }
     gst_event_unref (event);
     gst_object_unref (pad);

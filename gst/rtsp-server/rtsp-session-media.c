@@ -431,6 +431,7 @@ gst_rtsp_session_media_get_transports (GstRTSPSessionMedia * media)
 
   return result;
 }
+
 /**
  * gst_rtsp_session_media_alloc_channels:
  * @media: a #GstRTSPSessionMedia
