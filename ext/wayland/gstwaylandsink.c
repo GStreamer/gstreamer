@@ -684,7 +684,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       sink->video_info.offset[i] = vmeta->offset[i];
       sink->video_info.stride[i] = vmeta->stride[i];
     }
-    sink->video_info.size = mem->size;
+    sink->video_info.size = gst_buffer_get_size (buffer);
   }
 
   GST_LOG_OBJECT (sink, "buffer %p does not have a wl_buffer from our "
