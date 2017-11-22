@@ -1152,6 +1152,10 @@ init_devices (gpointer data)
   i = 0;
   ret = iterator->Next (&decklink);
   while (ret == S_OK) {
+    g_mutex_init (&devices[i].input.lock);
+    g_mutex_init (&devices[i].output.lock);
+    g_cond_init (&devices[i].output.cond);
+
     ret = decklink->QueryInterface (IID_IDeckLinkInput,
         (void **) &devices[i].input.input);
     if (ret != S_OK) {

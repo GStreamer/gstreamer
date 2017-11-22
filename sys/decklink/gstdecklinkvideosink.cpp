@@ -100,6 +100,12 @@ public:
   {
     GST_LOG_OBJECT (m_sink, "Scheduled playback stopped");
 
+    if (m_sink->output) {
+      g_mutex_lock (&m_sink->output->lock);
+      g_cond_signal (&m_sink->output->cond);
+      g_mutex_unlock (&m_sink->output->lock);
+    }
+
     return S_OK;
   }
 
@@ -900,6 +906,12 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
         gst_object_unref (clock);
         return;
       }
+
+      // Wait until scheduled playback actually stopped
+      do {
+        g_cond_wait (&self->output->cond, &self->output->lock);
+        self->output->output->IsScheduledPlaybackRunning (&active);
+      } while (active);
     }
 
     GST_DEBUG_OBJECT (self,
@@ -976,16 +988,24 @@ gst_decklink_video_sink_stop_scheduled_playback (GstDecklinkVideoSink * self)
 
   g_mutex_lock (&self->output->lock);
   self->output->started = FALSE;
-  g_mutex_unlock (&self->output->lock);
   res = self->output->output->StopScheduledPlayback (start_time, 0, GST_SECOND);
   if (res != S_OK) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         (NULL), ("Failed to stop scheduled playback: 0x%08lx", (unsigned long)
             res));
     ret = GST_STATE_CHANGE_FAILURE;
+  } else {
+    bool active = false;
+
+    // Wait until scheduled playback actually stopped
+    do {
+        g_cond_wait (&self->output->cond, &self->output->lock);
+        self->output->output->IsScheduledPlaybackRunning (&active);
+    } while (active);
   }
   self->internal_base_time = GST_CLOCK_TIME_NONE;
   self->external_base_time = GST_CLOCK_TIME_NONE;
+  g_mutex_unlock (&self->output->lock);
 
   return ret;
 }
