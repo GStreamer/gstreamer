@@ -1250,6 +1250,11 @@ switch_stream (GstValidatePipelineMonitor * monitor, GstValidateAction * action,
     }
   }
 
+  if (G_UNLIKELY (n == 0)) {
+    GST_ERROR ("No streams available of the required type");
+    return result;
+  }
+
   if (relative) {               /* We are changing track relatively to current track */
     index = (current + index) % n;
   }
