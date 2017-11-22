@@ -56,6 +56,8 @@ struct _GstDecklinkAudioSink
   GstDecklinkOutput *output;
   GstAudioInfo info;
   GstAudioStreamAlign *stream_align;
+  GstAudioResampler *resampler;
+  guint resampler_in_rate, resampler_out_rate;
 };
 
 struct _GstDecklinkAudioSinkClass

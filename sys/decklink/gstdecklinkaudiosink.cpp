@@ -70,6 +70,8 @@ static void gst_decklink_audio_sink_get_times (GstBaseSink * bsink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_decklink_audio_sink_query (GstBaseSink * bsink,
     GstQuery * query);
+static gboolean gst_decklink_audio_sink_event (GstBaseSink * bsink,
+    GstEvent * event);
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -112,6 +114,7 @@ gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)
   basesink_class->get_times =
       GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_get_times);
   basesink_class->query = GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_query);
+  basesink_class->event = GST_DEBUG_FUNCPTR (gst_decklink_audio_sink_event);
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
       g_param_spec_int ("device-number", "Device number",
@@ -292,6 +295,11 @@ gst_decklink_audio_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   self->output->audio_enabled = TRUE;
   self->info = info;
 
+  // Create a new resampler as needed
+  if (self->resampler)
+    gst_audio_resampler_free (self->resampler);
+  self->resampler = NULL;
+
   return TRUE;
 }
 
@@ -425,6 +433,43 @@ done:
   return res;
 }
 
+static gboolean
+gst_decklink_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
+{
+  GstDecklinkAudioSink *self = GST_DECKLINK_AUDIO_SINK_CAST (bsink);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+    const GstSegment *new_segment;
+
+    gst_event_parse_segment (event, &new_segment);
+
+    if (ABS (new_segment->rate) != 1.0) {
+      guint out_rate = self->info.rate / ABS (new_segment->rate);
+
+      if (self->resampler && (self->resampler_out_rate != out_rate
+              || self->resampler_in_rate != (guint) self->info.rate))
+        gst_audio_resampler_update (self->resampler, self->info.rate, out_rate,
+            NULL);
+      else if (!self->resampler)
+        self->resampler =
+            gst_audio_resampler_new (GST_AUDIO_RESAMPLER_METHOD_LINEAR,
+            GST_AUDIO_RESAMPLER_FLAG_NONE, self->info.finfo->format,
+            self->info.channels, self->info.rate, out_rate, NULL);
+
+      self->resampler_in_rate = self->info.rate;
+      self->resampler_out_rate = out_rate;
+    } else if (self->resampler) {
+      gst_audio_resampler_free (self->resampler);
+      self->resampler = NULL;
+    }
+
+    if (new_segment->rate < 0)
+      gst_audio_stream_align_set_rate (self->stream_align, -48000);
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
+}
+
 static GstFlowReturn
 gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -440,6 +485,7 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstMapInfo map_info;
   const guint8 *data;
   gsize len, written_all;
+  gboolean discont;
 
   GST_DEBUG_OBJECT (self, "Rendering buffer %p", buffer);
 
@@ -457,10 +503,76 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
-  gst_audio_stream_align_process (self->stream_align,
+  discont = gst_audio_stream_align_process (self->stream_align,
       GST_BUFFER_IS_DISCONT (buffer), timestamp,
       gst_buffer_get_size (buffer) / self->info.bpf, &timestamp, &duration,
       NULL);
+
+  if (discont && self->resampler)
+    gst_audio_resampler_reset (self->resampler);
+
+  if (GST_BASE_SINK_CAST (self)->segment.rate < 0.0) {
+    GstMapInfo out_map;
+    gint out_frames = gst_buffer_get_size (buffer) / self->info.bpf;
+
+    buffer = gst_buffer_make_writable (gst_buffer_ref (buffer));
+
+    gst_buffer_map (buffer, &out_map, GST_MAP_READWRITE);
+    if (self->info.finfo->format == GST_AUDIO_FORMAT_S16) {
+      gint16 *swap_data = (gint16 *) out_map.data;
+      gint16 *swap_data_end =
+          swap_data + (out_frames - 1) * self->info.channels;
+      gint16 swap_tmp[16];
+
+      while (out_frames > 0) {
+        memcpy (&swap_tmp, swap_data, self->info.bpf);
+        memcpy (swap_data, swap_data_end, self->info.bpf);
+        memcpy (swap_data_end, &swap_tmp, self->info.bpf);
+
+        swap_data += self->info.channels;
+        swap_data_end -= self->info.channels;
+
+        out_frames -= 2;
+      }
+    } else {
+      gint32 *swap_data = (gint32 *) out_map.data;
+      gint32 *swap_data_end =
+          swap_data + (out_frames - 1) * self->info.channels;
+      gint32 swap_tmp[16];
+
+      while (out_frames > 0) {
+        memcpy (&swap_tmp, swap_data, self->info.bpf);
+        memcpy (swap_data, swap_data_end, self->info.bpf);
+        memcpy (swap_data_end, &swap_tmp, self->info.bpf);
+
+        swap_data += self->info.channels;
+        swap_data_end -= self->info.channels;
+
+        out_frames -= 2;
+      }
+    }
+    gst_buffer_unmap (buffer, &out_map);
+  } else {
+    gst_buffer_ref (buffer);
+  }
+
+  if (self->resampler) {
+    gint in_frames = gst_buffer_get_size (buffer) / self->info.bpf;
+    gint out_frames =
+        gst_audio_resampler_get_out_frames (self->resampler, in_frames);
+    GstBuffer *out_buf = gst_buffer_new_and_alloc (out_frames * self->info.bpf);
+    GstMapInfo out_map;
+
+    gst_buffer_map (buffer, &map_info, GST_MAP_READ);
+    gst_buffer_map (out_buf, &out_map, GST_MAP_READWRITE);
+
+    gst_audio_resampler_resample (self->resampler, (gpointer *) & map_info.data,
+        in_frames, (gpointer *) & out_map.data, out_frames);
+
+    gst_buffer_unmap (out_buf, &out_map);
+    gst_buffer_unmap (buffer, &map_info);
+    buffer = out_buf;
+  }
 
   gst_buffer_map (buffer, &map_info, GST_MAP_READ);
   data = map_info.data;
@@ -513,11 +625,10 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
     buffered_time =
         gst_util_uint64_scale (buffered_samples, GST_SECOND, self->info.rate);
+    buffered_time /= ABS (GST_BASE_SINK_CAST (self)->segment.rate);
     GST_DEBUG_OBJECT (self,
         "Buffered %" GST_TIME_FORMAT " in the driver (%u samples)",
         GST_TIME_ARGS (buffered_time), buffered_samples);
-
-    buffered_time /= GST_BASE_SINK_CAST (self)->segment.rate;
     // We start waiting once we have more than buffer-time buffered
     if (buffered_time > self->buffer_time) {
       GstClockReturn clock_ret;
@@ -562,15 +673,27 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
           self->output->output->WriteAudioSamplesSync ((void *) data, len,
           &written);
       if (ret != S_OK) {
-        GST_ELEMENT_WARNING (self, STREAM, FAILED,
-            (NULL), ("Failed to write audio frame synchronously: 0x%08lx",
-                (unsigned long) ret));
-        ret = S_OK;
-        break;
+        bool is_running = true;
+        self->output->output->IsScheduledPlaybackRunning (&is_running);
+
+        if (is_running && !GST_BASE_SINK_CAST (self)->flushing && self->output->started) {
+          GST_ELEMENT_WARNING (self, STREAM, FAILED,
+              (NULL), ("Failed to write audio frame synchronously: 0x%08lx",
+                  (unsigned long) ret));
+          flow_ret = GST_FLOW_ERROR;
+          break;
+        } else {
+          flow_ret = GST_FLOW_FLUSHING;
+          break;
+        }
       }
+
       len -= written;
       data += written * self->info.bpf;
-      written_all += written;
+      if (self->resampler)
+        written_all += written * ABS (GST_BASE_SINK_CAST (self)->segment.rate);
+      else
+        written_all += written;
     } else {
       guint32 written = 0;
 
@@ -598,13 +721,17 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
       len -= written;
       data += written * self->info.bpf;
-      written_all += written;
+      if (self->resampler)
+        written_all += written * ABS (GST_BASE_SINK_CAST (self)->segment.rate);
+      else
+        written_all += written;
     }
 
     flow_ret = GST_FLOW_OK;
   } while (len > 0);
 
   gst_buffer_unmap (buffer, &map_info);
+  gst_buffer_unref (buffer);
 
   return flow_ret;
 }
@@ -664,6 +791,11 @@ gst_decklink_audio_sink_stop (GstDecklinkAudioSink * self)
     g_mutex_unlock (&self->output->lock);
 
     self->output->output->DisableAudioOutput ();
+  }
+
+  if (self->resampler) {
+    gst_audio_resampler_free (self->resampler);
+    self->resampler = NULL;
   }
 
   return TRUE;
