@@ -615,7 +615,6 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   /* Check if the pool's caps will meet msdk's alignment
      requirements by default. */
   gst_video_info_from_caps (&info_from_caps, pool_caps);
-  gst_caps_unref (pool_caps);
   memcpy (&info_aligned, &info_from_caps, sizeof (info_aligned));
   msdk_video_alignment (&alignment, &info_from_caps);
   gst_video_info_align (&info_aligned, &alignment);
@@ -645,7 +644,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
       /* The aligned pool config can be used directly. */
       if (!gst_buffer_pool_set_config (pool, pool_config))
-        return FALSE;
+        goto error_set_config;
     } else {
       /* The aligned pool config cannot be used directly so we will
          make a side-pool that will be decoded into and the copied
@@ -657,14 +656,23 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       memcpy (&thiz->pool_info, &info_aligned, sizeof (GstVideoInfo));
       if (!gst_buffer_pool_set_config (thiz->pool, pool_config) ||
           !gst_buffer_pool_set_active (thiz->pool, TRUE))
-        return FALSE;
+        goto error_set_config;
     }
   }
 
   gst_query_set_nth_allocation_pool (query, 0, pool, size, min_buffers,
       max_buffers);
 
+  if (pool)
+    gst_object_unref (pool);
+
   return TRUE;
+
+error_set_config:
+  GST_ERROR_OBJECT (decoder, "failed to set buffer pool config");
+  if (pool)
+    gst_object_unref (pool);
+  return FALSE;
 }
 
 static gboolean
@@ -693,8 +701,9 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
 
   for (;;) {
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
-    if (!gst_msdkdec_finish_task (thiz, task))
-      return GST_FLOW_ERROR;
+    if ((flow = gst_msdkdec_finish_task (thiz, task)) != GST_FLOW_OK)
+      return flow;
+
     if (!surface) {
       flow = allocate_output_buffer (thiz, &buffer);
       if (flow != GST_FLOW_OK)
