@@ -21,6 +21,34 @@
 
 #include <rtsp-media-factory.h>
 
+/* Check if the media can return a SDP. We don't actually check whether
+ * the contents are valid or not */
+static gboolean
+media_has_sdp (GstRTSPMedia * media)
+{
+  GstSDPInfo info;
+  GstSDPMessage *sdp;
+  gchar *sdp_str;
+
+  info.is_ipv6 = FALSE;
+  info.server_ip = "0.0.0.0";
+
+  /* Check if media can generate a SDP */
+  gst_sdp_message_new (&sdp);
+  GST_DEBUG ("Getting SDP");
+  if (!gst_rtsp_sdp_from_media (sdp, &info, media)) {
+    GST_WARNING ("failed to get the SDP");
+    gst_sdp_message_free (sdp);
+    return FALSE;
+  }
+  sdp_str = gst_sdp_message_as_text (sdp);
+  GST_DEBUG ("Got SDP\n%s", sdp_str);
+  g_free (sdp_str);
+  gst_sdp_message_free (sdp);
+
+  return TRUE;
+}
+
 GST_START_TEST (test_media_seek)
 {
   GstRTSPMediaFactory *factory;
@@ -54,6 +82,7 @@ GST_START_TEST (test_media_seek)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
 
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
 
   /* define transport */
   fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
@@ -127,6 +156,7 @@ GST_START_TEST (test_media_seek_no_sinks)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
 
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
 
   str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=0-"));
@@ -210,12 +240,14 @@ test_prepare_reusable (const gchar * launch_line)
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
 
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
 
   g_object_unref (media);
@@ -260,6 +292,7 @@ GST_START_TEST (test_media_prepare)
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
 
@@ -346,6 +379,7 @@ GST_START_TEST (test_media_dyn_prepare)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
@@ -353,6 +387,7 @@ GST_START_TEST (test_media_dyn_prepare)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
@@ -414,6 +449,7 @@ GST_START_TEST (test_media_reset)
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_suspend (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   g_object_unref (media);
@@ -425,6 +461,7 @@ GST_START_TEST (test_media_reset)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   gst_rtsp_media_set_suspend_mode (media, GST_RTSP_SUSPEND_MODE_RESET);
   fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_suspend (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   g_object_unref (media);
@@ -492,13 +529,16 @@ GST_START_TEST (test_media_multidyn_prepare)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 2);
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
+
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 0);
 
   thread = gst_rtsp_thread_pool_get_thread (pool,
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 2);
+  fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 0);
 
