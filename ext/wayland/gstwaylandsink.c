@@ -726,6 +726,9 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
         config = gst_buffer_pool_get_config (sink->pool);
         gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
+
+        /* revert back to default strides and offsets */
+        gst_video_info_from_caps (&sink->video_info, caps);
         gst_buffer_pool_config_set_params (config, caps, sink->video_info.size,
             2, 0);
 
