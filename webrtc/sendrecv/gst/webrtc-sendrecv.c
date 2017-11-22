@@ -219,12 +219,14 @@ static void
 on_offer_created (GstPromise * promise, gpointer user_data)
 {
   GstWebRTCSessionDescription *offer = NULL;
+  const GstStructure *reply;
   gchar *desc;
 
   g_assert (app_state == PEER_CALL_NEGOTIATING);
 
-  g_assert (promise->result == GST_PROMISE_RESULT_REPLIED);
-  gst_structure_get (promise->promise, "offer",
+  g_assert (gst_promise_wait(promise) == GST_PROMISE_RESULT_REPLIED);
+  reply = gst_promise_get_reply (promise);
+  gst_structure_get (reply, "offer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
   gst_promise_unref (promise);
 
@@ -241,12 +243,11 @@ on_offer_created (GstPromise * promise, gpointer user_data)
 static void
 on_negotiation_needed (GstElement * element, gpointer user_data)
 {
-  GstPromise *promise = gst_promise_new ();
+  GstPromise *promise;
 
   app_state = PEER_CALL_NEGOTIATING;
+  promise = gst_promise_new_with_change_func (on_offer_created, user_data, NULL);;
   g_signal_emit_by_name (webrtc1, "create-offer", NULL, promise);
-  gst_promise_set_change_callback (promise, on_offer_created, user_data,
-      NULL);
 }
 
 #define RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload="

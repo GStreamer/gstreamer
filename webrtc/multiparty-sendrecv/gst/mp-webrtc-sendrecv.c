@@ -252,11 +252,13 @@ on_offer_created (GstPromise * promise, const gchar * peer_id)
 {
   GstElement *webrtc;
   GstWebRTCSessionDescription *offer;
+  const GstStructure *reply;
 
   g_assert_cmpint (app_state, ==, ROOM_CALL_OFFERING);
 
-  g_assert_cmpint (promise->result, ==, GST_PROMISE_RESULT_REPLIED);
-  gst_structure_get (promise->promise, "offer",
+  g_assert_cmpint (gst_promise_wait (promise), ==, GST_PROMISE_RESULT_REPLIED);
+  reply = gst_promise_get_reply (promise);
+  gst_structure_get (reply, "offer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
   gst_promise_unref (promise);
 
@@ -275,12 +277,12 @@ on_offer_created (GstPromise * promise, const gchar * peer_id)
 static void
 on_negotiation_needed (GstElement * webrtc, const gchar * peer_id)
 {
-  GstPromise *promise = gst_promise_new ();
+  GstPromise *promise;
 
   app_state = ROOM_CALL_OFFERING;
-  g_signal_emit_by_name (webrtc, "create-offer", NULL, promise);
-  gst_promise_set_change_callback (promise,
+  promise = gst_promise_new_with_change_func (
       (GstPromiseChangeFunc) on_offer_created, (gpointer) peer_id, NULL);
+  g_signal_emit_by_name (webrtc, "create-offer", NULL, promise);
 }
 
 static void
@@ -576,11 +578,13 @@ on_answer_created (GstPromise * promise, const gchar * peer_id)
 {
   GstElement *webrtc;
   GstWebRTCSessionDescription *answer;
+  const GstStructure *reply;
 
   g_assert_cmpint (app_state, ==, ROOM_CALL_ANSWERING);
 
-  g_assert_cmpint (promise->result, ==, GST_PROMISE_RESULT_REPLIED);
-  gst_structure_get (promise->promise, "answer",
+  g_assert_cmpint (gst_promise_wait (promise), ==, GST_PROMISE_RESULT_REPLIED);
+  reply = gst_promise_get_reply (promise);
+  gst_structure_get (reply, "answer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &answer, NULL);
   gst_promise_unref (promise);
 
@@ -630,8 +634,7 @@ handle_sdp_offer (const gchar * peer_id, const gchar * text)
   gst_promise_unref (promise);
 
   /* Create an answer that we will send back to the peer */
-  promise = gst_promise_new ();
-  gst_promise_set_change_callback (promise,
+  promise = gst_promise_new_with_change_func (
       (GstPromiseChangeFunc) on_answer_created, (gpointer) peer_id, NULL);
   g_signal_emit_by_name (webrtc, "create-answer", NULL, promise);
 
