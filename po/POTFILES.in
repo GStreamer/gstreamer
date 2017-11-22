@@ -1,3 +1,4 @@
+ext/curl/gstcurlhttpsrc.c
 ext/dash/gstdashdemux.c
 ext/gl/gstgltestsrc.c
 ext/opencv/gsttemplatematch.cpp
