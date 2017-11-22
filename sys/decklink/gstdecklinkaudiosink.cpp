@@ -497,6 +497,10 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   if (GST_BASE_SINK_CAST (self)->flushing) {
     return GST_FLOW_FLUSHING;
   }
+  // If we're called before output is actually started, start pre-rolling
+  if (!self->output->started) {
+    self->output->output->BeginAudioPreroll ();
+  }
 
   video_sink =
       GST_DECKLINK_VIDEO_SINK (gst_object_ref (self->output->videosink));
@@ -697,64 +701,39 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     gst_decklink_video_sink_convert_to_internal_clock (video_sink,
         &schedule_time, &schedule_time_duration);
 
-    if (!self->output->started) {
-      GST_LOG_OBJECT (self, "Writing audio frame synchronously because PAUSED");
+    GST_LOG_OBJECT (self, "Scheduling audio samples at %" GST_TIME_FORMAT
+        " with duration %" GST_TIME_FORMAT, GST_TIME_ARGS (schedule_time),
+        GST_TIME_ARGS (schedule_time_duration));
 
-      ret =
-          self->output->output->WriteAudioSamplesSync ((void *) data, len,
-          &written);
-      if (ret != S_OK) {
-        bool is_running = true;
-        self->output->output->IsScheduledPlaybackRunning (&is_running);
+    ret = self->output->output->ScheduleAudioSamples ((void *) data, len,
+        schedule_time, GST_SECOND, &written);
+    if (ret != S_OK) {
+      bool is_running = true;
+      self->output->output->IsScheduledPlaybackRunning (&is_running);
 
-        if (is_running && !GST_BASE_SINK_CAST (self)->flushing && self->output->started) {
-          GST_ELEMENT_WARNING (self, STREAM, FAILED,
-              (NULL), ("Failed to write audio frame synchronously: 0x%08lx",
-                  (unsigned long) ret));
-          flow_ret = GST_FLOW_ERROR;
-          break;
-        } else {
-          flow_ret = GST_FLOW_FLUSHING;
-          break;
-        }
+      if (is_running && !GST_BASE_SINK_CAST (self)->flushing
+          && self->output->started) {
+        GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+            ("Failed to schedule frame: 0x%08lx", (unsigned long) ret));
+        flow_ret = GST_FLOW_ERROR;
+        break;
+      } else {
+        // Ignore the error and go out of the loop here, we're shutting down
+        // or are not started yet and there's nothing we can do at this point
+        GST_INFO_OBJECT (self,
+            "Ignoring scheduling error 0x%08x because we're not started yet"
+            " or not anymore", ret);
+        flow_ret = GST_FLOW_OK;
+        break;
       }
-
-      len -= written;
-      data += written * self->info.bpf;
-      if (self->resampler)
-        written_all += written * ABS (GST_BASE_SINK_CAST (self)->segment.rate);
-      else
-        written_all += written;
-    } else {
-      GST_LOG_OBJECT (self, "Scheduling audio samples at %" GST_TIME_FORMAT
-          " with duration %" GST_TIME_FORMAT, GST_TIME_ARGS (schedule_time),
-          GST_TIME_ARGS (schedule_time_duration));
-
-      ret = self->output->output->ScheduleAudioSamples ((void *) data, len,
-          schedule_time, GST_SECOND, &written);
-      if (ret != S_OK) {
-        bool is_running = true;
-        self->output->output->IsScheduledPlaybackRunning (&is_running);
-
-        if (is_running && !GST_BASE_SINK_CAST (self)->flushing && self->output->started) {
-          GST_ELEMENT_ERROR (self, STREAM, FAILED,
-              (NULL), ("Failed to schedule frame: 0x%08lx",
-                  (unsigned long) ret));
-          flow_ret = GST_FLOW_ERROR;
-          break;
-        } else {
-          flow_ret = GST_FLOW_FLUSHING;
-          break;
-        }
-      }
-
-      len -= written;
-      data += written * self->info.bpf;
-      if (self->resampler)
-        written_all += written * ABS (GST_BASE_SINK_CAST (self)->segment.rate);
-      else
-        written_all += written;
     }
+
+    len -= written;
+    data += written * self->info.bpf;
+    if (self->resampler)
+      written_all += written * ABS (GST_BASE_SINK_CAST (self)->segment.rate);
+    else
+      written_all += written;
 
     flow_ret = GST_FLOW_OK;
   } while (len > 0);
