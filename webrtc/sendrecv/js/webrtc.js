@@ -137,7 +137,15 @@ function websocketServerConnect() {
     }
     peer_id = getOurId();
     setStatus("Connecting to server");
-    ws_conn = new WebSocket('wss://' + window.location.hostname + ':8443');
+    loc = null;
+    if (window.location.protocol.startsWith ("file")) {
+        loc = "127.0.0.1";
+    } else if (window.location.protocol.startsWith ("http")) {
+        loc = window.location.hostname;
+    } else {
+        throw new Error ("Don't know how to connect to the signalling server with uri" + window.location);
+    }
+    ws_conn = new WebSocket('wss://' + loc + ':8443');
     /* When connected, immediately register with the server */
     ws_conn.addEventListener('open', (event) => {
         document.getElementById("peer-id").textContent = peer_id;
