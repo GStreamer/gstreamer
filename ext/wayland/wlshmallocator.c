@@ -129,6 +129,65 @@ gst_is_wl_shm_memory (GstMemory * mem)
   return gst_memory_is_type (mem, GST_ALLOCATOR_WL_SHM);
 }
 
+/* Copied from gst_v4l2_object_extrapolate_stride() */
+static gint
+gst_wl_shm_extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane,
+    gint stride)
+{
+  gint estride;
+
+  switch (finfo->format) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV12_64Z32:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
+    case GST_VIDEO_FORMAT_NV24:
+      estride = (plane == 0 ? 1 : 2) *
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
+      break;
+    default:
+      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
+      break;
+  }
+
+  return estride;
+}
+
+static gboolean
+gst_wl_shm_validate_video_info (const GstVideoInfo * vinfo)
+{
+  gint height = GST_VIDEO_INFO_HEIGHT (vinfo);
+  gint base_stride = GST_VIDEO_INFO_PLANE_STRIDE (vinfo, 0);
+  gsize base_offs = GST_VIDEO_INFO_PLANE_OFFSET (vinfo, 0);
+  gint i;
+  gsize offs = 0;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (vinfo); i++) {
+    guint32 estride;
+
+    /* Overwrite the video info's stride and offset using the pitch calculcated
+     * by the kms driver. */
+    estride = gst_wl_shm_extrapolate_stride (vinfo->finfo, i, base_stride);
+
+    if (estride != GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i))
+      return FALSE;
+
+    if (GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i) - base_offs != offs)
+      return FALSE;
+
+    /* Note that we cannot negotiate special padding betweem each planes,
+     * hence using the display height here. */
+    offs +=
+        estride * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, height);
+  }
+
+  if (vinfo->size < offs)
+    return FALSE;
+
+  return TRUE;
+}
+
 struct wl_buffer *
 gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
     const GstVideoInfo * info)
@@ -139,6 +198,11 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
   struct wl_shm_pool *wl_pool;
   struct wl_buffer *wbuffer;
 
+  if (!gst_wl_shm_validate_video_info (info)) {
+    GST_DEBUG_OBJECT (display, "Unsupported strides and offsets.");
+    return NULL;
+  }
+
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
   stride = GST_VIDEO_INFO_PLANE_STRIDE (info, 0);
@@ -146,6 +210,7 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
   format = gst_video_format_to_wl_shm_format (GST_VIDEO_INFO_FORMAT (info));
 
   memsize = gst_memory_get_sizes (mem, &offset, &maxsize);
+  offset += GST_VIDEO_INFO_PLANE_OFFSET (info, 0);
 
   g_return_val_if_fail (gst_is_fd_memory (mem), NULL);
   g_return_val_if_fail (size <= memsize, NULL);
