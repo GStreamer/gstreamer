@@ -704,7 +704,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   }
 
   if (!wbuf && gst_wl_display_check_format_for_shm (sink->display, format)) {
-    if (gst_is_fd_memory (mem)) {
+    if (gst_buffer_n_memory (buffer) == 1 && gst_is_fd_memory (mem)) {
       wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, sink->display,
           &sink->video_info);
     } else {
