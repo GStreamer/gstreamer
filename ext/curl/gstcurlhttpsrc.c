@@ -1179,8 +1179,7 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
     src->http_headers = gst_structure_new (HTTP_HEADERS_NAME,
         URI_NAME, G_TYPE_STRING, src->uri,
         REQUEST_HEADERS_NAME, GST_TYPE_STRUCTURE, src->request_headers,
-        RESPONSE_HEADERS_NAME, GST_TYPE_STRUCTURE,
-        gst_structure_new_empty (RESPONSE_HEADERS_NAME), NULL);
+        RESPONSE_HEADERS_NAME, GST_TYPE_STRUCTURE, empty_headers, NULL);
     gst_structure_free (empty_headers);
   }
 
