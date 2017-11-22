@@ -602,7 +602,7 @@ static const struct wl_callback_listener frame_callback_listener = {
 
 /* must be called with the render lock */
 static void
-render_last_buffer (GstWaylandSink * sink)
+render_last_buffer (GstWaylandSink * sink, gboolean redraw)
 {
   GstWlBuffer *wlbuffer;
   const GstVideoInfo *info = NULL;
@@ -616,7 +616,7 @@ render_last_buffer (GstWaylandSink * sink)
   callback = wl_surface_frame (surface);
   wl_callback_add_listener (callback, &frame_callback_listener, sink);
 
-  if (G_UNLIKELY (sink->video_info_changed)) {
+  if (G_UNLIKELY (sink->video_info_changed && !redraw)) {
     info = &sink->video_info;
     sink->video_info_changed = FALSE;
   }
@@ -785,7 +785,7 @@ render:
   }
 
   gst_buffer_replace (&sink->last_buffer, to_render);
-  render_last_buffer (sink);
+  render_last_buffer (sink, FALSE);
 
   if (buffer != to_render)
     gst_buffer_unref (to_render);
@@ -928,7 +928,7 @@ gst_wayland_sink_expose (GstVideoOverlay * overlay)
   g_mutex_lock (&sink->render_lock);
   if (sink->last_buffer && !sink->redraw_pending) {
     GST_DEBUG_OBJECT (sink, "redrawing last buffer");
-    render_last_buffer (sink);
+    render_last_buffer (sink, TRUE);
   }
   g_mutex_unlock (&sink->render_lock);
 }
