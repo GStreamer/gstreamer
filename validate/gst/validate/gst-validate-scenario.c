@@ -1257,7 +1257,8 @@ switch_stream (GstValidatePipelineMonitor * monitor, GstValidateAction * action,
 
   if (relative) {               /* We are changing track relatively to current track */
     index = (current + index) % n;
-  }
+  } else
+    index %= n;
 
   /* Add the new stream we want to switch to */
   s = streams[index];
