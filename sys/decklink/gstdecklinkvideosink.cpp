@@ -699,7 +699,7 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
   const GstDecklinkMode *mode;
 
-  GST_DEBUG_OBJECT (self, "Stopping");
+  GST_DEBUG_OBJECT (self, "Starting");
 
   self->output =
       gst_decklink_acquire_nth_output (self->device_number,
