@@ -253,6 +253,8 @@ test_prepare_reusable (const gchar * launch_line)
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);
+
+  g_object_unref (pool);
 }
 
 GST_START_TEST (test_media_reusable)
