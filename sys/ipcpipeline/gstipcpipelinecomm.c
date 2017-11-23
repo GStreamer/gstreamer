@@ -102,8 +102,7 @@ comm_request_wait (GstIpcPipelineComm * comm, CommRequest * req,
       req->id);
   while (!req->replied) {
     if (ack_type == ACK_TYPE_TIMED) {
-      g_cond_wait_until (&req->cond, &comm->mutex, end_time);
-      if (g_get_monotonic_time () >= end_time)
+      if (!g_cond_wait_until (&req->cond, &comm->mutex, end_time))
         break;
     } else
       g_cond_wait (&req->cond, &comm->mutex);
