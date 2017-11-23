@@ -116,7 +116,6 @@ struct _GstRTSPMediaPrivate
 
   /* the pipeline for the media */
   GstElement *pipeline;
-  GstElement *fakesink;         /* protected by lock */
   GSource *source;
   guint id;
   GstRTSPThread *thread;
@@ -2720,37 +2719,14 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 }
 
 static void
-remove_fakesink (GstRTSPMediaPrivate * priv)
-{
-  GstElement *fakesink;
-
-  g_mutex_lock (&priv->lock);
-  if ((fakesink = priv->fakesink))
-    gst_object_ref (fakesink);
-  priv->fakesink = NULL;
-  g_mutex_unlock (&priv->lock);
-
-  if (fakesink) {
-    gst_bin_remove (GST_BIN (priv->pipeline), fakesink);
-    gst_element_set_state (fakesink, GST_STATE_NULL);
-    gst_object_unref (fakesink);
-    GST_INFO ("removed fakesink");
-  }
-}
-
-static void
 no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  gboolean remaining_dynamic;
 
   GST_INFO_OBJECT (element, "no more pads");
   g_mutex_lock (&priv->lock);
   priv->no_more_pads_pending--;
-  remaining_dynamic = priv->no_more_pads_pending;
   g_mutex_unlock (&priv->lock);
-  if (remaining_dynamic == 0)
-    remove_fakesink (priv);
 }
 
 typedef struct _DynPaySignalHandlers DynPaySignalHandlers;
@@ -2893,13 +2869,6 @@ start_prepare (GstRTSPMedia * media)
         (GCallback) no_more_pads_cb, media);
 
     g_object_set_data (G_OBJECT (elem), "gst-rtsp-dynpay-handlers", handlers);
-
-    if (!priv->fakesink) {
-      /* we add a fakesink here in order to make the state change async. We remove
-       * the fakesink again in the no-more-pads callback. */
-      priv->fakesink = gst_element_factory_make ("fakesink", "fakesink");
-      gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
-    }
   }
 
   if (!start_preroll (media))
@@ -3153,8 +3122,6 @@ finish_unprepare (GstRTSPMedia * media)
 
   if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARING)
     return;
-
-  remove_fakesink (priv);
 
   for (i = 0; i < priv->streams->len; i++) {
     GstRTSPStream *stream;
