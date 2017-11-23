@@ -117,9 +117,16 @@ static gboolean
 resize_cb (GtkWidget * widget, GdkEvent * event, gpointer sink)
 {
   GtkAllocation allocation;
+  gint scale = 1;
+
+#if GTK_CHECK_VERSION(3, 10, 0)
+  scale = gtk_widget_get_scale_factor (widget);
+#endif
 
   gtk_widget_get_allocation (widget, &allocation);
-  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (sink), allocation.x, allocation.y, allocation.width, allocation.height);
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (sink),
+      allocation.x * scale, allocation.y * scale, allocation.width * scale,
+      allocation.height * scale);
 
   return G_SOURCE_CONTINUE;
 }
