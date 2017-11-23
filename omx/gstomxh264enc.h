@@ -52,6 +52,9 @@ struct _GstOMXH264Enc
   guint32 periodicty_idr;
   guint32 interval_intraframes;
   guint32 b_frames;
+  guint32 entropy_mode;
+  gboolean constrained_intra_prediction;
+  guint32 loop_filter_mode;
 
   GList *headers;
 };
