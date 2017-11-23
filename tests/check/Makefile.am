@@ -1,6 +1,8 @@
 include $(top_srcdir)/common/check.mak
 
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
 TEST_FILES_DIRECTORY = $(top_srcdir)/tests/check/ges
+
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY_1_0=$(CHECK_REGISTRY)
 
