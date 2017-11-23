@@ -651,7 +651,7 @@ gst_ipc_pipeline_sink_change_state (GstElement * element,
     GST_DEBUG_OBJECT (sink, "Calling peer with state change");
     peer_ret = gst_ipc_pipeline_comm_write_state_change_to_fd (&sink->comm,
         transition);
-    if (ret == GST_STATE_CHANGE_FAILURE && down) {
+    if (peer_ret == GST_STATE_CHANGE_FAILURE && down) {
       GST_WARNING_OBJECT (sink, "Peer returned state change failure, "
           "but ignoring because we are going down");
       peer_ret = GST_STATE_CHANGE_SUCCESS;
