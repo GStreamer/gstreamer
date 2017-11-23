@@ -2296,7 +2296,8 @@ _get_target_elements_by_klass_or_factory_name (GstValidateScenario * scenario,
   if (klass && gst_validate_element_has_klass (pipeline, klass))
     result = g_list_prepend (result, gst_object_ref (pipeline));
 
-  if (fname && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (pipeline)),
+  if (fname && gst_element_get_factory (pipeline)
+      && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (pipeline)),
           fname))
     result = g_list_prepend (result, gst_object_ref (pipeline));
 
@@ -2318,7 +2319,7 @@ _get_target_elements_by_klass_or_factory_name (GstValidateScenario * scenario,
           goto next;
         }
 
-        if (fname
+        if (fname && gst_element_get_factory (child)
             && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (child)),
                 fname))
           result = g_list_prepend (result, gst_object_ref (child));
@@ -3209,7 +3210,7 @@ should_execute_action (GstElement * element, GstValidateAction * action)
   tmp =
       gst_structure_get_string (action->structure,
       "target-element-factory-name");
-  if (tmp != NULL
+  if (tmp != NULL && gst_element_get_factory (element)
       && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (element)), tmp))
     return TRUE;
 
