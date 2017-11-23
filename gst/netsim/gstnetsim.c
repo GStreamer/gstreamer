@@ -33,16 +33,15 @@
 GST_DEBUG_CATEGORY (netsim_debug);
 #define GST_CAT_DEFAULT (netsim_debug)
 
-
 enum
 {
-  ARG_0,
-  ARG_MIN_DELAY,
-  ARG_MAX_DELAY,
-  ARG_DELAY_PROBABILITY,
-  ARG_DROP_PROBABILITY,
-  ARG_DUPLICATE_PROBABILITY,
-  ARG_DROP_PACKETS
+  PROP_0,
+  PROP_MIN_DELAY,
+  PROP_MAX_DELAY,
+  PROP_DELAY_PROBABILITY,
+  PROP_DROP_PROBABILITY,
+  PROP_DUPLICATE_PROBABILITY,
+  PROP_DROP_PACKETS,
 };
 
 /* these numbers are nothing but wild guesses and dont reflect any reality */
@@ -111,9 +110,6 @@ gst_net_sim_src_activatemode (GstPad * pad, GstObject * parent,
 {
   GstNetSim *netsim = GST_NET_SIM (parent);
   gboolean result = FALSE;
-
-  (void) pad;
-  (void) mode;
 
   g_mutex_lock (&netsim->loop_mutex);
   if (active) {
@@ -231,8 +227,6 @@ gst_net_sim_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstNetSim *netsim = GST_NET_SIM (parent);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  (void) pad;
-
   if (netsim->drop_packets > 0) {
     netsim->drop_packets--;
     GST_DEBUG_OBJECT (netsim, "Dropping packet (%d left)",
@@ -264,26 +258,26 @@ gst_net_sim_set_property (GObject * object,
   GstNetSim *netsim = GST_NET_SIM (object);
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-    case ARG_MIN_DELAY:
+    case PROP_MIN_DELAY:
       netsim->min_delay = g_value_get_int (value);
       break;
-    case ARG_MAX_DELAY:
+    case PROP_MAX_DELAY:
       netsim->max_delay = g_value_get_int (value);
       break;
-    case ARG_DELAY_PROBABILITY:
+    case PROP_DELAY_PROBABILITY:
       netsim->delay_probability = g_value_get_float (value);
       break;
-    case ARG_DROP_PROBABILITY:
+    case PROP_DROP_PROBABILITY:
       netsim->drop_probability = g_value_get_float (value);
       break;
-    case ARG_DUPLICATE_PROBABILITY:
+    case PROP_DUPLICATE_PROBABILITY:
       netsim->duplicate_probability = g_value_get_float (value);
       break;
-    case ARG_DROP_PACKETS:
+    case PROP_DROP_PACKETS:
       netsim->drop_packets = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -295,26 +289,26 @@ gst_net_sim_get_property (GObject * object,
   GstNetSim *netsim = GST_NET_SIM (object);
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-    case ARG_MIN_DELAY:
+    case PROP_MIN_DELAY:
       g_value_set_int (value, netsim->min_delay);
       break;
-    case ARG_MAX_DELAY:
+    case PROP_MAX_DELAY:
       g_value_set_int (value, netsim->max_delay);
       break;
-    case ARG_DELAY_PROBABILITY:
+    case PROP_DELAY_PROBABILITY:
       g_value_set_float (value, netsim->delay_probability);
       break;
-    case ARG_DROP_PROBABILITY:
+    case PROP_DROP_PROBABILITY:
       g_value_set_float (value, netsim->drop_probability);
       break;
-    case ARG_DUPLICATE_PROBABILITY:
+    case PROP_DUPLICATE_PROBABILITY:
       g_value_set_float (value, netsim->duplicate_probability);
       break;
-    case ARG_DROP_PACKETS:
+    case PROP_DROP_PACKETS:
       g_value_set_uint (value, netsim->drop_packets);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -391,37 +385,37 @@ gst_net_sim_class_init (GstNetSimClass * klass)
   gobject_class->set_property = gst_net_sim_set_property;
   gobject_class->get_property = gst_net_sim_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_MIN_DELAY,
+  g_object_class_install_property (gobject_class, PROP_MIN_DELAY,
       g_param_spec_int ("min-delay", "Minimum delay (ms)",
           "The minimum delay in ms to apply to buffers",
           G_MININT, G_MAXINT, DEFAULT_MIN_DELAY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_MAX_DELAY,
+  g_object_class_install_property (gobject_class, PROP_MAX_DELAY,
       g_param_spec_int ("max-delay", "Maximum delay (ms)",
           "The maximum delay in ms to apply to buffers",
           G_MININT, G_MAXINT, DEFAULT_MAX_DELAY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_DELAY_PROBABILITY,
+  g_object_class_install_property (gobject_class, PROP_DELAY_PROBABILITY,
       g_param_spec_float ("delay-probability", "Delay Probability",
           "The Probability a buffer is delayed",
           0.0, 1.0, DEFAULT_DELAY_PROBABILITY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_DROP_PROBABILITY,
+  g_object_class_install_property (gobject_class, PROP_DROP_PROBABILITY,
       g_param_spec_float ("drop-probability", "Drop Probability",
           "The Probability a buffer is dropped",
           0.0, 1.0, DEFAULT_DROP_PROBABILITY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_DUPLICATE_PROBABILITY,
+  g_object_class_install_property (gobject_class, PROP_DUPLICATE_PROBABILITY,
       g_param_spec_float ("duplicate-probability", "Duplicate Probability",
           "The Probability a buffer is duplicated",
           0.0, 1.0, DEFAULT_DUPLICATE_PROBABILITY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_DROP_PACKETS,
+  g_object_class_install_property (gobject_class, PROP_DROP_PACKETS,
       g_param_spec_uint ("drop-packets", "Drop Packets",
           "Drop the next n packets",
           0, G_MAXUINT, DEFAULT_DROP_PACKETS,
