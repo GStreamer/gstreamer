@@ -2551,7 +2551,7 @@ gst_qtdemux_stream_reset (GstQTDemux * qtdemux, QtDemuxStream * stream)
 static void
 gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
-  gst_qtdemux_stream_reset(qtdemux, stream);
+  gst_qtdemux_stream_reset (qtdemux, stream);
   gst_tag_list_unref (stream->stream_tags);
   if (stream->pad) {
     gst_element_remove_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
@@ -9648,7 +9648,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     /* reset reused stream */
-    gst_qtdemux_stream_reset(qtdemux, stream);
+    gst_qtdemux_stream_reset (qtdemux, stream);
   }
   /* need defaults for fragments */
   qtdemux_parse_trex (qtdemux, stream, &dummy, &dummy, &dummy);
