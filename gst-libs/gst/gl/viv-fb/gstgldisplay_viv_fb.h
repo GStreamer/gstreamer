@@ -23,12 +23,44 @@
 #define __GST_GL_DISPLAY_VIV_FB_H__
 
 #include <gst/gst.h>
-#include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/gstgldisplay.h>
 #include <gst/gl/egl/gstegl.h>
 
 G_BEGIN_DECLS
 
-GstGLDisplayEGL *gst_gl_display_viv_fb_new (gint disp_idx);
+GType gst_gl_display_viv_fb_get_type (void);
+
+#define GST_TYPE_GL_DISPLAY_VIV_FB             (gst_gl_display_viv_fb_get_type())
+#define GST_GL_DISPLAY_VIV_FB(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY_VIV_FB,GstGLDisplayVivFB))
+#define GST_GL_DISPLAY_VIV_FB_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_GL_DISPLAY_VIV_FB,GstGLDisplayVivFBClass))
+#define GST_IS_GL_DISPLAY_VIV_FB(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY_VIV_FB))
+#define GST_IS_GL_DISPLAY_VIV_FB_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_GL_DISPLAY_VIV_FB))
+#define GST_GL_DISPLAY_VIV_FB_CAST(obj)        ((GstGLDisplayVivFB*)(obj))
+
+typedef struct _GstGLDisplayVivFB GstGLDisplayVivFB;
+typedef struct _GstGLDisplayVivFBClass GstGLDisplayVivFBClass;
+
+/**
+ * GstGLDisplayVivFB:
+ *
+ * the contents of a #GstGLDisplayVivFB are private and should only be accessed
+ * through the provided API
+ */
+struct _GstGLDisplayVivFB
+{
+  GstGLDisplay          parent;
+
+  /* <private> */
+  gint disp_idx;
+  EGLNativeDisplayType display;
+};
+
+struct _GstGLDisplayVivFBClass
+{
+  GstGLDisplayClass object_class;
+};
+
+GstGLDisplayVivFB *gst_gl_display_viv_fb_new (gint disp_idx);
 
 G_END_DECLS
 
