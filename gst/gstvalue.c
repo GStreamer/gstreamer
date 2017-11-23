@@ -7496,10 +7496,10 @@ G_STMT_START {                                                          \
 /* These initial sizes are used for the tables
  * below, and save a couple of reallocs at startup */
 
-static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 35;
-static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 4;
-static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 11;
-static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 12;
+static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 40;
+static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 8;
+static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 16;
+static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 16;
 
 void
 _priv_gst_value_initialize (void)
@@ -7686,22 +7686,22 @@ _priv_gst_value_initialize (void)
 #if GST_VERSION_NANO == 1
   /* If building from git master, check starting array sizes matched actual size
    * so we can keep the defines in sync and save a few reallocs on startup */
-  if (gst_value_table->len != GST_VALUE_TABLE_DEFAULT_SIZE) {
+  if (gst_value_table->len > GST_VALUE_TABLE_DEFAULT_SIZE) {
     GST_ERROR ("Wrong initial gst_value_table size. "
         "Please set GST_VALUE_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
         gst_value_table->len);
   }
-  if (gst_value_union_funcs->len != GST_VALUE_UNION_TABLE_DEFAULT_SIZE) {
+  if (gst_value_union_funcs->len > GST_VALUE_UNION_TABLE_DEFAULT_SIZE) {
     GST_ERROR ("Wrong initial gst_value_union_funcs table size. "
         "Please set GST_VALUE_UNION_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
         gst_value_union_funcs->len);
   }
-  if (gst_value_intersect_funcs->len != GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE) {
+  if (gst_value_intersect_funcs->len > GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE) {
     GST_ERROR ("Wrong initial gst_value_intersect_funcs table size. "
         "Please set GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
         gst_value_intersect_funcs->len);
   }
-  if (gst_value_subtract_funcs->len != GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE) {
+  if (gst_value_subtract_funcs->len > GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE) {
     GST_ERROR ("Wrong initial gst_value_subtract_funcs table size. "
         "Please set GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
         gst_value_subtract_funcs->len);
