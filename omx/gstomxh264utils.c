@@ -81,6 +81,16 @@ gst_omx_h264_utils_get_level_from_str (const gchar * level)
     return OMX_VIDEO_AVCLevel5;
   } else if (g_str_equal (level, "5.1")) {
     return OMX_VIDEO_AVCLevel51;
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  } else if (g_str_equal (level, "5.2")) {
+    return (OMX_VIDEO_AVCLEVELTYPE) OMX_ALG_VIDEO_AVCLevel52;
+  } else if (g_str_equal (level, "6.0")) {
+    return (OMX_VIDEO_AVCLEVELTYPE) OMX_ALG_VIDEO_AVCLevel60;
+  } else if (g_str_equal (level, "6.1")) {
+    return (OMX_VIDEO_AVCLEVELTYPE) OMX_ALG_VIDEO_AVCLevel61;
+  } else if (g_str_equal (level, "6.2")) {
+    return (OMX_VIDEO_AVCLEVELTYPE) OMX_ALG_VIDEO_AVCLevel62;
+#endif
   }
 
   return OMX_VIDEO_AVCLevelMax;

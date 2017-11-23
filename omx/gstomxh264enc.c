@@ -696,6 +696,20 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
       case OMX_VIDEO_AVCLevel51:
         level = "5.1";
         break;
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      case OMX_ALG_VIDEO_AVCLevel52:
+        level = "5.2";
+        break;
+      case OMX_ALG_VIDEO_AVCLevel60:
+        level = "6.0";
+        break;
+      case OMX_ALG_VIDEO_AVCLevel61:
+        level = "6.1";
+        break;
+      case OMX_ALG_VIDEO_AVCLevel62:
+        level = "6.2";
+        break;
+#endif
       default:
         g_assert_not_reached ();
         gst_caps_unref (caps);
