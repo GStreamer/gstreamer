@@ -675,10 +675,7 @@ if build_gstgl
     soversion : soversion,
     install : true,
     dependencies : [gstbase_dep, gstvideo_dep, gstbadallocators_dep, gmodule_dep,
-                    gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
-    # Don't need vs_module_defs for gstgl because we do symbol exporting in the
-    # function definitions via __declspec(dllexport/import)
-  )
+                    gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps])
   gen_sources = []
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
