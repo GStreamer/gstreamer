@@ -706,6 +706,8 @@ gst_ipc_pipeline_comm_read_buffer (GstIpcPipelineComm * comm, guint32 size)
     } else {
       GST_WARNING_OBJECT (comm->element, "Unsupported meta: %s",
           g_type_name (api));
+      if (structure)
+        gst_structure_free (structure);
     }
 
 #undef READ_FIELD
