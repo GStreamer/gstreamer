@@ -59,8 +59,8 @@ gst_gl_display_viv_fb_finalize (GObject * object)
 {
   GstGLDisplayVivFB *display_viv_fb = GST_GL_DISPLAY_VIV_FB (object);
 
-  if (display_viv_fb->display)
-    fbDestroyDisplay (display_viv_fb->display);
+  // We don't destroy the FB Display - it causes crashes in applications
+  // because Vivante doesn't seem to do any refcounting
 
   G_OBJECT_CLASS (gst_gl_display_viv_fb_parent_class)->finalize (object);
 }
