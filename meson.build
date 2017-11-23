@@ -101,8 +101,7 @@ if ges_dep.found()
           '--version', meson.project_version(),
           '--tags', 'GStreamer GES GstSharp bindings',
           '--builddir', meson.current_build_dir(),
-          '--dependency', 'GLibSharp:3.22',
-          '--dependency', 'GioSharp:3.22',
+          '--dependency', 'GstSharp:' + meson.project_version(),
       ],
       output: 'GESSharp.' + meson.project_version() + '.nupkg'
   )
@@ -119,7 +118,6 @@ custom_target('GstSharp-nuget',
         '--version', meson.project_version(),
         '--tags', 'GStreamer GstSharp bindings',
         '--builddir', meson.current_build_dir(),
-        '--dependency', 'GstSharp:' + meson.project_version(),
     ],
     output: 'GstSharp.' + meson.project_version() + '.nupkg',
 )
