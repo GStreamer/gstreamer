@@ -3685,11 +3685,16 @@ default_unsuspend (GstRTSPMedia * media)
     case GST_RTSP_SUSPEND_MODE_NONE:
       if ((priv->transport_mode & GST_RTSP_TRANSPORT_MODE_RECORD))
         break;
-      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
-      /* at this point the media pipeline has been updated and contain all
-       * specific transport parts: all active streams contain at least one sink
-       * element and it's safe to unblock any blocked streams that are active */
-      media_unblock_linked (media);
+      if (media_streams_blocking (media)) {
+        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+        /* at this point the media pipeline has been updated and contain all
+         * specific transport parts: all active streams contain at least one sink
+         * element and it's safe to unblock any blocked streams that are active */
+        media_unblock_linked (media);
+      } else {
+        /* streams are not blocked and media is suspended from PAUSED */
+        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+      }
       g_rec_mutex_unlock (&priv->state_lock);
       if (gst_rtsp_media_get_status (media) == GST_RTSP_MEDIA_STATUS_ERROR) {
         g_rec_mutex_lock (&priv->state_lock);
