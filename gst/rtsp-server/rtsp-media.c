@@ -112,7 +112,7 @@ struct _GstRTSPMediaPrivate
   GstRTSPMediaStatus status;    /* protected by lock */
   gint prepare_count;
   gint n_active;
-  gboolean adding;
+  gboolean complete;
 
   /* the pipeline for the media */
   GstElement *pipeline;
@@ -2569,13 +2569,11 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
-      if (priv->adding) {
-        /* when we are dynamically adding pads, the addition of the udpsrc will
-         * temporarily produce ASYNC_DONE messages. We have to ignore them and
-         * wait for the final ASYNC_DONE after everything prerolled */
-        GST_INFO ("%p: ignoring ASYNC_DONE", media);
-      } else {
-        GST_INFO ("%p: got ASYNC_DONE", media);
+      if (priv->complete) {
+         /* receive the final ASYNC_DONE, that is posted by the media pipeline
+          * after all the transport parts have been successfully added to
+          * the media streams. */
+        GST_DEBUG_OBJECT (media, "got async-done");
         if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
           gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       }
@@ -2678,11 +2676,6 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 
   g_object_set_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream", stream);
 
-  /* we will be adding elements below that will cause ASYNC_DONE to be
-   * posted in the bus. We want to ignore those messages until the
-   * pipeline really prerolled. */
-  priv->adding = TRUE;
-
   /* join the element in the PAUSED state because this callback is
    * called from the streaming thread and it is PAUSED */
   if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
@@ -2693,7 +2686,6 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   if (priv->blocked)
     gst_rtsp_stream_set_blocked (stream, TRUE);
 
-  priv->adding = FALSE;
   g_rec_mutex_unlock (&priv->state_lock);
 
   return;
@@ -4118,6 +4110,8 @@ gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)
       return FALSE;
     }
   }
+
+  priv->complete = TRUE;
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
