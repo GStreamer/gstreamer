@@ -169,7 +169,11 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+#if GST_GL_HAVE_WINDOW_VIV_FB
+  if (GST_IS_GL_DISPLAY_VIV_FB (display)) {
+#else
   if (GST_IS_GL_DISPLAY_EGL (display)) {
+#endif
     platform = GST_GL_PLATFORM_EGL;
   }
 #endif
