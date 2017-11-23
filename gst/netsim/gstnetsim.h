@@ -57,14 +57,19 @@ struct _GstNetSim
   GCond start_cond;
   GMainLoop *main_loop;
   gboolean running;
-
   GRand *rand_seed;
+  gsize bucket_size;
+  GstClockTime prev_time;
+
+  /* properties */
   gint min_delay;
   gint max_delay;
   gfloat delay_probability;
   gfloat drop_probability;
   gfloat duplicate_probability;
   guint drop_packets;
+  gint max_kbps;
+  gint max_bucket_size;
 };
 
 struct _GstNetSimClass

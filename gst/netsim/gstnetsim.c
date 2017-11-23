@@ -4,7 +4,7 @@
  *  Copyright 2006 Collabora Ltd,
  *  Copyright 2006 Nokia Corporation
  *   @author: Philippe Kalaf <philippe.kalaf@collabora.co.uk>.
- *  Copyright 2012-2015 Pexip
+ *  Copyright 2012-2016 Pexip
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -42,6 +42,8 @@ enum
   PROP_DROP_PROBABILITY,
   PROP_DUPLICATE_PROBABILITY,
   PROP_DROP_PACKETS,
+  PROP_MAX_KBPS,
+  PROP_MAX_BUCKET_SIZE,
 };
 
 /* these numbers are nothing but wild guesses and dont reflect any reality */
@@ -51,6 +53,8 @@ enum
 #define DEFAULT_DROP_PROBABILITY 0.0
 #define DEFAULT_DUPLICATE_PROBABILITY 0.0
 #define DEFAULT_DROP_PACKETS 0
+#define DEFAULT_MAX_KBPS -1
+#define DEFAULT_MAX_BUCKET_SIZE -1
 
 static GstStaticPadTemplate gst_net_sim_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -221,11 +225,104 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
   return ret;
 }
 
+static gsize
+get_buffer_size_in_bits (GstBuffer * buf)
+{
+  GstMapInfo map = GST_MAP_INFO_INIT;
+  gsize size;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  size = map.size * 8;
+  gst_buffer_unmap (buf, &map);
+  return size;
+}
+
+static gint
+gst_net_sim_get_tokens (GstNetSim * netsim)
+{
+  gint tokens = 0;
+  GstClockTimeDiff elapsed_time = 0;
+  GstClockTime current_time = 0;
+  GstClockTimeDiff token_time;
+  GstClock *clock;
+
+  /* check for umlimited kbps and fill up the bucket if that is the case,
+   * if not, calculate the number of tokens to add based on the elapsed time */
+  if (netsim->max_kbps == -1)
+    return netsim->max_bucket_size * 1000 - netsim->bucket_size;
+
+  /* get the current time */
+  clock = gst_element_get_clock (GST_ELEMENT_CAST (netsim));
+  if (clock == NULL) {
+    GST_WARNING_OBJECT (netsim, "No clock, can't get the time");
+  } else {
+    current_time = gst_clock_get_time (clock);
+  }
+
+  /* get the elapsed time */
+  if (GST_CLOCK_TIME_IS_VALID (netsim->prev_time)) {
+    if (current_time < netsim->prev_time) {
+      GST_WARNING_OBJECT (netsim, "Clock is going backwards!!");
+    } else {
+      elapsed_time = GST_CLOCK_DIFF (netsim->prev_time, current_time);
+    }
+  } else {
+    netsim->prev_time = current_time;
+  }
+
+  /* calculate number of tokens and how much time is "spent" by these tokens */
+  tokens =
+      gst_util_uint64_scale_int (elapsed_time, netsim->max_kbps * 1000,
+      GST_SECOND);
+  token_time =
+      gst_util_uint64_scale_int (GST_SECOND, tokens, netsim->max_kbps * 1000);
+
+  /* increment the time with how much we spent in terms of whole tokens */
+  netsim->prev_time += token_time;
+  gst_object_unref (clock);
+  return tokens;
+}
+
+static gboolean
+gst_net_sim_token_bucket (GstNetSim * netsim, GstBuffer * buf)
+{
+  gsize buffer_size;
+  gint tokens;
+
+  /* with an unlimited bucket-size, we have nothing to do */
+  if (netsim->max_bucket_size == -1)
+    return TRUE;
+
+  buffer_size = get_buffer_size_in_bits (buf);
+  tokens = gst_net_sim_get_tokens (netsim);
+
+  netsim->bucket_size = MIN (G_MAXINT, netsim->bucket_size + tokens);
+  GST_LOG_OBJECT (netsim, "Adding %d tokens to bucket (contains %lu tokens)",
+      tokens, netsim->bucket_size);
+
+  if (netsim->max_bucket_size != -1 && netsim->bucket_size >
+      netsim->max_bucket_size * 1000)
+    netsim->bucket_size = netsim->max_bucket_size * 1000;
+
+  if (buffer_size > netsim->bucket_size) {
+    GST_DEBUG_OBJECT (netsim, "Buffer size (%lu) exeedes bucket size (%lu)",
+        buffer_size, netsim->bucket_size);
+    return FALSE;
+  }
+
+  netsim->bucket_size -= buffer_size;
+  GST_LOG_OBJECT (netsim, "Buffer taking %lu tokens (%lu left)",
+      buffer_size, netsim->bucket_size);
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_net_sim_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstNetSim *netsim = GST_NET_SIM (parent);
   GstFlowReturn ret = GST_FLOW_OK;
+
+  if (!gst_net_sim_token_bucket (netsim, buf))
+    goto done;
 
   if (netsim->drop_packets > 0) {
     netsim->drop_packets--;
@@ -245,8 +342,8 @@ gst_net_sim_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     ret = gst_net_sim_delay_buffer (netsim, buf);
   }
 
+done:
   gst_buffer_unref (buf);
-
   return ret;
 }
 
@@ -275,6 +372,14 @@ gst_net_sim_set_property (GObject * object,
       break;
     case PROP_DROP_PACKETS:
       netsim->drop_packets = g_value_get_uint (value);
+      break;
+    case PROP_MAX_KBPS:
+      netsim->max_kbps = g_value_get_int (value);
+      break;
+    case PROP_MAX_BUCKET_SIZE:
+      netsim->max_bucket_size = g_value_get_int (value);
+      if (netsim->max_bucket_size != -1)
+        netsim->bucket_size = netsim->max_bucket_size * 1000;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -307,6 +412,12 @@ gst_net_sim_get_property (GObject * object,
     case PROP_DROP_PACKETS:
       g_value_set_uint (value, netsim->drop_packets);
       break;
+    case PROP_MAX_KBPS:
+      g_value_set_int (value, netsim->max_kbps);
+      break;
+    case PROP_MAX_BUCKET_SIZE:
+      g_value_set_int (value, netsim->max_bucket_size);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -329,6 +440,7 @@ gst_net_sim_init (GstNetSim * netsim)
   g_cond_init (&netsim->start_cond);
   netsim->rand_seed = g_rand_new ();
   netsim->main_loop = NULL;
+  netsim->prev_time = GST_CLOCK_TIME_NONE;
 
   GST_OBJECT_FLAG_SET (netsim->sinkpad,
       GST_PAD_FLAG_PROXY_CAPS | GST_PAD_FLAG_PROXY_ALLOCATION);
@@ -377,7 +489,8 @@ gst_net_sim_class_init (GstNetSimClass * klass)
       "Filter/Network",
       "An element that simulates network jitter, "
       "packet loss and packet duplication",
-      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
+      "Havard Graff <havard@pexip.com>");
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_net_sim_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_net_sim_finalize);
@@ -419,6 +532,33 @@ gst_net_sim_class_init (GstNetSimClass * klass)
       g_param_spec_uint ("drop-packets", "Drop Packets",
           "Drop the next n packets",
           0, G_MAXUINT, DEFAULT_DROP_PACKETS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstNetSim:max-kbps:
+   *
+   * The maximum number of kilobits to let through per second. Setting this
+   * property to a positive value enables network congestion simulation using
+   * a token bucket algorithm. Also see the "max-bucket-size" property,
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_KBPS,
+      g_param_spec_int ("max-kbps", "Maximum Kbps",
+          "The maximum number of kilobits to let through per second "
+          "(-1 = unlimited)", -1, G_MAXINT, DEFAULT_MAX_KBPS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstNetSim:max-bucket-size:
+   *
+   * The size of the token bucket, related to burstiness resilience.
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_BUCKET_SIZE,
+      g_param_spec_int ("max-bucket-size", "Maximum Bucket Size (Kb)",
+          "The size of the token bucket, related to burstiness resilience "
+          "(-1 = unlimited)", -1, G_MAXINT, DEFAULT_MAX_BUCKET_SIZE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (netsim_debug, "netsim", 0, "Network simulator");
