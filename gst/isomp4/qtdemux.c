@@ -11753,15 +11753,15 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
         /* retrieve bitrate, prefer avg then max */
         bitrate = 0;
         if (qtdemux->streams[i]->stream_tags) {
-          gst_tag_list_get_uint (qtdemux->streams[i]->stream_tags,
-              GST_TAG_MAXIMUM_BITRATE, &bitrate);
-          GST_DEBUG_OBJECT (qtdemux, "max-bitrate: %u", bitrate);
-          gst_tag_list_get_uint (qtdemux->streams[i]->stream_tags,
-              GST_TAG_NOMINAL_BITRATE, &bitrate);
-          GST_DEBUG_OBJECT (qtdemux, "nominal-bitrate: %u", bitrate);
-          gst_tag_list_get_uint (qtdemux->streams[i]->stream_tags,
-              GST_TAG_BITRATE, &bitrate);
-          GST_DEBUG_OBJECT (qtdemux, "bitrate: %u", bitrate);
+          if (gst_tag_list_get_uint (qtdemux->streams[i]->stream_tags,
+                  GST_TAG_MAXIMUM_BITRATE, &bitrate))
+            GST_DEBUG_OBJECT (qtdemux, "max-bitrate: %u", bitrate);
+          if (gst_tag_list_get_uint (qtdemux->streams[i]->stream_tags,
+                  GST_TAG_NOMINAL_BITRATE, &bitrate))
+            GST_DEBUG_OBJECT (qtdemux, "nominal-bitrate: %u", bitrate);
+          if (gst_tag_list_get_uint (qtdemux->streams[i]->stream_tags,
+                  GST_TAG_BITRATE, &bitrate))
+            GST_DEBUG_OBJECT (qtdemux, "bitrate: %u", bitrate);
         }
         if (bitrate)
           sum_bitrate += bitrate;
