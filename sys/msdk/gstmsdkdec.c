@@ -701,8 +701,11 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
 
   for (;;) {
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
-    if ((flow = gst_msdkdec_finish_task (thiz, task)) != GST_FLOW_OK)
-      return flow;
+    if (gst_msdkdec_finish_task (thiz, task) != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (decoder,
+          "failed to finish the task %p, but keep draining for the remaining frames",
+          task);
+    }
 
     if (!surface) {
       flow = allocate_output_buffer (thiz, &buffer);
