@@ -575,7 +575,7 @@ rg_analysis_analyze_mono_int16 (RgAnalysisCtx * ctx, gconstpointer data,
   gint32 peak_sample = 0;
   const gint16 *samples = (gint16 *) data;
   guint n_samples = size / sizeof (gint16);
-  gint shift = sizeof (gint16) * 8 - depth;
+  gint shift = 1 << (sizeof (gint16) * 8 - depth);
   gint i;
 
   g_return_if_fail (depth <= (sizeof (gint16) * 8));
@@ -586,7 +586,7 @@ rg_analysis_analyze_mono_int16 (RgAnalysisCtx * ctx, gconstpointer data,
 
     n_samples -= n;
     for (i = 0; i < n; i++) {
-      gint16 old_sample = samples[i] << shift;
+      gint16 old_sample = samples[i] * shift;
 
       peak_sample = MAX (peak_sample, ABS ((gint32) old_sample));
       conv_samples[i] = (gfloat) old_sample;
@@ -607,7 +607,7 @@ rg_analysis_analyze_stereo_int16 (RgAnalysisCtx * ctx, gconstpointer data,
   gint32 peak_sample = 0;
   const gint16 *samples = (gint16 *) data;
   guint n_frames = size / (sizeof (gint16) * 2);
-  gint shift = sizeof (gint16) * 8 - depth;
+  gint shift = 1 << (sizeof (gint16) * 8 - depth);
   gint i;
 
   g_return_if_fail (depth <= (sizeof (gint16) * 8));
@@ -620,11 +620,11 @@ rg_analysis_analyze_stereo_int16 (RgAnalysisCtx * ctx, gconstpointer data,
     for (i = 0; i < n; i++) {
       gint16 old_sample;
 
-      old_sample = samples[2 * i] << shift;
+      old_sample = samples[2 * i] * shift;
       peak_sample = MAX (peak_sample, ABS ((gint32) old_sample));
       conv_samples_l[i] = (gfloat) old_sample;
 
-      old_sample = samples[2 * i + 1] << shift;
+      old_sample = samples[2 * i + 1] * shift;
       peak_sample = MAX (peak_sample, ABS ((gint32) old_sample));
       conv_samples_r[i] = (gfloat) old_sample;
     }
