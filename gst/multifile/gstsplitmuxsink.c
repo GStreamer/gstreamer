@@ -944,22 +944,22 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
           if (ok)
             break;
+
         } else {
           break;
         }
         /* This is in the case the muxer doesn't allow this change of caps */
-
         GST_SPLITMUX_LOCK (splitmux);
         locked = TRUE;
         ctx->caps_change = TRUE;
-        splitmux->ready_for_output = FALSE;
 
         if (splitmux->output_state != SPLITMUX_OUTPUT_STATE_START_NEXT_FILE) {
-
+          GST_DEBUG_OBJECT (splitmux,
+              "New caps were not accepted. Switching output file");
           if (ctx->out_eos == FALSE) {
-            send_eos (splitmux, ctx);
+            splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_FILE;
+            GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
           }
-          splitmux->output_state = SPLITMUX_OUTPUT_STATE_START_NEXT_FILE;
         }
 
         /* Lets it fall through, if it fails again, then the muxer just can't
@@ -983,9 +983,10 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
      * because it would cause a new file to be created without the first
      * buffer being available.
      */
-    if (ctx->caps_change && GST_EVENT_IS_STICKY (event))
-      return GST_PAD_PROBE_DROP;
-    else
+    if (ctx->caps_change && GST_EVENT_IS_STICKY (event)) {
+      gst_event_unref (event);
+      return GST_PAD_PROBE_HANDLED;
+    } else
       return GST_PAD_PROBE_PASS;
   }
 

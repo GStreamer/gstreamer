@@ -220,10 +220,10 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   gst_message_unref (msg);
 
   /* Check we saw the entire range of values */
-  fail_unless (first_ts == 0,
+  fail_unless (first_ts == exp_first_time,
       "Expected start of playback range 0, got %" GST_TIME_FORMAT,
       GST_TIME_ARGS (first_ts));
-  fail_unless (last_ts == (3 * GST_SECOND),
+  fail_unless (last_ts == exp_last_time,
       "Expected end of playback range 3s, got %" GST_TIME_FORMAT,
       GST_TIME_ARGS (last_ts));
 
@@ -572,6 +572,87 @@ GST_START_TEST (test_splitmuxsrc_sparse_streams)
 
 GST_END_TEST;
 
+struct CapsChangeData
+{
+  guint count;
+  GstElement *cf;
+};
+
+static GstPadProbeReturn
+switch_caps (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  struct CapsChangeData *data = (struct CapsChangeData *) (user_data);
+
+  if (data->count == 4) {
+    GST_INFO ("Saw 5 buffers to the encoder. Switching caps");
+    gst_util_set_object_arg (G_OBJECT (data->cf), "caps",
+        "video/x-raw,width=160,height=128,framerate=10/1");
+  }
+  data->count++;
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_splitmuxsrc_caps_change)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  GstElement *cf;
+  GstPad *sinkpad;
+  gchar *dest_pattern;
+  guint count;
+  gchar *in_pattern;
+  struct CapsChangeData data;
+
+  /* This test creates a new file only by changing the caps, which
+   * qtmux will reject (for now - if qtmux starts supporting caps
+   * changes, this test will break and need fixing/disabling */
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc num-buffers=10 !"
+      "  capsfilter name=c caps=video/x-raw,width=80,height=64,framerate=10/1 !"
+      "  jpegenc ! splitmuxsink name=splitsink muxer=qtmux", NULL);
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.mp4", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  cf = gst_bin_get_by_name (GST_BIN (pipeline), "c");
+  sinkpad = gst_element_get_static_pad (cf, "sink");
+
+  data.cf = cf;
+  data.count = 0;
+
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BUFFER,
+      switch_caps, &data, NULL);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (cf);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+
+  count = count_files (tmpdir);
+  fail_unless (count == 2, "Expected 2 output files, got %d", count);
+
+  in_pattern = g_build_filename (tmpdir, "out*.mp4", NULL);
+  test_playback (in_pattern, 0, GST_SECOND);
+  g_free (in_pattern);
+}
+
+GST_END_TEST;
+
 /* For verifying bug https://bugzilla.gnome.org/show_bug.cgi?id=762893 */
 GST_START_TEST (test_splitmuxsink_reuse_simple)
 {
@@ -606,7 +687,9 @@ splitmux_suite (void)
   TCase *tc_chain = tcase_create ("general");
   TCase *tc_chain_basic = tcase_create ("basic");
   TCase *tc_chain_complex = tcase_create ("complex");
-  gboolean have_theora, have_ogg, have_vorbis, have_matroska;
+  TCase *tc_chain_caps_change = tcase_create ("caps_change");
+  gboolean have_theora, have_ogg, have_vorbis, have_matroska, have_qtmux,
+      have_jpeg;
 
   /* we assume that if encoder/muxer are there, decoder/demuxer will be a well */
   have_theora = gst_registry_check_feature_version (gst_registry_get (),
@@ -617,10 +700,15 @@ splitmux_suite (void)
       "vorbisenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
   have_matroska = gst_registry_check_feature_version (gst_registry_get (),
       "matroskamux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_qtmux = gst_registry_check_feature_version (gst_registry_get (),
+      "qtmux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_jpeg = gst_registry_check_feature_version (gst_registry_get (),
+      "jpegenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   suite_add_tcase (s, tc_chain_basic);
   suite_add_tcase (s, tc_chain_complex);
+  suite_add_tcase (s, tc_chain_caps_change);
 
   tcase_add_test (tc_chain_basic, test_splitmuxsink_reuse_simple);
 
@@ -643,6 +731,14 @@ splitmux_suite (void)
     GST_INFO ("Skipping tests, missing plugins: theora and/or ogg");
   }
 
+
+  if (have_qtmux && have_jpeg) {
+    tcase_add_checked_fixture (tc_chain_caps_change, tempdir_setup,
+        tempdir_cleanup);
+    tcase_add_test (tc_chain_caps_change, test_splitmuxsrc_caps_change);
+  } else {
+    GST_INFO ("Skipping tests, missing plugins: jpegenc or mp4mux");
+  }
   return s;
 }
 
