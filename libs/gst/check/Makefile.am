@@ -102,6 +102,7 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_consistency_checker_free \
 	gst_harness_add_element_full \
 	gst_harness_add_element_src_pad \
+	gst_harness_add_element_sink_pad \
 	gst_harness_add_parse \
 	gst_harness_add_probe \
 	gst_harness_add_sink \
@@ -110,14 +111,14 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_harness_add_src \
 	gst_harness_add_src_harness \
 	gst_harness_add_src_parse \
-	gst_harness_buffers_received \
 	gst_harness_buffers_in_queue \
+	gst_harness_buffers_received \
 	gst_harness_crank_multiple_clock_waits \
 	gst_harness_crank_single_clock_wait \
 	gst_harness_create_buffer \
 	gst_harness_dump_to_file \
-	gst_harness_events_received \
 	gst_harness_events_in_queue \
+	gst_harness_events_received \
 	gst_harness_find_element \
 	gst_harness_get \
 	gst_harness_get_allocator \
@@ -172,8 +173,8 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_harness_try_pull \
 	gst_harness_try_pull_event \
 	gst_harness_try_pull_upstream_event \
-	gst_harness_upstream_events_received \
 	gst_harness_upstream_events_in_queue \
+	gst_harness_upstream_events_received \
 	gst_harness_use_systemclock \
 	gst_harness_use_testclock \
 	gst_harness_wait_for_clock_id_waits \
