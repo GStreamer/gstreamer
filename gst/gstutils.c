@@ -4368,7 +4368,7 @@ gst_calculate_linear_regression (const GstClockTime * xy,
           tmp /= 4;
         } while (G_MAXINT64 - sxx <= tmp);
         break;
-      } else if (G_UNLIKELY (tmp < 0 && sxx < 0 && (G_MAXINT64 - sxx >= tmp))) {
+      } else if (G_UNLIKELY (tmp < 0 && sxx < 0 && (G_MININT64 - sxx >= tmp))) {
         do {
           /* Drop some precision and restart */
           pshift++;
@@ -4387,7 +4387,7 @@ gst_calculate_linear_regression (const GstClockTime * xy,
           tmp /= 4;
         } while (G_MAXINT64 - syy <= tmp);
         break;
-      } else if (G_UNLIKELY (tmp < 0 && syy < 0 && (G_MAXINT64 - syy >= tmp))) {
+      } else if (G_UNLIKELY (tmp < 0 && syy < 0 && (G_MININT64 - syy >= tmp))) {
         do {
           pshift++;
           syy /= 4;
