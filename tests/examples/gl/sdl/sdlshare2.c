@@ -66,13 +66,9 @@ InitGL (int Width, int Height)  // We call this right after our OpenGL window is
 
 /* The main drawing function. */
 static void
-DrawGLScene (GstSample * sample)
+DrawGLScene (GstVideoFrame * v_frame)
 {
-  GstVideoFrame v_frame;
-  GstVideoInfo v_info;
   guint texture = 0;
-  GstBuffer *buf = gst_sample_get_buffer (sample);
-  GstCaps *caps = gst_sample_get_caps (sample);
 
 #ifdef WIN32
   if (!wglGetCurrentContext ())
@@ -82,14 +78,7 @@ DrawGLScene (GstSample * sample)
     return;
 #endif
 
-  gst_video_info_from_caps (&v_info, caps);
-
-  if (!gst_video_frame_map (&v_frame, &v_info, buf, GST_MAP_READ | GST_MAP_GL)) {
-    g_warning ("Failed to map the video buffer");
-    return;
-  }
-
-  texture = *(guint *) v_frame.data[0];
+  texture = *(guint *) v_frame->data[0];
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
   glLoadIdentity ();            // Reset The View
@@ -139,8 +128,21 @@ DrawGLScene (GstSample * sample)
 
   // swap buffers to display, since we're double buffered.
   SDL_GL_SwapBuffers ();
+}
 
-  gst_video_frame_unmap (&v_frame);
+static GMutex app_lock;
+static GCond app_cond;
+static gboolean app_rendered = FALSE;
+static gboolean app_quit = FALSE;
+
+static void
+stop_pipeline (GstElement * pipeline)
+{
+  g_mutex_lock (&app_lock);
+  app_quit = TRUE;
+  g_cond_signal (&app_cond);
+  g_mutex_unlock (&app_lock);
+  gst_element_send_event (pipeline, gst_event_new_eos ());
 }
 
 static gboolean
@@ -151,12 +153,12 @@ update_sdl_scene (gpointer data)
 
   while (SDL_PollEvent (&event)) {
     if (event.type == SDL_QUIT) {
-      gst_element_send_event (GST_ELEMENT (pipeline), gst_event_new_eos ());
+      stop_pipeline (pipeline);
       return FALSE;
     }
     if (event.type == SDL_KEYDOWN) {
       if (event.key.keysym.sym == SDLK_ESCAPE) {
-        gst_element_send_event (GST_ELEMENT (pipeline), gst_event_new_eos ());
+        stop_pipeline (pipeline);
         return FALSE;
       }
     }
@@ -165,18 +167,15 @@ update_sdl_scene (gpointer data)
   return TRUE;
 }
 
-static GMutex app_lock;
-static GCond app_cond;
-
 static gboolean
 executeCallback (gpointer data)
 {
-  GstSample *sample = (GstSample *) data;
-
   g_mutex_lock (&app_lock);
 
-  DrawGLScene (sample);
+  if (!app_quit)
+    DrawGLScene (data);
 
+  app_rendered = TRUE;
   g_cond_signal (&app_cond);
   g_mutex_unlock (&app_lock);
 
@@ -187,11 +186,30 @@ static gboolean
 on_client_draw (GstElement * glsink, GstGLContext * context, GstSample * sample,
     gpointer data)
 {
+  GstBuffer *buf = gst_sample_get_buffer (sample);
+  GstCaps *caps = gst_sample_get_caps (sample);
+  GstVideoFrame v_frame;
+  GstVideoInfo v_info;
+
+  /* FIXME don't do that every frame */
+  gst_video_info_from_caps (&v_info, caps);
+
+  if (!gst_video_frame_map (&v_frame, &v_info, buf, GST_MAP_READ | GST_MAP_GL)) {
+    g_warning ("Failed to map the video buffer");
+    return TRUE;
+  }
+
   g_mutex_lock (&app_lock);
 
-  g_idle_add_full (G_PRIORITY_HIGH, executeCallback, sample, NULL);
-  g_cond_wait (&app_cond, &app_lock);
+  app_rendered = FALSE;
+  g_idle_add_full (G_PRIORITY_HIGH, executeCallback, &v_frame, NULL);
+
+  while (!app_rendered && !app_quit)
+    g_cond_wait (&app_cond, &app_lock);
+
   g_mutex_unlock (&app_lock);
+
+  gst_video_frame_unmap (&v_frame);
 
   return TRUE;
 }
