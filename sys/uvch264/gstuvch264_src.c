@@ -753,8 +753,9 @@ gst_uvc_h264_src_get_property (GObject * object,
     case PROP_LEAKY_BUCKET_SIZE:
       fill_probe_commit (self, &probe, 0, 0, 0, 0, 0);
       if (GST_STATE (self) >= GST_STATE_PAUSED) {
-        xu_query (self, UVCX_VIDEO_CONFIG_PROBE, UVC_GET_CUR,
-            (guchar *) & probe);
+        if (!xu_query (self, UVCX_VIDEO_CONFIG_PROBE, UVC_GET_CUR,
+                (guchar *) & probe))
+          GST_WARNING_OBJECT (self, "probe_setting GET_CUR error");
       }
       break;
     default:
@@ -1323,7 +1324,11 @@ gst_uvc_h264_src_get_enum_setting (GstUvcH264Src * self, gchar * property,
       *default_value = def;
       *mask = 0;
 
-      xu_query (self, UVCX_RATE_CONTROL_MODE, UVC_GET_CUR, (guchar *) & cur);
+      if (!xu_query (self, UVCX_RATE_CONTROL_MODE, UVC_GET_CUR,
+              (guchar *) & cur)) {
+        GST_WARNING_OBJECT (self, " CONTROL_MODE GET_CUR error");
+        return FALSE;
+      }
 
       for (en = min; en <= max; en++) {
         uvcx_rate_control_mode_t req = { 0, en };
@@ -1334,7 +1339,11 @@ gst_uvc_h264_src_get_enum_setting (GstUvcH264Src * self, gchar * property,
                 (guchar *) & req) && req.bRateControlMode == en)
           *mask |= (1 << en);
       }
-      xu_query (self, UVCX_RATE_CONTROL_MODE, UVC_SET_CUR, (guchar *) & cur);
+      if (!xu_query (self, UVCX_RATE_CONTROL_MODE, UVC_SET_CUR,
+              (guchar *) & cur)) {
+        GST_WARNING_OBJECT (self, " CONTROL_MODE SET_CUR error");
+        return FALSE;
+      }
     }
   }
 
