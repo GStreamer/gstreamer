@@ -793,6 +793,7 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
 
     GST_DEBUG_OBJECT (flacparse, "Found metadata block of size %u", size);
     framesize = size;
+    gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), framesize);
     goto cleanup;
   }
 
@@ -1605,6 +1606,9 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
       if (res != GST_FLOW_OK)
         goto cleanup;
+    } else {
+      /* Header length */
+      gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 4);
     }
 
     /* DROPPED because we pushed already or will push all headers manually */
