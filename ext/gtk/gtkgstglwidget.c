@@ -496,6 +496,7 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
   GError *error = NULL;
 
   g_return_val_if_fail (GTK_IS_GST_GL_WIDGET (gst_widget), FALSE);
+  g_return_val_if_fail (priv->display != NULL, FALSE);
 
   GTK_GST_BASE_WIDGET_LOCK (gst_widget);
 
