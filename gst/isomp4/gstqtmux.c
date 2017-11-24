@@ -3780,6 +3780,18 @@ gst_qt_mux_robust_recording_update (GstQTMux * qtmux, GstClockTime position)
   guint64 mdat_offset = qtmux->mdat_pos + 16 + qtmux->mdat_size;
 
   GST_OBJECT_LOCK (qtmux);
+
+  /* Update the offset of how much we've muxed, so the
+   * report of remaining space keeps counting down */
+  if (position > qtmux->last_moov_update &&
+      position - qtmux->last_moov_update > qtmux->muxed_since_last_update) {
+    GST_LOG_OBJECT (qtmux,
+        "Muxed time %" G_GUINT64_FORMAT " since last moov update",
+        qtmux->muxed_since_last_update);
+    qtmux->muxed_since_last_update = position - qtmux->last_moov_update;
+  }
+
+  /* Next, check if we're supposed to send periodic moov updates downstream */
   if (qtmux->reserved_moov_update_period == GST_CLOCK_TIME_NONE) {
     GST_OBJECT_UNLOCK (qtmux);
     return GST_FLOW_OK;
@@ -3790,15 +3802,6 @@ gst_qt_mux_robust_recording_update (GstQTMux * qtmux, GstClockTime position)
       (position <= qtmux->last_moov_update ||
           (position - qtmux->last_moov_update) <
           qtmux->reserved_moov_update_period)) {
-    /* Update the offset of how much we've muxed, so the
-     * report of remaining space keeps counting down */
-    if (position > qtmux->last_moov_update &&
-        position - qtmux->last_moov_update > qtmux->muxed_since_last_update) {
-      GST_LOG_OBJECT (qtmux,
-          "Muxed time %" G_GUINT64_FORMAT " since last moov update",
-          qtmux->muxed_since_last_update);
-      qtmux->muxed_since_last_update = position - qtmux->last_moov_update;
-    }
     GST_OBJECT_UNLOCK (qtmux);
     return GST_FLOW_OK;         /* No update needed yet */
   }
