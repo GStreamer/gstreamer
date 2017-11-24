@@ -317,18 +317,17 @@ static GstFlowReturn
 gst_dc1394_src_create (GstPushSrc * psrc, GstBuffer ** obuf)
 {
   GstDC1394Src *src;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
   dc1394video_frame_t *frame;
   dc1394error_t ret;
 
   src = GST_DC1394_SRC (psrc);
-  buffer = NULL;
   ret = dc1394_capture_dequeue (src->camera, DC1394_CAPTURE_POLICY_WAIT,
       &frame);
   if (ret != DC1394_SUCCESS) {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not dequeue frame: %s.", dc1394_error_get_string (ret)));
-    goto error;
+    return GST_FLOW_ERROR;
   }
   /*
    * TODO: We could create the buffer by wrapping the image bytes in the frame
@@ -351,11 +350,6 @@ gst_dc1394_src_create (GstPushSrc * psrc, GstBuffer ** obuf)
   }
   *obuf = buffer;
   return GST_FLOW_OK;
-
-error:
-  if (buffer)
-    gst_buffer_unref (buffer);
-  return GST_FLOW_ERROR;
 }
 
 
