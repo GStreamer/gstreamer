@@ -836,14 +836,15 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
   g_return_val_if_fail (GST_PAD_CAST (gpad) != newtarget, FALSE);
 
-  if (newtarget == GST_PROXY_PAD_INTERNAL (gpad)) {
+  GST_OBJECT_LOCK (gpad);
+  internal = GST_PROXY_PAD_INTERNAL (gpad);
+
+  if (newtarget == internal) {
+    GST_OBJECT_UNLOCK (gpad);
     GST_WARNING_OBJECT (gpad, "Target has already been set to %s:%s",
         GST_DEBUG_PAD_NAME (newtarget));
     return FALSE;
   }
-
-  GST_OBJECT_LOCK (gpad);
-  internal = GST_PROXY_PAD_INTERNAL (gpad);
 
   if (newtarget)
     GST_DEBUG_OBJECT (gpad, "set target %s:%s", GST_DEBUG_PAD_NAME (newtarget));
