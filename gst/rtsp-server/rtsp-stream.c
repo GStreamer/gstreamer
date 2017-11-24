@@ -4450,6 +4450,58 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
 }
 
 /**
+ * gst_rtsp_stream_seekable:
+ * @stream: a #GstRTSPStream
+ *
+ * Checks whether the individual @stream is seekable.
+ *
+ * Returns: %TRUE if @stream is seekable, else %FALSE.
+ */
+gboolean
+gst_rtsp_stream_seekable (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GstPad *pad = NULL;
+  GstQuery *query = NULL;
+  gboolean seekable = FALSE;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  /* query stop position: if no sinks have been added yet,
+   * we obtain the stop position from the pad otherwise we query the sinks */
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  /* depending on the transport type, it should query corresponding sink */
+  if (priv->srcpad) {
+    pad = gst_object_ref (priv->srcpad);
+  } else {
+    g_mutex_unlock (&priv->lock);
+    GST_WARNING_OBJECT (stream, "Pad not available, can't query seekability");
+    goto beach;
+  }
+  g_mutex_unlock (&priv->lock);
+
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  if (!gst_pad_query (pad, query)) {
+    GST_WARNING_OBJECT (stream, "seeking query failed");
+    goto beach;
+  }
+  gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+
+beach:
+  if (pad)
+    gst_object_unref (pad);
+  if (query)
+    gst_query_unref (query);
+
+  GST_DEBUG_OBJECT (stream, "Returning %d", seekable);
+
+  return seekable;
+}
+
+/**
  * gst_rtsp_stream_complete_stream:
  * @stream: a #GstRTSPStream
  * @transport: a #GstRTSPTransport

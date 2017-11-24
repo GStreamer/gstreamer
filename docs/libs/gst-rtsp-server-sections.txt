@@ -610,6 +610,8 @@ gst_rtsp_stream_update_crypto
 gst_rtsp_stream_set_pt_map
 gst_rtsp_stream_request_aux_sender
 
+gst_rtsp_stream_seekable
+
 GstRTSPStreamTransportFilterFunc
 gst_rtsp_stream_transport_filter
 

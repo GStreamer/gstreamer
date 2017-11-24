@@ -281,6 +281,7 @@ EXPORTS
 	gst_rtsp_stream_remove_transport
 	gst_rtsp_stream_request_aux_sender
 	gst_rtsp_stream_reserve_address
+	gst_rtsp_stream_seekable
 	gst_rtsp_stream_set_address_pool
 	gst_rtsp_stream_set_blocked
 	gst_rtsp_stream_set_buffer_size

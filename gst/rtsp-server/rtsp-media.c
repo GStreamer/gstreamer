@@ -703,7 +703,19 @@ check_seekable (GstRTSPMedia * media)
 
     gst_query_parse_seeking (query, &format, &seekable, &start, &end);
     priv->seekable = seekable ? G_MAXINT64 : 0;
+  } else if (priv->streams->len) {
+    gboolean seekable = TRUE;
+    guint i, n = priv->streams->len;
+
+    GST_DEBUG_OBJECT (media, "Checking %d streams", n);
+    for (i = 0; i < n; i++) {
+      GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+      seekable &= gst_rtsp_stream_seekable (stream);
+    }
+    priv->seekable = seekable ? G_MAXINT64 : -1;
   }
+
+  GST_DEBUG_OBJECT (media, "seekable:%" G_GINT64_FORMAT, priv->seekable);
 
   gst_query_unref (query);
 }

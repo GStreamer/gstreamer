@@ -244,6 +244,9 @@ gboolean          gst_rtsp_stream_query_stop       (GstRTSPStream * stream,
                                                     gint64 * stop);
 
 GST_EXPORT
+gboolean          gst_rtsp_stream_seekable         (GstRTSPStream *stream);
+
+GST_EXPORT
 void              gst_rtsp_stream_set_seqnum_offset          (GstRTSPStream *stream, guint16 seqnum);
 
 GST_EXPORT
