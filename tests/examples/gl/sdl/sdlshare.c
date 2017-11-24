@@ -394,15 +394,6 @@ main (int argc, char **argv)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
 
-  /* turn on back sdl opengl context */
-#ifdef WIN32
-  wglMakeCurrent (sdl_dc, sdl_gl_context);
-#else
-  glXMakeCurrent (sdl_display, None, 0);
-#endif
-
-  SDL_Quit ();
-
   /* make sure there is no pending gst gl buffer in the communication queues 
    * between sdl and gst-gl
    */
@@ -415,6 +406,15 @@ main (int argc, char **argv)
     GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf);
   }
+
+  /* turn on back sdl opengl context */
+#ifdef WIN32
+  wglMakeCurrent (sdl_dc, sdl_gl_context);
+#else
+  glXMakeCurrent (sdl_display, None, 0);
+#endif
+
+  SDL_Quit ();
 
   return 0;
 }
