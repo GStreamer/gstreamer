@@ -28,7 +28,9 @@
 #include <glib/gstdio.h>
 #include <gst/check/gstcheck.h>
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 static GType gst_preset_test_get_type (void);
 
@@ -284,7 +286,13 @@ gst_preset_suite (void)
   /* check if we can create presets */
   gst_dir = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, NULL);
+
+#ifdef G_OS_WIN32
+  can_write = FALSE;            /* FIXME: test properly using win32 API */
+#else
   can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
+#endif
+
   g_free (gst_dir);
 
   suite_add_tcase (s, tc);

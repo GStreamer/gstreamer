@@ -19,7 +19,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include <gst/check/gstcheck.h>

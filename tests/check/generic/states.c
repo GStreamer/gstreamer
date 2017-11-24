@@ -24,8 +24,6 @@
 #  include "config.h"
 #endif
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 
 static GList *elements = NULL;

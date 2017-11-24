@@ -19,7 +19,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/check/gstcheck.h>
 
 #ifdef HAVE_CPU_I386

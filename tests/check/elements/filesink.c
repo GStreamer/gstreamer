@@ -28,10 +28,6 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>             /* for close() */
-#endif
-
 #include <gst/check/gstcheck.h>
 
 static GstPad *mysrcpad;
@@ -205,7 +201,7 @@ create_temporary_file (void)
     return NULL;
   }
   /* don't want the file, just a filename (hence silly, see above) */
-  close (fd);
+  g_close (fd, NULL);
   g_remove (tmp_fn);
 
   return tmp_fn;

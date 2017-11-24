@@ -17,8 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
-#include <unistd.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/gstcheck.h>
 
@@ -1339,7 +1340,7 @@ GST_START_TEST (test_limit_changes)
 
   /* Wait until we are actually blocking... we unfortunately can't
    * know that without sleeping */
-  sleep (1);
+  g_usleep (G_USEC_PER_SEC);
   g_object_set (mq, "max-size-buffers", (guint) 3, NULL);
   g_thread_join (thread);
 

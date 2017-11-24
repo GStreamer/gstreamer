@@ -19,14 +19,17 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <unistd.h>
 #include <gst/check/gstcheck.h>
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
 #include <fcntl.h>
 #else
+#include <unistd.h>
 #include <sys/socket.h>
 #endif
 

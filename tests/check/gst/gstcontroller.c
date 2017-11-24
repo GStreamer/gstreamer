@@ -24,9 +24,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-
 
 /* local test element */
 
