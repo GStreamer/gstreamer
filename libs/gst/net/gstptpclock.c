@@ -298,7 +298,7 @@ ptp_pending_sync_free (PtpPendingSync * sync)
 {
   if (sync->timeout_source) {
     g_source_destroy (sync->timeout_source);
-    g_source_unref(sync->timeout_source);
+    g_source_unref (sync->timeout_source);
   }
   g_free (sync);
 }

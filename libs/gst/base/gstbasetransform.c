@@ -1714,12 +1714,12 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
     GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
     /* simply copy then */
     if (info->transform_func) {
-        GST_DEBUG_OBJECT (trans, "copy metadata %s", g_type_name (info->api));
-        info->transform_func (outbuf, *meta, inbuf,
-            _gst_meta_transform_copy, &copy_data);
+      GST_DEBUG_OBJECT (trans, "copy metadata %s", g_type_name (info->api));
+      info->transform_func (outbuf, *meta, inbuf,
+          _gst_meta_transform_copy, &copy_data);
     } else {
-        GST_DEBUG_OBJECT (trans, "couldn't copy metadata %s",
-                          g_type_name (info->api));
+      GST_DEBUG_OBJECT (trans, "couldn't copy metadata %s",
+          g_type_name (info->api));
     }
   }
   return TRUE;
