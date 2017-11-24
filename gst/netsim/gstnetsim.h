@@ -45,24 +45,31 @@ G_BEGIN_DECLS
 
 typedef struct _GstNetSim GstNetSim;
 typedef struct _GstNetSimClass GstNetSimClass;
-typedef struct _GstNetSimPrivate GstNetSimPrivate;
 
 struct _GstNetSim
 {
   GstElement parent;
 
-  GstNetSimPrivate *priv;
+  GstPad *sinkpad;
+  GstPad *srcpad;
 
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
+  GMutex loop_mutex;
+  GCond start_cond;
+  GMainLoop *main_loop;
+  gboolean running;
+
+  GRand *rand_seed;
+  gint min_delay;
+  gint max_delay;
+  gfloat delay_probability;
+  gfloat drop_probability;
+  gfloat duplicate_probability;
+  guint drop_packets;
 };
 
 struct _GstNetSimClass
 {
   GstElementClass parent_class;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_net_sim_get_type (void);

@@ -45,24 +45,6 @@ enum
   ARG_DROP_PACKETS
 };
 
-struct _GstNetSimPrivate
-{
-  GstPad *sinkpad, *srcpad;
-
-  GMutex loop_mutex;
-  GCond start_cond;
-  GMainLoop *main_loop;
-  gboolean running;
-
-  GRand *rand_seed;
-  gint min_delay;
-  gint max_delay;
-  gfloat delay_probability;
-  gfloat drop_probability;
-  gfloat duplicate_probability;
-  guint drop_packets;
-};
-
 /* these numbers are nothing but wild guesses and dont reflect any reality */
 #define DEFAULT_MIN_DELAY 200
 #define DEFAULT_MAX_DELAY 400
@@ -70,10 +52,6 @@ struct _GstNetSimPrivate
 #define DEFAULT_DROP_PROBABILITY 0.0
 #define DEFAULT_DUPLICATE_PROBABILITY 0.0
 #define DEFAULT_DROP_PACKETS 0
-
-#define GST_NET_SIM_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_NET_SIM, \
-                                GstNetSimPrivate))
 
 static GstStaticPadTemplate gst_net_sim_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -96,24 +74,24 @@ gst_net_sim_loop (GstNetSim * netsim)
 
   GST_TRACE_OBJECT (netsim, "TASK: begin");
 
-  g_mutex_lock (&netsim->priv->loop_mutex);
-  loop = g_main_loop_ref (netsim->priv->main_loop);
-  netsim->priv->running = TRUE;
+  g_mutex_lock (&netsim->loop_mutex);
+  loop = g_main_loop_ref (netsim->main_loop);
+  netsim->running = TRUE;
   GST_TRACE_OBJECT (netsim, "TASK: signal start");
-  g_cond_signal (&netsim->priv->start_cond);
-  g_mutex_unlock (&netsim->priv->loop_mutex);
+  g_cond_signal (&netsim->start_cond);
+  g_mutex_unlock (&netsim->loop_mutex);
 
   GST_TRACE_OBJECT (netsim, "TASK: run");
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
 
-  g_mutex_lock (&netsim->priv->loop_mutex);
+  g_mutex_lock (&netsim->loop_mutex);
   GST_TRACE_OBJECT (netsim, "TASK: pause");
-  gst_pad_pause_task (netsim->priv->srcpad);
-  netsim->priv->running = FALSE;
+  gst_pad_pause_task (netsim->srcpad);
+  netsim->running = FALSE;
   GST_TRACE_OBJECT (netsim, "TASK: signal end");
-  g_cond_signal (&netsim->priv->start_cond);
-  g_mutex_unlock (&netsim->priv->loop_mutex);
+  g_cond_signal (&netsim->start_cond);
+  g_mutex_unlock (&netsim->loop_mutex);
   GST_TRACE_OBJECT (netsim, "TASK: end");
 }
 
@@ -137,25 +115,25 @@ gst_net_sim_src_activatemode (GstPad * pad, GstObject * parent,
   (void) pad;
   (void) mode;
 
-  g_mutex_lock (&netsim->priv->loop_mutex);
+  g_mutex_lock (&netsim->loop_mutex);
   if (active) {
-    if (netsim->priv->main_loop == NULL) {
+    if (netsim->main_loop == NULL) {
       GMainContext *main_context = g_main_context_new ();
-      netsim->priv->main_loop = g_main_loop_new (main_context, FALSE);
+      netsim->main_loop = g_main_loop_new (main_context, FALSE);
       g_main_context_unref (main_context);
 
       GST_TRACE_OBJECT (netsim, "ACT: Starting task on srcpad");
-      result = gst_pad_start_task (netsim->priv->srcpad,
+      result = gst_pad_start_task (netsim->srcpad,
           (GstTaskFunction) gst_net_sim_loop, netsim, NULL);
 
       GST_TRACE_OBJECT (netsim, "ACT: Wait for task to start");
-      g_assert (!netsim->priv->running);
-      while (!netsim->priv->running)
-        g_cond_wait (&netsim->priv->start_cond, &netsim->priv->loop_mutex);
+      g_assert (!netsim->running);
+      while (!netsim->running)
+        g_cond_wait (&netsim->start_cond, &netsim->loop_mutex);
       GST_TRACE_OBJECT (netsim, "ACT: Task on srcpad started");
     }
   } else {
-    if (netsim->priv->main_loop != NULL) {
+    if (netsim->main_loop != NULL) {
       GSource *source;
       guint id;
 
@@ -164,26 +142,26 @@ gst_net_sim_src_activatemode (GstPad * pad, GstObject * parent,
       GST_TRACE_OBJECT (netsim, "DEACT: Stopping main loop on deactivate");
       source = g_idle_source_new ();
       g_source_set_callback (source, _main_loop_quit_and_remove_source,
-          g_main_loop_ref (netsim->priv->main_loop),
+          g_main_loop_ref (netsim->main_loop),
           (GDestroyNotify) g_main_loop_unref);
       id = g_source_attach (source,
-          g_main_loop_get_context (netsim->priv->main_loop));
+          g_main_loop_get_context (netsim->main_loop));
       g_source_unref (source);
       g_assert_cmpuint (id, >, 0);
-      g_main_loop_unref (netsim->priv->main_loop);
-      netsim->priv->main_loop = NULL;
+      g_main_loop_unref (netsim->main_loop);
+      netsim->main_loop = NULL;
 
       GST_TRACE_OBJECT (netsim, "DEACT: Wait for mainloop and task to pause");
-      g_assert (netsim->priv->running);
-      while (netsim->priv->running)
-        g_cond_wait (&netsim->priv->start_cond, &netsim->priv->loop_mutex);
+      g_assert (netsim->running);
+      while (netsim->running)
+        g_cond_wait (&netsim->start_cond, &netsim->loop_mutex);
 
       GST_TRACE_OBJECT (netsim, "DEACT: Stopping task on srcpad");
-      result = gst_pad_stop_task (netsim->priv->srcpad);
+      result = gst_pad_stop_task (netsim->srcpad);
       GST_TRACE_OBJECT (netsim, "DEACT: Mainloop and GstTask stopped");
     }
   }
-  g_mutex_unlock (&netsim->priv->loop_mutex);
+  g_mutex_unlock (&netsim->loop_mutex);
 
   return result;
 }
@@ -226,24 +204,23 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
-  g_mutex_lock (&netsim->priv->loop_mutex);
-  if (netsim->priv->main_loop != NULL && netsim->priv->delay_probability > 0 &&
-      g_rand_double (netsim->priv->rand_seed) < netsim->priv->delay_probability)
-  {
-    PushBufferCtx *ctx = push_buffer_ctx_new (netsim->priv->srcpad, buf);
-    gint delay = g_rand_int_range (netsim->priv->rand_seed,
-        netsim->priv->min_delay, netsim->priv->max_delay);
+  g_mutex_lock (&netsim->loop_mutex);
+  if (netsim->main_loop != NULL && netsim->delay_probability > 0 &&
+      g_rand_double (netsim->rand_seed) < netsim->delay_probability) {
+    PushBufferCtx *ctx = push_buffer_ctx_new (netsim->srcpad, buf);
+    gint delay = g_rand_int_range (netsim->rand_seed,
+        netsim->min_delay, netsim->max_delay);
     GSource *source = g_timeout_source_new (delay);
 
     GST_DEBUG_OBJECT (netsim, "Delaying packet by %d", delay);
     g_source_set_callback (source, (GSourceFunc) push_buffer_ctx_push,
         ctx, (GDestroyNotify) push_buffer_ctx_free);
-    g_source_attach (source, g_main_loop_get_context (netsim->priv->main_loop));
+    g_source_attach (source, g_main_loop_get_context (netsim->main_loop));
     g_source_unref (source);
   } else {
-    ret = gst_pad_push (netsim->priv->srcpad, gst_buffer_ref (buf));
+    ret = gst_pad_push (netsim->srcpad, gst_buffer_ref (buf));
   }
-  g_mutex_unlock (&netsim->priv->loop_mutex);
+  g_mutex_unlock (&netsim->loop_mutex);
 
   return ret;
 }
@@ -256,17 +233,17 @@ gst_net_sim_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   (void) pad;
 
-  if (netsim->priv->drop_packets > 0) {
-    netsim->priv->drop_packets--;
+  if (netsim->drop_packets > 0) {
+    netsim->drop_packets--;
     GST_DEBUG_OBJECT (netsim, "Dropping packet (%d left)",
-        netsim->priv->drop_packets);
-  } else if (netsim->priv->drop_probability > 0
-      && g_rand_double (netsim->priv->rand_seed) <
-      (gdouble) netsim->priv->drop_probability) {
+        netsim->drop_packets);
+  } else if (netsim->drop_probability > 0
+      && g_rand_double (netsim->rand_seed) <
+      (gdouble) netsim->drop_probability) {
     GST_DEBUG_OBJECT (netsim, "Dropping packet");
-  } else if (netsim->priv->duplicate_probability > 0 &&
-      g_rand_double (netsim->priv->rand_seed) <
-      (gdouble) netsim->priv->duplicate_probability) {
+  } else if (netsim->duplicate_probability > 0 &&
+      g_rand_double (netsim->rand_seed) <
+      (gdouble) netsim->duplicate_probability) {
     GST_DEBUG_OBJECT (netsim, "Duplicating packet");
     gst_net_sim_delay_buffer (netsim, buf);
     ret = gst_net_sim_delay_buffer (netsim, buf);
@@ -291,22 +268,22 @@ gst_net_sim_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     case ARG_MIN_DELAY:
-      netsim->priv->min_delay = g_value_get_int (value);
+      netsim->min_delay = g_value_get_int (value);
       break;
     case ARG_MAX_DELAY:
-      netsim->priv->max_delay = g_value_get_int (value);
+      netsim->max_delay = g_value_get_int (value);
       break;
     case ARG_DELAY_PROBABILITY:
-      netsim->priv->delay_probability = g_value_get_float (value);
+      netsim->delay_probability = g_value_get_float (value);
       break;
     case ARG_DROP_PROBABILITY:
-      netsim->priv->drop_probability = g_value_get_float (value);
+      netsim->drop_probability = g_value_get_float (value);
       break;
     case ARG_DUPLICATE_PROBABILITY:
-      netsim->priv->duplicate_probability = g_value_get_float (value);
+      netsim->duplicate_probability = g_value_get_float (value);
       break;
     case ARG_DROP_PACKETS:
-      netsim->priv->drop_packets = g_value_get_uint (value);
+      netsim->drop_packets = g_value_get_uint (value);
       break;
   }
 }
@@ -322,22 +299,22 @@ gst_net_sim_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     case ARG_MIN_DELAY:
-      g_value_set_int (value, netsim->priv->min_delay);
+      g_value_set_int (value, netsim->min_delay);
       break;
     case ARG_MAX_DELAY:
-      g_value_set_int (value, netsim->priv->max_delay);
+      g_value_set_int (value, netsim->max_delay);
       break;
     case ARG_DELAY_PROBABILITY:
-      g_value_set_float (value, netsim->priv->delay_probability);
+      g_value_set_float (value, netsim->delay_probability);
       break;
     case ARG_DROP_PROBABILITY:
-      g_value_set_float (value, netsim->priv->drop_probability);
+      g_value_set_float (value, netsim->drop_probability);
       break;
     case ARG_DUPLICATE_PROBABILITY:
-      g_value_set_float (value, netsim->priv->duplicate_probability);
+      g_value_set_float (value, netsim->duplicate_probability);
       break;
     case ARG_DROP_PACKETS:
-      g_value_set_uint (value, netsim->priv->drop_packets);
+      g_value_set_uint (value, netsim->drop_packets);
       break;
   }
 }
@@ -346,27 +323,25 @@ gst_net_sim_get_property (GObject * object,
 static void
 gst_net_sim_init (GstNetSim * netsim)
 {
-  netsim->priv = GST_NET_SIM_GET_PRIVATE (netsim);
-
-  netsim->priv->srcpad =
+  netsim->srcpad =
       gst_pad_new_from_static_template (&gst_net_sim_src_template, "src");
-  netsim->priv->sinkpad =
+  netsim->sinkpad =
       gst_pad_new_from_static_template (&gst_net_sim_sink_template, "sink");
 
-  gst_element_add_pad (GST_ELEMENT (netsim), netsim->priv->srcpad);
-  gst_element_add_pad (GST_ELEMENT (netsim), netsim->priv->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (netsim), netsim->srcpad);
+  gst_element_add_pad (GST_ELEMENT (netsim), netsim->sinkpad);
 
-  g_mutex_init (&netsim->priv->loop_mutex);
-  g_cond_init (&netsim->priv->start_cond);
-  netsim->priv->rand_seed = g_rand_new ();
-  netsim->priv->main_loop = NULL;
+  g_mutex_init (&netsim->loop_mutex);
+  g_cond_init (&netsim->start_cond);
+  netsim->rand_seed = g_rand_new ();
+  netsim->main_loop = NULL;
 
-  GST_OBJECT_FLAG_SET (netsim->priv->sinkpad,
+  GST_OBJECT_FLAG_SET (netsim->sinkpad,
       GST_PAD_FLAG_PROXY_CAPS | GST_PAD_FLAG_PROXY_ALLOCATION);
 
-  gst_pad_set_chain_function (netsim->priv->sinkpad,
+  gst_pad_set_chain_function (netsim->sinkpad,
       GST_DEBUG_FUNCPTR (gst_net_sim_chain));
-  gst_pad_set_activatemode_function (netsim->priv->srcpad,
+  gst_pad_set_activatemode_function (netsim->srcpad,
       GST_DEBUG_FUNCPTR (gst_net_sim_src_activatemode));
 }
 
@@ -375,9 +350,9 @@ gst_net_sim_finalize (GObject * object)
 {
   GstNetSim *netsim = GST_NET_SIM (object);
 
-  g_rand_free (netsim->priv->rand_seed);
-  g_mutex_clear (&netsim->priv->loop_mutex);
-  g_cond_clear (&netsim->priv->start_cond);
+  g_rand_free (netsim->rand_seed);
+  g_mutex_clear (&netsim->loop_mutex);
+  g_cond_clear (&netsim->start_cond);
 
   G_OBJECT_CLASS (gst_net_sim_parent_class)->finalize (object);
 }
@@ -387,7 +362,7 @@ gst_net_sim_dispose (GObject * object)
 {
   GstNetSim *netsim = GST_NET_SIM (object);
 
-  g_assert (netsim->priv->main_loop == NULL);
+  g_assert (netsim->main_loop == NULL);
 
   G_OBJECT_CLASS (gst_net_sim_parent_class)->dispose (object);
 }
@@ -397,8 +372,6 @@ gst_net_sim_class_init (GstNetSimClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstNetSimPrivate));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_net_sim_src_template);
