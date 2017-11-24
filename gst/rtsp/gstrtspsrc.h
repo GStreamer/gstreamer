@@ -270,7 +270,14 @@ struct _GstRTSPSrc {
   /* supported methods */
   gint               methods;
 
-  /* Same semantic as described in gst_rtsp_media_seekable */
+  /* seekability
+   * -1.0 : Stream is not seekable
+   *  0.0 : seekable only to the beginning
+   * G_MAXFLOAT : Any value is possible
+   *
+   * Any other positive value indicates the longest duration
+   * between any two random access points
+   *  */
   gfloat             seekable;
   GstClockTime       last_pos;
 

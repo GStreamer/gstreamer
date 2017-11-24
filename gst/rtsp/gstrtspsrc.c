@@ -2282,7 +2282,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   const gchar *seek_style = NULL;
 
   if (event) {
-    GST_DEBUG_OBJECT (src, "doing seek with event");
+    GST_DEBUG_OBJECT (src, "doing seek with event %" GST_PTR_FORMAT, event);
 
     gst_event_parse_seek (event, &rate, &format, &flags,
         &cur_type, &cur, &stop_type, &stop);
@@ -2294,6 +2294,14 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     /* we need TIME format */
     if (format != src->segment.format)
       goto no_format;
+
+    /* Check if we are not at all seekable */
+    if (src->seekable == -1.0)
+      goto not_seekable;
+
+    /* Additional seeking-to-beginning-only check */
+    if (src->seekable == 0.0 && cur != 0)
+      goto not_seekable;
   } else {
     GST_DEBUG_OBJECT (src, "doing seek without event");
     flags = 0;
@@ -2423,6 +2431,11 @@ negative_rate:
 no_format:
   {
     GST_DEBUG_OBJECT (src, "unsupported format given, seek aborted.");
+    return FALSE;
+  }
+not_seekable:
+  {
+    GST_DEBUG_OBJECT (src, "stream is not seekable");
     return FALSE;
   }
 }
@@ -2621,6 +2634,8 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
             duration = 0;
           }
         }
+
+        GST_LOG_OBJECT (src, "seekable : %d", seekable);
 
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, start,
             duration);
