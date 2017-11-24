@@ -69,8 +69,6 @@ GST_START_TEST (test_subbuffer)
   fail_if (sub == NULL, "copy_region of buffer returned NULL");
   fail_unless (gst_buffer_map (sub, &sinfo, GST_MAP_READ));
   fail_unless (sinfo.size == 0, "subbuffer has wrong size");
-  fail_unless (memcmp (info.data + 1, sinfo.data, 0) == 0,
-      "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
   gst_buffer_unmap (sub, &sinfo);
   gst_buffer_unref (sub);
