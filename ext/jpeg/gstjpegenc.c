@@ -254,7 +254,7 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
   jpegenc->output_map.data = NULL;
   jpegenc->output_map.size = 0;
 
-  if (jpegenc->sof_marker != sof_marker) {
+  if (jpegenc->sof_marker != sof_marker || jpegenc->input_caps_changed) {
     GstVideoCodecState *output;
     output =
         gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (jpegenc),
@@ -262,6 +262,7 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
             NULL), jpegenc->input_state);
     gst_video_codec_state_unref (output);
     jpegenc->sof_marker = sof_marker;
+    jpegenc->input_caps_changed = FALSE;
   }
 
   outbuf = gst_buffer_new ();
@@ -361,6 +362,7 @@ gst_jpegenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   }
   enc->planar = (enc->inc[0] == 1 && enc->inc[1] == 1 && enc->inc[2] == 1);
 
+  enc->input_caps_changed = TRUE;
   gst_jpegenc_resync (enc);
 
   return TRUE;

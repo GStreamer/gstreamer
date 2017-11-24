@@ -58,6 +58,8 @@ struct _GstJpegEnc
   GstVideoCodecFrame *current_frame;
   GstFlowReturn res;
 
+  gboolean input_caps_changed;
+
   guint channels;
 
   gint inc[GST_VIDEO_MAX_COMPONENTS];
