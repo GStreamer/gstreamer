@@ -842,7 +842,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
     GST_OBJECT_UNLOCK (gpad);
     GST_WARNING_OBJECT (gpad, "Target has already been set to %s:%s",
         GST_DEBUG_PAD_NAME (newtarget));
-    return FALSE;
+    return TRUE;
   }
 
   if (newtarget)
