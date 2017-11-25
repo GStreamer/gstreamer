@@ -384,17 +384,6 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
   return ret;
 }
 
-static gsize
-get_buffer_size_in_bits (GstBuffer * buf)
-{
-  GstMapInfo map = GST_MAP_INFO_INIT;
-  gsize size;
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  size = map.size * 8;
-  gst_buffer_unmap (buf, &map);
-  return size;
-}
-
 static gint
 gst_net_sim_get_tokens (GstNetSim * netsim)
 {
@@ -451,7 +440,8 @@ gst_net_sim_token_bucket (GstNetSim * netsim, GstBuffer * buf)
   if (netsim->max_bucket_size == -1)
     return TRUE;
 
-  buffer_size = get_buffer_size_in_bits (buf);
+  /* get buffer size in bits */
+  buffer_size = gst_buffer_get_size (buf) * 8;
   tokens = gst_net_sim_get_tokens (netsim);
 
   netsim->bucket_size = MIN (G_MAXINT, netsim->bucket_size + tokens);
