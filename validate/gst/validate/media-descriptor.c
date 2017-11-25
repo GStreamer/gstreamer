@@ -425,10 +425,10 @@ compare_streams (GstValidateMediaDescriptor * ref,
   if (stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id)) {
     GstCaps *rcaps = caps_cleanup_parsing_fields (rstream->caps),
         *ccaps = caps_cleanup_parsing_fields (cstream->caps);
-    gchar *rcaps_str = gst_caps_to_string (rcaps),
-        *ccaps_str = gst_caps_to_string (ccaps);
 
     if (!gst_caps_is_equal (rcaps, ccaps)) {
+      gchar *rcaps_str = gst_caps_to_string (rcaps),
+        *ccaps_str = gst_caps_to_string (ccaps);
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Reference descriptor for stream %s has caps: %s"
           " but compared stream %s has caps: %s",
