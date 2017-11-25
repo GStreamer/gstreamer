@@ -618,6 +618,7 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   gboolean at_least_one_alpha = FALSE;
   GstVideoFormat best_format;
   GstVideoInfo best_info;
+  gchar *color_name;
 
   best_format = GST_VIDEO_FORMAT_UNKNOWN;
   gst_video_info_init (&best_info);
@@ -641,11 +642,12 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
       gst_video_colorimetry_to_string (&best_info.colorimetry));
 
   best_format_caps = gst_caps_copy (caps);
+  color_name = gst_video_colorimetry_to_string (&best_info.colorimetry);
   gst_caps_set_simple (best_format_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (best_format), "chroma-site", G_TYPE_STRING,
       gst_video_chroma_to_string (best_info.chroma_site), "colorimetry",
-      G_TYPE_STRING, gst_video_colorimetry_to_string (&best_info.colorimetry),
-      NULL);
+      G_TYPE_STRING, color_name, NULL);
+  g_free (color_name);
   ret = gst_caps_merge (best_format_caps, gst_caps_ref (caps));
 
   return ret;
