@@ -115,6 +115,80 @@ GST_START_TEST (test_media_seek)
 
 GST_END_TEST;
 
+/* case: media is complete and contains two streams but only one is active */
+GST_START_TEST (test_media_seek_one_active_stream)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPStream *stream1;
+  GstRTSPStream *stream2;
+  GstRTSPTimeRange *range;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+  GstRTSPTransport *transport;
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 "
+      " audiotestsrc ! audioconvert ! rtpL16pay name=pay1 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 2);
+
+  stream1 = gst_rtsp_media_get_stream (media, 0);
+  fail_unless (stream1 != NULL);
+
+  pool = gst_rtsp_thread_pool_new ();
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (media_has_sdp (media));
+
+  /* define transport */
+  fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
+  transport->lower_transport = GST_RTSP_LOWER_TRANS_TCP;
+
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
+
+  /* video stream is complete and seekable */
+  fail_unless (gst_rtsp_stream_complete_stream (stream1, transport));
+  fail_unless (gst_rtsp_stream_seekable (stream1));
+
+  /* audio stream is blocked (it does not contain any transport based part),
+   * but it's seekable */
+  stream2 = gst_rtsp_media_get_stream (media, 1);
+  fail_unless (stream2 != NULL);
+  fail_unless (gst_rtsp_stream_seekable (stream2));
+
+  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_range_parse ("npt=3.0-", &range) == GST_RTSP_OK);
+
+  /* the media is seekable now */
+  fail_unless (gst_rtsp_media_seek (media, range));
+
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_media_unprepare (media));
+  g_object_unref (media);
+
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+
+  g_object_unref (pool);
+
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_media_seek_no_sinks)
 {
@@ -577,6 +651,7 @@ rtspmedia_suite (void)
   tcase_set_timeout (tc, 20);
   tcase_add_test (tc, test_media_seek);
   tcase_add_test (tc, test_media_seek_no_sinks);
+  tcase_add_test (tc, test_media_seek_one_active_stream);
   tcase_add_test (tc, test_media);
   tcase_add_test (tc, test_media_prepare);
   tcase_add_test (tc, test_media_reusable);
