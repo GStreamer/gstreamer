@@ -108,6 +108,7 @@ gst_m3u8_unref (GstM3U8 * self)
     g_list_free (self->files);
 
     g_free (self->last_data);
+    g_mutex_clear (&self->lock);
     g_free (self);
   }
 }
