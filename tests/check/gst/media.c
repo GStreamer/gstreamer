@@ -215,7 +215,7 @@ GST_START_TEST (test_media)
 GST_END_TEST;
 
 static void
-test_prepare_reusable (const gchar * launch_line)
+test_prepare_reusable (const gchar * launch_line, gboolean is_live)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
@@ -241,6 +241,11 @@ test_prepare_reusable (const gchar * launch_line)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (media_has_sdp (media));
+  if (is_live) {                /* Live is not seekable */
+    fail_unless_equals_int64 (gst_rtsp_media_seekable (media), -1);
+  } else {
+    fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
+  }
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
 
@@ -261,9 +266,10 @@ GST_START_TEST (test_media_reusable)
 {
 
   /* test reusable media */
-  test_prepare_reusable ("( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
-  test_prepare_reusable (
-      "( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )");
+  test_prepare_reusable ("( videotestsrc ! rtpvrawpay pt=96 name=pay0 )",
+      FALSE);
+  test_prepare_reusable
+      ("( videotestsrc is-live=true ! rtpvrawpay pt=96 name=pay0 )", TRUE);
 }
 
 GST_END_TEST;
@@ -295,6 +301,7 @@ GST_START_TEST (test_media_prepare)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
 
@@ -382,6 +389,7 @@ GST_START_TEST (test_media_dyn_prepare)
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
@@ -390,6 +398,7 @@ GST_START_TEST (test_media_dyn_prepare)
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
@@ -452,6 +461,7 @@ GST_START_TEST (test_media_reset)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_suspend (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   g_object_unref (media);
@@ -464,6 +474,7 @@ GST_START_TEST (test_media_reset)
   gst_rtsp_media_set_suspend_mode (media, GST_RTSP_SUSPEND_MODE_RESET);
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_suspend (media));
   fail_unless (gst_rtsp_media_unprepare (media));
   g_object_unref (media);
@@ -532,8 +543,8 @@ GST_START_TEST (test_media_multidyn_prepare)
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 2);
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_unprepare (media));
-
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 0);
 
   thread = gst_rtsp_thread_pool_get_thread (pool,
@@ -541,6 +552,7 @@ GST_START_TEST (test_media_multidyn_prepare)
   fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 2);
   fail_unless (media_has_sdp (media));
+  fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless_equals_int (gst_rtsp_media_n_streams (media), 0);
 
