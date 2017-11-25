@@ -770,6 +770,8 @@ gst_uri_source_bin_finalize (GObject * obj)
   remove_demuxer (urisrc);
   g_mutex_clear (&urisrc->lock);
   g_mutex_clear (&urisrc->factories_lock);
+  g_mutex_clear (&urisrc->buffering_lock);
+  g_mutex_clear (&urisrc->buffering_post_lock);
   g_free (urisrc->uri);
   if (urisrc->factories)
     gst_plugin_feature_list_free (urisrc->factories);
