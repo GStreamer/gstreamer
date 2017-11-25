@@ -2504,14 +2504,14 @@ gst_mpdparser_get_rep_idx_with_min_bandwidth (GList * Representations)
 
 gint
 gst_mpdparser_get_rep_idx_with_max_bandwidth (GList * Representations,
-    gint max_bandwidth, gint max_video_width, gint max_video_height, gint
+    gint64 max_bandwidth, gint max_video_width, gint max_video_height, gint
     max_video_framerate_n, gint max_video_framerate_d)
 {
   GList *list = NULL, *best = NULL;
   GstRepresentationNode *representation;
   gint best_bandwidth = 0;
 
-  GST_DEBUG ("max_bandwidth = %i", max_bandwidth);
+  GST_DEBUG ("max_bandwidth = %" G_GINT64_FORMAT, max_bandwidth);
 
   if (Representations == NULL)
     return -1;
