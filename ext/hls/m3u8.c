@@ -1529,8 +1529,15 @@ gst_hls_master_playlist_new_from_data (gchar * data, const gchar * base_uri)
       data += stream->iframe ? 26 : 18;
       while (data && parse_attributes (&data, &a, &v)) {
         if (g_str_equal (a, "BANDWIDTH")) {
+          if (!stream->bandwidth) {
+            if (!int_from_string (v, NULL, &stream->bandwidth))
+              GST_WARNING ("Error while reading BANDWIDTH");
+          }
+        } else if (g_str_equal (a, "AVERAGE-BANDWIDTH")) {
+          GST_DEBUG
+              ("AVERAGE-BANDWIDTH attribute available. Using it as stream bandwidth");
           if (!int_from_string (v, NULL, &stream->bandwidth))
-            GST_WARNING ("Error while reading BANDWIDTH");
+            GST_WARNING ("Error while reading AVERAGE-BANDWIDTH");
         } else if (g_str_equal (a, "PROGRAM-ID")) {
           if (!int_from_string (v, NULL, &stream->program_id))
             GST_WARNING ("Error while reading PROGRAM-ID");
