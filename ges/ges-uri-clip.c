@@ -319,10 +319,15 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
       if (GES_IS_SOURCE (tmp->data)) {
         GESTrack *track = ges_track_element_get_track (tmp->data);
 
-        if (track->type == GES_TRACK_TYPE_AUDIO && audio_source)
+        if (track->type == GES_TRACK_TYPE_AUDIO && audio_source) {
           ges_track_element_copy_properties (audio_source, tmp->data);
-        else if (track->type == GES_TRACK_TYPE_VIDEO && video_source)
+          ges_track_element_copy_bindings (GES_TRACK_ELEMENT (audio_source),
+              tmp->data, GST_CLOCK_TIME_NONE);
+        } else if (track->type == GES_TRACK_TYPE_VIDEO && video_source) {
           ges_track_element_copy_properties (video_source, tmp->data);
+          ges_track_element_copy_bindings (GES_TRACK_ELEMENT (video_source),
+              tmp->data, GST_CLOCK_TIME_NONE);
+        }
       }
     }
 
