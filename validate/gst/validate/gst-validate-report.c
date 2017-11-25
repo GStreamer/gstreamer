@@ -663,6 +663,7 @@ _report_free (GstValidateReport * report)
 {
   g_free (report->message);
   g_free (report->reporter_name);
+  g_free (report->trace);
   g_list_free_full (report->shadow_reports,
       (GDestroyNotify) gst_validate_report_unref);
   g_list_free_full (report->repeated_reports,
@@ -1042,6 +1043,7 @@ gst_validate_report_print_details (GstValidateReport * report)
     gst_validate_printf (NULL, "%*s Details : %s\n", 12, "", lines[0]);
     for (i = 1; lines[i]; i++)
       gst_validate_printf (NULL, "%*s%s\n", 21, "", lines[i]);
+    g_strfreev (lines);
   }
 }
 
@@ -1055,6 +1057,7 @@ gst_validate_report_print_trace (GstValidateReport * report)
     gst_validate_printf (NULL, "%*s backtrace :\n", 12, "");
     for (i = 0; lines[i]; i++)
       gst_validate_printf (NULL, "%*s%s\n", 15, "", lines[i]);
+    g_strfreev (lines);
   }
 }
 
