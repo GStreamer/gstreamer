@@ -269,24 +269,30 @@ flags_to_string (GFlagsValue * vals, guint flags)
   GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | \
   GST_PARAM_MUTABLE_PAUSED | GST_PARAM_MUTABLE_READY)
 
+/* obj will be NULL if we're printing properties of pad template pads */
 static void
-print_element_properties_info (GstElement * element)
+print_object_properties_info (GObject * obj, GObjectClass * obj_class,
+    const gchar * desc)
 {
   GParamSpec **property_specs;
   guint num_properties, i;
   gboolean readable;
   gboolean first_flag;
 
-  property_specs = g_object_class_list_properties
-      (G_OBJECT_GET_CLASS (element), &num_properties);
-  n_print ("\n");
-  n_print ("Element Properties:\n");
+  property_specs = g_object_class_list_properties (obj_class, &num_properties);
+  n_print ("%s:\n", desc);
 
   push_indent ();
 
   for (i = 0; i < num_properties; i++) {
     GValue value = { 0, };
     GParamSpec *param = property_specs[i];
+    GType owner_type = param->owner_type;
+
+    /* We're printing pad properties */
+    if (obj == NULL && (owner_type == G_TYPE_OBJECT
+            || owner_type == GST_TYPE_OBJECT || owner_type == GST_TYPE_PAD))
+      continue;
 
     readable = FALSE;
 
@@ -299,8 +305,8 @@ print_element_properties_info (GstElement * element)
 
     first_flag = TRUE;
     n_print ("flags: ");
-    if (param->flags & G_PARAM_READABLE) {
-      g_object_get_property (G_OBJECT (element), param->name, &value);
+    if (param->flags & G_PARAM_READABLE && obj != NULL) {
+      g_object_get_property (obj, param->name, &value);
       readable = TRUE;
       g_print ("%s%s", (first_flag) ? "" : ", ", _("readable"));
       first_flag = FALSE;
@@ -363,7 +369,7 @@ print_element_properties_info (GstElement * element)
             pulong->minimum, pulong->maximum, g_value_get_ulong (&value));
 
         GST_ERROR ("%s: property '%s' of type ulong: consider changing to "
-            "uint/uint64", GST_OBJECT_NAME (element),
+            "uint/uint64", G_OBJECT_CLASS_NAME (obj_class),
             g_param_spec_get_name (param));
         break;
       }
@@ -375,7 +381,7 @@ print_element_properties_info (GstElement * element)
             plong->minimum, plong->maximum, g_value_get_long (&value));
 
         GST_ERROR ("%s: property '%s' of type long: consider changing to "
-            "int/int64", GST_OBJECT_NAME (element),
+            "int/int64", G_OBJECT_CLASS_NAME (obj_class),
             g_param_spec_get_name (param));
         break;
       }
@@ -432,7 +438,7 @@ print_element_properties_info (GstElement * element)
       case G_TYPE_CHAR:
       case G_TYPE_UCHAR:
         GST_ERROR ("%s: property '%s' of type char: consider changing to "
-            "int/string", GST_OBJECT_NAME (element),
+            "int/string", G_OBJECT_CLASS_NAME (obj_class),
             g_param_spec_get_name (param));
         /* fall through */
       default:
@@ -559,10 +565,19 @@ print_element_properties_info (GstElement * element)
 }
 
 static void
+print_element_properties_info (GstElement * element)
+{
+  g_print ("\n");
+  print_object_properties_info (G_OBJECT (element),
+      G_OBJECT_GET_CLASS (element), "Element Properties");
+}
+
+static void
 print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 {
   const GList *pads;
   GstStaticPadTemplate *padtemplate;
+  GstPadTemplate *tmpl;
 
   n_print ("Pad Templates:\n");
 
@@ -606,6 +621,21 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
       pop_indent ();
 
       gst_caps_unref (caps);
+    }
+
+    tmpl = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+        padtemplate->name_template);
+    if (tmpl != NULL) {
+      GType pad_type = GST_PAD_TEMPLATE_GTYPE (tmpl);
+
+      if (pad_type != G_TYPE_NONE && pad_type != GST_TYPE_PAD) {
+        gpointer pad_klass;
+
+        pad_klass = g_type_class_ref (pad_type);
+        n_print ("Type: %s\n", g_type_name (pad_type));
+        print_object_properties_info (NULL, pad_klass, "Pad Properties");
+        g_type_class_unref (pad_klass);
+      }
     }
 
     pop_indent ();

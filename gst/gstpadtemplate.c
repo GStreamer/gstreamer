@@ -217,6 +217,7 @@ gst_pad_template_init (GstPadTemplate * templ)
 {
   /* GstPadTemplate objects are usually leaked */
   GST_OBJECT_FLAG_SET (templ, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_PAD_TEMPLATE_GTYPE (templ) = G_TYPE_NONE;
 }
 
 static void
