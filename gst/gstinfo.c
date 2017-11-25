@@ -2751,7 +2751,7 @@ generate_backtrace_trace (void)
   for (j = 0; j < nptrs; j++)
     g_string_append_printf (trace, "%s\n", strings[j]);
 
-  g_free (strings);
+  free (strings);
 
   return g_string_free (trace, FALSE);
 }
