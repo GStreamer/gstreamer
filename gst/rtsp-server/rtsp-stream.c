@@ -4187,11 +4187,11 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
   priv = stream->priv;
 
   if (blocked) {
-    priv->blocking = FALSE;
     for (i = 0; i < 2; i++) {
       if (priv->blocked_id[i] != 0)
         continue;
       if (priv->send_src[i]) {
+        priv->blocking = FALSE;
         priv->blocked_id[i] = gst_pad_add_probe (priv->send_src[i],
             GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
             GST_PAD_PROBE_TYPE_BUFFER_LIST, pad_blocking,
