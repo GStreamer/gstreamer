@@ -2581,9 +2581,9 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       break;
     case GST_MESSAGE_ASYNC_DONE:
       if (priv->complete) {
-         /* receive the final ASYNC_DONE, that is posted by the media pipeline
-          * after all the transport parts have been successfully added to
-          * the media streams. */
+        /* receive the final ASYNC_DONE, that is posted by the media pipeline
+         * after all the transport parts have been successfully added to
+         * the media streams. */
         GST_DEBUG_OBJECT (media, "got async-done");
         if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
           gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
@@ -4043,11 +4043,20 @@ gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
 GstClockTimeDiff
 gst_rtsp_media_seekable (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
+  GstClockTimeDiff res;
+
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
 
   /* Currently we are not able to seek on live streams,
    * and no stream is seekable only to the beginning */
-  return media->priv->seekable;
+  g_mutex_lock (&priv->lock);
+  res = priv->seekable;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
 }
 
 /**
