@@ -3708,8 +3708,8 @@ gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
             gst_mpd_client_fetch_external_adaptation_set (client, period,
             adapt_set);
 
-        prev = l->prev;
-        period->AdaptationSets = g_list_delete_link (period->AdaptationSets, l);
+        prev = m->prev;
+        period->AdaptationSets = g_list_delete_link (period->AdaptationSets, m);
         gst_mpdparser_free_adaptation_set_node (adapt_set);
         adapt_set = NULL;
 
@@ -3729,9 +3729,9 @@ gst_mpd_client_fetch_on_load_external_resources (GstMpdClient * client)
 
         /* Update our iterator to the first new adapt_set if any, or the next */
         if (prev)
-          l = prev->next;
+          m = prev->next;
         else
-          l = period->AdaptationSets;
+          m = period->AdaptationSets;
 
         continue;
       }
