@@ -79,8 +79,6 @@ gstapp_dep = dependency('gstreamer-app-1.0', version : gst_req,
 gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
 
-vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
-
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
 build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
