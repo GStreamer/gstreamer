@@ -51,9 +51,7 @@ gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : gst_rtsp_server_deps,
-  vs_module_defs: vs_module_defs_dir + 'libgstrtspserver.def'
-)
+  dependencies : gst_rtsp_server_deps)
 
 rtsp_server_gen_sources = []
 if build_gir
