@@ -126,6 +126,9 @@ G_DEFINE_TYPE_WITH_CODE (GstWaylandSink, gst_wayland_sink, GST_TYPE_VIDEO_SINK,
  * width/height + stride and use the viewporter interface to crop, a bit like
  * we use to do with XV. It would still be quite limited. It's a bit retro,
  * hopefully there will be a better Wayland interface in the future. */
+
+GType gst_wayland_pool_get_type (void);
+
 typedef struct
 {
   GstVideoBufferPool parent;
