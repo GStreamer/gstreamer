@@ -20,14 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#define USE_GST_VALUE_ARRAY
-
-#ifndef USE_GST_VALUE_ARRAY
-/* FIXME 2.0: suppress warnings for deprecated API such as GValueArray
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-#endif
-
 #include <gst/gst.h>
 #include <string.h>
 
@@ -89,12 +81,8 @@ main (int argc, char **argv)
   GValue v2 = G_VALUE_INIT;
   GValue v3 = G_VALUE_INIT;
   GstElement *pipeline;
-#ifdef USE_GST_VALUE_ARRAY
   GValue v = G_VALUE_INIT;
   gchar *serialized_matrix;
-#else
-  GValueArray *a, *ra;
-#endif
 
   gst_init (&argc, &argv);
 
@@ -111,7 +99,6 @@ main (int argc, char **argv)
   g_object_set (audiomixmatrix, "out-channels", 2, NULL);
   g_object_set (audiomixmatrix, "channel-mask", 3, NULL);
   /* So the serialized matrix will be: < < 1, 0, 0, 0 >, < 0, 1, 0, 0 > > */
-#ifdef USE_GST_VALUE_ARRAY
   g_value_init (&v, GST_TYPE_ARRAY);
   g_value_init (&v2, GST_TYPE_ARRAY);
   g_value_init (&v3, G_TYPE_DOUBLE);
@@ -157,53 +144,6 @@ main (int argc, char **argv)
   gst_printerrln ("Serialized matrix: %s", serialized_matrix);
   g_free (serialized_matrix);
   g_value_unset (&v);
-#else
-  a = g_value_array_new (4);
-  ra = g_value_array_new (2);
-  g_value_init (&v2, G_TYPE_VALUE_ARRAY);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 1);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 0);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 0);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 0);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_take_boxed (&v2, ra);
-  g_value_array_append (a, &v2);
-  g_value_unset (&v2);
-  ra = g_value_array_new (2);
-  g_value_init (&v2, G_TYPE_VALUE_ARRAY);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 0);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 1);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 0);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_init (&v3, G_TYPE_DOUBLE);
-  g_value_set_double (&v3, 0);
-  g_value_array_append (ra, &v3);
-  g_value_unset (&v3);
-  g_value_take_boxed (&v2, ra);
-  g_value_array_append (a, &v2);
-  g_value_unset (&v2);
-  g_object_set (G_OBJECT (audiomixmatrix), "matrix-value-array", a, NULL);
-  g_value_array_free (a);
-#endif
   audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
   sink = gst_element_factory_make ("autoaudiosink", "sink");
   pipeline = gst_pipeline_new ("pipe");

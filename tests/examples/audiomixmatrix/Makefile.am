@@ -5,8 +5,7 @@ test_audiomixmatrix_CFLAGS  = \
         $(GST_PLUGINS_BAD_CFLAGS) \
         $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(GMODULE_EXPORT_CFLAGS) \
-        -DGST_USE_UNSTABLE_API
+	$(GMODULE_EXPORT_CFLAGS)
 test_audiomixmatrix_LDADD   = \
         $(GST_PLUGINS_BASE_LIBS) \
         $(GST_LIBS) \
