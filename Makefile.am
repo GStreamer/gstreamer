@@ -28,13 +28,10 @@ DIST_SUBDIRS = 			\
 	common 			\
 	m4
 
-# include before EXTRA_DIST for win32 assignment
-include $(top_srcdir)/common/win32.mak
-
 EXTRA_DIST = \
 	depcomp \
 	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-base.doap autogen.sh $(win32) \
+	ChangeLog gst-plugins-base.doap autogen.sh \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	gst-libs/gst/audio/audio_mkenum.py \
 	gst-libs/gst/app/app_mkenum.py \
@@ -69,13 +66,10 @@ endif
 
 include $(top_srcdir)/common/coverage/lcov.mak
 
-check: check-exports
-
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
 	$(top_builddir)/gst-plugins-base.spec \
-	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/gst-libs/gst/audio/testchannels \
@@ -95,6 +89,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/gio \
 	$(top_srcdir)/gst/gdp \
 	$(top_srcdir)/sys/v4l \
+	$(top_srcdir)/win32 \
 	$(top_srcdir)/tests/examples/v4l
 
 include $(top_srcdir)/common/cruft.mak
