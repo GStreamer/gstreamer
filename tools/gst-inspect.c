@@ -648,35 +648,6 @@ done:
   pop_indent ();
 }
 
-/* FIXME: should remove this if there is nothing interesting to print here */
-static void
-print_element_flag_info (GstElement * element)
-{
-  gboolean have_flags = FALSE;
-
-  n_print ("\n");
-  n_print ("Element Flags:\n");
-
-  push_indent ();
-
-  if (!have_flags)
-    n_print ("no flags set\n");
-
-  pop_indent ();
-
-  if (GST_IS_BIN (element)) {
-    n_print ("\n");
-    n_print ("Bin Flags:\n");
-
-    push_indent ();
-
-    if (!have_flags)
-      n_print ("  no flags set\n");
-
-    pop_indent ();
-  }
-}
-
 static void
 print_clocking_info (GstElement * element)
 {
@@ -1423,7 +1394,6 @@ print_element_info (GstPluginFeature * feature, gboolean print_names)
   print_interfaces (G_OBJECT_TYPE (element));
 
   print_pad_templates_info (element, factory);
-  print_element_flag_info (element);
   print_clocking_info (element);
   print_uri_handler_info (element);
   print_pad_info (element);
