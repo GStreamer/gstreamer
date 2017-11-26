@@ -169,6 +169,7 @@ typedef struct {
   gdouble Bx, By;
 } GstVideoColorPrimariesInfo;
 
+GST_EXPORT
 const GstVideoColorPrimariesInfo *
                 gst_video_color_primaries_get_info     (GstVideoColorPrimaries primaries);
 
