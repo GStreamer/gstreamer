@@ -549,36 +549,6 @@ GST_EXPORT
 gboolean gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr *hdr,
    GstMpegVideoSequenceExt *seqext, GstMpegVideoSequenceDisplayExt *displayext);
 
-#ifndef GST_DISABLE_DEPRECATED
-GST_EXPORT
-gboolean gst_mpeg_video_parse_picture_header          (GstMpegVideoPictureHdr* hdr,
-                                                       const guint8 * data, gsize size, guint offset);
-
-GST_EXPORT
-gboolean gst_mpeg_video_parse_picture_extension       (GstMpegVideoPictureExt *ext,
-                                                       const guint8 * data, gsize size, guint offset);
-
-GST_EXPORT
-gboolean gst_mpeg_video_parse_gop                     (GstMpegVideoGop * gop,
-                                                       const guint8 * data, gsize size, guint offset);
-
-GST_EXPORT
-gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * seqhdr,
-                                                       const guint8 * data, gsize size, guint offset);
-
-GST_EXPORT
-gboolean gst_mpeg_video_parse_sequence_extension      (GstMpegVideoSequenceExt * seqext,
-                                                       const guint8 * data, gsize size, guint offset);
-
-GST_EXPORT
-gboolean gst_mpeg_video_parse_sequence_display_extension (GstMpegVideoSequenceDisplayExt * seqdisplayext,
-                                                       const guint8 * data, gsize size, guint offset);
-
-GST_EXPORT
-gboolean gst_mpeg_video_parse_quant_matrix_extension  (GstMpegVideoQuantMatrixExt * quant,
-                                                       const guint8 * data, gsize size, guint offset);
-#endif
-
 GST_EXPORT
 void     gst_mpeg_video_quant_matrix_get_raster_from_zigzag (guint8 out_quant[64],
                                                              const guint8 quant[64]);
