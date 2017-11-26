@@ -160,9 +160,7 @@ libges = shared_library('ges-1.0', ges_sources, parser,
     c_args : [ges_c_args],
     include_directories : [configinc],
     install : true,
-    dependencies : libges_deps,
-    vs_module_defs: vs_module_defs_dir + 'libges.def',
-)
+    dependencies : libges_deps)
 
 ges_gen_sources = []
 if build_gir

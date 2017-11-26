@@ -106,8 +106,6 @@ gir_init_section = [ '--add-init-section=' + \
 ges_c_args = ['-DHAVE_CONFIG_H']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
-vs_module_defs_dir = meson.current_source_dir() + '/win32/common/'
-
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 

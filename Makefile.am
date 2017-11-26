@@ -10,14 +10,10 @@ SUBDIRS = ges tests tools common m4 pkgconfig docs bindings plugins $(EXAMPLES_S
 
 DIST_SUBDIRS = $(SUBDIRS)
 
-# include before EXTRA_DIST for win32 assignment
-include $(top_srcdir)/common/win32.mak
-
 EXTRA_DIST = \
 	depcomp \
 	AUTHORS COPYING NEWS README RELEASE \
 	ChangeLog autogen.sh gst-editing-services.doap \
-	$(win32) \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	meson_options.txt
 
