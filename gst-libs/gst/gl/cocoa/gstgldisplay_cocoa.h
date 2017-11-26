@@ -28,6 +28,7 @@
 
 G_BEGIN_DECLS
 
+GST_EXPORT
 GType gst_gl_display_cocoa_get_type (void);
 
 #define GST_TYPE_GL_DISPLAY_COCOA             (gst_gl_display_cocoa_get_type())
@@ -55,6 +56,7 @@ struct _GstGLDisplayCocoaClass
   GstGLDisplayClass object_class;
 };
 
+GST_EXPORT
 GstGLDisplayCocoa *gst_gl_display_cocoa_new (void);
 
 G_END_DECLS
