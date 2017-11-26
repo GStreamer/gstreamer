@@ -102,11 +102,6 @@ dnl *** checks for programs ***
 dnl find a compiler
 AC_PROG_CC
 
-dnl determine c++ compiler
-AC_PROG_CXX
-dnl determine if c++ is available on this system
-AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
-
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
 
@@ -353,9 +348,6 @@ AG_GST_SET_ERROR_CFLAGS($GST_GIT, [-Wmissing-declarations -Wmissing-prototypes -
 				   -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return -Wno-multichar \
 				   -Wnested-externs])
 
-dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_GIT)
-
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
@@ -387,21 +379,17 @@ VISIBILITY_CFLAGS=""
 AS_COMPILER_FLAG([-fvisibility=hidden], [VISIBILITY_CFLAGS="-fvisibility=hidden"])
 AC_SUBST(VISIBILITY_CFLAGS)
 
-dnl every flag in GST_OPTION_CFLAGS and GST_OPTION_CXXFLAGS can be overridden
+dnl every flag in GST_OPTION_CFLAGS can be overridden
 dnl at make time with e.g. make ERROR_CFLAGS=""
 GST_OPTION_CFLAGS="\$(WARNING_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
-GST_OPTION_CXXFLAGS="\$(ERROR_CXXFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
 AC_SUBST(GST_OPTION_CFLAGS)
-AC_SUBST(GST_OPTION_CXXFLAGS)
 
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
 dnl add GST_OPTION_CFLAGS, but overridable
 GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS) \$(ERROR_CFLAGS) \$(VISIBILITY_CFLAGS) -DGST_USE_UNSTABLE_API"
-GST_CXXFLAGS="$GST_CXXFLAGS \$(GST_OPTION_CXXFLAGS)"
 AC_SUBST(GST_CFLAGS)
-AC_SUBST(GST_CXXFLAGS)
 AC_SUBST(GST_LIBS)
 
 dnl LDFLAGS really should only contain flags, not libs - they get added before
