@@ -20,6 +20,7 @@
 #include <gst/gst.h>
 
 #include <gst/rtsp/gstrtsptransport.h>
+#include <gst/rtsp-server/rtsp-server.h> /* for GST_RTSP_SERVER_DEPRECATED_FOR */
 
 #ifndef __GST_RTSP_SESSION_H__
 #define __GST_RTSP_SESSION_H__
@@ -115,13 +116,12 @@ gint                   gst_rtsp_session_next_timeout_usec    (GstRTSPSession *se
 
 GST_EXPORT
 gboolean               gst_rtsp_session_is_expired_usec      (GstRTSPSession *session, gint64 now);
-#ifndef GST_DISABLE_DEPRECATED
-GST_EXPORT
+
+GST_RTSP_SERVER_DEPRECATED_FOR(gst_rtsp_session_next_timeout_usec)
 gint                   gst_rtsp_session_next_timeout         (GstRTSPSession *session, GTimeVal *now);
 
-GST_EXPORT
+GST_RTSP_SERVER_DEPRECATED_FOR(gst_rtsp_session_is_expired_usec)
 gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session, GTimeVal *now);
-#endif
 
 /* handle media in a session */
 

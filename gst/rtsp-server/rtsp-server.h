@@ -24,6 +24,15 @@
 
 G_BEGIN_DECLS
 
+/* Do *not* use these defines outside of rtsp-server. Use G_DEPRECATED instead. */
+#ifdef GST_DISABLE_DEPRECATED
+#define GST_RTSP_SERVER_DEPRECATED GST_EXPORT
+#define GST_RTSP_SERVER_DEPRECATED_FOR(f) GST_EXPORT
+#else
+#define GST_RTSP_SERVER_DEPRECATED G_DEPRECATED GST_EXPORT
+#define GST_RTSP_SERVER_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GST_EXPORT
+#endif
+
 typedef struct _GstRTSPServer GstRTSPServer;
 typedef struct _GstRTSPServerClass GstRTSPServerClass;
 typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
