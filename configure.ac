@@ -264,6 +264,10 @@ else
 fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
+VISIBILITY_CFLAGS=""
+AS_COMPILER_FLAG([-fvisibility=hidden], [VISIBILITY_CFLAGS="-fvisibility=hidden"])
+AC_SUBST(VISIBILITY_CFLAGS)
+
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time
 GST_OPTION_CFLAGS="\$(WARNING_CFLAGS) \$(ERROR_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
 AC_SUBST(GST_OPTION_CFLAGS)
@@ -271,7 +275,7 @@ AC_SUBST(GST_OPTION_CFLAGS)
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="$GST_CFLAGS \$(GST_STATIC_CFLAGS) \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="$GST_CFLAGS \$(GST_STATIC_CFLAGS) \$(GST_OPTION_CFLAGS) \$(VISIBILITY_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
@@ -300,7 +304,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
 dnl GST_LIB_LDFLAGS
 dnl linker flags shared by all libraries
 dnl LDFLAGS modifier defining exported symbols from built libraries
-GST_LIB_LDFLAGS="-export-symbols-regex \^[_]?\(gst_\|Gst\|GST_\).*"
+GST_LIB_LDFLAGS=""
 AC_SUBST(GST_LIB_LDFLAGS)
 
 dnl GST_OBJ_*
@@ -318,7 +322,7 @@ if test x$enable_static = xyes -a x$enable_shared = xno; then
 fi
 AC_SUBST(GST_STATIC_CFLAGS)
 
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_.*' $GST_ALL_LDFLAGS"
+GST_PLUGIN_LDFLAGS="-module -avoid-version $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 PKG_CHECK_MODULES(LIBCGROUP, libcgroup >= 0.26, HAVE_LIBCGROUP="yes", HAVE_LIBCGROUP="no")
