@@ -8,13 +8,10 @@ DIST_SUBDIRS = \
 	gst gst-libs sys ext pkgconfig \
 	m4 common docs tests po tools
 
-# include before EXTRA_DIST for win32 assignment
-include $(top_srcdir)/common/win32.mak
-
 EXTRA_DIST = \
 	depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-bad.doap autogen.sh $(win32) \
+	ChangeLog gst-plugins-bad.doap autogen.sh \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	meson_options.txt \
 	gst-libs/gst/interfaces/build_mkenum.py \
@@ -51,7 +48,6 @@ check: check-exports
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
-	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/gst-plugins-bad.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
@@ -147,7 +143,8 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/tarkin \
 	$(top_srcdir)/ext/theora \
 	$(top_srcdir)/ext/vp8 \
-	$(top_srcdir)/sys/mfc
+	$(top_srcdir)/sys/mfc \
+	$(top_srcdir)/win32
 
 include $(top_srcdir)/common/cruft.mak
 

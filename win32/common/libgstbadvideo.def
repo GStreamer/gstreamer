@@ -1,3 +1,0 @@
-EXPORTS
-	gst_video_aggregator_get_type
-	gst_video_aggregator_pad_get_type
