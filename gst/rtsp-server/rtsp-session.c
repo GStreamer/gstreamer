@@ -757,7 +757,8 @@ gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 {
   gboolean res;
 
-  res = (gst_rtsp_session_next_timeout (session, now) == 0);
+  res = gst_rtsp_session_next_timeout_usec (session,
+      (now->tv_sec * G_USEC_PER_SEC) + (now->tv_usec));
 
   return res;
 }
