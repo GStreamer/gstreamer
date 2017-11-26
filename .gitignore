@@ -58,6 +58,7 @@ log
 /m4
 
 /test-driver
+/tests/check/test-registry.reg
 /tests/check/*.log
 /tests/check/*.trs
 /tests/check/*/*.log
