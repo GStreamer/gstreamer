@@ -585,6 +585,9 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         self->info.rate);
     guint32 buffered_samples;
     GstClockTime buffered_time;
+    guint32 written = 0;
+    GstClock *clock;
+    GstClockTime clock_ahead;
 
     if (GST_BASE_SINK_CAST (self)->flushing) {
       flow_ret = GST_FLOW_FLUSHING;
@@ -619,6 +622,35 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     else
       running_time = 0;
 
+    clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
+    clock_ahead = 0;
+    if (clock) {
+      GstClockTime clock_now = gst_clock_get_time (clock);
+      GstClockTime base_time =
+          gst_element_get_base_time (GST_ELEMENT_CAST (self));
+      gst_object_unref (clock);
+      clock = NULL;
+
+      if (clock_now != GST_CLOCK_TIME_NONE && base_time != GST_CLOCK_TIME_NONE) {
+        GST_DEBUG_OBJECT (self,
+            "Clock time %" GST_TIME_FORMAT ", base time %" GST_TIME_FORMAT
+            ", target running time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (clock_now), GST_TIME_ARGS (base_time),
+            GST_TIME_ARGS (running_time));
+        if (clock_now > base_time)
+          clock_now -= base_time;
+        else
+          clock_now = 0;
+
+        if (clock_now < running_time)
+          clock_ahead = running_time - clock_now;
+      }
+    }
+
+    GST_DEBUG_OBJECT (self,
+        "Ahead %" GST_TIME_FORMAT " of the clock running time",
+        GST_TIME_ARGS (clock_ahead));
+
     if (self->output->
         output->GetBufferedAudioSampleFrameCount (&buffered_samples) != S_OK)
       buffered_samples = 0;
@@ -630,7 +662,7 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         "Buffered %" GST_TIME_FORMAT " in the driver (%u samples)",
         GST_TIME_ARGS (buffered_time), buffered_samples);
     // We start waiting once we have more than buffer-time buffered
-    if (buffered_time > self->buffer_time) {
+    if (buffered_time > self->buffer_time || clock_ahead > self->buffer_time) {
       GstClockReturn clock_ret;
       GstClockTime wait_time = running_time;
 
@@ -666,7 +698,6 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         &schedule_time, &schedule_time_duration);
 
     if (!self->output->started) {
-      guint32 written = 0;
       GST_LOG_OBJECT (self, "Writing audio frame synchronously because PAUSED");
 
       ret =
@@ -695,8 +726,6 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
       else
         written_all += written;
     } else {
-      guint32 written = 0;
-
       GST_LOG_OBJECT (self, "Scheduling audio samples at %" GST_TIME_FORMAT
           " with duration %" GST_TIME_FORMAT, GST_TIME_ARGS (schedule_time),
           GST_TIME_ARGS (schedule_time_duration));
