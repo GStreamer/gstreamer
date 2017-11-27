@@ -331,7 +331,7 @@ _create_layer (gpointer data)
 
   if (!ca_sink->layer) {
     layer = [[NSClassFromString(@"GstGLCAOpenGLLayer") alloc]
-        initWithGstGLContext:GST_GL_CONTEXT_COCOA (ca_sink->context)];
+        initWithGstGLContext:ca_sink->context];
 
     ca_sink->layer = (__bridge_retained gpointer)layer;
     [layer setDrawCallback:(GstGLWindowCB)gst_ca_opengl_layer_sink_on_draw

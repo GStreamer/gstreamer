@@ -25,13 +25,11 @@
 #include <gst/gl/gl.h>
 #include <Cocoa/Cocoa.h>
 
-#include <gst/gl/cocoa/gstglcontext_cocoa.h>
-
 G_BEGIN_DECLS
 
 @interface GstGLCAOpenGLLayer : CAOpenGLLayer {
 @public
-  GstGLContextCocoa *gst_gl_context;
+  GstGLContext *gst_gl_context;
   CGLContextObj gl_context;
 
 @private
@@ -53,7 +51,7 @@ G_BEGIN_DECLS
 - (void) setDrawCallback:(GstGLWindowCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (void) setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (void) queueResize;
-- (id) initWithGstGLContext: (GstGLContextCocoa *)context;
+- (id) initWithGstGLContext: (GstGLContext *)context;
 @end
 
 G_END_DECLS

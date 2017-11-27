@@ -62,7 +62,9 @@ _context_ready (gpointer data)
   g_atomic_int_set (&ca_layer->can_draw, 1);
 }
 
-- (id)initWithGstGLContext:(GstGLContextCocoa *)parent_gl_context {
+- (id)initWithGstGLContext:(GstGLContext *)parent_gl_context {
+  g_return_val_if_fail (GST_IS_GL_CONTEXT_COCOA (parent_gl_context), nil);
+
   self = [super init];
 
   _init_debug();
@@ -72,7 +74,7 @@ _context_ready (gpointer data)
   self->gst_gl_context = parent_gl_context;
   self.needsDisplayOnBoundsChange = YES;
 
-  gst_gl_window_send_message_async (GST_GL_CONTEXT (parent_gl_context)->window,
+  gst_gl_window_send_message_async (parent_gl_context->window,
       (GstGLWindowCB) _context_ready, (__bridge_retained gpointer)self, (GDestroyNotify)CFRelease);
 
   return self;
@@ -82,7 +84,7 @@ _context_ready (gpointer data)
   CGLPixelFormatObj fmt = NULL;
 
   if (self->gst_gl_context)
-    fmt = gst_gl_context_cocoa_get_pixel_format (self->gst_gl_context);
+    fmt = gst_gl_context_cocoa_get_pixel_format (GST_GL_CONTEXT_COCOA (self->gst_gl_context));
 
   if (!fmt) {
     CGLPixelFormatAttribute attribs[] = {
@@ -111,7 +113,7 @@ _context_ready (gpointer data)
   GError *error = NULL;
 
   if (self->gst_gl_context)
-    external_context = (CGLContextObj) gst_gl_context_get_gl_context (GST_GL_CONTEXT (self->gst_gl_context));
+    external_context = (CGLContextObj) gst_gl_context_get_gl_context (self->gst_gl_context);
 
   GST_INFO ("attempting to create CGLContext for CAOpenGLLayer with "
       "share context %p", external_context);
@@ -130,7 +132,7 @@ _context_ready (gpointer data)
     return NULL;
   }
 
-  display = gst_gl_context_get_display (GST_GL_CONTEXT (self->gst_gl_context));
+  display = gst_gl_context_get_display (self->gst_gl_context);
   self->draw_context = gst_gl_context_new_wrapped (display,
       (guintptr) self->gl_context, GST_GL_PLATFORM_CGL,
       gst_gl_context_get_current_gl_api (GST_GL_PLATFORM_CGL, NULL, NULL));
@@ -142,7 +144,7 @@ _context_ready (gpointer data)
   }
 
   gst_gl_context_activate (self->draw_context, TRUE);
-  gst_gl_context_set_shared_with (self->draw_context, GST_GL_CONTEXT (self->gst_gl_context));
+  gst_gl_context_set_shared_with (self->draw_context, self->gst_gl_context);
   if (!gst_gl_context_fill_info (self->draw_context, &error)) {
     GST_ERROR ("failed to fill wrapped context information: %s", error->message);
     return NULL;
