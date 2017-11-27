@@ -4746,14 +4746,14 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
   if (!representation) {
     GST_WARNING ("No valid representation in the MPD file, aborting...");
-    g_slice_free (GstActiveStream, stream);
+    gst_mpdparser_free_active_stream (stream);
     return FALSE;
   }
   stream->mimeType =
       gst_mpdparser_representation_get_mimetype (adapt_set, representation);
   if (stream->mimeType == GST_STREAM_UNKNOWN) {
     GST_WARNING ("Unknown mime type in the representation, aborting...");
-    g_slice_free (GstActiveStream, stream);
+    gst_mpdparser_free_active_stream (stream);
     return FALSE;
   }
 
