@@ -3973,11 +3973,15 @@ rtp_session_are_all_sources_bye (RTPSession * sess)
   GHashTableIter iter;
   RTPSource *src;
 
+  RTP_SESSION_LOCK (sess);
   g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *) & src)) {
-    if (src->internal && !src->sent_bye)
+    if (src->internal && !src->sent_bye) {
+      RTP_SESSION_UNLOCK (sess);
       return FALSE;
+    }
   }
+  RTP_SESSION_UNLOCK (sess);
 
   return TRUE;
 }
