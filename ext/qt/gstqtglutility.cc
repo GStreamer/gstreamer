@@ -51,10 +51,6 @@
 #include <gst/gl/egl/gstglcontext_egl.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_CGL && defined (HAVE_QT_MAC)
-#include <gst/gl/cocoa/gstgldisplay_cocoa.h>
-#endif
-
 #define GST_CAT_DEFAULT qt_gl_utils_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -126,7 +122,7 @@ gst_qt_get_gl_display ()
 
 #if GST_GL_HAVE_WINDOW_COCOA && GST_GL_HAVE_PLATFORM_CGL && defined (HAVE_QT_MAC)
   if (QString::fromUtf8 ("cocoa") == app->platformName())
-    display = (GstGLDisplay *) gst_gl_display_cocoa_new ();
+    display = (GstGLDisplay *) gst_gl_display_new ();
 #endif
 #if GST_GL_HAVE_WINDOW_EAGL && GST_GL_HAVE_PLATFORM_EAGL && defined (HAVE_QT_IOS)
   if (QString::fromUtf8 ("ios") == app->platformName())
