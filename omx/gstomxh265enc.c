@@ -47,11 +47,15 @@ enum
   PROP_PERIODICITYOFIDRFRAMES,
   PROP_INTERVALOFCODINGINTRAFRAMES,
   PROP_B_FRAMES,
+  PROP_CONSTRAINED_INTRA_PREDICTION,
+  PROP_LOOP_FILTER_MODE,
 };
 
 #define GST_OMX_H265_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT    (0xffffffff)
 #define GST_OMX_H265_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT (0xffffffff)
 #define GST_OMX_H265_VIDEO_ENC_B_FRAMES_DEFAULT (0xffffffff)
+#define GST_OMX_H265_VIDEO_ENC_CONSTRAINED_INTRA_PREDICTION_DEFAULT (FALSE)
+#define GST_OMX_H265_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT (0xffffffff)
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
 /* zynqultrascaleplus's OMX uses a param struct different of Android's one */
@@ -69,6 +73,36 @@ enum
 #define parent_class gst_omx_h265_enc_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOMXH265Enc, gst_omx_h265_enc,
     GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+#define GST_TYPE_OMX_H265_ENC_LOOP_FILTER_MODE (gst_omx_h265_enc_loop_filter_mode_get_type ())
+static GType
+gst_omx_h265_enc_loop_filter_mode_get_type (void)
+{
+  static GType qtype = 0;
+
+  if (qtype == 0) {
+    static const GEnumValue values[] = {
+      {OMX_ALG_VIDEO_HEVCLoopFilterEnable, "Enable deblocking filter",
+          "enable"},
+      {OMX_ALG_VIDEO_HEVCLoopFilterDisable, "Disable deblocking filter",
+          "disable"},
+      {OMX_ALG_VIDEO_HEVCLoopFilterDisableCrossSlice,
+          "Disable deblocking filter on slice boundary", "disable-cross-slice"},
+      {OMX_ALG_VIDEO_HEVCLoopFilterDisableCrossTile,
+          "Disable deblocking filter on tile boundary", "disable-cross-tile"},
+      {OMX_ALG_VIDEO_HEVCLoopFilterDisableCrossSliceAndTile,
+            "Disable deblocking filter on slice and tile boundary",
+          "disable-slice-and-tile"},
+      {0xffffffff, "Component Default", "default"},
+      {0, NULL, NULL}
+    };
+
+    qtype = g_enum_register_static ("GstOMXH265EncLoopFilter", values);
+  }
+  return qtype;
+}
+#endif
 
 static void
 gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
@@ -108,6 +142,24 @@ gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
           0, G_MAXUINT, GST_OMX_H265_VIDEO_ENC_B_FRAMES_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class,
+      PROP_CONSTRAINED_INTRA_PREDICTION,
+      g_param_spec_boolean ("constrained-intra-prediction",
+          "Constrained Intra Prediction",
+          "If enabled, prediction only uses residual data and decoded samples "
+          "from neighbouring coding blocks coded using intra prediction modes",
+          GST_OMX_H265_VIDEO_ENC_CONSTRAINED_INTRA_PREDICTION_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_LOOP_FILTER_MODE,
+      g_param_spec_enum ("loop-filter-mode", "Loop Filter mode",
+          "Enable or disable the deblocking filter (0xffffffff=component default)",
+          GST_TYPE_OMX_H265_ENC_LOOP_FILTER_MODE,
+          GST_OMX_H265_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 #endif
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h265, "
@@ -141,6 +193,12 @@ gst_omx_h265_enc_set_property (GObject * object, guint prop_id,
     case PROP_B_FRAMES:
       self->b_frames = g_value_get_uint (value);
       break;
+    case PROP_CONSTRAINED_INTRA_PREDICTION:
+      self->constrained_intra_prediction = g_value_get_boolean (value);
+      break;
+    case PROP_LOOP_FILTER_MODE:
+      self->loop_filter_mode = g_value_get_enum (value);
+      break;
 #endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -165,6 +223,12 @@ gst_omx_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_B_FRAMES:
       g_value_set_uint (value, self->b_frames);
       break;
+    case PROP_CONSTRAINED_INTRA_PREDICTION:
+      g_value_set_boolean (value, self->constrained_intra_prediction);
+      break;
+    case PROP_LOOP_FILTER_MODE:
+      g_value_set_enum (value, self->loop_filter_mode);
+      break;
 #endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -181,6 +245,9 @@ gst_omx_h265_enc_init (GstOMXH265Enc * self)
   self->periodicity_idr =
       GST_OMX_H265_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT;
   self->b_frames = GST_OMX_H265_VIDEO_ENC_B_FRAMES_DEFAULT;
+  self->constrained_intra_prediction =
+      GST_OMX_H265_VIDEO_ENC_CONSTRAINED_INTRA_PREDICTION_DEFAULT;
+  self->loop_filter_mode = GST_OMX_H265_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT;
 #endif
 }
 
@@ -252,6 +319,11 @@ update_param_hevc (GstOMXH265Enc * self,
    * See bgo#783862 for details. */
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  param.bConstIpred = self->constrained_intra_prediction;
+
+  if (self->loop_filter_mode != GST_OMX_H265_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT)
+    param.eLoopFilterMode = self->loop_filter_mode;
+
   err =
       gst_omx_component_get_parameter (GST_OMX_VIDEO_ENC (self)->enc,
       (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoHevc, &param);

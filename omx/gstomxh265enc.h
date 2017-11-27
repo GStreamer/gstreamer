@@ -52,6 +52,8 @@ struct _GstOMXH265Enc
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   guint32 periodicity_idr;
   guint32 b_frames;
+  gboolean constrained_intra_prediction;
+  guint32 loop_filter_mode;
 #endif
 };
 
