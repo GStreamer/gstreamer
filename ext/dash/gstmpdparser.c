@@ -4724,10 +4724,6 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
   GST_DEBUG ("0. Current stream %p", stream);
 
-  /* retrieve representation list */
-  if (stream->cur_adapt_set != NULL)
-    rep_list = stream->cur_adapt_set->Representations;
-
 #if 0
   /* fast start */
   representation =
