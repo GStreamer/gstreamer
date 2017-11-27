@@ -2497,8 +2497,11 @@ ensure_control_rate_params (GstVaapiEncoderH264 * encoder)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).window_size = encoder->cpb_length;
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).initial_qp = encoder->init_qp;
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).min_qp = encoder->min_qp;
+
+#if VA_CHECK_VERSION(1,0,0)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).rc_flags.bits.mb_rate_control =
       (guint) encoder->mbbrc;
+#endif
 
   /* HRD params */
   fill_hrd_params (encoder, &GST_VAAPI_ENCODER_VA_HRD (encoder));
