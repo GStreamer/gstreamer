@@ -1316,18 +1316,18 @@ gboolean
 ges_timeline_element_add_child_property (GESTimelineElement * self,
     GParamSpec * pspec, GObject * child)
 {
-  gchar *signame = g_strconcat ("notify::", pspec->name, NULL);
+  gchar *signame;
   ChildPropHandler *handler;
 
   if (g_hash_table_contains (self->priv->children_props, pspec)) {
     GST_INFO_OBJECT (self, "Child property already exists: %s", pspec->name);
-
     return FALSE;
   }
 
   GST_DEBUG_OBJECT (self, "Adding child property: %" GST_PTR_FORMAT "::%s",
       child, pspec->name);
 
+  signame = g_strconcat ("notify::", pspec->name, NULL);
   handler = (ChildPropHandler *) g_slice_new0 (ChildPropHandler);
   handler->child = gst_object_ref (child);
   handler->handler_id =

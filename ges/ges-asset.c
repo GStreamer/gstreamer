@@ -983,6 +983,8 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     _unsure_material_for_wrong_id (id, extractable_type, lerr);
     real_id = g_strdup (id);
   }
+  if (lerr)
+    g_error_free (lerr);
 
   asset = ges_asset_cache_lookup (extractable_type, real_id);
   if (asset) {

@@ -71,6 +71,8 @@ extractable_check_id (GType type, const gchar * id, GError ** error)
   else
     g_assert_not_reached ();
 
+  g_free (bin_desc);
+
   return real_id;
 }
 

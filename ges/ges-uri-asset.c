@@ -369,12 +369,14 @@ static void
 _set_meta_file_size (const gchar * uri, GESUriClipAsset * asset)
 {
   GError *error = NULL;
-  GFileInfo *file_info;
+  GFileInfo *file_info = NULL;
   guint64 file_size;
+  GFile *gfile = NULL;
 
   GESMetaContainer *container = GES_META_CONTAINER (asset);
 
-  file_info = g_file_query_info (g_file_new_for_uri (uri), "standard::size",
+  gfile = g_file_new_for_uri (uri);
+  file_info = g_file_query_info (gfile, "standard::size",
       G_FILE_QUERY_INFO_NONE, NULL, &error);
   if (!error) {
     file_size = g_file_info_get_attribute_uint64 (file_info, "standard::size");
@@ -383,6 +385,10 @@ _set_meta_file_size (const gchar * uri, GESUriClipAsset * asset)
   } else {
     g_error_free (error);
   }
+  if (gfile)
+    g_object_unref (gfile);
+  if (file_info)
+    g_object_unref (file_info);
 }
 
 static void

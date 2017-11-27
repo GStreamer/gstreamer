@@ -50,6 +50,7 @@ _fill_track_type (GESAsset * asset)
   if (bin_desc) {
     ges_track_element_asset_set_track_type (GES_TRACK_ELEMENT_ASSET (asset),
         ttype);
+    g_free (bin_desc);
   } else {
     GST_WARNING_OBJECT (asset, "No track type set, you should"
         " specify one in [audio, video] as first component" " in the asset id");

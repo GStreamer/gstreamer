@@ -1256,6 +1256,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 
       priv->nbelements++;
     }
+    g_list_free_full (clips, (GDestroyNotify) gst_object_unref);
     g_string_append (str, "      </layer>\n");
   }
 }
@@ -1318,6 +1319,7 @@ _save_groups (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
   for (tmp = ges_timeline_get_groups (timeline); tmp; tmp = tmp->next) {
     _save_group (self, str, &seen_groups, tmp->data);
   }
+  g_list_free (seen_groups);
   g_string_append (str, "      </groups>\n");
 }
 
