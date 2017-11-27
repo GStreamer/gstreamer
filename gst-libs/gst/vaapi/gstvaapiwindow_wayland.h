@@ -24,7 +24,6 @@
 #ifndef GST_VAAPI_WINDOW_WAYLAND_H
 #define GST_VAAPI_WINDOW_WAYLAND_H
 
-#include <wayland-client.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 
