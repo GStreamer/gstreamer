@@ -262,6 +262,7 @@ enum
   SIGNAL_RESET_SYNC,
   SIGNAL_GET_SESSION,
   SIGNAL_GET_INTERNAL_SESSION,
+  SIGNAL_GET_INTERNAL_STORAGE,
 
   SIGNAL_ON_NEW_SSRC,
   SIGNAL_ON_SSRC_COLLISION,
@@ -279,7 +280,11 @@ enum
   SIGNAL_REQUEST_RTCP_ENCODER,
   SIGNAL_REQUEST_RTCP_DECODER,
 
+  SIGNAL_REQUEST_FEC_DECODER,
+  SIGNAL_REQUEST_FEC_ENCODER,
+
   SIGNAL_NEW_JITTERBUFFER,
+  SIGNAL_NEW_STORAGE,
 
   SIGNAL_REQUEST_AUX_SENDER,
   SIGNAL_REQUEST_AUX_RECEIVER,
@@ -341,7 +346,7 @@ enum
   PROP_RFC7273_SYNC,
   PROP_MAX_STREAMS,
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
-  PROP_MAX_TS_OFFSET
+  PROP_MAX_TS_OFFSET,
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -439,6 +444,9 @@ struct _GstRtpBinStream
  * there they are pushed into an SSRC demuxer that splits the stream based on
  * SSRC. Each of the SSRC streams go into their own jitterbuffer (managed with
  * the GstRtpBinStream above).
+ *
+ * Before the SSRC demuxer, a storage element may be inserted for the purpose
+ * of Forward Error Correction.
  */
 struct _GstRtpBinSession
 {
@@ -452,6 +460,9 @@ struct _GstRtpBinSession
   GstElement *demux;
   gulong demux_newpad_sig;
   gulong demux_padremoved_sig;
+
+  /* Fec support */
+  GstElement *storage;
 
   /* Bundling support */
   GstElement *rtp_funnel;
@@ -479,7 +490,6 @@ struct _GstRtpBinSession
   GstPad *sync_src;
   GstPad *send_rtp_sink;
   GstPad *send_rtp_sink_ghost;
-  GstPad *send_rtp_src;
   GstPad *send_rtp_src_ghost;
   GstPad *send_rtcp_src;
   GstPad *send_rtcp_src_ghost;
@@ -762,6 +772,7 @@ create_session (GstRtpBin * rtpbin, gint id)
 {
   GstRtpBinSession *sess;
   GstElement *session, *demux;
+  GstElement *storage = NULL;
   GstState target;
 
   if (!(session = gst_element_factory_make ("rtpsession", NULL)))
@@ -770,12 +781,19 @@ create_session (GstRtpBin * rtpbin, gint id)
   if (!(demux = gst_element_factory_make ("rtpssrcdemux", NULL)))
     goto no_demux;
 
+  if (!(storage = gst_element_factory_make ("rtpstorage", NULL)))
+    goto no_storage;
+
+  g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_STORAGE], 0, storage,
+      id);
+
   sess = g_new0 (GstRtpBinSession, 1);
   g_mutex_init (&sess->lock);
   sess->id = id;
   sess->bin = rtpbin;
   sess->session = session;
   sess->demux = demux;
+  sess->storage = storage;
 
   sess->rtp_funnel = gst_element_factory_make ("funnel", NULL);
   sess->rtcp_funnel = gst_element_factory_make ("funnel", NULL);
@@ -829,6 +847,7 @@ create_session (GstRtpBin * rtpbin, gint id)
   gst_bin_add (GST_BIN_CAST (rtpbin), demux);
   gst_bin_add (GST_BIN_CAST (rtpbin), sess->rtp_funnel);
   gst_bin_add (GST_BIN_CAST (rtpbin), sess->rtcp_funnel);
+  gst_bin_add (GST_BIN_CAST (rtpbin), storage);
 
   GST_OBJECT_LOCK (rtpbin);
   target = GST_STATE_TARGET (rtpbin);
@@ -839,6 +858,7 @@ create_session (GstRtpBin * rtpbin, gint id)
   gst_element_set_state (session, target);
   gst_element_set_state (sess->rtp_funnel, target);
   gst_element_set_state (sess->rtcp_funnel, target);
+  gst_element_set_state (storage, target);
 
   return sess;
 
@@ -852,6 +872,13 @@ no_demux:
   {
     gst_object_unref (session);
     g_warning ("rtpbin: could not create rtpssrcdemux element");
+    return NULL;
+  }
+no_storage:
+  {
+    gst_object_unref (session);
+    gst_object_unref (demux);
+    g_warning ("rtpbin: could not create rtpstorage element");
     return NULL;
   }
 }
@@ -1117,6 +1144,25 @@ gst_rtp_bin_get_internal_session (GstRtpBin * bin, guint session_id)
   GST_RTP_BIN_UNLOCK (bin);
 
   return internal_session;
+}
+
+static GObject *
+gst_rtp_bin_get_internal_storage (GstRtpBin * bin, guint session_id)
+{
+  GObject *internal_storage = NULL;
+  GstRtpBinSession *session;
+
+  GST_RTP_BIN_LOCK (bin);
+  GST_DEBUG_OBJECT (bin, "retrieving internal storage object, index: %u",
+      session_id);
+  session = find_session_by_id (bin, (gint) session_id);
+  if (session && session->storage) {
+    g_object_get (session->storage, "internal-storage", &internal_storage,
+        NULL);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+
+  return internal_storage;
 }
 
 static GstElement *
@@ -1746,9 +1792,10 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   if (!(buffer = gst_element_factory_make ("rtpjitterbuffer", NULL)))
     goto no_jitterbuffer;
 
-  if (!rtpbin->ignore_pt)
+  if (!rtpbin->ignore_pt) {
     if (!(demux = gst_element_factory_make ("rtpptdemux", NULL)))
       goto no_demux;
+  }
 
   stream = g_new0 (GstRtpBinStream, 1);
   stream->ssrc = ssrc;
@@ -2064,6 +2111,19 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       RTP_TYPE_SESSION, 1, G_TYPE_UINT);
 
   /**
+   * GstRtpBin::get-internal-storage:
+   * @rtpbin: the object which received the signal
+   * @id: the session id
+   *
+   * Request the internal RTPStorage object as #GObject in session @id.
+   */
+  gst_rtp_bin_signals[SIGNAL_GET_INTERNAL_STORAGE] =
+      g_signal_new ("get-internal-storage", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
+          get_internal_storage), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_OBJECT, 1, G_TYPE_UINT);
+
+  /**
    * GstRtpBin::on-new-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
@@ -2287,6 +2347,23 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_TYPE_NONE, 3, GST_TYPE_ELEMENT, G_TYPE_UINT, G_TYPE_UINT);
 
   /**
+   * GstRtpBin::new-storage:
+   * @rtpbin: the object which received the signal
+   * @storage: the new storage
+   * @session: the session
+   *
+   * Notify that a new @storage was created for @session.
+   * This signal can, for example, be used to configure @storage.
+   *
+   * Since: 1.14
+   */
+  gst_rtp_bin_signals[SIGNAL_NEW_STORAGE] =
+      g_signal_new ("new-storage", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          new_storage), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_UINT);
+
+  /**
    * GstRtpBin::request-aux-sender:
    * @rtpbin: the object which received the signal
    * @session: the session
@@ -2303,6 +2380,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
           request_aux_sender), _gst_element_accumulator, NULL,
       g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
   /**
    * GstRtpBin::request-aux-receiver:
    * @rtpbin: the object which received the signal
@@ -2320,6 +2398,43 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
           request_aux_receiver), _gst_element_accumulator, NULL,
       g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
+  /**
+   * GstRtpBin::request-fec-decoder:
+   * @rtpbin: the object which received the signal
+   * @session: the session index
+   *
+   * Request a FEC decoder element for the given @session. The element
+   * will be added to the bin after the pt demuxer.
+   *
+   * If no handler is connected, no FEC decoder will be used.
+   *
+   * Since: 1.14
+   */
+  gst_rtp_bin_signals[SIGNAL_REQUEST_FEC_DECODER] =
+      g_signal_new ("request-fec-decoder", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_fec_decoder), _gst_element_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
+  /**
+   * GstRtpBin::request-fec-encoder:
+   * @rtpbin: the object which received the signal
+   * @session: the session index
+   *
+   * Request a FEC encoder element for the given @session. The element
+   * will be added to the bin after the RTPSession.
+   *
+   * If no handler is connected, no FEC encoder will be used.
+   *
+   * Since: 1.14
+   */
+  gst_rtp_bin_signals[SIGNAL_REQUEST_FEC_ENCODER] =
+      g_signal_new ("request-fec-encoder", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_fec_encoder), _gst_element_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
   /**
    * GstRtpBin::on-new-sender-ssrc:
    * @rtpbin: the object which received the signal
@@ -2583,6 +2698,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   klass->get_session = GST_DEBUG_FUNCPTR (gst_rtp_bin_get_session);
   klass->get_internal_session =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_session);
+  klass->get_internal_storage =
+      GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_storage);
   klass->request_rtp_encoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_encoder);
   klass->request_rtp_decoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_decoder);
   klass->request_rtcp_encoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_encoder);
@@ -3260,6 +3377,38 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
 
   GST_DEBUG_OBJECT (rtpbin, "new payload pad %u", pt);
 
+  pad = gst_object_ref (pad);
+
+  if (stream->session->storage) {
+    GstElement *fec_decoder =
+        session_request_element (stream->session, SIGNAL_REQUEST_FEC_DECODER);
+
+    if (fec_decoder) {
+      GstPad *sinkpad, *srcpad;
+      GstPadLinkReturn ret;
+
+      sinkpad = gst_element_get_static_pad (fec_decoder, "sink");
+
+      if (!sinkpad)
+        goto fec_decoder_sink_failed;
+
+      ret = gst_pad_link (pad, sinkpad);
+      gst_object_unref (sinkpad);
+
+      if (ret != GST_PAD_LINK_OK)
+        goto fec_decoder_link_failed;
+
+      srcpad = gst_element_get_static_pad (fec_decoder, "src");
+
+      if (!srcpad)
+        goto fec_decoder_src_failed;
+
+      gst_pad_sticky_events_foreach (pad, copy_sticky_events, srcpad);
+      gst_object_unref (pad);
+      pad = srcpad;
+    }
+  }
+
   GST_RTP_BIN_SHUTDOWN_LOCK (rtpbin, shutdown);
 
   /* ghost the pad to the parent */
@@ -3277,12 +3426,33 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   gst_pad_sticky_events_foreach (pad, copy_sticky_events, gpad);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
 
+done:
+  gst_object_unref (pad);
+
   return;
 
 shutdown:
   {
     GST_DEBUG ("ignoring, we are shutting down");
-    return;
+    goto done;
+  }
+fec_decoder_sink_failed:
+  {
+    g_warning ("rtpbin: failed to get fec encoder sink pad for session %u",
+        stream->session->id);
+    goto done;
+  }
+fec_decoder_src_failed:
+  {
+    g_warning ("rtpbin: failed to get fec encoder src pad for session %u",
+        stream->session->id);
+    goto done;
+  }
+fec_decoder_link_failed:
+  {
+    g_warning ("rtpbin: failed to link fec decoder for session %u",
+        stream->session->id);
+    goto done;
   }
 }
 
@@ -3330,6 +3500,36 @@ no_caps:
     GST_DEBUG_OBJECT (rtpbin, "could not get caps");
     return NULL;
   }
+}
+
+static GstCaps *
+ptdemux_pt_map_requested (GstElement * element, guint pt,
+    GstRtpBinSession * session)
+{
+  GstCaps *ret = pt_map_requested (element, pt, session);
+
+  if (ret && gst_caps_get_size (ret) == 1) {
+    const GstStructure *s = gst_caps_get_structure (ret, 0);
+    gboolean is_fec;
+
+    if (gst_structure_get_boolean (s, "is-fec", &is_fec) && is_fec) {
+      GValue v = G_VALUE_INIT;
+      GValue v2 = G_VALUE_INIT;
+
+      GST_INFO_OBJECT (session->bin, "Will ignore FEC pt %u in session %u", pt,
+          session->id);
+      g_value_init (&v, GST_TYPE_ARRAY);
+      g_value_init (&v2, G_TYPE_INT);
+      g_object_get_property (G_OBJECT (element), "ignored-payload-types", &v);
+      g_value_set_int (&v2, pt);
+      gst_value_array_append_value (&v, &v2);
+      g_value_unset (&v2);
+      g_object_set_property (G_OBJECT (element), "ignored-payload-types", &v);
+      g_value_unset (&v);
+    }
+  }
+
+  return ret;
 }
 
 static void
@@ -3435,7 +3635,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
      * demuxer so that it can apply a proper caps on the buffers for the
      * depayloaders. */
     stream->demux_ptreq_sig = g_signal_connect (stream->demux,
-        "request-pt-map", (GCallback) pt_map_requested, session);
+        "request-pt-map", (GCallback) ptdemux_pt_map_requested, session);
     /* connect to the  signal so it can be forwarded. */
     stream->demux_ptchange_sig = g_signal_connect (stream->demux,
         "payload-type-change", (GCallback) payload_type_change, session);
@@ -3618,8 +3818,7 @@ complete_session_receiver (GstRtpBin * rtpbin, GstRtpBinSession * session,
   if (session->recv_rtp_src == NULL)
     goto pad_failed;
 
-  /* find out if we need AUX elements or if we can go into the SSRC demuxer
-   * directly */
+  /* find out if we need AUX elements */
   aux = session_request_element (session, SIGNAL_REQUEST_AUX_RECEIVER);
   if (aux) {
     gchar *pname;
@@ -3639,13 +3838,28 @@ complete_session_receiver (GstRtpBin * rtpbin, GstRtpBinSession * session,
     if (ret != GST_PAD_LINK_OK)
       goto aux_link_failed;
 
-    /* this can be NULL when this AUX element is not to be linked to
-     * an SSRC demuxer */
+    /* this can be NULL when this AUX element is not to be linked any further */
     pname = g_strdup_printf ("src_%u", sessid);
     recv_rtp_src = gst_element_get_static_pad (aux, pname);
     g_free (pname);
   } else {
     recv_rtp_src = gst_object_ref (session->recv_rtp_src);
+  }
+
+  /* Add a storage element if needed */
+  if (recv_rtp_src && session->storage) {
+    GstPadLinkReturn ret;
+    GstPad *sinkpad = gst_element_get_static_pad (session->storage, "sink");
+
+    ret = gst_pad_link (recv_rtp_src, sinkpad);
+
+    gst_object_unref (sinkpad);
+    gst_object_unref (recv_rtp_src);
+
+    if (ret != GST_PAD_LINK_OK)
+      goto storage_link_failed;
+
+    recv_rtp_src = gst_element_get_static_pad (session->storage, "src");
   }
 
   if (recv_rtp_src) {
@@ -3680,6 +3894,11 @@ aux_sink_failed:
 aux_link_failed:
   {
     g_warning ("rtpbin: failed to link AUX pad to session %u", sessid);
+    return;
+  }
+storage_link_failed:
+  {
+    g_warning ("rtpbin: failed to link storage");
     return;
   }
 }
@@ -3973,11 +4192,12 @@ complete_session_src (GstRtpBin * rtpbin, GstRtpBinSession * session)
   GstElement *encoder;
   GstElementClass *klass;
   GstPadTemplate *templ;
+  gboolean ret = FALSE;
 
   /* get srcpad */
-  session->send_rtp_src =
-      gst_element_get_static_pad (session->session, "send_rtp_src");
-  if (session->send_rtp_src == NULL)
+  send_rtp_src = gst_element_get_static_pad (session->session, "send_rtp_src");
+
+  if (send_rtp_src == NULL)
     goto no_srcpad;
 
   GST_DEBUG_OBJECT (rtpbin, "getting RTP encoder");
@@ -3995,22 +4215,22 @@ complete_session_src (GstRtpBin * rtpbin, GstRtpBinSession * session)
     if (encsrc == NULL)
       goto enc_src_failed;
 
-    send_rtp_src = encsrc;
-
     ename = g_strdup_printf ("rtp_sink_%u", sessid);
     encsink = gst_element_get_static_pad (encoder, ename);
     g_free (ename);
     if (encsink == NULL)
       goto enc_sink_failed;
 
-    ret = gst_pad_link (session->send_rtp_src, encsink);
+    ret = gst_pad_link (send_rtp_src, encsink);
     gst_object_unref (encsink);
+    gst_object_unref (send_rtp_src);
+
+    send_rtp_src = encsrc;
 
     if (ret != GST_PAD_LINK_OK)
       goto enc_link_failed;
   } else {
     GST_DEBUG_OBJECT (rtpbin, "no RTP encoder given");
-    send_rtp_src = gst_object_ref (session->send_rtp_src);
   }
 
   /* ghost the new source pad */
@@ -4019,37 +4239,43 @@ complete_session_src (GstRtpBin * rtpbin, GstRtpBinSession * session)
   templ = gst_element_class_get_pad_template (klass, "send_rtp_src_%u");
   session->send_rtp_src_ghost =
       gst_ghost_pad_new_from_template (gname, send_rtp_src, templ);
-  gst_object_unref (send_rtp_src);
   gst_pad_set_active (session->send_rtp_src_ghost, TRUE);
   gst_pad_sticky_events_foreach (send_rtp_src, copy_sticky_events,
       session->send_rtp_src_ghost);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtp_src_ghost);
   g_free (gname);
 
-  return TRUE;
+  ret = TRUE;
+
+done:
+  if (send_rtp_src)
+    gst_object_unref (send_rtp_src);
+
+  return ret;
 
   /* ERRORS */
 no_srcpad:
   {
     g_warning ("rtpbin: failed to get rtp source pad for session %u", sessid);
-    return FALSE;
+    goto done;
   }
 enc_src_failed:
   {
-    g_warning ("rtpbin: failed to get encoder src pad for session %u", sessid);
-    return FALSE;
+    g_warning ("rtpbin: failed to get %" GST_PTR_FORMAT
+        " src pad for session %u", encoder, sessid);
+    goto done;
   }
 enc_sink_failed:
   {
-    g_warning ("rtpbin: failed to get encoder sink pad for session %u", sessid);
-    gst_object_unref (send_rtp_src);
-    return FALSE;
+    g_warning ("rtpbin: failed to get %" GST_PTR_FORMAT
+        " sink pad for session %u", encoder, sessid);
+    goto done;
   }
 enc_link_failed:
   {
-    g_warning ("rtpbin: failed to link rtp encoder for session %u", sessid);
-    gst_object_unref (send_rtp_src);
-    return FALSE;
+    g_warning ("rtpbin: failed to link %" GST_PTR_FORMAT " for session %u",
+        encoder, sessid);
+    goto done;
   }
 }
 
@@ -4154,6 +4380,8 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   guint sessid;
   GstPad *send_rtp_sink;
   GstElement *aux;
+  GstElement *encoder;
+  GstElement *prev = NULL;
   GstRtpBinSession *session;
 
   /* first get the session number */
@@ -4177,19 +4405,47 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   if (session->send_rtp_sink != NULL)
     goto existing_session;
 
+  encoder = session_request_element (session, SIGNAL_REQUEST_FEC_ENCODER);
+
+  if (encoder) {
+    GST_DEBUG_OBJECT (rtpbin, "Linking FEC encoder");
+
+    send_rtp_sink = gst_element_get_static_pad (encoder, "sink");
+
+    if (!send_rtp_sink)
+      goto enc_sink_failed;
+
+    prev = encoder;
+  }
+
   GST_DEBUG_OBJECT (rtpbin, "getting RTP AUX sender");
   aux = session_request_element (session, SIGNAL_REQUEST_AUX_SENDER);
   if (aux) {
+    GstPad *sinkpad;
     GST_DEBUG_OBJECT (rtpbin, "linking AUX sender");
     if (!setup_aux_sender (rtpbin, session, aux))
       goto aux_session_failed;
 
     pname = g_strdup_printf ("sink_%u", sessid);
-    send_rtp_sink = gst_element_get_static_pad (aux, pname);
+    sinkpad = gst_element_get_static_pad (aux, pname);
     g_free (pname);
 
-    if (send_rtp_sink == NULL)
+    if (sinkpad == NULL)
       goto aux_sink_failed;
+
+    if (!prev) {
+      send_rtp_sink = sinkpad;
+    } else {
+      GstPad *srcpad = gst_element_get_static_pad (prev, "src");
+      GstPadLinkReturn ret;
+
+      ret = gst_pad_link (srcpad, sinkpad);
+      gst_object_unref (srcpad);
+      if (ret != GST_PAD_LINK_OK) {
+        goto aux_link_failed;
+      }
+    }
+    prev = aux;
   } else {
     /* get send_rtp pad and store */
     session->send_rtp_sink =
@@ -4200,7 +4456,17 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
     if (!complete_session_src (rtpbin, session))
       goto session_src_failed;
 
-    send_rtp_sink = gst_object_ref (session->send_rtp_sink);
+    if (!prev) {
+      send_rtp_sink = gst_object_ref (session->send_rtp_sink);
+    } else {
+      GstPad *srcpad = gst_element_get_static_pad (prev, "src");
+      GstPadLinkReturn ret;
+
+      ret = gst_pad_link (srcpad, session->send_rtp_sink);
+      gst_object_unref (srcpad);
+      if (ret != GST_PAD_LINK_OK)
+        goto session_link_failed;
+    }
   }
 
   session->send_rtp_sink_ghost =
@@ -4237,6 +4503,12 @@ aux_sink_failed:
     g_warning ("rtpbin: failed to get AUX sink pad for session %u", sessid);
     return NULL;
   }
+aux_link_failed:
+  {
+    g_warning ("rtpbin: failed to link %" GST_PTR_FORMAT " for session %u",
+        aux, sessid);
+    return NULL;
+  }
 pad_failed:
   {
     g_warning ("rtpbin: failed to get session pad for session %u", sessid);
@@ -4245,6 +4517,18 @@ pad_failed:
 session_src_failed:
   {
     g_warning ("rtpbin: failed to setup source pads for session %u", sessid);
+    return NULL;
+  }
+session_link_failed:
+  {
+    g_warning ("rtpbin: failed to link %" GST_PTR_FORMAT " for session %u",
+        session, sessid);
+    return NULL;
+  }
+enc_sink_failed:
+  {
+    g_warning ("rtpbin: failed to get %" GST_PTR_FORMAT
+        " sink pad for session %u", encoder, sessid);
     return NULL;
   }
 }
@@ -4257,10 +4541,6 @@ remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session)
     gst_element_remove_pad (GST_ELEMENT_CAST (rtpbin),
         session->send_rtp_src_ghost);
     session->send_rtp_src_ghost = NULL;
-  }
-  if (session->send_rtp_src) {
-    gst_object_unref (session->send_rtp_src);
-    session->send_rtp_src = NULL;
   }
   if (session->send_rtp_sink) {
     gst_element_release_request_pad (GST_ELEMENT_CAST (session->session),
