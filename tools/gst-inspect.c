@@ -305,16 +305,18 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
 
     first_flag = TRUE;
     n_print ("flags: ");
-    if (param->flags & G_PARAM_READABLE && obj != NULL) {
+    readable = ! !(param->flags & G_PARAM_READABLE);
+    if (readable && obj != NULL) {
       g_object_get_property (obj, param->name, &value);
-      readable = TRUE;
-      g_print ("%s%s", (first_flag) ? "" : ", ", _("readable"));
-      first_flag = FALSE;
     } else {
       /* if we can't read the property value, assume it's set to the default
        * (which might not be entirely true for sub-classes, but that's an
        * unlikely corner-case anyway) */
       g_param_value_set_default (param, &value);
+    }
+    if (readable) {
+      g_print ("%s%s", (first_flag) ? "" : ", ", _("readable"));
+      first_flag = FALSE;
     }
     if (param->flags & G_PARAM_WRITABLE) {
       g_print ("%s%s", (first_flag) ? "" : ", ", _("writable"));
