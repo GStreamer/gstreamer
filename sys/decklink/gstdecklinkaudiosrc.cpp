@@ -237,6 +237,10 @@ gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
   self->current_packets =
       gst_queue_array_new_for_struct (sizeof (CapturePacket),
       DEFAULT_BUFFER_SIZE);
+
+  self->skipped_last = 0;
+  self->skip_from_timestamp = GST_CLOCK_TIME_NONE;
+  self->skip_to_timestamp = GST_CLOCK_TIME_NONE;
 }
 
 void
@@ -526,25 +530,31 @@ gst_decklink_audio_src_got_packet (GstElement * element,
   if (!self->flushing) {
     CapturePacket p;
     guint skipped_packets = 0;
-    GstClockTime from_timestamp = GST_CLOCK_TIME_NONE;
-    GstClockTime to_timestamp = GST_CLOCK_TIME_NONE;
 
     while (gst_queue_array_get_length (self->current_packets) >=
         self->buffer_size) {
       CapturePacket *tmp = (CapturePacket *)
           gst_queue_array_pop_head_struct (self->current_packets);
-      if (skipped_packets == 0)
-        from_timestamp = tmp->timestamp;
+      if (skipped_packets == 0 && self->skipped_last == 0)
+        self->skip_from_timestamp = tmp->timestamp;
       skipped_packets++;
-      to_timestamp = tmp->timestamp;
+      self->skip_to_timestamp = tmp->timestamp;
       capture_packet_clear (tmp);
     }
 
-    if (skipped_packets > 0)
+    if (self->skipped_last == 0 && skipped_packets > 0) {
+        GST_WARNING_OBJECT (self, "Starting to drop audio packets");
+    }
+
+    if (skipped_packets == 0 && self->skipped_last > 0) {
       GST_WARNING_OBJECT (self,
           "Dropped %u old packets from %" GST_TIME_FORMAT " to %"
-          GST_TIME_FORMAT, skipped_packets, GST_TIME_ARGS (from_timestamp),
-          GST_TIME_ARGS (to_timestamp));
+          GST_TIME_FORMAT, self->skipped_last,
+          GST_TIME_ARGS (self->skip_from_timestamp),
+          GST_TIME_ARGS (self->skip_to_timestamp));
+      self->skipped_last = 0;
+    }
+    self->skipped_last += skipped_packets;
 
     memset (&p, 0, sizeof (p));
     p.packet = packet;

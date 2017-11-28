@@ -81,6 +81,10 @@ struct _GstDecklinkAudioSrc
   GstClockTime discont_time;
 
   guint buffer_size;
+
+  guint skipped_last;
+  GstClockTime skip_from_timestamp;
+  GstClockTime skip_to_timestamp;
 };
 
 struct _GstDecklinkAudioSrcClass

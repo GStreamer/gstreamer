@@ -408,6 +408,9 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->window_fill = 0;
   self->window_skip = 1;
   self->window_skip_count = 0;
+  self->skipped_last = 0;
+  self->skip_from_timestamp = GST_CLOCK_TIME_NONE;
+  self->skip_to_timestamp = GST_CLOCK_TIME_NONE;
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
@@ -837,27 +840,34 @@ gst_decklink_video_src_got_frame (GstElement * element,
     GstVideoTimeCodeFlags flags = GST_VIDEO_TIME_CODE_FLAGS_NONE;
     guint field_count = 0;
     guint skipped_frames = 0;
-    GstClockTime from_timestamp = GST_CLOCK_TIME_NONE;
-    GstClockTime to_timestamp = GST_CLOCK_TIME_NONE;
 
     while (gst_queue_array_get_length (self->current_frames) >=
         self->buffer_size) {
       CaptureFrame *tmp = (CaptureFrame *)
           gst_queue_array_pop_head_struct (self->current_frames);
       if (tmp->frame) {
-        if (skipped_frames == 0)
-          from_timestamp = tmp->timestamp;
+        if (skipped_frames == 0 && self->skipped_last == 0)
+          self->skip_from_timestamp = tmp->timestamp;
         skipped_frames++;
-        to_timestamp = tmp->timestamp;
+        self->skip_to_timestamp = tmp->timestamp;
       }
       capture_frame_clear (tmp);
     }
 
-    if (skipped_frames > 0)
+    if (self->skipped_last == 0 && skipped_frames > 0) {
+      GST_WARNING_OBJECT (self, "Starting to drop frames");
+    }
+
+    if (skipped_frames == 0 && self->skipped_last > 0) {
       GST_WARNING_OBJECT (self,
           "Dropped %u old frames from %" GST_TIME_FORMAT " to %"
-          GST_TIME_FORMAT, skipped_frames, GST_TIME_ARGS (from_timestamp),
-          GST_TIME_ARGS (to_timestamp));
+          GST_TIME_FORMAT, self->skipped_last,
+          GST_TIME_ARGS (self->skip_from_timestamp),
+          GST_TIME_ARGS (self->skip_to_timestamp));
+      self->skipped_last = 0;
+    }
+
+    self->skipped_last += skipped_frames;
 
     memset (&f, 0, sizeof (f));
     f.frame = frame;

@@ -111,6 +111,10 @@ struct _GstDecklinkVideoSrc
   gboolean output_afd_bar;
   gint last_afd_bar_vbi_line;
   gint last_afd_bar_vbi_line_field2;
+
+  guint skipped_last;
+  GstClockTime skip_from_timestamp;
+  GstClockTime skip_to_timestamp;
 };
 
 struct _GstDecklinkVideoSrcClass
