@@ -39,6 +39,7 @@ struct _GstRtpPtDemux
   GstPad *sink;       /**< the sink pad */
   guint16 last_pt;    /**< pt of the last packet 0xFFFF if none */
   GSList *srcpads;    /**< a linked list of GstRtpPtDemuxPad objects */
+  GValue ignored_pts; /**< a GstValueArray of payload types that will not have pads created for */
 };
 
 struct _GstRtpPtDemuxClass
