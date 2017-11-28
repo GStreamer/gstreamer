@@ -109,9 +109,10 @@ gst_codec_utils_aac_get_index_from_sample_rate (guint rate)
 
 /**
  * gst_codec_utils_aac_get_sample_rate:
- * @audio_config: a pointer to the AudioSpecificConfig as specified in the
- *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1.
- * @len: Length of @audio_config in bytes
+ * @audio_config: (array length=len): a pointer to the AudioSpecificConfig
+ *                as specified in the Elementary Stream Descriptor (esds)
+ *                in ISO/IEC 14496-1.
+ * @len: Length of @audio_config
  *
  * Translates the sample rate index found in AAC headers to the actual sample
  * rate.
@@ -134,8 +135,10 @@ gst_codec_utils_aac_get_sample_rate (const guint8 * audio_config, guint len)
 
 /**
  * gst_codec_utils_aac_get_channels:
- * @audio_config: a pointer to the AudioSpecificConfig as specified in the
- *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1.
+ * @audio_config: (array length=len): a pointer to the AudioSpecificConfig
+ *                as specified in the Elementary Stream Descriptor (esds)
+ *                in ISO/IEC 14496-1.
+ * @len: Length of @audio_config in bytes
  *
  * Returns the channels of the given AAC stream.
  *
@@ -162,9 +165,9 @@ gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len)
 
 /**
  * gst_codec_utils_aac_get_profile:
- * @audio_config: a pointer to the AudioSpecificConfig as specified in the
- *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see
- *                gst_codec_utils_aac_get_level() for a more details).
+ * @audio_config: (array length=len): a pointer to the AudioSpecificConfig
+ *                as specified in the Elementary Stream Descriptor (esds)
+ *                in ISO/IEC 14496-1.
  * @len: Length of @audio_config in bytes
  *
  * Returns the profile of the given AAC stream as a string. The profile is
@@ -206,8 +209,9 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
 
 /**
  * gst_codec_utils_aac_get_level:
- * @audio_config: a pointer to the AudioSpecificConfig as specified in the
- *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1.
+ * @audio_config: (array length=len): a pointer to the AudioSpecificConfig
+ *                as specified in the Elementary Stream Descriptor (esds)
+ *                in ISO/IEC 14496-1.
  * @len: Length of @audio_config in bytes
  *
  * Determines the level of a stream as defined in ISO/IEC 14496-3. For AAC LC
@@ -398,9 +402,9 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
 /**
  * gst_codec_utils_aac_caps_set_level_and_profile:
  * @caps: the #GstCaps to which level and profile fields are to be added
- * @audio_config: a pointer to the AudioSpecificConfig as specified in the
- *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see
- *                below for a more details).
+ * @audio_config: (array length=len): a pointer to the AudioSpecificConfig
+ *                as specified in the Elementary Stream Descriptor (esds)
+ *                in ISO/IEC 14496-1. (See below for more details)
  * @len: Length of @audio_config in bytes
  *
  * Sets the level and profile on @caps if it can be determined from
@@ -454,7 +458,7 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
 
 /**
  * gst_codec_utils_h264_get_profile:
- * @sps: Pointer to the sequence parameter set for the stream.
+ * @sps: (array length=len): Pointer to the sequence parameter set for the stream.
  * @len: Length of the data available in @sps.
  *
  * Converts the profile indication (profile_idc) in the stream's
@@ -557,7 +561,7 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
 
 /**
  * gst_codec_utils_h264_get_level:
- * @sps: Pointer to the sequence parameter set for the stream.
+ * @sps: (array length=len): Pointer to the sequence parameter set for the stream.
  * @len: Length of the data available in @sps.
  *
  * Converts the level indication (level_idc) in the stream's
@@ -671,7 +675,7 @@ gst_codec_utils_h264_get_level_idc (const gchar * level)
 /**
  * gst_codec_utils_h264_caps_set_level_and_profile:
  * @caps: the #GstCaps to which the level and profile are to be added
- * @sps: Pointer to the sequence parameter set for the stream.
+ * @sps: (array length=len): Pointer to the sequence parameter set for the stream.
  * @len: Length of the data available in @sps.
  *
  * Sets the level and profile in @caps if it can be determined from @sps. See
@@ -709,7 +713,7 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
 
 /**
  * gst_codec_utils_h265_get_profile:
- * @profile_tier_level: Pointer to the profile_tier_level
+ * @profile_tier_level: (array length=len): Pointer to the profile_tier_level
  *   structure for the stream.
  * @len: Length of the data available in @profile_tier_level
  *
@@ -763,7 +767,7 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
 
 /**
  * gst_codec_utils_h265_get_tier:
- * @profile_tier_level: Pointer to the profile_tier_level structure
+ * @profile_tier_level: (array length=len): Pointer to the profile_tier_level
  *   for the stream.
  * @len: Length of the data available in @profile_tier_level.
  *
@@ -800,7 +804,7 @@ gst_codec_utils_h265_get_tier (const guint8 * profile_tier_level, guint len)
 
 /**
  * gst_codec_utils_h265_get_level:
- * @profile_tier_level: Pointer to the profile_tier_level structure
+ * @profile_tier_level: (array length=len): Pointer to the profile_tier_level
  *   for the stream
  * @len: Length of the data available in @profile_tier_level.
  *
@@ -904,7 +908,8 @@ gst_codec_utils_h265_get_level_idc (const gchar * level)
 /**
  * gst_codec_utils_h265_caps_set_level_tier_and_profile:
  * @caps: the #GstCaps to which the level, tier and profile are to be added
- * @profile_tier_level: Pointer to the profile_tier_level struct
+ * @profile_tier_level: (array length=len): Pointer to the profile_tier_level
+ *   struct
  * @len: Length of the data available in @profile_tier_level.
  *
  * Sets the level, tier and profile in @caps if it can be determined from
@@ -948,7 +953,8 @@ gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps * caps,
 
 /**
  * gst_codec_utils_mpeg4video_get_profile:
- * @vis_obj_seq: Pointer to the visual object sequence for the stream.
+ * @vis_obj_seq: (array length=len): Pointer to the visual object
+ *   sequence for the stream.
  * @len: Length of the data available in @sps.
  *
  * Converts the profile indication in the stream's visual object sequence into
@@ -1020,7 +1026,8 @@ gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
 
 /**
  * gst_codec_utils_mpeg4video_get_level:
- * @vis_obj_seq: Pointer to the visual object sequence for the stream.
+ * @vis_obj_seq: (array length=len): Pointer to the visual object
+ *   sequence for the stream.
  * @len: Length of the data available in @sps.
  *
  * Converts the level indication in the stream's visual object sequence into
@@ -1112,7 +1119,8 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
 /**
  * gst_codec_utils_mpeg4video_caps_set_level_and_profile:
  * @caps: the #GstCaps to which the level and profile are to be added
- * @vis_obj_seq: Pointer to the visual object sequence for the stream.
+ * @vis_obj_seq: (array length=len): Pointer to the visual object
+ *   sequence for the stream.
  * @len: Length of the data available in @sps.
  *
  * Sets the level and profile in @caps if it can be determined from
@@ -1150,13 +1158,13 @@ gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps * caps,
 
 /**
  * gst_codec_utils_opus_parse_caps:
- * @caps: the #GstCaps to which the level and profile are to be added
- * @rate: the sample rate
- * @channels: the number of channels
- * @channel_mapping_family: the channel mapping family
- * @stream_count: the number of independent streams
- * @coupled_count: the number of stereo streams
- * @channel_mapping: the mapping between the streams
+ * @caps: the #GstCaps to parse the data from
+ * @rate: (out): the sample rate
+ * @channels: (out): the number of channels
+ * @channel_mapping_family: (out): the channel mapping family
+ * @stream_count: (out): the number of independent streams
+ * @coupled_count: (out): the number of stereo streams
+ * @channel_mapping: (out) (array): the mapping between the streams
  *
  * Parses Opus caps and fills the different fields with defaults if possible.
  *
@@ -1272,7 +1280,7 @@ gst_codec_utils_opus_parse_caps (GstCaps * caps,
  * @channel_mapping_family: the channel mapping family
  * @stream_count: the number of independent streams
  * @coupled_count: the number of stereo streams
- * @channel_mapping: (allow-none): the mapping between the streams
+ * @channel_mapping: (allow-none) (array): the mapping between the streams
  *
  * Creates Opus caps from the given parameters.
  *
@@ -1496,7 +1504,7 @@ gst_codec_utils_opus_create_caps_from_header (GstBuffer * header,
  * @channel_mapping_family: the channel mapping family
  * @stream_count: the number of independent streams
  * @coupled_count: the number of stereo streams
- * @channel_mapping: (allow-none): the mapping between the streams
+ * @channel_mapping: (allow-none) (array): the mapping between the streams
  * @pre_skip: Pre-skip in 48kHz samples or 0
  * @output_gain: Output gain or 0
  *
@@ -1572,14 +1580,14 @@ gst_codec_utils_opus_create_header (guint32 rate,
 /**
  * gst_codec_utils_opus_parse_header:
  * @header: the OpusHead #GstBuffer
- * @rate: the sample rate
- * @channels: the number of channels
- * @channel_mapping_family: the channel mapping family
- * @stream_count: the number of independent streams
- * @coupled_count: the number of stereo streams
- * @channel_mapping: the mapping between the streams
- * @pre_skip: Pre-skip in 48kHz samples or 0
- * @output_gain: Output gain or 0
+ * @rate: (out): the sample rate
+ * @channels: (out): the number of channels
+ * @channel_mapping_family: (out): the channel mapping family
+ * @stream_count: (out): the number of independent streams
+ * @coupled_count: (out): the number of stereo streams
+ * @channel_mapping: (out) (array): the mapping between the streams
+ * @pre_skip: (out): Pre-skip in 48kHz samples or 0
+ * @output_gain: (out): Output gain or 0
  *
  * Parses the OpusHead header.
  *
