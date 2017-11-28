@@ -42,10 +42,10 @@ if build_gstgl
   pkgconf.set('GL_PLATFORMS', ' '.join(enabled_gl_platforms))
 endif
 
-if use_wayland
-    pkgconf.set('waylandlibdir', join_paths(meson.build_root(), gstwayland.outdir()))
-    pkg_libs += 'wayland'
-endif
+#if use_wayland
+#    pkgconf.set('waylandlibdir', join_paths(meson.build_root(), gstwayland.outdir()))
+#    pkg_libs += 'wayland'
+#endif
 
 foreach p : pkg_libs
   infile = 'gstreamer-@0@.pc.in'.format(p)
