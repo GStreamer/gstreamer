@@ -206,6 +206,24 @@ bus_sync_handler (GstBus * bus, GstMessage * msg, gpointer data)
 }
 
 static void
+play_cb (GtkButton * button, gpointer data)
+{
+  AppData *app = data;
+
+  gst_element_set_state (app->pipeline, GST_STATE_PLAYING);
+}
+
+static void
+null_cb (GtkButton * button, gpointer data)
+{
+  AppData *app = data;
+
+  gst_element_set_state (app->pipeline, GST_STATE_NULL);
+  app->va_display = NULL;
+}
+
+
+static void
 realize_cb (GtkWidget * widget, gpointer data)
 {
   AppData *app = data;
@@ -283,6 +301,16 @@ build_ui (AppData * app)
 
     gtk_box_pack_start (GTK_BOX (bbox), create_rotate_button (app, "sink2"),
         TRUE, TRUE, 0);
+  } else {
+    GtkWidget *button;
+
+    button = gtk_button_new_with_label ("PLAYING");
+    gtk_box_pack_start (GTK_BOX (bbox), button, TRUE, TRUE, 0);
+    g_signal_connect (button, "clicked", G_CALLBACK (play_cb), app);
+
+    button = gtk_button_new_with_label ("NULL");
+    gtk_box_pack_start (GTK_BOX (bbox), button, TRUE, TRUE, 0);
+    g_signal_connect (button, "clicked", G_CALLBACK (null_cb), app);
   }
 
   gtk_widget_show_all (mainwin);
