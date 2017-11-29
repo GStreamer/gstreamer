@@ -2865,7 +2865,7 @@ gst_v4l2_object_is_dmabuf_supported (GstV4l2Object * v4l2object)
 
   /* Expected to fail, but ENOTTY tells us that it is not implemented. */
   v4l2object->ioctl (v4l2object->video_fd, VIDIOC_EXPBUF, &expbuf);
-  if (errno == -ENOTTY)
+  if (errno == ENOTTY)
     ret = FALSE;
 
   return ret;
