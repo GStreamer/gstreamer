@@ -29,10 +29,17 @@
 G_DEFINE_TYPE (WebRTCTransceiver, webrtc_transceiver,
     GST_TYPE_WEBRTC_RTP_TRANSCEIVER);
 
+#define DEFAULT_FEC_TYPE GST_WEBRTC_FEC_TYPE_NONE
+#define DEFAULT_DO_NACK FALSE
+#define DEFAULT_FEC_PERCENTAGE 100
+
 enum
 {
   PROP_0,
   PROP_WEBRTC,
+  PROP_FEC_TYPE,
+  PROP_FEC_PERCENTAGE,
+  PROP_DO_NACK,
 };
 
 void
@@ -78,6 +85,15 @@ webrtc_transceiver_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WEBRTC:
       break;
+    case PROP_FEC_TYPE:
+      trans->fec_type = g_value_get_enum (value);
+      break;
+    case PROP_DO_NACK:
+      trans->do_nack = g_value_get_boolean (value);
+      break;
+    case PROP_FEC_PERCENTAGE:
+      trans->fec_percentage = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -93,6 +109,15 @@ webrtc_transceiver_get_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (trans);
   switch (prop_id) {
+    case PROP_FEC_TYPE:
+      g_value_set_enum (value, trans->fec_type);
+      break;
+    case PROP_DO_NACK:
+      g_value_set_boolean (value, trans->do_nack);
+      break;
+    case PROP_FEC_PERCENTAGE:
+      g_value_set_uint (value, trans->fec_percentage);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -108,6 +133,10 @@ webrtc_transceiver_finalize (GObject * object)
   if (trans->stream)
     gst_object_unref (trans->stream);
   trans->stream = NULL;
+
+  if (trans->local_rtx_ssrc_map)
+    gst_structure_free (trans->local_rtx_ssrc_map);
+  trans->local_rtx_ssrc_map = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -129,6 +158,28 @@ webrtc_transceiver_class_init (WebRTCTransceiverClass * klass)
           "Parent webrtcbin",
           GST_TYPE_WEBRTC_BIN,
           G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_FEC_TYPE,
+      g_param_spec_enum ("fec-type", "FEC type",
+          "The type of Forward Error Correction to use",
+          GST_TYPE_WEBRTC_FEC_TYPE,
+          DEFAULT_FEC_TYPE,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_DO_NACK,
+      g_param_spec_boolean ("do-nack", "Do nack",
+          "Whether to send negative acknowledgements for feedback",
+          DEFAULT_DO_NACK,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_FEC_PERCENTAGE,
+      g_param_spec_uint ("fec-percentage", "FEC percentage",
+          "The amount of Forward Error Correction to apply",
+          0, 100, DEFAULT_FEC_PERCENTAGE,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

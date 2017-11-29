@@ -822,6 +822,67 @@ GST_START_TEST (test_media_direction)
 GST_END_TEST;
 
 static void
+on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  const GstSDPMedia *vmedia;
+  guint j;
+
+  fail_unless_equals_int (gst_sdp_message_medias_len (desc->sdp), 2);
+
+  vmedia = gst_sdp_message_get_media (desc->sdp, 1);
+
+  for (j = 0; j < gst_sdp_media_attributes_len (vmedia); j++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (vmedia, j);
+
+    if (!g_strcmp0 (attr->key, "rtpmap")) {
+      if (g_str_has_prefix (attr->value, "97")) {
+        fail_unless_equals_string (attr->value, "97 VP8/90000");
+      } else if (g_str_has_prefix (attr->value, "96")) {
+        fail_unless_equals_string (attr->value, "96 red/90000");
+      } else if (g_str_has_prefix (attr->value, "98")) {
+        fail_unless_equals_string (attr->value, "98 ulpfec/90000");
+      } else if (g_str_has_prefix (attr->value, "99")) {
+        fail_unless_equals_string (attr->value, "99 rtx/90000");
+      } else if (g_str_has_prefix (attr->value, "100")) {
+        fail_unless_equals_string (attr->value, "100 rtx/90000");
+      }
+    }
+  }
+}
+
+/* In this test we verify that webrtcbin will pick available payload
+ * types when it needs to, in that example for RTX and FEC */
+GST_START_TEST (test_payload_types)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  struct validate_sdp offer = { on_sdp_media_payload_types, NULL };
+  GstWebRTCRTPTransceiver *trans;
+  GArray *transceivers;
+
+  t->offer_data = &offer;
+  t->on_offer_created = validate_sdp;
+  t->on_ice_candidate = NULL;
+  /* We don't really care about the answer here */
+  t->on_answer_created = NULL;
+
+  g_signal_emit_by_name (t->webrtc1, "get-transceivers", &transceivers);
+  fail_unless_equals_int (transceivers->len, 2);
+  trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
+  g_object_set (trans, "fec-type", GST_WEBRTC_FEC_TYPE_ULP_RED, "do-nack", TRUE,
+      NULL);
+  g_array_unref (transceivers);
+
+  test_webrtc_create_offer (t, t->webrtc1);
+
+  test_webrtc_wait_for_answer_error_eos (t);
+  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+static void
 on_sdp_media_setup (struct test_webrtc *t, GstElement * element,
     GstWebRTCSessionDescription * desc, gpointer user_data)
 {
@@ -1367,6 +1428,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_get_transceivers);
     tcase_add_test (tc, test_add_recvonly_transceiver);
     tcase_add_test (tc, test_recvonly_sendonly);
+    tcase_add_test (tc, test_payload_types);
   }
 
   if (nicesrc)

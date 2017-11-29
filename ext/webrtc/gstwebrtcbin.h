@@ -57,6 +57,9 @@ struct _GstWebRTCBinPad
   guint                 mlineindex;
 
   GstWebRTCRTPTransceiver *trans;
+  gulong                block_id;
+
+  GstCaps              *received_caps;
 };
 
 struct _GstWebRTCBinPadClass
@@ -125,6 +128,7 @@ struct _GstWebRTCBinPrivate
   gboolean async_pending;
 
   GList *pending_pads;
+  GList *pending_sink_transceivers;
 
   /* count of the number of media streams we've offered for uniqueness */
   /* FIXME: overflow? */
