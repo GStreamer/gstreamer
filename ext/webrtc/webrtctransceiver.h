@@ -38,6 +38,12 @@ struct _WebRTCTransceiver
   GstWebRTCRTPTransceiver   parent;
 
   TransportStream          *stream;
+  GstStructure             *local_rtx_ssrc_map;
+
+  /* Properties */
+  GstWebRTCFECType         fec_type;
+  guint                    fec_percentage;
+  gboolean                 do_nack;
 };
 
 struct _WebRTCTransceiverClass

@@ -253,4 +253,15 @@ typedef enum /*< underscore_name=gst_webrtc_stats_type >*/
   GST_WEBRTC_STATS_CERTIFICATE,
 } GstWebRTCStatsType;
 
+/**
+ * GstWebRTCFECType:
+ * GST_WEBRTC_FEC_TYPE_NONE: none
+ * GST_WEBRTC_FEC_TYPE_ULP_RED: ulpfec + red
+ */
+typedef enum /*< underscore_name=gst_webrtc_fec_type >*/
+{
+  GST_WEBRTC_FEC_TYPE_NONE,
+  GST_WEBRTC_FEC_TYPE_ULP_RED,
+} GstWebRTCFECType;
+
 #endif /* __GST_WEBRTC_FWD_H__ */
