@@ -72,11 +72,12 @@ gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
 }
 
 gboolean
-gst_vaapi_video_context_get_display (GstContext * context,
+gst_vaapi_video_context_get_display (GstContext * context, gboolean app_context,
     GstVaapiDisplay ** display_ptr)
 {
   const GstStructure *structure;
   const gchar *type;
+  GstVaapiDisplay *display = NULL;
 
   g_return_val_if_fail (GST_IS_CONTEXT (context), FALSE);
 
@@ -86,7 +87,9 @@ gst_vaapi_video_context_get_display (GstContext * context,
     structure = gst_context_get_structure (context);
     return gst_structure_get (structure, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME,
         GST_TYPE_VAAPI_DISPLAY, display_ptr, NULL);
-  } else if (!g_strcmp0 (type, GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME)) {
+  }
+
+  if (app_context && !g_strcmp0 (type, GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME)) {
     VADisplay va_display = NULL;
     structure = gst_context_get_structure (context);
 
@@ -96,12 +99,22 @@ gst_vaapi_video_context_get_display (GstContext * context,
       Display *x11_display = NULL;
       if (gst_structure_get (structure, "x11-display", G_TYPE_POINTER,
               &x11_display, NULL)) {
-        *display_ptr =
+        display =
             gst_vaapi_display_x11_new_with_va_display (va_display, x11_display);
-        return TRUE;
       }
 #endif
-      GST_WARNING ("Not support if only VADisplay provided");
+
+      _init_context_debug ();
+
+      if (!display) {
+        GST_CAT_WARNING (GST_CAT_CONTEXT,
+            "Cannot create GstVaapiDisplay if only VADisplay is provided");
+        return FALSE;
+      }
+      GST_CAT_INFO (GST_CAT_CONTEXT,
+          "new display with context %" GST_PTR_FORMAT, display);
+      *display_ptr = display;
+      return TRUE;
     }
   }
 
@@ -211,6 +224,33 @@ found:
   gst_query_unref (query);
 }
 
+static gboolean
+_gst_vaapi_sink_find_context (GstElement * element)
+{
+  GstQuery *query;
+  GstMessage *msg;
+  gboolean found;
+
+  /* 1. Query upstream for an already created GstVaapiDisplay */
+  query = gst_query_new_context (GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
+  found = _gst_context_get_from_query (element, query, GST_PAD_SINK);
+  gst_query_unref (query);
+  if (found)
+    return TRUE;
+
+  /* 2. Post a GST_MESSAGE_NEED_CONTEXT message on the bus with a
+   * gst.vaapi.app.Display context from the application */
+  msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
+      GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME);
+  if (!gst_element_post_message (element, msg)) {
+    _init_context_debug ();
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element, "No bus attached");
+    gst_message_unref (msg);
+  }
+
+  return FALSE;
+}
+
 gboolean
 gst_vaapi_video_context_prepare (GstElement * element,
     GstVaapiDisplay ** display_ptr)
@@ -227,22 +267,21 @@ gst_vaapi_video_context_prepare (GstElement * element,
     return TRUE;
   }
 
-  _gst_context_query (element, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
+  if (GST_IS_VIDEO_SINK (element)) {
+    if (!_gst_vaapi_sink_find_context (element) && *display_ptr) {
+      /* Propagate if display was created from application */
+      gst_vaapi_video_context_propagate (element, *display_ptr);
+    }
+  } else {
+    _gst_context_query (element, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
+  }
 
   if (*display_ptr) {
     GST_LOG_OBJECT (element, "found a display %" GST_PTR_FORMAT, *display_ptr);
     return TRUE;
   }
 
-  _gst_context_query (element, GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME);
-
-  if (*display_ptr) {
-    GST_LOG_OBJECT (element,
-        "got a display with va display from app %" GST_PTR_FORMAT,
-        *display_ptr);
-  }
-
-  return *display_ptr != NULL;
+  return FALSE;
 }
 
 /* 5) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT message

@@ -91,9 +91,12 @@ gst_vaapi_plugin_base_set_context (GstVaapiPluginBase * plugin,
 {
   GstVaapiDisplay *display = NULL;
 
-  if (gst_vaapi_video_context_get_display (context, &display))
+  /* gst.vaapi.app.Display is only attended _if_ the element is
+   * vaapisink and it doesn't have a display set yet */
+  if (gst_vaapi_video_context_get_display (context,
+          GST_IS_VIDEO_SINK (plugin) && !plugin->display, &display)) {
     plugin_set_display (plugin, display);
-
+  }
 #if USE_GST_GL_HELPERS
   {
     GstGLDisplay *gl_display = NULL;

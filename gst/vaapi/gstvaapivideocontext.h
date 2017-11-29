@@ -44,7 +44,7 @@ gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_video_context_get_display (GstContext * context,
+gst_vaapi_video_context_get_display (GstContext * context, gboolean app_context,
     GstVaapiDisplay ** display_ptr);
 
 G_GNUC_INTERNAL
