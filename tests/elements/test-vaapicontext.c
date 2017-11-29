@@ -110,7 +110,7 @@ create_vaapi_app_display_context (AppData * app, gboolean new_va_display)
   else
     va_display = ensure_va_display (app);
 
-  context = gst_context_new ("gst.vaapi.app.Display", TRUE);
+  context = gst_context_new ("gst.vaapi.app.Display", FALSE);
   s = gst_context_writable_structure (context);
   gst_structure_set (s, "va-display", G_TYPE_POINTER, va_display, NULL);
   gst_structure_set (s, "x11-display", G_TYPE_POINTER, x11_display, NULL);
