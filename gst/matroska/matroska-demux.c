@@ -4659,6 +4659,11 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
     case GST_MATROSKA_READ_STATE_DATA:
     case GST_MATROSKA_READ_STATE_SEEK:
       switch (id) {
+        case GST_EBML_ID_HEADER:
+          GST_READ_CHECK (gst_matroska_demux_flush (demux, read));
+          demux->common.state = GST_MATROSKA_READ_STATE_SEGMENT;
+          gst_matroska_demux_check_seekability (demux);
+          break;
         case GST_MATROSKA_ID_SEGMENTINFO:
           if (!demux->common.segmentinfo_parsed) {
             GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
