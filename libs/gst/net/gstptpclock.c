@@ -2517,7 +2517,6 @@ gst_ptp_clock_get_internal_time (GstClock * clock)
 GstClock *
 gst_ptp_clock_new (const gchar * name, guint domain)
 {
-  g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (domain <= G_MAXUINT8, NULL);
 
   if (!initted && !gst_ptp_init (GST_PTP_CLOCK_ID_NONE, NULL)) {
