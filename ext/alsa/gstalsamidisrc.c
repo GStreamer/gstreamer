@@ -625,6 +625,10 @@ gst_alsa_midi_src_state_changed (GstElement * element, GstState oldstate,
     snd_seq_queue_status_t *status;
 
     clock = gst_element_get_clock (element);
+    if (clock == NULL) {
+      GST_WARNING_OBJECT (element, "No clock present");
+      return;
+    }
     gst_time = gst_clock_get_time (clock);
     gst_object_unref (clock);
     base_time = gst_element_get_base_time (element);
