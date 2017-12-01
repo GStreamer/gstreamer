@@ -708,7 +708,7 @@ extract_symname (const char *filename)
   if (dot)
     len = dot - bname - prefix_len;
   else
-    len = g_utf8_strlen (bname + prefix_len, -1);
+    len = strlen (bname + prefix_len);
 
   name = g_strndup (bname + prefix_len, len);
   g_free (bname);
