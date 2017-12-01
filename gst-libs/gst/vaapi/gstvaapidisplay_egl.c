@@ -100,6 +100,7 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
   GstVaapiDisplay *native_display = NULL;
   GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   EglDisplay *egl_display;
+  guint gl_platform = EGL_PLATFORM_UNKNOWN;
   const InitParams *params = (InitParams *) native_params;
 
   if (params->display) {
@@ -118,7 +119,19 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
 
   gst_vaapi_display_replace (&display->display, native_display);
 
-  egl_display = egl_display_new (GST_VAAPI_DISPLAY_NATIVE (display->display));
+  switch (GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display->display)) {
+    case GST_VAAPI_DISPLAY_TYPE_X11:
+      gl_platform = EGL_PLATFORM_X11;
+      break;
+    case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
+      gl_platform = EGL_PLATFORM_WAYLAND;
+      break;
+    default:
+      break;
+  }
+
+  egl_display = egl_display_new (GST_VAAPI_DISPLAY_NATIVE (display->display),
+      gl_platform);
   if (!egl_display)
     return FALSE;
 

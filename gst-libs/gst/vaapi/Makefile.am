@@ -476,6 +476,7 @@ libgstvaapi_egl_la_CFLAGS =			\
 	$(GMODULE_CFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_VIDEO_CFLAGS)			\
+	$(GST_GL_CFLAGS)			\
 	$(LIBVA_CFLAGS)				\
 	$(LIBVA_WAYLAND_CFLAGS)			\
 	$(EGL_CFLAGS)				\
@@ -487,6 +488,7 @@ libgstvaapi_egl_la_LIBADD =			\
 	$(GST_LIBS)				\
 	$(GST_BASE_LIBS)			\
 	$(GST_VIDEO_LIBS)			\
+	$(GST_GL_LIBS)				\
 	$(EGL_LIBS)				\
 	$(NULL)
 

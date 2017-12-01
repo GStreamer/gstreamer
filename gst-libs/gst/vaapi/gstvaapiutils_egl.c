@@ -22,6 +22,9 @@
 
 #include "sysdeps.h"
 #include "gstvaapiutils_egl.h"
+#if USE_GST_GL_HELPERS
+# include <gst/gl/egl/gstgldisplay_egl.h>
+#endif
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -535,6 +538,31 @@ egl_display_run (EglDisplay * display, EglContextRunFunc func, gpointer args)
 }
 
 static gpointer
+egl_get_display_from_native (guintptr native_display, guint gl_platform)
+{
+#if USE_GST_GL_HELPERS
+  EGLDisplay ret;
+  GstGLDisplayType display_type = GST_GL_DISPLAY_TYPE_ANY;
+
+  switch (gl_platform) {
+    case EGL_PLATFORM_X11:
+      display_type = GST_GL_DISPLAY_TYPE_X11;
+      break;
+    case EGL_PLATFORM_WAYLAND:
+      display_type = GST_GL_DISPLAY_TYPE_WAYLAND;
+      break;
+    default:
+      break;
+  }
+
+  ret = gst_gl_display_egl_get_from_native (display_type, native_display);
+  if (ret != EGL_NO_DISPLAY)
+    return ret;
+#endif
+  return eglGetDisplay ((EGLNativeDisplayType) native_display);
+}
+
+static gpointer
 egl_display_thread (gpointer data)
 {
   EglDisplay *const display = data;
@@ -543,7 +571,9 @@ egl_display_thread (gpointer data)
   gchar **gl_apis, **gl_api;
 
   if (!display->base.is_wrapped) {
-    gl_display = display->base.handle.p = eglGetDisplay (gl_display);
+    gl_display = display->base.handle.p =
+        egl_get_display_from_native (display->base.handle.u,
+        display->gl_platform);
     if (!gl_display)
       goto error;
     if (!eglInitialize (gl_display, &major_version, &minor_version))
@@ -643,7 +673,7 @@ egl_display_finalize (EglDisplay * display)
 }
 
 static EglDisplay *
-egl_display_new_full (gpointer handle, gboolean is_wrapped)
+egl_display_new_full (gpointer handle, gboolean is_wrapped, guint platform)
 {
   EglDisplay *display;
 
@@ -653,6 +683,7 @@ egl_display_new_full (gpointer handle, gboolean is_wrapped)
 
   display->base.handle.p = handle;
   display->base.is_wrapped = is_wrapped;
+  display->gl_platform = platform;
   if (!egl_display_init (display))
     goto error;
   return display;
@@ -666,11 +697,11 @@ error:
 }
 
 EglDisplay *
-egl_display_new (gpointer native_display)
+egl_display_new (gpointer native_display, guint platform)
 {
   g_return_val_if_fail (native_display != NULL, NULL);
 
-  return egl_display_new_full (native_display, FALSE);
+  return egl_display_new_full (native_display, FALSE, platform);
 }
 
 EglDisplay *
@@ -678,7 +709,7 @@ egl_display_new_wrapped (EGLDisplay gl_display)
 {
   g_return_val_if_fail (gl_display != EGL_NO_DISPLAY, NULL);
 
-  return egl_display_new_full (gl_display, TRUE);
+  return egl_display_new_full (gl_display, TRUE, EGL_PLATFORM_UNKNOWN);
 }
 
 /* ------------------------------------------------------------------------- */

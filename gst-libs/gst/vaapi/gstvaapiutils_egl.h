@@ -51,6 +51,12 @@ typedef struct egl_window_s                     EglWindow;
 #define GL_PROTO_END()                          ;
 #include "egl_vtable.h"
 
+enum {
+  EGL_PLATFORM_UNKNOWN,
+  EGL_PLATFORM_X11,
+  EGL_PLATFORM_WAYLAND,
+};
+
 union egl_handle_s
 {
   gpointer p;
@@ -109,6 +115,7 @@ struct egl_display_s
   gchar *gl_version_string;
   gchar *gl_apis_string;
   guint gl_apis;                /* EGL_*_BIT mask */
+  guint gl_platform;
 
   GMutex mutex;
   GThread *gl_thread;
@@ -187,7 +194,7 @@ struct egl_window_s
 
 G_GNUC_INTERNAL
 EglDisplay *
-egl_display_new (gpointer native_display);
+egl_display_new (gpointer native_display, guint gl_platform);
 
 G_GNUC_INTERNAL
 EglDisplay *
