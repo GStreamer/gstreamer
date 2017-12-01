@@ -99,6 +99,11 @@ gst_kms_sink_set_render_rectangle (GstVideoOverlay * overlay,
 {
   GstKMSSink *self = GST_KMS_SINK (overlay);
 
+  GST_DEBUG_OBJECT (self, "Setting render rectangle to (%d,%d) %dx%d", x, y,
+      width, height);
+
+  GST_OBJECT_LOCK (self);
+
   if (width == -1 && height == -1) {
     x = 0;
     y = 0;
@@ -106,41 +111,23 @@ gst_kms_sink_set_render_rectangle (GstVideoOverlay * overlay,
     height = self->vdisplay;
   }
 
-  if (width <= 0 || height <= 0) {
-    return;
-  }
+  if (width <= 0 || height <= 0)
+    goto done;
 
-  GST_OBJECT_LOCK (self);
-  if (self->can_scale) {
-    self->render_rect.x = x;
-    self->render_rect.y = y;
-    self->render_rect.w = width;
-    self->render_rect.h = height;
+  self->pending_rect.x = x;
+  self->pending_rect.y = y;
+  self->pending_rect.w = width;
+  self->pending_rect.h = height;
+
+  if (self->can_scale ||
+      (self->render_rect.w == width && self->render_rect.h == height)) {
+    self->render_rect = self->pending_rect;
   } else {
-    GstVideoRectangle src = { 0, };
-    GstVideoRectangle dst = { 0, };
-    GstVideoRectangle result;
-
-    src.w = GST_VIDEO_INFO_WIDTH (&self->vinfo);
-    src.h = GST_VIDEO_INFO_HEIGHT (&self->vinfo);
-
-    dst.w = width;
-    dst.h = height;
-
-    if (src.w != dst.w || src.h != dst.h)
-      self->reconfigure = TRUE;
-
-    gst_video_sink_center_rect (src, dst, &result, TRUE);
-
-    self->pending_rect.x = x + result.x;
-    self->pending_rect.y = y + result.y;
-    self->pending_rect.w = result.w;
-    self->pending_rect.h = result.h;
-
-    GST_DEBUG_OBJECT (self, "pending resize to (%d,%d)-(%dx%d)",
-        self->pending_rect.x, self->pending_rect.y,
-        self->pending_rect.w, self->pending_rect.h);
+    self->reconfigure = TRUE;
+    GST_DEBUG_OBJECT (self, "Waiting for new caps to apply render rectangle");
   }
+
+done:
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -149,18 +136,23 @@ gst_kms_sink_expose (GstVideoOverlay * overlay)
 {
   GstKMSSink *self = GST_KMS_SINK (overlay);
 
+  GST_DEBUG_OBJECT (overlay, "Expose called by application");
+
   if (!self->can_scale) {
     GST_OBJECT_LOCK (self);
     if (self->reconfigure) {
       GST_OBJECT_UNLOCK (self);
+      GST_DEBUG_OBJECT (overlay, "Sending a reconfigure event");
       gst_pad_push_event (GST_BASE_SINK_PAD (self),
           gst_event_new_reconfigure ());
     } else {
+      GST_DEBUG_OBJECT (overlay, "Applying new render rectangle");
       /* size of the rectangle does not change, only the (x,y) position changes */
       self->render_rect = self->pending_rect;
       GST_OBJECT_UNLOCK (self);
     }
   }
+
   gst_kms_sink_show_frame (GST_VIDEO_SINK (self), NULL);
 }
 
@@ -659,12 +651,12 @@ retry_find_plane:
   GST_INFO_OBJECT (self, "connector id = %d / crtc id = %d / plane id = %d",
       self->conn_id, self->crtc_id, self->plane_id);
 
+  GST_OBJECT_LOCK (self);
   self->render_rect.x = 0;
   self->render_rect.y = 0;
-
-  GST_OBJECT_LOCK (self);
   self->hdisplay = self->render_rect.w = crtc->mode.hdisplay;
   self->vdisplay = self->render_rect.h = crtc->mode.vdisplay;
+  self->pending_rect = self->render_rect;
   GST_OBJECT_UNLOCK (self);
 
   self->buffer_id = crtc->buffer_id;
@@ -797,6 +789,11 @@ gst_kms_sink_stop (GstBaseSink * bsink)
   GST_OBJECT_LOCK (bsink);
   self->hdisplay = 0;
   self->vdisplay = 0;
+  self->pending_rect.x = 0;
+  self->pending_rect.y = 0;
+  self->pending_rect.w = 0;
+  self->pending_rect.h = 0;
+  self->render_rect = self->pending_rect;
   GST_OBJECT_UNLOCK (bsink);
 
   g_object_notify_by_pspec (G_OBJECT (self), g_properties[PROP_DISPLAY_WIDTH]);
@@ -818,35 +815,50 @@ gst_kms_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstKMSSink *self;
   GstCaps *caps, *out_caps;
+  GstStructure *s;
+  guint dpy_par_n, dpy_par_d;
 
   self = GST_KMS_SINK (bsink);
 
   caps = gst_kms_sink_get_allowed_caps (self);
+  if (!caps)
+    return NULL;
 
   GST_OBJECT_LOCK (self);
-  if (caps && self->reconfigure) {
-    GstStructure *s0, *s1;
-    guint dpy_par_n, dpy_par_d;
 
+  if (!self->can_scale) {
+    out_caps = gst_caps_new_empty ();
     gst_video_calculate_device_ratio (self->hdisplay, self->vdisplay,
         self->mm_width, self->mm_height, &dpy_par_n, &dpy_par_d);
 
-    caps = gst_caps_make_writable (caps);
-    s0 = gst_caps_get_structure (caps, 0);
-    s1 = gst_structure_copy (gst_caps_get_structure (caps, 0));
+    s = gst_structure_copy (gst_caps_get_structure (caps, 0));
+    gst_structure_set (s, "width", G_TYPE_INT, self->pending_rect.w,
+        "height", G_TYPE_INT, self->pending_rect.h,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, dpy_par_n, dpy_par_d, NULL);
 
-    gst_structure_set (s0, "width", G_TYPE_INT, self->pending_rect.w,
-        "height", G_TYPE_INT, self->pending_rect.h, NULL);
-    gst_caps_append_structure (caps, s1);
+    gst_caps_append_structure (out_caps, s);
+
+    out_caps = gst_caps_merge (out_caps, caps);
+    caps = NULL;
+
+    /* enforce our display aspect ratio */
+    gst_caps_set_simple (out_caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        dpy_par_n, dpy_par_d, NULL);
+  } else {
+    out_caps = gst_caps_make_writable (caps);
+    caps = NULL;
   }
+
   GST_OBJECT_UNLOCK (self);
 
-  if (caps && filter) {
+  GST_DEBUG_OBJECT (self, "Proposing caps %" GST_PTR_FORMAT, out_caps);
+
+  if (filter) {
+    caps = out_caps;
     out_caps = gst_caps_intersect_full (caps, filter, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (caps);
-  } else {
-    out_caps = caps;
   }
+
   return out_caps;
 }
 
