@@ -86,6 +86,8 @@ enum
   PROP_PLANE_ID,
   PROP_FORCE_MODESETTING,
   PROP_CAN_SCALE,
+  PROP_DISPLAY_WIDTH,
+  PROP_DISPLAY_HEIGHT,
   PROP_N
 };
 
@@ -659,8 +661,12 @@ retry_find_plane:
 
   self->render_rect.x = 0;
   self->render_rect.y = 0;
+
+  GST_OBJECT_LOCK (self);
   self->hdisplay = self->render_rect.w = crtc->mode.hdisplay;
   self->vdisplay = self->render_rect.h = crtc->mode.vdisplay;
+  GST_OBJECT_UNLOCK (self);
+
   self->buffer_id = crtc->buffer_id;
 
   self->mm_width = conn->mmWidth;
@@ -672,6 +678,9 @@ retry_find_plane:
   self->pollfd.fd = self->fd;
   gst_poll_add_fd (self->poll, &self->pollfd);
   gst_poll_fd_ctl_read (self->poll, &self->pollfd, TRUE);
+
+  g_object_notify_by_pspec (G_OBJECT (self), g_properties[PROP_DISPLAY_WIDTH]);
+  g_object_notify_by_pspec (G_OBJECT (self), g_properties[PROP_DISPLAY_HEIGHT]);
 
   ret = TRUE;
 
@@ -784,6 +793,14 @@ gst_kms_sink_stop (GstBaseSink * bsink)
     drmClose (self->fd);
     self->fd = -1;
   }
+
+  GST_OBJECT_LOCK (bsink);
+  self->hdisplay = 0;
+  self->vdisplay = 0;
+  GST_OBJECT_UNLOCK (bsink);
+
+  g_object_notify_by_pspec (G_OBJECT (self), g_properties[PROP_DISPLAY_WIDTH]);
+  g_object_notify_by_pspec (G_OBJECT (self), g_properties[PROP_DISPLAY_HEIGHT]);
 
   return TRUE;
 }
@@ -1596,6 +1613,16 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
     case PROP_CAN_SCALE:
       g_value_set_boolean (value, sink->can_scale);
       break;
+    case PROP_DISPLAY_WIDTH:
+      GST_OBJECT_LOCK (sink);
+      g_value_set_int (value, sink->hdisplay);
+      GST_OBJECT_UNLOCK (sink);
+      break;
+    case PROP_DISPLAY_HEIGHT:
+      GST_OBJECT_LOCK (sink);
+      g_value_set_int (value, sink->vdisplay);
+      GST_OBJECT_UNLOCK (sink);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1727,6 +1754,30 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
       g_param_spec_boolean ("can-scale", "can scale",
       "User can tell kmssink if the driver can support scale", TRUE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:display-width
+   *
+   * Actual width of the display. This is read only and only available in
+   * PAUSED and PLAYING state. It's meant to be used with
+   * gst_video_overlay_set_render_rectangle() function.
+   */
+  g_properties[PROP_DISPLAY_WIDTH] =
+      g_param_spec_int ("display-width", "Display Width",
+      "Width of the display surface in pixels", 0, G_MAXINT, 0,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * kmssink:display-height
+   *
+   * Actual height of the display. This is read only and only available in
+   * PAUSED and PLAYING state. It's meant to be used with
+   * gst_video_overlay_set_render_rectangle() function.
+   */
+  g_properties[PROP_DISPLAY_HEIGHT] =
+      g_param_spec_int ("display-height", "Display Height",
+      "Height of the display surface in pixels", 0, G_MAXINT, 0,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
 }
