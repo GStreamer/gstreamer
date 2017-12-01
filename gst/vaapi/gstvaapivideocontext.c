@@ -222,22 +222,25 @@ gst_vaapi_video_context_prepare (GstElement * element,
    *     type.
    */
   if (*display_ptr) {
-    GST_LOG_OBJECT (element, "already have a display (%p)", *display_ptr);
+    GST_LOG_OBJECT (element, "already have a display %" GST_PTR_FORMAT,
+        *display_ptr);
     return TRUE;
   }
 
   _gst_context_query (element, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME);
 
   if (*display_ptr) {
-    GST_LOG_OBJECT (element, "found a display (%p)", *display_ptr);
+    GST_LOG_OBJECT (element, "found a display %" GST_PTR_FORMAT, *display_ptr);
     return TRUE;
   }
 
   _gst_context_query (element, GST_VAAPI_DISPLAY_APP_CONTEXT_TYPE_NAME);
 
-  if (*display_ptr)
-    GST_LOG_OBJECT (element, "got a display with va display from app (%p)",
+  if (*display_ptr) {
+    GST_LOG_OBJECT (element,
+        "got a display with va display from app %" GST_PTR_FORMAT,
         *display_ptr);
+  }
 
   return *display_ptr != NULL;
 }
@@ -256,7 +259,7 @@ gst_vaapi_video_context_propagate (GstElement * element,
 
   _init_context_debug ();
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-      "posting `have-context' (%p) message with display (%p)",
+      "posting `have-context' (%p) message with display %" GST_PTR_FORMAT,
       context, display);
   msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
   if (!gst_element_post_message (element, msg))
