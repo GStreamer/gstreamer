@@ -73,7 +73,11 @@ typedef struct _GstMatroskaReadCommon {
   GList                   *tags_parsed;
 
   /* chapters stuff */
+  /* Internal toc is used to keep track of the internal UID
+   * which are different from the external StringUID used
+   * in the user toc */
   GstToc                  *toc;
+  GstToc                  *internal_toc;
   gboolean                toc_updated;
 
   /* start-of-segment and length */

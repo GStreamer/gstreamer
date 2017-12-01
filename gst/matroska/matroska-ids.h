@@ -304,6 +304,7 @@
 
 /* IDs in the ChapterAtom master */
 #define GST_MATROSKA_ID_CHAPTERUID                 0x73C4
+#define GST_MATROSKA_ID_CHAPTERSTRINGUID           0x5654
 #define GST_MATROSKA_ID_CHAPTERTIMESTART           0x91
 #define GST_MATROSKA_ID_CHAPTERTIMESTOP            0x92
 #define GST_MATROSKA_ID_CHAPTERFLAGHIDDEN          0x98

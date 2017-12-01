@@ -135,6 +135,9 @@ struct _GstMatroskaMux {
   /* GstForceKeyUnit event */
   GstEvent       *force_key_unit_event;
 
+  /* Internal Toc (adjusted UIDs and title tags removed when processed) */
+  GstToc         *internal_toc;
+
   /* Flag to ease handling of WebM specifics */
   gboolean is_webm;
 
