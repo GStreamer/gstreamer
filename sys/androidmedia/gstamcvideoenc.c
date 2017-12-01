@@ -1022,17 +1022,22 @@ process_buffer:
       " flags 0x%08x", idx, buffer_info.size, buffer_info.presentation_time_us,
       buffer_info.flags);
 
+  buf = gst_amc_codec_get_output_buffer (self->codec, idx, &err);
+  if (err) {
+    if (self->flushing) {
+      g_clear_error (&err);
+      goto flushing;
+    }
+    goto failed_to_get_output_buffer;
+  } else if (!buf) {
+    goto got_null_output_buffer;
+  }
+
   frame =
       _find_nearest_frame (self,
       gst_util_uint64_scale (buffer_info.presentation_time_us, GST_USECOND, 1));
 
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
-
-  buf = gst_amc_codec_get_output_buffer (self->codec, idx, &err);
-  if (err)
-    goto failed_to_get_output_buffer;
-  else if (!buf)
-    goto got_null_output_buffer;
 
   flow_ret =
       gst_amc_video_enc_handle_output_frame (self, buf, &buffer_info, frame);
