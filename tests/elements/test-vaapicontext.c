@@ -50,6 +50,7 @@ typedef struct _CustomData
   VADisplay va_display;
   GstElement *pipeline;
   guintptr videoarea_handle[2];
+  GstObject *gstvaapidisplay;
 } AppData;
 
 static void
@@ -133,6 +134,18 @@ bus_sync_handler (GstBus * bus, GstMessage * msg, gpointer data)
       gst_println ("Got need context %s from %s", context_type,
           GST_MESSAGE_SRC_NAME (msg));
 
+      if (g_strcmp0 (context_type, "gst.vaapi.Display") == 0) {
+        if (app->gstvaapidisplay) {
+          GstStructure *s;
+
+          context = gst_context_new ("gst.vaapi.Display", FALSE);
+          s = gst_context_writable_structure (context);
+          gst_structure_set (s, "gst.vaapi.Display",
+              GST_TYPE_OBJECT, app->gstvaapidisplay, NULL);
+        }
+        break;
+      }
+
       if (g_strcmp0 (context_type, "gst.vaapi.app.Display") != 0)
         break;
 
@@ -154,6 +167,32 @@ bus_sync_handler (GstBus * bus, GstMessage * msg, gpointer data)
       else
         gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY
             (GST_MESSAGE_SRC (msg)), app->videoarea_handle[0]);
+      break;
+    }
+    case GST_MESSAGE_HAVE_CONTEXT:{
+      const gchar *context_type;
+      const GstStructure *s;
+      GstContext *context = NULL;
+      const GValue *value;
+
+      gst_message_parse_have_context (msg, &context);
+      if (!context)
+        break;
+
+      context_type = gst_context_get_context_type (context);
+      gst_println ("Got have context %s from %s", context_type,
+          GST_MESSAGE_SRC_NAME (msg));
+
+      if (g_strcmp0 (context_type, "gst.vaapi.Display") != 0)
+        break;
+      s = gst_context_get_structure (context);
+      if (!s)
+        break;
+      value = gst_structure_get_value (s, "gst.vaapi.Display");
+      if (!value)
+        break;
+      app->gstvaapidisplay = g_value_dup_object (value);
+      gst_println ("found display %s", GST_OBJECT_NAME (app->gstvaapidisplay));
       break;
     }
     case GST_MESSAGE_EOS:
@@ -308,6 +347,7 @@ main (gint argc, gchar ** argv)
   gtk_main ();
 
   gst_object_unref (app.pipeline);
+  gst_object_unref (app.gstvaapidisplay);
   /* there is no need to call vaTerminate() because it is done by the
    * vaapi elements */
   return 0;
