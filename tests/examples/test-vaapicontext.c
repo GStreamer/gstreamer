@@ -35,12 +35,12 @@
 
 static gboolean g_multisink;
 static gchar *g_filepath;
+static GstElement *g_vaapisink;
 
 static GOptionEntry g_options[] = {
   {"multi", 'm', 0, G_OPTION_ARG_NONE, &g_multisink, "test multiple vaapisink",
       NULL},
-  {"file", 'f', 0, G_OPTION_ARG_STRING, &g_filepath,
-      "file path to play (only mp4/h264)", NULL},
+  {"file", 'f', 0, G_OPTION_ARG_STRING, &g_filepath, "file path to play", NULL},
   {NULL,}
 };
 
@@ -258,11 +258,14 @@ create_rotate_button (AppData * app, const gchar * name)
   GstElement *sink;
 
   sink = gst_bin_get_by_name (GST_BIN (app->pipeline), name);
+  if (!sink && !g_strcmp0 (name, "sink1"))
+    sink = g_vaapisink;
   g_assert (sink);
 
   rotate = gtk_button_new_with_label ("Rotate");
   g_signal_connect (rotate, "clicked", G_CALLBACK (button_rotate_cb), sink);
-  gst_object_unref (sink);
+  if (sink != g_vaapisink)
+    gst_object_unref (sink);
 
   return rotate;
 }
@@ -344,8 +347,8 @@ main (gint argc, gchar ** argv)
     app.pipeline = gst_parse_launch ("videotestsrc ! vaapih264enc ! "
         "vaapidecodebin ! vaapisink name=sink1", &error);
   } else {
-    app.pipeline = gst_parse_launch ("filesrc name=src ! qtdemux ! h264parse ! "
-        "vaapidecodebin ! vaapisink name=sink1", &error);
+    app.pipeline = gst_element_factory_make ("playbin", NULL);
+    g_assert (app.pipeline);
   }
 
   if (error) {
@@ -355,12 +358,10 @@ main (gint argc, gchar ** argv)
   }
 
   if (!g_multisink && g_filepath) {
-    GstElement *src;
-
-    src = gst_bin_get_by_name (GST_BIN (app.pipeline), "src");
-    g_assert (src);
-    g_object_set (src, "location", g_filepath, NULL);
-    gst_object_unref (src);
+    g_vaapisink = gst_element_factory_make ("vaapisink", "sink1");
+    g_assert (g_vaapisink);
+    g_object_set (app.pipeline, "uri", g_filepath, "video-sink", g_vaapisink,
+        NULL);
   }
 
   build_ui (&app);
