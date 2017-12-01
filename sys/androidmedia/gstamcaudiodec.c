@@ -495,10 +495,15 @@ retry:
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
 
   buf = gst_amc_codec_get_output_buffer (self->codec, idx, &err);
-  if (err)
+  if (err) {
+    if (self->flushing) {
+      g_clear_error (&err);
+      goto flushing;
+    }
     goto failed_to_get_output_buffer;
-  else if (!buf)
+  } else if (!buf) {
     goto got_null_output_buffer;
+  }
 
   if (buffer_info.size > 0) {
     GstBuffer *outbuf;
