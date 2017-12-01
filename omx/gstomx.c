@@ -55,6 +55,14 @@ GST_DEBUG_CATEGORY (gstomx_debug);
 
 GST_DEBUG_CATEGORY_STATIC (OMX_PERFORMANCE);
 
+/* Macros used to log result of OMX calls. Use the requested debug level if the
+ * operation succeeded and GST_LEVEL_ERROR if not.
+ * Don't consider OMX_ErrorNoMore as an error as it means we're done iterating. */
+#define DEBUG_IF_OK(obj,err,...) \
+  GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, (err == OMX_ErrorNone || err == OMX_ErrorNoMore) ? GST_LEVEL_DEBUG : GST_LEVEL_ERROR, obj, __VA_ARGS__)
+#define INFO_IF_OK(obj,err,...) \
+  GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, (err == OMX_ErrorNone || err == OMX_ErrorNoMore) ? GST_LEVEL_INFO : GST_LEVEL_ERROR, obj, __VA_ARGS__)
+
 G_LOCK_DEFINE_STATIC (core_handles);
 static GHashTable *core_handles;
 
@@ -814,8 +822,9 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
         gst_omx_component_set_parameter (comp,
         OMX_IndexParamStandardComponentRole, &param);
 
-    GST_DEBUG_OBJECT (parent, "Setting component role to '%s': %s (0x%08x)",
-        component_role, gst_omx_error_to_string (err), err);
+    DEBUG_IF_OK (comp->parent, err,
+        "Setting component role to '%s': %s (0x%08x)", component_role,
+        gst_omx_error_to_string (err), err);
 
     /* If setting the role failed this component is unusable */
     if (err != OMX_ErrorNone) {
@@ -1113,7 +1122,7 @@ gst_omx_component_get_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
   GST_DEBUG_OBJECT (comp->parent, "Getting %s parameter at index 0x%08x",
       comp->name, index);
   err = OMX_GetParameter (comp->handle, index, param);
-  GST_DEBUG_OBJECT (comp->parent, "Got %s parameter at index 0x%08x: %s "
+  DEBUG_IF_OK (comp->parent, err, "Got %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -1132,7 +1141,7 @@ gst_omx_component_set_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
   GST_DEBUG_OBJECT (comp->parent, "Setting %s parameter at index 0x%08x",
       comp->name, index);
   err = OMX_SetParameter (comp->handle, index, param);
-  GST_DEBUG_OBJECT (comp->parent, "Set %s parameter at index 0x%08x: %s "
+  DEBUG_IF_OK (comp->parent, err, "Set %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -1151,7 +1160,7 @@ gst_omx_component_get_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
   GST_DEBUG_OBJECT (comp->parent, "Getting %s configuration at index 0x%08x",
       comp->name, index);
   err = OMX_GetConfig (comp->handle, index, config);
-  GST_DEBUG_OBJECT (comp->parent, "Got %s parameter at index 0x%08x: %s "
+  DEBUG_IF_OK (comp->parent, err, "Got %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -1170,7 +1179,7 @@ gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
   GST_DEBUG_OBJECT (comp->parent, "Setting %s configuration at index 0x%08x",
       comp->name, index);
   err = OMX_SetConfig (comp->handle, index, config);
-  GST_DEBUG_OBJECT (comp->parent, "Set %s parameter at index 0x%08x: %s "
+  DEBUG_IF_OK (comp->parent, err, "Set %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -1209,7 +1218,7 @@ gst_omx_setup_tunnel (GstOMXPort * port1, GstOMXPort * port2)
     port2->tunneled = TRUE;
   }
 
-  GST_DEBUG_OBJECT (comp1->parent,
+  DEBUG_IF_OK (comp1->parent, err,
       "Setup tunnel between %s port %u and %s port %u: %s (0x%08x)",
       comp1->name, port1->index,
       comp2->name, port2->index, gst_omx_error_to_string (err), err);
@@ -1310,8 +1319,9 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
   err_get = gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
 
-  GST_DEBUG_OBJECT (comp->parent, "Updated %s port %u definition: %s (0x%08x)",
-      comp->name, port->index, gst_omx_error_to_string (err_set), err_set);
+  DEBUG_IF_OK (comp->parent, err_set,
+      "Updated %s port %u definition: %s (0x%08x)", comp->name, port->index,
+      gst_omx_error_to_string (err_set), err_set);
 
   if (err_set != OMX_ErrorNone)
     return err_set;
@@ -1539,7 +1549,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
     log_omx_performance (comp, "FillThisBuffer", buf);
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
-  GST_DEBUG_OBJECT (comp->parent, "Released buffer %p to %s port %u: %s "
+  DEBUG_IF_OK (comp->parent, err, "Released buffer %p to %s port %u: %s "
       "(0x%08x)", buf, comp->name, port->index, gst_omx_error_to_string (err),
       err);
 
@@ -1665,7 +1675,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
 done:
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_DEBUG_OBJECT (comp->parent, "Set %s port %u to %sflushing: %s (0x%08x)",
+  DEBUG_IF_OK (comp->parent, err, "Set %s port %u to %sflushing: %s (0x%08x)",
       comp->name, port->index, (flush ? "" : "not "),
       gst_omx_error_to_string (err), err);
   gst_omx_component_handle_messages (comp);
@@ -1800,7 +1810,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
 done:
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_INFO_OBJECT (comp->parent, "Allocated buffers for %s port %u: %s "
+  INFO_IF_OK (comp->parent, err, "Allocated buffers for %s port %u: %s "
       "(0x%08x)", comp->name, port->index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -2081,7 +2091,7 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
 done:
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_DEBUG_OBJECT (comp->parent, "Deallocated buffers of %s port %u: %s "
+  DEBUG_IF_OK (comp->parent, err, "Deallocated buffers of %s port %u: %s "
       "(0x%08x)", comp->name, port->index, gst_omx_error_to_string (err), err);
 
   return err;
@@ -2170,7 +2180,7 @@ done:
 
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_INFO_OBJECT (comp->parent, "Set %s port %u to %s%s: %s (0x%08x)",
+  INFO_IF_OK (comp->parent, err, "Set %s port %u to %s%s: %s (0x%08x)",
       comp->name, port->index, (err == OMX_ErrorNone ? "" : "not "),
       (enabled ? "enabled" : "disabled"), gst_omx_error_to_string (err), err);
 
@@ -2239,7 +2249,7 @@ done:
 
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_DEBUG_OBJECT (comp->parent,
+  DEBUG_IF_OK (comp->parent, err,
       "Waited for %s port %u to release all buffers: %s (0x%08x)", comp->name,
       port->index, gst_omx_error_to_string (err), err);
 
@@ -2335,7 +2345,7 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
 done:
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_DEBUG_OBJECT (comp->parent, "Populated %s port %u: %s (0x%08x)",
+  DEBUG_IF_OK (comp->parent, err, "Populated %s port %u: %s (0x%08x)",
       comp->name, port->index, gst_omx_error_to_string (err), err);
   gst_omx_component_handle_messages (comp);
 
@@ -2514,7 +2524,7 @@ gst_omx_port_mark_reconfigured (GstOMXPort * port)
 done:
   gst_omx_port_update_port_definition (port, NULL);
 
-  GST_INFO_OBJECT (comp->parent, "Marked %s port %u as reconfigured: %s "
+  INFO_IF_OK (comp->parent, err, "Marked %s port %u as reconfigured: %s "
       "(0x%08x)", comp->name, port->index, gst_omx_error_to_string (err), err);
 
   g_mutex_unlock (&comp->lock);
