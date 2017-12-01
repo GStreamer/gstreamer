@@ -335,10 +335,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//callback[@cname='GstPadChainFunction']/parameters/parameter[@name='buffer']" name="owned">true</attr>
 
 	<!-- Mark reserved fields as padding -->
-	<attr path="//*[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
-	<attr path="//*[contains(@cname, 'gst_reserved2')]" name="is-padding">true</attr>
-	<attr path="//*[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
-	<attr path="//*[contains(@cname, 'gst_reserved_p')]" name="is-padding">true</attr>
-	<attr path="//*[contains(@cname, 'gst_reserved_i')]" name="is-padding">true</attr>
-	<attr path="//*[contains(@cname, 'gst_reserved')]" name="is-padding">true</attr>
+	<attr path="//*[contains(@cname, 'gst_reserved')]" name="padding">true</attr>
+	<attr path="//*[contains(@cname, 'gst_reserved2')]" name="padding">true</attr>
+	<attr path="//*[contains(@cname, 'gst_reserved')]" name="padding">true</attr>
+	<attr path="//*[contains(@cname, 'gst_reserved_p')]" name="padding">true</attr>
+	<attr path="//*[contains(@cname, 'gst_reserved_i')]" name="padding">true</attr>
+	<attr path="//*[contains(@cname, 'gst_reserved')]" name="padding">true</attr>
 </metadata>
