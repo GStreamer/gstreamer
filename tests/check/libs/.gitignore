@@ -1,5 +1,6 @@
 .dirstamp
 adapter
+aggregator
 baseparse
 basesink
 basesrc

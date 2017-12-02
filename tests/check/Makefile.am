@@ -151,6 +151,7 @@ check_PROGRAMS =				\
 	$(REGISTRY_CHECKS)			\
 	$(LIBSABI_CHECKS)		     	\
 	libs/adapter				\
+	libs/aggregator				\
 	libs/bitreader				\
 	libs/bytereader				\
 	libs/bytewriter				\

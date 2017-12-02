@@ -30,6 +30,18 @@ EXPORTS
 	gst_adapter_take_buffer_list
 	gst_adapter_take_list
 	gst_adapter_unmap
+	gst_aggregator_finish_buffer
+	gst_aggregator_get_allocator
+	gst_aggregator_get_buffer_pool
+	gst_aggregator_get_latency
+	gst_aggregator_get_type
+	gst_aggregator_pad_drop_buffer
+	gst_aggregator_pad_get_buffer
+	gst_aggregator_pad_get_type
+	gst_aggregator_pad_is_eos
+	gst_aggregator_pad_steal_buffer
+	gst_aggregator_set_latency
+	gst_aggregator_set_src_caps
 	gst_base_parse_add_index_entry
 	gst_base_parse_convert_default
 	gst_base_parse_drain

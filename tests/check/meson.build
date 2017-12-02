@@ -54,6 +54,7 @@ core_tests = [
   [ 'gst/gstvalue.c' ],
   [ 'generic/states.c', not have_registry ],
   [ 'libs/adapter.c' ],
+  [ 'libs/aggregator.c' ],
   [ 'libs/baseparse.c' ],
   [ 'libs/basesrc.c', not have_registry ],
   [ 'libs/basesink.c', not have_registry ],

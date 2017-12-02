@@ -4,6 +4,7 @@ libgstbase_@GST_API_VERSION@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
 libgstbase_@GST_API_VERSION@_la_SOURCES = \
 	gstadapter.c		\
+	gstaggregator.c		\
 	gstbaseparse.c		\
 	gstbasesink.c		\
 	gstbasesrc.c		\
@@ -28,6 +29,7 @@ libgstbase_@GST_API_VERSION@includedir =		\
 libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	base.h			\
 	gstadapter.h		\
+	gstaggregator.h		\
 	gstbaseparse.h		\
 	gstbasesink.h		\
 	gstbasesrc.h		\
