@@ -18,7 +18,6 @@ libgstbadaudio_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_BASE_CFLAGS)
 
 libgstbadaudio_@GST_API_VERSION@_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/base/libgstbadbase-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 

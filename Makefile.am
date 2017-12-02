@@ -120,6 +120,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/gst/valve \
 	$(top_srcdir)/gst-libs/gst/baseparse \
+	$(top_srcdir)/gst-libs/gst/base \
 	$(top_srcdir)/gst-libs/gst/egl \
 	$(top_srcdir)/gst-libs/gst/signalprocessor \
 	$(top_srcdir)/tests/examples/gl/gtk/gtkvideooverlay \

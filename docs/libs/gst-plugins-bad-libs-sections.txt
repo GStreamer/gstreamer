@@ -1846,45 +1846,6 @@ x11_event_source_new
 </SECTION>
 
 <SECTION>
-<FILE>gstaggregator</FILE>
-<TITLE>GstAggregator</TITLE>
-GstAggregator
-GstAggregatorClass
-gst_aggregator_finish_buffer
-gst_aggregator_set_src_caps
-gst_aggregator_get_latency
-gst_aggregator_get_buffer_pool
-gst_aggregator_get_allocator
-<SUBSECTION Standard>
-GST_IS_AGGREGATOR
-GST_IS_AGGREGATOR_CLASS
-GST_TYPE_AGGREGATOR
-GST_AGGREGATOR
-GST_AGGREGATOR_CLASS
-GST_AGGREGATOR_GET_CLASS
-gst_aggregator_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstaggregatorpad</FILE>
-<TITLE>GstAggregatorPad</TITLE>
-GstAggregatorPad
-GstAggregatorPadClass
-gst_aggregator_pad_steal_buffer
-gst_aggregator_pad_get_buffer
-gst_aggregator_pad_drop_buffer
-gst_aggregator_pad_is_eos
-<SUBSECTION Standard>
-GST_IS_AGGREGATOR_PAD
-GST_IS_AGGREGATOR_PAD_CLASS
-GST_TYPE_AGGREGATOR_PAD
-GST_AGGREGATOR_PAD
-GST_AGGREGATOR_PAD_CLASS
-GST_AGGREGATOR_PAD_GET_CLASS
-gst_aggregator_pad_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstvideoaggregator</FILE>
 <TITLE>GstVideoAggregator</TITLE>
 GstVideoAggregator

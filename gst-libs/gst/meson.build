@@ -1,4 +1,3 @@
-subdir('base')
 subdir('uridownloader')
 
 subdir('allocators')

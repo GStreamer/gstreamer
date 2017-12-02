@@ -17,7 +17,6 @@ libgstbadvideo_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_BASE_CFLAGS)
 
 libgstbadvideo_@GST_API_VERSION@_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/base/libgstbadbase-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 

@@ -15,7 +15,6 @@ libgstwildmidi_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
         $(GST_CFLAGS) $(WILDMIDI_CFLAGS)
 libgstwildmidi_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/base/libgstbadbase-$(GST_API_VERSION).la \
 	$(top_builddir)/gst-libs/gst/audio/libgstbadaudio-$(GST_API_VERSION).la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
         $(GST_LIBS) $(GST_BASE_LIBS) $(WILDMIDI_LIBS)

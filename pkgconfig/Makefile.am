@@ -6,7 +6,6 @@ pcverfiles =  \
 	gstreamer-insertbin-@GST_API_VERSION@.pc \
 	gstreamer-mpegts-@GST_API_VERSION@.pc \
 	gstreamer-player-@GST_API_VERSION@.pc \
-	gstreamer-bad-base-@GST_API_VERSION@.pc \
 	gstreamer-bad-audio-@GST_API_VERSION@.pc \
 	gstreamer-bad-video-@GST_API_VERSION@.pc \
 	gstreamer-bad-allocators-@GST_API_VERSION@.pc
@@ -17,7 +16,6 @@ pcverfiles_uninstalled = \
 	gstreamer-insertbin-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-mpegts-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-player-@GST_API_VERSION@-uninstalled.pc \
-	gstreamer-bad-base-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-audio-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-allocators-@GST_API_VERSION@-uninstalled.pc
@@ -41,7 +39,6 @@ cp_verbose_0 = @echo "  CP     $@";
 ### rather than hardcoding it in the file directly.
 	$(AM_V_GEN) sed \
 		-e "s|[@]audiolibdir[@]|$(abs_top_builddir)/gst-libs/gst/audio/.libs|" \
-		-e "s|[@]baselibdir[@]|$(abs_top_builddir)/gst-libs/gst/base/.libs|" \
 		-e "s|[@]videolibdir[@]|$(abs_top_builddir)/gst-libs/gst/video/.libs|" \
 		-e "s|[@]codecparserslibdir[@]|$(abs_top_builddir)/gst-libs/gst/codecparsers/.libs|" \
 		-e "s|[@]gllibdir[@]|$(abs_top_builddir)/gst-libs/gst/gl/.libs|" \
@@ -66,7 +63,6 @@ pcinfiles = \
            gstreamer-player.pc.in gstreamer-player-uninstalled.pc.in \
            gstreamer-bad-audio.pc.in gstreamer-bad-audio-uninstalled.pc.in \
            gstreamer-bad-video.pc.in gstreamer-bad-video-uninstalled.pc.in \
-           gstreamer-bad-base.pc.in gstreamer-bad-base-uninstalled.pc.in \
            gstreamer-bad-allocators.pc.in gstreamer-bad-allocators-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)

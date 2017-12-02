@@ -10,9 +10,9 @@ gstbadaudio = library('gstbadaudio-' + api_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstbadbase_dep, gstaudio_dep],
+  dependencies : [gstaudio_dep, gstbase_dep],
 )
 
 gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,
   include_directories : [libsinc],
-  dependencies : [gstbadbase_dep, gstaudio_dep])
+  dependencies : [gstaudio_dep, gstbase_dep])

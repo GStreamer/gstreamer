@@ -3691,7 +3691,6 @@ gst-libs/gst/codecparsers/Makefile
 gst-libs/gst/mpegts/Makefile
 gst-libs/gst/uridownloader/Makefile
 gst-libs/gst/wayland/Makefile
-gst-libs/gst/base/Makefile
 gst-libs/gst/player/Makefile
 gst-libs/gst/video/Makefile
 gst-libs/gst/audio/Makefile
@@ -3847,8 +3846,6 @@ pkgconfig/gstreamer-player.pc
 pkgconfig/gstreamer-player-uninstalled.pc
 pkgconfig/gstreamer-wayland.pc
 pkgconfig/gstreamer-wayland-uninstalled.pc
-pkgconfig/gstreamer-bad-base.pc
-pkgconfig/gstreamer-bad-base-uninstalled.pc
 pkgconfig/gstreamer-bad-video.pc
 pkgconfig/gstreamer-bad-video-uninstalled.pc
 pkgconfig/gstreamer-bad-audio.pc

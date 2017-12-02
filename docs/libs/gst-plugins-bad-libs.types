@@ -1,6 +1,5 @@
 #include <gst/gst.h>
 
-#include <gst/base/gstaggregator.h>
 #include <gst/audio/gstaudioaggregator.h>
 #include <gst/video/gstvideoaggregator.h>
 #include <gst/codecparsers/gsth264parser.h>
@@ -9,9 +8,6 @@
 #include <gst/mpegts/mpegts.h>
 #include <gst/gl/gl.h>
 #include <gst/player/player.h>
-
-gst_aggregator_get_type
-gst_aggregator_pad_get_type
 
 gst_audio_aggregator_get_type
 gst_audio_aggregator_pad_get_type
