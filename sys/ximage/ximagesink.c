@@ -558,7 +558,7 @@ static void
 gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
 {
   XEvent e;
-  guint pointer_x = 0, pointer_y = 0;
+  gint pointer_x = 0, pointer_y = 0;
   gboolean pointer_moved = FALSE;
   gboolean exposed = FALSE, configured = FALSE;
 
