@@ -108,7 +108,7 @@ Enter the superuser/root password when prompted.
 The bootstrap process will then install all packages required to build
 GStreamer.
 
-## Build GSTreamer
+## Build GStreamer
 
 To generate GStreamer binaries, use the following command:
 
