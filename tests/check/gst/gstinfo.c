@@ -425,6 +425,60 @@ GST_START_TEST (info_fourcc)
 
 GST_END_TEST;
 
+/* Here we're testing adding debug categories after gst_init() and making
+ * sure that this doesn't incur exponential costs. Previously this would
+ * reparse the debug string and re-add the parsed category/levels to the
+ * list, thus doubling the list to pattern match a category against for
+ * every category added. And we would also re-evaluate all existing categories
+ * against that list. This test makes sure the overhead of registering debug
+ * categories late is very small. This test would time out before the fix. */
+GST_START_TEST (info_post_gst_init_category_registration)
+{
+  GstDebugCategory *cats[10000] = { NULL, };
+  guint i;
+
+  /* Note: before the fixes this wouldn't work to trigger the problem because
+   * only a pattern set via GST_DEBUG before gst_init would be picked up
+   * (another bug) */
+  gst_debug_set_threshold_from_string ("*a*b:6,*c:3,d*:2,xyz*:9,ax:1", FALSE);
+
+  for (i = 0; i < G_N_ELEMENTS (cats); ++i) {
+    gchar *name = g_strdup_printf ("%s-%x", (i % 2 == 0) ? "cat" : "dog", i);
+    GST_DEBUG_CATEGORY_INIT (cats[i], name, 0, "none");
+    g_free (name);
+  }
+
+  /* These checks will only work if no one else set anything externally */
+  if (g_getenv ("GST_DEBUG") == NULL) {
+    /* none */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0]),
+        GST_LEVEL_DEFAULT);
+    /* d*:2 */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[1]),
+        GST_LEVEL_WARNING);
+    /* none */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[2]),
+        GST_LEVEL_DEFAULT);
+    /* d*:2 */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[3]),
+        GST_LEVEL_WARNING);
+    /* *c:3 */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xc]),
+        GST_LEVEL_FIXME);
+    /* *c:3 */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0x4c]),
+        GST_LEVEL_FIXME);
+    /* *a*b:6 */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xa1b]),
+        GST_LEVEL_LOG);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (cats); ++i)
+    gst_debug_category_free (cats[i]);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_info_suite (void)
 {
@@ -445,6 +499,7 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_register_same_debug_category_twice);
   tcase_add_test (tc_chain, info_set_and_unset_single);
   tcase_add_test (tc_chain, info_set_and_unset_multiple);
+  tcase_add_test (tc_chain, info_post_gst_init_category_registration);
 #endif
 
   return s;
