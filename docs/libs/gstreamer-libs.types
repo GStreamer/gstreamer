@@ -3,6 +3,7 @@
 % base classes
 
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstaggregator.h>
 #include <gst/base/gstbaseparse.h>
 #include <gst/base/gstbasesrc.h>
 #include <gst/base/gstbasesink.h>
@@ -11,6 +12,8 @@
 #include <gst/base/gstpushsrc.h>
 
 gst_adapter_get_type
+gst_aggregator_get_type
+gst_aggregator_pad_get_type
 gst_base_parse_get_type
 gst_base_src_get_type
 gst_base_sink_get_type
