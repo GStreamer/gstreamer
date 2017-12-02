@@ -1692,6 +1692,18 @@ gst_debug_unset_threshold_for_name (const gchar * name)
   gst_debug_reset_all_thresholds ();
 }
 
+static void
+gst_debug_apply_patterns_to_category (GstDebugCategory * cat)
+{
+  GSList *l;
+
+  g_mutex_lock (&__level_name_mutex);
+  for (l = __level_name; l != NULL; l = l->next) {
+    for_each_threshold_by_entry (cat, (LevelNameEntry *) l->data);
+  }
+  g_mutex_unlock (&__level_name_mutex);
+}
+
 GstDebugCategory *
 _gst_debug_category_new (const gchar * name, guint color,
     const gchar * description)
@@ -1726,7 +1738,7 @@ _gst_debug_category_new (const gchar * name, guint color,
 
   /* ensure the filter is applied to categories registered after _debug_init */
   if (_gst_debug_filter) {
-    gst_debug_set_threshold_from_string (_gst_debug_filter, FALSE);
+    gst_debug_apply_patterns_to_category (cat);
   }
 
   return cat;
