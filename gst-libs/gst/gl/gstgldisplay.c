@@ -292,13 +292,13 @@ gst_gl_display_new (void)
       return NULL;
   }
 #endif
-#if GST_GL_HAVE_WINDOW_X11
-  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    display = GST_GL_DISPLAY (gst_gl_display_x11_new (NULL));
-#endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!display && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     display = GST_GL_DISPLAY (gst_gl_display_wayland_new (NULL));
+#endif
+#if GST_GL_HAVE_WINDOW_X11
+  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
+    display = GST_GL_DISPLAY (gst_gl_display_x11_new (NULL));
 #endif
 #if GST_GL_HAVE_WINDOW_VIV_FB
   if (!display && (!user_choice || g_strstr_len (user_choice, 6, "viv-fb"))) {
