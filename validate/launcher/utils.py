@@ -476,6 +476,7 @@ def kill_subprocess(owner, process, timeout):
 
     stime = time.time()
     res = process.poll()
+    waittime = 0.05
     while res is None:
         try:
             owner.debug("Subprocess is still alive, sending KILL signal")
@@ -484,7 +485,8 @@ def kill_subprocess(owner, process, timeout):
                     ['taskkill', '/F', '/T', '/PID', str(process.pid)])
             else:
                 process.send_signal(signal.SIGKILL)
-            time.sleep(1)
+            time.sleep(waittime)
+            waittime *= 2
         except OSError:
             pass
         if time.time() - stime > DEFAULT_TIMEOUT:
