@@ -656,7 +656,7 @@ class GstValidateBaseRTSPTest:
                 s.connect((("127.0.0.1", self.server_port)))
                 break
             except ConnectionRefusedError:
-                time.sleep(0.5)
+                time.sleep(0.1)
                 continue
             finally:
                 s.close()
