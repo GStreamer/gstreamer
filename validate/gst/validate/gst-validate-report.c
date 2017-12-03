@@ -452,7 +452,7 @@ done:
 void
 gst_validate_report_init (void)
 {
-  const gchar *var, *file_env, *server_env;
+  const gchar *var, *file_env, *server_env, *uuid;
   const GDebugKey keys[] = {
     {"fatal_criticals", GST_VALIDATE_FATAL_CRITICALS},
     {"fatal_warnings", GST_VALIDATE_FATAL_WARNINGS},
@@ -481,7 +481,11 @@ gst_validate_report_init (void)
   }
 
   server_env = g_getenv ("GST_VALIDATE_SERVER");
-  if (server_env) {
+  uuid = g_getenv ("GST_VALIDATE_UUID");
+
+  if (server_env && !uuid) {
+    GST_ERROR ("No GST_VALIDATE_UUID specified !");
+  } else if (server_env) {
     GstUri *server_uri = gst_uri_from_string (server_env);
 
     if (server_uri && !g_strcmp0 (gst_uri_get_scheme (server_uri), "tcp")) {
@@ -502,6 +506,8 @@ gst_validate_report_init (void)
             g_io_stream_get_output_stream (G_IO_STREAM (server_connection));
         jbuilder = json_builder_new ();
         json_builder_begin_object (jbuilder);
+        json_builder_set_member_name (jbuilder, "uuid");
+        json_builder_add_string_value (jbuilder, uuid);
         json_builder_set_member_name (jbuilder, "started");
         json_builder_add_boolean_value (jbuilder, TRUE);
         json_builder_end_object (jbuilder);
