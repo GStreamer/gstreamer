@@ -132,9 +132,11 @@ gst_gl_download_element_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
 
   if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     /* do nothing with the buffer */
+#if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
   } else if (gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     dl->dmabuf_allocator = gst_dmabuf_allocator_new ();
+#endif
   } else if (gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
     dl->do_pbo_transfers = TRUE;
