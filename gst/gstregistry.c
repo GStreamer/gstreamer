@@ -1375,7 +1375,7 @@ gst_registry_scan_path_internal (GstRegistryScanContext * context,
 /**
  * gst_registry_scan_path:
  * @registry: the registry to add found plugins to
- * @path: the path to scan
+ * @path: (type filename): the path to scan
  *
  * Scan the given path for plugins to add to the registry. The syntax of the
  * path is specific to the registry.

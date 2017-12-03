@@ -667,7 +667,7 @@ static GMutex gst_plugin_loading_mutex;
 
 /**
  * gst_plugin_load_file:
- * @filename: the plugin filename to load
+ * @filename: (type filename): the plugin filename to load
  * @error: pointer to a %NULL-valued GError
  *
  * Loads the given plugin and refs it.  Caller needs to unref after use.
@@ -971,7 +971,7 @@ gst_plugin_get_description (GstPlugin * plugin)
  *
  * get the filename of the plugin
  *
- * Returns: the filename of the plugin
+ * Returns: (type filename): the filename of the plugin
  */
 const gchar *
 gst_plugin_get_filename (GstPlugin * plugin)
