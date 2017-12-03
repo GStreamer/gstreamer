@@ -137,7 +137,6 @@ static void source_setup (GstElement *pipeline, GstElement *source, CustomData *
   g_signal_connect (source, "need-data", G_CALLBACK (start_feed), data);
   g_signal_connect (source, "enough-data", G_CALLBACK (stop_feed), data);
   gst_caps_unref (audio_caps);
-  g_free (audio_caps_text);
 }
 
 int main(int argc, char *argv[]) {
@@ -214,7 +213,6 @@ static void source_setup (GstElement *pipeline, GstElement *source, CustomData *
   g_signal_connect (source, "need-data", G_CALLBACK (start_feed), data);
   g_signal_connect (source, "enough-data", G_CALLBACK (stop_feed), data);
   gst_caps_unref (audio_caps);
-  g_free (audio_caps_text);
 }
 ```
 

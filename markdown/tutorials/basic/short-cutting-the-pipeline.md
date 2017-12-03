@@ -263,7 +263,6 @@ int main(int argc, char *argv[]) {
   g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
   g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
   gst_caps_unref (audio_caps);
-  g_free (audio_caps_text);
 
   /* Link all elements that can be automatically linked because they have "Always" pads */
   gst_bin_add_many (GST_BIN (data.pipeline), data.app_source, data.tee, data.audio_queue, data.audio_convert1, data.audio_resample,
@@ -352,8 +351,8 @@ Regarding the configuration of the `appsrc` and `appsink` elements:
 
 ``` c
 /* Configure appsrc */
-audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
-audio_caps = gst_caps_from_string (audio_caps_text);
+gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, SAMPLE_RATE, 1, NULL);
+audio_caps = gst_audio_info_to_caps (&info);
 g_object_set (data.app_source, "caps", audio_caps, NULL);
 g_signal_connect (data.app_source, "need-data", G_CALLBACK (start_feed), &data);
 g_signal_connect (data.app_source, "enough-data", G_CALLBACK (stop_feed), &data);
@@ -376,7 +375,6 @@ almost full, respectively. We will use these signals to start and stop
 g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
 g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
 gst_caps_unref (audio_caps);
-g_free (audio_caps_text);
 ```
 
 Regarding the `appsink` configuration, we connect to the
