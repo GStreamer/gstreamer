@@ -68,10 +68,6 @@ Some info about protocols and how to handle them
 """
 GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS),
                                  ("application/dash+xml", Protocols.DASH)]
-GST_VALIDATE_PROTOCOL_TIMEOUTS = {Protocols.HTTP: 120,
-                                  Protocols.HLS: 240,
-                                  Protocols.RTSP: 240,
-                                  Protocols.DASH: 240}
 
 
 class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
@@ -82,10 +78,7 @@ class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for uri, mediainfo, special_scenarios in uri_minfo_special_scenarios:
             protocol = mediainfo.media_descriptor.get_protocol()
-            try:
-                timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[protocol]
-            except KeyError:
-                timeout = DEFAULT_TIMEOUT
+            timeout = DEFAULT_TIMEOUT
 
             classname = "%s.media_check.%s" % (protocol,
                                                os.path.basename(url2path(uri)).replace(".", "_"))
@@ -447,14 +440,6 @@ class GstValidateLaunchTest(GstValidateTest):
 
         extra_env_variables = extra_env_variables or {}
 
-        try:
-            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
-                media_descriptor.get_protocol()]
-        except KeyError:
-            pass
-        except AttributeError:
-            pass
-
         if scenario:
             duration = scenario.get_duration()
         elif media_descriptor:
@@ -526,12 +511,6 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
             duration = file_dur / AUDIO_ONLY_FILE_TRANSCODING_RATIO
         else:
             duration = file_dur
-
-        try:
-            timeout = GST_VALIDATE_PROTOCOL_TIMEOUTS[
-                media_descriptor.get_protocol()]
-        except KeyError:
-            pass
 
         super(
             GstValidateTranscodingTest, self).__init__(GST_VALIDATE_TRANSCODING_COMMAND,
