@@ -467,6 +467,10 @@ Note that all testsuite should be inside python modules, so the directory should
     parser.add_argument('--xunit-file', dest='xunit_file',
                         action='store', metavar="FILE",
                         help=("Path to xml file to store the xunit report in."))
+    parser.add_argument('--shuffle', dest="shuffle", action="store_true",
+                        help="Runs the test in a random order. Can help speed up the overall"
+                             " test time by running synchronized and unsynchronized tests"
+                             " at the same time")
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",

@@ -35,6 +35,7 @@ import threading
 import queue
 import configparser
 import xml
+import random
 
 from . import reporters
 from . import loggable
@@ -1608,6 +1609,12 @@ class _TestsLauncher(Loggable):
 
         max_num_jobs = min(self.options.num_jobs, len(tests))
         jobs_running = 0
+
+        # if order of test execution doesn't matter, shuffle
+        # the order to optimize cpu usage
+        if self.options.shuffle:
+            random.shuffle(tests)
+            random.shuffle(alone_tests)
 
         for num_jobs, tests in [(max_num_jobs, tests), (1, alone_tests)]:
             tests_left = list(tests)
