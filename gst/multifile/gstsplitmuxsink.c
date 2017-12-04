@@ -1250,6 +1250,39 @@ bus_handler (GstBin * bin, GstMessage * message)
         }
       }
       break;
+    case GST_MESSAGE_WARNING:
+    {
+      GError *gerror = NULL;
+
+      gst_message_parse_warning (message, &gerror, NULL);
+
+      if (g_error_matches (gerror, GST_STREAM_ERROR, GST_STREAM_ERROR_FORMAT)) {
+        GList *item;
+        gboolean caps_change = FALSE;
+
+        GST_SPLITMUX_LOCK (splitmux);
+
+        for (item = splitmux->contexts; item; item = item->next) {
+          MqStreamCtx *ctx = item->data;
+
+          if (ctx->caps_change) {
+            caps_change = TRUE;
+            break;
+          }
+        }
+
+        GST_SPLITMUX_UNLOCK (splitmux);
+
+        if (caps_change) {
+          GST_LOG_OBJECT (splitmux,
+              "Ignoring warning change from child %" GST_PTR_FORMAT
+              " while switching caps", GST_MESSAGE_SRC (message));
+          gst_message_unref (message);
+          return;
+        }
+      }
+      break;
+    }
     default:
       break;
   }

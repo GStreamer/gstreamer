@@ -5685,9 +5685,10 @@ refuse_caps:
   }
 refuse_renegotiation:
   {
-    GST_WARNING_OBJECT (qtmux,
-        "pad %s refused renegotiation to %" GST_PTR_FORMAT, GST_PAD_NAME (pad),
-        caps);
+    GST_ELEMENT_WARNING (qtmux, STREAM, FORMAT,
+        ("Can't change input format at runtime."),
+        ("pad %s refused renegotiation to %" GST_PTR_FORMAT, GST_PAD_NAME (pad),
+            caps));
     gst_object_unref (qtmux);
     return FALSE;
   }
