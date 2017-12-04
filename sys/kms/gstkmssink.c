@@ -1369,11 +1369,18 @@ gst_kms_sink_get_input_buffer (GstKMSSink * self, GstBuffer * inbuf)
     return gst_buffer_ref (inbuf);
 
   if (gst_kms_sink_import_dmabuf (self, inbuf, &buf))
-    return buf;
+    goto done;
 
   GST_CAT_INFO_OBJECT (CAT_PERFORMANCE, self, "frame copy");
+  buf = gst_kms_sink_copy_to_dumb_buffer (self, inbuf);
 
-  return gst_kms_sink_copy_to_dumb_buffer (self, inbuf);
+done:
+  /* Copy all the non-memory related metas, this way CropMeta will be
+   * available upon GstVideoOverlay::expose calls. */
+  if (buf)
+    gst_buffer_copy_into (buf, inbuf, GST_BUFFER_COPY_METADATA, 0, -1);
+
+  return buf;
 }
 
 static GstFlowReturn
@@ -1397,6 +1404,9 @@ gst_kms_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     buffer = gst_kms_sink_get_input_buffer (self, buf);
   else if (self->last_buffer)
     buffer = gst_buffer_ref (self->last_buffer);
+
+  /* Make sure buf is not used accidentally */
+  buf = NULL;
 
   if (!buffer)
     return GST_FLOW_ERROR;
