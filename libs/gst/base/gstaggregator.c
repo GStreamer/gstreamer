@@ -116,8 +116,10 @@ gst_aggregator_start_time_selection_get_type (void)
 }
 
 /*  Might become API */
+#if 0
 static void gst_aggregator_merge_tags (GstAggregator * aggregator,
     const GstTagList * tags, GstTagMergeMode mode);
+#endif
 static void gst_aggregator_set_latency_property (GstAggregator * agg,
     GstClockTime latency);
 static GstClockTime gst_aggregator_get_latency_property (GstAggregator * agg);
@@ -1428,19 +1430,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       goto eat;
     }
     case GST_EVENT_TAG:
-    {
-      GstTagList *tags;
-
-      gst_event_parse_tag (event, &tags);
-
-      if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
-        gst_aggregator_merge_tags (self, tags, GST_TAG_MERGE_REPLACE);
-        gst_event_unref (event);
-        event = NULL;
-        goto eat;
-      }
-      break;
-    }
+      goto eat;
     default:
     {
       break;
@@ -2912,7 +2902,8 @@ gst_aggregator_pad_is_eos (GstAggregatorPad * pad)
   return is_eos;
 }
 
-/**
+#if 0
+/*
  * gst_aggregator_merge_tags:
  * @self: a #GstAggregator
  * @tags: a #GstTagList to merge
@@ -2946,6 +2937,7 @@ gst_aggregator_merge_tags (GstAggregator * self,
   self->priv->tags_changed = TRUE;
   GST_OBJECT_UNLOCK (self);
 }
+#endif
 
 /**
  * gst_aggregator_set_latency:
