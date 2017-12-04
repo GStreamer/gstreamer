@@ -61,8 +61,7 @@ struct _GstAlsaMidiSrc
   snd_midi_event_t *parser;
   unsigned char *buffer;
 
-  struct pollfd *pfds;
-  int npfds;
+  GstPoll *poll;
 
   guint64 tick;
   guint64 delay;

@@ -315,6 +315,8 @@ static void gst_alsa_midi_src_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_alsa_midi_src_start (GstBaseSrc * basesrc);
 static gboolean gst_alsa_midi_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_alsa_midi_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_alsa_midi_src_unlock_stop (GstBaseSrc * basesrc);
 static void gst_alsa_midi_src_state_changed (GstElement * element,
     GstState oldstate, GstState newstate, GstState pending);
 
@@ -350,6 +352,9 @@ gst_alsa_midi_src_class_init (GstAlsaMidiSrcClass * klass)
 
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_start);
   gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_stop);
+  gstbase_src_class->unlock = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_unlock);
+  gstbase_src_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_alsa_midi_src_unlock_stop);
   gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_alsa_midi_src_create);
   gstelement_class->state_changed =
       GST_DEBUG_FUNCPTR (gst_alsa_midi_src_state_changed);
@@ -450,10 +455,12 @@ gst_alsa_midi_src_create (GstPushSrc * src, GstBuffer ** buf)
   buffer_list = gst_buffer_list_new ();
 
 poll:
-  snd_seq_poll_descriptors (alsamidisrc->seq, alsamidisrc->pfds,
-      alsamidisrc->npfds, POLLIN);
-  ret = poll (alsamidisrc->pfds, alsamidisrc->npfds, -1);
+  ret = gst_poll_wait (alsamidisrc->poll, GST_CLOCK_TIME_NONE);
   if (ret <= 0) {
+    if (ret < 0 && errno == EBUSY) {
+      GST_INFO_OBJECT (alsamidisrc, "flushing");
+      return GST_FLOW_FLUSHING;
+    }
     GST_ERROR_OBJECT (alsamidisrc, "ERROR in poll: %s", strerror (errno));
   } else {
     /* There are events available */
@@ -570,17 +577,28 @@ gst_alsa_midi_src_start (GstBaseSrc * basesrc)
   if (alsamidisrc->buffer == NULL)
     goto error_free_parser;
 
-  alsamidisrc->npfds =
-      snd_seq_poll_descriptors_count (alsamidisrc->seq, POLLIN);
-  alsamidisrc->pfds =
-      g_try_malloc (sizeof (*alsamidisrc->pfds) * alsamidisrc->npfds);
-  if (alsamidisrc->pfds == NULL)
-    goto error_free_buffer;
+  {
+    struct pollfd *pfds;
+    int npfds, i;
+
+    npfds = snd_seq_poll_descriptors_count (alsamidisrc->seq, POLLIN);
+    pfds = g_newa (struct pollfd, npfds);
+
+    snd_seq_poll_descriptors (alsamidisrc->seq, pfds, npfds, POLLIN);
+
+    alsamidisrc->poll = gst_poll_new (TRUE);
+    for (i = 0; i < npfds; ++i) {
+      GstPollFD fd = GST_POLL_FD_INIT;
+
+      fd.fd = pfds[i].fd;
+      gst_poll_add_fd (alsamidisrc->poll, &fd);
+      gst_poll_fd_ctl_read (alsamidisrc->poll, &fd, TRUE);
+      gst_poll_fd_ctl_write (alsamidisrc->poll, &fd, FALSE);
+    }
+  }
 
   return TRUE;
 
-error_free_buffer:
-  g_free (alsamidisrc->buffer);
 error_free_parser:
   snd_midi_event_free (alsamidisrc->parser);
 error_free_seq_ports:
@@ -598,13 +616,34 @@ gst_alsa_midi_src_stop (GstBaseSrc * basesrc)
 
   alsamidisrc = GST_ALSA_MIDI_SRC (basesrc);
 
+  if (alsamidisrc->poll != NULL) {
+    gst_poll_free (alsamidisrc->poll);
+    alsamidisrc->poll = NULL;
+  }
   g_free (alsamidisrc->ports);
-  g_free (alsamidisrc->pfds);
   g_free (alsamidisrc->buffer);
   snd_midi_event_free (alsamidisrc->parser);
   g_free (alsamidisrc->seq_ports);
   snd_seq_close (alsamidisrc->seq);
 
+  return TRUE;
+}
+
+static gboolean
+gst_alsa_midi_src_unlock (GstBaseSrc * basesrc)
+{
+  GstAlsaMidiSrc *alsamidisrc = GST_ALSA_MIDI_SRC (basesrc);
+
+  gst_poll_set_flushing (alsamidisrc->poll, TRUE);
+  return TRUE;
+}
+
+static gboolean
+gst_alsa_midi_src_unlock_stop (GstBaseSrc * basesrc)
+{
+  GstAlsaMidiSrc *alsamidisrc = GST_ALSA_MIDI_SRC (basesrc);
+
+  gst_poll_set_flushing (alsamidisrc->poll, FALSE);
   return TRUE;
 }
 
