@@ -539,17 +539,8 @@ gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
   GST_PAD_STREAM_UNLOCK (self->srcpad);
 }
 
-/**
- * gst_aggregator_finish_buffer:
- * @self: The #GstAggregator
- * @buffer: (transfer full): the #GstBuffer to push.
- *
- * This method will push the provided output buffer downstream. If needed,
- * mandatory events such as stream-start, caps, and segment events will be
- * sent before pushing the buffer.
- */
-GstFlowReturn
-gst_aggregator_finish_buffer (GstAggregator * self, GstBuffer * buffer)
+static GstFlowReturn
+gst_aggregator_default_finish_buffer (GstAggregator * self, GstBuffer * buffer)
 {
   gst_aggregator_push_mandatory_events (self);
 
@@ -565,6 +556,25 @@ gst_aggregator_finish_buffer (GstAggregator * self, GstBuffer * buffer)
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+}
+
+/**
+ * gst_aggregator_finish_buffer:
+ * @aggregator: The #GstAggregator
+ * @buffer: (transfer full): the #GstBuffer to push.
+ *
+ * This method will push the provided output buffer downstream. If needed,
+ * mandatory events such as stream-start, caps, and segment events will be
+ * sent before pushing the buffer.
+ */
+GstFlowReturn
+gst_aggregator_finish_buffer (GstAggregator * aggregator, GstBuffer * buffer)
+{
+  GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (aggregator);
+
+  g_assert (klass->finish_buffer != NULL);
+
+  return klass->finish_buffer (aggregator, buffer);
 }
 
 static void
@@ -2232,6 +2242,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (aggregator_debug, "aggregator",
       GST_DEBUG_FG_MAGENTA, "GstAggregator");
+
+  klass->finish_buffer = gst_aggregator_default_finish_buffer;
 
   klass->sink_event = gst_aggregator_default_sink_event;
   klass->sink_query = gst_aggregator_default_sink_query;

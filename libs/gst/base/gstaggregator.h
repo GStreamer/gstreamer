@@ -159,6 +159,13 @@ struct _GstAggregator
  *                  clipping of input buffer. This function takes ownership of
  *                  buf and should output a buffer or return NULL in
  *                  if the buffer should be dropped.
+ * @finish_buffer:  Optional.
+ *                  Called when a subclass calls gst_aggregator_finish_buffer()
+ *                  from their aggregate function to push out a buffer.
+ *                  Subclasses can override this to modify or decorate buffers
+ *                  before they get pushed out. This function takes ownership
+ *                  of the buffer passed. Subclasses that override this method
+ *                  should always chain up to the parent class virtual method.
  * @sink_event:     Optional.
  *                  Called when an event is received on a sink pad, the subclass
  *                  should always chain up.
@@ -231,6 +238,9 @@ struct _GstAggregatorClass {
                                        GstAggregatorPad *  aggregator_pad,
                                        GstBuffer        *  buf);
 
+  GstFlowReturn     (*finish_buffer)  (GstAggregator    * aggregator,
+                                       GstBuffer        * buffer);
+
   /* sinkpads virtual methods */
   gboolean          (*sink_event)     (GstAggregator    *  aggregator,
                                        GstAggregatorPad *  aggregator_pad,
@@ -300,7 +310,7 @@ struct _GstAggregatorClass {
  ************************/
 
 GST_EXPORT
-GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  self,
+GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  aggregator,
                                                      GstBuffer                    *  buffer);
 
 GST_EXPORT
