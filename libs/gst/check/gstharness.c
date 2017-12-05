@@ -1561,7 +1561,7 @@ gst_harness_create_buffer (GstHarness * h, gsize size)
 /**
  * gst_harness_push:
  * @h: a #GstHarness
- * @buffer: a #GstBuffer to push
+ * @buffer: (transfer full): a #GstBuffer to push
  *
  * Pushes a #GstBuffer on the #GstHarness srcpad. The standard way of
  * interacting with an harnessed element.
@@ -1591,7 +1591,7 @@ gst_harness_push (GstHarness * h, GstBuffer * buffer)
  *
  * MT safe.
  *
- * Returns: a #GstBuffer or %NULL if timed out.
+ * Returns: (transfer full): a #GstBuffer or %NULL if timed out.
  *
  * Since: 1.6
  */
@@ -1621,7 +1621,7 @@ gst_harness_pull (GstHarness * h)
  *
  * MT safe.
  *
- * Returns: a #GstBuffer or %NULL if no buffers are present in the #GAsyncQueue
+ * Returns: (transfer full): a #GstBuffer or %NULL if no buffers are present in the #GAsyncQueue
  *
  * Since: 1.6
  */
@@ -1643,7 +1643,7 @@ gst_harness_try_pull (GstHarness * h)
 /**
  * gst_harness_push_and_pull:
  * @h: a #GstHarness
- * @buffer: a #GstBuffer to push
+ * @buffer: (transfer full): a #GstBuffer to push
  *
  * Basically a gst_harness_push and a gst_harness_pull in one line. Reflects
  * the fact that you often want to do exactly this in your test: Push one buffer
@@ -1651,7 +1651,7 @@ gst_harness_try_pull (GstHarness * h)
  *
  * MT safe.
  *
- * Returns: a #GstBuffer or %NULL if timed out.
+ * Returns: (transfer full): a #GstBuffer or %NULL if timed out.
  *
  * Since: 1.6
  */
