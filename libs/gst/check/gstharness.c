@@ -1791,7 +1791,7 @@ gst_harness_take_all_data (GstHarness * h, gsize * size)
 }
 
 /**
- * gst_harness_take_all_data_as_bytes:
+ * gst_harness_take_all_data_as_bytes: (rename-to gst_harness_take_all_data)
  * @h: a #GstHarness
  *
  * Pulls all pending data from the harness and returns it as a single #GBytes.
