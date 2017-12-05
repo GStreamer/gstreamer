@@ -99,6 +99,16 @@ guint64         gst_util_uint64_scale_int_round (guint64 val, gint num, gint den
 GST_EXPORT
 guint64         gst_util_uint64_scale_int_ceil  (guint64 val, gint num, gint denom);
 
+/**
+ * GST_SEQNUM_INVALID:
+ *
+ * A value which is guaranteed to never be returned by
+ * gst_util_seqnum_next().
+ *
+ * Can be used as a default value in variables used to store seqnum.
+ *
+ * Since: 1.14
+ */
 #define GST_SEQNUM_INVALID (0)
 
 GST_EXPORT

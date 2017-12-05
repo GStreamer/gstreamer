@@ -788,7 +788,7 @@ gst_util_uint64_scale_int_ceil (guint64 val, gint num, gint denom)
  * on a segment-done message to be the same as that of the last seek event, to
  * indicate that event and the message correspond to the same segment.
  *
- * This function never returns GST_SEQNUM_INVALID (which is 0).
+ * This function never returns %GST_SEQNUM_INVALID (which is 0).
  *
  * Returns: A constantly incrementing 32-bit unsigned integer, which might
  * overflow at some point. Use gst_util_seqnum_compare() to make sure
