@@ -107,6 +107,18 @@ guint32         gst_util_seqnum_next            (void);
 GST_EXPORT
 gint32          gst_util_seqnum_compare         (guint32 s1, guint32 s2);
 
+/**
+ * GST_GROUP_ID_INVALID:
+ *
+ * A value which is guaranteed to never be returned by
+ * gst_util_group_id_next().
+ *
+ * Can be used as a default value in variables used to store group_id.
+ *
+ * Since: 1.14
+ */
+#define GST_GROUP_ID_INVALID (0)
+
 GST_EXPORT
 guint           gst_util_group_id_next          (void);
 

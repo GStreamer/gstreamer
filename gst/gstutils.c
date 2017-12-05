@@ -4177,14 +4177,22 @@ gst_pad_get_stream (GstPad * pad)
  * This function is used to generate a new group-id for the
  * stream-start event.
  *
+ * This function never returns %GST_GROUP_ID_INVALID (which is 0)
+ *
  * Returns: A constantly incrementing unsigned integer, which might
  * overflow back to 0 at some point.
  */
 guint
 gst_util_group_id_next (void)
 {
-  static gint counter = 0;
-  return g_atomic_int_add (&counter, 1);
+  static gint counter = 1;
+  gint ret = g_atomic_int_add (&counter, 1);
+
+  /* Make sure we don't return GST_GROUP_ID_INVALID */
+  if (G_UNLIKELY (ret == GST_GROUP_ID_INVALID))
+    ret = g_atomic_int_add (&counter, 1);
+
+  return ret;
 }
 
 /* Compute log2 of the passed 64-bit number by finding the highest set bit */

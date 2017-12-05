@@ -3571,6 +3571,7 @@ GFLOAT_FROM_LE
 GFLOAT_SWAP_LE_BE
 GFLOAT_TO_BE
 GFLOAT_TO_LE
+GST_GROUP_ID_INVALID
 
 gst_guint64_to_gdouble
 gst_gdouble_to_guint64
