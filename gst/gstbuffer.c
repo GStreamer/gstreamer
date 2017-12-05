@@ -2393,7 +2393,7 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
  * @offset: the offset to extract
  * @size: the size to extract
  * @dest: (array length=dest_size) (element-type guint8) (out): A pointer where
- *  the destination array will be written.
+ *  the destination array will be written. Might be %NULL if the size is 0.
  * @dest_size: (out): A location where the size of @dest can be written
  *
  * Extracts a copy of at most @size bytes the data at @offset into
@@ -2406,13 +2406,18 @@ void
 gst_buffer_extract_dup (GstBuffer * buffer, gsize offset, gsize size,
     gpointer * dest, gsize * dest_size)
 {
-  gsize real_size;
+  gsize real_size, alloc_size;
 
   real_size = gst_buffer_get_size (buffer);
 
-  *dest = g_malloc (MIN (real_size - offset, size));
-
-  *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
+  alloc_size = MIN (real_size - offset, size);
+  if (alloc_size == 0) {
+    *dest = NULL;
+    *dest_size = 0;
+  } else {
+    *dest = g_malloc (alloc_size);
+    *dest_size = gst_buffer_extract (buffer, offset, *dest, size);
+  }
 }
 
 GST_DEBUG_CATEGORY_STATIC (gst_parent_buffer_meta_debug);
