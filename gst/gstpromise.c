@@ -30,7 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /**
  * SECTION:gstpromise
- * @title: GstRespsone
+ * @title: GstPromise
  * @short_description: a miniobject for future/promise-like functionality
  * @see_also:
  *

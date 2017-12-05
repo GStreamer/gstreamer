@@ -285,11 +285,15 @@ GST_PARENT_BUFFER_META_INFO
 GST_PARENT_BUFFER_META_API_TYPE
 GST_TYPE_PARENT_BUFFER_META_API_TYPE
 gst_parent_buffer_meta_get_info
+GST_REFERENCE_TIMESTAMP_META_INFO
+GST_REFERENCE_TIMESTAMP_META_API_TYPE
+gst_reference_timestamp_meta_get_info
 <SUBSECTION Private>
 gst_buffer_get_type
 gst_buffer_flags_get_type
 gst_buffer_copy_flags_get_type
 gst_parent_buffer_meta_api_get_type
+gst_reference_timestamp_meta_api_get_type
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_TIMESTAMP_IS_VALID
 </SECTION>
@@ -887,6 +891,7 @@ gst_element_remove_pad
 gst_element_iterate_pads
 gst_element_iterate_sink_pads
 gst_element_iterate_src_pads
+GstElementForeachPadFunc
 gst_element_foreach_pad
 gst_element_foreach_sink_pad
 gst_element_foreach_src_pad
@@ -1447,6 +1452,7 @@ GST_TYPE_DEBUG_COLOR_FLAGS
 GST_TYPE_DEBUG_COLOR_MODE
 GST_TYPE_DEBUG_LEVEL
 GST_TYPE_DEBUG_GRAPH_DETAILS
+GST_TYPE_STACK_TRACE_FLAGS
 <SUBSECTION Private>
 GST_DEBUG_FG_MASK
 GST_DEBUG_BG_MASK
@@ -1458,6 +1464,7 @@ gst_debug_color_mode_get_type
 gst_debug_level_get_type
 gst_debug_graph_details_get_type
 GST_CAT_LEVEL_LOG_valist
+gst_stack_trace_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -2078,7 +2085,7 @@ gst_pad_chain_list
 gst_pad_start_task
 gst_pad_pause_task
 gst_pad_stop_task
-gst_pad_task_get_state
+gst_pad_get_task_state
 
 gst_pad_set_active
 
@@ -2239,12 +2246,21 @@ GST_PARAM_MUTABLE_READY
 GstParamSpecFraction
 gst_param_spec_fraction
 
+<SUBSECTION paramspecarray>
+GstParamSpecArray
+gst_param_spec_array
+
+
 <SUBSECTION Standard>
 GST_IS_PARAM_SPEC_FRACTION
 GST_PARAM_SPEC_FRACTION
 GST_TYPE_PARAM_FRACTION
 gst_param_spec_fraction_get_type
 
+GST_IS_PARAM_SPEC_ARRAY_LIST
+GST_PARAM_SPEC_ARRAY_LIST
+GST_TYPE_PARAM_ARRAY_LIST
+gst_param_spec_array_get_type
 </SECTION>
 
 
@@ -2694,6 +2710,7 @@ gst_promise_wait
 gst_promise_reply
 gst_promise_interrupt
 gst_promise_expire
+gst_promise_get_reply
 <SUBSECTION Standard>
 GST_PROMISE
 GST_TYPE_PROMISE
@@ -3254,6 +3271,14 @@ GstTracerHookElementPostMessagePre
 GstTracerHookElementQueryPost
 GstTracerHookElementQueryPre
 GstTracerHookElementRemovePad
+GstTracerHookMiniObjectCreated
+GstTracerHookMiniObjectDestroyed
+GstTracerHookMiniObjectReffed
+GstTracerHookMiniObjectUnreffed
+GstTracerHookObjectCreated
+GstTracerHookObjectDestroyed
+GstTracerHookObjectReffed
+GstTracerHookObjectUnreffed
 GstTracerHookPadLinkPost
 GstTracerHookPadLinkPre
 GstTracerHookPadPullRangePost
@@ -3295,6 +3320,14 @@ GST_TRACER_ELEMENT_POST_MESSAGE_PRE
 GST_TRACER_ELEMENT_QUERY_POST
 GST_TRACER_ELEMENT_QUERY_PRE
 GST_TRACER_ELEMENT_REMOVE_PAD
+GST_TRACER_MINI_OBJECT_CREATED
+GST_TRACER_MINI_OBJECT_DESTROYED
+GST_TRACER_MINI_OBJECT_REFFED
+GST_TRACER_MINI_OBJECT_UNREFFED
+GST_TRACER_OBJECT_CREATED
+GST_TRACER_OBJECT_DESTROYED
+GST_TRACER_OBJECT_REFFED
+GST_TRACER_OBJECT_UNREFFED
 GST_TRACER_PAD_LINK_POST
 GST_TRACER_PAD_LINK_PRE
 GST_TRACER_PAD_PULL_RANGE_POST

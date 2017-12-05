@@ -67,9 +67,9 @@ typedef struct _GstStreamCollectionPrivate GstStreamCollectionPrivate;
  * Since: 1.10
  */
 struct _GstStreamCollection {
+  /*< private >*/
   GstObject object;
 
-  /*< private >*/
   gchar *upstream_id;
   GstStreamCollectionPrivate *priv;
 

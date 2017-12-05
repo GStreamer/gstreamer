@@ -83,6 +83,7 @@ typedef struct _GstStreamPrivate GstStreamPrivate;
  * pertinent to streams of data).
  */
 struct _GstStream {
+  /*< private >*/
   GstObject object;
 
   /*< public >*/
