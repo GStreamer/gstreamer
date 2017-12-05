@@ -495,13 +495,20 @@ gst_v4l2_video_remove_padding (GstCapsFeatures * features,
     return TRUE;
 
   if (align->padding_left != 0 || align->padding_top != 0 ||
-      width != info->width + align->padding_right ||
       height != info->height + align->padding_bottom)
     return TRUE;
 
-  gst_structure_set (structure,
-      "width", G_TYPE_INT, width - align->padding_right,
-      "height", G_TYPE_INT, height - align->padding_bottom, NULL);
+  if (height == info->height + align->padding_bottom) {
+    /* Some drivers may round up width to the padded with */
+    if (width == info->width + align->padding_right)
+      gst_structure_set (structure,
+          "width", G_TYPE_INT, width - align->padding_right,
+          "height", G_TYPE_INT, height - align->padding_bottom, NULL);
+    /* Some drivers may keep visible width and only round up bytesperline */
+    else if (width == info->width)
+      gst_structure_set (structure,
+          "height", G_TYPE_INT, height - align->padding_bottom, NULL);
+  }
 
   return TRUE;
 }
