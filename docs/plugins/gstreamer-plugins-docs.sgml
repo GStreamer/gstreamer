@@ -41,8 +41,18 @@
   </chapter>
 
   <chapter>
+    <title>gstreamer Tracers</title>
+    <xi:include href="xml/element-latencytracer.xml" />
+    <xi:include href="xml/element-leakstracer.xml" />
+    <xi:include href="xml/element-logtracer.xml" />
+    <xi:include href="xml/element-rusagetracer.xml" />
+    <xi:include href="xml/element-statstracer.xml" />
+  </chapter>
+
+  <chapter>
     <title>gstreamer Plugins</title>
     <xi:include href="xml/plugin-coreelements.xml" />
+    <xi:include href="xml/plugin-coretracers.xml" />
   </chapter>
 </book>
 

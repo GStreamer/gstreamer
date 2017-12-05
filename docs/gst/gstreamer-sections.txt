@@ -3354,6 +3354,7 @@ GstTracerPrivate
 <TITLE>GstTracerFactory</TITLE>
 GstTracerFactory
 gst_tracer_factory_get_list
+gst_tracer_factory_get_tracer_type
 <SUBSECTION Standard>
 GstTracerFactoryClass
 GST_TRACER_FACTORY

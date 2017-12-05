@@ -23,7 +23,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code.
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
-DOC_SOURCE_DIR = $(top_srcdir)/plugins/elements
+DOC_SOURCE_DIR = $(top_srcdir)/plugins/elements $(top_srcdir)/plugins/tracers
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
@@ -38,8 +38,8 @@ FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/gst/html \
 	--extra-dir=$(datadir)/gtk-doc/html
 
 # Used for dependencies.
-HFILE_GLOB=$(top_srcdir)/plugins/elements/*.h
-CFILE_GLOB=$(top_srcdir)/plugins/elements/*.c
+HFILE_GLOB=$(top_srcdir)/plugins/elements/*.h $(top_srcdir)/plugins/tracers/*.h
+CFILE_GLOB=$(top_srcdir)/plugins/elements/*.c $(top_srcdir)/plugins/tracers/*.c
 
 # Header files to ignore when scanning.
 IGNORE_HFILES =

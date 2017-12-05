@@ -54,6 +54,8 @@ GType           gst_tracer_factory_get_type          (void);
 GST_EXPORT
 GList *         gst_tracer_factory_get_list          (void);
 
+GST_EXPORT
+GType           gst_tracer_factory_get_tracer_type   (GstTracerFactory * factory);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracerFactory, gst_object_unref)

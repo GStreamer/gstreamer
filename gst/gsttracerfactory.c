@@ -77,3 +77,22 @@ gst_tracer_factory_get_list (void)
   return gst_registry_get_feature_list (gst_registry_get (),
       GST_TYPE_TRACER_FACTORY);
 }
+
+/**
+ * gst_tracer_factory_get_tracer_type:
+ * @factory: factory to get managed #GType from
+ *
+ * Get the #GType for elements managed by this factory. The type can
+ * only be retrieved if the element factory is loaded, which can be
+ * assured with gst_plugin_feature_load().
+ *
+ * Returns: the #GType for tracers managed by this factory or 0 if
+ * the factory is not loaded.
+ */
+GType
+gst_tracer_factory_get_tracer_type (GstTracerFactory * factory)
+{
+  g_return_val_if_fail (GST_IS_TRACER_FACTORY (factory), 0);
+
+  return factory->type;
+}

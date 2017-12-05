@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:gstrusage
+ * SECTION:element-rusagetracer
  * @short_description: log resource usage stats
  *
  * A tracing module that take rusage() snapshots and logs them.

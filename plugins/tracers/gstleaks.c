@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:gstleaks
+ * SECTION:element-leakstracer
  * @short_description: detect GstObject and GstMiniObject leaks
  *
  * A tracing module tracking the lifetime of objects by logging those still

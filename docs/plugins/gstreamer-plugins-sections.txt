@@ -218,6 +218,54 @@ gst_input_selector_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-latencytracer</FILE>
+<TITLE>latencytracer</TITLE>
+GstLatencyTracer
+<SUBSECTION Standard>
+GstLatencyTracerClass
+GST_LATENCY_TRACER
+GST_LATENCY_TRACER_CAST
+GST_IS_LATENCY_TRACER
+GST_LATENCY_TRACER_CLASS
+GST_IS_LATENCY_TRACER_CLASS
+GST_TYPE_LATENCY_TRACER
+<SUBSECTION Private>
+gst_latency_tracer_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-leakstracer</FILE>
+<TITLE>leakstracer</TITLE>
+GstLeaksTracer
+<SUBSECTION Standard>
+GstLeaksTracerClass
+GST_LEAKS_TRACER
+GST_LEAKS_TRACER_CAST
+GST_IS_LEAKS_TRACER
+GST_LEAKS_TRACER_CLASS
+GST_IS_LEAKS_TRACER_CLASS
+GST_TYPE_LEAKS_TRACER
+<SUBSECTION Private>
+gst_leaks_tracer_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-logtracer</FILE>
+<TITLE>logtracer</TITLE>
+GstLogTracer
+<SUBSECTION Standard>
+GstLogTracerClass
+GST_LOG_TRACER
+GST_LOG_TRACER_CAST
+GST_IS_LOG_TRACER
+GST_LOG_TRACER_CLASS
+GST_IS_LOG_TRACER_CLASS
+GST_TYPE_LOG_TRACER
+<SUBSECTION Private>
+gst_log_tracer_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-multiqueue</FILE>
 <TITLE>multiqueue</TITLE>
 GstMultiQueue
@@ -283,6 +331,38 @@ GST_TYPE_QUEUE2
 GstQueue2Size
 GstQueue2Range
 gst_queue2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rusagetracer</FILE>
+<TITLE>rusagetracer</TITLE>
+GstRUsageTracer
+<SUBSECTION Standard>
+GstRUsageTracerClass
+GST_RUSAGE_TRACER
+GST_RUSAGE_TRACER_CAST
+GST_IS_RUSAGE_TRACER
+GST_RUSAGE_TRACER_CLASS
+GST_IS_RUSAGE_TRACER_CLASS
+GST_TYPE_RUSAGE_TRACER
+<SUBSECTION Private>
+gst_rusage_tracer_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-statstracer</FILE>
+<TITLE>statstracer</TITLE>
+GstStatsTracer
+<SUBSECTION Standard>
+GstStatsTracerClass
+GST_STATS_TRACER
+GST_STATS_TRACER_CAST
+GST_IS_STATS_TRACER
+GST_STATS_TRACER_CLASS
+GST_IS_STATS_TRACER_CLASS
+GST_TYPE_STATS_TRACER
+<SUBSECTION Private>
+gst_stats_tracer_get_type
 </SECTION>
 
 <SECTION>

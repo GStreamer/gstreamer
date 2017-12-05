@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:gstlog
+ * SECTION:element-logtracer
  * @short_description: log hook event
  *
  * A tracing module that logs all data from all hooks.
