@@ -1320,6 +1320,9 @@ gst_harness_buffers_received
 gst_harness_buffers_in_queue
 gst_harness_set_drop_buffers
 gst_harness_dump_to_file
+gst_harness_take_all_data
+gst_harness_take_all_data_as_buffer
+gst_harness_take_all_data_as_bytes
 gst_harness_get_last_pushed_timestamp
 
 gst_harness_push_event

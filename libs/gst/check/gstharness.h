@@ -203,6 +203,15 @@ GST_EXPORT
 void           gst_harness_dump_to_file (GstHarness * h, const gchar * filename);
 
 GST_EXPORT
+guint8 *       gst_harness_take_all_data (GstHarness * h, gsize * size);
+
+GST_EXPORT
+GstBuffer *    gst_harness_take_all_data_as_buffer (GstHarness * h);
+
+GST_EXPORT
+GBytes *       gst_harness_take_all_data_as_bytes (GstHarness * h);
+
+GST_EXPORT
 GstClockTime   gst_harness_get_last_pushed_timestamp (GstHarness * h);
 
 /* downstream events */

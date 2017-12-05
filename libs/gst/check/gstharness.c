@@ -1722,6 +1722,99 @@ gst_harness_set_drop_buffers (GstHarness * h, gboolean drop_buffers)
 }
 
 /**
+ * gst_harness_take_all_data_as_buffer:
+ * @h: a #GstHarness
+ *
+ * Pulls all pending data from the harness and returns it as a single buffer.
+ *
+ * Returns: (transfer full): the data as a buffer. Unref with gst_buffer_unref()
+ *     when no longer needed.
+ *
+ * Since: 1.14
+ */
+GstBuffer *
+gst_harness_take_all_data_as_buffer (GstHarness * h)
+{
+  GstHarnessPrivate *priv;
+  GstBuffer *ret, *buf;
+
+  g_return_val_if_fail (h != NULL, NULL);
+
+  priv = h->priv;
+
+  g_async_queue_lock (priv->buffer_queue);
+
+  ret = g_async_queue_try_pop_unlocked (priv->buffer_queue);
+
+  if (ret == NULL) {
+    ret = gst_buffer_new ();
+  } else {
+    /* buffer appending isn't very efficient for larger numbers of buffers
+     * or lots of memories, but this function is not performance critical and
+     * we can still improve it if and when the need arises. For now KISS. */
+    while ((buf = g_async_queue_try_pop_unlocked (priv->buffer_queue)))
+      ret = gst_buffer_append (ret, buf);
+  }
+
+  g_async_queue_unlock (priv->buffer_queue);
+
+  return ret;
+}
+
+/**
+ * gst_harness_take_all_data: (skip)
+ * @h: a #GstHarness
+ * @size: (out): the size of the data in bytes
+ *
+ * Pulls all pending data from the harness and returns it as a single
+ * data slice.
+ *
+ * Returns: (transfer full): a pointer to the data, newly allocated. Free
+ *     with g_free() when no longer needed. Will return %NULL if there is no
+ *     data.
+ *
+ * Since: 1.14
+ */
+guint8 *
+gst_harness_take_all_data (GstHarness * h, gsize * size)
+{
+  GstBuffer *buf;
+  guint8 *data = NULL;
+
+  g_return_val_if_fail (h != NULL, NULL);
+  g_return_val_if_fail (size != NULL, NULL);
+
+  buf = gst_harness_take_all_data_as_buffer (h);
+  gst_buffer_extract_dup (buf, 0, -1, (gpointer *) & data, size);
+  gst_buffer_unref (buf);
+  return data;
+}
+
+/**
+ * gst_harness_take_all_data_as_bytes:
+ * @h: a #GstHarness
+ *
+ * Pulls all pending data from the harness and returns it as a single #GBytes.
+ *
+ * Returns: (transfer full): a pointer to the data, newly allocated. Free
+ *     with g_free() when no longer needed.
+ *
+ * Since: 1.14
+ */
+GBytes *
+gst_harness_take_all_data_as_bytes (GstHarness * h)
+{
+  guint8 *data;
+  gsize size = 0;
+
+  g_return_val_if_fail (h != NULL, NULL);
+
+  data = gst_harness_take_all_data (h, &size);
+  return g_bytes_new_take (data, size);
+}
+
+
+/**
  * gst_harness_dump_to_file:
  * @h: a #GstHarness
  * @filename: a #gchar with a the name of a file

@@ -170,6 +170,82 @@ GST_START_TEST (test_forward_event_and_query_to_sink_harness_while_teardown)
 
 GST_END_TEST;
 
+static GstHarness *
+harness_new_and_fill_with_data (void)
+{
+  GstHarness *h = gst_harness_new_parse ("fakesrc num-buffers=5 "
+      "filltype=pattern-span sizetype=fixed sizemin=10 sizemax=10");
+  gboolean have_eos = FALSE;
+
+  gst_harness_play (h);
+
+  do {
+    GstEvent *e = gst_harness_pull_event (h);
+    have_eos = GST_EVENT_TYPE (e) == GST_EVENT_EOS;
+    gst_event_unref (e);
+  } while (!have_eos);
+
+  return h;
+}
+
+GST_START_TEST (test_get_all_data)
+{
+  guint8 expected[50];
+  const guint8 *cdata;
+  GstHarness *h;
+  GstBuffer *buf;
+  GBytes *bytes;
+  guint8 *data;
+  gsize size;
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (expected); ++i)
+    expected[i] = i;
+
+  h = harness_new_and_fill_with_data ();
+  buf = gst_harness_take_all_data_as_buffer (h);
+  fail_unless (buf != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf), 5 * 10);
+  fail_unless (gst_buffer_memcmp (buf, 0, expected, 5 * 10) == 0);
+  gst_buffer_unref (buf);
+  /* There should be nothing left now. We should still get a non-NULL buffer */
+  buf = gst_harness_take_all_data_as_buffer (h);
+  fail_unless (buf != NULL);
+  fail_unless_equals_int (gst_buffer_get_size (buf), 0);
+  gst_buffer_unref (buf);
+  gst_harness_teardown (h);
+
+  h = harness_new_and_fill_with_data ();
+  bytes = gst_harness_take_all_data_as_bytes (h);
+  fail_unless (bytes != NULL);
+  cdata = g_bytes_get_data (bytes, &size);
+  fail_unless_equals_int (size, 5 * 10);
+  fail_unless (memcmp (cdata, expected, 50) == 0);
+  g_bytes_unref (bytes);
+  /* There should be nothing left now. We should still get a non-NULL bytes */
+  bytes = gst_harness_take_all_data_as_bytes (h);
+  fail_unless (bytes != NULL);
+  cdata = g_bytes_get_data (bytes, &size);
+  fail_unless (cdata == NULL);
+  fail_unless_equals_int (size, 0);
+  g_bytes_unref (bytes);
+  gst_harness_teardown (h);
+
+  h = harness_new_and_fill_with_data ();
+  data = gst_harness_take_all_data (h, &size);
+  fail_unless (data != NULL);
+  fail_unless_equals_int (size, 5 * 10);
+  fail_unless (memcmp (data, expected, 50) == 0);
+  g_free (data);
+  /* There should be nothing left now. */
+  data = gst_harness_take_all_data (h, &size);
+  fail_unless (data == NULL);
+  fail_unless_equals_int (size, 0);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_harness_suite (void)
 {
@@ -185,6 +261,7 @@ gst_harness_suite (void)
 
   tcase_add_test (tc_chain,
       test_forward_event_and_query_to_sink_harness_while_teardown);
+  tcase_add_test (tc_chain, test_get_all_data);
 
   return s;
 }
