@@ -130,8 +130,8 @@ glib_deps = [gio_dep, gobject_dep, gmodule_dep, glib_dep]
 gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_dep]
 
 foreach t : core_tests
-  fname = t.get(0)
-  test_name = fname.split('.').get(0).underscorify()
+  fname = t[0]
+  test_name = fname.split('.')[0].underscorify()
   skip_test = t.get(1, false)
   link_with_libs = t.get(2, [])
 
