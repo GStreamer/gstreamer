@@ -344,7 +344,7 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
   gst_video_info_from_caps (&out_info, src_caps);
 
   if (download->add_videometa) {
-    gst_buffer_add_video_meta_full (buffer, out_info.flags,
+    gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
         out_info.finfo->format, out_info.width, out_info.height,
         out_info.finfo->n_planes, offset, stride);
   } else {
