@@ -89,6 +89,10 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'gst_init(NULL,NULL);' ]
 
 subdir('gst')
-subdir('tests')
-subdir('examples')
+if get_option('tests')
+  subdir('tests')
+endif
+if get_option('examples')
+  subdir('examples')
+endif
 subdir('pkgconfig')

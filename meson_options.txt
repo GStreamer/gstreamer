@@ -5,3 +5,7 @@ option('with-package-name', type : 'string',
        description : 'package name to use in plugins')
 option('with-package-origin', type : 'string', value : 'Unknown package origin',
        description : 'package origin URL to use in plugins')
+option('tests', type : 'boolean', value : true,
+       description : 'Build and enable unit tests')
+option('examples', type : 'boolean', value : true,
+       description : 'Build the examples')
