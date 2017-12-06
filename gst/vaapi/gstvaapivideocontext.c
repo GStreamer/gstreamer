@@ -243,7 +243,6 @@ _gst_vaapi_sink_find_context (GstElement * element)
   if (!gst_element_post_message (element, msg)) {
     _init_context_debug ();
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element, "No bus attached");
-    gst_message_unref (msg);
   }
 
   return FALSE;
