@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 
+#ifndef LOCAL_FUZZ_BUILD
 GST_PLUGIN_STATIC_DECLARE(coreelements);
 GST_PLUGIN_STATIC_DECLARE(playback);
 GST_PLUGIN_STATIC_DECLARE(typefindfunctions);
@@ -34,6 +35,7 @@ GST_PLUGIN_STATIC_DECLARE(app);
 GST_PLUGIN_STATIC_DECLARE(ogg);
 GST_PLUGIN_STATIC_DECLARE(theora);
 GST_PLUGIN_STATIC_DECLARE(vorbis);
+#endif
 
 /* push-based discoverer fuzzing target
  *
@@ -97,7 +99,8 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
 
     /* Only initialize and register plugins once */
     gst_init (NULL, NULL);
-    
+
+#ifndef LOCAL_FUZZ_BUILD
     GST_PLUGIN_STATIC_REGISTER(coreelements);
     GST_PLUGIN_STATIC_REGISTER(playback);
     GST_PLUGIN_STATIC_REGISTER(typefindfunctions);
@@ -105,6 +108,7 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
     GST_PLUGIN_STATIC_REGISTER(ogg);
     GST_PLUGIN_STATIC_REGISTER(theora);
     GST_PLUGIN_STATIC_REGISTER(vorbis);
+#endif
 
     initialized = TRUE;
   }

@@ -26,9 +26,11 @@
 #include <glib.h>
 #include <gst/gst.h>
 
+#ifndef LOCAL_FUZZ_BUILD
 GST_PLUGIN_STATIC_DECLARE (coreelements);
 GST_PLUGIN_STATIC_DECLARE (typefindfunctions);
 GST_PLUGIN_STATIC_DECLARE (app);
+#endif
 
 /* push-based typefind fuzzing target
  *
@@ -73,9 +75,11 @@ LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
     /* Only initialize and register plugins once */
     gst_init (NULL, NULL);
 
+#ifndef LOCAL_FUZZ_BUILD
     GST_PLUGIN_STATIC_REGISTER (coreelements);
     GST_PLUGIN_STATIC_REGISTER (typefindfunctions);
     GST_PLUGIN_STATIC_REGISTER (app);
+#endif
 
     initialized = TRUE;
   }
