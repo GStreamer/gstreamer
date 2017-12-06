@@ -25,7 +25,7 @@
 #include <cdio/cdio.h>
 #include <cdio/cdtext.h>
 
-#if LIBCDIO_VERSION_NUM <= 83
+#if LIBCDIO_VERSION_NUM <= 83 && LIBCDIO_VERSION_NUM >= 76
   #define CDTEXT_FIELD_PERFORMER CDTEXT_PERFORMER
   #define CDTEXT_FIELD_GENRE     CDTEXT_GENRE
   #define CDTEXT_FIELD_TITLE     CDTEXT_TITLE
@@ -42,7 +42,7 @@ void     gst_cdio_add_cdtext_field (GstObject      * src,
                                     GstTagList    ** p_tags);
 
 GstTagList  * gst_cdio_get_cdtext  (GstObject      * src,
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
                                     cdtext_t       * t,
 #else
                                     CdIo           * cdio,
@@ -50,7 +50,7 @@ GstTagList  * gst_cdio_get_cdtext  (GstObject      * src,
                                     track_t          track);
 
 void      gst_cdio_add_cdtext_album_tags (GstObject  * src,
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
                                           cdtext_t   * t,
 #else
                                           CdIo       * cdio,
