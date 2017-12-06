@@ -731,10 +731,21 @@ gst_query_get_structure (GstQuery * query)
 GstStructure *
 gst_query_writable_structure (GstQuery * query)
 {
+  GstStructure *structure;
+
   g_return_val_if_fail (GST_IS_QUERY (query), NULL);
   g_return_val_if_fail (gst_query_is_writable (query), NULL);
 
-  return GST_QUERY_STRUCTURE (query);
+  structure = GST_QUERY_STRUCTURE (query);
+
+  if (structure == NULL) {
+    structure =
+        gst_structure_new_id_empty (gst_query_type_to_quark (GST_QUERY_TYPE
+            (query)));
+    gst_structure_set_parent_refcount (structure, &query->mini_object.refcount);
+    GST_QUERY_STRUCTURE (query) = structure;
+  }
+  return structure;
 }
 
 /**
