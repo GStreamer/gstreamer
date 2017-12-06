@@ -705,9 +705,9 @@ had_parent:
  *
  * Get the structure of a query.
  *
- * Returns: (transfer none): the #GstStructure of the query. The structure is
- *     still owned by the query and will therefore be freed when the query
- *     is unreffed.
+ * Returns: (transfer none) (nullable): the #GstStructure of the query. The
+ *     structure is still owned by the query and will therefore be freed when the
+ *     query is unreffed.
  */
 const GstStructure *
 gst_query_get_structure (GstQuery * query)

@@ -1144,9 +1144,9 @@ gst_message_new_request_state (GstObject * src, GstState state)
  *
  * Access the structure of the message.
  *
- * Returns: (transfer none): The structure of the message. The structure is
- * still owned by the message, which means that you should not free it and
- * that the pointer becomes invalid when you free the message.
+ * Returns: (transfer none) (nullable): The structure of the message. The
+ * structure is still owned by the message, which means that you should not
+ * free it and that the pointer becomes invalid when you free the message.
  *
  * MT safe.
  */
