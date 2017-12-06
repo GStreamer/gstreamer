@@ -6,13 +6,19 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-SUBDIRS = 		\
+if BUILD_TESTS
+SUBDIRS_TESTS = tests
+else
+SUBDIRS_TESTS =
+endif
+
+SUBDIRS = \
 	gst \
 	common \
 	pkgconfig \
 	docs \
 	$(SUBDIRS_EXAMPLES) \
-	tests
+	$(SUBDIRS_TESTS)
 
 DIST_SUBDIRS = gst common pkgconfig docs examples tests
 
