@@ -333,9 +333,9 @@ had_parent:
  *
  * Access the structure of the event.
  *
- * Returns: The structure of the event. The structure is still
- * owned by the event, which means that you should not free it and
- * that the pointer becomes invalid when you free the event.
+ * Returns: (transfer none) (nullable): The structure of the event. The
+ * structure is still owned by the event, which means that you should not free
+ * it and that the pointer becomes invalid when you free the event.
  *
  * MT safe.
  */
