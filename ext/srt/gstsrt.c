@@ -39,7 +39,7 @@ gst_srt_client_connect_full (GstElement * elem, int sender,
     GSocketAddress ** socket_address, gint * poll_id, gchar * passphrase,
     int key_length)
 {
-  SRTSOCKET sock;
+  SRTSOCKET sock = SRT_INVALID_SOCK;
   GError *error = NULL;
   gpointer sa;
   size_t sa_len;
