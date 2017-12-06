@@ -209,10 +209,8 @@ _gst_context_query (GstElement * element, const gchar * context_type)
   GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
       "posting `need-context' message");
   msg = gst_message_new_need_context (GST_OBJECT_CAST (element), context_type);
-  if (!gst_element_post_message (element, msg)) {
+  if (!gst_element_post_message (element, msg))
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element, "No bus attached");
-    gst_message_unref (msg);
-  }
 
   /*
    * Whomever responds to the need-context message performs a
