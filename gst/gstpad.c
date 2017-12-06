@@ -3871,6 +3871,8 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
   } else {
     data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+    if (data->ret == GST_FLOW_CUSTOM_SUCCESS_1)
+      data->ret = GST_FLOW_OK;
   }
 
   switch (data->ret) {
