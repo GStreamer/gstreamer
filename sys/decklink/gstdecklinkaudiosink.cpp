@@ -762,6 +762,8 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   gst_buffer_unmap (buffer, &map_info);
   gst_buffer_unref (buffer);
 
+  GST_DEBUG_OBJECT (self, "Returning %s", gst_flow_get_name (flow_ret));
+
   return flow_ret;
 }
 
