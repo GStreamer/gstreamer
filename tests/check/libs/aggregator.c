@@ -575,11 +575,15 @@ GST_START_TEST (test_aggregate_handle_queries)
   ChainData data1 = { 0, };
   ChainData data2 = { 0, };
   TestData test = { 0, };
+  GstCaps *caps;
 
   _test_data_init (&test, FALSE);
+
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
   _chain_data_init (&data1, test.aggregator,
-      gst_query_new_allocation (gst_caps_new_empty_simple ("foo/x-bar"), FALSE),
-      gst_buffer_new (), NULL);
+      gst_query_new_allocation (caps, FALSE), gst_buffer_new (), NULL);
+  gst_caps_unref (caps);
+
   _chain_data_init (&data2, test.aggregator, gst_buffer_new (), NULL);
 
   thread1 = g_thread_try_new ("gst-check", push_data, &data1, NULL);
