@@ -317,7 +317,7 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
   discmode_t discmode;
   gint first_track, num_tracks, i;
   gint first_audio_sector = 0, last_audio_sector = 0;
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
   cdtext_t *cdtext;
 #endif
 
@@ -346,7 +346,7 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
   if (src->read_speed != -1)
     cdio_set_speed (src->cdio, src->read_speed);
 
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
   cdtext = cdio_get_cdtext (src->cdio);
 
   if (NULL == cdtext)
@@ -379,7 +379,7 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
       first_audio_sector = MIN (first_audio_sector, track.start);
       last_audio_sector = MAX (last_audio_sector, track.end);
     }
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
     if (NULL != cdtext)
       track.tags = gst_cdio_get_cdtext (GST_OBJECT (src), cdtext,
           i + first_track);

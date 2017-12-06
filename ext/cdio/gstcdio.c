@@ -49,7 +49,7 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext, track_t track,
   const gchar *txt;
   gchar *txt_utf8;
 
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
   txt = cdtext_get_const (cdtext, field, track);
 #else
   txt = cdtext_get_const (field, cdtext);
@@ -82,7 +82,7 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext, track_t track,
 }
 
 GstTagList *
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
 gst_cdio_get_cdtext (GstObject * src, cdtext_t * t, track_t track)
 {
   GstTagList *tags = NULL;
@@ -109,7 +109,7 @@ gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
 }
 
 void
-#if LIBCDIO_VERSION_NUM > 83
+#if LIBCDIO_VERSION_NUM > 83 || LIBCDIO_VERSION_NUM < 76
 gst_cdio_add_cdtext_album_tags (GstObject * src, cdtext_t * t,
     GstTagList * tags)
 {
