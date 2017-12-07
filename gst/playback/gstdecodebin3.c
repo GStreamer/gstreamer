@@ -200,7 +200,7 @@ struct _GstDecodebin3
   GList *other_inputs;
   /* counter for input */
   guint32 input_counter;
-  /* Current stream group_id (default : G_MAXUINT32) */
+  /* Current stream group_id (default : GST_GROUP_ID_INVALID) */
   /* FIXME : Needs to be resetted appropriately (when upstream changes ?) */
   guint32 current_group_id;
   /* End of variables protected by input_lock */
@@ -606,7 +606,7 @@ gst_decodebin3_init (GstDecodebin3 * dbin)
       "max-size-buffers", 0, "use-interleave", TRUE, NULL);
   gst_bin_add ((GstBin *) dbin, dbin->multiqueue);
 
-  dbin->current_group_id = G_MAXUINT32;
+  dbin->current_group_id = GST_GROUP_ID_INVALID;
 
   g_mutex_init (&dbin->factories_lock);
   g_mutex_init (&dbin->selection_lock);
@@ -711,7 +711,7 @@ set_input_group_id (DecodebinInput * input, guint32 * group_id)
   GstDecodebin3 *dbin = input->dbin;
 
   if (input->group_id != *group_id) {
-    if (input->group_id != G_MAXUINT32)
+    if (input->group_id != GST_GROUP_ID_INVALID)
       GST_WARNING_OBJECT (dbin,
           "Group id changed (%" G_GUINT32_FORMAT " -> %" G_GUINT32_FORMAT
           ") on input %p ", input->group_id, *group_id, input);
@@ -719,7 +719,7 @@ set_input_group_id (DecodebinInput * input, guint32 * group_id)
   }
 
   if (*group_id != dbin->current_group_id) {
-    if (dbin->current_group_id == G_MAXUINT32) {
+    if (dbin->current_group_id == GST_GROUP_ID_INVALID) {
       GST_DEBUG_OBJECT (dbin, "Setting current group id to %" G_GUINT32_FORMAT,
           *group_id);
       dbin->current_group_id = *group_id;
@@ -955,7 +955,7 @@ create_new_input (GstDecodebin3 * dbin, gboolean main)
   input = g_new0 (DecodebinInput, 1);
   input->dbin = dbin;
   input->is_main = main;
-  input->group_id = G_MAXUINT32;
+  input->group_id = GST_GROUP_ID_INVALID;
   if (main)
     input->ghost_sink = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   else {
@@ -2765,6 +2765,7 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
       }
       g_list_free (dbin->slots);
       dbin->slots = NULL;
+      dbin->current_group_id = GST_GROUP_ID_INVALID;
       /* Free inputs */
     }
       break;

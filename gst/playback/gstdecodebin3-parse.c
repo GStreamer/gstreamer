@@ -208,7 +208,7 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
       case GST_EVENT_STREAM_START:
       {
         GstStream *stream = NULL;
-        guint group_id = G_MAXUINT32;
+        guint group_id = GST_GROUP_ID_INVALID;
 
         if (!gst_event_parse_group_id (ev, &group_id)) {
           GST_FIXME_OBJECT (pad,
