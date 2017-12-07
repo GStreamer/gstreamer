@@ -1,8 +1,8 @@
 # GStreamer 1.12 Release Notes
 
 GStreamer 1.12.0 was originally released on 4th May 2017.
-The latest bug-fix release in the 1.12 series is [1.12.3](#1.12.3) and was
-released on 18 September 2017.
+The latest bug-fix release in the 1.12 series is [1.12.4](#1.12.4) and was
+released on 7 December 2017.
 
 The GStreamer team is proud to announce a new major feature release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -13,7 +13,7 @@ improvements.
 See [https://gstreamer.freedesktop.org/releases/1.12/][latest] for the latest
 version of this document.
 
-*Last updated: Monday 19 September 2017, 12:30 UTC [(log)][gitlog]*
+*Last updated: Thursday 7 December 2017, 16:30 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.12/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.12/release-notes-1.12.md
@@ -783,7 +783,7 @@ GIT logs or ChangeLogs of the particular modules.
 
 ### 1.12.3
 
-The second 1.12 bug-fix release (1.12.3) was released on 14 July 2017.
+The third 1.12 bug-fix release (1.12.3) was released on 18 September 2017.
 This release only contains bugfixes and it should be safe to update from 1.12.x.
 
 #### Major bugfixes in 1.12.3
@@ -810,6 +810,38 @@ GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.12.3]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=248880&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.3
 
+### 1.12.4
+
+The fourth 1.12 bug-fix release (1.12.4) was released on 7 December 2017.
+This release only contains bugfixes and it should be safe to update from 1.12.x.
+
+#### Major bugfixes in 1.12.4
+
+ - Dozens of fixes for various issues detected with the help of Google's OSS-Fuzz
+   project: https://github.com/google/oss-fuzz
+   Details to be found there in the bug tracker
+ - Performance regressions with registering debug categories after gst_init()
+   were fixed
+ - Regression with seeking back to 0 in souphttpsrc was fixed
+ - Regression with header rewriting in flacparse was fixed
+ - Regression with playbin/playsink leaking sinks was fixed
+ - Inconsistencies with DROPPED/HANDLED handling in pad probe handlers are fixed
+ - gst_bin_iterate_sorted() always returns sources last now, as documented
+ - gst_query_writable_structure() will never return NULL, for consistency with events
+ - Removal of metas from gst_buffer_meta_foreach() works correctly now
+ - OpenJPEG plugin builds with OpenJPEG >= 2.3
+ - CDIO plugin builds with CDIO >= 1.0
+ - gstreamer-vaapi works correctly with libva 1.0
+ - gst-libav was updated to ffmpeg 3.3.5
+ - Various fixes for memory leaks, deadlocks and crashes in all modules
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.12.4]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.12.4]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=270310&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.4
+
 ## Known Issues
 
 - The `webrtcdsp` element is currently not shipped as part of the Windows
@@ -824,9 +856,9 @@ development version leading up to the stable 1.14 release. The development
 of 1.13/1.14 will happen in the git master branch.
 
 The plan for the 1.14 development cycle is yet to be confirmed, but it is
-expected that feature freeze will be around October 2017
+expected that feature freeze will be around early December 2017
 followed by several 1.13 pre-releases and the new 1.14 stable release
-in October.
+in late December or some time in January.
 
 1.14 will be backwards-compatible to the stable 1.12, 1.10, 1.8, 1.6, 1.4,
 1.2 and 1.0 release series.
