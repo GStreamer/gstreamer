@@ -3146,7 +3146,7 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
     ftyp_size = GST_READ_UINT32_BE (data);
   }
   if ((data = gst_type_find_peek (tf, 0, ftyp_size)) != NULL) {
-    for (offset = 16; offset < ftyp_size; offset += 4) {
+    for (offset = 16; offset + 4 < ftyp_size; offset += 4) {
       if ((profile = q3gp_type_find_get_profile (data + offset))) {
         gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
             "application/x-3gp", "profile", G_TYPE_STRING, profile, NULL);
