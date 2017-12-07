@@ -3,7 +3,7 @@
   <description>Parses byte streams into raw frames</description>
   <filename>../../gst/rawparse/.libs/libgstrawparse.so</filename>
   <basename>libgstrawparse.so</basename>
-  <version>1.12.3</version>
+  <version>1.12.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

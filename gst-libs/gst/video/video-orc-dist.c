@@ -483,11 +483,11 @@ void video_orc_convert_UYVY_GRAY8 (guint8 * ORC_RESTRICT d1, int d1_stride,
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -554,7 +554,7 @@ video_orc_blend_little (guint8 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 14: loadpl */
-  var39.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var39.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -664,7 +664,7 @@ _backup_video_orc_blend_little (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 14: loadpl */
-  var39.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var39.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -874,7 +874,7 @@ video_orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr4 = (orc_union32 *) s1;
 
   /* 15: loadpl */
-  var40.i = (int) 0xff000000;   /* -16777216 or 2.11371e-314f */
+  var40.i = 0xff000000;         /* -16777216 or 2.11371e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -987,7 +987,7 @@ _backup_video_orc_blend_big (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 15: loadpl */
-  var40.i = (int) 0xff000000;   /* -16777216 or 2.11371e-314f */
+  var40.i = 0xff000000;         /* -16777216 or 2.11371e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -1197,7 +1197,7 @@ video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr6 = (orc_int8 *) s3;
 
   /* 3: loadpb */
-  var36 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36 = 0x000000ff;           /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadupdb */
@@ -1261,7 +1261,7 @@ _backup_video_orc_unpack_I420 (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 3: loadpb */
-  var36 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36 = 0x000000ff;           /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadupdb */
@@ -1773,8 +1773,8 @@ video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr4 = (orc_union32 *) s1;
 
   /* 2: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -1855,8 +1855,8 @@ _backup_video_orc_unpack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 2: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -2418,8 +2418,8 @@ video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr4 = (orc_union32 *) s1;
 
   /* 2: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -2500,8 +2500,8 @@ _backup_video_orc_unpack_UYVY (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 2: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -2865,8 +2865,8 @@ video_orc_unpack_VYUY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr4 = (orc_union32 *) s1;
 
   /* 3: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -2950,8 +2950,8 @@ _backup_video_orc_unpack_VYUY (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 3: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -3104,8 +3104,8 @@ video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr4 = (orc_union32 *) s1;
 
   /* 3: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -3189,8 +3189,8 @@ _backup_video_orc_unpack_YVYU (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 3: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -3562,8 +3562,8 @@ video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr6 = (orc_int8 *) s3;
 
   /* 4: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadupdb */
@@ -3647,8 +3647,8 @@ _backup_video_orc_unpack_YUV9 (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 4: loadpb */
-  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadupdb */
@@ -3809,8 +3809,8 @@ video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr6 = (orc_int8 *) s3;
 
   /* 3: loadpb */
-  var38.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var38.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -3894,8 +3894,8 @@ _backup_video_orc_unpack_Y42B (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 3: loadpb */
-  var38.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var38.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -4265,7 +4265,7 @@ video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr6 = (orc_int8 *) s3;
 
   /* 3: loadpb */
-  var36 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36 = 0x000000ff;           /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -4329,7 +4329,7 @@ _backup_video_orc_unpack_Y444 (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 3: loadpb */
-  var36 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36 = 0x000000ff;           /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -4634,9 +4634,9 @@ video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
   ptr4 = (orc_int8 *) s1;
 
   /* 0: loadpb */
-  var33 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var33 = 0x000000ff;           /* 255 or 1.25987e-321f */
   /* 3: loadpw */
-  var35.i = (int) 0x00008080;   /* 32896 or 1.62528e-319f */
+  var35.i = 0x00008080;         /* 32896 or 1.62528e-319f */
 
   for (i = 0; i < n; i++) {
     /* 1: loadb */
@@ -4687,9 +4687,9 @@ _backup_video_orc_unpack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_int8 *) ex->arrays[4];
 
   /* 0: loadpb */
-  var33 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var33 = 0x000000ff;           /* 255 or 1.25987e-321f */
   /* 3: loadpw */
-  var35.i = (int) 0x00008080;   /* 32896 or 1.62528e-319f */
+  var35.i = 0x00008080;         /* 32896 or 1.62528e-319f */
 
   for (i = 0; i < n; i++) {
     /* 1: loadb */
@@ -6207,8 +6207,8 @@ video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr5 = (orc_union16 *) s2;
 
   /* 3: loadpb */
-  var36.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var36.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var36.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -6282,8 +6282,8 @@ _backup_video_orc_unpack_NV12 (OrcExecutor * ORC_RESTRICT ex)
   ptr5 = (orc_union16 *) ex->arrays[5];
 
   /* 3: loadpb */
-  var36.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var36.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var36.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -6606,8 +6606,8 @@ video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr5 = (orc_union16 *) s2;
 
   /* 3: loadpb */
-  var36.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var36.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var36.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -6681,8 +6681,8 @@ _backup_video_orc_unpack_NV21 (OrcExecutor * ORC_RESTRICT ex)
   ptr5 = (orc_union16 *) ex->arrays[5];
 
   /* 3: loadpb */
-  var36.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var36.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var36.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var36.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -7016,7 +7016,7 @@ video_orc_unpack_NV24 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr5 = (orc_union16 *) s2;
 
   /* 0: loadpb */
-  var33 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var33 = 0x000000ff;           /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 1: loadb */
@@ -7067,7 +7067,7 @@ _backup_video_orc_unpack_NV24 (OrcExecutor * ORC_RESTRICT ex)
   ptr5 = (orc_union16 *) ex->arrays[5];
 
   /* 0: loadpb */
-  var33 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
+  var33 = 0x000000ff;           /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 1: loadb */
@@ -7996,17 +7996,17 @@ video_orc_unpack_RGB15_le (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8104,17 +8104,17 @@ _backup_video_orc_unpack_RGB15_le (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8308,17 +8308,17 @@ video_orc_unpack_RGB15_be (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8416,17 +8416,17 @@ _backup_video_orc_unpack_RGB15_be (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8609,13 +8609,13 @@ video_orc_unpack_RGB15_le_trunc (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8700,13 +8700,13 @@ _backup_video_orc_unpack_RGB15_le_trunc (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8888,13 +8888,13 @@ video_orc_unpack_RGB15_be_trunc (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -8979,13 +8979,13 @@ _backup_video_orc_unpack_RGB15_be_trunc (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -9161,11 +9161,11 @@ video_orc_pack_RGB15_le (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var38.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -9236,11 +9236,11 @@ _backup_video_orc_pack_RGB15_le (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var38.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -9399,11 +9399,11 @@ video_orc_pack_RGB15_be (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var38.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -9474,11 +9474,11 @@ _backup_video_orc_pack_RGB15_be (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var38.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -9654,17 +9654,17 @@ video_orc_unpack_BGR15_le (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -9762,17 +9762,17 @@ _backup_video_orc_unpack_BGR15_le (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -9966,17 +9966,17 @@ video_orc_unpack_BGR15_be (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -10074,17 +10074,17 @@ _backup_video_orc_unpack_BGR15_be (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 8: loadpw */
-  var41.i = (int) 0x00000210;   /* 528 or 2.60867e-321f */
+  var41.i = 0x00000210;         /* 528 or 2.60867e-321f */
   /* 10: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 13: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -10267,13 +10267,13 @@ video_orc_unpack_BGR15_le_trunc (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -10358,13 +10358,13 @@ _backup_video_orc_unpack_BGR15_le_trunc (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -10546,13 +10546,13 @@ video_orc_unpack_BGR15_be_trunc (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -10637,13 +10637,13 @@ _backup_video_orc_unpack_BGR15_be_trunc (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var38.i = (int) 0x00007c00;   /* 31744 or 1.56836e-319f */
+  var38.i = 0x00007c00;         /* 31744 or 1.56836e-319f */
   /* 3: loadpw */
-  var39.i = (int) 0x000003e0;   /* 992 or 4.90113e-321f */
+  var39.i = 0x000003e0;         /* 992 or 4.90113e-321f */
   /* 5: loadpw */
-  var40.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var40.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var41.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var41.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -10819,11 +10819,11 @@ video_orc_pack_BGR15_le (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var38.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -10894,11 +10894,11 @@ _backup_video_orc_pack_BGR15_le (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var38.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -11057,11 +11057,11 @@ video_orc_pack_BGR15_be (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var38.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -11132,11 +11132,11 @@ _backup_video_orc_pack_BGR15_be (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var38.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -11313,17 +11313,17 @@ video_orc_unpack_RGB16 (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 9: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 11: loadpw */
-  var43.i = (int) 0x00002080;   /* 8320 or 4.11063e-320f */
+  var43.i = 0x00002080;         /* 8320 or 4.11063e-320f */
   /* 14: loadpw */
-  var44.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var44.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -11432,17 +11432,17 @@ _backup_video_orc_unpack_RGB16 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 9: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 11: loadpw */
-  var43.i = (int) 0x00002080;   /* 8320 or 4.11063e-320f */
+  var43.i = 0x00002080;         /* 8320 or 4.11063e-320f */
   /* 14: loadpw */
-  var44.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var44.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -11639,13 +11639,13 @@ video_orc_unpack_RGB16_trunc (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -11738,13 +11738,13 @@ _backup_video_orc_unpack_RGB16_trunc (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -11923,11 +11923,11 @@ video_orc_pack_RGB16_le (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00fc0000;   /* 16515072 or 8.15953e-317f */
+  var38.i = 0x00fc0000;         /* 16515072 or 8.15953e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -11995,11 +11995,11 @@ _backup_video_orc_pack_RGB16_le (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00fc0000;   /* 16515072 or 8.15953e-317f */
+  var38.i = 0x00fc0000;         /* 16515072 or 8.15953e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -12152,11 +12152,11 @@ video_orc_pack_RGB16_be (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000fc00;   /* 64512 or 3.18732e-319f */
+  var38.i = 0x0000fc00;         /* 64512 or 3.18732e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -12227,11 +12227,11 @@ _backup_video_orc_pack_RGB16_be (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000fc00;   /* 64512 or 3.18732e-319f */
+  var38.i = 0x0000fc00;         /* 64512 or 3.18732e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -12408,17 +12408,17 @@ video_orc_unpack_BGR16 (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 9: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 11: loadpw */
-  var43.i = (int) 0x00002080;   /* 8320 or 4.11063e-320f */
+  var43.i = 0x00002080;         /* 8320 or 4.11063e-320f */
   /* 14: loadpw */
-  var44.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var44.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -12527,17 +12527,17 @@ _backup_video_orc_unpack_BGR16 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 9: loadpw */
-  var42.i = (int) 0x00004200;   /* 16896 or 8.34773e-320f */
+  var42.i = 0x00004200;         /* 16896 or 8.34773e-320f */
   /* 11: loadpw */
-  var43.i = (int) 0x00002080;   /* 8320 or 4.11063e-320f */
+  var43.i = 0x00002080;         /* 8320 or 4.11063e-320f */
   /* 14: loadpw */
-  var44.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var44.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -12734,13 +12734,13 @@ video_orc_unpack_BGR16_trunc (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -12833,13 +12833,13 @@ _backup_video_orc_unpack_BGR16_trunc (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var39.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var39.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpw */
-  var40.i = (int) 0x000007e0;   /* 2016 or 9.96036e-321f */
+  var40.i = 0x000007e0;         /* 2016 or 9.96036e-321f */
   /* 5: loadpw */
-  var41.i = (int) 0x0000001f;   /* 31 or 1.5316e-322f */
+  var41.i = 0x0000001f;         /* 31 or 1.5316e-322f */
   /* 10: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -13019,11 +13019,11 @@ video_orc_pack_BGR16_le (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00fc0000;   /* 16515072 or 8.15953e-317f */
+  var38.i = 0x00fc0000;         /* 16515072 or 8.15953e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -13094,11 +13094,11 @@ _backup_video_orc_pack_BGR16_le (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x0000f800;   /* 63488 or 3.13672e-319f */
+  var37.i = 0x0000f800;         /* 63488 or 3.13672e-319f */
   /* 3: loadpl */
-  var38.i = (int) 0x00fc0000;   /* 16515072 or 8.15953e-317f */
+  var38.i = 0x00fc0000;         /* 16515072 or 8.15953e-317f */
   /* 5: loadpl */
-  var39.i = (int) 0xf8000000;   /* -134217728 or 2.05568e-314f */
+  var39.i = 0xf8000000;         /* -134217728 or 2.05568e-314f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -13257,11 +13257,11 @@ video_orc_pack_BGR16_be (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000fc00;   /* 64512 or 3.18732e-319f */
+  var38.i = 0x0000fc00;         /* 64512 or 3.18732e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -13332,11 +13332,11 @@ _backup_video_orc_pack_BGR16_be (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var37.i = (int) 0x00f80000;   /* 16252928 or 8.03001e-317f */
+  var37.i = 0x00f80000;         /* 16252928 or 8.03001e-317f */
   /* 3: loadpl */
-  var38.i = (int) 0x0000fc00;   /* 64512 or 3.18732e-319f */
+  var38.i = 0x0000fc00;         /* 64512 or 3.18732e-319f */
   /* 5: loadpl */
-  var39.i = (int) 0x000000f8;   /* 248 or 1.22528e-321f */
+  var39.i = 0x000000f8;         /* 248 or 1.22528e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -13553,7 +13553,7 @@ video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 31, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 98, 105, 108, 105, 110, 101, 97, 114, 95,
-        117,
+            117,
         51, 50, 11, 4, 4, 12, 4, 4, 16, 4, 16, 4, 51, 0, 4, 24,
         25, 2, 0,
       };
@@ -13631,7 +13631,7 @@ video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
   /* 6: loadpw */
   var38.i = p1;
   /* 8: loadpw */
-  var39.i = (int) 0x00000080;   /* 128 or 6.32404e-322f */
+  var39.i = 0x00000080;         /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -13693,7 +13693,7 @@ _backup_video_orc_merge_linear_u8 (OrcExecutor * ORC_RESTRICT ex)
   /* 6: loadpw */
   var38.i = ex->params[24];
   /* 8: loadpw */
-  var39.i = (int) 0x00000080;   /* 128 or 6.32404e-322f */
+  var39.i = 0x00000080;         /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -20811,10 +20811,10 @@ video_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = p1;
     /* 11: loadpw */
@@ -20971,10 +20971,10 @@ _backup_video_orc_convert_AYUV_ARGB (OrcExecutor * ORC_RESTRICT ex)
     ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = ex->params[24];
     /* 11: loadpw */
@@ -21267,10 +21267,10 @@ video_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = p1;
     /* 11: loadpw */
@@ -21427,10 +21427,10 @@ _backup_video_orc_convert_AYUV_BGRA (OrcExecutor * ORC_RESTRICT ex)
     ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = ex->params[24];
     /* 11: loadpw */
@@ -21723,10 +21723,10 @@ video_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = p1;
     /* 11: loadpw */
@@ -21883,10 +21883,10 @@ _backup_video_orc_convert_AYUV_ABGR (OrcExecutor * ORC_RESTRICT ex)
     ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = ex->params[24];
     /* 11: loadpw */
@@ -22179,10 +22179,10 @@ video_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride,
     ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = p1;
     /* 11: loadpw */
@@ -22339,10 +22339,10 @@ _backup_video_orc_convert_AYUV_RGBA (OrcExecutor * ORC_RESTRICT ex)
     ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
 
     /* 1: loadpb */
-    var47.x4[0] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[1] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[2] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
-    var47.x4[3] = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+    var47.x4[0] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[1] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[2] = 0x00000080;   /* 128 or 6.32404e-322f */
+    var47.x4[3] = 0x00000080;   /* 128 or 6.32404e-322f */
     /* 9: loadpw */
     var48.i = ex->params[24];
     /* 11: loadpw */
@@ -22646,13 +22646,13 @@ video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
   ptr6 = (orc_int8 *) s3;
 
   /* 1: loadpb */
-  var43 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var43 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 10: loadpw */
   var44.i = p1;
   /* 12: loadpw */
   var45.i = p2;
   /* 16: loadpb */
-  var46 = (int) 0x0000007f;     /* 127 or 6.27463e-322f */
+  var46 = 0x0000007f;           /* 127 or 6.27463e-322f */
   /* 18: loadpw */
   var47.i = p3;
   /* 22: loadpw */
@@ -22660,10 +22660,10 @@ video_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
   /* 25: loadpw */
   var49.i = p5;
   /* 31: loadpb */
-  var50.x4[0] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[1] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[2] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[3] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
+  var50.x4[0] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[1] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[2] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[3] = 0x00000080;     /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -22802,13 +22802,13 @@ _backup_video_orc_convert_I420_BGRA (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 1: loadpb */
-  var43 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var43 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 10: loadpw */
   var44.i = ex->params[24];
   /* 12: loadpw */
   var45.i = ex->params[25];
   /* 16: loadpb */
-  var46 = (int) 0x0000007f;     /* 127 or 6.27463e-322f */
+  var46 = 0x0000007f;           /* 127 or 6.27463e-322f */
   /* 18: loadpw */
   var47.i = ex->params[26];
   /* 22: loadpw */
@@ -22816,10 +22816,10 @@ _backup_video_orc_convert_I420_BGRA (OrcExecutor * ORC_RESTRICT ex)
   /* 25: loadpw */
   var49.i = ex->params[28];
   /* 31: loadpb */
-  var50.x4[0] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[1] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[2] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[3] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
+  var50.x4[0] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[1] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[2] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[3] = 0x00000080;     /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -23098,13 +23098,13 @@ video_orc_convert_I420_ARGB (guint8 * ORC_RESTRICT d1,
   ptr6 = (orc_int8 *) s3;
 
   /* 1: loadpb */
-  var43 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var43 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 10: loadpw */
   var44.i = p1;
   /* 12: loadpw */
   var45.i = p2;
   /* 16: loadpb */
-  var46 = (int) 0x0000007f;     /* 127 or 6.27463e-322f */
+  var46 = 0x0000007f;           /* 127 or 6.27463e-322f */
   /* 18: loadpw */
   var47.i = p3;
   /* 22: loadpw */
@@ -23112,10 +23112,10 @@ video_orc_convert_I420_ARGB (guint8 * ORC_RESTRICT d1,
   /* 25: loadpw */
   var49.i = p5;
   /* 31: loadpb */
-  var50.x4[0] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[1] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[2] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[3] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
+  var50.x4[0] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[1] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[2] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[3] = 0x00000080;     /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -23254,13 +23254,13 @@ _backup_video_orc_convert_I420_ARGB (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 1: loadpb */
-  var43 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var43 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 10: loadpw */
   var44.i = ex->params[24];
   /* 12: loadpw */
   var45.i = ex->params[25];
   /* 16: loadpb */
-  var46 = (int) 0x0000007f;     /* 127 or 6.27463e-322f */
+  var46 = 0x0000007f;           /* 127 or 6.27463e-322f */
   /* 18: loadpw */
   var47.i = ex->params[26];
   /* 22: loadpw */
@@ -23268,10 +23268,10 @@ _backup_video_orc_convert_I420_ARGB (OrcExecutor * ORC_RESTRICT ex)
   /* 25: loadpw */
   var49.i = ex->params[28];
   /* 31: loadpb */
-  var50.x4[0] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[1] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[2] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
-  var50.x4[3] = (int) 0x00000080;       /* 128 or 6.32404e-322f */
+  var50.x4[0] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[1] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[2] = 0x00000080;     /* 128 or 6.32404e-322f */
+  var50.x4[3] = 0x00000080;     /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -23499,14 +23499,14 @@ static void
 _backup_video_orc_matrix8 (OrcExecutor * ORC_RESTRICT ex)
 {
   _custom_video_orc_matrix8 (ex->arrays[ORC_VAR_D1], ex->arrays[ORC_VAR_S1],
-      (ex->params[ORC_VAR_P1] & 0xffffffff) |
-      ((orc_uint64) (ex->params[ORC_VAR_T1]) << 32),
-      (ex->params[ORC_VAR_P2] & 0xffffffff) |
-      ((orc_uint64) (ex->params[ORC_VAR_T2]) << 32),
-      (ex->params[ORC_VAR_P3] & 0xffffffff) |
-      ((orc_uint64) (ex->params[ORC_VAR_T3]) << 32),
-      (ex->params[ORC_VAR_P4] & 0xffffffff) |
-      ((orc_uint64) (ex->params[ORC_VAR_T4]) << 32), ex->n);
+      (ex->params[ORC_VAR_P1] & 0xffffffff) | ((orc_uint64) (ex->
+              params[ORC_VAR_T1]) << 32),
+      (ex->params[ORC_VAR_P2] & 0xffffffff) | ((orc_uint64) (ex->
+              params[ORC_VAR_T2]) << 32),
+      (ex->params[ORC_VAR_P3] & 0xffffffff) | ((orc_uint64) (ex->
+              params[ORC_VAR_T3]) << 32),
+      (ex->params[ORC_VAR_P4] & 0xffffffff) | ((orc_uint64) (ex->
+              params[ORC_VAR_T4]) << 32), ex->n);
 }
 
 void
@@ -24064,7 +24064,7 @@ video_orc_resample_h_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
   ptr7 = (orc_union16 *) s4;
 
   /* 9: loadpw */
-  var38.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var38.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -24133,7 +24133,7 @@ _backup_video_orc_resample_h_2tap_u8_lq (OrcExecutor * ORC_RESTRICT ex)
   ptr7 = (orc_union16 *) ex->arrays[7];
 
   /* 9: loadpw */
-  var38.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var38.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -24290,7 +24290,7 @@ video_orc_resample_h_2tap_u16 (guint16 * ORC_RESTRICT d1,
   ptr7 = (orc_union16 *) s4;
 
   /* 11: loadpl */
-  var40.i = (int) 0x00001000;   /* 4096 or 2.02369e-320f */
+  var40.i = 0x00001000;         /* 4096 or 2.02369e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -24365,7 +24365,7 @@ _backup_video_orc_resample_h_2tap_u16 (OrcExecutor * ORC_RESTRICT ex)
   ptr7 = (orc_union16 *) ex->arrays[7];
 
   /* 11: loadpl */
-  var40.i = (int) 0x00001000;   /* 4096 or 2.02369e-320f */
+  var40.i = 0x00001000;         /* 4096 or 2.02369e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -24527,7 +24527,7 @@ video_orc_resample_v_2tap_u8_lq (guint8 * ORC_RESTRICT d1,
   /* 5: loadpw */
   var37.i = p1;
   /* 7: loadpw */
-  var38.i = (int) 0x00000080;   /* 128 or 6.32404e-322f */
+  var38.i = 0x00000080;         /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -24589,7 +24589,7 @@ _backup_video_orc_resample_v_2tap_u8_lq (OrcExecutor * ORC_RESTRICT ex)
   /* 5: loadpw */
   var37.i = ex->params[24];
   /* 7: loadpw */
-  var38.i = (int) 0x00000080;   /* 128 or 6.32404e-322f */
+  var38.i = 0x00000080;         /* 128 or 6.32404e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -24733,7 +24733,7 @@ video_orc_resample_v_2tap_u16 (guint16 * ORC_RESTRICT d1,
   /* 5: loadpw */
   var37.i = p1;
   /* 8: loadpl */
-  var38.i = (int) 0x00001000;   /* 4096 or 2.02369e-320f */
+  var38.i = 0x00001000;         /* 4096 or 2.02369e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -24798,7 +24798,7 @@ _backup_video_orc_resample_v_2tap_u16 (OrcExecutor * ORC_RESTRICT ex)
   /* 5: loadpw */
   var37.i = ex->params[24];
   /* 8: loadpl */
-  var38.i = (int) 0x00001000;   /* 4096 or 2.02369e-320f */
+  var38.i = 0x00001000;         /* 4096 or 2.02369e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -24949,7 +24949,7 @@ video_orc_resample_v_2tap_u8 (guint8 * ORC_RESTRICT d1,
   /* 5: loadpw */
   var39.i = p1;
   /* 7: loadpl */
-  var40.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var40.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -25014,7 +25014,7 @@ _backup_video_orc_resample_v_2tap_u8 (OrcExecutor * ORC_RESTRICT ex)
   /* 5: loadpw */
   var39.i = ex->params[24];
   /* 7: loadpl */
-  var40.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var40.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -25187,7 +25187,7 @@ video_orc_resample_v_4tap_u8_lq (guint8 * ORC_RESTRICT d1,
   /* 16: loadpw */
   var41.i = p4;
   /* 19: loadpw */
-  var42.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var42.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -25286,7 +25286,7 @@ _backup_video_orc_resample_v_4tap_u8_lq (OrcExecutor * ORC_RESTRICT ex)
   /* 16: loadpw */
   var41.i = ex->params[27];
   /* 19: loadpw */
-  var42.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var42.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -25495,7 +25495,7 @@ video_orc_resample_v_4tap_u8 (guint8 * ORC_RESTRICT d1,
   /* 16: loadpw */
   var43.i = p4;
   /* 19: loadpl */
-  var44.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var44.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -25597,7 +25597,7 @@ _backup_video_orc_resample_v_4tap_u8 (OrcExecutor * ORC_RESTRICT ex)
   /* 16: loadpw */
   var43.i = ex->params[27];
   /* 19: loadpl */
-  var44.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var44.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -25840,7 +25840,7 @@ video_orc_resample_h_multaps_u8 (gint32 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 31, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 116, 97, 112, 115,
-        95,
+            95,
         117, 56, 11, 4, 4, 12, 1, 1, 12, 2, 2, 20, 2, 150, 32, 4,
         176, 0, 32, 5, 2, 0,
       };
@@ -25992,7 +25992,7 @@ video_orc_resample_h_muladdtaps_u8 (gint32 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 34, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101,
         115, 97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 97, 100, 100,
-        116,
+            116,
         97, 112, 115, 95, 117, 56, 11, 4, 4, 12, 1, 1, 12, 2, 2, 20,
         2, 20, 4, 150, 32, 4, 176, 33, 32, 5, 103, 0, 0, 33, 2, 0,
 
@@ -26069,7 +26069,7 @@ video_orc_resample_scaletaps_u8 (guint8 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var35.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var35.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -26111,7 +26111,7 @@ _backup_video_orc_resample_scaletaps_u8 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var35.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var35.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -26148,7 +26148,7 @@ video_orc_resample_scaletaps_u8 (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 31, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 115, 99, 97, 108, 101, 116, 97, 112, 115,
-        95,
+            95,
         117, 56, 11, 1, 1, 12, 4, 4, 14, 4, 255, 15, 0, 0, 14, 4,
         12, 0, 0, 0, 20, 2, 20, 4, 103, 33, 4, 16, 125, 33, 33, 17,
         166, 32, 33, 160, 0, 32, 2, 0,
@@ -26285,7 +26285,7 @@ video_orc_resample_h_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 34, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 116, 97, 112, 115,
-        95,
+            95,
         117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 12, 2, 2, 20, 2,
         150, 32, 4, 89, 0, 32, 5, 2, 0,
       };
@@ -26437,7 +26437,7 @@ video_orc_resample_h_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 37, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101,
         115, 97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 97, 100, 100,
-        116,
+            116,
         97, 112, 115, 95, 117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 12,
         2, 2, 20, 2, 150, 32, 4, 89, 32, 32, 5, 70, 0, 0, 32, 2,
         0,
@@ -26656,7 +26656,7 @@ video_orc_resample_h_multaps3_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 35, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 116, 97, 112, 115,
-        51,
+            51,
         95, 117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 12, 1, 1, 12,
         1, 1, 12, 2, 2, 12, 2, 2, 12, 2, 2, 20, 2, 20, 2, 150,
         32, 4, 89, 32, 32, 7, 150, 33, 5, 89, 33, 33, 8, 70, 32, 32,
@@ -26902,7 +26902,7 @@ video_orc_resample_h_muladdtaps3_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 38, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 97, 100, 100, 116,
-        97,
+            97,
         112, 115, 51, 95, 117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 12,
         1, 1, 12, 1, 1, 12, 2, 2, 12, 2, 2, 12, 2, 2, 20, 2,
         20, 2, 150, 32, 4, 89, 32, 32, 7, 150, 33, 5, 89, 33, 33, 8,
@@ -27025,7 +27025,7 @@ video_orc_resample_h_muladdscaletaps3_u8_lq (guint8 * ORC_RESTRICT d1,
   ptr10 = (orc_union16 *) s7;
 
   /* 16: loadpw */
-  var41.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var41.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -27122,7 +27122,7 @@ _backup_video_orc_resample_h_muladdscaletaps3_u8_lq (OrcExecutor *
   ptr10 = (orc_union16 *) ex->arrays[10];
 
   /* 16: loadpw */
-  var41.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var41.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -27190,7 +27190,7 @@ video_orc_resample_h_muladdscaletaps3_u8_lq (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 43, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 97, 100, 100, 115,
-        99,
+            99,
         97, 108, 101, 116, 97, 112, 115, 51, 95, 117, 56, 95, 108, 113, 11, 1,
         1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 2, 2, 12, 2, 2,
         12, 2, 2, 12, 2, 2, 14, 2, 32, 0, 0, 0, 14, 2, 6, 0,
@@ -27295,7 +27295,7 @@ video_orc_resample_scaletaps_u8_lq (guint8 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var34.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var34.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -27334,7 +27334,7 @@ _backup_video_orc_resample_scaletaps_u8_lq (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var34.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var34.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -27369,7 +27369,7 @@ video_orc_resample_scaletaps_u8_lq (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 34, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 115, 99, 97, 108, 101, 116, 97, 112, 115,
-        95,
+            95,
         117, 56, 95, 108, 113, 11, 1, 1, 12, 2, 2, 14, 2, 32, 0, 0,
         0, 14, 2, 6, 0, 0, 0, 20, 2, 70, 32, 4, 16, 94, 32, 32,
         17, 160, 0, 32, 2, 0,
@@ -27509,7 +27509,7 @@ video_orc_resample_h_multaps_u16 (gint32 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 32, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 116, 97, 112, 115,
-        95,
+            95,
         117, 49, 54, 11, 4, 4, 12, 2, 2, 12, 2, 2, 20, 4, 20, 4,
         154, 32, 4, 153, 33, 5, 120, 0, 32, 33, 2, 0,
       };
@@ -27670,7 +27670,7 @@ video_orc_resample_h_muladdtaps_u16 (gint32 * ORC_RESTRICT d1, int d1_stride,
       static const orc_uint8 bc[] = {
         1, 7, 9, 35, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101,
         115, 97, 109, 112, 108, 101, 95, 104, 95, 109, 117, 108, 97, 100, 100,
-        116,
+            116,
         97, 112, 115, 95, 117, 49, 54, 11, 4, 4, 12, 2, 2, 12, 2, 2,
         20, 4, 20, 4, 154, 32, 4, 153, 33, 5, 120, 32, 32, 33, 103, 0,
         0, 32, 2, 0,
@@ -27748,7 +27748,7 @@ video_orc_resample_scaletaps_u16 (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var34.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var34.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -27787,7 +27787,7 @@ _backup_video_orc_resample_scaletaps_u16 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var34.i = (int) 0x00000fff;   /* 4095 or 2.0232e-320f */
+  var34.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -27822,7 +27822,7 @@ video_orc_resample_scaletaps_u16 (guint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 32, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 115, 99, 97, 108, 101, 116, 97, 112, 115,
-        95,
+            95,
         117, 49, 54, 11, 2, 2, 12, 4, 4, 14, 4, 255, 15, 0, 0, 14,
         4, 12, 0, 0, 0, 20, 4, 103, 32, 4, 16, 125, 32, 32, 17, 166,
         0, 32, 2, 0,
@@ -27952,7 +27952,7 @@ video_orc_resample_v_multaps_u8 (gint32 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 31, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 116, 97, 112, 115,
-        95,
+            95,
         117, 56, 11, 4, 4, 12, 1, 1, 16, 2, 20, 2, 150, 32, 4, 176,
         0, 32, 24, 2, 0,
       };
@@ -28091,7 +28091,7 @@ video_orc_resample_v_muladdtaps_u8 (gint32 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 34, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 97, 100, 100, 116,
-        97,
+            97,
         112, 115, 95, 117, 56, 11, 4, 4, 12, 1, 1, 16, 2, 20, 2, 20,
         4, 150, 32, 4, 176, 33, 32, 24, 103, 0, 0, 33, 2, 0,
       };
@@ -28221,7 +28221,7 @@ video_orc_resample_v_multaps_u16 (gint32 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 32, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 116, 97, 112, 115,
-        95,
+            95,
         117, 49, 54, 11, 4, 4, 12, 2, 2, 16, 2, 20, 4, 154, 32, 4,
         120, 0, 32, 24, 2, 0,
       };
@@ -28366,7 +28366,7 @@ video_orc_resample_v_muladdtaps_u16 (gint32 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 35, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 97, 100, 100, 116,
-        97,
+            97,
         112, 115, 95, 117, 49, 54, 11, 4, 4, 12, 2, 2, 16, 2, 20, 4,
         20, 4, 154, 32, 4, 153, 33, 24, 120, 32, 32, 33, 103, 0, 0, 32,
         2, 0,
@@ -28499,7 +28499,7 @@ video_orc_resample_v_multaps_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 34, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 116, 97, 112, 115,
-        95,
+            95,
         117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 16, 2, 20, 2, 150,
         32, 4, 89, 0, 32, 24, 2, 0,
       };
@@ -28732,7 +28732,7 @@ video_orc_resample_v_multaps4_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 35, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 116, 97, 112, 115,
-        52,
+            52,
         95, 117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 12, 1, 1, 12,
         1, 1, 12, 1, 1, 16, 2, 16, 2, 16, 2, 16, 2, 20, 2, 20,
         2, 150, 32, 4, 89, 32, 32, 24, 150, 33, 5, 89, 33, 33, 25, 70,
@@ -28905,7 +28905,7 @@ video_orc_resample_v_muladdtaps_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 37, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 97, 100, 100, 116,
-        97,
+            97,
         112, 115, 95, 117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 16, 2,
         20, 2, 150, 32, 4, 89, 32, 32, 24, 70, 0, 0, 32, 2, 0,
       };
@@ -29152,7 +29152,7 @@ video_orc_resample_v_muladdtaps4_u8_lq (gint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 38, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 97, 100, 100, 116,
-        97,
+            97,
         112, 115, 52, 95, 117, 56, 95, 108, 113, 11, 2, 2, 12, 1, 1, 12,
         1, 1, 12, 1, 1, 12, 1, 1, 16, 2, 16, 2, 16, 2, 16, 2,
         20, 2, 20, 2, 150, 32, 4, 89, 32, 32, 24, 150, 33, 5, 89, 33,
@@ -29294,7 +29294,7 @@ video_orc_resample_v_muladdscaletaps4_u8_lq (guint8 * ORC_RESTRICT d1,
   /* 16: loadpw */
   var41.i = p4;
   /* 21: loadpw */
-  var43.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var43.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -29402,7 +29402,7 @@ _backup_video_orc_resample_v_muladdscaletaps4_u8_lq (OrcExecutor *
   /* 16: loadpw */
   var41.i = ex->params[27];
   /* 21: loadpw */
-  var43.i = (int) 0x00000020;   /* 32 or 1.58101e-322f */
+  var43.i = 0x00000020;         /* 32 or 1.58101e-322f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -29471,7 +29471,7 @@ video_orc_resample_v_muladdscaletaps4_u8_lq (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 43, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 114, 101, 115,
         97, 109, 112, 108, 101, 95, 118, 95, 109, 117, 108, 97, 100, 100, 115,
-        99,
+            99,
         97, 108, 101, 116, 97, 112, 115, 52, 95, 117, 56, 95, 108, 113, 11, 1,
         1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 2, 2,
         14, 2, 32, 0, 0, 0, 14, 2, 6, 0, 0, 0, 16, 2, 16, 2,
@@ -29998,11 +29998,11 @@ video_orc_chroma_up_v2_u8 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
   ptr5 = (orc_union32 *) s2;
 
   /* 6: loadpw */
-  var41.x2[0] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
-  var41.x2[1] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
+  var41.x2[0] = 0x00000003;     /* 3 or 1.4822e-323f */
+  var41.x2[1] = 0x00000003;     /* 3 or 1.4822e-323f */
   /* 9: loadpw */
-  var42.x2[0] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
-  var42.x2[1] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
+  var42.x2[0] = 0x00000002;     /* 2 or 9.88131e-324f */
+  var42.x2[1] = 0x00000002;     /* 2 or 9.88131e-324f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -30128,11 +30128,11 @@ _backup_video_orc_chroma_up_v2_u8 (OrcExecutor * ORC_RESTRICT ex)
   ptr5 = (orc_union32 *) ex->arrays[5];
 
   /* 6: loadpw */
-  var41.x2[0] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
-  var41.x2[1] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
+  var41.x2[0] = 0x00000003;     /* 3 or 1.4822e-323f */
+  var41.x2[1] = 0x00000003;     /* 3 or 1.4822e-323f */
   /* 9: loadpw */
-  var42.x2[0] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
-  var42.x2[1] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
+  var42.x2[0] = 0x00000002;     /* 2 or 9.88131e-324f */
+  var42.x2[1] = 0x00000002;     /* 2 or 9.88131e-324f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -30363,11 +30363,11 @@ video_orc_chroma_up_v2_u16 (guint16 * ORC_RESTRICT d1,
   ptr5 = (orc_union64 *) s2;
 
   /* 6: loadpl */
-  var41.x2[0] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
-  var41.x2[1] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
+  var41.x2[0] = 0x00000003;     /* 3 or 1.4822e-323f */
+  var41.x2[1] = 0x00000003;     /* 3 or 1.4822e-323f */
   /* 9: loadpl */
-  var42.x2[0] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
-  var42.x2[1] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
+  var42.x2[0] = 0x00000002;     /* 2 or 9.88131e-324f */
+  var42.x2[1] = 0x00000002;     /* 2 or 9.88131e-324f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadq */
@@ -30497,11 +30497,11 @@ _backup_video_orc_chroma_up_v2_u16 (OrcExecutor * ORC_RESTRICT ex)
   ptr5 = (orc_union64 *) ex->arrays[5];
 
   /* 6: loadpl */
-  var41.x2[0] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
-  var41.x2[1] = (int) 0x00000003;       /* 3 or 1.4822e-323f */
+  var41.x2[0] = 0x00000003;     /* 3 or 1.4822e-323f */
+  var41.x2[1] = 0x00000003;     /* 3 or 1.4822e-323f */
   /* 9: loadpl */
-  var42.x2[0] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
-  var42.x2[1] = (int) 0x00000002;       /* 2 or 9.88131e-324f */
+  var42.x2[0] = 0x00000002;     /* 2 or 9.88131e-324f */
+  var42.x2[1] = 0x00000002;     /* 2 or 9.88131e-324f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadq */
@@ -30919,8 +30919,8 @@ video_orc_chroma_down_v4_u8 (guint8 * ORC_RESTRICT d1,
   ptr7 = (orc_union32 *) s4;
 
   /* 17: loadpw */
-  var41.x2[0] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
-  var41.x2[1] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
+  var41.x2[0] = 0x00000004;     /* 4 or 1.97626e-323f */
+  var41.x2[1] = 0x00000004;     /* 4 or 1.97626e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -31051,8 +31051,8 @@ _backup_video_orc_chroma_down_v4_u8 (OrcExecutor * ORC_RESTRICT ex)
   ptr7 = (orc_union32 *) ex->arrays[7];
 
   /* 17: loadpw */
-  var41.x2[0] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
-  var41.x2[1] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
+  var41.x2[0] = 0x00000004;     /* 4 or 1.97626e-323f */
+  var41.x2[1] = 0x00000004;     /* 4 or 1.97626e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -31292,8 +31292,8 @@ video_orc_chroma_down_v4_u16 (guint16 * ORC_RESTRICT d1,
   ptr7 = (orc_union64 *) s4;
 
   /* 17: loadpl */
-  var41.x2[0] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
-  var41.x2[1] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
+  var41.x2[0] = 0x00000004;     /* 4 or 1.97626e-323f */
+  var41.x2[1] = 0x00000004;     /* 4 or 1.97626e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadq */
@@ -31424,8 +31424,8 @@ _backup_video_orc_chroma_down_v4_u16 (OrcExecutor * ORC_RESTRICT ex)
   ptr7 = (orc_union64 *) ex->arrays[7];
 
   /* 17: loadpl */
-  var41.x2[0] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
-  var41.x2[1] = (int) 0x00000004;       /* 4 or 1.97626e-323f */
+  var41.x2[0] = 0x00000004;     /* 4 or 1.97626e-323f */
+  var41.x2[1] = 0x00000004;     /* 4 or 1.97626e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadq */
@@ -31695,7 +31695,7 @@ video_orc_dither_none_4u8_mask (guint8 * ORC_RESTRICT d1, int p1, int n)
       static const orc_uint8 bc[] = {
         1, 9, 30, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 100, 105, 116,
         104, 101, 114, 95, 110, 111, 110, 101, 95, 52, 117, 56, 95, 109, 97,
-        115,
+            115,
         107, 11, 4, 4, 16, 4, 20, 4, 115, 32, 24, 21, 2, 37, 0, 32,
         0, 2, 0,
       };
@@ -32005,7 +32005,7 @@ video_orc_dither_verterr_4u8_mask (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 33, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 100, 105, 116,
         104, 101, 114, 95, 118, 101, 114, 116, 101, 114, 114, 95, 52, 117, 56,
-        95,
+            95,
         109, 97, 115, 107, 11, 4, 4, 11, 8, 8, 18, 8, 20, 8, 20, 8,
         134, 32, 24, 21, 2, 150, 33, 0, 21, 2, 70, 33, 1, 33, 21, 2,
         73, 1, 32, 33, 21, 2, 74, 33, 32, 33, 21, 2, 160, 0, 33, 2,
@@ -32093,9 +32093,9 @@ video_orc_dither_fs_muladd_u8 (guint16 * ORC_RESTRICT d1, int n)
   ptr0 = (orc_union16 *) d1;
 
   /* 1: loadpw */
-  var34.i = (int) 0x00000005;   /* 5 or 2.47033e-323f */
+  var34.i = 0x00000005;         /* 5 or 2.47033e-323f */
   /* 6: loadpw */
-  var36.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
+  var36.i = 0x00000003;         /* 3 or 1.4822e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadoffw */
@@ -32146,9 +32146,9 @@ _backup_video_orc_dither_fs_muladd_u8 (OrcExecutor * ORC_RESTRICT ex)
   ptr0 = (orc_union16 *) ex->arrays[0];
 
   /* 1: loadpw */
-  var34.i = (int) 0x00000005;   /* 5 or 2.47033e-323f */
+  var34.i = 0x00000005;         /* 5 or 2.47033e-323f */
   /* 6: loadpw */
-  var36.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
+  var36.i = 0x00000003;         /* 3 or 1.4822e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadoffw */
@@ -32188,7 +32188,7 @@ video_orc_dither_fs_muladd_u8 (guint16 * ORC_RESTRICT d1, int n)
       static const orc_uint8 bc[] = {
         1, 9, 29, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 100, 105, 116,
         104, 101, 114, 95, 102, 115, 95, 109, 117, 108, 97, 100, 100, 95, 117,
-        56,
+            56,
         11, 2, 2, 14, 4, 4, 0, 0, 0, 14, 2, 5, 0, 0, 0, 14,
         4, 8, 0, 0, 0, 14, 2, 3, 0, 0, 0, 20, 2, 20, 2, 83,
         33, 0, 16, 89, 33, 33, 17, 70, 32, 33, 0, 83, 33, 0, 18, 89,
@@ -32320,7 +32320,7 @@ video_orc_dither_ordered_u8 (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 27, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 100, 105, 116,
         104, 101, 114, 95, 111, 114, 100, 101, 114, 101, 100, 95, 117, 56, 11,
-        1,
+            1,
         1, 12, 1, 1, 35, 0, 0, 4, 2, 0,
       };
       p = orc_program_new_from_static_bytecode (bc);
@@ -32483,7 +32483,7 @@ video_orc_dither_ordered_4u8_mask (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 33, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 100, 105, 116,
         104, 101, 114, 95, 111, 114, 100, 101, 114, 101, 100, 95, 52, 117, 56,
-        95,
+            95,
         109, 97, 115, 107, 11, 4, 4, 12, 8, 8, 18, 8, 20, 8, 20, 8,
         134, 33, 24, 21, 2, 150, 32, 0, 21, 2, 70, 32, 32, 4, 21, 2,
         74, 32, 33, 32, 21, 2, 160, 0, 32, 2, 0,
@@ -32651,7 +32651,7 @@ video_orc_dither_ordered_4u16_mask (guint16 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 34, 118, 105, 100, 101, 111, 95, 111, 114, 99, 95, 100, 105, 116,
         104, 101, 114, 95, 111, 114, 100, 101, 114, 101, 100, 95, 52, 117, 49,
-        54,
+            54,
         95, 109, 97, 115, 107, 11, 8, 8, 12, 8, 8, 18, 8, 20, 8, 20,
         8, 134, 33, 24, 21, 2, 72, 32, 0, 4, 21, 2, 74, 0, 33, 32,
         2, 0,

@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Base Plugins 1.12.3
+Release notes for GStreamer Base Plugins 1.12.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -58,16 +58,9 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 785011 : videodecoder: Default buffer pool supports GstVideoAlignment but downstream might not
-      * 771088 : decodebin3: Don't send duplicated stream-start event
-      * 777735 : urisourcebin: Push EOS if slot is still eos state
-      * 785065 : encodebin: fix possible pad ref leak in error code path
-      * 785331 : Possible Memory leak in gstssaparse.c
-      * 785341 : videofilter: Forgets to unmap input buffer after failing to map output buffer
-      * 785799 : urisourcebin: Buffering broken for adaptive streams with inactive streams
-      * 785948 : audioencoder: Integer overflows in timestamp/granulepos calculation code on discont
-      * 785951 : urisourcebin/decodebin3: Don't use custom EOS events
-      * 786200 : appsrc: erroneous TIME duration query support
+      * 789458 : gst-plugins-base: gstaudiochannels: Handled buffer mapping failure
+      * 789547 : playbin: Leaking sinks during autoplugging
+      * 790329 : xvimageallocator: Fix build warning error
 
 ==== Download ====
 
@@ -104,12 +97,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Ashish Kumar
       * Edward Hervey
-      * Mark Nauwelaerts
-      * Philippe Normand
-      * Satya Prakash Gupta
+      * Havard Graff
+      * Mathieu Duponchelle
+      * Rico Tzschichholz
       * Sebastian Dröge
       * Seungha Yang
       * Thibault Saunier
       * Tim-Philipp Müller
+      * shakin chou
  

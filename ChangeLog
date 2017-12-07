@@ -1,9 +1,324 @@
-=== release 1.12.3 ===
+=== release 1.12.4 ===
 
-2017-09-18  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.3
+	  releasing 1.12.4
+
+2017-12-07 11:03:20 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Fix ico out-of-bound read
+	  The furthest we go to verify the data is reading a guint32 at offset
+	  18, therefore make sure we can read as much.
+
+2017-11-14 23:07:26 +0900  Seungha Yang <pudding8757@gmail.com>
+
+	* sys/xvimage/xvimageallocator.c:
+	  xvimageallocator: Fix build warning error
+	  Fix unused variable build error if HAVE_XSHM is undefined
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790329
+
+2017-12-06 14:22:49 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstogmparse.c:
+	  ogmparse: Make sure we set valid string on caps
+	  the fourcc might not contain printable characters, use the convenience
+	  macro to turn it into a printable fourcc, like it's done in
+	  gstogmparse
+
+2017-06-06 10:39:15 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: fix buffer leak in error code path
+
+2017-12-01 10:14:30 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst-libs/gst/audio/audio-converter.h:
+	  audio: Add missing G_BEGIN/END_DECLS
+
+2017-11-25 12:45:03 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/playback/gsturisourcebin.c:
+	  urisourcebin: Don't leak mutexes
+
+2017-11-21 10:15:02 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	  videotestsrc: Avoid overflow calculation
+	  n_frames could end up being quite big (potentially up to G_MAXINT64). Which
+	  would result in overflowing 64bits when multiplying it by GST_SECOND.
+	  Instead move GST_SECOND to the num argument
+
+2017-11-06 14:28:52 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: Ensure enough bytes for fishead header parsing
+
+2017-11-05 12:16:13 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: Use proper type for sample calculation
+	  If we are going to return a (potentially) 64bit integer, don't use
+	  a 32bit one for calculation, otherwise we could end up exceeding
+	  the maximum size of a 32bit int.
+
+2017-11-05 12:15:33 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: More fixes for invalid granuleshift
+	  Don't use granuleshift if it wasn't set
+
+2017-11-04 16:56:10 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	  rtcpbuffer: fix left shift override
+	  Needs to be cast to the target type
+
+2017-11-04 12:19:46 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/videotestsrc/videotestsrc.c:
+	  videotestsrc: Fix undefined left shift
+	  Cast value to target type
+
+2017-11-04 12:18:39 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst-libs/gst/video/video-converter.c:
+	  video-converter: Fix undefined left shift
+	  Cast value to target type
+
+2017-11-04 11:29:52 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: Fix default granuleshift usage
+	  For stream mappers that don't set a specific granuleshift, it will
+	  have the default value of -1.
+	  Protect the code for that and return the granule value as-is
+
+2017-11-04 11:28:47 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Protect against invalid granule positions
+	  Only valid values are -1, 0 or positive values. Anything else is
+	  most likely corrupted data streams
+
+2017-11-03 17:20:44 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst-libs/gst/pbutils/codec-utils.c:
+	  codecutils: improve input validation in opus header parsing
+	  Invalid input files do not warrant assertions. Instead
+	  output error messages and let the error bubble up.
+
+2017-11-02 15:14:49 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Fix out-of-bound read in PNM typefinder
+
+2017-11-02 10:40:37 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  vorbistag: Fix previous comment
+	  We already NULL-ended the string, don't use the bogus cur_size
+
+2017-11-02 09:05:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: fix off-by-one in webvtt typefinder
+	  We're also checking the byte after the WEBVTT magic.
+
+2017-11-02 09:19:21 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff-media: Handle strf_data being NULL
+	  Instead of trying to get the size of a NULL buffer :)
+
+2017-11-02 08:18:26 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  vorbistag: Check whether tag name is valid
+	  In the same way we check before whether the content of the tag
+	  is UTF-8
+
+2017-11-01 18:26:20 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Only track time for initialized streams
+	  in push-mode we only can track time (or most operations on streams
+	  for that matter) if the underlying GstOggMap was properly initialized.
+
+2017-11-01 18:24:11 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: Add a default GstOggMap
+	  Since the default value of a GstOggPad.map.map was 0 ... we would
+	  end up using wrong functions from mappers() if the stream wasn't
+	  initialized yet.
+	  Instead of that, use a default blank/empty first entry.
+
+2017-11-01 11:19:58 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstogmparse.c:
+	  ogmparse: Ensure we don't create bogus fractions
+	  The clamping of the fraction denominator was bogus (it needs to
+	  be >0)
+
+2017-11-01 11:18:12 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Fix chain leak in push mode
+	  In some corner cases we end up with the building chain not being
+	  properly tracked (and therefore not properly freed).
+	  Add a FIXME so it can later be fixed, but for now just fix the leak
+
+2017-11-01 10:53:54 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  vorbistag: Fix leak in error case
+	  Don't leak the vendor_string on error cases
+
+2017-10-31 10:34:26 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/ogg/gstoggstream.c:
+	  ogg: Don't add tags to empty taglist
+
+2017-11-17 14:07:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	* gst-libs/gst/rtp/gstrtcpbuffer.h:
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	  rtp: Require gconstpointer instead of gpointer for gst_rt[c]p_buffer_new_copy_data()
+
+2017-11-08 19:24:31 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	  audiobasesink: Print signed time offset as a signed number
+
+2017-11-03 11:39:54 +0800  shakin chou <shakin@outlook.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Don't ref_sink() the sinks twice
+	  Since we're already sunk floating reference, we shouldn't call ref_sink
+	  again, which increases the ref_count and cause leaks.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789547
+
+2017-10-30 11:10:11 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Use GST_READ_UINT32 macros
+	  Avoids undefined behaviour with shifting
+
+2017-10-30 08:55:48 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Fix out-of-bound memory access
+	  We were not checking the proper amount of available data in several
+	  places
+
+2017-10-25 12:47:40 +0530  Ashish Kumar <kr.ashish@samsung.com>
+
+	* gst-libs/gst/audio/audio-channels.c:
+	  gst-plugins-base: gstaudiochannels: Handled buffer mapping failure
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789458
+
+2017-10-05 14:28:42 +0200  Rico Tzschichholz <ricotz@ubuntu.com>
+
+	* gst-libs/gst/pbutils/meson.build:
+	* gst-libs/gst/tag/meson.build:
+	* gst-libs/gst/video/meson.build:
+	  meson: Add some missing args and dependencies in the gir generation
+
+2017-09-28 21:56:22 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst-libs/gst/audio/meson.build:
+	  meson: Add mssing GstBase-1.0 include in the gir generation
+
+=== release 1.12.3 ===
+
+2017-09-18 17:47:10 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-pbtypes.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* meson.build:
+	  Release 1.12.3
+
+2017-09-18 16:05:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-09-18 16:00:48 +0300  Sebastian Dröge <sebastian@centricular.com>
 
