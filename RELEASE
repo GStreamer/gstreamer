@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Good Plugins 1.12.3
+Release notes for GStreamer Good Plugins 1.12.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -55,21 +55,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 759292 : Buffer free on error leads to infinite recursion in gstv4l2
-      * 781458 : qtdemux: allow larger files
-      * 783086 : vpxenc:  memory usage grows when dropframe-threshold is enabled
-      * 784250 : rtpstats: Glib CRITICAL _gst_util_uint64_scale_int: assertion 'denom > 0' failed
-      * 784971 : matroskamux: Writes one cluster per audio frame
-      * 785429 : wavparse: Fixed memory leak in gstwavparse.c
-      * 785435 : alawdec: Fix Memory leak in error case
-      * 785990 : v4l2: mark all jpeg frames as keyframes
-      * 785991 : rtpstats: fix unsigned integer comparisons.
-      * 786268 : ac3parse: fix not-linked handling to not cause glitches when switching tracks
-      * 786670 : vpxenc: Return empty GValueArray instead of NULL in gst_vpx_enc_get_property
-      * 786718 : rtpbin: requesting send_rtcp_src_%u first fails
-      * 787160 : Backport patch for 4K colorimetry BT2020_12 selection needs > = 2160 in height check
-      * 787254 : rtph265depay: P-frames are being marked as I-frames
-      * 787313 : Handle BT2020 for colorspace and transfer and gst_v4l2_object_get_colorspace.
+      * 788777 : rtpjitterbuffer/h264parse timestamp issue (regression)
+      * 779957 : souphttpsrc: Manipulate range header when seek to 0
+      * 783542 : souphttpsrc: test_https unit test failure
+      * 784749 : qtdemux: fix debug log for 'hvcC' codec_data
+      * 787795 : flvdemux: unable to handle file that works fine in ffmpeg
+      * 788759 : qtdemux: fix 'stsd' table leak and nested caps leak
+      * 789197 : gst-device-monitor shows broken touch " video " sources
+      * 791034 : rtpjitterbuffer fails to create ptp_clock
+      * 791074 : rtpsession: Handle zero length feedback packets
+      * 787586 : souphttpsrc : Issue with gst-plugins-good v1.12 during seek request on SRT file [regression]
 
 ==== Download ====
 
@@ -106,21 +101,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Cyril Lashkevich
-      * Deepak Srivastava
-      * Eduard Sinelnikov
-      * George Kiagiadakis
-      * Ian Jamison
+      * Edward Hervey
+      * Florian Zwoch
+      * Haakon Sporsheim
       * Jan Alexander Steffens (heftig)
-      * Julien Isorce
-      * Mathieu Duponchelle
-      * Matt Fischer
-      * Matthew Waters
-      * Michael Olbrich
-      * Nicola Murino
+      * Jan Schmidt
+      * Jun Xie
       * Nicolas Dufresne
-      * Satya Prakash Gupta
       * Sebastian Dröge
-      * Sky Juan
       * Tim-Philipp Müller
+      * paul.kim
  

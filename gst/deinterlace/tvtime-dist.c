@@ -117,11 +117,11 @@ void deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -201,7 +201,7 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ptr8 = (orc_int8 *) s5;
 
   /* 16: loadpw */
-  var40.i = (int) 0x00000004;   /* 4 or 1.97626e-323f */
+  var40.i = 0x00000004;         /* 4 or 1.97626e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -293,7 +293,7 @@ _backup_deinterlace_line_vfir (OrcExecutor * ORC_RESTRICT ex)
   ptr8 = (orc_int8 *) ex->arrays[8];
 
   /* 16: loadpw */
-  var40.i = (int) 0x00000004;   /* 4 or 1.97626e-323f */
+  var40.i = 0x00000004;         /* 4 or 1.97626e-323f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -594,7 +594,7 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
   ptr6 = (orc_int8 *) s3;
 
   /* 9: loadpw */
-  var38.i = (int) 0x00000002;   /* 2 or 9.88131e-324f */
+  var38.i = 0x00000002;         /* 2 or 9.88131e-324f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -661,7 +661,7 @@ _backup_deinterlace_line_linear_blend (OrcExecutor * ORC_RESTRICT ex)
   ptr6 = (orc_int8 *) ex->arrays[6];
 
   /* 9: loadpw */
-  var38.i = (int) 0x00000002;   /* 2 or 9.88131e-324f */
+  var38.i = 0x00000002;         /* 2 or 9.88131e-324f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadb */
@@ -713,7 +713,7 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
       static const orc_uint8 bc[] = {
         1, 9, 29, 100, 101, 105, 110, 116, 101, 114, 108, 97, 99, 101, 95, 108,
         105, 110, 101, 95, 108, 105, 110, 101, 97, 114, 95, 98, 108, 101, 110,
-        100,
+            100,
         11, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 14, 2, 2, 0,
         0, 0, 20, 2, 20, 2, 20, 2, 150, 32, 4, 150, 33, 5, 150, 34,
         6, 70, 32, 32, 33, 70, 34, 34, 34, 70, 32, 32, 34, 70, 32, 32,
@@ -829,7 +829,7 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
   ptr7 = (orc_int8 *) s4;
 
   /* 11: loadpb */
-  var44 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var44 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 20: loadpb */
   var45 = p1;
 
@@ -934,7 +934,7 @@ _backup_deinterlace_line_greedy (OrcExecutor * ORC_RESTRICT ex)
   ptr7 = (orc_int8 *) ex->arrays[7];
 
   /* 11: loadpb */
-  var44 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var44 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 20: loadpb */
   var45 = ex->params[24];
 

@@ -63,7 +63,6 @@ GObject
           GstMultiFileSink
           GstMultiUDPSink
             GstUDPSink
-          GstShout2send
           GstSoupHttpClientSink
           GstTest
           GstVideoSink
