@@ -1966,6 +1966,9 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
    * work in pull-mode */
   blocksize = GST_READ_UINT32_LE (data + 4);
   GST_LOG ("wavpack header, blocksize=0x%04x", blocksize);
+  /* If bigger than maximum allowed blocksize, refuse */
+  if (blocksize > 131072)
+    return;
   count_wv = 0;
   count_wvc = 0;
   offset = 32;
