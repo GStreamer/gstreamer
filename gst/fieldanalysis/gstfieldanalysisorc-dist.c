@@ -120,11 +120,11 @@ void fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 *
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -283,7 +283,7 @@ fieldanalysis_orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
       static const orc_uint8 bc[] = {
         1, 9, 44, 102, 105, 101, 108, 100, 97, 110, 97, 108, 121, 115, 105, 115,
         95, 111, 114, 99, 95, 115, 97, 109, 101, 95, 112, 97, 114, 105, 116,
-        121,
+            121,
         95, 115, 97, 100, 95, 112, 108, 97, 110, 97, 114, 95, 121, 117, 118, 12,
         1, 1, 12, 1, 1, 13, 4, 16, 4, 20, 2, 20, 2, 20, 4, 20,
         4, 150, 32, 4, 150, 33, 5, 98, 32, 32, 33, 69, 32, 32, 154, 34,
@@ -466,9 +466,9 @@ fieldanalysis_orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
       static const orc_uint8 bc[] = {
         1, 9, 44, 102, 105, 101, 108, 100, 97, 110, 97, 108, 121, 115, 105, 115,
         95, 111, 114, 99, 95, 115, 97, 109, 101, 95, 112, 97, 114, 105, 116,
-        121,
+            121,
         95, 115, 115, 100, 95, 112, 108, 97, 110, 97, 114, 95, 121, 117, 118,
-        12,
+            12,
         1, 1, 12, 1, 1, 13, 4, 16, 4, 20, 2, 20, 2, 20, 4, 20,
         4, 150, 32, 4, 150, 33, 5, 98, 32, 32, 33, 176, 34, 32, 32, 111,
         35, 34, 24, 106, 34, 34, 35, 181, 12, 34, 2, 0,
@@ -758,7 +758,7 @@ fieldanalysis_orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
       static const orc_uint8 bc[] = {
         1, 9, 46, 102, 105, 101, 108, 100, 97, 110, 97, 108, 121, 115, 105, 115,
         95, 111, 114, 99, 95, 115, 97, 109, 101, 95, 112, 97, 114, 105, 116,
-        121,
+            121,
         95, 51, 95, 116, 97, 112, 95, 112, 108, 97, 110, 97, 114, 95, 121, 117,
         118, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1, 1,
         12, 1, 1, 13, 4, 14, 2, 2, 0, 0, 0, 16, 4, 20, 2, 20,
@@ -909,7 +909,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ptr8 = (orc_int8 *) s5;
 
   /* 11: loadpw */
-  var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
+  var44.i = 0x00000003;         /* 3 or 1.4822e-323f */
   /* 20: loadpl */
   var45.i = p1;
 
@@ -1011,7 +1011,7 @@ _backup_fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor *
   ptr8 = (orc_int8 *) ex->arrays[8];
 
   /* 11: loadpw */
-  var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
+  var44.i = 0x00000003;         /* 3 or 1.4822e-323f */
   /* 20: loadpl */
   var45.i = ex->params[24];
 
@@ -1085,7 +1085,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
       static const orc_uint8 bc[] = {
         1, 9, 50, 102, 105, 101, 108, 100, 97, 110, 97, 108, 121, 115, 105, 115,
         95, 111, 114, 99, 95, 111, 112, 112, 111, 115, 105, 116, 101, 95, 112,
-        97,
+            97,
         114, 105, 116, 121, 95, 53, 95, 116, 97, 112, 95, 112, 108, 97, 110, 97,
         114, 95, 121, 117, 118, 12, 1, 1, 12, 1, 1, 12, 1, 1, 12, 1,
         1, 12, 1, 1, 13, 4, 14, 2, 2, 0, 0, 0, 14, 2, 3, 0,

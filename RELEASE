@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Bad Plugins 1.12.3
+Release notes for GStreamer Bad Plugins 1.12.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -60,20 +60,13 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 767462 : gl: cocoa-videooverlay doesn't work
-      * 782379 : glimagesink: macOS crash when used with autovideosink
-      * 784887 : gsm: Possible Memory leak in gst_buffer_unmap
-      * 785119 : mxfdemux: Wrong PTS on some files
-      * 785941 : fix flushing seek in rtmpsrc
-      * 785957 : adaptivedemux: leaks pad probes, causing gradual increase in CPU
-      * 785987 : adaptivedemux: Deadlock on stopping pipeline
-      * 786036 : vtenc: assume 25 fps for unknown framerate
-      * 786201 : player: media-info duration field not updated upon duration-changed signal
-      * 786250 : openjpeg: Support libopenjp2 v2.2
-      * 787234 : opencv: allow compilation against 3.3.0
-      * 787309 : hlsdemux: fix compilation with openssl 1.1.0
-      * 787442 : kms: fix crash if bo allocation failed when copying to dumb buffer
-      * 787727 : player: cosmetic changes
+      * 784593 : aggregator: Invalidate pad's tail position ...
+      * 787293 : glimagesink: met segment fault when exit app on wayland
+      * 787942 : ttmlparse: Doesn't implement default showBackground behaviour
+      * 789999 : hlsdemux: Fix memory leak caused by double buffer map
+      * 790042 : waylandsink:  memory leak of shm allocator
+      * 790812 : dashdemux: Segmentation fault coredump issue with xlink external AdaptationSet
+      * 791258 : amcvideoenc: when flushing, better handle IllegalStateException received from getOutputBuffer
 
 ==== Download ====
 
@@ -110,20 +103,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Clemens Lang
+      * Chris Bass
       * Edward Hervey
-      * George Kiagiadakis
-      * Guillaume Desmottes
       * Jan Alexander Steffens (heftig)
+      * Jun Xie
+      * Mathieu Duponchelle
       * Matthew Waters
-      * Nicola Murino
-      * Nicolas Dufresne
-      * Philippe Normand
-      * Philippe Renon
-      * Satya Prakash Gupta
+      * Ponnam Srinivas
       * Sebastian Dröge
-      * Thibault Saunier
-      * Tim-Philipp Müller
-      * Tom Bailey
-      * davecraig@unbalancedaudio.com
+      * Shinya Saito
+      * Thiago Santos
+      * Ursula Maplehurst
+      * Vivia Nikolaidou
  

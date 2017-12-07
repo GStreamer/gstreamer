@@ -93,7 +93,6 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
-            GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
             GstGtkBaseSink
