@@ -44,6 +44,12 @@ gst_srt_client_connect_full (GstElement * elem, int sender,
   gpointer sa;
   size_t sa_len;
 
+  if (host == NULL) {
+    GST_ELEMENT_ERROR (elem, RESOURCE, OPEN_READ, ("Invalid host"),
+        ("Unspecified NULL host"));
+    goto failed;
+  }
+
   *socket_address = g_inet_socket_address_new_from_string (host, port);
 
   if (*socket_address == NULL) {
