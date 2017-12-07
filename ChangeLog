@@ -1,9 +1,164 @@
-=== release 1.12.2 ===
+=== release 1.12.4 ===
 
-2017-07-14  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.2
+	  releasing 1.12.4
+
+2017-11-25 15:56:36 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: Copy previous track elements bindings when setting a new asset
+	  Fixes https://phabricator.freedesktop.org/T7862
+
+2017-11-07 11:26:58 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	  auto-transition: Fix debug printf format
+
+2017-11-07 10:15:58 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-timeline.c:
+	  timeline: Do not snap object within the moving context
+	  Reviewed-by: Alex Băluț <<alexandru.balut@gmail.com>>
+	  Differential Revision: https://phabricator.freedesktop.org/D1873
+
+2017-10-31 12:05:08 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	  ges: Sync 'par' to track restriction caps in the frame positionner
+	  Allowing GES users to have control over how compositing is done
+
+2017-09-20 12:59:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-source.c:
+	  ges-source: Fix caps memory leak and compiler warnings when compiling without debug logging
+
+=== release 1.12.3 ===
+
+2017-09-18 17:49:16 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.12.3
+
+2017-08-17 07:28:46 +0000  Stefan Popa <stefanpopa2209@gmail.com>
+
+	* ges/ges-track-element.c:
+	  track_element: Always emit "control-binding-removed" signal.
+	  When setting a new control binding on a track element, the old control
+	  binding (if any) is going to be removed. Make sure the
+	  "control-binding-removed" signal is emitted in this case.
+	  Fixes https://phabricator.freedesktop.org/T7340#95666
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1842
+
+2017-08-29 22:23:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/backgroundsource.c:
+	  Revert "timeline: Return FALSE when commiting an empty timeline"
+	  This commit means that we do not get ASYNC_DONE anymore when commiting
+	  an empty timeline, which means that we need to special case that.
+	  This actually broke some code and does not bring in much.
+	  Fixes https://phabricator.freedesktop.org/T7802
+	  Fixes https://phabricator.freedesktop.org/T7797
+	  This reverts commit e570d1e08009992a0dd6a24bb4cda4427b2b460f.
+	  Thanks @stefanzzz for investigating!
+
+2017-08-22 14:23:45 +0000  Stefan Popa <stefanpopa2209@gmail.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Save encoder and muxer advanced settings
+	  Added support for saving/loading encoder and muxer advanced settings.
+	  Differential Revision: https://phabricator.freedesktop.org/D1837
+
+2017-07-24 10:34:48 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-pipeline.c:
+	* ges/ges-source.c:
+	  Enhance some pad linking issue debug logging.
+
+2017-08-10 15:05:09 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* plugins/nle/nlecomposition.c:
+	  smartmixer: Give a unique name to each compositor instances
+
+2017-08-19 11:42:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Allow up to 2 seconds queueing in the playsink video queue
+	  In playsink the default video queue max size is 3 buffers, which is
+	  sometimes not enough for our use case.
+	  Allow up to 2 seconds of buffered data, giving us more time to do
+	  the transition between clips, and thus avoiding dropping frames in
+	  the sink when bringing up new clip takes too much time.
+	  Differential Revision: https://phabricator.freedesktop.org/D1854
+
+2017-08-17 12:17:33 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to dd9d403
+
+2017-07-31 12:54:25 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	* win32/common/libges.def:
+	  asset: Add a function to stop proxying an asset
+	  And remove any reference as it beeing a proxy.
+
+2017-07-31 12:55:53 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.c:
+	  asset: Clear loading error when reload is requested
+
+2016-01-12 17:05:48 +0000  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Properly update segment->start/stop on commit
+	  Otherwise they will just be the ones from the previous seek event/
+	  stack setup and be meaningless.
+	  Also document the priv->segment meaning.
+	  Fixes https://phabricator.freedesktop.org/T7796
+
+2017-07-27 15:57:31 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Remove trackelements initating move from the moving context
+	  They are handled specially when moving the context and having them
+	  part of the context can lead to weird behaviours.
+	  Fixes https://phabricator.freedesktop.org/T7693
+
+2017-07-21 16:41:26 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Serialize encoding profiles in reverse order
+	  So they are reloaded in the right order.
+
+2017-07-24 10:32:47 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Make sure tracks are unlinked on NULL->NULL state changes
+
+=== release 1.12.2 ===
+
+2017-07-14 14:05:28 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.12.2
 
 2017-07-11 11:40:55 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
 
