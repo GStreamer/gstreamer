@@ -412,7 +412,8 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   GST_BUFFER_OFFSET (buffer) = interaudiosrc->n_samples;
   GST_BUFFER_OFFSET_END (buffer) = interaudiosrc->n_samples + n;
-  GST_BUFFER_TIMESTAMP (buffer) = interaudiosrc->timestamp_offset +
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_PTS (buffer) = interaudiosrc->timestamp_offset +
       gst_util_uint64_scale (interaudiosrc->n_samples, GST_SECOND,
       interaudiosrc->info.rate);
   GST_DEBUG_OBJECT (interaudiosrc, "create ts %" GST_TIME_FORMAT,
