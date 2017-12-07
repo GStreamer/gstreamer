@@ -1,9 +1,103 @@
-=== release 1.12.3 ===
+=== release 1.12.4 ===
 
-2017-09-18  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.3
+	  releasing 1.12.4
+
+2017-08-25 16:22:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicompat.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: handle deprecated enum
+	  In VA-API 1.0 the enum VAEncPackedHeaderH264_SEI is deprecated, and
+	  instead VAEncPackedHeaderRawData should be used.
+	  This patch creates a compatibility symbol,
+	  VA_ENC_PACKED_HEADER_H264_SEI, to expose the used enum according the
+	  VA-API version.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-08-25 16:07:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: guard deprecated symbols
+	  In VA-API 1.0 the H.264 baseline profile is deprecated. This patch
+	  guards the H.264 baseline usage. Consider this commit as a
+	  continuation of commit e0e0a474
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-11 17:29:13 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: libva 1.0 changed the logging
+	  The logging mechanism in libva has changed it's functions
+	  signatures. This patch updates that for libva versions >= 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-11 17:27:32 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: libva 1.0 deprecated baseline
+	  libva 1.0 deprecated H.264 baseline profile and FMO support
+	  (commit b4f332b3).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-11 16:55:26 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	  build: blacklist only libva 0.99.0
+	  Intel's MSDK uses libva 0.99.0, meanwhile open source libva bumped
+	  its API version to 1.0.0. Thus we have to blacklist only the MSDK's
+	  libva (0.99.0)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-09-25 17:04:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: flush pending frames before set format
+	  Flush pending frames, if any, in the internal encorder, before setting
+	  the new negotiated format.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+2017-09-25 15:50:19 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: drain pending frames before set format
+	  Drain pending frames, if any, in the internal decoder before setting
+	  the new negotiated format.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+2017-09-18 14:29:55 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h264/h265: decode codec data only if opened
+	  Fixes regression introduced by commit 2eb2b26a.
+	  There is a use case when the decoder set the src caps and immediatly
+	  tries to process the media codec_data, this happens before decoder is
+	  even opened, thus priv->parser is not instantiated yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787818
+
+2017-08-24 21:51:22 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	  libs: decoder: at update_caps() decode codec_data
+	  When updating the caps in decoder, if the caps has codec_data (avC
+	  format), it has to be parsed to update the state of the decoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+=== release 1.12.3 ===
+
+2017-09-18 17:49:43 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.12.3
 
 2017-09-15 18:31:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
