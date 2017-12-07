@@ -1,7 +1,7 @@
 
-Release notes for GStreamer 1.12.3
+Release notes for GStreamer 1.12.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -35,10 +35,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 778193 : Automagic libunwind dependency
-      * 786034 : plugins: *queue* elements: Handle STREAM_START in EOS situation
-      * 786056 : queue/queue2:: Allow re-usability after EOS
-      * 786561 : baseparse: excessive tag updates - totem uses about a quarter more CPU than " gst-play-1.0 --videosink=clutterautovideosink " 
+      * 788520 : device-provider: gst_device_provider_unhide_provider() always fails
+      * 788617 : gstbuffer: fix meta removal in gst_buffer_foreach_meta
 
 ==== Download ====
 
@@ -75,10 +73,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Carlos Rafael Giani
+      * Ashish Kumar
       * Edward Hervey
-      * Nicolas Dufresne
+      * Havard Graff
+      * Mathieu Duponchelle
+      * Michael Tretter
+      * Miguel París
       * Sebastian Dröge
-      * Thibault Saunier
       * Tim-Philipp Müller
  
