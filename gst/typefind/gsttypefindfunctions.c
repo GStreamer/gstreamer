@@ -3145,14 +3145,13 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
   if ((data = gst_type_find_peek (tf, 0, 4)) != NULL) {
     ftyp_size = GST_READ_UINT32_BE (data);
   }
-  for (offset = 16; offset < ftyp_size; offset += 4) {
-    if ((data = gst_type_find_peek (tf, offset, 3)) == NULL) {
-      break;
-    }
-    if ((profile = q3gp_type_find_get_profile (data))) {
-      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
-          "application/x-3gp", "profile", G_TYPE_STRING, profile, NULL);
-      return;
+  if ((data = gst_type_find_peek (tf, 0, ftyp_size)) != NULL) {
+    for (offset = 16; offset < ftyp_size; offset += 4) {
+      if ((profile = q3gp_type_find_get_profile (data + offset))) {
+        gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
+            "application/x-3gp", "profile", G_TYPE_STRING, profile, NULL);
+        return;
+      }
     }
   }
 
@@ -3361,17 +3360,17 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     size = GST_READ_UINT32_BE (data);
     /* check compatible brands rather than ever expaning major brands above */
     if ((STRNCMP (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
-      new_offset = offset + 12;
-      while (new_offset + 4 <= offset + size) {
-        data = gst_type_find_peek (tf, new_offset, 8);
-        if (data == NULL)
-          goto done;
-        if (STRNCMP (&data[4], "isom", 4) == 0 ||
-            STRNCMP (&data[4], "dash", 4) == 0 ||
-            STRNCMP (&data[4], "avc1", 4) == 0 ||
-            STRNCMP (&data[4], "avc3", 4) == 0 ||
-            STRNCMP (&data[4], "mp41", 4) == 0 ||
-            STRNCMP (&data[4], "mp42", 4) == 0) {
+      data = gst_type_find_peek (tf, offset, size);
+      if (data == NULL)
+        goto done;
+      new_offset = 12;
+      while (new_offset + 4 <= size) {
+        if (STRNCMP (&data[new_offset], "isom", 4) == 0 ||
+            STRNCMP (&data[new_offset], "dash", 4) == 0 ||
+            STRNCMP (&data[new_offset], "avc1", 4) == 0 ||
+            STRNCMP (&data[new_offset], "avc3", 4) == 0 ||
+            STRNCMP (&data[new_offset], "mp41", 4) == 0 ||
+            STRNCMP (&data[new_offset], "mp42", 4) == 0) {
           tip = GST_TYPE_FIND_MAXIMUM;
           variant = "iso";
           goto done;
