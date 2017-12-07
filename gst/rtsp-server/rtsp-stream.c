@@ -1483,7 +1483,7 @@ cleanup:
  * @stream: a #GstRTSPStream
  * @family: protocol family
  * @transport: transport method
- * @use_client_setttings: Whether to use client settings or not
+ * @use_client_settings: Whether to use client settings or not
  *
  * Allocates RTP and RTCP ports.
  *

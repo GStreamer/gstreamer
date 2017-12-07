@@ -413,8 +413,8 @@ gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)
  *
  * Get a list of all available #GstRTSPStreamTransport in this session.
  *
- * Returns: (transfer full): a list of #GstRTSPStreamTransport,
- * g_ptr_array_unref () after usage.
+ * Returns: (transfer full) (element-type GstRTSPStreamTransport): a
+ * list of #GstRTSPStreamTransport, g_ptr_array_unref () after usage.
  */
 GPtrArray *
 gst_rtsp_session_media_get_transports (GstRTSPSessionMedia * media)

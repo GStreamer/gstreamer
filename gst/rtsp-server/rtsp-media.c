@@ -4062,7 +4062,7 @@ gst_rtsp_media_seekable (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_complete_pipeline:
  * @media: a #GstRTSPMedia
- * @transports: a list of #GstRTSPTransport
+ * @transports: (element-type GstRTSPTransport): a list of #GstRTSPTransport
  *
  * Add a receiver and sender parts to the pipeline based on the transport from
  * SETUP.
