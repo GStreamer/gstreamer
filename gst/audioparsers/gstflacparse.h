@@ -86,10 +86,6 @@ struct _GstFlacParse {
   GstBuffer *seektable;
 
   gboolean force_variable_block_size;
-
-  gsize header_size;
-  gsize byte_offset;
-  gboolean byte_mode;
 };
 
 struct _GstFlacParseClass {
