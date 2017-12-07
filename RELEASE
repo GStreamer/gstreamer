@@ -1,7 +1,7 @@
 
-Release notes for GStreamer RTSP Server Library 1.12.3
+Release notes for GStreamer RTSP Server Library 1.12.4
 
-The GStreamer team is proud to announce the third bugfix release in the stable
+The GStreamer team is proud to announce the fourth bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
 
@@ -15,8 +15,8 @@ See /releases/1.12/ for the full release notes.
 
 Bugs fixed in this release
      
-      * 784094 : gst-rtsp-server: huge delay for the client to connect sometimes
-      * 786457 : -uninstalled.pc file is installed by meson build
+      * 789646 : live555 clients get timed out after a while
+      * 769521 : rtspmedia unit test failure: 'gst_rtsp_media_n_streams (media) == 2' failed
 
 ==== Download ====
 
@@ -53,6 +53,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Julien Isorce
-      * Tim-Philipp Müller
+      * Branko Subasic
+      * Edward Hervey
+      * Mathieu Duponchelle
+      * Sebastian Dröge
+      * Thibault Saunier
  
