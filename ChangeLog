@@ -1,9 +1,126 @@
-=== release 1.12.3 ===
+=== release 1.12.4 ===
 
-2017-09-18  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.12.3
+	  releasing 1.12.4
+
+2017-12-07 19:08:11 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/id.po:
+	* po/nl.po:
+	* po/sv.po:
+	  po: Update translations
+
+2017-12-06 13:01:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	  cdio: Fix build with cdio >= 1.0
+	  LIBCDIO_VERSION_NUM was defined as e.g. 94 for 0.94 but is now defined
+	  as 1 for 1.0. We had various checks for < 83, which of course succeeded
+	  now although we are >= 0.83.
+	  Fix this by checking for < 76 (0.76) too, as that is the minimum version
+	  we currently support and everything < 76 is going to be >= 1.0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791301
+
+2017-09-26 10:11:24 +0530  Ponnam Srinivas <p.srinivas@samsung.com>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Fix out buffer memory leak in error code path
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788119
+
+2017-09-15 17:06:58 +0530  Deepak Srivastava <srivastava.d@samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix buffer memory leak in error code path
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787817
+
+2017-08-31 11:33:14 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* gst/realmedia/asmrules.c:
+	  realmedia: fix leak in asmrules error code path
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787056
+
+2017-08-30 18:41:28 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* gst/realmedia/rtspreal.c:
+	  realmedia: Fix Memory leak in error case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787014
+
+=== release 1.12.3 ===
+
+2017-09-18 17:48:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.12.3
+
+2017-09-18 16:20:11 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-09-18 16:03:32 +0300  Sebastian Dröge <sebastian@centricular.com>
 
