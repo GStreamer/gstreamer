@@ -25,7 +25,7 @@
  * @short_description: Tracing base class
  *
  * Tracing modules will subclass #GstTracer and register through
- * gst_tracing_register(). Modules can attach to various hook-types - see
+ * gst_tracer_register(). Modules can attach to various hook-types - see
  * gst_tracing_register_hook(). When invoked they receive hook specific
  * contextual data, which they must not modify.
  *

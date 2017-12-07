@@ -358,7 +358,7 @@ typedef void (*GstTracerHookElementQueryPost) (GObject *self, GstClockTime ts,
  * @ts: the current timestamp
  * @element: the element
  *
- * Hook for gst_element_new() named "element-new".
+ * Hook for whenever a new element is created, named "element-new".
  */
 typedef void (*GstTracerHookElementNew) (GObject *self, GstClockTime ts,
     GstElement *element);

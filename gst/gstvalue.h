@@ -215,7 +215,7 @@ G_BEGIN_DECLS
  * GST_FLAG_SET_MASK_EXACT: (value 4294967295) (type guint)
  *
  * A mask value with all bits set, for use as a
- * #GstFlagSet mask where all flag bits must match
+ * GstFlagSet mask where all flag bits must match
  * exactly
  *
  * Since: 1.6

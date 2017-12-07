@@ -769,7 +769,7 @@ no_replace:
  * Gets the file descriptor from the bus which can be used to get notified about
  * messages being available with functions like g_poll(), and allows integration
  * into other event loops based on file descriptors.
- * Whenever a message is available, the %POLLIN / %G_IO_IN event is set.
+ * Whenever a message is available, the POLLIN / %G_IO_IN event is set.
  *
  * Warning: NEVER read or write anything to the returned fd but only use it
  * for getting notifications via g_poll() or similar and then use the normal
