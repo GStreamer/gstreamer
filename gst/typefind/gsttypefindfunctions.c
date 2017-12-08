@@ -3262,6 +3262,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     }
 
     size = GST_READ_UINT32_BE (data);
+    if (size + offset >= G_MAXINT64)
+      break;
     /* check compatible brands rather than ever expaning major brands above */
     if ((STRNCMP (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
       new_offset = offset + 12;
@@ -3296,6 +3298,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     }
     new_offset = offset + size;
     if (new_offset <= offset)
+      break;
+    if (new_offset + 16 >= G_MAXINT64)
       break;
     offset = new_offset;
   }
