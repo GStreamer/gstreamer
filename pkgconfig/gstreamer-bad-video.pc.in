@@ -10,7 +10,7 @@ typelibdir=${libdir}/girepository-1.0
 Name: GStreamer bad video library
 Description: Bad video library for GStreamer elements
 Version: @VERSION@
-Requires: gstreamer-@GST_API_VERSION@ gstreamer-bad-base-@GST_API_VERSION@
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
 
 Libs: -L${libdir} -lgstbadvideo-@GST_API_VERSION@
 Cflags: -I${includedir}
