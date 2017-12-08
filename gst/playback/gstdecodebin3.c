@@ -278,6 +278,12 @@ struct _DecodebinInput
 
   gulong pad_added_sigid;
   gulong pad_removed_sigid;
+  gulong drained_sigid;
+
+  /* TRUE if the input got drained
+   * FIXME : When do we reset it if re-used ?
+   */
+  gboolean drained;
 
   /* HACK : Remove these fields */
   /* List of PendingPad structures */
@@ -357,6 +363,7 @@ enum
 enum
 {
   SIGNAL_SELECT_STREAM,
+  SIGNAL_ABOUT_TO_FINISH,
   LAST_SIGNAL
 };
 static guint gst_decodebin3_signals[LAST_SIGNAL] = { 0 };
@@ -548,6 +555,17 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
       _gst_int_accumulator, NULL, g_cclosure_marshal_generic,
       G_TYPE_INT, 2, GST_TYPE_STREAM_COLLECTION, GST_TYPE_STREAM);
 
+  /**
+   * GstDecodebin3::about-to-finish:
+   *
+   * This signal is emitted when the data for the selected URI is
+   * entirely buffered and it is safe to specify anothe URI.
+   */
+  gst_decodebin3_signals[SIGNAL_ABOUT_TO_FINISH] =
+      g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+      0, G_TYPE_NONE);
+
 
   element_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_decodebin3_request_new_pad);
@@ -713,6 +731,30 @@ set_input_group_id (DecodebinInput * input, guint32 * group_id)
   return FALSE;
 }
 
+static void
+parsebin_drained_cb (GstElement * parsebin, DecodebinInput * input)
+{
+  GstDecodebin3 *dbin = input->dbin;
+  gboolean all_drained;
+  GList *tmp;
+
+  GST_WARNING_OBJECT (dbin, "input %p drained", input);
+  input->drained = TRUE;
+
+  all_drained = dbin->main_input->drained;
+  for (tmp = dbin->other_inputs; tmp; tmp = tmp->next) {
+    DecodebinInput *data = (DecodebinInput *) tmp->data;
+
+    all_drained &= data->drained;
+  }
+
+  if (all_drained) {
+    GST_WARNING_OBJECT (dbin, "All inputs drained. Posting about-to-finish");
+    g_signal_emit (dbin, gst_decodebin3_signals[SIGNAL_ABOUT_TO_FINISH], 0,
+        NULL);
+  }
+}
+
 /* Call with INPUT_LOCK taken */
 static gboolean
 ensure_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
@@ -731,6 +773,9 @@ ensure_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
     input->pad_removed_sigid =
         g_signal_connect (input->parsebin, "pad-removed",
         (GCallback) parsebin_pad_removed_cb, input);
+    input->drained_sigid =
+        g_signal_connect (input->parsebin, "drained",
+        (GCallback) parsebin_drained_cb, input);
     g_signal_connect (input->parsebin, "autoplug-continue",
         (GCallback) parsebin_autoplug_continue_cb, dbin);
   }
@@ -853,6 +898,7 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
     g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
     g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
+    g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
     gst_pad_remove_probe (input->parsebin_sink, probe_id);
     gst_object_unref (input->parsebin);
     gst_object_unref (input->parsebin_sink);
@@ -882,6 +928,7 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
   if (input->parsebin) {
     g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
     g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
+    g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
     gst_object_unref (input->parsebin);
     gst_object_unref (input->parsebin_sink);
