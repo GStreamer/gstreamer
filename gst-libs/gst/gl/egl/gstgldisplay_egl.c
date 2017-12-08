@@ -185,7 +185,7 @@ gst_gl_display_egl_new (void)
       gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
 
   if (!ret->display) {
-    GST_ERROR ("Failed to open EGL display connection");
+    GST_INFO ("Failed to open EGL display connection");
   }
 
   return ret;

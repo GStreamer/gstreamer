@@ -128,7 +128,7 @@ gst_gl_display_wayland_new (const gchar * name)
       GST_ERROR ("Failed to open Wayland display connection with name \'%s\'",
           name);
     } else {
-      GST_ERROR ("Failed to open Wayland display connection.");
+      GST_INFO ("Failed to open Wayland display connection.");
     }
     return NULL;
   }
