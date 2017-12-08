@@ -95,7 +95,7 @@ gst_gl_display_x11_new (const gchar * name)
   ret->display = XOpenDisplay (ret->name);
 
   if (!ret->display) {
-    GST_ERROR ("Failed to open X11 display connection with name, \'%s\'", name);
+    GST_INFO ("Failed to open X11 display connection with name, \'%s\'", name);
     gst_object_unref (ret);
     return NULL;
   }
