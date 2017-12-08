@@ -392,7 +392,7 @@ tag_list_from_vorbiscomment_packet (ogg_packet * packet,
   }
 
   if (encoder) {
-    if (encoder[0])
+    if (encoder[0] && g_utf8_validate (encoder, -1, NULL))
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, encoder,
           NULL);
     g_free (encoder);
