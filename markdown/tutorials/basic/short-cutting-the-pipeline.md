@@ -189,7 +189,7 @@ static void new_sample (GstElement *sink, CustomData *data) {
   if (sample) {
     /* The only thing we do in this example is print a * to indicate a received buffer */
     g_print ("*");
-    gst_buffer_unref (sample);
+    gst_sample_unref (sample);
   }
 }
 
