@@ -3460,6 +3460,8 @@ qtif_type_find (GstTypeFind * tf, gpointer unused)
     }
 
     offset += size;
+    if (offset + 8 >= G_MAXINT64)
+      break;
     if (++rounds > QTIF_MAXROUNDS)
       break;
   }
