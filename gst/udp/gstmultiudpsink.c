@@ -1362,6 +1362,7 @@ gst_multiudpsink_start (GstBaseSink * bsink)
       }
 
       g_socket_bind (sink->used_socket, bind_addr, TRUE, &err);
+      g_object_unref (bind_addr);
       if (err != NULL)
         goto bind_error;
     } else {
