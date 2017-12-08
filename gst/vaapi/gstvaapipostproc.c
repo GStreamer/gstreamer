@@ -306,7 +306,9 @@ gst_vaapipostproc_start (GstBaseTransform * trans)
   ds_reset (&postproc->deinterlace_state);
   if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (postproc)))
     return FALSE;
+  g_mutex_lock (&postproc->postproc_lock);
   gst_vaapipostproc_ensure_filter (postproc);
+  g_mutex_unlock (&postproc->postproc_lock);
 
   return TRUE;
 }
@@ -1881,8 +1883,12 @@ cb_channels_init (GstVaapiPostproc * postproc)
   if (postproc->cb_channels)
     return;
 
-  if (!gst_vaapipostproc_ensure_filter (postproc))
+  g_mutex_lock (&postproc->postproc_lock);
+  if (!gst_vaapipostproc_ensure_filter (postproc)) {
+    g_mutex_unlock (&postproc->postproc_lock);
     return;
+  }
+  g_mutex_unlock (&postproc->postproc_lock);
 
   filter_ops = postproc->filter_ops ? g_ptr_array_ref (postproc->filter_ops)
       : gst_vaapi_filter_get_operations (postproc->filter);
