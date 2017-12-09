@@ -47,7 +47,7 @@ opengl_sources = [
 
 if build_gstgl and gstgl_dep.found()
   optional_deps = []
-  opengl_defines = ['-DGST_USE_UNSTABLE_API']
+  opengl_defines = []
 
   if gl_dep.found() # have desktop GL
     opengl_sources += [

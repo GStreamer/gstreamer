@@ -19,8 +19,6 @@
  */
 #include <string.h>
 
-#define GST_USE_UNSTABLE_API 1
-
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>

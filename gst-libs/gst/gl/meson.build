@@ -144,7 +144,7 @@ gl_winsys_deps = []
 # other things we need.
 gl_misc_deps = []
 # Other preprocessor arguments
-gl_cpp_args = ['-DGST_USE_UNSTABLE_API', '-DGST_EXPORTS']
+gl_cpp_args = ['-DGST_EXPORTS']
 
 enabled_gl_apis = []
 enabled_gl_platforms = []
@@ -687,8 +687,7 @@ if build_gstgl
       export_packages : 'gstreamer-gl-1.0',
       includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
       install : true,
-      extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API',
-        '--c-include=gst/gl/gl.h'],
+      extra_args : gir_init_section + ['--c-include=gst/gl/gl.h'],
       dependencies : [gst_dep, gstbase_dep, gstvideo_dep]
     )
     gen_sources += gl_gir
