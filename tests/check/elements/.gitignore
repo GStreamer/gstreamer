@@ -59,6 +59,7 @@ rtpbundle
 rtpcollision
 rtph261
 rtph263
+rtph264
 rtpjitterbuffer
 rtpsession
 rtpmux
