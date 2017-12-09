@@ -131,7 +131,7 @@ static gboolean push_data (CustomData *data) {
 
   /* Set its timestamp and duration */
   GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (data->num_samples, GST_SECOND, SAMPLE_RATE);
-  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (num_samples, GST_SECOND, SAMPLE_RATE);
 
   /* Generate some psychodelic waveforms */
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
@@ -450,7 +450,7 @@ static gboolean push_data (CustomData *data) {
 
   /* Set its timestamp and duration */
   GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (data->num_samples, GST_SECOND, SAMPLE_RATE);
-  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (num_samples, GST_SECOND, SAMPLE_RATE);
 
   /* Generate some psychodelic waveforms */
   raw = (gint16 *)GST_BUFFER_DATA (buffer);
