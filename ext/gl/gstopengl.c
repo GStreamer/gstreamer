@@ -65,15 +65,13 @@
 #include "gstgltestsrc.h"
 #include "gstgldeinterlace.h"
 
-#if HAVE_GRAPHENE
+#ifdef HAVE_GRAPHENE
 #include "gstgltransformation.h"
 #include "gstglvideoflip.h"
 #endif
-#if HAVE_JPEG
-#if HAVE_PNG
+#if defined(HAVE_JPEG) && defined(HAVE_PNG)
 #include "gstgloverlay.h"
-#endif /* HAVE_PNG */
-#endif /* HAVE_JPEG */
+#endif
 
 #if GST_GL_HAVE_OPENGL
 #include "gstglfilterglass.h"
@@ -171,7 +169,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
     return FALSE;
   }
-#if HAVE_GRAPHENE
+#ifdef HAVE_GRAPHENE
   if (!gst_element_register (plugin, "gltransformation",
           GST_RANK_NONE, GST_TYPE_GL_TRANSFORMATION)) {
     return FALSE;
@@ -236,14 +234,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
     return FALSE;
   }
-#if HAVE_JPEG
-#if HAVE_PNG
+#if defined(HAVE_JPEG) && defined(HAVE_PNG)
   if (!gst_element_register (plugin, "gloverlay",
           GST_RANK_NONE, gst_gl_overlay_get_type ())) {
     return FALSE;
   }
-#endif /* HAVE_PNG */
-#endif /* HAVE_JPEG */
+#endif
 #if GST_GL_HAVE_OPENGL
   if (!gst_element_register (plugin, "glfilterglass",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_GLASS)) {

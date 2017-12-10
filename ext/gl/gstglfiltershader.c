@@ -59,7 +59,7 @@
 #include <gst/gl/gstglfuncs.h>
 
 #include "gstglfiltershader.h"
-#if HAVE_GRAPHENE
+#ifdef HAVE_GRAPHENE
 #include <graphene-gobject.h>
 #endif
 
@@ -360,7 +360,7 @@ _set_uniform (GQuark field_id, const GValue * value, gpointer user_data)
   } else if (G_TYPE_CHECK_VALUE_TYPE ((value), G_TYPE_FLOAT)) {
     gst_gl_shader_set_uniform_1f (shader, field_name,
         g_value_get_float (value));
-#if HAVE_GRAPHENE
+#ifdef HAVE_GRAPHENE
   } else if (G_TYPE_CHECK_VALUE_TYPE ((value), GRAPHENE_TYPE_VEC2)) {
     graphene_vec2_t *vec2 = g_value_get_boxed (value);
     float x = graphene_vec2_get_x (vec2);
