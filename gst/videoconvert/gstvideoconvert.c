@@ -371,7 +371,13 @@ static gboolean
 gst_video_convert_filter_meta (GstBaseTransform * trans, GstQuery * query,
     GType api, const GstStructure * params)
 {
-  /* propose all metadata upstream */
+  /* This element cannot passthrough the crop meta, because it would convert the
+   * wrong sub-region of the image, and worst, our output image may not be large
+   * enough for the crop to be applied later */
+  if (api == GST_VIDEO_CROP_META_API_TYPE)
+    return FALSE;
+
+  /* propose all other metadata upstream */
   return TRUE;
 }
 
