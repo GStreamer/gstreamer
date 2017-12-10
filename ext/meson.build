@@ -1,5 +1,6 @@
 subdir('alsa')
 subdir('cdparanoia')
+subdir('gl')
 if cc.get_id() != 'msvc'
   # libvisual has MinGW-specific headers which are not compatible with MSVC
   # If we want to build this with MSVC, we must build libvisual with it too

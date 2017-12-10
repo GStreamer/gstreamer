@@ -433,7 +433,7 @@ if need_platform_egl != 'no'
     glconf.set10('GST_GL_HAVE_PLATFORM_EGL', 1)
 
     if cc.has_header('libdrm/drm_fourcc.h', required : false)
-      gl_misc_deps += gstallocators_dep
+      gl_misc_deps += allocators_dep
       glconf.set10('GST_GL_HAVE_DMABUF', 1)
     endif
 
@@ -669,12 +669,12 @@ if build_gstgl
 
   gstgl = library('gstgl-' + api_version,
     gl_sources,
-    c_args : gst_plugins_bad_args + gl_cpp_args,
+    c_args : gst_plugins_base_args + gl_cpp_args,
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
     install : true,
-    dependencies : [gstbase_dep, gstvideo_dep, gstbadallocators_dep, gmodule_dep,
+    dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps])
   gen_sources = []
   if build_gir
@@ -688,7 +688,7 @@ if build_gstgl
       includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
       install : true,
       extra_args : gir_init_section + ['--c-include=gst/gl/gl.h'],
-      dependencies : [gst_dep, gstbase_dep, gstvideo_dep]
+      dependencies : [video_dep, gst_dep, gst_base_dep]
     )
     gen_sources += gl_gir
   endif
@@ -697,5 +697,5 @@ if build_gstgl
   gstgl_dep = declare_dependency(link_with : gstgl,
     include_directories : [libsinc],
     sources: gen_sources,
-    dependencies : [gstbase_dep, gstvideo_dep] + gl_winsys_deps)
+    dependencies : [video_dep, gst_base_dep] + gl_winsys_deps)
 endif

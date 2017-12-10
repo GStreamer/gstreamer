@@ -70,7 +70,7 @@ struct _GstMViewWidgetClass {
   GtkGridClass parent;
 };
 
-GType gst_mview_widget_get_type ();
+GType gst_mview_widget_get_type (void);
 GtkWidget *gst_mview_widget_new (gboolean is_output);
 
 G_END_DECLS

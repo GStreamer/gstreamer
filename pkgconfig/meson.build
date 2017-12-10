@@ -22,6 +22,7 @@ pkgconf.set('rtsplibdir', join_paths(meson.build_root(), gst_rtsp.outdir()))
 pkgconf.set('sdplibdir', join_paths(meson.build_root(), gstsdp.outdir()))
 pkgconf.set('taglibdir', join_paths(meson.build_root(), gsttag.outdir()))
 pkgconf.set('videolibdir', join_paths(meson.build_root(), gstvideo.outdir()))
+pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
 
 pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
@@ -38,9 +39,9 @@ pkg_files = [
   'gstreamer-sdp',
   'gstreamer-tag',
   'gstreamer-video',
+  'gstreamer-gl',
 ]
 
-# FIXME: -uninstalled.pc files (if still needed?)
 foreach p : pkg_files
   infile = p + '.pc.in'
   outfile = p + '-1.0.pc'

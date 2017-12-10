@@ -43,6 +43,8 @@
 #include "config.h"
 #endif
 
+#undef HAVE_VIDEO_AGGREGATOR_IN_BASE
+
 #include "gstglimagesink.h"
 #include "gstgluploadelement.h"
 #include "gstgldownloadelement.h"
@@ -51,16 +53,20 @@
 #include "gstglfilterbin.h"
 #include "gstglsinkbin.h"
 #include "gstglsrcbin.h"
-#include "gstglmixerbin.h"
 
 #include "gstglfiltercube.h"
 #include "gstgleffects.h"
 #include "gstglcolorscale.h"
+
+#ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
+#include "gstglmixerbin.h"
 #include "gstglvideomixer.h"
+#include "gstglstereomix.h"
+#endif
+
 #include "gstglfiltershader.h"
 #include "gstglfilterapp.h"
 #include "gstglstereosplit.h"
-#include "gstglstereomix.h"
 #include "gstglviewconvert.h"
 #include "gstgltestsrc.h"
 #include "gstgldeinterlace.h"
@@ -76,7 +82,9 @@
 #if GST_GL_HAVE_OPENGL
 #include "gstglfilterglass.h"
 /* #include "gstglfilterreflectedscreen.h" */
+#ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
 #include "gstglmosaic.h"
+#endif
 #if HAVE_PNG
 #include "gstgldifferencematte.h"
 /* #include "gstglbumper.h" */
@@ -159,11 +167,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_SRC_BIN)) {
     return FALSE;
   }
-
+#ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
   if (!gst_element_register (plugin, "glmixerbin",
           GST_RANK_NONE, GST_TYPE_GL_MIXER_BIN)) {
     return FALSE;
   }
+#endif
 
   if (!gst_element_register (plugin, "glfiltercube",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
@@ -189,7 +198,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
     return FALSE;
   }
-
+#ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
   if (!gst_element_register (plugin, "glvideomixer",
           GST_RANK_NONE, gst_gl_video_mixer_bin_get_type ())) {
     return FALSE;
@@ -199,6 +208,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_video_mixer_get_type ())) {
     return FALSE;
   }
+#endif
 
   if (!gst_element_register (plugin, "glshader",
           GST_RANK_NONE, gst_gl_filtershader_get_type ())) {
@@ -219,11 +229,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_STEREOSPLIT)) {
     return FALSE;
   }
-
+#ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
   if (!gst_element_register (plugin, "glstereomix",
           GST_RANK_NONE, GST_TYPE_GL_STEREO_MIX)) {
     return FALSE;
   }
+#endif
 
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -251,10 +262,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 #endif
+#ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
   if (!gst_element_register (plugin, "glmosaic",
           GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
     return FALSE;
   }
+#endif
 #if HAVE_PNG
   if (!gst_element_register (plugin, "gldifferencematte",
           GST_RANK_NONE, gst_gl_differencematte_get_type ())) {

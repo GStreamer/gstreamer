@@ -1,11 +1,15 @@
+# These have to stay in -bad until we can move GstVideoAggregator to -base
+#  'gstglbasemixer.c',
+#  'gstglmixerbin.c',
+#  'gstglmixer.c',
+#  'gstglvideomixer.c',
+#  'gstglstereomix.c',
 opengl_sources = [
   'gstopengl.c',
-  'gstglbasemixer.c',
   'gstgluploadelement.c',
   'gstgldownloadelement.c',
   'gstglcolorconvertelement.c',
   'gstglfilterbin.c',
-  'gstglmixerbin.c',
   'gstglsinkbin.c',
   'gstglsrcbin.c',
   'gstglimagesink.c',
@@ -32,14 +36,11 @@ opengl_sources = [
   'effects/gstgleffectlaplacian.c',
   'gstglcolorscale.c',
   'gstglcolorbalance.c',
-  'gstglmixer.c',
-  'gstglvideomixer.c',
   'gstglfiltershader.c',
   'gstglfilterapp.c',
   'gstglviewconvert.c',
   'gstglstereosplit.c',
   'gstgldeinterlace.c',
-  'gstglstereomix.c',
   'gltestsrc.c',
   'gstgltestsrc.c',
   'gstglutils.c'
@@ -50,9 +51,10 @@ if build_gstgl and gstgl_dep.found()
   opengl_defines = []
 
   if gl_dep.found() # have desktop GL
+    # These have to stay in -bad until we can move GstVideoAggregator to -base
+    # 'gstglmosaic.c',
     opengl_sources += [
       'gstglfilterglass.c',
-      'gstglmosaic.c',
     ]
   endif
 
@@ -103,16 +105,16 @@ if build_gstgl and gstgl_dep.found()
   endif
 
   if egl_dep.found() and cc.has_header('libdrm/drm_fourcc.h', required : false)
-    optional_deps += gstallocators_dep
+    optional_deps += allocators_dep
   endif
 
   gstopengl = library('gstopengl',
     opengl_sources,
-    c_args : gst_plugins_bad_args + opengl_defines,
+    c_args : gst_plugins_base_args + opengl_defines,
     link_args : noseh_link_args,
     include_directories : [configinc],
-    dependencies : [gstgl_dep, gstbadvideo_dep, gstvideo_dep,
-                    gstbase_dep, gstcontroller_dep, libm] + optional_deps,
+    dependencies : [gstgl_dep, video_dep,
+                    gst_base_dep, gst_controller_dep, libm] + optional_deps,
     install : true,
     install_dir : plugins_install_dir,
   )

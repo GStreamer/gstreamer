@@ -3,18 +3,18 @@ noinst_PROGRAMS += pixbufdrop
 
 fxtest_SOURCES = fxtest.c
 
-fxtest_CFLAGS=-I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
+fxtest_CFLAGS=\
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
-	$(GL_CFLAGS) $(GTK3_CFLAGS) $(X11_CFLAGS)
+	$(GL_CFLAGS) $(GTK_CFLAGS) $(X11_CFLAGS)
 fxtest_LDADD=../libgstgtkhelper.la \
-	$(GTK3_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS)  \
-	$(GL_LIBS) -lgstvideo-$(GST_API_VERSION) $(X11_LIBS)
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_LIBS) $(GL_LIBS) $(GTK_LIBS) $(X11_LIBS)
 
 pixbufdrop_SOURCES = pixbufdrop.c
 
-pixbufdrop_CFLAGS=-I$(top_srcdir)/gst-libs -I$(top_builddir)/gst-libs \
+pixbufdrop_CFLAGS=\
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
-	$(GL_CFLAGS) $(GTK3_CFLAGS) $(X11_CFLAGS)
+	$(GL_CFLAGS) $(GTK_CFLAGS) $(X11_CFLAGS)
 pixbufdrop_LDADD=../libgstgtkhelper.la \
-	$(GTK3_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) \
-	$(GL_LIBS) -lgstvideo-$(GST_API_VERSION) $(X11_LIBS)
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_LIBS) $(GL_LIBS) $(GTK_LIBS) $(X11_LIBS)

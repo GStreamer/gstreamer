@@ -1,8 +1,17 @@
 plugin_LTLIBRARIES = libgstopengl.la
 
+# These have to stay in -bad until we can move GstVideoAggregator to -base
+#	gstglbasemixer.c
+#	gstglbasemixer.h
+#	gstglmixer.c
+#	gstglmixer.h
+#	gstglstereomix.c
+#	gstglstereomix.h
+#	gstglvideomixer.c
+#	gstglvideomixer.h
+
 libgstopengl_la_SOURCES = \
 	gstopengl.c \
-	gstglbasemixer.c \
 	gstgluploadelement.c \
 	gstgldownloadelement.c \
 	gstglcolorconvertelement.c \
@@ -34,20 +43,16 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectlaplacian.c \
 	gstglcolorscale.c \
 	gstglcolorbalance.c \
-	gstglmixer.c \
-	gstglvideomixer.c \
 	gstglfiltershader.c \
 	gstglfilterapp.c \
 	gstglviewconvert.c \
 	gstglstereosplit.c \
 	gstgldeinterlace.c \
-	gstglstereomix.c \
 	gltestsrc.c \
 	gstgltestsrc.c \
 	gstglutils.c
 
 noinst_HEADERS = \
-	gstglbasemixer.h \
 	gstgluploadelement.h \
 	gstgldownloadelement.h \
 	gstglcolorconvertelement.h \
@@ -61,12 +66,9 @@ noinst_HEADERS = \
 	effects/gstgleffectssources.h \
 	gstglcolorscale.h \
 	gstglcolorbalance.h \
-	gstglmixer.h \
-	gstglvideomixer.h \
 	gstglfiltershader.h \
 	gstglfilterapp.h \
 	gstglstereosplit.h \
-	gstglstereomix.h \
 	gstgldeinterlace.h \
 	gstglviewconvert.h \
 	gltestsrc.h \
@@ -75,13 +77,13 @@ noinst_HEADERS = \
 
 # full opengl required
 if USE_OPENGL
+#	gstglmosaic.c
 libgstopengl_la_SOURCES += \
-	gstglfilterglass.c \
-	gstglmosaic.c
+	gstglfilterglass.c
 
+#	gstglmosaic.h
 noinst_HEADERS += \
 	gstglfilterglass.h \
-	gstglmosaic.h \
 	effects/gstgleffectscurves.h \
 	effects/gstgleffectlumatocurve.h
 
@@ -123,35 +125,31 @@ noinst_HEADERS += \
 endif
 
 libgstopengl_la_OBJCFLAGS = \
-	-I$(top_srcdir)/gst-libs \
-	-I$(top_builddir)/gst-libs \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	-fobjc-arc \
 	$(GST_OBJCFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) \
 	$(GL_OBJCFLAGS)
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
 libgstopengl_la_CFLAGS = \
-	-I$(top_srcdir)/gst-libs \
-	-I$(top_builddir)/gst-libs \
-	$(GST_CFLAGS) \
-	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) \
+	$(GST_CFLAGS) \
 	$(GL_CFLAGS) \
 	$(LIBPNG_CFLAGS) \
 	$(GRAPHENE_CFLAGS)
 
 libgstopengl_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
-	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
-	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_CONTROLLER_LIBS) \
+	$(GST_LIBS) \
 	$(GL_LIBS) \
 	$(LIBPNG_LIBS) \
 	$(JPEG_LIBS) \

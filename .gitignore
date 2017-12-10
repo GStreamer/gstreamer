@@ -43,6 +43,7 @@ Makefile
 *.gir
 *.typelib
 *.gc??
+.dirstamp
 
 /gst-libs/gst/pbutils/gstpluginsbaseversion.h
 /gst-libs/gst/tag/mklangtables

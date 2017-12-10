@@ -80,13 +80,12 @@ noinst_HEADERS = \
 
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/allocators/libgstallocators-@GST_API_VERSION@.la \
 	$(GMODULE_NO_EXPORT_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(GL_LIBS) \
-	$(top_builddir)/gst-libs/gst/allocators/libgstbadallocators-@GST_API_VERSION@.la
+	$(GL_LIBS)
 
 if HAVE_WINDOW_WIN32
 SUBDIRS += win32
@@ -139,8 +138,6 @@ nodist_configexecinclude_HEADERS = $(built_sys_header_configure)
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	-DGST_EXPORTS \
-	-I$(top_srcdir)/gst-libs \
-	-I$(top_builddir)/gst-libs \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \

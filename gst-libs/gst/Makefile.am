@@ -1,3 +1,10 @@
+if USE_OPENGL
+GL_DIR = gl
+endif
+if USE_GLES2
+GL_DIR = gl
+endif
+
 SUBDIRS = \
 	tag \
 	fft \
@@ -9,7 +16,22 @@ SUBDIRS = \
 	pbutils \
 	riff \
 	app \
-	allocators
+	allocators \
+	$(GL_DIR)
+
+DIST_SUBDIRS = \
+	tag \
+	fft \
+	audio \
+	rtp \
+	sdp \
+	rtsp \
+	video \
+	pbutils \
+	riff \
+	app \
+	allocators \
+	gl
 
 noinst_HEADERS = gettext.h gst-i18n-app.h gst-i18n-plugin.h glib-compat-private.h
 
@@ -25,6 +47,8 @@ pbutils: video audio
 rtp: audio
 
 sdp: rtp
+
+gl: video allocators
 
 INDEPENDENT_SUBDIRS = \
 	tag audio fft video app

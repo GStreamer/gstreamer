@@ -295,6 +295,8 @@ GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 
+AG_GST_GL_CHECKS
+
 dnl GTK is optional and only used in examples
 HAVE_GTK=no
 HAVE_GTK_X11=no
@@ -359,6 +361,9 @@ fi
 AM_CONDITIONAL(HAVE_QT, test "x$HAVE_QT" = "xyes")
 AM_CONDITIONAL(HAVE_QT_MOC, test "x$HAVE_QT_MOC" != "xno")
 
+dnl Check for OpenGL example dependencies (clutter, sdl, etc.)
+AG_GST_GL_EXAMPLES_CHECKS
+
 dnl chck for linux headers needed by the joystick seek example
 AC_COMPILE_IFELSE(
 [
@@ -420,10 +425,12 @@ AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
 
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wformat-nonliteral - see ext/pango/gstclockoverlay.c and http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39438
+dnl -Waggregate-return - xcb_intern_atom() returns an aggregate value
+dnl FIXME: -Wformat-nonliteral triggers in gst-libs/gst/gl/gstglcolorconvert.c (should be fixable)
 AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
-    -Wwrite-strings -Wformat-nonliteral -Wformat-security
-    -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
+    -Wwrite-strings -Wformat-security
+    -Winit-self -Wmissing-include-dirs -Waddress
     -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
@@ -657,6 +664,18 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
+dnl *** gl ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GL, true)
+AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
+  HAVE_GL="no"
+
+  if test x"$USE_OPENGL" = x"yes" -o x"$USE_GLES2" = x"yes"; then
+    HAVE_GL="yes"
+    AG_GST_GL_PLUGIN_CHECKS
+  fi
+])
+
+
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
@@ -759,6 +778,7 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_CDPARANOIA, false)
+AM_CONDITIONAL(USE_GL, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_OGG, false)
@@ -890,6 +910,7 @@ sys/xvimage/Makefile
 ext/Makefile
 ext/alsa/Makefile
 ext/cdparanoia/Makefile
+ext/gl/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile
 ext/opus/Makefile
@@ -902,6 +923,17 @@ gst-libs/gst/allocators/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/app/Makefile
 gst-libs/gst/fft/Makefile
+gst-libs/gst/gl/Makefile
+gst-libs/gst/gl/android/Makefile
+gst-libs/gst/gl/cocoa/Makefile
+gst-libs/gst/gl/dispmanx/Makefile
+gst-libs/gst/gl/glprototypes/Makefile
+gst-libs/gst/gl/eagl/Makefile
+gst-libs/gst/gl/egl/Makefile
+gst-libs/gst/gl/wayland/Makefile
+gst-libs/gst/gl/win32/Makefile
+gst-libs/gst/gl/x11/Makefile
+gst-libs/gst/gl/viv-fb/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/rtsp/Makefile
@@ -934,6 +966,8 @@ pkgconfig/gstreamer-tag.pc
 pkgconfig/gstreamer-tag-uninstalled.pc
 pkgconfig/gstreamer-video.pc
 pkgconfig/gstreamer-video-uninstalled.pc
+pkgconfig/gstreamer-gl.pc
+pkgconfig/gstreamer-gl-uninstalled.pc
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
 tests/Makefile
@@ -946,6 +980,22 @@ tests/examples/dynamic/Makefile
 tests/examples/encoding/Makefile
 tests/examples/fft/Makefile
 tests/examples/gio/Makefile
+tests/examples/gl/Makefile
+tests/examples/gl/generic/Makefile
+tests/examples/gl/generic/cube/Makefile
+tests/examples/gl/generic/doublecube/Makefile
+tests/examples/gl/generic/recordgraphic/Makefile
+tests/examples/gl/generic/cubeyuv/Makefile
+tests/examples/gl/qt/Makefile
+tests/examples/gl/gtk/Makefile
+tests/examples/gl/gtk/fxtest/Makefile
+tests/examples/gl/gtk/3dvideo/Makefile
+tests/examples/gl/gtk/switchvideooverlay/Makefile
+tests/examples/gl/gtk/filternovideooverlay/Makefile
+tests/examples/gl/gtk/filtervideooverlay/Makefile
+tests/examples/gl/cocoa/Makefile
+tests/examples/gl/sdl/Makefile
+tests/examples/gl/clutter/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile

@@ -10,6 +10,12 @@ else
 CDPARANOIA_DIR=
 endif
 
+if USE_GL
+GL_DIR=gl
+else
+GL_DIR=
+endif
+
 if USE_LIBVISUAL
 LIBVISUAL_DIR=libvisual
 else
@@ -57,6 +63,7 @@ endif
 SUBDIRS = \
   $(ALSA_DIR) \
   $(CDPARANOIA_DIR) \
+  $(GL_DIR) \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
   $(OPUS_DIR) \
@@ -67,6 +74,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
   alsa \
   cdparanoia \
+  gl \
   libvisual \
   ogg \
   opus \

@@ -1,6 +1,7 @@
 ext/alsa/gstalsasink.c
 ext/alsa/gstalsasrc.c
 ext/cdparanoia/gstcdparanoiasrc.c
+ext/gl/gstgltestsrc.c
 ext/ogg/gstoggdemux.c
 gst/encoding/gstencodebin.c
 gst/playback/gstdecodebin2.c
