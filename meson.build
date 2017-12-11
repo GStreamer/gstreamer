@@ -170,6 +170,52 @@ if omx_header_path != ''
   gst_omx_args += ['-I' + omx_header_path]
 endif
 
+default_omx_struct_packing = 0
+omx_target = get_option ('with_omx_target')
+if omx_target == 'generic'
+  cdata.set('USE_OMX_TARGET_GENERIC', 1)
+elif omx_target == 'rpi'
+  cdata.set('USE_OMX_TARGET_RPI', 1)
+  cdata.set('OMX_SKIP64BIT', 1)
+  default_omx_struct_packing = 4
+
+  if gstgl_dep.found()
+    if gstgl_dep.type_name() == 'pkgconfig'
+      gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split(',')
+      gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split(',')
+    elif gstgl_dep.type_name() == 'internal'
+      # XXX assume gst-plugins-bad was built with dispmanx and egl support
+      gl_winsys = ['dispmanx']
+      gl_platforms = ['egl']
+    else
+      error ('unreachable dependency type')
+    endif
+
+    if not gl_winsys.contains('dispmanx') or not gl_platforms.contains ('egl')
+      gstgl_dep = dependency('', required : false)
+    endif
+  endif
+elif omx_target == 'bellagio'
+  cdata.set('USE_OMX_TARGET_BELLAGIO', 1)
+elif omx_target == 'zynqultrascaleplus'
+  cdata.set('USE_OMX_TARGET_ZYNQ_USCALE_PLUS', 1)
+  have_allegro_header = cc.has_header (
+      'OMX_Allegro.h',
+      args : gst_omx_args,
+      required : false)
+  if not have_allegro_header
+    error ('Need Allegro OMX headers to build for Zynq UltraScale+. Use with_omx_header_path option to specify the path of those headers.')
+  endif
+elif omx_target == 'tizonia'
+  cdata.set('USE_OMX_TARGET_TIZONIA', 1)
+  tizil_dep = dependency('tizilheaders', version : tizil_req)
+  cdata.set('TIZONIA_LIBDIR', tizil_dep.get_pkgconfig_variable('libdir'))
+  tizil_includedir = tizil_dep.get_pkgconfig_variable('includedir')
+  gst_omx_args += ['-I' + tizil_includedir + '/tizonia']
+else
+  error ('Unsupported omx target specified. Use the -Dwith_omx_target option')
+endif
+
 have_external_omx = cc.has_header(
     'OMX_Core.h',
     args : gst_omx_args,
@@ -241,52 +287,6 @@ have_omx_hevc = cc.has_header_symbol(
     required : false)
 if have_omx_hevc
   cdata.set('HAVE_HEVC', 1)
-endif
-
-default_omx_struct_packing = 0
-omx_target = get_option ('with_omx_target')
-if omx_target == 'generic'
-  cdata.set('USE_OMX_TARGET_GENERIC', 1)
-elif omx_target == 'rpi'
-  cdata.set('USE_OMX_TARGET_RPI', 1)
-  cdata.set('OMX_SKIP64BIT', 1)
-  default_omx_struct_packing = 4
-
-  if gstgl_dep.found()
-    if gstgl_dep.type_name() == 'pkgconfig'
-      gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split(',')
-      gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split(',')
-    elif gstgl_dep.type_name() == 'internal'
-      # XXX assume gst-plugins-bad was built with dispmanx and egl support
-      gl_winsys = ['dispmanx']
-      gl_platforms = ['egl']
-    else
-      error ('unreachable dependency type')
-    endif
-
-    if not gl_winsys.contains('dispmanx') or not gl_platforms.contains ('egl')
-      gstgl_dep = dependency('', required : false)
-    endif
-  endif
-elif omx_target == 'bellagio'
-  cdata.set('USE_OMX_TARGET_BELLAGIO', 1)
-elif omx_target == 'zynqultrascaleplus'
-  cdata.set('USE_OMX_TARGET_ZYNQ_USCALE_PLUS', 1)
-  have_allegro_header = cc.has_header (
-      'OMX_Allegro.h',
-      args : gst_omx_args,
-      required : false)
-  if not have_allegro_header
-    error ('Need Allegro OMX headers to build for Zynq UltraScale+. Use with_omx_header_path option to specify the path of those headers.')
-  endif
-elif omx_target == 'tizonia'
-  cdata.set('USE_OMX_TARGET_TIZONIA', 1)
-  tizil_dep = dependency('tizilheaders', version : tizil_req)
-  cdata.set('TIZONIA_LIBDIR', tizil_dep.get_pkgconfig_variable('libdir'))
-  tizil_includedir = tizil_dep.get_pkgconfig_variable('includedir')
-  add_global_arguments('-I' + tizil_includedir + '/tizonia', language : 'C')
-else
-  error ('Unsupported omx target specified. Use the -Dwith_omx_target option')
 endif
 
 if gstgl_dep.found()
