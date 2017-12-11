@@ -5,7 +5,6 @@
 #subdir('codecparsers')
 subdir('compositor')
 #subdir('directfb')
-subdir('gl')
 #subdir('gtk')
 #subdir('ipcpipeline')
 subdir('mpegts')

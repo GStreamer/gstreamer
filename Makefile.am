@@ -17,7 +17,7 @@ EXTRA_DIST = \
 	gst-libs/gst/interfaces/build_mkenum.py \
 	gst-libs/gst/mpegts/mpegts_enum.py \
 	ext/srtp/srtp_mkenum.py \
-	ext/vulkan/vkconfig.h.meson gst-libs/gst/gl/gstglconfig.h.meson
+	ext/vulkan/vkconfig.h.meson
 
 DISTCLEANFILES = _stdint.h
 
@@ -122,8 +122,9 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst-libs/gst/baseparse \
 	$(top_srcdir)/gst-libs/gst/base \
 	$(top_srcdir)/gst-libs/gst/egl \
+	$(top_srcdir)/gst-libs/gst/gl \
 	$(top_srcdir)/gst-libs/gst/signalprocessor \
-	$(top_srcdir)/tests/examples/gl/gtk/gtkvideooverlay \
+	$(top_srcdir)/tests/examples/gl \
 	$(top_srcdir)/tests/examples/scaletempo \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/tests/examples/switch \

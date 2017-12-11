@@ -1,11 +1,3 @@
-
-if USE_OPENGL
-GL_DIR = gl
-endif
-if USE_GLES2
-GL_DIR = gl
-endif
-
 if USE_WAYLAND
 WAYLAND_DIR=wayland
 endif
@@ -15,21 +7,18 @@ OPENCV_DIR=opencv
 endif
 
 SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc codecparsers \
-	 insertbin mpegts video audio player allocators isoff $(GL_DIR) $(WAYLAND_DIR) \
+	 insertbin mpegts video audio player allocators isoff $(WAYLAND_DIR) \
 	 $(OPENCV_DIR)
 
 noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
-DIST_SUBDIRS = uridownloader adaptivedemux interfaces gl basecamerabinsrc \
+DIST_SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc \
 	codecparsers insertbin mpegts wayland opencv video audio player allocators isoff
-
-#dependencies
-gl: allocators
 
 adaptivedemux: uridownloader
 
 INDEPENDENT_SUBDIRS = \
 	interfaces basecamerabinsrc codecparsers insertbin uridownloader \
-	mpegts player allocators isoff $(GL_DIR) $(WAYLAND_DIR) $(OPENCV_DIR)
+	mpegts player allocators isoff $(WAYLAND_DIR) $(OPENCV_DIR)
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 

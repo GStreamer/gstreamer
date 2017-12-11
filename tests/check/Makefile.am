@@ -204,23 +204,6 @@ else
 check_ipcpipeline=
 endif
 
-if USE_GL
-check_gl=libs/gstglcontext \
-    libs/gstglmemory \
-    libs/gstglupload \
-    libs/gstglcolorconvert \
-    libs/gstglmatrix \
-    libs/gstglquery \
-    libs/gstglsl \
-    libs/gstglslstage \
-    libs/gstglshader \
-    libs/gstglheaders \
-    elements/glimagesink \
-    pipelines/simple-launch-lines
-else
-check_gl=
-endif
-
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -297,7 +280,6 @@ check_PROGRAMS = \
 	$(check_zbar) \
 	$(check_orc) \
 	libs/insertbin \
-	$(check_gl) \
 	$(check_hlsdemux_m3u8) \
 	$(check_hlsdemux) \
 	$(check_srtp) \
@@ -553,119 +535,6 @@ nodist_orc_audiomixer_SOURCES = orc/audiomixer.c
 orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
-
-libs_gstglcontext_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(LDADD)
-
-libs_gstglcontext_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglmemory_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(LDADD)
-
-libs_gstglmemory_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglupload_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglupload_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(LDADD)
-
-libs_gstglcolorconvert_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglcolorconvert_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(LDADD)
-
-libs_gstglmatrix_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglmatrix_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(LDADD)
-
-libs_gstglquery_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
-
-libs_gstglquery_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglsl_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
-
-libs_gstglsl_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglslstage_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
-
-libs_gstglslstage_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglshader_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
-
-libs_gstglshader_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-libs_gstglheaders_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
-
-libs_gstglheaders_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
-
-elements_glimagesink_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
-
-elements_glimagesink_LDADD = \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(LDADD)
-
-pipelines_simple_launch_lines_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) \
-	-DGST_USE_UNSTABLE_API \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
-
-pipelines_simple_launch_lines_LDADD = \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 elements_compositor_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)

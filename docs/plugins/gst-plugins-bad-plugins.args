@@ -47223,9 +47223,9 @@
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>height (kernel height)</NICK>
-<BLURB>The gaussian kernel height (must be positive and odd).</BLURB>
-<DEFAULT>3</DEFAULT>
+<NICK>height of area to blur</NICK>
+<BLURB>Height of the area to blur (in pixels).</BLURB>
+<DEFAULT>2147483647</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47241,11 +47241,51 @@
 <ARG>
 <NAME>GstCvSmooth::width</NAME>
 <TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>width of area to blur</NICK>
+<BLURB>Width of the area to blur (in pixels).</BLURB>
+<DEFAULT>2147483647</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::kernel-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>kernel height</NICK>
+<BLURB>The gaussian kernel height (must be positive and odd).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::kernel-width</NAME>
+<TYPE>gint</TYPE>
 <RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>width (kernel width)</NICK>
+<NICK>kernel width</NICK>
 <BLURB>The gaussian kernel width (must be positive and odd).If type is median, this means the aperture linear size.Check OpenCV docs: http://docs.opencv.org/2.4/modules/imgproc/doc/filtering.htm.</BLURB>
 <DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::position-x</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>starting x position for blur</NICK>
+<BLURB>Starting x position for blur (in pixels).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCvSmooth::position-y</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>starting y position for blur</NICK>
+<BLURB>Starting y position for blur (in pixels).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -67911,6 +67951,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSrc::hw-serial-number</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Hardware serial number</NICK>
+<BLURB>The serial number (hardware ID) of the Decklink card.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -67948,6 +67998,36 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Timecode format</NICK>
 <BLURB>Timecode format type to use for playback.</BLURB>
 <DEFAULT>bmdTimecodeRP188Any</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::hw-serial-number</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Hardware serial number</NICK>
+<BLURB>The serial number (hardware ID) of the Decklink card.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::keyer-level</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Keyer level</NICK>
+<BLURB>Keyer level.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::keyer-mode</NAME>
+<TYPE>GstDecklinkKeyerMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Keyer mode</NICK>
+<BLURB>Keyer mode to be enabled.</BLURB>
+<DEFAULT>Off</DEFAULT>
 </ARG>
 
 <ARG>
@@ -68011,6 +68091,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkAudioSrc::hw-serial-number</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Hardware serial number</NICK>
+<BLURB>The serial number (hardware ID) of the Decklink card.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkAudioSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -68018,6 +68108,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Device number</NICK>
 <BLURB>Output device instance to use.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSink::hw-serial-number</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Hardware serial number</NICK>
+<BLURB>The serial number (hardware ID) of the Decklink card.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -69446,7 +69546,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Maximum delay (ms)</NICK>
-<BLURB>The maximum delay in ms to apply to buffers.</BLURB>
+<BLURB>The maximum delay (inclusive) in ms to apply to buffers.</BLURB>
 <DEFAULT>400</DEFAULT>
 </ARG>
 
@@ -69458,6 +69558,46 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Minimum delay (ms)</NICK>
 <BLURB>The minimum delay in ms to apply to buffers.</BLURB>
 <DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNetSim::allow-reordering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Allow Reordering</NICK>
+<BLURB>When delaying packets, are they allowed to be reordered or not.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNetSim::delay-distribution</NAME>
+<TYPE>GstNetSimDistribution</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Delay Distribution</NICK>
+<BLURB>Distribution for the amount of delay.</BLURB>
+<DEFAULT>uniform</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNetSim::max-bucket-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Maximum Bucket Size (Kb)</NICK>
+<BLURB>The size of the token bucket, related to burstiness resilience (-1 = unlimited).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNetSim::max-kbps</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Maximum Kbps</NICK>
+<BLURB>The maximum number of kilobits to let through per second (-1 = unlimited).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -72221,6 +72361,46 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstKMSSink::bus-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bus ID</NICK>
+<BLURB>DRM bus ID.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::can-scale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>can scale</NICK>
+<BLURB>User can tell kmssink if the driver can support scale.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::display-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Display Height</NICK>
+<BLURB>Height of the display surface in pixels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::display-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Display Width</NICK>
+<BLURB>Width of the display surface in pixels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBs2b::fcut</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[300,2000]</RANGE>
@@ -72881,6 +73061,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstAvWait::end-timecode</NAME>
+<TYPE>GstVideoTimeCode*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>End timecode (object)</NICK>
+<BLURB>Timecode to end at in timecode mode (object).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDewarp::display-mode</NAME>
 <TYPE>GstDewarpDisplayMode</TYPE>
 <RANGE></RANGE>
@@ -73102,12 +73292,12 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstCurlHttpSrc::http-version</NAME>
-<TYPE>gfloat</TYPE>
-<RANGE>[1,2]</RANGE>
+<TYPE>GstCurlHttpVersionType</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>HTTP-Version</NICK>
-<BLURB>The preferred HTTP protocol version (Supported 1.0, 1.1, 2.0).</BLURB>
-<DEFAULT>2</DEFAULT>
+<BLURB>The preferred HTTP protocol version.</BLURB>
+<DEFAULT>HTTP Version 2.0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73257,7 +73447,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.52.1"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.56.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73380,3 +73570,62 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <DEFAULT>15</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstLcms::dest-profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Destination ICC profile file</NICK>
+<BLURB>Specify the destination ICC profile file to apply.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLcms::embedded-profile</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Embedded Profile</NICK>
+<BLURB>Extract and use source profiles embedded in images.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLcms::input-profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input ICC profile file</NICK>
+<BLURB>Specify the input ICC profile file to apply.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLcms::intent</NAME>
+<TYPE>GstLcmsIntent</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Rendering intent</NICK>
+<BLURB>Select the rendering intent of the color correction.</BLURB>
+<DEFAULT>Perceptual</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLcms::lookup</NAME>
+<TYPE>GstLcmsLookupMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Lookup method</NICK>
+<BLURB>Select the caching method for the color compensation calculations.</BLURB>
+<DEFAULT>Calculate and cache color replacement values on first occurence</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLcms::preserve-black</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Preserve black</NICK>
+<BLURB>Select whether purely black pixels should be preserved.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>

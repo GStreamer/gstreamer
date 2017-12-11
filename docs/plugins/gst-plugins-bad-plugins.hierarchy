@@ -95,13 +95,10 @@ GObject
           GstVideoSink
             GstDfbVideoSink
             GstFBDEVSink
-            GstGLImageSink
             GstGtkBaseSink
-              GstGtkGLSink
               GstGtkSink
             GstInterVideoSink
             GstKMSSink
-            GstQtSink
             GstVulkanSink
             GstWaylandSink
         GstBaseSrc
@@ -122,10 +119,8 @@ GObject
             GstDecklinkAudioSrc
             GstDecklinkVideoSrc
             GstDvbSrc
-            GstGLTestSrc
             GstMMS
             GstNeonhttpSrc
-            GstQtSrc
             GstRTMPSrc
             GstRfbSrc
             GstShmSrc
@@ -153,42 +148,6 @@ GObject
           GstDebugSpy
           GstDtmfDetect
           GstFreeverb
-          GstGLBaseFilter
-            GstGLColorConvertElement
-            GstGLDownloadElement
-            GstGLFilter
-              GstGLColorBalance
-              GstGLColorscale
-              GstGLDeinterlace
-              GstGLDifferenceMatte
-              GstGLEffects
-                GstGLEffectsGeneric
-                gleffects_blur
-                gleffects_bulge
-                gleffects_fisheye
-                gleffects_glow
-                gleffects_heat
-                gleffects_identity
-                gleffects_laplacian
-                gleffects_lumaxpro
-                gleffects_mirror
-                gleffects_sepia
-                gleffects_sin
-                gleffects_sobel
-                gleffects_square
-                gleffects_squeeze
-                gleffects_stretch
-                gleffects_tunnel
-                gleffects_twirl
-                gleffects_xpro
-                gleffects_xray
-              GstGLFilterApp
-              GstGLFilterCube
-              GstGLFilterGlass
-              GstGLFilterShader
-              GstGLOverlay
-              GstGLViewConvertElement
-            GstGLUploadElement
           GstIvtc
           GstRGB2Bayer
           GstRemoveSilence
@@ -221,6 +180,7 @@ GObject
               GstPerspective
               GstRotate
               GstSquare
+            GstLcms
             GstOpencvVideoFilter
               GstCvDilateErode
                 GstCvDilate
@@ -271,12 +231,8 @@ GObject
             GstDtlsSrtpEnc
           GstFPSDisplaySink
           GstFaceOverlay
-          GstGLFilterBin
           GstGLMixerBin
             GstGLVideoMixerBin
-          GstGLSinkBin
-            GstGLImageSinkBin
-          GstGLSrcBin
           GstHlsSink
           GstHlsSink2
           GstPipeline
@@ -303,7 +259,6 @@ GObject
         GstFluidDec
         GstGDPDepay
         GstGDPPay
-        GstGLStereoSplit
         GstGmeDec
         GstInterlace
         GstIpcPipelineSink
@@ -343,6 +298,7 @@ GObject
         GstTtmlRender
         GstUvcH264MjpgDemux
         GstVideoDecoder
+          GstLibde265Dec
           GstOpenEXRDec
           GstOpenJPEGDec
           GstOpenh264Dec
@@ -369,7 +325,6 @@ GObject
           MpegTSParse2
         MpegTsMux
       GstGLContext
-      GstGLShader
       GstPad
         GstAggregatorPad
           GstAudioAggregatorPad

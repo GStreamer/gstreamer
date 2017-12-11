@@ -20,11 +20,6 @@ pcverfiles_uninstalled = \
 	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-allocators-@GST_API_VERSION@-uninstalled.pc
 
-if HAVE_GST_GL
-pcverfiles += gstreamer-gl-@GST_API_VERSION@.pc
-pcverfiles_uninstalled += gstreamer-gl-@GST_API_VERSION@-uninstalled.pc
-endif
-
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
 cp_verbose = $(cp_verbose_$(V))
@@ -57,7 +52,6 @@ CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
 pcinfiles = \
            gstreamer-plugins-bad.pc.in gstreamer-plugins-bad-uninstalled.pc.in \
            gstreamer-codecparsers.pc.in gstreamer-codecparsers-uninstalled.pc.in \
-           gstreamer-gl.pc.in gstreamer-gl-uninstalled.pc.in \
            gstreamer-insertbin.pc.in gstreamer-insertbin-uninstalled.pc.in \
            gstreamer-mpegts.pc.in gstreamer-mpegts-uninstalled.pc.in \
            gstreamer-player.pc.in gstreamer-player-uninstalled.pc.in \
