@@ -24,6 +24,7 @@ noinst_HEADERS = \
 	qtatomparser.h   \
 	qtdemux.h        \
 	qtdemux_types.h  \
+	qtdemux_debug.h  \
 	qtdemux_dump.h   \
 	qtdemux_lang.h   \
 	qtpalette.h      \

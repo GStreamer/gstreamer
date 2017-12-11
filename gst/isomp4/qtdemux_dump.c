@@ -19,6 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "qtdemux_debug.h"
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 #include "fourcc.h"
@@ -26,6 +27,8 @@
 #include "qtatomparser.h"
 
 #include <string.h>
+
+#define GST_CAT_DEFAULT qtdemux_debug
 
 #define GET_UINT8(data)   gst_byte_reader_get_uint8_unchecked(data)
 #define GET_UINT16(data)  gst_byte_reader_get_uint16_be_unchecked(data)

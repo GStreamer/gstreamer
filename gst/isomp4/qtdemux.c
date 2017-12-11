@@ -101,6 +101,7 @@
 #define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
 
 GST_DEBUG_CATEGORY (qtdemux_debug);
+#define GST_CAT_DEFAULT qtdemux_debug
 
 typedef struct _QtDemuxSegment QtDemuxSegment;
 typedef struct _QtDemuxSample QtDemuxSample;

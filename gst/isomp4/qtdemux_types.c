@@ -17,9 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "qtdemux_debug.h"
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 #include "fourcc.h"
+
+#define GST_CAT_DEFAULT qtdemux_debug
 
 static const QtNodeType qt_node_types[] = {
   {FOURCC_moov, "movie", QT_FLAG_CONTAINER,},

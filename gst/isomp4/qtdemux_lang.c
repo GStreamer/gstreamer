@@ -17,10 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "qtdemux.h"
+#include "qtdemux_debug.h"
 #include "qtdemux_lang.h"
 
 #include <string.h>
+
+#define GST_CAT_DEFAULT qtdemux_debug
 
 /* http://developer.apple.com/mac/library/documentation/QuickTime/QTFF/QTFFChap4/qtff4.html */
 

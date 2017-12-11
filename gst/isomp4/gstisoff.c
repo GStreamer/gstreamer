@@ -22,8 +22,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "qtdemux_debug.h"
 #include "gstisoff.h"
 #include <gst/base/gstbytereader.h>
+
+#define GST_CAT_DEFAULT qtdemux_debug
 
 void
 gst_isoff_qt_sidx_parser_init (GstSidxParser * parser)
