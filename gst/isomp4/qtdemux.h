@@ -142,7 +142,7 @@ struct _GstQTDemux {
 
   /* Set to TRUE when all streams have been exposed */
   gboolean exposed;
-    
+
   gint64 chapters_track_id;
 
   /* protection support */
@@ -154,7 +154,7 @@ struct _GstQTDemux {
 
 
   /*
-   * ALL VARIABLES BELOW ARE ONLY USED IN PUSH-BASED MODE 
+   * ALL VARIABLES BELOW ARE ONLY USED IN PUSH-BASED MODE
    */
   GstAdapter *adapter;
   guint neededbytes;
