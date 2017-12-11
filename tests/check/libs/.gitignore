@@ -7,6 +7,16 @@ audioencoder
 baseaudiovisualizer
 discoverer
 fft
+gstglcolorconvert
+gstglcontext
+gstglheaders
+gstglmatrix
+gstglmemory
+gstglquery
+gstglshader
+gstglsl
+gstglslstage
+gstglupload
 gstlibscpp
 libsabi
 mikey

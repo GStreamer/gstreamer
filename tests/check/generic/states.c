@@ -25,6 +25,7 @@
 #endif
 
 #include <unistd.h>
+#include <gmodule.h>
 
 #include <gst/check/gstcheck.h>
 
@@ -209,6 +210,17 @@ states_suite (void)
 {
   Suite *s = suite_create ("states_base");
   TCase *tc_chain = tcase_create ("general");
+  GModule *libx11;
+
+  libx11 =
+      g_module_open ("libX11.so.6", G_MODULE_BIND_LOCAL | G_MODULE_BIND_LAZY);
+  if (libx11) {
+    void (*xinitthreads) (void);
+    if (g_module_symbol (libx11, "XInitThreads", (gpointer *) & xinitthreads)) {
+      xinitthreads ();
+    }
+    g_module_close (libx11);
+  }
 
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);

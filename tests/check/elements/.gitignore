@@ -9,6 +9,7 @@ audioresample
 audiotestsrc
 decodebin
 encodebin
+glimagesink
 libvisual
 multifdsink
 multisocketsink
