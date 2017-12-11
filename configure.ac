@@ -1899,6 +1899,8 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
   dnl  HAVE_GL="yes"
   dnlfi
 ])
+dnl FIXME
+AM_CONDITIONAL(USE_OPENGL, false)
 
 dnl *** gtk+ ***
 HAVE_GTK3_GL="no"
@@ -2705,6 +2707,7 @@ ext/faad/Makefile
 ext/fdkaac/Makefile
 ext/flite/Makefile
 ext/fluidsynth/Makefile
+ext/gl/Makefile
 ext/gsm/Makefile
 ext/hls/Makefile
 ext/iqa/Makefile
