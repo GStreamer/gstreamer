@@ -323,7 +323,7 @@ gst_iir_equalizer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     g_return_val_if_fail (index < equ->freq_band_count, NULL);
   }
 
-  ret = g_object_ref (equ->bands[index]);
+  ret = g_object_ref (G_OBJECT (equ->bands[index]));
   BANDS_UNLOCK (equ);
 
   GST_LOG_OBJECT (equ, "return child[%d] %" GST_PTR_FORMAT, index, ret);
