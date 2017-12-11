@@ -73,10 +73,9 @@ static void identityCallback (GstElement *src, GstBuffer  *buffer, GstElement* t
     nbFrames++ ;
     if (GST_BUFFER_TIMESTAMP(buffer) - last_timestamp >= 1000000000)
     {
-        std::ostringstream oss ;
-        oss << "video framerate = " << nbFrames ;
-        std::string s(oss.str()) ;
-        g_object_set(G_OBJECT(textoverlay), "text", s.c_str(), NULL);
+        gchar *s = g_strdup_printf ("video framerate = %d", nbFrames);
+        g_object_set(G_OBJECT(textoverlay), "text", s, NULL);
+        g_free (s);
         last_timestamp = GST_BUFFER_TIMESTAMP(buffer) ;
         nbFrames = 0 ;
     }

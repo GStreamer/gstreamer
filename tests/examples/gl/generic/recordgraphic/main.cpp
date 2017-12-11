@@ -19,7 +19,7 @@
  */
 
 #include <GL/gl.h>
-#if __WIN32__ || _WIN32
+#if defined(__WIN32__) || defined(_WIN32)
 # include <GL/glext.h>
 #endif
 #include <gst/gst.h>
