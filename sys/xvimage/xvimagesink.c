@@ -835,7 +835,7 @@ no_disp_ratio:
 no_display_size:
   {
     GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-        ("Error calculating the output display ratio of the video."));
+        ("Error calculating the output display size of the video."));
     return FALSE;
   }
 }
