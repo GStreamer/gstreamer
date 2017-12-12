@@ -264,14 +264,27 @@ dnl Check for external OpenMAX IL headers
 AC_CHECK_HEADER([OMX_Core.h], [HAVE_EXTERNAL_OMX=yes], [HAVE_EXTERNAL_OMX=no], [AC_INCLUDES_DEFAULT])
 AM_CONDITIONAL(HAVE_EXTERNAL_OMX, test "x$HAVE_EXTERNAL_OMX" = "xyes")
 
-dnl Our internal OpenMAX IL headers have OMX_VideoExt.h, OMX_IndexExt.h and OMX_ComponentExt.h
+dnl OMX defines 8 header files to contain extensions:
+dnl OMX_VideoExt.h, OMX_IndexExt.h, OMX_ComponentExt.h, OMX_CoreExt.h
+dnl OMX_AudioExt.h, OMX_IVCommonExt.h, OMX_ImageExt.h, OMX_OtherExt.h
+dnl The first 4 are present in our internal OpenMAX IL, the latter are not
 HAVE_VIDEO_EXT=yes
 HAVE_INDEX_EXT=yes
 HAVE_COMPONENT_EXT=yes
+HAVE_CORE_EXT=yes
+HAVE_AUDIO_EXT=no
+HAVE_IV_COMMON_EXT=no
+HAVE_IMAGE_EXT=no
+HAVE_OTHER_EXT=no
 if test "x$HAVE_EXTERNAL_OMX" = "xyes"; then
     AC_CHECK_HEADER([OMX_VideoExt.h], [HAVE_VIDEO_EXT=yes], [HAVE_VIDEO_EXT=no], [AC_INCLUDES_DEFAULT])
     AC_CHECK_HEADER([OMX_IndexExt.h], [HAVE_INDEX_EXT=yes], [HAVE_INDEX_EXT=no], [AC_INCLUDES_DEFAULT])
     AC_CHECK_HEADER([OMX_ComponentExt.h], [HAVE_COMPONENT_EXT=yes], [HAVE_COMPONENT_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_CoreExt.h], [HAVE_CORE_EXT=yes], [HAVE_CORE_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_AudioExt.h], [HAVE_AUDIO_EXT=yes], [HAVE_AUDIO_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_IVCommonExt.h], [HAVE_IV_COMMON_EXT=yes], [HAVE_IV_COMMON_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_ImageExt.h], [HAVE_IMAGE_EXT=yes], [HAVE_IMAGE_EXT=no], [AC_INCLUDES_DEFAULT])
+    AC_CHECK_HEADER([OMX_OtherExt.h], [HAVE_OTHER_EXT=yes], [HAVE_OTHER_EXT=no], [AC_INCLUDES_DEFAULT])
 fi
 
 VIDEO_HEADERS="#include <OMX_Video.h>"
@@ -288,6 +301,26 @@ fi
 
 if test "x$HAVE_COMPONENT_EXT" = "xyes"; then
     AC_DEFINE(HAVE_COMPONENT_EXT, 1, [OpenMAX IL has OMX_ComponentExt.h header])
+fi
+
+if test "x$HAVE_CORE_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_CORE_EXT, 1, [OpenMAX IL has OMX_CoreExt.h header])
+fi
+
+if test "x$HAVE_AUDIO_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_AUDIO_EXT, 1, [OpenMAX IL has OMX_AudioExt.h header])
+fi
+
+if test "x$HAVE_IV_COMMON_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_IV_COMMON_EXT, 1, [OpenMAX IL has OMX_IVCommonExt.h header])
+fi
+
+if test "x$HAVE_IMAGE_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_IMAGE_EXT, 1, [OpenMAX IL has OMX_ImageExt.h header])
+fi
+
+if test "x$HAVE_OTHER_EXT" = "xyes"; then
+    AC_DEFINE(HAVE_OTHER_EXT, 1, [OpenMAX IL has OMX_OtherExt.h header])
 fi
 
 AC_CHECK_DECLS([OMX_VIDEO_CodingVP8],

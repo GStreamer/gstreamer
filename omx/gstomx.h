@@ -70,6 +70,26 @@
 #include <OMX_ComponentExt.h>
 #endif
 
+#ifdef HAVE_CORE_EXT
+#include <OMX_CoreExt.h>
+#endif
+
+#ifdef HAVE_AUDIO_EXT
+#include <OMX_AudioExt.h>
+#endif
+
+#ifdef HAVE_IV_COMMON_EXT
+#include <OMX_IVCommonExt.h>
+#endif
+
+#ifdef HAVE_IMAGE_EXT
+#include <OMX_ImageExt.h>
+#endif
+
+#ifdef HAVE_OTHER_EXT
+#include <OMX_OtherExt.h>
+#endif
+
 #ifdef GST_OMX_STRUCT_PACKING
 #pragma pack()
 #endif

@@ -251,6 +251,41 @@ if cc.has_header (
   cdata.set ('HAVE_COMPONENT_EXT', 1)
 endif
 
+if cc.has_header (
+    'OMX_CoreExt.h',
+    args : gst_omx_args,
+    required : false)
+  cdata.set ('HAVE_CORE_EXT', 1)
+endif
+
+if cc.has_header (
+    'OMX_AudioExt.h',
+    args : gst_omx_args,
+    required : false)
+  cdata.set ('HAVE_AUDIO_EXT', 1)
+endif
+
+if cc.has_header (
+    'OMX_IVCommonExt.h',
+    args : gst_omx_args,
+    required : false)
+  cdata.set ('HAVE_IV_COMMON_EXT', 1)
+endif
+
+if cc.has_header (
+    'OMX_ImageExt.h',
+    args : gst_omx_args,
+    required : false)
+  cdata.set ('HAVE_IMAGE_EXT', 1)
+endif
+
+if cc.has_header (
+    'OMX_OtherExt.h',
+    args : gst_omx_args,
+    required : false)
+  cdata.set ('HAVE_OTHER_EXT', 1)
+endif
+
 have_omx_vp8 = cc.has_header_symbol(
     'OMX_Video.h',
     'OMX_VIDEO_CodingVP8',
