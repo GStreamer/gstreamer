@@ -102,10 +102,8 @@ gst_omx_video_get_supported_colorformats (GstOMXPort * port,
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = port->index;
   param.nIndex = 0;
-  if (!state || state->info.fps_n == 0)
-    param.xFramerate = 0;
-  else
-    param.xFramerate = (state->info.fps_n << 16) / (state->info.fps_d);
+  param.xFramerate =
+      state ? gst_omx_video_calculate_framerate_q16 (&state->info) : 0;
 
   old_index = -1;
   do {
@@ -199,4 +197,12 @@ gst_omx_video_find_nearest_frame (GstOMXBuffer * buf, GList * frames)
   g_list_free (frames);
 
   return best;
+}
+
+OMX_U32
+gst_omx_video_calculate_framerate_q16 (GstVideoInfo * info)
+{
+  g_assert (info);
+
+  return gst_util_uint64_scale_int (1 << 16, info->fps_n, info->fps_d);
 }

@@ -1287,14 +1287,12 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   port_def.format.video.nFrameWidth = info->width;
   port_def.format.video.nFrameHeight = info->height;
 
-  if (info->fps_n == 0) {
-    port_def.format.video.xFramerate = 0;
-  } else {
-    if (!(klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
-      port_def.format.video.xFramerate = (info->fps_n << 16) / (info->fps_d);
-    else
-      port_def.format.video.xFramerate = (info->fps_n) / (info->fps_d);
-  }
+  if (G_UNLIKELY (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
+    port_def.format.video.xFramerate =
+        info->fps_n ? (info->fps_n) / (info->fps_d) : 0;
+  else
+    port_def.format.video.xFramerate =
+        gst_omx_video_calculate_framerate_q16 (info);
 
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
   if (gst_omx_port_update_port_definition (self->enc_in_port,
