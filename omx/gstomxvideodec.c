@@ -2342,7 +2342,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   is_format_change |= port_def.format.video.nFrameHeight != info->height;
   is_format_change |= (port_def.format.video.xFramerate == 0
       && info->fps_n != 0)
-      || (port_def.format.video.xFramerate != framerate_q16);
+      || !gst_omx_video_is_equal_framerate_q16 (port_def.format.
+      video.xFramerate, framerate_q16);
   is_format_change |= (self->codec_data != state->codec_data);
   if (klass->is_format_change)
     is_format_change |=

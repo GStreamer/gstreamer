@@ -28,6 +28,8 @@
 
 #include "gstomxvideo.h"
 
+#include <math.h>
+
 GST_DEBUG_CATEGORY (gst_omx_video_debug_category);
 #define GST_CAT_DEFAULT gst_omx_video_debug_category
 
@@ -205,4 +207,18 @@ gst_omx_video_calculate_framerate_q16 (GstVideoInfo * info)
   g_assert (info);
 
   return gst_util_uint64_scale_int (1 << 16, info->fps_n, info->fps_d);
+}
+
+gboolean
+gst_omx_video_is_equal_framerate_q16 (OMX_U32 q16_a, OMX_U32 q16_b)
+{
+  /* If one of them is 0 use the classic comparison. The value 0 has a special
+     meaning and is used to indicate the frame rate is unknown, variable, or
+     is not needed. */
+  if (!q16_a || !q16_b)
+    return q16_a == q16_b;
+
+  /* If the 'percentage change' is less than 1% then consider it equal to avoid
+   * an unnecessary re-negotiation. */
+  return fabs (((gdouble) q16_a) - ((gdouble) q16_b)) / (gdouble) q16_b < 0.01;
 }
