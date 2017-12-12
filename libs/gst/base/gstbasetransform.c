@@ -949,6 +949,15 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   if (!result)
     goto no_decide_allocation;
 
+  /* check again in case the sub-class have switch to passthrough/in-place
+   * after looking at the meta APIs */
+  if (priv->passthrough || priv->always_in_place) {
+    GST_DEBUG_OBJECT (trans, "no doing passthrough, delay bufferpool");
+    gst_base_transform_set_allocation (trans, NULL, NULL, NULL, NULL);
+    gst_query_unref (query);
+    return TRUE;
+  }
+
   /* we got configuration from our peer or the decide_allocation method,
    * parse them */
   if (gst_query_get_n_allocation_params (query) > 0) {
