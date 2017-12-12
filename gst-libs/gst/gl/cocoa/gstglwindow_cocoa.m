@@ -183,12 +183,12 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
     return FALSE;
 
   context_cocoa = GST_GL_CONTEXT_COCOA (context);
-  layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context_cocoa];
+  layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context];
   glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:windowRect layer:layer];
 
   gst_object_unref (context);
 
-  internal_win_id = [[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
+  internal_win_id = [[GstGLNSWindow alloc] initWithContentRect:rect styleMask:
       (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
       NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
       backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
