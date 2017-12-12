@@ -250,6 +250,7 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
   g_signal_emit_by_name (webrtc1, "create-offer", NULL, promise);
 }
 
+#define STUN_SERVER " stun-server=stun://stun.l.google.com:19302 "
 #define RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload="
 #define RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8,payload="
 
@@ -260,7 +261,7 @@ start_pipeline (void)
   GError *error = NULL;
 
   pipe1 =
-      gst_parse_launch ("webrtcbin name=sendrecv "
+      gst_parse_launch ("webrtcbin name=sendrecv " STUN_SERVER
       "videotestsrc pattern=ball ! queue ! vp8enc deadline=1 ! rtpvp8pay ! "
       "queue ! " RTP_CAPS_VP8 "96 ! sendrecv. "
       "audiotestsrc wave=red-noise ! queue ! opusenc ! rtpopuspay ! "
