@@ -974,6 +974,9 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * from @func. If the watch was added to the default main context it is also
  * possible to remove the watch using g_source_remove().
  *
+ * The bus watch will take its own reference to the @bus, so it is safe to unref
+ * @bus using gst_object_unref() after setting the bus watch.
+ *
  * MT safe.
  *
  * Returns: The event source id or 0 if @bus already got an event source.
@@ -1015,9 +1018,12 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * from @func. If the watch was added to the default main context it is also
  * possible to remove the watch using g_source_remove().
  *
- * Returns: The event source id or 0 if @bus already got an event source.
+ * The bus watch will take its own reference to the @bus, so it is safe to unref
+ * @bus using gst_object_unref() after setting the bus watch.
  *
  * MT safe.
+ *
+ * Returns: The event source id or 0 if @bus already got an event source.
  */
 guint
 gst_bus_add_watch (GstBus * bus, GstBusFunc func, gpointer user_data)
