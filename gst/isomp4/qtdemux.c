@@ -5811,9 +5811,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
       GST_TIME_ARGS (dts), GST_TIME_ARGS (pts), GST_TIME_ARGS (duration));
 
   if (G_UNLIKELY (empty)) {
-    /* empty segment, push a gap if there's more than a second
+    /* empty segment, push a gap if there's a second or more
      * difference and move to the next one */
-    if ((pts + duration - stream->segment.position) > GST_SECOND)
+    if ((pts + duration - stream->segment.position) >= GST_SECOND)
       gst_pad_push_event (stream->pad, gst_event_new_gap (pts, duration));
     stream->segment.position = pts + duration;
     goto next;
