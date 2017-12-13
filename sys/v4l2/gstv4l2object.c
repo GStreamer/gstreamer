@@ -3393,6 +3393,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
 
     format.type = v4l2object->type;
+
     format.fmt.pix.width = width;
     format.fmt.pix.height = height;
     format.fmt.pix.pixelformat = pixelformat;

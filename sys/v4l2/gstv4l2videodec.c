@@ -57,6 +57,8 @@ enum
 G_DEFINE_ABSTRACT_TYPE (GstV4l2VideoDec, gst_v4l2_video_dec,
     GST_TYPE_VIDEO_DECODER);
 
+static GstFlowReturn gst_v4l2_video_dec_finish (GstVideoDecoder * decoder);
+
 static void
 gst_v4l2_video_dec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -245,7 +247,31 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
 
-    /* FIXME we probably need to do more work if pools are active */
+    gst_v4l2_video_dec_finish (decoder);
+    gst_v4l2_object_stop (self->v4l2output);
+
+    /* The renegotiation flow don't blend with the base class flow. To
+     * properly stop the capture pool we need to reclaim our buffers, which
+     * will happend through the allocation query. The allocation query is
+     * triggered by gst_video_decoder_negotiate() which requires the output
+     * caps to be set, but we can't know this information as we rely on the
+     * decoder, which requires the capture queue to be stopped.
+     *
+     * To workaround this issue, we simply run an allocation query with the
+     * old negotiated caps in order to drain/reclaim our buffers. That breaks
+     * the complexity and should not have much impact in performance since the
+     * following allocation query will happen on a drained pipeline and won't
+     * block. */
+    {
+      GstCaps *caps = gst_pad_get_current_caps (decoder->srcpad);
+      GstQuery *query = gst_query_new_allocation (caps, FALSE);
+      gst_pad_peer_query (decoder->srcpad, query);
+      gst_query_unref (query);
+      gst_caps_unref (caps);
+    }
+
+    gst_v4l2_object_stop (self->v4l2capture);
+    self->output_flow = GST_FLOW_OK;
   }
 
   ret = gst_v4l2_object_set_format (self->v4l2output, state->caps, &error);
@@ -279,11 +305,14 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
 
   self->output_flow = GST_FLOW_OK;
 
+  if (self->v4l2output->pool)
+    gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
+
+  if (self->v4l2capture->pool)
+    gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
+
   gst_v4l2_object_unlock_stop (self->v4l2output);
   gst_v4l2_object_unlock_stop (self->v4l2capture);
-
-  gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
-  gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
 
   return TRUE;
 }
@@ -379,8 +408,22 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (decoder, "Done draining buffers");
 
+  /* TODO Shall we cleanup any reffed frame to workaround broken decoders ? */
+
 done:
   return ret;
+}
+
+static gboolean
+gst_v4l2_video_dec_drain (GstVideoDecoder * decoder)
+{
+  GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+
+  GST_DEBUG_OBJECT (self, "Draining...");
+  gst_v4l2_video_dec_finish (decoder);
+  gst_v4l2_video_dec_flush (decoder);
+
+  return TRUE;
 }
 
 static GstVideoCodecFrame *
@@ -522,6 +565,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean processed = FALSE;
   GstBuffer *tmp;
+  GstTaskState task_state;
 
   GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
@@ -649,8 +693,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       goto activate_failed;
   }
 
-  if (gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self)) ==
-      GST_TASK_STOPPED) {
+  task_state = gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self));
+  if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     /* It's possible that the processing thread stopped due to an error */
     if (self->output_flow != GST_FLOW_OK &&
         self->output_flow != GST_FLOW_FLUSHING) {
@@ -949,6 +993,7 @@ gst_v4l2_video_dec_class_init (GstV4l2VideoDecClass * klass)
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_stop);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_finish);
   video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_flush);
+  video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_drain);
   video_decoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_set_format);
   video_decoder_class->negotiate =
