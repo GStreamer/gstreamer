@@ -13492,7 +13492,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case 0x69:                 /* MPEG-2 BC audio */
     case 0x6B:                 /* MPEG-1 audio */
       caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          "mpegversion", G_TYPE_INT, 1, NULL);
       codec_name = "MPEG-1 audio";
       break;
     case 0x6A:                 /* MPEG-1 */
