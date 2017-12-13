@@ -2787,7 +2787,7 @@ gst_omx_video_dec_finish (GstVideoDecoder * decoder)
 static gboolean
 gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 {
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (bdec);
 
@@ -2837,8 +2837,13 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 
   self->use_buffers = FALSE;
   if (gst_query_get_n_allocation_pools (query) > 0) {
-    GST_DEBUG_OBJECT (self, "Try using downstream buffers with OMX_UseBuffer");
-    self->use_buffers = TRUE;
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+    if (pool) {
+      GST_DEBUG_OBJECT (self,
+          "Try using downstream buffers with OMX_UseBuffer");
+      self->use_buffers = TRUE;
+      gst_object_unref (pool);
+    }
   }
 
   if (!GST_VIDEO_DECODER_CLASS
