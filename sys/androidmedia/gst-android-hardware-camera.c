@@ -304,9 +304,9 @@ static JNINativeMethod native_methods[] = {
   {(gchar *) "gst_ah_camera_on_error",
         (gchar *) "(ILandroid/hardware/Camera;JJ)V",
       (void *) gst_ah_camera_on_error},
-//  {(gchar *) "gst_ah_camera_on_auto_focus",
-//        (gchar *) "(ZLandroid/hardware/Camera;JJ)V",
-//      (void *) gst_ah_camera_on_auto_focus}
+  {(gchar *) "gst_ah_camera_on_auto_focus",
+        (gchar *) "(ZLandroid/hardware/Camera;JJ)V",
+      (void *) gst_ah_camera_on_auto_focus}
 };
 
 static gboolean
