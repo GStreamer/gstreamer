@@ -7,8 +7,7 @@ pcverfiles =  \
 	gstreamer-mpegts-@GST_API_VERSION@.pc \
 	gstreamer-player-@GST_API_VERSION@.pc \
 	gstreamer-bad-audio-@GST_API_VERSION@.pc \
-	gstreamer-bad-video-@GST_API_VERSION@.pc \
-	gstreamer-bad-allocators-@GST_API_VERSION@.pc
+	gstreamer-bad-video-@GST_API_VERSION@.pc
 
 pcverfiles_uninstalled = \
 	gstreamer-plugins-bad-@GST_API_VERSION@-uninstalled.pc \
@@ -17,8 +16,7 @@ pcverfiles_uninstalled = \
 	gstreamer-mpegts-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-player-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-audio-@GST_API_VERSION@-uninstalled.pc \
-	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc \
-	gstreamer-bad-allocators-@GST_API_VERSION@-uninstalled.pc
+	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
@@ -56,8 +54,7 @@ pcinfiles = \
            gstreamer-mpegts.pc.in gstreamer-mpegts-uninstalled.pc.in \
            gstreamer-player.pc.in gstreamer-player-uninstalled.pc.in \
            gstreamer-bad-audio.pc.in gstreamer-bad-audio-uninstalled.pc.in \
-           gstreamer-bad-video.pc.in gstreamer-bad-video-uninstalled.pc.in \
-           gstreamer-bad-allocators.pc.in gstreamer-bad-allocators-uninstalled.pc.in
+           gstreamer-bad-video.pc.in gstreamer-bad-video-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)

@@ -1,6 +1,5 @@
 subdir('uridownloader')
 
-subdir('allocators')
 subdir('adaptivedemux')
 subdir('audio')
 subdir('basecamerabinsrc')

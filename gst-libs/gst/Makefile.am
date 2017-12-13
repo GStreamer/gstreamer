@@ -7,18 +7,18 @@ OPENCV_DIR=opencv
 endif
 
 SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc codecparsers \
-	 insertbin mpegts video audio player allocators isoff $(WAYLAND_DIR) \
+	 insertbin mpegts video audio player isoff $(WAYLAND_DIR) \
 	 $(OPENCV_DIR)
 
 noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
 DIST_SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc \
-	codecparsers insertbin mpegts wayland opencv video audio player allocators isoff
+	codecparsers insertbin mpegts wayland opencv video audio player isoff
 
 adaptivedemux: uridownloader
 
 INDEPENDENT_SUBDIRS = \
 	interfaces basecamerabinsrc codecparsers insertbin uridownloader \
-	mpegts player allocators isoff $(WAYLAND_DIR) $(OPENCV_DIR)
+	mpegts player isoff $(WAYLAND_DIR) $(OPENCV_DIR)
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 
