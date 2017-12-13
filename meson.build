@@ -95,10 +95,10 @@ if not get_option('disable_gstreamer_sharp')
     if meson.version().version_compare('>=0.43')
       subprojects += ['gstreamer-sharp']
     else
-      message('WARNING: Not building gstramer-sharp as meson >=0.43 not found.')
+      message('WARNING: Not building gstreamer-sharp as meson >=0.43 not found.')
     endif
   else
-    message('WARNING: Not building gstramer-sharp as no CS compiler found.')
+    message('WARNING: Not building gstreamer-sharp as no CS compiler found.')
   endif
 endif
 
