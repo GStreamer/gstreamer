@@ -3812,7 +3812,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         delta_unit = TRUE;
         invisible_frame = ((flags & 0x08)) &&
             (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8) ||
-            !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9));
+            !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9) ||
+            !strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_AV1));
       }
 
       /* If we're doing a keyframe-only trickmode, only push keyframes on video
@@ -5609,6 +5610,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP9)) {
     caps = gst_caps_new_empty_simple ("video/x-vp9");
     *codec_name = g_strdup_printf ("On2 VP9");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_AV1)) {
+    caps = gst_caps_new_empty_simple ("video/x-av1");
+    *codec_name = g_strdup_printf ("AOM AV1");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
     guint32 fourcc;
     const gchar *variant, *variant_descr = "";

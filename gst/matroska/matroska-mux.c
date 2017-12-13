@@ -1210,6 +1210,8 @@ skip_details:
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP8);
   } else if (!strcmp (mimetype, "video/x-vp9")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP9);
+  } else if (!strcmp (mimetype, "video/x-av1")) {
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_AV1);
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
 
