@@ -326,7 +326,7 @@ static void
 gst_v4l2radio_init (GstV4l2Radio * filter)
 {
   filter->v4l2object = gst_v4l2_object_new (GST_ELEMENT (filter),
-      V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
+      GST_OBJECT (filter), V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
       gst_v4l2radio_get_input, gst_v4l2radio_set_input, NULL);
 
   filter->v4l2object->frequency = DEFAULT_FREQUENCY;

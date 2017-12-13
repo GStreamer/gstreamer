@@ -199,8 +199,8 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
 {
   /* fixme: give an update_fps_function */
   v4l2src->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2src),
-      V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
-      gst_v4l2_get_input, gst_v4l2_set_input, NULL);
+      GST_OBJECT (GST_BASE_SRC_PAD (v4l2src)), V4L2_BUF_TYPE_VIDEO_CAPTURE,
+      DEFAULT_PROP_DEVICE, gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
   /* Avoid the slow probes */
   v4l2src->v4l2object->skip_try_fmt_probes = TRUE;

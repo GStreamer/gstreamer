@@ -251,7 +251,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         standard.frameperiod.denominator, standard.frameperiod.numerator);
     v4l2norm->index = standard.id;
 
-    GST_DEBUG_OBJECT (v4l2object->element, "index=%08x, label=%s",
+    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "index=%08x, label=%s",
         (unsigned int) v4l2norm->index, norm->label);
 
     v4l2object->norms = g_list_prepend (v4l2object->norms, (gpointer) norm);
@@ -461,7 +461,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 static void
 gst_v4l2_empty_lists (GstV4l2Object * v4l2object)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "deleting enumerations");
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "deleting enumerations");
 
   g_list_foreach (v4l2object->channels, (GFunc) g_object_unref, NULL);
   g_list_free (v4l2object->channels);
@@ -520,7 +520,7 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   struct stat st;
   int libv4l2_fd = -1;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Trying to open device %s",
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Trying to open device %s",
       v4l2object->videodev);
 
   GST_V4L2_CHECK_NOT_OPEN (v4l2object);
@@ -591,7 +591,7 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   if (!gst_v4l2_fill_lists (v4l2object))
     goto error;
 
-  GST_INFO_OBJECT (v4l2object->element,
+  GST_INFO_OBJECT (v4l2object->dbg_obj,
       "Opened device '%s' (%s) successfully",
       v4l2object->vcap.card, v4l2object->videodev);
 
@@ -671,7 +671,7 @@ error:
 gboolean
 gst_v4l2_dup (GstV4l2Object * v4l2object, GstV4l2Object * other)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "Trying to dup device %s",
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Trying to dup device %s",
       other->videodev);
 
   GST_V4L2_CHECK_OPEN (other);
@@ -690,7 +690,7 @@ gst_v4l2_dup (GstV4l2Object * v4l2object, GstV4l2Object * other)
   g_free (v4l2object->videodev);
   v4l2object->videodev = g_strdup (other->videodev);
 
-  GST_INFO_OBJECT (v4l2object->element,
+  GST_INFO_OBJECT (v4l2object->dbg_obj,
       "Cloned device '%s' (%s) successfully",
       v4l2object->vcap.card, v4l2object->videodev);
 
@@ -717,7 +717,7 @@ not_open:
 gboolean
 gst_v4l2_close (GstV4l2Object * v4l2object)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "Trying to close %s",
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Trying to close %s",
       v4l2object->videodev);
 
   GST_V4L2_CHECK_OPEN (v4l2object);
@@ -742,7 +742,7 @@ gst_v4l2_close (GstV4l2Object * v4l2object)
 gboolean
 gst_v4l2_get_norm (GstV4l2Object * v4l2object, v4l2_std_id * norm)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "getting norm");
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "getting norm");
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -770,7 +770,7 @@ std_failed:
 gboolean
 gst_v4l2_set_norm (GstV4l2Object * v4l2object, v4l2_std_id norm)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to set norm to "
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set norm to "
       "%" G_GINT64_MODIFIER "x", (guint64) norm);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
@@ -804,7 +804,7 @@ gst_v4l2_get_frequency (GstV4l2Object * v4l2object,
 
   GstTunerChannel *channel;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "getting current tuner frequency");
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "getting current tuner frequency");
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -843,7 +843,7 @@ gst_v4l2_set_frequency (GstV4l2Object * v4l2object,
 
   GstTunerChannel *channel;
 
-  GST_DEBUG_OBJECT (v4l2object->element,
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj,
       "setting current tuner frequency to %lu", frequency);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
@@ -882,7 +882,7 @@ gst_v4l2_signal_strength (GstV4l2Object * v4l2object,
 {
   struct v4l2_tuner tuner = { 0, };
 
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to get signal strength");
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to get signal strength");
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -916,7 +916,7 @@ gst_v4l2_get_attribute (GstV4l2Object * v4l2object,
 {
   struct v4l2_control control = { 0, };
 
-  GST_DEBUG_OBJECT (v4l2object->element, "getting value of attribute %d",
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "getting value of attribute %d",
       attribute_num);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
@@ -953,7 +953,7 @@ gst_v4l2_set_attribute (GstV4l2Object * v4l2object,
 {
   struct v4l2_control control = { 0, };
 
-  GST_DEBUG_OBJECT (v4l2object->element, "setting value of attribute %d to %d",
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "setting value of attribute %d to %d",
       attribute_num, value);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
@@ -1029,7 +1029,7 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
 {
   gint n;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to get input");
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to get input");
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -1039,7 +1039,7 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
 
   *input = n;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "input: %d", n);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "input: %d", n);
 
   return TRUE;
 
@@ -1058,7 +1058,7 @@ input_failed:
 gboolean
 gst_v4l2_set_input (GstV4l2Object * v4l2object, gint input)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to set input to %d", input);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set input to %d", input);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -1086,7 +1086,7 @@ gst_v4l2_get_output (GstV4l2Object * v4l2object, gint * output)
 {
   gint n;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to get output");
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to get output");
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -1096,7 +1096,7 @@ gst_v4l2_get_output (GstV4l2Object * v4l2object, gint * output)
 
   *output = n;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "output: %d", n);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "output: %d", n);
 
   return TRUE;
 
@@ -1115,7 +1115,7 @@ output_failed:
 gboolean
 gst_v4l2_set_output (GstV4l2Object * v4l2object, gint output)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to set output to %d", output);
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "trying to set output to %d", output);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;

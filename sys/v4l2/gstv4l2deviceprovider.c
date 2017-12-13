@@ -113,7 +113,7 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
   if (!S_ISCHR (st.st_mode))
     goto destroy;
 
-  v4l2obj = gst_v4l2_object_new ((GstElement *) provider,
+  v4l2obj = gst_v4l2_object_new (NULL, GST_OBJECT (provider),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, device_path, NULL, NULL, NULL);
 
   if (!gst_v4l2_open (v4l2obj))

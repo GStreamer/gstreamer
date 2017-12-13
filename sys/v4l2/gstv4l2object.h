@@ -111,6 +111,7 @@ typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
 struct _GstV4l2Object {
   GstElement * element;
+  GstObject * dbg_obj;
 
   enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
 
@@ -234,6 +235,7 @@ GType gst_v4l2_object_get_type (void);
 
 /* create/destroy */
 GstV4l2Object*  gst_v4l2_object_new       (GstElement * element,
+                                           GstObject * dbg_obj,
                                            enum v4l2_buf_type  type,
                                            const char * default_device,
                                            GstV4l2GetInOutFunction get_in_out_func,

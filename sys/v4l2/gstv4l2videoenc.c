@@ -1035,12 +1035,14 @@ gst_v4l2_video_enc_subinstance_init (GTypeInstance * instance, gpointer g_class)
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (instance);
 
   self->v4l2output = gst_v4l2_object_new (GST_ELEMENT (self),
+      GST_OBJECT (GST_VIDEO_ENCODER_SINK_PAD (self)),
       V4L2_BUF_TYPE_VIDEO_OUTPUT, klass->default_device,
       gst_v4l2_get_output, gst_v4l2_set_output, NULL);
   self->v4l2output->no_initial_format = TRUE;
   self->v4l2output->keep_aspect = FALSE;
 
   self->v4l2capture = gst_v4l2_object_new (GST_ELEMENT (self),
+      GST_OBJECT (GST_VIDEO_ENCODER_SRC_PAD (self)),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, klass->default_device,
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
   self->v4l2capture->no_initial_format = TRUE;
