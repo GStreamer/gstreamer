@@ -5770,6 +5770,68 @@ GST_START_TEST (dash_mpdparser_xlink_period)
 
 GST_END_TEST;
 
+
+/*
+ * Test parsing xsd:datetime with timezoneoffset.
+ *
+ */
+GST_START_TEST (dash_mpdparser_datetime_with_tz_offset)
+{
+  GstDateTime *availabilityStartTime;
+  GstDateTime *availabilityEndTime;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     schemaLocation=\"TestSchemaLocation\""
+      "     xmlns:xsi=\"TestNamespaceXSI\""
+      "     xmlns:ext=\"TestNamespaceEXT\""
+      "     id=\"testId\""
+      "     type=\"static\""
+      "     availabilityStartTime=\"2015-03-24T1:10:50+08:00\""
+      "     availabilityEndTime=\"2015-03-24T1:10:50.123456-04:30\""
+      "     mediaPresentationDuration=\"P0Y1M2DT12H10M20.5S\""
+      "     minimumUpdatePeriod=\"P0Y1M2DT12H10M20.5S\""
+      "     minBufferTime=\"P0Y1M2DT12H10M20.5S\""
+      "     timeShiftBufferDepth=\"P0Y1M2DT12H10M20.5S\""
+      "     suggestedPresentationDelay=\"P0Y1M2DT12H10M20.5S\""
+      "     maxSegmentDuration=\"P0Y1M2DT12H10M20.5S\""
+      "     maxSubsegmentDuration=\"P0Y1M2DT12H10M20.5S\"></MPD>";
+
+  gboolean ret;
+  GstMpdClient *mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  availabilityStartTime = mpdclient->mpd_node->availabilityStartTime;
+  assert_equals_int (gst_date_time_get_year (availabilityStartTime), 2015);
+  assert_equals_int (gst_date_time_get_month (availabilityStartTime), 3);
+  assert_equals_int (gst_date_time_get_day (availabilityStartTime), 24);
+  assert_equals_int (gst_date_time_get_hour (availabilityStartTime), 1);
+  assert_equals_int (gst_date_time_get_minute (availabilityStartTime), 10);
+  assert_equals_int (gst_date_time_get_second (availabilityStartTime), 50);
+  assert_equals_int (gst_date_time_get_microsecond (availabilityStartTime), 0);
+  assert_equals_float (gst_date_time_get_time_zone_offset (availabilityStartTime), 8.0);
+
+  availabilityEndTime = mpdclient->mpd_node->availabilityEndTime;
+  assert_equals_int (gst_date_time_get_year (availabilityEndTime), 2015);
+  assert_equals_int (gst_date_time_get_month (availabilityEndTime), 3);
+  assert_equals_int (gst_date_time_get_day (availabilityEndTime), 24);
+  assert_equals_int (gst_date_time_get_hour (availabilityEndTime), 1);
+  assert_equals_int (gst_date_time_get_minute (availabilityEndTime), 10);
+  assert_equals_int (gst_date_time_get_second (availabilityEndTime), 50);
+  assert_equals_int (gst_date_time_get_microsecond (availabilityEndTime),
+      123456);
+  assert_equals_float (gst_date_time_get_time_zone_offset (availabilityEndTime), -4.5);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+
+
 /*
  * create a test suite containing all dash testcases
  */
@@ -5791,6 +5853,7 @@ dash_suite (void)
 
   /* tests parsing attributes from each element type */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_mpd);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_datetime_with_tz_offset);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_programInformation);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_baseURL);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_location);

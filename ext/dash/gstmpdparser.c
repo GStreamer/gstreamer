@@ -831,7 +831,7 @@ error:
 
   The dateTime data type is used to specify a date and a time.
 
-  The dateTime is specified in the following form "YYYY-MM-DDThh:mm:ss" where:
+  The lexical form of xs:dateTime is YYYY-MM-DDThh:mm:ss[Z|(+|-)hh:mm]
 
     * YYYY indicates the year
     * MM indicates the month
@@ -841,7 +841,7 @@ error:
     * mm indicates the minute
     * ss indicates the second
 
-  Note: All components are required!
+  The time zone may be specified as Z (UTC) or (+|-)hh:mm
 */
 static gboolean
 gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
@@ -853,6 +853,8 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
   gint year, month, day, hour, minute;
   gdouble second;
   gboolean exists = FALSE;
+  gfloat tzoffset = 0.0;
+  gint gmt_offset_hour = -99, gmt_offset_min = -99;
 
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
@@ -902,9 +904,50 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
     GST_LOG (" - %s: %4d/%02d/%02d %02d:%02d:%09.6lf", property_name,
         year, month, day, hour, minute, second);
 
+    if (strrchr (str, '+') || strrchr (str, '-')){
+      /* reuse some code from gst-plugins-base/gst-libs/gst/tag/gstxmptag.c */
+      gint gmt_offset = -1;
+      gchar *plus_pos = NULL;
+      gchar *neg_pos = NULL;
+      gchar *pos = NULL;
+
+      GST_LOG ("Checking for timezone information");
+
+      /* check if there is timezone info */
+      plus_pos = strrchr (str, '+');
+      neg_pos = strrchr (str, '-');
+      if (plus_pos)
+        pos = plus_pos + 1;
+      else if (neg_pos)
+        pos = neg_pos + 1;
+
+      if (pos && strlen (pos) >= 3) {
+        gint ret_tz;
+        if (pos[2] == ':')
+          ret_tz = sscanf (pos, "%d:%d", &gmt_offset_hour, &gmt_offset_min);
+        else
+          ret_tz = sscanf (pos, "%02d%02d", &gmt_offset_hour, &gmt_offset_min);
+
+        GST_DEBUG ("Parsing timezone: %s", pos);
+
+        if (ret_tz == 2) {
+          if (neg_pos != NULL && neg_pos + 1 == pos) {
+            gmt_offset_hour *= -1;
+            gmt_offset_min *= -1;
+          }
+          gmt_offset = gmt_offset_hour * 60 + gmt_offset_min;
+
+          tzoffset = gmt_offset / 60.0;
+
+          GST_LOG ("Timezone offset: %f (%d minutes)", tzoffset, gmt_offset);
+        } else
+          GST_WARNING ("Failed to parse timezone information");
+      }
+    }
+
     exists = TRUE;
     *property_value =
-        gst_date_time_new (0, year, month, day, hour, minute, second);
+        gst_date_time_new (tzoffset, year, month, day, hour, minute, second);
     xmlFree (prop_string);
   }
 
@@ -916,6 +959,7 @@ error:
   xmlFree (prop_string);
   return FALSE;
 }
+
 
 /*
   Duration Data Type
