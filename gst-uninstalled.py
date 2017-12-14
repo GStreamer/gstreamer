@@ -226,7 +226,7 @@ if __name__ == "__main__":
                 args.append(tmprc.name)
     python_set = python_env(options)
     try:
-        exit(subprocess.call(args, cwd=options.srcdir,
+        exit(subprocess.call(args, cwd=options.srcdir, close_fds=False,
                              env=get_subprocess_env(options)))
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
