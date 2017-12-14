@@ -136,7 +136,7 @@ GST_START_TEST (test_sub_terminator)
 
 GST_END_TEST;
 
-/* Recusively compare 2 toc entries */
+/* Recursively compare 2 toc entries */
 static void
 check_toc_entries (const GstTocEntry * original, const GstTocEntry * other)
 {
