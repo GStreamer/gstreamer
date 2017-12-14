@@ -1500,6 +1500,7 @@ EXPORTS
 	gst_toc_setter_reset
 	gst_toc_setter_set_toc
 	gst_tracer_factory_get_list
+	gst_tracer_factory_get_tracer_type
 	gst_tracer_factory_get_type
 	gst_tracer_get_type
 	gst_tracer_record_get_type
