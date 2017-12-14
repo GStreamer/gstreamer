@@ -50,7 +50,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 autovideosrc ! videoconvert ! "video/x-raw, formt=RGB, width=320, height=240" ! \
+ * gst-launch-1.0 autovideosrc ! videoconvert ! "video/x-raw, format=RGB, width=320, height=240" ! \
  * videoscale ! handdetect ! videoconvert ! xvimagesink
  * ]|
  * </refsect2>
