@@ -1047,11 +1047,39 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
-    gboolean full)
+gst_single_queue_start (GstMultiQueue * mq, GstSingleQueue * sq)
+{
+  GST_LOG_OBJECT (mq, "SingleQueue %d : starting task", sq->id);
+  return gst_pad_start_task (sq->srcpad,
+      (GstTaskFunction) gst_multi_queue_loop, sq->srcpad, NULL);
+}
+
+static gboolean
+gst_single_queue_pause (GstMultiQueue * mq, GstSingleQueue * sq)
 {
   gboolean result;
 
+  GST_LOG_OBJECT (mq, "SingleQueue %d : pausing task", sq->id);
+  result = gst_pad_pause_task (sq->srcpad);
+  sq->sink_tainted = sq->src_tainted = TRUE;
+  return result;
+}
+
+static gboolean
+gst_single_queue_stop (GstMultiQueue * mq, GstSingleQueue * sq)
+{
+  gboolean result;
+
+  GST_LOG_OBJECT (mq, "SingleQueue %d : stopping task", sq->id);
+  result = gst_pad_stop_task (sq->srcpad);
+  sq->sink_tainted = sq->src_tainted = TRUE;
+  return result;
+}
+
+static void
+gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
+    gboolean full)
+{
   GST_DEBUG_OBJECT (mq, "flush %s queue %d", (flush ? "start" : "stop"),
       sq->id);
 
@@ -1069,10 +1097,6 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
     sq->last_query = FALSE;
     g_cond_signal (&sq->query_handled);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-
-    GST_LOG_OBJECT (mq, "SingleQueue %d : pausing task", sq->id);
-    result = gst_pad_pause_task (sq->srcpad);
-    sq->sink_tainted = sq->src_tainted = TRUE;
   } else {
     gst_single_queue_flush_queue (sq, full);
 
@@ -1104,13 +1128,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
 
     sq->flushing = FALSE;
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-
-    GST_LOG_OBJECT (mq, "SingleQueue %d : starting task", sq->id);
-    result =
-        gst_pad_start_task (sq->srcpad, (GstTaskFunction) gst_multi_queue_loop,
-        sq->srcpad, NULL);
   }
-  return result;
 }
 
 /* WITH LOCK TAKEN */
@@ -2255,6 +2273,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = gst_pad_push_event (sq->srcpad, event);
 
       gst_single_queue_flush (mq, sq, TRUE, FALSE);
+      gst_single_queue_pause (mq, sq);
       goto done;
 
     case GST_EVENT_FLUSH_STOP:
@@ -2264,6 +2283,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = gst_pad_push_event (sq->srcpad, event);
 
       gst_single_queue_flush (mq, sq, FALSE, FALSE);
+      gst_single_queue_start (mq, sq);
       goto done;
 
     case GST_EVENT_SEGMENT:
@@ -2481,11 +2501,11 @@ gst_multi_queue_src_activate_mode (GstPad * pad, GstObject * parent,
   switch (mode) {
     case GST_PAD_MODE_PUSH:
       if (active) {
-        result = gst_single_queue_flush (mq, sq, FALSE, TRUE);
+        gst_single_queue_flush (mq, sq, FALSE, TRUE);
+        result = gst_single_queue_start (mq, sq);
       } else {
-        result = gst_single_queue_flush (mq, sq, TRUE, TRUE);
-        /* make sure streaming finishes */
-        result |= gst_pad_stop_task (pad);
+        gst_single_queue_flush (mq, sq, TRUE, TRUE);
+        result = gst_single_queue_stop (mq, sq);
       }
       break;
     default:
