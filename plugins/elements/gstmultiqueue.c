@@ -2502,7 +2502,7 @@ gst_multi_queue_src_activate_mode (GstPad * pad, GstObject * parent,
     case GST_PAD_MODE_PUSH:
       if (active) {
         gst_single_queue_flush (mq, sq, FALSE, TRUE);
-        result = gst_single_queue_start (mq, sq);
+        result = parent ? gst_single_queue_start (mq, sq) : TRUE;
       } else {
         gst_single_queue_flush (mq, sq, TRUE, TRUE);
         result = gst_single_queue_stop (mq, sq);
@@ -3075,6 +3075,9 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   }
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->srcpad);
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->sinkpad);
+  if (GST_STATE_TARGET (mqueue) != GST_STATE_NULL) {
+    gst_single_queue_start (mqueue, sq);
+  }
   g_rec_mutex_unlock (GST_STATE_GET_LOCK (mqueue));
 
   GST_DEBUG_OBJECT (mqueue, "GstSingleQueue [%d] created and pads added",
