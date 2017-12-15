@@ -156,6 +156,69 @@ gst_av1_enc_set_latency (GstAV1Enc * encoder)
   GST_WARNING_OBJECT (encoder, "Latency unimplemented");
 }
 
+static const gchar *
+get_aom_rc_mode_name (enum aom_rc_mode rc_mode)
+{
+  switch (rc_mode) {
+    case AOM_VBR:
+      return "VBR (Variable Bit Rate)";
+    case AOM_CBR:
+      return "CBR (Constant Bit Rate)";
+    case AOM_CQ:
+      return "CQ (Constrained Quality)";
+    case AOM_Q:
+      return "Q (Constant Quality)";
+    default:
+      return "<UNKNOWN>";
+  }
+}
+
+static void
+debug_encoder_cfg (struct aom_codec_enc_cfg *cfg)
+{
+  GST_DEBUG ("g_usage : %u", cfg->g_usage);
+  GST_DEBUG ("g_threads : %u", cfg->g_threads);
+  GST_DEBUG ("g_profile : %u", cfg->g_profile);
+  GST_DEBUG ("g_w x g_h : %u x %u", cfg->g_w, cfg->g_h);
+  GST_DEBUG ("g_bit_depth : %d", cfg->g_bit_depth);
+  GST_DEBUG ("g_input_bit_depth : %u", cfg->g_input_bit_depth);
+  GST_DEBUG ("g_timebase : %d / %d", cfg->g_timebase.num, cfg->g_timebase.den);
+  GST_DEBUG ("g_error_resilient : 0x%x", cfg->g_error_resilient);
+  GST_DEBUG ("g_pass : %d", cfg->g_pass);
+  GST_DEBUG ("g_lag_in_frames : %u", cfg->g_lag_in_frames);
+  GST_DEBUG ("rc_dropframe_thresh : %u", cfg->rc_dropframe_thresh);
+  GST_DEBUG ("rc_resize_mode : %u", cfg->rc_resize_mode);
+  GST_DEBUG ("rc_resize_denominator : %u", cfg->rc_resize_denominator);
+  GST_DEBUG ("rc_resize_kf_denominator : %u", cfg->rc_resize_kf_denominator);
+  GST_DEBUG ("rc_superres_mode : %u", cfg->rc_superres_mode);
+  GST_DEBUG ("rc_superres_denominator : %u", cfg->rc_superres_denominator);
+  GST_DEBUG ("rc_superres_kf_denominator : %u",
+      cfg->rc_superres_kf_denominator);
+  GST_DEBUG ("rc_superres_qthresh : %u", cfg->rc_superres_qthresh);
+  GST_DEBUG ("rc_superres_kf_qthresh : %u", cfg->rc_superres_kf_qthresh);
+  GST_DEBUG ("rc_end_usage : %s", get_aom_rc_mode_name (cfg->rc_end_usage));
+  /* rc_twopass_stats_in */
+  /* rc_firstpass_mb_stats_in */
+  GST_DEBUG ("rc_target_bitrate : %u (kbps)", cfg->rc_target_bitrate);
+  GST_DEBUG ("rc_min_quantizer : %u", cfg->rc_min_quantizer);
+  GST_DEBUG ("rc_max_quantizer : %u", cfg->rc_max_quantizer);
+  GST_DEBUG ("rc_undershoot_pct : %u", cfg->rc_undershoot_pct);
+  GST_DEBUG ("rc_overshoot_pct : %u", cfg->rc_overshoot_pct);
+  GST_DEBUG ("rc_buf_sz : %u (ms)", cfg->rc_buf_sz);
+  GST_DEBUG ("rc_buf_initial_sz : %u (ms)", cfg->rc_buf_initial_sz);
+  GST_DEBUG ("rc_buf_optimal_sz : %u (ms)", cfg->rc_buf_optimal_sz);
+  GST_DEBUG ("rc_2pass_vbr_bias_pct : %u (%%)", cfg->rc_2pass_vbr_bias_pct);
+  GST_DEBUG ("rc_2pass_vbr_minsection_pct : %u (%%)",
+      cfg->rc_2pass_vbr_minsection_pct);
+  GST_DEBUG ("rc_2pass_vbr_maxsection_pct : %u (%%)",
+      cfg->rc_2pass_vbr_maxsection_pct);
+  GST_DEBUG ("kf_mode : %u", cfg->kf_mode);
+  GST_DEBUG ("kf_min_dist : %u", cfg->kf_min_dist);
+  GST_DEBUG ("kf_max_dist : %u", cfg->kf_max_dist);
+  GST_DEBUG ("large_scale_tile : %u", cfg->large_scale_tile);
+  /* Tile-related values */
+}
+
 static gboolean
 gst_av1_enc_init_aom (GstAV1Enc * av1enc)
 {
@@ -166,13 +229,20 @@ gst_av1_enc_init_aom (GstAV1Enc * av1enc)
     gst_av1_codec_error (&av1enc->codec, "Failed to get default codec config.");
     return FALSE;
   }
+  GST_DEBUG_OBJECT (av1enc, "Got default encoder config");
+  debug_encoder_cfg (&av1enc->aom_cfg);
+
 
   av1enc->aom_cfg.g_w = av1enc->input_state->info.width;
   av1enc->aom_cfg.g_h = av1enc->input_state->info.height;
   av1enc->aom_cfg.g_timebase.num = av1enc->input_state->info.fps_d;
   av1enc->aom_cfg.g_timebase.den = av1enc->input_state->info.fps_n;
+  /* FIXME : Make configuration properties */
   av1enc->aom_cfg.rc_target_bitrate = 3000;
-  av1enc->aom_cfg.g_error_resilient = 0;
+  av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
+
+  GST_DEBUG_OBJECT (av1enc, "Calling encoder init with config:");
+  debug_encoder_cfg (&av1enc->aom_cfg);
 
   if (aom_codec_enc_init (&av1enc->codec, av1enc->codec_interface,
           &av1enc->aom_cfg, 0)) {
