@@ -347,6 +347,8 @@ GST_START_TEST (test_timecodescale)
   compare_buffer_to_data (outbuffer, data_h1, sizeof (data_h1));
   gst_buffer_unref (outbuffer);
   gst_buffer_unref (gst_harness_pull (h));
+
+  gst_harness_teardown (h);
 }
 
 GST_END_TEST;
@@ -592,6 +594,7 @@ check_chapter (GstTocEntry * toc_entry, GstTocEntry * internal_toc_entry,
     if (gst_tag_list_get_tag_size (tags, GST_TAG_TITLE) > 0) {
       gst_tag_list_get_string_index (tags, GST_TAG_TITLE, 0, &title);
       fail_unless (memcmp (info->data + *index, title, strlen (title)) == 0);
+      g_free (title);
     }
     *index += len;
 
@@ -743,6 +746,7 @@ find_and_check_tags (GstToc * ref_toc, GstToc * internal_toc, GstMapInfo * info,
   fail_unless (gst_tag_list_get_tag_size (tags, tag_type) > 0);
   gst_tag_list_get_string_index (tags, tag_type, 0, &cur_tag_string);
   fail_unless (g_strcmp0 (cur_tag_string, tag_string) == 0);
+  g_free (cur_tag_string);
 }
 
 static void
@@ -970,6 +974,7 @@ test_toc (gboolean with_edition)
   gst_toc_unref (ref_toc);
 
   gst_buffer_unmap (merged_buffer, &info);
+  gst_buffer_unref (merged_buffer);
   gst_harness_teardown (h);
 }
 
