@@ -129,10 +129,7 @@ gst_av1_codec_error (aom_codec_ctx_t * ctx, const char *s)
 {
   const char *detail = aom_codec_error_detail (ctx);
 
-  g_print ("%s: %s\n", s, aom_codec_error (ctx));
-  if (detail) {
-    g_print ("    %s\n", detail);
-  }
+  GST_ERROR ("%s: %s %s", s, aom_codec_error (ctx), detail ? detail : "");
 }
 
 static void
@@ -345,6 +342,5 @@ gst_av1_enc_start (GstVideoEncoder * encoder)
 static gboolean
 gst_av1_enc_stop (GstVideoEncoder * benc)
 {
-  g_print ("AV1Enc Stop \n");
   return TRUE;
 }
