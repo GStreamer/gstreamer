@@ -2252,7 +2252,7 @@ get_combiner_stream_id (GstPlayBin3 * playbin, GstSourceCombine * combine,
   gint i;
   GList *tmp;
 
-  for (i = 0; combine->streams->len; i++) {
+  for (i = 0; i < combine->streams->len; i++) {
     GstStream *stream = (GstStream *) g_ptr_array_index (combine->streams, i);
     const gchar *sid = gst_stream_get_stream_id (stream);
     for (tmp = full_list; tmp; tmp = tmp->next) {
