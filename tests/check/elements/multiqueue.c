@@ -1595,6 +1595,68 @@ GST_START_TEST (test_initial_events_nodelay)
 
 GST_END_TEST;
 
+static void
+check_for_stream_status_msg (GstElement * pipeline, GstElement * multiqueue,
+    GstStreamStatusType expected_type)
+{
+  GEnumClass *klass;
+  const gchar *expected_nick, *nick;
+  GstMessage *msg;
+  GstStreamStatusType type;
+  GstElement *owner;
+
+  klass = g_type_class_ref (GST_TYPE_STREAM_STATUS_TYPE);
+  expected_nick = g_enum_get_value (klass, expected_type)->value_nick;
+
+  GST_LOG ("waiting for stream-status %s message", expected_nick);
+
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipeline),
+      GST_MESSAGE_STREAM_STATUS | GST_MESSAGE_ERROR, -1);
+  fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR,
+      "Expected stream-status message, got error message");
+
+  gst_message_parse_stream_status (msg, &type, &owner);
+  nick = g_enum_get_value (klass, type)->value_nick;
+  fail_unless (owner == multiqueue,
+      "Got incorrect owner: %" GST_PTR_FORMAT " expected: %" GST_PTR_FORMAT,
+      owner, multiqueue);
+  fail_unless (type == expected_type,
+      "Got incorrect type: %s expected: %s", nick, expected_nick);
+
+  gst_message_unref (msg);
+  g_type_class_unref (klass);
+}
+
+GST_START_TEST (test_stream_status_messages)
+{
+  GstElement *pipe, *mq;
+  GstPad *pad;
+
+  pipe = gst_pipeline_new ("pipeline");
+  mq = gst_element_factory_make ("multiqueue", NULL);
+
+  gst_bin_add (GST_BIN (pipe), mq);
+
+  pad = gst_element_get_request_pad (mq, "sink_%u");
+  gst_object_unref (pad);
+
+  gst_element_set_state (pipe, GST_STATE_PAUSED);
+
+  check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_CREATE);
+  check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_ENTER);
+
+  pad = gst_element_get_request_pad (mq, "sink_%u");
+  gst_object_unref (pad);
+
+  check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_CREATE);
+  check_for_stream_status_msg (pipe, mq, GST_STREAM_STATUS_TYPE_ENTER);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 multiqueue_suite (void)
 {
@@ -1624,6 +1686,8 @@ multiqueue_suite (void)
 
   tcase_add_test (tc_chain, test_buffering_with_none_pts);
   tcase_add_test (tc_chain, test_initial_events_nodelay);
+
+  tcase_add_test (tc_chain, test_stream_status_messages);
 
   return s;
 }
