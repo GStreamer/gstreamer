@@ -939,6 +939,7 @@ test_toc (gboolean with_edition)
 
   /* send eos to ensure everything is written */
   fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+  ASSERT_MINI_OBJECT_REFCOUNT (test_toc, "test_toc", 1);
 
   outbuffer = gst_harness_pull (h);
   fail_unless (outbuffer != NULL);

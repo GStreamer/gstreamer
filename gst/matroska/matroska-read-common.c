@@ -2897,6 +2897,9 @@ gst_matroska_read_common_init (GstMatroskaReadCommon * ctx)
   ctx->index = NULL;
   ctx->global_tags = NULL;
   ctx->adapter = gst_adapter_new ();
+  ctx->toc = NULL;
+  ctx->internal_toc = NULL;
+  ctx->toc_updated = FALSE;
   ctx->cached_track_taglists =
       g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_tag_list_unref);
@@ -2914,6 +2917,17 @@ gst_matroska_read_common_finalize (GstMatroskaReadCommon * ctx)
     gst_tag_list_unref (ctx->global_tags);
     ctx->global_tags = NULL;
   }
+
+  if (ctx->toc) {
+    gst_toc_unref (ctx->toc);
+    ctx->toc = NULL;
+  }
+  if (ctx->internal_toc) {
+    gst_toc_unref (ctx->internal_toc);
+    ctx->internal_toc = NULL;
+  }
+
+  ctx->toc_updated = FALSE;
 
   g_object_unref (ctx->adapter);
   g_hash_table_remove_all (ctx->cached_track_taglists);
@@ -3010,6 +3024,7 @@ gst_matroska_read_common_reset (GstElement * element,
     gst_toc_unref (ctx->internal_toc);
     ctx->internal_toc = NULL;
   }
+  ctx->toc_updated = FALSE;
 }
 
 /* call with object lock held */

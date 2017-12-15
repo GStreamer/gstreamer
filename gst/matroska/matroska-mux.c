@@ -498,6 +498,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
   mux->num_a_streams = 0;
   mux->num_t_streams = 0;
   mux->num_v_streams = 0;
+  mux->internal_toc = NULL;
 
   /* create used uid list */
   mux->used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint64), 10);
@@ -526,8 +527,9 @@ gst_matroska_mux_finalize (GObject * object)
 
   g_array_free (mux->used_uids, TRUE);
 
-  if (mux->internal_toc != NULL) {
+  if (mux->internal_toc) {
     gst_toc_unref (mux->internal_toc);
+    mux->internal_toc = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -703,7 +705,10 @@ gst_matroska_mux_reset (GstElement * element)
 
   /* reset chapters */
   gst_toc_setter_reset (GST_TOC_SETTER (mux));
-  mux->internal_toc = NULL;
+  if (mux->internal_toc) {
+    gst_toc_unref (mux->internal_toc);
+    mux->internal_toc = NULL;
+  }
 
   mux->chapters_pos = 0;
 
@@ -3230,6 +3235,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   guint64 duration = 0;
   GSList *collected;
   const GstTagList *tags, *toc_tags;
+  const GstToc *toc;
   gboolean has_main_tags, toc_has_tags = FALSE;
   GList *cur;
 
@@ -3270,9 +3276,9 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   /* tags */
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
   has_main_tags = tags != NULL && !gst_matroska_mux_tag_list_is_empty (tags);
+  toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
 
-  if (has_main_tags || gst_matroska_mux_streams_have_tags (mux)
-      || gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL) {
+  if (has_main_tags || gst_matroska_mux_streams_have_tags (mux) || toc != NULL) {
     guint64 master_tags = 0, master_tag;
 
     GST_DEBUG_OBJECT (mux, "Writing tags");
@@ -3327,8 +3333,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
       mux->info_pos - mux->segment_master);
   gst_ebml_replace_uint (ebml, mux->seekhead_pos + 60,
       mux->tracks_pos - mux->segment_master);
-  if (gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL
-      && mux->chapters_pos > 0) {
+  if (toc != NULL && mux->chapters_pos > 0) {
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 88,
         mux->chapters_pos - mux->segment_master);
   } else {
@@ -3361,6 +3366,10 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     gst_ebml_write_seek (ebml, mux->seekhead_pos + 124);
     gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
     gst_ebml_write_seek (ebml, my_pos);
+  }
+
+  if (toc != NULL) {
+    gst_toc_unref (toc);
   }
 
   /* loop tracks:

@@ -118,7 +118,7 @@ GST_START_TEST (test_sub_terminator)
   buf = gst_buffer_new_wrapped (mkv_data, mkv_size);
   GST_BUFFER_OFFSET (buf) = 0;
 
-  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
   gst_harness_push_event (h, gst_event_new_eos ());
 
   pull_and_check_buffer (h, 1 * GST_SECOND, 2 * GST_SECOND, "foo");
@@ -271,7 +271,7 @@ GST_START_TEST (test_toc_demux)
   buf = gst_buffer_new_wrapped (mkv_data, mkv_size);
   GST_BUFFER_OFFSET (buf) = 0;
 
-  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buf));
   gst_harness_push_event (h, gst_event_new_eos ());
 
   event = gst_harness_try_pull_event (h);
@@ -280,8 +280,10 @@ GST_START_TEST (test_toc_demux)
   while (event != NULL) {
     if (event->type == GST_EVENT_TOC) {
       gst_event_parse_toc (event, &demuxed_toc, &update);
+      gst_event_unref (event);
       break;
     }
+    gst_event_unref (event);
     event = gst_harness_try_pull_event (h);
   }
 
