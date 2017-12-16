@@ -3025,6 +3025,12 @@ gst_rtsp_client_sink_open (GstRTSPClientSink * sink, gboolean async)
   sink->methods =
       GST_RTSP_SETUP | GST_RTSP_RECORD | GST_RTSP_PAUSE | GST_RTSP_TEARDOWN;
 
+  g_mutex_lock (&sink->open_conn_lock);
+  sink->open_conn_start = TRUE;
+  g_cond_broadcast (&sink->open_conn_cond);
+  GST_DEBUG_OBJECT (sink, "connection to server started");
+  g_mutex_unlock (&sink->open_conn_lock);
+
   if ((ret = gst_rtsp_client_sink_connect_to_server (sink, async)) < 0)
     goto open_failed;
 
@@ -4569,6 +4575,18 @@ gst_rtsp_client_sink_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_ASYNC;
       g_mutex_unlock (&rtsp_client_sink->preroll_lock);
       gst_rtsp_client_sink_loop_send_cmd (rtsp_client_sink, CMD_OPEN, 0);
+
+      /* CMD_OPEN has been scheduled. Wait until the sink thread starts
+       * opening connection to the server */
+      g_mutex_lock (&rtsp_client_sink->open_conn_lock);
+      while (!rtsp_client_sink->open_conn_start) {
+        GST_DEBUG_OBJECT (rtsp_client_sink,
+            "wait for connection to be started");
+        g_cond_wait (&rtsp_client_sink->open_conn_cond,
+            &rtsp_client_sink->open_conn_lock);
+      }
+      rtsp_client_sink->open_conn_start = FALSE;
+      g_mutex_unlock (&rtsp_client_sink->open_conn_lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
       GST_DEBUG_OBJECT (rtsp_client_sink,

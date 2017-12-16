@@ -230,6 +230,11 @@ struct _GstRTSPClientSink {
   GMutex          preroll_lock;
   GCond           preroll_cond;
 
+  /* TRUE if connection to server has been scheduled */
+  gboolean        open_conn_start;
+  GMutex          open_conn_lock;
+  GCond           open_conn_cond;
+
   GstClockTime    rtx_time;
 
   GstRTSPProfile profiles;
