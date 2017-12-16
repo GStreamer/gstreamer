@@ -228,11 +228,11 @@ gdouble      gst_player_get_color_balance             (GstPlayer    * player,
 
 
 GST_EXPORT
-GstVideoMultiviewMode	 gst_player_get_multiview_mode (GstPlayer    * player);
+GstVideoMultiviewFramePacking gst_player_get_multiview_mode (GstPlayer    * player);
 
 GST_EXPORT
 void                     gst_player_set_multiview_mode (GstPlayer    * player,
-                                                        GstVideoMultiviewMode mode);
+                                                        GstVideoMultiviewFramePacking mode);
 
 GST_EXPORT
 GstVideoMultiviewFlags  gst_player_get_multiview_flags  (GstPlayer  * player);

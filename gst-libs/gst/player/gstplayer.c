@@ -4227,12 +4227,13 @@ gst_player_get_color_balance (GstPlayer * self, GstPlayerColorBalanceType type)
  *
  * Since: 1.10
  */
-GstVideoMultiviewMode
+GstVideoMultiviewFramePacking
 gst_player_get_multiview_mode (GstPlayer * self)
 {
-  GstVideoMultiviewMode val = GST_VIDEO_MULTIVIEW_MODE_NONE;
+  GstVideoMultiviewFramePacking val = GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE;
 
-  g_return_val_if_fail (GST_IS_PLAYER (self), GST_VIDEO_MULTIVIEW_MODE_NONE);
+  g_return_val_if_fail (GST_IS_PLAYER (self),
+      GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE);
 
   g_object_get (self, "video-multiview-mode", &val, NULL);
 
@@ -4250,7 +4251,8 @@ gst_player_get_multiview_mode (GstPlayer * self)
  * Since: 1.10
  */
 void
-gst_player_set_multiview_mode (GstPlayer * self, GstVideoMultiviewMode mode)
+gst_player_set_multiview_mode (GstPlayer * self,
+    GstVideoMultiviewFramePacking mode)
 {
   g_return_if_fail (GST_IS_PLAYER (self));
 
