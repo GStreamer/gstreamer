@@ -3037,10 +3037,6 @@ gst_rtsp_client_sink_open (GstRTSPClientSink * sink, gboolean async)
   if (async)
     gst_rtsp_client_sink_loop_end_cmd (sink, CMD_OPEN, ret);
 
-  /* Collect all our input streams and create
-   * stream objects before actually returning */
-  gst_rtsp_client_sink_collect_streams (sink);
-
   return ret;
 
   /* ERRORS */
@@ -3356,6 +3352,9 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
       goto join_bin_failed;
     }
     context->joined = TRUE;
+
+    /* Block the stream, as it does not have any transport parts yet */
+    gst_rtsp_stream_set_blocked (context->stream, TRUE);
 
     /* Let the stream object receive data */
     gst_pad_remove_probe (srcpad, context->payloader_block_id);
@@ -3710,6 +3709,28 @@ gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
       GST_ELEMENT_PROGRESS (sink, CONTINUE, "request", ("SETUP stream %d",
               context->index));
 
+    {
+      GstRTSPTransport *transport;
+
+      gst_rtsp_transport_new (&transport);
+      if (gst_rtsp_transport_parse (transports, transport) != GST_RTSP_OK)
+        goto parse_transport_failed;
+      if (transport->lower_transport != GST_RTSP_LOWER_TRANS_TCP) {
+        if (!gst_rtsp_stream_allocate_udp_sockets (stream, family, transport,
+                FALSE)) {
+          gst_rtsp_transport_free (transport);
+          goto allocate_udp_ports_failed;
+        }
+      }
+      if (!gst_rtsp_stream_complete_stream (stream, transport)) {
+        gst_rtsp_transport_free (transport);
+        goto complete_stream_failed;
+      }
+
+      gst_rtsp_transport_free (transport);
+      gst_rtsp_stream_set_blocked (stream, FALSE);
+    }
+
     /* handle the code ourselves */
     res = gst_rtsp_client_sink_send (sink, info, &request, &response, &code);
     if (res < 0)
@@ -3885,6 +3906,30 @@ create_request_failed:
     g_free (str);
     goto cleanup_error;
   }
+parse_transport_failed:
+  {
+    GST_RTSP_STATE_UNLOCK (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not parse transport."));
+    res = GST_RTSP_ERROR;
+    goto cleanup_error;
+  }
+allocate_udp_ports_failed:
+  {
+    GST_RTSP_STATE_UNLOCK (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not parse transport."));
+    res = GST_RTSP_ERROR;
+    goto cleanup_error;
+  }
+complete_stream_failed:
+  {
+    GST_RTSP_STATE_UNLOCK (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not parse transport."));
+    res = GST_RTSP_ERROR;
+    goto cleanup_error;
+  }
 send_error:
   {
     gchar *str = gst_rtsp_strresult (res);
@@ -3958,19 +4003,28 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
   GSocket *conn_socket;
   GList *walk;
 
-  /* Wait for streams to preroll */
   g_mutex_lock (&sink->preroll_lock);
-  while (sink->in_async) {
-    GST_LOG_OBJECT (sink, "Waiting for ASYNC_DONE preroll");
-    g_cond_wait (&sink->preroll_cond, &sink->preroll_lock);
-  }
-  g_mutex_unlock (&sink->preroll_lock);
-
   if (sink->state == GST_RTSP_STATE_PLAYING) {
     /* Already recording, don't send another request */
     GST_LOG_OBJECT (sink, "Already in RECORD. Skipping duplicate request.");
+    g_mutex_unlock (&sink->preroll_lock);
     goto done;
   }
+  g_mutex_unlock (&sink->preroll_lock);
+
+  /* Collect all our input streams and create
+   * stream objects before actually returning.
+   * The streams are blocked at this point as we do not have any transport
+   * parts yet. */
+  gst_rtsp_client_sink_collect_streams (sink);
+
+  g_mutex_lock (&sink->block_streams_lock);
+  /* Wait for streams to be blocked */
+  while (!sink->streams_blocked) {
+    GST_DEBUG_OBJECT (sink, "waiting for streams to be blocked");
+    g_cond_wait (&sink->block_streams_cond, &sink->block_streams_lock);
+  }
+  g_mutex_unlock (&sink->block_streams_lock);
 
   /* Send announce, then setup for all streams */
   gst_sdp_message_init (&sink->cursdp);
@@ -4294,7 +4348,11 @@ gst_rtsp_client_sink_handle_message (GstBin * bin, GstMessage * message)
         return;
       } else if (gst_structure_has_name (s, "GstRTSPStreamBlocking")) {
         /* An RTSPStream has prerolled */
-        g_cond_broadcast (&rtsp_client_sink->preroll_cond);
+        GST_DEBUG_OBJECT (rtsp_client_sink, "received GstRTSPStreamBlocking");
+        g_mutex_lock (&rtsp_client_sink->block_streams_lock);
+        rtsp_client_sink->streams_blocked = TRUE;
+        g_cond_broadcast (&rtsp_client_sink->block_streams_cond);
+        g_mutex_unlock (&rtsp_client_sink->block_streams_lock);
       }
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;
@@ -4443,7 +4501,6 @@ gst_rtsp_client_sink_start (GstRTSPClientSink * sink)
   GST_DEBUG_OBJECT (sink, "starting");
 
   sink->streams_collected = FALSE;
-  sink->in_async = TRUE;
   gst_element_set_locked_state (GST_ELEMENT (sink->internal_bin), TRUE);
 
   gst_rtsp_client_sink_set_state (sink, GST_STATE_READY);

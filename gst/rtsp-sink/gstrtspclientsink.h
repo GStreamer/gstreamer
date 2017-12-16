@@ -217,6 +217,11 @@ struct _GstRTSPClientSink {
   /* TRUE when stream info has been collected */
   gboolean         streams_collected;
 
+  /* TRUE when streams have been blocked */
+  gboolean         streams_blocked;
+  GMutex           block_streams_lock;
+  GCond            block_streams_cond;
+
   guint            next_pad_id;
   gint             next_dyn_pt;
 
