@@ -272,7 +272,7 @@ GST_EXPORT
 guint          gst_player_config_get_position_update_interval  (const GstStructure * config);
 
 GST_EXPORT
-void           gst_player_config_set_seek_accurate (GstPlayer * player, gboolean accurate);
+void           gst_player_config_set_seek_accurate (GstStructure * config, gboolean accurate);
 
 GST_EXPORT
 gboolean       gst_player_config_get_seek_accurate (const GstStructure * config);
