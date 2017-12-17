@@ -22,7 +22,8 @@ _scenarios = ['simple_seeks.scenario',
               'disable_subtitle_track_while_paused.scenario',
               'play_15s.scenario',
               'change_state_intensive.scenario',
-              'switch_audio_track.scenario', ]
+              'switch_audio_track.scenario',
+              'force_rtsp2.scenario', ]
 
 install_data(sources: _scenarios,
              install_dir: get_option('datadir') + '/gstreamer-' +
