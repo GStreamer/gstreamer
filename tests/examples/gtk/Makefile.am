@@ -12,30 +12,29 @@ if USE_GL
 noinst_PROGRAMS += gtkglsink glliveshader
 
 gtkglsink_SOURCES = gtkglsink.c
-gtkglsink_CFLAGS = $(GTK3_CFLAGS) \
+gtkglsink_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(GL_CFLAGS) \
-	-DGST_USE_UNSTABLE_API
-gtkglsink_LDADD = $(GTK3_LIBS) \
+	$(GTK3_CFLAGS)
+gtkglsink_LDADD = \
+	$(GST_GL_LIBS) \
 	$(GST_LIBS) \
-	$(GL_LIBS) \
+	$(GTK3_LIBS) \
 	$(X11_LIBS)
 
 glliveshader_SOURCES = glliveshader.c
-glliveshader_CFLAGS = $(GTK3_CFLAGS) \
-	-I$(top_srcdir)/gst-libs \
-	-I$(top_builddir)/gst-libs \
+glliveshader_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_GL_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(GL_CFLAGS) \
-	-DGST_USE_UNSTABLE_API
-glliveshader_LDADD = $(GTK3_LIBS) \
+	$(GTK3_CFLAGS)
+glliveshader_LDADD = \
+	$(GST_GL_LIBS) \
 	$(GST_LIBS) \
-	$(GL_LIBS) \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
+	$(GTK3_LIBS) \
 	$(X11_LIBS)
 endif
 endif

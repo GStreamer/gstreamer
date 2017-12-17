@@ -32,7 +32,7 @@ endif
 # (like in AM_CFLAGS)?
 libgstopenglmixers_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_GL_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) \
 	$(GST_CFLAGS) \
@@ -40,8 +40,7 @@ libgstopenglmixers_la_CFLAGS = \
 
 libgstopenglmixers_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstgl-@GST_API_VERSION@
+	$(GST_GL_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \

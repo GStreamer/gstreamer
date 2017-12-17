@@ -196,6 +196,33 @@ AG_GST_CHECK_GST_NET($GST_API_VERSION, [$GST_REQ], yes)
 AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-[$GST_API_VERSION], [$GST_REQ], yes)
 AG_GST_PKG_CHECK_MODULES(GST_AUDIO, gstreamer-audio-[$GST_API_VERSION], [$GST_REQ], yes)
 AG_GST_PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-[$GST_API_VERSION], [$GST_REQ], yes)
+AG_GST_PKG_CHECK_MODULES(GST_GL, gstreamer-gl-[$GST_API_VERSION], [$GST_REQ], no)
+
+AC_MSG_CHECKING([GStreamer OpenGL window systems ...])
+GST_GL_WINSYS=`$PKG_CONFIG --variable=gl_winsys gstreamer-gl-1.0`
+AC_MSG_RESULT([$GST_GL_WINSYS])
+GST_GL_HAVE_WINDOW_X11=""
+GST_GL_HAVE_WINDOW_WAYLAND=""
+GST_GL_HAVE_WINDOW_ANDROID=""
+GST_GL_HAVE_WINDOW_COCOA=""
+GST_GL_HAVE_WINDOW_EAGL=""
+case "$GST_GL_WINSYS" in  *x11*) GST_GL_HAVE_WINDOW_X11="1" ;; esac
+case "$GST_GL_WINSYS" in  *wayland*) GST_GL_HAVE_WINDOW_WAYLAND="1" ;; esac
+case "$GST_GL_WINSYS" in  *android*) GST_GL_HAVE_WINDOW_ANDROID="1" ;; esac
+case "$GST_GL_WINSYS" in  *cocoa*) GST_GL_HAVE_WINDOW_COCOA="1" ;; esac
+case "$GST_GL_WINSYS" in  *eagl*) GST_GL_HAVE_WINDOW_EAGL="1" ;; esac
+
+AC_MSG_CHECKING([GStreamer OpenGL platforms ...])
+GST_GL_PLATFORMS=`$PKG_CONFIG --variable=gl_platforms gstreamer-gl-1.0`
+AC_MSG_RESULT([$GST_GL_PLATFORMS])
+GST_GL_HAVE_PLATFORM_GLX=""
+GST_GL_HAVE_PLATFORM_EGL=""
+GST_GL_HAVE_PLATFORM_CGL=""
+GST_GL_HAVE_PLATFORM_EAGL=""
+case "$GST_GL_PLATFORMS" in  *glx*) GST_GL_HAVE_PLATFORM_GLX="1" ;; esac
+case "$GST_GL_PLATFORMS" in  *egl*) GST_GL_HAVE_PLATFORM_EGL="1" ;; esac
+case "$GST_GL_PLATFORMS" in  *cgl*) GST_GL_HAVE_PLATFORM_CGL="1" ;; esac
+case "$GST_GL_PLATFORMS" in  *eagl*) GST_GL_HAVE_PLATFORM_EAGL="1" ;; esac
 
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
@@ -1892,12 +1919,14 @@ AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
 dnl *** gl ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GL, true)
 AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
-  HAVE_GL="no"
-
-  dnl FIXME: detect and re-enable opengl plugin
+  if test "x$HAVE_GST_GL" = "xyes"; then
+    HAVE_GL="yes"
+  else
+    HAVE_GL="no"
+  fi
   dnl if test x"$USE_OPENGL" = x"yes" -o x"$USE_GLES2" = x"yes"; then
   dnl  HAVE_GL="yes"
-  dnlfi
+  dnl fi
 ])
 dnl FIXME
 AM_CONDITIONAL(USE_OPENGL, false)

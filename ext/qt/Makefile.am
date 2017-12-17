@@ -32,20 +32,20 @@ libgstqmlgl_la_SOURCES = \
 	gstplugin.cc
 
 libgstqmlgl_la_CXXFLAGS = \
-	-I$(top_srcdir)/gst-libs \
-	-I$(top_builddir)/gst-libs \
-	$(GST_CXXFLAGS) \
-	$(GST_BASE_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_GL_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(GST_CXXFLAGS) \
 	$(QT_CFLAGS) \
 	$(GL_CFLAGS) -std=c++11
 
 libgstqmlgl_la_LIBADD = \
-	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
-	$(QT_LIBS) \
-	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
-	-lgstvideo-$(GST_API_VERSION)
+	$(GST_GL_LIBS) \
+	-lgstvideo-$(GST_API_VERSION) \
+	$(GST_BASE_LIBS) \
+	$(QT_LIBS)
 
 libgstqmlgl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

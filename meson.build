@@ -323,6 +323,23 @@ if host_machine.system() != 'windows'
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
 
+# GStreamer OpenGL
+gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'gl_dep'], required: false)
+build_gstgl = gstgl_dep.found() # FIXME: add option?
+
+gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys')
+message('GStreamer OpenGL window systems: ' + gst_gl_winsys)
+foreach ws : ['x11', 'wayland', 'android', 'cocoa', 'eagl']
+  set_variable('gst_gl_have_window_@0@'.format(ws), gst_gl_winsys.contains(ws))
+endforeach
+
+gst_gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms')
+message('GStreamer OpenGL platforms: ' + gst_gl_platforms)
+foreach p : ['glx', 'egl', 'cgl', 'eagl']
+  set_variable('gst_gl_have_platform_@0@'.format(p), gst_gl_platforms.contains(p))
+endforeach
+
 libm = cc.find_library('m', required : false)
 glib_dep = dependency('glib-2.0', version : glib_req,
   fallback: ['glib', 'libglib_dep'])
