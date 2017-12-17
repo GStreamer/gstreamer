@@ -1812,15 +1812,15 @@ gst_plugin_ext_dep_equals (GstPluginDep * dep, const gchar ** env_vars,
 /**
  * gst_plugin_add_dependency:
  * @plugin: a #GstPlugin
- * @env_vars: (allow-none): %NULL-terminated array of environment variables affecting the
+ * @env_vars: (allow-none) (array zero-terminated=1): %NULL-terminated array of environment variables affecting the
  *     feature set of the plugin (e.g. an environment variable containing
  *     paths where to look for additional modules/plugins of a library),
  *     or %NULL. Environment variable names may be followed by a path component
  *      which will be added to the content of the environment variable, e.g.
  *      "HOME/.mystuff/plugins".
- * @paths: (allow-none): %NULL-terminated array of directories/paths where dependent files
+ * @paths: (allow-none) (array zero-terminated=1): %NULL-terminated array of directories/paths where dependent files
  *     may be, or %NULL.
- * @names: (allow-none): %NULL-terminated array of file names (or file name suffixes,
+ * @names: (allow-none) (array zero-terminated=1): %NULL-terminated array of file names (or file name suffixes,
  *     depending on @flags) to be used in combination with the paths from
  *     @paths and/or the paths extracted from the environment variables in
  *     @env_vars, or %NULL.
