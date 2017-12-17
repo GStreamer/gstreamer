@@ -22,7 +22,6 @@ pkgconf.set('rtsplibdir', join_paths(meson.build_root(), gst_rtsp.outdir()))
 pkgconf.set('sdplibdir', join_paths(meson.build_root(), gstsdp.outdir()))
 pkgconf.set('taglibdir', join_paths(meson.build_root(), gsttag.outdir()))
 pkgconf.set('videolibdir', join_paths(meson.build_root(), gstvideo.outdir()))
-pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
 
 pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
@@ -39,8 +38,16 @@ pkg_files = [
   'gstreamer-sdp',
   'gstreamer-tag',
   'gstreamer-video',
-  'gstreamer-gl',
 ]
+
+# XXX: requires the meson.build to be parsed/executed after gst-libs/gl/meson.build
+if build_gstgl
+  pkgconf.set('gllibdir', join_paths(meson.build_root(), gstgl.outdir()))
+  pkg_files += ['gstreamer-gl']
+  pkgconf.set('GL_APIS', ' '.join(enabled_gl_apis))
+  pkgconf.set('GL_WINDOWS', ' '.join(enabled_gl_winsys))
+  pkgconf.set('GL_PLATFORMS', ' '.join(enabled_gl_platforms))
+endif
 
 foreach p : pkg_files
   infile = p + '.pc.in'
