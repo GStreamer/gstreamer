@@ -308,6 +308,661 @@ gst_gio_stream_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-glcolorbalance</FILE>
+<TITLE>glcolorbalance</TITLE>
+GstGLColorBalance
+<SUBSECTION Standard>
+GstGLColorBalanceClass
+GST_GL_COLOR_BALANCE
+GST_GL_COLOR_BALANCE_CAST
+GST_IS_GL_COLOR_BALANCE
+GST_GL_COLOR_BALANCE_CLASS
+GST_IS_GL_COLOR_BALANCE_CLASS
+GST_TYPE_GL_COLOR_BALANCE
+<SUBSECTION Private>
+gst_gl_color_balance_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glcolorconvert</FILE>
+<TITLE>glcolorconvert</TITLE>
+GstGLColorConvertElement
+<SUBSECTION Standard>
+GstGLColorConvertElementClass
+GST_GL_COLOR_CONVERT_ELEMENT
+GST_GL_COLOR_CONVERT_ELEMENT_CAST
+GST_IS_GL_COLOR_CONVERT_ELEMENT
+GST_GL_COLOR_CONVERT_ELEMENT_CLASS
+GST_IS_GL_COLOR_CONVERT_ELEMENT_CLASS
+GST_TYPE_GL_COLOR_CONVERT_ELEMENT
+<SUBSECTION Private>
+gst_gl_color_convert_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glcolorscale</FILE>
+<TITLE>glcolorscale</TITLE>
+GstGLColorscale
+<SUBSECTION Standard>
+GstGLColorscaleClass
+GST_GL_COLORSCALE
+GST_GL_COLORSCALE_CAST
+GST_IS_GL_COLORSCALE
+GST_GL_COLORSCALE_CLASS
+GST_IS_GL_COLORSCALE_CLASS
+GST_TYPE_GL_COLORSCALE
+<SUBSECTION Private>
+gst_gl_colorscale_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gldeinterlace</FILE>
+<TITLE>gldeinterlace</TITLE>
+GstGLDeinterlace
+GstGLDeinterlaceMethod
+<SUBSECTION Standard>
+GstGLDeinterlaceClass
+GST_GL_DEINTERLACE
+GST_GL_DEINTERLACE_CAST
+GST_IS_GL_DEINTERLACE
+GST_GL_DEINTERLACE_CLASS
+GST_IS_GL_DEINTERLACE_CLASS
+GST_TYPE_GL_DEINTERLACE
+<SUBSECTION Private>
+gst_gl_deinterlace_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gldifferencematte</FILE>
+<TITLE>gldifferencematte</TITLE>
+GstGLDifferenceMatte
+<SUBSECTION Standard>
+GstGLDifferenceMatteClass
+GST_GL_DIFFERENCE_MATTE
+GST_GL_DIFFERENCE_MATTE_CAST
+GST_IS_GL_DIFFERENCE_MATTE
+GST_GL_DIFFERENCE_MATTE_CLASS
+GST_IS_GL_DIFFERENCE_MATTE_CLASS
+GST_TYPE_GL_DIFFERENCE_MATTE
+<SUBSECTION Private>
+gst_gl_difference_matte_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gldownload</FILE>
+<TITLE>gldownload</TITLE>
+GstGLDownloadElement
+<SUBSECTION Standard>
+GstGLDownloadElementClass
+GST_GL_DOWNLOAD_ELEMENT
+GST_GL_DOWNLOAD_ELEMENT_CAST
+GST_IS_GL_DOWNLOAD_ELEMENT
+GST_GL_DOWNLOAD_ELEMENT_CLASS
+GST_IS_GL_DOWNLOAD_ELEMENT_CLASS
+GST_TYPE_GL_DOWNLOAD_ELEMENT
+<SUBSECTION Private>
+gst_gl_download_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects</FILE>
+<TITLE>gleffects</TITLE>
+GstGLEffectsGeneric
+<SUBSECTION Standard>
+GstGLEffectsGenericClass
+GST_GL_EFFECTS_GENERIC
+GST_GL_EFFECTS_GENERIC_CAST
+GST_IS_GL_EFFECTS_GENERIC
+GST_GL_EFFECTS_GENERIC_CLASS
+GST_IS_GL_EFFECTS_GENERIC_CLASS
+GST_TYPE_GL_EFFECTS_GENERIC
+<SUBSECTION Private>
+gst_gl_effects_generic_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_blur</FILE>
+<TITLE>gleffects_blur</TITLE>
+Gstffects_blur
+<SUBSECTION Standard>
+Gstffects_blurClass
+GST_FFECTS_BLUR
+GST_FFECTS_BLUR_CAST
+GST_IS_FFECTS_BLUR
+GST_FFECTS_BLUR_CLASS
+GST_IS_FFECTS_BLUR_CLASS
+GST_TYPE_FFECTS_BLUR
+<SUBSECTION Private>
+gst_ffects_blur_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_bulge</FILE>
+<TITLE>gleffects_bulge</TITLE>
+Gstffects_bulge
+<SUBSECTION Standard>
+Gstffects_bulgeClass
+GST_FFECTS_BULGE
+GST_FFECTS_BULGE_CAST
+GST_IS_FFECTS_BULGE
+GST_FFECTS_BULGE_CLASS
+GST_IS_FFECTS_BULGE_CLASS
+GST_TYPE_FFECTS_BULGE
+<SUBSECTION Private>
+gst_ffects_bulge_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_fisheye</FILE>
+<TITLE>gleffects_fisheye</TITLE>
+Gstffects_fisheye
+<SUBSECTION Standard>
+Gstffects_fisheyeClass
+GST_FFECTS_FISHEYE
+GST_FFECTS_FISHEYE_CAST
+GST_IS_FFECTS_FISHEYE
+GST_FFECTS_FISHEYE_CLASS
+GST_IS_FFECTS_FISHEYE_CLASS
+GST_TYPE_FFECTS_FISHEYE
+<SUBSECTION Private>
+gst_ffects_fisheye_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_glow</FILE>
+<TITLE>gleffects_glow</TITLE>
+Gstffects_glow
+<SUBSECTION Standard>
+Gstffects_glowClass
+GST_FFECTS_GLOW
+GST_FFECTS_GLOW_CAST
+GST_IS_FFECTS_GLOW
+GST_FFECTS_GLOW_CLASS
+GST_IS_FFECTS_GLOW_CLASS
+GST_TYPE_FFECTS_GLOW
+<SUBSECTION Private>
+gst_ffects_glow_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_heat</FILE>
+<TITLE>gleffects_heat</TITLE>
+Gstffects_heat
+<SUBSECTION Standard>
+Gstffects_heatClass
+GST_FFECTS_HEAT
+GST_FFECTS_HEAT_CAST
+GST_IS_FFECTS_HEAT
+GST_FFECTS_HEAT_CLASS
+GST_IS_FFECTS_HEAT_CLASS
+GST_TYPE_FFECTS_HEAT
+<SUBSECTION Private>
+gst_ffects_heat_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_identity</FILE>
+<TITLE>gleffects_identity</TITLE>
+Gstffects_identity
+<SUBSECTION Standard>
+Gstffects_identityClass
+GST_FFECTS_IDENTITY
+GST_FFECTS_IDENTITY_CAST
+GST_IS_FFECTS_IDENTITY
+GST_FFECTS_IDENTITY_CLASS
+GST_IS_FFECTS_IDENTITY_CLASS
+GST_TYPE_FFECTS_IDENTITY
+<SUBSECTION Private>
+gst_ffects_identity_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_laplacian</FILE>
+<TITLE>gleffects_laplacian</TITLE>
+Gstffects_laplacian
+<SUBSECTION Standard>
+Gstffects_laplacianClass
+GST_FFECTS_LAPLACIAN
+GST_FFECTS_LAPLACIAN_CAST
+GST_IS_FFECTS_LAPLACIAN
+GST_FFECTS_LAPLACIAN_CLASS
+GST_IS_FFECTS_LAPLACIAN_CLASS
+GST_TYPE_FFECTS_LAPLACIAN
+<SUBSECTION Private>
+gst_ffects_laplacian_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_lumaxpro</FILE>
+<TITLE>gleffects_lumaxpro</TITLE>
+Gstffects_lumaxpro
+<SUBSECTION Standard>
+Gstffects_lumaxproClass
+GST_FFECTS_LUMAXPRO
+GST_FFECTS_LUMAXPRO_CAST
+GST_IS_FFECTS_LUMAXPRO
+GST_FFECTS_LUMAXPRO_CLASS
+GST_IS_FFECTS_LUMAXPRO_CLASS
+GST_TYPE_FFECTS_LUMAXPRO
+<SUBSECTION Private>
+gst_ffects_lumaxpro_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_mirror</FILE>
+<TITLE>gleffects_mirror</TITLE>
+Gstffects_mirror
+<SUBSECTION Standard>
+Gstffects_mirrorClass
+GST_FFECTS_MIRROR
+GST_FFECTS_MIRROR_CAST
+GST_IS_FFECTS_MIRROR
+GST_FFECTS_MIRROR_CLASS
+GST_IS_FFECTS_MIRROR_CLASS
+GST_TYPE_FFECTS_MIRROR
+<SUBSECTION Private>
+gst_ffects_mirror_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_sepia</FILE>
+<TITLE>gleffects_sepia</TITLE>
+Gstffects_sepia
+<SUBSECTION Standard>
+Gstffects_sepiaClass
+GST_FFECTS_SEPIA
+GST_FFECTS_SEPIA_CAST
+GST_IS_FFECTS_SEPIA
+GST_FFECTS_SEPIA_CLASS
+GST_IS_FFECTS_SEPIA_CLASS
+GST_TYPE_FFECTS_SEPIA
+<SUBSECTION Private>
+gst_ffects_sepia_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_sin</FILE>
+<TITLE>gleffects_sin</TITLE>
+Gstffects_sin
+<SUBSECTION Standard>
+Gstffects_sinClass
+GST_FFECTS_SIN
+GST_FFECTS_SIN_CAST
+GST_IS_FFECTS_SIN
+GST_FFECTS_SIN_CLASS
+GST_IS_FFECTS_SIN_CLASS
+GST_TYPE_FFECTS_SIN
+<SUBSECTION Private>
+gst_ffects_sin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_sobel</FILE>
+<TITLE>gleffects_sobel</TITLE>
+Gstffects_sobel
+<SUBSECTION Standard>
+Gstffects_sobelClass
+GST_FFECTS_SOBEL
+GST_FFECTS_SOBEL_CAST
+GST_IS_FFECTS_SOBEL
+GST_FFECTS_SOBEL_CLASS
+GST_IS_FFECTS_SOBEL_CLASS
+GST_TYPE_FFECTS_SOBEL
+<SUBSECTION Private>
+gst_ffects_sobel_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_square</FILE>
+<TITLE>gleffects_square</TITLE>
+Gstffects_square
+<SUBSECTION Standard>
+Gstffects_squareClass
+GST_FFECTS_SQUARE
+GST_FFECTS_SQUARE_CAST
+GST_IS_FFECTS_SQUARE
+GST_FFECTS_SQUARE_CLASS
+GST_IS_FFECTS_SQUARE_CLASS
+GST_TYPE_FFECTS_SQUARE
+<SUBSECTION Private>
+gst_ffects_square_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_squeeze</FILE>
+<TITLE>gleffects_squeeze</TITLE>
+Gstffects_squeeze
+<SUBSECTION Standard>
+Gstffects_squeezeClass
+GST_FFECTS_SQUEEZE
+GST_FFECTS_SQUEEZE_CAST
+GST_IS_FFECTS_SQUEEZE
+GST_FFECTS_SQUEEZE_CLASS
+GST_IS_FFECTS_SQUEEZE_CLASS
+GST_TYPE_FFECTS_SQUEEZE
+<SUBSECTION Private>
+gst_ffects_squeeze_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_stretch</FILE>
+<TITLE>gleffects_stretch</TITLE>
+Gstffects_stretch
+<SUBSECTION Standard>
+Gstffects_stretchClass
+GST_FFECTS_STRETCH
+GST_FFECTS_STRETCH_CAST
+GST_IS_FFECTS_STRETCH
+GST_FFECTS_STRETCH_CLASS
+GST_IS_FFECTS_STRETCH_CLASS
+GST_TYPE_FFECTS_STRETCH
+<SUBSECTION Private>
+gst_ffects_stretch_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_tunnel</FILE>
+<TITLE>gleffects_tunnel</TITLE>
+Gstffects_tunnel
+<SUBSECTION Standard>
+Gstffects_tunnelClass
+GST_FFECTS_TUNNEL
+GST_FFECTS_TUNNEL_CAST
+GST_IS_FFECTS_TUNNEL
+GST_FFECTS_TUNNEL_CLASS
+GST_IS_FFECTS_TUNNEL_CLASS
+GST_TYPE_FFECTS_TUNNEL
+<SUBSECTION Private>
+gst_ffects_tunnel_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_twirl</FILE>
+<TITLE>gleffects_twirl</TITLE>
+Gstffects_twirl
+<SUBSECTION Standard>
+Gstffects_twirlClass
+GST_FFECTS_TWIRL
+GST_FFECTS_TWIRL_CAST
+GST_IS_FFECTS_TWIRL
+GST_FFECTS_TWIRL_CLASS
+GST_IS_FFECTS_TWIRL_CLASS
+GST_TYPE_FFECTS_TWIRL
+<SUBSECTION Private>
+gst_ffects_twirl_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_xpro</FILE>
+<TITLE>gleffects_xpro</TITLE>
+Gstffects_xpro
+<SUBSECTION Standard>
+Gstffects_xproClass
+GST_FFECTS_XPRO
+GST_FFECTS_XPRO_CAST
+GST_IS_FFECTS_XPRO
+GST_FFECTS_XPRO_CLASS
+GST_IS_FFECTS_XPRO_CLASS
+GST_TYPE_FFECTS_XPRO
+<SUBSECTION Private>
+gst_ffects_xpro_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gleffects_xray</FILE>
+<TITLE>gleffects_xray</TITLE>
+Gstffects_xray
+<SUBSECTION Standard>
+Gstffects_xrayClass
+GST_FFECTS_XRAY
+GST_FFECTS_XRAY_CAST
+GST_IS_FFECTS_XRAY
+GST_FFECTS_XRAY_CLASS
+GST_IS_FFECTS_XRAY_CLASS
+GST_TYPE_FFECTS_XRAY
+<SUBSECTION Private>
+gst_ffects_xray_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfilterapp</FILE>
+<TITLE>glfilterapp</TITLE>
+GstGLFilterApp
+<SUBSECTION Standard>
+GstGLFilterAppClass
+GST_GL_FILTER_APP
+GST_GL_FILTER_APP_CAST
+GST_IS_GL_FILTER_APP
+GST_GL_FILTER_APP_CLASS
+GST_IS_GL_FILTER_APP_CLASS
+GST_TYPE_GL_FILTER_APP
+<SUBSECTION Private>
+gst_gl_filter_app_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfilterbin</FILE>
+<TITLE>glfilterbin</TITLE>
+GstGLFilterBin
+<SUBSECTION Standard>
+GstGLFilterBinClass
+GST_GL_FILTER_BIN
+GST_GL_FILTER_BIN_CAST
+GST_IS_GL_FILTER_BIN
+GST_GL_FILTER_BIN_CLASS
+GST_IS_GL_FILTER_BIN_CLASS
+GST_TYPE_GL_FILTER_BIN
+<SUBSECTION Private>
+gst_gl_filter_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfiltercube</FILE>
+<TITLE>glfiltercube</TITLE>
+GstGLFilterCube
+<SUBSECTION Standard>
+GstGLFilterCubeClass
+GST_GL_FILTER_CUBE
+GST_GL_FILTER_CUBE_CAST
+GST_IS_GL_FILTER_CUBE
+GST_GL_FILTER_CUBE_CLASS
+GST_IS_GL_FILTER_CUBE_CLASS
+GST_TYPE_GL_FILTER_CUBE
+<SUBSECTION Private>
+gst_gl_filter_cube_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glfilterglass</FILE>
+<TITLE>glfilterglass</TITLE>
+GstGLFilterGlass
+<SUBSECTION Standard>
+GstGLFilterGlassClass
+GST_GL_FILTER_GLASS
+GST_GL_FILTER_GLASS_CAST
+GST_IS_GL_FILTER_GLASS
+GST_GL_FILTER_GLASS_CLASS
+GST_IS_GL_FILTER_GLASS_CLASS
+GST_TYPE_GL_FILTER_GLASS
+<SUBSECTION Private>
+gst_gl_filter_glass_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glshader</FILE>
+<TITLE>glshader</TITLE>
+GstGLFilterShader
+<SUBSECTION Standard>
+GstGLFilterShaderClass
+GST_GL_FILTER_SHADER
+GST_GL_FILTER_SHADER_CAST
+GST_IS_GL_FILTER_SHADER
+GST_GL_FILTER_SHADER_CLASS
+GST_IS_GL_FILTER_SHADER_CLASS
+GST_TYPE_GL_FILTER_SHADER
+<SUBSECTION Private>
+gst_gl_filter_shader_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glimagesinkelement</FILE>
+<TITLE>glimagesinkelement</TITLE>
+GstGLImageSink
+<SUBSECTION Standard>
+GstGLImageSinkClass
+GST_GL_IMAGE_SINK
+GST_GL_IMAGE_SINK_CAST
+GST_IS_GL_IMAGE_SINK
+GST_GL_IMAGE_SINK_CLASS
+GST_IS_GL_IMAGE_SINK_CLASS
+GST_TYPE_GL_IMAGE_SINK
+<SUBSECTION Private>
+gst_gl_image_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glimagesink</FILE>
+<TITLE>glimagesink</TITLE>
+GstGLImageSinkBin
+<SUBSECTION Standard>
+GstGLImageSinkBinClass
+GST_GL_IMAGE_SINK_BIN
+GST_GL_IMAGE_SINK_BIN_CAST
+GST_IS_GL_IMAGE_SINK_BIN
+GST_GL_IMAGE_SINK_BIN_CLASS
+GST_IS_GL_IMAGE_SINK_BIN_CLASS
+GST_TYPE_GL_IMAGE_SINK_BIN
+<SUBSECTION Private>
+gst_gl_image_sink_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gloverlay</FILE>
+<TITLE>gloverlay</TITLE>
+GstGLOverlay
+<SUBSECTION Standard>
+GstGLOverlayClass
+GST_GL_OVERLAY
+GST_GL_OVERLAY_CAST
+GST_IS_GL_OVERLAY
+GST_GL_OVERLAY_CLASS
+GST_IS_GL_OVERLAY_CLASS
+GST_TYPE_GL_OVERLAY
+<SUBSECTION Private>
+gst_gl_overlay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glsinkbin</FILE>
+<TITLE>glsinkbin</TITLE>
+GstGLSinkBin
+<SUBSECTION Standard>
+GstGLSinkBinClass
+GST_GL_SINK_BIN
+GST_GL_SINK_BIN_CAST
+GST_IS_GL_SINK_BIN
+GST_GL_SINK_BIN_CLASS
+GST_IS_GL_SINK_BIN_CLASS
+GST_TYPE_GL_SINK_BIN
+<SUBSECTION Private>
+gst_gl_sink_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glsrcbin</FILE>
+<TITLE>glsrcbin</TITLE>
+GstGLSrcBin
+<SUBSECTION Standard>
+GstGLSrcBinClass
+GST_GL_SRC_BIN
+GST_GL_SRC_BIN_CAST
+GST_IS_GL_SRC_BIN
+GST_GL_SRC_BIN_CLASS
+GST_IS_GL_SRC_BIN_CLASS
+GST_TYPE_GL_SRC_BIN
+<SUBSECTION Private>
+gst_gl_src_bin_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glstereosplit</FILE>
+<TITLE>glstereosplit</TITLE>
+GstGLStereoSplit
+<SUBSECTION Standard>
+GstGLStereoSplitClass
+GST_GL_STEREO_SPLIT
+GST_GL_STEREO_SPLIT_CAST
+GST_IS_GL_STEREO_SPLIT
+GST_GL_STEREO_SPLIT_CLASS
+GST_IS_GL_STEREO_SPLIT_CLASS
+GST_TYPE_GL_STEREO_SPLIT
+<SUBSECTION Private>
+gst_gl_stereo_split_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gltestsrc</FILE>
+<TITLE>gltestsrc</TITLE>
+GstGLTestSrc
+GstGLTestSrcPattern
+<SUBSECTION Standard>
+GstGLTestSrcClass
+GST_GL_TEST_SRC
+GST_GL_TEST_SRC_CAST
+GST_IS_GL_TEST_SRC
+GST_GL_TEST_SRC_CLASS
+GST_IS_GL_TEST_SRC_CLASS
+GST_TYPE_GL_TEST_SRC
+<SUBSECTION Private>
+gst_gl_test_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gltransformation</FILE>
+<TITLE>gltransformation</TITLE>
+GstGLTransformation
+<SUBSECTION Standard>
+GstGLTransformationClass
+GST_GL_TRANSFORMATION
+GST_GL_TRANSFORMATION_CLASS
+GST_IS_GL_TRANSFORMATION
+GST_IS_GL_TRANSFORMATION_CLASS
+GST_TYPE_GL_TRANSFORMATION
+</SECTION>
+
+<SECTION>
+<FILE>element-glupload</FILE>
+<TITLE>glupload</TITLE>
+GstGLUploadElement
+<SUBSECTION Standard>
+GstGLUploadElementClass
+GST_GL_UPLOAD_ELEMENT
+GST_GL_UPLOAD_ELEMENT_CAST
+GST_IS_GL_UPLOAD_ELEMENT
+GST_GL_UPLOAD_ELEMENT_CLASS
+GST_IS_GL_UPLOAD_ELEMENT_CLASS
+GST_TYPE_GL_UPLOAD_ELEMENT
+<SUBSECTION Private>
+gst_gl_upload_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-glviewconvert</FILE>
+<TITLE>glviewconvert</TITLE>
+GstGLViewConvertElement
+<SUBSECTION Standard>
+GstGLViewConvertElementClass
+GST_GL_VIEW_CONVERT_ELEMENT
+GST_GL_VIEW_CONVERT_ELEMENT_CAST
+GST_IS_GL_VIEW_CONVERT_ELEMENT
+GST_GL_VIEW_CONVERT_ELEMENT_CLASS
+GST_IS_GL_VIEW_CONVERT_ELEMENT_CLASS
+GST_TYPE_GL_VIEW_CONVERT_ELEMENT
+<SUBSECTION Private>
+gst_gl_view_convert_element_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-multifdsink</FILE>
 <TITLE>multifdsink</TITLE>
 GstMultiFdSink

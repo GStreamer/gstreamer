@@ -336,6 +336,14 @@ GstSample *arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstAppSrc::push-buffer-list</NAME>
+<RETURNS>GstFlowReturn</RETURNS>
+<FLAGS>la</FLAGS>
+GstAppSrc *gstappsrc
+GstBufferList *arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstAppSink::eos</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -816,5 +824,81 @@ GstCaps *arg2
 GstDecodebin3 *gstdecodebin3
 GstStreamCollection *arg1
 GstStream *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLSrcBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLSrcBin *gstglsrcbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLSinkBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLSinkBin *gstglsinkbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLFilterShader::create-shader</NAME>
+<RETURNS>GstGLShader*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLFilterShader *gstglfiltershader
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSink::client-draw</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSink *gstglimagesink
+GstGLContext *arg1
+GstSample *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSink::client-reshape</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSink *gstglimagesink
+GstGLContext *arg1
+guint  arg2
+guint  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSinkBin::client-draw</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSinkBin *gstglimagesinkbin
+GstGLContext *arg1
+GstSample *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLImageSinkBin::client-reshape</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLImageSinkBin *gstglimagesinkbin
+GstGLContext *arg1
+guint  arg2
+guint  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLFilterBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLFilterBin *gstglfilterbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLFilterApp::client-draw</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLFilterApp *gstglfilterapp
+guint  arg1
+guint  arg2
+guint  arg3
 </SIGNAL>
 

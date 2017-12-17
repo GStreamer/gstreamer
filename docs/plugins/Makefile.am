@@ -35,7 +35,7 @@ FIXXREF_OPTIONS=--extra-dir=$(top_builddir)/docs/libs/html \
 
 # Used for dependencies.
 HFILE_GLOB=$(top_srcdir)/gst/*/*.h $(top_srcdir)/ext/*/*.h $(top_srcdir)/sys/*/*.h
-CFILE_GLOB=$(top_srcdir)/gst/*/*.c $(top_srcdir)/ext/*/*.c $(top_srcdir)/sys/*/*.c
+CFILE_GLOB=$(top_srcdir)/gst/*/*.c $(top_srcdir)/ext/*/*.c $(top_srcdir)/sys/*/*.c $(top_srcdir)/ext/*/*.m
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = avcodec.h dsputil.h arch.h speex_resampler.h speex_resampler_wrapper.h fixed_arm4.h fixed_arm5e.h fixed_bfin.h fixed_debug.h fixed_generic.h resample_sse.h
