@@ -15,7 +15,7 @@ if gtk_dep.found()
   if build_gstgl and gstgl_dep.found() and gtk_dep.version().version_compare('>=3.15.0')
     have_gtk3_gl_windowing = false
 
-    if x11_dep.found() and gl_dep.found()
+    if gst_gl_have_window_x11 and gst_gl_have_platform_glx
       gtk_x11_dep = dependency('gtk+-x11-3.0', required : false)
       if gtk_x11_dep.found()
         optional_deps += gtk_x11_dep
@@ -23,7 +23,7 @@ if gtk_dep.found()
       endif
     endif
 
-    if wayland_egl_dep.found() and egl_dep.found()
+    if gst_gl_have_window_wayland and gst_gl_have_platform_egl
       gtk_wayland_dep = dependency('gtk+-wayland-3.0', required : false)
       if gtk_wayland_dep.found()
         optional_deps += gtk_wayland_dep
