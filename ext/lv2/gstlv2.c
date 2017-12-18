@@ -255,7 +255,8 @@ plugin_init (GstPlugin * plugin)
   side_right_role = lilv_new_uri (world, LV2_PORT_GROUPS__sideRight);
 
   gst_plugin_add_dependency_simple (plugin,
-      "LV2_PATH", GST_LV2_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+      "LV2_PATH", GST_LV2_DEFAULT_PATH, NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
 
   /* ensure GstAudioChannelPosition type is registered */
   if (!gst_audio_channel_position_get_type ())
