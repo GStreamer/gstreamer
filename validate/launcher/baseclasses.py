@@ -2024,17 +2024,39 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         self._xml_path = xml_path
         try:
-            self.media_xml = ET.parse(xml_path).getroot()
+            media_xml = ET.parse(xml_path).getroot()
         except xml.etree.ElementTree.ParseError:
             printc("Could not parse %s" % xml_path,
                    Colors.FAIL)
             raise
 
-        # Sanity checks
-        self.media_xml.attrib["duration"]
-        self.media_xml.attrib["seekable"]
+        self._extract_data (media_xml)
 
         self.set_protocol(urllib.parse.urlparse(urllib.parse.urlparse(self.get_uri()).scheme).scheme)
+
+    def _extract_data(self, media_xml):
+        # Extract the information we need from the xml
+        self._caps = media_xml.findall("streams")[0].attrib["caps"]
+        self._track_caps = []
+        try:
+            streams = media_xml.findall("streams")[0].findall("stream")
+        except IndexError:
+            pass
+        else:
+            for stream in streams:
+                self._track_caps.append((stream.attrib["type"], stream.attrib["caps"]))
+        self._uri = media_xml.attrib["uri"]
+        self._duration = int(media_xml.attrib["duration"])
+        self._protocol = media_xml.get("protocol", None)
+        self._is_seekable = media_xml.attrib["seekable"].lower() == "true"
+        self._is_live = media_xml.get("live", "false").lower() == "true"
+        self._is_image = False
+        for stream in media_xml.findall("streams")[0].findall("stream"):
+            if stream.attrib["type"] == "image":
+                self._is_image = True
+        self._track_types = []
+        for stream in media_xml.findall("streams")[0].findall("stream"):
+            self._track_types.append(stream.attrib["type"])
 
     @staticmethod
     def new_from_uri(uri, verbose=False, include_frames=False):
@@ -2100,51 +2122,39 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             return self._xml_path.replace("." + self.STREAM_INFO_EXT, "")
 
     def get_caps(self):
-        return self.media_xml.findall("streams")[0].attrib["caps"]
+        return self._caps
 
     def get_tracks_caps(self):
-        res = []
-        try:
-            streams = self.media_xml.findall("streams")[0].findall("stream")
-        except IndexError:
-            return res
-
-        for stream in streams:
-            res.append((stream.attrib["type"], stream.attrib["caps"]))
-
-        return res
+        return self._track_caps
 
     def get_uri(self):
-        return self.media_xml.attrib["uri"]
+        return self._uri
 
     def get_duration(self):
-        return int(self.media_xml.attrib["duration"])
+        return self._duration
 
     def set_protocol(self, protocol):
-        self.media_xml.attrib["protocol"] = protocol
+        self._protocol = protocol
 
     def get_protocol(self):
-        return self.media_xml.attrib["protocol"]
+        return self._protocol
 
     def is_seekable(self):
-        return self.media_xml.attrib["seekable"].lower() == "true"
+        return self._is_seekable
 
     def is_live(self):
-        return self.media_xml.get("live", "false").lower() == "true"
+        return self._is_live
 
     def can_play_reverse(self):
         return True
 
     def is_image(self):
-        for stream in self.media_xml.findall("streams")[0].findall("stream"):
-            if stream.attrib["type"] == "image":
-                return True
-        return False
+        return self._is_image
 
     def get_num_tracks(self, track_type):
         n = 0
-        for stream in self.media_xml.findall("streams")[0].findall("stream"):
-            if stream.attrib["type"] == track_type:
+        for t in self._track_types:
+            if t == track_type:
                 n += 1
 
         return n
