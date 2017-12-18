@@ -33,7 +33,7 @@ class GstBuildConfigurer:
                 print("Not reconfiguring")
                 return True
 
-        meson, mesonconf, mesonintrospect = get_meson()
+        meson = get_meson()
         if not meson:
             print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
                   "You can simply install it with:\n"

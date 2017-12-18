@@ -66,8 +66,8 @@ def get_subprocess_env(options):
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                          'lib', 'girepository-1.0'))
 
-    meson, mesonconf, mesonintrospect = get_meson()
-    targets_s = subprocess.check_output([sys.executable, mesonintrospect, options.builddir, '--targets'])
+    meson = get_meson()
+    targets_s = subprocess.check_output([sys.executable, meson, 'introspect', options.builddir, '--targets'])
     targets = json.loads(targets_s.decode())
     paths = set()
     mono_paths = set()
@@ -102,8 +102,8 @@ def get_subprocess_env(options):
     presets = set()
     encoding_targets = set()
     pkg_dirs = set()
-    if '--installed' in subprocess.check_output([sys.executable, mesonintrospect, '-h']).decode():
-        installed_s = subprocess.check_output([sys.executable, mesonintrospect,
+    if '--installed' in subprocess.check_output([sys.executable, meson, 'introspect', '-h']).decode():
+        installed_s = subprocess.check_output([sys.executable, meson, 'introspect',
                                                options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
             if path.endswith('.prs'):
