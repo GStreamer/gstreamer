@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import shlex
 
 
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
@@ -57,6 +58,21 @@ def get_meson():
     meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
     if os.path.exists(meson):
         return meson
+
+    mesonintrospect = os.environ.get('MESONINTROSPECT', '')
+    for comp in shlex.split (mesonintrospect):
+        # mesonintrospect might look like "/usr/bin/python /somewhere/meson introspect",
+        # let's not get tricked
+        if 'python' in os.path.basename (comp):
+            continue
+        if os.path.exists (comp):
+            mesondir = os.path.dirname(comp)
+            if mesonintrospect.endswith('.py'):
+                meson = os.path.join(mesondir, 'meson.py')
+            else:
+                meson = os.path.join(mesondir, 'meson')
+            if os.path.exists (meson):
+                return meson
 
     meson = accept_command(["meson.py", "meson"])
 
