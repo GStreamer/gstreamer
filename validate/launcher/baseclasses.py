@@ -519,6 +519,16 @@ class Test(Loggable):
             if self.result is not Result.PASSED:
                 self._dump_log_files()
 
+        # Only keep around env variables we need later
+        clean_env = {}
+        for n in self.__env_variable:
+            clean_env[n] = self.proc_env.get(n, None)
+        self.proc_env = clean_env
+
+        # Don't keep around JSON report objects, they were processed
+        # in check_results already
+        self.reports = []
+
         return self.result
 
 class GstValidateTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
