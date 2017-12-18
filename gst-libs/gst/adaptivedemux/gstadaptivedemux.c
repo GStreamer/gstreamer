@@ -4287,7 +4287,7 @@ gst_adaptive_demux_stream_update_fragment_info (GstAdaptiveDemux * demux,
         GST_TIME_ARGS (stream->fragment.timestamp),
         GST_TIME_ARGS (stream->fragment.duration));
     GST_LOG_OBJECT (stream->pad,
-        "range start:%" G_GUINT64_FORMAT " end:%" G_GUINT64_FORMAT,
+        "range start:%" G_GINT64_FORMAT " end:%" G_GINT64_FORMAT,
         stream->fragment.range_start, stream->fragment.range_end);
   }
 
