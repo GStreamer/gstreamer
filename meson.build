@@ -252,15 +252,15 @@ cdata.set('SIZEOF_LONG', cc.sizeof('long'))
 cdata.set('SIZEOF_SHORT', cc.sizeof('short'))
 cdata.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 
-cdata.set('VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE', '"gst-plugins-bad"')
-cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE_BUGREPORT', '"http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"')
-cdata.set('PACKAGE_NAME', '"GStreamer Bad Plug-ins"')
-cdata.set('GETTEXT_PACKAGE', '"gst-plugins-bad-1.0"')
-cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
-cdata.set('GST_LICENSE', '"LGPL"')
-cdata.set('LIBDIR', '"@0@"'.format(get_option('libdir')))
+cdata.set_quoted('VERSION', gst_version)
+cdata.set_quoted('PACKAGE', 'gst-plugins-bad')
+cdata.set_quoted('PACKAGE_VERSION', gst_version)
+cdata.set_quoted('PACKAGE_BUGREPORT', 'http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer')
+cdata.set_quoted('PACKAGE_NAME', 'GStreamer Bad Plug-ins')
+cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-bad-1.0')
+cdata.set_quoted('GST_API_VERSION', api_version)
+cdata.set_quoted('GST_LICENSE', 'LGPL')
+cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 
 # GStreamer package name and origin url
 gst_package_name = get_option('with-package-name')
@@ -279,11 +279,11 @@ cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
 # FIXME: This should be exposed as a configuration option
 host_system = host_machine.system()
 if host_system == 'linux'
-  cdata.set('DEFAULT_VIDEOSRC', '"v4l2src"')
+  cdata.set_quoted('DEFAULT_VIDEOSRC', 'v4l2src')
 elif host_system == 'osx'
-  cdata.set('DEFAULT_VIDEOSRC', '"avfvideosrc"')
+  cdata.set_quoted('DEFAULT_VIDEOSRC', 'avfvideosrc')
 else
-  cdata.set('DEFAULT_VIDEOSRC', '"videotestsrc"')
+  cdata.set_quoted('DEFAULT_VIDEOSRC', 'videotestsrc')
 endif
 
 # Mandatory GST deps
