@@ -133,10 +133,24 @@ GST_DEBUG_CATEGORY (ladspa_debug);
 #define LADSPA_VERSION "1.0"
 #endif
 
+#if defined (G_OS_WIN32)
+#define GST_LADSPA_ENVVARS "APPDATA/LADSPA:COMMONPROGRAMFILES/LADSPA"
+#define GST_LADSPA_DEFAULT_PATH ""
+#elif defined (HAVE_OSX)
+#define GST_LADSPA_ENVVARS "HOME/Library/Audio/Plug-Ins/LADSPA:HOME/.ladspa"
 #define GST_LADSPA_DEFAULT_PATH \
-  "/usr/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
-  "/usr/local/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
-  LIBDIR "/ladspa"
+  "/usr/local/lib/ladspa:/usr/lib/ladspa:/Library/Audio/Plug-Ins/LADSPA"
+#elif defined (G_OS_UNIX)
+#define GST_LADSPA_ENVVARS "HOME/.ladspa"
+#define GST_LADSPA_DEFAULT_PATH \
+  "/usr/lib/ladspa:" \
+  "/usr/lib64/ladspa:" \
+  "/usr/local/lib/ladspa:" \
+  "/usr/local/lib64/ladspa:" \
+   LIBDIR "/ladspa"
+#else
+#error "Unsupported OS"
+#endif
 
 GstStructure *ladspa_meta_all = NULL;
 
@@ -315,8 +329,8 @@ ladspa_plugin_directory_search (GstPlugin * ladspa_plugin, const char *dir_name)
 static gboolean
 ladspa_plugin_path_search (GstPlugin * plugin)
 {
-  const gchar *search_path;
-  gchar *ladspa_path;
+  const gchar *search_path, *path;
+  GString *ladspa_path;
   gchar **paths;
   gint i, j, path_entries;
   gboolean res = FALSE, skip;
@@ -324,18 +338,47 @@ ladspa_plugin_path_search (GstPlugin * plugin)
   gchar *pos, *prefix, *rdf_path;
 #endif
 
+  ladspa_path = g_string_new (NULL);
+
   search_path = g_getenv ("LADSPA_PATH");
   if (search_path) {
-    ladspa_path =
-        g_strdup_printf ("%s" G_SEARCHPATH_SEPARATOR_S GST_LADSPA_DEFAULT_PATH,
-        search_path);
+    g_string_append_printf (ladspa_path,
+        "%s" G_SEARCHPATH_SEPARATOR_S GST_LADSPA_DEFAULT_PATH, search_path);
   } else {
-    ladspa_path = g_strdup (GST_LADSPA_DEFAULT_PATH);
+    g_string_append_printf (ladspa_path, GST_LADSPA_DEFAULT_PATH);
   }
 
-  paths = g_strsplit (ladspa_path, G_SEARCHPATH_SEPARATOR_S, 0);
+#ifdef G_OS_WIN32
+  path = g_getenv ("APPDATA");
+  if (path)
+    g_string_append (path, search_path);
+
+  path = g_getenv ("COMMONPROGRAMFILES");
+  if (path) {
+    if (ladspa_path->len)
+      g_string_append_printf (ladspa_path, G_SEARCHPATH_SEPARATOR_S "%s", path);
+    else
+      g_string_append (ladspa_path, path);
+  }
+#else
+  path = g_getenv ("HOME");
+
+  if (path) {
+    if (ladspa_path->len)
+      g_string_append_printf (ladspa_path, ":%s/.ladspa", path);
+    else
+      g_string_append_printf (ladspa_path, "%s/.ladspa", path);
+
+#if defined (HAVE_IOS) || defined (HAVE_OSX)
+    g_string_append_printf (ladspa_path, ":%s/Library/Audio/Plug-Ins/LADSPA",
+        path);
+#endif
+  }
+#endif
+
+  paths = g_strsplit (ladspa_path->str, G_SEARCHPATH_SEPARATOR_S, 0);
   path_entries = g_strv_length (paths);
-  GST_INFO ("%d dirs in search paths \"%s\"", path_entries, ladspa_path);
+  GST_INFO ("%d dirs in search paths \"%s\"", path_entries, ladspa_path->str);
 
 #ifdef HAVE_LRDF
   for (i = 0; i < path_entries; i++) {
@@ -376,7 +419,7 @@ ladspa_plugin_path_search (GstPlugin * plugin)
   }
   g_strfreev (paths);
 
-  g_free (ladspa_path);
+  g_string_free (ladspa_path, TRUE);
 
   return res;
 }
@@ -397,7 +440,7 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   gst_plugin_add_dependency_simple (plugin,
-      "LADSPA_PATH",
+      "LADSPA_PATH:" GST_LADSPA_ENVVARS,
       GST_LADSPA_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
 #ifdef HAVE_LRDF
