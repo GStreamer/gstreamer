@@ -41,7 +41,7 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
 gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req,
     fallback : ['gst-plugins-bad', 'gstcodecparsers_dep'])
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
-    fallback : ['gst-plugins-bad', 'gstgl_dep'], required: false)
+    fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
 gmodule_dep = dependency('gmodule-2.0', required: false)
 libva_dep = dependency('libva', version: libva_req)
 
