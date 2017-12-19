@@ -753,7 +753,6 @@ gst_multiudpsink_render_buffers (GstMultiUDPSink * sink, GstBuffer ** buffers,
   GstFlowReturn flow_ret;
   guint num_addr_v4, num_addr_v6;
   guint num_addr, num_msgs;
-  GError *err = NULL;
   guint i, j, mem;
   gsize size = 0;
   GList *l;
@@ -901,7 +900,6 @@ no_clients:
 cancelled:
   {
     GST_INFO_OBJECT (sink, "cancelled");
-    g_clear_error (&err);
     flow_ret = GST_FLOW_FLUSHING;
 
     g_mutex_lock (&sink->client_lock);
