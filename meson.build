@@ -183,8 +183,8 @@ elif omx_target == 'rpi'
 
   if gstgl_dep.found()
     if gstgl_dep.type_name() == 'pkgconfig'
-      gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split(',')
-      gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split(',')
+      gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split(' ')
+      gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split(' ')
     elif gstgl_dep.type_name() == 'internal'
       # XXX assume gst-plugins-base was built with dispmanx and egl support
       gl_winsys = ['dispmanx']
