@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="cluttershare" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin\Debug\cluttershare" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin\Release\cluttershare" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-ansi" />
+			<Add option="-std=c89" />
+			<Add option="-DWIN32" />
+			<Add directory="..\..\..\..\clutter\include\clutter-0.8" />
+			<Add directory="C:\gstreamer\include\glib-2.0" />
+			<Add directory="C:\gstreamer\lib\glib-2.0\include" />
+			<Add directory="C:\gstreamer\include\gstreamer-1.0" />
+			<Add directory="C:\gstreamer\include\pango-1.0" />
+			<Add directory="C:\gstreamer\include\cairo" />
+			<Add directory="C:\gstreamer\include\libxml2" />
+			<Add directory="C:\gstreamer\include" />
+		</Compiler>
+		<Linker>
+			<Add library="clutter-win32-0.8" />
+			<Add library="gio-2.0" />
+			<Add library="gthread-2.0" />
+			<Add library="gobject-2.0" />
+			<Add library="gstreamer-1.0" />
+			<Add library="gmodule-2.0" />
+			<Add library="gstvideo-1.0" />
+			<Add library="glib-2.0" />
+			<Add library="pangocairo-1.0" />
+			<Add library="pangowin32-1.0" />
+			<Add library="pango-1.0" />
+			<Add library="gdk_pixbuf-2.0" />
+			<Add library="cairo" />
+			<Add library="glu32" />
+			<Add library="opengl32" />
+			<Add library="gdi32" />
+			<Add library="winmm" />
+			<Add directory="..\..\..\..\clutter\lib" />
+			<Add directory="C:\gstreamer\lib" />
+			<Add directory="C:\gstreamer\bin" />
+			<Add directory="..\..\..\..\gtk+\lib" />
+		</Linker>
+		<Unit filename="cluttershare.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
