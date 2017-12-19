@@ -37,8 +37,10 @@ libgstapplemedia_la_OBJCFLAGS =			\
 	-I$(top_builddir)/gst-libs              \
 	-fobjc-arc                              \
 	$(GST_OBJCFLAGS_WITH_VERSION)		\
+	$(GST_PLUGINS_BASE_CFLAGS)		\
+	$(GST_GL_CFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
-	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_CFLAGS)
 
 if HAVE_IOS
 libgstapplemedia_la_OBJCFLAGS += -fobjc-abi-version=2 -fobjc-legacy-dispatch
