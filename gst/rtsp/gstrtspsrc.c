@@ -2543,6 +2543,7 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
 
       gst_event_unref (event);
       event = gst_event_new_stream_start (stream_id);
+      g_free (stream_id);
       break;
     }
     default:
@@ -6764,6 +6765,9 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
 
   gst_rtsp_ext_list_stream_select (src->extensions, url);
 
+  if (pipelined_request_id)
+    g_free (pipelined_request_id);
+
   /* if there is nothing to activate, error out */
   if (!src->need_activate)
     goto nothing_to_activate;
@@ -6840,6 +6844,8 @@ nothing_to_activate:
   }
 cleanup_error:
   {
+    if (pipelined_request_id)
+      g_free (pipelined_request_id);
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
     return res;
