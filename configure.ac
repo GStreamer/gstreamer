@@ -197,6 +197,7 @@ fi
 
 dnl Check for mmap (needed by electricfence plugin)
 AC_FUNC_MMAP
+AC_CHECK_FUNCS([mmap64])
 AM_CONDITIONAL(GST_HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 
 dnl Check for mmap (needed by electricfence plugin)

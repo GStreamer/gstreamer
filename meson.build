@@ -105,6 +105,7 @@ check_functions = [
   ['HAVE_ISINF', 'isinf', '#include<math.h>'],
 # check token HAVE_LIBV4L2
   ['HAVE_MMAP', 'mmap', '#include<sys/mman.h>'],
+  ['HAVE_MMAP64', 'mmap64', '#include<sys/mman.h>'],
 # check token HAVE_OSX_AUDIO
 # check token HAVE_OSX_VIDEO
 # check token HAVE_RDTSC
