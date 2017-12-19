@@ -1119,12 +1119,18 @@ set_socket_for_udpsink (GstElement * udpsink, GSocket * socket,
 static void
 set_multicast_socket_for_udpsink (GstElement * udpsink, GSocket * socket,
     GSocketFamily family, const gchar * multicast_iface,
-    const gchar * addr_str, gint port)
+    const gchar * addr_str, gint port, gint mcast_ttl)
 {
   set_socket_for_udpsink (udpsink, socket, family);
 
   if (multicast_iface) {
+    GST_INFO ("setting multicast-iface %s", multicast_iface);
     g_object_set (G_OBJECT (udpsink), "multicast-iface", multicast_iface, NULL);
+  }
+
+  if (mcast_ttl > 0) {
+    GST_INFO ("setting ttl-mc %d", mcast_ttl);
+    g_object_set (G_OBJECT (udpsink), "ttl-mc", mcast_ttl, NULL);
   }
 
   g_signal_emit_by_name (udpsink, "add", addr_str, port, NULL);
@@ -1165,7 +1171,7 @@ get_port_from_socket (GSocket * socket)
 static gboolean
 create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
     GSocket * socket_v4, GSocket * socket_v6, gboolean multicast,
-    gboolean is_rtp)
+    gboolean is_rtp, gint mcast_ttl)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
 
@@ -1222,7 +1228,7 @@ create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
         goto get_port_failed;
       set_multicast_socket_for_udpsink (*udpsink, socket_v4,
           G_SOCKET_FAMILY_IPV4, priv->multicast_iface,
-          priv->mcast_addr_v4->address, port);
+          priv->mcast_addr_v4->address, port, mcast_ttl);
     }
 
     if (priv->mcast_addr_v6) {
@@ -1232,7 +1238,7 @@ create_and_configure_udpsink (GstRTSPStream * stream, GstElement ** udpsink,
         goto get_port_failed;
       set_multicast_socket_for_udpsink (*udpsink, socket_v6,
           G_SOCKET_FAMILY_IPV6, priv->multicast_iface,
-          priv->mcast_addr_v6->address, port);
+          priv->mcast_addr_v6->address, port, mcast_ttl);
     }
 
   }
@@ -2762,6 +2768,7 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
   GstPad *pad;
   GstBin *bin;
   gboolean is_tcp, is_udp, is_mcast;
+  gint mcast_ttl = 0;
   gint i;
 
   GST_DEBUG_OBJECT (stream, "create sender part");
@@ -2772,8 +2779,11 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
   is_udp = transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP;
   is_mcast = transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST;
 
-  GST_DEBUG_OBJECT (stream, "tcp: %d, udp: %d, mcast: %d", is_tcp, is_udp,
-      is_mcast);
+  if (is_mcast)
+    mcast_ttl = transport->ttl;
+
+  GST_DEBUG_OBJECT (stream, "tcp: %d, udp: %d, mcast: %d (ttl: %d)", is_tcp,
+      is_udp, is_mcast, mcast_ttl);
 
   if (is_udp && !priv->server_addr_v4 && !priv->server_addr_v6) {
     GST_WARNING_OBJECT (stream, "no sockets assigned for UDP");
@@ -2829,12 +2839,13 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
     if (is_udp && !priv->udpsink[i]) {
       /* we create only one pair of udpsinks for IPv4 and IPv6 */
       create_and_configure_udpsink (stream, &priv->udpsink[i],
-          priv->socket_v4[i], priv->socket_v6[i], FALSE, (i == 0));
+          priv->socket_v4[i], priv->socket_v6[i], FALSE, (i == 0), mcast_ttl);
       plug_sink (stream, transport, i);
     } else if (is_mcast && !priv->mcast_udpsink[i]) {
       /* we create only one pair of mcast-udpsinks for IPv4 and IPv6 */
       create_and_configure_udpsink (stream, &priv->mcast_udpsink[i],
-          priv->mcast_socket_v4[i], priv->mcast_socket_v6[i], TRUE, (i == 0));
+          priv->mcast_socket_v4[i], priv->mcast_socket_v6[i], TRUE, (i == 0),
+          mcast_ttl);
       plug_sink (stream, transport, i);
     } else if (is_tcp && !priv->appsink[i]) {
       /* make appsink */
@@ -3695,6 +3706,14 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         if (!check_mcast_part_for_transport (stream, tr))
           goto mcast_error;
         priv->transports = g_list_prepend (priv->transports, trans);
+
+        if (tr->ttl > 0) {
+          GST_INFO ("setting ttl-mc %d", tr->ttl);
+          if (priv->udpsink[0])
+            g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", tr->ttl, NULL);
+          if (priv->udpsink[1])
+            g_object_set (G_OBJECT (priv->udpsink[1]), "ttl-mc", tr->ttl, NULL);
+        }
       } else {
         priv->transports = g_list_remove (priv->transports, trans);
       }
@@ -3704,13 +3723,11 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
     {
       gchar *dest;
       gint min, max;
-      guint ttl = 0;
 
       dest = tr->destination;
       if (tr->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
         min = tr->port.min;
         max = tr->port.max;
-        ttl = tr->ttl;
       } else if (priv->client_side) {
         /* In client side mode the 'destination' is the RTSP server, so send
          * to those ports */
@@ -3722,12 +3739,6 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
       }
 
       if (add) {
-        if (ttl > 0) {
-          GST_INFO ("setting ttl-mc %d", ttl);
-          if (priv->udpsink[0])
-            g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", ttl, NULL);
-          g_object_set (G_OBJECT (priv->udpsink[1]), "ttl-mc", ttl, NULL);
-        }
         GST_INFO ("adding %s:%d-%d", dest, min, max);
         if (priv->udpsink[0])
           g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
