@@ -85,7 +85,7 @@
 #ifdef HAVE_VIDEO_AGGREGATOR_IN_BASE
 #include "gstglmosaic.h"
 #endif
-#if HAVE_PNG
+#ifdef HAVE_PNG
 #include "gstgldifferencematte.h"
 /* #include "gstglbumper.h" */
 #endif /* HAVE_PNG */
@@ -268,7 +268,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 #endif
-#if HAVE_PNG
+#ifdef HAVE_PNG
   if (!gst_element_register (plugin, "gldifferencematte",
           GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
     return FALSE;

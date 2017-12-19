@@ -187,7 +187,7 @@ GST_START_TEST (test_glfilterapp)
 
 GST_END_TEST
 #ifdef HAVE_PNG
-#if HAVE_JPEG
+#ifdef HAVE_JPEG
 GST_START_TEST (test_gloverlay)
 {
   const gchar *s;
@@ -337,7 +337,7 @@ gl_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_glshader);
   tcase_add_test (tc_chain, test_glfilterapp);
 #ifdef HAVE_PNG
-#if HAVE_JPEG
+#ifdef HAVE_JPEG
   tcase_add_test (tc_chain, test_gloverlay);
 #endif
 #endif
@@ -354,7 +354,7 @@ gl_launch_lines_suite (void)
 #ifdef HAVE_PNG
   tcase_add_test (tc_chain, test_gldifferencematte);
 /*  tcase_add_test (tc_chain, test_glbumper);*/
-#if HAVE_JPEG
+#ifdef HAVE_JPEG
 #endif /* HAVE_JPEG */
 #endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
