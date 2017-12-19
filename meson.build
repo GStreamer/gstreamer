@@ -330,7 +330,7 @@ gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
 build_gstgl = gstgl_dep.found() # FIXME: add option?
 
 if build_gstgl
-  if gstgl_dep.type_name() == 'pkg'
+  if gstgl_dep.type_name() == 'pkgconfig'
     gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys')
     gst_gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms')
   else
