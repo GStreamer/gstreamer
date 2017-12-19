@@ -666,18 +666,31 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstMemory *memory = NULL;
   GstBuffer *sendbuf = NULL;
+  gsize written_bytes;
 
   GST_OBJECT_LOCK (self);
   while (self->wait_for_connection && !self->clients) {
     g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
-    if (self->unlock)
-      goto flushing;
+    if (self->unlock) {
+      GST_OBJECT_UNLOCK (self);
+      ret = gst_base_sink_wait_preroll (bsink);
+      if (ret == GST_FLOW_OK)
+        GST_OBJECT_LOCK (self);
+      else
+        return ret;
+    }
   }
 
   while (!gst_shm_sink_can_render (self, GST_BUFFER_TIMESTAMP (buf))) {
     g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
-    if (self->unlock)
-      goto flushing;
+    if (self->unlock) {
+      GST_OBJECT_UNLOCK (self);
+      ret = gst_base_sink_wait_preroll (bsink);
+      if (ret == GST_FLOW_OK)
+        GST_OBJECT_LOCK (self);
+      else
+        return ret;
+    }
   }
 
 
@@ -709,16 +722,27 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
             gst_shm_sink_allocator_alloc_locked (self->allocator,
                 gst_buffer_get_size (buf), &self->params)) == NULL) {
       g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
-      if (self->unlock)
-        goto flushing;
+      if (self->unlock) {
+        GST_OBJECT_UNLOCK (self);
+        ret = gst_base_sink_wait_preroll (bsink);
+        if (ret == GST_FLOW_OK)
+          GST_OBJECT_LOCK (self);
+        else
+          return ret;
+      }
     }
 
     while (self->wait_for_connection && !self->clients) {
       g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
       if (self->unlock) {
         GST_OBJECT_UNLOCK (self);
-        gst_memory_unref (memory);
-        return GST_FLOW_FLUSHING;
+        ret = gst_base_sink_wait_preroll (bsink);
+        if (ret == GST_FLOW_OK) {
+          GST_OBJECT_LOCK (self);
+        } else {
+          gst_memory_unref (memory);
+          return ret;
+        }
       }
     }
 
@@ -731,7 +755,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG_OBJECT (self,
         "Copying %" G_GSIZE_FORMAT " bytes into map of size %" G_GSIZE_FORMAT
         " bytes.", gst_buffer_get_size (buf), map.size);
-    gsize written_bytes = gst_buffer_extract (buf, 0, map.data, map.size);
+    written_bytes = gst_buffer_extract (buf, 0, map.data, map.size);
     GST_DEBUG_OBJECT (self, "Copied %" G_GSIZE_FORMAT " bytes.", written_bytes);
     gst_memory_unmap (memory, &map);
 
@@ -775,10 +799,6 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   return ret;
-
-flushing:
-  GST_OBJECT_UNLOCK (self);
-  return GST_FLOW_FLUSHING;
 
 error:
   GST_OBJECT_UNLOCK (self);
