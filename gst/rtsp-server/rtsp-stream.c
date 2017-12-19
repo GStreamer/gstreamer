@@ -1508,18 +1508,19 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
   g_mutex_lock (&priv->lock);
 
   if (transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    if (family == G_SOCKET_FAMILY_IPV4 && priv->mcast_addr_v4)
+    if (family == G_SOCKET_FAMILY_IPV4 && priv->mcast_socket_v4[0])
       allocated = TRUE;
-    else if (family == G_SOCKET_FAMILY_IPV6 && priv->mcast_addr_v6)
+    else if (family == G_SOCKET_FAMILY_IPV6 && priv->mcast_socket_v6[0])
       allocated = TRUE;
   } else if (transport == GST_RTSP_LOWER_TRANS_UDP) {
-    if (family == G_SOCKET_FAMILY_IPV4 && priv->server_addr_v4)
+    if (family == G_SOCKET_FAMILY_IPV4 && priv->socket_v4[0])
       allocated = TRUE;
-    else if (family == G_SOCKET_FAMILY_IPV6 && priv->server_addr_v6)
+    else if (family == G_SOCKET_FAMILY_IPV6 && priv->socket_v6[0])
       allocated = TRUE;
   }
 
   if (allocated) {
+    GST_DEBUG_OBJECT (stream, "Allocated already");
     g_mutex_unlock (&priv->lock);
     return TRUE;
   }
