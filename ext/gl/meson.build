@@ -5,13 +5,14 @@ opengl_sources = [
   'gstglmixer.c',
   'gstglvideomixer.c',
   'gstglstereomix.c',
+  'gstglutils.c',
 ]
 
 if build_gstgl and gstgl_dep.found()
   optional_deps = []
-  opengl_defines = []
+  opengl_defines = ['-DGST_USE_UNSTABLE_API'] # for videoaggregator
 
-  if gl_dep.found() # have desktop GL
+  if gst_gl_have_api_opengl # have desktop GL
     opengl_sources += [
       'gstglmosaic.c',
     ]
@@ -20,14 +21,6 @@ if build_gstgl and gstgl_dep.found()
   if x11_dep.found()
     # for XInitThreads()
     optional_deps += x11_dep
-  endif
-
-  if bcm_host_dep.found()
-    optional_deps += bcm_host_dep
-  endif
-
-  if egl_dep.found() and cc.has_header('libdrm/drm_fourcc.h', required : false)
-    optional_deps += gstallocators_dep
   endif
 
   gstopenglmixers = library('gstopenglmixers',

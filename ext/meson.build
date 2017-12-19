@@ -15,7 +15,7 @@ subdir('faad')
 subdir('fdkaac')
 subdir('flite')
 subdir('fluidsynth')
-#subdir('gl') # FIXME: re-enable for gl mixers
+subdir('gl')
 #subdir('gme')
 subdir('gsm')
 subdir('gtk')

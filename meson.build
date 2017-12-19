@@ -331,16 +331,19 @@ build_gstgl = gstgl_dep.found() # FIXME: add option?
 
 if build_gstgl
   if gstgl_dep.type_name() == 'pkgconfig'
-    gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys')
-    gst_gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms')
+    gst_gl_apis = gstgl_dep.get_pkgconfig_variable('gl_apis').split()
+    gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split()
+    gst_gl_platforms = gstgl_dep.get_pkgconfig_variable('gl_platforms').split()
   else
     gstbase = subproject('gst-plugins-base')
-    gst_gl_winsys = ' '.join(gstbase.get_variable('enabled_gl_winsys'))
-    gst_gl_platforms = ' '.join(gstbase.get_variable('enabled_gl_platforms'))
+    gst_gl_apis = gstbase.get_variable('enabled_gl_apis')
+    gst_gl_winsys = gstbase.get_variable('enabled_gl_winsys')
+    gst_gl_platforms = gstbase.get_variable('enabled_gl_platforms')
   endif
 
-  message('GStreamer OpenGL window systems: ' + gst_gl_winsys)
-  message('GStreamer OpenGL platforms: ' + gst_gl_platforms)
+  message('GStreamer OpenGL window systems: @0@'.format(' '.join(gst_gl_winsys)))
+  message('GStreamer OpenGL platforms: @0@'.format(' '.join(gst_gl_platforms)))
+  message('GStreamer OpenGL apis: @0@'.format(' '.join(gst_gl_apis)))
 
   foreach ws : ['x11', 'wayland', 'android', 'cocoa', 'eagl', 'win32', 'dispmanx', 'viv_fb']
     set_variable('gst_gl_have_window_@0@'.format(ws), gst_gl_winsys.contains(ws))
@@ -348,6 +351,10 @@ if build_gstgl
 
   foreach p : ['glx', 'egl', 'cgl', 'eagl', 'wgl']
     set_variable('gst_gl_have_platform_@0@'.format(p), gst_gl_platforms.contains(p))
+  endforeach
+
+  foreach api : ['opengl', 'gles2']
+    set_variable('gst_gl_have_api_@0@'.format(api), gst_gl_apis.contains(api))
   endforeach
 endif
 
