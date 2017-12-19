@@ -135,6 +135,8 @@ struct _GstRtpBinClass {
   GstElement* (*request_fec_encoder)  (GstRtpBin *rtpbin, guint session);
   GstElement* (*request_fec_decoder)  (GstRtpBin *rtpbin, guint session);
 
+  GstElement* (*request_jitterbuffer) (GstRtpBin *rtpbin, guint session);
+
   void     (*on_new_sender_ssrc)      (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_sender_ssrc_active)   (GstRtpBin *rtpbin, guint session, guint32 ssrc);
 };
