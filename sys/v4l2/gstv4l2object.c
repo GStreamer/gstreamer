@@ -55,6 +55,10 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 
 #define ENCODED_BUFFER_SIZE             (2 * 1024 * 1024)
 
+#if SIZEOF_OFF_T == 8
+#define mmap64 mmap
+#endif
+
 enum
 {
   PROP_0,

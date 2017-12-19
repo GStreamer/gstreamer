@@ -126,6 +126,7 @@ cdata.set('SIZEOF_INT', cc.sizeof('int'))
 cdata.set('SIZEOF_LONG', cc.sizeof('long'))
 cdata.set('SIZEOF_SHORT', cc.sizeof('short'))
 cdata.set('SIZEOF_VOIDP', cc.sizeof('void*'))
+cdata.set('SIZEOF_OFF_T', cc.sizeof('off_t'))
 
 # Here be fixmes.
 # FIXME: check if this is correct
