@@ -23,7 +23,6 @@
 
 #if !HAVE_IOS
 #import <AppKit/AppKit.h>
-#include <gst/gl/cocoa/gstglcontext_cocoa.h>
 #include "iosurfacememory.h"
 #endif
 #include "iosglmemory.h"
