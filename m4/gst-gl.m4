@@ -308,13 +308,8 @@ HAVE_DRM_FOURCC_HEADER=no
 AC_CHECK_HEADER(libdrm/drm_fourcc.h,
   HAVE_DRM_FOURCC_HEADER=yes, )
 
-HAVE_GST_ALLOCATORS=no
-PKG_CHECK_MODULES(GST_ALLOCATORS, gstreamer-allocators-1.0,
-  HAVE_GST_ALLOCATORS=yes, )
-
 GST_GL_HAVE_DMABUF=0
 if test "x$HAVE_DRM_FOURCC_HEADER" = "xyes" -a \
-        "x$HAVE_GST_ALLOCATORS" = "xyes" -a \
         "x$HAVE_EGL" = "xyes"; then
           GST_GL_HAVE_DMABUF=1
 fi
