@@ -51,6 +51,7 @@ struct _GESSmartAdder
   GHashTable *pads_infos;
   GstPad *srcpad;
   GstElement *adder;
+  GstElement *capsfilter;
   GMutex lock;
 
   GstCaps *caps;

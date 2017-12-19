@@ -206,7 +206,13 @@ ges_smart_adder_init (GESSmartAdder * self)
   self->adder = gst_element_factory_make ("audiomixer", "smart-adder-adder");
   gst_bin_add (GST_BIN (self), self->adder);
 
-  pad = gst_element_get_static_pad (self->adder, "src");
+  self->capsfilter =
+      gst_element_factory_make ("capsfilter", "smart-adder-capsfilter");
+  gst_bin_add (GST_BIN (self), self->capsfilter);
+
+  gst_element_link (self->adder, self->capsfilter);
+
+  pad = gst_element_get_static_pad (self->capsfilter, "src");
   self->srcpad = gst_ghost_pad_new ("src", pad);
   gst_pad_set_active (self->srcpad, TRUE);
   gst_object_unref (pad);
@@ -229,7 +235,7 @@ restriction_caps_cb (GESTrack * track,
     caps = gst_caps_from_string (DEFAULT_CAPS);
 
   GST_DEBUG_OBJECT (self, "Setting adder caps to %" GST_PTR_FORMAT, caps);
-  g_object_set (self->adder, "caps", caps, NULL);
+  g_object_set (self->capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 }
 
