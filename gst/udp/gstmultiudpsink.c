@@ -671,7 +671,7 @@ gst_udp_address_get_string (GSocketAddress * addr, gchar * s, gsize size)
 
 /* Wrapper around g_socket_send_messages() plus error handling (ignoring).
  * Returns FALSE if we got cancelled, otherwise TRUE. */
-static gboolean
+static GstFlowReturn
 gst_multiudpsink_send_messages (GstMultiUDPSink * sink, GSocket * socket,
     GstOutputMessage * messages, guint num_messages)
 {
@@ -690,8 +690,16 @@ gst_multiudpsink_send_messages (GstMultiUDPSink * sink, GSocket * socket,
       GstOutputMessage *msg;
 
       if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+        GstFlowReturn flow_ret;
+
         g_clear_error (&err);
-        return FALSE;
+
+        flow_ret = gst_base_sink_wait_preroll (GST_BASE_SINK (sink));
+
+        if (flow_ret == GST_FLOW_OK)
+          continue;
+
+        return flow_ret;
       }
 
       err_idx = gst_udp_messsages_find_first_not_sent (messages, num_messages);
@@ -738,7 +746,7 @@ gst_multiudpsink_send_messages (GstMultiUDPSink * sink, GSocket * socket,
     num_messages -= ret;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -836,33 +844,28 @@ gst_multiudpsink_render_buffers (GstMultiUDPSink * sink, GstBuffer ** buffers,
   }
 
   /* now send it! */
-  {
-    gboolean ret;
 
-    /* no IPv4 socket? Send it all from the IPv6 socket then.. */
-    if (sink->used_socket == NULL) {
-      ret = gst_multiudpsink_send_messages (sink, sink->used_socket_v6,
-          msgs, num_msgs);
-    } else {
-      guint num_msgs_v4 = num_buffers * num_addr_v4;
-      guint num_msgs_v6 = num_buffers * num_addr_v6;
+  /* no IPv4 socket? Send it all from the IPv6 socket then.. */
+  if (sink->used_socket == NULL) {
+    flow_ret = gst_multiudpsink_send_messages (sink, sink->used_socket_v6,
+        msgs, num_msgs);
+  } else {
+    guint num_msgs_v4 = num_buffers * num_addr_v4;
+    guint num_msgs_v6 = num_buffers * num_addr_v6;
 
-      /* our client list is sorted with IPv4 clients first and IPv6 ones last */
-      ret = gst_multiudpsink_send_messages (sink, sink->used_socket,
-          msgs, num_msgs_v4);
+    /* our client list is sorted with IPv4 clients first and IPv6 ones last */
+    flow_ret = gst_multiudpsink_send_messages (sink, sink->used_socket,
+        msgs, num_msgs_v4);
 
-      if (!ret)
-        goto cancelled;
-
-      ret = gst_multiudpsink_send_messages (sink, sink->used_socket_v6,
-          msgs + num_msgs_v4, num_msgs_v6);
-    }
-
-    if (!ret)
+    if (flow_ret != GST_FLOW_OK)
       goto cancelled;
+
+    flow_ret = gst_multiudpsink_send_messages (sink, sink->used_socket_v6,
+        msgs + num_msgs_v4, num_msgs_v6);
   }
 
-  flow_ret = GST_FLOW_OK;
+  if (flow_ret != GST_FLOW_OK)
+    goto cancelled;
 
   /* now update stats */
   g_mutex_lock (&sink->client_lock);
@@ -900,7 +903,6 @@ no_clients:
 cancelled:
   {
     GST_INFO_OBJECT (sink, "cancelled");
-    flow_ret = GST_FLOW_FLUSHING;
 
     g_mutex_lock (&sink->client_lock);
     for (i = 0; i < num_addr; ++i)
