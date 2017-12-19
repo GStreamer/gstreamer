@@ -32,7 +32,6 @@
 #if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
 #include <gst/gl/x11/gstgldisplay_x11.h>
-#include <gst/gl/x11/gstglcontext_glx.h>
 #endif
 
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
