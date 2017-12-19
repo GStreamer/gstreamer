@@ -82,9 +82,8 @@ else
 DTS_DIR=
 endif
 
-# FIXME: re-enable for gl mixers
 if USE_GL
-#GL_DIR=gl
+GL_DIR=gl
 else
 GL_DIR=
 endif
