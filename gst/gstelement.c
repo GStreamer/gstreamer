@@ -3354,7 +3354,7 @@ gst_element_set_bus_func (GstElement * element, GstBus * bus)
 /**
  * gst_element_set_bus:
  * @element: a #GstElement to set the bus of.
- * @bus: (transfer none): the #GstBus to set.
+ * @bus: (transfer none) (allow-none): the #GstBus to set.
  *
  * Sets the bus of the element. Increases the refcount on the bus.
  * For internal use only, unless you're testing elements.
