@@ -1502,8 +1502,8 @@ gst_adaptive_demux_update_streams_segment (GstAdaptiveDemux * demux,
     seg_evt = gst_event_new_segment (&stream->segment);
     gst_event_set_seqnum (seg_evt, demux->priv->segment_seqnum);
     gst_event_replace (&stream->pending_segment, seg_evt);
-    GST_DEBUG_OBJECT (stream->pad, "Pending segment now %" GST_SEGMENT_FORMAT,
-        &stream->pending_segment);
+    GST_DEBUG_OBJECT (stream->pad, "Pending segment now %" GST_PTR_FORMAT,
+        stream->pending_segment);
     gst_event_unref (seg_evt);
     /* Make sure the first buffer after a seek has the discont flag */
     stream->discont = TRUE;
