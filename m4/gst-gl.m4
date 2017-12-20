@@ -1022,7 +1022,6 @@ fi
 if test x$HAVE_JPEG = xyes; then
   AC_DEFINE(HAVE_JPEG, [1], [Use libjpeg])
 else
-  AC_DEFINE(HAVE_JPEG, [0], [Use libjpeg])
   JPEG_LIBS=
 fi
 AC_SUBST(JPEG_LIBS)
