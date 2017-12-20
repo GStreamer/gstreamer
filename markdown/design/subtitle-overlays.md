@@ -1,4 +1,4 @@
-# Subtitle overlays, hardware-accelerated decoding and playbin
+# Subtitle Overlays and Hardware-Accelerated Playback
 
 This document describes some of the considerations and requirements that
 led to the current `GstVideoOverlayCompositionMeta` API which allows
