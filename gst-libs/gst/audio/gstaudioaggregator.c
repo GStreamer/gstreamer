@@ -743,7 +743,6 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
           && info.rate != downstream_rate) || (first_configured_pad
           && info.rate != first_configured_pad->info.rate)) {
     gst_pad_push_event (GST_PAD (aaggpad), gst_event_new_reconfigure ());
-    gst_object_unref (first_configured_pad);
     ret = FALSE;
   } else {
     GST_OBJECT_LOCK (aaggpad);
@@ -755,6 +754,9 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
   }
 
 done:
+  if (first_configured_pad)
+    gst_object_unref (first_configured_pad);
+
   if (downstream_caps)
     gst_caps_unref (downstream_caps);
 
