@@ -112,6 +112,8 @@ static void gst_festival_finalize (GObject * object);
 
 static GstFlowReturn gst_festival_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
+static gboolean gst_festival_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstStateChangeReturn gst_festival_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -184,6 +186,7 @@ gst_festival_init (GstFestival * festival)
 
   festival->srcpad =
       gst_pad_new_from_static_template (&src_template_factory, "src");
+  gst_pad_set_query_function (festival->srcpad, gst_festival_src_query);
   gst_element_add_pad (GST_ELEMENT (festival), festival->srcpad);
 
   festival->info = festival_default_info ();
@@ -493,6 +496,29 @@ gst_festival_change_state (GstElement * element, GstStateChange transition)
         transition);
 
   return GST_STATE_CHANGE_SUCCESS;
+}
+
+static gboolean
+gst_festival_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+      /* Not supported */
+      return FALSE;
+    case GST_QUERY_DURATION:
+      gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
+      return TRUE;
+    case GST_QUERY_SEEKING:
+      gst_query_set_seeking (query, GST_FORMAT_BYTES, FALSE, 0, -1);
+      return TRUE;
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 1, GST_FORMAT_BYTES);
+      return TRUE;
+    default:
+      break;
+  }
+
+  return gst_pad_query_default (pad, parent, query);
 }
 
 static gboolean
