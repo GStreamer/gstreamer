@@ -1,3 +1,5 @@
+# FIXME: .types file shouldn't have gl types in it if we don't build gstgl,
+# but then what about the other files (sections, sgml)
 types = configure_file(input : 'gst-plugins-base-libs.types',
   output : 'gst-plugins-base-libs.types',
   configuration : configuration_data())
@@ -8,6 +10,12 @@ ignored_headers = ['pbutils-private.h', 'gsttageditingprivate.h', 'id3v2.h',
   '_kiss_fft_guts_f32.h', '_kiss_fft_guts_f64.h', '_kiss_fft_guts_s16.h',
   '_kiss_fft_guts_s16.h', '_kiss_fft_guts_s32.h', '_kiss_fft_guts_s32.h',
   'pbutils-marshal.h']
+
+if build_gstgl
+  doc_extra_deps = [gstgl_dep]
+else
+  doc_extra_deps = []
+endif
 
 gnome.gtkdoc('gst-plugins-base-libs',
   main_sgml : 'gst-plugins-base-libs-docs.sgml',
@@ -20,5 +28,5 @@ gnome.gtkdoc('gst-plugins-base-libs',
   content_files : [version_entities],
   dependencies : [gst_base_dep, app_dep, allocators_dep, audio_dep,
     fft_dep, pbutils_dep, riff_dep, rtp_dep, rtsp_dep, sdp_dep,
-    tag_dep, video_dep],
+    tag_dep, video_dep] + doc_extra_deps,
   install : true)
