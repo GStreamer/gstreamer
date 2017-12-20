@@ -130,6 +130,9 @@ GST_START_TEST (test_uri_clip_change_asset)
       1);
 
   gst_object_unref (extractable);
+
+  g_free (uri);
+  g_free (uri1);
 }
 
 GST_END_TEST;
