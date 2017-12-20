@@ -293,7 +293,7 @@ gst_system_clock_get_property (GObject * object, guint prop_id, GValue * value,
 
 /**
  * gst_system_clock_set_default:
- * @new_clock: a #GstClock
+ * @new_clock: (allow-none): a #GstClock
  *
  * Sets the default system clock that can be obtained with
  * gst_system_clock_obtain().
