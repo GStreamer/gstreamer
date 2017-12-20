@@ -691,6 +691,12 @@ gst_rtsp_client_sink_init (GstRTSPClientSink * sink)
   g_mutex_init (&sink->conninfo.send_lock);
   g_mutex_init (&sink->conninfo.recv_lock);
 
+  g_mutex_init (&sink->block_streams_lock);
+  g_cond_init (&sink->block_streams_cond);
+
+  g_mutex_init (&sink->open_conn_lock);
+  g_cond_init (&sink->open_conn_cond);
+
   sink->internal_bin = (GstBin *) gst_bin_new ("rtspbin");
   gst_element_set_locked_state (GST_ELEMENT_CAST (sink->internal_bin), TRUE);
   gst_bin_add (GST_BIN (sink), GST_ELEMENT_CAST (sink->internal_bin));
@@ -746,6 +752,12 @@ gst_rtsp_client_sink_finalize (GObject * object)
 
   g_mutex_clear (&rtsp_client_sink->preroll_lock);
   g_cond_clear (&rtsp_client_sink->preroll_cond);
+
+  g_mutex_clear (&rtsp_client_sink->block_streams_lock);
+  g_cond_clear (&rtsp_client_sink->block_streams_cond);
+
+  g_mutex_clear (&rtsp_client_sink->open_conn_lock);
+  g_cond_clear (&rtsp_client_sink->open_conn_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
