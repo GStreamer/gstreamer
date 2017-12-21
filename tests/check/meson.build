@@ -24,16 +24,6 @@ base_tests = [
   [ 'libs/sdp.c' ],
   [ 'libs/tag.c' ],
   #  [ 'libs/video' ], # FIXME: times out, perhaps split or spawn conversions into benchmark tool and/or multiple threads
-  [ 'libs/gstglcolorconvert.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglcontext.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglheaders.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglmatrix.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglmemory.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglquery.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglshader.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglsl.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep]],
-  [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]],
   [ 'libs/videoencoder.c' ],
   [ 'libs/videotimecode.c' ],
   [ 'libs/xmpwriter.c' ],
@@ -77,6 +67,21 @@ base_tests = [
   [ 'pipelines/vorbisenc.c', not vorbisenc_dep.found() ],
   [ 'pipelines/vorbisdec.c', not vorbisenc_dep.found(),],
 ]
+
+if build_gstgl
+  base_tests += [
+    [ 'libs/gstglcolorconvert.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglcontext.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglheaders.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglmatrix.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglmemory.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglquery.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglshader.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglsl.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]]
+  ]
+endif
 
 # Make sure our headers are C++ clean
 if have_cxx
