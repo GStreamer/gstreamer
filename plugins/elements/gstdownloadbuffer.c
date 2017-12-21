@@ -1277,19 +1277,19 @@ write_error:
   }
 completed:
   {
+    GstMessage *complete_message;
+
     GST_LOG_OBJECT (dlbuf, "we completed the download");
     dlbuf->write_pos = dlbuf->upstream_size;
     dlbuf->filling = FALSE;
     update_levels (dlbuf, dlbuf->max_level.bytes);
     msg = update_buffering (dlbuf);
-
-    gst_element_post_message (GST_ELEMENT_CAST (dlbuf),
-        gst_message_new_element (GST_OBJECT_CAST (dlbuf),
-            gst_structure_new ("GstCacheDownloadComplete",
-                "location", G_TYPE_STRING, dlbuf->temp_location, NULL)));
-
+    complete_message = gst_message_new_element (GST_OBJECT_CAST (dlbuf),
+        gst_structure_new ("GstCacheDownloadComplete",
+            "location", G_TYPE_STRING, dlbuf->temp_location, NULL));
     GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
 
+    gst_element_post_message (GST_ELEMENT_CAST (dlbuf), complete_message);
     if (msg != NULL)
       gst_element_post_message (GST_ELEMENT_CAST (dlbuf), msg);
 
