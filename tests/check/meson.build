@@ -37,7 +37,6 @@ base_tests = [
   [ 'elements/libvisual.c', not libvisual_dep.found() ],
   [ 'elements/decodebin.c' ],
   [ 'elements/encodebin.c', not theoraenc_dep.found() or not vorbisenc_dep.found() ],
-  [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep]],
   [ 'elements/multifdsink.c' ],
   [ 'elements/multisocketsink.c' ],
   [ 'elements/playbin.c' ],
@@ -80,6 +79,7 @@ if build_gstgl
     [ 'libs/gstglsl.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]]
+    [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep]],
   ]
 endif
 
