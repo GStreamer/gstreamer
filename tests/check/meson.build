@@ -78,7 +78,7 @@ if build_gstgl
     [ 'libs/gstglshader.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglsl.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep]],
-    [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]]
+    [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]],
     [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep]],
   ]
 endif
