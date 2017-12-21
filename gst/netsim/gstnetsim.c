@@ -337,7 +337,7 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
     gint delay;
     PushBufferCtx *ctx;
     GSource *source;
-    gint64 ready_time;
+    gint64 ready_time, now_time;
 
     switch (netsim->delay_distribution) {
       case DISTRIBUTION_UNIFORM:
@@ -363,13 +363,14 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
     ctx = push_buffer_ctx_new (netsim->srcpad, buf);
 
     source = g_source_new (&gst_net_sim_source_funcs, sizeof (GSource));
-    ready_time = g_get_monotonic_time () + delay * 1000;
+    now_time = g_get_monotonic_time ();
+    ready_time = now_time + delay * 1000;
     if (!netsim->allow_reordering && ready_time < netsim->last_ready_time)
       ready_time = netsim->last_ready_time + 1;
 
-    GST_DEBUG_OBJECT (netsim, "Delaying packet by %ldms",
-        (ready_time - netsim->last_ready_time) / 1000);
     netsim->last_ready_time = ready_time;
+    GST_DEBUG_OBJECT (netsim, "Delaying packet by %ldms",
+        (ready_time - now_time) / 1000);
 
     g_source_set_ready_time (source, ready_time);
     g_source_set_callback (source, (GSourceFunc) push_buffer_ctx_push,
