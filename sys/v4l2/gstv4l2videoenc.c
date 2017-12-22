@@ -343,6 +343,14 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
     return FALSE;
   }
 
+  /* activating a capture pool will also call STREAMON. CODA driver will
+   * refuse to configure the output if the capture is stremaing. */
+  if (!gst_buffer_pool_set_active (GST_BUFFER_POOL (self->v4l2capture->pool),
+          TRUE)) {
+    GST_WARNING_OBJECT (self, "Could not activate capture buffer pool.");
+    return FALSE;
+  }
+
   self->input_state = gst_video_codec_state_ref (state);
 
   GST_DEBUG_OBJECT (self, "output caps: %" GST_PTR_FORMAT, state->caps);
@@ -580,12 +588,6 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
 
   if (!GST_VIDEO_ENCODER_CLASS (parent_class)->negotiate (encoder))
     return FALSE;
-
-  if (!gst_buffer_pool_set_active (GST_BUFFER_POOL (self->v4l2capture->pool),
-          TRUE)) {
-    GST_WARNING_OBJECT (self, "Could not activate capture buffer pool.");
-    return FALSE;
-  }
 
   return TRUE;
 
