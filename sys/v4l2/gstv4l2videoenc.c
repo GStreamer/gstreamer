@@ -711,14 +711,15 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstTaskState task_state;
 
   GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
   if (G_UNLIKELY (!g_atomic_int_get (&self->active)))
     goto flushing;
 
-  if (gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self)) ==
-      GST_TASK_STOPPED) {
+  task_state = gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self));
+  if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2output->pool);
 
     /* It possible that the processing thread stopped due to an error */
