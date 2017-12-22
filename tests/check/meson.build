@@ -54,7 +54,6 @@ base_tests = [
   [ 'elements/vorbistag.c', not vorbisenc_dep.found(), [ vorbis_dep, vorbisenc_dep ] ],
   [ 'generic/clock-selection.c' ],
   [ 'generic/states.c', false, [ gmodule_dep ] ],
-  [ 'pipelines/gl-launch-lines.c', not build_gstgl ],
   [ 'pipelines/simple-launch-lines.c' ],
   [ 'pipelines/basetime.c' ],
   [ 'pipelines/capsfilter-renegotiation.c' ],
@@ -80,6 +79,7 @@ if build_gstgl
     [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]],
     [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep]],
+    [ 'pipelines/gl-launch-lines.c', not build_gstgl ],
   ]
 endif
 

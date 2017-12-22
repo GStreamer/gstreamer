@@ -48,7 +48,6 @@ opengl_sources = [
 
 if build_gstgl and gstgl_dep.found()
   optional_deps = []
-  opengl_defines = []
 
   if gl_dep.found() # have desktop GL
     # These have to stay in -bad until we can move GstVideoAggregator to -base
@@ -61,7 +60,7 @@ if build_gstgl and gstgl_dep.found()
   graphene_dep = dependency('graphene-1.0', version : '>=1.4.0', required : false)
   if graphene_dep.found()
     optional_deps += graphene_dep
-    opengl_defines += '-DHAVE_GRAPHENE=1'
+    core_conf.set('HAVE_GRAPHENE', true)
     opengl_sources += [
       'gstgltransformation.c',
       'gstglvideoflip.c',
@@ -76,13 +75,13 @@ if build_gstgl and gstgl_dep.found()
 
   if png_dep.found()
     optional_deps += png_dep
-    opengl_defines += '-DHAVE_PNG=1'
+    core_conf.set('HAVE_PNG', true)
     opengl_sources += [
       'gstgldifferencematte.c',
     ]
     if jpeg_dep.found()
       optional_deps += jpeg_dep
-      opengl_defines += '-DHAVE_JPEG=1'
+      core_conf.set('HAVE_JPEG', true)
       opengl_sources += [
         'gstgloverlay.c',
       ]
@@ -110,7 +109,7 @@ if build_gstgl and gstgl_dep.found()
 
   gstopengl = library('gstopengl',
     opengl_sources,
-    c_args : gst_plugins_base_args + opengl_defines,
+    c_args : gst_plugins_base_args,
     link_args : noseh_link_args,
     include_directories : [configinc],
     dependencies : [gstgl_dep, video_dep,
