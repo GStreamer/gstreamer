@@ -142,6 +142,7 @@ gst_v4l2_device_provider_probe_device (GstV4l2DeviceProvider * provider,
       goto close;
 
     type = GST_V4L2_DEVICE_TYPE_SOURCE;
+    v4l2obj->skip_try_fmt_probes = TRUE;
   }
 
   if (v4l2obj->device_caps &
