@@ -321,6 +321,9 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
     if (gst_v4l2_video_enc_finish (encoder) != GST_FLOW_OK)
       return FALSE;
 
+    gst_v4l2_object_stop (self->v4l2output);
+    gst_v4l2_object_stop (self->v4l2capture);
+
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
   }
