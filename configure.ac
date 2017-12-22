@@ -426,10 +426,9 @@ AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wformat-nonliteral - see ext/pango/gstclockoverlay.c and http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39438
 dnl -Waggregate-return - xcb_intern_atom() returns an aggregate value
-dnl FIXME: -Wformat-nonliteral triggers in gst-libs/gst/gl/gstglcolorconvert.c (should be fixable)
 AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
-    -Wwrite-strings -Wformat-security
+    -Wwrite-strings  -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress
     -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
