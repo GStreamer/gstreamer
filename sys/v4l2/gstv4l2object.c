@@ -22,8 +22,6 @@
 #include <config.h>
 #endif
 
-#define _GNU_SOURCE             /* Enable mmap64() */
-
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -515,11 +513,7 @@ gst_v4l2_object_new (GstElement * element,
     v4l2object->dup = dup;
     v4l2object->ioctl = ioctl;
     v4l2object->read = read;
-#ifdef HAVE_MMAP64
-    v4l2object->mmap = mmap64;
-#else
     v4l2object->mmap = mmap;
-#endif
     v4l2object->munmap = munmap;
   }
 
