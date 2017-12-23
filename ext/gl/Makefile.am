@@ -33,12 +33,14 @@ endif
 libgstopenglmixers_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_GL_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(GL_CFLAGS)
 
 libgstopenglmixers_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) \
 	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-@GST_API_VERSION@.la \
 	$(GST_GL_LIBS) \
 	$(GST_BASE_LIBS) \
