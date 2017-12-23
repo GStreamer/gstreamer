@@ -40,9 +40,9 @@ libgstopenglmixers_la_CFLAGS = \
 	$(GL_CFLAGS)
 
 libgstopenglmixers_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) \
 	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-@GST_API_VERSION@.la \
 	$(GST_GL_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \
