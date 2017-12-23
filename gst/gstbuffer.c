@@ -2140,6 +2140,28 @@ gst_buffer_get_meta (GstBuffer * buffer, GType api)
 }
 
 /**
+ * gst_buffer_get_n_meta:
+ * @buffer: a #GstBuffer
+ * @api_type: the #GType of an API
+ *
+ * Returns: number of metas of type @api_type on @buffer.
+ *
+ * Since: 1.14
+ */
+guint
+gst_buffer_get_n_meta (GstBuffer * buffer, GType api_type)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  guint n = 0;
+
+  while ((meta = gst_buffer_iterate_meta_filtered (buffer, &state, api_type)))
+    ++n;
+
+  return n;
+}
+
+/**
  * gst_buffer_add_meta:
  * @buffer: a #GstBuffer
  * @info: a #GstMetaInfo

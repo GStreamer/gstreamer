@@ -136,6 +136,7 @@ EXPORTS
 	gst_buffer_get_memory
 	gst_buffer_get_memory_range
 	gst_buffer_get_meta
+	gst_buffer_get_n_meta
 	gst_buffer_get_reference_timestamp_meta
 	gst_buffer_get_size
 	gst_buffer_get_sizes
