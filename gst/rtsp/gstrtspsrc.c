@@ -3762,7 +3762,7 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_object_ref_sink (stream->udpsrc[1]);
 
     if (src->multi_iface != NULL)
-      g_object_set (G_OBJECT (stream->udpsrc[0]), "multicast-iface",
+      g_object_set (G_OBJECT (stream->udpsrc[1]), "multicast-iface",
           src->multi_iface, NULL);
 
     gst_element_set_state (stream->udpsrc[1], GST_STATE_READY);
