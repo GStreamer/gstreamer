@@ -384,7 +384,7 @@ gst_aggregator_pad_queue_is_empty (GstAggregatorPad * pad)
 static gboolean
 gst_aggregator_check_pads_ready (GstAggregator * self)
 {
-  GstAggregatorPad *pad;
+  GstAggregatorPad *pad = NULL;
   GList *l, *sinkpads;
   gboolean have_buffer = TRUE;
   gboolean have_event_or_query = FALSE;
