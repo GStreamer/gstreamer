@@ -1567,7 +1567,7 @@ bind_error:
 membership:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
-        ("could add membership: %s", err->message));
+        ("could not add membership: %s", err->message));
     g_clear_error (&err);
     gst_udpsrc_close (src);
     return FALSE;
