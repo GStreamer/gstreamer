@@ -14,8 +14,10 @@ gstclock
 gstcontroller
 gstcontext
 gstcpp
+gstcustombufferpool
 gstdata
 gstdatetime
+gstdeinit
 gstdevice
 gstelement
 gstelementfactory

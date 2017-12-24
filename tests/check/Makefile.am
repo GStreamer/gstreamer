@@ -121,6 +121,7 @@ check_PROGRAMS =				\
 	gst/gstcapsfeatures    			\
 	$(CXX_CHECKS)			     	\
 	gst/gstdatetime     			\
+	gst/gstdeinit				\
 	gst/gstdevice				\
 	gst/gstinfo		 		\
 	gst/gstiterator 			\
