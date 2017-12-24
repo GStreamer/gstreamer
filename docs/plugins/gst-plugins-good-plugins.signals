@@ -652,6 +652,24 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRTSPSrc::accept-certificate</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTSPSrc *gstrtspsrc
+GTlsConnection *arg1
+GTlsCertificate *arg2
+GTlsCertificateFlags  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTSPSrc::before-send</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>fc</FLAGS>
+GstRTSPSrc *gstrtspsrc
+GstRTSPMessage *arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSplitMuxSink::format-location</NAME>
 <RETURNS>gchar*</RETURNS>
 <FLAGS>l</FLAGS>
@@ -666,6 +684,13 @@ guint  arg1
 GstSplitMuxSink *gstsplitmuxsink
 guint  arg1
 GstSample *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSplitMuxSink::split-now</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
 </SIGNAL>
 
 <SIGNAL>

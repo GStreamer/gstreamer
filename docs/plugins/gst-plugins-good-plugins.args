@@ -684,7 +684,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Debug</NICK>
-<BLURB>Dump request and response messages to stdout.</BLURB>
+<BLURB>Dump request and response messages to stdout(DEPRECATED: Printed all RTSP message to gstreamer log as 'log' level).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -24316,6 +24316,16 @@
 <NICK>Alignment threshold (ns)</NICK>
 <BLURB>Allow non-reference streams to be that many ns before the reference stream.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::use-robust-muxing</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Support robust-muxing mode of some muxers</NICK>
+<BLURB>Check if muxers support robust muxing via the reserved-max-duration and reserved-duration-remaining properties and use them if so. (Only present on qtmux and mp4mux for now). splitmuxsink may then also  create new fragments if the reserved header space is about to overflow. Note this does not set reserved-moov-update-period - apps should do that manually.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>

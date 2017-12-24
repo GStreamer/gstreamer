@@ -362,7 +362,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)9, clock-rate=(int)8000; application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)[ 96, 127 ], clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)9, encoding-params=(string)1, clock-rate=(int)8000; application/x-rtp, media=(string)audio, encoding-name=(string)G722, payload=(int)[ 96, 127 ], encoding-params=(string)1, clock-rate=(int)8000</details>
         </caps>
       </pads>
     </element>
@@ -761,7 +761,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-h265, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
+          <details>video/x-h265, stream-format=(string)hvc1, alignment=(string)au; video/x-h265, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
         </caps>
       </pads>
     </element>

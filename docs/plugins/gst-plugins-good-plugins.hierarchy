@@ -21,6 +21,8 @@ GObject
         GstV4l2DeviceProvider
       GstElement
         Gst3GPPMux
+        GstAggregator
+          GstFlvMux
         GstAsteriskh263
         GstAuParse
         GstAudioDecoder
@@ -169,7 +171,6 @@ GObject
         GstDeinterleave
         GstFlacTag
         GstFlvDemux
-        GstFlvMux
         GstFlxDec
         GstGdkPixbufDec
         GstICYDemux
@@ -312,6 +313,8 @@ GObject
         GstWavEnc
         GstWavParse
       GstPad
+        GstAggregatorPad
+          GstFlvMuxPad
         GstInterleavePad
         GstVideoMixer2Pad
       GstPadTemplate
