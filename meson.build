@@ -102,7 +102,7 @@ if not get_option('disable_gstreamer_sharp')
   endif
 endif
 
-python3 = find_program('python3')
+python3 = import('python3').find_python()
 symlink = '''
 import os
 
