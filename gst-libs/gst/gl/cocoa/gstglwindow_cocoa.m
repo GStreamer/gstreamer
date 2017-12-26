@@ -86,6 +86,8 @@ static void gst_gl_window_cocoa_show (GstGLWindow * window);
 static void gst_gl_window_cocoa_queue_resize (GstGLWindow * window);
 static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
+static gboolean gst_gl_window_cocoa_set_render_rectangle (GstGLWindow *
+                                                          window, gint x, gint y, gint width, gint height);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -94,8 +96,6 @@ struct _GstGLWindowCocoaPrivate
   gboolean visible;
   gint preferred_width;
   gint preferred_height;
-
-  GLint viewport_dim[4];
 
   /* atomic set when the internal NSView has been created */
   int view_ready;
@@ -124,6 +124,8 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
   window_class->queue_resize = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_queue_resize);
   window_class->send_message_async =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
+  window_class->set_render_rectangle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_render_rectangle);
 
   gobject_class->finalize = gst_gl_window_cocoa_finalize;
 }
@@ -184,6 +186,8 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
 
   context_cocoa = GST_GL_CONTEXT_COCOA (context);
   layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context];
+  layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+  layer.needsDisplayOnBoundsChange = YES;
   glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:windowRect layer:layer];
 
   gst_object_unref (context);
@@ -267,6 +271,7 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
 
       [external_view addSubview: view];
 
+      [external_view setAutoresizesSubviews: YES];
       [view setFrame: [external_view bounds]];
       [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
     });
@@ -445,6 +450,70 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
   }
   if (thread)
     g_thread_unref (thread);
+}
+
+struct SetRenderRectangle
+{
+ GstGLWindowCocoa *window_cocoa;
+ GstVideoRectangle rect;
+};
+
+static void
+_free_set_render_rectangle (struct SetRenderRectangle *render)
+{
+  if (render) {
+    if (render->window_cocoa) {
+      gst_object_unref (render->window_cocoa);
+    }
+    g_free (render);
+  }
+}
+
+static void
+_set_render_rectangle (gpointer data)
+{
+ struct SetRenderRectangle *render = data;
+ NSView *view;
+ GstGLWindowCocoaPrivate *priv = render->window_cocoa->priv;
+ GstGLNSWindow *internal_win_id = (__bridge GstGLNSWindow *)priv->internal_win_id;
+
+ GST_LOG_OBJECT (render->window_cocoa, "setting render rectangle %i,%i+%ix%i",
+                 render->rect.x, render->rect.y, render->rect.w, render->rect.h);
+ if (!g_atomic_int_get (&render->window_cocoa->priv->view_ready)) {
+   return;
+ }
+
+ view = [internal_win_id contentView];
+ CGRect newMainViewFrame = CGRectMake(render->rect.x,
+                                      render->rect.y,
+                                      render->rect.w,
+                                      render->rect.h);
+
+ [view.superview setFrame:newMainViewFrame];
+ [view setFrame: view.superview.bounds];
+
+ [CATransaction begin];
+ [view setNeedsDisplay:YES];
+ [CATransaction commit];
+}
+
+static gboolean
+gst_gl_window_cocoa_set_render_rectangle (GstGLWindow * window, gint x, gint y, gint width, gint height)
+{
+ GstGLWindowCocoa *window_cocoa = (GstGLWindowCocoa *) window;
+ struct SetRenderRectangle *render;
+
+ render = g_new0 (struct SetRenderRectangle, 1);
+ render->window_cocoa = gst_object_ref (window_cocoa);
+ render->rect.x = x;
+ render->rect.y = y;
+ render->rect.w = width;
+ render->rect.h = height;
+
+ _invoke_on_main ((GstGLWindowCB) _set_render_rectangle, render,
+                  (GDestroyNotify) _free_set_render_rectangle);
+
+ return TRUE;
 }
 
 /* =============================================================*/
