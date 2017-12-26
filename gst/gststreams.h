@@ -51,6 +51,8 @@ G_BEGIN_DECLS
  * Note that this is a flag, and therefore users should not assume it
  * will be a single value. Do not use the equality operator for checking
  * whether a stream is of a certain type.
+ *
+ * Since: 1.10
  */
 typedef enum {
   GST_STREAM_TYPE_UNKNOWN   = 1 << 0,
@@ -81,6 +83,8 @@ typedef struct _GstStreamPrivate GstStreamPrivate;
  *
  * Elements can subclass a #GstStream for internal usage (to contain information
  * pertinent to streams of data).
+ *
+ * Since: 1.10
  */
 struct _GstStream {
   GstObject object;
