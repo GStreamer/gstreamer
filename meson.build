@@ -461,6 +461,10 @@ subdir('sys')
 subdir('ext')
 subdir('tests')
 subdir('pkgconfig')
-subdir('po')
+
+# xgettext is optional (on Windows for instance)
+if find_program('xgettext', required : false).found()
+  subdir('po')
+endif
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
