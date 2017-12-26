@@ -167,6 +167,10 @@ rtcp_buffer_get_ssrc (GstBuffer * buf, guint32 * ssrc)
           *ssrc = gst_rtcp_packet_fb_get_sender_ssrc (&packet);
           ret = TRUE;
           break;
+        case GST_RTCP_TYPE_APP:
+          *ssrc = gst_rtcp_packet_app_get_ssrc (&packet);
+          ret = TRUE;
+          break;
         default:
           break;
       }
