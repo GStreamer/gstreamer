@@ -197,7 +197,11 @@ presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'prese
 subdir('gst')
 subdir('ext')
 subdir('tests')
-subdir('po')
+
+# xgettext is optional (on Windows for instance)
+if find_program('xgettext', required : false).found()
+  subdir('po')
+endif
 
 python3 = import('python3').find_python()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
