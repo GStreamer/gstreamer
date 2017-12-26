@@ -264,7 +264,11 @@ subdir('sys')
 subdir('tools')
 subdir('tests')
 subdir('pkgconfig')
-subdir('po')
+
+# xgettext is optional (on Windows for instance)
+if find_program('xgettext', required : false).found()
+  subdir('po')
+endif
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
