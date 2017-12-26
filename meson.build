@@ -280,8 +280,12 @@ subdir('gst')
 subdir('sys')
 subdir('ext')
 subdir('tests')
-subdir('po')
 subdir('pkgconfig')
+
+# xgettext is optional (on Windows for instance)
+if find_program('xgettext', required : false).found()
+  subdir('po')
+endif
 
 configure_file(output : 'config.h', configuration : cdata)
 
