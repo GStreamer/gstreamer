@@ -1512,7 +1512,9 @@ print_tracer_info (GstPluginFeature * feature, gboolean print_names)
    *   tracer that created them
    * - we'd need to add them to GstTracerFactory
    *   gst_tracer_class_add_record (klass, record);
-   *   - needs work in gstregistrychunks.
+   *   - needs work in gstregistrychunks to (de)serialize specs
+   *   - gst_tracer_register() would need to iterate the list of records and
+   *     copy the record->spec into the factory
    */
 
   gst_object_unref (tracer);
