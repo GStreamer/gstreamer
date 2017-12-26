@@ -81,6 +81,12 @@
  * info to stream time (which is always between 0 and the duration of the stream).
  */
 
+/* FIXME 2.0: remove unused format parameter.
+ * Most of the methods in gstsegment.c take and extra GstFormat format, just to
+ * verify segment->format == format.
+ * See https://bugzilla.gnome.org/show_bug.cgi?id=788979
+ */
+
 /**
  * gst_segment_copy:
  * @segment: (transfer none): a #GstSegment
