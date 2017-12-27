@@ -773,29 +773,25 @@ gst_player_get_property (GObject * object, guint prop_id,
     }
     case PROP_MEDIA_INFO:{
       GstPlayerMediaInfo *media_info = gst_player_get_media_info (self);
-      g_value_set_object (value, media_info);
-      g_object_unref (media_info);
+      g_value_take_object (value, media_info);
       break;
     }
     case PROP_CURRENT_AUDIO_TRACK:{
       GstPlayerAudioInfo *audio_info =
           gst_player_get_current_audio_track (self);
-      g_value_set_object (value, audio_info);
-      g_object_unref (audio_info);
+      g_value_take_object (value, audio_info);
       break;
     }
     case PROP_CURRENT_VIDEO_TRACK:{
       GstPlayerVideoInfo *video_info =
           gst_player_get_current_video_track (self);
-      g_value_set_object (value, video_info);
-      g_object_unref (video_info);
+      g_value_take_object (value, video_info);
       break;
     }
     case PROP_CURRENT_SUBTITLE_TRACK:{
       GstPlayerSubtitleInfo *subtitle_info =
           gst_player_get_current_subtitle_track (self);
-      g_value_set_object (value, subtitle_info);
-      g_object_unref (subtitle_info);
+      g_value_take_object (value, subtitle_info);
       break;
     }
     case PROP_VOLUME:
