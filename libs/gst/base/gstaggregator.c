@@ -2426,6 +2426,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 {
   GstFlowReturn flow_return;
   GstClockTime buf_pts;
+  GstAggregatorPadClass *klass = GST_AGGREGATOR_PAD_GET_CLASS (aggpad);
 
   GST_DEBUG_OBJECT (aggpad, "Start chaining a buffer %" GST_PTR_FORMAT, buffer);
 
@@ -2433,6 +2434,9 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   flow_return = aggpad->priv->flow_return;
   if (flow_return != GST_FLOW_OK)
     goto flushing;
+
+  if (klass->skip_buffer && klass->skip_buffer (aggpad, self, buffer))
+    goto skipped;
 
   PAD_UNLOCK (aggpad);
 
@@ -2537,6 +2541,14 @@ flushing:
     gst_buffer_unref (buffer);
 
   return flow_return;
+
+skipped:
+  PAD_UNLOCK (aggpad);
+
+  GST_DEBUG_OBJECT (aggpad, "Skipped buffer %" GST_PTR_FORMAT, buffer);
+  gst_buffer_unref (buffer);
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

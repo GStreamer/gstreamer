@@ -74,17 +74,21 @@ struct _GstAggregatorPad
 
 /**
  * GstAggregatorPadClass:
- * @flush:    Optional
- *            Called when the pad has received a flush stop, this is the place
- *            to flush any information specific to the pad, it allows for individual
- *            pads to be flushed while others might not be.
+ * @flush:       Optional
+ *               Called when the pad has received a flush stop, this is the place
+ *               to flush any information specific to the pad, it allows for individual
+ *               pads to be flushed while others might not be.
+ * @skip_buffer: Optional
+ *               Called before input buffers are queued in the pad, return %TRUE
+ *               if the buffer should be skipped.
  *
  */
 struct _GstAggregatorPadClass
 {
   GstPadClass   parent_class;
 
-  GstFlowReturn (*flush)     (GstAggregatorPad * aggpad, GstAggregator * aggregator);
+  GstFlowReturn (*flush)       (GstAggregatorPad * aggpad, GstAggregator * aggregator);
+  gboolean      (*skip_buffer) (GstAggregatorPad * aggpad, GstAggregator * aggregator, GstBuffer * buffer);
 
   /*< private >*/
   gpointer      _gst_reserved[GST_PADDING_LARGE];
