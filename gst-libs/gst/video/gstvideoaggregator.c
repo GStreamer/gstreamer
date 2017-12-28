@@ -219,6 +219,28 @@ gst_video_aggregator_pad_set_info (GstVideoAggregatorPad * pad,
   return TRUE;
 }
 
+static gboolean
+gst_video_aggregator_pad_skip_buffer (GstAggregatorPad * aggpad,
+    GstAggregator * agg, GstBuffer * buffer)
+{
+  gboolean ret = FALSE;
+
+  if (agg->segment.position != GST_CLOCK_TIME_NONE
+      && GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE) {
+    GstClockTime start_time =
+        gst_segment_to_running_time (&aggpad->segment, GST_FORMAT_TIME,
+        GST_BUFFER_PTS (buffer));
+    GstClockTime end_time = start_time + GST_BUFFER_DURATION (buffer);
+    GstClockTime output_start_running_time =
+        gst_segment_to_running_time (&agg->segment, GST_FORMAT_TIME,
+        agg->segment.position);
+
+    ret = end_time < output_start_running_time;
+  }
+
+  return ret;
+}
+
 static void
 gst_video_aggregator_pad_finalize (GObject * o)
 {
@@ -324,6 +346,8 @@ gst_video_aggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
   g_type_class_add_private (klass, sizeof (GstVideoAggregatorPadPrivate));
 
   aggpadclass->flush = GST_DEBUG_FUNCPTR (_flush_pad);
+  aggpadclass->skip_buffer =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_pad_skip_buffer);
   klass->set_info = GST_DEBUG_FUNCPTR (gst_video_aggregator_pad_set_info);
   klass->prepare_frame =
       GST_DEBUG_FUNCPTR (gst_video_aggregator_pad_prepare_frame);
