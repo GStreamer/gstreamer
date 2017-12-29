@@ -39,7 +39,7 @@ if rtsp_server_dep.found()
 endif
 
 if cairo_dep.found()
-    executable('gst-validate-image-check-' + apiversion,
+    executable('gst-validate-images-check-' + apiversion,
             'gst-validate-images-check.c',
                 install: true,
                 include_directories : inc_dirs,

@@ -62,7 +62,7 @@ main (int argc, char **argv)
 
   setlocale (LC_ALL, "");
 
-  g_set_prgname ("gst-validate-mages-check-" GST_API_VERSION);
+  g_set_prgname ("gst-validate-images-check-" GST_API_VERSION);
   ctx = g_option_context_new ("/reference/file/path /compared/file/path");
 
   g_option_context_set_summary (ctx,
