@@ -2308,6 +2308,54 @@ gst_omx_video_dec_enable (GstOMXVideoDec * self, GstBuffer * input)
   return TRUE;
 }
 
+static OMX_COLOR_FORMATTYPE
+get_color_format_from_chroma (const gchar * chroma_format,
+    guint bit_depth_luma, guint bit_depth_chroma)
+{
+  if (chroma_format == NULL)
+    goto out;
+
+  if (!g_strcmp0 (chroma_format, "4:0:0") && bit_depth_chroma == 0) {
+    switch (bit_depth_luma) {
+      case 1:
+        return OMX_COLOR_FormatMonochrome;
+      case 2:
+        return OMX_COLOR_FormatL2;
+      case 4:
+        return OMX_COLOR_FormatL4;
+      case 8:
+        return OMX_COLOR_FormatL8;
+      case 16:
+        return OMX_COLOR_FormatL16;
+      case 24:
+        return OMX_COLOR_FormatL24;
+      case 32:
+        return OMX_COLOR_FormatL32;
+    }
+    goto out;
+  }
+
+  if (bit_depth_luma == 8 && bit_depth_chroma == 8) {
+    if (!g_strcmp0 (chroma_format, "4:2:0"))
+      return OMX_COLOR_FormatYUV420SemiPlanar;
+    else if (!g_strcmp0 (chroma_format, "4:2:2"))
+      return OMX_COLOR_FormatYUV422SemiPlanar;
+  }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  if (bit_depth_luma == 10 && bit_depth_chroma == 10) {
+    if (!g_strcmp0 (chroma_format, "4:2:0"))
+      return (OMX_COLOR_FORMATTYPE)
+          OMX_ALG_COLOR_FormatYUV420SemiPlanar10bitPacked;
+    else if (!g_strcmp0 (chroma_format, "4:2:2"))
+      return (OMX_COLOR_FORMATTYPE)
+          OMX_ALG_COLOR_FormatYUV422SemiPlanar10bitPacked;
+  }
+#endif
+
+out:
+  return OMX_COLOR_FormatUnused;
+}
+
 static gboolean
 gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state)
@@ -2378,6 +2426,38 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   port_def.format.video.nFrameWidth = info->width;
   port_def.format.video.nFrameHeight = info->height;
   port_def.format.video.xFramerate = framerate_q16;
+
+  if (klass->cdata.hacks & GST_OMX_HACK_PASS_COLOR_FORMAT_TO_DECODER) {
+    /* Let the decoder know the colar format of the encoded input stream.
+     * It may use it to pre-allocate its internal buffers and so save time when
+     * it will actually start to decode. */
+    GstStructure *s;
+    const gchar *chroma_format;
+    guint bit_depth_luma, bit_depth_chroma;
+
+    s = gst_caps_get_structure (state->caps, 0);
+    chroma_format = gst_structure_get_string (s, "chroma-format");
+    if (s && gst_structure_get_uint (s, "bit-depth-luma", &bit_depth_luma) &&
+        gst_structure_get_uint (s, "bit-depth-chroma", &bit_depth_chroma)) {
+      OMX_COLOR_FORMATTYPE color_format;
+
+      color_format =
+          get_color_format_from_chroma (chroma_format,
+          bit_depth_luma, bit_depth_chroma);
+      if (color_format != OMX_COLOR_FormatUnused) {
+        GST_DEBUG_OBJECT (self, "Setting input eColorFormat to %d",
+            color_format);
+        port_def.format.video.eColorFormat = color_format;
+      } else {
+        GST_WARNING_OBJECT (self,
+            "Unsupported input color format: %s (luma %d bits, chroma %d bits)",
+            chroma_format, bit_depth_luma, bit_depth_chroma);
+      }
+    } else {
+      GST_DEBUG_OBJECT (self,
+          "Input color format info not present in caps, can't pass them to decoder");
+    }
+  }
 
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
 

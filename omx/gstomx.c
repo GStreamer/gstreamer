@@ -2845,6 +2845,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_HEIGHT_MULTIPLE_16;
     else if (g_str_equal (*hacks, "pass-profile-to-decoder"))
       hacks_flags |= GST_OMX_HACK_PASS_PROFILE_TO_DECODER;
+    else if (g_str_equal (*hacks, "pass-color-format-to-decoder"))
+      hacks_flags |= GST_OMX_HACK_PASS_COLOR_FORMAT_TO_DECODER;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;
