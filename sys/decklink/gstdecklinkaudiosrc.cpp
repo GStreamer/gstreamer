@@ -707,6 +707,27 @@ retry:
 
   // Detect gaps in stream time
   self->processed += sample_count;
+  if (self->expected_stream_time != GST_CLOCK_TIME_NONE
+      && p.stream_timestamp == GST_CLOCK_TIME_NONE) {
+    /* We missed a frame. Extrapolate the timestamps */
+    p.stream_timestamp = self->expected_stream_time;
+    p.stream_duration =
+        gst_util_uint64_scale_int (sample_count, GST_SECOND, self->info.rate);
+  }
+  if (self->last_hardware_time != GST_CLOCK_TIME_NONE
+      && p.hardware_timestamp == GST_CLOCK_TIME_NONE) {
+    /* This should always happen when the previous one also does, but let's
+     * have two separate checks just in case */
+    GstClockTime start_hw_offset, end_hw_offset;
+    start_hw_offset =
+        gst_util_uint64_scale (self->last_hardware_time, self->info.rate,
+        GST_SECOND);
+    end_hw_offset = start_hw_offset + sample_count;
+    p.hardware_timestamp =
+        gst_util_uint64_scale_int (end_hw_offset, GST_SECOND, self->info.rate);
+    /* Will be the same as the stream duration - reuse it */
+    p.hardware_duration = p.stream_duration;
+  }
 
   if (p.stream_timestamp != GST_CLOCK_TIME_NONE) {
     GstClockTime start_stream_time, end_stream_time;
@@ -738,14 +759,15 @@ retry:
           GST_FORMAT_TIME, timestamp);
 
       msg =
-          gst_message_new_qos (GST_OBJECT (self), TRUE, running_time, p.stream_timestamp,
-          timestamp, duration);
+          gst_message_new_qos (GST_OBJECT (self), TRUE, running_time,
+          p.stream_timestamp, timestamp, duration);
       gst_message_set_qos_stats (msg, GST_FORMAT_DEFAULT, self->processed,
           self->dropped);
       gst_element_post_message (GST_ELEMENT (self), msg);
     }
     self->expected_stream_time = end_stream_time;
   }
+  self->last_hardware_time = p.hardware_timestamp;
 
   if (p.no_signal)
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);

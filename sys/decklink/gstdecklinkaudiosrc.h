@@ -75,6 +75,7 @@ struct _GstDecklinkAudioSrc
   GstClockTime expected_stream_time;
   guint64 processed;
   guint64 dropped;
+  GstClockTime last_hardware_time;
 
   /* Last time we noticed a discont */
   GstClockTime discont_time;
