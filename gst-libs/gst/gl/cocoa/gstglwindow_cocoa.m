@@ -86,8 +86,8 @@ static void gst_gl_window_cocoa_show (GstGLWindow * window);
 static void gst_gl_window_cocoa_queue_resize (GstGLWindow * window);
 static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
-static gboolean gst_gl_window_cocoa_set_render_rectangle (GstGLWindow *
-                                                          window, gint x, gint y, gint width, gint height);
+static gboolean gst_gl_window_cocoa_set_render_rectangle (GstGLWindow * window,
+    gint x, gint y, gint width, gint height);
 
 struct _GstGLWindowCocoaPrivate
 {
