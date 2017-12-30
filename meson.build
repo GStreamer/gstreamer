@@ -189,16 +189,14 @@ gsttag_dep = dependency('gstreamer-tag-1.0', version : gst_req,
 gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
 
-zlib_dep = dependency('zlib')
+zlib_dep = dependency('zlib', required : false)
 bz2lib = cc.find_library('bz2', required : false)
 glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 
-cdata.set('HAVE_ZLIB', 1)
-if bz2lib.found()
-  cdata.set('HAVE_BZ2', 1)
-endif
+cdata.set('HAVE_ZLIB', zlib_dep.found())
+cdata.set('HAVE_BZ2', bz2lib.found())
 
 # Check all of the things.
 # TODO: None of these are actually used yet because
