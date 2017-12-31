@@ -177,6 +177,11 @@ gst_av1_dec_stop (GstVideoDecoder * dec)
     av1dec->input_state = NULL;
   }
 
+  if (av1dec->decoder_inited) {
+    aom_codec_destroy (&av1dec->decoder);
+  }
+  av1dec->decoder_inited = FALSE;
+
   return TRUE;
 }
 
