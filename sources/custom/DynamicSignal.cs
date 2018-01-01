@@ -32,6 +32,7 @@ using System.Collections;
 namespace Gst
 {
 
+	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	delegate void GClosureMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr,
                                  IntPtr invocation_hint, IntPtr data);
 
