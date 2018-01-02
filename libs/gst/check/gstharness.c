@@ -1839,7 +1839,6 @@ gst_harness_dump_to_file (GstHarness * h, const gchar * filename)
     g_clear_error (&err);
   }
   g_free (data);
-  g_free (data);
 }
 
 /**
