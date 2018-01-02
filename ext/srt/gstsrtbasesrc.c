@@ -27,8 +27,6 @@
 #include <srt/srt.h>
 #include <gio/gio.h>
 
-#include <netinet/in.h>
-
 #define GST_CAT_DEFAULT gst_debug_srt_base_src
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 

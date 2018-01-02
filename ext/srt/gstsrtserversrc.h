@@ -22,7 +22,6 @@
 #define __GST_SRT_SERVER_SRC_H__
 
 #include "gstsrtbasesrc.h"
-#include <sys/socket.h>
 
 G_BEGIN_DECLS
 

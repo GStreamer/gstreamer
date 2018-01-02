@@ -22,7 +22,6 @@
 #define __GST_SRT_SERVER_SINK_H__
 
 #include "gstsrtbasesink.h"
-#include <sys/socket.h>
 
 G_BEGIN_DECLS
 

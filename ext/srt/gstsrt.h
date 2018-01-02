@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gio/gio.h>
+#include <gio/gnetworking.h>
 
 #include <srt/srt.h>
 

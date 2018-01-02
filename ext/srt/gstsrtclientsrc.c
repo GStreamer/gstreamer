@@ -49,8 +49,6 @@
 
 #include "gstsrt.h"
 
-#include <netinet/in.h>
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
