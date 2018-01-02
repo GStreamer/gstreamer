@@ -1643,6 +1643,8 @@ GST_START_TEST (test_no_session_timeout)
 
   is_expired = gst_rtsp_session_is_expired_usec (session, now);
   fail_unless (is_expired == FALSE);
+
+  g_object_unref (session);
 }
 
 GST_END_TEST;
