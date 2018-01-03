@@ -989,7 +989,6 @@ fi
 AC_SUBST(HAVE_GRAPHENE)
 AC_SUBST(GRAPHENE_LIBS)
 AC_SUBST(GRAPHENE_CFLAGS)
-AM_CONDITIONAL(HAVE_GRAPHENE, test "x$HAVE_GRAPHENE" = "xyes")
 
 dnl Needed by plugins that use g_module_*() API
 dnl FIXME: probably not needed because AG_GST_CHECK_GLIB already includes it?
@@ -1003,7 +1002,6 @@ fi
 AC_SUBST(HAVE_PNG)
 AC_SUBST(LIBPNG_LIBS)
 AC_SUBST(LIBPNG_CFLAGS)
-AM_CONDITIONAL(HAVE_PNG, test "x$HAVE_PNG" = "xyes")
 
 dnl libjpeg is optional
 AC_ARG_WITH(jpeg-mmx, [  --with-jpeg-mmx, path to MMX'ified JPEG library])
@@ -1026,7 +1024,6 @@ else
 fi
 AC_SUBST(JPEG_LIBS)
 AC_SUBST(HAVE_JPEG)
-AM_CONDITIONAL(HAVE_JPEG, test "x$HAVE_JPEG" = "xyes")
 ])
 
 dnl --------------------------------------------------------------------------

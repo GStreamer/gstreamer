@@ -674,7 +674,9 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
     AG_GST_GL_PLUGIN_CHECKS
   fi
 ])
-
+AM_CONDITIONAL(HAVE_GRAPHENE, test "x$HAVE_GRAPHENE" = "xyes")
+AM_CONDITIONAL(HAVE_PNG, test "x$HAVE_PNG" = "xyes")
+AM_CONDITIONAL(HAVE_JPEG, test "x$HAVE_JPEG" = "xyes")
 
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
