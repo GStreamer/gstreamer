@@ -137,20 +137,19 @@ GST_START_TEST (test_constructors)
 
 GST_END_TEST;
 
-GST_START_TEST (test_constructors_require_activated_context)
+static void
+_construct_with_activated_context (GstGLContext * context, gpointer unused)
 {
-  gboolean ret = FALSE;
   GstGLFramebuffer *framebuffer = NULL;
-
-  ret = gst_gl_context_activate (context, TRUE);
-  fail_if (!ret);
 
   framebuffer = gst_gl_framebuffer_new (context);
   fail_if (framebuffer == NULL);
   gst_object_unref (framebuffer);
+}
 
-  ret = gst_gl_context_activate (context, FALSE);
-  fail_if (!ret);
+GST_START_TEST (test_constructors_require_activated_context)
+{
+  gst_gl_context_thread_add (context, _construct_with_activated_context, NULL);
 }
 
 GST_END_TEST;
