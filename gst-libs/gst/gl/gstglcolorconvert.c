@@ -1491,7 +1491,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
      * for us */
     info->templ = &templ_REORDER;
     info->frag_body =
-        g_strdup_printf (info->templ->body, pixel_order[0], pixel_order[1],
+        g_strdup_printf (info->templ->body, "", pixel_order[0], pixel_order[1],
         pixel_order[2], pixel_order[3]);
     info->shader_tex_names[0] = "tex";
   } else {
