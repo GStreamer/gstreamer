@@ -260,7 +260,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
   /* No output available yet */
   if (dst_buf_info.iBufferStatus != 1) {
     gst_video_codec_frame_unref (frame);
-    return (frame ? GST_FLOW_OK : GST_FLOW_EOS);
+    return GST_FLOW_OK;
   }
 
   actual_width = dst_buf_info.UsrData.sSystemBuffer.iWidth;
