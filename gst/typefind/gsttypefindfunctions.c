@@ -1443,12 +1443,12 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
       guint found = 0;          /* number of valid headers found */
       guint64 offset = skipped;
       gboolean changed = FALSE;
+      guint prev_layer = 0;
+      guint prev_channels = 0, prev_samplerate = 0;
 
       while (found < GST_MP3_TYPEFIND_TRY_HEADERS) {
         guint32 head;
         guint length;
-        guint prev_layer = 0;
-        guint prev_channels = 0, prev_samplerate = 0;
         gboolean free = FALSE;
 
         if ((gint64) (offset - skipped + 4) >= 0 &&
@@ -1495,15 +1495,16 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
            * this header*/
           if (prev_layer)
             changed = TRUE;
-          prev_layer = layer;
-          prev_channels = channels;
-          prev_samplerate = samplerate;
         } else {
           found++;
           GST_LOG ("found %d. header at offset %" G_GUINT64_FORMAT " (0x%"
               G_GINT64_MODIFIER "X)", found, start_off + offset,
               start_off + offset);
         }
+        prev_layer = layer;
+        prev_channels = channels;
+        prev_samplerate = samplerate;
+
         offset += length;
       }
       g_assert (found <= GST_MP3_TYPEFIND_TRY_HEADERS);
