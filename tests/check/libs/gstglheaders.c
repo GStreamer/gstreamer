@@ -64,7 +64,7 @@
 #include <gst/gl/egl/gstglmemoryegl.h>
 #endif
 
-#ifdef GST_GL_HAVE_PLATFORM_GLX
+#if GST_GL_HAVE_PLATFORM_GLX
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #include <gst/gl/x11/gstglwindow_x11.h>
 #endif
