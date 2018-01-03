@@ -1244,6 +1244,7 @@ gst_hls_demux_update_variant_playlist (GstHLSDemux * hlsdemux, gchar * data,
   if (hlsdemux->master->is_simple) {
     GST_ERROR
         ("Cannot update variant playlist: Current playlist is not a variant playlist");
+    gst_hls_master_playlist_unref (new_master);
     goto out;
   }
 
