@@ -810,6 +810,10 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
       }
     }
 #endif
+    g_free (kregion);
+    g_free (kbitmap);
+    g_free (kpalette);
+
   } else if (G_UNLIKELY (kbitmap->width == 0 || kbitmap->height == 0)) {
     /* there are some DVDs (well, at least one) where some dimwits put in a wholly transparent full screen 720x576 SPU !!!!?! */
     GST_WARNING_OBJECT (ke, "SPU is totally invisible - dimwits");
