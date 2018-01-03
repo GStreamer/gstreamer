@@ -301,8 +301,7 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
       break;
   }
 
-  if (message)
-    GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 static GstPad *
