@@ -292,8 +292,8 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
           wl_shell_get_shell_surface (display->shell,
           window_egl->window.surface);
       if (window_egl->window.queue)
-        wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.
-            shell_surface, window_egl->window.queue);
+        wl_proxy_set_queue ((struct wl_proxy *) window_egl->
+            window.shell_surface, window_egl->window.queue);
 
       wl_shell_surface_add_listener (window_egl->window.shell_surface,
           &shell_surface_listener, window_egl);
@@ -450,7 +450,7 @@ gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
 }
 
 static void
-gst_gl_window_wayland_egl_show (GstGLWindow * window)
+_roundtrip_async (GstGLWindow * window)
 {
   GstGLDisplayWayland *display_wayland =
       GST_GL_DISPLAY_WAYLAND (window->display);
@@ -461,6 +461,16 @@ gst_gl_window_wayland_egl_show (GstGLWindow * window)
   if (gst_gl_wl_display_roundtrip_queue (display_wayland->display,
           window_egl->window.queue) < 0)
     GST_WARNING_OBJECT (window, "failed a roundtrip");
+}
+
+static void
+gst_gl_window_wayland_egl_show (GstGLWindow * window)
+{
+  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+
+  create_surfaces (window_egl);
+
+  gst_gl_window_send_message (window, (GstGLWindowCB) _roundtrip_async, window);
 }
 
 static void
