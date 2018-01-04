@@ -64,7 +64,7 @@ enum
   PROP_FIRST_TIMECODE,
   PROP_FIRST_NOW,
   PROP_LTC_MAX_OFFSET,
-  PROP_TC_ADD
+  PROP_LTC_ADD
 };
 
 #define DEFAULT_OVERRIDE_EXISTING FALSE
@@ -211,10 +211,10 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "or behind the video. Buffers not in this range are ignored.",
           0, G_MAXUINT64, DEFAULT_LTC_MAX_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_TC_ADD,
-      g_param_spec_int ("tc-add",
-          "Add this number of frames to LTC or internal timecode.",
-          "Add this number of frames to LTC or internal timecode, "
+  g_object_class_install_property (gobject_class, PROP_LTC_ADD,
+      g_param_spec_int ("ltc-add",
+          "Add this number of frames to LTC timecode.",
+          "Add this number of frames to LTC timecode, "
           "useful if there is an offset between your LTC source and video.",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -258,7 +258,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
 #if HAVE_LTC
   timecodestamper->ltc_dec = NULL;
   timecodestamper->ltc_max_offset = DEFAULT_LTC_MAX_OFFSET;
-  timecodestamper->tc_add = 0;
+  timecodestamper->ltc_add = 0;
   timecodestamper->ltc_first_runtime = 0;
   timecodestamper->ltc_audio_endtime = 0;
 
@@ -341,8 +341,8 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
     case PROP_LTC_MAX_OFFSET:
       timecodestamper->ltc_max_offset = g_value_get_uint64 (value);
       break;
-    case PROP_TC_ADD:
-      timecodestamper->tc_add = g_value_get_int (value);
+    case PROP_LTC_ADD:
+      timecodestamper->ltc_add = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -379,8 +379,8 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
     case PROP_LTC_MAX_OFFSET:
       g_value_set_uint64 (value, timecodestamper->ltc_max_offset);
       break;
-    case PROP_TC_ADD:
-      g_value_set_int (value, timecodestamper->tc_add);
+    case PROP_LTC_ADD:
+      g_value_set_int (value, timecodestamper->ltc_add);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -688,6 +688,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
           timecodestamper->current_tc->config.latest_daily_jam,
           timecodestamper->current_tc->config.flags, stc.hours, stc.mins,
           stc.secs, stc.frame, 0);
+      gst_video_time_code_add_frames (&ltc_intern_tc, timecodestamper->ltc_add);
       if (!timecodestamper->ltc_intern_tc
           || gst_video_time_code_compare (timecodestamper->ltc_intern_tc,
               &ltc_intern_tc) != 0) {
@@ -712,6 +713,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
               timecodestamper->current_tc->config.latest_daily_jam,
               timecodestamper->current_tc->config.flags,
               stc.hours, stc.mins, stc.secs, stc.frame * fps_n_div, 0);
+          gst_video_time_code_add_frames (timecodestamper->ltc_current_tc,
+              timecodestamper->ltc_add);
           GST_INFO_OBJECT (timecodestamper, "Resynced internal LTC counter");
         }
       } else {
@@ -764,7 +767,6 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
   if (timecodestamper->tc_source != GST_TIME_CODE_STAMPER_EXISTING && !tc_meta) {
     gst_buffer_foreach_meta (buffer, remove_timecode_meta, NULL);
-    gst_video_time_code_add_frames (tc, timecodestamper->tc_add);
     gst_buffer_add_video_time_code_meta (buffer, tc);
   }
 

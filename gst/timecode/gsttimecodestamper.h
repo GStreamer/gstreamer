@@ -71,7 +71,7 @@ struct _GstTimeCodeStamper
   GstVideoTimeCode *ltc_current_tc;
   GstVideoTimeCode *ltc_intern_tc;
   GstClockTime ltc_max_offset;
-  gint tc_add;
+  gint ltc_add;
   GstSegment ltc_segment;
   GstVideoInfo vinfo;
   gboolean post_messages;
