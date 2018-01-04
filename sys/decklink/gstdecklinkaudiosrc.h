@@ -71,11 +71,6 @@ struct _GstDecklinkAudioSrc
   /* counter to keep track of timestamps */
   guint64 next_offset;
 
-  /* detect gaps in stream time */
-  GstClockTime expected_stream_time;
-  guint64 processed;
-  guint64 dropped;
-
   /* Last time we noticed a discont */
   GstClockTime discont_time;
 

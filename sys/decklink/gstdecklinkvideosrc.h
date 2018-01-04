@@ -58,10 +58,6 @@ struct _GstDecklinkVideoSrc
   gboolean output_stream_time;
   GstClockTime skip_first_time;
   gboolean drop_no_signal_frames;
-  GstClockTime expected_stream_time;
-  guint64 processed;
-  guint64 dropped;
-  guint64 first_stream_time;
 
   GstVideoInfo info;
   GstDecklinkVideoFormat video_format;

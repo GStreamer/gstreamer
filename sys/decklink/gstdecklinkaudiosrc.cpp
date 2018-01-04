@@ -36,10 +36,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 #define DEFAULT_DISCONT_WAIT          (1 * GST_SECOND)
 #define DEFAULT_CHANNELS              (GST_DECKLINK_AUDIO_CHANNELS_2)
 
-#ifndef ABSDIFF
-#define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
-#endif
-
 enum
 {
   PROP_0,
@@ -705,44 +701,6 @@ retry:
         self->info.rate) - timestamp;
   }
 
-  // Detect gaps in stream time
-  self->processed += sample_count;
-
-  if (p.stream_timestamp != GST_CLOCK_TIME_NONE) {
-    GstClockTime start_stream_time, end_stream_time;
-
-    start_stream_time = p.stream_timestamp;
-
-    start_offset =
-        gst_util_uint64_scale (start_stream_time, self->info.rate, GST_SECOND);
-
-    end_offset = start_offset + sample_count;
-    end_stream_time = gst_util_uint64_scale_int (end_offset, GST_SECOND,
-        self->info.rate);
-
-    if (self->expected_stream_time != GST_CLOCK_TIME_NONE &&
-        ABSDIFF (self->expected_stream_time, p.stream_timestamp) >
-        gst_util_uint64_scale (2, GST_SECOND, self->info.rate)) {
-      GstMessage *msg;
-      GstClockTime running_time;
-
-      self->dropped +=
-          gst_util_uint64_scale (ABSDIFF (self->expected_stream_time,
-              p.stream_timestamp), self->info.rate, GST_SECOND);
-      running_time =
-          gst_segment_to_running_time (&GST_BASE_SRC (self)->segment,
-          GST_FORMAT_TIME, timestamp);
-
-      msg =
-          gst_message_new_qos (GST_OBJECT (self), TRUE, running_time, p.stream_timestamp,
-          timestamp, duration);
-      gst_message_set_qos_stats (msg, GST_FORMAT_DEFAULT, self->processed,
-          self->dropped);
-      gst_element_post_message (GST_ELEMENT (self), msg);
-    }
-    self->expected_stream_time = end_stream_time;
-  }
-
   if (p.no_signal)
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
   GST_BUFFER_TIMESTAMP (*buffer) = timestamp;
@@ -949,9 +907,6 @@ gst_decklink_audio_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      self->processed = 0;
-      self->dropped = 0;
-      self->expected_stream_time = GST_CLOCK_TIME_NONE;
       if (!gst_decklink_audio_src_open (self)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto out;
