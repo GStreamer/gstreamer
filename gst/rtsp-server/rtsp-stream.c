@@ -1359,10 +1359,16 @@ again:
     goto no_udp_protocol;
 
   if (multicast) {
+    GST_INFO ("setting udpsink multicast-iface %s", priv->multicast_iface);
     g_object_set (G_OBJECT (udpsink_out[0]), "multicast-iface",
         priv->multicast_iface, NULL);
     g_object_set (G_OBJECT (udpsink_out[1]), "multicast-iface",
         priv->multicast_iface, NULL);
+    GST_INFO ("setting udpsink ttl-mc %d", addr->ttl);
+    if (addr->ttl) {
+      g_object_set (G_OBJECT (udpsink_out[0]), "ttl-mc", addr->ttl, NULL);
+      g_object_set (G_OBJECT (udpsink_out[1]), "ttl-mc", addr->ttl, NULL);
+    }
 
     g_signal_emit_by_name (udpsink_out[0], "add", addr_str, rtpport, NULL);
     g_signal_emit_by_name (udpsink_out[1], "add", addr_str, rtcpport, NULL);
