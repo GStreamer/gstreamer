@@ -499,8 +499,20 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   audiorate->in += in_samples;
 
   /* calculate the buffer offset */
-  in_offset = gst_util_uint64_scale_int_round (in_time, rate, GST_SECOND);
+  if (in_time < audiorate->prev_in_time) {
+    in_offset = audiorate->prev_in_offset -
+        gst_util_uint64_scale_int_round (audiorate->prev_in_time - in_time,
+        rate, GST_SECOND);
+  } else {
+    in_offset =
+        audiorate->prev_in_offset +
+        gst_util_uint64_scale_int_round (in_time - audiorate->prev_in_time,
+        rate, GST_SECOND);
+  }
   in_offset_end = in_offset + in_samples;
+
+  audiorate->prev_in_offset = in_offset;
+  audiorate->prev_in_time = in_time;
 
   GST_LOG_OBJECT (audiorate,
       "in_time:%" GST_TIME_FORMAT ", in_duration:%" GST_TIME_FORMAT
@@ -566,9 +578,8 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
        * offset to get duration. Necessary complexity to get 'perfect' 
        * streams */
       GST_BUFFER_TIMESTAMP (fill) = audiorate->next_ts;
-      audiorate->next_ts =
-          gst_util_uint64_scale_int_round (audiorate->next_offset, GST_SECOND,
-          rate);
+      audiorate->next_ts +=
+          gst_util_uint64_scale_int_round (cursamples, GST_SECOND, rate);
       GST_BUFFER_DURATION (fill) =
           audiorate->next_ts - GST_BUFFER_TIMESTAMP (fill);
 
@@ -641,7 +652,8 @@ send:
   GST_BUFFER_OFFSET_END (buf) = in_offset_end;
 
   GST_BUFFER_TIMESTAMP (buf) = audiorate->next_ts;
-  audiorate->next_ts = gst_util_uint64_scale_int_round (in_offset_end,
+  audiorate->next_ts +=
+      gst_util_uint64_scale_int_round (in_offset_end - audiorate->next_offset,
       GST_SECOND, rate);
   GST_BUFFER_DURATION (buf) = audiorate->next_ts - GST_BUFFER_TIMESTAMP (buf);
 

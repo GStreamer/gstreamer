@@ -24,6 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/audio/audio.h>
+#include <gst/app/gstappsrc.h>
 
 /* helper element to insert additional buffers overlapping with previous ones */
 static gdouble injector_inject_probability = 0.0;
@@ -451,6 +452,116 @@ GST_START_TEST (test_large_discont)
 
 GST_END_TEST;
 
+
+#define FIRST_CAPS \
+  "audio/x-raw,format=S16LE,layout=interleaved,rate=48000,channels=1"
+#define SECOND_CAPS \
+  "audio/x-raw,format=S16LE,layout=interleaved,rate=8000,channels=1"
+
+#define BUFFERS_BEFORE_CHANGE 10
+#define TOTAL_BUFFERS (BUFFERS_BEFORE_CHANGE * 2)
+
+static GList *
+generate_buffers (gint from_rate, gint to_rate)
+{
+  GQueue q = G_QUEUE_INIT;
+  GstBuffer *buf;
+  guint i;
+  GstClockTime pts = 0;
+
+  for (i = 0; i < BUFFERS_BEFORE_CHANGE; i++) {
+    buf = gst_buffer_new_allocate (NULL, 2 * from_rate / 100, NULL);
+    gst_buffer_memset (buf, 0, 1, gst_buffer_get_size (buf));
+    GST_BUFFER_PTS (buf) = pts;
+    GST_BUFFER_DURATION (buf) = GST_SECOND / 100;
+    pts += GST_BUFFER_DURATION (buf);
+    g_queue_push_tail (&q, buf);
+  }
+
+  for (; i < TOTAL_BUFFERS; i++) {
+    buf = gst_buffer_new_allocate (NULL, 2 * to_rate / 100, NULL);
+    gst_buffer_memset (buf, 0, 1, gst_buffer_get_size (buf));
+    GST_BUFFER_PTS (buf) = pts;
+    GST_BUFFER_DURATION (buf) = GST_SECOND / 100;
+    pts += GST_BUFFER_DURATION (buf);
+    g_queue_push_tail (&q, buf);
+  }
+
+  return q.head;
+}
+
+GST_START_TEST (test_rate_change_down)
+{
+  GList *l, *rbufs = NULL, *bufs = NULL;
+  GstElement *pipeline;
+  GstElement *sink;
+  GstElement *src;
+  GstElement *audiorate;
+  GstCaps *caps1, *caps2;
+  int i = 0;
+  gint64 drop, in, out;
+  GstBus *bus;
+
+  caps1 = gst_caps_from_string (FIRST_CAPS);
+  caps2 = gst_caps_from_string (SECOND_CAPS);
+
+  bufs = generate_buffers (48000, 8000);
+
+  pipeline =
+      gst_parse_launch
+      ("appsrc name=src is-live=true format=time !"
+      " audiorate name=audiorate ! fakesink name=sink signal-handoffs=true",
+      NULL);
+
+  fail_if (pipeline == NULL);
+
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  g_signal_connect (sink, "handoff", G_CALLBACK (got_buf), &rbufs);
+  gst_object_unref (sink);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  gst_app_src_set_caps (GST_APP_SRC (src), caps1);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  for (l = bufs; l != NULL; l = l->next) {
+    if (i++ == BUFFERS_BEFORE_CHANGE) {
+      gst_app_src_set_caps (GST_APP_SRC (src), caps2);
+    }
+    GST_LOG ("Position: %" GST_TIME_FORMAT " Duration: %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (GST_BUFFER_PTS (l->data)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (l->data)));
+    fail_unless_equals_int (gst_app_src_push_buffer (GST_APP_SRC (src),
+            GST_BUFFER (l->data)), GST_FLOW_OK);
+  }
+
+  gst_app_src_end_of_stream (GST_APP_SRC (src));
+  gst_object_unref (src);
+
+  /* Give some time to the appsrc loop to push the buffers */
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_message_unref (gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+          GST_MESSAGE_EOS));
+  gst_object_unref (bus);
+
+  audiorate = gst_bin_get_by_name (GST_BIN (pipeline), "audiorate");
+  g_object_get (audiorate, "drop", &drop, "out", &out, "in", &in, NULL);
+  gst_object_unref (audiorate);
+
+  fail_unless_equals_int64 (drop, 0);
+
+  g_list_foreach (rbufs, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (rbufs);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
 static Suite *
 audiorate_suite (void)
 {
@@ -467,6 +578,7 @@ audiorate_suite (void)
   tcase_add_test (tc_chain, test_perfect_stream_inject90);
   tcase_add_test (tc_chain, test_perfect_stream_drop45_inject25);
   tcase_add_test (tc_chain, test_large_discont);
+  tcase_add_test (tc_chain, test_rate_change_down);
 
   return s;
 }

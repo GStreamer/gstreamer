@@ -679,6 +679,7 @@ elements_audiointerleave_CFLAGS = \
 elements_audiorate_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la \
 	$(LDADD)
 elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
