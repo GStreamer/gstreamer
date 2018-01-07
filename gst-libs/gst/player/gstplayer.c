@@ -3503,7 +3503,9 @@ gst_player_set_uri (GstPlayer * self, const gchar * val)
  * @player: #GstPlayer instance
  * @uri: subtitle URI
  *
- * Sets the external subtitle URI.
+ * Sets the external subtitle URI. This should be combined with a call to
+ * gst_player_set_subtitle_track_enabled(@player, TRUE) so the subtitles are actually
+ * rendered.
  */
 void
 gst_player_set_subtitle_uri (GstPlayer * self, const gchar * suburi)
