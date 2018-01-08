@@ -2582,10 +2582,11 @@ subtitle_encoding_activate_cb (GtkEntry * entry, PlaybackApp * app)
 static void
 subtitle_fontdesc_cb (GtkFontButton * button, PlaybackApp * app)
 {
-  const gchar *text;
+  gchar *text;
 
-  text = gtk_font_button_get_font_name (button);
+  text = gtk_font_chooser_get_font (GTK_FONT_CHOOSER (button));
   g_object_set (app->pipeline, "subtitle-font-desc", text, NULL);
+  g_free (text);
 }
 
 static void
