@@ -59,6 +59,7 @@ struct _GstFlacDec {
   guint16        min_blocksize;
   guint16        max_blocksize;
 
+  gboolean       do_resync;
   gint           error_count;
 };
 

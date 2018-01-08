@@ -178,6 +178,7 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
 static void
 gst_flac_dec_init (GstFlacDec * flacdec)
 {
+  flacdec->do_resync = FALSE;
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (flacdec), TRUE);
   gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
       (flacdec), TRUE);
@@ -511,7 +512,7 @@ gst_flac_dec_error_cb (const FLAC__StreamDecoder * d,
 
   switch (status) {
     case FLAC__STREAM_DECODER_ERROR_STATUS_LOST_SYNC:
-      /* Ignore this error and keep processing */
+      dec->do_resync = TRUE;
       return;
     case FLAC__STREAM_DECODER_ERROR_STATUS_BAD_HEADER:
       error = "bad header";
@@ -741,6 +742,7 @@ gst_flac_dec_flush (GstAudioDecoder * audio_dec, gboolean hard)
     }
   }
 
+  dec->do_resync = FALSE;
   FLAC__stream_decoder_flush (dec->decoder);
   gst_adapter_clear (dec->adapter);
 }
@@ -756,6 +758,12 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
   if (G_UNLIKELY (buf == NULL)) {
     gst_flac_dec_flush (audio_dec, FALSE);
     return GST_FLOW_OK;
+  }
+
+  if (dec->do_resync) {
+    GST_WARNING_OBJECT (dec, "Lost sync, flushing decoder");
+    FLAC__stream_decoder_flush (dec->decoder);
+    dec->do_resync = FALSE;
   }
 
   GST_LOG_OBJECT (dec, "frame: ts %" GST_TIME_FORMAT ", flags 0x%04x, "
