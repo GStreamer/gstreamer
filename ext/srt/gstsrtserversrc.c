@@ -41,7 +41,6 @@
 
 #include "gstsrtserversrc.h"
 #include "gstsrt.h"
-#include <srt/srt.h>
 #include <gio/gio.h>
 
 #define SRT_DEFAULT_POLL_TIMEOUT 100
