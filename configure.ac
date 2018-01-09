@@ -1516,9 +1516,7 @@ AC_SUBST(LIBMMS_LIBS)
 dnl *** libsrt ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SRT, true)
 AG_GST_CHECK_FEATURE(SRT, [srt library], srt, [
-  PKG_CHECK_MODULES(SRT, libsrt, HAVE_SRT="yes",
-    AG_GST_CHECK_LIBHEADER(SRT, srt, srt_startup, , srt/srt.h, SRT_LIBS="-lsrt")
-  )
+  PKG_CHECK_MODULES(SRT, srt, HAVE_SRT="yes", HAVE_SRT=no)
   AC_SUBST(SRT_LIBS)
   AC_SUBST(SRT_CFLAGS)
 ])
