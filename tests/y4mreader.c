@@ -55,9 +55,8 @@ parse_int (const gchar * str, guint * out_value_ptr)
 static gboolean
 parse_header (Y4MReader * file)
 {
-  gint i, j;
+  gint i, j, b;
   guint8 header[BUFSIZ];
-  gint8 b;
   size_t s;
   gchar *str;
 
@@ -185,9 +184,8 @@ y4m_reader_close (Y4MReader * file)
 static gboolean
 skip_frame_header (Y4MReader * file)
 {
-  gint i;
+  gint i, b;
   guint8 header[BUFSIZ];
-  gint8 b;
   size_t s;
 
   memset (header, 0, BUFSIZ);
