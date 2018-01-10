@@ -8,6 +8,7 @@ msdk_sources = [
   'gstmsdkh265enc.c',
   'gstmsdkmjpegdec.c',
   'gstmsdkmjpegenc.c',
+  'gstmsdkmpeg2dec.c',
   'gstmsdkmpeg2enc.c',
   'gstmsdkvp8dec.c',
   'gstmsdkvp8enc.c',
