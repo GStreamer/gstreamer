@@ -152,13 +152,14 @@ error_cleanup:
 static void
 dump_operation (GstVaapiFilterOpInfo * op_info)
 {
-  GParamSpec *const pspec = op_info->pspec;
+  GParamSpec *pspec;
   GValue value = G_VALUE_INIT;
   gchar *value_str;
 
   if (!op_info)
     return;
 
+  pspec = op_info->pspec;
   g_print ("  %s: ", g_param_spec_get_name (pspec));
   g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
   g_param_value_set_default (pspec, &value);
