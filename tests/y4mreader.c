@@ -27,7 +27,7 @@
  * http://wiki.multimedia.cx/index.php?title=YUV4MPEG2 */
 
 static inline gboolean
-parse_int (const gchar * str, glong * out_value_ptr)
+parse_int (const gchar * str, guint * out_value_ptr)
 {
   gint saved_errno;
   glong value;
@@ -44,7 +44,10 @@ parse_int (const gchar * str, glong * out_value_ptr)
   value = strtol (str, NULL, 0);
   ret = (errno == 0);
   errno = saved_errno;
-  *out_value_ptr = value;
+  if (value > 0 && value <= G_MAXUINT)
+    *out_value_ptr = value;
+  else
+    ret = FALSE;
 
   return ret;
 }
@@ -83,11 +86,11 @@ parse_header (Y4MReader * file)
     if ((header[j] != 0x20) && (header[j - 1] == 0x20)) {
       switch (header[j]) {
         case 'W':
-          if (!parse_int ((gchar *) & header[j], (glong *) & file->width))
+          if (!parse_int ((gchar *) & header[j], &file->width))
             return FALSE;
           break;
         case 'H':
-          if (!parse_int ((gchar *) & header[j], (glong *) & file->height))
+          if (!parse_int ((gchar *) & header[j], &file->height))
             return FALSE;
           break;
         case 'C':
@@ -108,11 +111,11 @@ parse_header (Y4MReader * file)
         {
           guint num, den;
 
-          if (!parse_int ((gchar *) & header[j], (glong *) & num))
+          if (!parse_int ((gchar *) & header[j], &num))
             return FALSE;
           while ((header[j] != ':') && (j < i))
             j++;
-          if (!parse_int ((gchar *) & header[j], (glong *) & den))
+          if (!parse_int ((gchar *) & header[j], &den))
             return FALSE;
 
           if (num <= 0 || den <= 0) {
