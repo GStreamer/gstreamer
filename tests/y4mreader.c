@@ -36,7 +36,7 @@ parse_int (const gchar * str, guint * out_value_ptr)
   if (!str)
     return FALSE;
   str += 1;
-  if (!str)
+  if (*str == '\0')
     return FALSE;
 
   saved_errno = errno;
