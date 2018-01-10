@@ -4530,7 +4530,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   GstSegment *segment;
   GstClockTime now, latency;
   GstClockTimeDiff base_time;
-  gint64 time, base, duration;
+  gint64 time, base, offset, duration;
   gdouble rate;
   gint64 last;
   gboolean last_seen, with_clock, in_paused;
@@ -4581,6 +4581,11 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     time = segment->time;
   else
     time = 0;
+
+  if (GST_CLOCK_TIME_IS_VALID (segment->offset))
+    offset = segment->offset;
+  else
+    offset = 0;
 
   if (GST_CLOCK_TIME_IS_VALID (segment->stop))
     duration = segment->stop - segment->start;
@@ -4703,7 +4708,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     if (rate < 0.0)
       time += duration;
 
-    *cur = time + gst_guint64_to_gdouble (now - base_time) * rate;
+    *cur = time + offset + gst_guint64_to_gdouble (now - base_time) * rate;
 
     /* never report more than last seen position */
     if (last != -1) {

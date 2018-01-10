@@ -242,6 +242,46 @@ GST_START_TEST (basesink_test_eos_after_playing)
 
 GST_END_TEST;
 
+
+GST_START_TEST (basesink_position_query_handles_segment_offset)
+{
+  GstElement *pipeline, *sink;
+  GstPad *pad;
+  GstEvent *ev;
+  GstSegment segment;
+  gint64 position;
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "async", FALSE, "sync", TRUE, NULL);
+  pad = gst_element_get_static_pad (sink, "sink");
+
+  pipeline = gst_pipeline_new (NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+
+  ev = gst_event_new_stream_start ("test");
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.offset = 15000;
+  ev = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  fail_unless (gst_element_query_position (pipeline, GST_FORMAT_TIME,
+          &position));
+  fail_unless_equals_int (position, 15000);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -253,6 +293,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesink_last_sample_disabled);
   tcase_add_test (tc, basesink_test_gap);
   tcase_add_test (tc, basesink_test_eos_after_playing);
+  tcase_add_test (tc, basesink_position_query_handles_segment_offset);
 
   return s;
 }
