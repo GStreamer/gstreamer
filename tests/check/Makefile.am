@@ -182,11 +182,13 @@ noinst_HEADERS = \
 	gst/capslist.h \
 	gst/struct_arm.h \
 	gst/struct_i386.h \
+	gst/struct_i386w.h \
 	gst/struct_hppa.h \
 	gst/struct_ppc32.h \
 	gst/struct_ppc64.h \
 	gst/struct_sparc.h \
 	gst/struct_x86_64.h \
+	gst/struct_x86_64w.h \
 	libs/struct_arm.h \
 	libs/struct_i386.h \
 	libs/struct_hppa.h \

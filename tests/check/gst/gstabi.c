@@ -41,7 +41,11 @@
 #define HAVE_ABI_SIZES TRUE
 #else
 #ifdef HAVE_CPU_X86_64
+#ifndef G_OS_WIN32
 #include "struct_x86_64.h"
+#else
+#include "struct_x86_64w.h"
+#endif
 #define HAVE_ABI_SIZES TRUE
 #else
 #ifdef HAVE_CPU_HPPA
