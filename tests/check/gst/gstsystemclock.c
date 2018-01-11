@@ -827,10 +827,13 @@ unschedule_thread_func (gpointer data)
 
 GST_START_TEST (test_stress_cleanup_unschedule)
 {
-  WaitUnscheduleData data[50];
-  gint i;
+  WaitUnscheduleData *data;
+  gint i, num;
 
-  for (i = 0; i < G_N_ELEMENTS (data); i++) {
+  num = g_get_num_processors () * 6;
+  data = g_newa (WaitUnscheduleData, num);
+
+  for (i = 0; i < num; i++) {
     WaitUnscheduleData *d = &data[i];
 
     /* Don't unschedule waits with positive offsets in order to trigger
@@ -854,7 +857,7 @@ GST_START_TEST (test_stress_cleanup_unschedule)
   g_usleep (G_USEC_PER_SEC);
 
   /* Stop and free test data */
-  for (i = 0; i < G_N_ELEMENTS (data); i++) {
+  for (i = 0; i < num; i++) {
     WaitUnscheduleData *d = &data[i];
     d->running = FALSE;
     g_thread_join (d->thread_wait);
@@ -868,10 +871,13 @@ GST_END_TEST;
 
 GST_START_TEST (test_stress_reschedule)
 {
-  WaitUnscheduleData data[50];
-  gint i;
+  WaitUnscheduleData *data;
+  gint i, num;
 
-  for (i = 0; i < G_N_ELEMENTS (data); i++) {
+  num = g_get_num_processors () * 6;
+  data = g_newa (WaitUnscheduleData, num);
+
+  for (i = 0; i < num; i++) {
     WaitUnscheduleData *d = &data[i];
 
     /* Try to unschedule all waits */
@@ -893,7 +899,7 @@ GST_START_TEST (test_stress_reschedule)
   g_usleep (G_USEC_PER_SEC);
 
   /* Stop and free test data */
-  for (i = 0; i < G_N_ELEMENTS (data); i++) {
+  for (i = 0; i < num; i++) {
     WaitUnscheduleData *d = &data[i];
     d->running = FALSE;
     g_thread_join (d->thread_wait);
