@@ -125,5 +125,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     msdk,
-    "Intel Media SDK encoders",
+    "Intel Media SDK based elements",
     plugin_init, VERSION, "BSD", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
