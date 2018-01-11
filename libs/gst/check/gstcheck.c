@@ -274,7 +274,15 @@ static void gst_check_log_critical_func
     return;
 
   if (!_gst_check_expecting_log) {
+    gchar *trace;
+
     g_print ("\n\nUnexpected critical/warning: %s\n", message);
+
+    trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
+    if (trace) {
+      g_print ("\nStack trace:\n%s\n", trace);
+      g_free (trace);
+    }
     fail ("Unexpected critical/warning: %s", message);
   }
 
