@@ -421,68 +421,6 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
   return TRUE;
 }
 
-/* Checks whether the supplied pad peer element supports DMABUF sharing */
-/* XXX: this is a workaround to the absence of any proposer way to
-   specify DMABUF memory capsfeatures or bufferpool option to downstream */
-static gboolean
-has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
-{
-  GstPad *other_pad = NULL;
-  GstElement *element = NULL;
-  gchar *element_name = NULL;
-  gboolean is_dmabuf_capable = FALSE;
-  gint v;
-
-  gst_object_ref (pad);
-
-  for (;;) {
-    other_pad = gst_pad_get_peer (pad);
-    gst_object_unref (pad);
-    if (!other_pad)
-      break;
-
-    element = gst_pad_get_parent_element (other_pad);
-    gst_object_unref (other_pad);
-    if (!element)
-      break;
-
-    if (GST_IS_PUSH_SRC (element)) {
-      element_name = gst_element_get_name (element);
-      if (!element_name)
-        break;
-
-      if ((sscanf (element_name, "v4l2src%d", &v) != 1)
-          && (sscanf (element_name, "camerasrc%d", &v) != 1))
-        break;
-
-      v = 0;
-      g_object_get (element, "io-mode", &v, NULL);
-      if (strncmp (element_name, "camerasrc", 9) == 0)
-        is_dmabuf_capable = v == 3;
-      else
-        is_dmabuf_capable = v == 5;     /* "dmabuf-import" enum value */
-      break;
-    } else if (GST_IS_BASE_TRANSFORM (element)) {
-      element_name = gst_element_get_name (element);
-      if (!element_name || sscanf (element_name, "capsfilter%d", &v) != 1)
-        break;
-
-      pad = gst_element_get_static_pad (element, "sink");
-      if (!pad)
-        break;
-    } else
-      break;
-
-    g_free (element_name);
-    element_name = NULL;
-    g_clear_object (&element);
-  }
-
-  g_free (element_name);
-  g_clear_object (&element);
-  return is_dmabuf_capable;
-}
-
 static gboolean
 gst_vaapi_buffer_pool_caps_is_equal (GstBufferPool * pool, GstCaps * newcaps)
 {
@@ -530,13 +468,6 @@ ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstCaps * caps,
 
   if (!reset_allocator (plugin->sinkpad_allocator, &vinfo))
     goto bail;
-
-  if (has_dmabuf_capable_peer (plugin, plugin->sinkpad)) {
-    plugin->sinkpad_allocator =
-        gst_vaapi_dmabuf_allocator_new (plugin->display, &vinfo,
-        GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE, GST_PAD_SINK);
-    goto bail;
-  }
 
   /* enable direct upload if upstream requests raw video */
   if (gst_caps_is_video_raw (caps)) {
