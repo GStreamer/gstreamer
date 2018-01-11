@@ -3461,10 +3461,7 @@ gst_util_get_timestamp (void)
   clock_gettime (CLOCK_MONOTONIC, &now);
   return GST_TIMESPEC_TO_TIME (now);
 #else
-  GTimeVal now;
-
-  g_get_current_time (&now);
-  return GST_TIMEVAL_TO_TIME (now);
+  return g_get_monotonic_time () * 1000;
 #endif
 }
 
