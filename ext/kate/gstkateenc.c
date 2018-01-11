@@ -780,6 +780,8 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
   kate_palette *kpalette;
   GstFlowReturn rflow;
   int ret = 0;
+  GstClockTime start, stop;
+  kate_float t0, t1;
 
   /* allocate region, bitmap, and palette, in case we have to delay encoding them */
   kregion = (kate_region *) g_malloc (sizeof (kate_region));
@@ -810,106 +812,109 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
       }
     }
 #endif
-    g_free (kregion);
-    g_free (kbitmap);
-    g_free (kpalette);
+    goto beach;
+  }
 
-  } else if (G_UNLIKELY (kbitmap->width == 0 || kbitmap->height == 0)) {
+  if (G_UNLIKELY (kbitmap->width == 0 || kbitmap->height == 0)) {
     /* there are some DVDs (well, at least one) where some dimwits put in a wholly transparent full screen 720x576 SPU !!!!?! */
     GST_WARNING_OBJECT (ke, "SPU is totally invisible - dimwits");
     rflow = GST_FLOW_OK;
-  } else {
-    /* timestamp offsets are hidden in the SPU packets */
-    GstClockTime start =
-        GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->show_time);
-    GstClockTime stop =
-        GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->hide_time);
-    kate_float t0 = start / (double) GST_SECOND;
-    kate_float t1 = stop / (double) GST_SECOND;
-    GST_DEBUG_OBJECT (ke, "buf ts %f, start/show %hu/%hu",
-        GST_BUFFER_TIMESTAMP (buf) / (double) GST_SECOND, ke->show_time,
-        ke->hide_time);
+    goto beach;
+  }
+
+  /* timestamp offsets are hidden in the SPU packets */
+  start = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->show_time);
+  stop = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->hide_time);
+  t0 = start / (double) GST_SECOND;
+  t1 = stop / (double) GST_SECOND;
+  GST_DEBUG_OBJECT (ke, "buf ts %f, start/show %hu/%hu",
+      GST_BUFFER_TIMESTAMP (buf) / (double) GST_SECOND, ke->show_time,
+      ke->hide_time);
 
 #if 0
-    {
-      static int spu_count = 0;
-      FILE *f;
-      char name[32];
-      snprintf (name, sizeof (name), "/tmp/spu_%04d", spu_count++);
-      name[sizeof (name) - 1] = 0;
-      f = fopen (name, "w");
-      if (f) {
-        fwrite (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
-        fclose (f);
-      }
+  {
+    static int spu_count = 0;
+    FILE *f;
+    char name[32];
+    snprintf (name, sizeof (name), "/tmp/spu_%04d", spu_count++);
+    name[sizeof (name) - 1] = 0;
+    f = fopen (name, "w");
+    if (f) {
+      fwrite (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
+      fclose (f);
     }
+  }
 #endif
-    GST_DEBUG_OBJECT (ke, "Encoding %" G_GSIZE_FORMAT "x%" G_GSIZE_FORMAT
-        " SPU: (%" G_GSIZE_FORMAT " bytes) from %f to %f",
-        kbitmap->width, kbitmap->height, gst_buffer_get_size (buf), t0, t1);
+  GST_DEBUG_OBJECT (ke, "Encoding %" G_GSIZE_FORMAT "x%" G_GSIZE_FORMAT
+      " SPU: (%" G_GSIZE_FORMAT " bytes) from %f to %f",
+      kbitmap->width, kbitmap->height, gst_buffer_get_size (buf), t0, t1);
 
-    ret = kate_encode_set_region (&ke->k, kregion);
-    if (G_UNLIKELY (ret < 0)) {
-      GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("Failed to set region: %s", gst_kate_util_get_error_message (ret)));
-      rflow = GST_FLOW_ERROR;
-    } else {
-      ret = kate_encode_set_palette (&ke->k, kpalette);
-      if (G_UNLIKELY (ret < 0)) {
-        GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-            ("Failed to set palette: %s",
-                gst_kate_util_get_error_message (ret)));
-        rflow = GST_FLOW_ERROR;
-      } else {
-        ret = kate_encode_set_bitmap (&ke->k, kbitmap);
-        if (G_UNLIKELY (ret < 0)) {
-          GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-              ("Failed to set bitmap: %s",
-                  gst_kate_util_get_error_message (ret)));
-          rflow = GST_FLOW_ERROR;
-        } else {
-          /* Some SPUs have no hide time - so I'm going to delay the encoding of the packet
-             till either a suitable event happens, and the time of this event will be used
-             as the end time of this SPU, which will then be encoded and sent off. Suitable
-             events are the arrival of a subsequent SPU (eg, this SPU will replace the one
-             with no end), EOS, a new segment event, or a time threshold being reached */
-          if (ke->hide_time <= ke->show_time) {
-            GST_INFO_OBJECT (ke,
-                "Cannot encode SPU packet now, hide time is now known (starting at %f) - delaying",
-                t0);
-            ke->delayed_spu = TRUE;
-            ke->delayed_start = start;
-            ke->delayed_bitmap = kbitmap;
-            ke->delayed_palette = kpalette;
-            ke->delayed_region = kregion;
-            rflow = GST_FLOW_OK;
-          } else {
-            ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
-            if (G_UNLIKELY (ret < 0)) {
-              GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-                  ("Failed to encode empty text for SPU buffer: %s",
-                      gst_kate_util_get_error_message (ret)));
-              rflow = GST_FLOW_ERROR;
-            } else {
-              rflow =
-                  gst_kate_enc_chain_push_packet (ke, &kp, start,
-                  stop - start + 1);
-            }
-          }
-        }
-      }
-    }
+  ret = kate_encode_set_region (&ke->k, kregion);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+        ("Failed to set region: %s", gst_kate_util_get_error_message (ret)));
+    goto error_return;
+  }
 
-    if (!ke->delayed_spu) {
-      g_free (kpalette->colors);
-      g_free (kpalette);
-      g_free (kbitmap->pixels);
-      g_free (kbitmap);
-      g_free (kregion);
-    }
+  ret = kate_encode_set_palette (&ke->k, kpalette);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+        ("Failed to set palette: %s", gst_kate_util_get_error_message (ret)));
+    goto error_return;
+  }
+
+  ret = kate_encode_set_bitmap (&ke->k, kbitmap);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+        ("Failed to set bitmap: %s", gst_kate_util_get_error_message (ret)));
+    goto error_return;
+  }
+
+  /* Some SPUs have no hide time - so I'm going to delay the encoding of the packet
+     till either a suitable event happens, and the time of this event will be used
+     as the end time of this SPU, which will then be encoded and sent off. Suitable
+     events are the arrival of a subsequent SPU (eg, this SPU will replace the one
+     with no end), EOS, a new segment event, or a time threshold being reached */
+  if (ke->hide_time <= ke->show_time) {
+    GST_INFO_OBJECT (ke,
+        "Cannot encode SPU packet now, hide time is now known (starting at %f) - delaying",
+        t0);
+    ke->delayed_spu = TRUE;
+    ke->delayed_start = start;
+    ke->delayed_bitmap = kbitmap;
+    ke->delayed_palette = kpalette;
+    ke->delayed_region = kregion;
+    rflow = GST_FLOW_OK;
+    goto beach;
+  }
+
+  ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
+  if (G_UNLIKELY (ret < 0)) {
+    GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+        ("Failed to encode empty text for SPU buffer: %s",
+            gst_kate_util_get_error_message (ret)));
+    goto error_return;
+  }
+
+  rflow = gst_kate_enc_chain_push_packet (ke, &kp, start, stop - start + 1);
+
+beach:
+  /* Cleanup data if we're not keeping it around */
+  if (!ke->delayed_spu) {
+    g_free (kpalette->colors);
+    g_free (kpalette);
+    g_free (kbitmap->pixels);
+    g_free (kbitmap);
+    g_free (kregion);
   }
 
   return rflow;
+
+error_return:
+  {
+    rflow = GST_FLOW_ERROR;
+    goto beach;
+  }
 }
 
 static GstFlowReturn
