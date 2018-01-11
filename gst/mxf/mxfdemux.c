@@ -3349,9 +3349,6 @@ gst_mxf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       continue;
     }
 
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      break;
-
     /* Need more data */
     if (demux->run_in == -1 && demux->offset < 64 * 1024)
       break;
