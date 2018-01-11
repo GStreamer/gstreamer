@@ -1990,7 +1990,7 @@ gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)
   g_assert (list);
 
   if (reset)
-    gst_debug_set_default_threshold (0);
+    gst_debug_set_default_threshold (GST_LEVEL_DEFAULT);
 
   split = g_strsplit (list, ",", 0);
 
