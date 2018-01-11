@@ -95,8 +95,8 @@ gst_v4l2_video_enc_get_property (GObject * object,
           prop_id, value, pspec);
       break;
     case PROP_CAPTURE_IO_MODE:
-      gst_v4l2_object_get_property_helper (self->v4l2output,
-          PROP_IO_MODE, value, pspec);
+      gst_v4l2_object_get_property_helper (self->v4l2capture,
+          prop_id, value, pspec);
       break;
 
       /* By default read from output */
