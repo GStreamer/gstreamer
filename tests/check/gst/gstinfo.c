@@ -440,7 +440,10 @@ GST_START_TEST (info_post_gst_init_category_registration)
   /* Note: before the fixes this wouldn't work to trigger the problem because
    * only a pattern set via GST_DEBUG before gst_init would be picked up
    * (another bug) */
-  gst_debug_set_threshold_from_string ("*a*b:6,*c:3,d*:2,xyz*:9,ax:1", FALSE);
+  gst_debug_set_threshold_from_string ("*a*b:6,*c:3,d*:2,xyz*:9,ax:1", TRUE);
+
+  fail_unless_equals_int (GST_LEVEL_DEFAULT,
+      gst_debug_get_default_threshold ());
 
   for (i = 0; i < G_N_ELEMENTS (cats); ++i) {
     gchar *name = g_strdup_printf ("%s-%x", (i % 2 == 0) ? "cat" : "dog", i);
