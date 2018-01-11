@@ -55,6 +55,7 @@ GST_DEBUG_CATEGORY (gst_msdkh265enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkmjpegdec_debug);
 GST_DEBUG_CATEGORY (gst_msdkmjpegenc_debug);
 GST_DEBUG_CATEGORY (gst_msdkmpeg2enc_debug);
+GST_DEBUG_CATEGORY (gst_msdkmpeg2dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp8dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp8enc_debug);
 
@@ -79,6 +80,8 @@ plugin_init (GstPlugin * plugin)
       "msdkmjpegenc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkmpeg2enc_debug, "msdkmpeg2enc", 0,
       "msdkmpeg2enc");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkmpeg2dec_debug, "msdkmpeg2dec", 0,
+      "msdkmpeg2dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp8dec_debug, "msdkvp8dec", 0, "msdkvp8dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp8enc_debug, "msdkvp8enc", 0, "msdkvp8enc");
 
