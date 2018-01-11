@@ -383,9 +383,9 @@ GST_START_TEST (test_uri_interface)
 #ifdef G_OS_WIN32
   /* should accept file:///c:/foo/bar.txt URIs */
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
-          "file://c:/foo/bar", NULL));
+          "file:///c:/foo/bar", NULL));
   location = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
-  fail_unless_equals_string (location, "file://c:/foo/bar");
+  fail_unless_equals_string (location, "file:///c:/foo/bar");
   g_free (location);
   location = NULL;
   g_object_get (G_OBJECT (src), "location", &location, NULL);
