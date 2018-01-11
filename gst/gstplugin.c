@@ -1303,7 +1303,7 @@ gst_plugin_load (GstPlugin * plugin)
   GstPlugin *newplugin;
 
   if (gst_plugin_is_loaded (plugin)) {
-    return plugin;
+    return gst_object_ref (plugin);
   }
 
   if (!(newplugin = gst_plugin_load_file (plugin->filename, &error)))
