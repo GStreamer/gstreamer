@@ -1145,7 +1145,7 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
     GValue *values;
     const gchar **names;
     values = g_malloc0 (sizeof (GValue) * n_specs);
-    names = g_malloc0 (sizeof (gchar **) * n_specs);
+    names = g_malloc0 (sizeof (gchar *) * n_specs);
 
     for (i = 0; i < n_params; i++) {
       values[i] = params[i].value;

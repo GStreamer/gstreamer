@@ -301,7 +301,7 @@ ges_asset_extract_default (GESAsset * asset, GError ** error)
     const gchar **names;
 
     values = g_malloc0 (sizeof (GValue) * n_params);
-    names = g_malloc0 (sizeof (gchar **) * n_params);
+    names = g_malloc0 (sizeof (gchar *) * n_params);
 
     for (i = 0; i < n_params; i++) {
       values[i] = params[i].value;
