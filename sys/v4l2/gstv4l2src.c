@@ -315,28 +315,58 @@ gst_v4l2src_fixed_caps_compare (GstStructure * a, GstStructure * b,
 {
   gint aw = G_MAXINT, ah = G_MAXINT, ad = G_MAXINT;
   gint bw = G_MAXINT, bh = G_MAXINT, bd = G_MAXINT;
+  gint ret;
 
   gst_v4l2_src_parse_fixed_struct (a, &aw, &ah, NULL, NULL);
   gst_v4l2_src_parse_fixed_struct (b, &bw, &bh, NULL, NULL);
 
   /* When both are smaller then pref, just append to the end */
   if ((bw < pref->width || bh < pref->height)
-      && (aw < pref->width || ah < pref->height))
-    return 1;
+      && (aw < pref->width || ah < pref->height)) {
+    ret = 1;
+    goto done;
+  }
 
   /* If a is smaller then pref and not b, then a goes after b */
-  if (aw < pref->width || ah < pref->height)
-    return 1;
+  if (aw < pref->width || ah < pref->height) {
+    ret = 1;
+    goto done;
+  }
 
   /* If b is smaller then pref and not a, then a goes before b */
-  if (bw < pref->width || bh < pref->height)
-    return -1;
+  if (bw < pref->width || bh < pref->height) {
+    ret = -1;
+    goto done;
+  }
 
-  /* Both are strictly larger then the preference, prefer the smallest */
-  ad = (aw - pref->width) * (ah - pref->height);
-  bd = (bw - pref->width) * (bh - pref->height);
+  /* Both are larger or equal to the preference, prefer the smallest */
+  ad = MAX (1, aw - pref->width) * MAX (1, ah - pref->height);
+  bd = MAX (1, bw - pref->width) * MAX (1, bh - pref->height);
 
-  return ad - bd;
+  /* Adjust slightly in case width/height matched the preference */
+  if (aw == pref->width)
+    ad -= 1;
+
+  if (ah == pref->height)
+    ad -= 1;
+
+  if (bw == pref->width)
+    bd -= 1;
+
+  if (bh == pref->height)
+    bd -= 1;
+
+  /* If the choices are equivalent, maintain the order */
+  if (ad == bd)
+    ret = 1;
+  else
+    ret = ad - bd;
+
+done:
+  GST_TRACE ("Placing %ix%i (%s) %s %ix%i (%s)", aw, ah,
+      gst_structure_get_string (a, "format"), ret > 0 ? "after" : "before", bw,
+      bh, gst_structure_get_string (b, "format"));
+  return ret;
 }
 
 static gboolean
@@ -386,6 +416,8 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
         &pref.fps_n, &pref.fps_d);
     gst_structure_free (pref_s);
   }
+
+  GST_DEBUG_OBJECT (basesrc, "Prefered size %ix%i", pref.width, pref.height);
 
   /* Sort the structures to get the caps that is nearest to our preferences,
    * first */
