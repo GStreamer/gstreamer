@@ -65,8 +65,10 @@ gst_v4l2_video_enc_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_CAPTURE_IO_MODE:
-      gst_v4l2_object_set_property_helper (self->v4l2capture,
-          prop_id, value, pspec);
+      if (!gst_v4l2_object_set_property_helper (self->v4l2capture,
+              prop_id, value, pspec)) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      }
       break;
 
       /* By default, only set on output */
@@ -87,8 +89,10 @@ gst_v4l2_video_enc_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_CAPTURE_IO_MODE:
-      gst_v4l2_object_get_property_helper (self->v4l2capture,
-          prop_id, value, pspec);
+      if (!gst_v4l2_object_get_property_helper (self->v4l2capture,
+              prop_id, value, pspec)) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      }
       break;
 
       /* By default read from output */
