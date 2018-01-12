@@ -278,6 +278,9 @@ gst_object_unref (gpointer object)
  * the floating flag while leaving the reference count unchanged. If the object
  * is not floating, then this call adds a new normal reference increasing the
  * reference count by one.
+ *
+ * For more background on "floating references" please see the #GObject
+ * documentation.
  */
 gpointer
 gst_object_ref_sink (gpointer object)
