@@ -50,10 +50,8 @@ if add_languages('c', required: false) and csc.get_id() == 'mono'
             cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
             dependencies: [gst_sharp_dep])
 
-    env = environment()
-    env.prepend('MONO_PATH', mono_path)
     test('gstreamer_sharp_abi', diff, args: [c_abi_exe.full_path(), cs_abi_exe.full_path()],
-            env: env)
+            env: testsenv)
 else
     message('Not running tests ' + csc.get_id())
 endif

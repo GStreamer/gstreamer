@@ -64,22 +64,24 @@ apiversion = '1.0'
 gst_required_version = '>=@0@'.format(meson.project_version())
 gst_deps = []
 
-foreach dep: [
-  ['gstreamer', ['gstreamer', 'gst_dep']],
-  ['gstreamer-app', ['gst-plugins-base', 'app_dep']],
-  ['gstreamer-audio', ['gst-plugins-base', 'audio_dep']],
-  ['gstreamer-base', ['gst-plugins-base', 'audio_dep']],
-  ['gstreamer-controller', ['gstreamer', 'gst_controller_dep']],
-  ['gstreamer-fft', ['gst-plugins-base', 'fft_dep']],
-  ['gstreamer-net', ['gstreamer', 'gst_net_dep']],
-  ['gstreamer-pbutils', ['gst-plugins-base', 'pbutils_dep']],
-  ['gstreamer-riff', ['gst-plugins-base', 'riff_dep']],
-  ['gstreamer-rtp', ['gst-plugins-base', 'rtp_dep']],
-  ['gstreamer-rtsp', ['gst-plugins-base', 'rtsp_dep']],
-  ['gstreamer-sdp', ['gst-plugins-base', 'sdp_dep']],
-  ['gstreamer-tag', ['gst-plugins-base', 'tag_dep']],
-  ['gstreamer-video', ['gst-plugins-base', 'video_dep']],]
+# dependency name, [subproject-name, internal-dep-name, library-name']
+gst_deps_defs = [
+  ['gstreamer', ['gstreamer', 'gst_dep'], 'libgst'],
+  ['gstreamer-app', ['gst-plugins-base', 'app_dep'], 'gstapp'],
+  ['gstreamer-audio', ['gst-plugins-base', 'audio_dep'], 'gstaudio'],
+  ['gstreamer-base', ['gstreamer', 'gst_base_dep'], 'gst_base'],
+  ['gstreamer-controller', ['gstreamer', 'gst_controller_dep'], 'gst_controller'],
+  ['gstreamer-fft', ['gst-plugins-base', 'fft_dep'], 'gstfft'],
+  ['gstreamer-net', ['gstreamer', 'gst_net_dep'], 'gst_net'],
+  ['gstreamer-pbutils', ['gst-plugins-base', 'pbutils_dep'], 'pbutils'],
+  ['gstreamer-riff', ['gst-plugins-base', 'riff_dep'], 'gstriff'],
+  ['gstreamer-rtp', ['gst-plugins-base', 'rtp_dep'], 'gst_rtp'],
+  ['gstreamer-rtsp', ['gst-plugins-base', 'rtsp_dep'], 'gst_rtsp'],
+  ['gstreamer-sdp', ['gst-plugins-base', 'sdp_dep'], 'gstsdp'],
+  ['gstreamer-tag', ['gst-plugins-base', 'tag_dep'], 'gsttag'],
+  ['gstreamer-video', ['gst-plugins-base', 'video_dep'], 'gstvideo'],]
 
+foreach dep: gst_deps_defs
   gst_deps += [dependency(dep.get(0) + '-' + apiversion, version: gst_required_version,
     fallback: dep.get(1))]
 endforeach
@@ -87,9 +89,41 @@ endforeach
 ges_dep = dependency('gst-editing-services-' + apiversion, version: gst_required_version,
     fallback: ['gst-editing-services', 'ges_dep'])
 
+if ges_dep.found()
+    gst_deps_defs +=  [
+        ['gst-editing-services', ['gst-editing-services', 'ges_dep'], 'libges'],
+    ]
+    mono_path += pathsep + join_paths(meson.current_build_dir(), 'ges')
+endif
+
+testsenv = environment()
+testsenv.prepend('MONO_PATH', mono_path)
+i = 0
+foreach dep: gst_deps + [ges_dep]
+    if dep.type_name() == 'pkgconfig'
+        testsenv.prepend('LD_LIBRARY_PATH', dep.get_pkgconfig_variable('libdir'))
+    else
+        depdef = gst_deps_defs[i][1]
+        libname = gst_deps_defs[i].get(2, '')
+        if libname != ''
+            proj = subproject(depdef[0])
+            libpath = proj.get_variable(libname).full_path().split('/')
+            dirname = ''
+            j = 1
+            foreach comp: libpath
+                if j < libpath.length()
+                    dirname += '/' + comp
+                endif
+                j += 1
+            endforeach
+            testsenv.prepend('LD_LIBRARY_PATH', dirname)
+        endif
+    endif
+    i += 1
+endforeach
+
 subdir('sources')
 if ges_dep.found()
-  mono_path += pathsep + join_paths(meson.current_build_dir(), 'ges')
   subdir('ges')
   custom_target('GESSharp-nuget',
       command: [nuget, '--package-name', 'GESSharp',
