@@ -167,10 +167,16 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   buf_offset = GST_BUFFER_OFFSET (buffer);
   buf_size = gst_buffer_get_size (buffer);
 
-  if ((buf_offset != -1 && buf_offset != offset) || buf_size < size) {
-    GST_DEBUG ("dropping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
-        " instead of %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
-        buf_offset, buf_offset + buf_size - 1, offset, offset + size - 1);
+  if (buf_size < size) {
+    GST_DEBUG ("dropping short buffer of size %" G_GSIZE_FORMAT ","
+        "requested size was %u", buf_size, size);
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
+
+  if (buf_offset != -1 && buf_offset != offset) {
+    GST_DEBUG ("dropping buffer with unexpected offset %" G_GUINT64_FORMAT ", "
+        "expected offset was %" G_GUINT64_FORMAT, buf_offset, offset);
     gst_buffer_unref (buffer);
     return NULL;
   }
