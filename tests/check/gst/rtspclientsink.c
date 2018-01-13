@@ -142,6 +142,7 @@ media_constructed_cb (GstRTSPMediaFactory * mfactory, GstRTSPMedia * media,
   bin = gst_rtsp_media_get_element (media);
   *p_sink = gst_bin_get_by_name (GST_BIN (bin), "sink");
   GST_INFO ("media constructed!: %" GST_PTR_FORMAT, *p_sink);
+  gst_object_unref (bin);
 }
 
 #define AUDIO_PIPELINE "audiotestsrc num-buffers=%d ! " \
