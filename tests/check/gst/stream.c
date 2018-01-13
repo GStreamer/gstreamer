@@ -76,7 +76,7 @@ get_sockets (GstRTSPLowerTrans lower_transport, GSocketFamily socket_family)
 
   /* allocate ports */
   fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-      socket_family, transport, FALSE));
+          socket_family, transport, FALSE));
 
   fail_unless (gst_rtsp_stream_complete_stream (stream, transport));
   fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
@@ -194,7 +194,7 @@ GST_START_TEST (test_allocate_udp_ports_fail)
   fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
   transport->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
   fail_if (gst_rtsp_stream_allocate_udp_sockets (stream, G_SOCKET_FAMILY_IPV4,
-      transport, FALSE));
+          transport, FALSE));
   fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
 
   g_object_unref (pool);

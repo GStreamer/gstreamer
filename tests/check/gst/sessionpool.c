@@ -111,8 +111,10 @@ GST_START_TEST (test_pool)
 
   {
     Responses responses = {
-      {session1, session2, session3},
-      {GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP},
+      {session1, session2, session3}
+      ,
+      {GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP}
+      ,
     };
 
     list = gst_rtsp_session_pool_filter (pool, filter_func, &responses);
@@ -121,8 +123,10 @@ GST_START_TEST (test_pool)
 
   {
     Responses responses = {
-      {session1, session2, session3},
-      {GST_RTSP_FILTER_REF, GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP},
+      {session1, session2, session3}
+      ,
+      {GST_RTSP_FILTER_REF, GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP}
+      ,
     };
 
     list = gst_rtsp_session_pool_filter (pool, filter_func, &responses);
@@ -133,8 +137,10 @@ GST_START_TEST (test_pool)
 
   {
     Responses responses = {
-      {session1, session2, session3},
-      {GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_REMOVE},
+      {session1, session2, session3}
+      ,
+      {GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_KEEP, GST_RTSP_FILTER_REMOVE}
+      ,
     };
 
     list = gst_rtsp_session_pool_filter (pool, filter_func, &responses);

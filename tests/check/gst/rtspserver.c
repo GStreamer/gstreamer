@@ -342,7 +342,8 @@ read_response (GstRTSPConnection * conn)
     return NULL;
   }
   type = gst_rtsp_message_get_type (response);
-  fail_unless (type == GST_RTSP_MESSAGE_RESPONSE || type == GST_RTSP_MESSAGE_DATA);
+  fail_unless (type == GST_RTSP_MESSAGE_RESPONSE
+      || type == GST_RTSP_MESSAGE_DATA);
   return response;
 }
 
@@ -1104,7 +1105,8 @@ do_test_play_tcp_full (const gchar * range)
   {
     GstRTSPMessage *message;
     fail_unless (gst_rtsp_message_new (&message) == GST_RTSP_OK);
-    fail_unless (gst_rtsp_connection_receive (conn, message, NULL) == GST_RTSP_OK);
+    fail_unless (gst_rtsp_connection_receive (conn, message,
+            NULL) == GST_RTSP_OK);
     fail_unless (gst_rtsp_message_get_type (message) == GST_RTSP_MESSAGE_DATA);
     gst_rtsp_message_free (message);
   }
@@ -1276,7 +1278,7 @@ GST_START_TEST (test_play_tcp)
 
   /* send PLAY request and check that we get 200 OK */
   fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
-        session)== GST_RTSP_STS_OK);
+          session) == GST_RTSP_STS_OK);
 
   /* send TEARDOWN request and check that we get 200 OK */
   fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
@@ -2336,7 +2338,8 @@ do_test_multiple_transports (GstRTSPLowerTrans trans1, GstRTSPLowerTrans trans2)
   {
     GstRTSPMessage *message;
     fail_unless (gst_rtsp_message_new (&message) == GST_RTSP_OK);
-    fail_unless (gst_rtsp_connection_receive (conn2, message, NULL) == GST_RTSP_OK);
+    fail_unless (gst_rtsp_connection_receive (conn2, message,
+            NULL) == GST_RTSP_OK);
     fail_unless (gst_rtsp_message_get_type (message) == GST_RTSP_MESSAGE_DATA);
     gst_rtsp_message_free (message);
   }
@@ -2364,7 +2367,8 @@ do_test_multiple_transports (GstRTSPLowerTrans trans1, GstRTSPLowerTrans trans2)
 GST_START_TEST (test_multiple_transports)
 {
   start_server (TRUE);
-  do_test_multiple_transports (GST_RTSP_LOWER_TRANS_UDP, GST_RTSP_LOWER_TRANS_TCP);
+  do_test_multiple_transports (GST_RTSP_LOWER_TRANS_UDP,
+      GST_RTSP_LOWER_TRANS_TCP);
   stop_server ();
 }
 
