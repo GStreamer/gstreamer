@@ -157,7 +157,7 @@ gst_av1_enc_set_latency (GstAV1Enc * encoder)
 }
 
 static const gchar *
-get_aom_rc_mode_name (enum aom_rc_mode rc_mode)
+gst_av1_enc_get_aom_rc_mode_name (enum aom_rc_mode rc_mode)
 {
   switch (rc_mode) {
     case AOM_VBR:
@@ -174,7 +174,7 @@ get_aom_rc_mode_name (enum aom_rc_mode rc_mode)
 }
 
 static void
-debug_encoder_cfg (struct aom_codec_enc_cfg *cfg)
+gst_av1_enc_debug_encoder_cfg (struct aom_codec_enc_cfg *cfg)
 {
   GST_DEBUG ("g_usage : %u", cfg->g_usage);
   GST_DEBUG ("g_threads : %u", cfg->g_threads);
@@ -196,7 +196,8 @@ debug_encoder_cfg (struct aom_codec_enc_cfg *cfg)
       cfg->rc_superres_kf_denominator);
   GST_DEBUG ("rc_superres_qthresh : %u", cfg->rc_superres_qthresh);
   GST_DEBUG ("rc_superres_kf_qthresh : %u", cfg->rc_superres_kf_qthresh);
-  GST_DEBUG ("rc_end_usage : %s", get_aom_rc_mode_name (cfg->rc_end_usage));
+  GST_DEBUG ("rc_end_usage : %s",
+      gst_av1_enc_get_aom_rc_mode_name (cfg->rc_end_usage));
   /* rc_twopass_stats_in */
   /* rc_firstpass_mb_stats_in */
   GST_DEBUG ("rc_target_bitrate : %u (kbps)", cfg->rc_target_bitrate);
@@ -230,7 +231,7 @@ gst_av1_enc_init_aom (GstAV1Enc * av1enc)
     return FALSE;
   }
   GST_DEBUG_OBJECT (av1enc, "Got default encoder config");
-  debug_encoder_cfg (&av1enc->aom_cfg);
+  gst_av1_enc_debug_encoder_cfg (&av1enc->aom_cfg);
 
 
   av1enc->aom_cfg.g_w = av1enc->input_state->info.width;
@@ -242,7 +243,7 @@ gst_av1_enc_init_aom (GstAV1Enc * av1enc)
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
 
   GST_DEBUG_OBJECT (av1enc, "Calling encoder init with config:");
-  debug_encoder_cfg (&av1enc->aom_cfg);
+  gst_av1_enc_debug_encoder_cfg (&av1enc->aom_cfg);
 
   if (aom_codec_enc_init (&av1enc->codec, av1enc->codec_interface,
           &av1enc->aom_cfg, 0)) {
