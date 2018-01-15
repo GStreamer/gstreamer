@@ -6134,6 +6134,9 @@ gst_pad_pause_task (GstPad * pad)
   if (task == NULL)
     goto no_task;
   res = gst_task_set_state (task, GST_TASK_PAUSED);
+  /* unblock activation waits if any */
+  pad->priv->in_activation = FALSE;
+  g_cond_broadcast (&pad->priv->activation_cond);
   GST_OBJECT_UNLOCK (pad);
 
   /* wait for task function to finish, this lock is recursive so it does nothing
@@ -6219,6 +6222,9 @@ gst_pad_stop_task (GstPad * pad)
     goto no_task;
   GST_PAD_TASK (pad) = NULL;
   res = gst_task_set_state (task, GST_TASK_STOPPED);
+  /* unblock activation waits if any */
+  pad->priv->in_activation = FALSE;
+  g_cond_broadcast (&pad->priv->activation_cond);
   GST_OBJECT_UNLOCK (pad);
 
   GST_PAD_STREAM_LOCK (pad);
