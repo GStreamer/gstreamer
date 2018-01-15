@@ -865,6 +865,10 @@ bin_manage_element (GstRtpBin * bin, GstElement * element)
     GST_DEBUG_OBJECT (bin, "requested element %p already in bin", element);
   } else {
     GST_DEBUG_OBJECT (bin, "adding requested element %p", element);
+
+    if (g_object_is_floating (element))
+      element = gst_object_ref_sink (element);
+
     if (!gst_bin_add (GST_BIN_CAST (bin), element))
       goto add_failed;
     if (!gst_element_sync_state_with_parent (element))
@@ -880,6 +884,7 @@ bin_manage_element (GstRtpBin * bin, GstElement * element)
 add_failed:
   {
     GST_WARNING_OBJECT (bin, "unable to add element");
+    gst_object_unref (element);
     return FALSE;
   }
 }
@@ -894,10 +899,13 @@ remove_bin_element (GstElement * element, GstRtpBin * bin)
   if (find) {
     priv->elements = g_list_delete_link (priv->elements, find);
 
-    if (!g_list_find (priv->elements, element))
+    if (!g_list_find (priv->elements, element)) {
+      gst_element_set_locked_state (element, TRUE);
       gst_bin_remove (GST_BIN_CAST (bin), element);
-    else
-      gst_object_unref (element);
+      gst_element_set_state (element, GST_STATE_NULL);
+    }
+
+    gst_object_unref (element);
   }
 }
 

@@ -576,7 +576,7 @@ aux_sender_cb (GstElement * rtpbin, guint sessid, gpointer user_data)
   GstElement *bin;
   GstPad *srcpad, *sinkpad;
 
-  bin = gst_bin_new (NULL);
+  bin = (GstElement *) user_data;
 
   GST_DEBUG ("making AUX sender");
   sinkpad = gst_ghost_pad_new_no_target ("sink_2", GST_PAD_SINK);
@@ -597,11 +597,14 @@ GST_START_TEST (test_aux_sender)
   GstElement *rtpbin;
   GstPad *rtp_sink1, *rtp_src, *rtcp_src;
   gulong id;
+  GstElement *aux_sender = gst_object_ref_sink (gst_bin_new ("aux-sender"));
+
+  gst_object_ref (aux_sender);
 
   rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
 
   id = g_signal_connect (rtpbin, "request-aux-sender",
-      (GCallback) aux_sender_cb, NULL);
+      (GCallback) aux_sender_cb, aux_sender);
 
   rtp_sink1 = gst_element_get_request_pad (rtpbin, "send_rtp_sink_2");
   fail_unless (rtp_sink1 != NULL);
@@ -631,6 +634,15 @@ GST_START_TEST (test_aux_sender)
   gst_element_release_request_pad (rtpbin, rtp_sink1);
   gst_object_unref (rtp_sink1);
 
+  /* We have sinked the initial reference before returning it
+   * in the request callback, the ref count should now be 1 because
+   * the return of the signal is transfer full, and rtpbin should
+   * have released that reference by now, but we had taken an
+   * extra reference to perform this check
+   */
+  ASSERT_OBJECT_REFCOUNT (aux_sender, "aux-sender", 1);
+
+  gst_object_unref (aux_sender);
   gst_object_unref (rtpbin);
 }
 
