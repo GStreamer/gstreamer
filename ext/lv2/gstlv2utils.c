@@ -487,7 +487,7 @@ gst_lv2_object_set_property (GstLV2 * lv2, GObject * object,
   switch (type) {
     case G_TYPE_BOOLEAN:
       lv2->ports.control.in[prop_id] =
-          g_value_get_boolean (value) ? 0.0f : 1.0f;
+          g_value_get_boolean (value) ? 1.0f : 0.0f;
       break;
     case G_TYPE_INT:
       lv2->ports.control.in[prop_id] = g_value_get_int (value);
