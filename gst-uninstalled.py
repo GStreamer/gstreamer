@@ -166,6 +166,8 @@ def python_env(options, unset_env=False):
 
     sitecustomize = os.path.join(sitepackages, "sitecustomize.py")
     overrides_hack = os.path.join(gst_python_path, "testsuite", "overrides_hack.py")
+    mesonconfig = os.path.join(gst_python_path, "testsuite", "mesonconfig.py")
+    mesonconfig_link = os.path.join(sitepackages, "mesonconfig.py")
 
     if not unset_env:
         if os.path.exists(sitecustomize):
@@ -180,12 +182,14 @@ def python_env(options, unset_env=False):
             os.makedirs(sitepackages)
 
         os.symlink(overrides_hack, sitecustomize)
+        os.symlink(mesonconfig, mesonconfig_link)
         return os.path.realpath(sitecustomize) == overrides_hack
     else:
         if not os.path.realpath(sitecustomize) == overrides_hack:
             return False
 
         os.remove(sitecustomize)
+        os.remove (mesonconfig_link)
         old_sitecustomize = os.path.join(sitepackages,
                                             "old.sitecustomize.gstuninstalled.py")
 
