@@ -22,14 +22,16 @@
 #include "config.h"
 #endif
 
-/* #include <fcntl.h> */
-#include <unistd.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gst/check/gstcheck.h>
 
 #include <gst/pbutils/encoding-profile.h>
 #include <gst/pbutils/encoding-target.h>
+
+#ifdef G_OS_UNIX
+#include <unistd.h>             /* For R_OK etc. */
+#endif
 
 static inline gboolean
 gst_caps_is_equal_unref (GstCaps * caps1, GstCaps * caps2)
@@ -679,9 +681,13 @@ profile_suite (void)
   gchar *gst_dir;
 
   /* cehck if we can create profiles */
+#ifdef G_OS_UNIX
   gst_dir = g_build_filename (g_get_user_data_dir (), "gstreamer-1.0", NULL);
   can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
   g_free (gst_dir);
+#else
+  can_write = FALSE;            /* FIXME: fix can_write test on Windows */
+#endif
 
   suite_add_tcase (s, tc_chain);
 

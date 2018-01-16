@@ -20,7 +20,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/check/gstcheck.h>
 

@@ -30,8 +30,6 @@
 #include "config.h"
 #endif
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstbufferstraw.h>
 

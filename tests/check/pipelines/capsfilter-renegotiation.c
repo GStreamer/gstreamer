@@ -21,6 +21,10 @@
 
 /* Ideally this would be in core, but using videotestsrc makes it easier */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/check/gstcheck.h>
 
 #define FIRST_CAPS  "video/x-raw,width=(int)480,height=(int)320"

@@ -19,8 +19,11 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-/* FIXME: GValueArray is deprecated, but there is currently no viabla alternative
+/* FIXME: GValueArray is deprecated, but there is currently no viable alternatives
  * See https://bugzilla.gnome.org/show_bug.cgi?id=667228 */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 

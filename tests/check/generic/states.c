@@ -24,7 +24,6 @@
 #  include "config.h"
 #endif
 
-#include <unistd.h>
 #include <gmodule.h>
 
 #include <gst/check/gstcheck.h>

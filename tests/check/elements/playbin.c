@@ -28,7 +28,6 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstpushsrc.h>
-#include <unistd.h>
 
 #ifndef GST_DISABLE_REGISTRY
 

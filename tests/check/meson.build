@@ -34,11 +34,12 @@ base_tests = [
   [ 'elements/audiorate.c' ],
   [ 'elements/audiotestsrc.c' ],
   [ 'elements/audioresample.c' ],
-  [ 'elements/libvisual.c', not libvisual_dep.found() ],
+  [ 'elements/libvisual.c', not is_variable('libvisual_dep') or not libvisual_dep.found() ],
   [ 'elements/decodebin.c' ],
   [ 'elements/encodebin.c', not theoraenc_dep.found() or not vorbisenc_dep.found() ],
-  [ 'elements/multifdsink.c' ],
-  [ 'elements/multisocketsink.c' ],
+  [ 'elements/multifdsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
+  # FIXME: multisocketsink test on windows/msvc
+  [ 'elements/multisocketsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
   [ 'elements/playbin.c' ],
   [ 'elements/playbin-complex.c', not ogg_dep.found() ],
   [ 'elements/playsink.c' ],
@@ -60,7 +61,8 @@ base_tests = [
   [ 'pipelines/gio.c' ],
   [ 'pipelines/oggmux.c', not ogg_dep.found(), [ ogg_dep, ] ],
   [ 'pipelines/streamsynchronizer.c' ],
-  [ 'pipelines/tcp.c' ], # FIXME: -DHAVE_GIO_UNIX_2_0=1
+  # FIXME: tcp test on windows/msvc
+  [ 'pipelines/tcp.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
   [ 'pipelines/theoraenc.c', not theoraenc_dep.found(), [ theoraenc_dep ] ],
   [ 'pipelines/vorbisenc.c', not vorbisenc_dep.found() ],
   [ 'pipelines/vorbisdec.c', not vorbisenc_dep.found(),],

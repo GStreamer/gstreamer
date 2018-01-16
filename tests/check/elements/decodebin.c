@@ -25,7 +25,6 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbaseparse.h>
-#include <unistd.h>
 
 static const gchar dummytext[] =
     "Quick Brown Fox Jumps over a Lazy Frog Quick Brown "

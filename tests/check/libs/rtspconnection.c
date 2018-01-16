@@ -26,8 +26,6 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/rtsp/gstrtspconnection.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
 
 

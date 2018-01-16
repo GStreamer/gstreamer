@@ -37,8 +37,8 @@
 #include <sys/stat.h>           /* for chmod() */
 #endif
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>             /* for unlink() */
+#ifdef G_OS_UNIX
+#include <unistd.h>             /* for getpid() */
 #endif
 
 static void
@@ -613,7 +613,7 @@ test_pb_utils_install_plugins_do_callout (const gchar * const *details,
 
 done:
 
-  unlink (path);
+  g_unlink (path);
   g_free (path);
 #endif /* G_OS_UNIX */
 }
