@@ -3,7 +3,7 @@ have_registry = true # FIXME not get_option('disable_registry')
 # name, condition when to skip the test and extra dependencies
 base_tests = [
   [ 'gst/typefindfunctions.c', not have_registry ],
-  [ 'libs/allocators.c' ],
+  [ 'libs/allocators.c', host_machine.system() != 'linux' ],
   [ 'libs/audio.c' ],
   [ 'libs/audiocdsrc.c' ],
   [ 'libs/audiodecoder.c' ],
