@@ -587,7 +587,14 @@ create_profile_file (void)
   profile_file_name =
       g_build_filename (g_get_user_data_dir (), "gstreamer-1.0",
       "encoding-profiles", "herding", "myponytarget.gep", NULL);
+
+  /* on Windows it will ignore the mode anyway */
+#ifdef G_OS_WIN32
+  g_mkdir_with_parents (profile_dir, 0700);
+#else
   g_mkdir_with_parents (profile_dir, S_IRUSR | S_IWUSR | S_IXUSR);
+#endif
+
   if (!g_file_set_contents (profile_file_name, profile_string,
           strlen (profile_string), &error))
     GST_WARNING ("Couldn't write contents to file : %s", error->message);
