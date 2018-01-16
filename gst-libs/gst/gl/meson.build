@@ -366,7 +366,9 @@ endif
 # can we include both gles2 and opengl headers?
 if gles2_dep.found() and gl_dep.found()
   gl_include_block = gl_include_header + gles_includes + opengl_includes
-  if not cc.compiles('void f (void) {}', prefix : gl_include_block, dependencies : [gles2_dep, gl_dep] )
+  # TODO: Revert to passing gl_include_block via prefix: once
+  # https://github.com/mesonbuild/meson/issues/2364 is fixed
+  if not cc.compiles(gl_include_block + '\n' + 'void f (void) {}',dependencies : [gles2_dep, gl_dep])
     message ('Cannot include both OpenGL and OpenGL ES headers')
     if need_gles2 != 'yes'
       gles2_dep = unneeded_dep
