@@ -579,10 +579,13 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
       'win32/win32_message_source.c',
       'win32/gstglwindow_win32.c',
       'win32/gstglwindow_win32.c',
+      'win32/gstglcontext_wgl.c',
     ]
     enabled_gl_winsys += 'win32'
     gl_winsys_deps += gdi_dep
     enabled_gl_platforms += 'wgl'
+    glconf.set('GST_GL_HAVE_WINDOW_WIN32', 1)
+    glconf.set('GST_GL_HAVE_PLATFORM_WGL', 1)
   endif
 endif
 
