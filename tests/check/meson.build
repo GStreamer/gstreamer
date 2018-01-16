@@ -62,7 +62,7 @@ base_tests = [
   [ 'pipelines/oggmux.c', not ogg_dep.found(), [ ogg_dep, ] ],
   [ 'pipelines/streamsynchronizer.c' ],
   # FIXME: tcp test on windows/msvc
-  [ 'pipelines/tcp.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
+  [ 'pipelines/tcp.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H'), [giounix_dep] ],
   [ 'pipelines/theoraenc.c', not theoraenc_dep.found(), [ theoraenc_dep ] ],
   [ 'pipelines/vorbisenc.c', not vorbisenc_dep.found() ],
   [ 'pipelines/vorbisdec.c', not vorbisenc_dep.found(),],
