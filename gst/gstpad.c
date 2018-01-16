@@ -1039,12 +1039,15 @@ post_activate (GstPad * pad, GstPadMode new_mode)
 {
   switch (new_mode) {
     case GST_PAD_MODE_NONE:
+      GST_OBJECT_LOCK (pad);
+      pad->priv->in_activation = FALSE;
+      g_cond_broadcast (&pad->priv->activation_cond);
+      GST_OBJECT_UNLOCK (pad);
+
       /* ensures that streaming stops */
       GST_PAD_STREAM_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "stopped streaming");
       GST_OBJECT_LOCK (pad);
-      pad->priv->in_activation = FALSE;
-      g_cond_broadcast (&pad->priv->activation_cond);
       remove_events (pad);
       GST_OBJECT_UNLOCK (pad);
       GST_PAD_STREAM_UNLOCK (pad);
