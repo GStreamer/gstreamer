@@ -3040,7 +3040,8 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
 
   if (padded_width < format->fmt.pix.width)
     GST_WARNING_OBJECT (v4l2object->dbg_obj,
-        "Driver bug detected, stride is too small for the width");
+        "Driver bug detected, stride (%d) is too small for the width (%d)",
+        padded_width, format->fmt.pix.width);
 
   align->padding_right = padded_width - info->width - align->padding_left;
 
