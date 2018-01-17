@@ -465,6 +465,9 @@ theora_handle_type_packet (GstTheoraDec * dec)
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
       info->width, info->height, dec->info.pic_x, dec->info.pic_y);
 
+  if (info->width == 0 || info->height == 0)
+    goto invalid_dimensions;
+
   /* done */
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
 
@@ -534,6 +537,13 @@ not_negotiated:
   {
     GST_ERROR_OBJECT (dec, "Failed to negotiate");
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+invalid_dimensions:
+  {
+    GST_ERROR_OBJECT (dec, "Invalid dimensions (width:%d, height:%d)",
+        info->width, info->height);
+    return GST_FLOW_ERROR;
   }
 }
 
