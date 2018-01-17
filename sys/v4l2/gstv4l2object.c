@@ -3022,7 +3022,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
 {
   const GstVideoFormatInfo *finfo = info->finfo;
   gboolean standard_stride = TRUE;
-  gint stride, padded_width, padded_height, i;
+  gint stride, pstride, padded_width, padded_height, i;
 
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_ENCODED) {
     v4l2object->n_v4l2_planes = 1;
@@ -3036,7 +3036,16 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
   else
     stride = format->fmt.pix.bytesperline;
 
-  padded_width = stride / GST_VIDEO_FORMAT_INFO_PSTRIDE (finfo, 0);
+  pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (finfo, 0);
+  if (pstride) {
+    padded_width = stride / pstride;
+  } else {
+    /* pstride can be 0 for complex formats */
+    GST_WARNING_OBJECT (v4l2object->element,
+        "format %s has a pstride of 0, cannot compute padded with",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+    padded_width = stride;
+  }
 
   if (padded_width < format->fmt.pix.width)
     GST_WARNING_OBJECT (v4l2object->dbg_obj,
