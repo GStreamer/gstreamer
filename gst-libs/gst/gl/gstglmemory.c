@@ -525,10 +525,12 @@ gst_gl_memory_texsubimage (GstGLMemory * gl_mem, gpointer read_pointer)
   gl = context->gl_vtable;
 
   gl_type = GL_UNSIGNED_BYTE;
-  if (gl_mem->tex_format == GST_GL_RGB565)
-    gl_type = GL_UNSIGNED_SHORT_5_6_5;
-
   gl_format = gl_mem->tex_format;
+  if (gl_mem->tex_format == GST_GL_RGB565) {
+    gl_format = GST_GL_RGB;
+    gl_type = GL_UNSIGNED_SHORT_5_6_5;
+  }
+
   gl_target = gst_gl_texture_target_to_gl (gl_mem->tex_target);
 
   if (USING_OPENGL (context) || USING_GLES3 (context)
