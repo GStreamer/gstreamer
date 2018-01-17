@@ -198,7 +198,12 @@ if USE_WAYLAND
     ]
 endif
 
-gstlibvaapi_deps = [gstbase_dep, gstvideo_dep, gstcodecparsers_dep, libva_dep, gstvaapi_baseutils_dep]
+gstlibvaapi_deps = [ gstbase_dep,
+                     gstvideo_dep,
+                     gstgl_dep,
+                     gstcodecparsers_dep,
+                     libva_dep,
+                     gstvaapi_baseutils_dep ]
 if USE_DRM
   gstlibvaapi_deps  += [libva_drm_dep, libdrm_dep, libudev_dep]
 endif
