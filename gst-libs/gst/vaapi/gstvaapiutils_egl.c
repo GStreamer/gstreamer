@@ -22,7 +22,7 @@
 
 #include "sysdeps.h"
 #include "gstvaapiutils_egl.h"
-#if USE_GST_GL_HELPERS
+#if USE_GST_GL_HELPERS && GST_GL_HAVE_PLATFORM_EGL
 # include <gst/gl/egl/gstgldisplay_egl.h>
 #endif
 
@@ -540,7 +540,7 @@ egl_display_run (EglDisplay * display, EglContextRunFunc func, gpointer args)
 static gpointer
 egl_get_display_from_native (guintptr native_display, guint gl_platform)
 {
-#if USE_GST_GL_HELPERS
+#if USE_GST_GL_HELPERS && GST_GL_HAVE_PLATFORM_EGL
   EGLDisplay ret;
   GstGLDisplayType display_type = GST_GL_DISPLAY_TYPE_ANY;
 
