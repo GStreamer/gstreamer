@@ -1001,12 +1001,17 @@ typedef struct
   gboolean got_state_changed_to_paused;
 } play_pause_master_data;
 
+#define PLAY_PAUSE_MASTER_DATA_INIT { { FALSE, FALSE }, FALSE }
+
 typedef struct
 {
   gboolean got_caps[2];
   gboolean got_segment[2];
   gboolean got_buffer[2];
 } play_pause_slave_data;
+
+#define PLAY_PAUSE_SLAVE_DATA_INIT \
+  { { FALSE, FALSE }, { FALSE, FALSE }, { FALSE, FALSE } }
 
 static gboolean
 idlenull (gpointer user_data)
@@ -1167,10 +1172,8 @@ check_success_sink_play_pause (void *user_data)
 
 GST_START_TEST (test_empty_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, play_pause_source, setup_sink_play_pause,
       check_success_source_play_pause, check_success_sink_play_pause, NULL, &md,
@@ -1181,10 +1184,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, play_pause_source, setup_sink_play_pause,
       check_success_source_play_pause, check_success_sink_play_pause, NULL, &md,
@@ -1195,10 +1196,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, play_pause_source,
       setup_sink_play_pause, check_success_source_play_pause,
@@ -1209,10 +1208,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       play_pause_source, setup_sink_play_pause, check_success_source_play_pause,
@@ -1223,10 +1220,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, play_pause_source,
       setup_sink_play_pause, check_success_source_play_pause,
@@ -1237,10 +1232,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, play_pause_source,
       setup_sink_play_pause, check_success_source_play_pause,
@@ -1251,10 +1244,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_play_pause)
 {
-  play_pause_master_data md = { {0}
-  };
-  play_pause_slave_data sd = { {0}
-  };
+  play_pause_master_data md = PLAY_PAUSE_MASTER_DATA_INIT;
+  play_pause_slave_data sd = PLAY_PAUSE_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       play_pause_source, setup_sink_play_pause, check_success_source_play_pause,
@@ -1271,12 +1262,18 @@ typedef struct
   gboolean pause;
 } flushing_seek_input_data;
 
+#define FLUSHING_SEEK_INPUT_DATA_INIT { FALSE, FALSE }
+#define FLUSHING_SEEK_INPUT_DATA_INIT_PAUSED { FALSE, TRUE }
+#define FLUSHING_SEEK_INPUT_DATA_INIT_SEGMENT_SEEK { TRUE, FALSE }
+
 typedef struct
 {
   gboolean got_state_changed_to_playing;
   gboolean got_segment_done;
   gboolean seek_sent;
 } flushing_seek_master_data;
+
+#define FLUSHING_SEEK_MASTER_DATA_INIT { FALSE, FALSE, FALSE }
 
 typedef struct
 {
@@ -1289,6 +1286,8 @@ typedef struct
   gboolean got_flush_start[2];
   gboolean got_flush_stop[2];
 } flushing_seek_slave_data;
+
+#define FLUSHING_SEEK_SLAVE_DATA_INIT { { 0, 0 }, }
 
 static gboolean
 send_flushing_seek (gpointer user_data)
@@ -1474,10 +1473,9 @@ check_success_sink_flushing_seek (gpointer user_data)
 
 GST_START_TEST (test_empty_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1488,10 +1486,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1502,10 +1499,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1516,10 +1512,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1531,10 +1526,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1545,10 +1539,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1559,10 +1552,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_flushing_seek)
 {
-  flushing_seek_input_data id = { FALSE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1574,10 +1566,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_empty_flushing_seek_in_pause)
 {
-  flushing_seek_input_data id = { FALSE, TRUE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_PAUSED;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1588,10 +1579,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_flushing_seek_in_pause)
 {
-  flushing_seek_input_data id = { FALSE, TRUE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_PAUSED;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1602,10 +1592,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_flushing_seek_in_pause)
 {
-  flushing_seek_input_data id = { FALSE, TRUE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_PAUSED;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1616,10 +1605,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_mpegts_2_flushing_seek_in_pause)
 {
-  flushing_seek_input_data id = { FALSE, TRUE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_PAUSED;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_MPEGTS_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1631,10 +1619,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_empty_segment_seek)
 {
-  flushing_seek_input_data id = { TRUE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_SEGMENT_SEEK;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_TEST_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1645,10 +1632,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_wavparse_segment_seek)
 {
-  flushing_seek_input_data id = { TRUE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_SEGMENT_SEEK;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_WAV_SOURCE, flushing_seek_source,
       setup_sink_flushing_seek, check_success_source_flushing_seek,
@@ -1659,10 +1645,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_a_segment_seek)
 {
-  flushing_seek_input_data id = { TRUE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_SEGMENT_SEEK;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_A_SOURCE,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1674,10 +1659,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_segment_seek)
 {
-  flushing_seek_input_data id = { TRUE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_SEGMENT_SEEK;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE,
       flushing_seek_source, setup_sink_flushing_seek,
@@ -1689,10 +1673,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_live_av_2_segment_seek)
 {
-  flushing_seek_input_data id = { TRUE, FALSE };
-  flushing_seek_master_data md = { 0 };
-  flushing_seek_slave_data sd = { {0}
-  };
+  flushing_seek_input_data id = FLUSHING_SEEK_INPUT_DATA_INIT_SEGMENT_SEEK;
+  flushing_seek_master_data md = FLUSHING_SEEK_MASTER_DATA_INIT;
+  flushing_seek_slave_data sd = FLUSHING_SEEK_SLAVE_DATA_INIT;
 
   TEST_BASE (TEST_FEATURE_LIVE_AV_SOURCE | TEST_FEATURE_SPLIT_SINKS,
       flushing_seek_source, setup_sink_flushing_seek,
