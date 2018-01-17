@@ -1793,12 +1793,6 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
   else
     port_def.format.video.nSliceHeight = slice_height;
 
-  GST_DEBUG_OBJECT (self,
-      "setting input nStride=%d and nSliceHeight=%d (nBufferAlignment=%d)",
-      (guint) port_def.format.video.nStride,
-      (guint) port_def.format.video.nSliceHeight,
-      (guint) port_def.nBufferAlignment);
-
   switch (port_def.format.video.eColorFormat) {
     case OMX_COLOR_FormatYUV420Planar:
     case OMX_COLOR_FormatYUV420PackedPlanar:
@@ -1821,6 +1815,12 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
           port_def.format.video.eColorFormat);
       g_assert_not_reached ();
   }
+
+  GST_DEBUG_OBJECT (self,
+      "setting input nStride=%d nSliceHeight=%d nBufferSize=%d (nBufferAlignment=%d)",
+      (guint) port_def.format.video.nStride,
+      (guint) port_def.format.video.nSliceHeight,
+      (guint) port_def.nBufferSize, (guint) port_def.nBufferAlignment);
 
   if (gst_omx_port_update_port_definition (self->enc_in_port,
           &port_def) != OMX_ErrorNone)
