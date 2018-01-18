@@ -407,6 +407,8 @@ gst_pad_template_new (const gchar * name_template,
  * and with the given arguments.
  *
  * Returns: (transfer floating): a new #GstPadTemplate.
+ *
+ * Since: 1.14
  */
 GstPadTemplate *
 gst_pad_template_new_with_gtype (const gchar * name_template,
