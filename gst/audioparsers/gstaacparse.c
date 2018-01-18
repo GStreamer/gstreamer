@@ -68,6 +68,7 @@ GST_DEBUG_CATEGORY_STATIC (aacparse_debug);
 #define ADIF_MAX_SIZE 40        /* Should be enough */
 #define ADTS_MAX_SIZE 10        /* Should be enough */
 #define LOAS_MAX_SIZE 3         /* Should be enough */
+#define RAW_MAX_SIZE  1         /* Correct framing is required */
 
 #define ADTS_HEADERS_LENGTH 7UL /* Total byte-length of fixed and variable
                                    headers prepended during raw to ADTS
@@ -334,6 +335,9 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
       gst_aac_parse_set_src_caps (aacparse, caps);
       if (aacparse->header_type == aacparse->output_header_type)
         gst_base_parse_set_passthrough (parse, TRUE);
+
+      /* input is already correctly framed */
+      gst_base_parse_set_min_frame_size (parse, RAW_MAX_SIZE);
     } else {
       return FALSE;
     }
