@@ -65,9 +65,10 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale) allow
- * adjusting some technical parameters, which might be useful in (rare) cases to
- * resolve compatibility issues in some situations.
+ * A few properties (#GstQTMux:movie-timescale, #GstQTMux:trak-timescale,
+ * #GstQTMuxPad:trak-timescale) allow adjusting some technical parameters,
+ * which might be useful in (rare) cases to resolve compatibility issues in
+ * some situations.
  *
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the
@@ -247,6 +248,115 @@ gst_qt_mux_dts_method_get_type (void)
   (gst_qt_mux_dts_method_get_type ())
 #endif
 
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_TRAK_TIMESCALE,
+};
+
+#define DEFAULT_PAD_TRAK_TIMESCALE          0
+
+GType gst_qt_mux_pad_get_type (void);
+
+#define GST_TYPE_QT_MUX_PAD \
+  (gst_qt_mux_pad_get_type())
+#define GST_QT_MUX_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QT_MUX_PAD, GstQTMuxPad))
+#define GST_QT_MUX_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QT_MUX_PAD, GstQTMuxPadClass))
+#define GST_IS_QT_MUX_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QT_MUX_PAD))
+#define GST_IS_QT_MUX_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QT_MUX_PAD))
+#define GST_QT_MUX_PAD_CAST(obj) \
+  ((GstQTMuxPad *)(obj))
+
+typedef struct _GstQTMuxPad GstQTMuxPad;
+typedef struct _GstQTMuxPadClass GstQTMuxPadClass;
+
+struct _GstQTMuxPad
+{
+  GstPad parent;
+
+  guint32 trak_timescale;
+};
+
+struct _GstQTMuxPadClass
+{
+  GstPadClass parent;
+};
+
+G_DEFINE_TYPE (GstQTMuxPad, gst_qt_mux_pad, GST_TYPE_PAD);
+
+static void
+gst_qt_mux_pad_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstQTMuxPad *pad = GST_QT_MUX_PAD_CAST (object);
+
+  GST_OBJECT_LOCK (pad);
+  switch (prop_id) {
+    case PROP_PAD_TRAK_TIMESCALE:
+      pad->trak_timescale = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (pad);
+}
+
+static void
+gst_qt_mux_pad_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstQTMuxPad *pad = GST_QT_MUX_PAD_CAST (object);
+
+  GST_OBJECT_LOCK (pad);
+  switch (prop_id) {
+    case PROP_PAD_TRAK_TIMESCALE:
+      g_value_set_uint (value, pad->trak_timescale);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (pad);
+}
+
+static void
+gst_qt_mux_pad_class_init (GstQTMuxPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->get_property = gst_qt_mux_pad_get_property;
+  gobject_class->set_property = gst_qt_mux_pad_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_PAD_TRAK_TIMESCALE,
+      g_param_spec_uint ("trak-timescale", "Track timescale",
+          "Timescale to use for this pad's trak (units per second, 0 is automatic)",
+          0, G_MAXUINT32, DEFAULT_PAD_TRAK_TIMESCALE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_qt_mux_pad_init (GstQTMuxPad * pad)
+{
+  pad->trak_timescale = DEFAULT_PAD_TRAK_TIMESCALE;
+}
+
+static guint32
+gst_qt_mux_pad_get_timescale (GstQTMuxPad * pad)
+{
+  guint32 timescale;
+
+  GST_OBJECT_LOCK (pad);
+  timescale = pad->trak_timescale;
+  GST_OBJECT_UNLOCK (pad);
+
+  return timescale;
+}
+
 /* QTMux signals and args */
 enum
 {
@@ -364,20 +474,23 @@ gst_qt_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, srctempl);
 
   if (params->audio_sink_caps) {
-    audiosinktempl = gst_pad_template_new ("audio_%u",
-        GST_PAD_SINK, GST_PAD_REQUEST, params->audio_sink_caps);
+    audiosinktempl = gst_pad_template_new_with_gtype ("audio_%u",
+        GST_PAD_SINK, GST_PAD_REQUEST, params->audio_sink_caps,
+        GST_TYPE_QT_MUX_PAD);
     gst_element_class_add_pad_template (element_class, audiosinktempl);
   }
 
   if (params->video_sink_caps) {
-    videosinktempl = gst_pad_template_new ("video_%u",
-        GST_PAD_SINK, GST_PAD_REQUEST, params->video_sink_caps);
+    videosinktempl = gst_pad_template_new_with_gtype ("video_%u",
+        GST_PAD_SINK, GST_PAD_REQUEST, params->video_sink_caps,
+        GST_TYPE_QT_MUX_PAD);
     gst_element_class_add_pad_template (element_class, videosinktempl);
   }
 
   if (params->subtitle_sink_caps) {
-    subtitlesinktempl = gst_pad_template_new ("subtitle_%u",
-        GST_PAD_SINK, GST_PAD_REQUEST, params->subtitle_sink_caps);
+    subtitlesinktempl = gst_pad_template_new_with_gtype ("subtitle_%u",
+        GST_PAD_SINK, GST_PAD_REQUEST, params->subtitle_sink_caps,
+        GST_TYPE_QT_MUX_PAD);
     gst_element_class_add_pad_template (element_class, subtitlesinktempl);
   }
 
@@ -4698,6 +4811,7 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   AtomInfo *ext_atom = NULL;
   gint constant_size = 0;
   const gchar *stream_format;
+  guint32 timescale;
 
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
@@ -5020,14 +5134,18 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   if (!entry.fourcc)
     goto refuse_caps;
 
+  timescale = gst_qt_mux_pad_get_timescale (GST_QT_MUX_PAD_CAST (pad));
+  if (!timescale && qtmux->trak_timescale)
+    timescale = qtmux->trak_timescale;
+  else if (!timescale)
+    timescale = entry.sample_rate;
+
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;
   qtpad->sample_size = constant_size;
   qtpad->trak_ste =
       (SampleTableEntry *) atom_trak_set_audio_type (qtpad->trak,
-      qtmux->context, &entry,
-      qtmux->trak_timescale ? qtmux->trak_timescale : entry.sample_rate,
-      ext_atom, constant_size);
+      qtmux->context, &entry, timescale, ext_atom, constant_size);
 
   gst_object_unref (qtmux);
   return TRUE;
@@ -5128,9 +5246,13 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
    * as well as a fair duration */
   qtpad->expected_sample_duration_n = framerate_num;
   qtpad->expected_sample_duration_d = framerate_den;
-  rate = qtmux->trak_timescale ?
-      qtmux->trak_timescale : atom_framerate_to_timescale (framerate_num,
-      framerate_den);
+
+  rate = gst_qt_mux_pad_get_timescale (GST_QT_MUX_PAD_CAST (pad));
+  if (!rate && qtmux->trak_timescale)
+    rate = qtmux->trak_timescale;
+  else if (!rate)
+    rate = atom_framerate_to_timescale (framerate_num, framerate_den);
+
   GST_DEBUG_OBJECT (qtmux, "Rate of video track selected: %" G_GUINT32_FORMAT,
       rate);
 
@@ -5825,7 +5947,9 @@ gst_qt_mux_request_new_pad (GstElement * element,
   GST_DEBUG_OBJECT (qtmux, "Requested pad: %s", name);
 
   /* create pad and add to collections */
-  newpad = gst_pad_new_from_template (templ, name);
+  newpad =
+      g_object_new (GST_TYPE_QT_MUX_PAD, "name", name, "direction",
+      templ->direction, "template", templ, NULL);
   g_free (name);
   collect_pad = (GstQTPad *)
       gst_collect_pads_add_pad (qtmux->collect, newpad, sizeof (GstQTPad),
