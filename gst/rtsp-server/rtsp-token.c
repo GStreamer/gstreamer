@@ -165,6 +165,54 @@ gst_rtsp_token_new_valist (const gchar * firstfield, va_list var_args)
   return token;
 }
 
+/**
+ * gst_rtsp_token_set_string:
+ * @token: The #GstRTSPToken.
+ * @field: field to set
+ * @string_value: string value to set
+ *
+ * Sets a string value on @token.
+ *
+ * Since: 1.14
+ */
+void
+gst_rtsp_token_set_string (GstRTSPToken * token, const gchar * field,
+    const gchar * string_value)
+{
+  GstStructure *s;
+
+  g_return_if_fail (token != NULL);
+  g_return_if_fail (field != NULL);
+  g_return_if_fail (string_value != NULL);
+
+  s = gst_rtsp_token_writable_structure (token);
+  if (s != NULL)
+    gst_structure_set (s, field, G_TYPE_STRING, string_value, NULL);
+}
+
+/**
+ * gst_rtsp_token_set_bool:
+ * @token: The #GstRTSPToken.
+ * @field: field to set
+ * @bool_value: boolean value to set
+ *
+ * Sets a boolean value on @token.
+ *
+ * Since: 1.14
+ */
+void
+gst_rtsp_token_set_bool (GstRTSPToken * token, const gchar * field,
+    gboolean bool_value)
+{
+  GstStructure *s;
+
+  g_return_if_fail (token != NULL);
+  g_return_if_fail (field != NULL);
+
+  s = gst_rtsp_token_writable_structure (token);
+  if (s != NULL)
+    gst_structure_set (s, field, G_TYPE_BOOLEAN, bool_value, NULL);
+}
 
 /**
  * gst_rtsp_token_get_structure:

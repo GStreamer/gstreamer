@@ -78,6 +78,17 @@ GST_START_TEST (test_token)
   fail_unless (gst_rtsp_token_is_allowed (token, "permission1"));
   fail_unless (gst_rtsp_token_is_allowed (token, "permission2"));
   fail_unless_equals_string (gst_rtsp_token_get_string (token, "role"), "user");
+
+  gst_rtsp_token_set_bool (token, "permission3", FALSE);
+  fail_unless (!gst_rtsp_token_is_allowed (token, "permission3"));
+  gst_rtsp_token_set_bool (token, "permission4", TRUE);
+  fail_unless (gst_rtsp_token_is_allowed (token, "permission4"));
+
+  fail_unless_equals_string (gst_rtsp_token_get_string (token, "role"), "user");
+  gst_rtsp_token_set_string (token, "role", "admin");
+  fail_unless_equals_string (gst_rtsp_token_get_string (token, "role"),
+      "admin");
+
   gst_rtsp_token_unref (token);
 }
 

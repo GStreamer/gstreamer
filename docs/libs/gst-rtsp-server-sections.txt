@@ -725,7 +725,9 @@ gst_rtsp_token_ref
 gst_rtsp_token_unref
 gst_rtsp_token_get_structure
 gst_rtsp_token_writable_structure
+gst_rtsp_token_set_string
 gst_rtsp_token_get_string
+gst_rtsp_token_set_bool
 gst_rtsp_token_is_allowed
 <SUBSECTION Standard>
 GST_RTSP_TOKEN_CAST
