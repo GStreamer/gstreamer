@@ -201,6 +201,9 @@ GST_EXPORT
 GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 								 GstPadDirection direction, GstPadPresence presence,
 								 GstCaps *caps) G_GNUC_MALLOC;
+GstPadTemplate*		gst_pad_template_new_with_gtype		(const gchar *name_template,
+								 GstPadDirection direction, GstPadPresence presence,
+								 GstCaps *caps, GType pad_type) G_GNUC_MALLOC;
 GST_EXPORT
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
 

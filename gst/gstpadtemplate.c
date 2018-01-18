@@ -396,6 +396,45 @@ gst_pad_template_new (const gchar * name_template,
 }
 
 /**
+ * gst_pad_template_new_with_gtype:
+ * @name_template: the name template.
+ * @direction: the #GstPadDirection of the template.
+ * @presence: the #GstPadPresence of the pad.
+ * @caps: (transfer none): a #GstCaps set for the template.
+ * @pad_type: The #GType of the pad to create
+ *
+ * Creates a new pad template with a name according to the given template
+ * and with the given arguments.
+ *
+ * Returns: (transfer floating): a new #GstPadTemplate.
+ */
+GstPadTemplate *
+gst_pad_template_new_with_gtype (const gchar * name_template,
+    GstPadDirection direction, GstPadPresence presence, GstCaps * caps,
+    GType pad_type)
+{
+  GstPadTemplate *new;
+
+  g_return_val_if_fail (name_template != NULL, NULL);
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (direction == GST_PAD_SRC
+      || direction == GST_PAD_SINK, NULL);
+  g_return_val_if_fail (presence == GST_PAD_ALWAYS
+      || presence == GST_PAD_SOMETIMES || presence == GST_PAD_REQUEST, NULL);
+
+  if (!name_is_valid (name_template, presence)) {
+    return NULL;
+  }
+
+  new = g_object_new (gst_pad_template_get_type (),
+      "name", name_template, "name-template", name_template,
+      "direction", direction, "presence", presence, "caps", caps,
+      "gtype", pad_type, NULL);
+
+  return new;
+}
+
+/**
  * gst_static_pad_template_get_caps:
  * @templ: a #GstStaticPadTemplate to get capabilities of.
  *
