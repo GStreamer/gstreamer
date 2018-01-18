@@ -982,6 +982,7 @@ EXPORTS
 	gst_pad_template_get_type
 	gst_pad_template_new
 	gst_pad_template_new_from_static_pad_template_with_gtype
+	gst_pad_template_new_with_gtype
 	gst_pad_template_pad_created
 	gst_pad_unlink
 	gst_pad_use_fixed_caps
