@@ -96,7 +96,7 @@ gst_rtsp_token_init (GstRTSPTokenImpl * token, GstStructure * structure)
 }
 
 /**
- * gst_rtsp_token_new_empty:
+ * gst_rtsp_token_new_empty: (rename-to gst_rtsp_token_new)
  *
  * Create a new empty Authorization token.
  *
@@ -118,7 +118,7 @@ gst_rtsp_token_new_empty (void)
 }
 
 /**
- * gst_rtsp_token_new:
+ * gst_rtsp_token_new: (skip)
  * @firstfield: the first fieldname
  * @...: additional arguments
  *
@@ -141,7 +141,7 @@ gst_rtsp_token_new (const gchar * firstfield, ...)
 }
 
 /**
- * gst_rtsp_token_new_valist:
+ * gst_rtsp_token_new_valist: (skip)
  * @firstfield: the first fieldname
  * @var_args: additional arguments
  *
