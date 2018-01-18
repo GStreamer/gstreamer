@@ -332,6 +332,8 @@ gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
  * Converts a #GstStaticPadTemplate into a #GstPadTemplate with a type.
  *
  * Returns: (transfer floating): a new #GstPadTemplate.
+ *
+ * Since: 1.14
  */
 GstPadTemplate *
 gst_pad_template_new_from_static_pad_template_with_gtype (GstStaticPadTemplate *
