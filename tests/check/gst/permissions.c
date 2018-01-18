@@ -86,6 +86,30 @@ GST_START_TEST (test_permissions)
   fail_unless (gst_rtsp_permissions_is_allowed (perms, "admin", "permission2"));
   fail_if (gst_rtsp_permissions_is_allowed (perms, "user", "permission1"));
   fail_if (gst_rtsp_permissions_is_allowed (perms, "user", "permission2"));
+
+  /* _add_permission_for_role() should overwrite existing or create new role */
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "admin", "permission1"));
+  gst_rtsp_permissions_add_permission_for_role (perms, "admin", "permission1",
+      FALSE);
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "admin", "permission1"));
+
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "tester", "permission1"));
+  gst_rtsp_permissions_add_permission_for_role (perms, "tester", "permission1",
+      TRUE);
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "tester",
+          "permission1"));
+  gst_rtsp_permissions_add_permission_for_role (perms, "tester", "permission1",
+      FALSE);
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "tester", "permission1"));
+  gst_rtsp_permissions_add_permission_for_role (perms, "tester", "permission2",
+      TRUE);
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "tester",
+          "permission2"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "tester", "permission3"));
+
+  gst_rtsp_permissions_add_role_empty (perms, "noone");
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "noone", "permission1"));
+
   gst_rtsp_permissions_unref (perms);
 }
 

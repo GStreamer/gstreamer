@@ -87,6 +87,16 @@ void                  gst_rtsp_permissions_add_role_valist (GstRTSPPermissions *
                                                             va_list var_args);
 
 GST_EXPORT
+void                  gst_rtsp_permissions_add_role_empty  (GstRTSPPermissions * permissions,
+                                                            const gchar * role);
+
+GST_EXPORT
+void                  gst_rtsp_permissions_add_permission_for_role (GstRTSPPermissions * permissions,
+                                                            const gchar * role,
+                                                            const gchar * permission,
+                                                            gboolean      allowed);
+
+GST_EXPORT
 void                  gst_rtsp_permissions_remove_role     (GstRTSPPermissions *permissions,
                                                             const gchar *role);
 

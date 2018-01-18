@@ -124,6 +124,60 @@ gst_rtsp_permissions_new (void)
 }
 
 /**
+ * gst_rtsp_permissions_add_permission_for_role:
+ * @permissions: a #GstRTSPPermissions
+ * @role: a role
+ * @permission: the permission
+ * @allowed: whether the role has this permission or not
+ *
+ * Add a new @permission for @role to @permissions with the access in @allowed.
+ *
+ * Since: 1.14
+ */
+void
+gst_rtsp_permissions_add_permission_for_role (GstRTSPPermissions * permissions,
+    const gchar * role, const gchar * permission, gboolean allowed)
+{
+  GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
+  guint i, len;
+
+  g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
+  g_return_if_fail (gst_mini_object_is_writable (&permissions->mini_object));
+  g_return_if_fail (role != NULL);
+  g_return_if_fail (permission != NULL);
+
+  len = impl->roles->len;
+  for (i = 0; i < len; i++) {
+    GstStructure *entry = g_ptr_array_index (impl->roles, i);
+
+    if (gst_structure_has_name (entry, role)) {
+      gst_structure_set (entry, permission, G_TYPE_BOOLEAN, allowed, NULL);
+      return;
+    }
+  }
+
+  gst_rtsp_permissions_add_role (permissions, role,
+      permission, G_TYPE_BOOLEAN, allowed, NULL);
+}
+
+/**
+ * gst_rtsp_permissions_add_role_empty: (rename-to gst_rtsp_permissions_add_role)
+ * @permissions: a #GstRTSPPermissions
+ * @role: a role
+ *
+ * Add a new @role to @permissions without any permissions. You can add
+ * permissions for the role with gst_rtsp_permissions_add_permission_for_role().
+ *
+ * Since: 1.14
+ */
+void
+gst_rtsp_permissions_add_role_empty (GstRTSPPermissions * permissions,
+    const gchar * role)
+{
+  gst_rtsp_permissions_add_role (permissions, role, NULL);
+}
+
+/**
  * gst_rtsp_permissions_add_role:
  * @permissions: a #GstRTSPPermissions
  * @role: a role
@@ -165,7 +219,6 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
   g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
   g_return_if_fail (gst_mini_object_is_writable (&permissions->mini_object));
   g_return_if_fail (role != NULL);
-  g_return_if_fail (fieldname != NULL);
 
   structure = gst_structure_new_valist (role, fieldname, var_args);
   g_return_if_fail (structure != NULL);
