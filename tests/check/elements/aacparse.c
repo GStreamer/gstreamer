@@ -24,10 +24,12 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/check.h>
 #include "parser.h"
 
 #define SRC_CAPS_CDATA "audio/mpeg, mpegversion=(int)4, framed=(boolean)false, codec_data=(buffer)1190"
 #define SRC_CAPS_TMPL  "audio/mpeg, framed=(boolean)false, mpegversion=(int){2,4}"
+#define SRC_CAPS_RAW   "audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, rate=(int)48000, channels=(int)2, codec_data=(buffer)1190"
 
 #define SINK_CAPS \
     "audio/mpeg, framed=(boolean)true"
@@ -66,6 +68,10 @@ static guint8 adts_frame_mpeg4[] = {
 
 static guint8 garbage_frame[] = {
   0xff, 0xff, 0xff, 0xff, 0xff
+};
+
+static guint8 raw_frame_short[] = {
+  0x27, 0x00, 0x03, 0x20, 0x64, 0x1c
 };
 
 /*
@@ -147,6 +153,36 @@ GST_START_TEST (test_parse_adts_detect_mpeg_version)
       NULL,
       SINK_CAPS_MPEG2
       ", stream-format=(string)adts, level=(string)2, profile=(string)lc");
+}
+
+GST_END_TEST;
+
+/*
+ * Test if the parser correctly handles short raw frames and doesn't
+ * concatenate them.
+ */
+GST_START_TEST (test_parse_raw_short)
+{
+  GstHarness *h = gst_harness_new ("aacparse");
+  GstBuffer *in_buf;
+
+  g_object_set (h->element, "disable-passthrough", TRUE, NULL);
+  gst_harness_set_src_caps_str (h, SRC_CAPS_RAW);
+
+  in_buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      raw_frame_short, sizeof raw_frame_short, 0, sizeof raw_frame_short,
+      NULL, NULL);
+
+  gst_harness_push (h, gst_buffer_ref (in_buf));
+  fail_unless_equals_int (gst_harness_buffers_received (h), 1);
+
+  gst_harness_push (h, in_buf);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 2);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+  fail_unless_equals_int (gst_harness_buffers_received (h), 2);
+
+  gst_harness_teardown (h);
 }
 
 GST_END_TEST;
@@ -260,6 +296,9 @@ aacparse_suite (void)
   tcase_add_test (tc_chain, test_parse_adts_split);
   tcase_add_test (tc_chain, test_parse_adts_skip_garbage);
   tcase_add_test (tc_chain, test_parse_adts_detect_mpeg_version);
+
+  /* Raw tests */
+  tcase_add_test (tc_chain, test_parse_raw_short);
 
   /* Other tests */
   tcase_add_test (tc_chain, test_parse_handle_codec_data);
