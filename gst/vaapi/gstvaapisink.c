@@ -680,8 +680,10 @@ cb_sync_values_from_display (GstVaapiSink * sink, GstVaapiDisplay * display)
 
   for (i = 0; i < G_N_ELEMENTS (sink->cb_values); i++) {
     const guint cb_id = CB_HUE + i;
-    if (!gst_vaapi_display_has_property (display, cb_map[i].prop_name))
+    if (!gst_vaapi_display_has_property (display, cb_map[i].prop_name)) {
+      GST_INFO_OBJECT (sink, "backend does not handle %s", cb_map[i].prop_name);
       continue;
+    }
 
     value = 0.0;
     g_object_get (display, cb_map[i].prop_name, &value, NULL);
@@ -700,6 +702,10 @@ cb_sync_values_to_display (GstVaapiSink * sink, GstVaapiDisplay * display)
     const guint cb_id = CB_HUE + i;
     if (!(sink->cb_changed & (1U << cb_id)))
       continue;
+    if (!gst_vaapi_display_has_property (display, cb_map[i].prop_name)) {
+      GST_INFO_OBJECT (sink, "backend does not handle %s", cb_map[i].prop_name);
+      continue;
+    }
 
     g_object_set_property (G_OBJECT (display), cb_map[i].prop_name,
         cb_get_gvalue (sink, cb_id));
