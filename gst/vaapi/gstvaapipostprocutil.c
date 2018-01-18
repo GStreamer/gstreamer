@@ -160,12 +160,9 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
   ret = TRUE;
   to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
   if (!to_par) {
-    g_value_init (&tpar, GST_TYPE_FRACTION);
-    gst_value_set_fraction (&tpar, GST_VIDEO_INFO_PAR_N (vinfo),
-        GST_VIDEO_INFO_PAR_D (vinfo));
+    g_value_init (&tpar, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range_full (&tpar, 1, G_MAXINT, G_MAXINT, 1);
     to_par = &tpar;
-
-    gst_structure_set_value (outs, "pixel-aspect-ratio", &tpar);
   }
 
   /* we have both PAR but they might not be fixated */
