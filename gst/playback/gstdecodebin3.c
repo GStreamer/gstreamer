@@ -1585,7 +1585,10 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
 
       /* Send EOS to all slots */
       if (peer) {
-        GstEvent *stream_start =
+        GstStructure *s;
+        GstEvent *stream_start, *eos;
+
+        stream_start =
             gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
 
         /* First forward a custom STREAM_START event to reset the EOS status (if any) */
@@ -1598,7 +1601,12 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
               G_TYPE_BOOLEAN, TRUE, NULL);
           gst_pad_send_event (peer, custom_stream_start);
         }
-        gst_pad_send_event (peer, gst_event_new_eos ());
+
+        eos = gst_event_new_eos ();
+        s = gst_event_writable_structure (eos);
+        gst_structure_set (s, "decodebin3-custom-final-eos", G_TYPE_BOOLEAN,
+            TRUE, NULL);
+        gst_pad_send_event (peer, eos);
         gst_object_unref (peer);
       } else
         GST_DEBUG_OBJECT (dbin, "no output");
@@ -1754,8 +1762,14 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
 
           free_multiqueue_slot_async (dbin, slot);
           ret = GST_PAD_PROBE_REMOVE;
-        } else if (!was_drained) {
-          GST_DEBUG_OBJECT (pad, "What happens with event ?");
+        } else if (s
+            && gst_structure_has_field (s, "decodebin3-custom-final-eos")) {
+          GST_DEBUG_OBJECT (pad, "Got final eos, propagating downstream");
+        } else {
+          GST_DEBUG_OBJECT (pad, "Got regular eos (all_inputs_are_eos)");
+          /* drop current event as eos will be sent in check_all_slot_for_eos
+           * when all output streams are also eos */
+          ret = GST_PAD_PROBE_DROP;
           SELECTION_LOCK (dbin);
           check_all_slot_for_eos (dbin);
           SELECTION_UNLOCK (dbin);
