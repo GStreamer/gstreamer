@@ -465,8 +465,8 @@ verify_convert (const gchar * which, void *in, int inlength,
     fail_unless (gst_structure_get_int (out_s, "channels", &out_chans));
 
     /* positions for 1 and 2 channels are implicit if not provided */
-    if (out_chans > 2 && gst_structure_has_field (in_s, "channel-positions")) {
-      if (!gst_structure_has_field (out_s, "channel-positions")) {
+    if (out_chans > 2 && gst_structure_has_field (in_s, "channel-mask")) {
+      if (!gst_structure_has_field (out_s, "channel-mask")) {
         gst_printerrln ("In  : %" GST_PTR_FORMAT, in_s);
         gst_printerrln ("Out : %" GST_PTR_FORMAT, out_s);
         g_error ("Channel layout got lost somewhere\n");
