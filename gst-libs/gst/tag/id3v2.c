@@ -582,7 +582,9 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         id3v2_add_id3v2_frame_blob_to_taglist (work,
             work->hdr.frame_data - frame_hdr_size, frame_hdr_size + frame_size);
       }
+      work->frame_id = NULL;    /* clear ref to loop-local storage */
     }
+
     work->hdr.frame_data += frame_size;
     work->hdr.frame_data_size -= frame_size;
   }
