@@ -1039,7 +1039,7 @@ SampleTableEntryTX3G * atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContex
                                SubtitleSampleEntry * entry);
 
 SampleTableEntryTMCD *
-atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context, GstVideoTimeCode * tc);
+atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context, guint trak_timescale, GstVideoTimeCode * tc);
 
 void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
                                 guint32 max_bitrate);

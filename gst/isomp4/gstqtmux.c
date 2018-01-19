@@ -2588,7 +2588,8 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
         qpad->trak->tref = atom_tref_new (FOURCC_tmcd);
         atom_tref_add_entry (qpad->trak->tref, qpad->tc_trak->tkhd.track_ID);
 
-        atom_trak_set_timecode_type (qpad->tc_trak, qtmux->context, tc);
+        atom_trak_set_timecode_type (qpad->tc_trak, qtmux->context,
+            qpad->trak->mdia.mdhd.time_info.timescale, tc);
 
         atom_trak_add_samples (qpad->tc_trak, 1, 1, 4,
             qtmux->mdat_size, FALSE, 0);
@@ -4086,7 +4087,8 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
     pad->trak->tref = atom_tref_new (FOURCC_tmcd);
     atom_tref_add_entry (pad->trak->tref, pad->tc_trak->tkhd.track_ID);
 
-    atom_trak_set_timecode_type (pad->tc_trak, qtmux->context, pad->first_tc);
+    atom_trak_set_timecode_type (pad->tc_trak, qtmux->context,
+        pad->trak->mdia.mdhd.time_info.timescale, pad->first_tc);
 
     tc_buf = gst_buffer_new_allocate (NULL, 4, NULL);
     szret = gst_buffer_fill (tc_buf, 0, &frames_since_daily_jam, 4);

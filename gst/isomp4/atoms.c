@@ -3813,17 +3813,18 @@ atom_framerate_to_timescale (gint n, gint d)
 
 static SampleTableEntryTMCD *
 atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
-    GstVideoTimeCode * tc)
+    guint32 trak_timescale, GstVideoTimeCode * tc)
 {
   AtomSTSD *stsd = &trak->mdia.minf.stbl.stsd;
   SampleTableEntryTMCD *tmcd = sample_entry_tmcd_new ();
+
+  g_assert (trak_timescale != 0);
 
   trak->mdia.hdlr.component_type = FOURCC_mhlr;
   trak->mdia.hdlr.handler_type = FOURCC_tmcd;
   g_free (trak->mdia.hdlr.name);
   trak->mdia.hdlr.name = g_strdup ("Time Code Media Handler");
-  trak->mdia.mdhd.time_info.timescale =
-      atom_framerate_to_timescale (tc->config.fps_n, tc->config.fps_d);
+  trak->mdia.mdhd.time_info.timescale = trak_timescale;
 
   tmcd->se.kind = TIMECODE;
   tmcd->se.data_reference_index = 1;
@@ -3832,9 +3833,10 @@ atom_trak_add_timecode_entry (AtomTRAK * trak, AtomsContext * context,
     tmcd->tc_flags |= TC_DROP_FRAME;
   tmcd->name.language_code = 0;
   tmcd->name.name = g_strdup ("Tape");
-  tmcd->timescale =
-      atom_framerate_to_timescale (tc->config.fps_n, tc->config.fps_d);
-  tmcd->frame_duration = 100;
+  tmcd->timescale = trak_timescale;
+  tmcd->frame_duration =
+      gst_util_uint64_scale (tmcd->timescale, tc->config.fps_d,
+      tc->config.fps_n);
   if (tc->config.fps_d == 1001)
     tmcd->n_frames = tc->config.fps_n / 1000;
   else
@@ -3991,7 +3993,7 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
 
 SampleTableEntryTMCD *
 atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context,
-    GstVideoTimeCode * tc)
+    guint32 trak_timescale, GstVideoTimeCode * tc)
 {
   SampleTableEntryTMCD *ste;
   AtomGMHD *gmhd = trak->mdia.minf.gmhd;
@@ -4000,7 +4002,7 @@ atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context,
     return NULL;
   }
 
-  ste = atom_trak_add_timecode_entry (trak, context, tc);
+  ste = atom_trak_add_timecode_entry (trak, context, trak_timescale, tc);
 
   gmhd = atom_gmhd_new ();
   gmhd->gmin.graphics_mode = 0x0040;
