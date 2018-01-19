@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 
+from distutils.sysconfig import get_python_lib
+
 from common import get_meson
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
@@ -137,6 +139,10 @@ def get_subprocess_env(options):
 
     return env
 
+# https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
+def in_venv():
+    return (hasattr(sys, 'real_prefix') or
+            (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
 def python_env(options, unset_env=False):
     """
@@ -150,7 +156,11 @@ def python_env(options, unset_env=False):
             not os.path.exists(gst_python_path):
         return False
 
-    sitepackages = site.getusersitepackages()
+    if in_venv ():
+        sitepackages = get_python_lib()
+    else:
+        sitepackages = site.getusersitepackages()
+
     if not sitepackages:
         return False
 
