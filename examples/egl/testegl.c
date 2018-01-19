@@ -967,15 +967,6 @@ handle_queued_objects (APP_STATE_T * state)
       if (!SYNC_BUFFERS) {
         object = NULL;
       }
-    } else if (GST_IS_QUERY (object)) {
-      GstQuery *query = GST_QUERY_CAST (object);
-      GstStructure *s = (GstStructure *) gst_query_get_structure (query);
-
-      if (gst_structure_has_name (s, "not-used")) {
-        g_assert_not_reached ();
-      } else {
-        g_assert_not_reached ();
-      }
     } else if (GST_IS_EVENT (object)) {
       GstEvent *event = GST_EVENT_CAST (object);
       g_print ("\nevent %p %s\n", event,
