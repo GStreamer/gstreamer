@@ -1921,15 +1921,18 @@ TestCaseDef tests[] = {
 static Suite *
 camerabin_suite (void)
 {
-  GstElementFactory *jpegenc_factory;
+  GstRegistry *reg = gst_registry_get ();
   Suite *s = suite_create ("camerabin");
   gint i;
   TCase *tc_generic = tcase_create ("generic");
   TCase *tc_phography_iface = tcase_create ("photography-iface");
 
-  jpegenc_factory = gst_element_factory_find ("jpegenc");
-  if (jpegenc_factory == NULL) {
-    GST_WARNING ("Skipping camerabin tests because jpegenc is missing");
+  if (!gst_registry_check_feature_version (reg, "jpegenc", 1, 0, 0)
+      || !gst_registry_check_feature_version (reg, "theoraenc", 1, 0, 0)
+      || !gst_registry_check_feature_version (reg, "vorbisenc", 1, 0, 0)
+      || !gst_registry_check_feature_version (reg, "oggmux", 1, 0, 0)) {
+    GST_WARNING ("Skipping camerabin tests because some required element is "
+        " missing (jpegenc, theoraenc, vorbisenc, oggmux)");
     goto end;
   }
 
