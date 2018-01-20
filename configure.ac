@@ -139,8 +139,8 @@ dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
               [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
               [SAVED_LDFLAGS="${LDFLAGS}" SAVED_LIBS="${LIBS}"
-               AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
-               LDFLAGS=-Wl,-Bsymbolic-functions
+               AC_MSG_CHECKING([for -Bsymbolic linker flag])
+               LDFLAGS=-Wl,-Bsymbolic
                LIBS=
                AC_TRY_LINK([], [return 0],
                            AC_MSG_RESULT(yes)
@@ -207,7 +207,7 @@ AC_SUBST(GST_LIBS)
 
 GST_ALL_LDFLAGS="-no-undefined"
 if test "x${enable_Bsymbolic}" = "xyes"; then
-  GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic-functions"
+  GST_ALL_LDFLAGS="$GST_ALL_LDFLAGS -Wl,-Bsymbolic"
 fi
 AC_SUBST(GST_ALL_LDFLAGS)
 
