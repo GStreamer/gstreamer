@@ -2,6 +2,8 @@
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
  * Copyright (C) 2013 Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2018 Centricular Ltd.
+ *   Author: Nirbheek Chauhan <nirbheek@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -38,6 +40,8 @@
 
 #include "gstwasapisink.h"
 
+#include <mmdeviceapi.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi_sink_debug);
 #define GST_CAT_DEFAULT gst_wasapi_sink_debug
 
@@ -45,15 +49,31 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) S16LE, "
+        "format = (string) " GST_AUDIO_FORMATS_ALL ", "
         "layout = (string) interleaved, "
-        "rate = (int) 44100, " "channels = (int) 2"));
+        "rate = " GST_AUDIO_RATE_RANGE ", channels = (int) [1, 2]"));
+
+#define DEFAULT_ROLE    GST_WASAPI_DEVICE_ROLE_CONSOLE
+#define DEFAULT_MUTE    FALSE
+
+enum
+{
+  PROP_0,
+  PROP_ROLE,
+  PROP_MUTE,
+  PROP_DEVICE
+};
 
 static void gst_wasapi_sink_dispose (GObject * object);
 static void gst_wasapi_sink_finalize (GObject * object);
+static void gst_wasapi_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_wasapi_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_wasapi_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
+
 static gboolean gst_wasapi_sink_prepare (GstAudioSink * asink,
     GstAudioRingBufferSpec * spec);
 static gboolean gst_wasapi_sink_unprepare (GstAudioSink * asink);
@@ -64,6 +84,7 @@ static gint gst_wasapi_sink_write (GstAudioSink * asink,
 static guint gst_wasapi_sink_delay (GstAudioSink * asink);
 static void gst_wasapi_sink_reset (GstAudioSink * asink);
 
+#define gst_wasapi_sink_parent_class parent_class
 G_DEFINE_TYPE (GstWasapiSink, gst_wasapi_sink, GST_TYPE_AUDIO_SINK);
 
 static void
@@ -76,6 +97,27 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
 
   gobject_class->dispose = gst_wasapi_sink_dispose;
   gobject_class->finalize = gst_wasapi_sink_finalize;
+  gobject_class->set_property = gst_wasapi_sink_set_property;
+  gobject_class->get_property = gst_wasapi_sink_get_property;
+
+  g_object_class_install_property (gobject_class,
+      PROP_ROLE,
+      g_param_spec_enum ("role", "Role",
+          "Role of the device: communications, multimedia, etc",
+          GST_WASAPI_DEVICE_TYPE_ROLE, DEFAULT_ROLE, G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class,
+      PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute", "Mute state of this stream",
+          DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
+
+  g_object_class_install_property (gobject_class,
+      PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "WASAPI playback device as a GUID string",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
@@ -126,11 +168,107 @@ gst_wasapi_sink_finalize (GObject * object)
   G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->finalize (object);
 }
 
+static void
+gst_wasapi_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstWasapiSink *self = GST_WASAPI_SINK (object);
+
+  switch (prop_id) {
+    case PROP_ROLE:
+      self->role = gst_wasapi_device_role_to_erole (g_value_get_enum (value));
+      break;
+    case PROP_MUTE:
+      self->mute = g_value_get_boolean (value);
+      break;
+    case PROP_DEVICE:
+    {
+      gchar *device = g_value_get_string (value);
+      g_free (self->device);
+      self->device =
+          device ? g_utf8_to_utf16 (device, 0, NULL, NULL, NULL) : NULL;
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_wasapi_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstWasapiSink *self = GST_WASAPI_SINK (object);
+
+  switch (prop_id) {
+    case PROP_ROLE:
+      g_value_set_enum (value, gst_wasapi_erole_to_device_role (self->role));
+      break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, self->mute);
+      break;
+    case PROP_DEVICE:
+      g_value_take_string (value, self->device ?
+          g_utf16_to_utf8 (self->device, 0, NULL, NULL, NULL) : NULL);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static GstCaps *
 gst_wasapi_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
-  /* FIXME: Implement */
-  return NULL;
+  GstWasapiSink *self = GST_WASAPI_SINK (bsink);
+  WAVEFORMATEX *format = NULL;
+  GstCaps *caps = NULL;
+  HRESULT hr;
+
+  GST_DEBUG_OBJECT (self, "entering get caps");
+
+  if (self->cached_caps) {
+    caps = gst_caps_ref (self->cached_caps);
+  } else {
+    GstCaps *template_caps;
+
+    template_caps = gst_pad_get_pad_template_caps (bsink->sinkpad);
+
+    if (!self->client)
+      gst_wasapi_sink_open (GST_AUDIO_SINK (bsink));
+
+    hr = IAudioClient_GetMixFormat (self->client, &format);
+    if (hr != S_OK || format == NULL) {
+      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
+          ("GetMixFormat failed: %s", gst_wasapi_util_hresult_to_string (hr)));
+      goto out;
+    }
+
+    caps =
+        gst_wasapi_util_waveformatex_to_caps ((WAVEFORMATEXTENSIBLE *) format,
+        template_caps);
+    if (caps == NULL) {
+      GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL), ("unknown format"));
+      goto out;
+    }
+
+    self->mix_format = format;
+    gst_caps_replace (&self->cached_caps, caps);
+    gst_caps_unref (template_caps);
+  }
+
+  if (filter) {
+    GstCaps *filtered =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = filtered;
+  }
+
+  GST_DEBUG_OBJECT (self, "returning caps %" GST_PTR_FORMAT, caps);
+
+out:
+  return caps;
 }
 
 static gboolean
@@ -140,10 +278,19 @@ gst_wasapi_sink_open (GstAudioSink * asink)
   gboolean res = FALSE;
   IAudioClient *client = NULL;
 
-  if (!gst_wasapi_util_get_default_device_client (GST_ELEMENT (self), FALSE,
-          &client)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
-        ("Failed to get default device"));
+  GST_DEBUG_OBJECT (self, "opening device");
+
+  if (self->client)
+    return TRUE;
+
+  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self), FALSE,
+          self->role, self->device, &client)) {
+    if (!self->device)
+      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
+          ("Failed to get default device"));
+    else
+      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
+          ("Failed to open device %S", self->device));
     goto beach;
   }
 
@@ -174,22 +321,12 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
   gboolean res = FALSE;
   HRESULT hr;
-  REFERENCE_TIME latency_rt, def_period, min_period;
-  WAVEFORMATEXTENSIBLE format;
+  REFERENCE_TIME latency_rt;
   IAudioRenderClient *render_client = NULL;
-
-  hr = IAudioClient_GetDevicePeriod (self->client, &def_period, &min_period);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod () failed");
-    goto beach;
-  }
-
-  gst_wasapi_util_audio_info_to_waveformatex (&spec->info, &format);
-  self->info = spec->info;
 
   hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED,
       AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
-      spec->buffer_time / 100, 0, (WAVEFORMATEX *) & format, NULL);
+      spec->buffer_time * 10, 0, self->mix_format, NULL);
   if (hr != S_OK) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
         ("IAudioClient::Initialize () failed: %s",
@@ -197,31 +334,40 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
     goto beach;
   }
 
+  /* Get latency for logging */
   hr = IAudioClient_GetStreamLatency (self->client, &latency_rt);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetStreamLatency () failed");
+    GST_ERROR_OBJECT (self, "IAudioClient::GetStreamLatency failed");
     goto beach;
   }
+  GST_INFO_OBJECT (self, "wasapi stream latency: %" G_GINT64_FORMAT " (%"
+      G_GINT64_FORMAT "ms)", latency_rt, latency_rt / 10000);
 
-  GST_INFO_OBJECT (self, "default period: %d (%d ms), "
-      "minimum period: %d (%d ms), "
-      "latency: %d (%d ms)",
-      (guint32) def_period, (guint32) def_period / 10000,
-      (guint32) min_period, (guint32) min_period / 10000,
-      (guint32) latency_rt, (guint32) latency_rt / 10000);
-
-  /* FIXME: What to do with the latency? */
-
+  /* Set the event handler which will trigger writes */
   hr = IAudioClient_SetEventHandle (self->client, self->event_handle);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::SetEventHandle () failed");
+    GST_ERROR_OBJECT (self, "IAudioClient::SetEventHandle failed");
     goto beach;
   }
 
+  /* Total size of the allocated buffer that we will write to
+   * XXX: Will this ever change while playing? */
+  hr = IAudioClient_GetBufferSize (self->client, &self->buffer_frame_count);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (self, "IAudioClient::GetBufferSize failed");
+    goto beach;
+  }
+  GST_INFO_OBJECT (self, "frame count is %i, blockAlign is %i, "
+      "buffer_time is %" G_GINT64_FORMAT, self->buffer_frame_count,
+      self->mix_format->nBlockAlign, spec->buffer_time);
+
+  /* Get render sink client and start it up */
   if (!gst_wasapi_util_get_render_client (GST_ELEMENT (self), self->client,
           &render_client)) {
     goto beach;
   }
+
+  GST_INFO_OBJECT (self, "got render client");
 
   hr = IAudioClient_Start (self->client);
   if (hr != S_OK) {
@@ -264,30 +410,58 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
   HRESULT hr;
   gint16 *dst = NULL;
-  guint nsamples;
+  guint pending = length;
 
-  nsamples = length / self->info.bpf;
+  while (pending > 0) {
+    guint have_frames, can_frames, n_frames, n_frames_padding, write_len;
 
-  WaitForSingleObject (self->event_handle, INFINITE);
+    /* We have N frames to be written out */
+    have_frames = pending / (self->mix_format->nBlockAlign);
 
-  hr = IAudioRenderClient_GetBuffer (self->render_client, nsamples,
-      (BYTE **) & dst);
-  if (hr != S_OK) {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
-        ("IAudioRenderClient::GetBuffer () failed: %s",
-            gst_wasapi_util_hresult_to_string (hr)));
-    length = 0;
-    goto beach;
-  }
+    WaitForSingleObject (self->event_handle, INFINITE);
 
-  memcpy (dst, data, length);
+    /* Frames the card hasn't rendered yet */
+    hr = IAudioClient_GetCurrentPadding (self->client, &n_frames_padding);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (self, "IAudioClient::GetCurrentPadding failed: %s",
+          gst_wasapi_util_hresult_to_string (hr));
+      length = 0;
+      goto beach;
+    }
 
-  hr = IAudioRenderClient_ReleaseBuffer (self->render_client, nsamples, 0);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioRenderClient::ReleaseBuffer () failed: %s",
-        gst_wasapi_util_hresult_to_string (hr));
-    length = 0;
-    goto beach;
+    /* We can write out these many frames */
+    can_frames = self->buffer_frame_count - n_frames_padding;
+
+    /* We will write out these many frames, and this much length */
+    n_frames = MIN (can_frames, have_frames);
+    write_len = n_frames * self->mix_format->nBlockAlign;
+
+    GST_TRACE_OBJECT (self, "total: %i, unread: %i, have: %i (%i bytes), "
+        "will write: %i (%i bytes)", self->buffer_frame_count, n_frames_padding,
+        have_frames, pending, n_frames, write_len);
+
+    hr = IAudioRenderClient_GetBuffer (self->render_client, n_frames,
+        (BYTE **) & dst);
+    if (hr != S_OK) {
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+          ("IAudioRenderClient::GetBuffer failed: %s",
+              gst_wasapi_util_hresult_to_string (hr)));
+      length = 0;
+      goto beach;
+    }
+
+    memcpy (dst, data, write_len);
+
+    hr = IAudioRenderClient_ReleaseBuffer (self->render_client, n_frames,
+        self->mute ? AUDCLNT_BUFFERFLAGS_SILENT : 0);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (self, "IAudioRenderClient::ReleaseBuffer failed: %s",
+          gst_wasapi_util_hresult_to_string (hr));
+      length = 0;
+      goto beach;
+    }
+
+    pending -= write_len;
   }
 
 beach:
@@ -298,8 +472,18 @@ beach:
 static guint
 gst_wasapi_sink_delay (GstAudioSink * asink)
 {
-  /* FIXME: Implement */
-  return 0;
+  GstWasapiSink *self = GST_WASAPI_SINK (asink);
+  guint delay = 0;
+  HRESULT hr;
+
+  hr = IAudioClient_GetCurrentPadding (self->client, &delay);
+  if (hr != S_OK) {
+    GST_ELEMENT_ERROR (self, RESOURCE, READ, (NULL),
+        ("IAudioClient::GetCurrentPadding failed %s",
+            gst_wasapi_util_hresult_to_string (hr)));
+  }
+
+  return delay;
 }
 
 static void

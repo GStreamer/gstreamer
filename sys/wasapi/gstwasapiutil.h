@@ -27,29 +27,39 @@
 
 #include <audioclient.h>
 
-const gchar *
-gst_wasapi_util_hresult_to_string (HRESULT hr);
+/* Device role enum property */
+typedef enum
+{
+  GST_WASAPI_DEVICE_ROLE_CONSOLE,
+  GST_WASAPI_DEVICE_ROLE_MULTIMEDIA,
+  GST_WASAPI_DEVICE_ROLE_COMMS
+} GstWasapiDeviceRole;
+#define GST_WASAPI_DEVICE_TYPE_ROLE (gst_wasapi_device_role_get_type())
+GType gst_wasapi_device_role_get_type (void);
+
+/* Utilities */
+
+gint gst_wasapi_device_role_to_erole (gint role);
+
+gint gst_wasapi_erole_to_device_role (gint erole);
+
+const gchar *gst_wasapi_util_hresult_to_string (HRESULT hr);
 
 gboolean
-gst_wasapi_util_get_default_device_client (GstElement * element,
-                                           gboolean capture,
-                                           IAudioClient ** ret_client);
+gst_wasapi_util_get_device_client (GstElement * element,
+    gboolean capture,
+    gint role, const wchar_t * device_name, IAudioClient ** ret_client);
 
 gboolean gst_wasapi_util_get_render_client (GstElement * element,
-                                            IAudioClient *client,
-                                            IAudioRenderClient ** ret_render_client);
+    IAudioClient * client, IAudioRenderClient ** ret_render_client);
 
 gboolean gst_wasapi_util_get_capture_client (GstElement * element,
-                                             IAudioClient * client,
-                                             IAudioCaptureClient ** ret_capture_client);
+    IAudioClient * client, IAudioCaptureClient ** ret_capture_client);
 
 gboolean gst_wasapi_util_get_clock (GstElement * element,
-                                    IAudioClient * client,
-                                    IAudioClock ** ret_clock);
+    IAudioClient * client, IAudioClock ** ret_clock);
 
-void
-gst_wasapi_util_audio_info_to_waveformatex (GstAudioInfo *info,
-                                       WAVEFORMATEXTENSIBLE *format);
+GstCaps *gst_wasapi_util_waveformatex_to_caps (WAVEFORMATEXTENSIBLE * format,
+    GstCaps * template_caps);
 
 #endif /* __GST_WASAPI_UTIL_H__ */
-

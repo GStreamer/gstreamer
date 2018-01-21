@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ * Copyright (C) 2018 Centricular Ltd.
+ *   Author: Nirbheek Chauhan <nirbheek@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,7 +26,16 @@
 
 #include <mmdeviceapi.h>
 
-/* These seem to be missing in the Windows SDK... */
+#ifdef __uuidof
+const CLSID CLSID_MMDeviceEnumerator = __uuidof (MMDeviceEnumerator);
+const IID IID_IMMDeviceEnumerator = __uuidof (IMMDeviceEnumerator);
+const IID IID_IAudioClient = __uuidof (IAudioClient);
+const IID IID_IAudioRenderClient = __uuidof (IAudioRenderClient);
+const IID IID_IAudioCaptureClient = __uuidof (IAudioCaptureClient);
+const IID IID_IAudioClock = __uuidof (IAudioClock);
+#else
+/* __uuidof is not implemented in our Cerbero's ancient MinGW toolchain so we
+ * hard-code the GUID values for all these. This is ok because these are ABI. */
 const CLSID CLSID_MMDeviceEnumerator = { 0xbcde0395, 0xe52f, 0x467c,
   {0x8e, 0x3d, 0xc4, 0x57, 0x92, 0x91, 0x69, 0x2e}
 };
@@ -48,11 +59,66 @@ const IID IID_IAudioCaptureClient = { 0xc8adbd64, 0xe71e, 0x48a0,
 const IID IID_IAudioRenderClient = { 0xf294acfc, 0x3146, 0x4483,
   {0xa7, 0xbf, 0xad, 0xdc, 0xa7, 0xc2, 0x60, 0xe2}
 };
+#endif
+
+GType
+gst_wasapi_device_role_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {GST_WASAPI_DEVICE_ROLE_CONSOLE,
+        "Games, system notifications, voice commands", "console"},
+    {GST_WASAPI_DEVICE_ROLE_MULTIMEDIA, "Music, movies, recorded media",
+        "multimedia"},
+    {GST_WASAPI_DEVICE_ROLE_COMMS, "Voice communications", "comms"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstWasapiDeviceRole", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+gint
+gst_wasapi_device_role_to_erole (gint role)
+{
+  switch (role) {
+    case GST_WASAPI_DEVICE_ROLE_CONSOLE:
+      return eConsole;
+    case GST_WASAPI_DEVICE_ROLE_MULTIMEDIA:
+      return eMultimedia;
+    case GST_WASAPI_DEVICE_ROLE_COMMS:
+      return eCommunications;
+    default:
+      g_assert_not_reached ();
+  }
+}
+
+gint
+gst_wasapi_erole_to_device_role (gint erole)
+{
+  switch (erole) {
+    case eConsole:
+      return GST_WASAPI_DEVICE_ROLE_CONSOLE;
+    case eMultimedia:
+      return GST_WASAPI_DEVICE_ROLE_MULTIMEDIA;
+    case eCommunications:
+      return GST_WASAPI_DEVICE_ROLE_COMMS;
+    default:
+      g_assert_not_reached ();
+  }
+}
 
 const gchar *
 gst_wasapi_util_hresult_to_string (HRESULT hr)
 {
-  const gchar *s = "AUDCLNT_E_UNKNOWN";
+  const gchar *s = "unknown error";
 
   switch (hr) {
     case AUDCLNT_E_NOT_INITIALIZED:
@@ -79,6 +145,9 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
     case AUDCLNT_E_UNSUPPORTED_FORMAT:
       s = "AUDCLNT_E_UNSUPPORTED_FORMAT";
       break;
+    case AUDCLNT_E_INVALID_DEVICE_PERIOD:
+      s = "AUDCLNT_E_INVALID_DEVICE_PERIOD";
+      break;
     case AUDCLNT_E_INVALID_SIZE:
       s = "AUDCLNT_E_INVALID_SIZE";
       break;
@@ -87,6 +156,12 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
       break;
     case AUDCLNT_E_BUFFER_OPERATION_PENDING:
       s = "AUDCLNT_E_BUFFER_OPERATION_PENDING";
+      break;
+    case AUDCLNT_E_BUFFER_SIZE_ERROR:
+      s = "AUDCLNT_E_BUFFER_SIZE_ERROR";
+      break;
+    case AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED:
+      s = "AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED";
       break;
     case AUDCLNT_E_THREAD_NOT_REGISTERED:
       s = "AUDCLNT_E_THREAD_NOT_REGISTERED";
@@ -115,9 +190,6 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
     case AUDCLNT_E_INCORRECT_BUFFER_SIZE:
       s = "AUDCLNT_E_INCORRECT_BUFFER_SIZE";
       break;
-    case AUDCLNT_E_BUFFER_SIZE_ERROR:
-      s = "AUDCLNT_E_BUFFER_SIZE_ERROR";
-      break;
     case AUDCLNT_E_CPUUSAGE_EXCEEDED:
       s = "AUDCLNT_E_CPUUSAGE_EXCEEDED";
       break;
@@ -130,14 +202,18 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
     case AUDCLNT_S_POSITION_STALLED:
       s = "AUDCLNT_S_POSITION_STALLED";
       break;
+    case E_INVALIDARG:
+      s = "E_INVALIDARG";
+      break;
   }
 
   return s;
 }
 
 gboolean
-gst_wasapi_util_get_default_device_client (GstElement * element,
-    gboolean capture, IAudioClient ** ret_client)
+gst_wasapi_util_get_device_client (GstElement * element,
+    gboolean capture, gint role, const wchar_t * device_name,
+    IAudioClient ** ret_client)
 {
   gboolean res = FALSE;
   HRESULT hr;
@@ -148,22 +224,32 @@ gst_wasapi_util_get_default_device_client (GstElement * element,
   hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
       &IID_IMMDeviceEnumerator, (void **) &enumerator);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "CoCreateInstance (MMDeviceEnumerator) failed");
+    GST_ERROR ("CoCreateInstance (MMDeviceEnumerator) failed: %s",
+        gst_wasapi_util_hresult_to_string (hr));
     goto beach;
   }
 
-  hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enumerator,
-      (capture) ? eCapture : eRender, eCommunications, &device);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (element,
-        "IMMDeviceEnumerator::GetDefaultAudioEndpoint () failed");
-    goto beach;
+  if (!device_name) {
+    hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enumerator,
+        capture ? eCapture : eRender, role, &device);
+    if (hr != S_OK) {
+      GST_ERROR ("IMMDeviceEnumerator::GetDefaultAudioEndpoint () failed: %s",
+          gst_wasapi_util_hresult_to_string (hr));
+      goto beach;
+    }
+  } else {
+    hr = IMMDeviceEnumerator_GetDevice (enumerator, device_name, &device);
+    if (hr != S_OK) {
+      GST_ERROR ("IMMDeviceEnumerator::GetDevice (\"%S\") failed", device_name);
+      goto beach;
+    }
   }
 
   hr = IMMDevice_Activate (device, &IID_IAudioClient, CLSCTX_ALL, NULL,
       (void **) &client);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "IMMDevice::Activate (IID_IAudioClient) failed");
+    GST_ERROR ("IMMDevice::Activate (IID_IAudioClient) failed: %s",
+        gst_wasapi_util_hresult_to_string (hr));
     goto beach;
   }
 
@@ -196,12 +282,13 @@ gst_wasapi_util_get_render_client (GstElement * element, IAudioClient * client,
   hr = IAudioClient_GetService (client, &IID_IAudioRenderClient,
       (void **) &render_client);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "IAudioClient::GetService "
-        "(IID_IAudioRenderClient) failed");
+    GST_ERROR ("IAudioClient::GetService (IID_IAudioRenderClient) failed: %s",
+        gst_wasapi_util_hresult_to_string (hr));
     goto beach;
   }
 
   *ret_render_client = render_client;
+  res = TRUE;
 
 beach:
   return res;
@@ -218,12 +305,13 @@ gst_wasapi_util_get_capture_client (GstElement * element, IAudioClient * client,
   hr = IAudioClient_GetService (client, &IID_IAudioCaptureClient,
       (void **) &capture_client);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "IAudioClient::GetService "
-        "(IID_IAudioCaptureClient) failed");
+    GST_ERROR ("IAudioClient::GetService (IID_IAudioCaptureClient) failed: %s",
+        gst_wasapi_util_hresult_to_string (hr));
     goto beach;
   }
 
   *ret_capture_client = capture_client;
+  res = TRUE;
 
 beach:
   return res;
@@ -237,66 +325,88 @@ gst_wasapi_util_get_clock (GstElement * element, IAudioClient * client,
   HRESULT hr;
   IAudioClock *clock = NULL;
 
-  hr = IAudioClient_GetService (client, &IID_IAudioClock,
-      (void **) &clock);
+  hr = IAudioClient_GetService (client, &IID_IAudioClock, (void **) &clock);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "IAudioClient::GetService "
-        "(IID_IAudioClock) failed");
+    GST_ERROR ("IAudioClient::GetService (IID_IAudioClock) failed: %s",
+        gst_wasapi_util_hresult_to_string (hr));
     goto beach;
   }
 
   *ret_clock = clock;
+  res = TRUE;
 
 beach:
   return res;
 }
 
-void
-gst_wasapi_util_audio_info_to_waveformatex (GstAudioInfo * info,
-    WAVEFORMATEXTENSIBLE * format)
+const gchar *
+gst_waveformatex_to_audio_format (WAVEFORMATEXTENSIBLE * format)
 {
-  memset (format, 0, sizeof (*format));
-  format->Format.cbSize = sizeof (*format) - sizeof (format->Format);
-  format->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-  format->Format.nChannels = info->channels;
-  format->Format.nSamplesPerSec = info->rate;
-  format->Format.wBitsPerSample = (info->bpf * 8) / format->Format.nChannels;
-  format->Format.nBlockAlign = info->bpf;
-  format->Format.nAvgBytesPerSec =
-      format->Format.nSamplesPerSec * format->Format.nBlockAlign;
-  format->Samples.wValidBitsPerSample = info->finfo->depth;
-  /* FIXME: Implement something here */
-  format->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
-  format->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+  const gchar *fmt_str = NULL;
+  GstAudioFormat fmt = GST_AUDIO_FORMAT_UNKNOWN;
+
+  if (format->Format.wFormatTag == WAVE_FORMAT_PCM) {
+    fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
+        format->Format.wBitsPerSample, format->Format.wBitsPerSample);
+  } else if (format->Format.wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+    if (format->Format.wBitsPerSample == 32)
+      fmt = GST_AUDIO_FORMAT_F32LE;
+    else if (format->Format.wBitsPerSample == 64)
+      fmt = GST_AUDIO_FORMAT_F64LE;
+  } else if (format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+    if (IsEqualGUID (&format->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM)) {
+      fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
+          format->Format.wBitsPerSample, format->Samples.wValidBitsPerSample);
+    } else if (IsEqualGUID (&format->SubFormat,
+            &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
+      if (format->Format.wBitsPerSample == 32
+          && format->Samples.wValidBitsPerSample == 32)
+        fmt = GST_AUDIO_FORMAT_F32LE;
+      else if (format->Format.wBitsPerSample == 64 &&
+          format->Samples.wValidBitsPerSample == 64)
+        fmt = GST_AUDIO_FORMAT_F64LE;
+    }
+  }
+
+  if (fmt != GST_AUDIO_FORMAT_UNKNOWN)
+    fmt_str = gst_audio_format_to_string (fmt);
+
+  return fmt_str;
 }
 
-#if 0
-static WAVEFORMATEXTENSIBLE *
-gst_wasapi_src_probe_device_format (GstWasapiSrc * self, IMMDevice * device)
+GstCaps *
+gst_wasapi_util_waveformatex_to_caps (WAVEFORMATEXTENSIBLE * format,
+    GstCaps * template_caps)
 {
-  HRESULT hr;
-  IPropertyStore *props = NULL;
-  PROPVARIANT format_prop;
-  WAVEFORMATEXTENSIBLE *format = NULL;
+  int ii;
+  const gchar *afmt;
+  GstCaps *caps = gst_caps_copy (template_caps);
 
-  hr = IMMDevice_OpenPropertyStore (device, STGM_READ, &props);
-  if (hr != S_OK)
-    goto beach;
+  /* TODO: handle SPDIF and other encoded formats */
 
-  PropVariantInit (&format_prop);
-  hr = IPropertyStore_GetValue (props, &PKEY_AudioEngine_DeviceFormat,
-      &format_prop);
-  if (hr != S_OK)
-    goto beach;
+  /* 1 or 2 channels <= 16 bits sample size OR
+   * 1 or 2 channels > 16 bits sample size or >2 channels */
+  if (format->Format.wFormatTag != WAVE_FORMAT_PCM &&
+      format->Format.wFormatTag != WAVE_FORMAT_IEEE_FLOAT &&
+      format->Format.wFormatTag != WAVE_FORMAT_EXTENSIBLE)
+    /* Unhandled format tag */
+    return NULL;
 
-  format = (WAVEFORMATEXTENSIBLE *) format_prop.blob.pBlobData;
+  /* WASAPI can only tell us one canonical mix format that it will accept. The
+   * alternative is calling IsFormatSupported on all combinations of formats.
+   * Instead, it's simpler and faster to require conversion inside gstreamer */
+  afmt = gst_waveformatex_to_audio_format (format);
+  if (afmt == NULL)
+    return NULL;
 
-  /* hmm: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture\{64adb8b7-9716-4c02-8929-96e53f5642da}\Properties */
+  for (ii = 0; ii < gst_caps_get_size (caps); ii++) {
+    GstStructure *s = gst_caps_get_structure (caps, ii);
 
-beach:
-  if (props != NULL)
-    IUnknown_Release (props);
+    gst_structure_set (s,
+        "format", G_TYPE_STRING, afmt,
+        "channels", G_TYPE_INT, format->Format.nChannels,
+        "rate", G_TYPE_INT, format->Format.nSamplesPerSec, NULL);
+  }
 
-  return format;
+  return caps;
 }
-#endif

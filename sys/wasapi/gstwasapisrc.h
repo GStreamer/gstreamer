@@ -23,7 +23,6 @@
 #include "gstwasapiutil.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_WASAPI_SRC \
   (gst_wasapi_src_get_type ())
 #define GST_WASAPI_SRC(obj) \
@@ -34,21 +33,29 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WASAPI_SRC))
 #define GST_IS_WASAPI_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_WASAPI_SRC))
-
-typedef struct _GstWasapiSrc      GstWasapiSrc;
+typedef struct _GstWasapiSrc GstWasapiSrc;
 typedef struct _GstWasapiSrcClass GstWasapiSrcClass;
 
 struct _GstWasapiSrc
 {
   GstAudioSrc parent;
 
-  GstAudioInfo info;
-
-  IAudioClient * client;
-  IAudioClock * client_clock;
+  IAudioClient *client;
+  IAudioClock *client_clock;
   guint64 client_clock_freq;
-  IAudioCaptureClient * capture_client;
+  IAudioCaptureClient *capture_client;
   HANDLE event_handle;
+
+  /* Actual size of the allocated buffer */
+  guint buffer_frame_count;
+  /* The mix format that wasapi prefers in shared mode */
+  WAVEFORMATEX *mix_format;
+  /* The probed caps that we can accept */
+  GstCaps *cached_caps;
+
+  /* properties */
+  gint role;
+  wchar_t *device;
 };
 
 struct _GstWasapiSrcClass
@@ -59,6 +66,4 @@ struct _GstWasapiSrcClass
 GType gst_wasapi_src_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_WASAPI_SRC_H__ */
-
