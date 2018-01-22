@@ -652,10 +652,16 @@ retry_find_plane:
       self->conn_id, self->crtc_id, self->plane_id);
 
   GST_OBJECT_LOCK (self);
-  self->render_rect.x = 0;
-  self->render_rect.y = 0;
-  self->hdisplay = self->render_rect.w = crtc->mode.hdisplay;
-  self->vdisplay = self->render_rect.h = crtc->mode.vdisplay;
+  self->hdisplay = crtc->mode.hdisplay;
+  self->vdisplay = crtc->mode.vdisplay;
+
+  if (self->render_rect.w == 0 || self->render_rect.h == 0) {
+    self->render_rect.x = 0;
+    self->render_rect.y = 0;
+    self->render_rect.w = self->hdisplay;
+    self->render_rect.h = self->vdisplay;
+  }
+
   self->pending_rect = self->render_rect;
   GST_OBJECT_UNLOCK (self);
 
@@ -1603,7 +1609,8 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
       sink->can_scale = g_value_get_boolean (value);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_video_overlay_set_property (object, PROP_N, prop_id, value))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -1802,6 +1809,8 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
+
+  gst_video_overlay_install_properties (gobject_class, PROP_N);
 }
 
 static gboolean
