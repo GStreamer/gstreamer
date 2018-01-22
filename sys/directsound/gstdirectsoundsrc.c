@@ -138,10 +138,7 @@ static GstStaticPadTemplate directsound_src_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { S16LE, S8 }, "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"));
+    GST_STATIC_CAPS (GST_DIRECTSOUND_SRC_CAPS));
 
 #define gst_directsound_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDirectSoundSrc, gst_directsound_src,
@@ -427,7 +424,8 @@ gst_directsound_src_open (GstAudioSrc * asrc)
     }
   }
   /* Create capture object */
-  hRes = DirectSoundCaptureCreate (dsoundsrc->device_guid, &dsoundsrc->pDSC, NULL);
+  hRes =
+      DirectSoundCaptureCreate (dsoundsrc->device_guid, &dsoundsrc->pDSC, NULL);
 
 
   if (FAILED (hRes)) {

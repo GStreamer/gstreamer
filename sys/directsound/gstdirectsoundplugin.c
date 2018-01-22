@@ -30,7 +30,7 @@
 #endif
 
 #include "gstdirectsoundsrc.h"
-
+#include "gstdirectsounddevice.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -38,6 +38,11 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "directsoundsrc", GST_RANK_PRIMARY,
           GST_TYPE_DIRECTSOUND_SRC))
     return FALSE;
+
+  if (!gst_device_provider_register (plugin, "directsoundsrcdeviceprovider",
+          GST_RANK_PRIMARY, GST_TYPE_DIRECTSOUND_DEVICE_PROVIDER))
+    return FALSE;
+
 
   return TRUE;
 }
