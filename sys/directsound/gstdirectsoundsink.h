@@ -97,5 +97,16 @@ struct _GstDirectSoundSinkClass
 
 GType gst_directsound_sink_get_type (void);
 
+#define GST_DIRECTSOUND_SINK_CAPS "audio/x-raw, "
+        "format = (string) S16LE, "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        "audio/x-raw, "
+        "format = (string) U8, "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
+        "audio/x-ac3, framed = (boolean) true;"
+        "audio/x-dts, framed = (boolean) true;"
+
 G_END_DECLS
 #endif /* __GST_DIRECTSOUNDSINK_H__ */

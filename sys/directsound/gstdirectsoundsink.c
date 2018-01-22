@@ -112,19 +112,10 @@ static gboolean gst_directsound_sink_is_spdif_format (GstAudioRingBufferSpec *
 static gchar *gst_hres_to_string (HRESULT hRes);
 
 static GstStaticPadTemplate directsoundsink_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) S16LE, "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
-        "audio/x-raw, "
-        "format = (string) U8, "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
-        "audio/x-ac3, framed = (boolean) true;"
-        "audio/x-dts, framed = (boolean) true;"));
+    GST_STATIC_CAPS (GST_DIRECTSOUND_SINK_CAPS));
 
 enum
 {
