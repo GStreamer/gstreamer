@@ -77,7 +77,6 @@ struct _GstDirectSoundSrc
 
   GstAudioSrc src;
 
-  HINSTANCE DSoundDLL; /* DLL instance */
   LPDIRECTSOUNDCAPTURE pDSC; /* DirectSoundCapture*/
   LPDIRECTSOUNDCAPTUREBUFFER pDSBSecondary;  /*Secondaty capturebuffer*/
   DWORD current_circular_offset;
