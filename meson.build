@@ -436,8 +436,6 @@ else
     endif
 endif
 
-configure_file(output : 'config.h', configuration : cdata)
-
 gst_plugins_bad_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
@@ -461,6 +459,8 @@ subdir('sys')
 subdir('ext')
 subdir('tests')
 subdir('pkgconfig')
+
+configure_file(output : 'config.h', configuration : cdata)
 
 # xgettext is optional (on Windows for instance)
 if find_program('xgettext', required : false).found()
