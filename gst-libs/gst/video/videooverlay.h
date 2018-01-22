@@ -23,6 +23,7 @@
 #define __GST_VIDEO_OVERLAY_H__
 
 #include <gst/gst.h>
+#include <gst/video/gstvideosink.h>
 
 G_BEGIN_DECLS
 
@@ -42,6 +43,7 @@ G_BEGIN_DECLS
  */
 typedef struct _GstVideoOverlay GstVideoOverlay;
 typedef struct _GstVideoOverlayInterface GstVideoOverlayInterface;
+typedef struct _GstVideoOverlayProperties GstVideoOverlayProperties;
 
 /**
  * GstVideoOverlayInterface:
@@ -50,6 +52,8 @@ typedef struct _GstVideoOverlayInterface GstVideoOverlayInterface;
  * @handle_events: virtual method to handle events
  * @set_render_rectangle: virtual method to set the render rectangle
  * @set_window_handle: virtual method to configure the window handle
+ * @properties_offset: Offset to the #GstVideoOverlayProperties in the
+ *                     instance allocation. Since 1.14
  *
  * #GstVideoOverlay interface
  */
@@ -102,6 +106,16 @@ void            gst_video_overlay_prepare_window_handle (GstVideoOverlay * overl
 
 GST_EXPORT
 gboolean        gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg);
+
+GST_EXPORT
+void            gst_video_overlay_install_properties    (GObjectClass    * oclass,
+                                                         gint              last_prop_id);
+
+GST_EXPORT
+gboolean        gst_video_overlay_set_property          (GObject         * object,
+                                                         gint              last_prop_id,
+                                                         guint             property_id,
+                                                         const GValue    * value);
 
 G_END_DECLS
 

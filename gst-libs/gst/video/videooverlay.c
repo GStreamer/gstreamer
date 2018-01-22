@@ -291,6 +291,11 @@
 
 #include "videooverlay.h"
 
+enum
+{
+  PROP_RENDER_RECTANGLE,
+};
+
 GST_DEBUG_CATEGORY_STATIC (gst_video_overlay_debug);
 #define GST_CAT_DEFAULT gst_video_overlay_debug
 
@@ -507,4 +512,89 @@ gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg)
     return FALSE;
 
   return gst_message_has_name (msg, "prepare-window-handle");
+}
+
+
+/**
+ * gst_video_overlay_install_properties:
+ * @oclass: The class on which the properties will be installed
+ * @last_prop_id: The first free property ID to use
+ *
+ * This helper shall be used by classes implementing the #GstVideoOverlay
+ * interface that want the render rectangle to be controllable using
+ * properties. This helper will install "render-rectangle" property into the
+ * class.
+ *
+ * Since 1.14
+ */
+void
+gst_video_overlay_install_properties (GObjectClass * oclass, gint last_prop_id)
+{
+  g_object_class_install_property (oclass, last_prop_id + PROP_RENDER_RECTANGLE,
+      gst_param_spec_array ("render-rectangle", "Render Rectangle",
+          "The render rectangle ('<x, y, width, height>')",
+          g_param_spec_int ("rect-value", "Rectangle Value",
+              "One of x, y, width or height value.", -1, G_MAXINT, -1,
+              G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+}
+
+/**
+ * gst_video_overlay_set_property:
+ * @object: The instance on which the property is set
+ * @last_prop_id: The highest property ID.
+ * @property_id: The property ID
+ * @value: The #GValue to be set
+ *
+ * This helper shall be used by classes implementing the #GstVideoOverlay
+ * interface that want the render rectangle to be controllable using
+ * properties. This helper will parse and set the render rectangle calling
+ * gst_video_overlay_set_render_rectangle().
+ *
+ * Returns: %TRUE if the @property_id matches the GstVideoOverlay property
+ *
+ * Since 1.14
+ */
+gboolean
+gst_video_overlay_set_property (GObject * object, gint last_prop_id,
+    guint property_id, const GValue * value)
+{
+  gboolean ret = FALSE;
+
+  if (property_id == last_prop_id) {
+    const GValue *v;
+    gint rect[4], i;
+
+    ret = TRUE;
+
+    if (gst_value_array_get_size (value) != 4)
+      goto wrong_format;
+
+    for (i = 0; i < 4; i++) {
+      v = gst_value_array_get_value (value, i);
+      if (!G_VALUE_HOLDS_INT (v))
+        goto wrong_format;
+
+      rect[i] = g_value_get_int (v);
+    }
+
+    gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (object),
+        rect[0], rect[1], rect[2], rect[3]);
+  }
+
+  return ret;
+
+wrong_format:
+  {
+    GValue string = G_VALUE_INIT;
+
+    g_value_init (&string, G_TYPE_STRING);
+    g_value_transform (value, &string);
+
+    g_critical ("Badly formated rectangle, must contains four gint (got '%s')",
+        g_value_get_string (&string));
+
+    g_value_unset (&string);
+    return TRUE;
+  }
 }
