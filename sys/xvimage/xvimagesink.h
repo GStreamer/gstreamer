@@ -120,6 +120,10 @@ struct _GstXvImageSink
 
   /* stream metadata */
   gchar *media_title;
+
+  /* saved render rectangle until we have a window */
+  gboolean pending_render_rect;
+  GstVideoRectangle render_rect;
 };
 
 struct _GstXvImageSinkClass
