@@ -189,8 +189,14 @@ struct _GstBaseSrcClass {
   gboolean      (*start)        (GstBaseSrc *src);
   gboolean      (*stop)         (GstBaseSrc *src);
 
-  /* given a buffer, return start and stop time when it should be pushed
-   * out. The base class will sync on the clock using these times. */
+  /**
+   * GstBaseSrcClass::get_times:
+   * @start: (out):
+   * @end: (out):
+   *
+   * Given @buffer, return @start and @end time when it should be pushed
+   * out. The base class will sync on the clock using these times.
+   */
   void          (*get_times)    (GstBaseSrc *src, GstBuffer *buffer,
                                  GstClockTime *start, GstClockTime *end);
 
@@ -220,8 +226,13 @@ struct _GstBaseSrcClass {
   /* notify subclasses of an event */
   gboolean      (*event)        (GstBaseSrc *src, GstEvent *event);
 
-  /* ask the subclass to create a buffer with offset and size, the default
-   * implementation will call alloc and fill. */
+  /**
+   * GstBaseSrcClass::create:
+   * @buf: (out):
+   *
+   * Ask the subclass to create a buffer with @offset and @size, the default
+   * implementation will call alloc and fill.
+   */
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
                                  GstBuffer **buf);
   /* ask the subclass to allocate an output buffer. The default implementation
