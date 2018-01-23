@@ -1780,7 +1780,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     if (!pad_eos)
       is_eos = FALSE;
 
-    pad->priv->input_buffer = gst_aggregator_pad_get_buffer (aggpad);
+    pad->priv->input_buffer = gst_aggregator_pad_peek_buffer (aggpad);
 
     GST_OBJECT_LOCK (pad);
     if (!pad->priv->input_buffer) {
