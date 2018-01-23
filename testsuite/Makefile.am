@@ -6,6 +6,7 @@ tests =	\
 	test_types.py
 
 EXTRA_DIST = \
+	meson.build \
 	__init__.py \
 	common.py \
 	runtests.py \
