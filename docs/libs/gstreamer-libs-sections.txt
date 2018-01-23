@@ -241,8 +241,8 @@ gst_aggregator_get_type
 <TITLE>GstAggregatorPad</TITLE>
 GstAggregatorPad
 GstAggregatorPadClass
-gst_aggregator_pad_steal_buffer
-gst_aggregator_pad_get_buffer
+gst_aggregator_pad_pop_buffer
+gst_aggregator_pad_peek_buffer
 gst_aggregator_pad_drop_buffer
 gst_aggregator_pad_is_eos
 <SUBSECTION Standard>

@@ -90,7 +90,7 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
           all_eos = FALSE;
 
         if (testagg->gap_expected == TRUE) {
-          buf = gst_aggregator_pad_get_buffer (pad);
+          buf = gst_aggregator_pad_peek_buffer (pad);
           fail_unless (buf);
           fail_unless (GST_BUFFER_PTS (buf) == TEST_GAP_PTS);
           fail_unless (GST_BUFFER_DURATION (buf) == TEST_GAP_DURATION);

@@ -98,10 +98,10 @@ GType gst_aggregator_pad_get_type           (void);
  ***************************/
 
 GST_EXPORT
-GstBuffer * gst_aggregator_pad_steal_buffer (GstAggregatorPad *  pad);
+GstBuffer * gst_aggregator_pad_pop_buffer   (GstAggregatorPad *  pad);
 
 GST_EXPORT
-GstBuffer * gst_aggregator_pad_get_buffer   (GstAggregatorPad *  pad);
+GstBuffer * gst_aggregator_pad_peek_buffer  (GstAggregatorPad *  pad);
 
 GST_EXPORT
 gboolean    gst_aggregator_pad_drop_buffer  (GstAggregatorPad *  pad);

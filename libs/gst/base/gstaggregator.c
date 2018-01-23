@@ -41,9 +41,9 @@
  *  * When data is queued on all pads, the aggregate vmethod is called.
  *
  *  * One can peek at the data on any given GstAggregatorPad with the
- *    gst_aggregator_pad_get_buffer () method, and take ownership of it
- *    with the gst_aggregator_pad_steal_buffer () method. When a buffer
- *    has been taken with steal_buffer (), a new buffer can be queued
+ *    gst_aggregator_pad_peek_buffer () method, and remove it from the pad
+ *    with the gst_aggregator_pad_pop_buffer () method. When a buffer
+ *    has been taken with pop_buffer (), a new buffer can be queued
  *    on that pad.
  *
  *  * If the subclass wishes to push a buffer downstream in its aggregate
@@ -2815,7 +2815,7 @@ gst_aggregator_pad_clip_buffer_unlocked (GstAggregatorPad * pad)
 }
 
 /**
- * gst_aggregator_pad_steal_buffer:
+ * gst_aggregator_pad_pop_buffer:
  * @pad: the pad to get buffer from
  *
  * Steal the ref to the buffer currently queued in @pad.
@@ -2824,7 +2824,7 @@ gst_aggregator_pad_clip_buffer_unlocked (GstAggregatorPad * pad)
  *   queued. You should unref the buffer after usage.
  */
 GstBuffer *
-gst_aggregator_pad_steal_buffer (GstAggregatorPad * pad)
+gst_aggregator_pad_pop_buffer (GstAggregatorPad * pad)
 {
   GstBuffer *buffer;
 
@@ -2858,7 +2858,7 @@ gst_aggregator_pad_drop_buffer (GstAggregatorPad * pad)
 {
   GstBuffer *buf;
 
-  buf = gst_aggregator_pad_steal_buffer (pad);
+  buf = gst_aggregator_pad_pop_buffer (pad);
 
   if (buf == NULL)
     return FALSE;
@@ -2868,7 +2868,7 @@ gst_aggregator_pad_drop_buffer (GstAggregatorPad * pad)
 }
 
 /**
- * gst_aggregator_pad_get_buffer:
+ * gst_aggregator_pad_peek_buffer:
  * @pad: the pad to get buffer from
  *
  * Returns: (transfer full): A reference to the buffer in @pad or
@@ -2876,7 +2876,7 @@ gst_aggregator_pad_drop_buffer (GstAggregatorPad * pad)
  * usage.
  */
 GstBuffer *
-gst_aggregator_pad_get_buffer (GstAggregatorPad * pad)
+gst_aggregator_pad_peek_buffer (GstAggregatorPad * pad)
 {
   GstBuffer *buffer;
 
