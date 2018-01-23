@@ -508,10 +508,15 @@ gst_multi_file_src_uri_get_uri (GstURIHandler * handler)
   gchar *ret;
 
   GST_OBJECT_LOCK (src);
-  if (src->filename != NULL)
-    ret = g_strdup_printf ("multifile://%s", src->filename);
-  else
+  if (src->filename != NULL) {
+    GstUri *uri = gst_uri_new ("multifle", NULL, NULL, GST_URI_NO_PORT,
+        src->filename, NULL, NULL);
+
+    ret = gst_uri_to_string (uri);
+    gst_uri_unref (uri);
+  } else {
     ret = NULL;
+  }
   GST_OBJECT_UNLOCK (src);
 
   return ret;
@@ -522,20 +527,37 @@ gst_multi_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     GError ** error)
 {
   GstMultiFileSrc *src = GST_MULTI_FILE_SRC (handler);
-
   GstUri *gsturi;
+  gchar *path;
 
   gsturi = gst_uri_from_string (uri);
-  g_free (src->filename);
-  src->filename = NULL;
-  if (gsturi) {
-    gchar *turi = gst_uri_get_path (gsturi);
-    gst_multi_file_src_set_location (src, turi);
-    g_free (turi);
-    gst_uri_unref (gsturi);
-  }
+  if (gsturi == NULL)
+    goto invalid_uri;
+
+  /* This should get us the unescaped path */
+  path = gst_uri_get_path (gsturi);
+  if (path == NULL)
+    goto invalid_uri;
+
+  GST_OBJECT_LOCK (src);
+  gst_multi_file_src_set_location (src, path);
+  GST_OBJECT_UNLOCK (src);
+
+  g_free (path);
+  gst_uri_unref (gsturi);
 
   return TRUE;
+
+/* ERRORS */
+invalid_uri:
+  {
+    GST_WARNING_OBJECT (src, "Invalid multifile URI '%s'", uri);
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid multifile URI");
+    if (gsturi)
+      gst_uri_unref (gsturi);
+    return FALSE;
+  }
 }
 
 static void
