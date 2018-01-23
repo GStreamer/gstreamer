@@ -30,8 +30,6 @@
 #include "gstdecklinkaudiosrc.h"
 #include "gstdecklinkvideosrc.h"
 
-#define GST_DECKLINK_MAX_DEVICES 16
-
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_debug);
 #define GST_CAT_DEFAULT gst_decklink_debug
 
@@ -1119,8 +1117,7 @@ gst_decklink_com_thread (gpointer data)
 #endif /* _MSC_VER */
 
 static GOnce devices_once = G_ONCE_INIT;
-static int n_devices;
-static Device devices[GST_DECKLINK_MAX_DEVICES];
+static GArray *devices; /* array of Device */
 
 static gpointer
 init_devices (gpointer data)
@@ -1149,29 +1146,32 @@ init_devices (gpointer data)
     return NULL;
   }
 
+  devices = g_array_new (FALSE, TRUE, sizeof (Device));
+
   i = 0;
   ret = iterator->Next (&decklink);
   while (ret == S_OK) {
-    g_mutex_init (&devices[i].input.lock);
-    g_mutex_init (&devices[i].output.lock);
-    g_cond_init (&devices[i].output.cond);
+    Device dev;
+
+    memset (&dev, 0, sizeof (Device));
+
+    g_mutex_init (&dev.input.lock);
+    g_mutex_init (&dev.output.lock);
+    g_cond_init (&dev.output.cond);
 
     ret = decklink->QueryInterface (IID_IDeckLinkInput,
-        (void **) &devices[i].input.input);
+        (void **) &dev.input.input);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have input interface: 0x%08lx",
           (unsigned long) ret);
     } else {
       IDeckLinkDisplayModeIterator *mode_iter;
 
-      devices[i].input.device = decklink;
-      devices[i].input.
-          input->SetCallback (new GStreamerDecklinkInputCallback (&devices[i].
-              input));
+      dev.input.device = decklink;
+      dev.input.
+          input->SetCallback (new GStreamerDecklinkInputCallback (&dev.input));
 
-      if ((ret =
-              devices[i].input.input->GetDisplayModeIterator (&mode_iter)) ==
-          S_OK) {
+      if ((ret = dev.input.input->GetDisplayModeIterator (&mode_iter)) == S_OK) {
         IDeckLinkDisplayMode *mode;
 
         GST_DEBUG ("Input %d supports:", i);
@@ -1194,22 +1194,20 @@ init_devices (gpointer data)
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkOutput,
-        (void **) &devices[i].output.output);
+        (void **) &dev.output.output);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have output interface: 0x%08lx",
           (unsigned long) ret);
     } else {
       IDeckLinkDisplayModeIterator *mode_iter;
 
-      devices[i].output.device = decklink;
-      devices[i].output.clock =
+      dev.output.device = decklink;
+      dev.output.clock =
           gst_decklink_clock_new ("GstDecklinkOutputClock");
-      GST_DECKLINK_CLOCK_CAST (devices[i].output.clock)->output =
-          &devices[i].output;
+      GST_DECKLINK_CLOCK_CAST (dev.output.clock)->output =
+          &dev.output;
 
-      if ((ret =
-              devices[i].output.output->GetDisplayModeIterator (&mode_iter)) ==
-          S_OK) {
+      if ((ret = dev.output.output->GetDisplayModeIterator (&mode_iter)) == S_OK) {
         IDeckLinkDisplayMode *mode;
 
         GST_DEBUG ("Output %d supports:", i);
@@ -1232,7 +1230,7 @@ init_devices (gpointer data)
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
-        (void **) &devices[i].input.config);
+        (void **) &dev.input.config);
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have config interface: 0x%08lx",
           (unsigned long) ret);
@@ -1240,28 +1238,30 @@ init_devices (gpointer data)
       char *serial_number;
 
       ret =
-          devices[i].input.
+          dev.input.
           config->GetString (bmdDeckLinkConfigDeviceInformationSerialNumber,
           (COMSTR_T *) & serial_number);
       if (ret == S_OK) {
         CONVERT_COM_STRING (serial_number);
-        devices[i].output.hw_serial_number = g_strdup (serial_number);
-        devices[i].input.hw_serial_number = g_strdup (serial_number);
+        dev.output.hw_serial_number = g_strdup (serial_number);
+        dev.input.hw_serial_number = g_strdup (serial_number);
         GST_DEBUG ("device %d has serial number %s", i, serial_number);
         FREE_COM_STRING (serial_number);
       }
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkAttributes,
-        (void **) &devices[i].input.attributes);
-    devices[i].output.attributes = devices[i].input.attributes;
+        (void **) &dev.input.attributes);
+    dev.output.attributes = dev.input.attributes;
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have attributes interface: "
           "0x%08lx", (unsigned long) ret);
     }
 
     ret = decklink->QueryInterface (IID_IDeckLinkKeyer,
-        (void **) &devices[i].output.keyer);
+        (void **) &dev.output.keyer);
+
+    g_array_append_val (devices, dev);
 
     /* We only warn of failure to obtain the keyer interface if the keyer
      * is enabled by keyer_mode
@@ -1269,14 +1269,9 @@ init_devices (gpointer data)
 
     ret = iterator->Next (&decklink);
     i++;
-
-    if (i == GST_DECKLINK_MAX_DEVICES) {
-      GST_WARNING ("this hardware has more then 10 devices");
-      break;
-    }
   }
 
-  n_devices = i;
+  GST_INFO ("Detected %u devices", devices->len);
 
   iterator->Release ();
 
@@ -1287,13 +1282,15 @@ GstDecklinkOutput *
 gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
 {
   GstDecklinkOutput *output;
+  Device *device;
 
   g_once (&devices_once, init_devices, NULL);
 
-  if (n >= n_devices)
+  if (n < 0 || (guint) n >= devices->len)
     return NULL;
 
-  output = &devices[n].output;
+  device = &g_array_index (devices, Device, n);
+  output = &device->output;
   if (!output->output) {
     GST_ERROR ("Device %d has no output", n);
     return NULL;
@@ -1319,11 +1316,13 @@ void
 gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio)
 {
   GstDecklinkOutput *output;
+  Device *device;
 
-  if (n >= n_devices)
+  if (n < 0 || (guint) n >= devices->len)
     return;
 
-  output = &devices[n].output;
+  device = &g_array_index (devices, Device, n);
+  output = &device->output;
   g_assert (output->output);
 
   g_mutex_lock (&output->lock);
@@ -1343,13 +1342,15 @@ GstDecklinkInput *
 gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
 {
   GstDecklinkInput *input;
+  Device *device;
 
   g_once (&devices_once, init_devices, NULL);
 
-  if (n >= n_devices)
+  if (n < 0 || (guint) n >= devices->len)
     return NULL;
 
-  input = &devices[n].input;
+  device = &g_array_index (devices, Device, n);
+  input = &device->input;
   if (!input->input) {
     GST_ERROR ("Device %d has no input", n);
     return NULL;
@@ -1377,11 +1378,14 @@ void
 gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
 {
   GstDecklinkInput *input;
+  Device *device;
 
-  if (n >= n_devices)
+  if (n < 0 || (guint) n >= devices->len)
     return;
 
-  input = &devices[n].input;
+  device = &g_array_index (devices, Device, n);
+
+  input = &device->input;
   g_assert (input->input);
 
   g_mutex_lock (&input->lock);
