@@ -28,3 +28,9 @@ CRUFT_FILES = \
 include $(top_srcdir)/common/cruft.mak
 
 all-local: check-cruft
+
+EXTRA_DIST = \
+	meson.build \
+	meson_options.txt \
+	config.h.meson \
+	scripts/pythondetector

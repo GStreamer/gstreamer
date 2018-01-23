@@ -11,3 +11,6 @@ libgstpython_la_SOURCES = gstpythonplugin.c
 libgstpython_la_LDFLAGS = -avoid-version -shrext $(PYTHON_SO)
 libgstpython_la_LIBADD =  $(PYTHON_LIBS) $(PYGOBJECT_LIBS) $(GST_LIBS)
 libgstpython_la_CFLAGS = $(GST_CFLAGS) $(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(PYTHON_INCLUDES)
+
+EXTRA_DIST = \
+	meson.build
