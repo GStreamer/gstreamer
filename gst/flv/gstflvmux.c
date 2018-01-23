@@ -1616,7 +1616,7 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts)
   for (l = GST_ELEMENT_CAST (aggregator)->sinkpads; l; l = l->next) {
     apad = GST_AGGREGATOR_PAD (l->data);
     pad = GST_FLV_MUX_PAD (l->data);
-    buffer = gst_aggregator_pad_get_buffer (GST_AGGREGATOR_PAD (pad));
+    buffer = gst_aggregator_pad_peek_buffer (GST_AGGREGATOR_PAD (pad));
     if (!buffer)
       continue;
     if (best_ts == GST_CLOCK_TIME_NONE) {
@@ -1679,7 +1679,7 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   }
 
   if (best) {
-    buffer = gst_aggregator_pad_steal_buffer (GST_AGGREGATOR_PAD (best));
+    buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best));
     g_assert (buffer);
     best->dts =
         gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD
