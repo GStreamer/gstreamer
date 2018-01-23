@@ -1286,6 +1286,9 @@ gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
 
   g_once (&devices_once, init_devices, NULL);
 
+  if (devices == NULL)
+    return NULL;
+
   if (n < 0 || (guint) n >= devices->len)
     return NULL;
 
@@ -1318,6 +1321,9 @@ gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio)
   GstDecklinkOutput *output;
   Device *device;
 
+  if (devices == NULL)
+    return;
+
   if (n < 0 || (guint) n >= devices->len)
     return;
 
@@ -1345,6 +1351,9 @@ gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
   Device *device;
 
   g_once (&devices_once, init_devices, NULL);
+
+  if (devices == NULL)
+    return NULL;
 
   if (n < 0 || (guint) n >= devices->len)
     return NULL;
@@ -1379,6 +1388,9 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
 {
   GstDecklinkInput *input;
   Device *device;
+
+  if (devices == NULL)
+    return;
 
   if (n < 0 || (guint) n >= devices->len)
     return;
