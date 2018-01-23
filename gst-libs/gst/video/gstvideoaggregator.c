@@ -1077,7 +1077,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 
     if (!is_eos)
       eos = FALSE;
-    buf = gst_aggregator_pad_get_buffer (bpad);
+    buf = gst_aggregator_pad_peek_buffer (bpad);
     if (buf) {
       GstClockTime start_time, end_time;
 
@@ -1122,7 +1122,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           continue;
         }
         gst_buffer_unref (buf);
-        buf = gst_aggregator_pad_steal_buffer (bpad);
+        buf = gst_aggregator_pad_pop_buffer (bpad);
         gst_buffer_replace (&pad->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
           pad->info = pad->priv->pending_vinfo;
