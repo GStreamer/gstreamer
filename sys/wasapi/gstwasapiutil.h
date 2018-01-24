@@ -52,10 +52,12 @@ gint gst_wasapi_erole_to_device_role (gint erole);
 
 const gchar *gst_wasapi_util_hresult_to_string (HRESULT hr);
 
-gboolean
-gst_wasapi_util_get_device_client (GstElement * element,
-    gboolean capture,
-    gint role, const wchar_t * device_name, IAudioClient ** ret_client);
+gboolean gst_wasapi_util_get_devices (GstElement * element, gboolean active,
+    GList ** devices);
+
+gboolean gst_wasapi_util_get_device_client (GstElement * element,
+    gboolean capture, gint role, const wchar_t * device_strid,
+    IAudioClient ** ret_client);
 
 gboolean gst_wasapi_util_get_render_client (GstElement * element,
     IAudioClient * client, IAudioRenderClient ** ret_render_client);

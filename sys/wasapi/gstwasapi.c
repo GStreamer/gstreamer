@@ -23,15 +23,22 @@
 
 #include "gstwasapisink.h"
 #include "gstwasapisrc.h"
+#include "gstwasapidevice.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "wasapisink", GST_RANK_NONE,
-      GST_TYPE_WASAPI_SINK);
-  gst_element_register (plugin, "wasapisrc", GST_RANK_NONE,
-      GST_TYPE_WASAPI_SRC);
+  if (!gst_element_register (plugin, "wasapisink", GST_RANK_NONE,
+          GST_TYPE_WASAPI_SINK))
+    return FALSE;
 
+  if (!gst_element_register (plugin, "wasapisrc", GST_RANK_NONE,
+          GST_TYPE_WASAPI_SRC))
+    return FALSE;
+
+  if (!gst_device_provider_register (plugin, "wasapideviceprovider",
+          GST_RANK_PRIMARY, GST_TYPE_WASAPI_DEVICE_PROVIDER))
+    return FALSE;
 
   return TRUE;
 }

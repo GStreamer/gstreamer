@@ -23,12 +23,25 @@
 #endif
 
 #include "gstwasapiutil.h"
+#include "gstwasapidevice.h"
 
 #include <mmdeviceapi.h>
+
+/* This was only added to MinGW in ~2015 and our Cerbero toolchain is too old */
+#if defined(_MSC_VER)
+  #include <functiondiscoverykeys_devpkey.h>
+#elif !defined(PKEY_Device_FriendlyName)
+  #include <initguid.h>
+  #include <propkey.h>
+  DEFINE_PROPERTYKEY(PKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0, 14);
+  DEFINE_PROPERTYKEY(PKEY_AudioEngine_DeviceFormat, 0xf19f064d, 0x82c, 0x4e27, 0xbc, 0x73, 0x68, 0x82, 0xa1, 0xbb, 0x8e, 0x4c, 0);
+#endif
+
 
 #ifdef __uuidof
 const CLSID CLSID_MMDeviceEnumerator = __uuidof (MMDeviceEnumerator);
 const IID IID_IMMDeviceEnumerator = __uuidof (IMMDeviceEnumerator);
+const IID IID_IMMEndpoint = __uuidof (IMMEndpoint);
 const IID IID_IAudioClient = __uuidof (IAudioClient);
 const IID IID_IAudioRenderClient = __uuidof (IAudioRenderClient);
 const IID IID_IAudioCaptureClient = __uuidof (IAudioCaptureClient);
@@ -42,6 +55,10 @@ const CLSID CLSID_MMDeviceEnumerator = { 0xbcde0395, 0xe52f, 0x467c,
 
 const IID IID_IMMDeviceEnumerator = { 0xa95664d2, 0x9614, 0x4f35,
   {0xa7, 0x46, 0xde, 0x8d, 0xb6, 0x36, 0x17, 0xe6}
+};
+
+const IID IID_IMMEndpoint = { 0x1be09788, 0x6894, 0x4089,
+  {0x85, 0x86, 0x9a, 0x2a, 0x6c, 0x26, 0x5a, 0xc5}
 };
 
 const IID IID_IAudioClient = { 0x1cb9ad4c, 0xdbfa, 0x4c32,
@@ -235,6 +252,176 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
   return s;
 }
 
+static IMMDeviceEnumerator*
+gst_wasapi_util_get_device_enumerator (GstElement * element)
+{
+  HRESULT hr;
+  IMMDeviceEnumerator *enumerator = NULL;
+
+  hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
+      &IID_IMMDeviceEnumerator, (void **) &enumerator);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (element, "CoCreateInstance (MMDeviceEnumerator) failed"
+        ": %s", gst_wasapi_util_hresult_to_string (hr));
+    return NULL;
+  }
+
+  return enumerator;
+}
+
+gboolean
+gst_wasapi_util_get_devices (GstElement * element, gboolean active,
+    GList ** devices)
+{
+  gboolean ret = FALSE;
+  static GstStaticCaps scaps = GST_STATIC_CAPS (GST_WASAPI_STATIC_CAPS);
+  DWORD dwStateMask = active ? DEVICE_STATE_ACTIVE : DEVICE_STATEMASK_ALL;
+  IMMDeviceCollection *device_collection = NULL;
+  IMMDeviceEnumerator *enumerator = NULL;
+  const gchar *device_class, *element_name;
+  guint ii, count;
+  HRESULT hr;
+
+  *devices = NULL;
+
+  enumerator = gst_wasapi_util_get_device_enumerator (element);
+  if (!enumerator)
+    return FALSE;
+
+  hr = IMMDeviceEnumerator_EnumAudioEndpoints (enumerator, eAll, dwStateMask,
+      &device_collection);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (element, "IMMDeviceEnumerator::EnumAudioEndpoints "
+        "failed: %s", gst_wasapi_util_hresult_to_string (hr));
+    goto err;
+  }
+
+  hr = IMMDeviceCollection_GetCount (device_collection, &count);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (element, "Failed to count devices: %s",
+        gst_wasapi_util_hresult_to_string (hr));
+    goto err;
+  }
+
+  /* Create a GList of GstDevices* to return */
+  for (ii = 0; ii < count; ii++) {
+    IMMDevice *item = NULL;
+    IMMEndpoint *endpoint = NULL;
+    IAudioClient *client = NULL;
+    IPropertyStore *prop_store = NULL;
+    WAVEFORMATEX *format = NULL;
+    gchar *description = NULL;
+    gchar *strid = NULL;
+    EDataFlow dataflow;
+    PROPVARIANT var;
+    wchar_t *wstrid;
+    GstDevice *device;
+    GstStructure *props;
+    GstCaps *caps;
+
+    hr = IMMDeviceCollection_Item (device_collection, ii, &item);
+    if (hr != S_OK)
+      continue;
+
+    hr = IMMDevice_QueryInterface (item, &IID_IMMEndpoint, (void **) &endpoint);
+    if (hr != S_OK)
+      goto next;
+
+    hr = IMMEndpoint_GetDataFlow (endpoint, &dataflow);
+    if (hr != S_OK)
+      goto next;
+
+    if (dataflow == eRender) {
+      device_class = "Audio/Sink";
+      element_name = "wasapisink";
+    } else {
+      device_class = "Audio/Source";
+      element_name = "wasapisrc";
+    }
+
+    PropVariantInit (&var);
+
+    hr = IMMDevice_GetId (item, &wstrid);
+    if (hr != S_OK)
+      goto next;
+    strid = g_utf16_to_utf8 (wstrid, -1, NULL, NULL, NULL);
+    CoTaskMemFree (wstrid);
+
+    hr = IMMDevice_OpenPropertyStore (item, STGM_READ, &prop_store);
+    if (hr != S_OK)
+      goto next;
+
+    /* NOTE: More properties can be added as needed from here:
+     * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370794(v=vs.85).aspx */
+    hr = IPropertyStore_GetValue (prop_store, &PKEY_Device_FriendlyName, &var);
+    if (hr != S_OK)
+      goto next;
+    description = g_utf16_to_utf8 (var.pwszVal, -1, NULL, NULL, NULL);
+    PropVariantClear (&var);
+
+    /* Get the audio client so we can fetch the mix format for shared mode
+     * to get the device format for exclusive mode (or something close to that)
+     * fetch PKEY_AudioEngine_DeviceFormat from the property store. */
+    hr = IMMDevice_Activate (item, &IID_IAudioClient, CLSCTX_ALL, NULL,
+        (void **) &client);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (element, "IMMDevice::Activate (IID_IAudioClient) failed"
+          "on %s: %s", strid, gst_wasapi_util_hresult_to_string (hr));
+      goto next;
+    }
+
+    hr = IAudioClient_GetMixFormat (client, &format);
+    if (hr != S_OK || format == NULL) {
+      GST_ERROR_OBJECT ("GetMixFormat failed on %s: %s", strid,
+          gst_wasapi_util_hresult_to_string (hr));
+      goto next;
+    }
+
+    if (!gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
+            gst_static_caps_get (&scaps), &caps, NULL))
+       goto next;
+
+    /* Set some useful properties */
+    props = gst_structure_new ("wasapi-proplist",
+        "device.api", G_TYPE_STRING, "wasapi",
+        "device.strid", G_TYPE_STRING, GST_STR_NULL (strid),
+        "wasapi.device.description", G_TYPE_STRING, description, NULL);
+
+    device = g_object_new (GST_TYPE_WASAPI_DEVICE, "device", strid,
+        "display-name", description, "caps", caps,
+        "device-class", device_class, "properties", props, NULL);
+    GST_WASAPI_DEVICE(device)->element = element_name;
+
+    gst_structure_free (props);
+    gst_caps_unref (caps);
+    *devices = g_list_prepend (*devices, device);
+
+next:
+    PropVariantClear (&var);
+    if (prop_store)
+      IUnknown_Release (prop_store);
+    if (endpoint)
+      IUnknown_Release (endpoint);
+    if (client)
+      IUnknown_Release (client);
+    if (item)
+      IUnknown_Release (item);
+    if (description)
+      g_free (description);
+    if (strid)
+      g_free (strid);
+  }
+
+  ret = TRUE;
+
+err:
+  if (enumerator)
+    IUnknown_Release (enumerator);
+  if (device_collection)
+    IUnknown_Release (device_collection);
+  return ret;
+}
+
 gboolean
 gst_wasapi_util_get_device_client (GstElement * element,
     gboolean capture, gint role, const wchar_t * device_strid,
@@ -246,13 +433,8 @@ gst_wasapi_util_get_device_client (GstElement * element,
   IMMDevice *device = NULL;
   IAudioClient *client = NULL;
 
-  hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
-      &IID_IMMDeviceEnumerator, (void **) &enumerator);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "CoCreateInstance (MMDeviceEnumerator) failed"
-        ": %s", gst_wasapi_util_hresult_to_string (hr));
+  if (!(enumerator = gst_wasapi_util_get_device_enumerator (element)))
     goto beach;
-  }
 
   if (!device_strid) {
     hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enumerator,
