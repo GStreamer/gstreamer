@@ -260,30 +260,36 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_PRESET,
       g_param_spec_enum ("preset", "Encoding Preset",
           "Encoding Preset",
-          GST_TYPE_NV_PRESET,
-          DEFAULT_PRESET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_NV_PRESET, DEFAULT_PRESET,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RC_MODE,
-      g_param_spec_enum ("rc-mode", "RC Mode",
-          "Rate Control Mode",
-          GST_TYPE_NV_RC_MODE,
-          DEFAULT_RC_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_enum ("rc-mode", "RC Mode", "Rate Control Mode",
+          GST_TYPE_NV_RC_MODE, DEFAULT_RC_MODE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_QP_MIN,
       g_param_spec_int ("qp-min", "Minimum Quantizer",
           "Minimum quantizer (-1 = from NVENC preset)", -1, 51, DEFAULT_QP_MIN,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_QP_MAX,
       g_param_spec_int ("qp-max", "Maximum Quantizer",
           "Maximum quantizer (-1 = from NVENC preset)", -1, 51, DEFAULT_QP_MAX,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_QP_CONST,
       g_param_spec_int ("qp-const", "Constant Quantizer",
-          "Constant quantizer (-1 = from NVENC preset)",
-          -1, 51, DEFAULT_QP_CONST,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Constant quantizer (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_CONST,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
           "Bitrate in kbit/sec (0 = from NVENC preset)", 0, 2000 * 1024,
-          DEFAULT_BITRATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_BITRATE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 }
 
 static gboolean
