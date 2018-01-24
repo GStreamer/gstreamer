@@ -157,13 +157,35 @@ gst_wasapi_src_dispose (GObject * object)
     self->event_handle = NULL;
   }
 
+  if (self->client_clock != NULL) {
+    IUnknown_Release (self->client_clock);
+    self->client_clock = NULL;
+  }
+
+  if (self->client != NULL) {
+    IUnknown_Release (self->client);
+    self->client = NULL;
+  }
+
+  if (self->capture_client != NULL) {
+    IUnknown_Release (self->capture_client);
+    self->capture_client = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
 gst_wasapi_src_finalize (GObject * object)
 {
+  GstWasapiSrc *self = GST_WASAPI_SRC (object);
+
+  g_clear_pointer (&self->mix_format, CoTaskMemFree);
+
   CoUninitialize ();
+
+  g_clear_pointer (&self->cached_caps, gst_caps_unref);
+  g_clear_pointer (&self->device, g_free);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -180,10 +202,10 @@ gst_wasapi_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
     {
-      gchar *device = g_value_get_string (value);
+      const gchar *device = g_value_get_string (value);
       g_free (self->device);
       self->device =
-          device ? g_utf8_to_utf16 (device, 0, NULL, NULL, NULL) : NULL;
+          device ? g_utf8_to_utf16 (device, -1, NULL, NULL, NULL) : NULL;
       break;
     }
     default:
@@ -204,7 +226,7 @@ gst_wasapi_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
       g_value_take_string (value, self->device ?
-          g_utf16_to_utf8 (self->device, 0, NULL, NULL, NULL) : NULL);
+          g_utf16_to_utf8 (self->device, -1, NULL, NULL, NULL) : NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -275,6 +297,10 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
   if (self->client)
     return TRUE;
 
+  /* FIXME: Switching the default device does not switch the stream to it,
+   * even if the old device was unplugged. We need to handle this somehow.
+   * For example, perhaps we should automatically switch to the new device if
+   * the default device is changed and a device isn't explicitly selected. */
   if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self), TRUE,
           self->role, self->device, &client)) {
     if (!self->device)
@@ -343,8 +369,6 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     GST_ERROR_OBJECT (self, "IAudioClient::SetEventHandle failed");
     goto beach;
   }
-
-  GST_INFO_OBJECT (self, "we got till here");
 
   /* Get the clock and the clock freq */
   if (!gst_wasapi_util_get_clock (GST_ELEMENT (self), self->client,
@@ -440,8 +464,12 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     hr = IAudioCaptureClient_GetBuffer (self->capture_client,
         (BYTE **) & from, &have_frames, &flags, NULL, NULL);
     if (hr != S_OK) {
-      GST_ERROR_OBJECT (self, "IAudioCaptureClient::GetBuffer () failed: %s",
-          gst_wasapi_util_hresult_to_string (hr));
+      if (hr == AUDCLNT_S_BUFFER_EMPTY)
+        GST_WARNING_OBJECT (self, "IAudioCaptureClient::GetBuffer failed: %s"
+            ", retrying", gst_wasapi_util_hresult_to_string (hr));
+      else
+        GST_ERROR_OBJECT (self, "IAudioCaptureClient::GetBuffer failed: %s",
+            gst_wasapi_util_hresult_to_string (hr));
       length = 0;
       goto beach;
     }

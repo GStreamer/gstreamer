@@ -157,13 +157,35 @@ gst_wasapi_sink_dispose (GObject * object)
     self->event_handle = NULL;
   }
 
+  if (self->client != NULL) {
+    IUnknown_Release (self->client);
+    self->client = NULL;
+  }
+
+  if (self->render_client != NULL) {
+    IUnknown_Release (self->render_client);
+    self->render_client = NULL;
+  }
+
   G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->dispose (object);
 }
 
 static void
 gst_wasapi_sink_finalize (GObject * object)
 {
+  GstWasapiSink *self = GST_WASAPI_SINK (object);
+
+  g_clear_pointer (&self->mix_format, CoTaskMemFree);
+
   CoUninitialize ();
+
+  if (self->cached_caps != NULL) {
+    gst_caps_unref (self->cached_caps);
+    self->cached_caps = NULL;
+  }
+
+  g_clear_pointer (&self->device, g_free);
+  self->mute = FALSE;
 
   G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->finalize (object);
 }
@@ -183,10 +205,10 @@ gst_wasapi_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
     {
-      gchar *device = g_value_get_string (value);
+      const gchar *device = g_value_get_string (value);
       g_free (self->device);
       self->device =
-          device ? g_utf8_to_utf16 (device, 0, NULL, NULL, NULL) : NULL;
+          device ? g_utf8_to_utf16 (device, -1, NULL, NULL, NULL) : NULL;
       break;
     }
     default:
@@ -210,7 +232,7 @@ gst_wasapi_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEVICE:
       g_value_take_string (value, self->device ?
-          g_utf16_to_utf8 (self->device, 0, NULL, NULL, NULL) : NULL);
+          g_utf16_to_utf8 (self->device, -1, NULL, NULL, NULL) : NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
