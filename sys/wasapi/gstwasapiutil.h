@@ -27,6 +27,13 @@
 
 #include <audioclient.h>
 
+/* Static Caps shared between source, sink, and device provider */
+#define GST_WASAPI_STATIC_CAPS "audio/x-raw, " \
+        "format = (string) " GST_AUDIO_FORMATS_ALL ", " \
+        "layout = (string) interleaved, " \
+        "rate = " GST_AUDIO_RATE_RANGE ", " \
+        "channels = " GST_AUDIO_CHANNELS_RANGE
+
 /* Device role enum property */
 typedef enum
 {
@@ -59,7 +66,8 @@ gboolean gst_wasapi_util_get_capture_client (GstElement * element,
 gboolean gst_wasapi_util_get_clock (GstElement * element,
     IAudioClient * client, IAudioClock ** ret_clock);
 
-GstCaps *gst_wasapi_util_waveformatex_to_caps (WAVEFORMATEXTENSIBLE * format,
-    GstCaps * template_caps);
+gboolean gst_wasapi_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
+    GstCaps * template_caps, GstCaps ** out_caps,
+    GstAudioChannelPosition ** out_positions);
 
 #endif /* __GST_WASAPI_UTIL_H__ */

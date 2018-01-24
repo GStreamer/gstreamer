@@ -50,6 +50,10 @@ struct _GstWasapiSink
   WAVEFORMATEX *mix_format;
   /* The probed caps that we can accept */
   GstCaps *cached_caps;
+  /* The channel positions in the data to be written to the device we
+   * will pass this to GstAudioRingbuffer so it can to it translate
+   * from the native GStreamer channel layout. */
+  GstAudioChannelPosition *positions;
 
   /* properties */
   gint role;

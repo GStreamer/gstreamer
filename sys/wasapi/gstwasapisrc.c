@@ -46,10 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_wasapi_src_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " GST_AUDIO_FORMATS_ALL ", "
-        "layout = (string) interleaved, "
-        "rate = " GST_AUDIO_RATE_RANGE ", channels = (int) [1, 2]"));
+    GST_STATIC_CAPS (GST_WASAPI_STATIC_CAPS));
 
 #define DEFAULT_ROLE    GST_WASAPI_DEVICE_ROLE_CONSOLE
 
@@ -185,6 +182,7 @@ gst_wasapi_src_finalize (GObject * object)
   CoUninitialize ();
 
   g_clear_pointer (&self->cached_caps, gst_caps_unref);
+  g_clear_pointer (&self->positions, g_free);
   g_clear_pointer (&self->device, g_free);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -261,12 +259,18 @@ gst_wasapi_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
       goto out;
     }
 
-    caps =
-        gst_wasapi_util_waveformatex_to_caps ((WAVEFORMATEXTENSIBLE *) format,
-        template_caps);
+    gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
+        template_caps, &caps, &self->positions);
     if (caps == NULL) {
       GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL), ("unknown format"));
       goto out;
+    }
+
+    {
+      gchar *pos_str = gst_audio_channel_positions_to_string (self->positions,
+          format->nChannels);
+      GST_INFO_OBJECT (self, "positions are: %s", pos_str);
+      g_free (pos_str);
     }
 
     self->mix_format = format;
@@ -408,6 +412,9 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   self->client_clock = client_clock;
   self->client_clock_freq = client_clock_freq;
   self->capture_client = capture_client;
+
+  gst_audio_ring_buffer_set_channel_positions (
+      GST_AUDIO_BASE_SRC (self)->ringbuffer, self->positions);
 
   res = TRUE;
 

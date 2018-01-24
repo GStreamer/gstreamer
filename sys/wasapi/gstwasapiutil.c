@@ -61,6 +61,31 @@ const IID IID_IAudioRenderClient = { 0xf294acfc, 0x3146, 0x4483,
 };
 #endif
 
+static struct {
+  guint64 wasapi_pos;
+  GstAudioChannelPosition gst_pos;
+} wasapi_to_gst_pos[] = {
+  {SPEAKER_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
+  {SPEAKER_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {SPEAKER_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+  {SPEAKER_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1},
+  {SPEAKER_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT},
+  {SPEAKER_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {SPEAKER_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER},
+  {SPEAKER_FRONT_RIGHT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
+  {SPEAKER_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+  /* Enum values diverge from this point onwards */
+  {SPEAKER_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT},
+  {SPEAKER_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
+  {SPEAKER_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_CENTER},
+  {SPEAKER_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT},
+  {SPEAKER_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER},
+  {SPEAKER_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT},
+  {SPEAKER_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT},
+  {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
+  {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT},
+};
+
 GType
 gst_wasapi_device_role_get_type (void)
 {
@@ -212,7 +237,7 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
 
 gboolean
 gst_wasapi_util_get_device_client (GstElement * element,
-    gboolean capture, gint role, const wchar_t * device_name,
+    gboolean capture, gint role, const wchar_t * device_strid,
     IAudioClient ** ret_client)
 {
   gboolean res = FALSE;
@@ -224,12 +249,12 @@ gst_wasapi_util_get_device_client (GstElement * element,
   hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
       &IID_IMMDeviceEnumerator, (void **) &enumerator);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "CoCreateInstance (MMDeviceEnumerator) failed:"
-        "%s", gst_wasapi_util_hresult_to_string (hr));
+    GST_ERROR_OBJECT (element, "CoCreateInstance (MMDeviceEnumerator) failed"
+        ": %s", gst_wasapi_util_hresult_to_string (hr));
     goto beach;
   }
 
-  if (!device_name) {
+  if (!device_strid) {
     hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enumerator,
         capture ? eCapture : eRender, role, &device);
     if (hr != S_OK) {
@@ -239,10 +264,10 @@ gst_wasapi_util_get_device_client (GstElement * element,
       goto beach;
     }
   } else {
-    hr = IMMDeviceEnumerator_GetDevice (enumerator, device_name, &device);
+    hr = IMMDeviceEnumerator_GetDevice (enumerator, device_strid, &device);
     if (hr != S_OK) {
       GST_ERROR_OBJECT (element, "IMMDeviceEnumerator::GetDevice (%S) failed"
-          ": %s", device_name, gst_wasapi_util_hresult_to_string (hr));
+          ": %s", device_strid, gst_wasapi_util_hresult_to_string (hr));
       goto beach;
     }
   }
@@ -379,13 +404,71 @@ gst_waveformatex_to_audio_format (WAVEFORMATEXTENSIBLE * format)
   return fmt_str;
 }
 
-GstCaps *
-gst_wasapi_util_waveformatex_to_caps (WAVEFORMATEXTENSIBLE * format,
-    GstCaps * template_caps)
+static void
+gst_wasapi_util_channel_position_all_none (guint channels,
+    GstAudioChannelPosition * position)
+{
+  int ii;
+  for (ii = 0; ii < channels; ii++)
+    position[ii] = GST_AUDIO_CHANNEL_POSITION_NONE;
+}
+
+/* Parse WAVEFORMATEX to get the gstreamer channel mask, and the wasapi channel
+ * positions so GstAudioRingbuffer can reorder the audio data to match the
+ * gstreamer channel order. */
+static guint64
+gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
+    GstAudioChannelPosition ** out_position)
+{
+  int ii;
+  guint64 mask = 0;
+  WORD nChannels = format->Format.nChannels;
+  DWORD dwChannelMask = format->dwChannelMask;
+  GstAudioChannelPosition *pos = NULL;
+
+  pos = g_new (GstAudioChannelPosition, nChannels);
+  gst_wasapi_util_channel_position_all_none (nChannels, pos);
+
+  /* Too many channels, have to assume that they are all non-positional */
+  if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
+    GST_INFO ("wasapi: got too many (%i) channels, assuming non-positional",
+        nChannels);
+    goto out;
+  }
+
+  /* Too many bits in the channel mask, and the bits don't match nChannels */
+  if (dwChannelMask >> (G_N_ELEMENTS (wasapi_to_gst_pos) + 1) != 0) {
+    GST_WARNING ("wasapi: too many bits in channel mask (%lu), assuming "
+        "non-positional", dwChannelMask);
+    goto out;
+  }
+
+  /* Map WASAPI's channel mask to Gstreamer's channel mask and positions.
+   * If the no. of bits in the mask > nChannels, we will ignore the extra. */
+  for (ii = 0; ii < nChannels; ii++) {
+    if (!(dwChannelMask & wasapi_to_gst_pos[ii].wasapi_pos))
+      /* Non-positional or unknown position, warn? */
+      continue;
+    mask |= G_GUINT64_CONSTANT(1) << wasapi_to_gst_pos[ii].gst_pos;
+    pos[ii] = wasapi_to_gst_pos[ii].gst_pos;
+  }
+
+out:
+  if (out_position)
+    *out_position = pos;
+  return mask;
+}
+
+gboolean
+gst_wasapi_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
+    GstCaps * template_caps, GstCaps ** out_caps,
+    GstAudioChannelPosition ** out_positions)
 {
   int ii;
   const gchar *afmt;
-  GstCaps *caps = gst_caps_copy (template_caps);
+  guint64 channel_mask;
+
+  *out_caps = NULL;
 
   /* TODO: handle SPDIF and other encoded formats */
 
@@ -395,23 +478,31 @@ gst_wasapi_util_waveformatex_to_caps (WAVEFORMATEXTENSIBLE * format,
       format->Format.wFormatTag != WAVE_FORMAT_IEEE_FLOAT &&
       format->Format.wFormatTag != WAVE_FORMAT_EXTENSIBLE)
     /* Unhandled format tag */
-    return NULL;
+    return FALSE;
 
   /* WASAPI can only tell us one canonical mix format that it will accept. The
    * alternative is calling IsFormatSupported on all combinations of formats.
    * Instead, it's simpler and faster to require conversion inside gstreamer */
   afmt = gst_waveformatex_to_audio_format (format);
   if (afmt == NULL)
-    return NULL;
+    return FALSE;
 
-  for (ii = 0; ii < gst_caps_get_size (caps); ii++) {
-    GstStructure *s = gst_caps_get_structure (caps, ii);
+  *out_caps = gst_caps_copy (template_caps);
+
+  /* This will always return something that might be usable */
+  channel_mask =
+      gst_wasapi_util_waveformatex_to_channel_mask (format, out_positions);
+
+  for (ii = 0; ii < gst_caps_get_size (*out_caps); ii++) {
+    GstStructure *s = gst_caps_get_structure (*out_caps, ii);
 
     gst_structure_set (s,
         "format", G_TYPE_STRING, afmt,
         "channels", G_TYPE_INT, format->Format.nChannels,
-        "rate", G_TYPE_INT, format->Format.nSamplesPerSec, NULL);
+        "rate", G_TYPE_INT, format->Format.nSamplesPerSec,
+        "channel-mask", GST_TYPE_BITMASK, channel_mask,
+        NULL);
   }
 
-  return caps;
+  return TRUE;
 }
