@@ -428,6 +428,7 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
       break;
     }
     case GST_EVENT_SEGMENT:{
+      GstClockTime duration;
       GstSegment seg;
 
       gst_event_copy_segment (event, &seg);
@@ -461,6 +462,15 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
           seg.time = splitpad->segment.time;
         }
       }
+
+      GST_OBJECT_LOCK (splitmux);
+      duration = splitmux->total_duration;
+      GST_OBJECT_UNLOCK (splitmux);
+
+      if (duration > 0)
+        seg.duration = duration;
+      else
+        seg.duration = GST_CLOCK_TIME_NONE;
 
       GST_INFO_OBJECT (splitpad,
           "Forwarding segment %" GST_SEGMENT_FORMAT, &seg);
