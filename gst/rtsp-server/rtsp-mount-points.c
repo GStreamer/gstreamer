@@ -277,6 +277,11 @@ gst_rtsp_mount_points_match (GstRTSPMountPoints * mounts,
         data_item_dump (ritem, "new best: ");
       }
       best = iter;
+    } else {
+      /* if have a match and the current item doesn't prefix match the best we
+       * found so far then we're moving away and can bail out of the loop */
+      if (best != NULL && !has_prefix (ritem, g_sequence_get (best)))
+        break;
     }
 
     iter = g_sequence_iter_next (iter);
