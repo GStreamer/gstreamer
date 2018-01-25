@@ -1841,9 +1841,10 @@ gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstSubParse *self = GST_SUBPARSE (parent);
   gboolean ret = FALSE;
 
-  GST_DEBUG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (self, "%s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_GROUP_DONE:
     case GST_EVENT_EOS:{
       /* Make sure the last subrip chunk is pushed out even
        * if the file does not have an empty line at the end */
@@ -1854,7 +1855,9 @@ gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gchar term_chars[] = { '\n', '\n', '\0' };
         GstBuffer *buf = gst_buffer_new_and_alloc (2 + 1);
 
-        GST_DEBUG ("EOS. Pushing remaining text (if any)");
+        GST_DEBUG_OBJECT (self, "%s: force pushing of any remaining text",
+            GST_EVENT_TYPE_NAME (event));
+
         gst_buffer_fill (buf, 0, term_chars, 3);
         gst_buffer_set_size (buf, 2);
 
