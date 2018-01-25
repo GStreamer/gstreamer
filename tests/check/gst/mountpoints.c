@@ -69,6 +69,9 @@ static const gchar *paths[] = {
   "/tark/bar/baz",
   "/tark/bar/baz/t",
   "/boozop",
+  "/raw",
+  "/raw/video",
+  "/raw/snapshot",
 };
 
 GST_START_TEST (test_match)
@@ -122,6 +125,14 @@ GST_START_TEST (test_match)
   g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/baz", &matched);
   fail_unless (tmp == f[4]);
+  fail_unless (matched == 13);
+  g_object_unref (tmp);
+  tmp = gst_rtsp_mount_points_match (mounts, "/raw/video", &matched);
+  fail_unless (tmp == f[8]);
+  fail_unless (matched == 10);
+  g_object_unref (tmp);
+  tmp = gst_rtsp_mount_points_match (mounts, "/raw/snapshot", &matched);
+  fail_unless (tmp == f[9]);
   fail_unless (matched == 13);
   g_object_unref (tmp);
 
