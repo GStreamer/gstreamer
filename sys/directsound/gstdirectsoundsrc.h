@@ -115,9 +115,9 @@ struct _GstDirectSoundSrcClass
 
 GType gst_directsound_src_get_type (void);
 
-#define GST_DIRECTSOUND_SRC_CAPS "audio/x-raw, "
-        "format = (string) { S16LE, S8 }, "
-        "layout = (string) interleaved, "
+#define GST_DIRECTSOUND_SRC_CAPS "audio/x-raw, " \
+        "format = (string) { S16LE, S8 }, " \
+        "layout = (string) interleaved, " \
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"
 
 G_END_DECLS
