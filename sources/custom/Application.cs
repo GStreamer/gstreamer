@@ -45,10 +45,13 @@ namespace Gst {
 			
 		public static void Init(ref string[] argv) {
 			int cnt_argv = argv == null ? 0 : argv.Length;
-			IntPtr[] native_argv = new IntPtr [cnt_argv];
+			System.Collections.Generic.List<IntPtr> native_arg_list = new System.Collections.Generic.List<IntPtr>();
 			for (int i = 0; i < cnt_argv; i++)
-				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
+				native_arg_list.Add (GLib.Marshaller.StringToPtrGStrdup(argv[i]));
+			IntPtr[] native_argv = native_arg_list.ToArray();
 			gst_init(ref cnt_argv, ref native_argv);
+			foreach (var native_arg in native_arg_list)
+				GLib.Marshaller.Free (native_arg);
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -66,11 +69,14 @@ namespace Gst {
 
 		public static bool InitCheck(ref string[] argv) {
 			int cnt_argv = argv == null ? 0 : argv.Length;
-			IntPtr[] native_argv = new IntPtr [cnt_argv];
+			System.Collections.Generic.List<IntPtr> native_arg_list = new System.Collections.Generic.List<IntPtr>();
 			for (int i = 0; i < cnt_argv; i++)
-				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
+				native_arg_list.Add (GLib.Marshaller.StringToPtrGStrdup(argv[i]));
+			IntPtr[] native_argv = native_arg_list.ToArray();
 			IntPtr error = IntPtr.Zero;
 			bool ret = gst_init_check(ref cnt_argv, ref native_argv, out error);
+			foreach (var native_arg in native_arg_list)
+				GLib.Marshaller.Free (native_arg);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}

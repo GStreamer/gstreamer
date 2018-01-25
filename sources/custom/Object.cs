@@ -55,7 +55,8 @@ namespace Gst {
 			if (PropertyNameCache.ContainsKey (name))
 				return PropertyNameCache [name];
 
-			var ptr = g_object_class_find_property (Marshal.ReadIntPtr (Handle), GLib.Marshaller.StringToPtrGStrdup (name));
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			var ptr = g_object_class_find_property (Marshal.ReadIntPtr (Handle), native_name);
 			var result = ptr != IntPtr.Zero;
 
 			// just cache the positive results because there might
@@ -63,6 +64,7 @@ namespace Gst {
 			if (result)
 				PropertyNameCache [name] = result;
 
+			GLib.Marshaller.Free (native_name);
 			return result;
 		}
 
