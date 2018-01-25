@@ -1823,9 +1823,19 @@ index_failed:
   }
 }
 
-/* stream/index return sample that is min/max w.r.t. byte position,
- * time is min/max w.r.t. time of samples,
- * the latter need not be time of the former sample */
+/* Find, for each track, the first sample in coding order that has a file offset >= @byte_pos.
+ *
+ * If @fw is false, the coding order is explored backwards.
+ *
+ * If @set is true, each stream will be moved to its matched sample, or EOS if no matching
+ * sample is found for that track.
+ *
+ * The stream and sample index of the sample with the minimum offset in the direction explored
+ * (see @fw) is returned in the output parameters @_stream and @_index respectively.
+ *
+ * @_time is set to the QTSAMPLE_PTS of the matched sample with the minimum QTSAMPLE_PTS in the
+ * direction explored, which may not always match the QTSAMPLE_PTS of the sample returned in
+ * @_stream and @_index. */
 static void
 gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
     gboolean set, QtDemuxStream ** _stream, gint * _index, gint64 * _time)
