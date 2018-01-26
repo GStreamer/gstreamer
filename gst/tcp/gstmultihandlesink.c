@@ -1038,11 +1038,13 @@ gst_multi_handle_sink_client_queue_buffer (GstMultiHandleSink * mhsink,
   caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
 
   if (!mhclient->caps) {
-    GST_DEBUG_OBJECT (sink,
-        "%s no previous caps for this client, send streamheader",
-        mhclient->debug);
-    send_streamheader = TRUE;
-    mhclient->caps = gst_caps_ref (caps);
+    if (caps) {
+      GST_DEBUG_OBJECT (sink,
+          "%s no previous caps for this client, send streamheader",
+          mhclient->debug);
+      send_streamheader = TRUE;
+      mhclient->caps = gst_caps_ref (caps);
+    }
   } else {
     /* there were previous caps recorded, so compare */
     if (!gst_caps_is_equal (caps, mhclient->caps)) {
@@ -1086,8 +1088,7 @@ gst_multi_handle_sink_client_queue_buffer (GstMultiHandleSink * mhsink,
       }
     }
     /* Replace the old caps */
-    gst_caps_unref (mhclient->caps);
-    mhclient->caps = gst_caps_ref (caps);
+    gst_caps_replace (&mhclient->caps, caps);
   }
 
   if (G_UNLIKELY (send_streamheader)) {
@@ -1127,7 +1128,8 @@ gst_multi_handle_sink_client_queue_buffer (GstMultiHandleSink * mhsink,
     }
   }
 
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
   caps = NULL;
 
   GST_LOG_OBJECT (sink, "%s queueing buffer of length %" G_GSIZE_FORMAT,
