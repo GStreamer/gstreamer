@@ -18,7 +18,7 @@ h_array = ['--fhead',
            ]
 
 c_array = ['--fhead',
-           "#include \"gstsrtp-enumtypes.h\"\n\n#include \"gstsrtp.h\"",
+           "#include \"gstsrtp-enumtypes.h\"\n\n#include \"gstsrtpenums.h\"",
            '--fprod',
            "\n/* enumerations from \"@filename@\" */",
            '--vhead',

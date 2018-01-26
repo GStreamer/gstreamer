@@ -45,23 +45,43 @@
 #ifndef __GST_SRTP_H__
 #define __GST_SRTP_H__
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include "gstsrtpenums.h"
+#include "gstsrtp-enumtypes.h"
+
 #include <gst/gst.h>
 
-#include <srtp/srtp.h>
+#ifdef HAVE_SRTP2
+#  include <srtp2/srtp.h>
+#  include <srtp2/crypto_types.h>
+#else
+#  include <srtp/srtp.h>
+#  include <srtp/srtp_priv.h>
 
-typedef enum
-{
-  GST_SRTP_CIPHER_NULL,
-  GST_SRTP_CIPHER_AES_128_ICM,
-  GST_SRTP_CIPHER_AES_256_ICM
-} GstSrtpCipherType;
+#  define srtp_crypto_policy_t crypto_policy_t
+#  define SRTP_AES_ICM_128 AES_ICM
+#  define SRTP_AES_ICM_256 AES_ICM
+#  define SRTP_NULL_CIPHER NULL_CIPHER
+#  define SRTP_AES_ICM_128_KEY_LEN_WSALT 30
+#  define SRTP_AES_ICM_256_KEY_LEN_WSALT 46
+#  define SRTP_HMAC_SHA1 HMAC_SHA1
+#  define SRTP_NULL_AUTH NULL_AUTH
+#  define srtp_err_status_t err_status_t
+#  define srtp_err_status_ok err_status_ok
+#  define srtp_err_status_bad_param err_status_bad_param
+#  define srtp_err_status_key_expired err_status_key_expired
+#  define srtp_err_status_auth_fail err_status_auth_fail
+#  define srtp_err_status_cipher_fail err_status_cipher_fail
+#  define srtp_err_status_fail err_status_fail
 
-typedef enum
-{
-  GST_SRTP_AUTH_NULL,
-  GST_SRTP_AUTH_HMAC_SHA1_32,
-  GST_SRTP_AUTH_HMAC_SHA1_80
-} GstSrtpAuthType;
+srtp_err_status_t srtp_set_stream_roc (srtp_t session, guint32 ssrc,
+    guint32 roc);
+srtp_err_status_t srtp_get_stream_roc (srtp_t session, guint32 ssrc,
+    guint32 * roc);
+#endif
 
 void     gst_srtp_init_event_reporter    (void);
 gboolean gst_srtp_get_soft_limit_reached (void);
@@ -72,7 +92,7 @@ const gchar *enum_nick_from_value (GType enum_gtype, gint value);
 gint enum_value_from_nick (GType enum_gtype, const gchar *nick);
 
 void set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
-    GstSrtpAuthType auth, crypto_policy_t * policy);
+    GstSrtpAuthType auth, srtp_crypto_policy_t * policy);
 
 guint cipher_key_size (GstSrtpCipherType cipher);
 

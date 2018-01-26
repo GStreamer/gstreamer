@@ -21,20 +21,45 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "gstsrtp.h"
 
-#include <glib.h>
-
 #include <gst/rtp/gstrtcpbuffer.h>
 
 #include "gstsrtpenc.h"
 #include "gstsrtpdec.h"
+
+#ifndef HAVE_SRTP2
+srtp_err_status_t
+srtp_set_stream_roc (srtp_t session, guint32 ssrc, guint32 roc)
+{
+  srtp_stream_t stream;
+
+  stream = srtp_get_stream (session, htonl (ssrc));
+  if (stream == NULL) {
+    return srtp_err_status_bad_param;
+  }
+
+  rdbx_set_roc (&stream->rtp_rdbx, roc);
+  return srtp_err_status_ok;
+}
+
+srtp_err_status_t
+srtp_get_stream_roc (srtp_t session, guint32 ssrc, guint32 * roc)
+{
+  srtp_stream_t stream;
+
+  stream = srtp_get_stream (session, htonl (ssrc));
+  if (stream == NULL) {
+    return srtp_err_status_bad_param;
+  }
+
+  *roc = stream->rtp_rdbx.index >> 16;
+  return srtp_err_status_ok;
+}
+#endif
 
 static void free_reporter_data (gpointer data);
 
@@ -185,38 +210,37 @@ rtcp_buffer_get_ssrc (GstBuffer * buf, guint32 * ssrc)
 
 void
 set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
-    GstSrtpAuthType auth, crypto_policy_t * policy)
+    GstSrtpAuthType auth, srtp_crypto_policy_t * policy)
 {
   switch (cipher) {
     case GST_SRTP_CIPHER_AES_128_ICM:
-      policy->cipher_type = AES_ICM;
-      policy->cipher_key_len = 30;
+      policy->cipher_type = SRTP_AES_ICM_128;
       break;
     case GST_SRTP_CIPHER_AES_256_ICM:
-      policy->cipher_type = AES_ICM;
-      policy->cipher_key_len = 46;
+      policy->cipher_type = SRTP_AES_ICM_256;
       break;
     case GST_SRTP_CIPHER_NULL:
-      policy->cipher_type = NULL_CIPHER;
-      policy->cipher_key_len = 0;
+      policy->cipher_type = SRTP_NULL_CIPHER;
       break;
     default:
       g_assert_not_reached ();
   }
 
+  policy->cipher_key_len = cipher_key_size (cipher);
+
   switch (auth) {
     case GST_SRTP_AUTH_HMAC_SHA1_80:
-      policy->auth_type = HMAC_SHA1;
+      policy->auth_type = SRTP_HMAC_SHA1;
       policy->auth_key_len = 20;
       policy->auth_tag_len = 10;
       break;
     case GST_SRTP_AUTH_HMAC_SHA1_32:
-      policy->auth_type = HMAC_SHA1;
+      policy->auth_type = SRTP_HMAC_SHA1;
       policy->auth_key_len = 20;
       policy->auth_tag_len = 4;
       break;
     case GST_SRTP_AUTH_NULL:
-      policy->auth_type = NULL_AUTH;
+      policy->auth_type = SRTP_NULL_AUTH;
       policy->auth_key_len = 0;
       policy->auth_tag_len = 0;
       break;
@@ -239,10 +263,10 @@ cipher_key_size (GstSrtpCipherType cipher)
 
   switch (cipher) {
     case GST_SRTP_CIPHER_AES_128_ICM:
-      size = 30;
+      size = SRTP_AES_ICM_128_KEY_LEN_WSALT;
       break;
     case GST_SRTP_CIPHER_AES_256_ICM:
-      size = 46;
+      size = SRTP_AES_ICM_256_KEY_LEN_WSALT;
       break;
     case GST_SRTP_CIPHER_NULL:
       size = 0;

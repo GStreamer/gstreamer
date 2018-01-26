@@ -1524,9 +1524,15 @@ AG_GST_CHECK_FEATURE(SRT, [srt library], srt, [
 dnl *** libsrtp ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SRTP, true)
 AG_GST_CHECK_FEATURE(SRTP, [srtp library], srtp, [
-  PKG_CHECK_MODULES(SRTP, libsrtp, HAVE_SRTP="yes",
-    AG_GST_CHECK_LIBHEADER(SRTP, srtp, srtp_init, , srtp/srtp.h, SRTP_LIBS="-lsrtp")
-  )
+  HAVE_SRTP="no"
+  AG_GST_PKG_CHECK_MODULES(SRTP, libsrtp2 >= 2.1.0)
+  if test x"$HAVE_SRTP" = x"yes"; then
+    AC_DEFINE([HAVE_SRTP2], 1, [Define if libsrtp2 is used])
+  else
+    PKG_CHECK_MODULES(SRTP, libsrtp, HAVE_SRTP="yes",
+      AG_GST_CHECK_LIBHEADER(SRTP, srtp, srtp_init, , srtp/srtp.h, SRTP_LIBS="-lsrtp")
+    )
+  fi
   AC_SUBST(SRTP_LIBS)
   AC_SUBST(SRTP_CFLAGS)
 ])

@@ -47,8 +47,7 @@
 #ifndef __GST_SRTPDEC_H__
 #define __GST_SRTPDEC_H__
 
-#include <gst/gst.h>
-#include <srtp/srtp.h>
+#include "gstsrtp.h"
 
 G_BEGIN_DECLS
 
@@ -84,7 +83,9 @@ struct _GstSrtpDec
   gboolean rtp_has_segment;
   gboolean rtcp_has_segment;
 
+#ifndef HAVE_SRTP2
   gboolean roc_changed;
+#endif
 };
 
 struct _GstSrtpDecClass

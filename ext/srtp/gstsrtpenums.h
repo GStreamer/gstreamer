@@ -1,8 +1,7 @@
 /*
  * GStreamer - GStreamer SRTP encoder
  *
- * Copyright 2009 Collabora Ltd.
- *  @author: Gabriel Millaire <gabriel.millaire@collabora.co.uk>
+ * Copyright 2011-2013 Collabora Ltd.
  *  @author: Olivier Crete <olivier.crete@collabora.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -43,59 +42,21 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifndef __GST_SRTP_ENUMS_H__
+#define __GST_SRTP_ENUMS_H__
 
-#ifndef __GST_SRTPENC_H__
-#define __GST_SRTPENC_H__
-
-#include "gstsrtp.h"
-
-G_BEGIN_DECLS
-
-#define GST_TYPE_SRTP_ENC \
-  (gst_srtp_enc_get_type())
-#define GST_SRTP_ENC(obj)                                              \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SRTP_ENC,GstSrtpEnc))
-#define GST_SRTP_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SRTP_ENC,GstSrtpEncClass))
-#define GST_IS_SRTP_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SRTP_ENC))
-#define GST_IS_SRTP_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SRTP_ENC))
-
-typedef struct _GstSrtpEnc      GstSrtpEnc;
-typedef struct _GstSrtpEncClass GstSrtpEncClass;
-
-struct _GstSrtpEnc
+typedef enum
 {
-  GstElement element;
+  GST_SRTP_CIPHER_NULL,
+  GST_SRTP_CIPHER_AES_128_ICM,
+  GST_SRTP_CIPHER_AES_256_ICM
+} GstSrtpCipherType;
 
-  gboolean random_key;
-
-  GstBuffer *key;
-  guint rtp_cipher;
-  guint rtp_auth;
-  guint rtcp_cipher;
-  guint rtcp_auth;
-
-  srtp_t session;
-  gboolean first_session;
-  gboolean key_changed;
-
-  guint replay_window_size;
-  gboolean allow_repeat_tx;
-
-  GHashTable *ssrcs_set;
-};
-
-struct _GstSrtpEncClass
+typedef enum
 {
-  GstElementClass parent_class;
-};
+  GST_SRTP_AUTH_NULL,
+  GST_SRTP_AUTH_HMAC_SHA1_32,
+  GST_SRTP_AUTH_HMAC_SHA1_80
+} GstSrtpAuthType;
 
-GType gst_srtp_enc_get_type (void);
-
-gboolean gst_srtp_enc_plugin_init (GstPlugin * plugin);
-
-G_END_DECLS
-
-#endif /* __GST_SRTPENC_H__ */
+#endif /* __GST_SRTP_ENUMS_H__ */
