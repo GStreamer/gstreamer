@@ -315,7 +315,7 @@ gst_av1_dec_handle_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
     return GST_FLOW_ERROR;
   }
 
-  status = aom_codec_decode (&av1dec->decoder, minfo.data, minfo.size, NULL, 0);
+  status = aom_codec_decode (&av1dec->decoder, minfo.data, minfo.size, NULL);
 
   gst_buffer_unmap (frame->input_buffer, &minfo);
 

@@ -350,8 +350,8 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   }
   av1enc->keyframe_dist++;
 
-  if (aom_codec_encode (&av1enc->codec, &raw, frame->pts, 1, flags,
-          AOM_DL_GOOD_QUALITY) != AOM_CODEC_OK) {
+  if (aom_codec_encode (&av1enc->codec, &raw, frame->pts, 1, flags)
+      != AOM_CODEC_OK) {
     gst_av1_codec_error (&av1enc->codec, "Failed to encode frame");
   }
 
