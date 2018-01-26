@@ -147,7 +147,7 @@ gst_av1_enc_finalize (GObject * object)
 static void
 gst_av1_enc_set_latency (GstAV1Enc * encoder)
 {
-  GstAV1Enc *av1enc = GST_AV1_ENC (encoder);
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
   GstClockTime latency =
       gst_util_uint64_scale (av1enc->aom_cfg.g_lag_in_frames, 1 * GST_SECOND,
       30);
@@ -259,7 +259,7 @@ static gboolean
 gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 {
   GstVideoCodecState *output_state;
-  GstAV1Enc *av1enc = GST_AV1_ENC (encoder);
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
 
   av1enc->keyframe_dist = 30;
 
@@ -327,7 +327,7 @@ gst_av1_enc_fill_image (GstAV1Enc * enc, GstVideoFrame * frame,
 static GstFlowReturn
 gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
-  GstAV1Enc *av1enc = GST_AV1_ENC (encoder);
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
   aom_image_t raw;
   int flags = 0;
   GstFlowReturn ret;
@@ -373,7 +373,7 @@ static void
 gst_av1_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAV1Enc *av1enc = GST_AV1_ENC (object);
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (object);
 
   GST_OBJECT_LOCK (av1enc);
 
@@ -390,7 +390,7 @@ static void
 gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstAV1Enc *av1enc = GST_AV1_ENC (object);
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (object);
 
   GST_OBJECT_LOCK (av1enc);
 

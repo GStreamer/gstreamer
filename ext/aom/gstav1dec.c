@@ -153,7 +153,7 @@ gst_av1_dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_av1_dec_start (GstVideoDecoder * dec)
 {
-  GstAV1Dec *av1dec = (GstAV1Dec *) dec;
+  GstAV1Dec *av1dec = GST_AV1_DEC_CAST (dec);
 
   av1dec->decoder_inited = FALSE;
   av1dec->output_state = NULL;
@@ -165,7 +165,7 @@ gst_av1_dec_start (GstVideoDecoder * dec)
 static gboolean
 gst_av1_dec_stop (GstVideoDecoder * dec)
 {
-  GstAV1Dec *av1dec = (GstAV1Dec *) dec;
+  GstAV1Dec *av1dec = GST_AV1_DEC_CAST (dec);
 
   if (av1dec->output_state) {
     gst_video_codec_state_unref (av1dec->output_state);
@@ -188,7 +188,7 @@ gst_av1_dec_stop (GstVideoDecoder * dec)
 static gboolean
 gst_av1_dec_set_format (GstVideoDecoder * dec, GstVideoCodecState * state)
 {
-  GstAV1Dec *av1dec = (GstAV1Dec *) dec;
+  GstAV1Dec *av1dec = GST_AV1_DEC_CAST (dec);
 
   if (av1dec->decoder_inited) {
     aom_codec_destroy (&av1dec->decoder);
@@ -291,7 +291,7 @@ gst_av1_dec_image_to_buffer (GstAV1Dec * dec, const aom_image_t * img,
 static GstFlowReturn
 gst_av1_dec_handle_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
 {
-  GstAV1Dec *av1dec = (GstAV1Dec *) dec;
+  GstAV1Dec *av1dec = GST_AV1_DEC_CAST (dec);
   GstFlowReturn ret;
   GstMapInfo minfo;
   aom_codec_err_t status;

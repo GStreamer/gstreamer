@@ -41,6 +41,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AV1_DEC))
 #define GST_AV1_DEC_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AV1_DEC, GstAV1DecClass))
+#define GST_AV1_DEC_CAST(obj) \
+  ((GstAV1Dec *) (obj))
 
 typedef struct _GstAV1Dec GstAV1Dec;
 typedef struct _GstAV1DecClass GstAV1DecClass;

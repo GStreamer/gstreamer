@@ -41,6 +41,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AV1_ENC))
 #define GST_IS_AV1_ENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AV1_ENC))
+#define GST_AV1_ENC_CAST(obj) \
+  ((GstAV1Enc *) (obj))
 
 typedef struct _GstAV1Enc GstAV1Enc;
 typedef struct _GstAV1EncClass GstAV1EncClass;
