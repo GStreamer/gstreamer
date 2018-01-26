@@ -1638,6 +1638,7 @@ gst_message_ref
 gst_message_unref
 gst_message_copy
 gst_message_get_structure
+gst_message_writable_structure
 gst_message_make_writable
 gst_message_get_seqnum
 gst_message_set_seqnum

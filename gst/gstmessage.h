@@ -450,6 +450,9 @@ const GstStructure *
                 gst_message_get_structure       (GstMessage *message);
 
 GST_EXPORT
+GstStructure *  gst_message_writable_structure  (GstMessage *message);
+
+GST_EXPORT
 gboolean        gst_message_has_name            (GstMessage *message, const gchar *name);
 
 /* identifiers for events and messages */

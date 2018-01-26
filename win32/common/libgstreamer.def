@@ -826,6 +826,7 @@ EXPORTS
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
+	gst_message_writable_structure
 	gst_meta_api_type_get_tags
 	gst_meta_api_type_has_tag
 	gst_meta_api_type_register

@@ -1159,6 +1159,43 @@ gst_message_get_structure (GstMessage * message)
 }
 
 /**
+ * gst_message_writable_structure:
+ * @message: The #GstMessage.
+ *
+ * Get a writable version of the structure.
+ *
+ * Returns: (transfer none): The structure of the message. The structure
+ * is still owned by the message, which means that you should not free
+ * it and that the pointer becomes invalid when you free the message.
+ * This function checks if @message is writable and will never return
+ * %NULL.
+ *
+ * MT safe.
+ *
+ * Since: 1.14
+ */
+GstStructure *
+gst_message_writable_structure (GstMessage * message)
+{
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (message), NULL);
+  g_return_val_if_fail (gst_message_is_writable (message), NULL);
+
+  structure = GST_MESSAGE_STRUCTURE (message);
+
+  if (structure == NULL) {
+    structure =
+        gst_structure_new_id_empty (gst_message_type_to_quark (GST_MESSAGE_TYPE
+            (message)));
+    gst_structure_set_parent_refcount (structure,
+        &message->mini_object.refcount);
+    GST_MESSAGE_STRUCTURE (message) = structure;
+  }
+  return structure;
+}
+
+/**
  * gst_message_has_name:
  * @message: The #GstMessage.
  * @name: name to check

@@ -35,10 +35,18 @@ GST_START_TEST (test_parsing)
 
   /* GST_MESSAGE_EOS */
   {
+    GstStructure *s;
+
     message = gst_message_new_eos (NULL);
     fail_if (message == NULL);
     fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EOS);
     fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    /* Add an extra field */
+    s = gst_message_writable_structure (message);
+    fail_if (s == NULL);
+    gst_structure_set (s, "eos-extra-field", G_TYPE_BOOLEAN, TRUE, NULL);
+
     gst_message_unref (message);
   }
   /* GST_MESSAGE_ERROR */
