@@ -398,8 +398,6 @@ gst_rtmp_sink_setcaps (GstBaseSink * sink, GstCaps * caps)
   GstRTMPSink *rtmpsink = GST_RTMP_SINK (sink);
   GstStructure *s;
   const GValue *sh;
-  GArray *buffers;
-  gint i;
 
   GST_DEBUG_OBJECT (sink, "caps set to %" GST_PTR_FORMAT, caps);
 
@@ -409,28 +407,42 @@ gst_rtmp_sink_setcaps (GstBaseSink * sink, GstCaps * caps)
     rtmpsink->header = NULL;
   }
 
-  rtmpsink->header = gst_buffer_new ();
-
   s = gst_caps_get_structure (caps, 0);
 
   sh = gst_structure_get_value (s, "streamheader");
-  buffers = g_value_peek_pointer (sh);
+  if (sh == NULL)
+    goto out;
 
-  /* Concatenate all buffers in streamheader into one */
-  for (i = 0; i < buffers->len; ++i) {
-    GValue *val;
-    GstBuffer *buf;
+  if (GST_VALUE_HOLDS_BUFFER (sh)) {
+    rtmpsink->header = gst_buffer_ref (gst_value_get_buffer (sh));
+  } else if (GST_VALUE_HOLDS_ARRAY (sh)) {
+    GArray *buffers;
+    gint i;
 
-    val = &g_array_index (buffers, GValue, i);
-    buf = g_value_peek_pointer (val);
+    buffers = g_value_peek_pointer (sh);
 
-    gst_buffer_ref (buf);
+    /* Concatenate all buffers in streamheader into one */
+    rtmpsink->header = gst_buffer_new ();
+    for (i = 0; i < buffers->len; ++i) {
+      GValue *val;
+      GstBuffer *buf;
 
-    rtmpsink->header = gst_buffer_append (rtmpsink->header, buf);
+      val = &g_array_index (buffers, GValue, i);
+      buf = g_value_peek_pointer (val);
+
+      gst_buffer_ref (buf);
+
+      rtmpsink->header = gst_buffer_append (rtmpsink->header, buf);
+    }
+  } else {
+    GST_ERROR_OBJECT (rtmpsink, "streamheader field has unexpected type %s",
+        G_VALUE_TYPE_NAME (sh));
   }
 
   GST_DEBUG_OBJECT (rtmpsink, "have %" G_GSIZE_FORMAT " bytes of header data",
       gst_buffer_get_size (rtmpsink->header));
+
+out:
 
   return TRUE;
 }
