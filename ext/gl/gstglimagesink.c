@@ -122,7 +122,8 @@ enum
   PROP_BIN_SHOW_PREROLL_FRAME,
   PROP_BIN_OUTPUT_MULTIVIEW_LAYOUT,
   PROP_BIN_OUTPUT_MULTIVIEW_FLAGS,
-  PROP_BIN_OUTPUT_MULTIVIEW_DOWNMIX_MODE
+  PROP_BIN_OUTPUT_MULTIVIEW_DOWNMIX_MODE,
+  PROP_BIN_LAST
 };
 
 enum
@@ -284,6 +285,9 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
           "Output anaglyph type to generate when downmixing to mono",
           GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_MULTIVIEW_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_video_overlay_install_properties (gobject_class, PROP_BIN_LAST);
+
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2,
@@ -389,7 +393,8 @@ enum
   PROP_IGNORE_ALPHA,
   PROP_OUTPUT_MULTIVIEW_LAYOUT,
   PROP_OUTPUT_MULTIVIEW_FLAGS,
-  PROP_OUTPUT_MULTIVIEW_DOWNMIX_MODE
+  PROP_OUTPUT_MULTIVIEW_DOWNMIX_MODE,
+  PROP_LAST
 };
 
 enum
@@ -692,6 +697,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
           GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_MULTIVIEW_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_video_overlay_install_properties (gobject_class, PROP_LAST);
+
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
       "Julien Isorce <julien.isorce@gmail.com>");
@@ -827,7 +834,8 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
       GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_video_overlay_set_property (object, PROP_LAST, prop_id, value))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -885,7 +893,8 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, glimage_sink->mview_downmix_mode);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_video_overlay_set_property (object, PROP_LAST, prop_id, value))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
