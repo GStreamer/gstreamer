@@ -207,7 +207,11 @@ buffer pushed in it.</doc>
       <method name="available" c:identifier="gst_adapter_available">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Gets the maximum amount of bytes available, that is it returns the maximum
 value that can be supplied to gst_adapter_map() without that function
-returning %NULL.</doc>
+returning %NULL.
+
+Calling gst_adapter_map() with the amount of bytes returned by this function
+may require expensive operations (like copying the data into a temporary
+buffer) in some cases.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">number of bytes available in @adapter</doc>
@@ -221,8 +225,11 @@ returning %NULL.</doc>
         </parameters>
       </method>
       <method name="available_fast" c:identifier="gst_adapter_available_fast">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Gets the maximum number of bytes that are immediately available without
-requiring any expensive operations (like copying the data into a
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstadapter.c">Gets the maximum number of bytes that can be retrieved in a single map
+operation without merging buffers.
+
+Calling gst_adapter_map() with the amount of bytes returned by this function
+will never require any expensive operations (like copying the data into a
 temporary buffer).</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">

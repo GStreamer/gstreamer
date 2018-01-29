@@ -1314,6 +1314,10 @@ gst_adapter_get_buffer_list (GstAdapter * adapter, gsize nbytes)
  * value that can be supplied to gst_adapter_map() without that function
  * returning %NULL.
  *
+ * Calling gst_adapter_map() with the amount of bytes returned by this function
+ * may require expensive operations (like copying the data into a temporary
+ * buffer) in some cases.
+ *
  * Returns: number of bytes available in @adapter
  */
 gsize
@@ -1328,8 +1332,11 @@ gst_adapter_available (GstAdapter * adapter)
  * gst_adapter_available_fast:
  * @adapter: a #GstAdapter
  *
- * Gets the maximum number of bytes that are immediately available without
- * requiring any expensive operations (like copying the data into a
+ * Gets the maximum number of bytes that can be retrieved in a single map
+ * operation without merging buffers.
+ *
+ * Calling gst_adapter_map() with the amount of bytes returned by this function
+ * will never require any expensive operations (like copying the data into a
  * temporary buffer).
  *
  * Returns: number of bytes that are available in @adapter without expensive
