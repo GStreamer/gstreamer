@@ -560,6 +560,11 @@ gst_gdp_depay_decide_allocation (GstGDPDepay * gdpdepay)
     return;
   }
 
+  if (!gst_caps_is_fixed (caps)) {
+    GST_LOG_OBJECT (gdpdepay, "Caps on src pad are not fixed. Not querying.");
+    return;
+  }
+
   query = gst_query_new_allocation (caps, TRUE);
   if (!gst_pad_peer_query (gdpdepay->srcpad, query)) {
     GST_WARNING_OBJECT (gdpdepay, "Peer allocation query failed.");
