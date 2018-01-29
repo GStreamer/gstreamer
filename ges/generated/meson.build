@@ -111,39 +111,27 @@ generated_sources = [
     'GES_NotifyMetaHandler.cs',
 ]
 
-source_gen = custom_target(pkg + '_codegen',
-    input: raw_api_fname,
-    output: generated_sources,
+run_target('update_ges_code',
     command: [
         generate_api,
-        '--api-raw', '@INPUT@',
+        '--api-raw', raw_api_fname,
         '--gapi-fixup', gapi_fixup,
         '--metadata', metadata,
         '--gapi-codegen', gapi_codegen,
         '--extra-includes=' + glib_api_includes,
         '--extra-includes=' + gio_api_includes,
         '--extra-includes=' + gst_api_includes,
-        '--out', meson.current_build_dir(),
+        '--out', meson.current_source_dir(),
         '--files', ';'.join(generated_sources),
         '--assembly-name', pkg,
         '--abi-includes', 'ges/ges.h',
         '--abi-cs-usings', 'Gst,Gst.Video,Gst.Sdp,Gst.Tags,Gst.Rtsp,Gst.PbUtils,Gst.Net,Gst.FFT,Gst.Controller,Gst.Base,Gst.Audio,Gst.App,GES',
     ],
-    depend_files: [raw_api_fname],
-    depends: codegen_dependencies + [gst_source_gen])
+)
 
-c_abi = custom_target(pkg + '_c_abi',
-        input: raw_api_fname,
-        output: pkg + '-abi.c',
-        command: [generate_api, '--fake'],
-        depends: [source_gen])
+ges_generate_files = files(generated_sources)
 
-cs_abi = custom_target(pkg + '_cs_abi',
-        input: raw_api_fname,
-        output: pkg + '-abi.cs',
-        command: [generate_api, '--fake'],
-        depends: [source_gen])
-
-
+c_abi = files(pkg + '-abi.c')
+cs_abi = files(pkg + '-abi.cs')
 gapis += [join_paths(meson.current_build_dir(), pkg + '-api.xml')]
-gapis_deps = [source_gen]
+gapis_deps = []

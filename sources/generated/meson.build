@@ -723,38 +723,28 @@ generated_sources = [
     'Gst.Audio_AudioStreamAlign.cs',
 ]
 
-gst_source_gen = custom_target('gst_codegen',
-    input: raw_api_fname,
-    output: generated_sources,
+run_target('update_gstreamer_code',
     command: [
-        generate_api,
-        '--api-raw', '@INPUT@',
-        '--gapi-fixup', gapi_fixup,
-        '--metadata', metadata,
-        '--gapi-codegen', gapi_codegen,
-        '--extra-includes=' + glib_api_includes,
-        '--extra-includes=' + gio_api_includes,
-        '--out', meson.current_build_dir(),
-        '--files', ';'.join(generated_sources),
-        '--assembly-name', meson.project_name(),
-        '--abi-includes', abi_includes,
-        '--abi-cs-usings', 'Gst,Gst.Video,Gst.Sdp,Gst.Tags,Gst.Rtsp,Gst.PbUtils,Gst.Net,Gst.FFT,Gst.Controller,Gst.Base,Gst.Audio,Gst.App',
-    ],
-    depend_files: [raw_api_fname],
-    depends: codegen_dependencies)
+            generate_api,
+            '--api-raw', raw_api_fname,
+            '--gapi-fixup', gapi_fixup,
+            '--metadata', metadata,
+            '--gapi-codegen', gapi_codegen,
+            '--extra-includes=' + glib_api_includes,
+            '--extra-includes=' + gio_api_includes,
+            '--out', meson.current_source_dir(),
+            '--files', ';'.join(generated_sources),
+            '--assembly-name', meson.project_name(),
+            '--abi-includes', abi_includes,
+            '--abi-cs-usings', 'Gst,Gst.Video,Gst.Sdp,Gst.Tags,Gst.Rtsp,Gst.PbUtils,Gst.Net,Gst.FFT,Gst.Controller,Gst.Base,Gst.Audio,Gst.App',
+    ]
+)
 
-c_abi = custom_target('gst_sharp_c_abi',
-        input: raw_api_fname,
-        output: 'gstreamer-sharp-abi.c',
-        command: [generate_api, '--fake'],
-        depends: [gst_source_gen])
+gst_generate_files = files(generated_sources)
 
-cs_abi = custom_target('gst_sharp_cs_abi',
-        input: raw_api_fname,
-        output: 'gstreamer-sharp-abi.cs',
-        command: [generate_api, '--fake'],
-        depends: [gst_source_gen])
+c_abi = files('gstreamer-sharp-abi.c')
+cs_abi = files('gstreamer-sharp-abi.cs')
 
-gst_api_includes = join_paths(meson.current_build_dir(), 'gstreamer-sharp-api.xml')
+gst_api_includes = join_paths(meson.current_source_dir(), 'gstreamer-sharp-api.xml')
 gapis = [gst_api_includes]
-gapis_deps = [gst_source_gen]
+gapis_deps = []
