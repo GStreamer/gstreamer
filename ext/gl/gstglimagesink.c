@@ -993,11 +993,8 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
           g_signal_connect (window, "mouse-event",
           G_CALLBACK (gst_glimage_sink_mouse_event_cb), gl_sink);
 
-      if (gl_sink->x >= 0 && gl_sink->y >= 0 && gl_sink->width > 0 &&
-          gl_sink->height > 0) {
-        gst_gl_window_set_render_rectangle (window, gl_sink->x, gl_sink->y,
-            gl_sink->width, gl_sink->height);
-      }
+      gst_gl_window_set_render_rectangle (window, gl_sink->x, gl_sink->y,
+          gl_sink->width, gl_sink->height);
 
       if (other_context)
         gst_object_unref (other_context);
