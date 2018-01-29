@@ -580,6 +580,15 @@ gst_gdp_depay_decide_allocation (GstGDPDepay * gdpdepay)
   if (gdpdepay->allocator)
     gst_object_unref (gdpdepay->allocator);
 
+  if (allocator &&
+      GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC)) {
+    GST_DEBUG_OBJECT (gdpdepay,
+        "Provided allocator has a custom alloc fuction. Ignoring.");
+    gst_object_unref (allocator);
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
   gdpdepay->allocator = allocator;
   gdpdepay->allocation_params = params;
 
