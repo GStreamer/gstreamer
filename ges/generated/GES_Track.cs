@@ -333,7 +333,7 @@ namespace GES {
 		static extern bool ges_track_add_element(IntPtr raw, IntPtr _object);
 
 		public bool AddElement(GES.TrackElement _object) {
-			bool raw_ret = ges_track_add_element(Handle, _object == null ? IntPtr.Zero : _object.OwnedHandle);
+			bool raw_ret = ges_track_add_element(Handle, _object == null ? IntPtr.Zero : _object.Handle);
 			bool ret = raw_ret;
 			return ret;
 		}

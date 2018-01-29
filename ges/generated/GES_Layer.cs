@@ -396,7 +396,7 @@ namespace GES {
 		static extern bool ges_layer_add_clip(IntPtr raw, IntPtr clip);
 
 		public bool AddClip(GES.Clip clip) {
-			bool raw_ret = ges_layer_add_clip(Handle, clip == null ? IntPtr.Zero : clip.OwnedHandle);
+			bool raw_ret = ges_layer_add_clip(Handle, clip == null ? IntPtr.Zero : clip.Handle);
 			bool ret = raw_ret;
 			return ret;
 		}

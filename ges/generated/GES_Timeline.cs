@@ -711,7 +711,7 @@ namespace GES {
 		static extern bool ges_timeline_add_layer(IntPtr raw, IntPtr layer);
 
 		public bool AddLayer(GES.Layer layer) {
-			bool raw_ret = ges_timeline_add_layer(Handle, layer == null ? IntPtr.Zero : layer.OwnedHandle);
+			bool raw_ret = ges_timeline_add_layer(Handle, layer == null ? IntPtr.Zero : layer.Handle);
 			bool ret = raw_ret;
 			return ret;
 		}
