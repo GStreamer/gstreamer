@@ -708,7 +708,19 @@ generated_sources = [
     'Gst.Rtp_RTPBufferMapFlags.cs',
     'Gst.Rtp_Constants.cs',
     'Gst.Rtp_RTPBuffer.cs',
-    'Gst.Rtp_RTPBaseAudioPayload.cs'
+    'Gst.Rtp_RTPBaseAudioPayload.cs',
+    'Gst.Base_AggregatorPad.cs',
+    'Gst.Base_Aggregator.cs',
+    'Gst.App_PushBufferListEventHandler.cs',
+    'Gst_PromiseChangeFunc.cs',
+    'Gst_PromiseResult.cs',
+    'Gst_GstSharp.ElementForeachPadFuncNative.cs',
+    'Gst_Promise.cs',
+    'Gst_ElementForeachPadFunc.cs',
+    'Gst_GstSharp.PromiseChangeFuncNative.cs',
+    'Gst.Rtsp_RTSPConnectionAcceptCertificateFunc.cs',
+    'Gst.Rtsp_Gst.RtspSharp.RTSPConnectionAcceptCertificateFuncNative.cs',
+    'Gst.Audio_AudioStreamAlign.cs',
 ]
 
 gst_source_gen = custom_target('gst_codegen',
