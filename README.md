@@ -16,13 +16,28 @@ These libraries are needed for clutter-sharp to compile:
 
 Building & Installing
 ----
-With meson:
 
     meson build && ninja -C build/
+    I
+HACKING
+-------
 
-With Autotools:
+While hacking on the code generator or the `.metadata` files, you will
+need to force code regeneration with `ninja update-code`, a full rebuild
+is triggered right after.
 
-    ./autogen.sh --prefix=/usr && make install
+Updating to new GStreamer version
+--------------------------------
+
+* Make sure [bindinator] is installed on the system
+
+Make sure you are in an environement where latest `.gir` files are available (either install
+or through the `$GI_TYPELIB_PATH` env var).
+
+    ninja -C update-all
+
+* Verify newly generated code and `git add` files in `sources/generated/` and `ges/generated`
+* Commit
 
 Supported Platforms
 ----
@@ -49,6 +64,6 @@ License
 ----
 gstreamer-sharp is licensed under the [LGPL 2.1](https://www.gnu.org/licenses/lgpl-2.1.html)
 
-[bindinator]:https://github.com/gtk-sharp/bindinator
-[gtk-sharp]:https://github.com/gtk-sharp/gtk-sharp
+[bindinator]:https://github.com/GLibSharp/bindinator
+[gtk-sharp]:https://github.com/GLibSharp/GtlSharp
 [gstreamer]: http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/
