@@ -26,6 +26,11 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
+# Disable strict aliasing
+if cc.has_argument('-fno-strict-aliasing')
+  add_project_arguments('-fno-strict-aliasing', language: 'c')
+endif
+
 # Mandatory GST deps
 libm = cc.find_library('m', required : false)
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
