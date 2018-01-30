@@ -346,11 +346,27 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   guint64 client_clock_freq = 0;
   IAudioCaptureClient *capture_client = NULL;
   REFERENCE_TIME latency_rt;
+  gint64 default_period, min_period;
+  guint bpf, rate, buffer_frames;
   HRESULT hr;
 
+  hr = IAudioClient_GetDevicePeriod (self->client, &default_period, &min_period);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod failed");
+    goto beach;
+  }
+  GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
+      ", min period: %" G_GINT64_FORMAT, default_period, min_period);
+
+  /* Set hnsBufferDuration to 0, which should, in theory, tell the device to
+   * create a buffer with the smallest latency possible. In practice, this is
+   * usually 2 * default_period. See:
+   * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370871(v=vs.85).aspx
+   *
+   * NOTE: min_period is a lie, and I have never seen WASAPI use it as the
+   * current period */
   hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED,
-      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, spec->buffer_time * 10, 0,
-      self->mix_format, NULL);
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, self->mix_format, NULL);
   if (hr != S_OK) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
         ("IAudioClient::Initialize failed: %s",
@@ -358,7 +374,26 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     goto beach;
   }
 
-  /* Get latency for logging */
+  /* Total size in frames of the allocated buffer that we will read from */
+  hr = IAudioClient_GetBufferSize (self->client, &buffer_frames);
+  if (hr != S_OK) {
+    GST_ERROR_OBJECT (self, "IAudioClient::GetBufferSize failed");
+    goto beach;
+  }
+
+  bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
+  GST_INFO_OBJECT (self, "buffer size is %i frames, bpf is %i bytes, "
+      "rate is %i Hz", buffer_frames, bpf, rate);
+
+  spec->segsize = gst_util_uint64_scale_int_round (rate * bpf,
+      default_period * 100, GST_SECOND);
+  spec->segtotal = (buffer_frames * bpf) / spec->segsize;
+
+  GST_INFO_OBJECT (self, "segsize is %i, segtotal is %i", spec->segsize,
+      spec->segtotal);
+
+  /* Get WASAPI latency for logging */
   hr = IAudioClient_GetStreamLatency (self->client, &latency_rt);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetStreamLatency failed");
@@ -385,17 +420,6 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     GST_ERROR_OBJECT (self, "IAudioClock::GetFrequency failed");
     goto beach;
   }
-
-  /* Total size of the allocated buffer that we will read from
-   * XXX: Will this ever change while playing? */
-  hr = IAudioClient_GetBufferSize (self->client, &self->buffer_frame_count);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetBufferSize failed");
-    goto beach;
-  }
-  GST_INFO_OBJECT (self, "frame count is %i, blockAlign is %i, "
-      "buffer_time is %" G_GINT64_FORMAT, self->buffer_frame_count,
-      self->mix_format->nBlockAlign, spec->buffer_time);
 
   /* Get capture source client and start it up */
   if (!gst_wasapi_util_get_capture_client (GST_ELEMENT (self), self->client,
