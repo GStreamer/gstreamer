@@ -96,6 +96,11 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
+# Disable strict aliasing
+if cc.has_argument('-fno-strict-aliasing')
+  add_project_arguments('-fno-strict-aliasing', language: 'c')
+endif
+
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 
