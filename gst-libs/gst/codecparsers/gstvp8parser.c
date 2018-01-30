@@ -548,7 +548,7 @@ gst_vp8_parser_parse_frame_header (GstVp8Parser * parser,
 
   data += frame_hdr->data_chunk_size;
   size -= frame_hdr->data_chunk_size;
-  if (!gst_vp8_range_decoder_init (&rd, data, frame_hdr->first_part_size))
+  if (!gst_vp8_range_decoder_init (&rd, data, size))
     return GST_VP8_PARSER_BROKEN_DATA;
 
   result = parse_frame_header (parser, &rd, frame_hdr);
