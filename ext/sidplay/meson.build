@@ -1,11 +1,13 @@
 # sidplay plugin works with libsidplay 1.36.x (not 2.x.x)
 have_sidplay = false
 if add_languages('cpp')
+  extra_args = []
   cxx = meson.get_compiler('cpp')
   if cxx.has_argument('-fvisibility=hidden')
-    cxx_vis_args = ['-fvisibility=hidden']
-  else
-    cxx_vis_args = []
+    extra_args += ['-fvisibility=hidden']
+  endif
+  if cxx.has_argument('-fno-strict-aliasing')
+    extra_args += ['-fno-strict-aliasing']
   endif
 
   if cxx.has_header('sidplay/player.h')
@@ -22,7 +24,7 @@ endif
 
 if have_sidplay
   shared_module('gstsid', 'gstsiddec.cc',
-    cpp_args : ugly_args + cxx_vis_args,
+    cpp_args : ugly_args + extra_args,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, sidplay_dep],
     install : true,
