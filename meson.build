@@ -32,6 +32,11 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
+# Disable strict aliasing
+if cc.has_argument('-fno-strict-aliasing')
+  add_project_arguments('-fno-strict-aliasing', language: 'c')
+endif
+
 cdata = configuration_data()
 cdata.set_quoted('GETTEXT_PACKAGE', 'gst-rtsp-server-1.0')
 cdata.set_quoted('PACKAGE', 'gst-rtsp-server')
