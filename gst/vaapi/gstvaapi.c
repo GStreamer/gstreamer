@@ -67,7 +67,7 @@ plugin_add_dependencies (GstPlugin * plugin)
     "DISPLAY", "WAYLAND_DISPLAY", NULL
   };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
-  const gchar *kernel_names[] = { "card", "render" };
+  const gchar *kernel_names[] = { "card", "render", NULL };
 
   /* features get updated upon changes in /dev/dri/card* */
   gst_plugin_add_dependency (plugin, NULL, kernel_paths, kernel_names,
