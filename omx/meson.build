@@ -26,6 +26,7 @@ omx_sources = [
   'gstomxmp3enc.c',
 ]
 
+extra_inc = []
 extra_c_args = []
 
 if have_omx_vp8
@@ -42,6 +43,10 @@ if have_omx_hevc
   omx_sources += 'gstomxh265dec.c'
 endif
 
+if not have_external_omx
+  extra_inc += include_directories ('openmax')
+endif
+
 optional_deps = []
 if gstgl_dep.found()
   optional_deps += gstgl_dep
@@ -52,7 +57,7 @@ gstomx = library('gstomx',
   omx_sources,
   c_args : gst_omx_args + extra_c_args,
 #  link_args : noseh_link_args,
-  include_directories : [configinc, omx_inc],
+  include_directories : [configinc] + extra_inc,
   dependencies : [gstvideo_dep, gstaudio_dep, gstbase_dep, gstcontroller_dep,
                   libm, gmodule_dep, gstallocators_dep] + optional_deps,
   install : true,
