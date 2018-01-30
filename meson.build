@@ -54,6 +54,11 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
+# Disable strict aliasing
+if cc.has_argument('-fno-strict-aliasing')
+  add_project_arguments('-fno-strict-aliasing', language: 'c')
+endif
+
 gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
 gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
