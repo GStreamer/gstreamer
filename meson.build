@@ -54,6 +54,11 @@ if have_visibility_hidden
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
+# Disable strict aliasing
+if cc.has_argument('-fno-strict-aliasing')
+  add_project_arguments('-fno-strict-aliasing', language: 'c')
+endif
+
 cdata = configuration_data()
 cdata.set_quoted('GST_API_VERSION', apiversion)
 cdata.set_quoted('GST_DATADIR', join_paths(prefix, get_option('datadir')))
