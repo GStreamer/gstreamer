@@ -99,12 +99,12 @@ simd_dependencies = []
 if have_sse
   audio_resampler_sse = static_library('audio_resampler_sse',
     ['audio-resampler-x86-sse.c', gstaudio_h],
-    c_args : gst_plugins_base_args + [sse_args] + [pic_args],
+    c_args : gst_plugins_base_args + [sse_args],
     include_directories : [configinc, libsinc],
     dependencies : [gst_base_dep],
+    pic : true,
     install : false
   )
-
   simd_cargs += ['-DHAVE_SSE']
   simd_dependencies += audio_resampler_sse
 endif
@@ -112,9 +112,10 @@ endif
 if have_sse2
   audio_resampler_sse2 = static_library('audio_resampler_sse2',
     ['audio-resampler-x86-sse2.c', gstaudio_h],
-    c_args : gst_plugins_base_args + [sse2_args] + [pic_args],
+    c_args : gst_plugins_base_args + [sse2_args],
     include_directories : [configinc, libsinc],
     dependencies : [gst_base_dep],
+    pic : true,
     install : false
   )
 
@@ -125,9 +126,10 @@ endif
 if have_sse41
   audio_resampler_sse41 = static_library('audio_resampler_sse41',
     ['audio-resampler-x86-sse41.c', gstaudio_h],
-    c_args : gst_plugins_base_args + [sse41_args] + [pic_args],
+    c_args : gst_plugins_base_args + [sse41_args],
     include_directories : [configinc, libsinc],
     dependencies : [gst_base_dep],
+    pic : true,
     install : false
   )
 
