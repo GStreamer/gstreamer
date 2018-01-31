@@ -473,7 +473,7 @@ qtdemux_dump_stsz (GstQTDemux * qtdemux, GstByteReader * data, int depth)
     if (!qt_atom_parser_has_chunks (data, num_entries, 4))
       return FALSE;
     for (i = 0; i < num_entries; i++) {
-      GST_LOG ("%*s    sample size:   %u", depth, "", GET_UINT32 (data));
+      GST_TRACE ("%*s    sample size:   %u", depth, "", GET_UINT32 (data));
     }
   }
   return TRUE;
