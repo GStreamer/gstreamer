@@ -283,6 +283,8 @@ static const FormatInfo formats[] = {
       ""},
   {"application/x-teletext", "Teletext", 0, ""},
   {"application/x-kate", "Kate", 0, ""},
+  {"closedcaption/x-cea-608", N_("CEA 608 Closed Caption"), FLAG_SUB, ""},
+  {"closedcaption/x-cea-708", N_("CEA 708 Closed Caption"), FLAG_SUB, ""},
   {"subtitle/x-kate", N_("Kate subtitle format"), FLAG_SUB, ""},
   {"application/x-subtitle-vtt", N_("WebVTT subtitle format"), FLAG_SUB, ""},
   {"subpicture/x-dvb", "DVB subtitles", FLAG_SUB, ""},
