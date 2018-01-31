@@ -1,4 +1,6 @@
 audio-trickplay
+benchmark-appsink
+benchmark-appsrc
 input-selector-test
 output-selector-test
 playbin-text

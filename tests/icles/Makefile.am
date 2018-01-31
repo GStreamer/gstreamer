@@ -1,6 +1,22 @@
 SUBDIRS = playback
 DIST_SUBDIRS = playback
 
+benchmark_appsink_SOURCES = benchmark-appsink.c
+benchmark_appsink_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS)
+benchmark_appsink_LDADD = \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-$(GST_API_VERSION).la \
+	$(GST_LIBS)
+
+benchmark_appsrc_SOURCES = benchmark-appsrc.c
+benchmark_appsrc_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS)
+benchmark_appsrc_LDADD = \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-$(GST_API_VERSION).la \
+	$(GST_LIBS)
+
 if USE_X
 X_TESTS = stress-videooverlay
 
@@ -103,4 +119,4 @@ test_reverseplay_LDADD = $(GST_LIBS) $(LIBM)
 noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
 	audio-trickplay playbin-text position-formats stress-playbin \
 	test-scale test-box test-effect-switch test-overlay-blending test-reverseplay \
-	test-resample
+	test-resample benchmark-appsink benchmark-appsrc
