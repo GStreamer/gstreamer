@@ -67,9 +67,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
-#include <gst/gstbuffer.h>
-#include <gst/gstbufferlist.h>
+#include <gst/base/base.h>
 
 #include <string.h>
 
@@ -86,7 +84,7 @@ struct _GstAppSinkPrivate
 
   GCond cond;
   GMutex mutex;
-  GQueue *queue;
+  GstQueueArray *queue;
   GstBuffer *preroll_buffer;
   GstCaps *preroll_caps;
   GstCaps *last_caps;
@@ -454,7 +452,7 @@ gst_app_sink_init (GstAppSink * appsink)
 
   g_mutex_init (&priv->mutex);
   g_cond_init (&priv->cond);
-  priv->queue = g_queue_new ();
+  priv->queue = gst_queue_array_new (16);
 
   priv->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
   priv->max_buffers = DEFAULT_PROP_MAX_BUFFERS;
@@ -484,7 +482,7 @@ gst_app_sink_dispose (GObject * obj)
   GST_OBJECT_UNLOCK (appsink);
 
   g_mutex_lock (&priv->mutex);
-  while ((queue_obj = g_queue_pop_head (priv->queue)))
+  while ((queue_obj = gst_queue_array_pop_head (priv->queue)))
     gst_mini_object_unref (queue_obj);
   gst_buffer_replace (&priv->preroll_buffer, NULL);
   gst_caps_replace (&priv->preroll_caps, NULL);
@@ -502,7 +500,7 @@ gst_app_sink_finalize (GObject * obj)
 
   g_mutex_clear (&priv->mutex);
   g_cond_clear (&priv->cond);
-  g_queue_free (priv->queue);
+  gst_queue_array_free (priv->queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -620,7 +618,7 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
   GST_DEBUG_OBJECT (appsink, "flush stop appsink");
   priv->is_eos = FALSE;
   gst_buffer_replace (&priv->preroll_buffer, NULL);
-  while ((obj = g_queue_pop_head (priv->queue)))
+  while ((obj = gst_queue_array_pop_head (priv->queue)))
     gst_mini_object_unref (obj);
   priv->num_buffers = 0;
   g_cond_signal (&priv->cond);
@@ -672,7 +670,7 @@ gst_app_sink_setcaps (GstBaseSink * sink, GstCaps * caps)
 
   g_mutex_lock (&priv->mutex);
   GST_DEBUG_OBJECT (appsink, "receiving CAPS");
-  g_queue_push_tail (priv->queue, gst_event_new_caps (caps));
+  gst_queue_array_push_tail (priv->queue, gst_event_new_caps (caps));
   if (!priv->preroll_buffer)
     gst_caps_replace (&priv->preroll_caps, caps);
   g_mutex_unlock (&priv->mutex);
@@ -690,7 +688,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     case GST_EVENT_SEGMENT:
       g_mutex_lock (&priv->mutex);
       GST_DEBUG_OBJECT (appsink, "receiving SEGMENT");
-      g_queue_push_tail (priv->queue, gst_event_ref (event));
+      gst_queue_array_push_tail (priv->queue, gst_event_ref (event));
       if (!priv->preroll_buffer)
         gst_event_copy_segment (event, &priv->preroll_segment);
       g_mutex_unlock (&priv->mutex);
@@ -787,7 +785,7 @@ dequeue_buffer (GstAppSink * appsink)
   GstMiniObject *obj;
 
   do {
-    obj = g_queue_pop_head (priv->queue);
+    obj = gst_queue_array_pop_head (priv->queue);
 
     if (GST_IS_BUFFER (obj) || GST_IS_BUFFER_LIST (obj)) {
       GST_DEBUG_OBJECT (appsink, "dequeued buffer/list %p", obj);
@@ -877,7 +875,7 @@ restart:
     }
   }
   /* we need to ref the buffer/list when pushing it in the queue */
-  g_queue_push_tail (priv->queue, gst_mini_object_ref (data));
+  gst_queue_array_push_tail (priv->queue, gst_mini_object_ref (data));
   priv->num_buffers++;
   g_cond_signal (&priv->cond);
   emit = priv->emit_signals;
