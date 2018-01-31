@@ -369,7 +369,7 @@ gst_net_sim_delay_buffer (GstNetSim * netsim, GstBuffer * buf)
       ready_time = netsim->last_ready_time + 1;
 
     netsim->last_ready_time = ready_time;
-    GST_DEBUG_OBJECT (netsim, "Delaying packet by %ldms",
+    GST_DEBUG_OBJECT (netsim, "Delaying packet by %" G_GINT64_FORMAT "ms",
         (ready_time - now_time) / 1000);
 
     g_source_set_ready_time (source, ready_time);
@@ -446,7 +446,8 @@ gst_net_sim_token_bucket (GstNetSim * netsim, GstBuffer * buf)
   tokens = gst_net_sim_get_tokens (netsim);
 
   netsim->bucket_size = MIN (G_MAXINT, netsim->bucket_size + tokens);
-  GST_LOG_OBJECT (netsim, "Adding %d tokens to bucket (contains %lu tokens)",
+  GST_LOG_OBJECT (netsim,
+      "Adding %d tokens to bucket (contains %" G_GSIZE_FORMAT " tokens)",
       tokens, netsim->bucket_size);
 
   if (netsim->max_bucket_size != -1 && netsim->bucket_size >
@@ -454,13 +455,15 @@ gst_net_sim_token_bucket (GstNetSim * netsim, GstBuffer * buf)
     netsim->bucket_size = netsim->max_bucket_size * 1000;
 
   if (buffer_size > netsim->bucket_size) {
-    GST_DEBUG_OBJECT (netsim, "Buffer size (%lu) exeedes bucket size (%lu)",
-        buffer_size, netsim->bucket_size);
+    GST_DEBUG_OBJECT (netsim,
+        "Buffer size (%" G_GSIZE_FORMAT ") exeedes bucket size (%"
+        G_GSIZE_FORMAT ")", buffer_size, netsim->bucket_size);
     return FALSE;
   }
 
   netsim->bucket_size -= buffer_size;
-  GST_LOG_OBJECT (netsim, "Buffer taking %lu tokens (%lu left)",
+  GST_LOG_OBJECT (netsim,
+      "Buffer taking %" G_GSIZE_FORMAT " tokens (%" G_GSIZE_FORMAT " left)",
       buffer_size, netsim->bucket_size);
   return TRUE;
 }
