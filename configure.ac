@@ -225,6 +225,14 @@ if test "x$HAVE_GST_GL" = "xyes"; then
   case "$GST_GL_PLATFORMS" in  *egl*) GST_GL_HAVE_PLATFORM_EGL="1" ;; esac
   case "$GST_GL_PLATFORMS" in  *cgl*) GST_GL_HAVE_PLATFORM_CGL="1" ;; esac
   case "$GST_GL_PLATFORMS" in  *eagl*) GST_GL_HAVE_PLATFORM_EAGL="1" ;; esac
+
+  AC_MSG_CHECKING([GStreamer OpenGL apis ...])
+  GST_GL_APIS=`$PKG_CONFIG --variable=gl_apis gstreamer-gl-1.0`
+  AC_MSG_RESULT([$GST_GL_APIS])
+  GST_GL_HAVE_API_GLES2=""
+  GST_GL_HAVE_API_GL=""
+  case "$GST_GL_APIS" in  *gles2*) GST_GL_HAVE_API_GLES2="1" ;; esac
+  case "$GST_GL_APIS" in "gl"|"gl "*|*" gl"|*" gl "*) GST_GL_HAVE_API_GL="1" ;; esac
 fi
 
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
@@ -1932,9 +1940,7 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
   fi
 ])
 AM_CONDITIONAL(USE_GL, test "x$HAVE_GL" = "xyes")
-
-dnl FIXME
-AM_CONDITIONAL(USE_OPENGL, false)
+AM_CONDITIONAL(USE_OPENGL, test "x$GST_GL_HAVE_API_GL" = "xyes")
 
 dnl *** gtk+ ***
 HAVE_GTK3_GL="no"

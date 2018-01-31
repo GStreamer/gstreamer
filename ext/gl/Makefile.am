@@ -4,7 +4,6 @@ plugin_LTLIBRARIES = libgstopenglmixers.la
 libgstopenglmixers_la_SOURCES = \
 	gstopengl.c \
 	gstglbasemixer.c \
-	gstglmosaic.c \
 	gstglmixer.c \
 	gstglmixerbin.c \
 	gstglstereomix.c \
@@ -13,7 +12,6 @@ libgstopenglmixers_la_SOURCES = \
 
 noinst_HEADERS = \
 	gstglbasemixer.h \
-	gstglmosaic.h \
 	gstglmixer.h \
 	gstglmixerbin.h \
 	gstglstereomix.h \
