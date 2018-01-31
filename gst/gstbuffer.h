@@ -210,13 +210,13 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_SYNC_AFTER:    Elements which write to disk or permanent
  * 				 storage should ensure the data is synced after
  * 				 writing the contents of this buffer. (Since 1.6)
- * @GST_BUFFER_FLAG_LAST:          additional media specific flags can be added starting from
- *                                 this flag.
  * @GST_BUFFER_FLAG_NON_DROPPABLE: This buffer is important and should not be dropped.
  *                                 This can be used to mark important buffers, e.g. to flag
  *                                 RTP packets carrying keyframes or codec setup data for RTP
  *                                 Forward Error Correction purposes, or to prevent still video
  *                                 frames from being dropped by elements due to QoS. (Since 1.14)
+ * @GST_BUFFER_FLAG_LAST:          additional media specific flags can be added starting from
+ *                                 this flag.
  *
  * A set of buffer flags used to describe properties of a #GstBuffer.
  */
