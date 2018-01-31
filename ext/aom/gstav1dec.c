@@ -70,6 +70,7 @@ static gboolean gst_av1_dec_start (GstVideoDecoder * dec);
 static gboolean gst_av1_dec_stop (GstVideoDecoder * dec);
 static gboolean gst_av1_dec_set_format (GstVideoDecoder * dec,
     GstVideoCodecState * state);
+static gboolean gst_av1_dec_flush (GstVideoDecoder * dec);
 static GstFlowReturn
 gst_av1_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
@@ -109,6 +110,8 @@ gst_av1_dec_class_init (GstAV1DecClass * klass)
 
   vdec_class->start = GST_DEBUG_FUNCPTR (gst_av1_dec_start);
   vdec_class->stop = GST_DEBUG_FUNCPTR (gst_av1_dec_stop);
+  vdec_class->flush = GST_DEBUG_FUNCPTR (gst_av1_dec_flush);
+
   vdec_class->set_format = GST_DEBUG_FUNCPTR (gst_av1_dec_set_format);
   vdec_class->handle_frame = GST_DEBUG_FUNCPTR (gst_av1_dec_handle_frame);
 
@@ -205,6 +208,24 @@ gst_av1_dec_set_format (GstVideoDecoder * dec, GstVideoCodecState * state)
   }
 
   av1dec->input_state = gst_video_codec_state_ref (state);
+
+  return TRUE;
+}
+
+static gboolean
+gst_av1_dec_flush (GstVideoDecoder * dec)
+{
+  GstAV1Dec *av1dec = GST_AV1_DEC_CAST (dec);
+
+  if (av1dec->output_state) {
+    gst_video_codec_state_unref (av1dec->output_state);
+    av1dec->output_state = NULL;
+  }
+
+  if (av1dec->decoder_inited) {
+    aom_codec_destroy (&av1dec->decoder);
+  }
+  av1dec->decoder_inited = FALSE;
 
   return TRUE;
 }
