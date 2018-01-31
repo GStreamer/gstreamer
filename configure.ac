@@ -1940,7 +1940,7 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
   fi
 ])
 AM_CONDITIONAL(USE_GL, test "x$HAVE_GL" = "xyes")
-AM_CONDITIONAL(USE_OPENGL, test "x$GST_GL_HAVE_API_GL" = "xyes")
+AM_CONDITIONAL(USE_OPENGL, test "x$GST_GL_HAVE_API_GL" = "x1")
 
 dnl *** gtk+ ***
 HAVE_GTK3_GL="no"
