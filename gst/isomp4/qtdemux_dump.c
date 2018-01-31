@@ -959,6 +959,31 @@ qtdemux_dump_fLaC (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_gmin (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 ver_flags;
+  guint16 graphics_mode, opc_r, opc_g, opc_b, balance;
+
+  if (!gst_byte_reader_get_uint32_be (data, &ver_flags))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags : %08x", depth, "", ver_flags);
+  if (!gst_byte_reader_get_uint16_be (data, &graphics_mode) ||
+      !gst_byte_reader_get_uint16_be (data, &opc_r) ||
+      !gst_byte_reader_get_uint16_be (data, &opc_g) ||
+      !gst_byte_reader_get_uint16_be (data, &opc_b) ||
+      !gst_byte_reader_get_uint16_be (data, &balance))
+    return FALSE;
+
+  GST_LOG ("%*s  graphics mode : 0x%x", depth, "", graphics_mode);
+  GST_LOG ("%*s  opcolor :       r:0x%x g:0x%x b:0x%x", depth, "", opc_r, opc_g,
+      opc_b);
+  GST_LOG ("%*s  balance :       %d", depth, "", balance);
+
+  return TRUE;
+}
+
+gboolean
 qtdemux_dump_unknown (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   int len;
