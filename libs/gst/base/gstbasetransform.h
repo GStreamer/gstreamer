@@ -244,12 +244,19 @@ struct _GstBaseTransformClass {
   gboolean      (*propose_allocation) (GstBaseTransform *trans, GstQuery *decide_query,
                                        GstQuery *query);
 
-  /* transform size */
+  /**
+   * GstBaseTransformClass::transform_size:
+   * @othersize: (out):
+   */
   gboolean      (*transform_size) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps, gsize size,
                                    GstCaps *othercaps, gsize *othersize);
 
+  /**
+   * GstBaseTransformClass::get_unit_size:
+   * @size: (out):
+   */
   gboolean      (*get_unit_size)  (GstBaseTransform *trans, GstCaps *caps,
                                    gsize *size);
 
@@ -261,6 +268,10 @@ struct _GstBaseTransformClass {
   gboolean      (*sink_event)   (GstBaseTransform *trans, GstEvent *event);
   gboolean      (*src_event)    (GstBaseTransform *trans, GstEvent *event);
 
+  /**
+   * GstBaseTransformClass::prepare_output_buffer:
+   * @outbuf: (out):
+   */
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
                                           GstBuffer *input, GstBuffer **outbuf);
 
@@ -278,6 +289,11 @@ struct _GstBaseTransformClass {
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 
   GstFlowReturn (*submit_input_buffer) (GstBaseTransform *trans, gboolean is_discont, GstBuffer *input);
+
+  /**
+   * GstBaseTransformClass::generate_output:
+   * @outbuf: (out):
+   */
   GstFlowReturn (*generate_output) (GstBaseTransform *trans, GstBuffer **outbuf);
 
   /*< private >*/
