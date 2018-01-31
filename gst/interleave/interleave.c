@@ -1221,7 +1221,6 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
       goto next;
     }
     ncollected++;
-    gst_buffer_map (inbuf, &input_info, GST_MAP_READ);
 
     if (timestamp == -1)
       timestamp = GST_BUFFER_TIMESTAMP (inbuf);
@@ -1236,6 +1235,7 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
     }
     outdata = write_info.data + width * channel;
 
+    gst_buffer_map (inbuf, &input_info, GST_MAP_READ);
     self->func (outdata, input_info.data, self->channels, nsamples);
     gst_buffer_unmap (inbuf, &input_info);
 
