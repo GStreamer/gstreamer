@@ -93,7 +93,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
-        "layout = (string) interleaved, "
+        "layout = (string) { interleaved, non-interleaved }, "
         "rate = " GST_AUDIO_RATE_RANGE ", "
         "channels = " GST_AUDIO_CHANNELS_RANGE)
     );
@@ -283,6 +283,8 @@ gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 
   gst_structure_fixate_field_string (structure, "format", DEFAULT_FORMAT_STR);
 
+  gst_structure_fixate_field_string (structure, "layout", "interleaved");
+
   /* fixate to mono unless downstream requires stereo, for backwards compat */
   gst_structure_fixate_field_nearest_int (structure, "channels", 1);
 
@@ -393,22 +395,32 @@ error:
 static void \
 gst_audio_test_src_create_sine_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels; \
+  gint i, c, channels, channel_step, sample_step; \
   gdouble step, amp; \
+  g##type *ptr; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   step = M_PI_M2 * src->freq / GST_AUDIO_INFO_RATE (&src->info); \
   amp = src->volume * scale; \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
     src->accumulator += step; \
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
-      samples[i++] = (g##type) (sin (src->accumulator) * amp); \
+      *ptr = (g##type) (sin (src->accumulator) * amp); \
+      ptr += channel_step; \
     } \
+    samples += sample_step; \
   } \
 }
 
@@ -428,22 +440,32 @@ static const ProcessFunc sine_funcs[] = {
 static void \
 gst_audio_test_src_create_square_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels; \
+  gint i, c, channels, channel_step, sample_step; \
   gdouble step, amp; \
+  g##type *ptr; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   step = M_PI_M2 * src->freq / GST_AUDIO_INFO_RATE (&src->info); \
   amp = src->volume * scale; \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
     src->accumulator += step; \
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
-      samples[i++] = (g##type) ((src->accumulator < G_PI) ? amp : -amp); \
+      *ptr = (g##type) ((src->accumulator < G_PI) ? amp : -amp); \
+      ptr += channel_step; \
     } \
+    samples += sample_step; \
   } \
 }
 
@@ -463,26 +485,39 @@ static const ProcessFunc square_funcs[] = {
 static void \
 gst_audio_test_src_create_saw_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels; \
+  gint i, c, channels, channel_step, sample_step; \
   gdouble step, amp; \
+  g##type *ptr; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   step = M_PI_M2 * src->freq / GST_AUDIO_INFO_RATE (&src->info); \
   amp = (src->volume * scale) / G_PI; \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
     src->accumulator += step; \
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
+    ptr = samples; \
     if (src->accumulator < G_PI) { \
-      for (c = 0; c < channels; ++c) \
-        samples[i++] = (g##type) (src->accumulator * amp); \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = (g##type) (src->accumulator * amp); \
+        ptr += channel_step; \
+      } \
     } else { \
-      for (c = 0; c < channels; ++c) \
-        samples[i++] = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
+        ptr += channel_step; \
+      } \
     } \
+    samples += sample_step; \
   } \
 }
 
@@ -502,29 +537,44 @@ static const ProcessFunc saw_funcs[] = {
 static void \
 gst_audio_test_src_create_triangle_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels; \
+  gint i, c, channels, channel_step, sample_step; \
   gdouble step, amp; \
+  g##type *ptr; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   step = M_PI_M2 * src->freq / GST_AUDIO_INFO_RATE (&src->info); \
   amp = (src->volume * scale) / G_PI_2; \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
     src->accumulator += step; \
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
+    ptr = samples; \
     if (src->accumulator < (G_PI_2)) { \
-      for (c = 0; c < channels; ++c) \
-        samples[i++] = (g##type) (src->accumulator * amp); \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = (g##type) (src->accumulator * amp); \
+        ptr += channel_step; \
+      } \
     } else if (src->accumulator < (G_PI * 1.5)) { \
-      for (c = 0; c < channels; ++c) \
-        samples[i++] = (g##type) ((src->accumulator - G_PI) * -amp); \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = (g##type) ((src->accumulator - G_PI) * -amp); \
+        ptr += channel_step; \
+      } \
     } else { \
-      for (c = 0; c < channels; ++c) \
-        samples[i++] = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
+        ptr += channel_step; \
+      } \
     } \
+    samples += sample_step; \
   } \
 }
 
@@ -563,14 +613,26 @@ static const ProcessFunc silence_funcs[] = {
 static void \
 gst_audio_test_src_create_white_noise_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c; \
+  gint i, c, channel_step, sample_step; \
+  g##type *ptr; \
   gdouble amp = (src->volume * scale); \
   gint channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
-    for (c = 0; c < channels; ++c) \
-      samples[i++] = (g##type) (amp * g_rand_double_range (src->gen, -1.0, 1.0)); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    ptr = samples; \
+    for (c = 0; c < channels; ++c) { \
+      *ptr = (g##type) (amp * g_rand_double_range (src->gen, -1.0, 1.0)); \
+      ptr += channel_step; \
+    } \
+    samples += sample_step; \
   } \
 }
 
@@ -657,19 +719,27 @@ gst_audio_test_src_generate_pink_noise_value (GstAudioTestSrc * src)
 static void \
 gst_audio_test_src_create_pink_noise_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels; \
+  gint i, c, channels, channel_step, sample_step; \
   gdouble amp; \
+  g##type *ptr; \
   \
   amp = src->volume * scale; \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
-      samples[i++] = \
-        (g##type) (gst_audio_test_src_generate_pink_noise_value (src) * \
-        amp); \
+      *ptr = (g##type) (gst_audio_test_src_generate_pink_noise_value (src) * amp); \
+      ptr += channel_step; \
     } \
+    samples += sample_step; \
   } \
 }
 
@@ -703,21 +773,32 @@ gst_audio_test_src_init_sine_table (GstAudioTestSrc * src)
 static void \
 gst_audio_test_src_create_sine_table_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels; \
+  gint i, c, channels, channel_step, sample_step; \
   gdouble step, scl; \
+  g##type *ptr; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   step = M_PI_M2 * src->freq / GST_AUDIO_INFO_RATE (&src->info); \
   scl = 1024.0 / M_PI_M2; \
   \
-  i = 0; \
-  while (i < (src->generate_samples_per_buffer * channels)) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
     src->accumulator += step; \
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
     \
-    for (c = 0; c < channels; ++c) \
-      samples[i++] = (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+    ptr = samples; \
+    for (c = 0; c < channels; ++c) { \
+      *ptr = (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+      ptr += channel_step; \
+    } \
+    samples += sample_step; \
   } \
 }
 
@@ -737,29 +818,46 @@ static const ProcessFunc sine_table_funcs[] = {
 static void \
 gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c, channels, samplerate, samplemod; \
+  gint i, c, channels, samplerate, samplemod, channel_step, sample_step; \
   gdouble step, scl; \
+  g##type *ptr; \
   \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   samplerate = GST_AUDIO_INFO_RATE (&src->info); \
   step = M_PI_M2 * src->freq / samplerate; \
   scl = 1024.0 / M_PI_M2; \
   \
   for (i = 0; i < src->generate_samples_per_buffer; i++) { \
     samplemod = (src->next_sample + i) % samplerate; \
+    \
+    ptr = samples; \
     if (samplemod == 0) { \
       src->accumulator = 0; \
     } else if (samplemod < 1600) { \
-      for (c = 0; c < channels; ++c) \
-        samples[(i * channels) + c] = (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = \
+            (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+        ptr += channel_step; \
+      } \
     } else { \
-      for (c = 0; c < channels; ++c) \
-        samples[(i * channels) + c] = 0; \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = 0; \
+        ptr += channel_step; \
+      } \
     } \
     \
     src->accumulator += step; \
     if (src->accumulator >= M_PI_M2) \
       src->accumulator -= M_PI_M2; \
+    \
+    samples += sample_step; \
   } \
 }
 
@@ -785,20 +883,33 @@ static const ProcessFunc tick_funcs[] = {
 static void \
 gst_audio_test_src_create_gaussian_white_noise_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c; \
+  gint i, c, channel_step, sample_step; \
+  g##type *ptr; \
   gdouble amp = (src->volume * scale); \
   gint channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
   \
-  for (i = 0; i < src->generate_samples_per_buffer * channels; ) { \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
       gdouble mag = sqrt (-2 * log (1.0 - g_rand_double (src->gen))); \
       gdouble phs = g_rand_double_range (src->gen, 0.0, M_PI_M2); \
       \
-      samples[i++] = (g##type) (amp * mag * cos (phs)); \
+      *ptr = (g##type) (amp * mag * cos (phs)); \
+      ptr += channel_step; \
       if (++c >= channels) \
         break; \
-      samples[i++] = (g##type) (amp * mag * sin (phs)); \
+      *ptr = (g##type) (amp * mag * sin (phs)); \
+      ptr += channel_step; \
     } \
+    samples += sample_step; \
   } \
 }
 
@@ -825,12 +936,22 @@ static const ProcessFunc gaussian_white_noise_funcs[] = {
 static void \
 gst_audio_test_src_create_red_noise_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c; \
+  gint i, c, channel_step, sample_step; \
+  g##type *ptr; \
   gdouble amp = (src->volume * scale); \
   gdouble state = src->red.state; \
   gint channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
   \
-  for (i = 0; i < src->generate_samples_per_buffer * channels; ) { \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
       while (TRUE) { \
         gdouble r = g_rand_double_range (src->gen, -1.0, 1.0); \
@@ -838,8 +959,10 @@ gst_audio_test_src_create_red_noise_##type (GstAudioTestSrc * src, g##type * sam
         if (state < -8.0f || state > 8.0f) state -= r; \
         else break; \
       } \
-      samples[i++] = (g##type) (amp * state * 0.0625f); /* /16.0 */ \
+      *ptr = (g##type) (amp * state * 0.0625f); /* /16.0 */ \
+      ptr += channel_step; \
     } \
+    samples += sample_step; \
   } \
   src->red.state = state; \
 }
@@ -862,16 +985,28 @@ static const ProcessFunc red_noise_funcs[] = {
 static void \
 gst_audio_test_src_create_blue_noise_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c; \
+  gint i, c, channel_step, sample_step; \
   static gdouble flip=1.0; \
   gint channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  g##type *ptr; \
+  \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   \
   gst_audio_test_src_create_pink_noise_##type (src, samples); \
-  for (i = 0; i < src->generate_samples_per_buffer * channels; ) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
-      samples[i++] *= flip; \
+      *ptr *= flip; \
+      ptr += channel_step; \
     } \
     flip *= -1.0; \
+    samples += sample_step; \
   } \
 }
 
@@ -894,16 +1029,28 @@ static const ProcessFunc blue_noise_funcs[] = {
 static void \
 gst_audio_test_src_create_violet_noise_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
-  gint i, c; \
+  gint i, c, channel_step, sample_step; \
   static gdouble flip=1.0; \
   gint channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
+  g##type *ptr; \
+  \
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
+    channel_step = 1; \
+    sample_step = channels; \
+  } else { \
+    channel_step = src->generate_samples_per_buffer; \
+    sample_step = 1; \
+  } \
   \
   gst_audio_test_src_create_red_noise_##type (src, samples); \
-  for (i = 0; i < src->generate_samples_per_buffer * channels; ) { \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    ptr = samples; \
     for (c = 0; c < channels; ++c) { \
-      samples[i++] *= flip; \
+      *ptr *= flip; \
+      ptr += channel_step; \
     } \
     flip *= -1.0; \
+    samples += sample_step; \
   } \
 }
 
@@ -1288,6 +1435,11 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
   if (G_UNLIKELY ((src->wave == GST_AUDIO_TEST_SRC_WAVE_SILENCE)
           || (src->volume == 0.0))) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_GAP);
+  }
+
+  if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    gst_buffer_add_audio_meta (buffer, &src->info,
+        src->generate_samples_per_buffer, NULL);
   }
 
   return GST_FLOW_OK;
