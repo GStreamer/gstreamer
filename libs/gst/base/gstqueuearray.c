@@ -160,6 +160,7 @@ gst_queue_array_pop_head (GstQueueArray * array)
 {
   gpointer ret;
   g_return_val_if_fail (array != NULL, NULL);
+
   /* empty array */
   if (G_UNLIKELY (array->length == 0))
     return NULL;
@@ -298,6 +299,7 @@ void
 gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
 {
   g_return_if_fail (array != NULL);
+
   /* Check if we need to make room */
   if (G_UNLIKELY (array->length == array->size))
     gst_queue_array_do_expand (array);
@@ -306,6 +308,69 @@ gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
   array->tail++;
   array->tail %= array->size;
   array->length++;
+}
+
+/**
+ * gst_queue_array_peek_tail: (skip)
+ * @array: a #GstQueueArray object
+ *
+ * Returns the tail of the queue @array, but does not remove it from the queue.
+ *
+ * Returns: The tail of the queue
+ *
+ * Since: 1.14
+ */
+gpointer
+gst_queue_array_peek_tail (GstQueueArray * array)
+{
+  guint len, idx;
+
+  g_return_val_if_fail (array != NULL, NULL);
+
+  len = array->length;
+
+  /* empty array */
+  if (len == 0)
+    return NULL;
+
+  idx = (array->head + (len - 1)) % array->size;
+
+  return *(gpointer *) (array->array + (sizeof (gpointer) * idx));
+}
+
+/**
+ * gst_queue_array_pop_tail: (skip)
+ * @array: a #GstQueueArray object
+ *
+ * Returns the tail of the queue @array and removes
+ * it from the queue.
+ *
+ * Returns: The tail of the queue
+ *
+ * Since: 1.14
+ */
+gpointer
+gst_queue_array_pop_tail (GstQueueArray * array)
+{
+  gpointer ret;
+  guint len, idx;
+
+  g_return_val_if_fail (array != NULL, NULL);
+
+  len = array->length;
+
+  /* empty array */
+  if (len == 0)
+    return NULL;
+
+  idx = (array->head + (len - 1)) % array->size;
+
+  ret = *(gpointer *) (array->array + (sizeof (gpointer) * idx));
+
+  array->tail = idx;
+  array->length--;
+
+  return ret;
 }
 
 /**

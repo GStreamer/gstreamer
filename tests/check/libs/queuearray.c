@@ -262,6 +262,58 @@ GST_START_TEST (test_array_grow_from_prealloc1)
 
 GST_END_TEST;
 
+GST_START_TEST (test_array_peek_pop_tail)
+{
+  const guint array_sizes[] = { 0, 1, 2, 5 };
+  guint s;
+
+  for (s = 0; s < G_N_ELEMENTS (array_sizes); ++s) {
+    GstQueueArray *array;
+
+    GST_INFO ("Testing with initial size %u", array_sizes[s]);
+
+    array = gst_queue_array_new (array_sizes[s]);
+    fail_unless_equals_int (gst_queue_array_get_length (array), 0);
+
+    fail_unless (gst_queue_array_peek_tail (array) == NULL);
+    fail_unless (gst_queue_array_pop_tail (array) == NULL);
+
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (42));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 1);
+    fail_unless (gst_queue_array_peek_tail (array) == GINT_TO_POINTER (42));
+    fail_unless (gst_queue_array_peek_head (array) == GINT_TO_POINTER (42));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 1);
+    fail_unless (gst_queue_array_pop_tail (array) == GINT_TO_POINTER (42));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 0);
+
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (42));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 1);
+    fail_unless (gst_queue_array_pop_head (array) == GINT_TO_POINTER (42));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 0);
+    fail_unless (gst_queue_array_peek_tail (array) == NULL);
+    fail_unless (gst_queue_array_pop_tail (array) == NULL);
+
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (43));
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (44));
+
+    fail_unless_equals_int (gst_queue_array_get_length (array), 2);
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_peek_head (array)),
+        43);
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_peek_tail (array)),
+        44);
+    fail_unless_equals_int (gst_queue_array_get_length (array), 2);
+    fail_unless (gst_queue_array_pop_tail (array) == GINT_TO_POINTER (44));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 1);
+    fail_unless (gst_queue_array_peek_head (array) == GINT_TO_POINTER (43));
+    fail_unless (gst_queue_array_peek_tail (array) == GINT_TO_POINTER (43));
+    fail_unless_equals_int (gst_queue_array_get_length (array), 1);
+
+    gst_queue_array_free (array);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_queue_array_suite (void)
 {
@@ -277,6 +329,7 @@ gst_queue_array_suite (void)
   tcase_add_test (tc_chain, test_array_grow_end);
   tcase_add_test (tc_chain, test_array_drop2);
   tcase_add_test (tc_chain, test_array_grow_from_prealloc1);
+  tcase_add_test (tc_chain, test_array_peek_pop_tail);
 
   return s;
 }
