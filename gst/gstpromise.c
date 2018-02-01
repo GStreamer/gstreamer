@@ -104,6 +104,8 @@ typedef struct
  * immediately with the current result.
  *
  * Returns: the result of the promise
+ *
+ * Since: 1.14
  */
 GstPromiseResult
 gst_promise_wait (GstPromise * promise)
@@ -134,6 +136,8 @@ gst_promise_wait (GstPromise * promise)
  *
  * Set a reply on @promise.  This will wake up any waiters with
  * %GST_PROMISE_RESULT_REPLIED.
+ *
+ * Since: 1.14
  */
 void
 gst_promise_reply (GstPromise * promise, GstStructure * s)
@@ -196,6 +200,8 @@ gst_promise_reply (GstPromise * promise, GstStructure * s)
  * %GST_PROMISE_RESULT_REPLIED and is owned by @promise
  *
  * Returns: (transfer none): The reply set on @promise
+ *
+ * Since: 1.14
  */
 const GstStructure *
 gst_promise_get_reply (GstPromise * promise)
@@ -220,6 +226,8 @@ gst_promise_get_reply (GstPromise * promise)
  *
  * Interrupt waiting for a @promise.  This will wake up any waiters with
  * %GST_PROMISE_RESULT_INTERRUPTED
+ *
+ * Since: 1.14
  */
 void
 gst_promise_interrupt (GstPromise * promise)
@@ -258,6 +266,8 @@ gst_promise_interrupt (GstPromise * promise)
  *
  * Expire a @promise.  This will wake up any waiters with
  * %GST_PROMISE_RESULT_EXPIRED
+ *
+ * Since: 1.14
  */
 void
 gst_promise_expire (GstPromise * promise)
@@ -329,6 +339,8 @@ gst_promise_init (GstPromise * promise)
  * gst_promise_new:
  *
  * Returns: a new #GstPromise
+ *
+ * Since: 1.14
  */
 GstPromise *
 gst_promise_new (void)
@@ -352,6 +364,8 @@ gst_promise_new (void)
  * states.
  *
  * Returns: a new #GstPromise
+ *
+ * Since: 1.14
  */
 GstPromise *
 gst_promise_new_with_change_func (GstPromiseChangeFunc func, gpointer user_data,

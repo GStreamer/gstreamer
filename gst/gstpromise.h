@@ -42,6 +42,8 @@ typedef struct _GstPromise GstPromise;
  * 	lost all refs) and the promise will never be fulfilled.
  *
  * The result of a #GstPromise
+ *
+ * Since: 1.14
  */
 typedef enum
 {
@@ -55,12 +57,16 @@ typedef enum
  * GstPromiseChangeFunc:
  * @promise: a #GstPromise
  * @user_data: (closure): user data
+ *
+ * Since: 1.14
  */
 typedef void (*GstPromiseChangeFunc) (GstPromise * promise, gpointer user_data);
 
 /**
  * GstPromise:
  * @parent: parent #GstMiniObject
+ *
+ * Since: 1.14
  */
 struct _GstPromise
 {
@@ -94,6 +100,8 @@ const GstStructure *    gst_promise_get_reply               (GstPromise * promis
  * Increases the refcount of the given @promise by one.
  *
  * Returns: (transfer full): @promise
+ *
+ * Since: 1.14
  */
 static inline GstPromise *
 gst_promise_ref (GstPromise * promise)
@@ -107,6 +115,8 @@ gst_promise_ref (GstPromise * promise)
  *
  * Decreases the refcount of the promise. If the refcount reaches 0, the
  * promise will be freed.
+ *
+ * Since: 1.14
  */
 static inline void
 gst_promise_unref (GstPromise * promise)
