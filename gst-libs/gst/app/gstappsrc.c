@@ -95,7 +95,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesrc.h>
+#include <gst/base/base.h>
 
 #include <string.h>
 
@@ -105,7 +105,7 @@ struct _GstAppSrcPrivate
 {
   GCond cond;
   GMutex mutex;
-  GQueue *queue;
+  GstQueueArray *queue;
 
   GstCaps *last_caps;
   GstCaps *current_caps;
@@ -568,7 +568,7 @@ gst_app_src_init (GstAppSrc * appsrc)
 
   g_mutex_init (&priv->mutex);
   g_cond_init (&priv->cond);
-  priv->queue = g_queue_new ();
+  priv->queue = gst_queue_array_new (16);
 
   priv->size = DEFAULT_PROP_SIZE;
   priv->duration = DEFAULT_PROP_DURATION;
@@ -592,8 +592,8 @@ gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
   GstAppSrcPrivate *priv = src->priv;
   GstCaps *requeue_caps = NULL;
 
-  while (!g_queue_is_empty (priv->queue)) {
-    obj = g_queue_pop_head (priv->queue);
+  while (!gst_queue_array_is_empty (priv->queue)) {
+    obj = gst_queue_array_pop_head (priv->queue);
     if (obj) {
       if (GST_IS_CAPS (obj) && retain_last_caps) {
         gst_caps_replace (&requeue_caps, GST_CAPS_CAST (obj));
@@ -603,7 +603,7 @@ gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
   }
 
   if (requeue_caps) {
-    g_queue_push_tail (priv->queue, requeue_caps);
+    gst_queue_array_push_tail (priv->queue, requeue_caps);
   }
 
   priv->queued_bytes = 0;
@@ -647,7 +647,7 @@ gst_app_src_finalize (GObject * obj)
 
   g_mutex_clear (&priv->mutex);
   g_cond_clear (&priv->cond);
-  g_queue_free (priv->queue);
+  gst_queue_array_free (priv->queue);
 
   g_free (priv->uri);
 
@@ -1173,9 +1173,9 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
 
   while (TRUE) {
     /* return data as long as we have some */
-    if (!g_queue_is_empty (priv->queue)) {
+    if (!gst_queue_array_is_empty (priv->queue)) {
       guint buf_size;
-      GstMiniObject *obj = g_queue_pop_head (priv->queue);
+      GstMiniObject *obj = gst_queue_array_pop_head (priv->queue);
 
       if (GST_IS_CAPS (obj)) {
         GstCaps *next_caps = GST_CAPS (obj);
@@ -1256,7 +1256,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
        * signal) we can still be empty because the pushed buffer got flushed or
        * when the application pushes the requested buffer later, we support both
        * possibilities. */
-      if (!g_queue_is_empty (priv->queue))
+      if (!gst_queue_array_is_empty (priv->queue))
         continue;
 
       /* no buffer yet, maybe we are EOS, if not, block for more data. */
@@ -1326,12 +1326,15 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 
   if (caps_changed) {
     GstCaps *new_caps;
+    gpointer t;
+
     new_caps = caps ? gst_caps_copy (caps) : NULL;
     GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
-    if (priv->queue->tail != NULL && GST_IS_CAPS (priv->queue->tail->data)) {
-      gst_caps_unref (g_queue_pop_tail (priv->queue));
+
+    while ((t = gst_queue_array_peek_tail (priv->queue)) && GST_IS_CAPS (t)) {
+      gst_caps_unref (gst_queue_array_pop_tail (priv->queue));
     }
-    g_queue_push_tail (priv->queue, new_caps);
+    gst_queue_array_push_tail (priv->queue, new_caps);
     gst_caps_replace (&priv->last_caps, new_caps);
   }
 
@@ -1840,13 +1843,13 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
     GST_DEBUG_OBJECT (appsrc, "queueing buffer list %p", buflist);
     if (!steal_ref)
       gst_buffer_list_ref (buflist);
-    g_queue_push_tail (priv->queue, buflist);
+    gst_queue_array_push_tail (priv->queue, buflist);
     priv->queued_bytes += gst_buffer_list_calculate_size (buflist);
   } else {
     GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
     if (!steal_ref)
       gst_buffer_ref (buffer);
-    g_queue_push_tail (priv->queue, buffer);
+    gst_queue_array_push_tail (priv->queue, buffer);
     priv->queued_bytes += gst_buffer_get_size (buffer);
   }
   g_cond_broadcast (&priv->cond);
