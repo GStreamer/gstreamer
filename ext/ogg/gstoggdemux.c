@@ -778,7 +778,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     pad->prev_granule = pad->current_granule;
   }
 
-  if (pad->map.is_ogm_text) {
+  if (G_UNLIKELY (offset + trim > packet->bytes))
+    goto invalid_packet;
+  else if (pad->map.is_ogm_text) {
     /* check for invalid buffer sizes */
     if (G_UNLIKELY (offset + trim >= packet->bytes))
       goto empty_packet;
@@ -898,6 +900,12 @@ done:
 empty_packet:
   {
     GST_DEBUG_OBJECT (ogg, "Skipping empty packet");
+    goto done;
+  }
+
+invalid_packet:
+  {
+    GST_DEBUG_OBJECT (ogg, "Skipping invalid packet");
     goto done;
   }
 
