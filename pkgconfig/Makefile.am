@@ -11,7 +11,6 @@ pcverfiles =  \
 	gstreamer-sdp-@GST_API_VERSION@.pc \
 	gstreamer-tag-@GST_API_VERSION@.pc \
 	gstreamer-video-@GST_API_VERSION@.pc \
-	gstreamer-gl-@GST_API_VERSION@.pc \
 	gstreamer-plugins-base-@GST_API_VERSION@.pc
 pcverfiles_uninstalled = \
 	gstreamer-allocators-@GST_API_VERSION@-uninstalled.pc \
@@ -25,8 +24,12 @@ pcverfiles_uninstalled = \
 	gstreamer-sdp-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-tag-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-video-@GST_API_VERSION@-uninstalled.pc \
-	gstreamer-gl-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-plugins-base-@GST_API_VERSION@-uninstalled.pc
+
+if HAVE_GST_GL
+pcverfiles += gstreamer-gl-@GST_API_VERSION@.pc
+pcverfiles_uninstalled += gstreamer-gl-@GST_API_VERSION@-uninstalled.pc
+endif
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
