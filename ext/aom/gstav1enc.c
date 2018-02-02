@@ -121,6 +121,7 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
   venc_class->handle_frame = gst_av1_enc_handle_frame;
   venc_class->propose_allocation = gst_av1_enc_propose_allocation;
 
+  klass->codec_algo = &aom_codec_av1_cx_algo;
   GST_DEBUG_CATEGORY_INIT (av1_enc_debug, "av1enc", 0, "AV1 encoding element");
 }
 
@@ -223,11 +224,12 @@ gst_av1_enc_debug_encoder_cfg (struct aom_codec_enc_cfg *cfg)
 static gboolean
 gst_av1_enc_init_aom (GstAV1Enc * av1enc)
 {
-  av1enc->codec_interface = &aom_codec_av1_cx_algo;
+  GstAV1EncClass *av1enc_class = GST_AV1_ENC_GET_CLASS (av1enc);
 
-  if (aom_codec_enc_config_default (av1enc->codec_interface, &av1enc->aom_cfg,
+  if (aom_codec_enc_config_default (av1enc_class->codec_algo, &av1enc->aom_cfg,
           0)) {
-    gst_av1_codec_error (&av1enc->codec, "Failed to get default codec config.");
+    gst_av1_codec_error (&av1enc->encoder,
+        "Failed to get default codec config.");
     return FALSE;
   }
   GST_DEBUG_OBJECT (av1enc, "Got default encoder config");
@@ -245,9 +247,9 @@ gst_av1_enc_init_aom (GstAV1Enc * av1enc)
   GST_DEBUG_OBJECT (av1enc, "Calling encoder init with config:");
   gst_av1_enc_debug_encoder_cfg (&av1enc->aom_cfg);
 
-  if (aom_codec_enc_init (&av1enc->codec, av1enc->codec_interface,
+  if (aom_codec_enc_init (&av1enc->encoder, av1enc_class->codec_algo,
           &av1enc->aom_cfg, 0)) {
-    gst_av1_codec_error (&av1enc->codec, "Failed to initialize encoder");
+    gst_av1_codec_error (&av1enc->encoder, "Failed to initialize encoder");
     return FALSE;
   }
 
@@ -285,7 +287,7 @@ gst_av1_enc_process (GstAV1Enc * encoder)
 
   video_encoder = GST_VIDEO_ENCODER (encoder);
 
-  while ((pkt = aom_codec_get_cx_data (&encoder->codec, &iter)) != NULL) {
+  while ((pkt = aom_codec_get_cx_data (&encoder->encoder, &iter)) != NULL) {
     if (pkt->kind == AOM_CODEC_STATS_PKT) {
       GST_WARNING_OBJECT (encoder, "Unhandled stats packet");
     } else if (pkt->kind == AOM_CODEC_FPMB_STATS_PKT) {
@@ -350,9 +352,9 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   }
   av1enc->keyframe_dist++;
 
-  if (aom_codec_encode (&av1enc->codec, &raw, frame->pts, 1, flags)
+  if (aom_codec_encode (&av1enc->encoder, &raw, frame->pts, 1, flags)
       != AOM_CODEC_OK) {
-    gst_av1_codec_error (&av1enc->codec, "Failed to encode frame");
+    gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
   }
 
   ret = gst_av1_enc_process (av1enc);

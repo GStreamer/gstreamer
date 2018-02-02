@@ -41,6 +41,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AV1_ENC))
 #define GST_IS_AV1_ENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AV1_ENC))
+#define GST_AV1_ENC_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AV1_ENC, GstAV1EncClass))
 #define GST_AV1_ENC_CAST(obj) \
   ((GstAV1Enc *) (obj))
 
@@ -49,20 +51,21 @@ typedef struct _GstAV1EncClass GstAV1EncClass;
 
 struct _GstAV1Enc
 {
-  GstVideoEncoder encoder;
+  GstVideoEncoder base_video_encoder;
 
   guint keyframe_dist;
 
-  GstVideoCodecState *input_state;
-
-  aom_codec_iface_t *codec_interface;
   aom_codec_enc_cfg_t aom_cfg;
-  aom_codec_ctx_t codec;
+  aom_codec_ctx_t encoder;
+
+  GstVideoCodecState *input_state;
 };
 
 struct _GstAV1EncClass
 {
   GstVideoEncoderClass parent_class;
+  /*supported aom algo*/
+  aom_codec_iface_t *codec_algo;
 };
 
 GType gst_av1_enc_get_type (void);
