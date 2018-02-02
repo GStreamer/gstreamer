@@ -842,6 +842,8 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
       conn->tunnelid);
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_ACCEPT,
       "application/x-rtsp-tunnelled");
+  gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_TYPE,
+      "application/x-rtsp-tunnelled");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_EXPIRES,
