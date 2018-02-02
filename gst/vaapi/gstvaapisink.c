@@ -448,9 +448,11 @@ gst_vaapisink_x11_pre_start_event_thread (GstVaapiSink * sink)
 {
   GstVaapiDisplayX11 *const display =
       GST_VAAPI_DISPLAY_X11 (GST_VAAPI_PLUGIN_BASE_DISPLAY (sink));
-  static const int x11_event_mask = (KeyPressMask | KeyReleaseMask |
-      ButtonPressMask | ButtonReleaseMask | PointerMotionMask |
-      ExposureMask | StructureNotifyMask);
+  int x11_event_mask = (KeyPressMask | KeyReleaseMask |
+      PointerMotionMask | ExposureMask | StructureNotifyMask);
+
+  if (!sink->foreign_window)
+      x11_event_mask |= ButtonPressMask | ButtonReleaseMask;
 
   if (sink->window) {
     gst_vaapi_display_lock (GST_VAAPI_DISPLAY (display));
