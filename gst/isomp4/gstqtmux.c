@@ -5189,6 +5189,7 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   GList *ext_atom_list = NULL;
   gboolean sync = FALSE;
   int par_num, par_den;
+  const gchar *multiview_mode;
 
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
@@ -5257,6 +5258,36 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (qtmux, "Rate of video track selected: %" G_GUINT32_FORMAT,
       rate);
+
+  multiview_mode = gst_structure_get_string (structure, "multiview-mode");
+  if (multiview_mode && !qtpad->trak->mdia.minf.stbl.svmi) {
+    GstVideoMultiviewMode mode;
+    GstVideoMultiviewFlags flags = 0;
+
+    mode = gst_video_multiview_mode_from_caps_string (multiview_mode);
+    gst_structure_get_flagset (structure, "multiview-flags", &flags, NULL);
+    switch (mode) {
+      case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
+        qtpad->trak->mdia.minf.stbl.svmi =
+            atom_svmi_new (0,
+            flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST);
+        break;
+      case GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED:
+        qtpad->trak->mdia.minf.stbl.svmi =
+            atom_svmi_new (1,
+            flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST);
+        break;
+      case GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME:
+        qtpad->trak->mdia.minf.stbl.svmi =
+            atom_svmi_new (2,
+            flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST);
+        break;
+      default:
+        GST_DEBUG_OBJECT (qtmux, "Unsupported multiview-mode %s",
+            multiview_mode);
+        break;
+    }
+  }
 
   /* set common properties */
   entry.width = width;

@@ -563,6 +563,14 @@ typedef struct _AtomCTTS
   gboolean do_pts;
 } AtomCTTS;
 
+typedef struct _AtomSVMI
+{
+  AtomFull header;
+
+  guint8 stereoscopic_composition_type;
+  gboolean is_left_first;
+} AtomSVMI;
+
 typedef struct _AtomSTBL
 {
   Atom header;
@@ -574,6 +582,8 @@ typedef struct _AtomSTBL
   AtomSTSZ stsz;
   /* NULL if not present */
   AtomCTTS *ctts;
+  /* NULL if not present */
+  AtomSVMI *svmi;
 
   AtomSTCO64 stco64;
 } AtomSTBL;
@@ -960,6 +970,9 @@ guint64    atom_stsz_copy_data         (AtomSTSZ *atom, guint8 **buffer,
                                         guint64 *size, guint64* offset);
 guint64    atom_ctts_copy_data         (AtomCTTS *atom, guint8 **buffer,
                                         guint64 *size, guint64* offset);
+guint64    atom_svmi_copy_data         (AtomSVMI *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
+AtomSVMI * atom_svmi_new (guint8 stereoscopic_composition_type, gboolean is_left_first);
 guint64    atom_stco64_copy_data       (AtomSTCO64 *atom, guint8 **buffer,
                                         guint64 *size, guint64* offset);
 AtomMOOF*  atom_moof_new               (AtomsContext *context, guint32 sequence_number);
