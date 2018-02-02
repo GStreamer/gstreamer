@@ -8,6 +8,8 @@
  */
 #include <gst/gst.h>
 #include <gst/sdp/sdp.h>
+
+#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 
 /* For signalling */
