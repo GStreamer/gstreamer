@@ -1384,7 +1384,6 @@ static gboolean
 update_output_format (GstGLImageSink * glimage_sink)
 {
   GstVideoInfo *out_info = &glimage_sink->out_info;
-  gboolean input_is_mono = FALSE;
   GstVideoMultiviewMode mv_mode;
   GstGLWindow *window = NULL;
   GstGLTextureTarget previous_target;
@@ -1398,14 +1397,7 @@ update_output_format (GstGLImageSink * glimage_sink)
 
   mv_mode = GST_VIDEO_INFO_MULTIVIEW_MODE (&glimage_sink->in_info);
 
-  if (mv_mode == GST_VIDEO_MULTIVIEW_MODE_NONE ||
-      mv_mode == GST_VIDEO_MULTIVIEW_MODE_MONO ||
-      mv_mode == GST_VIDEO_MULTIVIEW_MODE_LEFT ||
-      mv_mode == GST_VIDEO_MULTIVIEW_MODE_RIGHT)
-    input_is_mono = TRUE;
-
-  if (input_is_mono == FALSE &&
-      glimage_sink->mview_output_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+  if (glimage_sink->mview_output_mode != mv_mode) {
     /* Input is multiview, and output wants a conversion - configure 3d converter now,
      * otherwise defer it until either the caps or the 3D output mode changes */
     gst_video_multiview_video_info_change_mode (out_info,
