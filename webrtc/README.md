@@ -2,11 +2,13 @@
 
 All demos use the same signalling server in the `signalling/` directory
 
-You will need the following repositories till the GStreamer WebRTC implementation is merged upstream:
+The GStreamer WebRTC implementation has now been merged upstream, so all
+you need is the latest GStreamer git master, as of 2 February 2018 or later.
 
-https://github.com/ystreet/gstreamer/tree/promise
-
-https://github.com/ystreet/gst-plugins-bad/tree/webrtc
+http://cgit.freedesktop.org/gstreamer/gstreamer
+http://cgit.freedesktop.org/gstreamer/gst-plugins-base
+http://cgit.freedesktop.org/gstreamer/gst-plugins-good
+http://cgit.freedesktop.org/gstreamer/gst-plugins-bad
 
 You can build these with either Autotools gst-uninstalled:
 
