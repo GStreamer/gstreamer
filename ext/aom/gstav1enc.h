@@ -53,6 +53,8 @@ struct _GstAV1Enc
 {
   GstVideoEncoder base_video_encoder;
 
+  gboolean encoder_inited;
+
   guint keyframe_dist;
 
   aom_codec_enc_cfg_t aom_cfg;

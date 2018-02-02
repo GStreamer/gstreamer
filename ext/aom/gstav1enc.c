@@ -52,20 +52,21 @@ enum
 };
 
 static void gst_av1_enc_finalize (GObject * object);
-
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_av1_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_av1_enc_start (GstVideoEncoder * benc);
-static gboolean gst_av1_enc_stop (GstVideoEncoder * benc);
+static gboolean gst_av1_enc_start (GstVideoEncoder * encoder);
+static gboolean gst_av1_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_av1_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_av1_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_av1_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
+
+static void gst_av1_enc_destroy_encoder (GstAV1Enc * av1enc);
 
 #define gst_av1_enc_parent_class parent_class
 G_DEFINE_TYPE (GstAV1Enc, gst_av1_enc, GST_TYPE_VIDEO_ENCODER);
@@ -137,11 +138,23 @@ static void
 gst_av1_enc_init (GstAV1Enc * av1enc)
 {
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (av1enc));
+
+  av1enc->keyframe_dist = 30;
+  av1enc->encoder_inited = FALSE;
 }
 
 static void
 gst_av1_enc_finalize (GObject * object)
 {
+  GstAV1Enc *av1enc = GST_AV1_ENC (object);
+
+  if (av1enc->input_state) {
+    gst_video_codec_state_unref (av1enc->input_state);
+  }
+  av1enc->input_state = NULL;
+
+  gst_av1_enc_destroy_encoder (av1enc);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -222,9 +235,24 @@ gst_av1_enc_debug_encoder_cfg (struct aom_codec_enc_cfg *cfg)
 }
 
 static gboolean
-gst_av1_enc_init_aom (GstAV1Enc * av1enc)
+gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 {
+  GstVideoCodecState *output_state;
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
   GstAV1EncClass *av1enc_class = GST_AV1_ENC_GET_CLASS (av1enc);
+
+  output_state =
+      gst_video_encoder_set_output_state (encoder,
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder)),
+      state);
+  gst_video_codec_state_unref (output_state);
+
+  if (av1enc->input_state) {
+    gst_video_codec_state_unref (av1enc->input_state);
+  }
+  av1enc->input_state = gst_video_codec_state_ref (state);
+
+  gst_av1_enc_set_latency (av1enc);
 
   if (aom_codec_enc_config_default (av1enc_class->codec_algo, &av1enc->aom_cfg,
           0)) {
@@ -252,29 +280,9 @@ gst_av1_enc_init_aom (GstAV1Enc * av1enc)
     gst_av1_codec_error (&av1enc->encoder, "Failed to initialize encoder");
     return FALSE;
   }
+  av1enc->encoder_inited = TRUE;
 
   return TRUE;
-}
-
-
-static gboolean
-gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
-{
-  GstVideoCodecState *output_state;
-  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
-
-  av1enc->keyframe_dist = 30;
-
-  output_state =
-      gst_video_encoder_set_output_state (encoder,
-      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder)),
-      state);
-  gst_video_codec_state_unref (output_state);
-
-  av1enc->input_state = gst_video_codec_state_ref (state);
-
-  gst_av1_enc_set_latency (av1enc);
-  return gst_av1_enc_init_aom (av1enc);
 }
 
 static GstFlowReturn
@@ -332,7 +340,7 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
   aom_image_t raw;
   int flags = 0;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame vframe;
 
   if (!aom_img_alloc (&raw, AOM_IMG_FMT_I420, av1enc->aom_cfg.g_w,
@@ -355,11 +363,25 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   if (aom_codec_encode (&av1enc->encoder, &raw, frame->pts, 1, flags)
       != AOM_CODEC_OK) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
+    ret = GST_FLOW_ERROR;
   }
 
-  ret = gst_av1_enc_process (av1enc);
   aom_img_free (&raw);
-  return ret;
+  gst_video_codec_frame_unref (frame);
+
+  if (ret == GST_FLOW_ERROR) {
+    return ret;
+  }
+  return gst_av1_enc_process (av1enc);
+}
+
+static void
+gst_av1_enc_destroy_encoder (GstAV1Enc * av1enc)
+{
+  if (av1enc->encoder_inited) {
+    aom_codec_destroy (&av1enc->encoder);
+    av1enc->encoder_inited = FALSE;
+  }
 }
 
 static gboolean
@@ -413,7 +435,16 @@ gst_av1_enc_start (GstVideoEncoder * encoder)
 }
 
 static gboolean
-gst_av1_enc_stop (GstVideoEncoder * benc)
+gst_av1_enc_stop (GstVideoEncoder * encoder)
 {
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
+
+  if (av1enc->input_state) {
+    gst_video_codec_state_unref (av1enc->input_state);
+  }
+  av1enc->input_state = NULL;
+
+  gst_av1_enc_destroy_encoder (av1enc);
+
   return TRUE;
 }
