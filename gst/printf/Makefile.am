@@ -14,7 +14,7 @@ AM_CPPFLAGS += $(PRINTF_EXTRA_CFLAGS)
 
 noinst_LTLIBRARIES = libgstprintf.la
 
-libgstprintf_la_CFLAGS =
+libgstprintf_la_CFLAGS = $(EXTRA_CFLAGS)
 libgstprintf_la_SOURCES = 	\
 	asnprintf.c \
 	printf-args.c \
