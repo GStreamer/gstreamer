@@ -619,7 +619,7 @@ GST_EXPORT
 GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, GType api);
 
 GST_EXPORT
-guint           gst_buffer_get_n_meta           (GstBuffer *buffer, GType api);
+guint           gst_buffer_get_n_meta           (GstBuffer *buffer, GType api_type);
 
 GST_EXPORT
 GstMeta *       gst_buffer_add_meta             (GstBuffer *buffer, const GstMetaInfo *info,
