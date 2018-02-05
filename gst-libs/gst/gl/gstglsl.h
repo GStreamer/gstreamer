@@ -137,8 +137,8 @@ gchar *        gst_glsl_version_profile_to_string   (GstGLSLVersion version,
                                                      GstGLSLProfile profile);
 GST_EXPORT
 gboolean       gst_glsl_version_profile_from_string (const gchar * string,
-                                                     GstGLSLVersion * version,
-                                                     GstGLSLProfile * profile);
+                                                     GstGLSLVersion * version_ret,
+                                                     GstGLSLProfile * profile_ret);
 
 GST_EXPORT
 gboolean       gst_glsl_string_get_version_profile  (const gchar *s,

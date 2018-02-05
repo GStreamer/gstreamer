@@ -268,8 +268,8 @@ gboolean        gst_gl_memory_copy_teximage     (GstGLMemory * src,
                                                  guint tex_id,
                                                  GstGLTextureTarget out_target,
                                                  GstGLFormat out_tex_format,
-                                                 gint width,
-                                                 gint height);
+                                                 gint out_width,
+                                                 gint out_height);
 
 GST_EXPORT
 gboolean        gst_gl_memory_read_pixels       (GstGLMemory * gl_mem,

@@ -596,7 +596,7 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
 }
 
 /**
- * gst_gl_allocation_params_init:
+ * gst_gl_allocation_params_init: (skip)
  * @params: the #GstGLAllocationParams to initialize
  * @struct_size: the struct size of the implementation
  * @alloc_flags: some alloc flags
