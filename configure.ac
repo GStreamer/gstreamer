@@ -168,6 +168,10 @@ AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
+dnl disable strict aliasing
+AS_COMPILER_FLAG([-fno-strict-aliasing], [EXTRA_CFLAGS="-fno-strict-aliasing"])
+AC_SUBST(EXTRA_CFLAGS)
+
 dnl *** finalize CFLAGS, LDFLAGS, LIBS ***
 
 dnl Overview:
@@ -201,7 +205,7 @@ dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
 dnl add GST_OPTION_CFLAGS, but overridable
 GST_CFLAGS="$GST_CFLAGS"
-GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $EXTRA_CFLAGS $GLIB_EXTRA_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
