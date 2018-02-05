@@ -133,7 +133,7 @@ gst_dtls_enc_class_init (GstDtlsEncClass * klass)
   properties[PROP_IS_CLIENT] =
       g_param_spec_boolean ("is-client",
       "Is client",
-      "Set to true if the decoder should act as"
+      "Set to true if the decoder should act as "
       "client and initiate the handshake",
       DEFAULT_IS_CLIENT,
       GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
