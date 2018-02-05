@@ -103,10 +103,16 @@ To run all the tests of a specific component:
 meson test -C build --suite gst-plugins-base
 ```
 
-Or to run a specific test:
+Or to run a specific test file:
 
 ```
 meson test -C build/ --suite gstreamer gst_gstbuffer
+```
+
+Run a specific test from a specific test file:
+
+```
+GST_CHECKS=test_subbuffer meson test -C build/ --suite gstreamer gst_gstbuffer
 ```
 
 ## Add information about GStreamer development environment in your prompt line
