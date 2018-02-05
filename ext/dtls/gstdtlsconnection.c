@@ -76,7 +76,6 @@ static GParamSpec *properties[NUM_PROPERTIES];
 
 static int connection_ex_index;
 
-static GstClock *system_clock;
 static void handle_timeout (gpointer data, gpointer user_data);
 
 struct _GstDtlsConnectionPrivate
@@ -159,8 +158,6 @@ gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
   _gst_dtls_init_openssl ();
 
   gobject_class->finalize = gst_dtls_connection_finalize;
-
-  system_clock = gst_system_clock_obtain ();
 }
 
 static void
@@ -388,6 +385,7 @@ gst_dtls_connection_check_timeout_locked (GstDtlsConnection * self)
 
     GST_DEBUG_OBJECT (self, "waiting for %" G_GINT64_FORMAT " usec", wait_time);
     if (wait_time) {
+      GstClock *system_clock = gst_system_clock_obtain ();
       GstClockID clock_id;
 #ifndef G_DISABLE_ASSERT
       GstClockReturn clock_return;
@@ -405,6 +403,7 @@ gst_dtls_connection_check_timeout_locked (GstDtlsConnection * self)
           g_object_ref (self), (GDestroyNotify) g_object_unref);
       g_assert (clock_return == GST_CLOCK_OK);
       gst_clock_id_unref (clock_id);
+      gst_object_unref (system_clock);
     } else {
       if (self->priv->is_alive && !self->priv->timeout_pending) {
         self->priv->timeout_pending = TRUE;
