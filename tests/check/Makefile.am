@@ -164,6 +164,12 @@ else
 check_srtp =
 endif
 
+if USE_DTLS
+check_dtls=elements/dtls
+else
+check_dtls=
+endif
+
 if WITH_GST_PLAYER_TESTS
 check_player = libs/player
 else
@@ -234,6 +240,7 @@ check_PROGRAMS = \
 	generic/states \
 	$(check_assrender) \
 	$(check_dash) \
+	$(check_dtls) \
 	$(check_faac)  \
 	$(check_faad)  \
 	$(check_voaacenc) \

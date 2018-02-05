@@ -17,6 +17,7 @@ curlhttpsink
 curlsmtpsink
 dash_demux
 dash_mpd
+dtls
 faac
 faad
 gdpdepay
