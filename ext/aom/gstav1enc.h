@@ -53,14 +53,16 @@ struct _GstAV1Enc
 {
   GstVideoEncoder base_video_encoder;
 
-  gboolean encoder_inited;
-
+  /* properties */
   guint keyframe_dist;
+  gint cpu_used;
 
+  /* state */
+  gboolean encoder_inited;
+  GstVideoCodecState *input_state;
   aom_codec_enc_cfg_t aom_cfg;
   aom_codec_ctx_t encoder;
-
-  GstVideoCodecState *input_state;
+  GMutex encoder_lock;
 };
 
 struct _GstAV1EncClass

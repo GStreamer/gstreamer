@@ -38,6 +38,14 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/base/base.h>
 
+#define GST_AV1_ENC_APPLY_CODEC_CONTROL(av1enc, flag, value)             \
+  if (av1enc->encoder_inited) {                                        \
+    if (aom_codec_control (&av1enc->encoder, flag,                     \
+            value) != AOM_CODEC_OK) {                                  \
+      gst_av1_codec_error (&av1enc->encoder, "Failed to set " #flag);  \
+    }                                                                  \
+  }
+
 GST_DEBUG_CATEGORY_STATIC (av1_enc_debug);
 #define GST_CAT_DEFAULT av1_enc_debug
 
@@ -48,8 +56,11 @@ enum
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CPU_USED
 };
+
+#define PROP_CPU_USED_DEFAULT 0
 
 static void gst_av1_enc_finalize (GObject * object);
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
@@ -124,6 +135,12 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
 
   klass->codec_algo = &aom_codec_av1_cx_algo;
   GST_DEBUG_CATEGORY_INIT (av1_enc_debug, "av1enc", 0, "AV1 encoding element");
+
+  g_object_class_install_property (gobject_class, PROP_CPU_USED,
+      g_param_spec_int ("cpu-used", "CPU Used",
+          "CPU Used. A Value greater than 0 will increase encoder speed at the expense of quality.",
+          0, 8, PROP_CPU_USED_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -139,8 +156,12 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
 {
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (av1enc));
 
-  av1enc->keyframe_dist = 30;
   av1enc->encoder_inited = FALSE;
+
+  av1enc->keyframe_dist = 30;
+  av1enc->cpu_used = PROP_CPU_USED_DEFAULT;
+
+  g_mutex_init (&av1enc->encoder_lock);
 }
 
 static void
@@ -154,6 +175,7 @@ gst_av1_enc_finalize (GObject * object)
   av1enc->input_state = NULL;
 
   gst_av1_enc_destroy_encoder (av1enc);
+  g_mutex_clear (&av1enc->encoder_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -253,6 +275,7 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 
   gst_av1_enc_set_latency (av1enc);
 
+  g_mutex_lock (&av1enc->encoder_lock);
   if (aom_codec_enc_config_default (av1enc_class->codec_algo, &av1enc->aom_cfg,
           0)) {
     gst_av1_codec_error (&av1enc->encoder,
@@ -280,6 +303,9 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
     return FALSE;
   }
   av1enc->encoder_inited = TRUE;
+
+  GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AOME_SET_CPUUSED, av1enc->cpu_used);
+  g_mutex_unlock (&av1enc->encoder_lock);
 
   return TRUE;
 }
@@ -359,11 +385,13 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   }
   av1enc->keyframe_dist++;
 
+  g_mutex_lock (&av1enc->encoder_lock);
   if (aom_codec_encode (&av1enc->encoder, &raw, frame->pts, 1, flags)
       != AOM_CODEC_OK) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
     ret = GST_FLOW_ERROR;
   }
+  g_mutex_unlock (&av1enc->encoder_lock);
 
   aom_img_free (&raw);
   gst_video_codec_frame_unref (frame);
@@ -377,10 +405,12 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 static void
 gst_av1_enc_destroy_encoder (GstAV1Enc * av1enc)
 {
+  g_mutex_lock (&av1enc->encoder_lock);
   if (av1enc->encoder_inited) {
     aom_codec_destroy (&av1enc->encoder);
     av1enc->encoder_inited = FALSE;
   }
+  g_mutex_unlock (&av1enc->encoder_lock);
 }
 
 static gboolean
@@ -400,11 +430,18 @@ gst_av1_enc_set_property (GObject * object, guint prop_id,
 
   GST_OBJECT_LOCK (av1enc);
 
+  g_mutex_lock (&av1enc->encoder_lock);
   switch (prop_id) {
+    case PROP_CPU_USED:
+      av1enc->cpu_used = g_value_get_int (value);
+      GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AOME_SET_CPUUSED,
+          av1enc->cpu_used);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&av1enc->encoder_lock);
 
   GST_OBJECT_UNLOCK (av1enc);
 }
@@ -418,6 +455,8 @@ gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_LOCK (av1enc);
 
   switch (prop_id) {
+    case PROP_CPU_USED:
+      g_value_set_int (value, av1enc->cpu_used);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
