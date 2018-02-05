@@ -370,9 +370,9 @@ if gles2_dep.found() and gl_dep.found()
   # https://github.com/mesonbuild/meson/issues/2364 is fixed
   if not cc.compiles(gl_include_block + '\n' + 'void f (void) {}',dependencies : [gles2_dep, gl_dep])
     message ('Cannot include both OpenGL and OpenGL ES headers')
-    if need_gles2 != 'yes'
+    if need_api_gles2 != 'yes'
       gles2_dep = unneeded_dep
-    elif need_opengl != 'yes'
+    elif need_api_opengl != 'yes'
       gl_dep = unneeded_dep
     else
       error('Both OpenGL and OpenGL ES were requested but cannot be included together')
