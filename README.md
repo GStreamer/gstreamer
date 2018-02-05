@@ -106,7 +106,7 @@ meson test -C build --suite gst-plugins-base
 Or to run a specific test:
 
 ```
-meson test -C build/ --suite gstreamer gst/gstbuffer
+meson test -C build/ --suite gstreamer gst_gstbuffer
 ```
 
 ## Add information about GStreamer development environment in your prompt line
