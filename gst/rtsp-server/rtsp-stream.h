@@ -293,6 +293,12 @@ gboolean          gst_rtsp_stream_complete_stream (GstRTSPStream * stream, const
 GST_EXPORT
 gboolean           gst_rtsp_stream_is_complete (GstRTSPStream * stream);
 
+GST_EXPORT
+gboolean           gst_rtsp_stream_is_sender (GstRTSPStream * stream);
+
+GST_EXPORT
+gboolean           gst_rtsp_stream_is_receiver (GstRTSPStream * stream);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

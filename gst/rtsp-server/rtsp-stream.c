@@ -4590,3 +4590,51 @@ gst_rtsp_stream_is_complete (GstRTSPStream * stream)
 
   return ret;
 }
+
+/**
+ * gst_rtsp_stream_is_sender:
+ * @stream: a #GstRTSPStream
+ *
+ * Checks whether the stream is a sender.
+ *
+ * Returns: %TRUE if the stream is a sender and %FALSE otherwise.
+ */
+gboolean
+gst_rtsp_stream_is_sender (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  ret = (priv->srcpad != NULL);
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
+/**
+ * gst_rtsp_stream_is_receiver:
+ * @stream: a #GstRTSPStream
+ *
+ * Checks whether the stream is a receiver.
+ *
+ * Returns: %TRUE if the stream is a receiver and %FALSE otherwise.
+ */
+gboolean
+gst_rtsp_stream_is_receiver (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  ret = (priv->sinkpad != NULL);
+  g_mutex_unlock (&priv->lock);
+
+  return ret;
+}
