@@ -159,15 +159,14 @@ gst_av1_enc_finalize (GObject * object)
 }
 
 static void
-gst_av1_enc_set_latency (GstAV1Enc * encoder)
+gst_av1_enc_set_latency (GstAV1Enc * av1enc)
 {
-  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
   GstClockTime latency =
       gst_util_uint64_scale (av1enc->aom_cfg.g_lag_in_frames, 1 * GST_SECOND,
       30);
-  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
+  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (av1enc), latency, latency);
 
-  GST_WARNING_OBJECT (encoder, "Latency unimplemented");
+  GST_WARNING_OBJECT (av1enc, "Latency unimplemented");
 }
 
 static const gchar *
