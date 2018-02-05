@@ -96,6 +96,7 @@ static gboolean src_activate_mode (GstPad *, GstObject *, GstPadMode,
 static void src_task_loop (GstPad *);
 
 static GstFlowReturn sink_chain (GstPad *, GstObject *, GstBuffer *);
+static gboolean sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
 
 static void on_key_received (GstDtlsConnection *, gpointer key, guint cipher,
     guint auth, GstDtlsEnc *);
@@ -355,6 +356,7 @@ gst_dtls_enc_request_new_pad (GstElement * element,
   }
 
   gst_pad_set_chain_function (sink, GST_DEBUG_FUNCPTR (sink_chain));
+  gst_pad_set_event_function (sink, GST_DEBUG_FUNCPTR (sink_event));
 
   ret = gst_pad_set_active (sink, TRUE);
   g_warn_if_fail (ret);
@@ -491,6 +493,29 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   return GST_FLOW_OK;
+}
+
+
+static gboolean
+sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  gboolean ret = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+      /* Drop segment, stream-start as we will push our own from the src pad
+       * task.
+       * FIXME: do we need any information from upstream for pushing our own? */
+    case GST_EVENT_SEGMENT:
+    case GST_EVENT_STREAM_START:
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+
+  return ret;
 }
 
 static void
