@@ -58,7 +58,7 @@ struct _GstWasapiSink
   /* properties */
   gint role;
   gboolean mute;
-  wchar_t *device;
+  wchar_t *device_strid;
 };
 
 struct _GstWasapiSinkClass

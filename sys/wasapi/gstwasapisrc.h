@@ -59,7 +59,7 @@ struct _GstWasapiSrc
 
   /* properties */
   gint role;
-  wchar_t *device;
+  wchar_t *device_strid;
 };
 
 struct _GstWasapiSrcClass
