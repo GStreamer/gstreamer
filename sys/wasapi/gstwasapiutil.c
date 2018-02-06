@@ -160,8 +160,8 @@ gst_wasapi_erole_to_device_role (gint erole)
   }
 }
 
-const gchar *
-gst_wasapi_util_hresult_to_string (HRESULT hr)
+static const gchar *
+hresult_to_string_fallback (HRESULT hr)
 {
   const gchar *s = "unknown error";
 
@@ -247,12 +247,42 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
     case AUDCLNT_S_POSITION_STALLED:
       s = "AUDCLNT_S_POSITION_STALLED";
       break;
+    case E_POINTER:
+      s = "E_POINTER";
+      break;
     case E_INVALIDARG:
       s = "E_INVALIDARG";
       break;
   }
 
   return s;
+}
+
+gchar *
+gst_wasapi_util_hresult_to_string (HRESULT hr)
+{
+  DWORD flags;
+  gchar *ret_text;
+  LPTSTR error_text = NULL;
+
+  flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
+      | FORMAT_MESSAGE_IGNORE_INSERTS;
+  FormatMessage (flags, NULL, hr, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPTSTR) & error_text, 0, NULL);
+
+  /* If we couldn't get the error msg, try the fallback switch statement */
+  if (error_text == NULL)
+    return g_strdup (hresult_to_string_fallback (hr));
+
+#ifdef UNICODE
+  /* If UNICODE is defined, LPTSTR is LPWSTR which is UTF-16 */
+  ret_text = g_utf16_to_utf8 (error_text, 0, NULL, NULL, NULL);
+#else
+  ret_text = g_strdup (error_text);
+#endif
+
+  LocalFree (error_text);
+  return ret_text;
 }
 
 static IMMDeviceEnumerator *
@@ -264,8 +294,10 @@ gst_wasapi_util_get_device_enumerator (GstElement * element)
   hr = CoCreateInstance (&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
       &IID_IMMDeviceEnumerator, (void **) &enumerator);
   if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ERROR_OBJECT (element, "CoCreateInstance (MMDeviceEnumerator) failed"
-        ": %s", gst_wasapi_util_hresult_to_string (hr));
+        ": %s", msg);
+    g_free (msg);
     return NULL;
   }
 
@@ -294,15 +326,18 @@ gst_wasapi_util_get_devices (GstElement * element, gboolean active,
   hr = IMMDeviceEnumerator_EnumAudioEndpoints (enumerator, eAll, dwStateMask,
       &device_collection);
   if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ERROR_OBJECT (element, "IMMDeviceEnumerator::EnumAudioEndpoints "
-        "failed: %s", gst_wasapi_util_hresult_to_string (hr));
+        "failed: %s", msg);
+    g_free (msg);
     goto err;
   }
 
   hr = IMMDeviceCollection_GetCount (device_collection, &count);
   if (hr != S_OK) {
-    GST_ERROR_OBJECT (element, "Failed to count devices: %s",
-        gst_wasapi_util_hresult_to_string (hr));
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+    GST_ERROR_OBJECT (element, "Failed to count devices: %s", msg);
+    g_free (msg);
     goto err;
   }
 
@@ -368,15 +403,18 @@ gst_wasapi_util_get_devices (GstElement * element, gboolean active,
     hr = IMMDevice_Activate (item, &IID_IAudioClient, CLSCTX_ALL, NULL,
         (void **) &client);
     if (hr != S_OK) {
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
       GST_ERROR_OBJECT (element, "IMMDevice::Activate (IID_IAudioClient) failed"
-          "on %s: %s", strid, gst_wasapi_util_hresult_to_string (hr));
+          "on %s: %s", strid, msg);
+      g_free (msg);
       goto next;
     }
 
     hr = IAudioClient_GetMixFormat (client, &format);
     if (hr != S_OK || format == NULL) {
-      GST_ERROR_OBJECT ("GetMixFormat failed on %s: %s", strid,
-          gst_wasapi_util_hresult_to_string (hr));
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+      GST_ERROR_OBJECT ("GetMixFormat failed on %s: %s", strid, msg);
+      g_free (msg);
       goto next;
     }
 
@@ -437,8 +475,9 @@ gst_wasapi_util_get_device_format (GstElement * element,
 
   hr = IAudioClient_GetMixFormat (client, &format);
   if (hr != S_OK || format == NULL) {
-    GST_ERROR_OBJECT (element, "GetMixFormat failed: %s",
-        gst_wasapi_util_hresult_to_string (hr));
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+    GST_ERROR_OBJECT (element, "GetMixFormat failed: %s", msg);
+    g_free (msg);
     return FALSE;
   }
 
@@ -462,16 +501,18 @@ gst_wasapi_util_get_device_format (GstElement * element,
 
     hr = IMMDevice_OpenPropertyStore (device, STGM_READ, &prop_store);
     if (hr != S_OK) {
-      GST_ERROR_OBJECT (element, "OpenPropertyStore failed: %s",
-          gst_wasapi_util_hresult_to_string (hr));
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+      GST_ERROR_OBJECT (element, "OpenPropertyStore failed: %s", msg);
+      g_free (msg);
       return FALSE;
     }
 
     hr = IPropertyStore_GetValue (prop_store, &PKEY_AudioEngine_DeviceFormat,
         &var);
     if (hr != S_OK) {
-      GST_ERROR_OBJECT (element, "GetValue failed: %s",
-          gst_wasapi_util_hresult_to_string (hr));
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+      GST_ERROR_OBJECT (element, "GetValue failed: %s", msg);
+      g_free (msg);
       IUnknown_Release (prop_store);
       return FALSE;
     }
@@ -516,16 +557,19 @@ gst_wasapi_util_get_device_client (GstElement * element,
     hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint (enumerator,
         capture ? eCapture : eRender, role, &device);
     if (hr != S_OK) {
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
       GST_ERROR_OBJECT (element,
-          "IMMDeviceEnumerator::GetDefaultAudioEndpoint failed: %s",
-          gst_wasapi_util_hresult_to_string (hr));
+          "IMMDeviceEnumerator::GetDefaultAudioEndpoint failed: %s", msg);
+      g_free (msg);
       goto beach;
     }
   } else {
     hr = IMMDeviceEnumerator_GetDevice (enumerator, device_strid, &device);
     if (hr != S_OK) {
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
       GST_ERROR_OBJECT (element, "IMMDeviceEnumerator::GetDevice (%S) failed"
-          ": %s", device_strid, gst_wasapi_util_hresult_to_string (hr));
+          ": %s", device_strid, msg);
+      g_free (msg);
       goto beach;
     }
   }
@@ -533,8 +577,10 @@ gst_wasapi_util_get_device_client (GstElement * element,
   hr = IMMDevice_Activate (device, &IID_IAudioClient, CLSCTX_ALL, NULL,
       (void **) &client);
   if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ERROR_OBJECT (element, "IMMDevice::Activate (IID_IAudioClient) failed"
-        ": %s", gst_wasapi_util_hresult_to_string (hr));
+        ": %s", msg);
+    g_free (msg);
     goto beach;
   }
 
@@ -569,9 +615,10 @@ gst_wasapi_util_get_render_client (GstElement * element, IAudioClient * client,
   hr = IAudioClient_GetService (client, &IID_IAudioRenderClient,
       (void **) &render_client);
   if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ERROR_OBJECT (element,
-        "IAudioClient::GetService (IID_IAudioRenderClient) failed: %s",
-        gst_wasapi_util_hresult_to_string (hr));
+        "IAudioClient::GetService (IID_IAudioRenderClient) failed: %s", msg);
+    g_free (msg);
     goto beach;
   }
 
@@ -593,9 +640,10 @@ gst_wasapi_util_get_capture_client (GstElement * element, IAudioClient * client,
   hr = IAudioClient_GetService (client, &IID_IAudioCaptureClient,
       (void **) &capture_client);
   if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ERROR_OBJECT (element,
-        "IAudioClient::GetService (IID_IAudioCaptureClient) failed: %s",
-        gst_wasapi_util_hresult_to_string (hr));
+        "IAudioClient::GetService (IID_IAudioCaptureClient) failed: %s", msg);
+    g_free (msg);
     goto beach;
   }
 
@@ -616,9 +664,10 @@ gst_wasapi_util_get_clock (GstElement * element, IAudioClient * client,
 
   hr = IAudioClient_GetService (client, &IID_IAudioClock, (void **) &clock);
   if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ERROR_OBJECT (element,
-        "IAudioClient::GetService (IID_IAudioClock) failed: %s",
-        gst_wasapi_util_hresult_to_string (hr));
+        "IAudioClient::GetService (IID_IAudioClock) failed: %s", msg);
+    g_free (msg);
     goto beach;
   }
 

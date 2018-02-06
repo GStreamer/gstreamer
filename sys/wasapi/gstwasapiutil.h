@@ -51,7 +51,7 @@ gint gst_wasapi_device_role_to_erole (gint role);
 
 gint gst_wasapi_erole_to_device_role (gint erole);
 
-const gchar *gst_wasapi_util_hresult_to_string (HRESULT hr);
+gchar *gst_wasapi_util_hresult_to_string (HRESULT hr);
 
 gboolean gst_wasapi_util_get_devices (GstElement * element, gboolean active,
     GList ** devices);
