@@ -4798,6 +4798,34 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
 }
 
 static gboolean
+gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
+{
+  GstCaps *current_caps;
+
+  /* does not go well to renegotiate stream mid-way, unless
+   * the old caps are a subset of the new one (this means upstream
+   * added more info to the caps, as both should be 'fixed' caps) */
+  current_caps = gst_pad_get_current_caps (pad);
+  g_assert (caps != NULL);
+
+  if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
+    gst_caps_unref (current_caps);
+    GST_WARNING_OBJECT (qtmux,
+        "pad %s refused renegotiation to %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), caps);
+    gst_object_unref (qtmux);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (qtmux,
+      "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
+      GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
+  gst_caps_unref (current_caps);
+
+  return TRUE;
+}
+
+static gboolean
 gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 {
   GstPad *pad = qtpad->collect.pad;
@@ -4815,26 +4843,8 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   const gchar *stream_format;
   guint32 timescale;
 
-  /* does not go well to renegotiate stream mid-way, unless
-   * the old caps are a subset of the new one (this means upstream
-   * added more info to the caps, as both should be 'fixed' caps) */
-  if (qtpad->fourcc) {
-    GstCaps *current_caps;
-
-    current_caps = gst_pad_get_current_caps (pad);
-    g_assert (caps != NULL);
-
-    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
-      gst_caps_unref (current_caps);
-      goto refuse_renegotiation;
-    }
-    GST_DEBUG_OBJECT (qtmux,
-        "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
-        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
-    gst_caps_unref (current_caps);
-
-    return TRUE;
-  }
+  if (qtpad->fourcc)
+    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -5160,14 +5170,6 @@ refuse_caps:
     gst_object_unref (qtmux);
     return FALSE;
   }
-refuse_renegotiation:
-  {
-    GST_WARNING_OBJECT (qtmux,
-        "pad %s refused renegotiation to %" GST_PTR_FORMAT,
-        GST_PAD_NAME (pad), caps);
-    gst_object_unref (qtmux);
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -5191,26 +5193,8 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   int par_num, par_den;
   const gchar *multiview_mode;
 
-  /* does not go well to renegotiate stream mid-way, unless
-   * the old caps are a subset of the new one (this means upstream
-   * added more info to the caps, as both should be 'fixed' caps) */
-  if (qtpad->fourcc) {
-    GstCaps *current_caps;
-
-    current_caps = gst_pad_get_current_caps (pad);
-    g_assert (caps != NULL);
-
-    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
-      gst_caps_unref (current_caps);
-      goto refuse_renegotiation;
-    }
-    GST_DEBUG_OBJECT (qtmux,
-        "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
-        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
-    gst_caps_unref (current_caps);
-
-    return TRUE;
-  }
+  if (qtpad->fourcc)
+    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -5714,15 +5698,6 @@ refuse_caps:
     gst_object_unref (qtmux);
     return FALSE;
   }
-refuse_renegotiation:
-  {
-    GST_ELEMENT_WARNING (qtmux, STREAM, FORMAT,
-        ("Can't change input format at runtime."),
-        ("pad %s refused renegotiation to %" GST_PTR_FORMAT, GST_PAD_NAME (pad),
-            caps));
-    gst_object_unref (qtmux);
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -5733,26 +5708,8 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   GstStructure *structure;
   SubtitleSampleEntry entry = { 0, };
 
-  /* does not go well to renegotiate stream mid-way, unless
-   * the old caps are a subset of the new one (this means upstream
-   * added more info to the caps, as both should be 'fixed' caps) */
-  if (qtpad->fourcc) {
-    GstCaps *current_caps;
-
-    current_caps = gst_pad_get_current_caps (pad);
-    g_assert (caps != NULL);
-
-    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
-      gst_caps_unref (current_caps);
-      goto refuse_renegotiation;
-    }
-    GST_DEBUG_OBJECT (qtmux,
-        "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
-        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
-    gst_caps_unref (current_caps);
-
-    return TRUE;
-  }
+  if (qtpad->fourcc)
+    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -5791,14 +5748,6 @@ refuse_caps:
   {
     GST_WARNING_OBJECT (qtmux, "pad %s refused caps %" GST_PTR_FORMAT,
         GST_PAD_NAME (pad), caps);
-    gst_object_unref (qtmux);
-    return FALSE;
-  }
-refuse_renegotiation:
-  {
-    GST_WARNING_OBJECT (qtmux,
-        "pad %s refused renegotiation to %" GST_PTR_FORMAT, GST_PAD_NAME (pad),
-        caps);
     gst_object_unref (qtmux);
     return FALSE;
   }
