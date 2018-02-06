@@ -68,10 +68,6 @@ gst_v4l2_transform_set_property (GObject * object,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (object);
 
   switch (prop_id) {
-    case PROP_OUTPUT_IO_MODE:
-      gst_v4l2_object_set_property_helper (self->v4l2output, prop_id, value,
-          pspec);
-      break;
     case PROP_CAPTURE_IO_MODE:
       gst_v4l2_object_set_property_helper (self->v4l2capture, prop_id, value,
           pspec);
@@ -94,10 +90,6 @@ gst_v4l2_transform_get_property (GObject * object,
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (object);
 
   switch (prop_id) {
-    case PROP_OUTPUT_IO_MODE:
-      gst_v4l2_object_get_property_helper (self->v4l2output, prop_id, value,
-          pspec);
-      break;
     case PROP_CAPTURE_IO_MODE:
       gst_v4l2_object_get_property_helper (self->v4l2capture, prop_id, value,
           pspec);
