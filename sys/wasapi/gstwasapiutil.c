@@ -25,8 +25,6 @@
 #include "gstwasapiutil.h"
 #include "gstwasapidevice.h"
 
-#include <mmdeviceapi.h>
-
 /* This was only added to MinGW in ~2015 and our Cerbero toolchain is too old */
 #if defined(_MSC_VER)
 #include <functiondiscoverykeys_devpkey.h>
@@ -428,9 +426,82 @@ err:
 }
 
 gboolean
+gst_wasapi_util_get_device_format (GstElement * element,
+    gint device_mode, IMMDevice * device, IAudioClient * client,
+    WAVEFORMATEX ** ret_format)
+{
+  WAVEFORMATEX *format;
+  HRESULT hr;
+
+  *ret_format = NULL;
+
+  hr = IAudioClient_GetMixFormat (client, &format);
+  if (hr != S_OK || format == NULL) {
+    GST_ERROR_OBJECT (element, "GetMixFormat failed: %s",
+        gst_wasapi_util_hresult_to_string (hr));
+    return FALSE;
+  }
+
+  /* WASAPI always accepts the format returned by GetMixFormat in shared mode */
+  if (device_mode == AUDCLNT_SHAREMODE_SHARED)
+    goto out;
+
+  /* WASAPI may or may not support this format in exclusive mode */
+  hr = IAudioClient_IsFormatSupported (client, AUDCLNT_SHAREMODE_EXCLUSIVE,
+      format, NULL);
+  if (hr == S_OK)
+    goto out;
+
+  CoTaskMemFree (format);
+
+  /* Open the device property store, and get the format that WASAPI has been
+   * using for sending data to the device */
+  {
+    PROPVARIANT var;
+    IPropertyStore *prop_store = NULL;
+
+    hr = IMMDevice_OpenPropertyStore (device, STGM_READ, &prop_store);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (element, "OpenPropertyStore failed: %s",
+          gst_wasapi_util_hresult_to_string (hr));
+      return FALSE;
+    }
+
+    hr = IPropertyStore_GetValue (prop_store, &PKEY_AudioEngine_DeviceFormat,
+        &var);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (element, "GetValue failed: %s",
+          gst_wasapi_util_hresult_to_string (hr));
+      IUnknown_Release (prop_store);
+      return FALSE;
+    }
+
+    format = malloc (var.blob.cbSize);
+    memcpy (format, var.blob.pBlobData, var.blob.cbSize);
+
+    PropVariantClear (&var);
+    IUnknown_Release (prop_store);
+  }
+
+  /* WASAPI may or may not support this format in exclusive mode */
+  hr = IAudioClient_IsFormatSupported (client, AUDCLNT_SHAREMODE_EXCLUSIVE,
+      format, NULL);
+  if (hr == S_OK)
+    goto out;
+
+  GST_ERROR_OBJECT (element, "AudioEngine DeviceFormat not supported");
+  free (format);
+  return FALSE;
+
+out:
+  *ret_format = format;
+  return TRUE;
+}
+
+gboolean
 gst_wasapi_util_get_device_client (GstElement * element,
     gboolean capture, gint role, const wchar_t * device_strid,
-    IAudioClient ** ret_client)
+    IMMDevice ** ret_device, IAudioClient ** ret_client)
 {
   gboolean res = FALSE;
   HRESULT hr;
@@ -468,7 +539,9 @@ gst_wasapi_util_get_device_client (GstElement * element,
   }
 
   IUnknown_AddRef (client);
+  IUnknown_AddRef (device);
   *ret_client = client;
+  *ret_device = device;
 
   res = TRUE;
 

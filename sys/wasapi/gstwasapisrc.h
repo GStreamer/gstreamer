@@ -40,6 +40,7 @@ struct _GstWasapiSrc
 {
   GstAudioSrc parent;
 
+  IMMDevice *device;
   IAudioClient *client;
   IAudioClock *client_clock;
   guint64 client_clock_freq;
@@ -59,6 +60,7 @@ struct _GstWasapiSrc
 
   /* properties */
   gint role;
+  gint sharemode;
   wchar_t *device_strid;
 };
 

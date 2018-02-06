@@ -40,8 +40,6 @@
 
 #include "gstwasapisink.h"
 
-#include <mmdeviceapi.h>
-
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi_sink_debug);
 #define GST_CAT_DEFAULT gst_wasapi_sink_debug
 
@@ -50,15 +48,17 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_WASAPI_STATIC_CAPS));
 
-#define DEFAULT_ROLE    GST_WASAPI_DEVICE_ROLE_CONSOLE
-#define DEFAULT_MUTE    FALSE
+#define DEFAULT_ROLE      GST_WASAPI_DEVICE_ROLE_CONSOLE
+#define DEFAULT_MUTE      FALSE
+#define DEFAULT_EXCLUSIVE FALSE
 
 enum
 {
   PROP_0,
   PROP_ROLE,
   PROP_MUTE,
-  PROP_DEVICE
+  PROP_DEVICE,
+  PROP_EXCLUSIVE
 };
 
 static void gst_wasapi_sink_dispose (GObject * object);
@@ -115,6 +115,12 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
       g_param_spec_string ("device", "Device",
           "WASAPI playback device as a GUID string",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_EXCLUSIVE,
+      g_param_spec_boolean ("exclusive", "Exclusive mode",
+          "Open the device in exclusive mode",
+          DEFAULT_EXCLUSIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
@@ -209,6 +215,10 @@ gst_wasapi_sink_set_property (GObject * object, guint prop_id,
           device ? g_utf8_to_utf16 (device, -1, NULL, NULL, NULL) : NULL;
       break;
     }
+    case PROP_EXCLUSIVE:
+      self->sharemode = g_value_get_boolean (value)
+          ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -232,6 +242,10 @@ gst_wasapi_sink_get_property (GObject * object, guint prop_id,
       g_value_take_string (value, self->device_strid ?
           g_utf16_to_utf8 (self->device_strid, -1, NULL, NULL, NULL) : NULL);
       break;
+    case PROP_EXCLUSIVE:
+      g_value_set_boolean (value,
+          self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -244,7 +258,6 @@ gst_wasapi_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GstWasapiSink *self = GST_WASAPI_SINK (bsink);
   WAVEFORMATEX *format = NULL;
   GstCaps *caps = NULL;
-  HRESULT hr;
 
   GST_DEBUG_OBJECT (self, "entering get caps");
 
@@ -252,16 +265,18 @@ gst_wasapi_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     caps = gst_caps_ref (self->cached_caps);
   } else {
     GstCaps *template_caps;
+    gboolean ret;
 
     template_caps = gst_pad_get_pad_template_caps (bsink->sinkpad);
 
     if (!self->client)
       gst_wasapi_sink_open (GST_AUDIO_SINK (bsink));
 
-    hr = IAudioClient_GetMixFormat (self->client, &format);
-    if (hr != S_OK || format == NULL) {
+    ret = gst_wasapi_util_get_device_format (GST_ELEMENT (self),
+        self->sharemode, self->device, self->client, &format);
+    if (!ret) {
       GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
-          ("GetMixFormat failed: %s", gst_wasapi_util_hresult_to_string (hr)));
+          ("failed to detect format"));
       goto out;
     }
 
@@ -302,6 +317,7 @@ gst_wasapi_sink_open (GstAudioSink * asink)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
   gboolean res = FALSE;
+  IMMDevice *device = NULL;
   IAudioClient *client = NULL;
 
   GST_DEBUG_OBJECT (self, "opening device");
@@ -314,7 +330,7 @@ gst_wasapi_sink_open (GstAudioSink * asink)
    * For example, perhaps we should automatically switch to the new device if
    * the default device is changed and a device isn't explicitly selected. */
   if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self), FALSE,
-          self->role, self->device_strid, &client)) {
+          self->role, self->device_strid, &device, &client)) {
     if (!self->device_strid)
       GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
           ("Failed to get default device"));
@@ -325,6 +341,7 @@ gst_wasapi_sink_open (GstAudioSink * asink)
   }
 
   self->client = client;
+  self->device = device;
   res = TRUE;
 
 beach:
@@ -336,6 +353,11 @@ static gboolean
 gst_wasapi_sink_close (GstAudioSink * asink)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
+
+  if (self->device != NULL) {
+    IUnknown_Release (self->device);
+    self->device = NULL;
+  }
 
   if (self->client != NULL) {
     IUnknown_Release (self->client);
@@ -352,7 +374,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   gboolean res = FALSE;
   REFERENCE_TIME latency_rt;
   IAudioRenderClient *render_client = NULL;
-  gint64 default_period, min_period;
+  gint64 default_period, min_period, use_period;
   guint bpf, rate;
   HRESULT hr;
 
@@ -364,15 +386,27 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
       ", min period: %" G_GINT64_FORMAT, default_period, min_period);
 
-  /* Set hnsBufferDuration to 0, which should, in theory, tell the device to
-   * create a buffer with the smallest latency possible. In practice, this is
-   * usually 2 * default_period. See:
-   * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370871(v=vs.85).aspx
-   *
-   * NOTE: min_period is a lie, and I have never seen WASAPI use it as the
-   * current period */
-  hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED,
-      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, self->mix_format, NULL);
+  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
+    use_period = default_period;
+    /* Set hnsBufferDuration to 0, which should, in theory, tell the device to
+     * create a buffer with the smallest latency possible. In practice, this is
+     * usually 2 * default_period. See:
+     * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370871(v=vs.85).aspx
+     *
+     * NOTE: min_period is a lie, and I have never seen WASAPI use it as the
+     * current period */
+    hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, self->mix_format, NULL);
+  } else {
+    use_period = min_period;
+    /* For some reason, we need to call this another time for exclusive mode */
+    CoInitialize (NULL);
+    /* FIXME: We should be able to use min_period as the device buffer size,
+     * but I'm hitting a problem in GStreamer. */
+    hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_EXCLUSIVE,
+        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, use_period, use_period,
+        self->mix_format, NULL);
+  }
   if (hr != S_OK) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
         ("IAudioClient::Initialize () failed: %s",
@@ -394,8 +428,10 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   /* Actual latency-time/buffer-time are different now */
   spec->segsize = gst_util_uint64_scale_int_round (rate * bpf,
-      default_period * 100, GST_SECOND);
-  spec->segtotal = (self->buffer_frame_count * bpf) / spec->segsize;
+      use_period * 100, GST_SECOND);
+
+  /* We need a minimum of 2 segments to ensure glitch-free playback */
+  spec->segtotal = MAX (self->buffer_frame_count * bpf / spec->segsize, 2);
 
   GST_INFO_OBJECT (self, "segsize is %i, segtotal is %i", spec->segsize,
       spec->segtotal);
@@ -450,6 +486,9 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
+  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE)
+    CoUninitialize ();
+
   if (self->client != NULL) {
     IAudioClient_Stop (self->client);
   }
@@ -471,32 +510,36 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   guint pending = length;
 
   while (pending > 0) {
-    guint have_frames, can_frames, n_frames, n_frames_padding, write_len;
-
-    /* We have N frames to be written out */
-    have_frames = pending / (self->mix_format->nBlockAlign);
+    guint n_frames, write_len;
 
     WaitForSingleObject (self->event_handle, INFINITE);
 
-    /* Frames the card hasn't rendered yet */
-    hr = IAudioClient_GetCurrentPadding (self->client, &n_frames_padding);
-    if (hr != S_OK) {
-      GST_ERROR_OBJECT (self, "IAudioClient::GetCurrentPadding failed: %s",
-          gst_wasapi_util_hresult_to_string (hr));
-      length = 0;
-      goto beach;
+    if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
+      guint have_frames, can_frames, n_frames_padding;
+
+      /* Frames the card hasn't rendered yet */
+      hr = IAudioClient_GetCurrentPadding (self->client, &n_frames_padding);
+      if (hr != S_OK) {
+        GST_ERROR_OBJECT (self, "IAudioClient::GetCurrentPadding failed: %s",
+            gst_wasapi_util_hresult_to_string (hr));
+        length = 0;
+        goto beach;
+      }
+      /* We have N frames to be written out */
+      have_frames = pending / (self->mix_format->nBlockAlign);
+      /* We can write out these many frames */
+      can_frames = self->buffer_frame_count - n_frames_padding;
+      /* We will write out these many frames, and this much length */
+      n_frames = MIN (can_frames, have_frames);
+
+      GST_TRACE_OBJECT (self, "total: %i, unread: %i, have: %i (%i bytes), "
+          "will write: %i", self->buffer_frame_count, n_frames_padding,
+          have_frames, pending, n_frames);
+    } else {
+      n_frames = self->buffer_frame_count;
     }
 
-    /* We can write out these many frames */
-    can_frames = self->buffer_frame_count - n_frames_padding;
-
-    /* We will write out these many frames, and this much length */
-    n_frames = MIN (can_frames, have_frames);
     write_len = n_frames * self->mix_format->nBlockAlign;
-
-    GST_TRACE_OBJECT (self, "total: %i, unread: %i, have: %i (%i bytes), "
-        "will write: %i (%i bytes)", self->buffer_frame_count, n_frames_padding,
-        have_frames, pending, n_frames, write_len);
 
     hr = IAudioRenderClient_GetBuffer (self->render_client, n_frames,
         (BYTE **) & dst);

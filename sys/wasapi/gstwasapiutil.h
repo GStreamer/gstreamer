@@ -25,6 +25,7 @@
 #include <gst/audio/gstaudiosrc.h>
 #include <gst/audio/gstaudiosink.h>
 
+#include <mmdeviceapi.h>
 #include <audioclient.h>
 
 /* Static Caps shared between source, sink, and device provider */
@@ -57,7 +58,11 @@ gboolean gst_wasapi_util_get_devices (GstElement * element, gboolean active,
 
 gboolean gst_wasapi_util_get_device_client (GstElement * element,
     gboolean capture, gint role, const wchar_t * device_strid,
-    IAudioClient ** ret_client);
+    IMMDevice ** ret_device, IAudioClient ** ret_client);
+
+gboolean gst_wasapi_util_get_device_format (GstElement * element,
+    gint device_mode, IMMDevice * device, IAudioClient * client,
+    WAVEFORMATEX ** ret_format);
 
 gboolean gst_wasapi_util_get_render_client (GstElement * element,
     IAudioClient * client, IAudioRenderClient ** ret_render_client);

@@ -40,6 +40,7 @@ struct _GstWasapiSink
 {
   GstAudioSink parent;
 
+  IMMDevice *device;
   IAudioClient *client;
   IAudioRenderClient *render_client;
   HANDLE event_handle;
@@ -57,6 +58,7 @@ struct _GstWasapiSink
 
   /* properties */
   gint role;
+  gint sharemode;
   gboolean mute;
   wchar_t *device_strid;
 };
