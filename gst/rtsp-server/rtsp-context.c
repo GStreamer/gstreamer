@@ -31,7 +31,7 @@ G_DEFINE_POINTER_TYPE (GstRTSPContext, gst_rtsp_context);
 static GPrivate current_context;
 
 /**
- * gst_rtsp_context_get_current:
+ * gst_rtsp_context_get_current: (skip):
  *
  * Get the current #GstRTSPContext. This object is retrieved from the
  * current thread that is handling the request for a client.
