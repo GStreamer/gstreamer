@@ -73,7 +73,7 @@ if opencv_found
   else
     r = run_command('test', '-d', opencv_prefix + '/share/OpenCV')
     if r.returncode() == 0
-      gstopencv_cargs += '-DOPENCV_PATH_NAME="OpenCv"'
+      gstopencv_cargs += '-DOPENCV_PATH_NAME="OpenCV"'
     else
       error('Unable to detect OpenCV data directory')
     endif
