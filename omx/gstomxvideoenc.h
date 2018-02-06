@@ -91,6 +91,7 @@ struct _GstOMXVideoEnc
   guint32 num_slices;
   guint32 slice_size;
   gboolean dependent_slice;
+  gint default_roi_quality;
 #endif
 
   GstFlowReturn downstream_flow_ret;
@@ -98,6 +99,10 @@ struct _GstOMXVideoEnc
   GstOMXBufferAllocation input_allocation;
   /* TRUE if encoder is passing dmabuf's fd directly to the OMX component */
   gboolean input_dmabuf;
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  GEnumClass *alg_roi_quality_enum_class;
+#endif
 };
 
 struct _GstOMXVideoEncClass
