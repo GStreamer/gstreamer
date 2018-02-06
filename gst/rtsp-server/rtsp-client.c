@@ -248,7 +248,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-options-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -262,6 +262,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::options-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST] =
       g_signal_new ("options-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, options_request),
@@ -271,7 +276,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-describe-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -285,6 +290,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::describe-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST] =
       g_signal_new ("describe-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, describe_request),
@@ -294,7 +304,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-setup-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -308,6 +318,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::setup-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST] =
       g_signal_new ("setup-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, setup_request),
@@ -317,7 +332,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-play-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -331,6 +346,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::play-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST] =
       g_signal_new ("play-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, play_request),
@@ -340,7 +360,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-pause-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -354,6 +374,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::pause-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST] =
       g_signal_new ("pause-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, pause_request),
@@ -363,7 +388,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-teardown-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -377,6 +402,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::teardown-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST] =
       g_signal_new ("teardown-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, teardown_request),
@@ -386,7 +416,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-set-parameter-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -400,6 +430,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic,
       GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::set-parameter-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST] =
       g_signal_new ("set-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
@@ -409,7 +444,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-get-parameter-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -423,12 +458,22 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::get-parameter-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST] =
       g_signal_new ("get-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
           get_parameter_request), NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::handle-response:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_HANDLE_RESPONSE] =
       g_signal_new ("handle-response", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
@@ -450,7 +495,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-announce-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -464,6 +509,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::announce-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_ANNOUNCE_REQUEST] =
       g_signal_new ("announce-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, announce_request),
@@ -473,7 +523,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::pre-record-request:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    *
    * Returns: a #GstRTSPStatusCode, GST_RTSP_STS_OK in case of success,
    *          otherwise an appropriate return code
@@ -487,6 +537,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
       GST_TYPE_RTSP_CONTEXT);
 
+  /**
+   * GstRTSPClient::record-request:
+   * @client: a #GstRTSPClient
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
+   */
   gst_rtsp_client_signals[SIGNAL_RECORD_REQUEST] =
       g_signal_new ("record-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, record_request),
@@ -496,7 +551,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   /**
    * GstRTSPClient::check-requirements:
    * @client: a #GstRTSPClient
-   * @ctx: a #GstRTSPContext
+   * @ctx: (type GstRtspServer.RTSPContext): a #GstRTSPContext
    * @arr: a NULL-terminated array of strings
    *
    * Returns: a newly allocated string with comma-separated list of
