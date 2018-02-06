@@ -318,8 +318,10 @@ typedef struct _AtomGMHD
 {
   Atom header;
 
+  /* Only gmin is required in a gmhd atom
+   * The other fields are optional */
   AtomGMIN gmin;
-  AtomTMCD tmcd;
+  AtomTMCD *tmcd;
 
 } AtomGMHD;
 

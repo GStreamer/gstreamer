@@ -422,18 +422,23 @@ atom_tcmi_clear (AtomTCMI * tcmi)
   tcmi->font_name = NULL;
 }
 
-static void
-atom_tmcd_init (AtomTMCD * tmcd)
+static AtomTMCD *
+atom_tmcd_new (void)
 {
+  AtomTMCD *tmcd = g_new0 (AtomTMCD, 1);
+
   atom_header_set (&tmcd->header, FOURCC_tmcd, 0, 0);
   atom_tcmi_init (&tmcd->tcmi);
+
+  return tmcd;
 }
 
 static void
-atom_tmcd_clear (AtomTMCD * tmcd)
+atom_tmcd_free (AtomTMCD * tmcd)
 {
   atom_clear (&tmcd->header);
   atom_tcmi_clear (&tmcd->tcmi);
+  g_free (tmcd);
 }
 
 static void
@@ -461,7 +466,6 @@ atom_gmhd_init (AtomGMHD * gmhd)
 {
   atom_header_set (&gmhd->header, FOURCC_gmhd, 0, 0);
   atom_gmin_init (&gmhd->gmin);
-  atom_tmcd_init (&gmhd->tmcd);
 }
 
 static void
@@ -469,7 +473,10 @@ atom_gmhd_clear (AtomGMHD * gmhd)
 {
   atom_clear (&gmhd->header);
   atom_gmin_clear (&gmhd->gmin);
-  atom_tmcd_clear (&gmhd->tmcd);
+  if (gmhd->tmcd) {
+    atom_tmcd_free (gmhd->tmcd);
+    gmhd->tmcd = NULL;
+  }
 }
 
 static AtomGMHD *
@@ -1941,7 +1948,7 @@ atom_gmhd_copy_data (AtomGMHD * gmhd, guint8 ** buffer, guint64 * size,
   if (!atom_gmin_copy_data (&gmhd->gmin, buffer, size, offset)) {
     return 0;
   }
-  if (!atom_tmcd_copy_data (&gmhd->tmcd, buffer, size, offset)) {
+  if (gmhd->tmcd && !atom_tmcd_copy_data (gmhd->tmcd, buffer, size, offset)) {
     return 0;
   }
 
@@ -3315,7 +3322,7 @@ atom_moov_update_duration (AtomMOOV * moov)
     AtomTRAK *trak = (AtomTRAK *) traks->data;
 
     /* Skip timecodes for now: they have a placeholder duration */
-    if (trak->mdia.minf.gmhd == NULL) {
+    if (trak->mdia.minf.gmhd == NULL || trak->mdia.minf.gmhd->tmcd == NULL) {
       atom_trak_update_duration (trak, atom_moov_get_timescale (moov));
       dur = atom_trak_get_duration (trak);
       if (dur > duration)
@@ -3328,7 +3335,7 @@ atom_moov_update_duration (AtomMOOV * moov)
   while (traks) {
     AtomTRAK *trak = (AtomTRAK *) traks->data;
 
-    if (trak->mdia.minf.gmhd != NULL)
+    if (trak->mdia.minf.gmhd != NULL && trak->mdia.minf.gmhd->tmcd != NULL)
       timecode_atom_trak_set_duration (trak, duration,
           atom_moov_get_timescale (moov));
     traks = g_list_next (traks);
@@ -4064,8 +4071,9 @@ atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context,
   gmhd->gmin.opcolor[0] = 0x8000;
   gmhd->gmin.opcolor[1] = 0x8000;
   gmhd->gmin.opcolor[2] = 0x8000;
-  gmhd->tmcd.tcmi.text_size = 12;
-  gmhd->tmcd.tcmi.font_name = g_strdup ("Chicago");     /* Pascal string */
+  gmhd->tmcd = atom_tmcd_new ();
+  gmhd->tmcd->tcmi.text_size = 12;
+  gmhd->tmcd->tcmi.font_name = g_strdup ("Chicago");    /* Pascal string */
 
   trak->mdia.minf.gmhd = gmhd;
   trak->is_video = FALSE;
