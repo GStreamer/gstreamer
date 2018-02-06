@@ -44,6 +44,7 @@ struct _GstWasapiSink
   IAudioClient *client;
   IAudioRenderClient *render_client;
   HANDLE event_handle;
+  HANDLE thread_priority_handle;
 
   /* Actual size of the allocated buffer */
   guint buffer_frame_count;

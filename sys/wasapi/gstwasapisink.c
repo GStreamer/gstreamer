@@ -40,6 +40,8 @@
 
 #include "gstwasapisink.h"
 
+#include <avrt.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi_sink_debug);
 #define GST_CAT_DEFAULT gst_wasapi_sink_debug
 
@@ -472,6 +474,15 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
       (self)->ringbuffer, self->positions);
 
+#if defined(_MSC_VER) || defined(GST_FORCE_WIN_AVRT)
+  /* Increase the thread priority to reduce glitches */
+  {
+    DWORD taskIndex = 0;
+    self->thread_priority_handle =
+        AvSetMmThreadCharacteristics (TEXT ("Pro Audio"), &taskIndex);
+  }
+#endif
+
   res = TRUE;
 
 beach:
@@ -488,6 +499,13 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
 
   if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE)
     CoUninitialize ();
+
+#if defined(_MSC_VER) || defined(GST_FORCE_WIN_AVRT)
+  if (self->thread_priority_handle != NULL) {
+    AvRevertMmThreadCharacteristics (self->thread_priority_handle);
+    self->thread_priority_handle = NULL;
+  }
+#endif
 
   if (self->client != NULL) {
     IAudioClient_Stop (self->client);

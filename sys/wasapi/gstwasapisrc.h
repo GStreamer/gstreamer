@@ -46,6 +46,7 @@ struct _GstWasapiSrc
   guint64 client_clock_freq;
   IAudioCaptureClient *capture_client;
   HANDLE event_handle;
+  HANDLE thread_priority_handle;
 
   /* Actual size of the allocated buffer */
   guint buffer_frame_count;
