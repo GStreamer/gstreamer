@@ -77,4 +77,9 @@ gboolean gst_wasapi_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
     GstCaps * template_caps, GstCaps ** out_caps,
     GstAudioChannelPosition ** out_positions);
 
+void gst_wasapi_util_get_best_buffer_sizes (GstAudioRingBufferSpec * spec,
+    gboolean exclusive, REFERENCE_TIME default_period,
+    REFERENCE_TIME min_period, REFERENCE_TIME * ret_period,
+    REFERENCE_TIME * ret_buffer_duration);
+
 #endif /* __GST_WASAPI_UTIL_H__ */

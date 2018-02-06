@@ -62,6 +62,7 @@ struct _GstWasapiSrc
   /* properties */
   gint role;
   gint sharemode;
+  gboolean low_latency;
   wchar_t *device_strid;
 };
 

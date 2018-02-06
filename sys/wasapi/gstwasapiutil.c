@@ -814,3 +814,49 @@ gst_wasapi_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
 
   return TRUE;
 }
+
+void
+gst_wasapi_util_get_best_buffer_sizes (GstAudioRingBufferSpec * spec,
+    gboolean exclusive, REFERENCE_TIME default_period,
+    REFERENCE_TIME min_period, REFERENCE_TIME * ret_period,
+    REFERENCE_TIME * ret_buffer_duration)
+{
+  REFERENCE_TIME use_period, use_buffer;
+
+  /* Figure out what integral device period to use as the base */
+  if (exclusive) {
+    /* Exclusive mode can run at multiples of either the minimum period or the
+     * default period; these are on the hardware ringbuffer */
+    if (spec->latency_time * 10 > default_period)
+      use_period = default_period;
+    else
+      use_period = min_period;
+  } else {
+    /* Shared mode always runs at the default period, so if we want a larger
+     * period (for lower CPU usage), we do it as a multiple of that */
+    use_period = default_period;
+  }
+
+  /* Ensure that the period (latency_time) used is an integral multiple of
+   * either the default period or the minimum period */
+  use_period = use_period * MAX ((spec->latency_time * 10) / use_period, 1);
+
+  if (exclusive) {
+    /* Buffer duration is the same as the period in exclusive mode. The
+     * hardware is always writing out one buffer (of size *ret_period), and
+     * we're writing to the other one. */
+    use_buffer = use_period;
+  } else {
+    /* Ask WASAPI to create a software ringbuffer of at least this size; it may
+     * be larger so the actual buffer time may be different, which is why after
+     * initialization we read the buffer duration actually in-use and set
+     * segsize/segtotal from that. */
+    use_buffer = spec->buffer_time * 10;
+    /* Has to be at least twice the period */
+    if (use_buffer < 2 * use_period)
+      use_buffer = 2 * use_period;
+  }
+
+  *ret_period = use_period;
+  *ret_buffer_duration = use_buffer;
+}

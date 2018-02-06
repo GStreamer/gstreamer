@@ -50,9 +50,10 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_WASAPI_STATIC_CAPS));
 
-#define DEFAULT_ROLE      GST_WASAPI_DEVICE_ROLE_CONSOLE
-#define DEFAULT_MUTE      FALSE
-#define DEFAULT_EXCLUSIVE FALSE
+#define DEFAULT_ROLE          GST_WASAPI_DEVICE_ROLE_CONSOLE
+#define DEFAULT_MUTE          FALSE
+#define DEFAULT_EXCLUSIVE     FALSE
+#define DEFAULT_LOW_LATENCY   FALSE
 
 enum
 {
@@ -60,7 +61,8 @@ enum
   PROP_ROLE,
   PROP_MUTE,
   PROP_DEVICE,
-  PROP_EXCLUSIVE
+  PROP_EXCLUSIVE,
+  PROP_LOW_LATENCY
 };
 
 static void gst_wasapi_sink_dispose (GObject * object);
@@ -123,6 +125,12 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
       g_param_spec_boolean ("exclusive", "Exclusive mode",
           "Open the device in exclusive mode",
           DEFAULT_EXCLUSIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_LOW_LATENCY,
+      g_param_spec_boolean ("low-latency", "Low latency",
+          "Optimize all settings for lowest latency",
+          DEFAULT_LOW_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
@@ -221,6 +229,9 @@ gst_wasapi_sink_set_property (GObject * object, guint prop_id,
       self->sharemode = g_value_get_boolean (value)
           ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED;
       break;
+    case PROP_LOW_LATENCY:
+      self->low_latency = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -247,6 +258,9 @@ gst_wasapi_sink_get_property (GObject * object, guint prop_id,
     case PROP_EXCLUSIVE:
       g_value_set_boolean (value,
           self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE);
+      break;
+    case PROP_LOW_LATENCY:
+      g_value_set_boolean (value, self->low_latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -376,42 +390,48 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   gboolean res = FALSE;
   REFERENCE_TIME latency_rt;
   IAudioRenderClient *render_client = NULL;
-  gint64 default_period, min_period, use_period;
+  REFERENCE_TIME default_period, min_period;
+  REFERENCE_TIME device_period, device_buffer_duration;
   guint bpf, rate;
   HRESULT hr;
 
-  hr = IAudioClient_GetDevicePeriod (self->client, &default_period, &min_period);
+  hr = IAudioClient_GetDevicePeriod (self->client, &default_period,
+      &min_period);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod failed");
-    goto beach;
+    return FALSE;
   }
+
   GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
       ", min period: %" G_GINT64_FORMAT, default_period, min_period);
 
-  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
-    use_period = default_period;
-    /* Set hnsBufferDuration to 0, which should, in theory, tell the device to
-     * create a buffer with the smallest latency possible. In practice, this is
-     * usually 2 * default_period. See:
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370871(v=vs.85).aspx
-     *
-     * NOTE: min_period is a lie, and I have never seen WASAPI use it as the
-     * current period */
-    hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_SHARED,
-        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, self->mix_format, NULL);
+  if (self->low_latency) {
+    if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
+      device_period = default_period;
+      device_buffer_duration = 0;
+    } else {
+      device_period = min_period;
+      device_buffer_duration = min_period;
+    }
   } else {
-    use_period = min_period;
-    /* For some reason, we need to call this another time for exclusive mode */
-    CoInitialize (NULL);
-    /* FIXME: We should be able to use min_period as the device buffer size,
-     * but I'm hitting a problem in GStreamer. */
-    hr = IAudioClient_Initialize (self->client, AUDCLNT_SHAREMODE_EXCLUSIVE,
-        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, use_period, use_period,
-        self->mix_format, NULL);
+    /* Clamp values to integral multiples of an appropriate period */
+    gst_wasapi_util_get_best_buffer_sizes (spec,
+        self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE, default_period,
+        min_period, &device_period, &device_buffer_duration);
   }
+
+  /* For some reason, we need to call this a second time for exclusive mode */
+  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE)
+    CoInitialize (NULL);
+
+  hr = IAudioClient_Initialize (self->client, self->sharemode,
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_buffer_duration,
+      /* This must always be 0 in shared mode */
+      self->sharemode == AUDCLNT_SHAREMODE_SHARED ? 0 : device_period,
+      self->mix_format, NULL);
   if (hr != S_OK) {
     gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
         ("IAudioClient::Initialize () failed: %s", msg));
     g_free (msg);
     goto beach;
@@ -431,7 +451,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   /* Actual latency-time/buffer-time are different now */
   spec->segsize = gst_util_uint64_scale_int_round (rate * bpf,
-      use_period * 100, GST_SECOND);
+      device_period * 100, GST_SECOND);
 
   /* We need a minimum of 2 segments to ensure glitch-free playback */
   spec->segtotal = MAX (self->buffer_frame_count * bpf / spec->segsize, 2);

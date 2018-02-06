@@ -61,6 +61,7 @@ struct _GstWasapiSink
   gint role;
   gint sharemode;
   gboolean mute;
+  gboolean low_latency;
   wchar_t *device_strid;
 };
 
