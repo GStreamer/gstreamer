@@ -169,8 +169,6 @@ gst_vaapi_video_memory_sync (GstVaapiVideoMemory * mem);
 #define GST_VAAPI_IS_VIDEO_ALLOCATOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_VAAPI_TYPE_VIDEO_ALLOCATOR))
 
-#define GST_VAAPI_VIDEO_ALLOCATOR_NAME          "GstVaapiVideoAllocator"
-
 /**
  * GstVaapiVideoAllocator:
  *
