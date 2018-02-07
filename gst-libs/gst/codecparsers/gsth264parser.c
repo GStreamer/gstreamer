@@ -2438,7 +2438,7 @@ gst_h264_video_calculate_framerate (const GstH264SPS * sps,
   if (sps) {
     if (sps->vui_parameters_present_flag) {
       const GstH264VUIParams *vui = &sps->vui_parameters;
-      if (vui->timing_info_present_flag && vui->fixed_frame_rate_flag) {
+      if (vui->timing_info_present_flag) {
         int delta_tfi_divisor = 1;
         num = vui->time_scale;
         den = vui->num_units_in_tick;
