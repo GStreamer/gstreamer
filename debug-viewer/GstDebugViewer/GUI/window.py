@@ -290,15 +290,15 @@ class Window (object):
               "Hide log category")),
              ("show-only-log-category", None, _(
               "Show only log category")),
-             ("hide-log-thread", None, _(
+             ("hide-thread", None, _(
               "Hide thread")),
-             ("show-only-log-thread", None, _(
+             ("show-only-thread", None, _(
               "Show only thread")),
-             ("hide-log-object", None, _("Hide object")),
-             ("show-only-log-object", None, _(
+             ("hide-object", None, _("Hide object")),
+             ("show-only-object", None, _(
               "Show only object")),
-             ("hide-log-function", None, _("Hide function")),
-             ("show-only-log-function", None, _(
+             ("hide-function", None, _("Hide function")),
+             ("show-only-function", None, _(
               "Show only function")),
              ("hide-filename", None, _("Hide filename")),
              ("show-only-filename", None, _("Show only filename"))])
@@ -830,21 +830,21 @@ class Window (object):
         self.add_model_filter(CategoryFilter(category))
 
     @action
-    def handle_hide_log_thread_action_activate(self, action):
+    def handle_hide_thread_action_activate(self, action):
 
         row = self.get_active_line()
         thread = row[LogModelBase.COL_THREAD]
         self.add_model_filter(ThreadFilter(thread))
 
     @action
-    def handle_hide_log_object_action_activate(self, action):
+    def handle_hide_object_action_activate(self, action):
 
         row = self.get_active_line()
         object_ = row[LogModelBase.COL_OBJECT]
         self.add_model_filter(ObjectFilter(object_))
 
     @action
-    def handle_hide_log_function_action_activate(self, action):
+    def handle_hide_function_action_activate(self, action):
 
         row = self.get_active_line()
         object_ = row[LogModelBase.COL_FUNCTION]
@@ -881,21 +881,21 @@ class Window (object):
         self.add_model_filter(CategoryFilter(category, True))
 
     @action
-    def handle_show_only_log_thread_action_activate(self, action):
+    def handle_show_only_thread_action_activate(self, action):
 
         row = self.get_active_line()
         thread = row[LogModelBase.COL_THREAD]
         self.add_model_filter(ThreadFilter(thread, True))
 
     @action
-    def handle_show_only_log_object_action_activate(self, action):
+    def handle_show_only_object_action_activate(self, action):
 
         row = self.get_active_line()
         object_ = row[LogModelBase.COL_OBJECT]
         self.add_model_filter(ObjectFilter(object_, True))
 
     @action
-    def handle_show_only_log_function_action_activate(self, action):
+    def handle_show_only_function_action_activate(self, action):
 
         row = self.get_active_line()
         object_ = row[LogModelBase.COL_FUNCTION]
