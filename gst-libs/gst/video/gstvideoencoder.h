@@ -153,7 +153,7 @@ struct _GstVideoEncoder
   /*< private >*/
   GstVideoEncoderPrivate *priv;
 
-  void         *padding[GST_PADDING_LARGE];
+  gpointer padding[GST_PADDING_LARGE];
 };
 
 /**

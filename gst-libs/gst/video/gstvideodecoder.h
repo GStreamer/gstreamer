@@ -190,7 +190,7 @@ struct _GstVideoDecoder
   GstVideoDecoderPrivate *priv;
 
   /*< private >*/
-  void             *padding[GST_PADDING_LARGE];
+  gpointer padding[GST_PADDING_LARGE];
 };
 
 /**
@@ -338,7 +338,7 @@ struct _GstVideoDecoderClass
                                    GstMeta * meta);
 
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE-6];
+  gpointer padding[GST_PADDING_LARGE-6];
 };
 
 GST_EXPORT

@@ -72,7 +72,7 @@ struct _GstVideoCodecState
   GstCaps *allocation_caps;
 
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE - 1];
+  gpointer padding[GST_PADDING_LARGE - 1];
 };
 
 /**
@@ -259,7 +259,7 @@ struct _GstVideoCodecFrame
       GstClockTime ts;
       GstClockTime ts2;
     } ABI;
-    void         *padding[GST_PADDING_LARGE];
+    gpointer padding[GST_PADDING_LARGE];
   } abidata;
 };
 
