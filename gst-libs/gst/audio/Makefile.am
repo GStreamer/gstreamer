@@ -35,6 +35,7 @@ EXTRA_DIST += dbesi0.c
 
 libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio.c \
+	audio-buffer.c \
 	audio-format.c \
 	audio-channels.c \
 	audio-channel-mixer.c \
@@ -66,6 +67,7 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio.h \
 	audio-prelude.h	\
 	audio-format.h \
+	audio-buffer.h \
 	audio-channels.h \
 	audio-channel-mixer.h \
 	audio-converter.h \

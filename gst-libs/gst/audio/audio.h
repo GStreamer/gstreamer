@@ -29,6 +29,7 @@
 #include <gst/audio/audio-channels.h>
 #include <gst/audio/audio-channel-mixer.h>
 #include <gst/audio/audio-info.h>
+#include <gst/audio/audio-buffer.h>
 #include <gst/audio/audio-quantize.h>
 #include <gst/audio/audio-converter.h>
 #include <gst/audio/audio-resampler.h>

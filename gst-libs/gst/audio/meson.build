@@ -1,5 +1,6 @@
 audio_src= [
   'audio.c',
+  'audio-buffer.c',
   'audio-channel-mixer.c',
   'audio-channels.c',
   'audio-converter.c',
@@ -45,6 +46,7 @@ audio_mkenum_headers = [
 # FIXME: check headers
 audio_headers = audio_mkenum_headers + [
   'audio-prelude.h',
+  'audio-buffer.h',
   'gstaudiobasesink.h',
   'gstaudiobasesrc.h',
   'gstaudiocdsrc.h',
