@@ -383,6 +383,35 @@ gst_wasapi_sink_close (GstAudioSink * asink)
   return TRUE;
 }
 
+/* Get the empty space in the buffer that we have to write to */
+static gint
+gst_wasapi_sink_get_can_frames (GstWasapiSink * self)
+{
+  HRESULT hr;
+  guint n_frames_padding;
+
+  /* There is no padding in exclusive mode since there is no ringbuffer */
+  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
+    GST_DEBUG_OBJECT (self, "exclusive mode, can write: %i",
+        self->buffer_frame_count);
+    return self->buffer_frame_count;
+  }
+
+  /* Frames the card hasn't rendered yet */
+  hr = IAudioClient_GetCurrentPadding (self->client, &n_frames_padding);
+  if (hr != S_OK) {
+    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+    GST_ERROR_OBJECT (self, "IAudioClient::GetCurrentPadding failed: %s", msg);
+    g_free (msg);
+    return -1;
+  }
+
+  GST_DEBUG_OBJECT (self, "%i unread frames (padding)", n_frames_padding);
+
+  /* We can write out these many frames */
+  return self->buffer_frame_count - n_frames_padding;
+}
+
 static gboolean
 gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
@@ -483,6 +512,45 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   GST_INFO_OBJECT (self, "got render client");
 
+  /* To avoid start-up glitches, before starting the streaming, we fill the
+   * buffer with silence as recommended by the documentation:
+   * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370879%28v=vs.85%29.aspx */
+  {
+    gint n_frames, len;
+    gint16 *dst = NULL;
+
+    n_frames = gst_wasapi_sink_get_can_frames (self);
+    if (n_frames < 1) {
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+          ("should have more than %i frames to write", n_frames));
+      goto beach;
+    }
+
+    len = n_frames * self->mix_format->nBlockAlign;
+
+    hr = IAudioRenderClient_GetBuffer (render_client, n_frames,
+        (BYTE **) & dst);
+    if (hr != S_OK) {
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+          ("IAudioRenderClient::GetBuffer failed: %s", msg));
+      g_free (msg);
+      goto beach;
+    }
+
+    GST_DEBUG_OBJECT (self, "pre-wrote %i bytes of silence", len);
+
+    hr = IAudioRenderClient_ReleaseBuffer (render_client, n_frames,
+        AUDCLNT_BUFFERFLAGS_SILENT);
+    if (hr != S_OK) {
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+      GST_ERROR_OBJECT (self, "IAudioRenderClient::ReleaseBuffer failed: %s",
+          msg);
+      g_free (msg);
+      goto beach;
+    }
+  }
+
   hr = IAudioClient_Start (self->client);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::Start failed");
@@ -549,38 +617,21 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   guint pending = length;
 
   while (pending > 0) {
-    guint n_frames, write_len;
+    guint can_frames, have_frames, n_frames, write_len;
 
     WaitForSingleObject (self->event_handle, INFINITE);
 
-    if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
-      guint have_frames, can_frames, n_frames_padding;
-
-      /* Frames the card hasn't rendered yet */
-      hr = IAudioClient_GetCurrentPadding (self->client, &n_frames_padding);
-      if (hr != S_OK) {
-        gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-        GST_ERROR_OBJECT (self, "IAudioClient::GetCurrentPadding failed: %s",
-            msg);
-        g_free (msg);
-        length = 0;
-        goto beach;
-      }
-      /* We have N frames to be written out */
-      have_frames = pending / (self->mix_format->nBlockAlign);
-      /* We can write out these many frames */
-      can_frames = self->buffer_frame_count - n_frames_padding;
-      /* We will write out these many frames, and this much length */
-      n_frames = MIN (can_frames, have_frames);
-
-      GST_TRACE_OBJECT (self, "total: %i, unread: %i, have: %i (%i bytes), "
-          "will write: %i", self->buffer_frame_count, n_frames_padding,
-          have_frames, pending, n_frames);
-    } else {
-      n_frames = self->buffer_frame_count;
-    }
-
+    /* We have N frames to be written out */
+    have_frames = pending / (self->mix_format->nBlockAlign);
+    /* We have can_frames space in the output buffer */
+    can_frames = gst_wasapi_sink_get_can_frames (self);
+    /* We will write out these many frames, and this much length */
+    n_frames = MIN (can_frames, have_frames);
     write_len = n_frames * self->mix_format->nBlockAlign;
+
+    GST_DEBUG_OBJECT (self, "total: %i, have_frames: %i (%i bytes), "
+        "can_frames: %i, will write: %i (%i bytes)", self->buffer_frame_count,
+        have_frames, pending, can_frames, n_frames, write_len);
 
     hr = IAudioRenderClient_GetBuffer (self->render_client, n_frames,
         (BYTE **) & dst);

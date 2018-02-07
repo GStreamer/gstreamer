@@ -607,7 +607,7 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
 
     {
       guint bpf = self->mix_format->nBlockAlign;
-      GST_TRACE_OBJECT (self, "have: %i (%i bytes), can read: %i (%i bytes), "
+      GST_DEBUG_OBJECT (self, "have: %i (%i bytes), can read: %i (%i bytes), "
           "will read: %i (%i bytes)", have_frames, have_frames * bpf,
           want_frames, wanted, n_frames, read_len);
     }
