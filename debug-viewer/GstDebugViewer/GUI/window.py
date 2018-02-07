@@ -40,6 +40,7 @@ from GstDebugViewer.GUI.filters import (CategoryFilter,
                                         DebugLevelFilter,
                                         FilenameFilter,
                                         FunctionFilter,
+                                        ThreadFilter,
                                         ObjectFilter)
 from GstDebugViewer.GUI.models import (FilteredLogModel,
                                        LazyLogModel,
@@ -289,6 +290,10 @@ class Window (object):
               "Hide log category")),
              ("show-only-log-category", None, _(
               "Show only log category")),
+             ("hide-log-thread", None, _(
+              "Hide thread")),
+             ("show-only-log-thread", None, _(
+              "Show only thread")),
              ("hide-log-object", None, _("Hide object")),
              ("show-only-log-object", None, _(
               "Show only object")),
@@ -825,6 +830,13 @@ class Window (object):
         self.add_model_filter(CategoryFilter(category))
 
     @action
+    def handle_hide_log_thread_action_activate(self, action):
+
+        row = self.get_active_line()
+        thread = row[LogModelBase.COL_THREAD]
+        self.add_model_filter(ThreadFilter(thread))
+
+    @action
     def handle_hide_log_object_action_activate(self, action):
 
         row = self.get_active_line()
@@ -867,6 +879,13 @@ class Window (object):
         row = self.get_active_line()
         category = row[LogModelBase.COL_CATEGORY]
         self.add_model_filter(CategoryFilter(category, True))
+
+    @action
+    def handle_show_only_log_thread_action_activate(self, action):
+
+        row = self.get_active_line()
+        thread = row[LogModelBase.COL_THREAD]
+        self.add_model_filter(ThreadFilter(thread, True))
 
     @action
     def handle_show_only_log_object_action_activate(self, action):

@@ -29,6 +29,8 @@
       <menuitem name="ViewContextMenuShowOnlyLevel" action="show-only-log-level"/>
       <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
       <menuitem name="ViewContextMenuShowOnlyCategory" action="show-only-log-category"/>
+      <menuitem name="ViewContextMenuHideThread" action="hide-log-thread"/>
+      <menuitem name="ViewContextMenuShowOnlyThread" action="show-only-log-thread"/>
       <menuitem name="ViewContextMenuHideObject" action="hide-log-object"/>
       <menuitem name="ViewContextMenuShowOnlyObject" action="show-only-log-object"/>
       <menuitem name="ViewContextMenuHideFunction" action="hide-log-function"/>
@@ -57,6 +59,8 @@
       <menuitem name="ViewContextMenuShowOnlyLevel" action="show-only-log-level"/>
       <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
       <menuitem name="ViewContextMenuShowOnlyCategory" action="show-only-log-category"/>
+      <menuitem name="ViewContextMenuHideThread" action="hide-log-thread"/>
+      <menuitem name="ViewContextMenuShowOnlyThread" action="show-only-log-thread"/>
       <menuitem name="ViewContextMenuHideObject" action="hide-log-object"/>
       <menuitem name="ViewContextMenuShowOnlyObject" action="show-only-log-object"/>
       <menuitem name="ViewContextMenuHideFunction" action="hide-log-function"/>

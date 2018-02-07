@@ -89,6 +89,18 @@ class FunctionFilter (Filter):
         self.filter_func = function_filter_func
 
 
+class ThreadFilter (Filter):
+
+    def __init__(self, thread_, all_but_this=False):
+
+        col_id = LogModelBase.COL_THREAD
+        comparison_function = get_comparison_function(all_but_this)
+
+        def thread_filter_func(row):
+            return comparison_function(row[col_id], thread_)
+        self.filter_func = thread_filter_func
+
+
 class FilenameFilter (Filter):
 
     def __init__(self, filename, all_but_this=False):
