@@ -28,11 +28,6 @@
 #if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
 #include <QX11Info>
 #include <gst/gl/x11/gstgldisplay_x11.h>
-#if GST_GL_HAVE_PLATFORM_GLX
-#include <gst/gl/x11/gstglcontext_glx.h>
-#elif GST_GL_HAVE_PLATFORM_EGL
-#include <gst/gl/egl/gstglcontext_egl.h>
-#endif
 #endif
 
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
@@ -48,7 +43,6 @@
 #include <gst/gl/egl/gstegl.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
 #endif
-#include <gst/gl/egl/gstglcontext_egl.h>
 #endif
 
 #define GST_CAT_DEFAULT qt_gl_utils_debug
