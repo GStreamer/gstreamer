@@ -548,8 +548,7 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
   GstFlowReturn res;
   gint outsize;
   gsize out_len;
-  GstMapInfo map;
-  gpointer out[1];
+  GstAudioBuffer abuf;
 
   g_assert (resample->converter != NULL);
 
@@ -565,13 +564,15 @@ gst_audio_resample_push_drain (GstAudioResample * resample, guint history_len)
   outsize = out_len * resample->in.bpf;
   outbuf = gst_buffer_new_and_alloc (outsize);
 
-  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  if (GST_AUDIO_INFO_LAYOUT (&resample->out) ==
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    gst_buffer_add_audio_meta (outbuf, &resample->out, out_len, NULL);
+  }
 
-  out[0] = map.data;
+  gst_audio_buffer_map (&abuf, &resample->out, outbuf, GST_MAP_WRITE);
   gst_audio_converter_samples (resample->converter, 0, NULL, history_len,
-      out, out_len);
-
-  gst_buffer_unmap (outbuf, &map);
+      abuf.planes, out_len);
+  gst_audio_buffer_unmap (&abuf);
 
   /* time */
   if (GST_CLOCK_TIME_IS_VALID (resample->t0)) {
@@ -703,10 +704,10 @@ static GstFlowReturn
 gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstMapInfo in_map, out_map;
+  GstAudioBuffer srcabuf, dstabuf;
   gsize outsize;
-  guint32 in_len;
-  guint32 out_len;
+  gsize in_len;
+  gsize out_len;
   guint filt_len =
       gst_audio_converter_get_max_latency (resample->converter) * 2;
   gboolean inbuf_writable;
@@ -715,12 +716,21 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
       && gst_buffer_n_memory (inbuf) == 1
       && gst_memory_is_writable (gst_buffer_peek_memory (inbuf, 0));
 
-  gst_buffer_map (inbuf, &in_map,
+  gst_audio_buffer_map (&srcabuf, &resample->in, inbuf,
       inbuf_writable ? GST_MAP_READWRITE : GST_MAP_READ);
-  gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
 
-  in_len = in_map.size / resample->in.bpf;
-  out_len = out_map.size / resample->out.bpf;
+  in_len = srcabuf.n_samples;
+  out_len = gst_audio_converter_get_out_frames (resample->converter, in_len);
+
+  /* ensure that the output buffer is not bigger than what we need */
+  gst_buffer_set_size (outbuf, out_len * resample->in.bpf);
+
+  if (GST_AUDIO_INFO_LAYOUT (&resample->out) ==
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    gst_buffer_add_audio_meta (outbuf, &resample->out, out_len, NULL);
+  }
+
+  gst_audio_buffer_map (&dstabuf, &resample->out, outbuf, GST_MAP_WRITE);
 
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
     resample->num_nongap_samples = 0;
@@ -738,6 +748,7 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
 
     {
       guint num, den;
+      gint i;
 
       num = resample->in.rate;
       den = resample->out.rate;
@@ -749,7 +760,9 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
       else
         out_len = 0;
 
-      memset (out_map.data, 0, out_map.size);
+      for (i = 0; i < dstabuf.n_planes; i++)
+        memset (dstabuf.planes[i], 0, GST_AUDIO_BUFFER_PLANE_SIZE (&dstabuf));
+
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
       resample->num_gap_samples += in_len;
     }
@@ -771,17 +784,14 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
     }
     {
       /* process */
-      gpointer in[1], out[1];
       GstAudioConverterFlags flags;
 
       flags = 0;
       if (inbuf_writable)
         flags |= GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE;
 
-      in[0] = in_map.data;
-      out[0] = out_map.data;
-      gst_audio_converter_samples (resample->converter, flags, in, in_len,
-          out, out_len);
+      gst_audio_converter_samples (resample->converter, flags, srcabuf.planes,
+          in_len, dstabuf.planes, out_len);
     }
   }
 
@@ -809,13 +819,13 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
   resample->samples_out += out_len;
   resample->samples_in += in_len;
 
-  gst_buffer_unmap (inbuf, &in_map);
-  gst_buffer_unmap (outbuf, &out_map);
+  gst_audio_buffer_unmap (&srcabuf);
+  gst_audio_buffer_unmap (&dstabuf);
 
   outsize = out_len * resample->in.bpf;
 
   GST_LOG_OBJECT (resample,
-      "Converted to buffer of %" G_GUINT32_FORMAT
+      "Converted to buffer of %" G_GSIZE_FORMAT
       " samples (%" G_GSIZE_FORMAT " bytes) with timestamp %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
       ", offset_end %" G_GUINT64_FORMAT, out_len, outsize,
@@ -847,16 +857,8 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
    * flag to resync timestamp and offset counters and send event
    * downstream */
   if (G_UNLIKELY (gst_audio_resample_check_discont (resample, inbuf))) {
-    gsize size;
-    gint bpf = GST_AUDIO_INFO_BPF (&resample->in);
-
     gst_audio_resample_reset_state (resample);
     resample->need_discont = TRUE;
-
-    /* need to recalculate the output size */
-    size = gst_buffer_get_size (inbuf) / bpf;
-    size = gst_audio_converter_get_out_frames (resample->converter, size);
-    gst_buffer_set_size (outbuf, size * bpf);
   }
 
   /* handle discontinuity */
