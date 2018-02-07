@@ -806,7 +806,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
   GstCaps *caps = NULL;
   GstBufferPool *pool = NULL;
   gboolean need_pool;
-  guint size = 0;
+  guint size = 0, n_allocators;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
@@ -822,9 +822,22 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
         plugin->sinkpad_allocator);
     if (!pool)
       return FALSE;
-
-    gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
   }
+
+  /* Set sinkpad allocator as the last allocation param.
+   *
+   * If there's none, set system's allocator first and VAAPI allocator
+   * second
+   */
+  n_allocators = gst_query_get_n_allocation_params (query);
+  if (n_allocators == 0) {
+    GstAllocator *allocator;
+
+    allocator = gst_allocator_find (GST_ALLOCATOR_SYSMEM);
+    gst_query_add_allocation_param (query, allocator, NULL);
+    gst_object_unref (allocator);
+  }
+  gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
 
   gst_query_add_allocation_pool (query, pool, size,
       BUFFER_POOL_SINK_MIN_BUFFERS, 0);
@@ -861,8 +874,9 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   GstCaps *caps = NULL;
   GstBufferPool *pool;
   GstVideoInfo vi;
-  guint size, min, max, pool_options;
-  gboolean update_pool = FALSE, update_allocator = FALSE;
+  guint i, size, min, max, pool_options, num_allocators;
+  gint index_allocator;
+  gboolean update_pool = FALSE;
 #if (USE_GLX || USE_EGL)
   guint idx;
 #endif
@@ -911,8 +925,25 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
     goto error_invalid_caps;
   gst_video_info_force_nv12_if_encoded (&vi);
 
-  if (gst_query_get_n_allocation_params (query) > 0)
-    update_allocator = TRUE;
+  index_allocator = -1;
+  num_allocators = gst_query_get_n_allocation_params (query);
+  for (i = 0; i < num_allocators; i++) {
+    GstAllocator *allocator = NULL;
+
+    gst_query_parse_nth_allocation_param (query, i, &allocator, NULL);
+    if (!allocator)
+      continue;
+    if (g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) == 0) {
+      GST_DEBUG_OBJECT (plugin, "found vaapi allocator in query %"
+          GST_PTR_FORMAT, allocator);
+      index_allocator = i;
+      if (plugin->srcpad_allocator)
+        gst_object_unref (plugin->srcpad_allocator);
+      plugin->srcpad_allocator = allocator;
+      break;
+    }
+    gst_object_unref (allocator);
+  }
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -955,11 +986,17 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  if (update_allocator)
-    gst_query_set_nth_allocation_param (query, 0, plugin->srcpad_allocator,
-        NULL);
-  else
-    gst_query_add_allocation_param (query, plugin->srcpad_allocator, NULL);
+  /* allocator might be updated by ensure_srcpad_allocator() */
+  if (plugin->srcpad_allocator) {
+    if (index_allocator > 0) {
+      gst_query_set_nth_allocation_param (query, index_allocator,
+          plugin->srcpad_allocator, NULL);
+    } else {
+      GST_DEBUG_OBJECT (plugin, "adding allocator in query %" GST_PTR_FORMAT,
+          plugin->srcpad_allocator);
+      gst_query_add_allocation_param (query, plugin->srcpad_allocator, NULL);
+    }
+  }
 
   g_clear_object (&plugin->srcpad_buffer_pool);
   plugin->srcpad_buffer_pool = pool;
