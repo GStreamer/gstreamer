@@ -77,6 +77,18 @@ class ObjectFilter (Filter):
         self.filter_func = object_filter_func
 
 
+class FunctionFilter (Filter):
+
+    def __init__(self, function_, all_but_this=False):
+
+        col_id = LogModelBase.COL_FUNCTION
+        comparison_function = get_comparison_function(all_but_this)
+
+        def function_filter_func(row):
+            return comparison_function(row[col_id], function_)
+        self.filter_func = function_filter_func
+
+
 class FilenameFilter (Filter):
 
     def __init__(self, filename, all_but_this=False):

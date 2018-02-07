@@ -39,6 +39,7 @@ from GstDebugViewer.GUI.columns import LineViewColumnManager, ViewColumnManager
 from GstDebugViewer.GUI.filters import (CategoryFilter,
                                         DebugLevelFilter,
                                         FilenameFilter,
+                                        FunctionFilter,
                                         ObjectFilter)
 from GstDebugViewer.GUI.models import (FilteredLogModel,
                                        LazyLogModel,
@@ -291,6 +292,9 @@ class Window (object):
              ("hide-log-object", None, _("Hide object")),
              ("show-only-log-object", None, _(
               "Show only object")),
+             ("hide-log-function", None, _("Hide function")),
+             ("show-only-log-function", None, _(
+              "Show only function")),
              ("hide-filename", None, _("Hide filename")),
              ("show-only-filename", None, _("Show only filename"))])
         group.props.sensitive = False
@@ -828,6 +832,13 @@ class Window (object):
         self.add_model_filter(ObjectFilter(object_))
 
     @action
+    def handle_hide_log_function_action_activate(self, action):
+
+        row = self.get_active_line()
+        object_ = row[LogModelBase.COL_FUNCTION]
+        self.add_model_filter(FunctionFilter(object_))
+
+    @action
     def handle_hide_filename_action_activate(self, action):
 
         row = self.get_active_line()
@@ -863,6 +874,13 @@ class Window (object):
         row = self.get_active_line()
         object_ = row[LogModelBase.COL_OBJECT]
         self.add_model_filter(ObjectFilter(object_, True))
+
+    @action
+    def handle_show_only_log_function_action_activate(self, action):
+
+        row = self.get_active_line()
+        object_ = row[LogModelBase.COL_FUNCTION]
+        self.add_model_filter(FunctionFilter(object_, True))
 
     @action
     def handle_show_only_filename_action_activate(self, action):
