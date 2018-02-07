@@ -692,6 +692,7 @@ atom_stsd_remove_entries (AtomSTSD * stsd)
       case TIMECODE:
         sample_entry_tmcd_free ((SampleTableEntryTMCD *) se);
         break;
+      case CLOSEDCAPTION:
       default:
         /* best possible cleanup */
         atom_sample_entry_free (se);
@@ -2229,6 +2230,20 @@ sample_entry_tmcd_copy_data (SampleTableEntryTMCD * tmcd, guint8 ** buffer,
   return *offset - original_offset;
 }
 
+static guint64
+sample_entry_generic_copy_data (SampleTableEntry * entry, guint8 ** buffer,
+    guint64 * size, guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_sample_entry_copy_data (entry, buffer, size, offset)) {
+    return 0;
+  }
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
 guint64
 atom_stsz_copy_data (AtomSTSZ * stsz, guint8 ** buffer, guint64 * size,
     guint64 * offset)
@@ -2459,6 +2474,11 @@ atom_stsd_copy_data (AtomSTSD * stsd, guint8 ** buffer, guint64 * size,
           }
         } else if (se->kind == TIMECODE) {
           if (!sample_entry_tmcd_copy_data ((SampleTableEntryTMCD *)
+                  walker->data, buffer, size, offset)) {
+            return 0;
+          }
+        } else if (se->kind == CLOSEDCAPTION) {
+          if (!sample_entry_generic_copy_data ((SampleTableEntry *)
                   walker->data, buffer, size, offset)) {
             return 0;
           }
@@ -4074,6 +4094,44 @@ atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context,
   gmhd->tmcd = atom_tmcd_new ();
   gmhd->tmcd->tcmi.text_size = 12;
   gmhd->tmcd->tcmi.font_name = g_strdup ("Chicago");    /* Pascal string */
+
+  trak->mdia.minf.gmhd = gmhd;
+  trak->is_video = FALSE;
+  trak->is_h264 = FALSE;
+
+  return ste;
+}
+
+SampleTableEntry *
+atom_trak_set_caption_type (AtomTRAK * trak, AtomsContext * context,
+    guint32 trak_timescale, guint32 caption_type)
+{
+  SampleTableEntry *ste;
+  AtomGMHD *gmhd = trak->mdia.minf.gmhd;
+  AtomSTSD *stsd = &trak->mdia.minf.stbl.stsd;
+
+  if (context->flavor != ATOMS_TREE_FLAVOR_MOV) {
+    return NULL;
+  }
+
+  trak->mdia.mdhd.time_info.timescale = trak_timescale;
+  trak->mdia.hdlr.component_type = FOURCC_mhlr;
+  trak->mdia.hdlr.handler_type = FOURCC_clcp;
+  g_free (trak->mdia.hdlr.name);
+  trak->mdia.hdlr.name = g_strdup ("Closed Caption Media Handler");
+
+  ste = g_new0 (SampleTableEntry, 1);
+  atom_sample_entry_init (ste, caption_type);
+  ste->kind = CLOSEDCAPTION;
+  ste->data_reference_index = 1;
+  stsd->entries = g_list_prepend (stsd->entries, ste);
+  stsd->n_entries++;
+
+  gmhd = atom_gmhd_new ();
+  gmhd->gmin.graphics_mode = 0x0040;
+  gmhd->gmin.opcolor[0] = 0x8000;
+  gmhd->gmin.opcolor[1] = 0x8000;
+  gmhd->gmin.opcolor[2] = 0x8000;
 
   trak->mdia.minf.gmhd = gmhd;
   trak->is_video = FALSE;

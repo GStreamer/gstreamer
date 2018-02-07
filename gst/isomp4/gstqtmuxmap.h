@@ -70,6 +70,7 @@ typedef struct _GstQTMuxFormatProp
   GstStaticCaps video_sink_caps;
   GstStaticCaps audio_sink_caps;
   GstStaticCaps subtitle_sink_caps;
+  GstStaticCaps caption_sink_caps;
 } GstQTMuxFormatProp;
 
 extern GstQTMuxFormatProp gst_qt_mux_format_list[];

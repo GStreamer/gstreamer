@@ -166,6 +166,11 @@
   "text/x-raw, " \
   "format=(string)utf8"
 
+#define CEA608_CAPS \
+  "closedcaption/x-cea-608, format=(string)cc_data"
+#define CEA708_CAPS \
+  "closedcaption/x-cea-708, format=(string)cdp"
+
 /* FIXME 0.11 - take a look at bugs #580005 and #340375 */
 GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* original QuickTime format; see Apple site (e.g. qtff.pdf) */
@@ -209,7 +214,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
             "audio/x-mulaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
             AMR_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
-      GST_STATIC_CAPS (TEXT_UTF8)}
+        GST_STATIC_CAPS (TEXT_UTF8),
+      GST_STATIC_CAPS (CEA608_CAPS "; " CEA708_CAPS)}
   ,
   /* ISO 14496-14: mp42 as ISO base media extension
    * (supersedes original ISO 144996-1 mp41) */
@@ -224,7 +230,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP123_CAPS "; "
             AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
-      GST_STATIC_CAPS (TEXT_UTF8)}
+        GST_STATIC_CAPS (TEXT_UTF8),
+      GST_STATIC_CAPS_NONE}
   ,
   /* Microsoft Smooth Streaming fmp4/isml */
   /* TODO add WMV/WMA support */
@@ -237,6 +244,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso-fragmented"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS),
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS),
+        GST_STATIC_CAPS_NONE,
       GST_STATIC_CAPS_NONE}
   ,
   /* 3GPP Technical Specification 26.244 V7.3.0
@@ -250,7 +258,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
         GST_STATIC_CAPS (H263_CAPS "; " MPEG4V_CAPS "; " H264_CAPS),
         GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS "; " AC3_CAPS),
-      GST_STATIC_CAPS (TEXT_UTF8)}
+        GST_STATIC_CAPS (TEXT_UTF8),
+      GST_STATIC_CAPS_NONE}
   ,
   /* ISO 15444-3: Motion-JPEG-2000 (also ISO base media extension) */
   {
@@ -263,6 +272,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("image/x-j2c, " COMMON_VIDEO_CAPS "; "
             "image/x-jpc, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (PCM_CAPS),
+        GST_STATIC_CAPS_NONE,
       GST_STATIC_CAPS_NONE}
   ,
   {

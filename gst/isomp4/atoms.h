@@ -386,7 +386,8 @@ typedef enum _SampleEntryKind
   AUDIO,
   VIDEO,
   SUBTITLE,
-  TIMECODE
+  TIMECODE,
+  CLOSEDCAPTION
 } SampleEntryKind;
 
 typedef struct _SampleTableEntry
@@ -999,7 +1000,6 @@ guint64    atom_mfra_copy_data         (AtomMFRA *mfra, guint8 **buffer, guint64
 
 
 /* media sample description related helpers */
-
 typedef struct
 {
   guint16 version;
@@ -1055,6 +1055,9 @@ SampleTableEntryTX3G * atom_trak_set_subtitle_type (AtomTRAK * trak, AtomsContex
 
 SampleTableEntryTMCD *
 atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context, guint trak_timescale, GstVideoTimeCode * tc);
+
+SampleTableEntry * atom_trak_set_caption_type (AtomTRAK *trak, AtomsContext *context,
+					       guint32 trak_timescale, guint32 caption_type);
 
 void atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
                                 guint32 max_bitrate);
