@@ -434,6 +434,9 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
       ", min period: %" G_GINT64_FORMAT, default_period, min_period);
 
+  bpf = GST_AUDIO_INFO_BPF (&spec->info);
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
+
   if (self->low_latency) {
     if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
       device_period = default_period;
@@ -458,6 +461,33 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
       /* This must always be 0 in shared mode */
       self->sharemode == AUDCLNT_SHAREMODE_SHARED ? 0 : device_period,
       self->mix_format, NULL);
+
+  if (hr == AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED &&
+      self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
+    guint32 n_frames;
+
+    GST_WARNING_OBJECT (self, "initialize failed due to unaligned period %i",
+        (int) device_period);
+
+    /* Calculate a new aligned period. First get the aligned buffer size. */
+    hr = IAudioClient_GetBufferSize (self->client, &n_frames);
+    if (hr != S_OK) {
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
+      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
+          ("IAudioClient::GetBufferSize() failed: %s", msg));
+      g_free (msg);
+      goto beach;
+    }
+
+    device_period = (GST_SECOND / 100) * n_frames / rate;
+
+    GST_WARNING_OBJECT (self, "trying to re-initialize with period %i",
+        (int) device_period);
+
+    hr = IAudioClient_Initialize (self->client, self->sharemode,
+        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_period,
+        device_period, self->mix_format, NULL);
+  }
   if (hr != S_OK) {
     gchar *msg = gst_wasapi_util_hresult_to_string (hr);
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
@@ -472,9 +502,6 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
     GST_ERROR_OBJECT (self, "IAudioClient::GetBufferSize failed");
     goto beach;
   }
-
-  bpf = GST_AUDIO_INFO_BPF (&spec->info);
-  rate = GST_AUDIO_INFO_RATE (&spec->info);
   GST_INFO_OBJECT (self, "buffer size is %i frames, bpf is %i bytes, "
       "rate is %i Hz", self->buffer_frame_count, bpf, rate);
 
