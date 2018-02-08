@@ -40,4 +40,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     proxy,
     "plugin for proxied inter-pipeline communication",
-    plugin_init, VERSION, "LGPL", "gstproxy", "http://centricular.com")
+    plugin_init, VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)
