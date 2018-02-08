@@ -32,10 +32,6 @@ typedef struct _GstGLContextEGLClass GstGLContextEGLClass;
 G_GNUC_INTERNAL GType gst_gl_context_egl_get_type (void);
 #define GST_TYPE_GL_CONTEXT_EGL         (gst_gl_context_egl_get_type())
 
-/* FIXME: remove this when moving to -base */
-#ifndef GST_DISABLE_DEPRECATED
-#define GST_GL_TYPE_CONTEXT_EGL GST_TYPE_GL_CONTEXT_EGL
-#endif
 #define GST_GL_CONTEXT_EGL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_GL_CONTEXT_EGL, GstGLContextEGL))
 #define GST_GL_CONTEXT_EGL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_TYPE_GL_CONTEXT_EGL, GstGLContextEGLClass))
 #define GST_IS_GL_CONTEXT_EGL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_GL_CONTEXT_EGL))
