@@ -392,7 +392,7 @@ class LogLine (list):
         # PID.
         line[1] = int(line[1])
         # Thread.
-        line[2] = int(line[2], 16)
+        line[2] = long(line[2], 16)
         # Level (this is handled in LineCache).
         line[3] = 0
         # Line.
