@@ -30,12 +30,6 @@ else
 AVSAMPLE_DIR=
 endif
 
-if USE_GTK3
-GTK3_DIR=gtk
-else
-GTK3_DIR=
-endif
-
 if USE_WAYLAND
 if HAVE_GTK3
 WAYLAND_DIR=waylandsink
@@ -65,9 +59,9 @@ playout_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 playout_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_LIBS)
 
 SUBDIRS= codecparsers mpegts $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES) \
-        $(GTK3_DIR) $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR) \
+        $(AVSAMPLE_DIR) $(WAYLAND_DIR) $(MATRIXMIX_DIR) \
         $(IPCPIPELINE_DIR) $(WEBRTC_DIR)
-DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 gtk \
+DIST_SUBDIRS= codecparsers mpegts camerabin2 directfb mxf opencv uvch264 \
         avsamplesink waylandsink audiomixmatrix ipcpipeline webrtc
 
 include $(top_srcdir)/common/parallel-subdirs.mak

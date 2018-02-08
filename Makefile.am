@@ -52,6 +52,7 @@ CRUFT_FILES = \
 	$(top_builddir)/docs/plugins/xml/plugin-sdp.xml \
 	$(top_builddir)/ext/alsaspdif/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/gtk/.libs/libgstgtksink.so \
+	$(top_builddir)/ext/gtk/.libs/libgstgtk.so \
 	$(top_builddir)/ext/hls/.libs/libgstfragmented* \
 	$(top_builddir)/ext/ivorbis/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/jack/.libs/*.{so,dll,DLL,dylib} \
@@ -126,6 +127,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst-libs/gst/signalprocessor \
 	$(top_srcdir)/tests/examples/gl \
 	$(top_srcdir)/tests/examples/scaletempo \
+	$(top_srcdir)/tests/examples/gtk \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/tests/examples/switch \
 	$(top_srcdir)/tests/examples/jack \
@@ -134,6 +136,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/cog \
 	$(top_srcdir)/ext/eglgles \
 	$(top_srcdir)/ext/gsettings \
+	$(top_srcdir)/ext/gtk \
 	$(top_srcdir)/ext/ivorbis \
 	$(top_srcdir)/ext/jack \
 	$(top_srcdir)/ext/metadata \

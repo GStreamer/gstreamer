@@ -88,12 +88,6 @@ else
 GL_DIR=
 endif
 
-if USE_GTK3
-GTK3_DIR=gtk
-else
-GTK3_DIR=
-endif
-
 if USE_QT
 QT_DIR=qt
 else
@@ -437,7 +431,6 @@ SUBDIRS=\
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
 	$(GL_DIR) \
-	$(GTK3_DIR) \
 	$(QT_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
@@ -519,7 +512,6 @@ DIST_SUBDIRS = \
 	daala \
 	dts \
 	gl \
-	gtk \
 	qt \
 	modplug \
 	mpeg2enc \

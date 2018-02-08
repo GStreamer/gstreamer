@@ -1602,38 +1602,6 @@ gst_grabcut_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-gtkglsink</FILE>
-<TITLE>gtkglsink</TITLE>
-GstGtkGLSink
-<SUBSECTION Standard>
-GstGtkGLSinkClass
-GST_GTK_GL_SINK
-GST_GTK_GL_SINK_CAST
-GST_IS_GTK_GL_SINK
-GST_GTK_GL_SINK_CLASS
-GST_IS_GTK_GL_SINK_CLASS
-GST_TYPE_GTK_GL_SINK
-<SUBSECTION Private>
-gst_gtk_gl_sink_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-gtksink</FILE>
-<TITLE>gtksink</TITLE>
-GstGtkSink
-<SUBSECTION Standard>
-GstGtkSinkClass
-GST_GTK_SINK
-GST_GTK_SINK_CAST
-GST_IS_GTK_SINK
-GST_GTK_SINK_CLASS
-GST_IS_GTK_SINK_CLASS
-GST_TYPE_GTK_SINK
-<SUBSECTION Private>
-gst_gtk_sink_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-h263parse</FILE>
 <TITLE>h263parse</TITLE>
 GstH263Parse
