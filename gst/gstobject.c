@@ -296,6 +296,30 @@ gst_object_ref_sink (gpointer object)
 }
 
 /**
+ * gst_clear_object: (skip)
+ * @object_ptr: a pointer to a #GstObject reference
+ *
+ * Clears a reference to a #GstObject.
+ *
+ * @object_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing.
+ * Otherwise, the reference count of the object is decreased using
+ * gst_object_unref() and the pointer is set to %NULL.
+ *
+ * A macro is also included that allows this function to be used without
+ * pointer casts.
+ *
+ * Since: 1.16
+ **/
+#undef gst_clear_object
+void
+gst_clear_object (volatile GstObject ** object_ptr)
+{
+  g_clear_pointer (object_ptr, gst_object_unref);
+}
+
+/**
  * gst_object_replace:
  * @oldobj: (inout) (transfer full) (nullable): pointer to a place of
  *     a #GstObject to replace
