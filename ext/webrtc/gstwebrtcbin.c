@@ -170,8 +170,7 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 #define gst_webrtc_bin_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element");
-    );
+        "webrtcbin element"););
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
@@ -2790,7 +2789,8 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
     TransportStream *stream;
     GstWebRTCBinPad *pad;
 
-    if (sscanf (new_pad_name, "recv_rtp_src_%u_%u_%u", &session_id, &ssrc, &pt)) {
+    if (sscanf (new_pad_name, "recv_rtp_src_%u_%u_%u", &session_id, &ssrc,
+            &pt) != 3) {
       g_critical ("Invalid rtpbin pad name \'%s\'", new_pad_name);
       return;
     }
