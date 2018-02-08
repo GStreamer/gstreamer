@@ -2791,7 +2791,10 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
     TransportStream *stream;
     GstWebRTCBinPad *pad;
 
-    sscanf (new_pad_name, "recv_rtp_src_%u_%u_%u", &session_id, &ssrc, &pt);
+    if (sscanf (new_pad_name, "recv_rtp_src_%u_%u_%u", &session_id, &ssrc, &pt)) {
+      g_critical ("Invalid rtpbin pad name \'%s\'", new_pad_name);
+      return;
+    }
 
     stream = _find_transport_for_session (webrtc, session_id);
     if (!stream)
