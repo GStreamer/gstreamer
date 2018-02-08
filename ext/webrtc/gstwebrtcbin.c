@@ -1613,8 +1613,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
     if (rtp_trans) {
       answer_dir = rtp_trans->direction;
-      if (!answer_caps)
-        goto rejected;
+      g_assert (answer_caps != NULL);
     } else {
       /* if no transceiver, then we only receive that stream and respond with
        * the exact same caps */
