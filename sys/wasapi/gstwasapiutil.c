@@ -29,12 +29,14 @@
 
 /* This was only added to MinGW in ~2015 and our Cerbero toolchain is too old */
 #if defined(_MSC_VER)
-  #include <functiondiscoverykeys_devpkey.h>
+#include <functiondiscoverykeys_devpkey.h>
 #elif !defined(PKEY_Device_FriendlyName)
-  #include <initguid.h>
-  #include <propkey.h>
-  DEFINE_PROPERTYKEY(PKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0, 14);
-  DEFINE_PROPERTYKEY(PKEY_AudioEngine_DeviceFormat, 0xf19f064d, 0x82c, 0x4e27, 0xbc, 0x73, 0x68, 0x82, 0xa1, 0xbb, 0x8e, 0x4c, 0);
+#include <initguid.h>
+#include <propkey.h>
+DEFINE_PROPERTYKEY (PKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80,
+    0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0, 14);
+DEFINE_PROPERTYKEY (PKEY_AudioEngine_DeviceFormat, 0xf19f064d, 0x82c, 0x4e27,
+    0xbc, 0x73, 0x68, 0x82, 0xa1, 0xbb, 0x8e, 0x4c, 0);
 #endif
 
 
@@ -78,7 +80,8 @@ const IID IID_IAudioRenderClient = { 0xf294acfc, 0x3146, 0x4483,
 };
 #endif
 
-static struct {
+static struct
+{
   guint64 wasapi_pos;
   GstAudioChannelPosition gst_pos;
 } wasapi_to_gst_pos[] = {
@@ -88,8 +91,10 @@ static struct {
   {SPEAKER_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1},
   {SPEAKER_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT},
   {SPEAKER_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
-  {SPEAKER_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER},
-  {SPEAKER_FRONT_RIGHT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
+  {SPEAKER_FRONT_LEFT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER},
+  {SPEAKER_FRONT_RIGHT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
   {SPEAKER_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
   /* Enum values diverge from this point onwards */
   {SPEAKER_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT},
@@ -100,7 +105,7 @@ static struct {
   {SPEAKER_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT},
   {SPEAKER_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT},
   {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
-  {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT},
+  {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
 };
 
 GType
@@ -252,7 +257,7 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
   return s;
 }
 
-static IMMDeviceEnumerator*
+static IMMDeviceEnumerator *
 gst_wasapi_util_get_device_enumerator (GstElement * element)
 {
   HRESULT hr;
@@ -379,7 +384,7 @@ gst_wasapi_util_get_devices (GstElement * element, gboolean active,
 
     if (!gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
             gst_static_caps_get (&scaps), &caps, NULL))
-       goto next;
+      goto next;
 
     /* Set some useful properties */
     props = gst_structure_new ("wasapi-proplist",
@@ -390,13 +395,13 @@ gst_wasapi_util_get_devices (GstElement * element, gboolean active,
     device = g_object_new (GST_TYPE_WASAPI_DEVICE, "device", strid,
         "display-name", description, "caps", caps,
         "device-class", device_class, "properties", props, NULL);
-    GST_WASAPI_DEVICE(device)->element = element_name;
+    GST_WASAPI_DEVICE (device)->element = element_name;
 
     gst_structure_free (props);
     gst_caps_unref (caps);
     *devices = g_list_prepend (*devices, device);
 
-next:
+  next:
     PropVariantClear (&var);
     if (prop_store)
       IUnknown_Release (prop_store);
@@ -631,7 +636,7 @@ gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
     if (!(dwChannelMask & wasapi_to_gst_pos[ii].wasapi_pos))
       /* Non-positional or unknown position, warn? */
       continue;
-    mask |= G_GUINT64_CONSTANT(1) << wasapi_to_gst_pos[ii].gst_pos;
+    mask |= G_GUINT64_CONSTANT (1) << wasapi_to_gst_pos[ii].gst_pos;
     pos[ii] = wasapi_to_gst_pos[ii].gst_pos;
   }
 
@@ -682,8 +687,7 @@ gst_wasapi_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
         "format", G_TYPE_STRING, afmt,
         "channels", G_TYPE_INT, format->Format.nChannels,
         "rate", G_TYPE_INT, format->Format.nSamplesPerSec,
-        "channel-mask", GST_TYPE_BITMASK, channel_mask,
-        NULL);
+        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
   }
 
   return TRUE;

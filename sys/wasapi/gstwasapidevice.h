@@ -35,11 +35,13 @@ typedef struct _GstWasapiDeviceProviderClass GstWasapiDeviceProviderClass;
 #define GST_WASAPI_DEVICE_PROVIDER_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_PROVIDER, GstWasapiDeviceProviderClass))
 #define GST_WASAPI_DEVICE_PROVIDER_CAST(obj)            ((GstWasapiDeviceProvider *)(obj))
 
-struct _GstWasapiDeviceProvider {
+struct _GstWasapiDeviceProvider
+{
   GstDeviceProvider parent;
 };
 
-struct _GstWasapiDeviceProviderClass {
+struct _GstWasapiDeviceProviderClass
+{
   GstDeviceProviderClass parent_class;
 };
 
@@ -57,14 +59,16 @@ typedef struct _GstWasapiDeviceClass GstWasapiDeviceClass;
 #define GST_WASAPI_DEVICE_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE, GstWasapiDeviceClass))
 #define GST_WASAPI_DEVICE_CAST(obj)            ((GstWasapiDevice *)(obj))
 
-struct _GstWasapiDevice {
+struct _GstWasapiDevice
+{
   GstDevice parent;
 
-  gchar       *strid;
+  gchar *strid;
   const gchar *element;
 };
 
-struct _GstWasapiDeviceClass {
+struct _GstWasapiDeviceClass
+{
   GstDeviceClass parent_class;
 };
 

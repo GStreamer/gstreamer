@@ -350,7 +350,8 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   guint bpf, rate, buffer_frames;
   HRESULT hr;
 
-  hr = IAudioClient_GetDevicePeriod (self->client, &default_period, &min_period);
+  hr = IAudioClient_GetDevicePeriod (self->client, &default_period,
+      &min_period);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod failed");
     goto beach;
@@ -437,8 +438,8 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   self->client_clock_freq = client_clock_freq;
   self->capture_client = capture_client;
 
-  gst_audio_ring_buffer_set_channel_positions (
-      GST_AUDIO_BASE_SRC (self)->ringbuffer, self->positions);
+  gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
+      (self)->ringbuffer, self->positions);
 
   res = TRUE;
 

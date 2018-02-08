@@ -27,12 +27,10 @@ G_DEFINE_TYPE (GstWasapiDeviceProvider, gst_wasapi_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
 
 static void gst_wasapi_device_provider_finalize (GObject * object);
-static GList *gst_wasapi_device_provider_probe (GstDeviceProvider *
-    provider);
+static GList *gst_wasapi_device_provider_probe (GstDeviceProvider * provider);
 
 static void
-gst_wasapi_device_provider_class_init (GstWasapiDeviceProviderClass *
-    klass)
+gst_wasapi_device_provider_class_init (GstWasapiDeviceProviderClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstDeviceProviderClass *dm_class = GST_DEVICE_PROVIDER_CLASS (klass);

@@ -429,8 +429,8 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   self->render_client = render_client;
   render_client = NULL;
 
-  gst_audio_ring_buffer_set_channel_positions (
-      GST_AUDIO_BASE_SINK (self)->ringbuffer, self->positions);
+  gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
+      (self)->ringbuffer, self->positions);
 
   res = TRUE;
 
