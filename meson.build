@@ -6,11 +6,11 @@ project('gst-plugins-bad', 'c', 'cpp',
 
 gst_version = meson.project_version()
 version_arr = gst_version.split('.')
-gst_version_major = version_arr[0]
-gst_version_minor = version_arr[1]
-gst_version_micro = version_arr[2]
-if version_arr.length() == 4
-  gst_version_nano = version_arr[3]
+gst_version_major = version_arr[0].to_int()
+gst_version_minor = version_arr[1].to_int()
+gst_version_micro = version_arr[2].to_int()
+ if version_arr.length() == 4
+  gst_version_nano = version_arr[3].to_int()
 else
   gst_version_nano = 0
 endif
@@ -22,7 +22,7 @@ api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
-libversion = '@0@.@1@.0'.format(soversion, gst_version_minor.to_int() * 100 + gst_version_micro.to_int())
+libversion = '@0@.@1@.0'.format(soversion, gst_version_minor * 100 + gst_version_micro)
 
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
