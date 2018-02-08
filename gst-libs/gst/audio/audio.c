@@ -80,6 +80,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
     gint rate, gint bpf)
 {
   GstBuffer *ret;
+  GstAudioMeta *meta;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;
   guint64 offset = GST_BUFFER_OFFSET_NONE, offset_end = GST_BUFFER_OFFSET_NONE;
   gsize trim, size, osize;
@@ -98,8 +99,11 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
    * Calculate the missing values for the calculations,
    * they won't be changed later though. */
 
+  meta = gst_buffer_get_audio_meta (buffer);
+
+  /* these variables measure samples */
   trim = 0;
-  osize = size = gst_buffer_get_size (buffer);
+  osize = size = meta ? meta->samples : (gst_buffer_get_size (buffer) / bpf);
 
   /* no data, nothing to clip */
   if (!size)
@@ -111,7 +115,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
     duration = GST_BUFFER_DURATION (buffer);
   } else {
     change_duration = FALSE;
-    duration = gst_util_uint64_scale (size / bpf, GST_SECOND, rate);
+    duration = gst_util_uint64_scale (size, GST_SECOND, rate);
   }
 
   if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
@@ -125,7 +129,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
     offset_end = GST_BUFFER_OFFSET_END (buffer);
   } else {
     change_offset_end = FALSE;
-    offset_end = offset + size / bpf;
+    offset_end = offset + size;
   }
 
   if (segment->format == GST_FORMAT_TIME) {
@@ -149,8 +153,8 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
         diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
         if (change_offset)
           offset += diff;
-        trim += diff * bpf;
-        size -= diff * bpf;
+        trim += diff;
+        size -= diff;
       }
 
       diff = stop - cstop;
@@ -161,7 +165,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
         diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
         if (change_offset_end)
           offset_end -= diff;
-        size -= diff * bpf;
+        size -= diff;
       }
     } else {
       gst_buffer_unref (buffer);
@@ -188,8 +192,8 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
         if (change_duration)
           duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
 
-        trim += diff * bpf;
-        size -= diff * bpf;
+        trim += diff;
+        size -= diff;
       }
 
       diff = stop - cstop;
@@ -199,7 +203,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
         if (change_duration)
           duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
 
-        size -= diff * bpf;
+        size -= diff;
       }
     } else {
       gst_buffer_unref (buffer);
@@ -218,8 +222,34 @@ gst_audio_buffer_clip (GstBuffer * buffer, const GstSegment * segment,
       ret = gst_buffer_make_writable (ret);
       GST_BUFFER_DURATION (ret) = duration;
     }
+  } else if (meta && meta->info.layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    /* modify only the meta to avoid making copies of the planes */
+    gint i;
+
+    ret = gst_buffer_make_writable (buffer);
+    meta = gst_buffer_get_audio_meta (buffer);
+
+    meta->samples = size;
+    for (i = 0; i < meta->info.channels; i++) {
+      meta->offsets[i] += trim * bpf / meta->info.channels;
+    }
+
+    GST_BUFFER_TIMESTAMP (ret) = timestamp;
+
+    if (change_duration)
+      GST_BUFFER_DURATION (ret) = duration;
+    if (change_offset)
+      GST_BUFFER_OFFSET (ret) = offset;
+    if (change_offset_end)
+      GST_BUFFER_OFFSET_END (ret) = offset_end;
   } else {
-    /* Get a writable buffer and apply all changes */
+    /* resize the buffer, effectively cutting out all
+     * the samples that are no longer relevant */
+
+    /* convert samples to bytes */
+    trim *= bpf;
+    size *= bpf;
+
     GST_DEBUG ("trim %" G_GSIZE_FORMAT " size %" G_GSIZE_FORMAT, trim, size);
     ret = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, trim, size);
     gst_buffer_unref (buffer);
