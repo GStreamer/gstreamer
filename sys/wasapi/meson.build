@@ -3,10 +3,12 @@ wasapi_sources = [
   'gstwasapisrc.c',
   'gstwasapisink.c',
   'gstwasapiutil.c',
+  'gstwasapidevice.c',
 ]
 
 if host_system == 'windows' and cc.has_header('audioclient.h')
-  wasapi_dep = [cc.find_library('ole32'), cc.find_library('ksuser')]
+  wasapi_dep = [cc.find_library('ole32'), cc.find_library('ksuser'),
+                cc.find_library('avrt', required : false)]
 
   gstwasapi = library('gstwasapi',
     wasapi_sources,
