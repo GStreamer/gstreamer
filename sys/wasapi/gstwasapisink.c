@@ -480,8 +480,8 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
     device_period = (GST_SECOND / 100) * n_frames / rate;
 
-    GST_WARNING_OBJECT (self, "trying to re-initialize with period %i",
-        (int) device_period);
+    GST_WARNING_OBJECT (self, "trying to re-initialize with period %i "
+        "(%i frames, %i rate)", (int) device_period, n_frames, rate);
 
     hr = IAudioClient_Initialize (self->client, self->sharemode,
         AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_period,
