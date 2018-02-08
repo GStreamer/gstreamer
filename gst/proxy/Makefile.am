@@ -14,14 +14,3 @@ libgstproxy_la_CFLAGS = $(GST_CFLAGS)
 libgstproxy_la_LIBADD = $(GST_LIBS)
 libgstproxy_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstproxy_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
-
-gstproxytest_SOURCES = \
-	gstproxytest.c
-
-gstproxytest_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_CFLAGS)
-
-gstproxytest_LDADD = \
-	$(GST_PLUGINS_BASE_LIBS) \
-	$(GST_LIBS)
