@@ -1065,6 +1065,110 @@ GST_START_TEST (test_stream_align_reverse)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstAudioFormat format;
+  GstAudioLayout layout;
+  gint channels;
+  gsize samples;
+  gsize plane_size;
+  gsize offsets[10];
+  gboolean add_meta;
+  gboolean use_offsets;
+} AudioBufferTestData;
+
+GST_START_TEST (test_audio_buffer_and_audio_meta)
+{
+  AudioBufferTestData td[] = {
+    {GST_AUDIO_FORMAT_S24_32, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+        4, 60, 240, {10, 760, 510, 260}, TRUE, TRUE},
+    {GST_AUDIO_FORMAT_F32, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+        4, 60, 240, {0, 240, 480, 720}, TRUE, FALSE},
+    {GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+        4, 125, 1000, {0}, TRUE, FALSE},
+    {GST_AUDIO_FORMAT_S16, GST_AUDIO_LAYOUT_INTERLEAVED,
+        4, 125, 1000, {0}, FALSE, FALSE},
+    {GST_AUDIO_FORMAT_S8, GST_AUDIO_LAYOUT_INTERLEAVED,
+        8, 125, 1000, {0}, FALSE, FALSE},
+    {GST_AUDIO_FORMAT_U8, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+        8, 125, 125, {0, 125, 250, 375, 500, 625, 750, 875}, TRUE, FALSE},
+    {GST_AUDIO_FORMAT_U32, GST_AUDIO_LAYOUT_NON_INTERLEAVED,
+          10, 25, 100, {0, 100, 200, 300, 400, 500, 600, 700, 800, 900}, TRUE,
+        FALSE},
+    {GST_AUDIO_FORMAT_U32, GST_AUDIO_LAYOUT_INTERLEAVED,
+        10, 25, 1000, {0}, FALSE, FALSE},
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (td); i++) {
+    GstBuffer *buf;
+    guint8 *data;
+    GstAudioInfo info;
+    GstAudioMeta *meta;
+    GstAudioBuffer buffer;
+    gint j;
+
+    gst_audio_info_init (&info);
+    gst_audio_info_set_format (&info, td[i].format, 44100, td[i].channels,
+        NULL);
+    info.layout = td[i].layout;
+
+    buf = make_buffer (&data);
+    if (td[i].add_meta) {
+      meta = gst_buffer_add_audio_meta (buf, &info, td[i].samples,
+          td[i].use_offsets ? td[i].offsets : NULL);
+
+      fail_unless (meta);
+      fail_unless (GST_AUDIO_INFO_IS_VALID (&meta->info));
+      fail_unless (gst_audio_info_is_equal (&meta->info, &info));
+      fail_unless_equals_int (meta->info.finfo->format, td[i].format);
+      fail_unless_equals_int (meta->info.layout, td[i].layout);
+      fail_unless_equals_int (meta->info.channels, td[i].channels);
+      fail_unless_equals_int (meta->samples, td[i].samples);
+
+      if (td[i].layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+        fail_unless (meta->offsets);
+        for (j = 0; j < td[i].channels; j++) {
+          fail_unless_equals_int (meta->offsets[j], td[i].offsets[j]);
+        }
+      } else {
+        fail_if (meta->offsets);
+      }
+    }
+
+    fail_unless (gst_audio_buffer_map (&buffer, &info, buf, GST_MAP_READ));
+    fail_unless_equals_pointer (buffer.buffer, buf);
+    fail_unless (GST_AUDIO_INFO_IS_VALID (&buffer.info));
+    fail_unless (gst_audio_info_is_equal (&buffer.info, &info));
+    fail_unless_equals_int (buffer.n_samples, td[i].samples);
+
+    if (td[i].layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+      fail_unless_equals_int (buffer.n_planes, td[i].channels);
+      for (j = 0; j < td[i].channels; j++) {
+        fail_unless_equals_pointer (buffer.planes[j], data + td[i].offsets[j]);
+      }
+    } else {
+      fail_unless_equals_int (buffer.n_planes, 1);
+      fail_unless_equals_pointer (buffer.planes[0], data);
+    }
+
+    fail_unless_equals_int (GST_AUDIO_BUFFER_PLANE_SIZE (&buffer),
+        td[i].plane_size);
+
+    if (buffer.n_planes <= 8) {
+      fail_unless_equals_pointer (buffer.map_infos, buffer.priv_map_infos_arr);
+      fail_unless_equals_pointer (buffer.planes, buffer.priv_planes_arr);
+    } else {
+      fail_if (buffer.map_infos == buffer.priv_map_infos_arr);
+      fail_if (buffer.planes == buffer.priv_planes_arr);
+    }
+
+    gst_audio_buffer_unmap (&buffer);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -1094,6 +1198,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_fill_silence);
   tcase_add_test (tc_chain, test_stream_align);
   tcase_add_test (tc_chain, test_stream_align_reverse);
+  tcase_add_test (tc_chain, test_audio_buffer_and_audio_meta);
 
   return s;
 }
