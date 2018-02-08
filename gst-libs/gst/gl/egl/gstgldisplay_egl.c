@@ -90,7 +90,8 @@ gst_gl_display_egl_finalize (GObject * object)
  * @display: pointer to a display (or 0)
  *
  * Attempts to create a new #EGLDisplay from @display.  If @type is
- * %GST_GL_DISPLAY_TYPE_ANY, then @display must be 0.
+ * %GST_GL_DISPLAY_TYPE_ANY, then @display must be 0. @type must not be
+ * %GST_GL_DISPLAY_TYPE_NONE.
  *
  * Returns: A #EGLDisplay or %EGL_NO_DISPLAY
  *
@@ -103,18 +104,13 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
   EGLDisplay ret = EGL_NO_DISPLAY;
   _gst_eglGetPlatformDisplay_type _gst_eglGetPlatformDisplay;
 
+  g_return_val_if_fail (type != GST_GL_DISPLAY_TYPE_NONE, EGL_NO_DISPLAY);
   g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_ANY && display != 0)
       || (type == GST_GL_DISPLAY_TYPE_ANY && display == 0), EGL_NO_DISPLAY);
-  g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_NONE
-          || (type == GST_GL_DISPLAY_TYPE_NONE
-              && display == 0)), EGL_NO_DISPLAY);
 
   /* given an EGLDisplay already */
   if (type == GST_GL_DISPLAY_TYPE_EGL)
     return (gpointer) display;
-
-  if (type == GST_GL_DISPLAY_TYPE_NONE)
-    type = GST_GL_DISPLAY_TYPE_ANY;
 
   egl_exts = eglQueryString (EGL_NO_DISPLAY, EGL_EXTENSIONS);
   GST_DEBUG ("egl no display extensions: %s", egl_exts);
