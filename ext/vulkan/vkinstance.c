@@ -182,6 +182,8 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   gchar **enabled_layers;
   VkResult err;
 
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
+
   GST_OBJECT_LOCK (instance);
   if (instance->priv->opened) {
     GST_OBJECT_UNLOCK (instance);
