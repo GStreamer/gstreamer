@@ -380,9 +380,6 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 {
   GstWasapiSrc *self = GST_WASAPI_SRC (asrc);
   gboolean res = FALSE;
-  IAudioClock *client_clock = NULL;
-  guint64 client_clock_freq = 0;
-  IAudioCaptureClient *capture_client = NULL;
   REFERENCE_TIME latency_rt, default_period, min_period;
   REFERENCE_TIME device_period, device_buffer_duration;
   guint bpf, rate, buffer_frames;
@@ -392,7 +389,7 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
       &min_period);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod failed");
-    goto beach;
+    return FALSE;
   }
   GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
       ", min period: %" G_GINT64_FORMAT, default_period, min_period);
@@ -468,11 +465,11 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   /* Get the clock and the clock freq */
   if (!gst_wasapi_util_get_clock (GST_ELEMENT (self), self->client,
-          &client_clock)) {
+          &self->client_clock)) {
     goto beach;
   }
 
-  hr = IAudioClock_GetFrequency (client_clock, &client_clock_freq);
+  hr = IAudioClock_GetFrequency (self->client_clock, &self->client_clock_freq);
   if (hr != S_OK) {
     GST_ERROR_OBJECT (self, "IAudioClock::GetFrequency failed");
     goto beach;
@@ -480,7 +477,7 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   /* Get capture source client and start it up */
   if (!gst_wasapi_util_get_capture_client (GST_ELEMENT (self), self->client,
-          &capture_client)) {
+          &self->capture_client)) {
     goto beach;
   }
 
@@ -489,10 +486,6 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     GST_ERROR_OBJECT (self, "IAudioClient::Start failed");
     goto beach;
   }
-
-  self->client_clock = client_clock;
-  self->client_clock_freq = client_clock_freq;
-  self->capture_client = capture_client;
 
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
       (self)->ringbuffer, self->positions);
@@ -507,15 +500,11 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 #endif
 
   res = TRUE;
-
 beach:
-  if (!res) {
-    if (capture_client != NULL)
-      IUnknown_Release (capture_client);
-
-    if (client_clock != NULL)
-      IUnknown_Release (client_clock);
-  }
+  /* unprepare() is not called if prepare() fails, but we want it to be, so call
+   * it manually when needed */
+  if (!res)
+    gst_wasapi_src_unprepare (asrc);
 
   return res;
 }
@@ -548,6 +537,8 @@ gst_wasapi_src_unprepare (GstAudioSrc * asrc)
     IUnknown_Release (self->client_clock);
     self->client_clock = NULL;
   }
+
+  self->client_clock_freq = 0;
 
   return TRUE;
 }

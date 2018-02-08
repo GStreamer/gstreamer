@@ -418,7 +418,6 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
   gboolean res = FALSE;
   REFERENCE_TIME latency_rt;
-  IAudioRenderClient *render_client = NULL;
   REFERENCE_TIME default_period, min_period;
   REFERENCE_TIME device_period, device_buffer_duration;
   guint bpf, rate;
@@ -533,7 +532,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   /* Get render sink client and start it up */
   if (!gst_wasapi_util_get_render_client (GST_ELEMENT (self), self->client,
-          &render_client)) {
+          &self->render_client)) {
     goto beach;
   }
 
@@ -555,7 +554,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
     len = n_frames * self->mix_format->nBlockAlign;
 
-    hr = IAudioRenderClient_GetBuffer (render_client, n_frames,
+    hr = IAudioRenderClient_GetBuffer (self->render_client, n_frames,
         (BYTE **) & dst);
     if (hr != S_OK) {
       gchar *msg = gst_wasapi_util_hresult_to_string (hr);
@@ -567,7 +566,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
     GST_DEBUG_OBJECT (self, "pre-wrote %i bytes of silence", len);
 
-    hr = IAudioRenderClient_ReleaseBuffer (render_client, n_frames,
+    hr = IAudioRenderClient_ReleaseBuffer (self->render_client, n_frames,
         AUDCLNT_BUFFERFLAGS_SILENT);
     if (hr != S_OK) {
       gchar *msg = gst_wasapi_util_hresult_to_string (hr);
@@ -584,9 +583,6 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
     goto beach;
   }
 
-  self->render_client = render_client;
-  render_client = NULL;
-
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
       (self)->ringbuffer, self->positions);
 
@@ -602,8 +598,10 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   res = TRUE;
 
 beach:
-  if (render_client != NULL)
-    IUnknown_Release (render_client);
+  /* unprepare() is not called if prepare() fails, but we want it to be, so call
+   * it manually when needed */
+  if (!res)
+    gst_wasapi_sink_unprepare (asink);
 
   return res;
 }
