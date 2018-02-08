@@ -29,6 +29,7 @@ base_tests = [
   [['elements/curlftpsink.c'], not curl_dep.found(), [curl_dep]],
   [['elements/curlsmtpsink.c'], not curl_dep.found(), [curl_dep]],
   [['elements/dash_mpd.c'], not xml2_dep.found(), [xml2_dep]],
+  [['elements/dtls.c'], not libcrypto_dep.found(), [libcrypto_dep]],
   [['elements/faac.c'], not faac_dep.found() or not cc.has_header_symbol('faac.h', 'faacEncOpen'), [faac_dep]],
   [['elements/faad.c'], not faad_dep.found() or not have_faad_2_7, [faad_dep]],
   [['elements/gdpdepay.c']],
