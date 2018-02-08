@@ -819,13 +819,27 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
   if (!caps)
     goto error_no_caps;
 
+  if (!ensure_sinkpad_buffer_pool (plugin, caps))
+    return FALSE;
+
   if (need_pool) {
-    if (!ensure_sinkpad_buffer_pool (plugin, caps))
-      return FALSE;
     gst_query_add_allocation_pool (query, plugin->sinkpad_buffer_pool,
         plugin->sinkpad_buffer_size, BUFFER_POOL_SINK_MIN_BUFFERS, 0);
-    gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
   }
+
+  /* Set sinkpad allocator as the last allocation param.
+   *
+   * If there's none, set system's allocator first and VAAPI allocator
+   * second
+   */
+  if (gst_query_get_n_allocation_params (query) == 0) {
+    GstAllocator *allocator;
+
+    allocator = gst_allocator_find (GST_ALLOCATOR_SYSMEM);
+    gst_query_add_allocation_param (query, allocator, NULL);
+    gst_object_unref (allocator);
+  }
+  gst_query_add_allocation_param (query, plugin->sinkpad_allocator, NULL);
 
   gst_query_add_allocation_meta (query, GST_VAAPI_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
