@@ -328,7 +328,7 @@ gst_rtsp_server_set_address (GstRTSPServer * server, const gchar * address)
  *
  * Get the address on which the server will accept connections.
  *
- * Returns: (transfer full): the server address. g_free() after usage.
+ * Returns: (transfer full) (nullable): the server address. g_free() after usage.
  */
 gchar *
 gst_rtsp_server_get_address (GstRTSPServer * server)
@@ -417,7 +417,7 @@ gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
  *
  * Get the service on which the server will accept connections.
  *
- * Returns: (transfer full): the service. use g_free() after usage.
+ * Returns: (transfer full) (nullable): the service. use g_free() after usage.
  */
 gchar *
 gst_rtsp_server_get_service (GstRTSPServer * server)
@@ -488,7 +488,7 @@ gst_rtsp_server_get_backlog (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_session_pool:
  * @server: a #GstRTSPServer
- * @pool: (transfer none): a #GstRTSPSessionPool
+ * @pool: (transfer none) (nullable): a #GstRTSPSessionPool
  *
  * configure @pool to be used as the session pool of @server.
  */
@@ -521,7 +521,7 @@ gst_rtsp_server_set_session_pool (GstRTSPServer * server,
  *
  * Get the #GstRTSPSessionPool used as the session pool of @server.
  *
- * Returns: (transfer full): the #GstRTSPSessionPool used for sessions. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPSessionPool used for sessions. g_object_unref() after
  * usage.
  */
 GstRTSPSessionPool *
@@ -545,7 +545,7 @@ gst_rtsp_server_get_session_pool (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_mount_points:
  * @server: a #GstRTSPServer
- * @mounts: (transfer none): a #GstRTSPMountPoints
+ * @mounts: (transfer none) (nullable): a #GstRTSPMountPoints
  *
  * configure @mounts to be used as the mount points of @server.
  */
@@ -579,7 +579,7 @@ gst_rtsp_server_set_mount_points (GstRTSPServer * server,
  *
  * Get the #GstRTSPMountPoints used as the mount points of @server.
  *
- * Returns: (transfer full): the #GstRTSPMountPoints of @server. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPMountPoints of @server. g_object_unref() after
  * usage.
  */
 GstRTSPMountPoints *
@@ -603,7 +603,7 @@ gst_rtsp_server_get_mount_points (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_auth:
  * @server: a #GstRTSPServer
- * @auth: (transfer none): a #GstRTSPAuth
+ * @auth: (transfer none) (nullable): a #GstRTSPAuth
  *
  * configure @auth to be used as the authentication manager of @server.
  */
@@ -636,7 +636,7 @@ gst_rtsp_server_set_auth (GstRTSPServer * server, GstRTSPAuth * auth)
  *
  * Get the #GstRTSPAuth used as the authentication manager of @server.
  *
- * Returns: (transfer full): the #GstRTSPAuth of @server. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPAuth of @server. g_object_unref() after
  * usage.
  */
 GstRTSPAuth *
@@ -660,7 +660,7 @@ gst_rtsp_server_get_auth (GstRTSPServer * server)
 /**
  * gst_rtsp_server_set_thread_pool:
  * @server: a #GstRTSPServer
- * @pool: (transfer none): a #GstRTSPThreadPool
+ * @pool: (transfer none) (nullable): a #GstRTSPThreadPool
  *
  * configure @pool to be used as the thread pool of @server.
  */
@@ -693,7 +693,7 @@ gst_rtsp_server_set_thread_pool (GstRTSPServer * server,
  *
  * Get the #GstRTSPThreadPool used as the thread pool of @server.
  *
- * Returns: (transfer full): the #GstRTSPThreadPool of @server. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPThreadPool of @server. g_object_unref() after
  * usage.
  */
 GstRTSPThreadPool *
@@ -1088,7 +1088,7 @@ default_create_client (GstRTSPServer * server)
  * @socket: (transfer full): a network socket
  * @ip: the IP address of the remote client
  * @port: the port used by the other end
- * @initial_buffer: any initial data that was already read from the socket
+ * @initial_buffer: (nullable): any initial data that was already read from the socket
  *
  * Take an existing network socket and use it for an RTSP connection. This
  * is used when transferring a socket from an HTTP server which should be used

@@ -319,7 +319,7 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
  * Get the session media for @path. @matched will contain the number of matched
  * characters of @path.
  *
- * Returns: (transfer none): the configuration for @path in @sess.
+ * Returns: (transfer none) (nullable): the configuration for @path in @sess.
  */
 GstRTSPSessionMedia *
 gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
@@ -479,8 +479,8 @@ gst_rtsp_session_new (const gchar * sessionid)
  *
  * Get the sessionid of @session.
  *
- * Returns: (transfer none): the sessionid of @session. The value remains valid
- * as long as @session is alive.
+ * Returns: (transfer none) (nullable): the sessionid of @session.
+ * The value remains valid as long as @session is alive.
  */
 const gchar *
 gst_rtsp_session_get_sessionid (GstRTSPSession * session)
@@ -496,7 +496,8 @@ gst_rtsp_session_get_sessionid (GstRTSPSession * session)
  *
  * Get the string that can be placed in the Session header field.
  *
- * Returns: (transfer full): the Session header of @session. g_free() after usage.
+ * Returns: (transfer full) (nullable): the Session header of @session.
+ * g_free() after usage.
  */
 gchar *
 gst_rtsp_session_get_header (GstRTSPSession * session)

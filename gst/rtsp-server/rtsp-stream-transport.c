@@ -164,7 +164,7 @@ gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
  *
  * Get the #GstRTSPStream used when constructing @trans.
  *
- * Returns: (transfer none): the stream used when constructing @trans.
+ * Returns: (transfer none) (nullable): the stream used when constructing @trans.
  */
 GstRTSPStream *
 gst_rtsp_stream_transport_get_stream (GstRTSPStreamTransport * trans)
@@ -263,7 +263,7 @@ gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
  *
  * Get the transport configured in @trans.
  *
- * Returns: (transfer none): the transport configured in @trans. It remains
+ * Returns: (transfer none) (nullable): the transport configured in @trans. It remains
  * valid for as long as @trans is valid.
  */
 const GstRTSPTransport *
@@ -277,7 +277,7 @@ gst_rtsp_stream_transport_get_transport (GstRTSPStreamTransport * trans)
 /**
  * gst_rtsp_stream_transport_set_url:
  * @trans: a #GstRTSPStreamTransport
- * @url: (transfer none): a client #GstRTSPUrl
+ * @url: (transfer none) (nullable): a client #GstRTSPUrl
  *
  * Set @url as the client url.
  */
@@ -303,8 +303,8 @@ gst_rtsp_stream_transport_set_url (GstRTSPStreamTransport * trans,
  *
  * Get the url configured in @trans.
  *
- * Returns: (transfer none): the url configured in @trans. It remains
- * valid for as long as @trans is valid.
+ * Returns: (transfer none) (nullable): the url configured in @trans.
+ * It remains valid for as long as @trans is valid.
  */
 const GstRTSPUrl *
 gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
@@ -453,6 +453,8 @@ gst_rtsp_stream_transport_send_rtp (GstRTSPStreamTransport * trans,
   GstRTSPStreamTransportPrivate *priv;
   gboolean res = FALSE;
 
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+
   priv = trans->priv;
 
   if (priv->send_rtp)
@@ -481,6 +483,8 @@ gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
 {
   GstRTSPStreamTransportPrivate *priv;
   gboolean res = FALSE;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
   priv = trans->priv;
 
@@ -530,6 +534,8 @@ gst_rtsp_stream_transport_recv_data (GstRTSPStreamTransport * trans,
   GstRTSPStreamTransportPrivate *priv;
   const GstRTSPTransport *tr;
   GstFlowReturn res;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   priv = trans->priv;
   tr = priv->transport;

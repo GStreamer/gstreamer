@@ -290,7 +290,7 @@ gst_rtsp_auth_set_tls_certificate (GstRTSPAuth * auth, GTlsCertificate * cert)
  *
  * Get the #GTlsCertificate used for negotiating TLS @auth.
  *
- * Returns: (transfer full): the #GTlsCertificate of @auth. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GTlsCertificate of @auth. g_object_unref() after
  * usage.
  */
 GTlsCertificate *
@@ -350,7 +350,7 @@ gst_rtsp_auth_set_tls_database (GstRTSPAuth * auth, GTlsDatabase * database)
  *
  * Get the #GTlsDatabase used for verifying client certificate.
  *
- * Returns: (transfer full): the #GTlsDatabase of @auth. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GTlsDatabase of @auth. g_object_unref() after
  * usage.
  * Since: 1.6
  */
@@ -460,7 +460,7 @@ gst_rtsp_auth_set_default_token (GstRTSPAuth * auth, GstRTSPToken * token)
  * Get the default token for @auth. This token will be used for unauthenticated
  * users.
  *
- * Returns: (transfer full): the #GstRTSPToken of @auth. gst_rtsp_token_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPToken of @auth. gst_rtsp_token_unref() after
  * usage.
  */
 GstRTSPToken *

@@ -341,7 +341,7 @@ create_session (GstRTSPSessionPool * pool, const gchar * id)
  *
  * Create a new #GstRTSPSession object in @pool.
  *
- * Returns: (transfer full): a new #GstRTSPSession.
+ * Returns: (transfer full) (nullable): a new #GstRTSPSession.
  */
 GstRTSPSession *
 gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)
@@ -751,7 +751,7 @@ static GSourceFuncs gst_pool_source_funcs = {
  * Create a #GSource that will be dispatched when the session should be cleaned
  * up.
  *
- * Returns: (transfer full): a #GSource
+ * Returns: (transfer full) (nullable): a #GSource
  */
 GSource *
 gst_rtsp_session_pool_create_watch (GstRTSPSessionPool * pool)

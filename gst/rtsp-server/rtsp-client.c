@@ -3611,7 +3611,7 @@ invalid_length:
 /**
  * gst_rtsp_client_set_session_pool:
  * @client: a #GstRTSPClient
- * @pool: (transfer none): a #GstRTSPSessionPool
+ * @pool: (transfer none) (nullable): a #GstRTSPSessionPool
  *
  * Set @pool as the sessionpool for @client which it will use to find
  * or allocate sessions. the sessionpool is usually inherited from the server
@@ -3652,7 +3652,7 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
  *
  * Get the #GstRTSPSessionPool object that @client uses to manage its sessions.
  *
- * Returns: (transfer full): a #GstRTSPSessionPool, unref after usage.
+ * Returns: (transfer full) (nullable): a #GstRTSPSessionPool, unref after usage.
  */
 GstRTSPSessionPool *
 gst_rtsp_client_get_session_pool (GstRTSPClient * client)
@@ -3675,7 +3675,7 @@ gst_rtsp_client_get_session_pool (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_mount_points:
  * @client: a #GstRTSPClient
- * @mounts: (transfer none): a #GstRTSPMountPoints
+ * @mounts: (transfer none) (nullable): a #GstRTSPMountPoints
  *
  * Set @mounts as the mount points for @client which it will use to map urls
  * to media streams. These mount points are usually inherited from the server that
@@ -3710,7 +3710,7 @@ gst_rtsp_client_set_mount_points (GstRTSPClient * client,
  *
  * Get the #GstRTSPMountPoints object that @client uses to manage its sessions.
  *
- * Returns: (transfer full): a #GstRTSPMountPoints, unref after usage.
+ * Returns: (transfer full) (nullable): a #GstRTSPMountPoints, unref after usage.
  */
 GstRTSPMountPoints *
 gst_rtsp_client_get_mount_points (GstRTSPClient * client)
@@ -3733,7 +3733,7 @@ gst_rtsp_client_get_mount_points (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_auth:
  * @client: a #GstRTSPClient
- * @auth: (transfer none): a #GstRTSPAuth
+ * @auth: (transfer none) (nullable): a #GstRTSPAuth
  *
  * configure @auth to be used as the authentication manager of @client.
  */
@@ -3766,8 +3766,8 @@ gst_rtsp_client_set_auth (GstRTSPClient * client, GstRTSPAuth * auth)
  *
  * Get the #GstRTSPAuth used as the authentication manager of @client.
  *
- * Returns: (transfer full): the #GstRTSPAuth of @client. g_object_unref() after
- * usage.
+ * Returns: (transfer full) (nullable): the #GstRTSPAuth of @client.
+ * g_object_unref() after usage.
  */
 GstRTSPAuth *
 gst_rtsp_client_get_auth (GstRTSPClient * client)
@@ -3790,7 +3790,7 @@ gst_rtsp_client_get_auth (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_thread_pool:
  * @client: a #GstRTSPClient
- * @pool: (transfer none): a #GstRTSPThreadPool
+ * @pool: (transfer none) (nullable): a #GstRTSPThreadPool
  *
  * configure @pool to be used as the thread pool of @client.
  */
@@ -3823,7 +3823,7 @@ gst_rtsp_client_set_thread_pool (GstRTSPClient * client,
  *
  * Get the #GstRTSPThreadPool used as the thread pool of @client.
  *
- * Returns: (transfer full): the #GstRTSPThreadPool of @client. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPThreadPool of @client. g_object_unref() after
  * usage.
  */
 GstRTSPThreadPool *
@@ -3915,7 +3915,7 @@ no_address:
  *
  * Get the #GstRTSPConnection of @client.
  *
- * Returns: (transfer none): the #GstRTSPConnection of @client.
+ * Returns: (transfer none) (nullable): the #GstRTSPConnection of @client.
  * The connection object returned remains valid until the client is freed.
  */
 GstRTSPConnection *
