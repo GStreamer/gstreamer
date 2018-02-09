@@ -7534,7 +7534,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         }
         if (QT_FOURCC (buffer + 12) == FOURCC_hdlr) {
           /* Variant 1: What QTFF specifies. 'meta' is a short header which
-           * starts with a 'hldr' atom */
+           * starts with a 'hdlr' atom */
           qtdemux_parse_container (qtdemux, node, buffer + 8, end);
         } else if (QT_UINT32 (buffer + 8) == 0x00000000) {
           /* Variant 2: What ISO BMFF specifies. 'meta' is a _full_ atom
