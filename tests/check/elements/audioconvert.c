@@ -93,7 +93,7 @@ cleanup_audioconvert (GstElement * audioconvert)
 /* returns a newly allocated caps */
 static GstCaps *
 get_int_caps (guint channels, gint endianness, guint width,
-    guint depth, gboolean signedness)
+    guint depth, gboolean signedness, GstAudioLayout layout)
 {
   GstCaps *caps;
   GstAudioFormat fmt;
@@ -108,6 +108,7 @@ get_int_caps (guint channels, gint endianness, guint width,
 
   gst_audio_info_init (&info);
   gst_audio_info_set_format (&info, fmt, GST_AUDIO_DEF_RATE, channels, NULL);
+  info.layout = layout;
 
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
@@ -134,7 +135,8 @@ get_float_format (gint endianness, gint width)
 
 /* returns a newly allocated caps */
 static GstCaps *
-get_float_caps (guint channels, gint endianness, guint width)
+get_float_caps (guint channels, gint endianness, guint width,
+    GstAudioLayout layout)
 {
   GstCaps *caps;
   GstAudioInfo info;
@@ -144,6 +146,7 @@ get_float_caps (guint channels, gint endianness, guint width)
   gst_audio_info_init (&info);
   gst_audio_info_set_format (&info, get_float_format (endianness, width),
       GST_AUDIO_DEF_RATE, channels, NULL);
+  info.layout = layout;
 
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
@@ -330,7 +333,7 @@ static GstAudioChannelPosition undefined_positions[][15] = {
  */
 static GstCaps *
 get_float_mc_caps (guint channels, gint endianness, guint width,
-    const GstAudioChannelPosition * position)
+    GstAudioLayout layout, const GstAudioChannelPosition * position)
 {
   GstCaps *caps;
   GstAudioInfo info;
@@ -353,6 +356,8 @@ get_float_mc_caps (guint channels, gint endianness, guint width,
         GST_AUDIO_DEF_RATE, channels, pos);
   }
 
+  info.layout = layout;
+
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
 
@@ -363,7 +368,8 @@ get_float_mc_caps (guint channels, gint endianness, guint width,
 
 static GstCaps *
 get_int_mc_caps (guint channels, gint endianness, guint width,
-    guint depth, gboolean signedness, const GstAudioChannelPosition * position)
+    guint depth, gboolean signedness, GstAudioLayout layout,
+    const GstAudioChannelPosition * position)
 {
   GstCaps *caps;
   GstAudioFormat fmt;
@@ -388,6 +394,8 @@ get_int_mc_caps (guint channels, gint endianness, guint width,
     gst_audio_info_set_format (&info, fmt, GST_AUDIO_DEF_RATE, channels, pos);
   }
 
+  info.layout = layout;
+
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
 
@@ -404,6 +412,7 @@ verify_convert (const gchar * which, void *in, int inlength,
 {
   GstBuffer *inbuffer, *outbuffer;
   GstElement *audioconvert;
+  GstAudioInfo in_info;
 
   GST_DEBUG ("verifying conversion %s", which);
   GST_DEBUG ("incaps: %" GST_PTR_FORMAT, incaps);
@@ -423,6 +432,9 @@ verify_convert (const gchar * which, void *in, int inlength,
   inbuffer = gst_buffer_new_and_alloc (inlength);
   gst_buffer_fill (inbuffer, 0, in, inlength);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  fail_unless (gst_audio_info_from_caps (&in_info, incaps));
+  gst_buffer_add_audio_meta (inbuffer, &in_info, inlength / in_info.bpf, NULL);
 
   if (!in_place_allowed) {
     /* take extra ref to force processing */
@@ -505,6 +517,8 @@ done:
         in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
         FALSE)
 
+#define INTERLEAVED GST_AUDIO_LAYOUT_INTERLEAVED
+#define PLANAR GST_AUDIO_LAYOUT_NON_INTERLEAVED
 
 GST_START_TEST (test_int16)
 {
@@ -514,8 +528,8 @@ GST_START_TEST (test_int16)
     gint16 out[] = { 8064, 1024 };
 
     RUN_CONVERSION ("int16 stereo to mono",
-        in, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+        in, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
   }
   /* mono to stereo */
   {
@@ -523,8 +537,8 @@ GST_START_TEST (test_int16)
     gint16 out[] = { 512, 512, 1024, 1024 };
 
     RUN_CONVERSION ("int16 mono to stereo",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE));
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
   }
   /* signed -> unsigned */
   {
@@ -532,11 +546,11 @@ GST_START_TEST (test_int16)
     guint16 out[] = { 32768, 1, 65535, 0 };
 
     RUN_CONVERSION ("int16 signed to unsigned",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE));
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED));
     RUN_CONVERSION ("int16 unsigned to signed",
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE),
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED),
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
   }
 }
 
@@ -551,8 +565,8 @@ GST_START_TEST (test_float32)
     gfloat out[] = { 0.29609375, 0.03125 };
 
     RUN_CONVERSION ("float32 stereo to mono",
-        in, get_float_caps (2, G_BYTE_ORDER, 32),
-        out, get_float_caps (1, G_BYTE_ORDER, 32));
+        in, get_float_caps (2, G_BYTE_ORDER, 32, INTERLEAVED),
+        out, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED));
   }
   /* mono to stereo */
   {
@@ -560,8 +574,8 @@ GST_START_TEST (test_float32)
     gfloat out[] = { 0.015625, 0.015625, 0.03125, 0.03125 };
 
     RUN_CONVERSION ("float32 mono to stereo",
-        in, get_float_caps (1, G_BYTE_ORDER, 32),
-        out, get_float_caps (2, G_BYTE_ORDER, 32));
+        in, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED),
+        out, get_float_caps (2, G_BYTE_ORDER, 32, INTERLEAVED));
   }
 }
 
@@ -577,12 +591,12 @@ GST_START_TEST (test_int_conversion)
     gint16 out[] = { 0, 256, 512, 32512, -32512 };
 
     RUN_CONVERSION ("int 8bit to 16bit signed",
-        in, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        in, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED)
         );
     RUN_CONVERSION ("int 16bit signed to 8bit",
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        in, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        in, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED)
         );
   }
   /* 16 -> 8 signed */
@@ -591,8 +605,8 @@ GST_START_TEST (test_int_conversion)
     gint8 out[] = { 0, 0, 1, 1, 1, 2 };
 
     RUN_CONVERSION ("16 bit to 8 signed",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED)
         );
   }
   /* 8 unsigned <-> 16 signed */
@@ -603,14 +617,14 @@ GST_START_TEST (test_int_conversion)
     GstCaps *incaps, *outcaps;
 
     /* exploded for easier valgrinding */
-    incaps = get_int_caps (1, G_BYTE_ORDER, 8, 8, FALSE);
-    outcaps = get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE);
+    incaps = get_int_caps (1, G_BYTE_ORDER, 8, 8, FALSE, INTERLEAVED);
+    outcaps = get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED);
     GST_DEBUG ("incaps: %" GST_PTR_FORMAT, incaps);
     GST_DEBUG ("outcaps: %" GST_PTR_FORMAT, outcaps);
     RUN_CONVERSION ("8 unsigned to 16 signed", in, incaps, out, outcaps);
     RUN_CONVERSION ("16 signed to 8 unsigned", out, get_int_caps (1,
-            G_BYTE_ORDER, 16, 16, TRUE), in, get_int_caps (1, G_BYTE_ORDER, 8,
-            8, FALSE)
+            G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED), in, get_int_caps (1,
+            G_BYTE_ORDER, 8, 8, FALSE, INTERLEAVED)
         );
   }
   /* 8 <-> 24 signed */
@@ -622,10 +636,12 @@ GST_START_TEST (test_int_conversion)
      * interpreted during conversion */
 
     RUN_CONVERSION ("8 to 24 signed", in, get_int_caps (1, G_BYTE_ORDER, 8, 8,
-            TRUE), out, get_int_caps (1, G_LITTLE_ENDIAN, 24, 24, TRUE)
+            TRUE, INTERLEAVED), out, get_int_caps (1, G_LITTLE_ENDIAN, 24, 24,
+            TRUE, INTERLEAVED)
         );
     RUN_CONVERSION ("24 signed to 8", out, get_int_caps (1, G_LITTLE_ENDIAN, 24,
-            24, TRUE), in, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+            24, TRUE, INTERLEAVED), in, get_int_caps (1, G_BYTE_ORDER, 8, 8,
+            TRUE, INTERLEAVED)
         );
   }
 
@@ -634,12 +650,12 @@ GST_START_TEST (test_int_conversion)
     gint16 in[] = { 0, 128, -128 };
     guint16 out[] = { 32768, 32896, 32640 };
     RUN_CONVERSION ("16 signed to 16 unsigned",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE)
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED)
         );
     RUN_CONVERSION ("16 unsigned to 16 signed",
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE),
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED),
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED)
         );
   }
 
@@ -661,8 +677,8 @@ GST_START_TEST (test_int_conversion)
       -32
     };
     RUN_CONVERSION ("32 signed to 16 signed for rounding",
-        in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED)
         );
   }
 
@@ -684,8 +700,8 @@ GST_START_TEST (test_int_conversion)
       (1 << 15) - 32
     };
     RUN_CONVERSION ("32 signed to 16 unsigned for rounding",
-        in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE)
+        in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED)
         );
   }
 }
@@ -700,12 +716,12 @@ GST_START_TEST (test_float_conversion)
     gfloat out[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
 
     RUN_CONVERSION ("64 float to 32 float",
-        in, get_float_caps (1, G_BYTE_ORDER, 64),
-        out, get_float_caps (1, G_BYTE_ORDER, 32));
+        in, get_float_caps (1, G_BYTE_ORDER, 64, INTERLEAVED),
+        out, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED));
 
     RUN_CONVERSION ("32 float to 64 float",
-        out, get_float_caps (1, G_BYTE_ORDER, 32),
-        in, get_float_caps (1, G_BYTE_ORDER, 64));
+        out, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED),
+        in, get_float_caps (1, G_BYTE_ORDER, 64, INTERLEAVED));
   }
 
   /* 32-bit float little endian <-> big endian */
@@ -718,12 +734,12 @@ GST_START_TEST (test_float_conversion)
     };
 
     RUN_CONVERSION ("32 float LE to BE",
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 32),
-        be, get_float_caps (1, G_BIG_ENDIAN, 32));
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 32, INTERLEAVED),
+        be, get_float_caps (1, G_BIG_ENDIAN, 32, INTERLEAVED));
 
     RUN_CONVERSION ("32 float BE to LE",
-        be, get_float_caps (1, G_BIG_ENDIAN, 32),
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 32));
+        be, get_float_caps (1, G_BIG_ENDIAN, 32, INTERLEAVED),
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 32, INTERLEAVED));
   }
 
   /* 64-bit float little endian <-> big endian */
@@ -738,12 +754,12 @@ GST_START_TEST (test_float_conversion)
     };
 
     RUN_CONVERSION ("64 float LE to BE",
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 64),
-        be, get_float_caps (1, G_BIG_ENDIAN, 64));
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 64, INTERLEAVED),
+        be, get_float_caps (1, G_BIG_ENDIAN, 64, INTERLEAVED));
 
     RUN_CONVERSION ("64 float BE to LE",
-        be, get_float_caps (1, G_BIG_ENDIAN, 64),
-        le, get_float_caps (1, G_LITTLE_ENDIAN, 64));
+        be, get_float_caps (1, G_BIG_ENDIAN, 64, INTERLEAVED),
+        le, get_float_caps (1, G_LITTLE_ENDIAN, 64, INTERLEAVED));
   }
 }
 
@@ -770,11 +786,11 @@ GST_START_TEST (test_int_float_conversion)
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
     RUN_CONVERSION ("32 float le to 16 signed",
-        in_le, get_float_caps (1, G_LITTLE_ENDIAN, 32),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+        in_le, get_float_caps (1, G_LITTLE_ENDIAN, 32, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
     RUN_CONVERSION ("32 float be to 16 signed",
-        in_be, get_float_caps (1, G_BIG_ENDIAN, 32),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+        in_be, get_float_caps (1, G_BIG_ENDIAN, 32, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
   }
 
   {
@@ -782,8 +798,8 @@ GST_START_TEST (test_int_float_conversion)
     gfloat out[] = { 0.0, -1.0, 0.5, -0.5 };
 
     RUN_CONVERSION ("16 signed to 32 float",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_float_caps (1, G_BYTE_ORDER, 32));
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED));
   }
 
   /* 64 float <-> 16 signed */
@@ -805,11 +821,11 @@ GST_START_TEST (test_int_float_conversion)
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
     RUN_CONVERSION ("64 float LE to 16 signed",
-        in_le, get_float_caps (1, G_LITTLE_ENDIAN, 64),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+        in_le, get_float_caps (1, G_LITTLE_ENDIAN, 64, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
     RUN_CONVERSION ("64 float BE to 16 signed",
-        in_be, get_float_caps (1, G_BIG_ENDIAN, 64),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+        in_be, get_float_caps (1, G_BIG_ENDIAN, 64, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
   }
   {
     gint16 in[] = { 0, -32768, 16384, -16384 };
@@ -820,8 +836,8 @@ GST_START_TEST (test_int_float_conversion)
     };
 
     RUN_CONVERSION ("16 signed to 64 float",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_float_caps (1, G_BYTE_ORDER, 64));
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_float_caps (1, G_BYTE_ORDER, 64, INTERLEAVED));
   }
   {
     gint32 in[] =
@@ -833,8 +849,8 @@ GST_START_TEST (test_int_float_conversion)
     };
 
     RUN_CONVERSION ("32 signed to 64 float",
-        in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
-        out, get_float_caps (1, G_BYTE_ORDER, 64));
+        in, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED),
+        out, get_float_caps (1, G_BYTE_ORDER, 64, INTERLEAVED));
   }
 }
 
@@ -847,9 +863,11 @@ GST_START_TEST (test_multichannel_conversion)
     gfloat out[] = { 0.0, 0.0 };
 
     RUN_CONVERSION ("3 channels to 1", in, get_float_mc_caps (3,
-            G_BYTE_ORDER, 32, NULL), out, get_float_caps (1, G_BYTE_ORDER, 32));
+            G_BYTE_ORDER, 32, INTERLEAVED, NULL), out, get_float_caps (1,
+            G_BYTE_ORDER, 32, INTERLEAVED));
     RUN_CONVERSION ("1 channels to 3", out, get_float_caps (1, G_BYTE_ORDER,
-            32), in, get_float_mc_caps (3, G_BYTE_ORDER, 32, NULL));
+            32, INTERLEAVED), in, get_float_mc_caps (3, G_BYTE_ORDER, 32,
+            INTERLEAVED, NULL));
   }
 
   {
@@ -857,11 +875,11 @@ GST_START_TEST (test_multichannel_conversion)
     gint16 out[] = { 0, 0 };
 
     RUN_CONVERSION ("3 channels to 1", in, get_int_mc_caps (3,
-            G_BYTE_ORDER, 16, 16, TRUE, NULL), out,
-        get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE));
+            G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, NULL), out,
+        get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
     RUN_CONVERSION ("1 channels to 3", out, get_int_caps (1, G_BYTE_ORDER, 16,
-            16, TRUE), in, get_int_mc_caps (3, G_BYTE_ORDER, 16, 16, TRUE,
-            NULL));
+            16, TRUE, INTERLEAVED), in, get_int_mc_caps (3, G_BYTE_ORDER, 16,
+            16, TRUE, INTERLEAVED, NULL));
   }
 
   {
@@ -873,9 +891,9 @@ GST_START_TEST (test_multichannel_conversion)
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
     };
     GstCaps *in_caps =
-        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps =
-        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, in_layout);
+    GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("1 channels to 2 with standard layout", in,
         in_caps, out, out_caps);
@@ -884,8 +902,10 @@ GST_START_TEST (test_multichannel_conversion)
   {
     gint16 in[] = { 1, 2 };
     gint16 out[] = { 1, 1, 2, 2 };
-    GstCaps *in_caps = get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE);
-    GstCaps *out_caps = get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE);
+    GstCaps *in_caps =
+        get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED);
+    GstCaps *out_caps =
+        get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED);
 
     RUN_CONVERSION ("1 channels to 2 with standard layout and no positions set",
         in, gst_caps_copy (in_caps), out, gst_caps_copy (out_caps));
@@ -904,9 +924,9 @@ GST_START_TEST (test_multichannel_conversion)
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
     };
     GstCaps *in_caps =
-        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps =
-        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, in_layout);
+    GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("1 channels to 2 with non-standard layout", in,
         in_caps, out, out_caps);
@@ -922,9 +942,9 @@ GST_START_TEST (test_multichannel_conversion)
     GstAudioChannelPosition out_layout[1] =
         { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER };
     GstCaps *in_caps =
-        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps =
-        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, in_layout);
+    GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
         in_caps, out, out_caps);
@@ -939,9 +959,9 @@ GST_START_TEST (test_multichannel_conversion)
     };
     GstAudioChannelPosition out_layout[1] = { GST_AUDIO_CHANNEL_POSITION_MONO };
     GstCaps *in_caps =
-        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps =
-        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, in_layout);
+    GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("2 channels to 1 with standard layout", in,
         in_caps, out, out_caps);
@@ -956,9 +976,9 @@ GST_START_TEST (test_multichannel_conversion)
     };
     GstAudioChannelPosition out_layout[1] = { GST_AUDIO_CHANNEL_POSITION_MONO };
     GstCaps *in_caps =
-        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps =
-        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, in_layout);
+    GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
         in_caps, out, out_caps);
@@ -973,9 +993,9 @@ GST_START_TEST (test_multichannel_conversion)
     };
     GstAudioChannelPosition out_layout[1] = { GST_AUDIO_CHANNEL_POSITION_MONO };
     GstCaps *in_caps =
-        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps =
-        get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, in_layout);
+    GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("2 channels to 1 with non-standard layout", in,
         in_caps, out, out_caps);
@@ -983,8 +1003,10 @@ GST_START_TEST (test_multichannel_conversion)
   {
     gint16 in[] = { 4, 5, 4, 2, 2, 1 };
     gint16 out[] = { 3, 3 };
-    GstCaps *in_caps = get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, TRUE, NULL);
-    GstCaps *out_caps = get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE);
+    GstCaps *in_caps =
+        get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, NULL);
+    GstCaps *out_caps =
+        get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED);
 
     RUN_CONVERSION ("5.1 to 2 channels", in, in_caps, out, out_caps);
   }
@@ -1004,9 +1026,10 @@ GST_START_TEST (test_multichannel_conversion)
       GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
     };
-    GstCaps *in_caps =
-        get_int_mc_caps (11, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
-    GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, NULL);
+    GstCaps *in_caps = get_int_mc_caps (11, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, in_layout);
+    GstCaps *out_caps =
+        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, NULL);
 
     RUN_CONVERSION ("11 channels to 2", in, in_caps, out, out_caps);
   }
@@ -1026,9 +1049,10 @@ GST_START_TEST (test_multichannel_conversion)
       GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
     };
-    GstCaps *in_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, NULL);
-    GstCaps *out_caps =
-        get_int_mc_caps (11, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
+    GstCaps *in_caps =
+        get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, NULL);
+    GstCaps *out_caps = get_int_mc_caps (11, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, out_layout);
 
     RUN_CONVERSION ("2 channels to 11", in, in_caps, out, out_caps);
   }
@@ -1044,12 +1068,12 @@ GST_START_TEST (test_passthrough)
     gint8 data[] = { 0, 1, 2, 127, -127 };
 
     RUN_CONVERSION ("int 8 bit passthrough",
-        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE),
-        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED),
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED)
         );
     RUN_CONVERSION_NOT_INPLACE ("int 8 bit passthrough",
-        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE),
-        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE)
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED),
+        data, get_int_caps (1, G_BYTE_ORDER, 8, 8, TRUE, INTERLEAVED)
         );
   }
   /* int 16 bit signed */
@@ -1057,12 +1081,12 @@ GST_START_TEST (test_passthrough)
     gint16 data[] = { 0, 256, 512, 32512, -32512 };
 
     RUN_CONVERSION ("int 16 bit signed passthrough",
-        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED)
         );
     RUN_CONVERSION_NOT_INPLACE ("int 16 bit signed passthrough",
-        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        data, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED)
         );
   }
   /* int 32 bit signed */
@@ -1075,12 +1099,12 @@ GST_START_TEST (test_passthrough)
       (-(32 << 16))
     };
     RUN_CONVERSION ("int 32 bit signed passthrough",
-        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
-        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE)
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED),
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED)
         );
     RUN_CONVERSION_NOT_INPLACE ("int 32 bit signed passthrough",
-        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE),
-        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE)
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED),
+        data, get_int_caps (1, G_BYTE_ORDER, 32, 32, TRUE, INTERLEAVED)
         );
   }
 
@@ -1089,11 +1113,11 @@ GST_START_TEST (test_passthrough)
     gint16 data[] = { 0, 0, 1, 1, 2, 2, 3, 3 };
 
     RUN_CONVERSION ("int 16 bit signed 2 channel passthrough",
-        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE),
-        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE));
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
     RUN_CONVERSION_NOT_INPLACE ("int 16 bit signed 2 channel passthrough",
-        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE),
-        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE));
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        data, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
   }
 }
 
@@ -1174,9 +1198,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 out[] = { 0x2000 };
     guint8 in[] = { 0x20 };
     GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[1 - 1]);
+        INTERLEAVED, undefined_positions[1 - 1]);
     GstCaps *in_caps = get_int_mc_caps (1, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[1 - 1]);
+        INTERLEAVED, undefined_positions[1 - 1]);
 
     RUN_CONVERSION ("1 channel, undefined layout, identity conversion, "
         "int8 => int16", in, in_caps, out, out_caps);
@@ -1187,9 +1211,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 out[] = { 0x8000, 0x2000 };
     guint8 in[] = { 0x80, 0x20 };
     GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[2 - 1]);
+        INTERLEAVED, undefined_positions[2 - 1]);
     GstCaps *in_caps = get_int_mc_caps (2, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[2 - 1]);
+        INTERLEAVED, undefined_positions[2 - 1]);
 
     RUN_CONVERSION ("2 channels, undefined layout, identity conversion, "
         "int8 => int16", in, in_caps, out, out_caps);
@@ -1200,9 +1224,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 out[] = { 0x0000, 0x2000, 0x8000, 0x2000, 0x0000, 0xff00 };
     guint8 in[] = { 0x00, 0x20, 0x80, 0x20, 0x00, 0xff };
     GstCaps *out_caps = get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[6 - 1]);
+        INTERLEAVED, undefined_positions[6 - 1]);
     GstCaps *in_caps = get_int_mc_caps (6, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[6 - 1]);
+        INTERLEAVED, undefined_positions[6 - 1]);
 
     RUN_CONVERSION ("6 channels, undefined layout, identity conversion, "
         "int8 => int16", in, in_caps, out, out_caps);
@@ -1215,9 +1239,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     };
     guint8 in[] = { 0x00, 0xff, 0x00, 0x20, 0x80, 0x20, 0x00, 0xff, 0x00 };
     GstCaps *out_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[9 - 1]);
+        INTERLEAVED, undefined_positions[9 - 1]);
     GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[9 - 1]);
+        INTERLEAVED, undefined_positions[9 - 1]);
 
     RUN_CONVERSION ("9 channels, undefined layout, identity conversion, "
         "int8 => int16", in, in_caps, out, out_caps);
@@ -1234,9 +1258,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
       0x20, 0x80, 0x20, 0x00
     };
     GstCaps *out_caps = get_int_mc_caps (15, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[15 - 1]);
+        INTERLEAVED, undefined_positions[15 - 1]);
     GstCaps *in_caps = get_int_mc_caps (15, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[15 - 1]);
+        INTERLEAVED, undefined_positions[15 - 1]);
 
     RUN_CONVERSION ("15 channels, undefined layout, identity conversion, "
         "int8 => int16", in, in_caps, out, out_caps);
@@ -1249,9 +1273,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0x2000 };
     guint8 out[] = { 0x20 };
     GstCaps *in_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[1 - 1]);
+        INTERLEAVED, undefined_positions[1 - 1]);
     GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[1 - 1]);
+        INTERLEAVED, undefined_positions[1 - 1]);
 
     RUN_CONVERSION ("1 channel, undefined layout, identity conversion, "
         "int16 => int8", in, in_caps, out, out_caps);
@@ -1262,9 +1286,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0x8000, 0x2000 };
     guint8 out[] = { 0x80, 0x20 };
     GstCaps *in_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[2 - 1]);
+        INTERLEAVED, undefined_positions[2 - 1]);
     GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[2 - 1]);
+        INTERLEAVED, undefined_positions[2 - 1]);
 
     RUN_CONVERSION ("2 channels, undefined layout, identity conversion, "
         "int16 => int8", in, in_caps, out, out_caps);
@@ -1275,9 +1299,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0x0000, 0x2000, 0x8000, 0x2000, 0x0000, 0xff00 };
     guint8 out[] = { 0x00, 0x20, 0x80, 0x20, 0x00, 0xff };
     GstCaps *in_caps = get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[6 - 1]);
+        INTERLEAVED, undefined_positions[6 - 1]);
     GstCaps *out_caps = get_int_mc_caps (6, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[6 - 1]);
+        INTERLEAVED, undefined_positions[6 - 1]);
 
     RUN_CONVERSION ("6 channels, undefined layout, identity conversion, "
         "int16 => int8", in, in_caps, out, out_caps);
@@ -1290,9 +1314,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     };
     guint8 out[] = { 0x00, 0xff, 0x00, 0x20, 0x80, 0x20, 0x00, 0xff, 0x00 };
     GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[9 - 1]);
+        INTERLEAVED, undefined_positions[9 - 1]);
     GstCaps *out_caps = get_int_mc_caps (9, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[9 - 1]);
+        INTERLEAVED, undefined_positions[9 - 1]);
 
     RUN_CONVERSION ("9 channels, undefined layout, identity conversion, "
         "int16 => int8", in, in_caps, out, out_caps);
@@ -1309,9 +1333,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
       0x20, 0x80, 0x20, 0x00
     };
     GstCaps *in_caps = get_int_mc_caps (15, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[15 - 1]);
+        INTERLEAVED, undefined_positions[15 - 1]);
     GstCaps *out_caps = get_int_mc_caps (15, G_BYTE_ORDER, 8, 8, FALSE,
-        undefined_positions[15 - 1]);
+        INTERLEAVED, undefined_positions[15 - 1]);
 
     RUN_CONVERSION ("15 channels, undefined layout, identity conversion, "
         "int16 => int8", in, in_caps, out, out_caps);
@@ -1325,9 +1349,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0x2000 };
     guint16 out[] = { 0x2000 };
     GstCaps *in_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[1 - 1]);
+        INTERLEAVED, undefined_positions[1 - 1]);
     GstCaps *out_caps = get_int_mc_caps (1, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[1 - 1]);
+        INTERLEAVED, undefined_positions[1 - 1]);
 
     RUN_CONVERSION ("1 channel, undefined layout, identity conversion, "
         "int16 => int16", in, in_caps, out, out_caps);
@@ -1338,9 +1362,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0x8000, 0x2000 };
     guint16 out[] = { 0x8000, 0x2000 };
     GstCaps *in_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[2 - 1]);
+        INTERLEAVED, undefined_positions[2 - 1]);
     GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[2 - 1]);
+        INTERLEAVED, undefined_positions[2 - 1]);
 
     RUN_CONVERSION ("2 channels, undefined layout, identity conversion, "
         "int16 => int16", in, in_caps, out, out_caps);
@@ -1351,9 +1375,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0x0000, 0x2000, 0x8000, 0x2000, 0x0000, 0xff00 };
     guint16 out[] = { 0x0000, 0x2000, 0x8000, 0x2000, 0x0000, 0xff00 };
     GstCaps *in_caps = get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[6 - 1]);
+        INTERLEAVED, undefined_positions[6 - 1]);
     GstCaps *out_caps = get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[6 - 1]);
+        INTERLEAVED, undefined_positions[6 - 1]);
 
     RUN_CONVERSION ("6 channels, undefined layout, identity conversion, "
         "int16 => int16", in, in_caps, out, out_caps);
@@ -1368,9 +1392,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
       0x0000, 0xff00, 0x0000
     };
     GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[9 - 1]);
+        INTERLEAVED, undefined_positions[9 - 1]);
     GstCaps *out_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[9 - 1]);
+        INTERLEAVED, undefined_positions[9 - 1]);
 
     RUN_CONVERSION ("9 channels, undefined layout, identity conversion, "
         "int16 => int16", in, in_caps, out, out_caps);
@@ -1387,9 +1411,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
       0x0000
     };
     GstCaps *in_caps = get_int_mc_caps (15, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[15 - 1]);
+        INTERLEAVED, undefined_positions[15 - 1]);
     GstCaps *out_caps = get_int_mc_caps (15, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[15 - 1]);
+        INTERLEAVED, undefined_positions[15 - 1]);
 
     RUN_CONVERSION ("15 channels, undefined layout, identity conversion, "
         "int16 => int16", in, in_caps, out, out_caps);
@@ -1405,9 +1429,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     };
     gfloat out[] = { -1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, -1.0 };
     GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[9 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (9, G_BYTE_ORDER, 32, INTERLEAVED,
         undefined_positions[9 - 1]);
-    GstCaps *out_caps =
-        get_float_mc_caps (9, G_BYTE_ORDER, 32, undefined_positions[9 - 1]);
 
     RUN_CONVERSION ("9 channels, undefined layout, identity conversion, "
         "int16 => float", in, in_caps, out, out_caps);
@@ -1424,9 +1448,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
       0.0, -1.0
     };
     GstCaps *in_caps = get_int_mc_caps (15, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[15 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (15, G_BYTE_ORDER, 32, INTERLEAVED,
         undefined_positions[15 - 1]);
-    GstCaps *out_caps =
-        get_float_mc_caps (15, G_BYTE_ORDER, 32, undefined_positions[15 - 1]);
 
     RUN_CONVERSION ("15 channels, undefined layout, identity conversion, "
         "int16 => float", in, in_caps, out, out_caps);
@@ -1441,9 +1465,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     };
     gfloat out[] = { -1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, -1.0 };
     GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[9 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (9, G_BYTE_ORDER, 32, INTERLEAVED,
         undefined_positions[9 - 1]);
-    GstCaps *out_caps =
-        get_float_mc_caps (9, G_BYTE_ORDER, 32, undefined_positions[9 - 1]);
 
     gst_structure_remove_field (gst_caps_get_structure (out_caps, 0),
         "channel-mask");
@@ -1464,9 +1488,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
       0.0, -1.0
     };
     GstCaps *in_caps = get_int_mc_caps (15, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[15 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (15, G_BYTE_ORDER, 32, INTERLEAVED,
         undefined_positions[15 - 1]);
-    GstCaps *out_caps =
-        get_float_mc_caps (15, G_BYTE_ORDER, 32, undefined_positions[15 - 1]);
 
     gst_structure_remove_field (gst_caps_get_structure (out_caps, 0),
         "channel-mask");
@@ -1480,8 +1504,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     guint16 in[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     gfloat out[] = { -1.0, -1.0 };
     GstCaps *in_caps = get_int_mc_caps (8, G_BYTE_ORDER, 16, 16, FALSE,
-        undefined_positions[8 - 1]);
-    GstCaps *out_caps = get_float_mc_caps (2, G_BYTE_ORDER, 32, NULL);
+        INTERLEAVED, undefined_positions[8 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (2, G_BYTE_ORDER, 32, INTERLEAVED,
+        NULL);
 
     RUN_CONVERSION_TO_FAIL ("8 channels with layout => 2 channels",
         in, in_caps, out, out_caps);
@@ -1504,8 +1529,9 @@ GST_START_TEST (test_convert_undefined_multichannel)
     gint16 in[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     gint16 out[] = { 0, 0 };
     GstCaps *in_caps =
-        get_int_mc_caps (8, G_BYTE_ORDER, 16, 16, TRUE, layout8ch);
-    GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, NULL);
+        get_int_mc_caps (8, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, layout8ch);
+    GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE,
+        INTERLEAVED, NULL);
 
     RUN_CONVERSION ("8 channels with layout => 2 channels",
         in, in_caps, out, out_caps);
@@ -1561,7 +1587,7 @@ GST_START_TEST (test_preserve_width)
 
   for (i = 0; test_formats[i].width; i++) {
     gint width = test_formats[i].width;
-    incaps = get_int_caps (1, G_BIG_ENDIAN, width, width, TRUE);
+    incaps = get_int_caps (1, G_BIG_ENDIAN, width, width, TRUE, INTERLEAVED);
     gst_pad_set_caps (mysrcpad, incaps);
 
     convert_outcaps = gst_pad_get_current_caps (mysinkpad);
@@ -1582,7 +1608,7 @@ GST_START_TEST (test_gap_buffers)
 {
   GstBuffer *inbuffer, *outbuffer;
   GstElement *audioconvert;
-  GstCaps *caps = get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE);
+  GstCaps *caps = get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED);
   gint16 data[] = { 0, 0, 0, 0 };
   gsize data_len = sizeof (data);
   gint i;
