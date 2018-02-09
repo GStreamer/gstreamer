@@ -281,6 +281,7 @@ gboolean  gst_video_gl_texture_upload_meta_upload     (GstVideoGLTextureUploadMe
  * @y: y component of upper-left corner
  * @w: bounding box width
  * @h: bounding box height
+ * @params: list of #GstStructure containing element-specific params for downstream, see gst_video_region_of_interest_meta_add_params(). (Since: 1.14)
  *
  * Extra buffer metadata describing an image region of interest
  */
@@ -295,6 +296,8 @@ typedef struct {
   guint y;
   guint w;
   guint h;
+
+  GList *params;
 } GstVideoRegionOfInterestMeta;
 
 GST_EXPORT
@@ -325,6 +328,13 @@ GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_id (G
                                                                                guint         y,
                                                                                guint         w,
                                                                                guint         h);
+GST_EXPORT
+void gst_video_region_of_interest_meta_add_param (GstVideoRegionOfInterestMeta * meta,
+                                                  GstStructure * s);
+
+GST_EXPORT
+GstStructure *gst_video_region_of_interest_meta_get_param (GstVideoRegionOfInterestMeta * meta,
+                                                           const gchar * name);
 
 /**
  * GstVideoTimeCodeMeta:
