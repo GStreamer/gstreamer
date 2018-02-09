@@ -81,6 +81,7 @@ if build_gstgl
     [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep]],
     [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep]],
+    [ 'elements/glbin.c', not build_gstgl ],
     [ 'pipelines/gl-launch-lines.c', not build_gstgl ],
   ]
 endif

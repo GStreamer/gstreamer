@@ -31,6 +31,7 @@
 GST_DEBUG_CATEGORY (gst_debug_gl_sink_bin);
 #define GST_CAT_DEFAULT gst_debug_gl_sink_bin
 
+static void gst_gl_sink_bin_finalize (GObject * object);
 static void gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
 static void gst_gl_sink_bin_get_property (GObject * object, guint prop_id,
@@ -119,6 +120,7 @@ gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)
 
   gobject_class->set_property = gst_gl_sink_bin_set_property;
   gobject_class->get_property = gst_gl_sink_bin_get_property;
+  gobject_class->finalize = gst_gl_sink_bin_finalize;
 
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
@@ -264,6 +266,17 @@ gst_gl_sink_bin_init (GstGLSinkBin * self)
   }
 }
 
+static void
+gst_gl_sink_bin_finalize (GObject * object)
+{
+  GstGLSinkBin *self = GST_GL_SINK_BIN (object);
+
+  if (self->sink)
+    gst_object_unref (self->sink);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static gboolean
 _connect_sink_element (GstGLSinkBin * self)
 {
@@ -277,28 +290,40 @@ _connect_sink_element (GstGLSinkBin * self)
   return FALSE;
 }
 
-static void
+/*
+ * @sink: (transfer full):
+ */
+static gboolean
 gst_gl_sink_bin_set_sink (GstGLSinkBin * self, GstElement * sink)
 {
-  g_return_if_fail (GST_IS_ELEMENT (sink));
+  g_return_val_if_fail (GST_IS_ELEMENT (sink), FALSE);
 
   if (self->sink) {
+    gst_element_set_locked_state (self->sink, TRUE);
     gst_bin_remove (GST_BIN (self), self->sink);
+    gst_element_set_state (self->sink, GST_STATE_NULL);
+    gst_object_unref (self->sink);
     self->sink = NULL;
   }
-
-  /* We keep an indirect reference when the element is added */
   self->sink = sink;
 
-  if (sink && !_connect_sink_element (self))
+  if (sink && g_object_is_floating (sink))
+    gst_object_ref_sink (sink);
+
+  if (sink && !_connect_sink_element (self)) {
     self->sink = NULL;
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 void
 gst_gl_sink_bin_finish_init_with_element (GstGLSinkBin * self,
     GstElement * element)
 {
-  gst_gl_sink_bin_set_sink (self, element);
+  if (!gst_gl_sink_bin_set_sink (self, element))
+    gst_object_unref (element);
 }
 
 void
@@ -311,7 +336,7 @@ gst_gl_sink_bin_finish_init (GstGLSinkBin * self)
     element = klass->create_element ();
 
   if (element)
-    gst_gl_sink_bin_set_sink (self, element);
+    gst_gl_sink_bin_finish_init_with_element (self, element);
 }
 
 static void
@@ -379,9 +404,12 @@ gst_gl_sink_bin_change_state (GstElement * element, GstStateChange transition)
         if (klass->create_element)
           self->sink = klass->create_element ();
 
-        if (!self->sink)
+        if (!self->sink) {
           g_signal_emit (element,
               gst_gl_sink_bin_signals[SIGNAL_CREATE_ELEMENT], 0, &self->sink);
+          if (self->sink && g_object_is_floating (self->sink))
+            gst_object_ref_sink (self->sink);
+        }
 
         if (!self->sink) {
           GST_ERROR_OBJECT (element, "Failed to retrieve element");

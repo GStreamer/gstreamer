@@ -48,6 +48,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLFilterBin, gst_gl_filter_bin,
     GST_TYPE_BIN, GST_DEBUG_CATEGORY_INIT (gst_gl_filter_bin_debug,
         "glfilterbin", 0, "glfilterbin element"););
 
+static void gst_gl_filter_bin_finalize (GObject * object);
 static void gst_gl_filter_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_bin_set_property (GObject * object, guint prop_id,
@@ -72,6 +73,7 @@ gst_gl_filter_bin_class_init (GstGLFilterBinClass * klass)
 
   gobject_class->set_property = gst_gl_filter_bin_set_property;
   gobject_class->get_property = gst_gl_filter_bin_get_property;
+  gobject_class->finalize = gst_gl_filter_bin_finalize;
 
   gst_element_class_add_static_pad_template (element_class, &_src_pad_template);
 
@@ -142,6 +144,17 @@ gst_gl_filter_bin_init (GstGLFilterBin * self)
   }
 }
 
+static void
+gst_gl_filter_bin_finalize (GObject * object)
+{
+  GstGLFilterBin *self = GST_GL_FILTER_BIN (object);
+
+  if (self->filter)
+    gst_object_unref (self->filter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static gboolean
 _connect_filter_element (GstGLFilterBin * self)
 {
@@ -159,18 +172,40 @@ _connect_filter_element (GstGLFilterBin * self)
   return res;
 }
 
+/*
+ * @filter: (transfer full):
+ */
+static gboolean
+gst_gl_filter_bin_set_filter (GstGLFilterBin * self, GstElement * filter)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (filter), FALSE);
+
+  if (self->filter) {
+    gst_element_set_locked_state (self->filter, TRUE);
+    gst_bin_remove (GST_BIN (self), self->filter);
+    gst_element_set_state (self->filter, GST_STATE_NULL);
+    gst_object_unref (self->filter);
+    self->filter = NULL;
+  }
+  self->filter = filter;
+
+  if (filter && g_object_is_floating (filter))
+    gst_object_ref_sink (filter);
+
+  if (filter && !_connect_filter_element (self)) {
+    self->filter = NULL;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 void
 gst_gl_filter_bin_finish_init_with_element (GstGLFilterBin * self,
     GstElement * element)
 {
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  self->filter = element;
-
-  if (!_connect_filter_element (self)) {
-    gst_object_unref (self->filter);
-    self->filter = NULL;
-  }
+  if (!gst_gl_filter_bin_set_filter (self, element))
+    gst_object_unref (element);
 }
 
 void
@@ -210,17 +245,8 @@ gst_gl_filter_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILTER:
-    {
-      GstElement *filter = g_value_get_object (value);
-      if (self->filter)
-        gst_bin_remove (GST_BIN (self), self->filter);
-      self->filter = filter;
-      if (filter) {
-        gst_object_ref_sink (filter);
-        _connect_filter_element (self);
-      }
+      gst_gl_filter_bin_set_filter (self, g_value_get_object (value));
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -240,10 +266,13 @@ gst_gl_filter_bin_change_state (GstElement * element, GstStateChange transition)
         if (klass->create_element)
           self->filter = klass->create_element ();
 
-        if (!self->filter)
+        if (!self->filter) {
           g_signal_emit (element,
               gst_gl_filter_bin_signals[SIGNAL_CREATE_ELEMENT], 0,
               &self->filter);
+          if (self->filter && g_object_is_floating (self->filter))
+            gst_object_ref_sink (self->filter);
+        }
 
         if (!self->filter) {
           GST_ERROR_OBJECT (element, "Failed to retrieve element");

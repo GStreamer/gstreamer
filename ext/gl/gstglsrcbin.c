@@ -27,6 +27,7 @@
 GST_DEBUG_CATEGORY (gst_debug_gl_src_bin);
 #define GST_CAT_DEFAULT gst_debug_gl_src_bin
 
+static void gst_gl_src_bin_finalize (GObject * object);
 static void gst_gl_src_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
 static void gst_gl_src_bin_get_property (GObject * object, guint prop_id,
@@ -75,6 +76,7 @@ gst_gl_src_bin_class_init (GstGLSrcBinClass * klass)
 
   gobject_class->set_property = gst_gl_src_bin_set_property;
   gobject_class->get_property = gst_gl_src_bin_get_property;
+  gobject_class->finalize = gst_gl_src_bin_finalize;
 
   g_object_class_install_property (gobject_class, PROP_SRC,
       g_param_spec_object ("src",
@@ -135,6 +137,17 @@ gst_gl_src_bin_init (GstGLSrcBin * self)
   }
 }
 
+static void
+gst_gl_src_bin_finalize (GObject * object)
+{
+  GstGLSrcBin *self = GST_GL_SRC_BIN (object);
+
+  if (self->src)
+    gst_object_unref (self->src);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static gboolean
 _connect_src_element (GstGLSrcBin * self)
 {
@@ -151,18 +164,40 @@ _connect_src_element (GstGLSrcBin * self)
   return res;
 }
 
+/*
+ * @src: (transfer full):
+ */
+static gboolean
+gst_gl_src_bin_set_src (GstGLSrcBin * self, GstElement * src)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
+
+  if (self->src) {
+    gst_element_set_locked_state (self->src, TRUE);
+    gst_bin_remove (GST_BIN (self), self->src);
+    gst_element_set_state (self->src, GST_STATE_NULL);
+    gst_object_unref (self->src);
+    self->src = NULL;
+  }
+  self->src = src;
+
+  if (src && g_object_is_floating (src))
+    gst_object_ref_sink (src);
+
+  if (src && !_connect_src_element (self)) {
+    self->src = NULL;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 void
 gst_gl_src_bin_finish_init_with_element (GstGLSrcBin * self,
     GstElement * element)
 {
-  g_return_if_fail (GST_IS_ELEMENT (element));
-
-  self->src = element;
-
-  if (!_connect_src_element (self)) {
+  if (!gst_gl_src_bin_set_src (self, element))
     gst_object_unref (self->src);
-    self->src = NULL;
-  }
 }
 
 void
@@ -186,17 +221,8 @@ gst_gl_src_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SRC:
-    {
-      GstElement *src = g_value_get_object (value);
-      if (self->src)
-        gst_bin_remove (GST_BIN (self), self->src);
-      self->src = src;
-      if (src) {
-        gst_object_ref_sink (src);
-        _connect_src_element (self);
-      }
+      gst_gl_src_bin_set_src (self, g_value_get_object (value));
       break;
-    }
     default:
       if (self->src)
         g_object_set_property (G_OBJECT (self->src), pspec->name, value);
@@ -238,9 +264,12 @@ gst_gl_src_bin_change_state (GstElement * element, GstStateChange transition)
         if (klass->create_element)
           self->src = klass->create_element ();
 
-        if (!self->src)
+        if (!self->src) {
           g_signal_emit (element,
               gst_gl_src_bin_signals[SIGNAL_CREATE_ELEMENT], 0, &self->src);
+          if (self->src && g_object_is_floating (self->src))
+            gst_object_ref_sink (self->src);
+        }
 
         if (!self->src) {
           GST_ERROR_OBJECT (element, "Failed to retrieve element");
