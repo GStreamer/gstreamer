@@ -524,33 +524,48 @@ GST_START_TEST (test_int16)
 {
   /* stereo to mono */
   {
-    gint16 in[] = { 16384, -256, 1024, 1024 };
+    gint16 in_i[] = { 16384, -256, 1024, 1024 };
+    gint16 in_p[] = { 16384, 1024, -256, 1024 };
     gint16 out[] = { 8064, 1024 };
 
-    RUN_CONVERSION ("int16 stereo to mono",
-        in, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+    RUN_CONVERSION ("int16 stereo to mono interleaved",
+        in_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
         out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+    RUN_CONVERSION ("int16 stereo to mono planar",
+        in_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
   }
   /* mono to stereo */
   {
     gint16 in[] = { 512, 1024 };
-    gint16 out[] = { 512, 512, 1024, 1024 };
+    gint16 out_i[] = { 512, 512, 1024, 1024 };
+    gint16 out_p[] = { 512, 1024, 512, 1024 };
 
-    RUN_CONVERSION ("int16 mono to stereo",
+    RUN_CONVERSION ("int16 mono to stereo interleaved",
         in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
-        out, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+        out_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+    RUN_CONVERSION ("int16 mono to stereo planar",
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
   }
   /* signed -> unsigned */
   {
     gint16 in[] = { 0, -32767, 32767, -32768 };
     guint16 out[] = { 32768, 1, 65535, 0 };
 
-    RUN_CONVERSION ("int16 signed to unsigned",
+    RUN_CONVERSION ("int16 signed to unsigned interleaved",
         in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
         out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED));
-    RUN_CONVERSION ("int16 unsigned to signed",
+    RUN_CONVERSION ("int16 unsigned to signed interleaved",
         out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED),
         in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+
+    RUN_CONVERSION ("int16 signed to unsigned planar",
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, PLANAR));
+    RUN_CONVERSION ("int16 unsigned to signed planar",
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE, PLANAR),
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
   }
 }
 
@@ -561,21 +576,29 @@ GST_START_TEST (test_float32)
 {
   /* stereo to mono */
   {
-    gfloat in[] = { 0.6, -0.0078125, 0.03125, 0.03125 };
+    gfloat in_i[] = { 0.6, -0.0078125, 0.03125, 0.03125 };
+    gfloat in_p[] = { 0.6, 0.03125, -0.0078125, 0.03125 };
     gfloat out[] = { 0.29609375, 0.03125 };
 
-    RUN_CONVERSION ("float32 stereo to mono",
-        in, get_float_caps (2, G_BYTE_ORDER, 32, INTERLEAVED),
+    RUN_CONVERSION ("float32 stereo to mono interleaved",
+        in_i, get_float_caps (2, G_BYTE_ORDER, 32, INTERLEAVED),
         out, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED));
+    RUN_CONVERSION ("float32 stereo to mono planar",
+        in_p, get_float_caps (2, G_BYTE_ORDER, 32, PLANAR),
+        out, get_float_caps (1, G_BYTE_ORDER, 32, PLANAR));
   }
   /* mono to stereo */
   {
     gfloat in[] = { 0.015625, 0.03125 };
-    gfloat out[] = { 0.015625, 0.015625, 0.03125, 0.03125 };
+    gfloat out_i[] = { 0.015625, 0.015625, 0.03125, 0.03125 };
+    gfloat out_p[] = { 0.015625, 0.03125, 0.015625, 0.03125 };
 
-    RUN_CONVERSION ("float32 mono to stereo",
+    RUN_CONVERSION ("float32 mono to stereo interleaved",
         in, get_float_caps (1, G_BYTE_ORDER, 32, INTERLEAVED),
-        out, get_float_caps (2, G_BYTE_ORDER, 32, INTERLEAVED));
+        out_i, get_float_caps (2, G_BYTE_ORDER, 32, INTERLEAVED));
+    RUN_CONVERSION ("float32 mono to stereo planar",
+        in, get_float_caps (1, G_BYTE_ORDER, 32, PLANAR),
+        out_p, get_float_caps (2, G_BYTE_ORDER, 32, PLANAR));
   }
 }
 
@@ -1648,6 +1671,109 @@ GST_START_TEST (test_gap_buffers)
 
 GST_END_TEST;
 
+GST_START_TEST (test_layout_conversion)
+{
+  /* just layout conversion */
+  {
+    gint16 in[] = { 123, 123, 1024, 1024 };
+    gint16 out[] = { 123, 1024, 123, 1024 };
+
+    RUN_CONVERSION ("int16 interleaved -> planar",
+        in, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
+    RUN_CONVERSION ("int16 interleaved -> planar",
+        in, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+  }
+  /* int16 stereo to mono with layout conversion */
+  {
+    gint16 in_i[] = { 16384, -256, 1024, 1024 };
+    gint16 in_p[] = { 16384, 1024, -256, 1024 };
+    gint16 out[] = { 8064, 1024 };
+
+    RUN_CONVERSION ("int16 stereo to mono / interleaved -> planar",
+        in_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
+    RUN_CONVERSION ("int16 stereo to mono / planar -> interleaved",
+        in_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+  }
+  /* int16 mono to stereo with layout conversion */
+  {
+    gint16 in[] = { 512, 1024 };
+    gint16 out_i[] = { 512, 512, 1024, 1024 };
+    gint16 out_p[] = { 512, 1024, 512, 1024 };
+
+    RUN_CONVERSION ("int16 mono to stereo / planar -> interleaved",
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+    RUN_CONVERSION ("int16 mono to stereo / interleaved -> planar",
+        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
+  }
+  /* change format with layout conversion */
+  {
+    gint16 in_p[] = { 0, 32767, -32767, -32768 };
+    gint16 in_i[] = { 0, -32767, 32767, -32768 };
+    guint16 out_p[] = { 32768, 65535, 1, 0 };
+    guint16 out_i[] = { 32768, 1, 65535, 0 };
+
+    RUN_CONVERSION ("int16 signed -> unsigned / planar -> interleaved",
+        in_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR),
+        out_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED));
+    RUN_CONVERSION ("int16 signed -> unsigned / interleaved -> planar",
+        in_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED),
+        out_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, FALSE, PLANAR));
+
+    RUN_CONVERSION ("int16 unsigned -> signed / planar -> interleaved",
+        out_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, FALSE, PLANAR),
+        in_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+    RUN_CONVERSION ("int16 unsigned -> signed / interleaved -> planar",
+        out_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, FALSE, INTERLEAVED),
+        in_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
+  }
+  /* channel mixing with layout conversion */
+  {
+    gint16 in_i[] = { 4, 5, 4, 2, 2, 1, 8, 10, 8, 4, 4, 2 };
+    gint16 in_p[] = { 4, 8, 5, 10, 4, 8, 2, 4, 2, 4, 1, 2 };
+    gint16 out_i[] = { 3, 3, 6, 6 };
+    gint16 out_p[] = { 3, 6, 3, 6 };
+
+    RUN_CONVERSION ("5.1 to 2 channels / interleaved -> planar", in_i,
+        get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED, NULL),
+        out_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
+
+    RUN_CONVERSION ("5.1 to 2 channels / planar -> interleaved", in_p,
+        get_int_mc_caps (6, G_BYTE_ORDER, 16, 16, TRUE, PLANAR, NULL),
+        out_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+  }
+  /* change format + channels + layout */
+  {
+    guint8 in_i[] = {
+      0x00, 0x04, 0x00, 0x00, 0x05, 0x00, 0x00, 0x04, 0x00,
+      0x00, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x01, 0x00,
+      0x00, 0x08, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x08, 0x00,
+      0x00, 0x04, 0x00, 0x00, 0x04, 0x00, 0x00, 0x02, 0x00
+    };
+    guint8 in_p[] = {
+      0x00, 0x04, 0x00, 0x00, 0x08, 0x00, 0x00, 0x05, 0x00,
+      0x00, 0x0a, 0x00, 0x00, 0x04, 0x00, 0x00, 0x08, 0x00,
+      0x00, 0x02, 0x00, 0x00, 0x04, 0x00, 0x00, 0x02, 0x00,
+      0x00, 0x04, 0x00, 0x00, 0x01, 0x00, 0x00, 0x02, 0x00
+    };
+    gint16 out_i[] = { 3, 3, 6, 6 };
+    gint16 out_p[] = { 3, 6, 3, 6 };
+
+    RUN_CONVERSION ("5.1 to 2 channels / S24LE interleaved -> S16 planar", in_i,
+        get_int_mc_caps (6, G_LITTLE_ENDIAN, 24, 24, TRUE, INTERLEAVED, NULL),
+        out_p, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, PLANAR));
+    RUN_CONVERSION ("5.1 to 2 channels / S24LE planar -> S16 interleaved", in_p,
+        get_int_mc_caps (6, G_LITTLE_ENDIAN, 24, 24, TRUE, PLANAR, NULL),
+        out_i, get_int_caps (2, G_BYTE_ORDER, 16, 16, TRUE, INTERLEAVED));
+  }
+}
+
+GST_END_TEST;
 
 static Suite *
 audioconvert_suite (void)
@@ -1667,6 +1793,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_convert_undefined_multichannel);
   tcase_add_test (tc_chain, test_preserve_width);
   tcase_add_test (tc_chain, test_gap_buffers);
+  tcase_add_test (tc_chain, test_layout_conversion);
 
   return s;
 }
