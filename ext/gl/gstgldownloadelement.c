@@ -159,6 +159,18 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
   return tmp;
 }
 
+static void
+_remove_field (GstCaps * caps, const gchar * field)
+{
+  guint n = gst_caps_get_size (caps);
+  guint i = 0;
+
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    gst_structure_remove_field (s, field);
+  }
+}
+
 static GstCaps *
 gst_gl_download_element_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
@@ -174,10 +186,12 @@ gst_gl_download_element_transform_caps (GstBaseTransform * bt,
 
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
     newcaps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_DMABUF);
+    _remove_field (newcaps, "texture-target");
     tmp = gst_caps_merge (tmp, newcaps);
 #endif
 
     newcaps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    _remove_field (newcaps, "texture-target");
     tmp = gst_caps_merge (tmp, newcaps);
   }
 
