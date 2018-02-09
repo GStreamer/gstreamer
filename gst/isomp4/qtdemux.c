@@ -7521,13 +7521,27 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_meta:
       {
         GST_DEBUG_OBJECT (qtdemux, "parsing meta atom");
+
         /* You are reading this correctly. QTFF specifies that the
          * metadata atom is a short atom, whereas ISO BMFF specifies
-         * it's a full atom. joy joy joy */
-        if (qtdemux->major_brand == FOURCC_qt__)
+         * it's a full atom. But since so many people are doing things
+         * differently, we actually peek into the atom to see which
+         * variant it is */
+        if (length < 16) {
+          GST_LOG_OBJECT (qtdemux, "skipping small %" GST_FOURCC_FORMAT " box",
+              GST_FOURCC_ARGS (fourcc));
+          break;
+        }
+        if (QT_FOURCC (buffer + 12) == FOURCC_hdlr) {
+          /* Variant 1: What QTFF specifies. 'meta' is a short header which
+           * starts with a 'hldr' atom */
           qtdemux_parse_container (qtdemux, node, buffer + 8, end);
-        else
+        } else if (QT_UINT32 (buffer + 8) == 0x00000000) {
+          /* Variant 2: What ISO BMFF specifies. 'meta' is a _full_ atom
+           * with version/flags both set to zero */
           qtdemux_parse_container (qtdemux, node, buffer + 12, end);
+        } else
+          GST_WARNING_OBJECT (qtdemux, "Unknown 'meta' atom format");
         break;
       }
       case FOURCC_mp4s:
