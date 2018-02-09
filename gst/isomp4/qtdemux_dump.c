@@ -185,7 +185,7 @@ qtdemux_dump_hdlr (GstQTDemux * qtdemux, GstByteReader * data, int depth)
   guint32 version, type, subtype, manufacturer;
   const gchar *name;
 
-  if (!qt_atom_parser_has_remaining (data, 4 + 4 + 4 + 4 + 4 + 4 + 1))
+  if (!qt_atom_parser_has_remaining (data, 4 + 4 + 4 + 4 + 4 + 4))
     return FALSE;
 
   version = GET_UINT32 (data);
@@ -208,10 +208,10 @@ qtdemux_dump_hdlr (GstQTDemux * qtdemux, GstByteReader * data, int depth)
     GST_LOG ("%*s  name:          %s", depth, "", name);
   } else {
     gchar buf[256];
-    guint len;
+    guint8 len;
 
-    len = gst_byte_reader_get_uint8_unchecked (data);
-    if (qt_atom_parser_has_remaining (data, len)) {
+    if (gst_byte_reader_get_uint8 (data, &len)
+        && qt_atom_parser_has_remaining (data, len)) {
       memcpy (buf, gst_byte_reader_peek_data_unchecked (data), len);
       buf[len] = '\0';
       GST_LOG ("%*s  name:          %s", depth, "", buf);
