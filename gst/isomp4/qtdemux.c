@@ -9613,18 +9613,13 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *stsd;
   GNode *mp4a;
   GNode *mp4v;
-  GNode *wave;
   GNode *esds;
-  GNode *pasp;
-  GNode *colr;
   GNode *tref;
   GNode *udta;
   GNode *svmi;
-  GNode *fiel;
 
   QtDemuxStream *stream = NULL;
   gboolean new_stream = FALSE;
-  gchar *codec = NULL;
   const guint8 *stsd_data;
   const guint8 *stsd_entry_data;
   guint remaining_stsd_len;
@@ -9635,7 +9630,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   guint32 tkhd_flags = 0;
   guint8 tkhd_version = 0;
   guint32 w = 0, h = 0;
-  guint32 fourcc;
   guint value_size, stsd_len, len;
   guint32 track_id;
   guint32 dummy;
@@ -9875,6 +9869,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stsd_entry_data = stsd_data + 16;
   remaining_stsd_len = stsd_len - 16;
   for (stsd_index = 0; stsd_index < stsd_entry_count; stsd_index++) {
+    guint32 fourcc;
+    gchar *codec = NULL;
     QtDemuxStreamStsdEntry *entry = &stream->stsd_entries[stsd_index];
 
     /* and that entry should fit within stsd */
@@ -9900,6 +9896,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (stream->subtype == FOURCC_vide) {
+      GNode *colr;
+      GNode *fiel;
+      GNode *pasp;
       gboolean gray;
       gint depth, palette_size, palette_count;
       guint32 *palette_data = NULL;
@@ -10782,6 +10781,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           GST_FOURCC_ARGS (fourcc), entry->caps);
 
     } else if (stream->subtype == FOURCC_soun) {
+      GNode *wave;
       int version, samplesize;
       guint16 compression_id;
       gboolean amrwb = FALSE;
