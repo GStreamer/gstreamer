@@ -117,11 +117,11 @@ void video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -595,7 +595,7 @@ video_mixer_orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
     var39.x4[2] = p1;
     var39.x4[3] = p1;
     /* 16: loadpl */
-    var40.i = (int) 0x000000ff; /* 255 or 1.25987e-321f */
+    var40.i = 0x000000ff;       /* 255 or 1.25987e-321f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -721,7 +721,7 @@ _backup_video_mixer_orc_blend_argb (OrcExecutor * ORC_RESTRICT ex)
     var39.x4[2] = ex->params[24];
     var39.x4[3] = ex->params[24];
     /* 16: loadpl */
-    var40.i = (int) 0x000000ff; /* 255 or 1.25987e-321f */
+    var40.i = 0x000000ff;       /* 255 or 1.25987e-321f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -954,7 +954,7 @@ video_mixer_orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
     var40.x4[2] = p1;
     var40.x4[3] = p1;
     /* 17: loadpl */
-    var41.i = (int) 0xff000000; /* -16777216 or 2.11371e-314f */
+    var41.i = 0xff000000;       /* -16777216 or 2.11371e-314f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -1083,7 +1083,7 @@ _backup_video_mixer_orc_blend_bgra (OrcExecutor * ORC_RESTRICT ex)
     var40.x4[2] = ex->params[24];
     var40.x4[3] = ex->params[24];
     /* 17: loadpl */
-    var41.i = (int) 0xff000000; /* -16777216 or 2.11371e-314f */
+    var41.i = 0xff000000;       /* -16777216 or 2.11371e-314f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -1340,11 +1340,11 @@ video_mixer_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
     var41.x4[2] = p1;
     var41.x4[3] = p1;
     /* 10: loadpl */
-    var53.i = (int) 0xffffffff; /* -1 or 2.122e-314f */
+    var53.i = 0xffffffff;       /* -1 or 2.122e-314f */
     /* 26: loadpl */
-    var42.i = (int) 0xffffff00; /* -256 or 2.122e-314f */
+    var42.i = 0xffffff00;       /* -256 or 2.122e-314f */
     /* 29: loadpl */
-    var43.i = (int) 0x000000ff; /* 255 or 1.25987e-321f */
+    var43.i = 0x000000ff;       /* 255 or 1.25987e-321f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -1548,11 +1548,11 @@ _backup_video_mixer_orc_overlay_argb (OrcExecutor * ORC_RESTRICT ex)
     var41.x4[2] = ex->params[24];
     var41.x4[3] = ex->params[24];
     /* 10: loadpl */
-    var53.i = (int) 0xffffffff; /* -1 or 2.122e-314f */
+    var53.i = 0xffffffff;       /* -1 or 2.122e-314f */
     /* 26: loadpl */
-    var42.i = (int) 0xffffff00; /* -256 or 2.122e-314f */
+    var42.i = 0xffffff00;       /* -256 or 2.122e-314f */
     /* 29: loadpl */
-    var43.i = (int) 0x000000ff; /* 255 or 1.25987e-321f */
+    var43.i = 0x000000ff;       /* 255 or 1.25987e-321f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -1900,11 +1900,11 @@ video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
     var42.x4[2] = p1;
     var42.x4[3] = p1;
     /* 11: loadpl */
-    var55.i = (int) 0xffffffff; /* -1 or 2.122e-314f */
+    var55.i = 0xffffffff;       /* -1 or 2.122e-314f */
     /* 28: loadpl */
-    var43.i = (int) 0x00ffffff; /* 16777215 or 8.28905e-317f */
+    var43.i = 0x00ffffff;       /* 16777215 or 8.28905e-317f */
     /* 31: loadpl */
-    var44.i = (int) 0xff000000; /* -16777216 or 2.11371e-314f */
+    var44.i = 0xff000000;       /* -16777216 or 2.11371e-314f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -2114,11 +2114,11 @@ _backup_video_mixer_orc_overlay_bgra (OrcExecutor * ORC_RESTRICT ex)
     var42.x4[2] = ex->params[24];
     var42.x4[3] = ex->params[24];
     /* 11: loadpl */
-    var55.i = (int) 0xffffffff; /* -1 or 2.122e-314f */
+    var55.i = 0xffffffff;       /* -1 or 2.122e-314f */
     /* 28: loadpl */
-    var43.i = (int) 0x00ffffff; /* 16777215 or 8.28905e-317f */
+    var43.i = 0x00ffffff;       /* 16777215 or 8.28905e-317f */
     /* 31: loadpl */
-    var44.i = (int) 0xff000000; /* -16777216 or 2.11371e-314f */
+    var44.i = 0xff000000;       /* -16777216 or 2.11371e-314f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
