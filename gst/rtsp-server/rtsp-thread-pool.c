@@ -512,7 +512,8 @@ thread_error:
  *
  * Get a new #GstRTSPThread for @type and @ctx.
  *
- * Returns: (transfer full): a new #GstRTSPThread, gst_rtsp_thread_stop() after usage
+ * Returns: (transfer full) (nullable): a new #GstRTSPThread,
+ * gst_rtsp_thread_stop() after usage
  */
 GstRTSPThread *
 gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,

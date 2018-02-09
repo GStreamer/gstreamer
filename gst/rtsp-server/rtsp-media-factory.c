@@ -411,7 +411,7 @@ gst_rtsp_media_factory_new (void)
 /**
  * gst_rtsp_media_factory_set_permissions:
  * @factory: a #GstRTSPMediaFactory
- * @permissions: (transfer none): a #GstRTSPPermissions
+ * @permissions: (transfer none) (nullable): a #GstRTSPPermissions
  *
  * Set @permissions on @factory.
  */
@@ -439,7 +439,7 @@ gst_rtsp_media_factory_set_permissions (GstRTSPMediaFactory * factory,
  *
  * Get the permissions object from @factory.
  *
- * Returns: (transfer full): a #GstRTSPPermissions object, unref after usage.
+ * Returns: (transfer full) (nullable): a #GstRTSPPermissions object, unref after usage.
  */
 GstRTSPPermissions *
 gst_rtsp_media_factory_get_permissions (GstRTSPMediaFactory * factory)
@@ -534,7 +534,7 @@ gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory * factory,
  * Get the gst_parse_launch() pipeline description that will be used in the
  * default prepare vmethod.
  *
- * Returns: (transfer full): the configured launch description. g_free() after
+ * Returns: (transfer full) (nullable): the configured launch description. g_free() after
  * usage.
  */
 gchar *
@@ -748,7 +748,7 @@ gst_rtsp_media_factory_get_buffer_size (GstRTSPMediaFactory * factory)
 /**
  * gst_rtsp_media_factory_set_address_pool:
  * @factory: a #GstRTSPMediaFactory
- * @pool: (transfer none): a #GstRTSPAddressPool
+ * @pool: (transfer none) (nullable): a #GstRTSPAddressPool
  *
  * configure @pool to be used as the address pool of @factory.
  */
@@ -780,7 +780,7 @@ gst_rtsp_media_factory_set_address_pool (GstRTSPMediaFactory * factory,
  *
  * Get the #GstRTSPAddressPool used as the address pool of @factory.
  *
- * Returns: (transfer full): the #GstRTSPAddressPool of @factory. g_object_unref() after
+ * Returns: (transfer full) (nullable): the #GstRTSPAddressPool of @factory. g_object_unref() after
  * usage.
  */
 GstRTSPAddressPool *
@@ -804,7 +804,7 @@ gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
 /**
  * gst_rtsp_media_factory_set_multicast_iface:
  * @factory: a #GstRTSPMediaFactory
- * @multicast_iface: (transfer none): a multicast interface name
+ * @multicast_iface: (transfer none) (nullable): a multicast interface name
  *
  * configure @multicast_iface to be used for @factory.
  */
@@ -838,7 +838,7 @@ gst_rtsp_media_factory_set_multicast_iface (GstRTSPMediaFactory * media_factory,
  *
  * Get the multicast interface used for @factory.
  *
- * Returns: (transfer full): the multicast interface for @factory. g_free() after
+ * Returns: (transfer full) (nullable): the multicast interface for @factory. g_free() after
  * usage.
  */
 gchar *

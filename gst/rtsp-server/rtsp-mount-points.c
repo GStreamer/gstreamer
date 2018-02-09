@@ -181,7 +181,7 @@ default_make_path (GstRTSPMountPoints * mounts, const GstRTSPUrl * url)
  *
  * Make a path string from @url.
  *
- * Returns: (transfer full): a path string for @url, g_free() after usage.
+ * Returns: (transfer full) (nullable): a path string for @url, g_free() after usage.
  */
 gchar *
 gst_rtsp_mount_points_make_path (GstRTSPMountPoints * mounts,

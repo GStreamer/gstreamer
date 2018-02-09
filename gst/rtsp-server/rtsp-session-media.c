@@ -210,8 +210,8 @@ gst_rtsp_session_media_matches (GstRTSPSessionMedia * media,
  *
  * Get the #GstRTSPMedia that was used when constructing @media
  *
- * Returns: (transfer none): the #GstRTSPMedia of @media. Remains valid as long
- * as @media is valid.
+ * Returns: (transfer none) (nullable): the #GstRTSPMedia of @media.
+ * Remains valid as long as @media is valid.
  */
 GstRTSPMedia *
 gst_rtsp_session_media_get_media (GstRTSPSessionMedia * media)
@@ -387,8 +387,8 @@ gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
  *
  * Get a previously created #GstRTSPStreamTransport for the stream at @idx.
  *
- * Returns: (transfer none): a #GstRTSPStreamTransport that is valid until the
- * session of @media is unreffed.
+ * Returns: (transfer none) (nullable): a #GstRTSPStreamTransport that is
+ * valid until the session of @media is unreffed.
  */
 GstRTSPStreamTransport *
 gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)

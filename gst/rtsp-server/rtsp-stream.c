@@ -446,7 +446,7 @@ gst_rtsp_stream_get_pt (GstRTSPStream * stream)
  *
  * Get the srcpad associated with @stream.
  *
- * Returns: (transfer full): the srcpad. Unref after usage.
+ * Returns: (transfer full) (nullable): the srcpad. Unref after usage.
  */
 GstPad *
 gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
@@ -465,7 +465,7 @@ gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
  *
  * Get the sinkpad associated with @stream.
  *
- * Returns: (transfer full): the sinkpad. Unref after usage.
+ * Returns: (transfer full) (nullable): the sinkpad. Unref after usage.
  */
 GstPad *
 gst_rtsp_stream_get_sinkpad (GstRTSPStream * stream)
@@ -484,7 +484,7 @@ gst_rtsp_stream_get_sinkpad (GstRTSPStream * stream)
  *
  * Get the control string to identify this stream.
  *
- * Returns: (transfer full): the control string. g_free() after usage.
+ * Returns: (transfer full) (nullable): the control string. g_free() after usage.
  */
 gchar *
 gst_rtsp_stream_get_control (GstRTSPStream * stream)
@@ -507,7 +507,7 @@ gst_rtsp_stream_get_control (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_set_control:
  * @stream: a #GstRTSPStream
- * @control: a control string
+ * @control: (nullable): a control string
  *
  * Set the control string in @stream.
  */
@@ -529,7 +529,7 @@ gst_rtsp_stream_set_control (GstRTSPStream * stream, const gchar * control)
 /**
  * gst_rtsp_stream_has_control:
  * @stream: a #GstRTSPStream
- * @control: a control string
+ * @control: (nullable): a control string
  *
  * Check if @stream has the control string @control.
  *
@@ -682,6 +682,7 @@ gst_rtsp_stream_is_transport_supported (GstRTSPStream * stream,
   GstRTSPStreamPrivate *priv;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  g_return_val_if_fail (transport != NULL, FALSE);
 
   priv = stream->priv;
 
@@ -817,7 +818,7 @@ gst_rtsp_stream_get_protocols (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_set_address_pool:
  * @stream: a #GstRTSPStream
- * @pool: (transfer none): a #GstRTSPAddressPool
+ * @pool: (transfer none) (nullable): a #GstRTSPAddressPool
  *
  * configure @pool to be used as the address pool of @stream.
  */
@@ -851,8 +852,8 @@ gst_rtsp_stream_set_address_pool (GstRTSPStream * stream,
  *
  * Get the #GstRTSPAddressPool used as the address pool of @stream.
  *
- * Returns: (transfer full): the #GstRTSPAddressPool of @stream. g_object_unref() after
- * usage.
+ * Returns: (transfer full) (nullable): the #GstRTSPAddressPool of @stream.
+ * g_object_unref() after usage.
  */
 GstRTSPAddressPool *
 gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
@@ -875,7 +876,7 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_set_multicast_iface:
  * @stream: a #GstRTSPStream
- * @multicast_iface: (transfer none): a multicast interface name
+ * @multicast_iface: (transfer none) (nullable): a multicast interface name
  *
  * configure @multicast_iface to be used for @stream.
  */
@@ -910,8 +911,8 @@ gst_rtsp_stream_set_multicast_iface (GstRTSPStream * stream,
  *
  * Get the multicast interface used for @stream.
  *
- * Returns: (transfer full): the multicast interface for @stream. g_free() after
- * usage.
+ * Returns: (transfer full) (nullable): the multicast interface for @stream.
+ * g_free() after usage.
  */
 gchar *
 gst_rtsp_stream_get_multicast_iface (GstRTSPStream * stream)
@@ -2280,7 +2281,7 @@ request_rtp_rtcp_decoder (GstElement * rtpbin, guint session,
  *
  * Creating a rtxsend bin
  *
- * Returns: (transfer full): a #GstElement.
+ * Returns: (transfer full) (nullable): a #GstElement.
  *
  * Since: 1.6
  */
@@ -2339,6 +2340,9 @@ void
 gst_rtsp_stream_set_pt_map (GstRTSPStream * stream, guint pt, GstCaps * caps)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
+
+  if (!GST_IS_CAPS (caps))
+    return;
 
   g_mutex_lock (&priv->lock);
   g_hash_table_insert (priv->ptmap, GINT_TO_POINTER (pt), gst_caps_ref (caps));
@@ -3359,7 +3363,7 @@ wrong_bin:
  *
  * Get the previous joined bin with gst_rtsp_stream_join_bin() or NULL.
  *
- * Return: (transfer full): the joined bin or NULL.
+ * Return: (transfer full) (nullable): the joined bin or NULL.
  */
 GstBin *
 gst_rtsp_stream_get_joined_bin (GstRTSPStream * stream)
@@ -3381,10 +3385,10 @@ gst_rtsp_stream_get_joined_bin (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_get_rtpinfo:
  * @stream: a #GstRTSPStream
- * @rtptime: (allow-none): result RTP timestamp
- * @seq: (allow-none): result RTP seqnum
- * @clock_rate: (allow-none): the clock rate
- * @running_time: result running-time
+ * @rtptime: (allow-none) (out caller-allocates): result RTP timestamp
+ * @seq: (allow-none) (out caller-allocates): result RTP seqnum
+ * @clock_rate: (allow-none) (out caller-allocates): the clock rate
+ * @running_time: (out caller-allocates): result running-time
  *
  * Retrieve the current rtptime, seq and running-time. This is used to
  * construct a RTPInfo reply header.
@@ -3534,8 +3538,8 @@ no_stats:
  *
  * Retrieve the current caps of @stream.
  *
- * Returns: (transfer full): the #GstCaps of @stream. use gst_caps_unref()
- * after usage.
+ * Returns: (transfer full) (nullable): the #GstCaps of @stream.
+ * use gst_caps_unref() after usage.
  */
 GstCaps *
 gst_rtsp_stream_get_caps (GstRTSPStream * stream)
@@ -4297,7 +4301,7 @@ gst_rtsp_stream_is_blocking (GstRTSPStream * stream)
 /**
  * gst_rtsp_stream_query_position:
  * @stream: a #GstRTSPStream
- * @position: current position of a #GstRTSPStream
+ * @position: (out): current position of a #GstRTSPStream
  *
  * Query the position of the stream in %GST_FORMAT_TIME. This only considers
  * the RTP parts of the pipeline and not the RTCP parts.
@@ -4377,7 +4381,7 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
 /**
  * gst_rtsp_stream_query_stop:
  * @stream: a #GstRTSPStream
- * @stop: current stop of a #GstRTSPStream
+ * @stop: (out): current stop of a #GstRTSPStream
  *
  * Query the stop of the stream in %GST_FORMAT_TIME. This only considers
  * the RTP parts of the pipeline and not the RTCP parts.

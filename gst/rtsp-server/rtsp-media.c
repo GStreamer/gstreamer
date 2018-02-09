@@ -892,7 +892,7 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
 /**
  * gst_rtsp_media_set_permissions:
  * @media: a #GstRTSPMedia
- * @permissions: (transfer none): a #GstRTSPPermissions
+ * @permissions: (transfer none) (nullable): a #GstRTSPPermissions
  *
  * Set @permissions on @media.
  */
@@ -920,7 +920,7 @@ gst_rtsp_media_set_permissions (GstRTSPMedia * media,
  *
  * Get the permissions object from @media.
  *
- * Returns: (transfer full): a #GstRTSPPermissions object, unref after usage.
+ * Returns: (transfer full) (nullable): a #GstRTSPPermissions object, unref after usage.
  */
 GstRTSPPermissions *
 gst_rtsp_media_get_permissions (GstRTSPMedia * media)
@@ -1598,7 +1598,7 @@ gst_rtsp_media_get_publish_clock_mode (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_set_address_pool:
  * @media: a #GstRTSPMedia
- * @pool: (transfer none): a #GstRTSPAddressPool
+ * @pool: (transfer none) (nullable): a #GstRTSPAddressPool
  *
  * configure @pool to be used as the address pool of @media.
  */
@@ -1634,8 +1634,8 @@ gst_rtsp_media_set_address_pool (GstRTSPMedia * media,
  *
  * Get the #GstRTSPAddressPool used as the address pool of @media.
  *
- * Returns: (transfer full): the #GstRTSPAddressPool of @media. g_object_unref() after
- * usage.
+ * Returns: (transfer full) (nullable): the #GstRTSPAddressPool of @media.
+ * g_object_unref() after usage.
  */
 GstRTSPAddressPool *
 gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
@@ -1658,7 +1658,7 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_set_multicast_iface:
  * @media: a #GstRTSPMedia
- * @multicast_iface: (transfer none): a multicast interface name
+ * @multicast_iface: (transfer none) (nullable): a multicast interface name
  *
  * configure @multicast_iface to be used for @media.
  */
@@ -1694,8 +1694,8 @@ gst_rtsp_media_set_multicast_iface (GstRTSPMedia * media,
  *
  * Get the multicast interface used for @media.
  *
- * Returns: (transfer full): the multicast interface for @media. g_free() after
- * usage.
+ * Returns: (transfer full) (nullable): the multicast interface for @media.
+ * g_free() after usage.
  */
 gchar *
 gst_rtsp_media_get_multicast_iface (GstRTSPMedia * media)
@@ -2074,7 +2074,7 @@ default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
  * Get the current range as a string. @media must be prepared with
  * gst_rtsp_media_prepare ().
  *
- * Returns: (transfer full): The range as a string, g_free() after usage.
+ * Returns: (transfer full) (nullable): The range as a string, g_free() after usage.
  */
 gchar *
 gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
@@ -3289,7 +3289,7 @@ get_clock_unlocked (GstRTSPMedia * media)
  *
  * @media must be prepared before this method returns a valid clock object.
  *
- * Returns: (transfer full): the #GstClock used by @media. unref after usage.
+ * Returns: (transfer full) (nullable): the #GstClock used by @media. unref after usage.
  */
 GstClock *
 gst_rtsp_media_get_clock (GstRTSPMedia * media)
