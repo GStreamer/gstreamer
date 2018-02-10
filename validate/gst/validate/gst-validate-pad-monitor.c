@@ -1619,9 +1619,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
-      if (pad_monitor->pending_flush_start_seqnum) {
+      if (pad_monitor->pending_flush_start_seqnum != GST_SEQNUM_INVALID) {
         if (seqnum == pad_monitor->pending_flush_start_seqnum) {
-          pad_monitor->pending_flush_start_seqnum = 0;
+          pad_monitor->pending_flush_start_seqnum = GST_SEQNUM_INVALID;
         } else {
           GST_VALIDATE_REPORT (pad_monitor, FLUSH_START_HAS_WRONG_SEQNUM,
               "Got: %u Expected: %u", seqnum,
@@ -1638,9 +1638,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
       break;
     case GST_EVENT_FLUSH_STOP:
     {
-      if (pad_monitor->pending_flush_stop_seqnum) {
+      if (pad_monitor->pending_flush_stop_seqnum != GST_SEQNUM_INVALID) {
         if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
-          pad_monitor->pending_flush_stop_seqnum = 0;
+          pad_monitor->pending_flush_stop_seqnum = GST_SEQNUM_INVALID;
         } else {
           GST_VALIDATE_REPORT (pad_monitor, FLUSH_STOP_HAS_WRONG_SEQNUM,
               "Got: %u Expected: %u", seqnum,
@@ -1840,12 +1840,12 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       GST_DEBUG_OBJECT (pad, "Got segment %" GST_SEGMENT_FORMAT, segment);
 
       /* Reset expected flush start/stop values, we have a segment */
-      pad_monitor->pending_flush_start_seqnum = 0;
-      pad_monitor->pending_flush_stop_seqnum = 0;
+      pad_monitor->pending_flush_start_seqnum = GST_SEQNUM_INVALID;
+      pad_monitor->pending_flush_stop_seqnum = GST_SEQNUM_INVALID;
 
-      if (pad_monitor->pending_newsegment_seqnum) {
+      if (pad_monitor->pending_newsegment_seqnum != GST_SEQNUM_INVALID) {
         if (pad_monitor->pending_newsegment_seqnum == seqnum) {
-          pad_monitor->pending_newsegment_seqnum = 0;
+          pad_monitor->pending_newsegment_seqnum = GST_SEQNUM_INVALID;
           if (GST_CLOCK_TIME_IS_VALID (pad_monitor->pending_seek_accurate_time)) {
             if (segment->time == pad_monitor->pending_seek_accurate_time) {
               pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
@@ -1911,7 +1911,8 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
     }
     case GST_EVENT_EOS:
       pad_monitor->is_eos = TRUE;
-      if (pad_monitor->pending_eos_seqnum == 0) {
+      /* FIXME : This feels and looks wrong ... */
+      if (pad_monitor->pending_eos_seqnum == GST_SEQNUM_INVALID) {
         GST_VALIDATE_REPORT (pad_monitor, EVENT_EOS_WITHOUT_SEGMENT,
             "EOS %" GST_PTR_FORMAT " received before a segment was received",
             event);
@@ -2061,10 +2062,10 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
         pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
       } else if (!ret) {
         /* do not expect any of these events anymore */
-        pad_monitor->pending_flush_start_seqnum = 0;
-        pad_monitor->pending_flush_stop_seqnum = 0;
-        pad_monitor->pending_newsegment_seqnum = 0;
-        pad_monitor->pending_eos_seqnum = 0;
+        pad_monitor->pending_flush_start_seqnum = GST_SEQNUM_INVALID;
+        pad_monitor->pending_flush_stop_seqnum = GST_SEQNUM_INVALID;
+        pad_monitor->pending_newsegment_seqnum = GST_SEQNUM_INVALID;
+        pad_monitor->pending_eos_seqnum = GST_SEQNUM_INVALID;
         pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
       }
     }
