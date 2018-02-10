@@ -16,3 +16,4 @@ GstTocSetter GstElement
 GstTuner GstImplementsInterface GstElement
 GstVideoOrientation GstImplementsInterface GstElement
 GstXOverlay GstImplementsInterface GstElement
+GtkBuildable GObject

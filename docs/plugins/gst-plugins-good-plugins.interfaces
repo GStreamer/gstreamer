@@ -31,6 +31,9 @@ GstGConfAudioSrc GstChildProxy
 GstGConfVideoSink GstChildProxy
 GstGConfVideoSrc GstChildProxy
 GstGPPMux GstTagSetter GstTagXmpWriter
+GstGtkBaseSink GstNavigation
+GstGtkGLSink GstNavigation
+GstGtkSink GstNavigation
 GstHDV1394Src GstURIHandler
 GstHDV1394Src GstURIHandler GstPropertyProbe
 GstHalAudioSink GstChildProxy
@@ -53,6 +56,7 @@ GstMP4Mux GstTagSetter GstTagXmpWriter GstPreset
 GstMatroskaMux GstTagSetter
 GstMatroskaMux GstTagSetter GstTocSetter
 GstMuLawEnc GstPreset
+GstMultiFileSrc GstURIHandler
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstOss4Sink GstStreamVolume
 GstOss4Sink GstStreamVolume GstPropertyProbe
@@ -112,3 +116,4 @@ GstWavpackEnc GstPreset
 GstWebMMux GstTagSetter
 GstWebMMux GstTagSetter GstTocSetter
 GstY4mEncode GstPreset
+GtkWidget AtkImplementorIface GtkBuildable

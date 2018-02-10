@@ -214,7 +214,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum File Duration</NICK>
-<BLURB>Maximum file duration before starting a new file in max-size mode.</BLURB>
+<BLURB>Maximum file duration before starting a new file in max-size mode (in nanoseconds).</BLURB>
 <DEFAULT>18446744073709551615</DEFAULT>
 </ARG>
 
@@ -1506,6 +1506,16 @@
 <NICK>IDCT Method</NICK>
 <BLURB>The IDCT algorithm to use.</BLURB>
 <DEFAULT>Faster, less accurate integer method</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJpegEnc::snapshot</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Snapshot</NICK>
+<BLURB>Send EOS after encoding a frame, useful for snapshots.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>

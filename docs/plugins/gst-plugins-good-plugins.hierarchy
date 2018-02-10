@@ -74,6 +74,9 @@ GObject
           GstVideoSink
             GstAASink
             GstGdkPixbufSink
+            GstGtkBaseSink
+              GstGtkGLSink
+              GstGtkSink
             GstV4l2Sink
         GstBaseSrc
           GstDTMFSrc
@@ -318,6 +321,7 @@ GObject
         GstAggregatorPad
           GstFlvMuxPad
         GstInterleavePad
+        GstQTMuxPad
         GstVideoMixer2Pad
       GstPadTemplate
       GstPlugin
@@ -330,6 +334,7 @@ GObject
       GstRegistry
       GstTask
       GstTaskPool
+    GtkWidget
   GResolver
   GSocket
   GSocketAddress
@@ -351,6 +356,7 @@ GObject
   RTPSession
   SoupSession
 GInterface
+  AtkImplementorIface
   GDatagramBased
   GIcon
   GInitable
@@ -360,6 +366,7 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstColorBalance
+  GstNavigation
   GstPreset
   GstStreamVolume
   GstTagSetter
@@ -369,3 +376,4 @@ GInterface
   GstURIHandler
   GstVideoDirection
   GstVideoOrientation
+  GtkBuildable
