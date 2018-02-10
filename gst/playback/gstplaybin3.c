@@ -2431,6 +2431,7 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     GstSourceGroup *group = NULL, *other_group = NULL;
     gboolean changed = FALSE;
     guint group_id;
+    GstMessage *buffering_msg;
 
     if (!gst_message_parse_group_id (msg, &group_id)) {
       GST_ERROR_OBJECT (bin,
@@ -2465,30 +2466,30 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
     if (group->playing == FALSE)
       changed = TRUE;
     group->playing = TRUE;
+    buffering_msg = group->pending_buffering_msg;
+    group->pending_buffering_msg = NULL;
     GST_SOURCE_GROUP_UNLOCK (group);
+
     GST_SOURCE_GROUP_LOCK (other_group);
     other_group->playing = FALSE;
     GST_SOURCE_GROUP_UNLOCK (other_group);
+
     debug_groups (playbin);
     GST_PLAY_BIN3_UNLOCK (playbin);
     if (changed)
       gst_play_bin3_check_group_status (playbin);
     else
       GST_DEBUG_OBJECT (bin, "Groups didn't changed");
-  }
-#if 0
-  else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
-    GstSourceGroup *group = playbin->curr_group;
-    gboolean pending;
+    /* If there was a pending buffering message to send, do it now */
+    if (buffering_msg)
+      GST_BIN_CLASS (parent_class)->handle_message (bin, buffering_msg);
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_BUFFERING) {
+    GstSourceGroup *group;
 
-    /* drop buffering messages from child queues while we are switching
-     * groups (because the application set a new uri in about-to-finish)
-     * if the playsink queue still has buffers to play */
-
+    /* Only post buffering messages for group which is currently playing */
+    group = find_source_group_owner (playbin, msg->src);
     GST_SOURCE_GROUP_LOCK (group);
-    pending = group->stream_changed_pending;
-
-    if (pending) {
+    if (!group->playing) {
       GST_DEBUG_OBJECT (playbin, "Storing buffering message from pending group "
           "%p %" GST_PTR_FORMAT, group, msg);
       gst_message_replace (&group->pending_buffering_msg, msg);
@@ -2496,9 +2497,7 @@ gst_play_bin3_handle_message (GstBin * bin, GstMessage * msg)
       msg = NULL;
     }
     GST_SOURCE_GROUP_UNLOCK (group);
-  }
-#endif
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_COLLECTION) {
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_COLLECTION) {
     GstStreamCollection *collection = NULL;
 
     gst_message_parse_stream_collection (msg, &collection);
