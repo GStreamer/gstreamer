@@ -8,7 +8,6 @@ gtksink_LDADD = $(GTK3_LIBS) \
 	$(GST_LIBS)
 
 if USE_GTK3_GL
-if USE_GL
 noinst_PROGRAMS += gtkglsink glliveshader
 
 gtkglsink_SOURCES = gtkglsink.c
@@ -23,7 +22,7 @@ gtkglsink_LDADD = \
 	$(GST_GL_LIBS) \
 	$(GST_LIBS) \
 	$(GTK3_LIBS) \
-	$(X11_LIBS)
+	$(X_LIBS)
 
 glliveshader_SOURCES = glliveshader.c
 glliveshader_CFLAGS = \
@@ -36,6 +35,5 @@ glliveshader_LDADD = \
 	$(GST_GL_LIBS) \
 	$(GST_LIBS) \
 	$(GTK3_LIBS) \
-	$(X11_LIBS)
-endif
+	$(X_LIBS)
 endif

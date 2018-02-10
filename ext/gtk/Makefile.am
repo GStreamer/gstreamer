@@ -37,10 +37,8 @@ libgstgtk_la_SOURCES = $(sources)
 libgstgtk_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 if USE_GTK3_GL
-if USE_GL
 libgstgtk_la_SOURCES += gstgtkglsink.c gstgtkglsink.h gtkgstglwidget.c gtkgstglwidget.h
 libgstgtk_la_LIBADD += $(GST_GL_LIBS)
-endif
 endif
 
 plugin_LTLIBRARIES = libgstgtk.la

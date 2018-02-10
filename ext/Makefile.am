@@ -22,6 +22,13 @@ else
 GDK_PIXBUF_DIR =
 endif
 
+  
+if USE_GTK3
+GTK_DIR=gtk
+else
+GTK_DIR=
+endif
+ 
 if USE_JACK
 JACK_DIR=jack
 else
@@ -125,6 +132,7 @@ SUBDIRS = \
 	$(DV1394_DIR) \
 	$(FLAC_DIR) \
 	$(GDK_PIXBUF_DIR) \
+	$(GTK_DIR) \
 	$(JACK_DIR) \
 	$(JPEG_DIR) \
 	$(LAME_DIR) \
@@ -148,6 +156,7 @@ DIST_SUBDIRS = \
 	dv \
 	flac \
 	gdk_pixbuf \
+	gtk \
 	jack \
 	jpeg \
 	lame \

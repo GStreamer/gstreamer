@@ -234,6 +234,46 @@ AC_SUBST(GST_TOOLS_DIR)
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
+AG_GST_PKG_CHECK_MODULES(GST_GL, gstreamer-gl-[$GST_API_VERSION], [$GST_REQ], no)
+
+dnl FIXME: if uninstalled setup we might not want to pick up an installed gst-gl?
+if test "x$HAVE_GST_GL" = "xyes"; then
+
+  AC_MSG_CHECKING([GStreamer OpenGL window systems ...])
+  GST_GL_WINSYS=`$PKG_CONFIG --variable=gl_winsys gstreamer-gl-1.0`
+  AC_MSG_RESULT([$GST_GL_WINSYS])
+  GST_GL_HAVE_WINDOW_X11=""
+  GST_GL_HAVE_WINDOW_WAYLAND=""
+  GST_GL_HAVE_WINDOW_ANDROID=""
+  GST_GL_HAVE_WINDOW_COCOA=""
+  GST_GL_HAVE_WINDOW_EAGL=""
+  case "$GST_GL_WINSYS" in  *x11*) GST_GL_HAVE_WINDOW_X11="1" ;; esac
+  case "$GST_GL_WINSYS" in  *wayland*) GST_GL_HAVE_WINDOW_WAYLAND="1" ;; esac
+  case "$GST_GL_WINSYS" in  *android*) GST_GL_HAVE_WINDOW_ANDROID="1" ;; esac
+  case "$GST_GL_WINSYS" in  *cocoa*) GST_GL_HAVE_WINDOW_COCOA="1" ;; esac
+  case "$GST_GL_WINSYS" in  *eagl*) GST_GL_HAVE_WINDOW_EAGL="1" ;; esac
+
+  AC_MSG_CHECKING([GStreamer OpenGL platforms ...])
+  GST_GL_PLATFORMS=`$PKG_CONFIG --variable=gl_platforms gstreamer-gl-1.0`
+  AC_MSG_RESULT([$GST_GL_PLATFORMS])
+  GST_GL_HAVE_PLATFORM_GLX=""
+  GST_GL_HAVE_PLATFORM_EGL=""
+  GST_GL_HAVE_PLATFORM_CGL=""
+  GST_GL_HAVE_PLATFORM_EAGL=""
+  case "$GST_GL_PLATFORMS" in  *glx*) GST_GL_HAVE_PLATFORM_GLX="1" ;; esac
+  case "$GST_GL_PLATFORMS" in  *egl*) GST_GL_HAVE_PLATFORM_EGL="1" ;; esac
+  case "$GST_GL_PLATFORMS" in  *cgl*) GST_GL_HAVE_PLATFORM_CGL="1" ;; esac
+  case "$GST_GL_PLATFORMS" in  *eagl*) GST_GL_HAVE_PLATFORM_EAGL="1" ;; esac
+
+  AC_MSG_CHECKING([GStreamer OpenGL apis ...])
+  GST_GL_APIS=`$PKG_CONFIG --variable=gl_apis gstreamer-gl-1.0`
+  AC_MSG_RESULT([$GST_GL_APIS])
+  GST_GL_HAVE_API_GLES2=""
+  GST_GL_HAVE_API_GL=""
+  case "$GST_GL_APIS" in  *gles2*) GST_GL_HAVE_API_GLES2="1" ;; esac
+  case "$GST_GL_APIS" in "gl"|"gl "*|*" gl"|*" gl "*) GST_GL_HAVE_API_GL="1" ;; esac
+fi
+
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
 dnl Check for documentation xrefs
@@ -627,6 +667,42 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
 AG_GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
   AG_GST_PKG_CHECK_MODULES(GDK_PIXBUF, gdk-pixbuf-2.0 >= 2.8.0)
 ])
+
+dnl *** gtk+ ***
+HAVE_GTK3_GL="no"
+translit(dnm, m, l) AM_CONDITIONAL(USE_GTK3, true)
+AG_GST_CHECK_FEATURE(GTK3, [Gtk+ elements], gtk, [
+  PKG_CHECK_MODULES(GTK3, gtk+-3.0, [
+    AC_DEFINE([HAVE_GTK3], 1, [Define if Gtk+ 3.0 is installed])
+    HAVE_GTK3="yes"
+  ], [
+    HAVE_GTK3="no"
+  ])
+  PKG_CHECK_MODULES(GTK3_GL, gtk+-3.0 >= 3.15.0, [
+    GDK_WINDOWING="no"
+    if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1"; then
+      PKG_CHECK_MODULES(GTK3_X11, gtk+-x11-3.0, [
+        GTK3_CFLAGS="$GTK3_CFLAGS $GTK3_X11_CFLAGS"
+        GTK3_LIBS="$GTK3_LIBS $GTK3_X11_LIBS"
+        GDK_WINDOWING="yes"
+      ], [AC_MSG_NOTICE([Could not find Gtk X11 integration])])
+    fi
+    if test "x$GST_GL_HAVE_WINDOW_WAYLAND" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
+      PKG_CHECK_MODULES(GTK3_WAYLAND, gtk+-wayland-3.0, [
+        GTK3_CFLAGS="$GTK3_CFLAGS $GTK3_WAYLAND_CFLAGS"
+        GTK3_LIBS="$GTK3_LIBS $GTK3_WAYLAND_LIBS"
+        GDK_WINDOWING="yes"
+      ], [AC_MSG_NOTICE([Could not find Gtk Wayland integration])])
+    fi
+    if test "x$GDK_WINDOWING" = "xyes" -a "x$HAVE_GST_GL" = "xyes"; then
+      AC_DEFINE([HAVE_GTK3_GL], 1, [Define if Gtk+ 3.0 GL is installed])
+      HAVE_GTK3_GL="yes"
+    fi
+  ], [
+      HAVE_GTK3_GL="no"
+  ])
+])
+AM_CONDITIONAL(USE_GTK3_GL, test "x$HAVE_GTK3_GL" = "xyes")
 
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
@@ -1073,6 +1149,7 @@ ext/cairo/Makefile
 ext/dv/Makefile
 ext/flac/Makefile
 ext/gdk_pixbuf/Makefile
+ext/gtk/Makefile
 ext/jack/Makefile
 ext/jpeg/Makefile
 ext/lame/Makefile
@@ -1104,6 +1181,7 @@ tests/examples/Makefile
 tests/examples/audiofx/Makefile
 tests/examples/cairo/Makefile
 tests/examples/equalizer/Makefile
+tests/examples/gtk/Makefile
 tests/examples/jack/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile
