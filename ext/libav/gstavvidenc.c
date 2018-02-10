@@ -1048,6 +1048,13 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       goto next;
     }
 
+    if (g_str_has_suffix (in_plugin->name, "_v4l2m2m")) {
+      GST_DEBUG
+          ("Ignoring V4L2 mem-to-mem encoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
     /* only video encoders */
     if (!av_codec_is_encoder (in_plugin)
         || in_plugin->type != AVMEDIA_TYPE_VIDEO)

@@ -2314,6 +2314,13 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       goto next;
     }
 
+    if (g_str_has_suffix (in_plugin->name, "_v4l2m2m")) {
+      GST_DEBUG
+          ("Ignoring V4L2 mem-to-mem decoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
