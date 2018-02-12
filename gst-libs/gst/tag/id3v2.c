@@ -447,8 +447,30 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
   /* Extended header if present */
   if (work->hdr.flags & ID3V2_HDR_FLAG_EXTHDR) {
     work->hdr.ext_hdr_size = id3v2_read_synch_uint (work->hdr.frame_data, 4);
+
+    /* In id3v2.4.x the header size is the size of the *whole*
+     * extended header.
+     * In id3v2.3.x the header size does *not* include itself.
+     * In older versions it's undefined but let's assume it follow 2.3.x
+     */
+    switch (ID3V2_VER_MAJOR (work->hdr.version)) {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        work->hdr.ext_hdr_size += 4;
+        break;
+      case 4:
+        break;
+      default:
+        GST_WARNING
+            ("Don't know how to handled Extended Header for this id3 version");
+        break;
+    }
+    GST_LOG ("extended header size %d", work->hdr.ext_hdr_size);
+
     if (work->hdr.ext_hdr_size < 6 ||
-        (work->hdr.ext_hdr_size + 4) > work->hdr.frame_data_size) {
+        work->hdr.ext_hdr_size > work->hdr.frame_data_size) {
       GST_DEBUG ("Invalid extended header. Broken tag");
       return FALSE;
     }
@@ -458,10 +480,9 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
           ("Tag claims extended header, but doesn't have enough bytes. Broken tag");
       return FALSE;
     }
-
     work->hdr.ext_flag_data = work->hdr.frame_data + 5;
-    work->hdr.frame_data += work->hdr.ext_hdr_size + 4;
-    work->hdr.frame_data_size -= work->hdr.ext_hdr_size + 4;
+    work->hdr.frame_data += work->hdr.ext_hdr_size;
+    work->hdr.frame_data_size -= work->hdr.ext_hdr_size;
   }
 
   frame_hdr_size = id3v2_frame_hdr_size (work->hdr.version);
