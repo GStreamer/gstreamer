@@ -24588,3 +24588,53 @@
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstQtSrc::use-default-fbo</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Whether to use default FBO</NICK>
+<BLURB>When set it will not create a new FBO for the QML render thread.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSrc::window</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QQuickWindow</NICK>
+<BLURB>The QQuickWindow to place in the object hierarchy.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSink::pixel-aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQtSink::widget</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QQuickItem</NICK>
+<BLURB>The QQuickItem to place in the object hierarchy.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+

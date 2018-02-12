@@ -1834,6 +1834,38 @@ gst_push_file_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-qmlglsink</FILE>
+<TITLE>qmlglsink</TITLE>
+GstQtSink
+<SUBSECTION Standard>
+GstQtSinkClass
+GST_QT_SINK
+GST_QT_SINK_CAST
+GST_IS_QT_SINK
+GST_QT_SINK_CLASS
+GST_IS_QT_SINK_CLASS
+GST_TYPE_QT_SINK
+<SUBSECTION Private>
+gst_qt_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-qmlglsrc</FILE>
+<TITLE>qmlglsrc</TITLE>
+GstQtSrc
+<SUBSECTION Standard>
+GstQtSrcClass
+GST_QT_SRC
+GST_QT_SRC_CAST
+GST_IS_QT_SRC
+GST_QT_SRC_CLASS
+GST_IS_QT_SRC_CLASS
+GST_TYPE_QT_SRC
+<SUBSECTION Private>
+gst_qt_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-qtdemux</FILE>
 <TITLE>qtdemux</TITLE>
 GstQTDemux

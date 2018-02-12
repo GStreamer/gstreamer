@@ -135,6 +135,8 @@
     <xi:include href="xml/element-pulsesink.xml" />
     <xi:include href="xml/element-pulsesrc.xml" />
     <xi:include href="xml/element-pushfilesrc.xml" />
+    <xi:include href="xml/element-qmlglsink.xml" />
+    <xi:include href="xml/element-qmlglsrc.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
     <xi:include href="xml/element-qtmoovrecover.xml" />
     <xi:include href="xml/element-qtmux.xml" />
@@ -348,6 +350,7 @@
     <xi:include href="xml/plugin-osxvideo.xml" />
     <xi:include href="xml/plugin-png.xml" />
     <xi:include href="xml/plugin-pulseaudio.xml" />
+    <xi:include href="xml/plugin-qmlgl.xml" />
     <xi:include href="xml/plugin-replaygain.xml" />
     <xi:include href="xml/plugin-rtpmanager.xml" />
     <xi:include href="xml/plugin-rtp.xml" />

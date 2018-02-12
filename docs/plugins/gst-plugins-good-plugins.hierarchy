@@ -77,6 +77,7 @@ GObject
             GstGtkBaseSink
               GstGtkGLSink
               GstGtkSink
+            GstQtSink
             GstV4l2Sink
         GstBaseSrc
           GstDTMFSrc
@@ -90,6 +91,7 @@ GObject
             GstDV1394Src
             GstHDV1394Src
             GstMultiFileSrc
+            GstQtSrc
             GstSoupHTTPSrc
             GstUDPSrc
             GstV4l2Src
