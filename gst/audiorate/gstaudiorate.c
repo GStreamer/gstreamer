@@ -439,6 +439,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTimeDiff diff;
   gint rate, bpf;
+  GstAudioMeta *meta;
 
   audiorate = GST_AUDIO_RATE (parent);
 
@@ -492,8 +493,9 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     in_time = audiorate->next_ts;
   }
 
+  meta = gst_buffer_get_audio_meta (buf);
   in_size = gst_buffer_get_size (buf);
-  in_samples = in_size / bpf;
+  in_samples = meta ? meta->samples : in_size / bpf;
   audiorate->in += in_samples;
 
   /* calculate the buffer offset */
@@ -549,6 +551,10 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           fillmap.size);
       gst_buffer_unmap (fill, &fillmap);
 
+      if (audiorate->info.layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+        gst_buffer_add_audio_meta (fill, &audiorate->info, cursamples, NULL);
+      }
+
       GST_DEBUG_OBJECT (audiorate, "inserting %" G_GUINT64_FORMAT " samples",
           cursamples);
 
@@ -591,7 +597,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   } else if (in_offset < audiorate->next_offset) {
     /* need to remove samples */
     if (in_offset_end <= audiorate->next_offset) {
-      guint64 drop = in_size / bpf;
+      guint64 drop = in_samples;
 
       audiorate->drop += drop;
 
@@ -607,24 +613,16 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
       goto beach;
     } else {
-      guint64 truncsamples;
-      guint truncsize, leftsize;
-      GstBuffer *trunc;
+      guint64 truncsamples, leftsamples;
 
       /* truncate buffer */
       truncsamples = audiorate->next_offset - in_offset;
-      truncsize = truncsamples * bpf;
-      leftsize = in_size - truncsize;
+      leftsamples = in_samples - truncsamples;
 
-      trunc =
-          gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, truncsize,
-          leftsize);
-
-      gst_buffer_unref (buf);
-      buf = trunc;
+      buf = gst_audio_buffer_truncate (buf, bpf, truncsamples, leftsamples);
 
       audiorate->drop += truncsamples;
-      audiorate->out += (leftsize / bpf);
+      audiorate->out += leftsamples;
       GST_DEBUG_OBJECT (audiorate, "truncating %" G_GUINT64_FORMAT " samples",
           truncsamples);
 
