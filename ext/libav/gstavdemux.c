@@ -1488,17 +1488,10 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
         ((GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux)))->in_plugin->name;
     GstMapInfo map;
 
-    if (strcmp (plugin_name, "gif") == 0) {
-      src.data[0] = pkt.data;
-      src.data[1] = NULL;
-      src.data[2] = NULL;
-      src.linesize[0] = avstream->codec->width * 3;
-    } else {
-      GST_WARNING ("Unknown demuxer %s, no idea what to do", plugin_name);
-      gst_ffmpeg_avpicture_fill (&src, pkt.data,
-          avstream->codec->pix_fmt, avstream->codec->width,
-          avstream->codec->height);
-    }
+    GST_WARNING ("Unknown demuxer %s, no idea what to do", plugin_name);
+    gst_ffmpeg_avpicture_fill (&src, pkt.data,
+        avstream->codec->pix_fmt, avstream->codec->width,
+        avstream->codec->height);
 
     gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
     gst_ffmpeg_avpicture_fill (&dst, map.data,

@@ -259,11 +259,6 @@ gst_ffmpegmux_base_init (gpointer g_class)
     gst_caps_set_simple (audiosinkcaps,
         "rate", G_TYPE_INT, 48000, "channels", G_TYPE_INT, 2, NULL);
 
-  } else if (strcmp (in_plugin->name, "gif") == 0) {
-    if (videosinkcaps)
-      gst_caps_unref (videosinkcaps);
-
-    videosinkcaps = gst_caps_from_string ("video/x-raw, format=(string)RGB");
   }
 
   /* pad templates */
@@ -745,31 +740,9 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
         ffmpegmux->context->streams[best_pad->padnum]->time_base);
     pkt.dts = pkt.pts;
 
-    if (strcmp (ffmpegmux->context->oformat->name, "gif") == 0) {
-      AVStream *st = ffmpegmux->context->streams[best_pad->padnum];
-      AVPicture src, dst;
-
-      need_free = TRUE;
-      pkt.size = st->codec->width * st->codec->height * 3;
-      pkt.data = g_malloc (pkt.size);
-
-      dst.data[0] = pkt.data;
-      dst.data[1] = NULL;
-      dst.data[2] = NULL;
-      dst.linesize[0] = st->codec->width * 3;
-
-      gst_buffer_map (buf, &map, GST_MAP_READ);
-      gst_ffmpeg_avpicture_fill (&src, map.data,
-          AV_PIX_FMT_RGB24, st->codec->width, st->codec->height);
-
-      av_picture_copy (&dst, &src, AV_PIX_FMT_RGB24,
-          st->codec->width, st->codec->height);
-      gst_buffer_unmap (buf, &map);
-    } else {
-      gst_buffer_map (buf, &map, GST_MAP_READ);
-      pkt.data = map.data;
-      pkt.size = map.size;
-    }
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    pkt.data = map.data;
+    pkt.size = map.size;
 
     pkt.stream_index = best_pad->padnum;
     pkt.flags = 0;
