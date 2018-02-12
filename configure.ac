@@ -1943,108 +1943,6 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
 AM_CONDITIONAL(USE_GL, test "x$HAVE_GL" = "xyes")
 AM_CONDITIONAL(USE_OPENGL, test "x$GST_GL_HAVE_API_GL" = "x1")
 
-dnl *** Qt ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_QT, true)
-AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
-  PKG_CHECK_MODULES(QT, Qt5Core Qt5Gui Qt5Qml Qt5Quick >= 5.4.0, [
-      QT_PATH=`$PKG_CONFIG --variable=exec_prefix Qt5Core`
-      QT_HOST_PATH=`$PKG_CONFIG --variable=host_bins Qt5Core`
-      AC_ARG_WITH([moc],
-           AS_HELP_STRING([--with-moc], [Set location of qt moc tool]),
-           [MOC=$withval])
-      AC_PATH_PROGS(MOC, [moc-qt5 moc], [moc], ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
-      AC_ARG_WITH([rcc],
-           AS_HELP_STRING([--with-rcc], [Set location of qt rcc tool]),
-           [RCC=$withval])
-      AC_PATH_PROGS(RCC, [rcc-qt5 rcc], [rcc], ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
-      AC_ARG_WITH([uic],
-               AS_HELP_STRING([--with-uic], [Set location of qt uic tool]),
-               [UIC=$withval])
-      AC_PATH_PROGS(UIC, [uic-qt5 uic], [uic], ["${QT_HOST_PATH}" "${QT_PATH}/bin"])
-      if test "x$MOC" = "x" || test "x$UIC" = "x" || test "x$RCC" = "x"; then
-        AC_MSG_WARN([One of the required qt build programs was not found])
-        HAVE_QT="no"
-      else
-        HAVE_QT="yes"
-        HAVE_QT_WINDOWING="no"
-        QT_VERSION="`$PKG_CONFIG --define-prefix --modversion Qt5Core`"
-        QPA_INCLUDE_PATH=`$PKG_CONFIG --variable=includedir Qt5Core`/QtGui/${QT_VERSION}/QtGui
-        AS_IF([test -f "$PKG_CONFIG_SYSROOT_DIR/$QPA_INCLUDE_PATH/qpa/qplatformnativeinterface.h"], [
-          QT_CFLAGS="$QT_CFLAGS -I$PKG_CONFIG_SYSROOT_DIR/$QPA_INCLUDE_PATH"
-          HAVE_QT_QPA_HEADER="yes"
-        ], [AC_MSG_NOTICE([Cannot find QPA])])
-        if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1" || test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
-          PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
-            AC_DEFINE([HAVE_QT_X11], [], [Define if Qt X11 integration is installed])
-            QT_CFLAGS="$QT_CFLAGS $QT_X11_CFLAGS"
-            QT_LIBS="$QT_LIBS $QT_X11_LIBS"
-            HAVE_QT_WINDOWING="yes"
-          ], [AC_MSG_NOTICE([Could not find Qt X11 integration])])
-        fi
-        if test "x$GST_GL_HAVE_WINDOW_WAYLAND" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1" -a "x$HAVE_QT_QPA_HEADER" = "xyes"; then
-          PKG_CHECK_MODULES(QT_WAYLAND, Qt5WaylandClient, [
-            AC_DEFINE([HAVE_QT_WAYLAND], [],
-                [Define if Qt Wayland integration is installed])
-            QT_CFLAGS="$QT_CFLAGS $QT_WAYLAND_CFLAGS"
-            QT_LIBS="$QT_LIBS $QT_WAYLAND_LIBS"
-            HAVE_QT_WINDOWING="yes"
-          ], [AC_MSG_NOTICE([Could not find Qt Wayland integration])])
-        fi
-        if test "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
-          if test "x$GST_GL_HAVE_WINDOW_ANDROID" = "x1"; then
-            PKG_CHECK_MODULES(QT_ANDROID, Qt5AndroidExtras, [
-              # c++ on android requires a standard library and there are multiple
-              # choices.  cerbero provides a pkg-config file the describes a choice
-              # so try to use that.  Outside cerbero one has to pass these flags
-              # manually for the library one is using
-              PKG_CHECK_MODULES(GNUSTL, gnustl, [
-                QT_CFLAGS="$QT_CFLAGS $GNUSTL_CFLAGS"
-                QT_LIBS="$QT_LIBS $GNUSTL_LIBS"
-                ], [
-                AC_MSG_NOTICE([Could not find Standard C++ library])])
-              AC_DEFINE([HAVE_QT_EGLFS], [],
-                [Define if Qt eglfs integration is installed])
-              QT_CFLAGS="$QT_CFLAGS $QT_ANDROID_CFLAGS"
-              QT_LIBS="$QT_LIBS $QT_ANDROID_LIBS"
-              HAVE_QT_WINDOWING="yes"
-            ], [AC_MSG_NOTICE([Could not find Qt Android integration])])
-          else
-              AC_DEFINE([HAVE_QT_EGLFS], [],
-                [Define if Qt eglfs integration is installed])
-              HAVE_QT_WINDOWING="yes"
-          fi
-        fi
-        if test "x$GST_GL_HAVE_WINDOW_COCOA" = "x1" -a "x$GST_GL_HAVE_PLATFORM_CGL" = "x1"; then
-          PKG_CHECK_MODULES(QT_MAC, Qt5MacExtras, [
-            AC_DEFINE([HAVE_QT_MAC], [],
-                [Define if Qt Mac integration is installed])
-            QT_LIBDIR=`$PKG_CONFIG --variable=libdir Qt5Core`
-            QT_CFLAGS="$QT_CFLAGS $QT_MAC_CFLAGS -F$QT_LIBDIR -framework QtCore -framework QtGui -framework QtQuick -framework QtQml -framework QtMacExtras"
-            QT_LIBS="$QT_LIBS $QT_MAC_LIBS"
-            HAVE_QT_WINDOWING="yes"
-          ], [AC_MSG_NOTICE([Could not find Qt Mac integration])])
-        fi
-        if test "x$GST_GL_HAVE_WINDOW_EAGL" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EAGL" = "x1"; then
-          if test "x$HAVE_IOS" = "xyes"; then
-            # iOS doesn't have its own extras package so if we have the core
-            # modules we are good to go
-            AC_DEFINE([HAVE_QT_IOS], [],
-                [Define if Qt iOS integration is installed])
-            HAVE_QT_WINDOWING="yes"
-          fi
-        fi
-        if test "x$HAVE_QT_WINDOWING" = "xno"; then
-          AC_MSG_WARN([Could not find any Qt Windowing integration])
-          HAVE_QT="no"
-        fi
-        AC_SUBST([QT_CFLAGS])
-        AC_SUBST([QT_LIBS])
-      fi
-  ], [
-      HAVE_QT="no"
-  ])
-])
-
 dnl *** Vulkan ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VULKAN, true)
 AG_GST_CHECK_FEATURE(VULKAN, [Vulkan elements], vulkan, [
@@ -2454,7 +2352,6 @@ AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_OPENMPT, false)
 AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
-AM_CONDITIONAL(USE_QT, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_SMOOTHSTREAMING, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
@@ -2749,7 +2646,6 @@ ext/openjpeg/Makefile
 ext/openmpt/Makefile
 ext/openni2/Makefile
 ext/opus/Makefile
-ext/qt/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile

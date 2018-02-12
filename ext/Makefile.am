@@ -88,12 +88,6 @@ else
 GL_DIR=
 endif
 
-if USE_QT
-QT_DIR=qt
-else
-QT_DIR=
-endif
-
 if USE_RESINDVD
  RESINDVD_DIR = resindvd
 else
@@ -431,7 +425,6 @@ SUBDIRS=\
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
 	$(GL_DIR) \
-	$(QT_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FDK_AAC_DIR) \
@@ -512,7 +505,6 @@ DIST_SUBDIRS = \
 	daala \
 	dts \
 	gl \
-	qt \
 	modplug \
 	mpeg2enc \
 	mplex \

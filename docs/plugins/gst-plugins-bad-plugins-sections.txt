@@ -2650,22 +2650,6 @@ gst_pnmenc_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-qmlglsink</FILE>
-<TITLE>qmlglsink</TITLE>
-GstQtSink
-<SUBSECTION Standard>
-GstQtSinkClass
-GST_QT_SINK
-GST_QT_SINK_CAST
-GST_IS_QT_SINK
-GST_QT_SINK_CLASS
-GST_IS_QT_SINK_CLASS
-GST_TYPE_QT_SINK
-<SUBSECTION Private>
-gst_qt_sink_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-rgb2bayer</FILE>
 <TITLE>rgb2bayer</TITLE>
 GstRGB2Bayer

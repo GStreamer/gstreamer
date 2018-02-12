@@ -60,6 +60,7 @@ CRUFT_FILES = \
 	$(top_builddir)/ext/teletextdec/.libs/libgstteletextdec.so \
 	$(top_builddir)/gst/opus/.libs/libgstopus.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/mpg123/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/ext/qt/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/audioparsers/.libs/*.{so,dll,DLL,dylib} \
@@ -128,6 +129,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/tests/examples/gl \
 	$(top_srcdir)/tests/examples/scaletempo \
 	$(top_srcdir)/tests/examples/gtk \
+	$(top_srcdir)/tests/examples/qt \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/tests/examples/switch \
 	$(top_srcdir)/tests/examples/jack \
@@ -142,6 +144,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/metadata \
 	$(top_srcdir)/ext/mimic \
 	$(top_srcdir)/ext/mpg123 \
+	$(top_srcdir)/ext/qt \
 	$(top_srcdir)/ext/swfdec \
 	$(top_srcdir)/ext/tarkin \
 	$(top_srcdir)/ext/theora \
