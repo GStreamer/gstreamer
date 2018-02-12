@@ -210,6 +210,7 @@ plugin_init (GstPlugin * plugin)
 {
   GstVaapiDisplay *display;
   GArray *decoders;
+  guint rank;
 
   plugin_add_dependencies (plugin);
 
@@ -234,8 +235,11 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "vaapidecodebin",
       GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
 
-  gst_element_register (plugin, "vaapisink",
-      GST_RANK_PRIMARY, GST_TYPE_VAAPISINK);
+  rank = GST_RANK_PRIMARY;
+  if (g_getenv ("WAYLAND_DISPLAY"))
+    rank = GST_RANK_MARGINAL;
+  gst_element_register (plugin, "vaapisink", rank, GST_TYPE_VAAPISINK);
+
 #if USE_ENCODERS
   gst_vaapiencode_register (plugin, display);
 #endif
