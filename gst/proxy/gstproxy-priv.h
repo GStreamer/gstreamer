@@ -26,10 +26,13 @@
 
 G_BEGIN_DECLS
 
+G_GNUC_INTERNAL
 void gst_proxy_sink_set_proxysrc (GstProxySink *sink, GstProxySrc *src);
 
+G_GNUC_INTERNAL
 GstPad* gst_proxy_sink_get_internal_sinkpad (GstProxySink *sink);
 
+G_GNUC_INTERNAL
 GstPad* gst_proxy_src_get_internal_srcpad (GstProxySrc *src);
 
 G_END_DECLS

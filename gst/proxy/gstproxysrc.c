@@ -93,20 +93,6 @@ enum
   PROP_PROXYSINK,
 };
 
-struct _GstProxySrcPrivate
-{
-  /* Queue to hold buffers from proxysink */
-  GstElement *queue;
-  /* Source pad of the above queue and the proxysrc element itself */
-  GstPad *srcpad;
-  /* Our internal srcpad that proxysink pushes buffers/events/queries into */
-  GstPad *internal_srcpad;
-  /* An unlinked dummy sinkpad; see gst_proxy_src_init() */
-  GstPad *dummy_sinkpad;
-  /* The matching proxysink; queries and events are sent to its sinkpad */
-  GWeakRef proxysink;
-};
-
 /* We're not subclassing from basesrc because we don't want any of the special
  * handling it has for events/queries/etc. We just pass-through everything. */
 
@@ -132,7 +118,7 @@ gst_proxy_src_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_PROXYSINK:
-      g_value_take_object (value, g_weak_ref_get (&self->priv->proxysink));
+      g_value_take_object (value, g_weak_ref_get (&self->proxysink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
@@ -153,16 +139,16 @@ gst_proxy_src_set_property (GObject * object, guint prop_id,
       if (sink == NULL) {
         /* Unset proxysrc property on the existing proxysink to break the
          * connection in that direction */
-        GstProxySink *old_sink = g_weak_ref_get (&self->priv->proxysink);
+        GstProxySink *old_sink = g_weak_ref_get (&self->proxysink);
         if (old_sink) {
           gst_proxy_sink_set_proxysrc (old_sink, NULL);
           g_object_unref (old_sink);
         }
-        g_weak_ref_set (&self->priv->proxysink, NULL);
+        g_weak_ref_set (&self->proxysink, NULL);
       } else {
         /* Set proxysrc property on the new proxysink to point to us */
         gst_proxy_sink_set_proxysrc (sink, self);
-        g_weak_ref_set (&self->priv->proxysink, sink);
+        g_weak_ref_set (&self->proxysink, sink);
         g_object_unref (sink);
       }
       break;
@@ -178,8 +164,6 @@ gst_proxy_src_class_init (GstProxySrcClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_proxy_src_debug, "proxysrc", 0, "proxy sink");
-
-  g_type_class_add_private (klass, sizeof (GstProxySrcPrivate));
 
   gobject_class->dispose = gst_proxy_src_dispose;
 
@@ -207,34 +191,30 @@ gst_proxy_src_init (GstProxySrc * self)
 
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_SOURCE);
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_PROXY_SRC,
-      GstProxySrcPrivate);
-
   /* We feed incoming buffers into a queue to decouple the downstream pipeline
    * from the upstream pipeline */
-  self->priv->queue = gst_element_factory_make ("queue", NULL);
-  gst_bin_add (GST_BIN (self), self->priv->queue);
+  self->queue = gst_element_factory_make ("queue", NULL);
+  gst_bin_add (GST_BIN (self), self->queue);
 
-  srcpad = gst_element_get_static_pad (self->priv->queue, "src");
+  srcpad = gst_element_get_static_pad (self->queue, "src");
   templ = gst_static_pad_template_get (&src_template);
-  self->priv->srcpad = gst_ghost_pad_new_from_template ("src", srcpad, templ);
+  self->srcpad = gst_ghost_pad_new_from_template ("src", srcpad, templ);
   gst_object_unref (templ);
   gst_object_unref (srcpad);
 
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->srcpad);
+  gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   /* A dummy sinkpad that's not actually used anywhere
    * Explanation for why this is needed is below */
-  self->priv->dummy_sinkpad = gst_pad_new ("dummy_sinkpad", GST_PAD_SINK);
-  gst_object_set_parent (GST_OBJECT (self->priv->dummy_sinkpad),
-      GST_OBJECT (self));
+  self->dummy_sinkpad = gst_pad_new ("dummy_sinkpad", GST_PAD_SINK);
+  gst_object_set_parent (GST_OBJECT (self->dummy_sinkpad), GST_OBJECT (self));
 
-  self->priv->internal_srcpad = gst_pad_new ("internal_src", GST_PAD_SRC);
-  gst_object_set_parent (GST_OBJECT (self->priv->internal_srcpad),
-      GST_OBJECT (self->priv->dummy_sinkpad));
-  gst_pad_set_event_function (self->priv->internal_srcpad,
+  self->internal_srcpad = gst_pad_new ("internal_src", GST_PAD_SRC);
+  gst_object_set_parent (GST_OBJECT (self->internal_srcpad),
+      GST_OBJECT (self->dummy_sinkpad));
+  gst_pad_set_event_function (self->internal_srcpad,
       gst_proxy_src_internal_src_event);
-  gst_pad_set_query_function (self->priv->internal_srcpad,
+  gst_pad_set_query_function (self->internal_srcpad,
       gst_proxy_src_internal_src_query);
 
   /* We need to link internal_srcpad from proxysink to the sinkpad of our
@@ -243,8 +223,8 @@ gst_proxy_src_init (GstProxySrc * self)
    * the parent of internal_srcpad as dummy_sinkpad. This causes both these pads
    * to share a parent allowing us to link them.
    * Yes, this is a hack/workaround. */
-  sinkpad = gst_element_get_static_pad (self->priv->queue, "sink");
-  gst_pad_link (self->priv->internal_srcpad, sinkpad);
+  sinkpad = gst_element_get_static_pad (self->queue, "sink");
+  gst_pad_link (self->internal_srcpad, sinkpad);
   gst_object_unref (sinkpad);
 }
 
@@ -253,13 +233,13 @@ gst_proxy_src_dispose (GObject * object)
 {
   GstProxySrc *self = GST_PROXY_SRC (object);
 
-  gst_object_unparent (GST_OBJECT (self->priv->dummy_sinkpad));
-  self->priv->dummy_sinkpad = NULL;
+  gst_object_unparent (GST_OBJECT (self->dummy_sinkpad));
+  self->dummy_sinkpad = NULL;
 
-  gst_object_unparent (GST_OBJECT (self->priv->internal_srcpad));
-  self->priv->internal_srcpad = NULL;
+  gst_object_unparent (GST_OBJECT (self->internal_srcpad));
+  self->internal_srcpad = NULL;
 
-  g_weak_ref_set (&self->priv->proxysink, NULL);
+  g_weak_ref_set (&self->proxysink, NULL);
 
   G_OBJECT_CLASS (gst_proxy_src_parent_class)->dispose (object);
 }
@@ -279,10 +259,10 @@ gst_proxy_src_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = GST_STATE_CHANGE_NO_PREROLL;
-      gst_pad_set_active (self->priv->internal_srcpad, TRUE);
+      gst_pad_set_active (self->internal_srcpad, TRUE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_pad_set_active (self->priv->internal_srcpad, FALSE);
+      gst_pad_set_active (self->internal_srcpad, FALSE);
       break;
     default:
       break;
@@ -305,7 +285,7 @@ gst_proxy_src_internal_src_query (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
 
-  sink = g_weak_ref_get (&self->priv->proxysink);
+  sink = g_weak_ref_get (&self->proxysink);
   if (sink) {
     GstPad *sinkpad;
     sinkpad = gst_proxy_sink_get_internal_sinkpad (sink);
@@ -333,7 +313,7 @@ gst_proxy_src_internal_src_event (GstPad * pad, GstObject * parent,
 
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
-  sink = g_weak_ref_get (&self->priv->proxysink);
+  sink = g_weak_ref_get (&self->proxysink);
   if (sink) {
     GstPad *sinkpad;
     sinkpad = gst_proxy_sink_get_internal_sinkpad (sink);
@@ -354,5 +334,5 @@ gst_proxy_src_internal_src_event (GstPad * pad, GstObject * parent,
 GstPad *
 gst_proxy_src_get_internal_srcpad (GstProxySrc * self)
 {
-  return gst_object_ref (self->priv->internal_srcpad);
+  return gst_object_ref (self->internal_srcpad);
 }

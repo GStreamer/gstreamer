@@ -41,8 +41,21 @@ struct _GstProxySrc {
   GstBin parent;
 
   /* < private > */
-  GstProxySrcPrivate *priv;
-  gpointer  _gst_reserved[GST_PADDING];
+
+  /* Queue to hold buffers from proxysink */
+  GstElement *queue;
+
+  /* Source pad of the above queue and the proxysrc element itself */
+  GstPad *srcpad;
+
+  /* Our internal srcpad that proxysink pushes buffers/events/queries into */
+  GstPad *internal_srcpad;
+
+  /* An unlinked dummy sinkpad; see gst_proxy_src_init() */
+  GstPad *dummy_sinkpad;
+
+  /* The matching proxysink; queries and events are sent to its sinkpad */
+  GWeakRef proxysink;
 };
 
 struct _GstProxySrcClass {

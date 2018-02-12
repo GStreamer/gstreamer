@@ -41,8 +41,13 @@ struct _GstProxySink {
   GstElement parent;
 
   /* < private > */
-  GstProxySinkPrivate *priv;
-  gpointer _gst_reserved[GST_PADDING];
+  GstPad *sinkpad;
+
+  /* The proxysrc that we push events, buffers, queries to */
+  GWeakRef proxysrc;
+
+  /* Whether there are sticky events pending */
+  gboolean pending_sticky_events;
 };
 
 struct _GstProxySinkClass {

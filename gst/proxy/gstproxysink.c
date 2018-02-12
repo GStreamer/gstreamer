@@ -48,15 +48,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-struct _GstProxySinkPrivate
-{
-  GstPad *sinkpad;
-  /* The proxysrc that we push events, buffers, queries to */
-  GWeakRef proxysrc;
-  /* Whether there are sticky events pending */
-  gboolean pending_sticky_events;
-};
-
 /* We're not subclassing from basesink because we don't want any of the special
  * handling it has for events/queries/etc. We just pass-through everything. */
 
@@ -83,8 +74,6 @@ gst_proxy_sink_class_init (GstProxySinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_proxy_sink_debug, "proxysink", 0, "proxy sink");
 
-  g_type_class_add_private (klass, sizeof (GstProxySinkPrivate));
-
   gstelement_class->change_state = gst_proxy_sink_change_state;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -98,19 +87,16 @@ gst_proxy_sink_class_init (GstProxySinkClass * klass)
 static void
 gst_proxy_sink_init (GstProxySink * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_PROXY_SINK,
-      GstProxySinkPrivate);
-  self->priv->sinkpad =
-      gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_chain_function (self->priv->sinkpad,
+  self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_proxy_sink_sink_chain));
-  gst_pad_set_chain_list_function (self->priv->sinkpad,
+  gst_pad_set_chain_list_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_proxy_sink_sink_chain_list));
-  gst_pad_set_event_function (self->priv->sinkpad,
+  gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_proxy_sink_sink_event));
-  gst_pad_set_query_function (self->priv->sinkpad,
+  gst_pad_set_query_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_proxy_sink_sink_query));
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 }
 
 static GstStateChangeReturn
@@ -123,7 +109,7 @@ gst_proxy_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      self->priv->pending_sticky_events = FALSE;
+      self->pending_sticky_events = FALSE;
       break;
     default:
       break;
@@ -144,7 +130,7 @@ gst_proxy_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
 
-  src = g_weak_ref_get (&self->priv->proxysrc);
+  src = g_weak_ref_get (&self->proxysrc);
   if (src) {
     GstPad *srcpad;
     srcpad = gst_proxy_src_get_internal_srcpad (src);
@@ -185,18 +171,18 @@ gst_proxy_sink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP)
-    self->priv->pending_sticky_events = FALSE;
+    self->pending_sticky_events = FALSE;
 
-  src = g_weak_ref_get (&self->priv->proxysrc);
+  src = g_weak_ref_get (&self->proxysrc);
   if (src) {
     GstPad *srcpad;
     srcpad = gst_proxy_src_get_internal_srcpad (src);
 
-    if (sticky && self->priv->pending_sticky_events) {
+    if (sticky && self->pending_sticky_events) {
       CopyStickyEventsData data = { srcpad, GST_FLOW_OK };
 
       gst_pad_sticky_events_foreach (pad, copy_sticky_events, &data);
-      self->priv->pending_sticky_events = data.ret != GST_FLOW_OK;
+      self->pending_sticky_events = data.ret != GST_FLOW_OK;
     }
 
     ret = gst_pad_push_event (srcpad, event);
@@ -204,7 +190,7 @@ gst_proxy_sink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     gst_object_unref (src);
 
     if (!ret && sticky) {
-      self->priv->pending_sticky_events = TRUE;
+      self->pending_sticky_events = TRUE;
       ret = TRUE;
     }
   } else
@@ -222,16 +208,16 @@ gst_proxy_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_LOG_OBJECT (pad, "Chaining buffer %p", buffer);
 
-  src = g_weak_ref_get (&self->priv->proxysrc);
+  src = g_weak_ref_get (&self->proxysrc);
   if (src) {
     GstPad *srcpad;
     srcpad = gst_proxy_src_get_internal_srcpad (src);
 
-    if (self->priv->pending_sticky_events) {
+    if (self->pending_sticky_events) {
       CopyStickyEventsData data = { srcpad, GST_FLOW_OK };
 
       gst_pad_sticky_events_foreach (pad, copy_sticky_events, &data);
-      self->priv->pending_sticky_events = data.ret != GST_FLOW_OK;
+      self->pending_sticky_events = data.ret != GST_FLOW_OK;
     }
 
     ret = gst_pad_push (srcpad, buffer);
@@ -258,16 +244,16 @@ gst_proxy_sink_sink_chain_list (GstPad * pad, GstObject * parent,
 
   GST_LOG_OBJECT (pad, "Chaining buffer list %p", list);
 
-  src = g_weak_ref_get (&self->priv->proxysrc);
+  src = g_weak_ref_get (&self->proxysrc);
   if (src) {
     GstPad *srcpad;
     srcpad = gst_proxy_src_get_internal_srcpad (src);
 
-    if (self->priv->pending_sticky_events) {
+    if (self->pending_sticky_events) {
       CopyStickyEventsData data = { srcpad, GST_FLOW_OK };
 
       gst_pad_sticky_events_foreach (pad, copy_sticky_events, &data);
-      self->priv->pending_sticky_events = data.ret != GST_FLOW_OK;
+      self->pending_sticky_events = data.ret != GST_FLOW_OK;
     }
 
     ret = gst_pad_push_list (srcpad, list);
@@ -290,12 +276,12 @@ GstPad *
 gst_proxy_sink_get_internal_sinkpad (GstProxySink * self)
 {
   g_return_val_if_fail (self, NULL);
-  return gst_object_ref (self->priv->sinkpad);
+  return gst_object_ref (self->sinkpad);
 }
 
 void
 gst_proxy_sink_set_proxysrc (GstProxySink * self, GstProxySrc * src)
 {
   g_return_if_fail (self);
-  g_weak_ref_set (&self->priv->proxysrc, src);
+  g_weak_ref_set (&self->proxysrc, src);
 }
