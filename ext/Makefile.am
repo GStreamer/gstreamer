@@ -83,6 +83,11 @@ else
 PULSE_DIR =
 endif
 
+if USE_QT
+QT_DIR=qt
+else
+QT_DIR=
+endif
 
 if USE_SHOUT2
 SHOUT2_DIR = shout2
@@ -142,6 +147,7 @@ SUBDIRS = \
 	$(LIBPNG_DIR) \
 	$(MPG123_DIR) \
 	$(PULSE_DIR) \
+	$(QT_DIR) \
 	$(SHOUT2_DIR) \
 	$(SOUP_DIR) \
 	$(SPEEX_DIR) \
@@ -164,6 +170,7 @@ DIST_SUBDIRS = \
 	libpng \
 	mpg123 \
 	pulse \
+	qt \
 	raw1394 \
 	shout2 \
 	soup \
