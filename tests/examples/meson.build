@@ -1,5 +1,6 @@
 subdir('audiofx')
 subdir('cairo')
+#FIXME: subdir('gtk')
 subdir('level')
 subdir('rtp')
 subdir('shapewipe')

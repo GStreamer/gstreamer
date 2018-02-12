@@ -43,7 +43,7 @@ if gtk_dep.found()
 
   gstgtk = library('gstgtk',
     gtk_sources,
-    c_args : gst_plugins_bad_args + gtk_defines,
+    c_args : gst_plugins_good_args + gtk_defines,
     link_args : noseh_link_args,
     include_directories : [configinc],
     dependencies : [gtk_dep, gstvideo_dep, gstbase_dep, libm] + optional_deps,
