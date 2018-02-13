@@ -66,6 +66,9 @@ void msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface);
 
 const gchar *msdk_status_to_string (mfxStatus status);
 
+void gst_msdk_set_video_alignment (GstVideoInfo * info,
+    GstVideoAlignment * alignment);
+
 G_END_DECLS
 
 #endif /* __MSDK_H__ */

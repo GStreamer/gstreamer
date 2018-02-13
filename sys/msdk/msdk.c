@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
 #define GST_CAT_DEFAULT gst_msdkenc_debug
 
 #define INVALID_INDEX         ((guint) -1)
+#define GST_MSDK_ALIGNMENT_PADDING(num) (32 - ((num) & 31))
 
 static inline guint
 msdk_get_free_surface_index (mfxFrameSurface1 * surfaces, guint size)
@@ -361,4 +362,23 @@ msdk_is_available (void)
 
   msdk_close_session (session);
   return TRUE;
+}
+
+void
+gst_msdk_set_video_alignment (GstVideoInfo * info,
+    GstVideoAlignment * alignment)
+{
+  guint i, width, height;
+
+  width = GST_VIDEO_INFO_WIDTH (info);
+  height = GST_VIDEO_INFO_HEIGHT (info);
+
+  gst_video_alignment_reset (alignment);
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
+    alignment->stride_align[i] = 31;    /* 32-byte alignment */
+
+  if (width & 31)
+    alignment->padding_right = GST_MSDK_ALIGNMENT_PADDING (width);
+  if (height & 31)
+    alignment->padding_bottom = GST_MSDK_ALIGNMENT_PADDING (height);
 }

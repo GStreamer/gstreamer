@@ -70,19 +70,6 @@ typedef struct _MsdkSurface
   GstVideoFrame copy;
 } MsdkSurface;
 
-static void
-msdk_video_alignment (GstVideoAlignment * alignment, GstVideoInfo * info)
-{
-  guint i, height;
-
-  height = GST_VIDEO_INFO_HEIGHT (info);
-  gst_video_alignment_reset (alignment);
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
-    alignment->stride_align[i] = 31;    /* 32-byte alignment */
-  if (height & 31)
-    alignment->padding_bottom = 32 - (height & 31);
-}
-
 static GstFlowReturn
 allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
 {
@@ -356,7 +343,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz)
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (thiz),
       GST_VIDEO_FORMAT_NV12, width, height, thiz->input_state);
 
-  msdk_video_alignment (&align, &output_state->info);
+  gst_msdk_set_video_alignment (&output_state->info, &align);
   gst_video_info_align (&output_state->info, &align);
   memcpy (&thiz->output_info, &output_state->info, sizeof (GstVideoInfo));
   if (output_state->caps)
@@ -616,7 +603,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
      requirements by default. */
   gst_video_info_from_caps (&info_from_caps, pool_caps);
   memcpy (&info_aligned, &info_from_caps, sizeof (info_aligned));
-  msdk_video_alignment (&alignment, &info_from_caps);
+  gst_msdk_set_video_alignment (&info_from_caps, &alignment);
   gst_video_info_align (&info_aligned, &alignment);
   need_aligned = !gst_video_info_is_equal (&info_from_caps, &info_aligned);
 
