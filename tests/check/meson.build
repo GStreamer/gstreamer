@@ -31,6 +31,8 @@ base_tests = [
   [ 'elements/appsink.c' ],
   [ 'elements/appsrc.c' ],
   [ 'elements/audioconvert.c' ],
+  [ 'elements/audiointerleave.c' ],
+  [ 'elements/audiomixer.c', false, [ gst_controller_dep ] ],
   [ 'elements/audiorate.c' ],
   [ 'elements/audiotestsrc.c' ],
   [ 'elements/audioresample.c' ],

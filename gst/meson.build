@@ -1,6 +1,7 @@
 subdir('adder')
 subdir('app')
 subdir('audioconvert')
+subdir('audiomixer')
 subdir('audiorate')
 subdir('audioresample')
 subdir('audiotestsrc')

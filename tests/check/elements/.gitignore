@@ -4,6 +4,8 @@ alsa
 appsink
 appsrc
 audioconvert
+audiointerleave
+audiomixer
 audiorate
 audioresample
 audiotestsrc

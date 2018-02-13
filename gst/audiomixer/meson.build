@@ -24,9 +24,9 @@ endif
 
 gstaudiomixer = library('gstaudiomixer',
   audiomixer_sources, orc_c, orc_h,
-  c_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],
+  c_args : gst_plugins_base_args,
   include_directories : [configinc],
-  dependencies : [gstbadaudio_dep, gstaudio_dep, gstbase_dep, orc_dep],
+  dependencies : [audio_dep, gst_base_dep, orc_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

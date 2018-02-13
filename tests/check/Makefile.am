@@ -92,6 +92,12 @@ else
 check_audioconvert =
 endif
 
+if USE_PLUGIN_AUDIOMIXER
+check_audiomixer = elements/audiointerleave elements/audiomixer
+else
+check_audiomixer =
+endif
+
 if USE_PLUGIN_PLAYBACK
 check_playback = elements/decodebin elements/playbin \
     elements/playbin-complex elements/streamsynchronizer \
@@ -173,7 +179,7 @@ check_adder =
 endif
 
 if HAVE_ORC
-check_orc = orc/video orc/audio orc/adder orc/volume orc/videotestsrc
+check_orc = orc/video orc/audio orc/audiomixer orc/adder orc/volume orc/videotestsrc
 else
 check_orc =
 endif
@@ -253,6 +259,7 @@ check_PROGRAMS = \
 	$(check_adder) \
 	$(check_app) \
 	$(check_audioconvert) \
+	$(check_audiomixer) \
 	$(check_audiorate) \
 	$(check_audioresample) \
 	$(check_audiotestsrc) \
@@ -636,6 +643,21 @@ elements_audioconvert_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
+elements_audiomixer_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
+	$(LDADD)
+elements_audiomixer_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) \
+	$(AM_CFLAGS)
+
+elements_audiointerleave_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+elements_audiointerleave_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
 elements_audiorate_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
@@ -851,6 +873,9 @@ nodist_orc_audio_SOURCES = orc/audio.c
 orc_adder_CFLAGS = $(ORC_CFLAGS)
 orc_adder_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_adder_SOURCES = orc/adder.c
+orc_audiomixer_CFLAGS = $(ORC_CFLAGS)
+orc_audiomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_audiomixer_SOURCES = orc/audiomixer.c
 orc_volume_CFLAGS = $(ORC_CFLAGS)
 orc_volume_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_volume_SOURCES = orc/volume.c
@@ -864,6 +889,10 @@ orc/video.c: $(top_srcdir)/gst-libs/gst/video/video-orc.orc
 
 orc/audio.c: $(top_srcdir)/gst-libs/gst/audio/gstaudiopack.orc
 	$(MKDIR_P) orc/
+	$(ORCC) --test -o $@ $<
+
+orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
+	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
 
 orc/adder.c: $(top_srcdir)/gst/adder/gstadderorc.orc

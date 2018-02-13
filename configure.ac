@@ -479,6 +479,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(adder)
 AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(audioconvert)
+AG_GST_CHECK_PLUGIN(audiomixer)
 AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(encoding)
@@ -893,6 +894,7 @@ gst/Makefile
 gst/adder/Makefile
 gst/app/Makefile
 gst/audioconvert/Makefile
+gst/audiomixer/Makefile
 gst/audiorate/Makefile
 gst/audioresample/Makefile
 gst/audiotestsrc/Makefile
