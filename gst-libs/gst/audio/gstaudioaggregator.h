@@ -23,11 +23,6 @@
 #ifndef __GST_AUDIO_AGGREGATOR_H__
 #define __GST_AUDIO_AGGREGATOR_H__
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The Base library from gst-plugins-bad is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
 #include <gst/gst.h>
 #include <gst/base/gstaggregator.h>
 #include <gst/audio/audio.h>

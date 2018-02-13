@@ -41,6 +41,7 @@ libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio-info.c \
 	audio-quantize.c \
 	audio-resampler.c \
+	gstaudioaggregator.c \
 	gstaudioringbuffer.c \
 	gstaudioclock.c \
 	gstaudiocdsrc.c \
@@ -69,6 +70,7 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-info.h \
 	audio-quantize.h \
 	audio-resampler.h \
+	gstaudioaggregator.h \
 	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \

@@ -14,6 +14,11 @@ GObject
       GstControlSource
       GstElement
         GstAdder
+        GstAggregator
+          GstAudioAggregator
+            GstAudioInterleave
+            GstAudioMixer
+              GstLiveAdder
         GstAudioDecoder
           GstOpusDec
           GstVorbisDec
@@ -160,6 +165,10 @@ GObject
       GstGLContext
       GstGLShader
       GstPad
+        GstAggregatorPad
+          GstAudioAggregatorPad
+            GstAudioInterleavePad
+            GstAudioMixerPad
         GstProxyPad
           GstGhostPad
             GstDecodePad
