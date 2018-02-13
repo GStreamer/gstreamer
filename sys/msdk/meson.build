@@ -21,7 +21,7 @@ msdk_sources = [
 ]
 
 if host_machine.system() == 'windows'
-  msdk_sources += 'msdk_d3d.c'
+  msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
 else
   msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
 endif

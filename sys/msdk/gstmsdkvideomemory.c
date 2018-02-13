@@ -117,6 +117,8 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   GstMsdkVideoMemory *mem =
       GST_MSDK_VIDEO_MEMORY_CAST (gst_buffer_peek_memory (meta->buffer, 0));
   GstMsdkMemoryID *mem_id;
+  guint offset = 0;
+  gint pitch = 0;
 
   g_return_val_if_fail (mem, FALSE);
 
@@ -146,8 +148,19 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   mem->mapped++;
   mem_id = mem->surface->Data.MemId;
 
-  *data = mem->surface->Data.Y + mem_id->image.offsets[plane];
-  *stride = mem_id->image.pitches[plane];
+#ifndef _WIN32
+  offset = mem_id->image.offsets[plane];
+  pitch = mem_id->image.pitches[plane];
+#else
+  /* TODO: This is just to avoid compile errors on Windows.
+   * Implement handling Windows-specific video-memory.
+   */
+  offset = mem_id->offset;
+  pitch = mem_id->pitch;
+#endif
+
+  *data = mem->surface->Data.Y + offset;
+  *stride = pitch;
 
   info->flags = flags;
   ret = (*data != NULL);

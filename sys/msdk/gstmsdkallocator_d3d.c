@@ -30,39 +30,51 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GST_MSDK_ALLOCATOR_H_
-#define GST_MSDK_ALLOCATOR_H_
+#include "gstmsdkallocator.h"
 
-#include "msdk.h"
-#include "gstmsdkcontext.h"
+mfxStatus
+gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
+    mfxFrameAllocResponse * resp)
+{
+  return MFX_ERR_NONE;
+}
 
-G_BEGIN_DECLS
+mfxStatus
+gst_msdk_frame_free (mfxHDL pthis, mfxFrameAllocResponse * resp)
+{
+  return MFX_ERR_NONE;
+}
 
-typedef struct _GstMsdkMemoryID GstMsdkMemoryID;
+mfxStatus
+gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
+{
+  return MFX_ERR_NONE;
+}
 
-struct _GstMsdkMemoryID {
-  mfxU32 fourcc;
+mfxStatus
+gst_msdk_frame_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
+{
+  return MFX_ERR_NONE;
+}
 
-#ifndef _WIN32
-  VASurfaceID *surface;
-  VAImage image;
-#else
-  /* TODO: This is just to avoid compile errors on Windows.
-   * Implement handling Windows-specific video-memory.
-   */
-  gint pitch;
-  guint offset;
-#endif
-};
+mfxStatus
+gst_msdk_frame_get_hdl (mfxHDL pthis, mfxMemId mid, mfxHDL * hdl)
+{
+  return MFX_ERR_NONE;
+}
 
-mfxStatus gst_msdk_frame_alloc(mfxHDL pthis, mfxFrameAllocRequest *req, mfxFrameAllocResponse *resp);
-mfxStatus gst_msdk_frame_free(mfxHDL pthis, mfxFrameAllocResponse *resp);
-mfxStatus gst_msdk_frame_lock(mfxHDL pthis, mfxMemId mid, mfxFrameData *ptr);
-mfxStatus gst_msdk_frame_unlock(mfxHDL pthis, mfxMemId mid, mfxFrameData *ptr);
-mfxStatus gst_msdk_frame_get_hdl(mfxHDL pthis, mfxMemId mid, mfxHDL *hdl);
+void
+gst_msdk_set_frame_allocator (GstMsdkContext * context)
+{
+  mfxFrameAllocator gst_msdk_frame_allocator = {
+    .pthis = context,
+    .Alloc = gst_msdk_frame_alloc,
+    .Lock = gst_msdk_frame_lock,
+    .Unlock = gst_msdk_frame_unlock,
+    .GetHDL = gst_msdk_frame_get_hdl,
+    .Free = gst_msdk_frame_free,
+  };
 
-void gst_msdk_set_frame_allocator (GstMsdkContext * context);
-
-G_END_DECLS
-
-#endif /* GST_MSDK_ALLOCATOR_H_ */
+  MFXVideoCORE_SetFrameAllocator (gst_msdk_context_get_session (context),
+      &gst_msdk_frame_allocator);
+}
