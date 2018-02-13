@@ -1,6 +1,7 @@
 msdk_sources = [
   'gstmsdk.c',
   'gstmsdkcontext.c',
+  'gstmsdkcontextutil.c',
   'gstmsdksystemmemory.c',
   'gstmsdkvideomemory.c',
   'gstmsdkbufferpool.c',
