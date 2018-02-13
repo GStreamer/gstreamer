@@ -498,6 +498,8 @@ gst_uri_get_location (const gchar * uri)
  *
  * Returns: (transfer full): a new string for this URI. Returns %NULL if the
  *     given URI protocol is not valid, or the given location is %NULL.
+ *
+ * Deprecated: Use GstURI instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
 gchar *

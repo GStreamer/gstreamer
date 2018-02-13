@@ -1084,7 +1084,7 @@ gst_segment_position_from_running_time_full (const GstSegment * segment,
  * Returns: the position in the segment for @running_time. This function returns
  * -1 when @running_time is -1 or when it is not inside @segment.
  *
- * Deprecated. Use gst_segment_position_from_running_time() instead.
+ * Deprecated: Use gst_segment_position_from_running_time() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
 guint64

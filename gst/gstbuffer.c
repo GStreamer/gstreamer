@@ -2267,7 +2267,7 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
 /**
  * gst_buffer_iterate_meta: (skip)
  * @buffer: a #GstBuffer
- * @state: an opaque state pointer
+ * @state: (out caller-allocates): an opaque state pointer
  *
  * Retrieve the next #GstMeta after @current. If @state points
  * to %NULL, the first metadata is returned.
@@ -2302,7 +2302,7 @@ gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
 /**
  * gst_buffer_iterate_meta_filtered: (skip)
  * @buffer: a #GstBuffer
- * @state: an opaque state pointer
+ * @state: (out caller-allocates): an opaque state pointer
  * @meta_api_type: only return #GstMeta of this type
  *
  * Retrieve the next #GstMeta of type @meta_api_type after the current one

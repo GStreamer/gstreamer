@@ -993,7 +993,7 @@ gst_query_parse_n_formats (GstQuery * query, guint * n_formats)
 /**
  * gst_query_parse_nth_format:
  * @query: a #GstQuery
- * @nth: (out): the nth format to retrieve.
+ * @nth: the nth format to retrieve.
  * @format: (out) (allow-none): a pointer to store the nth format
  *
  * Parse the format query and retrieve the @nth format from it into
@@ -2389,7 +2389,7 @@ gst_query_set_accept_caps_result (GstQuery * query, gboolean result)
 /**
  * gst_query_parse_accept_caps_result:
  * @query: a GST_QUERY_ACCEPT_CAPS type query #GstQuery
- * @result: location for the result
+ * @result: (out) (allow-none): location for the result
  *
  * Parse the result from @query and store in @result.
  */

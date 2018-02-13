@@ -163,8 +163,8 @@ gst_memory_is_type (GstMemory * mem, const gchar * mem_type)
 /**
  * gst_memory_get_sizes:
  * @mem: a #GstMemory
- * @offset: pointer to offset
- * @maxsize: pointer to maxsize
+ * @offset: (out) (allow-none): pointer to offset
+ * @maxsize: (out) (allow-none): pointer to maxsize
  *
  * Get the current @size, @offset and @maxsize of @mem.
  *
@@ -426,7 +426,7 @@ gst_memory_share (GstMemory * mem, gssize offset, gssize size)
  * gst_memory_is_span:
  * @mem1: a #GstMemory
  * @mem2: a #GstMemory
- * @offset: a pointer to a result offset
+ * @offset: (out): a pointer to a result offset
  *
  * Check if @mem1 and mem2 share the memory with a common parent memory object
  * and that the memory is contiguous.

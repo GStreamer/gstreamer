@@ -2015,7 +2015,7 @@ gst_event_new_protection (const gchar * system_id,
  * string uniquely identifying a content protection system.
  * @data: (out) (allow-none) (transfer none): pointer to store a #GstBuffer
  * holding protection system specific information.
- * @origin: (allow-none) (transfer none): pointer to store a value that
+ * @origin: (out) (allow-none) (transfer none): pointer to store a value that
  * indicates where the protection information carried by @event was extracted
  * from.
  *

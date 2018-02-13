@@ -462,7 +462,7 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
 /**
  * gst_message_parse_error_details:
  * @message: The message object
- * @structure: (out): A pointer to the returned details
+ * @structure: (transfer none) (out): A pointer to the returned details
  *
  * Returns the optional details structure, may be NULL if none.
  * The returned structure must not be freed.
@@ -552,7 +552,7 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
 /**
  * gst_message_parse_warning_details:
  * @message: The message object
- * @structure: (out): A pointer to the returned details structure
+ * @structure: (transfer none) (out): A pointer to the returned details structure
  *
  * Returns the optional details structure, may be NULL if none
  * The returned structure must not be freed.
@@ -642,7 +642,7 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
 /**
  * gst_message_parse_info_details:
  * @message: The message object
- * @structure: (out): A pointer to the returned details structure
+ * @structure: (transfer none) (out): A pointer to the returned details structure
  *
  * Returns the optional details structure, may be NULL if none
  * The returned structure must not be freed.
@@ -2504,7 +2504,7 @@ gst_message_new_need_context (GstObject * src, const gchar * context_type)
 /**
  * gst_message_parse_context_type:
  * @message: a GST_MESSAGE_NEED_CONTEXT type message
- * @context_type: (out) (allow-none): the context type, or %NULL
+ * @context_type: (out) (transfer none) (allow-none): the context type, or %NULL
  *
  * Parse a context type from an existing GST_MESSAGE_NEED_CONTEXT message.
  *
@@ -2721,11 +2721,12 @@ gst_message_new_property_notify (GstObject * src, const gchar * property_name,
  * @message: a #GstMessage of type %GST_MESSAGE_PROPERTY_NOTIFY
  * @object: (out) (allow-none) (transfer none): location where to store a
  *     pointer to the object whose property got changed, or %NULL
- * @property_name: (out) (allow-none): return location for the name of the
- *     property that got changed, or %NULL
- * @property_value: (out) (allow-none): return location for the new value of
- *     the property that got changed, or %NULL. This will only be set if the
- *     property notify watch was told to include the value when it was set up
+ * @property_name: (out) (transfer none) (allow-none): return location for
+ *     the name of the property that got changed, or %NULL
+ * @property_value: (out) (transfer none) (allow-none): return location for
+ *     the new value of the property that got changed, or %NULL. This will
+ *     only be set if the property notify watch was told to include the value
+ *     when it was set up
  *
  * Parses a property-notify message. These will be posted on the bus only
  * when set up with gst_element_add_property_notify_watch() or

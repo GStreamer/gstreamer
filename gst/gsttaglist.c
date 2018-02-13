@@ -1640,6 +1640,18 @@ TAG_MERGE_FUNCS (int, gint, TRUE);
  */
 TAG_MERGE_FUNCS (uint, guint, TRUE);
 /**
+ * gst_tag_list_get_int64:
+ * @list: a #GstTagList to get the tag from
+ * @tag: tag to read out
+ * @value: (out): location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: %TRUE, if a value was copied, %FALSE if the tag didn't exist in the
+ *              given list.
+ */
+/**
  * gst_tag_list_get_int64_index:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
