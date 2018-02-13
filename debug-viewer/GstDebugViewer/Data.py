@@ -155,7 +155,7 @@ def default_log_line_regex_():
     PID = r"(\d+)\s*"
     FILENAME = r"([^:]*):"
     LINE = r"(\d+):"
-    FUNCTION = "([A-Za-z0-9_]*):"
+    FUNCTION = "([A-Za-z0-9_]*|operator\(\)):"
     # FIXME: When non-g(st)object stuff is logged with *_OBJECT (like
     # buffers!), the address is printed *without* <> brackets!
     OBJECT = "(?:<([^>]+)>)?"
