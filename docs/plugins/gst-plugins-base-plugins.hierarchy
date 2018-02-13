@@ -168,8 +168,9 @@ GObject
       GstPad
         GstAggregatorPad
           GstAudioAggregatorPad
+            GstAudioAggregatorConvertPad
+              GstAudioMixerPad
             GstAudioInterleavePad
-            GstAudioMixerPad
         GstProxyPad
           GstGhostPad
             GstDecodePad

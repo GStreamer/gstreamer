@@ -939,3 +939,4 @@ GstStream *arg2
 GstURIDecodeBin3 *gsturidecodebin3
 GstElement *arg1
 </SIGNAL>
+

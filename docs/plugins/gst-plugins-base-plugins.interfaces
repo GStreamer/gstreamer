@@ -7,6 +7,8 @@ GstAppSink GstURIHandler
 GstAppSrc GstURIHandler
 GstAudioCdSrc GstURIHandler
 GstAudioEncoder GstPreset
+GstAudioInterleave GstChildProxy
+GstAudioMixer GstChildProxy
 GstBin GstChildProxy
 GstCdParanoiaSrc GstURIHandler
 GstDecodeBin GstChildProxy
@@ -20,6 +22,7 @@ GstGLSinkBin GstChildProxy GstVideoOverlay GstNavigation GstColorBalance
 GstGLSrcBin GstChildProxy
 GstGioSink GstURIHandler
 GstGioSrc GstURIHandler
+GstLiveAdder GstChildProxy
 GstOggMux GstPreset
 GstOpusEnc GstPreset GstTagSetter
 GstParseBin GstChildProxy

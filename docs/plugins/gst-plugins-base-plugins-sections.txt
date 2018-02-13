@@ -111,6 +111,38 @@ gst_audio_convert_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audiointerleave</FILE>
+<TITLE>audiointerleave</TITLE>
+GstAudioInterleave
+<SUBSECTION Standard>
+GstAudioInterleaveClass
+GST_AUDIO_INTERLEAVE
+GST_AUDIO_INTERLEAVE_CAST
+GST_IS_AUDIO_INTERLEAVE
+GST_AUDIO_INTERLEAVE_CLASS
+GST_IS_AUDIO_INTERLEAVE_CLASS
+GST_TYPE_AUDIO_INTERLEAVE
+<SUBSECTION Private>
+gst_audio_interleave_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiomixer</FILE>
+<TITLE>audiomixer</TITLE>
+GstAudioMixer
+<SUBSECTION Standard>
+GstAudioMixerClass
+GST_AUDIO_MIXER
+GST_AUDIO_MIXER_CAST
+GST_IS_AUDIO_MIXER
+GST_AUDIO_MIXER_CLASS
+GST_IS_AUDIO_MIXER_CLASS
+GST_TYPE_AUDIO_MIXER
+<SUBSECTION Private>
+gst_audio_mixer_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audiorate</FILE>
 <TITLE>audiorate</TITLE>
 GstAudioRate
