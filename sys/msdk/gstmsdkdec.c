@@ -396,11 +396,6 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz)
   output_state->caps = gst_video_info_to_caps (&output_state->info);
   gst_video_codec_state_unref (output_state);
 
-  /* TODO: If downstream accepts msdk memory or dmabuf,
-   * this should be TRUE and using MFX_IOPATTERN_OUT_VIDEO_MEMORY
-   */
-  thiz->use_video_memory = FALSE;
-
   return TRUE;
 }
 
@@ -500,6 +495,7 @@ gst_msdkdec_start (GstVideoDecoder * decoder)
   if (gst_msdk_context_prepare (GST_ELEMENT_CAST (thiz), &thiz->context)) {
     GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
         thiz->context);
+    thiz->use_video_memory = TRUE;
 
     if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_DECODER) {
       GstMsdkContext *parent_context;
@@ -520,7 +516,6 @@ gst_msdkdec_start (GstVideoDecoder * decoder)
   } else {
     gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz), thiz->hardware,
         GST_MSDK_JOB_DECODER);
-
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
@@ -570,9 +565,6 @@ gst_msdkdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   thiz->input_state = gst_video_codec_state_ref (state);
 
   if (!gst_msdkdec_set_src_caps (thiz))
-    return FALSE;
-
-  if (!gst_msdkdec_init_decoder (thiz))
     return FALSE;
 
   gst_msdkdec_set_latency (thiz);
@@ -633,6 +625,9 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   mfxStatus status;
   GstMapInfo map_info;
   guint i;
+
+  if (!thiz->initialized)
+    gst_video_decoder_negotiate (decoder);
 
   if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ))
     return GST_FLOW_ERROR;
@@ -812,6 +807,10 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
   pool_config = gst_buffer_pool_get_config (pool);
 
+  /* If downstream's pool is MSDK bufferpool, decoder is using video memory */
+  if (GST_IS_MSDK_BUFFER_POOL (pool))
+    thiz->use_video_memory = TRUE;
+
   /* Get the caps of pool and increase the min and max buffers by async_depth,
    * we will always have that number of decode operations in-flight */
   gst_buffer_pool_config_get_params (pool_config, &pool_caps, &size,
@@ -884,6 +883,12 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   if (pool)
     gst_object_unref (pool);
+
+  /* Initialize MSDK decoder before new bufferpool tries to alloc each buffer,
+   * which requires information of frame allocation.
+   */
+  if (!gst_msdkdec_init_decoder (thiz))
+    return FALSE;
 
   return TRUE;
 
