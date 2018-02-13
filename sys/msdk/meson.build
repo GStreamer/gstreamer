@@ -1,6 +1,9 @@
 msdk_sources = [
   'gstmsdk.c',
   'gstmsdkcontext.c',
+  'gstmsdksystemmemory.c',
+  'gstmsdkvideomemory.c',
+  'gstmsdkbufferpool.c',
   'gstmsdkdec.c',
   'gstmsdkenc.c',
   'gstmsdkh264dec.c',
