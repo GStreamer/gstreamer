@@ -31,6 +31,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* sample pipeline: gst-launch-1.0 filesrc location=video.wmv ! asfdemux ! vc1parse !  msdkvc1dec ! videoconvert ! xvimagesink */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -50,7 +52,14 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "format= (string) WMV3, "
         "header-format= (string) none, "
         "stream-format= (string) sequence-layer-frame-layer, "
-        "profile = (string) {simple, main}")
+        "profile = (string) {simple, main}" ";"
+        "video/x-wmv, "
+        "framerate = (fraction) [0/1, MAX], "
+        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
+        "wmvversion= (int) 3, "
+        "format= (string) WVC1, "
+        "header-format= (string) asf, "
+        "stream-format= (string) bdu, " "profile = (string) advanced" ";")
     );
 
 #define gst_msdkvc1dec_parent_class parent_class
@@ -59,6 +68,7 @@ G_DEFINE_TYPE (GstMsdkVC1Dec, gst_msdkvc1dec, GST_TYPE_MSDKDEC);
 static gboolean
 gst_msdkvc1dec_configure (GstMsdkDec * decoder)
 {
+  GstBuffer *buffer;
   GstCaps *caps;
   GstStructure *structure;
   const gchar *profile_str;
@@ -71,16 +81,26 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
   if (!structure)
     return FALSE;
 
-  profile_str = gst_structure_get_string (structure, "profile");
-
   decoder->param.mfx.CodecId = MFX_CODEC_VC1;
+
+  profile_str = gst_structure_get_string (structure, "profile");
 
   if (!strcmp (profile_str, "simple"))
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_SIMPLE;
   else if (!strcmp (profile_str, "main"))
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_MAIN;
-  else
-    return FALSE;
+  else {
+    decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_ADVANCED;
+    /* asf advanced profile codec-data has 1 byte in the begining
+     * which is the ASF binding byte. MediaSDK can't recognize this
+     * byte, so discard it */
+    buffer = gst_buffer_copy_region (decoder->input_state->codec_data,
+        GST_BUFFER_COPY_DEEP | GST_BUFFER_COPY_MEMORY, 1,
+        gst_buffer_get_size (decoder->input_state->codec_data) - 1);
+    gst_adapter_push (decoder->adapter, buffer);
+
+    decoder->is_packetized = FALSE;
+  }
 
   return TRUE;
 }
