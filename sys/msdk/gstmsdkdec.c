@@ -39,6 +39,7 @@
 #include "gstmsdkbufferpool.h"
 #include "gstmsdkvideomemory.h"
 #include "gstmsdksystemmemory.h"
+#include "gstmsdkcontextutil.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkdec_debug);
 #define GST_CAT_DEFAULT gst_msdkdec_debug
@@ -203,10 +204,11 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz)
 {
   mfxStatus status;
 
-  if (!thiz->context)
+  if (!thiz->context || !thiz->initialized)
     return;
 
-  GST_DEBUG_OBJECT (thiz, "Closing decoder 0x%p", thiz->context);
+  GST_DEBUG_OBJECT (thiz, "Closing decoder with context %" GST_PTR_FORMAT,
+      thiz->context);
 
   if (thiz->use_video_memory)
     gst_msdk_frame_free (thiz->context, &thiz->alloc_resp);
@@ -220,9 +222,23 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz)
   g_array_set_size (thiz->tasks, 0);
   g_ptr_array_set_size (thiz->extra_params, 0);
 
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
   memset (&thiz->param, 0, sizeof (thiz->param));
+  thiz->initialized = FALSE;
+}
+
+static void
+gst_msdkdec_set_context (GstElement * element, GstContext * context)
+{
+  GstMsdkContext *msdk_context = NULL;
+  GstMsdkDec *thiz = GST_MSDKDEC (element);
+
+  if (gst_msdk_context_get_context (context, &msdk_context)) {
+    gst_object_replace ((GstObject **) & thiz->context,
+        (GstObject *) msdk_context);
+    gst_object_unref (msdk_context);
+  }
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static gboolean
@@ -234,20 +250,19 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   mfxStatus status;
   mfxFrameAllocRequest request;
 
+  if (thiz->initialized)
+    return TRUE;
+
+  if (!thiz->context) {
+    GST_WARNING_OBJECT (thiz, "No MSDK Context");
+    return FALSE;
+  }
+
   if (!thiz->input_state) {
     GST_DEBUG_OBJECT (thiz, "Have no input state yet");
     return FALSE;
   }
   info = &thiz->input_state->info;
-
-  /* make sure that the decoder is closed */
-  gst_msdkdec_close_decoder (thiz);
-
-  thiz->context = gst_msdk_context_new (thiz->hardware, GST_MSDK_JOB_DECODER);
-  if (!thiz->context) {
-    GST_ERROR_OBJECT (thiz, "Context creation failed");
-    return FALSE;
-  }
 
   GST_OBJECT_LOCK (thiz);
 
@@ -346,12 +361,11 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 
   GST_OBJECT_UNLOCK (thiz);
 
+  thiz->initialized = TRUE;
   return TRUE;
 
 failed:
   GST_OBJECT_UNLOCK (thiz);
-  gst_object_replace ((GstObject **) & thiz->context, NULL);
-  thiz->context = NULL;
   return FALSE;
 }
 
@@ -474,6 +488,39 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 }
 
 static gboolean
+gst_msdkdec_start (GstVideoDecoder * decoder)
+{
+  GstMsdkDec *thiz = GST_MSDKDEC (decoder);
+
+  if (gst_msdk_context_prepare (GST_ELEMENT_CAST (thiz), &thiz->context)) {
+    GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
+        thiz->context);
+
+    if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_DECODER) {
+      GstMsdkContext *parent_context;
+
+      parent_context = thiz->context;
+      thiz->context = gst_msdk_context_new_with_parent (parent_context);
+      gst_object_unref (parent_context);
+
+      GST_INFO_OBJECT (thiz,
+          "Creating new context %" GST_PTR_FORMAT " with joined session",
+          thiz->context);
+    } else {
+      gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_DECODER);
+    }
+  } else {
+    gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz), thiz->hardware,
+        GST_MSDK_JOB_DECODER);
+
+    GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
+        thiz->context);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_msdkdec_close (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
@@ -498,6 +545,8 @@ gst_msdkdec_stop (GstVideoDecoder * decoder)
   }
   gst_video_info_init (&thiz->output_info);
   gst_video_info_init (&thiz->pool_info);
+
+  gst_msdkdec_close_decoder (thiz);
   return TRUE;
 }
 
@@ -853,7 +902,7 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
   mfxStatus status;
   guint i;
 
-  if (!thiz->context)
+  if (!thiz->initialized)
     return GST_FLOW_OK;
   session = gst_msdk_context_get_session (thiz->context);
 
@@ -1017,7 +1066,10 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
   gobject_class->get_property = gst_msdkdec_get_property;
   gobject_class->finalize = gst_msdkdec_finalize;
 
+  element_class->set_context = gst_msdkdec_set_context;
+
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_msdkdec_close);
+  decoder_class->start = GST_DEBUG_FUNCPTR (gst_msdkdec_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_msdkdec_stop);
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_msdkdec_set_format);
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_msdkdec_finish);

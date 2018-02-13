@@ -48,7 +48,7 @@
 #include "gstmsdkbufferpool.h"
 #include "gstmsdkvideomemory.h"
 #include "gstmsdksystemmemory.h"
-#include "gstmsdkallocator.h"
+#include "gstmsdkcontextutil.h"
 
 static inline void *
 _aligned_alloc (size_t alignment, size_t size)
@@ -150,6 +150,21 @@ gst_msdkenc_add_extra_param (GstMsdkEnc * thiz, mfxExtBuffer * param)
   }
 }
 
+static void
+gst_msdkenc_set_context (GstElement * element, GstContext * context)
+{
+  GstMsdkContext *msdk_context = NULL;
+  GstMsdkEnc *thiz = GST_MSDKENC (element);
+
+  if (gst_msdk_context_get_context (context, &msdk_context)) {
+    gst_object_replace ((GstObject **) & thiz->context,
+        (GstObject *) msdk_context);
+    gst_object_unref (msdk_context);
+  }
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
 static gboolean
 gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 {
@@ -160,20 +175,19 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   mfxFrameAllocRequest request[2];
   guint i;
 
+  if (thiz->initialized)
+    return TRUE;
+
+  if (!thiz->context) {
+    GST_WARNING_OBJECT (thiz, "No MSDK Context");
+    return FALSE;
+  }
+
   if (!thiz->input_state) {
     GST_DEBUG_OBJECT (thiz, "Have no input state yet");
     return FALSE;
   }
   info = &thiz->input_state->info;
-
-  /* make sure that the encoder is closed */
-  gst_msdkenc_close_encoder (thiz);
-
-  thiz->context = gst_msdk_context_new (thiz->hardware, GST_MSDK_JOB_ENCODER);
-  if (!thiz->context) {
-    GST_ERROR_OBJECT (thiz, "Context creation failed");
-    return FALSE;
-  }
 
   GST_OBJECT_LOCK (thiz);
   session = gst_msdk_context_get_session (thiz->context);
@@ -346,6 +360,9 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         msdk_status_to_string (status));
   }
 
+  if (thiz->has_vpp)
+    request[0].NumFrameSuggested += thiz->num_vpp_surfaces + 1 - 4;
+
   if (thiz->use_video_memory)
     gst_msdk_frame_alloc (thiz->context, &(request[0]), &thiz->alloc_resp);
 
@@ -400,6 +417,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->next_task = 0;
 
   thiz->reconfig = FALSE;
+  thiz->initialized = TRUE;
 
   GST_OBJECT_UNLOCK (thiz);
 
@@ -408,8 +426,6 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 no_vpp:
 failed:
   GST_OBJECT_UNLOCK (thiz);
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
   return FALSE;
 }
 
@@ -419,10 +435,11 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
   guint i;
   mfxStatus status;
 
-  if (!thiz->context)
+  if (!thiz->context || !thiz->initialized)
     return;
 
-  GST_DEBUG_OBJECT (thiz, "Closing encoder 0x%p", thiz->context);
+  GST_DEBUG_OBJECT (thiz, "Closing encoder with context %" GST_PTR_FORMAT,
+      thiz->context);
 
   gst_object_replace ((GstObject **) & thiz->msdk_pool, NULL);
   gst_object_replace ((GstObject **) & thiz->msdk_converted_pool, NULL);
@@ -460,11 +477,9 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
     }
   }
 
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
-
   memset (&thiz->param, 0, sizeof (thiz->param));
   thiz->num_extra_params = 0;
+  thiz->initialized = FALSE;
 }
 
 typedef struct
@@ -1115,6 +1130,33 @@ invalid_frame:
 static gboolean
 gst_msdkenc_start (GstVideoEncoder * encoder)
 {
+  GstMsdkEnc *thiz = GST_MSDKENC (encoder);
+
+  if (gst_msdk_context_prepare (GST_ELEMENT_CAST (thiz), &thiz->context)) {
+    GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
+        thiz->context);
+
+    if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_ENCODER) {
+      GstMsdkContext *parent_context;
+
+      parent_context = thiz->context;
+      thiz->context = gst_msdk_context_new_with_parent (parent_context);
+      gst_object_unref (parent_context);
+
+      GST_INFO_OBJECT (thiz,
+          "Creating new context %" GST_PTR_FORMAT " with joined session",
+          thiz->context);
+    } else {
+      gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_ENCODER);
+    }
+  } else {
+    gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz), thiz->hardware,
+        GST_MSDK_JOB_ENCODER);
+
+    GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
+        thiz->context);
+  }
+
   /* Set the minimum pts to some huge value (1000 hours). This keeps
      the dts at the start of the stream from needing to be
      negative. */
@@ -1135,6 +1177,8 @@ gst_msdkenc_stop (GstVideoEncoder * encoder)
   if (thiz->input_state)
     gst_video_codec_state_unref (thiz->input_state);
   thiz->input_state = NULL;
+
+  gst_object_replace ((GstObject **) & thiz->context, NULL);
 
   return TRUE;
 }
@@ -1359,6 +1403,8 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
   gobject_class->set_property = gst_msdkenc_set_property;
   gobject_class->get_property = gst_msdkenc_get_property;
   gobject_class->finalize = gst_msdkenc_finalize;
+
+  element_class->set_context = gst_msdkenc_set_context;
 
   gstencoder_class->set_format = GST_DEBUG_FUNCPTR (gst_msdkenc_set_format);
   gstencoder_class->handle_frame = GST_DEBUG_FUNCPTR (gst_msdkenc_handle_frame);

@@ -67,6 +67,7 @@ struct _GstMsdkDec
   GstVideoInfo pool_info;
   mfxFrameAllocResponse alloc_resp;
   gboolean use_video_memory;
+  gboolean initialized;
 
   /* MFX context */
   GstMsdkContext *context;

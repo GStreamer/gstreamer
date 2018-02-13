@@ -91,6 +91,7 @@ struct _GstMsdkEnc
   GstBufferPool *msdk_converted_pool;
   GstVideoInfo aligned_info;
   gboolean use_video_memory;
+  gboolean initialized;
 
   /* element properties */
   gboolean hardware;
