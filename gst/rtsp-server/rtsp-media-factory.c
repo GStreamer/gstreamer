@@ -1292,7 +1292,7 @@ gst_rtsp_media_factory_get_media_gtype (GstRTSPMediaFactory * factory)
 /**
  * gst_rtsp_media_factory_set_clock:
  * @factory: a #GstRTSPMediaFactory
- * @clock: the clock to be used by the media factory
+ * @clock: (nullable): the clock to be used by the media factory
  *
  * Configures a specific clock to be used by the pipelines
  * of all medias created from this factory.
