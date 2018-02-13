@@ -3,6 +3,7 @@
 #include <gst/audio/gstaudioaggregator.h>
 gst_audio_aggregator_get_type
 gst_audio_aggregator_pad_get_type
+gst_audio_aggregator_convert_pad_get_type
 #include <gst/audio/gstaudiocdsrc.h>
 gst_audio_cd_src_get_type
 #include <gst/audio/gstaudioclock.h>

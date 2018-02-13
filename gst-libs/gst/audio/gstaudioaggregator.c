@@ -25,24 +25,25 @@
  */
 /**
  * SECTION: gstaudioaggregator
- * @short_description: manages a set of pads with the purpose of
- * aggregating their buffers for raw audio
+ * @title: GstAudioAggregator
+ * @short_description: Base class that manages a set of audio input pads
+ * with the purpose of aggregating or mixing their raw audio input buffers
  * @see_also: #GstAggregator
  *
  * #GstAudioAggregator will perform conversion on the data arriving
  * on its sink pads, based on the format expected downstream.
  *
  * Subclasses can opt out of the conversion behaviour by setting
- * #GstAudioAggregator.convert_buffer() to %NULL.
+ * #GstAudioAggregatorClass.convert_buffer() to %NULL.
  *
  * Subclasses that wish to use the default conversion implementation
  * should use a (subclass of) #GstAudioAggregatorConvertPad as their
  * #GstAggregatorClass.sinkpads_type, as it will cache the created
  * #GstAudioConverter and install a property allowing to configure it,
- * #GstAudioAggregatorPadClass:converter-config.
+ * #GstAudioAggregatorPad:converter-config.
  *
  * Subclasses that wish to perform custom conversion should override
- * #GstAudioAggregator.convert_buffer().
+ * #GstAudioAggregatorClass.convert_buffer().
  *
  * When conversion is enabled, #GstAudioAggregator will accept
  * any type of raw audio caps and perform conversion
