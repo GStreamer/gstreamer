@@ -69,6 +69,12 @@ const gchar *msdk_status_to_string (mfxStatus status);
 void gst_msdk_set_video_alignment (GstVideoInfo * info,
     GstVideoAlignment * alignment);
 
+/* Conversion from Gstreamer to libmfx */
+gint gst_msdk_get_mfx_chroma_from_format (GstVideoFormat format);
+gint gst_msdk_get_mfx_fourcc_from_format (GstVideoFormat format);
+void gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
+    GstVideoInfo * info);
+
 G_END_DECLS
 
 #endif /* __MSDK_H__ */

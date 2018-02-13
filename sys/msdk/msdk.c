@@ -37,6 +37,26 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
 #define INVALID_INDEX         ((guint) -1)
 #define GST_MSDK_ALIGNMENT_PADDING(num) (32 - ((num) & 31))
 
+struct map
+{
+  GstVideoFormat format;
+  mfxU16 mfx_chroma_format;
+  mfxU32 mfx_fourcc;
+};
+
+#define GST_VIDEO_INFO_TO_MFX_MAP(FORMAT, CHROMA, FOURCC) \
+    { GST_VIDEO_FORMAT_##FORMAT, MFX_CHROMAFORMAT_##CHROMA, MFX_FOURCC_##FOURCC }
+
+static const struct map gst_msdk_video_format_to_mfx_map[] = {
+  GST_VIDEO_INFO_TO_MFX_MAP (NV12, YUV420, NV12),
+  GST_VIDEO_INFO_TO_MFX_MAP (YV12, YUV420, YV12),
+  GST_VIDEO_INFO_TO_MFX_MAP (I420, YUV420, YV12),
+  GST_VIDEO_INFO_TO_MFX_MAP (YUY2, YUV422, YUY2),
+  GST_VIDEO_INFO_TO_MFX_MAP (UYVY, YUV422, UYVY),
+  GST_VIDEO_INFO_TO_MFX_MAP (BGRA, YUV444, RGB4),
+  {0, 0, 0}
+};
+
 static inline guint
 msdk_get_free_surface_index (mfxFrameSurface1 * surfaces, guint size)
 {
@@ -381,4 +401,55 @@ gst_msdk_set_video_alignment (GstVideoInfo * info,
     alignment->padding_right = GST_MSDK_ALIGNMENT_PADDING (width);
   if (height & 31)
     alignment->padding_bottom = GST_MSDK_ALIGNMENT_PADDING (height);
+}
+
+static const struct map *
+_map_lookup_format (GstVideoFormat format)
+{
+  const struct map *m = gst_msdk_video_format_to_mfx_map;
+
+  for (; m->format != 0; m++) {
+    if (m->format == format)
+      return m;
+  }
+  return NULL;
+}
+
+gint
+gst_msdk_get_mfx_chroma_from_format (GstVideoFormat format)
+{
+  const struct map *const m = _map_lookup_format (format);
+
+  return m ? m->mfx_chroma_format : -1;
+}
+
+gint
+gst_msdk_get_mfx_fourcc_from_format (GstVideoFormat format)
+{
+  const struct map *const m = _map_lookup_format (format);
+
+  return m ? m->mfx_fourcc : -1;
+}
+
+void
+gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
+    GstVideoInfo * info)
+{
+  g_return_if_fail (info && mfx_info);
+
+  mfx_info->Width = GST_ROUND_UP_32 (GST_VIDEO_INFO_WIDTH (info));
+  mfx_info->Height = GST_ROUND_UP_32 (GST_VIDEO_INFO_HEIGHT (info));
+  mfx_info->CropW = GST_VIDEO_INFO_WIDTH (info);
+  mfx_info->CropH = GST_VIDEO_INFO_HEIGHT (info);
+  mfx_info->FrameRateExtN = GST_VIDEO_INFO_FPS_N (info);
+  mfx_info->FrameRateExtD = GST_VIDEO_INFO_FPS_D (info);
+  mfx_info->AspectRatioW = GST_VIDEO_INFO_PAR_N (info);
+  mfx_info->AspectRatioH = GST_VIDEO_INFO_PAR_D (info);
+  mfx_info->PicStruct = MFX_PICSTRUCT_PROGRESSIVE;      /* this is by default */
+  mfx_info->FourCC =
+      gst_msdk_get_mfx_fourcc_from_format (GST_VIDEO_INFO_FORMAT (info));
+  mfx_info->ChromaFormat =
+      gst_msdk_get_mfx_chroma_from_format (GST_VIDEO_INFO_FORMAT (info));
+
+  return;
 }
