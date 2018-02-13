@@ -65,6 +65,8 @@ struct _GstVorbisDec {
   GstAudioInfo      info;
 
   CopySampleFunc    copy_samples;
+
+  GList            *pending_headers;
 };
 
 struct _GstVorbisDecClass {

@@ -159,6 +159,10 @@ vorbis_dec_stop (GstAudioDecoder * dec)
   vorbis_dsp_clear (&vd->vd);
   vorbis_comment_clear (&vd->vc);
   vorbis_info_clear (&vd->vi);
+  if (vd->pending_headers) {
+    g_list_free_full (vd->pending_headers, (GDestroyNotify) gst_buffer_unref);
+    vd->pending_headers = NULL;
+  }
 
   return TRUE;
 }
@@ -547,6 +551,92 @@ wrong_samples:
 }
 
 static GstFlowReturn
+check_pending_headers (GstVorbisDec * vd)
+{
+  GstBuffer *buffer1, *buffer3, *buffer5;
+  GstMapInfo map;
+  gboolean isvalid;
+  GList *tmp = vd->pending_headers;
+  GstFlowReturn result = GST_FLOW_OK;
+
+  if (g_list_length (vd->pending_headers) < MIN_NUM_HEADERS)
+    goto not_enough;
+
+  buffer1 = (GstBuffer *) tmp->data;
+  tmp = tmp->next;
+  buffer3 = (GstBuffer *) tmp->data;
+  tmp = tmp->next;
+  buffer5 = (GstBuffer *) tmp->data;
+
+  /* Start checking the headers */
+  gst_buffer_map (buffer1, &map, GST_MAP_READ);
+  isvalid = map.size >= 1 && map.data[0] == 0x01;
+  gst_buffer_unmap (buffer1, &map);
+  if (!isvalid) {
+    GST_WARNING_OBJECT (vd, "Pending first header was invalid");
+    goto cleanup;
+  }
+
+  gst_buffer_map (buffer3, &map, GST_MAP_READ);
+  isvalid = map.size >= 1 && map.data[0] == 0x03;
+  gst_buffer_unmap (buffer3, &map);
+  if (!isvalid) {
+    GST_WARNING_OBJECT (vd, "Pending second header was invalid");
+    goto cleanup;
+  }
+
+  gst_buffer_map (buffer5, &map, GST_MAP_READ);
+  isvalid = map.size >= 1 && map.data[0] == 0x05;
+  gst_buffer_unmap (buffer5, &map);
+  if (!isvalid) {
+    GST_WARNING_OBJECT (vd, "Pending third header was invalid");
+    goto cleanup;
+  }
+
+  /* Discard any other pending headers */
+  if (tmp->next) {
+    GST_DEBUG_OBJECT (vd, "Discarding extra headers");
+    g_list_free_full (tmp->next, (GDestroyNotify) gst_buffer_unref);
+    tmp->next = NULL;
+  }
+  g_list_free (vd->pending_headers);
+  vd->pending_headers = NULL;
+
+  GST_DEBUG_OBJECT (vd, "Resetting and processing new headers");
+
+  /* All good, let's reset ourselves and process the headers */
+  vorbis_dec_reset ((GstAudioDecoder *) vd);
+  result = vorbis_dec_handle_header_buffer (vd, buffer1);
+  if (result != GST_FLOW_OK) {
+    gst_buffer_unref (buffer3);
+    gst_buffer_unref (buffer5);
+    return result;
+  }
+  result = vorbis_dec_handle_header_buffer (vd, buffer3);
+  if (result != GST_FLOW_OK) {
+    gst_buffer_unref (buffer5);
+    return result;
+  }
+  result = vorbis_dec_handle_header_buffer (vd, buffer5);
+
+  return result;
+
+  /* ERRORS */
+cleanup:
+  {
+    g_list_free_full (vd->pending_headers, (GDestroyNotify) gst_buffer_unref);
+    vd->pending_headers = NULL;
+    return result;
+  }
+not_enough:
+  {
+    GST_LOG_OBJECT (vd,
+        "Not enough pending headers to properly reset, ignoring them");
+    goto cleanup;
+  }
+}
+
+static GstFlowReturn
 vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   ogg_packet *packet;
@@ -582,13 +672,15 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   /* switch depending on packet type */
   if ((gst_ogg_packet_data (packet))[0] & 1) {
-    /* If we get a new initialization packet, reset the decoder.
-     * The vorbis_info struct should have a rate of 0 if it hasn't been
-     * initialized yet. */
-    if ((vd->initialized || (vd->vi.rate != 0)) &&
-        (gst_ogg_packet_data (packet))[0] == 0x01) {
-      GST_INFO_OBJECT (vd, "already initialized, re-init");
-      vorbis_dec_reset (dec);
+    /* If we get a new initialization packet after being initialized,
+     * store it.
+     * When the next non-header buffer comes in, we will check whether
+     * those pending headers are correct and if so reset ourselves */
+    if (vd->initialized) {
+      GST_LOG_OBJECT (vd, "storing header for later analyzis");
+      vd->pending_headers =
+          g_list_append (vd->pending_headers, gst_buffer_ref (buffer));
+      goto done;
     }
     result = vorbis_handle_header_packet (vd, packet);
     if (result != GST_FLOW_OK)
@@ -597,6 +689,11 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
     result = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
   } else {
     GstClockTime timestamp, duration;
+
+    if (vd->pending_headers)
+      result = check_pending_headers (vd);
+    if (G_UNLIKELY (result != GST_FLOW_OK))
+      goto done;
 
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
