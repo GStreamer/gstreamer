@@ -630,6 +630,13 @@ GstCaps *arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstURISourceBin::about-to-finish</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstURISourceBin *gsturisourcebin
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstPlayBin3::about-to-finish</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -827,6 +834,13 @@ GstStream *arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstDecodebin3::about-to-finish</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodebin3 *gstdecodebin3
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstGLSrcBin::create-element</NAME>
 <RETURNS>GstElement*</RETURNS>
 <FLAGS>l</FLAGS>
@@ -902,3 +916,26 @@ guint  arg2
 guint  arg3
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstURIDecodeBin3::about-to-finish</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin3 *gsturidecodebin3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin3::select-stream</NAME>
+<RETURNS>gint</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin3 *gsturidecodebin3
+GstStreamCollection *arg1
+GstStream *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin3::source-setup</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin3 *gsturidecodebin3
+GstElement *arg1
+</SIGNAL>

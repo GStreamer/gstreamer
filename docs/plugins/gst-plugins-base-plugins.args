@@ -2159,6 +2159,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstXvImageSink::render-rectangle</NAME>
+<TYPE>GstValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Render Rectangle</NICK>
+<BLURB>The render rectangle ('<x, y, width, height>').</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstXImageSink::display</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -2974,7 +2984,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Audio stream combiner</NICK>
-<BLURB>Current audio stream combiner (NULL = input-selector).</BLURB>
+<BLURB>Current audio stream combiner (default: none)).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -3214,7 +3224,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Text stream combiner</NICK>
-<BLURB>Current text stream combiner (NULL = input-selector).</BLURB>
+<BLURB>Current text stream combiner (default: none).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -3274,7 +3284,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Video stream combiner</NICK>
-<BLURB>Current video stream combiner (NULL = input-selector).</BLURB>
+<BLURB>Current video stream combiner (default: none).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -4039,6 +4049,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstGLImageSink::render-rectangle</NAME>
+<TYPE>GstValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Render Rectangle</NICK>
+<BLURB>The render rectangle ('<x, y, width, height>').</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGLImageSinkBin::context</NAME>
 <TYPE>GstGLContext*</TYPE>
 <RANGE></RANGE>
@@ -4136,6 +4156,16 @@
 <NICK>Show preroll frame</NICK>
 <BLURB>Whether to render video frames during preroll.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSinkBin::render-rectangle</NAME>
+<TYPE>GstValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Render Rectangle</NICK>
+<BLURB>The render rectangle ('<x, y, width, height>').</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -4518,3 +4548,162 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstLiveAdder::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Buffer latency</NICK>
+<BLURB>Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in milliseconds).</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioInterleave::channel-positions</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions</NICK>
+<BLURB>Channel positions used on the output.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioInterleave::channel-positions-from-input</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel positions from input</NICK>
+<BLURB>Take channel positions from the input.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::buffer-duration</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer duration (ns)</NICK>
+<BLURB>Buffer duration when buffering streams (-1 default value).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer size (bytes)</NICK>
+<BLURB>Buffer size when buffering streams (-1 default value).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps on which to stop decoding. (NULL = default).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::connection-speed</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::current-suburi</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current .sub-URI</NICK>
+<BLURB>The currently playing URI of a subtitle.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::current-uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current URI</NICK>
+<BLURB>The currently playing URI.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::download</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Download</NICK>
+<BLURB>Attempt download buffering when buffering network streams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::ring-buffer-max-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXUINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. ring buffer size (bytes)</NICK>
+<BLURB>Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Source</NICK>
+<BLURB>Source object used.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::subtitle-encoding</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::suburi</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>.sub-URI</NICK>
+<BLURB>Optional URI of a subtitle.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI to decode.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin3::use-buffering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Buffering</NICK>
+<BLURB>Perform buffering on demuxed/parsed media.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>

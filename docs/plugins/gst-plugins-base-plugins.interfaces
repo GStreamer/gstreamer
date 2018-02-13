@@ -30,6 +30,7 @@ GstPlaySink GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColor
 GstSubtitleOverlay GstChildProxy
 GstTheoraEnc GstPreset
 GstURIDecodeBin GstChildProxy
+GstURIDecodeBin3 GstChildProxy
 GstURISourceBin GstChildProxy
 GstUnalignedAudioParse GstChildProxy
 GstUnalignedVideoParse GstChildProxy

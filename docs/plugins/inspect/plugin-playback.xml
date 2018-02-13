@@ -217,6 +217,39 @@
       </pads>
     </element>
     <element>
+      <name>uridecodebin3</name>
+      <longname>URI Decoder</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode an URI to raw media</description>
+      <author>Edward Hervey &lt;edward@centricular.com&gt;, Jan Schmidt &lt;jan@centricular.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>text_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>urisourcebin</name>
       <longname>URI reader</longname>
       <class>Generic/Bin/Source</class>

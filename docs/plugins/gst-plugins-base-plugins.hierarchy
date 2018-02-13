@@ -139,6 +139,7 @@ GObject
           GstPlaySink
           GstSubtitleOverlay
           GstURIDecodeBin
+          GstURIDecodeBin3
           GstURISourceBin
           GstUnalignedAudioParse
           GstUnalignedVideoParse
