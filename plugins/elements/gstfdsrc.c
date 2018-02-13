@@ -81,10 +81,10 @@
 #include "gstfdsrc.h"
 
 #ifdef __BIONIC__               /* Android */
-#undef lseek
-#define lseek lseek64
+#if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
 #undef fstat
 #define fstat fstat64
+#endif
 #endif
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",

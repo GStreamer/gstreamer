@@ -70,13 +70,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef __BIONIC__               /* Android */
-#undef lseek
-#define lseek lseek64
-#undef off_t
-#define off_t guint64
-#endif
-
 #include "gstelements_private.h"
 #include "gstfilesink.h"
 
@@ -401,12 +394,12 @@ gst_file_sink_open_file (GstFileSink * sink)
       sink->buffer = g_malloc (sink->buffer_size);
       buffer_size = sink->buffer_size;
     }
-    /* Cygwin does not have __fbufsize */
-#if defined(HAVE_STDIO_EXT_H) && !defined(__CYGWIN__)
+    /* Cygwin does not have __fbufsize, android adds it in API 23 */
+#if defined(HAVE_STDIO_EXT_H) && (!defined(__CYGWIN__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 23))
     GST_DEBUG_OBJECT (sink, "change buffer size %u to %u, mode %d",
         (guint) __fbufsize (sink->file), buffer_size, mode);
 #else
-    GST_DEBUG_OBJECT (sink, "change  buffer size to %u, mode %d",
+    GST_DEBUG_OBJECT (sink, "change buffer size to %u, mode %d",
         sink->buffer_size, mode);
 #endif
     if (setvbuf (sink->file, sink->buffer, mode, buffer_size) != 0) {

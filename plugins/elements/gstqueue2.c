@@ -75,10 +75,6 @@
 #endif
 
 #ifdef __BIONIC__               /* Android */
-#undef lseek
-#define lseek lseek64
-#undef off_t
-#define off_t guint64
 #include <fcntl.h>
 #endif
 

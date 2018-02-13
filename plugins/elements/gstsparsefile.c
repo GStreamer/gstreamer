@@ -36,13 +36,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef __BIONIC__               /* Android */
-#undef lseek
-#define lseek lseek64
-#undef off_t
-#define off_t guint64
-#endif
-
 #ifdef HAVE_FSEEKO
 #define FSEEK_FILE(file,offset)  (fseeko (file, (off_t) offset, SEEK_SET) != 0)
 #elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
