@@ -119,7 +119,7 @@ gst_msdkvp8enc_configure (GstMsdkEnc * encoder)
   mfxStatus status;
 
   if (encoder->hardware) {
-    session = msdk_context_get_session (encoder->context);
+    session = gst_msdk_context_get_session (encoder->context);
     status = MFXVideoUSER_Load (session, &MFX_PLUGINID_VP8E_HW, 1);
     if (status < MFX_ERR_NONE) {
       GST_ERROR_OBJECT (thiz, "Media SDK Plugin load failed (%s)",

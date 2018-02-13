@@ -64,7 +64,7 @@ gst_msdkvp8dec_configure (GstMsdkDec * decoder)
   mfxStatus status;
   const mfxPluginUID *uid;
 
-  session = msdk_context_get_session (decoder->context);
+  session = gst_msdk_context_get_session (decoder->context);
 
   uid = &MFX_PLUGINID_VP8D_HW;
 

@@ -1,5 +1,6 @@
 /* GStreamer Intel MSDK plugin
- * Copyright (c) 2016, Oblong Industries, Inc.
+ * Copyright (c) 2018, Intel Corporation
+ * Copyright (c) 2018, Igalia S.L.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,51 +25,65 @@
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGDECE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MSDK_H__
-#define __MSDK_H__
+#ifndef GST_MSDK_CONTEXT_H
+#define GST_MSDK_CONTEXT_H
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include <string.h>
-
-#include <gst/gst.h>
-#include <gst/video/video.h>
-
-#ifdef HAVE_LIBMFX
-#  include <mfx/mfxvideo.h>
-#else
-#  include "mfxvideo.h"
+#include "msdk.h"
+#ifndef _WIN32
+#include <va/va.h>
 #endif
 
 G_BEGIN_DECLS
 
-mfxSession msdk_open_session (gboolean hardware);
-void msdk_close_session (mfxSession session);
+#define GST_TYPE_MSDK_CONTEXT \
+  (gst_msdk_context_get_type ())
+#define GST_MSDK_CONTEXT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MSDK_CONTEXT, \
+      GstMsdkContext))
+#define GST_MSDK_CONTEXT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MSDK_CONTEXT, \
+      GstMsdkContextClass))
+#define GST_IS_MSDK_CONTEXT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MSDK_CONTEXT))
+#define GST_IS_MSDK_CONTEXT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MSDK_CONTEXT))
+#define GST_MSDK_CONTEXT_CAST(obj) ((GstMsdkContext*)(obj))
 
-gboolean msdk_is_available (void);
+typedef struct _GstMsdkContext GstMsdkContext;
+typedef struct _GstMsdkContextClass GstMsdkContextClass;
+typedef struct _GstMsdkContextPrivate GstMsdkContextPrivate;
 
-mfxFrameSurface1 *msdk_get_free_surface (mfxFrameSurface1 * surfaces,
-    guint size);
-void msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface);
+/*
+ * GstMsdkContext:
+ */
+struct _GstMsdkContext
+{
+  GstObject parent_instance;
 
-const gchar *msdk_status_to_string (mfxStatus status);
+  GstMsdkContextPrivate *priv;
+};
 
-void gst_msdk_set_video_alignment (GstVideoInfo * info,
-    GstVideoAlignment * alignment);
+/*
+ * GstMsdkContextClass:
+ */
+struct _GstMsdkContextClass
+{
+  GstObjectClass parent_class;
+};
 
-/* Conversion from Gstreamer to libmfx */
-gint gst_msdk_get_mfx_chroma_from_format (GstVideoFormat format);
-gint gst_msdk_get_mfx_fourcc_from_format (GstVideoFormat format);
-void gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
-    GstVideoInfo * info);
+GType gst_msdk_context_get_type (void);
+
+GstMsdkContext * gst_msdk_context_new (gboolean hardware);
+mfxSession gst_msdk_context_get_session (GstMsdkContext * context);
+
+gpointer gst_msdk_context_get_handle (GstMsdkContext * context);
+gint gst_msdk_context_get_fd (GstMsdkContext * context);
 
 G_END_DECLS
 
-#endif /* __MSDK_H__ */
+#endif /* GST_MSDK_CONTEXT_H */

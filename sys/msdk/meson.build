@@ -1,5 +1,6 @@
 msdk_sources = [
   'gstmsdk.c',
+  'gstmsdkcontext.c',
   'gstmsdkdec.c',
   'gstmsdkenc.c',
   'gstmsdkh264dec.c',

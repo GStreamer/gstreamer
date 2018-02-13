@@ -30,21 +30,3 @@
  */
 
 #include "msdk.h"
-
-MsdkContext *
-msdk_open_context (gboolean hardware)
-{
-  return (MsdkContext *) msdk_open_session (hardware);
-}
-
-void
-msdk_close_context (MsdkContext * context)
-{
-  msdk_close_session ((mfxSession) context);
-}
-
-mfxSession
-msdk_context_get_session (MsdkContext * context)
-{
-  return (mfxSession) context;
-}

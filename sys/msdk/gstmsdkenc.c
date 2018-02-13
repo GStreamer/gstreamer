@@ -231,14 +231,14 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   /* make sure that the encoder is closed */
   gst_msdkenc_close_encoder (thiz);
 
-  thiz->context = msdk_open_context (thiz->hardware);
+  thiz->context = gst_msdk_context_new (thiz->hardware);
   if (!thiz->context) {
     GST_ERROR_OBJECT (thiz, "Context creation failed");
     return FALSE;
   }
 
   GST_OBJECT_LOCK (thiz);
-  session = msdk_context_get_session (thiz->context);
+  session = gst_msdk_context_get_session (thiz->context);
 
   thiz->has_vpp = FALSE;
   if (info->finfo->format != GST_VIDEO_FORMAT_NV12) {
@@ -477,8 +477,8 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 no_vpp:
 failed:
   GST_OBJECT_UNLOCK (thiz);
-  msdk_close_context (thiz->context);
-  thiz->context = NULL;
+  if (thiz->context)
+    gst_object_replace ((GstObject **) & thiz->context, NULL);
   return FALSE;
 }
 
@@ -493,7 +493,7 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
 
   GST_DEBUG_OBJECT (thiz, "Closing encoder 0x%p", thiz->context);
 
-  status = MFXVideoENCODE_Close (msdk_context_get_session (thiz->context));
+  status = MFXVideoENCODE_Close (gst_msdk_context_get_session (thiz->context));
   if (status != MFX_ERR_NONE && status != MFX_ERR_NOT_INITIALIZED) {
     GST_WARNING_OBJECT (thiz, "Encoder close failed (%s)",
         msdk_status_to_string (status));
@@ -513,7 +513,7 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
   /* Close VPP before freeing the surfaces. They are shared between encoder
    * and VPP */
   if (thiz->has_vpp) {
-    status = MFXVideoVPP_Close (msdk_context_get_session (thiz->context));
+    status = MFXVideoVPP_Close (gst_msdk_context_get_session (thiz->context));
     if (status != MFX_ERR_NONE && status != MFX_ERR_NOT_INITIALIZED) {
       GST_WARNING_OBJECT (thiz, "VPP close failed (%s)",
           msdk_status_to_string (status));
@@ -538,8 +538,9 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
     thiz->vpp_surfaces = NULL;
   }
 
-  msdk_close_context (thiz->context);
-  thiz->context = NULL;
+  if (thiz->context)
+    gst_object_replace ((GstObject **) & thiz->context, NULL);
+
   memset (&thiz->param, 0, sizeof (thiz->param));
   thiz->num_extra_params = 0;
 }
@@ -663,7 +664,7 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
   }
 
   /* Wait for encoding operation to complete */
-  MFXVideoCORE_SyncOperation (msdk_context_get_session (thiz->context),
+  MFXVideoCORE_SyncOperation (gst_msdk_context_get_session (thiz->context),
       task->sync_point, 10000);
   if (!discard && task->output_bitstream.DataLength) {
     GstBuffer *out_buf = NULL;
@@ -706,7 +707,7 @@ gst_msdkenc_encode_frame (GstMsdkEnc * thiz, mfxFrameSurface1 * surface,
     gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (thiz), input_frame);
     return GST_FLOW_NOT_NEGOTIATED;
   }
-  session = msdk_context_get_session (thiz->context);
+  session = gst_msdk_context_get_session (thiz->context);
 
   task = gst_msdkenc_get_free_task (thiz);
 
@@ -895,7 +896,7 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
       surface->Data.TimeStamp = MFX_TIMESTAMP_UNKNOWN;
     }
 
-    session = msdk_context_get_session (thiz->context);
+    session = gst_msdk_context_get_session (thiz->context);
     for (;;) {
       status =
           MFXVideoVPP_RunFrameVPPAsync (session, vpp_surface, surface, NULL,

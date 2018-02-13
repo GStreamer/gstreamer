@@ -35,6 +35,7 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideoencoder.h>
 #include "msdk.h"
+#include "gstmsdkcontext.h"
 
 G_BEGIN_DECLS
 
@@ -69,7 +70,7 @@ struct _GstMsdkEnc
   GList *pending_frames;
 
   /* MFX context */
-  MsdkContext *context;
+  GstMsdkContext *context;
   mfxVideoParam param;
   guint num_surfaces;
   mfxFrameSurface1 *surfaces;

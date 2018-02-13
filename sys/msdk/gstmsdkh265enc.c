@@ -71,7 +71,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   mfxStatus status;
   const mfxPluginUID *uid;
 
-  session = msdk_context_get_session (encoder->context);
+  session = gst_msdk_context_get_session (encoder->context);
 
   if (encoder->hardware)
     uid = &MFX_PLUGINID_HEVCE_HW;

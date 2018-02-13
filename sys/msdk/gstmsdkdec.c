@@ -190,7 +190,7 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz)
 
   GST_DEBUG_OBJECT (thiz, "Closing decoder 0x%p", thiz->context);
 
-  status = MFXVideoDECODE_Close (msdk_context_get_session (thiz->context));
+  status = MFXVideoDECODE_Close (gst_msdk_context_get_session (thiz->context));
   if (status != MFX_ERR_NONE && status != MFX_ERR_NOT_INITIALIZED) {
     GST_WARNING_OBJECT (thiz, "Decoder close failed (%s)",
         msdk_status_to_string (status));
@@ -200,8 +200,8 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz)
   g_array_set_size (thiz->surfaces, 0);
   g_ptr_array_set_size (thiz->extra_params, 0);
 
-  msdk_close_context (thiz->context);
-  thiz->context = NULL;
+  if (thiz->context)
+    gst_object_replace ((GstObject **) & thiz->context, NULL);
   memset (&thiz->param, 0, sizeof (thiz->param));
 }
 
@@ -224,7 +224,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   /* make sure that the decoder is closed */
   gst_msdkdec_close_decoder (thiz);
 
-  thiz->context = msdk_open_context (thiz->hardware);
+  thiz->context = gst_msdk_context_new (thiz->hardware);
   if (!thiz->context) {
     GST_ERROR_OBJECT (thiz, "Context creation failed");
     return FALSE;
@@ -257,7 +257,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   thiz->param.NumExtParam = thiz->extra_params->len;
   thiz->param.ExtParam = (mfxExtBuffer **) thiz->extra_params->pdata;
 
-  session = msdk_context_get_session (thiz->context);
+  session = gst_msdk_context_get_session (thiz->context);
   /* validate parameters and allow the Media SDK to make adjustments */
   status = MFXVideoDECODE_Query (session, &thiz->param, &thiz->param);
   if (status < MFX_ERR_NONE) {
@@ -324,7 +324,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 
 failed:
   GST_OBJECT_UNLOCK (thiz);
-  msdk_close_context (thiz->context);
+  gst_object_replace ((GstObject **) & thiz->context, NULL);
   thiz->context = NULL;
   return FALSE;
 }
@@ -392,8 +392,8 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 
   if (G_LIKELY (task->sync_point)) {
     status =
-        MFXVideoCORE_SyncOperation (msdk_context_get_session (thiz->context),
-        task->sync_point, 10000);
+        MFXVideoCORE_SyncOperation (gst_msdk_context_get_session
+        (thiz->context), task->sync_point, 10000);
     if (status != MFX_ERR_NONE)
       return GST_FLOW_ERROR;
     frame = gst_video_decoder_get_oldest_frame (decoder);
@@ -426,10 +426,10 @@ static gboolean
 gst_msdkdec_close (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
-  if (thiz->context) {
-    msdk_close_context (thiz->context);
-    thiz->context = NULL;
-  }
+
+  if (thiz->context)
+    gst_object_replace ((GstObject **) & thiz->context, NULL);
+
   return TRUE;
 }
 
@@ -493,7 +493,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   bitstream.DataLength = map_info.size;
   bitstream.MaxLength = map_info.size;
 
-  session = msdk_context_get_session (thiz->context);
+  session = gst_msdk_context_get_session (thiz->context);
   for (;;) {
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     flow = gst_msdkdec_finish_task (thiz, task);
@@ -684,7 +684,7 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
 
   if (!thiz->context)
     return GST_FLOW_OK;
-  session = msdk_context_get_session (thiz->context);
+  session = gst_msdk_context_get_session (thiz->context);
 
   for (;;) {
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
