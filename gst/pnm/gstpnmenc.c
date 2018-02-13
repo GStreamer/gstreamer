@@ -184,7 +184,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
   GstPnmenc *pnmenc;
   guint size, pixels, bytesize;
-  GstMapInfo omap, imap;
+  GstMapInfo omap;
   gchar *header = NULL;
   GstVideoInfo *info;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -193,6 +193,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   guint i, j;
   guint maxbytes_per_pixel, str_len;
   gchar format_str[4];
+  GstVideoFrame in_frame;
   pnmenc = GST_PNMENC (encoder);
   info = &pnmenc->input_state->info;
 
@@ -245,7 +246,8 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     ret = GST_FLOW_ERROR;
     goto done;
   }
-  if (gst_buffer_map (frame->input_buffer, &imap, GST_MAP_READ) == FALSE) {
+  if (!gst_video_frame_map (&in_frame, &(pnmenc->input_state->info),
+          frame->input_buffer, GST_MAP_READ)) {
     /* Unmap already mapped buffer */
     gst_buffer_unmap (frame->output_buffer, &omap);
     ret = GST_FLOW_ERROR;
@@ -263,7 +265,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     } else {
       o_rowstride = pnmenc->info.width;
     }
-    i_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (pnmenc->input_state, 0);
+    i_rowstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
 
     switch (GST_VIDEO_INFO_FORMAT (info)) {
       case GST_VIDEO_FORMAT_RGB:
@@ -272,7 +274,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
           index = i * i_rowstride;
           for (j = 0; j < o_rowstride; j++, bytes++, index++) {
             g_snprintf ((char *) omap.data + head_size, maxbytes_per_pixel,
-                format_str, imap.data[index]);
+                format_str, in_frame.map[0].data[index]);
             head_size += str_len;
             omap.data[head_size++] = ' ';
             /* Add new line so that file will not end up with single big line */
@@ -286,7 +288,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
           index = i * i_rowstride;
           for (j = 0; j < o_rowstride; j++, bytes++, index += 2) {
             g_snprintf ((char *) omap.data + head_size, maxbytes_per_pixel,
-                format_str, GST_READ_UINT16_BE (imap.data + index));
+                format_str, GST_READ_UINT16_BE (in_frame.map[0].data + index));
             head_size += str_len;
             omap.data[head_size++] = ' ';
             /* Add new line so that file will not end up with single big line */
@@ -300,7 +302,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
           index = i * i_rowstride;
           for (j = 0; j < o_rowstride; j++, bytes++, index += 2) {
             g_snprintf ((char *) omap.data + head_size, maxbytes_per_pixel,
-                format_str, GST_READ_UINT16_LE (imap.data + index));
+                format_str, GST_READ_UINT16_LE (in_frame.map[0].data + index));
             head_size += str_len;
             omap.data[head_size++] = ' ';
             /* Add new line so that file will not end up with single big line */
@@ -313,7 +315,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
         GST_ERROR_OBJECT (encoder, "Unhandled format %s",
             gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
         gst_buffer_unmap (frame->output_buffer, &omap);
-        gst_buffer_unmap (frame->input_buffer, &imap);
+        gst_video_frame_unmap (&in_frame);
         g_free (header);
         return GST_FLOW_ERROR;
     }
@@ -328,14 +330,14 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     } else {
       o_rowstride = pnmenc->info.width * bytesize;
     }
-    i_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (pnmenc->input_state, 0);
+    i_rowstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
 
     switch (GST_VIDEO_INFO_FORMAT (info)) {
       case GST_VIDEO_FORMAT_GRAY16_BE:
         for (i = 0; i < pnmenc->info.height; i++) {
           index = i * i_rowstride;
           for (j = 0; j < o_rowstride; j += 2, index += 2) {
-            guint16 val = GST_READ_UINT16_LE (imap.data + index);
+            guint16 val = GST_READ_UINT16_LE (in_frame.map[0].data + index);
             GST_WRITE_UINT16_BE (omap.data + out_index, val);
             out_index += 2;
           }
@@ -345,7 +347,7 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
         for (i = 0; i < pnmenc->info.height; i++) {
           index = i * i_rowstride;
           for (j = 0; j < o_rowstride; j += 2, index += 2) {
-            guint16 val = GST_READ_UINT16_LE (imap.data + index);
+            guint16 val = GST_READ_UINT16_LE (in_frame.map[0].data + index);
             GST_WRITE_UINT16_BE (omap.data + out_index, val);
             out_index += 2;
           }
@@ -354,13 +356,13 @@ gst_pnmenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
       default:
         for (i = 0; i < pnmenc->info.height; i++) {
           memcpy (omap.data + head_size + o_rowstride * i,
-              imap.data + i_rowstride * i, o_rowstride);
+              in_frame.map[0].data + i_rowstride * i, o_rowstride);
         }
     }
   }
 
   gst_buffer_unmap (frame->output_buffer, &omap);
-  gst_buffer_unmap (frame->input_buffer, &imap);
+  gst_video_frame_unmap (&in_frame);
 
   if ((ret = gst_video_encoder_finish_frame (encoder, frame)) != GST_FLOW_OK)
     goto done;
