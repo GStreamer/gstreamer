@@ -215,9 +215,6 @@ void  gst_audio_aggregator_set_sink_caps (GstAudioAggregator    * aagg,
                                           GstAudioAggregatorPad * pad,
                                           GstCaps               * caps);
 
-GST_EXPORT
-void gst_audio_aggregator_class_perform_conversion (GstAudioAggregatorClass * klass);
-
 G_END_DECLS
 
 #endif /* __GST_AUDIO_AGGREGATOR_H__ */
