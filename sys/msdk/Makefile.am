@@ -49,7 +49,8 @@ libgstmsdk_la_CFLAGS = \
 	$(GST_PBUTILS_CFLAGS) \
 	$(GST_VIDEO_CFLAGS) \
 	$(MSDK_CFLAGS) \
-	$(LIBMFX_CFLAGS)
+	$(LIBMFX_CFLAGS)\
+	$(G_UDEV_CFLAGS)
 
 libgstmsdk_la_LIBADD = \
 	$(GST_LIBS) \
@@ -57,7 +58,8 @@ libgstmsdk_la_LIBADD = \
 	$(GST_PBUTILS_LIBS) \
 	$(GST_VIDEO_LIBS) \
 	$(MSDK_LIBS) \
-	$(LIBMFX_LIBS)
+	$(LIBMFX_LIBS) \
+	$(G_UDEV_LIBS)
 
 if USE_MSDK_LIBVA
 libgstmsdk_la_SOURCES += \

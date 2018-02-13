@@ -40,8 +40,9 @@ if msdk_root != ''
   else
     libva_dep = dependency('libva-drm', required: false)
     libdl_dep = cc.find_library('dl', required: false)
-    msdk_dep = declare_dependency(include_directories: msdk_incdir, dependencies: [msdk_lib, libva_dep, libdl_dep])
-    msdk_dep_found = msdk_lib.found() and libva_dep.found() and libdl_dep.found()
+    libgudev_dep = dependency('gudev-1.0', required : false)
+    msdk_dep = declare_dependency(include_directories: msdk_incdir, dependencies: [msdk_lib, libva_dep, libdl_dep, libgudev_dep])
+    msdk_dep_found = msdk_lib.found() and libva_dep.found() and libdl_dep.found() and libgudev_dep.found()
   endif
 
   if msdk_dep_found

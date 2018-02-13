@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <va/va_drm.h>
+#include <gudev/gudev.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_msdkcontext);
@@ -64,6 +65,65 @@ struct _GstMsdkContextPrivate
 };
 
 #ifndef _WIN32
+
+static gint
+get_device_id (void)
+{
+  GUdevClient *client = NULL;
+  GUdevEnumerator *e = NULL;
+  GList *devices, *l;
+  GUdevDevice *dev, *parent;
+  const gchar *devnode_path;
+  const gchar *devnode_files[2] = { "renderD[0-9]*", "card[0-9]*" };
+  int fd = -1, i;
+
+  client = g_udev_client_new (NULL);
+  if (!client)
+    goto done;
+
+  e = g_udev_enumerator_new (client);
+  if (!e)
+    goto done;
+
+  g_udev_enumerator_add_match_subsystem (e, "drm");
+  for (i = 0; i < 2; i++) {
+    g_udev_enumerator_add_match_name (e, devnode_files[i]);
+    devices = g_udev_enumerator_execute (e);
+
+    for (l = devices; l != NULL; l = l->next) {
+      dev = (GUdevDevice *) l->data;
+
+      parent = g_udev_device_get_parent (dev);
+      if (strcmp (g_udev_device_get_subsystem (parent), "pci") != 0) {
+        g_object_unref (parent);
+        continue;
+      }
+      g_object_unref (parent);
+
+      devnode_path = g_udev_device_get_device_file (dev);
+      fd = open (devnode_path, O_RDWR | O_CLOEXEC);
+      if (fd < 0)
+        continue;
+      GST_DEBUG ("Opened the drm device node %s", devnode_path);
+      break;
+    }
+
+    g_list_foreach (devices, (GFunc) gst_object_unref, NULL);
+    g_list_free (devices);
+    if (fd >= 0)
+      goto done;
+  }
+
+done:
+  if (e)
+    g_object_unref (e);
+  if (client)
+    g_object_unref (client);
+
+  return fd;
+}
+
+
 static gboolean
 gst_msdk_context_use_vaapi (GstMsdkContext * context)
 {
@@ -74,12 +134,9 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
   mfxStatus status;
   GstMsdkContextPrivate *priv = context->priv;
 
-  /* maybe /dev/dri/renderD128 */
-  static const gchar *dri_path = "/dev/dri/card0";
-
-  fd = open (dri_path, O_RDWR);
+  fd = get_device_id ();
   if (fd < 0) {
-    GST_ERROR ("Couldn't open %s", dri_path);
+    GST_ERROR ("Couldn't find a drm device node to open");
     return FALSE;
   }
 
