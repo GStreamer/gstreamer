@@ -443,7 +443,7 @@ gst_msdkdec_stop (GstVideoDecoder * decoder)
   }
   if (thiz->pool) {
     gst_object_unref (thiz->pool);
-    thiz->input_state = NULL;
+    thiz->pool = NULL;
   }
   gst_video_info_init (&thiz->output_info);
   gst_video_info_init (&thiz->pool_info);
