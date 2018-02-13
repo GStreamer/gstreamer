@@ -3820,10 +3820,12 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
 
         if (tr->ttl > 0) {
           GST_INFO ("setting ttl-mc %d", tr->ttl);
-          if (priv->udpsink[0])
-            g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", tr->ttl, NULL);
-          if (priv->udpsink[1])
-            g_object_set (G_OBJECT (priv->udpsink[1]), "ttl-mc", tr->ttl, NULL);
+          if (priv->mcast_udpsink[0])
+            g_object_set (G_OBJECT (priv->mcast_udpsink[0]), "ttl-mc", tr->ttl,
+                NULL);
+          if (priv->mcast_udpsink[1])
+            g_object_set (G_OBJECT (priv->mcast_udpsink[1]), "ttl-mc", tr->ttl,
+                NULL);
         }
       } else {
         priv->transports = g_list_remove (priv->transports, trans);
