@@ -39,9 +39,45 @@
 
 #include <va/va_drm.h>
 #include "msdk.h"
+#include "msdk_libva.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
 #define GST_CAT_DEFAULT gst_msdkenc_debug
+
+struct fourcc_map
+{
+  mfxU32 mfx_fourcc;
+  guint32 va_fourcc;
+};
+
+struct rt_map
+{
+  mfxU32 mfx_rt_format;
+  guint32 va_rt_format;
+};
+
+#define FOURCC_MFX_TO_VA(MFX, VA) \
+    { MFX_FOURCC_##MFX, VA_FOURCC_##VA }
+
+#define RT_MFX_TO_VA(MFX, VA) \
+    { MFX_CHROMAFORMAT_##MFX, VA_RT_FORMAT_##VA }
+
+static const struct fourcc_map gst_msdk_fourcc_mfx_to_va[] = {
+  FOURCC_MFX_TO_VA (NV12, NV12),
+  FOURCC_MFX_TO_VA (YUY2, YUY2),
+  FOURCC_MFX_TO_VA (UYVY, UYVY),
+  FOURCC_MFX_TO_VA (YV12, YV12),
+  FOURCC_MFX_TO_VA (RGB4, ARGB),
+  FOURCC_MFX_TO_VA (P8, P208),
+  {0, 0}
+};
+
+static const struct rt_map gst_msdk_rt_mfx_to_va[] = {
+  RT_MFX_TO_VA (YUV420, YUV420),
+  RT_MFX_TO_VA (YUV422, YUV422),
+  RT_MFX_TO_VA (YUV444, YUV444),
+  {0, 0}
+};
 
 struct _MsdkContext
 {
@@ -140,4 +176,95 @@ mfxSession
 msdk_context_get_session (MsdkContext * context)
 {
   return context->session;
+}
+
+mfxStatus
+gst_msdk_get_mfx_status_from_va_status (VAStatus va_res)
+{
+  mfxStatus mfxRes = MFX_ERR_NONE;
+
+  switch (va_res) {
+    case VA_STATUS_SUCCESS:
+      mfxRes = MFX_ERR_NONE;
+      break;
+    case VA_STATUS_ERROR_ALLOCATION_FAILED:
+      mfxRes = MFX_ERR_MEMORY_ALLOC;
+      break;
+    case VA_STATUS_ERROR_ATTR_NOT_SUPPORTED:
+    case VA_STATUS_ERROR_UNSUPPORTED_PROFILE:
+    case VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT:
+    case VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT:
+    case VA_STATUS_ERROR_UNSUPPORTED_BUFFERTYPE:
+    case VA_STATUS_ERROR_FLAG_NOT_SUPPORTED:
+    case VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED:
+      mfxRes = MFX_ERR_UNSUPPORTED;
+      break;
+    case VA_STATUS_ERROR_INVALID_DISPLAY:
+    case VA_STATUS_ERROR_INVALID_CONFIG:
+    case VA_STATUS_ERROR_INVALID_CONTEXT:
+    case VA_STATUS_ERROR_INVALID_SURFACE:
+    case VA_STATUS_ERROR_INVALID_BUFFER:
+    case VA_STATUS_ERROR_INVALID_IMAGE:
+    case VA_STATUS_ERROR_INVALID_SUBPICTURE:
+      mfxRes = MFX_ERR_NOT_INITIALIZED;
+      break;
+    case VA_STATUS_ERROR_INVALID_PARAMETER:
+      mfxRes = MFX_ERR_INVALID_VIDEO_PARAM;
+    default:
+      mfxRes = MFX_ERR_UNKNOWN;
+      break;
+  }
+  return mfxRes;
+}
+
+guint
+gst_msdk_get_va_fourcc_from_mfx_fourcc (mfxU32 fourcc)
+{
+  const struct fourcc_map *m = gst_msdk_fourcc_mfx_to_va;
+
+  for (; m->mfx_fourcc != 0; m++) {
+    if (m->mfx_fourcc == fourcc)
+      return m->va_fourcc;
+  }
+
+  return 0;
+}
+
+guint
+gst_msdk_get_mfx_fourcc_from_va_fourcc (guint32 fourcc)
+{
+  const struct fourcc_map *m = gst_msdk_fourcc_mfx_to_va;
+
+  for (; m->va_fourcc != 0; m++) {
+    if (m->va_fourcc == fourcc)
+      return m->mfx_fourcc;
+  }
+
+  return 0;
+}
+
+guint
+gst_msdk_get_va_rt_format_from_mfx_rt_format (mfxU32 format)
+{
+  const struct rt_map *m = gst_msdk_rt_mfx_to_va;
+
+  for (; m->mfx_rt_format != 0; m++) {
+    if (m->mfx_rt_format == format)
+      return m->va_rt_format;
+  }
+
+  return 0;
+}
+
+guint
+gst_msdk_get_mfx_rt_format_from_va_rt_format (guint32 format)
+{
+  const struct rt_map *m = gst_msdk_rt_mfx_to_va;
+
+  for (; m->va_rt_format != 0; m++) {
+    if (m->va_rt_format == format)
+      return m->mfx_rt_format;
+  }
+
+  return 0;
 }
