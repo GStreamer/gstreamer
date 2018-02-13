@@ -50,7 +50,7 @@ gboolean
 gst_msdk_context_get_context (GstContext * context, GstMsdkContext ** msdk_context);
 
 gboolean
-gst_msdk_context_ensure_context (GstElement * element, gboolean hardware);
+gst_msdk_context_ensure_context (GstElement * element, gboolean hardware, GstMsdkContextJobType job);
 
 G_END_DECLS
 

@@ -215,11 +215,12 @@ gst_msdk_context_propagate (GstElement * element, GstMsdkContext * msdk_context)
 }
 
 gboolean
-gst_msdk_context_ensure_context (GstElement * element, gboolean hardware)
+gst_msdk_context_ensure_context (GstElement * element, gboolean hardware,
+    GstMsdkContextJobType job)
 {
   GstMsdkContext *msdk_context;
 
-  msdk_context = gst_msdk_context_new (hardware);
+  msdk_context = gst_msdk_context_new (hardware, job);
   if (!msdk_context) {
     GST_ERROR_OBJECT (element, "Context creation failed");
     return FALSE;

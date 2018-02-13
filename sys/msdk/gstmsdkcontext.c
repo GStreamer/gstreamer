@@ -53,6 +53,9 @@ struct _GstMsdkContextPrivate
 {
   mfxSession session;
   GList *cached_alloc_responses;
+  gboolean hardware;
+  gboolean is_joined;
+  GstMsdkContextJobType job_type;
 #ifndef _WIN32
   gint fd;
   VADisplay dpy;
@@ -113,10 +116,13 @@ failed:
 #endif
 
 static gboolean
-gst_msdk_context_open (GstMsdkContext * context, gboolean hardware)
+gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
+    GstMsdkContextJobType job_type)
 {
   GstMsdkContextPrivate *priv = context->priv;
 
+  priv->job_type = job_type;
+  priv->hardware = hardware;
   priv->session = msdk_open_session (hardware);
   if (!priv->session)
     goto failed;
@@ -151,6 +157,12 @@ gst_msdk_context_finalize (GObject * obj)
 {
   GstMsdkContext *context = GST_MSDK_CONTEXT_CAST (obj);
   GstMsdkContextPrivate *priv = context->priv;
+
+  if (priv->is_joined) {
+    MFXDisjoinSession (priv->session);
+    goto done;
+  }
+
   msdk_close_session (priv->session);
 
 #ifndef _WIN32
@@ -160,6 +172,7 @@ gst_msdk_context_finalize (GObject * obj)
     close (priv->fd);
 #endif
 
+done:
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -173,15 +186,51 @@ gst_msdk_context_class_init (GstMsdkContextClass * klass)
 }
 
 GstMsdkContext *
-gst_msdk_context_new (gboolean hardware)
+gst_msdk_context_new (gboolean hardware, GstMsdkContextJobType job_type)
 {
   GstMsdkContext *obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
 
-  if (obj && !gst_msdk_context_open (obj, hardware)) {
+  if (obj && !gst_msdk_context_open (obj, hardware, job_type)) {
     if (obj)
       gst_object_unref (obj);
     return NULL;
   }
+
+  return obj;
+}
+
+GstMsdkContext *
+gst_msdk_context_new_with_parent (GstMsdkContext * parent)
+{
+  mfxStatus status;
+  GstMsdkContext *obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
+  GstMsdkContextPrivate *priv = obj->priv;
+  GstMsdkContextPrivate *parent_priv = parent->priv;
+
+  status = MFXCloneSession (parent_priv->session, &priv->session);
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to clone mfx session");
+    return NULL;
+  }
+
+  status = MFXJoinSession (parent_priv->session, priv->session);
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to join mfx session");
+    return NULL;
+  }
+
+  priv->is_joined = TRUE;
+  priv->hardware = parent_priv->hardware;
+  priv->job_type = parent_priv->job_type;
+#ifndef _WIN32
+  priv->dpy = parent_priv->dpy;
+  priv->fd = parent_priv->fd;
+
+  if (priv->hardware) {
+    status = MFXVideoCORE_SetHandle (priv->session, MFX_HANDLE_VA_DISPLAY,
+        (mfxHDL) parent_priv->dpy);
+  }
+#endif
 
   return obj;
 }
@@ -285,4 +334,17 @@ gst_msdk_context_remove_alloc_response (GstMsdkContext * context,
       g_list_delete_link (priv->cached_alloc_responses, l);
 
   return TRUE;
+}
+
+GstMsdkContextJobType
+gst_msdk_context_get_job_type (GstMsdkContext * context)
+{
+  return context->priv->job_type;
+}
+
+void
+gst_msdk_context_add_job_type (GstMsdkContext * context,
+    GstMsdkContextJobType job_type)
+{
+  context->priv->job_type |= job_type;
 }

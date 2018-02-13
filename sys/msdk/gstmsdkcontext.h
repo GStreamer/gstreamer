@@ -58,6 +58,12 @@ typedef struct _GstMsdkContext GstMsdkContext;
 typedef struct _GstMsdkContextClass GstMsdkContextClass;
 typedef struct _GstMsdkContextPrivate GstMsdkContextPrivate;
 
+typedef enum {
+  GST_MSDK_JOB_DECODER = 0x01,
+  GST_MSDK_JOB_ENCODER = 0x02,
+  GST_MSDK_JOB_VPP = 0x04,
+} GstMsdkContextJobType;
+
 /*
  * GstMsdkContext:
  */
@@ -78,7 +84,8 @@ struct _GstMsdkContextClass
 
 GType gst_msdk_context_get_type (void);
 
-GstMsdkContext * gst_msdk_context_new (gboolean hardware);
+GstMsdkContext * gst_msdk_context_new (gboolean hardware, GstMsdkContextJobType job_type);
+GstMsdkContext * gst_msdk_context_new_with_parent (GstMsdkContext * parent);
 mfxSession gst_msdk_context_get_session (GstMsdkContext * context);
 
 gpointer gst_msdk_context_get_handle (GstMsdkContext * context);
@@ -111,6 +118,12 @@ gst_msdk_context_add_alloc_response (GstMsdkContext * context,
 gboolean
 gst_msdk_context_remove_alloc_response (GstMsdkContext * context,
     mfxFrameAllocResponse * resp);
+
+GstMsdkContextJobType
+gst_msdk_context_get_job_type (GstMsdkContext * context);
+
+void
+gst_msdk_context_add_job_type (GstMsdkContext * context, GstMsdkContextJobType job_type);
 
 G_END_DECLS
 

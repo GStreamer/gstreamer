@@ -243,7 +243,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   /* make sure that the decoder is closed */
   gst_msdkdec_close_decoder (thiz);
 
-  thiz->context = gst_msdk_context_new (thiz->hardware);
+  thiz->context = gst_msdk_context_new (thiz->hardware, GST_MSDK_JOB_DECODER);
   if (!thiz->context) {
     GST_ERROR_OBJECT (thiz, "Context creation failed");
     return FALSE;

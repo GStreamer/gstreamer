@@ -169,7 +169,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   /* make sure that the encoder is closed */
   gst_msdkenc_close_encoder (thiz);
 
-  thiz->context = gst_msdk_context_new (thiz->hardware);
+  thiz->context = gst_msdk_context_new (thiz->hardware, GST_MSDK_JOB_ENCODER);
   if (!thiz->context) {
     GST_ERROR_OBJECT (thiz, "Context creation failed");
     return FALSE;
