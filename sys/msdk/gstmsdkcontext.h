@@ -125,6 +125,12 @@ gst_msdk_context_get_job_type (GstMsdkContext * context);
 void
 gst_msdk_context_add_job_type (GstMsdkContext * context, GstMsdkContextJobType job_type);
 
+gint
+gst_msdk_context_get_shared_async_depth (GstMsdkContext * context);
+
+void
+gst_msdk_context_add_shared_async_depth (GstMsdkContext * context, gint async_depth);
+
 G_END_DECLS
 
 #endif /* GST_MSDK_CONTEXT_H */

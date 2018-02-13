@@ -328,8 +328,13 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   }
 
   if (thiz->use_video_memory) {
+    gint shared_async_depth;
+
+    shared_async_depth =
+        gst_msdk_context_get_shared_async_depth (thiz->context);
+    request.NumFrameSuggested += shared_async_depth;
+
     request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
-    request.NumFrameSuggested += thiz->async_depth;
     gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
   }
 
@@ -501,6 +506,9 @@ gst_msdkdec_start (GstVideoDecoder * decoder)
 
       parent_context = thiz->context;
       thiz->context = gst_msdk_context_new_with_parent (parent_context);
+
+      gst_msdk_context_add_shared_async_depth (thiz->context,
+          gst_msdk_context_get_shared_async_depth (parent_context));
       gst_object_unref (parent_context);
 
       GST_INFO_OBJECT (thiz,
@@ -516,6 +524,8 @@ gst_msdkdec_start (GstVideoDecoder * decoder)
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
+
+  gst_msdk_context_add_shared_async_depth (thiz->context, thiz->async_depth);
 
   return TRUE;
 }

@@ -56,6 +56,7 @@ struct _GstMsdkContextPrivate
   gboolean hardware;
   gboolean is_joined;
   GstMsdkContextJobType job_type;
+  gint shared_async_depth;
 #ifndef _WIN32
   gint fd;
   VADisplay dpy;
@@ -347,4 +348,17 @@ gst_msdk_context_add_job_type (GstMsdkContext * context,
     GstMsdkContextJobType job_type)
 {
   context->priv->job_type |= job_type;
+}
+
+gint
+gst_msdk_context_get_shared_async_depth (GstMsdkContext * context)
+{
+  return context->priv->shared_async_depth;
+}
+
+void
+gst_msdk_context_add_shared_async_depth (GstMsdkContext * context,
+    gint async_depth)
+{
+  context->priv->shared_async_depth += async_depth;
 }

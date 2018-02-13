@@ -265,6 +265,9 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
           msdk_status_to_string (status));
     }
 
+    if (thiz->use_video_memory)
+      request[0].NumFrameSuggested +=
+          gst_msdk_context_get_shared_async_depth (thiz->context);
     thiz->num_vpp_surfaces = request[0].NumFrameSuggested;
 
     if (thiz->use_video_memory)
@@ -1156,6 +1159,8 @@ gst_msdkenc_start (GstVideoEncoder * encoder)
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
+
+  gst_msdk_context_add_shared_async_depth (thiz->context, thiz->async_depth);
 
   /* Set the minimum pts to some huge value (1000 hours). This keeps
      the dts at the start of the stream from needing to be
