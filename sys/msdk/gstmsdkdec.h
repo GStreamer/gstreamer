@@ -65,14 +65,18 @@ struct _GstMsdkDec
   GstVideoInfo output_info;
   GstBufferPool *pool;
   GstVideoInfo pool_info;
+  mfxFrameAllocResponse alloc_resp;
+  gboolean use_video_memory;
 
   /* MFX context */
   GstMsdkContext *context;
   mfxVideoParam param;
   GPtrArray *extra_params;
-  GArray *surfaces;
   GArray *tasks;
   guint next_task;
+
+  GList *decoded_msdk_surfaces;
+  GList *locked_buffer;
 
   /* element properties */
   gboolean hardware;
