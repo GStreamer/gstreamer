@@ -17,10 +17,6 @@ GObject
       GstControlSource
       GstElement
         GstAggregator
-          GstAudioAggregator
-            GstAudioInterleave
-            GstAudioMixer
-              GstLiveAdder
           GstMXFMux
           GstVideoAggregator
             GstCompositor
@@ -327,9 +323,6 @@ GObject
       GstGLContext
       GstPad
         GstAggregatorPad
-          GstAudioAggregatorPad
-            GstAudioInterleavePad
-            GstAudioMixerPad
           GstMXFMuxPad
           GstVideoAggregatorPad
             GstCompositorPad
