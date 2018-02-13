@@ -19,7 +19,7 @@ msdk_sources = [
 if host_machine.system() == 'windows'
   msdk_sources += 'msdk_d3d.c'
 else
-  msdk_sources += 'msdk_libva.c'
+  msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
 endif
 
 msdk_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()

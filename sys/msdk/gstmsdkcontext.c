@@ -211,3 +211,78 @@ gst_msdk_context_get_fd (GstMsdkContext * context)
   return -1;
 #endif
 }
+
+static gint
+_find_response (gconstpointer resp, gconstpointer comp_resp)
+{
+  GstMsdkAllocResponse *cached_resp = (GstMsdkAllocResponse *) resp;
+  mfxFrameAllocResponse *_resp = (mfxFrameAllocResponse *) comp_resp;
+
+  return cached_resp ? cached_resp->mem_ids != _resp->mids : -1;
+}
+
+static gint
+_find_request (gconstpointer resp, gconstpointer req)
+{
+  GstMsdkAllocResponse *cached_resp = (GstMsdkAllocResponse *) resp;
+  mfxFrameAllocRequest *_req = (mfxFrameAllocRequest *) req;
+
+  return cached_resp ? cached_resp->request.Type != _req->Type : -1;
+}
+
+GstMsdkAllocResponse *
+gst_msdk_context_get_cached_alloc_responses (GstMsdkContext * context,
+    mfxFrameAllocResponse * resp)
+{
+  GstMsdkContextPrivate *priv = context->priv;
+  GList *l =
+      g_list_find_custom (priv->cached_alloc_responses, resp, _find_response);
+
+  if (l)
+    return l->data;
+  else
+    return NULL;
+}
+
+GstMsdkAllocResponse *
+gst_msdk_context_get_cached_alloc_responses_by_request (GstMsdkContext *
+    context, mfxFrameAllocRequest * req)
+{
+  GstMsdkContextPrivate *priv = context->priv;
+  GList *l =
+      g_list_find_custom (priv->cached_alloc_responses, req, _find_request);
+
+  if (l)
+    return l->data;
+  else
+    return NULL;
+}
+
+void
+gst_msdk_context_add_alloc_response (GstMsdkContext * context,
+    GstMsdkAllocResponse * resp)
+{
+  context->priv->cached_alloc_responses =
+      g_list_append (context->priv->cached_alloc_responses, resp);
+}
+
+gboolean
+gst_msdk_context_remove_alloc_response (GstMsdkContext * context,
+    mfxFrameAllocResponse * resp)
+{
+  GstMsdkAllocResponse *msdk_resp;
+  GstMsdkContextPrivate *priv = context->priv;
+  GList *l =
+      g_list_find_custom (priv->cached_alloc_responses, resp, _find_response);
+
+  if (!l)
+    return FALSE;
+
+  msdk_resp = l->data;
+
+  g_slice_free1 (sizeof (GstMsdkAllocResponse), msdk_resp);
+  priv->cached_alloc_responses =
+      g_list_delete_link (priv->cached_alloc_responses, l);
+
+  return TRUE;
+}
