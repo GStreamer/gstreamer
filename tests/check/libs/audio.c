@@ -762,6 +762,7 @@ typedef struct
   gint channels;
   GstAudioChannelPosition from[32], to[32];
   gint32 in[32], out[32];
+  gint32 plane_offsets[32];
   gboolean fail;
 } MultichannelReorderData;
 
@@ -773,12 +774,14 @@ GST_START_TEST (test_multichannel_reorder)
           {GST_AUDIO_CHANNEL_POSITION_MONO},
           {0, 1, 2, 3},
           {0, 1, 2, 3},
+          {0},
         FALSE},
     {1,
           {GST_AUDIO_CHANNEL_POSITION_MONO},
           {GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
           {0, 1, 2, 3},
           {0, 1, 2, 3},
+          {0},
         TRUE},
     {2,
           {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -787,6 +790,7 @@ GST_START_TEST (test_multichannel_reorder)
               GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
           {0, 1, 2, 3},
           {0, 1, 2, 3},
+          {0, 1},
         FALSE},
     {2,
           {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -795,6 +799,7 @@ GST_START_TEST (test_multichannel_reorder)
               GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
           {0, 1, 2, 3},
           {1, 0, 3, 2},
+          {1, 0},
         FALSE},
     {4,
           {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -806,6 +811,7 @@ GST_START_TEST (test_multichannel_reorder)
                 GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
               GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
           {0, 1, 2, 3},
+          {1, 2, 0, 3},
           {1, 2, 0, 3},
         FALSE},
     {4,
@@ -819,6 +825,7 @@ GST_START_TEST (test_multichannel_reorder)
               GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
           {0, 1, 2, 3},
           {3, 0, 1, 2},
+          {3, 0, 1, 2},
         FALSE},
     {4,
           {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -831,11 +838,14 @@ GST_START_TEST (test_multichannel_reorder)
               GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
           {0, 1, 2, 3},
           {3, 2, 1, 0},
+          {3, 2, 1, 0},
         FALSE},
   };
-  gint i;
+  gint i, j;
   GstBuffer *buf;
   GstMapInfo map;
+  GstAudioInfo info;
+  GstAudioBuffer abuf;
 
   for (i = 0; i < G_N_ELEMENTS (tests); i++) {
     buf =
@@ -846,6 +856,8 @@ GST_START_TEST (test_multichannel_reorder)
       fail_if (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
               tests[i].channels, tests[i].from, tests[i].to));
     } else {
+      /* first interpret as interleaved */
+
       fail_unless (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
               tests[i].channels, tests[i].from, tests[i].to));
 
@@ -853,6 +865,30 @@ GST_START_TEST (test_multichannel_reorder)
       fail_unless_equals_int (map.size, sizeof (tests[i].in));
       fail_unless (memcmp (tests[i].out, map.data, map.size) == 0);
       gst_buffer_unmap (buf, &map);
+
+      /* now interpret as planar */
+
+      gst_audio_info_init (&info);
+      gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S32, 44100,
+          tests[i].channels, NULL);
+      info.layout = GST_AUDIO_LAYOUT_NON_INTERLEAVED;
+
+      gst_buffer_add_audio_meta (buf, &info,
+          sizeof (tests[i].in) / (tests[i].channels * sizeof (gint32)), NULL);
+
+      fail_unless (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
+              tests[i].channels, tests[i].from, tests[i].to));
+
+      fail_unless (gst_audio_buffer_map (&abuf, &info, buf, GST_MAP_READ));
+      fail_unless_equals_int (abuf.n_planes, tests[i].channels);
+      fail_unless_equals_int (GST_AUDIO_BUFFER_PLANE_SIZE (&abuf),
+          sizeof (tests[i].in) / tests[i].channels);
+      for (j = 0; j < abuf.n_planes; j++) {
+        fail_unless_equals_pointer (abuf.planes[j],
+            abuf.map_infos[0].data +
+            tests[i].plane_offsets[j] * GST_AUDIO_BUFFER_PLANE_SIZE (&abuf));
+      }
+      gst_audio_buffer_unmap (&abuf);
     }
     gst_buffer_unref (buf);
   }
