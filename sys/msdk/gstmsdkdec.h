@@ -69,6 +69,10 @@ struct _GstMsdkDec
   gboolean use_video_memory;
   gboolean initialized;
 
+  /* for packetization */
+  GstAdapter *adapter;
+  gboolean is_packetized;
+
   /* MFX context */
   GstMsdkContext *context;
   mfxVideoParam param;
