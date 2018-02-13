@@ -73,7 +73,6 @@ struct _GstMsdkEnc
   GstMsdkContext *context;
   mfxVideoParam param;
   guint num_surfaces;
-  mfxFrameSurface1 *surfaces;
   guint num_tasks;
   MsdkEncTask *tasks;
   guint next_task;
@@ -82,10 +81,16 @@ struct _GstMsdkEnc
   mfxVideoParam vpp_param;
   guint num_vpp_surfaces;
   /* Input interfaces, output above */
-  mfxFrameSurface1 *vpp_surfaces;
+  mfxFrameAllocResponse vpp_alloc_resp;
+  mfxFrameAllocResponse alloc_resp;
 
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
+
+  GstBufferPool *msdk_pool;
+  GstBufferPool *msdk_converted_pool;
+  GstVideoInfo aligned_info;
+  gboolean use_video_memory;
 
   /* element properties */
   gboolean hardware;

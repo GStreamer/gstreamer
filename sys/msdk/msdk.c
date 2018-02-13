@@ -30,6 +30,8 @@
  */
 
 #include "msdk.h"
+#include "gstmsdkvideomemory.h"
+#include "gstmsdksystemmemory.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
 #define GST_CAT_DEFAULT gst_msdkenc_debug
@@ -452,4 +454,33 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
       gst_msdk_get_mfx_chroma_from_format (GST_VIDEO_INFO_FORMAT (info));
 
   return;
+}
+
+gboolean
+gst_msdk_is_msdk_buffer (GstBuffer * buf)
+{
+  GstAllocator *allocator;
+  GstMemory *mem = gst_buffer_peek_memory (buf, 0);
+
+  allocator = GST_MEMORY_CAST (mem)->allocator;
+
+  if (allocator && (GST_IS_MSDK_VIDEO_ALLOCATOR (allocator) ||
+          GST_IS_MSDK_SYSTEM_ALLOCATOR (allocator)))
+    return TRUE;
+  else
+    return FALSE;
+}
+
+mfxFrameSurface1 *
+gst_msdk_get_surface_from_buffer (GstBuffer * buf)
+{
+  GstAllocator *allocator;
+  GstMemory *mem = gst_buffer_peek_memory (buf, 0);
+
+  allocator = GST_MEMORY_CAST (mem)->allocator;
+
+  if (GST_IS_MSDK_VIDEO_ALLOCATOR (allocator))
+    return GST_MSDK_VIDEO_MEMORY_CAST (mem)->surface;
+  else
+    return GST_MSDK_SYSTEM_MEMORY_CAST (mem)->surface;
 }
