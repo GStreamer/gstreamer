@@ -127,7 +127,7 @@ check_kate=
 endif
 
 if HAVE_ORC
-check_orc = orc/bayer orc/audiomixer orc/compositor
+check_orc = orc/bayer orc/compositor
 else
 check_orc =
 endif
@@ -257,8 +257,6 @@ check_PROGRAMS = \
 	elements/videoframe-audiolevel \
 	elements/autoconvert \
 	elements/autovideoconvert \
-	elements/audiointerleave \
-	elements/audiomixer \
 	elements/asfmux \
 	elements/camerabin \
 	elements/gdppay \
@@ -312,12 +310,6 @@ LDADD = $(GST_CHECK_LIBS)
 
 generic_states_CFLAGS = $(AM_CFLAGS) $(GLIB_CFLAGS)
 generic_states_LDADD = $(LDADD) $(GLIB_LIBS)
-
-elements_audiomixer_LDADD = $(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) -lgstbase-@GST_API_VERSION@ $(LDADD)
-elements_audiomixer_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(AM_CFLAGS)
-
-elements_audiointerleave_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(GST_AUDIO_LIBS) $(LDADD)
-elements_audiointerleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_pnm_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -539,14 +531,6 @@ orc_bayer_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_bayer_SOURCES = orc/bayer.c
 
 orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
-	$(MKDIR_P) orc
-	$(ORCC) --test -o $@ $<
-
-orc_audiomixer_CFLAGS = $(ORC_CFLAGS)
-orc_audiomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_audiomixer_SOURCES = orc/audiomixer.c
-
-orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
 

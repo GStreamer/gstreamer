@@ -63,6 +63,7 @@ CRUFT_FILES = \
 	$(top_builddir)/ext/qt/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/audiomixer/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/audioparsers/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/camerabin2/.libs/libgstcamerabin2.so \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
@@ -105,6 +106,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
+	$(top_srcdir)/gst/audiomixer \
 	$(top_srcdir)/gst/camerabin \
 	$(top_srcdir)/gst/dataurisrc \
 	$(top_srcdir)/gst/flacparse \

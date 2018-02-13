@@ -18,8 +18,6 @@ base_tests = [
   [['elements/aiffparse.c']],
   [['elements/asfmux.c']],
   [['elements/assrender.c'], not ass_dep.found(), [ass_dep]],
-  [['elements/audiointerleave.c']],
-  [['elements/audiomixer.c']],
   [['elements/autoconvert.c']],
   [['elements/autovideoconvert.c']],
   [['elements/camerabin.c']],
