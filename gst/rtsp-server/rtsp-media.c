@@ -1512,7 +1512,7 @@ gst_rtsp_media_is_time_provider (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_set_clock:
  * @media: a #GstRTSPMedia
- * @clock: #GstClock to be used
+ * @clock: (nullable): #GstClock to be used
  *
  * Configure the clock used for the media.
  */
