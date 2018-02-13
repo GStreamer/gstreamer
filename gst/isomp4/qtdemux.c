@@ -13323,6 +13323,81 @@ read_descr_size (guint8 * ptr, guint8 * end, guint8 ** end_out)
   return len;
 }
 
+static GList *
+parse_xiph_stream_headers (GstQTDemux * qtdemux, gpointer codec_data,
+    gsize codec_data_size)
+{
+  GList *list = NULL;
+  guint8 *p = codec_data;
+  gint i, offset, num_packets;
+  guint *length, last;
+
+  GST_MEMDUMP_OBJECT (qtdemux, "xiph codec data", codec_data, codec_data_size);
+
+  if (codec_data == NULL || codec_data_size == 0)
+    goto error;
+
+  /* start of the stream and vorbis audio or theora video, need to
+   * send the codec_priv data as first three packets */
+  num_packets = p[0] + 1;
+  GST_DEBUG_OBJECT (qtdemux,
+      "%u stream headers, total length=%" G_GSIZE_FORMAT " bytes",
+      (guint) num_packets, codec_data_size);
+
+  /* Let's put some limits, Don't think there even is a xiph codec
+   * with more than 3-4 headers */
+  if (G_UNLIKELY (num_packets > 16)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unlikely number of xiph headers, most likely not valid");
+    goto error;
+  }
+
+  length = g_alloca (num_packets * sizeof (guint));
+  last = 0;
+  offset = 1;
+
+  /* first packets, read length values */
+  for (i = 0; i < num_packets - 1; i++) {
+    length[i] = 0;
+    while (offset < codec_data_size) {
+      length[i] += p[offset];
+      if (p[offset++] != 0xff)
+        break;
+    }
+    last += length[i];
+  }
+  if (offset + last > codec_data_size)
+    goto error;
+
+  /* last packet is the remaining size */
+  length[i] = codec_data_size - offset - last;
+
+  for (i = 0; i < num_packets; i++) {
+    GstBuffer *hdr;
+
+    GST_DEBUG_OBJECT (qtdemux, "buffer %d: %u bytes", i, (guint) length[i]);
+
+    if (offset + length[i] > codec_data_size)
+      goto error;
+
+    hdr = gst_buffer_new_wrapped (g_memdup (p + offset, length[i]), length[i]);
+    list = g_list_append (list, hdr);
+
+    offset += length[i];
+  }
+
+  return list;
+
+  /* ERRORS */
+error:
+  {
+    if (list != NULL)
+      g_list_free_full (list, (GDestroyNotify) gst_buffer_unref);
+    return NULL;
+  }
+
+}
+
 /* this can change the codec originally present in @list */
 static void
 gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
@@ -13335,6 +13410,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint8 *data_ptr = NULL;
   int data_len = 0;
   guint8 object_type_id = 0;
+  guint8 stream_type = 0;
   const char *codec_name = NULL;
   GstCaps *caps = NULL;
 
@@ -13355,18 +13431,19 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     switch (tag) {
       case ES_DESCRIPTOR_TAG:
-        GST_DEBUG_OBJECT (qtdemux, "ID %04x", QT_UINT16 (ptr));
-        GST_DEBUG_OBJECT (qtdemux, "priority %04x", QT_UINT8 (ptr + 2));
+        GST_DEBUG_OBJECT (qtdemux, "ID 0x%04x", QT_UINT16 (ptr));
+        GST_DEBUG_OBJECT (qtdemux, "priority 0x%04x", QT_UINT8 (ptr + 2));
         ptr += 3;
         break;
       case DECODER_CONFIG_DESC_TAG:{
         guint max_bitrate, avg_bitrate;
 
         object_type_id = QT_UINT8 (ptr);
+        stream_type = QT_UINT8 (ptr + 1) >> 2;
         max_bitrate = QT_UINT32 (ptr + 5);
         avg_bitrate = QT_UINT32 (ptr + 9);
         GST_DEBUG_OBJECT (qtdemux, "object_type_id %02x", object_type_id);
-        GST_DEBUG_OBJECT (qtdemux, "stream_type %02x", QT_UINT8 (ptr + 1));
+        GST_DEBUG_OBJECT (qtdemux, "stream_type %02x", stream_type);
         GST_DEBUG_OBJECT (qtdemux, "buffer_size_db %02x", QT_UINT24 (ptr + 2));
         GST_DEBUG_OBJECT (qtdemux, "max bitrate %u", max_bitrate);
         GST_DEBUG_OBJECT (qtdemux, "avg bitrate %u", avg_bitrate);
@@ -13581,6 +13658,35 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
       codec_name = "DTS audio";
       caps = gst_caps_new_simple ("audio/x-dts",
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      break;
+    case 0xDD:
+      if (stream_type == 0x05 && data_ptr) {
+        GList *headers =
+            parse_xiph_stream_headers (qtdemux, data_ptr, data_len);
+        if (headers) {
+          GList *tmp;
+          GValue arr_val = G_VALUE_INIT;
+          GValue buf_val = G_VALUE_INIT;
+          GstStructure *s;
+
+          /* Let's assume it's vorbis if it's an audio stream of type 0xdd and we have codec data that extracts properly */
+          codec_name = "Vorbis";
+          caps = gst_caps_new_empty_simple ("audio/x-vorbis");
+          g_value_init (&arr_val, GST_TYPE_ARRAY);
+          g_value_init (&buf_val, GST_TYPE_BUFFER);
+          for (tmp = headers; tmp; tmp = tmp->next) {
+            g_value_set_boxed (&buf_val, (GstBuffer *) tmp->data);
+            gst_value_array_append_value (&arr_val, &buf_val);
+          }
+          s = gst_caps_get_structure (caps, 0);
+          gst_structure_take_value (s, "streamheader", &arr_val);
+          g_value_unset (&buf_val);
+          g_list_free (headers);
+
+          data_ptr = NULL;
+          data_len = 0;
+        }
+      }
       break;
     case 0xE1:                 /* QCELP */
       /* QCELP, the codec_data is a riff tag (little endian) with
