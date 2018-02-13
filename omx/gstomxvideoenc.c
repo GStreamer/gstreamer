@@ -2145,6 +2145,55 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
   return TRUE;
 }
 
+/* returns TRUE if only the framerate changed and that framerate could be
+ * updated using OMX_IndexConfigVideoFramerate */
+static gboolean
+gst_omx_video_enc_framerate_changed (GstOMXVideoEnc * self,
+    GstVideoCodecState * state)
+{
+  GstVideoInfo prev_info = self->input_state->info;
+  GstVideoInfo *info = &state->info;
+  GstOMXVideoEncClass *klass;
+
+  klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+
+  prev_info.fps_n = info->fps_n;
+  prev_info.fps_d = info->fps_d;
+
+  /* if only the framerate changed, try and set the framerate parameter */
+  if (gst_video_info_is_equal (info, &prev_info)) {
+    OMX_CONFIG_FRAMERATETYPE config;
+    OMX_ERRORTYPE err;
+
+    GST_DEBUG_OBJECT (self, "Framerate change detected: %d/%d -> %d/%d",
+        self->input_state->info.fps_n, self->input_state->info.fps_d,
+        info->fps_n, info->fps_d);
+
+    GST_OMX_INIT_STRUCT (&config);
+    config.nPortIndex = self->enc_in_port->index;
+    if (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER)
+      config.xEncodeFramerate = info->fps_n ? (info->fps_n) / (info->fps_d) : 0;
+    else
+      config.xEncodeFramerate = gst_omx_video_calculate_framerate_q16 (info);
+
+    err = gst_omx_component_set_config (self->enc,
+        OMX_IndexConfigVideoFramerate, &config);
+    if (err == OMX_ErrorNone) {
+      gst_video_codec_state_unref (self->input_state);
+      self->input_state = gst_video_codec_state_ref (state);
+      return TRUE;
+    } else {
+      GST_WARNING_OBJECT (self,
+          "Failed to set framerate configuration: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      /* if changing the rate dynamically didn't work, keep going with a full
+       * encoder reset */
+    }
+  }
+
+  return FALSE;
+}
+
 static gboolean
 gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state)
@@ -2172,6 +2221,9 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
    * format change happened we can just exit here.
    */
   if (needs_disable) {
+    if (gst_omx_video_enc_framerate_changed (self, state))
+      return TRUE;
+
     if (!gst_omx_video_enc_disable (self))
       return FALSE;
 
