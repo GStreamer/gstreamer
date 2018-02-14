@@ -3801,23 +3801,52 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
 }
 
 /* must be called with lock */
+static inline void
+add_client (GstElement * rtp_sink, GstElement * rtcp_sink, const gchar * host,
+    gint rtp_port, gint rtcp_port)
+{
+  if (rtp_sink != NULL)
+    g_signal_emit_by_name (rtp_sink, "add", host, rtp_port, NULL);
+  if (rtcp_sink != NULL)
+    g_signal_emit_by_name (rtcp_sink, "add", host, rtcp_port, NULL);
+}
+
+/* must be called with lock */
+static void
+remove_client (GstElement * rtp_sink, GstElement * rtcp_sink,
+    const gchar * host, gint rtp_port, gint rtcp_port)
+{
+  if (rtp_sink != NULL)
+    g_signal_emit_by_name (rtp_sink, "remove", host, rtp_port, NULL);
+  if (rtcp_sink != NULL)
+    g_signal_emit_by_name (rtcp_sink, "remove", host, rtcp_port, NULL);
+}
+
+/* must be called with lock */
 static gboolean
 update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
     gboolean add)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   const GstRTSPTransport *tr;
+  gchar *dest;
+  gint min, max;
 
   tr = gst_rtsp_stream_transport_get_transport (trans);
+  dest = tr->destination;
 
   switch (tr->lower_transport) {
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
     {
+      min = tr->port.min;
+      max = tr->port.max;
+
       if (add) {
+        GST_INFO ("adding %s:%d-%d", dest, min, max);
         if (!check_mcast_part_for_transport (stream, tr))
           goto mcast_error;
-        priv->transports = g_list_prepend (priv->transports, trans);
 
+        /* FIXME: Is it ok to set ttl-mc if media is shared? */
         if (tr->ttl > 0) {
           GST_INFO ("setting ttl-mc %d", tr->ttl);
           if (priv->mcast_udpsink[0])
@@ -3827,21 +3856,20 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
             g_object_set (G_OBJECT (priv->mcast_udpsink[1]), "ttl-mc", tr->ttl,
                 NULL);
         }
+        add_client (priv->mcast_udpsink[0], priv->mcast_udpsink[1], dest, min,
+            max);
+        priv->transports = g_list_prepend (priv->transports, trans);
       } else {
+        GST_INFO ("removing %s:%d-%d", dest, min, max);
+        remove_client (priv->mcast_udpsink[0], priv->mcast_udpsink[1], dest,
+            min, max);
         priv->transports = g_list_remove (priv->transports, trans);
       }
       break;
     }
     case GST_RTSP_LOWER_TRANS_UDP:
     {
-      gchar *dest;
-      gint min, max;
-
-      dest = tr->destination;
-      if (tr->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-        min = tr->port.min;
-        max = tr->port.max;
-      } else if (priv->client_side) {
+      if (priv->client_side) {
         /* In client side mode the 'destination' is the RTSP server, so send
          * to those ports */
         min = tr->server_port.min;
@@ -3853,15 +3881,11 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
 
       if (add) {
         GST_INFO ("adding %s:%d-%d", dest, min, max);
-        if (priv->udpsink[0])
-          g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
-        g_signal_emit_by_name (priv->udpsink[1], "add", dest, max, NULL);
+        add_client (priv->udpsink[0], priv->udpsink[1], dest, min, max);
         priv->transports = g_list_prepend (priv->transports, trans);
       } else {
         GST_INFO ("removing %s:%d-%d", dest, min, max);
-        if (priv->udpsink[0])
-          g_signal_emit_by_name (priv->udpsink[0], "remove", dest, min, NULL);
-        g_signal_emit_by_name (priv->udpsink[1], "remove", dest, max, NULL);
+        remove_client (priv->udpsink[0], priv->udpsink[1], dest, min, max);
         priv->transports = g_list_remove (priv->transports, trans);
       }
       priv->transports_cookie++;
