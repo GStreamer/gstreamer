@@ -751,7 +751,7 @@ static GSourceFuncs gst_pool_source_funcs = {
  * Create a #GSource that will be dispatched when the session should be cleaned
  * up.
  *
- * Returns: (transfer full) (nullable): a #GSource
+ * Returns: (transfer full): a #GSource
  */
 GSource *
 gst_rtsp_session_pool_create_watch (GstRTSPSessionPool * pool)
