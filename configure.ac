@@ -361,7 +361,7 @@ else
         --disable-audiotoolbox --disable-videotoolbox --disable-vaapi --disable-crystalhd \
         --disable-mediacodec --disable-nvenc --disable-mmal --disable-omx \
         --disable-omx-rpi --disable-cuda --disable-cuvid --disable-libmfx \
-        --disable-libnpp --disable-iconv --disable-jni --enable-optimizations"
+        --disable-libnpp --disable-iconv --disable-jni --disable-v4l2_m2m --enable-optimizations"
 
   if test "x$enable_gpl" == "xyes"; then
     emblibav_configure_args="$emblibav_configure_args --enable-gpl"
