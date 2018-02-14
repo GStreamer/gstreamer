@@ -3477,19 +3477,6 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
       /* update the elapsed time when we need to check against the npt stop time. */
       update_estimated_eos (jitterbuffer, item);
 
-      /* verify that an offset has not caused time stamps to go backwards, if so
-       * handle by reusing the previous timestamp */
-      if (priv->last_out_time != GST_CLOCK_TIME_NONE &&
-          GST_BUFFER_PTS (outbuf) < priv->last_out_time) {
-        GST_DEBUG_OBJECT (jitterbuffer, "buffer PTS %" GST_TIME_FORMAT
-            " older than preceding PTS %" GST_TIME_FORMAT
-            " adjusting to %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)),
-            GST_TIME_ARGS (priv->last_out_time),
-            GST_TIME_ARGS (priv->last_out_time));
-        GST_BUFFER_PTS (outbuf) = priv->last_out_time;
-      }
-
       priv->last_pts = pts;
       priv->last_out_time = GST_BUFFER_PTS (outbuf);
       break;
