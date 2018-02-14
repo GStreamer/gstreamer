@@ -58,6 +58,10 @@ const IID IID_IAudioClient = { 0x1cb9ad4c, 0xdbfa, 0x4c32,
   {0xb1, 0x78, 0xc2, 0xf5, 0x68, 0xa7, 0x03, 0xb2}
 };
 
+const IID IID_IAudioClient3 = { 0x7ed4ee07, 0x8e67, 0x4cd4,
+  {0x8c, 0x1a, 0x2b, 0x7a, 0x59, 0x87, 0xad, 0x42}
+};
+
 const IID IID_IAudioClock = { 0xcd63314f, 0x3fba, 0x4a1b,
   {0x81, 0x2c, 0xef, 0x96, 0x35, 0x87, 0x28, 0xe7}
 };
@@ -97,6 +101,27 @@ static struct
   {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
   {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
 };
+
+static int windows_major_version = 0;
+
+gboolean
+gst_wasapi_util_have_audioclient3 (void)
+{
+  if (windows_major_version > 0)
+    return windows_major_version == 10;
+
+  if (g_getenv ("GST_WASAPI_DISABLE_AUDIOCLIENT3") != NULL) {
+    windows_major_version = 6;
+    return FALSE;
+  }
+
+  /* https://msdn.microsoft.com/en-us/library/windows/desktop/ms724834(v=vs.85).aspx */
+  windows_major_version = 6;
+  if (g_win32_check_windows_version (10, 0, 0, G_WIN32_OS_ANY))
+    windows_major_version = 10;
+
+  return windows_major_version == 10;
+}
 
 GType
 gst_wasapi_device_role_get_type (void)
@@ -533,8 +558,12 @@ gst_wasapi_util_get_device_client (GstElement * self,
     }
   }
 
-  hr = IMMDevice_Activate (device, &IID_IAudioClient, CLSCTX_ALL, NULL,
-      (void **) &client);
+  if (gst_wasapi_util_have_audioclient3 ())
+    hr = IMMDevice_Activate (device, &IID_IAudioClient3, CLSCTX_ALL, NULL,
+        (void **) &client);
+  else
+    hr = IMMDevice_Activate (device, &IID_IAudioClient, CLSCTX_ALL, NULL,
+        (void **) &client);
   HR_FAILED_GOTO (hr, IMMDevice::Activate (IID_IAudioClient), beach);
 
   IUnknown_AddRef (client);
@@ -794,4 +823,118 @@ gst_wasapi_util_get_best_buffer_sizes (GstAudioRingBufferSpec * spec,
 
   *ret_period = use_period;
   *ret_buffer_duration = use_buffer;
+}
+
+gboolean
+gst_wasapi_util_initialize_audioclient (GstElement * self,
+    GstAudioRingBufferSpec * spec, IAudioClient * client,
+    WAVEFORMATEX * format, guint sharemode, gboolean low_latency,
+    guint * ret_devicep_frames)
+{
+  REFERENCE_TIME default_period, min_period;
+  REFERENCE_TIME device_period, device_buffer_duration;
+  guint rate;
+  HRESULT hr;
+
+  hr = IAudioClient_GetDevicePeriod (client, &default_period, &min_period);
+  HR_FAILED_RET (hr, IAudioClient::GetDevicePeriod, FALSE);
+
+  GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
+      ", min period: %" G_GINT64_FORMAT, default_period, min_period);
+
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
+
+  if (low_latency) {
+    if (sharemode == AUDCLNT_SHAREMODE_SHARED) {
+      device_period = default_period;
+      device_buffer_duration = 0;
+    } else {
+      device_period = min_period;
+      device_buffer_duration = min_period;
+    }
+  } else {
+    /* Clamp values to integral multiples of an appropriate period */
+    gst_wasapi_util_get_best_buffer_sizes (spec,
+        sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE, default_period,
+        min_period, &device_period, &device_buffer_duration);
+  }
+
+  /* For some reason, we need to call this a second time for exclusive mode */
+  if (sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE)
+    CoInitialize (NULL);
+
+  hr = IAudioClient_Initialize (client, sharemode,
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_buffer_duration,
+      /* This must always be 0 in shared mode */
+      sharemode == AUDCLNT_SHAREMODE_SHARED ? 0 : device_period, format, NULL);
+
+  if (hr == AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED &&
+      sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
+    guint32 n_frames;
+
+    GST_WARNING_OBJECT (self, "initialize failed due to unaligned period %i",
+        (int) device_period);
+
+    /* Calculate a new aligned period. First get the aligned buffer size. */
+    hr = IAudioClient_GetBufferSize (client, &n_frames);
+    HR_FAILED_RET (hr, IAudioClient::GetBufferSize, FALSE);
+
+    device_period = (GST_SECOND / 100) * n_frames / rate;
+
+    GST_WARNING_OBJECT (self, "trying to re-initialize with period %i "
+        "(%i frames, %i rate)", (int) device_period, n_frames, rate);
+
+    hr = IAudioClient_Initialize (client, sharemode,
+        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_period,
+        device_period, format, NULL);
+  }
+  HR_FAILED_RET (hr, IAudioClient::Initialize, FALSE);
+
+  *ret_devicep_frames = (rate * device_period * 100) / GST_SECOND;
+
+  return TRUE;
+}
+
+gboolean
+gst_wasapi_util_initialize_audioclient3 (GstElement * self,
+    GstAudioRingBufferSpec * spec, IAudioClient3 * client,
+    WAVEFORMATEX * format, gboolean low_latency, guint * ret_devicep_frames)
+{
+  HRESULT hr;
+  guint rate, devicep_frames;
+  guint defaultp_frames, fundp_frames, minp_frames, maxp_frames;
+  WAVEFORMATEX *tmpf;
+
+  rate = GST_AUDIO_INFO_RATE (&spec->info);
+
+  hr = IAudioClient3_GetSharedModeEnginePeriod (client, format,
+      &defaultp_frames, &fundp_frames, &minp_frames, &maxp_frames);
+  HR_FAILED_RET (hr, IAudioClient3::GetSharedModeEnginePeriod, FALSE);
+
+  GST_INFO_OBJECT (self, "Using IAudioClient3, default period %i frames, "
+      "fundamental period %i frames, minimum period %i frames, maximum period "
+      "%i frames", defaultp_frames, fundp_frames, minp_frames, maxp_frames);
+
+  if (low_latency) {
+    devicep_frames = minp_frames;
+  } else {
+    /* rate is in Hz, latency_time is in usec */
+    int tmp = (rate * spec->latency_time * GST_USECOND) / GST_SECOND;
+    devicep_frames = CLAMP (tmp, minp_frames, maxp_frames);
+    /* Ensure it's a multiple of the fundamental period */
+    tmp = devicep_frames / fundp_frames;
+    devicep_frames = tmp * fundp_frames;
+  }
+
+  hr = IAudioClient3_InitializeSharedAudioStream (client,
+      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, devicep_frames, format, NULL);
+  HR_FAILED_RET (hr, IAudioClient3::InitializeSharedAudioStream, FALSE);
+
+  hr = IAudioClient3_GetCurrentSharedModeEnginePeriod (client, &tmpf,
+      &devicep_frames);
+  CoTaskMemFree (tmpf);
+  HR_FAILED_RET (hr, IAudioClient3::GetCurrentSharedModeEnginePeriod, FALSE);
+
+  *ret_devicep_frames = devicep_frames;
+  return TRUE;
 }

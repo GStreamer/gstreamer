@@ -380,77 +380,36 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 {
   GstWasapiSrc *self = GST_WASAPI_SRC (asrc);
   gboolean res = FALSE;
-  REFERENCE_TIME latency_rt, default_period, min_period;
-  REFERENCE_TIME device_period, device_buffer_duration;
-  guint bpf, rate, buffer_frames;
+  REFERENCE_TIME latency_rt;
+  guint bpf, rate, devicep_frames, buffer_frames;
   HRESULT hr;
 
-  hr = IAudioClient_GetDevicePeriod (self->client, &default_period,
-      &min_period);
-  HR_FAILED_RET (hr, IAudioClient::GetDevicePeriod, FALSE);
-
-  GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
-      ", min period: %" G_GINT64_FORMAT, default_period, min_period);
+  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED &&
+      gst_wasapi_util_have_audioclient3 ()) {
+    if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
+            (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
+            &devicep_frames))
+      goto beach;
+  } else {
+    if (!gst_wasapi_util_initialize_audioclient (GST_ELEMENT (self), spec,
+            self->client, self->mix_format, self->sharemode, self->low_latency,
+            &devicep_frames))
+      goto beach;
+  }
 
   bpf = GST_AUDIO_INFO_BPF (&spec->info);
   rate = GST_AUDIO_INFO_RATE (&spec->info);
-
-  if (self->low_latency) {
-    if (self->sharemode == AUDCLNT_SHAREMODE_SHARED) {
-      device_period = default_period;
-      device_buffer_duration = 0;
-    } else {
-      device_period = min_period;
-      device_buffer_duration = min_period;
-    }
-  } else {
-    /* Clamp values to integral multiples of an appropriate period */
-    gst_wasapi_util_get_best_buffer_sizes (spec,
-        self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE, default_period,
-        min_period, &device_period, &device_buffer_duration);
-  }
-
-  /* For some reason, we need to call this a second time for exclusive mode */
-  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE)
-    CoInitialize (NULL);
-
-  hr = IAudioClient_Initialize (self->client, self->sharemode,
-      AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_buffer_duration,
-      /* This must always be 0 in shared mode */
-      self->sharemode == AUDCLNT_SHAREMODE_SHARED ? 0 : device_period,
-      self->mix_format, NULL);
-
-  if (hr == AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED &&
-      self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
-    guint32 n_frames;
-
-    GST_WARNING_OBJECT (self, "initialize failed due to unaligned period %i",
-        (int) device_period);
-
-    /* Calculate a new aligned period. First get the aligned buffer size. */
-    hr = IAudioClient_GetBufferSize (self->client, &n_frames);
-    HR_FAILED_GOTO (hr, IAudioClient::GetBufferSize, beach);
-
-    device_period = (GST_SECOND / 100) * n_frames / rate;
-
-    GST_WARNING_OBJECT (self, "trying to re-initialize with period %i "
-        "(%i frames, %i rate)", (int) device_period, n_frames, rate);
-
-    hr = IAudioClient_Initialize (self->client, self->sharemode,
-        AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_period,
-        device_period, self->mix_format, NULL);
-  }
-  HR_FAILED_GOTO (hr, IAudioClient::Initialize, beach);
 
   /* Total size in frames of the allocated buffer that we will read from */
   hr = IAudioClient_GetBufferSize (self->client, &buffer_frames);
   HR_FAILED_GOTO (hr, IAudioClient::GetBufferSize, beach);
 
-  GST_INFO_OBJECT (self, "buffer size is %i frames, bpf is %i bytes, "
-      "rate is %i Hz", buffer_frames, bpf, rate);
+  GST_INFO_OBJECT (self, "buffer size is %i frames, device period is %i "
+      "frames, bpf is %i bytes, rate is %i Hz", buffer_frames,
+      devicep_frames, bpf, rate);
 
-  spec->segsize = gst_util_uint64_scale_int_round (rate * bpf,
-      device_period * 100, GST_SECOND);
+  /* Actual latency-time/buffer-time will be different now */
+  spec->segsize = devicep_frames * bpf;
 
   /* We need a minimum of 2 segments to ensure glitch-free playback */
   spec->segtotal = MAX (self->buffer_frame_count * bpf / spec->segsize, 2);

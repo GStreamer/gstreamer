@@ -28,6 +28,8 @@
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 
+#include "gstaudioclient3.h"
+
 /* Static Caps shared between source, sink, and device provider */
 #define GST_WASAPI_STATIC_CAPS "audio/x-raw, " \
         "format = (string) " GST_AUDIO_FORMATS_ALL ", " \
@@ -61,6 +63,8 @@ typedef enum
 GType gst_wasapi_device_role_get_type (void);
 
 /* Utilities */
+
+gboolean gst_wasapi_util_have_audioclient3 (void);
 
 gint gst_wasapi_device_role_to_erole (gint role);
 
@@ -96,5 +100,14 @@ void gst_wasapi_util_get_best_buffer_sizes (GstAudioRingBufferSpec * spec,
     gboolean exclusive, REFERENCE_TIME default_period,
     REFERENCE_TIME min_period, REFERENCE_TIME * ret_period,
     REFERENCE_TIME * ret_buffer_duration);
+
+gboolean gst_wasapi_util_initialize_audioclient (GstElement * element,
+    GstAudioRingBufferSpec * spec, IAudioClient * client,
+    WAVEFORMATEX * format, guint sharemode, gboolean low_latency,
+    guint * ret_devicep_frames);
+
+gboolean gst_wasapi_util_initialize_audioclient3 (GstElement * element,
+    GstAudioRingBufferSpec * spec, IAudioClient3 * client,
+    WAVEFORMATEX * format, gboolean low_latency, guint * ret_devicep_frames);
 
 #endif /* __GST_WASAPI_UTIL_H__ */
