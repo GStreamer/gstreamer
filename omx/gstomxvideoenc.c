@@ -757,6 +757,7 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
   {
     OMX_ERRORTYPE err;
 
+    GST_OBJECT_LOCK (self);
     if (self->control_rate != 0xffffffff || self->target_bitrate != 0xffffffff) {
       OMX_VIDEO_PARAM_BITRATETYPE bitrate_param;
 
@@ -793,6 +794,7 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
           GST_ERROR_OBJECT (self,
               "Failed to set bitrate parameters: %s (0x%08x)",
               gst_omx_error_to_string (err), err);
+          GST_OBJECT_UNLOCK (self);
           return FALSE;
         }
       } else {
@@ -800,6 +802,7 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
             gst_omx_error_to_string (err), err);
       }
     }
+    GST_OBJECT_UNLOCK (self);
 
     if (self->quant_i_frames != 0xffffffff ||
         self->quant_p_frames != 0xffffffff ||
@@ -919,6 +922,7 @@ gst_omx_video_enc_set_property (GObject * object, guint prop_id,
       self->control_rate = g_value_get_enum (value);
       break;
     case PROP_TARGET_BITRATE:
+      GST_OBJECT_LOCK (self);
       self->target_bitrate = g_value_get_uint (value);
       if (self->enc) {
         OMX_VIDEO_CONFIG_BITRATETYPE config;
@@ -935,6 +939,7 @@ gst_omx_video_enc_set_property (GObject * object, guint prop_id,
               "Failed to set bitrate parameter: %s (0x%08x)",
               gst_omx_error_to_string (err), err);
       }
+      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_QUANT_I_FRAMES:
       self->quant_i_frames = g_value_get_uint (value);
@@ -1009,7 +1014,9 @@ gst_omx_video_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, self->control_rate);
       break;
     case PROP_TARGET_BITRATE:
+      GST_OBJECT_LOCK (self);
       g_value_set_uint (value, self->target_bitrate);
+      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_QUANT_I_FRAMES:
       g_value_set_uint (value, self->quant_i_frames);
@@ -2130,6 +2137,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
           NULL) != OMX_ErrorNone)
     return FALSE;
 
+  GST_OBJECT_LOCK (self);
   if (self->target_bitrate != 0xffffffff) {
     OMX_VIDEO_PARAM_BITRATETYPE config;
     OMX_ERRORTYPE err;
@@ -2144,6 +2152,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
       GST_ERROR_OBJECT (self, "Failed to set bitrate parameter: %s (0x%08x)",
           gst_omx_error_to_string (err), err);
   }
+  GST_OBJECT_UNLOCK (self);
 
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);

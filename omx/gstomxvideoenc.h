@@ -71,7 +71,7 @@ struct _GstOMXVideoEnc
 
   /* properties */
   guint32 control_rate;
-  guint32 target_bitrate;
+  guint32 target_bitrate; /* protected by object lock */
   guint32 quant_i_frames;
   guint32 quant_p_frames;
   guint32 quant_b_frames;
