@@ -58,7 +58,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_v216: packed 4:2:2 16-bit YUV, Y0-U0-Y1-V1 order
  * @GST_VIDEO_FORMAT_NV12: planar 4:2:0 YUV with interleaved UV plane
  * @GST_VIDEO_FORMAT_NV21: planar 4:2:0 YUV with interleaved VU plane
- * @GST_VIDEO_FORMAT_NV12_10LE32: 10-bit variant of @GST_VIDEO_FORMAT_NV12, packet in 32bit words (MSB 2 bits padding) (Since: 1.X)
+ * @GST_VIDEO_FORMAT_NV12_10LE32: 10-bit variant of @GST_VIDEO_FORMAT_NV12, packet in 32bit words (MSB 2 bits padding) (Since: 1.14)
  * @GST_VIDEO_FORMAT_GRAY8: 8-bit grayscale
  * @GST_VIDEO_FORMAT_GRAY10_LE32: 10-bit grayscale, packet in 32bit words (2 bits padding)
  * @GST_VIDEO_FORMAT_GRAY16_BE: 16-bit grayscale, most significant byte first
@@ -88,7 +88,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_GBR_10BE: planar 4:4:4 RGB, 10 bits per channel (Since: 1.2)
  * @GST_VIDEO_FORMAT_GBR_10LE: planar 4:4:4 RGB, 10 bits per channel (Since: 1.2)
  * @GST_VIDEO_FORMAT_NV16: planar 4:2:2 YUV with interleaved UV plane (Since: 1.2)
- * @GST_VIDEO_FORMAT_NV16_10LE32: 10-bit variant of @GST_VIDEO_FORMAT_NV16, packet in 32bit words (MSB 2 bits padding) (Since: 1.X)
+ * @GST_VIDEO_FORMAT_NV16_10LE32: 10-bit variant of @GST_VIDEO_FORMAT_NV16, packet in 32bit words (MSB 2 bits padding) (Since: 1.14)
  * @GST_VIDEO_FORMAT_NV24: planar 4:4:4 YUV with interleaved UV plane (Since: 1.2)
  * @GST_VIDEO_FORMAT_NV12_64Z32: NV12 with 64x32 tiling in zigzag pattern (Since: 1.4)
  * @GST_VIDEO_FORMAT_A420_10BE: planar 4:4:2:0 YUV, 10 bits per channel (Since: 1.6)
