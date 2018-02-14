@@ -93,7 +93,10 @@
  *
  * In non-live pipelines, baseclass can also (configurably) arrange for
  * output buffer aggregation which may help to redue large(r) numbers of
- * small(er) buffers being pushed and processed downstream.
+ * small(er) buffers being pushed and processed downstream. Note that this
+ * feature is only available if the buffer layout is interleaved. For planar
+ * buffers, the decoder implementation is fully responsible for the output
+ * buffer size.
  *
  * On the other hand, it should be noted that baseclass only provides limited
  * seeking support (upon explicit subclass request), as full-fledged support
@@ -992,7 +995,8 @@ gst_audio_decoder_output (GstAudioDecoder * dec, GstBuffer * buf)
 
 again:
   inbuf = NULL;
-  if (priv->agg && dec->priv->latency > 0) {
+  if (priv->agg && dec->priv->latency > 0 &&
+      priv->ctx.info.layout == GST_AUDIO_LAYOUT_INTERLEAVED) {
     gint av;
     gboolean assemble = FALSE;
     const GstClockTimeDiff tol = 10 * GST_MSECOND;
