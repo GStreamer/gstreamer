@@ -25,6 +25,8 @@
 #include "gstwasapisrc.h"
 #include "gstwasapidevice.h"
 
+GST_DEBUG_CATEGORY (gst_wasapi_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -39,6 +41,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_device_provider_register (plugin, "wasapideviceprovider",
           GST_RANK_PRIMARY, GST_TYPE_WASAPI_DEVICE_PROVIDER))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_wasapi_debug, "wasapi",
+      0, "Windows audio session API generic");
 
   return TRUE;
 }

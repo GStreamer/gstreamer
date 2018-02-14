@@ -25,6 +25,9 @@
 #include "gstwasapiutil.h"
 #include "gstwasapidevice.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gst_wasapi_debug);
+#define GST_CAT_DEFAULT gst_wasapi_debug
+
 /* This was only added to MinGW in ~2015 and our Cerbero toolchain is too old */
 #if defined(_MSC_VER)
 #include <functiondiscoverykeys_devpkey.h>
