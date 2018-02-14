@@ -1050,6 +1050,8 @@ gst_video_overlay_expose
 gst_video_overlay_handle_events
 gst_video_overlay_set_render_rectangle
 gst_is_video_overlay_prepare_window_handle_message
+gst_video_overlay_install_properties
+gst_video_overlay_set_property
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_OVERLAY
 GST_VIDEO_OVERLAY
