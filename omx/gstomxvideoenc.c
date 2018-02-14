@@ -392,7 +392,7 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
           "Max bitrate in bits per second, only used if control-rate=variable (0xffffffff=component default)",
           0, G_MAXUINT, GST_OMX_VIDEO_ENC_MAX_BITRATE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_READY));
 
   g_object_class_install_property (gobject_class, PROP_ASPECT_RATIO,
       g_param_spec_enum ("aspect-ratio", "Aspect ratio",
