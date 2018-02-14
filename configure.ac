@@ -1050,6 +1050,10 @@ AG_GST_CHECK_FEATURE(TINYALSA, [tinyalsa], tinyalsa, [
 dnl check for intel mediasdk
 translit(dnm, m, l) AM_CONDITIONAL(USE_MSDK, true)
 AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
+  PKG_CHECK_MODULES(G_UDEV, gudev-1.0 , [
+          AC_DEFINE([HAVE_GUDEV], 1, [Define if gudev is installed])
+          HAVE_GUDEV="yes" ],
+          [HAVE_GUDEV="no"])
   PKG_CHECK_MODULES(LIBMFX, libmfx,
   [
     AC_DEFINE(HAVE_LIBMFX, 1, [Define if mfx_dispatcher is available])
@@ -1090,8 +1094,9 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
 
   PKG_CHECK_MODULES(LIBVA_DRM, libva-drm, HAVE_LIBVA_DRM="yes", HAVE_LIBVA_DRM="no")
 
-  if test "x$HAVE_MSDK" = "xyes" \
-      -a "x$HAVE_LIBVA_DRM" = "xyes"; then
+  if test "x$HAVE_GUDEV" = "xyes" \
+     -a  "x$HAVE_MSDK" = "xyes" \
+     -a "x$HAVE_LIBVA_DRM" = "xyes"; then
     HAVE_MSDK="yes"
   else
     HAVE_MSDK="no"
