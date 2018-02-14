@@ -114,6 +114,12 @@ struct _GstMsdkEnc
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
 
+  /* Additional encoder coding options */
+  mfxExtCodingOption2 option2;
+  gboolean enable_extopt2;
+  mfxExtCodingOption3 option3;
+  gboolean enable_extopt3;
+
   GstBufferPool *msdk_pool;
   GstBufferPool *msdk_converted_pool;
   GstVideoInfo aligned_info;
@@ -127,6 +133,11 @@ struct _GstMsdkEnc
   guint target_usage;
   guint rate_control;
   guint bitrate;
+  guint max_frame_size;
+  guint max_vbv_bitrate;
+  guint accuracy;
+  guint convergence;
+  guint lookahead_depth;
   guint qpi;
   guint qpp;
   guint qpb;
