@@ -250,6 +250,8 @@ plugin_init (GstPlugin * plugin)
     state = PyGILState_Ensure ();
   }
 
+  GST_LOG ("Running with python version '%s'", Py_GetVersion ());
+
   GST_LOG ("initializing pygobject");
   if (!pygobject_init (3, 0, 0)) {
     g_critical ("pygobject initialization failed");
