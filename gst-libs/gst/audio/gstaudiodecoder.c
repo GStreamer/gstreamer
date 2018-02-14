@@ -1213,9 +1213,9 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   GstAudioDecoderPrivate *priv;
   GstAudioDecoderContext *ctx;
   GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
-  gint samples = 0;
+  GstAudioMeta *meta;
   GstClockTime ts, next_ts;
-  gsize size;
+  gsize size, samples = 0;
   GstFlowReturn ret = GST_FLOW_OK;
   GQueue inbufs = G_QUEUE_INIT;
 
@@ -1227,7 +1227,9 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   priv = dec->priv;
   ctx = &dec->priv->ctx;
+  meta = buf ? gst_buffer_get_audio_meta (buf) : NULL;
   size = buf ? gst_buffer_get_size (buf) : 0;
+  samples = buf ? (meta ? meta->samples : size / ctx->info.bpf) : 0;
 
   /* must know the output format by now */
   g_return_val_if_fail (buf == NULL || GST_AUDIO_INFO_IS_VALID (&ctx->info),
@@ -1235,8 +1237,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   GST_LOG_OBJECT (dec,
       "accepting %" G_GSIZE_FORMAT " bytes == %" G_GSIZE_FORMAT
-      " samples for %d frames", buf ? size : -1,
-      buf ? size / ctx->info.bpf : -1, frames);
+      " samples for %d frames", buf ? size : 0, samples, frames);
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
@@ -1251,12 +1252,20 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
       send_pending_events (dec);
   }
 
-  /* output shoud be whole number of sample frames */
+  /* sanity checking */
   if (G_LIKELY (buf && ctx->info.bpf)) {
-    if (size % ctx->info.bpf)
-      goto wrong_buffer;
-    /* per channel least */
-    samples = size / ctx->info.bpf;
+    if (!meta || meta->info.layout == GST_AUDIO_LAYOUT_INTERLEAVED) {
+      /* output shoud be whole number of sample frames */
+      if (size % ctx->info.bpf)
+        goto wrong_buffer;
+      /* output should have no additional padding */
+      if (samples != size / ctx->info.bpf)
+        goto wrong_samples;
+    } else {
+      /* can't have more samples than what the buffer fits */
+      if (samples > size / ctx->info.bpf)
+        goto wrong_samples;
+    }
   }
 
   /* frame and ts book-keeping */
@@ -1404,6 +1413,16 @@ wrong_buffer:
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
         ("buffer size %" G_GSIZE_FORMAT " not a multiple of %d", size,
             ctx->info.bpf));
+    gst_buffer_unref (buf);
+    ret = GST_FLOW_ERROR;
+    goto exit;
+  }
+wrong_samples:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("GstAudioMeta samples (%" G_GSIZE_FORMAT ") are inconsistent with "
+            "the buffer size and layout (size/bpf = %" G_GSIZE_FORMAT ")",
+            meta->samples, size / ctx->info.bpf));
     gst_buffer_unref (buf);
     ret = GST_FLOW_ERROR;
     goto exit;
