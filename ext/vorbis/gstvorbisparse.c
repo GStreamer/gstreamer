@@ -178,7 +178,21 @@ vorbis_parse_drain_event_queue (GstVorbisParse * parse)
   }
 }
 
-static void
+static gboolean
+vorbis_parse_have_header_packet (GstVorbisParse * parse, guint8 hdr_id)
+{
+  guint8 hdr;
+  GList *l;
+
+  for (l = parse->streamheader; l != NULL; l = l->next) {
+    if (gst_buffer_extract (l->data, 0, &hdr, 1) == 1 && hdr == hdr_id)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 vorbis_parse_push_headers (GstVorbisParse * parse)
 {
   /* mark and put on caps */
@@ -186,6 +200,20 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   GstBuffer *outbuf, *outbuf1, *outbuf2, *outbuf3;
   ogg_packet packet;
   GstMapInfo map;
+  const gchar *hdr_name;
+
+  /* Check we have enough header packets, and the right ones */
+  hdr_name = "identification";
+  if (!vorbis_parse_have_header_packet (parse, 1))
+    goto missing_header;
+
+  hdr_name = "comment";
+  if (!vorbis_parse_have_header_packet (parse, 3))
+    goto missing_header;
+
+  hdr_name = "setup";
+  if (!vorbis_parse_have_header_packet (parse, 5))
+    goto missing_header;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->data);
   gst_buffer_map (outbuf, &map, GST_MAP_READ);
@@ -244,6 +272,15 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
 
   g_list_free (parse->streamheader);
   parse->streamheader = NULL;
+  return TRUE;
+
+/* ERRORS */
+missing_header:
+  {
+    GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL),
+        ("Vorbis stream is missing %s header", hdr_name));
+    return FALSE;
+  }
 }
 
 static void
@@ -413,11 +450,16 @@ vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
   } else {
     /* data packet, push the headers we collected before */
     if (!parse->streamheader_sent) {
-      vorbis_parse_push_headers (parse);
+      if (!vorbis_parse_push_headers (parse)) {
+        ret = GST_FLOW_ERROR;
+        goto out;
+      }
       parse->streamheader_sent = TRUE;
     }
     ret = vorbis_parse_queue_buffer (parse, buf);
   }
+
+out:
 
   return ret;
 }
