@@ -94,6 +94,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_REF_FRAMES_DEFAULT          1
 #define PROP_I_FRAMES_DEFAULT            0
 #define PROP_B_FRAMES_DEFAULT            0
+#define PROP_NUM_SLICES_DEFAULT          0
 
 #define GST_MSDKENC_RATE_CONTROL_TYPE (gst_msdkenc_rate_control_get_type())
 static GType
@@ -293,6 +294,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->param.mfx.GopPicSize = thiz->gop_size;
   thiz->param.mfx.GopRefDist = thiz->b_frames + 1;
   thiz->param.mfx.IdrInterval = thiz->i_frames;
+  thiz->param.mfx.NumSlice = thiz->num_slices;
   thiz->param.mfx.NumRefFrame = thiz->ref_frames;
   thiz->param.mfx.EncodedOrder = 0;     /* Take input frames in display order */
 
@@ -1302,6 +1304,7 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->ref_frames = PROP_REF_FRAMES_DEFAULT;
   thiz->i_frames = PROP_I_FRAMES_DEFAULT;
   thiz->b_frames = PROP_B_FRAMES_DEFAULT;
+  thiz->num_slices = PROP_NUM_SLICES_DEFAULT;
 }
 
 /* gst_msdkenc_set_common_property:

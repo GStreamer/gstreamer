@@ -134,6 +134,7 @@ struct _GstMsdkEnc
   guint ref_frames;
   guint i_frames;
   guint b_frames;
+  guint num_slices;
 
   gboolean reconfig;
 };
