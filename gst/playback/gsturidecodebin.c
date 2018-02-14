@@ -455,8 +455,6 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * When download buffering is activated and used for the current media
    * type, this property does nothing. Otherwise perform buffering on the
    * demuxed or parsed media.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use Buffering",
@@ -472,8 +470,6 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * caps (see 'caps' property) will have a pad exposed. Streams that do not
    * match those caps but could have been decoded will not have decoder plugged
    * in internally and will not have a pad exposed.
-   *
-   * Since: 0.10.30
    */
   g_object_class_install_property (gobject_class, PROP_EXPOSE_ALL_STREAMS,
       g_param_spec_boolean ("expose-all-streams", "Expose All Streams",
@@ -486,8 +482,6 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    *
    * The maximum size of the ring buffer in kilobytes. If set to 0, the ring
    * buffer is disabled. Default is 0.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
       g_param_spec_uint64 ("ring-buffer-max-size",
@@ -589,8 +583,6 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * >   signal, they will never be invoked!
    *
    * Returns: A new sorted array of #GstElementFactory objects.
-   *
-   * Since: 0.10.33
    */
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SORT] =
       g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
@@ -682,8 +674,6 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * proxy server for an http source, or set the device and read speed for
    * an audio cd source). This is functionally equivalent to connecting to
    * the notify::source signal, but more convenient.
-   *
-   * Since: 0.10.33
    */
   gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
