@@ -387,10 +387,8 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   hr = IAudioClient_GetDevicePeriod (self->client, &default_period,
       &min_period);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod failed");
-    return FALSE;
-  }
+  HR_FAILED_RET (hr, IAudioClient::GetDevicePeriod, FALSE);
+
   GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
       ", min period: %" G_GINT64_FORMAT, default_period, min_period);
 
@@ -431,13 +429,7 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
     /* Calculate a new aligned period. First get the aligned buffer size. */
     hr = IAudioClient_GetBufferSize (self->client, &n_frames);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
-          ("IAudioClient::GetBufferSize() failed: %s", msg));
-      g_free (msg);
-      goto beach;
-    }
+    HR_FAILED_GOTO (hr, IAudioClient::GetBufferSize, beach);
 
     device_period = (GST_SECOND / 100) * n_frames / rate;
 
@@ -448,20 +440,11 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
         AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_period,
         device_period, self->mix_format, NULL);
   }
-  if (hr != S_OK) {
-    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
-        ("IAudioClient::Initialize () failed: %s", msg));
-    g_free (msg);
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::Initialize, beach);
 
   /* Total size in frames of the allocated buffer that we will read from */
   hr = IAudioClient_GetBufferSize (self->client, &buffer_frames);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetBufferSize failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::GetBufferSize, beach);
 
   GST_INFO_OBJECT (self, "buffer size is %i frames, bpf is %i bytes, "
       "rate is %i Hz", buffer_frames, bpf, rate);
@@ -477,31 +460,22 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   /* Get WASAPI latency for logging */
   hr = IAudioClient_GetStreamLatency (self->client, &latency_rt);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetStreamLatency failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::GetStreamLatency, beach);
+
   GST_INFO_OBJECT (self, "wasapi stream latency: %" G_GINT64_FORMAT " (%"
       G_GINT64_FORMAT " ms)", latency_rt, latency_rt / 10000);
 
   /* Set the event handler which will trigger reads */
   hr = IAudioClient_SetEventHandle (self->client, self->event_handle);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::SetEventHandle failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::SetEventHandle, beach);
 
   /* Get the clock and the clock freq */
   if (!gst_wasapi_util_get_clock (GST_ELEMENT (self), self->client,
-          &self->client_clock)) {
+          &self->client_clock))
     goto beach;
-  }
 
   hr = IAudioClock_GetFrequency (self->client_clock, &self->client_clock_freq);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClock::GetFrequency failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClock::GetFrequency, beach);
 
   /* Get capture source client and start it up */
   if (!gst_wasapi_util_get_capture_client (GST_ELEMENT (self), self->client,
@@ -510,10 +484,7 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   }
 
   hr = IAudioClient_Start (self->client);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::Start failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClock::Start, beach);
 
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
       (self)->ringbuffer, self->positions);
@@ -636,13 +607,7 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
 
     /* Always release all captured buffers if we've captured any at all */
     hr = IAudioCaptureClient_ReleaseBuffer (self->capture_client, have_frames);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self,
-          "IAudioCaptureClient::ReleaseBuffer () failed: %s", msg);
-      g_free (msg);
-      goto beach;
-    }
+    HR_FAILED_AND (hr, IAudioClock::ReleaseBuffer, goto beach);
   }
 
 
@@ -659,12 +624,7 @@ gst_wasapi_src_delay (GstAudioSrc * asrc)
   HRESULT hr;
 
   hr = IAudioClient_GetCurrentPadding (self->client, &delay);
-  if (hr != S_OK) {
-    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-    GST_ELEMENT_ERROR (self, RESOURCE, READ, (NULL),
-        ("IAudioClient::GetCurrentPadding failed %s", msg));
-    g_free (msg);
-  }
+  HR_FAILED_RET (hr, IAudioClock::GetCurrentPadding, 0);
 
   return delay;
 }
@@ -675,23 +635,14 @@ gst_wasapi_src_reset (GstAudioSrc * asrc)
   GstWasapiSrc *self = GST_WASAPI_SRC (asrc);
   HRESULT hr;
 
-  if (self->client) {
-    hr = IAudioClient_Stop (self->client);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self, "IAudioClient::Stop () failed: %s", msg);
-      g_free (msg);
-      return;
-    }
+  if (!self->client)
+    return;
 
-    hr = IAudioClient_Reset (self->client);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self, "IAudioClient::Reset () failed: %s", msg);
-      g_free (msg);
-      return;
-    }
-  }
+  hr = IAudioClient_Stop (self->client);
+  HR_FAILED_RET (hr, IAudioClock::Stop,);
+
+  hr = IAudioClient_Reset (self->client);
+  HR_FAILED_RET (hr, IAudioClock::Reset,);
 }
 
 static GstClockTime
@@ -706,8 +657,7 @@ gst_wasapi_src_get_time (GstClock * clock, gpointer user_data)
     return GST_CLOCK_TIME_NONE;
 
   hr = IAudioClock_GetPosition (self->client_clock, &devpos, NULL);
-  if (G_UNLIKELY (hr != S_OK))
-    return GST_CLOCK_TIME_NONE;
+  HR_FAILED_RET (hr, IAudioClock::GetPosition, GST_CLOCK_TIME_NONE);
 
   result = gst_util_uint64_scale_int (devpos, GST_SECOND,
       self->client_clock_freq);

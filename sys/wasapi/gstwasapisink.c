@@ -399,12 +399,7 @@ gst_wasapi_sink_get_can_frames (GstWasapiSink * self)
 
   /* Frames the card hasn't rendered yet */
   hr = IAudioClient_GetCurrentPadding (self->client, &n_frames_padding);
-  if (hr != S_OK) {
-    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-    GST_ERROR_OBJECT (self, "IAudioClient::GetCurrentPadding failed: %s", msg);
-    g_free (msg);
-    return -1;
-  }
+  HR_FAILED_RET (hr, IAudioClient::GetCurrentPadding, -1);
 
   GST_DEBUG_OBJECT (self, "%i unread frames (padding)", n_frames_padding);
 
@@ -425,10 +420,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   hr = IAudioClient_GetDevicePeriod (self->client, &default_period,
       &min_period);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetDevicePeriod failed");
-    return FALSE;
-  }
+  HR_FAILED_RET (hr, IAudioClient::GetDevicePeriod, FALSE);
 
   GST_INFO_OBJECT (self, "wasapi default period: %" G_GINT64_FORMAT
       ", min period: %" G_GINT64_FORMAT, default_period, min_period);
@@ -470,13 +462,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
     /* Calculate a new aligned period. First get the aligned buffer size. */
     hr = IAudioClient_GetBufferSize (self->client, &n_frames);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
-          ("IAudioClient::GetBufferSize() failed: %s", msg));
-      g_free (msg);
-      goto beach;
-    }
+    HR_FAILED_RET (hr, IAudioClient::GetBufferSize, FALSE);
 
     device_period = (GST_SECOND / 100) * n_frames / rate;
 
@@ -487,20 +473,12 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
         AUDCLNT_STREAMFLAGS_EVENTCALLBACK, device_period,
         device_period, self->mix_format, NULL);
   }
-  if (hr != S_OK) {
-    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
-        ("IAudioClient::Initialize () failed: %s", msg));
-    g_free (msg);
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::Initialize, beach);
 
   /* Total size of the allocated buffer that we will write to */
   hr = IAudioClient_GetBufferSize (self->client, &self->buffer_frame_count);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetBufferSize failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::GetBufferSize, beach);
+
   GST_INFO_OBJECT (self, "buffer size is %i frames, bpf is %i bytes, "
       "rate is %i Hz", self->buffer_frame_count, bpf, rate);
 
@@ -516,19 +494,14 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   /* Get latency for logging */
   hr = IAudioClient_GetStreamLatency (self->client, &latency_rt);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::GetStreamLatency failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::GetStreamLatency, beach);
+
   GST_INFO_OBJECT (self, "wasapi stream latency: %" G_GINT64_FORMAT " (%"
       G_GINT64_FORMAT "ms)", latency_rt, latency_rt / 10000);
 
   /* Set the event handler which will trigger writes */
   hr = IAudioClient_SetEventHandle (self->client, self->event_handle);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::SetEventHandle failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::SetEventHandle, beach);
 
   /* Get render sink client and start it up */
   if (!gst_wasapi_util_get_render_client (GST_ELEMENT (self), self->client,
@@ -556,32 +529,17 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
     hr = IAudioRenderClient_GetBuffer (self->render_client, n_frames,
         (BYTE **) & dst);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
-          ("IAudioRenderClient::GetBuffer failed: %s", msg));
-      g_free (msg);
-      goto beach;
-    }
+    HR_FAILED_GOTO (hr, IAudioRenderClient::GetBuffer, beach);
 
     GST_DEBUG_OBJECT (self, "pre-wrote %i bytes of silence", len);
 
     hr = IAudioRenderClient_ReleaseBuffer (self->render_client, n_frames,
         AUDCLNT_BUFFERFLAGS_SILENT);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self, "IAudioRenderClient::ReleaseBuffer failed: %s",
-          msg);
-      g_free (msg);
-      goto beach;
-    }
+    HR_FAILED_GOTO (hr, IAudioRenderClient::ReleaseBuffer, beach);
   }
 
   hr = IAudioClient_Start (self->client);
-  if (hr != S_OK) {
-    GST_ERROR_OBJECT (self, "IAudioClient::Start failed");
-    goto beach;
-  }
+  HR_FAILED_GOTO (hr, IAudioClient::Start, beach);
 
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
       (self)->ringbuffer, self->positions);
@@ -660,27 +618,14 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
 
     hr = IAudioRenderClient_GetBuffer (self->render_client, n_frames,
         (BYTE **) & dst);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
-          ("IAudioRenderClient::GetBuffer failed: %s", msg));
-      g_free (msg);
-      length = 0;
-      goto beach;
-    }
+    HR_FAILED_AND (hr, IAudioRenderClient::GetBuffer, length = 0; goto beach);
 
     memcpy (dst, data, write_len);
 
     hr = IAudioRenderClient_ReleaseBuffer (self->render_client, n_frames,
         self->mute ? AUDCLNT_BUFFERFLAGS_SILENT : 0);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self, "IAudioRenderClient::ReleaseBuffer failed: %s",
-          msg);
-      g_free (msg);
-      length = 0;
-      goto beach;
-    }
+    HR_FAILED_AND (hr, IAudioRenderClient::ReleaseBuffer, length = 0;
+        goto beach);
 
     pending -= write_len;
   }
@@ -698,12 +643,7 @@ gst_wasapi_sink_delay (GstAudioSink * asink)
   HRESULT hr;
 
   hr = IAudioClient_GetCurrentPadding (self->client, &delay);
-  if (hr != S_OK) {
-    gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-    GST_ELEMENT_ERROR (self, RESOURCE, READ, (NULL),
-        ("IAudioClient::GetCurrentPadding failed %s", msg));
-    g_free (msg);
-  }
+  HR_FAILED_RET (hr, IAudioClient::GetCurrentPadding, 0);
 
   return delay;
 }
@@ -714,21 +654,12 @@ gst_wasapi_sink_reset (GstAudioSink * asink)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
   HRESULT hr;
 
-  if (self->client) {
-    hr = IAudioClient_Stop (self->client);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self, "IAudioClient::Stop () failed: %s", msg);
-      g_free (msg);
-      return;
-    }
+  if (!self->client)
+    return;
 
-    hr = IAudioClient_Reset (self->client);
-    if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT (self, "IAudioClient::Reset () failed: %s", msg);
-      g_free (msg);
-      return;
-    }
-  }
+  hr = IAudioClient_Stop (self->client);
+  HR_FAILED_RET (hr, IAudioClient::Stop,);
+
+  hr = IAudioClient_Reset (self->client);
+  HR_FAILED_RET (hr, IAudioClient::Reset,);
 }

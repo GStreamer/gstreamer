@@ -35,6 +35,21 @@
         "rate = " GST_AUDIO_RATE_RANGE ", " \
         "channels = " GST_AUDIO_CHANNELS_RANGE
 
+/* Standard error path */
+#define HR_FAILED_AND(hr,func,and) \
+  do { \
+    if (hr != S_OK) { \
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr); \
+      GST_ERROR_OBJECT (self, #func " failed: %s", msg); \
+      g_free (msg); \
+      and; \
+    } \
+  } while (0)
+
+#define HR_FAILED_RET(hr,func,ret) HR_FAILED_AND(hr,func,return ret)
+
+#define HR_FAILED_GOTO(hr,func,where) HR_FAILED_AND(hr,func,res = FALSE; goto where)
+
 /* Device role enum property */
 typedef enum
 {
