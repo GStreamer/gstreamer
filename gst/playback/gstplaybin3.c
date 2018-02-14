@@ -4394,7 +4394,7 @@ source_setup_cb (GstElement * element, GstElement * source,
     GstSourceGroup * group)
 {
   g_signal_emit (group->playbin, gst_play_bin3_signals[SIGNAL_SOURCE_SETUP], 0,
-      0, source);
+      source);
 }
 
 /* must be called with PLAY_BIN_LOCK */
