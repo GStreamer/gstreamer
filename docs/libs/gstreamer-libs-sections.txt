@@ -798,6 +798,8 @@ gst_collect_pads_get_type
 GstFlowCombiner
 gst_flow_combiner_new
 gst_flow_combiner_free
+gst_flow_combiner_ref
+gst_flow_combiner_unref
 gst_flow_combiner_update_flow
 gst_flow_combiner_add_pad
 gst_flow_combiner_remove_pad
