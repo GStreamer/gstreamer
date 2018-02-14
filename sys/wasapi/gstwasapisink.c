@@ -501,14 +501,8 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
       (self)->ringbuffer, self->positions);
 
-#if defined(_MSC_VER) || defined(GST_FORCE_WIN_AVRT)
   /* Increase the thread priority to reduce glitches */
-  {
-    DWORD taskIndex = 0;
-    self->thread_priority_handle =
-        AvSetMmThreadCharacteristics (TEXT ("Pro Audio"), &taskIndex);
-  }
-#endif
+  self->thread_priority_handle = gst_wasapi_util_set_thread_characteristics ();
 
   res = TRUE;
 
@@ -530,12 +524,11 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
       !gst_wasapi_util_have_audioclient3 ())
     CoUninitialize ();
 
-#if defined(_MSC_VER) || defined(GST_FORCE_WIN_AVRT)
   if (self->thread_priority_handle != NULL) {
-    AvRevertMmThreadCharacteristics (self->thread_priority_handle);
+    gst_wasapi_util_revert_thread_characteristics
+        (self->thread_priority_handle);
     self->thread_priority_handle = NULL;
   }
-#endif
 
   if (self->client != NULL) {
     IAudioClient_Stop (self->client);
