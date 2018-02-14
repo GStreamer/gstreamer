@@ -91,6 +91,13 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   encoder->param.mfx.CodecId = MFX_CODEC_HEVC;
   encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
+  /* IdrInterval field of MediaSDK HEVC encoder behaves differently
+   * than other encoders. IdrInteval == 1 indicate every
+   * I-frame should be an IDR, IdrInteval == 2 means every other
+   * I-frame is an IDR etc. So we generalize the behaviour of property
+   * "i-frames" by incrementing the value by one in each case*/
+  encoder->param.mfx.IdrInterval += 1;
+
   return TRUE;
 }
 
