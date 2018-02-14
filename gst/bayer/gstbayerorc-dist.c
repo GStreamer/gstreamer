@@ -140,11 +140,11 @@ void bayer_orc_merge_gr_argb (guint8 * ORC_RESTRICT d1,
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -692,12 +692,12 @@ bayer_orc_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -828,12 +828,12 @@ _backup_bayer_orc_merge_bg_bgra (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -1064,12 +1064,12 @@ bayer_orc_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -1200,12 +1200,12 @@ _backup_bayer_orc_merge_gr_bgra (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -1436,12 +1436,12 @@ bayer_orc_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -1572,12 +1572,12 @@ _backup_bayer_orc_merge_bg_abgr (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -1808,12 +1808,12 @@ bayer_orc_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -1944,12 +1944,12 @@ _backup_bayer_orc_merge_gr_abgr (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -2180,12 +2180,12 @@ bayer_orc_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -2316,12 +2316,12 @@ _backup_bayer_orc_merge_bg_rgba (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -2552,12 +2552,12 @@ bayer_orc_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -2688,12 +2688,12 @@ _backup_bayer_orc_merge_gr_rgba (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 16: loadpb */
-  var45.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var45.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var45.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var45.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -2924,12 +2924,12 @@ bayer_orc_merge_bg_argb (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -3060,12 +3060,12 @@ _backup_bayer_orc_merge_bg_argb (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var42.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var43.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var43.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -3296,12 +3296,12 @@ bayer_orc_merge_gr_argb (guint8 * ORC_RESTRICT d1,
   ptr9 = (orc_union16 *) s6;
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */
@@ -3432,12 +3432,12 @@ _backup_bayer_orc_merge_gr_argb (OrcExecutor * ORC_RESTRICT ex)
   ptr9 = (orc_union16 *) ex->arrays[9];
 
   /* 9: loadpw */
-  var42.i = (int) 0x0000ff00;   /* 65280 or 3.22526e-319f */
+  var42.i = 0x0000ff00;         /* 65280 or 3.22526e-319f */
   /* 11: loadpw */
-  var43.i = (int) 0x000000ff;   /* 255 or 1.25987e-321f */
+  var43.i = 0x000000ff;         /* 255 or 1.25987e-321f */
   /* 14: loadpb */
-  var44.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var44.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var44.x2[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var44.x2[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadw */

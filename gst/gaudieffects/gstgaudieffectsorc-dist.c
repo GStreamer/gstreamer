@@ -106,11 +106,11 @@ void gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -184,15 +184,15 @@ gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
   var36.x4[2] = p1;
   var36.x4[3] = p1;
   /* 6: loadpb */
-  var37.x4[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x4[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x4[2] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x4[3] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x4[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x4[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x4[2] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x4[3] = 0x000000ff;     /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var38.x4[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x4[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x4[2] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x4[3] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var38.x4[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x4[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x4[2] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x4[3] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
@@ -305,15 +305,15 @@ _backup_gaudi_orc_burn (OrcExecutor * ORC_RESTRICT ex)
   var36.x4[2] = ex->params[24];
   var36.x4[3] = ex->params[24];
   /* 6: loadpb */
-  var37.x4[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x4[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x4[2] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var37.x4[3] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x4[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x4[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x4[2] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var37.x4[3] = 0x000000ff;     /* 255 or 1.25987e-321f */
   /* 11: loadpw */
-  var38.x4[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x4[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x4[2] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
-  var38.x4[3] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var38.x4[0] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x4[1] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x4[2] = 0x000000ff;     /* 255 or 1.25987e-321f */
+  var38.x4[3] = 0x000000ff;     /* 255 or 1.25987e-321f */
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */

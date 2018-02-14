@@ -120,11 +120,11 @@ void fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 *
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -909,7 +909,7 @@ fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ptr8 = (orc_int8 *) s5;
 
   /* 11: loadpw */
-  var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
+  var44.i = 0x00000003;         /* 3 or 1.4822e-323f */
   /* 20: loadpl */
   var45.i = p1;
 
@@ -1011,7 +1011,7 @@ _backup_fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (OrcExecutor *
   ptr8 = (orc_int8 *) ex->arrays[8];
 
   /* 11: loadpw */
-  var44.i = (int) 0x00000003;   /* 3 or 1.4822e-323f */
+  var44.i = 0x00000003;         /* 3 or 1.4822e-323f */
   /* 20: loadpl */
   var45.i = ex->params[24];
 
