@@ -40,18 +40,8 @@ DEFINE_PROPERTYKEY (PKEY_AudioEngine_DeviceFormat, 0xf19f064d, 0x82c, 0x4e27,
     0xbc, 0x73, 0x68, 0x82, 0xa1, 0xbb, 0x8e, 0x4c, 0);
 #endif
 
-
-#ifdef __uuidof
-const CLSID CLSID_MMDeviceEnumerator = __uuidof (MMDeviceEnumerator);
-const IID IID_IMMDeviceEnumerator = __uuidof (IMMDeviceEnumerator);
-const IID IID_IMMEndpoint = __uuidof (IMMEndpoint);
-const IID IID_IAudioClient = __uuidof (IAudioClient);
-const IID IID_IAudioRenderClient = __uuidof (IAudioRenderClient);
-const IID IID_IAudioCaptureClient = __uuidof (IAudioCaptureClient);
-const IID IID_IAudioClock = __uuidof (IAudioClock);
-#else
-/* __uuidof is not implemented in our Cerbero's ancient MinGW toolchain so we
- * hard-code the GUID values for all these. This is ok because these are ABI. */
+/* __uuidof is only available in C++, so we hard-code the GUID values for all
+ * these. This is ok because these are ABI. */
 const CLSID CLSID_MMDeviceEnumerator = { 0xbcde0395, 0xe52f, 0x467c,
   {0x8e, 0x3d, 0xc4, 0x57, 0x92, 0x91, 0x69, 0x2e}
 };
@@ -79,7 +69,6 @@ const IID IID_IAudioCaptureClient = { 0xc8adbd64, 0xe71e, 0x48a0,
 const IID IID_IAudioRenderClient = { 0xf294acfc, 0x3146, 0x4483,
   {0xa7, 0xbf, 0xad, 0xdc, 0xa7, 0xc2, 0x60, 0xe2}
 };
-#endif
 
 static struct
 {
