@@ -54,7 +54,7 @@ G_BEGIN_DECLS
  * In this case the importer element should check all incomming memory using
  * gst_is_dmabuf_memory().
  *
- * Since: 1.11
+ * Since: 1.12
  */
 #define GST_CAPS_FEATURE_MEMORY_DMABUF "memory:DMABuf"
 
