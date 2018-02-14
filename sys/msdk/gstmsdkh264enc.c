@@ -43,8 +43,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkh264enc_debug);
 
 enum
 {
-  PROP_0,
-  PROP_CABAC,
+  PROP_CABAC = GST_MSDKENC_PROP_MAX,
   PROP_LOW_POWER,
   PROP_FRAME_PACKING,
 };
@@ -382,14 +381,11 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (object);
-  GstState state;
+
+  if (gst_msdkenc_set_common_property (object, prop_id, value, pspec))
+    return;
 
   GST_OBJECT_LOCK (thiz);
-
-  state = GST_STATE (thiz);
-  if ((state != GST_STATE_READY && state != GST_STATE_NULL) &&
-      !(pspec->flags & GST_PARAM_MUTABLE_PLAYING))
-    goto wrong_state;
 
   switch (prop_id) {
     case PROP_CABAC:
@@ -407,13 +403,6 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
   }
   GST_OBJECT_UNLOCK (thiz);
   return;
-
-  /* ERROR */
-wrong_state:
-  {
-    GST_WARNING_OBJECT (thiz, "setting property in wrong state");
-    GST_OBJECT_UNLOCK (thiz);
-  }
 }
 
 static void
@@ -421,6 +410,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (object);
+
+  if (gst_msdkenc_get_common_property (object, prop_id, value, pspec))
+    return;
 
   GST_OBJECT_LOCK (thiz);
   switch (prop_id) {
@@ -461,6 +453,8 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
   encoder_class->set_format = gst_msdkh264enc_set_format;
   encoder_class->configure = gst_msdkh264enc_configure;
   encoder_class->set_src_caps = gst_msdkh264enc_set_src_caps;
+
+  gst_msdkenc_install_common_properties (encoder_class);
 
   g_object_class_install_property (gobject_class, PROP_CABAC,
       g_param_spec_boolean ("cabac", "CABAC", "Enable CABAC entropy coding",

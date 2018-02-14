@@ -156,17 +156,44 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
 }
 
 static void
+gst_msdkh265enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
+
+  if (!gst_msdkenc_set_common_property (object, prop_id, value, pspec))
+    GST_WARNING_OBJECT (thiz, "Failed to set common encode property");
+}
+
+static void
+gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
+
+  if (!gst_msdkenc_get_common_property (object, prop_id, value, pspec))
+    GST_WARNING_OBJECT (thiz, "Failed to get common encode property");
+}
+
+static void
 gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkEncClass *encoder_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   encoder_class = GST_MSDKENC_CLASS (klass);
+
+  gobject_class->set_property = gst_msdkh265enc_set_property;
+  gobject_class->get_property = gst_msdkh265enc_get_property;
 
   encoder_class->set_format = gst_msdkh265enc_set_format;
   encoder_class->configure = gst_msdkh265enc_configure;
   encoder_class->set_src_caps = gst_msdkh265enc_set_src_caps;
+
+  gst_msdkenc_install_common_properties (encoder_class);
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
