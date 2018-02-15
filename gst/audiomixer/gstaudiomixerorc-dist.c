@@ -137,11 +137,11 @@ void audiomixer_orc_add_volume_f64 (double *ORC_RESTRICT d1,
 #define ORC_MAX(a,b) ((a)>(b) ? (a) : (b))
 #define ORC_SB_MAX 127
 #define ORC_SB_MIN (-1-ORC_SB_MAX)
-#define ORC_UB_MAX 255
+#define ORC_UB_MAX (orc_uint8) 255
 #define ORC_UB_MIN 0
 #define ORC_SW_MAX 32767
 #define ORC_SW_MIN (-1-ORC_SW_MAX)
-#define ORC_UW_MAX 65535
+#define ORC_UW_MAX (orc_uint16)65535
 #define ORC_UW_MIN 0
 #define ORC_SL_MAX 2147483647
 #define ORC_SL_MIN (-1-ORC_SL_MAX)
@@ -1129,7 +1129,7 @@ audiomixer_orc_volume_u8 (guint8 * ORC_RESTRICT d1, int p1, int n)
   ptr0 = (orc_int8 *) d1;
 
   /* 1: loadpb */
-  var35 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var35 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 3: loadpb */
   var36 = p1;
 
@@ -1175,7 +1175,7 @@ _backup_audiomixer_orc_volume_u8 (OrcExecutor * ORC_RESTRICT ex)
   ptr0 = (orc_int8 *) ex->arrays[0];
 
   /* 1: loadpb */
-  var35 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var35 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 3: loadpb */
   var36 = ex->params[24];
 
@@ -1292,7 +1292,7 @@ audiomixer_orc_add_volume_u8 (guint8 * ORC_RESTRICT d1,
   ptr4 = (orc_int8 *) s1;
 
   /* 1: loadpb */
-  var35 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var35 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 3: loadpb */
   var36 = p1;
 
@@ -1346,7 +1346,7 @@ _backup_audiomixer_orc_add_volume_u8 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_int8 *) ex->arrays[4];
 
   /* 1: loadpb */
-  var35 = (int) 0x00000080;     /* 128 or 6.32404e-322f */
+  var35 = 0x00000080;           /* 128 or 6.32404e-322f */
   /* 3: loadpb */
   var36 = ex->params[24];
 
@@ -1622,7 +1622,7 @@ audiomixer_orc_add_volume_u16 (guint16 * ORC_RESTRICT d1,
   ptr4 = (orc_union16 *) s1;
 
   /* 1: loadpw */
-  var35.i = (int) 0x00008000;   /* 32768 or 1.61895e-319f */
+  var35.i = 0x00008000;         /* 32768 or 1.61895e-319f */
   /* 3: loadpw */
   var36.i = p1;
 
@@ -1676,7 +1676,7 @@ _backup_audiomixer_orc_add_volume_u16 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union16 *) ex->arrays[4];
 
   /* 1: loadpw */
-  var35.i = (int) 0x00008000;   /* 32768 or 1.61895e-319f */
+  var35.i = 0x00008000;         /* 32768 or 1.61895e-319f */
   /* 3: loadpw */
   var36.i = ex->params[24];
 
@@ -1956,7 +1956,7 @@ audiomixer_orc_add_volume_u32 (guint32 * ORC_RESTRICT d1,
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var35.i = (int) 0x80000000;   /* -2147483648 or 1.061e-314f */
+  var35.i = 0x80000000;         /* -2147483648 or 1.061e-314f */
   /* 3: loadpl */
   var36.i = p1;
 
@@ -2012,7 +2012,7 @@ _backup_audiomixer_orc_add_volume_u32 (OrcExecutor * ORC_RESTRICT ex)
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
-  var35.i = (int) 0x80000000;   /* -2147483648 or 1.061e-314f */
+  var35.i = 0x80000000;         /* -2147483648 or 1.061e-314f */
   /* 3: loadpl */
   var36.i = ex->params[24];
 
