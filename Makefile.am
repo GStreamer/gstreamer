@@ -7,6 +7,7 @@ DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs pkgconfig
 EXTRA_DIST = \
 	depcomp autogen.sh \
 	AUTHORS COPYING NEWS README ChangeLog gst-libav.doap \
+	meson_options.txt \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" )
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
