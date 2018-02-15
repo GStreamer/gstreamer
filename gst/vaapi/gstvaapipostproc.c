@@ -392,6 +392,16 @@ error_create_buffer:
   }
 }
 
+static inline GstBuffer *
+create_output_dump_buffer (GstVaapiPostproc * postproc)
+{
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (postproc);
+
+  return gst_buffer_new_allocate (plugin->other_srcpad_allocator,
+      GST_VIDEO_INFO_SIZE (&plugin->srcpad_info),
+      &plugin->other_allocator_params);
+}
+
 static gboolean
 append_output_buffer_metadata (GstVaapiPostproc * postproc, GstBuffer * outbuf,
     GstBuffer * inbuf, guint flags)
@@ -600,6 +610,31 @@ gst_vaapipostproc_set_passthrough (GstBaseTransform * trans)
       && !filter_updated);
 }
 
+static gboolean
+replace_to_dumb_buffer_if_required (GstVaapiPostproc * postproc,
+    GstBuffer ** fieldbuf)
+{
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (postproc);
+  GstBuffer *newbuf;
+
+  if (!GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME (postproc))
+    return TRUE;
+
+  newbuf = create_output_dump_buffer (postproc);
+  if (!newbuf)
+    return FALSE;
+
+  if (!gst_vaapi_plugin_copy_va_buffer (plugin, *fieldbuf, newbuf)) {
+    gst_buffer_unref (newbuf);
+    return FALSE;
+  }
+
+  gst_buffer_replace (fieldbuf, newbuf);
+  gst_buffer_unref (newbuf);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -727,6 +762,9 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
       discont = FALSE;
     }
 
+    if (!replace_to_dumb_buffer_if_required (postproc, &fieldbuf))
+      goto error_copy_buffer;
+
     ret = gst_pad_push (trans->srcpad, fieldbuf);
     if (ret != GST_FLOW_OK)
       goto error_push_buffer;
@@ -824,6 +862,12 @@ error_process_vpp:
     gst_buffer_replace (&fieldbuf, NULL);
     return GST_FLOW_ERROR;
   }
+error_copy_buffer:
+  {
+    GST_ERROR_OBJECT (postproc, "failed to copy field buffer to dumb buffer");
+    gst_buffer_replace (&fieldbuf, NULL);
+    return GST_FLOW_ERROR;
+  }
 error_push_buffer:
   {
     GST_DEBUG_OBJECT (postproc, "failed to push output buffer: %s",
@@ -871,6 +915,10 @@ gst_vaapipostproc_process (GstBaseTransform * trans, GstBuffer * inbuf,
 
   GST_BUFFER_TIMESTAMP (fieldbuf) = timestamp;
   GST_BUFFER_DURATION (fieldbuf) = postproc->field_duration;
+
+  if (!replace_to_dumb_buffer_if_required (postproc, &fieldbuf))
+    goto error_copy_buffer;
+
   ret = gst_pad_push (trans->srcpad, fieldbuf);
   if (ret != GST_FLOW_OK)
     goto error_push_buffer;
@@ -900,6 +948,12 @@ error_create_buffer:
   {
     GST_ERROR_OBJECT (postproc, "failed to create output buffer");
     return GST_FLOW_EOS;
+  }
+error_copy_buffer:
+  {
+    GST_ERROR_OBJECT (postproc, "failed to copy field buffer to dumb buffer");
+    gst_buffer_replace (&fieldbuf, NULL);
+    return GST_FLOW_ERROR;
   }
 error_push_buffer:
   {
@@ -1211,14 +1265,23 @@ gst_vaapipostproc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  GstBuffer *buf;
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (postproc);
+  GstBuffer *buf, *sys_buf = NULL;
   GstFlowReturn ret;
 
-  ret =
-      gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (postproc),
-      inbuf, &buf);
+  ret = gst_vaapi_plugin_base_get_input_buffer (plugin, inbuf, &buf);
   if (ret != GST_FLOW_OK)
     return GST_FLOW_ERROR;
+
+  if (GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME (trans)) {
+    GstBuffer *va_buf = create_output_buffer (postproc);
+    if (!va_buf) {
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+    sys_buf = outbuf;
+    outbuf = va_buf;
+  }
 
   ret = GST_FLOW_NOT_SUPPORTED;
   if (postproc->flags) {
@@ -1245,6 +1308,15 @@ gst_vaapipostproc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
 done:
   gst_buffer_unref (buf);
+
+  if (sys_buf) {
+    if (!gst_vaapi_plugin_copy_va_buffer (plugin, outbuf, sys_buf))
+      return GST_FLOW_ERROR;
+
+    gst_buffer_unref (outbuf);
+    outbuf = sys_buf;
+  }
+
   return ret;
 }
 
@@ -1259,7 +1331,12 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     return GST_FLOW_OK;
   }
 
-  *outbuf_ptr = create_output_buffer (postproc);
+  if (GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME (trans)) {
+    *outbuf_ptr = create_output_dump_buffer (postproc);
+  } else {
+    *outbuf_ptr = create_output_buffer (postproc);
+  }
+
   return *outbuf_ptr ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
