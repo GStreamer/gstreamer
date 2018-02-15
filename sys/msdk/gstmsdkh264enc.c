@@ -49,6 +49,7 @@ enum
   PROP_RC_LA_DOWNSAMPLING,
   PROP_TRELLIS,
   PROP_MAX_SLICE_SIZE,
+  PROP_B_PYRAMID
 };
 
 #define PROP_CABAC_DEFAULT              TRUE
@@ -57,6 +58,7 @@ enum
 #define PROP_RC_LA_DOWNSAMPLING_DEFAULT MFX_LOOKAHEAD_DS_UNKNOWN
 #define PROP_TRELLIS_DEFAULT            _MFX_TRELLIS_NONE
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
+#define PROP_B_PYRAMID_DEFAULT          FALSE
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -294,6 +296,13 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
       encoder->rate_control == MFX_RATECONTROL_LA_ICQ)
     encoder->option2.LookAheadDS = thiz->lookahead_ds;
 
+  if (thiz->b_pyramid) {
+    encoder->option2.BRefType = MFX_B_REF_PYRAMID;
+    /* Don't define Gop structure for B-pyramid, otherwise EncodeInit
+     * will throw Invalid param error */
+    encoder->param.mfx.GopRefDist = 0;
+  }
+
   return TRUE;
 }
 
@@ -418,6 +427,9 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_MAX_SLICE_SIZE:
       thiz->max_slice_size = g_value_get_uint (value);
       break;
+    case PROP_B_PYRAMID:
+      thiz->b_pyramid = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -454,6 +466,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MAX_SLICE_SIZE:
       g_value_set_uint (value, thiz->max_slice_size);
+      break;
+    case PROP_B_PYRAMID:
+      g_value_set_boolean (value, thiz->b_pyramid);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -519,6 +534,11 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           0, G_MAXUINT32, PROP_MAX_SLICE_SIZE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_B_PYRAMID,
+      g_param_spec_boolean ("b-pyramid", "B-pyramid",
+          "Enable B-Pyramid Referene structure", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder", "Codec/Encoder/Video",
       "H264 video encoder based on Intel Media SDK",
@@ -535,4 +555,5 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->lookahead_ds = PROP_RC_LA_DOWNSAMPLING_DEFAULT;
   thiz->trellis = PROP_TRELLIS_DEFAULT;
   thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
+  thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
 }

@@ -65,6 +65,7 @@ struct _GstMsdkH264Enc
   guint lookahead_ds;
   guint trellis;
   guint max_slice_size;
+  guint b_pyramid;
 };
 
 struct _GstMsdkH264EncClass
