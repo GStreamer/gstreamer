@@ -57,6 +57,10 @@ gst-validate-enum-types.c: $(source_h)
 	--template gst-validate-enum-types.c.template \
 	$^ > gst-validate-enum-types.c
 
+EXTRA_DIST= \
+	gst-validate-enum-types.c.template \
+	gst-validate-enum-types.h.template
+
 # BUILT_SOURCES are built on make all/check/install before all other targets
 BUILT_SOURCES = \
         $(built_header_make)		\
