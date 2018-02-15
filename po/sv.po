@@ -1,24 +1,25 @@
 # Swedish messages for gstreamer.
-# Copyright © 2004-2016 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.90\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-03-02 22:19+0100\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-21 18:45+0800\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.7\n"
+"X-Generator: Poedit 1.8.11\n"
 
 msgid "Print the GStreamer version"
 msgstr "Skriv ut GStreamer-versionen"
@@ -872,21 +873,22 @@ msgstr "kunde inte ställa in egenskapen \"%s\" i elementet \"%s\" till \"%s\""
 msgid "Delayed linking failed."
 msgstr "Fördröjd länkning misslyckades."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "kunde inte länka %s till %s"
+msgstr "kunde inte länka %s med %s, %s kan inte hantera förmågorna %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"kunde inte länka %s med %s, ingetdera element kan hantera förmågorna %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "kunde inte länka %s till %s"
+msgstr "kunde inte länka %s med %s med förmågor %s"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "kunde inte länka %s till %s"
+msgstr "kunde inte länka %s med %s"
 
 #, c-format
 msgid "no element \"%s\""
@@ -1109,6 +1111,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"En snedstreckseparerad lista (”/”) av typer av element (också känd som en "
+"klass) att lista. (oordnad)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Kontrollera om det angivna elementet eller insticksmodulen existerar"

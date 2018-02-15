@@ -5,21 +5,22 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.2\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-02-20 16:42+0100\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-10-24 22:53+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 2.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Toon de GStreamer versie"
@@ -461,10 +462,10 @@ msgid "person(s) who composed the recording"
 msgstr "perso(o)n(en) die de opname gecomponeerd hebben"
 
 msgid "conductor"
-msgstr ""
+msgstr "dirigent"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "dirigent/verfijning van uitvoerder"
 
 msgid "duration"
 msgstr "duur"
@@ -881,17 +882,18 @@ msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 msgid "Delayed linking failed."
 msgstr "Vertraagd koppelen is mislukt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "kon %s niet verbinden met %s"
+msgstr "kon %s niet koppelen naar %s, %s kan geen hoofdletters %s behandelen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "kon doelelement niet verbinden voor URI \"%s\""
+msgstr ""
+"kon %s niet koppelen naar %s, geen van beide kan hoofdletters %s behandelen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "kon %s niet verbinden met %s"
+msgstr "kon %s niet koppelen naar %s met hoofdletters %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1117,6 +1119,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Een met schuine strepen ('/') gescheiden lijst met typen elementen (ook "
+"bekend als klasse) om een lijst te maken. (ongeordend)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Controleer of het gespecificeerde element of plug-in bestaat"

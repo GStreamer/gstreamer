@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.90\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-09-28 21:13+0200\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-25 16:25+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.9\n"
+"X-Generator: Poedit 2.0.1\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
@@ -900,17 +900,21 @@ msgstr ""
 msgid "Delayed linking failed."
 msgstr "Verzögertes Verknüpfen ist fehlgeschlagen."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "%s konnte nicht mit %s verknüpft werden"
+msgstr ""
+"%s konnte nicht mit %s verknüpft werden. %s kann nicht mit Großbuchstaben %s "
+"umgehen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "Zielelement für URI »%s« nicht verknüpft werden"
+msgstr ""
+"%s konnte nicht mit %s verknüpft werden. Keines der Elemente kann mit "
+"Großbuchstaben %s umgehen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "%s konnte nicht mit %s verknüpft werden"
+msgstr "%s konnte nicht mit %s verknüpft werden mit den Großbuchstaben %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1135,6 +1139,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Eine mit Schrägstrichen »/« getrennte Liste von Elementtypen (auch bekannt "
+"als »klass«), die (unsortiert) aufgelistet werden soll."
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Prüfen Sie, ob das angegebene Element oder Plugin vorhanden ist"

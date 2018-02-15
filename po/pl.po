@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2016.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2017.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.10.0\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-11-01 20:41+0100\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-08 18:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -875,17 +875,18 @@ msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%
 msgid "Delayed linking failed."
 msgstr "Opóźnione dowiązanie nie powiodło się."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "nie udało się dowiązać %s do %s"
+msgstr "nie udało się dowiązać %s do %s, %s nie może obsłużyć możliwości %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"nie udało się dowiązać %s do %s, żaden element nie obsługuje możliwości %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "nie udało się dowiązać %s do %s"
+msgstr "nie udało się dowiązać %s do %s z możliwościami %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1114,6 +1115,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Lista rozdzielonych ukośnikami ('/') typów elementów (znanych jako klass) do "
+"wypisania (nie uporządkowana)."
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Sprawdzenie, czy podany element lub wtyczka istnieje"
@@ -1336,6 +1339,3 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
-
-#~ msgid "bin"
-#~ msgstr "kontener"

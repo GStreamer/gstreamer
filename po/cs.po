@@ -3,20 +3,21 @@
 # This file is put in the public domain.
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004, 2005, 2007, 2008.
-# Marek Černocký <marek@manet.cz>, 2011, 2013, 2015, 2016.
+# Marek Černocký <marek@manet.cz>, 2011, 2013, 2015, 2016, 2017.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.90\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-03-03 15:31+0100\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-09-13 15:04+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
@@ -871,17 +872,19 @@ msgstr "nelze nastavit vlastnost „%s“ v elementu „%s“ na „%s“"
 msgid "Delayed linking failed."
 msgstr "Odložené propojení selhalo."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "nelze připojit element „%s“ k elementu „%s“"
+msgstr "nelze připojit element „%s“ k elementu „%s“, %s nezvládá schopnost %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"nelze připojit element „%s“ k elementu „%s“, žádný element nezvládá "
+"schopnost %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "nelze připojit element „%s“ k elementu „%s“"
+msgstr "nelze připojit element „%s“ k elementu „%s“ se schopností %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1110,6 +1113,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Seznam typů elementů (nazývaných také třídy) oddělený lomítky („/“), který "
+"se má vypsat (neseřazený)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Zkontrolovat, zda zadaný element nebo zásuvný modul existuje"
@@ -1345,9 +1350,3 @@ msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
-
-#~ msgid "bin"
-#~ msgstr "zásobník"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Interní chyba proudu dat."

@@ -5,10 +5,10 @@
 # Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.10.0\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-11-02 13:43+0800\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-05 22:53+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 1.8.9\n"
+"X-Generator: Poedit 2.0.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "打印 GStreamer 版本"
@@ -840,17 +840,17 @@ msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
 msgid "Delayed linking failed."
 msgstr "延迟链接失败。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "无法将 %s 链接到 %s"
+msgstr "无法将 %s 链接到 %s，%s 无法处理分析器 %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "无法连接 URI“%s”的消音组件"
+msgstr "无法将 %s 链接到 %s，没有可以处理分析器 %s 的元素"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "无法将 %s 链接到 %s"
+msgstr "无法将带有分析器 %3$s 的 %1$s 链接到 %2$s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1069,6 +1069,7 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"斜杠（“/”）用于将一系列元素类型（也叫做 klass）分割成（未排序的）类型列表。"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "检查指定的组件或插件是否存在"

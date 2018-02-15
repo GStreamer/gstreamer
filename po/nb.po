@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2015-2016
+# Johnny A. Solbu <johnny@solbu.net>, 2015-2017
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.90\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-10-08 21:26+0200\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-23 22:59+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: nb_NO\n"
@@ -869,17 +869,19 @@ msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
 msgid "Delayed linking failed."
 msgstr "Forsinket linking feilet."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "kunne ikke lenke %s til %s"
+msgstr "kunne ikke lenke %s til %s,  %s kan ikke håndtere store bokstaver %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"kunne ikke linke %s til %s, ingen av elementene kan håndtere store bokstaver "
+"%s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "kunne ikke lenke %s til %s"
+msgstr "kunne ikke lenke %s til %s med store bokstaver %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1104,6 +1106,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"En skråstrekseparert («/») liste av typer av elementer (også kjent som "
+"klasse) til listen. (Uordnet)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Sjekk om det spesifiserte elementet eller programtillegg eksisterer"

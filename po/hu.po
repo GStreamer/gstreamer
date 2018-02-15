@@ -1,22 +1,23 @@
 # Hungarian translation for gstreamer
-# Copyright (c) 2006 Canonical Ltd, and Rosetta Contributors
+# Copyright (c) 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017 Canonical Ltd, and Rosetta Contributors
 # This file is distributed under the same license as the gstreamer package.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2010, 2012, 2016.
-# Balázs Úr <urbalazs@gmail.com>, 2014, 2015.
+# Balázs Úr <urbalazs@gmail.com>, 2014, 2015, 2017.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.90\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-03-14 16:10+0100\n"
-"Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-05 20:17+0200\n"
+"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
@@ -869,17 +870,21 @@ msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$
 msgid "Delayed linking failed."
 msgstr "A késleltetett linkelés meghiúsult."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "%s nem linkelhető a következőre: %s"
+msgstr ""
+"%s nem linkelhető a következőre: %s, a(z) %s nem tudja kezelni a következő "
+"képességeket: %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "nem linkelhető nyelőelem a következő URI címhez: „%s”"
+msgstr ""
+"%s nem linkelhető a következőre: %s, egyik elem sem tudja kezelni a "
+"következő képességeket: %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "%s nem linkelhető a következőre: %s"
+msgstr "%s nem linkelhető a következőre: %s ezekkel a képességekkel: %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1103,6 +1108,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"A felsorolandó elemek típusainak perjellel („/”) elválasztott listája (klass "
+"néven is ismert). (nem sorrendezett)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Ellenőrizze, hogy a megadott elem vagy bővítmény létezik-e"
@@ -1324,58 +1331,3 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
-
-#~ msgid "bin"
-#~ msgstr "tároló"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Belső adatfolyam-hiba."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Ne írjon ki a TÍPUS típus állapotinformációit"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TÍPUS1,TÍPUS2,…"
-
-#~ msgid "link without source element"
-#~ msgstr "link forráselem nélkül"
-
-#~ msgid "link without sink element"
-#~ msgstr "link nyelőelem nélkül"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "nincs elem, amelyhez a(z) „%s” URI linkelhető lenne"
-
-#~ msgid "maximum"
-#~ msgstr "maximum"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Használat: gst-xmllaunch <fájl.xml> [ elem.tulajdonság=érték … ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "HIBA: a(z) „%s” xml fájl feldolgozása meghiúsult.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr ""
-#~ "HIBA: nincs felső szintű adatcsatorna elem a következő fájlban: „%s”.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "FIGYELMEZTETÉS: egyszerre csak egy felső szintű elem támogatott.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "HIBA: nem elemezhető a(z) %d. parancssori argumentum: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "FIGYELMEZTETÉS: a(z) „%s” nevű elem nem található.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Az adatcsatorna xml ábrázolásának mentése a FÁJLBA és kilépés"
-
-#~ msgid "FILE"
-#~ msgstr "FÁJL"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Ne telepítsen szignálkezelőket a SIGUSR1 és SIGUSR2 szignálokhoz"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Foglalási nyomkövetés kiírása (ha fordításkor engedélyezték)"

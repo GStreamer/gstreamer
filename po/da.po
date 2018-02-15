@@ -1,23 +1,24 @@
 # translation of gstreamer to Danish
-# Copyright (C) 2015 Free Software Foundation, Inc.
+# Copyright (C) 2017 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013, 2014.
-# Joe Hansen <joedalton2@yahoo.dk>, 2015, 2016.
+# Joe Hansen <joedalton2@yahoo.dk>, 2015, 2016, 2017.
 #
 # conductor -> dirigent (https://lists.freedesktop.org/archives/gstreamer-commits/2016-February/092542.html)
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.90\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-06-25 13:26+0200\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-21 13:26+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 "X-Generator: Lokalize 1.5\n"
 
@@ -876,17 +877,19 @@ msgstr "kunne ikke sætte egenskab \"%s\" for element \"%s\" til \"%s\""
 msgid "Delayed linking failed."
 msgstr "Forsinket oprettelse af forbindelse mislykkedes."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "kunne ikke lænke %s til %s"
+msgstr "kunne ikke lænke %s til %s, %s kan ikke håndtere store bogstaver %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"kunne ikke lænke %s til %s, ingen af elementerne kan håndtere store "
+"bogstaver %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "kunne ikke lænke %s til %s"
+msgstr "kunne ikke lænke %s til %s med store bogstaver %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -1116,6 +1119,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"En skråstregsadskilt (»/«) liste af elementtyper (også kendt som klass) der "
+"skal vises. (usorteret)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Kontroller om det angivne element eller plugin eksisterer"

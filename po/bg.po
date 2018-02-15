@@ -1,23 +1,24 @@
 # Bulgarian translation of gstreamer.
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
-# Copyright (C) 2011, 2016 Free Software Fondation, Inc.
+# Copyright (C) 2011, 2016, 2017 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009, 2010.
-# Alexander Shopov <ash@contact.bg>, 2011, 2016.
+# Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
+# Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2017.
 #
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.7.2\n"
+"Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
-"PO-Revision-Date: 2016-02-21 21:02+0200\n"
+"POT-Creation-Date: 2018-02-15 11:27+0000\n"
+"PO-Revision-Date: 2017-05-08 11:35+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Print the GStreamer version"
@@ -257,11 +258,11 @@ msgstr ""
 
 #, c-format
 msgid "No error message for domain %s."
-msgstr "Няма съобщение за грешка за областта %s."
+msgstr "Няма съобщение за грешка за областта „%s“."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "Няма стандартно съобщение за грешка за областта %s с код %d."
+msgstr "Няма стандартно съобщение за грешка за областта „%s“ с код %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Избраният часовник не може да се използва в конвейер."
@@ -382,7 +383,7 @@ msgid ""
 "is hosted)"
 msgstr ""
 "Произход на медията като адрес (мястото в Интернет, откъдето е оригиналният "
-"файл)"
+"файл или поток)"
 
 msgid "homepage"
 msgstr "сайт"
@@ -460,10 +461,10 @@ msgid "person(s) who composed the recording"
 msgstr "композитор/и на записа"
 
 msgid "conductor"
-msgstr ""
+msgstr "диригент"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "информация за диригента или изпълнителя"
 
 msgid "duration"
 msgstr "продължителност"
@@ -511,19 +512,19 @@ msgid "nominal bitrate"
 msgstr "номинална скорост на битовете"
 
 msgid "nominal bitrate in bits/s"
-msgstr "номинална скорост на битовете в bps"
+msgstr "номинална скорост на битовете [bits/s]"
 
 msgid "minimum bitrate"
 msgstr "минимална скорост на битовете"
 
 msgid "minimum bitrate in bits/s"
-msgstr "минимална скорост на битовете в bps"
+msgstr "минимална скорост на битовете [bits/s]"
 
 msgid "maximum bitrate"
 msgstr "максимална скорост на битовете"
 
 msgid "maximum bitrate in bits/s"
-msgstr "максимална скорост на битовете в bps"
+msgstr "максимална скорост на битовете [bits/s]"
 
 msgid "encoder"
 msgstr "кодер"
@@ -547,7 +548,7 @@ msgid "replaygain track gain"
 msgstr "усилване на песента при изпълнение"
 
 msgid "track gain in db"
-msgstr "усилване на песента в db"
+msgstr "усилване на песента [db]"
 
 msgid "replaygain track peak"
 msgstr "максимално усилване на песента при изпълнение"
@@ -559,7 +560,7 @@ msgid "replaygain album gain"
 msgstr "усилване на албума при изпълнение"
 
 msgid "album gain in db"
-msgstr "усилване на албума в db"
+msgstr "усилване на албума [db]"
 
 msgid "replaygain album peak"
 msgstr "максимално усилване на албума при изпълнение"
@@ -681,7 +682,7 @@ msgid "geo location horizontal error"
 msgstr "хоризонтална грешка по координати"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr "очаквана грешка по хоризонтал (в метри)"
+msgstr "очаквана грешка по хоризонтал [m]"
 
 msgid "geo location movement speed"
 msgstr "скорост по координати"
@@ -842,7 +843,7 @@ msgstr "Схемата „%s“ в адреса не се поддържа"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "ГРЕШКА: от елемент %s: %s\n"
+msgstr "ГРЕШКА: от елемент „%s“: %s\n"
 
 #, c-format
 msgid ""
@@ -871,21 +872,21 @@ msgstr "свойството „%s“ на елемента „%s“ не мож
 msgid "Delayed linking failed."
 msgstr "Неуспешно отложено свързване."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "%s не може да се свърже към %s"
+msgstr "„%s“ не може да се свърже към „%s“, „%s“ не поддържа „%s“"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr ""
+msgstr "„%s“ не може да се свърже към „%s“, никой от тях не поддържа „%s“"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "%s не може да се свърже към %s"
+msgstr "„%s“ не може да се свърже към „%s“ с възможност „%s“"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "%s не може да се свърже към %s"
+msgstr "„%s“ не може да се свърже към „%s“"
 
 #, c-format
 msgid "no element \"%s\""
@@ -1110,7 +1111,7 @@ msgstr "Отпечатване на съдържанието на пристав
 msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
-msgstr ""
+msgstr "Списък с разделител наклонена черта („/“) от елементи. (неподреден)"
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Проверка дали избраният елемент или приставка съществуват"
@@ -1335,9 +1336,3 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
-
-#~ msgid "bin"
-#~ msgstr "резервоар"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Вътрешна грешка на потока от данни."
