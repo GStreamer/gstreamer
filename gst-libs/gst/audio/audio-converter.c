@@ -1469,11 +1469,14 @@ gst_audio_converter_convert (GstAudioConverter * convert,
     GstAudioConverterFlags flags, gpointer in, gsize in_size,
     gpointer * out, gsize * out_size)
 {
+  gsize in_frames;
+  gsize out_frames;
+
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (flags ^ GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE, FALSE);
 
-  gsize in_frames = in_size / convert->in.bpf;
-  gsize out_frames = gst_audio_converter_get_out_frames (convert, in_frames);
+  in_frames = in_size / convert->in.bpf;
+  out_frames = gst_audio_converter_get_out_frames (convert, in_frames);
 
   *out_size = out_frames * convert->out.bpf;
   *out = g_malloc0 (*out_size);
