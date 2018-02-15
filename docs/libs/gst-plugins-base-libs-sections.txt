@@ -658,6 +658,7 @@ GstAudioConverterFlags
 gst_audio_converter_new
 gst_audio_converter_free
 gst_audio_converter_samples
+gst_audio_converter_convert
 gst_audio_converter_get_in_frames
 gst_audio_converter_get_max_latency
 gst_audio_converter_get_out_frames

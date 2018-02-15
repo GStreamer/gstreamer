@@ -1448,6 +1448,41 @@ gst_audio_converter_samples (GstAudioConverter * convert,
 }
 
 /**
+ * gst_audio_converter_convert:
+ * @flags: extra #GstAudioConverterFlags
+ * @in: (array length=in_size) (element-type guint8): input data
+ * @in_size: size of @in
+ * @out: (out) (array length=out_size) (element-type guint8): a pointer where
+ *  the output data will be written
+ * @out_size: (out): a pointer where the size of @out will be written
+ *
+ * Convenience wrapper around gst_audio_converter_samples(), which will
+ * perform allocation of the output buffer based on the result from
+ * gst_audio_converter_get_out_frames().
+ *
+ * Returns: %TRUE is the conversion could be performed.
+ *
+ * Since: 1.14
+ */
+gboolean
+gst_audio_converter_convert (GstAudioConverter * convert,
+    GstAudioConverterFlags flags, gpointer in, gsize in_size,
+    gpointer * out, gsize * out_size)
+{
+  g_return_val_if_fail (convert != NULL, FALSE);
+  g_return_val_if_fail (flags ^ GST_AUDIO_CONVERTER_FLAG_IN_WRITABLE, FALSE);
+
+  gsize in_frames = in_size / convert->in.bpf;
+  gsize out_frames = gst_audio_converter_get_out_frames (convert, in_frames);
+
+  *out_size = out_frames * convert->out.bpf;
+  *out = g_malloc0 (*out_size);
+
+  return gst_audio_converter_samples (convert, flags, &in, in_frames, out,
+      out_frames);
+}
+
+/**
  * gst_audio_converter_supports_inplace:
  * @convert: a #GstAudioConverter
  *
