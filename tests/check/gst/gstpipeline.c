@@ -586,7 +586,11 @@ GST_START_TEST (test_pipeline_reset_start_time)
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
 
-  g_object_set (fakesrc, "do-timestamp", TRUE, "format", GST_FORMAT_TIME, NULL);
+  /* no more than 100 buffers per second */
+  g_object_set (fakesrc, "do-timestamp", TRUE, "format", GST_FORMAT_TIME,
+      "sizetype", 2, "sizemax", 4096, "datarate", 4096 * 100, NULL);
+
+  g_object_set (fakesink, "sync", TRUE, NULL);
 
   fail_unless (pipeline && fakesrc && fakesink);
 
