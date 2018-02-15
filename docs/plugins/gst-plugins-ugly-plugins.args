@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstX264Enc::bframes</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= 4</RANGE>
+<RANGE><= 16</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>B-Frames</NICK>
 <BLURB>Number of B-frames between I and P.</BLURB>
@@ -776,6 +776,16 @@
 <NICK>Frame Packing</NICK>
 <BLURB>Set frame packing mode for Stereoscopic content.</BLURB>
 <DEFAULT>Automatic (use incoming video information)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::insert-vui</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Insert VUI</NICK>
+<BLURB>Insert VUI NAL in stream.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>

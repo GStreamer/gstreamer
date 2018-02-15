@@ -44,7 +44,7 @@
     <xi:include href="xml/plugin-dvdsub.xml" />
     <xi:include href="xml/plugin-mpeg2dec.xml" />
     <xi:include href="xml/plugin-realmedia.xml" />
-    <xi:include href="xml/plugin-siddec.xml" />
+    <xi:include href="xml/plugin-sid.xml" />
     <xi:include href="xml/plugin-x264.xml" />
   </chapter>
 </book>
