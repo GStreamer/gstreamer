@@ -130,6 +130,7 @@ gst_gl_display_wayland_new (const gchar * name)
     } else {
       GST_INFO ("Failed to open Wayland display connection.");
     }
+    gst_object_unref (ret);
     return NULL;
   }
 
