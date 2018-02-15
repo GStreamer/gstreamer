@@ -1159,11 +1159,11 @@ converter_resample (GstAudioConverter * convert,
 		)
 
 /**
- * gst_audio_converter_new: (skip)
+ * gst_audio_converter_new:
  * @flags: extra #GstAudioConverterFlags
  * @in_info: a source #GstAudioInfo
  * @out_info: a destination #GstAudioInfo
- * @config: (transfer full): a #GstStructure with configuration options
+ * @config: (transfer full) (nullable): a #GstStructure with configuration options
  *
  * Create a new #GstAudioConverter that is able to convert between @in and @out
  * audio formats.
