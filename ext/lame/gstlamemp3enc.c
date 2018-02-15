@@ -56,8 +56,6 @@
  * gst-launch-1.0 -v audiotestsrc num-buffers=10 ! audio/x-raw,rate=44100,channels=1 ! lamemp3enc target=bitrate cbr=true bitrate=48 ! filesink location=test.mp3
  * ]| Encode to a fixed sample rate
  * </refsect2>
- *
- * Since: 0.10.12
  */
 
 #ifdef HAVE_CONFIG_H
