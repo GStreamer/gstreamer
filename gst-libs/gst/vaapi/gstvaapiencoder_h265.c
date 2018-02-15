@@ -2024,8 +2024,6 @@ reset_properties (GstVaapiEncoderH265 * encoder)
 
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
-  if (encoder->idr_period > MAX_IDR_PERIOD)
-    encoder->idr_period = MAX_IDR_PERIOD;
 
   if (encoder->min_qp > encoder->init_qp)
     encoder->min_qp = encoder->init_qp;

@@ -29,9 +29,6 @@
 
 G_BEGIN_DECLS
 
-/* Define the maximum IDR period */
-#define MAX_IDR_PERIOD 512
-
 /* Default CPB length (in milliseconds) */
 #define DEFAULT_CPB_LENGTH 1500
 

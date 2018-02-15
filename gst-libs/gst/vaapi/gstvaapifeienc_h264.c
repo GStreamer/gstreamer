@@ -49,9 +49,6 @@
 /* Define the maximum value for view-id */
 #define MAX_VIEW_ID 1023
 
-/* Define the maximum IDR period */
-#define MAX_IDR_PERIOD 512
-
 /* Default CPB length (in milliseconds) */
 #define DEFAULT_CPB_LENGTH 1500
 
@@ -1303,8 +1300,6 @@ reset_properties (GstVaapiFeiEncH264 * feienc)
 
   if (feienc->idr_period < base_encoder->keyframe_period)
     feienc->idr_period = base_encoder->keyframe_period;
-  if (feienc->idr_period > MAX_IDR_PERIOD)
-    feienc->idr_period = MAX_IDR_PERIOD;
 
   if (feienc->min_qp > feienc->init_qp ||
       (GST_VAAPI_ENCODER_RATE_CONTROL (feienc) == GST_VAAPI_RATECONTROL_CQP &&

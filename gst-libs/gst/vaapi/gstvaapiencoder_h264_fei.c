@@ -58,9 +58,6 @@ gst_vaapi_encoder_h264_fei_ensure_secondary_context (GstVaapiEncoder *
 /* Define the maximum value for view-id */
 #define MAX_VIEW_ID 1023
 
-/* Define the maximum IDR period */
-#define MAX_IDR_PERIOD 512
-
 /* Default CPB length (in milliseconds) */
 #define DEFAULT_CPB_LENGTH 1500
 
@@ -2650,8 +2647,6 @@ reset_properties (GstVaapiEncoderH264Fei * encoder)
 
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
-  if (encoder->idr_period > MAX_IDR_PERIOD)
-    encoder->idr_period = MAX_IDR_PERIOD;
 
   if (encoder->min_qp > encoder->init_qp ||
       (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
