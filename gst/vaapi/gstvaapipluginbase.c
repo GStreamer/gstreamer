@@ -34,6 +34,7 @@
 # include <gst/gl/gl.h>
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
 
@@ -1373,4 +1374,69 @@ gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
       && gst_gl_context_check_feature (gl_context,
           "EGL_EXT_image_dma_buf_import"));
 #endif
+}
+
+static void
+_init_performance_debug (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
+    g_once_init_leave (&_init, 1);
+  }
+#endif
+}
+
+/**
+ * gst_vaapi_plugin_copy_va_buffer:
+ * @plugin: a #GstVaapiPluginBase
+ * @inbuf: a #GstBuffer with VA memory type
+ * @outbuf: a #GstBuffer with system allocated memory
+ *
+ * Copy @inbuf to @outbuf. This if required when downstream doesn't
+ * support GstVideoMeta, and since VA memory may have custom strides a
+ * frame copy is required.
+ *
+ * Returns: %FALSE if the copy failed, otherwise %TRUE. Also returns
+ *          %TRUE if it is not required to do the copy
+ **/
+gboolean
+gst_vaapi_plugin_copy_va_buffer (GstVaapiPluginBase * plugin,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstVideoMeta *vmeta;
+  GstVideoFrame src_frame, dst_frame;
+  gboolean success;
+
+  if (!plugin->copy_output_frame)
+    return TRUE;
+
+  /* inbuf shall have video meta */
+  vmeta = gst_buffer_get_video_meta (inbuf);
+  if (!vmeta)
+    return FALSE;
+
+  _init_performance_debug ();
+  GST_CAT_INFO (CAT_PERFORMANCE, "copying VA buffer to system memory buffer");
+
+  if (!gst_video_frame_map (&src_frame, &plugin->srcpad_info, inbuf,
+          GST_MAP_READ))
+    return FALSE;
+  if (!gst_video_frame_map (&dst_frame, &plugin->srcpad_info, outbuf,
+          GST_MAP_WRITE)) {
+    gst_video_frame_unmap (&src_frame);
+    return FALSE;
+  }
+  success = gst_video_frame_copy (&dst_frame, &src_frame);
+  gst_video_frame_unmap (&dst_frame);
+  gst_video_frame_unmap (&src_frame);
+
+  if (success) {
+    gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS
+        | GST_BUFFER_COPY_FLAGS, 0, -1);
+  }
+
+  return success;
 }

@@ -258,6 +258,12 @@ void
 gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
     GstObject * object);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_copy_va_buffer (GstVaapiPluginBase * plugin,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_PLUGIN_BASE_H */
