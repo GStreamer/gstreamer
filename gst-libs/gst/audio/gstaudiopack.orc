@@ -326,8 +326,10 @@ copyl d1, s1
 .dest 4 d1 guint8
 .source 4 s1 gint32
 .const 4 c1 0x80000000
+.temp 4 t1
 
-xorl d1, s1, c1
+xorl t1, s1, c1
+swapl d1, t1
 
 
 .function audio_orc_pack_s32_swap
