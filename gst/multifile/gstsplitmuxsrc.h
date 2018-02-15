@@ -55,6 +55,8 @@ struct _GstSplitMuxSrc
   gboolean pads_complete;
   GMutex pads_lock;
   GList  *pads; /* pads_lock */
+  guint n_pads;
+  guint n_notlinked;
 
   GstClockTime total_duration;
   GstSegment play_segment;

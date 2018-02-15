@@ -259,6 +259,7 @@ gst_splitmux_src_dispose (GObject * object)
     gst_element_remove_pad (GST_ELEMENT (splitmux), pad);
   }
   g_list_free (splitmux->pads);
+  splitmux->n_pads = 0;
   splitmux->pads = NULL;
   SPLITMUX_SRC_PADS_UNLOCK (splitmux);
 
@@ -522,6 +523,22 @@ gst_splitmux_handle_buffer (GstSplitMuxSrc * splitmux,
   return ret;
 }
 
+static guint
+count_not_linked (GstSplitMuxSrc * splitmux)
+{
+  GList *cur;
+  guint ret = 0;
+
+  for (cur = g_list_first (splitmux->pads);
+      cur != NULL; cur = g_list_next (cur)) {
+    SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (cur->data);
+    if (GST_PAD_LAST_FLOW_RETURN (splitpad) == GST_FLOW_NOT_LINKED)
+      ret++;
+  }
+
+  return ret;
+}
+
 static void
 gst_splitmux_pad_loop (GstPad * pad)
 {
@@ -562,8 +579,21 @@ gst_splitmux_pad_loop (GstPad * pad)
       /* Stop immediately on error or flushing */
       GST_INFO_OBJECT (splitpad, "Stopping due to pad_push() result %d", ret);
       gst_pad_pause_task (pad);
-      if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
+      if (ret < GST_FLOW_EOS) {
         GST_ELEMENT_FLOW_ERROR (splitmux, ret);
+      } else if (ret == GST_FLOW_NOT_LINKED) {
+        gboolean post_error;
+        guint n_notlinked;
+
+        /* Only post not-linked if all pads are not-linked */
+        SPLITMUX_SRC_PADS_LOCK (splitmux);
+        n_notlinked = count_not_linked (splitmux);
+        post_error = (splitmux->pads_complete
+            && n_notlinked == splitmux->n_pads);
+        SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+
+        if (post_error)
+          GST_ELEMENT_FLOW_ERROR (splitmux, ret);
       }
     }
   }
@@ -837,6 +867,7 @@ gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
     target = g_object_new (SPLITMUX_TYPE_SRC_PAD,
         "name", pad_name, "direction", GST_PAD_SRC, NULL);
     splitmux->pads = g_list_prepend (splitmux->pads, target);
+    splitmux->n_pads++;
 
     gst_pad_set_active (target, TRUE);
 
