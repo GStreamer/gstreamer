@@ -159,7 +159,7 @@
  * and thus have to be exposed in installed headers. But please
  * do *not* use them in other projects. Instead, use G_DEPRECATED
  * or define your own wrappers around it. */
-#ifdef GST_DISABLE_DEPRECATED
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_DEPRECATED GST_EXPORT
 #define GST_DEPRECATED_FOR(f) GST_EXPORT
 #else
