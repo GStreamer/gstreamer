@@ -674,9 +674,6 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
     AG_GST_GL_PLUGIN_CHECKS
   fi
 ])
-AM_CONDITIONAL(HAVE_GRAPHENE, test "x$HAVE_GRAPHENE" = "xyes")
-AM_CONDITIONAL(HAVE_PNG, test "x$HAVE_PNG" = "xyes")
-AM_CONDITIONAL(HAVE_JPEG, test "x$HAVE_JPEG" = "xyes")
 
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
@@ -790,6 +787,10 @@ AM_CONDITIONAL(USE_THEORA, false)
 AM_CONDITIONAL(USE_VORBIS, false)
 
 fi dnl of EXT plugins
+
+AM_CONDITIONAL(HAVE_GRAPHENE, test "x$HAVE_GRAPHENE" = "xyes")
+AM_CONDITIONAL(HAVE_PNG, test "x$HAVE_PNG" = "xyes")
+AM_CONDITIONAL(HAVE_JPEG, test "x$HAVE_JPEG" = "xyes")
 
 dnl *** gio-unix-2.0 for tests/check/pipelines/tcp.c ***
 PKG_CHECK_MODULES(GIO_UNIX_2_0, gio-unix-2.0 >= 2.24,
