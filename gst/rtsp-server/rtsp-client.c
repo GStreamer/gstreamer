@@ -54,6 +54,13 @@
 #define GST_RTSP_CLIENT_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_CLIENT, GstRTSPClientPrivate))
 
+typedef enum
+{
+  TUNNEL_STATE_UNKNOWN,
+  TUNNEL_STATE_GET,
+  TUNNEL_STATE_POST
+} GstRTSPTunnelState;
+
 /* locking order:
  * send_lock, lock, tunnels_lock
  */
@@ -98,6 +105,7 @@ struct _GstRTSPClientPrivate
   GstRTSPVersion version;
 
   GHashTable *pipelined_requests;       /* pipelined_request_id -> session_id */
+  GstRTSPTunnelState tstate;
 };
 
 static GMutex tunnels_lock;
@@ -590,6 +598,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
       g_object_unref);
   priv->pipelined_requests = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, g_free);
+  priv->tstate = TUNNEL_STATE_UNKNOWN;
 }
 
 static GstRTSPFilterResult
@@ -4436,7 +4445,7 @@ tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
   return GST_RTSP_OK;
 }
 
-static gboolean
+static GstRTSPStatusCode
 handle_tunnel (GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
@@ -4472,6 +4481,8 @@ handle_tunnel (GstRTSPClient * client)
     g_mutex_lock (&opriv->watch_lock);
     if (opriv->watch == NULL)
       goto tunnel_closed;
+    if (opriv->tstate == priv->tstate)
+      goto tunnel_duplicate_id;
 
     GST_INFO ("client %p: found previous tunnel %p (old %p, new %p)", client,
         oclient, opriv->connection, priv->connection);
@@ -4488,20 +4499,27 @@ handle_tunnel (GstRTSPClient * client)
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   }
 
-  return TRUE;
+  return GST_RTSP_STS_OK;
 
   /* ERRORS */
 no_tunnelid:
   {
     GST_ERROR ("client %p: no tunnelid provided", client);
-    return FALSE;
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 tunnel_closed:
   {
     GST_ERROR ("client %p: tunnel session %s was closed", client, tunnelid);
     g_mutex_unlock (&opriv->watch_lock);
     g_object_unref (oclient);
-    return FALSE;
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+  }
+tunnel_duplicate_id:
+  {
+    GST_ERROR ("client %p: tunnel session %s was duplicate", client, tunnelid);
+    g_mutex_unlock (&opriv->watch_lock);
+    g_object_unref (oclient);
+    return GST_RTSP_STS_BAD_REQUEST;
   }
 }
 
@@ -4513,11 +4531,11 @@ tunnel_get (GstRTSPWatch * watch, gpointer user_data)
   GST_INFO ("client %p: tunnel get (connection %p)", client,
       client->priv->connection);
 
-  if (!handle_tunnel (client)) {
-    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
-  }
+  g_mutex_lock (&client->priv->lock);
+  client->priv->tstate = TUNNEL_STATE_GET;
+  g_mutex_unlock (&client->priv->lock);
 
-  return GST_RTSP_STS_OK;
+  return handle_tunnel (client);
 }
 
 static GstRTSPResult
@@ -4528,9 +4546,12 @@ tunnel_post (GstRTSPWatch * watch, gpointer user_data)
   GST_INFO ("client %p: tunnel post (connection %p)", client,
       client->priv->connection);
 
-  if (!handle_tunnel (client)) {
+  g_mutex_lock (&client->priv->lock);
+  client->priv->tstate = TUNNEL_STATE_POST;
+  g_mutex_unlock (&client->priv->lock);
+
+  if (handle_tunnel (client) != GST_RTSP_STS_OK)
     return GST_RTSP_ERROR;
-  }
 
   return GST_RTSP_OK;
 }
