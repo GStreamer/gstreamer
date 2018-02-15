@@ -670,6 +670,7 @@ gst_audio_converter_reset
 gst_audio_converter_supports_inplace
 <SUBSECTION Standard>
 gst_audio_converter_flags_get_type
+gst_audio_converter_get_type
 </SECTION>
 
 <SECTION>

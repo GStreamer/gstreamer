@@ -122,6 +122,9 @@ GstAudioConverter *  gst_audio_converter_new             (GstAudioConverterFlags
                                                           GstStructure *config);
 
 GST_EXPORT
+GType                gst_audio_converter_get_type        (void);
+
+GST_EXPORT
 void                 gst_audio_converter_free            (GstAudioConverter * convert);
 
 GST_EXPORT

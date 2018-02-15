@@ -141,6 +141,20 @@ struct _GstAudioConverter
   AudioConvertSamplesFunc convert;
 };
 
+static GstAudioConverter *
+gst_audio_converter_copy (GstAudioConverter * convert)
+{
+  GstAudioConverter *res =
+      gst_audio_converter_new (convert->flags, &convert->in, &convert->out,
+      convert->config);
+
+  return res;
+}
+
+G_DEFINE_BOXED_TYPE (GstAudioConverter, gst_audio_converter,
+    (GBoxedCopyFunc) gst_audio_converter_copy,
+    (GBoxedFreeFunc) gst_audio_converter_free);
+
 typedef gboolean (*AudioChainFunc) (AudioChain * chain, gpointer user_data);
 typedef gpointer *(*AudioChainAllocFunc) (AudioChain * chain, gsize num_samples,
     gpointer user_data);
