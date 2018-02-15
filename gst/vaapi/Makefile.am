@@ -61,6 +61,7 @@ libgstvaapi_source_c = \
 
 libgstvaapi_source_h = \
 	gstcompat.h		\
+	gstvaapi.h		\
 	gstvaapidecode.h	\
 	gstvaapipluginbase.h	\
 	gstvaapipluginutil.h	\
