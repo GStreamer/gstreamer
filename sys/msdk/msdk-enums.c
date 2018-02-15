@@ -100,3 +100,57 @@ gst_msdkenc_rc_lookahead_ds_get_type (void)
   }
   return type;
 }
+
+GType
+gst_msdkenc_mbbrc_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_CODINGOPTION_UNKNOWN, "SDK desides what to do", "auto"},
+    {MFX_CODINGOPTION_OFF, "Disable Macroblock level bit rate control", "off"},
+    {MFX_CODINGOPTION_ON, "Enable Macroblock level bit rate control ", "on"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkEncMbBitrateControl", values);
+  }
+  return type;
+}
+
+GType
+gst_msdkenc_adaptive_i_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_CODINGOPTION_UNKNOWN, "SDK desides what to do", "auto"},
+    {MFX_CODINGOPTION_OFF, "Disable Adaptive I frame insertion ", "off"},
+    {MFX_CODINGOPTION_ON, "Enable Aaptive I frame insertion ", "on"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkEncAdaptiveI", values);
+  }
+  return type;
+}
+
+GType
+gst_msdkenc_adaptive_b_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_CODINGOPTION_UNKNOWN, "SDK desides what to do", "auto"},
+    {MFX_CODINGOPTION_OFF, "Disable Adaptive B-Frame insertion ", "off"},
+    {MFX_CODINGOPTION_ON, "Enable Aaptive B-Frame insertion ", "on"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkEncAdaptiveB", values);
+  }
+  return type;
+}

@@ -49,5 +49,14 @@ gst_msdkenc_trellis_quantization_get_type (void);
 GType
 gst_msdkenc_rc_lookahead_ds_get_type (void);
 
+GType
+gst_msdkenc_mbbrc_get_type (void);
+
+GType
+gst_msdkenc_adaptive_i_get_type (void);
+
+GType
+gst_msdkenc_adaptive_b_get_type (void);
+
 G_END_DECLS
 #endif

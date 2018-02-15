@@ -287,7 +287,6 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
 
   gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & thiz->option);
 
-  encoder->enable_extopt2 = TRUE;
   encoder->option2.Trellis = thiz->trellis ? thiz->trellis : MFX_TRELLIS_OFF;
   encoder->option2.MaxSliceSize = thiz->max_slice_size;
   if (encoder->rate_control == MFX_RATECONTROL_LA ||

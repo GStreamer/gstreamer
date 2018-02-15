@@ -117,7 +117,6 @@ struct _GstMsdkEnc
 
   /* Additional encoder coding options */
   mfxExtCodingOption2 option2;
-  gboolean enable_extopt2;
   mfxExtCodingOption3 option3;
   gboolean enable_extopt3;
 
@@ -147,6 +146,9 @@ struct _GstMsdkEnc
   guint i_frames;
   guint b_frames;
   guint num_slices;
+  gint16 mbbrc;
+  gint16 adaptive_i;
+  gint16 adaptive_b;
 
   gboolean reconfig;
 };

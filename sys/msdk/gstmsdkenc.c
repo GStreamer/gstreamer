@@ -100,6 +100,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_RC_LOOKAHEAD_DEPTH_DEFAULT  10
 #define PROP_MAX_VBV_BITRATE_DEFAULT     0
 #define PROP_MAX_FRAME_SIZE_DEFAULT      0
+#define PROP_MBBRC_DEFAULT               MFX_CODINGOPTION_OFF
+#define PROP_ADAPTIVE_I_DEFAULT          MFX_CODINGOPTION_OFF
+#define PROP_ADAPTIVE_B_DEFAULT          MFX_CODINGOPTION_OFF
 
 #define gst_msdkenc_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkEnc, gst_msdkenc, GST_TYPE_VIDEO_ENCODER);
@@ -155,7 +158,6 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
 
     case MFX_RATECONTROL_LA_ICQ:
       option2->LookAheadDepth = thiz->lookahead_depth;
-      thiz->enable_extopt2 = TRUE;
     case MFX_RATECONTROL_ICQ:
       mfx->ICQQuality = CLAMP (thiz->qpi, 1, 51);
       break;
@@ -163,7 +165,6 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
     case MFX_RATECONTROL_LA:   /* VBR with LA. Only supported in H264?? */
     case MFX_RATECONTROL_LA_HRD:       /* VBR with LA, HRD compliant */
       option2->LookAheadDepth = thiz->lookahead_depth;
-      thiz->enable_extopt2 = TRUE;
       break;
 
     case MFX_RATECONTROL_QVBR:
@@ -177,7 +178,6 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
 
     case MFX_RATECONTROL_VBR:
       option2->MaxFrameSize = thiz->max_frame_size * 1000;
-      thiz->enable_extopt2 = TRUE;
       break;
 
     case MFX_RATECONTROL_VCM:
@@ -191,6 +191,30 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
     default:
       GST_ERROR ("Unsupported RateControl!");
       break;
+  }
+}
+
+static void
+ensure_extended_coding_options (GstMsdkEnc * thiz)
+{
+  mfxExtCodingOption2 *option2 = &thiz->option2;
+  mfxExtCodingOption3 *option3 = &thiz->option3;
+
+  /* Fill ExtendedCodingOption2, set non-zero defaults too */
+  option2->Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
+  option2->Header.BufferSz = sizeof (thiz->option2);
+  option2->MBBRC = thiz->mbbrc;
+  option2->AdaptiveI = thiz->adaptive_i;
+  option2->AdaptiveB = thiz->adaptive_b;
+  option2->BitrateLimit = MFX_CODINGOPTION_OFF;
+  option2->EnableMAD = MFX_CODINGOPTION_OFF;
+  option2->UseRawRef = MFX_CODINGOPTION_OFF;
+  gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) option2);
+
+  if (thiz->enable_extopt3) {
+    option3->Header.BufferId = MFX_EXTBUFF_CODING_OPTION3;
+    option3->Header.BufferSz = sizeof (thiz->option3);
+    gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) option3);
   }
 }
 
@@ -356,21 +380,13 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   /* ensure bitrate control parameters */
   ensure_bitrate_control (thiz);
 
+  /* Enable ExtCodingOption2 */
+  ensure_extended_coding_options (thiz);
+
   /* allow subclass configure further */
   if (klass->configure) {
     if (!klass->configure (thiz))
       goto failed;
-  }
-
-  if (thiz->enable_extopt2) {
-    thiz->option2.Header.BufferId = MFX_EXTBUFF_CODING_OPTION2;
-    thiz->option2.Header.BufferSz = sizeof (thiz->option2);
-    gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) & thiz->option2);
-  }
-  if (thiz->enable_extopt3) {
-    thiz->option3.Header.BufferId = MFX_EXTBUFF_CODING_OPTION3;
-    thiz->option3.Header.BufferSz = sizeof (thiz->option3);
-    gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) & thiz->option3);
   }
 
   if (thiz->num_extra_params) {
@@ -1361,8 +1377,10 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->i_frames = PROP_I_FRAMES_DEFAULT;
   thiz->b_frames = PROP_B_FRAMES_DEFAULT;
   thiz->num_slices = PROP_NUM_SLICES_DEFAULT;
+  thiz->mbbrc = PROP_MBBRC_DEFAULT;
+  thiz->adaptive_i = PROP_ADAPTIVE_I_DEFAULT;
+  thiz->adaptive_b = PROP_ADAPTIVE_B_DEFAULT;
 
-  thiz->enable_extopt2 = FALSE;
   thiz->enable_extopt3 = FALSE;
   memset (&thiz->option2, 0, sizeof (thiz->option2));
   memset (&thiz->option2, 0, sizeof (thiz->option3));
