@@ -53,6 +53,7 @@ GObject
         GstLogTracer
         GstRUsageTracer
         GstStatsTracer
+      GstTracerRecord
 GInterface
   GTypePlugin
   GstChildProxy

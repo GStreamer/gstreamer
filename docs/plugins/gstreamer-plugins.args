@@ -44,7 +44,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Allocation Src Pad</NICK>
-<BLURB>The pad ALLOCATION queries will be proxied to (unused).</BLURB>
+<BLURB>The pad ALLOCATION queries will be proxied to (DEPRECATED, has no effect).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -776,6 +776,16 @@
 <NICK>Timestamp offset for synchronisation</NICK>
 <BLURB>Timestamp offset in nanoseconds for synchronisation, negative for earlier sync.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::drop-allocation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop allocation query</NICK>
+<BLURB>Don't forward allocation queries.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
