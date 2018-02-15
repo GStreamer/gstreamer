@@ -35,6 +35,7 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideoencoder.h>
 #include "msdk.h"
+#include "msdk-enums.h"
 #include "gstmsdkcontext.h"
 
 G_BEGIN_DECLS

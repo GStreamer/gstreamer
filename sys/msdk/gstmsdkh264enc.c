@@ -50,8 +50,6 @@ enum
   PROP_TRELLIS,
 };
 
-#define _MFX_TRELLIS_NONE    0
-
 #define PROP_CABAC_DEFAULT              TRUE
 #define PROP_LOWPOWER_DEFAULT           FALSE
 #define PROP_FRAME_PACKING_DEFAULT      -1
@@ -86,46 +84,6 @@ gst_msdkh264enc_frame_packing_get_type (void)
   }
 
   return format_type;
-}
-
-static GType
-gst_msdkh264enc_rc_lookahead_ds_get_type (void)
-{
-  static GType type = 0;
-
-  static const GEnumValue values[] = {
-    {MFX_LOOKAHEAD_DS_UNKNOWN, "SDK desides what to do", "default"},
-    {MFX_LOOKAHEAD_DS_OFF, "No downsampling", "off"},
-    {MFX_LOOKAHEAD_DS_2x, "Down sample 2-times before estimation", "2x"},
-    {MFX_LOOKAHEAD_DS_4x, "Down sample 4-times before estimation", "4x"},
-    {0, NULL, NULL}
-  };
-
-  if (!type) {
-    type =
-        g_enum_register_static ("GstMsdkH264RCLookAheadDownsampling", values);
-  }
-  return type;
-}
-
-static GType
-gst_msdkh264enc_trellis_quantization_get_type (void)
-{
-  static GType type = 0;
-
-  static const GFlagsValue values[] = {
-    {_MFX_TRELLIS_NONE, "Disable for all frames", "None"},
-    {MFX_TRELLIS_I, "Enable for I frames", "i"},
-    {MFX_TRELLIS_P, "Enable for P frames", "p"},
-    {MFX_TRELLIS_B, "Enable for B frames", "b"},
-    {0, NULL, NULL}
-  };
-
-  if (!type) {
-    type =
-        g_flags_register_static ("GstMsdkH264EncTrellisQuantization", values);
-  }
-  return type;
 }
 
 #define gst_msdkh264enc_parent_class parent_class
@@ -538,14 +496,14 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_RC_LA_DOWNSAMPLING,
       g_param_spec_enum ("rc-lookahead-ds", "Look-ahead Downsampling",
           "Down sampling mode in look ahead bitrate control",
-          gst_msdkh264enc_rc_lookahead_ds_get_type (),
+          gst_msdkenc_rc_lookahead_ds_get_type (),
           PROP_RC_LA_DOWNSAMPLING_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TRELLIS,
       g_param_spec_flags ("trellis", "Trellis",
           "Enable Trellis Quantization",
-          gst_msdkh264enc_trellis_quantization_get_type (), _MFX_TRELLIS_NONE,
+          gst_msdkenc_trellis_quantization_get_type (), _MFX_TRELLIS_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,

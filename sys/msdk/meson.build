@@ -19,6 +19,7 @@ msdk_sources = [
   'gstmsdkvp8enc.c',
   'gstmsdkvc1dec.c',
   'msdk.c',
+  'msdk-enum.c'
 ]
 
 if host_machine.system() == 'windows'

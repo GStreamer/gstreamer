@@ -19,13 +19,15 @@ libgstmsdk_la_SOURCES = \
 	gstmsdkvc1dec.c \
 	gstmsdkdec.c \
 	gstmsdkenc.c \
-	gstmsdk.c
+	gstmsdk.c \
+        msdk-enums.c
 
 # Causes linking libgstmsdk.la with CXXLINK, required by libmfx
 nodist_EXTRA_libgstmsdk_la_SOURCES = not_present.cxx
 
 noinst_HEADERS = \
 	msdk.h \
+        msdk-enums.h \
 	gstmsdkcontext.h \
 	gstmsdkcontextutil.h \
 	gstmsdksystemmemory.h \

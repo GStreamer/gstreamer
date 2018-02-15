@@ -101,37 +101,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_MAX_VBV_BITRATE_DEFAULT     0
 #define PROP_MAX_FRAME_SIZE_DEFAULT      0
 
-#define GST_MSDKENC_RATE_CONTROL_TYPE (gst_msdkenc_rate_control_get_type())
-static GType
-gst_msdkenc_rate_control_get_type (void)
-{
-  static GType type = 0;
-
-  static const GEnumValue values[] = {
-    {MFX_RATECONTROL_CBR, "Constant Bitrate", "cbr"},
-    {MFX_RATECONTROL_VBR, "Variable Bitrate", "vbr"},
-    {MFX_RATECONTROL_CQP, "Constant Quantizer", "cqp"},
-    {MFX_RATECONTROL_AVBR, "Average Bitrate", "avbr"},
-    {MFX_RATECONTROL_LA, "VBR with look ahead (Non HRD compliant)", "la_vbr"},
-    {MFX_RATECONTROL_ICQ, "Intelligent CQP", "icq"},
-    {MFX_RATECONTROL_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
-    {MFX_RATECONTROL_LA_ICQ, "Intelligent CQP with LA (Non HRD compliant)",
-        "la_icq"},
-#if 0
-    /* intended for one to N transcode scenario */
-    {MFX_RATECONTROL_LA_EXT, "Extended LA", "la_ext"},
-#endif
-    {MFX_RATECONTROL_LA_HRD, "HRD compliant LA", "la_hrd"},
-    {MFX_RATECONTROL_QVBR, "VBR with CQP", "qvbr"},
-    {0, NULL, NULL}
-  };
-
-  if (!type) {
-    type = g_enum_register_static ("GstMsdkEncRateControl", values);
-  }
-  return type;
-}
-
 #define gst_msdkenc_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkEnc, gst_msdkenc, GST_TYPE_VIDEO_ENCODER);
 
@@ -1619,7 +1588,7 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
 
   obj_properties[GST_MSDKENC_PROP_RATE_CONTROL] =
       g_param_spec_enum ("rate-control", "Rate Control",
-      "Rate control method", GST_MSDKENC_RATE_CONTROL_TYPE,
+      "Rate control method", gst_msdkenc_rate_control_get_type (),
       PROP_RATE_CONTROL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_BITRATE] =
