@@ -68121,6 +68121,36 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkAudioSink::alignment-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alignment Threshold</NICK>
+<BLURB>Timestamp alignment threshold in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSink::buffer-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Time</NICK>
+<BLURB>Size of audio buffer in microseconds, this is the minimum latency that the sink reports.</BLURB>
+<DEFAULT>50000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkAudioSink::discont-wait</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Discont Wait</NICK>
+<BLURB>Window of time in nanoseconds to wait before creating a discontinuity.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstOpenh264Enc::adaptive-quantization</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -69176,7 +69206,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Is client</NICK>
-<BLURB>Set to true if the decoder should act asclient and initiate the handshake.</BLURB>
+<BLURB>Set to true if the decoder should act as client and initiate the handshake.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -72401,6 +72431,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstKMSSink::render-rectangle</NAME>
+<TYPE>GstValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Render Rectangle</NICK>
+<BLURB>The render rectangle ('<x, y, width, height>').</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBs2b::fcut</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[300,2000]</RANGE>
@@ -73447,7 +73487,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.56.1"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.57.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73629,3 +73669,94 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <BLURB>Select whether purely black pixels should be preserved.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstProxySrc::proxysink</NAME>
+<TYPE>GstProxySink*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxysink</NICK>
+<BLURB>Matching proxysink.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::connection-state</NAME>
+<TYPE>GstWebRTCPeerConnectionState</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Connection State</NICK>
+<BLURB>The overall connection state of this element.</BLURB>
+<DEFAULT>GST_WEBRTC_PEER_CONNECTION_STATE_NEW</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::ice-connection-state</NAME>
+<TYPE>GstWebRTCICEConnectionState</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>ICE connection state</NICK>
+<BLURB>The collective connection state of all ICETransport's.</BLURB>
+<DEFAULT>GST_WEBRTC_ICE_CONNECTION_STATE_NEW</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::ice-gathering-state</NAME>
+<TYPE>GstWebRTCICEGatheringState</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>ICE gathering state</NICK>
+<BLURB>The collective gathering state of all ICETransport's.</BLURB>
+<DEFAULT>GST_WEBRTC_ICE_GATHERING_STATE_NEW</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::local-description</NAME>
+<TYPE>GstWebRTCSessionDescription*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Local Description</NICK>
+<BLURB>The local SDP description to use for this connection.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::remote-description</NAME>
+<TYPE>GstWebRTCSessionDescription*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remote Description</NICK>
+<BLURB>The remote SDP description to use for this connection.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::signaling-state</NAME>
+<TYPE>GstWebRTCSignalingState</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Signaling State</NICK>
+<BLURB>The signaling state of this element.</BLURB>
+<DEFAULT>GST_WEBRTC_SIGNALING_STATE_STABLE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::stun-server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>STUN Server</NICK>
+<BLURB>The STUN server of the form stun://hostname:port.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::turn-server</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TURN Server</NICK>
+<BLURB>The TURN server of the form turn(s)://username:password@host:port.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+

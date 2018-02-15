@@ -747,3 +747,89 @@ GstMessage *arg1
 GstIpcPipelineSink *gstipcpipelinesink
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstWebRTCBin::add-ice-candidate</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+guint  arg1
+gchar *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::add-transceiver</NAME>
+<RETURNS>GstWebRTCRTPTransceiver*</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstWebRTCRTPTransceiverDirection  arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::create-answer</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstStructure *arg1
+GstPromise *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::create-offer</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstStructure *arg1
+GstPromise *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::get-stats</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstPad *arg1
+GstPromise *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::get-transceivers</NAME>
+<RETURNS>GArray*</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::on-ice-candidate</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+guint  arg1
+gchar *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::on-negotiation-needed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::set-local-description</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstWebRTCSessionDescription *arg1
+GstPromise *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::set-remote-description</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstWebRTCSessionDescription *arg1
+GstPromise *arg2
+</SIGNAL>
+

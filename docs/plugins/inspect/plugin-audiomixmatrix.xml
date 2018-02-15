@@ -1,0 +1,34 @@
+<plugin>
+  <name>audiomixmatrix</name>
+  <description>Audio matrix mix</description>
+  <filename>../../gst/audiomixmatrix/.libs/libgstaudiomixmatrix.so</filename>
+  <basename>libgstaudiomixmatrix.so</basename>
+  <version>1.13.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audiomixmatrix</name>
+      <longname>Matrix audio mix</longname>
+      <class>Filter/Audio</class>
+      <description>Mixes a number of input channels into a number of output channels according to a transformation matrix</description>
+      <author>Vivia Nikolaidou &lt;vivia@toolsonair.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2147483647 ], layout=(string)interleaved, format=(string){ F32LE, F64LE, S16LE, S32LE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2147483647 ], layout=(string)interleaved, format=(string){ F32LE, F64LE, S16LE, S32LE }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
