@@ -33,12 +33,14 @@ avenc_dvvideo GstPreset
 avenc_eac3 GstPreset
 avenc_ffv1 GstPreset
 avenc_ffvhuff GstPreset
+avenc_fits GstPreset
 avenc_flashsv GstPreset
 avenc_flashsv2 GstPreset
 avenc_flv GstPreset
 avenc_g722 GstPreset
 avenc_g723_1 GstPreset
 avenc_g726 GstPreset
+avenc_g726le GstPreset
 avenc_h261 GstPreset
 avenc_h263 GstPreset
 avenc_h263p GstPreset
@@ -131,6 +133,7 @@ avmux_f4v GstTagSetter
 avmux_ffm GstTagSetter
 avmux_fifo GstTagSetter
 avmux_filmstrip GstTagSetter
+avmux_fits GstTagSetter
 avmux_flv GstTagSetter
 avmux_gxf GstTagSetter
 avmux_hash GstTagSetter
