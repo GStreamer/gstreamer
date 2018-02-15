@@ -45,7 +45,6 @@ struct _GstSRTBaseSink {
   GstBaseSink parent;
 
   GstUri *uri;
-  GList *queued_buffers;
   gint latency;
   gchar *passphrase;
   gint key_length;
