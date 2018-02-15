@@ -37,7 +37,7 @@ typedef struct
   gboolean is_last;
 } VideoInfo;
 
-gchar *
+static gchar *
 ensure_uri (const gchar * location)
 {
   if (gst_uri_is_valid (location))

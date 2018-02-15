@@ -16,6 +16,7 @@ EXTRA_DIST = \
 	meson_options.txt \
 	gst-libs/gst/interfaces/build_mkenum.py \
 	gst-libs/gst/mpegts/mpegts_enum.py \
+	gst-libs/gst/webrtc/webrtc_mkenum.py \
 	ext/srtp/srtp_mkenum.py \
 	ext/vulkan/vkconfig.h.meson
 

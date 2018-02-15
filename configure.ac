@@ -2599,6 +2599,7 @@ tests/examples/Makefile
 tests/examples/avsamplesink/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/codecparsers/Makefile
+tests/examples/compositor/Makefile
 tests/examples/directfb/Makefile
 tests/examples/audiomixmatrix/Makefile
 tests/examples/ipcpipeline/Makefile
