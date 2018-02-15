@@ -48,6 +48,7 @@ enum
   PROP_FRAME_PACKING,
   PROP_RC_LA_DOWNSAMPLING,
   PROP_TRELLIS,
+  PROP_MAX_SLICE_SIZE,
 };
 
 #define PROP_CABAC_DEFAULT              TRUE
@@ -55,6 +56,7 @@ enum
 #define PROP_FRAME_PACKING_DEFAULT      -1
 #define PROP_RC_LA_DOWNSAMPLING_DEFAULT MFX_LOOKAHEAD_DS_UNKNOWN
 #define PROP_TRELLIS_DEFAULT            _MFX_TRELLIS_NONE
+#define PROP_MAX_SLICE_SIZE_DEFAULT     0
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -285,13 +287,13 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
 
   gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & thiz->option);
 
+  encoder->enable_extopt2 = TRUE;
+  encoder->option2.Trellis = thiz->trellis ? thiz->trellis : MFX_TRELLIS_OFF;
+  encoder->option2.MaxSliceSize = thiz->max_slice_size;
   if (encoder->rate_control == MFX_RATECONTROL_LA ||
       encoder->rate_control == MFX_RATECONTROL_LA_HRD ||
       encoder->rate_control == MFX_RATECONTROL_LA_ICQ)
     encoder->option2.LookAheadDS = thiz->lookahead_ds;
-
-  encoder->option2.Trellis = thiz->trellis ? thiz->trellis : MFX_TRELLIS_OFF;
-  encoder->enable_extopt2 = TRUE;
 
   return TRUE;
 }
@@ -414,6 +416,9 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_TRELLIS:
       thiz->trellis = g_value_get_flags (value);
       break;
+    case PROP_MAX_SLICE_SIZE:
+      thiz->max_slice_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -447,6 +452,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TRELLIS:
       g_value_set_flags (value, thiz->trellis);
+      break;
+    case PROP_MAX_SLICE_SIZE:
+      g_value_set_uint (value, thiz->max_slice_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -506,6 +514,12 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           gst_msdkenc_trellis_quantization_get_type (), _MFX_TRELLIS_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_SLICE_SIZE,
+      g_param_spec_uint ("max-slice-size", "Max Slice Size",
+          "Maximum slice size in bytes (if enabled MSDK will ignore the control over num-slices)",
+          0, G_MAXUINT32, PROP_MAX_SLICE_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 encoder", "Codec/Encoder/Video",
       "H264 video encoder based on Intel Media SDK",
@@ -521,4 +535,5 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->frame_packing = PROP_FRAME_PACKING_DEFAULT;
   thiz->lookahead_ds = PROP_RC_LA_DOWNSAMPLING_DEFAULT;
   thiz->trellis = PROP_TRELLIS_DEFAULT;
+  thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
 }

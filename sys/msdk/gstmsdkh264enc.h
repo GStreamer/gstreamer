@@ -64,6 +64,7 @@ struct _GstMsdkH264Enc
   gint frame_packing;
   guint lookahead_ds;
   guint trellis;
+  guint max_slice_size;
 };
 
 struct _GstMsdkH264EncClass
