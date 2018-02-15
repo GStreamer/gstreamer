@@ -70,15 +70,24 @@ class Caps(Gst.Caps):
     def __nonzero__(self):
         return not self.is_empty()
 
-    def __new__(cls, *kwargs):
-        if not kwargs:
+    def __new__(cls, *args):
+        if not args:
             return Caps.new_empty()
-        elif len(kwargs) > 1:
+        elif len(args) > 1:
             raise TypeError("wrong arguments when creating GstCaps object")
-        elif isinstance(kwargs[0], str):
-            return Caps.from_string(kwargs[0])
-        elif isinstance(kwargs[0], Caps):
-            return kwargs[0].copy()
+        elif isinstance(args[0], str):
+            return Caps.from_string(args[0])
+        elif isinstance(args[0], Caps):
+            return args[0].copy()
+        elif isinstance(args[0], Structure):
+            res = Caps.new_empty()
+            res.append_structure(args[0])
+            return res
+        elif isinstance(args[0], (list, tuple)):
+            res = Caps.new_empty()
+            for e in args[0]:
+                res.append_structure(e)
+            return res
 
         raise TypeError("wrong arguments when creating GstCaps object")
 
