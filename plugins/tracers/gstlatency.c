@@ -114,8 +114,10 @@ log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
 static void
 send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
 {
-  if (parent && (!GST_IS_BIN (parent)) &&
-      GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) {
+  /* allow for non-parented pads to send latency probes as used in e.g.
+   * rtspsrc for TCP connections */
+  if (!parent || (!GST_IS_BIN (parent) &&
+          GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE))) {
     GstEvent *latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
         gst_structure_new_id (latency_probe_id,
             latency_probe_pad, GST_TYPE_PAD, pad,
