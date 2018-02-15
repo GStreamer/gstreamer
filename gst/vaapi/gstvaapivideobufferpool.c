@@ -142,7 +142,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   const GstVideoInfo *negotiated_vinfo;
   GstVideoAlignment align;
   GstAllocator *allocator;
-  gboolean ret, updated = FALSE;
+  gboolean ret;
   guint size, min_buffers, max_buffers;
   guint surface_alloc_flags;
 
@@ -248,17 +248,16 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (gst_buffer_pool_config_has_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_META)) {
     priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
-  } else {
+  } else if (gst_caps_is_video_raw (caps) && !priv->use_dmabuf_memory) {
     gint i;
+
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&new_allocation_vinfo); i++) {
       if (GST_VIDEO_INFO_PLANE_OFFSET (&new_allocation_vinfo, i) !=
           GST_VIDEO_INFO_PLANE_OFFSET (&priv->vmeta_vinfo, i) ||
           GST_VIDEO_INFO_PLANE_STRIDE (&new_allocation_vinfo, i) !=
           GST_VIDEO_INFO_PLANE_STRIDE (&priv->vmeta_vinfo, i)) {
         priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
-        gst_buffer_pool_config_add_option (config,
-            GST_BUFFER_POOL_OPTION_VIDEO_META);
-        updated = TRUE;
+        GST_INFO_OBJECT (pool, "adding unrequested video meta");
         break;
       }
     }
@@ -277,7 +276,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   ret =
       GST_BUFFER_POOL_CLASS
       (gst_vaapi_video_buffer_pool_parent_class)->set_config (pool, config);
-  return !updated && ret;
+  return ret;
 
   /* ERRORS */
 error_invalid_config:
