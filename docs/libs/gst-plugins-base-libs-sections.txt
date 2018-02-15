@@ -3478,6 +3478,43 @@ gst_video_codec_state_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstvideoanc</FILE>
+<INCLUDE>gst/video/video.h</INCLUDE>
+<SUBSECTION ancillary>
+GstVideoAncillary
+GstVideoAncillaryDID
+GST_VIDEO_ANCILLARY_DID16
+GstVideoAncillaryDID16
+<SUBSECTION vbi>
+GstVideoVBIParser
+GstVideoVBIParserResult
+gst_video_vbi_parser_new
+gst_video_vbi_parser_free
+gst_video_vbi_parser_add_line
+gst_video_vbi_parser_get_ancillary
+gst_video_vbi_parser_copy
+<SUBSECTION closedcaption>
+GstVideoCaptionType
+GstVideoCaptionMeta
+gst_buffer_get_video_caption_meta
+gst_buffer_add_video_caption_meta
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_ANCILLARY_DID
+GST_TYPE_VIDEO_ANCILLARY_DI_D16
+GST_TYPE_VIDEO_CAPTION_TYPE
+GST_TYPE_VIDEO_VBI_PARSER_RESULT
+GST_VIDEO_CAPTION_META_API_TYPE
+gst_video_caption_meta_get_info
+GST_VIDEO_CAPTION_META_INFO
+gst_video_caption_meta_api_get_type
+gst_video_vbi_parser_get_type
+gst_video_ancillary_di_d16_get_type
+gst_video_ancillary_did_get_type
+gst_video_caption_type_get_type
+gst_video_vbi_parser_result_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstdiscoverer</FILE>
 <INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>

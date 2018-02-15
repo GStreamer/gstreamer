@@ -14,6 +14,7 @@ video_sources = [
   'gstvideoutilsprivate.c',
   'navigation.c',
   'video.c',
+  'video-anc.c',
   'video-blend.c',
   'video-chroma.c',
   'video-color.c',
@@ -47,6 +48,7 @@ video_headers = [
   'gstvideoutils.h',
   'navigation.h',
   'video.h',
+  'video-anc.h',
   'video-event.h',
   'video-format.h',
   'video-chroma.h',
@@ -70,6 +72,7 @@ install_headers(video_headers, subdir : 'gstreamer-1.0/gst/video/')
 
 video_mkenum_headers = [
   'video.h',
+  'video-anc.h',
   'video-format.h',
   'video-frame.h',
   'video-chroma.h',

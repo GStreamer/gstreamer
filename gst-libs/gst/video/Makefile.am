@@ -4,7 +4,7 @@ include $(top_srcdir)/common/orc.mak
 
 glib_enum_headers = video.h video-format.h video-color.h video-info.h video-dither.h \
 			colorbalance.h navigation.h video-chroma.h video-tile.h video-converter.h \
-			video-resampler.h video-frame.h video-scaler.h
+			video-resampler.h video-frame.h video-scaler.h video-anc.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
@@ -24,6 +24,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	colorbalancechannel.c   \
 	navigation.c            \
 	video.c          	\
+	video-anc.c		\
 	video-event.c          	\
 	video-format.c         	\
 	video-chroma.c         	\
@@ -62,6 +63,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	navigation.h            \
 	video.h			\
 	video-prelude.h		\
+	video-anc.h		\
 	video-event.h          	\
 	video-format.h         	\
 	video-chroma.h         	\
