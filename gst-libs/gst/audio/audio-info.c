@@ -121,7 +121,7 @@ gst_audio_info_init (GstAudioInfo * info)
  * @format: the format
  * @rate: the samplerate
  * @channels: the number of channels
- * @position: the channel positions
+ * @position: (array fixed-size=64) (nullable): the channel positions
  *
  * Set the default info for the audio info of @format and @rate and @channels.
  *
