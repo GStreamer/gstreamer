@@ -21,6 +21,10 @@
 #include "config.h"
 #endif
 
+#ifndef GST_REMOVE_DEPRECATED
+#undef GST_DISABLE_DEPRECATED
+#endif
+
 #include <gst/check/gstcheck.h>
 
 GST_START_TEST (test_protocol_case)
