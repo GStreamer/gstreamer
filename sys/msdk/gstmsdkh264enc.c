@@ -46,12 +46,13 @@ enum
   PROP_CABAC = GST_MSDKENC_PROP_MAX,
   PROP_LOW_POWER,
   PROP_FRAME_PACKING,
+  PROP_RC_LA_DOWNSAMPLING,
 };
 
-#define PROP_CABAC_DEFAULT            TRUE
-#define PROP_LOWPOWER_DEFAULT         FALSE
-#define PROP_FRAME_PACKING_DEFAULT    -1
-
+#define PROP_CABAC_DEFAULT              TRUE
+#define PROP_LOWPOWER_DEFAULT           FALSE
+#define PROP_FRAME_PACKING_DEFAULT      -1
+#define PROP_RC_LA_DOWNSAMPLING_DEFAULT MFX_LOOKAHEAD_DS_UNKNOWN
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -81,6 +82,26 @@ gst_msdkh264enc_frame_packing_get_type (void)
   }
 
   return format_type;
+}
+
+static GType
+gst_msdkh264enc_rc_lookahead_ds_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_LOOKAHEAD_DS_UNKNOWN, "SDK desides what to do", "default"},
+    {MFX_LOOKAHEAD_DS_OFF, "No downsampling", "off"},
+    {MFX_LOOKAHEAD_DS_2x, "Down sample 2-times before estimation", "2x"},
+    {MFX_LOOKAHEAD_DS_4x, "Down sample 4-times before estimation", "4x"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type =
+        g_enum_register_static ("GstMsdkH264RCLookAheadDownsampling", values);
+  }
+  return type;
 }
 
 #define gst_msdkh264enc_parent_class parent_class
@@ -282,6 +303,10 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
 
   gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & thiz->option);
 
+  if (encoder->rate_control == MFX_RATECONTROL_LA ||
+      encoder->rate_control == MFX_RATECONTROL_LA_HRD ||
+      encoder->rate_control == MFX_RATECONTROL_LA_ICQ)
+    encoder->option2.LookAheadDS = thiz->lookahead_ds;
   return TRUE;
 }
 
@@ -397,6 +422,9 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_FRAME_PACKING:
       thiz->frame_packing = g_value_get_enum (value);
       break;
+    case PROP_RC_LA_DOWNSAMPLING:
+      thiz->lookahead_ds = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -424,6 +452,9 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_FRAME_PACKING:
       g_value_set_enum (value, thiz->frame_packing);
+      break;
+    case PROP_RC_LA_DOWNSAMPLING:
+      g_value_set_enum (value, thiz->lookahead_ds);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -470,12 +501,17 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           gst_msdkh264enc_frame_packing_get_type (), PROP_FRAME_PACKING_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RC_LA_DOWNSAMPLING,
+      g_param_spec_enum ("rc-lookahead-ds", "Look-ahead Downsampling",
+          "Down sampling mode in look ahead bitrate control",
+          gst_msdkh264enc_rc_lookahead_ds_get_type (),
+          PROP_RC_LA_DOWNSAMPLING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
-      "Intel MSDK H264 encoder",
-      "Codec/Encoder/Video",
+      "Intel MSDK H264 encoder", "Codec/Encoder/Video",
       "H264 video encoder based on Intel Media SDK",
       "Josep Torra <jtorra@oblong.com>");
-
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
@@ -485,4 +521,5 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->cabac = PROP_CABAC_DEFAULT;
   thiz->lowpower = PROP_LOWPOWER_DEFAULT;
   thiz->frame_packing = PROP_FRAME_PACKING_DEFAULT;
+  thiz->lookahead_ds = PROP_RC_LA_DOWNSAMPLING_DEFAULT;
 }
