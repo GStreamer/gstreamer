@@ -327,6 +327,7 @@ gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 
   g_clear_object (&plugin->sinkpad_allocator);
   g_clear_object (&plugin->srcpad_allocator);
+  g_clear_object (&plugin->other_srcpad_allocator);
 
   gst_caps_replace (&plugin->srcpad_caps, NULL);
   gst_video_info_init (&plugin->srcpad_info);
@@ -929,10 +930,24 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   num_allocators = gst_query_get_n_allocation_params (query);
   for (i = 0; i < num_allocators; i++) {
     GstAllocator *allocator = NULL;
+    GstAllocationParams params;
 
-    gst_query_parse_nth_allocation_param (query, i, &allocator, NULL);
+    gst_query_parse_nth_allocation_param (query, i, &allocator, &params);
     if (!allocator)
       continue;
+
+    /* Let's keep the the first allocator if it is not VA-API. It
+     * might be used if it is required to copy the output frame to a
+     * new buffer */
+    if (i == 0
+        && g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) != 0) {
+      if (plugin->other_srcpad_allocator)
+        gst_object_unref (plugin->other_srcpad_allocator);
+      plugin->other_srcpad_allocator = allocator;
+      plugin->other_allocator_params = params;
+      continue;
+    }
+
     if (g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) == 0) {
       GST_DEBUG_OBJECT (plugin, "found vaapi allocator in query %"
           GST_PTR_FORMAT, allocator);

@@ -147,6 +147,8 @@ struct _GstVaapiPluginBase
   gboolean srcpad_can_dmabuf;
 
   gboolean enable_direct_rendering;
+  GstAllocator *other_srcpad_allocator;
+  GstAllocationParams other_allocator_params;
 };
 
 struct _GstVaapiPluginBaseClass
