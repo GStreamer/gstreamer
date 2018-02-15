@@ -85,6 +85,8 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (&GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_info)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_can_dmabuf)
+#define GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->copy_output_frame)
 
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
@@ -147,8 +149,10 @@ struct _GstVaapiPluginBase
   gboolean srcpad_can_dmabuf;
 
   gboolean enable_direct_rendering;
+
   GstAllocator *other_srcpad_allocator;
   GstAllocationParams other_allocator_params;
+  gboolean copy_output_frame;
 };
 
 struct _GstVaapiPluginBaseClass

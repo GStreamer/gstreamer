@@ -1015,6 +1015,12 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
 
   g_clear_object (&plugin->srcpad_buffer_pool);
   plugin->srcpad_buffer_pool = pool;
+
+  /* if downstream doesn't support GstVideoMeta, and the negotiated
+   * caps are raw video, and the used allocator is the VA-API one, we
+   * should copy the VA-API frame into a dumb buffer */
+  plugin->copy_output_frame = gst_vaapi_video_buffer_pool_copy_buffer (pool);
+
   return TRUE;
 
   /* ERRORS */
