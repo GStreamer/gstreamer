@@ -881,6 +881,7 @@ main (int argc, char *argv[])
 
   /* cleanup and exit */
   gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (sink);
   gst_object_unref (pipeline);
 
   exit (0);
