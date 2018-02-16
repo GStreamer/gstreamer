@@ -1557,6 +1557,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DEFAULT_VERSION:
       g_value_set_enum (value, rtspsrc->default_version);
       break;
+    case PROP_BACKCHANNEL:
+      g_value_set_enum (value, rtspsrc->backchannel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
