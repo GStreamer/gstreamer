@@ -64,6 +64,7 @@ base_tests = [
   [['libs/isoff.c'], not xml2_dep.found(), [gstisoff_dep, xml2_dep]],
   [['libs/mpegts.c'], false, [gstmpegts_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
+  [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
   [['libs/player.c'], not enable_gst_player_tests, [gstplayer_dep]],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],

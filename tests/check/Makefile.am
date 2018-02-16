@@ -285,6 +285,7 @@ check_PROGRAMS = \
 	libs/h264parser \
 	libs/h265parser \
 	libs/vp8parser \
+	libs/planaraudioadapter \
 	$(check_uvch264) \
 	libs/vc1parser \
 	$(check_x265enc) \
@@ -589,6 +590,12 @@ elements_msdk_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS
 elements_msdk_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
 elements_msdk_SOURCES = elements/msdkh264enc.c
 
+libs_planaraudioadapter_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstbadaudio-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_AUDIO_LIBS) $(LDADD)
+libs_planaraudioadapter_CFLAGS = \
+	$(GST_PLUGINS_BASE_CLAGS) $(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 distclean-local-orc:
 	rm -rf orc
