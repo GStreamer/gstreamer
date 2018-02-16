@@ -168,20 +168,29 @@ gst_srt_client_sink_start (GstBaseSink * sink)
 }
 
 static gboolean
+send_buffer_internal (GstSRTBaseSink * sink,
+    const GstMapInfo * mapinfo, gpointer user_data)
+{
+  SRTSOCKET sock = GPOINTER_TO_INT (user_data);
+
+  if (srt_sendmsg2 (sock, (char *) mapinfo->data, mapinfo->size,
+          0) == SRT_ERROR) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, NULL,
+        ("%s", srt_getlasterror_str ()));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_srt_client_sink_send_buffer (GstSRTBaseSink * sink,
     const GstMapInfo * mapinfo)
 {
   GstSRTClientSink *self = GST_SRT_CLIENT_SINK (sink);
   GstSRTClientSinkPrivate *priv = GST_SRT_CLIENT_SINK_GET_PRIVATE (self);
 
-  if (srt_sendmsg2 (priv->sock, (char *) mapinfo->data, mapinfo->size,
-          0) == SRT_ERROR) {
-    GST_ELEMENT_ERROR (self, RESOURCE, WRITE, NULL,
-        ("%s", srt_getlasterror_str ()));
-    return FALSE;
-  }
-
-  return TRUE;
+  return send_buffer_internal (sink, mapinfo, GINT_TO_POINTER (priv->sock));
 }
 
 static gboolean
