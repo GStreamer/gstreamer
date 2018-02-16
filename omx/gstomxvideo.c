@@ -81,6 +81,18 @@ gst_omx_video_get_format_from_omx (OMX_COLOR_FORMATTYPE omx_colorformat)
     case OMX_COLOR_Format24bitBGR888:
       format = GST_VIDEO_FORMAT_BGR;
       break;
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      /* Formats defined in extensions have their own enum so disable to -Wswitch warning */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+    case OMX_ALG_COLOR_FormatYUV420SemiPlanar10bitPacked:
+      format = GST_VIDEO_FORMAT_NV12_10LE32;
+      break;
+    case OMX_ALG_COLOR_FormatYUV422SemiPlanar10bitPacked:
+      format = GST_VIDEO_FORMAT_NV16_10LE32;
+      break;
+#pragma GCC diagnostic pop
+#endif
     default:
       format = GST_VIDEO_FORMAT_UNKNOWN;
       break;

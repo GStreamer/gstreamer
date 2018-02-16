@@ -1796,6 +1796,13 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
   switch (port_def.format.video.eColorFormat) {
     case OMX_COLOR_FormatYUV420Planar:
     case OMX_COLOR_FormatYUV420PackedPlanar:
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      /* Formats defined in extensions have their own enum so disable to -Wswitch warning */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+    case OMX_ALG_COLOR_FormatYUV420SemiPlanar10bitPacked:
+#pragma GCC diagnostic pop
+#endif
       port_def.nBufferSize =
           (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
           2 * ((port_def.format.video.nStride / 2) *
@@ -1807,6 +1814,19 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
       port_def.nBufferSize =
           (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
           (port_def.format.video.nStride *
+          ((port_def.format.video.nFrameHeight + 1) / 2));
+      break;
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      /* Formats defined in extensions have their own enum so disable to -Wswitch warning */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+    case OMX_ALG_COLOR_FormatYUV422SemiPlanar10bitPacked:
+#pragma GCC diagnostic pop
+#endif
+      port_def.nBufferSize =
+          (port_def.format.video.nStride * port_def.format.video.nFrameHeight) +
+          2 * (port_def.format.video.nStride *
           ((port_def.format.video.nFrameHeight + 1) / 2));
       break;
 
@@ -2248,7 +2268,7 @@ gst_omx_video_enc_flush (GstVideoEncoder * encoder)
 
 static gboolean
 gst_omx_video_enc_nv12_manual_copy (GstOMXVideoEnc * self, GstBuffer * inbuf,
-    GstOMXBuffer * outbuf)
+    GstOMXBuffer * outbuf, gboolean variant_10)
 {
   GstVideoInfo *info = &self->input_state->info;
   OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
@@ -2283,6 +2303,10 @@ gst_omx_video_enc_nv12_manual_copy (GstOMXVideoEnc * self, GstBuffer * inbuf,
     src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
     height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
     width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
+
+    if (variant_10)
+      /* Need ((width + 2) / 3) 32-bits words */
+      width = (width + 2) / 3 * 4;
 
     if (dest + dest_stride * height >
         outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
@@ -2453,7 +2477,11 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       break;
     }
     case GST_VIDEO_FORMAT_NV12:
-      ret = gst_omx_video_enc_nv12_manual_copy (self, inbuf, outbuf);
+      ret = gst_omx_video_enc_nv12_manual_copy (self, inbuf, outbuf, FALSE);
+      break;
+    case GST_VIDEO_FORMAT_NV12_10LE32:
+    case GST_VIDEO_FORMAT_NV16_10LE32:
+      ret = gst_omx_video_enc_nv12_manual_copy (self, inbuf, outbuf, TRUE);
       break;
     default:
       GST_ERROR_OBJECT (self, "Unsupported format");
@@ -2899,6 +2927,8 @@ filter_supported_formats (GList * negotiation_map)
     switch (nmap->format) {
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV12_10LE32:
+      case GST_VIDEO_FORMAT_NV16_10LE32:
         //case GST_VIDEO_FORMAT_ABGR:
         //case GST_VIDEO_FORMAT_ARGB:
         cur = g_list_next (cur);

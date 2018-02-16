@@ -628,6 +628,22 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
         dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo);
         dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo);
         break;
+      case GST_VIDEO_FORMAT_NV12_10LE32:
+        /* Need ((width + 2) / 3) 32-bits words */
+        dst_width[0] = (GST_VIDEO_INFO_WIDTH (vinfo) + 2) / 3 * 4;
+        dst_width[1] = dst_width[0];
+        src_stride[1] = nstride;
+        src_size[1] = src_stride[1] * nslice / 2;
+        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        break;
+      case GST_VIDEO_FORMAT_NV16_10LE32:
+        /* Need ((width + 2) / 3) 32-bits words */
+        dst_width[0] = (GST_VIDEO_INFO_WIDTH (vinfo) + 2) / 3 * 4;
+        dst_width[1] = dst_width[0];
+        src_stride[1] = nstride;
+        src_size[1] = src_stride[1] * nslice;
+        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo);
+        break;
       default:
         g_assert_not_reached ();
         break;
