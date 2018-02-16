@@ -4057,6 +4057,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             GST_BUFFER_PTS (sub) -= stream->codec_delay;
           } else {
             GST_BUFFER_PTS (sub) = 0;
+
+            /* Opus GstAudioClippingMeta units are scaled by 48000/sample_rate.
+               That is, if a Opus track has audio encoded at 24000 Hz and 132
+               samples need to be clipped, GstAudioClippingMeta.start will be
+               set to 264. (This is also the case for buffer offsets.)
+               Opus sample rates are always divisors of 48000 Hz, which is the
+               maximum allowed sample rate. */
             start_clip =
                 gst_util_uint64_scale_round (stream->codec_delay, 48000,
                 GST_SECOND);
