@@ -2296,7 +2296,7 @@ AG_GST_CHECK_FEATURE(WEBRTCDSP, [WebRTC Audio Processing], webrtcdsp, [
 dnl *** WebRTC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WEBRTC, true)
 AG_GST_CHECK_FEATURE(WEBRTC, [WebRTC], webrtc, [
-  PKG_CHECK_MODULES(NICE, nice >= 0.1, [
+  PKG_CHECK_MODULES(NICE, nice >= 0.1.14, [
     HAVE_WEBRTC="yes" ], [
     HAVE_WEBRTC="no"
   ])
