@@ -205,7 +205,7 @@ gst_srt_client_sink_stop (GstBaseSink * sink)
 
   g_clear_object (&priv->sockaddr);
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->stop (sink);
 }
 
 static void

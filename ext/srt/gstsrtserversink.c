@@ -425,7 +425,6 @@ gst_srt_server_sink_stop (GstBaseSink * sink)
 {
   GstSRTServerSink *self = GST_SRT_SERVER_SINK (sink);
   GstSRTServerSinkPrivate *priv = GST_SRT_SERVER_SINK_GET_PRIVATE (self);
-  gboolean ret = TRUE;
   GList *clients;
 
   GST_DEBUG_OBJECT (self, "closing client sockets");
@@ -457,7 +456,7 @@ gst_srt_server_sink_stop (GstBaseSink * sink)
 
   g_clear_pointer (&priv->context, g_main_context_unref);
 
-  return ret;
+  return GST_BASE_SINK_CLASS (parent_class)->stop (sink);
 }
 
 static gboolean

@@ -129,6 +129,12 @@ gst_srt_base_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_srt_base_sink_stop (GstBaseSink * sink)
+{
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_srt_base_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
@@ -197,6 +203,7 @@ gst_srt_base_sink_class_init (GstSRTBaseSinkClass * klass)
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
+  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_srt_base_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_srt_base_sink_render);
 }
 
