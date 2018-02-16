@@ -103,6 +103,7 @@ typedef struct
 {
   int sock;
   GSocketAddress *sockaddr;
+  gboolean sent_headers;
 } SRTClient;
 
 static SRTClient *
@@ -418,6 +419,12 @@ gst_srt_server_sink_send_buffer (GstSRTBaseSink * sink,
     SRTClient *client = clients->data;
     clients = clients->next;
 
+    if (!client->sent_headers) {
+      if (!gst_srt_base_sink_send_headers (sink, send_buffer_internal, client))
+        goto err;
+
+      client->sent_headers = TRUE;
+    }
 
     if (!send_buffer_internal (sink, mapinfo, client))
       goto err;

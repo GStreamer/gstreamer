@@ -45,6 +45,7 @@ struct _GstSRTBaseSink {
   GstBaseSink parent;
 
   GstUri *uri;
+  GstBufferList *headers;
   gint latency;
   gchar *passphrase;
   gint key_length;
@@ -64,6 +65,12 @@ struct _GstSRTBaseSinkClass {
 
 GST_EXPORT
 GType gst_srt_base_sink_get_type (void);
+
+typedef gboolean (*GstSRTBaseSinkSendCallback) (GstSRTBaseSink *sink,
+    const GstMapInfo *mapinfo, gpointer user_data);
+
+gboolean gst_srt_base_sink_send_headers (GstSRTBaseSink *sink,
+    GstSRTBaseSinkSendCallback send_cb, gpointer user_data);
 
 GstStructure * gst_srt_base_sink_get_stats (GSocketAddress *sockaddr,
     SRTSOCKET sock);

@@ -68,6 +68,8 @@ struct _GstSRTClientSinkPrivate
   gboolean rendez_vous;
   gchar *bind_address;
   guint16 bind_port;
+
+  gboolean sent_headers;
 };
 
 #define GST_SRT_CLIENT_SINK_GET_PRIVATE(obj)  \
@@ -190,6 +192,14 @@ gst_srt_client_sink_send_buffer (GstSRTBaseSink * sink,
   GstSRTClientSink *self = GST_SRT_CLIENT_SINK (sink);
   GstSRTClientSinkPrivate *priv = GST_SRT_CLIENT_SINK_GET_PRIVATE (self);
 
+  if (!priv->sent_headers) {
+    if (!gst_srt_base_sink_send_headers (sink, send_buffer_internal,
+            GINT_TO_POINTER (priv->sock)))
+      return FALSE;
+
+    priv->sent_headers = TRUE;
+  }
+
   return send_buffer_internal (sink, mapinfo, GINT_TO_POINTER (priv->sock));
 }
 
@@ -213,6 +223,8 @@ gst_srt_client_sink_stop (GstBaseSink * sink)
   }
 
   g_clear_object (&priv->sockaddr);
+
+  priv->sent_headers = FALSE;
 
   return GST_BASE_SINK_CLASS (parent_class)->stop (sink);
 }
