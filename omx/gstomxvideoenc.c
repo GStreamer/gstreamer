@@ -2247,6 +2247,70 @@ gst_omx_video_enc_flush (GstVideoEncoder * encoder)
 }
 
 static gboolean
+gst_omx_video_enc_nv12_manual_copy (GstOMXVideoEnc * self, GstBuffer * inbuf,
+    GstOMXBuffer * outbuf)
+{
+  GstVideoInfo *info = &self->input_state->info;
+  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
+  GstVideoFrame frame;
+  gint i, j, height, width, dest_height;
+  guint8 *src, *dest;
+  gint src_stride, dest_stride;
+
+  outbuf->omx_buf->nFilledLen = 0;
+
+  if (!gst_video_frame_map (&frame, info, inbuf, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Invalid input buffer size");
+    return FALSE;
+  }
+  dest_stride = port_def->format.video.nStride;
+
+  for (i = 0; i < 2; i++) {
+    src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
+    /* XXX: Try this if no stride was set */
+    if (dest_stride == 0)
+      dest_stride = src_stride;
+
+    dest = outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset;
+    if (i == 1)
+      dest +=
+          port_def->format.video.nSliceHeight * port_def->format.video.nStride;
+
+    if (i == 0)
+      dest_height = port_def->format.video.nSliceHeight;
+    else
+      dest_height = port_def->format.video.nSliceHeight / 2;
+    src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
+    height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
+
+    if (dest + dest_stride * height >
+        outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
+      gst_video_frame_unmap (&frame);
+      GST_ERROR_OBJECT (self, "Invalid output buffer size");
+      gst_video_frame_unmap (&frame);
+      return FALSE;
+    }
+
+    for (j = 0; j < height; j++) {
+      memcpy (dest, src, width);
+      outbuf->omx_buf->nFilledLen += dest_stride;
+      src += src_stride;
+      dest += dest_stride;
+    }
+    for (; j < dest_height; j++) {
+      memset (dest, 0, dest_stride);
+      outbuf->omx_buf->nFilledLen += dest_stride;
+      src += src_stride;
+      dest += dest_stride;
+    }
+  }
+
+  gst_video_frame_unmap (&frame);
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
     GstOMXBuffer * outbuf)
 {
@@ -2388,65 +2452,9 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       ret = TRUE;
       break;
     }
-    case GST_VIDEO_FORMAT_NV12:{
-      gint i, j, height, width, dest_height;
-      guint8 *src, *dest;
-      gint src_stride, dest_stride;
-
-      outbuf->omx_buf->nFilledLen = 0;
-
-      if (!gst_video_frame_map (&frame, info, inbuf, GST_MAP_READ)) {
-        GST_ERROR_OBJECT (self, "Invalid input buffer size");
-        ret = FALSE;
-        goto done;
-      }
-      dest_stride = port_def->format.video.nStride;
-
-      for (i = 0; i < 2; i++) {
-        src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
-        /* XXX: Try this if no stride was set */
-        if (dest_stride == 0)
-          dest_stride = src_stride;
-
-        dest = outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset;
-        if (i == 1)
-          dest +=
-              port_def->format.video.nSliceHeight *
-              port_def->format.video.nStride;
-
-        if (i == 0)
-          dest_height = port_def->format.video.nSliceHeight;
-        else
-          dest_height = port_def->format.video.nSliceHeight / 2;
-        src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
-        width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
-
-        if (dest + dest_stride * height >
-            outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
-          gst_video_frame_unmap (&frame);
-          GST_ERROR_OBJECT (self, "Invalid output buffer size");
-          ret = FALSE;
-          goto done;
-        }
-
-        for (j = 0; j < height; j++) {
-          memcpy (dest, src, width);
-          outbuf->omx_buf->nFilledLen += dest_stride;
-          src += src_stride;
-          dest += dest_stride;
-        }
-        for (; j < dest_height; j++) {
-          memset (dest, 0, dest_stride);
-          outbuf->omx_buf->nFilledLen += dest_stride;
-          src += src_stride;
-          dest += dest_stride;
-        }
-      }
-      gst_video_frame_unmap (&frame);
-      ret = TRUE;
+    case GST_VIDEO_FORMAT_NV12:
+      ret = gst_omx_video_enc_nv12_manual_copy (self, inbuf, outbuf);
       break;
-    }
     default:
       GST_ERROR_OBJECT (self, "Unsupported format");
       goto done;
