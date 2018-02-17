@@ -593,9 +593,32 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
     if (decode->has_texture_upload_meta)
       gst_buffer_ensure_texture_upload_meta (out_frame->output_buffer);
 #endif
+
+    /* Generate a system allocated output buffer if downstream doesn't
+     * support GstVideoMeta */
+    if (GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME (vdec)) {
+      GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (vdec);
+      GstBuffer *sys_buf, *va_buf;
+
+      va_buf = out_frame->output_buffer;
+      sys_buf = gst_buffer_new_allocate (plugin->other_srcpad_allocator,
+          GST_VIDEO_INFO_SIZE (&plugin->srcpad_info),
+          &plugin->other_allocator_params);
+      if (!sys_buf)
+        goto error_no_sys_buffer;
+
+      if (!gst_vaapi_plugin_copy_va_buffer (plugin, va_buf, sys_buf)) {
+        gst_buffer_unref (sys_buf);
+        goto error_cannot_copy;
+      }
+
+      gst_buffer_replace (&out_frame->output_buffer, sys_buf);
+      gst_buffer_unref (sys_buf);
+    }
   }
 
   if (decode->in_segment.rate < 0.0
+      && !GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME (vdec)
       && !GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (out_frame)) {
     GST_TRACE_OBJECT (decode, "drop frame in reverse playback");
     gst_video_decoder_release_frame (GST_VIDEO_DECODER (decode), out_frame);
@@ -625,6 +648,22 @@ error_get_meta:
     GST_ELEMENT_ERROR (vdec, STREAM, FAILED,
         ("Failed to get vaapi video meta attached to video buffer"),
         ("Failed to get vaapi video meta attached to video buffer"));
+    gst_video_decoder_drop_frame (vdec, out_frame);
+    return GST_FLOW_ERROR;
+  }
+error_no_sys_buffer:
+  {
+    GST_ELEMENT_ERROR (vdec, STREAM, FAILED,
+        ("Failed to create system allocated buffer"),
+        ("Failed to create system allocated buffer"));
+    gst_video_decoder_drop_frame (vdec, out_frame);
+    return GST_FLOW_ERROR;
+  }
+error_cannot_copy:
+  {
+    GST_ELEMENT_ERROR (vdec, STREAM, FAILED,
+        ("Failed to copy system allocated buffer"),
+        ("Failed to copy system allocated buffer"));
     gst_video_decoder_drop_frame (vdec, out_frame);
     return GST_FLOW_ERROR;
   }
