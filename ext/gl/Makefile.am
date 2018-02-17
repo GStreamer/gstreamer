@@ -147,6 +147,7 @@ libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/allocators/libgstallocators-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \
