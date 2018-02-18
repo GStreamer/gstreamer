@@ -33,4 +33,8 @@ EXTRA_DIST = \
 	meson.build \
 	meson_options.txt \
 	config.h.meson \
-	scripts/pythondetector
+	pygst.py.in \
+	scripts/pythondetector \
+	examples/plugins/python/sinkelement.py \
+	examples/plugins/python/identity.py \
+	examples/helloworld.py

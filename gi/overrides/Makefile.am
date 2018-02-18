@@ -9,8 +9,10 @@ pygioverrides_PYTHON = Gst.py GstPbutils.py
 pygioverridesexecdir = $(PYGI_OVERRIDES_DIR)
 
 EXTRA_DIST = \
+	__init__.py \
 	meson.build \
-	Gst.py
+	Gst.py \
+	GstPbutils.py
 
 AM_CPPFLAGS = $(PYTHON_INCLUDES)
 
