@@ -186,6 +186,9 @@ dnl GLib is required
 GLIB_REQ=2.40.0
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
+dnl Needed by plugins that use g_module_*() API
+PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
+
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)
