@@ -2423,10 +2423,10 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
       /* Some sanity checking */
       if ((minfo.data[0] & 0x01) != 0x01) {
-        GST_ERROR_OBJECT (vc1parse,
+        GST_WARNING_OBJECT (vc1parse,
             "Invalid binding byte for VC1 advanced profile ASF header");
-        gst_buffer_unmap (codec_data, &minfo);
-        return FALSE;
+        /* stay relax on the validation, it's quite minor to set the reserved
+         * bit to 0 instead of 1, also see bug #793551 */
       }
 
       start_code = GST_READ_UINT32_BE (minfo.data + 1);
