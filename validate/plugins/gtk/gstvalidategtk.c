@@ -181,8 +181,8 @@ _create_keyboard_events (GstValidateAction * action,
       GdkKeymapKey *kmaps;
       guint keyval = gdk_unicode_to_keyval (string[i]);
 
-      gdk_keymap_get_entries_for_keyval (gdk_keymap_get_default (),
-          keyval, &kmaps, &n_keys);
+      gdk_keymap_get_entries_for_keyval (gdk_keymap_get_for_display
+          (gdk_display_get_default ()), keyval, &kmaps, &n_keys);
 
       events =
           g_list_append (events, _create_key_event (window, etype, keyval,
