@@ -6,11 +6,14 @@ tests =	\
 	test_types.py
 
 EXTRA_DIST = \
-	meson.build \
 	__init__.py \
+	cleanup.py \
 	common.py \
-	runtests.py \
+	gstpython.supp \
+	meson.build \
 	overrides_hack.py \
+	python.supp \
+	runtests.py \
 	$(tests)
 
 clean-local:
