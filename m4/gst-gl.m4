@@ -991,7 +991,6 @@ AC_SUBST(GRAPHENE_LIBS)
 AC_SUBST(GRAPHENE_CFLAGS)
 
 dnl Needed by plugins that use g_module_*() API
-dnl FIXME: probably not needed because AG_GST_CHECK_GLIB already includes it?
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
 
 dnl libpng is optional
