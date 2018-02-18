@@ -54,6 +54,7 @@ struct _GstMonoscope
   GstBufferPool *pool;
 
   GstSegment   segment;
+  gboolean     segment_pending;
 
   /* QoS stuff *//* with LOCK */
   gdouble      proportion;

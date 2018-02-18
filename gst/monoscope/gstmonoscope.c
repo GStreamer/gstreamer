@@ -163,6 +163,7 @@ gst_monoscope_reset (GstMonoscope * monoscope)
 
   gst_adapter_clear (monoscope->adapter);
   gst_segment_init (&monoscope->segment, GST_FORMAT_UNDEFINED);
+  monoscope->segment_pending = FALSE;
 
   GST_OBJECT_LOCK (monoscope);
   monoscope->proportion = 1.0;
@@ -345,6 +346,12 @@ gst_monoscope_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     goto out;
   }
 
+  if (monoscope->segment_pending) {
+    gst_pad_push_event (monoscope->srcpad,
+        gst_event_new_segment (&monoscope->segment));
+    monoscope->segment_pending = FALSE;
+  }
+
   /* don't try to combine samples from discont buffer */
   if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (monoscope->adapter);
@@ -470,7 +477,12 @@ gst_monoscope_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * we can do QoS */
       gst_event_copy_segment (event, &monoscope->segment);
 
-      res = gst_pad_push_event (monoscope->srcpad, event);
+      /* We forward the event from the chain function after caps are
+       * negotiated. Otherwise we would potentially break the event order and
+       * send the segment event before the caps event */
+      monoscope->segment_pending = TRUE;
+      gst_event_unref (event);
+      res = TRUE;
       break;
     }
     case GST_EVENT_CAPS:
