@@ -30,6 +30,7 @@ noinst_HEADERS = \
 	gstmsdkcontextutil.h \
 	gstmsdksystemmemory.h \
 	gstmsdkvideomemory.h \
+	gstmsdkallocator.h \
 	gstmsdkbufferpool.h \
 	gstmsdkh264dec.h \
 	gstmsdkh264enc.h \
@@ -72,6 +73,12 @@ libgstmsdk_la_CFLAGS += \
 	$(LIBVA_DRM_CFLAGS)
 libgstmsdk_la_LIBADD += \
 	$(LIBVA_DRM_LIBS)
+noinst_HEADERS += \
+	msdk_libva.h
 endif
+
+# TODO: add support for windows compilation
+EXTRA_DIST = \
+	msdk_d3d.c
 
 libgstmsdk_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
