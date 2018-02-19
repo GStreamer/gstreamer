@@ -79,7 +79,6 @@ gst_rtsp_onvif_media_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
     GstCaps *caps = NULL;
     GstRTSPProfile profiles;
     guint mask;
-    gboolean res;
     GstPad *sinkpad = NULL;
     guint n_caps, j;
 
