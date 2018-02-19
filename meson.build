@@ -294,6 +294,10 @@ else
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'videotestsrc')
 endif
 
+if host_system == 'darwin'
+  cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
+endif
+
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
