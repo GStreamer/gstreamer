@@ -8,7 +8,7 @@ srt_sources = [
   'gstsrtserversink.c',
 ]
 
-srt_dep = dependency('libsrt', required : false)
+srt_dep = dependency('srt', required : false)
 
 if not srt_dep.found() and cc.has_header_symbol('srt/srt.h', 'srt_startup')
   srt_dep = cc.find_library('srt', required : false)
