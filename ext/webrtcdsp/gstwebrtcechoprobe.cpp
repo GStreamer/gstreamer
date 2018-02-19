@@ -49,6 +49,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
         "rate = (int) { 48000, 32000, 16000, 8000 }, "
+        "channels = (int) [1, MAX];"
+        "audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) non-interleaved, "
+        "rate = (int) { 48000, 32000, 16000, 8000 }, "
         "channels = (int) [1, MAX]")
     );
 
@@ -59,6 +64,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
+        "rate = (int) { 48000, 32000, 16000, 8000 }, "
+        "channels = (int) [1, MAX];"
+        "audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) non-interleaved, "
         "rate = (int) { 48000, 32000, 16000, 8000 }, "
         "channels = (int) [1, MAX]")
     );
@@ -80,11 +90,17 @@ gst_webrtc_echo_probe_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   GST_WEBRTC_ECHO_PROBE_LOCK (self);
 
   self->info = *info;
+  self->interleaved = (info->layout == GST_AUDIO_LAYOUT_INTERLEAVED);
+
+  if (!self->interleaved)
+    gst_planar_audio_adapter_configure (self->padapter, info);
 
   /* WebRTC library works with 10ms buffers, compute once this size */
-  self->period_size = info->bpf * info->rate / 100;
+  self->period_samples = info->rate / 100;
+  self->period_size = self->period_samples * info->bpf;
 
-  if ((webrtc::AudioFrame::kMaxDataSizeSamples * 2) < self->period_size)
+  if (self->interleaved &&
+      (webrtc::AudioFrame::kMaxDataSizeSamples * 2) < self->period_size)
     goto period_too_big;
 
   GST_WEBRTC_ECHO_PROBE_UNLOCK (self);
@@ -107,6 +123,7 @@ gst_webrtc_echo_probe_stop (GstBaseTransform * btrans)
 
   GST_WEBRTC_ECHO_PROBE_LOCK (self);
   gst_adapter_clear (self->adapter);
+  gst_planar_audio_adapter_clear (self->padapter);
   GST_WEBRTC_ECHO_PROBE_UNLOCK (self);
 
   return TRUE;
@@ -163,11 +180,24 @@ gst_webrtc_echo_probe_transform_ip (GstBaseTransform * btrans,
   /* Moves the buffer timestamp to be in Running time */
   GST_BUFFER_PTS (newbuf) = gst_segment_to_running_time (&btrans->segment,
       GST_FORMAT_TIME, GST_BUFFER_PTS (buffer));
-  gst_adapter_push (self->adapter, newbuf);
 
-  if (gst_adapter_available (self->adapter) > MAX_ADAPTER_SIZE)
-    gst_adapter_flush (self->adapter,
-        gst_adapter_available (self->adapter) - MAX_ADAPTER_SIZE);
+  if (self->interleaved) {
+    gst_adapter_push (self->adapter, newbuf);
+
+    if (gst_adapter_available (self->adapter) > MAX_ADAPTER_SIZE)
+      gst_adapter_flush (self->adapter,
+          gst_adapter_available (self->adapter) - MAX_ADAPTER_SIZE);
+  } else {
+    gsize available;
+
+    gst_planar_audio_adapter_push (self->padapter, newbuf);
+    available =
+        gst_planar_audio_adapter_available (self->padapter) * self->info.bpf;
+    if (available > MAX_ADAPTER_SIZE)
+      gst_planar_audio_adapter_flush (self->padapter,
+          (available - MAX_ADAPTER_SIZE) / self->info.bpf);
+  }
+
   GST_WEBRTC_ECHO_PROBE_UNLOCK (self);
 
   return GST_FLOW_OK;
@@ -183,7 +213,9 @@ gst_webrtc_echo_probe_finalize (GObject * object)
   G_UNLOCK (gst_aec_probes);
 
   gst_object_unref (self->adapter);
+  gst_object_unref (self->padapter);
   self->adapter = NULL;
+  self->padapter = NULL;
 
   G_OBJECT_CLASS (gst_webrtc_echo_probe_parent_class)->finalize (object);
 }
@@ -192,6 +224,7 @@ static void
 gst_webrtc_echo_probe_init (GstWebrtcEchoProbe * self)
 {
   self->adapter = gst_adapter_new ();
+  self->padapter = gst_planar_audio_adapter_new ();
   gst_audio_info_init (&self->info);
   g_mutex_init (&self->lock);
 
@@ -268,7 +301,7 @@ gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe)
 
 gint
 gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
-    gpointer _frame)
+    gpointer _frame, GstBuffer ** buf)
 {
   webrtc::AudioFrame * frame = (webrtc::AudioFrame *) _frame;
   GstClockTimeDiff diff;
@@ -281,31 +314,39 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
       !GST_AUDIO_INFO_IS_VALID (&self->info))
     goto done;
 
+  if (self->interleaved)
+    avail = gst_adapter_available (self->adapter) / self->info.bpf;
+  else
+    avail = gst_planar_audio_adapter_available (self->padapter);
+
   /* In delay agnostic mode, just return 10ms of data */
   if (!GST_CLOCK_TIME_IS_VALID (rec_time)) {
-    avail = gst_adapter_available (self->adapter);
-
-    if (avail < self->period_size)
+    if (avail < self->period_samples)
       goto done;
 
-    size = self->period_size;
+    size = self->period_samples;
     skip = 0;
     offset = 0;
 
     goto copy;
   }
 
-  if (gst_adapter_available (self->adapter) == 0) {
+  if (avail == 0) {
     diff = G_MAXINT64;
   } else {
     GstClockTime play_time;
     guint64 distance;
 
-    play_time = gst_adapter_prev_pts (self->adapter, &distance);
+    if (self->interleaved) {
+      play_time = gst_adapter_prev_pts (self->adapter, &distance);
+      distance /= self->info.bpf;
+    } else {
+      play_time = gst_planar_audio_adapter_prev_pts (self->padapter, &distance);
+    }
 
     if (GST_CLOCK_TIME_IS_VALID (play_time)) {
-      play_time += gst_util_uint64_scale_int (distance / self->info.bpf,
-          GST_SECOND, self->info.rate);
+      play_time += gst_util_uint64_scale_int (distance, GST_SECOND,
+          self->info.rate);
       play_time += self->latency;
 
       diff = GST_CLOCK_DIFF (rec_time, play_time) / GST_MSECOND;
@@ -315,33 +356,91 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
     }
   }
 
-  avail = gst_adapter_available (self->adapter);
-
   if (diff > self->delay) {
-    skip = (diff - self->delay) * self->info.rate / 1000 * self->info.bpf;
-    skip = MIN (self->period_size, skip);
+    skip = (diff - self->delay) * self->info.rate / 1000;
+    skip = MIN (self->period_samples, skip);
     offset = 0;
   } else {
     skip = 0;
-    offset = (self->delay - diff) * self->info.rate / 1000 * self->info.bpf;
+    offset = (self->delay - diff) * self->info.rate / 1000;
     offset = MIN (avail, offset);
   }
 
-  size = MIN (avail - offset, self->period_size - skip);
-
-  if (size < self->period_size)
-    memset (frame->data_, 0, self->period_size);
+  size = MIN (avail - offset, self->period_samples - skip);
 
 copy:
-  if (size) {
-    gst_adapter_copy (self->adapter, (guint8 *) frame->data_ + skip,
-        offset, size);
-    gst_adapter_flush (self->adapter, offset + size);
+  if (self->interleaved) {
+    skip *= self->info.bpf;
+    offset *= self->info.bpf;
+    size *= self->info.bpf;
+
+    if (size < self->period_size)
+      memset (frame->data_, 0, self->period_size);
+
+    if (size) {
+      gst_adapter_copy (self->adapter, (guint8 *) frame->data_ + skip,
+          offset, size);
+      gst_adapter_flush (self->adapter, offset + size);
+    }
+  } else {
+    GstBuffer *ret, *taken, *tmp;
+
+    if (size) {
+      gst_planar_audio_adapter_flush (self->padapter, offset);
+
+      /* we need to fill silence at the beginning and/or the end of each
+       * channel plane in order to have exactly period_samples in the buffer */
+      if (size < self->period_samples) {
+        GstAudioMeta *meta;
+        gint bps = self->info.finfo->width / 8;
+        gsize padding = self->period_samples - (skip + size);
+        gint c;
+
+        taken = gst_planar_audio_adapter_take_buffer (self->padapter, size,
+            GST_MAP_READ);
+        meta = gst_buffer_get_audio_meta (taken);
+        ret = gst_buffer_new ();
+
+        for (c = 0; c < meta->info.channels; c++) {
+          /* need some silence at the beginning */
+          if (skip) {
+            tmp = gst_buffer_new_allocate (NULL, skip * bps, NULL);
+            gst_buffer_memset (tmp, 0, 0, skip * bps);
+            ret = gst_buffer_append (ret, tmp);
+          }
+
+          tmp = gst_buffer_copy_region (taken, GST_BUFFER_COPY_MEMORY,
+              meta->offsets[c], size * bps);
+          ret = gst_buffer_append (ret, tmp);
+
+          /* need some silence at the end */
+          if (padding) {
+            tmp = gst_buffer_new_allocate (NULL, padding * bps, NULL);
+            gst_buffer_memset (tmp, 0, 0, padding * bps);
+            ret = gst_buffer_append (ret, tmp);
+          }
+        }
+
+        gst_buffer_unref (taken);
+        gst_buffer_add_audio_meta (ret, &self->info, self->period_samples,
+            NULL);
+      } else {
+        ret = gst_planar_audio_adapter_take_buffer (self->padapter, size,
+          GST_MAP_READWRITE);
+      }
+    } else {
+      ret = gst_buffer_new_allocate (NULL, self->period_size, NULL);
+      gst_buffer_memset (ret, 0, 0, self->period_size);
+      gst_buffer_add_audio_meta (ret, &self->info, self->period_samples,
+          NULL);
+    }
+
+    *buf = ret;
   }
 
   frame->num_channels_ = self->info.channels;
   frame->sample_rate_hz_ = self->info.rate;
-  frame->samples_per_channel_ = self->period_size / self->info.bpf;
+  frame->samples_per_channel_ = self->period_samples;
 
   delay = self->delay;
 

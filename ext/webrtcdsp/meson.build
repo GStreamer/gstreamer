@@ -12,7 +12,7 @@ if webrtc_dep.found()
     cpp_args : gst_plugins_bad_args,
     link_args : noseh_link_args,
     include_directories : [configinc],
-    dependencies : [gstbase_dep, gstaudio_dep, webrtc_dep],
+    dependencies : [gstbase_dep, gstaudio_dep, gstbadaudio_dep, webrtc_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

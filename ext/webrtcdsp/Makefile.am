@@ -6,9 +6,12 @@ libgstwebrtcdsp_la_CXXFLAGS = \
 	$(GST_CXXFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
 	$(WEBRTCDSP_CFLAGS)
 libgstwebrtcdsp_la_LIBADD = \
 	-lgstaudio-$(GST_API_VERSION) \
+	$(top_builddir)/gst-libs/gst/audio/libgstbadaudio-$(GST_API_VERSION).la \
 	$(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(WEBRTCDSP_LIBS)

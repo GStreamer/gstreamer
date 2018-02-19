@@ -28,6 +28,9 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 
+#define GST_USE_UNSTABLE_API
+#include <gst/audio/gstplanaraudioadapter.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_WEBRTC_ECHO_PROBE            (gst_webrtc_echo_probe_get_type())
@@ -62,11 +65,14 @@ struct _GstWebrtcEchoProbe
   /* Protected by the lock */
   GstAudioInfo info;
   guint period_size;
+  guint period_samples;
   GstClockTime latency;
   gint delay;
+  gboolean interleaved;
 
   GstSegment segment;
   GstAdapter *adapter;
+  GstPlanarAudioAdapter *padapter;
 
   /* Private */
   gboolean acquired;
@@ -82,7 +88,7 @@ GType gst_webrtc_echo_probe_get_type (void);
 GstWebrtcEchoProbe *gst_webrtc_acquire_echo_probe (const gchar * name);
 void gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe);
 gint gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self,
-    GstClockTime rec_time, gpointer frame);
+    GstClockTime rec_time, gpointer frame, GstBuffer ** buf);
 
 G_END_DECLS
 #endif /* __GST_WEBRTC_ECHO_PROBE_H__ */

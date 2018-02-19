@@ -95,6 +95,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
         "rate = (int) { 48000, 32000, 16000, 8000 }, "
+        "channels = (int) [1, MAX];"
+        "audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) non-interleaved, "
+        "rate = (int) { 48000, 32000, 16000, 8000 }, "
         "channels = (int) [1, MAX]")
     );
 
@@ -105,6 +110,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
+        "rate = (int) { 48000, 32000, 16000, 8000 }, "
+        "channels = (int) [1, MAX];"
+        "audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) non-interleaved, "
         "rate = (int) { 48000, 32000, 16000, 8000 }, "
         "channels = (int) [1, MAX]")
     );
@@ -230,11 +240,14 @@ struct _GstWebrtcDsp
 
   /* Protected by the object lock */
   GstAudioInfo info;
+  gboolean interleaved;
   guint period_size;
+  guint period_samples;
   gboolean stream_has_voice;
 
   /* Protected by the stream lock */
   GstAdapter *adapter;
+  GstPlanarAudioAdapter *padapter;
   webrtc::AudioProcessing * apm;
 
   /* Protected by the object lock */
@@ -321,20 +334,35 @@ gst_webrtc_dsp_take_buffer (GstWebrtcDsp * self)
   GstBuffer *buffer;
   GstClockTime timestamp;
   guint64 distance;
+  gboolean at_discont;
 
-  timestamp = gst_adapter_prev_pts (self->adapter, &distance);
-  timestamp += gst_util_uint64_scale_int (distance / self->info.bpf,
-      GST_SECOND, self->info.rate);
+  if (self->interleaved) {
+    timestamp = gst_adapter_prev_pts (self->adapter, &distance);
+    distance /= self->info.bpf;
+  } else {
+    timestamp = gst_planar_audio_adapter_prev_pts (self->padapter, &distance);
+  }
 
-  buffer = gst_adapter_take_buffer (self->adapter, self->period_size);
+  timestamp += gst_util_uint64_scale_int (distance, GST_SECOND, self->info.rate);
+
+  if (self->interleaved) {
+    buffer = gst_adapter_take_buffer (self->adapter, self->period_size);
+    at_discont = (gst_adapter_pts_at_discont (self->adapter) == timestamp);
+  } else {
+    buffer = gst_planar_audio_adapter_take_buffer (self->padapter,
+        self->period_samples, GST_MAP_READWRITE);
+    at_discont =
+        (gst_planar_audio_adapter_pts_at_discont (self->padapter) == timestamp);
+  }
 
   GST_BUFFER_PTS (buffer) = timestamp;
   GST_BUFFER_DURATION (buffer) = 10 * GST_MSECOND;
 
-  if (gst_adapter_pts_at_discont (self->adapter) == timestamp && distance == 0) {
+  if (at_discont && distance == 0) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-  } else
+  } else {
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
+  }
 
   return buffer;
 }
@@ -346,6 +374,7 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
   GstWebrtcEchoProbe *probe = NULL;
   webrtc::AudioProcessing * apm;
   webrtc::AudioFrame frame;
+  GstBuffer *buf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   gint err, delay;
 
@@ -364,7 +393,7 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
     rec_time = GST_CLOCK_TIME_NONE;
 
 again:
-  delay = gst_webrtc_echo_probe_read (probe, rec_time, (gpointer) &frame);
+  delay = gst_webrtc_echo_probe_read (probe, rec_time, (gpointer) &frame, &buf);
   apm->set_stream_delay_ms (delay);
 
   if (delay < 0)
@@ -379,15 +408,31 @@ again:
     goto done;
   }
 
-  if ((err = apm->AnalyzeReverseStream (&frame)) < 0)
-    GST_WARNING_OBJECT (self, "Reverse stream analyses failed: %s.",
-        webrtc_error_to_string (err));
+  if (buf) {
+    webrtc::StreamConfig config (frame.sample_rate_hz_, frame.num_channels_,
+        false);
+    GstAudioBuffer abuf;
+    float * const * data;
+
+    gst_audio_buffer_map (&abuf, &self->info, buf, GST_MAP_READWRITE);
+    data = (float * const *) abuf.planes;
+    if ((err = apm->ProcessReverseStream (data, config, config, data)) < 0)
+      GST_WARNING_OBJECT (self, "Reverse stream analyses failed: %s.",
+          webrtc_error_to_string (err));
+    gst_audio_buffer_unmap (&abuf);
+    gst_buffer_replace (&buf, NULL);
+  } else {
+    if ((err = apm->AnalyzeReverseStream (&frame)) < 0)
+      GST_WARNING_OBJECT (self, "Reverse stream analyses failed: %s.",
+          webrtc_error_to_string (err));
+  }
 
   if (self->delay_agnostic)
       goto again;
 
 done:
   gst_object_unref (probe);
+  gst_buffer_replace (&buf, NULL);
 
   return ret;
 }
@@ -418,23 +463,34 @@ static GstFlowReturn
 gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
     GstBuffer * buffer)
 {
-  GstMapInfo info;
+  GstAudioBuffer abuf;
   webrtc::AudioProcessing * apm = self->apm;
-  webrtc::AudioFrame frame;
   gint err;
 
-  frame.num_channels_ = self->info.channels;
-  frame.sample_rate_hz_ = self->info.rate;
-  frame.samples_per_channel_ = self->period_size / self->info.bpf;
-
-  if (!gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE)) {
+  if (!gst_audio_buffer_map (&abuf, &self->info, buffer,
+          (GstMapFlags) GST_MAP_READWRITE)) {
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 
-  memcpy (frame.data_, info.data, self->period_size);
+  if (self->interleaved) {
+    webrtc::AudioFrame frame;
+    frame.num_channels_ = self->info.channels;
+    frame.sample_rate_hz_ = self->info.rate;
+    frame.samples_per_channel_ = self->period_samples;
 
-  if ((err = apm->ProcessStream (&frame)) < 0) {
+    memcpy (frame.data_, abuf.planes[0], self->period_size);
+    err = apm->ProcessStream (&frame);
+    if (err >= 0)
+      memcpy (abuf.planes[0], frame.data_, self->period_size);
+  } else {
+    float * const * data = (float * const *) abuf.planes;
+    webrtc::StreamConfig config (self->info.rate, self->info.channels, false);
+
+    err = apm->ProcessStream (data, config, config, data);
+  }
+
+  if (err < 0) {
     GST_WARNING_OBJECT (self, "Failed to filter the audio: %s.",
         webrtc_error_to_string (err));
   } else {
@@ -446,10 +502,9 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
 
       self->stream_has_voice = stream_has_voice;
     }
-    memcpy (info.data, frame.data_, self->period_size);
   }
 
-  gst_buffer_unmap (buffer, &info);
+  gst_audio_buffer_unmap (&abuf);
 
   return GST_FLOW_OK;
 }
@@ -467,10 +522,16 @@ gst_webrtc_dsp_submit_input_buffer (GstBaseTransform * btrans,
   if (is_discont) {
     GST_DEBUG_OBJECT (self,
         "Received discont, clearing adapter.");
-    gst_adapter_clear (self->adapter);
+    if (self->interleaved)
+      gst_adapter_clear (self->adapter);
+    else
+      gst_planar_audio_adapter_clear (self->padapter);
   }
 
-  gst_adapter_push (self->adapter, buffer);
+  if (self->interleaved)
+    gst_adapter_push (self->adapter, buffer);
+  else
+    gst_planar_audio_adapter_push (self->padapter, buffer);
 
   return GST_FLOW_OK;
 }
@@ -480,8 +541,15 @@ gst_webrtc_dsp_generate_output (GstBaseTransform * btrans, GstBuffer ** outbuf)
 {
   GstWebrtcDsp *self = GST_WEBRTC_DSP (btrans);
   GstFlowReturn ret;
+  gboolean not_enough;
 
-  if (gst_adapter_available (self->adapter) < self->period_size) {
+  if (self->interleaved)
+    not_enough = gst_adapter_available (self->adapter) < self->period_size;
+  else
+    not_enough = gst_planar_audio_adapter_available (self->padapter) <
+        self->period_samples;
+
+  if (not_enough) {
     *outbuf = NULL;
     return GST_FLOW_OK;
   }
@@ -545,13 +613,21 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   GST_OBJECT_LOCK (self);
 
   gst_adapter_clear (self->adapter);
+  gst_planar_audio_adapter_clear (self->padapter);
+
   self->info = *info;
+  self->interleaved = (info->layout == GST_AUDIO_LAYOUT_INTERLEAVED);
   apm = self->apm;
 
-  /* WebRTC library works with 10ms buffers, compute once this size */
-  self->period_size = info->bpf * info->rate / 100;
+  if (!self->interleaved)
+    gst_planar_audio_adapter_configure (self->padapter, info);
 
-  if ((webrtc::AudioFrame::kMaxDataSizeSamples * 2) < self->period_size)
+  /* WebRTC library works with 10ms buffers, compute once this size */
+  self->period_samples = info->rate / 100;
+  self->period_size = self->period_samples * info->bpf;
+
+  if (self->interleaved &&
+      (webrtc::AudioFrame::kMaxDataSizeSamples * 2) < self->period_size)
     goto period_too_big;
 
   if (self->probe) {
@@ -676,6 +752,7 @@ gst_webrtc_dsp_stop (GstBaseTransform * btrans)
   GST_OBJECT_LOCK (self);
 
   gst_adapter_clear (self->adapter);
+  gst_planar_audio_adapter_clear (self->padapter);
 
   if (self->probe) {
     gst_webrtc_release_echo_probe (self->probe);
@@ -840,6 +917,7 @@ gst_webrtc_dsp_finalize (GObject * object)
   GstWebrtcDsp *self = GST_WEBRTC_DSP (object);
 
   gst_object_unref (self->adapter);
+  gst_object_unref (self->padapter);
   g_free (self->probe_name);
 
   G_OBJECT_CLASS (gst_webrtc_dsp_parent_class)->finalize (object);
@@ -849,6 +927,7 @@ static void
 gst_webrtc_dsp_init (GstWebrtcDsp * self)
 {
   self->adapter = gst_adapter_new ();
+  self->padapter = gst_planar_audio_adapter_new ();
   gst_audio_info_init (&self->info);
 }
 
