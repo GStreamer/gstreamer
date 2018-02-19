@@ -609,7 +609,7 @@ gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
 /**
  * gst_encoding_profile_set_name:
  * @profile: a #GstEncodingProfile
- * @name: the name to set on the profile
+ * @name: (allow-none): the name to set on the profile
  *
  * Set @name as the given name for the @profile. A copy of @name will be made
  * internally.
@@ -626,7 +626,7 @@ gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
 /**
  * gst_encoding_profile_set_description:
  * @profile: a #GstEncodingProfile
- * @description: the description to set on the profile
+ * @description: (allow-none): the description to set on the profile
  *
  * Set @description as the given description for the @profile. A copy of
  * @description will be made internally.
@@ -713,7 +713,7 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
 /**
  * gst_encoding_profile_set_preset_name:
  * @profile: a #GstEncodingProfile
- * @preset_name: The name of the preset to use in this @profile.
+ * @preset_name: (allow-none): The name of the preset to use in this @profile.
  *
  * Sets the name of the #GstPreset's factory to be used in the profile.
  */
@@ -764,7 +764,7 @@ gst_encoding_profile_set_enabled (GstEncodingProfile * profile,
 /**
  * gst_encoding_profile_set_restriction:
  * @profile: a #GstEncodingProfile
- * @restriction: (transfer full): the restriction to apply
+ * @restriction: (allow-none) (transfer full): the restriction to apply
  *
  * Set the restriction #GstCaps to apply before the encoder
  * that will be used in the profile. See gst_encoding_profile_get_restriction()

@@ -256,10 +256,11 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    * GstDiscoverer::discovered:
    * @discoverer: the #GstDiscoverer
    * @info: the results #GstDiscovererInfo
-   * @error: (type GLib.Error): #GError, which will be non-NULL if an error
-   *                            occurred during discovery. You must not
-   *                            free this #GError, it will be freed by
-   *                            the discoverer.
+   * @error: (allow-none) (type GLib.Error): #GError, which will be non-NULL
+   *                                         if an error occurred during
+   *                                         discovery. You must not free
+   *                                         this #GError, it will be freed by
+   *                                         the discoverer.
    *
    * Will be emitted in async mode when all information on a URI could be
    * discovered, or an error occurred.
