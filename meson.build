@@ -83,6 +83,10 @@ cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_
 cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
   description: 'libexecdir path component, used to find plugin-scanner on relocatable builds on windows')
 
+if host_system == 'darwin'
+  cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
+endif
+
 if gst_version_nano > 0
     # Have GST_ERROR message printed when running from git
     cdata.set('GST_LEVEL_DEFAULT', 'GST_LEVEL_ERROR')
