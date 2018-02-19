@@ -43,6 +43,19 @@ struct _GstPlanarAudioAdapter
   gsize samples;
   gsize skip;
   guint count;
+
+  GstClockTime pts;
+  guint64 pts_distance;
+  GstClockTime dts;
+  guint64 dts_distance;
+  guint64 offset;
+  guint64 offset_distance;
+
+  GstClockTime pts_at_discont;
+  GstClockTime dts_at_discont;
+  guint64 offset_at_discont;
+
+  guint64 distance_from_discont;
 };
 
 struct _GstPlanarAudioAdapterClass
@@ -70,6 +83,16 @@ gst_planar_audio_adapter_class_init (GstPlanarAudioAdapterClass * klass)
 static void
 gst_planar_audio_adapter_init (GstPlanarAudioAdapter * adapter)
 {
+  adapter->pts = GST_CLOCK_TIME_NONE;
+  adapter->pts_distance = 0;
+  adapter->dts = GST_CLOCK_TIME_NONE;
+  adapter->dts_distance = 0;
+  adapter->offset = GST_BUFFER_OFFSET_NONE;
+  adapter->offset_distance = 0;
+  adapter->pts_at_discont = GST_CLOCK_TIME_NONE;
+  adapter->dts_at_discont = GST_CLOCK_TIME_NONE;
+  adapter->offset_at_discont = GST_BUFFER_OFFSET_NONE;
+  adapter->distance_from_discont = 0;
 }
 
 static void
@@ -134,6 +157,51 @@ gst_planar_audio_adapter_clear (GstPlanarAudioAdapter * adapter)
   adapter->count = 0;
   adapter->samples = 0;
   adapter->skip = 0;
+
+  adapter->pts = GST_CLOCK_TIME_NONE;
+  adapter->pts_distance = 0;
+  adapter->dts = GST_CLOCK_TIME_NONE;
+  adapter->dts_distance = 0;
+  adapter->offset = GST_BUFFER_OFFSET_NONE;
+  adapter->offset_distance = 0;
+  adapter->pts_at_discont = GST_CLOCK_TIME_NONE;
+  adapter->dts_at_discont = GST_CLOCK_TIME_NONE;
+  adapter->offset_at_discont = GST_BUFFER_OFFSET_NONE;
+  adapter->distance_from_discont = 0;
+}
+
+static inline void
+update_timestamps_and_offset (GstPlanarAudioAdapter * adapter, GstBuffer * buf)
+{
+  GstClockTime pts, dts;
+  guint64 offset;
+
+  pts = GST_BUFFER_PTS (buf);
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    GST_LOG_OBJECT (adapter, "new pts %" GST_TIME_FORMAT, GST_TIME_ARGS (pts));
+    adapter->pts = pts;
+    adapter->pts_distance = 0;
+  }
+  dts = GST_BUFFER_DTS (buf);
+  if (GST_CLOCK_TIME_IS_VALID (dts)) {
+    GST_LOG_OBJECT (adapter, "new dts %" GST_TIME_FORMAT, GST_TIME_ARGS (dts));
+    adapter->dts = dts;
+    adapter->dts_distance = 0;
+  }
+  offset = GST_BUFFER_OFFSET (buf);
+  if (offset != GST_BUFFER_OFFSET_NONE) {
+    GST_LOG_OBJECT (adapter, "new offset %" G_GUINT64_FORMAT, offset);
+    adapter->offset = offset;
+    adapter->offset_distance = 0;
+  }
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    /* Take values as-is (might be NONE) */
+    adapter->pts_at_discont = pts;
+    adapter->dts_at_discont = dts;
+    adapter->offset_at_discont = offset;
+    adapter->distance_from_discont = 0;
+  }
 }
 
 /**
@@ -165,6 +233,7 @@ gst_planar_audio_adapter_push (GstPlanarAudioAdapter * adapter, GstBuffer * buf)
     GST_LOG_OBJECT (adapter, "pushing %p first %" G_GSIZE_FORMAT " samples",
         buf, samples);
     adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
+    update_timestamps_and_offset (adapter, buf);
   } else {
     /* Otherwise append to the end, and advance our end pointer */
     GST_LOG_OBJECT (adapter, "pushing %p %" G_GSIZE_FORMAT " samples at end, "
@@ -179,31 +248,51 @@ static void
 gst_planar_audio_adapter_flush_unchecked (GstPlanarAudioAdapter * adapter,
     gsize to_flush)
 {
-  GSList *cur = adapter->buflist;
+  GSList *g = adapter->buflist;
   gsize cur_samples;
 
-  while (to_flush > 0) {
-    cur_samples = gst_buffer_get_audio_meta (cur->data)->samples;
-    cur_samples -= adapter->skip;
+  /* clear state */
+  adapter->samples -= to_flush;
 
-    if (to_flush >= cur_samples) {
-      gst_buffer_unref (cur->data);
-      cur = g_slist_remove_link (cur, cur);
+  /* take skip into account */
+  to_flush += adapter->skip;
+  /* distance is always at least the amount of skipped samples */
+  adapter->pts_distance -= adapter->skip;
+  adapter->dts_distance -= adapter->skip;
+  adapter->offset_distance -= adapter->skip;
+  adapter->distance_from_discont -= adapter->skip;
 
-      to_flush -= cur_samples;
-      adapter->samples -= cur_samples;
-      adapter->skip = 0;
-      --adapter->count;
-    } else {
-      adapter->samples -= to_flush;
-      adapter->skip += to_flush;
-      to_flush = 0;
+  g = adapter->buflist;
+  cur_samples = gst_buffer_get_audio_meta (g->data)->samples;
+  while (to_flush >= cur_samples) {
+    /* can skip whole buffer */
+    GST_LOG_OBJECT (adapter, "flushing out head buffer");
+    adapter->pts_distance += cur_samples;
+    adapter->dts_distance += cur_samples;
+    adapter->offset_distance += cur_samples;
+    adapter->distance_from_discont += cur_samples;
+    to_flush -= cur_samples;
+
+    gst_buffer_unref (g->data);
+    g = g_slist_delete_link (g, g);
+    --adapter->count;
+
+    if (G_UNLIKELY (g == NULL)) {
+      GST_LOG_OBJECT (adapter, "adapter empty now");
+      adapter->buflist_end = NULL;
+      break;
     }
+    /* there is a new head buffer, update the timestamps */
+    update_timestamps_and_offset (adapter, g->data);
+    cur_samples = gst_buffer_get_audio_meta (g->data)->samples;
   }
-
-  adapter->buflist = cur;
-  if (!adapter->buflist)
-    adapter->buflist_end = NULL;
+  adapter->buflist = g;
+  /* account for the remaining bytes */
+  adapter->skip = to_flush;
+  adapter->pts_distance += to_flush;
+  adapter->dts_distance += to_flush;
+  adapter->offset_distance += to_flush;
+  adapter->distance_from_discont += to_flush;
 }
 
 /**
@@ -388,4 +477,164 @@ gst_planar_audio_adapter_available (GstPlanarAudioAdapter * adapter)
   g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter), 0);
 
   return adapter->samples;
+}
+
+/**
+ * gst_planar_audio_adapter_get_distance_from_discont:
+ * @adapter: a #GstPlanarAudioAdapter
+ *
+ * Get the distance in samples since the last buffer with the
+ * %GST_BUFFER_FLAG_DISCONT flag.
+ *
+ * The distance will be reset to 0 for all buffers with
+ * %GST_BUFFER_FLAG_DISCONT on them, and then calculated for all other
+ * following buffers based on their size.
+ *
+ * Returns: The offset. Can be %GST_BUFFER_OFFSET_NONE.
+ */
+guint64
+gst_planar_audio_adapter_distance_from_discont (GstPlanarAudioAdapter * adapter)
+{
+  return adapter->distance_from_discont;
+}
+
+/**
+ * gst_planar_audio_adapter_offset_at_discont:
+ * @adapter: a #GstPlanarAudioAdapter
+ *
+ * Get the offset that was on the last buffer with the GST_BUFFER_FLAG_DISCONT
+ * flag, or GST_BUFFER_OFFSET_NONE.
+ *
+ * Returns: The offset at the last discont or GST_BUFFER_OFFSET_NONE.
+ */
+guint64
+gst_planar_audio_adapter_offset_at_discont (GstPlanarAudioAdapter * adapter)
+{
+  g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter),
+      GST_BUFFER_OFFSET_NONE);
+
+  return adapter->offset_at_discont;
+}
+
+/**
+ * gst_planar_audio_adapter_pts_at_discont:
+ * @adapter: a #GstPlanarAudioAdapter
+ *
+ * Get the PTS that was on the last buffer with the GST_BUFFER_FLAG_DISCONT
+ * flag, or GST_CLOCK_TIME_NONE.
+ *
+ * Returns: The PTS at the last discont or GST_CLOCK_TIME_NONE.
+ */
+GstClockTime
+gst_planar_audio_adapter_pts_at_discont (GstPlanarAudioAdapter * adapter)
+{
+  g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter),
+      GST_CLOCK_TIME_NONE);
+
+  return adapter->pts_at_discont;
+}
+
+/**
+ * gst_planar_audio_adapter_dts_at_discont:
+ * @adapter: a #GstPlanarAudioAdapter
+ *
+ * Get the DTS that was on the last buffer with the GST_BUFFER_FLAG_DISCONT
+ * flag, or GST_CLOCK_TIME_NONE.
+ *
+ * Returns: The DTS at the last discont or GST_CLOCK_TIME_NONE.
+ */
+GstClockTime
+gst_planar_audio_adapter_dts_at_discont (GstPlanarAudioAdapter * adapter)
+{
+  g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter),
+      GST_CLOCK_TIME_NONE);
+
+  return adapter->dts_at_discont;
+}
+
+/**
+ * gst_planar_audio_adapter_prev_offset:
+ * @adapter: a #GstPlanarAudioAdapter
+ * @distance: (out) (allow-none): pointer to a location for distance, or %NULL
+ *
+ * Get the offset that was before the current sample in the adapter. When
+ * @distance is given, the amount of samples between the offset and the current
+ * position is returned.
+ *
+ * The offset is reset to GST_BUFFER_OFFSET_NONE and the distance is set to 0
+ * when the adapter is first created or when it is cleared. This also means that
+ * before the first sample with an offset is removed from the adapter, the
+ * offset and distance returned are GST_BUFFER_OFFSET_NONE and 0 respectively.
+ *
+ * Returns: The previous seen offset.
+ */
+guint64
+gst_planar_audio_adapter_prev_offset (GstPlanarAudioAdapter * adapter,
+    guint64 * distance)
+{
+  g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter),
+      GST_BUFFER_OFFSET_NONE);
+
+  if (distance)
+    *distance = adapter->offset_distance;
+
+  return adapter->offset;
+}
+
+/**
+ * gst_planar_audio_adapter_prev_pts:
+ * @adapter: a #GstPlanarAudioAdapter
+ * @distance: (out) (allow-none): pointer to location for distance, or %NULL
+ *
+ * Get the pts that was before the current sample in the adapter. When
+ * @distance is given, the amount of samples between the pts and the current
+ * position is returned.
+ *
+ * The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+ * the adapter is first created or when it is cleared. This also means that before
+ * the first sample with a pts is removed from the adapter, the pts
+ * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
+ *
+ * Returns: The previously seen pts.
+ */
+GstClockTime
+gst_planar_audio_adapter_prev_pts (GstPlanarAudioAdapter * adapter,
+    guint64 * distance)
+{
+  g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter),
+      GST_CLOCK_TIME_NONE);
+
+  if (distance)
+    *distance = adapter->pts_distance;
+
+  return adapter->pts;
+}
+
+/**
+ * gst_planar_audio_adapter_prev_dts:
+ * @adapter: a #GstPlanarAudioAdapter
+ * @distance: (out) (allow-none): pointer to location for distance, or %NULL
+ *
+ * Get the dts that was before the current sample in the adapter. When
+ * @distance is given, the amount of bytes between the dts and the current
+ * position is returned.
+ *
+ * The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+ * the adapter is first created or when it is cleared. This also means that
+ * before the first sample with a dts is removed from the adapter, the dts
+ * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
+ *
+ * Returns: The previously seen dts.
+ */
+GstClockTime
+gst_planar_audio_adapter_prev_dts (GstPlanarAudioAdapter * adapter,
+    guint64 * distance)
+{
+  g_return_val_if_fail (GST_IS_PLANAR_AUDIO_ADAPTER (adapter),
+      GST_CLOCK_TIME_NONE);
+
+  if (distance)
+    *distance = adapter->dts_distance;
+
+  return adapter->dts;
 }

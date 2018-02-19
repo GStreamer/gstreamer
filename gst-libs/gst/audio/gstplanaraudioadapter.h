@@ -85,6 +85,29 @@ GstBuffer * gst_planar_audio_adapter_take_buffer (GstPlanarAudioAdapter * adapte
 GST_AUDIO_BAD_API
 gsize gst_planar_audio_adapter_available (GstPlanarAudioAdapter * adapter);
 
+GST_AUDIO_BAD_API
+guint64 gst_planar_audio_adapter_distance_from_discont (GstPlanarAudioAdapter * adapter);
+
+GST_AUDIO_BAD_API
+guint64 gst_planar_audio_adapter_offset_at_discont (GstPlanarAudioAdapter * adapter);
+
+GST_AUDIO_BAD_API
+GstClockTime gst_planar_audio_adapter_pts_at_discont (GstPlanarAudioAdapter * adapter);
+
+GST_AUDIO_BAD_API
+GstClockTime gst_planar_audio_adapter_dts_at_discont (GstPlanarAudioAdapter * adapter);
+
+GST_AUDIO_BAD_API
+guint64 gst_planar_audio_adapter_prev_offset (GstPlanarAudioAdapter * adapter,
+    guint64 * distance);
+
+GST_AUDIO_BAD_API
+GstClockTime gst_planar_audio_adapter_prev_pts (GstPlanarAudioAdapter * adapter,
+    guint64 * distance);
+
+GST_AUDIO_BAD_API
+GstClockTime gst_planar_audio_adapter_prev_dts (GstPlanarAudioAdapter * adapter,
+    guint64 * distance);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPlanarAudioAdapter, gst_object_unref)
