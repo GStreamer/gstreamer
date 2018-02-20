@@ -9,14 +9,6 @@ debugutilsbad_sources = [
   'gstwatchdog.c',
 ]
 
-debugutilsbad_headers = [
-  'gstchecksumsink.h',
-  'gstchopmydata.h',
-  'gstcompare.h',
-  'gstdebugspy.h',
-  'gstwatchdog.h',
-]
-
 gstdebugutilsbad = library('gstdebugutilsbad',
   debugutilsbad_sources,
   c_args : gst_plugins_bad_args,
