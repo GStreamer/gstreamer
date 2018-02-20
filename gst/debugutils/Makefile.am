@@ -8,7 +8,8 @@ libgstdebugutilsbad_la_SOURCES = \
 	gstchopmydata.c \
 	gstcompare.c \
 	gstwatchdog.c \
-	gsterrorignore.c
+	gsterrorignore.c \
+	gstfakevideosink.c
 
 libgstdebugutilsbad_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstdebugutilsbad_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
@@ -22,4 +23,5 @@ noinst_HEADERS = fpsdisplaysink.h \
 	gstcompare.h \
 	gstdebugspy.h \
 	gstwatchdog.h \
-	gsterrorignore.h
+	gsterrorignore.h \
+	gstfakevideosink.h

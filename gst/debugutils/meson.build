@@ -6,6 +6,7 @@ debugutilsbad_sources = [
   'gstchecksumsink.c',
   'gstchopmydata.c',
   'gstcompare.c',
+  'gstfakevideosink.c',
   'gstwatchdog.c',
 ]
 
