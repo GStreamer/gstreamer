@@ -30,6 +30,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_omx_buffer_pool_debug_category);
 #define GST_CAT_DEFAULT gst_omx_buffer_pool_debug_category
+GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
 typedef struct _GstOMXMemory GstOMXMemory;
 typedef struct _GstOMXMemoryAllocator GstOMXMemoryAllocator;
@@ -462,6 +463,12 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 
       for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&pool->video_info); i++) {
         if (info.stride[i] != stride[i] || info.offset[i] != offset[i]) {
+          GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, pool,
+              "Need to copy output frames because of stride/offset mismatch: plane %d stride %d (expected: %d) offset %"
+              G_GSIZE_FORMAT " (expected: %" G_GSIZE_FORMAT
+              ") nStride: %d nSliceHeight: %d ", i, stride[i], info.stride[i],
+              offset[i], info.offset[i], nstride, nslice);
+
           need_copy = TRUE;
           break;
         }
@@ -647,6 +654,8 @@ gst_omx_buffer_pool_class_init (GstOMXBufferPoolClass * klass)
   gstbufferpool_class->free_buffer = gst_omx_buffer_pool_free_buffer;
   gstbufferpool_class->acquire_buffer = gst_omx_buffer_pool_acquire_buffer;
   gstbufferpool_class->release_buffer = gst_omx_buffer_pool_release_buffer;
+
+  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
