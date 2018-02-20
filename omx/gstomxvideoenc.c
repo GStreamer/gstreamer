@@ -2810,6 +2810,15 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
       err =
           gst_omx_component_set_config (self->enc,
           OMX_IndexConfigBrcmVideoRequestIFrame, &config);
+#elif USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      OMX_ALG_VIDEO_CONFIG_INSERT config;
+
+      GST_OMX_INIT_STRUCT (&config);
+      config.nPortIndex = self->enc_out_port->index;
+
+      GST_DEBUG_OBJECT (self, "Forcing a keyframe");
+      err = gst_omx_component_set_config (self->enc, (OMX_INDEXTYPE)
+          OMX_ALG_IndexConfigVideoInsertInstantaneousDecodingRefresh, &config);
 #else
       OMX_CONFIG_INTRAREFRESHVOPTYPE config;
 
