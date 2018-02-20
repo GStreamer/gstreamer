@@ -49,6 +49,7 @@ struct _GstVaapiVideoBufferPoolPrivate
   GstVaapiDisplay *display;
   guint options;
   guint use_dmabuf_memory:1;
+  guint forced_video_meta:1;
 };
 
 #define GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE(obj) \
@@ -257,6 +258,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
           GST_VIDEO_INFO_PLANE_STRIDE (&new_allocation_vinfo, i) !=
           GST_VIDEO_INFO_PLANE_STRIDE (&priv->vmeta_vinfo, i)) {
         priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
+        priv->forced_video_meta = TRUE;
         GST_INFO_OBJECT (pool, "adding unrequested video meta");
         break;
       }
@@ -534,4 +536,26 @@ gst_vaapi_video_buffer_pool_new (GstVaapiDisplay * display)
 {
   return g_object_new (GST_VAAPI_TYPE_VIDEO_BUFFER_POOL,
       "display", display, NULL);
+}
+
+/**
+ * gst_vaapi_video_buffer_pool_copy_buffer:
+ * @pool: a #GstVaapiVideoBufferPool
+ *
+ * Returns if the @pool force set of #GstVideoMeta. If so, the element
+ * should copy the generated buffer by the pool to a system allocated
+ * buffer. Otherwise, downstream could not display correctly the
+ * frame.
+ *
+ * Returns: %TRUE if #GstVideoMeta is forced.
+ **/
+gboolean
+gst_vaapi_video_buffer_pool_copy_buffer (GstBufferPool * pool)
+{
+  GstVaapiVideoBufferPoolPrivate *priv;
+
+  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_BUFFER_POOL (pool), FALSE);
+
+  priv = GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE (pool);
+  return priv->forced_video_meta;
 }

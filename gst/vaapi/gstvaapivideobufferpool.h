@@ -134,6 +134,10 @@ G_GNUC_INTERNAL
 GstBufferPool *
 gst_vaapi_video_buffer_pool_new (GstVaapiDisplay * display);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_video_buffer_pool_copy_buffer (GstBufferPool * pool);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_BUFFER_POOL_H */
