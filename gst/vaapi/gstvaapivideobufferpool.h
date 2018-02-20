@@ -132,7 +132,7 @@ gst_vaapi_video_buffer_pool_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstBufferPool *
-gst_vaapi_video_buffer_pool_new (GstVaapiDisplay * display) G_GNUC_CONST;
+gst_vaapi_video_buffer_pool_new (GstVaapiDisplay * display);
 
 G_END_DECLS
 
