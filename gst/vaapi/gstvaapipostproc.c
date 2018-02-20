@@ -617,7 +617,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
   GstBuffer *fieldbuf;
   GstVaapiDeinterlaceMethod deint_method;
   guint flags, deint_flags;
-  gboolean tff, deint, deint_refs, deint_changed;
+  gboolean tff, deint, deint_refs, deint_changed, discont;
   const GstVideoCropMeta *crop_meta;
   GstVaapiRectangle *crop_rect = NULL;
   GstVaapiRectangle tmp_rect;
@@ -641,6 +641,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   tff = GST_BUFFER_FLAG_IS_SET (inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
+  discont = GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT);
   deint = should_deinterlace_buffer (postproc, inbuf);
 
   /* Drop references if deinterlacing conditions changed */
@@ -723,6 +724,11 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
 
     GST_BUFFER_TIMESTAMP (fieldbuf) = timestamp;
     GST_BUFFER_DURATION (fieldbuf) = postproc->field_duration;
+    if (discont) {
+      GST_BUFFER_FLAG_SET (fieldbuf, GST_BUFFER_FLAG_DISCONT);
+      discont = FALSE;
+    }
+
     ret = gst_pad_push (trans->srcpad, fieldbuf);
     if (ret != GST_FLOW_OK)
       goto error_push_buffer;
@@ -773,6 +779,10 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
   else {
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp + postproc->field_duration;
     GST_BUFFER_DURATION (outbuf) = postproc->field_duration;
+    if (discont) {
+      GST_BUFFER_FLAG_SET (fieldbuf, GST_BUFFER_FLAG_DISCONT);
+      discont = FALSE;
+    }
   }
 
   if (deint && deint_refs)
