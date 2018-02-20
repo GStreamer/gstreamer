@@ -540,8 +540,8 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
   gdi_dep = cc.find_library('gdi32', required : false)
   # FIXME: Revert back to has_header once it gains prefix support
   wglext_h = cc.has_header_symbol('GL/wglext.h', 'WGL_WGLEXT_VERSION',
-                                  prefix : '#include <windows.h>
-                                            #include <GL/gl.h>')
+                                  prefix : '''#include <windows.h>
+                                              #include <GL/gl.h>''')
 
   if wglext_h and gdi_dep.found() and gl_dep.found()
     gl_platform_deps += gdi_dep
