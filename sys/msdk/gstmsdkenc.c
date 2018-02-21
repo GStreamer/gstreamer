@@ -1383,7 +1383,7 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
 
   thiz->enable_extopt3 = FALSE;
   memset (&thiz->option2, 0, sizeof (thiz->option2));
-  memset (&thiz->option2, 0, sizeof (thiz->option3));
+  memset (&thiz->option3, 0, sizeof (thiz->option3));
 }
 
 /* gst_msdkenc_set_common_property:
