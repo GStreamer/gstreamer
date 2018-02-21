@@ -1294,6 +1294,22 @@ gst_face_detect_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-fakevideosink</FILE>
+<TITLE>fakevideosink</TITLE>
+GstFakeVideoSink
+<SUBSECTION Standard>
+GstFakeVideoSinkClass
+GST_FAKE_VIDEO_SINK
+GST_FAKE_VIDEO_SINK_CAST
+GST_IS_FAKE_VIDEO_SINK
+GST_FAKE_VIDEO_SINK_CLASS
+GST_IS_FAKE_VIDEO_SINK_CLASS
+GST_TYPE_FAKE_VIDEO_SINK
+<SUBSECTION Private>
+gst_fake_video_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-festival</FILE>
 <TITLE>festival</TITLE>
 GstFestival

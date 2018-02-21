@@ -19,6 +19,24 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-fakevideosink
+ * @title: fakevideosink
+ *
+ * This element is the same as fakesink but will pretend to support various
+ * allocation meta API like GstVideoMeta in order to prevent memory copies.
+ * This is useful for throughput testing and testing zero-copy path while
+ * creating a new pipeline.
+ *
+ * ## Example launch lines
+ * |[
+ * gst-launch-1.0 videotestsrc ! fakevideosink
+ * gst-launch-1.0 videotestsrc ! fpsdisplaysink text-overlay=false video-sink=fakevideosink
+ * ]|
+ *
+ * Since 1.14
+ */
+
 #include "gstfakevideosink.h"
 
 #include <gst/video/video.h>
