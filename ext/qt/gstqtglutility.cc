@@ -82,8 +82,10 @@ gst_qt_get_gl_display ()
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_WINDOW_ANDROID
-  if (QString::fromUtf8 ("android") == app->platformName())
-    display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (eglGetDisplay(EGL_DEFAULT_DISPLAY));
+  if (QString::fromUtf8 ("android") == app->platformName()) {
+    EGLDisplay egl_display = (EGLDisplay) gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
+    display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (egl_display);
+  }
 #elif GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
   if (QString::fromUtf8("eglfs") == app->platformName()) {
 #if GST_GL_HAVE_WINDOW_VIV_FB
@@ -109,7 +111,8 @@ gst_qt_get_gl_display ()
 
     display = (GstGLDisplay *) gst_gl_display_viv_fb_new (disp_idx);
 #else
-    display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (eglGetDisplay(EGL_DEFAULT_DISPLAY));
+    EGLDisplay egl_display = (EGLDisplay) gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
+    display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (egl_display);
 #endif
   }
 #endif
