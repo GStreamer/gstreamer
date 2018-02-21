@@ -369,6 +369,7 @@ rtp_ulpfec_map_info_unmap (RtpUlpFecMapInfo * info)
   }
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 void
 rtp_ulpfec_log_rtppacket (GstDebugCategory * cat, GstDebugLevel level,
     gpointer object, const gchar * name, GstRTPBuffer * rtp)
@@ -398,7 +399,9 @@ rtp_ulpfec_log_rtppacket (GstDebugCategory * cat, GstDebugLevel level,
       gst_rtp_buffer_get_packet_len (rtp) - MIN_RTP_HEADER_LEN,
       gst_rtp_buffer_get_payload_len (rtp));
 }
+#endif /* GST_DISABLE_GST_DEBUG */
 
+#ifndef GST_DISABLE_GST_DEBUG
 void
 rtp_ulpfec_log_fec_packet (GstDebugCategory * cat, GstDebugLevel level,
     gpointer object, GstRTPBuffer * fecrtp)
@@ -432,3 +435,4 @@ rtp_ulpfec_log_fec_packet (GstDebugCategory * cat, GstDebugLevel level,
       g_ntohs (fec_level_hdr->protection_len),
       fec_level_hdr_get_mask (fec_level_hdr, fec_hdr->L));
 }
+#endif /* GST_DISABLE_GST_DEBUG */

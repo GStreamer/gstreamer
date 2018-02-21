@@ -524,13 +524,6 @@ gst_rtp_ulpfec_enc_set_property (GObject * object, guint prop_id,
 {
   GstRtpUlpFecEnc *fec = GST_RTP_ULPFEC_ENC (object);
 
-  if (GST_LEVEL_LOG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
-    gchar *val_str = gst_value_serialize (value);
-    GST_LOG_OBJECT (object, "Setting property \"%s\" to %s", pspec->name,
-        val_str);
-    g_free (val_str);
-  }
-
   switch (prop_id) {
     case PROP_PT:
       fec->pt = g_value_get_uint (value);
@@ -591,13 +584,6 @@ gst_rtp_ulpfec_enc_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
-  }
-
-  if (GST_LEVEL_LOG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
-    gchar *val_str = gst_value_serialize (value);
-    GST_LOG_OBJECT (object, "Returning property \"%s\" %s", pspec->name,
-        val_str);
-    g_free (val_str);
   }
 }
 

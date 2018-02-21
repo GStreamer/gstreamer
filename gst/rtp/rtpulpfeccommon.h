@@ -21,7 +21,8 @@
 #ifndef __RTP_ULPFEC_COMMON_H__
 #define __RTP_ULPFEC_COMMON_H__
 
-#include <gst/rtp/gstrtpbuffer.h>
+#include <gst/gst.h>
+#include <gst/rtp/rtp.h>
 
 G_BEGIN_DECLS
 
@@ -120,11 +121,19 @@ GstBuffer       * rtp_ulpfec_bitstring_to_media_rtp_buffer (GArray *arr,
 GstBuffer       * rtp_ulpfec_bitstring_to_fec_rtp_buffer   (GArray *arr, guint16 seq_base, gboolean fec_mask_long,
                                                             guint64 fec_mask, gboolean marker, guint8 pt, guint16 seq,
                                                             guint32 timestamp, guint32 ssrc);
+
+#ifndef GST_DISABLE_GST_DEBUG
 void              rtp_ulpfec_log_rtppacket                 (GstDebugCategory * cat, GstDebugLevel level,
                                                             gpointer object, const gchar *name,
                                                             GstRTPBuffer *rtp);
+
 void              rtp_ulpfec_log_fec_packet                (GstDebugCategory * cat, GstDebugLevel level,
                                                             gpointer object, GstRTPBuffer *fecrtp);
+#else
+#define rtp_ulpfec_log_rtppacket(cat,level,obj,name,rtp) /* NOOP */
+#define rtp_ulpfec_log_fec_packet(cat,level,obj,fecrtp)  /* NOOP */
+#endif
+
 RtpUlpFecHeader * rtp_ulpfec_buffer_get_fechdr             (GstRTPBuffer *rtp);
 guint             rtp_ulpfec_get_headers_len               (gboolean fec_mask_long);
 guint16           rtp_ulpfec_hdr_get_protection_len        (RtpUlpFecHeader const *fec_hdr);
