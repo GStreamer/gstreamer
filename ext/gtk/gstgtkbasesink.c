@@ -396,7 +396,7 @@ gst_gtk_base_sink_change_state (GstElement * element, GstStateChange transition)
 
       GST_OBJECT_LOCK (gtk_sink);
       if (gtk_sink->window)
-        window = g_object_ref (gtk_sink->window);
+        window = g_object_ref (GTK_WINDOW (gtk_sink->window));
       GST_OBJECT_UNLOCK (gtk_sink);
 
       if (window)
