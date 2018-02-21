@@ -2273,7 +2273,7 @@ gst_omx_video_enc_nv12_manual_copy (GstOMXVideoEnc * self, GstBuffer * inbuf,
   GstVideoInfo *info = &self->input_state->info;
   OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
   GstVideoFrame frame;
-  gint i, j, height, width, dest_height;
+  gint i, j, height, width;
   guint8 *src, *dest;
   gint src_stride, dest_stride;
 
@@ -2296,10 +2296,6 @@ gst_omx_video_enc_nv12_manual_copy (GstOMXVideoEnc * self, GstBuffer * inbuf,
       dest +=
           port_def->format.video.nSliceHeight * port_def->format.video.nStride;
 
-    if (i == 0)
-      dest_height = port_def->format.video.nSliceHeight;
-    else
-      dest_height = port_def->format.video.nSliceHeight / 2;
     src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
     height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
     width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
@@ -2318,12 +2314,6 @@ gst_omx_video_enc_nv12_manual_copy (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
     for (j = 0; j < height; j++) {
       memcpy (dest, src, width);
-      outbuf->omx_buf->nFilledLen += dest_stride;
-      src += src_stride;
-      dest += dest_stride;
-    }
-    for (; j < dest_height; j++) {
-      memset (dest, 0, dest_stride);
       outbuf->omx_buf->nFilledLen += dest_stride;
       src += src_stride;
       dest += dest_stride;
@@ -2411,7 +2401,7 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
   switch (info->finfo->format) {
     case GST_VIDEO_FORMAT_I420:{
-      gint i, j, height, width, dest_height;
+      gint i, j, height, width;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
 
@@ -2426,10 +2416,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       for (i = 0; i < 3; i++) {
         if (i == 0) {
           dest_stride = port_def->format.video.nStride;
-          dest_height = port_def->format.video.nSliceHeight;
         } else {
           dest_stride = port_def->format.video.nStride / 2;
-          dest_height = port_def->format.video.nSliceHeight / 2;
         }
 
         src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
@@ -2461,12 +2449,6 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
         for (j = 0; j < height; j++) {
           memcpy (dest, src, width);
-          outbuf->omx_buf->nFilledLen += dest_stride;
-          src += src_stride;
-          dest += dest_stride;
-        }
-        for (; j < dest_height; j++) {
-          memset (dest, 0, dest_stride);
           outbuf->omx_buf->nFilledLen += dest_stride;
           src += src_stride;
           dest += dest_stride;
