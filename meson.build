@@ -114,27 +114,19 @@ ges_c_args = ['-DHAVE_CONFIG_H']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 if gst_dep.type_name() == 'internal'
-    gst_proj = subproject('gstreamer')
-
-    if gst_proj.get_variable('disable_gst_debug')
-        message('GStreamer debug system is disabled')
-        add_project_arguments('-Wno-unused', language: 'c')
-    else
-        message('GStreamer debug system is enabled')
-    endif
+  gst_debug_disabled = subproject('gstreamer').get_variable('disable_gst_debug')
 else
     # We can't check that in the case of subprojects as we won't
-    # be able to build against an internal dependency (which is not built yet)
-    if not cc.compiles('''
-#include <gst/gstconfig.h>
-#ifdef GST_DISABLE_GST_DEBUG
-#error "debugging disabled, make compiler fail"
-#endif''' , dependencies: gst_dep)
-        message('GStreamer debug system is disabled')
-        add_global_arguments('-Wno-unused', language: 'c')
-    else
-        message('GStreamer debug system is enabled')
-    endif
+  # be able to build against an internal dependency (which is not built yet)
+  gst_debug_disabled = not cc.compiles('''#include <gst/gstconfig.h>
+                                          #ifdef GST_DISABLE_GST_DEBUG
+                                          #error "debugging disabled, make compiler fail"
+                                          #endif''', dependencies: gst_dep)
+endif
+
+if gst_debug_disabled and cc.has_argument('-Wno-unused')
+  message('GStreamer debug system is disabled')
+  add_project_arguments('-Wno-unused', language: 'c')
 endif
 
 configinc = include_directories('.')
