@@ -194,15 +194,20 @@ noinst_HEADERS =			\
 	gstasteriskh263.h \
 	gstrtpqcelpdepay.h \
 	gstrtpqdmdepay.h \
+	gstrtpreddec.h \
+	gstrtpredenc.h \
 	gstrtpsbcdepay.h \
 	gstrtpsbcpay.h \
 	gstrtpsirenpay.h \
 	gstrtpsirendepay.h \
 	gstrtpspeexdepay.h \
 	gstrtpspeexpay.h \
+	gstrtpstorage.h \
 	gstrtpsv3vdepay.h \
 	gstrtptheoradepay.h \
 	gstrtptheorapay.h \
+	gstrtpulpfecdec.h \
+	gstrtpulpfecenc.h \
 	gstrtpvorbisdepay.h \
 	gstrtpvorbispay.h \
 	gstrtpvp8depay.h \
@@ -213,6 +218,11 @@ noinst_HEADERS =			\
 	gstrtpvrawpay.h \
 	gstrtpstreampay.h \
 	gstrtpstreamdepay.h \
-	gstrtputils.h
+	gstrtputils.h \
+	rtpredcommon.h \
+	rtpstorage.h \
+	rtpstoragestream.h \
+	rtpulpfeccommon.h
+
 
 EXTRA_DIST = dboolhuff.LICENSE
