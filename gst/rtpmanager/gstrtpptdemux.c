@@ -325,22 +325,25 @@ gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
   g_value_unset (&ret);
 
   sink_caps = gst_pad_get_current_caps (rtpdemux->sink);
-  if (caps == NULL) {
-    caps = gst_caps_ref (sink_caps);
-  } else {
-    GstStructure *s1;
-    GstStructure *s2;
-    guint ssrc;
 
-    caps = gst_caps_make_writable (caps);
-    s1 = gst_caps_get_structure (sink_caps, 0);
-    s2 = gst_caps_get_structure (caps, 0);
+  if (sink_caps) {
+    if (caps == NULL) {
+      caps = gst_caps_ref (sink_caps);
+    } else {
+      GstStructure *s1;
+      GstStructure *s2;
+      guint ssrc;
 
-    gst_structure_get_uint (s1, "ssrc", &ssrc);
-    gst_structure_set (s2, "ssrc", G_TYPE_UINT, ssrc, NULL);
+      caps = gst_caps_make_writable (caps);
+      s1 = gst_caps_get_structure (sink_caps, 0);
+      s2 = gst_caps_get_structure (caps, 0);
+
+      gst_structure_get_uint (s1, "ssrc", &ssrc);
+      gst_structure_set (s2, "ssrc", G_TYPE_UINT, ssrc, NULL);
+    }
+
+    gst_caps_unref (sink_caps);
   }
-
-  gst_caps_unref (sink_caps);
 
   GST_DEBUG ("pt %d, got caps %" GST_PTR_FORMAT, pt, caps);
 
