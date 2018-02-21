@@ -672,4 +672,5 @@ distclean-local-orc:
 
 EXTRA_DIST = \
 	gst-plugins-good.supp	\
+	elements/packets.h \
 	elements/qtdemux.h
