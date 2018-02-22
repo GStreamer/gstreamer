@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import os
+import subprocess
+import xml.etree.ElementTree as ET
+import sys
+
+from common import git
+from common import Colors
+from common import get_meson
+from common import accept_command
+
+
+SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
+
+
+def checkout_subprojects(worktree_dir, branch):
+    subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
+    worktree_subdir = os.path.join(worktree_dir, "subprojects")
+
+    meson = get_meson()
+    installed_s = subprocess.check_output([sys.executable, meson, 'introspect',
+                                            options.builddir, '--projectinfo'])
+    for subproj in json.loads(installed_s.decode())["subprojects"]:
+        repo_name = subproj["name"]
+        if not repo_name.startswith("gst"):
+            continue
+
+        repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
+        if not os.path.exists(os.path.join(repo_dir, '.git')):
+            continue
+
+        workdir = os.path.normpath(os.path.join(worktree_subdir, repo_name))
+        if not checkout_worktree(repo_name, repo_dir, workdir, branch):
+            return False
+
+    return True
+
+
+def checkout_worktree(repo_name, repo_dir, worktree_dir, branch):
+    print("Checking out worktree %s in %s (branch %s)" % (repo_name, worktree_dir, branch))
+    try:
+        git("worktree", "add", worktree_dir, branch, repository_path=repo_dir)
+    except Exception as e:
+        out = getattr(e, "output", b"").decode()
+        print("\nCould not checkout worktree %s, please fix and try again."
+              " Error:\n\n%s %s" % (repo_dir, out, e))
+
+        return False
+
+    commit_message = git("show", repository_path=repo_dir).split("\n")
+    print(u"  -> %s%s%s - %s" % (Colors.HEADER, repo_dir, Colors.ENDC,
+                                    commit_message[4].strip()))
+
+    return True
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="git-update")
+
+
+    parser.add_argument('worktree_dir', metavar='worktree_dir', type=str,
+                        help='The directory where to checkout the new worktree')
+    parser.add_argument('branch', metavar='branch', type=str,
+                        help='The branch to checkout')
+    parser.add_argument("--no-color",
+                        default=False,
+                        action='store_true',
+                        help="Do not output ansi colors.")
+    parser.add_argument("--builddir", '-C',
+                        default=os.path.join(SCRIPTDIR, "build"),
+                        help="The meson build directory")
+    options = parser.parse_args()
+
+    if options.no_color:
+        Colors.disable()
+
+    if not os.path.exists(options.builddir):
+        print("GStreamer not built in %s\n\nBuild it and try again" %
+              options.builddir)
+        exit(1)
+
+    options.worktree_dir = os.path.abspath(options.worktree_dir)
+    if not checkout_worktree('gst-build', SCRIPTDIR, options.worktree_dir, options.branch):
+        exit(1)
+    if not checkout_subprojects(options.worktree_dir, options.branch):
+        exit(1)

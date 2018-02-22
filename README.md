@@ -115,6 +115,20 @@ Run a specific test from a specific test file:
 GST_CHECKS=test_subbuffer meson test -C build/ --suite gstreamer gst_gstbuffer
 ```
 
+## Checkout another branch using worktrees
+
+If you need to have several versions of GStreamer coexisting (eg. `master` and `1.14`),
+you can use the `checkout-branch-worktree` script provided by `gst-build`. It allows you
+to create a new `gst-build` environment with new checkout of all the GStreamer modules as
+[git worktrees](https://git-scm.com/docs/git-worktree).
+
+For example to get a fresh checkout of `gst-1.14` from a `gst-build` in master already
+built in a `build` directory you can simply run:
+
+```
+./checkout-branch-worktree ../gst-1.14 1.14 -C build/
+```
+
 ## Add information about GStreamer development environment in your prompt line
 
 ### Bash prompt
