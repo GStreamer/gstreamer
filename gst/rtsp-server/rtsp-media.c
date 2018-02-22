@@ -3058,8 +3058,14 @@ start_prepare (GstRTSPMedia * media)
     g_object_set_data (G_OBJECT (elem), "gst-rtsp-dynpay-handlers", handlers);
   }
 
-  if (!start_preroll (media))
+  if (priv->nb_dynamic_elements == 0 && is_receive_only (media)) {
+    /* If we are receive_only (RECORD), do not try to preroll, to avoid
+     * a second ASYNC state change failing */
+    priv->is_live = TRUE;
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+  } else if (!start_preroll (media)) {
     goto preroll_failed;
+  }
 
   g_rec_mutex_unlock (&priv->state_lock);
 

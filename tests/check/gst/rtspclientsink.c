@@ -157,7 +157,7 @@ GST_START_TEST (test_record)
 
   mfactory =
       start_record_server
-      ("( rtppcmadepay name=depay0 ! appsink name=sink async=false )");
+      ("( rtppcmadepay name=depay0 ! appsink name=sink )");
 
   g_signal_connect (mfactory, "media-constructed",
       G_CALLBACK (media_constructed_cb), &server_sink);
