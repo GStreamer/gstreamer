@@ -164,8 +164,8 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
       GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
       g_param_spec_uint ("keyframe-period",
           "Keyframe Period",
-          "Maximal distance between two keyframes (0: auto-calculate)", 1, G_MAXUINT32,
-          30, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Maximal distance between two keyframes (0: auto-calculate)", 1,
+          G_MAXUINT32, 30, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoder:tune:
