@@ -1796,7 +1796,9 @@ static void
 gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   guint64 data_len, frame_dur;
-  gint overhead, frame_bitrate;
+  gint overhead;
+  guint frame_bitrate;
+  guint64 frame_bitrate64;
   GstBuffer *buffer = frame->buffer;
 
   overhead = frame->overhead;
@@ -1809,11 +1811,17 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* duration should be valid by now,
    * either set by subclass or maybe based on fps settings */
   if (GST_BUFFER_DURATION_IS_VALID (buffer) && parse->priv->acc_duration != 0) {
+    guint64 avg_bitrate;
+
     /* Calculate duration of a frame from buffer properties */
     frame_dur = GST_BUFFER_DURATION (buffer);
-    parse->priv->avg_bitrate = (8 * parse->priv->data_bytecount * GST_SECOND) /
-        parse->priv->acc_duration;
+    avg_bitrate = gst_util_uint64_scale (GST_SECOND,
+        8 * parse->priv->data_bytecount, parse->priv->acc_duration);
 
+    if (avg_bitrate > G_MAXUINT)
+      return;
+
+    parse->priv->avg_bitrate = avg_bitrate;
   } else {
     /* No way to figure out frame duration (is this even possible?) */
     return;
@@ -1828,10 +1836,15 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBaseParseFrame * frame)
       parse->priv->tags_changed = TRUE;
   }
 
-  if (frame_dur)
-    frame_bitrate = (8 * data_len * GST_SECOND) / frame_dur;
-  else
+  if (!frame_dur)
     return;
+
+  frame_bitrate64 = gst_util_uint64_scale (GST_SECOND, 8 * data_len, frame_dur);
+
+  if (frame_bitrate64 > G_MAXUINT)
+    return;
+
+  frame_bitrate = (guint) frame_bitrate64;
 
   GST_LOG_OBJECT (parse, "frame bitrate %u, avg bitrate %u", frame_bitrate,
       parse->priv->avg_bitrate);
