@@ -443,10 +443,10 @@ class Int64Range(Gst.Int64Range):
 
 class Bitmask(Gst.Bitmask):
     def __init__(self, v):
-        if not isinstance(v, int):
-            raise TypeError("%s is not an int." % (type(v)))
+        if not isinstance(v, long) and not isinstance(v, int):
+            raise TypeError("%s is not an int or long." % (type(v)))
 
-        self.v = v
+        self.v = long(v)
 
     def __str__(self):
         return hex(self.v)
