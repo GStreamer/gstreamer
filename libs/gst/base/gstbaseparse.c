@@ -4105,8 +4105,8 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
           if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &duration)
               || duration == -1) {
             /* seekable if we still have a chance to get duration later on */
-            seekable =
-                parse->priv->upstream_seekable && parse->priv->update_interval;
+            seekable = parse->priv->upstream_seekable &&
+                (parse->priv->update_interval > 0);
           } else {
             seekable = parse->priv->upstream_seekable;
             GST_LOG_OBJECT (parse, "already determine upstream seekabled: %d",
