@@ -80,6 +80,9 @@ gst_omx_video_enc_qp_mode_get_type (void)
       {OMX_ALG_AUTO_QP,
             "Let the VCU encoder change the QP for each coding unit according to its content",
           "auto"},
+      {OMX_ALG_ROI_QP,
+            "Adjust QP according to the regions of interest defined on each frame. Must be set to handle ROI metadata.",
+          "roi"},
       {0xffffffff, "Component Default", "default"},
       {0, NULL, NULL}
     };
@@ -2497,6 +2500,13 @@ handle_roi_metadata (GstOMXVideoEnc * self, GstBuffer * input)
     GST_LOG_OBJECT (self, "Input buffer ROI: type=%s id=%d (%d, %d) %dx%d",
         g_quark_to_string (roi->roi_type), roi->id, roi->x, roi->y, roi->w,
         roi->h);
+
+    if (self->qp_mode != OMX_ALG_ROI_QP) {
+      GST_WARNING_OBJECT (self,
+          "Need qp-mode=roi to handle ROI metadata (current: %d); ignoring",
+          self->qp_mode);
+      continue;
+    }
 
     GST_OMX_INIT_STRUCT (&roi_param);
     roi_param.nPortIndex = self->enc_in_port->index;
