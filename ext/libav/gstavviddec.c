@@ -32,6 +32,7 @@
 #include <gst/video/gstvideodecoder.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
+#include <gst/video/video-anc.h>
 
 #include "gstav.h"
 #include "gstavcodecmap.h"
@@ -1633,6 +1634,19 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     if (ffmpegdec->picture->interlaced_frame)
       GST_BUFFER_FLAG_SET (out_frame->output_buffer,
           GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  }
+
+  {
+    AVFrameSideData *side_data =
+        av_frame_get_side_data (ffmpegdec->picture, AV_FRAME_DATA_A53_CC);
+    if (side_data) {
+      GST_LOG_OBJECT (ffmpegdec, "Found CC of size %d", side_data->size);
+      GST_MEMDUMP ("A53 CC", side_data->data, side_data->size);
+      out_frame->output_buffer =
+          gst_buffer_make_writable (out_frame->output_buffer);
+      gst_buffer_add_video_caption_meta (out_frame->output_buffer,
+          GST_VIDEO_CAPTION_TYPE_CEA708_RAW, side_data->data, side_data->size);
+    }
   }
 
   /* cleaning time */
