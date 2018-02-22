@@ -120,6 +120,9 @@ struct _GstMsdkEnc
   mfxExtCodingOption3 option3;
   gboolean enable_extopt3;
 
+  /* parameters for per-frame based encoding control */
+  mfxEncodeCtrl enc_cntrl;
+
   GstBufferPool *msdk_pool;
   GstBufferPool *msdk_converted_pool;
   GstVideoInfo aligned_info;

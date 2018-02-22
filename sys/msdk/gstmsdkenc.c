@@ -727,7 +727,15 @@ gst_msdkenc_encode_frame (GstMsdkEnc * thiz, mfxFrameSurface1 * surface,
   task = gst_msdkenc_get_free_task (thiz);
 
   for (;;) {
-    status = MFXVideoENCODE_EncodeFrameAsync (session, NULL, surface,
+    /* Force key-frame if needed */
+    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (input_frame))
+      thiz->enc_cntrl.FrameType =
+          MFX_FRAMETYPE_I | MFX_FRAMETYPE_IDR | MFX_FRAMETYPE_REF;
+    else
+      thiz->enc_cntrl.FrameType = MFX_FRAMETYPE_UNKNOWN;
+
+    status =
+        MFXVideoENCODE_EncodeFrameAsync (session, &thiz->enc_cntrl, surface,
         &task->output_bitstream, &task->sync_point);
     if (status != MFX_WRN_DEVICE_BUSY)
       break;
@@ -1384,6 +1392,7 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->enable_extopt3 = FALSE;
   memset (&thiz->option2, 0, sizeof (thiz->option2));
   memset (&thiz->option3, 0, sizeof (thiz->option3));
+  memset (&thiz->enc_cntrl, 0, sizeof (thiz->enc_cntrl));
 }
 
 /* gst_msdkenc_set_common_property:
