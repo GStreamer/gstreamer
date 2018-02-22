@@ -414,7 +414,7 @@ gst_rtp_ulpfec_dec_handle_sink_event (GstPad * pad, GstObject * parent,
     else
       ++self->packets_recovered;
     GST_DEBUG_OBJECT (self, "Unrecovered / Recovered: %lu / %lu",
-        self->packets_unrecovered, self->packets_recovered);
+        (gulong) self->packets_unrecovered, (gulong) self->packets_recovered);
   } else if (GST_EVENT_CAPS == GST_EVENT_TYPE (event)) {
     GstCaps *caps;
     gboolean have_caps_pt = FALSE;
