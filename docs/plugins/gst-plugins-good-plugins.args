@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.13.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.13.1.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1066,6 +1066,16 @@
 <NICK>Max Timestamp Offset Adjustment</NICK>
 <BLURB>The maximum number of nanoseconds per frame that time stamp offsets may be adjusted (0 = no limit).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::backchannel</NAME>
+<TYPE>GstRTSPBackchannel</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Backchannel type</NICK>
+<BLURB>The type of backchannel to setup. Default is 'none'.</BLURB>
+<DEFAULT>No backchannel</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3525,7 +3535,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.13.1 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.13.1.1 "</DEFAULT>
 </ARG>
 
 <ARG>

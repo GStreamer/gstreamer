@@ -670,6 +670,15 @@ GstRTSPMessage *arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRTSPSrc::push-backchannel-buffer</NAME>
+<RETURNS>GstFlowReturn</RETURNS>
+<FLAGS>la</FLAGS>
+GstRTSPSrc *gstrtspsrc
+guint  arg1
+GstBuffer *arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSplitMuxSink::format-location</NAME>
 <RETURNS>gchar*</RETURNS>
 <FLAGS>l</FLAGS>
