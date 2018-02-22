@@ -61,9 +61,12 @@ rtph261
 rtph263
 rtph264
 rtpjitterbuffer
+rtpred
 rtpsession
+rtpstorage
 rtpmux
 rtprtx
+rtpulpfec
 rtpvp9
 shapewipe
 souphttpsrc

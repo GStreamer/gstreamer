@@ -50,6 +50,7 @@ tmp-orc.c
 *orc.h
 
 /tests/examples/jack/jack_client
+/tests/examples/rtsp/test-onvif
 
 Build
 *.user
