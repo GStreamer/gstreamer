@@ -1852,6 +1852,8 @@ ensure_misc_params (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture)
 
   if (!gst_vaapi_encoder_ensure_param_control_rate (base_encoder, picture))
     return FALSE;
+  if (!gst_vaapi_encoder_ensure_param_roi_regions (base_encoder, picture))
+    return FALSE;
   if (!gst_vaapi_encoder_ensure_param_quality_level (base_encoder, picture))
     return FALSE;
   return TRUE;

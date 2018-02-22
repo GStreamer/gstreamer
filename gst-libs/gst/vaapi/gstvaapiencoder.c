@@ -193,6 +193,19 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
           " higher value means lower-quality/fast-encode)",
           1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVapiEncoder:roi-default-delta-qp
+   *
+   * Default delta-qp to apply to each Region of Interest
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE,
+      g_param_spec_int ("default-roi-delta-qp", "Default ROI delta QP",
+          "The default delta-qp to apply to each Region of Interest"
+          "(lower value means higher-quality, "
+          "higher value means lower-quality)",
+          -10, 10, -10, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   return props;
 }
 
@@ -257,6 +270,99 @@ gst_vaapi_encoder_ensure_param_control_rate (GstVaapiEncoder * encoder,
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
+  return TRUE;
+}
+
+gboolean
+gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture)
+{
+#if VA_CHECK_VERSION(0,39,1)
+  GstVaapiContextInfo *const cip = &encoder->context_info;
+  const GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;
+  VAEncMiscParameterBufferROI *roi_param;
+  GstVaapiEncMiscParam *misc;
+  VAEncROI *region_roi;
+  GstBuffer *input;
+  guint num_roi, i;
+  gpointer state = NULL;
+
+  if (!config->roi_capability)
+    return TRUE;
+
+  if (!picture->frame)
+    return FALSE;
+
+  input = picture->frame->input_buffer;
+  if (!input)
+    return FALSE;
+
+  num_roi =
+      gst_buffer_get_n_meta (input, GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE);
+  if (num_roi == 0)
+    return TRUE;
+  num_roi = CLAMP (num_roi, 1, config->roi_num_supported);
+
+  misc =
+      gst_vaapi_enc_misc_param_new (encoder, VAEncMiscParameterTypeROI,
+      sizeof (VAEncMiscParameterBufferROI) + num_roi * sizeof (VAEncROI));
+  if (!misc)
+    return FALSE;
+
+  region_roi =
+      (VAEncROI *) ((guint8 *) misc->param + sizeof (VAEncMiscParameterBuffer) +
+      sizeof (VAEncMiscParameterBufferROI));
+
+  roi_param = misc->data;
+  roi_param->num_roi = num_roi;
+  roi_param->roi = region_roi;
+
+  /* roi_value in VAEncROI should be used as ROI delta QP */
+  roi_param->roi_flags.bits.roi_value_is_qp_delta = 1;
+  roi_param->max_delta_qp = 10;
+  roi_param->min_delta_qp = -10;
+
+  for (i = 0; i < num_roi; i++) {
+    GstVideoRegionOfInterestMeta *roi;
+    GstStructure *s;
+
+    roi = (GstVideoRegionOfInterestMeta *)
+        gst_buffer_iterate_meta_filtered (input, &state,
+        GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE);
+
+    /* ignore roi if overflow */
+    if ((roi->x > G_MAXINT16) || (roi->y > G_MAXINT16)
+        || (roi->w > G_MAXUINT16) || (roi->h > G_MAXUINT16))
+      continue;
+
+    GST_LOG ("Input buffer ROI: type=%s id=%d (%d, %d) %dx%d",
+        g_quark_to_string (roi->roi_type), roi->id, roi->x, roi->y, roi->w,
+        roi->h);
+
+    region_roi[i].roi_rectangle.x = roi->x;
+    region_roi[i].roi_rectangle.y = roi->y;
+    region_roi[i].roi_rectangle.width = roi->w;
+    region_roi[i].roi_rectangle.height = roi->h;
+
+    s = gst_video_region_of_interest_meta_get_param (roi, "roi/vaapi");
+    if (s) {
+      int value = 0;
+
+      if (!gst_structure_get_int (s, "delta-qp", &value))
+        continue;
+      value = CLAMP (value, roi_param->min_delta_qp, roi_param->max_delta_qp);
+      region_roi[i].roi_value = value;
+    } else {
+      region_roi[i].roi_value = encoder->default_roi_value;
+
+      GST_LOG ("No ROI value specified upstream, use default (%d)",
+          encoder->default_roi_value);
+    }
+  }
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+#endif
   return TRUE;
 }
 
@@ -656,8 +762,13 @@ get_roi_capability (GstVaapiEncoder * encoder, guint * num_roi_supported)
 
   roi_config = (VAConfigAttribValEncROI *) & value;
 
-  if (roi_config->bits.num_roi_regions == 0 ||
-      VA_ROI_RC_QP_DELTA_SUPPORT (roi_config) == 0)
+  if (roi_config->bits.num_roi_regions == 0)
+    return FALSE;
+
+  /* Only support QP delta, and it only makes sense when rate control
+   * is not CQP */
+  if ((GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CQP)
+      && (VA_ROI_RC_QP_DELTA_SUPPORT (roi_config) == 0))
     return FALSE;
 
   GST_INFO ("Support for ROI - number of regions supported: %d",
@@ -981,6 +1092,10 @@ set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
     case GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL:
       status = gst_vaapi_encoder_set_quality_level (encoder,
           g_value_get_uint (value));
+      break;
+    case GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE:
+      encoder->default_roi_value = g_value_get_int (value);
+      status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
       break;
   }
   return status;

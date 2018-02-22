@@ -318,7 +318,7 @@ config_create (GstVaapiContext * context)
         roi_config = (VAConfigAttribValEncROI *) & value;
         if (roi_config->bits.num_roi_regions != config->roi_num_supported ||
             VA_ROI_RC_QP_DELTA_SUPPORT (roi_config) == 0) {
-          GST_ERROR ("ROI unsupported - number of regions supported: %d"
+          GST_ERROR ("Mismatched ROI support: number of regions supported: %d"
               " ROI delta QP: %d", roi_config->bits.num_roi_regions,
               VA_ROI_RC_QP_DELTA_SUPPORT (roi_config));
           goto cleanup;

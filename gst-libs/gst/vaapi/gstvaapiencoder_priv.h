@@ -287,6 +287,8 @@ struct _GstVaapiEncoder
   VAEncMiscParameterRateControl va_ratecontrol;
   VAEncMiscParameterFrameRate va_framerate;
   VAEncMiscParameterHRD va_hrd;
+
+  gint8 default_roi_value;
 };
 
 struct _GstVaapiEncoderClassData
@@ -411,6 +413,11 @@ gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_encoder_ensure_param_control_rate (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
     GstVaapiEncPicture * picture);
 
 G_GNUC_INTERNAL
