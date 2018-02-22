@@ -35,6 +35,7 @@ from gi.repository import GLib
 if sys.version_info >= (3, 0):
     _basestring = str
     _callable = lambda c: hasattr(c, '__call__')
+    long = int
 else:
     _basestring = basestring
     _callable = callable

@@ -396,4 +396,7 @@ class TestBitmask(TestCase):
         Gst.init(None)
 
         r = Gst.Bitmask(1 << 5)
-        self.assertEqual(str(r), '0x20L')
+        if sys.version_info >= (3, 0):
+            self.assertEqual(str(r), '0x20')
+        else:
+            self.assertEqual(str(r), '0x20L')
