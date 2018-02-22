@@ -140,11 +140,6 @@ typedef struct {
   GParamSpec *const pspec;
 } GstVaapiEncoderPropInfo;
 
-typedef struct _GstVaapiROI {
-  gint roi_value;
-  GstVaapiRectangle rect;
-} GstVaapiROI;
-
 GType
 gst_vaapi_encoder_tune_get_type (void) G_GNUC_CONST;
 
@@ -206,13 +201,6 @@ gst_vaapi_encoder_flush (GstVaapiEncoder * encoder);
 GArray *
 gst_vaapi_encoder_get_surface_formats (GstVaapiEncoder * encoder,
     GstVaapiProfile profile);
-
-gboolean
-gst_vaapi_encoder_add_roi (GstVaapiEncoder * encoder, GstVaapiROI * roi);
-
-gboolean
-gst_vaapi_encoder_del_roi (GstVaapiEncoder * encoder, GstVaapiROI * roi);
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_H */
