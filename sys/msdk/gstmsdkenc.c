@@ -1388,11 +1388,6 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->mbbrc = PROP_MBBRC_DEFAULT;
   thiz->adaptive_i = PROP_ADAPTIVE_I_DEFAULT;
   thiz->adaptive_b = PROP_ADAPTIVE_B_DEFAULT;
-
-  thiz->enable_extopt3 = FALSE;
-  memset (&thiz->option2, 0, sizeof (thiz->option2));
-  memset (&thiz->option3, 0, sizeof (thiz->option3));
-  memset (&thiz->enc_cntrl, 0, sizeof (thiz->enc_cntrl));
 }
 
 /* gst_msdkenc_set_common_property:
