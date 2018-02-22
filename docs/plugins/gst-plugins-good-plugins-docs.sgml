@@ -224,6 +224,8 @@
     <xi:include href="xml/element-rtpptdemux.xml" />
     <xi:include href="xml/element-rtpqcelpdepay.xml" />
     <xi:include href="xml/element-rtpqdm2depay.xml" />
+    <xi:include href="xml/element-rtpreddec.xml" />
+    <xi:include href="xml/element-rtpredenc.xml" />
     <xi:include href="xml/element-rtprtxqueue.xml" />
     <xi:include href="xml/element-rtprtxreceive.xml" />
     <xi:include href="xml/element-rtprtxsend.xml" />
@@ -235,11 +237,14 @@
     <xi:include href="xml/element-rtpspeexdepay.xml" />
     <xi:include href="xml/element-rtpspeexpay.xml" />
     <xi:include href="xml/element-rtpssrcdemux.xml" />
+    <xi:include href="xml/element-rtpstorage.xml" />
     <xi:include href="xml/element-rtpstreamdepay.xml" />
     <xi:include href="xml/element-rtpstreampay.xml" />
     <xi:include href="xml/element-rtpsv3vdepay.xml" />
     <xi:include href="xml/element-rtptheoradepay.xml" />
     <xi:include href="xml/element-rtptheorapay.xml" />
+    <xi:include href="xml/element-rtpulpfecdec.xml" />
+    <xi:include href="xml/element-rtpulpfecenc.xml" />
     <xi:include href="xml/element-rtpvorbisdepay.xml" />
     <xi:include href="xml/element-rtpvorbispay.xml" />
     <xi:include href="xml/element-rtpvp8depay.xml" />

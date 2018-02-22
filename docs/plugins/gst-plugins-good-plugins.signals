@@ -383,6 +383,39 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::get-internal-storage</NAME>
+<RETURNS>GObject*</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::new-storage</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+GstElement *arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-fec-decoder</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::request-fec-encoder</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>

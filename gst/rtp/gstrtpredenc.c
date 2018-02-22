@@ -18,6 +18,16 @@
  * Author: Mikhail Fludkov <misha@pexip.com>
  */
 
+/**
+ * SECTION:element-rtpredenc
+ * @short_description: RTP Redundant Audio Data (RED) encoder
+ * @title: rtpredenc
+ *
+ * Encode Redundant Audio Data (RED) as per RFC 2198.
+ *
+ * Since: 1.14
+ */
+
 #include <gst/rtp/gstrtpbuffer.h>
 #include <string.h>
 #include <stdio.h>

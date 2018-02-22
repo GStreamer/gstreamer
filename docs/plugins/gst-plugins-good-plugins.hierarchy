@@ -289,11 +289,16 @@ GObject
         GstRndBufferSize
         GstRtpJitterBuffer
         GstRtpPtDemux
+        GstRtpRedDec
+        GstRtpRedEnc
         GstRtpRtxReceive
         GstRtpRtxSend
         GstRtpSession
         GstRtpSsrcDemux
+        GstRtpStorage
         GstRtpStreamPay
+        GstRtpUlpFecDec
+        GstRtpUlpFecEnc
         GstSMPTE
         GstShapeWipe
         GstTagDemux

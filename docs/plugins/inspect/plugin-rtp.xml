@@ -1459,6 +1459,48 @@
       </pads>
     </element>
     <element>
+      <name>rtpreddec</name>
+      <longname>Redundant Audio Data (RED) Decoder</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Decode Redundant Audio Data (RED)</description>
+      <author>Hani Mustafa &lt;hani@pexip.com&gt;, Mikhail Fludkov &lt;misha@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpredenc</name>
+      <longname>Redundant Audio Data (RED) Encoder</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Encode Redundant Audio Data (RED)</description>
+      <author>Hani Mustafa &lt;hani@pexip.com&gt;, Mikhail Fludkov &lt;misha@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpsbcdepay</name>
       <longname>RTP SBC audio depayloader</longname>
       <class>Codec/Depayloader/Network/RTP</class>
@@ -1585,6 +1627,27 @@
       </pads>
     </element>
     <element>
+      <name>rtpstorage</name>
+      <longname>RTP storage</longname>
+      <class>Analyzer/RTP</class>
+      <description>Helper element for various purposes (ex. recovering from packet loss using RED/FEC). Saves given number of RTP packets. Should be instantiated before jitterbuffer</description>
+      <author>Mikhail Fludkov &lt;misha@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpstreamdepay</name>
       <longname>RTP Stream Depayloading</longname>
       <class>Codec/Depayloader/Network</class>
@@ -1686,6 +1749,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpulpfecdec</name>
+      <longname>RTP FEC Decoder</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Decodes RTP FEC (RFC5109)</description>
+      <author>Mikhail Fludkov &lt;misha@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpulpfecenc</name>
+      <longname>RTP FEC Encoder</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Encodes RTP FEC (RFC5109)</description>
+      <author>Mikhail Fludkov &lt;misha@pexip.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
         </caps>
       </pads>
     </element>

@@ -18,6 +18,17 @@
  * Author: Mikhail Fludkov <misha@pexip.com>
  */
 
+/**
+ * SECTION:element-rtpulpfecenc
+ * @short_description: Generic RTP Forward Error Correction (FEC) encoder
+ * @title: rtpulpfecenc
+ *
+ * Generic Forward Error Correction (FEC) encoder using Uneven Level
+ * Protection (ULP) as described in RFC 5109.
+ *
+ * Since: 1.14
+ */
+
 #include <gst/rtp/gstrtp-enumtypes.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <string.h>

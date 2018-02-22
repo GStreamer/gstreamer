@@ -18,6 +18,16 @@
  * Author: Mikhail Fludkov <misha@pexip.com>
  */
 
+/**
+ * SECTION:element-rtpreddec
+ * @short_description: RTP Redundant Audio Data (RED) decoder
+ * @title: rtpreddec
+ *
+ * Decode Redundant Audio Data (RED) as per RFC 2198.
+ *
+ * Since: 1.14
+ */
+
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "rtpredcommon.h"

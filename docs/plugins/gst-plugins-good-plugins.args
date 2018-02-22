@@ -24648,3 +24648,203 @@
 <DEFAULT></DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRtpPtDemux::ignored-payload-types</NAME>
+<TYPE>GstValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignored payload types</NICK>
+<BLURB>Packets with these payload types will be dropped.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::multipacket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Multipacket</NICK>
+<BLURB>Apply FEC on multiple packets.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::mux-seq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mux seq</NICK>
+<BLURB>Mux seqnum for media and fec packets in same seqnum space.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::percentage</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Percentage</NICK>
+<BLURB>FEC overhead percentage for the whole stream.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::percentage-important</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Percentage important</NICK>
+<BLURB>FEC overhead percentage for important packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::protected</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Protected</NICK>
+<BLURB>Count of protected packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::pt</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>payload type</NICK>
+<BLURB>The payload type of FEC packets.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecEnc::ssrc</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>SSRC</NICK>
+<BLURB>The SSRC to use on FEC'd packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecDec::pt</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 127</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>pt</NICK>
+<BLURB>FEC packets payload type.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecDec::recovered</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>recovered</NICK>
+<BLURB>The number of recovered packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecDec::storage</NAME>
+<TYPE>GObject*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTP storage</NICK>
+<BLURB>RTP storage.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpUlpFecDec::unrecovered</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>unrecovered</NICK>
+<BLURB>The number of unrecovered packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpStorage::internal-storage</NAME>
+<TYPE>GObject*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Internal storage</NICK>
+<BLURB>Internal RtpStorage object.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpStorage::size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Storage size (in ns)</NICK>
+<BLURB>The amount of data to keep in the storage (in ns, 0-disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRedEnc::allow-no-red-blocks</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Allow no redundant blocks</NICK>
+<BLURB>true - can produce RED packets even without redundant blocks (distance==0) false - RED packets will be produced only if distance>0.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRedEnc::distance</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RED distance</NICK>
+<BLURB>Tells which media packet to use as a redundant block (0 - no redundant blocks, 1 to use previous packet, 2 to use the packet before previous, etc.).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRedEnc::pt</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>payload type</NICK>
+<BLURB>Payload type FEC packets (-1 disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRedEnc::sent</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Sent</NICK>
+<BLURB>Count of sent packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRedDec::pt</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,127]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>payload type</NICK>
+<BLURB>Payload type FEC packets.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRedDec::received</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Received</NICK>
+<BLURB>Count of received packets.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

@@ -18,6 +18,20 @@
  * Author: Mikhail Fludkov <misha@pexip.com>
  */
 
+/**
+ * SECTION:element-rtpstorage
+ * @short_description: RTP storage for forward error correction (FEC) in rtpbin
+ * @title: rtpstorage
+ *
+ * Helper element for storing packets to aid later packet recovery from packet
+ * loss using RED/FEC (Forward Error Correction).
+ *
+ * This element is used internally by rtpbin and is usually created
+ * automatically.
+ *
+ * Since: 1.14
+ */
+
 #include "gstrtpstorage.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",

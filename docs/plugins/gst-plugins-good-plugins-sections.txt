@@ -3332,6 +3332,38 @@ gst_rtp_qd_m2_depay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtpreddec</FILE>
+<TITLE>rtpreddec</TITLE>
+GstRtpRedDec
+<SUBSECTION Standard>
+GstRtpRedDecClass
+GST_RTP_RED_DEC
+GST_RTP_RED_DEC_CAST
+GST_IS_RTP_RED_DEC
+GST_RTP_RED_DEC_CLASS
+GST_IS_RTP_RED_DEC_CLASS
+GST_TYPE_RTP_RED_DEC
+<SUBSECTION Private>
+gst_rtp_red_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtpredenc</FILE>
+<TITLE>rtpredenc</TITLE>
+GstRtpRedEnc
+<SUBSECTION Standard>
+GstRtpRedEncClass
+GST_RTP_RED_ENC
+GST_RTP_RED_ENC_CAST
+GST_IS_RTP_RED_ENC
+GST_RTP_RED_ENC_CLASS
+GST_IS_RTP_RED_ENC_CLASS
+GST_TYPE_RTP_RED_ENC
+<SUBSECTION Private>
+gst_rtp_red_enc_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtprtxreceive</FILE>
 <TITLE>rtprtxreceive</TITLE>
 GstRtpRtxReceive
@@ -3475,6 +3507,22 @@ GST_TYPE_RTP_SSRC_DEMUX
 gst_rtp_ssrc_demux_get_type
 </SECTION>
 
+ <SECTION>
+<FILE>element-rtpstorage</FILE>
+<TITLE>rtpstorage</TITLE>
+GstRtpStorage
+<SUBSECTION Standard>
+GstRtpStorageClass
+GST_RTP_STORAGE
+GST_RTP_STORAGE_CAST
+GST_IS_RTP_STORAGE
+GST_RTP_STORAGE_CLASS
+GST_IS_RTP_STORAGE_CLASS
+GST_TYPE_RTP_STORAGE
+<SUBSECTION Private>
+gst_rtp_storage_get_type
+</SECTION>
+
 <SECTION>
 <FILE>element-rtpstreamdepay</FILE>
 <TITLE>rtpstreamdepay</TITLE>
@@ -3537,6 +3585,38 @@ GST_IS_RTP_THEORA_PAY_CLASS
 GST_TYPE_RTP_THEORA_PAY
 <SUBSECTION Private>
 gst_rtp_theora_pay_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtpulpfecdec</FILE>
+<TITLE>rtpulpfecdec</TITLE>
+GstRtpUlpFecDec
+<SUBSECTION Standard>
+GstRtpUlpFecDecClass
+GST_RTP_ULP_FEC_DEC
+GST_RTP_ULP_FEC_DEC_CAST
+GST_IS_RTP_ULP_FEC_DEC
+GST_RTP_ULP_FEC_DEC_CLASS
+GST_IS_RTP_ULP_FEC_DEC_CLASS
+GST_TYPE_RTP_ULP_FEC_DEC
+<SUBSECTION Private>
+gst_rtp_ulp_fec_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-rtpulpfecenc</FILE>
+<TITLE>rtpulpfecenc</TITLE>
+GstRtpUlpFecEnc
+<SUBSECTION Standard>
+GstRtpUlpFecEncClass
+GST_RTP_ULP_FEC_ENC
+GST_RTP_ULP_FEC_ENC_CAST
+GST_IS_RTP_ULP_FEC_ENC
+GST_RTP_ULP_FEC_ENC_CLASS
+GST_IS_RTP_ULP_FEC_ENC_CLASS
+GST_TYPE_RTP_ULP_FEC_ENC
+<SUBSECTION Private>
+gst_rtp_ulp_fec_enc_get_type
 </SECTION>
 
 <SECTION>
