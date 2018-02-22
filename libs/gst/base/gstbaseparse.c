@@ -3860,7 +3860,11 @@ gst_base_parse_set_frame_rate (GstBaseParse * parse, guint fps_num,
         gst_util_uint64_scale (GST_SECOND, fps_den * lead_out, fps_num);
     /* aim for about 1.5s to estimate duration */
     if (parse->priv->update_interval < 0) {
-      parse->priv->update_interval = fps_num * 3 / (fps_den * 2);
+      guint64 interval = gst_util_uint64_scale (fps_num, 3,
+          G_GUINT64_CONSTANT (2) * fps_den);
+
+      parse->priv->update_interval = MIN (interval, G_MAXINT);
+
       GST_LOG_OBJECT (parse, "estimated update interval to %d frames",
           parse->priv->update_interval);
     }
