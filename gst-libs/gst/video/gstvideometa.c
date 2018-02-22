@@ -890,7 +890,7 @@ gst_video_region_of_interest_meta_add_param (GstVideoRegionOfInterestMeta *
  * Returns: (transfer none) (nullable): a #GstStructure
  *
  * Since: 1.14
- * @see_also: gst_video_region_of_interest_meta_add_param()
+ * See also: gst_video_region_of_interest_meta_add_param()
  */
 GstStructure *
 gst_video_region_of_interest_meta_get_param (GstVideoRegionOfInterestMeta *
