@@ -396,4 +396,4 @@ class TestBitmask(TestCase):
         Gst.init(None)
 
         r = Gst.Bitmask(1 << 5)
-        self.assertEqual(str(r), '0x20')
+        self.assertEqual(str(r), '0x20L')
