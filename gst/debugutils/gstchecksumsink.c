@@ -49,12 +49,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate gst_checksum_sink_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
 /* class initialization */
 
 #define GST_TYPE_CHECKSUM_SINK_HASH (gst_checksum_sink_hash_get_type ())
@@ -95,8 +89,6 @@ gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_checksum_sink_stop);
   base_sink_class->render = GST_DEBUG_FUNCPTR (gst_checksum_sink_render);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_checksum_sink_src_template);
   gst_element_class_add_static_pad_template (element_class,
       &gst_checksum_sink_sink_template);
 
