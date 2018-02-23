@@ -1115,8 +1115,9 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     goto error_copy_buffer;
 
 done:
-  gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_FLAGS |
-      GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  if (!gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_FLAGS |
+          GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_META, 0, -1))
+    return GST_FLOW_ERROR;
   *outbuf_ptr = outbuf;
   return GST_FLOW_OK;
 
