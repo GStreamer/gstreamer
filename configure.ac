@@ -101,11 +101,7 @@ AC_ARG_WITH([pygi_overrides_dir],
 
 AC_MSG_CHECKING(for pygobject overrides directory)
 if test "x$with_pygi_overrides_dir" = "x" ; then
-        overrides_dir="`$PYTHON -c 'import gi; print(gi._overridesdir)' 2>/dev/null`"
-    # fallback if the previous failed
-    if test "x$overrides_dir" = "x" ; then
         overrides_dir="${pyexecdir}/gi/overrides"
-    fi
 else
         overrides_dir="$with_pygi_overrides_dir"
 fi
