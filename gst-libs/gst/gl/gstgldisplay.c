@@ -73,6 +73,9 @@
 #if GST_GL_HAVE_WINDOW_VIV_FB
 #include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
 #endif
+#if GST_GL_HAVE_WINDOW_GBM
+#include <gst/gl/gbm/gstgldisplay_gbm.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_context);
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
@@ -311,6 +314,11 @@ gst_gl_display_new (void)
         disp_idx = v;
     }
     display = GST_GL_DISPLAY (gst_gl_display_viv_fb_new (disp_idx));
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_GBM
+  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "gbm"))) {
+    display = GST_GL_DISPLAY (gst_gl_display_gbm_new ());
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL

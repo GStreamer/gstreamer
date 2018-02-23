@@ -126,6 +126,7 @@ HAVE_GLES2=no
 HAVE_GLES3_H=no
 HAVE_WAYLAND_EGL=no
 HAVE_VIV_FB_EGL=no
+HAVE_GBM_EGL=no
 HAVE_EGL_RPI=no
 
 case $host in
@@ -169,6 +170,12 @@ case $host in
     dnl imx6 / Vivante specifics
     if test "x$HAVE_EGL" = "xyes"; then
         AC_CHECK_LIB([EGL], [fbGetDisplay], [HAVE_VIV_FB_EGL=yes])
+    fi
+
+    if test "x$HAVE_EGL" = "xyes" -a "x$HAVE_DRM" = "xyes"; then
+        PKG_CHECK_MODULES(GBM, gbm, HAVE_GBM_EGL=yes, HAVE_GBM_EGL=no)
+        AC_SUBST(GBM_CFLAGS)
+        AC_SUBST(GBM_LIBS)
     fi
 
     dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
@@ -467,6 +474,16 @@ case $host in
       fi
     fi
 
+    if test "x$HAVE_GBM_EGL" = "xyes"; then
+      if test "x$NEED_EGL" = "xno" -o "x$HAVE_EGL" = "xno"; then
+        AC_MSG_WARN([EGL is required by the Mesa GBM EGL backend])
+      else
+        HAVE_WINDOW_GBM=yes
+        GL_LIBS="$GL_LIBS"
+        GL_CFLAGS="$GL_CFLAGS"
+      fi
+    fi
+
     if test "x$HAVE_X11_XCB" = "xyes" -a "x$HAVE_EGL_RPI" = "xno"; then
       if test "x$NEED_X11" != "xno"; then
         GL_LIBS="$GL_LIBS $X11_XCB_LIBS"
@@ -511,7 +528,7 @@ case $host in
       fi
     else
       if test "x$NEED_EGL" != "xno"; then
-        if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes" -o "x$HAVE_WINDOW_VIV_FB" = "xyes"; then
+        if test "x$HAVE_WINDOW_WAYLAND" = "xyes" -o "x$HAVE_WINDOW_X11" = "xyes" -o "x$HAVE_WINDOW_DISPMANX" = "xyes" -o "x$HAVE_WINDOW_VIV_FB" = "xyes" -o "x$HAVE_WINDOW_GBM" = "xyes"; then
           GL_LIBS="$GL_LIBS -lEGL $EGL_LIBS"
           GL_CFLAGS="$GL_CFLAGS $EGL_CFLAGS"
           USE_EGL=yes
@@ -669,6 +686,7 @@ GST_GL_HAVE_WINDOW_ANDROID=0
 GST_GL_HAVE_WINDOW_DISPMANX=0
 GST_GL_HAVE_WINDOW_EAGL=0
 GST_GL_HAVE_WINDOW_VIV_FB=0
+GST_GL_HAVE_WINDOW_GBM=0
 
 if test "x$HAVE_WINDOW_X11" = "xyes"; then
   GL_WINDOWS="x11 $GL_WINDOWS"
@@ -702,6 +720,10 @@ if test "x$HAVE_WINDOW_VIV_FB" = "xyes"; then
   GL_WINDOWS="viv-fb $GL_WINDOWS"
   GST_GL_HAVE_WINDOW_VIV_FB=1
 fi
+if test "x$HAVE_WINDOW_GBM" = "xyes"; then
+  GL_WINDOWS="gbm $GL_WINDOWS"
+  GST_GL_HAVE_WINDOW_GBM=1
+fi
 
 GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_X11 $GST_GL_HAVE_WINDOW_X11
@@ -712,6 +734,7 @@ GL_CONFIG_DEFINES="$GL_CONFIG_DEFINES
 #define GST_GL_HAVE_WINDOW_DISPMANX $GST_GL_HAVE_WINDOW_DISPMANX
 #define GST_GL_HAVE_WINDOW_EAGL $GST_GL_HAVE_WINDOW_EAGL
 #define GST_GL_HAVE_WINDOW_VIV_FB $GST_GL_HAVE_WINDOW_VIV_FB
+#define GST_GL_HAVE_WINDOW_GBM $GST_GL_HAVE_WINDOW_GBM
 "
 
 dnl PLATFORM's
@@ -789,6 +812,7 @@ if test "x$GL_APIS" = "x" -o "x$GL_PLATFORMS" = "x" -o "x$GL_WINDOWS" = "x"; the
   HAVE_WINDOW_COCOA=no
   HAVE_WINDOW_EAGL=no
   HAVE_WINDOW_VIV_FB=no
+  HAVE_WINDOW_GBM=no
 fi
 
 AC_SUBST(GL_APIS)
@@ -808,6 +832,7 @@ AM_CONDITIONAL(HAVE_WINDOW_WAYLAND, test "x$HAVE_WINDOW_WAYLAND" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_ANDROID, test "x$HAVE_WINDOW_ANDROID" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_EAGL, test "x$HAVE_WINDOW_EAGL" = "xyes")
 AM_CONDITIONAL(HAVE_WINDOW_VIV_FB, test "x$HAVE_WINDOW_VIV_FB" = "xyes")
+AM_CONDITIONAL(HAVE_WINDOW_GBM, test "x$HAVE_WINDOW_GBM" = "xyes")
 
 AM_CONDITIONAL(USE_OPENGL, test "x$USE_OPENGL" = "xyes")
 AM_CONDITIONAL(USE_GLES2, test "x$USE_GLES2" = "xyes")

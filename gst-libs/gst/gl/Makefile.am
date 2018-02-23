@@ -134,6 +134,11 @@ SUBDIRS += viv-fb
 libgstgl_@GST_API_VERSION@_la_LIBADD += viv-fb/libgstgl-viv-fb.la
 endif
 
+if HAVE_WINDOW_GBM
+SUBDIRS += gbm
+libgstgl_@GST_API_VERSION@_la_LIBADD += gbm/libgstgl-gbm.la
+endif
+
 if USE_EGL
 SUBDIRS += egl
 libgstgl_@GST_API_VERSION@_la_LIBADD += egl/libgstgl-egl.la

@@ -150,6 +150,14 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
         NULL);
   }
 #endif
+#if GST_GL_HAVE_WINDOW_GBM
+  if (ret == EGL_NO_DISPLAY && (type & GST_GL_DISPLAY_TYPE_GBM) &&
+      (gst_gl_check_extension ("EGL_MESA_platform_gbm", egl_exts) ||
+          gst_gl_check_extension ("EGL_MESA_platform_gbm", egl_exts))) {
+    ret = _gst_eglGetPlatformDisplay (EGL_PLATFORM_GBM_MESA, (gpointer) display,
+        NULL);
+  }
+#endif
   /* android only has one winsys/display connection */
 
   if (ret != EGL_NO_DISPLAY)

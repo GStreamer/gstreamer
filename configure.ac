@@ -951,6 +951,7 @@ gst-libs/gst/gl/wayland/Makefile
 gst-libs/gst/gl/win32/Makefile
 gst-libs/gst/gl/x11/Makefile
 gst-libs/gst/gl/viv-fb/Makefile
+gst-libs/gst/gl/gbm/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/rtsp/Makefile
