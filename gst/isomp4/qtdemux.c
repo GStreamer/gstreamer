@@ -9224,7 +9224,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if ((edts = qtdemux_tree_get_child_by_type (trak, FOURCC_edts))) {
     GNode *elst;
     gint n_segments;
-    gint i, count, entry_size;
+    gint segment_number, entry_size;
     guint64 time;
     GstClockTime stime;
     const guint8 *buffer;
@@ -9259,9 +9259,8 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     /* segments always start from 0 */
     time = 0;
     stime = 0;
-    count = 0;
     buffer += 16;
-    for (i = 0; i < n_segments; i++) {
+    for (segment_number = 0; segment_number < n_segments; segment_number++) {
       guint64 duration;
       guint64 media_time;
       gboolean time_valid = TRUE;
@@ -9284,7 +9283,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       if (time_valid)
         media_start = QTSTREAMTIME_TO_GSTTIME (stream, media_time);
 
-      segment = &stream->segments[count++];
+      segment = &stream->segments[segment_number];
 
       /* time and duration expressed in global timescale */
       segment->time = stime;
@@ -9332,7 +9331,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
           ", duration %" GST_TIME_FORMAT ", media_start %" GST_TIME_FORMAT
           " (%" G_GUINT64_FORMAT ") , media_stop %" GST_TIME_FORMAT
           " stop_time %" GST_TIME_FORMAT " rate %g, (%d) timescale %u",
-          i, GST_TIME_ARGS (segment->time),
+          segment_number, GST_TIME_ARGS (segment->time),
           GST_TIME_ARGS (segment->duration),
           GST_TIME_ARGS (segment->media_start), media_time,
           GST_TIME_ARGS (segment->media_stop),
@@ -9342,15 +9341,16 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
         GST_WARNING_OBJECT (qtdemux, "Segment %d "
             " extends to %" GST_TIME_FORMAT
             " past the end of the file duration %" GST_TIME_FORMAT
-            " it will be truncated", i, GST_TIME_ARGS (segment->stop_time),
+            " it will be truncated", segment_number,
+            GST_TIME_ARGS (segment->stop_time),
             GST_TIME_ARGS (qtdemux->segment.stop));
         qtdemux->segment.stop = segment->stop_time;
       }
 
       buffer += entry_size;
     }
-    GST_DEBUG_OBJECT (qtdemux, "found %d segments", count);
-    stream->n_segments = count;
+    GST_DEBUG_OBJECT (qtdemux, "found %d segments", n_segments);
+    stream->n_segments = n_segments;
     if (media_segments_count != 1)
       allow_pushbased_edts = FALSE;
   }
