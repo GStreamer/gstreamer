@@ -1326,11 +1326,11 @@ error:
 static gboolean
 alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
     GSocket * socket_out[2], GstRTSPAddress ** server_addr_out,
-    gboolean multicast, GstRTSPTransport * ct)
+    gboolean multicast, GstRTSPTransport * ct, gboolean use_transport_settings)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   GSocket *rtp_socket = NULL;
-  GSocket *rtcp_socket;
+  GSocket *rtcp_socket = NULL;
   gint tmp_rtp, tmp_rtcp;
   guint count;
   GList *rejected_addresses = NULL;
@@ -1339,12 +1339,37 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
   GSocketAddress *rtp_sockaddr = NULL;
   GSocketAddress *rtcp_sockaddr = NULL;
   GstRTSPAddressPool *pool;
+  gboolean transport_settings_defined = FALSE;
 
   pool = priv->pool;
   count = 0;
 
   /* Start with random port */
   tmp_rtp = 0;
+
+  if (use_transport_settings) {
+    if (!multicast)
+      goto no_mcast;
+
+    if (ct == NULL)
+      goto no_transport;
+
+    /* multicast and transport specific case */
+    if (ct->destination != NULL) {
+      tmp_rtp = ct->port.min;
+      tmp_rtcp = ct->port.max;
+      inetaddr = g_inet_address_new_from_string (ct->destination);
+      if (inetaddr == NULL)
+        goto destination_error;
+      if (!g_inet_address_get_is_multicast (inetaddr))
+        goto destination_no_mcast;
+      g_object_unref (inetaddr);
+      inetaddr = g_inet_address_new_any (family);
+
+      GST_DEBUG_OBJECT (stream, "use transport settings");
+      transport_settings_defined = TRUE;
+    }
+  }
 
   rtcp_socket = g_socket_new (family, G_SOCKET_TYPE_DATAGRAM,
       G_SOCKET_PROTOCOL_UDP, NULL);
@@ -1364,55 +1389,60 @@ again:
     g_socket_set_multicast_loopback (rtp_socket, FALSE);
   }
 
-  if ((pool && gst_rtsp_address_pool_has_unicast_addresses (pool)) || multicast) {
-    GstRTSPAddressFlags flags;
+  if (!transport_settings_defined) {
+    if ((pool && gst_rtsp_address_pool_has_unicast_addresses (pool))
+        || multicast) {
+      GstRTSPAddressFlags flags;
 
-    if (addr)
-      rejected_addresses = g_list_prepend (rejected_addresses, addr);
+      if (addr)
+        rejected_addresses = g_list_prepend (rejected_addresses, addr);
 
-    if (!pool)
-      goto no_pool;
+      if (!pool)
+        goto no_pool;
 
-    flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT;
-    if (multicast)
-      flags |= GST_RTSP_ADDRESS_FLAG_MULTICAST;
-    else
-      flags |= GST_RTSP_ADDRESS_FLAG_UNICAST;
+      flags = GST_RTSP_ADDRESS_FLAG_EVEN_PORT;
+      if (multicast)
+        flags |= GST_RTSP_ADDRESS_FLAG_MULTICAST;
+      else
+        flags |= GST_RTSP_ADDRESS_FLAG_UNICAST;
 
-    if (family == G_SOCKET_FAMILY_IPV6)
-      flags |= GST_RTSP_ADDRESS_FLAG_IPV6;
-    else
-      flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
+      if (family == G_SOCKET_FAMILY_IPV6)
+        flags |= GST_RTSP_ADDRESS_FLAG_IPV6;
+      else
+        flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
 
-    addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
+      addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
 
-    if (addr == NULL)
-      goto no_address;
+      if (addr == NULL)
+        goto no_address;
 
-    tmp_rtp = addr->port;
+      tmp_rtp = addr->port;
 
-    g_clear_object (&inetaddr);
-    /* FIXME: Does it really work with the IP_MULTICAST_ALL socket option and
-     * socket control message set in udpsrc? */
-    if (multicast)
-      inetaddr = g_inet_address_new_any (family);
-    else
-      inetaddr = g_inet_address_new_from_string (addr->address);
-  } else {
-    if (tmp_rtp != 0) {
-      tmp_rtp += 2;
-      if (++count > 20)
-        goto no_ports;
+      g_clear_object (&inetaddr);
+      /* FIXME: Does it really work with the IP_MULTICAST_ALL socket option and
+       * socket control message set in udpsrc? */
+      if (multicast)
+        inetaddr = g_inet_address_new_any (family);
+      else
+        inetaddr = g_inet_address_new_from_string (addr->address);
+    } else {
+      if (tmp_rtp != 0) {
+        tmp_rtp += 2;
+        if (++count > 20)
+          goto no_ports;
+      }
+
+      if (inetaddr == NULL)
+        inetaddr = g_inet_address_new_any (family);
     }
-
-    if (inetaddr == NULL)
-      inetaddr = g_inet_address_new_any (family);
   }
 
   rtp_sockaddr = g_inet_socket_address_new (inetaddr, tmp_rtp);
   if (!g_socket_bind (rtp_socket, rtp_sockaddr, FALSE, NULL)) {
     GST_DEBUG_OBJECT (stream, "rtp bind() failed, will try again");
     g_object_unref (rtp_sockaddr);
+    if (transport_settings_defined)
+      goto transport_settings_error;
     goto again;
   }
   g_object_unref (rtp_sockaddr);
@@ -1423,17 +1453,22 @@ again:
     goto socket_error;
   }
 
-  tmp_rtp =
-      g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (rtp_sockaddr));
-  g_object_unref (rtp_sockaddr);
+  if (!transport_settings_defined) {
+    tmp_rtp =
+        g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (rtp_sockaddr));
 
-  /* check if port is even */
-  if ((tmp_rtp & 1) != 0) {
-    /* port not even, close and allocate another */
-    tmp_rtp++;
-    g_clear_object (&rtp_socket);
-    goto again;
+    /* check if port is even. RFC 3550 encorages the use of an even/odd port
+     * pair, however it's not a strict requirement so this check is not done
+     * for the client selected ports. */
+    if ((tmp_rtp & 1) != 0) {
+      /* port not even, close and allocate another */
+      tmp_rtp++;
+      g_object_unref (rtp_sockaddr);
+      g_clear_object (&rtp_socket);
+      goto again;
+    }
   }
+  g_object_unref (rtp_sockaddr);
 
   /* set port */
   tmp_rtcp = tmp_rtp + 1;
@@ -1443,15 +1478,21 @@ again:
     GST_DEBUG_OBJECT (stream, "rctp bind() failed, will try again");
     g_object_unref (rtcp_sockaddr);
     g_clear_object (&rtp_socket);
+    if (transport_settings_defined)
+      goto transport_settings_error;
     goto again;
   }
   g_object_unref (rtcp_sockaddr);
 
   if (!addr) {
     addr = g_slice_new0 (GstRTSPAddress);
-    addr->address = g_inet_address_to_string (inetaddr);
     addr->port = tmp_rtp;
     addr->n_ports = 2;
+    if (transport_settings_defined)
+      addr->address = g_strdup (ct->destination);
+    else
+      addr->address = g_inet_address_to_string (inetaddr);
+    addr->ttl = ct->ttl;
   }
 
   g_clear_object (&inetaddr);
@@ -1468,6 +1509,28 @@ again:
   return TRUE;
 
   /* ERRORS */
+no_mcast:
+  {
+    GST_ERROR_OBJECT (stream, "failed to allocate UDP ports: wrong transport");
+    goto cleanup;
+  }
+no_transport:
+  {
+    GST_ERROR_OBJECT (stream, "failed to allocate UDP ports: no transport");
+    goto cleanup;
+  }
+destination_error:
+  {
+    GST_ERROR_OBJECT (stream,
+        "failed to allocate UDP ports: destination error");
+    goto cleanup;
+  }
+destination_no_mcast:
+  {
+    GST_ERROR_OBJECT (stream,
+        "failed to allocate UDP ports: destination not multicast address");
+    goto cleanup;
+  }
 no_udp_protocol:
   {
     GST_WARNING_OBJECT (stream, "failed to allocate UDP ports: protocol error");
@@ -1487,6 +1550,12 @@ no_address:
 no_ports:
   {
     GST_WARNING_OBJECT (stream, "failed to allocate UDP ports: no ports");
+    goto cleanup;
+  }
+transport_settings_error:
+  {
+    GST_ERROR_OBJECT (stream,
+        "failed to allocate UDP ports with requested transport settings");
     goto cleanup;
   }
 socket_error:
@@ -1563,12 +1632,13 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
       /* UDP unicast */
       GST_DEBUG_OBJECT (stream, "GST_RTSP_LOWER_TRANS_UDP, ipv4");
       ret = alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4,
-          priv->socket_v4, &priv->server_addr_v4, FALSE, ct);
+          priv->socket_v4, &priv->server_addr_v4, FALSE, ct, FALSE);
     } else {
       /* multicast */
       GST_DEBUG_OBJECT (stream, "GST_RTSP_LOWER_TRANS_MCAST_UDP, ipv4");
       ret = alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV4,
-          priv->mcast_socket_v4, &priv->mcast_addr_v4, TRUE, ct);
+          priv->mcast_socket_v4, &priv->mcast_addr_v4, TRUE, ct,
+          use_transport_settings);
     }
   } else {
     /* IPv6 */
@@ -1576,13 +1646,14 @@ gst_rtsp_stream_allocate_udp_sockets (GstRTSPStream * stream,
       /* unicast */
       GST_DEBUG_OBJECT (stream, "GST_RTSP_LOWER_TRANS_UDP, ipv6");
       ret = alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6,
-          priv->socket_v6, &priv->server_addr_v6, FALSE, ct);
+          priv->socket_v6, &priv->server_addr_v6, FALSE, ct, FALSE);
 
     } else {
       /* multicast */
       GST_DEBUG_OBJECT (stream, "GST_RTSP_LOWER_TRANS_MCAST_UDP, ipv6");
       ret = alloc_ports_one_family (stream, G_SOCKET_FAMILY_IPV6,
-          priv->mcast_socket_v6, &priv->mcast_addr_v6, TRUE, ct);
+          priv->mcast_socket_v6, &priv->mcast_addr_v6, TRUE, ct,
+          use_transport_settings);
     }
   }
   g_mutex_unlock (&priv->lock);
