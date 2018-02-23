@@ -375,7 +375,7 @@ gst_rtsp_auth_get_tls_database (GstRTSPAuth * auth)
 /**
  * gst_rtsp_auth_set_tls_authentication_mode:
  * @auth: a #GstRTSPAuth
- * @mode: (transfer none) (allow-none): a #GTlsAuthenticationMode
+ * @mode: a #GTlsAuthenticationMode
  *
  * The #GTlsAuthenticationMode to set on the underlying GTlsServerConnection.
  * When set to another value than %G_TLS_AUTHENTICATION_NONE,
