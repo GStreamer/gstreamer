@@ -295,7 +295,16 @@ GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 
+dnl check for libdrm
+PKG_CHECK_MODULES(DRM, libdrm >= 2.4.55, HAVE_DRM=yes, HAVE_DRM=no)
+
 AG_GST_GL_CHECKS
+
+dnl check for gudev
+PKG_CHECK_MODULES(G_UDEV, gudev-1.0 , [
+        AC_DEFINE([HAVE_GUDEV], 1, [Define if gudev is installed])
+        HAVE_GUDEV="yes" ],
+        [HAVE_GUDEV="no"])
 
 dnl GTK is optional and only used in examples
 HAVE_GTK=no
