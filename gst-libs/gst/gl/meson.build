@@ -88,6 +88,7 @@ gl_wayland_headers = []
 gl_win32_headers = []
 gl_cocoa_headers = []
 gl_egl_headers = []
+gl_gbm_headers = []
 
 glconf = configuration_data()
 glconf_options = [
@@ -223,6 +224,7 @@ if gl_winsys_s == 'auto'
   need_win_eagl = 'auto'
   need_win_dispmanx = 'auto'
   need_win_viv_fb = 'auto'
+  need_win_gbm = 'auto'
 else
   need_win_x11 = 'no'
   need_win_wayland = 'no'
@@ -231,6 +233,7 @@ else
   need_win_eagl = 'no'
   need_win_dispmanx = 'no'
   need_win_viv_fb = 'no'
+  need_win_gbm = 'no'
   gl_winsys = gl_winsys_s.split(',')
   foreach winsys : gl_winsys
     if winsys == 'x11'
@@ -247,6 +250,8 @@ else
       need_win_dispmanx = 'yes'
     elif winsys == 'viv-fb'
       need_win_viv_fb = 'yes'
+    elif winsys == 'gbm'
+      need_win_gbm = 'no'
     else
       error('Unsupported GL winsys provided ' + winsys)
     endif
@@ -597,6 +602,42 @@ if host_machine.system() == 'darwin'
 #  ]
 endif
 
+# GDM Checks
+gbm_gudev_dep = unneeded_dep
+gbm_libdrm_dep = unneeded_dep
+gbm_dep = unneeded_dep
+if need_win_gbm != 'no'
+  if need_win_gbm == 'yes'
+    if need_platform_egl == 'no'
+      error('Impossible situation requested: Cannot use GBM without EGL support')
+    endif
+  endif
+
+  gbm_gudev_dep = dependency('gudev-1.0', version : '>=147', required : false)
+  gbm_libdrm_dep = dependency('libdrm', version : '>= 2.4.55', required : false)
+  gbm_dep = dependency('gbm', required : false)
+  if egl_dep.found() and gbm_gudev_dep.found() and gbm_libdrm_dep.found() and gbm_dep.found()
+    gl_sources += [
+      'gbm/gstgldisplay_gbm.c',
+      'gbm/gstgl_gbm_utils.c',
+      'gbm/gstglwindow_gbm_egl.c',
+    ]
+    gl_gbm_headers += [
+      'gbm/gstgldisplay_gbm.h'
+    ]
+    enabled_gl_winsys += 'gbm'
+    gl_winsys_deps += [gbm_gudev_dep, gbm_libdrm_dep, gbm_dep]
+    glconf.set('GST_GL_HAVE_WINDOW_GBM', 1)
+  else
+    if need_win_gbm == 'yes'
+      error ('Could not find requested GBM libraries')
+    endif
+    gbm_gudev_dep = unneeded_dep
+    gbm_libdrm_dep = unneeded_dep
+    gbm_dep = unneeded_dep
+  endif
+endif
+
 if need_platform_egl != 'no' and need_win_viv_fb != 'no'
   if egl_dep.found() and cc.has_function ('fbGetDisplay', dependencies : egl_dep)
     if cc.has_function ('glTexDirectVIV', dependencies : gles2_dep)
@@ -666,6 +707,7 @@ if build_gstgl
   install_headers(gl_prototype_headers, subdir : 'gstreamer-1.0/gst/gl/glprototypes')
   install_headers(gl_x11_headers, subdir : 'gstreamer-1.0/gst/gl/x11')
   install_headers(gl_wayland_headers, subdir : 'gstreamer-1.0/gst/gl/wayland')
+  install_headers(gl_gbm_headers, subdir : 'gstreamer-1.0/gst/gl/gbm')
 
   configure_file(input : 'gstglconfig.h.meson',
     output : 'gstglconfig.h',
