@@ -1418,13 +1418,35 @@ update_output_format (GstGLImageSink * glimage_sink)
   ret = configure_display_from_info (glimage_sink, out_info);
 
   if (glimage_sink->convert_views) {
+    gint new_w, new_h;
+    gint par_n, par_d;
+
     /* Match actual output window size for pixel-aligned output,
      * even though we can't necessarily match the starting left/right
-     * view parity properly */
-    glimage_sink->out_info.width = MAX (1, glimage_sink->display_rect.w);
-    glimage_sink->out_info.height = MAX (1, glimage_sink->display_rect.h);
-    GST_LOG_OBJECT (glimage_sink, "Set 3D output scale to %d,%d",
-        glimage_sink->display_rect.w, glimage_sink->display_rect.h);
+     * view parity properly for line-by-line modes, because that
+     * depends on the window being placed correctly.
+     * FIXME: Should this rescaling be configurable? */
+    new_w = MAX (1, glimage_sink->display_rect.w);
+    new_h = MAX (1, glimage_sink->display_rect.h);
+    if (new_w != out_info->width || new_h != out_info->height) {
+      /* Recalculate PAR if rescaling */
+      gint from_dar_n, from_dar_d;
+      if (!gst_util_fraction_multiply (out_info->width, out_info->height,
+              out_info->par_n, out_info->par_d, &from_dar_n,
+              &from_dar_d) ||
+          !gst_util_fraction_multiply (from_dar_n, from_dar_d, new_h, new_w,
+              &par_n, &par_d)) {
+        par_n = glimage_sink->par_n;
+        par_d = glimage_sink->par_d;
+      }
+      out_info->par_n = par_n;
+      out_info->par_d = par_d;
+      out_info->width = new_w;
+      out_info->height = new_h;
+    }
+
+    GST_LOG_OBJECT (glimage_sink, "Set 3D output scale to %d,%d PAR %d/%d",
+        out_info->width, out_info->height, out_info->par_n, out_info->par_d);
   }
 
   s = gst_caps_get_structure (glimage_sink->in_caps, 0);
