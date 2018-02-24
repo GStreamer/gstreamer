@@ -102,10 +102,120 @@
 
 #include "gstrtspclientsink.h"
 
+typedef struct _GstRtspClientSinkPad GstRtspClientSinkPad;
+typedef GstGhostPadClass GstRtspClientSinkPadClass;
+
+struct _GstRtspClientSinkPad
+{
+  GstGhostPad parent;
+  GstElement *custom_payloader;
+};
+
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_PAYLOADER
+};
+
+G_DEFINE_TYPE (GstRtspClientSinkPad, gst_rtsp_client_sink_pad,
+    GST_TYPE_GHOST_PAD);
+#define GST_TYPE_RTSP_CLIENT_SINK_PAD (gst_rtsp_client_sink_pad_get_type ())
+#define GST_RTSP_CLIENT_SINK_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTSP_CLIENT_SINK_PAD,GstRtspClientSinkPad))
+
+static void
+gst_rtsp_client_sink_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtspClientSinkPad *pad;
+
+  pad = GST_RTSP_CLIENT_SINK_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_PAYLOADER:
+      GST_OBJECT_LOCK (pad);
+      if (pad->custom_payloader)
+        gst_object_unref (pad->custom_payloader);
+      pad->custom_payloader = g_value_get_object (value);
+      gst_object_ref_sink (pad->custom_payloader);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtsp_client_sink_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtspClientSinkPad *pad;
+
+  pad = GST_RTSP_CLIENT_SINK_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_PAYLOADER:
+      GST_OBJECT_LOCK (pad);
+      g_value_set_object (value, pad->custom_payloader);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtsp_client_sink_pad_dispose (GObject * object)
+{
+  GstRtspClientSinkPad *pad = GST_RTSP_CLIENT_SINK_PAD (object);
+
+  if (pad->custom_payloader)
+    gst_object_unref (pad->custom_payloader);
+
+  G_OBJECT_CLASS (gst_rtsp_client_sink_pad_parent_class)->dispose (object);
+}
+
+static void
+gst_rtsp_client_sink_pad_class_init (GstRtspClientSinkPadClass * klass)
+{
+  GObjectClass *gobject_klass;
+
+  gobject_klass = (GObjectClass *) klass;
+
+  gobject_klass->set_property = gst_rtsp_client_sink_pad_set_property;
+  gobject_klass->get_property = gst_rtsp_client_sink_pad_get_property;
+  gobject_klass->dispose = gst_rtsp_client_sink_pad_dispose;
+
+  g_object_class_install_property (gobject_klass, PROP_PAD_PAYLOADER,
+      g_param_spec_object ("payloader", "Payloader",
+          "The payloader element to use (NULL = default automatically selected)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_rtsp_client_sink_pad_init (GstRtspClientSinkPad * pad)
+{
+}
+
+static GstPad *
+gst_rtsp_client_sink_pad_new (const GstPadTemplate * pad_tmpl,
+    const gchar * name)
+{
+  GstRtspClientSinkPad *ret;
+
+  ret =
+      g_object_new (GST_TYPE_RTSP_CLIENT_SINK_PAD, "direction", GST_PAD_SINK,
+      "template", pad_tmpl, "name", name, NULL);
+  gst_ghost_pad_construct (GST_GHOST_PAD_CAST (ret));
+
+  return GST_PAD (ret);
+}
+
 GST_DEBUG_CATEGORY_STATIC (rtsp_client_sink_debug);
 #define GST_CAT_DEFAULT (rtsp_client_sink_debug)
 
-static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream_%u",
+static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);       /* Actual caps come from available set of payloaders */
@@ -280,10 +390,58 @@ G_STMT_START {                                          \
 
 static guint gst_rtsp_client_sink_signals[LAST_SIGNAL] = { 0 };
 
+/*********************************
+ * GstChildProxy implementation  *
+ *********************************/
+static GObject *
+gst_rtsp_client_sink_child_proxy_get_child_by_index (GstChildProxy *
+    child_proxy, guint index)
+{
+  GObject *obj;
+  GstRTSPClientSink *cs = GST_RTSP_CLIENT_SINK (child_proxy);
+
+  GST_OBJECT_LOCK (cs);
+  if ((obj = g_list_nth_data (GST_ELEMENT (cs)->sinkpads, index)))
+    g_object_ref (obj);
+  GST_OBJECT_UNLOCK (cs);
+
+  return obj;
+}
+
+static guint
+gst_rtsp_client_sink_child_proxy_get_children_count (GstChildProxy *
+    child_proxy)
+{
+  guint count = 0;
+
+  GST_OBJECT_LOCK (child_proxy);
+  count = GST_ELEMENT (child_proxy)->numsinkpads;
+  GST_OBJECT_UNLOCK (child_proxy);
+
+  GST_INFO_OBJECT (child_proxy, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_rtsp_client_sink_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  GST_INFO ("intializing child proxy interface");
+  iface->get_child_by_index =
+      gst_rtsp_client_sink_child_proxy_get_child_by_index;
+  iface->get_children_count =
+      gst_rtsp_client_sink_child_proxy_get_children_count;
+}
+
 #define gst_rtsp_client_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRTSPClientSink, gst_rtsp_client_sink, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
-        gst_rtsp_client_sink_uri_handler_init));
+        gst_rtsp_client_sink_uri_handler_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_rtsp_client_sink_child_proxy_init);
+    );
 
 #ifndef GST_DISABLE_GST_DEBUG
 static inline const gchar *
@@ -634,7 +792,8 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtsp_client_sink_release_pad);
 
-  gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &rtptemplate, GST_TYPE_RTSP_CLIENT_SINK_PAD);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RTSP RECORD client", "Sink/Network",
@@ -839,7 +998,36 @@ gst_rtsp_client_sink_get_factories (void)
 }
 
 static GstCaps *
-gst_rtsp_client_sink_get_payloader_caps (void)
+gst_rtsp_client_sink_get_payloader_caps (GstElementFactory *factory)
+{
+  const GList *tmp;
+  GstCaps *caps = gst_caps_new_empty();
+
+  for (tmp = gst_element_factory_get_static_pad_templates (factory);
+      tmp; tmp = g_list_next (tmp)) {
+    GstStaticPadTemplate *template = tmp->data;
+
+    if (template->direction == GST_PAD_SINK) {
+      GstCaps *static_caps = gst_static_pad_template_get_caps (template);
+
+      GST_LOG ("Found pad template %s on factory %s",
+          template->name_template, gst_plugin_feature_get_name (factory));
+
+      if (static_caps)
+        caps = gst_caps_merge (caps, static_caps);
+
+      /* Early out, any is absorbing */
+      if (gst_caps_is_any (caps))
+        goto out;
+    }
+  }
+
+out:
+  return caps;
+}
+
+static GstCaps *
+gst_rtsp_client_sink_get_all_payloaders_caps (void)
 {
   /* Cached caps result */
   static GstCaps *ret;
@@ -851,27 +1039,15 @@ gst_rtsp_client_sink_get_payloader_caps (void)
     factories = gst_rtsp_client_sink_get_factories ();
     for (cur = factories; cur != NULL; cur = g_list_next (cur)) {
       GstElementFactory *factory = GST_ELEMENT_FACTORY (cur->data);
-      const GList *tmp;
+      GstCaps *payloader_caps = gst_rtsp_client_sink_get_payloader_caps (factory);
 
-      for (tmp = gst_element_factory_get_static_pad_templates (factory);
-          tmp; tmp = g_list_next (tmp)) {
-        GstStaticPadTemplate *template = tmp->data;
+      caps = gst_caps_merge (caps, payloader_caps);
 
-        if (template->direction == GST_PAD_SINK) {
-          GstCaps *static_caps = gst_static_pad_template_get_caps (template);
-
-          GST_LOG ("Found pad template %s on factory %s",
-              template->name_template, gst_plugin_feature_get_name (factory));
-
-          if (static_caps)
-            caps = gst_caps_merge (caps, static_caps);
-
-          /* Early out, any is absorbing */
-          if (gst_caps_is_any (caps))
-            goto out;
-        }
-      }
+      /* Early out, any is absorbing */
+      if (gst_caps_is_any (caps))
+        goto out;
     }
+
   out:
     g_once_init_leave (&ret, caps);
   }
@@ -1003,14 +1179,20 @@ gst_rtsp_client_sink_setup_payloader (GstRTSPClientSink * sink, GstPad * pad,
     GstCaps * caps)
 {
   GstRTSPStreamContext *context;
+  GstRtspClientSinkPad *cspad = GST_RTSP_CLIENT_SINK_PAD (pad);
 
   GstElement *payloader;
   GstPad *sinkpad, *srcpad, *ghostsink;
 
   context = gst_pad_get_element_private (pad);
 
-  /* Find the payloader. FIXME: Allow user to provide payloader via pad property */
-  payloader = gst_rtsp_client_sink_make_payloader (caps);
+  if (cspad->custom_payloader) {
+    payloader = cspad->custom_payloader;
+  } else {
+    /* Find the payloader. */
+    payloader = gst_rtsp_client_sink_make_payloader (caps);
+  }
+
   if (payloader == NULL)
     return FALSE;
 
@@ -1084,6 +1266,11 @@ gst_rtsp_client_sink_sinkpad_event (GstPad * pad, GstObject * parent,
 
       if (!gst_rtsp_client_sink_setup_payloader (GST_RTSP_CLIENT_SINK (parent),
               pad, caps)) {
+        GstRtspClientSinkPad *cspad = GST_RTSP_CLIENT_SINK_PAD (pad);
+        GST_ELEMENT_ERROR (parent, CORE, NEGOTIATION,
+            ("Could not create payloader"),
+            ("Custom payloader: %p, caps: %" GST_PTR_FORMAT,
+                cspad->custom_payloader, caps));
         gst_event_unref (event);
         return FALSE;
       }
@@ -1102,8 +1289,17 @@ gst_rtsp_client_sink_sinkpad_query (GstPad * pad, GstObject * parent,
   if (GST_QUERY_TYPE (query) == GST_QUERY_CAPS) {
     GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
     if (target == NULL) {
-      /* No target yet - return the union of all payloader caps */
-      GstCaps *caps = gst_rtsp_client_sink_get_payloader_caps ();
+      GstRtspClientSinkPad *cspad = GST_RTSP_CLIENT_SINK_PAD (pad);
+      GstCaps *caps;
+
+      if (cspad->custom_payloader) {
+        GstElementFactory *factory = gst_element_get_factory (cspad->custom_payloader);
+
+        caps = gst_rtsp_client_sink_get_payloader_caps (factory);
+      } else {
+        /* No target yet - return the union of all payloader caps */
+        caps = gst_rtsp_client_sink_get_all_payloaders_caps ();
+      }
 
       GST_TRACE_OBJECT (parent, "Returning payloader caps %" GST_PTR_FORMAT,
           caps);
@@ -1155,7 +1351,7 @@ gst_rtsp_client_sink_request_new_pad (GstElement * element,
   GST_OBJECT_UNLOCK (sink);
 
   tmpname = g_strdup_printf ("sink_%u", idx);
-  pad = gst_ghost_pad_new_no_target_from_template (tmpname, templ);
+  pad = gst_rtsp_client_sink_pad_new (templ, tmpname);
   g_free (tmpname);
 
   GST_DEBUG_OBJECT (element, "Creating request pad %" GST_PTR_FORMAT, pad);
@@ -1174,6 +1370,8 @@ gst_rtsp_client_sink_request_new_pad (GstElement * element,
   /* The rest of the context is configured on a caps set */
   gst_pad_set_active (pad, TRUE);
   gst_element_add_pad (element, pad);
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (pad),
+      GST_PAD_NAME (pad));
 
   (void) gst_rtsp_client_sink_get_factories ();
 
