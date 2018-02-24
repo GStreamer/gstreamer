@@ -556,8 +556,7 @@ no_event:
   }
 missing_caps:
   {
-    GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
-        ("Missing caps %u.", CV), (NULL));
+    GST_INFO_OBJECT (rtpgstdepay, "No caps received yet %u", CV);
     gst_buffer_unref (outbuf);
     return NULL;
   }
