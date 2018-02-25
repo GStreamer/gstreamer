@@ -385,6 +385,7 @@ G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
  *              GESTimelineElement                  *
  ****************************************************/
 G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);
+G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 
 /******************************
  *  GESMultiFile internal API *

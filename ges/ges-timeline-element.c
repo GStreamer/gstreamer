@@ -1857,3 +1857,12 @@ ges_timeline_element_get_media_duration_factor (GESTimelineElement * self)
   g_type_class_unref (class);
   return media_duration_factor;
 }
+
+/* Internal */
+GESTimelineElement *
+ges_timeline_element_get_copied_from (GESTimelineElement * self)
+{
+  GESTimelineElement *copied_from = self->priv->copied_from;
+  self->priv->copied_from = NULL;
+  return copied_from;
+}

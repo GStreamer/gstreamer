@@ -3730,3 +3730,59 @@ ges_timeline_get_layer (GESTimeline * timeline, guint priority)
 
   return layer;
 }
+
+/**
+ * ges_timeline_paste_element:
+ * @timeline: The #GESTimeline onto which the #GESTimelineElement should be pasted
+ * @element: The #GESTimelineElement to paste
+ * @position: The position in the timeline the element should
+ * be pasted to, meaning it will become the start of @element
+ * @layer_priority: The #GESLayer to which the element should be pasted to.
+ * -1 means paste to the same layer from which the @element has been copied from.
+ *
+ * Paste @element inside the timeline. @element must have been
+ * created using ges_timeline_element_copy with deep=TRUE set,
+ * i.e. it must be a deep copy, otherwise it will fail.
+ *
+ * Returns: (transfer none): Shallow copy of the @element pasted
+ */
+GESTimelineElement *
+ges_timeline_paste_element (GESTimeline * timeline,
+    GESTimelineElement * element, GstClockTime position, gint layer_priority)
+{
+  GESTimelineElement *res, *copied_from;
+  GESTimelineElementClass *element_class;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
+
+  element_class = GES_TIMELINE_ELEMENT_GET_CLASS (element);
+  copied_from = ges_timeline_element_get_copied_from (element);
+
+  if (!copied_from) {
+    GST_ERROR_OBJECT (element, "Is not being 'deeply' copied!");
+
+    return NULL;
+  }
+
+  if (!element_class->paste) {
+    GST_ERROR_OBJECT (element, "No paste vmethod implemented");
+
+    return NULL;
+  }
+
+  /*
+   * Currently the API only supports pasting onto the same layer from which
+   * the @element has been copied from, i.e., @layer_priority needs to be -1.
+   */
+  if (layer_priority != -1) {
+    GST_WARNING_OBJECT (timeline,
+        "Only -1 value for layer priority is supported");
+  }
+
+  res = element_class->paste (element, copied_from, position);
+
+  g_clear_object (&copied_from);
+
+  return g_object_ref (res);
+}

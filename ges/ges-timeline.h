@@ -158,6 +158,9 @@ GST_EXPORT
 GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name);
 GST_EXPORT
 gboolean ges_timeline_is_empty (GESTimeline * timeline);
+GST_EXPORT
+GESTimelineElement * ges_timeline_paste_element (GESTimeline * timeline,
+  GESTimelineElement * element, GstClockTime position, gint layer_priority);
 
 G_END_DECLS
 
