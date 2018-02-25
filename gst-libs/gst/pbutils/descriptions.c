@@ -434,6 +434,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
 
   g_assert (info != NULL);
 
+  gst_pb_utils_init_locale_text_domain ();
+
   if (info->desc != NULL)
     return g_strdup (_(info->desc));
 
@@ -930,6 +932,8 @@ gst_pb_utils_get_source_description (const gchar * protocol)
 
   g_return_val_if_fail (protocol != NULL, NULL);
 
+  gst_pb_utils_init_locale_text_domain ();
+
   if (strcmp (protocol, "cdda") == 0)
     return g_strdup (_("Audio CD source"));
 
@@ -1019,6 +1023,8 @@ gst_pb_utils_get_decoder_description (const GstCaps * caps)
 
   g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
+  gst_pb_utils_init_locale_text_domain ();
+
   /* special-case RTP caps */
   if (caps_are_rtp_caps (tmp, "video", &str)) {
     ret = g_strdup_printf (_("%s video RTP depayloader"), str);
@@ -1069,6 +1075,7 @@ gst_pb_utils_get_encoder_description (const GstCaps * caps)
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
   tmp = copy_and_clean_caps (caps);
   g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
+  gst_pb_utils_init_locale_text_domain ();
 
   /* special-case RTP caps */
   if (caps_are_rtp_caps (tmp, "video", &str)) {
@@ -1116,6 +1123,8 @@ gst_pb_utils_get_element_description (const gchar * factory_name)
   gchar *ret;
 
   g_return_val_if_fail (factory_name != NULL, NULL);
+
+  gst_pb_utils_init_locale_text_domain ();
 
   ret = g_strdup_printf (_("GStreamer element %s"), factory_name);
   if (ret && g_str_has_prefix (ret, factory_name))

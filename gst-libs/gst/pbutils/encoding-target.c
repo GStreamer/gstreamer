@@ -368,6 +368,8 @@ get_locale (void)
   const char *loc = NULL;
   gchar *ret;
 
+  gst_pb_utils_init_locale_text_domain ();
+
 #ifdef ENABLE_NLS
 #if defined(LC_MESSAGES)
   loc = setlocale (LC_MESSAGES, NULL);

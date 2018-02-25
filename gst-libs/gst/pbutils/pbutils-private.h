@@ -112,3 +112,6 @@ struct _GstDiscovererInfo {
 /* missing-plugins.c */
 G_GNUC_INTERNAL
 GstCaps *copy_and_clean_caps (const GstCaps * caps);
+
+G_GNUC_INTERNAL
+void gst_pb_utils_init_locale_text_domain (void);
