@@ -26,6 +26,46 @@
  * Generic Forward Error Correction (FEC) encoder using Uneven Level
  * Protection (ULP) as described in RFC 5109.
  *
+ * This element will insert protection packets in any RTP stream, which
+ * can then be used on the receiving side to recover lost packets.
+ *
+ * This element rewrites packets' seqnums, which means that when combined
+ * with retransmission elements such as #GstRtpRtxSend, it *must* be
+ * placed upstream of those, otherwise retransmission requests will request
+ * incorrect seqnums.
+ *
+ * A payload type for the protection packets *must* be specified, different
+ * from the payload type of the protected packets, with the GstRtpUlpFecEnc:pt
+ * property.
+ *
+ * The marker bit of RTP packets is used to determine sets of packets to
+ * protect as a unit, in order to modulate the level of protection, this
+ * behaviour can be disabled with GstRtpUlpFecEnc:multipacket, but should
+ * be left enabled for video streams.
+ *
+ * The level of protection can be configured with two properties,
+ * #GstRtpUlpFecEnc:percentage and #GstRtpUlpFecEnc:percentage-important,
+ * the element will determine which percentage to use for a given set of
+ * packets based on the presence of the #GST_BUFFER_FLAG_NON_DROPPABLE
+ * flag, upstream payloaders are expected to set this flag on "important"
+ * packets such as those making up a keyframe.
+ *
+ * The percentage is expressed not in terms of bytes, but in terms of
+ * packets, this for implementation convenience. The drawback with this
+ * approach is that when using a percentage different from 100 %, and a
+ * low bitrate, entire frames may be contained in a single packet, leading
+ * to some packets not being protected, thus lowering the overall recovery
+ * rate on the receiving side.
+ *
+ * When using #GstRtpBin, this element should be inserted through the
+ * #GstRtpBin::request-fec-encoder signal.
+ *
+ * Example programs using this element can be found at
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
+ * and
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
+ *
+ * See also: #GstRtpUlpFecDec, #GstRtpBin
  * Since: 1.14
  */
 
@@ -47,14 +87,11 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp"));
 
 #define UNDEF_PT                255
-#define UNDEF_SSRC              0
 
 #define DEFAULT_PT              UNDEF_PT
-#define DEFAULT_SSRC            UNDEF_SSRC
 #define DEFAULT_PCT             0
 #define DEFAULT_PCT_IMPORTANT   0
-#define DEFAULT_MULTIPACKET     FALSE
-#define DEFAULT_MUX_SEQ         FALSE
+#define DEFAULT_MULTIPACKET     TRUE
 
 #define PACKETS_BUF_MAX_LENGTH  (RTP_ULPFEC_PROTECTED_PACKETS_MAX(TRUE))
 
@@ -66,10 +103,8 @@ G_DEFINE_TYPE (GstRtpUlpFecEnc, gst_rtp_ulpfec_enc, GST_TYPE_ELEMENT);
 enum
 {
   PROP_0,
-  PROP_SSRC,
   PROP_PT,
   PROP_MULTIPACKET,
-  PROP_MUX_SEQ,
   PROP_PROTECTED,
   PROP_PERCENTAGE,
   PROP_PERCENTAGE_IMPORTANT,
@@ -346,16 +381,13 @@ gst_rtp_ulpfec_enc_stream_ctx_cache_packet (GstRtpUlpFecEncStreamCtx * ctx,
 
 static void
 gst_rtp_ulpfec_enc_stream_ctx_configure (GstRtpUlpFecEncStreamCtx * ctx,
-    guint pt, guint32 fec_ssrc,
-    guint percentage, guint percentage_important, gboolean multipacket,
-    gboolean mux_seq)
+    guint pt, guint percentage, guint percentage_important,
+    gboolean multipacket)
 {
   ctx->pt = pt;
-  ctx->fec_ssrc = fec_ssrc;
   ctx->percentage = percentage;
   ctx->percentage_important = percentage_important;
   ctx->multipacket = multipacket;
-  ctx->mux_seq = mux_seq;
 
   ctx->fec_nth = percentage ? 100 / percentage : 0;
   if (percentage) {
@@ -375,9 +407,8 @@ gst_rtp_ulpfec_enc_stream_ctx_configure (GstRtpUlpFecEncStreamCtx * ctx,
 static GstRtpUlpFecEncStreamCtx *
 gst_rtp_ulpfec_enc_stream_ctx_new (guint ssrc,
     GstElement * parent, GstPad * srcpad,
-    guint pt, guint32 fec_ssrc,
-    guint percentage, guint percentage_important, gboolean multipacket,
-    gboolean mux_seq)
+    guint pt, guint percentage, guint percentage_important,
+    gboolean multipacket)
 {
   GstRtpUlpFecEncStreamCtx *ctx = g_new0 (GstRtpUlpFecEncStreamCtx, 1);
 
@@ -392,8 +423,8 @@ gst_rtp_ulpfec_enc_stream_ctx_new (guint ssrc,
       (GDestroyNotify) rtp_ulpfec_map_info_unmap);
   ctx->parent = parent;
   ctx->scratch_buf = g_array_new (FALSE, TRUE, sizeof (guint8));
-  gst_rtp_ulpfec_enc_stream_ctx_configure (ctx, pt, fec_ssrc,
-      percentage, percentage_important, multipacket, mux_seq);
+  gst_rtp_ulpfec_enc_stream_ctx_configure (ctx, pt,
+      percentage, percentage_important, multipacket);
 
   return ctx;
 }
@@ -425,7 +456,7 @@ gst_rtp_ulpfec_enc_stream_ctx_process (GstRtpUlpFecEncStreamCtx * ctx,
 
   ctx->num_packets_received++;
 
-  if (ctx->mux_seq && ctx->seqnum_offset > 0) {
+  if (ctx->seqnum_offset > 0) {
     buffer = gst_buffer_make_writable (buffer);
     if (!gst_rtp_buffer_map (buffer,
             GST_MAP_READWRITE | GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtp))
@@ -443,11 +474,8 @@ gst_rtp_ulpfec_enc_stream_ctx_process (GstRtpUlpFecEncStreamCtx * ctx,
 
   if (push_fec) {
     guint32 fec_timestamp = gst_rtp_buffer_get_timestamp (&rtp);
-    guint32 fec_ssrc =
-        ctx->fec_ssrc ==
-        UNDEF_SSRC ? gst_rtp_buffer_get_ssrc (&rtp) : ctx->fec_ssrc;
-    guint16 fec_seq =
-        ctx->mux_seq ? gst_rtp_buffer_get_seq (&rtp) + 1 : ctx->seqnum;
+    guint32 fec_ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+    guint16 fec_seq = gst_rtp_buffer_get_seq (&rtp) + 1;
 
     gst_rtp_buffer_unmap (&rtp);
 
@@ -477,8 +505,8 @@ gst_rtp_ulpfec_enc_aquire_ctx (GstRtpUlpFecEnc * fec, guint ssrc)
   if (ctx == NULL) {
     ctx =
         gst_rtp_ulpfec_enc_stream_ctx_new (ssrc, GST_ELEMENT_CAST (fec),
-        fec->srcpad, fec->pt, fec->ssrc, fec->percentage,
-        fec->percentage_important, fec->multipacket, fec->mux_seq);
+        fec->srcpad, fec->pt, fec->percentage,
+        fec->percentage_important, fec->multipacket);
     g_hash_table_insert (fec->ssrc_to_ctx, GUINT_TO_POINTER (ssrc), ctx);
   }
   GST_OBJECT_UNLOCK (fec);
@@ -524,9 +552,8 @@ gst_rtp_ulpfec_enc_configure_ctx (gpointer key, gpointer value,
   GstRtpUlpFecEnc *fec = user_data;
   GstRtpUlpFecEncStreamCtx *ctx = value;
 
-  gst_rtp_ulpfec_enc_stream_ctx_configure (ctx, fec->pt, fec->ssrc,
-      fec->percentage, fec->percentage_important,
-      fec->multipacket, fec->mux_seq);
+  gst_rtp_ulpfec_enc_stream_ctx_configure (ctx, fec->pt,
+      fec->percentage, fec->percentage_important, fec->multipacket);
 }
 
 static void
@@ -539,9 +566,6 @@ gst_rtp_ulpfec_enc_set_property (GObject * object, guint prop_id,
     case PROP_PT:
       fec->pt = g_value_get_uint (value);
       break;
-    case PROP_SSRC:
-      fec->ssrc = g_value_get_uint (value);
-      break;
     case PROP_MULTIPACKET:
       fec->multipacket = g_value_get_boolean (value);
       break;
@@ -550,9 +574,6 @@ gst_rtp_ulpfec_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PERCENTAGE_IMPORTANT:
       fec->percentage_important = g_value_get_uint (value);
-      break;
-    case PROP_MUX_SEQ:
-      fec->mux_seq = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -574,9 +595,6 @@ gst_rtp_ulpfec_enc_get_property (GObject * object, guint prop_id,
     case PROP_PT:
       g_value_set_uint (value, fec->pt);
       break;
-    case PROP_SSRC:
-      g_value_set_uint (value, fec->ssrc);
-      break;
     case PROP_PROTECTED:
       g_value_set_uint (value, fec->num_packets_protected);
       break;
@@ -588,9 +606,6 @@ gst_rtp_ulpfec_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MULTIPACKET:
       g_value_set_boolean (value, fec->multipacket);
-      break;
-    case PROP_MUX_SEQ:
-      g_value_set_boolean (value, fec->mux_seq);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -650,11 +665,6 @@ gst_rtp_ulpfec_enc_class_init (GstRtpUlpFecEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_ulpfec_enc_get_property);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_ulpfec_enc_dispose);
 
-  g_object_class_install_property (gobject_class, PROP_SSRC,
-      g_param_spec_uint ("ssrc", "SSRC",
-          "The SSRC to use on FEC'd packets", 0, G_MAXUINT32, DEFAULT_SSRC,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_PT,
       g_param_spec_uint ("pt", "payload type",
           "The payload type of FEC packets", 0, 255, DEFAULT_PT,
@@ -663,12 +673,6 @@ gst_rtp_ulpfec_enc_class_init (GstRtpUlpFecEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_MULTIPACKET,
       g_param_spec_boolean ("multipacket", "Multipacket",
           "Apply FEC on multiple packets", DEFAULT_MULTIPACKET,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_MUX_SEQ,
-      g_param_spec_boolean ("mux-seq", "Mux seq",
-          "Mux seqnum for media and fec packets in same seqnum space",
-          DEFAULT_MUX_SEQ,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PERCENTAGE,

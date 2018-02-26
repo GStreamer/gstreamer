@@ -26,9 +26,30 @@
  * Helper element for storing packets to aid later packet recovery from packet
  * loss using RED/FEC (Forward Error Correction).
  *
- * This element is used internally by rtpbin and is usually created
- * automatically.
+ * The purpose of this element is to store a moving window of packets which
+ * downstream elements such as #GstRtpUlpFecDec can request in order to perform
+ * recovery of lost packets upon receiving custom GstRtpPacketLost events,
+ * usually from #GstRtpJitterBuffer.
  *
+ * As such, when building a pipeline manually, it should have the form:
+ *
+ * ```
+ * rtpstorage ! rtpjitterbuffer ! rtpulpfecdec
+ * ```
+ *
+ * where rtpulpfecdec get passed a reference to the object pointed to by
+ * the #GstRtpStorage:internal-storage property.
+ *
+ * The #GstRtpStorage:size-time property should be configured with a value
+ * equal to the #GstRtpJitterBuffer latency, plus some tolerance, in the order
+ * of milliseconds, for example in the example found at
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>,
+ * `size-time` is configured as 200 + 50 milliseconds (latency + tolerance).
+ *
+ * When using #GstRtpBin, a storage element is created automatically, and
+ * can be configured upon receiving the #GstRtpBin::new-storage signal.
+ *
+ * See also: #GstRtpBin, #GstRtpUlpFecDec
  * Since: 1.14
  */
 

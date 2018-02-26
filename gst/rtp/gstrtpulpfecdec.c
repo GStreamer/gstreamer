@@ -26,6 +26,25 @@
  * Generic Forward Error Correction (FEC) decoder for Uneven Level
  * Protection (ULP) as described in RFC 5109.
  *
+ * This element will work in combination with an upstream #GstRtpStorage
+ * element and attempt to recover packets declared lost through custom
+ * 'GstRTPPacketLost' events, usually emitted by #GstRtpJitterBuffer.
+ *
+ * As such, this element cannot be usefully used from the command line,
+ * because a reference to the upstream storage object needs to be
+ * provided to it through its #GstRtpUlpFecDec:storage property, example
+ * programs are available at
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
+ * and
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
+ *
+ * Additionally, the payload types of the protection packets *must* be
+ * provided to this element via its #GstRtpUlpFecDec:pt property.
+ *
+ * When using #GstRtpBin, this element should be inserted through the
+ * #GstRtpBin::request-fec-decoder signal.
+ *
+ * See also: #GstRtpUlpFecEnc, #GstRtpBin, #GstRtpStorage
  * Since: 1.14
  */
 

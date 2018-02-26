@@ -25,6 +25,18 @@
  *
  * Decode Redundant Audio Data (RED) as per RFC 2198.
  *
+ * This element is mostly provided for chrome webrtc compatibility:
+ * chrome will wrap ulpfec-protected streams in RED packets, and such
+ * streams need to be unwrapped by this element before being passed on
+ * to #GstRtpUlpFecDec.
+ *
+ * The #GstRtpRedDec:pt property should be set to the expected payload
+ * types of the RED packets.
+ *
+ * When using #GstRtpBin, this element should be inserted through the
+ * #GstRtpBin::request-fec-decoder signal.
+ *
+ * See also: #GstRtpRedEnc, #GstWebRTCBin, #GstRtpBin
  * Since: 1.14
  */
 

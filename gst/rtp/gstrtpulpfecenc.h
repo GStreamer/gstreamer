@@ -56,7 +56,6 @@ struct _GstRtpUlpFecEnc {
   guint percentage;
   guint percentage_important;
   gboolean multipacket;
-  gboolean mux_seq;
   guint num_packets_protected;
 };
 
@@ -68,7 +67,6 @@ typedef struct {
 
   /* settings */
   guint pt;
-  guint32 fec_ssrc;
   guint percentage;
   guint percentage_important;
   gboolean multipacket;
