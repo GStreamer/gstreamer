@@ -428,6 +428,7 @@ AG_GST_CHECK_PLUGIN(videoframe_audiolevel)
 AG_GST_CHECK_PLUGIN(asfmux)
 AG_GST_CHECK_PLUGIN(audiobuffersplit)
 AG_GST_CHECK_PLUGIN(audiofxbad)
+AG_GST_CHECK_PLUGIN(audiolatency)
 AG_GST_CHECK_PLUGIN(audiomixmatrix)
 AG_GST_CHECK_PLUGIN(compositor)
 AG_GST_CHECK_PLUGIN(audiovisualizers)
@@ -2497,6 +2498,7 @@ gst/videoframe_audiolevel/Makefile
 gst/asfmux/Makefile
 gst/audiobuffersplit/Makefile
 gst/audiofxbad/Makefile
+gst/audiolatency/Makefile
 gst/audiomixmatrix/Makefile
 gst/audiovisualizers/Makefile
 gst/autoconvert/Makefile
