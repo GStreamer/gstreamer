@@ -246,6 +246,11 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
    * If specified, packets with an ignored payload type will be dropped,
    * instead of causing a new pad to be exposed for these to be pushed on.
    *
+   * This is for example useful to drop FEC protection packets, as they
+   * need to go through the #GstRtpJitterBuffer, but cease to be useful
+   * past that point, #GstRtpBin will make use of this property for that
+   * purpose.
+   *
    * Since: 1.14
    */
   g_object_class_install_property (gobject_klass, PROP_IGNORED_PTS,
