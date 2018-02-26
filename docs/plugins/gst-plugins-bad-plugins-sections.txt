@@ -175,6 +175,22 @@ gst_ass_render_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audiobuffersplit</FILE>
+<TITLE>audiobuffersplit</TITLE>
+GstAudioBufferSplit
+<SUBSECTION Standard>
+GstAudioBufferSplitClass
+GST_AUDIO_BUFFER_SPLIT
+GST_AUDIO_BUFFER_SPLIT_CAST
+GST_IS_AUDIO_BUFFER_SPLIT
+GST_AUDIO_BUFFER_SPLIT_CLASS
+GST_IS_AUDIO_BUFFER_SPLIT_CLASS
+GST_TYPE_AUDIO_BUFFER_SPLIT
+<SUBSECTION Private>
+gst_audio_buffer_split_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audiochannelmix</FILE>
 <TITLE>audiochannelmix</TITLE>
 GstAudioChannelMix
@@ -194,6 +210,7 @@ gst_audio_channel_mix_get_type
 <FILE>element-audiomixmatrix</FILE>
 <TITLE>audiomixmatrix</TITLE>
 GstAudioMixMatrix
+GstAudioMixMatrixModeType
 <SUBSECTION Standard>
 GstAudioMixMatrixClass
 GST_AUDIO_MIX_MATRIX
@@ -269,6 +286,23 @@ GST_IS_AUTO_VIDEO_CONVERT_CLASS
 GST_TYPE_AUTO_VIDEO_CONVERT
 <SUBSECTION Private>
 gst_auto_video_convert_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-avwait</FILE>
+<TITLE>avwait</TITLE>
+GstAvWait
+GstAvWaitMode
+<SUBSECTION Standard>
+GstAvWaitClass
+GST_AV_WAIT
+GST_AV_WAIT_CAST
+GST_IS_AV_WAIT
+GST_AV_WAIT_CLASS
+GST_IS_AV_WAIT_CLASS
+GST_TYPE_AV_WAIT
+<SUBSECTION Private>
+gst_av_wait_get_type
 </SECTION>
 
 <SECTION>
@@ -645,6 +679,38 @@ gst_curl_http_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-curlhttpsrc</FILE>
+<TITLE>curlhttpsrc</TITLE>
+GstCurlHttpSrc
+<SUBSECTION Standard>
+GstCurlHttpSrcClass
+GST_CURL_HTTP_SRC
+GST_CURL_HTTP_SRC_CAST
+GST_IS_CURL_HTTP_SRC
+GST_CURL_HTTP_SRC_CLASS
+GST_IS_CURL_HTTP_SRC_CLASS
+GST_TYPE_CURL_HTTP_SRC
+<SUBSECTION Private>
+gst_curl_http_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-curlsftpsink</FILE>
+<TITLE>curlsftpsink</TITLE>
+GstCurlSftpSink
+<SUBSECTION Standard>
+GstCurlSftpSinkClass
+GST_CURL_SFTP_SINK
+GST_CURL_SFTP_SINK_CAST
+GST_IS_CURL_SFTP_SINK
+GST_CURL_SFTP_SINK_CLASS
+GST_IS_CURL_SFTP_SINK_CLASS
+GST_TYPE_CURL_SFTP_SINK
+<SUBSECTION Private>
+gst_curl_sftp_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-curlsmtpsink</FILE>
 <TITLE>curlsmtpsink</TITLE>
 GstCurlSmtpSink
@@ -806,17 +872,17 @@ gst_dash_demux_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-dc1394</FILE>
-<TITLE>dc1394</TITLE>
-GstDc1394
+<FILE>element-dc1394src</FILE>
+<TITLE>dc1394src</TITLE>
+GstDC1394Src
 <SUBSECTION Standard>
-GstDc1394Class
-GST_DC1394
-GST_DC1394_CLASS
-GST_IS_DC1394
-GST_IS_DC1394_CLASS
-GST_TYPE_DC1394
-gst_dc1394_get_type
+GstDD1394SrcClass
+GST_DC1394_SRC
+GST_DC1394_SRC_CLASS
+GST_IS_DC1394_SRC
+GST_IS_DC1394_SRC_CLASS
+GST_TYPE_DC1394_SRC
+gst_dc1394_src_get_type
 </SECTION>
 
 <SECTION>
@@ -897,6 +963,24 @@ GST_IS_DECKLINK_VIDEO_SRC_CLASS
 GST_TYPE_DECKLINK_VIDEO_SRC
 <SUBSECTION Private>
 gst_decklink_video_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-dewarp</FILE>
+<TITLE>dewarp</TITLE>
+GstDewarp
+GstDewarpDisplayMode
+GstDewarpInterpolationMode
+<SUBSECTION Standard>
+GstDewarpClass
+GST_DEWARP
+GST_DEWARP_CAST
+GST_IS_DEWARP
+GST_DEWARP_CLASS
+GST_IS_DEWARP_CLASS
+GST_TYPE_DEWARP
+<SUBSECTION Private>
+gst_dewarp_get_type
 </SECTION>
 
 <SECTION>
@@ -1277,6 +1361,22 @@ gst_face_blur_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-faceoverlay</FILE>
+<TITLE>faceoverlay</TITLE>
+GstFaceOverlay
+<SUBSECTION Standard>
+GstFaceOverlayClass
+GST_FACE_OVERLAY
+GST_FACE_OVERLAY_CAST
+GST_IS_FACE_OVERLAY
+GST_FACE_OVERLAY_CLASS
+GST_IS_FACE_OVERLAY_CLASS
+GST_TYPE_FACE_OVERLAY
+<SUBSECTION Private>
+gst_face_overlay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-facedetect</FILE>
 <TITLE>facedetect</TITLE>
 GstFaceDetect
@@ -1307,6 +1407,38 @@ GST_IS_FAKE_VIDEO_SINK_CLASS
 GST_TYPE_FAKE_VIDEO_SINK
 <SUBSECTION Private>
 gst_fake_video_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fdkaacdec</FILE>
+<TITLE>fdkaacdec</TITLE>
+GstFdkAacDec
+<SUBSECTION Standard>
+GstFdkAacDecClass
+GST_FDK_AAC_DEC
+GST_FDK_AAC_DEC_CAST
+GST_IS_FDK_AAC_DEC
+GST_FDK_AAC_DEC_CLASS
+GST_IS_FDK_AAC_DEC_CLASS
+GST_TYPE_FDK_AAC_DEC
+<SUBSECTION Private>
+gst_fdk_aac_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-fdkaacenc</FILE>
+<TITLE>fdkaacenc</TITLE>
+GstFdkAacEnc
+<SUBSECTION Standard>
+GstFdkAacEncClass
+GST_FDK_AAC_ENC
+GST_FDK_AAC_ENC_CAST
+GST_IS_FDK_AAC_ENC
+GST_FDK_AAC_ENC_CLASS
+GST_IS_FDK_AAC_ENC_CLASS
+GST_TYPE_FDK_AAC_ENC
+<SUBSECTION Private>
+gst_fdk_aac_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -1679,6 +1811,70 @@ GST_IS_HLS_SINK_CLASS
 GST_TYPE_HLS_SINK
 <SUBSECTION Private>
 gst_hls_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-hlssink2</FILE>
+<TITLE>hlssink2</TITLE>
+GstHlsSink2
+<SUBSECTION Standard>
+GstHlsSink2Class
+GST_HLS_SINK2
+GST_HLS_SINK2_CAST
+GST_IS_HLS_SINK2
+GST_HLS_SINK2_CLASS
+GST_IS_HLS_SINK2_CLASS
+GST_TYPE_HLS_SINK2
+<SUBSECTION Private>
+gst_hls_sink2_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ipcpipelinesink</FILE>
+<TITLE>ipcpipelinesink</TITLE>
+GstIpcPipelineSink
+<SUBSECTION Standard>
+GstIpcPipelineSinkClass
+GST_IPC_PIPELINE_SINK
+GST_IPC_PIPELINE_SINK_CAST
+GST_IS_IPC_PIPELINE_SINK
+GST_IPC_PIPELINE_SINK_CLASS
+GST_IS_IPC_PIPELINE_SINK_CLASS
+GST_TYPE_IPC_PIPELINE_SINK
+<SUBSECTION Private>
+gst_ipc_pipeline_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ipcpipelinesrc</FILE>
+<TITLE>ipcpipelinesrc</TITLE>
+GstIpcPipelineSrc
+<SUBSECTION Standard>
+GstIpcPipelineSrcClass
+GST_IPC_PIPELINE_SRC
+GST_IPC_PIPELINE_SRC_CAST
+GST_IS_IPC_PIPELINE_SRC
+GST_IPC_PIPELINE_SRC_CLASS
+GST_IS_IPC_PIPELINE_SRC_CLASS
+GST_TYPE_IPC_PIPELINE_SRC
+<SUBSECTION Private>
+gst_ipc_pipeline_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ipcslavepipeline</FILE>
+<TITLE>ipcslavepipeline</TITLE>
+GstIpcSlavePipeline
+<SUBSECTION Standard>
+GstIpcSlavePipelineClass
+GST_IPC_SLAVE_PIPELINE
+GST_IPC_SLAVE_PIPELINE_CAST
+GST_IS_IPC_SLAVE_PIPELINE
+GST_IPC_SLAVE_PIPELINE_CLASS
+GST_IS_IPC_SLAVE_PIPELINE_CLASS
+GST_TYPE_IPC_SLAVE_PIPELINE
+<SUBSECTION Private>
+gst_ipc_slave_pipeline_get_type
 </SECTION>
 
 <SECTION>
@@ -2149,38 +2345,6 @@ gst_midi_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-mimdec</FILE>
-<TITLE>mimdec</TITLE>
-GstMimDec
-<SUBSECTION Standard>
-GstMimDecClass
-GST_MIM_DEC
-GST_MIM_DEC_CAST
-GST_IS_MIM_DEC
-GST_MIM_DEC_CLASS
-GST_IS_MIM_DEC_CLASS
-GST_TYPE_MIM_DEC
-<SUBSECTION Private>
-gst_mim_dec_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-mimenc</FILE>
-<TITLE>mimenc</TITLE>
-GstMimEnc
-<SUBSECTION Standard>
-GstMimEncClass
-GST_MIM_ENC
-GST_MIM_ENC_CAST
-GST_IS_MIM_ENC
-GST_MIM_ENC_CLASS
-GST_IS_MIM_ENC_CLASS
-GST_TYPE_MIM_ENC
-<SUBSECTION Private>
-gst_mim_enc_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-mirror</FILE>
 <TITLE>mirror</TITLE>
 GstMirror
@@ -2334,6 +2498,22 @@ gst_mss_demux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-musepackdec</FILE>
+<TITLE>musepackdec</TITLE>
+GstMusepackDec
+<SUBSECTION Standard>
+GstMusepackDecClass
+GST_MUSEPACK_DEC
+GST_MUSEPACK_DEC_CAST
+GST_IS_MUSEPACK_DEC
+GST_MUSEPACK_DEC_CLASS
+GST_IS_MUSEPACK_DEC_CLASS
+GST_TYPE_MUSEPACK_DEC
+<SUBSECTION Private>
+gst_musepack_dec_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-mxfdemux</FILE>
 <TITLE>mxfdemux</TITLE>
 GstMXFDemux
@@ -2366,6 +2546,7 @@ gst_mxf_mux_get_type
 <FILE>element-netsim</FILE>
 <TITLE>netsim</TITLE>
 GstNetSim
+GstNetSimDistribution
 <SUBSECTION Standard>
 GstNetSimClass
 GST_NET_SIM
@@ -2438,6 +2619,39 @@ GST_IS_OPEN_EXR_DEC_CLASS
 GST_TYPE_OPEN_EXR_DEC
 <SUBSECTION Private>
 gst_open_exr_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-openh264dec</FILE>
+<TITLE>openh264dec</TITLE>
+GstOpenh264Dec
+<SUBSECTION Standard>
+GstOpenh264DecClass
+GST_OPENH264_DEC
+GST_OPENH264_DEC_CAST
+GST_IS_OPENH264_DEC
+GST_OPENH264_DEC_CLASS
+GST_IS_OPENH264_DEC_CLASS
+GST_TYPE_OPENH264_DEC
+<SUBSECTION Private>
+gst_openh264_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-openh264enc</FILE>
+<TITLE>openh264enc</TITLE>
+GstOpenh264Enc
+GstOpenh264EncSliceModes
+<SUBSECTION Standard>
+GstOpenh264EncClass
+GST_OPENH264_ENC
+GST_OPENH264_ENC_CAST
+GST_IS_OPENH264_ENC
+GST_OPENH264_ENC_CLASS
+GST_IS_OPENH264_ENC_CLASS
+GST_TYPE_OPENH264_ENC
+<SUBSECTION Private>
+gst_openh264_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -2634,6 +2848,38 @@ gst_pnmenc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-proxysink</FILE>
+<TITLE>proxysink</TITLE>
+GstProxySink
+<SUBSECTION Standard>
+GstProxySinkClass
+GST_PROXY_SINK
+GST_PROXY_SINK_CAST
+GST_IS_PROXY_SINK
+GST_PROXY_SINK_CLASS
+GST_IS_PROXY_SINK_CLASS
+GST_TYPE_PROXY_SINK
+<SUBSECTION Private>
+gst_proxy_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-proxysrc</FILE>
+<TITLE>proxysrc</TITLE>
+GstProxySrc
+<SUBSECTION Standard>
+GstProxySrcClass
+GST_PROXY_SRC
+GST_PROXY_SRC_CAST
+GST_IS_PROXY_SRC
+GST_PROXY_SRC_CLASS
+GST_IS_PROXY_SRC_CLASS
+GST_TYPE_PROXY_SRC
+<SUBSECTION Private>
+gst_proxy_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rgb2bayer</FILE>
 <TITLE>rgb2bayer</TITLE>
 GstRGB2Bayer
@@ -2824,6 +3070,38 @@ GST_IS_RTP_ONVIF_TIMESTAMP_CLASS
 GST_TYPE_RTP_ONVIF_TIMESTAMP
 <SUBSECTION Private>
 gst_rtp_onvif_timestamp_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sbcdec</FILE>
+<TITLE>sbcdec</TITLE>
+GstSbcDec
+<SUBSECTION Standard>
+GstSbcDecClass
+GST_SBC_DEC
+GST_SBC_DEC_CAST
+GST_IS_SBC_DEC
+GST_SBC_DEC_CLASS
+GST_IS_SBC_DEC_CLASS
+GST_TYPE_SBC_DEC
+<SUBSECTION Private>
+gst_sbc_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sbcenc</FILE>
+<TITLE>sbcenc</TITLE>
+GstSbcEnc
+<SUBSECTION Standard>
+GstSbcEncClass
+GST_SBC_ENC
+GST_SBC_ENC_CAST
+GST_IS_SBC_ENC
+GST_SBC_ENC_CLASS
+GST_IS_SBC_ENC_CLASS
+GST_TYPE_SBC_ENC
+<SUBSECTION Private>
+gst_sbc_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -3325,6 +3603,22 @@ gst_template_match_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-timecodestamper</FILE>
+<TITLE>timecodestamper</TITLE>
+GstTimeCodeStamper
+<SUBSECTION Standard>
+GstTimeCodeStamperClass
+GST_TIME_CODE_STAMPER
+GST_TIME_CODE_STAMPER_CAST
+GST_IS_TIME_CODE_STAMPER
+GST_TIME_CODE_STAMPER_CLASS
+GST_IS_TIME_CODE_STAMPER_CLASS
+GST_TYPE_TIME_CODE_STAMPER
+<SUBSECTION Private>
+gst_time_code_stamper_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-tonegeneratesrc</FILE>
 <TITLE>tonegeneratesrc</TITLE>
 GstToneGenerateSrc
@@ -3565,6 +3859,38 @@ gst_video_parse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-vulkansink</FILE>
+<TITLE>vulkansink</TITLE>
+GstVulkanSink
+<SUBSECTION Standard>
+GstVulkanSinkClass
+GST_VULKAN_SINK
+GST_VULKAN_SINK_CAST
+GST_IS_VULKAN_SINK
+GST_VULKAN_SINK_CLASS
+GST_IS_VULKAN_SINK_CLASS
+GST_TYPE_VULKAN_SINK
+<SUBSECTION Private>
+gst_vulkan_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vulkanupload</FILE>
+<TITLE>vulkanupload</TITLE>
+GstVulkanUpload
+<SUBSECTION Standard>
+GstVulkanUploadClass
+GST_VULKAN_UPLOAD
+GST_VULKAN_UPLOAD_CAST
+GST_IS_VULKAN_UPLOAD
+GST_VULKAN_UPLOAD_CLASS
+GST_IS_VULKAN_UPLOAD_CLASS
+GST_TYPE_VULKAN_UPLOAD
+<SUBSECTION Private>
+gst_vulkan_upload_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rawaudioparse</FILE>
 <TITLE>rawaudioparse</TITLE>
 GstRawAudioParse
@@ -3741,6 +4067,22 @@ GST_IS_WEBP_ENC_CLASS
 GST_TYPE_WEBP_ENC
 <SUBSECTION Private>
 gst_webp_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-webrtcbin</FILE>
+<TITLE>webrtcbin</TITLE>
+GstWebRTCBin
+<SUBSECTION Standard>
+GstWebRTCBinClass
+GST_WEB_RTC_BIN
+GST_WEB_RTC_BIN_CAST
+GST_IS_WEB_RTC_BIN
+GST_WEB_RTC_BIN_CLASS
+GST_IS_WEB_RTC_BIN_CLASS
+GST_TYPE_WEB_RTC_BIN
+<SUBSECTION Private>
+gst_web_rtc_bin_get_type
 </SECTION>
 
 <SECTION>
