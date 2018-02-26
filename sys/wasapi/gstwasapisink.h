@@ -62,6 +62,7 @@ struct _GstWasapiSink
   gint sharemode;
   gboolean mute;
   gboolean low_latency;
+  gboolean try_audioclient3;
   wchar_t *device_strid;
 };
 

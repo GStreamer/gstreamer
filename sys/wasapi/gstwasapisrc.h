@@ -63,6 +63,7 @@ struct _GstWasapiSrc
   gint role;
   gint sharemode;
   gboolean low_latency;
+  gboolean try_audioclient3;
   wchar_t *device_strid;
 };
 

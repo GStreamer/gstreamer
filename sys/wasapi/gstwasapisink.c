@@ -54,6 +54,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define DEFAULT_MUTE          FALSE
 #define DEFAULT_EXCLUSIVE     FALSE
 #define DEFAULT_LOW_LATENCY   FALSE
+#define DEFAULT_AUDIOCLIENT3  TRUE
 
 enum
 {
@@ -62,7 +63,8 @@ enum
   PROP_MUTE,
   PROP_DEVICE,
   PROP_EXCLUSIVE,
-  PROP_LOW_LATENCY
+  PROP_LOW_LATENCY,
+  PROP_AUDIOCLIENT3
 };
 
 static void gst_wasapi_sink_dispose (GObject * object);
@@ -132,6 +134,12 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
           "Optimize all settings for lowest latency",
           DEFAULT_LOW_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class,
+      PROP_AUDIOCLIENT3,
+      g_param_spec_boolean ("use-audioclient3", "Use the AudioClient3 API",
+          "Use the Windows 10 AudioClient3 API when available",
+          DEFAULT_AUDIOCLIENT3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
       "Sink/Audio",
@@ -155,6 +163,11 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
 static void
 gst_wasapi_sink_init (GstWasapiSink * self)
 {
+  self->role = DEFAULT_ROLE;
+  self->mute = DEFAULT_MUTE;
+  self->sharemode = AUDCLNT_SHAREMODE_SHARED;
+  self->low_latency = DEFAULT_LOW_LATENCY;
+  self->try_audioclient3 = DEFAULT_AUDIOCLIENT3;
   self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
 
   CoInitialize (NULL);
@@ -232,6 +245,9 @@ gst_wasapi_sink_set_property (GObject * object, guint prop_id,
     case PROP_LOW_LATENCY:
       self->low_latency = g_value_get_boolean (value);
       break;
+    case PROP_AUDIOCLIENT3:
+      self->try_audioclient3 = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -262,10 +278,22 @@ gst_wasapi_sink_get_property (GObject * object, guint prop_id,
     case PROP_LOW_LATENCY:
       g_value_set_boolean (value, self->low_latency);
       break;
+    case PROP_AUDIOCLIENT3:
+      g_value_set_boolean (value, self->try_audioclient3);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_wasapi_sink_can_audioclient3 (GstWasapiSink * self)
+{
+  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED &&
+      self->try_audioclient3 && gst_wasapi_util_have_audioclient3 ())
+    return TRUE;
+  return FALSE;
 }
 
 static GstCaps *
@@ -416,8 +444,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   guint bpf, rate, devicep_frames;
   HRESULT hr;
 
-  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED &&
-      gst_wasapi_util_have_audioclient3 ()) {
+  if (gst_wasapi_sink_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
             &devicep_frames))
@@ -521,7 +548,7 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
   if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE &&
-      !gst_wasapi_util_have_audioclient3 ())
+      !gst_wasapi_sink_can_audioclient3 (self))
     CoUninitialize ();
 
   if (self->thread_priority_handle != NULL) {
