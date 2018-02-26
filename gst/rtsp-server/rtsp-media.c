@@ -1921,7 +1921,8 @@ appsink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     if (gst_base_sink_query_latency (GST_BASE_SINK (data->appsink), NULL, NULL,
             &min, &max)) {
       g_object_set (data->appsrc, "min-latency", min, "max-latency", max, NULL);
-      g_print ("setting latency to %lu %lu\n", min, max);
+      GST_DEBUG ("setting latency to min %" GST_TIME_FORMAT " max %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (min), GST_TIME_ARGS (max));
     }
   } else if (GST_IS_QUERY (info->data)) {
     GstPad *srcpad = gst_element_get_static_pad (data->appsrc, "src");
