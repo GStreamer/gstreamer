@@ -999,10 +999,10 @@ gst_rtsp_client_sink_get_factories (void)
 }
 
 static GstCaps *
-gst_rtsp_client_sink_get_payloader_caps (GstElementFactory *factory)
+gst_rtsp_client_sink_get_payloader_caps (GstElementFactory * factory)
 {
   const GList *tmp;
-  GstCaps *caps = gst_caps_new_empty();
+  GstCaps *caps = gst_caps_new_empty ();
 
   for (tmp = gst_element_factory_get_static_pad_templates (factory);
       tmp; tmp = g_list_next (tmp)) {
@@ -1040,7 +1040,8 @@ gst_rtsp_client_sink_get_all_payloaders_caps (void)
     factories = gst_rtsp_client_sink_get_factories ();
     for (cur = factories; cur != NULL; cur = g_list_next (cur)) {
       GstElementFactory *factory = GST_ELEMENT_FACTORY (cur->data);
-      GstCaps *payloader_caps = gst_rtsp_client_sink_get_payloader_caps (factory);
+      GstCaps *payloader_caps =
+          gst_rtsp_client_sink_get_payloader_caps (factory);
 
       caps = gst_caps_merge (caps, payloader_caps);
 
@@ -1294,7 +1295,8 @@ gst_rtsp_client_sink_sinkpad_query (GstPad * pad, GstObject * parent,
       GstCaps *caps;
 
       if (cspad->custom_payloader) {
-        GstElementFactory *factory = gst_element_get_factory (cspad->custom_payloader);
+        GstElementFactory *factory =
+            gst_element_get_factory (cspad->custom_payloader);
 
         caps = gst_rtsp_client_sink_get_payloader_caps (factory);
       } else {
