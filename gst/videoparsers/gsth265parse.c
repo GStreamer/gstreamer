@@ -1234,6 +1234,46 @@ get_profile_string (GstH265Profile profile)
       return "main-10";
     case GST_H265_PROFILE_MAIN_STILL_PICTURE:
       return "main-still-picture";
+    case GST_H265_PROFILE_MONOCHROME:
+      return "monochrome";
+    case GST_H265_PROFILE_MONOCHROME_12:
+      return "monochrome-12";
+    case GST_H265_PROFILE_MONOCHROME_16:
+      return "monochrome-16";
+    case GST_H265_PROFILE_MAIN_12:
+      return "main-12";
+    case GST_H265_PROFILE_MAIN_422_10:
+      return "main-422-10";
+    case GST_H265_PROFILE_MAIN_422_12:
+      return "main-422-12";
+    case GST_H265_PROFILE_MAIN_444:
+      return "main-444";
+    case GST_H265_PROFILE_MAIN_444_10:
+      return "main-444-10";
+    case GST_H265_PROFILE_MAIN_444_12:
+      return "main-444-12";
+    case GST_H265_PROFILE_MAIN_INTRA:
+      return "main-intra";
+    case GST_H265_PROFILE_MAIN_10_INTRA:
+      return "main-10-intra";
+    case GST_H265_PROFILE_MAIN_12_INTRA:
+      return "main-12-intra";
+    case GST_H265_PROFILE_MAIN_422_10_INTRA:
+      return "main-422-10-intra";
+    case GST_H265_PROFILE_MAIN_422_12_INTRA:
+      return "main-422-12-intra";
+    case GST_H265_PROFILE_MAIN_444_INTRA:
+      return "main-444-intra";
+    case GST_H265_PROFILE_MAIN_444_10_INTRA:
+      return "main-444-10-intra";
+    case GST_H265_PROFILE_MAIN_444_12_INTRA:
+      return "main-444-12-intra";
+    case GST_H265_PROFILE_MAIN_444_16_INTRA:
+      return "main-444-16-intra";
+    case GST_H265_PROFILE_MAIN_444_STILL_PICTURE:
+      return "main-444-still-picture";
+    case GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE:
+      return "main-444-16-still-picture";
     default:
       break;
   }

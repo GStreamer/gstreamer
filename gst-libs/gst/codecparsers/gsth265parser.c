@@ -2642,6 +2642,88 @@ gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal (guint8 out_quant[64],
     out_quant[uprightdiagonal_8x8[i]] = quant[i];
 }
 
+typedef struct
+{
+  GstH265Profile profile;
+
+  guint8 max_12bit_constraint_flag;
+  guint8 max_10bit_constraint_flag;
+  guint8 max_8bit_constraint_flag;
+  guint8 max_422chroma_constraint_flag;
+  guint8 max_420chroma_constraint_flag;
+  guint8 max_monochrome_constraint_flag;
+  guint8 intra_constraint_flag;
+  guint8 one_picture_only_constraint_flag;
+  gboolean lower_bit_rate_constraint_flag_set;
+} FormatRangeExtensionProfile;
+
+static GstH265Profile
+get_format_range_extension_profile (GstH265ProfileTierLevel * ptl)
+{
+  /* See Table A.2 for the definition of those formats */
+  FormatRangeExtensionProfile profiles[] = {
+    {GST_H265_PROFILE_MONOCHROME, 1, 1, 1, 1, 1, 1, 0, 0, TRUE},
+    {GST_H265_PROFILE_MONOCHROME_12, 1, 0, 0, 1, 1, 1, 0, 0, TRUE},
+    {GST_H265_PROFILE_MONOCHROME_16, 0, 0, 0, 1, 1, 1, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_12, 1, 0, 0, 1, 1, 0, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_422_10, 1, 1, 0, 1, 0, 0, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_422_12, 1, 0, 0, 1, 0, 0, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_444, 1, 1, 1, 0, 0, 0, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_444_10, 1, 1, 0, 0, 0, 0, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_444_12, 1, 0, 0, 0, 0, 0, 0, 0, TRUE},
+    {GST_H265_PROFILE_MAIN_INTRA, 1, 1, 1, 1, 1, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_10_INTRA, 1, 1, 0, 1, 1, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_12_INTRA, 1, 0, 0, 1, 1, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_422_10_INTRA, 1, 1, 0, 1, 0, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_422_12_INTRA, 1, 0, 0, 1, 0, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_444_INTRA, 1, 1, 1, 0, 0, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_444_10_INTRA, 1, 1, 0, 0, 0, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_444_12_INTRA, 1, 0, 0, 0, 0, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_444_16_INTRA, 0, 0, 0, 0, 0, 0, 1, 0, FALSE},
+    {GST_H265_PROFILE_MAIN_444_STILL_PICTURE, 1, 1, 1, 0, 0, 0, 1, 1, FALSE},
+    {GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE, 0, 0, 0, 0, 0, 0, 1, 1, FALSE},
+  };
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (profiles); i++) {
+    FormatRangeExtensionProfile p = profiles[i];
+
+    if (p.max_12bit_constraint_flag != ptl->max_12bit_constraint_flag)
+      continue;
+    if (p.max_10bit_constraint_flag != ptl->max_10bit_constraint_flag)
+      continue;
+    if (p.max_8bit_constraint_flag != ptl->max_8bit_constraint_flag)
+      continue;
+    if (p.max_422chroma_constraint_flag != ptl->max_422chroma_constraint_flag)
+      continue;
+    if (p.max_420chroma_constraint_flag != ptl->max_420chroma_constraint_flag)
+      continue;
+    if (p.max_monochrome_constraint_flag != ptl->max_monochrome_constraint_flag)
+      continue;
+    if (p.intra_constraint_flag != ptl->intra_constraint_flag)
+      continue;
+    if (p.one_picture_only_constraint_flag !=
+        ptl->one_picture_only_constraint_flag)
+      continue;
+    if (p.lower_bit_rate_constraint_flag_set
+        && !ptl->lower_bit_rate_constraint_flag)
+      continue;
+
+    return p.profile;
+  }
+
+  return GST_H265_PROFILE_INVALID;
+}
+
+/**
+ * gst_h265_profile_tier_level_get_profile:
+ * @ptl: a #GstH265ProfileTierLevel
+ *
+ * Return the H265 profile defined in @ptl.
+ *
+ * Returns: a #GstH265Profile
+ * Since: 1.14
+ */
 GstH265Profile
 gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
 {
@@ -2657,8 +2739,11 @@ gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
       || ptl->profile_compatibility_flag[3])
     return GST_H265_PROFILE_MAIN_STILL_PICTURE;
 
+  if (ptl->profile_idc == GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION
+      || ptl->profile_compatibility_flag[4])
+    return get_format_range_extension_profile (ptl);
+
   /* TODO:
-   * - GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION
    * - GST_H265_PROFILE_IDC_HIGH_THROUGHPUT
    * - GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING
    */
