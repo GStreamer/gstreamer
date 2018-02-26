@@ -1202,8 +1202,8 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   supported_sinkcaps = gst_caps_new_simple ("video/x-raw",
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure
       (supported_sinkcaps, 0), TRUE, TRUE, TRUE, TRUE);
