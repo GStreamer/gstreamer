@@ -1296,10 +1296,17 @@ gst_rtsp_client_sink_sinkpad_query (GstPad * pad, GstObject * parent,
       GstCaps *caps;
 
       if (cspad->custom_payloader) {
-        GstElementFactory *factory =
-            gst_element_get_factory (cspad->custom_payloader);
+        GstPad *sinkpad =
+            gst_element_get_static_pad (cspad->custom_payloader, "sink");
 
-        caps = gst_rtsp_client_sink_get_payloader_caps (factory);
+        if (sinkpad) {
+          caps = gst_pad_query_caps (sinkpad, NULL);
+          gst_object_unref (sinkpad);
+        } else {
+          GST_ELEMENT_ERROR (parent, CORE, NEGOTIATION, (NULL),
+              ("Custom payloaders are expected to expose a sink pad named 'sink'"));
+          return FALSE;
+        }
       } else {
         /* No target yet - return the union of all payloader caps */
         caps = gst_rtsp_client_sink_get_all_payloaders_caps ();
