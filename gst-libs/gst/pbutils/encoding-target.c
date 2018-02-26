@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <string.h>
 #include "encoding-target.h"
+#include "pbutils-private.h"
 
 /* Documented in encoding-profile.c */
 

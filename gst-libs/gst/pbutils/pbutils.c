@@ -57,11 +57,12 @@
 #endif
 
 #include "pbutils.h"
+#include "pbutils-private.h"
 
 #include "gst/gst-i18n-plugin.h"
 
-static void
-_init_locale_text_domain (void)
+static gpointer
+_init_locale_text_domain (gpointer data)
 {
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
@@ -69,6 +70,8 @@ _init_locale_text_domain (void)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
+
+  return NULL;
 }
 
 void
