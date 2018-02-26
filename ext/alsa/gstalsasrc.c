@@ -923,6 +923,10 @@ gst_alsasrc_get_timestamp (GstAlsaSrc * asrc)
 
   /* get high resolution time stamp from driver */
   snd_pcm_status_get_htstamp (status, &tstamp);
+
+  if (tstamp.tv_sec == 0 && tstamp.tv_nsec == 0)
+    return GST_CLOCK_TIME_NONE;
+
   timestamp = GST_TIMESPEC_TO_TIME (tstamp);
 
   /* max available frames sets the depth of the buffer */
