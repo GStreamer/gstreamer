@@ -31,6 +31,10 @@
  * gst-launch-1.0 -v wasapisrc ! fakesink
  * ]| Capture from the default audio device and render to fakesink.
  *
+ * |[
+ * gst-launch-1.0 -v wasapisrc low-latency=true ! fakesink
+ * ]| Capture from the default audio device with the minimum possible latency and render to fakesink.
+ *
  */
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -123,7 +127,7 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_LOW_LATENCY,
       g_param_spec_boolean ("low-latency", "Low latency",
-          "Optimize all settings for lowest latency",
+          "Optimize all settings for lowest latency. Always safe to enable.",
           DEFAULT_LOW_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
@@ -136,6 +140,7 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
       "Source/Audio",
       "Stream audio from an audio capture device through WASAPI",
+      "Nirbheek Chauhan <nirbheek@centricular.com>, "
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_wasapi_src_get_caps);

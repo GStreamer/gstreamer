@@ -33,6 +33,10 @@
  * gst-launch-1.0 -v audiotestsrc samplesperbuffer=160 ! wasapisink
  * ]| Generate 20 ms buffers and render to the default audio device.
  *
+ * |[
+ * gst-launch-1.0 -v audiotestsrc samplesperbuffer=160 ! wasapisink low-latency=true
+ * ]| Same as above, but with the minimum possible latency
+ *
  */
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -131,7 +135,7 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_LOW_LATENCY,
       g_param_spec_boolean ("low-latency", "Low latency",
-          "Optimize all settings for lowest latency",
+          "Optimize all settings for lowest latency. Always safe to enable.",
           DEFAULT_LOW_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
@@ -144,6 +148,7 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "WasapiSrc",
       "Sink/Audio",
       "Stream audio to an audio capture device through WASAPI",
+      "Nirbheek Chauhan <nirbheek@centricular.com>, "
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wasapi_sink_get_caps);
