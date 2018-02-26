@@ -2116,6 +2116,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @id: the session id
    *
    * Request the internal RTPStorage object as #GObject in session @id.
+   *
+   * Since: 1.14
    */
   gst_rtp_bin_signals[SIGNAL_GET_INTERNAL_STORAGE] =
       g_signal_new ("get-internal-storage", G_TYPE_FROM_CLASS (klass),

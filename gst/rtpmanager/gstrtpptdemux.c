@@ -240,7 +240,14 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gobject_klass->set_property = gst_rtp_pt_demux_set_property;
   gobject_klass->get_property = gst_rtp_pt_demux_get_property;
 
-
+  /**
+   * GstRtpPtDemux:ignored-payload-types:
+   *
+   * If specified, packets with an ignored payload type will be dropped,
+   * instead of causing a new pad to be exposed for these to be pushed on.
+   *
+   * Since: 1.14
+   */
   g_object_class_install_property (gobject_klass, PROP_IGNORED_PTS,
       gst_param_spec_array ("ignored-payload-types",
           "Ignored payload types",
