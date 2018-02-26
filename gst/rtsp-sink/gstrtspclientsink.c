@@ -117,6 +117,7 @@ enum
   PROP_PAD_PAYLOADER
 };
 
+static GType gst_rtsp_client_sink_pad_get_type (void);
 G_DEFINE_TYPE (GstRtspClientSinkPad, gst_rtsp_client_sink_pad,
     GST_TYPE_GHOST_PAD);
 #define GST_TYPE_RTSP_CLIENT_SINK_PAD (gst_rtsp_client_sink_pad_get_type ())
