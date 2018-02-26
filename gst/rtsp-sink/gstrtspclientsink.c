@@ -1239,7 +1239,8 @@ gst_rtsp_client_sink_setup_payloader (GstRTSPClientSink * sink, GstPad * pad,
 no_sinkpad:
   GST_ERROR_OBJECT (sink,
       "Could not find sink pad on payloader %" GST_PTR_FORMAT, payloader);
-  gst_object_unref (payloader);
+  if (!cspad->custom_payloader)
+    gst_object_unref (payloader);
   return FALSE;
 
 no_srcpad:
