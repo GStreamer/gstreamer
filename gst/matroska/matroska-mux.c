@@ -975,8 +975,20 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   gint width, height, pixel_width, pixel_height;
   gint fps_d, fps_n;
   guint multiview_flags;
+  GstCaps *old_caps;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
+
+  if ((old_caps = gst_pad_get_current_caps (pad))) {
+    if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
+        && !gst_caps_is_equal (caps, old_caps)) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+          ("Caps changed are not supported by Matroska"));
+      gst_caps_unref (old_caps);
+      goto refuse_caps;
+    }
+    gst_caps_unref (old_caps);
+  }
 
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
@@ -1787,8 +1799,20 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *codec_data = NULL;
   GstBuffer *buf = NULL;
   const gchar *stream_format = NULL;
+  GstCaps *old_caps;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
+
+  if ((old_caps = gst_pad_get_current_caps (pad))) {
+    if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
+        && !gst_caps_is_equal (caps, old_caps)) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+          ("Caps changed are not supported by Matroska"));
+      gst_caps_unref (old_caps);
+      goto refuse_caps;
+    }
+    gst_caps_unref (old_caps);
+  }
 
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
@@ -2211,8 +2235,20 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *value = NULL;
   GstBuffer *buf = NULL;
   gboolean ret = TRUE;
+  GstCaps *old_caps;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
+
+  if ((old_caps = gst_pad_get_current_caps (pad))) {
+    if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
+        && !gst_caps_is_equal (caps, old_caps)) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+          ("Caps changed are not supported by Matroska"));
+      gst_caps_unref (old_caps);
+      goto refuse_caps;
+    }
+    gst_caps_unref (old_caps);
+  }
 
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
@@ -2295,6 +2331,14 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
 exit:
 
   return ret;
+
+  /* ERRORS */
+refuse_caps:
+  {
+    GST_WARNING_OBJECT (mux, "pad %s refused caps %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), caps);
+    return FALSE;
+  }
 }
 
 
