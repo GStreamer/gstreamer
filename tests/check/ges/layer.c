@@ -1738,34 +1738,41 @@ GST_START_TEST (test_layer_get_clips_in_interval)
   current = objects = ges_layer_get_clips_in_interval (layer, 0, 30);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   current = objects = ges_layer_get_clips_in_interval (layer, 0, 11);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   /* Clip's end lies between the interval */
   current = objects = ges_layer_get_clips_in_interval (layer, 30, 50);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   current = objects = ges_layer_get_clips_in_interval (layer, 39, 50);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   /* Clip exactly overlaps the interval */
   current = objects = ges_layer_get_clips_in_interval (layer, 10, 40);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   /* Clip completely inside the interval */
   current = objects = ges_layer_get_clips_in_interval (layer, 0, 50);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   /* Interval completely inside the clip duration */
   current = objects = ges_layer_get_clips_in_interval (layer, 20, 30);
   assert_equals_int (g_list_length (objects), 1);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
+  g_list_free_full (objects, gst_object_unref);
 
   /* No intersecting clip */
   objects = ges_layer_get_clips_in_interval (layer, 0, 10);
@@ -1809,12 +1816,14 @@ GST_START_TEST (test_layer_get_clips_in_interval)
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
   current = current->next;
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip2));
+  g_list_free_full (objects, gst_object_unref);
 
   current = objects = ges_layer_get_clips_in_interval (layer, 39, 65);
   assert_equals_int (g_list_length (objects), 2);
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip));
   current = current->next;
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip2));
+  g_list_free_full (objects, gst_object_unref);
 
 }
 
