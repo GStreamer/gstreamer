@@ -430,7 +430,7 @@ rtp_ulpfec_log_fec_packet (GstDebugCategory * cat, GstDebugLevel level,
 
   fec_level_hdr = fec_hdr_get_level_hdr (fec_hdr);
   GST_CAT_LEVEL_LOG (cat, level, object,
-      "%-22s: protection_len=%u mask=0x%012lx",
+      "%-22s: protection_len=%u mask=0x%012" G_GINT64_MODIFIER "x",
       "fec level header",
       g_ntohs (fec_level_hdr->protection_len),
       fec_level_hdr_get_mask (fec_level_hdr, fec_hdr->L));
