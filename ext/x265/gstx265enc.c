@@ -376,7 +376,8 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
-          "String of x264 options (overridden by element properties)",
+          "String of x265 options (overridden by element properties)"
+          " in the format \"key1=value1:key2=value2\".",
           PROP_OPTION_STRING_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
