@@ -2450,7 +2450,7 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
   composition_meta =
       gst_buffer_get_video_overlay_composition_meta (convert->inbuf);
   if (composition_meta) {
-    GST_DEBUG ("found video overlay composition meta, appliying on output.");
+    GST_DEBUG ("found video overlay composition meta, applying on output.");
     gst_buffer_add_video_overlay_composition_meta
         (convert->outbuf, composition_meta->overlay);
   }
