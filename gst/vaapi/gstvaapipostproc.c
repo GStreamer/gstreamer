@@ -1260,6 +1260,13 @@ gst_vaapipostproc_transform_size (GstBaseTransform * trans,
   return TRUE;
 }
 
+static gboolean
+gst_vaapipostproc_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
+{
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vaapipostproc_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -1325,6 +1332,7 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (gst_base_transform_is_passthrough (trans)) {
     *outbuf_ptr = inbuf;
@@ -1337,7 +1345,18 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     *outbuf_ptr = create_output_buffer (postproc);
   }
 
-  return *outbuf_ptr ? GST_FLOW_OK : GST_FLOW_ERROR;
+  if (!*outbuf_ptr)
+    return GST_FLOW_ERROR;
+
+  if (inbuf != *outbuf_ptr && bclass->copy_metadata) {
+    if (!bclass->copy_metadata (trans, inbuf, *outbuf_ptr)) {
+      /* something failed, post a warning */
+      GST_ELEMENT_WARNING (trans, STREAM, NOT_IMPLEMENTED,
+          ("could not copy metadata"), (NULL));
+    }
+  }
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -1673,6 +1692,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   trans_class->fixate_caps = gst_vaapipostproc_fixate_caps;
   trans_class->transform_caps = gst_vaapipostproc_transform_caps;
   trans_class->transform_size = gst_vaapipostproc_transform_size;
+  trans_class->transform_meta = gst_vaapipostproc_transform_meta;
   trans_class->transform = gst_vaapipostproc_transform;
   trans_class->set_caps = gst_vaapipostproc_set_caps;
   trans_class->query = gst_vaapipostproc_query;
