@@ -930,7 +930,8 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
-          "String of x264 options (overridden by element properties)",
+          "String of x264 options (overridden by element properties)"
+          " in the format \"key1=value1:key2=value2\".",
           ARG_OPTION_STRING_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
