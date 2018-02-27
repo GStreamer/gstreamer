@@ -695,6 +695,8 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
 
     dmeta->id = smeta->id;
     dmeta->parent_id = smeta->parent_id;
+    dmeta->params = g_list_copy_deep (smeta->params,
+        (GCopyFunc) gst_structure_copy, NULL);
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
