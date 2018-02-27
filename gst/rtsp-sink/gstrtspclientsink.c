@@ -4684,7 +4684,9 @@ gst_rtsp_client_sink_thread (GstRTSPClientSink * sink)
 
   switch (cmd) {
     case CMD_OPEN:
-      gst_rtsp_client_sink_open (sink, TRUE);
+      if (gst_rtsp_client_sink_open (sink, TRUE) == GST_RTSP_ERROR)
+        gst_rtsp_client_sink_loop_send_cmd (sink, CMD_WAIT,
+            CMD_ALL & ~CMD_CLOSE);
       break;
     case CMD_RECORD:
       gst_rtsp_client_sink_record (sink, TRUE);
