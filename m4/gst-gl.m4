@@ -172,10 +172,15 @@ case $host in
         AC_CHECK_LIB([EGL], [fbGetDisplay], [HAVE_VIV_FB_EGL=yes])
     fi
 
-    if test "x$HAVE_EGL" = "xyes" -a "x$HAVE_DRM" = "xyes"; then
-        PKG_CHECK_MODULES(GBM, gbm, HAVE_GBM_EGL=yes, HAVE_GBM_EGL=no)
-        AC_SUBST(GBM_CFLAGS)
-        AC_SUBST(GBM_LIBS)
+    if test "x$HAVE_EGL" = "xyes"; then
+        PKG_CHECK_MODULES(DRM, libdrm >= 2.4.55, HAVE_DRM=yes, HAVE_DRM=no)
+        AC_SUBST(DRM_CFLAGS)
+        AC_SUBST(DRM_LIBS)
+        if test "x$HAVE_DRM" = "xyes"; then
+          PKG_CHECK_MODULES(GBM, gbm, HAVE_GBM_EGL=yes, HAVE_GBM_EGL=no)
+          AC_SUBST(GBM_CFLAGS)
+          AC_SUBST(GBM_LIBS)
+       fi
     fi
 
     dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
@@ -479,8 +484,7 @@ case $host in
         AC_MSG_WARN([EGL is required by the Mesa GBM EGL backend])
       else
         HAVE_WINDOW_GBM=yes
-        GL_LIBS="$GL_LIBS"
-        GL_CFLAGS="$GL_CFLAGS"
+        GL_CFLAGS="$GL_CFLAGS DRM_CFLAGS"
       fi
     fi
 
