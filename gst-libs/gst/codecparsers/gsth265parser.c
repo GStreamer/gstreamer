@@ -264,8 +264,19 @@ gst_h265_parse_profile_tier_level (GstH265ProfileTierLevel * ptl,
   READ_UINT8 (nr, ptl->non_packed_constraint_flag, 1);
   READ_UINT8 (nr, ptl->frame_only_constraint_flag, 1);
 
+  READ_UINT8 (nr, ptl->max_12bit_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->max_10bit_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->max_8bit_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->max_422chroma_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->max_420chroma_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->max_monochrome_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->intra_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->one_picture_only_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->lower_bit_rate_constraint_flag, 1);
+  READ_UINT8 (nr, ptl->max_14bit_constraint_flag, 1);
+
   /* skip the reserved zero bits */
-  if (!nal_reader_skip (nr, 44))
+  if (!nal_reader_skip (nr, 34))
     goto error;
 
   READ_UINT8 (nr, ptl->level_idc, 8);

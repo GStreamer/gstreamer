@@ -316,6 +316,16 @@ struct _GstH265NalUnit
  * @non_packed_constraint_flag: indicate the presence of frame packing
  *   arragement sei message
  * @frame_only_constraint_flag: recognize the field_seq_flag
+ * @max_12bit_constraint_flag: used to define profile extensions, see Annex A
+ * @max_10bit_constraint_flag: used to define profile extensions, see Annex A
+ * @max_8bit_constraint_flag: used to define profile extensions, see Annex A
+ * @max_422chroma_constraint_flag: used to define profile extensions, see Annex A
+ * @max_420chroma_constraint_flag: used to define profile extensions, see Annex A
+ * @max_monochrome_constraint_flag: used to define profile extensions, see Annex A
+ * @intra_constraint_flag: used to define profile extensions, see Annex A
+ * @one_picture_only_constraint_flag: used to define profile extensions, see Annex A
+ * @lower_bit_rate_constraint_flag: used to define profile extensions, see Annex A
+ * @max_14bit_constraint_flag: used to define profile extensions, see Annex A
  * @level idc: indicate the level which the CVS confirms
  * @sub_layer_profile_present_flag: sublayer profile presence ind
  * @sub_layer_level_present_flag:sublayer level presence indicator.
@@ -344,6 +354,18 @@ struct _GstH265ProfileTierLevel {
   guint8 interlaced_source_flag;
   guint8 non_packed_constraint_flag;
   guint8 frame_only_constraint_flag;
+
+  guint8 max_12bit_constraint_flag;
+  guint8 max_10bit_constraint_flag;
+  guint8 max_8bit_constraint_flag;
+  guint8 max_422chroma_constraint_flag;
+  guint8 max_420chroma_constraint_flag;
+  guint8 max_monochrome_constraint_flag;
+  guint8 intra_constraint_flag;
+  guint8 one_picture_only_constraint_flag;
+  guint8 lower_bit_rate_constraint_flag;
+  guint8 max_14bit_constraint_flag;
+
   guint8 level_idc;
 
   guint8 sub_layer_profile_present_flag[6];
