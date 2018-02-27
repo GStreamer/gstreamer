@@ -777,8 +777,8 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
 
     if (clip_intersects)
       intersecting_clips =
-          g_list_insert_sorted (intersecting_clips, tmp->data,
-          (GCompareFunc) element_start_compare);
+          g_list_insert_sorted (intersecting_clips,
+          gst_object_ref (tmp->data), (GCompareFunc) element_start_compare);
   }
   return intersecting_clips;
 }
