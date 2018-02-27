@@ -268,7 +268,7 @@ gst_vaapi_surface_create_from_buffer_proxy (GstVaapiSurface * surface,
     extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vip, i);
     extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vip, i);
   }
-  extbuf.buffers = &extbuf_handle;
+  extbuf.buffers = (uintptr_t *) & extbuf_handle;
   extbuf.num_buffers = 1;
   extbuf.flags = 0;
   extbuf.private_data = NULL;
