@@ -261,8 +261,8 @@ gst_audiolatency_set_latency (GstAudioLatency * self, gint64 latency)
   avg_latency = gst_audiolatency_get_average_latency_unlocked (self);
 
   if (self->print_latency)
-    g_print ("last latency: %lims, running average: %lims\n", latency / 1000,
-        avg_latency / 1000);
+    g_print ("last latency: %" G_GINT64_FORMAT "ms, running average: %"
+        G_GINT64_FORMAT "ms\n", latency / 1000, avg_latency / 1000);
   GST_OBJECT_UNLOCK (self);
 
   /* Post an element message about it */
@@ -321,7 +321,7 @@ buffer_has_wave (GstBuffer * buffer, GstPad * pad)
   for (ii = 1; ii < fsize; ii += channels) {
     if (ABS (fdata[ii]) > 0.7) {
       /* The waveform probably starts somewhere inside the buffer,
-       * so return the offset from the buffer pts */
+       * so get the offset in nanoseconds from the buffer pts */
       offset = gst_util_uint64_scale_int_round (duration, ii, fsize);
       break;
     }
@@ -332,7 +332,8 @@ buffer_has_wave (GstBuffer * buffer, GstPad * pad)
   else
     gst_buffer_unmap (buffer, &minfo);
 
-  return offset;
+  /* Return offset in microseconds */
+  return offset / 1000;
 }
 
 static GstPadProbeReturn
@@ -362,11 +363,12 @@ gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
   if (offset < 0)
     goto out;
 
-  pts -= offset / 1000;
-  GST_INFO ("send pts: %li (after %lims, offset %lims)", pts,
-      (pts - self->send_pts) / 1000, offset / 1000000);
+  pts -= offset;
+  GST_INFO ("send pts: %" G_GINT64_FORMAT "us (after %" G_GINT64_FORMAT
+      "ms, offset %" G_GINT64_FORMAT "ms)", pts,
+      (pts - self->send_pts) / 1000, offset / 1000);
 
-  self->send_pts = pts + offset / 1000;
+  self->send_pts = pts + offset;
 
 out:
   return GST_PAD_PROBE_OK;
@@ -390,7 +392,7 @@ gst_audiolatency_sink_chain (GstPad * pad, GstObject * parent,
   if (offset < 0)
     goto out;
 
-  pts += offset / 1000;
+  pts += offset;
   /* Only measure latency using the first buffer of each tick wave */
   if (pts - self->recv_pts <= 950 * 1000)
     goto out;
@@ -399,7 +401,8 @@ gst_audiolatency_sink_chain (GstPad * pad, GstObject * parent,
   latency = (self->recv_pts - self->send_pts);
   gst_audiolatency_set_latency (self, latency);
 
-  GST_INFO ("recv pts: %li, latency: %lims", self->recv_pts, latency / 1000);
+  GST_INFO ("recv pts: %" G_GINT64_FORMAT "us, latency: %" G_GINT64_FORMAT "ms",
+      self->recv_pts, latency / 1000);
 
 out:
   gst_buffer_unref (buffer);
