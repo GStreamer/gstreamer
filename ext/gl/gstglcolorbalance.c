@@ -54,17 +54,55 @@ GST_DEBUG_CATEGORY_STATIC (glcolorbalance_debug);
 #define DEFAULT_PROP_HUE            0.0
 #define DEFAULT_PROP_SATURATION	    1.0
 
+#define GST_GL_COLOR_BALANCE_VIDEO_CAPS \
+    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "              \
+    "format = (string) RGBA, "              \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
+    "texture-target = (string) { 2D, external-oes } "        \
+    " ; "                                                               \
+    "video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY ","                \
+    GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION "), "           \
+    "format = (string) RGBA, "              \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
+    "texture-target = (string) { 2D, external-oes }"
+
+static GstStaticPadTemplate gst_gl_color_balance_element_src_pad_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_GL_COLOR_BALANCE_VIDEO_CAPS));
+
+static GstStaticPadTemplate gst_gl_color_balance_element_sink_pad_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_GL_COLOR_BALANCE_VIDEO_CAPS));
+
 /* *INDENT-OFF* */
-static const gchar *color_balance_frag =
+static const gchar color_balance_frag_OES_preamble[] =
+    "#extension GL_OES_EGL_image_external : require\n"
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "uniform samplerExternalOES tex;\n";
+
+static const gchar color_balance_frag_2D_preamble[] =
   "#ifdef GL_ES\n"
   "precision mediump float;\n"
   "#endif\n"
+  "uniform sampler2D tex;\n";
+
+static const gchar color_balance_frag_templ[] =
+  "%s\n" // Preamble
   "uniform float brightness;\n"
   "uniform float contrast;\n"
   "uniform float saturation;\n"
   "uniform float hue;\n"
   "varying vec2 v_texcoord;\n"
-  "uniform sampler2D tex;\n"
   "#define from_yuv_bt601_offset vec3(-0.0625, -0.5, -0.5)\n"
   "#define from_yuv_bt601_rcoeff vec3(1.164, 0.000, 1.596)\n"
   "#define from_yuv_bt601_gcoeff vec3(1.164,-0.391,-0.813)\n"
@@ -105,7 +143,7 @@ static const gchar *color_balance_frag =
    * blend-function-src-rgb=src-color and blend-function-dst-rgb=dst-color */
   "  float hue_cos = cos (PI * hue);\n"
   "  float hue_sin = sin (PI * hue);\n"
-  "  vec4 rgba = texture2D (tex, v_texcoord);\n"
+  "  vec4 rgba = %s (tex, v_texcoord);\n" /* texture2D / texture2DOES */
   "  yuv = rgb_to_yuv (rgba.rgb);\n"
   "  yuv.x = clamp (luma_to_narrow (luma_to_full(yuv.x) * contrast) + brightness, 0.0, 1.0);\n"
   "  vec2 uv = yuv.yz;\n"
@@ -139,6 +177,28 @@ G_DEFINE_TYPE_WITH_CODE (GstGLColorBalance, gst_gl_color_balance,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_gl_color_balance_colorbalance_init));
 
+static GstCaps *
+gcb_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
+{
+  GstCaps *tmp = gst_caps_make_writable (caps);
+  gint i;
+  /* If we're not in passthrough mode, we can only output 2D textures,
+   * but can always receive any compatible texture.
+   * This function is not called in passthrough mode, so we can do the
+   * transform unconditionally */
+  for (i = 0; i < gst_caps_get_size (tmp); i++) {
+    GstStructure *outs = gst_caps_get_structure (tmp, i);
+    if (direction == GST_PAD_SINK) {
+      gst_structure_set (outs, "texture-target", G_TYPE_STRING,
+          gst_gl_texture_target_to_string (GST_GL_TEXTURE_TARGET_2D), NULL);
+    } else {
+      gst_structure_remove_field (outs, "texture-target");
+    }
+  }
+  return tmp;
+}
+
 static gboolean
 gst_gl_color_balance_is_passthrough (GstGLColorBalance * glcolorbalance)
 {
@@ -169,9 +229,20 @@ _create_shader (GstGLColorBalance * balance)
   GstGLBaseFilter *base_filter = GST_GL_BASE_FILTER (balance);
   GstGLFilter *filter = GST_GL_FILTER (balance);
   GError *error = NULL;
+  gchar *frag_str;
 
   if (balance->shader)
     gst_object_unref (balance->shader);
+
+  /* Can support rectangle textures in the future if needed */
+  if (filter->in_texture_target == GST_GL_TEXTURE_TARGET_2D)
+    frag_str =
+        g_strdup_printf (color_balance_frag_templ,
+        color_balance_frag_2D_preamble, "texture2D");
+  else
+    frag_str =
+        g_strdup_printf (color_balance_frag_templ,
+        color_balance_frag_OES_preamble, "texture2D");
 
   if (!(balance->shader =
           gst_gl_shader_new_link_with_stages (base_filter->context, &error,
@@ -179,12 +250,14 @@ _create_shader (GstGLColorBalance * balance)
               gst_glsl_stage_new_with_string (base_filter->context,
                   GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
                   GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  color_balance_frag), NULL))) {
+                  frag_str), NULL))) {
+    g_free (frag_str);
     GST_ELEMENT_ERROR (balance, RESOURCE, NOT_FOUND, ("%s",
             "Failed to initialize colorbalance shader"), ("%s",
             error ? error->message : "Unknown error"));
     return FALSE;
   }
+  g_free (frag_str);
 
   filter->draw_attr_position_loc =
       gst_gl_shader_get_attribute_location (balance->shader, "a_position");
@@ -292,7 +365,10 @@ gst_gl_color_balance_class_init (GstGLColorBalanceClass * klass)
   GST_DEBUG_CATEGORY_INIT (glcolorbalance_debug, "glcolorbalance", 0,
       "glcolorbalance");
 
-  gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gl_color_balance_element_src_pad_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_gl_color_balance_element_sink_pad_template);
 
   gobject_class->finalize = gst_gl_color_balance_finalize;
   gobject_class->set_property = gst_gl_color_balance_set_property;
@@ -329,6 +405,7 @@ gst_gl_color_balance_class_init (GstGLColorBalanceClass * klass)
 
   filter_class->filter_texture =
       GST_DEBUG_FUNCPTR (gst_gl_color_balance_filter_texture);
+  filter_class->transform_internal_caps = gcb_transform_internal_caps;
 }
 
 static void
