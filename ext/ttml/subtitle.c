@@ -77,6 +77,7 @@ gst_subtitle_style_set_new (void)
   ret->extent_w = ret->extent_h = 0.0;
   ret->padding_start = ret->padding_end
       = ret->padding_before = ret->padding_after = 0.0;
+  ret->fill_line_gap = FALSE;
 
   return ret;
 }

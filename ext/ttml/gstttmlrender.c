@@ -2031,8 +2031,14 @@ gst_ttml_render_render_block_elements (GstTtmlRender * render,
         block_metrics.line_height, block_metrics.baseline_offset);
     g_free (markup);
 
-    bg_offset = 0;
-    bg_height = block_metrics.line_height;
+    if (!block->style_set->fill_line_gap) {
+      bg_offset =
+          block_metrics.baseline_offset - ue->pango_font_metrics.baseline;
+      bg_height = ue->pango_font_metrics.height;
+    } else {
+      bg_offset = 0;
+      bg_height = block_metrics.line_height;
+    }
     bg_width = text_image->width;
 
     if (line_padding > 0) {
@@ -2656,7 +2662,9 @@ gst_ttml_render_render_text_region (GstTtmlRender * render,
   /* Render each block and append to list. */
   for (i = 0; i < gst_subtitle_region_get_block_count (region); ++i) {
     const GstSubtitleBlock *block;
-    GstTtmlRenderRenderedImage *rendered_block;
+    GstTtmlRenderRenderedImage *rendered_block, *block_bg_image, *tmp;
+    GstBuffer *block_bg_buf;
+    gint block_height;
 
     block = gst_subtitle_region_get_block (region, i);
     rendered_block = gst_ttml_render_render_text_block (render, block, text_buf,
@@ -2684,22 +2692,17 @@ gst_ttml_render_render_text_region (GstTtmlRender * render,
         break;
     }
 
-    if (!gst_ttml_render_color_is_transparent (&block->style_set->
-            background_color)) {
-      /* Draw block background rectangle and render block image over it */
-      GstTtmlRenderRenderedImage *tmp = rendered_block;
-      GstBuffer *block_bg_buf;
-      GstTtmlRenderRenderedImage *block_bg_image;
+    tmp = rendered_block;
 
-      block_bg_buf = gst_ttml_render_draw_rectangle (window_width,
-          rendered_block->height, block->style_set->background_color);
-      block_bg_image = gst_ttml_render_rendered_image_new (block_bg_buf, 0,
-          rendered_block->y, window_width, rendered_block->height);
-      rendered_block = gst_ttml_render_rendered_image_combine (block_bg_image,
-          rendered_block);
-      gst_ttml_render_rendered_image_free (tmp);
-      gst_ttml_render_rendered_image_free (block_bg_image);
-    }
+    block_height = rendered_block->height + (2 * rendered_block->y);
+    block_bg_buf = gst_ttml_render_draw_rectangle (window_width,
+        block_height, block->style_set->background_color);
+    block_bg_image = gst_ttml_render_rendered_image_new (block_bg_buf, 0, 0,
+        window_width, block_height);
+    rendered_block = gst_ttml_render_rendered_image_combine (block_bg_image,
+        rendered_block);
+    gst_ttml_render_rendered_image_free (tmp);
+    gst_ttml_render_rendered_image_free (block_bg_image);
 
     rendered_block->y = 0;
     g_ptr_array_add (rendered_blocks, rendered_block);

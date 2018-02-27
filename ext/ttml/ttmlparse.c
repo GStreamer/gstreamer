@@ -234,6 +234,7 @@ ttml_parse_style_set (const xmlNode * node)
 
   for (attr = node->properties; attr != NULL; attr = attr->next) {
     if (attr->ns && ((g_strcmp0 ((const gchar *) attr->ns->prefix, "tts") == 0)
+            || (g_strcmp0 ((const gchar *) attr->ns->prefix, "itts") == 0)
             || (g_strcmp0 ((const gchar *) attr->ns->prefix, "ebutts") == 0))) {
       ttml_style_set_add_attr (s, (const gchar *) attr->name,
           (const gchar *) attr->children->content);
@@ -657,6 +658,11 @@ ttml_update_style_set (GstSubtitleStyleSet * style_set, TtmlStyleSet * tss,
       style_set->overflow = GST_SUBTITLE_OVERFLOW_MODE_VISIBLE;
     else
       style_set->overflow = GST_SUBTITLE_OVERFLOW_MODE_HIDDEN;
+  }
+
+  if ((attr = ttml_style_set_get_attr (tss, "fillLineGap"))) {
+    if (g_strcmp0 (attr, "true") == 0)
+      style_set->fill_line_gap = TRUE;
   }
 }
 
