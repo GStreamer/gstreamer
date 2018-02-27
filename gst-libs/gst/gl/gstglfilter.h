@@ -56,6 +56,8 @@ typedef gboolean (*GstGLFilterRenderFunc) (GstGLFilter * filter, GstGLMemory * i
  * @parent: parent #GstGLBaseFilter
  * @in_info: the video info for input buffers
  * @out_info: the video info for output buffers
+ * @in_texture_target: The texture target of the input buffers (usually 2D)
+ * @out_texture_target: The texture target of the output buffers (usually 2D)
  * @out_caps: the output #GstCaps
  * @fbo: #GstGLFramebuffer object used for transformations
  */
@@ -65,6 +67,8 @@ struct _GstGLFilter
 
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;
+  GstGLTextureTarget in_texture_target;
+  GstGLTextureTarget out_texture_target;
 
   GstCaps           *out_caps;
 
