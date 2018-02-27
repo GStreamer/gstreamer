@@ -1668,8 +1668,10 @@ gst_curl_http_src_curl_multi_loop (gpointer thread_data)
         g_mutex_unlock (&qelement->p->buffer_mutex);
         gst_curl_http_src_remove_queue_item (&context->queue, qelement->p);
       }
+      qelement = qelement->next;
     }
     context->request_removal_element = NULL;
+    context->state = GSTCURL_MULTI_LOOP_STATE_RUNNING;
     g_mutex_unlock (&context->mutex);
   } else {
     GSTCURL_WARNING_PRINT ("Curl Loop State was invalid or unsupported");
