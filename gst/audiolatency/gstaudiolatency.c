@@ -248,7 +248,7 @@ gst_audiolatency_get_average_latency (GstAudioLatency * self)
 static void
 gst_audiolatency_set_latency (GstAudioLatency * self, gint64 latency)
 {
-  gint avg_latency;
+  gint64 avg_latency;
 
   GST_OBJECT_LOCK (self);
   self->latencies[self->next_latency_idx] = latency;
