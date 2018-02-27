@@ -426,9 +426,10 @@ GST_START_TEST (rtpredenc_passthrough)
 {
   GstBuffer *bufinp, *bufout;
   GstHarness *h = gst_harness_new ("rtpredenc");
+
+  g_object_set (h->element, "allow-no-red-blocks", FALSE, NULL);
   gst_harness_set_src_caps_str (h, GST_RTP_RED_ENC_CAPS_STR);
 
-  /* Passthrough by default */
   bufinp =
       _new_rtp_buffer (FALSE, 0, PT_MEDIA, 0, TIMESTAMP_NTH (0), 0xabe2b0b, 0);
   bufout = gst_harness_push_and_pull (h, bufinp);
