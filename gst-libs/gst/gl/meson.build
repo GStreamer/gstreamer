@@ -88,7 +88,6 @@ gl_wayland_headers = []
 gl_win32_headers = []
 gl_cocoa_headers = []
 gl_egl_headers = []
-gl_gbm_headers = []
 
 glconf = configuration_data()
 glconf_options = [
@@ -622,9 +621,6 @@ if need_win_gbm != 'no'
       'gbm/gstgl_gbm_utils.c',
       'gbm/gstglwindow_gbm_egl.c',
     ]
-    gl_gbm_headers += [
-      'gbm/gstgldisplay_gbm.h'
-    ]
     enabled_gl_winsys += 'gbm'
     gl_winsys_deps += [gbm_gudev_dep, gbm_libdrm_dep, gbm_dep]
     glconf.set('GST_GL_HAVE_WINDOW_GBM', 1)
@@ -707,7 +703,6 @@ if build_gstgl
   install_headers(gl_prototype_headers, subdir : 'gstreamer-1.0/gst/gl/glprototypes')
   install_headers(gl_x11_headers, subdir : 'gstreamer-1.0/gst/gl/x11')
   install_headers(gl_wayland_headers, subdir : 'gstreamer-1.0/gst/gl/wayland')
-  install_headers(gl_gbm_headers, subdir : 'gstreamer-1.0/gst/gl/gbm')
 
   configure_file(input : 'gstglconfig.h.meson',
     output : 'gstglconfig.h',
