@@ -35,9 +35,10 @@ gst_omx_h265_utils_get_profile_from_str (const gchar * profile)
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   } else if (g_str_equal (profile, "main-still-picture")) {
     return (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMainStill;
-  } else if (g_str_equal (profile, "main422")) {
+  } else if (g_str_equal (profile, "main-422")) {
+    /* Not standard: 8 bits variation of main-422-10 */
     return (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422;
-  } else if (g_str_equal (profile, "main422-10")) {
+  } else if (g_str_equal (profile, "main-422-10")) {
     return (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422_10;
 #endif
   }

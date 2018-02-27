@@ -568,10 +568,10 @@ gst_omx_h265_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
         profile = "main-still-picture";
         break;
       case OMX_ALG_VIDEO_HEVCProfileMain422:
-        profile = "main422";
+        profile = "main-422";
         break;
       case OMX_ALG_VIDEO_HEVCProfileMain422_10:
-        profile = "main422-10";
+        profile = "main-422-10";
         break;
 #endif
       default:
