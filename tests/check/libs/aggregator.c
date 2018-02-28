@@ -152,9 +152,11 @@ gst_test_aggregator_class_init (GstTestAggregatorClass * klass)
       GST_STATIC_PAD_TEMPLATE ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
       GST_STATIC_CAPS_ANY);
 
-  gst_element_class_add_static_pad_template (gstelement_class, &_src_template);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &_src_template, GST_TYPE_AGGREGATOR_PAD);
 
-  gst_element_class_add_static_pad_template (gstelement_class, &_sink_template);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &_sink_template, GST_TYPE_AGGREGATOR_PAD);
 
   gst_element_class_set_static_metadata (gstelement_class, "Aggregator",
       "Testing", "Combine N buffers", "Stefan Sauer <ensonic@users.sf.net>");
@@ -167,7 +169,8 @@ static void
 gst_test_aggregator_init (GstTestAggregator * self)
 {
   GstAggregator *agg = GST_AGGREGATOR (self);
-  gst_segment_init (&agg->segment, GST_FORMAT_TIME);
+  gst_segment_init (&GST_AGGREGATOR_PAD (agg->srcpad)->segment,
+      GST_FORMAT_TIME);
   self->timestamp = 0;
   self->gap_expected = FALSE;
 }
@@ -808,8 +811,8 @@ GST_START_TEST (test_flushing_seek)
   GST_BUFFER_TIMESTAMP (buf) = 0;
   _chain_data_init (&data2, test.aggregator, buf, NULL);
 
-  gst_segment_init (&GST_AGGREGATOR (test.aggregator)->segment,
-      GST_FORMAT_TIME);
+  gst_segment_init (&GST_AGGREGATOR_PAD (GST_AGGREGATOR (test.
+              aggregator)->srcpad)->segment, GST_FORMAT_TIME);
 
   /* now do a successful flushing seek */
   event = gst_event_new_seek (1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,

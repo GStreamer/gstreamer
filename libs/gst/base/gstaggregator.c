@@ -61,6 +61,10 @@
  *    flag these buffers with GST_BUFFER_FLAG_GAP and GST_BUFFER_FLAG_DROPPABLE
  *    to ease their identification and subsequent processing.
  *
+ *  * Subclasses must use (a subclass of) #GstAggregatorPad for both their
+ *    sink and source pads.
+ *    See gst_element_class_add_static_pad_template_with_gtype().
+ *
  * This class used to live in gst-plugins-bad and was moved to core.
  *
  * Since: 1.14
@@ -461,7 +465,8 @@ gst_aggregator_reset_flow_values (GstAggregator * self)
   GST_OBJECT_LOCK (self);
   self->priv->send_stream_start = TRUE;
   self->priv->send_segment = TRUE;
-  gst_segment_init (&self->segment, GST_FORMAT_TIME);
+  gst_segment_init (&GST_AGGREGATOR_PAD (self->srcpad)->segment,
+      GST_FORMAT_TIME);
   self->priv->first_buffer = TRUE;
   GST_OBJECT_UNLOCK (self);
 }
@@ -479,7 +484,8 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
     GST_INFO_OBJECT (self, "pushing stream start");
     /* stream-start (FIXME: create id based on input ids) */
     g_snprintf (s_id, sizeof (s_id), "agg-%08x", g_random_int ());
-    if (!gst_pad_push_event (self->srcpad, gst_event_new_stream_start (s_id))) {
+    if (!gst_pad_push_event (GST_PAD (self->srcpad),
+            gst_event_new_stream_start (s_id))) {
       GST_WARNING_OBJECT (self->srcpad, "Sending stream start event failed");
     }
     self->priv->send_stream_start = FALSE;
@@ -489,7 +495,7 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
 
     GST_INFO_OBJECT (self, "pushing caps: %" GST_PTR_FORMAT,
         self->priv->srccaps);
-    if (!gst_pad_push_event (self->srcpad,
+    if (!gst_pad_push_event (GST_PAD (self->srcpad),
             gst_event_new_caps (self->priv->srccaps))) {
       GST_WARNING_OBJECT (self->srcpad, "Sending caps event failed");
     }
@@ -499,7 +505,8 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
 
   GST_OBJECT_LOCK (self);
   if (self->priv->send_segment && !self->priv->flush_seeking) {
-    segment = gst_event_new_segment (&self->segment);
+    segment =
+        gst_event_new_segment (&GST_AGGREGATOR_PAD (self->srcpad)->segment);
 
     if (!self->priv->seqnum)
       /* This code-path is in preparation to be able to run without a source
@@ -1828,8 +1835,8 @@ gst_aggregator_send_event (GstElement * element, GstEvent * event)
         &start, &stop_type, &stop);
 
     GST_OBJECT_LOCK (self);
-    gst_segment_do_seek (&self->segment, rate, fmt, flags, start_type, start,
-        stop_type, stop, NULL);
+    gst_segment_do_seek (&GST_AGGREGATOR_PAD (self->srcpad)->segment, rate, fmt,
+        flags, start_type, start, stop_type, stop, NULL);
     self->priv->seqnum = gst_event_get_seqnum (event);
     self->priv->first_buffer = FALSE;
     GST_OBJECT_UNLOCK (self);
@@ -1987,8 +1994,8 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
     priv->flush_seeking = TRUE;
   }
 
-  gst_segment_do_seek (&self->segment, rate, fmt, flags, start_type, start,
-      stop_type, stop, NULL);
+  gst_segment_do_seek (&GST_AGGREGATOR_PAD (self->srcpad)->segment, rate, fmt,
+      flags, start_type, start, stop_type, stop, NULL);
 
   /* Seeking sets a position */
   self->priv->first_buffer = FALSE;
@@ -2356,9 +2363,10 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
   self->priv->peer_latency_min = self->priv->sub_latency_min = 0;
   self->priv->peer_latency_max = self->priv->sub_latency_max = 0;
   self->priv->has_peer_latency = FALSE;
-  gst_aggregator_reset_flow_values (self);
 
   self->srcpad = gst_pad_new_from_template (pad_template, "src");
+
+  gst_aggregator_reset_flow_values (self);
 
   gst_pad_set_event_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_aggregator_src_pad_event_func));
@@ -2517,6 +2525,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 
   if (self->priv->first_buffer) {
     GstClockTime start_time;
+    GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (self->srcpad);
 
     switch (self->priv->start_time_selection) {
       case GST_AGGREGATOR_START_TIME_SELECTION_ZERO:
@@ -2550,10 +2559,10 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
     }
 
     if (start_time != -1) {
-      if (self->segment.position == -1)
-        self->segment.position = start_time;
+      if (srcpad->segment.position == -1)
+        srcpad->segment.position = start_time;
       else
-        self->segment.position = MIN (start_time, self->segment.position);
+        srcpad->segment.position = MIN (start_time, srcpad->segment.position);
 
       GST_DEBUG_OBJECT (self, "Selecting start time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (start_time));
