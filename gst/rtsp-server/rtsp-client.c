@@ -3589,6 +3589,37 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
   trans =
       g_hash_table_lookup (priv->transports, GINT_TO_POINTER ((gint) channel));
   if (trans) {
+    GSocketAddress *addr;
+
+    /* Only create the socket address once for the transport, we don't really
+     * want to do that for every single packet.
+     *
+     * The netaddress meta is later used by the RTP stack to know where
+     * packets came from and allows us to match it again to a stream transport
+     *
+     * In theory we could use the remote socket address of the RTSP connection
+     * here, but this would fail with a custom configure_client_transport()
+     * implementation.
+     */
+    if (!(addr =
+            g_object_get_data (G_OBJECT (trans), "rtsp-client.remote-addr"))) {
+      const GstRTSPTransport *tr;
+      GInetAddress *iaddr;
+
+      tr = gst_rtsp_stream_transport_get_transport (trans);
+      iaddr = g_inet_address_new_from_string (tr->destination);
+      if (iaddr) {
+        addr = g_inet_socket_address_new (iaddr, tr->client_port.min);
+        g_object_unref (iaddr);
+        g_object_set_data_full (G_OBJECT (trans), "rtsp-client.remote-addr",
+            addr, (GDestroyNotify) g_object_unref);
+      }
+    }
+
+    if (addr) {
+      gst_buffer_add_net_address_meta (buffer, addr);
+    }
+
     /* dispatch to the stream based on the channel number */
     GST_LOG_OBJECT (client, "%u bytes of data on channel %u", size, channel);
     gst_rtsp_stream_transport_recv_data (trans, channel, buffer);
