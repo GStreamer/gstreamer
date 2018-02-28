@@ -448,18 +448,18 @@ static GstClockTime
 gst_audio_aggregator_get_next_time (GstAggregator * agg)
 {
   GstClockTime next_time;
+  GstSegment *segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
   GST_OBJECT_LOCK (agg);
-  if (agg->segment.position == -1 || agg->segment.position < agg->segment.start)
-    next_time = agg->segment.start;
+  if (segment->position == -1 || segment->position < segment->start)
+    next_time = segment->start;
   else
-    next_time = agg->segment.position;
+    next_time = segment->position;
 
-  if (agg->segment.stop != -1 && next_time > agg->segment.stop)
-    next_time = agg->segment.stop;
+  if (segment->stop != -1 && next_time > segment->stop)
+    next_time = segment->stop;
 
-  next_time =
-      gst_segment_to_running_time (&agg->segment, GST_FORMAT_TIME, next_time);
+  next_time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, next_time);
   GST_OBJECT_UNLOCK (agg);
 
   return next_time;
@@ -929,7 +929,7 @@ gst_audio_aggregator_src_event (GstAggregator * agg, GstEvent * event)
       }
 
       GST_OBJECT_LOCK (agg);
-      dest_format = agg->segment.format;
+      dest_format = GST_AGGREGATOR_PAD (agg->srcpad)->segment.format;
       GST_OBJECT_UNLOCK (agg);
       if (seek_format != dest_format) {
         result = FALSE;
@@ -980,10 +980,10 @@ gst_audio_aggregator_sink_event (GstAggregator * agg,
       }
 
       GST_OBJECT_LOCK (agg);
-      if (segment->rate != agg->segment.rate) {
+      if (segment->rate != GST_AGGREGATOR_PAD (agg->srcpad)->segment.rate) {
         GST_ERROR_OBJECT (aggpad,
             "Got segment event with wrong rate %lf, expected %lf",
-            segment->rate, agg->segment.rate);
+            segment->rate, GST_AGGREGATOR_PAD (agg->srcpad)->segment.rate);
         res = FALSE;
         gst_event_unref (event);
         event = NULL;
@@ -1166,8 +1166,9 @@ gst_audio_aggregator_src_query (GstAggregator * agg, GstQuery * query)
       switch (format) {
         case GST_FORMAT_TIME:
           gst_query_set_position (query, format,
-              gst_segment_to_stream_time (&agg->segment, GST_FORMAT_TIME,
-                  agg->segment.position));
+              gst_segment_to_stream_time (&GST_AGGREGATOR_PAD (agg->
+                      srcpad)->segment, GST_FORMAT_TIME,
+                  GST_AGGREGATOR_PAD (agg->srcpad)->segment.position));
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
@@ -1227,7 +1228,7 @@ gst_audio_aggregator_reset (GstAudioAggregator * aagg)
 
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
-  agg->segment.position = -1;
+  GST_AGGREGATOR_PAD (agg->srcpad)->segment.position = -1;
   aagg->priv->offset = -1;
   gst_audio_info_init (&GST_AUDIO_AGGREGATOR_PAD (agg->srcpad)->info);
   gst_caps_replace (&aagg->current_caps, NULL);
@@ -1263,7 +1264,7 @@ gst_audio_aggregator_flush (GstAggregator * agg)
 
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
-  agg->segment.position = -1;
+  GST_AGGREGATOR_PAD (agg->srcpad)->segment.position = -1;
   aagg->priv->offset = -1;
   gst_buffer_replace (&aagg->priv->current_buffer, NULL);
   GST_OBJECT_UNLOCK (aagg);
@@ -1410,6 +1411,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     GstClockTime segment_pos;
     guint64 start_output_offset = -1;
     guint64 end_output_offset = -1;
+    GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
     start_running_time =
         gst_segment_to_running_time (&aggpad->segment,
@@ -1420,19 +1422,19 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
 
     /* Convert to position in the output segment */
     segment_pos =
-        gst_segment_position_from_running_time (&agg->segment, GST_FORMAT_TIME,
+        gst_segment_position_from_running_time (agg_segment, GST_FORMAT_TIME,
         start_running_time);
     if (GST_CLOCK_TIME_IS_VALID (segment_pos))
       start_output_offset =
-          gst_util_uint64_scale (segment_pos - agg->segment.start, rate,
+          gst_util_uint64_scale (segment_pos - agg_segment->start, rate,
           GST_SECOND);
 
     segment_pos =
-        gst_segment_position_from_running_time (&agg->segment, GST_FORMAT_TIME,
+        gst_segment_position_from_running_time (agg_segment, GST_FORMAT_TIME,
         end_running_time);
     if (GST_CLOCK_TIME_IS_VALID (segment_pos))
       end_output_offset =
-          gst_util_uint64_scale (segment_pos - agg->segment.start, rate,
+          gst_util_uint64_scale (segment_pos - agg_segment->start, rate,
           GST_SECOND);
 
     if (start_output_offset == -1 && end_output_offset == -1) {
@@ -1668,6 +1670,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   gboolean is_done = TRUE;
   guint blocksize;
   GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
+  GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
   element = GST_ELEMENT (agg);
   aagg = GST_AUDIO_AGGREGATOR (agg);
@@ -1679,11 +1682,11 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   GST_OBJECT_LOCK (agg);
 
   /* Update position from the segment start/stop if needed */
-  if (agg->segment.position == -1) {
-    if (agg->segment.rate > 0.0)
-      agg->segment.position = agg->segment.start;
+  if (agg_segment->position == -1) {
+    if (agg_segment->rate > 0.0)
+      agg_segment->position = agg_segment->start;
     else
-      agg->segment.position = agg->segment.stop;
+      agg_segment->position = agg_segment->stop;
   }
 
   if (G_UNLIKELY (srcpad->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN)) {
@@ -1692,12 +1695,12 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
           "Got timeout before receiving any caps, don't output anything");
 
       /* Advance position */
-      if (agg->segment.rate > 0.0)
-        agg->segment.position += aagg->priv->output_buffer_duration;
-      else if (agg->segment.position > aagg->priv->output_buffer_duration)
-        agg->segment.position -= aagg->priv->output_buffer_duration;
+      if (agg_segment->rate > 0.0)
+        agg_segment->position += aagg->priv->output_buffer_duration;
+      else if (agg_segment->position > aagg->priv->output_buffer_duration)
+        agg_segment->position -= aagg->priv->output_buffer_duration;
       else
-        agg->segment.position = 0;
+        agg_segment->position = 0;
 
       GST_OBJECT_UNLOCK (agg);
       GST_AUDIO_AGGREGATOR_UNLOCK (aagg);
@@ -1713,7 +1716,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   if (aagg->priv->offset == -1) {
     aagg->priv->offset =
-        gst_util_uint64_scale (agg->segment.position - agg->segment.start, rate,
+        gst_util_uint64_scale (agg_segment->position - agg_segment->start, rate,
         GST_SECOND);
     GST_DEBUG_OBJECT (aagg, "Starting at offset %" G_GINT64_FORMAT,
         aagg->priv->offset);
@@ -1724,7 +1727,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   blocksize = MAX (1, blocksize);
 
   /* FIXME: Reverse mixing does not work at all yet */
-  if (agg->segment.rate > 0.0) {
+  if (agg_segment->rate > 0.0) {
     next_offset = aagg->priv->offset + blocksize;
   } else {
     next_offset = aagg->priv->offset - blocksize;
@@ -1732,7 +1735,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   /* Use the sample counter, which will never accumulate rounding errors */
   next_timestamp =
-      agg->segment.start + gst_util_uint64_scale (next_offset, GST_SECOND,
+      agg_segment->start + gst_util_uint64_scale (next_offset, GST_SECOND,
       rate);
 
   if (aagg->priv->current_buffer == NULL) {
@@ -1749,7 +1752,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   GST_LOG_OBJECT (agg,
       "Starting to mix %u samples for offset %" G_GINT64_FORMAT
       " with timestamp %" GST_TIME_FORMAT, blocksize,
-      aagg->priv->offset, GST_TIME_ARGS (agg->segment.position));
+      aagg->priv->offset, GST_TIME_ARGS (agg_segment->position));
 
   for (iter = element->sinkpads; iter; iter = iter->next) {
     GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
@@ -1904,7 +1907,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
           G_GINT64_FORMAT, max_offset, next_offset);
       next_offset = max_offset;
       next_timestamp =
-          agg->segment.start + gst_util_uint64_scale (next_offset, GST_SECOND,
+          agg_segment->start + gst_util_uint64_scale (next_offset, GST_SECOND,
           rate);
 
       if (next_offset > aagg->priv->offset)
@@ -1914,16 +1917,16 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
   /* set timestamps on the output buffer */
   GST_OBJECT_LOCK (agg);
-  if (agg->segment.rate > 0.0) {
-    GST_BUFFER_PTS (outbuf) = agg->segment.position;
+  if (agg_segment->rate > 0.0) {
+    GST_BUFFER_PTS (outbuf) = agg_segment->position;
     GST_BUFFER_OFFSET (outbuf) = aagg->priv->offset;
     GST_BUFFER_OFFSET_END (outbuf) = next_offset;
-    GST_BUFFER_DURATION (outbuf) = next_timestamp - agg->segment.position;
+    GST_BUFFER_DURATION (outbuf) = next_timestamp - agg_segment->position;
   } else {
     GST_BUFFER_PTS (outbuf) = next_timestamp;
     GST_BUFFER_OFFSET (outbuf) = next_offset;
     GST_BUFFER_OFFSET_END (outbuf) = aagg->priv->offset;
-    GST_BUFFER_DURATION (outbuf) = agg->segment.position - next_timestamp;
+    GST_BUFFER_DURATION (outbuf) = agg_segment->position - next_timestamp;
   }
 
   GST_OBJECT_UNLOCK (agg);
@@ -1944,7 +1947,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (agg);
   aagg->priv->offset = next_offset;
-  agg->segment.position = next_timestamp;
+  agg_segment->position = next_timestamp;
 
   /* If there was a timeout and there was a gap in data in out of the streams,
    * then it's a very good time to for a resync with the timestamps.
