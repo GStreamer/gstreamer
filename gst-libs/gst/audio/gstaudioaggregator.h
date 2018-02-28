@@ -68,10 +68,11 @@ struct _GstAudioAggregatorPad
 {
   GstAggregatorPad                  parent;
 
+  /* read-only, with OBJECT_LOCK */
   GstAudioInfo                      info;
 
   /*< private >*/
-  GstAudioAggregatorPadPrivate   *  priv;
+  GstAudioAggregatorPadPrivate     *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -119,7 +120,7 @@ struct _GstAudioAggregatorConvertPad
   GstAudioAggregatorPad                  parent;
 
   /*< private >*/
-  GstAudioAggregatorConvertPadPrivate   *  priv;
+  GstAudioAggregatorConvertPadPrivate   *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -160,17 +161,17 @@ GType gst_audio_aggregator_convert_pad_get_type           (void);
  */
 struct _GstAudioAggregator
 {
-  GstAggregator            parent;
+  GstAggregator              parent;
 
   /* All member are read only for subclasses, must hold OBJECT lock  */
-  GstAudioInfo    info;
+  GstAudioInfo               info;
 
-  GstCaps *current_caps;
+  GstCaps                   *current_caps;
 
   /*< private >*/
   GstAudioAggregatorPrivate *priv;
 
-  gpointer                 _gst_reserved[GST_PADDING];
+  gpointer                  _gst_reserved[GST_PADDING];
 };
 
 /**
