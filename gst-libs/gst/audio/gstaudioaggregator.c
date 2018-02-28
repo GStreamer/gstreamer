@@ -28,22 +28,24 @@
  * @title: GstAudioAggregator
  * @short_description: Base class that manages a set of audio input pads
  * with the purpose of aggregating or mixing their raw audio input buffers
- * @see_also: #GstAggregator
+ * @see_also: #GstAggregator, #GstAudioMixer
  *
- * #GstAudioAggregator will perform conversion on the data arriving
- * on its sink pads, based on the format expected downstream.
+ * Subclasses must use (a subclass of) #GstAudioAggregatorPad for both
+ * their source and sink pads,
+ * gst_element_class_add_static_pad_template_with_gtype() is a convenient
+ * helper.
  *
- * Subclasses can opt out of the conversion behaviour by setting
- * #GstAudioAggregatorClass.convert_buffer() to %NULL.
+ * #GstAudioAggregator can perform conversion on the data arriving
+ * on its sink pads, based on the format expected downstream: in order
+ * to enable that behaviour, the GType of the sink pads must either be
+ * a (subclass of) #GstAudioAggregatorConvertPad to use the default
+ * #GstAudioConverter implementation, or a subclass of #GstAudioAggregatorPad
+ * implementing #GstAudioAggregatorPad.convert_buffer.
  *
- * Subclasses that wish to use the default conversion implementation
- * should use a (subclass of) #GstAudioAggregatorConvertPad as their
- * #GstAggregatorClass.sinkpads_type, as it will cache the created
- * #GstAudioConverter and install a property allowing to configure it,
- * #GstAudioAggregatorPad:converter-config.
+ * To allow for the output caps to change, the mechanism is the same as
+ * above, with the GType of the source pad.
  *
- * Subclasses that wish to perform custom conversion should override
- * #GstAudioAggregatorClass.convert_buffer().
+ * See #GstAudioMixer for an example.
  *
  * When conversion is enabled, #GstAudioAggregator will accept
  * any type of raw audio caps and perform conversion
@@ -53,10 +55,6 @@
  * In case downstream caps are not fully fixated, it will use
  * the first configured sink pad to finish fixating its source pad
  * caps.
- *
- * Additionally, handling audio conversion directly in the element
- * means that this base class supports safely reconfiguring its
- * source pad.
  *
  * A notable exception for now is the sample rate, sink pads must
  * have the same sample rate as either the downstream requirement,
@@ -223,12 +221,22 @@ gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
   aaggcpad->priv->converter_config_changed = FALSE;
 }
 
+static void
+gst_audio_aggregator_pad_update_conversion_info (GstAudioAggregatorPad *
+    aaggpad)
+{
+  GST_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad)->priv->converter_config_changed =
+      TRUE;
+}
+
 static GstBuffer *
-gst_audio_aggregator_convert_pad_convert_buffer (GstAudioAggregatorConvertPad *
-    aaggcpad, GstAudioInfo * in_info, GstAudioInfo * out_info,
+gst_audio_aggregator_convert_pad_convert_buffer (GstAudioAggregatorPad *
+    aaggpad, GstAudioInfo * in_info, GstAudioInfo * out_info,
     GstBuffer * input_buffer)
 {
   GstBuffer *res;
+  GstAudioAggregatorConvertPad *aaggcpad =
+      GST_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad);
 
   gst_audio_aggregator_convert_pad_update_converter (aaggcpad, in_info,
       out_info);
@@ -327,6 +335,8 @@ gst_audio_aggregator_convert_pad_class_init (GstAudioAggregatorConvertPadClass *
     klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstAudioAggregatorPadClass *aaggpad_class =
+      (GstAudioAggregatorPadClass *) klass;
   g_type_class_add_private (klass,
       sizeof (GstAudioAggregatorConvertPadPrivate));
 
@@ -338,6 +348,12 @@ gst_audio_aggregator_convert_pad_class_init (GstAudioAggregatorConvertPadClass *
           "A GstStructure describing the configuration that should be used "
           "when converting this pad's audio buffers",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  aaggpad_class->convert_buffer =
+      gst_audio_aggregator_convert_pad_convert_buffer;
+
+  aaggpad_class->update_conversion_info =
+      gst_audio_aggregator_pad_update_conversion_info;
 
   gobject_class->finalize = gst_audio_aggregator_convert_pad_finalize;
 }
@@ -450,63 +466,15 @@ gst_audio_aggregator_get_next_time (GstAggregator * agg)
 }
 
 static GstBuffer *
-gst_audio_aggregator_convert_once (GstAudioAggregator * aagg, GstPad * pad,
-    GstAudioInfo * in_info, GstAudioInfo * out_info, GstBuffer * buffer)
-{
-  GstAudioConverter *converter =
-      gst_audio_converter_new (GST_AUDIO_CONVERTER_FLAG_NONE,
-      in_info, out_info, NULL);
-  gint insize = gst_buffer_get_size (buffer);
-  gsize insamples = insize / in_info->bpf;
-  gsize outsamples = gst_audio_converter_get_out_frames (converter,
-      insamples);
-  gint outsize = outsamples * out_info->bpf;
-  GstMapInfo inmap, outmap;
-  GstBuffer *converted = gst_buffer_new_allocate (NULL, outsize, NULL);
-
-  gst_buffer_copy_into (converted, buffer,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
-      GST_BUFFER_COPY_META, 0, -1);
-
-  gst_buffer_map (buffer, &inmap, GST_MAP_READ);
-  gst_buffer_map (converted, &outmap, GST_MAP_WRITE);
-
-  gst_audio_converter_samples (converter,
-      GST_AUDIO_CONVERTER_FLAG_NONE,
-      (gpointer *) & inmap.data, insamples,
-      (gpointer *) & outmap.data, outsamples);
-
-  gst_buffer_unmap (buffer, &inmap);
-  gst_buffer_unmap (converted, &outmap);
-  gst_audio_converter_free (converter);
-
-  return converted;
-}
-
-static GstBuffer *
-gst_audio_aggregator_default_convert_buffer (GstAudioAggregator * aagg,
-    GstPad * pad, GstAudioInfo * in_info, GstAudioInfo * out_info,
-    GstBuffer * buffer)
-{
-  if (GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD (pad))
-    return
-        gst_audio_aggregator_convert_pad_convert_buffer
-        (GST_AUDIO_AGGREGATOR_CONVERT_PAD (pad),
-        &GST_AUDIO_AGGREGATOR_PAD (pad)->info, out_info, buffer);
-  else
-    return gst_audio_aggregator_convert_once (aagg, pad, in_info, out_info,
-        buffer);
-}
-
-static GstBuffer *
 gst_audio_aggregator_convert_buffer (GstAudioAggregator * aagg, GstPad * pad,
     GstAudioInfo * in_info, GstAudioInfo * out_info, GstBuffer * buffer)
 {
-  GstAudioAggregatorClass *klass = GST_AUDIO_AGGREGATOR_GET_CLASS (aagg);
+  GstAudioAggregatorPadClass *klass = GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad);
+  GstAudioAggregatorPad *aaggpad = GST_AUDIO_AGGREGATOR_PAD (pad);
 
   g_assert (klass->convert_buffer);
 
-  return klass->convert_buffer (aagg, pad, in_info, out_info, buffer);
+  return klass->convert_buffer (aaggpad, in_info, out_info, buffer);
 }
 
 static void
@@ -542,7 +510,6 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
       gst_audio_aggregator_negotiated_src_caps;
 
   klass->create_output_buffer = gst_audio_aggregator_create_output_buffer;
-  klass->convert_buffer = gst_audio_aggregator_default_convert_buffer;
 
   GST_DEBUG_CATEGORY_INIT (audio_aggregator_debug, "audioaggregator",
       GST_DEBUG_FG_MAGENTA, "GstAudioAggregator");
@@ -746,11 +713,12 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
     gst_pad_push_event (GST_PAD (aaggpad), gst_event_new_reconfigure ());
     ret = FALSE;
   } else {
+    GstAudioAggregatorPadClass *klass =
+        GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (aaggpad);
     GST_OBJECT_LOCK (aaggpad);
     gst_audio_info_from_caps (&aaggpad->info, caps);
-    if (GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad))
-      GST_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad)->
-          priv->converter_config_changed = TRUE;
+    if (klass->update_conversion_info)
+      klass->update_conversion_info (aaggpad);
     GST_OBJECT_UNLOCK (aaggpad);
   }
 
@@ -792,10 +760,9 @@ gst_audio_aggregator_update_src_caps (GstAggregator * agg,
 static GstCaps *
 gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 {
-  GstAudioAggregatorClass *aaggclass = GST_AUDIO_AGGREGATOR_GET_CLASS (agg);
   GstAudioAggregatorPad *first_configured_pad;
 
-  if (!aaggclass->convert_buffer)
+  if (!GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad)->convert_buffer)
     return
         GST_AGGREGATOR_CLASS
         (gst_audio_aggregator_parent_class)->fixate_src_caps (agg, caps);
@@ -844,10 +811,11 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
 
   for (l = GST_ELEMENT (aagg)->sinkpads; l; l = l->next) {
     GstAudioAggregatorPad *aaggpad = l->data;
+    GstAudioAggregatorPadClass *klass =
+        GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (aaggpad);
 
-    if (GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad))
-      GST_AUDIO_AGGREGATOR_CONVERT_PAD (aaggpad)->
-          priv->converter_config_changed = TRUE;
+    if (klass->update_conversion_info)
+      klass->update_conversion_info (aaggpad);
 
     /* If we currently were mixing a buffer, we need to convert it to the new
      * format */
@@ -865,7 +833,6 @@ static gboolean
 gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
-  GstAudioAggregatorClass *aaggclass = GST_AUDIO_AGGREGATOR_GET_CLASS (agg);
   GstAudioInfo info;
 
   GST_INFO_OBJECT (agg, "src caps negotiated %" GST_PTR_FORMAT, caps);
@@ -878,12 +845,19 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
 
-  if (aaggclass->convert_buffer) {
+  if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad)->convert_buffer) {
     gst_audio_aggregator_update_converters (aagg, &info);
 
     if (aagg->priv->current_buffer
         && !gst_audio_info_is_equal (&aagg->info, &info)) {
-      GstBuffer *converted =
+      GstBuffer *converted;
+      GstAudioAggregatorPadClass *klass =
+          GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad);
+
+      if (klass->update_conversion_info)
+        klass->update_conversion_info (GST_AUDIO_AGGREGATOR_PAD (agg->srcpad));
+
+      converted =
           gst_audio_aggregator_convert_buffer (aagg, agg->srcpad, &aagg->info,
           &info, aagg->priv->current_buffer);
       gst_buffer_unref (aagg->priv->current_buffer);
@@ -1324,7 +1298,6 @@ static gboolean
 gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad)
 {
-  GstAudioAggregatorClass *aaggclass = GST_AUDIO_AGGREGATOR_GET_CLASS (aagg);
   GstClockTime start_time, end_time;
   gboolean discont = FALSE;
   guint64 start_offset, end_offset;
@@ -1333,7 +1306,7 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
   GstAggregator *agg = GST_AGGREGATOR (aagg);
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
 
-  if (aaggclass->convert_buffer) {
+  if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer) {
     rate = GST_AUDIO_INFO_RATE (&aagg->info);
     bpf = GST_AUDIO_INFO_BPF (&aagg->info);
   } else {
@@ -1802,7 +1775,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
 
     /* New buffer? */
     if (!pad->priv->buffer) {
-      if (GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD (pad))
+      if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer)
         pad->priv->buffer =
             gst_audio_aggregator_convert_buffer
             (aagg, GST_PAD (pad), &pad->info, &aagg->info,

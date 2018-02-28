@@ -1849,6 +1849,141 @@ GST_START_TEST (test_change_output_caps)
 
 GST_END_TEST;
 
+/* In this test, we create two input buffers with a duration of 1 second,
+ * and require the audiomixer to output 1.5 second long buffers.
+ *
+ * After we have input two buffers, we change the output format
+ * from S8 to S32, then push a last buffer.
+ *
+ * This makes audioaggregator convert its "half-mixed" current_buffer,
+ * we can then ensure that the second output buffer is as expected.
+ */
+GST_START_TEST (test_change_output_caps_mid_output_buffer)
+{
+  GstSegment segment;
+  GstElement *bin, *audiomixer, *capsfilter, *sink;
+  GstBus *bus;
+  GstPad *sinkpad;
+  gboolean res;
+  GstStateChangeReturn state_res;
+  GstFlowReturn ret;
+  GstEvent *event;
+  GstBuffer *buffer;
+  GstCaps *caps;
+  GstQuery *drain;
+  GstMapInfo inmap;
+  GstMapInfo outmap;
+  guint i;
+
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  audiomixer = gst_element_factory_make ("audiomixer", "audiomixer");
+  g_object_set (audiomixer, "output-buffer-duration", 1500 * GST_MSECOND, NULL);
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), audiomixer, capsfilter, sink, NULL);
+
+  res = gst_element_link_many (audiomixer, capsfilter, sink, NULL);
+  fail_unless (res == TRUE, NULL);
+
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  sinkpad = gst_element_get_request_pad (audiomixer, "sink_%u");
+  fail_if (sinkpad == NULL, NULL);
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "S8",
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, 10, "channels", G_TYPE_INT, 1, NULL);
+
+  gst_pad_set_caps (sinkpad, caps);
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 0;
+  segment.stop = 3 * GST_SECOND;
+  segment.time = 0;
+  event = gst_event_new_segment (&segment);
+  gst_pad_send_event (sinkpad, event);
+
+  buffer = new_buffer (10, 0, 0, 1 * GST_SECOND, 0);
+  ret = gst_pad_chain (sinkpad, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  buffer = new_buffer (10, 0, 1 * GST_SECOND, 1 * GST_SECOND, 0);
+  gst_buffer_map (buffer, &inmap, GST_MAP_WRITE);
+  memset (inmap.data, 1, 10);
+  gst_buffer_unmap (buffer, &inmap);
+  ret = gst_pad_chain (sinkpad, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  drain = gst_query_new_drain ();
+  gst_pad_query (sinkpad, drain);
+  gst_query_unref (drain);
+
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, 10, "channels", G_TYPE_INT, 1, NULL);
+  g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  gst_buffer_replace (&handoff_buffer, NULL);
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
+
+  buffer = new_buffer (10, 0, 2 * GST_SECOND, 1 * GST_SECOND, 0);
+  gst_buffer_map (buffer, &inmap, GST_MAP_WRITE);
+  memset (inmap.data, 0, 10);
+  gst_buffer_unmap (buffer, &inmap);
+  ret = gst_pad_chain (sinkpad, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  drain = gst_query_new_drain ();
+  gst_pad_query (sinkpad, drain);
+  gst_query_unref (drain);
+
+  fail_unless (handoff_buffer);
+  fail_unless_equals_int (gst_buffer_get_size (handoff_buffer), 60);
+
+  gst_buffer_map (handoff_buffer, &outmap, GST_MAP_READ);
+  for (i = 0; i < 15; i++) {
+    guint32 sample;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    sample = GUINT32_FROM_LE (((guint32 *) outmap.data)[i]);
+#else
+    sample = GUINT32_FROM_BE (((guint32 *) outmap.data)[i]);
+#endif
+
+    if (i < 5) {
+      fail_unless_equals_int (sample, 1 << 24);
+    } else {
+      fail_unless_equals_int (sample, 0);
+    }
+  }
+
+  gst_buffer_unmap (handoff_buffer, &outmap);
+
+  gst_element_release_request_pad (audiomixer, sinkpad);
+  gst_object_unref (sinkpad);
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
 static Suite *
 audiomixer_suite (void)
 {
@@ -1876,6 +2011,7 @@ audiomixer_suite (void)
   tcase_add_test (tc_chain, test_sinkpad_property_controller);
   tcase_add_checked_fixture (tc_chain, test_setup, test_teardown);
   tcase_add_test (tc_chain, test_change_output_caps);
+  tcase_add_test (tc_chain, test_change_output_caps_mid_output_buffer);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND

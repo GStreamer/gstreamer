@@ -560,8 +560,8 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
   gobject_class->get_property = gst_audio_interleave_get_property;
   gobject_class->finalize = gst_audio_interleave_finalize;
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_audio_interleave_src_template);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_audio_interleave_src_template, GST_TYPE_AUDIO_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_audio_interleave_sink_template, GST_TYPE_AUDIO_INTERLEAVE_PAD);
   gst_element_class_set_static_metadata (gstelement_class, "AudioInterleave",
@@ -580,7 +580,6 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
   agg_class->negotiated_src_caps = gst_audio_interleave_negotiated_src_caps;
 
   aagg_class->aggregate_one_buffer = gst_audio_interleave_aggregate_one_buffer;
-  aagg_class->convert_buffer = NULL;
 
   /**
    * GstInterleave:channel-positions

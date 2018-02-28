@@ -224,8 +224,8 @@ gst_audiomixer_class_init (GstAudioMixerClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstAudioAggregatorClass *aagg_class = (GstAudioAggregatorClass *) klass;
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_audiomixer_src_template);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_audiomixer_src_template, GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_audiomixer_sink_template, GST_TYPE_AUDIO_MIXER_PAD);
   gst_element_class_set_static_metadata (gstelement_class, "AudioMixer",

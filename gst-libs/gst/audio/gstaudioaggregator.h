@@ -79,11 +79,20 @@ struct _GstAudioAggregatorPad
 
 /**
  * GstAudioAggregatorPadClass:
- *
+ * @convert_buffer: Convert a buffer from one format to another.
+ * @update_conversion_info: Called when either the input or output
+ *  formats have changed.
  */
 struct _GstAudioAggregatorPadClass
   {
   GstAggregatorPadClass   parent_class;
+
+  GstBuffer * (* convert_buffer) (GstAudioAggregatorPad * pad,
+                                  GstAudioInfo *in_info,
+                                  GstAudioInfo *out_info,
+                                  GstBuffer * buffer);
+
+  void        (* update_conversion_info) (GstAudioAggregatorPad *pad);
 
   /*< private >*/
   gpointer      _gst_reserved[GST_PADDING_LARGE];
@@ -181,10 +190,6 @@ struct _GstAudioAggregator
  *  buffer.  The in_offset and out_offset are in "frames", which is
  *  the size of a sample times the number of channels. Returns TRUE if
  *  any non-silence was added to the buffer
- * @convert_buffer: Convert a buffer from one format to another. The pad
- *  is either a sinkpad, when converting an input buffer, or the source pad,
- *  when converting the output buffer after a downstream format change is
- *  requested.
  */
 struct _GstAudioAggregatorClass {
   GstAggregatorClass   parent_class;
@@ -194,11 +199,6 @@ struct _GstAudioAggregatorClass {
   gboolean (* aggregate_one_buffer) (GstAudioAggregator * aagg,
       GstAudioAggregatorPad * pad, GstBuffer * inbuf, guint in_offset,
       GstBuffer * outbuf, guint out_offset, guint num_frames);
-  GstBuffer * (* convert_buffer) (GstAudioAggregator *aagg,
-                                  GstPad * pad,
-                                  GstAudioInfo *in_info,
-                                  GstAudioInfo *out_info,
-                                  GstBuffer * buffer);
 
   /*< private >*/
   gpointer          _gst_reserved[GST_PADDING_LARGE];
