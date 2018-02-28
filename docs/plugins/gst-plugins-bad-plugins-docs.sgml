@@ -21,6 +21,7 @@
     <xi:include href="xml/element-aiffparse.xml" />
     <xi:include href="xml/element-aiffmux.xml" />
     <xi:include href="xml/element-assrender.xml" />
+    <xi:include href="xml/element-audiolatency.xml" />
     <xi:include href="xml/element-audiobuffersplit.xml" />
     <xi:include href="xml/element-audioparse.xml" />
     <xi:include href="xml/element-autoconvert.xml" />
@@ -138,6 +139,7 @@
   <chapter>
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aiff.xml" />
+    <xi:include href="xml/plugin-audiolatency.xml" />
     <xi:include href="xml/plugin-audiovisualizers.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-assrender.xml" />

@@ -125,6 +125,7 @@ GObject
             GstAccurip
             GstAudioChannelMix
             GstBPMDetect
+            GstBs2b
             GstChromaprint
             GstLADSPAFilter
               ladspa-amp-so-amp-mono
@@ -203,6 +204,7 @@ GObject
             GstSolarize
             GstVideoAnalyse
             GstVideoDiff
+            GstZBar
             GstZebraStripe
           GstVulkanUpload
           GstWatchdog
@@ -214,6 +216,7 @@ GObject
             GstDashDemux
             GstHLSDemux
             GstMssDemux
+          GstAudioLatency
           GstAudioParse
           GstAutoConvert
           GstAutoVideoConvert
@@ -225,6 +228,7 @@ GObject
             GstDtlsSrtpEnc
           GstFPSDisplaySink
           GstFaceOverlay
+          GstFakeVideoSink
           GstGLMixerBin
             GstGLVideoMixerBin
           GstHlsSink

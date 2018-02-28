@@ -7,6 +7,7 @@ GstApExSink GstImplementsInterface GstMixer
 GstAsfMux GstTagSetter
 GstAudioEncoder GstPreset
 GstAudioInterleave GstChildProxy
+GstAudioLatency GstChildProxy
 GstAudioMixer GstChildProxy
 GstAudioParse GstChildProxy
 GstAutoConvert GstChildProxy
@@ -33,6 +34,7 @@ GstEglGlesSink GstVideoOverlay
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy
+GstFakeVideoSink GstChildProxy
 GstFdkAacEnc GstPreset
 GstFreeverb GstPreset
 GstGLBaseMixer GstChildProxy

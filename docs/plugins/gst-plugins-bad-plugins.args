@@ -69396,7 +69396,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Option string</NICK>
-<BLURB>String of x264 options (overridden by element properties).</BLURB>
+<BLURB>String of x265 options (overridden by element properties) in the format "key1=value1:key2=value2".</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
@@ -73758,5 +73758,35 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>TURN Server</NICK>
 <BLURB>The TURN server of the form turn(s)://username:password@host:port.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioLatency::average-latency</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Running average latency</NICK>
+<BLURB>The running average latency, in microseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioLatency::last-latency</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Last measured latency</NICK>
+<BLURB>The last latency that was measured, in microseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioLatency::print-latency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Print latencies</NICK>
+<BLURB>Print the measured latencies on stdout.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
