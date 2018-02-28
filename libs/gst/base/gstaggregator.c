@@ -2739,14 +2739,16 @@ gst_aggregator_pad_constructed (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
 
-  gst_pad_set_chain_function (pad,
-      GST_DEBUG_FUNCPTR (gst_aggregator_pad_chain));
-  gst_pad_set_event_full_function_full (pad,
-      GST_DEBUG_FUNCPTR (gst_aggregator_pad_event_func), NULL, NULL);
-  gst_pad_set_query_function (pad,
-      GST_DEBUG_FUNCPTR (gst_aggregator_pad_query_func));
-  gst_pad_set_activatemode_function (pad,
-      GST_DEBUG_FUNCPTR (gst_aggregator_pad_activate_mode_func));
+  if (GST_PAD_IS_SINK (pad)) {
+    gst_pad_set_chain_function (pad,
+        GST_DEBUG_FUNCPTR (gst_aggregator_pad_chain));
+    gst_pad_set_event_full_function_full (pad,
+        GST_DEBUG_FUNCPTR (gst_aggregator_pad_event_func), NULL, NULL);
+    gst_pad_set_query_function (pad,
+        GST_DEBUG_FUNCPTR (gst_aggregator_pad_query_func));
+    gst_pad_set_activatemode_function (pad,
+        GST_DEBUG_FUNCPTR (gst_aggregator_pad_activate_mode_func));
+  }
 }
 
 static void
