@@ -3674,7 +3674,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
           gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
       GST_LOG_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
           gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
-      gst_ebml_write_flush_cache (ebml, TRUE, buffer_timestamp);
+      gst_ebml_write_flush_cache (ebml, is_video_keyframe
+          || is_audio_only, buffer_timestamp);
       mux->cluster_time = buffer_timestamp;
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_PREVSIZE,
           mux->prev_cluster_size);
