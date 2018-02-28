@@ -1233,7 +1233,8 @@ gst_compositor_class_init (GstCompositorClass * klass)
           GST_TYPE_COMPOSITOR_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &sink_factory, GST_TYPE_COMPOSITOR_PAD);
 

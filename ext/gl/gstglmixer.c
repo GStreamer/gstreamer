@@ -364,7 +364,8 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   gobject_class->get_property = gst_gl_mixer_get_property;
   gobject_class->set_property = gst_gl_mixer_set_property;
 
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_factory, GST_TYPE_GL_MIXER_PAD);
 
