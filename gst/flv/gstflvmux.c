@@ -244,7 +244,8 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
       &videosink_templ, GST_TYPE_FLV_MUX_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &audiosink_templ, GST_TYPE_FLV_MUX_PAD);
-  gst_element_class_add_static_pad_template (gstelement_class, &src_templ);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &src_templ, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_set_static_metadata (gstelement_class, "FLV muxer",
       "Codec/Muxer",
       "Muxes video/audio streams into a FLV stream",
@@ -1804,5 +1805,5 @@ static GstClockTime
 gst_flv_mux_get_next_time (GstAggregator * aggregator)
 {
   return gst_flv_mux_get_next_time_for_segment (aggregator,
-      &aggregator->segment);
+      &GST_AGGREGATOR_PAD (aggregator->srcpad)->segment);
 }
