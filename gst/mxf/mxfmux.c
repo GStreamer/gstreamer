@@ -104,6 +104,7 @@ gst_mxf_mux_pad_class_init (GstMXFMuxPadClass * klass)
 static void
 gst_mxf_mux_pad_init (GstMXFMuxPad * pad)
 {
+  pad->adapter = gst_adapter_new ();
 }
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
@@ -454,7 +455,6 @@ gst_mxf_mux_create_new_pad (GstAggregator * aggregator,
       GST_PAD_SINK, "template", templ, NULL);
   g_free (name);
   pad->last_timestamp = 0;
-  pad->adapter = gst_adapter_new ();
   pad->writer = writer;
 
   gst_pad_use_fixed_caps (GST_PAD_CAST (pad));
