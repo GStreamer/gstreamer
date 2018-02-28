@@ -586,6 +586,14 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
     GST_WARNING_OBJECT (dec, "No keyframe, skipping");
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
+  if (stream_info.w == 0 || stream_info.h == 0) {
+    /* For VP8 it's possible to signal width or height to be 0, but it does
+     * not make sense to do so. For VP9 it's impossible. Hence, we most likely
+     * have a corrupt stream if width or height is 0. */
+    GST_INFO_OBJECT (dec, "Invalid resolution %d x %d", stream_info.w,
+        stream_info.h);
+    return GST_FLOW_CUSTOM_SUCCESS_1;
+  }
 
   gst_vpx_dec_set_stream_info (dec, &stream_info);
   gst_vpx_dec_set_default_format (dec, GST_VIDEO_FORMAT_I420, stream_info.w,

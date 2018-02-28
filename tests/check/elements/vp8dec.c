@@ -19,6 +19,8 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
+#include <gst/video/video.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -248,6 +250,38 @@ GST_START_TEST (test_decode_caps_change)
 
 GST_END_TEST;
 
+GST_START_TEST (test_decode_invalid_resolution)
+{
+  GstHarness *h;
+
+  guint8 invalid_width[] = {
+    0x50, 0x48, 0x00, 0x9d, 0x01, 0x2a, 0x00, 0x00, 0x11, 0x44, 0x39, 0x63,
+  };
+  guint8 invalid_height[] = {
+    0x50, 0x48, 0x00, 0x9d, 0x01, 0x2a, 0x11, 0x44, 0x00, 0x00, 0x39, 0x63,
+  };
+
+  h = gst_harness_new_parse ("vp8dec");
+  gst_harness_set_src_caps_str (h, "video/x-vp8");
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h,
+          gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, invalid_width,
+              sizeof (invalid_width), 0, sizeof (invalid_width), NULL, NULL)));
+  fail_unless (gst_harness_try_pull (h) == NULL);
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h,
+          gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, invalid_height,
+              sizeof (invalid_height), 0, sizeof (invalid_height), NULL,
+              NULL)));
+  fail_unless (gst_harness_try_pull (h) == NULL);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 vp8dec_suite (void)
@@ -259,6 +293,7 @@ vp8dec_suite (void)
 
   tcase_add_test (tc_chain, test_decode_simple);
   tcase_add_test (tc_chain, test_decode_caps_change);
+  tcase_add_test (tc_chain, test_decode_invalid_resolution);
 
   return s;
 }
