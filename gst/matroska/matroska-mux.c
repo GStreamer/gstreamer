@@ -3648,7 +3648,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
           mux->min_cluster_duration));
   is_max_duration_exceeded = (mux->max_cluster_duration > 0
       && buffer_timestamp > mux->cluster_time
-      && (buffer_timestamp - mux->cluster_time) >= mux->max_cluster_duration);
+      && (buffer_timestamp - mux->cluster_time) >=
+      MIN (G_MAXINT16 * mux->time_scale, mux->max_cluster_duration));
 
   if (mux->cluster) {
     /* start a new cluster at every keyframe, at every GstForceKeyUnit event,
