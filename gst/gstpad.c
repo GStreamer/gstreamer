@@ -864,8 +864,11 @@ GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
 {
   g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
+  GType pad_type =
+      GST_PAD_TEMPLATE_GTYPE (templ) ==
+      G_TYPE_NONE ? GST_TYPE_PAD : GST_PAD_TEMPLATE_GTYPE (templ);
 
-  return g_object_new (GST_TYPE_PAD,
+  return g_object_new (pad_type,
       "name", name, "direction", templ->direction, "template", templ, NULL);
 }
 

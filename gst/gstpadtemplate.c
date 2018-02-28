@@ -342,6 +342,8 @@ gst_pad_template_new_from_static_pad_template_with_gtype (GstStaticPadTemplate *
   GstPadTemplate *new;
   GstCaps *caps;
 
+  g_return_val_if_fail (g_type_is_a (pad_type, GST_TYPE_PAD), NULL);
+
   if (!name_is_valid (pad_template->name_template, pad_template->presence))
     return NULL;
 
@@ -423,6 +425,7 @@ gst_pad_template_new_with_gtype (const gchar * name_template,
       || direction == GST_PAD_SINK, NULL);
   g_return_val_if_fail (presence == GST_PAD_ALWAYS
       || presence == GST_PAD_SOMETIMES || presence == GST_PAD_REQUEST, NULL);
+  g_return_val_if_fail (g_type_is_a (pad_type, GST_TYPE_PAD), NULL);
 
   if (!name_is_valid (name_template, presence)) {
     return NULL;
