@@ -5057,7 +5057,7 @@
         <return-type type="gboolean" />
         <parameters />
       </method>
-      <method name="GetBus" cname="gst_pipeline_get_bus">
+      <method name="GetBus" cname="gst_pipeline_get_bus" hidden="true">
         <return-type type="GstBus*" owned="true" />
         <parameters />
       </method>

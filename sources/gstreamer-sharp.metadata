@@ -79,6 +79,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstBin']/field[@cname='element']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstPipeline']/field[@cname='bin']" name="hidden">true</attr>
 
+        <!-- hide some methods if the same name exisits in a parent class -->
+	<attr path="/api/namespace/object[@cname='GstPipeline']/method[@name='GetBus']" name="hidden">true</attr>
+
 	<!-- add opaque attribute to all structs which need special handling -->
 	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="opaque">true</attr>
 	<attr path="/api/namespace//boxed[field[@type='GstMiniObject']]" name="parent">GstMiniObject</attr>

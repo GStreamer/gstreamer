@@ -155,17 +155,6 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_pipeline_get_bus(IntPtr raw);
-
-		public new Gst.Bus Bus { 
-			get {
-				IntPtr raw_ret = gst_pipeline_get_bus(Handle);
-				Gst.Bus ret = GLib.Object.GetObject(raw_ret, true) as Gst.Bus;
-				return ret;
-			}
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pipeline_get_pipeline_clock(IntPtr raw);
 
 		public Gst.Clock PipelineClock { 
