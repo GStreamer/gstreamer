@@ -295,6 +295,8 @@ gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
   GstMapInfo inmap;
   GstMapInfo outmap;
   gint bpf;
+  GstAggregator *agg = GST_AGGREGATOR (aagg);
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   GST_OBJECT_LOCK (aagg);
   GST_OBJECT_LOCK (aaggpad);
@@ -306,7 +308,7 @@ gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
     return FALSE;
   }
 
-  bpf = GST_AUDIO_INFO_BPF (&aagg->info);
+  bpf = GST_AUDIO_INFO_BPF (&srcpad->info);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
   gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
@@ -315,92 +317,92 @@ gst_audiomixer_aggregate_one_buffer (GstAudioAggregator * aagg,
 
   /* further buffers, need to add them */
   if (pad->volume == 1.0) {
-    switch (aagg->info.finfo->format) {
+    switch (srcpad->info.finfo->format) {
       case GST_AUDIO_FORMAT_U8:
         audiomixer_orc_add_u8 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_S8:
         audiomixer_orc_add_s8 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_U16:
         audiomixer_orc_add_u16 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_S16:
         audiomixer_orc_add_s16 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_U32:
         audiomixer_orc_add_u32 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_S32:
         audiomixer_orc_add_s32 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_F32:
         audiomixer_orc_add_f32 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_F64:
         audiomixer_orc_add_f64 ((gpointer) (outmap.data + out_offset * bpf),
             (gpointer) (inmap.data + in_offset * bpf),
-            num_frames * aagg->info.channels);
+            num_frames * srcpad->info.channels);
         break;
       default:
         g_assert_not_reached ();
         break;
     }
   } else {
-    switch (aagg->info.finfo->format) {
+    switch (srcpad->info.finfo->format) {
       case GST_AUDIO_FORMAT_U8:
         audiomixer_orc_add_volume_u8 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume_i8, num_frames * aagg->info.channels);
+            pad->volume_i8, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_S8:
         audiomixer_orc_add_volume_s8 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume_i8, num_frames * aagg->info.channels);
+            pad->volume_i8, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_U16:
         audiomixer_orc_add_volume_u16 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume_i16, num_frames * aagg->info.channels);
+            pad->volume_i16, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_S16:
         audiomixer_orc_add_volume_s16 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume_i16, num_frames * aagg->info.channels);
+            pad->volume_i16, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_U32:
         audiomixer_orc_add_volume_u32 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume_i32, num_frames * aagg->info.channels);
+            pad->volume_i32, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_S32:
         audiomixer_orc_add_volume_s32 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume_i32, num_frames * aagg->info.channels);
+            pad->volume_i32, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_F32:
         audiomixer_orc_add_volume_f32 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume, num_frames * aagg->info.channels);
+            pad->volume, num_frames * srcpad->info.channels);
         break;
       case GST_AUDIO_FORMAT_F64:
         audiomixer_orc_add_volume_f64 ((gpointer) (outmap.data +
                 out_offset * bpf), (gpointer) (inmap.data + in_offset * bpf),
-            pad->volume, num_frames * aagg->info.channels);
+            pad->volume, num_frames * srcpad->info.channels);
         break;
       default:
         g_assert_not_reached ();

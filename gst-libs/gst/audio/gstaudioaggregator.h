@@ -172,9 +172,6 @@ struct _GstAudioAggregator
 {
   GstAggregator              parent;
 
-  /* All member are read only for subclasses, must hold OBJECT lock  */
-  GstAudioInfo               info;
-
   GstCaps                   *current_caps;
 
   /*< private >*/

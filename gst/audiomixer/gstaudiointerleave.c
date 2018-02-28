@@ -535,12 +535,12 @@ static gboolean
 gst_audio_interleave_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
   GstAudioInterleave *self = GST_AUDIO_INTERLEAVE (agg);
-  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (self);
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   if (!GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps))
     return FALSE;
 
-  gst_audio_interleave_set_process_function (self, &aagg->info);
+  gst_audio_interleave_set_process_function (self, &srcpad->info);
 
   return TRUE;
 }
@@ -818,14 +818,16 @@ gst_audio_interleave_aggregate_one_buffer (GstAudioAggregator * aagg,
   GstMapInfo outmap;
   gint out_width, in_bpf, out_bpf, out_channels, channel;
   guint8 *outdata;
+  GstAggregator *agg = GST_AGGREGATOR (aagg);
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   GST_OBJECT_LOCK (aagg);
   GST_OBJECT_LOCK (aaggpad);
 
-  out_width = GST_AUDIO_INFO_WIDTH (&aagg->info) / 8;
+  out_width = GST_AUDIO_INFO_WIDTH (&srcpad->info) / 8;
   in_bpf = GST_AUDIO_INFO_BPF (&aaggpad->info);
-  out_bpf = GST_AUDIO_INFO_BPF (&aagg->info);
-  out_channels = GST_AUDIO_INFO_CHANNELS (&aagg->info);
+  out_bpf = GST_AUDIO_INFO_BPF (&srcpad->info);
+  out_channels = GST_AUDIO_INFO_CHANNELS (&srcpad->info);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
   gst_buffer_map (inbuf, &inmap, GST_MAP_READ);

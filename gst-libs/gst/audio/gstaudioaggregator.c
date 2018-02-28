@@ -548,7 +548,6 @@ gst_audio_aggregator_init (GstAudioAggregator * aagg)
   aagg->priv->discont_wait = DEFAULT_DISCONT_WAIT;
 
   aagg->current_caps = NULL;
-  gst_audio_info_init (&aagg->info);
 
   gst_aggregator_set_latency (GST_AGGREGATOR (aagg),
       aagg->priv->output_buffer_duration, aagg->priv->output_buffer_duration);
@@ -834,6 +833,7 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
   GstAudioInfo info;
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   GST_INFO_OBJECT (agg, "src caps negotiated %" GST_PTR_FORMAT, caps);
 
@@ -849,7 +849,7 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     gst_audio_aggregator_update_converters (aagg, &info);
 
     if (aagg->priv->current_buffer
-        && !gst_audio_info_is_equal (&aagg->info, &info)) {
+        && !gst_audio_info_is_equal (&srcpad->info, &info)) {
       GstBuffer *converted;
       GstAudioAggregatorPadClass *klass =
           GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad);
@@ -858,18 +858,18 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
         klass->update_conversion_info (GST_AUDIO_AGGREGATOR_PAD (agg->srcpad));
 
       converted =
-          gst_audio_aggregator_convert_buffer (aagg, agg->srcpad, &aagg->info,
+          gst_audio_aggregator_convert_buffer (aagg, agg->srcpad, &srcpad->info,
           &info, aagg->priv->current_buffer);
       gst_buffer_unref (aagg->priv->current_buffer);
       aagg->priv->current_buffer = converted;
     }
   }
 
-  if (!gst_audio_info_is_equal (&info, &aagg->info)) {
+  if (!gst_audio_info_is_equal (&info, &srcpad->info)) {
     GST_INFO_OBJECT (aagg, "setting caps to %" GST_PTR_FORMAT, caps);
     gst_caps_replace (&aagg->current_caps, caps);
 
-    memcpy (&aagg->info, &info, sizeof (info));
+    memcpy (&srcpad->info, &info, sizeof (info));
   }
 
   GST_OBJECT_UNLOCK (aagg);
@@ -1148,6 +1148,7 @@ static gboolean
 gst_audio_aggregator_src_query (GstAggregator * agg, GstQuery * query)
 {
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (agg);
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1170,9 +1171,9 @@ gst_audio_aggregator_src_query (GstAggregator * agg, GstQuery * query)
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
-          if (GST_AUDIO_INFO_BPF (&aagg->info)) {
+          if (GST_AUDIO_INFO_BPF (&srcpad->info)) {
             gst_query_set_position (query, format, aagg->priv->offset *
-                GST_AUDIO_INFO_BPF (&aagg->info));
+                GST_AUDIO_INFO_BPF (&srcpad->info));
             res = TRUE;
           }
           break;
@@ -1228,7 +1229,7 @@ gst_audio_aggregator_reset (GstAudioAggregator * aagg)
   GST_OBJECT_LOCK (aagg);
   agg->segment.position = -1;
   aagg->priv->offset = -1;
-  gst_audio_info_init (&aagg->info);
+  gst_audio_info_init (&GST_AUDIO_AGGREGATOR_PAD (agg->srcpad)->info);
   gst_caps_replace (&aagg->current_caps, NULL);
   gst_buffer_replace (&aagg->priv->current_buffer, NULL);
   GST_OBJECT_UNLOCK (aagg);
@@ -1305,10 +1306,11 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
 
   GstAggregator *agg = GST_AGGREGATOR (aagg);
   GstAggregatorPad *aggpad = GST_AGGREGATOR_PAD (pad);
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer) {
-    rate = GST_AUDIO_INFO_RATE (&aagg->info);
-    bpf = GST_AUDIO_INFO_BPF (&aagg->info);
+    rate = GST_AUDIO_INFO_RATE (&srcpad->info);
+    bpf = GST_AUDIO_INFO_BPF (&srcpad->info);
   } else {
     rate = GST_AUDIO_INFO_RATE (&pad->info);
     bpf = GST_AUDIO_INFO_BPF (&pad->info);
@@ -1581,20 +1583,22 @@ gst_audio_aggregator_create_output_buffer (GstAudioAggregator * aagg,
   GstAllocationParams params;
   GstBuffer *outbuf;
   GstMapInfo outmap;
+  GstAggregator *agg = GST_AGGREGATOR (aagg);
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   gst_aggregator_get_allocator (GST_AGGREGATOR (aagg), &allocator, &params);
 
   GST_DEBUG ("Creating output buffer with size %d",
-      num_frames * GST_AUDIO_INFO_BPF (&aagg->info));
+      num_frames * GST_AUDIO_INFO_BPF (&srcpad->info));
 
   outbuf = gst_buffer_new_allocate (allocator, num_frames *
-      GST_AUDIO_INFO_BPF (&aagg->info), &params);
+      GST_AUDIO_INFO_BPF (&srcpad->info), &params);
 
   if (allocator)
     gst_object_unref (allocator);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
-  gst_audio_format_fill_silence (aagg->info.finfo, outmap.data, outmap.size);
+  gst_audio_format_fill_silence (srcpad->info.finfo, outmap.data, outmap.size);
   gst_buffer_unmap (outbuf, &outmap);
 
   return outbuf;
@@ -1663,6 +1667,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   gboolean is_eos = TRUE;
   gboolean is_done = TRUE;
   guint blocksize;
+  GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
 
   element = GST_ELEMENT (agg);
   aagg = GST_AUDIO_AGGREGATOR (agg);
@@ -1681,7 +1686,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       agg->segment.position = agg->segment.stop;
   }
 
-  if (G_UNLIKELY (aagg->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN)) {
+  if (G_UNLIKELY (srcpad->info.finfo->format == GST_AUDIO_FORMAT_UNKNOWN)) {
     if (timeout) {
       GST_DEBUG_OBJECT (aagg,
           "Got timeout before receiving any caps, don't output anything");
@@ -1703,8 +1708,8 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     }
   }
 
-  rate = GST_AUDIO_INFO_RATE (&aagg->info);
-  bpf = GST_AUDIO_INFO_BPF (&aagg->info);
+  rate = GST_AUDIO_INFO_RATE (&srcpad->info);
+  bpf = GST_AUDIO_INFO_BPF (&srcpad->info);
 
   if (aagg->priv->offset == -1) {
     aagg->priv->offset =
@@ -1764,7 +1769,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
           GST_DEBUG_OBJECT (pad, "Timeout, missing %" G_GINT64_FORMAT
               " frames (%" GST_TIME_FORMAT ")", diff,
               GST_TIME_ARGS (gst_util_uint64_scale (diff, GST_SECOND,
-                      GST_AUDIO_INFO_RATE (&aagg->info))));
+                      GST_AUDIO_INFO_RATE (&srcpad->info))));
         }
       } else if (!pad_eos) {
         is_done = FALSE;
@@ -1778,7 +1783,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (pad)->convert_buffer)
         pad->priv->buffer =
             gst_audio_aggregator_convert_buffer
-            (aagg, GST_PAD (pad), &pad->info, &aagg->info,
+            (aagg, GST_PAD (pad), &pad->info, &srcpad->info,
             pad->priv->input_buffer);
       else
         pad->priv->buffer = gst_buffer_ref (pad->priv->input_buffer);
@@ -1820,7 +1825,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
         GST_DEBUG_OBJECT (pad, "Buffer was late by %" GST_TIME_FORMAT
             ", dropping %" GST_PTR_FORMAT,
             GST_TIME_ARGS (gst_util_uint64_scale (odiff, GST_SECOND,
-                    GST_AUDIO_INFO_RATE (&aagg->info))), pad->priv->buffer);
+                    GST_AUDIO_INFO_RATE (&srcpad->info))), pad->priv->buffer);
         /* Buffer done, drop it */
         gst_buffer_replace (&pad->priv->buffer, NULL);
         gst_buffer_replace (&pad->priv->input_buffer, NULL);
