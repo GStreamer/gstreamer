@@ -15,6 +15,8 @@ else
   gst_version_nano = 0
 endif
 
+have_cxx = add_languages('cpp', required : false)
+
 glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
@@ -185,6 +187,48 @@ endif
 if gst_debug_disabled and cc.has_argument('-Wno-unused')
   add_project_arguments('-Wno-unused', language: 'c')
 endif
+
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wredundant-decls',
+  '-Wwrite-strings',
+  '-Wformat',
+  '-Wformat-nonliteral',
+  '-Wformat-security',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Waddress',
+  '-Wno-multichar',
+  '-Wvla',
+  '-Wpointer-arith',
+  '-Waggregate-return',
+]
+
+warning_c_flags = [
+  '-Wmissing-prototypes',
+  '-Wold-style-definition',
+  '-Wdeclaration-after-statement',
+  '-Wnested-externs'
+]
+
+if have_cxx
+  cxx = meson.get_compiler('cpp')
+endif
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+  if have_cxx and cxx.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'cpp')
+  endif
+endforeach
+
+foreach extra_arg : warning_c_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
 
 presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
 subdir('gst')
