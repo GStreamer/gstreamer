@@ -69,12 +69,13 @@ namespace Gst
 			}
 		}
 
-		class SignalInfo
+		class SignalInfo : IDisposable
 		{
 			uint handlerId;
 			IntPtr closure;
 			Delegate registeredHandler;
 			Type argsType;
+			GCHandle gch;
 
 			public IntPtr Closure {
 				get {
@@ -112,11 +113,12 @@ namespace Gst
 				}
 			}
 
-			public SignalInfo (uint handlerId, IntPtr closure, Delegate registeredHandler)
+			public SignalInfo (uint handlerId, IntPtr closure, Delegate registeredHandler, GCHandle gch)
 			{
 				this.handlerId = handlerId;
 				this.closure = closure;
 				this.registeredHandler = registeredHandler;
+				this.gch = gch;
 
 				if (!IsValidDelegate (registeredHandler))
 					throw new Exception ("Invalid delegate");
@@ -162,6 +164,13 @@ namespace Gst
 					return false;
 
 				return true;
+			}
+
+			public void Dispose ()
+			{
+				registeredHandler = null;
+				gch.Free ();
+				GC.SuppressFinalize (this);
 			}
 
 			public static bool IsValidDelegate (Delegate d)
@@ -227,9 +236,10 @@ namespace Gst
 
 				// Let's allocate 64bytes for the GClosure, it should be more than necessary.
 				IntPtr closure = g_closure_new_simple (64, IntPtr.Zero);
-				g_closure_set_meta_marshal (closure, (IntPtr)GCHandle.Alloc (k), marshalHandler);
+				GCHandle gch = GCHandle.Alloc (k);
+				g_closure_set_meta_marshal (closure, (IntPtr)gch, marshalHandler);
 				uint signalId = g_signal_connect_closure (o.Handle, name, closure, after);
-				SignalHandlers.Add (k, new SignalInfo (signalId, closure, handler));
+				SignalHandlers.Add (k, new SignalInfo (signalId, closure, handler, gch));
 			}
 		}
 
@@ -242,6 +252,7 @@ namespace Gst
 				if (newHandler == null || handler == null) {
 					g_signal_handler_disconnect (o.Handle, si.HandlerId);
 					SignalHandlers.Remove (k);
+					si.Dispose ();
 				} else {
 					si.RegisteredHandler = newHandler;
 				}
