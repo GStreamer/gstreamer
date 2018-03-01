@@ -45,7 +45,6 @@ if cc.get_id() == 'msvc'
 elif cc.has_argument('-Wl,-Bsymbolic-functions')
   # FIXME: Add an option for this if people ask for it
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
-  # FIXME: Add FATAL_WARNINGS from configure.ac
 endif
 
 # Symbol visibility
@@ -338,6 +337,32 @@ disable_gst_debug = get_option('disable_gst_debug')
 if disable_gst_debug
   add_project_arguments(['-Wno-unused'], language: 'c')
 endif
+
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wmissing-prototypes',
+  '-Wredundant-decls',
+  '-Wundef',
+  '-Wwrite-strings',
+  '-Wformat-nonliteral',
+  '-Wformat-security',
+  '-Wold-style-definition',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Waddress',
+  '-Waggregate-return',
+  '-Wno-multichar',
+  '-Wnested-externs',
+  '-Wdeclaration-after-statement',
+  '-Wvla',
+  '-Wpointer-arith',
+]
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
 
 # Used by the gstutils test
 gmp_dep = cc.find_library('gmp', required : false)

@@ -18,6 +18,10 @@ printf_args += ['-UHAVE_LONG_LONG_FORMAT']
 # Don't need any of this widechar stuff, so just disable it for now
 printf_args += ['-UHAVE_WCHAR_T', '-UHAVE_WCSLEN', '-UHAVE_WINT_T']
 
+if cc.has_argument('-Wno-format-nonliteral')
+  printf_args += ['-Wno-format-nonliteral']
+endif
+
 # Check if 'long long' works and what format can be used to print it
 # jm_AC_TYPE_LONG_LONG
 if cc.compiles('''long long ll = 1LL;
