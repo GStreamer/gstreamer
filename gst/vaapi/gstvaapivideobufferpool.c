@@ -171,7 +171,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     if (allocator) {
       const GstVideoInfo *alloc_vinfo =
           gst_allocator_get_vaapi_video_info (allocator, &surface_alloc_flags);
-      vinfo_changed = gst_video_info_changed (alloc_vinfo, &new_vip);
+      if (!alloc_vinfo)
+        vinfo_changed = TRUE;
+      else
+        vinfo_changed = gst_video_info_changed (alloc_vinfo, &new_vip);
     }
 
     if (vinfo_changed && allocator && priv->use_dmabuf_memory) {
