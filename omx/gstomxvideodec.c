@@ -1788,7 +1788,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       }
     }
   } else if (frame != NULL) {
-    flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    /* Just ignore empty buffers, don't drop a frame for that */
+    flow_ret = GST_FLOW_OK;
+    gst_video_codec_frame_unref (frame);
     frame = NULL;
   }
 
