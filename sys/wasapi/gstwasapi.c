@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ * Copyright (C) 2018 Centricular Ltd.
+ *   Author: Nirbheek Chauhan <nirbheek@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,11 +32,11 @@ GST_DEBUG_CATEGORY (gst_wasapi_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "wasapisink", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "wasapisink", GST_RANK_PRIMARY,
           GST_TYPE_WASAPI_SINK))
     return FALSE;
 
-  if (!gst_element_register (plugin, "wasapisrc", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "wasapisrc", GST_RANK_PRIMARY,
           GST_TYPE_WASAPI_SRC))
     return FALSE;
 
