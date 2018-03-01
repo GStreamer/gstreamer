@@ -1774,7 +1774,7 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
 
   if (gst_sdp_media_get_attribute_val (media, "recvonly") != NULL &&
       /* We want to setup caps for streams configured as backchannel */
-      !stream->is_backchannel)
+      !stream->is_backchannel && src->backchannel != BACKCHANNEL_NONE)
     goto recvonly_media;
 
   /* Parse global SDP attributes once */
