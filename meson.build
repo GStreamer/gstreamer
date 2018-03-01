@@ -116,6 +116,55 @@ core_conf.set('GST_INSTALL_PLUGINS_HELPER', '"/FIXME"')
 core_conf.set('GST_DATADIR', '"/FIXME"')
 core_conf.set('GST_LICENSE', '"LGPL"')
 
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wredundant-decls',
+  '-Wundef',
+  '-Wwrite-strings',
+  '-Wformat',
+  '-Wformat-nonliteral',
+  '-Wformat-security',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Waddress',
+  '-Wno-multichar',
+  '-Wvla',
+  '-Wpointer-arith',
+]
+
+warning_c_flags = [
+  '-Wmissing-prototypes',
+  '-Wdeclaration-after-statement',
+]
+
+warning_cxx_flags = [
+  '-Waggregate-return',
+]
+
+if have_cxx
+  cxx = meson.get_compiler('cpp')
+  foreach extra_arg : warning_cxx_flags
+    if cxx.has_argument (extra_arg)
+      add_project_arguments([extra_arg], language: 'cpp')
+    endif
+  endforeach
+endif
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+  if have_cxx and cxx.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'cpp')
+  endif
+endforeach
+
+foreach extra_arg : warning_c_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
+
 # GStreamer package name and origin url
 gst_package_name = get_option('with-package-name')
 if gst_package_name == ''
