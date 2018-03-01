@@ -3255,7 +3255,7 @@ atom_trak_update_duration (AtomTRAK * trak, guint64 moov_timescale)
       atom_stts_get_total_duration (&trak->mdia.minf.stbl.stts);
   if (trak->mdia.mdhd.time_info.timescale != 0) {
     trak->tkhd.duration =
-        gst_util_uint64_scale (trak->mdia.mdhd.time_info.duration,
+        gst_util_uint64_scale_round (trak->mdia.mdhd.time_info.duration,
         moov_timescale, trak->mdia.mdhd.time_info.timescale);
   } else {
     trak->tkhd.duration = 0;
