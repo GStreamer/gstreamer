@@ -62,6 +62,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/opus/.libs/libgstopus.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/mpg123/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/qt/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/ext/schroedinger/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/audiomixer/.libs/*.{so,dll,DLL,dylib} \
@@ -92,6 +93,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/check/elements/rawaudioparse \
 	$(top_builddir)/tests/check/elements/rawvideoparse \
 	$(top_builddir)/tests/check/elements/rtpmux \
+	$(top_builddir)/tests/check/elements/schroenc \
 	$(top_builddir)/tests/check/elements/selector \
 	$(top_builddir)/tests/check/elements/valve \
 	$(top_builddir)/tests/check/pipelines/metadata \
@@ -148,6 +150,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/mimic \
 	$(top_srcdir)/ext/mpg123 \
 	$(top_srcdir)/ext/qt \
+	$(top_srcdir)/ext/schroedinger \
 	$(top_srcdir)/ext/swfdec \
 	$(top_srcdir)/ext/tarkin \
 	$(top_srcdir)/ext/theora \

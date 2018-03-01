@@ -280,12 +280,6 @@ else
 SBC_DIR=
 endif
 
-if USE_SCHRO
-SCHRO_DIR=schroedinger
-else
-SCHRO_DIR=
-endif
-
 if USE_SMOOTHSTREAMING
 SMOOTHSTREAMING_DIR = smoothstreaming
 else
@@ -454,7 +448,6 @@ SUBDIRS=\
 	$(OPUS_DIR) \
 	$(RSVG_DIR) \
 	$(SBC_DIR) \
-	$(SCHRO_DIR) \
 	$(SMOOTHSTREAMING_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
@@ -522,7 +515,6 @@ DIST_SUBDIRS = \
 	rsvg \
 	resindvd \
 	sbc \
-	schroedinger \
 	smoothstreaming \
 	sndfile \
 	soundtouch \

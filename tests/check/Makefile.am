@@ -108,12 +108,6 @@ else
 check_ofa =
 endif
 
-if USE_SCHRO
-check_schro=elements/schroenc
-else
-check_schro=
-endif
-
 if USE_X265
 check_x265enc=elements/x265enc
 else
@@ -285,7 +279,6 @@ check_PROGRAMS = \
 	libs/vp8parser \
 	$(check_uvch264) \
 	libs/vc1parser \
-	$(check_schro) \
 	$(check_x265enc) \
 	elements/viewfinderbin \
 	$(check_zbar) \

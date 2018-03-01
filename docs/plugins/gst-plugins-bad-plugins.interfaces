@@ -85,7 +85,6 @@ GstRTMPSrc GstURIHandler
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstSDPDemux GstChildProxy
 GstSbcEnc GstPreset
-GstSchroEnc GstPreset
 GstSdpSrc GstChildProxy GstURIHandler
 GstSirenEnc GstPreset
 GstTagMux GstTagSetter

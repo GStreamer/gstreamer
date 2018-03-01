@@ -213,7 +213,6 @@ check_functions = [
 # check token HAVE_RSVG_2_36_2
 # check token HAVE_RTMP
 # check token HAVE_SBC
-# check token HAVE_SCHRO
 # check token HAVE_SDL
 # check token HAVE_SHM
 # check token HAVE_SMOOTHSTREAMING

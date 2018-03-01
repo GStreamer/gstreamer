@@ -3169,38 +3169,6 @@ gst_scene_change_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-schrodec</FILE>
-<TITLE>schrodec</TITLE>
-GstSchroDec
-<SUBSECTION Standard>
-GstSchroDecClass
-GST_SCHRO_DEC
-GST_SCHRO_DEC_CAST
-GST_IS_SCHRO_DEC
-GST_SCHRO_DEC_CLASS
-GST_IS_SCHRO_DEC_CLASS
-GST_TYPE_SCHRO_DEC
-<SUBSECTION Private>
-gst_schro_dec_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-schroenc</FILE>
-<TITLE>schroenc</TITLE>
-GstSchroEnc
-<SUBSECTION Standard>
-GstSchroEncClass
-GST_SCHRO_ENC
-GST_SCHRO_ENC_CAST
-GST_IS_SCHRO_ENC
-GST_SCHRO_ENC_CLASS
-GST_IS_SCHRO_ENC_CLASS
-GST_TYPE_SCHRO_ENC
-<SUBSECTION Private>
-gst_schro_enc_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-sdpsrc</FILE>
 <TITLE>sdpsrc</TITLE>
 GstSdpSrc

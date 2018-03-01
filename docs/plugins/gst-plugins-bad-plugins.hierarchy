@@ -305,7 +305,6 @@ GObject
           GstOpenh264Dec
           GstPnmdec
           GstRsvgDec
-          GstSchroDec
           GstVMncDec
           GstVdpDecoder
             GstVdpMpegDec
@@ -314,7 +313,6 @@ GObject
           GstOpenJPEGEnc
           GstOpenh264Enc
           GstPnmenc
-          GstSchroEnc
           GstWebpEnc
           GstX265Enc
         GstVideoFrameAudioLevel

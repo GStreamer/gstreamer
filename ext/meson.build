@@ -42,7 +42,6 @@ subdir('resindvd')
 subdir('rsvg')
 subdir('rtmp')
 subdir('sbc')
-subdir('schroedinger')
 subdir('smoothstreaming')
 #subdir('sndfile')
 if cc.get_id() != 'msvc'

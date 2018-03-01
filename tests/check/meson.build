@@ -47,7 +47,6 @@ base_tests = [
   [['elements/netsim.c']],
   [['elements/pcapparse.c'], false, [libparser_dep]],
   [['elements/pnm.c']],
-  [['elements/schroenc.c'], not schro_dep.found(), [schro_dep]],
   [['elements/shm.c'], not shm_enabled, shm_deps],
   [['elements/rtponvifparse.c']],
   [['elements/rtponviftimestamp.c']],

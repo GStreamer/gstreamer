@@ -2178,12 +2178,6 @@ AG_GST_CHECK_FEATURE(SBC, [SBC bluetooth audio codec], sbc, [
   AG_GST_PKG_CHECK_MODULES(SBC, [sbc >= 1.0])
 ])
 
-dnl *** schroedinger ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SCHRO, true)
-AG_GST_CHECK_FEATURE(SCHRO, [Schroedinger video codec], schro, [
-  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.10)
-])
-
 dnl *** zbar ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZBAR, true)
 AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
@@ -2376,7 +2370,6 @@ AM_CONDITIONAL(USE_DVB, false)
 AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SBC, false)
-AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_RTMP, false)
@@ -2663,7 +2656,6 @@ ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile
 ext/sbc/Makefile
-ext/schroedinger/Makefile
 ext/smoothstreaming/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
