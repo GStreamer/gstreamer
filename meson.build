@@ -269,6 +269,52 @@ cdata.set_quoted('GST_API_VERSION', api_version)
 cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wredundant-decls',
+  '-Wwrite-strings',
+  '-Wformat',
+  '-Wformat-security',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Waddress',
+  '-Wno-multichar',
+  '-Wvla',
+  '-Wpointer-arith',
+]
+
+warning_c_flags = [
+  '-Wmissing-prototypes',
+  '-Wdeclaration-after-statement',
+  '-Wold-style-definition',
+  '-Wnested-externs',
+]
+
+warning_cxx_flags = [
+  '-Wformat-nonliteral',
+]
+
+foreach extra_arg : warning_c_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
+
+foreach extra_arg : warning_cxx_flags
+  if cxx.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'cpp')
+  endif
+endforeach
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+  if cxx.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'cpp')
+  endif
+endforeach
+
 # GStreamer package name and origin url
 gst_package_name = get_option('with-package-name')
 if gst_package_name == ''
