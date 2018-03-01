@@ -3648,9 +3648,11 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
        * mvhd should be consistent with empty moov
        * (but TODO maybe some clients do not handle that well ?) */
       qtmux->moov->mvex.mehd.fragment_duration =
-          gst_util_uint64_scale (qtmux->last_dts, qtmux->timescale, GST_SECOND);
-      GST_DEBUG_OBJECT (qtmux, "rewriting moov with mvex duration %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (qtmux->last_dts));
+          gst_util_uint64_scale_round (qtmux->last_dts, qtmux->timescale,
+          GST_SECOND);
+      GST_DEBUG_OBJECT (qtmux,
+          "rewriting moov with mvex duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (qtmux->last_dts));
       /* seek and rewrite the header */
       gst_segment_init (&segment, GST_FORMAT_BYTES);
       segment.start = qtmux->moov_pos;
