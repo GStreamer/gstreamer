@@ -1239,6 +1239,7 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
           goto no_egl;
         }
 #else
+        gst_video_codec_state_unref (state);
         GST_VIDEO_DECODER_STREAM_UNLOCK (self);
         goto no_egl;
 #endif
