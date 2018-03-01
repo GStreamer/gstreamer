@@ -67,6 +67,33 @@ configure_file(output : 'config.h', configuration : cdata)
 
 rtspserver_args = ['-DHAVE_CONFIG_H']
 
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wmissing-prototypes',
+  '-Wredundant-decls',
+  '-Wundef',
+  '-Wwrite-strings',
+  '-Wformat',
+  '-Wformat-nonliteral',
+  '-Wformat-security',
+  '-Wold-style-definition',
+  '-Waggregate-return',
+  '-Wnested-externs',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Waddress',
+  '-Wno-multichar',
+  '-Wdeclaration-after-statement',
+  '-Wvla',
+  '-Wpointer-arith',
+]
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
+
 rtspserver_incs = include_directories('gst/rtsp-server', '.')
 
 glib_dep = dependency('glib-2.0', version : glib_req,
