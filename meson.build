@@ -344,6 +344,7 @@ warning_flags = [
   '-Wredundant-decls',
   '-Wundef',
   '-Wwrite-strings',
+  '-Wformat',
   '-Wformat-nonliteral',
   '-Wformat-security',
   '-Wold-style-definition',
