@@ -845,6 +845,7 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
       decoder->priv->in_out_segment_sync =
           gst_segment_is_equal (&decoder->input_segment, &segment);
       decoder->priv->last_timestamp_out = GST_CLOCK_TIME_NONE;
+      decoder->priv->earliest_time = GST_CLOCK_TIME_NONE;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     }
