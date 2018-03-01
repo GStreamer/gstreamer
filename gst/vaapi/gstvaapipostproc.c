@@ -402,6 +402,24 @@ create_output_dump_buffer (GstVaapiPostproc * postproc)
       &plugin->other_allocator_params);
 }
 
+static void
+copy_metadata (GstVaapiPostproc * postproc, GstBuffer * outbuf,
+    GstBuffer * inbuf)
+{
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (postproc);
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (postproc);
+
+  if (inbuf == outbuf)
+    return;
+  if (!bclass->copy_metadata)
+    return;
+  if (!bclass->copy_metadata (trans, inbuf, outbuf)) {
+    /* something failed, post a warning */
+    GST_ELEMENT_WARNING (trans, STREAM, NOT_IMPLEMENTED,
+        ("could not copy metadata"), (NULL));
+  }
+}
+
 static gboolean
 append_output_buffer_metadata (GstVaapiPostproc * postproc, GstBuffer * outbuf,
     GstBuffer * inbuf, guint flags)
@@ -411,16 +429,7 @@ append_output_buffer_metadata (GstVaapiPostproc * postproc, GstBuffer * outbuf,
 
   gst_buffer_copy_into (outbuf, inbuf, flags | GST_BUFFER_COPY_FLAGS, 0, -1);
 
-  /* GstVideoCropMeta */
-  if (!postproc->use_vpp) {
-    GstVideoCropMeta *const crop_meta = gst_buffer_get_video_crop_meta (inbuf);
-    if (crop_meta) {
-      GstVideoCropMeta *const out_crop_meta =
-          gst_buffer_add_video_crop_meta (outbuf);
-      if (out_crop_meta)
-        *out_crop_meta = *crop_meta;
-    }
-  }
+  copy_metadata (postproc, outbuf, inbuf);
 
   /* GstVaapiVideoMeta */
   inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
@@ -755,6 +764,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
       goto error_process_vpp;
 
+    copy_metadata (postproc, fieldbuf, inbuf);
     GST_BUFFER_TIMESTAMP (fieldbuf) = timestamp;
     GST_BUFFER_DURATION (fieldbuf) = postproc->field_duration;
     if (discont) {
@@ -820,6 +830,7 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
       discont = FALSE;
     }
   }
+  copy_metadata (postproc, outbuf, inbuf);
 
   if (deint && deint_refs)
     ds_add_buffer (ds, inbuf);
@@ -1264,6 +1275,11 @@ static gboolean
 gst_vaapipostproc_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
     GstMeta * meta, GstBuffer * inbuf)
 {
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+
+  /* dont' GstVideoCropMeta if use_vpp */
+  if (meta->info->api == GST_VIDEO_CROP_META_API_TYPE && postproc->use_vpp)
+    return FALSE;
   return TRUE;
 }
 
@@ -1332,7 +1348,6 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (gst_base_transform_is_passthrough (trans)) {
     *outbuf_ptr = inbuf;
@@ -1347,14 +1362,6 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
 
   if (!*outbuf_ptr)
     return GST_FLOW_ERROR;
-
-  if (inbuf != *outbuf_ptr && bclass->copy_metadata) {
-    if (!bclass->copy_metadata (trans, inbuf, *outbuf_ptr)) {
-      /* something failed, post a warning */
-      GST_ELEMENT_WARNING (trans, STREAM, NOT_IMPLEMENTED,
-          ("could not copy metadata"), (NULL));
-    }
-  }
 
   return GST_FLOW_OK;
 }
