@@ -906,6 +906,40 @@ GST_START_TEST (test_queries_while_flushing)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_serialized_query_with_threshold)
+{
+  GstQuery *query;
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate);
+  gst_pad_set_event_function (mysinkpad, event_func);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_object_set (queue, "min-threshold-buffers", 10, NULL);
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+
+  gst_pad_push (mysrcpad, gst_buffer_new ());
+
+  query = gst_query_new_drain ();
+  gst_pad_peer_query (mysrcpad, query);
+  gst_query_unref (query);
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+}
+
+GST_END_TEST;
+
+
 static gpointer
 push_event_thread_func (gpointer data)
 {
@@ -1162,6 +1196,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_time_level);
   tcase_add_test (tc_chain, test_time_level_task_not_started);
   tcase_add_test (tc_chain, test_queries_while_flushing);
+  tcase_add_test (tc_chain, test_serialized_query_with_threshold);
   tcase_add_test (tc_chain, test_state_change_when_flushing);
 #if 0
   tcase_add_test (tc_chain, test_newsegment);

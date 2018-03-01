@@ -1094,18 +1094,18 @@ out_flushing:
 static gboolean
 gst_queue_is_empty (GstQueue * queue)
 {
-  GstQueueItem *head;
+  GstQueueItem *tail;
 
-  head = gst_queue_array_peek_head_struct (queue->queue);
+  tail = gst_queue_array_peek_tail_struct (queue->queue);
 
-  if (head == NULL)
+  if (tail == NULL)
     return TRUE;
 
   /* Only consider the queue empty if the minimum thresholds
-   * are not reached and data is at the queue head. Otherwise
+   * are not reached and data is at the queue tail. Otherwise
    * we would block forever on serialized queries.
    */
-  if (!GST_IS_BUFFER (head->item) && !GST_IS_BUFFER_LIST (head->item))
+  if (!GST_IS_BUFFER (tail->item) && !GST_IS_BUFFER_LIST (tail->item))
     return FALSE;
 
   /* It is possible that a max size is reached before all min thresholds are.
