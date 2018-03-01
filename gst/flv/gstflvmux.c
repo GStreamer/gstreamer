@@ -1174,9 +1174,11 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
       GstClockTime timestamp = GST_CLOCK_TIME_NONE;
 
       if (gst_segment_to_running_time_full (&GST_AGGREGATOR_PAD (pad)->segment,
-              GST_FORMAT_TIME, GST_BUFFER_DTS_OR_PTS (buffer), &timestamp) == 1)
+              GST_FORMAT_TIME, GST_BUFFER_DTS_OR_PTS (buffer),
+              &timestamp) == 1) {
         GST_BUFFER_PTS (tag) = timestamp;
-
+        GST_BUFFER_DURATION (tag) = GST_BUFFER_DURATION (buffer);
+      }
       GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_NONE;
     } else {

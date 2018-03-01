@@ -260,7 +260,8 @@ GST_START_TEST (test_speex_streamable)
   /* pull header0 */
   buf = gst_harness_pull (h);
   fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
-  fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (GST_CLOCK_TIME_NONE, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
   gst_buffer_map (buf, &map, GST_MAP_READ);
   /* 0x08 means it is audio */
   fail_unless_equals_int (0x08, map.data[0]);
@@ -276,7 +277,7 @@ GST_START_TEST (test_speex_streamable)
   /* pull header1 */
   buf = gst_harness_pull (h);
   fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
-  fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (GST_CLOCK_TIME_NONE, GST_BUFFER_DTS (buf));
   fail_unless_equals_uint64 (0, GST_BUFFER_DURATION (buf));
   gst_buffer_map (buf, &map, GST_MAP_READ);
   /* 0x08 means it is audio */
@@ -293,7 +294,7 @@ GST_START_TEST (test_speex_streamable)
   /* pull data */
   buf = gst_harness_pull (h);
   fail_unless_equals_uint64 (base_time, GST_BUFFER_PTS (buf));
-  fail_unless_equals_uint64 (base_time, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (GST_CLOCK_TIME_NONE, GST_BUFFER_DTS (buf));
   fail_unless_equals_uint64 (duration, GST_BUFFER_DURATION (buf));
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE, GST_BUFFER_OFFSET (buf));
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE,
@@ -313,7 +314,7 @@ GST_START_TEST (test_speex_streamable)
   /* pull data */
   buf = gst_harness_pull (h);
   fail_unless_equals_uint64 (base_time + duration, GST_BUFFER_PTS (buf));
-  fail_unless_equals_uint64 (base_time + duration, GST_BUFFER_DTS (buf));
+  fail_unless_equals_uint64 (GST_CLOCK_TIME_NONE, GST_BUFFER_DTS (buf));
   fail_unless_equals_uint64 (duration, GST_BUFFER_DURATION (buf));
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE, GST_BUFFER_OFFSET (buf));
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_NONE,
