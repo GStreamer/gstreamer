@@ -125,6 +125,29 @@ if gst_debug_disabled and cc.has_argument('-Wno-unused')
   add_project_arguments('-Wno-unused', language: 'c')
 endif
 
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wmissing-prototypes',
+  '-Wredundant-decls',
+  '-Wundef',
+  '-Wwrite-strings',
+  '-Wformat',
+  '-Wformat-security',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Waddress',
+  '-Wno-multichar',
+  '-Wdeclaration-after-statement',
+  '-Wvla',
+  '-Wpointer-arith',
+]
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
+
 configinc = include_directories('.')
 subdir('ges')
 subdir('plugins')
