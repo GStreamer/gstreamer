@@ -1171,7 +1171,12 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     /* if we are streamable we copy over timestamps and offsets,
        if not just copy the offsets */
     if (mux->streamable) {
-      gst_buffer_copy_into (tag, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+      GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+
+      if (gst_segment_to_running_time_full (&GST_AGGREGATOR_PAD (pad)->segment,
+              GST_FORMAT_TIME, GST_BUFFER_DTS_OR_PTS (buffer), &timestamp) == 1)
+        GST_BUFFER_PTS (tag) = timestamp;
+
       GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_OFFSET_END (tag) = GST_BUFFER_OFFSET_NONE;
     } else {
