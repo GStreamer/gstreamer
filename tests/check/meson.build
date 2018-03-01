@@ -57,6 +57,7 @@ base_tests = [
   [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
   [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
+  [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
   [['libs/insertbin.c'], false, [gstinsertbin_dep]],
   [['libs/isoff.c'], not xml2_dep.found(), [gstisoff_dep, xml2_dep]],
   [['libs/mpegts.c'], false, [gstmpegts_dep]],

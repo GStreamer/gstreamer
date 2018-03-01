@@ -51,10 +51,34 @@ G_BEGIN_DECLS
  *
  */
 typedef enum {
+  GST_H265_PROFILE_INVALID              = -1,
   GST_H265_PROFILE_MAIN                 = 1,
   GST_H265_PROFILE_MAIN_10              = 2,
   GST_H265_PROFILE_MAIN_STILL_PICTURE   = 3
 } GstH265Profile;
+
+/**
+ * GstH265ProfileIDC:
+ * @GST_H265_PROFILE_IDC_MAIN: Main profile (A.3.2)
+ * @GST_H265_PROFILE_IDC_MAIN_10: Main 10 profile (A.3.3)
+ * @GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE: Main Still Picture profile (A.3.4)
+ * @GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION: Format range extensions profile (A.3.5)
+ * @GST_H265_PROFILE_IDC_HIGH_THROUGHPUT: High throughput profiles (A.3.6)
+ * @GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING: Screen content coding extensions profiles (A.3.7)
+ *
+ * Valid values for the profile_idc field. This is different from
+ * #GstH265Profile as an extension idc can be used to encode a whole variety of
+ * profiles.
+ *
+ */
+typedef enum {
+  GST_H265_PROFILE_IDC_MAIN                   = 1,
+  GST_H265_PROFILE_IDC_MAIN_10                = 2,
+  GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE     = 3,
+  GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION = 4,
+  GST_H265_PROFILE_IDC_HIGH_THROUGHPUT        = 5,
+  GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING  = 9,
+} GstH265ProfileIDC;
 
 /**
  * GstH265NalUnitType:
@@ -1133,6 +1157,9 @@ void    gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal (guint8 out_qu
         gst_h265_quant_matrix_8x8_get_uprightdiagonal_from_raster
 #define gst_h265_quant_matrix_32x32_get_raster_from_uprightdiagonal\
         gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal
+
+GST_EXPORT
+GstH265Profile gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl);
 
 G_END_DECLS
 #endif

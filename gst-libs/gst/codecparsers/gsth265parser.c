@@ -2630,3 +2630,27 @@ gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal (guint8 out_quant[64],
   for (i = 0; i < 64; i++)
     out_quant[uprightdiagonal_8x8[i]] = quant[i];
 }
+
+GstH265Profile
+gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
+{
+  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN
+      || ptl->profile_compatibility_flag[1])
+    return GST_H265_PROFILE_MAIN;
+
+  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN_10
+      || ptl->profile_compatibility_flag[2])
+    return GST_H265_PROFILE_MAIN_10;
+
+  if (ptl->profile_idc == GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE
+      || ptl->profile_compatibility_flag[3])
+    return GST_H265_PROFILE_MAIN_STILL_PICTURE;
+
+  /* TODO:
+   * - GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION
+   * - GST_H265_PROFILE_IDC_HIGH_THROUGHPUT
+   * - GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING
+   */
+
+  return GST_H265_PROFILE_INVALID;
+}

@@ -1225,18 +1225,20 @@ digit_to_string (guint digit)
 }
 
 static const gchar *
-get_profile_string (guint8 profile_idc)
+get_profile_string (GstH265Profile profile)
 {
-  const gchar *profile = NULL;
+  switch (profile) {
+    case GST_H265_PROFILE_MAIN:
+      return "main";
+    case GST_H265_PROFILE_MAIN_10:
+      return "main-10";
+    case GST_H265_PROFILE_MAIN_STILL_PICTURE:
+      return "main-still-picture";
+    default:
+      break;
+  }
 
-  if (profile_idc == 1)
-    profile = "main";
-  else if (profile_idc == 2)
-    profile = "main-10";
-  else if (profile_idc == 3)
-    profile = "main-still-picture";
-
-  return profile;
+  return NULL;
 }
 
 static const gchar *
@@ -1298,7 +1300,7 @@ get_compatible_profile_caps (GstH265SPS * sps)
   g_value_init (&compat_profiles, GST_TYPE_LIST);
 
   switch (sps->profile_tier_level.profile_idc) {
-    case GST_H265_PROFILE_MAIN_10:
+    case GST_H265_PROFILE_IDC_MAIN_10:
       if (sps->profile_tier_level.profile_compatibility_flag[1]) {
         if (sps->profile_tier_level.profile_compatibility_flag[3]) {
           static const gchar *profile_array[] =
@@ -1310,7 +1312,7 @@ get_compatible_profile_caps (GstH265SPS * sps)
         }
       }
       break;
-    case GST_H265_PROFILE_MAIN:
+    case GST_H265_PROFILE_IDC_MAIN:
       if (sps->profile_tier_level.profile_compatibility_flag[3]) {
         static const gchar *profile_array[] =
             { "main-still-picture", "main-10", NULL
@@ -1321,7 +1323,7 @@ get_compatible_profile_caps (GstH265SPS * sps)
         profiles = profile_array;
       }
       break;
-    case GST_H265_PROFILE_MAIN_STILL_PICTURE:
+    case GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE:
     {
       static const gchar *profile_array[] = { "main", "main-10", NULL
       };
@@ -1587,8 +1589,10 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     /* set profile and level in caps */
     if (sps) {
       const gchar *profile, *tier, *level;
+      GstH265Profile p;
 
-      profile = get_profile_string (sps->profile_tier_level.profile_idc);
+      p = gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
+      profile = get_profile_string (p);
       if (profile != NULL)
         gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
 
