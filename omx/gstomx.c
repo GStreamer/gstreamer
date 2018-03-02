@@ -1896,6 +1896,8 @@ gst_omx_port_use_dynamic_buffers (GstOMXPort * port)
   port->allocation = GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC;
   g_mutex_unlock (&port->comp->lock);
 
+  g_list_free (buffers);
+
   return err;
 }
 
