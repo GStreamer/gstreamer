@@ -25,6 +25,7 @@ GST_START_TEST (test_permissions)
 {
   GstRTSPPermissions *perms;
   GstRTSPPermissions *copy;
+  GstStructure *role_structure;
 
   perms = gst_rtsp_permissions_new ();
   fail_if (gst_rtsp_permissions_is_allowed (perms, "missing", "permission1"));
@@ -109,6 +110,14 @@ GST_START_TEST (test_permissions)
 
   gst_rtsp_permissions_add_role_empty (perms, "noone");
   fail_if (gst_rtsp_permissions_is_allowed (perms, "noone", "permission1"));
+
+  role_structure = gst_structure_new ("tester", "permission1", G_TYPE_BOOLEAN,
+      TRUE, NULL);
+  gst_rtsp_permissions_add_role_from_structure (perms, role_structure);
+  gst_structure_free (role_structure);
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "tester",
+          "permission1"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "tester", "permission2"));
 
   gst_rtsp_permissions_unref (perms);
 }

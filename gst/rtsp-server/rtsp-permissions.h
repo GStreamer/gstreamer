@@ -91,6 +91,9 @@ void                  gst_rtsp_permissions_add_role_empty  (GstRTSPPermissions *
                                                             const gchar * role);
 
 GST_EXPORT
+void                  gst_rtsp_permissions_add_role_from_structure (GstRTSPPermissions * permissions,
+                                                            GstStructure *structure);
+GST_EXPORT
 void                  gst_rtsp_permissions_add_permission_for_role (GstRTSPPermissions * permissions,
                                                             const gchar * role,
                                                             const gchar * permission,

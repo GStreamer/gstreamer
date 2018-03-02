@@ -105,6 +105,28 @@ gst_rtsp_permissions_init (GstRTSPPermissionsImpl * permissions)
       g_ptr_array_new_with_free_func ((GDestroyNotify) free_structure);
 }
 
+static void
+add_role_from_structure (GstRTSPPermissionsImpl * impl,
+    GstStructure * structure)
+{
+  guint i, len;
+  const gchar *role = gst_structure_get_name (structure);
+
+  len = impl->roles->len;
+  for (i = 0; i < len; i++) {
+    GstStructure *entry = g_ptr_array_index (impl->roles, i);
+
+    if (gst_structure_has_name (entry, role)) {
+      g_ptr_array_remove_index_fast (impl->roles, i);
+      break;
+    }
+  }
+
+  gst_structure_set_parent_refcount (structure,
+      &impl->permissions.mini_object.refcount);
+  g_ptr_array_add (impl->roles, structure);
+}
+
 /**
  * gst_rtsp_permissions_new:
  *
@@ -214,7 +236,6 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
 {
   GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
   GstStructure *structure;
-  guint i, len;
 
   g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
   g_return_if_fail (gst_mini_object_is_writable (&permissions->mini_object));
@@ -223,19 +244,27 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
   structure = gst_structure_new_valist (role, fieldname, var_args);
   g_return_if_fail (structure != NULL);
 
-  len = impl->roles->len;
-  for (i = 0; i < len; i++) {
-    GstStructure *entry = g_ptr_array_index (impl->roles, i);
+  add_role_from_structure (impl, structure);
+}
 
-    if (gst_structure_has_name (entry, role)) {
-      g_ptr_array_remove_index_fast (impl->roles, i);
-      break;
-    }
-  }
+/**
+ * gst_rtsp_permissions_add_role_from_structure:
+ *
+ * Add a new role to @permissions based on @structure
+ */
+void
+gst_rtsp_permissions_add_role_from_structure (GstRTSPPermissions * permissions,
+    GstStructure * structure)
+{
+  GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
+  GstStructure *copy;
 
-  gst_structure_set_parent_refcount (structure,
-      &impl->permissions.mini_object.refcount);
-  g_ptr_array_add (impl->roles, structure);
+  g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
+  g_return_if_fail (GST_IS_STRUCTURE (structure));
+
+  copy = gst_structure_copy (structure);
+
+  add_role_from_structure (impl, copy);
 }
 
 /**

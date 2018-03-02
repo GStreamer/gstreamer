@@ -495,6 +495,31 @@ gst_rtsp_media_factory_add_role (GstRTSPMediaFactory * factory,
 }
 
 /**
+ * gst_rtsp_media_factory_add_role_from_structure:
+ *
+ * A convenience wrapper around gst_rtsp_permissions_add_role_from_structure().
+ * If @factory had no permissions, new permissions will be created and the
+ * role will be added to it.
+ */
+void
+gst_rtsp_media_factory_add_role_from_structure (GstRTSPMediaFactory * factory,
+    GstStructure * structure)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+  g_return_if_fail (GST_IS_STRUCTURE (structure));
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  if (priv->permissions == NULL)
+    priv->permissions = gst_rtsp_permissions_new ();
+
+  gst_rtsp_permissions_add_role_from_structure (priv->permissions, structure);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
  * gst_rtsp_media_factory_set_launch:
  * @factory: a #GstRTSPMediaFactory
  * @launch: the launch description

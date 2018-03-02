@@ -127,6 +127,9 @@ void                  gst_rtsp_media_factory_add_role         (GstRTSPMediaFacto
                                                                const gchar *fieldname, ...);
 
 GST_EXPORT
+void                  gst_rtsp_media_factory_add_role_from_structure (GstRTSPMediaFactory * factory,
+                                                               GstStructure *structure);
+GST_EXPORT
 void                  gst_rtsp_media_factory_set_shared       (GstRTSPMediaFactory *factory,
                                                                gboolean shared);
 
