@@ -268,7 +268,7 @@ gst_iqa_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
    * is locked.
    */
   gst_structure_set (msg_structure, "time", GST_TYPE_CLOCK_TIME,
-      agg->segment.position, NULL);
+      GST_AGGREGATOR_PAD (agg->srcpad)->segment.position, NULL);
   gst_element_post_message (GST_ELEMENT (self), m);
   return GST_FLOW_OK;
 
@@ -321,10 +321,10 @@ gst_iqa_class_init (GstIqaClass * klass)
 
   videoaggregator_class->aggregate_frames = gst_iqa_aggregate_frames;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &src_factory, GST_TYPE_AGGREGATOR_PAD);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &sink_factory, GST_TYPE_VIDEO_AGGREGATOR_PAD);
 
   gobject_class->set_property = _set_property;
   gobject_class->get_property = _get_property;
