@@ -2149,10 +2149,6 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     if (h265parse->align == GST_H265_PARSE_ALIGN_NAL)
       h265parse->split_packetized = TRUE;
     h265parse->packetized = TRUE;
-
-    /* We got all the caps infos from the codec_data so can already set the
-     * src caps. */
-    gst_h265_parse_update_src_caps (h265parse, NULL);
   }
 
   return TRUE;
