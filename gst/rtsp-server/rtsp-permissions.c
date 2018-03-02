@@ -250,7 +250,15 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
 /**
  * gst_rtsp_permissions_add_role_from_structure:
  *
- * Add a new role to @permissions based on @structure
+ * Add a new role to @permissions based on @structure, for example
+ * given a role named `tester`, which should be granted a permission named
+ * `permission1`, the structure could be created with:
+ *
+ * ```
+ * gst_structure_new ("tester", "permission1", G_TYPE_BOOLEAN, TRUE, NULL);
+ * ```
+ *
+ * Since: 1.14
  */
 void
 gst_rtsp_permissions_add_role_from_structure (GstRTSPPermissions * permissions,

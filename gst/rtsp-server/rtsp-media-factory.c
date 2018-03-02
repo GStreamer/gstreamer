@@ -500,6 +500,8 @@ gst_rtsp_media_factory_add_role (GstRTSPMediaFactory * factory,
  * A convenience wrapper around gst_rtsp_permissions_add_role_from_structure().
  * If @factory had no permissions, new permissions will be created and the
  * role will be added to it.
+ *
+ * Since: 1.14
  */
 void
 gst_rtsp_media_factory_add_role_from_structure (GstRTSPMediaFactory * factory,
