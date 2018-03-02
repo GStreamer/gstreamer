@@ -12,5 +12,6 @@ Description: Tag base classes and helper functions
 Requires: gstreamer-@GST_API_VERSION@
 Version: @VERSION@
 Libs: -L${libdir} -lgsttag-@GST_API_VERSION@
+Libs.private: @ZLIB_LIBS@
 Cflags: -I${includedir}
 

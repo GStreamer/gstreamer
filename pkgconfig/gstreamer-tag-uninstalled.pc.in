@@ -12,5 +12,6 @@ Description: Tag base classes and helper functions, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
 Libs: -L${libdir} -lgsttag-@GST_API_VERSION@
+Libs.Private: @ZLIB_LIBS@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
