@@ -2734,11 +2734,6 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     if (h264parse->align == GST_H264_PARSE_ALIGN_NAL)
       h264parse->split_packetized = TRUE;
     h264parse->packetized = TRUE;
-
-    if (format == GST_H264_PARSE_FORMAT_AVC)
-      /* We got all the caps infos from the codec_data so can already set the
-       * src caps. */
-      gst_h264_parse_update_src_caps (h264parse, NULL);
   }
 
   h264parse->in_align = align;
