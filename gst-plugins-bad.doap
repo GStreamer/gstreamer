@@ -31,7 +31,17 @@ real live maintainer, or some actual wide use.
      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-bad"/>
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-bad"/>
    </GitRepository>
- </repository> 
+ </repository>
+
+ <release>
+  <Version>
+   <revision>1.13.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-03</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.13.90.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
