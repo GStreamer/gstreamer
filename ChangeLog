@@ -1,9 +1,3024 @@
-=== release 1.12.0 ===
+=== release 1.13.90 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2018-03-03 22:59:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.13.90
+
+2018-03-01 07:33:27 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: change how the metadata is copied
+	  Instead of copying the metada in prepare_output_buffer() vmethod,
+	  it is done in append_output_buffer_metadata() thus deinterlaced
+	  buffers could also have the proper metas.
+	  GstVideoCropMeta now it is copied internally and it is decided via
+	  transform_meta() vmethod.
+	  A new internal method, copy_metadata() was added to handle VPP
+	  transformation where non-GstVideoVaapiMeta metas were lost.
+
+2018-02-27 16:20:15 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  postproc: Copy meta data from input to output
+	  This will ensure that meta data without memory tags will be copied. This
+	  was noticed when testing ROI.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-23 10:48:36 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/elements/test-roi.c:
+	  tests: element: rewrite ROI test
+	  Rewrote the ROI test to use GstVideoRegionOfInterest meta rather
+	  than injecting GstEvents. These meta are added as a pad probe in
+	  the queue src pad.
+	  Also
+	  * Use of navigation messages to control de test
+	  * Use signal watch for processing messages
+	  * Change to H265 rather than H264 since current intel-vaapi-driver
+	  only supports ROI on kabylake.
+	  TODO: add a parameter to change the encoder/decoder to test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-22 14:20:42 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  libs: encoder: reimplement ROI using meta
+	  Check input buffers for ROI metas and pass them to VA. Also added a
+	  new "default-roi-delta-qp" property in order to tell the encoder what
+	  delta QP should be applied to ROI by default.
+	  Enabled it for H264 and H265 encoders.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-22 08:22:35 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  Revert "libs: encoder: add api gst_vaapi_encoder_add/del_roi"
+	  This reverts commit 7a6f690340dcb3b82c59efa777d4453227851de8.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-22 14:29:19 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/simple-encoder.c:
+	  Revert "tests: simple-encoder: add an option to set ROI"
+	  This reverts commit c21345c4787bb6342adddea1190f53fe62abff04.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-21 10:56:47 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  Revert "vaapiencode: handle custom event GstVaapiEncoderRegionOfInterest"
+	  This reverts commit 8f1b88dac0e64a211325cdcb2cda693b80229bd1.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-23 09:25:51 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: copy input buffer metas
+	  When importing buffers to a VA-base buffer, it is required to copy
+	  the metas in the original buffer, otherwise information will be
+	  lost, such as GstVideoRegionOfInterestMeta.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2018-02-27 06:10:09 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface.c:
+	  libs: surface: cast to uintptr_t pointer
+	  According to Debian package auto-building, uintptr_t is not an
+	  unsigned long in i386 arch, raising an "incompatible pointer type"
+	  error.
+	  This patch adds a casting for compiler's satisfaction in i386.
+
+2018-02-25 20:46:56 -0600  Matteo Valdina <matteo.valdina@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: add zero as valid value for periodic keyframe.
+	  Enabled zero as valid value for keyframe-period property.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793829
+
+2018-02-22 08:24:12 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: code-style fix
+
+2018-02-17 18:32:11 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: generate system allocated buffers
+	  Generate system allocated output buffers when downstream doesn't
+	  support GstVideoMeta.
+	  The VA buffer content is copied to the new output buffer, and it
+	  replaces the VA buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-15 19:32:37 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: handle system allocated buffers when required
+	  When downstream can't handle GstVideoMeta it is required to send
+	  system allocated buffers.
+	  The system allocated buffers are produced in prepare_output_buffer()
+	  vmethod if downstream can't handl GstVideoMeta.
+	  At transform() vmethod if the buffer is a system allocated buffer,
+	  a VA buffer is instanciated and replaces the out buffer. Later
+	  the VA buffer is copied to the system allocate buffer and it
+	  replaces the output buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-15 19:32:19 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: add gst_vaapi_copy_va_buffer()
+	  This helper function aims to copy buffers with VA memory to dumb
+	  buffers, when GstVideoMeta is not available dowstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-15 19:29:51 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: add COPY_OUTPUT_FRAME flag
+	  This patch add the member copy_output_frame and set it TRUE when
+	  when downstream didn't request GstVideoMeta API, the caps are raw
+	  and the internal allocator is the VA-API one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-15 19:28:33 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: store the first downstream allocator if available
+	  The allocator will be required if we need to allocate a buffer
+	  to store the frame with the expected strides.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-20 02:25:13 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	* gst/vaapi/gstvaapivideobufferpool.h:
+	  vaapibufferpool: add gst_vaapi_video_buffer_pool_copy_buffer()
+	  This function will inform the element if it shall copy the generated
+	  buffer by the pool to a system allocated buffer before pushing it
+	  to downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-15 19:22:08 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapibufferpool: don't change config when forcing video meta
+	  VA-API based buffer might need a video meta because of different
+	  strides. But when donwstream doesn't support video meta we need to
+	  force the usage of video meta.
+	  Before we changed the buffer pool configuration, but actually this
+	  is a hack and we cannot rely on that for downstream.
+	  This patch add a check fo raw video caps and allocator is VA-API,
+	  then the option is enabled without changing the pool configuration.
+	  In this case the element is responsible to copy the frame to a
+	  simple buffer with the expected strides.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785054
+
+2018-02-20 09:15:05 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: set discont flag at vpp deinterlacing
+	  When deinterlacing with VPP the discont flag was not forwarded to
+	  the new created buffer. This patch sets the discont flag if input
+	  buffer has it.
+
+2018-02-20 02:14:37 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.h:
+	  vaapibufferpool: remove wrong gcc annotation
+
+2018-02-15 14:55:42 -0600  Matteo Valdina <matteo.valdina@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapifeienc_h264.c:
+	* gst-libs/gst/vaapi/gstvaapifeipak_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h26x_priv.h:
+	  libs: encoder: h264,h265: extend max periodic keyframe.
+	  Increased max values of periodic key frame for h26x codecs.
+	  This allow more fine tunning of encoder that in certian scenario
+	  want higher periodic key frame.
+	  For example: it doesn't want a key frame each 10 seconds but
+	  each 120 seconds.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786320
+
+2018-02-15 19:44:35 +0000  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.12.0
+	* meson.build:
+	  Back to development
+
+=== release 1.13.1 ===
+
+2018-02-15 17:39:16 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.13.1
+
+2018-02-15 18:15:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/vaapi/Makefile.am:
+	  vaapi: dist new header
+
+2018-02-12 17:53:58 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  vaapi: register vaapisink as marginal on wayland
+	  vaapsink, when used with the Intel VA-API driver, tries to display
+	  surfaces with format NV12, which are handled correctly by
+	  Weston. Nonetheless, COGL cannot display YUV surfaces, making fail
+	  pipelines on mutter.
+	  This shall be solved either by COGL or by making the driver to paint
+	  RGB surfaces. In the meanwhile, let's just demote vaapisink as
+	  marginal when the Wayland environment is detected, no matter if it is
+	  Weston.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=775698
+
+2018-02-12 19:00:36 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: update mesa's vendor string in whitelist
+	  Mesa has updated its VA-API Gallium driver vendor string:
+	  https://cgit.freedesktop.org/mesa/mesa/commit/?id=5db29d62ce1fefa3f2ee6e4a4688576fde4bde4a
+	  This patch tries to cover both, the old and the new one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793386
+
+2018-02-08 19:22:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: make version numbers ints and fix int/string comparison
+	  WARNING: Trying to compare values of different types (str, int).
+	  The result of this is undefined and will become a hard error
+	  in a future Meson release.
+
+2018-02-07 09:13:26 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: handle vaapi allocator in allocation query
+	  In propose_allocation() if the numer of allocation params is zero, the
+	  system's allocator is added first, and lastly the native VA-API
+	  allocator.
+	  In decide_allocation(), the allocations params in query are travered,
+	  looking for a native VA-API allocator. If it is found, it is reused as
+	  src pad allocator. Otherwise, a new allocator is instantiated and
+	  appended in the query.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789476
+
+2018-02-07 09:06:46 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: remove unused macro
+	  GST_VAAPI_VIDEO_ALLOCATOR_NAME was added in commit 5b11b8332 but it
+	  was never used, since the native VA-API allocator name has been
+	  GST_VAAPI_VIDEO_MEMORY_NAME.
+	  This patch removes GST_VAAPI_VIDEO_ALLOCATOR_NAME macro.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789476
+
+2018-02-02 08:54:00 +0000  VaL Doroshchuk <valkov@yandex.ru>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: don't mask button events for foreign windows
+	  Don't subscribe to button press events when using a foreing window,
+	  because the user created window would trap those events, preveting the
+	  show of frames.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791615
+
+2018-02-05 08:51:56 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-30 20:38:37 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-30 12:56:49 +0000  Philippe Normand <philn@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  vaapi: add NULL-sentinel to kernel_names
+	  The array needs to be NULL-terminated according to the
+	  gst_plugin_add_dependency() documentation.
+
+2018-01-18 18:53:29 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: remove spurious code
+	  This assignation is dead code, since gst_video_info_from_caps() set
+	  to 1 by default.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790149
+
+2018-01-18 18:51:57 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: if no p-a-r in out caps define a range
+	  Instead of copying the pixel-aspect-ratio from the sink caps, define
+	  an open range for the src caps pixel-aspect-ratio. Later it will be
+	  defined.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790149
+
+2018-01-18 13:10:59 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: check for display's color-balance properties
+	  Check for display's color-balance properties, available by the VA-API
+	  driver, before setting them.
+	  Also logs an info message of those unavailable properties.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792638
+
+2018-01-17 17:30:50 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: re-using buffer pool breaks renegotiation
+	  at propose_allocation() we should not reuse the proposed buffer,
+	  because it could break renegotiation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792620
+
+2018-01-17 17:26:24 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: use g_clear_object() to unref sinkpad_buffer_pool
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792620
+
+2018-01-17 12:42:12 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/meson.build:
+	  build: meson: add missing GstGL dependency
+
+2018-01-17 12:41:54 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	  libs: utils: egl: add missing guards for GstGL
+
+2018-01-11 11:48:02 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: remove dmabuf-import hack
+	  Remove the hack to check if an upstream element has enabled the
+	  property io-mode enabled as dmabuf-import.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792034
+
+2017-12-01 15:04:35 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.h:
+	  libs: egl: utils: use eglGetPlatformDisplay()
+	  eglGetDisplay() is currently broken in Mesa for Wayland.  Also using
+	  eglGetDisplay() is rather fragile, and it is recommended to use
+	  eglGetPlatformDisplay() when possible.
+	  In order to do that, this patch uses the helper in GstGL. If
+	  gstreamer-vaapi is not compiled with GstGL support, eglGetDisplay()
+	  will be used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790493
+
+2017-12-08 14:46:02 +0100  Michael Tretter <m.tretter@pengutronix.de>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: lock ensure_filter with postproc_lock
+	  gst_vaapipostproc_ensure_filter might free the allowed_srcpad_caps
+	  and allowed_sinkpad_caps. This can race with copying these caps in
+	  gst_vaapipostproc_transform_caps and lead to segfaults.
+	  The gst_vaapipostproc_transform_caps function already locks
+	  postproc_lock before copying the caps. Make sure that calls to
+	  gst_vaapipostproc_ensure_filter also acquire this lock.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791404
+
+2018-01-10 17:10:28 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/test-filter.c:
+	  tests: test-filter: fix dereference before null check
+	  Null-checking op_info suggests that it may be null, but it has already
+	  been dereferenced on all paths leading to the check.
+	  There may be a null pointer dereference, or else the comparison
+	  against null is unnecessary.
+
+2018-01-10 17:06:53 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/y4mreader.c:
+	  tests: y4mreader: fix string state checkup
+	  str cannot be null in that moment, but it may be the end of string.
+
+2018-01-10 16:59:56 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/y4mreader.c:
+	  tests: y4mreader: use int for fgetc
+	  Assigning the return value of fgetc to char truncates its value.
+	  It will not be possible to distinguish between EOF and a valid
+	  character.
+
+2018-01-10 16:48:07 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/y4mreader.c:
+	  tests: y4mreader: fix incompatible cast
+	  Passed pointer in parse_int() are unsigned int (32 bits, unsigned) but
+	  they are dereferenced as a wider long (64 bits, signed). This may lead
+	  to memory corruption.
+
+2017-12-19 16:01:10 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix fallback for gstreamer-gl-1.0, it's now in -base
+
+2017-12-14 14:53:27 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e8c7a71 to 3fa2c9e
+
+2017-12-06 16:11:46 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  videoconvert: gst_element_post_message() is transfer full on msg
+	  For this reson we need not to unref the message, even if it failed.
+
+2017-12-06 16:11:25 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  Revert "vaapivideocontext: possible memleak when no bus attached"
+	  This reverts commit 0438a3e62660e64ed390b6bb83bfb560b91664aa.
+
+2017-12-01 23:03:32 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/elements/test-vaapicontext.c:
+	  test: vaapicontext: process have-context bus message
+
+2017-11-29 18:29:45 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/elements/test-vaapicontext.c:
+	  test: vaapicontext: app context is not persistent
+
+2017-11-29 11:02:03 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideocontext.h:
+	  vaapivideocontext: only vaapisink process app context
+	  gst.vaapi.app.Display context is made for applications that will
+	  provide the VA display and the native display to used by the
+	  pipeline, when are using vaapisink as overlay. There are no use
+	  case for encoders, decoders, neither for the postprocessor.
+	  In the case of the vaapisink, it shall query for gst.vaapi.Display
+	  upstream first, and then, if there is no reply,
+	  gst.vaapi.app.Display context will be posted in the bus for the
+	  application. If the application replies, a GstVaapiDisplay object
+	  is instantiated given the context info, otherwise a
+	  GstVaapiDisplay is created with the normal algorithm to guess the
+	  graphics platform. Either way, the instantiated GstVaapiDisplay
+	  is propagated among the pipeline and the have-message bus message.
+	  Also only vaapisink will process the gst.vaapi.app.Display, if
+	  and only if, it doesn't have a display already set. This is
+	  caused because if vaapisink is in a bin (playsink, for example)
+	  the need-context is posted twice, leading to an error state.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790999
+
+2017-12-01 20:21:54 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  vaapivideocontext: log the name of GstVaapiDisplay
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790999
+
+2017-11-30 14:24:43 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  vaapivideocontext: possible memleak when no bus attached
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790999
+
+2017-11-27 13:04:24 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.h:
+	  libs: window: wayland: remove unused header include
+	  Remove wayland-client.h include since there is no exposed symbols from
+	  it.
+
+2017-11-27 12:18:56 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264,h265: guard rate control's macroblock
+	  macroblock parameter appear on VA-API 1.0.0. It should be guarded.
+
+2017-11-27 20:17:55 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3f4aa96 to e8c7a71
+
+2016-07-29 14:58:49 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: Add Hierarchical-B encode
+	  Frames are encoded as different layers. Frame in a particular
+	  layer will use pictures in lower or same layer as references.
+	  Which means decoder can drop the frames in upper layer but still
+	  decode lower layer frames.
+	  B-frames, except the one in top most layer, are reference frames.
+	  All the base layer frames are I or P.
+	  eg: with 3 temporal layers
+	  T3:             B1            B3              B5              B7
+	  T2:                   B2                              B6
+	  T1:   I0                                P4                        P8
+	  T1, T2, T3: Temporal Layers
+	  P1...Pn:   P-Frames:
+	  B1...Bn:   B-frames:
+	  T1: I0->P4 , P4->P8 etc..
+	  T2: I0--> B2 <-- P4
+	  T3: I0--> B1 <-- B2, B2 --> B3 <-- P4
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2016-07-28 18:33:23 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: Add Hierarchical-P encode
+	  Frames are encoded as different layers. A frame in a particular
+	  layer will use pictures in lower or same layer as references.
+	  Which means decoder can drop the frames in upper layer but still
+	  decode lower layer frames.
+	  eg: with 3 temporal layers
+	  T3:             P1            P3              P5              P7
+	  T2:                   P2                              P6
+	  T1:   P0                                P4                        P8
+	  T1, T2, T3: Temporal Layers
+	  P1...pn:   P-Frames:
+	  P0->P1 , P0->P2, P2->P3, P0->P4......repeat
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2016-07-28 16:51:28 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: Fix frame_num generation
+	  The frame_num generation was not correctly implemented.
+	  According to h264 spec, frame_num should get incremented
+	  for each frame if previous frame is a referece frame.
+	  For eg: IPBPB sequece should have the frame numbers 0,1,2,2,3
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2016-07-28 15:53:48 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: Add new property "prediction-type"
+	  Adds new property "prediction-type" to select different reference
+	  picture selection modes like hierarchical-p, hierarchical-b etc.
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2016-07-28 15:12:05 +0300  XuGuangxin <guangxin.xu@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.h:
+	  libs: encoder: h264: Add machinery for implementing hierarchical-prediction
+	  Adds some basic building blocks to ease the implementation
+	  of hierarchical prediction modes.
+	  -- add an utility method to find temporal level of each frame
+	  -- define max_ref_frame count based on temporal level count
+	  -- add temporal_level_div[] for finding temporal level each frame
+	  to be encoded.
+	  -- find ip_period based on temporal level count
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2016-07-28 14:17:53 +0300  XuGuangxin <guangxin.xu@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: Add property "temporal-levels"
+	  Adds new property "temporal-levels" to select the number of
+	  temporal levels to be included in the encoded stream.
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2016-07-27 16:41:01 +0300  XuGuangxin <guangxin.xu@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.h:
+	  libs: encoder: objects: Add a reference flag
+	  We can have p-frame as non-ref and also b-frame as ref
+	  which are not supported yet. Reference flag
+	  is the first machinery needed for more advanced
+	  reference picture selection modes.
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788918
+
+2017-11-02 13:21:34 +0100  Daniel van Vugt <daniel.van.vugt@canonical.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface_egl.c:
+	  libs: surface: egl: add comment
+	  Add a warning comment when using old intel-vaapi-drivers (>1.8.4),
+	  where the creation of surfaces from GEM fd may fail.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-10 13:38:21 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.h:
+	* gst-libs/gst/vaapi/gstvaapitexture_egl.c:
+	  libs: display: egl: add gst_vaapi_display_egl_set_current_display()
+	  Adds a new function that changes the internal EGL display to the
+	  current one (eglGetCurrentDisplay()) and sets the current context
+	  too (eglGetCurrentContext()).
+	  This new function is called by gst_vaapi_texture_egl_create() updating
+	  the GstVaapiDisplayEGL with the current EGL display.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-09 16:02:11 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapitexture_egl.c:
+	  libs: texture: egl: update EGL display and context
+	  It is required to use the context of the calling thread when wrapping
+	  a foreign texture. According the documentation of
+	  GstVideoGLTextureUploadMeta:
+	  "The caller of gst_video_gl_texture_upload_meta_upload() must
+	  have OpenGL set up and call this from a thread where it is valid
+	  to upload something to an OpenGL texture."
+	  This patch updates the EGL display and context in GstVaapiDisplay
+	  instance to the one used by te renderer that uploads the texture.
+	  Original-patch-by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-10 19:53:04 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: centralize assignation of GL objects
+	  Add plugin_set_gst_gl() where the GstGL objects are assigned.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-10 19:13:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: set GL objects if ensured
+	  Only set the GL display and GL other context if they are ensured.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-10 17:14:15 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: set GL objects if context is handled
+	  Only set the GL display and GL other context if they are extracted
+	  correctly from the gstreamer's context.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-10 19:57:45 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: fix memory leak when GL context is created
+	  When the GL display and context are created inside an VAAPI element
+	  the created GL context is leaked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-10 14:01:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	  libs: display: egl: free leaked memory
+	  The EGL VAAPI display forgot to release the egl display, context and
+	  proxied VAAPI display.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-05 19:25:08 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapitexture_egl.c:
+	  libs: texture: egl: code style
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-04 13:51:23 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface_egl.c:
+	  libs: surface: egl: error message if no extension
+	  Instead of silently fail to export the image if there is not available
+	  the EGL_MESA_drm_image, log an error message. Also a code refactoring
+	  was done.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=773453
+
+2017-10-31 13:10:50 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: direct rendering on memory:VASurface
+	  As buffers negotiated with memory:VASurface caps feature can also be
+	  mapped, they can also be configured to use VA derived images, in other
+	  words "direct rendering".
+	  Also, because of the changes in dmabuf allocator as default allocator,
+	  the code for configuring the direct rendering was not clear.
+	  This patch cleans up the code and enables direct rendering when the
+	  environment variable GST_VAAPI_ENABLE_DIRECT_RENDERING is defined,
+	  even then the memory:VASurface cap feature is negotiated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786054
+
+2017-10-04 11:54:31 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: only dmabuf on srcpad if downstream
+	  Set if source pad can handle dmabuf only if the GstGL context comes
+	  from downstream.
+	  It is possible to know that at two moments:
+	  1\ In the case of GstGLTextureUpload caps feature is negotiated and
+	  downstream pool reports back gst.gl.GstGLContext.
+	  2\ When GstGLContext is found as GstContext from dowstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788503
+
+2017-10-04 11:52:32 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	  vaapivideocontext: add inline documentation
+	  Document function gst_vaapi_find_gl_local_context().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788503
+
+2017-10-04 11:50:25 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideocontext.h:
+	  vaapivideocontext: return the direction of gl context
+	  In function gst_vaapi_find_gl_context() add a direction parameter to
+	  return back the direction where the GstGL context was found.
+	  This is going to be useful when checking if downstream can import
+	  dmabuf-based buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788503
+
+2017-10-04 08:30:51 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	  plugins: add gst_vaapi_plugin_base_set_srcpad_can_dmabuf()
+	  This patch refactors the code by adding the function
+	  vaapi_plugin_base_set_srcpad_can_dmabuf(), it determines if the passed
+	  GstGLContext can handle dmabuf-based buffers.
+	  The function is exposed publicly since it is intended to be used later
+	  at GstVaapiDisplay instantiation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788503
+
+2017-10-20 12:37:15 +0200  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: allow to set property on runtime
+	  Tis patch, allows some properties that we want to be set on
+	  runtime. (eg. bitrate)
+	  Note that all properties are under control by num_codedbuf_queued.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786321
+
+2017-09-15 15:38:18 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: allow to set bitrate on runtime
+	  In case of streaming, controlling bitrate dynamically for encoder might be
+	  important to manage quality of the streaming.
+	  This patch is to support such a scenario.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786321
+
+2017-10-10 11:35:24 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapi.h:
+	* gst/vaapi/gstvaapidecodebin.c:
+	  vaapidecodebin: Register element if no VPP support is available too
+	  VPP support is only needed for advanced deinterlacing, which is not
+	  enabled by default either. Error out if it is selected but VPP is not
+	  supported, and otherwise just work without VPP support.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788758
+
+2017-10-16 11:57:16 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  Avoid infinite loop when vaapi_create_display fails
+	  Which might be the case when using, for example, xvfb.
+
+2017-10-02 18:53:21 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: log warn if display fail
+	  gstreamer-vaapi initializes the display by trial-and-error, thus
+	  logging an error message if the display initialisation fails the user
+	  may be weary of the error message in the screen, if using VA-API 1.0
+	  This commit set the VA error log handler to GStreamer warning level
+	  while calling vaInitialize() and set it to error after that.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783169
+
+2017-09-29 20:05:22 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: try to create test display in order
+	  When creating the test display for querying capabilites, it try in
+	  certain order: DRM, Wayland and finally X11. GLX nor EGL are tried
+	  since they are either composited with X11 or Wayland.
+	  The reason for this is to reduce the posibility of failure that could
+	  blacklist the plugin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782212
+
+2017-09-29 15:07:47 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	  libs: display: delay getting screen resolution
+	  Instead of extracting the screen resolution at GstVaapiDisplay
+	  creation, this patch delay it until the screen size is requested for
+	  first time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782212
+
+2017-09-28 18:58:17 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	  libs: display: egl: avoid two vaDisplay instantiates
+	  GstVaapiDisplayEGL is a wrapper of another GstVaapiDisplay, either X11
+	  or Wayland. Nonetheless it created another vaDisplay for it, instead
+	  of using the wrapped one.
+	  This patch enables the reuse of the wrapped vaDisplay avoiding
+	  instantiating two.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782212
+
+2017-09-28 17:45:00 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.c:
+	  libs: display: remove display_type from display info
+	  Since it's no required to pass the display type in the display info,
+	  the structure member is removed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782212
+
+2017-09-28 17:35:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	  libs: display: remove display_type member
+	  It is not used any more since GstVaapiDisplay was ported as a
+	  GstObject-based. This information is part of the class information.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782212
+
+2017-09-28 16:12:23 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	  libs: display: remove parent member
+	  Parent was a crumb left from display cache.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782212
+
+2017-10-03 13:06:33 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  vaapi: Also register vaapipostproc without VPP support
+	  It can still do simple deinterlacing then.
+
+2017-10-03 10:51:06 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: Allow running without VPP support
+	  We returned FALSE from ::start() if VPP support is not available, but it
+	  is only really needed for complex filters and during transform we check
+	  for that. For simple deinterlacing it is not needed.
+
+2017-09-27 18:35:20 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: use scoped variable for return value
+	  Instead of reusing a parameter variable for the return value of
+	  gst_vaapipostproc_transform_caps(), this patch uses the function
+	  scoped pointer. Thus, the code is cleaner.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785706
+
+2017-09-27 18:32:03 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: removed unused parameter
+	  Removed caps parameter from gst_vaapipostproc_transform_caps_impl()
+	  helper function since the it is not used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785706
+
+2017-09-27 13:32:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: use scoped variable for return value
+	  Instead of reusing a parameter variable for the return value of
+	  gst_vaapipostproc_fixate_caps(), this patch uses the function scoped
+	  pointer. Thus, the code is cleaner.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785706
+
+2017-09-27 11:27:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.h:
+	  plugins: memory:DMABuf only handles planar formats
+	  When glimagesink negotiates the caps feature memory:DMABuf the
+	  exported dmabufs buffers with NV12 format are not well rendered, thus
+	  setting only planar.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788229
+
+2017-09-25 17:04:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: flush pending frames before set format
+	  Flush pending frames, if any, in the internal encorder, before setting
+	  the new negotiated format.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+2017-09-25 15:50:19 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: drain pending frames before set format
+	  Drain pending frames, if any, in the internal decoder before setting
+	  the new negotiated format.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+2017-09-22 19:35:04 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/test-display.c:
+	  tests: display: use GObject getter
+	  Instead of using the gst_vaapi_display_get_property(), this patch
+	  replaces it with g_object_get_property() to dump the available VA
+	  display properties.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 19:25:20 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: use GObject setter and getter
+	  Instead of using gst_vaapi_display_set_property() or
+	  gst_vaapi_display_get_property(), this patch set replace it usage
+	  with g_object_set() or g_object_get().
+	  Also the internal helper cb_set_value() is removed since it is not
+	  used anymore.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 18:59:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: initialize value if they are not yet
+	  This is a difference between the GObject API and the GstVaapi one: the
+	  GValue passed to get a property value, in GObject has to be
+	  initialized with g_value_init(), but in GstVaapi is has not.
+	  In order to overcome this mismatch, this patch call g_value_init()
+	  internally only in the passed one is not already initialized.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 17:04:17 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: optimize properties setters and getters
+	  Shuffled some code to avoid to find the properties descriptor in the
+	  array twice, adding the internal functions _set_property() and
+	  _get_property().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 16:29:02 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: install properties in class
+	  Install the properties in the class as a normal GObject. Implement
+	  set_property() and get_property() vmethods.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 15:16:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: remove gst_vaapi_display_properties_init()
+	  Remove gst_vaapi_display_properties_init() since it can be unrolled in
+	  gst_vaapi_display_class_init()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 15:12:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: remove libgstvaapi_init_once()
+	  It is not required since it can be unrolled in
+	  gst_vaapi_display_class_init()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788058
+
+2017-09-22 17:50:15 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/test-display.c:
+	  tests: test-display: remove display cache tests
+	  Since commit ec3e10f6, display cache was removed. This patch removes
+	  this leftovers in the display test.
+
+2017-09-18 14:29:55 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h264/h265: decode codec data only if opened
+	  Fixes regression introduced by commit 2eb2b26a.
+	  There is a use case when the decoder set the src caps and immediatly
+	  tries to process the media codec_data, this happens before decoder is
+	  even opened, thus priv->parser is not instantiated yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787818
+
+2017-09-18 19:11:45 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  libs: encoder: change mbbrc from uint to enum
+	  Instead of handling the macroblock bitrate control as a integer, this
+	  patch changes it as a enum, which is more self documented in the
+	  GStreamer elements.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787855
+
+2017-09-18 13:55:49 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  Fix a typo in the prop string for compliance-mode
+
+2017-09-15 18:31:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: don't unref properties
+	  This patch fixes a regression introduced in commit 148f867c, since the
+	  props variable is set to object's member variable
+	  encoder->properties. And it is set in the instance initialization,
+	  thus it will not be leaked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787733
+
+2017-09-15 15:14:47 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode/libs: encoder: fix leaks of properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786321
+
+2017-08-24 21:51:22 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder.c:
+	  libs: decoder: at update_caps() decode codec_data
+	  When updating the caps in decoder, if the caps has codec_data (avC
+	  format), it has to be parsed to update the state of the decoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+2017-09-13 15:44:32 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: context: fix wrong counter of the array of attributes
+	  The counter value passed to vaCreateConfig is always +1.
+	  This is a regression caused by commit e42ec3ad.
+	  The present patch fixes wrong counting of the array of attributes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787613
+
+2017-09-13 12:23:42 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.h:
+	  libs: encoder: h265: support I/P/B QP setting seperatedly
+	  Creates 2 properties, qp-ip and qp-ib for setting different QP for P/B
+	  frames
+	  and set slice_qp_delta for each frame according to the value provided.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785923
+
+2017-09-13 12:22:07 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: support I/P/B QP setting seperatedly
+	  Creates 2 properties, qp-ip and qp-ib for setting different QP for P/B
+	  frames
+	  and set slice_qp_delta for each frame according to the value provided.
+	  In addition, remove the limitation of (<= 4) when setting
+	  slice_qp_delta.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785923
+
+2017-09-13 12:15:57 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264/h265: keep min_qp as is unless it's over init_qp
+	  Creates new variable for QP for I frame and keep it at configuration and
+	  use this for pic_init_qp and slice_qp_delta setting.
+	  Since changing min qp doesn't make sense, keep min qp as is.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785923
+
+2017-09-13 12:09:45 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.h:
+	  libs: encoder: h265: Add mbbrc property
+	  This property supports Macroblock level Bitrate Control as the
+	  following (same as h264 encoder):
+	  0: auto
+	  1: on
+	  2: off
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785917
+
+2017-09-13 12:02:53 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: Add mbbrc property
+	  This property supports Macroblock level Bitrate Control as the
+	  following:
+	  0: auto
+	  1: on
+	  2: off
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785917
+
+2017-09-13 11:39:09 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: add multi reference support
+	  This is doing the same as h264 encoder as the following:
+	  Using num_ref_frames provided and the result of the Query
+	  VAConfigAttribEncMaxRefFrames, it determines the size of reference list
+	  and perform encoding with multi reference frames as the following:
+	  1\ The num_ref_frames is being considered as the number of
+	  reference picture list0
+	  2\ Encoder adds 1 reference frame more to the reference picture list1
+	  internally if b-frame encoding.
+	  3\ If num_ref_frames is bigger than the number of refrence frames
+	  supported in the driver, it will be lowered.
+	  Also this patch includes:
+	  - Set num_negative_pics and num_positive_pics according to the number of
+	  refs.
+	  - Set delta_poc according to the number of refs.
+	  - Increase max_dec_pic_buffering according to the number of refs
+	  - Change max_num_reorder_pics according to num of bframes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783804
+
+2017-09-13 11:37:33 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.h:
+	  libs: encoder: h265: add refs property
+	  Users can provide the number of reference frame by this property,
+	  which is exaclty same as h264.
+	  The value of the property will be considered as the number of
+	  reference picture list0 and will add 1 reference frame more to the
+	  reference picture list1 internally if b-frame encoding.
+	  If the value provided is bigger than the number of refrence frames
+	  supported in the driver, it will be lowered.
+	  The maximum value is aligned to the value of the driver supported now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783804
+
+2017-09-13 11:17:26 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264/5: determine num_ref_idx_active_override_flag according to reference list
+	  Follows the specification as below:
+	  7.4.7.1 in Rec. ITU-T H.265 v4 (12/2016)
+	  num_ref_idx_active_override_flag equal to 1 specifies that the syntax
+	  element num_ref_idx_l0_active_minus1 is present for P and B slices and
+	  that the syntax element num_ref_idx_l1_active_minus1 is present for B
+	  slices.
+	  num_ref_idx_active_override_flag equal to 0 specifies that the syntax
+	  elements num_ref_idx_l0_active_minus1 and num_ref_idx_l1_active_minus1
+	  are not present.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783804
+
+2017-09-13 11:06:20 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: keep idr_period equal to keyframe period
+	  Remove FIXME code, which makes previous assignation spurious.
+	  This also means to make idr_period equal to keyframe period,
+	  which is same as h264 encoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783804
+
+2017-09-06 14:03:25 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  Request minimum buffer even if need_pool is FALSE
+	  When tee is used, it will not request a pool, but still it wants to
+	  know how many buffers are required.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=730758
+
+2017-09-05 10:58:57 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	  libs: encoder: h264_fei: VA-API 1.0 compat
+	  Use VA_ENC_PACKED_HEADER_H264_SEI compat macro for VA-API 1.0
+	  compatibility.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787322
+	  Signed-off-by: U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+2017-09-01 13:48:01 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: Fix rendering in drm display
+	  Make sure vaapisink create a va surface backed buffer pool and all
+	  required attributes get assigned correctly for drm display type.
+	  This is needed to make the below pipeline working:
+	  gst-launch-1.0 filesrc location= raw_video.mov ! videoparse format=uyvy
+	  width=320 height=240 framerate=30/1 ! vaapisink display=drm
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786954
+
+2017-08-09 18:46:09 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* tests/Makefile.am:
+	* tests/test-fei-enc-in.c:
+	* tests/test-fei-enc-out.c:
+	  FEI: Add test applications to showcase fei use case
+	  test-fei-enc-out: A simple fei encoding application to output mv, mbcode and distortion
+	  eg:
+	  ./test-fei-enc-out -i sample_320x240.nv12 -w 320 -h 240 -o out.264 -v mv.out -d out.dist -m out.mbcode -e 1
+	  test-fei-enc-in: A simple fei encoding application for testing input fei buffers
+	  eg:
+	  ./test-fei-enc-in -c h264 -o out.264 -e 4 -q 1 sample_i420.y4m
+	  Fixme: Running test-fei-enc-in in PAK mode with mv and mbcode input buffers
+	  from saved files is still not working
+	  People contributed:
+	  Wang, Yi <yi.a.wang@intel.com>
+	  Leilei <leilei.shang@intel.com>
+	  Zhong, Xiaoxia <xiaoxia.zhong@intel.com>
+	  xiaominc <xiaomin.chen@intel.com>
+	  Li, Jing B <jing.b.li@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 18:36:13 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/vaapi/Makefile.am:
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapiencode_h264_fei.c:
+	* gst/vaapi/gstvaapiencode_h264_fei.h:
+	  FEI: plugin: Add vaapih264feienc element
+	  A new FEI based encoder element for h264 is added: vaapih264feienc
+	  FEI is a an extension to VA-API which is providing low level
+	  advanced control over different stages of encoding.
+	  Extending vaapih264enc with fei support is possible, but it will
+	  make the code too much complicated and will be difficult
+	  to debug. So adding the new encoder element, but keeping
+	  the rank as 0 , vaapih264enc will stay as the primary
+	  encoder for normal use cases.
+	  The vaaih264feienc is mainly useful for customers who want to play
+	  with MotionVectors and Macroblock Predictions. Also user can
+	  do one stage of encoding(eg: only the Motion Vector Calculation)
+	  in software and offload trasformation/entroy-coding etc to
+	  Hardware (which is what PAK module is doing) using FEI element.
+	  vaapih264feienc can work in  different modes using fei-mode properoty
+	  eg: gst-launch-1.0 videotestsrc ! vaapih264feienc fei-mode=ENC+PAK ! filesink location=sample.264
+	  Important Note: ENC only mode won't produce any encoded data which is expected.
+	  But ENC alwys requires the output of PAK in order to do the inter-prediction
+	  over reconstructed frames.
+	  Similary PAK mode alway requires MV and MBCode as input, so unless there is an
+	  upstream element providing those buffers, PAK only won't work as expected.
+	  In a nutshell, ENC_PAK and the ENC+PAK modes are the only options we can verify
+	  with vaapih264feienc. But ideally, EN+PAK mode verification is enough to make sure
+	  that ENC and PAK are working as expected since ENC+PAK mode always invoke ENC and PAK
+	  separately in vaapih264feienc.
+	  People contributed:
+	  Wang, Yi <yi.a.wang@intel.com>
+	  Leilei <leilei.shang@intel.com>
+	  Zhong, Xiaoxia <xiaoxia.zhong@intel.com>
+	  xiaominc <xiaomin.chen@intel.com>
+	  Li, Jing B <jing.b.li@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-09 18:32:13 -0700  Yi A Wang <yi.a.wang@intel.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapiencode.h:
+	  FEI: plugin: Add virtual methods to base encode
+	  Two new virtual methods are added to gstvaapiencode.
+	  load_control_data():  load the FEI input buffers set by the upstream elements
+	  save_stats_to_meta(): save the FEI output buffers to Meta for downnstream elements
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-09 18:26:57 -0700  Yi A Wang <yi.a.wang@intel.com>
+
+	* gst/vaapi/Makefile.am:
+	* gst/vaapi/gstvaapifeivideometa.c:
+	* gst/vaapi/gstvaapifeivideometa.h:
+	  FEI: plugin: Add fei specific video meta
+	  GstVaapiFeiVideoMeta holds the below fei codec objects:
+	  GstVaapiEncFeiMbCode
+	  GstVaapiEncFeiMv
+	  GstVaapiEncFeiMvPredictor
+	  GstVaapiEncFeiMbControl
+	  GstVaapiEncFeiQp
+	  GstVaapiEncFeiDistortion
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-09 18:19:06 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.h:
+	* gst-libs/gst/vaapi/gstvaapifeienc_h264.c:
+	* gst-libs/gst/vaapi/gstvaapifeienc_h264.h:
+	* gst-libs/gst/vaapi/gstvaapifeipak_h264.c:
+	* gst-libs/gst/vaapi/gstvaapifeipak_h264.h:
+	  FEI: libs: Add FEI encoder
+	  Adding FEI encoder to core lib.
+	  The code is splitted into three session:
+	  1: gstvaapiencoder_h264_fei.{h,c}
+	  This is the replica of gstvaapiencoder_h264.{c,h} but with FEI.
+	  All the modes ENC, PAK and ENC_PAK are running based
+	  the code in these files.
+	  2: gstvaapifeienc_h264.{h,c}
+	  Abstract implementation intended for ENC (only VME) operation.
+	  3: gstvaapifeipak_h264.{h,c}
+	  Abstrct implementation intended for PAK (only the PAK module)
+	  Right now ENC_PAK, ENC and PAK are running based on code
+	  in gstvaapiencoder_h264_fei.{h,c}. The abstract implementations
+	  in gstvaapifeienc_h264.{h,c} and gstvaapifeipak_h264.{h,c} are
+	  needed if user request for ENC+PAK mode operation.
+	  ENC+PAK: Here we need to invoke two sequence of
+	  vaBeginPicture/vaRenderPicutre/vaEndPicture for each frame,
+	  first for the ENC only and the second for PAK only.
+	  Each mode associated with separate context ,but same pool of surfaces are
+	  shared between the modes.
+	  This is more useful once we have custom BRC algorithms.
+	  Other Contributors:
+	  Wang, Yi <yi.a.wang@intel.com>
+	  Leilei <leilei.shang@intel.com>
+	  Zhong, Xiaoxia <xiaoxia.zhong@intel.com>
+	  xiaominc <xiaomin.chen@intel.com>
+	  Li, Jing B <jing.b.li@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 17:54:27 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.h:
+	  FEI: libs: Add fei codec objects to GstVaapiEncPicture
+	  All the codec objects(vaapi buffers) supposed to be
+	  submited in vaRenderPicutre are associated with a GstVaapiEncPicture
+	  for each frame, follow the same design for FEI too.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 16:05:13 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapicodedbufferproxy.c:
+	* gst-libs/gst/vaapi/gstvaapicodedbufferproxy.h:
+	* gst-libs/gst/vaapi/gstvaapicodedbufferproxy_priv.h:
+	  FEI: libs: Add fei codec objects in codedbufferproxy
+	  MbCode, MV and Distortion buffers (fei codec objects)
+	  can be treated as output of different fei modes based user request.
+	  For eg: MbCode and MV are the output of ENC only. MbCode, MV and Dist
+	  can be dumped as output in ENC_PAK mode for analysis purpose.
+	  So treating them as a part of CodedBufferProxy too.
+	  Here we avoided Qp, MbControl and MvPredictor codec objects since
+	  there is no practical use case of treating them as "output buffers".
+	  Other contributors:
+	  Zhong, Xiaoxia <xiaoxia.zhong@intel.com>
+	  xiaominc <xiaomin.chen@intel.com>
+	  Leilei <leilei.shang@intel.com>
+	  Li, Jing B <jing.b.li@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 15:49:21 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurfaceproxy.c:
+	* gst-libs/gst/vaapi/gstvaapisurfaceproxy.h:
+	* gst-libs/gst/vaapi/gstvaapisurfaceproxy_priv.h:
+	  FEI: libs: Add fei codec objects to surface proxy
+	  Add fei codec objects to surface proxy since handling the
+	  fei buffers(codec objects here) external to gstvaapisurfaceproxy
+	  will make the code complicated. Especially considering the behavior
+	  of encoder where the input frame order from upstream and output
+	  frame order to the downstream are not sequential.
+	  Other contributors:
+	  Zhong, Xiaoxia <xiaoxia.zhong@intel.com>
+	  xiaominc <xiaomin.chen@intel.com>
+	  Leilei <leilei.shang@intel.com>
+	  Li, Jing B <jing.b.li@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 15:35:10 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapifei_objects.c:
+	* gst-libs/gst/vaapi/gstvaapifei_objects.h:
+	* gst-libs/gst/vaapi/gstvaapifei_objects_priv.h:
+	  FEI: Add codec objects for fei usecase
+	  There are 6 new va buffer types, each defined as a specific codec object.
+	  Borrowed the code from gstvaapicodecobject , but made a clear separation
+	  to avoid any possible mess-up. Because unlike the other gstvaaicodecobjects,
+	  feicodecobjects can be shared between elements and also can be accessed
+	  from different thread.
+	  Unlike the other fei codecs object, VAEncMiscParameterTypeFEIFrameControl
+	  object is not shared between elements.So we utilize the already
+	  existing gst_vaapi_enc_misc_param_new(), but still keeping the code
+	  in gstvaapfei_objects_priv.h in order to have a better
+	  code readability.
+	  Fixme:
+	  -- Probably we need _locked_map() and _unlocked_map()
+	  -- Context can be associated with PreEnc(not just Enoder)
+	  once we have the proper support inplace, but for now we don't have
+	  PreEnc support, so should be safe enough to use GstVaapiEncoder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 14:22:12 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapifeiutils_h264.c:
+	* gst-libs/gst/vaapi/gstvaapifeiutils_h264.h:
+	  FEI: libs: add H264 fei specific utility functions
+	  Added enum/flag type definitions for a number of FEI
+	  input and output parameters.
+	  Original author of the patch: Wang, Yi <yi.a.wang@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+	  Signed-off-by: Wang, Yi <yi.a.wang@intel.com>
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-09 14:10:16 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  FEI: libs: Add virtual method for secondary context creation.
+	  Add a new vitrual method ensure_secondary_context to the
+	  base encoder which is only required for the FEI entrypoint, that too
+	  only when user configures the ENC+PAK mode. ENC+PAK mode is not something
+	  supported directly by libva or driver, but this can be enabled
+	  from the middleware.
+	  Original Author of this idea: Leilei Shang <leilei.shang@intel.com>
+	  Signed-off-by: Leilei Shang <leilei.shang@intel.com>
+	  Signed-off-by: xiaominc <xiaomin.chen@intel.com>
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 14:05:03 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  FEI: libs: make sure the default context creation works as expected.
+	  Current code always guess the entrypoint during init phase in case
+	  if there is no entrypoint already configured in GstVaapiContextInfo.
+	  Make sure FEI Entrypoint is not messing up with this logic.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 13:45:40 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapicontext.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  FEI: libs: Add FEI functional mode configuration
+	  FEI Entrypoint can work in either one of the 3 different modes:
+	  VA_FEI_FUNCTION_ENC, VA_FEI_FUNCTION_PAK or VA_FEI_FUNCTION_ENC_PAK.
+	  Add infrastructure in gstvaapicontext and gstvaapiencoder for this
+	  functioal mode configuration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 13:02:24 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiprofile.h:
+	  FEI: libs: Add FEI Entrypoint mapping
+	  Define the new mapping GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI
+	  for VAEntrypointFEI.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-09 12:58:29 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	  FEI: Add support for FEI conditional build
+	  FEI(Flexible Encoding Infrastructure) is an extension
+	  to VA API. Define USE_H264_FEI_ENCODER based on
+	  fei header file and required structures availability.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785712
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784667
+
+2017-08-28 17:34:50 -0700  Orestis Floros <orestisf1993@gmail.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: force add h264 SVC profiles in caps
+	  When vaapih264dec's base-only profile is set to TRUE, fake SVC profile
+	  support in caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732266
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-28 17:32:57 -0700  Orestis Floros <orestisf1993@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: decode SVC base layer only
+	  Drops non-base NALs when the base-only property is set to TRUE.
+	  This modifies the behavior for MVC streams with base-only too: All the
+	  non-base units are dropped before they are decoded instead of dropping
+	  the non-base frames.
+	  The relevant part from the H264 spec is:
+	  > Decoders that conform to one or more of the profiles specified in
+	  Annex A rather than the profiles specified in Annexes G or H shall
+	  ignore (remove from the bitstream and discard) the contents of all NAL
+	  units with nal_unit_type equal to 14, 15, or 20.
+	  To eliminate side effects from the offending units:
+	  - PPS's with a broken seq_parameter_set_id (referring to dropped subset
+	  SPS's) are ignored.
+	  - The NAL parsing is skipped and their flags are set to
+	  GST_VAAPI_DECODER_UNIT_FLAG_SKIP.
+	  - Prefix units are not stored in prev_pi. Otherwise, parse_slice() would
+	  use them even if they are flagged to be skipped. Subset SPS's and slice
+	  extension units are not stored there either.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732266
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-28 17:28:04 -0700  Orestis Floros <orestisf1993@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: check nalu validity in parser info finalize
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732266
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+2017-08-28 19:20:42 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: remove unused cast macro
+	  Remove internal macro to cast structure that are already declared
+	  in the header.
+
+2017-08-28 19:09:07 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.h:
+	  Revert "libs: encoders: remove unused cast macros"
+	  This reverts commit fd7d38f7d26b11e592638092b4073b5c1764f255.
+
+2017-08-28 18:32:32 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.h:
+	  libs: encoders: remove unused cast macros
+	  They are only used inside the code, where another macro is defined.
+	  Thus these exported macros have no use.
+
+2017-08-24 20:26:11 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: improve code-style
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786173
+
+2017-08-25 16:22:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicompat.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: handle deprecated enum
+	  In VA-API 1.0 the enum VAEncPackedHeaderH264_SEI is deprecated, and
+	  instead VAEncPackedHeaderRawData should be used.
+	  This patch creates a compatibility symbol,
+	  VA_ENC_PACKED_HEADER_H264_SEI, to expose the used enum according the
+	  VA-API version.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-08-25 16:07:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiprofile.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: guard deprecated symbols
+	  In VA-API 1.0 the H.264 baseline profile is deprecated. This patch
+	  guards the H.264 baseline usage. Consider this commit as a
+	  continuation of commit e0e0a474
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-08-17 12:54:47 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	* meson_options.txt:
+	  Revert "build: check for libva-2.0"
+	  This reverts commit 8f2eb70803099d4b533ecc10fc259041d8714210.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-08-17 12:44:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicompat.h:
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: macro to get a renamed value in VA-API 1.0
+	  In VA-API 1.0 the union bits in VAEncMiscParameterBufferROI has
+	  renamed one member from roi_value_is_qp_delat to
+	  roi_value_is_qp_delta, which is the correct name.
+	  In order to keep back compatibility a macro has added to access this
+	  union member.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-08-22 11:37:28 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.h:
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: include main gstgl header
+	  Instead including particular gstgl header files in a header file
+	  that doesn't export a gstgl symbol, the main gstgl header file is
+	  included in gstvaapipluginutil.c where the symbols are used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786597
+
+2017-08-18 18:00:24 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: fix enum namespace
+
+2017-08-17 12:26:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to 3f4aa96
+
+2017-08-17 11:03:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: remove spurious assignation
+	  Coverity scan bug:
+	  An assigned value that is never used may represent unnecessary
+	  computation, an incorrect algorithm, or possibly the need for cleanup
+	  or refactoring.
+	  ip_period is assigned first to be rewritter inmediatly after. The
+	  first assignation is spurious.
+
+2017-08-15 17:36:51 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: fix mismatch of the return type
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786307
+
+2017-08-10 13:34:21 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapidecoder_unit.h:
+	* gst-libs/gst/vaapi/gstvaapiminiobject.h:
+	* gst-libs/gst/vaapi/gstvaapiutils.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h264_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_x11.h:
+	* gst-libs/gst/vaapi/libgstvaapi_priv_check.h:
+	* gst-libs/gst/vaapi/meson.build:
+	  libs: remove unused header
+	  Since libgstvaapi is not distributed, there is no need to check for
+	  private header inclusion. Thus removing it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786119
+
+2017-08-10 13:27:11 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h264.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h264_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2_priv.h:
+	  libs: utils: move gstvaapisurface.h to private headers
+	  Since the utils don't expose API defined in gstvaapisource.h, it is
+	  moved to their private headers where they are used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786119
+
+2017-08-10 13:26:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h264.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.h:
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_mpeg2.h:
+	  libs: utils: remove va.h include in header
+	  And include gstvaapicompat.h in the C files, since the VA-API is not
+	  exposed in the headers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786119
+
+2017-08-10 13:24:06 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: remove va.h include
+	  Since it is already managed by gstvaapicompat.h
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786119
+
+2017-08-10 13:11:04 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicodec_objects.h:
+	* gst-libs/gst/vaapi/gstvaapicompat.h:
+	* gst-libs/gst/vaapi/gstvaapidecoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	* meson.build:
+	  build: consolidate the VA sub API includes
+	  Include all VA sub APIs headers in a single point (gstvaapicompat.h),
+	  since they are all already included in va.h after VA-API 0.38.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786119
+
+2017-08-10 13:09:27 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	  build: check for va_vpp.h
+	  Thus, in config.h the macro HAVE_VA_VA_VPP_H is defined. This will
+	  allow us to handle the inclusion of the header better.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786119
+
+2017-08-11 20:22:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: don't export symbols by default
+	  Only plugin entry points should be exported.
+
+2017-08-09 19:06:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: remove spurious code
+	  Coverity scan:
+	  Logically dead code: The indicated dead code may have performed some
+	  action; that action will never occur.
+	  By using pointer arithmetic is impossible to get NULL.
+
+2017-08-08 18:52:37 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: context: use attribs index instead pointers
+	  Coverity scan bug:
+	  Out-of-bounds write. This could cause an immediate crash or incorrect
+	  computations.
+	  Coverity basically found that it is possible to assign more than 4
+	  attribs in the array.
+	  In my opinion this was produced because code pattern used pointer
+	  arithmetic, which is not readable nor maintainable.
+	  This patch refactors config_create() to use an array index rather than
+	  pointer arithmetic. Also a run-time check for index size was added.
+
+2017-08-08 17:38:51 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: remove spurious code
+	  Coverity scan bug:
+	  An unsigned value can never be negative, so this test will always
+	  evaluate the same way.
+	  As len is guint32, there is no need to check it if it is equal or
+	  bigger than zero.
+
+2017-08-08 17:34:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: initialize variable
+	  Coverity scan bug:
+	  The variable will contain an arbitrary value left from earlier
+	  computations.
+	  Variable base_only is fetched from base-only property, and it may be
+	  not assigned. It needs to be initialized.
+
+2017-08-08 17:29:54 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: windows: wayland: fail if cannot remove last frame
+	  Converity scan bug:
+	  If the function returns an error value, the error value may be
+	  mistaken for a normal value.
+	  If g_atomic_pointer_compare_and_exchange() fails because the frame is
+	  not the last one, the function fails. Thus, logging an info message.
+
+2017-08-08 17:21:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	  libs: utils: glx: check return value
+	  Coverity scan bug:
+	  If the function returns an error value, the error value may be
+	  mistaken for a normal value.
+	  Function sscanf returns the number of assignations done. Validate this
+	  return value with the number of expected variables to match.
+
+2017-08-08 17:12:06 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiobject.c:
+	  libs: vaapi: object: remove unrequired NULL check
+	  Coverity scan bug:
+	  Dereference after null check: Either the check against null is
+	  unnecessary, or there may be a null pointer dereference.
+	  Variable klass has been validated as non-NULL several time before in
+	  gst_vaapi_object_new() function, so there is no need to check it
+	  again.
+
+2017-08-08 17:06:17 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: remove spurious assignation
+	  Coverity scan bug:
+	  An assigned value that is never used may represent unnecessary
+	  computation, an incorrect algorithm, or possibly the need for cleanup
+	  or refactoring.
+	  ip_period is assigned first to be rewritter inmediatly after. The
+	  first assignation is spurious.
+
+2017-08-08 16:50:39 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: fix copy & paste error
+	  Coverity scan bug:
+	  The copied code will not have its intended effect.
+	  This is a bug from commit cdaf15b2, where the intention is to
+	  initialize RefPicList1 while setting RefPicList0.
+
+2017-08-08 16:33:44 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fix possible integer overflow
+	  Coverity scan bug:
+	  Unintentional integer overflow. The expression's value may not be what
+	  the programmer intended, because the expression is evaluated using a
+	  narrow (i.e. few bits) integer type.
+	  Cast operator to guint64 before computation to avoid narrowing.
+	  merge with 3c5a6add
+
+2017-08-08 16:12:13 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg4.c:
+	  libs: decoder: mpeg4: fail if return value is not OK
+	  Coverity scan bug:
+	  An assigned value that is never used may represent unnecessary
+	  computation, an incorrect algorithm, or possibly the need for cleanup
+	  or refactoring.
+	  In the return value of decode_slice() or
+	  gst_mpeg4_parse_video_packet_header() are not success, thus fail
+	  decode_packet() function.
+
+2017-08-08 15:49:27 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: check for null
+	  Coverity scan bug:
+	  Dereference after null check: Either the check against null is
+	  unnecessary, or there may be a null pointer dereference.
+	  While looking for hte lowest poc, according to rest of the code, the
+	  picture in the dbp (decoded picture buffer) might be NULL, thus we
+	  could check for a NULL picture before assigned as found.
+	  Also, split a comma operator because it is considered as a bad
+	  practice because it possible side effects.
+
+2017-08-08 15:38:16 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: untaint loop control variable
+	  Coverity scan bug:
+	  Scalars (for example, integers) are not properly
+	  bounds-checked (sanitized) before being used as array or pointer
+	  indexes, loop boundaries, or function arguments are considered as
+	  tainted.
+	  In this case, num_nals were not checked before used as loop control.
+
+2017-08-08 13:46:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: remove unrequired NULL check
+	  Coverity scan bug:
+	  Dereference after null check: Either the check against null is
+	  unnecessary, or there may be a null pointer dereference.
+	  In the original commit for fill_picture_gaps() (commit 5abd2b90) the
+	  prev_picture could be NULL, that's why the code did a null check. But,
+	  since commit 52adebe7, the previous reference frames are tracked, thus
+	  there is no need to check null anymore.
+
+2017-08-03 23:17:44 +0300  orestisf <orestisf1993@gmail.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: fix gst_caps_new_simple call
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732265
+
+2017-07-25 22:25:10 +0300  orestisf <orestisf1993@gmail.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: force add h264 MVC profiles in caps
+	  When vaapih264dec's base-only profile is set to TRUE, fake MVC profile
+	  support in caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732265
+
+2017-07-25 22:54:30 +0300  orestisf <orestisf1993@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: decode MVC base view only
+	  If processed SPS has mvc profile and the configuration is set to
+	  base-only, the frame is drop.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732265
+
+2017-07-25 22:06:56 +0300  orestisf <orestisf1993@gmail.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode_props.c:
+	  vaapidecode: set h264 base-only to decoder
+	  Set the base-only value when property is set and the internal
+	  decoder is already instantiated or when the internal decoder
+	  is created.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732265
+
+2017-07-25 22:03:34 +0300  orestisf <orestisf1993@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.h:
+	  libs: decoder: h264: add setter for base-only mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732265
+
+2017-07-25 22:01:37 +0300  orestisf <orestisf1993@gmail.com>
+
+	* gst/vaapi/gstvaapidecode_props.c:
+	* gst/vaapi/gstvaapidecode_props.h:
+	  vaapidecode_props: h264: add base-only property
+	  https://bugzilla.gnome.org/show_bug.cgi?id=732265
+
+2017-08-01 11:11:55 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: missing property enum documentation
+
+2017-08-02 14:54:53 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: add multi reference support
+	  Using num_ref_frames provided and the result of the Query
+	  VAConfigAttribEncMaxRefFrames, it determines the size of reference list
+	  and perform encoding with multi reference frames as the following:
+	  1\ The num_ref_frames is being considered as the number of
+	  reference picture list0
+	  2\ Encoder adds 1 reference frame more to the reference picture list1
+	  internally if b-frame encoding.
+	  3\ If num_ref_frames is bigger than the number of refrence frames
+	  supported in the driver, it will be lowered.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783803
+
+2017-08-02 14:53:34 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: add refs property
+	  Users can provide the number of reference frame by this property.
+	  The value of the property will be considered as the number of
+	  reference picture list0 and will add 1 reference frame more to the
+	  reference picture list1 internally if b-frame encoding.
+	  If the value provided is bigger than the number of refrence frames
+	  supported in the driver, it will be lowered.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783803
+
+2017-07-28 15:27:20 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  libs: encoder: implements gst_vaapi_encoder_ensure_max_num_ref_frames
+	  This function will query VAConfigAttribEncMaxRefFrames to get the
+	  maximum number of reference frames supported in the driver.
+	  This will be used for h264/h265 encoding.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783803
+
+2017-08-01 18:38:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h265.c:
+	  vaapiencode: h265: compare an unsigned int if not zero
+	  An unsigned value can never be negative, so this test (greater than
+	  zero) will always evaluate the same way. Thus change it to just if
+	  it's not zero.
+
+2017-08-01 18:10:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: check gst_gl_ensure_element_data() return value
+	  Refactor gst_vaapi_plugin_base_create_gl_context() in order to check
+	  the return value of gst_gl_ensure_element_data(). The result is a code
+	  bit cleaner.
+
+2017-08-01 17:59:38 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: avoid dead code detection
+	  By using #elif macro, the static code analysis would stop to detect
+	  these lines as dead code. Also it is inforced the mutually exclusive
+	  environments.
+
+2017-08-01 17:39:04 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: don't shift by negative since it's undefined
+	  The function g_bit_nth_lsf() may return -1 if the request bit position
+	  is not avaible. Thus, this patch check if the return value is not -1
+	  in order to continue.
+
+2017-08-01 17:29:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: fix memory leak
+
+2017-08-01 17:23:48 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: fix memory leaks
+
+2017-07-27 10:54:00 +0000  Tomas Rataj <rataj28@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: when appending formats change pointers to indexes
+	  Thus, it fixes an invalid read when YV12 or I420 are not supported by
+	  the driver.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785085
+
+2017-07-19 12:02:40 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: Add uncompliant mode reducing coded buffer size
+	  Added a new property "compliance-mode", which default is the normal
+	  strict compliant mode.
+	  The second mode, "restrict-buf-alloc", is to limit the coded buffer
+	  allocation size to improve performance in some specific Intel
+	  platforms (there is asignificant performance improvement in parallel
+	  encodings). Under this new mode, we use the MinCR field in A.3.1 for
+	  pre-calculating the coded-buffer size.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784590
+
+2017-07-05 17:13:44 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_h264_priv.h:
+	  libs: utils_h264: Extend LevelLimit table with MinCR field
+	  Add MinCR(Minimum Compression Ratio) field to GstVaapiH264LevelLimits
+	  based on Annex A.3
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784590
+
+2017-07-11 17:29:13 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: libva 1.0 changed the logging
+	  The logging mechanism in libva has changed it's functions
+	  signatures. This patch updates that for libva versions >= 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-11 17:27:32 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: libva 1.0 deprecated baseline
+	  libva 1.0 deprecated H.264 baseline profile and FMO support
+	  (commit b4f332b3).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-26 20:03:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	* meson_options.txt:
+	  build: check for libva-2.0
+	  Check for libva-2.0 since libva's developers decided to increase the
+	  library's version number.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-11 16:55:26 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	  build: blacklist only libva 0.99.0
+	  Intel's MSDK uses libva 0.99.0, meanwhile open source libva bumped
+	  its API version to 1.0.0. Thus we have to blacklist only the MSDK's
+	  libva (0.99.0)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784398
+
+2017-07-26 20:30:37 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/meson.build:
+	  build: meson: remove gstvaapidisplaycache.c
+	  This is a missing bit of commit ec3e10f6
+
+2017-07-26 09:53:10 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* configure.ac:
+	  configure: do not break configure if gtk+-3.0 devel missing
+	  Fix PKG_CHECK_MODULES rule for with_gtk=check condition to
+	  set USE_GTK=0 if gtk+-3.0 is not available.
+	  Since commit 85856c29a70d6de4aea5b708e04e9eb418190623
+	  Author: Hyunjun Ko <zzoon@igalia.com>
+	  Date:   Wed Jul 5 15:59:43 2017 +0900
+	  tests: elements: add testsuite of vaapi context
+	  ...configure fails if gtk+-3.0 development files are missing.
+	  The "with_gtk" option defaults to "check" in configure.ac
+	  which implies that if it is not explicitly requested then
+	  configure will only enable it if it's available on the system.
+	  However, the PKG_CHECK_MODULES rule that get's activated on
+	  "check" condition did not provide default when gtk+-3.0 devel
+	  packages are not found on the system.  Thus, it resulted in
+	  configure failure.
+	  Signed-off-by: U. Artie Eoff <ullysses.a.eoff@intel.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785452
+
+2017-07-05 15:59:43 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* configure.ac:
+	* tests/elements/Makefile.am:
+	* tests/elements/test-vaapicontext.c:
+	  tests: elements: add testsuite of vaapi context
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766704
+
+2017-07-05 15:32:43 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: fail if surface display is different
+	  Replacing GstVaapiDisplay during rendering might be hiding problems
+	  at some cases, even though it's safe currently since we use cache
+	  of GstVaapidisplay.
+	  Play safe by failing if this happens.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766704
+
+2017-07-05 15:31:55 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideocontext.h:
+	  videocontext: support "gst.vaapi.app.Display" context
+	  Through "gst.vaapi.app.Display" context, users can set their own VADisplay
+	  and native display of their backend.
+	  Attributes:
+	  - display : pointer of VADisplay
+	  - x11-display : pointer of X11 display (Display *), if they're using.
+	  This patch creates GstVaapidisplayX11 if information provided through
+	  "gst.vaapi.app.Display"
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766704
+
+2017-07-05 14:33:38 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.h:
+	  libs: display: x11: add gst_vaapi_display_x11_new_with_va_display()
+	  Implements new API function so that users could create GstVaapiDisplay
+	  with their own VADisplay within a native display as backend.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766704
+
+2017-07-05 14:32:35 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: pass display info when foreign display
+	  When creating a GstVaapiDisplay using a foreign VADisplay, and render
+	  with that display, it also requires native display of the backend.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766704
+
+2017-06-26 21:18:25 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_drm.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_x11.c:
+	* gst-libs/gst/vaapi/gstvaapidisplaycache.c:
+	* gst-libs/gst/vaapi/gstvaapidisplaycache.h:
+	  libs: display: remove cache
+	  Remove a bunch of code that handles the VADisplay cache, since the
+	  context sharing should be doing this correctly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=747946
+
+2017-07-13 10:56:18 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* tests/elements/Makefile.am:
+	* tests/elements/test-vaapipostproc.c:
+	  tests: elements: add test for vaapipostproc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754885
+
+2017-07-12 18:25:15 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  postproc: reconfigure when width or height changes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=754885
+
+2017-07-17 18:53:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp9: array terminated in zeros
+	  There is a crash when setting ref-pic-mode since the #GEnumValue
+	  array is not terminated with a structured with all memvers being
+	  zero.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785032
+
+2017-07-13 16:43:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: add plugin documentation
+	  Comment how the profile is set and other parameters.
+
+2017-05-26 15:19:00 +0000  Matt Staples <staples255@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: push frames as soon as possible
+	  Push frames downstream as soon as possible instead of waiting until
+	  they are ejected from the DPB.
+	  This patch makes the decoder not comply with the H.264 specification,
+	  but it is required for some video cameras.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=762509
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-07-10 19:27:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode_props.c:
+	  vaapidecode_props: h264: set low-latency in decoder
+	  Set the low-latency property if the H264 decoder is already
+	  instantiated, thus you could change the behavior in run-time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783588
+
+2017-07-06 20:00:15 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: set h264 low latency to decoder
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783588
+
+2017-06-14 18:30:53 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.h:
+	  libs: decoder: h264: add getter/setter for low latency mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783588
+
+2017-06-14 18:31:18 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode_props.c:
+	* gst/vaapi/gstvaapidecode_props.h:
+	  vaapidecode_props: h264: add low latency property
+	  Adding support for private data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783588
+
+2017-06-14 18:23:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/Makefile.am:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecode_props.c:
+	* gst/vaapi/gstvaapidecode_props.h:
+	* gst/vaapi/meson.build:
+	  vaapidecode_props: add skeleton for h264 decoder properties
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783588
+
+2017-06-14 17:07:30 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: properties callback in decoders map
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783588
+
+2017-07-07 12:01:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: find python3 via python3 module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783198
+
+2017-06-09 14:47:40 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: submit sps in case of IDR picture
+	  If the picture is IDR, also submit a SPS header.
+	  This means when frame number reaches to keyframe-period or an force
+	  key unit event arrives, we insert SPS/PPS again.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776712
+
+2017-06-09 14:47:16 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: set the frame as IDR if forced key unit
+	  GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME() is a flag usually used to manage
+	  the `frame-lost` event in the case of streaming, such as RTP.
+	  In case of this event, it is needed to start new GOP rather than just
+	  produce an I-frame.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776712
+
+2017-04-05 14:48:46 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.h:
+	  libs: encoder: h264: insert AU delimiter
+	  Insert an AUD as the first NAL of each encoded frame.
+	  Some applications require Access Unit Delimiter for decoding the
+	  stream.
+	  The AU delimeter insertion is done only when the aud parameter is
+	  TRUE (by default is disabled). The reason of this it is because this
+	  header is only available from Intel Gen9 and the VA intel driver
+	  should be 1.8 or superior. Otherwise, the output will be corrupted.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=776712
+	  Signed-off-by: Victor Jaquez <vjaquez@igalia.com>
+
+2017-06-29 12:50:26 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: initialize all elements of view_ids
+	  Currently when num_views is changed by multiview-mode on sink caps, it produces
+	  wrong MVC encoded stream since the array view_ids is not set properly according
+	  to changed num_views.
+	  So this patch initializes all of the array sequentially to handle this case.
+	  Side effect is not going to happen by this patch since this array is being
+	  handled by num_views.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784321
+
+2017-06-27 14:30:54 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  Revert "encoder: h264: Use high profile by default"
+	  This reverts commit 4aec5bdd7207fc0e45813ef14c9c0ad5174a8f75.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-27 16:03:37 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: set profile via capsfilter
+	  Until now, the encoder ignored the profile in src caps and chose one
+	  according with the given parameters. But the encoder must honor the
+	  profile specifed in src caps.
+	  This patch do that, and if the encoder needs to choose the profile,
+	  it will do it by following these rules:
+	  1\ If given parameters are not compatible with given profile, the
+	  encoder will bail out with an error.
+	  2\ The encoder will choose the higher profile indicated in the
+	  src caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-27 13:14:31 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: set profile to src caps
+	  So far vaapi encoder does not set profile to src caps. This patch makes it
+	  setting profile to src caps, which is determined by itself.
+	  In addition, if encoder chose different profile, which is not negotiated with
+	  downstream, we should set compatible profile to make negotiation working.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-22 09:56:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	* gst/vaapi/gstvaapiencode_h264.h:
+	  vaapiencode: h264: verify if requested profile is supported
+	  Check if the requested profile in source caps, is supported by the
+	  VA driver. If it is not, an info log message is send saying that
+	  another (compatible?) profile will be used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-21 21:49:27 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: improve set_config() vmethod
+	  First check if downstream requests ANY caps. If so, byte-stream is
+	  used and the profile will be choose by the encoder. If dowstream
+	  requests EMPTY caps, the negotiation will fail.
+	  Lately, byte-stream and profile are looked in the allowed caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-21 19:30:55 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: check for avc in set_config()
+	  The check for avc stream format was done in the vaapi encoder's
+	  vmethod get_caps(), but that is wrong since it has to be check
+	  when encoder set_format().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-29 12:49:24 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: set multivew-mode flags to src caps
+	  vaapipostproc didn't negotiate the proper multiview caps losing
+	  downstream information.
+	  This patch enables the playing of MVC encoded stream by setting
+	  the proper multiview mode/flags and views to src caps, according
+	  to sink caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784320
+
+2016-11-22 15:52:47 +0000  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: add support for DMABuf caps feature
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+	  Signed-off-by: Julien Isorce <j.isorce@samsung.com>
+
+2017-06-01 19:42:20 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: add support for DMABuf caps feature
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+	  Original-patch-by: Julien Isorce <j.isorce@samsung.com>
+
+2017-06-23 12:12:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  vaapipluginbase: force dmabuf allocator if DMABuf caps feature
+	  Instantiate all dmabuf allocator for src pad buffer pool if the
+	  src caps ask for memory:DMABuf feature.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2016-11-22 23:26:05 +0000  Julien Isorce <j.isorce@samsung.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipluginutil.h:
+	  vaapipluginutil: add support for DMABuf caps feature
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+	  Signed-off-by: Julien Isorce <j.isorce@samsung.com>
+	  Signed-off-by: Victor Jaquez <vjaquez@igalia.com>
+	  vaapipluginutil: add support for DMABuf caps feature
+
+2017-06-01 19:13:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  vaapipluginbase: dmabuf memory map trial for raw caps
+	  Only push dmabuf-based buffers with raw caps if gst_memory_map()
+	  succeeds. Otherwise, use the the vaapi surfaces allocator.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774649
+	  Original-patch-by: Julien Isorce <j.isorce@samsung.com>
+
+2016-06-08 19:11:15 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: add gst_vaapi_dmabuf_can_map()
+	  This new method checks the specified allocator can create GstMemory that can
+	  be mapped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=755072
+
+2017-06-23 17:33:03 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: fix regression with video metas
+	  There is another regression with 7a206923 when setting the video
+	  info for the video meta, it should be the one from the image's
+	  allocator rather from the allocation caps.
+	  Test pipeline:
+	  gst-launch-1.0 filesrc location=bug766184.flv ! decodebin \
+	  ! tee ! videoconvert ! videoscale                     \
+	  ! video/x-raw, width=1920, height=1080 ! xvimagesink
+
+2017-06-23 14:38:10 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  plugins: update buffer size with the one reported by allocator
+	  There is a regression in 7a206923, since the buffer pool ditches all
+	  the buffers generated by them because the pool config size is
+	  different of the buffer's size.
+	  Test pipeline:
+	  gst-launch-1.0 filesrc location=big_buck_bunny_1080p_h264.mov \
+	  ! qtdemux ! vaapih264dec ! vaapipostproc ! xvimagesink    \
+	  --gst-debug=GST_PERFORMANCE:5
+	  The allocator may update the buffer size according to the VA surface
+	  properties. In order to do this, the video info is modified when the
+	  allocator is created, which reports through the allocation info the
+	  updated size, and set it to the pool config.
+
+2017-06-14 21:40:33 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: initialize active_sps/pps in reset
+	  Since commits in https://bugzilla.gnome.org/show_bug.cgi?id=781142 landed,
+	  they introduced regression in seek.
+	  Formerly, once seek is done, decoder drops P-frames until I-frame arrives.
+	  But since the commits landed, it doesn't drop P-frame and does try to
+	  decode it continuously because active_sps is still alive. See ensure_sps function.
+	  But there are prev_frames and prev_ref_frames reset already, then it
+	  causes assertion.
+	  So it's necessary to reset active_sps/pps also in reset method.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783726
+
+2017-06-15 13:24:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: fix compilation with old versions of libva
+	  There are some symbols that are not used when compiling with old
+	  version of libva and those generates a compilation error.
+	  Original-patch-by: Matt Staples <staples255@gmail.com>
+
+2017-06-09 14:02:20 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: Fix the quality level clamping
+	  Change the hard-coded range of quality-level from {1-8} to {1-7},
+	  since it is the range Intel Open source driver supports.
+	  Also perform the range clamping only if the user provided
+	  quality-level is greater than the max-range suppored by the driver,
+	  because there could be non-intel drivers giving lower value than
+	  the hard-coded max value 7.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783567
+
+2017-04-06 19:35:27 +0200  Víctor Manuel Jáquez Leal <victorx.jaquez@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_jpeg.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: log out the name of the profile
+	  Instead of printing a number, it is more readable to log out, in
+	  case of error, the name of the failing profile.
+
+2017-05-31 12:36:17 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: changes raw number of profile to macro name of its
+	  Changes raw number of profile to macro name of its to improve readability.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757941
+
+2017-06-09 17:00:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: remove allocation_vinfo private attribute
+	  There is no need to keep this attribute internally since it is
+	  already managed by the allocator.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783599
+
+2017-06-09 15:02:08 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: refactor set_config()
+	  Refactor the set_config() virtual method considering a cleaner
+	  approach to allocator instanciation, if it it not set or if it is
+	  not valid for the pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783599
+
+2017-06-09 13:05:36 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  plugins: distinguish allocation and negotiation caps
+	  The vaapi video decoders might have different allocation caps from
+	  the negotiation caps, thus the GstVideoMeta shall use the negotiation
+	  caps, not the allocation caps.
+	  This was done before reusing gst_allocator_get_vaapi_video_info(),
+	  storing there the negotiation caps if they differ from the allocation
+	  ones, but this strategy felt short when the allocator had to be reset
+	  in the vaapi buffer pool, since we need both.
+	  This patch adds gst_allocator_set_vaapi_negotiated_video_info() and
+	  gst_allocator_get_vaapi_negotiated_video_info() to store the
+	  negotiated video info in the allocator, and distinguish it from
+	  the allocation video info.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783599
+
+2017-06-08 19:32:35 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: rename qdata quarks and ids
+	  Also the parameter names were renamed to reflect their origin
+	  and purpose.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783599
+
+2017-06-08 16:05:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: rename local variables
+	  Renamed local video info structure names in set_config() vitual
+	  method. The purpose of their renaming is to clarify the origin
+	  of those structures, whether come from passed caps parameter
+	  (new_allocation_vinfo) or from the configured allocator
+	  (allocator_vinfo).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783599
+
+2017-06-08 15:49:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: rename video info structures
+	  Renamed private GstVideoInfo structure video_info to allocation_vinfo
+	  and alloc_info to negotiated_vinfo.
+	  The purpose of these renaming is to clarify the origin and purpose of
+	  these private variables:
+	  video_info (now allocation_vinfo) comes from the bufferpool
+	  configuration. It describes the physical video resolution to be
+	  allocated by the allocator, which may be different from the
+	  negotiated one.
+	  alloc_info (now vmeta_vinfo) comes from the negotiated caps in
+	  the pipeline. It represents how the frame is going to be mapped
+	  using the video meta.
+	  In Intel's VA-API backend, the allocation_vinfo resolution is
+	  bigger than the negotiated_info.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783599
+
+2017-06-08 12:51:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: set framerate if bigger than 0/1
+	  Just set the framerate parameter if the framerate numerator and
+	  denominator are bigger than zero.
+	  Otherwise, in Intel Gen6 driver, a warning is raised disabling the
+	  bitrate control.
+	  Original-patch-by: Hyunjun Ko <zzoon@igalia.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783532
+
+2017-06-07 12:32:53 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: bitrate target percentage calculation
+	  If the rate control is set to Constant Bit Rate (CBR) the target
+	  percentage is 100%, otherwise is 70%
+
+2017-06-07 12:25:24 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: h264,h265,mpeg2,vp8,vp9: refactor ratecontrol param
+	  Centralize the common configuration for the Rate Control parameter,
+	  thus can be overloaded per each specific encoder.
+
+2017-06-07 11:10:49 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: h264,h265,mpeg2,vp8,vp9: refactor framerate param
+	  Since the framerate VA parameter is calculated equally among all the
+	  encoders, it is better to handle it in the base encoder class.
+
+2016-08-09 15:53:47 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.h:
+	  libs: encoder: vp9: Adds CBR and VBR Encoding support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=766832
+	  Signed-off-by: Hyunjun Ko <zzoon@igalia.com>
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-06-01 12:12:26 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8: Adds VBR Encoding support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778732
+
+2017-06-01 12:11:12 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: Adds VBR Encoding support
+	  Enables Variable BitRate mode, which does set FrameRate and RateControl
+	  parameters.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778732
+
+2017-06-02 13:50:05 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: Describes more detail about the bitrate property
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778732
+
+2017-06-05 20:44:22 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: add rate control parameter
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-05 20:33:27 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	  libs: encoder: h264,h265,mpeg2: add framerate parameter
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-05 20:30:07 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8,h264,h265,mpeg2: set misc param once
+	  Instead of recalculating the miscellaneous buffer parameters for
+	  every buffer, it is only done once, when the encoder is configured.
+	  And for every buffer, the same structures are just copied.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-05 17:31:10 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8,h264,h265,mpeg2: refactor misc parameters
+	  This is patch pretends to decouple the assignation of the values
+	  in the parameter structures and the VA buffer's parameters setting.
+	  It may lead to some issues since HRD, framerate or controlrate may
+	  not be handled by the specific encoder, but they are set in
+	  the VA buffer's parameters.
+	  I leave as it because this patch is just a transitional patch.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-05 16:34:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8: fix frame rate calculation
+	  According to the VA documentation:
+	  The framerate is specified as a number of frames per second,
+	  as a fraction.  The denominator of the fraction is given in
+	  the top half (the high two bytes) of the framerate field, and
+	  the numerator is given in the bottom half (the low two bytes).
+	  For example, if framerate is set to (100 << 16 | 750), this is
+	  750 / 100, hence 7.5fps.
+	  If the denominator is zero (the high two bytes are both zero)
+	  then it takes the value one instead, so the framerate is just
+	  the integer in the low 2 bytes.
+	  This patch fixes the the framerate calculation in vp8 encoder
+	  according to this.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-02 19:46:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8: refactor FrameRate parameter
+	  Move frame-rate parameter from ensure_misc_params() to
+	  ensure_contro_rate_param() since it only has meaning when the
+	  control rate is either VBR or CBR.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-02 19:33:36 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: h264,h265,mpeg2,vp8: refactor HDR
+	  Move the Hypothetical Reference Decoder (HRD) parameter, from
+	  ensure_misc_params() to ensure_control_rate_params(), since it
+	  only shall be defined when the control rate is either VBR or CBR.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-02 17:21:25 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: h264,vp8,mpeg2: refactor control rate
+	  Instead of filling the control rate param in ensure_misc_params(),
+	  this patch refactor it out, as a first step to merge the same code
+	  for all the encoders.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783449
+
+2017-06-02 16:28:30 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	  libs: encoder: h264, h265, mpeg2: remove assert
+	  Remove spurious asserts for misc parameters. If they cannot be
+	  allocated, FALSE is already returned.
+
+2017-06-05 18:19:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  libs: encoder: use VA quality level structure
+	  Instead of using a proxy to story the buffer quality level, the
+	  encoder now uses the native VA structure, which is copied to the
+	  dynamically allocated VAEncMiscParameterBuffer.
+	  This approach is computationally less expensive.
+
+2017-05-26 11:10:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg4.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: standardize the FIXME comment
+	  This is a trivial patch that makes homogeneous the FIXME tag in
+	  comments.
+	  For more info about these comment style:
+	  http://wiki.c2.com/?FixmeComment
+
+2017-05-22 17:20:45 +0200  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	  libs: encoder: vp8: set quality level regardless of rate control mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782957
+
+2017-05-15 18:38:29 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  libs: encoder: check for maximum number of slices
+	  Right now, H264 and HEVC can set as a property the number of slices to
+	  process. But each driver can set a maximum number of slices, depending
+	  on the supported profile & entry point.
+	  This patch verifies the current num_slices to process against the maximum
+	  permitted by the driver and the media size.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=780955
+
+2017-05-15 18:36:21 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h26x_priv.h:
+	  libs: utils: mark functions as internals
+	  The functions in this header are internal to the library.
+
+2017-05-15 18:35:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.h:
+	  libs: context: add missing documentation
+	  Document the region-of-interest configuration variables.
+
+2017-05-12 18:46:50 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/elements/test-vaapisink.c:
+	  tests: elements: vaapisink: handle nav events
+	  The test app can now handle navigation events to rotate the
+	  display.
+
+2017-05-12 18:17:55 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* tests/elements/test-vaapisink.c:
+	  tests: elements: clean up vaapisink test
+	  - Use gst_element_send_event() instead of gst_pad_push_event()
+	  - don't zero App structure
+	  - check for pipeline parsing error
+	  - only get vaapisink for property set
+
+2017-05-12 13:08:30 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: keep handle_events flag except that if user want to set
+	  When state of vaapisink is changed from PLAYING to NULL, the handle_events
+	  flag is set to FALSE, and never recovered, and then event thread is never
+	  going to run.
+	  So we should allow to set the flag only when users try it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782543
+
+2017-05-12 13:06:24 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
+	  libs: window: x11: fix src rect info when using vpp
+	  Since we started using VPP in VaapiWindowX11, we need to care about
+	  the case that src rect and window's size are different.
+	  So, once VPP has converted to other format, we should honor the
+	  size of the VPP's surface as source rect. Otherwise, it is cropped
+	  according the previous size of the source rect.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782542
+
+2017-04-28 15:20:01 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: remove par from caps negotiation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781759
+
+2017-03-30 17:57:42 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* tests/elements/Makefile.am:
+	* tests/elements/test-roi.c:
+	  tests: elements: add an example for ROI
+	  This implements a pipleint to recognize difference between ROI and non-ROI.
+	  See comments in this code in detail.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-03-30 17:54:20 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: handle custom event GstVaapiEncoderRegionOfInterest
+	  Handles new custom event GstVaapiEncoderRegionOfInterest
+	  to enable/disable a ROI region.
+	  Writes a way to use new event to document.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-02-23 18:53:18 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* tests/simple-encoder.c:
+	  tests: simple-encoder: add an option to set ROI
+	  $ simple-encoder -r inputfile.y4m
+	  And you'll got an output file in H264 with two regions of interest.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-02-23 18:52:48 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: set ROI params during encoding
+	  Set ROI params during encoding each frame, which are set via
+	  gst_vaapi_encoder_add_roi ()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-03-28 17:41:37 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	  libs: encoder: add api gst_vaapi_encoder_add/del_roi
+	  Implements and exposes new api gst_vaapi_encoder_add/del_roi to set ROI regions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+
+2017-02-23 17:57:07 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapicontext.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder/context: query region of interest support
+	  Queries if the driver supports "Region of Interest" (ROI) during the config
+	  creation.
+	  This attribute conveys whether the driver supports region-of-interest (ROI)
+	  encoding, based on user provided ROI rectangles.  The attribute value is
+	  partitioned into fields as defined in the VAConfigAttribValEncROI union.
+	  If ROI encoding is supported, the ROI information is passed to the driver
+	  using VAEncMiscParameterTypeROI.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=768248
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-05-12 11:11:48 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.h:
+	  libs: encoder: fix a comment
+
+2017-05-11 12:23:28 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: guard quality level configuration
+	  The quality level appeared in VA-API 0.36. So let's guard its
+	  usage.
+
+2017-04-19 13:04:44 -0700  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  encoders: add quality level tuning
+	  This patch adds the handling of VAEncMiscParameterTypeQualityLevel,
+	  in gstreamer-vaapi encoders:
+	  The encoding quality could be set through this structure, if the
+	  implementation supports multiple quality levels. The quality level set
+	  through this structure is persistent over the entire coded sequence, or
+	  until a new structure is being sent. The quality level range can be queried
+	  through the VAConfigAttribEncQualityRange attribute. A lower value means
+	  higher quality, and a value of 1 represents the highest quality. The quality
+	  level setting is used as a trade-off between quality and speed/power
+	  consumption, with higher quality corresponds to lower speed and higher power
+	  consumption.
+	  The quality level is set by the element's parameter "quality-level" with a
+	  hard-coded range of 1 to 8.
+	  Later, when the encoder is configured in run time, just before start
+	  processing, the quality level is scaled to the codec range. If
+	  VAConfigAttribEncQualityRange is not available in the used VA backend, then
+	  the quality level is set to zero, which means "disabled".
+	  All the available codecs now process this parameter if it is available.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778733
+	  Signed-off-by: Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+2017-05-04 18:59:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+=== release 1.12.0 ===
+
+2017-05-04 15:46:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.12.0
 
 2017-05-04 11:49:33 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
@@ -10033,6 +13048,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.9 ===
+
 2014-07-29 10:31:58 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* AUTHORS:
@@ -11710,6 +14727,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.5.8 ===
 
 2014-01-24 10:55:39 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -13723,6 +16742,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.7 ===
+
 2013-11-22 11:28:09 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst/vaapi/Makefile.am:
@@ -14722,6 +17743,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.6 ===
+
 2013-08-31 15:47:33 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -15268,6 +18291,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.5 ===
+
 2013-07-15 17:49:31 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg2.c:
@@ -15804,6 +18829,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.5.4 ===
 
 2013-06-14 11:47:50 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -16351,6 +19378,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.3 ===
+
 2013-04-18 19:09:45 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -16848,6 +19877,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.2 ===
+
 2013-03-28 10:18:51 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -17333,6 +20364,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.5.1 ===
+
 2013-01-30 09:37:38 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -17796,6 +20829,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.5.0 ===
 
 2013-01-15 09:21:08 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -20832,6 +23867,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.3.6 ===
+
 2012-04-02 10:07:33 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* configure.ac:
@@ -21145,6 +24182,8 @@
 	  bitstream. i.e. the direct slice() information. VA drivers will be fixed
 	  accordingly.
 
+=== release 0.3.5 ===
+
 2012-03-02 15:03:57 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst/vaapi/gstvaapidecode.c:
@@ -21317,6 +24356,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.3.4 ===
 
 2012-02-01 23:34:09 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -21594,6 +24635,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.3.3 ===
 
 2012-01-16 11:05:31 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -22028,6 +25071,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.3.2 ===
+
 2012-01-06 11:20:48 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -22154,6 +25199,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.3.1 ===
 
 2012-01-03 13:42:12 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -22334,6 +25381,8 @@
 	* gst-libs/gst/video/gstbasevideoutils.c:
 	* gst-libs/gst/video/gstbasevideoutils.h:
 	  Drop unused copy of GstBaseVideoDecoder.
+
+=== release 0.3.0 ===
 
 2011-12-09 11:46:45 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -22765,6 +25814,8 @@
 	* tests/Makefile.am:
 	  Fix build with libva headers not in a standard include dir.
 
+=== release 0.2.6 ===
+
 2011-06-14 15:59:08 +0200  Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>
 
 	* configure.ac:
@@ -22979,6 +26030,8 @@
 	* gst-libs/gst/vaapi/gstvaapicompat.h:
 	  Fix build with older VA-API 0.29-sds.
 
+=== release 0.2.4 ===
+
 2010-05-18 11:22:54 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst/vaapisink/gstvaapisink.c:
@@ -23011,6 +26064,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.2.3 ===
 
 2010-05-16 21:44:17 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -23088,6 +26143,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.2.2 ===
+
 2010-05-13 21:52:22 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* NEWS:
@@ -23155,6 +26212,8 @@
 
 	* gst/vaapisink/gstvaapisink.c:
 	  Use XGetGeometry() to retrieve the window size.
+
+=== release 0.2.1 ===
 
 2010-05-12 19:40:30 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -23305,6 +26364,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.2.0 ===
 
 2010-05-05 12:29:28 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -24018,6 +27079,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.1.2 ===
+
 2010-03-30 13:29:34 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* configure.ac:
@@ -24687,6 +27750,8 @@
 	* configure.ac:
 	  Bump version for development.
 
+=== release 0.1.1 ===
+
 2010-03-23 17:29:47 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst-libs/gst/vaapi/gstvaapiutils_x11.c:
@@ -25215,6 +28280,8 @@
 
 	* configure.ac:
 	  Bump version for development.
+
+=== release 0.1.0 ===
 
 2010-03-16 14:07:53 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
