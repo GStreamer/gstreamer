@@ -1,9 +1,398 @@
-=== release 1.12.0 ===
+=== release 1.13.90 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2018-03-03 22:44:19 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.13.90
+
+2018-03-03 22:44:19 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2018-03-01 19:01:58 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: enable more warnings
+
+2018-02-14 23:45:51 +1100  Matthew Waters <matthew@centricular.com>
 
 	* configure.ac:
-	  releasing 1.12.0
+	  explicitly disable v4l2_m2m codecs
+	  They fail with android NDK r16
+
+2018-02-15 19:44:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* meson.build:
+	  Back to development
+
+=== release 1.13.1 ===
+
+2018-02-15 17:15:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* NEWS:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.13.1
+
+2018-02-15 17:14:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/inspect/plugin-libav.xml:
+	  docs: update plugin docs
+
+2018-02-12 08:32:01 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavmux.c:
+	  av*mux: Disable gif related "hacks"
+	  This is properly handled by the previous commit now
+
+2017-06-13 18:50:50 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavviddec.c:
+	  Enable gif format, and make it so avdemux_gif and avdec_gif can autoplug
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784684
+
+2018-02-12 07:38:13 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n3.4.2 release
+
+2018-02-10 15:18:11 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  avvid*: Don't expose V4L2 mem-to-mem decoder and encoders
+	  It's not going to work without special handling. Mask for now.
+
+2018-02-10 14:56:50 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/ext/libav:
+	  gst-libs: Switch to ffmpeg n3.4.1
+
+2018-02-08 19:18:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: make version numbers ints and fix int/string comparison
+	  WARNING: Trying to compare values of different types (str, int).
+	  The result of this is undefined and will become a hard error
+	  in a future Meson release.
+
+2018-02-05 08:47:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-30 20:37:18 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-20 15:45:45 +0800  Ting-Wei Lan <lantw@src.gnome.org>
+
+	* configure.ac:
+	  configure: Replace -Bsymbolic-functions with -Bsymbolic
+	  The documentation of libav says -Bsymbolic may be needed when building a
+	  shared library which links statically to libav.
+	  Fixes linking error on FreeBSD:
+	  gst-libav/gst-libs/ext/.libs/libavcodec.a(simple_idct10.o):
+	  relocation R_X86_64_PC32 against `ff_pw_1023' can not be used when making a
+	  shared object; recompile with -fPIC
+	  /usr/bin/ld: final link failed: Bad value
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791783
+
+2017-10-23 19:35:31 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	  libav: use LIBAV_CPPFLAGS for -I include paths
+	  Autotools automatically appends user CPPFLAGS after target
+	  CPPFLAGS.  Also, it puts all CPPFLAGS before CFLAGS in final
+	  generated gcc compile command.  The internal ffmpeg include
+	  paths need to come before any other external include paths
+	  to ensure we don't accidentally pickup external ffmpeg
+	  headers first (i.e. from user CPPFLAGS include paths).  Thus,
+	  move the internal LIBAV include paths to LIBAV_CPPFLAGS so
+	  that they come before any user defined CPPFLAGS.
+	  This allows ffmpeg and gst-ffmpeg to coexist on users system.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789379
+
+2017-10-03 13:57:24 +0530  Ashish Kumar <kr.ashish@samsung.com>
+
+	* ext/libav/gstavprotocol.c:
+	  avprotocol: fix leak in error code paths
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788481
+
+2017-12-14 14:53:10 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e8c7a71 to 3fa2c9e
+
+2017-11-27 20:16:52 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3f4aa96 to e8c7a71
+
+2017-10-31 08:54:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.5
+
+2017-10-19 16:15:26 +0200  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	  avdemux: Whitelist the demuxers required for GC/Wii/WiiU ADPCM streams
+	  Required to play .brstm (GameCube/Wii) and .bfstm (Wii U) files. Needs
+	  at least avdec_adpcm_thp too, but that one is already accessible.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789139
+
+2017-09-23 17:14:03 +0200  Nicola Murino <nicola.murino@gmail.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: reset to 0 negative pts
+	  for us pts are unsigned so reset to 0 negative pts returned from libav.
+	  This is better than outputs completly wrong timestamps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787795
+
+2017-09-18 15:45:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.4
+
+2017-08-17 14:28:22 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  gstavcodecmap: Do not require a channel-mask
+	  .. for mono or stereo input.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786401
+
+2017-08-17 12:25:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to 3f4aa96
+
+2017-08-11 20:26:06 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: don't export symbols by default
+	  Only plugin entry points should be exported.
+
+2017-08-10 18:55:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  Revert "avviddec: Remove usage of deprecated EDGE APIs"
+	  This reverts commit 4284d791bc2c3ae716e4f99cedd870de9f575aec.
+	  It causes crashes on various h264 and DNXHD/VC3 streams, where the
+	  decoders write to arbitrary memory far after what we've allocated.
+
+2017-08-10 17:22:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.3
+
+2017-07-11 13:45:35 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  libswscale: Memory leak in gst_video_frame_map
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784741
+
+2017-07-11 11:34:03 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* ext/libav/gstavprotocol.c:
+	  avdemux/mux: Memory leak and possible crash in avio_alloc_context
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784735
+
+2017-07-11 09:36:45 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Remove usage of deprecated EDGE APIs
+	  As a side effect, left/right green bars goes away when using
+	  xvimagesink. I just think that xv cropping is broken, so this is
+	  probably just hiding a bug.
+
+2017-07-10 10:33:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Blacklist scc muxer
+	  We have no codec mappings for it and it's a subtitle/closed caption
+	  "muxer" anyway.
+
+2017-07-07 11:59:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: find python3 via python3 module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783198
+
+2017-06-26 09:53:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix with-package-name option
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784082
+
+2017-06-20 10:50:38 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.2
+
+2017-05-20 15:16:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstav.c:
+	* meson.build:
+	* meson_options.txt:
+	  meson: add options to set package name and origin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782172
+
+2017-05-20 15:27:52 +0200  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	* gst-libs/ext/Makefile.am:
+	  plugin: Explicitly link to BZ2, LZMA and LZ
+	  While all this information is in the .la files, libtool seems to get
+	  confused with ordering in presence of static system libraries. This could
+	  cause missing symbol error at link time. Adding these depenencies explicitly
+	  workaround the issue.
+
+2017-05-20 13:05:23 +0200  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/ext/Makefile.am:
+	  Don't fail if running "make clean" twice
+
+2017-05-20 20:02:39 +1000  Jan Schmidt <jan@centricular.com>
+
+	* .gitmodules:
+	* configure.ac:
+	* gst-libs/ext/gas-preprocessor:
+	  Pass $CC as AS, unless $AS is provided. Add gas-preprocessor
+	  Add gas-preprocessor.pl as a git submodule, and put it in the
+	  path so that it is available if libav wants it.
+	  Switch back to providing $CC as $AS by default, but
+	  respect an external $AS setting so that it can be
+	  overridden in cerbero
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694416
+
+2017-05-17 10:41:57 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.3.1
+
+2017-05-16 14:43:11 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	  Remove plugin specific static build option
+	  Static and dynamic plugins now have the same interface. The standard
+	  --enable-static/--enable-shared toggle are sufficient.
+
+2017-05-16 18:54:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Don't expose NVIDIA CUVID decoder
+	  It's not working without further changes on our side, like all hardware
+	  decoders in ffmpeg.
+
+2017-05-11 21:17:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	* gst-libs/ext/Makefile.am:
+	  Generate .la for internal libav libraries
+	  This should help libtool in getting the internal linking right.
+	  Effectively, libtool can sometime get the link order wrong when
+	  presented with a mix of .la and -l arguments. These .la file are
+	  also required by the android build system and were previously
+	  created by cerbero.
+
+2017-05-11 13:31:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/Makefile.am:
+	  Use automake to install dependency libraries
+	  The install line was using -t parameter which is not supported on OSX.
+	  Instead, use automake DATA installation mechanism, this way we rely on
+	  automake to generate portable scripts.
+
+2017-05-10 21:20:05 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* ext/libav/Makefile.am:
+	  Use a portable method to link against internal FFMPEG
+	  In the last iteration, we kept the original method to link the shared
+	  plugin and edited the .a and .la files so satisfy what cerbero needed.
+	  Unfortunately, that required adding .a file into the archive which is
+	  not allowed with iOS ar command for universal builds.
+	  This patch uses standard method to link a static library. One of the
+	  benefit is that it removes some libtool warning about portability.
+	  For the static case, we implement an install hook that installs
+	  FFMPEG internal .a files in the plugin directory (so it does not get
+	  confused with a possible system FFMPEG. This makes the static plugin
+	  usable without depending on cerbero recipe.
+
+2017-05-10 12:10:54 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/Makefile.am:
+	  static: Update libgstlibav.lai too
+	  Libtool will produce libgstlibav.la and libgstlibav.lai (the installed
+	  version). We need to edit at least the installed version for the final
+	  linking of static application to work.
+
+2017-05-10 09:47:12 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/Makefile.am:
+	  Simplify and fix the static linking
+	  Some libtool will endup removing the shared build when running a static
+	  build. That had unwanted side effect. Rather then fighting libtool to
+	  get to build each static and shared seperatly, let libtool build with
+	  the LIBAV_DEPS added to LIBADD (list of libav*.a) and finally remove the
+	  extra .a from the archive and fix the .la to what cerbero will expect.
+
+2017-05-08 09:30:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/Makefile.am:
+	  libav: Allow build both static dynamic plugins
+	  When building plugins with internal FFMPEG, we use different link
+	  flags depending if it is static or shared. As we want to build both
+	  static and dynamic plugins at once, rewrite the rules so we can
+	  pass the right flags.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=779344
+
+2017-05-04 18:59:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+=== release 1.12.0 ===
+
+2017-05-04 15:39:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.12.0
 
 === release 1.11.91 ===
 
