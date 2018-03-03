@@ -1,1 +1,1 @@
-SUBDIRS = bellagio rpi zynqultrascaleplus
+SUBDIRS = bellagio rpi tizonia zynqultrascaleplus
