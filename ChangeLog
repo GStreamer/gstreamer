@@ -1,9 +1,640 @@
-=== release 1.12.0 ===
+=== release 1.13.90 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2018-03-03 22:24:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.13.90
+
+2018-03-03 22:24:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2018-03-01 19:07:42 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  meson: enable more warnings
+
+2018-02-28 10:07:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix build with newer x264 with support for multiple bit depths
+	  libx264 used to be built for one specific bit depth, and if we
+	  wanted to support multiple bit depths we would have to dynamically
+	  load the right .so from different paths. That has changed now, and
+	  libx264 can include support for multiple depths in the same lib,
+	  so we don't need to do the dlopen() dance any more. We'll keep
+	  the vtable stuff around until we can drop support for older x264.
+	  gstx264enc.c:2927:36: error: ‘x264_bit_depth’ undeclared
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792111
+
+2018-02-27 15:42:32 +0100  Alicia Boya García <aboya@igalia.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add format example for option-string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793879
+
+2018-02-21 19:47:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: simplify GST_DISABLE_GST_DEBUG check and don't use add_global_*
+	  add_global_arguments() can't be used in subprojects. It's
+	  entirely possible that -ugly is a subproject but gstreamer
+	  is picked up from an installed location, so we should
+	  really use add_project_arguments() in both cases.
+
+2018-02-15 19:44:21 +0000  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.12.0
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* meson.build:
+	  Back to development
+
+=== release 1.13.1 ===
+
+2018-02-15 17:10:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.13.1
+
+2018-02-15 17:07:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  docs: update plugin docs
+
+2018-02-15 14:52:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/id.po:
+	* po/it.po:
+	* po/nl.po:
+	* po/sv.po:
+	  po: update translations
+
+2018-02-08 19:09:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: make version numbers ints and fix int/string comparison
+	  WARNING: Trying to compare values of different types (str, int).
+	  The result of this is undefined and will become a hard error
+	  in a future Meson release.
+
+2018-02-04 12:03:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-30 20:34:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/sidplay/meson.build:
+	* meson.build:
+	  meson: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-03 16:02:08 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	  amrnbdec: Don't use g_return_*_if_fail() on data parsing
+	  Those functions can be disabled. Instead just use the (existing)
+	  function.
+	  CID #1427121
+
+2018-01-03 16:02:08 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/amrwbdec/amrwbdec.c:
+	  amrwbdec: Don't use g_return_*_if_fail() on data parsing
+	  Those functions can be disabled. Instead just use the (existing)
+	  function.
+	  CID #1427093
+
+2017-12-26 13:51:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: skip translations if gettext is not available
+
+2017-12-14 14:49:17 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e8c7a71 to 3fa2c9e
+
+2017-12-07 15:52:58 +0900  Justin Kim <justin.kim@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: add 'insert-vui' property for users to choose
+	  VUI(Video Usability Information) parameters should be set
+	  according to the specification. However, some of the existing
+	  hardware decoders refuse to decode in certain combinations of
+	  the resolution and VUI parameters. To support the legacy
+	  decoders, this patch provides 'insert-vui' to skip the settings.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791331
+
+2017-12-06 13:01:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	  cdio: Fix build with cdio >= 1.0
+	  LIBCDIO_VERSION_NUM was defined as e.g. 94 for 0.94 but is now defined
+	  as 1 for 1.0. We had various checks for < 83, which of course succeeded
+	  now although we are >= 0.83.
+	  Fix this by checking for < 76 (0.76) too, as that is the minimum version
+	  we currently support and everything < 76 is going to be >= 1.0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791301
+
+2017-11-27 20:11:56 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3f4aa96 to e8c7a71
+
+2017-11-26 15:05:14 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: actually use -fvisibility if supported
+	  Fix up for previous commit.
+
+2017-11-26 14:49:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: stop controlling symbol visibility with -export-symbols-regex
+	  Instead, use -fvisibility=hidden and explicit exports via GST_EXPORT.
+	  This should result in consistent behaviour for the autotools and
+	  Meson builds.
+
+2017-11-13 11:13:30 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix prerolling files with "empty" streams
+	  This is a regression that was introduced by
+	  commit 1803b3c18530cb0100d140c2b8e49a8dfe41f941
+	  "    asfdemux: Add support for dvr-ms"
+	  The problem is that some files/streams might contain stream definition
+	  but there is no actual packets for those streams.
+	  This was used to "define" streams with different bitrates for example.
+	  The first_ts calculation resulted in never ever finding a valid first_ts
+	  since some streams were empty, and therefore never "activating" itself.
+	  Instead of that we first check if we are prerolled. And if we are we
+	  unconditionally get the "first_ts"
+	  The preroll check has been adapted to check whether streams of
+	  each defined type (i.e. audio/video/sub) has been prerolled. This solves
+	  the problem of having different streams of a particular type where only
+	  one stream actually has data.
+
+2017-11-13 11:09:31 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Store the stream type in streams
+	  The field was present but never set :)
+
+2017-09-26 10:11:24 +0530  Ponnam Srinivas <p.srinivas@samsung.com>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Fix out buffer memory leak in error code path
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788119
+
+2017-09-15 17:06:58 +0530  Deepak Srivastava <srivastava.d@samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix buffer memory leak in error code path
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787817
+
+2017-09-07 13:27:26 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Unmap output video frame if copying to it fails
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787398
+
+2017-08-31 11:33:14 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* gst/realmedia/asmrules.c:
+	  realmedia: fix leak in asmrules error code path
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787056
+
+2017-08-30 18:41:28 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* gst/realmedia/rtspreal.c:
+	  realmedia: Fix Memory leak in error case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787014
+
+2017-08-26 13:02:26 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/files/Makefile.am:
+	* tests/files/cbr_stream.mp3:
+	* tests/files/stream.mp2:
+	* tests/files/vbr_stream.mp3:
+	  tests: remove files that were used by the mpg123 unit test
+
+2017-08-26 09:35:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* REQUIREMENTS:
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* ext/Makefile.am:
+	* ext/meson.build:
+	* ext/twolame/Makefile.am:
+	* ext/twolame/gsttwolamemp2enc.c:
+	* ext/twolame/gsttwolamemp2enc.h:
+	* ext/twolame/meson.build:
+	* po/POTFILES.in:
+	  Remove twolame plugin, moved to -good
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774252
+
+2017-08-26 08:51:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* REQUIREMENTS:
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* ext/Makefile.am:
+	* ext/lame/Makefile.am:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/lame/gstlamemp3enc.h:
+	* ext/lame/meson.build:
+	* ext/lame/plugin.c:
+	* ext/meson.build:
+	* m4/Makefile.am:
+	* m4/as-liblame.m4:
+	* po/POTFILES.in:
+	* tests/check/Makefile.am:
+	* tests/check/gst-plugins-ugly.supp:
+	* tests/check/meson.build:
+	* tests/check/pipelines/.gitignore:
+	* tests/check/pipelines/lame.c:
+	  Remove lame plugin, moved to -good
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774252
+
+2017-08-20 14:31:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* REQUIREMENTS:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* ext/Makefile.am:
+	* ext/meson.build:
+	* ext/mpg123/Makefile.am:
+	* ext/mpg123/gstmpg123audiodec.c:
+	* ext/mpg123/gstmpg123audiodec.h:
+	* ext/mpg123/meson.build:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/mpg123audiodec.c:
+	* tests/check/meson.build:
+	  Remove mpg123 plugin, moved to -good
+	  https://bugzilla.gnome.org/show_bug.cgi?id=774252
+
+2017-08-17 12:23:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to 3f4aa96
+
+2017-08-10 15:48:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/sidplay/meson.build:
+	  sidplay: hide symbols in meson for this c++ plugin too
+	  Keep things local, as this is the only c++ plugin
+	  in ugly currently.
+
+2017-08-10 11:55:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: don't export symbols by default
+	  Only plugin entry points should be exported.
+	  Currently plugins might export more symbols with
+	  the meson build, as we don't have the exports
+	  regexp there that we pass to libtool.
+
+2017-08-09 19:31:56 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: add FIXME note for future configuration cleanup
+
+2017-07-25 13:36:17 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: Fix string memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785388
+
+2017-07-15 15:01:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix indentation
+
+2017-07-15 14:59:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix caps leak
+	  Move creation of supported sink pads into class_init function
+	  which is also the only place where they're used. Unref the
+	  caps when no longer needed, the pad template will take its
+	  own ref.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784982
+
+2017-07-15 14:57:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123audiodec: fix caps leak
+	  The pad template takes its own ref, so we should unref the caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784982
+
+2017-07-15 12:49:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/meson.build:
+	  meson: po: use glib preset and read language list from LINGUAS
+	  Supported since meson 0.37, so we can use it now.
+
+2017-07-11 14:21:41 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpmdec: Fix overrun from coverity
+	  CID #1414801
+
+2017-07-07 11:58:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: find python3 via python3 module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783198
+
+2017-07-05 18:58:35 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	  dvdlpcmdec: Added support for Blu-Ray audio
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784552
+
+2017-06-27 11:48:08 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: More index handling
+	  In the same vein as the previous commit, the end of the file might have been
+	  cut and therefore contains bogus data.
+	  If the object is too short, consider it as garbage and return a non-fatal
+	  flow.
+	  Regression introduced in 97294eb8bbed1b9dad7d3f2c52dd69eb1812cc06
+
+2017-06-27 10:25:42 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux; Don't assume index is present at end of file
+	  Some files have garbage at the end of the file, don't error out if we don't
+	  find the index there.
+	  Reverts back to previous behaviour (where corrupted/missing indexex were
+	  not a fatal error).
+	  Regression introduced in 97294eb8bbed1b9dad7d3f2c52dd69eb1812cc06
+
+2017-06-26 09:49:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix with-package-name option
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784082
+
+2017-06-14 21:08:31 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: adjust segment start to a keyframe ts only for a KEYUNIT seek
+	  ... which is how it has always been until changed coincidentally in commit
+	  9ee60482b265481d0e3b397044f560eb736e5429 which then prompted commit
+	  dba14178ce6115b406ef86e356b1201463af5e2a to consider ACCURATE as well
+	  to compensate for that in a lateral way
+
+2017-06-14 20:56:16 +0200  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: relax bframes upper limit count to maximum encoder supported
+
+2017-06-23 23:44:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/sidplay/meson.build:
+	  meson: don't error out if sidplay library is not found
+
+2017-06-23 18:33:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/meson.build:
+	* ext/sidplay/meson.build:
+	  meson: build sid plugin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784135
+
+2017-06-21 21:23:29 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264: fix memory leak
+	  When the allowed caps are the same of template caps the allowed
+	  caps are not unrefed, leaking memory.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784060
+
+2017-06-07 12:08:43 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Do not use path separator in test names
+	  Avoiding warnings like:
+	  WARNING: Target "elements/audioamplify" has a path separator in its name.
+
+2017-06-06 21:48:19 -0700  Thiago Santos <thiagossantos@gmail.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix checking for header objects
+	  The if 'and' condition was mixed up with the last parameter of the
+	  function and would lead to wrong results
+
+2017-05-21 17:49:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* config.h.meson:
+	* meson.build:
+	  meson: don't need config.h.meson any longer
+
+2017-05-20 14:58:37 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add options to set package name and origin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782172
+
+2017-05-19 20:05:02 +0200  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/meson.build:
+	  Add gstvideo_dep for meson mpeg2dec test build
+
+2017-05-19 18:59:17 +0200  Jan Schmidt <jan@centricular.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/mpeg2dec.c:
+	  mpeg2dec test: Fix expected output caps
+	  In the absence of explicit info, video decoders
+	  now output mono multiview caps by default, so make
+	  the expected caps match that
+
+2017-05-16 14:07:56 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* config.h.meson:
+	* configure.ac:
+	* ext/a52dec/Makefile.am:
+	* ext/amrnb/Makefile.am:
+	* ext/amrwbdec/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/dvdread/Makefile.am:
+	* ext/lame/Makefile.am:
+	* ext/mpeg2dec/Makefile.am:
+	* ext/mpg123/Makefile.am:
+	* ext/sidplay/Makefile.am:
+	* ext/twolame/Makefile.am:
+	* ext/x264/Makefile.am:
+	* gst/asfdemux/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	* gst/xingmux/Makefile.am:
+	  Remove plugin specific static build option
+	  Static and dynamic plugins now have the same interface. The standard
+	  --enable-static/--enable-shared toggle are sufficient.
+
+2017-05-09 09:45:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	  sid: Make plugin name match plugin file name
+
+2017-05-04 18:59:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+=== release 1.12.0 ===
+
+2017-05-04 15:39:25 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.12.0
+
+2017-05-04 15:12:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-05-04 13:47:56 +0300  Sebastian Dröge <sebastian@centricular.com>
 

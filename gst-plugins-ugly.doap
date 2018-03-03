@@ -31,7 +31,17 @@ might be widely known to present patent problems.
      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-ugly"/>
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-ugly"/>
    </GitRepository>
- </repository> 
+ </repository>
+
+ <release>
+  <Version>
+   <revision>1.13.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-03</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.13.90.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
