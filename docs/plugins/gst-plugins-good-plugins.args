@@ -1015,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.13.1.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.13.90"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3535,7 +3535,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.13.1.1 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.13.90 "</DEFAULT>
 </ARG>
 
 <ARG>
@@ -24665,7 +24665,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Multipacket</NICK>
 <BLURB>Apply FEC on multiple packets.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -24795,7 +24795,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Allow no redundant blocks</NICK>
 <BLURB>true - can produce RED packets even without redundant blocks (distance==0) false - RED packets will be produced only if distance>0.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
