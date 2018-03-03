@@ -724,7 +724,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Option string</NICK>
-<BLURB>String of x264 options (overridden by element properties).</BLURB>
+<BLURB>String of x264 options (overridden by element properties) in the format "key1=value1:key2=value2".</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
