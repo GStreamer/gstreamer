@@ -1,70 +1,63 @@
+This is GStreamer gst-plugins-good 1.13.90.
 
-Release notes for GStreamer Good Plugins 1.12.0
+The GStreamer team is pleased to announce the first release candidate for the
+upcoming stable 1.14 release series.
 
-The GStreamer team is pleased to announce the first release in the stable 1.12
-release series. The 1.12 release series is adding new features on top of the
-1.0, 1.2, 1.4, 1.6, 1.8 and 1.10 series and is part of the API and ABI-stable
-1.x release series of the GStreamer multimedia framework.
+The 1.14 release series adds new features on top of the 1.0, 1.2, 1.4, 1.6,
+1.8, 1.10 and 1.12 series and is part of the API and ABI-stable 1.x release
+series of the GStreamer multimedia framework.
 
+Full release notes can be found at:
 
-Full release notes can be found here
+  https://gstreamer.freedesktop.org/releases/1.14/
 
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly
+after the release.
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided in the next days.
+This module will not be very useful by itself and should be used in conjunction
+with other GStreamer modules for a complete multimedia experience.
 
+ - gstreamer: provides the core GStreamer libraries and some generic plugins
 
-"Such ingratitude.  After all the times I've saved your life."
+ - gst-plugins-base: a basic set of well-supported plugins and additional
+                     media-specific GStreamer helper libraries for audio,
+                     video, rtsp, rtp, tags, OpenGL, etc.
 
+ - gst-plugins-good: a set of well-supported plugins under our preferred
+                     license
 
-A collection of plugins you'd want to have right next to you on the
-battlefield.  Shooting sharp and making no mistakes, these plugins have it
-all: good looks, good code, and good licensing.  Documented and dressed up
-in tests.  If you're looking for a role model to base your own plugin on,
-here it is.
+ - gst-plugins-ugly: a set of well-supported plugins which might pose
+                     problems for distributors
 
+ - gst-plugins-bad: a set of plugins of varying quality that have not made
+                    their way into one of core/base/good/ugly yet, for one
+                    reason or another. Many of these are are production quality
+                    elements, but may still be missing documentation or unit
+                    tests; others haven't passed the rigorous quality testing
+                    we expect yet.
 
-If you find a plot hole or a badly lip-synced line of code in them,
-let us know - it is a matter of honour for us to ensure Blondie doesn't look
-like he's been walking 100 miles through the desert without water.
+ - gst-libav: a set of codecs plugins based on the ffmpeg library. This is
+                    where you can find audio and video decoders and encoders
+                    for a wide variety of formats including H.264, AAC, etc.
 
+ - gstreamer-vaapi: hardware-accelerated video decoding and encoding using
+                    VA-API on Linux. Primarily for Intel graphics hardware.
 
-This module contains a set of plugins that we consider to have good quality
-  code, correct functionality, our preferred license (LGPL for the plugin
-  code, LGPL or LGPL-compatible for the supporting library).
-We believe distributors can safely ship these plugins.
-People writing elements should base their code on these elements.
+ - gst-omx: hardware-accelerated video decoding and encoding, primarily for
+                    embedded Linux systems that provide an OpenMax
+                    implementation layer such as the Raspberry Pi.
 
+ - gst-rtsp-server: library to serve files or streaming pipelines via RTSP
 
-Other modules containing plugins are:
-
-
-gst-plugins-base
-contains a basic set of well-supported plugins
-gst-plugins-ugly
-contains a set of well-supported plugins, but might pose problems for
-    distributors
-gst-plugins-bad
-contains a set of less supported plugins that haven't passed the
-    rigorous quality testing we expect, or are still missing documentation
-    and/or unit tests
-gst-libav
-contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
-
-
-
-  
-
-Bugs fixed in this release
-     
-      * 782042 : qtdemux: Fix crash on mss stream caused by invalid stsd entry access
+ - gst-editing-services: library an plugins for non-linear editing
 
 ==== Download ====
 
-You can find source releases of gst-plugins-good in the download
-directory: https://gstreamer.freedesktop.org/src/gst-plugins-good/
+You can find source releases of gstreamer in the download
+directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
-http://cgit.freedesktop.org/gstreamer/gst-plugins-good/
+http://cgit.freedesktop.org/gstreamer/gstreamer/
 
 ==== Homepage ====
 
@@ -89,10 +82,3 @@ from there (see link above).
 
 Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
-
-        
-Contributors to this release
-    
-      * Sebastian Dröge
-      * Seungha Yang
- 

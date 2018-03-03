@@ -30,7 +30,17 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-good"/>
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-good"/>
    </GitRepository>
- </repository> 
+ </repository>
+
+ <release>
+  <Version>
+   <revision>1.13.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-03</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.13.90.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
