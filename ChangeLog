@@ -1,9 +1,638 @@
-=== release 1.12.0 ===
+=== release 1.13.90 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2018-03-03 23:09:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.13.90
+
+2018-02-26 04:01:33 +0530  Harish Fulara <harish14143@iiitd.ac.in>
+
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  Added paste functionality to GESTimeline class
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793820
+
+2018-03-01 18:56:05 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: enable more warnings
+
+2018-02-27 10:00:32 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/layer.c:
+	  test: Plug minor leaks
+
+2018-02-27 15:26:29 +0530  Harish Fulara <harish14143@iiitd.ac.in>
+
+	* ges/ges-layer.c:
+	  ges: Fix ges_layer_get_clips_in_interval(start, end) refcount handling
+	  The documentation states that it returns a (transfer full) list
+	  of GESClip but it was returning a (transfer container) list. Make
+	  sure to actually make it (transfer full).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793874
+
+2018-01-29 17:46:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/meson.build:
+	  meson: Explicitely include GObject-2.0 in the gir
+
+2018-02-21 19:42:19 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: simplify GST_DISABLE_GST_DEBUG check some more
+
+2018-02-21 19:20:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: don't use add_global_arguments()
+	  .. and tighten check for disabled gst debugging sytem.
+	  add_global_arguments() can't be used in subprojects. It's
+	  entirely possible that ges is a subproject but gstreamer
+	  is picked up from an installed location, so we should
+	  really use add_project_arguments() in both cases.
+
+2018-02-15 19:44:30 +0000  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.12.0
+	* meson.build:
+	  Back to development
+
+=== release 1.13.1 ===
+
+2018-02-15 17:20:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.13.1
+
+2018-02-08 19:16:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: make version numbers ints and fix int/string comparison
+	  WARNING: Trying to compare values of different types (str, int).
+	  The result of this is undefined and will become a hard error
+	  in a future Meson release.
+
+2018-02-04 12:26:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-30 20:35:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-11 10:57:30 +0100  Edward Hervey <edward@centricular.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-timeline-element.c:
+	  ges: Fix sizeof() usage
+	  The entries of the array are "gchar *" and not "gchar **"
+	  CID #1427091
+	  CID #1427120
+
+2017-12-20 14:28:33 +0100  Edward Hervey <edward@centricular.com>
+
+	* tests/check/ges/asset.c:
+	  check: Fix minor leak in test
+
+2017-12-19 23:28:53 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ges/ges-smart-adder.c:
+	* ges/ges-smart-adder.h:
+	  ges-smart-adder: use capsfilter instead of GstAudioMixer:caps
+	  The property has been removed, and using a capsfilter instead
+	  is the appropriate solution.
+
+2017-12-14 14:53:41 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e8c7a71 to 3fa2c9e
+
+2017-11-27 11:49:04 +0100  Edward Hervey <edward@centricular.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-effect-asset.c:
+	* ges/ges-effect.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-xml-formatter.c:
+	  ges: Fix a bunch of leaks
+	  There are definitely more left, but don't have time for more debugging
+
+2017-11-27 20:18:55 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3f4aa96 to e8c7a71
+
+2017-11-26 13:31:02 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: remove c++ compiler bits that are unused
+
+2017-11-26 13:29:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* ges/meson.build:
+	* meson.build:
+	* win32/MANIFEST:
+	* win32/common/libges.def:
+	  win32: remove .def file with exports
+	  They're no longer needed, symbol exporting is now explicit
+	  via GST_EXPORT in all cases (autotools, meson, incl. MSVC).
+
+2017-11-26 13:25:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: stop controlling symbol visibility with -export-symbols-regex
+	  Instead, use -fvisibility=hidden and explicit exports via GST_EXPORT.
+	  This should result in consistent behaviour for the autotools and
+	  Meson builds.
+
+2017-11-26 13:26:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  .gitignore: ignore test registry
+
+2017-11-25 15:56:36 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-uri-clip.c:
+	  uri-clip: Copy previous track elements bindings when setting a new asset
+	  Fixes https://phabricator.freedesktop.org/T7862
+
+2017-11-23 15:49:48 +0100  Edward Hervey <edward@centricular.com>
+
+	* tests/check/Makefile.am:
+	  check: Actually define a registry to use for tests
+	  Otherwise every single run of every single test would recreate
+	  a registry
+
+2017-11-07 12:04:03 +0530  Ashish Kumar <kr.ashish@samsung.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-layer.c:
+	  GESAsset, GESLayer: add some function guards
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789521
+
+2017-11-07 11:26:58 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	  auto-transition: Fix debug printf format
+
+2017-11-07 10:15:58 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-timeline.c:
+	  timeline: Do not snap object within the moving context
+	  Reviewed-by: Alex Băluț <<alexandru.balut@gmail.com>>
+	  Differential Revision: https://phabricator.freedesktop.org/D1873
+
+2017-10-31 12:05:08 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/gstframepositioner.c:
+	* ges/gstframepositioner.h:
+	  ges: Sync 'par' to track restriction caps in the frame positionner
+	  Allowing GES users to have control over how compositing is done
+
+2017-09-20 12:59:40 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-source.c:
+	  ges-source: Fix caps memory leak and compiler warnings when compiling without debug logging
+
+2017-09-07 12:08:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Always execute seeks
+	  We have an optiominisation to avoid double seeks when a seek is passed
+	  the end of the current stack. The problem, is that we no longer flush
+	  the pipeline when this code is reached. This patch comments out this
+	  optimization adding a FIXME. As mention, flushing the stack instead of
+	  seeking would work, but does not seem trivial considering all the
+	  mechanic inplace to forward or not the events.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787405
+
+2017-09-07 12:08:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Also start task on allocation query
+	  The allocation query may block on the sink when in pause. As a side effect, we
+	  may never get a buffer now that tee does forward the allocation query.
+	  This would often lead in a pipeline stall.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787405
+
+2017-09-07 12:08:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* tests/validate/scenarios/Makefile.am:
+	  make: Fix validate scenario install directory
+
+2017-09-07 12:07:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* tests/meson.build:
+	* tests/validate/meson.build:
+	* tests/validate/scenarios/meson.build:
+	  meson: Install validate helpers and scenarios
+	  This fixes the usage of gst-validate-launcher ges with an installed
+	  version of GES.
+
+2017-08-17 07:28:46 +0000  Stefan Popa <stefanpopa2209@gmail.com>
+
+	* ges/ges-track-element.c:
+	  track_element: Always emit "control-binding-removed" signal.
+	  When setting a new control binding on a track element, the old control
+	  binding (if any) is going to be removed. Make sure the
+	  "control-binding-removed" signal is emitted in this case.
+	  Fixes https://phabricator.freedesktop.org/T7340#95666
+	  Reviewed-by: Thibault Saunier <thibault.saunier@collabora.com>
+	  Differential Revision: https://phabricator.freedesktop.org/D1842
+
+2017-08-29 22:23:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/ges/backgroundsource.c:
+	  Revert "timeline: Return FALSE when commiting an empty timeline"
+	  This commit means that we do not get ASYNC_DONE anymore when commiting
+	  an empty timeline, which means that we need to special case that.
+	  This actually broke some code and does not bring in much.
+	  Fixes https://phabricator.freedesktop.org/T7802
+	  Fixes https://phabricator.freedesktop.org/T7797
+	  This reverts commit e570d1e08009992a0dd6a24bb4cda4427b2b460f.
+	  Thanks @stefanzzz for investigating!
+
+2017-08-22 14:23:45 +0000  Stefan Popa <stefanpopa2209@gmail.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Save encoder and muxer advanced settings
+	  Added support for saving/loading encoder and muxer advanced settings.
+	  Differential Revision: https://phabricator.freedesktop.org/D1837
+
+2017-08-19 11:42:57 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Allow up to 2 seconds queueing in the playsink video queue
+	  In playsink the default video queue max size is 3 buffers, which is
+	  sometimes not enough for our use case.
+	  Allow up to 2 seconds of buffered data, giving us more time to do
+	  the transition between clips, and thus avoiding dropping frames in
+	  the sink when bringing up new clip takes too much time.
+	  Differential Revision: https://phabricator.freedesktop.org/D1854
+
+2017-08-18 23:39:38 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Add from first element with wanted start to the move context
+	  We need to iterate over the previous element from trackelement_iter
+	  to find the first element that is at the moving point. Several
+	  elements can have the same start as the one initiating the move,
+	  and we need to take all of them into account.
+	  Fixes https://phabricator.freedesktop.org/T7819
+
+2017-08-18 23:18:10 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-validate.c:
+	  validate: Add an action type to ungroup containers
+
+2017-08-17 12:26:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to 3f4aa96
+
+2017-08-12 10:04:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-smart-video-mixer.h:
+	* win32/common/libges.def:
+	  Hide ges_smart_mixer_* API
+	  The header file isn't installed anyway.
+
+2017-08-12 10:01:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  configure: bump gst-validate requirement to 1.12.1
+	  For gst_validate_scenario_get_pipeline().
+
+2017-08-11 22:27:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: hide symbols by default unless explicitly exported
+
+2017-08-11 21:41:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-internal.h:
+	* tests/check/ges/asset.c:
+	  tests: don't use private debug category in asset test
+	  That will lead to undefined symbol errors once it no
+	  longer gets exported.
+
+2017-08-11 21:40:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-smart-adder.h:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-timeline-element.h:
+	* ges/ges-video-track.h:
+	  ges: sprinkle more GST_EXPORT
+
+2017-08-10 15:05:09 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* plugins/nle/nlecomposition.c:
+	  smartmixer: Give a unique name to each compositor instances
+
+2017-08-10 21:38:04 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Check subprocess return code in rendering tests
+
+2017-08-10 15:18:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: fix error message
+
+2017-08-10 13:46:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/meson.build:
+	* docs/meson.build:
+	  meson: fix a few warnings
+
+2017-08-07 15:35:58 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.h:
+	* ges/ges-audio-source.h:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-track.h:
+	* ges/ges-audio-transition.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-base-effect-clip.h:
+	* ges/ges-base-effect.h:
+	* ges/ges-base-transition-clip.h:
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-container.h:
+	* ges/ges-effect-asset.h:
+	* ges/ges-effect-clip.h:
+	* ges/ges-effect.h:
+	* ges/ges-enums.h:
+	* ges/ges-extractable.h:
+	* ges/ges-formatter.h:
+	* ges/ges-group.h:
+	* ges/ges-image-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-layer.h:
+	* ges/ges-meta-container.h:
+	* ges/ges-multi-file-source.h:
+	* ges/ges-operation-clip.h:
+	* ges/ges-operation.h:
+	* ges/ges-overlay-clip.h:
+	* ges/ges-pipeline.h:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-project.h:
+	* ges/ges-screenshot.h:
+	* ges/ges-smart-video-mixer.h:
+	* ges/ges-source-clip.h:
+	* ges/ges-source.h:
+	* ges/ges-test-clip.h:
+	* ges/ges-text-overlay-clip.h:
+	* ges/ges-text-overlay.h:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.h:
+	* ges/ges-title-clip.h:
+	* ges/ges-title-source.h:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.h:
+	* ges/ges-track.h:
+	* ges/ges-transition-clip.h:
+	* ges/ges-transition.h:
+	* ges/ges-uri-asset.h:
+	* ges/ges-uri-clip.c:
+	* ges/ges-uri-clip.h:
+	* ges/ges-utils.h:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-track.h:
+	* ges/ges-video-transition.h:
+	* ges/ges-video-uri-source.h:
+	* ges/ges-xml-formatter.h:
+	* ges/ges.h:
+	* win32/common/libges.def:
+	  Mark symbols explicitly for export with GST_EXPORT
+	  With two exceptions:
+	  * ges_clip_create_track_elements_func
+	  * ges_uri_clip_set_uri
+	  which were never declared in headers and should always have been static.
+
+2017-08-03 17:03:31 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-video-transition.c:
+	  transition: Fix usage of transition types != crossfade
+	  We need to make sure the crossfade ratio is disabled in that case.
+
+2017-07-10 11:43:11 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-video-transition.c:
+	  video-transition: Make use of the new `compositor::crossfade-ratio` property
+	  To achieve a real transition about to handle several level of layers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784827
+
+2017-07-31 14:52:20 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* win32/common/libges.def:
+	  win32: Update .def file
+
+2017-07-31 12:54:25 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-asset.h:
+	  asset: Add a function to stop proxying an asset
+	  And remove any reference as it beeing a proxy.
+
+2017-07-31 12:55:53 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.c:
+	  asset: Clear loading error when reload is requested
+
+2017-07-27 21:15:34 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Rename segment_start to current_stack_start
+	  It is still not exactly precise, but gives a much better understanding
+	  of what it is.
+
+2016-01-12 17:05:48 +0000  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Properly update segment->start/stop on commit
+	  Otherwise they will just be the ones from the previous seek event/
+	  stack setup and be meaningless.
+	  Also document the priv->segment meaning.
+	  Fixes https://phabricator.freedesktop.org/T7796
+
+2017-07-27 15:57:31 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Remove trackelements initating move from the moving context
+	  They are handled specially when moving the context and having them
+	  part of the context can lead to weird behaviours.
+	  Fixes https://phabricator.freedesktop.org/T7693
+
+2017-07-21 16:41:26 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Serialize encoding profiles in reverse order
+	  So they are reloaded in the right order.
+
+2017-07-24 10:32:47 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Make sure tracks are unlinked on NULL->NULL state changes
+
+2017-07-24 10:34:48 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-pipeline.c:
+	* ges/ges-source.c:
+	  Enhance some pad linking issue debug logging.
+
+2017-07-13 16:38:04 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Fix test names now that the launcher handles adding manager name
+
+2017-07-11 11:40:55 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/tempochange.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/track.c:
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	  tests: Initialize GES only once in the main process
+	  Fixing calling deinit in a process where init was not called
+	  when libcheck is forking.
+
+2017-07-10 21:42:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ges/ges.c:
+	  ges: Ref the GES class to avoid later deadlock
+	  This ensure that that all class are initialized from the main thread,
+	  avoid class initialization in random thread, which may cause deadlocks.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784769
+
+2017-07-07 12:27:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: find python3 via python3 module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783198
+
+2017-07-03 18:33:39 +0300  Stefan Popa <stefanpopa2209@gmail.com>
+
+	* ges/ges-timeline-element.c:
+	  "deep-notify" signal gets emitted only from the main thread
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784414
+
+2017-06-30 16:18:17 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-video-transition.c:
+	  video-transition: Make sure crossfade output never contains alpha
+	  Otherwise it would get mixed with lower layers, which is totally
+	  unexpected.
+	  Fixes T7773
+	  Differential Revision: https://phabricator.freedesktop.org/D1764
+
+2017-06-23 16:18:36 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Allow using glib as a subproject
+
+2017-06-23 16:04:01 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-timeline-element.c:
+	  ges: Handle g_object_newv deprecation in latest GLib
+
+2017-06-09 20:15:26 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* Makefile.am:
+	  Don't dist config.meson.h as it no longer exist
+
+2017-06-09 21:37:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* config.h.meson:
+	* meson.build:
+	  meson: remove config.h.meson
+
+2017-06-07 12:08:00 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Do not use path separator in test names
+	  Avoiding warnings like:
+	  WARNING: Target "elements/audioamplify" has a path separator in its name.
+
+2017-04-28 16:41:42 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* ges/ges-validate.c:
+	  validate: Port to new GstValidate API for pipeline retrieval
+
+2017-05-15 09:13:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-layer.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	  ges: Correctly handling floating references
+	  If we ref_sink() a parameter, it must be marked as (transfer floating)
+	  and it also has to be handled consistently between error and normal cases.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=782499
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782652
+
+2017-05-16 14:37:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* plugins/nle/Makefile.am:
+	  Remove plugin specific static build option
+	  Static and dynamic plugins now have the same interface. The standard
+	  --enable-static/--enable-shared toggle are sufficient.
+
+2017-05-04 18:59:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+=== release 1.12.0 ===
+
+2017-05-04 15:43:12 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.12.0
 
 === release 1.11.91 ===
 
