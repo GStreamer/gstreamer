@@ -1,9 +1,947 @@
-=== release 1.12.0 ===
+=== release 1.13.90 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2018-03-03 22:49:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.13.90
+
+2018-03-02 16:24:23 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-permissions.c:
+	  permissions: add Since tags and example for new API
+
+2018-03-02 01:36:23 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-permissions.h:
+	* tests/check/gst/permissions.c:
+	  permissions: more bindings-friendly API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793975
+
+2018-03-01 19:28:16 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: enable more warnings
+
+2018-02-28 21:12:43 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Place netaddress meta on packets received via TCP
+	  This allows us to later map signals from rtpbin/rtpsource back to the
+	  corresponding stream transport, and allows to do keep-alive based on
+	  RTCP packets in case of TCP media transport.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789646
+
+2018-02-27 20:34:49 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: if OPEN failed, unqueue next command
+	  As READY_TO_PAUSED can no longer return async, the RECORD
+	  command will be queued before the OPEN command fails
+	  (for example in case the server could not be connected),
+	  and record then waits for ever.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793896
+
+2018-02-26 22:59:17 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: fix retrieval of custom payloader caps
+	  If a bin is passed as the custom payloader, the caps of
+	  its factory will be empty, the correct way to obtain the caps
+	  is to query its sinkpad.
+
+2018-02-26 22:59:00 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: fix extra unref of custom payloader
+
+2018-02-26 22:57:39 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rspclientsink: fix recent code indentation
+
+2018-02-26 20:27:57 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: add missing get_type prototype
+
+2018-02-24 03:52:15 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: allow setting payloader as pad property
+	  This was a FIXME  item, and can be quite useful, also
+	  allowing to specify payloader properties from the command
+	  line, which is always nice.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793776
+
+2018-02-26 14:16:54 +0100  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Replace g_print() log line
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793838
+
+2018-02-22 20:17:33 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/rtspclientsink.c:
+	  rtsp-media: fix RECORD getting stuck
+	  The test_record case was working because async=false had
+	  been added in https://bugzilla.gnome.org/show_bug.cgi?id=757488
+	  but that was incorrect, as it should not be needed.
+	  Removing async=false made the test fail as expected, this is
+	  fixed by not trying to preroll when preparing the media for
+	  RECORD, as start_prepare is called upon receiving ANNOUNCE,
+	  and our peer will not start sending media until it has received
+	  a response to that request, and sent and received a response
+	  to RECORD as well, thus obviously preventing preroll.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793738
+
+2018-02-23 03:26:21 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	  rtsp-auth: fix set_tls_authentication_mode annotation
+
+2018-02-19 11:57:29 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  rtp-server: remove redefined variable
+	  res is a boolean variable which is defined in the function scope and
+	  redefined, with no reason, in the loop scope. This patch removes the
+	  redefinition.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793592
+
+2018-02-05 11:49:07 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  stream: Add functions for checking if stream is receiver or sender
+	  ...and replace all checks for RECORD in GstRTSPMedia which are really
+	  for "sender-only". This way the code becomes more generic and introducing
+	  support for onvif-backchannel later on will require no changes in
+	  GstRTSPMedia.
+
+2017-10-21 14:06:30 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	  onvif: Make requires_backchannel() public
+	  ...in order to let subclasses building the onvif part of the pipeline
+	  check whether backchannel shall be included or not.
+
+2018-01-22 12:46:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  rtsp-server: Switch around sendonly/recvonly attributes
+	  They are wrong in the ONVIF streaming spec. The backchannel should be
+	  recvonly and the normal media should be sendonly: direction is always
+	  from the point of view of the SDP offerer (the server) according to
+	  RFC 3264.
+
+2017-09-25 19:41:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/libs/gst-rtsp-server-docs.sgml:
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/test-onvif-backchannel.c:
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-onvif-client.c:
+	* gst/rtsp-server/rtsp-onvif-client.h:
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	* gst/rtsp-server/rtsp-onvif-media.h:
+	* gst/rtsp-server/rtsp-onvif-server.c:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-sdp.h:
+	  rtsp: Add support for ONVIF backchannel
+	  This adds a new RTSP server, client, media-factory and media subclass
+	  for handling the specifics of the backchannel. Ideally this later can be
+	  extended with other ONVIF specific features.
+
+2017-10-12 21:00:16 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Add support for sending+receiving medias
+	  We need to add an appsrc/appsink in that case because otherwise the
+	  media bin will be a sink and a source for rtpbin, causing a pipeline
+	  loop.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788950
+
+2018-02-15 19:44:28 +0000  Tim-Philipp Müller <tim@centricular.com>
 
 	* configure.ac:
-	  releasing 1.12.0
+	* meson.build:
+	  Back to development
+
+=== release 1.13.1 ===
+
+2018-02-15 17:15:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.13.1
+
+2018-02-14 17:11:19 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  session-pool: remove nullable return annotation
+	  create_watch can only return NULL from the API guards, no
+	  need for nullable.
+
+2018-02-13 18:59:16 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	  set_clock functions: Add nullable annotations
+
+2018-02-10 00:07:25 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  All around: add annotations and API guards
+
+2018-02-12 19:12:35 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* tests/test-cleanup.c:
+	  test-cleanup: bind any port
+	  The meson test suite runs tests in parallel, trying to bind
+	  a single port made the test fail.
+
+2018-02-08 19:15:10 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: make version numbers ints and fix int/string comparison
+	  WARNING: Trying to compare values of different types (str, int).
+	  The result of this is undefined and will become a hard error
+	  in a future Meson release.
+
+2018-02-06 18:00:33 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-context.c:
+	  gst_rtsp_context_get_current: add (skip) annotation
+	  The return value type is defined with G_DEFINE_POINTER_TYPE,
+	  and gi emits the following warning:
+	  Invalid non-constant return of bare structure or union; register as
+	  boxed type or (skip)
+
+2018-02-06 17:58:49 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: add type annotations
+	  gi doesn't seem to be able to figure out the type of the
+	  signal parameters when defined with G_DEFINE_POINTER_TYPE
+
+2018-02-04 12:24:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-30 20:35:21 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2018-01-25 12:09:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	  mount-points: bail out of loop again when matching mount points
+	  Previous patch led to us iterating the entire sequence. Bail out
+	  of the loop again if we have a match but are moving away from it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771555
+
+2018-01-25 12:06:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/mountpoints.c:
+	  tests: mountpoints: add more checks for mount point path matching
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771555
+
+2016-09-16 20:41:19 +0000  Andrew Bott <andrew.bott@blackmoth.com>
+
+	* gst/rtsp-server/rtsp-mount-points.c:
+	  mount-points: fix matching of paths where there's also an entry with a common prefix
+	  e.g. with the following mount points
+	  /raw
+	  /raw/snapshot
+	  /raw/video
+	  _match() would not match /raw/video and /raw/snapshot correctly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=771555
+
+2018-01-18 23:53:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-permissions.h:
+	* tests/check/gst/permissions.c:
+	  permissions: add some new API to make this usable from bindings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787073
+
+2018-01-18 11:32:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-token.c:
+	  rtsp-token: annotate constructors for bindings
+	  This maps _new_empty() to _new(), which also makes RTSPToken()
+	  work properly now. Since this API wasn't usable from bindings
+	  before, this should hopefully be fine.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787073
+
+2018-01-18 11:07:45 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-token.c:
+	* gst/rtsp-server/rtsp-token.h:
+	* tests/check/gst/token.c:
+	  rtsp-token: add some API to set fields from bindings
+	  The existing functions are all vararg-based and as such
+	  not usable from bindings.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787073
+
+2018-01-13 15:02:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspclientsink.c:
+	* tests/check/gst/rtspserver.c:
+	* tests/check/gst/sessionpool.c:
+	* tests/check/gst/stream.c:
+	  tests: fix indentation
+	  Fix and "fix".
+
+2018-01-13 14:58:55 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: rtspserver: fix another ref leak
+	  Even if this didn't show up in valgrind.
+
+2018-01-13 14:58:00 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/rtspclientsink.c:
+	  tests: rtspclientsink: fix leak
+
+2018-01-02 14:19:31 +0100  Branko Subasic <branko@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  test: rtspserver: plug memory leak in test_no_session_timeout
+	  In test_no_session_timeout, unref the rtsp session object when the
+	  test is done.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792127
+
+2017-12-20 14:17:02 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtpsclientsink: Initialize and clear newly added mutex and cond
+	  While it *did* work, glib would automatically create new mutex and cond
+	  ... which never got freed
+
+2017-12-19 11:34:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Set multicast TTL on the multicast sockets
+	  And not if we do unicast UDP.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791743
+
+2017-12-19 11:14:48 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Decide based on the sockets, not the addresses if we already allocated a socket
+	  In the multicast case (as in test-multicast, not test-multicast2), the
+	  address could be allocated/reserved (and thus set) already without
+	  allocating the actual socket. We need to allocate the socket here still
+	  instead of just claiming that it was already allocated.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=791743#c2
+
+2017-12-16 21:46:53 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  rtspclientsink: Use the new rtsp-stream API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790412
+
+2017-12-16 21:01:43 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  rtspclientsink: Wait until OPEN has been scheduled
+	  Make sure that the sink thread has started opening connection
+	  to the server before continuing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790412
+
+2017-12-14 14:53:35 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e8c7a71 to 3fa2c9e
+
+2017-12-07 16:08:29 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Minor doc fixes
+	  Mostly for g-i
+
+2017-12-06 20:47:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* tests/Makefile.am:
+	  tests: disable all tests when --disable-tests is used
+	  Move conditional subdir include into top level.
+	  Based on patch by: Joel Holdsworth
+	  https://bugzilla.gnome.org/show_bug.cgi?id=757703
+
+2017-12-06 20:42:39 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* tests/meson.build:
+	  meson: build more tests and add options to disable tests and examples
+
+2017-11-26 13:26:39 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* gst/rtsp-server/rtsp-session.c:
+	  Fix build when -Werror=deprecated-declarations is on
+	  As gst_rtsp_session_next_timeout is deprecated.
+	  ```
+	  ../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.c:760:3: error: ‘gst_rtsp_session_next_timeout’ is deprecated: Use 'gst_rtsp_session_next_timeout_usec' instead [-Werror=deprecated-declarations]
+	  res = (gst_rtsp_session_next_timeout (session, now) == 0);
+	  ^~~
+	  ../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.c:685:1: note: declared here
+	  gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
+	  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	  ```
+
+2017-11-27 20:18:24 +1100  Matthew Waters <matthew@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3f4aa96 to e8c7a71
+
+2017-11-25 20:34:16 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* tests/check/gst/media.c:
+	  check/media: Add seekability test case: not all streams are active
+	  Media contains two streams but only one is complete and prepared
+	  for playing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-25 20:32:02 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Do not reset 'blocking' if stream is already blocked
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-25 20:45:44 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix missing lock in gst_rtsp_media_seekable()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-26 16:29:49 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: remove vs_module_defs_dir variable which is no longer needed
+
+2017-11-26 14:46:05 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-session.h:
+	  rtsp: fix distcheck
+
+2017-11-26 12:53:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* win32/MANIFEST:
+	* win32/common/libgstrtspserver.def:
+	  win32: remove .def file with exports
+	  They're no longer needed, symbol exporting is now explicit
+	  via GST_EXPORT in all cases (autotools, meson, incl. MSVC).
+
+2017-11-26 12:28:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  autotools: stop controlling symbol visibility with -export-symbols-regex
+	  Instead, use -fvisibility=hidden and explicit exports via GST_EXPORT.
+	  This should result in consistent behaviour for the autotools and
+	  Meson builds.
+
+2017-11-26 12:47:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-session.h:
+	  rtsp-server: add missing GST_EXPORT and export deprecated funcs
+
+2017-11-25 07:53:30 +0100  Edward Hervey <edward@centricular.com>
+
+	* tests/check/gst/media.c:
+	  check: Add seekability testing on medias
+	  Make sure that once GstRTSPMedia are prepared they returned
+	  the expected seekability results
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-24 17:34:31 +0100  Edward Hervey <edward@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* win32/common/libgstrtspserver.def:
+	  rtsp-media: Enable seeking query before pipeline is complete
+	  SDP are now provided *before* the pipeline is fully complete. In order
+	  to know whether a media is seekable or not therefore requires asking
+	  the invididual streams.
+	  API: gst_rtsp_stream_seekable
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-23 20:34:03 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix handling in default_unsuspend()
+	  Handle the case when streams are not blocked and media
+	  is suspended from PAUSED.
+	  Change-Id: I2f3d222ea7b9b20a0732ea5dc81a32d17ab75040
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-23 18:51:21 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* tests/check/gst/media.c:
+	  check/media: Fix thread pool leak.
+	  Change-Id: I0f92b1caca0ee518ae64a7dacfbd28a214c3eea1
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-23 18:39:44 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Removed fakesink elements
+	  There is not need of adding fakesink elements to the media
+	  pipeline in the dynamic-payloader case.
+	  The media pipeline itself is dynamically updated with
+	  the receiver and sender parts that are based on the client
+	  transport information known after SETUP has been received.
+	  Change-Id: I4e88c9b500c04030669822f0d03b1842913f6cb9
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-23 09:10:54 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Corrected ASYNC_DONE handling
+	  Media is complete when all the transport based parts are
+	  added to the media pipeline. At this point ASYNC_DONE is
+	  posted by the media pipeline and media is ready to enter
+	  the PREPARED state.
+	  Change-Id: I50fb8dfed88ebaf057d9a35fca2d7f0a70e9d1fa
+	  https://bugzilla.gnome.org/show_bug.cgi?id=790674
+
+2017-11-22 12:24:38 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/gst/media.c:
+	  check/media: Check that prepared media can provide a SDP
+	  Whenever a RTSPMedia is prepared, it should be able to provide a SDP
+
+2017-11-21 09:53:19 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Don't leak addr
+	  CID #1422260
+
+2017-11-21 09:53:08 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  Run gst-indent
+
+2017-11-20 18:30:19 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't unblock with remaining dynamic payloaders
+	  If we still have some dynamic paylaoders which haven't posted
+	  no-more-pads yet, don't go to PREPARED if one of the streams
+	  blocked.
+	  The risk was that we would end up not exposing/using all specified
+	  streams.
+	  The downside is that if you have _multiple_ _live_ _dynamic_ payloaders
+	  then it will take a bit more time to start. But only if those 3
+	  conditions are present.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769521
+
+2017-11-20 16:49:29 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix doc
+
+2017-11-20 16:48:55 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't set float on a gint64 variable
+	  Just use 0. Fixes 'undefined' behaviour from clang
+
+2017-11-20 18:29:02 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix previous commit
+	  We only want to count dynamic payloaders
+
+2017-11-20 09:32:07 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/media.c:
+	  rtsp-media: Handle multiple dynamic elements
+	  If we have more than one dynamic payloader in the pipeline, we need
+	  to wait until the *last* one emits 'no-more-pads' before switching
+	  to PREPARED.
+	  Failure to do so would result in a race where some of the streams
+	  wouldn't properly be prepared
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769521
+
+2017-11-16 12:18:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* win32/common/libgstrtspserver.def:
+	  win32: Fix exported symbols list
+
+2017-11-15 19:52:29 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Only update the RTP udpsink if it actually exists
+	  For send-only streams it does not exist, but the RTCP udpsink might.
+
+2017-11-15 18:15:53 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* win32/common/libgstrtspserver.def:
+	  win32: Update exports
+
+2017-10-23 09:49:09 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-media: seek on media pipelines that are complete
+	  Make sure that a seek is performed on pipelines that
+	  contain at least one sink element.
+	  Change-Id: Icf398e10add3191d104b1289de612412da326819
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-10-17 10:44:33 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/media.c:
+	* tests/check/gst/rtspserver.c:
+	* tests/check/gst/stream.c:
+	  Dynamically reconfigure pipeline in PLAY based on transports
+	  The initial pipeline does not contain specific transport
+	  elements. The receiver and the sender parts are added
+	  after PLAY.
+	  If the media is shared, the streams are dynamically
+	  reconfigured after each PLAY.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-10-16 12:40:57 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: obtain stream position from pad
+	  If no sinks have been added yet, obtain the current and
+	  the stop position of the stream from the send_src pad.
+	  Change-Id: Iacd4ab4bdc69f6b49370d06012880ce48a7d595a
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-10-16 11:35:10 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-media.h:
+	  rtsp-session-media: add function to get a list of transports
+	  Change-Id: I817e10624da0f3200f24d1b232cff481099278e3
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-10-16 11:15:55 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: add functions to get rtp and rtcp multicast sockets
+	  Change-Id: Iddfe6e0bd250cb0159096d5eba9e4202d22b56db
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-10-20 12:21:48 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: set async=sync=false only for RTCP appsink
+	  Change-Id: I929a218a9adf4759f61322b6f2063aacc5595f90
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-10-16 10:10:17 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: return minimum value in query position case
+	  The minimum position should be returned as we are interested
+	  in the whole interval.
+	  Change-Id: I30e297fc040c995ae40c25dee8ff56321612fe2b
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788340
+
+2017-08-09 11:52:38 +0200  Jonathan Karlsson <jonakn@axis.com>
+
+	* gst/rtsp-server/rtsp-session.c:
+	* tests/check/gst/rtspserver.c:
+	  rtsp-session: Handle the case when timeout=0
+	  According to the documentation, a timeout of value 0 means
+	  that the session never timeouts. This adds handling of that.
+	  If timeout=0 we just return with a -1 from
+	  gst_rtsp_session_next_timeout_usec ().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785058
+
+2017-07-17 17:15:22 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Add "accept-certificate" signal for manually checking a TLS certificate for validity
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785024
+
+2017-10-26 14:43:19 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  docs: add media factory transport mode accessors
+	  and fix the documentation for the return value of the getter
+
+2017-10-09 12:43:01 +0200  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: unref 'pipelined_requests' in finalize
+	  The hash table priv->pipelined_requests is not unref:ed in the
+	  finalize funktion. Make sure it is.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=788704
+
+2017-10-09 14:44:40 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Initialize scalar variable
+	  CID 1418985
+
+2017-10-06 10:27:34 +0200  Edward Hervey <edward@centricular.com>
+
+	* win32/common/libgstrtspserver.def:
+	  win32: Update export file
+
+2017-04-22 09:26:07 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	  Start support for RTSP 2.0
+	  This adds basic support for new 2.0 features, though the protocol is
+	  subposdely backward incompatible, most semantics are the sames.
+	  This commit adds:
+	  - features:
+	  * version negotiation
+	  * pipelined requests support
+	  * Media-Properties support
+	  * Accept-Ranges support
+	  - APIs:
+	  * gst_rtsp_media_seekable
+	  The RTSP methods that have been removed when using 2.0 now return
+	  BAD_REQUEST.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781446
+
+2017-06-02 15:37:54 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  stream: Use stream duration as stream-stop if segment was not configured with a stop
+	  Allowing client to know stream duration when no seeking happened.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783435
+
+2017-09-25 19:40:17 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  rtsp-media-factory: Don't cache any media if NULL was returned as key
+	  The docs already mentioned this, but we actually stored it in the hash
+	  table with key==NULL and leaked its reference forever.
+
+2017-09-18 19:31:31 +0200  Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  rtspclientsink: Use a mutex for protecting against concurrent send/receives
+	  This is a simple port of:
+	  * a722f6e8329032c6eda4865d6a07f4ba5981d7ea
+	  * c438545dc9e2f14f657bc0ef261fff726449867b
+	  * cd17c71dcea5c9310d21f1347c7520983e5869ac
+	  in gst-plugins-good.
+
+2017-08-31 13:24:15 +0530  Satya Prakash Gupta <sp.gupta@samsung.com>
+
+	* gst/rtsp-server/rtsp-sdp.c:
+	  sdp: fix Memory leak in error case
+	  https://bugzilla.gnome.org/show_bug.cgi?id=787059
+
+2017-08-18 17:37:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* pkgconfig/meson.build:
+	  meson: don't install -uninstalled.pc file
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786457
+
+2017-08-17 12:26:17 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 48a5d85 to 3f4aa96
+
+2017-08-14 21:04:23 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix typo in debug message
+
+2017-08-11 14:14:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: hide symbols by default unless explicitly exported
+
+2017-08-10 14:20:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* pkgconfig/gstreamer-rtsp-server-uninstalled.pc.in:
+	  pkgconfig: remove -I@srcdir@/.. which duplicates abs_top_srcdir
+	  Fixes meson warning about undefined @srcdir@.
+
+2017-07-21 13:36:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/meson.build:
+	  meson: skip tests on windows for now
+	  As we do in the other modules. As libgstcheck is currently not
+	  built on windows. Fixes "Fallback variable 'gst_check_dep' in
+	  the subproject 'gstreamer' does not exist"" Meson error.
+
+2017-06-22 07:25:07 -0700  Julien Isorce <julien.isorce@gmail.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: fix connection delay due to wrong assumption on last-sample
+	  Commit 852cc09f542af5cadd79ffd7fe79d6475cf57e14 assumed that
+	  multiudpsink's last-sample always comes from the payloader. Which
+	  is wrong if auxiliary streams are multiplexed in the same stream.
+	  So check the buffer's ssrc against the caps'ssrc before to use its
+	  seqnum. If not the same ssrc just use the payloader as done prior
+	  the commit above or when there is no last-sample yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784094
+
+2017-06-23 16:19:04 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Allow using glib as a subproject
+
+2017-06-26 09:55:49 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix with-package-name option
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784082
+
+2017-06-09 20:16:28 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* Makefile.am:
+	  Distribute meson_options.txt
+
+2017-06-09 20:11:47 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* Makefile.am:
+	  And config.h.meson is no longer dist either
+
+2017-06-09 21:27:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* config.h.meson:
+	* meson.build:
+	  meson: config.h.meson is no longer needed
+
+2017-06-07 13:04:41 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	* tests/meson.build:
+	  meson: Fix building tests and activate them again
+
+2017-06-07 12:55:41 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* tests/check/meson.build:
+	  meson: Do not use path separator in test names
+	  Avoiding warnings like:
+	  WARNING: Target "elements/audioamplify" has a path separator in its name.
+
+2017-05-20 15:07:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add options to set package name and origin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782172
+
+2017-05-18 10:35:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.h:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* gst/rtsp-server/rtsp-params.h:
+	* gst/rtsp-server/rtsp-permissions.h:
+	* gst/rtsp-server/rtsp-sdp.h:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.h:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	* gst/rtsp-server/rtsp-token.h:
+	  Mark symbols explicitly for export with GST_EXPORT
+
+2017-05-16 14:44:43 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* gst/rtsp-sink/Makefile.am:
+	  Remove plugin specific static build option
+	  Static and dynamic plugins now have the same interface. The standard
+	  --enable-static/--enable-shared toggle are sufficient.
+
+2017-05-04 18:59:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+=== release 1.12.0 ===
+
+2017-05-04 15:40:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.12.0
 
 === release 1.11.91 ===
 
