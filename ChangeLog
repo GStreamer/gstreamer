@@ -1,9 +1,207 @@
-=== release 1.12.0 ===
+=== release 1.13.90 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2018-03-03 22:55:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.13.90
+
+2018-02-23 14:40:37 +0100  Edward Hervey <edward@centricular.com>
 
 	* configure.ac:
-	  releasing 1.12.0
+	  configure.ac: Don't use runtime location of overrides by default
+	  If someone wants to put the overrides in a non-standard location,
+	  they can use the --with-pygi-overrides-dir option.
+	  The default is to put them in ${pyexecdir}/gi/overrides
+	  Fixes make distcheck
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793756
+
+2018-02-18 10:00:48 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* Makefile.am:
+	* gi/Makefile.am:
+	* gi/overrides/Makefile.am:
+	* testsuite/Makefile.am:
+	  makefiles: Add missing dist files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793560
+
+2018-02-22 08:05:24 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_types.py:
+	  bitmask: Do not use long() directly with python3
+	  It doesn't exist anymore there
+
+2017-09-24 21:43:49 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	  gi: Check Gst has not been initialized before loading bindings
+	  It can have been initialized by some C code (in a C app with plugins
+	  for example).
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=788088
+
+2018-02-22 10:58:48 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_types.py:
+	  Allow Bitmask to be created from ints and longs but always store as long
+	  We need a 64 bit integer, and previously the test failed because it was
+	  already created from longs in various cases (e.g. when reading from a
+	  GstStructure).
+
+2018-02-15 19:44:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+2018-02-15 20:08:38 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: accept Gst.Structure in Caps.__new__
+	  Also rename misleading parameter (*kwargs -> *args)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793493
+
+=== release 1.13.1 ===
+
+2018-02-15 17:24:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.13.1
+
+2018-02-14 10:13:36 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  Print Python version after initialization
+
+2018-02-14 10:10:39 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugin/gstpythonplugin.c:
+	  pluginloader: Print Python library path that is tried to be loaded
+
+2018-01-23 19:32:18 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* Makefile.am:
+	* gi/Makefile.am:
+	* gi/overrides/Makefile.am:
+	* plugin/Makefile.am:
+	* testsuite/Makefile.am:
+	  Ship meson build system in autotools generated tarballs
+
+2017-08-01 09:57:57 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/__init__.py:
+	* scripts/pythondetector:
+	  meson: Fix detection of overrides path in some cases
+
+2017-07-29 23:05:22 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: Always initialize GIL state
+	  gcc warns about possibly unintialized use of it
+	  (even if it can't actually happen)
+
+2017-07-25 16:18:26 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/meson.build:
+	* meson.build:
+	* scripts/pythondetector:
+	* testsuite/meson.build:
+	* testsuite/overrides_hack.py:
+	  Fix simply running testsuite in meson
+	  - Make sure to never have root folder in sys.path when running meson,
+	  as pythondetector won't be able to access gi._overridesdir
+	  - Generate a mesonconfig.py file that will be used by the testsuite to
+	  know where meson generated files, making `python -m unittest` working.
+
+2017-07-25 16:17:54 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	* testsuite/test_types.py:
+	  Add support for Gst.Bitmask
+
+2017-07-25 14:35:01 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* testsuite/test_types.py:
+	  tests: Stop using deprecated assertion methods
+
+2017-07-25 14:29:19 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* testsuite/Makefile.am:
+	* testsuite/meson.build:
+	* testsuite/test_doublerange.py:
+	* testsuite/test_fraction.py:
+	* testsuite/test_fractionrange.py:
+	* testsuite/test_int64range.py:
+	* testsuite/test_intrange.py:
+	* testsuite/test_types.py:
+	* testsuite/test_valuearray.py:
+	* testsuite/test_valuelist.py:
+	  tests: Move all Fundamental types tests in a file
+	  No reason to have one file per type and it makes it more complicated
+	  to handle.
+
+2017-07-25 13:00:08 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	  structure: Add a .keys() method and implement __str__
+	  We are making it behave like a dict, so we should provide the
+	  same kind of utilities.
+
+2017-07-24 17:06:06 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  Return a Gst.*Range instead of a python range converting from GValue to python
+	  Otherwise we lose the information about what type of range it is, which
+	  is mandatory, especially when dealing with Structure and Caps.
+
+2017-07-24 12:13:13 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_gst.py:
+	  structures: Override __new__ to make it more pythonic
+
+2017-05-21 18:06:25 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* gi/overrides/Gst.py:
+	* testsuite/test_int64range.py:
+	* testsuite/test_intrange.py:
+	  overrides: Remove IntRange And Int64Range on Python2
+	  They use the range() built-in type which is a Python 3 change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782927
+
+2017-05-21 13:16:02 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugin/Makefile.am:
+	* plugin/meson.build:
+	  pythonplugin: Rename plugin file to match plugin name
+	  This is required by the new loader macro.
+
+2017-05-04 19:00:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+=== release 1.12.0 ===
+
+2017-05-04 15:40:29 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.12.0
 
 === release 1.11.91 ===
 
