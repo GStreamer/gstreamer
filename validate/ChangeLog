@@ -1,9 +1,1115 @@
+=== release 1.13.90 ===
+
+2018-03-03 22:54:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.13.90
+
+2018-03-01 18:49:21 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: enable more warnings
+
+2018-02-07 10:13:44 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/data/menus.ui:
+	  debug-viewer: fix names of actions/functions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793241
+
+2018-02-07 10:05:35 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/filters.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/data/menus.ui:
+	  debug-viewer: Added filter for threads
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793241
+
+2018-02-07 09:52:26 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/filters.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/data/menus.ui:
+	  debug-viewer: Added filter for function
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793241
+
+2018-02-21 19:50:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: simplify GST_DISABLE_GST_DEBUG check and don't use add_global_*
+	  add_global_arguments() can't be used in subprojects. It's
+	  entirely possible that devtools is a subproject but gstreamer
+	  is picked up from an installed location, so we should
+	  really use add_project_arguments() in both cases.
+
+2018-02-19 12:02:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/tools/meson.build:
+	  validate: tools: fix build dependencies for validate-rtsp-server
+	  In file included from ../subprojects/gst-devtools/validate/tools/gst-validate-rtsp-server.c:21:0:
+	  .../gst/gst.h:31:10: fatal error: gst/gstenumtypes.h: No such file or directory
+
+2018-02-18 12:21:34 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/plugins/gtk/gstvalidategtk.c:
+	  validategtk: Stop using deprecated keymap API
+	  gstvalidategtk.c:184:7: error: ‘gdk_keymap_get_default’ is deprecated: Use 'gdk_keymap_get_for_display' instead [-Werror=deprecated-declarations]
+	  gdk_keymap_get_entries_for_keyval (gdk_keymap_get_default (),
+	  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+2018-02-14 13:30:41 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	  debug-viewer: Fixed C++ destructors detection
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793447
+
+2018-02-15 21:00:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/configure.ac:
+	  Fix versions
+
+2018-02-15 19:44:37 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/configure.ac:
+	  Back to development
+
+=== release 1.13.1 ===
+
+2018-02-15 17:30:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.13.1
+
+2018-02-15 18:27:37 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: dist enum types templates
+
+2018-02-13 14:02:39 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	  debug-viewer: Fix C++ detection of lambdas as function
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793422
+
+2018-02-10 14:20:44 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  validate-pad-monitor: Use GST_SEQNUM_INVALID
+	  Instead of 0 (which is valid)
+
+2018-02-08 08:20:55 -0700  Olivier Crête <olivier.crete@collabora.com>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	  debug-viewer; Store thread as long instead of int
+	  On 64-bit platforms, the thread id can be over 2^32 so use a long
+	  to handle it.
+
+2017-12-29 11:25:05 +0900  Wonchul Lee <hi@wonchul.kr>
+
+	* validate/tools/gst-validate-images-check.c:
+	* validate/tools/meson.build:
+	  tools: gst-validate-images-check: Fix typo
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792035
+
+2018-01-30 20:36:00 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -fno-strict-aliasing where supported
+	  https://bugzilla.gnome.org/show_bug.cgi?id=769183
+
+2017-12-18 10:51:05 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate/baseclasses: Release un-needed data when test ends
+	  This was keeping around 500-700kB of data for each test, which was
+	  gradually raising memory usage of a full run by 100MB+
+	  The reports are definitely not needed, and we only need to keep
+	  information from the subprocess env variable that we might need
+	  later on for final reporting
+
+2017-12-18 09:48:21 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate/baseclasses: Don't leak several hundred MB of XML
+	  The xml-based MediaDescriptor were keeping open the XML file and the
+	  associated ElementTree structures, resulting in memory usage of several
+	  hundred megabytes.
+	  Instead cache the information we need immediately and release the
+	  XML structure
+
+2017-12-17 16:22:51 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* validate/data/scenarios/meson.build:
+	  meson: Add missing force_rtsp2 scenario
+	  Without this file, gst-validate installed using meson will fail all
+	  RTSP2 tests
+
+2017-12-03 12:23:51 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Remove protocol-specific timeouts
+	  Since we now check position/status of pipeline at regular intevals,
+	  we no longer need to impose a different timeout based on the
+	  protocol used.
+	  Avoids having 4min long timeouts for no reason (30s is enough)
+
+2017-12-03 10:42:49 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/launcher/baseclasses.py:
+	  validate: Use a single TCPServer for subprocess communication
+	  Instead of creating a separate TCPServer for each test, just create
+	  one which handles all connections in a threaded fashion.
+	  Shaves off ~500ms per test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791159
+
+2017-12-03 10:49:22 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	* validate/launcher/reporters.py:
+	  validate-launcher: Allow running tests out-of-order
+	  When the --shuffle option is used, the tests will be run out of order.
+	  This optimizes CPU utilization since it allows running synchronized
+	  and unsynchronized tests at the same.
+
+2017-12-03 11:07:00 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/utils.py:
+	  validate: Reduce time waiting for subprocess to stop
+	  stopping the subprocess is done from the main thread, this would
+	  throttle starting/stopping any tests by one second.
+	  Start with 50ms, and gradually increase the wait between iterations
+
+2017-12-03 11:05:40 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  gstvalidate: Lower timeout to check for rtsp-server to be up
+	  Check every 100ms, avoids throttling all rtsp tests by 500ms
+
+2017-12-02 09:36:27 -0300  Thibault Saunier <tsaunier@gnome.org>
+
+	* .gitignore:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Launch tests in `_TestsLauncher` not in TestsManagaer
+	  So that Test from several TestManager can run in parallel and thus avoid
+	  waiting for tests from one TestManager to run the following one.,
+	  Also by design TestsLauncher should always have been the responsible for
+	  ... launching tests.
+
+2017-11-25 13:10:41 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: Don't leak strings
+	  We only use them in the error/debug case anyway
+
+2017-11-25 12:46:05 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate-report: Plug leaks
+	  The trace was never freed, nor were the output of g_str_split
+
+2017-11-23 12:27:11 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Don't assume element have factories
+	  Some elements might not originate from factories (like custom/internal
+	  elements).
+	  Avoids dereferencing a NULL pointer
+
+2017-11-22 16:35:46 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Handle non-relative switch
+	  Make sure we stay within the number of present streams (and avoid
+	  out-of-bound read).
+	  CID #1415470
+
+2017-11-22 16:34:42 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Handle switching stream of type not present
+	  Unlikely to happen, but at least don't end up doing unsafe calculation
+	  with n == 0 afterwards
+	  CID #1415453
+
+2017-11-12 20:08:39 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* validate/tools/meson.build:
+	  meson: Always require the latest gst-rtsp-server
+	  In the worst case, when building with gst-uninstalled, we will try to
+	  link against an older gst-rtsp-server provided by the system. Found by
+	  philn.
+
+2017-11-08 17:22:47 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: Call g-ir-scanner with the same toolchain as the rest
+
+2017-10-27 09:59:53 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate-analyze:
+	  validate-analyze: Update for xml format changes
+
+2017-07-03 16:36:32 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/data/scenarios/force_rtsp2.scenario:
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Run rtsp tests against both V1 and V2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=781446
+
+2017-09-06 16:35:25 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/main.py:
+	  validate:launcher: Allow disabling using the number of failed tests as exitcode
+	  This is usefull on CI servers where the test results will be inspected
+	  and the status of the build built from it.
+
+2017-08-24 14:17:08 +0900  Jimmy Ohn <yongjin.ohn@lge.com>
+
+	* validate/launcher/main.py:
+	  validate: launcher: Modify the order of the parser argument
+	  Modify the order of the parser argument before setting dir_group
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786715
+
+2017-08-26 10:50:44 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/utils.py:
+	  launcher: Automatically disable output coloration if not supported
+
+2017-08-26 09:10:40 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/meson.build:
+	  meson: Fix the way we set the testsuite version
+
+2017-08-18 11:37:28 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	* validate/launcher/reporters.py:
+	  validate:launcher: Use the number of failed test as exit code
+	  We used to always return 0, which was not right!
+
+2017-08-14 16:39:56 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher: Avoid exceptions when inspecting renders files
+	  We were a bit to strict on the Exception types which lead to
+	  the launcher failling itself when it shouldn't
+
+2017-08-12 12:08:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: hide symbols by default unless explicitly exported
+
+2017-08-12 12:04:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/win32/common/libgstvalidate.def:
+	  validate: hide some private symbols
+
+2017-08-10 21:43:54 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Plug a potential leak when retrieving peer pad
+
+2017-08-10 19:25:09 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Fix going over ghostpads/proxypads
+
+2017-08-10 14:35:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/docs/validate/meson.build:
+	* validate/launcher/meson.build:
+	* validate/plugins/gtk/meson.build:
+	  meson: fix a few meson warnings
+	  WARNING: The variable(s) 'DATADIR', 'LIBDIR' in the input file
+	  'subprojects/gst-devtools/validate/launcher/config.py.in' are not
+	  present in the given configuration data
+	  WARNING: Passed invalid keyword argument "scanobj_args". This will
+	  become a hard error in the future.
+	  WARNING: Keyword argument "install" defined multiple times. This
+	  will be a an error in future Meson releases.
+
+2017-08-07 16:00:53 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/win32/common/libgstvalidate.def:
+	  validate:win32: Update .def file.
+
+2017-08-07 15:56:21 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-media-info.h:
+	* validate/gst/validate/gst-validate-monitor-factory.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override-registry.h:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.h:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/gst/validate/validate.h:
+	* validate/win32/common/libgstvalidate.def:
+	  validate: Mark symbols explicitly for export with GST_EXPORT
+	  With an exception:
+	  * gst_validate_monitor_setup
+	  which was never declared in headers and should always have been static.
+
+2017-07-26 17:22:33 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: Fix building the tracer
+	  It fails on some platforms, I guess this is the reason
+
+2017-07-26 16:15:16 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-enum-types.c.template:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Also mkenums with autotools
+	  And fix the build with stricter gcc arguments.
+
+2017-07-25 11:23:35 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-enum-types.c.template:
+	* validate/gst/validate/gst-validate-enum-types.h.template:
+	* validate/gst/validate/gst-validate-enums.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.h:
+	* validate/gst/validate/meson.build:
+	* validate/gst/validate/validate.h:
+	* validate/tools/gst-validate.c:
+	  validate: Add a way to print information about pipeline status
+	  Similare to what is done with gst-launch.
+	  And finally generate GTypes for our flags and enums.
+
+2017-07-26 15:22:49 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Fix NULL pointer usage
+	  for good this time ...
+	  CID #1415570
+
+2017-07-26 15:18:57 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate-report: Fix a leak in error cases
+	  CID #1415494
+
+2017-07-25 09:55:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Re-enable mxf op2b tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=785119
+
+2017-07-21 10:30:37 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/win32/common/libgstvalidate.def:
+	  wind32: Update .def file.
+
+2017-07-20 14:21:59 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Protect against priv NULL usage
+	  CID #1415570
+
+2017-07-19 12:16:53 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/data/scenarios/Makefile.am:
+	* validate/data/scenarios/meson.build:
+	  validate: Do not install now removed setup_sink_props_max_lateness.scenario file
+
+2017-07-19 11:49:09 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/testsuites/check.py:
+	  validate:launcher:check: Make sure to register tests from the testsuite
+	  Instead of having them listed from the app manager. This is needed
+	  to avoid backtrace as tests now have to be register when setting up
+	  the testsuite.
+
+2017-07-19 11:27:13 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/data/scenarios/setup_sink_props_max_lateness.scenario:
+	* validate/data/valgrind.config:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/launcher/baseclasses.py:
+	  validate: Factor out a method to set properties on elements in utils
+	  Make sure to use it where appropriate and add some logging when
+	  setting an object property from an action.
+	  And use the valgrind.conf to set all the properties instead of having
+	  a mixture of a config scenario and the config file (making sure the
+	  max-lateness is set on any sink)
+
+2017-07-19 10:52:40 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate:scenario: Allow not config action to be executed from config files
+	  When those are special cased to support that, such as the `set-property`
+	  action.
+	  This special handling was added in
+	  4927c657107dd23405456a703bb23173ab60f27d
+	  validate: disable QOS features when running with valgrind
+	  before we started to support executing arbitrary config action from
+	  configuration files.
+
+2017-07-19 10:17:25 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: Fix running config action from the config file
+
+2017-07-19 15:47:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Blacklist op2b mxf files
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=785119
+
+2017-07-19 11:02:44 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	  validate: Cast GList data content before usage
+	  Apart from code readability, it allows compilers to detect wrong usages,
+	  such as the call to gst_validate_action_new() which was using the wrong
+	  argument
+
+2017-07-18 12:09:13 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Error out if no testsuite could be loaded
+
+2017-07-13 16:43:32 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate: launcher: Namespace test name with the testsuite name
+	  Also allowing users to pass test names directly
+
+2017-07-13 20:17:51 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Properly use TestsLauncher.list_test to load tests
+	  Otherwise we might skip check_defined_tests.
+
+2017-07-18 10:47:00 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Remove some dead code
+	  CID 1415457
+
+2017-07-18 10:45:29 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Plug a minor string leak
+	  CID 1415459
+
+2017-07-18 10:42:00 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Don't create scenario on a monitor which has no target
+	  Not very probable but avoids a potential NULL pointer dereferencing.
+	  CID 1415460
+
+2017-07-18 10:36:34 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Always only use the first description in scenarios
+	  Also pluging a leak of the descrption copied structure
+	  CID 1415463
+
+2017-07-18 10:27:49 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: ssim: Do not compare unsigned to < 0
+	  CID 1415473
+
+2017-07-18 10:23:31 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: Plug a string leak
+	  CID 1415475
+
+2017-07-18 10:19:23 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:ssim: Let user know when no file have been compared
+	  Fixing a possible division by zero issue.
+	  CID 1415482
+
+2017-07-18 10:16:07 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Add missing break statement
+	  CID 1415485
+
+2017-07-18 10:14:59 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  Check g_file_set_contents() return value
+	  CID 1415486
+
+2017-07-18 10:12:07 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: Plug leak of copy of a va_list
+	  CID 1415490
+
+2017-07-18 10:07:34 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	  validate: Do not check NULL pointer uselessly
+	  CID 141593
+
+2017-07-18 10:05:02 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Plug minor leak in issue creation error path
+	  CID 1415494
+
+2017-07-18 10:00:03 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  validate: Remove some dead code
+	  Next will never be NULL as `done` is always set to TRUE when next is
+	  set.
+	  CID 1415503
+
+2017-07-18 09:51:16 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	  validate: monitor: Add missing break; statement
+	  Fixes CID 1415500
+
+2017-07-18 15:50:35 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Fix wrong return value
+	  We were always returning ok ...
+	  CID #1415484
+
+2017-07-18 15:48:01 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Check g_file_set_contents() return value
+	  CID #1415487
+
+2017-07-18 15:45:13 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Fix copy/paste error
+	  CID #1415502
+
+2017-07-18 15:43:26 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Fix string usage
+	  Use the string representation of the index if it *IS* present (and
+	  not the opposite).
+	  CID #1415506
+
+2017-07-18 15:38:04 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate-utils: Add NULL check
+	  Unlikely to be triggered. And fix typo at the same time
+	  CID #1415464
+
+2017-07-14 10:36:49 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Un-blacklist scrub_forward_seeking.op2b-mpeg2-wave_hd_mxf
+	  It works now after various mxfdemux changes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=764025
+
+2017-07-13 08:45:28 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  gstvalidate: Re-allow tests that should be fixed
+
+2017-07-12 14:46:36 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/tests/check/validate/test-utils.c:
+	  check: Remove dead assignments
+
+2017-07-11 10:11:33 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Add some missing env variables in command to launch test
+
+2017-07-07 12:26:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: find python3 via python3 module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783198
+
+2017-06-30 12:32:56 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Recalculate latency on LATENCY messages
+
+2017-06-30 12:30:40 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Allow setting properties by element factory name
+
+2017-06-30 09:46:57 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Enhance the set_property action to handle enum props
+	  User needs to specify the enum value as a string, to be used
+	  as with gst_util_set_object_arg.
+	  Also enhance reporting and verify that the set value has actually
+	  been taken into account.
+
+2017-06-30 09:45:02 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Use Gst printing utils in our reporting system
+	  Allowing us to use GST_PTR_FORMAT and friends!
+
+2017-06-28 15:54:13 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not check ModuleNotFound exception
+	  It is a subclass of ImportError and is avalaible only since 3.6
+	  https://ci.gstreamer.net/job/pitivi-flatpak/626/console
+
+2017-06-28 13:01:47 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Disable seek with stop on RTSP streams
+	  It is actually not supported
+
+2017-06-23 16:20:01 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* meson.build:
+	  meson: Allow using glib as a subproject
+
+2017-06-22 15:26:08 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Avoid useless and expensive deep copies
+
+2017-06-22 13:08:30 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Speed up xml parsing using lxml if avalaible
+
+2017-06-22 12:01:12 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/data/scenarios/disable_subtitle_track_while_paused.scenario:
+	  validate: make swicthing subtitle track while paused require prerolling
+
+2017-06-22 11:53:49 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/data/scenarios/change_state_intensive.scenario:
+	  validate: Fix the change_state_intensive scenario
+	  The scenario was in no way certified that the pipeline was in PAUSED
+	  state when starting on an stream that does not preroll
+
+2017-06-21 14:36:33 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Enhance playbin3 stream selection error message
+
+2017-06-20 15:51:27 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Add missing space in segment mismatch issue description
+
+2017-06-20 10:43:54 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Enhance command printing when using a server
+	  So it can be copy pasted and work
+
+2017-06-20 10:43:09 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: No need to use -validate as a tracer for RTSP server
+	  It is now linked into the server app
+
+2017-06-16 17:31:19 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix launching testsuite with relative paths
+
+2017-06-13 17:13:22 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/plugins/extra_checks/gstvalidateextrachecks.c:
+	* validate/plugins/extra_checks/meson.build:
+	* validate/plugins/meson.build:
+	  validate: Add a plugin with potential extra checks
+	  And add a way to check that a configured number of instances of a particular
+	  element is used, this is useful to make sure for example that playing a
+	  particular stream doesn't lead to several decoders being instanciated.
+
+2017-06-13 17:11:40 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Fix the way we check if _CONFIG is a list of structures
+
+2017-06-13 16:15:20 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-override.h:
+	  validate: overrides: Add a hook about newly added elements in a bin
+
+2017-06-13 16:08:23 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-monitor-factory.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	  validate: Attach overrides before calling monitor.setup()
+
+2017-06-08 13:43:41 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate: libs: video: improve ssim's action registrations
+
+2017-06-08 12:30:22 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/Makefile.am:
+	  validate: Do not link the rtsp server against validatevideo
+	  It is not needed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783554
+
+2017-06-08 12:16:24 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Do not which(None), the rtsp-server command is unset if not avalaible
+	  https://bugzilla.gnome.org/show_bug.cgi?id=783551
+
+2017-06-07 16:18:59 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tools/meson.build:
+	  meson: Make dependency on rtsp-server really optionnal
+
+2017-06-07 15:06:10 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle test that can't be run in parralel
+
+2017-06-07 12:29:17 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/tests/check/meson.build:
+	  meson: Do not use path separator in test names
+	  Avoiding warnings like:
+	  WARNING: Target "elements/audioamplify" has a path separator in its name.
+
+2017-06-07 09:16:45 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/configure.ac:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/tools/Makefile.am:
+	* validate/tools/gst-validate-rtsp-server.c:
+	* validate/tools/meson.build:
+	  validate: Add 'our own' RTSP server implementation
+
+2017-06-06 16:23:48 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle optional tests
+	  For example RTSP tests might not be avalaible if gst-rtsp-server-example-uri is not avalaible
+
+2017-06-06 12:45:31 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Print logfiles when printing test result
+	  It was often annoying to check wrong logs because the result are
+	  not printed near the reference to logs.
+
+2017-06-06 12:42:57 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/validate.c:
+	  validate: Add a way to use config actions in GST_VALIDATE_CONFIG files
+	  The synthax is:
+	  core, action=action-name, param1=1, param2=param2
+
+2017-06-05 11:35:43 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  scenario: Fallback to using media_info to determine stream duration
+	  In the case the query duration return CLOCK_TIME_NONE.
+
+2017-05-10 08:12:18 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/data/scenarios/scrub_backward_seeking.scenario:
+	* validate/data/scenarios/scrub_backward_seeking_full.scenario:
+	* validate/data/scenarios/scrub_forward_seeking.scenario:
+	* validate/data/scenarios/scrub_forward_seeking_full.scenario:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not run scenarios that need prerolling on RTSP stream
+
+2017-04-28 17:59:21 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/meson.build:
+	  validate: Do not print \r in actual files
+
+2014-12-05 12:16:36 +0100  Thibault Saunier <tsaunier@gnome.org>
+
+	* validate/data/scenarios/switch_audio_track_while_paused.scenario:
+	* validate/data/scenarios/switch_subtitle_track_while_paused.scenario:
+	* validate/docs/validate-design.txt:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate: Implement RTSP support
+
+2017-06-06 23:39:21 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-reporter.c:
+	  validate: reporter: add doc entry for gst_validate_report()'s varargs
+	  Avoids GTK-Doc parser warnings
+
+2017-06-06 23:01:32 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: fix typo/grammar issues in function documentation
+
+2017-06-06 20:56:29 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: actions: drop needless newline before feature-rank and wait
+	  Stale new-lines messed the help output of gst-validate -t
+
+2017-06-06 20:25:10 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: actions: add info on mandatory fields for set-property
+	  Additionally, drop a comment that becomes redundant after adding this
+	  info to the action description
+
+2017-06-06 19:38:23 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: scenario: fix description for 'seek' and 'stop'
+
+2017-06-06 18:50:47 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: fix documentation for gst_validate_init()
+
+2017-06-02 16:51:21 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/win32/common/libgstvalidate.def:
+	  validate: Update win32 def file
+
+2017-06-01 16:38:25 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: Make Reporter.runner a MT safe weak reference
+	  It can be used in any thread!
+
+2017-05-31 14:06:04 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Add missing is_live implementation for FakeMediaDescriptor
+
+2017-05-30 17:42:07 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Fix json serialized object leaks
+
+2017-05-30 16:15:19 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Handle not redirecting valgrind output
+
+2017-05-30 16:14:51 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Add a way to pass arguments to the leak tracer
+
+2017-05-30 16:13:08 -0400  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: Use GWeakRefs on monitor target and pipeline
+	  Making it thread safe and more future proof (though having them point
+	  to NULL might not be handled all around).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782784
+
+2017-05-18 15:21:41 +0200  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	  validate: monitor: Unref our weak reference to the pipeline
+
+2017-04-28 18:02:05 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/plugins/gtk/gstvalidategtk.c:
+	* validate/tests/check/validate/monitoring.c:
+	* validate/tests/check/validate/padmonitor.c:
+	* validate/tools/gst-validate.c:
+	  validate: Make accessing Scenario.pipeline thread safe
+	  The fact that Scenario.pipeline was not accessible in a thread way lead
+	  to the fact that all users had to take the unref the last pipeline ref
+	  in the main thread, otherwise we were crying. This was an ugly
+	  restriction which lead to issue when using scenario on gst-rtsp-server.
+	  This break the API as this commit remove the GstValidateScenario.pipeline
+	  field but it is worth it.
+
+2017-05-25 15:57:33 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/data/scenarios/change_state_intensive.scenario:
+	* validate/data/scenarios/full_live_rewind.scenario:
+	* validate/data/scenarios/play_15s_live.scenario:
+	* validate/data/scenarios/seek_end_live.scenario:
+	  scenarios: Add/Update scenarios for live contents
+
+2017-05-25 15:50:23 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Implement Scenario.__repr__
+	  Allows better debugging when looking at logs
+
+2017-05-25 13:55:52 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Add live-related features to scenarios and medias
+	  Note: The notion of "live" here is in the *content* sense and not in the
+	  GStreamer sense.
+	  Ex:
+	  * A rtsp stream is always "live" in the GStreamer sense but might not always
+	  provide live content.
+	  * HLS/DASH streams are not "live" in the GStreamer sense but might
+	  provide "live" content.
+	  Some scenarios might:
+	  * require live content
+	  * not be compatible with live content
+	  This patch adds two new properties for scenarios:
+	  * live_content_required (default False) for scenarios that can only work with
+	  live content.
+	  * live_content_compatible (default False) for scenarios that can work with
+	  both live and non-live content.
+	  This patch adds support for reading a "live" property from stream_info
+
+2017-05-20 12:26:31 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: g_object_newv() is deprecated
+	  Since glib version 2.54, g_object_newv() is deprecated.
+	  This patch changes that function with a simpler g_object_new(),
+	  since no properties are set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782860
+
+2017-05-05 14:57:20 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate-report: Don't leak GError
+
+2017-05-05 14:57:56 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Don't end up with invalid action name
+	  When replacing an action structure, also update the action name with
+	  the (new) name from the new structure. Otherwise we end up with
+	  a bogus name from the previous (deleted) structure.
+
+2017-05-03 17:57:05 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Avoid invalid memory access
+	  The name of the action comes directly (i.e. not copied) from the
+	  contained GstStructure field. Therefore make sure to take that
+	  name from the proper structure field (copied just before) and
+	  not from an outside one.
+
+2017-05-04 14:45:32 -0700  Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
+
+	* validate/tools/gst-validate-images-check.c:
+	  validate: drop superfluous whitespace from cmd description
+
+2017-05-01 13:51:48 -0700  Scott D Phillips <scott.d.phillips@intel.com>
+
+	* validate/tools/gst-validate-images-check.c:
+	  validate: remove const from outfolder
+	  GOptionEntry's arg_data is of type gpointer which differs in
+	  constness from const gchar*, so remove constness from outfolder.
+	  This fixes a build issue with msvc.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=782031
+
+2017-05-04 18:59:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* meson.build:
+	  Back to development
+
+2017-05-04 18:59:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/configure.ac:
+	  Back to development
+
 === release 1.12.0 ===
 
-2017-05-04  Sebastian Dröge <slomo@coaxion.net>
+2017-05-04 15:48:44 +0300  Sebastian Dröge <sebastian@centricular.com>
 
-	* configure.ac:
-	  releasing 1.12.0
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.12.0
 
 2017-04-30 14:35:29 -0300  Thibault Saunier <thibault.saunier@osg.samsung.com>
 

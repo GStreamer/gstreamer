@@ -50,7 +50,17 @@
      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-devtools"/>
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-devtools/"/>
    </GitRepository>
- </repository> 
+ </repository>
+
+ <release>
+  <Version>
+   <revision>1.13.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-03</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-validate/gst-validate-1.13.90.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
