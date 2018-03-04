@@ -42,6 +42,9 @@
 #else
 #include <gst/gl/egl/gstegl.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#ifdef HAVE_QT_QPA_HEADER
+#include <qpa/qplatformnativeinterface.h>
+#endif
 #endif
 #endif
 
@@ -110,6 +113,13 @@ gst_qt_get_gl_display ()
     }
 
     display = (GstGLDisplay *) gst_gl_display_viv_fb_new (disp_idx);
+#elif defined(HAVE_QT_QPA_HEADER)
+    QPlatformNativeInterface *native =
+        QGuiApplication::platformNativeInterface();
+    EGLDisplay egl_display = (EGLDisplay)
+        native->nativeResourceForWindow("egldisplay", NULL);
+    if (egl_display != EGL_NO_DISPLAY)
+      display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (egl_display);
 #else
     EGLDisplay egl_display = (EGLDisplay) gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
     display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (egl_display);
