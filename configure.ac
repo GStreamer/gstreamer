@@ -892,6 +892,7 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
         AS_IF([test -f "$PKG_CONFIG_SYSROOT_DIR/$QPA_INCLUDE_PATH/qpa/qplatformnativeinterface.h"], [
           QT_CFLAGS="$QT_CFLAGS -I$PKG_CONFIG_SYSROOT_DIR/$QPA_INCLUDE_PATH"
           HAVE_QT_QPA_HEADER="yes"
+          AC_DEFINE([HAVE_QT_QPA_HEADER], [], [Define if the Qt QPA header is installed])
         ], [AC_MSG_NOTICE([Cannot find QPA])])
         if test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_GLX" = "x1" || test "x$GST_GL_HAVE_WINDOW_X11" = "x1" -a "x$GST_GL_HAVE_PLATFORM_EGL" = "x1"; then
           PKG_CHECK_MODULES(QT_X11, Qt5X11Extras, [
