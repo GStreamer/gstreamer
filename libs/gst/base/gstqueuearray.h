@@ -84,6 +84,8 @@ gboolean        gst_queue_array_drop_struct      (GstQueueArray * array,
                                                   guint           idx,
                                                   gpointer        p_struct);
 GST_EXPORT
+gpointer        gst_queue_array_pop_tail_struct  (GstQueueArray * array);
+GST_EXPORT
 gpointer        gst_queue_array_peek_tail_struct (GstQueueArray * array);
 
 G_END_DECLS

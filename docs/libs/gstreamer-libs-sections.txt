@@ -938,6 +938,7 @@ gst_queue_array_push_tail_struct
 gst_queue_array_peek_head_struct
 gst_queue_array_pop_head_struct
 gst_queue_array_peek_tail_struct
+gst_queue_array_pop_tail_struct
 gst_queue_array_drop_struct
 </SECTION>
 

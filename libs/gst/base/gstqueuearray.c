@@ -402,6 +402,41 @@ gst_queue_array_pop_tail (GstQueueArray * array)
 }
 
 /**
+ * gst_queue_array_pop_tail_struct: (skip)
+ * @array: a #GstQueueArray object
+ *
+ * Returns the tail of the queue @array and removes
+ * it from the queue.
+ *
+ * Returns: The tail of the queue
+ *
+ * Since: 1.14
+ */
+gpointer
+gst_queue_array_pop_tail_struct (GstQueueArray * array)
+{
+  gpointer ret;
+  guint len, idx;
+
+  g_return_val_if_fail (array != NULL, NULL);
+
+  len = array->length;
+
+  /* empty array */
+  if (len == 0)
+    return NULL;
+
+  idx = (array->head + (len - 1)) % array->size;
+
+  ret = array->array + (array->elt_size * idx);
+
+  array->tail = idx;
+  array->length--;
+
+  return ret;
+}
+
+/**
  * gst_queue_array_is_empty: (skip)
  * @array: a #GstQueueArray object
  *
