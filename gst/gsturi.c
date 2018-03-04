@@ -892,7 +892,7 @@ file_path_contains_relatives (const gchar * path)
 
 /**
  * gst_filename_to_uri:
- * @filename: absolute or relative file name path
+ * @filename: (type filename): absolute or relative file name path
  * @error: pointer to error, or %NULL
  *
  * Similar to g_filename_to_uri(), but attempts to handle relative file paths

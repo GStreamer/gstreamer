@@ -1211,7 +1211,7 @@ gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
 
 /**
  * gst_preset_set_app_dir:
- * @app_dir: the application specific preset dir
+ * @app_dir: (type filename): the application specific preset dir
  *
  * Sets an extra directory as an absolute path that should be considered when
  * looking for presets. Any presets in the application dir will shadow the
@@ -1237,7 +1237,7 @@ gst_preset_set_app_dir (const gchar * app_dir)
  * Gets the directory for application specific presets if set by the
  * application.
  *
- * Returns: (nullable): the directory or %NULL, don't free or modify
+ * Returns: (nullable) (type filename): the directory or %NULL, don't free or modify
  * the string
  */
 const gchar *
