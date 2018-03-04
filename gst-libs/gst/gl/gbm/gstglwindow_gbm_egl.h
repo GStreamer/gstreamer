@@ -63,6 +63,7 @@ struct _GstGLWindowGBMEGLClass {
 GType gst_gl_window_gbm_egl_get_type (void);
 
 GstGLWindowGBMEGL * gst_gl_window_gbm_egl_new (GstGLDisplay * display);
+gboolean gst_gl_window_gbm_egl_create_window (GstGLWindowGBMEGL * window_egl);
 
 G_END_DECLS
 

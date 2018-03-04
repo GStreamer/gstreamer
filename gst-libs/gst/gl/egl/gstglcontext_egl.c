@@ -51,6 +51,9 @@
 #if GST_GL_HAVE_WINDOW_DISPMANX
 #include "../dispmanx/gstglwindow_dispmanx_egl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_GBM
+#include "../gbm/gstglwindow_gbm_egl.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
@@ -518,6 +521,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #if GST_GL_HAVE_WINDOW_DISPMANX
     if (GST_IS_GL_WINDOW_DISPMANX_EGL (context->window)) {
       gst_gl_window_dispmanx_egl_create_window ((GstGLWindowDispmanxEGL *)
+          context->window);
+    }
+#endif
+#if GST_GL_HAVE_WINDOW_GBM
+    if (GST_IS_GL_WINDOW_GBM_EGL (context->window)) {
+      gst_gl_window_gbm_egl_create_window ((GstGLWindowGBMEGL *)
           context->window);
     }
 #endif

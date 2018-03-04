@@ -83,16 +83,6 @@ gst_gl_window_gbm_egl_init (GstGLWindowGBMEGL * window_gbm)
 static guintptr
 gst_gl_window_gbm_egl_get_window_handle (GstGLWindow * window)
 {
-  GstGLWindowGBMEGL *window_egl = GST_GL_WINDOW_GBM_EGL (window);
-
-  /* This function is called in here, and not in the open()
-   * vmethod. The reason for this is explained inside the
-   * gst_gl_window_gbm_init_surface() function. */
-  if (window_egl->gbm_surf == NULL) {
-    if (!gst_gl_window_gbm_init_surface (window_egl))
-      return 0;
-  }
-
   return (guintptr) GST_GL_WINDOW_GBM_EGL (window)->gbm_surf;
 }
 
@@ -293,7 +283,11 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
    * contains some function pointers that are set to NULL and
    * shouldn't be. This is because Mesa's eglInitialize() loads
    * the DRI2 driver and the relevant functions aren't available
-   * until then. */
+   * until then.
+   *
+   * Therefore, this function is called instead inside
+   * gst_gl_window_gbm_egl_create_window(), which in turn is
+   * called inside gst_gl_context_egl_create_context(). */
 
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
   GstGLDisplayGBM *display = (GstGLDisplayGBM *) window->display;
@@ -354,4 +348,11 @@ gst_gl_window_gbm_egl_new (GstGLDisplay * display)
   window_egl = g_object_new (GST_TYPE_GL_WINDOW_GBM_EGL, NULL);
 
   return window_egl;
+}
+
+
+gboolean
+gst_gl_window_gbm_egl_create_window (GstGLWindowGBMEGL * window_egl)
+{
+  return gst_gl_window_gbm_init_surface (window_egl);
 }
