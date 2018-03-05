@@ -217,6 +217,21 @@ GST_START_TEST (test_h265_format_range_profiles_exact_match)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_format_range_profiles_partial_match)
+{
+  /* Test matching compatible profiles from non-standard bitstream */
+  GstH265ProfileTierLevel ptl;
+
+  memset (&ptl, 0, sizeof (ptl));
+  ptl.profile_idc = 4;
+
+  set_format_range_fields (&ptl, 1, 1, 1, 1, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_MAIN_444);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -228,6 +243,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_base_profiles);
   tcase_add_test (tc_chain, test_h265_base_profiles_compat);
   tcase_add_test (tc_chain, test_h265_format_range_profiles_exact_match);
+  tcase_add_test (tc_chain, test_h265_format_range_profiles_partial_match);
 
   return s;
 }
