@@ -1340,7 +1340,9 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
       flow_ret = gst_pad_push (GST_VIDEO_ENCODER_SRC_PAD (self), outbuf);
     }
   } else if (frame != NULL) {
-    flow_ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
+    /* Just ignore empty buffers, don't drop a frame for that */
+    flow_ret = GST_FLOW_OK;
+    gst_video_codec_frame_unref (frame);
   }
 
   return flow_ret;
