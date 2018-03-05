@@ -6,14 +6,20 @@ ladspa_sources = [
   'gstladspautils.c',
 ]
 
-ladspa_dep = dependency('lrdf', required : false)
-if ladspa_dep.found()
-  gstrsvg = library('gstladspa',
+ladspa_cargs = []
+
+lrdf_dep = dependency('lrdf', required : false)
+if lrdf_dep.found()
+  ladspa_cargs = ['-DHAVE_LRDF']
+endif
+
+if cc.has_header('ladspa.h')
+  gstladspa = library('gstladspa',
     ladspa_sources,
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + ladspa_cargs,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gstaudio_dep, gstbase_dep, gmodule_dep, ladspa_dep, mathlib],
+    dependencies : [gstaudio_dep, gstbase_dep, gmodule_dep, mathlib],
     install : true,
     install_dir : plugins_install_dir,
   )
