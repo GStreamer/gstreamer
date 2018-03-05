@@ -176,7 +176,7 @@ case $host in
         PKG_CHECK_MODULES(DRM, libdrm >= 2.4.55, HAVE_DRM=yes, HAVE_DRM=no)
         AC_SUBST(DRM_CFLAGS)
         AC_SUBST(DRM_LIBS)
-        if test "x$HAVE_DRM" = "xyes"; then
+        if test "x$HAVE_DRM" = "xyes" -a "x$HAVE_GUDEV" = "xyes"; then
           PKG_CHECK_MODULES(GBM, gbm, HAVE_GBM_EGL=yes, HAVE_GBM_EGL=no)
           AC_SUBST(GBM_CFLAGS)
           AC_SUBST(GBM_LIBS)
