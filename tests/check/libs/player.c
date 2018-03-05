@@ -1712,7 +1712,7 @@ player_suite (void)
   tcase_add_test (tc_general, test_play_audio_video_eos);
   tcase_add_test (tc_general, test_play_error_invalid_uri);
   tcase_add_test (tc_general, test_play_error_invalid_uri_and_play);
-  tcase_add_test (tc_general, test_play_media_info);
+  tcase_skip_broken_test (tc_general, test_play_media_info);
   tcase_add_test (tc_general, test_play_stream_disable);
   tcase_add_test (tc_general, test_play_stream_switch_audio);
   tcase_add_test (tc_general, test_play_stream_switch_subtitle);
