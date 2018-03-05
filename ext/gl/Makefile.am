@@ -14,6 +14,7 @@ plugin_LTLIBRARIES = libgstopengl.la
 
 libgstopengl_la_SOURCES = \
 	gstopengl.c \
+	gstglalpha.c \
 	gstgluploadelement.c \
 	gstgldownloadelement.c \
 	gstglcolorconvertelement.c \
@@ -54,6 +55,7 @@ libgstopengl_la_SOURCES = \
 	gstglutils.c
 
 noinst_HEADERS = \
+	gstglalpha.h \
 	gstgluploadelement.h \
 	gstgldownloadelement.h \
 	gstglcolorconvertelement.h \

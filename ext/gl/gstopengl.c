@@ -70,6 +70,7 @@
 #include "gstglviewconvert.h"
 #include "gstgltestsrc.h"
 #include "gstgldeinterlace.h"
+#include "gstglalpha.h"
 
 #ifdef HAVE_GRAPHENE
 #include "gstgltransformation.h"
@@ -243,6 +244,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "gldeinterlace",
           GST_RANK_NONE, GST_TYPE_GL_DEINTERLACE)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glalpha",
+          GST_RANK_NONE, GST_TYPE_GL_ALPHA)) {
     return FALSE;
   }
 #if defined(HAVE_JPEG) && defined(HAVE_PNG)

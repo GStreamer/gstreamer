@@ -6,6 +6,7 @@
 #  'gstglstereomix.c',
 opengl_sources = [
   'gstopengl.c',
+  'gstglalpha.c',
   'gstgluploadelement.c',
   'gstgldownloadelement.c',
   'gstglcolorconvertelement.c',
