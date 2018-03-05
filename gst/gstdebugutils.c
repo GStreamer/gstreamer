@@ -792,7 +792,7 @@ debug_dump_footer (GString * str)
   g_string_append_printf (str, "}\n");
 }
 
-/*
+/**
  * gst_debug_bin_to_dot_data:
  * @bin: the top-level pipeline that should be analyzed
  *
@@ -819,7 +819,7 @@ gst_debug_bin_to_dot_data (GstBin * bin, GstDebugGraphDetails details)
   return g_string_free (str, FALSE);
 }
 
-/*
+/**
  * gst_debug_bin_to_dot_file:
  * @bin: the top-level pipeline that should be analyzed
  * @file_name: (type filename): output base filename (e.g. "myplayer")
@@ -869,7 +869,7 @@ gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
   g_free (full_file_name);
 }
 
-/*
+/**
  * gst_debug_bin_to_dot_file_with_ts:
  * @bin: the top-level pipeline that should be analyzed
  * @file_name: (type filename): output base filename (e.g. "myplayer")
