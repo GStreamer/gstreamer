@@ -1055,9 +1055,9 @@ typedef struct
 static gint
 find_func (QtDemuxSample * s1, gint64 * media_time, gpointer user_data)
 {
-  if ((gint64) s1->timestamp + s1->pts_offset > *media_time)
+  if ((gint64) s1->timestamp > *media_time)
     return 1;
-  if ((gint64) s1->timestamp + s1->pts_offset == *media_time)
+  if ((gint64) s1->timestamp == *media_time)
     return 0;
 
   return -1;
@@ -1066,7 +1066,7 @@ find_func (QtDemuxSample * s1, gint64 * media_time, gpointer user_data)
 /* find the index of the sample that includes the data for @media_time using a
  * binary search.  Only to be called in optimized cases of linear search below.
  *
- * Returns the index of the sample.
+ * Returns the index of the sample with the corresponding *DTS*.
  */
 static guint32
 gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
@@ -1156,20 +1156,31 @@ gst_qtdemux_find_index_linear (GstQTDemux * qtdemux, QtDemuxStream * str,
 
   /* use faster search if requested time in already parsed range */
   sample = str->samples + str->stbl_index;
-  if (str->stbl_index >= 0 &&
-      mov_time <= (sample->timestamp + sample->pts_offset))
-    return gst_qtdemux_find_index (qtdemux, str, media_time);
+  if (str->stbl_index >= 0 && mov_time <= sample->timestamp) {
+    index = gst_qtdemux_find_index (qtdemux, str, media_time);
+    sample = str->samples + index;
+  } else {
+    while (index < str->n_samples - 1) {
+      if (!qtdemux_parse_samples (qtdemux, str, index + 1))
+        goto parse_failed;
 
-  while (index < str->n_samples - 1) {
-    if (!qtdemux_parse_samples (qtdemux, str, index + 1))
-      goto parse_failed;
+      sample = str->samples + index + 1;
+      if (mov_time < sample->timestamp) {
+        sample = str->samples + index;
+        break;
+      }
 
-    sample = str->samples + index + 1;
-    if (mov_time < (sample->timestamp + sample->pts_offset))
-      break;
-
-    index++;
+      index++;
+    }
   }
+
+  /* sample->timestamp is now <= media_time, need to find the corresponding
+   * PTS now by looking backwards */
+  while (index > 0 && sample->timestamp + sample->pts_offset > mov_time) {
+    index--;
+    sample = str->samples + index;
+  }
+
   return index;
 
   /* ERRORS */
