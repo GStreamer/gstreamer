@@ -74,15 +74,11 @@ struct _GstUDPSrc {
   gboolean   external_socket;
   gboolean   made_cancel_fd;
 
-  /* memory management */
-  GstAllocator *allocator;
-  GstAllocationParams params;
+  /* Initial size of buffers in the buffer pool */
+  guint mtu;
 
-  GstMemory   *mem;
-  GstMapInfo   map;
-  GstMemory   *mem_max;
-  GstMapInfo   map_max;
-  GInputVector vec[2];
+  /* Extra memory for buffers with a size superior to max_packet_size */
+  GstMemory *extra_mem;
 
   gchar     *uri;
 };
