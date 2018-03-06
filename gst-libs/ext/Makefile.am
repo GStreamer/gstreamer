@@ -16,6 +16,31 @@ EXTRA_DIST=Makefile.am
 MAINTAINERCLEANDIRS = $(DIST_SUBDIRS)
 LIB_LIST=libavutil libswresample libavcodec libavformat libavfilter
 
+# attempt to generate .la references from -l and a list of -L
+# $1 is the argument to filter, -l, -L, -I, etc
+# $2 is the list to filter
+define filter_arg
+  $(foreach item,$(filter $(1)%,$(2)),$(patsubst $(1)%,%,$(item)))
+endef
+
+# $1 library to find
+# $2 directories to search
+define find_la
+ $(firstword $(wildcard $(foreach path,$(call filter_arg,-L,$(2)), $(path)/lib$(strip $(call filter_arg,-l,$(1))).la)))
+endef
+
+# $(call find_la,...) and if a library is found use that, otherwise, return the
+# original lib unchanged
+define find_la_or_original
+ $(if $(strip $(call find_la,$1,$2)),$(call find_la,$1,$2),$(1))
+endef
+
+# $1 the libraries to look for (including -l) e.g. -lbz2 -lz
+# $2 LDFLAGS containing -L arguments
+define find_library_la
+ $(foreach lib,$(1),$(call find_la_or_original,$(lib),$(2)))
+endef
+
 define create_la
 echo "  GEN      $1.la" && \
 (echo "# $1.la - a libtool library file" && \
@@ -24,7 +49,7 @@ echo "  GEN      $1.la" && \
  echo "library_names=''" && \
  echo "old_library='$1.a'" && \
  echo "inherited_linker_flags=''" && \
- echo "dependency_libs=' -L$(libdir) $(if $2,$(foreach dep,$2,$(abs_builddir)/$(dep).la)) $3 $(LIBM) '" && \
+ echo "dependency_libs=' -L$(libdir) $(if $2,$(foreach dep,$2,$(abs_builddir)/$(dep).la)) $(call find_library_la,$3 $(LIBM),$(LDFLAGS)) '" && \
  echo "weak_library_names=''" &&  \
  echo "current=" && \
  echo "age=" && \
