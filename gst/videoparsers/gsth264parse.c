@@ -1629,11 +1629,19 @@ get_profile_string (GstH264SPS * sps)
       profile = "extended";
       break;
     case 100:
-      profile = "high";
+      if (sps->constraint_set4_flag) {
+        if (sps->constraint_set5_flag)
+          profile = "constrained-high";
+        else
+          profile = "progressive-high";
+      } else
+        profile = "high";
       break;
     case 110:
       if (sps->constraint_set3_flag)
         profile = "high-10-intra";
+      else if (sps->constraint_set4_flag)
+        profile = "progressive-high-10";
       else
         profile = "high-10";
       break;

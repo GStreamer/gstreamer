@@ -78,9 +78,12 @@ G_BEGIN_DECLS
  * @GST_H264_PROFILE_BASELINE: Baseline profile (A.2.1)
  * @GST_H264_PROFILE_MAIN: Main profile (A.2.2)
  * @GST_H264_PROFILE_EXTENDED: Extended profile (A.2.3)
- * @GST_H264_PROFILE_HIGH: High profile (A.2.4)
+ * @GST_H264_PROFILE_HIGH: High profile (A.2.4),
+ * or Progressive High profile (A.2.4.1), or Constrained High profile (A.2.4.2)
+ * depending on constraint_set4_flag and constraint_set5_flag
  * @GST_H264_PROFILE_HIGH10: High 10 profile (A.2.5) or High 10 Intra
- *   profile (A.2.8), depending on constraint_set3_flag
+ *   profile (A.2.8), or Progressive High 10 profile (A.2.5.1) depending on
+ *   constraint_set3_flag and constraint_set4_flag
  * @GST_H264_PROFILE_HIGH_422: High 4:2:2 profile (A.2.6) or High
  *   4:2:2 Intra profile (A.2.9), depending on constraint_set3_flag
  * @GST_H264_PROFILE_HIGH_444: High 4:4:4 Predictive profile (A.2.7)
