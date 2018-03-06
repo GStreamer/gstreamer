@@ -982,6 +982,55 @@ _gl_sync_release_next_buffer (struct gl_sync *sync, gboolean render)
   }
 }
 
+#define I(x,y) ((y)*4+(x))
+static int affine_inverse (float in[], float out[]) {
+    float s0, s1, s2, s3, s4, s5;
+    float c0, c1, c2, c3, c4, c5;
+    float det, invdet;
+
+    s0 = in[0] * in[I(1,1)] - in[I(1,0)] * in[I(0,1)];
+    s1 = in[0] * in[I(1,2)] - in[I(1,0)] * in[I(0,2)];
+    s2 = in[0] * in[I(1,3)] - in[I(1,0)] * in[I(0,3)];
+    s3 = in[1] * in[I(1,2)] - in[I(1,1)] * in[I(0,2)];
+    s4 = in[1] * in[I(1,3)] - in[I(1,1)] * in[I(0,3)];
+    s5 = in[2] * in[I(1,3)] - in[I(1,2)] * in[I(0,3)];
+
+    c0 = in[I(2,0)] * in[I(3,1)] - in[I(3,0)] * in[I(2,1)];
+    c1 = in[I(2,0)] * in[I(3,2)] - in[I(3,0)] * in[I(2,2)];
+    c2 = in[I(2,0)] * in[I(3,3)] - in[I(3,0)] * in[I(2,3)];
+    c3 = in[I(2,1)] * in[I(3,2)] - in[I(3,1)] * in[I(2,2)];
+    c4 = in[I(2,1)] * in[I(3,3)] - in[I(3,1)] * in[I(2,3)];
+    c5 = in[I(2,2)] * in[I(3,3)] - in[I(3,2)] * in[I(2,3)];
+
+    det = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+    if (det == 0.0)
+      return 0;
+    invdet = 1.0 / det;
+
+    out[I(0,0)] = ( in[I(1,1)] * c5 - in[I(1,2)] * c4 + in[I(1,3)] * c3) * invdet;
+    out[I(0,1)] = (-in[I(0,1)] * c5 + in[I(0,2)] * c4 - in[I(0,3)] * c3) * invdet;
+    out[I(0,2)] = ( in[I(3,1)] * s5 - in[I(3,2)] * s4 + in[I(3,3)] * s3) * invdet;
+    out[I(0,3)] = (-in[I(2,1)] * s5 + in[I(2,2)] * s4 - in[I(2,3)] * s3) * invdet;
+
+    out[I(1,0)] = (-in[I(1,0)] * c5 + in[I(1,2)] * c2 - in[I(1,3)] * c1) * invdet;
+    out[I(1,1)] = ( in[I(0,0)] * c5 - in[I(0,2)] * c2 + in[I(0,3)] * c1) * invdet;
+    out[I(1,2)] = (-in[I(3,0)] * s5 + in[I(3,2)] * s2 - in[I(3,3)] * s1) * invdet;
+    out[I(1,3)] = ( in[I(2,0)] * s5 - in[I(2,2)] * s2 + in[I(2,3)] * s1) * invdet;
+
+    out[I(2,0)] = ( in[I(1,0)] * c4 - in[I(1,1)] * c2 + in[I(1,3)] * c0) * invdet;
+    out[I(2,1)] = (-in[I(0,0)] * c4 + in[I(0,1)] * c2 - in[I(0,3)] * c0) * invdet;
+    out[I(2,2)] = ( in[I(3,0)] * s4 - in[I(3,1)] * s2 + in[I(3,3)] * s0) * invdet;
+    out[I(2,3)] = (-in[I(2,0)] * s4 + in[I(2,1)] * s2 - in[I(2,3)] * s0) * invdet;
+
+    out[I(3,0)] = (-in[I(1,0)] * c3 + in[I(1,1)] * c1 - in[I(1,2)] * c0) * invdet;
+    out[I(3,1)] = ( in[I(0,0)] * c3 - in[I(0,1)] * c1 + in[I(0,2)] * c0) * invdet;
+    out[I(3,2)] = (-in[I(3,0)] * s3 + in[I(3,1)] * s1 - in[I(3,2)] * s0) * invdet;
+    out[I(3,3)] = ( in[I(2,0)] * s3 - in[I(2,1)] * s1 + in[I(2,2)] * s0) * invdet;
+
+    return 1;
+}
+#undef I
+
 /* caller should remove from the gl_queue after calling this function.
  * _gl_sync_release_buffer must be called before this function */
 static void
@@ -1035,8 +1084,22 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
         "gl_sync %p buffer %p", sync, sync->buffer);
   } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface->
           texture, matrix, &error)) {
+    gfloat inv_mat[16];
 
-    gst_video_affine_transformation_meta_apply_matrix (af_meta, matrix);
+    /* The transform from mediacodec applies to the texture coords, but
+     * GStreamer affine meta applies to the video geometry, which is the
+     * opposite - so we invert it */
+    if (affine_inverse(matrix, inv_mat)) {
+      gst_video_affine_transformation_meta_apply_matrix (af_meta, inv_mat);
+    }
+    else {
+      GST_WARNING ("Failed to invert display transform - the video won't display right. "
+          "Transform matrix [ %f %f %f %f, %f %f %f %f, %f %f %f %f, %f %f %f %f ]",
+          matrix[0], matrix[1], matrix[2], matrix[3],
+          matrix[4], matrix[5], matrix[6], matrix[7],
+          matrix[8], matrix[9], matrix[10], matrix[11],
+          matrix[12], matrix[13], matrix[14], matrix[15]);
+    }
     gst_video_affine_transformation_meta_apply_matrix (af_meta, yflip_matrix);
   }
 
