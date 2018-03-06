@@ -31,5 +31,7 @@ OMX_VIDEO_HEVCPROFILETYPE gst_omx_h265_utils_get_profile_from_str (const
 OMX_VIDEO_HEVCLEVELTYPE gst_omx_h265_utils_get_level_from_str (const gchar *
     level, const gchar * tier);
 
+const gchar * gst_omx_h265_utils_get_profile_from_enum (OMX_VIDEO_HEVCPROFILETYPE e);
+
 G_END_DECLS
 #endif /* __GST_OMX_H265_UTILS_H__ */

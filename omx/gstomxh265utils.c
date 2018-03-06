@@ -25,24 +25,49 @@
 
 #include "gstomxh265utils.h"
 
+typedef struct
+{
+  const gchar *profile;
+  OMX_VIDEO_HEVCPROFILETYPE e;
+} H265ProfileMapping;
+
+static const H265ProfileMapping h265_profiles[] = {
+  {"main", OMX_VIDEO_HEVCProfileMain},
+  {"main-10", OMX_VIDEO_HEVCProfileMain10},
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  {"main-still-picture",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMainStill},
+  /* Not standard: 8 bits variation of main-422-10 */
+  {"main-422", (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422},
+  {"main-422-10",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422_10},
+#endif
+};
+
 OMX_VIDEO_HEVCPROFILETYPE
 gst_omx_h265_utils_get_profile_from_str (const gchar * profile)
 {
-  if (g_str_equal (profile, "main")) {
-    return OMX_VIDEO_HEVCProfileMain;
-  } else if (g_str_equal (profile, "main-10")) {
-    return OMX_VIDEO_HEVCProfileMain10;
-#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
-  } else if (g_str_equal (profile, "main-still-picture")) {
-    return (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMainStill;
-  } else if (g_str_equal (profile, "main-422")) {
-    /* Not standard: 8 bits variation of main-422-10 */
-    return (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422;
-  } else if (g_str_equal (profile, "main-422-10")) {
-    return (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422_10;
-#endif
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (h265_profiles); i++) {
+    if (g_str_equal (profile, h265_profiles[i].profile))
+      return h265_profiles[i].e;
   }
+
   return OMX_VIDEO_HEVCProfileUnknown;
+}
+
+const gchar *
+gst_omx_h265_utils_get_profile_from_enum (OMX_VIDEO_HEVCPROFILETYPE e)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (h265_profiles); i++) {
+    if (e == h265_profiles[i].e)
+      return h265_profiles[i].profile;
+  }
+
+  return NULL;
 }
 
 OMX_VIDEO_HEVCLEVELTYPE

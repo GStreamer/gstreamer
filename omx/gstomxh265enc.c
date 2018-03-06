@@ -556,28 +556,11 @@ gst_omx_h265_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
       "alignment", G_TYPE_STRING, "au", NULL);
 
   if (err == OMX_ErrorNone) {
-    switch (param.eProfile) {
-      case OMX_VIDEO_HEVCProfileMain:
-        profile = "main";
-        break;
-      case OMX_VIDEO_HEVCProfileMain10:
-        profile = "main-10";
-        break;
-#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
-      case OMX_ALG_VIDEO_HEVCProfileMainStill:
-        profile = "main-still-picture";
-        break;
-      case OMX_ALG_VIDEO_HEVCProfileMain422:
-        profile = "main-422";
-        break;
-      case OMX_ALG_VIDEO_HEVCProfileMain422_10:
-        profile = "main-422-10";
-        break;
-#endif
-      default:
-        g_assert_not_reached ();
-        gst_caps_unref (caps);
-        return NULL;
+    profile = gst_omx_h265_utils_get_profile_from_enum (param.eProfile);
+    if (!profile) {
+      g_assert_not_reached ();
+      gst_caps_unref (caps);
+      return NULL;
     }
 
     switch (param.eLevel) {
