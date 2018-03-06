@@ -37,10 +37,25 @@ static const H265ProfileMapping h265_profiles[] = {
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   {"main-still-picture",
       (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMainStill},
+  /* Format range extensions profiles (A.3.5) */
+  {"monochrome",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMonochrome},
+  /* Not standard: 10 bits variation of monochrome-12 */
+  {"monochrome-10",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMonochrome10},
   /* Not standard: 8 bits variation of main-422-10 */
   {"main-422", (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422},
   {"main-422-10",
       (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422_10},
+  {"main-intra",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain_Intra},
+  {"main-10-intra",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain10_Intra},
+  /* Not standard: intra variation of main-422 */
+  {"main-422-intra",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422_Intra},
+  {"main-422-10-intra",
+      (OMX_VIDEO_HEVCPROFILETYPE) OMX_ALG_VIDEO_HEVCProfileMain422_10_Intra},
 #endif
 };
 
