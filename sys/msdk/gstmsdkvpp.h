@@ -61,8 +61,9 @@ typedef struct _GstMsdkVPP GstMsdkVPP;
 typedef struct _GstMsdkVPPClass GstMsdkVPPClass;
 
 typedef enum {
-  GST_MSDK_FLAG_DENOISE  = 1 << 0,
-  GST_MSDK_FLAG_ROTATION = 1 << 1,
+  GST_MSDK_FLAG_DENOISE     = 1 << 0,
+  GST_MSDK_FLAG_ROTATION    = 1 << 1,
+  GST_MSDK_FLAG_DEINTERLACE = 1 << 2,
 } GstMsdkVppFlags;
 
 struct _GstMsdkVPP
@@ -99,12 +100,16 @@ struct _GstMsdkVPP
   guint async_depth;
   guint denoise_factor;
   guint rotation;
+  guint deinterlace_mode;
+  guint deinterlace_method;
+  GstClockTime field_duration;
 
   /* MFX Filters */
   mfxExtVPPDoUse mfx_vpp_douse;
   mfxU32 max_filter_algorithms [MAX_FILTER_ALGORITHMS];
   mfxExtVPPDenoise mfx_denoise;
   mfxExtVPPRotation mfx_rotation;
+  mfxExtVPPDeinterlacing mfx_deinterlace;
 
   /* Extended buffers */
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];

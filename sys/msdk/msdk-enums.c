@@ -176,3 +176,69 @@ gst_msdkvpp_rotation_get_type (void)
   }
   return type;
 }
+
+GType
+gst_msdkvpp_deinterlace_mode_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {GST_MSDKVPP_DEINTERLACE_MODE_AUTO,
+        "Auto detection", "auto"},
+    {GST_MSDKVPP_DEINTERLACE_MODE_INTERLACED,
+        "Force deinterlacing", "interlaced"},
+    {GST_MSDKVPP_DEINTERLACE_MODE_DISABLED,
+        "Never deinterlace", "disabled"},
+    {0, NULL, NULL},
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkVPPDeinterlaceMode", values);
+  }
+  return type;
+}
+
+GType
+gst_msdkvpp_deinterlace_method_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {_MFX_DEINTERLACE_METHOD_NONE,
+        "Disable deinterlacing", "none"},
+    {MFX_DEINTERLACING_BOB, "Bob deinterlacing", "bob"},
+    {MFX_DEINTERLACING_ADVANCED, "Advanced deinterlacing (Motion adaptive)",
+        "advanced"},
+#if 0
+    {MFX_DEINTERLACING_AUTO_DOUBLE,
+          "Auto mode with deinterlacing double framerate output",
+        "auto-double"},
+    {MFX_DEINTERLACING_AUTO_SINGLE,
+          "Auto mode with deinterlacing single framerate output",
+        "auto-single"},
+    {MFX_DEINTERLACING_FULL_FR_OUT,
+        "Deinterlace only mode with full framerate output", "full-fr"},
+    {MFX_DEINTERLACING_HALF_FR_OUT,
+        "Deinterlace only Mode with half framerate output", "half-fr"},
+    {MFX_DEINTERLACING_24FPS_OUT, "24 fps fixed output mode", "24-fps"},
+    {MFX_DEINTERLACING_FIXED_TELECINE_PATTERN,
+        "Fixed telecine pattern removal mode", "fixed-telecine-removal"},
+    {MFX_DEINTERLACING_30FPS_OUT, "30 fps fixed output mode", "30-fps"},
+    {MFX_DEINTERLACING_DETECT_INTERLACE, "Only interlace detection",
+        "only-detect"},
+#endif
+    {MFX_DEINTERLACING_ADVANCED_NOREF,
+          "Advanced deinterlacing mode without using of reference frames",
+        "advanced-no-ref"},
+    {MFX_DEINTERLACING_ADVANCED_SCD,
+          "Advanced deinterlacing mode with scene change detection",
+        "advanced-scd"},
+    {MFX_DEINTERLACING_FIELD_WEAVING, "Field weaving", "field-weave"},
+    {0, NULL, NULL},
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkVPPDeinterlaceMethod", values);
+  }
+  return type;
+}

@@ -69,6 +69,8 @@ enum
   PROP_ASYNC_DEPTH,
   PROP_DENOISE,
   PROP_ROTATION,
+  PROP_DEINTERLACE_MODE,
+  PROP_DEINTERLACE_METHOD,
   PROP_N,
 };
 
@@ -76,6 +78,8 @@ enum
 #define PROP_ASYNC_DEPTH_DEFAULT         1
 #define PROP_DENOISE_DEFAULT             0
 #define PROP_ROTATION_DEFAULT            MFX_ANGLE_0
+#define PROP_DEINTERLACE_MODE_DEFAULT    GST_MSDKVPP_DEINTERLACE_MODE_AUTO
+#define PROP_DEINTERLACE_METHOD_DEFAULT  MFX_DEINTERLACING_BOB
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -581,6 +585,7 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
     gst_object_unref (thiz->srcpad_buffer_pool);
   thiz->srcpad_buffer_pool = NULL;
 
+  thiz->field_duration = GST_CLOCK_TIME_NONE;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
@@ -609,6 +614,17 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_rotation->Angle = thiz->rotation;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_rotation);
     thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_ROTATION;
+    n_filters++;
+  }
+
+  /* Deinterlace */
+  if (thiz->flags & GST_MSDK_FLAG_DEINTERLACE) {
+    mfxExtVPPDeinterlacing *mfx_deinterlace = &thiz->mfx_deinterlace;
+    mfx_deinterlace->Header.BufferId = MFX_EXTBUFF_VPP_DEINTERLACING;
+    mfx_deinterlace->Header.BufferSz = sizeof (mfxExtVPPDeinterlacing);
+    mfx_deinterlace->Mode = thiz->deinterlace_method;
+    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_deinterlace);
+    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_DEINTERLACING;
     n_filters++;
   }
 
@@ -682,6 +698,10 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
   thiz->param.vpp.Out.FrameRateExtD =
       GST_VIDEO_INFO_FPS_D (&thiz->sinkpad_info);
 
+  /* set vpp out picstruct as progressive if deinterlacing enabled */
+  if (thiz->flags & GST_MSDK_FLAG_DEINTERLACE)
+    thiz->param.vpp.Out.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+
   /* validate parameters and allow the Media SDK to make adjustments */
   status = MFXVideoVPP_Query (session, &thiz->param, &thiz->param);
   if (status < MFX_ERR_NONE) {
@@ -753,6 +773,7 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   GstVideoInfo in_info, out_info;
   gboolean sinkpad_info_changed = FALSE;
   gboolean srcpad_info_changed = FALSE;
+  gboolean deinterlace;
 
   gst_video_info_from_caps (&in_info, caps);
   gst_video_info_from_caps (&out_info, out_caps);
@@ -772,6 +793,14 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
 
   if (!sinkpad_info_changed && !srcpad_info_changed)
     return TRUE;
+
+  /* check for deinterlace requirement */
+  deinterlace = gst_msdkvpp_is_deinterlace_enabled (thiz, &in_info);
+  if (deinterlace)
+    thiz->flags |= GST_MSDK_FLAG_DEINTERLACE;
+  thiz->field_duration = GST_VIDEO_INFO_FPS_N (&in_info) > 0 ?
+      gst_util_uint64_scale (GST_SECOND, GST_VIDEO_INFO_FPS_D (&in_info),
+      (1 + deinterlace) * GST_VIDEO_INFO_FPS_N (&in_info)) : 0;
 
   if (!gst_msdkvpp_initialize (thiz))
     return FALSE;
@@ -880,6 +909,12 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->rotation = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_ROTATION;
       break;
+    case PROP_DEINTERLACE_MODE:
+      thiz->deinterlace_mode = g_value_get_enum (value);
+      break;
+    case PROP_DEINTERLACE_METHOD:
+      thiz->deinterlace_method = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -904,6 +939,12 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ROTATION:
       g_value_set_enum (value, thiz->rotation);
+      break;
+    case PROP_DEINTERLACE_MODE:
+      g_value_set_enum (value, thiz->deinterlace_mode);
+      break;
+    case PROP_DEINTERLACE_METHOD:
+      g_value_set_enum (value, thiz->deinterlace_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -995,6 +1036,18 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "Rotation Angle", gst_msdkvpp_rotation_get_type (),
       PROP_ROTATION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_DEINTERLACE_MODE] =
+      g_param_spec_enum ("deinterlace-mode", "Deinterlace Mode",
+      "Deinterlace mode to use", gst_msdkvpp_deinterlace_mode_get_type (),
+      PROP_DEINTERLACE_MODE_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_DEINTERLACE_METHOD] =
+      g_param_spec_enum ("deinterlace-method", "Deinterlace Method",
+      "Deinterlace method to use", gst_msdkvpp_deinterlace_method_get_type (),
+      PROP_DEINTERLACE_METHOD_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1005,6 +1058,9 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
   thiz->denoise_factor = PROP_DENOISE_DEFAULT;
   thiz->rotation = PROP_ROTATION_DEFAULT;
+  thiz->deinterlace_mode = PROP_DEINTERLACE_MODE_DEFAULT;
+  thiz->deinterlace_method = PROP_DEINTERLACE_METHOD_DEFAULT;
+  thiz->field_duration = GST_CLOCK_TIME_NONE;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }

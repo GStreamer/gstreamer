@@ -265,7 +265,9 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
   mfx_info->FrameRateExtD = GST_VIDEO_INFO_FPS_D (info);
   mfx_info->AspectRatioW = GST_VIDEO_INFO_PAR_N (info);
   mfx_info->AspectRatioH = GST_VIDEO_INFO_PAR_D (info);
-  mfx_info->PicStruct = MFX_PICSTRUCT_PROGRESSIVE;      /* this is by default */
+  mfx_info->PicStruct =
+      !GST_VIDEO_INFO_IS_INTERLACED (info) ? MFX_PICSTRUCT_PROGRESSIVE :
+      MFX_PICSTRUCT_UNKNOWN;
   mfx_info->FourCC =
       gst_msdk_get_mfx_fourcc_from_format (GST_VIDEO_INFO_FORMAT (info));
   mfx_info->ChromaFormat =

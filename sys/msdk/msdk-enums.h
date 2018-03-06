@@ -60,8 +60,23 @@ GType
 gst_msdkenc_adaptive_b_get_type (void);
 
 /*========= MSDK VPP Enums =========================*/
+
 GType
 gst_msdkvpp_rotation_get_type (void);
+
+typedef enum
+{
+  GST_MSDKVPP_DEINTERLACE_MODE_AUTO = 0,
+  GST_MSDKVPP_DEINTERLACE_MODE_INTERLACED,
+  GST_MSDKVPP_DEINTERLACE_MODE_DISABLED,
+} GstMskdVPPDeinterlaceMode;
+
+GType
+gst_msdkvpp_deinterlace_mode_get_type (void);
+
+#define _MFX_DEINTERLACE_METHOD_NONE 0
+GType
+gst_msdkvpp_deinterlace_method_get_type (void);
 
 G_END_DECLS
 #endif

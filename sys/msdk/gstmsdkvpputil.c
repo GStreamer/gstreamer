@@ -26,6 +26,26 @@
  */
 
 #include "gstmsdkvpputil.h"
+#include "msdk-enums.h"
+
+gboolean
+gst_msdkvpp_is_deinterlace_enabled (GstMsdkVPP * msdkvpp, GstVideoInfo * vip)
+{
+  gboolean deinterlace;
+
+  switch (msdkvpp->deinterlace_mode) {
+    case GST_MSDKVPP_DEINTERLACE_MODE_AUTO:
+      deinterlace = GST_VIDEO_INFO_IS_INTERLACED (vip);
+      break;
+    case GST_MSDKVPP_DEINTERLACE_MODE_INTERLACED:
+      deinterlace = TRUE;
+      break;
+    default:
+      deinterlace = FALSE;
+      break;
+  }
+  return deinterlace;
+}
 
 static gboolean
 fixate_output_frame_size (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
@@ -407,6 +427,31 @@ overflow_error:
 }
 
 static gboolean
+fixate_frame_rate (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstStructure * outs)
+{
+  gint fps_n, fps_d;
+
+  fps_n = GST_VIDEO_INFO_FPS_N (vinfo);
+  fps_d = GST_VIDEO_INFO_FPS_D (vinfo);
+  if (gst_msdkvpp_is_deinterlace_enabled (thiz, vinfo)) {
+    /* Fixme: set double framerate?:
+     * msdk is not outputting double framerate for bob or adv deinterlace */
+    if (!gst_util_fraction_multiply (fps_n, fps_d, 1, 1, &fps_n, &fps_d))
+      goto overflow_error;
+  }
+  gst_structure_set (outs, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+  return TRUE;
+
+  /* ERRORS */
+overflow_error:
+  {
+    GST_ELEMENT_ERROR (thiz, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output framerate - integer overflow"));
+    return FALSE;
+  }
+}
+
+static gboolean
 set_multiview_mode (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     GstStructure * outs)
 {
@@ -426,6 +471,28 @@ set_multiview_mode (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     gst_structure_set (outs, "views", G_TYPE_INT, GST_VIDEO_INFO_VIEWS (vinfo),
         NULL);
   }
+  return TRUE;
+}
+
+static gboolean
+set_interlace_mode (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
+    GstStructure * outs)
+{
+  const gchar *interlace_mode = NULL;
+
+  if (gst_msdkvpp_is_deinterlace_enabled (thiz, vinfo)) {
+    interlace_mode = "progressive";
+  } else {
+    interlace_mode =
+        gst_video_interlace_mode_to_string (GST_VIDEO_INFO_INTERLACE_MODE
+        (vinfo));
+  }
+
+  if (!interlace_mode)
+    return FALSE;
+
+  gst_structure_set (outs, "interlace-mode", G_TYPE_STRING, interlace_mode,
+      NULL);
   return TRUE;
 }
 
@@ -450,14 +517,18 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     goto fixate_failed;
 
   /* Fixate the framerate */
-  gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
-      GST_VIDEO_INFO_FPS_N (vinfo), GST_VIDEO_INFO_FPS_D (vinfo), NULL);
+  if (!fixate_frame_rate (thiz, vinfo, structure))
+    goto fixate_failed;
 
   /* set multiview mode based on input caps */
   if (!set_multiview_mode (thiz, vinfo, structure))
     goto fixate_failed;
 
-  /*Fixme: Set colorimetry and interlace mode */
+  /*Fixme: Set colorimetry */
+
+  /* set interlace mode */
+  if (!set_interlace_mode (thiz, vinfo, structure))
+    goto interlace_mode_failed;
 
   outcaps = gst_caps_new_empty ();
   gst_caps_append_structure (outcaps, structure);
@@ -469,6 +540,11 @@ fixate_failed:
   {
     GST_WARNING_OBJECT (thiz, "Could not fixate src caps");
     gst_structure_free (structure);
+    return NULL;
+  }
+interlace_mode_failed:
+  {
+    GST_WARNING_OBJECT (thiz, "Invalid sink caps interlace mode");
     return NULL;
   }
 }

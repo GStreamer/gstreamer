@@ -33,6 +33,10 @@ G_BEGIN_DECLS
 GstCaps *gst_msdkvpp_fixate_srccaps (GstMsdkVPP * msdkvpp,
     GstCaps * sinkcaps, GstCaps * srccaps);
 
+gboolean
+gst_msdkvpp_is_deinterlace_enabled (GstMsdkVPP * msdkvpp,
+    GstVideoInfo * vip);
+
 G_END_DECLS
 
 #endif /* GST_MSDKVPPUTIL_H */
