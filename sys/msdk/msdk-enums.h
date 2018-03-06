@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 
 #define _MFX_TRELLIS_NONE    0
 
+/*========= MSDK Encoder Enums =========================*/
 GType
 gst_msdkenc_rate_control_get_type (void);
 
@@ -57,6 +58,10 @@ gst_msdkenc_adaptive_i_get_type (void);
 
 GType
 gst_msdkenc_adaptive_b_get_type (void);
+
+/*========= MSDK VPP Enums =========================*/
+GType
+gst_msdkvpp_rotation_get_type (void);
 
 G_END_DECLS
 #endif

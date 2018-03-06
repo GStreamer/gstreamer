@@ -64,14 +64,18 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 enum
 {
-  PROP_0 = 0,
-  PROP_HARDWARE = 1,
-  PROP_ASYNC_DEPTH = 2,
+  PROP_0,
+  PROP_HARDWARE,
+  PROP_ASYNC_DEPTH,
+  PROP_DENOISE,
+  PROP_ROTATION,
   PROP_N,
 };
 
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         1
+#define PROP_DENOISE_DEFAULT             0
+#define PROP_ROTATION_DEFAULT            MFX_ANGLE_0
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -88,6 +92,15 @@ free_msdk_surface (MsdkSurface * surface)
   if (surface->buf)
     gst_buffer_unref (surface->buf);
   g_slice_free (MsdkSurface, surface);
+}
+
+static void
+gst_msdkvpp_add_extra_param (GstMsdkVPP * thiz, mfxExtBuffer * param)
+{
+  if (thiz->num_extra_params < MAX_EXTRA_PARAMS) {
+    thiz->extra_params[thiz->num_extra_params] = param;
+    thiz->num_extra_params++;
+  }
 }
 
 static gboolean
@@ -712,6 +725,7 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
   thiz->in_num_surfaces = request[0].NumFrameSuggested;
   thiz->out_num_surfaces = request[1].NumFrameSuggested;
 
+
   status = MFXVideoVPP_Init (session, &thiz->param);
   if (status < MFX_ERR_NONE) {
     GST_ERROR_OBJECT (thiz, "Init failed (%s)", msdk_status_to_string (status));
@@ -858,6 +872,14 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
     case PROP_ASYNC_DEPTH:
       thiz->async_depth = g_value_get_uint (value);
       break;
+    case PROP_DENOISE:
+      thiz->denoise_factor = g_value_get_uint (value);
+      thiz->flags |= GST_MSDK_FLAG_DENOISE;
+      break;
+    case PROP_ROTATION:
+      thiz->rotation = g_value_get_enum (value);
+      thiz->flags |= GST_MSDK_FLAG_ROTATION;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -876,6 +898,12 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ASYNC_DEPTH:
       g_value_set_uint (value, thiz->async_depth);
+      break;
+    case PROP_DENOISE:
+      g_value_set_uint (value, thiz->denoise_factor);
+      break;
+    case PROP_ROTATION:
+      g_value_set_enum (value, thiz->rotation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -957,6 +985,16 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       1, 1, PROP_ASYNC_DEPTH_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_DENOISE] =
+      g_param_spec_uint ("denoise", "Denoising factor",
+      "Denoising Factor",
+      0, 100, PROP_DENOISE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_ROTATION] =
+      g_param_spec_enum ("rotation", "Rotation",
+      "Rotation Angle", gst_msdkvpp_rotation_get_type (),
+      PROP_ROTATION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -965,6 +1003,8 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
 {
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
+  thiz->denoise_factor = PROP_DENOISE_DEFAULT;
+  thiz->rotation = PROP_ROTATION_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }

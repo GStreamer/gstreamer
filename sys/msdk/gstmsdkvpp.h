@@ -55,9 +55,15 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKVPP))
 
 #define MAX_EXTRA_PARAMS                 8
+#define MAX_FILTER_ALGORITHMS            7
 
 typedef struct _GstMsdkVPP GstMsdkVPP;
 typedef struct _GstMsdkVPPClass GstMsdkVPPClass;
+
+typedef enum {
+  GST_MSDK_FLAG_DENOISE  = 1 << 0,
+  GST_MSDK_FLAG_ROTATION = 1 << 1,
+} GstMsdkVppFlags;
 
 struct _GstMsdkVPP
 {
@@ -86,10 +92,23 @@ struct _GstMsdkVPP
   gboolean use_video_memory;
   gboolean shared_context;
   gboolean add_video_meta;
+  guint flags;
 
   /* element properties */
   gboolean hardware;
   guint async_depth;
+  guint denoise_factor;
+  guint rotation;
+
+  /* MFX Filters */
+  mfxExtVPPDoUse mfx_vpp_douse;
+  mfxU32 max_filter_algorithms [MAX_FILTER_ALGORITHMS];
+  mfxExtVPPDenoise mfx_denoise;
+  mfxExtVPPRotation mfx_rotation;
+
+  /* Extended buffers */
+  mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
+  guint num_extra_params;
 };
 
 struct _GstMsdkVPPClass

@@ -33,6 +33,7 @@
 
 #include "msdk-enums.h"
 
+/*========= MSDK Encoder Enums =========================*/
 GType
 gst_msdkenc_rate_control_get_type (void)
 {
@@ -151,6 +152,27 @@ gst_msdkenc_adaptive_b_get_type (void)
 
   if (!type) {
     type = g_enum_register_static ("GstMsdkEncAdaptiveB", values);
+  }
+  return type;
+}
+
+/*========= MSDK VPP Enums =========================*/
+
+GType
+gst_msdkvpp_rotation_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_ANGLE_0, "Unrotated mode", "0"},
+    {MFX_ANGLE_90, "Rotated by 90°", "90"},
+    {MFX_ANGLE_180, "Rotated by 180°", "180"},
+    {MFX_ANGLE_270, "Rotated by 270°", "270"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkVPPRotation", values);
   }
   return type;
 }
