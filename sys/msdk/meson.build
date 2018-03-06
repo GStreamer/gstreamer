@@ -7,6 +7,7 @@ msdk_sources = [
   'gstmsdkbufferpool.c',
   'gstmsdkdec.c',
   'gstmsdkenc.c',
+  'gstmsdkvpp.c',
   'gstmsdkh264dec.c',
   'gstmsdkh264enc.c',
   'gstmsdkh265dec.c',
@@ -19,7 +20,8 @@ msdk_sources = [
   'gstmsdkvp8enc.c',
   'gstmsdkvc1dec.c',
   'msdk.c',
-  'msdk-enums.c'
+  'msdk-enum.c'
+  'gstmsdkvpputil.c'
 ]
 
 if host_machine.system() == 'windows'

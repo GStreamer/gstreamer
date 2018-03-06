@@ -46,10 +46,12 @@
 #include "gstmsdkvp8dec.h"
 #include "gstmsdkvp8enc.h"
 #include "gstmsdkvc1dec.h"
+#include "gstmsdkvpp.h"
 
 GST_DEBUG_CATEGORY (gst_msdk_debug);
 GST_DEBUG_CATEGORY (gst_msdkdec_debug);
 GST_DEBUG_CATEGORY (gst_msdkenc_debug);
+GST_DEBUG_CATEGORY (gst_msdkvpp_debug);
 GST_DEBUG_CATEGORY (gst_msdkh264dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkh264enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkh265dec_debug);
@@ -74,6 +76,7 @@ plugin_init (GstPlugin * plugin)
       "msdkh264dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkh264enc_debug, "msdkh264enc", 0,
       "msdkh264enc");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkvpp_debug, "msdkvpp", 0, "msdkvpp");
   GST_DEBUG_CATEGORY_INIT (gst_msdkh265dec_debug, "msdkh265dec", 0,
       "msdkh265dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkh265enc_debug, "msdkh265enc", 0,
@@ -125,6 +128,9 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
       GST_TYPE_MSDKVC1DEC);
+
+  ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
+      GST_TYPE_MSDKVPP);
 
   return ret;
 }
