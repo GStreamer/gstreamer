@@ -32,13 +32,26 @@ typedef struct
 
 static const H264ProfileMapping h264_profiles[] = {
   {"baseline", OMX_VIDEO_AVCProfileBaseline},
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  {"constrained-baseline",
+      (OMX_VIDEO_AVCPROFILETYPE) OMX_ALG_VIDEO_AVCProfileConstrainedBaseline},
+#else
   {"constrained-baseline", OMX_VIDEO_AVCProfileBaseline},
+#endif
   {"main", OMX_VIDEO_AVCProfileMain},
-  {"extended", OMX_VIDEO_AVCProfileExtended},
   {"high", OMX_VIDEO_AVCProfileHigh},
   {"high-10", OMX_VIDEO_AVCProfileHigh10},
   {"high-4:2:2", OMX_VIDEO_AVCProfileHigh422},
-  {"high-4:4:4", OMX_VIDEO_AVCProfileHigh444},
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  {"progressive-high",
+      (OMX_VIDEO_AVCPROFILETYPE) OMX_ALG_VIDEO_AVCProfileProgressiveHigh},
+  {"constrained-high",
+      (OMX_VIDEO_AVCPROFILETYPE) OMX_ALG_VIDEO_AVCProfileConstrainedHigh},
+  {"high-10-intra",
+      (OMX_VIDEO_AVCPROFILETYPE) OMX_ALG_VIDEO_AVCProfileHigh10_Intra},
+  {"high-4:2:2-intra",
+      (OMX_VIDEO_AVCPROFILETYPE) OMX_ALG_VIDEO_AVCProfileHigh422_Intra},
+#endif
 };
 
 OMX_VIDEO_AVCPROFILETYPE
