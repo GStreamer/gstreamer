@@ -30,5 +30,7 @@ OMX_VIDEO_AVCPROFILETYPE gst_omx_h264_utils_get_profile_from_str (const
 OMX_VIDEO_AVCLEVELTYPE gst_omx_h264_utils_get_level_from_str (const gchar *
     level);
 
+const gchar * gst_omx_h264_utils_get_profile_from_enum (OMX_VIDEO_AVCPROFILETYPE e);
+
 G_END_DECLS
 #endif /* __GST_OMX_H264_UTILS_H__ */

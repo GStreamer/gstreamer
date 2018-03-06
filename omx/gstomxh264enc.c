@@ -737,32 +737,11 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
       "alignment", G_TYPE_STRING, "au", NULL);
 
   if (err == OMX_ErrorNone) {
-    switch (param.eProfile) {
-      case OMX_VIDEO_AVCProfileBaseline:
-        profile = "baseline";
-        break;
-      case OMX_VIDEO_AVCProfileMain:
-        profile = "main";
-        break;
-      case OMX_VIDEO_AVCProfileExtended:
-        profile = "extended";
-        break;
-      case OMX_VIDEO_AVCProfileHigh:
-        profile = "high";
-        break;
-      case OMX_VIDEO_AVCProfileHigh10:
-        profile = "high-10";
-        break;
-      case OMX_VIDEO_AVCProfileHigh422:
-        profile = "high-4:2:2";
-        break;
-      case OMX_VIDEO_AVCProfileHigh444:
-        profile = "high-4:4:4";
-        break;
-      default:
-        g_assert_not_reached ();
-        gst_caps_unref (caps);
-        return NULL;
+    profile = gst_omx_h264_utils_get_profile_from_enum (param.eProfile);
+    if (!profile) {
+      g_assert_not_reached ();
+      gst_caps_unref (caps);
+      return NULL;
     }
 
     switch (param.eLevel) {
