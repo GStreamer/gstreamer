@@ -3512,10 +3512,6 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
 
   GST_DEBUG_OBJECT (basesrc, "is random_access: %d", basesrc->random_access);
 
-  /* stop flushing now but for live sources, still block in the LIVE lock when
-   * we are not yet PLAYING */
-  gst_base_src_set_flushing (basesrc, FALSE);
-
   gst_pad_mark_reconfigure (GST_BASE_SRC_PAD (basesrc));
 
   GST_OBJECT_LOCK (basesrc->srcpad);
