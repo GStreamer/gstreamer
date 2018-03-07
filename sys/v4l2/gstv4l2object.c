@@ -55,10 +55,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 
 #define ENCODED_BUFFER_SIZE             (2 * 1024 * 1024)
 
-#if SIZEOF_OFF_T == 8 && !defined(mmap64)
-#define mmap64 mmap
-#endif
-
 enum
 {
   PROP_0,
@@ -459,6 +455,22 @@ gst_v4l2_object_install_m2m_properties_helper (GObjectClass * gobject_class)
           "Extra v4l2 controls (CIDs) for the device",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
+
+/* Support for 32bit off_t, this wrapper is casting off_t to gint64 */
+#ifdef HAVE_LIBV4L2
+#if SIZEOF_OFF_T < 8
+
+static gpointer
+v4l2_mmap_wrapper (gpointer start, gsize length, gint prot, gint flags, gint fd,
+    off_t offset)
+{
+  return v4l2_mmap (start, length, prot, flags, fd, (gint64) offset);
+}
+
+#define v4l2_mmap v4l2_mmap_wrapper
+
+#endif /* SIZEOF_OFF_T < 8 */
+#endif /* HAVE_LIBV4L2 */
 
 GstV4l2Object *
 gst_v4l2_object_new (GstElement * element,

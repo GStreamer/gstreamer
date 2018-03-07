@@ -194,7 +194,7 @@ struct _GstV4l2Object {
   gint (*ioctl) (gint fd, gulong request, ...);
   gssize (*read) (gint fd, gpointer buffer, gsize n);
   gpointer (*mmap) (gpointer start, gsize length, gint prot, gint flags,
-      gint fd, gint64 offset);
+      gint fd,  off_t offset);
   gint (*munmap) (gpointer _start, gsize length);
 
   /* Quirks */
