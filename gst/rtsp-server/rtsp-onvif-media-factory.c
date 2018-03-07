@@ -375,6 +375,11 @@ gst_rtsp_onvif_media_factory_init (GstRTSPOnvifMediaFactory * factory)
  * all possible, complete RTP caps that are going to be supported. At least
  * the payload type, clock-rate and encoding-name need to be specified.
  *
+ * Note: The pipeline part passed here must end in sinks that are not waiting
+ * until pre-rolling before reaching the PAUSED state, i.e. setting
+ * async=false on #GstBaseSink. Otherwise the whole media will not be able to
+ * prepare.
+ *
  * Since: 1.14
  */
 void
