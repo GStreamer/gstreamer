@@ -39,10 +39,6 @@ G_BEGIN_DECLS
 #define GST_ALSA_SRC_LOCK(obj)      (g_mutex_lock (GST_ALSA_SRC_GET_LOCK (obj)))
 #define GST_ALSA_SRC_UNLOCK(obj)    (g_mutex_unlock (GST_ALSA_SRC_GET_LOCK (obj)))
 
-#define GST_DELAY_SRC_GET_LOCK(obj) (&GST_ALSA_SRC_CAST (obj)->delay_lock)
-#define GST_DELAY_SRC_LOCK(obj)     (g_mutex_lock (GST_DELAY_SRC_GET_LOCK (obj)))
-#define GST_DELAY_SRC_UNLOCK(obj)   (g_mutex_unlock (GST_DELAY_SRC_GET_LOCK (obj)))
-
 typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
@@ -75,7 +71,6 @@ struct _GstAlsaSrc {
   snd_pcm_uframes_t     period_size;
 
   GMutex                alsa_lock;
-  GMutex                delay_lock;
 };
 
 struct _GstAlsaSrcClass {
