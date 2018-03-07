@@ -3630,8 +3630,11 @@ gst_base_src_stop (GstBaseSrc * basesrc)
 
   /* flush all */
   gst_base_src_set_flushing (basesrc, TRUE);
+
   /* stop the task */
   gst_pad_stop_task (basesrc->srcpad);
+  /* stop flushing, this will balance unlock/unlock_stop calls */
+  gst_base_src_set_flushing (basesrc, FALSE);
 
   GST_OBJECT_LOCK (basesrc);
   if (!GST_BASE_SRC_IS_STARTED (basesrc) && !GST_BASE_SRC_IS_STARTING (basesrc))
