@@ -47,11 +47,15 @@ static const struct
   DEF_FMT (XRGB8888, BGRx),
   DEF_FMT (ABGR8888, RGBA),
   DEF_FMT (XBGR8888, RGBx),
+  DEF_FMT (BGR888, RGB),
+  DEF_FMT (RGB888, BGR),
 #else
   DEF_FMT (ARGB8888, ARGB),
   DEF_FMT (XRGB8888, xRGB),
   DEF_FMT (ABGR8888, ABGR),
   DEF_FMT (XBGR8888, xBGR),
+  DEF_FMT (RGB888, RGB),
+  DEF_FMT (BGR888, BGR),
 #endif
   DEF_FMT (UYVY, UYVY),
   DEF_FMT (YUYV, YUY2),
@@ -111,6 +115,10 @@ gst_drm_bpp_from_drm (guint32 drmfmt)
     case DRM_FORMAT_YUYV:
     case DRM_FORMAT_YVYU:
       bpp = 16;
+      break;
+    case DRM_FORMAT_BGR888:
+    case DRM_FORMAT_RGB888:
+      bpp = 24;
       break;
     default:
       bpp = 32;
