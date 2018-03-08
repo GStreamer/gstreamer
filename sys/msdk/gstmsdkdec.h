@@ -81,7 +81,6 @@ struct _GstMsdkDec
   guint next_task;
 
   GList *decoded_msdk_surfaces;
-  GList *locked_buffer;
 
   /* element properties */
   gboolean hardware;

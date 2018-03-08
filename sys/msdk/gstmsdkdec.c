@@ -81,7 +81,6 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
   GstFlowReturn flow;
   GstVideoCodecFrame *frame;
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (thiz);
-  mfxFrameSurface1 *mfx_surface;
 
   frame = gst_video_decoder_get_oldest_frame (decoder);
   if (!frame) {
@@ -92,25 +91,10 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
   }
 
   if (!frame->output_buffer) {
-  retry:
     flow = gst_video_decoder_allocate_output_frame (decoder, frame);
     if (flow != GST_FLOW_OK) {
       gst_video_codec_frame_unref (frame);
       return flow;
-    }
-
-    if (gst_msdk_is_msdk_buffer (frame->output_buffer)) {
-      mfx_surface = gst_msdk_get_surface_from_buffer (frame->output_buffer);
-      /* When using video memory, mfx surface is still locked even though
-       * it's finished by SyncOperation. There's no way to get notified when it gets unlocked.
-       * We should be keep these buffers and check if it's unlocked.
-       */
-      if (mfx_surface && mfx_surface->Data.Locked) {
-        thiz->locked_buffer =
-            g_list_append (thiz->locked_buffer, frame->output_buffer);
-        frame->output_buffer = NULL;
-        goto retry;
-      }
     }
   }
 
@@ -159,24 +143,12 @@ get_surface (GstMsdkDec * thiz, GstBuffer * buffer)
             GST_MAP_WRITE))
       goto failed_unref_buffer;
 
-  retry:
     if (gst_buffer_pool_acquire_buffer (thiz->pool, &buffer,
             NULL) != GST_FLOW_OK)
       goto failed_unmap_copy;
 
-    if (gst_msdk_is_msdk_buffer (buffer)) {
-      i->surface = gst_msdk_get_surface_from_buffer (buffer);
-
-      /* When using video memory, mfx surface is still locked even though
-       * it's finished by SyncOperation. There's no way to get notified when it gets unlocked.
-       * We should keep these buffers and check if it's unlocked.
-       */
-      if (i->surface->Data.Locked) {
-        thiz->locked_buffer = g_list_append (thiz->locked_buffer, buffer);
-        goto retry;
-      }
-      i->buf = buffer;
-    }
+    i->surface = gst_msdk_get_surface_from_buffer (buffer);
+    i->buf = buffer;
 
     if (!gst_video_frame_map (&i->data, &thiz->pool_info, buffer,
             GST_MAP_READWRITE))
@@ -584,35 +556,6 @@ release_msdk_surfaces (GstMsdkDec * thiz)
   }
 }
 
-static void
-release_locked_buffer (GstMsdkDec * thiz)
-{
-  GList *l;
-  GstBuffer *buf;
-
-  for (l = thiz->locked_buffer; l; l = l->next) {
-    buf = l->data;
-    gst_buffer_unref (buf);
-  }
-}
-
-static void
-check_locked_buffer (GstMsdkDec * thiz)
-{
-  GList *l;
-  GstBuffer *buf;
-  mfxFrameSurface1 *mfx_surface;
-
-  for (l = thiz->locked_buffer; l; l = l->next) {
-    buf = l->data;
-    mfx_surface = gst_msdk_get_surface_from_buffer (buf);
-    if (!mfx_surface->Data.Locked) {
-      gst_buffer_unref (buf);
-      thiz->locked_buffer = g_list_delete_link (thiz->locked_buffer, l);
-    }
-  }
-}
-
 static GstFlowReturn
 gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
@@ -657,8 +600,6 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   session = gst_msdk_context_get_session (thiz->context);
   for (;;) {
-    check_locked_buffer (thiz);
-
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     flow = gst_msdkdec_finish_task (thiz, task);
     if (flow != GST_FLOW_OK)
@@ -946,8 +887,6 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
   session = gst_msdk_context_get_session (thiz->context);
 
   for (;;) {
-    check_locked_buffer (thiz);
-
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     if ((flow = gst_msdkdec_finish_task (thiz, task)) != GST_FLOW_OK) {
       if (flow != GST_FLOW_FLUSHING)
@@ -1003,8 +942,6 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
     thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
   }
 
-  check_locked_buffer (thiz);
-  release_locked_buffer (thiz);
   release_msdk_surfaces (thiz);
 
   return GST_FLOW_OK;
