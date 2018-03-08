@@ -78,6 +78,12 @@ dnl common/m4/gst-arch.m4
 dnl check CPU type
 AG_GST_ARCH
 
+dnl *** software ***
+
+dnl check for large file support
+dnl affected plugins must include config.h
+AC_SYS_LARGEFILE
+
 dnl *** checks for programs ***
 
 dnl find a compiler
