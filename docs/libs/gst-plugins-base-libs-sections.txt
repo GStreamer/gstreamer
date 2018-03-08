@@ -48,6 +48,26 @@ GST_TYPE_FD_ALLOCATOR
 <SUBSECTION Private>
 </SECTION>
 
+<SECTION>
+<FILE>gstphysmemoryallocator</FILE>
+<TITLE>GstPhysMemoryAllocator</TITLE>
+<INCLUDE>gst/allocators/allocators.h</INCLUDE>
+GstPhysMemoryAllocator
+GstPhysMemoryAllocatorInterface
+gst_is_phys_memory
+gst_phys_memory_get_phys_addr
+<SUBSECTION Standard>
+GST_TYPE_PHYS_MEMORY_ALLOCATOR
+GST_IS_PHYS_MEMORY_ALLOCATOR
+GST_IS_PHYS_MEMORY_ALLOCATOR_INTERFACE
+GST_PHYS_MEMORY_ALLOCATOR_GET_INTERFACE
+GST_PHYS_MEMORY_ALLOCATOR
+GST_PHYS_MEMORY_ALLOCATOR_INTERFACE
+GST_PHYS_MEMORY_ALLOCATOR_CAST
+gst_phys_memory_allocator_get_type
+<SUBSECTION Private>
+</SECTION>
+
 # app
 <SECTION>
 <FILE>gstappsrc</FILE>

@@ -30,6 +30,7 @@
       </para>
       <xi:include href="xml/gstdmabuf.xml" />
       <xi:include href="xml/gstfdmemory.xml" />
+      <xi:include href="xml/gstphysmemoryallocator.xml" />
     </chapter>
 
     <chapter id="gstreamer-app">

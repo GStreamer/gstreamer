@@ -17,6 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstphysmemoryallocator
+ * @title: GstPhysMemoryAllocator
+ * @short_description: Interface for allocators that pass around physical memory addresses
+ * @see_also: #GstMemory
+ *
+ * Since: 1.14
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
