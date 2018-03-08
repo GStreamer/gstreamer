@@ -36,37 +36,19 @@
 #include "gstmsdkvideomemory.h"
 #include "gstmsdkallocator.h"
 
-static gboolean
-ensure_data (GstMsdkVideoMemory * mem, GstMsdkVideoAllocator * allocator)
-{
-  GstMsdkMemoryID *mem_id;
-  GstMsdkAllocResponse *resp =
-      gst_msdk_context_get_cached_alloc_responses (allocator->context,
-      allocator->alloc_response);
-
-  if (!resp) {
-    GST_WARNING ("failed to get allocation response");
-    return FALSE;
-  }
-
-  mem_id = (GstMsdkMemoryID *) resp->mem_ids[resp->num_used_memory++];
-  mem->surface->Data.MemId = mem_id;
-
-  return TRUE;
-}
-
 static mfxFrameSurface1 *
-gst_msdk_video_allocator_create_surface (GstAllocator * allocator)
+gst_msdk_video_allocator_get_surface (GstAllocator * allocator)
 {
   mfxFrameInfo frame_info = { {0,}, 0, };
   mfxFrameSurface1 *surface;
   GstMsdkVideoAllocator *msdk_video_allocator =
       GST_MSDK_VIDEO_ALLOCATOR_CAST (allocator);
 
-  surface = (mfxFrameSurface1 *) g_slice_new0 (mfxFrameSurface1);
-
+  surface =
+      gst_msdk_context_get_surface_available (msdk_video_allocator->context,
+      msdk_video_allocator->alloc_response);
   if (!surface) {
-    GST_ERROR ("failed to allocate surface");
+    GST_ERROR ("failed to get surface available");
     return NULL;
   }
 
@@ -76,6 +58,42 @@ gst_msdk_video_allocator_create_surface (GstAllocator * allocator)
   surface->Info = frame_info;
 
   return surface;
+}
+
+gboolean
+gst_msdk_video_memory_get_surface_available (GstMsdkVideoMemory * mem)
+{
+  GstAllocator *allocator;
+
+  allocator = GST_MEMORY_CAST (mem)->allocator;
+  mem->surface = gst_msdk_video_allocator_get_surface (allocator);
+  return mem->surface ? TRUE : FALSE;
+}
+
+/*
+ * Every time releasing a gst buffer, we need to check the status of surface's lock,
+ * so that we could manage locked surfaces seperatedly in the context.
+ * Otherwise, we put the surface to the available list.
+ */
+void
+gst_msdk_video_memory_release_surface (GstMsdkVideoMemory * mem)
+{
+  GstMsdkVideoAllocator *msdk_video_allocator;
+
+  msdk_video_allocator =
+      GST_MSDK_VIDEO_ALLOCATOR_CAST (GST_MEMORY_CAST (mem)->allocator);
+  if (!mem->surface)
+    return;
+
+  if (mem->surface->Data.Locked > 0)
+    gst_msdk_context_put_surface_locked (msdk_video_allocator->context,
+        msdk_video_allocator->alloc_response, mem->surface);
+  else
+    gst_msdk_context_put_surface_available (msdk_video_allocator->context,
+        msdk_video_allocator->alloc_response, mem->surface);
+
+  mem->surface = NULL;
+  return;
 }
 
 GstMemory *
@@ -94,15 +112,14 @@ gst_msdk_video_memory_new (GstAllocator * base_allocator)
   if (!mem)
     return NULL;
 
-  mem->surface = gst_msdk_video_allocator_create_surface (base_allocator);
+  mem->surface = gst_msdk_video_allocator_get_surface (base_allocator);
+  if (!mem->surface)
+    return FALSE;
 
   vip = &allocator->image_info;
   gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
       base_allocator, NULL, GST_VIDEO_INFO_SIZE (vip), 0, 0,
       GST_VIDEO_INFO_SIZE (vip));
-
-  if (!ensure_data (mem, allocator))
-    return FALSE;
 
   return GST_MEMORY_CAST (mem);
 }
@@ -243,19 +260,6 @@ gst_msdk_video_allocator_alloc (GstAllocator * allocator, gsize size,
 }
 
 static void
-gst_msdk_video_allocator_free (GstAllocator * allocator, GstMemory * memory)
-{
-  GstMsdkVideoAllocator *msdk_video_allocator =
-      GST_MSDK_VIDEO_ALLOCATOR_CAST (allocator);
-  GstMsdkAllocResponse *resp =
-      gst_msdk_context_get_cached_alloc_responses
-      (msdk_video_allocator->context, msdk_video_allocator->alloc_response);
-
-  if (resp)
-    resp->num_used_memory--;
-}
-
-static void
 gst_msdk_video_allocator_finalize (GObject * object)
 {
   GstMsdkVideoAllocator *allocator = GST_MSDK_VIDEO_ALLOCATOR_CAST (object);
@@ -273,7 +277,6 @@ gst_msdk_video_allocator_class_init (GstMsdkVideoAllocatorClass * klass)
   object_class->finalize = gst_msdk_video_allocator_finalize;
 
   allocator_class->alloc = gst_msdk_video_allocator_alloc;
-  allocator_class->free = gst_msdk_video_allocator_free;
 }
 
 static void

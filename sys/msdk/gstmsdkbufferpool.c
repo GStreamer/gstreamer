@@ -227,6 +227,64 @@ no_memory:
   }
 }
 
+static GstFlowReturn
+gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
+    GstBuffer ** out_buffer_ptr, GstBufferPoolAcquireParams * params)
+{
+  GstMsdkBufferPool *msdk_pool = GST_MSDK_BUFFER_POOL_CAST (pool);
+  GstMsdkBufferPoolPrivate *priv = msdk_pool->priv;
+  GstBuffer *buf = NULL;
+  GstFlowReturn ret;
+  mfxFrameSurface1 *surface;
+
+  ret =
+      GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool, &buf, params);
+
+  /* When using video memory, mfx surface is still locked even though
+   * it's finished by SyncOperation. There's no way to get notified when it gets unlocked.
+   * So we need to confirm if it's unlocked every time a gst buffer is acquired.
+   * If it's still locked, we can replace it with new unlocked/unused surface.
+   */
+  if (ret != GST_FLOW_OK || !priv->use_video_memory) {
+    if (buf)
+      *out_buffer_ptr = buf;
+    return ret;
+  }
+
+  surface = gst_msdk_get_surface_from_buffer (buf);
+  if (!surface || surface->Data.Locked > 0) {
+    if (!gst_msdk_video_memory_get_surface_available (GST_MSDK_VIDEO_MEMORY_CAST
+            (gst_buffer_peek_memory (buf, 0)))) {
+      GST_WARNING_OBJECT (pool, "failed to get new surface available");
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  *out_buffer_ptr = buf;
+  return GST_FLOW_OK;
+}
+
+static void
+gst_msdk_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buf)
+{
+  mfxFrameSurface1 *surface;
+  GstMsdkBufferPool *msdk_pool = GST_MSDK_BUFFER_POOL_CAST (pool);
+  GstMsdkBufferPoolPrivate *priv = msdk_pool->priv;
+
+  if (!priv->use_video_memory)
+    goto done;
+
+  surface = gst_msdk_get_surface_from_buffer (buf);
+  if (!surface)
+    goto done;
+
+  gst_msdk_video_memory_release_surface (GST_MSDK_VIDEO_MEMORY_CAST
+      (gst_buffer_peek_memory (buf, 0)));
+
+done:
+  return GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buf);
+}
+
 static void
 gst_msdk_buffer_pool_finalize (GObject * object)
 {
@@ -258,6 +316,8 @@ gst_msdk_buffer_pool_class_init (GstMsdkBufferPoolClass * klass)
   pool_class->get_options = gst_msdk_buffer_pool_get_options;
   pool_class->set_config = gst_msdk_buffer_pool_set_config;
   pool_class->alloc_buffer = gst_msdk_buffer_pool_alloc_buffer;
+  pool_class->acquire_buffer = gst_msdk_buffer_pool_acquire_buffer;
+  pool_class->release_buffer = gst_msdk_buffer_pool_release_buffer;
 }
 
 GstBufferPool *
