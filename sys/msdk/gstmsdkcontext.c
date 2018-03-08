@@ -59,6 +59,7 @@ struct _GstMsdkContextPrivate
   GstMsdkContextJobType job_type;
   gint shared_async_depth;
   GMutex mutex;
+  GList *child_session_list;
 #ifndef _WIN32
   gint fd;
   VADisplay dpy;
@@ -214,15 +215,28 @@ gst_msdk_context_init (GstMsdkContext * context)
 }
 
 static void
+release_child_session (gpointer session)
+{
+  mfxStatus status;
+
+  mfxSession _session = session;
+  status = MFXDisjoinSession (_session);
+  if (status != MFX_ERR_NONE)
+    GST_WARNING ("failed to disjoin (%s)", msdk_status_to_string (status));
+  msdk_close_session (_session);
+}
+
+static void
 gst_msdk_context_finalize (GObject * obj)
 {
   GstMsdkContext *context = GST_MSDK_CONTEXT_CAST (obj);
   GstMsdkContextPrivate *priv = context->priv;
 
-  if (priv->is_joined) {
-    MFXDisjoinSession (priv->session);
+  /* child sessions will be closed when the parent session is closed */
+  if (priv->is_joined)
     goto done;
-  }
+  else
+    g_list_free_full (priv->child_session_list, release_child_session);
 
   msdk_close_session (priv->session);
   g_mutex_clear (&priv->mutex);
@@ -284,6 +298,8 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   priv->is_joined = TRUE;
   priv->hardware = parent_priv->hardware;
   priv->job_type = parent_priv->job_type;
+  parent_priv->child_session_list =
+      g_list_prepend (parent_priv->child_session_list, priv->session);
 #ifndef _WIN32
   priv->dpy = parent_priv->dpy;
   priv->fd = parent_priv->fd;
