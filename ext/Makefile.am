@@ -256,6 +256,12 @@ else
 OPUS_DIR=
 endif
 
+if USE_PANGO
+CLOSEDCAPTION_DIR=closedcaption
+else
+CLOSEDCAPTION_DIR=
+endif
+
 if USE_RSVG
 RSVG_DIR=rsvg
 else
@@ -410,6 +416,7 @@ SUBDIRS=\
 	$(BZ2_DIR) \
 	$(COLORMANAGEMENT_DIR) \
 	$(CHROMAPRINT_DIR) \
+	$(CLOSEDCAPTION_DIR) \
 	$(CURL_DIR) \
 	$(DASH_DIR) \
 	$(DC1394_DIR) \
@@ -477,6 +484,7 @@ DIST_SUBDIRS = \
 	bz2 \
 	colormanagement \
 	chromaprint \
+	closedcaption \
 	curl \
 	dash \
 	dc1394 \

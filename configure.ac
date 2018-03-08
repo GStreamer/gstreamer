@@ -1994,6 +1994,12 @@ AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
   AC_SUBST(OPUS_LIBS)
 ])
 
+dnl *** pango ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
+AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
+  AG_GST_PKG_CHECK_MODULES(PANGO, pango >= 1.22.0  pangocairo >= 1.22.0)
+])
+
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
@@ -2416,6 +2422,7 @@ AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_OPENMPT, false)
 AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
+AM_CONDITIONAL(USE_PANGO, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_SMOOTHSTREAMING, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
@@ -2674,6 +2681,7 @@ ext/aom/Makefile
 ext/bs2b/Makefile
 ext/bz2/Makefile
 ext/chromaprint/Makefile
+ext/closedcaption/Makefile
 ext/colormanagement/Makefile
 ext/curl/Makefile
 ext/dash/Makefile
