@@ -107,6 +107,12 @@ AG_GST_ARCH
 dnl Determine endianness
 AC_C_BIGENDIAN
 
+dnl *** software ***
+
+dnl check for large file support
+dnl affected plugins must include config.h
+AC_SYS_LARGEFILE
+
 dnl *** checks for programs ***
 
 dnl find a compiler
