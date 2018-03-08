@@ -167,11 +167,8 @@ struct _GstMsdkEncClass
 
 struct _MsdkEncTask
 {
-  GstVideoCodecFrame *input_frame;
   mfxSyncPoint sync_point;
   mfxBitstream output_bitstream;
-  gboolean more_data;
-  guint pending_frame_number;
 };
 
 GType gst_msdkenc_get_type (void);

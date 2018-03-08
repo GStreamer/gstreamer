@@ -643,39 +643,24 @@ gst_msdkenc_get_free_task (GstMsdkEnc * thiz)
 static void
 gst_msdkenc_reset_task (MsdkEncTask * task)
 {
-  task->input_frame = NULL;
   task->output_bitstream.DataLength = 0;
   task->sync_point = NULL;
-  task->more_data = FALSE;
 }
 
 static GstFlowReturn
 gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     gboolean discard)
 {
-  GstVideoCodecFrame *frame = task->input_frame;
+  GstVideoCodecFrame *frame;
 
-  if (task->more_data) {
-    GstVideoCodecFrame *frame;
-
-    frame =
-        gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (thiz),
-        task->pending_frame_number);
-    if (frame) {
-      gst_msdkenc_dequeue_frame (thiz, frame);
-      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (thiz), frame);
-      gst_msdkenc_reset_task (task);
-      return GST_FLOW_OK;
-    } else {
-      GST_ERROR_OBJECT (thiz,
-          "Couldn't find the pending frame %d to be finished",
-          task->pending_frame_number);
-      return GST_FLOW_ERROR;
-    }
-  }
-
-  if (!task->sync_point) {
+  if (!task->sync_point)
     return GST_FLOW_OK;
+
+  frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (thiz));
+
+  if (!frame) {
+    GST_ERROR_OBJECT (thiz, "failed to get a frame");
+    return GST_FLOW_ERROR;
   }
 
   /* Wait for encoding operation to complete */
@@ -705,7 +690,9 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     gst_msdkenc_reset_task (task);
   }
 
+  gst_video_codec_frame_unref (frame);
   gst_msdkenc_dequeue_frame (thiz, frame);
+
   return gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (thiz), frame);
 }
 
@@ -752,13 +739,9 @@ gst_msdkenc_encode_frame (GstMsdkEnc * thiz, mfxFrameSurface1 * surface,
   }
 
   if (task->sync_point) {
-    task->input_frame = input_frame;
     thiz->next_task = ((task - thiz->tasks) + 1) % thiz->num_tasks;
   } else if (status == MFX_ERR_MORE_DATA) {
-    task->more_data = TRUE;
-    task->pending_frame_number = input_frame->system_frame_number;
-    gst_video_codec_frame_unref (input_frame);
-    thiz->next_task = ((task - thiz->tasks) + 1) % thiz->num_tasks;
+    gst_msdkenc_dequeue_frame (thiz, input_frame);
   }
 
   /* Ensure that next task is available */
@@ -802,11 +785,36 @@ gst_msdkenc_set_latency (GstMsdkEnc * thiz)
 static void
 gst_msdkenc_flush_frames (GstMsdkEnc * thiz, gboolean discard)
 {
-  guint i, t = thiz->next_task;
+  mfxStatus status;
+  mfxSession session;
+  MsdkEncTask *task;
+  guint i, t;
 
   if (!thiz->tasks)
     return;
 
+  session = gst_msdk_context_get_session (thiz->context);
+
+  for (;;) {
+    task = thiz->tasks + thiz->next_task;
+    gst_msdkenc_finish_frame (thiz, task, FALSE);
+
+    status = MFXVideoENCODE_EncodeFrameAsync (session, NULL, NULL,
+        &task->output_bitstream, &task->sync_point);
+
+    if (status != MFX_ERR_NONE && status != MFX_ERR_MORE_DATA) {
+      GST_ELEMENT_ERROR (thiz, STREAM, ENCODE, ("Encode frame failed."),
+          ("MSDK encode error (%s)", msdk_status_to_string (status)));
+    }
+
+    if (task->sync_point) {
+      thiz->next_task = ((task - thiz->tasks) + 1) % thiz->num_tasks;
+    } else if (status == MFX_ERR_MORE_DATA) {
+      break;
+    }
+  };
+
+  t = thiz->next_task;
   for (i = 0; i < thiz->num_tasks; i++) {
     gst_msdkenc_finish_frame (thiz, &thiz->tasks[t], discard);
     t = (t + 1) % thiz->num_tasks;
