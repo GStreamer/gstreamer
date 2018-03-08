@@ -75,6 +75,8 @@ typedef struct _MsdkSurface
   GstVideoFrame copy;
 } MsdkSurface;
 
+static gboolean gst_msdkdec_flush (GstVideoDecoder * decoder);
+
 static GstFlowReturn
 allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
 {
@@ -513,6 +515,9 @@ static gboolean
 gst_msdkdec_stop (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
+
+  gst_msdkdec_flush (decoder);
+
   if (thiz->input_state) {
     gst_video_codec_state_unref (thiz->input_state);
     thiz->input_state = NULL;
@@ -603,11 +608,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     flow = gst_msdkdec_finish_task (thiz, task);
     if (flow != GST_FLOW_OK)
-      goto exit;
+      goto error;
     if (!surface) {
       flow = allocate_output_buffer (thiz, &buffer);
       if (flow != GST_FLOW_OK)
-        goto exit;
+        goto error;
       surface = get_surface (thiz, buffer);
       if (!surface) {
         /* Can't get a surface for some reason, finish tasks to see if
@@ -617,7 +622,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
           task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
           flow = gst_msdkdec_finish_task (thiz, task);
           if (flow != GST_FLOW_OK)
-            goto exit;
+            goto error;
           surface = get_surface (thiz, buffer);
           if (surface)
             break;
@@ -625,7 +630,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         if (!surface) {
           GST_ERROR_OBJECT (thiz, "Couldn't get a surface");
           flow = GST_FLOW_ERROR;
-          goto exit;
+          goto error;
         }
       }
     }
@@ -673,11 +678,16 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     flow = GST_FLOW_OK;
   }
 
-exit:
   if (surface)
     free_surface (thiz, surface);
 
   gst_buffer_unmap (frame->input_buffer, &map_info);
+  return flow;
+
+error:
+  gst_buffer_unmap (frame->input_buffer, &map_info);
+  gst_video_decoder_drop_frame (decoder, frame);
+
   return flow;
 }
 
@@ -936,9 +946,7 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
 
   for (i = 0; i < thiz->tasks->len; i++) {
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
-    flow = gst_msdkdec_finish_task (thiz, task);
-    if (flow != GST_FLOW_OK)
-      return flow;
+    gst_msdkdec_finish_task (thiz, task);
     thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
   }
 
