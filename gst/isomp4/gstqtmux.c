@@ -97,6 +97,17 @@
  * #GstQTMux::reserved-duration-remaining property to see how close to full
  * the reserved space is becoming.
  *
+ * Applications that wish to be able to use/edit a file while it is being
+ * written to by live content, can use the "Robust Prefill Muxing" mode. That
+ * mode is a variant of the "Robust Muxing" mode in that it will pre-allocate a
+ * completely valid header from the start for all tracks (i.e. it appears as
+ * though the file is "reserved-max-duration" long with all samples
+ * present). This mode can be enabled by setting the
+ * #GstQTMux::reserved-moov-update-period and #GstQTMux::reserved-prefill
+ * properties. Note that this mode is only possible with input streams that have
+ * a fixed sample size (such as raw audio and Prores Video) and that don't
+ * have reordered samples.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -2505,12 +2516,17 @@ prefill_update_sample_size (GstQTMux * qtmux, GstQTPad * qpad)
   }
 }
 
+/* Only called at startup when doing the "fake" iteration of all tracks in order
+ * to prefill the sample tables in the header.  */
 static GstQTPad *
-find_best_pad_prefill (GstQTMux * qtmux)
+find_best_pad_prefill_start (GstQTMux * qtmux)
 {
   GSList *walk;
   GstQTPad *best_pad = NULL;
 
+  /* If interleave limits have been specified and the current pad is within
+   * those interleave limits, pick that one, otherwise let's try to figure out
+   * the next best one. */
   if (qtmux->current_pad &&
       (qtmux->interleave_bytes != 0 || qtmux->interleave_time != 0) &&
       (qtmux->interleave_bytes == 0
@@ -2524,9 +2540,13 @@ find_best_pad_prefill (GstQTMux * qtmux)
       best_pad = qtmux->current_pad;
     }
   } else if (qtmux->collect->data->next) {
+    /* Attempt to try another pad if we have one. Otherwise use the only pad
+     * present */
     best_pad = qtmux->current_pad = NULL;
   }
 
+  /* The next best pad is the one which has the lowest timestamp and hasn't
+   * exceeded the reserved max duration */
   if (!best_pad) {
     GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
@@ -2551,6 +2571,11 @@ find_best_pad_prefill (GstQTMux * qtmux)
   return best_pad;
 }
 
+/* Called when starting the file in prefill_mode to figure out all the entries
+ * of the header based on the input stream and reserved maximum duration.
+ *
+ * The _actual_ header (i.e. with the proper duration and trimmed sample tables)
+ * will be updated and written on EOS. */
 static gboolean
 gst_qt_mux_prefill_samples (GstQTMux * qtmux)
 {
@@ -2608,7 +2633,7 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
     }
   }
 
-  while ((qpad = find_best_pad_prefill (qtmux))) {
+  while ((qpad = find_best_pad_prefill_start (qtmux))) {
     GstClockTime timestamp, next_timestamp, duration;
     guint nsamples, sample_size;
     guint64 chunk_offset;
