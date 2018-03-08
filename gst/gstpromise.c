@@ -37,11 +37,20 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
  * The #GstPromise object implements the container for values that may
  * be available later. i.e. a Future or a Promise in
  * <ulink url="https://en.wikipedia.org/wiki/Futures_and_promises">https://en.wikipedia.org/wiki/Futures_and_promises</ulink>
+ * As with all Future/Promise-like functionality, there is the concept of the
+ * producer of the value and the consumer of the value.
  *
- * A #GstPromise can be created with gst_promise_new(), replied to
- * with gst_promise_reply(), interrupted with gst_promise_interrupt() and
- * expired with gst_promise_expire(). A callback can also be installed at
- * #GstPromise creation for result changes with gst_promise_new_with_change_func().
+ * A #GstPromise is created with gst_promise_new() by the consumer and passed
+ * to the producer to avoid thread safety issues with the change callback.
+ * A #GstPromise can be replied to with a value (or an error) by the producer
+ * with gst_promise_reply(). gst_promise_interrupt() is for the consumer to
+ * indicate to the producer that the value is not needed anymore and producing
+ * that value can stop.  The @GST_PROMISE_RESULT_EXPIRED state set by a call
+ * to gst_promise_expire() indicates to the consumer that a value will never
+ * be produced and is intended to be called by a third party that implements
+ * some notion of message handling such as #GstBus.
+ * A callback can also be installed at #GstPromise creation for
+ * result changes with gst_promise_new_with_change_func().
  * The change callback can be used to chain #GstPromises's together as in the
  * following example.
  * |[<!-- language="C" -->
@@ -57,18 +66,25 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
  * ]|
  *
  * Each #GstPromise starts out with a #GstPromiseResult of
- * %GST_PROMISE_RESULT_PENDING and only ever transitions out of that result
- * into one of the other #GstPromiseResult.
+ * %GST_PROMISE_RESULT_PENDING and only ever transitions once
+ * into one of the other #GstPromiseResult's.
  *
  * In order to support multi-threaded code, gst_promise_reply(),
  * gst_promise_interrupt() and gst_promise_expire() may all be from
- * different threads with some restrictions, the final result of the promise
+ * different threads with some restrictions and the final result of the promise
  * is whichever call is made first.  There are two restrictions on ordering:
  *
  * 1. That gst_promise_reply() and gst_promise_interrupt() cannot be called
  * after gst_promise_expire()
  * 2. That gst_promise_reply() and gst_promise_interrupt()
  * cannot be called twice.
+ *
+ * The change function set with gst_promise_new_with_change_func() is
+ * called directly from either the gst_promise_reply(),
+ * gst_promise_interrupt() or gst_promise_expire() and can be called
+ * from an arbitrary thread.  #GstPromise using APIs can restrict this to
+ * a single thread or a subset of threads but that is entirely up to the API
+ * that uses #GstPromise.
  */
 
 static const int immutable_structure_refcount = 2;
@@ -135,7 +151,11 @@ gst_promise_wait (GstPromise * promise)
  * @s: (transfer full): a #GstStructure with the the reply contents
  *
  * Set a reply on @promise.  This will wake up any waiters with
- * %GST_PROMISE_RESULT_REPLIED.
+ * %GST_PROMISE_RESULT_REPLIED.  Called by the producer of the value to
+ * indicate success (or failure).
+ *
+ * If @promise has already been interrupted by the consumer, then this reply
+ * is not visible to the consumer.
  *
  * Since: 1.14
  */
@@ -197,7 +217,7 @@ gst_promise_reply (GstPromise * promise, GstStructure * s)
  * @promise: a #GstPromise
  *
  * Retrieve the reply set on @promise.  @promise must be in
- * %GST_PROMISE_RESULT_REPLIED and is owned by @promise
+ * %GST_PROMISE_RESULT_REPLIED and the returned structure is owned by @promise
  *
  * Returns: (transfer none): The reply set on @promise
  *
@@ -225,7 +245,8 @@ gst_promise_get_reply (GstPromise * promise)
  * @promise: a #GstPromise
  *
  * Interrupt waiting for a @promise.  This will wake up any waiters with
- * %GST_PROMISE_RESULT_INTERRUPTED
+ * %GST_PROMISE_RESULT_INTERRUPTED.  Called when the consumer does not want
+ * the value produced anymore.
  *
  * Since: 1.14
  */
@@ -265,7 +286,8 @@ gst_promise_interrupt (GstPromise * promise)
  * @promise: a #GstPromise
  *
  * Expire a @promise.  This will wake up any waiters with
- * %GST_PROMISE_RESULT_EXPIRED
+ * %GST_PROMISE_RESULT_EXPIRED.  Called by a message loop when the parent
+ * message is handled and/or destroyed (possibly unanswered).
  *
  * Since: 1.14
  */
