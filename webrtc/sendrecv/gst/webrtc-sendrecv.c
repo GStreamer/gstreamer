@@ -50,6 +50,7 @@ static GOptionEntry entries[] =
 {
   { "peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id, "String ID of the peer to connect to", "ID" },
   { "server", 0, 0, G_OPTION_ARG_STRING, &server_url, "Signalling server to connect to", "URL" },
+  { NULL },
 };
 
 static gboolean
@@ -105,12 +106,14 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
   GstElement *q, *conv, *sink;
   GstPadLinkReturn ret;
 
+  g_print ("Trying to handle stream with %s ! %s", convert_name, sink_name);
+
   q = gst_element_factory_make ("queue", NULL);
-  g_assert (q);
+  g_assert_nonnull (q);
   conv = gst_element_factory_make (convert_name, NULL);
-  g_assert (conv);
+  g_assert_nonnull (conv);
   sink = gst_element_factory_make (sink_name, NULL);
-  g_assert (sink);
+  g_assert_nonnull (sink);
   gst_bin_add_many (GST_BIN (pipe), q, conv, sink, NULL);
   gst_element_sync_state_with_parent (q);
   gst_element_sync_state_with_parent (conv);
@@ -120,7 +123,7 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
   qpad = gst_element_get_static_pad (q, "sink");
 
   ret = gst_pad_link (pad, qpad);
-  g_assert (ret == GST_PAD_LINK_OK);
+  g_assert_cmphex (ret, ==, GST_PAD_LINK_OK);
 }
 
 static void
@@ -224,9 +227,9 @@ on_offer_created (GstPromise * promise, gpointer user_data)
   const GstStructure *reply;
   gchar *desc;
 
-  g_assert (app_state == PEER_CALL_NEGOTIATING);
+  g_assert_cmphex (app_state, ==, PEER_CALL_NEGOTIATING);
 
-  g_assert (gst_promise_wait(promise) == GST_PROMISE_RESULT_REPLIED);
+  g_assert_cmphex (gst_promise_wait(promise), ==, GST_PROMISE_RESULT_REPLIED);
   reply = gst_promise_get_reply (promise);
   gst_structure_get (reply, "offer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
@@ -277,7 +280,7 @@ start_pipeline (void)
   }
 
   webrtc1 = gst_bin_get_by_name (GST_BIN (pipe1), "sendrecv");
-  g_assert (webrtc1 != NULL);
+  g_assert_nonnull (webrtc1);
 
   /* This is the gstwebrtc entry point where we create the offer and so on. It
    * will be called when the pipeline goes to PLAYING. */
@@ -455,9 +458,9 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       GstSDPMessage *sdp;
       GstWebRTCSessionDescription *answer;
 
-      g_assert (app_state == PEER_CALL_NEGOTIATING);
+      g_assert_cmphex (app_state, ==, PEER_CALL_NEGOTIATING);
 
-      g_assert (json_object_has_member (object, "type"));
+      g_assert_true (json_object_has_member (object, "type"));
       /* In this example, we always create the offer and receive one answer.
        * See tests/examples/webrtcbidirectional.c in gst-plugins-bad for how to
        * handle offers from peers and reply with answers using webrtcbin. */
@@ -469,14 +472,14 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       g_print ("Received answer:\n%s\n", text);
 
       ret = gst_sdp_message_new (&sdp);
-      g_assert (ret == GST_SDP_OK);
+      g_assert_cmphex (ret, ==, GST_SDP_OK);
 
       ret = gst_sdp_message_parse_buffer (text, strlen (text), sdp);
-      g_assert (ret == GST_SDP_OK);
+      g_assert_cmphex (ret, ==, GST_SDP_OK);
 
       answer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER,
           sdp);
-      g_assert (answer);
+      g_assert_nonnull (answer);
 
       /* Set remote description on our pipeline */
       {
@@ -523,7 +526,7 @@ on_server_connected (SoupSession * session, GAsyncResult * res,
     return;
   }
 
-  g_assert (ws_conn != NULL);
+  g_assert_nonnull (ws_conn);
 
   app_state = SERVER_CONNECTED;
   g_print ("Connected to signalling server\n");

@@ -54,6 +54,7 @@ static GOptionEntry entries[] =
   { "name", 0, 0, G_OPTION_ARG_STRING, &local_id, "Name we will send to the server", "ID" },
   { "room-id", 0, 0, G_OPTION_ARG_STRING, &room_id, "Room name to join or create", "ID" },
   { "server", 0, 0, G_OPTION_ARG_STRING, &server_url, "Signalling server to connect to", "URL" },
+  { NULL }
 };
 
 static gint
