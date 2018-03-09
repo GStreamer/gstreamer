@@ -30,6 +30,9 @@ endif
 
 msdk_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
 
+have_msdk = false
+msdk_dep = []
+
 if msdk_root != ''
   msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64']
   msdk_incdir = include_directories(msdk_root + '/include')
@@ -56,5 +59,6 @@ if msdk_root != ''
       install : true,
       install_dir : plugins_install_dir,
     )
+    have_msdk = true
   endif
 endif
