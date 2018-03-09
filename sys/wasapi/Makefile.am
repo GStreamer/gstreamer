@@ -12,7 +12,8 @@ libgstwasapi_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) 
 	$(WASAPI_LIBS)
 libgstwasapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
-noinst_HEADERS = gstwasapisrc.h \
+noinst_HEADERS = gstaudioclient3.h \
+	gstwasapisrc.h \
 	gstwasapisink.h \
 	gstwasapiutil.h \
 	gstwasapidevice.h
