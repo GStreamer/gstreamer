@@ -94,6 +94,11 @@ struct _GstDecklinkVideoSrc
     GstClockTime num, den;
   } next_time_mapping;
   gboolean next_time_mapping_pending;
+
+  GstVideoVBIParser *vbiparser;
+  GstVideoFormat anc_vformat;
+  gboolean output_cc;
+  guint last_cc_vbi_line;
 };
 
 struct _GstDecklinkVideoSrcClass

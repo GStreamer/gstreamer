@@ -232,10 +232,10 @@ gst_decklink_audio_channels_get_type (void)
   return (GType) id;
 }
 
-#define NTSC 10, 11, false, "bt601"
-#define PAL 12, 11, true, "bt601"
-#define HD 1, 1, true, "bt709"
-#define UHD 1, 1, true, "bt2020"
+#define NTSC 10, 11, false, "bt601", FALSE
+#define PAL 12, 11, true, "bt601", FALSE
+#define HD 1, 1, true, "bt709", TRUE
+#define UHD 1, 1, true, "bt2020", TRUE
 
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},     // default is ntsc
@@ -461,6 +461,20 @@ gst_decklink_type_from_video_format (GstVideoFormat f)
   g_assert_not_reached ();
   return GST_DECKLINK_VIDEO_FORMAT_AUTO;
 }
+
+GstVideoFormat
+gst_decklink_video_format_from_type (BMDPixelFormat pf)
+{
+  guint i;
+
+  for (i = 1; i < G_N_ELEMENTS (formats); i++) {
+    if (formats[i].format == pf)
+      return formats[i].vformat;
+  }
+  GST_WARNING ("Unknown pixel format 0x%x", pf);
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
 
 const BMDTimecodeFormat
 gst_decklink_timecode_format_from_enum (GstDecklinkTimecodeFormat f)
