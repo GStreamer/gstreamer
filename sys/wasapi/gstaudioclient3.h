@@ -16,7 +16,16 @@ typedef interface IAudioClient3 IAudioClient3;
 #ifndef __IAudioClient3_INTERFACE_DEFINED__
 #define __IAudioClient3_INTERFACE_DEFINED__
 
-#ifndef AUDIO_STREAM_CATEGORY
+/* This is only available with IAudioClient3 */
+typedef enum AUDCLNT_STREAMOPTIONS
+{
+    AUDCLNT_STREAMOPTIONS_NONE	        = 0,
+    AUDCLNT_STREAMOPTIONS_RAW	        = 0x1,
+    AUDCLNT_STREAMOPTIONS_MATCH_FORMAT	= 0x2
+} AUDCLNT_STREAMOPTIONS;
+
+/* These should be available when the IAudioClient2 interface is defined */
+#ifndef __IAudioClient2_FWD_DEFINED__
 typedef enum _AUDIO_STREAM_CATEGORY {
   AudioCategory_Other                   = 0,
   AudioCategory_ForegroundOnlyMedia,
@@ -31,18 +40,7 @@ typedef enum _AUDIO_STREAM_CATEGORY {
   AudioCategory_Movie,
   AudioCategory_Media
 } AUDIO_STREAM_CATEGORY;
-#endif
 
-#ifndef AUDCLNT_STREAMOPTIONS
-typedef enum AUDCLNT_STREAMOPTIONS
-{
-    AUDCLNT_STREAMOPTIONS_NONE	        = 0,
-    AUDCLNT_STREAMOPTIONS_RAW	        = 0x1,
-    AUDCLNT_STREAMOPTIONS_MATCH_FORMAT	= 0x2
-} AUDCLNT_STREAMOPTIONS;
-#endif
-
-#ifndef AudioClientProperties
 typedef struct AudioClientProperties
 {
     UINT32 cbSize;
@@ -50,7 +48,7 @@ typedef struct AudioClientProperties
     AUDIO_STREAM_CATEGORY eCategory;
     AUDCLNT_STREAMOPTIONS Options;
 } AudioClientProperties;
-#endif
+#endif /* __IAudioClient2_FWD_DEFINED__ */
 
 EXTERN_C const IID IID_IAudioClient3;
 
