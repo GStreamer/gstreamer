@@ -210,6 +210,12 @@ else
 check_webrtc=
 endif
 
+if USE_MSDK
+check_msdk=elements/msdkh264enc
+else
+check_msdk=
+endif
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -290,6 +296,7 @@ check_PROGRAMS = \
 	$(check_srtp) \
 	$(check_player) \
 	$(check_webrtc) \
+	$(check_msdk) \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h libs/isoff.h
@@ -569,6 +576,10 @@ elements_webrtcbin_LDADD = \
 elements_webrtcbin_CFLAGS = \
 	$(GST_PLUGINS_BASE_CLAGS) $(GST_PLUGINS_BAD_CFLAGS) $(GST_SDP_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+elements_msdk_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_msdk_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
+elements_msdk_SOURCES = elements/msdkh264enc.c
 
 
 distclean-local-orc:

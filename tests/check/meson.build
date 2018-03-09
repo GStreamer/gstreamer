@@ -56,6 +56,7 @@ base_tests = [
   [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
   [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
   [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
+  [['elements/msdkh264enc.c'], not msdk_dep.found(), [msdk_dep]],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
   [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
   [['libs/insertbin.c'], false, [gstinsertbin_dep]],
