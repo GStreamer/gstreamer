@@ -568,6 +568,30 @@ connect_to_websocket_server_async (void)
   app_state = SERVER_CONNECTING;
 }
 
+static gboolean
+check_plugins (void)
+{
+  int i;
+  gboolean ret;
+  GstPlugin *plugin;
+  GstRegistry *registry;
+  const gchar *needed[] = { "opus", "vpx", "nice", "webrtc", "dtls", "srtp",
+      "rtpmanager", "videotestsrc", "audiotestsrc", NULL};
+
+  registry = gst_registry_get ();
+  ret = TRUE;
+  for (i = 0; i < g_strv_length ((gchar **) needed); i++) {
+    plugin = gst_registry_find_plugin (registry, needed[i]);
+    if (!plugin) {
+      g_print ("Required gstreamer plugin '%s' not found\n", needed[i]);
+      ret = FALSE;
+      continue;
+    }
+    gst_object_unref (plugin);
+  }
+  return ret;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -582,6 +606,9 @@ main (int argc, char *argv[])
     g_printerr ("Error initializing: %s\n", error->message);
     return -1;
   }
+
+  if (!check_plugins ())
+    return -1;
 
   if (!peer_id) {
     g_printerr ("--peer-id is a required argument\n");
