@@ -110,7 +110,7 @@ cdata.set('PACKAGE_BUGREPORT', '"http://bugzilla.gnome.org/enter_bug.cgi?product
 cdata.set('PACKAGE_NAME', '"GStreamer OMX Plugins"')
 cdata.set('GETTEXT_PACKAGE', '"gst-omx-1.0"')
 cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
-cdata.set('GST_PACKAGE_NAME', '"GStreamer OpenMX Plug-ins"')
+cdata.set('GST_PACKAGE_NAME', '"GStreamer OpenMAX Plug-ins"')
 cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
 cdata.set('GST_LICENSE', '"LGPL"')
 cdata.set('LIBDIR', '"@0@"'.format(get_option('libdir')))
