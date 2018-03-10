@@ -3956,6 +3956,36 @@ gst_vo_amr_wb_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-wasapisink</FILE>
+<TITLE>wasapisink</TITLE>
+GstWasapiSink
+<SUBSECTION Standard>
+GstWasapiSinkClass
+GST_WASAPI_SINK
+GST_IS_WASAPI_SINK
+GST_WASAPI_SINK_CLASS
+GST_IS_WASAPI_SINK_CLASS
+GST_TYPE_WASAPI_SINK
+<SUBSECTION Private>
+gst_wasapi_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-wasapisrc</FILE>
+<TITLE>wasapisrc</TITLE>
+GstWasapiSrc
+<SUBSECTION Standard>
+GstWasapiSrcClass
+GST_WASAPI_SRC
+GST_IS_WASAPI_SRC
+GST_WASAPI_SRC_CLASS
+GST_IS_WASAPI_SRC_CLASS
+GST_TYPE_WASAPI_SRC
+<SUBSECTION Private>
+gst_wasapi_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-watchdog</FILE>
 <TITLE>watchdog</TITLE>
 GstWatchdog

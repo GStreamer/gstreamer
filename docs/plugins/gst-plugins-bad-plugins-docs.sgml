@@ -128,6 +128,8 @@
     <xi:include href="xml/element-voamrwbenc.xml" />
     <xi:include href="xml/element-vulkansink.xml" />
     <xi:include href="xml/element-vulkanupload.xml" />
+    <xi:include href="xml/element-wasapisink.xml" />
+    <xi:include href="xml/element-wasapisrc.xml" />
     <xi:include href="xml/element-wavescope.xml" />
     <xi:include href="xml/element-webrtcbin.xml" />
     <xi:include href="xml/element-webrtcdsp.xml" />
@@ -181,6 +183,7 @@
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-voaacenc.xml" />
     <xi:include href="xml/plugin-voamrwbenc.xml" />
+    <xi:include href="xml/plugin-wasapi.xml" />
     <xi:include href="xml/plugin-webrtcdsp.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
     <xi:include href="xml/plugin-ttmlsubs.xml" />

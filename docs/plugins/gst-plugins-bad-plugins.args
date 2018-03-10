@@ -45439,6 +45439,116 @@
 </ARG>
 
 <ARG>
+<NAME>GstWasapiSink::role</NAME>
+<TYPE>GstWasapiDeviceRole</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Role</NICK>
+<BLURB>Role of the device: communications, multimedia, etc</BLURB>
+<DEFAULT>console</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSink::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>WASAPI playback device as a GUID string</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSink::mute</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mute</NICK>
+<BLURB>Mute state of this stream</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSink::exclusive</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Exclusive mode</NICK>
+<BLURB>Open the device in exclusive mode</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSink::low-latency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low latency</NICK>
+<BLURB>Optimize all settings for lowest latency. Always safe to enable.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSink::use-audioclient3</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use the AudioClient3 API</NICK>
+<BLURB>Whether to use the Windows 10 AudioClient3 API when available</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSrc::role</NAME>
+<TYPE>GstWasapiDeviceRole</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Role</NICK>
+<BLURB>Role of the device: communications, multimedia, etc</BLURB>
+<DEFAULT>console</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSrc::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>WASAPI playback device as a GUID string</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSrc::exclusive</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Exclusive mode</NICK>
+<BLURB>Open the device in exclusive mode</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSrc::low-latency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low latency</NICK>
+<BLURB>Optimize all settings for lowest latency. Always safe to enable.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWasapiSrc::use-audioclient3</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use the AudioClient3 API</NICK>
+<BLURB>Whether to use the Windows 10 AudioClient3 API when available</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstWaterRipple::amplitude</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE></RANGE>

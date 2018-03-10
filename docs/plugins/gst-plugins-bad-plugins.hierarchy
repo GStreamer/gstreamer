@@ -72,6 +72,7 @@ GObject
           GstAudioBaseSink
             GstAudioSink
               GstOpenALSink
+              GstWasapiSink
           GstAvdtpSink
           GstChecksumSink
           GstCurlBaseSink
@@ -108,6 +109,7 @@ GObject
             GstAudioBaseSrc
               GstAudioSrc
                 GstOpenalSrc
+                GstWasapiSrc
             GstCurlHttpSrc
             GstDC1394Src
             GstDecklinkAudioSrc
