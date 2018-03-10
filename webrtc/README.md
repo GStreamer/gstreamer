@@ -2,15 +2,29 @@
 
 All demos use the same signalling server in the `signalling/` directory
 
-## Build
+## Downloading GStreamer
 
-The GStreamer WebRTC implementation has now been merged upstream, so all
-you need is the latest GStreamer git master, as of 2 February 2018 or later:
+The GStreamer WebRTC implementation has now been merged upstream, and is in the GStreamer 1.14 release. Binaries can be found here:
+
+https://gstreamer.freedesktop.org/download/
+
+## Building GStreamer from source
+
+If you don't want to use the binaries provided by GStreamer or on your Linux distro, you can build GStreamer from source.
+
+The easiest way to build the webrtc plugin and all the plugins it needs, is to [use Cerbero](https://gstreamer.freedesktop.org/documentation/installing/building-from-source-using-cerbero.html). These instructions should work out of the box for all platforms, including cross-compiling for iOS and Android.
+
+One thing to note is that it's written in Python 2, so you may need to replace all instances of `./cerbero-uninstalled` (or `cerbero`) with `python2 cerbero-uninstalled` or whatever Python 2 is called on your platform.
+
+## Building GStreamer manually from source
+
+For hacking on the webrtc plugin, you may want to build manually using the git repositories:
 
  - http://cgit.freedesktop.org/gstreamer/gstreamer
  - http://cgit.freedesktop.org/gstreamer/gst-plugins-base
  - http://cgit.freedesktop.org/gstreamer/gst-plugins-good
  - http://cgit.freedesktop.org/gstreamer/gst-plugins-bad
+ - http://cgit.freedesktop.org/libnice/libnice
 
 You can build these with either Autotools gst-uninstalled:
 
@@ -23,6 +37,12 @@ https://cgit.freedesktop.org/gstreamer/gst-build/
 You may need to install the following packages using your package manager:
 
 json-glib, libsoup, libnice, libnice-gstreamer1 (the gstreamer plugin for libnice)
+
+## Filing bugs
+
+Please only file bugs about the demos here. Bugs about GStreamer's WebRTC implementation should be filed on the [GStreamer bugzilla](https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gst-plugins-bad).
+
+You can also find us on IRC by joining #gstreamer @ FreeNode.
 
 ## Documentation
 
