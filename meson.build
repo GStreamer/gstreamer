@@ -79,6 +79,7 @@ check_headers = [
   ['HAVE_UNISTD_H', 'unistd.h'],
   ['HAVE_WINSOCK2_H', 'winsock2.h'],
   ['HAVE_XMMINTRIN_H', 'xmmintrin.h'],
+  ['HAVE_LINUX_DMA_BUF_H', 'linux/dma-buf.h'],
 ]
 foreach h : check_headers
   if cc.has_header(h.get(1))

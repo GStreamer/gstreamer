@@ -486,6 +486,9 @@ esac
 dnl Check for mmap (needed by allocators library)
 AC_CHECK_FUNC([mmap], [AC_DEFINE(HAVE_MMAP, 1, [Defined if mmap is supported])])
 
+dnl Check for DMABuf synchronization ioctl (needed for DMABuf CPU access)
+AC_CHECK_HEADERS([linux/dma-buf.h], [])
+
 dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs

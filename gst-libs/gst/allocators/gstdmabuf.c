@@ -34,15 +34,66 @@
  * Since: 1.2
  */
 
-#ifdef HAVE_MMAP
-#include <sys/mman.h>
-#include <unistd.h>
+#ifdef HAVE_LINUX_DMA_BUF_H
+#include <sys/ioctl.h>
+#include <linux/dma-buf.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
 G_DEFINE_TYPE (GstDmaBufAllocator, gst_dmabuf_allocator, GST_TYPE_FD_ALLOCATOR);
+
+static gpointer
+gst_dmabuf_mem_map (GstMemory * gmem, GstMapInfo * info, gsize maxsize)
+{
+  GstAllocator *allocator = gmem->allocator;
+#ifdef HAVE_LINUX_DMA_BUF_H
+  struct dma_buf_sync sync = { DMA_BUF_SYNC_START };
+  gpointer ret;
+
+  if (info->flags & GST_MAP_READ)
+    sync.flags |= DMA_BUF_SYNC_READ;
+
+  if (info->flags & GST_MAP_WRITE)
+    sync.flags |= DMA_BUF_SYNC_WRITE;
+#endif
+
+  ret = allocator->mem_map (gmem, maxsize, info->flags);
+
+#ifdef HAVE_LINUX_DMA_BUF_H
+  if (ret) {
+    if (ioctl (gst_fd_memory_get_fd (gmem), DMA_BUF_IOCTL_SYNC, &sync) < 0)
+      GST_WARNING_OBJECT (allocator, "Failed to synchronize DMABuf: %s (%i)",
+          g_strerror (errno), errno);
+  }
+#endif
+
+  return ret;
+}
+
+static void
+gst_dmabuf_mem_unmap (GstMemory * gmem, GstMapInfo * info)
+{
+  GstAllocator *allocator = gmem->allocator;
+#ifdef HAVE_LINUX_DMA_BUF_H
+  struct dma_buf_sync sync = { DMA_BUF_SYNC_END };
+
+  if (info->flags & GST_MAP_READ)
+    sync.flags |= DMA_BUF_SYNC_READ;
+
+  if (info->flags & GST_MAP_WRITE)
+    sync.flags |= DMA_BUF_SYNC_WRITE;
+
+  if (ioctl (gst_fd_memory_get_fd (gmem), DMA_BUF_IOCTL_SYNC, &sync) < 0)
+    GST_WARNING_OBJECT (allocator, "Failed to synchronize DMABuf: %s (%i)",
+        g_strerror (errno), errno);
+#else
+  GST_WARNING_OBJECT (allocator, "Using DMABuf without synchronization.");
+#endif
+
+  allocator->mem_unmap (gmem);
+}
 
 static void
 gst_dmabuf_allocator_class_init (GstDmaBufAllocatorClass * klass)
@@ -55,6 +106,8 @@ gst_dmabuf_allocator_init (GstDmaBufAllocator * allocator)
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
   alloc->mem_type = GST_ALLOCATOR_DMABUF;
+  alloc->mem_map_full = gst_dmabuf_mem_map;
+  alloc->mem_unmap_full = gst_dmabuf_mem_unmap;
 }
 
 /**
