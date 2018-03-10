@@ -1,6 +1,14 @@
 directsoundsink_sources = [
   'gstdirectsoundsink.c',
+  'gstdirectsounddevice.c',
   'gstdirectsoundplugin.c',
+]
+
+directsoundsink_device_flags = [
+  '-DGstDirectSoundDeviceProvider=GstDirectSoundSinkDeviceProvider',
+  '-DGstDirectSoundDeviceProviderClass=GstDirectSoundSinkDeviceProviderClass',
+  '-DGstDirectSoundDevice=GstDirectSoundSinkDevice',
+  '-DGstDirectSoundDeviceClass=GstDirectSoundSinkDeviceClass',
 ]
 
 if host_machine.system() == 'windows' and cc.has_header('dsound.h')
@@ -8,7 +16,7 @@ if host_machine.system() == 'windows' and cc.has_header('dsound.h')
 
   gstdirectsoundsink = library('gstdirectsound',
     directsoundsink_sources,
-    c_args : gst_plugins_good_args,
+    c_args : gst_plugins_good_args + directsoundsink_device_flags,
     include_directories : [configinc],
     dependencies : [gstaudio_dep] + directsoundsink_dep,
     install : true,
