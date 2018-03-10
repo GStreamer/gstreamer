@@ -423,7 +423,7 @@ gst_wasapi_util_get_devices (GstElement * self, gboolean active,
     hr = IAudioClient_GetMixFormat (client, &format);
     if (hr != S_OK || format == NULL) {
       gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      GST_ERROR_OBJECT ("GetMixFormat failed on %s: %s", strid, msg);
+      GST_ERROR_OBJECT (self, "GetMixFormat failed on %s: %s", strid, msg);
       g_free (msg);
       goto next;
     }
@@ -714,14 +714,14 @@ gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
 
   /* Too many channels, have to assume that they are all non-positional */
   if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
-    GST_INFO ("wasapi: got too many (%i) channels, assuming non-positional",
+    GST_INFO ("Got too many (%i) channels, assuming non-positional",
         nChannels);
     goto out;
   }
 
   /* Too many bits in the channel mask, and the bits don't match nChannels */
   if (dwChannelMask >> (G_N_ELEMENTS (wasapi_to_gst_pos) + 1) != 0) {
-    GST_WARNING ("wasapi: too many bits in channel mask (%lu), assuming "
+    GST_WARNING ("Too many bits in channel mask (%lu), assuming "
         "non-positional", dwChannelMask);
     goto out;
   }
