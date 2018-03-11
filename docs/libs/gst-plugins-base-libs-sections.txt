@@ -3175,6 +3175,7 @@ gst_video_encoder_get_output_state
 gst_video_encoder_set_min_pts
 gst_video_encoder_proxy_getcaps
 gst_video_encoder_merge_tags
+gst_video_encoder_get_max_encode_time
 <SUBSECTION Standard>
 GST_IS_VIDEO_ENCODER
 GST_IS_VIDEO_ENCODER_CLASS
