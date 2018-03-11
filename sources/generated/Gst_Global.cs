@@ -274,7 +274,7 @@ namespace Gst {
 
 		public static string PresetGetAppDir() {
 			IntPtr raw_ret = gst_preset_get_app_dir();
-			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			string ret = GLib.Marshaller.FilenamePtrToString (raw_ret);
 			return ret;
 		}
 
@@ -282,7 +282,7 @@ namespace Gst {
 		static extern bool gst_preset_set_app_dir(IntPtr app_dir);
 
 		public static bool PresetSetAppDir(string app_dir) {
-			IntPtr native_app_dir = GLib.Marshaller.StringToPtrGStrdup (app_dir);
+			IntPtr native_app_dir = GLib.Marshaller.StringToFilenamePtr (app_dir);
 			bool raw_ret = gst_preset_set_app_dir(native_app_dir);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_app_dir);

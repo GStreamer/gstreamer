@@ -156,10 +156,18 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_info_set_format(IntPtr raw, int format, int rate, int channels, int position);
+		static extern void gst_audio_info_set_format(IntPtr raw, int format, int rate, int channels, int[] position);
 
-		public void SetFormat(Gst.Audio.AudioFormat format, int rate, int channels, Gst.Audio.AudioChannelPosition position) {
-			gst_audio_info_set_format(Handle, (int) format, rate, channels, (int) position);
+		public void SetFormat(Gst.Audio.AudioFormat format, int rate, int channels, Gst.Audio.AudioChannelPosition[] position) {
+			int cnt_position = position == null ? 0 : position.Length;
+			int[] native_position = new int [cnt_position];
+			for (int i = 0; i < cnt_position; i++)
+				native_position [i] = (int) position[i];
+			gst_audio_info_set_format(Handle, (int) format, rate, channels, native_position);
+		}
+
+		public void SetFormat(Gst.Audio.AudioFormat format, int rate, int channels) {
+			SetFormat (format, rate, channels, null);
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

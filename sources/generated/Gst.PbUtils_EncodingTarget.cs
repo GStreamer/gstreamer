@@ -67,7 +67,7 @@ namespace Gst.PbUtils {
 		static extern unsafe IntPtr gst_encoding_target_load_from_file(IntPtr filepath, out IntPtr error);
 
 		public static unsafe Gst.PbUtils.EncodingTarget LoadFromFile(string filepath) {
-			IntPtr native_filepath = GLib.Marshaller.StringToPtrGStrdup (filepath);
+			IntPtr native_filepath = GLib.Marshaller.StringToFilenamePtr (filepath);
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = gst_encoding_target_load_from_file(native_filepath, out error);
 			Gst.PbUtils.EncodingTarget ret = GLib.Object.GetObject(raw_ret, true) as Gst.PbUtils.EncodingTarget;
@@ -155,7 +155,7 @@ namespace Gst.PbUtils {
 		static extern unsafe bool gst_encoding_target_save_to_file(IntPtr raw, IntPtr filepath, out IntPtr error);
 
 		public unsafe bool SaveToFile(string filepath) {
-			IntPtr native_filepath = GLib.Marshaller.StringToPtrGStrdup (filepath);
+			IntPtr native_filepath = GLib.Marshaller.StringToFilenamePtr (filepath);
 			IntPtr error = IntPtr.Zero;
 			bool raw_ret = gst_encoding_target_save_to_file(Handle, native_filepath, out error);
 			bool ret = raw_ret;

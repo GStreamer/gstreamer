@@ -12,6 +12,7 @@ namespace Gst.Rtp {
 	public enum RTPBufferFlags {
 
 		Retransmission = 1048576,
+		Redundant = 2097152,
 		Last = 268435456,
 	}
 

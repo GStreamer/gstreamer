@@ -853,6 +853,17 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_overlay_set_property(IntPtr _object, int last_prop_id, uint property_id, IntPtr value);
+
+		public static bool VideoOverlaySetProperty(GLib.Object _object, int last_prop_id, uint property_id, GLib.Value value) {
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			bool raw_ret = gst_video_overlay_set_property(_object == null ? IntPtr.Zero : _object.Handle, last_prop_id, property_id, native_value);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_value);
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_region_of_interest_meta_api_get_type();
 
 		public static GLib.GType VideoRegionOfInterestMetaApiGetType() {

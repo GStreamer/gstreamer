@@ -635,6 +635,7 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_construct(IntPtr protocol, IntPtr location);
 
+		[Obsolete]
 		public static string Construct(string protocol, string location) {
 			IntPtr native_protocol = GLib.Marshaller.StringToPtrGStrdup (protocol);
 			IntPtr native_location = GLib.Marshaller.StringToPtrGStrdup (location);

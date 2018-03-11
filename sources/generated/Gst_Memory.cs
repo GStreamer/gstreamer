@@ -122,20 +122,26 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern UIntPtr gst_memory_get_sizes(IntPtr raw, UIntPtr offset, UIntPtr maxsize);
+		static extern UIntPtr gst_memory_get_sizes(IntPtr raw, out UIntPtr offset, out UIntPtr maxsize);
 
-		public ulong GetSizes(ulong offset, ulong maxsize) {
-			UIntPtr raw_ret = gst_memory_get_sizes(Handle, new UIntPtr (offset), new UIntPtr (maxsize));
+		public ulong GetSizes(out ulong offset, out ulong maxsize) {
+			UIntPtr native_offset;
+			UIntPtr native_maxsize;
+			UIntPtr raw_ret = gst_memory_get_sizes(Handle, out native_offset, out native_maxsize);
 			ulong ret = (ulong) raw_ret;
+			offset = (ulong) native_offset;
+			maxsize = (ulong) native_maxsize;
 			return ret;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_memory_is_span(IntPtr raw, IntPtr mem2, UIntPtr offset);
+		static extern bool gst_memory_is_span(IntPtr raw, IntPtr mem2, out UIntPtr offset);
 
-		public bool IsSpan(Gst.Memory mem2, ulong offset) {
-			bool raw_ret = gst_memory_is_span(Handle, mem2 == null ? IntPtr.Zero : mem2.Handle, new UIntPtr (offset));
+		public bool IsSpan(Gst.Memory mem2, out ulong offset) {
+			UIntPtr native_offset;
+			bool raw_ret = gst_memory_is_span(Handle, mem2 == null ? IntPtr.Zero : mem2.Handle, out native_offset);
 			bool ret = raw_ret;
+			offset = (ulong) native_offset;
 			return ret;
 		}
 

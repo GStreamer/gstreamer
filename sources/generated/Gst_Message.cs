@@ -186,7 +186,7 @@ namespace Gst {
 			IntPtr native_context_type;
 			bool raw_ret = gst_message_parse_context_type(Handle, out native_context_type);
 			bool ret = raw_ret;
-			context_type = GLib.Marshaller.PtrToStringGFree(native_context_type);
+			context_type = GLib.Marshaller.Utf8PtrToString (native_context_type);
 			return ret;
 		}
 
@@ -219,7 +219,7 @@ namespace Gst {
 			Gst.Structure structure;
 			IntPtr native_structure;
 			gst_message_parse_error_details(Handle, out native_structure);
-			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), true);
+			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
 			return structure;
 		}
 
@@ -260,7 +260,7 @@ namespace Gst {
 			Gst.Structure structure;
 			IntPtr native_structure;
 			gst_message_parse_info_details(Handle, out native_structure);
-			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), true);
+			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
 			return structure;
 		}
 
@@ -297,7 +297,7 @@ namespace Gst {
 			IntPtr native_property_value = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (GLib.Value)));
 			gst_message_parse_property_notify(Handle, out native__object, out native_property_name, native_property_value);
 			_object = GLib.Object.GetObject(native__object) as Gst.Object;
-			property_name = GLib.Marshaller.PtrToStringGFree(native_property_name);
+			property_name = GLib.Marshaller.Utf8PtrToString (native_property_name);
 			property_value = (GLib.Value) Marshal.PtrToStructure (native_property_value, typeof (GLib.Value));
 			Marshal.FreeHGlobal (native_property_value);
 		}
@@ -488,7 +488,7 @@ namespace Gst {
 			Gst.Structure structure;
 			IntPtr native_structure;
 			gst_message_parse_warning_details(Handle, out native_structure);
-			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), true);
+			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
 			return structure;
 		}
 

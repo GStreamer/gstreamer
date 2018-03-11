@@ -46,7 +46,7 @@ namespace Gst {
 		static extern void gst_debug_bin_to_dot_file(IntPtr bin, int details, IntPtr file_name);
 
 		public static void BinToDotFile(Gst.Bin bin, Gst.DebugGraphDetails details, string file_name) {
-			IntPtr native_file_name = GLib.Marshaller.StringToPtrGStrdup (file_name);
+			IntPtr native_file_name = GLib.Marshaller.StringToFilenamePtr (file_name);
 			gst_debug_bin_to_dot_file(bin == null ? IntPtr.Zero : bin.Handle, (int) details, native_file_name);
 			GLib.Marshaller.Free (native_file_name);
 		}
@@ -55,7 +55,7 @@ namespace Gst {
 		static extern void gst_debug_bin_to_dot_file_with_ts(IntPtr bin, int details, IntPtr file_name);
 
 		public static void BinToDotFileWithTs(Gst.Bin bin, Gst.DebugGraphDetails details, string file_name) {
-			IntPtr native_file_name = GLib.Marshaller.StringToPtrGStrdup (file_name);
+			IntPtr native_file_name = GLib.Marshaller.StringToFilenamePtr (file_name);
 			gst_debug_bin_to_dot_file_with_ts(bin == null ? IntPtr.Zero : bin.Handle, (int) details, native_file_name);
 			GLib.Marshaller.Free (native_file_name);
 		}

@@ -171,11 +171,11 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_tag_list_get_int64(IntPtr raw, IntPtr tag, long value);
+		static extern bool gst_tag_list_get_int64(IntPtr raw, IntPtr tag, out long value);
 
-		public bool GetInt64(string tag, long value) {
+		public bool GetInt64(string tag, out long value) {
 			IntPtr native_tag = GLib.Marshaller.StringToPtrGStrdup (tag);
-			bool raw_ret = gst_tag_list_get_int64(Handle, native_tag, value);
+			bool raw_ret = gst_tag_list_get_int64(Handle, native_tag, out value);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_tag);
 			return ret;

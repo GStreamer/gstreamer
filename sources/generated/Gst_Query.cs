@@ -193,10 +193,12 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_query_parse_accept_caps_result(IntPtr raw, bool _result);
+		static extern void gst_query_parse_accept_caps_result(IntPtr raw, out bool _result);
 
-		public void ParseAcceptCapsResult(bool _result) {
-			gst_query_parse_accept_caps_result(Handle, _result);
+		public bool ParseAcceptCapsResult() {
+			bool _result;
+			gst_query_parse_accept_caps_result(Handle, out _result);
+			return _result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -356,12 +358,14 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_query_parse_nth_format(IntPtr raw, out uint nth, out int format);
+		static extern void gst_query_parse_nth_format(IntPtr raw, uint nth, out int format);
 
-		public void ParseNthFormat(out uint nth, out Gst.Format format) {
+		public Gst.Format ParseNthFormat(uint nth) {
+			Gst.Format format;
 			int native_format;
-			gst_query_parse_nth_format(Handle, out nth, out native_format);
+			gst_query_parse_nth_format(Handle, nth, out native_format);
 			format = (Gst.Format) native_format;
+			return format;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

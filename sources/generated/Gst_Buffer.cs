@@ -280,10 +280,10 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_buffer_get_n_meta(IntPtr raw, IntPtr api);
+		static extern uint gst_buffer_get_n_meta(IntPtr raw, IntPtr api_type);
 
-		public uint GetNMeta(GLib.GType api) {
-			uint raw_ret = gst_buffer_get_n_meta(Handle, api.Val);
+		public uint GetNMeta(GLib.GType api_type) {
+			uint raw_ret = gst_buffer_get_n_meta(Handle, api_type.Val);
 			uint ret = raw_ret;
 			return ret;
 		}

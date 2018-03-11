@@ -199,6 +199,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace//struct[@cname='GstAudioDownmixMeta']" name="parent">GstMeta</attr>
 	<attr path="/api/namespace//struct[@cname='GstAudioDownmixMeta']/field[@cname='from_position']" name="type">GstAudioChannelPosition*</attr>
 	<attr path="/api/namespace//struct[@cname='GstAudioDownmixMeta']/field[@cname='to_position']" name="type">GstAudioChannelPosition*</attr>
+	<attr path="/api/namespace/boxed/method[@cname='gst_audio_converter_convert']" name="hidden">true</attr>
+	<remove-attr path="/api/namespace/boxed/method[@cname='gst_audio_info_set_format']/parameters/parameter[@name='position']" name="array_len"/>
+	<!-- FIXME Make GstAudioAggregator working  -->
+	<attr path="/api/namespace/object[@cname='GstAudioAggregator']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstAudioAggregatorPad']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstAudioAggregatorConvertPad']" name="hidden">true</attr>
 
 	<!-- Name clashes -->
 	<attr path="//method[@cname='gst_buffer_foreach_meta']" name="hidden">true</attr> <!-- FIXME This should probably be usable -->

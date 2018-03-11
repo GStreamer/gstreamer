@@ -99,7 +99,8 @@ namespace GstreamerSharp
 			AppSource = source;
 
 			// Configure appsrc
-			info.SetFormat (Gst.Audio.AudioFormat.S16, SampleRate, 1, (Gst.Audio.AudioChannelPosition)0);
+			Gst.Audio.AudioChannelPosition[] position = {};
+			info.SetFormat (Gst.Audio.AudioFormat.S16, SampleRate, 1, position);
 			var audioCaps = info.ToCaps ();
 			source ["caps"] = audioCaps;
 			source ["format"] = Format.Time;

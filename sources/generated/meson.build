@@ -721,6 +721,7 @@ generated_sources = [
     'Gst.Rtsp_RTSPConnectionAcceptCertificateFunc.cs',
     'Gst.Rtsp_Gst.RtspSharp.RTSPConnectionAcceptCertificateFuncNative.cs',
     'Gst.Audio_AudioStreamAlign.cs',
+    'Gst.Video_VideoOverlayProperties.cs',
 ]
 
 run_target('update_gstreamer_code',

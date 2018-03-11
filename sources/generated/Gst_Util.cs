@@ -13,7 +13,7 @@ namespace Gst {
 		static extern unsafe IntPtr gst_filename_to_uri(IntPtr filename, out IntPtr error);
 
 		public static unsafe string FilenameToUri(string filename) {
-			IntPtr native_filename = GLib.Marshaller.StringToPtrGStrdup (filename);
+			IntPtr native_filename = GLib.Marshaller.StringToFilenamePtr (filename);
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = gst_filename_to_uri(native_filename, out error);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
@@ -85,6 +85,7 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_construct(IntPtr protocol, IntPtr location);
 
+		[Obsolete]
 		public static string UriConstruct(string protocol, string location) {
 			IntPtr native_protocol = GLib.Marshaller.StringToPtrGStrdup (protocol);
 			IntPtr native_location = GLib.Marshaller.StringToPtrGStrdup (location);

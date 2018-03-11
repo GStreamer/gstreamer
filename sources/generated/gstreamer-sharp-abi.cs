@@ -540,7 +540,6 @@ namespace AbiTester {
 			Console.WriteLine("\"GstAggregatorClass.propose_allocation\": \"" + Gst.Base.Aggregator.class_abi.GetFieldOffset("propose_allocation") + "\"");
 			Console.WriteLine("\"sizeof(GstAggregator)\": \"" + Gst.Base.Aggregator.abi_info.Size + "\"");
 			Console.WriteLine("\"GstAggregator.srcpad\": \"" + Gst.Base.Aggregator.abi_info.GetFieldOffset("srcpad") + "\"");
-			Console.WriteLine("\"GstAggregator.segment\": \"" + Gst.Base.Aggregator.abi_info.GetFieldOffset("segment") + "\"");
 			Console.WriteLine("\"GstAggregator.priv\": \"" + Gst.Base.Aggregator.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GstAggregatorPadClass)\": \"" + Gst.Base.AggregatorPad.class_abi.Size + "\"");
 			Console.WriteLine("\"GstAggregatorPadClass.flush\": \"" + Gst.Base.AggregatorPad.class_abi.GetFieldOffset("flush") + "\"");

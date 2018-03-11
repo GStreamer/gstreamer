@@ -545,7 +545,6 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstAggregatorClass.propose_allocation\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorClass, propose_allocation));
 	g_print("\"sizeof(GstAggregator)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAggregator));
 	g_print("\"GstAggregator.srcpad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, srcpad));
-	g_print("\"GstAggregator.segment\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, segment));
 	g_print("\"GstAggregator.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregator, priv));
 	g_print("\"sizeof(GstAggregatorPadClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAggregatorPadClass));
 	g_print("\"GstAggregatorPadClass.flush\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAggregatorPadClass, flush));

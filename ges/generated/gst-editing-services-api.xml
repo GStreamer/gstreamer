@@ -2379,6 +2379,14 @@
           <parameter name="error" type="GError**" />
         </parameters>
       </method>
+      <method name="PasteElement" cname="ges_timeline_paste_element">
+        <return-type type="GESTimelineElement*" />
+        <parameters>
+          <parameter name="element" type="GESTimelineElement*" />
+          <parameter name="position" type="guint64" />
+          <parameter name="layer_priority" type="gint" />
+        </parameters>
+      </method>
       <method name="RemoveLayer" cname="ges_timeline_remove_layer">
         <return-type type="gboolean" />
         <parameters>

@@ -200,6 +200,7 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_segment_to_position(IntPtr raw, int format, ulong running_time);
 
+		[Obsolete]
 		public ulong ToPosition(Gst.Format format, ulong running_time) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);

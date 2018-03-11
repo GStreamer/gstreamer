@@ -59,15 +59,6 @@ namespace Gst.Base {
 			}
 		}
 
-		public Gst.Segment Segment {
-			get {
-				unsafe {
-					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("segment"));
-					return Gst.Segment.New ((*raw_ptr));
-				}
-			}
-		}
-
 		static FlushNativeDelegate Flush_cb_delegate;
 		static FlushNativeDelegate FlushVMCallback {
 			get {
@@ -1299,22 +1290,14 @@ namespace Gst.Base {
 							, Gst.Element.abi_info.Fields
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // srcpad
 							, null
-							, "segment"
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
-							, 0
-							),
-						new GLib.AbiField("segment"
-							, -1
-							, (uint) Marshal.SizeOf(typeof(Gst.Segment)) // segment
-							, "srcpad"
 							, "priv"
-							, (long) Marshal.OffsetOf(typeof(GstAggregator_segmentAlign), "segment")
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("priv"
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // priv
-							, "segment"
+							, "srcpad"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1331,13 +1314,6 @@ namespace Gst.Base {
 
 				return _abi_info;
 			}
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct GstAggregator_segmentAlign
-		{
-			sbyte f1;
-			private Gst.Segment segment;
 		}
 
 

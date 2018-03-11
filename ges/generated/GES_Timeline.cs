@@ -826,6 +826,15 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_timeline_paste_element(IntPtr raw, IntPtr element, ulong position, int layer_priority);
+
+		public GES.TimelineElement PasteElement(GES.TimelineElement element, ulong position, int layer_priority) {
+			IntPtr raw_ret = ges_timeline_paste_element(Handle, element == null ? IntPtr.Zero : element.Handle, position, layer_priority);
+			GES.TimelineElement ret = GLib.Object.GetObject(raw_ret) as GES.TimelineElement;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_timeline_remove_layer(IntPtr raw, IntPtr layer);
 
 		public bool RemoveLayer(GES.Layer layer) {

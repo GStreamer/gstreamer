@@ -23,6 +23,7 @@ namespace Gst {
 		DeltaUnit = 8192,
 		TagMemory = 16384,
 		SyncAfter = 32768,
+		NonDroppable = 65536,
 		Last = 1048576,
 	}
 

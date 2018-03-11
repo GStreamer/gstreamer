@@ -565,14 +565,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool TransformSizeNativeDelegate (IntPtr inst, int direction, IntPtr caps, UIntPtr size, IntPtr othercaps, UIntPtr othersize);
+		delegate bool TransformSizeNativeDelegate (IntPtr inst, int direction, IntPtr caps, UIntPtr size, IntPtr othercaps, out UIntPtr othersize);
 
-		static bool TransformSize_cb (IntPtr inst, int direction, IntPtr caps, UIntPtr size, IntPtr othercaps, UIntPtr othersize)
+		static bool TransformSize_cb (IntPtr inst, int direction, IntPtr caps, UIntPtr size, IntPtr othercaps, out UIntPtr othersize)
 		{
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				bool __result;
-				__result = __obj.OnTransformSize ((Gst.PadDirection) direction, caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), (ulong) size, othercaps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (othercaps, typeof (Gst.Caps), false), (ulong) othersize);
+				ulong myothersize;
+				__result = __obj.OnTransformSize ((Gst.PadDirection) direction, caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), (ulong) size, othercaps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (othercaps, typeof (Gst.Caps), false), out myothersize);
+				othersize = new UIntPtr (myothersize);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -582,21 +584,23 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseTransform), ConnectionMethod="OverrideTransformSize")]
-		protected virtual bool OnTransformSize (Gst.PadDirection direction, Gst.Caps caps, ulong size, Gst.Caps othercaps, ulong othersize)
+		protected virtual bool OnTransformSize (Gst.PadDirection direction, Gst.Caps caps, ulong size, Gst.Caps othercaps, out ulong othersize)
 		{
-			return InternalTransformSize (direction, caps, size, othercaps, othersize);
+			return InternalTransformSize (direction, caps, size, othercaps, out othersize);
 		}
 
-		private bool InternalTransformSize (Gst.PadDirection direction, Gst.Caps caps, ulong size, Gst.Caps othercaps, ulong othersize)
+		private bool InternalTransformSize (Gst.PadDirection direction, Gst.Caps caps, ulong size, Gst.Caps othercaps, out ulong othersize)
 		{
 			TransformSizeNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("transform_size"));
 				unmanaged = (TransformSizeNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(TransformSizeNativeDelegate));
 			}
-			if (unmanaged == null) return false;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			bool __result = unmanaged (this.Handle, (int) direction, caps == null ? IntPtr.Zero : caps.Handle, new UIntPtr (size), othercaps == null ? IntPtr.Zero : othercaps.Handle, new UIntPtr (othersize));
+			UIntPtr native_othersize;
+			bool __result = unmanaged (this.Handle, (int) direction, caps == null ? IntPtr.Zero : caps.Handle, new UIntPtr (size), othercaps == null ? IntPtr.Zero : othercaps.Handle, out native_othersize);
+			othersize = (ulong) native_othersize;
 			return __result;
 		}
 
@@ -623,14 +627,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool GetUnitSizeNativeDelegate (IntPtr inst, IntPtr caps, UIntPtr size);
+		delegate bool GetUnitSizeNativeDelegate (IntPtr inst, IntPtr caps, out UIntPtr size);
 
-		static bool GetUnitSize_cb (IntPtr inst, IntPtr caps, UIntPtr size)
+		static bool GetUnitSize_cb (IntPtr inst, IntPtr caps, out UIntPtr size)
 		{
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				bool __result;
-				__result = __obj.OnGetUnitSize (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), (ulong) size);
+				ulong mysize;
+				__result = __obj.OnGetUnitSize (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), out mysize);
+				size = new UIntPtr (mysize);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -640,21 +646,23 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseTransform), ConnectionMethod="OverrideGetUnitSize")]
-		protected virtual bool OnGetUnitSize (Gst.Caps caps, ulong size)
+		protected virtual bool OnGetUnitSize (Gst.Caps caps, out ulong size)
 		{
-			return InternalGetUnitSize (caps, size);
+			return InternalGetUnitSize (caps, out size);
 		}
 
-		private bool InternalGetUnitSize (Gst.Caps caps, ulong size)
+		private bool InternalGetUnitSize (Gst.Caps caps, out ulong size)
 		{
 			GetUnitSizeNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("get_unit_size"));
 				unmanaged = (GetUnitSizeNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GetUnitSizeNativeDelegate));
 			}
-			if (unmanaged == null) return false;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			bool __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle, new UIntPtr (size));
+			UIntPtr native_size;
+			bool __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle, out native_size);
+			size = (ulong) native_size;
 			return __result;
 		}
 
@@ -913,14 +921,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int PrepareOutputBufferNativeDelegate (IntPtr inst, IntPtr input, IntPtr outbuf);
+		delegate int PrepareOutputBufferNativeDelegate (IntPtr inst, IntPtr input, out IntPtr outbuf);
 
-		static int PrepareOutputBuffer_cb (IntPtr inst, IntPtr input, IntPtr outbuf)
+		static int PrepareOutputBuffer_cb (IntPtr inst, IntPtr input, out IntPtr outbuf)
 		{
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				Gst.FlowReturn __result;
-				__result = __obj.OnPrepareOutputBuffer (input == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (input, typeof (Gst.Buffer), false), outbuf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (outbuf, typeof (Gst.Buffer), false));
+				Gst.Buffer myoutbuf;
+				__result = __obj.OnPrepareOutputBuffer (input == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (input, typeof (Gst.Buffer), false), out myoutbuf);
+				outbuf = myoutbuf == null ? IntPtr.Zero : myoutbuf.Handle;
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -930,21 +940,23 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseTransform), ConnectionMethod="OverridePrepareOutputBuffer")]
-		protected virtual Gst.FlowReturn OnPrepareOutputBuffer (Gst.Buffer input, Gst.Buffer outbuf)
+		protected virtual Gst.FlowReturn OnPrepareOutputBuffer (Gst.Buffer input, out Gst.Buffer outbuf)
 		{
-			return InternalPrepareOutputBuffer (input, outbuf);
+			return InternalPrepareOutputBuffer (input, out outbuf);
 		}
 
-		private Gst.FlowReturn InternalPrepareOutputBuffer (Gst.Buffer input, Gst.Buffer outbuf)
+		private Gst.FlowReturn InternalPrepareOutputBuffer (Gst.Buffer input, out Gst.Buffer outbuf)
 		{
 			PrepareOutputBufferNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_output_buffer"));
 				unmanaged = (PrepareOutputBufferNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(PrepareOutputBufferNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			int __result = unmanaged (this.Handle, input == null ? IntPtr.Zero : input.Handle, outbuf == null ? IntPtr.Zero : outbuf.Handle);
+			IntPtr native_outbuf;
+			int __result = unmanaged (this.Handle, input == null ? IntPtr.Zero : input.Handle, out native_outbuf);
+			outbuf = native_outbuf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_outbuf, typeof (Gst.Buffer), true);
 			return (Gst.FlowReturn) __result;
 		}
 
@@ -1316,14 +1328,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int GenerateOutputNativeDelegate (IntPtr inst, IntPtr outbuf);
+		delegate int GenerateOutputNativeDelegate (IntPtr inst, out IntPtr outbuf);
 
-		static int GenerateOutput_cb (IntPtr inst, IntPtr outbuf)
+		static int GenerateOutput_cb (IntPtr inst, out IntPtr outbuf)
 		{
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				Gst.FlowReturn __result;
-				__result = __obj.OnGenerateOutput (outbuf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (outbuf, typeof (Gst.Buffer), false));
+				Gst.Buffer myoutbuf;
+				__result = __obj.OnGenerateOutput (out myoutbuf);
+				outbuf = myoutbuf == null ? IntPtr.Zero : myoutbuf.Handle;
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -1333,21 +1347,23 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseTransform), ConnectionMethod="OverrideGenerateOutput")]
-		protected virtual Gst.FlowReturn OnGenerateOutput (Gst.Buffer outbuf)
+		protected virtual Gst.FlowReturn OnGenerateOutput (out Gst.Buffer outbuf)
 		{
-			return InternalGenerateOutput (outbuf);
+			return InternalGenerateOutput (out outbuf);
 		}
 
-		private Gst.FlowReturn InternalGenerateOutput (Gst.Buffer outbuf)
+		private Gst.FlowReturn InternalGenerateOutput (out Gst.Buffer outbuf)
 		{
 			GenerateOutputNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("generate_output"));
 				unmanaged = (GenerateOutputNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GenerateOutputNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			int __result = unmanaged (this.Handle, outbuf == null ? IntPtr.Zero : outbuf.Handle);
+			IntPtr native_outbuf;
+			int __result = unmanaged (this.Handle, out native_outbuf);
+			outbuf = native_outbuf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_outbuf, typeof (Gst.Buffer), true);
 			return (Gst.FlowReturn) __result;
 		}
 

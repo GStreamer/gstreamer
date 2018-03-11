@@ -172,20 +172,16 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_event_parse_protection(IntPtr raw, out IntPtr system_id, out IntPtr data, IntPtr origin);
+		static extern void gst_event_parse_protection(IntPtr raw, out IntPtr system_id, out IntPtr data, out IntPtr origin);
 
-		public void ParseProtection(out string system_id, out Gst.Buffer data, string origin) {
+		public void ParseProtection(out string system_id, out Gst.Buffer data, out string origin) {
 			IntPtr native_system_id;
 			IntPtr native_data;
-			IntPtr native_origin = GLib.Marshaller.StringToPtrGStrdup (origin);
-			gst_event_parse_protection(Handle, out native_system_id, out native_data, native_origin);
+			IntPtr native_origin;
+			gst_event_parse_protection(Handle, out native_system_id, out native_data, out native_origin);
 			system_id = GLib.Marshaller.Utf8PtrToString (native_system_id);
 			data = native_data == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_data, typeof (Gst.Buffer), false);
-			GLib.Marshaller.Free (native_origin);
-		}
-
-		public void ParseProtection(out string system_id, out Gst.Buffer data) {
-			ParseProtection (out system_id, out data, null);
+			origin = GLib.Marshaller.Utf8PtrToString (native_origin);
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
