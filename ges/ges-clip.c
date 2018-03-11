@@ -151,10 +151,12 @@ _set_start (GESTimelineElement * element, GstClockTime start)
     if (child != container->initiated_move) {
       /* Make the snapping happen if in a timeline */
       timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-      if (timeline == NULL || ges_timeline_move_object_simple (timeline, child,
-              NULL, GES_EDGE_NONE, start) == FALSE)
-        _set_start0 (GES_TIMELINE_ELEMENT (child), start);
+      if (timeline && !container->initiated_move) {
+        if (ges_timeline_move_object_simple (timeline, child, NULL, GES_EDGE_NONE, start))
+          continue;
+      }
 
+      _set_start0 (GES_TIMELINE_ELEMENT (child), start);
     }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
