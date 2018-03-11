@@ -32,6 +32,7 @@
 #include <gst/audio/audio-converter.h>
 #include <gst/audio/audio-resampler.h>
 #include <gst/audio/gstaudiostreamalign.h>
+#include <gst/audio/gstaudioaggregator.h>
 
 G_BEGIN_DECLS
 
