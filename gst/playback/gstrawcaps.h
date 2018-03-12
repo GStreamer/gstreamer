@@ -32,7 +32,9 @@ G_BEGIN_DECLS
     "subpicture/x-dvd; " \
     "subpicture/x-dvb; " \
     "subpicture/x-xsub; " \
-    "subpicture/x-pgs"
+    "subpicture/x-pgs; " \
+    "closedcaption/x-cea-608; " \
+    "closedcaption/x-cea-708"
 
 G_END_DECLS
 

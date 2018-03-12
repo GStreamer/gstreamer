@@ -232,7 +232,7 @@ _is_parser (GstElementFactory * factory)
 
 static const gchar *const _sub_pad_names[] = { "subpicture", "subpicture_sink",
   "text", "text_sink",
-  "subtitle_sink", "subtitle"
+  "subtitle_sink", "subtitle", "cc_sink"
 };
 
 static gboolean
