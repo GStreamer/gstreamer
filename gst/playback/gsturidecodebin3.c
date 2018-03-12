@@ -267,7 +267,6 @@ static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw(ANY)");
 #define DEFAULT_PROP_SOURCE         NULL
 #define DEFAULT_CONNECTION_SPEED    0
 #define DEFAULT_CAPS                (gst_static_caps_get (&default_raw_caps))
-#define DEFAULT_SUBTITLE_ENCODING   NULL
 #define DEFAULT_BUFFER_DURATION     -1
 #define DEFAULT_BUFFER_SIZE         -1
 #define DEFAULT_DOWNLOAD            FALSE
@@ -282,7 +281,6 @@ enum
   PROP_SUBURI,
   PROP_CURRENT_SUBURI,
   PROP_SOURCE,
-  PROP_SUBTITLE_ENCODING,
   PROP_CONNECTION_SPEED,
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
@@ -388,14 +386,6 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
   g_object_class_install_property (gobject_class, PROP_SOURCE,
       g_param_spec_object ("source", "Source", "Source object used",
           GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_SUBTITLE_ENCODING,
-      g_param_spec_string ("subtitle-encoding", "subtitle encoding",
-          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
-          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
-          "be checked for an encoding to use. If that is not set either, "
-          "ISO-8859-15 will be assumed.", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint64 ("connection-speed", "Connection Speed",
@@ -811,10 +801,6 @@ gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
         g_free (dec->suburi);
       dec->suburi = g_value_dup_string (value);
       break;
-    case PROP_SUBTITLE_ENCODING:
-      g_object_set_property (G_OBJECT (dec->decodebin), "subtitle-encoding",
-          value);
-      break;
     case PROP_CONNECTION_SPEED:
       GST_URI_DECODE_BIN3_LOCK (dec);
       dec->connection_speed = g_value_get_uint64 (value) * 1000;
@@ -884,10 +870,6 @@ gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (dec);
       break;
     }
-    case PROP_SUBTITLE_ENCODING:
-      g_object_get_property (G_OBJECT (dec->decodebin), "subtitle-encoding",
-          value);
-      break;
     case PROP_CONNECTION_SPEED:
       GST_URI_DECODE_BIN3_LOCK (dec);
       g_value_set_uint64 (value, dec->connection_speed / 1000);
