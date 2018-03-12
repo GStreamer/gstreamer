@@ -3781,6 +3781,9 @@ fill_picture (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture)
   COPY_FIELD (sps, bit_depth_luma_minus8);
   COPY_FIELD (sps, bit_depth_chroma_minus8);
   COPY_FIELD (sps, num_ref_frames);
+  if (pic_param->num_ref_frames == 0)
+    pic_param->num_ref_frames = priv->dpb_size;
+
 #if !VA_CHECK_VERSION(1,0,0)
   /* Deprecate H.264 baseline profile and FMO support */
   COPY_FIELD (pps, num_slice_groups_minus1);
