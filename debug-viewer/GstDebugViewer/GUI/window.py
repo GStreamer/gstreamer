@@ -686,7 +686,7 @@ class Window (object):
         line_text = model.access_offset(line_offset).strip()
         line_text = Data.strip_escape(line_text)
 
-        self.clipboard.set_text(line_text)
+        self.clipboard.set_text(line_text, -1)
 
     @action
     def handle_edit_copy_message_action_activate(self, action):
