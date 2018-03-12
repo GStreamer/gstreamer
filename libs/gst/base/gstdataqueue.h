@@ -24,6 +24,7 @@
 #define __GST_DATA_QUEUE_H__
 
 #include <gst/gst.h>
+#include <gst/base/base-prelude.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_DATA_QUEUE \
@@ -135,45 +136,45 @@ struct _GstDataQueueClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_BASE_API
 GType          gst_data_queue_get_type (void);
 
-GST_EXPORT
+GST_BASE_API
 GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction checkfull,
 					      GstDataQueueFullCallback fullcallback,
 					      GstDataQueueEmptyCallback emptycallback,
 					      gpointer checkdata) G_GNUC_MALLOC;
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
 
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_push_force     (GstDataQueue * queue, GstDataQueueItem * item);
 
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);
 
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_peek           (GstDataQueue * queue, GstDataQueueItem ** item);
 
-GST_EXPORT
+GST_BASE_API
 void           gst_data_queue_flush          (GstDataQueue * queue);
 
-GST_EXPORT
+GST_BASE_API
 void           gst_data_queue_set_flushing   (GstDataQueue * queue, gboolean flushing);
 
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_drop_head      (GstDataQueue * queue, GType type);
 
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_is_full        (GstDataQueue * queue);
 
-GST_EXPORT
+GST_BASE_API
 gboolean       gst_data_queue_is_empty       (GstDataQueue * queue);
 
-GST_EXPORT
+GST_BASE_API
 void           gst_data_queue_get_level      (GstDataQueue * queue, GstDataQueueSize *level);
 
-GST_EXPORT
+GST_BASE_API
 void           gst_data_queue_limits_changed (GstDataQueue * queue);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

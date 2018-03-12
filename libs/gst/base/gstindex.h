@@ -27,6 +27,7 @@
 #include <gst/gstobject.h>
 #include <gst/gstformat.h>
 #include <gst/gstpluginfeature.h>
+#include <gst/base/base-prelude.h>
 
 G_BEGIN_DECLS
 

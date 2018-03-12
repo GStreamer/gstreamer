@@ -28,6 +28,7 @@ libgstbase_@GST_API_VERSION@includedir =		\
 
 libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	base.h			\
+	base-prelude.h		\
 	gstadapter.h		\
 	gstaggregator.h		\
 	gstbaseparse.h		\

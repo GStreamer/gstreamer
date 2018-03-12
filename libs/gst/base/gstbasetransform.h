@@ -22,6 +22,7 @@
 #define __GST_BASE_TRANSFORM_H__
 
 #include <gst/gst.h>
+#include <gst/base/base-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -300,52 +301,52 @@ struct _GstBaseTransformClass {
   gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
-GST_EXPORT
+GST_BASE_API
 GType           gst_base_transform_get_type         (void);
 
-GST_EXPORT
+GST_BASE_API
 void		gst_base_transform_set_passthrough  (GstBaseTransform *trans,
 	                                             gboolean passthrough);
-GST_EXPORT
+GST_BASE_API
 gboolean	gst_base_transform_is_passthrough   (GstBaseTransform *trans);
 
-GST_EXPORT
+GST_BASE_API
 void		gst_base_transform_set_in_place     (GstBaseTransform *trans,
 	                                             gboolean in_place);
-GST_EXPORT
+GST_BASE_API
 gboolean	gst_base_transform_is_in_place      (GstBaseTransform *trans);
 
-GST_EXPORT
+GST_BASE_API
 void		gst_base_transform_update_qos       (GstBaseTransform *trans,
 						     gdouble proportion,
 						     GstClockTimeDiff diff,
 						     GstClockTime timestamp);
-GST_EXPORT
+GST_BASE_API
 void		gst_base_transform_set_qos_enabled  (GstBaseTransform *trans,
 		                                     gboolean enabled);
-GST_EXPORT
+GST_BASE_API
 gboolean	gst_base_transform_is_qos_enabled   (GstBaseTransform *trans);
 
-GST_EXPORT
+GST_BASE_API
 void            gst_base_transform_set_gap_aware    (GstBaseTransform *trans,
                                                      gboolean gap_aware);
-GST_EXPORT
+GST_BASE_API
 void            gst_base_transform_set_prefer_passthrough (GstBaseTransform *trans,
                                                            gboolean prefer_passthrough);
-GST_EXPORT
+GST_BASE_API
 GstBufferPool * gst_base_transform_get_buffer_pool  (GstBaseTransform *trans);
 
-GST_EXPORT
+GST_BASE_API
 void            gst_base_transform_get_allocator    (GstBaseTransform *trans,
                                                      GstAllocator **allocator,
                                                      GstAllocationParams *params);
-GST_EXPORT
+GST_BASE_API
 void		gst_base_transform_reconfigure_sink (GstBaseTransform *trans);
 
-GST_EXPORT
+GST_BASE_API
 void		gst_base_transform_reconfigure_src  (GstBaseTransform *trans);
 
-GST_EXPORT
+GST_BASE_API
 gboolean gst_base_transform_update_src_caps (GstBaseTransform *trans,
                                              GstCaps *updated_caps);
 

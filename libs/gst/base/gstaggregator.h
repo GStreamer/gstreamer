@@ -22,6 +22,7 @@
 #define __GST_AGGREGATOR_H__
 
 #include <gst/gst.h>
+#include <gst/base/base-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -94,23 +95,23 @@ struct _GstAggregatorPadClass
   gpointer      _gst_reserved[GST_PADDING_LARGE];
 };
 
-GST_EXPORT
+GST_BASE_API
 GType gst_aggregator_pad_get_type           (void);
 
 /****************************
  * GstAggregatorPad methods *
  ***************************/
 
-GST_EXPORT
+GST_BASE_API
 GstBuffer * gst_aggregator_pad_pop_buffer   (GstAggregatorPad *  pad);
 
-GST_EXPORT
+GST_BASE_API
 GstBuffer * gst_aggregator_pad_peek_buffer  (GstAggregatorPad *  pad);
 
-GST_EXPORT
+GST_BASE_API
 gboolean    gst_aggregator_pad_drop_buffer  (GstAggregatorPad *  pad);
 
-GST_EXPORT
+GST_BASE_API
 gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 
 /*********************
@@ -310,29 +311,29 @@ struct _GstAggregatorClass {
  * GstAggregator methods *
  ************************/
 
-GST_EXPORT
+GST_BASE_API
 GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator                *  aggregator,
                                                      GstBuffer                    *  buffer);
 
-GST_EXPORT
+GST_BASE_API
 void           gst_aggregator_set_src_caps          (GstAggregator                *  self,
                                                      GstCaps                      *  caps);
 
-GST_EXPORT
+GST_BASE_API
 void           gst_aggregator_set_latency           (GstAggregator                *  self,
                                                      GstClockTime                    min_latency,
                                                      GstClockTime                    max_latency);
 
-GST_EXPORT
+GST_BASE_API
 GType gst_aggregator_get_type(void);
 
-GST_EXPORT
+GST_BASE_API
 GstClockTime  gst_aggregator_get_latency           (GstAggregator                 *  self);
 
-GST_EXPORT
+GST_BASE_API
 GstBufferPool * gst_aggregator_get_buffer_pool     (GstAggregator                 * self);
 
-GST_EXPORT
+GST_BASE_API
 void            gst_aggregator_get_allocator       (GstAggregator                 * self,
                                                     GstAllocator                 ** allocator,
                                                     GstAllocationParams           * params);

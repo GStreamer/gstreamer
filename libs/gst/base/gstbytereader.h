@@ -23,6 +23,7 @@
 #define __GST_BYTE_READER_H__
 
 #include <gst/gst.h>
+#include <gst/base/base-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -47,201 +48,201 @@ typedef struct {
   gpointer _gst_reserved[GST_PADDING];
 } GstByteReader;
 
-GST_EXPORT
+GST_BASE_API
 GstByteReader * gst_byte_reader_new             (const guint8 *data, guint size) G_GNUC_MALLOC;
 
-GST_EXPORT
+GST_BASE_API
 void            gst_byte_reader_free            (GstByteReader *reader);
 
-GST_EXPORT
+GST_BASE_API
 void            gst_byte_reader_init            (GstByteReader *reader, const guint8 *data, guint size);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_sub_reader (GstByteReader * reader,
                                                  GstByteReader * sub_reader,
                                                  guint           size);
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_sub_reader  (GstByteReader * reader,
                                                  GstByteReader * sub_reader,
                                                  guint           size);
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_set_pos         (GstByteReader *reader, guint pos);
 
-GST_EXPORT
+GST_BASE_API
 guint           gst_byte_reader_get_pos         (const GstByteReader *reader);
 
-GST_EXPORT
+GST_BASE_API
 guint           gst_byte_reader_get_remaining   (const GstByteReader *reader);
 
-GST_EXPORT
+GST_BASE_API
 guint           gst_byte_reader_get_size        (const GstByteReader *reader);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_skip            (GstByteReader *reader, guint nbytes);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint8       (GstByteReader *reader, guint8 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int8        (GstByteReader *reader, gint8 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint16_le   (GstByteReader *reader, guint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int16_le    (GstByteReader *reader, gint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint16_be   (GstByteReader *reader, guint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int16_be    (GstByteReader *reader, gint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint24_le   (GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int24_le    (GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint24_be   (GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int24_be    (GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint32_le   (GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int32_le    (GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint32_be   (GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int32_be    (GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint64_le   (GstByteReader *reader, guint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int64_le    (GstByteReader *reader, gint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_uint64_be   (GstByteReader *reader, guint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_int64_be    (GstByteReader *reader, gint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint8      (const GstByteReader *reader, guint8 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int8       (const GstByteReader *reader, gint8 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint16_le  (const GstByteReader *reader, guint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int16_le   (const GstByteReader *reader, gint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint16_be  (const GstByteReader *reader, guint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int16_be   (const GstByteReader *reader, gint16 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint24_le  (const GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int24_le   (const GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint24_be  (const GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int24_be   (const GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint32_le  (const GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int32_le   (const GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint32_be  (const GstByteReader *reader, guint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int32_be   (const GstByteReader *reader, gint32 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint64_le  (const GstByteReader *reader, guint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int64_le   (const GstByteReader *reader, gint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_uint64_be  (const GstByteReader *reader, guint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_int64_be   (const GstByteReader *reader, gint64 *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_float32_le  (GstByteReader *reader, gfloat *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_float32_be  (GstByteReader *reader, gfloat *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_float64_le  (GstByteReader *reader, gdouble *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_float64_be  (GstByteReader *reader, gdouble *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_float32_le (const GstByteReader *reader, gfloat *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_float32_be (const GstByteReader *reader, gfloat *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_float64_le (const GstByteReader *reader, gdouble *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_float64_be (const GstByteReader *reader, gdouble *val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_dup_data        (GstByteReader * reader, guint size, guint8       ** val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_data        (GstByteReader * reader, guint size, const guint8 ** val);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_data       (const GstByteReader * reader, guint size, const guint8 ** val);
 
 #define gst_byte_reader_dup_string(reader,str) \
     gst_byte_reader_dup_string_utf8(reader,str)
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_dup_string_utf8  (GstByteReader * reader, gchar   ** str);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_dup_string_utf16 (GstByteReader * reader, guint16 ** str);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_dup_string_utf32 (GstByteReader * reader, guint32 ** str);
 
 #define gst_byte_reader_skip_string(reader) \
     gst_byte_reader_skip_string_utf8(reader)
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_skip_string_utf8  (GstByteReader * reader);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_skip_string_utf16 (GstByteReader * reader);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_skip_string_utf32 (GstByteReader * reader);
 
 #define gst_byte_reader_get_string(reader,str) \
@@ -250,19 +251,19 @@ gboolean        gst_byte_reader_skip_string_utf32 (GstByteReader * reader);
 #define gst_byte_reader_peek_string(reader,str) \
     gst_byte_reader_peek_string_utf8(reader,str)
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_get_string_utf8    (GstByteReader * reader, const gchar ** str);
 
-GST_EXPORT
+GST_BASE_API
 gboolean        gst_byte_reader_peek_string_utf8   (const GstByteReader * reader, const gchar ** str);
 
-GST_EXPORT
+GST_BASE_API
 guint           gst_byte_reader_masked_scan_uint32 (const GstByteReader * reader,
                                                     guint32               mask,
                                                     guint32               pattern,
                                                     guint                 offset,
                                                     guint                 size);
-GST_EXPORT
+GST_BASE_API
 guint           gst_byte_reader_masked_scan_uint32_peek (const GstByteReader * reader,
                                                          guint32 mask,
                                                          guint32 pattern,

@@ -82,7 +82,7 @@ struct _GstPushSrcClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_BASE_API
 GType gst_push_src_get_type (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

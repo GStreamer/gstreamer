@@ -18,6 +18,7 @@ gst_base_sources = [
 
 gst_base_headers = [
   'base.h',
+  'base-prelude.h',
   'gstadapter.h',
   'gstaggregator.h',
   'gstbaseparse.h',
@@ -83,6 +84,7 @@ gst_base_dep = declare_dependency(link_with : gst_base,
   sources : gst_base_gen_sources)
 
 install_headers('base.h',
+  'base-prelude.h',
   'gstadapter.h',
   'gstaggregator.h',
   'gstbaseparse.h',

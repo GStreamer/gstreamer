@@ -1,7 +1,7 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer Base Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * base.h: single include header for gst-base library
+ * base-prelude.h: prelude include header for gst-base library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,25 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_BASE_H__
-#define __GST_BASE_H__
+#ifndef __GST_BASE_PRELUDE_H__
+#define __GST_BASE_PRELUDE_H__
 
-#include <gst/base/base-prelude.h>
+#include <gst/gst.h>
 
-#include <gst/base/gstadapter.h>
-#include <gst/base/gstaggregator.h>
-#include <gst/base/gstbaseparse.h>
-#include <gst/base/gstbasesink.h>
-#include <gst/base/gstbasesrc.h>
-#include <gst/base/gstbasetransform.h>
-#include <gst/base/gstbitreader.h>
-#include <gst/base/gstbytereader.h>
-#include <gst/base/gstbytewriter.h>
-#include <gst/base/gstcollectpads.h>
-#include <gst/base/gstdataqueue.h>
-#include <gst/base/gstflowcombiner.h>
-#include <gst/base/gstpushsrc.h>
-#include <gst/base/gstqueuearray.h>
-#include <gst/base/gsttypefindhelper.h>
+#ifndef GST_BASE_API
+#define GST_BASE_API GST_EXPORT
+#endif
 
-#endif /* __GST_BASE_H__ */
+#endif /* __GST_BASE_PRELUDE_H__ */
