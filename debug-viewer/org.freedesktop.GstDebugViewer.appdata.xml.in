@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>org.freedesktop.GstDebugViewer</id>
+  <launchable type="desktop">gst-debug-viewer.desktop</launchable>
+  <metadata_license>CC-BY-3.0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <_name>GStreamer Debug Viewer</_name>
+  <_summary>Examine GStreamer debug log information</_summary>
+  <description>
+    <_p>View and read GStreamer debug logs in an efficient way</_p>
+  </description>
+  <url type="homepage">https://gstreamer.freedesktop.org/</url>
+  <url type="bugtracker">http://bugzilla.gnome.org/</url>
+  <update_contact>tsaunier@gnome.org</update_contact>
+  <project_group>GStreamer</project_group>
+  <translation type="gettext">GStreamer</translation>
+  <_developer_name>The GStreamer Team</_developer_name>
+</component>
