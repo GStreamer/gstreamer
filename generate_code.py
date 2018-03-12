@@ -50,8 +50,10 @@ if __name__ == "__main__":
         '--outdir=' + opts.out,
         '--assembly-name=' + opts.assembly_name,
         '--glue-includes=' + opts.abi_includes,
-        '--abi-c-filename=' + os.path.join(opts.out, opts.assembly_name + "-abi.c"),
-        '--abi-cs-filename=' + os.path.join(opts.out, opts.assembly_name + "-abi.cs"),
+        '--abi-c-filename=' +
+        os.path.join(opts.out, opts.assembly_name + "-abi.c"),
+        '--abi-cs-filename=' +
+        os.path.join(opts.out, opts.assembly_name + "-abi.cs"),
     ]
 
     if opts.schema:
@@ -68,21 +70,24 @@ if __name__ == "__main__":
     # as meson doesn't like path separator in output names.
     regex = re.compile('_')
     dirs = set()
-    for _f in opts.files.split(';'):
-        fpath = os.path.join(opts.out, regex.sub("/", _f, 1))
-        dirs.add(os.path.dirname(fpath))
-        _f = os.path.join(opts.out, _f)
-        shutil.move(fpath, _f)
+    expected_files = set(opts.files.split(';'))
+    for _f in expected_files:
+        dirs.add(os.path.dirname(_f))
 
-    missing_files = []
-    for _dir in dirs:
-        missing_files.extend(glob.glob(os.path.join(_dir, '*.cs')))
-
-    if missing_files:
+    generated = set(glob.glob(os.path.join('*/*.cs')))
+    rcode = 0
+    not_listed = generated - expected_files
+    if not_listed:
         print("Following files were generated but not listed:\n    %s" %
-              '\n    '.join(["'%s_%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
-             for m in missing_files]))
-        exit(1)
+              '\n    '.join(["'%s/%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
+                             for m in not_listed]))
+        rcode = 1
 
-    for _dir in dirs:
-        shutil.rmtree(_dir)
+    not_generated = expected_files - generated
+    if not_generated:
+        print("Following files were generated but not listed:\n    %s" %
+              '\n    '.join(["'%s/%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
+                             for m in not_generated]))
+        rcode = 1
+
+    exit(rcode)
