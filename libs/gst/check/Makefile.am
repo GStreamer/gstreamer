@@ -28,6 +28,7 @@ libgstcheck_@GST_API_VERSION@includedir =		\
 
 libgstcheck_@GST_API_VERSION@include_HEADERS =	\
 	check.h					\
+	check-prelude.h				\
 	gstbufferstraw.h			\
 	gstcheck.h				\
 	gstconsistencychecker.h			\

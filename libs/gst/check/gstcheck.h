@@ -30,13 +30,14 @@
 #include <math.h>
 
 #include <gst/gst.h>
+#include <gst/check/check-prelude.h>
 
-#define CK_DLL_EXP GST_EXPORT
+#define CK_DLL_EXP GST_CHECK_API
 #include <gst/check/internal-check.h>
 
 G_BEGIN_DECLS
 
-GST_EXPORT GstDebugCategory *check_debug;
+GST_CHECK_API GstDebugCategory *check_debug;
 #define GST_CAT_DEFAULT check_debug
 
 /* logging function for tests
@@ -44,17 +45,17 @@ GST_EXPORT GstDebugCategory *check_debug;
  * a gst unit test can be run with GST_TEST_DEBUG env var set to see the
  * messages
  */
-GST_EXPORT gboolean _gst_check_threads_running;
-GST_EXPORT gboolean _gst_check_raised_critical;
-GST_EXPORT gboolean _gst_check_raised_warning;
-GST_EXPORT gboolean _gst_check_expecting_log;
-GST_EXPORT gboolean _gst_check_list_tests;
+GST_CHECK_API gboolean _gst_check_threads_running;
+GST_CHECK_API gboolean _gst_check_raised_critical;
+GST_CHECK_API gboolean _gst_check_raised_warning;
+GST_CHECK_API gboolean _gst_check_expecting_log;
+GST_CHECK_API gboolean _gst_check_list_tests;
 
 /* global variables used in test methods */
-GST_EXPORT GList * buffers;
+GST_CHECK_API GList * buffers;
 
-GST_EXPORT GMutex check_mutex;
-GST_EXPORT GCond check_cond;
+GST_CHECK_API GMutex check_mutex;
+GST_CHECK_API GCond check_cond;
 
 typedef struct
 {
@@ -83,114 +84,114 @@ typedef struct _GstCheckLogFilter GstCheckLogFilter;
 typedef gboolean (*GstCheckLogFilterFunc) (const gchar * log_domain,
     GLogLevelFlags log_level, const gchar * message, gpointer user_data);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_init (int *argc, char **argv[]);
 
-GST_EXPORT
+GST_CHECK_API
 GstCheckLogFilter * gst_check_add_log_filter (const gchar * log,
     GLogLevelFlags log_level, GRegex * regex, GstCheckLogFilterFunc func,
     gpointer user_data, GDestroyNotify destroy_data);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_remove_log_filter (GstCheckLogFilter * filter);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_clear_log_filter (void);
 
-GST_EXPORT
+GST_CHECK_API
 GstFlowReturn gst_check_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_message_error (GstMessage * message, GstMessageType type,
     GQuark domain, gint code);
 
-GST_EXPORT
+GST_CHECK_API
 GstElement *gst_check_setup_element (const gchar * factory);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_teardown_element (GstElement * element);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad *gst_check_setup_src_pad (GstElement * element,
     GstStaticPadTemplate * tmpl);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad *gst_check_setup_src_pad_from_template (GstElement * element,
     GstPadTemplate * tmpl);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad * gst_check_setup_src_pad_by_name (GstElement * element,
           GstStaticPadTemplate * tmpl, const gchar *name);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad * gst_check_setup_src_pad_by_name_from_template (GstElement * element,
           GstPadTemplate * tmpl, const gchar *name);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad *gst_check_setup_sink_pad (GstElement * element,
     GstStaticPadTemplate * tmpl);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad *gst_check_setup_sink_pad_from_template (GstElement * element,
     GstPadTemplate * tmpl);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad * gst_check_setup_sink_pad_by_name (GstElement * element,
           GstStaticPadTemplate * tmpl, const gchar *name);
 
-GST_EXPORT
+GST_CHECK_API
 GstPad * gst_check_setup_sink_pad_by_name_from_template (GstElement * element,
           GstPadTemplate * tmpl, const gchar *name);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_teardown_pad_by_name (GstElement * element, const gchar *name);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_teardown_src_pad (GstElement * element);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_drop_buffers (void);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_element_push_buffer_list (const gchar * element_name,
     GList * buffer_in, GstCaps * caps_in, GList * buffer_out,
     GstCaps * caps_out, GstFlowReturn last_flow_return);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_element_push_buffer (const gchar * element_name,
     GstBuffer * buffer_in, GstCaps * caps_in, GstBuffer * buffer_out,
     GstCaps *caps_out);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_teardown_sink_pad (GstElement * element);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes);
 
-GST_EXPORT
+GST_CHECK_API
 gint gst_check_run_suite (Suite * suite, const gchar * name,
     const gchar * fname);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_setup_events (GstPad * srcpad, GstElement * element,
     GstCaps * caps, GstFormat format);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_setup_events_with_stream_id (GstPad * srcpad,
     GstElement * element, GstCaps * caps, GstFormat format,
     const gchar * stream_id);
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_objects_destroyed_on_unref (gpointer object_to_unref, gpointer first_object, ...)
   G_GNUC_NULL_TERMINATED;
 
-GST_EXPORT
+GST_CHECK_API
 void gst_check_object_destroyed_on_unref (gpointer object_to_unref);
 
 #define fail_unless_message_error(msg, domain, code)            \
@@ -502,10 +503,10 @@ G_STMT_START {                                                    \
 /***
  * thread test macros and variables
  */
-GST_EXPORT GList *thread_list;
-GST_EXPORT GMutex mutex;
-GST_EXPORT GCond start_cond;       /* used to notify main thread of thread startups */
-GST_EXPORT GCond sync_cond;        /* used to synchronize all threads and main thread */
+GST_CHECK_API GList *thread_list;
+GST_CHECK_API GMutex mutex;
+GST_CHECK_API GCond start_cond;       /* used to notify main thread of thread startups */
+GST_CHECK_API GCond sync_cond;        /* used to synchronize all threads and main thread */
 
 #define MAIN_START_THREADS(count, function, data)               \
 MAIN_INIT();                                                    \
@@ -677,7 +678,7 @@ int main (int argc, char **argv)                                \
  * GST_CHECKS environment variable (test function names globs, comma
  * separated), or GST_CHECKS_IGNORE with the same semantics */
 
-GST_EXPORT
+GST_CHECK_API
 gboolean _gst_check_run_test_func (const gchar * func_name);
 
 static inline void

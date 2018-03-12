@@ -1,7 +1,7 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer Check Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * check.h: single include header for gst-check library
+ * check-prelude.h: prelude include header for gst-check library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,15 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_CHECK__H__
-#define __GST_CHECK__H__
+#ifndef __GST_CHECK_PRELUDE_H__
+#define __GST_CHECK_PRELUDE_H__
 
-#include <gst/check/check-prelude.h>
+#include <gst/gst.h>
 
-#include <gst/check/gstbufferstraw.h>
-#include <gst/check/gstcheck.h>
-#include <gst/check/gstconsistencychecker.h>
-#include <gst/check/gstharness.h>
-#include <gst/check/gsttestclock.h>
+#ifndef GST_CHECK_API
+#define GST_CHECK_API GST_EXPORT
+#endif
 
-#endif /* __GST_CHECK__H__ */
+#endif /* __GST_CHECK_PRELUDE_H__ */

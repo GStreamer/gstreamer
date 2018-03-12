@@ -7,6 +7,7 @@ gst_check_sources = [
 ]
 gst_check_headers = [
   'check.h',
+  'check-prelude.h',
   'gstbufferstraw.h',
   'gstcheck.h',
   'gstconsistencychecker.h',
