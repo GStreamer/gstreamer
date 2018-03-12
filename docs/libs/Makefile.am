@@ -22,7 +22,8 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 DOC_SOURCE_DIR=$(top_srcdir)/libs/gst
 
 # Extra options to supply to gtkdoc-scan.
-SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
+SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED" \
+  --ignore-decorators="GST_API|GST_BASE_API|GST_CHECK_API|GST_CONTROLLER_API|GST_NET_API"
 
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files="$(IGNORE_HFILES)"
