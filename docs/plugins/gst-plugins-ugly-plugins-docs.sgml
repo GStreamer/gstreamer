@@ -23,8 +23,8 @@
     <xi:include href="xml/element-amrwbdec.xml" />
     <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-rademux.xml" />
-    <xi:include href="xml/element-rmdemux.xml" />
     <xi:include href="xml/element-rdtmanager.xml" />
+    <xi:include href="xml/element-rmdemux.xml" />
     <xi:include href="xml/element-rtspreal.xml" />
     <xi:include href="xml/element-rtspwms.xml" />
     <xi:include href="xml/element-siddec.xml" />
@@ -46,5 +46,6 @@
     <xi:include href="xml/plugin-realmedia.xml" />
     <xi:include href="xml/plugin-sid.xml" />
     <xi:include href="xml/plugin-x264.xml" />
+    <xi:include href="xml/plugin-xingmux.xml" />
   </chapter>
 </book>
