@@ -773,6 +773,7 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
     GstCaps *first_configured_caps =
         gst_audio_info_to_caps (&first_configured_pad->info);
     gint first_configured_rate, first_configured_channels;
+    gint channels;
 
     caps = gst_caps_make_writable (caps);
     s = gst_caps_get_structure (caps, 0);
@@ -788,6 +789,18 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
     gst_structure_fixate_field_nearest_int (s, "rate", first_configured_rate);
     gst_structure_fixate_field_nearest_int (s, "channels",
         first_configured_channels);
+
+    gst_structure_get_int (s, "channels", &channels);
+
+    if (!gst_structure_has_field (s, "channel-mask") && channels > 2) {
+      guint64 mask;
+
+      if (!gst_structure_get (s2, "channel-mask", GST_TYPE_BITMASK, &mask,
+              NULL)) {
+        mask = gst_audio_channel_get_fallback_mask (channels);
+      }
+      gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
+    }
 
     gst_caps_unref (first_configured_caps);
     gst_object_unref (first_configured_pad);
