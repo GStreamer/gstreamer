@@ -2644,6 +2644,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * specifies the maximum number of nanoseconds per frame that this time offset
    * may be adjusted with. This is used to avoid sudden large changes to time
    * stamps.
+   *
+   * Since: 1.14
    */
   g_object_class_install_property (gobject_class, PROP_MAX_TS_OFFSET_ADJUSTMENT,
       g_param_spec_uint64 ("max-ts-offset-adjustment",
@@ -2659,6 +2661,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * Used to set an upper limit of how large a time offset may be. This
    * is used to protect against unrealistic values as a result of either
    * client,server or clock issues.
+   *
+   * Since: 1.14
    */
   g_object_class_install_property (gobject_class, PROP_MAX_TS_OFFSET,
       g_param_spec_int64 ("max-ts-offset", "Max TS Offset",
