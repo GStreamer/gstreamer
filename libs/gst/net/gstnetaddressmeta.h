@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gio/gio.h>
+#include <gst/net/net-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -40,20 +41,20 @@ struct _GstNetAddressMeta {
   GSocketAddress *addr;
 };
 
-GST_EXPORT
+GST_NET_API
 GType gst_net_address_meta_api_get_type (void);
 #define GST_NET_ADDRESS_META_API_TYPE (gst_net_address_meta_api_get_type())
 
 /* implementation */
 
-GST_EXPORT
+GST_NET_API
 const GstMetaInfo *gst_net_address_meta_get_info (void);
 #define GST_NET_ADDRESS_META_INFO (gst_net_address_meta_get_info())
 
-GST_EXPORT
+GST_NET_API
 GstNetAddressMeta * gst_buffer_add_net_address_meta (GstBuffer      *buffer,
                                                      GSocketAddress *addr);
-GST_EXPORT
+GST_NET_API
 GstNetAddressMeta * gst_buffer_get_net_address_meta (GstBuffer      *buffer);
 
 G_END_DECLS

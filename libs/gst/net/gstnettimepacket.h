@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gio/gio.h>
+#include <gst/net/net-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -47,26 +48,26 @@ struct _GstNetTimePacket {
   GstClockTime remote_time;
 };
 
-GST_EXPORT
+GST_NET_API
 GType                   gst_net_time_packet_get_type    (void);
 
-GST_EXPORT
+GST_NET_API
 GstNetTimePacket*       gst_net_time_packet_new         (const guint8 *buffer);
 
-GST_EXPORT
+GST_NET_API
 GstNetTimePacket*       gst_net_time_packet_copy        (const GstNetTimePacket *packet);
 
-GST_EXPORT
+GST_NET_API
 void                    gst_net_time_packet_free        (GstNetTimePacket *packet);
 
-GST_EXPORT
+GST_NET_API
 guint8*                 gst_net_time_packet_serialize   (const GstNetTimePacket *packet);
 
-GST_EXPORT
+GST_NET_API
 GstNetTimePacket*	gst_net_time_packet_receive     (GSocket         * socket,
                                                          GSocketAddress ** src_address,
                                                          GError         ** error);
-GST_EXPORT
+GST_NET_API
 gboolean                gst_net_time_packet_send        (const GstNetTimePacket * packet,
                                                          GSocket                * socket,
                                                          GSocketAddress         * dest_address,

@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gio/gio.h>
+#include <gst/net/net-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -41,7 +42,7 @@ struct _GstNetControlMessageMeta {
   GSocketControlMessage *message;
 };
 
-GST_EXPORT
+GST_NET_API
 GType gst_net_control_message_meta_api_get_type (void);
 
 #define GST_NET_CONTROL_MESSAGE_META_API_TYPE \
@@ -52,13 +53,13 @@ GType gst_net_control_message_meta_api_get_type (void);
 
 /* implementation */
 
-GST_EXPORT
+GST_NET_API
 const GstMetaInfo *gst_net_control_message_meta_get_info (void);
 
 #define GST_NET_CONTROL_MESSAGE_META_INFO \
   (gst_net_control_message_meta_get_info())
 
-GST_EXPORT
+GST_NET_API
 GstNetControlMessageMeta * gst_buffer_add_net_control_message_meta (GstBuffer             * buffer,
                                                                     GSocketControlMessage * message);
 

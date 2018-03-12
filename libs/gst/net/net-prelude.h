@@ -1,5 +1,7 @@
-/* GStreamer
- * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+/* GStreamer Net Library
+ * Copyright (C) 2018 GStreamer developers
+ *
+ * net-prelude.h: prelude include header for gst-net library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,15 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_NET_PRELUDE_H__
+#define __GST_NET_PRELUDE_H__
 
-#ifndef __GST_NET_H__
-#define __GST_NET_H__
+#include <gst/gst.h>
 
-#include <gst/net/net-prelude.h>
+#ifndef GST_NET_API
+#define GST_NET_API GST_EXPORT
+#endif
 
-#include <gst/net/gstnetaddressmeta.h>
-#include <gst/net/gstnetclientclock.h>
-#include <gst/net/gstnettimepacket.h>
-#include <gst/net/gstnettimeprovider.h>
-
-#endif /* __GST_NET_H__ */
+#endif /* __GST_NET_PRELUDE_H__ */

@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include <gst/gstsystemclock.h>
+#include <gst/net/net-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -68,10 +69,10 @@ struct _GstNetClientClockClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_NET_API
 GType           gst_net_client_clock_get_type	(void);
 
-GST_EXPORT
+GST_NET_API
 GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 
@@ -89,10 +90,10 @@ GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_addre
 typedef struct _GstNetClientClock GstNtpClock;
 typedef struct _GstNetClientClockClass GstNtpClockClass;
 
-GST_EXPORT
+GST_NET_API
 GType           gst_ntp_clock_get_type	        (void);
 
-GST_EXPORT
+GST_NET_API
 GstClock*	gst_ntp_clock_new	        (const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 

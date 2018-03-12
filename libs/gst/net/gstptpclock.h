@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/gstsystemclock.h>
+#include <gst/net/net-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -75,19 +76,19 @@ struct _GstPtpClockClass {
  */
 #define GST_PTP_CLOCK_ID_NONE ((guint64) -1)
 
-GST_EXPORT
+GST_NET_API
 GType           gst_ptp_clock_get_type             (void);
 
-GST_EXPORT
+GST_NET_API
 gboolean        gst_ptp_is_supported               (void);
 
-GST_EXPORT
+GST_NET_API
 gboolean        gst_ptp_is_initialized             (void);
 
-GST_EXPORT
+GST_NET_API
 gboolean        gst_ptp_init                       (guint64 clock_id,
                                                     gchar ** interfaces);
-GST_EXPORT
+GST_NET_API
 void            gst_ptp_deinit                     (void);
 
 #define GST_PTP_STATISTICS_NEW_DOMAIN_FOUND           "GstPtpStatisticsNewDomainFound"
@@ -142,13 +143,13 @@ void            gst_ptp_deinit                     (void);
 typedef gboolean  (*GstPtpStatisticsCallback)      (guint8 domain,
                                                     const GstStructure * stats,
                                                     gpointer user_data);
-GST_EXPORT
+GST_NET_API
 gulong          gst_ptp_statistics_callback_add    (GstPtpStatisticsCallback callback,
                                                     gpointer user_data, GDestroyNotify destroy_data);
-GST_EXPORT
+GST_NET_API
 void            gst_ptp_statistics_callback_remove (gulong id);
 
-GST_EXPORT
+GST_NET_API
 GstClock*       gst_ptp_clock_new                  (const gchar *name,
                                                     guint domain);
 

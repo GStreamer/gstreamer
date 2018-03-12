@@ -3,6 +3,7 @@ lib_LTLIBRARIES = libgstnet-@GST_API_VERSION@.la
 libgstnet_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/net
 libgstnet_@GST_API_VERSION@_include_HEADERS = \
     net.h \
+    net-prelude.h \
     gstnet.h \
     gstnetaddressmeta.h \
     gstnetclientclock.h \

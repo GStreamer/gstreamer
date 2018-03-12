@@ -17,6 +17,7 @@ gst_net_headers = [
  'gstnettimepacket.h',
  'gstnettimeprovider.h',
  'gstptpclock.h',
+ 'net-prelude.h',
  'net.h',
 ]
 install_headers(gst_net_headers, subdir : 'gstreamer-1.0/gst/net/')
