@@ -7,7 +7,8 @@ glib_enum_headers= \
 glib_enum_define = GST_CONTROLLER
 glib_gen_prefix = gst
 glib_gen_basename = controller
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_CONTROLLER_API
+glib_gen_decl_include=\#include <gst/controller/controller-prelude.h>
 
 built_sources = controller-enumtypes.c
 built_headers = controller-enumtypes.h
@@ -16,6 +17,7 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 libgstcontroller_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/controller
 libgstcontroller_@GST_API_VERSION@_include_HEADERS = \
 	controller.h \
+	controller-prelude.h \
 	gstargbcontrolbinding.h \
 	gstdirectcontrolbinding.h \
 	gsttimedvaluecontrolsource.h \

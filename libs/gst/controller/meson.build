@@ -21,6 +21,7 @@ gst_controller_headers = controller_mkenum_headers + [
   'gstproxycontrolbinding.h',
   'gsttriggercontrolsource.h',
   'gstlfocontrolsource.h',
+  'controller-prelude.h',
   'controller.h',
 ]
 install_headers(gst_controller_headers, subdir : 'gstreamer-1.0/gst/controller/')
