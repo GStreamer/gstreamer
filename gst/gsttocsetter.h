@@ -54,16 +54,16 @@ struct _GstTocSetterInterface
   /* virtual table */
 };
 
-GST_EXPORT
+GST_API
 GType         gst_toc_setter_get_type (void);
 
-GST_EXPORT
+GST_API
 void          gst_toc_setter_reset   (GstTocSetter *setter);
 
-GST_EXPORT
+GST_API
 GstToc *      gst_toc_setter_get_toc (GstTocSetter *setter);
 
-GST_EXPORT
+GST_API
 void          gst_toc_setter_set_toc (GstTocSetter *setter, GstToc *toc);
 
 G_END_DECLS

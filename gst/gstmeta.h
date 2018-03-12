@@ -132,7 +132,7 @@ typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
  * GQuark for the "gst-copy" transform.
  */
 
-GST_EXPORT GQuark _gst_meta_transform_copy;
+GST_API GQuark _gst_meta_transform_copy;
 
 /**
  * GST_META_TRANSFORM_IS_COPY:
@@ -204,27 +204,27 @@ struct _GstMetaInfo {
    * just like interfaces */
 };
 
-GST_EXPORT
+GST_API
 GType                gst_meta_api_type_register (const gchar *api,
                                                  const gchar **tags);
-GST_EXPORT
+GST_API
 gboolean             gst_meta_api_type_has_tag  (GType api, GQuark tag);
 
-GST_EXPORT
+GST_API
 const GstMetaInfo *  gst_meta_register          (GType api, const gchar *impl,
                                                  gsize size,
                                                  GstMetaInitFunction      init_func,
                                                  GstMetaFreeFunction      free_func,
                                                  GstMetaTransformFunction transform_func);
-GST_EXPORT
+GST_API
 const GstMetaInfo *  gst_meta_get_info          (const gchar * impl);
 
-GST_EXPORT
+GST_API
 const gchar* const*  gst_meta_api_type_get_tags (GType api);
 
 /* some default tags */
 
-GST_EXPORT GQuark _gst_meta_tag_memory;
+GST_API GQuark _gst_meta_tag_memory;
 
 /**
  * GST_META_TAG_MEMORY:

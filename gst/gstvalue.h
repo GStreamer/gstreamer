@@ -222,7 +222,7 @@ G_BEGIN_DECLS
  */
 #define GST_FLAG_SET_MASK_EXACT ((guint)(-1))
 
-GST_EXPORT GType _gst_int_range_type;
+GST_API GType _gst_int_range_type;
 
 /**
  * GST_TYPE_INT_RANGE:
@@ -233,7 +233,7 @@ GST_EXPORT GType _gst_int_range_type;
  */
 #define GST_TYPE_INT_RANGE               (_gst_int_range_type)
 
-GST_EXPORT GType _gst_int64_range_type;
+GST_API GType _gst_int64_range_type;
 
 /**
  * GST_TYPE_INT64_RANGE:
@@ -244,7 +244,7 @@ GST_EXPORT GType _gst_int64_range_type;
  */
 #define GST_TYPE_INT64_RANGE             (_gst_int64_range_type)
 
-GST_EXPORT GType _gst_double_range_type;
+GST_API GType _gst_double_range_type;
 
 /**
  * GST_TYPE_DOUBLE_RANGE:
@@ -255,7 +255,7 @@ GST_EXPORT GType _gst_double_range_type;
  */
 #define GST_TYPE_DOUBLE_RANGE            (_gst_double_range_type)
 
-GST_EXPORT GType _gst_fraction_range_type;
+GST_API GType _gst_fraction_range_type;
 
 /**
  * GST_TYPE_FRACTION_RANGE:
@@ -266,7 +266,7 @@ GST_EXPORT GType _gst_fraction_range_type;
  */
 #define GST_TYPE_FRACTION_RANGE           (_gst_fraction_range_type)
 
-GST_EXPORT GType _gst_value_list_type;
+GST_API GType _gst_value_list_type;
 
 /**
  * GST_TYPE_LIST:
@@ -281,7 +281,7 @@ GST_EXPORT GType _gst_value_list_type;
  */
 #define GST_TYPE_LIST                    (_gst_value_list_type)
 
-GST_EXPORT GType _gst_value_array_type;
+GST_API GType _gst_value_array_type;
 
 /**
  * GST_TYPE_ARRAY:
@@ -297,7 +297,7 @@ GST_EXPORT GType _gst_value_array_type;
  */
 #define GST_TYPE_ARRAY                   (_gst_value_array_type)
 
-GST_EXPORT GType _gst_fraction_type;
+GST_API GType _gst_fraction_type;
 
 /**
  * GST_TYPE_FRACTION:
@@ -310,7 +310,7 @@ GST_EXPORT GType _gst_fraction_type;
 
 #define GST_TYPE_FRACTION                (_gst_fraction_type)
 
-GST_EXPORT GType _gst_bitmask_type;
+GST_API GType _gst_bitmask_type;
 
 /**
  * GST_TYPE_BITMASK:
@@ -322,7 +322,7 @@ GST_EXPORT GType _gst_bitmask_type;
 
 #define GST_TYPE_BITMASK                 (_gst_bitmask_type)
 
-GST_EXPORT GType _gst_flagset_type;
+GST_API GType _gst_flagset_type;
 
 /**
  * GST_TYPE_FLAG_SET:
@@ -436,289 +436,289 @@ struct _GstValueTable {
   gpointer _gst_reserved [GST_PADDING];
 };
 
-GST_EXPORT
+GST_API
 GType gst_int_range_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_int64_range_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_double_range_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_fraction_range_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_fraction_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_value_list_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_value_array_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_bitmask_get_type (void);
 
-GST_EXPORT
+GST_API
 GType gst_flagset_get_type (void);
 
 /* Hide this compatibility type from introspection */
 #ifndef __GI_SCANNER__
-GST_EXPORT
+GST_API
 GType gst_g_thread_get_type (void);
 #endif
 
-GST_EXPORT
+GST_API
 void            gst_value_register              (const GstValueTable   *table);
 
-GST_EXPORT
+GST_API
 void            gst_value_init_and_copy         (GValue                *dest,
                                                  const GValue          *src);
-GST_EXPORT
+GST_API
 gchar *         gst_value_serialize             (const GValue          *value) G_GNUC_MALLOC;
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_deserialize           (GValue                *dest,
                                                  const gchar           *src);
 
 /* list */
 
-GST_EXPORT
+GST_API
 void            gst_value_list_append_value     (GValue         *value,
                                                  const GValue   *append_value);
-GST_EXPORT
+GST_API
 void            gst_value_list_append_and_take_value (GValue         *value,
                                                  GValue   *append_value);
-GST_EXPORT
+GST_API
 void            gst_value_list_prepend_value    (GValue         *value,
                                                  const GValue   *prepend_value);
-GST_EXPORT
+GST_API
 void            gst_value_list_concat           (GValue         *dest,
                                                  const GValue   *value1,
                                                  const GValue   *value2);
-GST_EXPORT
+GST_API
 void            gst_value_list_merge            (GValue         *dest,
                                                  const GValue   *value1,
                                                  const GValue   *value2);
-GST_EXPORT
+GST_API
 guint           gst_value_list_get_size         (const GValue   *value);
 
-GST_EXPORT
+GST_API
 const GValue *  gst_value_list_get_value        (const GValue   *value,
                                                  guint          index);
 
 /* array */
 
-GST_EXPORT
+GST_API
 void            gst_value_array_append_value    (GValue         *value,
                                                  const GValue   *append_value);
-GST_EXPORT
+GST_API
 void            gst_value_array_append_and_take_value    (GValue         *value,
                                                  GValue   *append_value);
-GST_EXPORT
+GST_API
 void            gst_value_array_prepend_value   (GValue         *value,
                                                  const GValue   *prepend_value);
-GST_EXPORT
+GST_API
 guint           gst_value_array_get_size        (const GValue   *value);
 
-GST_EXPORT
+GST_API
 const GValue *  gst_value_array_get_value       (const GValue   *value,
                                                  guint          index);
 
 /* int range */
 
-GST_EXPORT
+GST_API
 void            gst_value_set_int_range         (GValue         *value,
                                                  gint           start,
                                                  gint           end);
-GST_EXPORT
+GST_API
 void            gst_value_set_int_range_step    (GValue         *value,
                                                  gint           start,
                                                  gint           end,
                                                  gint           step);
-GST_EXPORT
+GST_API
 gint            gst_value_get_int_range_min     (const GValue   *value);
 
-GST_EXPORT
+GST_API
 gint            gst_value_get_int_range_max     (const GValue   *value);
 
-GST_EXPORT
+GST_API
 gint            gst_value_get_int_range_step    (const GValue   *value);
 
 /* int64 range */
 
-GST_EXPORT
+GST_API
 void            gst_value_set_int64_range       (GValue         *value,
                                                  gint64         start,
                                                  gint64         end);
-GST_EXPORT
+GST_API
 void            gst_value_set_int64_range_step  (GValue         *value,
                                                  gint64         start,
                                                  gint64         end,
                                                  gint64         step);
-GST_EXPORT
+GST_API
 gint64          gst_value_get_int64_range_min   (const GValue   *value);
 
-GST_EXPORT
+GST_API
 gint64          gst_value_get_int64_range_max   (const GValue   *value);
 
-GST_EXPORT
+GST_API
 gint64          gst_value_get_int64_range_step  (const GValue   *value);
 
 /* double range */
 
-GST_EXPORT
+GST_API
 void            gst_value_set_double_range      (GValue         *value,
                                                  gdouble        start,
                                                  gdouble        end);
-GST_EXPORT
+GST_API
 gdouble         gst_value_get_double_range_min  (const GValue   *value);
 
-GST_EXPORT
+GST_API
 gdouble         gst_value_get_double_range_max  (const GValue   *value);
 
 /* caps */
 
-GST_EXPORT
+GST_API
 const GstCaps * gst_value_get_caps              (const GValue   *value);
 
-GST_EXPORT
+GST_API
 void            gst_value_set_caps              (GValue         *value,
                                                  const GstCaps  *caps);
 
 /* structure */
 
-GST_EXPORT
+GST_API
 const GstStructure *
                 gst_value_get_structure         (const GValue   *value);
 
-GST_EXPORT
+GST_API
 void            gst_value_set_structure         (GValue         *value,
                                                  const GstStructure  *structure);
 
 /* caps features */
 
-GST_EXPORT
+GST_API
 const GstCapsFeatures *
                 gst_value_get_caps_features     (const GValue   *value);
 
-GST_EXPORT
+GST_API
 void            gst_value_set_caps_features     (GValue         *value,
                                                  const GstCapsFeatures  *features);
 
 /* fraction */
 
-GST_EXPORT
+GST_API
 void            gst_value_set_fraction          (GValue         *value,
                                                  gint           numerator,
                                                  gint           denominator);
-GST_EXPORT
+GST_API
 gint            gst_value_get_fraction_numerator   (const GValue  *value);
 
-GST_EXPORT
+GST_API
 gint            gst_value_get_fraction_denominator (const GValue *value);
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_fraction_multiply        (GValue         *product,
                                                     const GValue   *factor1,
                                                     const GValue   *factor2);
-GST_EXPORT
+GST_API
 gboolean        gst_value_fraction_subtract     (GValue * dest,
                                                  const GValue * minuend,
                                                  const GValue * subtrahend);
 
 /* fraction range */
 
-GST_EXPORT
+GST_API
 void            gst_value_set_fraction_range    (GValue         *value,
                                                  const GValue   *start,
                                                  const GValue   *end);
-GST_EXPORT
+GST_API
 void            gst_value_set_fraction_range_full (GValue       *value,
                                                  gint numerator_start,
                                                  gint denominator_start,
                                                  gint numerator_end,
                                                  gint denominator_end);
-GST_EXPORT
+GST_API
 const GValue    *gst_value_get_fraction_range_min (const GValue *value);
 
-GST_EXPORT
+GST_API
 const GValue    *gst_value_get_fraction_range_max (const GValue *value);
 
 /* bitmask */
 
-GST_EXPORT
+GST_API
 guint64         gst_value_get_bitmask           (const GValue   *value);
 
-GST_EXPORT
+GST_API
 void            gst_value_set_bitmask           (GValue         *value,
                                                  guint64         bitmask);
 /* flagset */
 
-GST_EXPORT
+GST_API
 void            gst_value_set_flagset (GValue * value, guint flags, guint mask);
 
-GST_EXPORT
+GST_API
 guint           gst_value_get_flagset_flags (const GValue * value);
 
-GST_EXPORT
+GST_API
 guint           gst_value_get_flagset_mask (const GValue * value);
 
 /* compare */
 
-GST_EXPORT
+GST_API
 gint            gst_value_compare               (const GValue   *value1,
                                                  const GValue   *value2);
-GST_EXPORT
+GST_API
 gboolean        gst_value_can_compare           (const GValue   *value1,
                                                  const GValue   *value2);
-GST_EXPORT
+GST_API
 gboolean        gst_value_is_subset             (const GValue   *value1,
                                                  const GValue   *value2);
 
 /* union */
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_union                 (GValue         *dest,
                                                  const GValue   *value1,
                                                  const GValue   *value2);
-GST_EXPORT
+GST_API
 gboolean        gst_value_can_union             (const GValue   *value1,
                                                  const GValue   *value2);
 
 /* intersection */
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_intersect             (GValue         *dest,
                                                  const GValue   *value1,
                                                  const GValue   *value2);
-GST_EXPORT
+GST_API
 gboolean        gst_value_can_intersect         (const GValue   *value1,
                                                  const GValue   *value2);
 
 /* subtraction */
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_subtract              (GValue         *dest,
                                                  const GValue   *minuend,
                                                  const GValue   *subtrahend);
-GST_EXPORT
+GST_API
 gboolean        gst_value_can_subtract          (const GValue   *minuend,
                                                  const GValue   *subtrahend);
 
 /* fixation */
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_is_fixed              (const GValue   *value);
 
-GST_EXPORT
+GST_API
 gboolean        gst_value_fixate                (GValue         *dest,
                                                  const GValue   *src);
 
 /* Flagset registration wrapper */
 
-GST_EXPORT
+GST_API
 GType		gst_flagset_register (GType flags_type);
 
 G_END_DECLS

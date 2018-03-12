@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_API
 GQuark gst_parse_error_quark (void);
 /**
  * GST_PARSE_ERROR:
@@ -96,36 +96,36 @@ typedef struct _GstParseContext GstParseContext;
 
 /* create, process and free a parse context */
 
-GST_EXPORT
+GST_API
 GType             gst_parse_context_get_type (void);
 
-GST_EXPORT
+GST_API
 GstParseContext * gst_parse_context_new (void) G_GNUC_MALLOC;
 
-GST_EXPORT
+GST_API
 gchar          ** gst_parse_context_get_missing_elements (GstParseContext * context) G_GNUC_MALLOC;
 
-GST_EXPORT
+GST_API
 void              gst_parse_context_free (GstParseContext * context);
 
-GST_EXPORT
+GST_API
 GstParseContext * gst_parse_context_copy (const GstParseContext * context);
 
 
 /* parse functions */
 
-GST_EXPORT
+GST_API
 GstElement      * gst_parse_launch       (const gchar      * pipeline_description,
                                           GError          ** error) G_GNUC_MALLOC;
-GST_EXPORT
+GST_API
 GstElement      * gst_parse_launchv      (const gchar     ** argv,
                                           GError          ** error) G_GNUC_MALLOC;
-GST_EXPORT
+GST_API
 GstElement      * gst_parse_launch_full  (const gchar      * pipeline_description,
                                           GstParseContext  * context,
                                           GstParseFlags      flags,
                                           GError          ** error) G_GNUC_MALLOC;
-GST_EXPORT
+GST_API
 GstElement      * gst_parse_launchv_full (const gchar     ** argv,
                                           GstParseContext  * context,
                                           GstParseFlags      flags,

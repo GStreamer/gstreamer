@@ -155,16 +155,20 @@
 # endif
 #endif
 
+#ifndef GST_API
+#define GST_API GST_EXPORT
+#endif
+
 /* These macros are used to mark deprecated functions in GStreamer headers,
  * and thus have to be exposed in installed headers. But please
  * do *not* use them in other projects. Instead, use G_DEPRECATED
  * or define your own wrappers around it. */
 #ifndef GST_DISABLE_DEPRECATED
-#define GST_DEPRECATED GST_EXPORT
-#define GST_DEPRECATED_FOR(f) GST_EXPORT
+#define GST_DEPRECATED GST_API
+#define GST_DEPRECATED_FOR(f) GST_API
 #else
-#define GST_DEPRECATED G_DEPRECATED GST_EXPORT
-#define GST_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GST_EXPORT
+#define GST_DEPRECATED G_DEPRECATED GST_API
+#define GST_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GST_API
 #endif
 
 #endif /* __GST_CONFIG_H__ */

@@ -31,7 +31,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType _gst_sample_type;
+GST_API GType _gst_sample_type;
 
 #define GST_TYPE_SAMPLE      (_gst_sample_type)
 #define GST_IS_SAMPLE(obj)   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_SAMPLE))
@@ -47,32 +47,32 @@ GST_EXPORT GType _gst_sample_type;
  */
 typedef struct _GstSample GstSample;
 
-GST_EXPORT
+GST_API
 GType                gst_sample_get_type      (void);
 
 /* allocation */
 
-GST_EXPORT
+GST_API
 GstSample *          gst_sample_new           (GstBuffer          *buffer,
                                                GstCaps            *caps,
                                                const GstSegment   *segment,
                                                GstStructure       *info);
-GST_EXPORT
+GST_API
 GstBuffer *          gst_sample_get_buffer    (GstSample *sample);
 
-GST_EXPORT
+GST_API
 GstCaps *            gst_sample_get_caps      (GstSample *sample);
 
-GST_EXPORT
+GST_API
 GstSegment *         gst_sample_get_segment   (GstSample *sample);
 
-GST_EXPORT
+GST_API
 const GstStructure * gst_sample_get_info      (GstSample *sample);
 
-GST_EXPORT
+GST_API
 GstBufferList *      gst_sample_get_buffer_list (GstSample *sample);
 
-GST_EXPORT
+GST_API
 void                 gst_sample_set_buffer_list (GstSample *sample, GstBufferList *buffer_list);
 
 /* refcounting */

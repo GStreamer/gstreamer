@@ -75,40 +75,40 @@ struct _GstDeviceMonitorClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_API
 GType     gst_device_monitor_get_type (void);
 
-GST_EXPORT
+GST_API
 GstDeviceMonitor * gst_device_monitor_new  (void);
 
-GST_EXPORT
+GST_API
 GstBus *  gst_device_monitor_get_bus (GstDeviceMonitor * monitor);
 
-GST_EXPORT
+GST_API
 GList *   gst_device_monitor_get_devices (GstDeviceMonitor * monitor);
 
 
-GST_EXPORT
+GST_API
 gboolean  gst_device_monitor_start (GstDeviceMonitor * monitor);
 
-GST_EXPORT
+GST_API
 void      gst_device_monitor_stop  (GstDeviceMonitor * monitor);
 
 
-GST_EXPORT
+GST_API
 guint     gst_device_monitor_add_filter (GstDeviceMonitor * monitor,
                                          const gchar      * classes,
                                          GstCaps          * caps);
-GST_EXPORT
+GST_API
 gboolean  gst_device_monitor_remove_filter (GstDeviceMonitor * monitor,
                                             guint filter_id);
-GST_EXPORT
+GST_API
 gchar **  gst_device_monitor_get_providers (GstDeviceMonitor * monitor);
 
-GST_EXPORT
+GST_API
 void      gst_device_monitor_set_show_all_devices (GstDeviceMonitor * monitor, gboolean show_all);
 
-GST_EXPORT
+GST_API
 gboolean  gst_device_monitor_get_show_all_devices (GstDeviceMonitor * monitor);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

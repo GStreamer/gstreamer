@@ -78,13 +78,13 @@ struct _GstSystemClockClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_API
 GType                   gst_system_clock_get_type       (void);
 
-GST_EXPORT
+GST_API
 GstClock*               gst_system_clock_obtain         (void);
 
-GST_EXPORT
+GST_API
 void                    gst_system_clock_set_default    (GstClock *new_clock);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

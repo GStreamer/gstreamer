@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_API
 GType gst_promise_get_type(void);
 #define GST_TYPE_PROMISE            (gst_promise_get_type())
 #define GST_PROMISE(obj)            ((GstPromise *) obj)
@@ -73,24 +73,24 @@ struct _GstPromise
   GstMiniObject         parent;
 };
 
-GST_EXPORT
+GST_API
 GstPromise *            gst_promise_new                     (void);
-GST_EXPORT
+GST_API
 GstPromise *            gst_promise_new_with_change_func    (GstPromiseChangeFunc func,
                                                              gpointer user_data,
                                                              GDestroyNotify notify);
 
-GST_EXPORT
+GST_API
 GstPromiseResult        gst_promise_wait                    (GstPromise * promise);
-GST_EXPORT
+GST_API
 void                    gst_promise_reply                   (GstPromise * promise,
                                                              GstStructure * s);
-GST_EXPORT
+GST_API
 void                    gst_promise_interrupt               (GstPromise * promise);
-GST_EXPORT
+GST_API
 void                    gst_promise_expire                  (GstPromise * promise);
 
-GST_EXPORT
+GST_API
 const GstStructure *    gst_promise_get_reply               (GstPromise * promise);
 
 /**

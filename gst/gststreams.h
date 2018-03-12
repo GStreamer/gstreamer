@@ -112,44 +112,44 @@ struct _GstStreamClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_API
 GType     gst_stream_get_type (void);
 
 #include <gst/gstevent.h>
 
-GST_EXPORT
+GST_API
 GstStream *gst_stream_new            (const gchar *stream_id,
 				      GstCaps *caps,
 				      GstStreamType type,
 				      GstStreamFlags flags);
-GST_EXPORT
+GST_API
 const gchar *  gst_stream_get_stream_id (GstStream *stream);
 
-GST_EXPORT
+GST_API
 void           gst_stream_set_stream_flags (GstStream *stream, GstStreamFlags flags);
 
-GST_EXPORT
+GST_API
 GstStreamFlags gst_stream_get_stream_flags (GstStream *stream);
 
-GST_EXPORT
+GST_API
 void           gst_stream_set_stream_type (GstStream *stream, GstStreamType stream_type);
 
-GST_EXPORT
+GST_API
 GstStreamType  gst_stream_get_stream_type (GstStream *stream);
 
-GST_EXPORT
+GST_API
 void           gst_stream_set_tags (GstStream *stream, GstTagList *tags);
 
-GST_EXPORT
+GST_API
 GstTagList *   gst_stream_get_tags (GstStream *stream);
 
-GST_EXPORT
+GST_API
 void           gst_stream_set_caps (GstStream *stream, GstCaps *caps);
 
-GST_EXPORT
+GST_API
 GstCaps *      gst_stream_get_caps (GstStream *stream);
 
-GST_EXPORT
+GST_API
 const gchar *  gst_stream_type_get_name (GstStreamType stype);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

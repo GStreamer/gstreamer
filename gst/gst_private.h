@@ -38,7 +38,7 @@ extern const char             g_log_domain_gstreamer[];
 #include <stdlib.h>
 #include <string.h>
 
-/* Needed for GST_EXPORT */
+/* Needed for GST_API */
 #include "gst/gstconfig.h"
 
 /* Needed for GstRegistry * */
@@ -144,7 +144,7 @@ gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 
 G_GNUC_INTERNAL  void _priv_gst_registry_cleanup (void);
 
-GST_EXPORT
+GST_API
 gboolean _gst_plugin_loader_client_run (void);
 
 G_GNUC_INTERNAL  GstPlugin * _priv_gst_plugin_load_file_for_registry (const gchar *filename,
@@ -226,12 +226,12 @@ GstCapsFeatures * __gst_caps_get_features_unchecked (const GstCaps * caps, guint
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
 
-GST_EXPORT gboolean _gst_disable_registry_cache;
+GST_API gboolean _gst_disable_registry_cache;
 #endif
 
 /* Secret variable to let the plugin scanner use the same base path
  * as the main application in order to determine dependencies */
-GST_EXPORT gchar *_gst_executable_path;
+GST_API gchar *_gst_executable_path;
 
 /* provide inline gst_g_value_get_foo_unchecked(), used in gststructure.c */
 #define DEFINE_INLINE_G_VALUE_GET_UNCHECKED(ret_type,name_type,v_field) \
@@ -255,37 +255,37 @@ DEFINE_INLINE_G_VALUE_GET_UNCHECKED(const gchar *,string,v_pointer)
 
 #ifndef GST_REMOVE_GST_DEBUG
 
-GST_EXPORT GstDebugCategory *GST_CAT_GST_INIT;
-GST_EXPORT GstDebugCategory *GST_CAT_MEMORY;
-GST_EXPORT GstDebugCategory *GST_CAT_PARENTAGE;
-GST_EXPORT GstDebugCategory *GST_CAT_STATES;
-GST_EXPORT GstDebugCategory *GST_CAT_SCHEDULING;
-GST_EXPORT GstDebugCategory *GST_CAT_BUFFER;
-GST_EXPORT GstDebugCategory *GST_CAT_BUFFER_LIST;
-GST_EXPORT GstDebugCategory *GST_CAT_BUS;
-GST_EXPORT GstDebugCategory *GST_CAT_CAPS;
-GST_EXPORT GstDebugCategory *GST_CAT_CLOCK;
-GST_EXPORT GstDebugCategory *GST_CAT_ELEMENT_PADS;
-GST_EXPORT GstDebugCategory *GST_CAT_PADS;
-GST_EXPORT GstDebugCategory *GST_CAT_PERFORMANCE;
-GST_EXPORT GstDebugCategory *GST_CAT_PIPELINE;
-GST_EXPORT GstDebugCategory *GST_CAT_PLUGIN_LOADING;
-GST_EXPORT GstDebugCategory *GST_CAT_PLUGIN_INFO;
-GST_EXPORT GstDebugCategory *GST_CAT_PROPERTIES;
-GST_EXPORT GstDebugCategory *GST_CAT_NEGOTIATION;
-GST_EXPORT GstDebugCategory *GST_CAT_REFCOUNTING;
-GST_EXPORT GstDebugCategory *GST_CAT_ERROR_SYSTEM;
-GST_EXPORT GstDebugCategory *GST_CAT_EVENT;
-GST_EXPORT GstDebugCategory *GST_CAT_MESSAGE;
-GST_EXPORT GstDebugCategory *GST_CAT_PARAMS;
-GST_EXPORT GstDebugCategory *GST_CAT_CALL_TRACE;
-GST_EXPORT GstDebugCategory *GST_CAT_SIGNAL;
-GST_EXPORT GstDebugCategory *GST_CAT_PROBE;
-GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
-GST_EXPORT GstDebugCategory *GST_CAT_QOS;
-GST_EXPORT GstDebugCategory *GST_CAT_META;
-GST_EXPORT GstDebugCategory *GST_CAT_LOCKING;
-GST_EXPORT GstDebugCategory *GST_CAT_CONTEXT;
+GST_API GstDebugCategory *GST_CAT_GST_INIT;
+GST_API GstDebugCategory *GST_CAT_MEMORY;
+GST_API GstDebugCategory *GST_CAT_PARENTAGE;
+GST_API GstDebugCategory *GST_CAT_STATES;
+GST_API GstDebugCategory *GST_CAT_SCHEDULING;
+GST_API GstDebugCategory *GST_CAT_BUFFER;
+GST_API GstDebugCategory *GST_CAT_BUFFER_LIST;
+GST_API GstDebugCategory *GST_CAT_BUS;
+GST_API GstDebugCategory *GST_CAT_CAPS;
+GST_API GstDebugCategory *GST_CAT_CLOCK;
+GST_API GstDebugCategory *GST_CAT_ELEMENT_PADS;
+GST_API GstDebugCategory *GST_CAT_PADS;
+GST_API GstDebugCategory *GST_CAT_PERFORMANCE;
+GST_API GstDebugCategory *GST_CAT_PIPELINE;
+GST_API GstDebugCategory *GST_CAT_PLUGIN_LOADING;
+GST_API GstDebugCategory *GST_CAT_PLUGIN_INFO;
+GST_API GstDebugCategory *GST_CAT_PROPERTIES;
+GST_API GstDebugCategory *GST_CAT_NEGOTIATION;
+GST_API GstDebugCategory *GST_CAT_REFCOUNTING;
+GST_API GstDebugCategory *GST_CAT_ERROR_SYSTEM;
+GST_API GstDebugCategory *GST_CAT_EVENT;
+GST_API GstDebugCategory *GST_CAT_MESSAGE;
+GST_API GstDebugCategory *GST_CAT_PARAMS;
+GST_API GstDebugCategory *GST_CAT_CALL_TRACE;
+GST_API GstDebugCategory *GST_CAT_SIGNAL;
+GST_API GstDebugCategory *GST_CAT_PROBE;
+GST_API GstDebugCategory *GST_CAT_REGISTRY;
+GST_API GstDebugCategory *GST_CAT_QOS;
+GST_API GstDebugCategory *GST_CAT_META;
+GST_API GstDebugCategory *GST_CAT_LOCKING;
+GST_API GstDebugCategory *GST_CAT_CONTEXT;
 
 /* Categories that should be completely private to
  * libgstreamer should be done like this: */

@@ -41,28 +41,28 @@ G_BEGIN_DECLS
 typedef struct _GstAtomicQueue GstAtomicQueue;
 
 
-GST_EXPORT
+GST_API
 GType              gst_atomic_queue_get_type    (void);
 
-GST_EXPORT
+GST_API
 GstAtomicQueue *   gst_atomic_queue_new         (guint initial_size) G_GNUC_MALLOC;
 
-GST_EXPORT
+GST_API
 void               gst_atomic_queue_ref         (GstAtomicQueue * queue);
 
-GST_EXPORT
+GST_API
 void               gst_atomic_queue_unref       (GstAtomicQueue * queue);
 
-GST_EXPORT
+GST_API
 void               gst_atomic_queue_push        (GstAtomicQueue* queue, gpointer data);
 
-GST_EXPORT
+GST_API
 gpointer           gst_atomic_queue_pop         (GstAtomicQueue* queue);
 
-GST_EXPORT
+GST_API
 gpointer           gst_atomic_queue_peek        (GstAtomicQueue* queue);
 
-GST_EXPORT
+GST_API
 guint              gst_atomic_queue_length      (GstAtomicQueue * queue);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

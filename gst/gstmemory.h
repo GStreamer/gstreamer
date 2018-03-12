@@ -31,10 +31,10 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType _gst_memory_type;
+GST_API GType _gst_memory_type;
 #define GST_TYPE_MEMORY (_gst_memory_type)
 
-GST_EXPORT
+GST_API
 GType gst_memory_get_type(void);
 
 typedef struct _GstMemory GstMemory;
@@ -310,12 +310,12 @@ typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gssize offset
  */
 typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
-GST_EXPORT
+GST_API
 void           gst_memory_init         (GstMemory *mem, GstMemoryFlags flags,
                                         GstAllocator *allocator, GstMemory *parent,
                                         gsize maxsize, gsize align,
                                         gsize offset, gsize size);
-GST_EXPORT
+GST_API
 gboolean       gst_memory_is_type      (GstMemory *mem, const gchar *mem_type);
 
 /* refcounting */
@@ -347,10 +347,10 @@ gst_memory_unref (GstMemory * memory)
 
 /* getting/setting memory properties */
 
-GST_EXPORT
+GST_API
 gsize          gst_memory_get_sizes    (GstMemory *mem, gsize *offset, gsize *maxsize);
 
-GST_EXPORT
+GST_API
 void           gst_memory_resize       (GstMemory *mem, gssize offset, gsize size);
 
 #define        gst_memory_lock(m,f)        gst_mini_object_lock (GST_MINI_OBJECT_CAST (m), (f))
@@ -360,26 +360,26 @@ void           gst_memory_resize       (GstMemory *mem, gssize offset, gsize siz
 
 /* retrieving data */
 
-GST_EXPORT
+GST_API
 GstMemory *    gst_memory_make_mapped  (GstMemory *mem, GstMapInfo *info, GstMapFlags flags) G_GNUC_WARN_UNUSED_RESULT;
 
-GST_EXPORT
+GST_API
 gboolean       gst_memory_map          (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
 
-GST_EXPORT
+GST_API
 void           gst_memory_unmap        (GstMemory *mem, GstMapInfo *info);
 
 /* copy and subregions */
 
-GST_EXPORT
+GST_API
 GstMemory *    gst_memory_copy         (GstMemory *mem, gssize offset, gssize size) G_GNUC_WARN_UNUSED_RESULT;
 
-GST_EXPORT
+GST_API
 GstMemory *    gst_memory_share        (GstMemory *mem, gssize offset, gssize size) G_GNUC_WARN_UNUSED_RESULT;
 
 /* span memory */
 
-GST_EXPORT
+GST_API
 gboolean       gst_memory_is_span      (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

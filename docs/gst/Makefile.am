@@ -25,7 +25,7 @@ DOC_SOURCE_DIR = $(top_srcdir)/gst
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED" \
-  --ignore-decorators='GST_EXPORT'
+  --ignore-decorators='GST_API'
 
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=parse

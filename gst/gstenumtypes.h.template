@@ -14,7 +14,7 @@ G_BEGIN_DECLS
 /*** END file-production ***/
 
 /*** BEGIN value-header ***/
-GST_EXPORT GType @enum_name@_get_type (void);
+GST_API GType @enum_name@_get_type (void);
 #define @ENUMPREFIX@_TYPE_@ENUMSHORT@ (@enum_name@_get_type ())
 /*** END value-header ***/
 

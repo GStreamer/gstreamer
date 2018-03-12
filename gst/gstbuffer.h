@@ -31,7 +31,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType _gst_buffer_type;
+GST_API GType _gst_buffer_type;
 
 typedef struct _GstBuffer GstBuffer;
 typedef struct _GstBufferPool GstBufferPool;
@@ -277,133 +277,133 @@ struct _GstBuffer {
   guint64                offset_end;
 };
 
-GST_EXPORT
+GST_API
 GType       gst_buffer_get_type            (void);
 
-GST_EXPORT
+GST_API
 guint       gst_buffer_get_max_memory      (void);
 
 /* allocation */
 
-GST_EXPORT
+GST_API
 GstBuffer * gst_buffer_new                 (void);
 
-GST_EXPORT
+GST_API
 GstBuffer * gst_buffer_new_allocate        (GstAllocator * allocator, gsize size,
                                             GstAllocationParams * params);
-GST_EXPORT
+GST_API
 GstBuffer * gst_buffer_new_wrapped_full    (GstMemoryFlags flags, gpointer data, gsize maxsize,
                                             gsize offset, gsize size, gpointer user_data,
                                             GDestroyNotify notify);
-GST_EXPORT
+GST_API
 GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 
 /* memory blocks */
 
-GST_EXPORT
+GST_API
 guint       gst_buffer_n_memory             (GstBuffer *buffer);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_insert_memory        (GstBuffer *buffer, gint idx, GstMemory *mem);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_replace_memory_range (GstBuffer *buffer, guint idx, gint length, GstMemory *mem);
 
-GST_EXPORT
+GST_API
 GstMemory * gst_buffer_peek_memory          (GstBuffer *buffer, guint idx);
 
-GST_EXPORT
+GST_API
 GstMemory * gst_buffer_get_memory_range     (GstBuffer *buffer, guint idx, gint length);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_remove_memory_range  (GstBuffer *buffer, guint idx, gint length);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_prepend_memory       (GstBuffer *buffer, GstMemory *mem);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_append_memory        (GstBuffer *buffer, GstMemory *mem);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_replace_memory       (GstBuffer *buffer, guint idx, GstMemory *mem);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_replace_all_memory   (GstBuffer *buffer, GstMemory *mem);
 
-GST_EXPORT
+GST_API
 GstMemory * gst_buffer_get_memory           (GstBuffer *buffer, guint idx);
 
-GST_EXPORT
+GST_API
 GstMemory * gst_buffer_get_all_memory       (GstBuffer *buffer);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_remove_memory        (GstBuffer *buffer, guint idx);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_remove_all_memory    (GstBuffer *buffer);
 
-GST_EXPORT
+GST_API
 gboolean    gst_buffer_find_memory         (GstBuffer *buffer, gsize offset, gsize size,
                                             guint *idx, guint *length, gsize *skip);
-GST_EXPORT
+GST_API
 gboolean    gst_buffer_is_memory_range_writable  (GstBuffer *buffer, guint idx, gint length);
 
-GST_EXPORT
+GST_API
 gboolean    gst_buffer_is_all_memory_writable    (GstBuffer *buffer);
 
-GST_EXPORT
+GST_API
 gsize       gst_buffer_fill                (GstBuffer *buffer, gsize offset,
                                             gconstpointer src, gsize size);
-GST_EXPORT
+GST_API
 gsize       gst_buffer_extract             (GstBuffer *buffer, gsize offset,
                                             gpointer dest, gsize size);
-GST_EXPORT
+GST_API
 gint        gst_buffer_memcmp              (GstBuffer *buffer, gsize offset,
                                             gconstpointer mem, gsize size);
-GST_EXPORT
+GST_API
 gsize       gst_buffer_memset              (GstBuffer *buffer, gsize offset,
                                             guint8 val, gsize size);
-GST_EXPORT
+GST_API
 gsize       gst_buffer_get_sizes_range     (GstBuffer *buffer, guint idx, gint length,
                                             gsize *offset, gsize *maxsize);
-GST_EXPORT
+GST_API
 gboolean    gst_buffer_resize_range        (GstBuffer *buffer, guint idx, gint length,
                                             gssize offset, gssize size);
-GST_EXPORT
+GST_API
 gsize       gst_buffer_get_sizes           (GstBuffer *buffer, gsize *offset, gsize *maxsize);
 
-GST_EXPORT
+GST_API
 gsize       gst_buffer_get_size            (GstBuffer *buffer);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gssize size);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_set_size            (GstBuffer *buffer, gssize size);
 
-GST_EXPORT
+GST_API
 gboolean    gst_buffer_map_range           (GstBuffer *buffer, guint idx, gint length,
                                             GstMapInfo *info, GstMapFlags flags);
-GST_EXPORT
+GST_API
 gboolean    gst_buffer_map                 (GstBuffer *buffer, GstMapInfo *info, GstMapFlags flags);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_unmap               (GstBuffer *buffer, GstMapInfo *info);
 
-GST_EXPORT
+GST_API
 void        gst_buffer_extract_dup         (GstBuffer *buffer, gsize offset,
                                             gsize size, gpointer *dest,
                                             gsize *dest_size);
-GST_EXPORT
+GST_API
 GstBufferFlags gst_buffer_get_flags        (GstBuffer * buffer);
 
-GST_EXPORT
+GST_API
 gboolean       gst_buffer_has_flags        (GstBuffer * buffer, GstBufferFlags flags);
 
-GST_EXPORT
+GST_API
 gboolean       gst_buffer_set_flags        (GstBuffer * buffer, GstBufferFlags flags);
 
-GST_EXPORT
+GST_API
 gboolean       gst_buffer_unset_flags      (GstBuffer * buffer, GstBufferFlags flags);
 
 
@@ -461,7 +461,7 @@ gst_buffer_copy (const GstBuffer * buf)
   return GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (buf)));
 }
 
-GST_EXPORT
+GST_API
 GstBuffer * gst_buffer_copy_deep (const GstBuffer * buf);
 
 /**
@@ -513,7 +513,7 @@ typedef enum {
 
 /* copies memory or metadata into newly allocated buffer */
 
-GST_EXPORT
+GST_API
 gboolean        gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src,
                                                  GstBufferCopyFlags flags,
                                                  gsize offset, gsize size);
@@ -579,16 +579,16 @@ gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf)
 
 /* creating a region */
 
-GST_EXPORT
+GST_API
 GstBuffer*      gst_buffer_copy_region          (GstBuffer *parent, GstBufferCopyFlags flags,
                                                  gsize offset, gsize size);
 
 /* append two buffers */
 
-GST_EXPORT
+GST_API
 GstBuffer*      gst_buffer_append_region        (GstBuffer *buf1, GstBuffer *buf2,
                                                  gssize offset, gssize size);
-GST_EXPORT
+GST_API
 GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf2);
 
 /* metadata */
@@ -615,26 +615,26 @@ GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf
 typedef gboolean (*GstBufferForeachMetaFunc)    (GstBuffer *buffer, GstMeta **meta,
                                                  gpointer user_data);
 
-GST_EXPORT
+GST_API
 GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, GType api);
 
-GST_EXPORT
+GST_API
 guint           gst_buffer_get_n_meta           (GstBuffer *buffer, GType api_type);
 
-GST_EXPORT
+GST_API
 GstMeta *       gst_buffer_add_meta             (GstBuffer *buffer, const GstMetaInfo *info,
                                                  gpointer params);
-GST_EXPORT
+GST_API
 gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, GstMeta *meta);
 
-GST_EXPORT
+GST_API
 GstMeta *       gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
 
-GST_EXPORT
+GST_API
 GstMeta *       gst_buffer_iterate_meta_filtered (GstBuffer * buffer,
                                                   gpointer  * state,
                                                   GType       meta_api_type);
-GST_EXPORT
+GST_API
 gboolean        gst_buffer_foreach_meta         (GstBuffer *buffer,
                                                  GstBufferForeachMetaFunc func,
                                                  gpointer user_data);
@@ -693,7 +693,7 @@ struct _GstParentBufferMeta
   GstBuffer *buffer;
 };
 
-GST_EXPORT
+GST_API
 GType gst_parent_buffer_meta_api_get_type (void);
 #ifndef GST_DISABLE_DEPRECATED
 #define GST_TYPE_PARENT_BUFFER_META_API_TYPE GST_PARENT_BUFFER_META_API_TYPE
@@ -710,13 +710,13 @@ GType gst_parent_buffer_meta_api_get_type (void);
 #define gst_buffer_get_parent_buffer_meta(b) \
   ((GstParentBufferMeta*)gst_buffer_get_meta((b),GST_PARENT_BUFFER_META_API_TYPE))
 
-GST_EXPORT
+GST_API
 const GstMetaInfo *gst_parent_buffer_meta_get_info (void);
 #define GST_PARENT_BUFFER_META_INFO (gst_parent_buffer_meta_get_info())
 
 /* implementation */
 
-GST_EXPORT
+GST_API
 GstParentBufferMeta *gst_buffer_add_parent_buffer_meta (GstBuffer *buffer,
     GstBuffer *ref);
 
@@ -751,23 +751,23 @@ struct _GstReferenceTimestampMeta
   GstClockTime timestamp, duration;
 };
 
-GST_EXPORT
+GST_API
 GType gst_reference_timestamp_meta_api_get_type (void);
 #define GST_REFERENCE_TIMESTAMP_META_API_TYPE (gst_reference_timestamp_meta_api_get_type())
 
-GST_EXPORT
+GST_API
 const GstMetaInfo *gst_reference_timestamp_meta_get_info (void);
 #define GST_REFERENCE_TIMESTAMP_META_INFO (gst_reference_timestamp_meta_get_info())
 
 /* implementation */
 
-GST_EXPORT
+GST_API
 GstReferenceTimestampMeta * gst_buffer_add_reference_timestamp_meta (GstBuffer  * buffer,
                                                                      GstCaps    * reference,
                                                                      GstClockTime timestamp,
                                                                      GstClockTime duration);
 
-GST_EXPORT
+GST_API
 GstReferenceTimestampMeta * gst_buffer_get_reference_timestamp_meta (GstBuffer * buffer,
                                                                      GstCaps   * reference);
 

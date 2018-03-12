@@ -125,15 +125,15 @@ struct _GstControlSourceClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_API
 GType          gst_control_source_get_type (void);
 
 /* Functions */
 
-GST_EXPORT
+GST_API
 gboolean       gst_control_source_get_value             (GstControlSource *self, GstClockTime timestamp,
                                                          gdouble *value);
-GST_EXPORT
+GST_API
 gboolean       gst_control_source_get_value_array       (GstControlSource *self, GstClockTime timestamp,
                                                          GstClockTime interval, guint n_values,
                                                          gdouble *values);
