@@ -1,7 +1,65 @@
+=== release 1.13.91 ===
+
+2018-03-13 19:30:43 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.13.91
+
+2018-03-13 13:58:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/docs/validate/meson.build:
+	* validate/gst/validate/Makefile.am:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-enum-types.h.template:
+	* validate/gst/validate/gst-validate-media-info.h:
+	* validate/gst/validate/gst-validate-monitor-factory.h:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override-registry.h:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.h:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/gst/validate/meson.build:
+	* validate/gst/validate/validate-prelude.h:
+	* validate/gst/validate/validate.h:
+	  validate: GST_EXPORT -> GST_VALIDATE_API
+	  We need different export decorators for the different libs.
+	  For now no actual change though, just rename before the release,
+	  and add prelude headers to define the new decorator to GST_EXPORT.
+
+2018-03-13 13:48:00 +0100  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	  debug-viewer: solved crash when maximum freq sentinel is 0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794282
+
+2018-03-12 12:11:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	  debug-viewer: Fix copying current line
+
+2018-03-12 11:18:02 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/MANIFEST.in:
+	* debug-viewer/org.freedesktop.GstDebugViewer.appdata.xml.in:
+	* debug-viewer/setup.cfg:
+	  debug-viewer: Add an appdata file
+
 === release 1.13.90 ===
 
 2018-03-03 22:54:57 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* validate/ChangeLog:
 	* validate/NEWS:
 	* validate/configure.ac:
 	* validate/gst-validate.doap:
