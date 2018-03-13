@@ -136,6 +136,7 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   GstMsdkMemoryID *mem_id;
   guint offset = 0;
   gint pitch = 0;
+  guint plane_id = plane;
 
   g_return_val_if_fail (mem, FALSE);
 
@@ -165,9 +166,14 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   mem->mapped++;
   mem_id = mem->surface->Data.MemId;
 
+  /* msdk doesn't support I420 format and we used YV12 internally
+   * So we need to swap U/V planes for mapping */
+  if (meta->format == GST_VIDEO_FORMAT_I420)
+    plane_id = plane ? (plane == 1 ? 2 : 1) : plane;
+
 #ifndef _WIN32
-  offset = mem_id->image.offsets[plane];
-  pitch = mem_id->image.pitches[plane];
+  offset = mem_id->image.offsets[plane_id];
+  pitch = mem_id->image.pitches[plane_id];
 #else
   /* TODO: This is just to avoid compile errors on Windows.
    * Implement handling Windows-specific video-memory.
