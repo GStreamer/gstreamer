@@ -67,9 +67,9 @@ struct _GESPitiviFormatterClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_GES_API
+GES_API
 GType ges_pitivi_formatter_get_type (void);
-GST_GES_API
+GES_API
 GESPitiviFormatter *ges_pitivi_formatter_new (void);
 
 G_END_DECLS

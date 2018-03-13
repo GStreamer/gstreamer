@@ -125,106 +125,106 @@ struct _GESTrackElementClass {
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
-GST_GES_API
+GES_API
 GType ges_track_element_get_type               (void);
 
-GST_GES_API
+GES_API
 GESTrack* ges_track_element_get_track          (GESTrackElement * object);
 
-GST_GES_API
+GES_API
 GESTrackType ges_track_element_get_track_type  (GESTrackElement * object);
-GST_GES_API
+GES_API
 void ges_track_element_set_track_type          (GESTrackElement * object,
                                                GESTrackType     type);
 
-GST_GES_API
+GES_API
 GstElement * ges_track_element_get_nleobject   (GESTrackElement * object);
-GST_GES_API
+GES_API
 GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 
-GST_GES_API
+GES_API
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
 
-GST_GES_API
+GES_API
 gboolean ges_track_element_set_active          (GESTrackElement * object,
                                                gboolean active);
 
-GST_GES_API
+GES_API
 gboolean ges_track_element_is_active           (GESTrackElement * object);
 
-GST_GES_API GParamSpec **
+GES_API GParamSpec **
 ges_track_element_list_children_properties     (GESTrackElement *object,
                                                guint *n_properties);
 
-GST_GES_API
+GES_API
 gboolean ges_track_element_lookup_child        (GESTrackElement *object,
                                                const gchar *prop_name,
                                                GstElement **element,
                                                GParamSpec **pspec);
 
-GST_GES_API void
+GES_API void
 ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
                                               GParamSpec * pspec,
                                               GValue * value);
 
-GST_GES_API void
+GES_API void
 ges_track_element_get_child_property_valist   (GESTrackElement * object,
                                               const gchar * first_property_name,
                                               va_list var_args);
 
-GST_GES_API
+GES_API
 void ges_track_element_get_child_properties   (GESTrackElement *object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
-GST_GES_API void
+GES_API void
 ges_track_element_set_child_property_valist   (GESTrackElement * object,
                                               const gchar * first_property_name,
                                               va_list var_args);
 
-GST_GES_API void
+GES_API void
 ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
                                               GParamSpec * pspec,
                                               GValue * value);
 
-GST_GES_API
+GES_API
 void ges_track_element_set_child_properties   (GESTrackElement * object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
-GST_GES_API
+GES_API
 gboolean ges_track_element_set_child_property (GESTrackElement *object,
                                               const gchar *property_name,
                                               GValue * value);
 
-GST_GES_API
+GES_API
 gboolean ges_track_element_get_child_property (GESTrackElement *object,
                                               const gchar *property_name,
                                               GValue * value);
 
-GST_GES_API gboolean
+GES_API gboolean
 ges_track_element_edit                        (GESTrackElement * object,
                                               GList *layers, GESEditMode mode,
                                               GESEdge edge, guint64 position);
 
-GST_GES_API gboolean
+GES_API gboolean
 ges_track_element_set_control_source          (GESTrackElement *object,
                                                GstControlSource *source,
                                                const gchar *property_name,
                                                const gchar *binding_type);
 
-GST_GES_API GstControlBinding *
+GES_API GstControlBinding *
 ges_track_element_get_control_binding         (GESTrackElement *object,
                                                const gchar *property_name);
-GST_GES_API void
+GES_API void
 ges_track_element_add_children_props          (GESTrackElement *self,
                                                GstElement *element,
                                                const gchar ** wanted_categories,
                                                const gchar **blacklist,
                                                const gchar **whitelist);
-GST_GES_API GHashTable *
+GES_API GHashTable *
 ges_track_element_get_all_control_bindings    (GESTrackElement * trackelement);
-GST_GES_API gboolean
+GES_API gboolean
 ges_track_element_remove_control_binding      (GESTrackElement * object,
                                                const gchar * property_name);
 G_END_DECLS

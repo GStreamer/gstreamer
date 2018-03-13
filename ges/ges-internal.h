@@ -145,10 +145,10 @@ ges_asset_cache_put (GESAsset * asset, GTask *task);
 G_GNUC_INTERNAL gboolean
 ges_asset_cache_set_loaded(GType extractable_type, const gchar * id, GError *error);
 
-GST_GES_API GESAsset*
+GES_API GESAsset*
 ges_asset_cache_lookup(GType extractable_type, const gchar * id);
 
-GST_GES_API gboolean
+GES_API gboolean
 ges_asset_try_proxy (GESAsset *asset, const gchar *new_id);
 
 G_GNUC_INTERNAL gboolean

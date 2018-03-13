@@ -51,9 +51,9 @@ struct _GESGroupClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_GES_API
+GES_API
 GType ges_group_get_type          (void);
-GST_GES_API
+GES_API
 GESGroup *ges_group_new           (void);
 
 G_END_DECLS

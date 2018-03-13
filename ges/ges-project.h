@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 
 typedef struct _GESProjectPrivate GESProjectPrivate;
 
-GST_GES_API
+GES_API
 GType ges_project_get_type (void);
 
 struct _GESProject
@@ -75,53 +75,53 @@ struct _GESProjectClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_GES_API
+GES_API
 gboolean  ges_project_add_asset    (GESProject* project,
                                     GESAsset *asset);
-GST_GES_API
+GES_API
 gboolean  ges_project_remove_asset (GESProject *project,
                                     GESAsset * asset);
-GST_GES_API
+GES_API
 GList   * ges_project_list_assets  (GESProject * project,
                                     GType filter);
-GST_GES_API
+GES_API
 gboolean  ges_project_save         (GESProject * project,
                                     GESTimeline * timeline,
                                     const gchar *uri,
                                     GESAsset * formatter_asset,
                                     gboolean overwrite,
                                     GError **error);
-GST_GES_API
+GES_API
 gboolean  ges_project_load         (GESProject * project,
                                     GESTimeline * timeline,
                                     GError **error);
-GST_GES_API
+GES_API
 GESProject * ges_project_new       (const gchar *uri);
-GST_GES_API
+GES_API
 gchar      * ges_project_get_uri   (GESProject *project);
-GST_GES_API
+GES_API
 GESAsset   * ges_project_get_asset (GESProject * project,
                                     const gchar *id,
                                     GType extractable_type);
-GST_GES_API
+GES_API
 gboolean ges_project_create_asset  (GESProject * project,
                                     const gchar *id,
                                     GType extractable_type);
 
-GST_GES_API
+GES_API
 GESAsset * ges_project_create_asset_sync        (GESProject * project,
                                                  const gchar * id,
                                                  GType extractable_type,
                                                  GError **error);
-GST_GES_API
+GES_API
 GList * ges_project_get_loading_assets          (GESProject * project);
 
-GST_GES_API
+GES_API
 gboolean ges_project_add_encoding_profile       (GESProject *project,
                                                  GstEncodingProfile *profile);
-GST_GES_API
+GES_API
 const GList *ges_project_list_encoding_profiles (GESProject *project);
-GST_GES_API
+GES_API
 gboolean ges_add_missing_uri_relocation_uri    (const gchar * uri,
                                                 gboolean recurse);
 

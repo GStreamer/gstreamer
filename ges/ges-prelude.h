@@ -24,8 +24,8 @@
 
 #include <gst/gst.h>
 
-#ifndef GST_GES_API
-#define GST_GES_API GST_EXPORT
+#ifndef GES_API
+#define GES_API GST_EXPORT
 #endif
 
 #endif /* __GST_GES_PRELUDE_H__ */

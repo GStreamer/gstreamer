@@ -50,9 +50,9 @@ struct _GESCommandLineFormatter
     GESCommandLineFormatterPrivate *priv;
 };
 
-GST_GES_API
+GES_API
 GType ges_command_line_formatter_get_type (void);
-GST_GES_API
+GES_API
 gchar * ges_command_line_formatter_get_help (gint nargs, gchar ** commands);
 
 G_END_DECLS

@@ -88,7 +88,7 @@ struct _GESVideoSourceClass {
   } ABI;
 };
 
-GST_GES_API
+GES_API
 GType ges_video_source_get_type (void);
 
 G_END_DECLS

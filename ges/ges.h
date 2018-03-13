@@ -87,18 +87,18 @@
 G_BEGIN_DECLS
 
 
-GST_GES_API
+GES_API
 gboolean ges_init         (void);
-GST_GES_API
+GES_API
 gboolean ges_init_check (int *argc, char **argv[], GError ** err);
-GST_GES_API
+GES_API
 void     ges_deinit       (void);
-GST_GES_API
+GES_API
 void     ges_version      (guint * major, guint * minor, guint * micro,
                            guint * nano);
-GST_GES_API GOptionGroup *
+GES_API GOptionGroup *
 ges_init_get_option_group (void);
-GST_GES_API
+GES_API
 gboolean ges_validate_register_action_types (void);
 
 G_END_DECLS

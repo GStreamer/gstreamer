@@ -76,13 +76,13 @@ struct _GESEffectClass
 
 };
 
-GST_GES_API
+GES_API
 GType ges_effect_get_type (void);
 
-GST_GES_API GESEffect*
+GES_API GESEffect*
 ges_effect_new (const gchar * bin_description);
 
-GST_GES_API gboolean
+GES_API gboolean
 ges_effect_class_register_rate_property (GESEffectClass *klass, const gchar *element_name, const gchar *property_name);
 
 G_END_DECLS

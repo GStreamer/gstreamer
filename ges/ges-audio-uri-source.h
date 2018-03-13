@@ -69,7 +69,7 @@ struct _GESAudioUriSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_GES_API
+GES_API
 GType ges_audio_uri_source_get_type (void);
 
 G_END_DECLS

@@ -99,66 +99,66 @@ struct _GESTimelineClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_GES_API
+GES_API
 GType ges_timeline_get_type (void);
 
-GST_GES_API
+GES_API
 GESTimeline* ges_timeline_new (void);
-GST_GES_API
+GES_API
 GESTimeline* ges_timeline_new_from_uri (const gchar *uri, GError **error);
 
-GST_GES_API
+GES_API
 gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri, GError **error);
-GST_GES_API
+GES_API
 gboolean ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
     GESAsset *formatter_asset, gboolean overwrite, GError ** error);
-GST_GES_API
+GES_API
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESLayer *layer);
-GST_GES_API
+GES_API
 GESLayer * ges_timeline_append_layer (GESTimeline * timeline);
-GST_GES_API
+GES_API
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESLayer *layer);
-GST_GES_API
+GES_API
 GList* ges_timeline_get_layers (GESTimeline *timeline);
-GST_GES_API
+GES_API
 GESLayer* ges_timeline_get_layer (GESTimeline *timeline, guint priority);
 
-GST_GES_API
+GES_API
 gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
-GST_GES_API
+GES_API
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 
-GST_GES_API
+GES_API
 GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
-GST_GES_API
+GES_API
 GstPad * ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack *track);
-GST_GES_API
+GES_API
 GList *ges_timeline_get_tracks (GESTimeline *timeline);
 
-GST_GES_API
+GES_API
 GList* ges_timeline_get_groups (GESTimeline * timeline);
 
-GST_GES_API
+GES_API
 gboolean ges_timeline_commit (GESTimeline * timeline);
-GST_GES_API
+GES_API
 gboolean ges_timeline_commit_sync (GESTimeline * timeline);
 
-GST_GES_API
+GES_API
 GstClockTime ges_timeline_get_duration (GESTimeline *timeline);
 
-GST_GES_API
+GES_API
 gboolean ges_timeline_get_auto_transition (GESTimeline * timeline);
-GST_GES_API
+GES_API
 void ges_timeline_set_auto_transition (GESTimeline * timeline, gboolean auto_transition);
-GST_GES_API
+GES_API
 GstClockTime ges_timeline_get_snapping_distance (GESTimeline * timeline);
-GST_GES_API
+GES_API
 void ges_timeline_set_snapping_distance (GESTimeline * timeline, GstClockTime snapping_distance);
-GST_GES_API
+GES_API
 GESTimelineElement * ges_timeline_get_element (GESTimeline * timeline, const gchar *name);
-GST_GES_API
+GES_API
 gboolean ges_timeline_is_empty (GESTimeline * timeline);
-GST_GES_API
+GES_API
 GESTimelineElement * ges_timeline_paste_element (GESTimeline * timeline,
   GESTimelineElement * element, GstClockTime position, gint layer_priority);
 
