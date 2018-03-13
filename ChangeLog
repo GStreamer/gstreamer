@@ -1,7 +1,47 @@
+=== release 1.13.91 ===
+
+2018-03-13 19:17:58 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.13.91
+
+2018-03-13 19:17:58 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2018-03-12 20:19:19 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	  docs: plugins: minor addition to plugins list
+
+2018-03-08 10:12:16 +0100  Michael Tretter <m.tretter@pengutronix.de>
+
+	* configure.ac:
+	  configure.ac: enable largefile support if possible
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793103
+
 === release 1.13.90 ===
 
 2018-03-03 22:24:28 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
