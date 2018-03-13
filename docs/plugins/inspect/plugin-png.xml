@@ -3,7 +3,7 @@
   <description>PNG plugin library</description>
   <filename>../../ext/libpng/.libs/libgstpng.so</filename>
   <basename>libgstpng.so</basename>
-  <version>1.13.90</version>
+  <version>1.13.91</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

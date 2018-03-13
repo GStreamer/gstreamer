@@ -3,7 +3,7 @@
   <description>JPeg plugin library</description>
   <filename>../../ext/jpeg/.libs/libgstjpeg.so</filename>
   <basename>libgstjpeg.so</basename>
-  <version>1.13.90</version>
+  <version>1.13.91</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
