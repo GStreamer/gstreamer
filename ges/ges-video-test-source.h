@@ -67,13 +67,13 @@ struct _GESVideoTestSourceClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_video_test_source_get_type (void);
 
-GST_EXPORT void
+GST_GES_API void
 ges_video_test_source_set_pattern(GESVideoTestSource *self,
 					GESVideoTestPattern pattern);
-GST_EXPORT GESVideoTestPattern
+GST_GES_API GESVideoTestPattern
 ges_video_test_source_get_pattern (GESVideoTestSource *source);
 
 G_END_DECLS

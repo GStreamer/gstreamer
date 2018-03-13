@@ -54,7 +54,7 @@ struct _GESEffectAsset
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_effect_asset_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS

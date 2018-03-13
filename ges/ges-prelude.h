@@ -1,6 +1,7 @@
-/* GStreamer Editing Services
- * Copyright (C) 2010 Brandon Lewis <brandon.lewis@collabora.co.uk>
- *               2010 Nokia Corporation
+/* GStreamer GES Library
+ * Copyright (C) 2018 GStreamer developers
+ *
+ * ges-prelude.h: prelude include header for gst-ges library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,17 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_SCREENSHOT_H__
-#define __GES_SCREENSHOT_H__
+#ifndef __GST_GES_PRELUDE_H__
+#define __GST_GES_PRELUDE_H__
 
 #include <gst/gst.h>
-#include <ges/ges-prelude.h>
 
-G_BEGIN_DECLS
+#ifndef GST_GES_API
+#define GST_GES_API GST_EXPORT
+#endif
 
-GST_GES_API GstSample *
-ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps);
-
-G_END_DECLS
-
-#endif /* __GES_SCREENSHOT_H__ */
+#endif /* __GST_GES_PRELUDE_H__ */

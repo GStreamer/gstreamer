@@ -71,66 +71,66 @@ struct _GESTitleClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_title_clip_get_type (void);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_text( GESTitleClip * self,
     const gchar * text);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_font_desc (GESTitleClip * self,
     const gchar * font_desc);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_valignment (GESTitleClip * self,
     GESTextVAlign valign);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_halignment (GESTitleClip * self,
     GESTextHAlign halign);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_color (GESTitleClip * self,
     guint32 color);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_background (GESTitleClip * self,
     guint32 background);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_xpos (GESTitleClip * self,
     gdouble position);
 
-GST_EXPORT void
+GST_GES_API void
 ges_title_clip_set_ypos (GESTitleClip * self,
     gdouble position);
 
-GST_EXPORT const gchar*
+GST_GES_API const gchar*
 ges_title_clip_get_font_desc (GESTitleClip * self);
 
-GST_EXPORT GESTextVAlign
+GST_GES_API GESTextVAlign
 ges_title_clip_get_valignment (GESTitleClip * self);
 
-GST_EXPORT GESTextHAlign
+GST_GES_API GESTextHAlign
 ges_title_clip_get_halignment (GESTitleClip * self);
 
-GST_EXPORT const guint32
+GST_GES_API const guint32
 ges_title_clip_get_text_color (GESTitleClip * self);
 
-GST_EXPORT const guint32
+GST_GES_API const guint32
 ges_title_clip_get_background_color (GESTitleClip * self);
 
-GST_EXPORT const gdouble
+GST_GES_API const gdouble
 ges_title_clip_get_xpos (GESTitleClip * self);
 
-GST_EXPORT const gdouble
+GST_GES_API const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self);
 
-GST_EXPORT
+GST_GES_API
 const gchar* ges_title_clip_get_text (GESTitleClip * self);
 
-GST_EXPORT
+GST_GES_API
 GESTitleClip* ges_title_clip_new (void);
 
 G_END_DECLS

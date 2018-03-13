@@ -20,7 +20,7 @@ gnome.gtkdoc('ges',
   main_sgml : 'ges-docs.sgml',
   src_dir : '@0@/../../ges'.format(meson.current_source_dir()),
   scan_args : ['--deprecated-guards=GST_DISABLE_DEPRECATED',
-            '--ignore-decorators=GST_EXPORT',
+            '--ignore-decorators=GES_API',
             '--ignore-headers=gesmarshal.h ges-internal.h ges-auto-transition.h ges-structured-interface.h ges-structure-parser.h ges-smart-video-mixer.h gstframepositioner.h'
             ],
   scanobjs_args : ['--type-init-func="gst_init(NULL,NULL)"'],

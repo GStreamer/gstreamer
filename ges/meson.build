@@ -67,6 +67,7 @@ ges_sources = [
 ges_headers = [
     'ges-types.h',
     'ges.h',
+    'ges-prelude.h',
     'ges-enums.h',
     'ges-gerror.h',
     'ges-meta-container.h',

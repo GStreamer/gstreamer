@@ -75,7 +75,7 @@ struct _GESSourceClipClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_source_clip_get_type (void);
 
 G_END_DECLS

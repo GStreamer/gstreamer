@@ -64,7 +64,7 @@ struct _GESBaseXmlFormatterClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_base_xml_formatter_get_type    (void);
 
 G_END_DECLS

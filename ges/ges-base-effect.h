@@ -68,7 +68,7 @@ struct _GESBaseEffectClass
 
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_base_effect_get_type (void);
 
 G_END_DECLS

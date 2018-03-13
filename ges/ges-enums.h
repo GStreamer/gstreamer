@@ -22,11 +22,12 @@
 #define __GES_ENUMS_H__
 
 #include <gst/gst.h>
+#include <ges/ges-prelude.h>
 
 G_BEGIN_DECLS
 
 #define GES_TYPE_TRACK_TYPE (ges_track_type_get_type ())
-GST_EXPORT
+GST_GES_API
 GType ges_track_type_get_type (void);
 
 /**
@@ -54,7 +55,7 @@ typedef enum {
 } GESTrackType;
 
 #define GES_META_FLAG_TYPE (ges_meta_flag_get_type ())
-GST_EXPORT
+GST_GES_API
 GType ges_meta_flag_get_type (void);
 
 /**
@@ -224,7 +225,7 @@ typedef enum {
 #define GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE \
     (ges_video_standard_transition_type_get_type())
 
-GST_EXPORT
+GST_GES_API
 GType ges_video_standard_transition_type_get_type (void);
 
 /**
@@ -251,7 +252,7 @@ typedef enum {
 #define GES_TEXT_VALIGN_TYPE\
   (ges_text_valign_get_type ())
 
-GST_EXPORT
+GST_GES_API
 GType ges_text_valign_get_type (void);
 
 /**
@@ -276,7 +277,7 @@ typedef enum {
 #define GES_TEXT_HALIGN_TYPE\
   (ges_text_halign_get_type ())
 
-GST_EXPORT
+GST_GES_API
 GType ges_text_halign_get_type (void);
 
 /**
@@ -328,7 +329,7 @@ typedef enum {
 #define GES_VIDEO_TEST_PATTERN_TYPE\
   ges_video_test_pattern_get_type()
 
-GST_EXPORT
+GST_GES_API
 GType ges_video_test_pattern_get_type (void);
 
 /**
@@ -352,7 +353,7 @@ typedef enum {
 #define GES_TYPE_PIPELINE_FLAGS\
   ges_pipeline_flags_get_type()
 
-GST_EXPORT
+GST_GES_API
 GType ges_pipeline_flags_get_type (void);
 
 /**
@@ -393,7 +394,7 @@ typedef enum {
 
 #define GES_TYPE_EDIT_MODE ges_edit_mode_get_type()
 
-GST_EXPORT
+GST_GES_API
 GType ges_edit_mode_get_type (void);
 
 /**
@@ -413,11 +414,11 @@ typedef enum {
 
 #define GES_TYPE_EDGE ges_edge_get_type()
 
-GST_EXPORT
+GST_GES_API
 GType ges_edge_get_type (void);
 
 
-GST_EXPORT
+GST_GES_API
 const gchar * ges_track_type_name (GESTrackType type);
 G_END_DECLS
 

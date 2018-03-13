@@ -61,10 +61,10 @@ struct _GESSmartAdder
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GType         ges_smart_adder_get_type (void) G_GNUC_CONST;
 
-GST_EXPORT
+GST_GES_API
 GstElement*   ges_smart_adder_new      (GESTrack *track);
 
 G_END_DECLS

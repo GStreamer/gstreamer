@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 #define GES_IS_EXTRACTABLE(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_EXTRACTABLE))
 #define GES_EXTRACTABLE_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GES_TYPE_EXTRACTABLE, GESExtractableInterface))
 
-GST_EXPORT
+GST_GES_API
 GType ges_extractable_get_type (void);
 
 /**
@@ -85,13 +85,13 @@ struct _GESExtractableInterface
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GESAsset* ges_extractable_get_asset      (GESExtractable *self);
-GST_EXPORT
+GST_GES_API
 gboolean ges_extractable_set_asset              (GESExtractable *self,
                                                 GESAsset *asset);
 
-GST_EXPORT
+GST_GES_API
 gchar * ges_extractable_get_id                 (GESExtractable *self);
 
 G_END_DECLS

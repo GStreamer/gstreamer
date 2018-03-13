@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 
 typedef struct _GESUriClipAssetPrivate GESUriClipAssetPrivate;
 
-GST_EXPORT
+GST_GES_API
 GType ges_uri_clip_asset_get_type (void);
 
 struct _GESUriClipAsset
@@ -68,23 +68,23 @@ struct _GESUriClipAssetClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GST_EXPORT
+GST_GES_API
 GstDiscovererInfo *ges_uri_clip_asset_get_info      (const GESUriClipAsset * self);
-GST_EXPORT
+GST_GES_API
 GstClockTime ges_uri_clip_asset_get_duration        (GESUriClipAsset *self);
-GST_EXPORT
+GST_GES_API
 gboolean ges_uri_clip_asset_is_image                (GESUriClipAsset *self);
-GST_EXPORT
+GST_GES_API
 void ges_uri_clip_asset_new                         (const gchar *uri,
                                                      GCancellable *cancellable,
                                                      GAsyncReadyCallback callback,
                                                      gpointer user_data);
-GST_EXPORT
+GST_GES_API
 GESUriClipAsset* ges_uri_clip_asset_request_sync    (const gchar *uri, GError **error);
-GST_EXPORT
+GST_GES_API
 void ges_uri_clip_asset_class_set_timeout           (GESUriClipAssetClass *klass,
                                                      GstClockTime timeout);
-GST_EXPORT
+GST_GES_API
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
 #define GES_TYPE_URI_SOURCE_ASSET ges_uri_source_asset_get_type()
@@ -101,7 +101,7 @@ const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
 typedef struct _GESUriSourceAssetPrivate GESUriSourceAssetPrivate;
 
-GST_EXPORT
+GST_GES_API
 GType ges_uri_source_asset_get_type (void);
 
 struct _GESUriSourceAsset
@@ -121,11 +121,11 @@ struct _GESUriSourceAssetClass
 
   gpointer _ges_reserved[GES_PADDING];
 };
-GST_EXPORT
+GST_GES_API
 GstDiscovererStreamInfo * ges_uri_source_asset_get_stream_info     (GESUriSourceAsset *asset);
-GST_EXPORT
+GST_GES_API
 const gchar * ges_uri_source_asset_get_stream_uri                  (GESUriSourceAsset *asset);
-GST_EXPORT
+GST_GES_API
 const GESUriClipAsset *ges_uri_source_asset_get_filesource_asset   (GESUriSourceAsset *asset);
 
 G_END_DECLS

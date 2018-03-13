@@ -22,6 +22,7 @@
 #define __GES_TYPES_H__
 
 #include <glib.h>
+#include <ges/ges-prelude.h>
 
 G_BEGIN_DECLS
 

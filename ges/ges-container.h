@@ -134,22 +134,22 @@ struct _GESContainerClass
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
-GST_EXPORT
+GST_GES_API
 GType ges_container_get_type (void);
 
 /* Children handling */
-GST_EXPORT
+GST_GES_API
 GList* ges_container_get_children (GESContainer *container, gboolean recursive);
-GST_EXPORT
+GST_GES_API
 gboolean ges_container_add        (GESContainer *container, GESTimelineElement *child);
-GST_EXPORT
+GST_GES_API
 gboolean ges_container_remove     (GESContainer *container, GESTimelineElement *child);
-GST_EXPORT
+GST_GES_API
 GList * ges_container_ungroup     (GESContainer * container, gboolean recursive);
-GST_EXPORT
+GST_GES_API
 GESContainer *ges_container_group (GList *containers);
 
-GST_EXPORT
+GST_GES_API
 gboolean ges_container_edit       (GESContainer * container,
                                    GList * layers, gint new_layer_priority,
                                    GESEditMode mode,
