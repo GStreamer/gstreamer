@@ -7855,7 +7855,7 @@
         </parameters>
       </method>
     </boxed>
-    <boxed name="Message" cname="GstMessage" opaque="true" hidden="false" parent="GstMiniObject">
+    <boxed name="Message" cname="GstMessage" opaque="true" hidden="false" name_constructors="true" parent="GstMiniObject">
       <method name="GetType" cname="gst_message_get_type" shared="true">
         <return-type type="GType" />
       </method>

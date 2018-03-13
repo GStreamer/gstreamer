@@ -55,6 +55,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	</add-node>
 
 	<attr path="/api/namespace/boxed[@cname='GstEvent']" name="name_constructors">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstMessage']" name="name_constructors">true</attr>
 
 	<!-- Explicitly declare GstSample as a GstMiniObject (the opaque struct definition doesn't have GObject-Introspection
 	     annotations) to get ref-counting to work.

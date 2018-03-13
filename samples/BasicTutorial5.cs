@@ -181,7 +181,7 @@ namespace GstreamerSharp
 		static void HandleTags (object sender, GLib.SignalArgs args) {
 			// We are possibly in the Gstreamer working thread, so we notify the main thread of this event through a message in the bus
 			var s = new Structure ("tags-changed");
-			Playbin.PostMessage (new Message (Playbin, s));
+			Playbin.PostMessage (Message.NewApplication (Playbin, s));
 		}
 
 		// This function is called when an error message is posted on the bus

@@ -561,67 +561,75 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_application(IntPtr src, IntPtr structure);
 
-		public Message (Gst.Object src, Gst.Structure structure) 
+		public static Message NewApplication(Gst.Object src, Gst.Structure structure)
 		{
 			structure.Owned = false;
-			Raw = gst_message_new_application(src == null ? IntPtr.Zero : src.Handle, structure == null ? IntPtr.Zero : structure.Handle);
+			Message result = new Message (gst_message_new_application(src == null ? IntPtr.Zero : src.Handle, structure == null ? IntPtr.Zero : structure.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_async_done(IntPtr src, ulong running_time);
 
-		public Message (Gst.Object src, ulong running_time) 
+		public static Message NewAsyncDone(Gst.Object src, ulong running_time)
 		{
-			Raw = gst_message_new_async_done(src == null ? IntPtr.Zero : src.Handle, running_time);
+			Message result = new Message (gst_message_new_async_done(src == null ? IntPtr.Zero : src.Handle, running_time));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_async_start(IntPtr src);
 
-		public Message (Gst.Object src) 
+		public static Message NewAsyncStart(Gst.Object src)
 		{
-			Raw = gst_message_new_async_start(src == null ? IntPtr.Zero : src.Handle);
+			Message result = new Message (gst_message_new_async_start(src == null ? IntPtr.Zero : src.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_buffering(IntPtr src, int percent);
 
-		public Message (Gst.Object src, int percent) 
+		public static Message NewBuffering(Gst.Object src, int percent)
 		{
-			Raw = gst_message_new_buffering(src == null ? IntPtr.Zero : src.Handle, percent);
+			Message result = new Message (gst_message_new_buffering(src == null ? IntPtr.Zero : src.Handle, percent));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_clock_lost(IntPtr src, IntPtr clock);
 
-		public Message (Gst.Object src, Gst.Clock clock) 
+		public static Message NewClockLost(Gst.Object src, Gst.Clock clock)
 		{
-			Raw = gst_message_new_clock_lost(src == null ? IntPtr.Zero : src.Handle, clock == null ? IntPtr.Zero : clock.Handle);
+			Message result = new Message (gst_message_new_clock_lost(src == null ? IntPtr.Zero : src.Handle, clock == null ? IntPtr.Zero : clock.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_clock_provide(IntPtr src, IntPtr clock, bool ready);
 
-		public Message (Gst.Object src, Gst.Clock clock, bool ready) 
+		public static Message NewClockProvide(Gst.Object src, Gst.Clock clock, bool ready)
 		{
-			Raw = gst_message_new_clock_provide(src == null ? IntPtr.Zero : src.Handle, clock == null ? IntPtr.Zero : clock.Handle, ready);
+			Message result = new Message (gst_message_new_clock_provide(src == null ? IntPtr.Zero : src.Handle, clock == null ? IntPtr.Zero : clock.Handle, ready));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_custom(int type, IntPtr src, IntPtr structure);
 
-		public Message (Gst.MessageType type, Gst.Object src, Gst.Structure structure) 
+		public static Message NewCustom(Gst.MessageType type, Gst.Object src, Gst.Structure structure)
 		{
 			structure.Owned = false;
-			Raw = gst_message_new_custom((int) type, src == null ? IntPtr.Zero : src.Handle, structure == null ? IntPtr.Zero : structure.Handle);
+			Message result = new Message (gst_message_new_custom((int) type, src == null ? IntPtr.Zero : src.Handle, structure == null ? IntPtr.Zero : structure.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_device_added(IntPtr src, IntPtr device);
 
-		public Message (Gst.Object src, Gst.Device device) 
+		public static Message NewDeviceAdded(Gst.Object src, Gst.Device device)
 		{
-			Raw = gst_message_new_device_added(src == null ? IntPtr.Zero : src.Handle, device == null ? IntPtr.Zero : device.Handle);
+			Message result = new Message (gst_message_new_device_added(src == null ? IntPtr.Zero : src.Handle, device == null ? IntPtr.Zero : device.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -664,32 +672,35 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_error(IntPtr src, IntPtr error, IntPtr debug);
 
-		public Message (Gst.Object src, IntPtr error, string debug) 
+		public static Message NewError(Gst.Object src, IntPtr error, string debug)
 		{
 			IntPtr native_debug = GLib.Marshaller.StringToPtrGStrdup (debug);
-			Raw = gst_message_new_error(src == null ? IntPtr.Zero : src.Handle, error, native_debug);
+			Message result = new Message (gst_message_new_error(src == null ? IntPtr.Zero : src.Handle, error, native_debug));
 			GLib.Marshaller.Free (native_debug);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_error_with_details(IntPtr src, IntPtr error, IntPtr debug, IntPtr details);
 
-		public Message (Gst.Object src, IntPtr error, string debug, Gst.Structure details) 
+		public static Message NewErrorWithDetails(Gst.Object src, IntPtr error, string debug, Gst.Structure details)
 		{
 			IntPtr native_debug = GLib.Marshaller.StringToPtrGStrdup (debug);
 			details.Owned = false;
-			Raw = gst_message_new_error_with_details(src == null ? IntPtr.Zero : src.Handle, error, native_debug, details == null ? IntPtr.Zero : details.Handle);
+			Message result = new Message (gst_message_new_error_with_details(src == null ? IntPtr.Zero : src.Handle, error, native_debug, details == null ? IntPtr.Zero : details.Handle));
 			GLib.Marshaller.Free (native_debug);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_have_context(IntPtr src, IntPtr context);
 
-		public Message (Gst.Object src, Gst.Context context) 
+		public static Message NewHaveContext(Gst.Object src, Gst.Context context)
 		{
 			IntPtr native_context = GLib.Marshaller.StructureToPtrAlloc (context);
-			Raw = gst_message_new_have_context(src == null ? IntPtr.Zero : src.Handle, native_context);
+			Message result = new Message (gst_message_new_have_context(src == null ? IntPtr.Zero : src.Handle, native_context));
 			Marshal.FreeHGlobal (native_context);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -727,11 +738,12 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_need_context(IntPtr src, IntPtr context_type);
 
-		public Message (Gst.Object src, string context_type) 
+		public static Message NewNeedContext(Gst.Object src, string context_type)
 		{
 			IntPtr native_context_type = GLib.Marshaller.StringToPtrGStrdup (context_type);
-			Raw = gst_message_new_need_context(src == null ? IntPtr.Zero : src.Handle, native_context_type);
+			Message result = new Message (gst_message_new_need_context(src == null ? IntPtr.Zero : src.Handle, native_context_type));
 			GLib.Marshaller.Free (native_context_type);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -746,53 +758,58 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_progress(IntPtr src, int type, IntPtr code, IntPtr text);
 
-		public Message (Gst.Object src, Gst.ProgressType type, string code, string text) 
+		public static Message NewProgress(Gst.Object src, Gst.ProgressType type, string code, string text)
 		{
 			IntPtr native_code = GLib.Marshaller.StringToPtrGStrdup (code);
 			IntPtr native_text = GLib.Marshaller.StringToPtrGStrdup (text);
-			Raw = gst_message_new_progress(src == null ? IntPtr.Zero : src.Handle, (int) type, native_code, native_text);
+			Message result = new Message (gst_message_new_progress(src == null ? IntPtr.Zero : src.Handle, (int) type, native_code, native_text));
 			GLib.Marshaller.Free (native_code);
 			GLib.Marshaller.Free (native_text);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_property_notify(IntPtr src, IntPtr property_name, IntPtr val);
 
-		public Message (Gst.Object src, string property_name, GLib.Value val) 
+		public static Message NewPropertyNotify(Gst.Object src, string property_name, GLib.Value val)
 		{
 			IntPtr native_property_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
 			IntPtr native_val = GLib.Marshaller.StructureToPtrAlloc (val);
-			Raw = gst_message_new_property_notify(src == null ? IntPtr.Zero : src.Handle, native_property_name, native_val);
+			Message result = new Message (gst_message_new_property_notify(src == null ? IntPtr.Zero : src.Handle, native_property_name, native_val));
 			GLib.Marshaller.Free (native_property_name);
 			Marshal.FreeHGlobal (native_val);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_qos(IntPtr src, bool live, ulong running_time, ulong stream_time, ulong timestamp, ulong duration);
 
-		public Message (Gst.Object src, bool live, ulong running_time, ulong stream_time, ulong timestamp, ulong duration) 
+		public static Message NewQos(Gst.Object src, bool live, ulong running_time, ulong stream_time, ulong timestamp, ulong duration)
 		{
-			Raw = gst_message_new_qos(src == null ? IntPtr.Zero : src.Handle, live, running_time, stream_time, timestamp, duration);
+			Message result = new Message (gst_message_new_qos(src == null ? IntPtr.Zero : src.Handle, live, running_time, stream_time, timestamp, duration));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_redirect(IntPtr src, IntPtr location, IntPtr tag_list, IntPtr entry_struct);
 
-		public Message (Gst.Object src, string location, Gst.TagList tag_list, Gst.Structure entry_struct) 
+		public static Message NewRedirect(Gst.Object src, string location, Gst.TagList tag_list, Gst.Structure entry_struct)
 		{
 			IntPtr native_location = GLib.Marshaller.StringToPtrGStrdup (location);
 			tag_list.Owned = false;
 			entry_struct.Owned = false;
-			Raw = gst_message_new_redirect(src == null ? IntPtr.Zero : src.Handle, native_location, tag_list == null ? IntPtr.Zero : tag_list.Handle, entry_struct == null ? IntPtr.Zero : entry_struct.Handle);
+			Message result = new Message (gst_message_new_redirect(src == null ? IntPtr.Zero : src.Handle, native_location, tag_list == null ? IntPtr.Zero : tag_list.Handle, entry_struct == null ? IntPtr.Zero : entry_struct.Handle));
 			GLib.Marshaller.Free (native_location);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_request_state(IntPtr src, int state);
 
-		public Message (Gst.Object src, Gst.State state) 
+		public static Message NewRequestState(Gst.Object src, Gst.State state)
 		{
-			Raw = gst_message_new_request_state(src == null ? IntPtr.Zero : src.Handle, (int) state);
+			Message result = new Message (gst_message_new_request_state(src == null ? IntPtr.Zero : src.Handle, (int) state));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -807,9 +824,10 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_segment_done(IntPtr src, int format, long position);
 
-		public Message (Gst.Object src, Gst.Format format, long position) 
+		public static Message NewSegmentDone(Gst.Object src, Gst.Format format, long position)
 		{
-			Raw = gst_message_new_segment_done(src == null ? IntPtr.Zero : src.Handle, (int) format, position);
+			Message result = new Message (gst_message_new_segment_done(src == null ? IntPtr.Zero : src.Handle, (int) format, position));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -824,9 +842,10 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_state_changed(IntPtr src, int oldstate, int newstate, int pending);
 
-		public Message (Gst.Object src, Gst.State oldstate, Gst.State newstate, Gst.State pending) 
+		public static Message NewStateChanged(Gst.Object src, Gst.State oldstate, Gst.State newstate, Gst.State pending)
 		{
-			Raw = gst_message_new_state_changed(src == null ? IntPtr.Zero : src.Handle, (int) oldstate, (int) newstate, (int) pending);
+			Message result = new Message (gst_message_new_state_changed(src == null ? IntPtr.Zero : src.Handle, (int) oldstate, (int) newstate, (int) pending));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -841,25 +860,28 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_step_done(IntPtr src, int format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos);
 
-		public Message (Gst.Object src, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos) 
+		public static Message NewStepDone(Gst.Object src, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate, ulong duration, bool eos)
 		{
-			Raw = gst_message_new_step_done(src == null ? IntPtr.Zero : src.Handle, (int) format, amount, rate, flush, intermediate, duration, eos);
+			Message result = new Message (gst_message_new_step_done(src == null ? IntPtr.Zero : src.Handle, (int) format, amount, rate, flush, intermediate, duration, eos));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_step_start(IntPtr src, bool active, int format, ulong amount, double rate, bool flush, bool intermediate);
 
-		public Message (Gst.Object src, bool active, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate) 
+		public static Message NewStepStart(Gst.Object src, bool active, Gst.Format format, ulong amount, double rate, bool flush, bool intermediate)
 		{
-			Raw = gst_message_new_step_start(src == null ? IntPtr.Zero : src.Handle, active, (int) format, amount, rate, flush, intermediate);
+			Message result = new Message (gst_message_new_step_start(src == null ? IntPtr.Zero : src.Handle, active, (int) format, amount, rate, flush, intermediate));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_stream_collection(IntPtr src, IntPtr collection);
 
-		public Message (Gst.Object src, Gst.StreamCollection collection) 
+		public static Message NewStreamCollection(Gst.Object src, Gst.StreamCollection collection)
 		{
-			Raw = gst_message_new_stream_collection(src == null ? IntPtr.Zero : src.Handle, collection == null ? IntPtr.Zero : collection.Handle);
+			Message result = new Message (gst_message_new_stream_collection(src == null ? IntPtr.Zero : src.Handle, collection == null ? IntPtr.Zero : collection.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -874,9 +896,10 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_stream_status(IntPtr src, int type, IntPtr owner);
 
-		public Message (Gst.Object src, Gst.StreamStatusType type, Gst.Element owner) 
+		public static Message NewStreamStatus(Gst.Object src, Gst.StreamStatusType type, Gst.Element owner)
 		{
-			Raw = gst_message_new_stream_status(src == null ? IntPtr.Zero : src.Handle, (int) type, owner == null ? IntPtr.Zero : owner.Handle);
+			Message result = new Message (gst_message_new_stream_status(src == null ? IntPtr.Zero : src.Handle, (int) type, owner == null ? IntPtr.Zero : owner.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -891,28 +914,31 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_structure_change(IntPtr src, int type, IntPtr owner, bool busy);
 
-		public Message (Gst.Object src, Gst.StructureChangeType type, Gst.Element owner, bool busy) 
+		public static Message NewStructureChange(Gst.Object src, Gst.StructureChangeType type, Gst.Element owner, bool busy)
 		{
-			Raw = gst_message_new_structure_change(src == null ? IntPtr.Zero : src.Handle, (int) type, owner == null ? IntPtr.Zero : owner.Handle, busy);
+			Message result = new Message (gst_message_new_structure_change(src == null ? IntPtr.Zero : src.Handle, (int) type, owner == null ? IntPtr.Zero : owner.Handle, busy));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_tag(IntPtr src, IntPtr tag_list);
 
-		public Message (Gst.Object src, Gst.TagList tag_list) 
+		public static Message NewTag(Gst.Object src, Gst.TagList tag_list)
 		{
 			tag_list.Owned = false;
-			Raw = gst_message_new_tag(src == null ? IntPtr.Zero : src.Handle, tag_list == null ? IntPtr.Zero : tag_list.Handle);
+			Message result = new Message (gst_message_new_tag(src == null ? IntPtr.Zero : src.Handle, tag_list == null ? IntPtr.Zero : tag_list.Handle));
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_new_toc(IntPtr src, IntPtr toc, bool updated);
 
-		public Message (Gst.Object src, Gst.Toc toc, bool updated) 
+		public static Message NewToc(Gst.Object src, Gst.Toc toc, bool updated)
 		{
 			IntPtr native_toc = GLib.Marshaller.StructureToPtrAlloc (toc);
-			Raw = gst_message_new_toc(src == null ? IntPtr.Zero : src.Handle, native_toc, updated);
+			Message result = new Message (gst_message_new_toc(src == null ? IntPtr.Zero : src.Handle, native_toc, updated));
 			Marshal.FreeHGlobal (native_toc);
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
