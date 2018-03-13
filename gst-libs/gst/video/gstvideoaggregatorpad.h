@@ -105,7 +105,7 @@ struct _GstVideoAggregatorPadClass
   gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
-GST_EXPORT
+GST_VIDEO_BAD_API
 GType gst_video_aggregator_pad_get_type (void);
 
 G_END_DECLS

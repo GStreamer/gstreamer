@@ -29,6 +29,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstaggregator.h>
+#include <gst/video/video-bad-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -111,7 +112,7 @@ struct _GstVideoAggregatorClass
   gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
 
-GST_EXPORT
+GST_VIDEO_BAD_API
 GType gst_video_aggregator_get_type       (void);
 
 G_END_DECLS

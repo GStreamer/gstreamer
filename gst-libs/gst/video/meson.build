@@ -3,7 +3,8 @@ badvideo_sources = [
 ]
 badvideo_headers = [
   'gstvideoaggregatorpad.h',
-  'gstvideoaggregator.h'
+  'gstvideoaggregator.h',
+  'video-bad-prelude.h',
 ]
 install_headers(badvideo_headers, subdir : 'gstreamer-1.0/gst/video')
 
