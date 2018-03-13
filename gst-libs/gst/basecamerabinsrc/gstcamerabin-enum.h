@@ -27,6 +27,7 @@
 #endif
 
 #include <gst/gst.h>
+#include "basecamerabinsrc-prelude.h"
 
 G_BEGIN_DECLS
 
@@ -55,7 +56,7 @@ typedef enum
 
 
 #define GST_TYPE_CAMERABIN_MODE (gst_camerabin_mode_get_type ())
-GST_EXPORT
+GST_BASE_CAMERA_BIN_SRC_API
 GType gst_camerabin_mode_get_type (void);
 
 G_END_DECLS

@@ -4,6 +4,7 @@ camerabin_sources = [
   'gstbasecamerasrc.c',
 ]
 camerabin_headers = [
+  'basecamerabinsrc-prelude.h',
   'gstcamerabin-enum.h',
   'gstcamerabinpreview.h',
   'gstbasecamerasrc.h',

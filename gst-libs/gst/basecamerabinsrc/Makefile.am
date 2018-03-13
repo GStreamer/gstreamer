@@ -10,6 +10,7 @@ libgstbasecamerabinsrc_@GST_API_VERSION@_la_SOURCES = \
 
 libgstbasecamerabinsrc_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/basecamerabinsrc
 libgstbasecamerabinsrc_@GST_API_VERSION@include_HEADERS = \
+	basecamerabinsrc-prelude.h \
 	gstcamerabin-enum.h \
 	gstcamerabinpreview.h \
 	gstbasecamerasrc.h
