@@ -4039,19 +4039,20 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   GSocket *socket;
-  const gchar *name;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
       family == G_SOCKET_FAMILY_IPV6, NULL);
-  g_return_val_if_fail (priv->udpsink[0], NULL);
 
+  g_mutex_lock (&priv->lock);
   if (family == G_SOCKET_FAMILY_IPV6)
-    name = "socket-v6";
+    socket = priv->socket_v6[0];
   else
-    name = "socket";
+    socket = priv->socket_v4[0];
 
-  g_object_get (priv->udpsink[0], name, &socket, NULL);
+  if (socket != NULL)
+    socket = g_object_ref (socket);
+  g_mutex_unlock (&priv->lock);
 
   return socket;
 }
@@ -4071,21 +4072,22 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
 GSocket *
 gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
+  GstRTSPStreamPrivate *priv = stream->priv;
   GSocket *socket;
-  const gchar *name;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
       family == G_SOCKET_FAMILY_IPV6, NULL);
-  g_return_val_if_fail (priv->udpsink[1], NULL);
 
+  g_mutex_lock (&priv->lock);
   if (family == G_SOCKET_FAMILY_IPV6)
-    name = "socket-v6";
+    socket = priv->socket_v6[1];
   else
-    name = "socket";
+    socket = priv->socket_v4[1];
 
-  g_object_get (priv->udpsink[1], name, &socket, NULL);
+  if (socket != NULL)
+    socket = g_object_ref (socket);
+  g_mutex_unlock (&priv->lock);
 
   return socket;
 }
@@ -4104,21 +4106,22 @@ GSocket *
 gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream,
     GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
+  GstRTSPStreamPrivate *priv = stream->priv;
   GSocket *socket;
-  const gchar *name;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
       family == G_SOCKET_FAMILY_IPV6, NULL);
-  g_return_val_if_fail (priv->mcast_udpsink[0], NULL);
 
+  g_mutex_lock (&priv->lock);
   if (family == G_SOCKET_FAMILY_IPV6)
-    name = "socket-v6";
+    socket = priv->mcast_socket_v6[0];
   else
-    name = "socket";
+    socket = priv->mcast_socket_v4[0];
 
-  g_object_get (priv->mcast_udpsink[0], name, &socket, NULL);
+  if (socket != NULL)
+    socket = g_object_ref (socket);
+  g_mutex_unlock (&priv->lock);
 
   return socket;
 }
@@ -4137,21 +4140,22 @@ GSocket *
 gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream,
     GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
+  GstRTSPStreamPrivate *priv = stream->priv;
   GSocket *socket;
-  const gchar *name;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
       family == G_SOCKET_FAMILY_IPV6, NULL);
-  g_return_val_if_fail (priv->mcast_udpsink[1], NULL);
 
+  g_mutex_lock (&priv->lock);
   if (family == G_SOCKET_FAMILY_IPV6)
-    name = "socket-v6";
+    socket = priv->mcast_socket_v6[1];
   else
-    name = "socket";
+    socket = priv->mcast_socket_v4[1];
 
-  g_object_get (priv->mcast_udpsink[1], name, &socket, NULL);
+  if (socket != NULL)
+    socket = g_object_ref (socket);
+  g_mutex_unlock (&priv->lock);
 
   return socket;
 }
