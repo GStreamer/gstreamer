@@ -1,6 +1,7 @@
-/*
- * GStreamer
- * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
+/* GStreamer GL Library
+ * Copyright (C) 2018 GStreamer developers
+ *
+ * gl-prelude.h: prelude include header for gst-gl library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,26 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_GL_SHADER_STRINGS_H__
-#define __GST_GL_SHADER_STRINGS_H__
+#ifndef __GST_GL_PRELUDE_H__
+#define __GST_GL_PRELUDE_H__
 
 #include <gst/gst.h>
-#include <gst/gl/gl-prelude.h>
 
-G_BEGIN_DECLS
+#ifndef GST_GL_API
+#define GST_GL_API GST_EXPORT
+#endif
 
-GST_GL_API
-const gchar *gst_gl_shader_string_vertex_default;
-GST_GL_API
-const gchar *gst_gl_shader_string_fragment_default;
-
-GST_GL_API
-const gchar *gst_gl_shader_string_vertex_mat4_texture_transform;
-GST_GL_API
-const gchar *gst_gl_shader_string_vertex_mat4_vertex_transform;
-GST_GL_API
-const gchar *gst_gl_shader_string_fragment_external_oes_default;
-
-G_END_DECLS
-
-#endif /* __GST_GL_SHADER_STRINGS_H__ */
+#endif /* __GST_GL_PRELUDE_H__ */

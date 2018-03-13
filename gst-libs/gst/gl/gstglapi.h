@@ -22,6 +22,7 @@
 #define __GST_GL_API_H__
 
 #include <gst/gl/gstglconfig.h>
+#include <gst/gl/gl-prelude.h>
 
 #include <gst/gst.h>
 
@@ -98,14 +99,14 @@ typedef enum
   GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;
 
-GST_EXPORT
+GST_GL_API
 gchar * gst_gl_api_to_string (GstGLAPI api);
-GST_EXPORT
+GST_GL_API
 GstGLAPI gst_gl_api_from_string (const gchar * api_s);
 
-GST_EXPORT
+GST_GL_API
 gchar * gst_gl_platform_to_string (GstGLPlatform platform);
-GST_EXPORT
+GST_GL_API
 GstGLPlatform gst_gl_platform_from_string (const gchar * platform_s);
 
 G_END_DECLS

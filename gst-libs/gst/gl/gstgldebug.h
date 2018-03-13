@@ -55,17 +55,17 @@ struct _GstGLAsyncDebug
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstGLAsyncDebug *   gst_gl_async_debug_new                      (void);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_async_debug_free                     (GstGLAsyncDebug * ad);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_async_debug_init                     (GstGLAsyncDebug * ad);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_async_debug_unset                    (GstGLAsyncDebug * ad);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_async_debug_freeze                   (GstGLAsyncDebug * ad);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug * ad);
 
 /**
@@ -119,12 +119,12 @@ GST_GL_ASYNC_CAT_LEVEL_LOG(GstGLAsyncDebug * ad, GstDebugCategory * cat,
 
 #if !defined(GST_DISABLE_GST_DEBUG)
 
-GST_EXPORT
+GST_GL_API
 void        gst_gl_insert_debug_marker              (GstGLContext * context,
                                                      const gchar * format, ...) G_GNUC_PRINTF (2, 3);
-GST_EXPORT
+GST_GL_API
 void        gst_gl_async_debug_output_log_msg       (GstGLAsyncDebug * ad);
-GST_EXPORT
+GST_GL_API
 void        gst_gl_async_debug_store_log_msg        (GstGLAsyncDebug * ad,
                                                      GstDebugCategory * cat,
                                                      GstDebugLevel level,
@@ -133,7 +133,7 @@ void        gst_gl_async_debug_store_log_msg        (GstGLAsyncDebug * ad,
                                                      gint line,
                                                      GObject * object,
                                                      const gchar * format, ...) G_GNUC_PRINTF (8, 9);
-GST_EXPORT
+GST_GL_API
 void        gst_gl_async_debug_store_log_msg_valist (GstGLAsyncDebug * ad,
                                                      GstDebugCategory * cat,
                                                      GstDebugLevel level,

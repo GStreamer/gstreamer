@@ -120,27 +120,27 @@ typedef enum
   GST_GL_DEPTH24_STENCIL8               = 0x88F0,
 } GstGLFormat;
 
-GST_EXPORT
+GST_GL_API
 guint                   gst_gl_format_type_n_bytes                  (guint format,
                                                                      guint type);
-GST_EXPORT
+GST_GL_API
 GstGLFormat             gst_gl_format_from_video_info               (GstGLContext * context,
                                                                      GstVideoInfo * vinfo,
                                                                      guint plane);
-GST_EXPORT
+GST_GL_API
 guint                   gst_gl_sized_gl_format_from_gl_format_type  (GstGLContext * context,
                                                                      guint format,
                                                                      guint type);
 
-GST_EXPORT
+GST_GL_API
 GstGLTextureTarget      gst_gl_texture_target_from_string           (const gchar * str);
-GST_EXPORT
+GST_GL_API
 const gchar *           gst_gl_texture_target_to_string             (GstGLTextureTarget target);
-GST_EXPORT
+GST_GL_API
 guint                   gst_gl_texture_target_to_gl                 (GstGLTextureTarget target);
-GST_EXPORT
+GST_GL_API
 GstGLTextureTarget      gst_gl_texture_target_from_gl               (guint target);
-GST_EXPORT
+GST_GL_API
 const gchar *           gst_gl_texture_target_to_buffer_pool_option (GstGLTextureTarget target);
 
 G_END_DECLS

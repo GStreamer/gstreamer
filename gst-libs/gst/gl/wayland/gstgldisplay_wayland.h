@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType gst_gl_display_wayland_get_type (void);
+GST_GL_API GType gst_gl_display_wayland_get_type (void);
 
 #define GST_TYPE_GL_DISPLAY_WAYLAND             (gst_gl_display_wayland_get_type())
 #define GST_GL_DISPLAY_WAYLAND(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY_WAYLAND,GstGLDisplayWayland))
@@ -71,10 +71,10 @@ struct _GstGLDisplayWaylandClass
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayWayland *gst_gl_display_wayland_new (const gchar * name);
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayWayland *gst_gl_display_wayland_new_with_display (struct wl_display *display);
 
 G_END_DECLS

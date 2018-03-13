@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_GL_API
 GType gst_gl_display_egl_get_type (void);
 
 #define GST_TYPE_GL_DISPLAY_EGL             (gst_gl_display_egl_get_type())
@@ -63,16 +63,16 @@ struct _GstGLDisplayEGLClass
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_new (void);
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (gpointer display);
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_from_gl_display (GstGLDisplay * display);
 
-GST_EXPORT
+GST_GL_API
 gpointer         gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display);
 
 #define GST_GL_DISPLAY_EGL_NAME "gst.gl.display.egl"

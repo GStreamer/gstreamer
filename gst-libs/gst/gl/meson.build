@@ -30,6 +30,7 @@ gl_sources = [
 
 gl_headers = [
   'gl.h',
+  'gl-prelude.h',
   'gstgl_enums.h',
   'gstgl_fwd.h',
   'gstglapi.h',

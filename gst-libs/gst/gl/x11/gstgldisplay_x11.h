@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_GL_API
 GType gst_gl_display_x11_get_type (void);
 
 #define GST_TYPE_GL_DISPLAY_X11             (gst_gl_display_x11_get_type())
@@ -68,10 +68,10 @@ struct _GstGLDisplayX11Class
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayX11 *gst_gl_display_x11_new (const gchar * name);
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplayX11 *gst_gl_display_x11_new_with_display (Display *display);
 
 G_END_DECLS

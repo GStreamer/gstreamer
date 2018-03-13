@@ -22,6 +22,7 @@
 #define _GST_EGL_H_
 
 #include <gst/gl/gstglconfig.h>
+#include <gst/gl/gl-prelude.h>
 
 #if GST_GL_HAVE_WINDOW_DISPMANX && defined(__GNUC__)
 #ifndef __VCCOREVER__
@@ -51,7 +52,7 @@
 typedef gintptr EGLAttrib;
 #endif
 
-GST_EXPORT
+GST_GL_API
 const gchar *   gst_egl_get_error_string             (EGLint err);
 
 #endif /* _GST_EGL_H_ */

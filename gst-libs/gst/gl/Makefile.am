@@ -67,6 +67,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglquery.h \
 	gstgl_fwd.h \
 	gstgl_enums.h \
+	gl-prelude.h \
 	gl.h
 
 noinst_HEADERS = \

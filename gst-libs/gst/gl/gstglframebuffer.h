@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_GL_API
 GType gst_gl_framebuffer_get_type (void);
 
 #define GST_TYPE_GL_FRAMEBUFFER             (gst_gl_framebuffer_get_type())
@@ -78,35 +78,35 @@ struct _GstGLFramebufferClass
   gpointer          _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstGLFramebuffer *      gst_gl_framebuffer_new                      (GstGLContext *context);
-GST_EXPORT
+GST_GL_API
 GstGLFramebuffer *      gst_gl_framebuffer_new_with_default_depth   (GstGLContext *context,
                                                                      guint width,
                                                                      guint height);
 
-GST_EXPORT
+GST_GL_API
 guint                   gst_gl_framebuffer_get_id                   (GstGLFramebuffer * fb);
 
-GST_EXPORT
+GST_GL_API
 void                    gst_gl_framebuffer_attach                   (GstGLFramebuffer * fb,
                                                                      guint attachment_point,
                                                                      GstGLBaseMemory * mem);
-GST_EXPORT
+GST_GL_API
 void                    gst_gl_framebuffer_bind                     (GstGLFramebuffer * fb);
-GST_EXPORT
+GST_GL_API
 void                    gst_gl_context_clear_framebuffer            (GstGLContext * context);
 
-GST_EXPORT
+GST_GL_API
 void                    gst_gl_framebuffer_get_effective_dimensions (GstGLFramebuffer * fb,
                                                                      guint * width,
                                                                      guint * height);
 
-GST_EXPORT
+GST_GL_API
 gboolean                gst_gl_context_check_framebuffer_status     (GstGLContext * context,
                                                                      guint fbo_target);
 
-GST_EXPORT
+GST_GL_API
 gboolean                gst_gl_framebuffer_draw_to_texture          (GstGLFramebuffer * fb,
                                                                      GstGLMemory * mem,
                                                                      GstGLFramebufferFunc func,

@@ -62,17 +62,17 @@ struct _GstGLSLStageClass
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GType          gst_glsl_stage_get_type          (void);
-GST_EXPORT
+GST_GL_API
 GstGLSLStage * gst_glsl_stage_new               (GstGLContext * context, guint type);
-GST_EXPORT
+GST_GL_API
 GstGLSLStage * gst_glsl_stage_new_with_string   (GstGLContext * context,
                                                  guint type,
                                                  GstGLSLVersion version,
                                                  GstGLSLProfile profile,
                                                  const gchar * str);
-GST_EXPORT
+GST_GL_API
 GstGLSLStage * gst_glsl_stage_new_with_strings  (GstGLContext * context,
                                                  guint type,
                                                  GstGLSLVersion version,
@@ -80,26 +80,26 @@ GstGLSLStage * gst_glsl_stage_new_with_strings  (GstGLContext * context,
                                                  gint n_strings,
                                                  const gchar ** str);
 
-GST_EXPORT
+GST_GL_API
 GstGLSLStage * gst_glsl_stage_new_default_fragment (GstGLContext * context);
-GST_EXPORT
+GST_GL_API
 GstGLSLStage * gst_glsl_stage_new_default_vertex   (GstGLContext * context);
 
-GST_EXPORT
+GST_GL_API
 guint          gst_glsl_stage_get_handle        (GstGLSLStage * stage);
-GST_EXPORT
+GST_GL_API
 GstGLSLProfile gst_glsl_stage_get_profile       (GstGLSLStage * stage);
-GST_EXPORT
+GST_GL_API
 GstGLSLVersion gst_glsl_stage_get_version       (GstGLSLStage * stage);
-GST_EXPORT
+GST_GL_API
 guint          gst_glsl_stage_get_shader_type   (GstGLSLStage * stage);
-GST_EXPORT
+GST_GL_API
 gboolean       gst_glsl_stage_set_strings       (GstGLSLStage * stage,
                                                  GstGLSLVersion version,
                                                  GstGLSLProfile profile,
                                                  gint n_strings,
                                                  const gchar ** str);
-GST_EXPORT
+GST_GL_API
 gboolean       gst_glsl_stage_compile           (GstGLSLStage * stage,
                                                  GError ** error);
 

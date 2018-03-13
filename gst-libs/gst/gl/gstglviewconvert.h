@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 #define GST_GL_VIEW_CONVERT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_VIEW_CONVERT,GstGLViewConvertClass))
 
 #define GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE gst_gl_stereo_downmix_mode_get_type()
-GST_EXPORT
+GST_GL_API
 GType gst_gl_stereo_downmix_mode_get_type (void);
 
 /**
@@ -106,31 +106,31 @@ struct _GstGLViewConvertClass
   gpointer                  _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GType gst_gl_view_convert_get_type (void);
-GST_EXPORT
+GST_GL_API
 GstGLViewConvert * gst_gl_view_convert_new (void);
 
-GST_EXPORT
+GST_GL_API
 gboolean  gst_gl_view_convert_set_caps (GstGLViewConvert * viewconvert, GstCaps * in_caps, GstCaps * out_caps);
-GST_EXPORT
+GST_GL_API
 GstCaps * gst_gl_view_convert_transform_caps (GstGLViewConvert * viewconvert,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-GST_EXPORT
+GST_GL_API
 GstCaps * gst_gl_view_convert_fixate_caps (GstGLViewConvert *viewconvert,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-GST_EXPORT
+GST_GL_API
 GstFlowReturn gst_gl_view_convert_submit_input_buffer (GstGLViewConvert *viewconvert,
     gboolean is_discont, GstBuffer * input);
-GST_EXPORT
+GST_GL_API
 GstFlowReturn gst_gl_view_convert_get_output (GstGLViewConvert *viewconvert,
     GstBuffer ** outbuf_ptr);
 
-GST_EXPORT
+GST_GL_API
 GstBuffer * gst_gl_view_convert_perform (GstGLViewConvert * viewconvert, GstBuffer *inbuf);
-GST_EXPORT
+GST_GL_API
 void gst_gl_view_convert_reset (GstGLViewConvert * viewconvert);
-GST_EXPORT
+GST_GL_API
 void gst_gl_view_convert_set_context (GstGLViewConvert *viewconvert, GstGLContext * context);
 
 G_END_DECLS

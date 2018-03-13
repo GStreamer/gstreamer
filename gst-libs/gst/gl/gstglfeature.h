@@ -54,7 +54,7 @@ G_BEGIN_DECLS
   ((driver_major) > (target_major) || \
    ((driver_major) == (target_major) && (driver_minor) >= (target_minor)))
 
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_check_extension (const char *name, const gchar * ext);
 
 G_END_DECLS

@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType gst_egl_image_get_type (void);
+GST_GL_API GType gst_egl_image_get_type (void);
 
 #define GST_TYPE_EGL_IMAGE                         (gst_egl_image_get_type())
 #define GST_IS_EGL_IMAGE(obj)                      (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_EGL_IMAGE))
@@ -68,27 +68,27 @@ struct _GstEGLImage
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstEGLImage *             gst_egl_image_new_wrapped             (GstGLContext * context,
                                                                  gpointer image,
                                                                  GstGLFormat format,
                                                                  gpointer user_data,
                                                                  GstEGLImageDestroyNotify user_data_destroy);
-GST_EXPORT
+GST_GL_API
 gpointer                gst_egl_image_get_image                 (GstEGLImage * image);
 
-GST_EXPORT
+GST_GL_API
 GstEGLImage *           gst_egl_image_from_texture              (GstGLContext * context,
                                                                  GstGLMemory * gl_mem,
                                                                  guintptr * attribs);
 #if GST_GL_HAVE_DMABUF
-GST_EXPORT
+GST_GL_API
 GstEGLImage *           gst_egl_image_from_dmabuf               (GstGLContext * context,
                                                                  gint dmabuf,
                                                                  GstVideoInfo * in_info,
                                                                  gint plane,
                                                                  gsize offset);
-GST_EXPORT
+GST_GL_API
 gboolean                gst_egl_image_export_dmabuf             (GstEGLImage *image, int *fd, gint *stride, gsize *offset);
 #endif
 

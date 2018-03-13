@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_GL_API
 GType gst_gl_display_get_type (void);
 
 #define GST_TYPE_GL_DISPLAY             (gst_gl_display_get_type())
@@ -100,22 +100,22 @@ struct _GstGLDisplayClass
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 GstGLDisplay *gst_gl_display_new (void);
 
 #define gst_gl_display_lock(display)        GST_OBJECT_LOCK (display)
 #define gst_gl_display_unlock(display)      GST_OBJECT_UNLOCK (display)
 
-GST_EXPORT
+GST_GL_API
 guintptr         gst_gl_display_get_handle             (GstGLDisplay * display);
-GST_EXPORT
+GST_GL_API
 GstGLDisplayType gst_gl_display_get_handle_type        (GstGLDisplay * display);
-GST_EXPORT
+GST_GL_API
 void             gst_gl_display_filter_gl_api          (GstGLDisplay * display,
                                                         GstGLAPI gl_api);
-GST_EXPORT
+GST_GL_API
 GstGLAPI         gst_gl_display_get_gl_api             (GstGLDisplay * display);
-GST_EXPORT
+GST_GL_API
 GstGLAPI         gst_gl_display_get_gl_api_unlocked    (GstGLDisplay * display);
 
 /**
@@ -124,26 +124,26 @@ GstGLAPI         gst_gl_display_get_gl_api_unlocked    (GstGLDisplay * display);
  * The name used in #GstContext queries for requesting a #GstGLDisplay
  */
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
-GST_EXPORT
+GST_GL_API
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);
-GST_EXPORT
+GST_GL_API
 gboolean gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display);
 
-GST_EXPORT
+GST_GL_API
 gboolean  gst_gl_display_create_context (GstGLDisplay * display,
     GstGLContext * other_context, GstGLContext ** p_context, GError **error);
-GST_EXPORT
+GST_GL_API
 GstGLContext * gst_gl_display_get_gl_context_for_thread (GstGLDisplay * display,
     GThread * thread);
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_display_add_context (GstGLDisplay * display,
     GstGLContext * context);
 
-GST_EXPORT
+GST_GL_API
 GstGLWindow *   gst_gl_display_create_window    (GstGLDisplay * display);
-GST_EXPORT
+GST_GL_API
 gboolean        gst_gl_display_remove_window    (GstGLDisplay * display, GstGLWindow * window);
-GST_EXPORT
+GST_GL_API
 GstGLWindow *   gst_gl_display_find_window      (GstGLDisplay * display, gpointer data, GCompareFunc compare_func);
 
 G_END_DECLS

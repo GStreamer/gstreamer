@@ -59,25 +59,25 @@ struct _GstGLQuery
   gpointer          _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 void                gst_gl_query_init               (GstGLQuery * query,
                                                      GstGLContext * context,
                                                      GstGLQueryType query_type);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_query_unset              (GstGLQuery * query);
-GST_EXPORT
+GST_GL_API
 GstGLQuery *        gst_gl_query_new                (GstGLContext * context,
                                                      GstGLQueryType query_type);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_query_free               (GstGLQuery * query);
 
-GST_EXPORT
+GST_GL_API
 void                gst_gl_query_start              (GstGLQuery * query);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_query_end                (GstGLQuery * query);
-GST_EXPORT
+GST_GL_API
 void                gst_gl_query_counter            (GstGLQuery * query);
-GST_EXPORT
+GST_GL_API
 guint64             gst_gl_query_result             (GstGLQuery * query);
 
 #define gst_gl_query_start_log_valist(query,cat,level,object,format,varargs) \

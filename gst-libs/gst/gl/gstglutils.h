@@ -28,35 +28,35 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_ensure_element_data (gpointer element,
     GstGLDisplay **display_ptr, GstGLContext ** other_context_ptr);
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context, 
     GstGLDisplay ** display, GstGLContext ** other_context);
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
     GstGLDisplay * display, GstGLContext * context, GstGLContext * other_context);
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_query_local_gl_context (GstElement * element, GstPadDirection direction,
     GstGLContext ** context_ptr);
 
-GST_EXPORT
+GST_GL_API
 void gst_gl_element_propagate_display_context (GstElement * element, GstGLDisplay * display);
 
-GST_EXPORT
+GST_GL_API
 gsize gst_gl_get_plane_data_size (GstVideoInfo * info, GstVideoAlignment * align,
     guint plane);
-GST_EXPORT
+GST_GL_API
 gsize gst_gl_get_plane_start (GstVideoInfo * info, GstVideoAlignment * valign,
     guint plane);
 
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_value_set_texture_target_from_mask (GValue * value,
     GstGLTextureTarget target_mask);
-GST_EXPORT
+GST_GL_API
 gboolean gst_gl_value_set_texture_target (GValue * value, GstGLTextureTarget target);
-GST_EXPORT
+GST_GL_API
 GstGLTextureTarget gst_gl_value_get_texture_target_mask (const GValue * value);
 
 G_END_DECLS

@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_GL_RENDERBUFFER_ALLOCATOR (gst_gl_renderbuffer_allocator_get_type())
-GST_EXPORT GType gst_gl_renderbuffer_allocator_get_type(void);
+GST_GL_API GType gst_gl_renderbuffer_allocator_get_type(void);
 
 #define GST_IS_GL_RENDERBUFFER_ALLOCATOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GL_RENDERBUFFER_ALLOCATOR))
 #define GST_IS_GL_RENDERBUFFER_ALLOCATOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GL_RENDERBUFFER_ALLOCATOR))
@@ -98,7 +98,7 @@ struct _GstGLRenderbufferAllocatorClass
 
 #include <gst/gl/gstglbasememory.h>
 
-GST_EXPORT GType gst_gl_renderbuffer_allocation_params_get_type (void);
+GST_GL_API GType gst_gl_renderbuffer_allocation_params_get_type (void);
 #define GST_TYPE_RENDERBUFFER_ALLOCATION_PARAMS (gst_gl_renderbuffer_allocation_params_get_type)
 
 typedef struct
@@ -113,14 +113,14 @@ typedef struct
   gpointer _padding[GST_PADDING];
 } GstGLRenderbufferAllocationParams;
 
-GST_EXPORT
+GST_GL_API
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new           (GstGLContext * context,
                                                                                              GstAllocationParams * alloc_params,
                                                                                              GstGLFormat renderbuffer_format,
                                                                                              guint width,
                                                                                              guint height);
 
-GST_EXPORT
+GST_GL_API
 GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_new_wrapped   (GstGLContext * context,
                                                                                              GstAllocationParams * alloc_params,
                                                                                              GstGLFormat renderbuffer_format,
@@ -130,23 +130,23 @@ GstGLRenderbufferAllocationParams *     gst_gl_renderbuffer_allocation_params_ne
                                                                                              gpointer user_data,
                                                                                              GDestroyNotify notify);
 
-GST_EXPORT
+GST_GL_API
 void            gst_gl_renderbuffer_init_once   (void);
 
-GST_EXPORT
+GST_GL_API
 gboolean        gst_is_gl_renderbuffer          (GstMemory * mem);
 
 /* accessors */
-GST_EXPORT
+GST_GL_API
 gint                    gst_gl_renderbuffer_get_width     (GstGLRenderbuffer * gl_mem);
 
-GST_EXPORT
+GST_GL_API
 gint                    gst_gl_renderbuffer_get_height    (GstGLRenderbuffer * gl_mem);
 
-GST_EXPORT
+GST_GL_API
 GstGLFormat             gst_gl_renderbuffer_get_format    (GstGLRenderbuffer * gl_mem);
 
-GST_EXPORT
+GST_GL_API
 guint                   gst_gl_renderbuffer_get_id        (GstGLRenderbuffer * gl_mem);
 
 G_END_DECLS
