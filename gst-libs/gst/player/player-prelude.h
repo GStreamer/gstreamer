@@ -1,6 +1,7 @@
-/* GStreamer
+/* GStreamer Player Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
+ * player-prelude.h: prelude include header for gst-player library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,14 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __PLAYER_H__
-#define __PLAYER_H__
+#ifndef __GST_PLAYER_PRELUDE_H__
+#define __GST_PLAYER_PRELUDE_H__
 
-#include <gst/player/player-prelude.h>
-#include <gst/player/gstplayer.h>
-#include <gst/player/gstplayer-media-info.h>
-#include <gst/player/gstplayer-g-main-context-signal-dispatcher.h>
-#include <gst/player/gstplayer-video-overlay-video-renderer.h>
-#include <gst/player/gstplayer-visualization.h>
+#include <gst/gst.h>
 
-#endif /* __PLAYER_H__ */
+#ifndef GST_PLAYER_API
+#define GST_PLAYER_API GST_EXPORT
+#endif
+
+#endif /* __GST_PLAYER_PRELUDE_H__ */

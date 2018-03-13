@@ -39,28 +39,28 @@ typedef struct _GstPlayerVideoOverlayVideoRendererClass
 #define GST_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER, GstPlayerVideoOverlayVideoRendererClass))
 #define GST_PLAYER_VIDEO_OVERLAY_VIDEO_RENDERER_CAST(obj)        ((GstPlayerVideoOverlayVideoRenderer*)(obj))
 
-GST_EXPORT
+GST_PLAYER_API
 GType gst_player_video_overlay_video_renderer_get_type (void);
 
-GST_EXPORT
+GST_PLAYER_API
 GstPlayerVideoRenderer * gst_player_video_overlay_video_renderer_new (gpointer window_handle);
 
-GST_EXPORT
+GST_PLAYER_API
 GstPlayerVideoRenderer * gst_player_video_overlay_video_renderer_new_with_sink (gpointer window_handle, GstElement * video_sink);
 
-GST_EXPORT
+GST_PLAYER_API
 void gst_player_video_overlay_video_renderer_set_window_handle (GstPlayerVideoOverlayVideoRenderer * self, gpointer window_handle);
 
-GST_EXPORT
+GST_PLAYER_API
 gpointer gst_player_video_overlay_video_renderer_get_window_handle (GstPlayerVideoOverlayVideoRenderer * self);
 
-GST_EXPORT
+GST_PLAYER_API
 void gst_player_video_overlay_video_renderer_expose (GstPlayerVideoOverlayVideoRenderer * self);
 
-GST_EXPORT
+GST_PLAYER_API
 void gst_player_video_overlay_video_renderer_set_render_rectangle (GstPlayerVideoOverlayVideoRenderer * self, gint x, gint y, gint width, gint height);
 
-GST_EXPORT
+GST_PLAYER_API
 void gst_player_video_overlay_video_renderer_get_render_rectangle (GstPlayerVideoOverlayVideoRenderer * self, gint *x, gint *y, gint *width, gint *height);
 
 G_END_DECLS

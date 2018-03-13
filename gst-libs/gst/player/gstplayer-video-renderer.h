@@ -40,7 +40,7 @@ struct _GstPlayerVideoRendererInterface {
   GstElement * (*create_video_sink) (GstPlayerVideoRenderer * self, GstPlayer * player);
 };
 
-GST_EXPORT
+GST_PLAYER_API
 GType        gst_player_video_renderer_get_type       (void);
 
 G_END_DECLS

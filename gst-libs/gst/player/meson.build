@@ -10,6 +10,7 @@ gstplayer_sources = [
 
 gstplayer_headers = [
   'player.h',
+  'player-prelude.h',
   'gstplayer.h',
   'gstplayer-types.h',
   'gstplayer-signal-dispatcher.h',

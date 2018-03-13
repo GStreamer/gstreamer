@@ -23,6 +23,7 @@
 #define __GST_PLAYER_VISUALIZATION_H__
 
 #include <gst/gst.h>
+#include <gst/player/player-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -39,19 +40,19 @@ struct _GstPlayerVisualization {
   gchar *description;
 };
 
-GST_EXPORT
+GST_PLAYER_API
 GType                     gst_player_visualization_get_type (void);
 
-GST_EXPORT
+GST_PLAYER_API
 GstPlayerVisualization *  gst_player_visualization_copy  (const GstPlayerVisualization *vis);
 
-GST_EXPORT
+GST_PLAYER_API
 void                      gst_player_visualization_free  (GstPlayerVisualization *vis);
 
-GST_EXPORT
+GST_PLAYER_API
 GstPlayerVisualization ** gst_player_visualizations_get  (void);
 
-GST_EXPORT
+GST_PLAYER_API
 void                      gst_player_visualizations_free (GstPlayerVisualization **viss);
 
 G_END_DECLS

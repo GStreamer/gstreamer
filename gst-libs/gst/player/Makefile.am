@@ -39,6 +39,7 @@ noinst_HEADERS = \
 
 libgstplayer_HEADERS = \
 	player.h \
+	player-prelude.h \
 	gstplayer.h \
 	gstplayer-types.h \
 	gstplayer-signal-dispatcher.h \

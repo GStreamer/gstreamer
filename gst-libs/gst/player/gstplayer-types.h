@@ -22,6 +22,7 @@
 #define __GST_PLAYER_TYPES_H__
 
 #include <gst/gst.h>
+#include <gst/player/player-prelude.h>
 
 G_BEGIN_DECLS
 
