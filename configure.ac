@@ -280,6 +280,13 @@ AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 ORC_CHECK([0.4.24])
 
+dnl For Requires.private in pkg-config files
+ORC_PC=
+if test x"$HAVE_ORC" = "xyes"; then
+    ORC_PC="orc-0.4"
+fi
+AC_SUBST(ORC_PC)
+
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)

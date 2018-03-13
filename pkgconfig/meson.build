@@ -7,6 +7,7 @@ pkgconf.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
 pkgconf.set('GST_API_VERSION', api_version)
 pkgconf.set('VERSION', gst_version)
 pkgconf.set('LIBM', libm.found() ? '-lm' : '')
+pkgconf.set('ORC_PC', have_orcc ? 'orc-0.4' : '')
 
 # needed for generating -uninstalled.pc files
 pkgconf.set('abs_top_builddir', join_paths(meson.current_build_dir(), '..'))

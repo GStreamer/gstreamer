@@ -11,6 +11,7 @@ Name: GStreamer Video Library, Uninstalled
 Description: Video base classes and helper functions, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
+Requires.private: @ORC_PC@
 Libs: -L${libdir} -lgstvideo-@GST_API_VERSION@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
