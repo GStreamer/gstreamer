@@ -74,7 +74,7 @@ struct _GstValidateOverride
   GstValidateOverridePriv *priv;
 };
 
-GST_EXPORT
+GST_VALIDATE_API
 GType gst_validate_override_get_type (void) G_GNUC_CONST;
 
 /* TYPE MACROS */
@@ -85,46 +85,46 @@ GType gst_validate_override_get_type (void) G_GNUC_CONST;
 #define GST_IS_VALIDATE_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VALIDATE_OVERRIDE))
 #define GST_VALIDATE_OVERRIDE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverrideClass))
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateOverride *    gst_validate_override_new (void);
 
 void               gst_validate_override_free (GstValidateOverride * override);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_change_severity (GstValidateOverride * override, GstValidateIssueId issue_id, GstValidateReportLevel new_level);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateReportLevel   gst_validate_override_get_severity (GstValidateOverride * override, GstValidateIssueId issue_id, GstValidateReportLevel default_level);
 
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_event_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstEvent * event);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_buffer_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstBuffer * buffer);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_query_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstQuery * query);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_buffer_probe_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstBuffer * buffer);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_getcaps_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstCaps * caps);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_setcaps_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstCaps * caps);
 
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_event_handler (GstValidateOverride * override, GstValidateOverrideEventHandler handler);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_buffer_handler (GstValidateOverride * override, GstValidateOverrideBufferHandler handler);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_query_handler (GstValidateOverride * override, GstValidateOverrideQueryHandler handler);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_buffer_probe_handler (GstValidateOverride * override, GstValidateOverrideBufferHandler handler);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_getcaps_handler (GstValidateOverride * override, GstValidateOverrideGetCapsHandler handler);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_setcaps_handler (GstValidateOverride * override, GstValidateOverrideSetCapsHandler handler);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_element_added_handler (GstValidateOverride * override, GstValidateMonitor * monitor, GstElement * child);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_override_set_element_added_handler (GstValidateOverride * override, GstValidateOverrideElementAddedHandler func);
 
-GST_EXPORT
+GST_VALIDATE_API
 gboolean           gst_validate_override_can_attach (GstValidateOverride * override, GstValidateMonitor *monitor);
 
 G_END_DECLS

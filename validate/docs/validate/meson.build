@@ -21,7 +21,7 @@ if gtkdoc.found()
     main_sgml : 'gst-validate-docs.sgml',
     src_dir : '@0@/../../gst/validate'.format(meson.current_source_dir()),
     scan_args : ['--deprecated-guards=GST_DISABLE_DEPRECATED',
-                '--ignore-decorators=GST_EXPORT',
+                '--ignore-decorators=GST_VALIDATE_API',
                 '--ignore-headers=gettext.h gst-validate-internal.h gst-validate-monitor.h gst-validate-bin-monitor.h gst-validate-element-monitor.h gst-validate-pad-monitor.h gst-validate-override.h gst-validate-override-registry.h gst-validate-utils.h gst-validate-media-info.h  gst-validate-report.h  media-descriptor.h media-descriptor-parser.h media-descriptor-writer.h gst-validate-i18n-lib.h'
             ],
     scanobjs_args : ['--type-init-func="gst_init(NULL,NULL)"'],

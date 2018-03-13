@@ -39,23 +39,23 @@ typedef struct {
   GQueue klass_overrides;
 } GstValidateOverrideRegistry;
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateOverrideRegistry * gst_validate_override_registry_get (void);
 
-GST_EXPORT GList *
+GST_VALIDATE_API GList *
 gst_validate_override_registry_get_override_for_names (GstValidateOverrideRegistry *reg,
         const gchar *name, ...);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_override_register_by_name (const gchar * name, GstValidateOverride * override);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_override_register_by_type (GType gtype, GstValidateOverride * override);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_override_register_by_klass (const gchar * klass, GstValidateOverride * override);
 
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_override_registry_attach_overrides (GstValidateMonitor * monitor);
 
-GST_EXPORT
+GST_VALIDATE_API
 int gst_validate_override_registry_preload (void);
 
 G_END_DECLS

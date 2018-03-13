@@ -73,10 +73,10 @@ struct _GstValidateBinMonitorClass {
 };
 
 /* normal GObject stuff */
-GST_EXPORT
+GST_VALIDATE_API
 GType		gst_validate_bin_monitor_get_type		(void);
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateBinMonitor *   gst_validate_bin_monitor_new      (GstBin * bin, GstValidateRunner * runner, GstValidateMonitor * parent);
 
 G_END_DECLS

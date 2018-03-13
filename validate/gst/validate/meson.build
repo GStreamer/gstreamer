@@ -21,6 +21,7 @@ gstvalidate_sources = [
 
 gstvalidate_headers = [
     'validate.h',
+    'validate-prelude.h',
     'gst-validate-types.h',
     'gst-validate-bin-monitor.h',
     'gst-validate-pipeline-monitor.h',

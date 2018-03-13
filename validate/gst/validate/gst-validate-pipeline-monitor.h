@@ -83,10 +83,10 @@ struct _GstValidatePipelineMonitorClass {
 };
 
 /* normal GObject stuff */
-GST_EXPORT
+GST_VALIDATE_API
 GType		gst_validate_pipeline_monitor_get_type		(void);
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidatePipelineMonitor *   gst_validate_pipeline_monitor_new      (GstPipeline * pipeline,
     GstValidateRunner * runner, GstValidateMonitor * parent);
 

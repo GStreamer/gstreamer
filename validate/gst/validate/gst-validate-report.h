@@ -28,12 +28,13 @@ typedef struct _GstValidateReport GstValidateReport;
 typedef guintptr GstValidateIssueId;
 
 #include <gst/gst.h>
+#include <gst/validate/validate-prelude.h>
 #include <gst/validate/gst-validate-reporter.h>
 #include "gst-validate-types.h"
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_VALIDATE_API
 GType           gst_validate_report_get_type (void);
 #define GST_TYPE_VALIDATE_REPORT (gst_validate_report_get_type ())
 
@@ -150,7 +151,7 @@ typedef struct {
 
 } GstValidateIssue;
 
-GST_EXPORT
+GST_VALIDATE_API
 GType           gst_validate_issue_get_type (void);
 
 struct _GstValidateReport {
@@ -204,69 +205,69 @@ void gst_validate_report_add_message (GstValidateReport *report,
                                     gst_validate_reporter_get_name (r->reporter), \
                                     GST_VALIDATE_ISSUE_ARGS (r->issue), \
                                     r->message
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_init (void);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateIssue  *gst_validate_issue_from_id (GstValidateIssueId issue_id);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateIssueId gst_validate_issue_get_id (GstValidateIssue * issue);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_issue_register (GstValidateIssue * issue);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
 					   const gchar * description,
 					   GstValidateReportLevel default_level);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_issue_set_default_level (GstValidateIssue *issue,
                                            GstValidateReportLevel default_level);
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateReport *gst_validate_report_new (GstValidateIssue * issue,
               GstValidateReporter * reporter,
               const gchar * message);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_unref (GstValidateReport * report);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateReport *gst_validate_report_ref   (GstValidateReport * report);
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateIssueId gst_validate_report_get_issue_id (GstValidateReport * report);
 
-GST_EXPORT
+GST_VALIDATE_API
 gboolean           gst_validate_report_check_abort (GstValidateReport * report);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_printf (GstValidateReport * report);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_print_level (GstValidateReport *report);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_print_detected_on (GstValidateReport *report);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_print_details (GstValidateReport *report);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_report_print_description (GstValidateReport *report);
 
-GST_EXPORT
+GST_VALIDATE_API
 const gchar *      gst_validate_report_level_get_name (GstValidateReportLevel level);
 
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_printf        (gpointer source,
                                                const gchar      * format,
                                                ...) G_GNUC_PRINTF (2, 3) G_GNUC_NO_INSTRUMENT;
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_print_action  (GstValidateAction *action, const gchar * message);
-GST_EXPORT
+GST_VALIDATE_API
 void               gst_validate_printf_valist (gpointer source,
                                                const gchar      * format,
                                                va_list            args) G_GNUC_NO_INSTRUMENT;
-GST_EXPORT
+GST_VALIDATE_API
 gboolean gst_validate_report_should_print (GstValidateReport * report);
-GST_EXPORT
+GST_VALIDATE_API
 gboolean gst_validate_report_set_master_report(GstValidateReport *report, GstValidateReport *master_report);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_report_set_reporting_level (GstValidateReport *report, GstValidateReportingDetails level);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_report_add_repeated_report (GstValidateReport *report, GstValidateReport *repeated_report);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateReportLevel gst_validate_report_level_from_name (const gchar *level_name);
 
 G_END_DECLS

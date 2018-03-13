@@ -24,6 +24,7 @@ typedef struct _GstValidateReporter GstValidateReporter;
 typedef struct _GstValidateReporterInterface GstValidateReporterInterface;
 
 #include <glib-object.h>
+#include <gst/validate/validate-prelude.h>
 #include <gst/validate/gst-validate-report.h>
 #include <gst/validate/gst-validate-runner.h>
 #include <gst/validate/gst-validate-enums.h>
@@ -64,7 +65,7 @@ G_BEGIN_DECLS
   } G_STMT_END
 #endif /* G_HAVE_ISO_VARARGS */
 #endif /* G_HAVE_GNUC_VARARGS */
-GST_EXPORT
+GST_VALIDATE_API
 GType gst_validate_reporter_get_type (void);
 
 /**
@@ -95,42 +96,42 @@ struct _GstValidateReporterInterface
     GstPipeline *                 (*get_pipeline)        (GstValidateReporter *reporter);
 };
 
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_reporter_set_name            (GstValidateReporter * reporter,
                                           gchar * name);
-GST_EXPORT
+GST_VALIDATE_API
 const gchar * gst_validate_reporter_get_name            (GstValidateReporter * reporter);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateRunner * gst_validate_reporter_get_runner (GstValidateReporter *reporter);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_reporter_init                (GstValidateReporter * reporter, const gchar *name);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_report                       (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * format, ...) G_GNUC_PRINTF (3, 4) G_GNUC_NO_INSTRUMENT;
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_report_valist                (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * format, va_list var_args);
-GST_EXPORT void
+GST_VALIDATE_API void
 gst_validate_reporter_report_simple (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * message);
 
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_reporter_set_runner          (GstValidateReporter * reporter, GstValidateRunner *runner);
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_reporter_set_handle_g_logs   (GstValidateReporter * reporter);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateReport * gst_validate_reporter_get_report (GstValidateReporter *reporter,
                                                       GstValidateIssueId issue_id);
-GST_EXPORT
+GST_VALIDATE_API
 GList * gst_validate_reporter_get_reports (GstValidateReporter * reporter);
-GST_EXPORT
+GST_VALIDATE_API
 gint gst_validate_reporter_get_reports_count (GstValidateReporter *reporter);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateReportingDetails gst_validate_reporter_get_reporting_level (GstValidateReporter *reporter);
 
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_reporter_purge_reports (GstValidateReporter * reporter);
-GST_EXPORT
+GST_VALIDATE_API
 GstPipeline * gst_validate_reporter_get_pipeline (GstValidateReporter * reporter);
 
 G_END_DECLS

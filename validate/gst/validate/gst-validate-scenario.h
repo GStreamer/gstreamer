@@ -114,15 +114,15 @@ struct _GstValidateAction
   gpointer _gst_reserved[GST_PADDING_LARGE - 1]; /* ->priv */
 };
 
-GST_EXPORT
+GST_VALIDATE_API
 void                  gst_validate_action_set_done     (GstValidateAction *action);
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateScenario * gst_validate_action_get_scenario (GstValidateAction *action);
 
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
 #define GST_VALIDATE_ACTION_GET_TYPE(obj)   ((GstValidateActionType*)gst_validate_get_action_type(((GstValidateAction*)obj)->type))
-GST_EXPORT
+GST_VALIDATE_API
 GType gst_validate_action_get_type (void);
 
 /**
@@ -195,10 +195,10 @@ struct _GstValidateActionType
 #define GST_TYPE_VALIDATE_ACTION_TYPE       (gst_validate_action_type_get_type ())
 #define GST_IS_VALIDATE_ACTION_TYPE(obj)    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION_TYPE))
 #define GST_VALIDATE_ACTION_TYPE(obj)       ((GstValidateActionType*) obj)
-GST_EXPORT
+GST_VALIDATE_API
 GType gst_validate_action_type_get_type     (void);
 
-GST_EXPORT
+GST_VALIDATE_API
 gboolean gst_validate_print_action_types (const gchar ** wanted_types, gint num_wanted_types);
 
 /**
@@ -256,22 +256,22 @@ struct _GstValidateScenario
   gpointer _gst_reserved[GST_PADDING + 1];
 };
 
-GST_EXPORT
+GST_VALIDATE_API
 GType gst_validate_scenario_get_type (void);
 
-GST_EXPORT
+GST_VALIDATE_API
 GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *runner,
                                                 GstElement *pipeline,
                                                 const gchar *scenario_name);
-GST_EXPORT gboolean
+GST_VALIDATE_API gboolean
 gst_validate_list_scenarios       (gchar **scenarios,
                                    gint num_scenarios,
                                    gchar * output_file);
 
-GST_EXPORT GstValidateActionType *
+GST_VALIDATE_API GstValidateActionType *
 gst_validate_get_action_type           (const gchar *type_name);
 
-GST_EXPORT GstValidateActionType *
+GST_VALIDATE_API GstValidateActionType *
 gst_validate_register_action_type      (const gchar *type_name,
                                         const gchar *implementer_namespace,
                                         GstValidateExecuteAction function,
@@ -279,7 +279,7 @@ gst_validate_register_action_type      (const gchar *type_name,
                                         const gchar *description,
                                         GstValidateActionTypeFlags flags);
 
-GST_EXPORT GstValidateActionType *
+GST_VALIDATE_API GstValidateActionType *
 gst_validate_register_action_type_dynamic (GstPlugin *plugin,
                                            const gchar * type_name,
                                            GstRank rank,
@@ -289,13 +289,13 @@ gst_validate_register_action_type_dynamic (GstPlugin *plugin,
                                            GstValidateActionTypeFlags flags);
 
 
-GST_EXPORT
+GST_VALIDATE_API
 gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,
                                             GstValidateAction *action,
                                             const gchar * name,
                                             GstClockTime * retval);
 
-GST_EXPORT GstValidateExecuteActionReturn
+GST_VALIDATE_API GstValidateExecuteActionReturn
 gst_validate_scenario_execute_seek         (GstValidateScenario *scenario,
                                              GstValidateAction *action,
                                              gdouble rate,
@@ -306,19 +306,19 @@ gst_validate_scenario_execute_seek         (GstValidateScenario *scenario,
                                              GstSeekType stop_type,
                                              GstClockTime stop);
 
-GST_EXPORT GList *
+GST_VALIDATE_API GList *
 gst_validate_scenario_get_actions          (GstValidateScenario *scenario);
-GST_EXPORT GstValidateExecuteActionReturn
+GST_VALIDATE_API GstValidateExecuteActionReturn
 gst_validate_execute_action                 (GstValidateActionType * action_type,
                                              GstValidateAction * action);
 
-GST_EXPORT GstState
+GST_VALIDATE_API GstState
 gst_validate_scenario_get_target_state     (GstValidateScenario *scenario);
 
-GST_EXPORT GstElement *
+GST_VALIDATE_API GstElement *
 gst_validate_scenario_get_pipeline         (GstValidateScenario * scenario);
 
-GST_EXPORT
+GST_VALIDATE_API
 void gst_validate_scenario_deinit          (void);
 
 G_END_DECLS
