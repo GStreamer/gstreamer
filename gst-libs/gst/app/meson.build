@@ -4,7 +4,7 @@ app_mkenum_headers = [
   'gstappsrc.h',
 ]
 
-app_headers = app_mkenum_headers + [ 'app.h', 'gstappsink.h' ]
+app_headers = app_mkenum_headers + [ 'app.h', 'app-prelude.h', 'gstappsink.h' ]
 install_headers(app_headers, subdir : 'gstreamer-1.0/gst/app/')
 
 mkenums = find_program('app_mkenum.py')

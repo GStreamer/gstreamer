@@ -3,7 +3,8 @@ lib_LTLIBRARIES = libgstapp-@GST_API_VERSION@.la
 glib_enum_define = GST_APP
 glib_gen_prefix = __gst_app
 glib_gen_basename = app
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_APP_API
+glib_gen_decl_include=\#include <gst/app/app-prelude.h>
 
 glib_enum_headers = gstappsrc.h
 
@@ -23,6 +24,7 @@ libgstapp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $
 libgstapp_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/app
 libgstapp_@GST_API_VERSION@include_HEADERS = \
 	app.h \
+	app-prelude.h \
 	gstappsrc.h \
 	gstappsink.h
 nodist_libgstapp_@GST_API_VERSION@include_HEADERS = app-enumtypes.h

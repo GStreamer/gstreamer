@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gst/app/app-prelude.h>
 #include <gst/app/app-enumtypes.h>
 
 G_BEGIN_DECLS
@@ -117,67 +118,67 @@ struct _GstAppSrcClass
   gpointer     _gst_reserved[GST_PADDING-2];
 };
 
-GST_EXPORT
+GST_APP_API
 GType            gst_app_src_get_type                (void);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_caps                (GstAppSrc *appsrc, const GstCaps *caps);
 
-GST_EXPORT
+GST_APP_API
 GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_size                (GstAppSrc *appsrc, gint64 size);
 
-GST_EXPORT
+GST_APP_API
 gint64           gst_app_src_get_size                (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_duration            (GstAppSrc *appsrc, GstClockTime duration);
 
-GST_EXPORT
+GST_APP_API
 GstClockTime     gst_app_src_get_duration            (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_stream_type         (GstAppSrc *appsrc, GstAppStreamType type);
 
-GST_EXPORT
+GST_APP_API
 GstAppStreamType gst_app_src_get_stream_type         (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_max_bytes           (GstAppSrc *appsrc, guint64 max);
 
-GST_EXPORT
+GST_APP_API
 guint64          gst_app_src_get_max_bytes           (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 guint64          gst_app_src_get_current_level_bytes (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_latency             (GstAppSrc *appsrc, guint64 min, guint64 max);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_get_latency             (GstAppSrc *appsrc, guint64 *min, guint64 *max);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_emit_signals        (GstAppSrc *appsrc, gboolean emit);
 
-GST_EXPORT
+GST_APP_API
 gboolean         gst_app_src_get_emit_signals        (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 GstFlowReturn    gst_app_src_push_buffer             (GstAppSrc *appsrc, GstBuffer *buffer);
 
-GST_EXPORT
+GST_APP_API
 GstFlowReturn    gst_app_src_push_buffer_list        (GstAppSrc * appsrc, GstBufferList * buffer_list);
 
-GST_EXPORT
+GST_APP_API
 GstFlowReturn    gst_app_src_end_of_stream           (GstAppSrc *appsrc);
 
-GST_EXPORT
+GST_APP_API
 GstFlowReturn    gst_app_src_push_sample             (GstAppSrc *appsrc, GstSample *sample);
 
-GST_EXPORT
+GST_APP_API
 void             gst_app_src_set_callbacks           (GstAppSrc * appsrc,
                                                       GstAppSrcCallbacks *callbacks,
                                                       gpointer user_data,

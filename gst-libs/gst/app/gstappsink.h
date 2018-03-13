@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
+#include <gst/app/app-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -101,61 +102,61 @@ struct _GstAppSinkClass
   gpointer     _gst_reserved[GST_PADDING - 2];
 };
 
-GST_EXPORT
+GST_APP_API
 GType           gst_app_sink_get_type         (void);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_caps         (GstAppSink *appsink, const GstCaps *caps);
 
-GST_EXPORT
+GST_APP_API
 GstCaps *       gst_app_sink_get_caps         (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 gboolean        gst_app_sink_is_eos           (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_emit_signals (GstAppSink *appsink, gboolean emit);
 
-GST_EXPORT
+GST_APP_API
 gboolean        gst_app_sink_get_emit_signals (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_max_buffers  (GstAppSink *appsink, guint max);
 
-GST_EXPORT
+GST_APP_API
 guint           gst_app_sink_get_max_buffers  (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_drop         (GstAppSink *appsink, gboolean drop);
 
-GST_EXPORT
+GST_APP_API
 gboolean        gst_app_sink_get_drop         (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_buffer_list_support  (GstAppSink *appsink, gboolean enable_lists);
 
-GST_EXPORT
+GST_APP_API
 gboolean        gst_app_sink_get_buffer_list_support  (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_wait_on_eos  (GstAppSink *appsink, gboolean wait);
 
-GST_EXPORT
+GST_APP_API
 gboolean        gst_app_sink_get_wait_on_eos  (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 GstSample *     gst_app_sink_pull_preroll     (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 GstSample *     gst_app_sink_pull_sample      (GstAppSink *appsink);
 
-GST_EXPORT
+GST_APP_API
 GstSample *     gst_app_sink_try_pull_preroll (GstAppSink *appsink, GstClockTime timeout);
 
-GST_EXPORT
+GST_APP_API
 GstSample *     gst_app_sink_try_pull_sample  (GstAppSink *appsink, GstClockTime timeout);
 
-GST_EXPORT
+GST_APP_API
 void            gst_app_sink_set_callbacks    (GstAppSink * appsink,
                                                GstAppSinkCallbacks *callbacks,
                                                gpointer user_data,
