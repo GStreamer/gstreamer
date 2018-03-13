@@ -1,6 +1,7 @@
 libgstsdpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/sdp
 
 libgstsdpinclude_HEADERS = sdp.h \
+			   sdp-prelude.h \
 			   gstsdp.h \
 			   gstmikey.h \
 			   gstsdpmessage.h

@@ -1,5 +1,6 @@
 gst_sdp_headers = [
   'sdp.h',
+  'sdp-prelude.h',
   'gstsdp.h',
   'gstmikey.h',
   'gstsdpmessage.h',

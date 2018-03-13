@@ -1,7 +1,7 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer SDP Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * gstsdp.h: single include header for gst-sdp library
+ * sdp-prelude.h: prelude include header for gst-sdp library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,13 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_SDP__H__
-#define __GST_SDP__H__
+#ifndef __GST_SDP_PRELUDE_H__
+#define __GST_SDP_PRELUDE_H__
 
-#include <gst/sdp/sdp-prelude.h>
+#include <gst/gst.h>
 
-#include <gst/sdp/gstsdp.h>
-#include <gst/sdp/gstsdpmessage.h>
-#include <gst/sdp/gstmikey.h>
+#ifndef GST_SDP_API
+#define GST_SDP_API GST_EXPORT
+#endif
 
-#endif /* __GST_SDP__H__ */
+#endif /* __GST_SDP_PRELUDE_H__ */
