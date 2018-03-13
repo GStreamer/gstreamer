@@ -391,20 +391,11 @@ namespace Gst {
 		public Caps(IntPtr raw) : base(raw) {}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_caps_new_any();
+		static extern IntPtr gst_caps_new_empty();
 
 		public Caps () 
 		{
-			Raw = gst_caps_new_any();
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_caps_new_empty();
-
-		public static Caps NewEmpty()
-		{
-			Caps result = new Caps (gst_caps_new_empty());
-			return result;
+			Raw = gst_caps_new_empty();
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -415,6 +406,15 @@ namespace Gst {
 			IntPtr native_media_type = GLib.Marshaller.StringToPtrGStrdup (media_type);
 			Raw = gst_caps_new_empty_simple(native_media_type);
 			GLib.Marshaller.Free (native_media_type);
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_new_any();
+
+		public static Caps NewAny()
+		{
+			Caps result = new Caps (gst_caps_new_any());
+			return result;
 		}
 
 

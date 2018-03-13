@@ -6618,7 +6618,6 @@
       <field cname="mini_object" access="public" writeable="true" readable="true" is_callback="false" name="MiniObject" type="GstMiniObject" hidden="true">
         <warning>missing glib:type-name</warning>
       </field>
-      <constructor cname="gst_caps_new_any" disable_void_ctor="" />
       <constructor cname="gst_caps_new_empty" disable_void_ctor="" />
       <constructor cname="gst_caps_new_empty_simple">
         <parameters>
@@ -6912,6 +6911,7 @@
           <parameter name="string" type="const-gchar*" />
         </parameters>
       </method>
+      <constructor cname="gst_caps_new_any" disable_void_ctor="" />
     </boxed>
     <boxed name="CapsFeatures" cname="GstCapsFeatures" opaque="false" hidden="false">
       <method name="GetType" cname="gst_caps_features_get_type" shared="true">

@@ -48,6 +48,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstRTSPMessage']" name="nohash">true</attr> -->
 	<attr path="/api/namespace/boxed[@cname='GstRTSPMessage']/field[@cname='body']" name="type">guint8*</attr>
 
+	<!-- GstCaps fixes -->
+	<remove-node path="/api/namespace/boxed[@cname='GstCaps']/constructor[@cname='gst_caps_new_any']"/>
+	<add-node path="/api/namespace/boxed[@cname='GstCaps']">
+		<constructor cname="gst_caps_new_any" disable_void_ctor="" />
+	</add-node>
+
 	<!-- Explicitly declare GstSample as a GstMiniObject (the opaque struct definition doesn't have GObject-Introspection
 	     annotations) to get ref-counting to work.
 	-->
