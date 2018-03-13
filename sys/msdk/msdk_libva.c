@@ -29,20 +29,12 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-/* TODO:
- *   - discover dri_path instead of having it hardcoded
- */
-
 #include <fcntl.h>
 #include <unistd.h>
 
 #include <va/va_drm.h>
 #include "msdk.h"
 #include "msdk_libva.h"
-
-GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
-#define GST_CAT_DEFAULT gst_msdkenc_debug
 
 struct fourcc_map
 {
