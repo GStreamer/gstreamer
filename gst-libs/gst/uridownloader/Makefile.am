@@ -7,7 +7,7 @@ libgsturidownloader_@GST_API_VERSION@includedir = \
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/uridownloader
 
 libgsturidownloader_@GST_API_VERSION@include_HEADERS = \
-	gstfragment.h gsturidownloader.h gsturidownloader_debug.h
+	gstfragment.h gsturidownloader.h gsturidownloader_debug.h uridownloader-prelude.h
 
 libgsturidownloader_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

@@ -3,6 +3,7 @@ urid_sources = [
   'gsturidownloader.c',
 ]
 urid_headers = [
+  'uridownloader-prelude.h',
   'gstfragment.h',
   'gsturidownloader.h',
   'gsturidownloader_debug.h',

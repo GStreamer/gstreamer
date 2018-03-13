@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
+#include <gst/uridownloader/uridownloader-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -65,22 +66,22 @@ struct _GstFragmentClass
   GObjectClass parent_class;
 };
 
-GST_EXPORT
+GST_URI_DOWNLOADER_API
 GType gst_fragment_get_type (void);
 
-GST_EXPORT
+GST_URI_DOWNLOADER_API
 GstBuffer * gst_fragment_get_buffer (GstFragment *fragment);
 
-GST_EXPORT
+GST_URI_DOWNLOADER_API
 void gst_fragment_set_caps (GstFragment * fragment, GstCaps * caps);
 
-GST_EXPORT
+GST_URI_DOWNLOADER_API
 GstCaps * gst_fragment_get_caps (GstFragment * fragment);
 
-GST_EXPORT
+GST_URI_DOWNLOADER_API
 gboolean gst_fragment_add_buffer (GstFragment *fragment, GstBuffer *buffer);
 
-GST_EXPORT
+GST_URI_DOWNLOADER_API
 GstFragment * gst_fragment_new (void);
 
 G_END_DECLS
