@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
+#include <gst/video/video-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -120,10 +121,10 @@ struct _GstVideoSinkClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_VIDEO_API
 GType gst_video_sink_get_type (void);
 
-GST_EXPORT
+GST_VIDEO_API
 void gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
                                  GstVideoRectangle *result, gboolean scaling);
 

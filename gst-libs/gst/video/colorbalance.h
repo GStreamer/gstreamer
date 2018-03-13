@@ -90,31 +90,31 @@ struct _GstColorBalanceInterface {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_VIDEO_API
 GType   gst_color_balance_get_type      (void);
 
 /* virtual class function wrappers */
 
-GST_EXPORT
+GST_VIDEO_API
 const GList *
         gst_color_balance_list_channels (GstColorBalance        *balance);
 
-GST_EXPORT
+GST_VIDEO_API
 void    gst_color_balance_set_value     (GstColorBalance        *balance,
                                          GstColorBalanceChannel *channel,
                                          gint                    value);
 
-GST_EXPORT
+GST_VIDEO_API
 gint    gst_color_balance_get_value     (GstColorBalance        *balance,
                                          GstColorBalanceChannel *channel);
 
-GST_EXPORT
+GST_VIDEO_API
 GstColorBalanceType
         gst_color_balance_get_balance_type (GstColorBalance        *balance);
 
 /* trigger signal */
 
-GST_EXPORT
+GST_VIDEO_API
 void    gst_color_balance_value_changed (GstColorBalance        *balance,
                                          GstColorBalanceChannel *channel,
                                          gint                    value);

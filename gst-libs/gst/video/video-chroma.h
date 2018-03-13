@@ -21,6 +21,7 @@
 #define __GST_VIDEO_CHROMA_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -51,10 +52,10 @@ typedef enum {
   GST_VIDEO_CHROMA_SITE_DV        = (GST_VIDEO_CHROMA_SITE_COSITED | GST_VIDEO_CHROMA_SITE_ALT_LINE),
 } GstVideoChromaSite;
 
-GST_EXPORT
+GST_VIDEO_API
 GstVideoChromaSite    gst_video_chroma_from_string   (const gchar * s);
 
-GST_EXPORT
+GST_VIDEO_API
 const gchar *         gst_video_chroma_to_string     (GstVideoChromaSite site);
 
 /**
@@ -88,21 +89,21 @@ typedef struct _GstVideoChromaResample GstVideoChromaResample;
 /* circular dependency, need to include this after defining the enums */
 #include <gst/video/video-format.h>
 
-GST_EXPORT
+GST_VIDEO_API
 GstVideoChromaResample * gst_video_chroma_resample_new   (GstVideoChromaMethod method,
                                                           GstVideoChromaSite site,
                                                           GstVideoChromaFlags flags,
                                                           GstVideoFormat format,
                                                           gint h_factor, gint v_factor);
 
-GST_EXPORT
+GST_VIDEO_API
 void                     gst_video_chroma_resample_free  (GstVideoChromaResample *resample);
 
-GST_EXPORT
+GST_VIDEO_API
 void                     gst_video_chroma_resample_get_info (GstVideoChromaResample *resample,
                                                              guint * n_lines, gint *offset);
 
-GST_EXPORT
+GST_VIDEO_API
 void                     gst_video_chroma_resample       (GstVideoChromaResample *resample,
                                                           gpointer lines[], gint width);
 

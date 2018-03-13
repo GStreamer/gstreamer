@@ -21,6 +21,7 @@
 #define __GST_VIDEO_RESAMPLER_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -160,7 +161,7 @@ struct _GstVideoResampler
 };
 
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean    gst_video_resampler_init      (GstVideoResampler *resampler,
                                            GstVideoResamplerMethod method,
                                            GstVideoResamplerFlags flags,
@@ -169,7 +170,7 @@ gboolean    gst_video_resampler_init      (GstVideoResampler *resampler,
                                            guint in_size, guint out_size,
                                            GstStructure *options);
 
-GST_EXPORT
+GST_VIDEO_API
 void        gst_video_resampler_clear     (GstVideoResampler *resampler);
 
 G_END_DECLS

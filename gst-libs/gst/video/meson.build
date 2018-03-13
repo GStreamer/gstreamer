@@ -55,6 +55,7 @@ video_headers = [
   'video-dither.h',
   'video-info.h',
   'video-frame.h',
+  'video-prelude.h',
   'video-scaler.h',
   'video-tile.h',
   'videodirection.h',

@@ -22,6 +22,8 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video-prelude.h>
+
 typedef struct _GstVideoAlignment GstVideoAlignment;
 
 #include <gst/video/video-format.h>
@@ -121,13 +123,13 @@ typedef enum {
  */
 #define GST_META_TAG_VIDEO_COLORSPACE_STR "colorspace"
 
-GST_EXPORT
+GST_VIDEO_API
 void           gst_video_alignment_reset         (GstVideoAlignment *align);
 
 
 /* some helper functions */
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint * dar_d,
                                                   guint   video_width,
@@ -137,7 +139,7 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint   display_par_n,
                                                   guint   display_par_d);
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean       gst_video_guess_framerate (GstClockTime duration,
                                           gint * dest_n, gint * dest_d);
 
@@ -145,7 +147,7 @@ gboolean       gst_video_guess_framerate (GstClockTime duration,
 
 typedef void (*GstVideoConvertSampleCallback) (GstSample * sample, GError *error, gpointer user_data);
 
-GST_EXPORT
+GST_VIDEO_API
 void          gst_video_convert_sample_async (GstSample                    * sample,
                                               const GstCaps                * to_caps,
                                               GstClockTime                   timeout,
@@ -153,7 +155,7 @@ void          gst_video_convert_sample_async (GstSample                    * sam
                                               gpointer                       user_data,
                                               GDestroyNotify                 destroy_notify);
 
-GST_EXPORT
+GST_VIDEO_API
 GstSample *   gst_video_convert_sample       (GstSample     * sample,
                                               const GstCaps * to_caps,
                                               GstClockTime    timeout,

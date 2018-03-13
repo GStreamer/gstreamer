@@ -65,7 +65,7 @@ typedef enum {
   GST_VIDEO_COLOR_MATRIX_BT2020
 } GstVideoColorMatrix;
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb);
 
 /**
@@ -110,10 +110,10 @@ typedef enum {
   GST_VIDEO_TRANSFER_ADOBERGB
 } GstVideoTransferFunction;
 
-GST_EXPORT
+GST_VIDEO_API
 gdouble      gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val);
 
-GST_EXPORT
+GST_VIDEO_API
 gdouble      gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val);
 
 /**
@@ -169,7 +169,7 @@ typedef struct {
   gdouble Bx, By;
 } GstVideoColorPrimariesInfo;
 
-GST_EXPORT
+GST_VIDEO_API
 const GstVideoColorPrimariesInfo *
                 gst_video_color_primaries_get_info     (GstVideoColorPrimaries primaries);
 
@@ -198,21 +198,21 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
 #define GST_VIDEO_COLORIMETRY_BT2020      "bt2020"
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean     gst_video_colorimetry_matches     (const GstVideoColorimetry *cinfo, const gchar *color);
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
 
-GST_EXPORT
+GST_VIDEO_API
 gchar *      gst_video_colorimetry_to_string   (const GstVideoColorimetry *cinfo);
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean     gst_video_colorimetry_is_equal    (const GstVideoColorimetry *cinfo, const GstVideoColorimetry *other);
 
 /* compute offset and scale */
 
-GST_EXPORT
+GST_VIDEO_API
 void         gst_video_color_range_offsets     (GstVideoColorRange range,
                                                 const GstVideoFormatInfo *info,
                                                 gint offset[GST_VIDEO_MAX_COMPONENTS],

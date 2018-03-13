@@ -47,10 +47,10 @@ G_BEGIN_DECLS
 
 /* setting a bufferpool config */
 
-GST_EXPORT
+GST_VIDEO_API
 void             gst_buffer_pool_config_set_video_alignment  (GstStructure *config, GstVideoAlignment *align);
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean         gst_buffer_pool_config_get_video_alignment  (GstStructure *config, GstVideoAlignment *align);
 
 /* video bufferpool */
@@ -75,10 +75,10 @@ struct _GstVideoBufferPoolClass
   GstBufferPoolClass parent_class;
 };
 
-GST_EXPORT
+GST_VIDEO_API
 GType             gst_video_buffer_pool_get_type      (void);
 
-GST_EXPORT
+GST_VIDEO_API
 GstBufferPool *   gst_video_buffer_pool_new           (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

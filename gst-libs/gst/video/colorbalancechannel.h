@@ -23,6 +23,7 @@
 #define __GST_COLOR_BALANCE_CHANNEL_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -78,7 +79,7 @@ struct _GstColorBalanceChannelClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_VIDEO_API
 GType   gst_color_balance_channel_get_type (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

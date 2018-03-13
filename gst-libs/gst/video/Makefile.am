@@ -8,7 +8,8 @@ glib_enum_headers = video.h video-format.h video-color.h video-info.h video-dith
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_VIDEO_API
+glib_gen_decl_include=\#include <gst/video/video-prelude.h>
 
 built_sources = video-enumtypes.c
 built_headers = video-enumtypes.h
@@ -60,6 +61,7 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	colorbalancechannel.h	\
 	navigation.h            \
 	video.h			\
+	video-prelude.h		\
 	video-event.h          	\
 	video-format.h         	\
 	video-chroma.h         	\

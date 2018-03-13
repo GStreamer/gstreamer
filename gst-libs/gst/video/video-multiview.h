@@ -21,39 +21,40 @@
 #define __GST_VIDEO_MULTIVIEW_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-prelude.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_MULTIVIEW_FLAGSET (gst_video_multiview_flagset_get_type())
-GST_EXPORT
+GST_VIDEO_API
 GType gst_video_multiview_flagset_get_type (void);
 
-GST_EXPORT
+GST_VIDEO_API
 const gchar * gst_video_multiview_mode_to_caps_string (GstVideoMultiviewMode mview_mode);
 
-GST_EXPORT
+GST_VIDEO_API
 GstVideoMultiviewMode gst_video_multiview_mode_from_caps_string (const gchar * caps_mview_mode);
 
-GST_EXPORT
+GST_VIDEO_API
 const GValue *gst_video_multiview_get_mono_modes(void);
 
-GST_EXPORT
+GST_VIDEO_API
 const GValue *gst_video_multiview_get_unpacked_modes(void);
 
-GST_EXPORT
+GST_VIDEO_API
 const GValue *gst_video_multiview_get_doubled_height_modes(void);
 
-GST_EXPORT
+GST_VIDEO_API
 const GValue *gst_video_multiview_get_doubled_width_modes(void);
 
-GST_EXPORT
+GST_VIDEO_API
 const GValue *gst_video_multiview_get_doubled_size_modes(void);
 
-GST_EXPORT
+GST_VIDEO_API
 void gst_video_multiview_video_info_change_mode (GstVideoInfo *info,
     GstVideoMultiviewMode out_mview_mode, GstVideoMultiviewFlags out_mview_flags);
 
-GST_EXPORT
+GST_VIDEO_API
 gboolean gst_video_multiview_guess_half_aspect (GstVideoMultiviewMode mv_mode,
     guint width, guint height, guint par_n, guint par_d);
 

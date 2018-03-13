@@ -23,6 +23,7 @@
 #define __GST_VIDEO_DIRECTION_H__
 
 #include <gst/gst.h>
+#include <gst/video/video-prelude.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_VIDEO_DIRECTION \
@@ -56,7 +57,7 @@ struct _GstVideoDirectionInterface
   GTypeInterface iface;
 };
 
-GST_EXPORT
+GST_VIDEO_API
 GType gst_video_direction_get_type (void);
 
 G_END_DECLS
