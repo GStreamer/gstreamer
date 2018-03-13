@@ -33,6 +33,10 @@
 
 #include <gst/gst.h>
 
+#ifndef GST_INSERT_BIN_API
+#define GST_INSERT_BIN_API GST_EXPORT
+#endif
+
 G_BEGIN_DECLS
 #define GST_TYPE_INSERT_BIN            (gst_insert_bin_get_type())
 #define GST_INSERT_BIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_INSERT_BIN,GstInsertBin))
@@ -84,31 +88,31 @@ struct _GstInsertBinClass
   GstBinClass parent_class;
 };
 
-GST_EXPORT
+GST_INSERT_BIN_API
 GType gst_insert_bin_get_type (void);
 
-GST_EXPORT
+GST_INSERT_BIN_API
 GstElement *gst_insert_bin_new (const gchar * name);
 
-GST_EXPORT
+GST_INSERT_BIN_API
 void gst_insert_bin_prepend (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
 
-GST_EXPORT
+GST_INSERT_BIN_API
 void gst_insert_bin_append (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
 
-GST_EXPORT
+GST_INSERT_BIN_API
 void gst_insert_bin_insert_before (GstInsertBin * self,
     GstElement * element, GstElement * sibling,
     GstInsertBinCallback callback, gpointer user_data);
 
-GST_EXPORT
+GST_INSERT_BIN_API
 void gst_insert_bin_insert_after (GstInsertBin * self,
     GstElement * element, GstElement * sibling,
     GstInsertBinCallback callback, gpointer user_data);
 
-GST_EXPORT
+GST_INSERT_BIN_API
 void gst_insert_bin_remove (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
 
