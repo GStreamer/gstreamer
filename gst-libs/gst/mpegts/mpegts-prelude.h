@@ -1,9 +1,7 @@
-/*
- * mpegts.h -
- * Copyright (C) 2013 Edward Hervey
+/* GStreamer MpegTS Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * Authors:
- *   Edward Hervey <edward@collabora.com>
+ * mpegts-prelude.h: prelude include header for gst-mpegts library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,28 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GST_MPEGTS_H_
-#define _GST_MPEGTS_H_
+#ifndef __GST_MPEGTS_PRELUDE_H__
+#define __GST_MPEGTS_PRELUDE_H__
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The GStreamer mpegts library is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#include <gst/gst.h>
+
+#ifndef GST_MPEGTS_API
+#define GST_MPEGTS_API GST_EXPORT
 #endif
 
-#include <gst/mpegts/mpegts-prelude.h>
-#include <gst/mpegts/gstmpegtsdescriptor.h>
-#include <gst/mpegts/gst-dvb-descriptor.h>
-#include <gst/mpegts/gstmpegtssection.h>
-#include <gst/mpegts/gst-atsc-section.h>
-#include <gst/mpegts/gst-dvb-section.h>
-#include <gst/mpegts/gst-scte-section.h>
-#include <gst/mpegts/gstmpegts-enumtypes.h>
-
-G_BEGIN_DECLS
-
-GST_MPEGTS_API
-void gst_mpegts_initialize (void);
-
-G_END_DECLS
-
-#endif
+#endif /* __GST_MPEGTS_PRELUDE_H__ */

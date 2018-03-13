@@ -33,6 +33,7 @@
 #define GST_MPEGTS_DESCRIPTOR_H
 
 #include <gst/gst.h>
+#include <gst/mpegts/mpegts-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -238,7 +239,7 @@ typedef enum {
 typedef struct _GstMpegtsDescriptor GstMpegtsDescriptor;
 
 #define GST_TYPE_MPEGTS_DESCRIPTOR (gst_mpegts_descriptor_get_type())
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_descriptor_get_type (void);
 
 /**
@@ -263,26 +264,26 @@ struct _GstMpegtsDescriptor
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 void       gst_mpegts_descriptor_free (GstMpegtsDescriptor *desc);
 
-GST_EXPORT
+GST_MPEGTS_API
 GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
 							guint8 tag);
 
 /* GST_MTS_DESC_REGISTRATION (0x05) */
 
-GST_EXPORT
+GST_MPEGTS_API
 GstMpegtsDescriptor *gst_mpegts_descriptor_from_registration (
     const gchar *format_identifier,
     guint8 *additional_info, gsize additional_info_length);
 
 /* GST_MTS_DESC_CA (0x09) */
 
-GST_EXPORT
+GST_MPEGTS_API
 gboolean  gst_mpegts_descriptor_parse_ca (GstMpegtsDescriptor *descriptor,
 					  guint16 *ca_system_id,
 					  guint16 *ca_pid,
@@ -313,25 +314,25 @@ struct _GstMpegtsISO639LanguageDescriptor
 };
 
 #define GST_TYPE_MPEGTS_ISO_639_LANGUAGE (gst_mpegts_iso_639_language_get_type ())
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_iso_639_language_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 void gst_mpegts_iso_639_language_descriptor_free (GstMpegtsISO639LanguageDescriptor * desc);
 
-GST_EXPORT
+GST_MPEGTS_API
 gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegtsDescriptor *descriptor,
 						       GstMpegtsISO639LanguageDescriptor **res);
 
-GST_EXPORT
+GST_MPEGTS_API
 gboolean gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegtsDescriptor *descriptor,
                                                            guint idx, gchar **lang,
                                                            GstMpegtsIso639AudioType *audio_type);
 
-GST_EXPORT
+GST_MPEGTS_API
 guint gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegtsDescriptor *descriptor);
 
-GST_EXPORT
+GST_MPEGTS_API
 GstMpegtsDescriptor * gst_mpegts_descriptor_from_iso_639_language (const gchar * language);
 
 
@@ -355,16 +356,16 @@ struct _GstMpegtsLogicalChannelDescriptor
 
 /* FIXME : Maybe make two methods. One for getting the number of channels,
  * and the other for getting the content for one channel ? */
-GST_EXPORT
+GST_MPEGTS_API
 gboolean
 gst_mpegts_descriptor_parse_logical_channel (const GstMpegtsDescriptor *descriptor,
 					     GstMpegtsLogicalChannelDescriptor *res);
 
-GST_EXPORT
+GST_MPEGTS_API
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 *data, gsize length);
 
-GST_EXPORT
+GST_MPEGTS_API
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom_with_extension (guint8 tag, guint8 tag_extension, const guint8 *data, gsize length);
 

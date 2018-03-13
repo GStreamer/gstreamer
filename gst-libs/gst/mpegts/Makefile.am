@@ -19,6 +19,7 @@ libgstmpegts_@GST_API_VERSION@include_HEADERS = \
 	gst-scte-section.h			\
 	gstmpegtsdescriptor.h			\
 	gst-dvb-descriptor.h			\
+	mpegts-prelude.h			\
 	mpegts.h
 
 nodist_libgstmpegts_@GST_API_VERSION@include_HEADERS = \
@@ -48,7 +49,8 @@ glib_enum_headers=gstmpegtssection.h	\
 glib_enum_define=GST_MPEGTS
 glib_gen_prefix=gst_mpegts
 glib_gen_basename=gstmpegts
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_MPEGTS_API
+glib_gen_decl_include=\#include <gst/mpegts/mpegts-prelude.h>
 
 BUILT_SOURCES = gstmpegts-enumtypes.c gstmpegts-enumtypes.h
 nodist_libgstmpegts_@GST_API_VERSION@_la_SOURCES = gstmpegts-enumtypes.c

@@ -119,16 +119,16 @@ struct _GstMpegtsAtscVCT
   GPtrArray *descriptors;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_vct_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_vct_source_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsAtscVCT * gst_mpegts_section_get_atsc_tvct (GstMpegtsSection * section);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsAtscVCT * gst_mpegts_section_get_atsc_cvct (GstMpegtsSection * section);
 
 /* MGT */
@@ -176,13 +176,13 @@ struct _GstMpegtsAtscMGT
   GPtrArray *descriptors;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_mgt_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_mgt_table_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsAtscMGT * gst_mpegts_section_get_atsc_mgt (GstMpegtsSection * section);
 
 /* Multiple string structure (used in ETT and EIT */
@@ -202,7 +202,7 @@ struct _GstMpegtsAtscStringSegment {
   gchar *cached_string;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 const gchar * gst_mpegts_atsc_string_segment_get_string (GstMpegtsAtscStringSegment * seg);
 
 /**
@@ -215,10 +215,10 @@ struct _GstMpegtsAtscMultString {
   GPtrArray *segments;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_string_segment_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_mult_string_get_type (void);
 
 /* EIT */
@@ -261,13 +261,13 @@ struct _GstMpegtsAtscEIT
   GPtrArray     *events;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_eit_event_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_eit_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsAtscEIT *gst_mpegts_section_get_atsc_eit (GstMpegtsSection *section);
 
 /* ETT */
@@ -292,10 +292,10 @@ struct _GstMpegtsAtscETT
   GPtrArray     *messages;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_ett_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsAtscETT *gst_mpegts_section_get_atsc_ett (GstMpegtsSection *section);
 
 /* STT */
@@ -323,14 +323,14 @@ struct _GstMpegtsAtscSTT
   GstDateTime *utc_datetime;
 };
 
-GST_EXPORT
+GST_MPEGTS_API
 GType gst_mpegts_atsc_stt_get_type (void);
 
-GST_EXPORT
+GST_MPEGTS_API
 const GstMpegtsAtscSTT * gst_mpegts_section_get_atsc_stt (GstMpegtsSection * section);
 /* FIXME receive a non-const parameter but we only provide a const getter */
 
-GST_EXPORT
+GST_MPEGTS_API
 GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt);
 
 G_END_DECLS
