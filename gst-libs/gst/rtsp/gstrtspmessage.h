@@ -107,7 +107,7 @@ struct _GstRTSPMessage
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_API
 GType                   gst_rtsp_msg_get_type            (void);
 
 #define GST_TYPE_RTSP_MESSAGE           (gst_rtsp_msg_get_type())
@@ -116,37 +116,37 @@ GType                   gst_rtsp_msg_get_type            (void);
 
 /* memory management */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_new             (GstRTSPMessage **msg);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_init            (GstRTSPMessage *msg);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_unset           (GstRTSPMessage *msg);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_free            (GstRTSPMessage *msg);
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_copy            (const GstRTSPMessage *msg,
                                                      GstRTSPMessage **copy);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPMsgType     gst_rtsp_message_get_type        (GstRTSPMessage *msg);
 
 /* request */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_new_request     (GstRTSPMessage **msg,
                                                      GstRTSPMethod method,
                                                      const gchar *uri);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_init_request    (GstRTSPMessage *msg,
                                                      GstRTSPMethod method,
                                                      const gchar *uri);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_parse_request   (GstRTSPMessage *msg,
                                                      GstRTSPMethod *method,
                                                      const gchar **uri,
@@ -154,19 +154,19 @@ GstRTSPResult      gst_rtsp_message_parse_request   (GstRTSPMessage *msg,
 
 /* response */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_new_response    (GstRTSPMessage **msg,
                                                      GstRTSPStatusCode code,
                                                      const gchar *reason,
                                                      const GstRTSPMessage *request);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_init_response   (GstRTSPMessage *msg,
                                                      GstRTSPStatusCode code,
                                                      const gchar *reason,
                                                      const GstRTSPMessage *request);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_parse_response  (GstRTSPMessage *msg,
                                                      GstRTSPStatusCode *code,
                                                      const gchar **reason,
@@ -174,57 +174,57 @@ GstRTSPResult      gst_rtsp_message_parse_response  (GstRTSPMessage *msg,
 
 /* data */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_new_data        (GstRTSPMessage **msg,
                                                      guint8 channel);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_init_data       (GstRTSPMessage *msg,
                                                      guint8 channel);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_parse_data      (GstRTSPMessage *msg,
                                                      guint8 *channel);
 
 /* headers */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_add_header      (GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      const gchar *value);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_take_header     (GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      gchar *value);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_remove_header   (GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      gint indx);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_get_header      (const GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      gchar **value,
                                                      gint indx);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_add_header_by_name    (GstRTSPMessage * msg,
                                                            const gchar    * header,
                                                            const gchar    * value);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_take_header_by_name   (GstRTSPMessage * msg,
                                                            const gchar    * header,
                                                            gchar          * value);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_remove_header_by_name (GstRTSPMessage * msg,
                                                            const gchar    * header,
                                                            gint             index);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_get_header_by_name    (GstRTSPMessage * msg,
                                                            const gchar    * header,
                                                            gchar         ** value,
@@ -232,28 +232,28 @@ GstRTSPResult      gst_rtsp_message_get_header_by_name    (GstRTSPMessage * msg,
 
 /* header serialization */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_append_headers  (const GstRTSPMessage *msg,
                                                      GString *str);
 
 /* handling the body */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_set_body        (GstRTSPMessage *msg,
                                                      const guint8 *data,
                                                      guint size);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_take_body       (GstRTSPMessage *msg,
                                                      guint8 *data,
                                                      guint size);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_get_body        (const GstRTSPMessage *msg,
                                                      guint8 **data,
                                                      guint *size);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_steal_body      (GstRTSPMessage *msg,
                                                      guint8 **data,
                                                      guint *size);
@@ -277,30 +277,30 @@ struct _GstRTSPAuthParam {
   gchar *value;
 };
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPAuthParam *       gst_rtsp_auth_param_copy (GstRTSPAuthParam * param);
-GST_EXPORT
+GST_RTSP_API
 void                     gst_rtsp_auth_param_free (GstRTSPAuthParam * param);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPAuthCredential ** gst_rtsp_message_parse_auth_credentials (GstRTSPMessage * msg, GstRTSPHeaderField field);
 
-GST_EXPORT
+GST_RTSP_API
 void                     gst_rtsp_auth_credentials_free (GstRTSPAuthCredential ** credentials);
 
 #define GST_TYPE_RTSP_AUTH_CREDENTIAL gst_rtsp_auth_credential_get_type()
 
-GST_EXPORT
+GST_RTSP_API
 GType                    gst_rtsp_auth_credential_get_type (void);
 
 #define GST_TYPE_RTSP_AUTH_PARAM gst_rtsp_auth_param_get_type()
 
-GST_EXPORT
+GST_RTSP_API
 GType                    gst_rtsp_auth_param_get_type (void);
 
 /* debug */
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_message_dump            (GstRTSPMessage *msg);
 
 G_END_DECLS

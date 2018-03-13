@@ -17,6 +17,7 @@ rtsp_headers = [
   'gstrtsprange.h',
   'gstrtsptransport.h',
   'gstrtspurl.h',
+  'rtsp-prelude.h',
   'rtsp.h',
 ]
 install_headers(rtsp_headers, subdir : 'gstreamer-1.0/gst/rtsp/')

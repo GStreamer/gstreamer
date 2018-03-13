@@ -1,7 +1,7 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer Rtsp Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * gstrtsp.h: single include header for gst-rtsp library
+ * rtsp-prelude.h: prelude include header for gst-rtsp library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,19 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_RTSP__H__
-#define __GST_RTSP__H__
+#ifndef __GST_RTSP_PRELUDE_H__
+#define __GST_RTSP_PRELUDE_H__
 
-#include <gst/rtsp/rtsp-prelude.h>
+#include <gst/gst.h>
 
-#include <gst/rtsp/gstrtsp.h>
-#include <gst/rtsp/gstrtspconnection.h>
-#include <gst/rtsp/gstrtspdefs.h>
-#include <gst/rtsp/gstrtsp-enumtypes.h>
-#include <gst/rtsp/gstrtspextension.h>
-#include <gst/rtsp/gstrtspmessage.h>
-#include <gst/rtsp/gstrtsprange.h>
-#include <gst/rtsp/gstrtsptransport.h>
-#include <gst/rtsp/gstrtspurl.h>
+#ifndef GST_RTSP_API
+#define GST_RTSP_API GST_EXPORT
+#endif
 
-#endif /* __GST_RTSP__H__ */
+#endif /* __GST_RTSP_PRELUDE_H__ */

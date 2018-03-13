@@ -142,20 +142,20 @@ struct _GstRTSPTimeRange {
   GstRTSPTime2 max2;
 };
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult   gst_rtsp_range_parse        (const gchar *rangestr, GstRTSPTimeRange **range);
 
-GST_EXPORT
+GST_RTSP_API
 gchar *         gst_rtsp_range_to_string    (const GstRTSPTimeRange *range);
 
-GST_EXPORT
+GST_RTSP_API
 void            gst_rtsp_range_free         (GstRTSPTimeRange *range);
 
-GST_EXPORT
+GST_RTSP_API
 gboolean        gst_rtsp_range_get_times     (const GstRTSPTimeRange *range,
                                               GstClockTime *min, GstClockTime *max);
 
-GST_EXPORT
+GST_RTSP_API
 gboolean        gst_rtsp_range_convert_units (GstRTSPTimeRange * range,
                                               GstRTSPRangeUnit unit);
 

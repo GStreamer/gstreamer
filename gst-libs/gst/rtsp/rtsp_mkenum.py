@@ -9,11 +9,11 @@ import sys, os, shutil, subprocess
 
 h_array = [
     '--fhead',
-    "#ifndef __gst_rtsp_ENUM_TYPES_H__\n#define __gst_rtsp_ENUM_TYPES_H__\n\n#include <gst/gst.h>\n\nG_BEGIN_DECLS\n",
+    "#ifndef __gst_rtsp_ENUM_TYPES_H__\n#define __gst_rtsp_ENUM_TYPES_H__\n\n#include <gst/gst.h>\n#include <gst/rtsp/rtsp-prelude.h>\nG_BEGIN_DECLS\n",
     '--fprod',
     "\n/* enumerations from \"@filename@\" */\n",
     '--vhead',
-    "GST_EXPORT GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n",
+    "GST_RTSP_API GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n",
     '--ftail',
     "G_END_DECLS\n\n#endif /* __gst_rtsp_ENUM_TYPES_H__ */"
 ]

@@ -86,28 +86,28 @@ struct _GstRTSPUrl {
   gchar             *query;
 };
 
-GST_EXPORT
+GST_RTSP_API
 GType gst_rtsp_url_get_type (void);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_url_parse           (const gchar *urlstr, GstRTSPUrl **url);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPUrl*        gst_rtsp_url_copy            (const GstRTSPUrl *url);
 
-GST_EXPORT
+GST_RTSP_API
 void               gst_rtsp_url_free            (GstRTSPUrl *url);
 
-GST_EXPORT
+GST_RTSP_API
 gchar*             gst_rtsp_url_get_request_uri (const GstRTSPUrl *url);
 
-GST_EXPORT
+GST_RTSP_API
 gchar**            gst_rtsp_url_decode_path_components
                                                 (const GstRTSPUrl *url);
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_url_set_port        (GstRTSPUrl *url, guint16 port);
 
-GST_EXPORT
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_url_get_port        (const GstRTSPUrl *url, guint16 *port);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
