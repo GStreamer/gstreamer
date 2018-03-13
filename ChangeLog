@@ -1,7 +1,58 @@
+=== release 1.13.91 ===
+
+2018-03-13 19:32:39 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.13.91
+
+2018-03-09 12:02:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix typo in package name define
+
+2018-02-27 15:42:53 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxh265enc.c:
+	* omx/gstomxh265utils.c:
+	  omxh265: update 422 profile names
+	  h265parse is gaining support for the format range extension profile
+	  (bgo#793876).
+	  Use the profile names defined in h265parse.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793928
+
+2018-03-05 13:49:18 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Don't drop the frame on empty payload
+	  This otherwise may lead to "No reference frame found" warning.
+
+2018-03-01 15:16:55 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Don't drop the frame on empty payload
+	  This otherwise may lead to "No reference frame found" warning.
+
+2018-03-02 15:36:06 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: Free empty buffers list in use_dynamic_buffers
+	  To indicate we are doing dynamic buffers importation, we pass
+	  a list of NULL pointers, but we forgot to free that list.
+
+2018-03-01 15:16:32 -0500  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Fix CodecState leak
+
 === release 1.13.90 ===
 
 2018-03-03 23:00:59 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
