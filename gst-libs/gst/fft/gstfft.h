@@ -24,6 +24,8 @@
 #ifndef __GST_FFT_H__
 #define __GST_FFT_H__
 
+#include <gst/fft/fft-prelude.h>
+
 G_BEGIN_DECLS
 
 /**
@@ -47,7 +49,7 @@ typedef enum
 
 /* Functions */
 
-GST_EXPORT
+GST_FFT_API
 gint gst_fft_next_fast_length (gint n) G_GNUC_CONST;
 
 G_END_DECLS

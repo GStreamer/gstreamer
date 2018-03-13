@@ -4,6 +4,7 @@ libgstfft_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSIO
 
 libgstfft_@GST_API_VERSION@_include_HEADERS = \
 	fft.h \
+	fft-prelude.h \
 	gstfft.h \
 	gstffts16.h \
 	gstffts32.h \

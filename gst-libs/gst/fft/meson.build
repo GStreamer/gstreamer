@@ -16,6 +16,7 @@ fft_sources = [
 
 fft_headers = [
   'fft.h',
+  'fft-prelude.h',
   'gstfftf32.h',
   'gstfftf64.h',
   'gstfft.h',
