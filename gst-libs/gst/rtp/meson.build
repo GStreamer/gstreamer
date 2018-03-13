@@ -17,6 +17,7 @@ rtp_headers = [
   'gstrtpdefs.h',
   'gstrtphdrext.h',
   'gstrtppayloads.h',
+  'rtp-prelude.h',
   'rtp.h',
 ]
 install_headers(rtp_headers, subdir : 'gstreamer-1.0/gst/rtp/')

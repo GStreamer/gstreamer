@@ -25,6 +25,7 @@
 #define __GST_RTPDEFS_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/rtp-prelude.h>
 
 /**
  * GstRTPProfile:

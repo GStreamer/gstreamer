@@ -76,44 +76,44 @@ struct _GstRTPBaseAudioPayloadClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTP_API
 GType gst_rtp_base_audio_payload_get_type (void);
 
 /* configure frame based */
 
-GST_EXPORT
+GST_RTP_API
 void            gst_rtp_base_audio_payload_set_frame_based        (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
 
-GST_EXPORT
+GST_RTP_API
 void            gst_rtp_base_audio_payload_set_frame_options      (GstRTPBaseAudioPayload *rtpbaseaudiopayload,
                                                                    gint frame_duration, gint frame_size);
 
 /* configure sample based */
 
-GST_EXPORT
+GST_RTP_API
 void            gst_rtp_base_audio_payload_set_sample_based       (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
 
-GST_EXPORT
+GST_RTP_API
 void            gst_rtp_base_audio_payload_set_sample_options     (GstRTPBaseAudioPayload *rtpbaseaudiopayload,
                                                                    gint sample_size);
 
-GST_EXPORT
+GST_RTP_API
 void            gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload *rtpbaseaudiopayload,
                                                                    gint sample_size);
 
 /* get the internal adapter */
 
-GST_EXPORT
+GST_RTP_API
 GstAdapter*     gst_rtp_base_audio_payload_get_adapter            (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
 
 /* push and flushing data */
 
-GST_EXPORT
+GST_RTP_API
 GstFlowReturn   gst_rtp_base_audio_payload_push                   (GstRTPBaseAudioPayload * baseaudiopayload,
                                                                    const guint8 * data, guint payload_len,
                                                                    GstClockTime timestamp);
 
-GST_EXPORT
+GST_RTP_API
 GstFlowReturn   gst_rtp_base_audio_payload_flush                  (GstRTPBaseAudioPayload * baseaudiopayload,
                                                                    guint payload_len, GstClockTime timestamp);
 

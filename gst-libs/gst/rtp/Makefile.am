@@ -2,6 +2,7 @@ libgstrtpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtp
 
 libgstrtpinclude_HEADERS = \
 			   rtp.h \
+			   rtp-prelude.h \
 			   gstrtpdefs.h \
 			   gstrtpbuffer.h \
 			   gstrtcpbuffer.h \
@@ -38,7 +39,8 @@ glib_gen_prefix = __gst_rtp
 glib_enum_define = gst_rtp
 glib_enum_headers = $(libgstrtpinclude_HEADERS)
 glib_gen_basename = gstrtp
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_RTP_API
+glib_gen_decl_include=\#include <gst/rtp/rtp-prelude.h>
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 

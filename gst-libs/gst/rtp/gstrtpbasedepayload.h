@@ -114,13 +114,13 @@ struct _GstRTPBaseDepayloadClass
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 
-GST_EXPORT
+GST_RTP_API
 GType gst_rtp_base_depayload_get_type (void);
 
-GST_EXPORT
+GST_RTP_API
 GstFlowReturn   gst_rtp_base_depayload_push       (GstRTPBaseDepayload *filter, GstBuffer *out_buf);
 
-GST_EXPORT
+GST_RTP_API
 GstFlowReturn   gst_rtp_base_depayload_push_list  (GstRTPBaseDepayload *filter, GstBufferList *out_list);
 
 

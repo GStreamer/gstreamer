@@ -34,20 +34,20 @@ G_BEGIN_DECLS
 
 #define GST_RTP_HDREXT_NTP_64_SIZE 8
 
-GST_EXPORT
+GST_RTP_API
 gboolean       gst_rtp_hdrext_set_ntp_64  (gpointer data, guint size, guint64 ntptime);
 
-GST_EXPORT
+GST_RTP_API
 gboolean       gst_rtp_hdrext_get_ntp_64  (gpointer data, guint size, guint64 *ntptime);
 
 #define GST_RTP_HDREXT_NTP_56 "ntp-56"
 
 #define GST_RTP_HDREXT_NTP_56_SIZE 7
 
-GST_EXPORT
+GST_RTP_API
 gboolean       gst_rtp_hdrext_set_ntp_56  (gpointer data, guint size, guint64 ntptime);
 
-GST_EXPORT
+GST_RTP_API
 gboolean       gst_rtp_hdrext_get_ntp_56  (gpointer data, guint size, guint64 *ntptime);
 
 G_END_DECLS
