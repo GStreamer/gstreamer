@@ -44,6 +44,7 @@ audio_mkenum_headers = [
 
 # FIXME: check headers
 audio_headers = audio_mkenum_headers + [
+  'audio-prelude.h',
   'gstaudiobasesink.h',
   'gstaudiobasesrc.h',
   'gstaudiocdsrc.h',
