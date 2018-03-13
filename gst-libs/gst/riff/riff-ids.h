@@ -23,6 +23,7 @@
 #define __GST_RIFF_IDS_H__
 
 #include <gst/gst.h>
+#include "riff-prelude.h"
 
 G_BEGIN_DECLS
 

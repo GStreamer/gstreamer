@@ -1,7 +1,7 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer RIFF Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * gstriff.h: single include header for gst-riff library
+ * riff-prelude.h: prelude include header for gst-riff library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,12 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_RIFF_H__
-#define __GST_RIFF_H__
+#ifndef __GST_RIFF_PRELUDE_H__
+#define __GST_RIFF_PRELUDE_H__
 
-#include <gst/riff/riff-prelude.h>
-#include <gst/riff/riff-ids.h>
-#include <gst/riff/riff-media.h>
-#include <gst/riff/riff-read.h>
+#include <gst/gst.h>
 
-#endif /* __GST_RIFF_H__ */
+#ifndef GST_RIFF_API
+#define GST_RIFF_API GST_EXPORT
+#endif
+
+#endif /* __GST_RIFF_PRELUDE_H__ */

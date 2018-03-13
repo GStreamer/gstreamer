@@ -33,7 +33,7 @@ G_BEGIN_DECLS
  * Operate using pull_range().
  */
 
-GST_EXPORT
+GST_RIFF_API
 GstFlowReturn gst_riff_read_chunk   (GstElement * element,
                                      GstPad     * pad,
                                      guint64    * offset,
@@ -47,42 +47,42 @@ GstFlowReturn gst_riff_read_chunk   (GstElement * element,
  * by the function.
  */
 
-GST_EXPORT
+GST_RIFF_API
 gboolean gst_riff_parse_chunk       (GstElement * element,
                                      GstBuffer  * buf,
                                      guint      * offset,
                                      guint32    * fourcc,
                                      GstBuffer ** chunk_data);
 
-GST_EXPORT
+GST_RIFF_API
 gboolean gst_riff_parse_file_header (GstElement * element,
                                      GstBuffer  * buf,
                                      guint32    * doctype);
 
-GST_EXPORT
+GST_RIFF_API
 gboolean gst_riff_parse_strh        (GstElement     * element,
                                      GstBuffer      * buf,
                                      gst_riff_strh ** strh);
 
-GST_EXPORT
+GST_RIFF_API
 gboolean gst_riff_parse_strf_vids   (GstElement          * element,
                                      GstBuffer           * buf,
                                      gst_riff_strf_vids ** strf,
                                      GstBuffer          ** data);
 
-GST_EXPORT
+GST_RIFF_API
 gboolean gst_riff_parse_strf_auds   (GstElement          * element,
                                      GstBuffer           * buf,
                                      gst_riff_strf_auds ** strf,
                                      GstBuffer          ** data);
 
-GST_EXPORT
+GST_RIFF_API
 gboolean gst_riff_parse_strf_iavs   (GstElement          * element,
                                      GstBuffer           * buf,
                                      gst_riff_strf_iavs ** strf,
                                      GstBuffer          ** data);
 
-GST_EXPORT
+GST_RIFF_API
 void gst_riff_parse_info            (GstElement  * element,
                                      GstBuffer   * buf,
                                      GstTagList ** taglist);
@@ -90,7 +90,7 @@ void gst_riff_parse_info            (GstElement  * element,
  * Init.
  */
 
-GST_EXPORT
+GST_RIFF_API
 void gst_riff_init                  (void);
 
 G_END_DECLS

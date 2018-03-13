@@ -8,6 +8,7 @@ libgstriff_@GST_API_VERSION@_la_SOURCES = \
 libgstriff_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/riff
 libgstriff_@GST_API_VERSION@include_HEADERS = \
 	riff.h \
+	riff-prelude.h \
 	riff-ids.h \
 	riff-media.h \
 	riff-read.h

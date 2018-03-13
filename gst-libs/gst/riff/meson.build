@@ -6,6 +6,7 @@ riff_sources = [
 
 riff_headers = [
   'riff.h',
+  'riff-prelude.h',
   'riff-ids.h',
   'riff-media.h',
   'riff-read.h',
