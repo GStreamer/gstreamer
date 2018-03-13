@@ -676,19 +676,6 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     gst_caps_unref (peercaps);
   }
 
-  /* Change default profile to high-10 if input is 10 bits */
-  if (profile == OMX_VIDEO_AVCProfileMax) {
-    GstVideoFormat format;
-
-    format = state->info.finfo->format;
-    if (format == GST_VIDEO_FORMAT_NV12_10LE32 ||
-        format == GST_VIDEO_FORMAT_NV16_10LE32) {
-      GST_DEBUG_OBJECT (self,
-          "Set profile to high-10 as input is a 10 bits format");
-      profile = OMX_VIDEO_AVCProfileHigh10;
-    }
-  }
-
   if (profile != OMX_VIDEO_AVCProfileMax || level != OMX_VIDEO_AVCLevelMax) {
     /* OMX provides 2 API to set the profile and level. We try using the
      * generic one here and the H264 specific when calling
