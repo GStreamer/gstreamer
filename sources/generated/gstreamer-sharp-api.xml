@@ -7250,7 +7250,7 @@
     <struct name="DeviceMonitorPrivate" cname="GstDeviceMonitorPrivate" opaque="true" hidden="true" />
     <struct name="DevicePrivate" cname="GstDevicePrivate" opaque="true" hidden="true" />
     <struct name="DeviceProviderPrivate" cname="GstDeviceProviderPrivate" opaque="true" hidden="true" />
-    <boxed name="Event" cname="GstEvent" opaque="true" hidden="false" parent="GstMiniObject">
+    <boxed name="Event" cname="GstEvent" opaque="true" hidden="false" name_constructors="true" parent="GstMiniObject">
       <method name="GetType" cname="gst_event_get_type" shared="true">
         <return-type type="GType" />
       </method>

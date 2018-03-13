@@ -54,6 +54,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 		<constructor cname="gst_caps_new_any" disable_void_ctor="" />
 	</add-node>
 
+	<attr path="/api/namespace/boxed[@cname='GstEvent']" name="name_constructors">true</attr>
+
 	<!-- Explicitly declare GstSample as a GstMiniObject (the opaque struct definition doesn't have GObject-Introspection
 	     annotations) to get ref-counting to work.
 	-->
