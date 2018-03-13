@@ -3,7 +3,7 @@
   <description>Mixes multiple audio streams</description>
   <filename>../../gst/audiomixer/.libs/libgstaudiomixer.so</filename>
   <basename>libgstaudiomixer.so</basename>
-  <version>1.13.90</version>
+  <version>1.13.91</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
