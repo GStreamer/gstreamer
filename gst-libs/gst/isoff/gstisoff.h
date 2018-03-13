@@ -30,6 +30,10 @@
 
 G_BEGIN_DECLS
 
+#ifndef GST_ISOFF_API
+#define GST_ISOFF_API GST_EXPORT
+#endif
+
 typedef enum {
   GST_ISOFF_PARSER_OK,
   GST_ISOFF_PARSER_DONE,
@@ -37,7 +41,7 @@ typedef enum {
   GST_ISOFF_PARSER_ERROR
 } GstIsoffParserResult;
 
-GST_EXPORT
+GST_ISOFF_API
 gboolean gst_isoff_parse_box_header (GstByteReader * reader, guint32 * type, guint8 extended_type[16], guint * header_size, guint64 * size);
 
 #define GST_ISOFF_FOURCC_UUID GST_MAKE_FOURCC('u','u','i','d')
@@ -182,10 +186,10 @@ typedef struct _GstMoofBox
   GArray *traf;
 } GstMoofBox;
 
-GST_EXPORT
+GST_ISOFF_API
 GstMoofBox * gst_isoff_moof_box_parse (GstByteReader *reader);
 
-GST_EXPORT
+GST_ISOFF_API
 void gst_isoff_moof_box_free (GstMoofBox *moof);
 
 typedef struct _GstTkhdBox
@@ -220,10 +224,10 @@ typedef struct _GstMoovBox
   GArray *trak;
 } GstMoovBox;
 
-GST_EXPORT
+GST_ISOFF_API
 GstMoovBox * gst_isoff_moov_box_parse (GstByteReader *reader);
 
-GST_EXPORT
+GST_ISOFF_API
 void gst_isoff_moov_box_free (GstMoovBox *moov);
 
 typedef struct _GstSidxBoxEntry
@@ -274,16 +278,16 @@ typedef struct _GstSidxParser
   GstSidxBox sidx;
 } GstSidxParser;
 
-GST_EXPORT
+GST_ISOFF_API
 void gst_isoff_sidx_parser_init (GstSidxParser * parser);
 
-GST_EXPORT
+GST_ISOFF_API
 void gst_isoff_sidx_parser_clear (GstSidxParser * parser);
 
-GST_EXPORT
+GST_ISOFF_API
 GstIsoffParserResult gst_isoff_sidx_parser_parse (GstSidxParser * parser, GstByteReader * reader, guint * consumed);
 
-GST_EXPORT
+GST_ISOFF_API
 GstIsoffParserResult gst_isoff_sidx_parser_add_buffer (GstSidxParser * parser, GstBuffer * buf, guint * consumed);
 
 G_END_DECLS
