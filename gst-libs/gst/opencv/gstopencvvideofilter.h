@@ -46,6 +46,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideofilter.h>
+#include <gst/opencv/opencv-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -101,10 +102,10 @@ struct _GstOpencvVideoFilterClass
   GstOpencvVideoFilterSetCaps cv_set_caps;
 };
 
-GST_EXPORT
+GST_OPENCV_API
 GType gst_opencv_video_filter_get_type (void);
 
-GST_EXPORT
+GST_OPENCV_API
 void gst_opencv_video_filter_set_in_place (GstOpencvVideoFilter * transform,
                                            gboolean ip);
 

@@ -4,6 +4,7 @@ opencv_sources = [
 ]
 
 opencv_headers = [
+  'opencv-prelude.h',
   'gstopencvutils.h',
   'gstopencvvideofilter.h',
 ]
