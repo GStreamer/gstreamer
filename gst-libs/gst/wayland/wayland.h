@@ -29,20 +29,24 @@
 #include <gst/gst.h>
 #include <wayland-client.h>
 
+#ifndef GST_WAYLAND_API
+#define GST_WAYLAND_API GST_EXPORT
+#endif
+
 G_BEGIN_DECLS
 
 /* The type of GstContext used to pass the wl_display pointer
  * from the application to the sink */
 #define GST_WAYLAND_DISPLAY_HANDLE_CONTEXT_TYPE "GstWaylandDisplayHandleContextType"
 
-GST_EXPORT
+GST_WAYLAND_API
 gboolean gst_is_wayland_display_handle_need_context_message (GstMessage * msg);
 
-GST_EXPORT
+GST_WAYLAND_API
 GstContext *
 gst_wayland_display_handle_context_new (struct wl_display * display);
 
-GST_EXPORT
+GST_WAYLAND_API
 struct wl_display *
 gst_wayland_display_handle_context_get_handle (GstContext * context);
 
@@ -79,14 +83,14 @@ struct _GstWaylandVideoInterface {
   void (*end_geometry_change)     (GstWaylandVideo *video);
 };
 
-GST_EXPORT
+GST_WAYLAND_API
 GType   gst_wayland_video_get_type (void);
 
 /* virtual function wrappers */
-GST_EXPORT
+GST_WAYLAND_API
 void gst_wayland_video_begin_geometry_change (GstWaylandVideo * video);
 
-GST_EXPORT
+GST_WAYLAND_API
 void gst_wayland_video_end_geometry_change (GstWaylandVideo * video);
 
 G_END_DECLS
