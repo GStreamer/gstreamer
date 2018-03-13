@@ -17,6 +17,7 @@ noinst_HEADERS = parserutils.h nalutils.h dboolhuff.h vp8utils.h vp9utils.h
 libgstcodecparsers_@GST_API_VERSION@include_HEADERS = \
 	gstmpegvideoparser.h gsth264parser.h gstvc1parser.h gstmpeg4parser.h \
 	gsth265parser.h gstvp8parser.h gstvp8rangedecoder.h \
+	codecparsers-prelude.h \
 	gstjpegparser.h \
 	gstmpegvideometa.h \
 	gstjpeg2000sampling.h \

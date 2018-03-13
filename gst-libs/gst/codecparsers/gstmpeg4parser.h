@@ -22,6 +22,7 @@
 #define __GST_MPEG4UTIL_H__
 
 #include <gst/gst.h>
+#include <gst/codecparsers/codecparsers-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -532,48 +533,48 @@ struct _GstMpeg4Packet
   GstMpeg4StartCode type;
 };
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult gst_h263_parse       (GstMpeg4Packet * packet,
                                           const guint8 * data, guint offset,
                                           gsize size);
 
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult gst_mpeg4_parse      (GstMpeg4Packet * packet,
                                           gboolean skip_user_data,
                                           GstMpeg4VideoObjectPlane *vop,
                                           const guint8 * data, guint offset,
                                           gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_video_object_plane       (GstMpeg4VideoObjectPlane *vop,
                                           GstMpeg4SpriteTrajectory *sprite_trajectory,
                                           GstMpeg4VideoObjectLayer *vol,
                                           const guint8 * data,
                                           gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_group_of_vop             (GstMpeg4GroupOfVOP *gov,
                                           const guint8 * data, gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_video_object_layer       (GstMpeg4VideoObjectLayer *vol,
                                           GstMpeg4VisualObject *vo,
                                           const guint8 * data, gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_visual_object            (GstMpeg4VisualObject *vo,
                                           GstMpeg4VideoSignalType *signal_type,
                                           const guint8 * data, gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_visual_object_sequence   (GstMpeg4VisualObjectSequence *vos,
                                           const guint8 * data, gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr * shorthdr,
                                           const guint8 * data, gsize size);
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstMpeg4ParseResult
 gst_mpeg4_parse_video_packet_header      (GstMpeg4VideoPacketHdr * videopackethdr,
                                           GstMpeg4VideoObjectLayer * vol,

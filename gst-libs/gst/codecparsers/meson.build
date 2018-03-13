@@ -17,6 +17,7 @@ codecparser_sources = [
   'gstmpegvideometa.c',
 ]
 codecparser_headers = [
+  'codecparsers-prelude.h',
   'gstmpegvideoparser.h',
   'gsth264parser.h',
   'gstvc1parser.h',

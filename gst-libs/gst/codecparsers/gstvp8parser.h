@@ -25,6 +25,7 @@
 #define GST_VP8_PARSER_H
 
 #include <gst/gst.h>
+#include <gst/codecparsers/codecparsers-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -326,10 +327,10 @@ struct _GstVp8Parser
   GstVp8ModeProbs mode_probs;
 };
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void                gst_vp8_parser_init (GstVp8Parser * parser);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstVp8ParserResult  gst_vp8_parser_parse_frame_header (GstVp8Parser   * parser,
                                                        GstVp8FrameHdr * frame_hdr,
                                                        const guint8   * data,

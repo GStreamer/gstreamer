@@ -31,6 +31,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/codecparsers/codecparsers-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -482,13 +483,13 @@ struct _GstVp9Parser
   GstVp9Segmentation segmentation[GST_VP9_MAX_SEGMENTS];
 };
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstVp9Parser *     gst_vp9_parser_new (void);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstVp9ParserResult gst_vp9_parser_parse_frame_header (GstVp9Parser* parser, GstVp9FrameHdr * frame_hdr, const guint8 * data, gsize size);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void               gst_vp9_parser_free (GstVp9Parser * parser);
 
 G_END_DECLS

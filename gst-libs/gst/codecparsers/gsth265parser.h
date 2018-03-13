@@ -29,6 +29,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/codecparsers/codecparsers-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -1083,24 +1084,24 @@ struct _GstH265Parser
   GstH265PPS *last_pps;
 };
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265Parser *     gst_h265_parser_new               (void);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_identify_nalu      (GstH265Parser  * parser,
                                                         const guint8   * data,
                                                         guint            offset,
                                                         gsize            size,
                                                         GstH265NalUnit * nalu);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_identify_nalu_unchecked (GstH265Parser * parser,
                                                         const guint8   * data,
                                                         guint            offset,
                                                         gsize            size,
                                                         GstH265NalUnit * nalu);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_identify_nalu_hevc (GstH265Parser  * parser,
                                                         const guint8   * data,
                                                         guint            offset,
@@ -1108,81 +1109,81 @@ GstH265ParserResult gst_h265_parser_identify_nalu_hevc (GstH265Parser  * parser,
                                                         guint8           nal_length_size,
                                                         GstH265NalUnit * nalu);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_parse_nal       (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_parse_slice_hdr (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu,
                                                      GstH265SliceHdr * slice);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_parse_vps       (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu,
                                                      GstH265VPS      * vps);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_parse_sps       (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu,
                                                      GstH265SPS      * sps,
                                                      gboolean          parse_vui_params);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_parse_pps       (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu,
                                                      GstH265PPS      * pps);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parser_parse_sei       (GstH265Parser   * parser,
                                                      GstH265NalUnit  * nalu,
                                                      GArray **messages);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void                gst_h265_parser_free            (GstH265Parser  * parser);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parse_vps              (GstH265NalUnit * nalu,
                                                      GstH265VPS     * vps);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parse_sps              (GstH265Parser  * parser,
                                                      GstH265NalUnit * nalu,
                                                      GstH265SPS     * sps,
                                                      gboolean         parse_vui_params);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265ParserResult gst_h265_parse_pps              (GstH265Parser  * parser,
                                                      GstH265NalUnit * nalu,
                                                      GstH265PPS     * pps);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 gboolean            gst_h265_slice_hdr_copy (GstH265SliceHdr       * dst_slice,
                                              const GstH265SliceHdr * src_slice);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void                gst_h265_slice_hdr_free (GstH265SliceHdr * slice_hdr);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 gboolean            gst_h265_sei_copy       (GstH265SEIMessage       * dest_sei,
                                              const GstH265SEIMessage * src_sei);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void                gst_h265_sei_free       (GstH265SEIMessage * sei);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_4x4_get_zigzag_from_raster (guint8 out_quant[16],
                                                           const guint8 quant[16]);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_4x4_get_raster_from_zigzag (guint8 out_quant[16],
                                                           const guint8 quant[16]);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],
                                                           const guint8 quant[64]);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_8x8_get_raster_from_zigzag (guint8 out_quant[64],
                                                           const guint8 quant[64]);
 
@@ -1195,19 +1196,19 @@ void    gst_h265_quant_matrix_8x8_get_raster_from_zigzag (guint8 out_quant[64],
 #define gst_h265_quant_matrix_32x32_get_raster_from_zigzag \
         gst_h265_quant_matrix_8x8_get_raster_from_zigzag
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_4x4_get_uprightdiagonal_from_raster (guint8 out_quant[16],
                                                           const guint8 quant[16]);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_4x4_get_raster_from_uprightdiagonal (guint8 out_quant[16],
                                                           const guint8 quant[16]);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_8x8_get_uprightdiagonal_from_raster (guint8 out_quant[64],
                                                           const guint8 quant[64]);
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 void    gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal (guint8 out_quant[64],
                                                           const guint8 quant[64]);
 
@@ -1220,7 +1221,7 @@ void    gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal (guint8 out_qu
 #define gst_h265_quant_matrix_32x32_get_raster_from_uprightdiagonal\
         gst_h265_quant_matrix_8x8_get_raster_from_uprightdiagonal
 
-GST_EXPORT
+GST_CODEC_PARSERS_API
 GstH265Profile gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl);
 
 G_END_DECLS
