@@ -1,7 +1,58 @@
+=== release 1.13.91 ===
+
+2018-03-13 19:28:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.13.91
+
+2018-03-13 13:30:41 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-server/rtsp-address-pool.h:
+	* gst/rtsp-server/rtsp-auth.h:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-media-factory-uri.h:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-mount-points.h:
+	* gst/rtsp-server/rtsp-onvif-client.h:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	* gst/rtsp-server/rtsp-onvif-media.h:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	* gst/rtsp-server/rtsp-params.h:
+	* gst/rtsp-server/rtsp-permissions.h:
+	* gst/rtsp-server/rtsp-sdp.h:
+	* gst/rtsp-server/rtsp-server-prelude.h:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session-media.h:
+	* gst/rtsp-server/rtsp-session-pool.h:
+	* gst/rtsp-server/rtsp-session.h:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.h:
+	* gst/rtsp-server/rtsp-thread-pool.h:
+	* gst/rtsp-server/rtsp-token.h:
+	  rtsp-server: GST_EXPORT -> GST_RTSP_SERVER_API
+	  We need different export decorators for the different libs.
+	  For now no actual change though, just rename before the release,
+	  and add prelude headers to define the new decorator to GST_EXPORT.
+
+2018-03-07 12:20:05 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	  rtsp-onvif-media-factory: Document that backchannel pipelines must end with async=false sinks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794143
+
 === release 1.13.90 ===
 
 2018-03-03 22:49:34 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
