@@ -29,6 +29,7 @@ typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPClientClass GstRTSPClientClass;
 typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 
+#include "rtsp-server-prelude.h"
 #include "rtsp-context.h"
 #include "rtsp-mount-points.h"
 #include "rtsp-sdp.h"
@@ -143,62 +144,62 @@ struct _GstRTSPClientClass {
   gpointer _gst_reserved[GST_PADDING_LARGE-16];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType                 gst_rtsp_client_get_type          (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPClient *       gst_rtsp_client_new               (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_mount_points  (GstRTSPClient *client,
                                                          GstRTSPMountPoints *mounts);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPMountPoints *  gst_rtsp_client_get_mount_points  (GstRTSPClient *client);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_thread_pool   (GstRTSPClient *client, GstRTSPThreadPool *pool);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPThreadPool *   gst_rtsp_client_get_thread_pool   (GstRTSPClient *client);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean              gst_rtsp_client_set_connection    (GstRTSPClient *client, GstRTSPConnection *conn);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
                                                          GMainContext *context);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_client_close             (GstRTSPClient * client);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GstRTSPClientSendFunc func,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,
                                                          GstRTSPMessage *message);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPResult         gst_rtsp_client_send_message      (GstRTSPClient * client,
                                                          GstRTSPSession *session,
                                                          GstRTSPMessage *message);
@@ -226,7 +227,7 @@ typedef GstRTSPFilterResult (*GstRTSPClientSessionFilterFunc)  (GstRTSPClient *c
                                                                 GstRTSPSession *sess,
                                                                 gpointer user_data);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GList *                gst_rtsp_client_session_filter    (GstRTSPClient *client,
                                                           GstRTSPClientSessionFilterFunc func,
                                                           gpointer user_data);

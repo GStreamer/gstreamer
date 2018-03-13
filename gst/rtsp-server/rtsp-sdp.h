@@ -34,13 +34,13 @@ typedef struct {
 
 /* creating SDP */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean            gst_rtsp_sdp_from_media  (GstSDPMessage *sdp, GstSDPInfo *info, GstRTSPMedia * media);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean            gst_rtsp_sdp_from_stream (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPStream *stream);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean
 gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info, GstRTSPStream * stream, GstCaps * caps, GstRTSPProfile profile);
 

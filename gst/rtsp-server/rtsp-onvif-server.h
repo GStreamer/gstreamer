@@ -51,9 +51,9 @@ struct GstRTSPOnvifServer
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType gst_rtsp_onvif_server_get_type (void);
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPServer *gst_rtsp_onvif_server_new (void);
 
 #define GST_RTSP_ONVIF_BACKCHANNEL_REQUIREMENT "www.onvif.org/ver20/backchannel"

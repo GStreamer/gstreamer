@@ -51,7 +51,7 @@ struct GstRTSPOnvifClient
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType gst_rtsp_onvif_client_get_type (void);
 
 #endif /* __GST_RTSP_ONVIF_CLIENT_H__ */

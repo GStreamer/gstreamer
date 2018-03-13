@@ -68,31 +68,31 @@ struct _GstRTSPMountPointsClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType                 gst_rtsp_mount_points_get_type       (void);
 
 /* creating a mount points */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPMountPoints *  gst_rtsp_mount_points_new            (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gchar *               gst_rtsp_mount_points_make_path      (GstRTSPMountPoints *mounts,
                                                             const GstRTSPUrl * url);
 /* finding a media factory */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPMediaFactory * gst_rtsp_mount_points_match          (GstRTSPMountPoints *mounts,
                                                             const gchar *path,
                                                             gint * matched);
 /* managing media to a mount point */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_mount_points_add_factory    (GstRTSPMountPoints *mounts,
                                                             const gchar *path,
                                                             GstRTSPMediaFactory *factory);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints *mounts,
                                                             const gchar *path);
 

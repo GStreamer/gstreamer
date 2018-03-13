@@ -26,6 +26,7 @@ typedef struct _GstRTSPAuth GstRTSPAuth;
 typedef struct _GstRTSPAuthClass GstRTSPAuthClass;
 typedef struct _GstRTSPAuthPrivate GstRTSPAuthPrivate;
 
+#include "rtsp-server-prelude.h"
 #include "rtsp-client.h"
 #include "rtsp-token.h"
 
@@ -81,63 +82,63 @@ struct _GstRTSPAuthClass {
   gpointer            _gst_reserved[GST_PADDING - 1];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType               gst_rtsp_auth_get_type          (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAuth *       gst_rtsp_auth_new               (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_set_tls_certificate (GstRTSPAuth *auth, GTlsCertificate *cert);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GTlsCertificate *   gst_rtsp_auth_get_tls_certificate (GstRTSPAuth *auth);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_set_tls_database (GstRTSPAuth *auth, GTlsDatabase *database);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GTlsDatabase *      gst_rtsp_auth_get_tls_database (GstRTSPAuth *auth);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_set_tls_authentication_mode (GstRTSPAuth *auth, GTlsAuthenticationMode mode);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GTlsAuthenticationMode gst_rtsp_auth_get_tls_authentication_mode (GstRTSPAuth *auth);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_set_default_token (GstRTSPAuth *auth, GstRTSPToken *token);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPToken *      gst_rtsp_auth_get_default_token (GstRTSPAuth *auth);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
                                                      GstRTSPToken *token);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_add_digest        (GstRTSPAuth *auth, const gchar *user,
                                                      const gchar *pass, GstRTSPToken *token);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_remove_digest     (GstRTSPAuth *auth, const gchar *user);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                gst_rtsp_auth_set_supported_methods (GstRTSPAuth *auth, GstRTSPAuthMethod methods);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAuthMethod   gst_rtsp_auth_get_supported_methods (GstRTSPAuth *auth);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean            gst_rtsp_auth_check             (const gchar *check);
 
 
 /* helpers */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);
 
 /* checks */

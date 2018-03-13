@@ -53,14 +53,14 @@ struct GstRTSPOnvifMedia
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType gst_rtsp_onvif_media_get_type (void);
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean gst_rtsp_onvif_media_collect_backchannel (GstRTSPOnvifMedia * media);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void gst_rtsp_onvif_media_set_backchannel_bandwidth (GstRTSPOnvifMedia * media, guint bandwidth);
-GST_EXPORT
+GST_RTSP_SERVER_API
 guint gst_rtsp_onvif_media_get_backchannel_bandwidth (GstRTSPOnvifMedia * media);
 
 #endif /* __GST_RTSP_ONVIF_MEDIA_H__ */

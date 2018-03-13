@@ -22,11 +22,13 @@
 #ifndef __GST_RTSP_PERMISSIONS_H__
 #define __GST_RTSP_PERMISSIONS_H__
 
+#include "rtsp-server-prelude.h"
+
 typedef struct _GstRTSPPermissions GstRTSPPermissions;
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType gst_rtsp_permissions_get_type (void);
 
 #define GST_TYPE_RTSP_PERMISSIONS        (gst_rtsp_permissions_get_type ())
@@ -72,42 +74,42 @@ gst_rtsp_permissions_unref (GstRTSPPermissions * permissions)
 }
 
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPPermissions *  gst_rtsp_permissions_new             (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_add_role        (GstRTSPPermissions *permissions,
                                                             const gchar *role,
                                                             const gchar *fieldname, ...);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_add_role_valist (GstRTSPPermissions *permissions,
                                                             const gchar *role,
                                                             const gchar *fieldname,
                                                             va_list var_args);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_add_role_empty  (GstRTSPPermissions * permissions,
                                                             const gchar * role);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_add_role_from_structure (GstRTSPPermissions * permissions,
                                                             GstStructure *structure);
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_add_permission_for_role (GstRTSPPermissions * permissions,
                                                             const gchar * role,
                                                             const gchar * permission,
                                                             gboolean      allowed);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                  gst_rtsp_permissions_remove_role     (GstRTSPPermissions *permissions,
                                                             const gchar *role);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 const GstStructure *  gst_rtsp_permissions_get_role        (GstRTSPPermissions *permissions,
                                                             const gchar *role);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean              gst_rtsp_permissions_is_allowed      (GstRTSPPermissions *permissions,
                                                             const gchar *role, const gchar *permission);
 

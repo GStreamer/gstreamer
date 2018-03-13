@@ -1,5 +1,7 @@
-/* GStreamer
- * Copyright (C) 2008 Wim Taymans <wim.taymans at gmail.com>
+/* GStreamer RtspServer Library
+ * Copyright (C) 2018 GStreamer developers
+ *
+ * rtspserver-prelude.h: prelude include header for gst-rtspserver library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,25 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_RTSP_SERVER_PRELUDE_H__
+#define __GST_RTSP_SERVER_PRELUDE_H__
+
 #include <gst/gst.h>
 
-#include <gst/rtsp/gstrtspurl.h>
-#include <gst/rtsp/gstrtspmessage.h>
+#ifndef GST_RTSP_SERVER_API
+#define GST_RTSP_SERVER_API GST_EXPORT
+#endif
 
-#ifndef __GST_RTSP_PARAMS_H__
-#define __GST_RTSP_PARAMS_H__
-
-#include "rtsp-client.h"
-#include "rtsp-session.h"
-
-G_BEGIN_DECLS
-
-GST_RTSP_SERVER_API
-GstRTSPResult    gst_rtsp_params_set      (GstRTSPClient * client, GstRTSPContext * ctx);
-
-GST_RTSP_SERVER_API
-GstRTSPResult    gst_rtsp_params_get      (GstRTSPClient * client, GstRTSPContext * ctx);
-
-G_END_DECLS
-
-#endif /* __GST_RTSP_PARAMS_H__ */
+#endif /* __GST_RTSP_SERVER_PRELUDE_H__ */

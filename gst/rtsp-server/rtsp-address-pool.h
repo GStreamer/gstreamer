@@ -17,10 +17,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <gst/gst.h>
-
 #ifndef __GST_RTSP_ADDRESS_POOL_H__
 #define __GST_RTSP_ADDRESS_POOL_H__
+
+#include <gst/gst.h>
+#include "rtsp-server-prelude.h"
 
 G_BEGIN_DECLS
 
@@ -82,13 +83,13 @@ struct _GstRTSPAddress {
   gpointer priv;
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType gst_rtsp_address_get_type        (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAddress * gst_rtsp_address_copy (GstRTSPAddress *addr);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void             gst_rtsp_address_free (GstRTSPAddress *addr);
 
 /**
@@ -153,21 +154,21 @@ struct _GstRTSPAddressPoolClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType                  gst_rtsp_address_pool_get_type        (void);
 
 /* create a new address pool */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAddressPool *   gst_rtsp_address_pool_new             (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                   gst_rtsp_address_pool_clear           (GstRTSPAddressPool * pool);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                   gst_rtsp_address_pool_dump            (GstRTSPAddressPool * pool);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool * pool,
                                                               const gchar *min_address,
                                                               const gchar *max_address,
@@ -175,12 +176,12 @@ gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool
                                                               guint16 max_port,
                                                               guint8 ttl);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
                                                               GstRTSPAddressFlags flags,
                                                               gint n_ports);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPAddressPoolResult  gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
                                                               const gchar *ip_address,
                                                               guint port,
@@ -188,7 +189,7 @@ GstRTSPAddressPoolResult  gst_rtsp_address_pool_reserve_address (GstRTSPAddressP
                                                               guint ttl,
                                                               GstRTSPAddress ** address);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean               gst_rtsp_address_pool_has_unicast_addresses (GstRTSPAddressPool * pool);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

@@ -80,41 +80,41 @@ struct _GstRTSPSessionClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType                  gst_rtsp_session_get_type             (void);
 
 /* create a new session */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 const gchar *          gst_rtsp_session_get_sessionid        (GstRTSPSession *session);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gchar *                gst_rtsp_session_get_header           (GstRTSPSession *session);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                   gst_rtsp_session_set_timeout          (GstRTSPSession *session, guint timeout);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *session);
 
 /* session timeout stuff */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                   gst_rtsp_session_touch                (GstRTSPSession *session);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                   gst_rtsp_session_prevent_expire       (GstRTSPSession *session);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                   gst_rtsp_session_allow_expire         (GstRTSPSession *session);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gint                   gst_rtsp_session_next_timeout_usec    (GstRTSPSession *session, gint64 now);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean               gst_rtsp_session_is_expired_usec      (GstRTSPSession *session, gint64 now);
 
 GST_RTSP_SERVER_DEPRECATED_FOR(gst_rtsp_session_next_timeout_usec)
@@ -125,17 +125,17 @@ gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *se
 
 /* handle media in a session */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,
                                                               const gchar *path,
                                                               GstRTSPMedia *media);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean               gst_rtsp_session_release_media        (GstRTSPSession *sess,
                                                               GstRTSPSessionMedia *media);
 /* get media in a session */
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const gchar *path,
                                                               gint * matched);
@@ -164,7 +164,7 @@ typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSession *sess,
                                                           GstRTSPSessionMedia *media,
                                                           gpointer user_data);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GList *                gst_rtsp_session_filter           (GstRTSPSession *sess,
                                                           GstRTSPSessionFilterFunc func,
                                                           gpointer user_data);

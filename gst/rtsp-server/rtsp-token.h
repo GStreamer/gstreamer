@@ -28,7 +28,7 @@ typedef struct _GstRTSPToken GstRTSPToken;
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GType gst_rtsp_token_get_type(void);
 
 #define GST_TYPE_RTSP_TOKEN        (gst_rtsp_token_get_type())
@@ -74,33 +74,33 @@ gst_rtsp_token_unref (GstRTSPToken * token)
 }
 
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPToken *       gst_rtsp_token_new_empty          (void);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPToken *       gst_rtsp_token_new                (const gchar * firstfield, ...);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstRTSPToken *       gst_rtsp_token_new_valist         (const gchar * firstfield, va_list var_args);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 const GstStructure * gst_rtsp_token_get_structure      (GstRTSPToken *token);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 GstStructure *       gst_rtsp_token_writable_structure (GstRTSPToken *token);
 
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                 gst_rtsp_token_set_string         (GstRTSPToken * token,
                                                         const gchar  * field,
                                                         const gchar  * string_value);
-GST_EXPORT
+GST_RTSP_SERVER_API
 const gchar *        gst_rtsp_token_get_string         (GstRTSPToken *token,
                                                         const gchar *field);
-GST_EXPORT
+GST_RTSP_SERVER_API
 void                 gst_rtsp_token_set_bool           (GstRTSPToken * token,
                                                         const gchar  * field,
                                                         gboolean       bool_value);
-GST_EXPORT
+GST_RTSP_SERVER_API
 gboolean             gst_rtsp_token_is_allowed         (GstRTSPToken *token,
                                                         const gchar *field);
 
