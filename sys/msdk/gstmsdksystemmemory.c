@@ -165,7 +165,7 @@ gst_msdk_system_memory_new (GstAllocator * base_allocator)
       GST_VIDEO_INFO_SIZE (vip));
 
   if (!ensure_data (mem))
-    return FALSE;
+    return NULL;
 
   return GST_MEMORY_CAST (mem);
 }
@@ -180,13 +180,13 @@ gst_msdk_system_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 
   if (!mem->surface) {
     GST_WARNING ("The surface is not allocated");
-    return FALSE;
+    return NULL;
   }
 
   if ((info->flags & GST_MAP_WRITE) && mem->surface
       && mem->surface->Data.Locked) {
     GST_WARNING ("The surface in memory %p is not still avaliable", mem);
-    return FALSE;
+    return NULL;
   }
 
   return mem->surface->Data.Y;

@@ -114,7 +114,7 @@ gst_msdk_video_memory_new (GstAllocator * base_allocator)
 
   mem->surface = gst_msdk_video_allocator_get_surface (base_allocator);
   if (!mem->surface)
-    return FALSE;
+    return NULL;
 
   vip = &allocator->image_info;
   gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
@@ -228,13 +228,13 @@ gst_msdk_video_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 
   if (!mem->surface) {
     GST_WARNING ("The surface is not allocated");
-    return FALSE;
+    return NULL;
   }
 
   if ((info->flags & GST_MAP_WRITE) && mem->surface
       && mem->surface->Data.Locked) {
     GST_WARNING ("The surface in memory %p is not still avaliable", mem);
-    return FALSE;
+    return NULL;
   }
 
   gst_msdk_frame_lock (msdk_video_allocator->context, mem->surface->Data.MemId,
