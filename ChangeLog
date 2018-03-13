@@ -1,7 +1,160 @@
+=== release 1.13.91 ===
+
+2018-03-13 19:29:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.13.91
+
+2018-03-13 14:14:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-asset.h:
+	* ges/ges-audio-source.h:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-track.h:
+	* ges/ges-audio-transition.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-base-effect-clip.h:
+	* ges/ges-base-effect.h:
+	* ges/ges-base-transition-clip.h:
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.h:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-container.h:
+	* ges/ges-effect-asset.h:
+	* ges/ges-effect-clip.h:
+	* ges/ges-effect.h:
+	* ges/ges-enums.h:
+	* ges/ges-extractable.h:
+	* ges/ges-formatter.h:
+	* ges/ges-group.h:
+	* ges/ges-image-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-layer.h:
+	* ges/ges-meta-container.h:
+	* ges/ges-multi-file-source.h:
+	* ges/ges-operation-clip.h:
+	* ges/ges-operation.h:
+	* ges/ges-overlay-clip.h:
+	* ges/ges-pipeline.h:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-prelude.h:
+	* ges/ges-project.h:
+	* ges/ges-screenshot.h:
+	* ges/ges-smart-adder.h:
+	* ges/ges-source-clip.h:
+	* ges/ges-source.h:
+	* ges/ges-test-clip.h:
+	* ges/ges-text-overlay-clip.h:
+	* ges/ges-text-overlay.h:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.h:
+	* ges/ges-title-clip.h:
+	* ges/ges-title-source.h:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.h:
+	* ges/ges-track.h:
+	* ges/ges-transition-clip.h:
+	* ges/ges-transition.h:
+	* ges/ges-uri-asset.h:
+	* ges/ges-uri-clip.h:
+	* ges/ges-utils.h:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-track.h:
+	* ges/ges-video-transition.h:
+	* ges/ges-video-uri-source.h:
+	* ges/ges-xml-formatter.h:
+	* ges/ges.h:
+	  GST_GES_API -> GES_API
+
+2018-03-13 13:45:24 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/libs/meson.build:
+	* ges/Makefile.am:
+	* ges/ges-asset.h:
+	* ges/ges-audio-source.h:
+	* ges/ges-audio-test-source.h:
+	* ges/ges-audio-track.h:
+	* ges/ges-audio-transition.h:
+	* ges/ges-audio-uri-source.h:
+	* ges/ges-base-effect-clip.h:
+	* ges/ges-base-effect.h:
+	* ges/ges-base-transition-clip.h:
+	* ges/ges-base-xml-formatter.h:
+	* ges/ges-clip-asset.h:
+	* ges/ges-clip.h:
+	* ges/ges-command-line-formatter.h:
+	* ges/ges-container.h:
+	* ges/ges-effect-asset.h:
+	* ges/ges-effect-clip.h:
+	* ges/ges-effect.h:
+	* ges/ges-enums.h:
+	* ges/ges-extractable.h:
+	* ges/ges-formatter.h:
+	* ges/ges-group.h:
+	* ges/ges-image-source.h:
+	* ges/ges-internal.h:
+	* ges/ges-layer.h:
+	* ges/ges-meta-container.h:
+	* ges/ges-multi-file-source.h:
+	* ges/ges-operation-clip.h:
+	* ges/ges-operation.h:
+	* ges/ges-overlay-clip.h:
+	* ges/ges-pipeline.h:
+	* ges/ges-pitivi-formatter.h:
+	* ges/ges-prelude.h:
+	* ges/ges-project.h:
+	* ges/ges-screenshot.h:
+	* ges/ges-smart-adder.h:
+	* ges/ges-source-clip.h:
+	* ges/ges-source.h:
+	* ges/ges-test-clip.h:
+	* ges/ges-text-overlay-clip.h:
+	* ges/ges-text-overlay.h:
+	* ges/ges-timeline-element.h:
+	* ges/ges-timeline.h:
+	* ges/ges-title-clip.h:
+	* ges/ges-title-source.h:
+	* ges/ges-track-element-asset.h:
+	* ges/ges-track-element.h:
+	* ges/ges-track.h:
+	* ges/ges-transition-clip.h:
+	* ges/ges-transition.h:
+	* ges/ges-types.h:
+	* ges/ges-uri-asset.h:
+	* ges/ges-uri-clip.h:
+	* ges/ges-utils.h:
+	* ges/ges-video-source.h:
+	* ges/ges-video-test-source.h:
+	* ges/ges-video-track.h:
+	* ges/ges-video-transition.h:
+	* ges/ges-video-uri-source.h:
+	* ges/ges-xml-formatter.h:
+	* ges/ges.h:
+	* ges/meson.build:
+	  ges: GST_EXPORT -> GST_GES_API
+	  We need different export decorators for the different libs.
+	  For now no actual change though, just rename before the release,
+	  and add prelude headers to define the new decorator to GST_EXPORT.
+
+2018-03-11 11:13:05 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: Snapping should happen with one and only one TrackElement
+	  This was leading to clip with TrackElements that were not at the
+	  same position in their container, and weird bugs, see:
+	  https://gitlab.gnome.org/GNOME/pitivi/issues/2133
+
 === release 1.13.90 ===
 
 2018-03-03 23:09:36 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
