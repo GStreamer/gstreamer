@@ -1,5 +1,5 @@
 badaudio_sources = ['gstnonstreamaudiodecoder.c']
-badaudio_headers = ['gstnonstreamaudiodecoder.h']
+badaudio_headers = ['gstnonstreamaudiodecoder.h', 'audio-bad-prelude.h']
 install_headers(badaudio_headers, subdir : 'gstreamer-1.0/gst/audio')
 
 

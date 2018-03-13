@@ -23,4 +23,4 @@ libgstbadaudio_@GST_API_VERSION@_la_LIBADD = \
 libgstbadaudio_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstaudio_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/audio
-libgstaudio_@GST_API_VERSION@include_HEADERS = gstnonstreamaudiodecoder.h
+libgstaudio_@GST_API_VERSION@include_HEADERS = gstnonstreamaudiodecoder.h audio-bad-prelude.h
