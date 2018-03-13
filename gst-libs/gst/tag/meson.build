@@ -22,6 +22,7 @@ tag_mkenum_headers = [
 tag_headers = tag_mkenum_headers + [
   'gsttagmux.h',
   'xmpwriter.h',
+  'tag-prelude.h',
 ]
 install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
 

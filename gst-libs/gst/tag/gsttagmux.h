@@ -23,6 +23,7 @@
 #define GST_TAG_MUX_H
 
 #include <gst/gst.h>
+#include <gst/tag/tag-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -78,7 +79,7 @@ struct _GstTagMuxClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_TAG_API
 GType gst_tag_mux_get_type (void);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

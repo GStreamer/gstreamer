@@ -4,7 +4,8 @@ libgsttagincludedir = \
 glib_enum_define = GST_TAG
 glib_gen_prefix = gst_tag
 glib_gen_basename = tag
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_TAG_API
+glib_gen_decl_include=\#include <gst/tag/tag-prelude.h>
 
 glib_enum_headers = tag.h gsttagdemux.h
 
@@ -15,7 +16,7 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 include $(top_srcdir)/common/gst-glib-gen.mak
 
 libgsttaginclude_HEADERS = \
-	tag.h gsttagdemux.h gsttagmux.h xmpwriter.h
+	tag.h tag-prelude.h gsttagdemux.h gsttagmux.h xmpwriter.h
 nodist_libgsttaginclude_HEADERS = tag-enumtypes.h
 
 CLEANFILES = $(BUILT_SOURCES)
