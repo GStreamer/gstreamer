@@ -8,7 +8,7 @@ libgstadaptivedemux_@GST_API_VERSION@_la_SOURCES = \
 
 libgstadaptivedemux_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/adaptivedemux
 
-noinst_HEADERS = gstadaptivedemux.h
+noinst_HEADERS = gstadaptivedemux.h adaptive-demux-prelude.h
 
 libgstadaptivedemux_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/uridownloader/gsturidownloader.h>
+#include <gst/adaptivedemux/adaptive-demux-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -483,49 +484,49 @@ struct _GstAdaptiveDemuxClass
   gboolean (*requires_periodical_playlist_update) (GstAdaptiveDemux * demux);
 };
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GType    gst_adaptive_demux_get_type (void);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 void     gst_adaptive_demux_set_stream_struct_size (GstAdaptiveDemux * demux,
                                                     gsize struct_size);
 
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GstAdaptiveDemuxStream *gst_adaptive_demux_stream_new (GstAdaptiveDemux * demux,
                                                        GstPad * pad);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GstAdaptiveDemuxStream *gst_adaptive_demux_find_stream_for_pad (GstAdaptiveDemux * demux,
                                                                 GstPad * pad);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 void gst_adaptive_demux_stream_set_caps (GstAdaptiveDemuxStream * stream,
                                          GstCaps * caps);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 void gst_adaptive_demux_stream_set_tags (GstAdaptiveDemuxStream * stream,
                                          GstTagList * tags);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 void gst_adaptive_demux_stream_fragment_clear (GstAdaptiveDemuxStreamFragment * f);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GstFlowReturn gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream, GstBuffer * buffer);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GstFlowReturn
 gst_adaptive_demux_stream_advance_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxStream * stream, GstClockTime duration);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 void gst_adaptive_demux_stream_queue_event (GstAdaptiveDemuxStream * stream,
     GstEvent * event);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GstClockTime gst_adaptive_demux_get_monotonic_time (GstAdaptiveDemux * demux);
 
-GST_EXPORT
+GST_ADAPTIVE_DEMUX_API
 GDateTime *gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux);
 
 G_END_DECLS
