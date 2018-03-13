@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_WEBRTC_API
 GType gst_webrtc_dtls_transport_get_type(void);
 #define GST_TYPE_WEBRTC_DTLS_TRANSPORT            (gst_webrtc_dtls_transport_get_type())
 #define GST_WEBRTC_DTLS_TRANSPORT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WEBRTC_DTLS_TRANSPORT,GstWebRTCDTLSTransport))
@@ -58,10 +58,10 @@ struct _GstWebRTCDTLSTransportClass
   gpointer                  _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_WEBRTC_API
 GstWebRTCDTLSTransport *    gst_webrtc_dtls_transport_new               (guint session_id, gboolean rtcp);
 
-GST_EXPORT
+GST_WEBRTC_API
 void                        gst_webrtc_dtls_transport_set_transport     (GstWebRTCDTLSTransport * transport,
                                                                          GstWebRTCICETransport * ice);
 

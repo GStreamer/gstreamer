@@ -26,6 +26,11 @@
 #endif
 
 #include <gst/gst.h>
+
+#ifndef GST_WEBRTC_API
+#define GST_WEBRTC_API GST_EXPORT
+#endif
+
 #include <gst/webrtc/webrtc-enumtypes.h>
 
 typedef struct _GstWebRTCDTLSTransport GstWebRTCDTLSTransport;

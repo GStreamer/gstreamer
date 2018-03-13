@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_WEBRTC_API
 GType gst_webrtc_rtp_transceiver_get_type(void);
 #define GST_TYPE_WEBRTC_RTP_TRANSCEIVER            (gst_webrtc_rtp_transceiver_get_type())
 #define GST_WEBRTC_RTP_TRANSCEIVER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WEBRTC_RTP_TRANSCEIVER,GstWebRTCRTPTransceiver))
@@ -61,7 +61,7 @@ struct _GstWebRTCRTPTransceiverClass
   gpointer              _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_WEBRTC_API
 void                        gst_webrtc_rtp_transceiver_stop     (GstWebRTCRTPTransceiver * transceiver);
 
 G_END_DECLS

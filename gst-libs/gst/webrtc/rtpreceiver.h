@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT
+GST_WEBRTC_API
 GType gst_webrtc_rtp_receiver_get_type(void);
 #define GST_TYPE_WEBRTC_RTP_RECEIVER            (gst_webrtc_rtp_receiver_get_type())
 #define GST_WEBRTC_RTP_RECEIVER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WEBRTC_RTP_RECEIVER,GstWebRTCRTPReceiver))
@@ -56,18 +56,18 @@ struct _GstWebRTCRTPReceiverClass
   gpointer                  _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_WEBRTC_API
 GstWebRTCRTPReceiver *      gst_webrtc_rtp_receiver_new                 (void);
-GST_EXPORT
+GST_WEBRTC_API
 GstStructure *              gst_webrtc_rtp_receiver_get_parameters      (GstWebRTCRTPReceiver * receiver, gchar * kind);
 /* FIXME: promise? */
-GST_EXPORT
+GST_WEBRTC_API
 gboolean                    gst_webrtc_rtp_receiver_set_parameters      (GstWebRTCRTPReceiver * receiver,
                                                                          GstStructure * parameters);
-GST_EXPORT
+GST_WEBRTC_API
 void                        gst_webrtc_rtp_receiver_set_transport       (GstWebRTCRTPReceiver * receiver,
                                                                          GstWebRTCDTLSTransport * transport);
-GST_EXPORT
+GST_WEBRTC_API
 void                        gst_webrtc_rtp_receiver_set_rtcp_transport  (GstWebRTCRTPReceiver * receiver,
                                                                          GstWebRTCDTLSTransport * transport);
 
