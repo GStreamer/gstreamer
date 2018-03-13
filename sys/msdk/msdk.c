@@ -33,8 +33,8 @@
 #include "gstmsdkvideomemory.h"
 #include "gstmsdksystemmemory.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
-#define GST_CAT_DEFAULT gst_msdkenc_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_msdk_debug);
+#define GST_CAT_DEFAULT gst_msdk_debug
 
 #define INVALID_INDEX         ((guint) -1)
 #define GST_MSDK_ALIGNMENT_PADDING(num) (32 - ((num) & 31))

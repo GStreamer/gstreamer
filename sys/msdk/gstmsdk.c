@@ -47,6 +47,7 @@
 #include "gstmsdkvp8enc.h"
 #include "gstmsdkvc1dec.h"
 
+GST_DEBUG_CATEGORY (gst_msdk_debug);
 GST_DEBUG_CATEGORY (gst_msdkdec_debug);
 GST_DEBUG_CATEGORY (gst_msdkenc_debug);
 GST_DEBUG_CATEGORY (gst_msdkh264dec_debug);
@@ -66,6 +67,7 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+  GST_DEBUG_CATEGORY_INIT (gst_msdk_debug, "msdk", 0, "msdk");
   GST_DEBUG_CATEGORY_INIT (gst_msdkdec_debug, "msdkdec", 0, "msdkdec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkenc_debug, "msdkenc", 0, "msdkenc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkh264dec_debug, "msdkh264dec", 0,
