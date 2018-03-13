@@ -131,47 +131,47 @@ typedef enum {
 
 #define GST_AUDIO_CHANNEL_POSITION_MASK(pos) (G_GUINT64_CONSTANT(1)<< GST_AUDIO_CHANNEL_POSITION_ ## pos)
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_buffer_reorder_channels (GstBuffer * buffer,
                                                   GstAudioFormat format,
                                                   gint channels,
                                                   const GstAudioChannelPosition * from,
                                                   const GstAudioChannelPosition * to);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_reorder_channels        (gpointer data, gsize size,
                                                   GstAudioFormat format,
                                                   gint channels,
                                                   const GstAudioChannelPosition * from,
                                                   const GstAudioChannelPosition * to);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_channel_positions_to_valid_order (GstAudioChannelPosition *position,
                                                            gint channels);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *position,
                                                         gint channels, gboolean force_order);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_channel_positions_to_mask  (const GstAudioChannelPosition *position,
                                                      gint channels, gboolean force_order,
                                                      guint64 *channel_mask);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_channel_positions_from_mask (gint channels, guint64 channel_mask,
                                                       GstAudioChannelPosition * position);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_get_channel_reorder_map (gint channels,
                                                   const GstAudioChannelPosition * from,
                                                   const GstAudioChannelPosition * to,
                                                   gint *reorder_map);
 
-GST_EXPORT
+GST_AUDIO_API
 guint64        gst_audio_channel_get_fallback_mask (gint channels);
 
-GST_EXPORT
+GST_AUDIO_API
 gchar*         gst_audio_channel_positions_to_string (const GstAudioChannelPosition * position,
                                                       gint channels);
 

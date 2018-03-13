@@ -46,7 +46,7 @@ typedef enum {
   GST_AUDIO_CHANNEL_MIXER_FLAGS_UNPOSITIONED_OUT    = (1 << 3)
 } GstAudioChannelMixerFlags;
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioChannelMixer * gst_audio_channel_mixer_new   (GstAudioChannelMixerFlags flags,
                                                       GstAudioFormat format,
                                                       gint in_channels,
@@ -54,28 +54,28 @@ GstAudioChannelMixer * gst_audio_channel_mixer_new   (GstAudioChannelMixerFlags 
                                                       gint out_channels,
                                                       GstAudioChannelPosition *out_position);
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioChannelMixer * gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
                                                                 GstAudioFormat format,
                                                                 gint in_channels,
                                                                 gint out_channels,
                                                                 gfloat **matrix);
 
-GST_EXPORT
+GST_AUDIO_API
 void                   gst_audio_channel_mixer_free  (GstAudioChannelMixer *mix);
 
 /*
  * Checks for passthrough (= identity matrix).
  */
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean        gst_audio_channel_mixer_is_passthrough  (GstAudioChannelMixer *mix);
 
 /*
  * Do actual mixing.
  */
 
-GST_EXPORT
+GST_AUDIO_API
 void            gst_audio_channel_mixer_samples   (GstAudioChannelMixer * mix,
                                                    const gpointer         in[],
                                                    gpointer               out[],

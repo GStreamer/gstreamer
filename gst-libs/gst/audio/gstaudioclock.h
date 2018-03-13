@@ -89,23 +89,23 @@ struct _GstAudioClockClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_AUDIO_API
 GType           gst_audio_clock_get_type        (void);
 
-GST_EXPORT
+GST_AUDIO_API
 GstClock*       gst_audio_clock_new             (const gchar *name, GstAudioClockGetTimeFunc func,
                                                  gpointer user_data, GDestroyNotify destroy_notify);
 
-GST_EXPORT
+GST_AUDIO_API
 void            gst_audio_clock_reset           (GstAudioClock *clock, GstClockTime time);
 
-GST_EXPORT
+GST_AUDIO_API
 GstClockTime    gst_audio_clock_get_time        (GstAudioClock * clock);
 
-GST_EXPORT
+GST_AUDIO_API
 GstClockTime    gst_audio_clock_adjust          (GstAudioClock * clock, GstClockTime time);
 
-GST_EXPORT
+GST_AUDIO_API
 void            gst_audio_clock_invalidate      (GstAudioClock * clock);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

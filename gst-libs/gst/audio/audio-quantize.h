@@ -81,7 +81,7 @@ typedef enum
 
 typedef struct _GstAudioQuantize GstAudioQuantize;
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioQuantize *  gst_audio_quantize_new      (GstAudioDitherMethod dither,
                                                  GstAudioNoiseShapingMethod ns,
                                                  GstAudioQuantizeFlags flags,
@@ -89,13 +89,13 @@ GstAudioQuantize *  gst_audio_quantize_new      (GstAudioDitherMethod dither,
                                                  guint channels,
                                                  guint quantizer);
 
-GST_EXPORT
+GST_AUDIO_API
 void                gst_audio_quantize_free     (GstAudioQuantize * quant);
 
-GST_EXPORT
+GST_AUDIO_API
 void                gst_audio_quantize_reset    (GstAudioQuantize * quant);
 
-GST_EXPORT
+GST_AUDIO_API
 void                gst_audio_quantize_samples  (GstAudioQuantize * quant,
                                                  const gpointer in[],
                                                  gpointer out[], guint samples);

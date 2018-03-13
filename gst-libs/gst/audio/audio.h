@@ -23,6 +23,7 @@
 #define __GST_AUDIO_AUDIO_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio-prelude.h>
 #include <gst/audio/audio-enumtypes.h>
 #include <gst/audio/audio-format.h>
 #include <gst/audio/audio-channels.h>
@@ -90,7 +91,7 @@ G_BEGIN_DECLS
  * handling
  */
 
-GST_EXPORT
+GST_AUDIO_API
 GstBuffer *    gst_audio_buffer_clip     (GstBuffer *buffer,
                                           const GstSegment *segment,
                                           gint rate, gint bpf);

@@ -19,7 +19,8 @@ glib_enum_headers= 		\
 glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio
 glib_gen_basename = audio
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_AUDIO_API
+glib_gen_decl_include=\#include <gst/audio/audio-prelude.h>
 
 built_sources = audio-enumtypes.c
 built_headers = audio-enumtypes.h
@@ -63,6 +64,7 @@ nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 libgstaudio_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/audio
 libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio.h \
+	audio-prelude.h	\
 	audio-format.h \
 	audio-channels.h \
 	audio-channel-mixer.h \

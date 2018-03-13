@@ -132,23 +132,23 @@ struct _GstAudioBaseSrcClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GST_EXPORT
+GST_AUDIO_API
 GType      gst_audio_base_src_get_type(void);
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioRingBuffer *
            gst_audio_base_src_create_ringbuffer        (GstAudioBaseSrc *src);
 
-GST_EXPORT
+GST_AUDIO_API
 void       gst_audio_base_src_set_provide_clock        (GstAudioBaseSrc *src, gboolean provide);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean   gst_audio_base_src_get_provide_clock        (GstAudioBaseSrc *src);
 
-GST_EXPORT
+GST_AUDIO_API
 void       gst_audio_base_src_set_slave_method         (GstAudioBaseSrc *src,
                                                         GstAudioBaseSrcSlaveMethod method);
-GST_EXPORT
+GST_AUDIO_API
 GstAudioBaseSrcSlaveMethod
            gst_audio_base_src_get_slave_method         (GstAudioBaseSrc *src);
 

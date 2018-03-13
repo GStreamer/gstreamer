@@ -1,7 +1,7 @@
-/* GStreamer audio helper functions for IEC 61937 payloading
- * (c) 2011 Intel Corporation
- *     2011 Collabora Multimedia
- *     2011 Arun Raghavan <arun.raghavan@collabora.co.uk>
+/* GStreamer Audio Library
+ * Copyright (C) 2018 GStreamer developers
+ *
+ * audio-prelude.h: prelude include header for gst-audio library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,18 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_AUDIO_IEC61937_H__
-#define __GST_AUDIO_IEC61937_H__
+#ifndef __GST_AUDIO_PRELUDE_H__
+#define __GST_AUDIO_PRELUDE_H__
 
-#include <gst/audio/gstaudioringbuffer.h>
+#include <gst/gst.h>
 
-GST_AUDIO_API
-guint       gst_audio_iec61937_frame_size  (const GstAudioRingBufferSpec * spec);
+#ifndef GST_AUDIO_API
+#define GST_AUDIO_API GST_EXPORT
+#endif
 
-GST_AUDIO_API
-gboolean    gst_audio_iec61937_payload     (const guint8 * src, guint src_n,
-                                            guint8 * dst, guint dst_n,
-                                            const GstAudioRingBufferSpec * spec,
-                                            gint endianness);
-
-#endif /* __GST_AUDIO_IEC61937_H__ */
+#endif /* __GST_AUDIO_PRELUDE_H__ */

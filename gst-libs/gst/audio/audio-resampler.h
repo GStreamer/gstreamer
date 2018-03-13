@@ -201,42 +201,42 @@ typedef enum {
 #define GST_AUDIO_RESAMPLER_QUALITY_MAX 10
 #define GST_AUDIO_RESAMPLER_QUALITY_DEFAULT 4
 
-GST_EXPORT
+GST_AUDIO_API
 void           gst_audio_resampler_options_set_quality   (GstAudioResamplerMethod method,
                                                           guint quality,
                                                           gint in_rate, gint out_rate,
                                                           GstStructure *options);
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioResampler * gst_audio_resampler_new              (GstAudioResamplerMethod method,
                                                           GstAudioResamplerFlags flags,
                                                           GstAudioFormat format, gint channels,
                                                           gint in_rate, gint out_rate,
                                                           GstStructure *options);
 
-GST_EXPORT
+GST_AUDIO_API
 void                gst_audio_resampler_free             (GstAudioResampler *resampler);
 
-GST_EXPORT
+GST_AUDIO_API
 void                gst_audio_resampler_reset            (GstAudioResampler *resampler);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean            gst_audio_resampler_update           (GstAudioResampler *resampler,
                                                           gint in_rate, gint out_rate,
                                                           GstStructure *options);
 
-GST_EXPORT
+GST_AUDIO_API
 gsize               gst_audio_resampler_get_out_frames   (GstAudioResampler *resampler,
                                                           gsize in_frames);
 
-GST_EXPORT
+GST_AUDIO_API
 gsize               gst_audio_resampler_get_in_frames    (GstAudioResampler *resampler,
                                                           gsize out_frames);
 
-GST_EXPORT
+GST_AUDIO_API
 gsize               gst_audio_resampler_get_max_latency  (GstAudioResampler *resampler);
 
-GST_EXPORT
+GST_AUDIO_API
 void                gst_audio_resampler_resample         (GstAudioResampler * resampler,
                                                           gpointer in[], gsize in_frames,
                                                           gpointer out[], gsize out_frames);

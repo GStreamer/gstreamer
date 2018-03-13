@@ -115,51 +115,51 @@ typedef enum {
   GST_AUDIO_CONVERTER_FLAG_VARIABLE_RATE   = (1 << 1)
 } GstAudioConverterFlags;
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioConverter *  gst_audio_converter_new             (GstAudioConverterFlags flags,
                                                           GstAudioInfo *in_info,
                                                           GstAudioInfo *out_info,
                                                           GstStructure *config);
 
-GST_EXPORT
+GST_AUDIO_API
 GType                gst_audio_converter_get_type        (void);
 
-GST_EXPORT
+GST_AUDIO_API
 void                 gst_audio_converter_free            (GstAudioConverter * convert);
 
-GST_EXPORT
+GST_AUDIO_API
 void                 gst_audio_converter_reset           (GstAudioConverter * convert);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean             gst_audio_converter_update_config   (GstAudioConverter * convert,
                                                           gint in_rate, gint out_rate,
                                                           GstStructure *config);
 
-GST_EXPORT
+GST_AUDIO_API
 const GstStructure * gst_audio_converter_get_config      (GstAudioConverter * convert,
                                                           gint *in_rate, gint *out_rate);
 
-GST_EXPORT
+GST_AUDIO_API
 gsize                gst_audio_converter_get_out_frames  (GstAudioConverter *convert,
                                                           gsize in_frames);
 
-GST_EXPORT
+GST_AUDIO_API
 gsize                gst_audio_converter_get_in_frames   (GstAudioConverter *convert,
                                                           gsize out_frames);
 
-GST_EXPORT
+GST_AUDIO_API
 gsize                gst_audio_converter_get_max_latency (GstAudioConverter *convert);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean             gst_audio_converter_samples         (GstAudioConverter * convert,
                                                           GstAudioConverterFlags flags,
                                                           gpointer in[], gsize in_frames,
                                                           gpointer out[], gsize out_frames);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean             gst_audio_converter_supports_inplace (GstAudioConverter *convert);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean             gst_audio_converter_convert          (GstAudioConverter * convert,
                                                            GstAudioConverterFlags flags,
                                                            gpointer in, gsize in_size,

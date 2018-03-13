@@ -85,7 +85,7 @@ struct _GstAudioInfo {
 };
 
 #define GST_TYPE_AUDIO_INFO                  (gst_audio_info_get_type ())
-GST_EXPORT
+GST_AUDIO_API
 GType gst_audio_info_get_type                (void);
 
 #define GST_AUDIO_INFO_IS_VALID(i)           ((i)->finfo != NULL && (i)->rate > 0 && (i)->channels > 0 && (i)->bpf > 0)
@@ -113,35 +113,35 @@ GType gst_audio_info_get_type                (void);
 #define GST_AUDIO_INFO_BPF(info)             ((info)->bpf)
 #define GST_AUDIO_INFO_POSITION(info,c)      ((info)->position[c])
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioInfo * gst_audio_info_new         (void);
 
-GST_EXPORT
+GST_AUDIO_API
 void           gst_audio_info_init        (GstAudioInfo *info);
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioInfo * gst_audio_info_copy        (const GstAudioInfo *info);
 
-GST_EXPORT
+GST_AUDIO_API
 void           gst_audio_info_free        (GstAudioInfo *info);
 
-GST_EXPORT
+GST_AUDIO_API
 void           gst_audio_info_set_format  (GstAudioInfo *info, GstAudioFormat format,
                                            gint rate, gint channels,
                                            const GstAudioChannelPosition *position);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_info_from_caps   (GstAudioInfo *info, const GstCaps *caps);
 
-GST_EXPORT
+GST_AUDIO_API
 GstCaps *      gst_audio_info_to_caps     (const GstAudioInfo *info);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_info_convert     (const GstAudioInfo * info,
                                            GstFormat src_fmt, gint64 src_val,
                                            GstFormat dest_fmt, gint64 * dest_val);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean       gst_audio_info_is_equal    (const GstAudioInfo *info,
                                            const GstAudioInfo *other);
 

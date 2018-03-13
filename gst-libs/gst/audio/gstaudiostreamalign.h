@@ -23,6 +23,7 @@
 #define __GST_AUDIO_STREAM_ALIGN_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -30,47 +31,47 @@ G_BEGIN_DECLS
 
 typedef struct _GstAudioStreamAlign GstAudioStreamAlign;
 
-GST_EXPORT
+GST_AUDIO_API
 GType                   gst_audio_stream_align_get_type                  (void);
 
-GST_EXPORT
+GST_AUDIO_API
 GstAudioStreamAlign *   gst_audio_stream_align_new                       (gint rate,
                                                                           GstClockTime alignment_threshold,
                                                                           GstClockTime discont_wait);
-GST_EXPORT
+GST_AUDIO_API
 GstAudioStreamAlign *   gst_audio_stream_align_copy                      (const GstAudioStreamAlign * align);
-GST_EXPORT
+GST_AUDIO_API
 void                    gst_audio_stream_align_free                      (GstAudioStreamAlign * align);
 
-GST_EXPORT
+GST_AUDIO_API
 void                    gst_audio_stream_align_set_rate                  (GstAudioStreamAlign * align,
                                                                           gint rate);
-GST_EXPORT
+GST_AUDIO_API
 gint                    gst_audio_stream_align_get_rate                  (GstAudioStreamAlign * align);
 
-GST_EXPORT
+GST_AUDIO_API
 void                    gst_audio_stream_align_set_alignment_threshold   (GstAudioStreamAlign * align,
                                                                           GstClockTime alignment_threshold);
-GST_EXPORT
+GST_AUDIO_API
 GstClockTime            gst_audio_stream_align_get_alignment_threshold   (GstAudioStreamAlign * align);
 
-GST_EXPORT
+GST_AUDIO_API
 void                    gst_audio_stream_align_set_discont_wait          (GstAudioStreamAlign * align,
                                                                           GstClockTime discont_wait);
-GST_EXPORT
+GST_AUDIO_API
 GstClockTime            gst_audio_stream_align_get_discont_wait          (GstAudioStreamAlign * align);
 
 
-GST_EXPORT
+GST_AUDIO_API
 void                    gst_audio_stream_align_mark_discont              (GstAudioStreamAlign * align);
 
-GST_EXPORT
+GST_AUDIO_API
 GstClockTime            gst_audio_stream_align_get_timestamp_at_discont  (GstAudioStreamAlign * align);
 
-GST_EXPORT
+GST_AUDIO_API
 guint64                 gst_audio_stream_align_get_samples_since_discont (GstAudioStreamAlign * align);
 
-GST_EXPORT
+GST_AUDIO_API
 gboolean                gst_audio_stream_align_process                   (GstAudioStreamAlign * align,
                                                                           gboolean discont,
                                                                           GstClockTime timestamp,
