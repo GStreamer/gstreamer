@@ -24,6 +24,7 @@ gst_pbutils_version_h = configure_file(input : 'gstpluginsbaseversion.h.in',
 
 pbutils_headers = [
   'pbutils.h',
+  'pbutils-prelude.h',
   'codec-utils.h',
   'descriptions.h',
   'encoding-profile.h',

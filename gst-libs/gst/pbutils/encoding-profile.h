@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 typedef struct _GstEncodingProfile GstEncodingProfile;
 typedef struct _GstEncodingProfileClass GstEncodingProfileClass;
 
-GST_EXPORT
+GST_PBUTILS_API
 GType gst_encoding_profile_get_type (void);
 
 
@@ -63,7 +63,7 @@ GType gst_encoding_profile_get_type (void);
 typedef struct _GstEncodingContainerProfile GstEncodingContainerProfile;
 typedef struct _GstEncodingContainerProfileClass GstEncodingContainerProfileClass;
 
-GST_EXPORT
+GST_PBUTILS_API
 GType gst_encoding_container_profile_get_type (void);
 
 
@@ -82,7 +82,7 @@ GType gst_encoding_container_profile_get_type (void);
 typedef struct _GstEncodingVideoProfile GstEncodingVideoProfile;
 typedef struct _GstEncodingVideoProfileClass GstEncodingVideoProfileClass;
 
-GST_EXPORT
+GST_PBUTILS_API
 GType gst_encoding_video_profile_get_type (void);
 
 
@@ -101,7 +101,7 @@ GType gst_encoding_video_profile_get_type (void);
 typedef struct _GstEncodingAudioProfile GstEncodingAudioProfile;
 typedef struct _GstEncodingAudioProfileClass GstEncodingAudioProfileClass;
 
-GST_EXPORT
+GST_PBUTILS_API
 GType gst_encoding_audio_profile_get_type (void);
 
 
@@ -124,101 +124,101 @@ GType gst_encoding_audio_profile_get_type (void);
  */
 #define gst_encoding_profile_ref(profile) (g_object_ref ((GObject*) profile))
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_name           (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_name           (GstEncodingProfile *profile,
                                                          const gchar *name);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_description    (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_description    (GstEncodingProfile *profile,
                                                          const gchar *description);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstCaps *       gst_encoding_profile_get_format         (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_format         (GstEncodingProfile *profile,
                                                          GstCaps *format);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean  gst_encoding_profile_get_allow_dynamic_output (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void      gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile *profile,
                                                          gboolean allow_dynamic_output);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_preset         (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_preset_name    (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_preset         (GstEncodingProfile *profile,
                                                          const gchar *preset);
 
-GST_EXPORT
+GST_PBUTILS_API
 guint           gst_encoding_profile_get_presence       (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_presence       (GstEncodingProfile *profile,
                                                          guint presence);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_preset_name    (GstEncodingProfile * profile,
                                                          const gchar * preset_name);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstCaps *       gst_encoding_profile_get_restriction    (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_restriction    (GstEncodingProfile *profile,
                                                          GstCaps *restriction);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean        gst_encoding_profile_is_equal           (GstEncodingProfile *a,
                                                          GstEncodingProfile *b);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstCaps *       gst_encoding_profile_get_input_caps     (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_type_nick      (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_file_extension (GstEncodingProfile * profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_find (const gchar *targetname,
                                                 const gchar *profilename,
                                                 const gchar *category);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean        gst_encoding_profile_is_enabled        (GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 void            gst_encoding_profile_set_enabled       (GstEncodingProfile *profile,
                                                          gboolean enabled);
 /* GstEncodingContainerProfile API */
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean        gst_encoding_container_profile_add_profile       (GstEncodingContainerProfile *container,
                                                                   GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean        gst_encoding_container_profile_contains_profile  (GstEncodingContainerProfile * container,
                                                                   GstEncodingProfile *profile);
 
-GST_EXPORT
+GST_PBUTILS_API
 const GList *   gst_encoding_container_profile_get_profiles      (GstEncodingContainerProfile *profile);
 
 
-GST_EXPORT
+GST_PBUTILS_API
 GstEncodingContainerProfile *  gst_encoding_container_profile_new (const gchar *name,
                                                                    const gchar *description,
                                                                    GstCaps *format,
@@ -227,36 +227,36 @@ GstEncodingContainerProfile *  gst_encoding_container_profile_new (const gchar *
 
 /* Invidual stream encodingprofile API */
 
-GST_EXPORT
+GST_PBUTILS_API
 GstEncodingVideoProfile * gst_encoding_video_profile_new (GstCaps *format,
                                                           const gchar *preset,
                                                           GstCaps *restriction,
                                                           guint presence);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstEncodingAudioProfile * gst_encoding_audio_profile_new (GstCaps *format,
                                                           const gchar *preset,
                                                           GstCaps *restriction,
                                                           guint presence);
 
-GST_EXPORT
+GST_PBUTILS_API
 guint    gst_encoding_video_profile_get_pass              (GstEncodingVideoProfile *prof);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean gst_encoding_video_profile_get_variableframerate (GstEncodingVideoProfile *prof);
 
-GST_EXPORT
+GST_PBUTILS_API
 void     gst_encoding_video_profile_set_pass              (GstEncodingVideoProfile *prof,
                                                            guint pass);
 
-GST_EXPORT
+GST_PBUTILS_API
 void     gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfile *prof,
                                                            gboolean variableframerate);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *info);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_copy (GstEncodingProfile *self);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

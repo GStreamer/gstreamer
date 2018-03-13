@@ -8,11 +8,11 @@
 import sys, os, shutil, subprocess
 
 h_array = ['--fhead',
-           "#ifndef __PB_UTILS_ENUM_TYPES_H__\n#define __PB_UTILS_ENUM_TYPES_H__\n\n#include <gst/gst.h>\n\nG_BEGIN_DECLS\n",
+           "#ifndef __PB_UTILS_ENUM_TYPES_H__\n#define __PB_UTILS_ENUM_TYPES_H__\n\n#include <gst/gst.h>\n#include <gst/pbutils/pbutils-prelude.h>\nG_BEGIN_DECLS\n",
            '--fprod',
            "\n/* enumerations from \"@filename@\" */\n",
            '--vhead',
-           "GST_EXPORT GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n",
+           "GST_PBUTILS_API GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n",
            '--ftail',
            "G_END_DECLS\n\n#endif /* __PB_UTILS_ENUM_TYPES_H__ */"
 ]

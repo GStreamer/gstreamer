@@ -1,5 +1,7 @@
-/* GStreamer base utils library
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+/* GStreamer Plugins Base Utils Library
+ * Copyright (C) 2018 GStreamer developers
+ *
+ * pbutils-prelude.h: prelude include header for gst-pbutils library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,27 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_PB_UTILS_BASE_UTILS_H__
-#define __GST_PB_UTILS_BASE_UTILS_H__
+#ifndef __GST_PBUTILS_PRELUDE_H__
+#define __GST_PBUTILS_PRELUDE_H__
 
 #include <gst/gst.h>
 
-#include <gst/pbutils/gstpluginsbaseversion.h>
-#include <gst/pbutils/descriptions.h>
-#include <gst/pbutils/missing-plugins.h>
-#include <gst/pbutils/install-plugins.h>
-#include <gst/pbutils/codec-utils.h>
-#include <gst/pbutils/pbutils-enumtypes.h>
-#include <gst/pbutils/gstdiscoverer.h>
-#include <gst/pbutils/encoding-profile.h>
-#include <gst/pbutils/encoding-target.h>
+#ifndef GST_PBUTILS_API
+#define GST_PBUTILS_API GST_EXPORT
+#endif
 
-G_BEGIN_DECLS
-
-GST_PBUTILS_API
-void    gst_pb_utils_init (void);
-
-G_END_DECLS
-
-#endif /* __GST_PB_UTILS_BASE_UTILS_H__ */
-
+#endif /* __GST_PBUTILS_PRELUDE_H__ */

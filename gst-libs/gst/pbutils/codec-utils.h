@@ -23,87 +23,88 @@
 #define __GST_PB_UTILS_CODEC_UTILS_H__
 
 #include <gst/gst.h>
+#include <gst/pbutils/pbutils-prelude.h>
 
 G_BEGIN_DECLS
 
 /* AAC */
 
-GST_EXPORT
+GST_PBUTILS_API
 guint         gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx);
 
-GST_EXPORT
+GST_PBUTILS_API
 gint          gst_codec_utils_aac_get_index_from_sample_rate (guint rate);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_aac_get_level   (const guint8 * audio_config, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 guint         gst_codec_utils_aac_get_sample_rate (const guint8 * audio_config, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 guint         gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean      gst_codec_utils_aac_caps_set_level_and_profile (GstCaps      * caps,
                                                               const guint8 * audio_config,
                                                               guint          len);
 
 /* H.264 */
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_h264_get_profile (const guint8 * sps, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_h264_get_level   (const guint8 * sps, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 guint8        gst_codec_utils_h264_get_level_idc (const gchar * level);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean      gst_codec_utils_h264_caps_set_level_and_profile (GstCaps      * caps,
                                                                const guint8 * sps,
                                                                guint          len);
 
 /* H.265 */
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_h265_get_profile                     (const guint8 * profile_tier_level,
                                                                     guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_h265_get_tier                        (const guint8 * profile_tier_level,
                                                                     guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_h265_get_level                       (const guint8 * profile_tier_level,
                                                                     guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 guint8        gst_codec_utils_h265_get_level_idc                   (const gchar  * level);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean      gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps      * caps,
                                                                     const guint8 * profile_tier_level,
                                                                     guint          len);
 /* MPEG-4 part 2 */
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 const gchar * gst_codec_utils_mpeg4video_get_level   (const guint8 * vis_obj_seq, guint len);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean      gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps      * caps,
                                                                      const guint8 * vis_obj_seq,
                                                                      guint          len);
 
 /* Opus */
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean      gst_codec_utils_opus_parse_caps (GstCaps   * caps,
                                                guint32   * rate,
                                                guint8    * channels,
@@ -112,7 +113,7 @@ gboolean      gst_codec_utils_opus_parse_caps (GstCaps   * caps,
                                                guint8    * coupled_count,
                                                guint8      channel_mapping[256]);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstCaps *     gst_codec_utils_opus_create_caps (guint32        rate,
                                                 guint8         channels,
                                                 guint8         channel_mapping_family,
@@ -120,10 +121,10 @@ GstCaps *     gst_codec_utils_opus_create_caps (guint32        rate,
                                                 guint8         coupled_count,
                                                 const guint8 * channel_mapping);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstCaps *    gst_codec_utils_opus_create_caps_from_header (GstBuffer * header, GstBuffer * comments);
 
-GST_EXPORT
+GST_PBUTILS_API
 GstBuffer *  gst_codec_utils_opus_create_header (guint32        rate,
                                                  guint8         channels,
                                                  guint8         channel_mapping_family,
@@ -133,7 +134,7 @@ GstBuffer *  gst_codec_utils_opus_create_header (guint32        rate,
                                                  guint16        pre_skip,
                                                  gint16         output_gain);
 
-GST_EXPORT
+GST_PBUTILS_API
 gboolean  gst_codec_utils_opus_parse_header (GstBuffer * header,
                                              guint32   * rate,
                                              guint8    * channels,

@@ -2,6 +2,7 @@ lib_LTLIBRARIES = libgstpbutils-@GST_API_VERSION@.la
 
 headers_pbutils = \
 	pbutils.h         \
+	pbutils-prelude.h         \
 	codec-utils.h     \
 	descriptions.h    \
 	encoding-profile.h	\
@@ -16,7 +17,8 @@ glib_enum_headers = $(headers_pbutils)
 glib_enum_define = PB_UTILS
 glib_gen_prefix = pbutils
 glib_gen_basename = pbutils
-glib_gen_decl_banner=GST_EXPORT
+glib_gen_decl_banner=GST_PBUTILS_API
+glib_gen_decl_include=\#include <gst/pbutils/pbutils-prelude.h>
 
 built_headers_configure = \
 	gstpluginsbaseversion.h
