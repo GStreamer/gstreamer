@@ -725,7 +725,11 @@ class TimelineWidget (Gtk.DrawingArea):
         if not data:
             return
 
-        heights = [height * float(d) / maximum for d in data]
+        if maximum:
+            heights = [height * float(d) / maximum for d in data]
+        else:
+            heights = [0. for d in data]
+
         ctx.move_to(0, height)
         for i in range(len(heights)):
             ctx.line_to(i - .5, height - heights[i] + .5)
