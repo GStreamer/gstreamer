@@ -4,6 +4,7 @@ libgstallocators_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API
 
 libgstallocators_@GST_API_VERSION@_include_HEADERS = \
 	allocators.h \
+	allocators-prelude.h \
 	gstfdmemory.h \
 	gstphysmemory.h \
 	gstdmabuf.h

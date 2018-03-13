@@ -1,5 +1,6 @@
 gst_allocators_headers = [
   'allocators.h',
+  'allocators-prelude.h',
   'gstfdmemory.h',
   'gstphysmemory.h',
   'gstdmabuf.h',

@@ -1,7 +1,7 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer Allocators Library
+ * Copyright (C) 2018 GStreamer developers
  *
- * allocators.h: single include header for gst-allocators library
+ * allocators-prelude.h: prelude include header for gst-allocators library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,14 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_ALLOCATORS_H__
-#define __GST_ALLOCATORS_H__
+#ifndef __GST_ALLOCATORS_PRELUDE_H__
+#define __GST_ALLOCATORS_PRELUDE_H__
 
-#include <gst/allocators/allocators-prelude.h>
+#include <gst/gst.h>
 
-#include <gst/allocators/gstdmabuf.h>
-#include <gst/allocators/gstfdmemory.h>
-#include <gst/allocators/gstphysmemory.h>
+#ifndef GST_ALLOCATORS_API
+#define GST_ALLOCATORS_API GST_EXPORT
+#endif
 
-#endif /* __GST_ALLOCATORS_H__ */
-
+#endif /* __GST_ALLOCATORS_PRELUDE_H__ */

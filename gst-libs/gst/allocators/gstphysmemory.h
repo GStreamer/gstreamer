@@ -21,6 +21,7 @@
 #define __GST_PHYS_MEMORY_H__
 
 #include <gst/gst.h>
+#include <gst/allocators/allocators-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -49,13 +50,13 @@ struct _GstPhysMemoryAllocatorInterface
   guintptr (*get_phys_addr) (GstPhysMemoryAllocator * allocator, GstMemory * mem);
 };
 
-GST_EXPORT
+GST_ALLOCATORS_API
 GType gst_phys_memory_allocator_get_type (void);
 
-GST_EXPORT
+GST_ALLOCATORS_API
 gboolean gst_is_phys_memory (GstMemory *mem);
 
-GST_EXPORT
+GST_ALLOCATORS_API
 guintptr gst_phys_memory_get_phys_addr (GstMemory * mem);
 
 G_END_DECLS
