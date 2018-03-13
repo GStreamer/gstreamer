@@ -1,5 +1,5 @@
 photography_sources = ['photography.c']
-photo_headers = ['photography.h']
+photo_headers = ['photography.h', 'photography-prelude.h']
 install_headers(photo_headers, subdir : 'gstreamer-1.0/gst/interfaces')
 
 mkenums = find_program('build_mkenum.py')
