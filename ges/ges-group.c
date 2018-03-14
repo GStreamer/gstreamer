@@ -91,7 +91,12 @@ _update_our_values (GESGroup * group)
 
     if (GES_IS_CLIP (child)) {
       GESLayer *layer = ges_clip_get_layer (GES_CLIP (child));
-      gint32 prio = ges_layer_get_priority (layer);
+      gint32 prio;
+
+      if (!layer)
+        continue;
+
+      prio = ges_layer_get_priority (layer);
 
       min_layer_prio = MIN (prio, min_layer_prio);
       max_layer_prio = MAX (prio, max_layer_prio);
@@ -195,6 +200,12 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
     container->children_control_mode = GES_CHILDREN_INIBIT_SIGNAL_EMISSION;
     ges_clip_move_to_layer (GES_CLIP (clip), old_layer);
     g_signal_stop_emission_by_name (clip, "notify::layer");
+
+    return;
+  }
+
+  if (!new_layer) {
+    _update_our_values (group);
 
     return;
   }
