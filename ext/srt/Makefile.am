@@ -30,11 +30,13 @@ libgstsrt_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 CLEANFILES = $(BUILT_SOURCES)
 
 noinst_HEADERS = \
-	gstsrtbasesink.h \
-	gstsrtclientsink.h  \
-	gstsrtserversrc.h \
+	gstsrt.h \
 	gstsrtbasesrc.h \
 	gstsrtclientsrc.h \
-	gstsrtserversink.h
+	gstsrtserversrc.h \
+	gstsrtbasesink.h \
+	gstsrtclientsink.h  \
+	gstsrtserversink.h \
+	$(NULL)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
