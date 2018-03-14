@@ -131,6 +131,10 @@ GST_GL_API
 guint                   gst_gl_sized_gl_format_from_gl_format_type  (GstGLContext * context,
                                                                      guint format,
                                                                      guint type);
+GST_GL_API
+void                    gst_gl_format_type_from_sized_gl_format     (GstGLFormat format,
+                                                                     GstGLFormat * unsized_format,
+                                                                     guint * gl_type);
 
 GST_GL_API
 GstGLTextureTarget      gst_gl_texture_target_from_string           (const gchar * str);

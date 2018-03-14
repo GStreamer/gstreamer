@@ -420,16 +420,11 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   out_stride = copy_params->out_stride;
 
   gl = context->gl_vtable;
-  out_gl_format = copy_params->out_format;
-  out_gl_type = GL_UNSIGNED_BYTE;
-  if (copy_params->out_format == GST_GL_RGB565) {
-    out_gl_format = GST_GL_RGB;
-    out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
-  }
-  in_gl_format = src->mem.tex_format;
-  in_gl_type = GL_UNSIGNED_BYTE;
-  if (src->mem.tex_format == GST_GL_RGB565)
-    in_gl_type = GL_UNSIGNED_SHORT_5_6_5;
+
+  gst_gl_format_type_from_sized_gl_format (copy_params->out_format,
+      &out_gl_format, &out_gl_type);
+  gst_gl_format_type_from_sized_gl_format (src->mem.tex_format, &in_gl_format,
+      &in_gl_type);
 
   if (!gl->GenFramebuffers) {
     GST_CAT_ERROR (GST_CAT_GL_MEMORY,
@@ -450,21 +445,10 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   }
 
   if (!tex_id) {
-    guint internal_format;
-    guint out_gl_type;
-
-    out_gl_type = GL_UNSIGNED_BYTE;
-    if (copy_params->out_format == GST_GL_RGB565)
-      out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
-
-    internal_format =
-        gst_gl_sized_gl_format_from_gl_format_type (context, out_gl_format,
-        out_gl_type);
-
     tex_id =
         _new_texture (context, out_tex_target,
-        internal_format, out_gl_format, out_gl_type, copy_params->out_width,
-        copy_params->out_height);
+        copy_params->out_format, out_gl_format, out_gl_type,
+        copy_params->out_width, copy_params->out_height);
   }
 
   if (!tex_id) {

@@ -123,18 +123,16 @@ static inline void
 _calculate_unpack_length (GstGLMemory * gl_mem, GstGLContext * context)
 {
   guint n_gl_bytes;
-  guint tex_type;
+  guint tex_format, tex_type;
 
   gl_mem->tex_scaling[0] = 1.0f;
   gl_mem->tex_scaling[1] = 1.0f;
   gl_mem->unpack_length = 1;
   gl_mem->tex_width = GL_MEM_WIDTH (gl_mem);
 
-  tex_type = GL_UNSIGNED_BYTE;
-  if (gl_mem->tex_format == GST_GL_RGB565)
-    tex_type = GL_UNSIGNED_SHORT_5_6_5;
-
-  n_gl_bytes = gst_gl_format_type_n_bytes (gl_mem->tex_format, tex_type);
+  gst_gl_format_type_from_sized_gl_format (gl_mem->tex_format, &tex_format,
+      &tex_type);
+  n_gl_bytes = gst_gl_format_type_n_bytes (tex_format, tex_type);
   if (n_gl_bytes == 0) {
     GST_ERROR ("Unsupported texture type %d", gl_mem->tex_format);
     return;
@@ -243,16 +241,9 @@ _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
   GLenum tex_format;
   GLenum tex_type;
 
-  tex_format = gl_mem->tex_format;
-  tex_type = GL_UNSIGNED_BYTE;
-  if (gl_mem->tex_format == GST_GL_RGB565) {
-    tex_format = GST_GL_RGB;
-    tex_type = GL_UNSIGNED_SHORT_5_6_5;
-  }
-
-  internal_format =
-      gst_gl_sized_gl_format_from_gl_format_type (context, tex_format,
-      tex_type);
+  internal_format = gl_mem->tex_format;
+  gst_gl_format_type_from_sized_gl_format (internal_format, &tex_format,
+      &tex_type);
 
   if (!gl_mem->texture_wrapped) {
     gl_mem->tex_id =
@@ -363,10 +354,7 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
   guint format, type;
   guint fbo;
 
-  format = gl_mem->tex_format;
-  type = GL_UNSIGNED_BYTE;
-  if (gl_mem->tex_format == GST_GL_RGB565)
-    type = GL_UNSIGNED_SHORT_5_6_5;
+  gst_gl_format_type_from_sized_gl_format (gl_mem->tex_format, &format, &type);
 
   /* FIXME: avoid creating a framebuffer every download/copy */
   gl->GenFramebuffers (1, &fbo);
@@ -441,10 +429,8 @@ _gl_tex_download_get_tex_image (GstGLMemory * gl_mem, GstMapInfo * info,
     GST_CAT_TRACE (GST_CAT_GL_MEMORY, "attempting download of texture %u "
         "using glGetTexImage", gl_mem->tex_id);
 
-    format = gl_mem->tex_format;
-    type = GL_UNSIGNED_BYTE;
-    if (gl_mem->tex_format == GST_GL_RGB565)
-      type = GL_UNSIGNED_SHORT_5_6_5;
+    gst_gl_format_type_from_sized_gl_format (gl_mem->tex_format, &format,
+        &type);
 
     target = gst_gl_texture_target_to_gl (gl_mem->tex_target);
     gl->BindTexture (target, gl_mem->tex_id);
@@ -524,12 +510,8 @@ gst_gl_memory_texsubimage (GstGLMemory * gl_mem, gpointer read_pointer)
 
   gl = context->gl_vtable;
 
-  gl_type = GL_UNSIGNED_BYTE;
-  gl_format = gl_mem->tex_format;
-  if (gl_mem->tex_format == GST_GL_RGB565) {
-    gl_format = GST_GL_RGB;
-    gl_type = GL_UNSIGNED_SHORT_5_6_5;
-  }
+  gst_gl_format_type_from_sized_gl_format (gl_mem->tex_format, &gl_format,
+      &gl_type);
 
   gl_target = gst_gl_texture_target_to_gl (gl_mem->tex_target);
 
@@ -784,16 +766,9 @@ _gl_tex_copy_thread (GstGLContext * context, gpointer data)
     guint internal_format, out_gl_format, out_gl_type, out_tex_target;
 
     out_tex_target = gst_gl_texture_target_to_gl (copy_params->tex_target);
-    out_gl_format = copy_params->src->tex_format;
-    out_gl_type = GL_UNSIGNED_BYTE;
-    if (copy_params->out_format == GST_GL_RGB565) {
-      out_gl_format = GST_GL_RGB;
-      out_gl_type = GL_UNSIGNED_SHORT_5_6_5;
-    }
-
-    internal_format =
-        gst_gl_sized_gl_format_from_gl_format_type (context, out_gl_format,
-        out_gl_type);
+    internal_format = copy_params->src->tex_format;
+    gst_gl_format_type_from_sized_gl_format (internal_format, &out_gl_format,
+        &out_gl_type);
 
     copy_params->tex_id =
         _new_texture (context, out_tex_target,

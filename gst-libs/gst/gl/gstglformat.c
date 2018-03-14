@@ -56,21 +56,26 @@ _gl_format_n_components (guint format)
   switch (format) {
     case GST_VIDEO_GL_TEXTURE_TYPE_RGBA:
     case GST_GL_RGBA:
+    case GST_GL_RGBA8:
       return 4;
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB:
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB16:
     case GST_GL_RGB:
+    case GST_GL_RGB8:
     case GST_GL_RGB565:
       return 3;
     case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA:
     case GST_VIDEO_GL_TEXTURE_TYPE_RG:
     case GST_GL_LUMINANCE_ALPHA:
     case GST_GL_RG:
+    case GST_GL_RG8:
       return 2;
     case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE:
     case GST_VIDEO_GL_TEXTURE_TYPE_R:
     case GST_GL_LUMINANCE:
+    case GST_GL_ALPHA:
     case GST_GL_RED:
+    case GST_GL_R8:
       return 1;
     default:
       return 0;
@@ -159,6 +164,7 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
       return GST_GL_RGB565;
+      break;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_YUY2:
@@ -275,6 +281,59 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
 
   g_assert_not_reached ();
   return 0;
+}
+
+/**
+ * gst_gl_format_type_from_sized_gl_format:
+ * @format: the sized internal #GstGLFormat
+ * @unsized_format: (out): location for the resulting unsized #GstGLFormat
+ * @gl_type: (out): location for the resulting GL type
+ *
+ * Get the unsized format and type from @format for usage in glReadPixels,
+ * glTex{Sub}Image*, glTexImage* and similar functions.
+ */
+void
+gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
+    GstGLFormat * unsized_format, guint * gl_type)
+{
+  g_return_if_fail (unsized_format != NULL);
+  g_return_if_fail (gl_type != NULL);
+
+  switch (format) {
+    case GST_GL_RGBA8:
+      *unsized_format = GST_GL_RGBA;
+      *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case GST_GL_RGB8:
+      *unsized_format = GST_GL_RGB;
+      *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case GST_GL_RGB565:
+      *unsized_format = GST_GL_RGB;
+      *gl_type = GL_UNSIGNED_SHORT_5_6_5;
+      break;
+    case GST_GL_RG8:
+      *unsized_format = GST_GL_RG;
+      *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case GST_GL_R8:
+      *unsized_format = GST_GL_RED;
+      *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case GST_GL_RGBA:
+    case GST_GL_RGB:
+    case GST_GL_RG:
+    case GST_GL_RED:
+    case GST_GL_LUMINANCE:
+    case GST_GL_LUMINANCE_ALPHA:
+    case GST_GL_ALPHA:
+      *unsized_format = format;
+      *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    default:
+      g_assert_not_reached ();
+      return;
+  }
 }
 
 /**
