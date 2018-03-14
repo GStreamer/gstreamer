@@ -10,12 +10,10 @@ version_arr = gst_version.split('.')
 gst_version_major = version_arr[0]
 gst_version_minor = version_arr[1]
 gst_version_micro = version_arr[2]
-if version_arr.length() == 4
-  gst_version_nano = version_arr[3]
-  TESTSUITE_VERSION = 'master'
-else
-  gst_version_nano = 0
+if gst_version_minor.to_int().is_even()
   TESTSUITE_VERSION = '@0@.@1@'.format(gst_version_major, gst_version_minor)
+else
+  TESTSUITE_VERSION = 'master'
 endif
 
 apiversion = '1.0'
