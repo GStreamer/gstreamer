@@ -40,7 +40,7 @@ gstwebrtc_c = custom_target('gstwebrtcenum_c',
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 webrtc_gen_sources = [gstwebrtc_h]
 
-gstwebrtc_dependencies = [gstbase_dep, gstpbutils_dep, gstsdp_dep]
+gstwebrtc_dependencies = [gstbase_dep, gstsdp_dep]
 
 gstwebrtc = library('gstwebrtc-' + api_version,
   webrtc_sources, gstwebrtc_c, gstwebrtc_h,
@@ -52,8 +52,25 @@ gstwebrtc = library('gstwebrtc-' + api_version,
   dependencies : gstwebrtc_dependencies,
 )
 
+if build_gir
+  webrtc_gir = gnome.generate_gir(gstwebrtc,
+    sources : gstwebrtc_sources + gstwebrtc_headers,
+    namespace : 'GstWebRTC',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-webrtc-1.0',
+    includes : ['Gst-1.0', 'GstSdp-1.0'],
+    install : true,
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] + ['--c-include=gst/webrtc/webrtc.h'],
+    dependencies : [gstbase_dep, gstsdp_dep]
+  )
+  webrtc_gen_sources += webrtc_gir
+endif
+
 install_headers(webrtc_headers, subdir : 'gstreamer-1.0/gst/webrtc')
 
 gstwebrtc_dep = declare_dependency(link_with: gstwebrtc,
   include_directories : libsinc,
+  sources: webrtc_gen_sources,
   dependencies: gstwebrtc_dependencies)
