@@ -54,7 +54,7 @@ gstwebrtc = library('gstwebrtc-' + api_version,
 
 if build_gir
   webrtc_gir = gnome.generate_gir(gstwebrtc,
-    sources : gstwebrtc_sources + gstwebrtc_headers,
+    sources : webrtc_sources + webrtc_headers + [gstwebrtc_h],
     namespace : 'GstWebRTC',
     nsversion : api_version,
     identifier_prefix : 'Gst',
