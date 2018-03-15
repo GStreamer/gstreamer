@@ -274,6 +274,20 @@ GST_START_TEST (test_to_from_string)
 
   gst_structure_free (st1);
   gst_structure_free (st2);
+
+  /* pointers are serialized but not deserialized */
+  st1 = gst_structure_new ("test", "ptr", G_TYPE_POINTER, 0xdeadbeef, NULL);
+  str = gst_structure_to_string (st1);
+  /* The way pointers are serialized may be plateform specific so just check
+   * if it contains the address */
+  fail_unless (g_strrstr (str, "deadbeef") || g_strrstr (str, "DEADBEEF"),
+      "Failed to serialize to right string: %s", str);
+
+  st2 = gst_structure_from_string (str, NULL);
+  fail_unless (!st2);
+
+  gst_structure_free (st1);
+  g_free (str);
 }
 
 GST_END_TEST;
