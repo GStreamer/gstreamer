@@ -38,7 +38,7 @@ struct _GstWebRTCICETransport
 {
   GstObject                          parent;
 
-  GstWebRTCIceRole                   role;
+  GstWebRTCICERole                   role;
   GstWebRTCICEComponent              component;
 
   GstWebRTCICEConnectionState        state;

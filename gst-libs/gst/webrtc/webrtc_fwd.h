@@ -148,7 +148,7 @@ typedef enum /*< underscore_name=gst_webrtc_peer_connection_state >*/
 } GstWebRTCPeerConnectionState;
 
 /**
- * GstWebRTCIceRole:
+ * GstWebRTCICERole:
  * GST_WEBRTC_ICE_ROLE_CONTROLLED: controlled
  * GST_WEBRTC_ICE_ROLE_CONTROLLING: controlling
  */
@@ -156,10 +156,10 @@ typedef enum /*< underscore_name=gst_webrtc_ice_role >*/
 {
   GST_WEBRTC_ICE_ROLE_CONTROLLED,
   GST_WEBRTC_ICE_ROLE_CONTROLLING,
-} GstWebRTCIceRole;
+} GstWebRTCICERole;
 
 /**
- * GstWebRTCIceComponent:
+ * GstWebRTCICEComponent:
  * GST_WEBRTC_ICE_COMPONENT_RTP,
  * GST_WEBRTC_ICE_COMPONENT_RTCP,
  */
