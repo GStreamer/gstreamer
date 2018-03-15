@@ -29,6 +29,13 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_AUDIO_INFO_STREAM_ALIGN (gst_audio_stream_align_get_type ())
 
+/**
+ * GstAudioStreamAlign:
+ *
+ * The opaque #GstAudioStreamAlign data structure.
+ *
+ * Since: 1.14
+ */
 typedef struct _GstAudioStreamAlign GstAudioStreamAlign;
 
 GST_AUDIO_API
