@@ -1,6 +1,24 @@
 plugin_LTLIBRARIES = libgstclosedcaption.la
 
+zvbi_sources = \
+	bit_slicer.c \
+	decoder.c \
+        raw_decoder.c \
+	sampling_par.c
+
+zvbi_headers = \
+	bcd.h \
+	bit_slicer.h \
+	decoder.h \
+	macros.h \
+	misc.h \
+	raw_decoder.h \
+	sampling_par.h \
+	sliced.h
+
 libgstclosedcaption_la_SOURCES = \
+	$(zvbi_sources) \
+	$(zvbi_headers) \
 	gstccextractor.c \
 	gstccextractor.h \
 	gstclosedcaption.c
@@ -18,4 +36,5 @@ libgstclosedcaption_la_LIBADD = \
 libgstclosedcaption_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
-	gstccextractor.h
+	gstccextractor.h \
+	$(zvbi_headers)
