@@ -139,7 +139,7 @@ gst_webrtc_rtp_sender_init (GstWebRTCRTPSender * webrtc)
 }
 
 GstWebRTCRTPSender *
-gst_webrtc_rtp_sender_new (GArray * send_encodings /* FIXME */ )
+gst_webrtc_rtp_sender_new (void)
 {
   return g_object_new (GST_TYPE_WEBRTC_RTP_SENDER, NULL);
 }
