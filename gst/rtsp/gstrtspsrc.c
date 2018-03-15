@@ -848,7 +848,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpBin:max-ts-offset:
+   * GstRTSPSrc:max-ts-offset:
    *
    * Used to set an upper limit of how large a time offset may be. This
    * is used to protect against unrealistic values as a result of either
@@ -862,7 +862,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpSrc:backchannel
+   * GstRTSPSrc:backchannel
    *
    * Select a type of backchannel to setup with the RTSP server.
    * Default value is "none". Allowed values are "none" and "onvif".
