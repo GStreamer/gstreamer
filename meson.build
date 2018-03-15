@@ -177,3 +177,4 @@ if bindinate.found()
   run_target('update-all', command: [find_program('update_sources.py'), 'bindinate'])
 endif
 
+subdir('Tests')
