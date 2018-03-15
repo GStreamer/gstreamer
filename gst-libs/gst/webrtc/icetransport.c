@@ -66,7 +66,9 @@ void
 gst_webrtc_ice_transport_connection_state_change (GstWebRTCICETransport * ice,
     GstWebRTCICEConnectionState new_state)
 {
+  GST_OBJECT_LOCK (ice);
   ice->state = new_state;
+  GST_OBJECT_UNLOCK (ice);
   g_object_notify (G_OBJECT (ice), "state");
 }
 
@@ -74,7 +76,9 @@ void
 gst_webrtc_ice_transport_gathering_state_change (GstWebRTCICETransport * ice,
     GstWebRTCICEGatheringState new_state)
 {
+  GST_OBJECT_LOCK (ice);
   ice->gathering_state = new_state;
+  GST_OBJECT_UNLOCK (ice);
   g_object_notify (G_OBJECT (ice), "gathering-state");
 }
 

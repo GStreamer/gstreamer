@@ -61,9 +61,6 @@ struct _GstWebRTCRTPTransceiverClass
   gpointer              _padding[GST_PADDING];
 };
 
-GST_WEBRTC_API
-void                        gst_webrtc_rtp_transceiver_stop     (GstWebRTCRTPTransceiver * transceiver);
-
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_RTP_TRANSCEIVER_H__ */

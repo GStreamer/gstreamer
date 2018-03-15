@@ -59,12 +59,6 @@ struct _GstWebRTCRTPReceiverClass
 GST_WEBRTC_API
 GstWebRTCRTPReceiver *      gst_webrtc_rtp_receiver_new                 (void);
 GST_WEBRTC_API
-GstStructure *              gst_webrtc_rtp_receiver_get_parameters      (GstWebRTCRTPReceiver * receiver, gchar * kind);
-/* FIXME: promise? */
-GST_WEBRTC_API
-gboolean                    gst_webrtc_rtp_receiver_set_parameters      (GstWebRTCRTPReceiver * receiver,
-                                                                         GstStructure * parameters);
-GST_WEBRTC_API
 void                        gst_webrtc_rtp_receiver_set_transport       (GstWebRTCRTPReceiver * receiver,
                                                                          GstWebRTCDTLSTransport * transport);
 GST_WEBRTC_API

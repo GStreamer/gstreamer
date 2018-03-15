@@ -57,12 +57,6 @@ struct _GstWebRTCRTPSenderClass
 
 GST_WEBRTC_API
 GstWebRTCRTPSender *        gst_webrtc_rtp_sender_new                   (GArray * send_encodings);
-GST_WEBRTC_API
-GstStructure *              gst_webrtc_rtp_sender_get_parameters        (GstWebRTCRTPSender * sender, gchar * kind);
-/* FIXME: promise? */
-GST_WEBRTC_API
-gboolean                    gst_webrtc_rtp_sender_set_parameters        (GstWebRTCRTPSender * sender,
-                                                                         GstStructure * parameters);
 
 GST_WEBRTC_API
 void                        gst_webrtc_rtp_sender_set_transport         (GstWebRTCRTPSender * sender,
