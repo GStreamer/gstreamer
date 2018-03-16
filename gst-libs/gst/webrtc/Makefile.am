@@ -57,7 +57,7 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstWebRTC-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstwebrtc_@GST_API_VERSION@include_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstwebrtc_@GST_API_VERSION@_la_SOURCES) $(BUILT_SOURCES))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstwebrtc_@GST_API_VERSION@_la_SOURCES)) $(BUILT_SOURCES)
 
 GstWebRTC-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstwebrtc-@GST_API_VERSION@.la
 	$(AM_V_GEN)GST_PLUGIN_SYSTEM_PATH_1_0="" GST_PLUGIN_PATH_1_0="" GST_REGISTRY_UPDATE=no GI_SCANNER_DISABLE_CACHE=yes \
