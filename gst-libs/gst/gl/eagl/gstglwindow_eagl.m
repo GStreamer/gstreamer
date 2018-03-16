@@ -191,6 +191,8 @@ draw_cb (gpointer data)
     eagl_layer = (CAEAGLLayer *)[GS_GL_WINDOW_EAGL_VIEW(window_eagl) layer];
     size = eagl_layer.frame.size;
 
+    size = CGSizeMake (size.width * eagl_layer.contentsScale,  size.height * eagl_layer.contentsScale);
+
     if (window->queue_resize || window_eagl->priv->window_width != size.width ||
         window_eagl->priv->window_height != size.height) {
 
