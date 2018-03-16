@@ -29,8 +29,6 @@
 # include <valgrind/valgrind.h>
 #endif
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
 #include <gst/audio/audio.h>
