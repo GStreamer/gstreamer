@@ -1241,7 +1241,7 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc)
   GstWebRTCRTPSender *sender;
   GstWebRTCRTPReceiver *receiver;
 
-  sender = gst_webrtc_rtp_sender_new (NULL);
+  sender = gst_webrtc_rtp_sender_new ();
   receiver = gst_webrtc_rtp_receiver_new ();
   trans = webrtc_transceiver_new (webrtc, sender, receiver);
   rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
