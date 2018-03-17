@@ -48,6 +48,14 @@ typedef struct {
   GstRTPBuffer rtp;
 } RtpUlpFecMapInfo;
 
+/* FIXME: parse/write these properly instead of relying in packed structs */
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#define ATTRIBUTE_PACKED
+#else
+#define ATTRIBUTE_PACKED __attribute__ ((packed))
+#endif
+
 /* RFC 5109 */
 /*
     0                   1                   2                   3
@@ -76,7 +84,7 @@ typedef struct {
   guint16 seq;
   guint32 timestamp;
   guint16 len;
-} __attribute__ ((packed)) RtpUlpFecHeader;
+} ATTRIBUTE_PACKED RtpUlpFecHeader;
 #else
 typedef struct {
   guint8 E:1;
@@ -91,7 +99,7 @@ typedef struct {
   guint16 seq;
   guint32 timestamp;
   guint16 len;
-} __attribute__ ((packed)) RtpUlpFecHeader;
+} ATTRIBUTE_PACKED RtpUlpFecHeader;
 #endif
 
 /*
@@ -110,7 +118,13 @@ typedef struct
   guint16 protection_len;
   guint16 mask;
   guint32 mask_continued;
-} __attribute__ ((packed)) RtpUlpFecLevelHeader;
+} ATTRIBUTE_PACKED RtpUlpFecLevelHeader;
+
+#ifdef _MSC_VER
+#pragma pack(pop)
+#else
+#undef ATTRIBUTE_PACKED
+#endif
 
 gboolean          rtp_ulpfec_map_info_map                  (GstBuffer *buffer, RtpUlpFecMapInfo *info);
 void              rtp_ulpfec_map_info_unmap                (RtpUlpFecMapInfo *info);
