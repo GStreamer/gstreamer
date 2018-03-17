@@ -1050,6 +1050,9 @@ static gboolean
 is_header_fLaC (GstOggStream * pad, ogg_packet * packet)
 {
   if (pad->n_header_packets_seen == 1) {
+    if (packet->bytes < 17)
+      return FALSE;
+
     pad->granulerate_n = (packet->packet[14] << 12) |
         (packet->packet[15] << 4) | ((packet->packet[16] >> 4) & 0xf);
   }
