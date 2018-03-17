@@ -25,6 +25,7 @@
 #include <gst/audio/gstaudiosrc.h>
 #include <gst/audio/gstaudiosink.h>
 
+#include <initguid.h>
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 
