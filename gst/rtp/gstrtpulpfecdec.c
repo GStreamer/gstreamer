@@ -276,6 +276,30 @@ gst_rtp_ulpfec_dec_recover_from_storage (GstRtpUlpFecDec * self,
   return gst_buffer_ref (info->rtp.buffer);
 }
 
+/* __has_builtin only works with clang, so test compiler version for gcc */
+/* Intel compiler and MSVC probably have their own things as well */
+#if defined(__has_builtin) && __has_builtin(__builtin_ctzll)
+#define rtp_ulpfec_ctz64 __builtin_ctzll
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define rtp_ulpfec_ctz64 __builtin_ctzll
+#else
+static inline gint
+rtp_ulpfec_ctz64_inline (guint64 mask)
+{
+  gint nth_bit = 0;
+
+  do {
+    if ((mask & 1))
+      return nth_bit;
+    mask = mask >> 1;
+  } while (++nth_bit < 64);
+
+  return -1;                    /* should not be reached, since mask must not be 0 */
+}
+
+#define rtp_ulpfec_ctz64 rtp_ulpfec_ctz64_inline
+#endif
+
 static GstBuffer *
 gst_rtp_ulpfec_dec_recover (GstRtpUlpFecDec * self, guint32 ssrc, gint media_pt,
     guint8 * dst_pt, guint16 * dst_seq)
@@ -308,7 +332,7 @@ gst_rtp_ulpfec_dec_recover (GstRtpUlpFecDec * self, guint32 ssrc, gint media_pt,
 
     /* Do we have any 1s? Checking if current FEC packet can be used for recovery */
     if (0 != missing_packets_mask) {
-      guint trailing_zeros = __builtin_ctzll (missing_packets_mask);
+      guint trailing_zeros = rtp_ulpfec_ctz64 (missing_packets_mask);
 
       /* Is it the only 1 in the mask? Checking if we lacking single packet in
        * that case FEC packet can be used for recovery */
@@ -620,4 +644,7 @@ gst_rtp_ulpfec_dec_class_init (GstRtpUlpFecDecClass * klass)
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES,
       klass_properties);
+
+  g_assert (rtp_ulpfec_ctz64 (G_GUINT64_CONSTANT (0x1)) == 0);
+  g_assert (rtp_ulpfec_ctz64 (G_GUINT64_CONSTANT (0x8000000000000000)) == 63);
 }
