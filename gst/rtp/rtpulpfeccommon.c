@@ -161,14 +161,17 @@ rtp_ulpfec_get_headers_len (gboolean fec_mask_long)
   return sizeof (RtpUlpFecHeader) + fec_level_hdr_get_size (fec_mask_long);
 }
 
+#define ONE_64BIT G_GUINT64_CONSTANT(1)
+
 guint64
 rtp_ulpfec_packet_mask_from_seqnum (guint16 seq,
     guint16 fec_seq_base, gboolean fec_mask_long)
 {
   gint seq_delta = gst_rtp_buffer_compare_seqnum (fec_seq_base, seq);
   if (seq_delta >= 0
-      && seq_delta <= RTP_ULPFEC_SEQ_BASE_OFFSET_MAX (fec_mask_long))
-    return 1ULL << (RTP_ULPFEC_SEQ_BASE_OFFSET_MAX (TRUE) - seq_delta);
+      && seq_delta <= RTP_ULPFEC_SEQ_BASE_OFFSET_MAX (fec_mask_long)) {
+    return ONE_64BIT << (RTP_ULPFEC_SEQ_BASE_OFFSET_MAX (TRUE) - seq_delta);
+  }
   return 0;
 }
 

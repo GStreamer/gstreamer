@@ -224,7 +224,7 @@ gst_rtp_ulpfec_enc_stream_ctx_protect (GstRtpUlpFecEncStreamCtx * ctx,
     }
   }
 
-  g_assert (tmp_mask == 0ULL);
+  g_assert (tmp_mask == 0);
   ret =
       rtp_ulpfec_bitstring_to_fec_rtp_buffer (ctx->scratch_buf, seq_base,
       fec_mask_long, fec_mask, FALSE, pt, seq, timestamp, ssrc);

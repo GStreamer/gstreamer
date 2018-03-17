@@ -336,7 +336,7 @@ gst_rtp_ulpfec_dec_recover (GstRtpUlpFecDec * self, guint32 ssrc, gint media_pt,
 
       /* Is it the only 1 in the mask? Checking if we lacking single packet in
        * that case FEC packet can be used for recovery */
-      if (missing_packets_mask == (1ULL << trailing_zeros)) {
+      if (missing_packets_mask == (G_GUINT64_CONSTANT (1) << trailing_zeros)) {
         GstBuffer *ret;
 
         *dst_seq =
