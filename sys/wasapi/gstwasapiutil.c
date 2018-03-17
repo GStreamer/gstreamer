@@ -73,6 +73,7 @@ const IID IID_IAudioRenderClient = { 0xf294acfc, 0x3146, 0x4483,
   {0xa7, 0xbf, 0xad, 0xdc, 0xa7, 0xc2, 0x60, 0xe2}
 };
 
+/* *INDENT-OFF* */
 static struct
 {
   guint64 wasapi_pos;
@@ -100,6 +101,7 @@ static struct
   {SPEAKER_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER},
   {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
 };
+/* *INDENT-ON* */
 
 static int windows_major_version = 0;
 
@@ -713,8 +715,7 @@ gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
 
   /* Too many channels, have to assume that they are all non-positional */
   if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
-    GST_INFO ("Got too many (%i) channels, assuming non-positional",
-        nChannels);
+    GST_INFO ("Got too many (%i) channels, assuming non-positional", nChannels);
     goto out;
   }
 
