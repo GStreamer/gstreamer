@@ -1065,8 +1065,9 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
 }
 
 /* @track_element must be a GESSource */
-static void
-create_transitions (GESTimeline * timeline, GESTrackElement * track_element)
+void
+timeline_create_transitions (GESTimeline * timeline,
+    GESTrackElement * track_element)
 {
   GESTrack *track;
   GList *layer_node;
@@ -1220,7 +1221,7 @@ start_tracking_track_element (GESTimeline * timeline,
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 
     timeline_update_duration (timeline);
-    create_transitions (timeline, trackelement);
+    timeline_create_transitions (timeline, trackelement);
   }
 }
 
@@ -2581,7 +2582,7 @@ trackelement_start_changed_cb (GESTrackElement * child,
         timeline->priv->snapping_distance == 0)
       timeline->priv->movecontext.needs_move_ctx = TRUE;
 
-    create_transitions (timeline, child);
+    timeline_create_transitions (timeline, child);
   }
 }
 
@@ -2651,7 +2652,7 @@ trackelement_duration_changed_cb (GESTrackElement * child,
       timeline->priv->movecontext.needs_move_ctx = TRUE;
     }
 
-    create_transitions (timeline, child);
+    timeline_create_transitions (timeline, child);
   }
 }
 

@@ -1384,6 +1384,13 @@ ges_clip_split (GESClip * clip, guint64 position)
 
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
 
+  if (GES_TIMELINE_ELEMENT_TIMELINE (clip)) {
+    for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {
+      timeline_create_transitions (GES_TIMELINE_ELEMENT_TIMELINE (tmp->data),
+          tmp->data);
+    }
+  }
+
   return new_object;
 }
 

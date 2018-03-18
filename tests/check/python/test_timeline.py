@@ -45,6 +45,7 @@ class TestTimeline(unittest.TestCase):
         project = GES.Project.new(uri=timeline.get_asset().props.uri)
 
         loaded_called = False
+
         def loaded(unused_project, unused_timeline):
             nonlocal loaded_called
             loaded_called = True
@@ -62,6 +63,59 @@ class TestTimeline(unittest.TestCase):
         self.assertTrue(loaded_called)
         handle.assert_not_called()
 
+
+class TestSplitting(GESSimpleTimelineTest):
+    def setUp(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super(TestSplitting, self).setUp()
+
+    def assertTimelineTopology(self, topology):
+        res = []
+        for layer in self.timeline.get_layers():
+            layer_timings = []
+            for clip in layer.get_clips():
+                layer_timings.append(
+                    (type(clip), clip.props.start, clip.props.duration))
+
+            res.append(layer_timings)
+
+        self.assertEqual(topology, res)
+        return res
+
+    def test_spliting_with_auto_transition_on_the_left(self):
+        self.timeline.props.auto_transition = True
+        clip1 = self.add_clip(0, 0, 100)
+        clip2 = self.add_clip(50, 0, 100)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 100),
+                (GES.TransitionClip, 50, 50),
+                (GES.TestClip, 50, 100)
+            ]
+        ])
+
+        clip1.split(25)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 25),
+                (GES.TestClip, 25, 75),
+                (GES.TransitionClip, 50, 50),
+                (GES.TestClip, 50, 100),
+            ]
+        ])
+
+        clip2.split(125)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 25),
+                (GES.TestClip, 25, 75),
+                (GES.TransitionClip, 50, 50),
+                (GES.TestClip, 50, 75),
+                (GES.TestClip, 125, 25),
+            ]
+        ])
+
+
 class TestEditing(GESSimpleTimelineTest):
 
     def test_transition_disappears_when_moving_to_another_layer(self):
@@ -71,7 +125,8 @@ class TestEditing(GESSimpleTimelineTest):
         self.assertEquals(len(self.layer.get_clips()), 4)
 
         layer2 = self.timeline.append_layer()
-        clip2.edit([], layer2.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, clip2.props.start)
+        clip2.edit([], layer2.get_priority(), GES.EditMode.EDIT_NORMAL,
+                   GES.Edge.EDGE_NONE, clip2.props.start)
         self.assertEquals(len(self.layer.get_clips()), 1)
         self.assertEquals(len(layer2.get_clips()), 1)
 
@@ -83,7 +138,8 @@ class TestEditing(GESSimpleTimelineTest):
         self.assertEquals(len(all_clips), 4)
 
         layer2 = self.timeline.append_layer()
-        clip1.edit([], layer2.get_priority(), GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, clip1.props.start)
+        clip1.edit([], layer2.get_priority(), GES.EditMode.EDIT_RIPPLE,
+                   GES.Edge.EDGE_NONE, clip1.props.start)
         self.assertEquals(self.layer.get_clips(), [])
         self.assertEquals(set(layer2.get_clips()), set(all_clips))
 
@@ -94,7 +150,8 @@ class TestEditing(GESSimpleTimelineTest):
         all_clips = self.layer.get_clips()
         self.assertEquals(len(all_clips), 4)
 
-        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, clip2.props.start + 1)
+        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE,
+                   GES.Edge.EDGE_NONE, clip2.props.start + 1)
         self.assertEquals(set(self.layer.get_clips()), set(all_clips))
 
     def test_transition_rippling_over_does_not_create_another_transition(self):
@@ -103,14 +160,17 @@ class TestEditing(GESSimpleTimelineTest):
         clip1 = self.add_clip(0, 0, 17 * Gst.SECOND)
         clip2 = clip1.split(7.0 * Gst.SECOND)
         # Make a transition between the two clips
-        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 4.5 * Gst.SECOND)
+        clip1.edit([], self.layer.get_priority(),
+                   GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 4.5 * Gst.SECOND)
 
         # Rippl clip1 and check that transitions ar always the sames
         all_clips = self.layer.get_clips()
         self.assertEquals(len(all_clips), 4)
-        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 41.5 * Gst.SECOND)
+        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE,
+                   GES.Edge.EDGE_NONE, 41.5 * Gst.SECOND)
         self.assertEquals(len(self.layer.get_clips()), 4)
-        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 35 * Gst.SECOND)
+        clip1.edit([], self.layer.get_priority(),
+                   GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 35 * Gst.SECOND)
         self.assertEquals(len(self.layer.get_clips()), 4)
 
 
@@ -156,7 +216,9 @@ class TestTransitions(GESSimpleTimelineTest):
         clip2.connect("notify::start", property_changed_cb)
 
         # Move clip2 to create a transition with clip1.
-        clip2.edit([], self.layer.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 50)
+        clip2.edit([], self.layer.get_priority(),
+                   GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 50)
         # The clip-added signal is emitted twice, once for the video
         # transition and once for the audio transition.
-        self.assertEqual(signals, ["notify::start", "clip-added", "clip-added"])
+        self.assertEqual(
+            signals, ["notify::start", "clip-added", "clip-added"])
