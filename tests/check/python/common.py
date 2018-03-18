@@ -55,6 +55,7 @@ def create_main_loop():
     mainloop.run = run
     return mainloop
 
+
 def create_project(with_group=False, saved=False):
     """Creates a project with two clips in a group."""
     project = GES.Project()
@@ -77,6 +78,7 @@ def create_project(with_group=False, saved=False):
         project.save(timeline, uri, None, overwrite=True)
 
     return timeline
+
 
 class GESTest(unittest.TestCase):
     def _log(self, func, format, *args):
@@ -105,9 +107,22 @@ class GESTest(unittest.TestCase):
 
 
 class GESSimpleTimelineTest(GESTest):
+    def __init__(self, *args):
+        self.track_types = [GES.TrackType.AUDIO, GES.TrackType.VIDEO]
+        super(GESSimpleTimelineTest, self).__init__(*args)
+
     def setUp(self):
-        self.timeline = GES.Timeline.new_audio_video()
-        self.assertEqual(len(self.timeline.get_tracks()), 2)
+        self.timeline = GES.Timeline.new()
+        for track_type in self.track_types:
+            self.assertIn(
+                track_type, [GES.TrackType.AUDIO, GES.TrackType.VIDEO])
+            if track_type == GES.TrackType.AUDIO:
+                self.timeline.add_track(GES.AudioTrack.new())
+            else:
+                self.timeline.add_track(GES.VideoTrack.new())
+
+        self.assertEqual(len(self.timeline.get_tracks()),
+                         len(self.track_types))
         self.layer = self.timeline.append_layer()
 
     def add_clip(self, start, in_point, duration):

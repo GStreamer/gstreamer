@@ -125,6 +125,9 @@ G_GNUC_INTERNAL
 void
 timeline_fill_gaps            (GESTimeline *timeline);
 
+G_GNUC_INTERNAL void
+timeline_create_transitions (GESTimeline * timeline, GESTrackElement * track_element);
+
 G_GNUC_INTERNAL
 void
 track_resort_and_fill_gaps    (GESTrack *track);
