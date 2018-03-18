@@ -1453,7 +1453,7 @@ done:
 /**
  * gst_encoding_profile_find:
  * @targetname: (transfer none): The name of the target
- * @profilename: (transfer none): (allow-none): The name of the profile, if %NULL
+ * @profilename: (transfer none) (allow-none): The name of the profile, if %NULL
  * provided, it will default to the encoding profile called `default`.
  * @category: (transfer none) (allow-none): The target category. Can be %NULL
  *
