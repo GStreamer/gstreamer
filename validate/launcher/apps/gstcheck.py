@@ -17,13 +17,16 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import argparse
+import json
 import os
 import re
 import pickle
 import platform
 import shutil
+import subprocess
 import threading
 import concurrent.futures as conc
+
 
 from launcher import config
 from launcher.utils import printc, Colors
@@ -31,32 +34,27 @@ from launcher.utils import printc, Colors
 
 class MesonTest(Test):
 
-    def __init__(self, name, options, reporter, test, child_env=None):
+    def __init__(self, name, options, reporter, test_infos, child_env=None):
         ref_env = os.environ.copy()
         if child_env is None:
             child_env = {}
         else:
             ref_env.update(child_env)
 
-        if not isinstance(test.env, dict):
-            test.env = test.env.get_env(ref_env)
-        child_env.update(test.env)
-        if len(test.extra_paths) > 0:
-            child_env['PATH'] = child_env['PATH'] + \
-                ';'.join([''] + test.extra_paths)
+        child_env.update(test_infos['env'])
         self.child_env = child_env
 
-        timeout = int(child_env.pop('CK_DEFAULT_TIMEOUT', test.timeout))
+        timeout = int(child_env.pop(
+            'CK_DEFAULT_TIMEOUT', test_infos['timeout']))
 
-        Test.__init__(self, test.fname[0], name, options,
+        Test.__init__(self, test_infos['cmd'][0], name, options,
                       reporter, timeout=timeout, hard_timeout=timeout,
-                      is_parallel=test.is_parallel)
+                      is_parallel=getattr(test_infos, 'is_parallel', True))
 
-        self.mesontest = test
+        self.test_infos = test_infos
 
     def build_arguments(self):
-        self.add_arguments(*self.mesontest.fname[1:])
-        self.add_arguments(*self.mesontest.cmd_args)
+        self.add_arguments(*self.test_infos['cmd'][1:])
 
     def get_subproc_env(self):
         env = os.environ.copy()
@@ -86,32 +84,34 @@ class MesonTestsManager(TestsManager):
         arggroup = MesonTestsManager.arggroup = parser.add_argument_group(
             "meson tests specific options and behaviours")
         arggroup.add_argument("--meson-build-dir",
-                            action="append",
-                            dest='meson_build_dirs',
-                            default=[],
-                            help="defines the paths to look for GstValidate tools.")
+                              action="append",
+                              dest='meson_build_dirs',
+                              default=[],
+                              help="defines the paths to look for GstValidate tools.")
         arggroup.add_argument("--meson-no-rebuild",
-                            action="store_true",
-                            default=False,
-                            help="Whether to avoid to rebuild tests before running them.")
+                              action="store_true",
+                              default=False,
+                              help="Whether to avoid to rebuild tests before running them.")
 
     def get_meson_tests(self):
+        meson = shutil.which('meson')
+        if not meson:
+            meson = shutil.which('meson.py')
+        if not meson:
+            printc("Can't find meson, can't run testsuite.\n", Colors.FAIL)
+            return False
+
         if not self.options.meson_build_dirs:
             self.options.meson_build_dirs = [config.BUILDDIR]
+
         mesontests = []
         for i, bdir in enumerate(self.options.meson_build_dirs):
             bdir = os.path.abspath(bdir)
-            datafile = os.path.join(
-                bdir, 'meson-private/meson_test_setup.dat')
+            output = subprocess.check_output(
+                [meson, 'introspect', '--tests', bdir])
 
-            if not os.path.isfile(datafile):
-                self.error("%s does not exists, can't use meson test launcher",
-                           datafile)
-                continue
-
-            with open(datafile, 'rb') as f:
-                tests = pickle.load(f)
-                mesontests.extend(tests)
+            for test_dict in json.loads(output.decode()):
+                mesontests.append(test_dict)
 
         return mesontests
 
@@ -157,9 +157,9 @@ class MesonTestsManager(TestsManager):
         return TestsManager.run_tests(self, starting_test_num, total_num_tests)
 
     def get_test_name(self, test):
-        name = test.name.replace('/', '.')
-        if test.suite:
-            name = '.'.join(test.suite) + '.' + name
+        name = test['name'].replace('/', '.')
+        if test['suite']:
+            name = '.'.join(test['suite']) + '.' + name
 
         return name.replace('..', '.').replace(' ', '-')
 
@@ -201,7 +201,7 @@ class GstCheckTestsManager(MesonTestsManager):
         return last_touched, []
 
     def _list_gst_check_tests(self, test, recurse=False):
-        binary = test.fname[0]
+        binary = test['cmd'][0]
 
         self.tests_info[binary] = self.check_binary_ts(binary)
 
@@ -237,14 +237,14 @@ class GstCheckTestsManager(MesonTestsManager):
         super().add_options(parser)
         arggroup = parser.add_argument_group("gstcheck specific options")
         arggroup.add_argument("--gst-check-leak-trace-testnames",
-                            default=None,
-                            help="A regex to specifying testsnames of the test"
+                              default=None,
+                              help="A regex to specifying testsnames of the test"
                               "to run with the leak tracer activated, if 'known-not-leaky'"
                               " is specified, the testsuite will automatically activate"
                               " leak tracers on tests known to be not leaky.")
         arggroup.add_argument("--gst-check-leak-options",
-                            default=None,
-                            help="Leak tracer options")
+                              default=None,
+                              help="Leak tracer options")
 
     def get_child_env(self, testname, check_name=None):
         child_env = {}
@@ -256,7 +256,8 @@ class GstCheckTestsManager(MesonTestsManager):
                 leak_tracer = "leaks"
                 if self.options.gst_check_leak_options:
                     leak_tracer += "(%s)" % self.options.gst_check_leak_options
-                tracers = set(os.environ.get('GST_TRACERS', '').split(';')) | set([leak_tracer])
+                tracers = set(os.environ.get('GST_TRACERS', '').split(
+                    ';')) | set([leak_tracer])
                 child_env['GST_TRACERS'] = ';'.join(tracers)
 
         return child_env
@@ -270,7 +271,7 @@ class GstCheckTestsManager(MesonTestsManager):
         mesontests = self.get_meson_tests()
         to_inspect = []
         for test in mesontests:
-            binary = test.fname[0]
+            binary = test['cmd'][0]
             test_info = self.check_binary_ts(binary)
             if test_info is True:
                 continue
@@ -297,7 +298,7 @@ class GstCheckTestsManager(MesonTestsManager):
                 e.result()
 
         for test in mesontests:
-            gst_tests = self.tests_info[test.fname[0]][1]
+            gst_tests = self.tests_info[test['cmd'][0]][1]
             if not gst_tests:
                 name = self.get_test_name(test)
                 child_env = self.get_child_env(name)
