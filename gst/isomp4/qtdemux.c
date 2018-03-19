@@ -12634,6 +12634,7 @@ qtdemux_tag_add_date (GstQTDemux * qtdemux, GstTagList * taglist,
     const char *tag, const char *dummy, GNode * node)
 {
   GNode *data;
+  GstDateTime *datetime = NULL;
   char *s;
   int len;
   int type;
@@ -12648,6 +12649,13 @@ qtdemux_tag_add_date (GstQTDemux * qtdemux, GstTagList * taglist,
 
       s = g_strndup ((char *) data->data + 16, len - 16);
       GST_DEBUG_OBJECT (qtdemux, "adding date '%s'", s);
+      datetime = gst_date_time_new_from_iso8601_string (s);
+      if (datetime != NULL) {
+        gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
+            datetime, NULL);
+        gst_date_time_unref (datetime);
+      }
+
       ret = sscanf (s, "%u-%u-%u", &y, &m, &d);
       if (ret >= 1 && y > 1500 && y < 3000) {
         GDate *date;
