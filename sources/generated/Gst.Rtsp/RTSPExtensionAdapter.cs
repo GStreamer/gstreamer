@@ -100,7 +100,7 @@ namespace Gst.Rtsp {
 			try {
 				IRTSPExtensionImplementor __obj = GLib.Object.GetObject (inst, false) as IRTSPExtensionImplementor;
 				Gst.Rtsp.RTSPResult __result;
-				__result = __obj.ParseSdp (Gst.Sdp.SDPMessage.New (sdp), s == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (s, typeof (Gst.Structure), false));
+				__result = __obj.ParseSdp (sdp == IntPtr.Zero ? null : (Gst.Sdp.SDPMessage) GLib.Opaque.GetOpaque (sdp, typeof (Gst.Sdp.SDPMessage), false), s == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (s, typeof (Gst.Structure), false));
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -357,10 +357,8 @@ namespace Gst.Rtsp {
 		static extern int gst_rtsp_extension_parse_sdp(IntPtr raw, IntPtr sdp, IntPtr s);
 
 		public Gst.Rtsp.RTSPResult ParseSdp(Gst.Sdp.SDPMessage sdp, Gst.Structure s) {
-			IntPtr native_sdp = GLib.Marshaller.StructureToPtrAlloc (sdp);
-			int raw_ret = gst_rtsp_extension_parse_sdp(Handle, native_sdp, s == null ? IntPtr.Zero : s.Handle);
+			int raw_ret = gst_rtsp_extension_parse_sdp(Handle, sdp == null ? IntPtr.Zero : sdp.Handle, s == null ? IntPtr.Zero : s.Handle);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
-			Marshal.FreeHGlobal (native_sdp);
 			return ret;
 		}
 
