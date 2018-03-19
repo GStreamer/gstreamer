@@ -233,6 +233,7 @@ typedef enum {
 	VBI_MODULATION_BIPHASE_MSB
 } vbi_modulation;
 
+#if 0
 /**
  * @ingroup Rawdec
  * @brief Bit slicer context.
@@ -296,7 +297,7 @@ vbi_bit_slice(vbi_bit_slicer *slicer, uint8_t *raw, uint8_t *buf)
 	return slicer->func(slicer, raw, buf);
 }
 /** @} */
-
+#endif
 /**
  * @ingroup Rawdec
  * @brief Raw vbi decoder context.
@@ -372,14 +373,18 @@ typedef struct vbi_raw_decoder {
 	pthread_mutex_t		mutex;
 
 	unsigned int		services;
+#if 0				/* DISABLED LEGACY DECODER */
 	int			num_jobs;
+#endif
 
-	int8_t *		pattern;
+	int8_t *		pattern; /* The real vbi3_raw_decoder */
+#if 0		/* DISABLED LEGACY DECODER */
 	struct _vbi_raw_decoder_job {
 		unsigned int		id;
 		int			offset;
 		vbi_bit_slicer		slicer;
 	}			jobs[8];
+#endif
 } vbi_raw_decoder;
 
 /**

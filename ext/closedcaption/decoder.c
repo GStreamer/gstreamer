@@ -48,6 +48,7 @@
  * these lower level functions.
  */
 
+#if 0                           /* LEGACY BIT SLICER */
 /*
  *  Bit Slicer
  */
@@ -474,6 +475,8 @@ vbi_bit_slicer_init (vbi_bit_slicer * slicer,
       break;
   }
 }
+
+#endif
 
 /**
  * @example examples/wss.c
