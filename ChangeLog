@@ -1,7 +1,47 @@
+=== release 1.14.0 ===
+
+2018-03-19 20:28:10 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.14.0
+
+2018-03-19 08:57:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	  doc: Remove documentation about GESVideoSource::zorder as it doesn't exist
+	  The zorder is controled through the GESLayer priority API, not directly
+	  on the sources.
+
+2018-03-18 11:03:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  clip: Make sure to create transition after a clip is splitted
+	  In the (now tested) scenario where we have a transition on the right
+	  side of a clip we are splitting, auto transitions can't be created
+	  because we resize the clip after adding the new one, meaning that
+	  there are 3 elements in the "transition zone", we need to force
+	  auto transition creation after the splitting.
+	  Fixes https://gitlab.gnome.org/GNOME/pitivi/issues/2142
+
+2018-03-14 20:59:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	  group: Handle clips being removed from their layers
+
 === release 1.13.91 ===
 
 2018-03-13 19:29:44 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
