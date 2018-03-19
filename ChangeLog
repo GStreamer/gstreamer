@@ -1,7 +1,30 @@
+=== release 1.14.0 ===
+
+2018-03-19 20:30:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.14.0
+
+2018-03-12 16:59:01 +0000  Julien Isorce <jisorce@oblong.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: ensure num_ref_frames is greater than 0
+	  Even if it is the h264parse fault or bad video file, vaapih264dec
+	  should set a proper value for VAPictureParameterBufferH264.num_ref_frames
+	  as the driver might use it.
+	  Also see "info.ref_frames = dpb_size;" in
+	  gstvaapidecoder_h264.c::ensure_context
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793836
+
 === release 1.13.91 ===
 
 2018-03-13 19:32:05 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* configure.ac:
 	* gstreamer-vaapi.doap:
