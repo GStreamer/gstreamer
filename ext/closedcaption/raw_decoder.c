@@ -198,13 +198,16 @@ const _vbi_service_par _vbi_service_table[] = {
         {21, 0},
         {21, 0},
         10500, 1006976, 503488, /* 32 x FH */
+#if 0
         /* Test of CRI bits has been removed to handle the
            incorrect signal observed by Rich Kandel (see
            _VBI_RAW_SHIFT_CC_CRI). */
         0x03, 0x0F, 4, 0, 2 * 8, VBI_MODULATION_NRZ_LSB,
-        /* 0x00005551, 0x7FF, 14, 2, 2 * 8, VBI_MODULATION_NRZ_LSB, */
+#else
+        0x00005551, 0x7FF, 14, 2, 2 * 8, VBI_MODULATION_NRZ_LSB,
         /* I've seen CC signals on other lines and there's no
            way to distinguish from the transmitted data. */
+#endif
         _VBI_SP_FIELD_NUM | _VBI_SP_LINE_NUM,
       }, {
         VBI_SLICED_CAPTION_525_F2,
@@ -213,8 +216,14 @@ const _vbi_service_par _vbi_service_table[] = {
         {0, 284},
         {0, 284},
         10500, 1006976, 503488, /* 32 x FH */
+#if 0
+        /* Test of CRI bits has been removed to handle the
+           incorrect signal observed by Rich Kandel (see
+           _VBI_RAW_SHIFT_CC_CRI). */
         0x03, 0x0F, 4, 0, 2 * 8, VBI_MODULATION_NRZ_LSB,
-        /* 0x00005551, 0x7FF, 14, 2, 2 * 8, VBI_MODULATION_NRZ_LSB, */
+#else
+        0x00005551, 0x7FF, 14, 2, 2 * 8, VBI_MODULATION_NRZ_LSB,
+#endif
         _VBI_SP_FIELD_NUM | _VBI_SP_LINE_NUM,
       }, {
         VBI_SLICED_2xCAPTION_525,       /* NOT CONFIRMED */
