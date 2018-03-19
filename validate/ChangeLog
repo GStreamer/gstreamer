@@ -1,7 +1,33 @@
+=== release 1.14.0 ===
+
+2018-03-19 20:29:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.14.0
+
+2018-03-13 21:14:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  validate: Fix the way we set the testsuite version
+	  The testuite version should be 'master' during development
+	  and the version number on releases, during the pre-release
+	  cycle, there is no nano version, thus our detection handling
+	  was mistaking.
+
+2018-03-13 22:20:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: update version
+
 === release 1.13.91 ===
 
 2018-03-13 19:30:43 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* validate/ChangeLog:
 	* validate/NEWS:
 	* validate/configure.ac:
 	* validate/gst-validate.doap:
