@@ -26,12 +26,20 @@
 #include <gst/gst.h>
 
 #include "gstccextractor.h"
+#include "gstline21dec.h"
 
 static gboolean
 closedcaption_init (GstPlugin * ccextractor)
 {
-  return gst_element_register (ccextractor, "ccextractor", GST_RANK_NONE,
+  gboolean ret;
+
+  ret = gst_element_register (ccextractor, "ccextractor", GST_RANK_NONE,
       GST_TYPE_CCEXTRACTOR);
+
+  ret &= gst_element_register (ccextractor, "line21decoder", GST_RANK_NONE,
+      GST_TYPE_LINE21DECODER);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
