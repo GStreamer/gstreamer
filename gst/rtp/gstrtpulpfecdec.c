@@ -278,9 +278,8 @@ gst_rtp_ulpfec_dec_recover_from_storage (GstRtpUlpFecDec * self,
 
 /* __has_builtin only works with clang, so test compiler version for gcc */
 /* Intel compiler and MSVC probably have their own things as well */
-#if defined(__has_builtin) && __has_builtin(__builtin_ctzll)
-#define rtp_ulpfec_ctz64 __builtin_ctzll
-#elif defined(__GNUC__) && __GNUC__ >= 4
+/* TODO: make sure we use builtin for clang as well */
+#if defined(__GNUC__) && __GNUC__ >= 4
 #define rtp_ulpfec_ctz64 __builtin_ctzll
 #else
 static inline gint
