@@ -1320,10 +1320,10 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   if (g_atomic_int_get (&(splitmux->split_now)) == TRUE)
     return TRUE;
 
-  if (thresh_bytes > 0 && queued_bytes >= thresh_bytes)
+  if (thresh_bytes > 0 && queued_bytes > thresh_bytes)
     return TRUE;                /* Would overrun byte limit */
 
-  if (thresh_time > 0 && queued_time >= thresh_time)
+  if (thresh_time > 0 && queued_time > thresh_time)
     return TRUE;                /* Would overrun byte limit */
 
   /* Timecode-based threshold accounts for possible rounding errors:
