@@ -21,6 +21,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 #include <gst/net/gstnetcontrolmessagemeta.h>
+#include <gst/webrtc/webrtc.h>
 
 int main (int argc, char *argv[]) {
 	g_print("\"sizeof(GstAllocatorClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAllocatorClass));
@@ -944,5 +945,52 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstVideoInfo.fps_d\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoInfo, fps_d));
 	g_print("\"GstVideoInfo.offset\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoInfo, offset));
 	g_print("\"GstVideoInfo.stride\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstVideoInfo, stride));
+	g_print("\"sizeof(GstWebRTCDTLSTransportClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCDTLSTransportClass));
+	g_print("\"GstWebRTCDTLSTransportClass._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransportClass, _padding));
+	g_print("\"sizeof(GstWebRTCDTLSTransport)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCDTLSTransport));
+	g_print("\"GstWebRTCDTLSTransport.transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, transport));
+	g_print("\"GstWebRTCDTLSTransport.state\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, state));
+	g_print("\"GstWebRTCDTLSTransport.is_rtcp\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, is_rtcp));
+	g_print("\"GstWebRTCDTLSTransport.client\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, client));
+	g_print("\"GstWebRTCDTLSTransport.session_id\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, session_id));
+	g_print("\"GstWebRTCDTLSTransport.dtlssrtpenc\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, dtlssrtpenc));
+	g_print("\"GstWebRTCDTLSTransport.dtlssrtpdec\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, dtlssrtpdec));
+	g_print("\"GstWebRTCDTLSTransport._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCDTLSTransport, _padding));
+	g_print("\"sizeof(GstWebRTCICETransportClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCICETransportClass));
+	g_print("\"GstWebRTCICETransportClass.gather_candidates\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransportClass, gather_candidates));
+	g_print("\"GstWebRTCICETransportClass._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransportClass, _padding));
+	g_print("\"sizeof(GstWebRTCICETransport)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCICETransport));
+	g_print("\"GstWebRTCICETransport.role\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, role));
+	g_print("\"GstWebRTCICETransport.component\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, component));
+	g_print("\"GstWebRTCICETransport.state\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, state));
+	g_print("\"GstWebRTCICETransport.gathering_state\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, gathering_state));
+	g_print("\"GstWebRTCICETransport.src\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, src));
+	g_print("\"GstWebRTCICETransport.sink\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, sink));
+	g_print("\"GstWebRTCICETransport._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCICETransport, _padding));
+	g_print("\"sizeof(GstWebRTCRTPReceiverClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPReceiverClass));
+	g_print("\"GstWebRTCRTPReceiverClass._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPReceiverClass, _padding));
+	g_print("\"sizeof(GstWebRTCRTPReceiver)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPReceiver));
+	g_print("\"GstWebRTCRTPReceiver.transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPReceiver, transport));
+	g_print("\"GstWebRTCRTPReceiver.rtcp_transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPReceiver, rtcp_transport));
+	g_print("\"GstWebRTCRTPReceiver._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPReceiver, _padding));
+	g_print("\"sizeof(GstWebRTCRTPSenderClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPSenderClass));
+	g_print("\"GstWebRTCRTPSenderClass._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSenderClass, _padding));
+	g_print("\"sizeof(GstWebRTCRTPSender)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPSender));
+	g_print("\"GstWebRTCRTPSender.transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, transport));
+	g_print("\"GstWebRTCRTPSender.rtcp_transport\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, rtcp_transport));
+	g_print("\"GstWebRTCRTPSender.send_encodings\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, send_encodings));
+	g_print("\"GstWebRTCRTPSender._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPSender, _padding));
+	g_print("\"sizeof(GstWebRTCRTPTransceiverClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPTransceiverClass));
+	g_print("\"GstWebRTCRTPTransceiverClass._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiverClass, _padding));
+	g_print("\"sizeof(GstWebRTCRTPTransceiver)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstWebRTCRTPTransceiver));
+	g_print("\"GstWebRTCRTPTransceiver.mline\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, mline));
+	g_print("\"GstWebRTCRTPTransceiver.mid\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, mid));
+	g_print("\"GstWebRTCRTPTransceiver.stopped\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, stopped));
+	g_print("\"GstWebRTCRTPTransceiver.sender\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, sender));
+	g_print("\"GstWebRTCRTPTransceiver.receiver\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, receiver));
+	g_print("\"GstWebRTCRTPTransceiver.direction\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, direction));
+	g_print("\"GstWebRTCRTPTransceiver.current_direction\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, current_direction));
+	g_print("\"GstWebRTCRTPTransceiver.codec_preferences\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, codec_preferences));
+	g_print("\"GstWebRTCRTPTransceiver._padding\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstWebRTCRTPTransceiver, _padding));
 	return 0;
 }

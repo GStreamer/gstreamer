@@ -79,7 +79,9 @@ gst_deps_defs = [
   ['gstreamer-rtsp', ['gst-plugins-base', 'rtsp_dep'], 'gst_rtsp'],
   ['gstreamer-sdp', ['gst-plugins-base', 'sdp_dep'], 'gstsdp'],
   ['gstreamer-tag', ['gst-plugins-base', 'tag_dep'], 'gsttag'],
-  ['gstreamer-video', ['gst-plugins-base', 'video_dep'], 'gstvideo'],]
+  ['gstreamer-video', ['gst-plugins-base', 'video_dep'], 'gstvideo'],
+  ['gstreamer-webrtc', ['gst-plugins-bad', 'gstwebrtc_dep'], 'gstwebrtc'],
+]
 
 foreach dep: gst_deps_defs
   gst_deps += [dependency(dep.get(0) + '-' + apiversion, version: gst_required_version,
@@ -165,7 +167,7 @@ if bindinator.get_variable('found')
     run_target('bindinate_gstreamer',
         command: [bindinate,
             '--name=gstreamer', '--regenerate=true',
-            '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0',
+            '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0,GstWebRTC-1.0',
             '--gir=Gst-1.0',
             '--copy-girs=@0@'.format(join_paths(meson.current_source_dir(), 'girs'))],
         depends: []
