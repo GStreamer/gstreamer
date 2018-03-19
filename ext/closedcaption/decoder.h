@@ -406,6 +406,8 @@ extern void             vbi_raw_decoder_resize( vbi_raw_decoder *rd,
 extern unsigned int	vbi_raw_decoder_parameters(vbi_raw_decoder *rd, unsigned int services,
 						   int scanning, int *max_rate);
 extern int		vbi_raw_decode(vbi_raw_decoder *rd, uint8_t *raw, vbi_sliced *out);
+
+void vbi_initialize_gst_debug (void);
 /** @} */
 
 /* Private */

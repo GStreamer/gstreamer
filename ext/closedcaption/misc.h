@@ -295,6 +295,8 @@ _vbi_grow_vector_capacity	(void **		vector,
 				 size_t			element_size)
   _vbi_nonnull ((1, 2));
 
+GST_DEBUG_CATEGORY_EXTERN (libzvbi_debug);
+
 /* Logging stuff. */
 #ifdef G_HAVE_ISO_VARARGS
 #define VBI_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
@@ -336,19 +338,19 @@ VBI_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
 #endif /* G_HAVE_ISO_VARARGS */
 
 #define error(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_ERROR, NULL, templ , ##args)
 #define warning(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_WARNING, NULL, templ , ##args)
 #define notice(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_INFO, NULL, templ , ##args)
 #define info(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_INFO, NULL, templ , ##args)
 #define debug1(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_DEBUG, NULL, templ , ##args)
 #define debug2(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_LOG, NULL, templ , ##args)
 #define debug3(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_TRACE, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_TRACE, NULL, templ , ##args)
 
 #if 0				/* Replaced logging with GStreamer logging system */
 extern _vbi_log_hook		_vbi_global_log;

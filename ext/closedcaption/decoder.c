@@ -827,6 +827,13 @@ vbi_raw_decoder_init (vbi_raw_decoder * rd)
   rd->pattern = (int8_t *) rd3;
 }
 
+GST_DEBUG_CATEGORY (libzvbi_debug);
+void
+vbi_initialize_gst_debug (void)
+{
+  GST_DEBUG_CATEGORY_INIT (libzvbi_debug, "libzvbi", 0, "libzvbi");
+}
+
 /*
 Local variables:
 c-set-style: K&R
