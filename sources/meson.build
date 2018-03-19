@@ -1,7 +1,7 @@
 raw_api_fname = join_paths(meson.current_source_dir(), meson.project_name() + '-api.raw')
 metadata = files(meson.project_name() + '.metadata')
 
-abi_includes = 'glib.h,gst/gst.h,gst/video/video.h,gst/audio/audio.h,gst/rtsp/rtsp.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/net/net.h,gst/pbutils/gstaudiovisualizer.h,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h,gst/video/gstvideoaffinetransformationmeta.h,gst/net/gstnetcontrolmessagemeta.h'
+abi_includes = 'glib.h,gst/gst.h,gst/video/video.h,gst/audio/audio.h,gst/rtsp/rtsp.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/net/net.h,gst/pbutils/gstaudiovisualizer.h,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h,gst/video/gstvideoaffinetransformationmeta.h,gst/net/gstnetcontrolmessagemeta.h,gst/webrtc/webrtc.h'
 
 sources = [
     'custom/Adapter.cs',
@@ -43,7 +43,7 @@ gst_sharp_dep = declare_dependency(dependencies: [glib_sharp_dep, gio_sharp_dep]
 
 if add_languages('c', required: false) and csc.get_id() == 'mono'
     c_abi_exe = executable('gst_sharp_c_abi', c_abi,
-            cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
+            c_args: ['-DGST_USE_UNSTABLE_API'],
             dependencies: [gst_deps])
 
     cs_abi_exe = executable('gst_sharp_cs_abi', cs_abi,

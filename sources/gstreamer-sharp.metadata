@@ -243,6 +243,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='GstRtp']" name="name">Gst.Rtp</attr>
 	<attr path="/api/namespace[@name='GstRtsp']" name="name">Gst.Rtsp</attr>
 	<attr path="/api/namespace[@name='GstSdp']" name="name">Gst.Sdp</attr>
+	<attr path="/api/namespace[@name='GstWebRTC']" name="name">Gst.WebRTC</attr>
 
 	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
@@ -258,6 +259,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='Gst.Rtp']" name="library">libgstrtp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">libgstrtsp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">libgstsdp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.WebRTC']" name="library">libgstwebrtc-1.0-0.dll</attr>
 
 	<!-- DoubleRange and Fraction are in Value.cs -->
 	<attr path="//struct[@name='DoubleRange' or @name='Fraction' or @name='IntRange' or @name='FractionRange']" name="hidden">true</attr>

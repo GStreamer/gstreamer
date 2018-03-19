@@ -29,7 +29,8 @@ namespace Gst {
 			GLib.GType.Register (FractionRange.GType, typeof(FractionRange));
 			GLib.GType.Register (DateTime.GType, typeof(DateTime));
 			GLib.GType.Register (Gst.Array.GType, typeof(Gst.Array));
-
+			GLib.GType.Register(Promise.GType, typeof(Promise));
+			GLib.GType.Register(Gst.WebRTC.WebRTCSessionDescription.GType, typeof(Gst.WebRTC.WebRTCSessionDescription));
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
