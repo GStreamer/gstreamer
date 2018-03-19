@@ -1,7 +1,20 @@
+=== release 1.14.0 ===
+
+2018-03-19 20:27:04 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.14.0
+
 === release 1.13.91 ===
 
 2018-03-13 19:28:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
