@@ -24252,7 +24252,7 @@
         </parameters>
       </method>
     </struct>
-    <boxed name="SDPMessage" cname="GstSDPMessage" opaque="false" hidden="false">
+    <boxed name="SDPMessage" cname="GstSDPMessage" opaque="true" hidden="false">
       <method name="GetType" cname="gst_sdp_message_get_type" shared="true">
         <return-type type="GType" />
       </method>

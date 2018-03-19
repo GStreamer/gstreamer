@@ -67,23 +67,20 @@ namespace Gst.Sdp {
 
 		public static string SdpMessageAsUri(string scheme, Gst.Sdp.SDPMessage msg) {
 			IntPtr native_scheme = GLib.Marshaller.StringToPtrGStrdup (scheme);
-			IntPtr native_msg = GLib.Marshaller.StructureToPtrAlloc (msg);
-			IntPtr raw_ret = gst_sdp_message_as_uri(native_scheme, native_msg);
+			IntPtr raw_ret = gst_sdp_message_as_uri(native_scheme, msg == null ? IntPtr.Zero : msg.Handle);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			GLib.Marshaller.Free (native_scheme);
-			Marshal.FreeHGlobal (native_msg);
 			return ret;
 		}
 
 		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_message_new(IntPtr msg);
+		static extern int gst_sdp_message_new(out IntPtr msg);
 
 		public static Gst.Sdp.SDPResult SdpMessageNew(out Gst.Sdp.SDPMessage msg) {
-			IntPtr native_msg = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Sdp.SDPMessage)));
-			int raw_ret = gst_sdp_message_new(native_msg);
+			IntPtr native_msg;
+			int raw_ret = gst_sdp_message_new(out native_msg);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
-			msg = Gst.Sdp.SDPMessage.New (native_msg);
-			Marshal.FreeHGlobal (native_msg);
+			msg = native_msg == IntPtr.Zero ? null : (Gst.Sdp.SDPMessage) GLib.Opaque.GetOpaque (native_msg, typeof (Gst.Sdp.SDPMessage), true);
 			return ret;
 		}
 
@@ -91,10 +88,8 @@ namespace Gst.Sdp {
 		static extern int gst_sdp_message_parse_buffer(byte[] data, uint size, IntPtr msg);
 
 		public static Gst.Sdp.SDPResult SdpMessageParseBuffer(byte[] data, uint size, Gst.Sdp.SDPMessage msg) {
-			IntPtr native_msg = GLib.Marshaller.StructureToPtrAlloc (msg);
-			int raw_ret = gst_sdp_message_parse_buffer(data, size, native_msg);
+			int raw_ret = gst_sdp_message_parse_buffer(data, size, msg == null ? IntPtr.Zero : msg.Handle);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
-			Marshal.FreeHGlobal (native_msg);
 			return ret;
 		}
 
@@ -103,11 +98,9 @@ namespace Gst.Sdp {
 
 		public static Gst.Sdp.SDPResult SdpMessageParseUri(string uri, Gst.Sdp.SDPMessage msg) {
 			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
-			IntPtr native_msg = GLib.Marshaller.StructureToPtrAlloc (msg);
-			int raw_ret = gst_sdp_message_parse_uri(native_uri, native_msg);
+			int raw_ret = gst_sdp_message_parse_uri(native_uri, msg == null ? IntPtr.Zero : msg.Handle);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			GLib.Marshaller.Free (native_uri);
-			Marshal.FreeHGlobal (native_msg);
 			return ret;
 		}
 
