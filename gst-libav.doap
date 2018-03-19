@@ -34,6 +34,16 @@ colorspace conversion elements.
 
  <release>
   <Version>
+   <revision>1.14.0</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2018-03-19</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.14.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.13.91</revision>
    <branch>master</branch>
    <name></name>
