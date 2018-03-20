@@ -406,7 +406,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
   } else {
     pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), value);
     if (pspec != NULL) {
-      target = g_object_ref (element);
+      target = G_OBJECT (g_object_ref (element));
       GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, target, "found %s property", value);
     } else {
       SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
