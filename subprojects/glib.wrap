@@ -2,4 +2,4 @@
 directory=glib
 url=git://git.gnome.org/glib
 push-url=ssh://git.gnome.org/git/glib
-revision=987bf5bbeb25e846617d7bc1ee9b78f049dc0d60
+revision=master
