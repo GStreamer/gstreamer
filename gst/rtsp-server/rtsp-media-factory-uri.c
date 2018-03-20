@@ -618,7 +618,7 @@ rtsp_media_factory_uri_create_element (GstRTSPMediaFactory * factory,
 
   /* keep factory data around */
   data = g_new0 (FactoryData, 1);
-  data->factory = g_object_ref (factory);
+  data->factory = g_object_ref (urifact);
   data->pt = 96;
 
   g_object_set_data_full (G_OBJECT (element), factory_key,
