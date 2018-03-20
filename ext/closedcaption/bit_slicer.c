@@ -35,7 +35,6 @@
 #  define VBI_PIXFMT_BGRA24_LE VBI_PIXFMT_BGRA32_LE
 #  define VBI_PIXFMT_RGBA24_BE VBI_PIXFMT_RGBA32_BE
 #  define VBI_PIXFMT_BGRA24_BE VBI_PIXFMT_BGRA32_BE
-#  define VBI_PIXFMT_RGB8 101
 #  define vbi_pixfmt_bytes_per_pixel VBI_PIXFMT_BPP
 
 /**
@@ -66,31 +65,25 @@
 /* Read a sample with pixfmt conversion. pixfmt is const. */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GREEN(raw)							\
-	((VBI_PIXFMT_RGB8 == pixfmt) ?					\
-	 *(const uint8_t *)(raw) & bs->green_mask :			\
 	 ((VBI_PIXFMT_RGB16_LE == pixfmt) ?				\
 	  *(const uint16_t *)(raw) & bs->green_mask :			\
 	  ((VBI_PIXFMT_RGB16_BE == pixfmt) ?				\
 	   GREEN2 (raw, 1) :						\
-	   (raw)[0])))
+	   (raw)[0]))
 #elif G_BYTE_ORDER == G_BIG_ENDIAN
 #define GREEN(raw)							\
-	((VBI_PIXFMT_RGB8 == pixfmt) ?					\
-	 *(const uint8_t *)(raw) & bs->green_mask :			\
 	 ((VBI_PIXFMT_RGB16_LE == pixfmt) ?				\
 	  GREEN2 (raw, 0) :						\
 	  ((VBI_PIXFMT_RGB16_BE == pixfmt) ?				\
 	   *(const uint16_t *)(raw) & bs->green_mask :			\
-	   (raw)[0])))
+	   (raw)[0]))
 #else
 #define GREEN(raw)							\
-	((VBI_PIXFMT_RGB8 == pixfmt) ?					\
-	 *(const uint8_t *)(raw) & bs->green_mask :			\
 	 ((VBI_PIXFMT_RGB16_LE == pixfmt) ?				\
 	  GREEN2 (raw, 0) :						\
 	  ((VBI_PIXFMT_RGB16_BE == pixfmt) ?				\
 	   GREEN2 (raw, 1) :						\
-	   (raw)[0])))
+	   (raw)[0]))
 #endif
 
 /* raw0 = raw[index >> 8], linear interpolated. */
@@ -465,10 +458,10 @@ null_function (vbi3_bit_slicer * bs,
     uint8_t * buffer,
     vbi3_bit_slicer_point * points, unsigned int *n_points, const uint8_t * raw)
 {
-  buffer = buffer;              /* unused */
-  points = points;
-  n_points = n_points;
-  raw = raw;
+  /* buffer = buffer;              /\* unused *\/ */
+  /* points = points; */
+  /* n_points = n_points; */
+  /* raw = raw; */
 
   warning (&bs->log, "vbi3_bit_slicer_set_params() not called.");
 
