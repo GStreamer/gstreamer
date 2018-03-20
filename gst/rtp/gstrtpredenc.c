@@ -143,6 +143,7 @@ _alloc_red_packet_and_fill_headers (GstRtpRedEnc * self,
   GstBuffer *red = gst_rtp_buffer_new_allocate (red_header_size, 0, csrc_count);
   guint8 *red_block_header;
   GstRTPBuffer red_rtp = GST_RTP_BUFFER_INIT;
+  guint i;
 
   if (!gst_rtp_buffer_map (red, GST_MAP_WRITE, &red_rtp))
     g_assert_not_reached ();
@@ -156,7 +157,7 @@ _alloc_red_packet_and_fill_headers (GstRtpRedEnc * self,
   gst_rtp_buffer_set_seq (&red_rtp, gst_rtp_buffer_get_seq (inp_rtp));
   gst_rtp_buffer_set_timestamp (&red_rtp, timestmap);
   gst_rtp_buffer_set_ssrc (&red_rtp, gst_rtp_buffer_get_ssrc (inp_rtp));
-  for (guint i = 0; i != csrc_count; ++i)
+  for (i = 0; i != csrc_count; ++i)
     gst_rtp_buffer_set_csrc (&red_rtp, i,
         gst_rtp_buffer_get_csrc ((inp_rtp), i));
 

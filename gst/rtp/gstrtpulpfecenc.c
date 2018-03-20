@@ -120,10 +120,11 @@ gst_rtp_ulpfec_enc_stream_ctx_start (GstRtpUlpFecEncStreamCtx * ctx,
     GQueue * packets, guint fec_packets)
 {
   GList *it = packets->tail;
+  guint i;
 
   g_array_set_size (ctx->info_arr, packets->length);
 
-  for (guint i = 0; i < packets->length; ++i) {
+  for (i = 0; i < packets->length; ++i) {
     GstBuffer *buffer = it->data;
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (ctx, i);
 
@@ -162,11 +163,12 @@ static void
   guint len = end - start + 1;
   guint64 mask = 0;
   guint16 seq_base = 0;
+  guint i;
 
   len = MIN (len, RTP_ULPFEC_PROTECTED_PACKETS_MAX (TRUE));
   end = start + len - 1;
 
-  for (guint i = start; i <= end; ++i) {
+  for (i = start; i <= end; ++i) {
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (ctx, i);
     guint16 seq = gst_rtp_buffer_get_seq (&info->rtp);
 
@@ -200,6 +202,7 @@ gst_rtp_ulpfec_enc_stream_ctx_protect (GstRtpUlpFecEncStreamCtx * ctx,
   GstBuffer *ret;
   guint64 tmp_mask;
   gboolean fec_mask_long;
+  guint i;
 
   if (ctx->fec_packet_idx >= ctx->fec_packets)
     return NULL;
@@ -210,7 +213,7 @@ gst_rtp_ulpfec_enc_stream_ctx_protect (GstRtpUlpFecEncStreamCtx * ctx,
 
   tmp_mask = fec_mask;
   fec_mask_long = rtp_ulpfec_mask_is_long (fec_mask);
-  for (guint i = start; i <= end; ++i) {
+  for (i = start; i <= end; ++i) {
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (ctx, i);
     guint64 packet_mask =
         rtp_ulpfec_packet_mask_from_seqnum (gst_rtp_buffer_get_seq (&info->rtp),

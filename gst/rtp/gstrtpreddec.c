@@ -218,7 +218,7 @@ gst_red_history_lost_seq_num_for_timestamp (GstRtpRedDec * self,
   RTPHistItem *older;
   RTPHistItem *newer;
   guint32 timestamp_diff;
-  gint seq_diff;
+  gint seq_diff, lost_packet_idx;
 
   if (NULL == older_sibling) {
     if (self->rtp_history->length == RTP_HISTORY_MAX_SIZE)
@@ -260,7 +260,7 @@ gst_red_history_lost_seq_num_for_timestamp (GstRtpRedDec * self,
   }
 
   timestamp_diff = newer->timestamp - older->timestamp;
-  for (gint lost_packet_idx = 1; lost_packet_idx < seq_diff; ++lost_packet_idx) {
+  for (lost_packet_idx = 1; lost_packet_idx < seq_diff; ++lost_packet_idx) {
     guint32 lost_timestamp = older->timestamp +
         lost_packet_idx * timestamp_diff / seq_diff;
     if (lost_timestamp == timestamp) {
@@ -283,6 +283,7 @@ gst_rtp_red_create_packet (GstRtpRedDec * self, GstRTPBuffer * red_rtp,
   guint csrc_count = gst_rtp_buffer_get_csrc_count (red_rtp);
   GstBuffer *ret = gst_rtp_buffer_new_allocate (0, 0, csrc_count);
   GstRTPBuffer ret_rtp = GST_RTP_BUFFER_INIT;
+  guint i;
   if (!gst_rtp_buffer_map (ret, GST_MAP_WRITE, &ret_rtp))
     g_assert_not_reached ();
 
@@ -291,7 +292,7 @@ gst_rtp_red_create_packet (GstRtpRedDec * self, GstRTPBuffer * red_rtp,
   gst_rtp_buffer_set_seq (&ret_rtp, seq_num);
   gst_rtp_buffer_set_timestamp (&ret_rtp, timestamp);
   gst_rtp_buffer_set_ssrc (&ret_rtp, gst_rtp_buffer_get_ssrc (red_rtp));
-  for (guint i = 0; i < csrc_count; ++i)
+  for (i = 0; i < csrc_count; ++i)
     gst_rtp_buffer_set_csrc (&ret_rtp, i, gst_rtp_buffer_get_csrc (red_rtp, i));
   gst_rtp_buffer_unmap (&ret_rtp);
 
