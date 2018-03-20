@@ -12678,9 +12678,9 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN"/>
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
-      <constant value="90" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
-      <constant value="13" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
-      <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
+      <constant value="0" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="15" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstApp" library="gstapp-1.0">
@@ -15265,7 +15265,7 @@
       <field cname="seglatency" access="public" writeable="true" readable="true" is_callback="false" name="Seglatency" type="gint"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
     </struct>
-    <boxed name="AudioStreamAlign" cname="GstAudioStreamAlign" opaque="false" hidden="false">
+    <boxed name="AudioStreamAlign" cname="GstAudioStreamAlign" opaque="false" hidden="false" version="1.14">
       <method name="GetType" cname="gst_audio_stream_align_get_type" shared="true">
         <return-type type="GType"/>
       </method>
@@ -20706,9 +20706,9 @@
       <constant value="online-service" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_ONLINE_SERVICE"/>
       <constant value="storage-editing" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_STORAGE_EDITING"/>
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR"/>
-      <constant value="90" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
-      <constant value="13" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
-      <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
+      <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
+      <constant value="15" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
+      <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
     </object>
   </namespace>
   <namespace name="GstRtp" library="gstrtp-1.0">
