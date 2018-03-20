@@ -267,6 +267,7 @@ gst_h264_parse_start (GstBaseParse * parse)
 
   h264parse->nalparser = gst_h264_nal_parser_new ();
 
+  h264parse->state = 0;
   h264parse->dts = GST_CLOCK_TIME_NONE;
   h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
   h264parse->sei_pic_struct_pres_flag = FALSE;
