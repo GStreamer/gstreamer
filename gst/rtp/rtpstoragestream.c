@@ -72,7 +72,7 @@ rtp_storage_stream_resize (RtpStorageStream * stream, GstClockTime size_time)
     }
   }
 
-  for (guint i = 0; i < too_old_buffers_num; ++i) {
+  for (i = 0; i < too_old_buffers_num; ++i) {
     RtpStorageItem *item = g_queue_pop_tail (&stream->queue);
     rtp_storage_item_free (item);
   }
@@ -137,6 +137,7 @@ rtp_storage_stream_get_packets_for_recovery (RtpStorageStream * stream,
   GList *end = NULL;
   GList *start = NULL;
   gboolean saw_fec = TRUE;      /* To initialize the start pointer in the loop below */
+  GList *it;
 
   /* Looking for media stream chunk with FEC packets at the end, which could
    * can have the lost packet. For example:
@@ -151,7 +152,7 @@ rtp_storage_stream_get_packets_for_recovery (RtpStorageStream * stream,
    * - it could have arrived right after it was considered lost (more of a corner case)
    * - it was recovered together with the other lost packet (most likely)
    */
-  for (GList * it = stream->queue.tail; it; it = it->prev) {
+  for (it = stream->queue.tail; it; it = it->prev) {
     RtpStorageItem *item = it->data;
     gboolean found_end = FALSE;
 
@@ -193,8 +194,9 @@ rtp_storage_stream_get_packets_for_recovery (RtpStorageStream * stream,
 
   if (start && end) {
     GstBufferList *ret = gst_buffer_list_new_sized (ret_length);
+    GList *it;
 
-    for (GList * it = start; it != end->prev; it = it->prev)
+    for (it = start; it != end->prev; it = it->prev)
       gst_buffer_list_add (ret,
           gst_buffer_ref (((RtpStorageItem *) it->data)->buffer));
     return ret;
@@ -207,7 +209,8 @@ GstBuffer *
 rtp_storage_stream_get_redundant_packet (RtpStorageStream * stream,
     guint16 lost_seq)
 {
-  for (GList * it = stream->queue.head; it; it = it->next) {
+  GList *it;
+  for (it = stream->queue.head; it; it = it->next) {
     RtpStorageItem *item = it->data;
     if (item->seq == lost_seq)
       return gst_buffer_ref (item->buffer);

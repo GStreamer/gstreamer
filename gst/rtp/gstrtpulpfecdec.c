@@ -105,6 +105,7 @@ gst_rtp_ulpfec_dec_start (GstRtpUlpFecDec * self, GstBufferList * buflist,
     guint8 fec_pt, guint16 lost_seq)
 {
   guint fec_packets = 0;
+  gsize i;
 
   g_assert (NULL == self->info_media);
   g_assert (0 == self->info_fec->len);
@@ -112,7 +113,7 @@ gst_rtp_ulpfec_dec_start (GstRtpUlpFecDec * self, GstBufferList * buflist,
 
   g_array_set_size (self->info_arr, gst_buffer_list_length (buflist));
 
-  for (gsize i = 0;
+  for (i = 0;
       i < gst_buffer_list_length (buflist) && !self->lost_packet_from_storage;
       ++i) {
     GstBuffer *buffer = gst_buffer_list_get (buflist, i);
@@ -165,7 +166,9 @@ gst_rtp_ulpfec_dec_get_media_buffers_mask (GstRtpUlpFecDec * self,
     guint16 fec_seq_base)
 {
   guint64 mask = 0;
-  for (GList * it = self->info_media; it; it = it->next) {
+  GList *it;
+
+  for (it = self->info_media; it; it = it->next) {
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (self, it->data);
     mask |=
         rtp_ulpfec_packet_mask_from_seqnum (gst_rtp_buffer_get_seq (&info->rtp),
@@ -178,10 +181,11 @@ static gboolean
 gst_rtp_ulpfec_dec_is_recovered_pt_valid (GstRtpUlpFecDec * self, gint media_pt,
     guint8 recovered_pt)
 {
+  GList *it;
   if (media_pt == recovered_pt)
     return TRUE;
 
-  for (GList * it = self->info_media; it; it = it->next) {
+  for (it = self->info_media; it; it = it->next) {
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (self, it->data);
     if (gst_rtp_buffer_get_payload_type (&info->rtp) == recovered_pt)
       return TRUE;
@@ -198,12 +202,13 @@ gst_rtp_ulpfec_dec_recover_from_fec (GstRtpUlpFecDec * self,
   gboolean fec_mask_long = rtp_ulpfec_buffer_get_fechdr (&info_fec->rtp)->L;
   guint16 fec_seq_base = rtp_ulpfec_buffer_get_seq_base (&info_fec->rtp);
   GstBuffer *ret;
+  GList *it;
 
   g_array_set_size (self->scratch_buf, 0);
   rtp_buffer_to_ulpfec_bitstring (&info_fec->rtp, self->scratch_buf, TRUE,
       fec_mask_long);
 
-  for (GList * it = self->info_media; it; it = it->next) {
+  for (it = self->info_media; it; it = it->next) {
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (self, it->data);
     guint64 packet_mask =
         rtp_ulpfec_packet_mask_from_seqnum (gst_rtp_buffer_get_seq (&info->rtp),
@@ -305,12 +310,13 @@ gst_rtp_ulpfec_dec_recover (GstRtpUlpFecDec * self, guint32 ssrc, gint media_pt,
 {
   guint64 media_mask = 0;
   gint media_mask_seq_base = -1;
+  gsize i;
 
   if (self->lost_packet_from_storage)
     return gst_rtp_ulpfec_dec_recover_from_storage (self, dst_pt, dst_seq);
 
   /* Looking for a FEC packet which can be used for recovery */
-  for (gsize i = 0; i < self->info_fec->len; ++i) {
+  for (i = 0; i < self->info_fec->len; ++i) {
     RtpUlpFecMapInfo *info = RTP_FEC_MAP_INFO_NTH (self,
         g_ptr_array_index (self->info_fec, i));
     guint16 seq_base = rtp_ulpfec_buffer_get_seq_base (&info->rtp);

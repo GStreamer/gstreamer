@@ -49,10 +49,10 @@
 #define _check_caps(_h_, _nth_, _expected_payload_)               \
   G_STMT_START {                                                  \
     GstEvent *_ev_;                                               \
-    gint _pt_ = -1;                                               \
+    gint _pt_ = -1, _i_;                                          \
     GstCaps *_caps_ = NULL;                                       \
                                                                   \
-    for (gint _i_ = 0; _i_ < _nth_; ++_i_)                        \
+    for (_i_ = 0; _i_ < _nth_; ++_i_)                             \
       gst_event_unref (gst_harness_pull_event (_h_));             \
                                                                   \
     _ev_ = gst_harness_pull_event (_h_);                          \

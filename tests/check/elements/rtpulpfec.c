@@ -144,10 +144,11 @@ packet_recovered_cb (GObject * internal_storage, GstBuffer * buffer,
 {
   gboolean found = FALSE;
   GstRTPBuffer rtp = { NULL };
+  GList *it;
 
   fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
 
-  for (GList * it = infos; it; it = it->next) {
+  for (it = infos; it; it = it->next) {
     RecoveredPacketInfo *info = it->data;
     if (gst_rtp_buffer_get_seq (&rtp) == info->seq) {
       fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp), info->pt);
@@ -285,8 +286,9 @@ GST_START_TEST (rtpulpfecdec_recovered_from_many)
   gsize lost_packet_size = packets_size[__i__];
   RecoveredPacketInfo info = {.pt = 126,.ssrc = 578322839,.seq = lost_seq };
   GList *expected = expect_recovered_packets (h, &info, 1);
+  gsize i;
 
-  for (gsize i = 0; i < G_N_ELEMENTS (packets); ++i) {
+  for (i = 0; i < G_N_ELEMENTS (packets); ++i) {
     if (i != (gsize) __i__)
       push_data (h, packets[i], packets_size[i]);
   }
