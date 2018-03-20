@@ -1,18 +1,15 @@
-This is GStreamer gst-python 1.14.0.
+This is GStreamer gst-python 1.15.0.1.
 
-The GStreamer team is thrilled to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
+GStreamer 1.15 is the development version leading up to the next major
+stable version which will be 1.16.
 
-As always, this release is again packed with new features, bug fixes and
-other improvements.
-
-The 1.14 release series adds new features on top of the 1.12 series and is
+The 1.15 development series adds new features on top of the 1.14 series and is
 part of the API and ABI-stable 1.x release series of the GStreamer multimedia
 framework.
 
-Full release notes can be found at:
+Full release notes will one day be found at:
 
-  https://gstreamer.freedesktop.org/releases/1.14/
+  https://gstreamer.freedesktop.org/releases/1.16/
 
 Binaries for Android, iOS, Mac OS X and Windows will be provided shortly
 after the release.
