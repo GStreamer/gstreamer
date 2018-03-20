@@ -35,6 +35,7 @@
 #include <gst/base/gstpushsrc.h>
 
 #include <gst/video/video.h>
+#include <unistd.h>
 
 typedef struct _GstV4l2Object GstV4l2Object;
 typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
