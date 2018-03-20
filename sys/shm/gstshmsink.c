@@ -289,8 +289,9 @@ gst_shm_sink_allocator_alloc_locked (GstShmSinkAllocator * self, gsize size,
     if (padding && (params->flags & GST_MEMORY_FLAG_ZERO_PADDED))
       memset (mymem->data + params->prefix + size, 0, padding);
 
-    gst_memory_init (memory, params->flags, g_object_ref (self), NULL,
-        maxsize, align, params->prefix, size);
+    gst_memory_init (memory, params->flags,
+        GST_ALLOCATOR_CAST (g_object_ref (self)), NULL, maxsize, align,
+        params->prefix, size);
   }
 
   return memory;
