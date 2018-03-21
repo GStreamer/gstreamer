@@ -103,7 +103,7 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
     const char * sink_name)
 {
   GstPad *qpad;
-  GstElement *q, *conv, *sink;
+  GstElement *q, *conv, *resample, *sink;
   GstPadLinkReturn ret;
 
   g_print ("Trying to handle stream with %s ! %s", convert_name, sink_name);
@@ -114,11 +114,23 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
   g_assert_nonnull (conv);
   sink = gst_element_factory_make (sink_name, NULL);
   g_assert_nonnull (sink);
-  gst_bin_add_many (GST_BIN (pipe), q, conv, sink, NULL);
-  gst_element_sync_state_with_parent (q);
-  gst_element_sync_state_with_parent (conv);
-  gst_element_sync_state_with_parent (sink);
-  gst_element_link_many (q, conv, sink, NULL);
+
+  if (g_strcmp0 (convert_name, "audioconvert") == 0) {
+    resample = gst_element_factory_make ("audioresample", NULL);
+    g_assert_nonnull (resample);
+    gst_bin_add_many (GST_BIN (pipe), q, conv, resample, sink, NULL);
+    gst_element_sync_state_with_parent (q);
+    gst_element_sync_state_with_parent (conv);
+    gst_element_sync_state_with_parent (resample);
+    gst_element_sync_state_with_parent (sink);
+    gst_element_link_many (q, conv, resample, sink, NULL);
+  } else {
+    gst_bin_add_many (GST_BIN (pipe), q, conv, sink, NULL);
+    gst_element_sync_state_with_parent (q);
+    gst_element_sync_state_with_parent (conv);
+    gst_element_sync_state_with_parent (sink);
+    gst_element_link_many (q, conv, sink, NULL);
+  }
 
   qpad = gst_element_get_static_pad (q, "sink");
 
