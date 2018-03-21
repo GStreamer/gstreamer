@@ -380,12 +380,15 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
   mux->previous_pcr = -1;
+  mux->previous_offset = 0;
   mux->pcr_rate_num = mux->pcr_rate_den = 1;
   mux->last_ts = 0;
   mux->is_delta = TRUE;
+  mux->is_header = FALSE;
 
   mux->streamheader_sent = FALSE;
   mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
+  gst_event_replace (&mux->force_key_unit_event, NULL);
 #if 0
   mux->spn_count = 0;
 
