@@ -242,3 +242,21 @@ gst_msdkvpp_deinterlace_method_get_type (void)
   }
   return type;
 }
+
+GType
+gst_msdkvpp_mirroring_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_MIRRORING_DISABLED, "Disable mirroring", "disable"},
+    {MFX_MIRRORING_HORIZONTAL, "Horizontal Mirroring", "horizontal"},
+    {MFX_MIRRORING_VERTICAL, "Vertical Mirroring", "vertical"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkVPPMirroring", values);
+  }
+  return type;
+}

@@ -75,6 +75,7 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_DETAIL,
+  PROP_MIRRORING,
   PROP_N,
 };
 
@@ -89,6 +90,7 @@ enum
 #define PROP_BRIGHTNESS_DEFAULT          0
 #define PROP_CONTRAST_DEFAULT            1
 #define PROP_DETAIL_DEFAULT              0
+#define PROP_MIRRORING_DEFAULT           MFX_MIRRORING_DISABLED
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -672,6 +674,17 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_vpp_douse->AlgList = thiz->max_filter_algorithms;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_vpp_douse);
   }
+
+  /* Mirroring */
+  if (thiz->flags & GST_MSDK_FLAG_MIRRORING) {
+    mfxExtVPPMirroring *mfx_mirroring = &thiz->mfx_mirroring;
+    mfx_mirroring->Header.BufferId = MFX_EXTBUFF_VPP_MIRRORING;
+    mfx_mirroring->Header.BufferSz = sizeof (mfxExtVPPMirroring);
+    mfx_mirroring->Type = thiz->mirroring;
+    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_mirroring);
+    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_MIRRORING;
+    n_filters++;
+  }
 }
 
 static void
@@ -970,6 +983,10 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->detail = g_value_get_uint (value);
       thiz->flags |= GST_MSDK_FLAG_DETAIL;
       break;
+    case PROP_MIRRORING:
+      thiz->mirroring = g_value_get_enum (value);
+      thiz->flags |= GST_MSDK_FLAG_MIRRORING;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1015,6 +1032,9 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DETAIL:
       g_value_set_uint (value, thiz->detail);
+      break;
+    case PROP_MIRRORING:
+      g_value_set_enum (value, thiz->mirroring);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1145,6 +1165,11 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "The factor of detail/edge enhancement filter algorithm",
       0, 100, PROP_DETAIL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_MIRRORING] =
+      g_param_spec_enum ("mirroring", "Mirroring",
+      "The Mirroring type", gst_msdkvpp_mirroring_get_type (),
+      PROP_MIRRORING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1163,6 +1188,7 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->brightness = PROP_BRIGHTNESS_DEFAULT;
   thiz->contrast = PROP_CONTRAST_DEFAULT;
   thiz->detail = PROP_DETAIL_DEFAULT;
+  thiz->mirroring = PROP_MIRRORING_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
