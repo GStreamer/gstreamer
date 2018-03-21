@@ -2009,22 +2009,8 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   if (gst_is_dmabuf_memory (gst_buffer_peek_memory (input, 0))) {
     if (self->input_allocation == GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
-      OMX_ALG_PORT_PARAM_BUFFER_MODE buffer_mode;
-      OMX_ERRORTYPE err;
-
-      GST_OMX_INIT_STRUCT (&buffer_mode);
-      buffer_mode.nPortIndex = self->enc_in_port->index;
-      buffer_mode.eMode = OMX_ALG_BUF_DMA;
-
-      GST_DEBUG_OBJECT (self, "Configure encoder to import dmabuf");
-
-      err =
-          gst_omx_component_set_parameter (self->enc,
-          (OMX_INDEXTYPE) OMX_ALG_IndexPortParamBufferMode, &buffer_mode);
-      if (err != OMX_ErrorNone)
-        GST_WARNING_OBJECT (self,
-            "Failed to set output buffer mode: %s (0x%08x)",
-            gst_omx_error_to_string (err), err);
+      GST_DEBUG_OBJECT (self, "Configure encoder input to import dmabuf");
+      gst_omx_port_set_dmabuf (self->enc_in_port, TRUE);
     } else {
       GST_DEBUG_OBJECT (self,
           "Wrong input allocation mode (%d); dynamic buffers are required to use dmabuf import",

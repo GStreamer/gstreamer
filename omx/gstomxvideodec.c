@@ -303,26 +303,8 @@ gst_omx_video_dec_open (GstVideoDecoder * decoder)
   self->dec_out_port = gst_omx_component_add_port (self->dec, out_port_index);
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
-  {
-    /* Configure OMX decoder to produce dmabuf */
-    OMX_ALG_PORT_PARAM_BUFFER_MODE buffer_mode;
-    OMX_ERRORTYPE err;
-
-    GST_OMX_INIT_STRUCT (&buffer_mode);
-    buffer_mode.nPortIndex = self->dec_out_port->index;
-    buffer_mode.eMode = OMX_ALG_BUF_DMA;
-
-    GST_DEBUG_OBJECT (self, "Configure decoder to produce dmabuf");
-
-    err =
-        gst_omx_component_set_parameter (self->dec,
-        (OMX_INDEXTYPE) OMX_ALG_IndexPortParamBufferMode, &buffer_mode);
-    if (err != OMX_ErrorNone)
-      GST_WARNING_OBJECT (self, "Failed to set output buffer mode: %s (0x%08x)",
-          gst_omx_error_to_string (err), err);
-    else
-      self->dmabuf = TRUE;
-  }
+  GST_DEBUG_OBJECT (self, "Configure decoder output to export dmabuf");
+  self->dmabuf = gst_omx_port_set_dmabuf (self->dec_out_port, TRUE);
 #endif
 
   if (!self->dec_in_port || !self->dec_out_port)

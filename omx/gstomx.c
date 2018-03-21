@@ -2591,6 +2591,38 @@ gst_omx_port_ensure_buffer_count_actual (GstOMXPort * port, guint extra)
   return TRUE;
 }
 
+gboolean
+gst_omx_port_set_dmabuf (GstOMXPort * port, gboolean dmabuf)
+{
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  OMX_ALG_PORT_PARAM_BUFFER_MODE buffer_mode;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&buffer_mode);
+  buffer_mode.nPortIndex = port->index;
+
+  if (dmabuf)
+    buffer_mode.eMode = OMX_ALG_BUF_DMA;
+  else
+    buffer_mode.eMode = OMX_ALG_BUF_NORMAL;
+
+  err =
+      gst_omx_component_set_parameter (port->comp,
+      (OMX_INDEXTYPE) OMX_ALG_IndexPortParamBufferMode, &buffer_mode);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (port->comp->parent,
+        "Failed to set port %d in %sdmabuf mode: %s (0x%08x)",
+        port->index, dmabuf ? "" : "non-", gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return TRUE;
+#else
+  /* dmabuf not supported for this platform */
+  return FALSE;
+#endif
+}
+
 typedef GType (*GGetTypeFunction) (void);
 
 static const GGetTypeFunction types[] = {
