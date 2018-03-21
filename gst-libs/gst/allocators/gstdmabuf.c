@@ -48,9 +48,10 @@ static gpointer
 gst_dmabuf_mem_map (GstMemory * gmem, GstMapInfo * info, gsize maxsize)
 {
   GstAllocator *allocator = gmem->allocator;
+  gpointer ret;
+
 #ifdef HAVE_LINUX_DMA_BUF_H
   struct dma_buf_sync sync = { DMA_BUF_SYNC_START };
-  gpointer ret;
 
   if (info->flags & GST_MAP_READ)
     sync.flags |= DMA_BUF_SYNC_READ;
