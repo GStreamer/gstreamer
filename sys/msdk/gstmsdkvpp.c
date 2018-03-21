@@ -43,7 +43,6 @@
 #include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkvpputil.h"
-#include "msdk-enums.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #define GST_CAT_DEFAULT gst_msdkvpp_debug
@@ -71,6 +70,10 @@ enum
   PROP_ROTATION,
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
+  PROP_HUE,
+  PROP_SATURATION,
+  PROP_BRIGHTNESS,
+  PROP_CONTRAST,
   PROP_N,
 };
 
@@ -80,6 +83,10 @@ enum
 #define PROP_ROTATION_DEFAULT            MFX_ANGLE_0
 #define PROP_DEINTERLACE_MODE_DEFAULT    GST_MSDKVPP_DEINTERLACE_MODE_AUTO
 #define PROP_DEINTERLACE_METHOD_DEFAULT  MFX_DEINTERLACING_BOB
+#define PROP_HUE_DEFAULT                 0
+#define PROP_SATURATION_DEFAULT          1
+#define PROP_BRIGHTNESS_DEFAULT          0
+#define PROP_CONTRAST_DEFAULT            1
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -628,6 +635,21 @@ ensure_filters (GstMsdkVPP * thiz)
     n_filters++;
   }
 
+  /* Colorbalance(ProcAmp) */
+  if (thiz->flags & (GST_MSDK_FLAG_HUE | GST_MSDK_FLAG_SATURATION |
+          GST_MSDK_FLAG_BRIGHTNESS | GST_MSDK_FLAG_CONTRAST)) {
+    mfxExtVPPProcAmp *mfx_procamp = &thiz->mfx_procamp;
+    mfx_procamp->Header.BufferId = MFX_EXTBUFF_VPP_PROCAMP;
+    mfx_procamp->Header.BufferSz = sizeof (mfxExtVPPProcAmp);
+    mfx_procamp->Hue = thiz->hue;
+    mfx_procamp->Saturation = thiz->saturation;
+    mfx_procamp->Brightness = thiz->brightness;
+    mfx_procamp->Contrast = thiz->contrast;
+    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_procamp);
+    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_PROCAMP;
+    n_filters++;
+  }
+
   /* mfxExtVPPDoUse */
   if (n_filters) {
     mfxExtVPPDoUse *mfx_vpp_douse = &thiz->mfx_vpp_douse;
@@ -915,6 +937,22 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
     case PROP_DEINTERLACE_METHOD:
       thiz->deinterlace_method = g_value_get_enum (value);
       break;
+    case PROP_HUE:
+      thiz->hue = g_value_get_float (value);
+      thiz->flags |= GST_MSDK_FLAG_HUE;
+      break;
+    case PROP_SATURATION:
+      thiz->saturation = g_value_get_float (value);
+      thiz->flags |= GST_MSDK_FLAG_SATURATION;
+      break;
+    case PROP_BRIGHTNESS:
+      thiz->brightness = g_value_get_float (value);
+      thiz->flags |= GST_MSDK_FLAG_BRIGHTNESS;
+      break;
+    case PROP_CONTRAST:
+      thiz->contrast = g_value_get_float (value);
+      thiz->flags |= GST_MSDK_FLAG_CONTRAST;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -945,6 +983,18 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEINTERLACE_METHOD:
       g_value_set_enum (value, thiz->deinterlace_method);
+      break;
+    case PROP_HUE:
+      g_value_set_float (value, thiz->hue);
+      break;
+    case PROP_SATURATION:
+      g_value_set_float (value, thiz->saturation);
+      break;
+    case PROP_BRIGHTNESS:
+      g_value_set_float (value, thiz->brightness);
+      break;
+    case PROP_CONTRAST:
+      g_value_set_float (value, thiz->contrast);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1048,6 +1098,28 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       PROP_DEINTERLACE_METHOD_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_HUE] =
+      g_param_spec_float ("hue", "Hue",
+      "The hue of the video",
+      -180, 180, PROP_HUE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_SATURATION] =
+      g_param_spec_float ("saturation", "Saturation",
+      "The Saturation of the video",
+      0, 10, PROP_SATURATION_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_BRIGHTNESS] =
+      g_param_spec_float ("brightness", "Brightness",
+      "The Brightness of the video",
+      -100, 100, PROP_BRIGHTNESS_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_CONTRAST] =
+      g_param_spec_float ("contrast", "Contrast",
+      "The Contrast of the video",
+      0, 10, PROP_CONTRAST_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1061,6 +1133,10 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->deinterlace_mode = PROP_DEINTERLACE_MODE_DEFAULT;
   thiz->deinterlace_method = PROP_DEINTERLACE_METHOD_DEFAULT;
   thiz->field_duration = GST_CLOCK_TIME_NONE;
+  thiz->hue = PROP_HUE_DEFAULT;
+  thiz->saturation = PROP_SATURATION_DEFAULT;
+  thiz->brightness = PROP_BRIGHTNESS_DEFAULT;
+  thiz->contrast = PROP_CONTRAST_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
