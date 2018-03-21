@@ -917,11 +917,9 @@ gst_wasapi_util_initialize_audioclient3 (GstElement * self,
 {
   HRESULT hr;
   gint stream_flags;
-  guint rate, devicep_frames;
+  guint devicep_frames;
   guint defaultp_frames, fundp_frames, minp_frames, maxp_frames;
   WAVEFORMATEX *tmpf;
-
-  rate = GST_AUDIO_INFO_RATE (&spec->info);
 
   hr = IAudioClient3_GetSharedModeEnginePeriod (client, format,
       &defaultp_frames, &fundp_frames, &minp_frames, &maxp_frames);
@@ -931,16 +929,12 @@ gst_wasapi_util_initialize_audioclient3 (GstElement * self,
       "fundamental period %i frames, minimum period %i frames, maximum period "
       "%i frames", defaultp_frames, fundp_frames, minp_frames, maxp_frames);
 
-  if (low_latency) {
+  if (low_latency)
     devicep_frames = minp_frames;
-  } else {
-    /* rate is in Hz, latency_time is in usec */
-    int tmp = (rate * spec->latency_time * GST_USECOND) / GST_SECOND;
-    devicep_frames = CLAMP (tmp, minp_frames, maxp_frames);
-    /* Ensure it's a multiple of the fundamental period */
-    tmp = devicep_frames / fundp_frames;
-    devicep_frames = tmp * fundp_frames;
-  }
+  else
+    /* Just pick the max period, because lower values can cause glitches
+     * https://bugzilla.gnome.org/show_bug.cgi?id=794497 */
+    devicep_frames = maxp_frames;
 
   stream_flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   if (loopback)
