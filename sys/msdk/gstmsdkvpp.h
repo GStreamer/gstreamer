@@ -58,15 +58,16 @@ typedef struct _GstMsdkVPP GstMsdkVPP;
 typedef struct _GstMsdkVPPClass GstMsdkVPPClass;
 
 typedef enum {
-  GST_MSDK_FLAG_DENOISE     = 1 << 0,
-  GST_MSDK_FLAG_ROTATION    = 1 << 1,
-  GST_MSDK_FLAG_DEINTERLACE = 1 << 2,
-  GST_MSDK_FLAG_HUE         = 1 << 3,
-  GST_MSDK_FLAG_SATURATION  = 1 << 4,
-  GST_MSDK_FLAG_BRIGHTNESS  = 1 << 5,
-  GST_MSDK_FLAG_CONTRAST    = 1 << 6,
-  GST_MSDK_FLAG_DETAIL      = 1 << 7,
-  GST_MSDK_FLAG_MIRRORING   = 1 << 8,
+  GST_MSDK_FLAG_DENOISE      = 1 << 0,
+  GST_MSDK_FLAG_ROTATION     = 1 << 1,
+  GST_MSDK_FLAG_DEINTERLACE  = 1 << 2,
+  GST_MSDK_FLAG_HUE          = 1 << 3,
+  GST_MSDK_FLAG_SATURATION   = 1 << 4,
+  GST_MSDK_FLAG_BRIGHTNESS   = 1 << 5,
+  GST_MSDK_FLAG_CONTRAST     = 1 << 6,
+  GST_MSDK_FLAG_DETAIL       = 1 << 7,
+  GST_MSDK_FLAG_MIRRORING    = 1 << 8,
+  GST_MSDK_FLAG_SCALING_MODE = 1 << 9,
 } GstMsdkVppFlags;
 
 struct _GstMsdkVPP
@@ -111,6 +112,7 @@ struct _GstMsdkVPP
   gfloat contrast;
   guint detail;
   guint mirroring;
+  guint scaling_mode;
 
   GstClockTime field_duration;
 
@@ -123,6 +125,7 @@ struct _GstMsdkVPP
   mfxExtVPPProcAmp mfx_procamp;
   mfxExtVPPDetail mfx_detail;
   mfxExtVPPMirroring mfx_mirroring;
+  mfxExtVPPScaling mfx_scaling;
 
   /* Extended buffers */
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];

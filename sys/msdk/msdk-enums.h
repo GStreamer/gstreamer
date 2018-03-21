@@ -81,5 +81,8 @@ gst_msdkvpp_deinterlace_method_get_type (void);
 GType
 gst_msdkvpp_mirroring_get_type (void);
 
+GType
+gst_msdkvpp_scaling_mode_get_type (void);
+
 G_END_DECLS
 #endif

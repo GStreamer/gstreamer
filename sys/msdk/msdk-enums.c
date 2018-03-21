@@ -260,3 +260,21 @@ gst_msdkvpp_mirroring_get_type (void)
   }
   return type;
 }
+
+GType
+gst_msdkvpp_scaling_mode_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {MFX_SCALING_MODE_DEFAULT, "Default Scaling", "disable"},
+    {MFX_SCALING_MODE_LOWPOWER, "Lowpower Scaling", "lowpower"},
+    {MFX_SCALING_MODE_QUALITY, "High Quality Scaling", "quality"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkVPPScalingMode", values);
+  }
+  return type;
+}

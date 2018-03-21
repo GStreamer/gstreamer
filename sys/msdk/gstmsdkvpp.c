@@ -76,6 +76,7 @@ enum
   PROP_CONTRAST,
   PROP_DETAIL,
   PROP_MIRRORING,
+  PROP_SCALING_MODE,
   PROP_N,
 };
 
@@ -91,6 +92,7 @@ enum
 #define PROP_CONTRAST_DEFAULT            1
 #define PROP_DETAIL_DEFAULT              0
 #define PROP_MIRRORING_DEFAULT           MFX_MIRRORING_DISABLED
+#define PROP_SCALING_MODE_DEFAULT        MFX_SCALING_MODE_DEFAULT
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -685,6 +687,17 @@ ensure_filters (GstMsdkVPP * thiz)
     thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_MIRRORING;
     n_filters++;
   }
+
+  /* Scaling Mode */
+  if (thiz->flags & GST_MSDK_FLAG_SCALING_MODE) {
+    mfxExtVPPScaling *mfx_scaling = &thiz->mfx_scaling;
+    mfx_scaling->Header.BufferId = MFX_EXTBUFF_VPP_SCALING;
+    mfx_scaling->Header.BufferSz = sizeof (mfxExtVPPScaling);
+    mfx_scaling->ScalingMode = thiz->scaling_mode;
+    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_scaling);
+    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_SCALING;
+    n_filters++;
+  }
 }
 
 static void
@@ -987,6 +1000,10 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->mirroring = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_MIRRORING;
       break;
+    case PROP_SCALING_MODE:
+      thiz->scaling_mode = g_value_get_enum (value);
+      thiz->flags |= GST_MSDK_FLAG_SCALING_MODE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1035,6 +1052,9 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MIRRORING:
       g_value_set_enum (value, thiz->mirroring);
+      break;
+    case PROP_SCALING_MODE:
+      g_value_set_enum (value, thiz->scaling_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1170,6 +1190,11 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "The Mirroring type", gst_msdkvpp_mirroring_get_type (),
       PROP_MIRRORING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_SCALING_MODE] =
+      g_param_spec_enum ("scaling-mode", "Scaling Mode",
+      "The Scaling mode to use", gst_msdkvpp_scaling_mode_get_type (),
+      PROP_SCALING_MODE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1189,6 +1214,7 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->contrast = PROP_CONTRAST_DEFAULT;
   thiz->detail = PROP_DETAIL_DEFAULT;
   thiz->mirroring = PROP_MIRRORING_DEFAULT;
+  thiz->scaling_mode = PROP_SCALING_MODE_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
