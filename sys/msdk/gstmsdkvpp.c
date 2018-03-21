@@ -77,6 +77,7 @@ enum
   PROP_DETAIL,
   PROP_MIRRORING,
   PROP_SCALING_MODE,
+  PROP_FORCE_ASPECT_RATIO,
   PROP_N,
 };
 
@@ -93,6 +94,7 @@ enum
 #define PROP_DETAIL_DEFAULT              0
 #define PROP_MIRRORING_DEFAULT           MFX_MIRRORING_DISABLED
 #define PROP_SCALING_MODE_DEFAULT        MFX_SCALING_MODE_DEFAULT
+#define PROP_FORCE_ASPECT_RATIO_DEFAULT  TRUE
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -1004,6 +1006,9 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->scaling_mode = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_SCALING_MODE;
       break;
+    case PROP_FORCE_ASPECT_RATIO:
+      thiz->keep_aspect = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1055,6 +1060,9 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALING_MODE:
       g_value_set_enum (value, thiz->scaling_mode);
+      break;
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, thiz->keep_aspect);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1195,6 +1203,12 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "The Scaling mode to use", gst_msdkvpp_scaling_mode_get_type (),
       PROP_SCALING_MODE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_FORCE_ASPECT_RATIO] =
+      g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
+      "When enabled, scaling will respect original aspect ratio",
+      PROP_FORCE_ASPECT_RATIO_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1215,6 +1229,7 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->detail = PROP_DETAIL_DEFAULT;
   thiz->mirroring = PROP_MIRRORING_DEFAULT;
   thiz->scaling_mode = PROP_SCALING_MODE_DEFAULT;
+  thiz->keep_aspect = PROP_FORCE_ASPECT_RATIO_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }

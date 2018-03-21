@@ -508,6 +508,10 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
   /* make a copy */
   structure = gst_structure_copy (structure);
 
+  if (thiz->keep_aspect)
+    gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1,
+        1, NULL);
+
   /* Fixate the format */
   if (!gst_structure_fixate_field (structure, "format"))
     goto fixate_failed;

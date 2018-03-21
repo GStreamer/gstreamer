@@ -113,6 +113,7 @@ struct _GstMsdkVPP
   guint detail;
   guint mirroring;
   guint scaling_mode;
+  gboolean keep_aspect;
 
   GstClockTime field_duration;
 
