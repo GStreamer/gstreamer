@@ -31,6 +31,7 @@
 #include <gst/pbutils/gstdiscoverer.h>
 #include <gst/pbutils/encoding-profile.h>
 #include <gst/pbutils/encoding-target.h>
+#include <gst/pbutils/gstaudiovisualizer.h>
 
 G_BEGIN_DECLS
 
