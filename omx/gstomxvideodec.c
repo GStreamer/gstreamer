@@ -770,7 +770,8 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
   if (caps)
     self->out_port_pool =
         gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->dec, port,
-        self->dmabuf);
+        self->dmabuf ? GST_OMX_BUFFER_MODE_DMABUF :
+        GST_OMX_BUFFER_MODE_SYSTEM_MEMORY);
 
 #if defined (HAVE_GST_GL)
   if (eglimage) {
