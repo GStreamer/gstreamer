@@ -1378,16 +1378,16 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
           GST_TIME_ARGS (running_time), count);
       gst_pad_push_event (mux->srcpad, event);
 
-      /* output PAT */
-      mux->tsmux->last_pat_ts = -1;
+      /* output PAT, SI tables */
+      tsmux_resend_pat (mux->tsmux);
+      tsmux_resend_si (mux->tsmux);
 
       /* output PMT for each program */
       for (cur = mux->tsmux->programs; cur; cur = cur->next) {
         TsMuxProgram *program = (TsMuxProgram *) cur->data;
 
-        program->last_pmt_ts = -1;
+        tsmux_resend_pmt (program);
       }
-      tsmux_program_set_pcr_stream (prog, NULL);
     }
   }
 

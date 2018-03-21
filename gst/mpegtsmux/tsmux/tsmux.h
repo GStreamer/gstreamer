@@ -189,6 +189,7 @@ void 		tsmux_set_write_func 		(TsMux *mux, TsMuxWriteFunc func, void *user_data)
 void 		tsmux_set_alloc_func 		(TsMux *mux, TsMuxAllocFunc func, void *user_data);
 void 		tsmux_set_pat_interval          (TsMux *mux, guint interval);
 guint 		tsmux_get_pat_interval          (TsMux *mux);
+void 		tsmux_resend_pat                (TsMux *mux);
 guint16		tsmux_get_new_pid 		(TsMux *mux);
 
 /* pid/program management */
@@ -196,10 +197,12 @@ TsMuxProgram *	tsmux_program_new 		(TsMux *mux, gint prog_id);
 void 		tsmux_program_free 		(TsMuxProgram *program);
 void 		tsmux_set_pmt_interval          (TsMuxProgram *program, guint interval);
 guint 		tsmux_get_pmt_interval   	(TsMuxProgram *program);
+void 		tsmux_resend_pmt                (TsMuxProgram *program);
 
 /* SI table management */
 void            tsmux_set_si_interval           (TsMux *mux, guint interval);
 guint           tsmux_get_si_interval           (TsMux *mux);
+void            tsmux_resend_si                 (TsMux *mux);
 gboolean        tsmux_add_mpegts_si_section     (TsMux * mux, GstMpegtsSection * section);
 
 /* stream management */

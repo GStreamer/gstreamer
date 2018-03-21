@@ -229,6 +229,20 @@ tsmux_get_pat_interval (TsMux * mux)
 }
 
 /**
+ * tsmux_resend_pat:
+ * @mux: a #TsMux
+ *
+ * Resends the PAT before the next stream packet.
+ */
+void
+tsmux_resend_pat (TsMux * mux)
+{
+  g_return_if_fail (mux != NULL);
+
+  mux->last_pat_ts = G_MININT64;
+}
+
+/**
  * tsmux_set_si_interval:
  * @mux: a #TsMux
  * @freq: a new SI table interval
@@ -258,6 +272,21 @@ tsmux_get_si_interval (TsMux * mux)
   g_return_val_if_fail (mux != NULL, 0);
 
   return mux->si_interval;
+}
+
+/**
+ * tsmux_resend_si:
+ * @mux: a #TsMux
+ *
+ * Resends the SI tables before the next stream packet.
+ *
+ */
+void
+tsmux_resend_si (TsMux * mux)
+{
+  g_return_if_fail (mux != NULL);
+
+  mux->last_si_ts = G_MININT64;
 }
 
 /**
@@ -425,6 +454,20 @@ tsmux_get_pmt_interval (TsMuxProgram * program)
   g_return_val_if_fail (program != NULL, 0);
 
   return program->pmt_interval;
+}
+
+/**
+ * tsmux_resend_pmt:
+ * @program: a #TsMuxProgram
+ *
+ * Resends the PMT before the next stream packet.
+ */
+void
+tsmux_resend_pmt (TsMuxProgram * program)
+{
+  g_return_if_fail (program != NULL);
+
+  program->last_pmt_ts = G_MININT64;
 }
 
 /**
