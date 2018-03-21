@@ -105,6 +105,8 @@
 GST_DEBUG_CATEGORY (mpegtsmux_debug);
 #define GST_CAT_DEFAULT mpegtsmux_debug
 
+#define COLLECT_DATA_PAD(collect_data) (((GstCollectData *)(collect_data))->pad)
+
 enum
 {
   PROP_0,
@@ -963,6 +965,13 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       tsmux_set_pmt_interval (ts_data->prog, mux->pmt_interval);
       g_hash_table_insert (mux->programs,
           GINT_TO_POINTER (ts_data->prog_id), ts_data->prog);
+
+      /* Take the first stream of the program for the PCR */
+      GST_DEBUG_OBJECT (COLLECT_DATA_PAD (ts_data),
+          "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
+          ts_data->pid, ts_data->prog_id);
+
+      tsmux_program_set_pcr_stream (ts_data->prog, ts_data->stream);
     }
 
     if (ts_data->stream == NULL) {
@@ -988,9 +997,6 @@ no_stream:
     return ret;
   }
 }
-
-
-#define COLLECT_DATA_PAD(collect_data) (((GstCollectData *)(collect_data))->pad)
 
 static gboolean
 mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
