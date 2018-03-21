@@ -65,6 +65,7 @@ typedef enum {
   GST_MSDK_FLAG_SATURATION  = 1 << 4,
   GST_MSDK_FLAG_BRIGHTNESS  = 1 << 5,
   GST_MSDK_FLAG_CONTRAST    = 1 << 6,
+  GST_MSDK_FLAG_DETAIL      = 1 << 7,
 } GstMsdkVppFlags;
 
 struct _GstMsdkVPP
@@ -107,6 +108,7 @@ struct _GstMsdkVPP
   gfloat saturation;
   gfloat brightness;
   gfloat contrast;
+  guint detail;
 
   GstClockTime field_duration;
 
@@ -117,6 +119,7 @@ struct _GstMsdkVPP
   mfxExtVPPRotation mfx_rotation;
   mfxExtVPPDeinterlacing mfx_deinterlace;
   mfxExtVPPProcAmp mfx_procamp;
+  mfxExtVPPDetail mfx_detail;
 
   /* Extended buffers */
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];

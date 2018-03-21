@@ -74,6 +74,7 @@ enum
   PROP_SATURATION,
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
+  PROP_DETAIL,
   PROP_N,
 };
 
@@ -87,6 +88,7 @@ enum
 #define PROP_SATURATION_DEFAULT          1
 #define PROP_BRIGHTNESS_DEFAULT          0
 #define PROP_CONTRAST_DEFAULT            1
+#define PROP_DETAIL_DEFAULT              0
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -650,6 +652,17 @@ ensure_filters (GstMsdkVPP * thiz)
     n_filters++;
   }
 
+  /* Detail/Edge enhancement */
+  if (thiz->flags & GST_MSDK_FLAG_DETAIL) {
+    mfxExtVPPDetail *mfx_detail = &thiz->mfx_detail;
+    mfx_detail->Header.BufferId = MFX_EXTBUFF_VPP_DETAIL;
+    mfx_detail->Header.BufferSz = sizeof (mfxExtVPPDetail);
+    mfx_detail->DetailFactor = thiz->detail;
+    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_detail);
+    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_DETAIL;
+    n_filters++;
+  }
+
   /* mfxExtVPPDoUse */
   if (n_filters) {
     mfxExtVPPDoUse *mfx_vpp_douse = &thiz->mfx_vpp_douse;
@@ -953,6 +966,10 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->contrast = g_value_get_float (value);
       thiz->flags |= GST_MSDK_FLAG_CONTRAST;
       break;
+    case PROP_DETAIL:
+      thiz->detail = g_value_get_uint (value);
+      thiz->flags |= GST_MSDK_FLAG_DETAIL;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -995,6 +1012,9 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONTRAST:
       g_value_set_float (value, thiz->contrast);
+      break;
+    case PROP_DETAIL:
+      g_value_set_uint (value, thiz->detail);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1120,6 +1140,11 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "The Contrast of the video",
       0, 10, PROP_CONTRAST_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_DETAIL] =
+      g_param_spec_uint ("detail", "Detail",
+      "The factor of detail/edge enhancement filter algorithm",
+      0, 100, PROP_DETAIL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1137,6 +1162,7 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->saturation = PROP_SATURATION_DEFAULT;
   thiz->brightness = PROP_BRIGHTNESS_DEFAULT;
   thiz->contrast = PROP_CONTRAST_DEFAULT;
+  thiz->detail = PROP_DETAIL_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
