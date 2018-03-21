@@ -78,7 +78,8 @@ struct _GstRTSPStreamPrivate
    * parts are present in the stream. */
   gboolean is_complete;
   GstRTSPProfile profiles;
-  GstRTSPLowerTrans protocols;
+  GstRTSPLowerTrans allowed_protocols;
+  GstRTSPLowerTrans configured_protocols;
 
   /* pads on the rtpbin */
   GstPad *send_rtp_sink;
@@ -269,7 +270,8 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->dscp_qos = -1;
   priv->control = g_strdup (DEFAULT_CONTROL);
   priv->profiles = DEFAULT_PROFILES;
-  priv->protocols = DEFAULT_PROTOCOLS;
+  priv->allowed_protocols = DEFAULT_PROTOCOLS;
+  priv->configured_protocols = 0;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
 
   g_mutex_init (&priv->lock);
@@ -708,7 +710,7 @@ gst_rtsp_stream_is_transport_supported (GstRTSPStream * stream,
   if (!(transport->profile & priv->profiles))
     goto unsupported_profile;
 
-  if (!(transport->lower_transport & priv->protocols))
+  if (!(transport->lower_transport & priv->allowed_protocols))
     goto unsupported_ltrans;
 
   g_mutex_unlock (&priv->lock);
@@ -800,7 +802,7 @@ gst_rtsp_stream_set_protocols (GstRTSPStream * stream,
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
-  priv->protocols = protocols;
+  priv->allowed_protocols = protocols;
   g_mutex_unlock (&priv->lock);
 }
 
@@ -824,7 +826,7 @@ gst_rtsp_stream_get_protocols (GstRTSPStream * stream)
   priv = stream->priv;
 
   g_mutex_lock (&priv->lock);
-  res = priv->protocols;
+  res = priv->allowed_protocols;
   g_mutex_unlock (&priv->lock);
 
   return res;
@@ -4471,9 +4473,9 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
 
   g_mutex_lock (&priv->lock);
   /* depending on the transport type, it should query corresponding sink */
-  if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP)
+  if (priv->configured_protocols & GST_RTSP_LOWER_TRANS_UDP)
     sink = priv->udpsink[0];
-  else if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+  else if (priv->configured_protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
     sink = priv->mcast_udpsink[0];
   else
     sink = priv->appsink[0];
@@ -4551,9 +4553,9 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
 
   g_mutex_lock (&priv->lock);
   /* depending on the transport type, it should query corresponding sink */
-  if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP)
+  if (priv->configured_protocols & GST_RTSP_LOWER_TRANS_UDP)
     sink = priv->udpsink[0];
-  else if (priv->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+  else if (priv->configured_protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
     sink = priv->mcast_udpsink[0];
   else
     sink = priv->appsink[0];
@@ -4687,7 +4689,7 @@ gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
 
   g_mutex_lock (&priv->lock);
 
-  if (!(priv->protocols & transport->lower_transport))
+  if (!(priv->allowed_protocols & transport->lower_transport))
     goto unallowed_transport;
 
   if (!create_receiver_part (stream, transport))
@@ -4696,6 +4698,8 @@ gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
   /* in the RECORD case, we only add RTCP sender part */
   if (!create_sender_part (stream, transport))
     goto create_sender_error;
+
+  priv->configured_protocols |= transport->lower_transport;
 
   priv->is_complete = TRUE;
   g_mutex_unlock (&priv->lock);
