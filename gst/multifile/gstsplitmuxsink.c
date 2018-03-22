@@ -124,6 +124,11 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate caption_sink_template =
+GST_STATIC_PAD_TEMPLATE ("caption_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
 
 static GQuark PAD_CONTEXT;
 
@@ -212,6 +217,8 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       &audio_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,
       &subtitle_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &caption_sink_template);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_splitmux_sink_change_state);
