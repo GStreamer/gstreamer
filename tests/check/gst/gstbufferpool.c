@@ -179,7 +179,6 @@ GST_START_TEST (test_buffer_modify_discard)
   gst_buffer_pool_set_active (pool, TRUE);
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   fail_unless (buf != NULL);
-  prev = buf;
   buffer_track_destroy (buf, &dcount);
   /* remove all memory, pool should not reuse this buffer */
   gst_buffer_remove_all_memory (buf);
@@ -189,25 +188,24 @@ GST_START_TEST (test_buffer_modify_discard)
   fail_unless_equals_int (dcount, 1);
 
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
-  prev = buf;
   buffer_track_destroy (buf, &dcount);
-  /* do resize, pool should not reuse this buffer */
+  /* do resize, as we didn't modify the memory, pool should reuse this buffer */
   gst_buffer_resize (buf, 5, 2);
   gst_buffer_unref (buf);
 
-  /* buffer should've been destroyed instead of going back into pool */
-  fail_unless_equals_int (dcount, 2);
+  /* buffer should've gone back into pool */
+  fail_unless_equals_int (dcount, 1);
 
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   prev = buf;
-  buffer_track_destroy (buf, &dcount);
+  fail_unless (buf == prev, "got a fresh buffer instead of previous");
   /* keep ref to memory, not exclusive so pool should reuse this buffer */
   mem = gst_buffer_get_memory (buf, 0);
   gst_buffer_unref (buf);
   gst_memory_unref (mem);
 
   /* buffer should not have been destroyed and gone back into pool */
-  fail_unless_equals_int (dcount, 2);
+  fail_unless_equals_int (dcount, 1);
 
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   fail_unless (buf == prev, "got a fresh buffer instead of previous");
@@ -221,7 +219,7 @@ GST_START_TEST (test_buffer_modify_discard)
 
   /* buffer should have been destroyed and not gone back into pool because
    * of the exclusive lock */
-  fail_unless_equals_int (dcount, 3);
+  fail_unless_equals_int (dcount, 2);
 
   gst_buffer_pool_set_active (pool, FALSE);
   gst_object_unref (pool);
