@@ -36,7 +36,6 @@ cp_verbose_0 = @echo "  CP     $@";
 		-e "s|[@]audiolibdir[@]|$(abs_top_builddir)/gst-libs/gst/audio/.libs|" \
 		-e "s|[@]videolibdir[@]|$(abs_top_builddir)/gst-libs/gst/video/.libs|" \
 		-e "s|[@]codecparserslibdir[@]|$(abs_top_builddir)/gst-libs/gst/codecparsers/.libs|" \
-		-e "s|[@]gllibdir[@]|$(abs_top_builddir)/gst-libs/gst/gl/.libs|" \
 		-e "s|[@]insertbinlibdir[@]|$(abs_top_builddir)/gst-libs/gst/insertbin/.libs|" \
 		-e "s|[@]mpegtslibdir[@]|$(abs_top_builddir)/gst-libs/gst/mpegts/.libs|" \
 		-e "s|[@]playerlibdir[@]|$(abs_top_builddir)/gst-libs/gst/player/.libs|" \
