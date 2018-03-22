@@ -71,7 +71,6 @@ gboolean
 gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
 {
   GIOChannel *ioc;
-  int flags;
 
   if (!isatty (STDIN_FILENO)) {
     GST_INFO ("stdin is not connected to a terminal");
@@ -106,6 +105,8 @@ gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
       /* Echo off, canonical mode off, extended input processing off  */
       new_settings = term_settings;
       new_settings.c_lflag &= ~(ECHO | ICANON | IEXTEN);
+      new_settings.c_cc[VMIN] = 0;
+      new_settings.c_cc[VTIME] = 0;
 
       if (tcsetattr (STDIN_FILENO, TCSAFLUSH, &new_settings) != 0) {
         g_warning ("Could not set terminal state");
@@ -116,10 +117,6 @@ gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
   }
 
   ioc = g_io_channel_unix_new (STDIN_FILENO);
-
-  /* make non-blocking */
-  flags = g_io_channel_get_flags (ioc);
-  g_io_channel_set_flags (ioc, flags | G_IO_FLAG_NONBLOCK, NULL);
 
   io_watch_id = g_io_add_watch_full (ioc, G_PRIORITY_DEFAULT, G_IO_IN,
       (GIOFunc) gst_play_kb_io_cb, user_data, NULL);
