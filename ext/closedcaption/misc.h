@@ -480,15 +480,15 @@ _vbi_strlcpy			(char *			dst,
 				 size_t			size)
   _vbi_nonnull ((1, 2));
 
-/* strndup() is a BSD/GNU extension. */
-#ifndef HAVE_STRNDUP
-#  define strndup _vbi_strndup
-#endif
+/* /\* strndup() is a BSD/GNU extension. *\/ */
+/* #ifndef HAVE_STRNDUP */
+/* #  define strndup _vbi_strndup */
+/* #endif */
 
-extern char *
-_vbi_strndup			(const char *		s,
-				 size_t			len)
-  _vbi_nonnull ((1));
+/* extern char * */
+/* _vbi_strndup			(const char *		s, */
+/* 				 size_t			len) */
+/*   _vbi_nonnull ((1)); */
 
 /* vasprintf() is a GNU extension. */
 #ifndef HAVE_VASPRINTF
