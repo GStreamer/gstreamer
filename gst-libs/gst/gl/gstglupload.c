@@ -40,6 +40,7 @@
 
 #if GST_GL_HAVE_VIV_DIRECTVIV
 #include <gst/allocators/gstphysmemory.h>
+#include <gst/gl/gstglfuncs.h>
 #endif
 
 /**
