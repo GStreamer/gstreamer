@@ -68,6 +68,7 @@ typedef enum {
   GST_MSDK_FLAG_DETAIL       = 1 << 7,
   GST_MSDK_FLAG_MIRRORING    = 1 << 8,
   GST_MSDK_FLAG_SCALING_MODE = 1 << 9,
+  GST_MSDK_FLAG_FRC          = 1 << 10,
 } GstMsdkVppFlags;
 
 struct _GstMsdkVPP
@@ -114,8 +115,9 @@ struct _GstMsdkVPP
   guint mirroring;
   guint scaling_mode;
   gboolean keep_aspect;
+  guint frc_algm;
 
-  GstClockTime field_duration;
+  GstClockTime buffer_duration;
 
   /* MFX Filters */
   mfxExtVPPDoUse mfx_vpp_douse;
@@ -127,6 +129,7 @@ struct _GstMsdkVPP
   mfxExtVPPDetail mfx_detail;
   mfxExtVPPMirroring mfx_mirroring;
   mfxExtVPPScaling mfx_scaling;
+  mfxExtVPPFrameRateConversion mfx_frc;
 
   /* Extended buffers */
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];

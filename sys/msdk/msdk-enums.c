@@ -278,3 +278,29 @@ gst_msdkvpp_scaling_mode_get_type (void)
   }
   return type;
 }
+
+GType
+gst_msdkvpp_frc_algorithm_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {_MFX_FRC_ALGORITHM_NONE, "No FrameRate Control algorithm", "none"},
+    {MFX_FRCALGM_PRESERVE_TIMESTAMP,
+        "Frame dropping/repetition, Preserve timestamp", "preserve-ts"},
+    {MFX_FRCALGM_DISTRIBUTED_TIMESTAMP,
+        "Frame dropping/repetition, Distribute timestamp", "distribute-ts"},
+    {MFX_FRCALGM_FRAME_INTERPOLATION, "Frame interpolation", "interpolate"},
+    {MFX_FRCALGM_FRAME_INTERPOLATION | MFX_FRCALGM_PRESERVE_TIMESTAMP,
+        "Frame interpolation, Preserve timestamp", "interpolate-preserve-ts"},
+    {MFX_FRCALGM_FRAME_INTERPOLATION | MFX_FRCALGM_DISTRIBUTED_TIMESTAMP,
+          "Frame interpolation, Distribute timestamp",
+        "interpolate-distribute-ts"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkVPPFrcAlgorithm", values);
+  }
+  return type;
+}

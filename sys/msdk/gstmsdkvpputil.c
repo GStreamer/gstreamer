@@ -429,10 +429,19 @@ overflow_error:
 static gboolean
 fixate_frame_rate (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstStructure * outs)
 {
-  gint fps_n, fps_d;
+  gint fps_n = 0, fps_d;
 
-  fps_n = GST_VIDEO_INFO_FPS_N (vinfo);
-  fps_d = GST_VIDEO_INFO_FPS_D (vinfo);
+  /* fixate the srcpad fps */
+  if (gst_structure_fixate_field (outs, "framerate"))
+    gst_structure_get (outs, "framerate", GST_TYPE_FRACTION, &fps_n, &fps_d,
+        NULL);
+
+  /* if we don't have a fixed non-zero fps_n, use the sinkpad fps */
+  if (!fps_n) {
+    fps_n = GST_VIDEO_INFO_FPS_N (vinfo);
+    fps_d = GST_VIDEO_INFO_FPS_D (vinfo);
+  }
+
   if (gst_msdkvpp_is_deinterlace_enabled (thiz, vinfo)) {
     /* Fixme: set double framerate?:
      * msdk is not outputting double framerate for bob or adv deinterlace */
