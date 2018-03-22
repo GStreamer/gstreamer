@@ -25,19 +25,15 @@ webrtc_enumtypes_headers = [
   'webrtc_fwd.h',
 ]
 
-mkenums = find_program('webrtc_mkenum.py')
-gstwebrtc_h = custom_target('gstwebrtcenum_h',
-  output : 'webrtc-enumtypes.h',
-  input : webrtc_enumtypes_headers,
-  install : true,
-  install_dir : 'include/gstreamer-1.0/gst/webrtc/',
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
+webrtc_enums = gnome.mkenums_simple('webrtc-enumtypes',
+  sources : webrtc_enumtypes_headers,
+  header_prefix : '#include <gst/webrtc/webrtc_fwd.h>',
+  decorator: 'GST_WEBRTC_API',
+  install_header: true,
+  install_dir : 'include/gstreamer-1.0/gst/webrtc/')
+gstwebrtc_c = webrtc_enums[0]
+gstwebrtc_h = webrtc_enums[1]
 
-gstwebrtc_c = custom_target('gstwebrtcenum_c',
-  output : 'webrtc-enumtypes.c',
-  input : webrtc_enumtypes_headers,
-  depends : [gstwebrtc_h],
-  command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 webrtc_gen_sources = [gstwebrtc_h]
 
 gstwebrtc_dependencies = [gstbase_dep, gstsdp_dep]

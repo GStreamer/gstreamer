@@ -485,9 +485,6 @@ gst_plugins_bad_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
 
-# Used by the *_mkenum.py helper scripts
-glib_mkenums = find_program('glib-mkenums')
-
 python3 = import('python3').find_python()
 
 gir = find_program('g-ir-scanner', required : false)

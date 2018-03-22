@@ -14,7 +14,6 @@ EXTRA_DIST = \
 	ChangeLog gst-plugins-bad.doap autogen.sh \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	meson_options.txt \
-	gst-libs/gst/webrtc/webrtc_mkenum.py \
 	ext/vulkan/vkconfig.h.meson
 
 DISTCLEANFILES = _stdint.h
