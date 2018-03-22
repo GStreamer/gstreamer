@@ -23,6 +23,7 @@
 
 #include "../gstgl_fwd.h"
 #include <gst/gl/gstglcontext.h>
+#include <gst/gl/gstglfuncs.h>
 
 #include "gstglwindow_viv_fb_egl.h"
 #include "../gstglwindow_private.h"
@@ -215,7 +216,7 @@ _free_set_render_rectangle (SetRenderRectangleData * render)
 }
 
 static void
-_calculate_viewport_coordinates(GstGLWindowVivFBEGL * window_egl,
+_calculate_viewport_coordinates (GstGLWindowVivFBEGL * window_egl,
     GstVideoRectangle * req, GstVideoRectangle * result)
 {
   result->x = req->x;
