@@ -941,17 +941,22 @@ AG_GST_CHECK_FEATURE(CUDA, [NVIDIA CUDA API],, [
       CUDA_LIBS="-L$CUDA_PREFIX/lib -L$CUDA_PREFIX/lib64 -L$CUDA_PREFIX/lib/stubs -L$CUDA_PREFIX/lib64/stubs -lcuda -lcudart"
     fi
   else
-    PKG_CHECK_MODULES([CUDA], [cuda-8.0 cudart-8.0],, [
-      PKG_CHECK_MODULES([CUDA], [cuda-7.5 cudart-7.5],, [
-        PKG_CHECK_MODULES([CUDA], [cuda-7.0 cudart-7.0],, [
-          PKG_CHECK_MODULES([CUDA], [cuda-6.5 cudart-6.5],, [
-            AC_MSG_WARN([Could not find cuda headers/libraries])])])])])
+    PKG_CHECK_MODULES([CUDA], [cuda-9.1 cudart-9.1],, [
+      PKG_CHECK_MODULES([CUDA], [cuda-9.0 cudart-9.0],, [
+        PKG_CHECK_MODULES([CUDA], [cuda-8.0 cudart-8.0],, [
+          PKG_CHECK_MODULES([CUDA], [cuda-7.5 cudart-7.5],, [
+            PKG_CHECK_MODULES([CUDA], [cuda-7.0 cudart-7.0],, [
+              PKG_CHECK_MODULES([CUDA], [cuda-6.5 cudart-6.5],, [
+                AC_MSG_WARN([Could not find cuda headers/libraries])])])])])])])
   fi
 
   HAVE_CUDA_H=no
   HAVE_CUDART_H=no
+  HAVE_CUDA_DYN_H=no
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CUDA_CFLAGS $save_CPPFLAGS "
+  AC_CHECK_HEADER([dynlink_cuda.h], [HAVE_CUDA_DYN_H=yes],
+      AC_MSG_WARN([Could not find dynlink_cuda.h]))
   AC_CHECK_HEADER([cuda.h], [HAVE_CUDA_H=yes],
       AC_MSG_WARN([Could not find cuda.h]))
   AC_CHECK_HEADER([cuda_runtime_api.h], [HAVE_CUDART_H=yes],
@@ -974,10 +979,14 @@ dnl *** NVDEC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NVDEC, true)
 AG_GST_CHECK_FEATURE(NVDEC, [nvdec], nvdec, [
   HAVE_NVCUVID_H=no
+  HAVE_NCUVID_DYN_H=no
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CUDA_CFLAGS $save_CPPFLAGS"
   AC_CHECK_HEADER([nvcuvid.h], [HAVE_NVCUVID_H=yes],
       AC_MSG_WARN([Could not find nvcuvid.h]))
+  AC_CHECK_HEADER([dynlink_nvcuvid.h], [HAVE_NVCUVID_DYN_H=yes],
+      AC_MSG_WARN([Could not find dynlink_nvcuvid.h]))
+
   CPPFLAGS=$save_CPPFLAGS
 
   HAVE_NVCUVID=no
@@ -987,7 +996,12 @@ AG_GST_CHECK_FEATURE(NVDEC, [nvdec], nvdec, [
       AC_MSG_WARN([Could not find library nvcuvid]))
   LIBS="$save_LIBS"
 
-  if test "x$HAVE_NVCUVID_H" = "xyes" -a "x$HAVE_NVCUVID" = "xyes"; then
+  AM_CONDITIONAL(USE_DYNLINK_NVDEC, false)
+  if test "x$HAVE_NVCUVID_DYN_H" = "xyes" -a "x$HAVE_NVCUVID" = "xyes"; then
+    HAVE_NVDEC=yes
+    AM_CONDITIONAL(USE_DYNLINK_NVDEC, true)
+    AC_DEFINE(HAVE_DYNLINK_HEADERS_NVDEC, 1, [Define if dynlink headers for nvdec are available])
+  elif test "x$HAVE_NVCUVID_H" = "xyes" -a "x$HAVE_NVCUVID" = "xyes"; then
     HAVE_NVDEC=yes
   else
     HAVE_NVDEC=no

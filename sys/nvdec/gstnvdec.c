@@ -31,9 +31,6 @@
 
 #include "gstnvdec.h"
 
-#include <gst/gl/gstglfuncs.h>
-#include <cudaGL.h>
-
 typedef enum
 {
   GST_NVDEC_QUEUE_ITEM_TYPE_SEQUENCE,
@@ -100,8 +97,16 @@ gst_nvdec_cuda_context_class_init (GstNvDecCudaContextClass * klass)
 static void
 gst_nvdec_cuda_context_init (GstNvDecCudaContext * self)
 {
+#ifdef HAVE_DYNLINK_HEADERS_NVDEC
+  if (!cuda_OK (cuInit (0, __CUDA_API_VERSION, NULL)))
+    GST_ERROR ("failed to init CUDA");
+
+  if (!cuda_OK (cuvidInit (0)))
+    GST_ERROR ("failed to init cuvid");
+#else
   if (!cuda_OK (cuInit (0)))
     GST_ERROR ("failed to init CUDA");
+#endif
 
   if (!cuda_OK (cuCtxCreate (&self->context, CU_CTX_SCHED_AUTO, 0)))
     GST_ERROR ("failed to create CUDA context");
