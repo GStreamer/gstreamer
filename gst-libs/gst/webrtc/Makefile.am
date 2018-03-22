@@ -82,6 +82,7 @@ GstWebRTC-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstwebrtc-@GST_API_
 		--pkg gstreamer-sdp-@GST_API_VERSION@ \
 		--pkg-export gstreamer-webrtc-@GST_API_VERSION@ \
 		--add-init-section="$(INTROSPECTION_INIT)" \
+		-DGST_USE_UNSTABLE_API \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
