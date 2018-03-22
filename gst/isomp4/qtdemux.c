@@ -2664,6 +2664,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
   QtDemuxCencSampleSetInfo *ss_info = NULL;
   const gchar *system_id;
   gboolean uses_sub_sample_encryption = FALSE;
+  guint32 sample_count;
 
   if (qtdemux->n_streams == 0)
     return;
@@ -2759,16 +2760,16 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     uses_sub_sample_encryption = TRUE;
   }
 
-  if (!gst_byte_reader_get_uint32_be (&br, &qtdemux->cenc_aux_sample_count)) {
+  if (!gst_byte_reader_get_uint32_be (&br, &sample_count)) {
     GST_ERROR_OBJECT (qtdemux, "Error getting box's sample count field");
     return;
   }
 
   ss_info->crypto_info =
-      g_ptr_array_new_full (qtdemux->cenc_aux_sample_count,
+      g_ptr_array_new_full (sample_count,
       (GDestroyNotify) qtdemux_gst_structure_free);
 
-  for (i = 0; i < qtdemux->cenc_aux_sample_count; ++i) {
+  for (i = 0; i < sample_count; ++i) {
     GstStructure *properties;
     guint8 *data;
     GstBuffer *buf;
@@ -2776,12 +2777,14 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     properties = qtdemux_get_cenc_sample_properties (qtdemux, stream, i);
     if (properties == NULL) {
       GST_ERROR_OBJECT (qtdemux, "failed to get properties for sample %u", i);
+      qtdemux->cenc_aux_sample_count = i;
       return;
     }
 
     if (!gst_byte_reader_dup_data (&br, iv_size, &data)) {
       GST_ERROR_OBJECT (qtdemux, "IV data not present for sample %u", i);
       gst_structure_free (properties);
+      qtdemux->cenc_aux_sample_count = i;
       return;
     }
     buf = gst_buffer_new_wrapped (data, iv_size);
@@ -2796,6 +2799,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
         GST_ERROR_OBJECT (qtdemux,
             "failed to get subsample count for sample %u", i);
         gst_structure_free (properties);
+        qtdemux->cenc_aux_sample_count = i;
         return;
       }
       GST_LOG_OBJECT (qtdemux, "subsample count: %u", n_subsamples);
@@ -2803,6 +2807,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
         GST_ERROR_OBJECT (qtdemux, "failed to get subsample data for sample %u",
             i);
         gst_structure_free (properties);
+        qtdemux->cenc_aux_sample_count = i;
         return;
       }
       buf = gst_buffer_new_wrapped (data, n_subsamples * 6);
@@ -2816,6 +2821,8 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
 
     g_ptr_array_add (ss_info->crypto_info, properties);
   }
+
+  qtdemux->cenc_aux_sample_count = sample_count;
 }
 
 static void
