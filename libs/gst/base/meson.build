@@ -36,46 +36,33 @@ gst_base_headers = [
   'gsttypefindhelper.h',
 ]
 
-if libtype != 'shared'
-  gst_base_static = static_library('gstbase-@0@'.format(apiversion),
-    gst_base_sources,
-    c_args : gst_c_args,
-    install : true,
-    include_directories : [configinc, libsinc],
-    dependencies : [gobject_dep, glib_dep, gst_dep],
-  )
-  gst_base = gst_base_static
-endif
-
 gst_base_gen_sources = []
 
-if libtype != 'static'
-  gst_base_shared = shared_library('gstbase-@0@'.format(apiversion),
-    gst_base_sources,
-    c_args : gst_c_args,
-    version : libversion,
-    soversion : soversion,
+gst_base = library('gstbase-@0@'.format(apiversion),
+  gst_base_sources,
+  c_args : gst_c_args,
+  version : libversion,
+  soversion : soversion,
+  install : true,
+  include_directories : [configinc, libsinc],
+  dependencies : [gobject_dep, glib_dep, gst_dep],
+)
+
+if build_gir
+  gst_gir_extra_args = gir_init_section + [ '--c-include=gst/base/base.h' ]
+  gst_base_gen_sources += [gnome.generate_gir(gst_base,
+    sources : gst_base_sources + gst_base_headers,
+    namespace : 'GstBase',
+    nsversion : apiversion,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-base-1.0',
+    dependencies : [gst_dep],
+    include_directories : [configinc, libsinc, privinc],
+    includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
     install : true,
-    include_directories : [configinc, libsinc],
-    dependencies : [gobject_dep, glib_dep, gst_dep],
-  )
-  gst_base = gst_base_shared
-  if build_gir
-    gst_gir_extra_args = gir_init_section + [ '--c-include=gst/base/base.h' ]
-    gst_base_gen_sources += [gnome.generate_gir(gst_base_shared,
-      sources : gst_base_sources + gst_base_headers,
-      namespace : 'GstBase',
-      nsversion : apiversion,
-      identifier_prefix : 'Gst',
-      symbol_prefix : 'gst',
-      export_packages : 'gstreamer-base-1.0',
-      dependencies : [gst_dep],
-      include_directories : [configinc, libsinc, privinc],
-      includes : ['GLib-2.0', 'GObject-2.0', 'GModule-2.0', 'Gst-1.0'],
-      install : true,
-      extra_args : gst_gir_extra_args,
-    )]
-  endif
+    extra_args : gst_gir_extra_args,
+  )]
 endif
 
 gst_base_dep = declare_dependency(link_with : gst_base,

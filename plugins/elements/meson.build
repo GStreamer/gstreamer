@@ -25,26 +25,11 @@ gst_elements_sources = [
   'gstvalve.c',
 ]
 
-if libtype != 'shared'
-  gst_elements_static = static_library('gstcoreelements',
-    gst_elements_sources,
-    c_args : gst_c_args,
-    include_directories : [configinc],
-    dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
-    install : true,
-    install_dir : join_paths(get_option('libdir'), 'gstreamer-1.0'),
-  )
-  gst_elements = gst_elements_static
-endif
-
-if libtype != 'static'
-  gst_elements_shared = shared_library('gstcoreelements',
-    gst_elements_sources,
-    c_args : gst_c_args,
-    include_directories : [configinc],
-    dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
-    install : true,
-    install_dir : join_paths(get_option('libdir'), 'gstreamer-1.0'),
-  )
-  gst_elements = gst_elements_shared
-endif
+gst_elements = library('gstcoreelements',
+  gst_elements_sources,
+  c_args : gst_c_args,
+  include_directories : [configinc],
+  dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
+  install : true,
+  install_dir : join_paths(get_option('libdir'), 'gstreamer-1.0'),
+)

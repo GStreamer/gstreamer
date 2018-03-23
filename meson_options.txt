@@ -5,7 +5,6 @@ option('disable_examples', type : 'boolean', value : false)
 option('disable_gst_debug', type : 'boolean', value : false)
 option('disable_registry', type : 'boolean', value : false)
 option('disable_tracer_hooks', type : 'boolean', value : false)
-option('library_format', type : 'combo', choices : ['shared', 'static', 'both'], value : 'shared')
 option('disable_introspection',
         type : 'boolean', value : false,
         description : 'Whether to disable the introspection generation')
