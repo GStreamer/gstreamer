@@ -145,7 +145,8 @@ def get_color_for_result(result):
     return color
 
 
-def printc(message, color="", title=False, title_char=''):
+last_cariage_return_len = 0
+def printc(message, color="", title=False, title_char='', end="\n"):
     if title or title_char:
         length = 0
         for l in message.split("\n"):
@@ -162,7 +163,17 @@ def printc(message, color="", title=False, title_char=''):
     if hasattr(message, "result") and color == '':
         color = get_color_for_result(message.result)
 
-    sys.stdout.write(color + str(message) + Colors.ENDC + "\n")
+    if not sys.stdout.isatty():
+        end = "\n"
+
+    global last_carriage_return_len
+    if end == "\r":
+        message += ' ' * max(0, last_carriage_return_len - len(message))
+        last_carriage_return_len = len(message)
+    else:
+        last_carriage_return_len = 0
+
+    sys.stdout.write(color + str(message) + Colors.ENDC + end)
     sys.stdout.flush()
 
 

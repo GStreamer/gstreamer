@@ -109,6 +109,8 @@ class Test(Loggable):
         self.optional = False
         self.is_parallel = is_parallel
         self.generator = None
+        # String representation of the test number in the testsuite
+        self.number = ""
 
         self.clean()
 
@@ -134,7 +136,10 @@ class Test(Loggable):
                           "       You can reproduce with: %s\n" \
                     % (self.message, self.get_command_repr())
 
-                string += self.get_logfile_repr()
+                if not self.options.redirect_logs and \
+                        self.result == Result.PASSED or \
+                        not self.options.dump_on_failure:
+                    string += self.get_logfile_repr()
 
         return string
 
@@ -240,13 +245,13 @@ class Test(Loggable):
 
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
-                   message, error))
+                                                                    message, error))
 
         if result is Result.TIMEOUT:
             if self.options.debug is True:
                 if self.options.gdb:
                     printc("Timeout, you should process <ctrl>c to get into gdb",
-                        Colors.FAIL)
+                           Colors.FAIL)
                     # and wait here until gdb exits
                     self.process.communicate()
                 else:
@@ -434,7 +439,7 @@ class Test(Loggable):
             logfiles.insert(0, self.logfile)
 
         for log in logfiles:
-            message += "\n         - %s" % log
+            message += "         - %s\n" % log
 
         return message
 
@@ -465,21 +470,18 @@ class Test(Loggable):
         if self.options.valgrind:
             self.command = self.use_valgrind(self.command, self.proc_env)
 
-        message = "Launching: %s%s\n" \
-                  "    Command: %s\n" % (Colors.ENDC, self.classname,
-                                         self.get_command_repr())
-
         if not self.options.redirect_logs:
-            message += self.get_logfile_repr()
-
             self.out.write("=================\n"
                            "Test name: %s\n"
                            "Command: '%s'\n"
                            "=================\n\n"
                            % (self.classname, ' '.join(self.command)))
             self.out.flush()
-
-        printc(message, Colors.OKBLUE)
+        else:
+            message = "Launching: %s%s\n" \
+                "    Command: %s\n" % (Colors.ENDC, self.classname,
+                                       self.get_command_repr())
+            printc(message, Colors.OKBLUE)
 
         self.thread = threading.Thread(target=self.thread_wrapper)
         self.thread.start()
@@ -506,13 +508,15 @@ class Test(Loggable):
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
 
-        message = "%s: %s%s\n" % (self.classname, self.result,
-               " (" + self.message + ")" if self.message else "")
-        if not self.options.redirect_logs:
-            message += self.get_logfile_repr()
+        if self.result != Result.PASSED:
+            message = str(self)
+            end = "\n"
+        else:
+            message = "%s %s: %s%s" % (self.number, self.classname, self.result,
+                                       " (" + self.message + ")" if self.message else "")
+            end = "\r"
 
-        printc(message, color=utils.get_color_for_result(self.result))
-
+        printc(message, color=utils.get_color_for_result(self.result), end=end)
         self.close_logfile()
 
         if self.options.dump_on_failure:
@@ -1548,12 +1552,13 @@ class _TestsLauncher(Loggable):
                 return True
         return False
 
-    def print_test_num(self, test):
+    def get_test_num(self, test):
         cur_test_num = self.tests.index(test) + 1
-        sys.stdout.write("[%d / %d] " % (cur_test_num, self.total_num_tests))
+        return "[%d / %d] " % (cur_test_num, self.total_num_tests)
 
     def server_wrapper(self, ready):
-        self.server = GstValidateTCPServer(('localhost', 0), GstValidateListener)
+        self.server = GstValidateTCPServer(
+            ('localhost', 0), GstValidateListener)
         self.server.socket.settimeout(None)
         self.server.launcher = self
         self.serverport = self.server.socket.getsockname()[1]
@@ -1608,7 +1613,6 @@ class _TestsLauncher(Loggable):
         except IndexError:
             return False
 
-        self.print_test_num(test)
         test.test_start(self.queue)
 
         self.jobs.append(test)
@@ -1653,7 +1657,7 @@ class _TestsLauncher(Loggable):
             while jobs_running != 0:
                 test = self.tests_wait()
                 jobs_running -= 1
-                self.print_test_num(test)
+                test.number = self.get_test_num(test)
                 res = test.test_end()
                 self.reporter.after_test(test)
                 if res != Result.PASSED and (self.options.forever or

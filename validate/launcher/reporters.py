@@ -96,14 +96,6 @@ class Reporter(Loggable):
 
     def final_report(self):
         print("\n")
-        printc("Final Report:", title=True)
-        sortedresults = sorted(self.results, key=lambda test: test.classname)
-        for test in sorted(sortedresults, key=lambda test: test.result):
-            printc(test)
-            if test.result != Result.PASSED:
-                print("\n")
-
-        print("\n")
         lenstat = (len("Statistics") + 1)
         printc("Statistics:\n%s" % (lenstat * "-"), Colors.OKBLUE)
         printc("\n%sTotal time spent: %s seconds\n" %
