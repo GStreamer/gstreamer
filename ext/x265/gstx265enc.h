@@ -61,6 +61,7 @@ struct _GstX265Enc
   gint log_level;
   gint tune;
   gint speed_preset;
+  gint keyintmax;
   GString *option_string_prop;  /* option-string property */
   /*GString *option_string; *//* used by set prop */
 

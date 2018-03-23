@@ -53,7 +53,8 @@ enum
   PROP_OPTION_STRING,
   PROP_X265_LOG_LEVEL,
   PROP_SPEED_PRESET,
-  PROP_TUNE
+  PROP_TUNE,
+  PROP_KEY_INT_MAX
 };
 
 #define PROP_BITRATE_DEFAULT            (2 * 1024)
@@ -62,6 +63,7 @@ enum
 #define PROP_LOG_LEVEL_DEFAULT           -1     // None
 #define PROP_SPEED_PRESET_DEFAULT        6      // Medium
 #define PROP_TUNE_DEFAULT                2      // SSIM
+#define PROP_KEY_INT_MAX_DEFAULT         0      // x265 lib default
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define FORMATS "I420, Y444, I420_10LE, Y444_10LE"
@@ -396,6 +398,17 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
       g_param_spec_enum ("tune", "Tune options",
           "Preset name for tuning options", GST_X265_ENC_TUNE_TYPE,
           PROP_TUNE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstX265Enc::key-int-max:
+   *
+   * Controls maximum number of frames since the last keyframe
+   *
+   * Since: 1.16
+   */
+  g_object_class_install_property (gobject_class, PROP_KEY_INT_MAX,
+      g_param_spec_int ("key-int-max", "Max key frame",
+          "Maximal distance between two key-frames (0 = x265 default / 250)",
+          0, G_MAXINT32, PROP_KEY_INT_MAX_DEFAULT, G_PARAM_READWRITE));
 
   gst_element_class_set_static_metadata (element_class,
       "x265enc", "Codec/Encoder/Video", "H265 Encoder",
@@ -423,6 +436,7 @@ gst_x265_enc_init (GstX265Enc * encoder)
   encoder->log_level = PROP_LOG_LEVEL_DEFAULT;
   encoder->speed_preset = PROP_SPEED_PRESET_DEFAULT;
   encoder->tune = PROP_TUNE_DEFAULT;
+  encoder->keyintmax = PROP_KEY_INT_MAX_DEFAULT;
 }
 
 typedef struct
@@ -672,6 +686,10 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     /* ABR */
     encoder->x265param.rc.bitrate = encoder->bitrate;
     encoder->x265param.rc.rateControlMode = X265_RC_ABR;
+  }
+
+  if (encoder->keyintmax > 0) {
+    encoder->x265param.keyframeMax = encoder->keyintmax;
   }
 
   /* apply option-string property */
@@ -1202,6 +1220,9 @@ gst_x265_enc_set_property (GObject * object, guint prop_id,
     case PROP_TUNE:
       encoder->tune = g_value_get_enum (value);
       break;
+    case PROP_KEY_INT_MAX:
+      encoder->keyintmax = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1245,6 +1266,9 @@ gst_x265_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TUNE:
       g_value_set_enum (value, encoder->tune);
+      break;
+    case PROP_KEY_INT_MAX:
+      g_value_set_int (value, encoder->keyintmax);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
