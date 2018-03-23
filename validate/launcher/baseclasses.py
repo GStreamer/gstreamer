@@ -1561,10 +1561,6 @@ class _TestsLauncher(Loggable):
                 return True
         return False
 
-    def get_test_num(self, test):
-        cur_test_num = self.tests.index(test) + 1
-        return "[%d / %d] " % (cur_test_num, self.total_num_tests)
-
     def server_wrapper(self, ready):
         self.server = GstValidateTCPServer(
             ('localhost', 0), GstValidateListener)
@@ -1656,6 +1652,7 @@ class _TestsLauncher(Loggable):
             random.shuffle(tests)
             random.shuffle(alone_tests)
 
+        current_test_num = 1
         for num_jobs, tests in [(max_num_jobs, tests), (1, alone_tests)]:
             tests_left = list(tests)
             for i in range(num_jobs):
@@ -1666,7 +1663,8 @@ class _TestsLauncher(Loggable):
             while jobs_running != 0:
                 test = self.tests_wait()
                 jobs_running -= 1
-                test.number = self.get_test_num(test)
+                test.number = "[%d / %d] " % (current_test_num, self.total_num_tests)
+                current_test_num += 1
                 res = test.test_end()
                 self.reporter.after_test(test)
                 if res != Result.PASSED and (self.options.forever or
@@ -1687,8 +1685,7 @@ class _TestsLauncher(Loggable):
         if self.options.forever:
             r = 1
             while True:
-                t = "Running iteration %d" % r
-                print("%s\n%s\n%s\n" % ("=" * len(t), t, "=" * len(t)))
+                printc("Running iteration %d" % r, title=True)
 
                 if not self._run_tests():
                     break

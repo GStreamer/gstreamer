@@ -102,6 +102,7 @@ def desactivate_colors():
     Colors.FAIL = ''
     Colors.ENDC = ''
 
+
 if not supports_ansi_colors():
     desactivate_colors()
 
@@ -145,8 +146,11 @@ def get_color_for_result(result):
     return color
 
 
-last_cariage_return_len = 0
+last_carriage_return_len = 0
+
+
 def printc(message, color="", title=False, title_char='', end="\n"):
+    global last_carriage_return_len
     if title or title_char:
         length = 0
         for l in message.split("\n"):
@@ -155,10 +159,13 @@ def printc(message, color="", title=False, title_char='', end="\n"):
         if length == 0:
             length = len(message)
 
+        needed_spaces = ' ' * max(0, last_carriage_return_len - length)
         if title is True:
-            message = length * "=" + "\n" + str(message) + "\n" + length * '='
+            message = length * "=" + needed_spaces + "\n" \
+                + str(message) + "\n" + length * '='
         else:
-            message = str(message) + "\n" + length * title_char
+            message = str(message) + needed_spaces + "\n" + \
+                length * title_char
 
     if hasattr(message, "result") and color == '':
         color = get_color_for_result(message.result)
@@ -166,13 +173,8 @@ def printc(message, color="", title=False, title_char='', end="\n"):
     if not sys.stdout.isatty():
         end = "\n"
 
-    global last_carriage_return_len
-    if end == "\r":
-        message += ' ' * max(0, last_carriage_return_len - len(message))
-        last_carriage_return_len = len(message)
-    else:
-        last_carriage_return_len = 0
-
+    message += ' ' * max(0, last_carriage_return_len - len(message))
+    last_carriage_return_len = len(message) if end == "\r" else 0
     sys.stdout.write(color + str(message) + Colors.ENDC + end)
     sys.stdout.flush()
 
@@ -266,6 +268,7 @@ def get_data_file(subdir, name):
 
 def gsttime_from_tuple(stime):
     return int((int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2])) * GST_SECOND + int(stime[3]))
+
 
 timeregex = re.compile(r'(?P<_0>.+):(?P<_1>.+):(?P<_2>.+)\.(?P<_3>.+)')
 
