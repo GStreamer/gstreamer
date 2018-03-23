@@ -1118,6 +1118,10 @@ gst_x265_enc_encode_frame (GstX265Enc * encoder, x265_picture * pic_in,
     offset += nal[i].sizeBytes;
   }
 
+  if (pic_out.sliceType == X265_TYPE_IDR || pic_out.sliceType == X265_TYPE_I) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+  }
+
   frame->output_buffer = out_buf;
 
   if (encoder->push_header) {
