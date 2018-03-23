@@ -447,7 +447,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
   /* Look for JSON messages containing SDP and ICE candidates */
   } else {
     JsonNode *root;
-    JsonObject *object;
+    JsonObject *object, *child;
     JsonParser *parser = json_parser_new ();
     if (!json_parser_load_from_data (parser, text, -1, NULL)) {
       g_printerr ("Unknown message '%s', ignoring", text);
@@ -466,20 +466,27 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     /* Check type of JSON message */
     if (json_object_has_member (object, "sdp")) {
       int ret;
-      const gchar *text;
       GstSDPMessage *sdp;
+      const gchar *text, *sdptype;
       GstWebRTCSessionDescription *answer;
 
       g_assert_cmphex (app_state, ==, PEER_CALL_NEGOTIATING);
 
-      g_assert_true (json_object_has_member (object, "type"));
+      child = json_object_get_object_member (object, "sdp");
+
+      if (!json_object_has_member (child, "type")) {
+        cleanup_and_quit_loop ("ERROR: received SDP without 'type'",
+            PEER_CALL_ERROR);
+        goto out;
+      }
+
+      sdptype = json_object_get_string_member (child, "type");
       /* In this example, we always create the offer and receive one answer.
        * See tests/examples/webrtcbidirectional.c in gst-plugins-bad for how to
        * handle offers from peers and reply with answers using webrtcbin. */
-      g_assert_cmpstr (json_object_get_string_member (object, "type"), ==,
-          "answer");
+      g_assert_cmpstr (sdptype, ==, "answer");
 
-      text = json_object_get_string_member (object, "sdp");
+      text = json_object_get_string_member (child, "sdp");
 
       g_print ("Received answer:\n%s\n", text);
 
@@ -504,13 +511,12 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
 
       app_state = PEER_CALL_STARTED;
     } else if (json_object_has_member (object, "ice")) {
-      JsonObject *ice;
       const gchar *candidate;
       gint sdpmlineindex;
 
-      ice = json_object_get_object_member (object, "ice");
-      candidate = json_object_get_string_member (ice, "candidate");
-      sdpmlineindex = json_object_get_int_member (ice, "sdpMLineIndex");
+      child = json_object_get_object_member (object, "ice");
+      candidate = json_object_get_string_member (child, "candidate");
+      sdpmlineindex = json_object_get_int_member (child, "sdpMLineIndex");
 
       /* Add ice candidate sent by remote peer */
       g_signal_emit_by_name (webrtc1, "add-ice-candidate", sdpmlineindex,

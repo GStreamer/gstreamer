@@ -63,7 +63,8 @@ function onLocalDescription(desc) {
     console.log("Got local description: " + JSON.stringify(desc));
     peer_connection.setLocalDescription(desc).then(function() {
         setStatus("Sending SDP answer");
-        ws_conn.send(JSON.stringify(peer_connection.localDescription));
+        sdp = {'sdp': peer_connection.localDescription}
+        ws_conn.send(JSON.stringify(sdp));
     });
 }
 
