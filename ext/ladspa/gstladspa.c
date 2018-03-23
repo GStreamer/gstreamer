@@ -350,8 +350,12 @@ ladspa_plugin_path_search (GstPlugin * plugin)
 
 #ifdef G_OS_WIN32
   path = g_getenv ("APPDATA");
-  if (path)
-    g_string_append (path, search_path);
+  if (path) {
+    if (ladspa_path->len)
+      g_string_append_printf (ladspa_path, G_SEARCHPATH_SEPARATOR_S "%s", path);
+    else
+      g_string_append (ladspa_path, path);
+  }
 
   path = g_getenv ("COMMONPROGRAMFILES");
   if (path) {
