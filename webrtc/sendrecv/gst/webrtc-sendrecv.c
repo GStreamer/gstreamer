@@ -237,7 +237,6 @@ on_offer_created (GstPromise * promise, gpointer user_data)
 {
   GstWebRTCSessionDescription *offer = NULL;
   const GstStructure *reply;
-  gchar *desc;
 
   g_assert_cmphex (app_state, ==, PEER_CALL_NEGOTIATING);
 
@@ -493,7 +492,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       ret = gst_sdp_message_new (&sdp);
       g_assert_cmphex (ret, ==, GST_SDP_OK);
 
-      ret = gst_sdp_message_parse_buffer (text, strlen (text), sdp);
+      ret = gst_sdp_message_parse_buffer ((guint8 *) text, strlen (text), sdp);
       g_assert_cmphex (ret, ==, GST_SDP_OK);
 
       answer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER,
@@ -613,7 +612,6 @@ check_plugins (void)
 int
 main (int argc, char *argv[])
 {
-  SoupSession *session;
   GOptionContext *context;
   GError *error = NULL;
 

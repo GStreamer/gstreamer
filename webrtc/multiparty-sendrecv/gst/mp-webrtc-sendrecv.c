@@ -8,6 +8,7 @@
  */
 #include <gst/gst.h>
 #include <gst/sdp/sdp.h>
+#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 
 /* For signalling */
@@ -327,7 +328,6 @@ add_peer_to_pipeline (const gchar * peer_id, gboolean offer)
   gchar *tmp;
   GstElement *tee, *webrtc, *q;
   GstPad *srcpad, *sinkpad;
-  GError *error = NULL;
 
   tmp = g_strdup_printf ("queue-%s", peer_id);
   q = gst_element_factory_make ("queue", tmp);
@@ -619,7 +619,7 @@ handle_sdp_offer (const gchar * peer_id, const gchar * text)
   ret = gst_sdp_message_new (&sdp);
   g_assert_cmpint (ret, ==, GST_SDP_OK);
 
-  ret = gst_sdp_message_parse_buffer (text, strlen (text), sdp);
+  ret = gst_sdp_message_parse_buffer ((guint8 *) text, strlen (text), sdp);
   g_assert_cmpint (ret, ==, GST_SDP_OK);
 
   offer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER, sdp);
@@ -659,7 +659,7 @@ handle_sdp_answer (const gchar * peer_id, const gchar * text)
   ret = gst_sdp_message_new (&sdp);
   g_assert_cmpint (ret, ==, GST_SDP_OK);
 
-  ret = gst_sdp_message_parse_buffer (text, strlen (text), sdp);
+  ret = gst_sdp_message_parse_buffer ((guint8 *) text, strlen (text), sdp);
   g_assert_cmpint (ret, ==, GST_SDP_OK);
 
   answer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER, sdp);
@@ -700,10 +700,7 @@ handle_peer_message (const gchar * peer_id, const gchar * msg)
   object = json_node_get_object (root);
   /* Check type of JSON message */
   if (json_object_has_member (object, "sdp")) {
-    int ret;
-    GstSDPMessage *sdp;
     const gchar *text, *sdp_type;
-    GstWebRTCSessionDescription *answer;
 
     g_assert_cmpint (app_state, >=, ROOM_JOINED);
 
@@ -920,7 +917,6 @@ check_plugins (void)
 int
 main (int argc, char *argv[])
 {
-  SoupSession *session;
   GOptionContext *context;
   GError *error = NULL;
 
