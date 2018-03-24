@@ -1075,7 +1075,7 @@ get_compatible_muxer_sink_pad (GstEncodeBin * ebin, GstElement * encoder,
         sinkcaps);
     g_assert (srctempl != NULL);
     sinktempl = gst_element_get_compatible_pad_template (ebin->muxer, srctempl);
-    g_object_unref (srctempl);
+    gst_object_unref (srctempl);
   }
 
   if (G_UNLIKELY (sinktempl == NULL))
@@ -1379,7 +1379,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
       sinkpad = gst_element_get_static_pad (sgroup->smartencoder, "sink");
     }
     gst_caps_unref (tmpcaps);
-    g_object_unref (srcpad);
+    gst_object_unref (srcpad);
   }
 
   srcpad =
@@ -1391,8 +1391,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* Go straight to splitter */
   if (G_UNLIKELY (fast_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK))
     goto passthrough_link_failure;
-  g_object_unref (sinkpad);
-  g_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
   srcpad = NULL;
 
   /* Path 2 : Conversion / Encoding */
@@ -1412,8 +1412,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     srcpad = gst_element_get_static_pad (sgroup->encoder, "src");
     if (G_UNLIKELY (fast_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK))
       goto encoder_link_failure;
-    g_object_unref (sinkpad);
-    g_object_unref (srcpad);
+    gst_object_unref (sinkpad);
+    gst_object_unref (srcpad);
     srcpad = NULL;
   } else if (gst_encoding_profile_get_preset (sgroup->profile)
       || gst_encoding_profile_get_preset_name (sgroup->profile)) {
@@ -1575,8 +1575,8 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     goto no_splitter_srcpad;
   if (G_UNLIKELY (fast_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK))
     goto splitter_encoding_failure;
-  g_object_unref (sinkpad);
-  g_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
   srcpad = NULL;
 
   /* End of Stream 2 setup */
