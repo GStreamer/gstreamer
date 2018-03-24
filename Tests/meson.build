@@ -26,7 +26,7 @@ if nunit_console.found()
                 # 'PipelineTests',
                 'SdpTests'
                 ]
-            lib = library(test, test + '.cs', 'TestBase.cs',
+            lib = shared_library(test, test + '.cs', 'TestBase.cs',
                         cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114'],
                         dependencies: [gst_sharp_dep, nunit_dep])
             test(test, nunit_console, args: [lib.full_path()], env: testsenv)

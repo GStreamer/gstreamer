@@ -34,7 +34,7 @@ sources = [
 
 subdir('generated')
 
-gst_sharp = library('gstreamer-sharp', gst_generate_files, sources,
+gst_sharp = shared_library('gstreamer-sharp', gst_generate_files, sources,
         cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
         dependencies: [glib_sharp_dep, gio_sharp_dep])
 
