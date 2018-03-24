@@ -1164,8 +1164,8 @@ _post_missing_plugin_message (GstEncodeBin * ebin, GstEncodingProfile * prof)
   /* missing plugin support */
   gst_element_post_message (GST_ELEMENT_CAST (ebin),
       gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin), format));
-  GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN, (NULL),
-      ("Couldn't create encoder for format %" GST_PTR_FORMAT, format));
+  GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN,
+      ("Couldn't create encoder for format %" GST_PTR_FORMAT, format), (NULL));
 
   gst_caps_unref (format);
 }
@@ -1959,8 +1959,8 @@ no_muxer:
     /* missing plugin support */
     gst_element_post_message (GST_ELEMENT_CAST (ebin),
         gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin), format));
-    GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN, (NULL),
-        ("No available muxer for format %" GST_PTR_FORMAT, format));
+    GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN,
+        ("No available muxer for format %" GST_PTR_FORMAT, format), (NULL));
     if (format)
       gst_caps_unref (format);
     return FALSE;
