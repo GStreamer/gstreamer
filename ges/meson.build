@@ -4,7 +4,7 @@ metadata  = files(pkg + '.metadata')
 
 subdir('generated')
 
-ges_sharp = library(pkg + '-sharp', ges_generate_files,
+ges_sharp = shared_library(pkg + '-sharp', ges_generate_files,
         cs_args: ['-nowarn:169', '-nowarn:108', '-nowarn:114', '-unsafe'],
         link_with: gst_sharp,
         dependencies: [glib_sharp_dep, gio_sharp_dep])
