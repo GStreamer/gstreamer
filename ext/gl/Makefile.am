@@ -5,6 +5,8 @@ plugin_LTLIBRARIES = libgstopengl.la
 #	gstglbasemixer.h
 #	gstglmixer.c
 #	gstglmixer.h
+#	gstglmixerbin.h
+#	gstglmixerbin.c
 #	gstglstereomix.c
 #	gstglstereomix.h
 #	gstglvideomixer.c
@@ -16,7 +18,6 @@ libgstopengl_la_SOURCES = \
 	gstgldownloadelement.c \
 	gstglcolorconvertelement.c \
 	gstglfilterbin.c \
-	gstglmixerbin.c \
 	gstglsinkbin.c \
 	gstglsrcbin.c \
 	gstglimagesink.c \
@@ -57,7 +58,6 @@ noinst_HEADERS = \
 	gstgldownloadelement.h \
 	gstglcolorconvertelement.h \
 	gstglfilterbin.h \
-	gstglmixerbin.h \
 	gstglsinkbin.h \
 	gstglsrcbin.h \
 	gstglimagesink.h \
