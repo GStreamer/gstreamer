@@ -35,7 +35,11 @@ libgstopenglmixers_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CONTROLLER_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(X11_CFLAGS)
+	$(X11_CFLAGS) \
+	-Dgst_gl_context_gen_shader=gst_gl_bad_context_gen_shader \
+	-Dgst_gl_multiply_matrix4=Dgst_gl_bad_multiply_matrix4 \
+	-Dgst_gl_get_affine_transformation_meta_as_ndc_ext=Dgst_gl_bad_get_affine_transformation_meta_as_ndc_ext \
+	-Dgst_gl_set_affine_transformation_meta_from_ndc_ext=Dgst_gl_bad_set_affine_transformation_meta_from_ndc_ext
 
 libgstopenglmixers_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-@GST_API_VERSION@.la \
