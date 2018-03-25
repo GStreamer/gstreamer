@@ -45,7 +45,7 @@
   do { \
     if (hr != S_OK) { \
       gchar *msg = gst_wasapi_util_hresult_to_string (hr); \
-      GST_ERROR_OBJECT (self, #func " failed: %s", msg); \
+      GST_ERROR_OBJECT (self, #func " failed (%x): %s", hr, msg); \
       g_free (msg); \
       and; \
     } \
