@@ -114,6 +114,37 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->get_id = extractable_get_id;
 }
 
+static int
+property_name_compare (gconstpointer s1, gconstpointer s2)
+{
+  return g_strcmp0 ((const gchar *) s1, (const gchar *) s2);
+}
+
+static void
+_set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
+    GParamSpec * pspec, GValue * value)
+{
+  GESEffectClass *klass = GES_EFFECT_GET_CLASS (self);
+  gchar *full_property_name;
+
+  GES_TIMELINE_ELEMENT_CLASS
+      (ges_effect_parent_class)->set_child_property (self, child, pspec, value);
+
+  full_property_name = g_strdup_printf ("%s::%s", G_OBJECT_TYPE_NAME (child),
+      pspec->name);
+
+  if (g_list_find_custom (klass->rate_properties, full_property_name,
+          property_name_compare)) {
+    GstElement *nleobject =
+        ges_track_element_get_nleobject (GES_TRACK_ELEMENT (self));
+    gdouble media_duration_factor =
+        ges_timeline_element_get_media_duration_factor (self);
+
+    g_object_set (nleobject, "media-duration-factor", media_duration_factor,
+        NULL);
+  }
+}
+
 static void
 ges_effect_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
@@ -149,9 +180,11 @@ ges_effect_class_init (GESEffectClass * klass)
 {
   GObjectClass *object_class;
   GESTrackElementClass *obj_bg_class;
+  GESTimelineElementClass *element_class;
 
   object_class = G_OBJECT_CLASS (klass);
   obj_bg_class = GES_TRACK_ELEMENT_CLASS (klass);
+  element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESEffectPrivate));
 
@@ -161,6 +194,7 @@ ges_effect_class_init (GESEffectClass * klass)
   object_class->finalize = ges_effect_finalize;
 
   obj_bg_class->create_element = ges_effect_create_element;
+  element_class->set_child_property = _set_child_property;
 
   klass->rate_properties = NULL;
   ges_effect_class_register_rate_property (klass, "scaletempo", "rate");
@@ -278,12 +312,6 @@ ges_effect_new (const gchar * bin_description)
   gst_object_unref (asset);
 
   return effect;
-}
-
-static int
-property_name_compare (gconstpointer s1, gconstpointer s2)
-{
-  return g_strcmp0 ((const gchar *) s1, (const gchar *) s2);
 }
 
 /**

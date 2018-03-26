@@ -107,6 +107,13 @@ typedef struct
   GESTimelineElement *self;
 } EmitDeepNotifyInIdleData;
 
+static void
+_set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
+    GParamSpec * pspec, GValue * value)
+{
+  g_object_set_property (child, pspec->name, value);
+}
+
 static gboolean
 _lookup_child (GESTimelineElement * self, const gchar * prop_name,
     GObject ** child, GParamSpec ** pspec)
@@ -434,6 +441,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 
   klass->list_children_properties = default_list_children_properties;
   klass->lookup_child = _lookup_child;
+  klass->set_child_property = _set_child_property;
 }
 
 static void
@@ -1385,6 +1393,7 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
     GParamSpec * pspec, GValue * value)
 {
   ChildPropHandler *handler;
+  GESTimelineElementClass *klass;
 
   g_return_if_fail (GES_IS_TRACK_ELEMENT (self));
 
@@ -1393,7 +1402,9 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
   if (!handler)
     goto not_found;
 
-  g_object_set_property (handler->child, pspec->name, value);
+  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+  g_assert (klass->set_child_property);
+  klass->set_child_property (self, handler->child, pspec, value);
 
   return;
 
@@ -1423,6 +1434,7 @@ ges_timeline_element_set_child_property (GESTimelineElement * self,
     const gchar * property_name, GValue * value)
 {
   GParamSpec *pspec;
+  GESTimelineElementClass *klass;
   GObject *child;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
@@ -1430,7 +1442,9 @@ ges_timeline_element_set_child_property (GESTimelineElement * self,
   if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
     goto not_found;
 
-  g_object_set_property (child, pspec->name, value);
+  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+  g_assert (klass->set_child_property);
+  klass->set_child_property (self, child, pspec, value);
 
   gst_object_unref (child);
   g_param_spec_unref (pspec);
