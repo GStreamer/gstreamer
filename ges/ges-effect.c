@@ -166,6 +166,7 @@ ges_effect_class_init (GESEffectClass * klass)
   ges_effect_class_register_rate_property (klass, "scaletempo", "rate");
   ges_effect_class_register_rate_property (klass, "pitch", "tempo");
   ges_effect_class_register_rate_property (klass, "pitch", "rate");
+  ges_effect_class_register_rate_property (klass, "videorate", "rate");
 
   /**
    * GESEffect:bin-description:
