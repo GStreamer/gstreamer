@@ -60,10 +60,10 @@ enum
 #define PROP_BITRATE_DEFAULT            (2 * 1024)
 #define PROP_QP_DEFAULT                 -1
 #define PROP_OPTION_STRING_DEFAULT      ""
-#define PROP_LOG_LEVEL_DEFAULT           -1     // None
-#define PROP_SPEED_PRESET_DEFAULT        6      // Medium
-#define PROP_TUNE_DEFAULT                2      // SSIM
-#define PROP_KEY_INT_MAX_DEFAULT         0      // x265 lib default
+#define PROP_LOG_LEVEL_DEFAULT           -1     /* None   */
+#define PROP_SPEED_PRESET_DEFAULT        6      /* Medium */
+#define PROP_TUNE_DEFAULT                2      /* SSIM   */
+#define PROP_KEY_INT_MAX_DEFAULT         0      /* x265 lib default */
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define FORMATS "I420, Y444, I420_10LE, Y444_10LE"
@@ -503,8 +503,6 @@ gst_x265_enc_dequeue_all_frames (GstX265Enc * enc)
 static gboolean
 gst_x265_enc_start (GstVideoEncoder * encoder)
 {
-  //GstX265Enc *x265enc = GST_X265_ENC (encoder);
-
   return TRUE;
 }
 
@@ -1070,7 +1068,7 @@ gst_x265_enc_encode_frame (GstX265Enc * encoder, x265_picture * pic_in,
 
   GST_OBJECT_LOCK (encoder);
   if (encoder->reconfig) {
-    // x265_encoder_reconfig is not yet implemented thus we shut down and re-create encoder
+    /* x265_encoder_reconfig is not yet implemented thus we shut down and re-create encoder */
     gst_x265_enc_init_encoder (encoder);
     update_latency = TRUE;
   }
