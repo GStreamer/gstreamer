@@ -1133,7 +1133,7 @@ init_devices (gpointer data)
   g_mutex_lock (&com_init_lock);
 
   /* create the COM initialization thread */
-  g_thread_create ((GThreadFunc) gst_decklink_com_thread, NULL, FALSE, NULL);
+  g_thread_new ("COM init thread", (GThreadFunc) gst_decklink_com_thread, NULL);
 
   /* wait until the COM thread signals that COM has been initialized */
   g_cond_wait (&com_init_cond, &com_init_lock);
