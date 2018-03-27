@@ -93,6 +93,7 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
+            GstDfbVideoSink
             GstFBDEVSink
             GstGLImageSink
             GstGtkBaseSink
@@ -122,6 +123,7 @@ GObject
             GstDvbSrc
             GstGLTestSrc
             GstMMS
+            GstNeonhttpSrc
             GstQtSrc
             GstRTMPSrc
             GstRfbSrc
