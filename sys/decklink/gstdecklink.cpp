@@ -1065,7 +1065,7 @@ public:
   }
 };
 
-#ifdef _MSC_VER
+#ifdef G_OS_WIN32
 /* FIXME: We currently never deinit this */
 
 static GMutex com_init_lock;
@@ -1114,7 +1114,7 @@ gst_decklink_com_thread (gpointer data)
 
   return NULL;
 }
-#endif /* _MSC_VER */
+#endif /* G_OS_WIN32 */
 
 static GOnce devices_once = G_ONCE_INIT;
 static GPtrArray *devices;      /* array of Device */
@@ -1127,7 +1127,7 @@ init_devices (gpointer data)
   HRESULT ret;
   int i;
 
-#ifdef _MSC_VER
+#ifdef G_OS_WIN32
   // Start COM thread for Windows
 
   g_mutex_lock (&com_init_lock);
@@ -1138,7 +1138,7 @@ init_devices (gpointer data)
   /* wait until the COM thread signals that COM has been initialized */
   g_cond_wait (&com_init_cond, &com_init_lock);
   g_mutex_unlock (&com_init_lock);
-#endif /* _MSC_VER */
+#endif /* G_OS_WIN32 */
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
