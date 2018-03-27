@@ -19,7 +19,7 @@ if cc.has_header('ladspa.h')
     c_args : gst_plugins_bad_args + ladspa_cargs,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gstaudio_dep, gstbase_dep, gmodule_dep, mathlib],
+    dependencies : [gstaudio_dep, gstbase_dep, gmodule_dep, lrdf_dep, mathlib],
     install : true,
     install_dir : plugins_install_dir,
   )
