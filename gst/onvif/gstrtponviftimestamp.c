@@ -185,9 +185,12 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
   GstStateChangeReturn ret;
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      purge_cached_buffer_and_events (self);
-      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      self->ntp_offset = self->prop_ntp_offset;
+      GST_DEBUG_OBJECT (self, "ntp-offset: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->ntp_offset));
+      self->set_d_bit = TRUE;
+      self->set_e_bit = FALSE;
       break;
     default:
       break;
@@ -200,12 +203,9 @@ gst_rtp_onvif_timestamp_change_state (GstElement * element,
     return ret;
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      self->ntp_offset = self->prop_ntp_offset;
-      GST_DEBUG_OBJECT (self, "ntp-offset: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (self->ntp_offset));
-      self->set_d_bit = TRUE;
-      self->set_e_bit = FALSE;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      purge_cached_buffer_and_events (self);
+      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       break;
     default:
       break;
