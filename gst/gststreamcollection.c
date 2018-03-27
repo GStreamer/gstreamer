@@ -48,7 +48,7 @@ struct _GstStreamCollectionPrivate
 {
   /* Maybe switch this to a GArray if performance is
    * ever an issue? */
-  GQueue *streams;
+  GQueue streams;
 };
 
 /* stream signals and properties */
@@ -68,7 +68,6 @@ enum
 static guint gst_stream_collection_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_stream_collection_dispose (GObject * object);
-static void gst_stream_collection_finalize (GObject * object);
 
 static void gst_stream_collection_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -130,14 +129,13 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
       2, GST_TYPE_STREAM, G_TYPE_PARAM);
 
   gobject_class->dispose = gst_stream_collection_dispose;
-  gobject_class->finalize = gst_stream_collection_finalize;
 }
 
 static void
 gst_stream_collection_init (GstStreamCollection * collection)
 {
   collection->priv = GST_STREAM_COLLECTION_GET_PRIVATE (collection);
-  collection->priv->streams = g_queue_new ();
+  g_queue_init (&collection->priv->streams);
 }
 
 static void
@@ -158,24 +156,11 @@ gst_stream_collection_dispose (GObject * object)
     collection->upstream_id = NULL;
   }
 
-  if (collection->priv->streams) {
-    g_queue_foreach (collection->priv->streams,
-        (GFunc) release_gst_stream, collection);
-    g_queue_clear (collection->priv->streams);
-  }
+  g_queue_foreach (&collection->priv->streams,
+      (GFunc) release_gst_stream, collection);
+  g_queue_clear (&collection->priv->streams);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_stream_collection_finalize (GObject * object)
-{
-  GstStreamCollection *collection = GST_STREAM_COLLECTION_CAST (object);
-
-  if (collection->priv->streams)
-    g_queue_free (collection->priv->streams);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /**
@@ -303,11 +288,10 @@ gst_stream_collection_add_stream (GstStreamCollection * collection,
 {
   g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), FALSE);
   g_return_val_if_fail (GST_IS_STREAM (stream), FALSE);
-  g_return_val_if_fail (collection->priv->streams, FALSE);
 
   GST_DEBUG_OBJECT (collection, "Adding stream %" GST_PTR_FORMAT, stream);
 
-  g_queue_push_tail (collection->priv->streams, stream);
+  g_queue_push_tail (&collection->priv->streams, stream);
   g_signal_connect (stream, "notify", (GCallback) proxy_stream_notify_cb,
       collection);
 
@@ -328,9 +312,8 @@ guint
 gst_stream_collection_get_size (GstStreamCollection * collection)
 {
   g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), 0);
-  g_return_val_if_fail (collection->priv->streams, 0);
 
-  return g_queue_get_length (collection->priv->streams);
+  return g_queue_get_length (&collection->priv->streams);
 }
 
 /**
@@ -350,7 +333,6 @@ GstStream *
 gst_stream_collection_get_stream (GstStreamCollection * collection, guint index)
 {
   g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), NULL);
-  g_return_val_if_fail (collection->priv->streams, NULL);
 
-  return g_queue_peek_nth (collection->priv->streams, index);
+  return g_queue_peek_nth (&collection->priv->streams, index);
 }
