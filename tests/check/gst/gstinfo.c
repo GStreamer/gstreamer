@@ -440,7 +440,8 @@ GST_START_TEST (info_post_gst_init_category_registration)
   /* Note: before the fixes this wouldn't work to trigger the problem because
    * only a pattern set via GST_DEBUG before gst_init would be picked up
    * (another bug) */
-  gst_debug_set_threshold_from_string ("*a*b:6,*c:3,d*:2,xyz*:9,ax:1", TRUE);
+  gst_debug_set_threshold_from_string ("*a*b:6,*b*0:6,*c:3,d*:2,xyz*:9,ax:1",
+      TRUE);
 
   fail_unless_equals_int (GST_LEVEL_DEFAULT,
       gst_debug_get_default_threshold ());
@@ -471,8 +472,12 @@ GST_START_TEST (info_post_gst_init_category_registration)
     /* *c:3 */
     fail_unless_equals_int (gst_debug_category_get_threshold (cats[0x4c]),
         GST_LEVEL_FIXME);
-    /* *a*b:6 */
+    /* *a*b:6 and d*:2, but d*:2 takes priority here as cat name is "dog-a1b"
+     * and order matters: items listed later override earlier ones. */
     fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xa1b]),
+        GST_LEVEL_WARNING);
+    /* *a*0:6 */
+    fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xb10]),
         GST_LEVEL_LOG);
   }
 
