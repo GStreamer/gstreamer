@@ -340,7 +340,6 @@
     <xi:include href="xml/plugin-gmedec.xml" />
     <xi:include href="xml/plugin-gme.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
-    <xi:include href="xml/plugin-gstsiren.xml" />
     <xi:include href="xml/plugin-hls.xml" />
     <xi:include href="xml/plugin-id3tag.xml" />
     <xi:include href="xml/plugin-interlace.xml" />
@@ -379,7 +378,6 @@
     <xi:include href="xml/plugin-pcapparse.xml" />
     <xi:include href="xml/plugin-pnm.xml" />
     <xi:include href="xml/plugin-proxy.xml" />
-    <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-removesilence.xml" />
     <xi:include href="xml/plugin-resindvd.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
