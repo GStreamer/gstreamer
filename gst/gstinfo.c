@@ -1598,18 +1598,16 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
   GSList *walk;
 
   g_mutex_lock (&__level_name_mutex);
-  walk = __level_name;
-  while (walk) {
-    LevelNameEntry *entry = walk->data;
 
-    walk = g_slist_next (walk);
-    if (gst_debug_apply_entry (cat, entry))
-      goto exit;
+  for (walk = __level_name; walk != NULL; walk = walk->next) {
+    if (gst_debug_apply_entry (cat, walk->data))
+      break;
   }
-  gst_debug_category_set_threshold (cat, gst_debug_get_default_threshold ());
 
-exit:
   g_mutex_unlock (&__level_name_mutex);
+
+  if (walk == NULL)
+    gst_debug_category_set_threshold (cat, gst_debug_get_default_threshold ());
 }
 
 static void
