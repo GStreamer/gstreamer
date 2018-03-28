@@ -120,7 +120,7 @@ gst_rpi_cam_src_device_new (void)
   s = gst_structure_new ("video/x-h264",
       "width", GST_TYPE_INT_RANGE, 1, 1920,
       "height", GST_TYPE_INT_RANGE, 1, 1080,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 90, 1,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, RPICAMSRC_MAX_FPS, 1,
       "stream-format", G_TYPE_STRING, "byte-stream",
       "alignment", G_TYPE_STRING, "au",
       NULL);

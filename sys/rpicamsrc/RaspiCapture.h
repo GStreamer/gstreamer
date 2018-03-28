@@ -54,6 +54,8 @@
 #include "RaspiCamControl.h"
 #include "RaspiPreview.h"
 
+#define RPICAMSRC_MAX_FPS 1000
+
 GST_DEBUG_CATEGORY_EXTERN (gst_rpi_cam_src_debug);
 #define GST_CAT_DEFAULT gst_rpi_cam_src_debug
 

@@ -1285,12 +1285,12 @@ gst_rpi_cam_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
     if (gst_structure_has_name (s, "video/x-h264")) {
        gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 1920, "height",
            GST_TYPE_INT_RANGE, 1, 1080, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-           90, 1, NULL);
+           RPICAMSRC_MAX_FPS, 1, NULL);
     }
     else {
        gst_caps_set_simple (caps, "width", GST_TYPE_INT_RANGE, 1, 3240, "height",
            GST_TYPE_INT_RANGE, 1, 2464, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-           90, 1, NULL);
+           RPICAMSRC_MAX_FPS, 1, NULL);
     }
   }
 done:
