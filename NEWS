@@ -1,19 +1,13 @@
 # GStreamer 1.12 Release Notes
 
 GStreamer 1.12.0 was originally released on 4th May 2017.
-The latest bug-fix release in the 1.12 series is [1.12.4](#1.12.4) and was
-released on 7 December 2017.
-
-The GStreamer team is proud to announce a new major feature release in the
-stable 1.x API series of your favourite cross-platform multimedia framework!
-
-As always, this release is again packed with new features, bug fixes and other
-improvements.
+The latest bug-fix release in the 1.12 series is [1.12.5](#1.12.5) and was
+released on 28 March 2018.
 
 See [https://gstreamer.freedesktop.org/releases/1.12/][latest] for the latest
 version of this document.
 
-*Last updated: Thursday 7 December 2017, 16:30 UTC [(log)][gitlog]*
+*Last updated: Wednesday 28 March 2018, 10:00 UTC [(log)][gitlog]*
 
 [latest]: https://gstreamer.freedesktop.org/releases/1.12/
 [gitlog]: https://cgit.freedesktop.org/gstreamer/www/log/src/htdocs/releases/1.12/release-notes-1.12.md
@@ -810,6 +804,8 @@ GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.12.3]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=248880&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.3
 
+<a name="1.12.4"></a>
+
 ### 1.12.4
 
 The fourth 1.12 bug-fix release (1.12.4) was released on 7 December 2017.
@@ -842,6 +838,54 @@ GIT logs or ChangeLogs of the particular modules.
 
 [buglist-1.12.4]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=270310&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.4
 
+<a name="1.12.5"></a>
+
+### 1.12.5
+
+The fifth (and likely last) 1.12 bug-fix release (1.12.5) was released on
+28 March 2018. This release only contains bugfixes and it should be safe to
+update from 1.12.x.
+
+The 1.12 series has now been superseded by the 1.14 stable release series,
+and users should upgrade at their earliest convenience.
+
+#### Bugs fixed in 1.12.5
+
+ - pad: fix some stream deactivation deadlocks/races
+ - registrychunks: don't read from unaligned memory when loading registry
+ - ptp: fix build failure with #undef USE_MEASUREMENT_FILTERING
+ - downloadbuffer: Don't hold the mutex while posting the download-complete message
+ - playbin3: Fix accessing invalid index in GstStream when received select-stream event
+ - id3v2: re-fix handling of ID3 v2.4 tags with extended headers
+ - audio: fix handling of U32BE format
+ - videodecoder: Reset QoS time after pushing segment. This fixes playbin gapless playback with videos.
+ - subparse: push out of last chunk of text if last line has no newline
+ - aacparse: When parsing raw input, accept frames of any size. This fixes handling of encoded silence.
+ - splitmuxsrc: Improve not-linked handling.
+ - rtspsrc: also proxy multicast-iface property to RTCP udpsrc
+ - flacdec: flush flac decoder on lost sync, so that it can re-sync.
+ - matroskamux: Only mark new clusters as keyframe if they start on a keyframe or we're muxing only audio
+ - matroskamux: Clip maximum cluster duration to the maximum possible value
+ - h264parse: reset internal 'state' variable properly
+ - x264enc: fix build with newer x264 with support for multiple bit depths
+ - x265enc: Fix tagging of keyframes on output buffers
+ - glimagesink: Correct PAR in output caps when transforming
+ - vtdec: destroy and create the GL context on start()/stop(), fixing a refcount loop
+ - player: fix criticals when reading info/track properties that are NULL
+ - lv2: fix inverted boolean properties
+ - rtponviftimestamp: fix state change function init/reset, fixing memory corruption or leaks on shutdown
+ - libav: some build issues fixes
+ - rtsp-server: Place netaddress meta on packets received via TCP. Fixes keep-alive via RTCP in TCP interleaved mode.
+ - rtsp-server: gi annotation fixes
+ - Various fixes for memory leaks, deadlocks and crashes in all modules
+ - ... and many, many more!
+
+For a full list of bugfixes see [Bugzilla][buglist-1.12.5]. Note that this is
+not the full list of changes. For the full list of changes please refer to the
+GIT logs or ChangeLogs of the particular modules.
+
+[buglist-1.12.5]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=270310&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.12.5
+
 ## Known Issues
 
 - The `webrtcdsp` element is currently not shipped as part of the Windows
@@ -851,17 +895,13 @@ GIT logs or ChangeLogs of the particular modules.
 
 ## Schedule for 1.14
 
-Our next major feature release will be 1.14, and 1.13 will be the unstable
-development version leading up to the stable 1.14 release. The development
-of 1.13/1.14 will happen in the git master branch.
+[GStreamer 1.14.0][release-1.14] was released on 19 March 2018 and supersedes
+the 1.12.x series.
 
-The plan for the 1.14 development cycle is yet to be confirmed, but it is
-expected that feature freeze will be around early December 2017
-followed by several 1.13 pre-releases and the new 1.14 stable release
-in late December or some time in January.
-
-1.14 will be backwards-compatible to the stable 1.12, 1.10, 1.8, 1.6, 1.4,
+It is backwards-compatible to the stable 1.12, 1.10, 1.8, 1.6, 1.4,
 1.2 and 1.0 release series.
+
+[release-1.14]: https://gstreamer.freedesktop.org/releases/1.14/
 
 - - -
 
