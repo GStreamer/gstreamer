@@ -1,0 +1,13 @@
+<plugin>
+  <name>coretracers</name>
+  <description>GStreamer core tracers</description>
+  <filename>../../plugins/tracers/.libs/libgstcoretracers.so</filename>
+  <basename>libgstcoretracers.so</basename>
+  <version>1.12.5</version>
+  <license>LGPL</license>
+  <source>gstreamer</source>
+  <package>GStreamer source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+  </elements>
+</plugin>
