@@ -1,0 +1,28 @@
+<plugin>
+  <name>dfbvideosink</name>
+  <description>DirectFB video output plugin</description>
+  <filename>../../ext/directfb/.libs/libgstdfbvideosink.so</filename>
+  <basename>libgstdfbvideosink.so</basename>
+  <version>1.12.5</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dfbvideosink</name>
+      <longname>DirectFB video sink</longname>
+      <class>Sink/Video</class>
+      <description>A DirectFB based videosink</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

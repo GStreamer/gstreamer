@@ -148,8 +148,6 @@ GObject
               ladspa-sine-so-sine-fcaa
             GstOFA
             GstStereo
-            GstWebrtcDsp
-            GstWebrtcEchoProbe
           GstAudioMixMatrix
           GstBayer2RGB
           GstDebugSpy
@@ -316,9 +314,7 @@ GObject
         GstMXFDemux
         GstMidiParse
         GstModPlug
-        GstMpeg2enc
         GstMpegPSDemux
-        GstMplex
         GstMusepackDec
         GstNetSim
         GstPcapParse
@@ -327,7 +323,6 @@ GObject
           GstRtpAsfPay
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
-        GstSFDec
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
