@@ -1,80 +1,65 @@
+This is GStreamer gst-plugins-bad 1.12.5.
 
-Release notes for GStreamer Bad Plugins 1.12.4
-
-The GStreamer team is proud to announce the fourth bugfix release in the stable
+The GStreamer team is pleased to announce the fifth bugfix release in the stable
 1.12 release series of your favourite cross-platform multimedia framework!
 
-
 This release only contains bugfixes and it is safe to update from 1.12.x. For a
-full list of bugfixes see Bugzilla.
+full list of bugfixes see Bugzilla and the release notes.
 
+The 1.12 stable series is now superseded by the 1.14 stable series, and 1.12.5
+will likely be the last bugfix release in the 1.12 series.
 
-See /releases/1.12/ for the full release notes.
+Full release notes can be found at:
 
+  https://gstreamer.freedesktop.org/releases/1.12/#1.12.5
 
-"That an accusation?"
+Binaries for Android, iOS, Mac OS X and Windows will be provided shortly
+after the release.
 
+This module will not be very useful by itself and should be used in conjunction
+with other GStreamer modules for a complete multimedia experience.
 
-No perfectly groomed moustache or any amount of fine clothing is going to
-cover up the truth - these plugins are Bad with a capital B.
-They look fine on the outside, and might even appear to get the job done, but
-at the end of the day they're a black sheep. Without a golden-haired angel
-to watch over them, they'll probably land in an unmarked grave at the final
-showdown.
+ - gstreamer: provides the core GStreamer libraries and some generic plugins
 
+ - gst-plugins-base: a basic set of well-supported plugins and additional
+                     media-specific GStreamer helper libraries for audio,
+                     video, rtsp, rtp, tags, OpenGL, etc.
 
-Don't bug us about their quality - exercise your Free Software rights,
-patch up the offender and send us the patch on the fastest steed you can
-steal from the Confederates. Because you see, in this world, there's two
-kinds of people, my friend: those with loaded guns and those who dig.
-You dig.
+ - gst-plugins-good: a set of well-supported plugins under our preferred
+                     license
 
+ - gst-plugins-ugly: a set of well-supported plugins which might pose
+                     problems for distributors
 
-This module contains a set of plugins that aren't up to par compared to the
-rest.  They might be close to being good quality, but they're missing something
-- be it a good code review, some documentation, a set of tests, a real live
-maintainer, or some actual wide use.  If the blanks are filled in they might be
-upgraded to become part of either gst-plugins-good or gst-plugins-ugly,
-depending on the other factors.
-If the plugins break, you can't complain - instead, you can fix the
-problem and send us a patch, or bribe someone into fixing them for you.
-New contributors can start here for things to work on.
+ - gst-plugins-bad: a set of plugins of varying quality that have not made
+                    their way into one of core/base/good/ugly yet, for one
+                    reason or another. Many of these are are production quality
+                    elements, but may still be missing documentation or unit
+                    tests; others haven't passed the rigorous quality testing
+                    we expect yet.
 
+ - gst-libav: a set of codecs plugins based on the ffmpeg library. This is
+                    where you can find audio and video decoders and encoders
+                    for a wide variety of formats including H.264, AAC, etc.
 
-Other modules containing plugins are:
+ - gstreamer-vaapi: hardware-accelerated video decoding and encoding using
+                    VA-API on Linux. Primarily for Intel graphics hardware.
 
+ - gst-omx: hardware-accelerated video decoding and encoding, primarily for
+                    embedded Linux systems that provide an OpenMax
+                    implementation layer such as the Raspberry Pi.
 
-gst-plugins-base
-contains a basic set of well-supported plugins
-gst-plugins-good
-contains a set of well-supported plugins under our preferred license
-gst-plugins-ugly
-contains a set of well-supported plugins, but might pose problems for
-    distributors
-gst-libav
-contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
+ - gst-rtsp-server: library to serve files or streaming pipelines via RTSP
 
-
-
-  
-
-Bugs fixed in this release
-     
-      * 784593 : aggregator: Invalidate pad's tail position ...
-      * 787293 : glimagesink: met segment fault when exit app on wayland
-      * 787942 : ttmlparse: Doesn't implement default showBackground behaviour
-      * 789999 : hlsdemux: Fix memory leak caused by double buffer map
-      * 790042 : waylandsink:  memory leak of shm allocator
-      * 790812 : dashdemux: Segmentation fault coredump issue with xlink external AdaptationSet
-      * 791258 : amcvideoenc: when flushing, better handle IllegalStateException received from getOutputBuffer
+ - gst-editing-services: library an plugins for non-linear editing
 
 ==== Download ====
 
-You can find source releases of gst-plugins-bad in the download
-directory: https://gstreamer.freedesktop.org/src/gst-plugins-bad/
+You can find source releases of gstreamer in the download
+directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
-http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/
+https://cgit.freedesktop.org/gstreamer/gstreamer/
 
 ==== Homepage ====
 
@@ -83,7 +68,7 @@ The project's website is https://gstreamer.freedesktop.org/
 ==== Support and Bugs ====
 
 We use GNOME's bugzilla for bug reports and feature requests:
-http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
 Please submit patches via bugzilla as well.
 
@@ -99,20 +84,3 @@ from there (see link above).
 
 Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
-
-        
-Contributors to this release
-    
-      * Chris Bass
-      * Edward Hervey
-      * Jan Alexander Steffens (heftig)
-      * Jun Xie
-      * Mathieu Duponchelle
-      * Matthew Waters
-      * Ponnam Srinivas
-      * Sebastian Dröge
-      * Shinya Saito
-      * Thiago Santos
-      * Ursula Maplehurst
-      * Vivia Nikolaidou
- 
