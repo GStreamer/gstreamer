@@ -1,9 +1,36 @@
+=== release 1.12.5 ===
+
+2018-03-28 14:35:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.12.5
+
+2017-06-29 23:17:26 +0100  Julien Isorce <jisorce@oblong.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix buffer leak when eglimage setup fails
+	  Can happen if gst_buffer_pool_acquire_buffer succeeds but
+	  gst_buffer_n_memory (buffer) is not exactly 1.
+	  In theory this should not happen because the decoder requests
+	  EGLImage(RGBA) but better to fix any leak on corner cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=784365
+
 === release 1.12.4 ===
 
-2017-12-07  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07 20:23:01 +0200  Sebastian Dröge <sebastian@centricular.com>
 
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
 	* configure.ac:
-	  releasing 1.12.4
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.12.4
 
 === release 1.12.3 ===
 
