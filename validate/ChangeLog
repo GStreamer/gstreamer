@@ -1,9 +1,51 @@
+=== release 1.12.5 ===
+
+2018-03-28 14:33:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.12.5
+
+2017-07-18 15:38:04 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	  validate-utils: Add NULL check
+	  Unlikely to be triggered. And fix typo at the same time
+	  CID #1415464
+
+2017-05-05 14:57:20 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate-report: Don't leak GError
+
+2017-05-05 14:57:56 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Don't end up with invalid action name
+	  When replacing an action structure, also update the action name with
+	  the (new) name from the new structure. Otherwise we end up with
+	  a bogus name from the previous (deleted) structure.
+
+2017-05-03 17:57:05 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Avoid invalid memory access
+	  The name of the action comes directly (i.e. not copied) from the
+	  contained GstStructure field. Therefore make sure to take that
+	  name from the proper structure field (copied just before) and
+	  not from an outside one.
+
 === release 1.12.4 ===
 
-2017-12-07  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07 20:22:48 +0200  Sebastian Dröge <sebastian@centricular.com>
 
-	* configure.ac:
-	  releasing 1.12.4
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.12.4
 
 === release 1.12.3 ===
 
