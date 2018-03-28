@@ -1,9 +1,136 @@
+=== release 1.12.5 ===
+
+2018-03-28 14:23:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.12.5
+
+2018-03-28 14:23:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2018-02-28 10:07:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix build with newer x264 with support for multiple bit depths
+	  libx264 used to be built for one specific bit depth, and if we
+	  wanted to support multiple bit depths we would have to dynamically
+	  load the right .so from different paths. That has changed now, and
+	  libx264 can include support for multiple depths in the same lib,
+	  so we don't need to do the dlopen() dance any more. We'll keep
+	  the vtable stuff around until we can drop support for older x264.
+	  gstx264enc.c:2927:36: error: ‘x264_bit_depth’ undeclared
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792111
+
+2018-01-03 16:02:08 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/amrnb/amrnbdec.c:
+	  amrnbdec: Don't use g_return_*_if_fail() on data parsing
+	  Those functions can be disabled. Instead just use the (existing)
+	  function.
+	  CID #1427121
+
+2018-01-03 16:02:08 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/amrwbdec/amrwbdec.c:
+	  amrwbdec: Don't use g_return_*_if_fail() on data parsing
+	  Those functions can be disabled. Instead just use the (existing)
+	  function.
+	  CID #1427093
+
 === release 1.12.4 ===
 
-2017-12-07  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07 20:22:27 +0200  Sebastian Dröge <sebastian@centricular.com>
 
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
 	* configure.ac:
-	  releasing 1.12.4
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.12.4
+
+2017-12-07 19:27:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2017-12-07 19:08:11 +0200  Sebastian Dröge <sebastian@centricular.com>
 
