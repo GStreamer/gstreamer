@@ -28,7 +28,17 @@ GStreamer Python Bindings is a set of overrides and Gst fundamental types handli
      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-python"/>
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-python"/>
    </GitRepository>
- </repository> 
+ </repository>
+
+ <release>
+  <Version>
+   <revision>1.12.5</revision>
+   <branch>1.12</branch>
+   <name></name>
+   <created>2018-03-28</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-python/gst-python-1.12.5.tar.xz" />
+  </Version>
+ </release>
 
  <release>
   <Version>
