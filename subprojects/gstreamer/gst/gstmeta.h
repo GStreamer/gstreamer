@@ -87,10 +87,20 @@ typedef enum {
  * GST_META_TAG_MEMORY_STR:
  *
  * This metadata stays relevant as long as memory layout is unchanged.
+ * In hindsight, this tag should have been called "memory-layout".
  *
  * Since: 1.2
  */
 #define GST_META_TAG_MEMORY_STR "memory"
+
+/**
+ * GST_META_TAG_MEMORY_REFERENCE_STR:
+ *
+ * This metadata stays relevant until a deep copy is made.
+ *
+ * Since: 1.20.4
+ */
+#define GST_META_TAG_MEMORY_REFERENCE_STR "memory-reference"
 
 /**
  * GstMeta:
@@ -282,6 +292,7 @@ gint                 gst_meta_compare_seqnum    (const GstMeta * meta1,
 /* some default tags */
 
 GST_API GQuark _gst_meta_tag_memory;
+GST_API GQuark _gst_meta_tag_memory_reference;
 
 /**
  * GST_META_TAG_MEMORY:
