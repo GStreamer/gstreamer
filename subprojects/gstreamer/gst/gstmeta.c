@@ -57,6 +57,7 @@ static GRWLock lock;
 
 GQuark _gst_meta_transform_copy;
 GQuark _gst_meta_tag_memory;
+GQuark _gst_meta_tag_memory_reference;
 
 typedef struct
 {
@@ -88,6 +89,8 @@ _priv_gst_meta_initialize (void)
 
   _gst_meta_transform_copy = g_quark_from_static_string ("gst-copy");
   _gst_meta_tag_memory = g_quark_from_static_string ("memory");
+  _gst_meta_tag_memory_reference =
+      g_quark_from_static_string ("memory-reference");
 }
 
 static gboolean

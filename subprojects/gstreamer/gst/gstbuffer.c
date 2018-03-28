@@ -130,6 +130,7 @@
 #include "gstbuffer.h"
 #include "gstbufferpool.h"
 #include "gstinfo.h"
+#include "gstmeta.h"
 #include "gstutils.h"
 #include "gstversion.h"
 
@@ -666,6 +667,10 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   }
 
   if (flags & GST_BUFFER_COPY_META) {
+    gboolean deep;
+
+    deep = (flags & GST_BUFFER_COPY_DEEP) != 0;
+
     /* NOTE: GstGLSyncMeta copying relies on the meta
      *       being copied now, after the buffer data,
      *       so this has to happen last */
@@ -683,6 +688,10 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         GST_CAT_DEBUG (GST_CAT_BUFFER,
             "don't copy memory meta %p of API type %s", meta,
             g_type_name (info->api));
+      } else if (deep && gst_meta_api_type_has_tag (info->api,
+              _gst_meta_tag_memory_reference)) {
+        GST_CAT_DEBUG (GST_CAT_BUFFER,
+            "don't copy meta with memory references %" GST_PTR_FORMAT, meta);
       } else if (info->transform_func) {
         GstMetaTransformCopy copy_data;
 
@@ -2672,7 +2681,7 @@ GType
 gst_parent_buffer_meta_api_get_type (void)
 {
   static GType type = 0;
-  static const gchar *tags[] = { NULL };
+  static const gchar *tags[] = { GST_META_TAG_MEMORY_REFERENCE_STR, NULL };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstParentBufferMetaAPI", tags);
