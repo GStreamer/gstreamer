@@ -1,9 +1,93 @@
+=== release 1.12.5 ===
+
+2018-03-28 14:34:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.12.5
+
+2018-03-28 14:34:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2018-03-12 16:59:01 +0000  Julien Isorce <jisorce@oblong.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h264.c:
+	  libs: decoder: h264: ensure num_ref_frames is greater than 0
+	  Even if it is the h264parse fault or bad video file, vaapih264dec
+	  should set a proper value for VAPictureParameterBufferH264.num_ref_frames
+	  as the driver might use it.
+	  Also see "info.ref_frames = dpb_size;" in
+	  gstvaapidecoder_h264.c::ensure_context
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793836
+
+2018-03-01 17:44:07 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapivideobufferpool: fix regression
+	  The allocator in the config may be not VAAPI (videotestsrc, for
+	  example) and it will not have a video info configuration.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789476
+
+2018-02-20 09:15:05 -0600  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: set discont flag at vpp deinterlacing
+	  When deinterlacing with VPP the discont flag was not forwarded to
+	  the new created buffer. This patch sets the discont flag if input
+	  buffer has it.
+
+2018-02-08 11:33:26 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: handle vaapi allocator in allocation query
+	  In propose_allocation() if the numer of allocation params is zero, the
+	  system's allocator is added first, and lastly the native VA-API
+	  allocator.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789476
+
+2018-02-07 09:06:46 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideomemory.h:
+	  vaapivideomemory: remove unused macro
+	  GST_VAAPI_VIDEO_ALLOCATOR_NAME was added in commit 5b11b8332 but it
+	  was never used, since the native VA-API allocator name has been
+	  GST_VAAPI_VIDEO_MEMORY_NAME.
+	  This patch removes GST_VAAPI_VIDEO_ALLOCATOR_NAME macro.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789476
+
+2018-01-30 12:56:49 +0000  Philippe Normand <philn@igalia.com>
+
+	* gst/vaapi/gstvaapi.c:
+	  vaapi: add NULL-sentinel to kernel_names
+	  The array needs to be NULL-terminated according to the
+	  gst_plugin_add_dependency() documentation.
+
+2017-12-08 14:46:02 +0100  Michael Tretter <m.tretter@pengutronix.de>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: lock ensure_filter with postproc_lock
+	  gst_vaapipostproc_ensure_filter might free the allowed_srcpad_caps
+	  and allowed_sinkpad_caps. This can race with copying these caps in
+	  gst_vaapipostproc_transform_caps and lead to segfaults.
+	  The gst_vaapipostproc_transform_caps function already locks
+	  postproc_lock before copying the caps. Make sure that calls to
+	  gst_vaapipostproc_ensure_filter also acquire this lock.
+
 === release 1.12.4 ===
 
-2017-12-07  Sebastian Dröge <slomo@coaxion.net>
+2017-12-07 20:23:08 +0200  Sebastian Dröge <sebastian@centricular.com>
 
+	* ChangeLog:
+	* NEWS:
 	* configure.ac:
-	  releasing 1.12.4
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.12.4
 
 2017-08-25 16:22:59 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
 
