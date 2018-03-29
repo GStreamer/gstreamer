@@ -303,6 +303,9 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
     encoder->param.mfx.GopRefDist = 0;
   }
 
+  /* Enable Extended coding options */
+  gst_msdkenc_ensure_extended_coding_options (encoder);
+
   return TRUE;
 }
 

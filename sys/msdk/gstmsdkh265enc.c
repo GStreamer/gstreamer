@@ -98,6 +98,9 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
    * "i-frames" by incrementing the value by one in each case*/
   encoder->param.mfx.IdrInterval += 1;
 
+  /* Enable Extended coding options */
+  gst_msdkenc_ensure_extended_coding_options (encoder);
+
   return TRUE;
 }
 

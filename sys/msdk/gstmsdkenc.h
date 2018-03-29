@@ -184,6 +184,8 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
 gboolean
 gst_msdkenc_get_common_property (GObject * object, guint prop_id,
                                  GValue * value, GParamSpec * pspec);
+void
+gst_msdkenc_ensure_extended_coding_options (GstMsdkEnc * thiz);
 
 G_END_DECLS
 
