@@ -3909,9 +3909,6 @@ gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
       goto create_request_failed;
     }
 
-    /* select transport */
-    gst_rtsp_message_take_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
-
     /* set up keys */
     if (cur_profile == GST_RTSP_PROFILE_SAVP ||
         cur_profile == GST_RTSP_PROFILE_SAVPF) {
@@ -3951,6 +3948,25 @@ gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
       gst_rtsp_transport_free (transport);
       gst_rtsp_stream_set_blocked (stream, FALSE);
     }
+
+    /* FIXME:
+     * the creation of the transports string depends on
+     * calling stream_get_server_port, which only starts returning
+     * something meaningful after a call to stream_allocate_udp_sockets
+     * has been made, this function expects a transport that we parse
+     * from the transport string ...
+     *
+     * Significant refactoring is in order, but does not look entirely
+     * trivial, for now we put a band aid on and create a second transport
+     * string after the stream has been completed, to pass it in
+     * the request headers instead of the previous, incomplete one.
+     */
+    g_free (transports);
+    res = gst_rtsp_client_sink_create_transports_string (sink, context, family,
+        protocols & protocol_masks[mask], cur_profile, &transports);
+
+    /* select transport */
+    gst_rtsp_message_take_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
 
     /* handle the code ourselves */
     res = gst_rtsp_client_sink_send (sink, info, &request, &response, &code);
