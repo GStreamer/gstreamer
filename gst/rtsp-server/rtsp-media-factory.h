@@ -199,6 +199,13 @@ GST_RTSP_SERVER_API
 GstClockTime          gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory);
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_media_factory_set_do_retransmission (GstRTSPMediaFactory * factory,
+                                                                    gboolean do_retransmission);
+
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_factory_get_do_retransmission (GstRTSPMediaFactory * factory);
+
+GST_RTSP_SERVER_API
 void                  gst_rtsp_media_factory_set_latency      (GstRTSPMediaFactory * factory,
                                                                guint                 latency);
 

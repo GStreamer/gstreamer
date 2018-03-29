@@ -65,6 +65,7 @@ struct _GstRTSPMediaFactoryPrivate
 
   GstClockTime rtx_time;
   guint latency;
+  gboolean do_retransmission;
 
   GMutex medias_lock;
   GHashTable *medias;           /* protected by medias_lock */
@@ -87,6 +88,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_LATENCY         200
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
+#define DEFAULT_DO_RETRANSMISSION FALSE
 
 enum
 {
@@ -264,6 +266,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
+  priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -1086,6 +1089,55 @@ gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory)
 }
 
 /**
+ * gst_rtsp_media_factory_set_do_retransmission:
+ *
+ * Set whether retransmission requests will be sent for
+ * receiving media
+ *
+ * Since: 1.16
+ */
+void
+gst_rtsp_media_factory_set_do_retransmission (GstRTSPMediaFactory * factory,
+                                              gboolean do_retransmission)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_DEBUG_OBJECT (factory, "Do retransmission %d", do_retransmission);
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->do_retransmission = do_retransmission;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_do_retransmission:
+ *
+ * Returns: Whether retransmission requests will be sent for receiving media
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtsp_media_factory_get_do_retransmission (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), 0);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  res = priv->do_retransmission;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return res;
+}
+
+/**
  * gst_rtsp_media_factory_set_latency:
  * @factory: a #GstRTSPMediaFactory
  * @latency: latency in milliseconds
@@ -1584,6 +1636,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_profiles (media, profiles);
   gst_rtsp_media_set_protocols (media, protocols);
   gst_rtsp_media_set_retransmission_time (media, rtx_time);
+  gst_rtsp_media_set_do_retransmission (media, priv->do_retransmission);
   gst_rtsp_media_set_latency (media, latency);
   gst_rtsp_media_set_transport_mode (media, transport_mode);
   gst_rtsp_media_set_stop_on_disconnect (media, stop_on_disconnect);

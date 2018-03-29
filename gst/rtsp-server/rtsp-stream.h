@@ -280,6 +280,9 @@ GST_RTSP_SERVER_API
 GstElement *      gst_rtsp_stream_request_aux_sender         (GstRTSPStream * stream, guint sessid);
 
 GST_RTSP_SERVER_API
+GstElement *      gst_rtsp_stream_request_aux_receiver       (GstRTSPStream * stream, guint sessid);
+
+GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_allocate_udp_sockets       (GstRTSPStream * stream, GSocketFamily family,
                                                               GstRTSPTransport *transport, gboolean use_client_settings);
 

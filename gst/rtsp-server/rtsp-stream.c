@@ -124,6 +124,7 @@ struct _GstRTSPStreamPrivate
 
   /* retransmission */
   GstElement *rtxsend;
+  GstElement *rtxreceive;
   guint rtx_pt;
   GstClockTime rtx_time;
 
@@ -298,6 +299,8 @@ gst_rtsp_stream_finalize (GObject * obj)
     g_object_unref (priv->pool);
   if (priv->rtxsend)
     g_object_unref (priv->rtxsend);
+  if (priv->rtxreceive)
+    g_object_unref (priv->rtxreceive);
 
   for (i = 0; i < 2; i++) {
     if (priv->socket_v4[i])
@@ -2328,6 +2331,81 @@ gst_rtsp_stream_request_aux_sender (GstRTSPStream * stream, guint sessid)
   return bin;
 }
 
+static void
+add_rtx_pt (gpointer key, GstCaps *caps, GstStructure *pt_map)
+{
+  guint pt = GPOINTER_TO_INT (key);
+  const GstStructure *s = gst_caps_get_structure (caps, 0);
+  const gchar *apt;
+
+  if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "RTX") &&
+      (apt = gst_structure_get_string (s, "apt"))) {
+    gst_structure_set (pt_map, apt, G_TYPE_UINT, pt, NULL);
+  }
+}
+
+/* Call with priv->lock taken */
+static void
+update_rtx_receive_pt_map (GstRTSPStream * stream)
+{
+  GstStructure *pt_map;
+
+  if (!stream->priv->rtxreceive)
+    goto done;
+
+  pt_map = gst_structure_new_empty ("application/x-rtp-pt-map");
+  g_hash_table_foreach (stream->priv->ptmap, (GHFunc) add_rtx_pt, pt_map);
+  g_object_set (stream->priv->rtxreceive, "payload-type-map", pt_map, NULL);
+  gst_structure_free (pt_map);
+
+done:
+  return;
+}
+
+/**
+ * gst_rtsp_stream_request_aux_receiver:
+ * @stream: a #GstRTSPStream
+ * @sessid: the session id
+ *
+ * Creating a rtxreceive bin
+ *
+ * Returns: (transfer full) (nullable): a #GstElement.
+ *
+ * Since: 1.16
+ */
+GstElement *
+gst_rtsp_stream_request_aux_receiver (GstRTSPStream * stream, guint sessid)
+{
+  GstElement *bin;
+  GstPad *pad;
+  gchar *name;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  g_mutex_lock (&stream->priv->lock);
+
+  bin = gst_bin_new (NULL);
+  stream->priv->rtxreceive = gst_element_factory_make ("rtprtxreceive", NULL);
+  update_rtx_receive_pt_map (stream);
+  gst_bin_add (GST_BIN (bin), gst_object_ref (stream->priv->rtxreceive));
+
+  pad = gst_element_get_static_pad (stream->priv->rtxreceive, "src");
+  name = g_strdup_printf ("src_%u", sessid);
+  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (stream->priv->rtxreceive, "sink");
+  name = g_strdup_printf ("sink_%u", sessid);
+  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
+  g_free (name);
+  gst_object_unref (pad);
+
+  g_mutex_unlock (&stream->priv->lock);
+
+  return bin;
+}
+
 /**
  * gst_rtsp_stream_set_pt_map:
  * @stream: a #GstRTSPStream
@@ -2346,6 +2424,7 @@ gst_rtsp_stream_set_pt_map (GstRTSPStream * stream, guint pt, GstCaps * caps)
 
   g_mutex_lock (&priv->lock);
   g_hash_table_insert (priv->ptmap, GINT_TO_POINTER (pt), gst_caps_ref (caps));
+  update_rtx_receive_pt_map (stream);
   g_mutex_unlock (&priv->lock);
 }
 

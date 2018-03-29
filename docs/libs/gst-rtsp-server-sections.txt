@@ -178,6 +178,9 @@ gst_rtsp_media_get_buffer_size
 gst_rtsp_media_set_retransmission_time
 gst_rtsp_media_get_retransmission_time
 
+gst_rtsp_media_set_do_retransmission
+gst_rtsp_media_get_do_retransmission
+
 gst_rtsp_media_set_latency
 gst_rtsp_media_get_latency
 
@@ -276,6 +279,9 @@ gst_rtsp_media_factory_set_suspend_mode
 
 gst_rtsp_media_factory_set_retransmission_time
 gst_rtsp_media_factory_get_retransmission_time
+
+gst_rtsp_media_factory_set_do_retransmission
+gst_rtsp_media_factory_get_do_retransmission
 
 gst_rtsp_media_factory_set_latency
 gst_rtsp_media_factory_get_latency
@@ -617,6 +623,7 @@ gst_rtsp_stream_update_crypto
 
 gst_rtsp_stream_set_pt_map
 gst_rtsp_stream_request_aux_sender
+gst_rtsp_stream_request_aux_receiver
 
 gst_rtsp_stream_seekable
 

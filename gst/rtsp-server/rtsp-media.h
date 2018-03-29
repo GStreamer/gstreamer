@@ -282,6 +282,13 @@ GST_RTSP_SERVER_API
 GstClockTime          gst_rtsp_media_get_retransmission_time  (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_media_set_do_retransmission (GstRTSPMedia * media,
+                                                            gboolean do_retransmission);
+
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_get_do_retransmission (GstRTSPMedia * media);
+
+GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_latency      (GstRTSPMedia *media, guint latency);
 
 GST_RTSP_SERVER_API

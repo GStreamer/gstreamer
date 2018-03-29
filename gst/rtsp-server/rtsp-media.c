@@ -139,6 +139,7 @@ struct _GstRTSPMediaPrivate
 
   GList *payloads;              /* protected by lock */
   GstClockTime rtx_time;        /* protected by lock */
+  gboolean do_retransmission;   /* protected by lock */
   guint latency;                /* protected by lock */
   GstClock *clock;              /* protected by lock */
   GstRTSPPublishClockMode publish_clock_mode;
@@ -160,6 +161,8 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_LATENCY         200
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
+
+#define DEFAULT_DO_RETRANSMISSION FALSE
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -444,6 +447,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
+  priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
 }
 
 static void
@@ -1408,9 +1412,6 @@ gst_rtsp_media_set_retransmission_time (GstRTSPMedia * media, GstClockTime time)
 
     gst_rtsp_stream_set_retransmission_time (stream, time);
   }
-
-  if (priv->rtpbin)
-    g_object_set (priv->rtpbin, "do-retransmission", time > 0, NULL);
   g_mutex_unlock (&priv->lock);
 }
 
@@ -1434,6 +1435,54 @@ gst_rtsp_media_get_retransmission_time (GstRTSPMedia * media)
 
   g_mutex_lock (&priv->lock);
   res = priv->rtx_time;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_media_set_do_retransmission:
+ *
+ * Set whether retransmission requests will be sent
+ *
+ * Since: 1.16
+ */
+void
+gst_rtsp_media_set_do_retransmission (GstRTSPMedia * media, gboolean do_retransmission)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->do_retransmission = do_retransmission;
+
+  if (priv->rtpbin)
+    g_object_set (priv->rtpbin, "do-retransmission", do_retransmission, NULL);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_do_retransmission:
+ *
+ * Returns: Whether retransmission requests will be sent
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtsp_media_get_do_retransmission (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), 0);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->do_retransmission;
   g_mutex_unlock (&priv->lock);
 
   return res;
@@ -2997,6 +3046,7 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
   GstRTSPMediaPrivate *priv = media->priv;
   GstRTSPStream *stream = NULL;
   guint i;
+  GstElement *res = NULL;
 
   g_mutex_lock (&priv->lock);
   for (i = 0; i < priv->streams->len; i++) {
@@ -3004,10 +3054,40 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
 
     if (sessid == gst_rtsp_stream_get_index (stream))
       break;
+
+    stream = NULL;
   }
   g_mutex_unlock (&priv->lock);
 
-  return gst_rtsp_stream_request_aux_sender (stream, sessid);
+  if (stream)
+    res = gst_rtsp_stream_request_aux_sender (stream, sessid);
+
+  return res;
+}
+
+static GstElement *
+request_aux_receiver (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPStream *stream = NULL;
+  guint i;
+  GstElement *res = NULL;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    stream = g_ptr_array_index (priv->streams, i);
+
+    if (sessid == gst_rtsp_stream_get_index (stream))
+      break;
+
+    stream = NULL;
+  }
+  g_mutex_unlock (&priv->lock);
+
+  if (stream)
+    res = gst_rtsp_stream_request_aux_receiver (stream, sessid);
+
+  return res;
 }
 
 static gboolean
@@ -3034,6 +3114,11 @@ start_prepare (GstRTSPMedia * media)
           (GCallback) request_aux_sender, media);
     }
 
+    if (priv->do_retransmission) {
+      g_signal_connect (priv->rtpbin, "request-aux-receiver",
+          (GCallback) request_aux_receiver, media);
+    }
+
     if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
             priv->rtpbin, GST_STATE_NULL)) {
       goto join_bin_failed;
@@ -3041,7 +3126,7 @@ start_prepare (GstRTSPMedia * media)
   }
 
   if (priv->rtpbin)
-    g_object_set (priv->rtpbin, "do-retransmission", priv->rtx_time > 0, NULL);
+    g_object_set (priv->rtpbin, "do-retransmission", priv->do_retransmission, NULL);
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;
