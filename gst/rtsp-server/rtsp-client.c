@@ -2062,6 +2062,73 @@ rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv)
   g_mutex_unlock (&priv->lock);
 }
 
+static gchar *
+stream_make_keymgmt (GstRTSPClient * client, const gchar *location, GstRTSPStream * stream)
+{
+  gchar *base64, *result = NULL;
+  GstMIKEYMessage *mikey_msg;
+  GstCaps *srtcpparams;
+  GstElement *rtcp_encoder;
+  gint srtcp_cipher, srtp_cipher;
+  gint srtcp_auth, srtp_auth;
+  GstBuffer *key;
+  GType ciphertype, authtype;
+  GEnumClass *cipher_enum, *auth_enum;
+  GEnumValue *srtcp_cipher_value, *srtp_cipher_value, *srtcp_auth_value, *srtp_auth_value;
+
+  rtcp_encoder = gst_rtsp_stream_get_srtp_encoder (stream);
+
+  if (!rtcp_encoder)
+    goto done;
+
+  ciphertype = g_type_from_name ("GstSrtpCipherType");
+  authtype = g_type_from_name ("GstSrtpAuthType");
+
+  cipher_enum = g_type_class_ref (ciphertype);
+  auth_enum = g_type_class_ref (authtype);
+
+  /* We need to bring the encoder to READY so that it generates its key */
+  gst_element_set_state (rtcp_encoder, GST_STATE_READY);
+
+  g_object_get (rtcp_encoder, "rtcp-cipher", &srtcp_cipher, "rtcp-auth", &srtcp_auth,
+      "rtp-cipher", &srtp_cipher, "rtp-auth", &srtp_auth, "key", &key, NULL);
+  g_object_unref (rtcp_encoder);
+
+  srtcp_cipher_value = g_enum_get_value (cipher_enum, srtcp_cipher);
+  srtp_cipher_value = g_enum_get_value (cipher_enum, srtp_cipher);
+  srtcp_auth_value = g_enum_get_value (auth_enum, srtcp_auth);
+  srtp_auth_value = g_enum_get_value (auth_enum, srtp_auth);
+
+  g_type_class_unref (cipher_enum);
+  g_type_class_unref (auth_enum);
+
+  srtcpparams = gst_caps_new_simple ("application/x-srtcp",
+      "srtcp-cipher", G_TYPE_STRING, srtcp_cipher_value->value_nick,
+      "srtcp-auth", G_TYPE_STRING, srtcp_auth_value->value_nick,
+      "srtp-cipher", G_TYPE_STRING, srtp_cipher_value->value_nick,
+      "srtp-auth", G_TYPE_STRING, srtp_auth_value->value_nick,
+      "srtp-key", GST_TYPE_BUFFER, key, NULL);
+
+  mikey_msg = gst_mikey_message_new_from_caps (srtcpparams);
+  if (mikey_msg) {
+    guint send_ssrc;
+
+    gst_rtsp_stream_get_ssrc (stream, &send_ssrc);
+    gst_mikey_message_add_cs_srtp (mikey_msg, 0, send_ssrc, 0);
+
+    base64 = gst_mikey_message_base64_encode (mikey_msg);
+    gst_mikey_message_unref (mikey_msg);
+
+    if (base64) {
+      result = gst_sdp_make_keymgmt (location, base64);
+      g_free (base64);
+    }
+  }
+
+done:
+  return result;
+}
+
 static gboolean
 handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
@@ -2718,6 +2785,7 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   guint8 *data;
   guint size;
   GstRTSPStatusCode sig_result;
+  guint i, n_streams;
 
   klass = GST_RTSP_CLIENT_GET_CLASS (client);
 
@@ -2771,12 +2839,25 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!klass->handle_sdp (client, ctx, media, sdp))
     goto unhandled_sdp;
 
+  gst_rtsp_message_init_response (ctx->response, GST_RTSP_STS_OK,
+      gst_rtsp_status_as_text (GST_RTSP_STS_OK), ctx->request);
+
+  n_streams = gst_rtsp_media_n_streams (media);
+  for (i = 0; i < n_streams; i++) {
+    GstRTSPStream *stream = gst_rtsp_media_get_stream (media, i);
+    gchar *location = g_strdup_printf ("rtsp://%s%s:8554/stream=%d", priv->server_ip, path, i);
+    gchar *keymgmt = stream_make_keymgmt (client, location, stream);
+
+    if (keymgmt)
+      gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_KEYMGMT, keymgmt);
+
+    g_free (location);
+    g_free (keymgmt);
+  }
+
   /* we suspend after the announce */
   gst_rtsp_media_suspend (media);
   g_object_unref (media);
-
-  gst_rtsp_message_init_response (ctx->response, GST_RTSP_STS_OK,
-      gst_rtsp_status_as_text (GST_RTSP_STS_OK), ctx->request);
 
   send_message (client, ctx, ctx->response, FALSE);
 
