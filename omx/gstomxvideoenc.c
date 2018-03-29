@@ -739,6 +739,63 @@ set_zynqultrascaleplus_props (GstOMXVideoEnc * self)
 #endif
 
 static gboolean
+gst_omx_video_enc_set_bitrate (GstOMXVideoEnc * self)
+{
+  OMX_ERRORTYPE err;
+  OMX_VIDEO_PARAM_BITRATETYPE bitrate_param;
+  gboolean result = TRUE;
+
+  GST_OBJECT_LOCK (self);
+  if (self->control_rate == 0xffffffff && self->target_bitrate == 0xffffffff)
+    /* Keep defaults, nothing to do */
+    goto out;
+
+  GST_OMX_INIT_STRUCT (&bitrate_param);
+  bitrate_param.nPortIndex = self->enc_out_port->index;
+
+  err = gst_omx_component_get_parameter (self->enc,
+      OMX_IndexParamVideoBitrate, &bitrate_param);
+
+  if (err == OMX_ErrorNone) {
+#ifdef USE_OMX_TARGET_RPI
+    /* FIXME: Workaround for RPi returning garbage for this parameter */
+    if (bitrate_param.nVersion.nVersion == 0) {
+      GST_OMX_INIT_STRUCT (&bitrate_param);
+      bitrate_param.nPortIndex = self->enc_out_port->index;
+    }
+#endif
+    if (self->control_rate != 0xffffffff)
+      bitrate_param.eControlRate = self->control_rate;
+    if (self->target_bitrate != 0xffffffff)
+      bitrate_param.nTargetBitrate = self->target_bitrate;
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        OMX_IndexParamVideoBitrate, &bitrate_param);
+    if (err == OMX_ErrorUnsupportedIndex) {
+      GST_WARNING_OBJECT (self,
+          "Setting a bitrate not supported by the component");
+    } else if (err == OMX_ErrorUnsupportedSetting) {
+      GST_WARNING_OBJECT (self,
+          "Setting bitrate settings %u %u not supported by the component",
+          self->control_rate, self->target_bitrate);
+    } else if (err != OMX_ErrorNone) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set bitrate parameters: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+      result = FALSE;
+    }
+  } else {
+    GST_ERROR_OBJECT (self, "Failed to get bitrate parameters: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+  }
+
+out:
+  GST_OBJECT_UNLOCK (self);
+  return result;
+}
+
+static gboolean
 gst_omx_video_enc_open (GstVideoEncoder * encoder)
 {
   GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (encoder);
@@ -794,52 +851,8 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
   {
     OMX_ERRORTYPE err;
 
-    GST_OBJECT_LOCK (self);
-    if (self->control_rate != 0xffffffff || self->target_bitrate != 0xffffffff) {
-      OMX_VIDEO_PARAM_BITRATETYPE bitrate_param;
-
-      GST_OMX_INIT_STRUCT (&bitrate_param);
-      bitrate_param.nPortIndex = self->enc_out_port->index;
-
-      err = gst_omx_component_get_parameter (self->enc,
-          OMX_IndexParamVideoBitrate, &bitrate_param);
-
-      if (err == OMX_ErrorNone) {
-#ifdef USE_OMX_TARGET_RPI
-        /* FIXME: Workaround for RPi returning garbage for this parameter */
-        if (bitrate_param.nVersion.nVersion == 0) {
-          GST_OMX_INIT_STRUCT (&bitrate_param);
-          bitrate_param.nPortIndex = self->enc_out_port->index;
-        }
-#endif
-        if (self->control_rate != 0xffffffff)
-          bitrate_param.eControlRate = self->control_rate;
-        if (self->target_bitrate != 0xffffffff)
-          bitrate_param.nTargetBitrate = self->target_bitrate;
-
-        err =
-            gst_omx_component_set_parameter (self->enc,
-            OMX_IndexParamVideoBitrate, &bitrate_param);
-        if (err == OMX_ErrorUnsupportedIndex) {
-          GST_WARNING_OBJECT (self,
-              "Setting a bitrate not supported by the component");
-        } else if (err == OMX_ErrorUnsupportedSetting) {
-          GST_WARNING_OBJECT (self,
-              "Setting bitrate settings %u %u not supported by the component",
-              self->control_rate, self->target_bitrate);
-        } else if (err != OMX_ErrorNone) {
-          GST_ERROR_OBJECT (self,
-              "Failed to set bitrate parameters: %s (0x%08x)",
-              gst_omx_error_to_string (err), err);
-          GST_OBJECT_UNLOCK (self);
-          return FALSE;
-        }
-      } else {
-        GST_ERROR_OBJECT (self, "Failed to get bitrate parameters: %s (0x%08x)",
-            gst_omx_error_to_string (err), err);
-      }
-    }
-    GST_OBJECT_UNLOCK (self);
+    if (!gst_omx_video_enc_set_bitrate (self))
+      return FALSE;
 
     if (self->quant_i_frames != 0xffffffff ||
         self->quant_p_frames != 0xffffffff ||
