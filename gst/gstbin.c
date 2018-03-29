@@ -1459,7 +1459,7 @@ gst_bin_deep_element_added_func (GstBin * bin, GstBin * sub_bin,
 
   GST_LOG_OBJECT (parent_bin, "emitting deep-element-added for element "
       "%" GST_PTR_FORMAT " which has just been added to %" GST_PTR_FORMAT,
-      sub_bin, child);
+      child, sub_bin);
 
   g_signal_emit (parent_bin, gst_bin_signals[DEEP_ELEMENT_ADDED], 0, sub_bin,
       child);
