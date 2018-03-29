@@ -256,8 +256,13 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   thiz->param.mfx.FrameInfo.Height = GST_ROUND_UP_32 (info->height);
   thiz->param.mfx.FrameInfo.CropW = info->width;
   thiz->param.mfx.FrameInfo.CropH = info->height;
-  thiz->param.mfx.FrameInfo.FrameRateExtN = info->fps_n;
-  thiz->param.mfx.FrameInfo.FrameRateExtD = info->fps_d;
+
+  /* Set framerate only if provided.
+   * If not, framerate will be assumed inside the driver */
+  if (info->fps_n > 0 && info->fps_d > 0) {
+    thiz->param.mfx.FrameInfo.FrameRateExtN = info->fps_n;
+    thiz->param.mfx.FrameInfo.FrameRateExtD = info->fps_d;
+  }
   thiz->param.mfx.FrameInfo.AspectRatioW = info->par_n;
   thiz->param.mfx.FrameInfo.AspectRatioH = info->par_d;
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
