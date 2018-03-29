@@ -168,6 +168,14 @@ gst_dtls_agent_class_init (GstDtlsAgentClass * klass)
   _gst_dtls_init_openssl ();
 }
 
+static int
+ssl_warn_cb (const char *str, size_t len, void *u)
+{
+  GstDtlsAgent *self = u;
+  GST_WARNING_OBJECT (self, "ssl error: %s", str);
+  return 0;
+}
+
 static void
 gst_dtls_agent_init (GstDtlsAgent * self)
 {
@@ -182,12 +190,10 @@ gst_dtls_agent_init (GstDtlsAgent * self)
   priv->ssl_context = SSL_CTX_new (DTLSv1_method ());
 #endif
   if (ERR_peek_error () || !priv->ssl_context) {
-    char buf[512];
-
     priv->ssl_context = NULL;
 
-    GST_WARNING_OBJECT (self, "Error creating SSL Context: %s",
-        ERR_error_string (ERR_get_error (), buf));
+    GST_WARNING_OBJECT (self, "Error creating SSL Context");
+    ERR_print_errors_cb (ssl_warn_cb, self);
 
     g_return_if_reached ();
   }
