@@ -50,7 +50,7 @@
 
 /**
  * gst_util_dump_mem:
- * @mem: a pointer to the memory to dump
+ * @mem: (array length=size): a pointer to the memory to dump
  * @size: the size of the memory block to dump
  *
  * Dumps the memory block into a hex representation. Useful for debugging.
