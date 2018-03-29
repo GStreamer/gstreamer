@@ -518,6 +518,8 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self)
   self->default_roi_quality = GST_OMX_VIDEO_ENC_DEFAULT_ROI_QUALITY;
 #endif
 
+  self->default_target_bitrate = GST_OMX_PROP_OMX_DEFAULT;
+
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
 
@@ -746,9 +748,6 @@ gst_omx_video_enc_set_bitrate (GstOMXVideoEnc * self)
   gboolean result = TRUE;
 
   GST_OBJECT_LOCK (self);
-  if (self->control_rate == 0xffffffff && self->target_bitrate == 0xffffffff)
-    /* Keep defaults, nothing to do */
-    goto out;
 
   GST_OMX_INIT_STRUCT (&bitrate_param);
   bitrate_param.nPortIndex = self->enc_out_port->index;
@@ -764,10 +763,16 @@ gst_omx_video_enc_set_bitrate (GstOMXVideoEnc * self)
       bitrate_param.nPortIndex = self->enc_out_port->index;
     }
 #endif
+    if (self->default_target_bitrate == GST_OMX_PROP_OMX_DEFAULT)
+      /* Save the actual OMX default so we can restore it if needed */
+      self->default_target_bitrate = bitrate_param.nTargetBitrate;
+
     if (self->control_rate != 0xffffffff)
       bitrate_param.eControlRate = self->control_rate;
     if (self->target_bitrate != 0xffffffff)
       bitrate_param.nTargetBitrate = self->target_bitrate;
+    else
+      bitrate_param.nTargetBitrate = self->default_target_bitrate;
 
     err =
         gst_omx_component_set_parameter (self->enc,
@@ -790,7 +795,6 @@ gst_omx_video_enc_set_bitrate (GstOMXVideoEnc * self)
         gst_omx_error_to_string (err), err);
   }
 
-out:
   GST_OBJECT_UNLOCK (self);
   return result;
 }
@@ -1666,6 +1670,8 @@ gst_omx_video_enc_stop (GstVideoEncoder * encoder)
   self->draining = FALSE;
   g_cond_broadcast (&self->drain_cond);
   g_mutex_unlock (&self->drain_lock);
+
+  self->default_target_bitrate = GST_OMX_PROP_OMX_DEFAULT;
 
   gst_omx_component_get_state (self->enc, 5 * GST_SECOND);
 

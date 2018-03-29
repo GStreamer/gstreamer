@@ -94,6 +94,8 @@ struct _GstOMXVideoEnc
   gint default_roi_quality;
 #endif
 
+  guint32 default_target_bitrate;
+
   GstFlowReturn downstream_flow_ret;
 
   GstOMXBufferAllocation input_allocation;

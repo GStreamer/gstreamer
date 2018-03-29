@@ -118,6 +118,11 @@ G_BEGIN_DECLS
 } G_STMT_END
 #endif
 
+/* If set on an element property means "use the OMX default value".
+ * If set on a default_* variable means that the default values hasn't been
+ * retrieved from OMX yet. */
+#define GST_OMX_PROP_OMX_DEFAULT G_MAXUINT32
+
 /* OMX_StateInvalid does not exist in 1.2.0 spec. The initial state is now
  * StateLoaded. Problem is that gst-omx still needs an initial state different
  * than StateLoaded. Otherwise gst_omx_component_set_state(StateLoaded) will
