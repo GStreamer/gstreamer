@@ -4638,3 +4638,272 @@ gst_rtsp_stream_is_receiver (GstRTSPStream * stream)
 
   return ret;
 }
+
+#define AES_128_KEY_LEN 16
+#define AES_256_KEY_LEN 32
+
+#define HMAC_32_KEY_LEN 4
+#define HMAC_80_KEY_LEN 10
+
+static gboolean
+mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
+{
+  const gchar *srtp_cipher;
+  const gchar *srtp_auth;
+  const GstMIKEYPayload *sp;
+  guint i;
+
+  /* loop over Security policy until we find one containing policy */
+  for (i = 0;; i++) {
+    if ((sp = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_SP, i)) == NULL)
+      break;
+
+    if (((GstMIKEYPayloadSP *) sp)->policy == policy)
+      break;
+  }
+
+  /* the default ciphers */
+  srtp_cipher = "aes-128-icm";
+  srtp_auth = "hmac-sha1-80";
+
+  /* now override the defaults with what is in the Security Policy */
+  if (sp != NULL) {
+    guint len;
+
+    /* collect all the params and go over them */
+    len = gst_mikey_payload_sp_get_n_params (sp);
+    for (i = 0; i < len; i++) {
+      const GstMIKEYPayloadSPParam *param =
+          gst_mikey_payload_sp_get_param (sp, i);
+
+      switch (param->type) {
+        case GST_MIKEY_SP_SRTP_ENC_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_cipher = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_cipher = "aes-128-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
+          switch (param->val[0]) {
+            case AES_128_KEY_LEN:
+              srtp_cipher = "aes-128-icm";
+              break;
+            case AES_256_KEY_LEN:
+              srtp_cipher = "aes-256-icm";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_ALG:
+          switch (param->val[0]) {
+            case 0:
+              srtp_auth = "null";
+              break;
+            case 2:
+            case 1:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_AUTH_KEY_LEN:
+          switch (param->val[0]) {
+            case HMAC_32_KEY_LEN:
+              srtp_auth = "hmac-sha1-32";
+              break;
+            case HMAC_80_KEY_LEN:
+              srtp_auth = "hmac-sha1-80";
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_MIKEY_SP_SRTP_SRTP_ENC:
+          break;
+        case GST_MIKEY_SP_SRTP_SRTCP_ENC:
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  /* now configure the SRTP parameters */
+  gst_caps_set_simple (caps,
+      "srtp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtp-auth", G_TYPE_STRING, srtp_auth,
+      "srtcp-cipher", G_TYPE_STRING, srtp_cipher,
+      "srtcp-auth", G_TYPE_STRING, srtp_auth, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+handle_mikey_data (GstRTSPStream * stream, guint8 * data, gsize size)
+{
+  GstMIKEYMessage *msg;
+  guint i, n_cs;
+  GstCaps *caps = NULL;
+  GstMIKEYPayloadKEMAC *kemac;
+  const GstMIKEYPayloadKeyData *pkd;
+  GstBuffer *key;
+
+  /* the MIKEY message contains a CSB or crypto session bundle. It is a
+   * set of Crypto Sessions protected with the same master key.
+   * In the context of SRTP, an RTP and its RTCP stream is part of a
+   * crypto session */
+  if ((msg = gst_mikey_message_new_from_data (data, size, NULL, NULL)) == NULL)
+    goto parse_failed;
+
+  /* we can only handle SRTP crypto sessions for now */
+  if (msg->map_type != GST_MIKEY_MAP_TYPE_SRTP)
+    goto invalid_map_type;
+
+  /* get the number of crypto sessions. This maps SSRC to its
+   * security parameters */
+  n_cs = gst_mikey_message_get_n_cs (msg);
+  if (n_cs == 0)
+    goto no_crypto_sessions;
+
+  /* we also need keys */
+  if (!(kemac = (GstMIKEYPayloadKEMAC *) gst_mikey_message_find_payload
+          (msg, GST_MIKEY_PT_KEMAC, 0)))
+    goto no_keys;
+
+  /* we don't support encrypted keys */
+  if (kemac->enc_alg != GST_MIKEY_ENC_NULL
+      || kemac->mac_alg != GST_MIKEY_MAC_NULL)
+    goto unsupported_encryption;
+
+  /* get Key data sub-payload */
+  pkd = (const GstMIKEYPayloadKeyData *)
+      gst_mikey_payload_kemac_get_sub (&kemac->pt, 0);
+
+  key =
+      gst_buffer_new_wrapped (g_memdup (pkd->key_data, pkd->key_len),
+      pkd->key_len);
+
+  /* go over all crypto sessions and create the security policy for each
+   * SSRC */
+  for (i = 0; i < n_cs; i++) {
+    const GstMIKEYMapSRTP *map = gst_mikey_message_get_cs_srtp (msg, i);
+
+    caps = gst_caps_new_simple ("application/x-srtp",
+        "ssrc", G_TYPE_UINT, map->ssrc,
+        "roc", G_TYPE_UINT, map->roc, "srtp-key", GST_TYPE_BUFFER, key, NULL);
+    mikey_apply_policy (caps, msg, map->policy);
+
+    gst_rtsp_stream_update_crypto (stream, map->ssrc, caps);
+    gst_caps_unref (caps);
+  }
+  gst_mikey_message_unref (msg);
+  gst_buffer_unref (key);
+
+  return TRUE;
+
+  /* ERRORS */
+parse_failed:
+  {
+    GST_DEBUG_OBJECT (stream, "failed to parse MIKEY message");
+    return FALSE;
+  }
+invalid_map_type:
+  {
+    GST_DEBUG_OBJECT (stream, "invalid map type %d", msg->map_type);
+    goto cleanup_message;
+  }
+no_crypto_sessions:
+  {
+    GST_DEBUG_OBJECT (stream, "no crypto sessions");
+    goto cleanup_message;
+  }
+no_keys:
+  {
+    GST_DEBUG_OBJECT (stream, "no keys found");
+    goto cleanup_message;
+  }
+unsupported_encryption:
+  {
+    GST_DEBUG_OBJECT (stream, "unsupported key encryption");
+    goto cleanup_message;
+  }
+cleanup_message:
+  {
+    gst_mikey_message_unref (msg);
+    return FALSE;
+  }
+}
+
+#define IS_STRIP_CHAR(c) (g_ascii_isspace ((guchar)(c)) || ((c) == '\"'))
+
+static void
+strip_chars (gchar * str)
+{
+  gchar *s;
+  gsize len;
+
+  len = strlen (str);
+  while (len--) {
+    if (!IS_STRIP_CHAR (str[len]))
+      break;
+    str[len] = '\0';
+  }
+  for (s = str; *s && IS_STRIP_CHAR (*s); s++);
+  memmove (str, s, len + 1);
+}
+
+/**
+ * gst_rtsp_stream_handle_keymgmt:
+ * @stream: a #GstRTSPStream
+ * @keymgmt: a keymgmt header
+ *
+ * Parse and handle a KeyMgmt header.
+ *
+ * Since: 1.16
+ */
+/* KeyMgmt = "KeyMgmt" ":" key-mgmt-spec 0*("," key-mgmt-spec)
+ * key-mgmt-spec = "prot" "=" KMPID ";" ["uri" "=" %x22 URI %x22 ";"]
+ */
+gboolean
+gst_rtsp_stream_handle_keymgmt (GstRTSPStream * stream, const gchar * keymgmt)
+{
+  gchar **specs;
+  gint i, j;
+
+  specs = g_strsplit (keymgmt, ",", 0);
+  for (i = 0; specs[i]; i++) {
+    gchar **split;
+
+    split = g_strsplit (specs[i], ";", 0);
+    for (j = 0; split[j]; j++) {
+      g_strstrip (split[j]);
+      if (g_str_has_prefix (split[j], "prot=")) {
+        g_strstrip (split[j] + 5);
+        if (!g_str_equal (split[j] + 5, "mikey"))
+          break;
+        GST_DEBUG ("found mikey");
+      } else if (g_str_has_prefix (split[j], "uri=")) {
+        strip_chars (split[j] + 4);
+        GST_DEBUG ("found uri '%s'", split[j] + 4);
+      } else if (g_str_has_prefix (split[j], "data=")) {
+        guchar *data;
+        gsize size;
+        strip_chars (split[j] + 5);
+        GST_DEBUG ("found data '%s'", split[j] + 5);
+        data = g_base64_decode_inplace (split[j] + 5, &size);
+        handle_mikey_data (stream, data, size);
+      }
+    }
+    g_strfreev (split);
+  }
+  g_strfreev (specs);
+  return TRUE;
+}

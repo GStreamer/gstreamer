@@ -301,6 +301,9 @@ gboolean           gst_rtsp_stream_is_sender (GstRTSPStream * stream);
 GST_RTSP_SERVER_API
 gboolean           gst_rtsp_stream_is_receiver (GstRTSPStream * stream);
 
+GST_RTSP_SERVER_API
+gboolean           gst_rtsp_stream_handle_keymgmt (GstRTSPStream *stream, const gchar *keymgmt);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object
