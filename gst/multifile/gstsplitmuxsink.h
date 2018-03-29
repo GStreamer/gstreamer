@@ -120,6 +120,8 @@ struct _GstSplitMuxSink
   GstClockTime next_max_tc_time;
   GstClockTime alignment_threshold;
 
+  gboolean reset_muxer;
+
   GstElement *muxer;
   GstElement *sink;
 

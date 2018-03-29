@@ -84,7 +84,8 @@ enum
   PROP_USE_ROBUST_MUXING,
   PROP_ALIGNMENT_THRESHOLD,
   PROP_MUXER,
-  PROP_SINK
+  PROP_SINK,
+  PROP_RESET_MUXER,
 };
 
 #define DEFAULT_MAX_SIZE_TIME       0
@@ -96,6 +97,7 @@ enum
 #define DEFAULT_MUXER "mp4mux"
 #define DEFAULT_SINK "filesink"
 #define DEFAULT_USE_ROBUST_MUXING FALSE
+#define DEFAULT_RESET_MUXER TRUE
 
 enum
 {
@@ -284,6 +286,12 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           DEFAULT_USE_ROBUST_MUXING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RESET_MUXER,
+      g_param_spec_boolean ("reset-muxer",
+          "Reset Muxer",
+          "Reset the muxer after each segment. Disabling this will not work for most muxers.",
+          DEFAULT_RESET_MUXER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstSplitMuxSink::format-location:
    * @splitmux: the #GstSplitMuxSink
@@ -343,6 +351,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
   splitmux->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   splitmux->use_robust_muxing = DEFAULT_USE_ROBUST_MUXING;
+  splitmux->reset_muxer = DEFAULT_RESET_MUXER;
 
   splitmux->threshold_timecode_str = NULL;
 
@@ -512,6 +521,11 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       gst_object_ref_sink (splitmux->provided_muxer);
       GST_OBJECT_UNLOCK (splitmux);
       break;
+    case PROP_RESET_MUXER:
+      GST_OBJECT_LOCK (splitmux);
+      splitmux->reset_muxer = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -578,6 +592,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
     case PROP_MUXER:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_object (value, splitmux->provided_muxer);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_RESET_MUXER:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_boolean (value, splitmux->reset_muxer);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     default:
@@ -1153,6 +1172,15 @@ restart_context (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
   gst_object_unref (peer);
 }
 
+static void
+_send_event (const GValue * value, gpointer user_data)
+{
+  GstPad *pad = g_value_get_object (value);
+  GstEvent *ev = user_data;
+
+  gst_pad_send_event (pad, gst_event_ref (ev));
+}
+
 /* Called with lock held when a fragment
  * reaches EOS and it is time to restart
  * a new fragment
@@ -1175,8 +1203,26 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 
   gst_element_set_locked_state (muxer, TRUE);
   gst_element_set_locked_state (sink, TRUE);
-  gst_element_set_state (muxer, GST_STATE_NULL);
   gst_element_set_state (sink, GST_STATE_NULL);
+
+  if (splitmux->reset_muxer) {
+    gst_element_set_state (muxer, GST_STATE_NULL);
+  } else {
+    GstIterator *it = gst_element_iterate_sink_pads (muxer);
+    GstEvent *ev;
+
+    ev = gst_event_new_flush_start ();
+    gst_iterator_foreach (it, _send_event, ev);
+    gst_event_unref (ev);
+
+    gst_iterator_resync (it);
+
+    ev = gst_event_new_flush_stop (TRUE);
+    gst_iterator_foreach (it, _send_event, ev);
+    gst_event_unref (ev);
+
+    gst_iterator_free (it);
+  }
 
   GST_SPLITMUX_LOCK (splitmux);
   if (splitmux->muxed_out_bytes > 0 || splitmux->fragment_id == 0)
