@@ -707,11 +707,26 @@ beach:
   self->priv->keys_exported = TRUE;
 }
 
+static int
+ssl_warn_cb (const char *str, size_t len, void *u)
+{
+  GstDtlsConnection *self = u;
+  GST_WARNING_OBJECT (self, "ssl error: %s", str);
+  return 0;
+}
+
+static int
+ssl_err_cb (const char *str, size_t len, void *u)
+{
+  GstDtlsConnection *self = u;
+  GST_ERROR_OBJECT (self, "ssl error: %s", str);
+  return 0;
+}
+
 static void
 openssl_poll (GstDtlsConnection * self)
 {
   int ret;
-  char buf[512];
   int error;
 
   log_state (self, "poll: before handshake");
@@ -748,9 +763,9 @@ openssl_poll (GstDtlsConnection * self)
       GST_WARNING_OBJECT (self, "no error, handshake should be done");
       break;
     case SSL_ERROR_SSL:
-      GST_LOG_OBJECT (self, "SSL error %d: %s", error,
-          ERR_error_string (ERR_get_error (), buf));
-      break;
+      GST_ERROR_OBJECT (self, "SSL error");
+      ERR_print_errors_cb (ssl_err_cb, self);
+      return;
     case SSL_ERROR_WANT_READ:
       GST_LOG_OBJECT (self, "SSL wants read");
       break;
@@ -758,12 +773,14 @@ openssl_poll (GstDtlsConnection * self)
       GST_LOG_OBJECT (self, "SSL wants write");
       break;
     case SSL_ERROR_SYSCALL:{
-      GST_LOG_OBJECT (self, "SSL syscall (error) : %lu", ERR_get_error ());
+      GST_LOG_OBJECT (self, "SSL syscall error");
       break;
     }
     default:
       GST_WARNING_OBJECT (self, "Unknown SSL error: %d, ret: %d", error, ret);
   }
+
+  ERR_print_errors_cb (ssl_warn_cb, self);
 }
 
 static int
