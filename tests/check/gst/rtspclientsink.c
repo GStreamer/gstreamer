@@ -38,6 +38,7 @@ static GstRTSPServer *server = NULL;
 
 /* tcp port that the test server listens for rtsp requests on */
 static gint test_port = 0;
+static gint server_send_rtcp_port;
 
 /* id of the server's source within the GMainContext */
 static guint source_id;
@@ -132,12 +133,35 @@ get_server_uri (gint port, const gchar * mount_point)
   return uri_string;
 }
 
+static GstRTSPFilterResult
+check_transport (GstRTSPStream *stream, GstRTSPStreamTransport *strans, gpointer user_data)
+{
+  const GstRTSPTransport *trans = gst_rtsp_stream_transport_get_transport (strans);
+
+  server_send_rtcp_port = trans->client_port.max;
+
+  return GST_RTSP_FILTER_KEEP;
+}
+
+static void
+new_state_cb (GstRTSPMedia * media, gint state, gpointer user_data)
+{
+  if (state == GST_STATE_PLAYING) {
+    GstRTSPStream *stream = gst_rtsp_media_get_stream (media, 0);
+
+    gst_rtsp_stream_transport_filter (stream, (GstRTSPStreamTransportFilterFunc) check_transport, user_data);
+  }
+}
+
 static void
 media_constructed_cb (GstRTSPMediaFactory * mfactory, GstRTSPMedia * media,
     gpointer user_data)
 {
   GstElement **p_sink = user_data;
   GstElement *bin;
+
+  g_signal_connect (media, "new-state",
+      G_CALLBACK (new_state_cb), user_data);
 
   bin = gst_rtsp_media_get_element (media);
   *p_sink = gst_bin_get_by_name (GST_BIN (bin), "sink");
@@ -192,6 +216,8 @@ GST_START_TEST (test_record)
   }
 
   iterate ();
+
+  fail_unless (server_send_rtcp_port != 0);
 
   /* check received data (we assume every buffer created by audiotestsrc and
    * subsequently encoded by mulawenc results in exactly one RTP packet) */
