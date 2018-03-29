@@ -1086,6 +1086,25 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
       }
       break;
     }
+    case GST_EVENT_FLUSH_STOP:{
+      GList *cur;
+
+      /* Send initial segments again after a flush-stop, and also resend the
+       * header sections */
+      mux->first = TRUE;
+
+      /* output PAT, SI tables */
+      tsmux_resend_pat (mux->tsmux);
+      tsmux_resend_si (mux->tsmux);
+
+      /* output PMT for each program */
+      for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+        TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+        tsmux_resend_pmt (program);
+      }
+      break;
+    }
     default:
       break;
   }
