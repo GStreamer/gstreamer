@@ -4232,6 +4232,8 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
   GstSDPMessage *sdp;
   guint sdp_index = 0;
   GstSDPInfo info = { 0, };
+  gchar *keymgmt;
+  guint i;
 
   const gchar *proto;
   gchar *sess_id, *client_ip, *str;
@@ -4338,6 +4340,17 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
               &response, NULL)) < 0)
     goto send_error;
 
+  /* parse the keymgmt */
+  i = 0;
+  walk = sink->contexts;
+  while (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_KEYMGMT,
+          &keymgmt, i++) == GST_RTSP_OK) {
+    GstRTSPStreamContext *context = (GstRTSPStreamContext *) walk->data;
+    walk = g_list_next (walk);
+    if (!gst_rtsp_stream_handle_keymgmt (context->stream, keymgmt))
+      goto keymgmt_error;
+  }
+
   /* send setup for all streams */
   if ((res = gst_rtsp_client_sink_setup_streams (sink, async)) < 0)
     goto setup_failed;
@@ -4413,6 +4426,11 @@ send_error:
     /* Don't post a message - the rtsp_send method will have
      * taken care of it because we passed NULL for the response code */
     goto cleanup_error;
+  }
+keymgmt_error:
+  {
+    GST_ELEMENT_ERROR (sink, STREAM, DECRYPT_NOKEY, (NULL),
+        ("Could not handle KeyMgmt"));
   }
 setup_failed:
   {
