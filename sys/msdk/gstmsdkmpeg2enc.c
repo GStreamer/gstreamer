@@ -111,6 +111,9 @@ gst_msdkmpeg2enc_configure (GstMsdkEnc * encoder)
   encoder->param.mfx.CodecProfile = thiz->profile;
   encoder->param.mfx.CodecLevel = 0;
 
+  /* Enable Extended Coding options */
+  gst_msdkenc_ensure_extended_coding_options (encoder);
+
   return TRUE;
 }
 

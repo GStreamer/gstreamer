@@ -194,8 +194,8 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
   }
 }
 
-static void
-ensure_extended_coding_options (GstMsdkEnc * thiz)
+void
+gst_msdkenc_ensure_extended_coding_options (GstMsdkEnc * thiz)
 {
   mfxExtCodingOption2 *option2 = &thiz->option2;
   mfxExtCodingOption3 *option3 = &thiz->option3;
@@ -379,9 +379,6 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
   /* ensure bitrate control parameters */
   ensure_bitrate_control (thiz);
-
-  /* Enable ExtCodingOption2 */
-  ensure_extended_coding_options (thiz);
 
   /* allow subclass configure further */
   if (klass->configure) {
