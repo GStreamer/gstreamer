@@ -3711,12 +3711,16 @@ gst_rtsp_client_sink_stream_make_keymgmt (GstRTSPClientSink * sink,
 
   mikey_msg = gst_mikey_message_new_from_caps (context->srtcpparams);
   if (mikey_msg) {
-    guint send_ssrc;
+    guint send_ssrc, send_rtx_ssrc;
+    const GstStructure *s = gst_caps_get_structure (context->srtcpparams, 0);
 
     /* add policy '0' for our SSRC */
     gst_rtsp_stream_get_ssrc (context->stream, &send_ssrc);
     GST_LOG_OBJECT (sink, "Stream %p ssrc %x", context->stream, send_ssrc);
     gst_mikey_message_add_cs_srtp (mikey_msg, 0, send_ssrc, 0);
+
+    if (gst_structure_get_uint (s, "rtx-ssrc", &send_rtx_ssrc))
+      gst_mikey_message_add_cs_srtp (mikey_msg, 0, send_rtx_ssrc, 0);
 
     base64 = gst_mikey_message_base64_encode (mikey_msg);
     gst_mikey_message_unref (mikey_msg);
