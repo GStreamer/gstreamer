@@ -51,7 +51,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "format = (string) { NV12 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
-        "interlace-mode = (string) progressive")
+        "interlace-mode = (string) progressive;"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            "{ NV12 }") ";")
     );
 
 enum
@@ -315,6 +317,8 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
     request.NumFrameSuggested += shared_async_depth;
 
     request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
+    if (thiz->use_dmabuf)
+      request.Type |= MFX_MEMTYPE_EXPORT_FRAME;
     gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
   }
 
@@ -354,6 +358,53 @@ failed:
   return FALSE;
 }
 
+
+static gboolean
+_gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
+{
+  guint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
+    /* Skip ANY features, we need an exact match for correct evaluation */
+    if (gst_caps_features_is_any (features))
+      continue;
+    if (gst_caps_features_contains (features, feature))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_msdk_find_preferred_caps_feature (GstMsdkDec * thiz, const char *feature)
+{
+  gboolean ret = FALSE;
+  GstCaps *caps, *out_caps;
+  GstPad *srcpad;
+
+  srcpad = GST_VIDEO_DECODER_SRC_PAD (thiz);
+  caps = gst_pad_get_pad_template_caps (srcpad);
+
+  out_caps = gst_pad_peer_query_caps (srcpad, caps);
+  if (!out_caps)
+    goto done;
+
+  if (gst_caps_is_any (out_caps) || gst_caps_is_empty (out_caps)
+      || out_caps == caps)
+    goto done;
+
+  if (_gst_caps_has_feature (out_caps, feature))
+    ret = TRUE;
+
+done:
+  if (caps)
+    gst_caps_unref (caps);
+  if (out_caps)
+    gst_caps_unref (out_caps);
+  return ret;
+}
+
 static gboolean
 gst_msdkdec_set_src_caps (GstMsdkDec * thiz)
 {
@@ -374,6 +425,12 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz)
   if (output_state->caps)
     gst_caps_unref (output_state->caps);
   output_state->caps = gst_video_info_to_caps (&output_state->info);
+
+  if (gst_msdk_find_preferred_caps_feature (thiz,
+          GST_CAPS_FEATURE_MEMORY_DMABUF))
+    gst_caps_set_features (output_state->caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+
   gst_video_codec_state_unref (output_state);
 
   return TRUE;
@@ -722,7 +779,10 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstCaps * caps,
   gst_msdk_set_video_alignment (&info, &align);
   gst_video_info_align (&info, &align);
 
-  if (thiz->use_video_memory)
+  if (thiz->use_dmabuf)
+    allocator =
+        gst_msdk_dmabuf_allocator_new (thiz->context, &info, alloc_resp);
+  else if (thiz->use_video_memory)
     allocator = gst_msdk_video_allocator_new (thiz->context, &info, alloc_resp);
   else
     allocator = gst_msdk_system_allocator_new (&info);
@@ -736,9 +796,13 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstCaps * caps,
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  if (thiz->use_video_memory)
+  if (thiz->use_video_memory) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY);
+    if (thiz->use_dmabuf)
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF);
+  }
 
   gst_buffer_pool_config_set_video_alignment (config, &align);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
@@ -787,10 +851,6 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
   pool_config = gst_buffer_pool_get_config (pool);
 
-  /* If downstream's pool is MSDK bufferpool, decoder is using video memory */
-  if (GST_IS_MSDK_BUFFER_POOL (pool))
-    thiz->use_video_memory = TRUE;
-
   /* Get the caps of pool and increase the min and max buffers by async_depth,
    * we will always have that number of decode operations in-flight */
   gst_buffer_pool_config_get_params (pool_config, &pool_caps, &size,
@@ -798,6 +858,11 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   min_buffers += thiz->async_depth;
   if (max_buffers)
     max_buffers += thiz->async_depth;
+
+  if (_gst_caps_has_feature (pool_caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    GST_INFO_OBJECT (decoder, "This MSDK decoder uses DMABuf memory");
+    thiz->use_video_memory = thiz->use_dmabuf = TRUE;
+  }
 
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)
       && gst_buffer_pool_has_option (pool,
