@@ -31,6 +31,7 @@
  */
 
 #include <va/va.h>
+#include <va/va_drmcommon.h>
 #include "gstmsdkallocator.h"
 #include "msdk_libva.h"
 
@@ -104,6 +105,31 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     }
 
     for (i = 0; i < surfaces_num; i++) {
+      /* Get dmabuf handle if MFX_MEMTYPE_EXPORT_FRAME */
+      if (req->Type & MFX_MEMTYPE_EXPORT_FRAME) {
+        msdk_mids[i].info.mem_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
+        va_status =
+            vaDeriveImage (gst_msdk_context_get_handle (context), surfaces[i],
+            &msdk_mids[i].image);
+        status = gst_msdk_get_mfx_status_from_va_status (va_status);
+
+        if (MFX_ERR_NONE != status) {
+          GST_ERROR ("failed to derive image");
+          return status;
+        }
+
+        va_status =
+            vaAcquireBufferHandle (gst_msdk_context_get_handle (context),
+            msdk_mids[i].image.buf, &msdk_mids[i].info);
+        status = gst_msdk_get_mfx_status_from_va_status (va_status);
+
+        if (MFX_ERR_NONE != status) {
+          GST_ERROR ("failed to get dmabuf handle");
+          vaDestroyImage (gst_msdk_context_get_handle (context),
+              msdk_mids[i].image.image_id);
+        }
+      }
+
       msdk_mids[i].surface = &surfaces[i];
       mids[i] = (mfxMemId *) & msdk_mids[i];
     }
@@ -170,6 +196,11 @@ gst_msdk_frame_free (mfxHDL pthis, mfxFrameAllocResponse * resp)
     /* Make sure that all the vaImages are destroyed */
     for (i = 0; i < resp->NumFrameActual; i++) {
       GstMsdkMemoryID *mem = resp->mids[i];
+
+      /* Release dmabuf handle if used */
+      if (mem->info.mem_type == VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME)
+        vaReleaseBufferHandle (dpy, mem->image.buf);
+
       vaDestroyImage (dpy, mem->image.image_id);
     }
 
