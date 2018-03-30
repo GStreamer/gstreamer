@@ -36,12 +36,15 @@
 #include "msdk.h"
 #include "gstmsdkcontext.h"
 #include "gstmsdkallocator.h"
+#include <gst/allocators/allocators.h>
 
 G_BEGIN_DECLS
 
 typedef struct _GstMsdkVideoMemory GstMsdkVideoMemory;
 typedef struct _GstMsdkVideoAllocator GstMsdkVideoAllocator;
 typedef struct _GstMsdkVideoAllocatorClass GstMsdkVideoAllocatorClass;
+typedef struct _GstMsdkDmaBufAllocator GstMsdkDmaBufAllocator;
+typedef struct _GstMsdkDmaBufAllocatorClass GstMsdkDmaBufAllocatorClass;
 
 /* ---------------------------------------------------------------------*/
 /* GstMsdkVideoMemory                                                        */
@@ -129,6 +132,62 @@ struct _GstMsdkVideoAllocatorClass
 GType gst_msdk_video_allocator_get_type (void);
 
 GstAllocator * gst_msdk_video_allocator_new (GstMsdkContext * context,
+    GstVideoInfo *image_info, mfxFrameAllocResponse * alloc_resp);
+
+/* ---------------------------------------------------------------------*/
+/* GstMsdkDmaBufMemory                                                  */
+/* ---------------------------------------------------------------------*/
+
+#define GST_MSDK_DMABUF_MEMORY_NAME             "GstMsdkDmaBufMemory"
+
+GstMemory *
+gst_msdk_dmabuf_memory_new (GstAllocator * allocator);
+
+GstMemory *
+gst_msdk_dmabuf_memory_new_with_surface (GstAllocator * base_allocator, mfxFrameSurface1 * surface);
+
+/* ---------------------------------------------------------------------*/
+/* GstMsdkDmaBufAllocator                                                */
+/* ---------------------------------------------------------------------*/
+
+#define GST_MSDK_DMABUF_ALLOCATOR_CAST(allocator) \
+  ((GstMsdkDmaBufAllocator *) (allocator))
+
+#define GST_TYPE_MSDK_DMABUF_ALLOCATOR \
+  (gst_msdk_dmabuf_allocator_get_type ())
+#define GST_MSDK_DMABUF_ALLOCATOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MSDK_DMABUF_ALLOCATOR, \
+      GstMsdkDmaBufAllocator))
+#define GST_IS_MSDK_DMABUF_ALLOCATOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MSDK_DMABUF_ALLOCATOR))
+
+/*
+ * GstMsdkDmaBufAllocator:
+ *
+ * A MSDK DMABuf memory allocator object.
+ */
+struct _GstMsdkDmaBufAllocator
+{
+  GstDmaBufAllocator parent_instance;
+
+  GstMsdkContext *context;
+  GstVideoInfo image_info;
+  mfxFrameAllocResponse *alloc_response;
+};
+
+/*
+ * GstMsdkDmaBufAllocatorClass:
+ *
+ * A MSDK DMABuf memory allocator class.
+ */
+struct _GstMsdkDmaBufAllocatorClass
+{
+  GstDmaBufAllocatorClass parent_class;
+};
+
+GType gst_msdk_dmabuf_allocator_get_type (void);
+
+GstAllocator * gst_msdk_dmabuf_allocator_new (GstMsdkContext * context,
     GstVideoInfo *image_info, mfxFrameAllocResponse * alloc_resp);
 
 G_END_DECLS

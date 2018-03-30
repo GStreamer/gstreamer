@@ -63,6 +63,7 @@ typedef struct _GstMsdkBufferPoolPrivate GstMsdkBufferPoolPrivate;
  * MsdkSystemAllocator or MsdkVideoAllocator.
  */
 #define GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY "GstBufferPoolOptionMsdkUseVideoMemory"
+#define GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF "GstBufferPoolOptionMsdkUseDMABuf"
 
 /**
  * GstMsdkBufferPool:

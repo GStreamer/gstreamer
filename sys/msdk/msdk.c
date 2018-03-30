@@ -283,7 +283,8 @@ gst_msdk_is_msdk_buffer (GstBuffer * buf)
   allocator = GST_MEMORY_CAST (mem)->allocator;
 
   if (allocator && (GST_IS_MSDK_VIDEO_ALLOCATOR (allocator) ||
-          GST_IS_MSDK_SYSTEM_ALLOCATOR (allocator)))
+          GST_IS_MSDK_SYSTEM_ALLOCATOR (allocator) ||
+          GST_IS_MSDK_DMABUF_ALLOCATOR (allocator)))
     return TRUE;
   else
     return FALSE;
@@ -299,6 +300,12 @@ gst_msdk_get_surface_from_buffer (GstBuffer * buf)
 
   if (GST_IS_MSDK_VIDEO_ALLOCATOR (allocator))
     return GST_MSDK_VIDEO_MEMORY_CAST (mem)->surface;
-  else
+  else if (GST_IS_MSDK_SYSTEM_ALLOCATOR (allocator))
     return GST_MSDK_SYSTEM_MEMORY_CAST (mem)->surface;
+  else if (GST_IS_MSDK_DMABUF_ALLOCATOR (allocator)) {
+    return gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+        g_quark_from_static_string ("GstMsdkBufferSurface"));
+  }
+
+  return NULL;
 }

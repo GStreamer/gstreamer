@@ -55,7 +55,7 @@ if msdk_root != ''
       msdk_sources,
       c_args : gst_plugins_bad_args,
       include_directories : [configinc],
-      dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, msdk_dep],
+      dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, msdk_dep],
       install : true,
       install_dir : plugins_install_dir,
     )
