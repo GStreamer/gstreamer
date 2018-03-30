@@ -76,7 +76,8 @@ libgstmsdk_la_CFLAGS += \
 libgstmsdk_la_LIBADD += \
 	$(LIBVA_DRM_LIBS)
 noinst_HEADERS += \
-	msdk_libva.h
+	msdk_libva.h \
+	gstmsdkallocator_libva.h
 endif
 
 # TODO: add support for windows compilation

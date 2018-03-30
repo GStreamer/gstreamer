@@ -33,6 +33,7 @@
 #include <va/va.h>
 #include <va/va_drmcommon.h>
 #include "gstmsdkallocator.h"
+#include "gstmsdkallocator_libva.h"
 #include "msdk_libva.h"
 
 mfxStatus
@@ -351,4 +352,20 @@ gst_msdk_set_frame_allocator (GstMsdkContext * context)
 
   MFXVideoCORE_SetFrameAllocator (gst_msdk_context_get_session (context),
       &gst_msdk_frame_allocator);
+}
+
+gboolean
+gst_msdk_get_dmabuf_info_from_surface (mfxFrameSurface1 * surface,
+    gint * handle, gsize * size)
+{
+  GstMsdkMemoryID *mem_id;
+  g_return_val_if_fail (surface, FALSE);
+
+  mem_id = (GstMsdkMemoryID *) surface->Data.MemId;
+  if (handle)
+    *handle = mem_id->info.handle;
+  if (size)
+    *size = mem_id->info.mem_size;
+
+  return TRUE;
 }
