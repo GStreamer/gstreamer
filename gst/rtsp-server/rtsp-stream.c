@@ -2382,8 +2382,6 @@ gst_rtsp_stream_request_aux_receiver (GstRTSPStream * stream, guint sessid)
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
-  g_mutex_lock (&stream->priv->lock);
-
   bin = gst_bin_new (NULL);
   stream->priv->rtxreceive = gst_element_factory_make ("rtprtxreceive", NULL);
   update_rtx_receive_pt_map (stream);
@@ -2400,8 +2398,6 @@ gst_rtsp_stream_request_aux_receiver (GstRTSPStream * stream, guint sessid)
   gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
   g_free (name);
   gst_object_unref (pad);
-
-  g_mutex_unlock (&stream->priv->lock);
 
   return bin;
 }
