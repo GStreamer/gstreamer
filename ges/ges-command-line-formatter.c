@@ -35,13 +35,143 @@ struct _GESCommandLineFormatterPrivate
 G_DEFINE_TYPE (GESCommandLineFormatter, ges_command_line_formatter,
     GES_TYPE_FORMATTER);
 
+static gboolean
+_ges_command_line_formatter_add_clip (GESTimeline * timeline,
+    GstStructure * structure, GError ** error);
+static gboolean
+_ges_command_line_formatter_add_effect (GESTimeline * timeline,
+    GstStructure * structure, GError ** error);
+static gboolean
+_ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
+    GstStructure * structure, GError ** error);
+
 typedef struct
 {
   const gchar *long_name;
   const gchar *short_name;
   GType type;
   const gchar *new_name;
-} Properties;
+  const gchar *desc;
+} Property;
+
+// Currently Clip has the most properties.. adapt as needed
+#define MAX_PROPERTIES 8
+typedef struct
+{
+  const gchar *long_name;
+  gchar short_name;
+  ActionFromStructureFunc callback;
+  const gchar *description;
+  /* The first property must be the ID on the command line */
+  Property properties[MAX_PROPERTIES];
+} GESCommandLineOption;
+
+/*  *INDENT-OFF* */
+static GESCommandLineOption options[] = {
+  {"clip", 'c', (ActionFromStructureFunc) _ges_command_line_formatter_add_clip,
+    "<clip uri> - Adds a clip in the timeline.",
+    {
+      {
+        "uri", "n", 0, "asset-id",
+        "The URI of the media file."
+      },
+      {
+        "name", "n", 0, NULL,
+        "The name of the clip, can be used as an ID later."
+      },
+      {
+        "start", "s",GST_TYPE_CLOCK_TIME, NULL,
+        "The starting position of the clip in the timeline."
+      },
+      {
+        "duration", "d", GST_TYPE_CLOCK_TIME, NULL,
+        "The duration of the clip."
+      },
+      {
+        "inpoint", "i", GST_TYPE_CLOCK_TIME, NULL,
+        "The inpoint of the clip (time in the input file to start playing from)."
+      },
+      {
+        "track-types", "tt", 0, NULL,
+        "The type of the tracks where the clip should be used (audio or video or audio+video)."
+      },
+      {
+        "layer", "l", 0, NULL,
+        "The priority of the layer into which the clip should be added."
+      },
+      {NULL, 0, 0, NULL, FALSE},
+    },
+  },
+  {"effect", 'e', (ActionFromStructureFunc) _ges_command_line_formatter_add_effect,
+    "<effect bin description> - Adds an effect as specified by 'bin-description',\n"
+    "similar to gst-launch-style pipeline description, without setting properties\n"
+    "(see `set-` for information about how to set properties).\n",
+    {
+      {
+        "bin-description", "d", 0, "asset-id",
+        "gst-launch style bin description."
+      },
+      {
+        "element-name", "e", 0, NULL,
+        "The name of the element to apply the effect on."
+      },
+      {
+        "name", "n", 0, "child-name",
+        "The name to be given to the effect."
+      },
+      {NULL, NULL, 0, NULL, FALSE},
+    },
+  },
+  {"test-clip", 0, (ActionFromStructureFunc) _ges_command_line_formatter_add_test_clip,
+    "<test clip pattern> - Add a test clip in the timeline.",
+    {
+      {
+        "pattern", "p", 0, NULL,
+        "The testsource pattern name."
+      },
+      {
+        "name", "n", 0, NULL,
+        "The name of the clip, can be used as an ID later."
+      },
+      {
+        "start", "s",GST_TYPE_CLOCK_TIME, NULL,
+        "The starting position of the clip in the timeline."
+      },
+      {
+        "duration", "d", GST_TYPE_CLOCK_TIME, NULL,
+        "The duration of the clip."
+      },
+      {
+        "inpoint", "i", GST_TYPE_CLOCK_TIME, NULL,
+        "The inpoint of the clip (time in the input file to start playing)."
+      },
+      {
+        "layer", "l", 0, NULL,
+        "The priority of the layer into which the clip should be added."
+      },
+      {NULL, 0, 0, NULL, FALSE},
+    },
+  },
+  {
+    "set-", 0, NULL,
+    "<property name> <value> - Set a property on the last added element.\n"
+    "Any child property that exists on the previously added element\n"
+    "can be used as <property name>",
+    {
+      {NULL, NULL, 0, NULL, FALSE},
+    },
+  },
+};
+/*  *INDENT-ON* */
+
+/* Should always be in the same order as the options */
+typedef enum
+{
+  CLIP,
+  EFFECT,
+  TEST_CLIP,
+  SET,
+} GESCommandLineOptionType;
 
 static gint                     /*  -1: not present, 0: failure, 1: OK */
 _convert_to_clocktime (GstStructure * structure, const gchar * name,
@@ -84,7 +214,7 @@ done:
 }
 
 static gboolean
-_cleanup_fields (const Properties * field_names, GstStructure * structure,
+_cleanup_fields (const Property * field_names, GstStructure * structure,
     GError ** error)
 {
   guint i;
@@ -141,18 +271,7 @@ static gboolean
 _ges_command_line_formatter_add_clip (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
-  const Properties field_names[] = {
-    {"uri", "n", 0, "asset-id"},
-    {"name", "n", 0, NULL},
-    {"start", "s", GST_TYPE_CLOCK_TIME, NULL},
-    {"duration", "d", GST_TYPE_CLOCK_TIME, NULL},
-    {"inpoint", "i", GST_TYPE_CLOCK_TIME, NULL},
-    {"track-types", "tt", 0, NULL},
-    {"layer", "l", 0, NULL},
-    {NULL, 0, 0, NULL},
-  };
-
-  if (!_cleanup_fields (field_names, structure, error))
+  if (!_cleanup_fields (options[CLIP].properties, structure, error))
     return FALSE;
 
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESUriClip", NULL);
@@ -164,17 +283,7 @@ static gboolean
 _ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
-  const Properties field_names[] = {
-    {"pattern", "p", G_TYPE_STRING, NULL},
-    {"name", "n", 0, NULL},
-    {"start", "s", GST_TYPE_CLOCK_TIME, NULL},
-    {"duration", "d", GST_TYPE_CLOCK_TIME, NULL},
-    {"inpoint", "i", GST_TYPE_CLOCK_TIME, NULL},
-    {"layer", "l", 0, NULL},
-    {NULL, 0, 0, NULL},
-  };
-
-  if (!_cleanup_fields (field_names, structure, error))
+  if (!_cleanup_fields (options[TEST_CLIP].properties, structure, error))
     return FALSE;
 
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESTestClip", NULL);
@@ -188,14 +297,7 @@ static gboolean
 _ges_command_line_formatter_add_effect (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
-  const Properties field_names[] = {
-    {"element-name", "e", 0, NULL},
-    {"bin-description", "d", 0, "asset-id"},
-    {"name", "n", 0, "child-name"},
-    {NULL, NULL, 0, NULL},
-  };
-
-  if (!_cleanup_fields (field_names, structure, error))
+  if (!_cleanup_fields (options[EFFECT].properties, structure, error))
     return FALSE;
 
   gst_structure_set (structure, "child-type", G_TYPE_STRING, "GESEffect", NULL);
@@ -203,45 +305,15 @@ _ges_command_line_formatter_add_effect (GESTimeline * timeline,
   return _ges_container_add_child_from_struct (timeline, structure, error);
 }
 
-static GOptionEntry timeline_parsing_options[] = {
-  {"clip", 'c', 0.0, G_OPTION_ARG_CALLBACK,
-        &_ges_command_line_formatter_add_clip,
-        "<clip uri> - Adds a clip in the timeline.",
-      "     * s=, start             The start position of the element inside the layer.\n"
-        "     * d=, duration          The duration of the clip.\n"
-        "     * i=, inpoint           The inpoint of the clip.\n"
-        "     * tt=, track-types      The type of the tracks where the clip should be used:\n"
-        "       Examples:\n"
-        "        * audio  / a\n"
-        "        * video / v\n"
-        "        * audio+video / a+v\n"
-        "       (Will default to all the media types in the clip that match the global track-types)\n"},
-  {"effect", 'e', 0.0, G_OPTION_ARG_CALLBACK,
-        &_ges_command_line_formatter_add_effect,
-        "<effect bin description> - Adds an effect as specified by 'bin-description'.",
-      "     * d=, bin-description   The description of the effect bin with a gst-launch-style pipeline description.\n"
-        "     * e=, element-name      The name of the element to apply the effect on.\n"},
-  {"test-clip", 0, 0.0, G_OPTION_ARG_CALLBACK,
-        &_ges_command_line_formatter_add_test_clip,
-        "<test clip pattern> - Add a test clip in the timeline.",
-      "     * s=, start              The start position of the element inside the layer.\n"
-        "     * d=, duration           The duration of the clip.\n"
-        "     * i=, inpoint            The inpoint of the clip.\n"},
-  {"set-", 0, 0.0, G_OPTION_ARG_CALLBACK,
-        NULL,
-      "<property name> <value> - Set a property on the last added element."
-        " Any child property that exists on the previously added element"
-        " can be used as <property name>", NULL},
-};
-
 gchar *
 ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
 {
   gint i;
-  gchar *help = NULL;
+  GString *help = g_string_new (NULL);
 
-  for (i = 0; i < G_N_ELEMENTS (timeline_parsing_options); i++) {
+  for (i = 0; i < G_N_ELEMENTS (options); i++) {
     gboolean print = nargs == 0;
+    GESCommandLineOption option = options[i];
 
     if (!print) {
       gint j;
@@ -249,7 +321,7 @@ ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
       for (j = 0; j < nargs; j++) {
         gchar *cname = commands[j][0] == '+' ? &commands[j][1] : commands[j];
 
-        if (!g_strcmp0 (cname, timeline_parsing_options[i].long_name)) {
+        if (!g_strcmp0 (cname, option.long_name)) {
           print = TRUE;
           break;
         }
@@ -257,24 +329,27 @@ ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
     }
 
     if (print) {
-      gchar *tmp = g_strdup_printf ("%s  %s%s %s\n", help ? help : "",
-          timeline_parsing_options[i].arg_description ? "+" : "",
-          timeline_parsing_options[i].long_name,
-          timeline_parsing_options[i].description);
+      g_string_append_printf (help, "%s%s %s\n",
+          option.properties[0].long_name ? "+" : "",
+          option.long_name, option.description);
 
-      g_free (help);
-      help = tmp;
+      if (option.properties[0].long_name) {
+        gint j;
 
-      if (timeline_parsing_options[i].arg_description) {
-        tmp = g_strdup_printf ("%s     Properties:\n%s\n", help,
-            timeline_parsing_options[i].arg_description);
-        g_free (help);
-        help = tmp;
+        g_string_append (help, "  Properties:\n");
+
+        for (j = 1; option.properties[j].long_name; j++) {
+          Property prop = option.properties[j];
+          g_string_append_printf (help, "    * %s: %s\n", prop.long_name,
+              prop.desc);
+        }
       }
+
+      g_string_append (help, "\n");
     }
   }
 
-  return help;
+  return g_string_free (help, FALSE);
 }
 
 
@@ -363,13 +438,10 @@ _load (GESFormatter * self, GESTimeline * timeline, const gchar * string,
       continue;
     }
 
-    for (i = 0; i < G_N_ELEMENTS (timeline_parsing_options); i++) {
-      if (gst_structure_has_name (tmp->data,
-              timeline_parsing_options[i].long_name)
-          || (strlen (name) == 1 &&
-              *name == timeline_parsing_options[i].short_name)) {
-        EXEC (((ActionFromStructureFunc) timeline_parsing_options[i].arg_data),
-            tmp->data, &err);
+    for (i = 0; i < G_N_ELEMENTS (options); i++) {
+      if (gst_structure_has_name (tmp->data, options[i].long_name)
+          || (strlen (name) == 1 && *name == options[i].short_name)) {
+        EXEC (((ActionFromStructureFunc) options[i].callback), tmp->data, &err);
       }
     }
   }
