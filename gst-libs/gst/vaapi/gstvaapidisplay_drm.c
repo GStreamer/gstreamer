@@ -56,6 +56,7 @@ typedef enum
 
 static DRMDeviceType g_drm_device_type;
 static GMutex g_drm_device_type_lock;
+static const gchar *allowed_subsystems[] = { "pci", "platform", NULL };
 
 static gboolean
 supports_vaapi (int fd)
@@ -83,6 +84,7 @@ get_default_device_path (GstVaapiDisplay * display)
   struct udev_device *device, *parent;
   struct udev_enumerate *e = NULL;
   struct udev_list_entry *l;
+  gint i;
   int fd;
 
   if (!priv->device_path_default) {
@@ -111,7 +113,13 @@ get_default_device_path (GstVaapiDisplay * display)
       syspath = udev_list_entry_get_name (l);
       device = udev_device_new_from_syspath (udev, syspath);
       parent = udev_device_get_parent (device);
-      if (strcmp (udev_device_get_subsystem (parent), "pci") != 0) {
+
+      for (i = 0; allowed_subsystems[i] != NULL; i++)
+        if (strcmp (udev_device_get_subsystem (parent),
+                allowed_subsystems[i]) == 0)
+          break;
+
+      if (allowed_subsystems[i] == NULL) {
         udev_device_unref (device);
         continue;
       }
@@ -185,6 +193,7 @@ set_device_path_from_fd (GstVaapiDisplay * display, gint drm_device)
   struct udev_enumerate *e = NULL;
   struct udev_list_entry *l;
   gboolean success = FALSE;
+  gint i;
 
   g_free (priv->device_path);
   priv->device_path = NULL;
@@ -195,10 +204,18 @@ set_device_path_from_fd (GstVaapiDisplay * display, gint drm_device)
   busid = drmGetBusid (drm_device);
   if (!busid)
     goto end;
-  if (strncmp (busid, "pci:", 4) != 0)
+
+  for (i = 0; allowed_subsystems[i] != NULL; i++) {
+    busid_length = strlen (allowed_subsystems[i]);
+
+    if (strncmp (busid, allowed_subsystems[i], busid_length) == 0) {
+      busid += busid_length + 1;
+      busid_length = strlen (busid);
+    }
+  }
+
+  if (allowed_subsystems[i] == NULL)
     goto end;
-  busid += 4;
-  busid_length = strlen (busid);
 
   udev = udev_new ();
   if (!udev)
