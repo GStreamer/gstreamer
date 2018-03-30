@@ -354,7 +354,14 @@ _find_request (gconstpointer resp, gconstpointer req)
   GstMsdkAllocResponse *cached_resp = (GstMsdkAllocResponse *) resp;
   mfxFrameAllocRequest *_req = (mfxFrameAllocRequest *) req;
 
-  return cached_resp ? cached_resp->request.Type != _req->Type : -1;
+  /* Confirm if it's under the size of the cached response */
+  if (_req->Info.Width <= cached_resp->request.Info.Width &&
+      _req->Info.Height <= cached_resp->request.Info.Height) {
+    return _req->Type & cached_resp->
+        request.Type & MFX_MEMTYPE_FROM_DECODE ? 0 : -1;
+  }
+
+  return -1;
 }
 
 GstMsdkAllocResponse *

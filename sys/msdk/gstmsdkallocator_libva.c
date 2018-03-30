@@ -56,6 +56,10 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     GstMsdkAllocResponse *cached =
         gst_msdk_context_get_cached_alloc_responses_by_request (context, req);
     if (cached) {
+      /* check if enough frames were allocated */
+      if (req->NumFrameSuggested > cached->response->NumFrameActual)
+        return MFX_ERR_MEMORY_ALLOC;
+
       *resp = *cached->response;
       return MFX_ERR_NONE;
     }
