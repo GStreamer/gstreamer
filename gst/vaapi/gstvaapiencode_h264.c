@@ -334,7 +334,7 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
 
     /* Check for the largest profile that is supported */
-    profile = find_best_profile (allowed_caps);
+    profile = find_best_profile (available_caps);
     if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
       GST_INFO ("using %s profile as target decoder constraints",
           gst_vaapi_utils_h264_get_profile_string (profile));
