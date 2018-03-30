@@ -128,6 +128,8 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
     ges_structure_parser_parse_string (self, "effect, bin-description=", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "transition", 10))
     ges_structure_parser_parse_string (self, "transition, type=", TRUE);
+  else if (!g_ascii_strncasecmp (symbol, "title", 5))
+    ges_structure_parser_parse_string (self, "title, text=(string)", TRUE);
 }
 
 void

@@ -328,6 +328,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   GESClip *clip;
   gint layer_priority;
   const gchar *name;
+  const gchar *text;
   const gchar *pattern;
   gchar *asset_id = NULL;
   gchar *check_asset_id = NULL;
@@ -340,7 +341,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
 
   const gchar *valid_fields[] =
       { "asset-id", "pattern", "name", "layer-priority", "layer", "type",
-    "start", "inpoint", "duration", NULL
+    "start", "inpoint", "duration", "text", NULL
   };
 
   FieldsError fields_error = { valid_fields, NULL };
@@ -351,6 +352,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   GET_AND_CHECK ("asset-id", G_TYPE_STRING, &check_asset_id, beach);
 
   TRY_GET_STRING ("pattern", &pattern, NULL);
+  TRY_GET_STRING ("text", &text, NULL);
   TRY_GET_STRING ("name", &name, NULL);
   TRY_GET ("layer-priority", G_TYPE_INT, &layer_priority, -1);
   if (layer_priority == -1)
@@ -422,6 +424,10 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
         g_type_class_unref (enum_class);
       }
     }
+
+    if (GES_IS_TITLE_CLIP (clip) && text)
+      ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (clip),
+          "text", text, NULL);
 
     if (name
         && !ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (clip), name)) {

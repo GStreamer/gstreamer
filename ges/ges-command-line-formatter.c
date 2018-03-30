@@ -44,6 +44,9 @@ _ges_command_line_formatter_add_effect (GESTimeline * timeline,
 static gboolean
 _ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
     GstStructure * structure, GError ** error);
+static gboolean
+_ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
+    GstStructure * structure, GError ** error);
 
 typedef struct
 {
@@ -152,6 +155,40 @@ static GESCommandLineOption options[] = {
       {NULL, 0, 0, NULL, FALSE},
     },
   },
+  {"title", 'c', (ActionFromStructureFunc) _ges_command_line_formatter_add_title_clip,
+    "<title text> - Adds a clip in the timeline.",
+    {
+      {
+        "text", "n", 0, NULL,
+        "The text to be used as title."
+      },
+      {
+        "name", "n", 0, NULL,
+        "The name of the clip, can be used as an ID later."
+      },
+      {
+        "start", "s",GST_TYPE_CLOCK_TIME, NULL,
+        "The starting position of the clip in the timeline."
+      },
+      {
+        "duration", "d", GST_TYPE_CLOCK_TIME, NULL,
+        "The duration of the clip."
+      },
+      {
+        "inpoint", "i", GST_TYPE_CLOCK_TIME, NULL,
+        "The inpoint of the clip (time in the input file to start playing from)."
+      },
+      {
+        "track-types", "tt", 0, NULL,
+        "The type of the tracks where the clip should be used (audio or video or audio+video)."
+      },
+      {
+        "layer", "l", 0, NULL,
+        "The priority of the layer into which the clip should be added."
+      },
+      {NULL, 0, 0, NULL, FALSE},
+    },
+  },
   {
     "set-", 0, NULL,
     "<property name> <value> - Set a property on the last added element.\n"
@@ -170,6 +207,7 @@ typedef enum
   CLIP,
   EFFECT,
   TEST_CLIP,
+  TITLE,
   SET,
 } GESCommandLineOptionType;
 
@@ -289,6 +327,21 @@ _ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESTestClip", NULL);
   gst_structure_set (structure, "asset-id", G_TYPE_STRING,
       gst_structure_get_string (structure, "pattern"), NULL);
+
+  return _ges_add_clip_from_struct (timeline, structure, error);
+}
+
+static gboolean
+_ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
+    GstStructure * structure, GError ** error)
+{
+  if (!_cleanup_fields (options[TEST_CLIP].properties, structure, error))
+    return FALSE;
+
+  gst_structure_set (structure, "type", G_TYPE_STRING, "GESTitleClip", NULL);
+  gst_structure_set (structure, "asset-id", G_TYPE_STRING, "GESTitleClip",
+      NULL);
+  GST_ERROR ("Structure: %" GST_PTR_FORMAT, structure);
 
   return _ges_add_clip_from_struct (timeline, structure, error);
 }

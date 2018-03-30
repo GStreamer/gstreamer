@@ -15,6 +15,7 @@ CLIP 		[ ]+\+clip[ ]+
 TEST_CLIP       [ ]+\+test-clip[ ]+
 TRANSITION	[ ]+\+transition[ ]+
 EFFECT		[ ]+\+effect[ ]+
+TITLE		[ ]+\+title[ ]+
 
 SETTER		[ ]+set-[^ ]+[ ]+
 
@@ -24,7 +25,7 @@ SETTER		[ ]+set-[^ ]+[ ]+
 		ges_structure_parser_parse_string (yyextra, yytext, FALSE);
 }
 
-{CLIP}|{TRANSITION}|{EFFECT}|{TEST_CLIP}   {
+{CLIP}|{TRANSITION}|{EFFECT}|{TEST_CLIP}|{TITLE}   {
 		ges_structure_parser_parse_symbol (yyextra, yytext);
 }
 
