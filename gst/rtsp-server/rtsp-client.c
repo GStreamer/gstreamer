@@ -2852,7 +2852,6 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_KEYMGMT, keymgmt);
 
     g_free (location);
-    g_free (keymgmt);
   }
 
   /* we suspend after the announce */
