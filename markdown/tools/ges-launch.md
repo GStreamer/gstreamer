@@ -233,6 +233,17 @@ contains a video stream.
 This will set the "dusts" property of the agingtv to false and play the
 timeline back.
 
+### +title
+
+Adds a title to the timeline.
+
+#### Mandatory arguments
+
+__text:__
+
+The text to be used as a Title.
+
+
 ## Options
 
 ### Project-related options
