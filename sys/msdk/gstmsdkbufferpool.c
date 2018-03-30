@@ -253,8 +253,8 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
 
   surface = gst_msdk_get_surface_from_buffer (buf);
   if (!surface || surface->Data.Locked > 0) {
-    if (!gst_msdk_video_memory_get_surface_available (GST_MSDK_VIDEO_MEMORY_CAST
-            (gst_buffer_peek_memory (buf, 0)))) {
+    if (!gst_msdk_video_memory_get_surface_available (gst_buffer_peek_memory
+            (buf, 0))) {
       GST_WARNING_OBJECT (pool, "failed to get new surface available");
       return GST_FLOW_ERROR;
     }
@@ -278,8 +278,7 @@ gst_msdk_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buf)
   if (!surface)
     goto done;
 
-  gst_msdk_video_memory_release_surface (GST_MSDK_VIDEO_MEMORY_CAST
-      (gst_buffer_peek_memory (buf, 0)));
+  gst_msdk_video_memory_release_surface (gst_buffer_peek_memory (buf, 0));
 
 done:
   return GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buf);

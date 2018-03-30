@@ -73,10 +73,10 @@ GstMemory *
 gst_msdk_video_memory_new (GstAllocator * allocator);
 
 gboolean
-gst_msdk_video_memory_get_surface_available (GstMsdkVideoMemory * mem);
+gst_msdk_video_memory_get_surface_available (GstMemory * mem);
 
 void
-gst_msdk_video_memory_release_surface (GstMsdkVideoMemory * mem);
+gst_msdk_video_memory_release_surface (GstMemory * mem);
 
 gboolean
 gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,

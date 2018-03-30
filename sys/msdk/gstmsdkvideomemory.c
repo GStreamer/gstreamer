@@ -61,13 +61,18 @@ gst_msdk_video_allocator_get_surface (GstAllocator * allocator)
 }
 
 gboolean
-gst_msdk_video_memory_get_surface_available (GstMsdkVideoMemory * mem)
+gst_msdk_video_memory_get_surface_available (GstMemory * mem)
 {
   GstAllocator *allocator;
+  GstMsdkVideoMemory *msdk_mem;
 
-  allocator = GST_MEMORY_CAST (mem)->allocator;
-  mem->surface = gst_msdk_video_allocator_get_surface (allocator);
-  return mem->surface ? TRUE : FALSE;
+  g_return_val_if_fail (mem, FALSE);
+  g_return_val_if_fail (GST_IS_MSDK_VIDEO_MEMORY (mem), FALSE);
+
+  msdk_mem = GST_MSDK_VIDEO_MEMORY_CAST (mem);
+  allocator = mem->allocator;
+  msdk_mem->surface = gst_msdk_video_allocator_get_surface (allocator);
+  return msdk_mem->surface ? TRUE : FALSE;
 }
 
 /*
@@ -76,23 +81,28 @@ gst_msdk_video_memory_get_surface_available (GstMsdkVideoMemory * mem)
  * Otherwise, we put the surface to the available list.
  */
 void
-gst_msdk_video_memory_release_surface (GstMsdkVideoMemory * mem)
+gst_msdk_video_memory_release_surface (GstMemory * mem)
 {
   GstMsdkVideoAllocator *msdk_video_allocator;
+  GstMsdkVideoMemory *msdk_mem;
 
-  msdk_video_allocator =
-      GST_MSDK_VIDEO_ALLOCATOR_CAST (GST_MEMORY_CAST (mem)->allocator);
-  if (!mem->surface)
+  g_return_if_fail (mem);
+  g_return_if_fail (GST_IS_MSDK_VIDEO_MEMORY (mem));
+
+  msdk_mem = GST_MSDK_VIDEO_MEMORY_CAST (mem);
+  msdk_video_allocator = GST_MSDK_VIDEO_ALLOCATOR_CAST (mem->allocator);
+
+  if (!msdk_mem->surface)
     return;
 
-  if (mem->surface->Data.Locked > 0)
+  if (msdk_mem->surface->Data.Locked > 0)
     gst_msdk_context_put_surface_locked (msdk_video_allocator->context,
-        msdk_video_allocator->alloc_response, mem->surface);
+        msdk_video_allocator->alloc_response, msdk_mem->surface);
   else
     gst_msdk_context_put_surface_available (msdk_video_allocator->context,
-        msdk_video_allocator->alloc_response, mem->surface);
+        msdk_video_allocator->alloc_response, msdk_mem->surface);
 
-  mem->surface = NULL;
+  msdk_mem->surface = NULL;
   return;
 }
 
