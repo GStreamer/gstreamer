@@ -7,6 +7,7 @@
 GST_CAPS_FEATURE_MEMORY_DMABUF
 gst_dmabuf_allocator_new
 gst_dmabuf_allocator_alloc
+gst_dmabuf_allocator_alloc_with_flags
 gst_dmabuf_memory_get_fd
 gst_is_dmabuf_memory
 <SUBSECTION Standard>

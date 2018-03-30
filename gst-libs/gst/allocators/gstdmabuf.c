@@ -158,6 +158,32 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 }
 
 /**
+ * gst_dmabuf_allocator_alloc_with_flags:
+ * @allocator: allocator to be used for this memory
+ * @fd: dmabuf file descriptor
+ * @size: memory size
+ * @flags: extra #GstFdMemoryFlags
+ *
+ * Return a %GstMemory that wraps a dmabuf file descriptor.
+ *
+ * Returns: (transfer full): a GstMemory based on @allocator.
+ *
+ * When the buffer will be released the allocator will close the @fd unless
+ * the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
+ * The memory is only mmapped on gst_buffer_mmap() request.
+ *
+ * Since: 1.16
+ */
+GstMemory *
+gst_dmabuf_allocator_alloc_with_flags (GstAllocator * allocator, gint fd,
+    gsize size, GstFdMemoryFlags flags)
+{
+  g_return_val_if_fail (GST_IS_DMABUF_ALLOCATOR (allocator), NULL);
+
+  return gst_fd_allocator_alloc (allocator, fd, size, flags);
+}
+
+/**
  * gst_dmabuf_memory_get_fd:
  * @mem: the memory to get the file descriptor
  *
