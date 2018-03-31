@@ -21,8 +21,6 @@ var peer_connection;
 var ws_conn;
 // Promise for local stream after constraints are approved by the user
 var local_stream_promise;
-// MediaStream: the local stream
-var local_stream;
 
 function getOurId() {
     return Math.floor(Math.random() * (9000 - 10) + 10).toString();
@@ -59,9 +57,7 @@ function setError(text) {
 
 function resetVideo() {
     // Release the webcam and mic
-    if (local_stream != null)
-        local_stream.stop();
-    local_stream = null;
+    local_stream_promise.then(stream => { stream.stop(); });
 
     // Reset the video element and stop showing the last received frame
     var videoElement = getVideoElement();
@@ -219,7 +215,6 @@ function errorUserMediaHandler() {
 function createCall(msg) {
     // Reset connection attempts because we connected successfully
     connect_attempts = 0;
-    local_stream = null;
 
     console.log('Creating RTCPeerConnection');
 
@@ -229,7 +224,7 @@ function createCall(msg) {
     local_stream_promise = getLocalStream().then((stream) => {
         console.log('Adding local stream');
         peer_connection.addStream(stream);
-        local_stream = stream;
+        return stream;
     }).catch(setError);
 
     if (!msg.sdp) {
