@@ -16,7 +16,9 @@
 */
 /* @@MIDL_FILE_HEADING(  ) */
 
+#ifdef _MSC_VER
 #pragma warning( disable: 4049 )  /* more than 64k source lines */
+#endif
 
 
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
