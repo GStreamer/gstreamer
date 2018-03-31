@@ -45,6 +45,7 @@ static SoupWebsocketConnection *ws_conn = NULL;
 static enum AppState app_state = 0;
 static const gchar *peer_id = NULL;
 static const gchar *server_url = "wss://webrtc.nirbheek.in:8443";
+static gboolean strict_ssl = TRUE;
 
 static GOptionEntry entries[] =
 {
@@ -566,7 +567,7 @@ connect_to_websocket_server_async (void)
   SoupSession *session;
   const char *https_aliases[] = {"wss", NULL};
 
-  session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, TRUE,
+  session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, strict_ssl,
       SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
       //SOUP_SESSION_SSL_CA_FILE, "/etc/ssl/certs/ca-bundle.crt",
       SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
@@ -629,6 +630,16 @@ main (int argc, char *argv[])
   if (!peer_id) {
     g_printerr ("--peer-id is a required argument\n");
     return -1;
+  }
+
+  /* Don't use strict ssl when running a localhost server, because
+   * it's probably a test server with a self-signed certificate */
+  {
+    GstUri *uri = gst_uri_from_string (server_url);
+    if (g_strcmp0 ("localhost", gst_uri_get_host (uri)) == 0 ||
+        g_strcmp0 ("127.0.0.1", gst_uri_get_host (uri)) == 0)
+      strict_ssl = FALSE;
+    gst_uri_unref (uri);
   }
 
   loop = g_main_loop_new (NULL, FALSE);
