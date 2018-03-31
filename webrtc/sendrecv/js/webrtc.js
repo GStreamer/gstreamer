@@ -14,6 +14,8 @@ var rtc_configuration = {iceServers: [{urls: "stun:stun.services.mozilla.com"},
                                       {urls: "stun:stun.l.google.com:19302"}]};
 var ws_conn;
 // Promise for local stream after constraints are approved by the user
+var local_stream_promise;
+// MediaStream: the local stream
 var local_stream;
 var peer_id;
 
@@ -50,7 +52,13 @@ function setError(text) {
     span.classList.add('error');
 }
 
-function resetVideoElement() {
+function resetVideo() {
+    // Release the webcam and mic
+    if (local_stream != null)
+        local_stream.stop();
+    local_stream = null;
+
+    // Reset the video element and stop showing the last received frame
     var videoElement = getVideoElement();
     videoElement.pause();
     videoElement.src = "";
@@ -65,7 +73,7 @@ function onIncomingSDP(sdp) {
         if (sdp.type != "offer")
             return;
         setStatus("Got SDP offer");
-        local_stream.then((stream) => {
+        local_stream_promise.then((stream) => {
             setStatus("Got local stream, creating answer");
             peer_connection.createAnswer()
             .then(onLocalDescription).catch(setError);
@@ -128,7 +136,7 @@ function onServerMessage(event) {
 }
 
 function onServerClose(event) {
-    resetVideoElement();
+    resetVideo();
 
     if (peer_connection != null) {
         peer_connection.close();
@@ -203,15 +211,17 @@ function errorUserMediaHandler() {
 function createCall(msg) {
     // Reset connection attempts because we connected successfully
     connect_attempts = 0;
+    local_stream = null;
 
     console.log('Creating RTCPeerConnection');
 
     peer_connection = new RTCPeerConnection(rtc_configuration);
     peer_connection.onaddstream = onRemoteStreamAdded;
     /* Send our video/audio to the other peer */
-    local_stream = getLocalStream().then((stream) => {
+    local_stream_promise = getLocalStream().then((stream) => {
         console.log('Adding local stream');
         peer_connection.addStream(stream);
+        local_stream = stream;
     }).catch(setError);
 
     if (!msg.sdp) {
