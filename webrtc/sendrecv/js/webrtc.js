@@ -13,6 +13,7 @@ var peer_connection = null;
 var rtc_configuration = {iceServers: [{urls: "stun:stun.services.mozilla.com"},
                                       {urls: "stun:stun.l.google.com:19302"}]};
 var ws_conn;
+// Promise for local stream after constraints are approved by the user
 var local_stream;
 var peer_id;
 
@@ -54,7 +55,10 @@ function onIncomingSDP(sdp) {
         if (sdp.type != "offer")
             return;
         setStatus("Got SDP offer, creating answer");
-        peer_connection.createAnswer().then(onLocalDescription).catch(setStatus);
+        local_stream.then((stream) => {
+            peer_connection.createAnswer()
+            .then(onLocalDescription).catch(setStatus);
+        }).catch(errorUserMediaHandler);
     }).catch(setStatus);
 }
 
@@ -130,6 +134,17 @@ function onServerError(event) {
     window.setTimeout(websocketServerConnect, 3000);
 }
 
+function getLocalStream() {
+    var constraints = {video: true, audio: true};
+
+    // Add local stream
+    if (navigator.mediaDevices.getUserMedia) {
+        return navigator.mediaDevices.getUserMedia(constraints);
+    } else {
+        errorUserMediaHandler();
+    }
+}
+
 function websocketServerConnect() {
     connect_attempts++;
     if (connect_attempts > 3) {
@@ -156,17 +171,6 @@ function websocketServerConnect() {
     ws_conn.addEventListener('error', onServerError);
     ws_conn.addEventListener('message', onServerMessage);
     ws_conn.addEventListener('close', onServerClose);
-
-    var constraints = {video: true, audio: true};
-
-    // Add local stream
-    if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then((stream) => { local_stream = stream })
-            .catch(errorUserMediaHandler);
-    } else {
-        errorUserMediaHandler();
-    }
 }
 
 function onRemoteStreamAdded(event) {
@@ -192,7 +196,10 @@ function createCall(msg) {
     peer_connection = new RTCPeerConnection(rtc_configuration);
     peer_connection.onaddstream = onRemoteStreamAdded;
     /* Send our video/audio to the other peer */
-    peer_connection.addStream(local_stream);
+    local_stream = getLocalStream().then((stream) => {
+        console.log('Adding local stream');
+        peer_connection.addStream(stream);
+    }).catch(errorUserMediaHandler);
 
     if (!msg.sdp) {
         console.log("WARNING: First message wasn't an SDP message!?");
