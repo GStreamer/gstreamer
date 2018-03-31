@@ -43,4 +43,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
         <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
       </union>
 	</add-node>
+
+	<!-- Mark reserved fields as padding -->
+	<attr path="//*[contains(@cname, 'ges_reserved')]" name="padding">true</attr>
 </metadata>

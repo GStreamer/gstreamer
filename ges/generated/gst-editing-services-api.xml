@@ -246,7 +246,7 @@
         <method vm="get_id" />
         <method vm="get_real_extractable_type" />
         <method vm="register_metas" />
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <virtual_method name="GetParametersFromId" cname="get_parameters_from_id" shared="true" hidden="true">
         <return-type type="GParameter*">
@@ -315,7 +315,7 @@
         <field cname="parent_iface" access="public" writeable="false" readable="true" is_callback="false" name="ParentIface" type="GTypeInterface">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_meta_container_get_type" shared="true">
         <return-type type="GType" />
@@ -622,7 +622,7 @@
         <method vm="inform_proxy" />
         <method vm="proxied" />
         <method vm="request_id_update" />
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_asset_get_type" shared="true">
         <return-type type="GType" />
@@ -740,7 +740,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="AudioSource" cname="GESAudioSource" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESSource">
       <implements>
@@ -752,7 +752,7 @@
           <warning>missing glib:type-name</warning>
         </field>
         <method vm="create_source" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <virtual_method name="CreateSource" cname="create_source" shared="true" hidden="true">
         <return-type type="GstElement*" />
@@ -767,7 +767,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAudioSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="AudioTestSource" cname="GESAudioTestSource" opaque="false" hidden="false" parent="GESAudioSource">
       <implements>
@@ -778,7 +778,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESAudioSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_audio_test_source_get_type" shared="true">
         <return-type type="GType" />
@@ -807,7 +807,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAudioTestSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="AudioTrack" cname="GESAudioTrack" opaque="false" hidden="false" parent="GESTrack">
       <implements>
@@ -818,7 +818,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESTrackClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_audio_track_get_type" shared="true">
         <return-type type="GType" />
@@ -828,7 +828,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAudioTrackPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="AudioTransition" cname="GESAudioTransition" opaque="false" hidden="false" parent="GESTransition">
       <implements>
@@ -839,7 +839,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESTransitionClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_audio_transition_get_type" shared="true">
         <return-type type="GType" />
@@ -849,7 +849,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAudioTransitionPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="AudioUriSource" cname="GESAudioUriSource" opaque="false" hidden="false" parent="GESAudioSource">
       <implements>
@@ -860,7 +860,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESAudioSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_audio_uri_source_get_type" shared="true">
         <return-type type="GType" />
@@ -871,7 +871,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAudioUriSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="BaseEffect" cname="GESBaseEffect" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESOperation">
       <implements>
@@ -882,7 +882,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESOperationClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_base_effect_get_type" shared="true">
         <return-type type="GType" />
@@ -891,7 +891,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESBaseEffectPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="BaseEffectClip" cname="GESBaseEffectClip" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESOperationClip">
       <implements>
@@ -902,7 +902,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESOperationClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_base_effect_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -911,7 +911,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESBaseEffectClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="BaseTransitionClip" cname="GESBaseTransitionClip" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESOperationClip">
       <implements>
@@ -922,7 +922,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESOperationClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_base_transition_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -931,7 +931,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESBaseTransitionClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="BaseXmlFormatter" cname="GESBaseXmlFormatter" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESFormatter">
       <implements>
@@ -943,7 +943,7 @@
         </field>
         <field cname="content_parser" access="public" writeable="false" readable="true" is_callback="false" name="ContentParser" type="GMarkupParser" />
         <method vm="save" />
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <virtual_method name="Save" cname="save" shared="true">
         <return-type type="GLib.String*" owned="true" />
@@ -960,7 +960,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESBaseXmlFormatterPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Clip" cname="GESClip" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESContainer">
       <implements>
@@ -973,7 +973,7 @@
         </field>
         <field cname="create_track_element" access="public" writeable="false" readable="true" is_callback="false" name="CreateTrackElement" type="GESCreateTrackElementFunc" />
         <field cname="create_track_elements" access="public" writeable="false" readable="true" is_callback="false" name="CreateTrackElements" type="GESCreateTrackElementsFunc" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -1073,7 +1073,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
     </object>
     <object name="ClipAsset" cname="GESClipAsset" opaque="false" hidden="false" parent="GESAsset">
       <implements>
@@ -1085,7 +1085,7 @@
         <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GESAssetClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_clip_asset_get_type" shared="true">
         <return-type type="GType" />
@@ -1105,7 +1105,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESClipAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="CommandLineFormatter" cname="GESCommandLineFormatter" opaque="false" hidden="false" parent="GESFormatter">
       <implements>
@@ -1148,7 +1148,7 @@
         <method vm="group" />
         <method vm="edit" />
         <field cname="grouping_priority" access="private" writeable="false" readable="false" is_callback="false" name="GroupingPriority" type="guint" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       </class_struct>
       <virtual_method name="Group" cname="group" shared="true" hidden="true">
         <return-type type="GESContainer*" />
@@ -1236,7 +1236,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESContainerPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       <signal name="ChildAdded" cname="child-added" when="first" field_name="child_added">
         <return-type type="void" />
         <parameters>
@@ -1260,7 +1260,7 @@
           <warning>missing glib:type-name</warning>
         </field>
         <field cname="rate_properties" access="private" writeable="false" readable="false" is_callback="false" name="RateProperties" type="GList*" element_type="gpointer" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="RegisterRateProperty" cname="ges_effect_class_register_rate_property" shared="true">
         <return-type type="gboolean" />
@@ -1282,7 +1282,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESEffectPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="EffectAsset" cname="GESEffectAsset" opaque="false" hidden="false" parent="GESTrackElementAsset">
       <implements>
@@ -1294,7 +1294,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESTrackElementAssetClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_effect_asset_get_type" shared="true">
         <return-type type="GType" />
@@ -1303,7 +1303,7 @@
       <field cname="priv" access="public" writeable="false" readable="true" is_callback="false" name="Priv" type="GESEffectAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="EffectClip" cname="GESEffectClip" opaque="false" hidden="false" parent="GESBaseEffectClip">
       <implements>
@@ -1314,7 +1314,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESBaseEffectClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_effect_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -1331,7 +1331,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESEffectClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Formatter" cname="GESFormatter" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GInitiallyUnowned">
       <implements>
@@ -1350,7 +1350,7 @@
         <field cname="mimetype" access="private" writeable="false" readable="false" is_callback="false" name="Mimetype" type="gchar*" />
         <field cname="version" access="private" writeable="false" readable="false" is_callback="false" name="Version" type="gdouble" />
         <field cname="rank" access="private" writeable="false" readable="false" is_callback="false" name="Rank" type="GstRank" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="RegisterMetas" cname="ges_formatter_class_register_metas" shared="true">
         <return-type type="void" />
@@ -1430,7 +1430,7 @@
       </field>
       <field cname="project" access="private" writeable="false" readable="false" is_callback="false" name="Project" type="GESProject*" />
       <field cname="timeline" access="private" writeable="false" readable="false" is_callback="false" name="Timeline" type="GESTimeline*" />
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Group" cname="GESGroup" opaque="false" hidden="false" parent="GESContainer">
       <implements>
@@ -1441,7 +1441,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESContainerClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_group_get_type" shared="true">
         <return-type type="GType" />
@@ -1456,7 +1456,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESGroupPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="ImageSource" cname="GESImageSource" opaque="false" hidden="false" parent="GESVideoSource">
       <implements>
@@ -1467,7 +1467,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESVideoSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_image_source_get_type" shared="true">
         <return-type type="GType" />
@@ -1478,7 +1478,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESImageSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Layer" cname="GESLayer" opaque="false" hidden="false" parent="GInitiallyUnowned">
       <implements>
@@ -1492,7 +1492,7 @@
         <method vm="get_objects" />
         <method vm="object_added" />
         <method vm="object_removed" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_layer_get_type" shared="true">
         <return-type type="GType" />
@@ -1594,7 +1594,7 @@
       <field cname="priv" access="public" writeable="false" readable="true" is_callback="false" name="Priv" type="GESLayerPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       <signal name="ClipAdded" cname="clip-added" when="first">
         <return-type type="void" />
         <parameters>
@@ -1617,7 +1617,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESVideoSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_multi_file_source_get_type" shared="true">
         <return-type type="GType" />
@@ -1633,7 +1633,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESMultiFileSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Operation" cname="GESOperation" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESTrackElement">
       <implements>
@@ -1644,7 +1644,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESTrackElementClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_operation_get_type" shared="true">
         <return-type type="GType" />
@@ -1653,7 +1653,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESOperationPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="OperationClip" cname="GESOperationClip" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESClip">
       <implements>
@@ -1664,7 +1664,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_operation_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -1673,7 +1673,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESOperationClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="OverlayClip" cname="GESOverlayClip" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESOperationClip">
       <implements>
@@ -1684,7 +1684,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESOperationClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_overlay_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -1693,7 +1693,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESOverlayClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Pipeline" cname="GESPipeline" opaque="false" hidden="false" parent="GstPipeline">
       <implements>
@@ -1704,7 +1704,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GstPipelineClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_pipeline_get_type" shared="true">
         <return-type type="GType" />
@@ -1792,7 +1792,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESPipelinePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="PitiviFormatter" cname="GESPitiviFormatter" opaque="false" hidden="false" parent="GESFormatter">
       <implements>
@@ -1802,7 +1802,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESFormatterClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_pitivi_formatter_get_type" shared="true">
         <return-type type="GType" />
@@ -1812,7 +1812,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESPitiviFormatterPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Project" cname="GESProject" opaque="false" hidden="false" parent="GESAsset">
       <implements>
@@ -1830,7 +1830,7 @@
         <method signal_vm="missing_uri" />
         <method vm="loading_error" />
         <method signal_vm="loaded" />
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_project_get_type" shared="true">
         <return-type type="GType" />
@@ -1928,7 +1928,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESProjectPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="20" />
+      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       <signal name="AssetAdded" cname="asset-added" when="last" field_name="asset_added">
         <return-type type="void" />
         <parameters>
@@ -1978,7 +1978,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESTrackElementClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_source_get_type" shared="true">
         <return-type type="GType" />
@@ -1987,7 +1987,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="SourceClip" cname="GESSourceClip" opaque="false" hidden="false" parent="GESClip">
       <implements>
@@ -1998,7 +1998,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_source_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -2007,7 +2007,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESSourceClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="TestClip" cname="GESTestClip" opaque="false" hidden="false" parent="GESSourceClip">
       <implements>
@@ -2018,7 +2018,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESSourceClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_test_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -2077,7 +2077,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTestClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="TextOverlay" cname="GESTextOverlay" opaque="false" hidden="false" parent="GESOperation">
       <implements>
@@ -2088,7 +2088,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESOperationClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_text_overlay_get_type" shared="true">
         <return-type type="GType" />
@@ -2168,7 +2168,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTextOverlayPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="TextOverlayClip" cname="GESTextOverlayClip" opaque="false" hidden="false" parent="GESOverlayClip">
       <implements>
@@ -2179,7 +2179,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESOverlayClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_text_overlay_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -2266,7 +2266,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTextOverlayClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Timeline" cname="GESTimeline" opaque="false" hidden="false" parent="GstBin">
       <implements>
@@ -2284,7 +2284,7 @@
         <method signal_vm="layer_removed" />
         <method signal_vm="group_added" />
         <method signal_vm="group_removed" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_timeline_get_type" shared="true">
         <return-type type="GType" />
@@ -2429,7 +2429,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTimelinePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       <signal name="Commited" cname="commited" when="last">
         <return-type type="void" />
         <parameters />
@@ -2520,7 +2520,7 @@
         <method vm="list_children_properties" />
         <method vm="lookup_child" />
         <method vm="get_track_types" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="18" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="18" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_timeline_element_get_type" shared="true">
         <return-type type="GType" />
@@ -2837,7 +2837,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTimelineElementPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       <signal name="DeepNotify" cname="deep-notify" when="first">
         <return-type type="void" />
         <parameters>
@@ -2855,7 +2855,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESSourceClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_title_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -2953,7 +2953,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTitleClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="TitleSource" cname="GESTitleSource" opaque="false" hidden="false" parent="GESVideoSource">
       <implements>
@@ -2964,7 +2964,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESVideoSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="3" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="3" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_title_source_get_type" shared="true">
         <return-type type="GType" />
@@ -3053,7 +3053,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTitleSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Track" cname="GESTrack" opaque="false" hidden="false" parent="GstBin">
       <implements>
@@ -3065,7 +3065,7 @@
           <warning>missing glib:type-name</warning>
         </field>
         <method vm="get_mixing_element" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_track_get_type" shared="true">
         <return-type type="GType" />
@@ -3154,7 +3154,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTrackPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       <signal name="Commited" cname="commited" when="last">
         <return-type type="void" />
         <parameters />
@@ -3188,7 +3188,7 @@
         <method vm="changed" />
         <method vm="list_children_properties" />
         <method vm="lookup_child" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_track_element_get_type" shared="true">
         <return-type type="GType" />
@@ -3326,7 +3326,7 @@
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="asset" access="private" writeable="false" readable="false" is_callback="false" name="Asset" type="GESAsset*" />
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="20" padding="true" />
       <signal name="ControlBindingAdded" cname="control-binding-added" when="first">
         <return-type type="void" />
         <parameters>
@@ -3350,7 +3350,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESAssetClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_track_element_asset_get_type" shared="true">
         <return-type type="GType" />
@@ -3370,7 +3370,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTrackElementAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="Transition" cname="GESTransition" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESOperation">
       <implements>
@@ -3381,7 +3381,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESOperationClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_transition_get_type" shared="true">
         <return-type type="GType" />
@@ -3390,7 +3390,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTransitionPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="TransitionClip" cname="GESTransitionClip" opaque="false" hidden="false" parent="GESBaseTransitionClip">
       <implements>
@@ -3401,7 +3401,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESBaseTransitionClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_transition_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -3422,7 +3422,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESTransitionClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="UriClip" cname="GESUriClip" opaque="false" hidden="false" parent="GESSourceClip">
       <implements>
@@ -3433,7 +3433,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESSourceClipClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_uri_clip_get_type" shared="true">
         <return-type type="GType" />
@@ -3465,7 +3465,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESUriClipPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="UriClipAsset" cname="GESUriClipAsset" opaque="false" hidden="false" parent="GESClipAsset">
       <implements>
@@ -3479,7 +3479,7 @@
         </field>
         <field cname="discoverer" access="private" writeable="false" readable="false" is_callback="false" name="Discoverer" type="GstDiscoverer*" />
         <field cname="sync_discoverer" access="private" writeable="false" readable="false" is_callback="false" name="SyncDiscoverer" type="GstDiscoverer*" />
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="SetTimeout" cname="ges_uri_clip_asset_class_set_timeout" shared="true">
         <return-type type="void" />
@@ -3527,7 +3527,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESUriClipAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="UriSourceAsset" cname="GESUriSourceAsset" opaque="false" hidden="false" parent="GESTrackElementAsset">
       <implements>
@@ -3539,7 +3539,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESTrackElementAssetClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_uri_source_asset_get_type" shared="true">
         <return-type type="GType" />
@@ -3560,7 +3560,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESUriSourceAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="__ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="__gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="VideoSource" cname="GESVideoSource" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GESSource">
       <implements>
@@ -3592,7 +3592,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="VideoTestSource" cname="GESVideoTestSource" opaque="false" hidden="false" parent="GESVideoSource">
       <implements>
@@ -3603,7 +3603,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESVideoSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_video_test_source_get_type" shared="true">
         <return-type type="GType" />
@@ -3622,7 +3622,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoTestSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="VideoTrack" cname="GESVideoTrack" opaque="false" hidden="false" parent="GESTrack">
       <implements>
@@ -3633,7 +3633,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESTrackClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_video_track_get_type" shared="true">
         <return-type type="GType" />
@@ -3643,7 +3643,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoTrackPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="VideoTransition" cname="GESVideoTransition" opaque="false" hidden="false" parent="GESTransition">
       <implements>
@@ -3654,7 +3654,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GESTransitionClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_video_transition_get_type" shared="true">
         <return-type type="GType" />
@@ -3697,7 +3697,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoTransitionPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="VideoUriSource" cname="GESVideoUriSource" opaque="false" hidden="false" parent="GESVideoSource">
       <implements>
@@ -3708,7 +3708,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESVideoSourceClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_video_uri_source_get_type" shared="true">
         <return-type type="GType" />
@@ -3719,7 +3719,7 @@
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESVideoUriSourcePrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="XmlFormatter" cname="GESXmlFormatter" opaque="false" hidden="false" parent="GESBaseXmlFormatter">
       <implements>
@@ -3729,7 +3729,7 @@
         <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GESBaseXmlFormatterClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="ges_xml_formatter_get_type" shared="true">
         <return-type type="GType" />
@@ -3738,7 +3738,7 @@
       <field cname="priv" access="public" writeable="false" readable="true" is_callback="false" name="Priv" type="GESXmlFormatterPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" />
+      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <struct name="AssetPrivate" cname="GESAssetPrivate" opaque="true" hidden="true" />
     <struct name="AudioSourcePrivate" cname="GESAudioSourcePrivate" opaque="true" hidden="true" />
