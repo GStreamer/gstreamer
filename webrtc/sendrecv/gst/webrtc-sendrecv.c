@@ -117,6 +117,8 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
   g_assert_nonnull (sink);
 
   if (g_strcmp0 (convert_name, "audioconvert") == 0) {
+    /* Might also need to resample, so add it just in case.
+     * Will be a no-op if it's not required. */
     resample = gst_element_factory_make ("audioresample", NULL);
     g_assert_nonnull (resample);
     gst_bin_add_many (GST_BIN (pipe), q, conv, resample, sink, NULL);
@@ -279,9 +281,9 @@ start_pipeline (void)
 
   pipe1 =
       gst_parse_launch ("webrtcbin name=sendrecv " STUN_SERVER
-      "videotestsrc pattern=ball ! queue ! vp8enc deadline=1 ! rtpvp8pay ! "
+      "videotestsrc pattern=ball ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay ! "
       "queue ! " RTP_CAPS_VP8 "96 ! sendrecv. "
-      "audiotestsrc wave=red-noise ! queue ! opusenc ! rtpopuspay ! "
+      "audiotestsrc wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! "
       "queue ! " RTP_CAPS_OPUS "97 ! sendrecv. ",
       &error);
 
