@@ -11,7 +11,7 @@
 var ws_server;
 var ws_port;
 // Set this to use a specific peer id instead of a random one
-var peer_id;
+var default_peer_id;
 // Override with your own STUN servers if you want
 var rtc_configuration = {iceServers: [{urls: "stun:stun.services.mozilla.com"},
                                       {urls: "stun:stun.l.google.com:19302"}]};
@@ -180,8 +180,7 @@ function websocketServerConnect() {
     if (textarea.value == '')
         textarea.value = JSON.stringify(default_constraints);
     // Fetch the peer id to use
-    peer_id = peer_id || getOurId();
-    ws_server = ws_server;
+    peer_id = default_peer_id || getOurId();
     ws_port = ws_port || '8443';
     if (window.location.protocol.startsWith ("file")) {
         ws_server = ws_server || "127.0.0.1";
