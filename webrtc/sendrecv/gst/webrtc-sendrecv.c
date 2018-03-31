@@ -647,11 +647,13 @@ main (int argc, char *argv[])
   connect_to_websocket_server_async ();
 
   g_main_loop_run (loop);
+  g_main_loop_unref (loop);
 
-  gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_NULL);
-  g_print ("Pipeline stopped\n");
-
-  gst_object_unref (pipe1);
+  if (pipe1) {
+    gst_element_set_state (GST_ELEMENT (pipe1), GST_STATE_NULL);
+    g_print ("Pipeline stopped\n");
+    gst_object_unref (pipe1);
+  }
 
   return 0;
 }
