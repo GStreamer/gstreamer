@@ -7,17 +7,22 @@
  * Author: Nirbheek Chauhan <nirbheek@centricular.com>
  */
 
-var connect_attempts = 0;
-
-var peer_connection = null;
+// Set this to override the automatic detection in websocketServerConnect()
+var ws_server;
+var ws_port;
+// Set this to use a specific peer id instead of a random one
+var peer_id;
+// Override with your own STUN servers if you want
 var rtc_configuration = {iceServers: [{urls: "stun:stun.services.mozilla.com"},
                                       {urls: "stun:stun.l.google.com:19302"}]};
+
+var connect_attempts = 0;
+var peer_connection;
 var ws_conn;
 // Promise for local stream after constraints are approved by the user
 var local_stream_promise;
 // MediaStream: the local stream
 var local_stream;
-var peer_id;
 
 function getOurId() {
     return Math.floor(Math.random() * (9000 - 10) + 10).toString();
@@ -170,17 +175,20 @@ function websocketServerConnect() {
         setError("Too many connection attempts, aborting. Refresh page to try again");
         return;
     }
-    peer_id = getOurId();
-    setStatus("Connecting to server");
-    loc = null;
+    // Fetch the peer id to use
+    peer_id = peer_id || getOurId();
+    ws_server = ws_server;
+    ws_port = ws_port || '8443';
     if (window.location.protocol.startsWith ("file")) {
-        loc = "127.0.0.1";
+        ws_server = ws_server || "127.0.0.1";
     } else if (window.location.protocol.startsWith ("http")) {
-        loc = window.location.hostname;
+        ws_server = ws_server || window.location.hostname;
     } else {
         throw new Error ("Don't know how to connect to the signalling server with uri" + window.location);
     }
-    ws_conn = new WebSocket('wss://' + loc + ':8443');
+    var ws_url = 'wss://' + ws_server + ':' + ws_port
+    setStatus("Connecting to server " + ws_url);
+    ws_conn = new WebSocket(ws_url);
     /* When connected, immediately register with the server */
     ws_conn.addEventListener('open', (event) => {
         document.getElementById("peer-id").textContent = peer_id;
