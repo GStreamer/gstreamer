@@ -27,7 +27,7 @@ function resetState() {
 }
 
 function handleIncomingError(error) {
-    setStatus("ERROR: " + error);
+    setError("ERROR: " + error);
     resetState();
 }
 
@@ -37,7 +37,17 @@ function getVideoElement() {
 
 function setStatus(text) {
     console.log(text);
-    document.getElementById("status").textContent = text;
+    span = document.getElementById("status")
+    // Don't set the status if it already contains an error
+    if (!span.classList.contains('error'))
+        span.textContent = text;
+}
+
+function setError(text) {
+    console.log(text);
+    span = document.getElementById("status")
+    span.textContent = text;
+    span.classList.add('error');
 }
 
 function resetVideoElement() {
@@ -54,12 +64,13 @@ function onIncomingSDP(sdp) {
         setStatus("Remote SDP set");
         if (sdp.type != "offer")
             return;
-        setStatus("Got SDP offer, creating answer");
+        setStatus("Got SDP offer");
         local_stream.then((stream) => {
+            setStatus("Got local stream, creating answer");
             peer_connection.createAnswer()
-            .then(onLocalDescription).catch(setStatus);
-        }).catch(errorUserMediaHandler);
-    }).catch(setStatus);
+            .then(onLocalDescription).catch(setError);
+        }).catch(setError);
+    }).catch(setError);
 }
 
 // Local description was set, send it to peer
@@ -76,7 +87,7 @@ function onLocalDescription(desc) {
 function onIncomingICE(ice) {
     console.log("Incoming ICE: " + JSON.stringify(ice));
     var candidate = new RTCIceCandidate(ice);
-    peer_connection.addIceCandidate(candidate).catch(setStatus);
+    peer_connection.addIceCandidate(candidate).catch(setError);
 }
 
 function onServerMessage(event) {
@@ -129,7 +140,7 @@ function onServerClose(event) {
 }
 
 function onServerError(event) {
-    setStatus("Unable to connect to server, did you add an exception for the certificate?")
+    setError("Unable to connect to server, did you add an exception for the certificate?")
     // Retry after 3 seconds
     window.setTimeout(websocketServerConnect, 3000);
 }
@@ -148,7 +159,7 @@ function getLocalStream() {
 function websocketServerConnect() {
     connect_attempts++;
     if (connect_attempts > 3) {
-        setStatus("Too many connection attempts, aborting. Refresh page to try again");
+        setError("Too many connection attempts, aborting. Refresh page to try again");
         return;
     }
     peer_id = getOurId();
@@ -186,12 +197,14 @@ function onRemoteStreamAdded(event) {
 }
 
 function errorUserMediaHandler() {
-    setStatus("Browser doesn't support getUserMedia!");
+    setError("Browser doesn't support getUserMedia!");
 }
 
 function createCall(msg) {
     // Reset connection attempts because we connected successfully
     connect_attempts = 0;
+
+    console.log('Creating RTCPeerConnection');
 
     peer_connection = new RTCPeerConnection(rtc_configuration);
     peer_connection.onaddstream = onRemoteStreamAdded;
@@ -199,7 +212,7 @@ function createCall(msg) {
     local_stream = getLocalStream().then((stream) => {
         console.log('Adding local stream');
         peer_connection.addStream(stream);
-    }).catch(errorUserMediaHandler);
+    }).catch(setError);
 
     if (!msg.sdp) {
         console.log("WARNING: First message wasn't an SDP message!?");
