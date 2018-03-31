@@ -354,6 +354,7 @@ G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip
  *              GESLayer                            *
  ****************************************************/
 G_GNUC_INTERNAL gboolean ges_layer_resync_priorities (GESLayer * layer);
+G_GNUC_INTERNAL void layer_set_priority               (GESLayer * layer, guint priority, gboolean emit);
 
 /****************************************************
  *              GESTrackElement                     *

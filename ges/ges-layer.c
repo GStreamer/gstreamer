@@ -105,7 +105,8 @@ ges_layer_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_PRIORITY:
-      ges_layer_set_priority (layer, g_value_get_uint (value));
+      GST_FIXME ("Deprecated, use ges_timeline_move_layer instead");
+      layer_set_priority (layer, g_value_get_uint (value), FALSE);
       break;
     case PROP_AUTO_TRANSITION:
       ges_layer_set_auto_transition (layer, g_value_get_boolean (value));
@@ -165,6 +166,10 @@ ges_layer_class_init (GESLayerClass * klass)
    *
    * Note that the timeline needs to be commited (with #ges_timeline_commit)
    * for the change to be taken into account.
+   *
+   * Deprecated:1.16.0: use #ges_timeline_move_layer instead. This deprecation means
+   * that you will not need to handle layer priorities at all yourself, GES
+   * will make sure there is never 'gaps' between layer priorities.
    */
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
@@ -280,6 +285,23 @@ ges_layer_resync_priorities (GESLayer * layer)
       GES_TYPE_SOURCE_CLIP);
 
   return TRUE;
+}
+
+void
+layer_set_priority (GESLayer * layer, guint priority, gboolean emit)
+{
+  GST_DEBUG ("layer:%p, priority:%d", layer, priority);
+
+  if (priority != layer->priv->priority) {
+    layer->priv->priority = priority;
+    layer->min_nle_priority = (priority * LAYER_HEIGHT) + MIN_NLE_PRIO;
+    layer->max_nle_priority = ((priority + 1) * LAYER_HEIGHT) + MIN_NLE_PRIO;
+
+    ges_layer_resync_priorities (layer);
+  }
+
+  if (emit)
+    g_object_notify (G_OBJECT (layer), "priority");
 }
 
 static void
@@ -413,23 +435,19 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
  *
  * Sets the layer to the given @priority. See the documentation of the
  * priority property for more information.
+ *
+ * Deprecated:1.16.0: use #ges_timeline_move_layer instead. This deprecation means
+ * that you will not need to handle layer priorities at all yourself, GES
+ * will make sure there is never 'gaps' between layer priorities.
  */
 void
 ges_layer_set_priority (GESLayer * layer, guint priority)
 {
   g_return_if_fail (GES_IS_LAYER (layer));
 
-  GST_DEBUG ("layer:%p, priority:%d", layer, priority);
+  GST_FIXME ("Deprecated, use ges_timeline_move_layer instead");
 
-  if (priority != layer->priv->priority) {
-    layer->priv->priority = priority;
-    layer->min_nle_priority = (priority * LAYER_HEIGHT) + MIN_NLE_PRIO;
-    layer->max_nle_priority = ((priority + 1) * LAYER_HEIGHT) + MIN_NLE_PRIO;
-
-    ges_layer_resync_priorities (layer);
-  }
-
-  g_object_notify (G_OBJECT (layer), "priority");
+  layer_set_priority (layer, priority, TRUE);
 }
 
 /**

@@ -26,23 +26,22 @@
 GST_START_TEST (test_layer_properties)
 {
   GESTimeline *timeline;
-  GESLayer *layer;
+  GESLayer *layer, *layer1;
   GESTrack *track;
   GESTrackElement *trackelement;
   GESClip *clip;
 
   /* Timeline and 1 Layer */
   timeline = ges_timeline_new ();
-  layer = (GESLayer *) ges_layer_new ();
 
   /* The default priority is 0 */
+  fail_unless ((layer = ges_timeline_append_layer (timeline)));
   fail_unless_equals_int (ges_layer_get_priority (layer), 0);
 
-  /* Layers are initially floating, once we add them to the timeline,
-   * the timeline will take that reference. */
-  fail_unless (g_object_is_floating (layer));
-  fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_if (g_object_is_floating (layer));
+
+  fail_unless ((layer1 = ges_timeline_append_layer (timeline)));
+  fail_unless_equals_int (ges_layer_get_priority (layer1), 1);
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -92,7 +91,7 @@ GST_START_TEST (test_layer_properties)
       51, MIN_NLE_PRIO + TRANSITIONS_HEIGHT + LAYER_HEIGHT * 31, TRUE);
 
   /* and back to 0 */
-  g_object_set (layer, "priority", 0, NULL);
+  fail_unless (ges_timeline_move_layer (timeline, layer, 0));
   assert_equals_int (ges_layer_get_priority (layer), 0);
   assert_equals_uint64 (_PRIORITY (clip), 1);
   ges_timeline_commit (timeline);
@@ -121,16 +120,9 @@ GST_START_TEST (test_layer_priorities)
 
   /* Timeline and 3 Layer */
   timeline = ges_timeline_new ();
-  layer1 = (GESLayer *) ges_layer_new ();
-  layer2 = (GESLayer *) ges_layer_new ();
-  layer3 = (GESLayer *) ges_layer_new ();
-
-  ges_layer_set_priority (layer2, 1);
-  ges_layer_set_priority (layer3, 2);
-
-  fail_unless (ges_timeline_add_layer (timeline, layer1));
-  fail_unless (ges_timeline_add_layer (timeline, layer2));
-  fail_unless (ges_timeline_add_layer (timeline, layer3));
+  fail_unless ((layer1 = ges_timeline_append_layer (timeline)));
+  fail_unless ((layer2 = ges_timeline_append_layer (timeline)));
+  fail_unless ((layer3 = ges_timeline_append_layer (timeline)));
   fail_unless_equals_int (ges_layer_get_priority (layer1), 0);
   fail_unless_equals_int (ges_layer_get_priority (layer2), 1);
   fail_unless_equals_int (ges_layer_get_priority (layer3), 2);
@@ -189,9 +181,7 @@ GST_START_TEST (test_layer_priorities)
   assert_equals_int (prio3, 1 + MIN_NLE_PRIO + LAYER_HEIGHT * 2);
 
   /* Move layers around */
-  g_object_set (layer1, "priority", 2, NULL);
-  g_object_set (layer2, "priority", 0, NULL);
-  g_object_set (layer3, "priority", 1, NULL);
+  fail_unless (ges_timeline_move_layer (timeline, layer1, 2));
   ges_timeline_commit (timeline);
 
   /* And check the new priorities */

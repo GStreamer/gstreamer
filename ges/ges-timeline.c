@@ -744,9 +744,7 @@ _resync_layers (GESTimeline * timeline)
 
   timeline->priv->resyncing_layers = TRUE;
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
-    GST_ERROR_OBJECT (tmp->data, "New index: %d", i);
-    ges_layer_set_priority (tmp->data, i);
-
+    layer_set_priority (tmp->data, i, TRUE);
     i++;
   }
   timeline->priv->resyncing_layers = FALSE;
@@ -2540,6 +2538,9 @@ static void
 layer_priority_changed_cb (GESLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
+  if (timeline->priv->resyncing_layers)
+    return;
+
   timeline->layers = g_list_sort (timeline->layers, (GCompareFunc)
       sort_layers);
 }
