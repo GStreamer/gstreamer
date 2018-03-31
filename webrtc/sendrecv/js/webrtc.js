@@ -44,15 +44,15 @@ function getVideoElement() {
 
 function setStatus(text) {
     console.log(text);
-    span = document.getElementById("status")
+    var span = document.getElementById("status")
     // Don't set the status if it already contains an error
     if (!span.classList.contains('error'))
         span.textContent = text;
 }
 
 function setError(text) {
-    console.log(text);
-    span = document.getElementById("status")
+    console.error(text);
+    var span = document.getElementById("status")
     span.textContent = text;
     span.classList.add('error');
 }
@@ -71,7 +71,6 @@ function resetVideo() {
 
 // SDP offer received from peer, set remote description and create an answer
 function onIncomingSDP(sdp) {
-    console.log("Incoming SDP is "+ JSON.stringify(sdp));
     peer_connection.setRemoteDescription(sdp).then(() => {
         setStatus("Remote SDP set");
         if (sdp.type != "offer")
@@ -97,7 +96,6 @@ function onLocalDescription(desc) {
 
 // ICE candidate received from peer, add it to the peer connection
 function onIncomingICE(ice) {
-    console.log("Incoming ICE: " + JSON.stringify(ice));
     var candidate = new RTCIceCandidate(ice);
     peer_connection.addIceCandidate(candidate).catch(setError);
 }
@@ -140,6 +138,7 @@ function onServerMessage(event) {
 }
 
 function onServerClose(event) {
+    setStatus('Disconnected from server');
     resetVideo();
 
     if (peer_connection) {
@@ -158,8 +157,15 @@ function onServerError(event) {
 }
 
 function getLocalStream() {
+    var constraints;
     var textarea = document.getElementById('constraints');
-    var constraints = JSON.parse(textarea.value);
+    try {
+        constraints = JSON.parse(textarea.value);
+    } catch (e) {
+        console.error(e);
+        setError('ERROR parsing constraints: ' + e.message + ', using default constraints');
+        constraints = default_constraints;
+    }
     console.log(JSON.stringify(constraints));
 
     // Add local stream
@@ -176,6 +182,10 @@ function websocketServerConnect() {
         setError("Too many connection attempts, aborting. Refresh page to try again");
         return;
     }
+    // Clear errors in the status span
+    var span = document.getElementById("status");
+    span.classList.remove('error');
+    span.textContent = '';
     // Populate constraints
     var textarea = document.getElementById('constraints');
     if (textarea.value == '')
