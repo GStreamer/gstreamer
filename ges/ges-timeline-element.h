@@ -194,9 +194,9 @@ struct _GESTimelineElementClass
   GParamSpec** (*list_children_properties) (GESTimelineElement * self, guint *n_properties);
   gboolean (*lookup_child)                 (GESTimelineElement *self, const gchar *prop_name,
                                             GObject **child, GParamSpec **pspec);
+  GESTrackType (*get_track_types)          (GESTimelineElement * self);
   void         (*set_child_property)       (GESTimelineElement * self, GObject *child,
                                             GParamSpec *pspec, GValue *value);
-  GESTrackType (*get_track_types)          (GESTimelineElement * self);
 
   /*< private > */
   /* Padding for API extension */
