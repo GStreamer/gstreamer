@@ -59,7 +59,8 @@ function setError(text) {
 
 function resetVideo() {
     // Release the webcam and mic
-    local_stream_promise.then(stream => { stream.stop(); });
+    if (local_stream_promise)
+        local_stream_promise.then(stream => { stream.stop(); });
 
     // Reset the video element and stop showing the last received frame
     var videoElement = getVideoElement();
@@ -125,7 +126,7 @@ function onServerMessage(event) {
             }
 
             // Incoming JSON signals the beginning of a call
-            if (peer_connection == null)
+            if (!peer_connection)
                 createCall(msg);
 
             if (msg.sdp != null) {
@@ -141,7 +142,7 @@ function onServerMessage(event) {
 function onServerClose(event) {
     resetVideo();
 
-    if (peer_connection != null) {
+    if (peer_connection) {
         peer_connection.close();
         peer_connection = null;
     }
