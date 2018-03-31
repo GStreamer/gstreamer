@@ -18,7 +18,9 @@
 */
 /* @@MIDL_FILE_HEADING(  ) */
 
+#ifdef _MSC_VER
 #pragma warning( disable: 4049 )  /* more than 64k source lines */
+#endif
 
 
 #ifdef __cplusplus
