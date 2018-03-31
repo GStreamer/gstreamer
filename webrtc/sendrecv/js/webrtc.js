@@ -15,6 +15,8 @@ var peer_id;
 // Override with your own STUN servers if you want
 var rtc_configuration = {iceServers: [{urls: "stun:stun.services.mozilla.com"},
                                       {urls: "stun:stun.l.google.com:19302"}]};
+// The default constraints that will be attempted. Can be overriden by the user.
+var default_constraints = {video: true, audio: true};
 
 var connect_attempts = 0;
 var peer_connection;
@@ -155,7 +157,9 @@ function onServerError(event) {
 }
 
 function getLocalStream() {
-    var constraints = {video: true, audio: true};
+    var textarea = document.getElementById('constraints');
+    var constraints = JSON.parse(textarea.value);
+    console.log(JSON.stringify(constraints));
 
     // Add local stream
     if (navigator.mediaDevices.getUserMedia) {
@@ -171,6 +175,10 @@ function websocketServerConnect() {
         setError("Too many connection attempts, aborting. Refresh page to try again");
         return;
     }
+    // Populate constraints
+    var textarea = document.getElementById('constraints');
+    if (textarea.value == '')
+        textarea.value = JSON.stringify(default_constraints);
     // Fetch the peer id to use
     peer_id = peer_id || getOurId();
     ws_server = ws_server;
