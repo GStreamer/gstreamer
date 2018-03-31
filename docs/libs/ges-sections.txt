@@ -392,6 +392,8 @@ ges_timeline_get_snapping_distance
 ges_timeline_set_snapping_distance
 ges_timeline_get_element
 ges_timeline_is_empty
+GES_TIMELINE_GET_LAYERS
+GES_TIMELINE_GET_TRACKS
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
@@ -422,10 +424,6 @@ ges_layer_get_auto_transition
 ges_layer_set_auto_transition
 ges_layer_is_empty
 ges_layer_get_duration
-
-GES_TIMELINE_GET_LAYERS
-GES_TIMELINE_GET_TRACKS
-
 <SUBSECTION Standard>
 GESLayerPrivate
 ges_layer_set_timeline
