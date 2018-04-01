@@ -182,7 +182,7 @@ gst_cdata.set('GST_DISABLE_PLUGIN_DEFINE', '#undef GST_DISABLE_PLUGIN')
 
 configure_file(input : 'gstconfig.h.in',
   output : 'gstconfig.h',
-  install_dir : 'include/gstreamer-1.0/gst',
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst'),
   configuration : gst_cdata)
 
 version_cdata = configuration_data()
@@ -193,7 +193,7 @@ version_cdata.set('GST_VERSION_NANO', gst_version_nano)
 
 gst_version_h = configure_file(input : 'gstversion.h.in',
   output : 'gstversion.h',
-  install_dir : 'include/gstreamer-1.0/gst',
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst'),
   configuration : version_cdata)
 
 gst_enums = gnome.mkenums_simple('gstenumtypes',

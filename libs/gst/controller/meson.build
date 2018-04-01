@@ -31,7 +31,7 @@ controller_enums = gnome.mkenums_simple('controller-enumtypes',
   header_prefix : '#include <gst/controller/controller-prelude.h>',
   decorator : 'GST_CONTROLLER_API',
   install_header : true,
-  install_dir : 'include/gstreamer-1.0/gst/controller/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/controller'))
 gstcontroller_c = controller_enums[0]
 gstcontroller_h = controller_enums[1]
 

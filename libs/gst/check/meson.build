@@ -34,7 +34,7 @@ subdir('libcheck')
 configure_file(input : 'libcheck/check.h.in',
   output : 'internal-check.h',
   install : true,
-  install_dir : 'include/gstreamer-1.0/gst/check/',
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/check'),
   configuration : check_cdata)
 
 gst_check = shared_library('gstcheck-@0@'.format(apiversion),
