@@ -373,40 +373,75 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
 
   update_sdp_from_tags (stream, smedia);
 
-  if ((profile == GST_RTSP_PROFILE_AVPF || profile == GST_RTSP_PROFILE_SAVPF)
-      && (rtx_time = gst_rtsp_stream_get_retransmission_time (stream))) {
-    /* ssrc multiplexed retransmit functionality */
-    guint rtx_pt = gst_rtsp_stream_get_retransmission_pt (stream);
+  if (profile == GST_RTSP_PROFILE_AVPF || profile == GST_RTSP_PROFILE_SAVPF) {
+    if ((rtx_time = gst_rtsp_stream_get_retransmission_time (stream))) {
+      /* ssrc multiplexed retransmit functionality */
+      guint rtx_pt = gst_rtsp_stream_get_retransmission_pt (stream);
 
-    if (rtx_pt == 0) {
-      g_warning ("failed to find an available dynamic payload type. "
-          "Not adding retransmission");
-    } else {
-      gchar *tmp;
-      GstStructure *s;
-      gint caps_pt, caps_rate;
+      if (rtx_pt == 0) {
+        g_warning ("failed to find an available dynamic payload type. "
+            "Not adding retransmission");
+      } else {
+        gchar *tmp;
+        GstStructure *s;
+        gint caps_pt, caps_rate;
 
-      s = gst_caps_get_structure (caps, 0);
-      if (s == NULL)
-        goto no_caps_info;
+        s = gst_caps_get_structure (caps, 0);
+        if (s == NULL)
+          goto no_caps_info;
 
-      /* get payload type and clock rate */
-      gst_structure_get_int (s, "payload", &caps_pt);
-      gst_structure_get_int (s, "clock-rate", &caps_rate);
+        /* get payload type and clock rate */
+        gst_structure_get_int (s, "payload", &caps_pt);
+        gst_structure_get_int (s, "clock-rate", &caps_rate);
 
-      tmp = g_strdup_printf ("%d", rtx_pt);
-      gst_sdp_media_add_format (smedia, tmp);
-      g_free (tmp);
+        tmp = g_strdup_printf ("%d", rtx_pt);
+        gst_sdp_media_add_format (smedia, tmp);
+        g_free (tmp);
 
-      tmp = g_strdup_printf ("%d rtx/%d", rtx_pt, caps_rate);
-      gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
-      g_free (tmp);
+        tmp = g_strdup_printf ("%d rtx/%d", rtx_pt, caps_rate);
+        gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
+        g_free (tmp);
 
-      tmp =
-          g_strdup_printf ("%d apt=%d;rtx-time=%" G_GINT64_FORMAT, rtx_pt,
-          caps_pt, GST_TIME_AS_MSECONDS (rtx_time));
-      gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
-      g_free (tmp);
+        tmp =
+            g_strdup_printf ("%d apt=%d;rtx-time=%" G_GINT64_FORMAT, rtx_pt,
+            caps_pt, GST_TIME_AS_MSECONDS (rtx_time));
+        gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
+        g_free (tmp);
+      }
+    }
+
+    if (gst_rtsp_stream_get_ulpfec_percentage (stream)) {
+      guint ulpfec_pt = gst_rtsp_stream_get_ulpfec_pt (stream);
+
+      if (ulpfec_pt == 0) {
+        g_warning ("failed to find an available dynamic payload type. "
+            "Not adding ulpfec");
+      } else {
+        gchar *tmp;
+        GstStructure *s;
+        gint caps_pt, caps_rate;
+
+        s = gst_caps_get_structure (caps, 0);
+        if (s == NULL)
+          goto no_caps_info;
+
+        /* get payload type and clock rate */
+        gst_structure_get_int (s, "payload", &caps_pt);
+        gst_structure_get_int (s, "clock-rate", &caps_rate);
+
+        tmp = g_strdup_printf ("%d", ulpfec_pt);
+        gst_sdp_media_add_format (smedia, tmp);
+        g_free (tmp);
+
+        tmp = g_strdup_printf ("%d ulpfec/%d", ulpfec_pt, caps_rate);
+        gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
+        g_free (tmp);
+
+        tmp =
+            g_strdup_printf ("%d apt=%d", ulpfec_pt, caps_pt);
+        gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
+        g_free (tmp);
+      }
     }
   }
 

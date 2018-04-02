@@ -307,6 +307,28 @@ gboolean           gst_rtsp_stream_is_receiver (GstRTSPStream * stream);
 GST_RTSP_SERVER_API
 gboolean           gst_rtsp_stream_handle_keymgmt (GstRTSPStream *stream, const gchar *keymgmt);
 
+/* ULP Forward Error Correction (RFC 5109) */
+GST_RTSP_SERVER_API
+gboolean           gst_rtsp_stream_get_ulpfec_enabled (GstRTSPStream *stream);
+
+GST_RTSP_SERVER_API
+void               gst_rtsp_stream_set_ulpfec_pt (GstRTSPStream *stream, guint pt);
+
+GST_RTSP_SERVER_API
+guint              gst_rtsp_stream_get_ulpfec_pt (GstRTSPStream *stream);
+
+GST_RTSP_SERVER_API
+GstElement *       gst_rtsp_stream_request_ulpfec_decoder (GstRTSPStream *stream, GstElement *rtpbin, guint sessid);
+
+GST_RTSP_SERVER_API
+GstElement *       gst_rtsp_stream_request_ulpfec_encoder (GstRTSPStream *stream, guint sessid);
+
+GST_RTSP_SERVER_API
+void               gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream *stream, guint percentage);
+
+GST_RTSP_SERVER_API
+guint              gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream *stream);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

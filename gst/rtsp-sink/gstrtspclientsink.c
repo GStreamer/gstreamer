@@ -109,13 +109,17 @@ struct _GstRtspClientSinkPad
 {
   GstGhostPad parent;
   GstElement *custom_payloader;
+  guint ulpfec_percentage;
 };
 
 enum
 {
   PROP_PAD_0,
-  PROP_PAD_PAYLOADER
+  PROP_PAD_PAYLOADER,
+  PROP_PAD_ULPFEC_PERCENTAGE
 };
+
+#define DEFAULT_PAD_ULPFEC_PERCENTAGE 0
 
 static GType gst_rtsp_client_sink_pad_get_type (void);
 G_DEFINE_TYPE (GstRtspClientSinkPad, gst_rtsp_client_sink_pad,
@@ -140,6 +144,11 @@ gst_rtsp_client_sink_pad_set_property (GObject * object, guint prop_id,
       gst_object_ref_sink (pad->custom_payloader);
       GST_OBJECT_UNLOCK (pad);
       break;
+    case PROP_PAD_ULPFEC_PERCENTAGE:
+      GST_OBJECT_LOCK (pad);
+      pad->ulpfec_percentage = g_value_get_uint (value);
+      GST_OBJECT_UNLOCK (pad);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -158,6 +167,11 @@ gst_rtsp_client_sink_pad_get_property (GObject * object, guint prop_id,
     case PROP_PAD_PAYLOADER:
       GST_OBJECT_LOCK (pad);
       g_value_set_object (value, pad->custom_payloader);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    case PROP_PAD_ULPFEC_PERCENTAGE:
+      GST_OBJECT_LOCK (pad);
+      g_value_set_uint (value, pad->ulpfec_percentage);
       GST_OBJECT_UNLOCK (pad);
       break;
     default:
@@ -192,6 +206,11 @@ gst_rtsp_client_sink_pad_class_init (GstRtspClientSinkPadClass * klass)
       g_param_spec_object ("payloader", "Payloader",
           "The payloader element to use (NULL = default automatically selected)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_klass, PROP_PAD_ULPFEC_PERCENTAGE,
+      g_param_spec_uint ("ulpfec-percentage", "ULPFEC percentage",
+          "The percentage of ULP redundancy to apply", 0, 100, DEFAULT_PAD_ULPFEC_PERCENTAGE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -1099,7 +1118,7 @@ gst_rtsp_client_sink_create_stream (GstRTSPClientSink * sink,
     GstRTSPStreamContext * context, GstElement * payloader, GstPad * pad)
 {
   GstRTSPStream *stream = NULL;
-  guint pt, aux_pt;
+  guint pt, aux_pt, ulpfec_pt;
 
   GST_OBJECT_LOCK (sink);
 
@@ -1125,6 +1144,11 @@ gst_rtsp_client_sink_create_stream (GstRTSPClientSink * sink,
     goto no_free_pt;
   sink->next_dyn_pt++;
 
+  ulpfec_pt = sink->next_dyn_pt;
+  if (ulpfec_pt > 127)
+    goto no_free_pt;
+  sink->next_dyn_pt++;
+
   GST_OBJECT_UNLOCK (sink);
 
 
@@ -1142,6 +1166,9 @@ gst_rtsp_client_sink_create_stream (GstRTSPClientSink * sink,
   if (sink->rtp_blocksize > 0)
     gst_rtsp_stream_set_mtu (stream, sink->rtp_blocksize);
   gst_rtsp_stream_set_multicast_iface (stream, sink->multi_iface);
+
+  gst_rtsp_stream_set_ulpfec_pt (stream, ulpfec_pt);
+  gst_rtsp_stream_set_ulpfec_percentage (stream, context->ulpfec_percentage);
 
 #if 0
   if (priv->pool)
@@ -1228,6 +1255,8 @@ gst_rtsp_client_sink_setup_payloader (GstRTSPClientSink * sink, GstPad * pad,
   gst_ghost_pad_set_target (GST_GHOST_PAD (pad), ghostsink);
   gst_object_unref (GST_OBJECT (sinkpad));
   GST_RTSP_STATE_UNLOCK (sink);
+
+  context->ulpfec_percentage = cspad->ulpfec_percentage;
 
   gst_element_sync_state_with_parent (payloader);
 
@@ -3502,6 +3531,32 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPClientSink * sink)
   return ret;
 }
 
+static GstElement *
+request_fec_encoder (GstElement * rtpbin, guint sessid, GstRTSPClientSink * sink)
+{
+  GstRTSPStream *stream = NULL;
+  GstElement *ret = NULL;
+  GList *walk;
+
+  GST_RTSP_STATE_LOCK (sink);
+  for (walk = sink->contexts; walk; walk = g_list_next (walk)) {
+    GstRTSPStreamContext *context = (GstRTSPStreamContext *) walk->data;
+
+    if (sessid == gst_rtsp_stream_get_index (context->stream)) {
+      stream = context->stream;
+      break;
+    }
+  }
+
+  if (stream != NULL) {
+    ret = gst_rtsp_stream_request_ulpfec_encoder (stream, sessid);
+  }
+
+  GST_RTSP_STATE_UNLOCK (sink);
+
+  return ret;
+}
+
 static gboolean
 gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
 {
@@ -3567,6 +3622,9 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
       g_signal_connect (sink->rtpbin, "request-aux-sender",
           (GCallback) request_aux_sender, sink);
     }
+
+    g_signal_connect (sink->rtpbin, "request-fec-encoder",
+        (GCallback) request_fec_encoder, sink);
 
     if (!gst_rtsp_stream_join_bin (context->stream,
             GST_BIN (sink->internal_bin), sink->rtpbin, GST_STATE_PAUSED)) {

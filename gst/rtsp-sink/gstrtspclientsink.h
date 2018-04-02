@@ -118,6 +118,8 @@ struct _GstRTSPStreamContext {
   guint8        channel[2];
 
   GstRTSPStreamTransport *stream_transport;
+
+  guint ulpfec_percentage;
 };
 
 /**

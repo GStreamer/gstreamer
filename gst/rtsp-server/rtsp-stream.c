@@ -128,6 +128,13 @@ struct _GstRTSPStreamPrivate
   guint rtx_pt;
   GstClockTime rtx_time;
 
+  /* Forward Error Correction with RFC 5109 */
+  GstElement *ulpfec_decoder;
+  GstElement *ulpfec_encoder;
+  guint ulpfec_pt;
+  gboolean ulpfec_enabled;
+  guint ulpfec_percentage;
+
   /* pool used to manage unicast and multicast addresses */
   GstRTSPAddressPool *pool;
 
@@ -301,6 +308,10 @@ gst_rtsp_stream_finalize (GObject * obj)
     g_object_unref (priv->rtxsend);
   if (priv->rtxreceive)
     g_object_unref (priv->rtxreceive);
+  if (priv->ulpfec_encoder)
+    gst_object_unref (priv->ulpfec_encoder);
+  if (priv->ulpfec_decoder)
+    gst_object_unref (priv->ulpfec_decoder);
 
   for (i = 0; i < 2; i++) {
     if (priv->socket_v4[i])
@@ -2362,6 +2373,28 @@ done:
   return;
 }
 
+static void
+retrieve_ulpfec_pt (gpointer key, GstCaps *caps, GstElement *ulpfec_decoder)
+{
+  guint pt = GPOINTER_TO_INT (key);
+  const GstStructure *s = gst_caps_get_structure (caps, 0);
+
+  if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "ULPFEC"))
+    g_object_set (ulpfec_decoder, "pt", pt, NULL);
+}
+
+static void
+update_ulpfec_decoder_pt (GstRTSPStream * stream)
+{
+  if (!stream->priv->ulpfec_decoder)
+    goto done;
+
+  g_hash_table_foreach (stream->priv->ptmap, (GHFunc) retrieve_ulpfec_pt, stream->priv->ulpfec_decoder);
+
+done:
+  return;
+}
+
 /**
  * gst_rtsp_stream_request_aux_receiver:
  * @stream: a #GstRTSPStream
@@ -2385,6 +2418,7 @@ gst_rtsp_stream_request_aux_receiver (GstRTSPStream * stream, guint sessid)
   bin = gst_bin_new (NULL);
   stream->priv->rtxreceive = gst_element_factory_make ("rtprtxreceive", NULL);
   update_rtx_receive_pt_map (stream);
+  update_ulpfec_decoder_pt (stream);
   gst_bin_add (GST_BIN (bin), gst_object_ref (stream->priv->rtxreceive));
 
   pad = gst_element_get_static_pad (stream->priv->rtxreceive, "src");
@@ -4981,4 +5015,134 @@ gst_rtsp_stream_handle_keymgmt (GstRTSPStream * stream, const gchar * keymgmt)
   }
   g_strfreev (specs);
   return TRUE;
+}
+
+
+/**
+ * gst_rtsp_stream_get_ulpfec_pt:
+ *
+ * Returns: the payload type used for ULPFEC protection packets
+ *
+ * Since: 1.16
+ */
+guint
+gst_rtsp_stream_get_ulpfec_pt (GstRTSPStream *stream)
+{
+  guint res;
+
+  g_mutex_lock (&stream->priv->lock);
+  res = stream->priv->ulpfec_pt;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_stream_set_ulpfec_pt:
+ *
+ * Set the payload type to be used for ULPFEC protection packets
+ *
+ * Since: 1.16
+ */
+void
+gst_rtsp_stream_set_ulpfec_pt (GstRTSPStream * stream, guint pt)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->ulpfec_pt = pt;
+  if (stream->priv->ulpfec_encoder) {
+    g_object_set (stream->priv->ulpfec_encoder, "pt", pt, NULL);
+  }
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_request_ulpfec_decoder:
+ *
+ * Creating a rtpulpfecdec element
+ *
+ * Returns: (transfer full) (nullable): a #GstElement.
+ *
+ * Since: 1.16
+ */
+GstElement *
+gst_rtsp_stream_request_ulpfec_decoder (GstRTSPStream * stream, GstElement *rtpbin, guint sessid)
+{
+  GObject *internal_storage = NULL;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  stream->priv->ulpfec_decoder = gst_object_ref (gst_element_factory_make ("rtpulpfecdec", NULL));
+
+  g_signal_emit_by_name (G_OBJECT (rtpbin), "get-internal-storage", sessid, &internal_storage);
+  g_object_set (stream->priv->ulpfec_decoder, "storage", internal_storage, NULL);
+  g_object_unref (internal_storage);
+  update_ulpfec_decoder_pt (stream);
+
+  return stream->priv->ulpfec_decoder;
+}
+
+/**
+ * gst_rtsp_stream_request_ulpfec_encoder:
+ *
+ * Creating a rtpulpfecenc element
+ *
+ * Returns: (transfer full) (nullable): a #GstElement.
+ *
+ * Since: 1.16
+ */
+GstElement *
+gst_rtsp_stream_request_ulpfec_encoder (GstRTSPStream * stream, guint sessid)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  if (!stream->priv->ulpfec_percentage)
+    return NULL;
+
+  stream->priv->ulpfec_encoder = gst_object_ref (gst_element_factory_make ("rtpulpfecenc", NULL));
+
+  g_object_set (stream->priv->ulpfec_encoder, "pt", stream->priv->ulpfec_pt, "percentage", stream->priv->ulpfec_percentage, NULL);
+
+  return stream->priv->ulpfec_encoder;
+}
+
+/**
+ * gst_rtsp_stream_set_ulpfec_percentage:
+ *
+ * Sets the amount of redundancy to apply when creating ULPFEC
+ * protection packets.
+ *
+ * Since: 1.16
+ */
+void
+gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream *stream, guint percentage)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->ulpfec_percentage = percentage;
+  if (stream->priv->ulpfec_encoder) {
+    g_object_set (stream->priv->ulpfec_encoder, "percentage", percentage, NULL);
+  }
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_get_ulpfec_percentage:
+ *
+ * Returns: the amount of redundancy applied when creating ULPFEC
+ * protection packets.
+ *
+ * Since: 1.16
+ */
+guint
+gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream *stream)
+{
+  guint res;
+
+  g_mutex_lock (&stream->priv->lock);
+  res = stream->priv->ulpfec_percentage;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return res;
 }

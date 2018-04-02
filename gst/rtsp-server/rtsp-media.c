@@ -1517,6 +1517,7 @@ void
 gst_rtsp_media_set_latency (GstRTSPMedia * media, guint latency)
 {
   GstRTSPMediaPrivate *priv;
+  guint i;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
@@ -1526,8 +1527,19 @@ gst_rtsp_media_set_latency (GstRTSPMedia * media, guint latency)
 
   g_mutex_lock (&priv->lock);
   priv->latency = latency;
-  if (priv->rtpbin)
+  if (priv->rtpbin) {
     g_object_set (priv->rtpbin, "latency", latency, NULL);
+
+    for (i = 0; i < media->priv->streams->len; i++) {
+      GObject *storage = NULL;
+
+      g_signal_emit_by_name (G_OBJECT (media->priv->rtpbin), "get-storage",
+          i, &storage);
+      if (storage)
+        g_object_set (storage, "size-time", (media->priv->latency + 50) * GST_MSECOND, NULL);
+    }
+  }
+
   g_mutex_unlock (&priv->lock);
 }
 
@@ -3108,6 +3120,38 @@ request_aux_receiver (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
   return res;
 }
 
+static GstElement *
+request_fec_decoder (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstRTSPStream *stream = NULL;
+  guint i;
+  GstElement *res = NULL;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    stream = g_ptr_array_index (priv->streams, i);
+
+    if (sessid == gst_rtsp_stream_get_index (stream))
+      break;
+
+    stream = NULL;
+  }
+  g_mutex_unlock (&priv->lock);
+
+  if (stream) {
+    res = gst_rtsp_stream_request_ulpfec_decoder (stream, rtpbin, sessid);
+  }
+
+  return res;
+}
+
+static void
+new_storage_cb (GstElement * rtpbin, GObject * storage, guint sessid, GstRTSPMedia * media)
+{
+  g_object_set (storage, "size-time", (media->priv->latency + 50) * GST_MSECOND, NULL);
+}
+
 static gboolean
 start_prepare (GstRTSPMedia * media)
 {
@@ -3118,6 +3162,9 @@ start_prepare (GstRTSPMedia * media)
   g_rec_mutex_lock (&priv->state_lock);
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
     goto no_longer_preparing;
+
+  g_signal_connect (priv->rtpbin, "new-storage", G_CALLBACK (new_storage_cb), media);
+  g_signal_connect (priv->rtpbin, "request-fec-decoder", G_CALLBACK (request_fec_decoder), media);
 
   /* link streams we already have, other streams might appear when we have
    * dynamic elements */
@@ -3145,7 +3192,7 @@ start_prepare (GstRTSPMedia * media)
 
   if (priv->rtpbin)
     g_object_set (priv->rtpbin, "do-retransmission", priv->do_retransmission,
-        NULL);
+        "do-lost", TRUE, NULL);
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;
@@ -3805,6 +3852,9 @@ default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp)
 
       s = gst_caps_get_structure (caps, 0);
       gst_structure_set_name (s, "application/x-rtp");
+
+      if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "ULPFEC"))
+        gst_structure_set (s, "is-fec", G_TYPE_BOOLEAN, TRUE, NULL);
 
       gst_rtsp_stream_set_pt_map (stream, pt, caps);
       gst_caps_unref (caps);

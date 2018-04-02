@@ -630,6 +630,13 @@ gst_rtsp_stream_seekable
 GstRTSPStreamTransportFilterFunc
 gst_rtsp_stream_transport_filter
 
+gst_rtsp_stream_set_ulpfec_pt
+gst_rtsp_stream_get_ulpfec_pt
+gst_rtsp_stream_set_ulpfec_percentage
+gst_rtsp_stream_get_ulpfec_percentage
+gst_rtsp_stream_request_ulpfec_decoder
+gst_rtsp_stream_request_ulpfec_encoder
+
 <SUBSECTION Standard>
 GST_RTSP_STREAM_CAST
 GST_RTSP_STREAM_CLASS_CAST
