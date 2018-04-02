@@ -23,6 +23,13 @@
 
 #include <string.h>
 
+/**
+ * SECTION:gstvideoaffinetransformationmeta
+ * @title: GstVideoAffineTransformationMeta
+ * @short_description: GstMeta for video affine transformation
+ *
+ */
+
 GType
 gst_video_affine_transformation_meta_api_get_type (void)
 {

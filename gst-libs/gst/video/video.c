@@ -31,12 +31,11 @@
 
 /**
  * SECTION:gstvideo
- * @title: GstVideoAlignment
+ * @title: GstVideo
  * @short_description: Support library for video operations
  *
  * This library contains some helper functions and includes the
  * videosink and videofilter base classes.
- *
  */
 
 /**
