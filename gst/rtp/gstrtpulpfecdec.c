@@ -363,11 +363,18 @@ gst_rtp_ulpfec_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstRtpUlpFecDec *self = GST_RTP_ULPFEC_DEC (parent);
 
   if (G_LIKELY (GST_FLOW_OK == self->chain_return_val)) {
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+    buf = gst_buffer_make_writable (buf);
+
     if (G_UNLIKELY (self->unset_discont_flag)) {
       self->unset_discont_flag = FALSE;
-      buf = gst_buffer_make_writable (buf);
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
+
+    gst_rtp_buffer_map (buf, GST_MAP_WRITE, &rtp);
+    gst_rtp_buffer_set_seq (&rtp, self->next_seqnum++);
+    gst_rtp_buffer_unmap (&rtp);
+
     return gst_pad_push (self->srcpad, buf);
   }
 
@@ -396,6 +403,9 @@ gst_rtp_ulpfec_dec_handle_packet_loss (GstRtpUlpFecDec * self, guint16 seqnum,
             gst_rtp_ulpfec_dec_recover (self, self->caps_ssrc, caps_pt,
                 &recovered_pt, &recovered_seq))) {
       if (seqnum == recovered_seq) {
+        GstBuffer *sent_buffer;
+        GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
         recovered_buffer = gst_buffer_make_writable (recovered_buffer);
         GST_BUFFER_PTS (recovered_buffer) = timestamp;
         /* GST_BUFFER_DURATION (recovered_buffer) = duration;
@@ -403,16 +413,21 @@ gst_rtp_ulpfec_dec_handle_packet_loss (GstRtpUlpFecDec * self, guint16 seqnum,
 
         if (!self->lost_packet_from_storage)
           rtp_storage_put_recovered_packet (self->storage,
-              gst_buffer_ref (recovered_buffer), recovered_pt, self->caps_ssrc,
-              recovered_seq);
+              recovered_buffer, recovered_pt, self->caps_ssrc, recovered_seq);
 
         GST_DEBUG_OBJECT (self,
             "Pushing recovered packet ssrc=0x%08x seq=%u %" GST_PTR_FORMAT,
             self->caps_ssrc, seqnum, recovered_buffer);
 
+        sent_buffer = gst_buffer_copy_deep (recovered_buffer);
+
+        gst_rtp_buffer_map (sent_buffer, GST_MAP_WRITE, &rtp);
+        gst_rtp_buffer_set_seq (&rtp, self->next_seqnum++);
+        gst_rtp_buffer_unmap (&rtp);
+
         ret = FALSE;
         self->unset_discont_flag = TRUE;
-        self->chain_return_val = gst_pad_push (self->srcpad, recovered_buffer);
+        self->chain_return_val = gst_pad_push (self->srcpad, sent_buffer);
         break;
       }
 
@@ -444,11 +459,15 @@ gst_rtp_ulpfec_dec_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_event_has_name (event, "GstRTPPacketLost")) {
     guint seqnum;
     GstClockTime timestamp, duration;
+    GstStructure *s;
+
+    event = gst_event_make_writable (event);
+    s = gst_event_writable_structure (event);
 
     g_assert (self->have_caps_ssrc);
     g_assert (self->storage);
 
-    if (!gst_structure_get (gst_event_get_structure (event),
+    if (!gst_structure_get (s,
             "seqnum", G_TYPE_UINT, &seqnum,
             "timestamp", G_TYPE_UINT64, &timestamp,
             "duration", G_TYPE_UINT64, &duration, NULL))
@@ -457,10 +476,15 @@ gst_rtp_ulpfec_dec_handle_sink_event (GstPad * pad, GstObject * parent,
     forward =
         gst_rtp_ulpfec_dec_handle_packet_loss (self, seqnum, timestamp,
         duration);
-    if (forward)
+
+    if (forward) {
+      gst_structure_remove_field (s, "seqnum");
+      gst_structure_set (s, "might-have-been-fec", G_TYPE_BOOLEAN, TRUE, NULL);
       ++self->packets_unrecovered;
-    else
+    } else {
       ++self->packets_recovered;
+    }
+
     GST_DEBUG_OBJECT (self, "Unrecovered / Recovered: %lu / %lu",
         (gulong) self->packets_unrecovered, (gulong) self->packets_recovered);
   } else if (GST_EVENT_CAPS == GST_EVENT_TYPE (event)) {
@@ -513,6 +537,8 @@ gst_rtp_ulpfec_dec_init (GstRtpUlpFecDec * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->fec_pt = DEFAULT_FEC_PT;
+
+  self->next_seqnum = g_random_int_range (0, G_MAXINT16);
 
   self->chain_return_val = GST_FLOW_OK;
   self->have_caps_ssrc = FALSE;

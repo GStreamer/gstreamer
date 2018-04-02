@@ -74,7 +74,20 @@ push_lost_event (GstHarness * h, guint32 seqnum,
   }
 
   if (event_goes_through) {
-    fail_unless (packet_loss_in == packet_loss_out);
+    const GstStructure *s = gst_event_get_structure (packet_loss_out);
+    guint64 tscopy, durcopy;
+    gboolean might_have_been_fec;
+
+    fail_unless (gst_structure_has_name (s, "GstRTPPacketLost"));
+    fail_if (gst_structure_has_field (s, "seqnum"));
+    fail_unless (gst_structure_get_uint64 (s, "timestamp", &tscopy));
+    fail_unless (gst_structure_get_uint64 (s, "duration", &durcopy));
+    fail_unless (gst_structure_get_boolean (s, "might-have-been-fec",
+            &might_have_been_fec));
+
+    fail_unless_equals_uint64 (timestamp, tscopy);
+    fail_unless_equals_uint64 (duration, durcopy);
+    fail_unless (might_have_been_fec == TRUE);
     gst_event_unref (packet_loss_out);
   } else {
     fail_unless (NULL == packet_loss_out);
@@ -88,18 +101,31 @@ lose_and_recover_test (GstHarness * h, guint16 lost_seq,
   guint64 duration = 222222;
   guint64 timestamp = 111111;
   GstBuffer *bufout;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstRTPBuffer rtpout = GST_RTP_BUFFER_INIT;
+  GstBuffer *wrap;
+  gpointer reccopy = g_malloc (recbuf_size);
+
+  memcpy (reccopy, recbuf, recbuf_size);
 
   push_lost_event (h, lost_seq, timestamp, duration, FALSE);
 
   bufout = gst_harness_pull (h);
   fail_unless_equals_int (gst_buffer_get_size (bufout), recbuf_size);
   fail_unless_equals_int (GST_BUFFER_PTS (bufout), timestamp);
-  fail_unless (gst_buffer_memcmp (bufout, 0, recbuf, recbuf_size) == 0);
+  wrap = gst_buffer_new_wrapped (reccopy, recbuf_size);
+  gst_rtp_buffer_map (wrap, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_map (bufout, GST_MAP_READ, &rtpout);
+  gst_rtp_buffer_set_seq (&rtp, gst_rtp_buffer_get_seq (&rtpout));
+  fail_unless (gst_buffer_memcmp (bufout, 0, reccopy, recbuf_size) == 0);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_rtp_buffer_unmap (&rtpout);
   fail_unless (!GST_BUFFER_FLAG_IS_SET (bufout, GST_RTP_BUFFER_FLAG_REDUNDANT));
   gst_buffer_unref (bufout);
+  g_free (reccopy);
 
   /* Pushing the next buffer with discont flag set */
-  bufout = gst_buffer_new ();
+  bufout = gst_rtp_buffer_new_allocate (0, 0, 0);
   GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_FLAG_DISCONT);
   bufout = gst_harness_push_and_pull (h, bufout);
   /* Checking the flag was unset */

@@ -69,6 +69,7 @@ struct _GstRtpUlpFecDec {
   GArray *scratch_buf;
   gboolean lost_packet_from_storage;
   gboolean lost_packet_returned;
+  guint16 next_seqnum;
 
   /* stats */
   gsize fec_packets_received;
