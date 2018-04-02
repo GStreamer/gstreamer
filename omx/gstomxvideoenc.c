@@ -2675,7 +2675,6 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     }
 
     /* Now handle the frame */
-    GST_DEBUG_OBJECT (self, "Handling frame");
 
     if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
 #ifdef USE_OMX_TARGET_RPI
