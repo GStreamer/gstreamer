@@ -118,10 +118,9 @@ struct _GstParamSpecFraction {
 /**
  * GstParamSpecArray:
  * @parent_instance: super class
- * @value_array: the array of values
+ * @element_spec: the #GParamSpec of the type of values in the array
  *
- * A GParamSpec derived structure that contains the meta data for fractional
- * properties.
+ * A GParamSpec derived structure for arrays of values.
  */
 struct _GstParamSpecArray {
   GParamSpec    parent_instance;
