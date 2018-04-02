@@ -109,6 +109,7 @@ struct _GstRtpBinClass {
   void        (*reset_sync)           (GstRtpBin *rtpbin);
   GstElement* (*get_session)          (GstRtpBin *rtpbin, guint session);
   RTPSession* (*get_internal_session) (GstRtpBin *rtpbin, guint session);
+  GstElement* (*get_storage)          (GstRtpBin *rtpbin, guint session);
   GObject*    (*get_internal_storage) (GstRtpBin *rtpbin, guint session);
 
   /* session manager signals */

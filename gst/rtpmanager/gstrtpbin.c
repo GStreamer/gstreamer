@@ -262,6 +262,7 @@ enum
   SIGNAL_RESET_SYNC,
   SIGNAL_GET_SESSION,
   SIGNAL_GET_INTERNAL_SESSION,
+  SIGNAL_GET_STORAGE,
   SIGNAL_GET_INTERNAL_STORAGE,
 
   SIGNAL_ON_NEW_SSRC,
@@ -1144,6 +1145,24 @@ gst_rtp_bin_get_internal_session (GstRtpBin * bin, guint session_id)
   GST_RTP_BIN_UNLOCK (bin);
 
   return internal_session;
+}
+
+static GstElement *
+gst_rtp_bin_get_storage (GstRtpBin * bin, guint session_id)
+{
+  GstRtpBinSession *session;
+  GstElement *res = NULL;
+
+  GST_RTP_BIN_LOCK (bin);
+  GST_DEBUG_OBJECT (bin, "retrieving internal storage object, index: %u",
+      session_id);
+  session = find_session_by_id (bin, (gint) session_id);
+  if (session && session->storage) {
+    res = gst_object_ref (session->storage);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+
+  return res;
 }
 
 static GObject *
@@ -2126,6 +2145,21 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_TYPE_OBJECT, 1, G_TYPE_UINT);
 
   /**
+   * GstRtpBin::get-storage:
+   * @rtpbin: the object which received the signal
+   * @id: the session id
+   *
+   * Request the RTPStorage element as #GObject in session @id.
+   *
+   * Since: 1.16
+   */
+  gst_rtp_bin_signals[SIGNAL_GET_STORAGE] =
+      g_signal_new ("get-storage", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
+          get_storage), NULL, NULL, g_cclosure_marshal_generic,
+      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
+  /**
    * GstRtpBin::on-new-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
@@ -2704,6 +2738,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   klass->get_session = GST_DEBUG_FUNCPTR (gst_rtp_bin_get_session);
   klass->get_internal_session =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_session);
+  klass->get_storage = GST_DEBUG_FUNCPTR (gst_rtp_bin_get_storage);
   klass->get_internal_storage =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_storage);
   klass->request_rtp_encoder = GST_DEBUG_FUNCPTR (gst_rtp_bin_request_encoder);
