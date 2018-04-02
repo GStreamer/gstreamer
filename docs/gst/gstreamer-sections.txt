@@ -2210,6 +2210,7 @@ GST_PAD_TEMPLATE_CAPS
 GST_PAD_TEMPLATE_IS_FIXED
 GST_PAD_TEMPLATE_GTYPE
 gst_pad_template_new
+gst_pad_template_new_with_gtype
 gst_pad_template_new_from_static_pad_template_with_gtype
 gst_pad_template_get_caps
 
