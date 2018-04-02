@@ -3966,8 +3966,12 @@ gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
      * the request headers instead of the previous, incomplete one.
      */
     g_free (transports);
+    transports = NULL;
     res = gst_rtsp_client_sink_create_transports_string (sink, context, family,
         protocols & protocol_masks[mask], cur_profile, &transports);
+
+    if (res < 0 || transports == NULL)
+      goto setup_transport_failed;
 
     /* select transport */
     gst_rtsp_message_take_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
