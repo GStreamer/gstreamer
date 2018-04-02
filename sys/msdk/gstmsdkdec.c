@@ -377,7 +377,7 @@ _gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
 }
 
 static gboolean
-gst_msdk_find_preferred_caps_feature (GstMsdkDec * thiz, const char *feature)
+srcpad_can_dmabuf (GstMsdkDec * thiz)
 {
   gboolean ret = FALSE;
   GstCaps *caps, *out_caps;
@@ -394,7 +394,7 @@ gst_msdk_find_preferred_caps_feature (GstMsdkDec * thiz, const char *feature)
       || out_caps == caps)
     goto done;
 
-  if (_gst_caps_has_feature (out_caps, feature))
+  if (_gst_caps_has_feature (out_caps, GST_CAPS_FEATURE_MEMORY_DMABUF))
     ret = TRUE;
 
 done:
@@ -426,8 +426,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz)
     gst_caps_unref (output_state->caps);
   output_state->caps = gst_video_info_to_caps (&output_state->info);
 
-  if (gst_msdk_find_preferred_caps_feature (thiz,
-          GST_CAPS_FEATURE_MEMORY_DMABUF))
+  if (srcpad_can_dmabuf (thiz))
     gst_caps_set_features (output_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
 
