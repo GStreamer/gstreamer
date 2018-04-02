@@ -78,9 +78,10 @@ const GstToc*            gst_discoverer_stream_info_get_toc(GstDiscovererStreamI
 GST_PBUTILS_API
 const gchar*             gst_discoverer_stream_info_get_stream_id(GstDiscovererStreamInfo* info);
 
+#ifndef GST_DISABLE_DEPRECATED
 GST_PBUTILS_API
 const GstStructure*      gst_discoverer_stream_info_get_misc(GstDiscovererStreamInfo* info);
-
+#endif
 GST_PBUTILS_API
 const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDiscovererStreamInfo* info);
 
@@ -303,8 +304,10 @@ gboolean                  gst_discoverer_info_get_seekable(const GstDiscovererIn
 GST_PBUTILS_API
 gboolean                  gst_discoverer_info_get_live(const GstDiscovererInfo* info);
 
+#ifndef GST_DISABLE_DEPRECATED
 GST_PBUTILS_API
 const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
+#endif
 
 GST_PBUTILS_API
 const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info); 

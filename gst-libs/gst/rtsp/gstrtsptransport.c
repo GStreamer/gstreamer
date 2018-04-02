@@ -198,6 +198,7 @@ gst_rtsp_transport_init (GstRTSPTransport * transport)
   return GST_RTSP_OK;
 }
 
+#ifndef GST_DISABLE_DEPRECATED
 /**
  * gst_rtsp_transport_get_mime:
  * @trans: a #GstRTSPTransMode
@@ -227,6 +228,7 @@ gst_rtsp_transport_get_mime (GstRTSPTransMode trans, const gchar ** mime)
 
   return GST_RTSP_OK;
 }
+#endif
 
 /**
  * gst_rtsp_transport_get_media_type:

@@ -689,6 +689,7 @@ gst_discoverer_stream_info_get_stream_id (GstDiscovererStreamInfo * info)
   return info->stream_id;
 }
 
+#ifndef GST_DISABLE_DEPRECATED
 /**
  * gst_discoverer_stream_info_get_misc:
  * @info: a #GstDiscovererStreamInfo
@@ -707,6 +708,7 @@ gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
 
   return info->misc;
 }
+#endif
 
 /* GstDiscovererContainerInfo */
 
@@ -1039,6 +1041,7 @@ DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
 
 DISCOVERER_INFO_ACCESSOR_CODE (live, gboolean, FALSE);
 
+#ifndef GST_DISABLE_DEPRECATED
 /**
  * gst_discoverer_info_get_misc:
  * @info: a #GstDiscovererInfo
@@ -1052,6 +1055,7 @@ DISCOVERER_INFO_ACCESSOR_CODE (live, gboolean, FALSE);
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
+#endif
 
 /**
  * gst_discoverer_info_get_tags:

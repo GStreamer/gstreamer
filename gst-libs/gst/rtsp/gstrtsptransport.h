@@ -183,8 +183,10 @@ GstRTSPResult      gst_rtsp_transport_parse        (const gchar *str, GstRTSPTra
 GST_RTSP_API
 gchar*             gst_rtsp_transport_as_text      (GstRTSPTransport *transport);
 
+#ifndef GST_DISABLE_DEPRECATED
 GST_RTSP_API
 GstRTSPResult      gst_rtsp_transport_get_mime     (GstRTSPTransMode trans, const gchar **mime);
+#endif
 
 GST_RTSP_API
 GstRTSPResult      gst_rtsp_transport_get_manager  (GstRTSPTransMode trans, const gchar **manager, guint option);
