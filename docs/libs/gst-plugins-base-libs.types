@@ -1,63 +1,67 @@
 #include <gst/gst.h>
 
-#include <gst/audio/gstaudioaggregator.h>
+#include <gst/allocators/allocators.h>
+gst_dmabuf_allocator_get_type
+gst_fd_allocator_get_type
+gst_phys_memory_allocator_get_type
+
+#include <gst/app/app.h>
+gst_app_src_get_type
+gst_app_sink_get_type
+gst_app_stream_type_get_type
+
+#include <gst/audio/audio.h>
+gst_audio_info_get_type
+gst_audio_flags_get_type
+gst_audio_format_flags_get_type
+gst_audio_format_get_type
+gst_audio_format_info_get_type
+gst_audio_layout_get_type
+gst_audio_pack_flags_get_type
+gst_audio_resampler_filter_interpolation_get_type
+gst_audio_resampler_filter_mode_get_type
+gst_audio_resampler_flags_get_type
+gst_audio_resampler_method_get_type
+gst_audio_stream_align_get_type
 gst_audio_aggregator_get_type
 gst_audio_aggregator_pad_get_type
 gst_audio_aggregator_convert_pad_get_type
-#include <gst/audio/gstaudiocdsrc.h>
 gst_audio_cd_src_get_type
-#include <gst/audio/gstaudioclock.h>
 gst_audio_clock_get_type
-#include <gst/audio/gstaudiodecoder.h>
 gst_audio_decoder_get_type
-#include <gst/audio/gstaudioencoder.h>
 gst_audio_encoder_get_type
-#include <gst/audio/gstaudiofilter.h>
 gst_audio_filter_get_type
-#include <gst/audio/gstaudiosink.h>
 gst_audio_sink_get_type
-#include <gst/audio/gstaudiosrc.h>
 gst_audio_src_get_type
-#include <gst/audio/gstaudiobasesink.h>
 gst_audio_base_sink_get_type
-#include <gst/audio/gstaudiobasesrc.h>
+gst_audio_base_sink_slave_method_get_type
+gst_audio_base_sink_discont_reason_get_type
 gst_audio_base_src_get_type
-#include <gst/audio/gstaudioringbuffer.h>
 gst_audio_ring_buffer_get_type
-
-#include <gst/video/navigation.h>
-gst_navigation_get_type
-#include <gst/audio/streamvolume.h>
 gst_stream_volume_get_type
 
-
-#include <gst/rtp/gstrtpbasedepayload.h>
+#include <gst/rtp/rtp.h>
 gst_rtp_base_depayload_get_type
-#include <gst/rtp/gstrtpbasepayload.h>
 gst_rtp_base_payload_get_type
-#include <gst/rtp/gstrtpbaseaudiopayload.h>
 gst_rtp_base_audio_payload_get_type
 
-
-#include <gst/video/gstvideofilter.h>
+#include <gst/video/video.h>
 gst_video_filter_get_type
-#include <gst/video/gstvideosink.h>
 gst_video_sink_get_type
-#include <gst/video/colorbalance.h>
 gst_color_balance_get_type
 gst_color_balance_channel_get_type
-#include <gst/video/videodirection.h>
 gst_video_direction_get_type
-#include <gst/video/videoorientation.h>
 gst_video_orientation_get_type
-#include <gst/video/videooverlay.h>
 gst_video_overlay_get_type
+gst_video_encoder_get_type
+gst_video_decoder_get_type
+gst_video_buffer_pool_get_type
+gst_navigation_get_type
 
 #include <gst/pbutils/pbutils.h>
 gst_discoverer_get_type
-
-#include <gst/pbutils/encoding-profile.h>
-#include <gst/pbutils/encoding-target.h>
+gst_discoverer_serialize_flags_get_type
+gst_audio_visualizer_get_type
 gst_encoding_profile_get_type
 gst_encoding_video_profile_get_type
 gst_encoding_video_profile_get_type
@@ -88,3 +92,29 @@ gst_gl_overlay_compositor_get_type
 gst_gl_upload_get_type
 gst_gl_view_convert_get_type
 gst_gl_window_get_type
+
+#include <gst/gl/wayland/gstgldisplay_wayland.h>
+gst_gl_display_wayland_get_type
+
+#include <gst/rtsp/rtsp.h>
+gst_rtsp_auth_method_get_type
+gst_rtsp_auth_credential_get_type
+gst_rtsp_event_get_type
+gst_rtsp_family_get_type
+gst_rtsp_header_field_get_type
+gst_rtsp_lower_trans_get_type
+gst_rtsp_method_get_type
+gst_rtsp_msg_type_get_type
+gst_rtsp_profile_get_type
+gst_rtsp_range_unit_get_type
+gst_rtsp_result_get_type
+gst_rtsp_state_get_type
+gst_rtsp_status_code_get_type
+gst_rtsp_time_type_get_type
+gst_rtsp_trans_mode_get_type
+gst_rtsp_version_get_type
+gst_rtsp_extension_get_type
+gst_rtsp_auth_credential_get_type
+gst_rtsp_auth_param_get_type
+gst_rtsp_msg_get_type
+gst_rtsp_url_get_type

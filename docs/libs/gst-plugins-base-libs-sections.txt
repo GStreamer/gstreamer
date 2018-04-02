@@ -3,16 +3,16 @@
 <SECTION>
 <FILE>gstdmabuf</FILE>
 <TITLE>dmabuf</TITLE>
-<INCLUDE>gst/allocators/gstdmabuf.h</INCLUDE>
+<INCLUDE>gst/allocators/allocators.h</INCLUDE>
 GST_CAPS_FEATURE_MEMORY_DMABUF
 gst_dmabuf_allocator_new
 gst_dmabuf_allocator_alloc
 gst_dmabuf_memory_get_fd
-gst_dmabuf_allocator_get_type
 gst_is_dmabuf_memory
 <SUBSECTION Standard>
 GstDmaBufAllocator
 GstDmaBufAllocatorClass
+gst_dmabuf_allocator_get_type
 GST_ALLOCATOR_DMABUF
 GST_DMABUF_ALLOCATOR
 GST_DMABUF_ALLOCATOR_CAST
@@ -21,20 +21,19 @@ GST_DMABUF_ALLOCATOR_GET_CLASS
 GST_IS_DMABUF_ALLOCATOR
 GST_IS_DMABUF_ALLOCATOR_CLASS
 GST_TYPE_DMABUF_ALLOCATOR
-<SUBSECTION Private>
 </SECTION>
 
 <SECTION>
 <FILE>gstfdmemory</FILE>
 <TITLE>fdmemory</TITLE>
-<INCLUDE>gst/allocators/gstfdmemory.h</INCLUDE>
+<INCLUDE>gst/allocators/allocators.h</INCLUDE>
 GstFdMemoryFlags
 gst_fd_allocator_alloc
-gst_fd_allocator_get_type
 gst_fd_allocator_new
 gst_fd_memory_get_fd
 gst_is_fd_memory
 <SUBSECTION Standard>
+gst_fd_allocator_get_type
 GstFdAllocator
 GstFdAllocatorClass
 GST_ALLOCATOR_FD
@@ -72,7 +71,7 @@ gst_phys_memory_allocator_get_type
 <SECTION>
 <FILE>gstappsrc</FILE>
 <TITLE>appsrc</TITLE>
-<INCLUDE>gst/app/gstappsrc.h</INCLUDE>
+<INCLUDE>gst/app/app.h</INCLUDE>
 GstAppStreamType
 gst_app_src_set_caps
 gst_app_src_get_caps
@@ -104,27 +103,17 @@ GST_TYPE_APP_SRC
 gst_app_src_get_type
 GST_APP_SRC_CLASS
 GST_IS_APP_SRC_CLASS
-GST_APP_BUFFER
-GST_APP_BUFFER_CLASS
-GST_IS_APP_BUFFER
-GST_IS_APP_BUFFER_CLASS
-GST_TYPE_APP_BUFFER
 GST_TYPE_APP_STREAM_TYPE
 gst_app_stream_type_get_type
 <SUBSECTION Private>
 GstAppSrc
 GstAppSrcPrivate
-GstAppBuffer
-GstAppBufferClass
-GstAppBufferFinalizeFunc
-gst_app_buffer_get_type
-gst_app_buffer_new
 </SECTION>
 
 <SECTION>
 <FILE>gstappsink</FILE>
 <TITLE>appsink</TITLE>
-<INCLUDE>gst/app/gstappsink.h</INCLUDE>
+<INCLUDE>gst/app/app.h</INCLUDE>
 gst_app_sink_set_caps
 gst_app_sink_get_caps
 gst_app_sink_is_eos
@@ -286,10 +275,14 @@ GST_TYPE_BUFFER_FORMAT_TYPE
 GST_TYPE_AUDIO_FORMAT
 GST_TYPE_AUDIO_FORMAT_FLAGS
 GST_TYPE_AUDIO_FLAGS
+GST_TYPE_AUDIO_INFO
+GST_TYPE_AUDIO_INFO_STREAM_ALIGN
 GST_TYPE_AUDIO_LAYOUT
 GST_TYPE_AUDIO_PACK_FLAGS
-gst_buffer_format_get_type
-gst_buffer_format_type_get_type
+GST_TYPE_AUDIO_RESAMPLER_FILTER_INTERPOLATION
+GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE
+GST_TYPE_AUDIO_RESAMPLER_FLAGS
+GST_TYPE_AUDIO_RESAMPLER_METHOD
 gst_audio_info_get_type
 gst_audio_flags_get_type
 gst_audio_format_flags_get_type
@@ -308,7 +301,7 @@ _GST_AUDIO_FORMAT_NE
 
 <SECTION>
 <FILE>gstaudiometa</FILE>
-<INCLUDE>gst/audio/gstaudiometa.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioDownmixMeta
 gst_buffer_add_audio_downmix_meta
 gst_buffer_get_audio_downmix_meta
@@ -322,11 +315,15 @@ GST_AUDIO_CLIPPING_META_API_TYPE
 GST_AUDIO_CLIPPING_META_INFO
 gst_audio_clipping_meta_api_get_type
 gst_audio_clipping_meta_get_info
+GST_AUDIO_DOWNMIX_META_API_TYPE
+GST_AUDIO_DOWNMIX_META_INFO
+gst_audio_downmix_meta_api_get_type
+gst_audio_downmix_meta_get_info
 </SECTION>
 
 <SECTION>
 <FILE>gstaudioclock</FILE>
-<INCLUDE>gst/audio/gstaudioclock.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioClock
 GstAudioClockGetTimeFunc
 gst_audio_clock_new
@@ -347,7 +344,7 @@ GST_AUDIO_CLOCK_CAST
 
 <SECTION>
 <FILE>gstaudiocdsrc</FILE>
-<INCLUDE>gst/audio/gstaudiocdsrc.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioCdSrc
 GstAudioCdSrcClass
 GstAudioCdSrcTrack
@@ -368,7 +365,7 @@ gst_audio_cd_src_get_type
 
 <SECTION>
 <FILE>gstaudiodecoder</FILE>
-<INCLUDE>gst/audio/gstaudiodecoder.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioDecoder
 GstAudioDecoderClass
 GST_AUDIO_DECODER_ERROR
@@ -425,7 +422,7 @@ GST_AUDIO_DECODER_CAST
 
 <SECTION>
 <FILE>gstaudioencoder</FILE>
-<INCLUDE>gst/audio/gstaudioencoder.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioEncoder
 GstAudioEncoderClass
 GST_AUDIO_ENCODER_SINK_NAME
@@ -482,7 +479,7 @@ GstAudioEncoderPrivate
 
 <SECTION>
 <FILE>gstaudiofilter</FILE>
-<INCLUDE>gst/audio/gstaudiofilter.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioFilter
 GstAudioFilterClass
 gst_audio_filter_class_add_pad_templates
@@ -507,7 +504,7 @@ GST_AUDIO_FILTER_RATE
 
 <SECTION>
 <FILE>gstaudiosink</FILE>
-<INCLUDE>gst/audio/gstaudiosink.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioSink
 GstAudioSinkClass
 <SUBSECTION Standard>
@@ -522,7 +519,7 @@ GST_AUDIO_SINK_GET_CLASS
 
 <SECTION>
 <FILE>gstaudiosrc</FILE>
-<INCLUDE>gst/audio/gstaudiosrc.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioSrc
 GstAudioSrcClass
 <SUBSECTION Standard>
@@ -538,7 +535,7 @@ GST_AUDIO_BASE_SRC_CAST
 
 <SECTION>
 <FILE>gstaudiobasesink</FILE>
-<INCLUDE>gst/audio/gstaudiobasesink.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioBaseSink
 GstAudioBaseSinkClass
 GstAudioBaseSinkSlaveMethod
@@ -572,6 +569,8 @@ GST_AUDIO_BASE_SINK_CAST
 GstAudioBaseSinkPrivate
 gst_audio_base_sink_slave_method_get_type
 GST_TYPE_AUDIO_BASE_SINK_SLAVE_METHOD
+gst_audio_base_sink_discont_reason_get_type
+GST_TYPE_AUDIO_BASE_SINK_DISCONT_REASON
 </SECTION>
 
 <SECTION>
@@ -596,10 +595,9 @@ gst_audio_aggregator_get_type
 GST_AUDIO_AGGREGATOR_CLASS
 GST_IS_AUDIO_AGGREGATOR_CLASS
 GST_AUDIO_AGGREGATOR_GET_CLASS
-gst_audio_aggregator_get_type
 
 GST_IS_AUDIO_AGGREGATOR_PAD
-GST_IS_AUDIO_AGGREGATOR_PADCLASS
+GST_IS_AUDIO_AGGREGATOR_PAD_CLASS
 GST_TYPE_AUDIO_AGGREGATOR_PAD
 GST_AUDIO_AGGREGATOR_PAD
 GST_AUDIO_AGGREGATOR_PAD_CLASS
@@ -607,17 +605,20 @@ GST_AUDIO_AGGREGATOR_PAD_GET_CLASS
 gst_audio_aggregator_pad_get_type
 
 GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD
-GST_IS_AUDIO_AGGREGATOR_CONVERT_PADCLASS
+GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD_CLASS
 GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD
 GST_AUDIO_AGGREGATOR_CONVERT_PAD
 GST_AUDIO_AGGREGATOR_CONVERT_PAD_CLASS
 GST_AUDIO_AGGREGATOR_CONVERT_PAD_GET_CLASS
 gst_audio_aggregator_convert_pad_get_type
+<SUBSECTION Private>
+GstAudioAggregatorConvertPadPrivate
+GstAudioAggregatorPadPrivate
 </SECTION>
 
 <SECTION>
 <FILE>gstaudiobasesrc</FILE>
-<INCLUDE>gst/audio/gstaudiobasesrc.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioBaseSrc
 GstAudioBaseSrcClass
 GstAudioBaseSrcSlaveMethod
@@ -640,6 +641,7 @@ GST_IS_AUDIO_BASE_SRC_CLASS
 GST_AUDIO_BASE_SRC_GET_CLASS
 gst_audio_base_src_slave_method_get_type
 GST_TYPE_AUDIO_BASE_SRC_SLAVE_METHOD
+GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP
 </SECTION>
 
 <SECTION>
@@ -666,6 +668,7 @@ gst_audio_channel_mixer_samples
 <SUBSECTION Standard>
 GST_TYPE_AUDIO_CHANNEL_POSITION
 gst_audio_channel_position_get_type
+GST_TYPE_AUDIO_CHANNEL_MIXER_FLAGS
 gst_audio_channel_mixer_flags_get_type
 </SECTION>
 
@@ -685,12 +688,15 @@ gst_audio_converter_get_out_frames
 GST_AUDIO_CONVERTER_OPT_DITHER_METHOD
 GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD
 GST_AUDIO_CONVERTER_OPT_QUANTIZATION
+GST_AUDIO_CONVERTER_OPT_MIX_MATRIX
+GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD
 gst_audio_converter_update_config
 gst_audio_converter_get_config
 gst_audio_converter_reset
 gst_audio_converter_supports_inplace
 <SUBSECTION Standard>
 gst_audio_converter_flags_get_type
+GST_TYPE_AUDIO_CONVERTER_FLAGS
 gst_audio_converter_get_type
 </SECTION>
 
@@ -709,11 +715,15 @@ gst_audio_quantize_reset
 <SUBSECTION Standard>
 gst_audio_quantize_flags_get_type
 GST_TYPE_AUDIO_QUANTIZE_FLAGS
+gst_audio_dither_method_get_type
+GST_TYPE_AUDIO_DITHER_METHOD
+gst_audio_noise_shaping_method_get_type
+GST_TYPE_AUDIO_NOISE_SHAPING_METHOD
 </SECTION>
 
 <SECTION>
 <FILE>gstaudioringbuffer</FILE>
-<INCLUDE>gst/audio/gstaudioringbuffer.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstAudioRingBuffer
 GstAudioRingBufferClass
 GstAudioRingBufferSpec
@@ -786,7 +796,7 @@ gst_audio_ring_buffer_debug_spec_caps
 
 <SECTION>
 <FILE>gstaudioiec61937</FILE>
-<INCLUDE>gst/audio/gstaudioiec61937.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 gst_audio_iec61937_frame_size
 gst_audio_iec61937_payload
 </SECTION>
@@ -795,14 +805,14 @@ gst_audio_iec61937_payload
 
 <SECTION>
 <FILE>gstfft</FILE>
-<INCLUDE>gst/fft/gstfft.h</INCLUDE>
+<INCLUDE>gst/fft/fft.h</INCLUDE>
 GstFFTWindow
 gst_fft_next_fast_length
 </SECTION>
 
 <SECTION>
 <FILE>gstffts16</FILE>
-<INCLUDE>gst/fft/gstffts16.h</INCLUDE>
+<INCLUDE>gst/fft/fft.h</INCLUDE>
 GstFFTS16
 GstFFTS16Complex
 gst_fft_s16_new
@@ -827,7 +837,7 @@ KISS_FFT_S16_SIN
 
 <SECTION>
 <FILE>gstffts32</FILE>
-<INCLUDE>gst/fft/gstffts32.h</INCLUDE>
+<INCLUDE>gst/fft/fft.h</INCLUDE>
 GstFFTS32
 GstFFTS32Complex
 gst_fft_s32_new
@@ -853,7 +863,7 @@ KISS_FFT_S32_SIN
 
 <SECTION>
 <FILE>gstfftf32</FILE>
-<INCLUDE>gst/fft/gstfftf32.h</INCLUDE>
+<INCLUDE>gst/fft/fft.h</INCLUDE>
 GstFFTF32
 GstFFTF32Complex
 gst_fft_f32_new
@@ -878,7 +888,7 @@ KISS_FFT_F32_SIN
 
 <SECTION>
 <FILE>gstfftf64</FILE>
-<INCLUDE>gst/fft/gstfftf64.h</INCLUDE>
+<INCLUDE>gst/fft/fft.h</INCLUDE>
 GstFFTF64
 GstFFTF64Complex
 gst_fft_f64_new
@@ -905,7 +915,7 @@ KISS_FFT_F64_SIN
 
 <SECTION>
 <FILE>gstcolorbalance</FILE>
-<INCLUDE>gst/video/colorbalance.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstColorBalance
 GstColorBalanceInterface
 GstColorBalanceType
@@ -927,7 +937,7 @@ gst_color_balance_type_get_type
 
 <SECTION>
 <FILE>gstcolorbalancechannel</FILE>
-<INCLUDE>gst/video/colorbalancechannel.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstColorBalanceChannel
 GstColorBalanceChannelClass
 <SUBSECTION Standard>
@@ -941,7 +951,7 @@ gst_color_balance_channel_get_type
 
 <SECTION>
 <FILE>gstnavigation</FILE>
-<INCLUDE>gst/video/navigation.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstNavigation
 GstNavigationInterface
 GstNavigationCommand
@@ -1003,7 +1013,7 @@ gst_navigation_command_get_type
 
 <SECTION>
 <FILE>gststreamvolume</FILE>
-<INCLUDE>gst/audio/streamvolume.h</INCLUDE>
+<INCLUDE>gst/audio/audio.h</INCLUDE>
 GstStreamVolume
 GstStreamVolumeFormat
 
@@ -1028,7 +1038,7 @@ gst_stream_volume_get_type
 
 <SECTION>
 <FILE>gstvideodirection</FILE>
-<INCLUDE>gst/video/videodirection.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoDirection
 GstVideoDirectionInterface
 <SUBSECTION Standard>
@@ -1041,7 +1051,7 @@ gst_video_direction_get_type
 
 <SECTION>
 <FILE>gstvideoorientation</FILE>
-<INCLUDE>gst/video/videoorientation.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoOrientation
 GstVideoOrientationInterface
 gst_video_orientation_get_hcenter
@@ -1062,7 +1072,7 @@ gst_video_orientation_get_type
 
 <SECTION>
 <FILE>gstvideooverlay</FILE>
-<INCLUDE>gst/video/videooverlay.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoOverlay
 GstVideoOverlayInterface
 gst_video_overlay_got_window_handle
@@ -1089,7 +1099,7 @@ gst_video_overlay_get_type
 
 <SECTION>
 <FILE>gstriff</FILE>
-<INCLUDE>gst/riff/riff-media.h</INCLUDE>
+<INCLUDE>gst/riff/riff.h</INCLUDE>
 gst_riff_create_audio_caps
 gst_riff_create_audio_template_caps
 gst_riff_create_iavs_caps
@@ -1316,7 +1326,7 @@ gst_riff_strh
 
 <SECTION>
 <FILE>gstrtpbaseaudiopayload</FILE>
-<INCLUDE>gst/rtp/gstrtpbaseaudiopayload.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
 GstRTPBaseAudioPayload
 GstRTPBaseAudioPayloadClass
 
@@ -1341,7 +1351,7 @@ GstRTPBaseAudioPayloadPrivate
 
 <SECTION>
 <FILE>gstrtpbasedepayload</FILE>
-<INCLUDE>gst/rtp/gstrtpbasedepayload.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
 GstRTPBaseDepayload
 GstRTPBaseDepayloadClass
 
@@ -1355,6 +1365,7 @@ gst_rtp_base_depayload_push_list
 GstRTPBaseDepayloadPrivate
 GST_TYPE_RTP_BASE_DEPAYLOAD
 GST_RTP_BASE_DEPAYLOAD
+GST_RTP_BASE_DEPAYLOAD_CAST
 GST_RTP_BASE_DEPAYLOAD_CLASS
 GST_RTP_BASE_DEPAYLOAD_GET_CLASS
 GST_IS_RTP_BASE_DEPAYLOAD
@@ -1362,17 +1373,11 @@ GST_IS_RTP_BASE_DEPAYLOAD_CLASS
 GST_RTP_BASE_PAYLOAD_CAST
 gst_rtp_base_depayload_get_type
 GstRTPBasePayloadPrivate
-
-<SUBSECTION Private>
-QUEUE_LOCK_INIT
-QUEUE_LOCK_FREE
-QUEUE_LOCK
-QUEUE_UNLOCK
 </SECTION>
 
 <SECTION>
 <FILE>gstrtpbasepayload</FILE>
-<INCLUDE>gst/rtp/gstrtpbasepayload.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
 GstRTPBasePayload
 GstRTPBasePayloadClass
 
@@ -1398,7 +1403,7 @@ gst_rtp_base_payload_get_type
 
 <SECTION>
 <FILE>gstrtcpbuffer</FILE>
-<INCLUDE>gst/rtp/gstrtcpbuffer.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
 
 GST_RTCP_VERSION
 
@@ -1417,6 +1422,7 @@ GstRTCPFBType
 gst_rtcp_buffer_new_take_data
 gst_rtcp_buffer_new_copy_data
 
+GST_RTCP_REDUCED_SIZE_VALID_MASK
 gst_rtcp_buffer_validate_data_reduced
 gst_rtcp_buffer_validate_reduced
 gst_rtcp_buffer_validate_data
@@ -1497,6 +1503,7 @@ gst_rtcp_packet_app_set_subtype
 gst_rtcp_packet_copy_profile_specific_ext
 gst_rtcp_packet_get_profile_specific_ext
 gst_rtcp_packet_get_profile_specific_ext_length
+gst_rtcp_packet_add_profile_specific_ext
 
 gst_rtcp_ntp_to_unix
 gst_rtcp_unix_to_ntp
@@ -1505,11 +1512,18 @@ gst_rtcp_sdes_name_to_type
 gst_rtcp_sdes_type_to_name
 
 <SUBSECTION Standard>
+GST_RTCP_RTPFB_TYPE_RCTP_SR_REQ
+GST_TYPE_RTCPFB_TYPE
+GST_TYPE_RTCPSDES_TYPE
+GST_TYPE_RTCP_TYPE
+gst_rtcp_type_get_type
+gst_rtcpfb_type_get_type
+gst_rtcpsdes_type_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstrtppayloads</FILE>
-<INCLUDE>gst/rtp/gstrtppayload.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
 GstRTPPayload
 GST_RTP_PAYLOAD_IS_DYNAMIC
 
@@ -1554,11 +1568,13 @@ GST_RTP_PAYLOAD_NV_STRING
 GST_RTP_PAYLOAD_QCELP_STRING
 GST_RTP_PAYLOAD_TS41
 GST_RTP_PAYLOAD_TS48
+GST_TYPE_RTP_PAYLOAD
+gst_rtp_payload_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstrtpbuffer</FILE>
-<INCLUDE>gst/rtp/gstrtpbuffer.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
 
 GST_RTP_VERSION
 
@@ -1631,21 +1647,40 @@ gst_rtp_buffer_get_extension_onebyte_header
 gst_rtp_buffer_get_extension_twobytes_header
 gst_rtp_buffer_add_extension_onebyte_header
 gst_rtp_buffer_add_extension_twobytes_header
+<SUBSECTION Standard>
+GST_TYPE_RTP_BUFFER_FLAGS
+GST_TYPE_RTP_BUFFER_MAP_FLAGS
+gst_rtp_buffer_flags_get_type
+gst_rtp_buffer_map_flags_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstrtphdrext</FILE>
-<INCLUDE>gst/rtp/gstrtphdrext.h</INCLUDE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
+GST_RTP_HDREXT_BASE
+GST_RTP_HDREXT_NTP_56
+GST_RTP_HDREXT_NTP_56_SIZE
+GST_RTP_HDREXT_NTP_64
+GST_RTP_HDREXT_NTP_64_SIZE
 gst_rtp_hdrext_get_ntp_56
 gst_rtp_hdrext_get_ntp_64
 gst_rtp_hdrext_set_ntp_56
 gst_rtp_hdrext_set_ntp_64
 </SECTION>
 
+<SECTION>
+<FILE>gstrtpdefs</FILE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
+GstRTPProfile
+<SUBSECTION Standard>
+GST_TYPE_RTP_PROFILE
+gst_rtp_profile_get_type
+</SECTION>
+
 # rtsp
 <SECTION>
 <FILE>gstrtspdefs</FILE>
-<INCLUDE>gst/rtsp/gstrtspdefs.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GST_RTSP_CHECK
 GST_RTSP_AUTH_MAX
 GstRTSPEvent
@@ -1693,7 +1728,7 @@ gst_rtsp_header_field_get_type
 
 <SECTION>
 <FILE>gstrtsptransport</FILE>
-<INCLUDE>gst/rtsp/gstrtsptransport.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GstRTSPTransMode
 GstRTSPProfile
 GstRTSPRange
@@ -1707,13 +1742,17 @@ gst_rtsp_transport_get_mime
 gst_rtsp_transport_get_manager
 gst_rtsp_transport_free
 <SUBSECTION Standard>
+GST_TYPE_RTSP_PROFILE
 gst_rtsp_lower_trans_get_type
 gst_rtsp_transport_get_media_type
+GST_TYPE_RTSP_TRANS_MODE
+gst_rtsp_profile_get_type
+gst_rtsp_trans_mode_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstrtspconnection</FILE>
-<INCLUDE>gst/rtsp/gstrtspconnection.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GstRTSPConnection
 gst_rtsp_connection_create
 gst_rtsp_connection_create_from_socket
@@ -1769,6 +1808,10 @@ gst_rtsp_connection_get_tls_interaction
 gst_rtsp_connection_get_remember_session_id
 gst_rtsp_connection_set_remember_session_id
 
+GstRTSPConnectionAcceptCertificateFunc
+gst_rtsp_connection_set_accept_certificate_func
+
+
 GstRTSPWatch
 GstRTSPWatchFuncs
 gst_rtsp_watch_new
@@ -1785,7 +1828,7 @@ gst_rtsp_watch_wait_backlog
 
 <SECTION>
 <FILE>gstrtspextension</FILE>
-<INCLUDE>gst/rtsp/gstrtspextension.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GstRTSPExtension
 GstRTSPExtensionInterface
 <SUBSECTION Standard>
@@ -1808,12 +1851,13 @@ gst_rtsp_extension_get_type
 
 <SECTION>
 <FILE>gstrtspmessage</FILE>
-<INCLUDE>gst/rtsp/gstrtspmessage.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GstRTSPMsgType
 GstRTSPMessage
 gst_rtsp_message_new
 gst_rtsp_message_init
 gst_rtsp_message_unset
+gst_rtsp_message_copy
 gst_rtsp_message_free
 gst_rtsp_message_get_type
 gst_rtsp_message_new_request
@@ -1843,13 +1887,26 @@ GstRTSPAuthCredential
 GstRTSPAuthParam
 gst_rtsp_message_parse_auth_credentials
 gst_rtsp_auth_credentials_free
+gst_rtsp_auth_param_copy
+gst_rtsp_auth_param_free
 
 gst_rtsp_message_dump
+<SUBSECTION Standard>
+GST_RTSP_MESSAGE
+GST_RTSP_MESSAGE_CAST
+GST_TYPE_RTSP_MESSAGE
+gst_rtsp_auth_param_get_type
+GST_TYPE_RTSP_AUTH_CREDENTIAL
+GST_TYPE_RTSP_AUTH_PARAM
+gst_rtsp_auth_credential_get_type
+GST_TYPE_RTSP_MSG_TYPE
+gst_rtsp_msg_get_type
+gst_rtsp_msg_type_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstrtspurl</FILE>
-<INCLUDE>gst/rtsp/gstrtspurl.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GST_RTSP_DEFAULT_PORT
 GstRTSPUrl
 gst_rtsp_url_parse
@@ -1865,7 +1922,7 @@ gst_rtsp_url_get_type
 
 <SECTION>
 <FILE>gstrtsprange</FILE>
-<INCLUDE>gst/rtsp/gstrtsprange.h</INCLUDE>
+<INCLUDE>gst/rtsp/rtsp.h</INCLUDE>
 GstRTSPRangeUnit
 GstRTSPTimeRange
 GstRTSPTime
@@ -1876,12 +1933,17 @@ gst_rtsp_range_get_times
 gst_rtsp_range_to_string
 gst_rtsp_range_convert_units
 gst_rtsp_range_free
+<SUBSECTION Standard>
+GST_TYPE_RTSP_RANGE_UNIT
+GST_TYPE_RTSP_TIME_TYPE
+gst_rtsp_range_unit_get_type
+gst_rtsp_time_type_get_type
 </SECTION>
 
 # sdp
 <SECTION>
 <FILE>gstsdpmessage</FILE>
-<INCLUDE>gst/sdp/gstsdpmessage.h</INCLUDE>
+<INCLUDE>gst/sdp/sdp.h</INCLUDE>
 GstSDPResult
 
 GstSDPOrigin
@@ -2039,16 +2101,21 @@ gst_sdp_make_keymgmt
 gst_sdp_message_attributes_to_caps
 gst_sdp_media_attributes_to_caps
 <SUBSECTION Standard>
+GST_SDP_MESSAGE
+GST_SDP_MESSAGE_CAST
+GST_TYPE_SDP_MESSAGE
 gst_sdp_message_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstmikey</FILE>
-<INCLUDE>gst/sdp/gstmikey.h</INCLUDE>
+<INCLUDE>gst/sdp/sdp.h</INCLUDE>
 <SUBSECTION Messages>
 GST_MIKEY_VERSION
 GstMIKEYType
 GstMIKEYMessage
+GstMIKEYDecryptInfo
+GstMIKEYEncryptInfo
 
 gst_mikey_message_new
 gst_mikey_message_new_from_bytes
@@ -2084,6 +2151,9 @@ gst_mikey_message_remove_payload
 gst_mikey_message_replace_payload
 gst_mikey_message_add_payload
 
+GstMIKEYKVType
+GstMIKEYKeyDataType
+GstMIKEYPayloadKeyData
 GstMIKEYPayloadType
 GstMIKEYPayload
 gst_mikey_payload_new
@@ -2161,6 +2231,7 @@ GST_TAG_CMML_STREAM
 GST_TAG_CAPTURING_SHUTTER_SPEED
 GST_TAG_CAPTURING_FOCAL_RATIO
 GST_TAG_CAPTURING_FOCAL_LENGTH
+GST_TAG_CAPTURING_FOCAL_LENGTH_35_MM
 GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO
 GST_TAG_CAPTURING_ISO_SPEED
 GST_TAG_CAPTURING_EXPOSURE_PROGRAM
@@ -2244,7 +2315,7 @@ gst_tag_list_from_exif_buffer_with_tiff_header
 
 <SECTION>
 <FILE>gsttagdemux</FILE>
-<INCLUDE>gst/tag/gsttagdemux.h</INCLUDE>
+<INCLUDE>gst/tag/tag.h</INCLUDE>
 GstTagDemux
 GstTagDemuxClass
 GstTagDemuxResult
@@ -2262,7 +2333,7 @@ gst_tag_demux_result_get_type
 
 <SECTION>
 <FILE>gsttagmux</FILE>
-<INCLUDE>gst/tag/gsttagmux.h</INCLUDE>
+<INCLUDE>gst/tag/tag.h</INCLUDE>
 GstTagMux
 GstTagMuxClass
 <SUBSECTION Standard>
@@ -2299,11 +2370,13 @@ gst_tag_get_license_jurisdiction
 gst_tag_get_license_version
 gst_tag_get_licenses
 <SUBSECTION Standard>
+GST_TYPE_TAG_LICENSE_FLAGS
 gst_tag_license_flags_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gsttagxmpwriter</FILE>
+<INCLUDE>gst/tag/tag.h</INCLUDE>
 gst_tag_xmp_writer_add_all_schemas
 gst_tag_xmp_writer_add_schema
 gst_tag_xmp_writer_has_schema
@@ -2333,7 +2406,7 @@ gst_pb_utils_init
 
 <SECTION>
 <FILE>gstpluginsbaseversion</FILE>
-<INCLUDE>gst/pbutils/gstpluginsbaseversion.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 GST_PLUGINS_BASE_VERSION_MAJOR
 GST_PLUGINS_BASE_VERSION_MINOR
@@ -2346,7 +2419,7 @@ gst_plugins_base_version_string
 
 <SECTION>
 <FILE>gstpbutilsmissingplugins</FILE>
-<INCLUDE>gst/pbutils/missing-plugins.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_missing_plugin_message_get_installer_detail
 gst_missing_plugin_message_get_description
@@ -2367,7 +2440,7 @@ gst_missing_encoder_installer_detail_new
 
 <SECTION>
 <FILE>gstpbutilsinstallplugins</FILE>
-<INCLUDE>gst/pbutils/install-plugins.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 GstInstallPluginsReturn
 GstInstallPluginsResultFunc
@@ -2380,6 +2453,7 @@ gst_install_plugins_supported
 GstInstallPluginsContext
 gst_install_plugins_context_new
 gst_install_plugins_context_free
+gst_install_plugins_context_copy
 gst_install_plugins_context_set_xid
 gst_install_plugins_context_set_confirm_search
 gst_install_plugins_context_set_desktop_id
@@ -2393,7 +2467,7 @@ gst_install_plugins_return_get_type
 
 <SECTION>
 <FILE>gstpbutilsdescriptions</FILE>
-<INCLUDE>gst/pbutils/descriptions.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_get_source_description
 gst_pb_utils_get_sink_description
@@ -2407,7 +2481,7 @@ gst_pb_utils_get_codec_description
 
 <SECTION>
 <FILE>gstpbutilscodecutils</FILE>
-<INCLUDE>gst/pbutils/codec-utils.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_codec_utils_aac_get_sample_rate_from_index
 gst_codec_utils_aac_get_index_from_sample_rate
@@ -2441,7 +2515,7 @@ gst_codec_utils_opus_parse_header
 
 <SECTION>
 <FILE>encoding-profile</FILE>
-<INCLUDE>gst/pbutils/encoding-profile.h</INCLUDE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 GstEncodingProfile
 gst_encoding_profile_unref
 gst_encoding_profile_ref
@@ -2491,6 +2565,7 @@ GST_ENCODING_CATEGORY_DEVICE
 GST_ENCODING_CATEGORY_ONLINE_SERVICE
 GST_ENCODING_CATEGORY_STORAGE_EDITING
 GST_ENCODING_CATEGORY_CAPTURE
+GST_ENCODING_CATEGORY_FILE_EXTENSION
 GstEncodingTarget
 gst_encoding_target_unref
 gst_encoding_target_ref
@@ -2535,6 +2610,27 @@ GstEncodingContainerProfileClass
 GstEncodingTargetClass
 </SECTION>
 
+<SECTION>
+<FILE>gstaudiovisualizer</FILE>
+<TITLE>GstAudioVisualizer</TITLE>
+<INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
+GstAudioVisualizer
+GstAudioVisualizerClass
+GstAudioVisualizerShader
+GstAudioVisualizerShaderFunc
+<SUBSECTION Standard>
+GST_AUDIO_VISUALIZER
+GST_AUDIO_VISUALIZER_CLASS
+GST_AUDIO_VISUALIZER_GET_CLASS
+GST_TYPE_AUDIO_VISUALIZER_SHADER
+gst_audio_visualizer_shader_get_type
+GST_IS_SYNAESTHESIA
+GST_IS_SYNAESTHESIA_CLASS
+GST_TYPE_AUDIO_VISUALIZER
+GstAudioVisualizerPrivate
+gst_audio_visualizer_get_type
+</SECTION>
+
 
 
 # video
@@ -2560,6 +2656,9 @@ GST_META_TAG_VIDEO_SIZE_STR
 GST_META_TAG_VIDEO_COLORSPACE_STR
 
 GstVideoOrientationMethod
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_ORIENTATION_METHOD
+gst_video_orientation_method_get_type
 
 #video-event.h
 <SUBSECTION>
@@ -2641,8 +2740,10 @@ GstVideoColorMatrix
 gst_video_color_matrix_get_Kr_Kb
 GstVideoColorPrimaries
 GstVideoTransferFunction
+GstVideoColorPrimariesInfo
 gst_video_color_transfer_decode
 gst_video_color_transfer_encode
+gst_video_color_primaries_get_info
 
 GstVideoColorimetry
 GST_VIDEO_COLORIMETRY_BT2020
@@ -2669,9 +2770,6 @@ GST_TYPE_VIDEO_COLOR_PRIMARIES
 GstVideoInfo
 GstVideoInterlaceMode
 GstVideoFieldOrder
-GstVideoMultiviewMode
-GstVideoMultiviewFramePacking
-GstVideoMultiviewFlags
 GstVideoFlags
 GST_VIDEO_INFO_FORMAT
 GST_VIDEO_INFO_NAME
@@ -2739,6 +2837,7 @@ GST_TYPE_VIDEO_MULTIVIEW_MODE
 gst_video_multiview_mode_get_type
 gst_video_multiview_flagset_get_type
 gst_video_multiview_frame_packing_get_type
+GST_TYPE_VIDEO_INFO
 gst_video_info_get_type
 
 #video-frame.h
@@ -2776,6 +2875,14 @@ GST_VIDEO_FRAME_COMP_PLANE
 GST_VIDEO_FRAME_COMP_PSTRIDE
 GST_VIDEO_FRAME_COMP_POFFSET
 GstVideoBufferFlags
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_BUFFER_FLAGS
+GST_TYPE_VIDEO_FRAME_FLAGS
+GST_TYPE_VIDEO_FRAME_MAP_FLAGS
+gst_video_buffer_flags_get_type
+gst_video_frame_flags_get_type
+gst_video_frame_map_flags_get_type
+
 
 #video-tile.h
 <SUBSECTION>
@@ -2788,9 +2895,15 @@ GST_VIDEO_TILE_MODE_IS_INDEXED
 GST_VIDEO_TILE_MAKE_STRIDE
 GST_VIDEO_TILE_X_TILES
 GST_VIDEO_TILE_Y_TILES
+GST_VIDEO_TILE_TYPE_MASK
+GST_VIDEO_TILE_TYPE_SHIFT
+GST_VIDEO_TILE_X_TILES_MASK
+GST_VIDEO_TILE_Y_TILES_SHIFT
 <SUBSECTION Standard>
 gst_video_tile_mode_get_type
 gst_video_tile_type_get_type
+GST_TYPE_VIDEO_TILE_MODE
+GST_TYPE_VIDEO_TILE_TYPE
 
 #video-blend.h
 <SUBSECTION>
@@ -2826,17 +2939,31 @@ GST_VIDEO_CONVERTER_OPT_SRC_HEIGHT
 GST_VIDEO_CONVERTER_OPT_SRC_WIDTH
 GST_VIDEO_CONVERTER_OPT_SRC_X
 GST_VIDEO_CONVERTER_OPT_SRC_Y
+GST_VIDEO_CONVERTER_OPT_THREADS
 gst_video_converter_new
 gst_video_converter_free
 gst_video_converter_get_config
 gst_video_converter_set_config
 gst_video_converter_frame
 <SUBSECTION Standard>
+gst_video_alpha_mode_get_type
+gst_video_chroma_mode_get_type
+gst_video_gamma_mode_get_type
+gst_video_matrix_mode_get_type
 gst_video_dither_method_get_type
+gst_video_primaries_mode_get_type
+GST_TYPE_VIDEO_ALPHA_MODE
+GST_TYPE_VIDEO_CHROMA_MODE
+GST_TYPE_VIDEO_GAMMA_MODE
+GST_TYPE_VIDEO_MATRIX_MODE
+GST_TYPE_VIDEO_PRIMARIES_MODE
 GST_TYPE_VIDEO_DITHER_METHOD
 
 #video-multiview.h
 <SUBSECTION>
+GstVideoMultiviewMode
+GstVideoMultiviewFramePacking
+GstVideoMultiviewFlags
 GST_VIDEO_MULTIVIEW_MAX_FRAME_PACKING
 gst_video_multiview_get_mono_modes
 gst_video_multiview_get_unpacked_modes
@@ -2847,6 +2974,19 @@ gst_video_multiview_mode_from_caps_string
 gst_video_multiview_mode_to_caps_string
 gst_video_multiview_guess_half_aspect
 gst_video_multiview_video_info_change_mode
+<SUBSECTION Standard>
+gst_video_multiview_flags_get_type
+<SUBSECTION Private>
+GstVideoMultiviewMeta
+GstVideoMultiviewViewInfo
+GstVideoMultiviewViewLabel
+gst_buffer_add_video_multiview_meta
+gst_buffer_get_video_multiview_meta
+gst_video_multiview_meta_set_n_views
+gst_video_multiview_meta_api_get_type
+gst_video_multiview_meta_get_info
+GST_VIDEO_MULTIVIEW_META_API_TYPE
+GST_VIDEO_MULTIVIEW_META_INFO
 
 #video-timecode.h
 <SUBSECTION>
@@ -2859,6 +2999,7 @@ gst_video_time_code_free
 gst_video_time_code_copy
 gst_video_time_code_init
 gst_video_time_code_init_from_date_time
+GST_VIDEO_TIME_CODE_INIT
 gst_video_time_code_clear
 gst_video_time_code_is_valid
 gst_video_time_code_compare
@@ -2884,6 +3025,9 @@ gst_video_time_code_interval_free
 <SUBSECTION Standard>
 gst_video_time_code_get_type
 GST_TYPE_VIDEO_TIME_CODE
+GST_TYPE_VIDEO_TIME_CODE_INTERVAL
+gst_video_time_code_interval_get_type
+
 
 #video-enumtypes.h
 <SUBSECTION Standard>
@@ -2903,7 +3047,7 @@ GST_TYPE_NAVIGATION_EVENT_TYPE
 <SECTION>
 <FILE>gstvideopool</FILE>
 <TITLE>GstVideoPool</TITLE>
-<INCLUDE>gst/video/gstvideopool.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoBufferPool
 GstVideoBufferPoolClass
 gst_video_buffer_pool_new
@@ -2922,9 +3066,10 @@ gst_video_buffer_pool_get_type
 
 <SECTION>
 <FILE>gstvideometa</FILE>
-<INCLUDE>gst/video/gstvideometa.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
+<SUBSECTION videometa>
 GstVideoMeta
-GstVideoMetaTransform
+GST_CAPS_FEATURE_META_GST_VIDEO_META
 gst_video_meta_map
 gst_video_meta_unmap
 gst_video_meta_get_info
@@ -2932,9 +3077,16 @@ gst_buffer_add_video_meta
 gst_buffer_add_video_meta_full
 gst_buffer_get_video_meta
 gst_buffer_get_video_meta_id
+
+<SUBSECTION videometatransform>
+GstVideoMetaTransform
+
+<SUBSECTION videometacrop>
 GstVideoCropMeta
 gst_buffer_add_video_crop_meta
 gst_buffer_get_video_crop_meta
+
+<SUBSECTION videometaroi>
 GstVideoRegionOfInterestMeta
 gst_buffer_add_video_region_of_interest_meta
 gst_buffer_add_video_region_of_interest_meta_id
@@ -2942,6 +3094,9 @@ gst_buffer_get_video_region_of_interest_meta
 gst_buffer_get_video_region_of_interest_meta_id
 gst_video_region_of_interest_meta_add_param
 gst_video_region_of_interest_meta_get_param
+
+<SUBSECTION videometagltextureupload>
+GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META
 GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META
 GstVideoGLTextureOrientation
 GstVideoGLTextureType
@@ -2950,10 +3105,13 @@ GstVideoGLTextureUploadMeta
 gst_buffer_add_video_gl_texture_upload_meta
 gst_buffer_get_video_gl_texture_upload_meta
 gst_video_gl_texture_upload_meta_upload
+
+<SUBSECTION videometatc>
 GstVideoTimeCodeMeta
 gst_buffer_add_video_time_code_meta
 gst_buffer_add_video_time_code_meta_full
 gst_buffer_get_video_time_code_meta
+
 <SUBSECTION Standard>
 gst_video_crop_meta_api_get_type
 gst_video_meta_api_get_type
@@ -2972,24 +3130,34 @@ GST_VIDEO_TIME_CODE_META_API_TYPE
 GST_VIDEO_TIME_CODE_META_INFO
 gst_video_time_code_meta_api_get_type
 gst_video_time_code_meta_get_info
+GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE
+GST_VIDEO_REGION_OF_INTEREST_META_INFO
+gst_video_region_of_interest_meta_api_get_type
+gst_video_region_of_interest_meta_get_info
 </SECTION>
 
 <SECTION>
 <FILE>gstvideoaffinetransformationmeta</FILE>
-<INCLUDE>gst/video/gstvideoaffinetransformationmeta.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
+GstVideoAffineTransformationGetMatrix
 GstVideoAffineTransformationMeta
 gst_buffer_add_video_affine_transformation_meta
 gst_buffer_get_video_affine_transformation_meta
 gst_video_affine_transformation_meta_apply_matrix
+GST_BUFFER_POOL_OPTION_VIDEO_AFFINE_TRANSFORMATION_META
 <SUBSECTION Standard>
+GST_CAPS_FEATURE_META_GST_VIDEO_AFFINE_TRANSFORMATION_META
 gst_video_affine_transformation_meta_api_get_type
 gst_video_affine_transformation_meta_get_info
+GST_VIDEO_AFFINE_TRANSFORMATION_META_API_TYPE
+GST_VIDEO_AFFINE_TRANSFORMATION_META_INFO
 </SECTION>
 
 <SECTION>
 <FILE>gstvideooverlaycomposition</FILE>
-<INCLUDE>gst/video/video-overlay-composition.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 <SUBSECTION composition>
+
 GstVideoOverlayComposition
 gst_video_overlay_composition_new
 gst_video_overlay_composition_ref
@@ -3001,10 +3169,13 @@ gst_video_overlay_composition_get_seqnum
 gst_video_overlay_composition_copy
 gst_video_overlay_composition_make_writable
 
+GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB
+GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV
 GST_VIDEO_OVERLAY_COMPOSITION_BLEND_FORMATS
 gst_video_overlay_composition_blend
 
 <SUBSECTION composition-set-get>
+GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION
 GstVideoOverlayCompositionMeta
 gst_video_overlay_composition_meta_get_info
 gst_buffer_add_video_overlay_composition_meta
@@ -3042,13 +3213,14 @@ gst_video_overlay_composition_meta_api_get_type
 
 GST_TYPE_VIDEO_OVERLAY_RECTANGLE
 GST_VIDEO_OVERLAY_RECTANGLE
+GST_VIDEO_OVERLAY_RECTANGLE_CAST
 GST_IS_VIDEO_OVERLAY_RECTANGLE
 gst_video_overlay_rectangle_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstvideofilter</FILE>
-<INCLUDE>gst/video/gstvideofilter.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoFilter
 GstVideoFilterClass
 <SUBSECTION Standard>
@@ -3064,7 +3236,7 @@ GST_VIDEO_FILTER_CAST
 
 <SECTION>
 <FILE>gstvideosink</FILE>
-<INCLUDE>gst/video/gstvideosink.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoSink
 GstVideoSinkClass
 GstVideoRectangle
@@ -3087,6 +3259,7 @@ gst_video_sink_get_type
 <SECTION>
 <FILE>gstvideodecoder</FILE>
 <TITLE>GstVideoDecoder</TITLE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GST_VIDEO_DECODER_ERROR
 GST_VIDEO_DECODER_FLOW_NEED_DATA
 GST_VIDEO_DECODER_MAX_ERRORS
@@ -3137,6 +3310,7 @@ GST_IS_VIDEO_DECODER
 GST_IS_VIDEO_DECODER_CLASS
 GST_TYPE_VIDEO_DECODER
 GST_VIDEO_DECODER
+GST_VIDEO_DECODER_CAST
 GST_VIDEO_DECODER_CLASS
 GST_VIDEO_DECODER_GET_CLASS
 GstVideoDecoderPrivate
@@ -3146,6 +3320,7 @@ gst_video_decoder_get_type
 <SECTION>
 <FILE>gstvideoencoder</FILE>
 <TITLE>GstVideoEncoder</TITLE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GST_VIDEO_ENCODER_CAST
 GST_VIDEO_ENCODER_FLOW_DROPPED
 GST_VIDEO_ENCODER_FLOW_NEED_DATA
@@ -3176,6 +3351,8 @@ gst_video_encoder_set_min_pts
 gst_video_encoder_proxy_getcaps
 gst_video_encoder_merge_tags
 gst_video_encoder_get_max_encode_time
+gst_video_encoder_is_qos_enabled
+gst_video_encoder_set_qos_enabled
 <SUBSECTION Standard>
 GST_IS_VIDEO_ENCODER
 GST_IS_VIDEO_ENCODER_CLASS
@@ -3190,7 +3367,7 @@ gst_video_encoder_get_type
 <SECTION>
 <FILE>gstvideodither</FILE>
 <TITLE>GstVideoDither</TITLE>
-<INCLUDE>gst/video/video-dither.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoDither
 GstVideoDitherFlags
 GstVideoDitherMethod
@@ -3205,7 +3382,7 @@ gst_video_dither_flags_get_type
 <SECTION>
 <FILE>gstvideochroma</FILE>
 <TITLE>GstVideoChroma</TITLE>
-<INCLUDE>gst/video/video-chroma.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoChromaSite
 gst_video_chroma_from_string
 gst_video_chroma_to_string
@@ -3227,7 +3404,7 @@ GST_TYPE_VIDEO_CHROMA_METHOD
 <SECTION>
 <FILE>gstvideoresampler</FILE>
 <TITLE>GstVideoResampler</TITLE>
-<INCLUDE>gst/video/video-resampler.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoResampler
 GstVideoResamplerFlags
 GstVideoResamplerMethod
@@ -3249,9 +3426,10 @@ GST_TYPE_VIDEO_RESAMPLER_METHOD
 <SECTION>
 <FILE>gstvideoscaler</FILE>
 <TITLE>GstVideoScaler</TITLE>
-<INCLUDE>gst/video/video-scaler.h</INCLUDE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoScaler
 GstVideoScalerFlags
+GST_VIDEO_SCALER_OPT_DITHER_METHOD
 gst_video_scaler_2d
 gst_video_scaler_combine_packed_YUV
 gst_video_scaler_free
@@ -3261,10 +3439,13 @@ gst_video_scaler_new
 gst_video_scaler_vertical
 gst_video_scaler_get_max_taps
 <SUBSECTION Standard>
+GST_TYPE_VIDEO_SCALER_FLAGS
+gst_video_scaler_flags_get_type
 </SECTION>
 
 <SECTION>
 <FILE>gstvideoutils</FILE>
+<INCLUDE>gst/video/video.h</INCLUDE>
 GstVideoCodecFrame
 GstVideoCodecFrameFlags
 GST_VIDEO_CODEC_FRAME_FLAGS
@@ -3392,6 +3573,7 @@ GST_TYPE_DISCOVERER_RESULT
 GST_TYPE_DISCOVERER_STREAM_INFO
 GST_TYPE_DISCOVERER_VIDEO_INFO
 GST_TYPE_DISCOVERER_SUBTITLE_INFO
+GST_TYPE_DISCOVERER_SERIALIZE_FLAGS
 GstDiscovererAudioInfoClass
 GstDiscovererClass
 GstDiscovererContainerInfoClass
@@ -3409,6 +3591,7 @@ gst_discoverer_result_get_type
 gst_discoverer_stream_info_get_type
 gst_discoverer_subtitle_info_get_type
 gst_discoverer_video_info_get_type
+gst_discoverer_serialize_flags_get_type
 </SECTION>
 
 # private
@@ -3416,30 +3599,33 @@ gst_discoverer_video_info_get_type
 <SECTION>
 <FILE>private</FILE>
 <SUBSECTION Private>
-bind_textdomain_codeset
-bindtextdomain
-dcgettext
-dcngettext
-dgettext
-dngettext
-gettext
-gettext_noop
-ngettext
-textdomain
-_
-N_
 inline
-orc_int16
-orc_int32
-orc_int64
-orc_int8
-orc_uint16
-orc_uint32
-orc_uint64
-orc_uint8
-ORC_UINT64_C
-gst_audio_marshal_VOID__OBJECT_INT
-gst_audio_marshal_VOID__OBJECT_ULONG
+GST_ALLOCATORS_API
+GST_APP_API
+GST_AUDIO_API
+GST_FFT_API
+GST_GL_API
+GST_PBUTILS_API
+GST_RIFF_API
+GST_RTP_API
+GST_RTSP_API
+GST_SDP_API
+GST_TAG_API
+GST_VIDEO_API
+
+GLchar
+GLeglImageOES
+GLhandleARB
+GLint64
+GLintptr
+GLsizeiptr
+GLsync
+GLuint64
+
+EGLAttrib
+
+display
+window
 </SECTION>
 
 <SECTION>
@@ -3464,11 +3650,21 @@ GST_GL_EXT_END
 GST_GL_EXT_FUNCTION
 GstGLFeatureData
 GstGLFeatureFunction
+GL_COLOR_ATTACHMENT1
+GL_COLOR_ATTACHMENT2
+GL_DEPTH24_STENCIL8
+GL_RGB16
+GL_RGB8
+GL_TEXTURE_ENV
+GL_TEXTURE_ENV_MODE
+GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
+
 </SECTION>
 
 <SECTION>
 <FILE>gstglbuffer</FILE>
 <TITLE>GstGLBuffer</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLBuffer
 gst_gl_buffer_init_once
 gst_is_gl_buffer
@@ -3496,6 +3692,7 @@ GST_TYPE_GL_BUFFER_ALLOCATOR
 <SECTION>
 <FILE>gstglbufferpool</FILE>
 <TITLE>GstGLBufferPool</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLBufferPool
 GstGLBufferPoolClass
 gst_gl_buffer_pool_new
@@ -3514,6 +3711,7 @@ GST_TYPE_GL_BUFFER_POOL
 <SECTION>
 <FILE>gstglcolorconvert</FILE>
 <TITLE>GstGLColorConvert</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GST_GL_COLOR_CONVERT_FORMATS
 GST_GL_COLOR_CONVERT_VIDEO_CAPS
 GstGLColorConvert
@@ -3538,7 +3736,13 @@ GST_TYPE_GL_COLOR_CONVERT
 <SECTION>
 <FILE>gstglcontext</FILE>
 <TITLE>GstGLContext</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GST_GL_CONTEXT_ERROR
+GST_GL_CONTEXT_TYPE_CGL
+GST_GL_CONTEXT_TYPE_EAGL
+GST_GL_CONTEXT_TYPE_EGL
+GST_GL_CONTEXT_TYPE_GLX
+GST_GL_CONTEXT_TYPE_WGL
 GstGLContextError
 GstGLContextThreadFunc
 GstGLContext
@@ -3609,115 +3813,22 @@ GST_GL_HAVE_WINDOW_WAYLAND
 GST_GL_HAVE_WINDOW_WIN32
 GST_GL_HAVE_WINDOW_X11
 GST_GL_HAVE_WINDOW_VIV_FB
+GST_GL_HAVE_WINDOW_GBM
 GST_GL_HAVE_VIV_DIRECTVIV
-</SECTION>
-
-<SECTION>
-<FILE>gstglcontextcocoa</FILE>
-<TITLE>GstGLContextCocoa</TITLE>
-GstGLContextCocoa
-gst_gl_context_cocoa_new
-gst_gl_context_cocoa_get_current_context
-gst_gl_context_cocoa_get_pixel_format
-<SUBSECTION Standard>
-GST_GL_CONTEXT_COCOA
-GST_IS_GL_CONTEXT_COCOA
-GST_TYPE_GL_CONTEXT_COCOA
-GST_GL_CONTEXT_COCOA_CLASS
-GST_GL_CONTEXT_COCOA_GET_CLASS
-GST_IS_GL_CONTEXT_COCOA_CLASS
-GST_GL_CONTEXT_COCOA_CAST
-GstGLContextCocoaPrivate
-gst_gl_context_cocoa_get_type
-<SUBSECTION Private>
-gst_gl_context_cocoa_dump_pixel_format
 </SECTION>
 
 <SECTION>
 <FILE>gstglcontextegl</FILE>
 <TITLE>GstGLContextEGL</TITLE>
-GstGLContextEGL
-gst_gl_context_egl_new
-gst_gl_context_egl_get_current_context
-gst_gl_context_egl_get_proc_address
 gst_egl_get_error_string
-<SUBSECTION Standard>
-GST_GL_CONTEXT_EGL
-GST_IS_GL_CONTEXT_EGL
-GST_TYPE_GL_CONTEXT_EGL
-GST_GL_CONTEXT_EGL_CLASS
-GST_GL_CONTEXT_EGL_GET_CLASS
-GST_IS_GL_CONTEXT_EGL_CLASS
-GST_GL_CONTEXT_EGL_CAST
-GstGLContextEGLPrivate
-gst_gl_context_egl_get_type
 </SECTION>
 
-<SECTION>
-<FILE>gstglcontextglx</FILE>
-<TITLE>GstGLContextGLX</TITLE>
-GstGLContextGLX
-gst_gl_context_glx_new
-gst_gl_context_glx_get_current_context
-gst_gl_context_glx_get_proc_address
-<SUBSECTION Standard>
-GST_GL_CONTEXT_GLX
-GST_IS_GL_CONTEXT_GLX
-GST_TYPE_GL_CONTEXT_GLX
-GST_GL_CONTEXT_GLX_CLASS
-GST_GL_CONTEXT_GLX_GET_CLASS
-GST_IS_GL_CONTEXT_GLX_CLASS
-GST_GL_CONTEXT_GLX_CAST
-GstGLContextGLXPrivate
-gst_gl_context_glx_get_type
-</SECTION>
 
-<SECTION>
-<FILE>gstglcontextwgl</FILE>
-<TITLE>GstGLContextWGL</TITLE>
-GstGLContextWGL
-gst_gl_context_wgl_new
-gst_gl_context_wgl_get_current_context
-gst_gl_context_wgl_get_proc_address
-<SUBSECTION Standard>
-GST_GL_CONTEXT_WGL
-GST_IS_GL_CONTEXT_WGL
-GST_TYPE_GL_CONTEXT_WGL
-GST_GL_CONTEXT_WGL_CLASS
-GST_GL_CONTEXT_WGL_GET_CLASS
-GST_IS_GL_CONTEXT_WGL_CLASS
-GST_GL_CONTEXT_WGL_CAST
-GstGLContextWGLPrivate
-gst_gl_context_wgl_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstglcontexteagl</FILE>
-<TITLE>GstGLContextEagl</TITLE>
-GstGLContextEagl
-gst_gl_context_eagl_new
-gst_gl_context_eagl_get_current_context
-<SUBSECTION Standard>
-GST_GL_CONTEXT_EAGL
-GST_IS_GL_CONTEXT_EAGL
-GST_TYPE_GL_CONTEXT_EAGL
-GST_GL_CONTEXT_EAGL_CLASS
-GST_GL_CONTEXT_EAGL_GET_CLASS
-GST_IS_GL_CONTEXT_EAGL_CLASS
-GST_GL_CONTEXT_EAGL_CAST
-GstGLContextEaglPrivate
-
-<SUBSECTION Private>
-gst_gl_context_eagl_get_type
-gst_gl_context_eagl_prepare_draw
-gst_gl_context_eagl_finish_draw
-gst_gl_context_eagl_resize
-gst_gl_context_eagl_update_layer
-</SECTION>
 
 <SECTION>
 <FILE>gstgldisplay</FILE>
 <TITLE>GstGLDisplay</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GST_GL_DISPLAY_CONTEXT_TYPE
 GstGLDisplayType
 GstGLDisplay
@@ -3753,6 +3864,7 @@ gst_gl_display_get_gl_api_unlocked
 <SECTION>
 <FILE>gstgldisplaycocoa</FILE>
 <TITLE>GstGLDisplayCocoa</TITLE>
+<INCLUDE>gst/gl/cocoa/gstgldisplay_cocoa.h</INCLUDE>
 gst_gl_display_cocoa_new
 <SUBSECTION Standard>
 GstGLDisplayCocoa
@@ -3769,6 +3881,7 @@ GST_IS_GL_DISPLAY_COCOA_CLASS
 <SECTION>
 <FILE>gstgldisplayegl</FILE>
 <TITLE>GstGLDisplayEGL</TITLE>
+<INCLUDE>gst/gl/egl/gstgldisplay_egl.h</INCLUDE>
 gst_gl_display_egl_new
 gst_gl_display_egl_new_with_egl_display
 gst_gl_display_egl_from_gl_display
@@ -3788,6 +3901,8 @@ GST_IS_GL_DISPLAY_EGL_CLASS
 <SECTION>
 <FILE>gstgldisplaywayland</FILE>
 <TITLE>GstGLDisplayWayland</TITLE>
+<INCLUDE>gst/gl/wayland/gstgldisplay_wayland.h</INCLUDE>
+GstGLDisplayWayland
 gst_gl_display_wayland_new
 gst_gl_display_wayland_new_with_display
 <SUBSECTION Standard>
@@ -3803,6 +3918,8 @@ GST_IS_GL_DISPLAY_WAYLAND_CLASS
 <SECTION>
 <FILE>gstgldisplayx11</FILE>
 <TITLE>GstGLDisplayX11</TITLE>
+<INCLUDE>gst/gl/x11/gstgldisplay_x11.h</INCLUDE>
+GstGLDisplayX11
 gst_gl_display_x11_new
 gst_gl_display_x11_new_with_display
 <SUBSECTION Standard>
@@ -3819,6 +3936,7 @@ GST_IS_GL_DISPLAY_X11_CLASS
 <FILE>gstgldebug</FILE>
 GstGLAsyncDebugLogGetMessage
 <TITLE>OpenGL Debugging</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLAsyncDebug
 gst_gl_async_debug_new
 gst_gl_async_debug_free
@@ -3837,6 +3955,7 @@ gst_gl_insert_debug_marker
 <SECTION>
 <FILE>gstglbasefilter</FILE>
 <TITLE>GstGLBaseFilter</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLBaseFilter
 GstGLBaseFilterClass
 <SUBSECTION Standard>
@@ -3853,9 +3972,12 @@ GstGLBaseFilterPrivate
 <SECTION>
 <FILE>gsteglimage</FILE>
 <TITLE>GstEGLImage</TITLE>
+<INCLUDE>gst/gl/egl/gsteglimage.h</INCLUDE>
+GstEGLImage
 gst_egl_image_from_dmabuf
 gst_egl_image_from_texture
 gst_egl_image_get_image
+gst_egl_image_export_dmabuf
 gst_egl_image_new_wrapped
 gst_egl_image_ref
 gst_egl_image_unref
@@ -3871,6 +3993,7 @@ GST_IS_EGL_IMAGE
 <SECTION>
 <FILE>gstglfilter</FILE>
 <TITLE>GstGLFilter</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLFilter
 GstGLFilterClass
 GstGLFilterRenderFunc
@@ -3878,6 +4001,7 @@ gst_gl_filter_render_to_target
 gst_gl_filter_render_to_target_with_shader
 gst_gl_filter_filter_texture
 gst_gl_filter_draw_fullscreen_quad
+gst_gl_filter_add_rgba_pad_templates
 <SUBSECTION Standard>
 GST_GL_FILTER
 GST_IS_GL_FILTER
@@ -3891,6 +4015,7 @@ GST_GL_FILTER_GET_CLASS
 <SECTION>
 <FILE>gstglformat</FILE>
 <TITLE>OpenGL Formats</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLTextureTarget
 GST_GL_TEXTURE_TARGET_2D_STR
 GST_GL_TEXTURE_TARGET_RECTANGLE_STR
@@ -3913,6 +4038,7 @@ gst_gl_texture_target_to_buffer_pool_option
 <SECTION>
 <FILE>gstglframebuffer</FILE>
 <TITLE>GstGLFramebuffer</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLFramebuffer
 GstGLFramebufferClass
 gst_gl_framebuffer_new
@@ -3939,6 +4065,7 @@ GST_GL_FRAMEBUFFER_GET_CLASS
 
 <SECTION>
 <FILE>gstglbasememory</FILE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLBaseMemoryAllocator
 GstGLBaseMemoryAllocatorClass
 GST_GL_BASE_MEMORY_ALLOCATOR_NAME
@@ -3992,6 +4119,7 @@ GST_TYPE_GL_BASE_MEMORY_ALLOCATOR
 <SECTION>
 <FILE>gstglmemory</FILE>
 <TITLE>GstGLMemory</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GST_GL_MEMORY_VIDEO_FORMATS_STR
 GST_CAPS_FEATURE_MEMORY_GL_MEMORY
 GstGLVideoAllocationParams
@@ -4037,6 +4165,7 @@ GST_TYPE_GL_MEMORY_ALLOCATOR
 
 <SECTION>
 <FILE>gstglmemoryegl</FILE>
+<INCLUDE>gst/gl/egl/gstglmemoryegl.h</INCLUDE>
 GstGLMemoryEGLAllocator
 GstGLMemoryEGLAllocatorClass
 GST_GL_MEMORY_EGL_ALLOCATOR_NAME
@@ -4060,6 +4189,7 @@ GST_TYPE_GL_MEMORY_EGL_ALLOCATOR
 
 <SECTION>
 <FILE>gstglmemorypbo</FILE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLMemoryPBOAllocator
 GstGLMemoryPBOAllocatorClass
 GST_GL_MEMORY_PBO_ALLOCATOR_NAME
@@ -4085,6 +4215,8 @@ GST_TYPE_GL_MEMORY_PBO_ALLOCATOR
 <SECTION>
 <FILE>gstgloverlaycompositor</FILE>
 <TITLE>GstGLOverlayCompositor</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
+GstGLOverlayCompositor
 gst_gl_overlay_compositor_new
 gst_gl_overlay_compositor_add_caps
 gst_gl_overlay_compositor_draw_overlays
@@ -4103,6 +4235,8 @@ GST_IS_GL_OVERLAY_COMPOSITOR_CLASS
 <SECTION>
 <FILE>gstglquery</FILE>
 <TITLE>GstGLQuery</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
+GstGLQuery
 GstGLQueryType
 gst_gl_query_counter
 gst_gl_query_counter_log
@@ -4121,8 +4255,11 @@ gst_gl_query_unset
 <SECTION>
 <FILE>gstglrenderbuffer</FILE>
 <TITLE>GstGLRenderbuffer</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
+GstGLRenderbuffer
 GstGLRenderbufferAllocator
 GstGLRenderbufferAllocatorClass
+GstGLRenderbufferAllocationParams
 GST_GL_RENDERBUFFER_ALLOCATOR_NAME
 gst_gl_renderbuffer_allocation_params_new
 gst_gl_renderbuffer_allocation_params_new_wrapped
@@ -4149,6 +4286,7 @@ GST_IS_GL_RENDERBUFFER_ALLOCATOR_CLASS
 <SECTION>
 <FILE>gstglshader</FILE>
 <TITLE>GstGLShader</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLShader
 gst_gl_shader_new
 gst_gl_shader_new_default
@@ -4213,6 +4351,7 @@ GST_GL_SHADER_GET_CLASS
 <SECTION>
 <FILE>gstglsl</FILE>
 <TITLE>GstGLSL</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GST_GLSL_ERROR
 GstGLSLError
 GstGLSLProfile
@@ -4233,6 +4372,7 @@ gst_glsl_error_quark
 <SECTION>
 <FILE>gstglslstage</FILE>
 <TITLE>GstGLSLStage</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLSLStage
 GstGLSLStageClass
 gst_glsl_stage_new
@@ -4260,6 +4400,7 @@ GST_GLSL_STAGE_GET_CLASS
 <SECTION>
 <FILE>gstglsyncmeta</FILE>
 <TITLE>GstGLSyncMeta</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLSyncMeta
 gst_gl_sync_meta_get_info
 gst_buffer_add_gl_sync_meta
@@ -4278,6 +4419,7 @@ gst_gl_sync_meta_api_get_type
 <SECTION>
 <FILE>gstglupload</FILE>
 <TITLE>GstGLUpload</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLUpload
 gst_gl_upload_new
 gst_gl_upload_set_context
@@ -4303,6 +4445,7 @@ GstGLUploadPrivate
 <SECTION>
 <FILE>gstglutils</FILE>
 <TITLE>OpenGL Miscellaneous Utilities</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 gst_gl_handle_set_context
 gst_gl_handle_context_query
 gst_gl_ensure_element_data
@@ -4313,11 +4456,13 @@ gst_gl_value_get_texture_target_mask
 gst_gl_value_set_texture_target
 gst_gl_value_set_texture_target_from_mask
 gst_gl_check_extension
+gst_gl_element_propagate_display_context
 </SECTION>
 
 <SECTION>
 <FILE>gstglviewconvert</FILE>
 <TITLE>GstGLViewConvert</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLStereoDownmix
 GstGLViewConvert
 GstGLViewConvertClass
@@ -4346,6 +4491,7 @@ GstGLViewConvertPrivate
 <SECTION>
 <FILE>gstglwindow</FILE>
 <TITLE>GstGLWindow</TITLE>
+<INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLWindowError
 gst_gl_window_error_quark
 GST_GL_WINDOW_ERROR
@@ -4396,133 +4542,3 @@ GST_GL_WINDOW_LOCK
 GST_GL_WINDOW_UNLOCK
 </SECTION>
 
-<SECTION>
-<FILE>gstglwindowandroid</FILE>
-<TITLE>GstGLWindowAndroid</TITLE>
-GstGLWindowAndroidEGL
-GstGLWindowAndroidEGLClass
-gst_gl_window_android_egl_new
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_ANDROID_EGL
-GST_IS_GL_WINDOW_ANDROID_EGL_CLASS
-GST_TYPE_GL_WINDOW_ANDROID_EGL
-GST_GL_WINDOW_ANDROID_EGL
-GST_GL_WINDOW_ANDROID_EGL_CLASS
-GST_GL_WINDOW_ANDROID_EGL_GET_CLASS
-gst_gl_window_android_egl_get_type
-</SECTION>
-
-<SECTION>
-<FILE>gstglwindowcocoa</FILE>
-<TITLE>GstGLWindowCocoa</TITLE>
-GstGLWindowCocoa
-GstGLWindowCocoaClass
-gst_gl_window_cocoa_new
-gst_gl_window_cocoa_create_window
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_COCOA
-GST_IS_GL_WINDOW_COCOA_CLASS
-GST_TYPE_GL_WINDOW_COCOA
-GST_GL_WINDOW_COCOA
-GST_GL_WINDOW_COCOA_CLASS
-GST_GL_WINDOW_COCOA_GET_CLASS
-gst_gl_window_cocoa_get_type
-GstGLWindowCocoaPrivate
-<SUBSECTION Private>
-gst_gl_window_cocoa_draw_thread
-</SECTION>
-
-<SECTION>
-<FILE>gstglwindowdispmanx</FILE>
-<TITLE>GstGLWindowDispmanx</TITLE>
-GstGLWindowDispmanxEGL
-GstGLWindowDispmanxEGLClass
-gst_gl_window_dispmanx_egl_new
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_DISPMANX_EGL
-GST_IS_GL_WINDOW_DISPMANX_EGL_CLASS
-GST_TYPE_GL_WINDOW_DISPMANX_EGL
-GST_GL_WINDOW_DISPMANX_EGL
-GST_GL_WINDOW_DISPMANX_EGL_CLASS
-GST_GL_WINDOW_DISPMANX_EGL_GET_CLASS
-gst_gl_window_dispmanx_egl_get_type
-<SUBSECTION Private>
-gst_gl_window_dispmanx_egl_create_window
-</SECTION>
-
-<SECTION>
-<FILE>gstglwindoweagl</FILE>
-<TITLE>GstGLWindowEagl</TITLE>
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_EAGL
-GST_IS_GL_WINDOW_EAGL_CLASS
-GST_GL_TYPE_WINDOW_EAGL
-GST_GL_WINDOW_EAGL
-GST_GL_WINDOW_EAGL_CLASS
-GST_GL_WINDOW_EAGL_GET_CLASS
-gst_gl_window_eagl_get_type
-<SUBSECTION Private>
-GST_TYPE_GL_WINDOW_EAGL
-GstGLWindowEagl
-GstGLWindowEaglClass
-GstGLWindowEaglPrivate
-gst_gl_window_eagl_new
-</SECTION>
-
-<SECTION>
-<FILE>gstglwindowwayland</FILE>
-<TITLE>GstGLWindowWayland</TITLE>
-GstGLWindowWaylandEGL
-GstGLWindowWaylandEGLClass
-gst_gl_window_wayland_egl_new
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_WAYLAND_EGL
-GST_IS_GL_WINDOW_WAYLAND_EGL_CLASS
-GST_TYPE_GL_WINDOW_WAYLAND_EGL
-GST_GL_WINDOW_WAYLAND_EGL
-GST_GL_WINDOW_WAYLAND_EGL_CLASS
-GST_GL_WINDOW_WAYLAND_EGL_GET_CLASS
-gst_gl_window_wayland_egl_get_type
-wayland_event_source_new
-<SUBSECTION Private>
-gst_gl_window_wayland_egl_create_window
-</SECTION>
-
-<SECTION>
-<FILE>gstglwindowwin32</FILE>
-<TITLE>GstGLWindowWin32</TITLE>
-GstGLWindowWin32
-GstGLWindowWin32Class
-gst_gl_window_win32_new
-gst_gl_window_win32_create_window
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_WIN32
-GST_IS_GL_WINDOW_WIN32_CLASS
-GST_TYPE_GL_WINDOW_WIN32
-GST_GL_WINDOW_WIN32
-GST_GL_WINDOW_WIN32_CLASS
-GST_GL_WINDOW_WIN32_GET_CLASS
-gst_gl_window_win32_get_type
-GstGLWindowWin32Private
-</SECTION>
-
-<SECTION>
-<FILE>gstglwindowx11</FILE>
-<TITLE>GstGLWindowX11</TITLE>
-GstGLWindowX11
-GstGLWindowX11Class
-gst_gl_window_x11_new
-gst_gl_window_x11_create_window
-gst_gl_window_x11_trap_x_errors
-gst_gl_window_x11_untrap_x_errors
-<SUBSECTION Standard>
-GST_IS_GL_WINDOW_X11
-GST_IS_GL_WINDOW_X11_CLASS
-GST_TYPE_GL_WINDOW_X11
-GST_GL_WINDOW_X11
-GST_GL_WINDOW_X11_CLASS
-GST_GL_WINDOW_X11_GET_CLASS
-gst_gl_window_x11_get_type
-GstGLWindowX11Private
-x11_event_source_new
-</SECTION>

@@ -117,6 +117,7 @@
       <xi:include href="xml/gstrtcpbuffer.xml" />
       <xi:include href="xml/gstrtppayloads.xml" />
       <xi:include href="xml/gstrtphdrext.xml" />
+      <xi:include href="xml/gstrtpdefs.xml" />
     </chapter>
 
     <chapter id="gstreamer-rtsp">
@@ -190,6 +191,7 @@
       <xi:include href="xml/gstpbutilsinstallplugins.xml" />
       <xi:include href="xml/gstdiscoverer.xml" />
       <xi:include href="xml/encoding-profile.xml" />
+      <xi:include href="xml/gstaudiovisualizer.xml" />
     </chapter>
 
     <chapter id="gstreamer-video">
@@ -235,17 +237,11 @@
       <xi:include href="xml/gstglcolorconvert.xml"/>
       <xi:include href="xml/gstglcontext.xml"/>
       <!-- Not exposed as public API
-      <xi:include href="xml/gstglcontextcocoa.xml"/>
-      <xi:include href="xml/gstglcontexteagl.xml"/>
       <xi:include href="xml/gstglcontextegl.xml"/>
-      <xi:include href="xml/gstglcontextglx.xml"/>
-      <xi:include href="xml/gstglcontextwgl.xml"/>
       -->
       <xi:include href="xml/gstgldisplay.xml"/>
-      <!-- Not exposed as public API
       <xi:include href="xml/gstgldisplaycocoa.xml"/>
       <xi:include href="xml/gstgldisplayegl.xml"/>
-      -->
       <xi:include href="xml/gstgldisplaywayland.xml"/>
       <xi:include href="xml/gstgldisplayx11.xml"/>
       <xi:include href="xml/gsteglimage.xml"/>
@@ -264,15 +260,6 @@
       <xi:include href="xml/gstglupload.xml"/>
       <xi:include href="xml/gstglviewconvert.xml"/>
       <xi:include href="xml/gstglwindow.xml"/>
-      <!-- Not exposed as public API
-      <xi:include href="xml/gstglwindowandroid.xml"/>
-      <xi:include href="xml/gstglwindowcocoa.xml"/>
-      <xi:include href="xml/gstglwindowdispmanx.xml"/>
-      <xi:include href="xml/gstglwindoweagl.xml"/>
-      <xi:include href="xml/gstglwindowwayland.xml"/>
-      <xi:include href="xml/gstglwindowwin32.xml"/>
-      <xi:include href="xml/gstglwindowx11.xml"/>
-      -->
       <!-- Some utilities -->
       <xi:include href="xml/gstgldebug.xml"/>
       <xi:include href="xml/gstglformat.xml"/>

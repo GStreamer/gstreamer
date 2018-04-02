@@ -36,15 +36,60 @@ FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
 HFILE_GLOB=$(top_srcdir)/gst-libs/gst/*/*.h
 CFILE_GLOB=$(top_srcdir)/gst-libs/gst/*/*.c
 
+KISS_FFT_HFILES=$(wildcard $(top_srcdir)/gst-libs/gst/fft/*kiss_fft*.h)
+
 # Header files to ignore when scanning.
-IGNORE_HFILES = pbutils-private.h gsttageditingprivate.h id3v2.h \
-	kiss_fft_f32.h kiss_fft_f64.h kiss_fftr_f32.h kiss_fftr_f64.h \
-	kiss_fftr_s16.h kiss_fftr_s32.h kiss_fft_s16.h kiss_fft_s32.h \
-	_kiss_fft_guts_f32.h _kiss_fft_guts_f64.h _kiss_fft_guts_s16.h \
-	_kiss_fft_guts_s16.h _kiss_fft_guts_s32.h _kiss_fft_guts_s32.h \
-	pbutils-marshal.h \
+# Note that you can't use glob, so all headers to be ignored must be specified
+IGNORE_HFILES = \
+	$(top_srcdir)/gst-libs/gst/gettext.h \
+	$(top_srcdir)/gst-libs/gst/gst-i18n-app.h \
+	$(top_srcdir)/gst-libs/gst/gst-i18n-plugin.h \
+	$(top_srcdir)/gst-libs/gst/glib-compat-private.h \
+	$(top_srcdir)/gst-libs/gst/audio/gstaudioutilsprivate.h \
+	$(top_srcdir)/gst-libs/gst/audio/gstaudiopack.h \
+	$(top_srcdir)/gst-libs/gst/audio/gstaudiopack-dist.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-private.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-macros.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-x86.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-x86-sse.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-x86-sse2.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-x86-sse41.h \
+	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-neon.h \
 	$(top_srcdir)/gst-libs/gst/gl/gstglcontext_private.h \
-	$(top_srcdir)/gst-libs/gst/gl/gstglsl_private.h
+	$(top_srcdir)/gst-libs/gst/gl/gstglfeature_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/gstglsl_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/gstglutil_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/gstglwindow_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/android/gstglwindow_android_egl.h \
+	$(top_srcdir)/gst-libs/gst/gl/cocoa/gstglcontext_cocoa.h \
+	$(top_srcdir)/gst-libs/gst/gl/cocoa/gstglwindow_cocoa.h \
+	$(top_srcdir)/gst-libs/gst/gl/cocoa/gstgl_cocoa_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/dispmanx/gstglwindow_dispmanx_egl.h \
+	$(top_srcdir)/gst-libs/gst/gl/eagl/gstglwindow_eagl.h \
+	$(top_srcdir)/gst-libs/gst/gl/eagl/gstglcontext_eagl.h \
+	$(top_srcdir)/gst-libs/gst/gl/egl/gstglcontext_egl.h \
+	$(top_srcdir)/gst-libs/gst/gl/gbm/gstgl_gbm_utils.h \
+	$(top_srcdir)/gst-libs/gst/gl/gbm/gstgldisplay_gbm.h \
+	$(top_srcdir)/gst-libs/gst/gl/gbm/gstglwindow_gbm_egl.h \
+	$(top_srcdir)/gst-libs/gst/gl/utils/opengl_versions.h \
+	$(top_srcdir)/gst-libs/gst/gl/utils/gles_versions.h \
+	$(top_srcdir)/gst-libs/gst/gl/viv-fb/gstgldisplay_viv_fb.h \
+	$(top_srcdir)/gst-libs/gst/gl/viv-fb/gstglwindow_viv_fb_egl.h \
+	$(top_srcdir)/gst-libs/gst/gl/wayland/gstglwindow_wayland_egl.h \
+	$(top_srcdir)/gst-libs/gst/gl/wayland/wayland_event_source.h \
+	$(top_srcdir)/gst-libs/gst/gl/win32/gstglcontext_wgl.h \
+	$(top_srcdir)/gst-libs/gst/gl/win32/gstglwindow_win32.h \
+	$(top_srcdir)/gst-libs/gst/gl/win32/win32_message_source.h \
+	$(top_srcdir)/gst-libs/gst/gl/x11/gstglwindow_x11.h \
+	$(top_srcdir)/gst-libs/gst/gl/x11/gstglcontext_glx.h \
+	$(top_srcdir)/gst-libs/gst/gl/x11/xcb_event_source.h \
+	$(KISS_FFT_HFILES) \
+	$(top_srcdir)/gst-libs/gst/pbutils/pbutils-private.h \
+	$(top_srcdir)/gst-libs/gst/tag/gsttageditingprivate.h \
+	$(top_srcdir)/gst-libs/gst/tag/id3v2.h \
+	$(top_srcdir)/gst-libs/gst/video/gstvideoutilsprivate.h \
+	$(top_srcdir)/gst-libs/gst/video/video-orc.h \
+	$(top_srcdir)/gst-libs/gst/video/video-orc-dist.h
 
 
 # Images to copy into HTML directory.
