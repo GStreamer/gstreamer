@@ -14,13 +14,6 @@ else
 GTK_TESTS =
 endif
 
-V4L2_TESTS = v4l2src-test
-
-v4l2src_test_SOURCES = v4l2src-test.c
-v4l2src_test_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-v4l2src_test_LDADD = $(GST_PLUGINS_BASE_LIBS) \
-		     -lgstvideo-$(GST_API_VERSION)
-
 if USE_OSS4
 OSS4_TESTS=test-oss4
 
@@ -68,7 +61,7 @@ videocrop2_test_SOURCES = videocrop2-test.c
 videocrop2_test_CFLAGS  = $(GST_CFLAGS)
 videocrop2_test_LDADD   = $(GST_LIBS)
 
-noinst_PROGRAMS = $(GTK_TESTS) $(OSS4_TESTS) $(V4L2_TESTS) $(X_TESTS) \
+noinst_PROGRAMS = $(GTK_TESTS) $(OSS4_TESTS) $(X_TESTS) \
 	equalizer-test \
 	test-accurate-seek \
 	test-segment-seeks \
