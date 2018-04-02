@@ -88,7 +88,7 @@ GST_CHECK_API
 void gst_check_init (int *argc, char **argv[]);
 
 GST_CHECK_API
-GstCheckLogFilter * gst_check_add_log_filter (const gchar * log,
+GstCheckLogFilter * gst_check_add_log_filter (const gchar * log_domain,
     GLogLevelFlags log_level, GRegex * regex, GstCheckLogFilterFunc func,
     gpointer user_data, GDestroyNotify destroy_data);
 

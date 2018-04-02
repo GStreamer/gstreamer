@@ -64,10 +64,11 @@ struct _GstAggregatorPad
 {
   GstPad                       parent;
 
+  /*< public >*/
   /* Protected by the OBJECT_LOCK */
   GstSegment segment;
 
-  /* < Private > */
+  /* < private > */
   GstAggregatorPadPrivate   *  priv;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -131,7 +132,6 @@ gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 /**
  * GstAggregator:
  * @srcpad: the aggregator's source pad
- * @segment: the output segment
  *
  * Aggregator base class object structure.
  */
@@ -139,6 +139,7 @@ struct _GstAggregator
 {
   GstElement               parent;
 
+  /*< public >*/
   GstPad                *  srcpad;
 
   /*< private >*/
@@ -203,6 +204,10 @@ struct _GstAggregator
  *                  based aggregation to occur. Defaults to returning
  *                  GST_CLOCK_TIME_NONE causing the element to wait for buffers
  *                  on all sink pads before aggregating.
+ * @create_new_pad: Optional.
+ *                  Called when a new pad needs to be created. Allows subclass that
+ *                  don't have a single sink pad template to provide a pad based
+ *                  on the provided information.
  * @update_src_caps: Lets subclasses update the #GstCaps representing
  *                   the src pad caps before usage.  The result should end up
  *                   in @ret. Return %GST_AGGREGATOR_FLOW_NEED_DATA to indicate that the
@@ -220,6 +225,8 @@ struct _GstAggregator
  *                     Setup the allocation parameters for allocating output
  *                     buffers. The passed in query contains the result of the
  *                     downstream allocation query.
+ * @propose_allocation: Optional.
+ *                     Allows the subclass to handle the allocation query from upstream.
  *
  * The aggregator base class will handle in a thread-safe way all manners of
  * concurrent flushes, seeks, pad additions and removals, leaving to the
