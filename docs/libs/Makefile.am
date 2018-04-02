@@ -40,8 +40,12 @@ CFILE_GLOB=$(top_srcdir)/libs/gst/*/*.c
 # Extra options to pass to gtkdoc-scanobj or gtkdoc-scangobj.
 SCANOBJ_OPTIONS=--type-init-func="gst_init(&argc,&argv)"
 
+CHECK_HFILES=$(wildcard $(top_srcdir)/libs/gst/check/libcheck/*.h)
+CHECK_HFILES+=$(wildcard $(top_srcdir)/libs/gst/check/libcheck/libcompat/*.h)
+
 # Header files to ignore when scanning.
 IGNORE_HFILES = \
+	$(CHECK_HFILES) \
 	check/libcheck internal-check.h \
 	gstinterpolationcontrolsourceprivate.h \
 	gstlfocontrolsourceprivate.h \

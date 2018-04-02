@@ -85,6 +85,8 @@ gst_timed_value_control_source_unset
 gst_timed_value_control_source_unset_all
 gst_timed_value_control_source_get_count
 gst_timed_value_control_invalidate_cache
+gst_control_point_copy
+gst_control_point_free
 <SUBSECTION Standard>
 GstTimedValueControlSourceClass
 GstTimedValueControlSourcePrivate
@@ -221,9 +223,12 @@ gst_adapter_get_type
 <INCLUDE>gst/base/base.h</INCLUDE>
 GstAggregator
 GstAggregatorClass
+GST_AGGREGATOR_FLOW_NEED_DATA
+GST_AGGREGATOR_SRC_PAD
 gst_aggregator_finish_buffer
 gst_aggregator_set_src_caps
 gst_aggregator_get_latency
+gst_aggregator_set_latency
 gst_aggregator_get_buffer_pool
 gst_aggregator_get_allocator
 <SUBSECTION Standard>
@@ -231,9 +236,11 @@ GST_IS_AGGREGATOR
 GST_IS_AGGREGATOR_CLASS
 GST_TYPE_AGGREGATOR
 GST_AGGREGATOR
+GST_AGGREGATOR_CAST
 GST_AGGREGATOR_CLASS
 GST_AGGREGATOR_GET_CLASS
 gst_aggregator_get_type
+GstAggregatorPrivate
 </SECTION>
 
 <SECTION>
@@ -249,7 +256,9 @@ gst_aggregator_pad_is_eos
 GST_IS_AGGREGATOR_PAD
 GST_IS_AGGREGATOR_PAD_CLASS
 GST_TYPE_AGGREGATOR_PAD
+GstAggregatorPadPrivate
 GST_AGGREGATOR_PAD
+GST_AGGREGATOR_PAD_CAST
 GST_AGGREGATOR_PAD_CLASS
 GST_AGGREGATOR_PAD_GET_CLASS
 gst_aggregator_pad_get_type
@@ -282,6 +291,7 @@ GstBaseParseFrame
 GstBaseParseFrameFlags
 gst_base_parse_frame_new
 gst_base_parse_frame_init
+gst_base_parse_frame_copy
 gst_base_parse_frame_free
 
 gst_base_parse_push_frame
@@ -387,6 +397,8 @@ gst_base_sink_set_max_bitrate
 gst_base_sink_get_max_bitrate
 gst_base_sink_set_last_sample_enabled
 gst_base_sink_is_last_sample_enabled
+gst_base_sink_get_drop_out_of_segment
+gst_base_sink_set_drop_out_of_segment
 
 GST_BASE_SINK_PAD
 GST_BASE_SINK_GET_PREROLL_COND
@@ -1139,6 +1151,14 @@ gst_check_setup_src_pad_from_template
 gst_check_objects_destroyed_on_unref
 gst_check_object_destroyed_on_unref
 
+<SUBSECTION log-filter>
+GstCheckLogFilter
+GstCheckLogFilterFunc
+gst_check_add_log_filter
+gst_check_clear_log_filter
+gst_check_remove_log_filter
+
+
 <SUBSECTION Private>
 MAIN_INIT
 MAIN_START_THREADS
@@ -1161,102 +1181,15 @@ GST_CHECK_MAIN
 
 gst_check_chain_func
 gst_check_abi_list
+tcase_skip_broken_loop_test
+tcase_skip_broken_test
 
 buffers
 check_cond
 check_mutex
 
-CHECK_MAJOR_VERSION
-CHECK_MICRO_VERSION
-CHECK_MINOR_VERSION
-CK_ATTRIBUTE_UNUSED
-CK_CPPEND
-CK_CPPSTART
-CK_EXPORT
 END_TEST
-GCC_VERSION_AT_LEAST
-LFun
-List
-Log
-NULL
-SFun
-SRunner
 START_TEST
-Suite
-TCase
-TF
-TFun
-TestResult
-TestStats
-check_list_create
-ck_abort
-ck_abort_msg
-ck_assert
-ck_assert_int_eq
-ck_assert_int_ne
-ck_assert_msg
-ck_assert_str_eq
-ck_assert_str_ne
-ck_strdup_printf
-cur_fork_status
-emalloc
-eprintf
-erealloc
-fail
-fail_if
-fail_unless
-get_env_printmode
-lfile_lfun
-list_add_end
-list_add_front
-list_advance
-list_apply
-list_at_end
-list_free
-list_front
-list_val
-log_srunner_end
-log_srunner_start
-log_suite_end
-log_suite_start
-log_test_start
-log_test_end
-mark_point
-pack
-ppack
-punpack
-rcvmsg_free
-receive_test_result
-send_ctx_info
-send_failure_info
-send_loc_info
-set_fork_status
-setup_messaging
-sr_stat_str
-srunner_end_logging
-srunner_fprint
-srunner_init_logging
-srunner_open_lfile
-srunner_open_xmlfile
-srunner_register_lfun
-stdout_lfun
-subunit_lfun
-tcase_add_exit_test
-tcase_add_loop_exit_test
-tcase_add_loop_test
-tcase_add_loop_test_raise_signal
-tcase_add_test
-tcase_add_test_raise_signal
-tcase_skip_broken_test
-teardown_messaging
-tr_create
-tr_fprint
-tr_reset
-tr_short_str
-tr_str
-tr_xmlprint
-upack
-xml_lfun
 </SECTION>
 
 <SECTION>
