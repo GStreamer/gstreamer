@@ -15,10 +15,6 @@ if gtk_dep.found()
   ]
 endif
 
-if cdata.has('HAVE_GST_V4L2')
-  tests += [['v4l2src-test', gstvideo_dep]]
-endif
-
 if get_variable('have_oss4', false)
   tests += [['test-oss4']]
 endif
