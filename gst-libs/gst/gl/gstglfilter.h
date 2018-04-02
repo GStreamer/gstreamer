@@ -41,7 +41,7 @@ GType gst_gl_filter_get_type(void);
 
 /**
  * GstGLFilterRenderFunc:
- * @filter: the #GstGLFIlter
+ * @filter: the #GstGLFilter
  * @in_tex: the input #GstGLMemory to render
  * @user_data: user data
  *
@@ -53,18 +53,18 @@ typedef gboolean (*GstGLFilterRenderFunc) (GstGLFilter * filter, GstGLMemory * i
 
 /**
  * GstGLFilter:
- * @parent: parent #GstGLBaseFilter
  * @in_info: the video info for input buffers
  * @out_info: the video info for output buffers
  * @in_texture_target: The texture target of the input buffers (usually 2D)
  * @out_texture_target: The texture target of the output buffers (usually 2D)
  * @out_caps: the output #GstCaps
- * @fbo: #GstGLFramebuffer object used for transformations
+ * @fbo: #GstGLFramebuffer object used for transformations (only for subclass usage)
  */
 struct _GstGLFilter
 {
   GstGLBaseFilter    parent;
 
+  /*< public >*/
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;
   GstGLTextureTarget in_texture_target;
@@ -72,10 +72,10 @@ struct _GstGLFilter
 
   GstCaps           *out_caps;
 
-  /* <protected> */
+  /* protected */
   GstGLFramebuffer  *fbo;
 
-  /* <private> */
+  /*< private >*/
   gboolean           gl_result;
   GstBuffer         *inbuf;
   GstBuffer         *outbuf;
@@ -94,7 +94,6 @@ struct _GstGLFilter
 
 /**
  * GstGLFilterClass:
- * @parent_class: parent #GstGLBaseFilterClass
  * @set_caps: mirror from #GstBaseTransform
  * @filter: perform operations on the input and output buffers.  In general,
  *          you should avoid using this method if at all possible. One valid
@@ -110,6 +109,7 @@ struct _GstGLFilterClass
 {
   GstGLBaseFilterClass parent_class;
 
+  /*< public >*/
   gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
   gboolean (*filter_texture)    (GstGLFilter *filter, GstGLMemory *in_tex, GstGLMemory *out_tex);
@@ -118,7 +118,7 @@ struct _GstGLFilterClass
   GstCaps *(*transform_internal_caps) (GstGLFilter *filter,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps);
 
-  /* <private> */
+  /*< private >*/
   gpointer                      _padding[GST_PADDING];
 };
 

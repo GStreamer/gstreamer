@@ -145,7 +145,7 @@ gst_dmabuf_allocator_new (void)
  *
  * Returns: (transfer full): a GstMemory based on @allocator.
  * When the buffer will be released dmabuf allocator will close the @fd.
- * The memory is only mmapped on gst_buffer_mmap() request.
+ * The memory is only mmapped on gst_buffer_map() request.
  *
  * Since: 1.2
  */

@@ -689,7 +689,7 @@ gst_video_time_code_new_from_string (const gchar * tc_str)
  * The resulting config->latest_daily_jam is set to
  * midnight, and timecode is set to the given time.
  *
- * Returns: the #GVideoTimeCode representation of @dt.
+ * Returns: the #GstVideoTimeCode representation of @dt.
  *
  * Since: 1.12
  */

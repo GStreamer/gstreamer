@@ -187,7 +187,9 @@ struct _GstAudioRingBuffer {
   gboolean                    acquired;
   guint8                     *memory;
   gsize                       size;
+  /*< private >*/
   GstClockTime               *timestamps;
+  /*< public >*/ /* with LOCK */
   GstAudioRingBufferSpec      spec;
   gint                        samples_per_seg;
   guint8                     *empty_seg;

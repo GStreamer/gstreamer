@@ -50,9 +50,9 @@ typedef struct _GstGLDisplayX11Class GstGLDisplayX11Class;
  */
 struct _GstGLDisplayX11
 {
+  /*< private >*/
   GstGLDisplay          parent;
 
-  /* <private> */
   gchar *name;
   Display *display;
   xcb_connection_t *xcb_connection;

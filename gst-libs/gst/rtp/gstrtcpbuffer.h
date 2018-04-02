@@ -209,6 +209,7 @@ struct _GstRTCPBuffer
  */
 struct _GstRTCPPacket
 {
+  /*< public >*/
   GstRTCPBuffer *rtcp;
   guint          offset;
 

@@ -201,7 +201,7 @@ typedef enum {
  *
  * GstVideoMultiviewFlags are used to indicate extra properties of a
  * stereo/multiview stream beyond the frame layout and buffer mapping
- * that is conveyed in the #GstMultiviewMode.
+ * that is conveyed in the #GstVideoMultiviewMode.
  */
 typedef enum {
   GST_VIDEO_MULTIVIEW_FLAGS_NONE             = 0,

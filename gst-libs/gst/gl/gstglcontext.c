@@ -1758,7 +1758,7 @@ gst_gl_context_default_get_gl_platform_version (GstGLContext * context,
  * @minor: (out): return for the minor version
  *
  * Get the version of the OpenGL platform (GLX, EGL, etc) used.  Only valid
- * after a call to gst_gl_context_create_context().
+ * after a call to gst_gl_context_create().
  */
 void
 gst_gl_context_get_gl_platform_version (GstGLContext * context, gint * major,

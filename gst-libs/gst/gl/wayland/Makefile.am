@@ -8,7 +8,6 @@ libgstgl_wayland_la_SOURCES = \
 	wayland_event_source.c
 
 noinst_HEADERS = \
-	gstgldisplay_wayland.h \
 	gstglwindow_wayland_egl.h \
 	wayland_event_source.h
 

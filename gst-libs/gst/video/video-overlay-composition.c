@@ -42,7 +42,7 @@
  *
  * Together, this allows existing overlay elements to easily handle raw
  * and non-raw video as input in without major changes (once the overlays
- * have been put into a #GstOverlayComposition object anyway) - for raw
+ * have been put into a #GstVideoOverlayComposition object anyway) - for raw
  * video the overlay can just use the blending function to blend the data
  * on top of the video, and for surface buffers it can just attach them to
  * the buffer and let the sink render the overlays.

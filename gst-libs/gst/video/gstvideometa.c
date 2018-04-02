@@ -21,6 +21,13 @@
 
 #include <string.h>
 
+/**
+ * SECTION:gstvideometa
+ * @title: GstMeta for video
+ * @short_description: Video related GstMeta
+ *
+ */
+
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
 static GstDebugCategory *
@@ -885,6 +892,7 @@ gst_video_region_of_interest_meta_add_param (GstVideoRegionOfInterestMeta *
 /**
  * gst_video_region_of_interest_meta_get_param:
  * @meta: a #GstVideoRegionOfInterestMeta
+ * @name: a name.
  *
  * Retrieve the parameter for @meta having @name as structure name,
  * or %NULL if there is none.

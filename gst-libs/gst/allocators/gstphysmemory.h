@@ -38,6 +38,8 @@ typedef struct _GstPhysMemoryAllocatorInterface GstPhysMemoryAllocatorInterface;
 
 /**
  * GstPhysMemoryAllocatorInterface:
+ * @get_phys_addr: Implementations shall return the physicall memory address
+ *    that is backing the provided memory, or 0 if none.
  *
  * Marker interface for allocators with physical address backed memory
  *
@@ -45,8 +47,10 @@ typedef struct _GstPhysMemoryAllocatorInterface GstPhysMemoryAllocatorInterface;
  */
 struct _GstPhysMemoryAllocatorInterface
 {
+  /*< private >*/
   GTypeInterface parent_iface;
 
+  /*< public >*/
   guintptr (*get_phys_addr) (GstPhysMemoryAllocator * allocator, GstMemory * mem);
 };
 

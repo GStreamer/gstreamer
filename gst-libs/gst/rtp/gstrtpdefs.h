@@ -28,6 +28,14 @@
 #include <gst/rtp/rtp-prelude.h>
 
 /**
+ * SECTION:gstrtpdefs
+ * @title: GstRTPdefs
+ * @short_description: common RTP defines
+ *
+ * Provides common defines for the RTP library.
+ */
+
+/**
  * GstRTPProfile:
  * @GST_RTP_PROFILE_UNKNOWN: invalid profile
  * @GST_RTP_PROFILE_AVP: the Audio/Visual profile (RFC 3551)

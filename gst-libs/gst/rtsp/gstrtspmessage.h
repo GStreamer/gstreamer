@@ -261,6 +261,14 @@ GstRTSPResult      gst_rtsp_message_steal_body      (GstRTSPMessage *msg,
 typedef struct _GstRTSPAuthCredential GstRTSPAuthCredential;
 typedef struct _GstRTSPAuthParam GstRTSPAuthParam;
 
+/**
+ * GstRTSPAuthCredential:
+ * @scheme: a #GstRTSPAuthMethod
+ * @params: A NULL-terminated array of #GstRTSPAuthParam
+ * @authorization: The authorization for the basic schem
+ *
+ * RTSP Authentication credentials
+ */
 struct _GstRTSPAuthCredential {
   GstRTSPAuthMethod scheme;
 
@@ -272,6 +280,13 @@ struct _GstRTSPAuthCredential {
   gchar *authorization;
 };
 
+/**
+ * GstRTSPAuthParam:
+ * @name: The name of the parameter
+ * @value: The value of the parameter
+ *
+ * RTSP Authentication parameter
+ */
 struct _GstRTSPAuthParam {
   gchar *name;
   gchar *value;

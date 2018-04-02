@@ -720,7 +720,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
  * are considered discarded, e.g. as a result of discontinuous transmission,
  * and a discontinuity is marked.
  *
- * Note that samples received in gst_audio_encoder_handle_frame()
+ * Note that samples received in #GstAudioEncoderClass.handle_frame()
  * may be invalidated by a call to this function.
  *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
@@ -2148,7 +2148,7 @@ gst_audio_encoder_get_audio_info (GstAudioEncoder * enc)
  * must be called with the same number.
  *
  * Note: This value will be reset to 0 every time before
- * GstAudioEncoder::set_format() is called.
+ * #GstAudioEncoderClass.set_format() is called.
  */
 void
 gst_audio_encoder_set_frame_samples_min (GstAudioEncoder * enc, gint num)
@@ -2185,7 +2185,7 @@ gst_audio_encoder_get_frame_samples_min (GstAudioEncoder * enc)
  * must be called with the same number.
  *
  * Note: This value will be reset to 0 every time before
- * GstAudioEncoder::set_format() is called.
+ * #GstAudioEncoderClass.set_format() is called.
  */
 void
 gst_audio_encoder_set_frame_samples_max (GstAudioEncoder * enc, gint num)
@@ -2219,7 +2219,7 @@ gst_audio_encoder_get_frame_samples_max (GstAudioEncoder * enc)
  * Requires @frame_samples_min and @frame_samples_max to be the equal.
  *
  * Note: This value will be reset to 0 every time before
- * GstAudioEncoder::set_format() is called.
+ * #GstAudioEncoderClass.set_format() is called.
  */
 void
 gst_audio_encoder_set_frame_max (GstAudioEncoder * enc, gint num)
@@ -2252,7 +2252,7 @@ gst_audio_encoder_get_frame_max (GstAudioEncoder * enc)
  * Sets encoder lookahead (in units of input rate samples)
  *
  * Note: This value will be reset to 0 every time before
- * GstAudioEncoder::set_format() is called.
+ * #GstAudioEncoderClass.set_format() is called.
  */
 void
 gst_audio_encoder_set_lookahead (GstAudioEncoder * enc, gint num)
@@ -2927,7 +2927,7 @@ fallback:
  * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
  * used
  * @params: (out) (allow-none) (transfer full): the
- * #GstAllocatorParams of @allocator
+ * #GstAllocationParams of @allocator
  *
  * Lets #GstAudioEncoder sub-classes to know the memory @allocator
  * used by the base class and its @params.

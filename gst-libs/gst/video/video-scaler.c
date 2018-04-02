@@ -204,7 +204,7 @@ scaler_dump (GstVideoScaler * scale)
  * pixel. If n_taps is 0, this function chooses a good value automatically based
  * on the @method and @in_size/@out_size.
  *
- * Returns: a #GstVideoResample
+ * Returns: a #GstVideoScaler
  */
 GstVideoScaler *
 gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,

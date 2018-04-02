@@ -41,7 +41,7 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_RTSP_EXTENSION, GstRTSPExtensionInterface))
 
 /**
- * GstRTSPExtension:
+ * GstRTSPExtensionInterface:
  *
  * An interface representing RTSP extensions.
  */

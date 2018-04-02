@@ -265,7 +265,7 @@ gst_fd_allocator_new (void)
  * Returns: (transfer full): a GstMemory based on @allocator.
  * When the buffer will be released the allocator will close the @fd unless
  * the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
- * The memory is only mmapped on gst_buffer_mmap() request.
+ * The memory is only mmapped on gst_buffer_map() request.
  *
  * Since: 1.6
  */

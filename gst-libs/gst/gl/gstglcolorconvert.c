@@ -781,7 +781,7 @@ gst_gl_color_convert_set_caps (GstGLColorConvert * convert,
  * @convert: a #GstGLColorConvert
  * @query: a completed ALLOCATION #GstQuery
  *
- * Provides an implementation of #GstBaseTransfromClass::decide_allocation()
+ * Provides an implementation of #GstBaseTransformClass.decide_allocation()
  *
  * Returns: whether the allocation parameters were successfully chosen
  *
@@ -975,7 +975,7 @@ gst_gl_color_convert_caps_transform_format_info (GstCaps * caps)
  * @caps: (transfer none): the #GstCaps to transform
  * @filter: (transfer none): a set of filter #GstCaps
  *
- * Provides an implementation of #GstBaseTransformClass::transform_caps()
+ * Provides an implementation of #GstBaseTransformClass.transform_caps()
  *
  * Returns: (transfer full): the converted #GstCaps
  *
@@ -1213,7 +1213,7 @@ gst_gl_color_convert_fixate_format_target (GstCaps * caps, GstCaps * result)
  * @caps: (transfer none): the #GstCaps of @direction
  * @other: (transfer full): the #GstCaps to fixate
  *
- * Provides an implementation of #GstBaseTransformClass::fixate_caps()
+ * Provides an implementation of #GstBaseTransformClass.fixate_caps()
  *
  * Returns: (transfer full): the fixated #GstCaps
  *

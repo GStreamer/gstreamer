@@ -2496,7 +2496,7 @@ gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
 
 /**
  * gst_video_encoder_get_frame:
- * @encoder: a #GstVideoEnccoder
+ * @encoder: a #GstVideoEncoder
  * @frame_number: system_frame_number of a frame
  *
  * Get a pending unfinished #GstVideoCodecFrame
@@ -2595,7 +2595,7 @@ gst_video_encoder_merge_tags (GstVideoEncoder * encoder,
  * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
  * used
  * @params: (out) (allow-none) (transfer full): the
- * #GstAllocatorParams of @allocator
+ * #GstAllocationParams of @allocator
  *
  * Lets #GstVideoEncoder sub-classes to know the memory @allocator
  * used by the base class and its @params.

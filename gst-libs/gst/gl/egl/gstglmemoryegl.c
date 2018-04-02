@@ -25,7 +25,7 @@
 /**
  * SECTION:gstglmemoryegl
  * @short_description: memory subclass for EGLImage's
- * @see_also: #GstGLMemory, #GstGLAllocator, #GstGLBufferPool
+ * @see_also: #GstGLMemory, #GstGLBaseMemoryAllocator, #GstGLBufferPool
  *
  * #GstGLMemoryEGL is created or wrapped through gst_gl_base_memory_alloc()
  * with #GstGLVideoAllocationParams.

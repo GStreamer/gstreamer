@@ -55,13 +55,13 @@ typedef void (*GstEGLImageDestroyNotify) (GstEGLImage * image,
  */
 struct _GstEGLImage
 {
+  /*< private >*/
   GstMiniObject parent;
 
   GstGLContext *context;
   gpointer image;
   GstGLFormat format;
 
-  /* <private> */
   gpointer destroy_data;
   GstEGLImageDestroyNotify destroy_notify;
 

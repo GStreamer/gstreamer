@@ -40,7 +40,7 @@
  * to enable that behaviour, the GType of the sink pads must either be
  * a (subclass of) #GstAudioAggregatorConvertPad to use the default
  * #GstAudioConverter implementation, or a subclass of #GstAudioAggregatorPad
- * implementing #GstAudioAggregatorPad.convert_buffer.
+ * implementing #GstAudioAggregatorPadClass.convert_buffer.
  *
  * To allow for the output caps to change, the mechanism is the same as
  * above, with the GType of the source pad.

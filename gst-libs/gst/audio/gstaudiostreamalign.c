@@ -65,7 +65,7 @@ struct _GstAudioStreamAlign
  *
  * Allocate a new #GstAudioStreamAlign with the given configuration. All
  * processing happens according to sample rate @rate, until
- * gst_audio_discont_wait_set_rate() is called with a new @rate.
+ * gst_audio_stream_align_set_rate() is called with a new @rate.
  * A negative rate can be used for reverse playback.
  *
  * @alignment_threshold gives the tolerance in nanoseconds after which a
@@ -139,7 +139,7 @@ gst_audio_stream_align_free (GstAudioStreamAlign * align)
 }
 
 /**
- * gst_audio_discont_set_rate:
+ * gst_audio_stream_align_set_rate:
  * @align: a #GstAudioStreamAlign
  * @rate: a new sample rate
  *
@@ -162,7 +162,7 @@ gst_audio_stream_align_set_rate (GstAudioStreamAlign * align, gint rate)
 }
 
 /**
- * gst_audio_discont_get_rate:
+ * gst_audio_stream_align_get_rate:
  * @align: a #GstAudioStreamAlign
  *
  * Gets the currently configured sample rate.
@@ -180,9 +180,9 @@ gst_audio_stream_align_get_rate (GstAudioStreamAlign * align)
 }
 
 /**
- * gst_audio_discont_set_alignment_threshold:
+ * gst_audio_stream_align_set_alignment_threshold:
  * @align: a #GstAudioStreamAlign
- * @alignment_treshold: a new alignment threshold
+ * @alignment_threshold: a new alignment threshold
  *
  * Sets @alignment_treshold as new alignment threshold for the following processing.
  *
@@ -198,7 +198,7 @@ gst_audio_stream_align_set_alignment_threshold (GstAudioStreamAlign *
 }
 
 /**
- * gst_audio_discont_get_alignment_threshold:
+ * gst_audio_stream_align_get_alignment_threshold:
  * @align: a #GstAudioStreamAlign
  *
  * Gets the currently configured alignment threshold.
@@ -216,9 +216,9 @@ gst_audio_stream_align_get_alignment_threshold (GstAudioStreamAlign * align)
 }
 
 /**
- * gst_audio_discont_set_discont_wait:
+ * gst_audio_stream_align_set_discont_wait:
  * @align: a #GstAudioStreamAlign
- * @alignment_treshold: a new discont wait
+ * @discont_wait: a new discont wait
  *
  * Sets @alignment_treshold as new discont wait for the following processing.
  *
@@ -234,7 +234,7 @@ gst_audio_stream_align_set_discont_wait (GstAudioStreamAlign * align,
 }
 
 /**
- * gst_audio_discont_get_discont_wait:
+ * gst_audio_stream_align_get_discont_wait:
  * @align: a #GstAudioStreamAlign
  *
  * Gets the currently configured discont wait.

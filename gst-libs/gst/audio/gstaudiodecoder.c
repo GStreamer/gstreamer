@@ -1190,7 +1190,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
  * Otherwise, source pad caps must be set when it is called with valid
  * data in @buf.
  *
- * Note that a frame received in gst_audio_decoder_handle_frame() may be
+ * Note that a frame received in #GstAudioDecoderClass.handle_frame() may be
  * invalidated by a call to this function.
  *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
@@ -3563,7 +3563,7 @@ fallback:
  * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
  * used
  * @params: (out) (allow-none) (transfer full): the
- * #GstAllocatorParams of @allocator
+ * #GstAllocationParams of @allocator
  *
  * Lets #GstAudioDecoder sub-classes to know the memory @allocator
  * used by the base class and its @params.

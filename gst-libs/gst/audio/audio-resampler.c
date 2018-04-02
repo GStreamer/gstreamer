@@ -1318,13 +1318,16 @@ gst_audio_resampler_options_set_quality (GstAudioResamplerMethod method,
  * gst_audio_resampler_new:
  * @method: a #GstAudioResamplerMethod
  * @flags: #GstAudioResamplerFlags
+ * @format: the #GstAudioFormat
+ * @channels: the number of channels
  * @in_rate: input rate
  * @out_rate: output rate
  * @options: extra options
  *
  * Make a new resampler.
  *
- * Returns: (skip) (transfer full): %TRUE on success
+ * Returns: (skip) (transfer full): The new #GstAudioResampler, or
+ * %NULL on failure.
  */
 GstAudioResampler *
 gst_audio_resampler_new (GstAudioResamplerMethod method,

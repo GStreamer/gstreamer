@@ -31,7 +31,7 @@
 #include "gstaudiopack.h"
 
 /**
- * SECTION:audioconverter
+ * SECTION:gstaudioconverter
  * @title: GstAudioConverter
  * @short_description: Generic audio conversion
  *
@@ -1168,7 +1168,7 @@ converter_resample (GstAudioConverter * convert,
  * Create a new #GstAudioConverter that is able to convert between @in and @out
  * audio formats.
  *
- * @config contains extra configuration options, see #GST_VIDEO_CONVERTER_OPT_*
+ * @config contains extra configuration options, see #GST_AUDIO_CONVERTER_OPT_*
  * parameters for details about the options and values.
  *
  * Returns: a #GstAudioConverter or %NULL if conversion is not possible.
@@ -1449,6 +1449,7 @@ gst_audio_converter_samples (GstAudioConverter * convert,
 
 /**
  * gst_audio_converter_convert:
+ * @convert: a #GstAudioConverter
  * @flags: extra #GstAudioConverterFlags
  * @in: (array length=in_size) (element-type guint8): input data
  * @in_size: size of @in

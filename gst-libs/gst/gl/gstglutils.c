@@ -315,8 +315,8 @@ done:
  * @display: (inout) (transfer full): location of a #GstGLDisplay
  * @other_context: (inout) (transfer full): location of a #GstGLContext
  *
- * Helper function for implementing GstElement::set_context() in OpenGL capable
- * elements.
+ * Helper function for implementing #GstElementClass.set_context() in
+ * OpenGL capable elements.
  *
  * Retrieve's the #GstGLDisplay or #GstGLContext in @context and places the
  * result in @display or @other_context respectively.

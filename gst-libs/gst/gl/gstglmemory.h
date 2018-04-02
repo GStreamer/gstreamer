@@ -60,7 +60,7 @@ GType gst_gl_memory_allocator_get_type(void);
  * @mem: the parent #GstGLBaseMemory object
  * @tex_id: the GL texture id for this memory
  * @tex_target: the GL texture target for this memory
- * @tex_type: the texture type
+ * @tex_format: the texture type
  * @info: the texture's #GstVideoInfo
  * @valign: data alignment for system memory mapping
  * @plane: data plane in @info

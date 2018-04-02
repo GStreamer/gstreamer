@@ -227,14 +227,16 @@ struct _GstVideoCodecFrame
 {
   /*< private >*/
   gint ref_count;
-
   guint32 flags;
 
   /*< public >*/
   guint32 system_frame_number;	/* ED */
+
+  /*< private >*/
   guint32 decode_frame_number;	/* ED */
   guint32 presentation_frame_number; /* ED */
 
+  /*< public >*/
   GstClockTime dts;       /* ED */
   GstClockTime pts;       /* ED */
   GstClockTime duration;  /* ED */

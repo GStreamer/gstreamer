@@ -1431,7 +1431,7 @@ DEFINE_ARRAY_GETTER (zone, zones, GstSDPZone);
  * gst_sdp_message_insert_zone:
  * @msg: a #GstSDPMessage
  * @idx: an index
- * @zone a #GstSDPZone
+ * @zone: a #GstSDPZone
  *
  * Insert zone parameters into the array of zones in @msg
  * at index @idx.

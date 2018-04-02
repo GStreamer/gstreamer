@@ -67,9 +67,21 @@ struct _GstRTPBaseDepayload
  * GstRTPBaseDepayloadClass:
  * @parent_class: the parent class
  * @set_caps: configure the depayloader
- * @process: process incoming rtp packets
+ * @process: process incoming rtp packets. Subclass must implement either
+ *   this method or @process_rtp_packet to process incoming rtp packets.
+ *   If the child returns a buffer without a valid timestamp, the timestamp
+ *   of the provided buffer will be applied to the result buffer and the
+ *   buffer will be pushed. If this function returns %NULL, nothing is pushed.
  * @packet_lost: signal the depayloader about packet loss
  * @handle_event: custom event handling
+ * @process_rtp_packet: Same as the process virtual function, but slightly more
+ * efficient, since it is passed the rtp buffer structure that has already
+ * been mapped (with GST_MAP_READ) by the base class and thus does not have
+ * to be mapped again by the subclass. Can be used by the subclass to process
+ * incoming rtp packets. If the subclass returns a buffer without a valid
+ * timestamp, the timestamp of the input buffer will be applied to the result
+ * buffer and the output buffer will be pushed out. If this function returns
+ * %NULL, nothing is pushed out. Since: 1.6.
  *
  * Base class for RTP depayloaders.
  */
@@ -77,15 +89,11 @@ struct _GstRTPBaseDepayloadClass
 {
   GstElementClass parent_class;
 
+  /*< public >*/
   /* virtuals, inform the subclass of the caps. */
   gboolean (*set_caps) (GstRTPBaseDepayload *filter, GstCaps *caps);
 
-  /* pure virtual function, child must implement either this method
-   * or the process_rtp_packet virtual method to process incoming
-   * rtp packets. If the child returns a buffer without a valid timestamp,
-   * the timestamp of @in will be applied to the result buffer and the
-   * buffer will be pushed. If this function returns %NULL, nothing is
-   * pushed.  */
+  /* pure virtual function */
   GstBuffer * (*process) (GstRTPBaseDepayload *base, GstBuffer *in);
 
   /* non-pure function used to to signal the depayloader about packet loss. the
@@ -97,17 +105,6 @@ struct _GstRTPBaseDepayloadClass
    * implementation can override. */
   gboolean (*handle_event) (GstRTPBaseDepayload * filter, GstEvent * event);
 
-  /* Optional. Same as the process virtual function, but slightly more
-   * efficient, since it is passed the rtp buffer structure that has already
-   * been mapped (with GST_MAP_READ) by the base class and thus does not have
-   * to be mapped again by the subclass. Can be used by the subclass to process
-   * incoming rtp packets. If the subclass returns a buffer without a valid
-   * timestamp, the timestamp of the input buffer will be applied to the result
-   * buffer and the output buffer will be pushed out. If this function returns
-   * %NULL, nothing is pushed out.
-   *
-   * Since: 1.6
-   */
   GstBuffer * (*process_rtp_packet) (GstRTPBaseDepayload *base, GstRTPBuffer * rtp_buffer);
 
   /*< private >*/

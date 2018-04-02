@@ -92,9 +92,9 @@ GstGLBufferAllocationParams *   gst_gl_buffer_allocation_params_new     (GstGLCo
                                                                          guint gl_usage);
 
 /**
- * GstGLBufferAllocator
+ * GstGLBufferAllocator:
  *
- * Opaque #GstGLAllocator struct
+ * Opaque #GstGLBufferAllocator struct
  */
 struct _GstGLBufferAllocator
 {

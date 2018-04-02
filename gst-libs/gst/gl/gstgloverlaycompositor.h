@@ -37,17 +37,17 @@ GST_GL_API
 GType gst_gl_overlay_compositor_get_type (void);
 
 /**
- * GstGLOverlayCompositor
+ * GstGLOverlayCompositor:
  *
  * Opaque #GstGLOverlayCompositor object
  */
 struct _GstGLOverlayCompositor
 {
+  /* <private> */
   GstObject parent;
 
   GstGLContext *context;
 
-  /* <private> */
   guint last_window_width;
   guint last_window_height;
 

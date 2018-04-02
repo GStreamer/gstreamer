@@ -59,7 +59,6 @@ typedef struct _GstAudioAggregatorPadPrivate GstAudioAggregatorPadPrivate;
 
 /**
  * GstAudioAggregatorPad:
- * @parent: The parent #GstAggregatorPad
  * @info: The audio info for this pad set from the incoming caps
  *
  * The default implementation of GstPad used with #GstAudioAggregator
@@ -68,6 +67,7 @@ struct _GstAudioAggregatorPad
 {
   GstAggregatorPad                  parent;
 
+  /*< public >*/
   /* read-only, with OBJECT_LOCK */
   GstAudioInfo                      info;
 
@@ -118,7 +118,6 @@ typedef struct _GstAudioAggregatorConvertPadPrivate GstAudioAggregatorConvertPad
 
 /**
  * GstAudioAggregatorConvertPad:
- * @parent: The parent #GstAudioAggregatorPad
  *
  * An implementation of GstPad that can be used with #GstAudioAggregator.
  *
@@ -126,9 +125,9 @@ typedef struct _GstAudioAggregatorConvertPadPrivate GstAudioAggregatorConvertPad
  */
 struct _GstAudioAggregatorConvertPad
 {
+  /*< private >*/
   GstAudioAggregatorPad                  parent;
 
-  /*< private >*/
   GstAudioAggregatorConvertPadPrivate   *priv;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -162,8 +161,6 @@ GType gst_audio_aggregator_convert_pad_get_type           (void);
 
 /**
  * GstAudioAggregator:
- * @parent: The parent #GstAggregator
- * @info: The information parsed from the current caps
  * @current_caps: The caps set by the subclass
  *
  * GstAudioAggregator object
@@ -172,6 +169,7 @@ struct _GstAudioAggregator
 {
   GstAggregator              parent;
 
+  /*< public >*/
   GstCaps                   *current_caps;
 
   /*< private >*/
@@ -191,6 +189,7 @@ struct _GstAudioAggregator
 struct _GstAudioAggregatorClass {
   GstAggregatorClass   parent_class;
 
+  /*< public >*/
   GstBuffer * (* create_output_buffer) (GstAudioAggregator * aagg,
       guint num_frames);
   gboolean (* aggregate_one_buffer) (GstAudioAggregator * aagg,

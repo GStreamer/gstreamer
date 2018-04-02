@@ -332,7 +332,7 @@ typedef GstGLBaseMemory *   (*GstGLBaseMemoryAllocatorCopyFunction)         (Gst
 typedef void                (*GstGLBaseMemoryAllocatorDestroyFunction)      (GstGLBaseMemory * mem);
 
 /**
- * GstGLBaseMemoryAllocator
+ * GstGLBaseMemoryAllocator:
  *
  * Opaque #GstGLBaseMemoryAllocator struct
  *

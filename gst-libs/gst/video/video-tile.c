@@ -30,7 +30,7 @@
  * Get the tile index of the tile at coordinates @x and @y in the tiled
  * image of @x_tiles by @y_tiles.
  *
- * Use this method when @mode is of type %GST_VIDEO_TILE_MODE_INDEXED.
+ * Use this method when @mode is of type %GST_VIDEO_TILE_TYPE_INDEXED.
  *
  * Returns: the index of the tile at @x and @y in the tiled image of
  *   @x_tiles by @y_tiles.

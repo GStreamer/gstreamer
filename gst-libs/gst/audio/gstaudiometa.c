@@ -19,7 +19,7 @@
 
 /**
  * SECTION:gstaudiometa
- * @title: GstAudioDownmixMeta
+ * @title: GstAudio meta
  * @short_description: Buffer metadata for audio downmix matrix handling
  *
  * #GstAudioDownmixMeta defines an audio downmix matrix to be send along with

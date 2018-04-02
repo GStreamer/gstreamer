@@ -40,23 +40,25 @@ GType gst_gl_base_filter_get_type(void);
 
 /**
  * GstGLBaseFilter:
- * @parent: parent #GstBaseTransform
  * @display: the currently configured #GstGLDisplay
  * @context: the currently configured #GstGLContext
  * @in_caps: the currently configured input #GstCaps
  * @out_caps: the currently configured output #GstCaps
+ *
+ * The parent instance type of a base GStreamer GL Filter.
  */
 struct _GstGLBaseFilter
 {
   GstBaseTransform   parent;
 
+  /*< public >*/
   GstGLDisplay      *display;
   GstGLContext      *context;
 
   GstCaps           *in_caps;
   GstCaps           *out_caps;
 
-  /* <private> */
+  /*< private >*/
   gpointer           _padding[GST_PADDING];
 
   GstGLBaseFilterPrivate *priv;
@@ -64,22 +66,25 @@ struct _GstGLBaseFilter
 
 /**
  * GstGLBaseFilterClass:
- * @parent_class: parent class
  * @supported_gl_api: the logical-OR of #GstGLAPI's supported by this element
  * @gl_start: called in the GL thread to setup the element GL state.
  * @gl_stop: called in the GL thread to setup the element GL state.
  * @gl_set_caps: called in the GL thread when caps are set on @filter.
+ *
+ * The base class for GStreamer GL Filter.
  */
 struct _GstGLBaseFilterClass
 {
   GstBaseTransformClass parent_class;
+
+  /*< public >*/
   GstGLAPI supported_gl_api;
 
   gboolean (*gl_start)          (GstGLBaseFilter *filter);
   void     (*gl_stop)           (GstGLBaseFilter *filter);
   gboolean (*gl_set_caps)       (GstGLBaseFilter *filter, GstCaps * incaps, GstCaps * outcaps);
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 
