@@ -239,6 +239,11 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
   va_surface = mem_id->surface;
   dpy = gst_msdk_context_get_handle (context);
 
+  if (mem_id->info.mem_type == VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME) {
+    GST_WARNING ("Couldn't map the buffer since dmabuf is already in use");
+    return MFX_ERR_LOCK_MEMORY;
+  }
+
   if (mem_id->fourcc != MFX_FOURCC_P8) {
     va_status = vaDeriveImage (dpy, *va_surface, &mem_id->image);
     status = gst_msdk_get_mfx_status_from_va_status (va_status);
