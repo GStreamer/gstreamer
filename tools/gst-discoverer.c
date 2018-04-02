@@ -66,7 +66,9 @@ gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
 {
   gchar *tmp;
   GstCaps *caps;
+#ifndef GST_DISABLE_DEPRECATED
   const GstStructure *misc;
+#endif
 
   my_g_string_append_printf (s, depth, "Codec:\n");
   caps = gst_discoverer_stream_info_get_caps (info);
@@ -75,6 +77,7 @@ gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
   my_g_string_append_printf (s, depth, "  %s\n", tmp);
   g_free (tmp);
 
+#ifndef GST_DISABLE_DEPRECATED
   my_g_string_append_printf (s, depth, "Additional info:\n");
   if ((misc = gst_discoverer_stream_info_get_misc (info))) {
     tmp = gst_structure_to_string (misc);
@@ -83,6 +86,7 @@ gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
   } else {
     my_g_string_append_printf (s, depth, "  None\n");
   }
+#endif
 
   my_g_string_append_printf (s, depth, "Stream ID: %s\n",
       gst_discoverer_stream_info_get_stream_id (info));

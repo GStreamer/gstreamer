@@ -231,7 +231,9 @@ GST_START_TEST (test_disco_missing_plugins)
     result = gst_discoverer_info_get_result (info);
     GST_INFO ("result: %d, error message: %s", result, err->message);
     fail_unless_equals_int (result, GST_DISCOVERER_MISSING_PLUGINS);
+#ifndef GST_DISABLE_DEPRECATED
     GST_INFO ("misc: %" GST_PTR_FORMAT, gst_discoverer_info_get_misc (info));
+#endif
 
     gst_discoverer_info_unref (info);
     g_error_free (err);
