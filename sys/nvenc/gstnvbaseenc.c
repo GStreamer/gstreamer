@@ -448,9 +448,9 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
 static void
 gst_nv_base_enc_set_context (GstElement * element, GstContext * context)
 {
+#if HAVE_NVENC_GST_GL
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (element);
 
-#if HAVE_NVENC_GST_GL
   gst_gl_handle_set_context (element, context,
       (GstGLDisplay **) & nvenc->display,
       (GstGLContext **) & nvenc->other_context);
@@ -465,7 +465,9 @@ gst_nv_base_enc_set_context (GstElement * element, GstContext * context)
 static gboolean
 gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
 {
+#if HAVE_NVENC_GST_GL
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+#endif
 
   switch (GST_QUERY_TYPE (query)) {
 #if HAVE_NVENC_GST_GL
