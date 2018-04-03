@@ -1228,6 +1228,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_promise_result_get_type ()));
 
   gst_deinitialized = TRUE;
+  gst_initialized = FALSE;
   GST_INFO ("deinitialized GStreamer");
 }
 
