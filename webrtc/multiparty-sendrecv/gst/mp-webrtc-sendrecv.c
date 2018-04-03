@@ -898,7 +898,7 @@ check_plugins (void)
   gboolean ret;
   GstPlugin *plugin;
   GstRegistry *registry;
-  const gchar *needed[] = { "opus", "nice", "webrtc", "dtls", "srtp"
+  const gchar *needed[] = { "opus", "nice", "webrtc", "dtls", "srtp",
       "rtpmanager", "audiotestsrc", NULL};
 
   registry = gst_registry_get ();
