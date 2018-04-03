@@ -79,7 +79,7 @@ gboolean gst_wasapi_util_get_devices (GstElement * element, gboolean active,
     GList ** devices);
 
 gboolean gst_wasapi_util_get_device_client (GstElement * element,
-    gboolean capture, gint role, const wchar_t * device_strid,
+    gint data_flow, gint role, const wchar_t * device_strid,
     IMMDevice ** ret_device, IAudioClient ** ret_client);
 
 gboolean gst_wasapi_util_get_device_format (GstElement * element,
@@ -107,11 +107,12 @@ void gst_wasapi_util_get_best_buffer_sizes (GstAudioRingBufferSpec * spec,
 gboolean gst_wasapi_util_initialize_audioclient (GstElement * element,
     GstAudioRingBufferSpec * spec, IAudioClient * client,
     WAVEFORMATEX * format, guint sharemode, gboolean low_latency,
-    guint * ret_devicep_frames);
+    gboolean loopback, guint * ret_devicep_frames);
 
 gboolean gst_wasapi_util_initialize_audioclient3 (GstElement * element,
     GstAudioRingBufferSpec * spec, IAudioClient3 * client,
-    WAVEFORMATEX * format, gboolean low_latency, guint * ret_devicep_frames);
+    WAVEFORMATEX * format, gboolean low_latency, gboolean loopback,
+    guint * ret_devicep_frames);
 
 HANDLE gst_wasapi_util_set_thread_characteristics (void);
 

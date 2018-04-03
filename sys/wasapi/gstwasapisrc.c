@@ -53,6 +53,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_WASAPI_STATIC_CAPS));
 
 #define DEFAULT_ROLE          GST_WASAPI_DEVICE_ROLE_CONSOLE
+#define DEFAULT_LOOPBACK      FALSE
 #define DEFAULT_EXCLUSIVE     FALSE
 #define DEFAULT_LOW_LATENCY   FALSE
 #define DEFAULT_AUDIOCLIENT3  FALSE
@@ -62,6 +63,7 @@ enum
   PROP_0,
   PROP_ROLE,
   PROP_DEVICE,
+  PROP_LOOPBACK,
   PROP_EXCLUSIVE,
   PROP_LOW_LATENCY,
   PROP_AUDIOCLIENT3
@@ -119,6 +121,12 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
+      PROP_LOOPBACK,
+      g_param_spec_boolean ("loopback", "Loopback recording",
+          "Open the sink device for loopback recording",
+          DEFAULT_LOOPBACK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
       PROP_EXCLUSIVE,
       g_param_spec_boolean ("exclusive", "Exclusive mode",
           "Open the device in exclusive mode",
@@ -170,6 +178,7 @@ gst_wasapi_src_init (GstWasapiSrc * self)
 
   self->role = DEFAULT_ROLE;
   self->sharemode = AUDCLNT_SHAREMODE_SHARED;
+  self->loopback = DEFAULT_LOOPBACK;
   self->low_latency = DEFAULT_LOW_LATENCY;
   self->try_audioclient3 = DEFAULT_AUDIOCLIENT3;
   self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
@@ -239,6 +248,9 @@ gst_wasapi_src_set_property (GObject * object, guint prop_id,
           device ? g_utf8_to_utf16 (device, -1, NULL, NULL, NULL) : NULL;
       break;
     }
+    case PROP_LOOPBACK:
+      self->loopback = g_value_get_boolean (value);
+      break;
     case PROP_EXCLUSIVE:
       self->sharemode = g_value_get_boolean (value)
           ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED;
@@ -268,6 +280,9 @@ gst_wasapi_src_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       g_value_take_string (value, self->device_strid ?
           g_utf16_to_utf8 (self->device_strid, -1, NULL, NULL, NULL) : NULL);
+      break;
+    case PROP_LOOPBACK:
+      g_value_set_boolean (value, self->loopback);
       break;
     case PROP_EXCLUSIVE:
       g_value_set_boolean (value,
@@ -369,8 +384,9 @@ gst_wasapi_src_open (GstAudioSrc * asrc)
    * even if the old device was unplugged. We need to handle this somehow.
    * For example, perhaps we should automatically switch to the new device if
    * the default device is changed and a device isn't explicitly selected. */
-  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self), TRUE,
-          self->role, self->device_strid, &device, &client)) {
+  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self),
+          self->loopback ? eRender : eCapture, self->role, self->device_strid,
+          &device, &client)) {
     if (!self->device_strid)
       GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
           ("Failed to get default device"));
@@ -419,12 +435,12 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   if (gst_wasapi_src_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
-            &devicep_frames))
+            self->loopback, &devicep_frames))
       goto beach;
   } else {
     if (!gst_wasapi_util_initialize_audioclient (GST_ELEMENT (self), spec,
             self->client, self->mix_format, self->sharemode, self->low_latency,
-            &devicep_frames))
+            self->loopback, &devicep_frames))
       goto beach;
   }
 

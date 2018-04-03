@@ -378,7 +378,7 @@ gst_wasapi_sink_open (GstAudioSink * asink)
    * even if the old device was unplugged. We need to handle this somehow.
    * For example, perhaps we should automatically switch to the new device if
    * the default device is changed and a device isn't explicitly selected. */
-  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self), FALSE,
+  if (!gst_wasapi_util_get_device_client (GST_ELEMENT (self), eRender,
           self->role, self->device_strid, &device, &client)) {
     if (!self->device_strid)
       GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
@@ -452,12 +452,12 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   if (gst_wasapi_sink_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
-            &devicep_frames))
+            FALSE, &devicep_frames))
       goto beach;
   } else {
     if (!gst_wasapi_util_initialize_audioclient (GST_ELEMENT (self), spec,
             self->client, self->mix_format, self->sharemode, self->low_latency,
-            &devicep_frames))
+            FALSE, &devicep_frames))
       goto beach;
   }
 
