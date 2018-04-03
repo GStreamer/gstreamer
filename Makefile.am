@@ -30,6 +30,8 @@ include $(top_srcdir)/common/cruft.mak
 all-local: check-cruft
 
 EXTRA_DIST = \
+	configure.ac autogen.sh depcomp \
+	RELEASE gst-python.doap \
 	meson.build \
 	meson_options.txt \
 	config.h.meson \
