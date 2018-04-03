@@ -228,6 +228,7 @@ static gboolean wait_preroll (GstRTSPMedia * media);
 static GstElement *find_payload_element (GstElement * payloader);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
+static gboolean check_complete (GstRTSPMedia * media);
 
 #define C_ENUM(v) ((gint) v)
 
@@ -593,6 +594,7 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
 typedef struct
 {
   gint64 position;
+  gboolean complete_streams_only;
   gboolean ret;
 } DoQueryPositionData;
 
@@ -600,6 +602,12 @@ static void
 do_query_position (GstRTSPStream * stream, DoQueryPositionData * data)
 {
   gint64 tmp;
+
+  if (data->complete_streams_only && !gst_rtsp_stream_is_complete (stream))
+  {
+    GST_DEBUG_OBJECT (stream, "stream not complete, do not query position");
+    return;
+  }
 
   if (gst_rtsp_stream_query_position (stream, &tmp)) {
     data->position = MIN (data->position, tmp);
@@ -620,6 +628,15 @@ default_query_position (GstRTSPMedia * media, gint64 * position)
 
   data.position = G_MAXINT64;
   data.ret = FALSE;
+
+  /* if the media is complete, i.e. one or more streams have been configured
+   * with sinks, then we want to query the position on those streams only.
+   * a query on an incmplete stream may return a position that originates from
+   * an earlier preroll */
+  if (check_complete (media))
+    data.complete_streams_only = TRUE;
+  else
+    data.complete_streams_only = FALSE;
 
   g_ptr_array_foreach (priv->streams, (GFunc) do_query_position, &data);
 

@@ -127,6 +127,8 @@ GST_START_TEST (test_media_seek_one_active_stream)
   GstRTSPThreadPool *pool;
   GstRTSPThread *thread;
   GstRTSPTransport *transport;
+  char *range_str;
+  GstRTSPTimeRange *play_range;
 
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
@@ -174,7 +176,15 @@ GST_START_TEST (test_media_seek_one_active_stream)
   /* the media is seekable now */
   fail_unless (gst_rtsp_media_seek (media, range));
 
+  /* verify that we got the expected range, 'npt=3.0-' */
+  range_str = gst_rtsp_media_get_range_string (media, TRUE, GST_RTSP_RANGE_NPT);
+  fail_unless (gst_rtsp_range_parse (range_str, &play_range) == GST_RTSP_OK);
+  fail_unless (play_range->min.seconds == range->min.seconds);
+  fail_unless (play_range->max.seconds == range->max.seconds);
+
   gst_rtsp_range_free (range);
+  gst_rtsp_range_free (play_range);
+  g_free (range_str);
 
   fail_unless (gst_rtsp_media_unprepare (media));
   g_object_unref (media);
@@ -188,7 +198,6 @@ GST_START_TEST (test_media_seek_one_active_stream)
 }
 
 GST_END_TEST;
-
 
 GST_START_TEST (test_media_seek_no_sinks)
 {
