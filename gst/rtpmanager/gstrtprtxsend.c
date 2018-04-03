@@ -400,7 +400,10 @@ gst_rtp_rtx_buffer_new (GstRtpRtxSend * rtx, GstBuffer * buffer)
 
   /* copy extension if any */
   if (rtp.size[1]) {
-    mem = gst_memory_copy (rtp.map[1].memory, 0, rtp.size[1]);
+    mem = gst_allocator_alloc (NULL, rtp.size[1], NULL);
+    gst_memory_map (mem, &map, GST_MAP_WRITE);
+    memcpy (map.data, rtp.data[1], rtp.size[1]);
+    gst_memory_unmap (mem, &map);
     gst_buffer_append_memory (new_buffer, mem);
   }
 
