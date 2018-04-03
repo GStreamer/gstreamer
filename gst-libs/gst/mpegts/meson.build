@@ -25,6 +25,10 @@ mpegts_enums = gnome.mkenums_simple('gstmpegts-enumtypes',
   install_header: true,
   install_dir : 'include/gstreamer-1.0/gst/mpegts/')
 
+mpegtsenumtypes_h = mpegts_enums[1]
+
+gen_sources = [mpegtsenumtypes_h]
+
 gstmpegts = library('gstmpegts-' + api_version,
   mpegts_sources, mpegts_enums,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
