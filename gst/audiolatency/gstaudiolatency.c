@@ -335,7 +335,7 @@ buffer_has_wave (GstBuffer * buffer, GstPad * pad)
     gst_buffer_unmap (buffer, &minfo);
 
   /* Return offset in microseconds */
-  return offset / 1000;
+  return (offset > 0) ? offset / 1000 : -1;
 }
 
 static GstPadProbeReturn
@@ -406,12 +406,7 @@ gst_audiolatency_sink_chain (GstPad * pad, GstObject * parent,
   if (offset < 0)
     goto out;
 
-  pts += offset;
-  /* Only measure latency using the first buffer of each tick wave */
-  if (pts - self->recv_pts <= 950 * 1000)
-    goto out;
-
-  self->recv_pts = pts;
+  self->recv_pts = pts + offset;
   latency = (self->recv_pts - self->send_pts);
   gst_audiolatency_set_latency (self, latency);
 
