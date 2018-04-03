@@ -174,6 +174,8 @@ gst_audiolatency_init (GstAudioLatency * self)
   GstPad *srcpad;
   GstPadTemplate *templ;
 
+  self->send_pts = 0;
+  self->recv_pts = 0;
   self->print_latency = DEFAULT_PRINT_LATENCY;
 
   /* Setup sinkpad */
@@ -353,7 +355,8 @@ gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
   GST_TRACE ("audiotestsrc pushed out a buffer");
 
   pts = g_get_monotonic_time ();
-  /* The ticks are once a second, so we can skip checking most buffers */
+  /* Ticks are once a second, so once we send something, we can skip
+   * checking ~1sec of buffers till the next one. */
   if (self->send_pts > 0 && pts - self->send_pts <= 950 * 1000)
     goto out;
 
@@ -364,9 +367,13 @@ gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
     goto out;
 
   pts -= offset;
-  GST_INFO ("send pts: %" G_GINT64_FORMAT "us (after %" G_GINT64_FORMAT
-      "ms, offset %" G_GINT64_FORMAT "ms)", pts,
-      (pts - self->send_pts) / 1000, offset / 1000);
+  {
+    gint64 after = 0;
+    if (self->send_pts > 0)
+      after = (pts - self->send_pts) / 1000;
+    GST_INFO ("send pts: %" G_GINT64_FORMAT "us (after %" G_GINT64_FORMAT
+        "ms, offset %" G_GINT64_FORMAT "ms)", pts, after, offset / 1000);
+  }
 
   self->send_pts = pts + offset;
 
@@ -381,10 +388,17 @@ gst_audiolatency_sink_chain (GstPad * pad, GstObject * parent,
   GstAudioLatency *self = GST_AUDIOLATENCY (parent);
   gint64 latency, offset, pts;
 
+  /* Ignore buffers till something gets sent out by us. Fixes a bug where we'd
+   * start out by printing one garbage latency value on Windows. */
+  if (self->send_pts == 0)
+    goto out;
+
   GST_TRACE_OBJECT (pad, "Got buffer %p", buffer);
 
   pts = g_get_monotonic_time ();
-  /* The ticks are once a second, so we can skip checking most buffers */
+  /* Ticks are once a second, so once we receive something, we can skip
+   * checking ~1sec of buffers till the next one. This way we also don't count
+   * the same tick twice for latency measurement. */
   if (self->recv_pts > 0 && pts - self->recv_pts <= 950 * 1000)
     goto out;
 
