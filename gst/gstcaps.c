@@ -2540,3 +2540,24 @@ gst_caps_filter_and_map_in_place (GstCaps * caps, GstCapsFilterMapFunc func,
     }
   }
 }
+
+/**
+ * gst_caps_copy:
+ * @caps: a #GstCaps.
+ *
+ * Creates a new #GstCaps as a copy of the old @caps. The new caps will have a
+ * refcount of 1, owned by the caller. The structures are copied as well.
+ *
+ * Note that this function is the semantic equivalent of a gst_caps_ref()
+ * followed by a gst_caps_make_writable(). If you only want to hold on to a
+ * reference to the data, you should use gst_caps_ref().
+ *
+ * When you are finished with the caps, call gst_caps_unref() on it.
+ *
+ * Returns: the new #GstCaps
+ */
+GstCaps *
+gst_caps_copy (const GstCaps * caps)
+{
+  return GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
+}
