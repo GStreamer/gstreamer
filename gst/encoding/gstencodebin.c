@@ -916,7 +916,12 @@ _create_element_and_set_preset (GstElementFactory * factory,
   GstElement *res = NULL;
 
   GST_DEBUG ("Creating element from factory %s (preset factory name: %s"
-      " preset name: %s)", GST_OBJECT_NAME (factory), preset, preset_name);
+      " preset name: %s)", GST_OBJECT_NAME (factory), preset_name, preset);
+
+  if (preset_name && g_strcmp0 (GST_OBJECT_NAME (factory), preset_name)) {
+    GST_DEBUG ("Got to use %s, not %s", preset_name, GST_OBJECT_NAME (factory));
+    return NULL;
+  }
 
   res = gst_element_factory_create (factory, name);
 
@@ -934,9 +939,6 @@ _create_element_and_set_preset (GstElementFactory * factory,
       GST_DEBUG ("Using a preset with no preset name, making use of the"
           " proper element without setting any property");
     }
-  } else if (preset_name && g_strcmp0 (GST_OBJECT_NAME (factory), preset_name)) {
-    gst_object_unref (res);
-    res = NULL;
   }
   /* Else we keep it */
 
