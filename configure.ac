@@ -598,18 +598,20 @@ if test x$HAVE_GST_V4L2 = xyes; then
 fi
 
 dnl Allow enabling v4l2 device probing
+default_v4l2_probe=no
 AS_CASE([$host],
     [*-*linux*],
       [AS_CASE([$host_cpu],
         [arm*], [
-          enable_v4l2_probe="yes"],
+          default_v4l2_probe=yes],
         [aarch64*], [
-          enable_v4l2_probe="yes"])])
+          default_v4l2_probe=yes])])
 AC_ARG_ENABLE(
   v4l2-probe,
   AC_HELP_STRING(
     [--enable-v4l2-probe],
-    [enable V4L2 plugin to probe devices @<:@default=no@:>@]))
+    [enable V4L2 plugin to probe devices]),
+  [], [enable_v4l2_probe=$default_v4l2_probe])
 if test "x$enable_v4l2_probe" = "xyes"; then
   AC_DEFINE(GST_V4L2_ENABLE_PROBE, 1,
     [Define if Video4Linux probe shall be run at plugin load])
