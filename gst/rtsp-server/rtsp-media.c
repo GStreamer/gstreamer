@@ -228,6 +228,7 @@ static gboolean wait_preroll (GstRTSPMedia * media);
 static GstElement *find_payload_element (GstElement * payloader);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
+
 static gboolean check_complete (GstRTSPMedia * media);
 
 #define C_ENUM(v) ((gint) v)
@@ -603,8 +604,7 @@ do_query_position (GstRTSPStream * stream, DoQueryPositionData * data)
 {
   gint64 tmp;
 
-  if (data->complete_streams_only && !gst_rtsp_stream_is_complete (stream))
-  {
+  if (data->complete_streams_only && !gst_rtsp_stream_is_complete (stream)) {
     GST_DEBUG_OBJECT (stream, "stream not complete, do not query position");
     return;
   }
@@ -1465,7 +1465,8 @@ gst_rtsp_media_get_retransmission_time (GstRTSPMedia * media)
  * Since: 1.16
  */
 void
-gst_rtsp_media_set_do_retransmission (GstRTSPMedia * media, gboolean do_retransmission)
+gst_rtsp_media_set_do_retransmission (GstRTSPMedia * media,
+    gboolean do_retransmission)
 {
   GstRTSPMediaPrivate *priv;
 
@@ -3143,7 +3144,8 @@ start_prepare (GstRTSPMedia * media)
   }
 
   if (priv->rtpbin)
-    g_object_set (priv->rtpbin, "do-retransmission", priv->do_retransmission, NULL);
+    g_object_set (priv->rtpbin, "do-retransmission", priv->do_retransmission,
+        NULL);
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;

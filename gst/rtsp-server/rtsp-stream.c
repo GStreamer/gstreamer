@@ -2332,7 +2332,7 @@ gst_rtsp_stream_request_aux_sender (GstRTSPStream * stream, guint sessid)
 }
 
 static void
-add_rtx_pt (gpointer key, GstCaps *caps, GstStructure *pt_map)
+add_rtx_pt (gpointer key, GstCaps * caps, GstStructure * pt_map)
 {
   guint pt = GPOINTER_TO_INT (key);
   const GstStructure *s = gst_caps_get_structure (caps, 0);

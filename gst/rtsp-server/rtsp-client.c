@@ -2063,7 +2063,8 @@ rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv)
 }
 
 static gchar *
-stream_make_keymgmt (GstRTSPClient * client, const gchar *location, GstRTSPStream * stream)
+stream_make_keymgmt (GstRTSPClient * client, const gchar * location,
+    GstRTSPStream * stream)
 {
   gchar *base64, *result = NULL;
   GstMIKEYMessage *mikey_msg;
@@ -2074,7 +2075,8 @@ stream_make_keymgmt (GstRTSPClient * client, const gchar *location, GstRTSPStrea
   GstBuffer *key;
   GType ciphertype, authtype;
   GEnumClass *cipher_enum, *auth_enum;
-  GEnumValue *srtcp_cipher_value, *srtp_cipher_value, *srtcp_auth_value, *srtp_auth_value;
+  GEnumValue *srtcp_cipher_value, *srtp_cipher_value, *srtcp_auth_value,
+      *srtp_auth_value;
 
   rtcp_encoder = gst_rtsp_stream_get_srtp_encoder (stream);
 
@@ -2090,8 +2092,9 @@ stream_make_keymgmt (GstRTSPClient * client, const gchar *location, GstRTSPStrea
   /* We need to bring the encoder to READY so that it generates its key */
   gst_element_set_state (rtcp_encoder, GST_STATE_READY);
 
-  g_object_get (rtcp_encoder, "rtcp-cipher", &srtcp_cipher, "rtcp-auth", &srtcp_auth,
-      "rtp-cipher", &srtp_cipher, "rtp-auth", &srtp_auth, "key", &key, NULL);
+  g_object_get (rtcp_encoder, "rtcp-cipher", &srtcp_cipher, "rtcp-auth",
+      &srtcp_auth, "rtp-cipher", &srtp_cipher, "rtp-auth", &srtp_auth, "key",
+      &key, NULL);
   g_object_unref (rtcp_encoder);
 
   srtcp_cipher_value = g_enum_get_value (cipher_enum, srtcp_cipher);
@@ -2845,11 +2848,14 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPStream *stream = gst_rtsp_media_get_stream (media, i);
-    gchar *location = g_strdup_printf ("rtsp://%s%s:8554/stream=%d", priv->server_ip, path, i);
+    gchar *location =
+        g_strdup_printf ("rtsp://%s%s:8554/stream=%d", priv->server_ip, path,
+        i);
     gchar *keymgmt = stream_make_keymgmt (client, location, stream);
 
     if (keymgmt)
-      gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_KEYMGMT, keymgmt);
+      gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_KEYMGMT,
+          keymgmt);
 
     g_free (location);
   }

@@ -1098,7 +1098,7 @@ gst_rtsp_media_factory_get_retransmission_time (GstRTSPMediaFactory * factory)
  */
 void
 gst_rtsp_media_factory_set_do_retransmission (GstRTSPMediaFactory * factory,
-                                              gboolean do_retransmission)
+    gboolean do_retransmission)
 {
   GstRTSPMediaFactoryPrivate *priv;
 
