@@ -49,7 +49,7 @@
 
 G_BEGIN_DECLS
 
-mfxSession msdk_open_session (gboolean hardware);
+mfxSession msdk_open_session (mfxIMPL impl);
 void msdk_close_session (mfxSession session);
 
 gboolean msdk_is_available (void);
