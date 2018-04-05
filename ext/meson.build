@@ -14,7 +14,7 @@ endif
 subdir('libpng')
 subdir('mpg123')
 subdir('raw1394')
-# FIXME: subdir('qt')
+subdir('qt')
 subdir('pulse')
 subdir('shout2')
 subdir('soup')

@@ -48,6 +48,8 @@
 #endif
 #endif
 
+#include <gst/gl/gstglfuncs.h>
+
 #define GST_CAT_DEFAULT qt_gl_utils_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -204,12 +206,12 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     GST_ERROR ("cannot wrap qt OpenGL context");
     return FALSE;
   }
- 
+
   (void) platform;
   (void) gl_api;
   (void) gl_handle;
 
-  gst_gl_context_activate (*wrap_glcontext, TRUE);
+  gst_gl_context_activate(*wrap_glcontext, TRUE);
   if (!gst_gl_context_fill_info (*wrap_glcontext, &error)) {
     GST_ERROR ("failed to retrieve qt context info: %s", error->message);
     g_object_unref (*wrap_glcontext);
@@ -242,7 +244,7 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
       wglMakeCurrent (device, 0);
       gst_object_unref (window);
       if (!gst_gl_context_create (*context, *wrap_glcontext, &error)) {
-        GST_ERROR ("%p failed to create shared GL context: %s", this, error->message);
+        GST_ERROR ("failed to create shared GL context: %s", error->message);
         g_object_unref (*context);
         *context = NULL;
         g_object_unref (*wrap_glcontext);
@@ -251,10 +253,10 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
         return FALSE;
       }
       wglMakeCurrent (device, (HGLRC) gl_handle);
-    }
+    } G_STMT_END;
 #endif
     gst_gl_context_activate (*wrap_glcontext, FALSE);
-  } G_STMT_END;
+  }
 
   return TRUE;
 }
