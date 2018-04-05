@@ -183,7 +183,8 @@ gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
 
   priv->job_type = job_type;
   priv->hardware = hardware;
-  priv->session = msdk_open_session (hardware);
+  priv->session =
+      msdk_open_session (hardware ? MFX_IMPL_HARDWARE_ANY : MFX_IMPL_SOFTWARE);
   if (!priv->session)
     goto failed;
 

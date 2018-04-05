@@ -147,7 +147,7 @@ msdk_close_session (mfxSession session)
 }
 
 mfxSession
-msdk_open_session (gboolean hardware)
+msdk_open_session (mfxIMPL impl)
 {
   mfxSession session = NULL;
   mfxVersion version = { {1, 1}
@@ -160,8 +160,7 @@ msdk_open_session (gboolean hardware)
     "HARDWARE3", "HARDWARE4", "RUNTIME"
   };
 
-  status = MFXInit (hardware ? MFX_IMPL_HARDWARE_ANY : MFX_IMPL_SOFTWARE,
-      &version, &session);
+  status = MFXInit (impl, &version, &session);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Intel Media SDK not available (%s)",
         msdk_status_to_string (status));
@@ -195,7 +194,7 @@ failed:
 gboolean
 msdk_is_available (void)
 {
-  mfxSession session = msdk_open_session (FALSE);
+  mfxSession session = msdk_open_session (MFX_IMPL_AUTO_ANY);
   if (!session) {
     return FALSE;
   }
