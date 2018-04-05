@@ -1021,9 +1021,9 @@ gst_poll_fd_ctl_read_unlocked (GstPoll * set, GstPollFD * fd, gboolean active)
     struct pollfd *pfd = &g_array_index (set->fds, struct pollfd, idx);
 
     if (active)
-      pfd->events |= (POLLIN | POLLPRI);
+      pfd->events |= POLLIN;
     else
-      pfd->events &= ~(POLLIN | POLLPRI);
+      pfd->events &= ~POLLIN;
 #else
     gst_poll_update_winsock_event_mask (set, idx, FD_READ | FD_ACCEPT, active);
 #endif
@@ -1201,7 +1201,7 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
 #ifndef G_OS_WIN32
     struct pollfd *pfd = &g_array_index (set->active_fds, struct pollfd, idx);
 
-    res = (pfd->revents & (POLLIN | POLLPRI)) != 0;
+    res = (pfd->revents & POLLIN) != 0;
 #else
     WinsockFd *wfd = &g_array_index (set->active_fds, WinsockFd, idx);
 
