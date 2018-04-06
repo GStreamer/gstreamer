@@ -67,7 +67,7 @@ the sink.
 
 An element will have to install an event function on its source pads in
 order to receive QOS events. Usually, the element will need to store the
-value of the QOS event and use them in the data processing function. The
+value of the QOS event and use it in the data processing function. The
 element will need to use a lock to protect these QoS values as shown in
 the example below. Also make sure to pass the QoS event upstream.
 
@@ -111,7 +111,7 @@ timestamp + jitter is also going to be late. We can thus drop all
 buffers with a timestamp less than timestamp + jitter.
 
 If the buffer duration is known, a better estimation for the next likely
-timestamp as: timestamp + 2 \* jitter + duration.
+timestamp to arrive in time is: timestamp + 2 \* jitter + duration.
 
 A possible algorithm typically looks like this:
 
@@ -205,7 +205,7 @@ conditions:
 
   - The element dropped a buffer because of QoS reasons.
 
-  - An element changes its processing strategy because of QoS reasons
-    (quality). This could include a decoder that decides to drop every B
+  - An element changed its processing strategy because of QoS reasons
+    (quality). This could include a decoder that decided to drop every B
     frame to increase its processing speed or an effect element
-    switching to a lower quality algorithm.
+    that switched to a lower quality algorithm.

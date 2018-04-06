@@ -5,7 +5,7 @@ title: Pre-made base classes
 # Pre-made base classes
 
 So far, we've been looking at low-level concepts of creating any type of
-GStreamer element. Now, let's assume that all you want is to create an
+GStreamer element. Now, let's assume that all you want is to create a
 simple audiosink that works exactly the same as, say, “esdsink”, or a
 filter that simply normalizes audio volume. Such elements are very
 general in concept and since they do nothing special, they should be
@@ -31,7 +31,7 @@ in many elements. Therefore, sink elements can derive from the
 functions automatically. The derived class only needs to implement a
 bunch of virtual functions and will work automatically.
 
-The base class implement much of the synchronization logic that a sink
+The base class implements much of the synchronization logic that a sink
 has to perform.
 
 The `GstBaseSink` base-class specifies some limitations on elements,
@@ -65,7 +65,7 @@ The advantages of deriving from `GstBaseSink` are numerous:
     not need to know anything about the technical implementation
     requirements of preroll. The base-class does all the hard work.
 
-    Less code to write in the derived class, shared code (and thus
+  - Less code to write in the derived class, shared code (and thus
     shared bugfixes).
 
 There are also specialized base classes for audio and video, let's look

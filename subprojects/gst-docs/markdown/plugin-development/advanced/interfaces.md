@@ -16,11 +16,11 @@ a spin-button widget, whereas others would be better represented by a
 slider widget. Such things are not possible because the UI has no actual
 meaning in the application. A UI widget that represents a bitrate
 property is the same as a UI widget that represents the size of a video,
-as long as both are of the same `GParamSpec` type. Another problem, is
+as long as both are of the same `GParamSpec` type. Another problem is
 that things like parameter grouping, function grouping, or parameter
 coupling are not really possible.
 
-The second problem with parameters are that they are not dynamic. In
+The second problem with parameters is that they are not dynamic. In
 many cases, the allowed values for a property are not fixed, but depend
 on things that can only be detected at runtime. The names of inputs for
 a TV card in a video4linux source element, for example, can only be
@@ -125,7 +125,7 @@ WRITEME
 
 ## Video Overlay Interface
 
-The `GstVideoOverlay` interface is used for 2 main purposes :
+The `GstVideoOverlay` interface is used for 2 main purposes:
 
   - To get a grab on the Window where the video sink element is going to
     render. This is achieved by either being informed about the Window

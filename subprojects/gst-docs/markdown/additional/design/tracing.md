@@ -113,10 +113,10 @@ Hooks (\* already implemented)
 
 Tracers are plugin features. They have a simple api:
 
-class init Here the tracers describe the data the will emit.
+class init Here the tracers describe the data they will emit.
 
 instance init Tracers attach handlers to one or more hooks using
-`gst_tracing_register_hook()`. In case the are configurable, they can
+`gst_tracing_register_hook()`. In case they are configurable, they can
 read the options from the *params* property. This is the extra detail
 from the environment var.
 
@@ -146,7 +146,7 @@ to describe their format:
 ``` c
 fmt = gst_tracer_record_new ("thread-rusage.class",
     // value in the log record (order does not matter)
-    // *thread-id* is a *key* to related the record to something as indicated
+    // *thread-id* is a *key* to relate the record to something as indicated
     // by *scope* substructure
     "thread-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
         "type", G_TYPE_GTYPE, G_TYPE_GUINT64,
@@ -177,7 +177,7 @@ Later tracers can use the `GstTracerRecord` instance to log values efficiently:
 gst_tracer_record_log (fmt, (guint64) (guintptr) thread_id, avg_cpuload);
 ```
 
-Below a few more example for parts of tracer classes:
+Below a few more examples for parts of tracer classes:
 
 An optional value. Since the PTS can be GST_CLOCK_TIME_NONE and that is (-1),
 we don't want to log this.

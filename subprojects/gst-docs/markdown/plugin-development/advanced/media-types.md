@@ -7,7 +7,7 @@ title: Media Types and Properties
 There is a very large set of possible media types that may be used to pass
 data between elements. Indeed, each new element that is defined may use
 a new data format (though unless at least one other element recognises
-that format, it will be most likely be useless since nothing will be
+that format, it will be useless since nothing will be
 able to link with it).
 
 In order for media types to be useful, and for systems like autopluggers to
@@ -25,7 +25,7 @@ For now, the policy is simple:
   - If creating a new media type, discuss it first with the other GStreamer
     developers, on at least one of: IRC, mailing lists.
 
-  - Try to ensure that the name for a new format is as unlikely to
+  - Try to ensure that the name for a new format does not
     conflict with anything else created already, and is not a more
     generalised name than it should be. For example: "audio/compressed"
     would be too generalised a name to represent audio data compressed
@@ -149,7 +149,7 @@ samplerate of the contained audio stream in the header. MPEG system
 streams don't. This means that an AVI stream demuxer would provide
 samplerate as a property for MPEG audio streams, whereas an MPEG demuxer
 would not. A decoder needing this data would require a stream parser in
-between two extract this from the header or calculate it from the
+between to extract this from the header or calculate it from the
 stream.
 
 ### Table of Audio Types

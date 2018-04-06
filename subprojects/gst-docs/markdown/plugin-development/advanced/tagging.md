@@ -220,7 +220,7 @@ gst_my_filter_task_func (GstElement *element)
 
 ```
 
-Note that normally, elements would not read the full stream before
+Note that normally elements would not read the full stream before
 processing tags. Rather, they would read from each sinkpad until they've
 received data (since tags usually come in before the first data buffer)
 and process that.

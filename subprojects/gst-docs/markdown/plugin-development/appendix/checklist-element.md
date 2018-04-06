@@ -122,5 +122,5 @@ we will try to explain why those requirements are set.
     with unseekable input streams (e.g. network sources) as well.
 
   - Sources and sinks should be prepared to be assigned another clock
-    then the one they expose themselves. Always use the provided clock
+    than the one they expose themselves. Always use the provided clock
     for synchronization, else you'll get A/V sync issues.

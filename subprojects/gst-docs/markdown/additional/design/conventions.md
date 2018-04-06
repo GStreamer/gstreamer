@@ -19,7 +19,7 @@ Within the context of a given object, functions defined in that object’s
 header and/or source file will have their object-specific prefix
 stripped. For instance, `gst_element_add_pad()` would be referred to as
 simply `*add_pad()`. Note that the trailing parentheses should always be
-present, but sometimes may not be. A prefixing underscore (*) will
+present, but sometimes may not be. A prefixed asterisk (*) will
 always tell you it’s a function, however, regardless of the presence or
 absence of the trailing parentheses.
 
