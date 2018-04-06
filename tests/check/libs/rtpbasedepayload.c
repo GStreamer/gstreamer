@@ -509,7 +509,8 @@ set_state (State * state, GstState new_state)
 }
 
 static void
-packet_lost (State * state, GstClockTime timestamp, GstClockTime duration)
+packet_lost (State * state, GstClockTime timestamp, GstClockTime duration,
+    gboolean might_have_been_fec)
 {
   GstEvent *event;
   guint seqnum = 0x4243;
@@ -521,6 +522,7 @@ packet_lost (State * state, GstClockTime timestamp, GstClockTime duration)
           "seqnum", G_TYPE_UINT, seqnum,
           "timestamp", G_TYPE_UINT64, timestamp,
           "duration", G_TYPE_UINT64, duration,
+          "might-have-been-fec", G_TYPE_BOOLEAN, might_have_been_fec,
           "late", G_TYPE_BOOLEAN, late, "retry", G_TYPE_UINT, retries, NULL));
 
   fail_unless (gst_pad_push_event (state->srcpad, event));
@@ -869,7 +871,11 @@ GST_START_TEST (rtp_base_depayload_packet_lost_test)
       "pts", 0 * GST_SECOND,
       "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
 
-  packet_lost (state, 1 * GST_SECOND, GST_SECOND);
+  packet_lost (state, 1 * GST_SECOND, GST_SECOND, FALSE);
+
+  /* If a packet was lost but we don't know whether it was a FEC packet,
+   * the depayloader should not generate gap events */
+  packet_lost (state, 2 * GST_SECOND, GST_SECOND, TRUE);
 
   push_rtp_buffer (state,
       "pts", 2 * GST_SECOND,

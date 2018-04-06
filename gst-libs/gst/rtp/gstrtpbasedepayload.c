@@ -827,6 +827,8 @@ gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
   GstClockTime timestamp, duration;
   GstEvent *sevent;
   const GstStructure *s;
+  gboolean might_have_been_fec;
+  gboolean res = TRUE;
 
   s = gst_event_get_structure (event);
 
@@ -841,10 +843,14 @@ gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
     return FALSE;
   }
 
-  /* send GAP event */
-  sevent = gst_event_new_gap (timestamp, duration);
+  if (!gst_structure_get_boolean (s, "might-have-been-fec",
+          &might_have_been_fec) || !might_have_been_fec) {
+    /* send GAP event */
+    sevent = gst_event_new_gap (timestamp, duration);
+    res = gst_pad_push_event (filter->srcpad, sevent);
+  }
 
-  return gst_pad_push_event (filter->srcpad, sevent);
+  return res;
 }
 
 static GstStateChangeReturn
