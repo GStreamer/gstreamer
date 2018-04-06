@@ -141,23 +141,6 @@ _rc_mode_to_nv (GstNvRCMode mode)
   }
 }
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420 }, "       // TODO: YV12, Y444 support
-        "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
-        "framerate = (fraction) [0, MAX],"
-        "interlace-mode = { progressive, mixed, interleaved } "
-#if HAVE_NVENC_GST_GL
-        ";"
-        "video/x-raw(memory:GLMemory), "
-        "format = (string) { NV12, Y444 }, "
-        "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
-        "framerate = (fraction) [0, MAX],"
-        "interlace-mode = { progressive, mixed, interleaved } "
-#endif
-    ));
-
 enum
 {
   PROP_0,
@@ -253,8 +236,6 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_base_enc_handle_frame);
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_nv_base_enc_finish);
   videoenc_class->sink_query = GST_DEBUG_FUNCPTR (gst_nv_base_enc_sink_query);
-
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id",

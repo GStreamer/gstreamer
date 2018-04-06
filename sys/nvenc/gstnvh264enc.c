@@ -42,6 +42,23 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
 G_DEFINE_TYPE (GstNvH264Enc, gst_nv_h264_enc, GST_TYPE_NV_BASE_ENC);
 
 /* *INDENT-OFF* */
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420 }, "       // TODO: YV12, Y444 support
+        "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
+        "framerate = (fraction) [0, MAX],"
+        "interlace-mode = { progressive, mixed, interleaved } "
+#if HAVE_NVENC_GST_GL
+        ";"
+        "video/x-raw(memory:GLMemory), "
+        "format = (string) { NV12, Y444 }, "
+        "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
+        "framerate = (fraction) [0, MAX],"
+        "interlace-mode = { progressive, mixed, interleaved } "
+#endif
+    ));
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -92,6 +109,7 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
   nvenc_class->set_src_caps = gst_nv_h264_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h264_enc_set_pic_params;
 
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 
   gst_element_class_set_static_metadata (element_class,
