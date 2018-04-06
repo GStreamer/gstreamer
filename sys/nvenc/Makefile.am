@@ -3,12 +3,14 @@ plugin_LTLIBRARIES = libgstnvenc.la
 libgstnvenc_la_SOURCES = \
 	gstnvenc.c \
 	gstnvbaseenc.c \
-	gstnvh264enc.c
+	gstnvh264enc.c \
+	gstnvh265enc.c
 
 noinst_HEADERS = \
 	gstnvenc.h \
 	gstnvbaseenc.h \
-	gstnvh264enc.h
+	gstnvh264enc.h \
+	gstnvh265enc.h
 
 libgstnvenc_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

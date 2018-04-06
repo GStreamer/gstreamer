@@ -23,6 +23,7 @@
 
 #include "gstnvenc.h"
 #include "gstnvh264enc.h"
+#include "gstnvh265enc.h"
 
 GST_DEBUG_CATEGORY (gst_nvenc_debug);
 #define GST_CAT_DEFAULT gst_nvenc_debug
@@ -335,6 +336,8 @@ plugin_init (GstPlugin * plugin)
 
     gst_element_register (plugin, "nvh264enc", GST_RANK_PRIMARY * 2,
         gst_nv_h264_enc_get_type ());
+    gst_element_register (plugin, "nvh265enc", GST_RANK_PRIMARY * 2,
+        gst_nv_h265_enc_get_type ());
   }
 
   return TRUE;
