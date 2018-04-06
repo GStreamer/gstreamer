@@ -2268,8 +2268,10 @@ gst_h265_parse_get_caps (GstBaseParse * parse, GstCaps * filter)
   }
 
   /* Try if we can put the downstream caps first */
-  remove_fields (peercaps, FALSE);
-  tmp = gst_caps_intersect_full (peercaps, res, GST_CAPS_INTERSECT_FIRST);
+  pcopy = gst_caps_copy (peercaps);
+  remove_fields (pcopy, FALSE);
+  tmp = gst_caps_intersect_full (pcopy, res, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (pcopy);
   if (!gst_caps_is_empty (tmp))
     res = gst_caps_merge (tmp, res);
   else
