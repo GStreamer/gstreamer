@@ -27,6 +27,9 @@
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
+#define GST_CAT_DEFAULT gst_nv_h264_enc_debug
+
 #if HAVE_GST_GL
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -97,6 +100,9 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
       "Encode H.264 video streams using NVIDIA's hardware-accelerated NVENC encoder API",
       "Tim-Philipp Müller <tim@centricular.com>\n"
       "Matthew Waters <matthew@centricular.com>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_nv_h264_enc_debug,
+      "nvh264enc", 0, "Nvidia H.264 encoder");
 }
 
 static void

@@ -25,6 +25,7 @@
 #include "gstnvh264enc.h"
 
 GST_DEBUG_CATEGORY (gst_nvenc_debug);
+#define GST_CAT_DEFAULT gst_nvenc_debug
 
 static NV_ENCODE_API_FUNCTION_LIST nvenc_api;
 

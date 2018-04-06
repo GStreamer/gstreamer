@@ -27,6 +27,8 @@
 
 #include <string.h>
 
+#define GST_CAT_DEFAULT gst_nvenc_debug
+
 #if HAVE_NVENC_GST_GL
 #include <cuda.h>
 #include <cuda_runtime_api.h>
