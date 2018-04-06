@@ -141,7 +141,8 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_AUDIOCLIENT3,
       g_param_spec_boolean ("use-audioclient3", "Use the AudioClient3 API",
-          "Use the Windows 10 AudioClient3 API when available",
+          "Use the Windows 10 AudioClient3 API when available and if the "
+          "low-latency property is set to TRUE",
           DEFAULT_AUDIOCLIENT3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
@@ -295,10 +296,30 @@ gst_wasapi_sink_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_wasapi_sink_can_audioclient3 (GstWasapiSink * self)
 {
-  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED &&
-      self->try_audioclient3 && gst_wasapi_util_have_audioclient3 ())
-    return TRUE;
-  return FALSE;
+  /* AudioClient3 API only makes sense in shared mode */
+  if (self->sharemode != AUDCLNT_SHAREMODE_SHARED)
+    return FALSE;
+
+  if (!self->try_audioclient3) {
+    GST_INFO_OBJECT (self, "AudioClient3 disabled by user");
+    return FALSE;
+  }
+
+  if (!gst_wasapi_util_have_audioclient3 ()) {
+    GST_INFO_OBJECT (self, "AudioClient3 not available on this OS");
+    return FALSE;
+  }
+
+  /* Only use audioclient3 when low-latency is requested because otherwise
+   * very slow machines and VMs with 1 CPU allocated will get glitches:
+   * https://bugzilla.gnome.org/show_bug.cgi?id=794497 */
+  if (!self->low_latency) {
+    GST_INFO_OBJECT (self, "AudioClient3 disabled because low-latency mode "
+        "was not requested");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static GstCaps *
