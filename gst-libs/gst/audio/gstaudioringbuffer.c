@@ -1840,7 +1840,7 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
 
   if (buf->timestamps && timestamp) {
     *timestamp = buf->timestamps[readseg % segtotal];
-    GST_INFO_OBJECT (buf, "Retrieved timestamp %" GST_TIME_FORMAT
+    GST_DEBUG_OBJECT (buf, "Retrieved timestamp %" GST_TIME_FORMAT
         " @ %d", GST_TIME_ARGS (*timestamp), readseg % segtotal);
   }
 
@@ -2080,7 +2080,7 @@ gst_audio_ring_buffer_set_timestamp (GstAudioRingBuffer * buf, gint readseg,
 {
   g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
-  GST_INFO_OBJECT (buf, "Storing timestamp %" GST_TIME_FORMAT
+  GST_DEBUG_OBJECT (buf, "Storing timestamp %" GST_TIME_FORMAT
       " @ %d", GST_TIME_ARGS (timestamp), readseg);
 
   GST_OBJECT_LOCK (buf);
