@@ -53,6 +53,14 @@ gstwebrtc = library('gstwebrtc-' + api_version,
   dependencies : gstwebrtc_dependencies,
 )
 
+pkgconfig.generate(gstwebrtc,
+  libraries : [gst_dep, gstbase_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-webrtc-1.0',
+  description : 'GStreamer WebRTC support',
+)
+
 if build_gir
   webrtc_gir = gnome.generate_gir(gstwebrtc,
     sources : webrtc_sources + webrtc_headers + [gstwebrtc_h],
@@ -75,3 +83,5 @@ gstwebrtc_dep = declare_dependency(link_with: gstwebrtc,
   include_directories : libsinc,
   sources: webrtc_gen_sources,
   dependencies: gstwebrtc_dependencies)
+
+meson.override_dependency('gstreamer-webrtc-1.0', gstwebrtc_dep)

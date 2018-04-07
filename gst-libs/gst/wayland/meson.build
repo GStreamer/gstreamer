@@ -18,7 +18,17 @@ if use_wayland
     dependencies : [gst_dep, gstvideo_dep, wl_client_dep]
   )
 
+  pkgconfig.generate(gstwayland,
+    libraries : [gst_dep, gstvideo_dep],
+    variables : pkgconfig_variables,
+    subdirs : pkgconfig_subdirs,
+    name : 'gstreamer-wayland-1.0',
+    description : 'GStreamer Wayland support',
+  )
+
   gstwayland_dep = declare_dependency(link_with : gstwayland,
     include_directories : [libsinc],
     dependencies : [gst_dep, gstvideo_dep])
+
+  meson.override_dependency('gstreamer-wayland-1.0', gstwayland_dep)
 endif

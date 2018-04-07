@@ -13,6 +13,14 @@ gstinsertbin = library('gstinsertbin-' + api_version,
   dependencies : [gst_dep],
 )
 
+pkgconfig.generate(gstinsertbin,
+  libraries : [gst_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-insertbin-1.0',
+  description : 'Bin to automatically and insertally link elements',
+)
+
 gen_sources = []
 if build_gir
   insertbin_gir = gnome.generate_gir(gstinsertbin,
@@ -34,3 +42,5 @@ gstinsertbin_dep = declare_dependency(link_with : gstinsertbin,
   include_directories : [libsinc],
   sources: gen_sources,
   dependencies : [gst_dep])
+
+meson.override_dependency('gstreamer-insertbin-1.0', gstinsertbin_dep)

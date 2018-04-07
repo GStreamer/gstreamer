@@ -35,6 +35,14 @@ gstplayer = library('gstplayer-' + api_version,
                   gsttag_dep, gstpbutils_dep],
 )
 
+pkgconfig.generate(gstplayer,
+  libraries : [gst_dep, gstvideo_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-player-1.0',
+  description : 'GStreamer Player convenience library',
+)
+
 gen_sources = []
 if build_gir
   player_gir = gnome.generate_gir(gstplayer,
@@ -59,3 +67,5 @@ gstplayer_dep = declare_dependency(link_with : gstplayer,
   sources: gen_sources,
   dependencies : [gstbase_dep, gstvideo_dep, gstaudio_dep,
                   gsttag_dep, gstpbutils_dep])
+
+meson.override_dependency('gstreamer-player-1.0', gstplayer_dep)

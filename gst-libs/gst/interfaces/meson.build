@@ -24,7 +24,17 @@ gstphotography = library('gstphotography-' + api_version,
   dependencies : [gst_dep],
 )
 
+pkgconfig.generate(gstphotography,
+  libraries : [gst_dep, gstbase_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-photography-1.0',
+  description : 'High level API for transcoding using GStreamer',
+)
+
 gstphotography_dep = declare_dependency(link_with : gstphotography,
   include_directories : [libsinc],
   dependencies : [gst_dep],
   sources : [photoenum_h])
+
+meson.override_dependency('gstreamer-photography-1.0', gstphotography_dep)

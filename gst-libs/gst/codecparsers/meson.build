@@ -53,6 +53,16 @@ gstcodecparsers = library('gstcodecparsers-' + api_version,
   dependencies : [gstbase_dep, libm],
 )
 
+pkgconfig.generate(gstcodecparsers,
+  libraries : [gst_dep, gstbase_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-codecparsers-1.0',
+  description : 'Bitstream parsers for GStreamer elements',
+)
+
 gstcodecparsers_dep = declare_dependency(link_with : gstcodecparsers,
   include_directories : [libsinc],
   dependencies : [gstbase_dep])
+
+meson.override_dependency('gstreamer-codecparsers-1.0', gstcodecparsers_dep)

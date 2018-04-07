@@ -41,6 +41,15 @@ gstmpegts = library('gstmpegts-' + api_version,
   install : true,
   dependencies : [gst_dep],
 )
+
+pkgconfig.generate(gstmpegts,
+  libraries : [gst_dep, gstbase_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-mpegts-1.0',
+  description : 'GStreamer MPEG-TS support',
+)
+
 if build_gir
   mpegts_gir = gnome.generate_gir(gstmpegts,
     sources : mpegts_sources + mpegts_headers,
@@ -62,3 +71,5 @@ gstmpegts_dep = declare_dependency(link_with : gstmpegts,
   include_directories : [libsinc],
   dependencies : [gst_dep],
   sources : gen_sources)
+
+meson.override_dependency('gstreamer-mpegts-1.0', gstmpegts_dep)

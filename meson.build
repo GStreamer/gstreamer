@@ -462,6 +462,24 @@ if get_option('default_library') == 'shared'
   plugins_pkgconfig_install_dir = disabler()
 endif
 
+pkgconfig_variables = ['exec_prefix=${prefix}',
+    'toolsdir=${exec_prefix}/bin',
+    'pluginsdir=${libdir}/gstreamer-1.0',
+    'datarootdir=${prefix}/share',
+    'datadir=${datarootdir}',
+    'girdir=${datadir}/gir-1.0',
+    'typelibdir=${libdir}/girepository-1.0']
+
+pkgconfig_subdirs = ['gstreamer-1.0']
+
+pkgconfig.generate(
+  libraries : [gst_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-plugins-bad-1.0',
+  description : 'Streaming media framework, bad plugins libraries',
+)
+
 subdir('gst-libs')
 subdir('gst')
 subdir('sys')
@@ -469,7 +487,6 @@ subdir('ext')
 subdir('tests')
 subdir('data')
 subdir('tools')
-subdir('pkgconfig')
 
 if have_orcc
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')

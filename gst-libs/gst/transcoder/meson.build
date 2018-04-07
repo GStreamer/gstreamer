@@ -11,6 +11,15 @@ gst_transcoder = library('gsttranscoder-' + api_version,
   c_args: gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_TRANSCODER'],
   soversion : soversion,
 )
+
+pkgconfig.generate(gst_transcoder,
+  libraries : [gst_dep, gstbase_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-transcoder-1.0',
+  description : 'High level API for transcoding using GStreamer',
+)
+
 if build_gir
   transcoder_gir = gnome.generate_gir(gst_transcoder,
     sources : sources + headers,
@@ -31,3 +40,5 @@ gst_transcoder_dep = declare_dependency(link_with: gst_transcoder,
   dependencies : [gst_dep, gstpbutils_dep],
   include_directories : [libsinc]
 )
+
+meson.override_dependency('gstreamer-transcoder-1.0', gst_transcoder_dep)

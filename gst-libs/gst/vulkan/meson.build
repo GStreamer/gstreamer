@@ -322,6 +322,14 @@ gstvulkan = library('gstvulkan-' + api_version,
   # don't confuse gst/vulkan/xcb/xcb.h with xcb/xcb.h
   implicit_include_directories : false)
 
+pkgconfig.generate(gstvulkan,
+  libraries : [gst_dep, gstbase_dep, gstvideo_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-vulkan-1.0',
+  description : 'GStreamer Vulkan support',
+)
+
 if build_gir
   extra_gir_includes = []
   gobject_introspection_dep = dependency('gobject-introspection-1.0')
@@ -350,8 +358,17 @@ gstvulkan_dep = declare_dependency(link_with : gstvulkan,
   sources: gen_sources,
   dependencies : [gstvideo_dep, gstbase_dep, vulkan_dep] + optional_deps)
 
+meson.override_dependency('gstreamer-vulkan-1.0', gstvulkan_dep)
+
 if enabled_vulkan_winsys.contains('xcb')
   install_headers(vulkan_xcb_headers, subdir : 'gstreamer-1.0/gst/vulkan/xcb')
+  pkgconfig.generate(
+    libraries : [gstvulkan],
+    requires : ['xcb'],
+    subdirs : pkgconfig_subdirs,
+    name : 'gstreamer-vulkan-xcb-1.0',
+    description : 'GStreamer Vulkan support (XCB Specifics)',
+  )
   vulkan_xcb_gir = []
   if build_gir
     vulkan_xcb_gir = gnome.generate_gir(gstvulkan,
@@ -369,10 +386,18 @@ if enabled_vulkan_winsys.contains('xcb')
   endif
   gstvulkanxcb_dep = declare_dependency(dependencies : [gstvulkan_dep],
       sources : vulkan_xcb_gir)
+  meson.override_dependency('gstreamer-vulkan-xcb-1.0', gstvulkanxcb_dep)
 endif
 
 if enabled_vulkan_winsys.contains('wayland')
   install_headers(vulkan_wayland_headers, subdir : 'gstreamer-1.0/gst/vulkan/wayland')
+  pkgconfig.generate(
+    libraries : [gstvulkan],
+    requires : ['wayland-client'],
+    subdirs : pkgconfig_subdirs,
+    name : 'gstreamer-vulkan-wayland-1.0',
+    description : 'GStreamer Vulkan support (Wayland Specifics)',
+  )
   vulkan_wayland_gir = []
   if build_gir
     vulkan_wayland_gir = gnome.generate_gir(gstvulkan,
@@ -390,4 +415,5 @@ if enabled_vulkan_winsys.contains('wayland')
   endif
   gstvulkanwayland_dep = declare_dependency(dependencies : [gstvulkan_dep],
       sources : vulkan_wayland_gir)
+  meson.override_dependency('gstreamer-vulkan-wayland-1.0', gstvulkanwayland_dep)
 endif
