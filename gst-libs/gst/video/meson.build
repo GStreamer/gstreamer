@@ -137,6 +137,14 @@ gstvideo = library('gstvideo-@0@'.format(api_version),
   dependencies : gstvideo_deps,
 )
 
+pkgconfig.generate(gstvideo,
+  libraries : [gst_dep, gst_base_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-video-1.0',
+  description : 'Video base classes and helper functions',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/video/video.h' ]
   video_gir = gnome.generate_gir(gstvideo,
@@ -158,3 +166,5 @@ video_dep = declare_dependency(link_with : gstvideo,
   include_directories : [libsinc],
   dependencies : gstvideo_deps,
   sources : video_gen_sources)
+
+meson.override_dependency('gstreamer-video-1.0', video_dep)

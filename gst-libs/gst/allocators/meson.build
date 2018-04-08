@@ -19,6 +19,14 @@ gstallocators = library('gstallocators-@0@'.format(api_version),
   dependencies : [gst_dep],
 )
 
+pkgconfig.generate(gstallocators,
+  libraries : [gst_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-allocators-1.0',
+  description : 'Allocators implementation',
+)
+
 allocators_gen_sources  = []
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/allocators/allocators.h' ]
@@ -41,3 +49,5 @@ allocators_dep = declare_dependency(link_with: gstallocators,
   include_directories : [libsinc],
   dependencies : [gst_dep],
   sources : allocators_gen_sources)
+
+meson.override_dependency('gstreamer-allocators-1.0', allocators_dep)

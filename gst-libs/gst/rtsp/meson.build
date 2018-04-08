@@ -51,6 +51,14 @@ gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   dependencies : gstrtsp_deps,
 )
 
+pkgconfig.generate(gst_rtsp,
+  libraries : [gst_dep, sdp_dep, gio_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-rtsp-1.0',
+  description : 'RTSP base classes and helper functions',
+)
+
 rtsp_gen_sources = [gstrtsp_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/rtsp/rtsp.h' ]
@@ -73,3 +81,5 @@ rtsp_dep = declare_dependency(link_with : gst_rtsp,
   include_directories : [libsinc],
   dependencies : gstrtsp_deps,
   sources : rtsp_gen_sources)
+
+meson.override_dependency('gstreamer-rtsp-1.0', rtsp_dep)

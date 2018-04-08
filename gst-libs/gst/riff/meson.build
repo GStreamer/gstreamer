@@ -25,6 +25,14 @@ gstriff = library('gstriff-@0@'.format(api_version),
   dependencies : riff_deps,
 )
 
+pkgconfig.generate(gstriff,
+  libraries : [gst_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-riff-1.0',
+  description : 'RIFF helper functions',
+)
+
 riff_gen_sources  = []
 
 # *** GIR DISABLED for this library ***
@@ -50,3 +58,5 @@ riff_dep = declare_dependency(link_with: gstriff,
   include_directories : [libsinc],
   dependencies : riff_deps,
   sources : riff_gen_sources  )
+
+meson.override_dependency('gstreamer-riff-1.0', riff_dep)

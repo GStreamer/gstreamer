@@ -30,6 +30,14 @@ gstapp = library('gstapp-@0@'.format(api_version),
   dependencies : [gst_base_dep],
 )
 
+pkgconfig.generate(gstapp,
+  libraries : [gst_dep, gst_base_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-app-1.0',
+  description : 'Helper functions and base classes for application integration',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/app/app.h' ]
   app_gir = gnome.generate_gir(gstapp,
@@ -52,3 +60,5 @@ app_dep = declare_dependency(link_with: gstapp,
   include_directories : [libsinc],
   dependencies : [gst_base_dep],
   sources : app_gen_sources)
+
+meson.override_dependency('gstreamer-app-1.0', app_dep)

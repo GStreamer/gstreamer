@@ -46,6 +46,14 @@ gst_rtp = library('gstrtp-@0@'.format(api_version),
   dependencies : gstrtp_deps,
 )
 
+pkgconfig.generate(gst_rtp,
+  libraries : [gst_dep, gst_base_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-rtp-1.0',
+  description : 'RTP base classes and helper functions',
+)
+
 rtp_gen_sources = [gstrtp_enum_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/rtp/rtp.h' ]
@@ -70,3 +78,5 @@ rtp_dep = declare_dependency(link_with : gst_rtp,
   include_directories : [libsinc],
   dependencies : gstrtp_deps,
   sources : rtp_gen_sources)
+
+meson.override_dependency('gstreamer-rtp-1.0', rtp_dep)

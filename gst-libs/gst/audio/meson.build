@@ -152,6 +152,14 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
   dependencies : gstaudio_deps,
 )
 
+pkgconfig.generate(gstaudio,
+  libraries : [gst_dep, gst_base_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-audio-1.0',
+  description : 'Audio helper functions and base classes',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/audio/audio.h' ]
   audio_gir = gnome.generate_gir(gstaudio,
@@ -173,3 +181,5 @@ audio_dep = declare_dependency(link_with : gstaudio,
   include_directories : [libsinc],
   dependencies : gstaudio_deps,
   sources : audio_gen_sources)
+
+meson.override_dependency('gstreamer-audio-1.0', audio_dep)

@@ -431,6 +431,16 @@ if get_option('default_library') == 'shared'
   plugins_pkgconfig_install_dir = disabler()
 endif
 
+pkgconfig_variables = ['exec_prefix=${prefix}',
+    'toolsdir=${exec_prefix}/bin',
+    'pluginsdir=${libdir}/gstreamer-1.0',
+    'datarootdir=${prefix}/share',
+    'datadir=${datarootdir}',
+    'girdir=${datadir}/gir-1.0',
+    'typelibdir=${libdir}/girepository-1.0',
+    'libexecdir=${prefix}/libexec']
+pkgconfig_subdirs = ['gstreamer-1.0']
+
 python3 = import('python').find_installation()
 subdir('gst-libs')
 subdir('gst')
@@ -440,7 +450,7 @@ if not get_option('tools').disabled()
   subdir('tools')
 endif
 subdir('tests')
-subdir('pkgconfig')
+
 # xgettext is optional (on Windows for instance)
 if find_program('xgettext', required : get_option('nls')).found()
   core_conf.set('ENABLE_NLS', 1)
@@ -448,6 +458,20 @@ if find_program('xgettext', required : get_option('nls')).found()
 endif
 subdir('docs')
 subdir('scripts')
+
+base_libraries = ['allocators', 'app', 'audio', 'fft', 'pbutils', 'riff', 'rtp', 'rtsp', 'sdp', 'tag', 'video']
+if build_gstgl
+  base_libraries += 'gl'
+endif
+pkgconfig.generate(
+  libraries : [gst_dep],
+  variables : pkgconfig_variables + [
+    'libraries=' + ' '.join(base_libraries),
+  ],
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-plugins-base-1.0',
+  description : 'Streaming media framework, base plugins libraries',
+)
 
 if have_orcc
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')

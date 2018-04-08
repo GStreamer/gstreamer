@@ -60,6 +60,14 @@ pbutils = library('gstpbutils-@0@'.format(api_version),
   dependencies : gstpbutils_deps,
 )
 
+pkgconfig.generate(pbutils,
+  libraries : [gst_dep, video_dep, audio_dep, gst_base_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-pbutils-1.0',
+  description : 'General utility functions',
+)
+
 pbutils_gen_sources = [gstpbutils_h, gst_pbutils_version_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/pbutils/pbutils.h' ]

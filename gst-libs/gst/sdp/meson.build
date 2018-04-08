@@ -20,6 +20,14 @@ gstsdp = library('gstsdp-@0@'.format(api_version),
   dependencies : rtsp_deps,
 )
 
+pkgconfig.generate(gstsdp,
+  libraries : [glib_deps],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-sdp-1.0',
+  description : 'SDP helper functions',
+)
+
 sdp_gen_sources  = []
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/sdp/sdp.h' ]
@@ -43,3 +51,5 @@ sdp_dep = declare_dependency(link_with: gstsdp,
   include_directories : [libsinc],
   dependencies : rtsp_deps,
   sources: sdp_gen_sources)
+
+meson.override_dependency('gstreamer-sdp-1.0', sdp_dep)

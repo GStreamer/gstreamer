@@ -1,9 +1,0 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@/gstreamer-@GST_API_VERSION@
-
-Name: GStreamer OpenGL Plugins Libraries (X11 specifics)
-Description: Streaming media framework, OpenGL plugins libraries (X11 specifics)
-Version: @VERSION@
-Requires: gstreamer-gl-@GST_API_VERSION@ x11-xcb

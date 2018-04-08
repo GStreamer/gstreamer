@@ -91,6 +91,14 @@ gsttag = library('gsttag-@0@'.format(api_version),
   dependencies : tag_deps,
 )
 
+pkgconfig.generate(gsttag,
+  libraries : [gst_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-tag-1.0',
+  description : 'Tag base classes and helper functions',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/tag/tag.h' ]
   tag_gir = gnome.generate_gir(gsttag,
@@ -112,6 +120,8 @@ tag_dep = declare_dependency(link_with: gsttag,
   include_directories : [libsinc],
   dependencies : tag_deps,
   sources: tag_gen_sources)
+
+meson.override_dependency('gstreamer-tag-1.0', tag_dep)
 
 # Little program that reads iso_639.xml and outputs tables for us as fallback
 # for when iso-codes are not available (and so we don't have to read the xml

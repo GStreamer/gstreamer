@@ -1004,6 +1004,26 @@ if build_gstgl
     # don't confuse EGL/egl.h with gst-libs/gl/egl/egl.h on case-insensitive file systems
     implicit_include_directories : false)
 
+  pkgconfig.generate(gstgl,
+    libraries : [gstvideo, gst_base_dep, gst_dep],
+    variables : pkgconfig_variables + [
+      'gl_platforms=' + ' '.join(enabled_gl_platforms),
+      'gl_winsys=' + ' '.join(enabled_gl_winsys),
+      'gl_apis=' + ' '.join(enabled_gl_apis),
+    ],
+    subdirs : pkgconfig_subdirs,
+    extra_cflags : ['-I${libdir}/gstreamer-1.0/include'],
+    name : 'gstreamer-gl-1.0',
+    description : 'Streaming media framework, OpenGL plugins libraries',
+  )
+
+  pkgconfig.generate(gstgl,
+    libraries : [gstgl, gl_dep],
+    subdirs : pkgconfig_subdirs,
+    name : 'gstreamer-gl-prototypes-1.0',
+    description : 'Streaming media framework, OpenGL plugins libraries (OpenGL Prototypes)',
+  )
+
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
       sources : gl_sources + [gl_enumtypes_h] + [gl_enumtypes_c] + gir_gl_headers,
@@ -1025,9 +1045,18 @@ if build_gstgl
     sources: gen_sources,
     dependencies : [video_dep, gst_base_dep])
   gstglproto_dep = declare_dependency(dependencies : [gstgl_dep] + gl_lib_deps)
+  meson.override_dependency('gstreamer-gl-1.0', gstgl_dep)
+  meson.override_dependency('gstreamer-gl-prototypes-1.0', gstglproto_dep)
 
   if gl_x11_headers.length() > 0
     install_headers(gl_x11_headers, subdir : 'gstreamer-1.0/gst/gl/x11')
+    pkgconfig.generate(
+      libraries : [gstgl],
+      requires: ['x11-xcb'],
+      subdirs : pkgconfig_subdirs,
+      name : 'gstreamer-gl-x11-1.0',
+      description : 'Streaming media framework, OpenGL plugins libraries (X11 specifics)',
+    )
     gl_x11_gir = []
     if build_gir
       gl_x11_gir = gnome.generate_gir(gstgl,
@@ -1045,10 +1074,18 @@ if build_gstgl
     endif
     gstglx11_dep = declare_dependency(dependencies : [gstgl_dep],
       sources : gl_x11_gir)
+    meson.override_dependency('gstreamer-gl-x11-1.0', gstglx11_dep)
   endif
 
   if gl_wayland_headers.length() > 0
     install_headers(gl_wayland_headers, subdir : 'gstreamer-1.0/gst/gl/wayland')
+    pkgconfig.generate(
+      libraries : [gstgl],
+      requires: ['wayland-egl', 'wayland-client'],
+      subdirs : pkgconfig_subdirs,
+      name : 'gstreamer-gl-wayland-1.0',
+      description : 'Streaming media framework, OpenGL plugins libraries (Wayland specifics)',
+    )
     gl_wayland_gir = []
     if build_gir
       gl_wayland_gir = gnome.generate_gir(gstgl,
@@ -1066,10 +1103,17 @@ if build_gstgl
     endif
     gstglwayland_dep = declare_dependency(dependencies : [gstgl_dep],
       sources : gl_wayland_gir)
+    meson.override_dependency('gstreamer-gl-wayland-1.0', gstglwayland_dep)
   endif
 
   if gl_egl_headers.length() > 0
     install_headers(gl_egl_headers, subdir : 'gstreamer-1.0/gst/gl/egl')
+    pkgconfig.generate(
+      libraries : [gstgl, egl_dep],
+      subdirs : pkgconfig_subdirs,
+      name : 'gstreamer-gl-egl-1.0',
+      description : 'Streaming media framework, OpenGL plugins libraries (EGL specifics)',
+    )
     gl_egl_gir = []
     if build_gir
       gl_egl_gir = gnome.generate_gir(gstgl,
@@ -1087,6 +1131,7 @@ if build_gstgl
     endif
     gstglegl_dep = declare_dependency(dependencies : [gstgl_dep],
       sources : gl_egl_gir)
+    meson.override_dependency('gstreamer-gl-egl-1.0', gstglegl_dep)
   endif
 
 elif get_option('gl').enabled()
