@@ -3249,135 +3249,133 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     field = V4L2_FIELD_NONE;
   }
 
-  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
-    /* We first pick th main colorspace from the primaries */
-    switch (info.colorimetry.primaries) {
-      case GST_VIDEO_COLOR_PRIMARIES_BT709:
-        /* There is two colorspaces using these primaries, use the range to
-         * differentiate */
-        if (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235)
-          colorspace = V4L2_COLORSPACE_REC709;
-        else
-          colorspace = V4L2_COLORSPACE_SRGB;
-        break;
-      case GST_VIDEO_COLOR_PRIMARIES_BT2020:
-        colorspace = V4L2_COLORSPACE_BT2020;
-        break;
-      case GST_VIDEO_COLOR_PRIMARIES_BT470M:
-        colorspace = V4L2_COLORSPACE_470_SYSTEM_M;
-        break;
-      case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
-        colorspace = V4L2_COLORSPACE_470_SYSTEM_BG;
-        break;
-      case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
-        colorspace = V4L2_COLORSPACE_SMPTE170M;
-        break;
-      case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
-        colorspace = V4L2_COLORSPACE_SMPTE240M;
-        break;
-
-      case GST_VIDEO_COLOR_PRIMARIES_FILM:
-      case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
-        /* We don't know, we will guess */
-        break;
-
-      default:
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "Unknown colorimetry primaries %d", info.colorimetry.primaries);
-        break;
-    }
-
-    switch (info.colorimetry.range) {
-      case GST_VIDEO_COLOR_RANGE_0_255:
-        range = V4L2_QUANTIZATION_FULL_RANGE;
-        break;
-      case GST_VIDEO_COLOR_RANGE_16_235:
-        range = V4L2_QUANTIZATION_LIM_RANGE;
-        break;
-      case GST_VIDEO_COLOR_RANGE_UNKNOWN:
-        /* We let the driver pick a default one */
-        break;
-      default:
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "Unknown colorimetry range %d", info.colorimetry.range);
-        break;
-    }
-
-    switch (info.colorimetry.matrix) {
-      case GST_VIDEO_COLOR_MATRIX_RGB:
-        /* Unspecified, leave to default */
-        break;
-        /* FCC is about the same as BT601 with less digit */
-      case GST_VIDEO_COLOR_MATRIX_FCC:
-      case GST_VIDEO_COLOR_MATRIX_BT601:
-        matrix = V4L2_YCBCR_ENC_601;
-        break;
-      case GST_VIDEO_COLOR_MATRIX_BT709:
-        matrix = V4L2_YCBCR_ENC_709;
-        break;
-      case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-        matrix = V4L2_YCBCR_ENC_SMPTE240M;
-        break;
-      case GST_VIDEO_COLOR_MATRIX_BT2020:
-        matrix = V4L2_YCBCR_ENC_BT2020;
-        break;
-      case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
-        /* We let the driver pick a default one */
-        break;
-      default:
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "Unknown colorimetry matrix %d", info.colorimetry.matrix);
-        break;
-    }
-
-    switch (info.colorimetry.transfer) {
-      case GST_VIDEO_TRANSFER_GAMMA18:
-      case GST_VIDEO_TRANSFER_GAMMA20:
-      case GST_VIDEO_TRANSFER_GAMMA22:
-      case GST_VIDEO_TRANSFER_GAMMA28:
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "GAMMA 18, 20, 22, 28 transfer functions not supported");
-        /* fallthrough */
-      case GST_VIDEO_TRANSFER_GAMMA10:
-        transfer = V4L2_XFER_FUNC_NONE;
-        break;
-      case GST_VIDEO_TRANSFER_BT2020_12:
-      case GST_VIDEO_TRANSFER_BT709:
-        transfer = V4L2_XFER_FUNC_709;
-        break;
-      case GST_VIDEO_TRANSFER_SMPTE240M:
-        transfer = V4L2_XFER_FUNC_SMPTE240M;
-        break;
-      case GST_VIDEO_TRANSFER_SRGB:
-        transfer = V4L2_XFER_FUNC_SRGB;
-        break;
-      case GST_VIDEO_TRANSFER_LOG100:
-      case GST_VIDEO_TRANSFER_LOG316:
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "LOG 100, 316 transfer functions not supported");
-        /* FIXME No known sensible default, maybe AdobeRGB ? */
-        break;
-      case GST_VIDEO_TRANSFER_UNKNOWN:
-        /* We let the driver pick a default one */
-        break;
-      default:
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "Unknown colorimetry tranfer %d", info.colorimetry.transfer);
-        break;
-    }
-
-    if (colorspace == 0) {
-      /* Try to guess colorspace according to pixelformat and size */
-      if (GST_VIDEO_INFO_IS_YUV (&info)) {
-        /* SD streams likely use SMPTE170M and HD streams REC709 */
-        if (width <= 720 && height <= 576)
-          colorspace = V4L2_COLORSPACE_SMPTE170M;
-        else
-          colorspace = V4L2_COLORSPACE_REC709;
-      } else if (GST_VIDEO_INFO_IS_RGB (&info)) {
+  /* We first pick th main colorspace from the primaries */
+  switch (info.colorimetry.primaries) {
+    case GST_VIDEO_COLOR_PRIMARIES_BT709:
+      /* There is two colorspaces using these primaries, use the range to
+       * differentiate */
+      if (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235)
+        colorspace = V4L2_COLORSPACE_REC709;
+      else
         colorspace = V4L2_COLORSPACE_SRGB;
-        transfer = V4L2_XFER_FUNC_NONE;
-      }
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
+      colorspace = V4L2_COLORSPACE_BT2020;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470M:
+      colorspace = V4L2_COLORSPACE_470_SYSTEM_M;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
+      colorspace = V4L2_COLORSPACE_470_SYSTEM_BG;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+      colorspace = V4L2_COLORSPACE_SMPTE170M;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+      colorspace = V4L2_COLORSPACE_SMPTE240M;
+      break;
+
+    case GST_VIDEO_COLOR_PRIMARIES_FILM:
+    case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
+      /* We don't know, we will guess */
+      break;
+
+    default:
+      GST_WARNING_OBJECT (v4l2object->dbg_obj,
+          "Unknown colorimetry primaries %d", info.colorimetry.primaries);
+      break;
+  }
+
+  switch (info.colorimetry.range) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      range = V4L2_QUANTIZATION_FULL_RANGE;
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      range = V4L2_QUANTIZATION_LIM_RANGE;
+      break;
+    case GST_VIDEO_COLOR_RANGE_UNKNOWN:
+      /* We let the driver pick a default one */
+      break;
+    default:
+      GST_WARNING_OBJECT (v4l2object->dbg_obj,
+          "Unknown colorimetry range %d", info.colorimetry.range);
+      break;
+  }
+
+  switch (info.colorimetry.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      /* Unspecified, leave to default */
+      break;
+      /* FCC is about the same as BT601 with less digit */
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      matrix = V4L2_YCBCR_ENC_601;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      matrix = V4L2_YCBCR_ENC_709;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      matrix = V4L2_YCBCR_ENC_SMPTE240M;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      matrix = V4L2_YCBCR_ENC_BT2020;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
+      /* We let the driver pick a default one */
+      break;
+    default:
+      GST_WARNING_OBJECT (v4l2object->dbg_obj,
+          "Unknown colorimetry matrix %d", info.colorimetry.matrix);
+      break;
+  }
+
+  switch (info.colorimetry.transfer) {
+    case GST_VIDEO_TRANSFER_GAMMA18:
+    case GST_VIDEO_TRANSFER_GAMMA20:
+    case GST_VIDEO_TRANSFER_GAMMA22:
+    case GST_VIDEO_TRANSFER_GAMMA28:
+      GST_WARNING_OBJECT (v4l2object->dbg_obj,
+          "GAMMA 18, 20, 22, 28 transfer functions not supported");
+      /* fallthrough */
+    case GST_VIDEO_TRANSFER_GAMMA10:
+      transfer = V4L2_XFER_FUNC_NONE;
+      break;
+    case GST_VIDEO_TRANSFER_BT2020_12:
+    case GST_VIDEO_TRANSFER_BT709:
+      transfer = V4L2_XFER_FUNC_709;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      transfer = V4L2_XFER_FUNC_SMPTE240M;
+      break;
+    case GST_VIDEO_TRANSFER_SRGB:
+      transfer = V4L2_XFER_FUNC_SRGB;
+      break;
+    case GST_VIDEO_TRANSFER_LOG100:
+    case GST_VIDEO_TRANSFER_LOG316:
+      GST_WARNING_OBJECT (v4l2object->dbg_obj,
+          "LOG 100, 316 transfer functions not supported");
+      /* FIXME No known sensible default, maybe AdobeRGB ? */
+      break;
+    case GST_VIDEO_TRANSFER_UNKNOWN:
+      /* We let the driver pick a default one */
+      break;
+    default:
+      GST_WARNING_OBJECT (v4l2object->dbg_obj,
+          "Unknown colorimetry tranfer %d", info.colorimetry.transfer);
+      break;
+  }
+
+  if (colorspace == 0) {
+    /* Try to guess colorspace according to pixelformat and size */
+    if (GST_VIDEO_INFO_IS_YUV (&info)) {
+      /* SD streams likely use SMPTE170M and HD streams REC709 */
+      if (width <= 720 && height <= 576)
+        colorspace = V4L2_COLORSPACE_SMPTE170M;
+      else
+        colorspace = V4L2_COLORSPACE_REC709;
+    } else if (GST_VIDEO_INFO_IS_RGB (&info)) {
+      colorspace = V4L2_COLORSPACE_SRGB;
+      transfer = V4L2_XFER_FUNC_NONE;
     }
   }
 
