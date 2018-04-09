@@ -1213,7 +1213,7 @@ gst_audio_base_src_post_message (GstElement * element, GstMessage * message)
   GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (element);
   gboolean ret;
 
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR && src->ringbuffer) {
     GstAudioRingBuffer *ringbuffer;
 
     GST_INFO_OBJECT (element, "subclass posted error");
