@@ -47,6 +47,8 @@ struct _GstWasapiSrc
   IAudioCaptureClient *capture_client;
   HANDLE event_handle;
   HANDLE thread_priority_handle;
+  /* Client was reset, so it needs to be started again */
+  gboolean client_needs_restart;
 
   /* Actual size of the allocated buffer */
   guint buffer_frame_count;
