@@ -2083,7 +2083,7 @@ gst_v4l2_object_get_colorspace (struct v4l2_format *fmt,
 
   switch (transfer) {
     case V4L2_XFER_FUNC_709:
-      if (fmt->fmt.pix.height >= 2160)
+      if (colorspace == V4L2_COLORSPACE_BT2020 && fmt->fmt.pix.height >= 2160)
         cinfo->transfer = GST_VIDEO_TRANSFER_BT2020_12;
       else
         cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
