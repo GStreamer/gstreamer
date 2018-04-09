@@ -52,8 +52,10 @@ G_DEFINE_TYPE (GstFakeVideoSink, gst_fake_video_sink, GST_TYPE_BIN);
 static gboolean
 gst_fake_video_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
+  GstFakeVideoSink *self = GST_FAKE_VIDEO_SINK (parent);
   GstCaps *caps;
   GstVideoInfo info;
+  guint min_buffers = 1;
 
   if (GST_QUERY_TYPE (query) != GST_QUERY_ALLOCATION)
     return gst_pad_query_default (pad, parent, query);
@@ -62,7 +64,11 @@ gst_fake_video_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-  gst_query_add_allocation_pool (query, NULL, info.size, 1, 0);
+  /* Request an extra buffer if we are keeping a ref on the last rendered buffer */
+  if (gst_base_sink_is_last_sample_enabled (GST_BASE_SINK (self->child)))
+    min_buffers++;
+
+  gst_query_add_allocation_pool (query, NULL, info.size, min_buffers, 0);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query,
