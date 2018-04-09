@@ -311,22 +311,26 @@ gst_wasapi_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
     template_caps = gst_pad_get_pad_template_caps (bsrc->srcpad);
 
-    if (!self->client)
-      gst_wasapi_src_open (GST_AUDIO_SRC (bsrc));
+    if (!self->client) {
+      caps = template_caps;
+      goto out;
+    }
 
     ret = gst_wasapi_util_get_device_format (GST_ELEMENT (self),
         self->sharemode, self->device, self->client, &format);
     if (!ret) {
       GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
           ("failed to detect format"));
-      goto out;
+      gst_caps_unref (template_caps);
+      return NULL;
     }
 
     gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
         template_caps, &caps, &self->positions);
     if (caps == NULL) {
       GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL), ("unknown format"));
-      goto out;
+      gst_caps_unref (template_caps);
+      return NULL;
     }
 
     {
@@ -348,9 +352,8 @@ gst_wasapi_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
     caps = filtered;
   }
 
-  GST_DEBUG_OBJECT (self, "returning caps %" GST_PTR_FORMAT, caps);
-
 out:
+  GST_DEBUG_OBJECT (self, "returning caps %" GST_PTR_FORMAT, caps);
   return caps;
 }
 
