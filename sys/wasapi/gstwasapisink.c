@@ -175,6 +175,7 @@ gst_wasapi_sink_init (GstWasapiSink * self)
   self->low_latency = DEFAULT_LOW_LATENCY;
   self->try_audioclient3 = DEFAULT_AUDIOCLIENT3;
   self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
+  self->client_needs_restart = FALSE;
 
   CoInitialize (NULL);
 }
@@ -606,6 +607,14 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   gint16 *dst = NULL;
   guint pending = length;
 
+  GST_OBJECT_LOCK (self);
+  if (self->client_needs_restart) {
+    hr = IAudioClient_Start (self->client);
+    HR_FAILED_AND (hr, IAudioClient::Start, length = 0; goto beach);
+    self->client_needs_restart = FALSE;
+  }
+  GST_OBJECT_UNLOCK (self);
+
   while (pending > 0) {
     guint can_frames, have_frames, n_frames, write_len;
 
@@ -661,12 +670,18 @@ gst_wasapi_sink_reset (GstAudioSink * asink)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
   HRESULT hr;
 
+  GST_INFO_OBJECT (self, "reset called");
+
   if (!self->client)
     return;
 
+  GST_OBJECT_LOCK (self);
   hr = IAudioClient_Stop (self->client);
-  HR_FAILED_RET (hr, IAudioClient::Stop,);
+  HR_FAILED_AND (hr, IAudioClient::Stop,);
 
   hr = IAudioClient_Reset (self->client);
-  HR_FAILED_RET (hr, IAudioClient::Reset,);
+  HR_FAILED_AND (hr, IAudioClient::Reset,);
+
+  self->client_needs_restart = TRUE;
+  GST_OBJECT_UNLOCK (self);
 }

@@ -182,6 +182,7 @@ gst_wasapi_src_init (GstWasapiSrc * self)
   self->low_latency = DEFAULT_LOW_LATENCY;
   self->try_audioclient3 = DEFAULT_AUDIOCLIENT3;
   self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
+  self->client_needs_restart = FALSE;
 
   CoInitialize (NULL);
 }
@@ -555,6 +556,14 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   guint wanted = length;
   DWORD flags;
 
+  GST_OBJECT_LOCK (self);
+  if (self->client_needs_restart) {
+    hr = IAudioClient_Start (self->client);
+    HR_FAILED_AND (hr, IAudioClient::Start, length = 0; goto beach);
+    self->client_needs_restart = FALSE;
+  }
+  GST_OBJECT_UNLOCK (self);
+
   while (wanted > 0) {
     guint have_frames, n_frames, want_frames, read_len;
 
@@ -641,11 +650,15 @@ gst_wasapi_src_reset (GstAudioSrc * asrc)
   if (!self->client)
     return;
 
+  GST_OBJECT_LOCK (self);
   hr = IAudioClient_Stop (self->client);
   HR_FAILED_RET (hr, IAudioClock::Stop,);
 
   hr = IAudioClient_Reset (self->client);
   HR_FAILED_RET (hr, IAudioClock::Reset,);
+
+  self->client_needs_restart = TRUE;
+  GST_OBJECT_UNLOCK (self);
 }
 
 static GstClockTime
