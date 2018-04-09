@@ -616,9 +616,16 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   GST_OBJECT_UNLOCK (self);
 
   while (pending > 0) {
+    DWORD dwWaitResult;
     guint can_frames, have_frames, n_frames, write_len;
 
-    WaitForSingleObject (self->event_handle, INFINITE);
+    dwWaitResult = WaitForSingleObject (self->event_handle, INFINITE);
+    if (dwWaitResult != WAIT_OBJECT_0) {
+      GST_ERROR_OBJECT (self, "Error waiting for event handle: %x",
+          (guint) dwWaitResult);
+      length -= pending;
+      goto beach;
+    }
 
     /* We have N frames to be written out */
     have_frames = pending / (self->mix_format->nBlockAlign);

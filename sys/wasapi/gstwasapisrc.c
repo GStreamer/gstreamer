@@ -549,10 +549,17 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   GST_OBJECT_UNLOCK (self);
 
   while (wanted > 0) {
+    DWORD dwWaitResult;
     guint have_frames, n_frames, want_frames, read_len;
 
     /* Wait for data to become available */
-    WaitForSingleObject (self->event_handle, INFINITE);
+    dwWaitResult = WaitForSingleObject (self->event_handle, INFINITE);
+    if (dwWaitResult != WAIT_OBJECT_0) {
+      GST_ERROR_OBJECT (self, "Error waiting for event handle: %x",
+          (guint) dwWaitResult);
+      length = 0;
+      goto beach;
+    }
 
     hr = IAudioCaptureClient_GetBuffer (self->capture_client,
         (BYTE **) & from, &have_frames, &flags, NULL, NULL);
