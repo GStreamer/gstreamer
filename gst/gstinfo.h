@@ -651,7 +651,8 @@ GST_API GstDebugLevel            _gst_debug_min;
  */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
+  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min	\
+      && (level) <= gst_debug_category_get_threshold (cat))) {		\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), __VA_ARGS__);				\
   }									\
@@ -659,7 +660,8 @@ GST_API GstDebugLevel            _gst_debug_min;
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{	\
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
+  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min 	\
+      && (level) <= gst_debug_category_get_threshold (cat))) {		\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), ##args );					\
   }									\
@@ -669,7 +671,8 @@ static inline void
 GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
     GstDebugLevel level, gpointer object, const char *format, va_list varargs)
 {
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {
+  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min
+      && (level) <= gst_debug_category_get_threshold (cat))) {
     gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
         varargs);
   }
