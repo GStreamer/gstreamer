@@ -666,6 +666,54 @@ GST_START_TEST (test_query_drain)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pull_sample_refcounts)
+{
+  GstElement *sink;
+  GstBuffer *buffer;
+  GstSample *s1, *s2, *s3;
+
+  sink = setup_appsink ();
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+
+  s1 = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  fail_unless (s1 != NULL);
+  fail_unless (gst_buffer_get_size (gst_sample_get_buffer (s1)) == 4);
+  gst_sample_unref (s1);
+
+  buffer = gst_buffer_new_and_alloc (6);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  s2 = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  fail_unless (s2 != NULL);
+  fail_unless (gst_buffer_get_size (gst_sample_get_buffer (s2)) == 6);
+
+  /* We unreffed s1, appsink should thus reuse the same sample,
+   * avoiding an extra allocation */
+  fail_unless (s1 == s2);
+
+  buffer = gst_buffer_new_and_alloc (8);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  s3 = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  fail_unless (s3 != NULL);
+  fail_unless (gst_buffer_get_size (gst_sample_get_buffer (s2)) == 6);
+  fail_unless (gst_buffer_get_size (gst_sample_get_buffer (s3)) == 8);
+
+
+  /* We didn't unref s2, appsink should thus have created a new sample */
+  fail_unless (s2 != s3);
+
+  gst_sample_unref (s2);
+  gst_sample_unref (s3);
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -686,6 +734,7 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_query_drain);
   tcase_add_test (tc_chain, test_pull_preroll);
   tcase_add_test (tc_chain, test_do_not_care_preroll);
+  tcase_add_test (tc_chain, test_pull_sample_refcounts);
 
   return s;
 }
