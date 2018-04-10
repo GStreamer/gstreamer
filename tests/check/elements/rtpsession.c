@@ -44,8 +44,7 @@ generate_caps (void)
 {
   return gst_caps_new_simple ("application/x-rtp",
       "clock-rate", G_TYPE_INT, TEST_BUF_CLOCK_RATE,
-      "payload", G_TYPE_INT, TEST_BUF_PT,
-      NULL);
+      "payload", G_TYPE_INT, TEST_BUF_PT, NULL);
 }
 
 static GstBuffer *
@@ -181,8 +180,7 @@ session_harness_crank_clock (SessionHarness * h)
 }
 
 static gboolean
-session_harness_advance_and_crank (SessionHarness * h,
-    GstClockTime delta)
+session_harness_advance_and_crank (SessionHarness * h, GstClockTime delta)
 {
   GstClockID res, pending;
   gboolean result;
@@ -427,7 +425,7 @@ GST_START_TEST (test_internal_sources_timeout)
     gst_rtcp_buffer_unmap (&rtcp);
     gst_buffer_unref (buf);
   }
-  fail_unless_equals_int (0x3, j); /* verify we got both SR and RR */
+  fail_unless_equals_int (0x3, j);      /* verify we got both SR and RR */
 
   /* go 30 seconds in the future and observe both sources timing out:
    * 0xDEADBEEF -> BYE, 0x01BADBAD -> becomes receiver only */
@@ -468,7 +466,7 @@ GST_START_TEST (test_internal_sources_timeout)
     gst_rtcp_buffer_unmap (&rtcp);
     gst_buffer_unref (buf);
   }
-  fail_unless_equals_int (0x3, j); /* verify we got both BYE and RR */
+  fail_unless_equals_int (0x3, j);      /* verify we got both BYE and RR */
 
   session_harness_free (h);
 }
@@ -718,6 +716,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_receive_rtcp_app_packet);
   tcase_add_test (tc_chain, test_dont_lock_on_stats);
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
+
 
   tcase_add_test (tc_chain, test_illegal_rtcp_fb_packet);
   return s;
