@@ -1454,13 +1454,16 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
             gst_object_unref (pad);
             pad = slot->srcpad;
           } else {
-            pad = create_output_pad (urisrc, pad);
+            GstPad *tmppad = create_output_pad (urisrc, pad);
+            gst_object_unref (pad);
+
+            pad = tmppad;
           }
           GST_URI_SOURCE_BIN_UNLOCK (urisrc);
           expose_output_pad (urisrc, pad);
+        } else {
           gst_object_unref (pad);
         }
-        gst_object_unref (pad);
         g_value_reset (&item);
         break;
     }
