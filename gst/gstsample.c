@@ -123,6 +123,7 @@ gst_sample_new (GstBuffer * buffer, GstCaps * caps, const GstSegment * segment,
   sample->buffer = buffer ? gst_buffer_ref (buffer) : NULL;
   sample->caps = caps ? gst_caps_ref (caps) : NULL;
 
+  /* FIXME 2.0: initialize with GST_FORMAT_UNDEFINED by default */
   if (segment)
     gst_segment_copy_into (segment, &sample->segment);
   else
@@ -244,7 +245,7 @@ gst_sample_get_buffer_list (GstSample * sample)
  * @sample: a #GstSample
  * @buffer_list: a #GstBufferList
  *
- * Set the buffer list associated with @sample
+ * Set the buffer list associated with @sample. @sample must be writable.
  *
  * Since: 1.6
  */
@@ -253,10 +254,98 @@ gst_sample_set_buffer_list (GstSample * sample, GstBufferList * buffer_list)
 {
   GstBufferList *old = NULL;
   g_return_if_fail (GST_IS_SAMPLE (sample));
+  g_return_if_fail (gst_sample_is_writable (sample));
+
   old = sample->buffer_list;
-  sample->buffer_list = (GstBufferList *)
-      gst_mini_object_ref (GST_MINI_OBJECT_CAST (buffer_list));
+  sample->buffer_list = buffer_list ? (GstBufferList *)
+      gst_mini_object_ref (GST_MINI_OBJECT_CAST (buffer_list)) : NULL;
 
   if (old)
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (old));
+}
+
+/**
+ * gst_sample_set_buffer:
+ *
+ * Set the buffer associated with @sample. @sample must be writable.
+ *
+ * Since: 1.16
+ */
+void
+gst_sample_set_buffer (GstSample * sample, GstBuffer * buffer)
+{
+  g_return_if_fail (GST_IS_SAMPLE (sample));
+  g_return_if_fail (gst_sample_is_writable (sample));
+
+  gst_buffer_replace (&sample->buffer, buffer);
+}
+
+/**
+ * gst_sample_set_caps:
+ *
+ * Set the caps associated with @sample. @sample must be writable.
+ *
+ * Since: 1.16
+ */
+void
+gst_sample_set_caps (GstSample * sample, GstCaps * caps)
+{
+  g_return_if_fail (GST_IS_SAMPLE (sample));
+  g_return_if_fail (gst_sample_is_writable (sample));
+
+  gst_caps_replace (&sample->caps, caps);
+}
+
+/**
+ * gst_sample_set_segment:
+ *
+ * Set the segment associated with @sample. @sample must be writable.
+ *
+ * Since: 1.16
+ */
+void
+gst_sample_set_segment (GstSample * sample, const GstSegment * segment)
+{
+  g_return_if_fail (GST_IS_SAMPLE (sample));
+  g_return_if_fail (gst_sample_is_writable (sample));
+
+  /* FIXME 2.0: initialize with GST_FORMAT_UNDEFINED by default */
+  if (segment)
+    gst_segment_copy_into (segment, &sample->segment);
+  else
+    gst_segment_init (&sample->segment, GST_FORMAT_TIME);
+}
+
+/**
+ * gst_sample_set_info:
+ *
+ * Set the info structure associated with @sample. @sample must be writable,
+ * and @info must not have a parent set already.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_sample_set_info (GstSample * sample, GstStructure * info)
+{
+  g_return_val_if_fail (GST_IS_SAMPLE (sample), FALSE);
+  g_return_val_if_fail (gst_sample_is_writable (sample), FALSE);
+
+  if (info) {
+    if (!gst_structure_set_parent_refcount (info,
+            &sample->mini_object.refcount))
+      goto had_parent;
+  }
+
+  if (sample->info) {
+    gst_structure_set_parent_refcount (sample->info, NULL);
+    gst_structure_free (sample->info);
+  }
+
+  sample->info = info;
+
+  return TRUE;
+
+had_parent:
+  g_warning ("structure is already owned by another object");
+  return FALSE;
 }
