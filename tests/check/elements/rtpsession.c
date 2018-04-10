@@ -30,6 +30,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <gst/net/gstnetaddressmeta.h>
+#include <gst/video/video.h>
 
 #define TEST_BUF_CLOCK_RATE 8000
 #define TEST_BUF_PT 0
@@ -801,6 +802,93 @@ GST_START_TEST (test_ignore_suspicious_bye)
 
 GST_END_TEST;
 
+static GstBuffer *
+create_buffer (guint8 * data, gsize size)
+{
+  return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      data, size, 0, size, NULL, NULL);
+}
+
+GST_START_TEST (test_receive_regular_pli)
+{
+  SessionHarness *h = session_harness_new ();
+  GstEvent *ev;
+
+  /* PLI packet */
+  guint8 rtcp_pkt[] = {
+    0x81,                       /* PLI */
+    0xce,                       /* Type 206 Application layer feedback */
+    0x00, 0x02,                 /* Length */
+    0x37, 0x56, 0x93, 0xed,     /* Sender SSRC */
+    0x37, 0x56, 0x93, 0xed      /* Media SSRC */
+  };
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_send_rtp (h, generate_test_buffer (0, 928420845)));
+
+  session_harness_recv_rtcp (h, create_buffer (rtcp_pkt, sizeof (rtcp_pkt)));
+  fail_unless_equals_int (3,
+      gst_harness_upstream_events_received (h->send_rtp_h));
+
+  /* Remove the first 2 reconfigure events */
+  fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
+  fail_unless_equals_int (GST_EVENT_RECONFIGURE, GST_EVENT_TYPE (ev));
+  gst_event_unref (ev);
+  fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
+  fail_unless_equals_int (GST_EVENT_RECONFIGURE, GST_EVENT_TYPE (ev));
+  gst_event_unref (ev);
+
+  /* Then pull and check the force key-unit event */
+  fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
+  fail_unless_equals_int (GST_EVENT_CUSTOM_UPSTREAM, GST_EVENT_TYPE (ev));
+  fail_unless (gst_video_event_is_force_key_unit (ev));
+  gst_event_unref (ev);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_receive_pli_no_sender_ssrc)
+{
+  SessionHarness *h = session_harness_new ();
+  GstEvent *ev;
+
+  /* PLI packet */
+  guint8 rtcp_pkt[] = {
+    0x81,                       /* PLI */
+    0xce,                       /* Type 206 Application layer feedback */
+    0x00, 0x02,                 /* Length */
+    0x00, 0x00, 0x00, 0x00,     /* Sender SSRC */
+    0x37, 0x56, 0x93, 0xed      /* Media SSRC */
+  };
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_send_rtp (h, generate_test_buffer (0, 928420845)));
+
+  session_harness_recv_rtcp (h, create_buffer (rtcp_pkt, sizeof (rtcp_pkt)));
+  fail_unless_equals_int (3,
+      gst_harness_upstream_events_received (h->send_rtp_h));
+
+  /* Remove the first 2 reconfigure events */
+  fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
+  fail_unless_equals_int (GST_EVENT_RECONFIGURE, GST_EVENT_TYPE (ev));
+  gst_event_unref (ev);
+  fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
+  fail_unless_equals_int (GST_EVENT_RECONFIGURE, GST_EVENT_TYPE (ev));
+  gst_event_unref (ev);
+
+  /* Then pull and check the force key-unit event */
+  fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
+  fail_unless_equals_int (GST_EVENT_CUSTOM_UPSTREAM, GST_EVENT_TYPE (ev));
+  fail_unless (gst_video_event_is_force_key_unit (ev));
+  gst_event_unref (ev);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_illegal_rtcp_fb_packet)
 {
   SessionHarness *h = session_harness_new ();
@@ -921,6 +1009,8 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
   tcase_add_test (tc_chain, test_illegal_rtcp_fb_packet);
   tcase_add_test (tc_chain, test_feedback_rtcp_race);
+  tcase_add_test (tc_chain, test_receive_regular_pli);
+  tcase_add_test (tc_chain, test_receive_pli_no_sender_ssrc);
   return s;
 }
 
