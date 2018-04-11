@@ -5427,6 +5427,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
             GST_FOURCC_ARGS (fourcc));
         goto invalid_cdat;
       }
+
       /* Convert to cc_data triplet */
       if (fourcc == FOURCC_cdat)
         cdat = convert_to_ccdata (data + 8, atom_length - 8, 1, &cdat_size);
@@ -5434,10 +5435,11 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
         cdt2 = convert_to_ccdata (data + 8, atom_length - 8, 2, &cdt2_size);
       GST_DEBUG_OBJECT (stream->pad, "size:%" G_GSIZE_FORMAT " atom_length:%u",
           size, atom_length);
+
       /* Check for another atom ? */
       if (size > atom_length + 8) {
         guint32 new_atom_length = QT_UINT32 (data + atom_length);
-        if (size <= atom_length + new_atom_length) {
+        if (size >= atom_length + new_atom_length) {
           fourcc = QT_FOURCC (data + atom_length + 4);
           if (fourcc == FOURCC_cdat) {
             if (cdat == NULL)
@@ -5458,6 +5460,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
           }
         }
       }
+
       *cclen = cdat_size + cdt2_size;
       res = g_malloc (*cclen);
       if (cdat_size)
