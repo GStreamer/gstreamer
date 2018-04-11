@@ -476,6 +476,8 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   guint elt_size;
 
   g_return_val_if_fail (array != NULL, FALSE);
+  idx = (array->head + idx) % array->size;
+
   g_return_val_if_fail (array->length > 0, FALSE);
   g_return_val_if_fail (idx < array->size, FALSE);
 
@@ -581,11 +583,6 @@ gst_queue_array_drop_element (GstQueueArray * array, guint idx)
  * with @func or by looking up @data if no compare function @func is provided,
  * and returning the index of the found element.
  *
- * Note that the index is not 0-based, but an internal index number with a
- * random offset. The index can be used in connection with
- * gst_queue_array_drop_element(). FIXME: return index 0-based and make
- * gst_queue_array_drop_element() take a 0-based index.
- *
  * Returns: Index of the found element or -1 if nothing was found.
  *
  * Since: 1.2
@@ -611,13 +608,13 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
     for (i = 0; i < array->length; i++) {
       p_element = array->array + ((i + array->head) % array->size) * elt_size;
       if (func (*(gpointer *) p_element, data) == 0)
-        return (i + array->head) % array->size;
+        return i;
     }
   } else {
     for (i = 0; i < array->length; i++) {
       p_element = array->array + ((i + array->head) % array->size) * elt_size;
       if (*(gpointer *) p_element == data)
-        return (i + array->head) % array->size;
+        return i;
     }
   }
 
