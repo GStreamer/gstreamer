@@ -673,12 +673,16 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened)
 
   g_object_get (splitmux->sink, "location", &location, NULL);
 
-  msg = gst_message_new_element (GST_OBJECT (splitmux),
-      gst_structure_new (msg_name,
-          "location", G_TYPE_STRING, location,
-          "running-time", GST_TYPE_CLOCK_TIME,
-          splitmux->reference_ctx->out_running_time, NULL));
-  gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
+  /* If it's in the middle of a teardown, the reference_ctc might have become
+   * NULL */
+  if (splitmux->reference_ctx) {
+    msg = gst_message_new_element (GST_OBJECT (splitmux),
+        gst_structure_new (msg_name,
+            "location", G_TYPE_STRING, location,
+            "running-time", GST_TYPE_CLOCK_TIME,
+            splitmux->reference_ctx->out_running_time, NULL));
+    gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
+  }
 
   g_free (location);
 }
