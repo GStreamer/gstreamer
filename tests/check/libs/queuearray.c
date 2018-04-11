@@ -261,6 +261,33 @@ GST_START_TEST (test_array_grow_from_prealloc1)
 }
 
 GST_END_TEST;
+GST_START_TEST (test_array_peek_nth)
+{
+  GstQueueArray *array;
+  guint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new (10);
+
+  /* push 10 values in */
+  for (i = 0; i < 10; i++)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  for (i = 0; i < 10; i++)
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_peek_nth (array,
+                i)), i);
+
+  gst_queue_array_pop_head (array);
+
+  for (i = 0; i < 9; i++)
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_peek_nth (array,
+                i)), i + 1);
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_array_peek_pop_tail)
 {
@@ -330,6 +357,7 @@ gst_queue_array_suite (void)
   tcase_add_test (tc_chain, test_array_drop2);
   tcase_add_test (tc_chain, test_array_grow_from_prealloc1);
   tcase_add_test (tc_chain, test_array_peek_pop_tail);
+  tcase_add_test (tc_chain, test_array_peek_nth);
 
   return s;
 }

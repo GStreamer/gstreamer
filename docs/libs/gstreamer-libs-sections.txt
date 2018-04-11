@@ -939,6 +939,7 @@ gst_queue_array_free
 gst_queue_array_get_length
 gst_queue_array_pop_head
 gst_queue_array_peek_head
+gst_queue_array_peek_nth
 gst_queue_array_push_tail
 gst_queue_array_pop_tail
 gst_queue_array_peek_tail
@@ -948,6 +949,7 @@ gst_queue_array_find
 gst_queue_array_new_for_struct
 gst_queue_array_push_tail_struct
 gst_queue_array_peek_head_struct
+gst_queue_array_peek_nth_struct
 gst_queue_array_pop_head_struct
 gst_queue_array_peek_tail_struct
 gst_queue_array_pop_tail_struct

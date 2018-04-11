@@ -316,6 +316,8 @@ EXPORTS
 	gst_queue_array_new_for_struct
 	gst_queue_array_peek_head
 	gst_queue_array_peek_head_struct
+	gst_queue_array_peek_nth
+	gst_queue_array_peek_nth_struct
 	gst_queue_array_peek_tail
 	gst_queue_array_peek_tail_struct
 	gst_queue_array_pop_head

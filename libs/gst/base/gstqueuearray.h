@@ -46,6 +46,9 @@ GST_BASE_API
 gpointer        gst_queue_array_peek_head (GstQueueArray * array);
 
 GST_BASE_API
+gpointer        gst_queue_array_peek_nth  (GstQueueArray * array, guint idx);
+
+GST_BASE_API
 gpointer        gst_queue_array_pop_tail  (GstQueueArray * array);
 
 GST_BASE_API
@@ -82,11 +85,15 @@ GST_BASE_API
 gpointer        gst_queue_array_peek_head_struct (GstQueueArray * array);
 
 GST_BASE_API
+gpointer        gst_queue_array_peek_nth_struct  (GstQueueArray * array, guint idx);
+
+GST_BASE_API
 gboolean        gst_queue_array_drop_struct      (GstQueueArray * array,
                                                   guint           idx,
                                                   gpointer        p_struct);
 GST_BASE_API
 gpointer        gst_queue_array_pop_tail_struct  (GstQueueArray * array);
+
 GST_BASE_API
 gpointer        gst_queue_array_peek_tail_struct (GstQueueArray * array);
 

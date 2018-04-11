@@ -217,6 +217,46 @@ gst_queue_array_peek_head (GstQueueArray * array)
   return *(gpointer *) (array->array + (sizeof (gpointer) * array->head));
 }
 
+/**
+ * gst_queue_array_peek_nth: (skip)
+ *
+ * Returns the item at @idx in @array, but does not remove it from the queue.
+ *
+ * Returns: The item, or %NULL if @idx was out of bounds
+ *
+ * Since: 1.16
+ */
+gpointer
+gst_queue_array_peek_nth (GstQueueArray * array, guint idx)
+{
+  g_return_val_if_fail (array != NULL, NULL);
+  g_return_val_if_fail (idx < array->length, NULL);
+
+  idx = (array->head + idx) % array->size;
+
+  return *(gpointer *) (array->array + (sizeof (gpointer) * idx));
+}
+
+/**
+ * gst_queue_array_peek_nth_struct: (skip)
+ *
+ * Returns the item at @idx in @array, but does not remove it from the queue.
+ *
+ * Returns: The item, or %NULL if @idx was out of bounds
+ *
+ * Since: 1.16
+ */
+gpointer
+gst_queue_array_peek_nth_struct (GstQueueArray * array, guint idx)
+{
+  g_return_val_if_fail (array != NULL, NULL);
+  g_return_val_if_fail (idx < array->length, NULL);
+
+  idx = (array->head + idx) % array->size;
+
+  return array->array + (array->elt_size * idx);
+}
+
 static void
 gst_queue_array_do_expand (GstQueueArray * array)
 {
