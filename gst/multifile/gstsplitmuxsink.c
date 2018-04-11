@@ -1212,13 +1212,13 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     GstEvent *ev;
 
     ev = gst_event_new_flush_start ();
-    gst_iterator_foreach (it, _send_event, ev);
+    while (gst_iterator_foreach (it, _send_event, ev) == GST_ITERATOR_RESYNC);
     gst_event_unref (ev);
 
     gst_iterator_resync (it);
 
     ev = gst_event_new_flush_stop (TRUE);
-    gst_iterator_foreach (it, _send_event, ev);
+    while (gst_iterator_foreach (it, _send_event, ev) == GST_ITERATOR_RESYNC);
     gst_event_unref (ev);
 
     gst_iterator_free (it);
