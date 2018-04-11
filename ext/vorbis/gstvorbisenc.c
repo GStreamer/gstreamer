@@ -907,7 +907,7 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   if (!buffer)
     return gst_vorbis_enc_clear (vorbisenc);
 
-  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   /* data to encode */
   size = map.size / (vorbisenc->channels * sizeof (float));
