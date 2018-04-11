@@ -1,26 +1,26 @@
-# Terminology
+## Terminology
 
-## Client
+### Client
 
 A GStreamer-based application
 
-## Browser
+### Browser
 
 A JS application that runs in the browser and uses built-in browser webrtc APIs
 
-## Peer
+### Peer
  
 Any webrtc-using application that can participate in a call
 
-## Signalling server
+### Signalling server
 
 Basic websockets server implemented in Python that manages the peers list and shovels data between peers
 
-### Overview
+## Overview
 
 This is a basic protocol for doing 1-1 audio+video calls between a gstreamer app and a JS app in a browser.
 
-### Peer registration
+## Peer registration
 
 Peers must register with the signalling server before a call can be initiated. The server connection should stay open as long as the peer is available or in a call.
 
@@ -54,7 +54,7 @@ This protocol builds upon https://github.com/shanet/WebRTC-Example/
   - In theory you should never need to use this since you are guaranteed to receive JOINED and LEFT messages for all peers in a room
 * You may stay connected to a room for as long as you like
 
-### Negotiation
+## Negotiation
 
 Once a call has been setup with the signalling server, the peers must negotiate SDP and ICE candidates with each other.
 
