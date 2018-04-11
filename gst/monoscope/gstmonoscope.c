@@ -255,8 +255,9 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 25, 1);
-  gst_structure_fixate_field_nearest_fraction (structure, "pixel-aspect-ratio",
-      1, 1);
+  if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
+    gst_structure_fixate_field_nearest_fraction (structure,
+        "pixel-aspect-ratio", 1, 1);
   target = gst_caps_fixate (target);
 
   gst_monoscope_src_setcaps (monoscope, target);
