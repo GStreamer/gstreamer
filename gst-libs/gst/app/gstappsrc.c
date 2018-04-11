@@ -1984,6 +1984,9 @@ gst_app_src_push_buffer_list (GstAppSrc * appsrc, GstBufferList * buffer_list)
  * previous caps that were set on appsrc will be replaced by the caps
  * associated with the sample if not equal.
  *
+ * This function does not take ownership of the
+ * sample so the sample needs to be unreffed after calling this function.
+ *
  * When the block property is TRUE, this function can block until free
  * space becomes available in the queue.
  *
