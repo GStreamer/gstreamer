@@ -5439,14 +5439,23 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
         guint32 new_atom_length = QT_UINT32 (data + atom_length);
         if (size <= atom_length + new_atom_length) {
           fourcc = QT_FOURCC (data + atom_length + 4);
-          if (fourcc == FOURCC_cdat)
-            cdat =
-                convert_to_ccdata (data + atom_length + 8, new_atom_length - 8,
-                1, &cdat_size);
-          else
-            cdt2 =
-                convert_to_ccdata (data + atom_length + 8, new_atom_length - 8,
-                2, &cdt2_size);
+          if (fourcc == FOURCC_cdat) {
+            if (cdat == NULL)
+              cdat =
+                  convert_to_ccdata (data + atom_length + 8,
+                  new_atom_length - 8, 1, &cdat_size);
+            else
+              GST_WARNING_OBJECT (stream->pad,
+                  "Got multiple [cdat] atoms in a c608 sample. This is unsupported for now. Please file a bug");
+          } else {
+            if (cdt2 == NULL)
+              cdt2 =
+                  convert_to_ccdata (data + atom_length + 8,
+                  new_atom_length - 8, 2, &cdt2_size);
+            else
+              GST_WARNING_OBJECT (stream->pad,
+                  "Got multiple [cdt2] atoms in a c608 sample. This is unsupported for now. Please file a bug");
+          }
         }
       }
       *cclen = cdat_size + cdt2_size;
