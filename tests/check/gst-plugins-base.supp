@@ -569,3 +569,12 @@
    fun:glXChooseFBConfig
    fun:gst_gl_context_glx_choose_format
 }
+{
+   <a one time alloc>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:call_xinitthreads
+   fun:states_suite
+}

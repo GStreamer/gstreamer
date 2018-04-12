@@ -203,12 +203,14 @@ GST_START_TEST (test_state_changes_down_seq)
 
 GST_END_TEST;
 
-
-static Suite *
-states_suite (void)
+/* Separate function because XInitThreads leaks, but valgrind
+ * gets confused when a dynamically loaded symbol leaks, and
+ * shows it as a ??? symbol in an unrelated library, making
+ * it awkward to ignore in the suppression files
+ */
+static void
+call_xinitthreads (void)
 {
-  Suite *s = suite_create ("states_base");
-  TCase *tc_chain = tcase_create ("general");
   GModule *libx11;
 
   libx11 =
@@ -220,6 +222,15 @@ states_suite (void)
     }
     g_module_close (libx11);
   }
+}
+
+static Suite *
+states_suite (void)
+{
+  Suite *s = suite_create ("states_base");
+  TCase *tc_chain = tcase_create ("general");
+
+  call_xinitthreads ();
 
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
