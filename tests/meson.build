@@ -6,4 +6,4 @@ if not get_option('disable_examples')
   subdir('examples')
 endif
 #subdir('files')
-# FIXME: subdir('icles')
+subdir('icles')
