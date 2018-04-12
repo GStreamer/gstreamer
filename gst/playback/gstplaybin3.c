@@ -1421,6 +1421,7 @@ gst_play_bin3_finalize (GObject * object)
   if (playbin->velements)
     g_sequence_free (playbin->velements);
 
+  g_rec_mutex_clear (&playbin->activation_lock);
   g_rec_mutex_clear (&playbin->lock);
   g_mutex_clear (&playbin->dyn_lock);
   g_mutex_clear (&playbin->elements_lock);
