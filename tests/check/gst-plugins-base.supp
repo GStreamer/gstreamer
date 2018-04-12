@@ -607,3 +607,11 @@
    Memcheck:Cond
    obj:*libnvidia-glcore.so.*
 }
+{
+   <Intentional leak in GL test>
+   Memcheck:Leak
+   fun:calloc
+   obj:*/libGLX_nvidia.so*
+   ...
+   fun:_test_query_start_free_gl
+}
