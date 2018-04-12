@@ -459,6 +459,7 @@ poll:
   if (ret <= 0) {
     if (ret < 0 && errno == EBUSY) {
       GST_INFO_OBJECT (alsamidisrc, "flushing");
+      gst_buffer_list_unref (buffer_list);
       return GST_FLOW_FLUSHING;
     }
     GST_ERROR_OBJECT (alsamidisrc, "ERROR in poll: %s", strerror (errno));
