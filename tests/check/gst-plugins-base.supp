@@ -602,3 +602,8 @@
    fun:getaddrinfo
    ...
 }
+{
+   <unitialized values in nvidia driver>
+   Memcheck:Cond
+   obj:*libnvidia-glcore.so.*
+}
