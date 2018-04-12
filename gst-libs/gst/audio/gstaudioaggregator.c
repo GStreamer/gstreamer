@@ -839,6 +839,7 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
           gst_audio_aggregator_convert_buffer (aagg, GST_PAD (aaggpad),
           &aaggpad->info, new_info, aaggpad->priv->input_buffer);
       gst_buffer_replace (&aaggpad->priv->buffer, new_converted_buffer);
+      gst_buffer_unref (new_converted_buffer);
     }
   }
 }
