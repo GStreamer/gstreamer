@@ -578,3 +578,12 @@
    fun:call_xinitthreads
    fun:states_suite
 }
+{
+   <gst_install_plugins_* can instantiate bash, which leaks>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:xmalloc
+   fun:set_default_locale
+   fun:main
+}
