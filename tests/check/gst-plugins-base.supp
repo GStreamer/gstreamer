@@ -559,3 +559,13 @@
    fun:call_init.part.0
    fun:_dl_init
 }
+{
+   <a one time alloc>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:XextCreateExtension
+   ...
+   fun:glXChooseFBConfig
+   fun:gst_gl_context_glx_choose_format
+}
