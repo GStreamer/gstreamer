@@ -615,3 +615,11 @@
    ...
    fun:_test_query_start_free_gl
 }
+
+# FIXME: how does this even happen ? reproduce with make elements/textoverlay.valgrind
+{
+   <We do not care about leaks where pango is the first object in the stacktrace>
+   Memcheck:Leak
+   ...
+   obj:*/libpango*.so*
+}
