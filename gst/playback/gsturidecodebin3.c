@@ -1064,6 +1064,8 @@ gst_uri_decode_bin3_change_state (GstElement * element,
   /* ERRORS */
 failure:
   {
+    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
+      free_play_items (uridecodebin);
     return ret;
   }
 }
