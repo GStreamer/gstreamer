@@ -1729,6 +1729,7 @@ change_src_caps (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
       "rate", G_TYPE_INT, 10, "channels", G_TYPE_INT, 1, NULL);
 
   g_object_set (capsfilter, "caps", caps, NULL);
+  gst_caps_unref (caps);
   g_signal_connect (fakesink, "handoff", (GCallback) handoff_buffer_cb, NULL);
   g_signal_handlers_disconnect_by_func (fakesink, change_src_caps, capsfilter);
 }
