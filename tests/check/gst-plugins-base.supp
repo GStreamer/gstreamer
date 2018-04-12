@@ -587,3 +587,18 @@
    fun:set_default_locale
    fun:main
 }
+{
+   <getaddrinfo can leak when resolving addresses, see https://lists.debian.org/debian-glibc/2016/03/msg00243.html>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__libc_alloc_buffer_allocate
+   fun:__resolv_conf_allocate
+   fun:__resolv_conf_load
+   fun:__resolv_conf_get_current
+   fun:__res_vinit
+   fun:context_get.part.1
+   fun:gaih_inet.constprop.7
+   fun:getaddrinfo
+   ...
+}
