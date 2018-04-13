@@ -795,6 +795,7 @@ debug_dump_footer (GString * str)
 /**
  * gst_debug_bin_to_dot_data:
  * @bin: the top-level pipeline that should be analyzed
+ * @details: type of #GstDebugGraphDetails to use
  *
  * To aid debugging applications one can use this method to obtain the whole
  * network of gstreamer elements that form the pipeline into an dot file.
@@ -822,6 +823,7 @@ gst_debug_bin_to_dot_data (GstBin * bin, GstDebugGraphDetails details)
 /**
  * gst_debug_bin_to_dot_file:
  * @bin: the top-level pipeline that should be analyzed
+ * @details: type of #GstDebugGraphDetails to use
  * @file_name: (type filename): output base filename (e.g. "myplayer")
  *
  * To aid debugging applications one can use this method to write out the whole
@@ -872,6 +874,7 @@ gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
 /**
  * gst_debug_bin_to_dot_file_with_ts:
  * @bin: the top-level pipeline that should be analyzed
+ * @details: type of #GstDebugGraphDetails to use
  * @file_name: (type filename): output base filename (e.g. "myplayer")
  *
  * This works like gst_debug_bin_to_dot_file(), but adds the current timestamp
