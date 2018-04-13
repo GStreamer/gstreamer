@@ -695,6 +695,7 @@ gst_v4l2_dup (GstV4l2Object * v4l2object, GstV4l2Object * other)
       v4l2object->vcap.card, v4l2object->videodev);
 
   v4l2object->never_interlaced = other->never_interlaced;
+  v4l2object->no_initial_format = other->no_initial_format;
 
   return TRUE;
 
