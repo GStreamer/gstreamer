@@ -1649,7 +1649,7 @@ gst_base_parse_src_event_default (GstBaseParse * parse, GstEvent * event)
  * @src_format: #GstFormat describing the source format.
  * @src_value: Source value to be converted.
  * @dest_format: #GstFormat defining the converted format.
- * @dest_value: Pointer where the conversion result will be put.
+ * @dest_value: (out): Pointer where the conversion result will be put.
  *
  * Default implementation of "convert" vmethod in #GstBaseParse class.
  *
