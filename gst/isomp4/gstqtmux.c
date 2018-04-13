@@ -4857,6 +4857,7 @@ gst_qt_mux_audio_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
     gst_caps_unref (current_caps);
+    gst_object_unref (qtmux);
 
     return TRUE;
   }
@@ -5233,6 +5234,7 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
     gst_caps_unref (current_caps);
+    gst_object_unref (qtmux);
 
     return TRUE;
   }
@@ -5775,6 +5777,7 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
     gst_caps_unref (current_caps);
+    gst_object_unref (qtmux);
 
     return TRUE;
   }
