@@ -185,6 +185,11 @@ gst_vaapi_window_wayland_sync (GstVaapiWindow * window)
     if (wl_display_flush (wl_display) < 0)
       goto error;
 
+    if (g_atomic_int_get (&priv->num_frames_pending) == 0) {
+      wl_display_cancel_read (wl_display);
+      return TRUE;
+    }
+
   again:
     if (gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE) < 0) {
       int saved_errno = errno;
