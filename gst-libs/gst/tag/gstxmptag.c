@@ -1698,7 +1698,8 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
  * gst_tag_list_to_xmp_buffer:
  * @list: tags
  * @read_only: does the container forbid inplace editing
- * @schemas: %NULL terminated array of schemas to be used on serialization
+ * @schemas: (array zero-terminated):
+ *     %NULL terminated array of schemas to be used on serialization
  *
  * Formats a taglist as a xmp packet using only the selected
  * schemas. An empty list (%NULL) means that all schemas should
