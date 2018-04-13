@@ -414,14 +414,7 @@ class Test(Loggable):
         self.timeout *= VALGRIND_TIMEOUT_FACTOR
 
         # Enable 'valgrind.config'
-        vg_config = get_data_file('data', 'valgrind.config')
-
-        if self.proc_env.get('GST_VALIDATE_CONFIG'):
-            subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (
-                self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, vg_config)
-        else:
-            subenv['GST_VALIDATE_CONFIG'] = vg_config
-
+        self.add_validate_config(get_data_file('data', 'valgrind.config'), subenv)
         if subenv == self.proc_env:
             self.add_env_variable('G_DEBUG', 'gc-friendly')
             self.add_env_variable('G_SLICE', 'always-malloc')
@@ -429,6 +422,16 @@ class Test(Loggable):
                                   self.proc_env['GST_VALIDATE_CONFIG'])
 
         return command
+
+    def add_validate_config(self, config, subenv=None):
+        if not subenv:
+            subenv = self.extra_env_variables
+
+        if subenv.get('GST_VALIDATE_CONFIG'):
+            subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (
+                self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, config)
+        else:
+            subenv['GST_VALIDATE_CONFIG'] = config
 
     def launch_server(self):
         return None
