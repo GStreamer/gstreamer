@@ -1729,7 +1729,7 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     if (gst_flv_mux_are_all_pads_eos (mux)) {
       gst_flv_mux_write_eos (mux);
       gst_flv_mux_rewrite_header (mux);
-      gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
+      return GST_FLOW_EOS;
     }
     return GST_FLOW_OK;
   }
