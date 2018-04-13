@@ -149,8 +149,7 @@ mux_pcm_audio (guint num_buffers, guint repeat)
 GST_START_TEST (test_index_writing)
 {
   /* note: there's a magic 128 value in flvmux when doing index writing */
-  if ((__i__ % 33) == 1)
-    mux_pcm_audio (__i__, 2);
+  mux_pcm_audio (__i__ * 33 + 1, 2);
 }
 
 GST_END_TEST;
@@ -428,17 +427,17 @@ flvmux_suite (void)
 {
   Suite *s = suite_create ("flvmux");
   TCase *tc_chain = tcase_create ("general");
-  gint loop = 499;
+  gint loop = 16;
 
   suite_add_tcase (s, tc_chain);
 
 #ifdef HAVE_VALGRIND
   if (RUNNING_ON_VALGRIND) {
-    loop = 140;
+    loop = 1;
   }
 #endif
 
-  tcase_add_loop_test (tc_chain, test_index_writing, 1, loop);
+  tcase_add_loop_test (tc_chain, test_index_writing, 0, loop);
 
   tcase_add_test (tc_chain, test_speex_streamable);
   tcase_add_test (tc_chain, test_increasing_timestamp_when_pts_none);
