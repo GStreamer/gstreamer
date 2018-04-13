@@ -170,3 +170,18 @@
    ...
    fun:twolame_encode_flush
 }
+
+{
+   <getaddrinfo can leak when resolving addresses, see https://lists.debian.org/debian-glibc/2016/03/msg00243.html>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__libc_alloc_buffer_allocate
+   ...
+   fun:__res_vinit
+   ...
+   fun:context_get.part.1
+   fun:gaih_inet.constprop.7
+   fun:getaddrinfo
+   ...
+}
