@@ -1075,6 +1075,10 @@ class TestsManager(Loggable):
     def list_tests(self):
         return sorted(list(self.tests), key=lambda x: x.classname)
 
+    def find_tests(self, classname):
+        regex = re.compile(classname)
+        return [test for test in self.list_tests() if regex.findall(test.classname)]
+
     def add_expected_issues(self, expected_failures):
         expected_failures_re = {}
         for test_name_regex, failures in list(expected_failures.items()):
