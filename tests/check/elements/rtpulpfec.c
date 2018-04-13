@@ -111,8 +111,11 @@ static void
 push_data (GstHarness * h, gconstpointer rtp, gsize rtp_length)
 {
   GstBuffer *buf = gst_rtp_buffer_new_copy_data (rtp, rtp_length);
+  GstBuffer *bufout;
 
-  gst_harness_push_and_pull (h, buf);
+  bufout = gst_harness_push_and_pull (h, buf);
+  if (bufout)
+    gst_buffer_unref (bufout);
 }
 
 static GstHarness *
@@ -556,6 +559,7 @@ GST_START_TEST (rtpulpfecdec_invalid_recovered_pt_mismatch)
   GstHarness *h = harness_rtpulpfecdec (3536077562, 100, 123);
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstBuffer *modified;
+  GstBuffer *bufout;
 
   gst_harness_set_src_caps_str (h, "application/x-rtp,ssrc=(uint)3536077562");
 
@@ -579,7 +583,9 @@ GST_START_TEST (rtpulpfecdec_invalid_recovered_pt_mismatch)
   gst_rtp_buffer_set_seq (&rtp, 36920);
   gst_rtp_buffer_unmap (&rtp);
   /* Now we have media packet with pt=50 and caps with pt=50. */
-  gst_harness_push_and_pull (h, modified);
+  bufout = gst_harness_push_and_pull (h, modified);
+  if (bufout)
+    gst_buffer_unref (bufout);
   push_lost_event (h, 36921, 1111, 2222, TRUE);
   check_rtpulpfecdec_stats (h, 0, 3);
 
@@ -600,6 +606,8 @@ GST_START_TEST (rtpulpfecdec_fecstorage_gives_no_buffers)
   push_lost_event (h, 36921, 1111, 2222, TRUE);
 
   check_rtpulpfecdec_stats (h, 0, 1);
+
+  gst_harness_teardown (h);
 }
 
 GST_END_TEST;
