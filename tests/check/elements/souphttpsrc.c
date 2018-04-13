@@ -135,7 +135,9 @@ run_test (gboolean use_https, const gchar * path, gint expected)
     if (g_path_is_absolute (ssl_cert_file)) {
       path = g_strdup (ssl_cert_file);
     } else {
-      path = g_build_filename (g_get_current_dir (), ssl_cert_file, NULL);
+      gchar *cwd = g_get_current_dir ();
+      path = g_build_filename (cwd, ssl_cert_file, NULL);
+      g_free (cwd);
     }
 
     tlsdb = g_tls_file_database_new (path, &error);
@@ -606,7 +608,7 @@ run_server (gboolean use_https)
     }
 
     if (!soup_server_set_ssl_cert_file (server, ssl_cert_file, ssl_key_file,
-          &err)) {
+            &err)) {
       GST_INFO ("Failed to load certificate: %s", err->message);
       g_object_unref (server);
       g_error_free (err);
