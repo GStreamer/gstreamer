@@ -403,12 +403,12 @@ decode_failed:
 
 /**
  * gst_tag_list_from_vorbiscomment:
- * @data: data to convert
+ * @data: (array length=size): data to convert
  * @size: size of @data
- * @id_data: identification data at start of stream
+ * @id_data: (array length=id_data_length): identification data at start of stream
  * @id_data_length: length of identification data
- * @vendor_string: pointer to a string that should take the vendor string
- *                 of this vorbis comment or NULL if you don't need it.
+ * @vendor_string: (out) (optional): pointer to a string that should take the
+ *     vendor string of this vorbis comment or NULL if you don't need it.
  *
  * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
@@ -501,10 +501,10 @@ error:
 /**
  * gst_tag_list_from_vorbiscomment_buffer:
  * @buffer: buffer to convert
- * @id_data: identification data at start of stream
+ * @id_data: (array length=id_data_length): identification data at start of stream
  * @id_data_length: length of identification data
- * @vendor_string: pointer to a string that should take the vendor string
- *                 of this vorbis comment or NULL if you don't need it.
+ * @vendor_string: (out) (optional): pointer to a string that should take the
+ *     vendor string of this vorbis comment or NULL if you don't need it.
  *
  * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
@@ -777,9 +777,9 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 /**
  * gst_tag_list_to_vorbiscomment_buffer:
  * @list: tag list to convert
- * @id_data: identification data at start of stream
+ * @id_data: (array length=id_data_length): identification data at start of stream
  * @id_data_length: length of identification data, may be 0 if @id_data is NULL
- * @vendor_string: string that describes the vendor string or NULL
+ * @vendor_string: (nullable): string that describes the vendor string or NULL
  *
  * Creates a new vorbiscomment buffer from a tag list.
  *
