@@ -185,3 +185,23 @@
    fun:getaddrinfo
    ...
 }
+
+{
+  <gnutls sessions leak the certificates, even though gnutls_deinit is correctly called>
+  Memcheck:Leak
+  match-leak-kinds: definite
+  fun:malloc
+  ...
+  fun:g_tls_certificate_gnutls_real_copy
+  fun:g_tls_server_connection_gnutls_retrieve_function
+}
+
+{
+  <gnutls sessions leak the certificates, even though gnutls_deinit is correctly called>
+  Memcheck:Leak
+  match-leak-kinds: definite
+  fun:calloc
+  ...
+  fun:g_tls_certificate_gnutls_real_copy
+  fun:g_tls_server_connection_gnutls_retrieve_function
+}
