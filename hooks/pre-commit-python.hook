@@ -4,25 +4,24 @@ import subprocess
 import sys
 import tempfile
 
-NOT_PEP8_COMPLIANT_MESSAGE_PRE = \
-    "Your code is not fully pep8 compliant and contains"\
+NOT_PYCODESTYLE_COMPLIANT_MESSAGE_PRE = \
+    "Your code is not fully pycodestyle compliant and contains"\
     " the following coding style issues:\n\n"
 
-NOT_PEP8_COMPLIANT_MESSAGE_POST = \
+NOT_PYCODESTYLE_COMPLIANT_MESSAGE_POST = \
     "Please fix these errors and commit again, you can do so "\
     "from the root directory automatically like this, assuming the whole "\
     "file is to be commited:"
 
-NO_PEP8_MESSAGE = \
-    "You should install the pep8 style checker to be able"\
+NO_PYCODESTYLE_MESSAGE = \
+    "You should install the pycodestyle style checker to be able"\
     " to commit in this repo.\nIt allows us to garantee that "\
-    "anything that is commited respects the pep8 coding style "\
+    "anything that is commited respects the pycodestyle coding style "\
     "standard.\nYou can install it:\n"\
-    "  * on ubuntu, debian: $sudo apt-get install pep8 \n"\
-    "  * on fedora: #yum install python-pep8 \n"\
-    "  * on arch: #pacman -S pep8-python3 \n"\
-    "  * or add the official pep8 from http://www.python.org/dev/peps/pep-0008/"\
-    " in your $PATH"
+    "  * on ubuntu, debian: $sudo apt-get install pycodestyle \n"\
+    "  * on fedora: #yum install python3-pycodestyle \n"\
+    "  * on arch: #pacman -S python-pycodestyle \n"\
+    "  * or `pip install --user pycodestyle`"
 
 
 def system(*args, **kwargs):
@@ -57,23 +56,23 @@ def main():
         try:
             if not modified_file.endswith(".py"):
                 continue
-            pep8_errors = system('pep8', '--repeat', '--ignore', 'E501,E128', modified_file)
-            if pep8_errors:
+            pycodestyle_errors = system('pycodestyle', '--repeat', '--ignore', 'E501,E128', modified_file)
+            if pycodestyle_errors:
                 if output_message is None:
-                    output_message = NOT_PEP8_COMPLIANT_MESSAGE_PRE
-                output_message += pep8_errors
+                    output_message = NOT_PYCODESTYLE_COMPLIANT_MESSAGE_PRE
+                output_message += pycodestyle_errors
                 non_compliant_files.append(modified_file)
-        except OSError:
-            output_message = NO_PEP8_MESSAGE
+        except OSError as e:
+            output_message = NO_PYCODESTYLE_MESSAGE
             break
 
     if output_message:
         print(output_message)
         if non_compliant_files:
-            print(NOT_PEP8_COMPLIANT_MESSAGE_POST)
+            print(NOT_PYCODESTYLE_COMPLIANT_MESSAGE_POST)
             for non_compliant_file in non_compliant_files:
                 print("autopep8 -i ", non_compliant_file, "; git add ",
-                    non_compliant_file)
+                      non_compliant_file)
             print("git commit")
         sys.exit(1)
 
