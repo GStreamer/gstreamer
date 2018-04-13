@@ -4822,6 +4822,7 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
   return gst_structure_foreach (sub_s, check_field, sup_s);
 }
 
+/* will unref @qtmux */
 static gboolean
 gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
 {
@@ -4845,6 +4846,7 @@ gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (qtmux,
       "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
       GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
+  gst_object_unref (qtmux);
   gst_caps_unref (current_caps);
 
   return TRUE;
