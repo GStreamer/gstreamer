@@ -1042,8 +1042,6 @@ gst_v4l2_video_enc_subinstance_init (GTypeInstance * instance, gpointer g_class)
       GST_OBJECT (GST_VIDEO_ENCODER_SRC_PAD (self)),
       V4L2_BUF_TYPE_VIDEO_CAPTURE, klass->default_device,
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
-  self->v4l2capture->no_initial_format = TRUE;
-  self->v4l2output->keep_aspect = FALSE;
 }
 
 static void
