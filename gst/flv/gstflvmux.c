@@ -1639,6 +1639,7 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts)
         best_ts = t;
       }
     }
+    gst_buffer_unref (buffer);
   }
   GST_DEBUG_OBJECT (aggregator,
       "Best pad found with %" GST_TIME_FORMAT ": %" GST_PTR_FORMAT,
