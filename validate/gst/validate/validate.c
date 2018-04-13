@@ -90,29 +90,6 @@ _free_plugin_config (gpointer data)
   g_list_free_full (data, (GDestroyNotify) gst_structure_free);
 }
 
-static GList *
-create_config (const gchar * path, const gchar * suffix)
-{
-  GList *structures = NULL, *tmp, *result = NULL;
-
-  if (!suffix)
-    return NULL;
-
-  structures = gst_validate_utils_structs_parse_from_filename (path);
-
-  for (tmp = structures; tmp; tmp = tmp->next) {
-    GstStructure *structure = tmp->data;
-
-    if (gst_structure_has_name (structure, suffix))
-      result = g_list_append (result, structure);
-    else
-      gst_structure_free (structure);
-  }
-
-  g_list_free (structures);
-  return result;
-}
-
 /* Copied from gststructure.c to avoid assertion */
 static gboolean
 gst_structure_validate_name (const gchar * name)
@@ -141,6 +118,49 @@ gst_structure_validate_name (const gchar * name)
   }
 
   return TRUE;
+}
+
+static GList *
+create_config (const gchar * config, const gchar * suffix)
+{
+  GList *structures = NULL, *tmp, *result = NULL;
+
+  if (!suffix)
+    return NULL;
+
+  structures = gst_validate_utils_structs_parse_from_filename (config);
+  if (!structures) {
+    GstCaps *confs = NULL;
+
+    if (gst_structure_validate_name (config))
+      confs = gst_caps_from_string (config);
+
+    if (confs) {
+      gint i;
+
+      for (i = 0; i < gst_caps_get_size (confs); i++) {
+        GstStructure *structure = gst_caps_get_structure (confs, i);
+
+        if (gst_structure_has_name (structure, suffix))
+          structures =
+              g_list_append (structures, gst_structure_copy (structure));
+      }
+
+      gst_caps_unref (confs);
+    }
+  }
+
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    GstStructure *structure = tmp->data;
+
+    if (gst_structure_has_name (structure, suffix))
+      result = g_list_append (result, structure);
+    else
+      gst_structure_free (structure);
+  }
+
+  g_list_free (structures);
+  return result;
 }
 
 /**
@@ -187,27 +207,6 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
       plugin_conf = g_list_concat (plugin_conf, l);
   }
   g_strfreev (tmp);
-
-  if (!plugin_conf) {
-    GstCaps *confs = NULL;
-
-    if (gst_structure_validate_name (config))
-      confs = gst_caps_from_string (config);
-
-    if (confs) {
-      gint i;
-
-      for (i = 0; i < gst_caps_get_size (confs); i++) {
-        GstStructure *structure = gst_caps_get_structure (confs, i);
-
-        if (gst_structure_has_name (structure, suffix))
-          plugin_conf =
-              g_list_append (plugin_conf, gst_structure_copy (structure));
-      }
-
-      gst_caps_unref (confs);
-    }
-  }
 
   if (plugin)
     g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
