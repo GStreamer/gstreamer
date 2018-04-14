@@ -26,6 +26,10 @@
  * #GstPcapParse:src-port and #GstPcapParse:dst-port to restrict which packets
  * should be included.
  *
+ * The supported data format is the classical <ulink
+ * url="https://wiki.wireshark.org/Development/LibpcapFileFormat">libpcap file
+ * format</ulink>.
+ *
  * ## Example pipelines
  * |[
  * gst-launch-1.0 filesrc location=h264crasher.pcap ! pcapparse ! rtph264depay
@@ -415,6 +419,8 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
   }
 
   b = *buf_ip;
+
+  /* Check that the packet is IPv4 */
   if (((b >> 4) & 0x0f) != 4)
     return FALSE;
 
@@ -490,6 +496,7 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     if (self->initialized) {
       if (self->cur_packet_size >= 0) {
+        /* Parse the Packet Data */
         if (avail < self->cur_packet_size)
           break;
 
@@ -543,10 +550,12 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         self->cur_packet_size = -1;
       } else {
+        /* Parse the Record (Packet) Header */
         guint32 ts_sec;
         guint32 ts_usec;
         guint32 incl_len;
 
+        /* sizeof(pcaprec_hdr_t) == 16 */
         if (avail < 16)
           break;
 
@@ -566,10 +575,12 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         self->cur_packet_size = incl_len;
       }
     } else {
+      /* Parse the Global Header */
       guint32 magic;
       guint32 linktype;
       guint16 major_version;
 
+      /* sizeof(pcap_hdr_t) == 24 */
       if (avail < 24)
         break;
 
