@@ -22,6 +22,7 @@
 import os
 import logging
 import re
+import sys
 
 # Nanosecond resolution (like Gst.SECOND)
 SECOND = 1000000000
@@ -67,8 +68,8 @@ def parse_time(st):
     h, m, s = st.split(":")
     secs, subsecs = s.split(".")
 
-    return (long((int(h) * 60 ** 2 + int(m) * 60) * SECOND) +
-            long(secs) * SECOND + long(subsecs))
+    return int((int(h) * 60 ** 2 + int(m) * 60) * SECOND) + \
+           int(secs) * SECOND + int(subsecs)
 
 
 class DebugLevel (int):
@@ -130,15 +131,15 @@ debug_levels = [debug_level_none,
                 debug_level_error]
 
 # For stripping color codes:
-_escape = re.compile("\x1b\\[[0-9;]*m")
+_escape = re.compile(b"\x1b\\[[0-9;]*m")
 
 
 def strip_escape(s):
 
     # FIXME: This can be optimized further!
 
-    while "\x1b" in s:
-        s = _escape.sub("", s)
+    while b"\x1b" in s:
+        s = _escape.sub(b"", s)
     return s
 
 
@@ -155,7 +156,7 @@ def default_log_line_regex_():
     PID = r"(\d+)\s*"
     FILENAME = r"([^:]*):"
     LINE = r"(\d+):"
-    FUNCTION = "(~?[A-Za-z0-9_]*|operator\(\)):"
+    FUNCTION = "(~?[A-Za-z0-9_\s\*,\(\)]*):"
     # FIXME: When non-g(st)object stuff is logged with *_OBJECT (like
     # buffers!), the address is printed *without* <> brackets!
     OBJECT = "(?:<([^>]+)>)?"
@@ -201,7 +202,7 @@ class SortHelper (object):
     def __init__(self, fileobj, offsets):
 
         self._gen = self.__gen(fileobj, offsets)
-        self._gen.next()
+        next(self._gen)
 
         # Override in the instance, for performance (this gets called in an
         # inner loop):
@@ -252,7 +253,7 @@ class SortHelper (object):
                 mid = int(floor(lo * 0.1 + hi * 0.9))
                 seek(offsets[mid])
                 mid_time_string = read(time_len)
-                if insert_time_string < mid_time_string:
+                if insert_time_string.encode('utf8') < mid_time_string:
                     hi = mid
                 else:
                     lo = mid + 1
@@ -339,7 +340,7 @@ class LineCache (Producer):
                 yield True
 
             offset = tell()
-            line = readline()
+            line = readline().decode('utf-8')
             if not line:
                 break
             match = rexp_match(line)
@@ -379,8 +380,7 @@ class LogLine (list):
 
     @classmethod
     def parse_full(cls, line_string):
-
-        match = cls._line_regex.match(line_string)
+        match = cls._line_regex.match(line_string.decode('utf8'))
         if match is None:
             # raise ValueError ("not a valid log line (%r)" % (line_string,))
             groups = [0, 0, 0, 0, "", "", 0, "", "", 0]
@@ -392,7 +392,7 @@ class LogLine (list):
         # PID.
         line[1] = int(line[1])
         # Thread.
-        line[2] = long(line[2], 16)
+        line[2] = int(line[2], 16)
         # Level (this is handled in LineCache).
         line[3] = 0
         # Line.
@@ -404,7 +404,7 @@ class LogLine (list):
                        5,   # COL_FILENAME
                        7,   # COL_FUNCTION,
                        8,):  # COL_OBJECT
-            line[col_id] = intern(line[col_id] or "")
+            line[col_id] = sys.intern(line[col_id] or "")
 
         return line
 
@@ -450,21 +450,11 @@ class LogFile (Producer):
         self.logger = logging.getLogger("logfile")
 
         self.path = os.path.normpath(os.path.abspath(filename))
-        self.__real_fileobj = file(filename, "rb")
+        self.__real_fileobj = open(filename, "rb")
         self.fileobj = mmap.mmap(
             self.__real_fileobj.fileno(), 0, access=mmap.ACCESS_READ)
         self.line_cache = LineCache(self.fileobj, dispatcher)
         self.line_cache.consumers.append(self)
-
-    def get_full_line(self, line_index):
-
-        offset = self.line_cache.offsets[line_index]
-        self.fileobj.seek(offset)
-        line_string = self.fileobj.readline()
-        line = LogLine.parse_full(line_string)
-        msg = line_string[line[-1]:]
-        line[-1] = msg
-        return line
 
     def start_loading(self):
 

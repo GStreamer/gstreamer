@@ -33,42 +33,41 @@ from GstDebugViewer import Common, Data
 from GstDebugViewer.GUI.filters import CategoryFilter, Filter
 from GstDebugViewer.GUI.models import (FilteredLogModel,
                                        LogModelBase,
-                                       RangeFilteredLogModel,
                                        SubRange,)
 
 class TestSubRange (TestCase):
 
     def test_len (self):
 
-        l = range (20)
+        l = list(range(20))
 
         sr = SubRange (l, 0, 20)
-        self.assertEquals (len (sr), 20)
+        self.assertEqual (len (sr), 20)
 
         sr = SubRange (l, 10, 20)
-        self.assertEquals (len (sr), 10)
+        self.assertEqual (len (sr), 10)
 
         sr = SubRange (l, 0, 10)
-        self.assertEquals (len (sr), 10)
+        self.assertEqual (len (sr), 10)
 
         sr = SubRange (l, 5, 15)
-        self.assertEquals (len (sr), 10)
+        self.assertEqual (len (sr), 10)
 
     def test_iter (self):
 
-        l = range (20)
+        l = list(range(20))
 
         sr = SubRange (l, 0, 20)
-        self.assertEquals (list (sr), l)
+        self.assertEqual (list (sr), l)
 
         sr = SubRange (l, 10, 20)
-        self.assertEquals (list (sr), range (10, 20))
+        self.assertEqual (list (sr), list(range(10, 20)))
 
         sr = SubRange (l, 0, 10)
-        self.assertEquals (list (sr), range (0, 10))
+        self.assertEqual (list (sr), list(range(0, 10)))
 
         sr = SubRange (l, 5, 15)
-        self.assertEquals (list (sr), range (5, 15))
+        self.assertEqual (list (sr), list(range(5, 15)))
 
 class Model (LogModelBase):
 
@@ -84,12 +83,12 @@ class Model (LogModelBase):
 
         pid = line_offset // 100
         if pid % 2 == 0:
-            category = "EVEN"
+            category = b"EVEN"
         else:
-            category = "ODD"
+            category = b"ODD"
 
-        line_fmt = ("0:00:00.000000000 %5i 0x0000000 DEBUG "
-                    "%20s dummy.c:1:dummy: dummy")
+        line_fmt = (b"0:00:00.000000000 %5i 0x0000000 DEBUG "
+                    b"%20s dummy.c:1:dummy: dummy")
         line_str = line_fmt % (pid, category,)
         log_line = Data.LogLine.parse_full (line_str)
         self.line_cache[line_offset] = log_line
@@ -122,76 +121,35 @@ class TestDynamicFilter (TestCase):
     def test_unset_filter_rerange (self):
 
         full_model = Model ()
-        ranged_model = RangeFilteredLogModel (full_model)
-        # FIXME: Call to .reset should not be needed.
-        ranged_model.reset ()
-        filtered_model = FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (full_model)
         row_list = self.__row_list
 
-        self.assertEquals (row_list (full_model), range (20))
-        self.assertEquals (row_list (ranged_model), range (20))
-        self.assertEquals (row_list (filtered_model), range (20))
+        self.assertEqual (row_list (full_model), list(range(20)))
+        self.assertEqual (row_list (filtered_model), list(range(20)))
 
-        ranged_model.set_range (5, 16)
-        filtered_model.super_model_changed_range ()
+        filtered_model.set_range (5, 16)
 
-        self.assertEquals (row_list (ranged_model), range (5, 16))
-        self.assertEquals (row_list (filtered_model), range (5, 16))
-
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (11)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
-                            for i in range (11)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (5, 16)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (11)],
-                           range (5, 16))
+        self.assertEqual (row_list (filtered_model), list(range(5, 16)))
 
     def test_identity_filter_rerange (self):
 
         full_model = Model ()
-        ranged_model = RangeFilteredLogModel (full_model)
-        # FIXME: Call to .reset should not be needed.
-        ranged_model.reset ()
-        filtered_model = FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (full_model)
         row_list = self.__row_list
 
-        self.assertEquals (row_list (full_model), range (20))
-        self.assertEquals (row_list (ranged_model), range (20))
-        self.assertEquals (row_list (filtered_model), range (20))
+        self.assertEqual (row_list (full_model), list(range(20)))
+        self.assertEqual (row_list (filtered_model), list(range(20)))
 
         filtered_model.add_filter (IdentityFilter (),
                                    Common.Data.DefaultDispatcher ())
-        ranged_model.set_range (5, 16)
-        filtered_model.super_model_changed_range ()
+        filtered_model.set_range (5, 16)
 
-        self.assertEquals (row_list (ranged_model), range (5, 16))
-        self.assertEquals (row_list (filtered_model), range (5, 16))
-
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (11)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
-                            for i in range (11)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (5, 16)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (11)],
-                           range (5, 16))
+        self.assertEqual (row_list (filtered_model), list(range(5, 16)))
 
     def test_filtered_range_refilter_skip (self):
 
         full_model = Model ()
-        ranged_model = RangeFilteredLogModel (full_model)
-        # FIXME: Call to .reset should not be needed.
-        ranged_model.reset ()
-        filtered_model = FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (full_model)
 
         row_list = self.__row_list
 
@@ -199,233 +157,89 @@ class TestDynamicFilter (TestCase):
                                    Common.Data.DefaultDispatcher ())
         self.__dump_model (filtered_model, "filtered")
 
-        self.assertEquals (row_list (filtered_model), range (1, 20, 2))
-        self.assertEquals ([filtered_model.line_index_from_super (i)
+        self.assertEqual (row_list (filtered_model), list(range(1, 20, 2)))
+        self.assertEqual ([filtered_model.line_index_from_super (i)
                             for i in range (1, 20, 2)],
-                           range (10))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
+                           list(range(10)))
+        self.assertEqual ([filtered_model.line_index_to_super (i)
                             for i in range (10)],
-                           range (1, 20, 2))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (1, 20, 2)],
-                           range (10))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (10)],
-                           range (1, 20, 2))
+                           list(range(1, 20, 2)))
 
-        ranged_model.set_range (1, 20)
-        self.__dump_model (ranged_model, "ranged (1, 20)")
-        filtered_model.super_model_changed_range ()
+        filtered_model.set_range (1, 20)
+        self.__dump_model (filtered_model, "ranged (1, 20)")
         self.__dump_model (filtered_model, "filtered range")
 
-        self.assertEquals ([filtered_model.line_index_from_super (i)
+        self.assertEqual ([filtered_model.line_index_from_super (i)
                             for i in range (0, 19, 2)],
-                           range (10))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
+                           list(range(10)))
+        self.assertEqual ([filtered_model.line_index_to_super (i)
                             for i in range (10)],
-                           range (0, 19, 2))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (1, 20, 2)],
-                           range (10))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (10)],
-                           range (1, 20, 2))
+                           list(range(1, 20, 2)))
 
-        ranged_model.set_range (2, 20)
-        self.__dump_model (ranged_model, "ranged (2, 20)")
-        filtered_model.super_model_changed_range ()
-        self.__dump_model (filtered_model, "filtered range")
+        filtered_model.set_range (2, 20)
+        self.__dump_model (filtered_model, "ranged (2, 20)")
 
-        self.assertEquals (row_list (filtered_model), range (3, 20, 2))
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (1, 18, 2)],
-                           range (9))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
-                            for i in range (9)],
-                           range (1, 18, 2))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (3, 20, 2)],
-                           range (9))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (9)],
-                           range (3, 20, 2))
+        self.assertEqual (row_list (filtered_model), list(range(3, 20, 2)))
 
     def test_filtered_range_refilter (self):
 
         full_model = Model ()
-        ranged_model = RangeFilteredLogModel (full_model)
-        # FIXME: Call to .reset should not be needed.
-        ranged_model.reset ()
-        filtered_model = FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (full_model)
 
         row_list = self.__row_list
         rows = row_list (full_model)
-        rows_ranged = row_list (ranged_model)
         rows_filtered = row_list (filtered_model)
 
         self.__dump_model (full_model, "full model")
-        ## self.__dump_model (ranged_model, "ranged model")
-        ## self.__dump_model (filtered_model, "filtered model")
 
-        self.assertEquals (rows, rows_ranged)
-        self.assertEquals (rows, rows_filtered)
+        self.assertEqual (rows, rows_filtered)
 
-        self.assertEquals ([ranged_model.line_index_from_super (i)
+        self.assertEqual ([filtered_model.line_index_from_super (i)
                             for i in range (20)],
-                           range (20))
-        self.assertEquals ([ranged_model.line_index_to_super (i)
+                           list(range(20)))
+        self.assertEqual ([filtered_model.line_index_to_super (i)
                             for i in range (20)],
-                           range (20))
-        self.assertEquals ([ranged_model.line_index_from_top (i)
-                            for i in range (20)],
-                           range (20))
-        self.assertEquals ([ranged_model.line_index_to_top (i)
-                            for i in range (20)],
-                           range (20))
+                           list(range(20)))
 
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (20)],
-                           range (20))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
-                            for i in range (20)],
-                           range (20))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (20)],
-                           range (20))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (20)],
-                           range (20))
+        filtered_model.set_range (5, 16)
+        self.__dump_model (filtered_model, "ranged model (5, 16)")
 
-        ranged_model.set_range (5, 16)
-        self.__dump_model (ranged_model, "ranged model (5, 16)")
-        filtered_model.super_model_changed_range ()
-
-        rows_ranged = row_list (ranged_model)
-        self.assertEquals (rows_ranged, range (5, 16))
+        rows_ranged = row_list (filtered_model)
+        self.assertEqual (rows_ranged, list(range(5, 16)))
 
         self.__dump_model (filtered_model, "filtered model (nofilter, 5, 15)")
-
-        rows_filtered = row_list (filtered_model)
-        self.assertEquals (rows_ranged, rows_filtered)
-
-        self.assertEquals ([ranged_model.line_index_from_super (i)
-                            for i in range (5, 16)],
-                           range (11))
-        self.assertEquals ([ranged_model.line_index_to_super (i)
-                            for i in range (11)],
-                           range (5, 16))
-        self.assertEquals ([ranged_model.line_index_from_top (i)
-                            for i in range (5, 16)],
-                           range (11))
-        self.assertEquals ([ranged_model.line_index_to_top (i)
-                            for i in range (11)],
-                           range (5, 16))
-
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (11)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
-                            for i in range (11)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (5, 16)],
-                           range (11))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (11)],
-                           range (5, 16))
 
         filtered_model.add_filter (CategoryFilter ("EVEN"),
                                    Common.Data.DefaultDispatcher ())
         rows_filtered = row_list (filtered_model)
-        self.assertEquals (rows_filtered, range (5, 16, 2))
+        self.assertEqual (rows_filtered, list(range(5, 16, 2)))
 
         self.__dump_model (filtered_model, "filtered model")
-
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (0, 11, 2)],
-                           range (6))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (5, 16, 2)],
-                           range (6))
-
-        ranged_model.set_range (7, 13)
-        self.__dump_model (ranged_model, "ranged model (7, 13)")
-        filtered_model.super_model_changed_range ()
-
-        self.assertEquals (row_list (ranged_model), range (7, 13))
-        self.assertEquals ([ranged_model.line_index_from_super (i)
-                            for i in range (7, 13)],
-                           range (6))
-        self.assertEquals ([ranged_model.line_index_to_super (i)
-                            for i in range (6)],
-                           range (7, 13))
-        self.assertEquals ([ranged_model.line_index_from_top (i)
-                            for i in range (7, 13)],
-                           range (6))
-        self.assertEquals ([ranged_model.line_index_to_top (i)
-                            for i in range (6)],
-                           range (7, 13))
-
-        self.__dump_model (filtered_model, "filtered model (ranged 7, 12)")
-        self.assertEquals ([filtered_model.line_index_from_super (i)
-                            for i in range (0, 6, 2)],
-                           range (3))
-        self.assertEquals ([filtered_model.line_index_to_super (i)
-                            for i in range (3)],
-                           range (0, 6, 2))
-        self.assertEquals ([filtered_model.line_index_from_top (i)
-                            for i in range (7, 12, 2)],
-                           range (3))
-        self.assertEquals ([filtered_model.line_index_to_top (i)
-                            for i in range (3)],
-                           range (7, 12, 2))
-
-        rows_filtered = row_list (filtered_model)
-        self.assertEquals (rows_filtered, range (7, 13, 2))
 
     def test_random_filtered_range_refilter (self):
 
         full_model = Model ()
-        ranged_model = RangeFilteredLogModel (full_model)
-        # FIXME: Call to .reset should not be needed.
-        ranged_model.reset ()
-        filtered_model = FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (full_model)
         row_list = self.__row_list
 
-        self.assertEquals (row_list (full_model), range (20))
-        self.assertEquals (row_list (ranged_model), range (20))
-        self.assertEquals (row_list (filtered_model), range (20))
+        self.assertEqual (row_list (full_model), list(range(20)))
+        self.assertEqual (row_list (filtered_model), list(range(20)))
 
         filtered_model.add_filter (RandomFilter (538295943),
                                    Common.Data.DefaultDispatcher ())
         random_rows = row_list (filtered_model)
 
         self.__dump_model (filtered_model)
-        ranged_model.set_range (10, 20)
-        self.__dump_model (ranged_model, "ranged_model (10, 20)")
-        self.assertEquals (row_list (ranged_model), range (10, 20))
-        filtered_model.super_model_changed_range ()
-        self.__dump_model (filtered_model)
-        self.assertEquals (row_list (filtered_model), [x for x in range (10, 20) if x in random_rows])
 
-        ranged_model.set_range (0, 20)
-        self.assertEquals (row_list (ranged_model), range (0, 20))
-
-        ranged_model = RangeFilteredLogModel (full_model)
-        # FIXME: Call to .reset should not be needed.
-        ranged_model.reset ()
-        filtered_model = FilteredLogModel (ranged_model)
+        filtered_model = FilteredLogModel (full_model)
         filtered_model.add_filter (RandomFilter (538295943),
                                    Common.Data.DefaultDispatcher ())
         self.__dump_model (filtered_model, "filtered model")
-        self.assertEquals (row_list (filtered_model), random_rows)
+        self.assertEqual (row_list (filtered_model), random_rows)
 
-        ranged_model.set_range (0, 10)
-        self.__dump_model (ranged_model, "ranged model (0, 10)")
-        filtered_model.super_model_changed_range ()
-        self.assertEquals (row_list (ranged_model), range (0, 10))
+        filtered_model.set_range (1, 10)
         self.__dump_model (filtered_model)
-        self.assertEquals (row_list (filtered_model), [x for x in range (0, 10) if x in random_rows])
+        self.assertEqual (row_list (filtered_model), [x for x in range (0, 10) if x in random_rows])
 
     def __row_list (self, model):
 
@@ -439,7 +253,7 @@ class TestDynamicFilter (TestCase):
 
         if not hasattr (model, "super_model"):
             # Top model.
-            print "\t(%s)" % ("|".join ([str (i).rjust (2) for i in self.__row_list (model)]),),
+            print("\t(%s)" % ("|".join ([str (i).rjust (2) for i in self.__row_list (model)]),), end=' ')
         else:
             top_model = model.super_model
             if hasattr (top_model, "super_model"):
@@ -449,12 +263,12 @@ class TestDynamicFilter (TestCase):
             output = ["  "] * len (top_indices)
             for i, position in enumerate (positions):
                 output[position] = str (i).rjust (2)
-            print "\t(%s)" % ("|".join (output),),
+            print("\t(%s)" % ("|".join (output),), end=' ')
 
         if comment is None:
-            print
+            print()
         else:
-            print comment
+            print(comment)
 
 if __name__ == "__main__":
     test_main ()

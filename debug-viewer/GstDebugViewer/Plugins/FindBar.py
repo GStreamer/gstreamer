@@ -34,21 +34,24 @@ class SearchOperation (object):
     def __init__(self, model, search_text, search_forward=True, start_position=None):
 
         self.model = model
-        self.search_text = search_text
+        if isinstance(search_text, str):
+            self.search_text = search_text.encode('utf8')
+        else:
+            self.search_text = search_text
         self.search_forward = search_forward
         self.start_position = start_position
 
         col_id = GUI.models.LogModelBase.COL_MESSAGE
-        len_search_text = len(search_text)
+        len_search_text = len(self.search_text)
 
         def match_func(model_row):
 
             message = model_row[col_id]
-            if search_text in message:
+            if self.search_text in message:
                 ranges = []
                 start = 0
                 while True:
-                    pos = message.find(search_text, start)
+                    pos = message.find(self.search_text, start)
                     if pos == -1:
                         break
                     ranges.append((pos, pos + len_search_text,))
@@ -99,7 +102,7 @@ class SearchSentinel (object):
             nth_child = model.iter_nth_child
 
             def iter_next_():
-                for i in xrange(start_pos, -1, -1):
+                for i in range(start_pos, -1, -1):
                     yield nth_child(None, i)
                 yield None
             it_ = iter_next_()

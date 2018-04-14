@@ -53,20 +53,20 @@ class TestParsingPerformance (object):
     def handle_load_finished (self):
 
         diff = time.time () - self.start_time
-        print "line cache built in %0.1f ms" % (diff * 1000.,)
+        print("line cache built in %0.1f ms" % (diff * 1000.,))
 
         start_time = time.time ()
         model = GUI.LazyLogModel (self.log_file)
         for row in model:
             pass
         diff = time.time () - start_time
-        print "model iterated in %0.1f ms" % (diff * 1000.,)
-        print "overall time spent: %0.1f s" % (time.time () - self.start_time,)
+        print("model iterated in %0.1f ms" % (diff * 1000.,))
+        print("overall time spent: %0.1f s" % (time.time () - self.start_time,))
 
         import resource
         rusage = resource.getrusage (resource.RUSAGE_SELF)
-        print "time spent in user mode: %.2f s" % (rusage.ru_utime,)
-        print "time spent in system mode: %.2f s" % (rusage.ru_stime,)
+        print("time spent in user mode: %.2f s" % (rusage.ru_utime,))
+        print("time spent in system mode: %.2f s" % (rusage.ru_stime,))
 
 def main ():
 

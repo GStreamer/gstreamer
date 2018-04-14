@@ -19,7 +19,7 @@
 
 """GStreamer Development Utilities Common package."""
 
-import Data
-import GUI
-import Main
-import utils
+from . import Data
+from . import GUI
+from . import Main
+from . import utils

@@ -36,7 +36,7 @@ class SingletonMeta (type):
 
     def __call__(cls, *a, **kw):
 
-        kw_key = tuple(sorted(kw.iteritems()))
+        kw_key = tuple(sorted(kw.items()))
 
         try:
             obj = cls._singleton_instances[a + kw_key]

@@ -346,7 +346,7 @@ class MessageColumn (TextColumn):
 
         def message_data_func(column, cell, model, tree_iter, user_data):
 
-            msg = model.get_value(tree_iter, id_)
+            msg = model.get_value(tree_iter, id_).decode("utf8")
 
             if not highlighters:
                 cell.props.text = msg
@@ -355,7 +355,7 @@ class MessageColumn (TextColumn):
             if len(highlighters) > 1:
                 raise NotImplementedError("FIXME: Support more than one...")
 
-            highlighter = highlighters.values()[0]
+            highlighter = list(highlighters.values())[0]
             row = model[tree_iter]
             ranges = highlighter(row)
             if not ranges:

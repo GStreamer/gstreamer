@@ -30,6 +30,7 @@ from gettext import gettext as _, ngettext
 
 import gi
 
+from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import Gtk
 
@@ -49,14 +50,7 @@ class ExceptionHandler (object):
 
 
 class DefaultExceptionHandler (ExceptionHandler):
-
-    # TODO Py2.5: In Python 2.5, this succeeds.  Remove the try...except block
-    # once we depend on 2.5.
-    try:
-        exc_types = (BaseException,)
-    except NameError:
-        # Python < 2.5.
-        exc_types = (Exception,)
+    exc_types = (BaseException,)
     priority = 0
     inherit_fork = True
 
@@ -81,7 +75,7 @@ class ExitOnInterruptExceptionHandler (ExceptionHandler):
 
     def __call__(self, *args):
 
-        print >> sys.stderr, "Interrupt caught, exiting."
+        print("Interrupt caught, exiting.", file=sys.stderr)
 
         sys.exit(self.exit_status)
 
@@ -115,7 +109,7 @@ class MainLoopWrapper (ExceptionHandler):
         if self.exc_info != (None,) * 3:
             # Re-raise unhandled exception that occured while running the loop.
             exc_type, exc_value, exc_tb = self.exc_info
-            raise exc_type, exc_value, exc_tb
+            raise exc_type(exc_value).with_traceback(exc_tb)
 
 
 class ExceptHookManagerClass (object):
@@ -294,144 +288,6 @@ class PathsProgramBase (PathsBase):
         # needed directory structure in the source dist.
 
 
-class OptionError (Exception):
-
-    pass
-
-
-class OptionParser (object):
-
-    def __init__(self, options):
-
-        self.__entries = []
-        self.__parsers = {}
-
-        self.options = options
-
-        self.__remaining_args = []
-
-        # Remaining args parsing with pygobject does not work with glib before
-        # 2.13.2 (e.g. Ubuntu Feisty).
-        # if GObject.glib_version >= (2, 13, 2,):
-        # self.__entries.append ((GObject.OPTION_REMAINING, "\0", 0, "", "",))
-
-    def add_option(self, long_name, short_name=None, description=None,
-                   arg_name=None, arg_parser=None, hidden=False):
-
-        flags = 0
-
-        if not short_name:
-            # A deficiency of pygobject:
-            short_name = "\0"
-
-        if not description:
-            description = ""
-
-        if arg_name is None:
-            flags |= GObject.OPTION_FLAG_NO_ARG
-        elif arg_parser is not None:
-            self.__parsers[long_name] = arg_parser
-
-        if hidden:
-            flags |= GObject.OPTION_FLAG_HIDDEN
-
-        self.__entries.append((long_name, short_name, flags, description,
-                               arg_name,))
-
-    def __handle_option(self, option, arg, group):
-
-        # See __init__ for glib requirement.
-        # if option == GObject.OPTION_REMAINING:
-        # self.__remaining_args.append (arg)
-        # return
-
-        for entry in self.__entries:
-            long_name, short_name = entry[:2]
-            arg_name = entry[-1]
-            if (option != "--%s" % (long_name,) and
-                    option != "-%s" % (short_name,)):
-                continue
-            attr = long_name.replace("-", "_")
-            if arg_name is None:
-                value = True
-            elif long_name in self.__parsers:
-                value = self.__parsers[long_name](arg)
-            else:
-                value = arg
-            self.options[attr] = value
-            break
-
-    def parse(self, argv):
-
-        context = GObject.OptionContext(self.get_parameter_string())
-        group = GObject.OptionGroup(None, None, None, self.__handle_option)
-        context.set_main_group(group)
-        group.add_entries(self.__entries)
-
-        try:
-            result_argv = context.parse(argv)
-        except GObject.GError as exc:
-            raise OptionError(exc.message)
-
-        self.__remaining_args = result_argv[1:]
-
-        self.handle_parse_complete(self.__remaining_args)
-
-    def get_parameter_string(self):
-
-        raise NotImplementedError("derived classes must override this method")
-
-    def handle_parse_complete(self, remaining_args):
-
-        pass
-
-
-class LogOptionParser (OptionParser):
-
-    """Like OptionParser, but adds a --log-level option."""
-
-    def __init__(self, *a, **kw):
-
-        OptionParser.__init__(self, *a, **kw)
-
-        # TODO: Re-evaluate usage of log levels to use less of them.  Like
-        # unifying warning, error and critical.
-
-        self.add_option("log-level", "l",
-                        "%s (debug, info, warning, error, critical)"
-                        % (_("Enable logging"),),
-                        "LEVEL", self.parse_log_level)
-
-    @staticmethod
-    def parse_log_level(arg):
-
-        try:
-            level = int(arg)
-        except ValueError:
-            level = {"off": None,
-                     "none": None,
-                     "debug": logging.DEBUG,
-                     "info": logging.INFO,
-                     "warning": logging.WARNING,
-                     "error": logging.ERROR,
-                     "critical": logging.CRITICAL}.get(arg.strip().lower())
-            if level is None:
-                return None
-            else:
-                return level
-        else:
-            if level < 0:
-                level = 0
-            elif level > 5:
-                level = 5
-            return {0: None,
-                    1: logging.DEBUG,
-                    2: logging.INFO,
-                    3: logging.WARNING,
-                    4: logging.ERROR,
-                    5: logging.CRITICAL}[level]
-
-
 def _init_excepthooks():
 
     ExceptHookManager.setup()
@@ -459,24 +315,16 @@ def _init_locale(gettext_domain=None):
             gettext.textdomain(gettext_domain)
             gettext.bind_textdomain_codeset(gettext_domain, "UTF-8")
 
+def _init_logging(level):
+    if level == "none":
+        return
 
-def _init_options(option_parser=None):
-
-    if option_parser is None:
-        return {}
-
-    try:
-        option_parser.parse(sys.argv)
-    except OptionError as exc:
-        print >> sys.stderr, exc.args[0]
-        sys.exit(1)
-
-    return option_parser.options
-
-
-def _init_logging(level=None):
-
-    logging.basicConfig(level=level,
+    mapping = { "debug": logging.DEBUG,
+                "info": logging.INFO,
+                "warning": logging.WARNING,
+                "error": logging.ERROR,
+                "critical": logging.CRITICAL }
+    logging.basicConfig(level=mapping[level],
                         format='%(asctime)s.%(msecs)03d %(levelname)8s %(name)20s: %(message)s',
                         datefmt='%H:%M:%S')
 
@@ -484,8 +332,18 @@ def _init_logging(level=None):
     logger.debug("logging at level %s", logging.getLevelName(level))
     logger.info("using Python %i.%i.%i %s %i", *sys.version_info)
 
+def _init_log_option(parser):
+    choices = ["none", "debug", "info", "warning", "error", "critical"]
+    parser.add_option("--log-level", "-l",
+                      type="choice",
+                      choices=choices,
+                      action="store",
+                      dest="log_level",
+                      default="none",
+                      help=_("Enable logging, possible values: ") + ", ".join(choices))
+    return parser
 
-def main(option_parser=None, gettext_domain=None, paths=None):
+def main(main_function, option_parser, gettext_domain=None, paths=None):
 
     # FIXME:
     global Paths
@@ -494,15 +352,11 @@ def main(option_parser=None, gettext_domain=None, paths=None):
     _init_excepthooks()
     _init_paths(paths)
     _init_locale(gettext_domain)
-    options = _init_options(option_parser)
-    try:
-        log_level = options["log_level"]
-    except KeyError:
-        _init_logging()
-    else:
-        _init_logging(log_level)
+    parser = _init_log_option(option_parser)
+    options, args = option_parser.parse_args()
+    _init_logging(options.log_level)
 
     try:
-        options["main"](options)
+        main_function(args)
     finally:
         logging.shutdown()

@@ -35,7 +35,7 @@ import cairo
 def iter_model_reversed(model):
 
     count = model.iter_n_children(None)
-    for i in xrange(count - 1, 0, -1):
+    for i in range(count - 1, 0, -1):
         yield model[i]
 
 
@@ -192,7 +192,7 @@ class LevelDistributionSentinel (object):
                 level_index = stop_index
                 level_iter = iter(levels)
             try:
-                level = level_iter.next()
+                level = level_iter.__next__()
             except StopIteration:
                 level_iter = None
                 continue
@@ -640,7 +640,7 @@ class TimelineWidget (Gtk.DrawingArea):
         pixel_step = self.find_indicative_time_step()
         ctx.set_source_rgb(.9, .9, .9)
         start = dirty_start - dirty_start % pixel_step
-        for x in xrange(start + pixel_step, dirty_stop, pixel_step):
+        for x in range(start + pixel_step, dirty_stop, pixel_step):
             ctx.move_to(x - .5, 0)
             ctx.line_to(x - .5, height)
             ctx.stroke()

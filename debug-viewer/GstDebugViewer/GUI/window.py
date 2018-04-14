@@ -58,7 +58,7 @@ def action(func):
 def iter_actions(manager):
 
     cls = type(manager)
-    it = cls.__dict__.iteritems()
+    it = cls.__dict__.items()
     for name, member in it:
         try:
             member.is_action_handler
@@ -508,9 +508,9 @@ class Window (object):
         if start_index is not None and not scroll_to_selection:
 
             def traverse():
-                for i in xrange(start_index, len(model)):
+                for i in range(start_index, len(model)):
                     yield i
-                for i in xrange(start_index - 1, 0, -1):
+                for i in range(start_index - 1, 0, -1):
                     yield i
             for current_index in traverse():
                 try:
@@ -686,13 +686,13 @@ class Window (object):
         line_text = model.access_offset(line_offset).strip()
         line_text = Data.strip_escape(line_text)
 
-        self.clipboard.set_text(line_text, -1)
+        self.clipboard.set_text(line_text.decode('utf8'), -1)
 
     @action
     def handle_edit_copy_message_action_activate(self, action):
 
         col_id = LogModelBase.COL_MESSAGE
-        self.clipboard.set_text(self.get_active_line()[col_id])
+        self.clipboard.set_text(self.get_active_line()[col_id].decode('utf8'), -1)
 
     @action
     def handle_enlarge_text_action_activate(self, action):

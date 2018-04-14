@@ -38,7 +38,7 @@ def perform_substitution (filename, values):
     data = fp.read ()
     fp.close ()
 
-    for name, value in values.items ():
+    for name, value in list(values.items ()):
         data = data.replace ("$%s$" % (name,), value)
 
     fp = file (filename, "wt")
@@ -74,7 +74,7 @@ class clean_custom (clean):
     def remove_file (self, path):
 
         if os.path.exists (path):
-            print "removing '%s'" % (path,)
+            print("removing '%s'" % (path,))
             if not self.dry_run:
                 os.unlink (path)
 
@@ -300,7 +300,7 @@ class install_scripts_custom (install_scripts):
         if install.root:
             root = normpath (install.root)
             len_root = len (root)
-            for name, value in values.items ():
+            for name, value in list(values.items ()):
                 if normpath (value).startswith (root):
                     values[name] = normpath (value)[len_root:]
 

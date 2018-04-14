@@ -33,7 +33,7 @@ from gi.types import GObjectMeta
 
 import GstDebugViewer
 from GstDebugViewer.Common import utils
-from generictreemodel import GenericTreeModel
+from .generictreemodel import GenericTreeModel
 
 
 def widget_add_popup_menu(widget, menu, button=3):
@@ -150,7 +150,7 @@ class UIFactory (object):
     def make(self, extra_actions=None):
 
         ui_manager = Gtk.UIManager()
-        for action_group in self.action_groups.values():
+        for action_group in list(self.action_groups.values()):
             ui_manager.insert_action_group(action_group, 0)
         if extra_actions:
             for action_group in extra_actions.groups:
@@ -199,7 +199,7 @@ class MetaModel (GObjectMeta):
 
         column_names = spec[::2]
         column_types = spec[1::2]
-        column_indices = range(len(column_names))
+        column_indices = list(range(len(column_names)))
 
         for col_index, col_name, in zip(column_indices, column_names):
             setattr(cls, col_name, col_index)
@@ -240,7 +240,7 @@ class Manager (object):
         if len(kw) != 1:
             raise ValueError("need exactly one keyword argument")
 
-        attr, value = kw.items()[0]
+        attr, value = list(kw.items())[0]
         getter = attrgetter(attr)
 
         for item in i:
@@ -261,20 +261,20 @@ class StateString (object):
 
     def __get__(self, section, section_class=None):
 
-        import ConfigParser
+        import configparser
 
         if section is None:
             return self
 
         try:
             return self.get(section)
-        except (ConfigParser.NoSectionError,
-                ConfigParser.NoOptionError,):
+        except (configparser.NoSectionError,
+                configparser.NoOptionError,):
             return self.get_default(section)
 
     def __set__(self, section, value):
 
-        import ConfigParser
+        import configparser
 
         self.set(section, value)
 
@@ -439,13 +439,13 @@ class StateSection (object):
 
     def set(self, state_string, value):
 
-        import ConfigParser
+        import configparser
 
         parser = self.state._parser
 
         try:
             parser.set(self._name, state_string.option, value)
-        except ConfigParser.NoSectionError:
+        except configparser.NoSectionError:
             parser.add_section(self._name)
             parser.set(self._name, state_string.option, value)
 
@@ -454,12 +454,12 @@ class State (object):
 
     def __init__(self, filename, old_filenames=()):
 
-        import ConfigParser
+        import configparser
 
         self.sections = {}
 
         self._filename = filename
-        self._parser = ConfigParser.RawConfigParser()
+        self._parser = configparser.RawConfigParser()
         success = self._parser.read([filename])
         if not success:
             for old_filename in old_filenames:

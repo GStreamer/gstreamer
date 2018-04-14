@@ -21,6 +21,10 @@
 
 import os.path
 
+import gi
+gi.require_version('Gdk', '3.0')
+gi.require_version('Gtk', '3.0')
+
 from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import Gtk
@@ -92,7 +96,7 @@ class App (object):
 
         # Apply custom widget stying
         # TODO: check for dark theme
-        css = """
+        css = b"""
         @define-color normal_bg_color #FFFFFF;
         @define-color shade_bg_color shade(@normal_bg_color, 0.95);
         #log_view row:nth-child(even) {

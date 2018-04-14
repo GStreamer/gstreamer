@@ -57,7 +57,7 @@ class GSourceDispatcher (Dispatcher):
             GObject.source_remove(self.source_id)
 
         self.source_id = GObject.idle_add(
-            iterator.next, priority=GObject.PRIORITY_LOW)
+            iterator.__next__, priority=GObject.PRIORITY_LOW)
 
     def cancel(self):
 

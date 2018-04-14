@@ -27,9 +27,7 @@ import gi
 from GstDebugViewer.GUI.app import App
 
 
-def main(options):
-
-    args = options["args"]
+def main(args):
 
     app = App()
 

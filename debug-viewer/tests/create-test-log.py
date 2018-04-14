@@ -38,13 +38,13 @@ def main ():
               Data.debug_level_info,)
 
     shift = 0
-    for i in xrange (count):
+    for i in range (count):
 
         ts = i * 10000
         shift += i % (count // 100)
         level = levels[(i + shift) % 3]
-        print line_string (ts, pid, thread, level, category, filename, file_line,
-                           function, object_, message)
+        print(line_string (ts, pid, thread, level, category, filename, file_line,
+                           function, object_, message))
 
 if __name__ == "__main__":
     main ()

@@ -20,63 +20,41 @@
 """GStreamer Debug Viewer Main module."""
 
 import sys
+import optparse
 from gettext import gettext as _, ngettext
 
+from gi.repository import GLib
+
+from GstDebugViewer import GUI
 import GstDebugViewer.Common.Main
 Common = GstDebugViewer.Common
 
 GETTEXT_DOMAIN = "gst-debug-viewer"
 
 
-def main_version():
+def main_version(opt, value, parser, *args, **kwargs):
 
     from GstDebugViewer import version
 
-    print "GStreamer Debug Viewer %s" % (version,)
-
+    print("GStreamer Debug Viewer %s" % (version,))
+    sys.exit(0)
 
 class Paths (Common.Main.PathsProgramBase):
 
     program_name = "gst-debug-viewer"
 
 
-class OptionParser (Common.Main.LogOptionParser):
-
-    def __init__(self, options):
-
-        Common.Main.LogOptionParser.__init__(self, options)
-
-        options["main"] = None
-        options["args"] = []
-
-        self.add_option("version", None, _("Display version and exit"))
-
-    def get_parameter_string(self):
-
-        return _("[FILENAME] - Display and analyze GStreamer debug log files")
-
-    def handle_parse_complete(self, remaining_args):
-
-        try:
-            version = self.options["version"]
-        except KeyError:
-            pass
-        else:
-            main_version()
-            sys.exit(0)
-
-        if self.options["main"] is None:
-            from GstDebugViewer import GUI
-            self.options["main"] = GUI.main
-
-        self.options["args"][:] = remaining_args
-
-
 def main():
+    parser = optparse.OptionParser(
+        _("%prog [OPTION...] [FILENAME]"),
+        description=_("Display and analyze GStreamer debug log files"))
+    parser.add_option("--version", "-v",
+                      action="callback",
+                      dest="version",
+                      callback=main_version,
+                      help=_("Display version and exit"))
 
-    options = {}
-    parser = OptionParser(options)
-
-    Common.Main.main(option_parser=parser,
+    Common.Main.main(main_function=GUI.main,
+                     option_parser=parser,
                      gettext_domain=GETTEXT_DOMAIN,
                      paths=Paths)

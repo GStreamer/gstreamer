@@ -29,9 +29,7 @@ from gi.repository import Gtk
 from GstDebugViewer import Common, Data
 
 
-class LogModelBase (Common.GUI.GenericTreeModel):
-
-    __metaclass__ = Common.GUI.MetaModel
+class LogModelBase (Common.GUI.GenericTreeModel, metaclass=Common.GUI.MetaModel):
 
     columns = ("COL_TIME", GObject.TYPE_UINT64,
                "COL_PID", int,
@@ -134,6 +132,8 @@ class LogModelBase (Common.GUI.GenericTreeModel):
         if col_id == self.COL_MESSAGE:
             # strip whitespace + newline
             value = self.access_offset(line_offset + value).strip()
+        elif col_id in (self.COL_TIME, self.COL_THREAD):
+            value = GObject.Value(GObject.TYPE_UINT64, value)
 
         return value
 
@@ -270,7 +270,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         self.line_offsets = self.super_model.line_offsets
         self.line_levels = self.super_model.line_levels
-        self.super_index = xrange(len(self.line_offsets))
+        self.super_index = range(len(self.line_offsets))
 
         del self.filters[:]
 
@@ -374,7 +374,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         if len(self.filters) == 0:
             # Identity.
-            self.super_index = xrange(super_start, super_stop)
+            self.super_index = range(super_start, super_stop)
             self.line_offsets = SubRange(self.super_model.line_offsets,
                                          super_start, super_stop)
             self.line_levels = SubRange(self.super_model.line_levels,
@@ -384,12 +384,12 @@ class FilteredLogModel (FilteredLogModelBase):
         if super_start < old_super_start:
             # TODO:
             raise NotImplementedError("Only handling further restriction of the range"
-                                      " (start offset = %i)" % (start_offset,))
+                                      " (start offset = %i)" % (super_start,))
 
         if super_stop > old_super_stop:
             # TODO:
             raise NotImplementedError("Only handling further restriction of the range"
-                                      " (end offset = %i)" % (stop_offset,))
+                                      " (end offset = %i)" % (super_stop,))
 
         start = self.line_index_from_super(super_start)
         stop = self.line_index_from_super(super_stop)
@@ -439,7 +439,7 @@ class SubRange (object):
     def __iter__(self):
 
         l = self.l
-        for i in xrange(self.start, self.stop):
+        for i in range(self.start, self.stop):
             yield l[i]
 
 
