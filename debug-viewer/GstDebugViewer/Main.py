@@ -39,6 +39,7 @@ def main_version(opt, value, parser, *args, **kwargs):
     print("GStreamer Debug Viewer %s" % (version,))
     sys.exit(0)
 
+
 class Paths (Common.Main.PathsProgramBase):
 
     program_name = "gst-debug-viewer"

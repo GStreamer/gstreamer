@@ -75,7 +75,7 @@ class LogModelBase (Common.GUI.GenericTreeModel, metaclass=Common.GUI.MetaModel)
             # adjust special rows
             row[COL_LEVEL] = line_levels[i]
             msg_offset = row[COL_MESSAGE]
-            row[COL_MESSAGE] =  access_offset(offset + msg_offset)
+            row[COL_MESSAGE] = access_offset(offset + msg_offset)
             yield (row, offset,)
             row[COL_MESSAGE] = msg_offset
 
@@ -401,21 +401,21 @@ class FilteredLogModel (FilteredLogModelBase):
 
 class SubRange (object):
 
-    __slots__ = ("l", "start", "stop",)
+    __slots__ = ("size", "start", "stop",)
 
-    def __init__(self, l, start, stop):
+    def __init__(self, size, start, stop):
 
         if start > stop:
             raise ValueError(
                 "need start <= stop (got %r, %r)" % (start, stop,))
 
-        if type(l) == type(self):
+        if type(size) == type(self):
             # Another SubRange, don't stack:
-            start += l.start
-            stop += l.start
-            l = l.l
+            start += size.start
+            stop += size.start
+            size = size.size
 
-        self.l = l
+        self.size = size
         self.start = start
         self.stop = stop
 
@@ -428,9 +428,9 @@ class SubRange (object):
             else:
                 stop += self.stop
 
-            return self.l[i.start + self.start:stop]
+            return self.size[i.start + self.start:stop]
         else:
-            return self.l[i + self.start]
+            return self.size[i + self.start]
 
     def __len__(self):
 
@@ -438,9 +438,9 @@ class SubRange (object):
 
     def __iter__(self):
 
-        l = self.l
+        size = self.size
         for i in range(self.start, self.stop):
-            yield l[i]
+            yield size[i]
 
 
 class LineViewLogModel (FilteredLogModelBase):

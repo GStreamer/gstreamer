@@ -25,101 +25,82 @@ import os
 import os.path
 
 import distutils.cmd
-from distutils.core import setup
+from setuptools import setup
 from distutils.command.clean import clean
 from distutils.command.build import build
 from distutils.command.sdist import sdist
 from distutils.command.install_scripts import install_scripts
 from distutils.errors import *
 
-def perform_substitution (filename, values):
 
-    fp = file (filename, "rt")
-    data = fp.read ()
-    fp.close ()
+def perform_substitution(filename, values):
 
-    for name, value in list(values.items ()):
-        data = data.replace ("$%s$" % (name,), value)
+    fp = file(filename, "rt")
+    data = fp.read()
+    fp.close()
 
-    fp = file (filename, "wt")
-    fp.write (data)
-    fp.close ()
+    for name, value in list(values.items()):
+        data = data.replace("$%s$" % (name,), value)
 
-class tests (distutils.cmd.Command):
+    fp = file(filename, "wt")
+    fp.write(data)
+    fp.close()
 
-    description = "run unit tests"
-
-    user_options = [("files=", "f", "test scripts",)]
-
-    def initialize_options (self):
-
-        self.files = []
-
-    def finalize_options (self):
-
-        from glob import glob
-
-        if self.files:
-            self.files = glob (os.path.join (*self.files.split ("/")))
-        else:
-            self.files = []
-
-    def run (self):
-
-        for filename in self.files:
-            self.spawn ([sys.executable, filename])
 
 class clean_custom (clean):
 
-    def remove_file (self, path):
+    def remove_file(self, path):
 
-        if os.path.exists (path):
+        if os.path.exists(path):
             print("removing '%s'" % (path,))
             if not self.dry_run:
-                os.unlink (path)
+                os.unlink(path)
 
-    def remove_directory (self, path):
+    def remove_directory(self, path):
 
         from distutils import dir_util
 
-        if os.path.exists (path):
-            dir_util.remove_tree (path, dry_run = self.dry_run)
+        if os.path.exists(path):
+            dir_util.remove_tree(path, dry_run=self.dry_run)
 
-    def run (self):
+    def run(self):
 
-        clean.run (self)
+        clean.run(self)
 
-        if os.path.exists ("MANIFEST.in"):
+        if os.path.exists("MANIFEST.in"):
             # MANIFEST is generated, get rid of it.
-            self.remove_file ("MANIFEST")
+            self.remove_file("MANIFEST")
 
-        pot_file = os.path.join ("po", "gst-debug-viewer.pot")
-        self.remove_file (pot_file)
+        pot_file = os.path.join("po", "gst-debug-viewer.pot")
+        self.remove_file(pot_file)
 
-        self.remove_directory ("build")
-        self.remove_directory ("dist")
+        self.remove_directory("build")
+        self.remove_directory("dist")
 
-        for path, dirs, files in os.walk ("."):
+        for path, dirs, files in os.walk("."):
             for filename in files:
-                if filename.endswith (".pyc") or filename.endswith (".pyo"):
-                    file_path = os.path.join (path, filename)
-                    self.remove_file (file_path)
+                if filename.endswith(".pyc") or filename.endswith(".pyo"):
+                    file_path = os.path.join(path, filename)
+                    self.remove_file(file_path)
+
 
 class build_custom (build):
 
-    def build_l10n (self):
+    def build_l10n(self):
 
         return self.l10n
 
     sub_commands = build.sub_commands + [("build_l10n", build_l10n,)]
-    user_options = build.user_options + [("l10n", None, "enable translations",)]
+    user_options = build.user_options + \
+        [("l10n", None, "enable translations",)]
     boolean_options = build.boolean_options + ["l10n"]
 
-    def initialize_options (self):
+    def initialize_options(self):
 
-        build.initialize_options (self)
+        build.initialize_options(self)
 
         self.l10n = False
+
 
 class build_l10n (distutils.cmd.Command):
 
@@ -135,7 +116,7 @@ class build_l10n (distutils.cmd.Command):
                     ("domain=", "d", "gettext domain"),
                     ("bug-contact=", "c", "contact address for msgid bugs")]
 
-    def initialize_options (self):
+    def initialize_options(self):
 
         self.merge_desktop_files = []
         self.merge_xml_files = []
@@ -145,54 +126,55 @@ class build_l10n (distutils.cmd.Command):
         self.domain = None
         self.bug_contact = None
 
-    def finalize_options (self):
+    def finalize_options(self):
 
         for attr in ("desktop", "xml", "key", "schemas", "rfc822deb",):
-            value = getattr (self, "merge_%s_files" % (attr,))
+            value = getattr(self, "merge_%s_files" % (attr,))
             if not value:
                 value = []
             else:
-                value = eval (value)
-            setattr (self, "merge_%s_files" % (attr,), value)
+                value = eval(value)
+            setattr(self, "merge_%s_files" % (attr,), value)
 
         if self.domain is None:
             self.domain = self.distribution.metadata.name
 
-    def run (self):
+    def run(self):
 
         from glob import glob
 
         data_files = self.distribution.data_files
 
-        po_makefile = os.path.join ("po", "Makefile")
-        if os.path.exists (po_makefile):
-            raise DistutilsFileError ("file %s exists (intltool will pick up "
-                                      "values from there)" % (po_makefile,))
+        po_makefile = os.path.join("po", "Makefile")
+        if os.path.exists(po_makefile):
+            raise DistutilsFileError("file %s exists (intltool will pick up "
+                                     "values from there)" % (po_makefile,))
 
-        cwd = os.getcwd ()
+        cwd = os.getcwd()
 
         if self.bug_contact is not None:
-            os.environ["XGETTEXT_ARGS"] = "--msgid-bugs-address=%s" % (self.bug_contact,)
-        os.chdir (os.path.join (cwd, "po"))
+            os.environ["XGETTEXT_ARGS"] = "--msgid-bugs-address=%s" % (
+                self.bug_contact,)
+        os.chdir(os.path.join(cwd, "po"))
         # Update .pot file.
-        self.spawn (["intltool-update", "-p", "-g", self.domain])
+        self.spawn(["intltool-update", "-p", "-g", self.domain])
         # Merge new strings into .po files.
-        self.spawn (["intltool-update", "-r", "-g", self.domain])
+        self.spawn(["intltool-update", "-r", "-g", self.domain])
 
-        os.chdir (cwd)
+        os.chdir(cwd)
 
-        for po_file in glob (os.path.join ("po", "*.po")):
-            lang = os.path.basename (po_file[:-3])
-            if lang.startswith ("."):
+        for po_file in glob(os.path.join("po", "*.po")):
+            lang = os.path.basename(po_file[:-3])
+            if lang.startswith("."):
                 # Hidden file, like auto-save data from an editor.
                 continue
-            mo_dir = os.path.join ("build", "mo", lang, "LC_MESSAGES")
-            mo_file = os.path.join (mo_dir, "%s.mo" % (self.domain,))
-            self.mkpath (mo_dir)
-            self.spawn (["msgfmt", po_file, "-o", mo_file])
+            mo_dir = os.path.join("build", "mo", lang, "LC_MESSAGES")
+            mo_file = os.path.join(mo_dir, "%s.mo" % (self.domain,))
+            self.mkpath(mo_dir)
+            self.spawn(["msgfmt", po_file, "-o", mo_file])
 
-            targetpath = os.path.join ("share", "locale", lang, "LC_MESSAGES")
-            data_files.append ((targetpath, (mo_file,)))
+            targetpath = os.path.join("share", "locale", lang, "LC_MESSAGES")
+            data_files.append((targetpath, (mo_file,)))
 
         for parameter, option in ((self.merge_xml_files, "-x",),
                                   (self.merge_desktop_files, "-d",),
@@ -202,17 +184,18 @@ class build_l10n (distutils.cmd.Command):
             if not parameter:
                 continue
             for target, files in parameter:
-                build_target = os.path.join ("build", target)
+                build_target = os.path.join("build", target)
                 for file in files:
-                    if file.endswith (".in"):
-                        file_merged = os.path.basename (file[:-3])
+                    if file.endswith(".in"):
+                        file_merged = os.path.basename(file[:-3])
                     else:
-                        file_merged = os.path.basename (file)
+                        file_merged = os.path.basename(file)
 
-                self.mkpath (build_target)
-                file_merged = os.path.join (build_target, file_merged)
-                self.spawn (["intltool-merge", option, "po", file, file_merged])
-                data_files.append ((target, [file_merged],))
+                self.mkpath(build_target)
+                file_merged = os.path.join(build_target, file_merged)
+                self.spawn(["intltool-merge", option, "po", file, file_merged])
+                data_files.append((target, [file_merged],))
+
 
 class distcheck (sdist):
 
@@ -220,126 +203,132 @@ class distcheck (sdist):
 
     description = "verify self-containedness of source distribution"
 
-    def run (self):
+    def run(self):
 
         from distutils import dir_util
         from distutils.spawn import spawn
 
         # This creates e.g. dist/gst-debug-viewer-0.1.tar.gz.
-        sdist.run (self)
+        sdist.run(self)
 
-        base_dir = self.distribution.get_fullname ()
-        distcheck_dir = os.path.join (self.dist_dir, "distcheck")
-        self.mkpath (distcheck_dir)
-        self.mkpath (os.path.join (distcheck_dir, "again"))
+        base_dir = self.distribution.get_fullname()
+        distcheck_dir = os.path.join(self.dist_dir, "distcheck")
+        self.mkpath(distcheck_dir)
+        self.mkpath(os.path.join(distcheck_dir, "again"))
 
-        cwd = os.getcwd ()
-        os.chdir (distcheck_dir)
+        cwd = os.getcwd()
+        os.chdir(distcheck_dir)
 
-        if os.path.isdir (base_dir):
-            dir_util.remove_tree (base_dir)
+        if os.path.isdir(base_dir):
+            dir_util.remove_tree(base_dir)
 
         # Unpack tarball into dist/distcheck, creating
         # e.g. dist/distcheck/gst-debug-viewer-0.1.
         for archive in self.archive_files:
-            if archive.endswith (".tar.gz"):
-                archive_rel = os.path.join (os.pardir, os.pardir, archive)
-                spawn (["tar", "-xzf", archive_rel, base_dir])
+            if archive.endswith(".tar.gz"):
+                archive_rel = os.path.join(os.pardir, os.pardir, archive)
+                spawn(["tar", "-xzf", archive_rel, base_dir])
                 break
         else:
-            raise ValueError ("no supported archives were created")
+            raise ValueError("no supported archives were created")
 
-        os.chdir (cwd)
-        os.chdir (os.path.join (distcheck_dir, base_dir))
-        spawn ([sys.executable, "setup.py", "sdist", "--formats", "gztar"])
+        os.chdir(cwd)
+        os.chdir(os.path.join(distcheck_dir, base_dir))
+        spawn([sys.executable, "setup.py", "sdist", "--formats", "gztar"])
 
         # Unpack tarball into dist/distcheck/again.
-        os.chdir (cwd)
-        os.chdir (os.path.join (distcheck_dir, "again"))
-        archive_rel = os.path.join (os.pardir, base_dir, "dist", "%s.tar.gz" % (base_dir,))
-        spawn (["tar", "-xzf", archive_rel, base_dir])
+        os.chdir(cwd)
+        os.chdir(os.path.join(distcheck_dir, "again"))
+        archive_rel = os.path.join(
+            os.pardir, base_dir, "dist", "%s.tar.gz" % (base_dir,))
+        spawn(["tar", "-xzf", archive_rel, base_dir])
 
-        os.chdir (cwd)
-        os.chdir (os.path.join (distcheck_dir, base_dir))
-        spawn ([sys.executable, "setup.py", "clean"])
+        os.chdir(cwd)
+        os.chdir(os.path.join(distcheck_dir, base_dir))
+        spawn([sys.executable, "setup.py", "clean"])
 
-        os.chdir (cwd)
-        spawn (["diff", "-ru",
-                os.path.join (distcheck_dir, base_dir),
-                os.path.join (distcheck_dir, "again", base_dir)])
+        os.chdir(cwd)
+        spawn(["diff", "-ru",
+               os.path.join(distcheck_dir, base_dir),
+               os.path.join(distcheck_dir, "again", base_dir)])
 
         if not self.keep_temp:
-            dir_util.remove_tree (distcheck_dir)
+            dir_util.remove_tree(distcheck_dir)
+
 
 class install_scripts_custom (install_scripts):
 
     user_options = install_scripts.user_options \
-                   + [("substitute-files=", None,
-                       "files to perform substitution on")]
+        + [("substitute-files=", None,
+            "files to perform substitution on")]
 
-    def initialize_options (self):
+    def initialize_options(self):
 
-        install_scripts.initialize_options (self)
+        install_scripts.initialize_options(self)
 
         self.substitute_files = "[]"
 
-    def run (self):
+    def run(self):
 
         from os.path import normpath
 
-        install = self.distribution.get_command_obj ("install")
-        install.ensure_finalized ()
+        install = self.distribution.get_command_obj("install")
+        install.ensure_finalized()
 
-        values = {"DATADIR" : install.install_data or "",
-                  "PREFIX" : install.home or install.prefix or "",
-                  "SCRIPTSDIR" : self.install_dir or ""}
+        values = {"DATADIR": install.install_data or "",
+                  "PREFIX": install.home or install.prefix or "",
+                  "SCRIPTSDIR": self.install_dir or ""}
 
         if install.home:
-            values["LIBDIR"] = os.path.normpath (install.install_lib)
+            values["LIBDIR"] = os.path.normpath(install.install_lib)
 
         if install.root:
-            root = normpath (install.root)
-            len_root = len (root)
-            for name, value in list(values.items ()):
-                if normpath (value).startswith (root):
-                    values[name] = normpath (value)[len_root:]
+            root = normpath(install.root)
+            len_root = len(root)
+            for name, value in list(values.items()):
+                if normpath(value).startswith(root):
+                    values[name] = normpath(value)[len_root:]
 
         # Perform installation as normal...
-        install_scripts.run (self)
+        install_scripts.run(self)
 
         if self.dry_run:
             return
 
         # ...then substitute in-place:
-        for filename in eval (self.substitute_files):
-            perform_substitution (os.path.join (self.install_dir, filename), values)
+        for filename in eval(self.substitute_files):
+            perform_substitution(os.path.join(
+                self.install_dir, filename), values)
 
-cmdclass = {"build" : build_custom,
-            "clean" : clean_custom,
-            "install_scripts" : install_scripts_custom,
 
-            "build_l10n" : build_l10n,
-            "distcheck" : distcheck,
-            "tests" : tests}
+cmdclass = {"build": build_custom,
+            "clean": clean_custom,
+            "install_scripts": install_scripts_custom,
 
-setup (cmdclass = cmdclass,
+            "build_l10n": build_l10n,
+            "distcheck": distcheck}
 
-       packages = ["GstDebugViewer",
-                   "GstDebugViewer.Common",
-                   "GstDebugViewer.GUI",
-                   "GstDebugViewer.Plugins"],
-       scripts = ["gst-debug-viewer"],
-       data_files = [("share/gst-debug-viewer", ["data/about-dialog.ui",
-                                                 "data/main-window.ui",
-                                                 "data/menus.ui"],),
-                     ("share/icons/hicolor/48x48/apps", ["data/gst-debug-viewer.png"],),
-                     ("share/icons/hicolor/scalable/apps", ["data/gst-debug-viewer.svg"],)],
+setup(cmdclass=cmdclass,
 
-       name = "gst-debug-viewer",
-       version = "0.1",
-       description = "GStreamer Debug Viewer",
-       long_description = """""",
-       license = "GNU GPL",
-       author = "Rene Stadler",
-       author_email = "mail@renestadler.de",
-       url = "http://renestadler.de/projects/gst-debug-viewer")
+      packages=["GstDebugViewer",
+                "GstDebugViewer.Common",
+                "GstDebugViewer.GUI",
+                "GstDebugViewer.Plugins",
+                "GstDebugViewer.tests"],
+      scripts=["gst-debug-viewer"],
+      data_files=[("share/gst-debug-viewer", ["data/about-dialog.ui",
+                                              "data/main-window.ui",
+                                              "data/menus.ui"],),
+                  ("share/icons/hicolor/48x48/apps",
+                   ["data/gst-debug-viewer.png"],),
+                  ("share/icons/hicolor/scalable/apps", ["data/gst-debug-viewer.svg"],)],
+
+      name="gst-debug-viewer",
+      version="0.1",
+      description="GStreamer Debug Viewer",
+      long_description="""""",
+      test_suite="GstDebugViewer.tests",
+      license="GNU GPL",
+      author="Rene Stadler",
+      author_email="mail@renestadler.de",
+      url="http://renestadler.de/projects/gst-debug-viewer")

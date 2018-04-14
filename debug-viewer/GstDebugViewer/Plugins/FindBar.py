@@ -224,9 +224,9 @@ class FindBarFeature (FeatureBase):
         self.action_group.add_actions([("goto-next-search-result",
                                         None, _("Goto Next Match"),
                                         "<Ctrl>G"),
-                                     ("goto-previous-search-result",
-                                         None, _("Goto Previous Match"),
-                                         "<Ctrl><Shift>G")])
+                                       ("goto-previous-search-result",
+                                        None, _("Goto Previous Match"),
+                                        "<Ctrl><Shift>G")])
 
         self.bar = None
         self.operation = None
@@ -434,7 +434,7 @@ class FindBarFeature (FeatureBase):
 
     def handle_match_found(self, model, tree_iter):
 
-        if not self.search_state in ("search-forward", "search-backward",):
+        if self.search_state not in ("search-forward", "search-backward",):
             self.logger.warning(
                 "inconsistent search state %r", self.search_state)
             return

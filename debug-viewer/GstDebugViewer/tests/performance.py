@@ -30,49 +30,50 @@ import gi
 
 from gi.repository import GObject
 
-sys.path.insert (0, os.path.join (sys.path[0], os.pardir))
+from .. import Common, Data, GUI
 
-from GstDebugViewer import Common, Data, GUI
 
 class TestParsingPerformance (object):
 
-    def __init__ (self, filename):
+    def __init__(self, filename):
 
-        self.main_loop = GObject.MainLoop ()
-        self.log_file = Data.LogFile (filename, Common.Data.DefaultDispatcher ())
-        self.log_file.consumers.append (self)
+        self.main_loop = GObject.MainLoop()
+        self.log_file = Data.LogFile(filename, Common.Data.DefaultDispatcher())
+        self.log_file.consumers.append(self)
 
-    def start (self):
+    def start(self):
 
-        self.log_file.start_loading ()
+        self.log_file.start_loading()
 
-    def handle_load_started (self):
+    def handle_load_started(self):
 
-        self.start_time = time.time ()
+        self.start_time = time.time()
 
-    def handle_load_finished (self):
+    def handle_load_finished(self):
 
-        diff = time.time () - self.start_time
+        diff = time.time() - self.start_time
         print("line cache built in %0.1f ms" % (diff * 1000.,))
 
-        start_time = time.time ()
-        model = GUI.LazyLogModel (self.log_file)
+        start_time = time.time()
+        model = GUI.LazyLogModel(self.log_file)
         for row in model:
             pass
-        diff = time.time () - start_time
+        diff = time.time() - start_time
         print("model iterated in %0.1f ms" % (diff * 1000.,))
-        print("overall time spent: %0.1f s" % (time.time () - self.start_time,))
+        print("overall time spent: %0.1f s" % (time.time() - self.start_time,))
 
         import resource
-        rusage = resource.getrusage (resource.RUSAGE_SELF)
+        rusage = resource.getrusage(resource.RUSAGE_SELF)
         print("time spent in user mode: %.2f s" % (rusage.ru_utime,))
         print("time spent in system mode: %.2f s" % (rusage.ru_stime,))
 
-def main ():
 
-    if len (sys.argv) > 1:
-        test = TestParsingPerformance (sys.argv[1])
-        test.start ()
+def main():
+
+    if len(sys.argv) > 1:
+        test = TestParsingPerformance(sys.argv[1])
+        test.start()
+
 
 if __name__ == "__main__":
-    main ()
+    main()

@@ -58,7 +58,7 @@ def gettext_cache():
 
     def gettext_cache_access(s):
 
-        if not s in d:
+        if s not in d:
             d[s] = gettext(s)
         return d[s]
 
@@ -103,6 +103,7 @@ class _XDGClass (object):
             dir = os.path.expanduser(os.path.join(*default.split("/")))
 
         setattr(self, name, dir)
+
 
 XDG = _XDGClass()
 

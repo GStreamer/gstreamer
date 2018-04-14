@@ -56,7 +56,7 @@ def main():
         try:
             if not modified_file.endswith(".py"):
                 continue
-            pycodestyle_errors = system('pycodestyle', '--repeat', '--ignore', 'E501,E128', modified_file)
+            pycodestyle_errors = system('pycodestyle', '--repeat', '--ignore', 'E501,E128,W605', modified_file)
             if pycodestyle_errors:
                 if output_message is None:
                     output_message = NOT_PYCODESTYLE_COMPLIANT_MESSAGE_PRE

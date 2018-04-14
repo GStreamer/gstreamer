@@ -43,7 +43,8 @@ class DebugLevelFilter (Filter):
 
         col_id = LogModelBase.COL_LEVEL
         if mode == self.this_and_above:
-            comparison_function = lambda x, y: x < y
+            def comparison_function(x, y):
+                return x < y
         else:
             comparison_function = get_comparison_function(
                 mode == self.all_but_this)

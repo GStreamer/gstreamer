@@ -19,10 +19,6 @@
 
 """GStreamer Debug Viewer GUI module."""
 
-
-def _(s):
-    return s
-
 import logging
 
 from gi.repository import Gtk, GLib
@@ -30,6 +26,10 @@ from gi.repository import Gtk, GLib
 from GstDebugViewer import Common, Data
 from GstDebugViewer.GUI.colors import LevelColorThemeTango
 from GstDebugViewer.GUI.models import LazyLogModel, LogModelBase
+
+
+def _(s):
+    return s
 
 # Sync with gst-inspector!
 
@@ -526,7 +526,7 @@ class ColumnManager (Common.GUI.Manager):
         before = self.column_order[:pos]
         shown_names = [col.name for col in self.columns]
         for col_class in before:
-            if not col_class.name in shown_names:
+            if col_class.name not in shown_names:
                 pos -= 1
         return pos
 

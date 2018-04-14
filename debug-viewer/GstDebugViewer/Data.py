@@ -69,7 +69,7 @@ def parse_time(st):
     secs, subsecs = s.split(".")
 
     return int((int(h) * 60 ** 2 + int(m) * 60) * SECOND) + \
-           int(secs) * SECOND + int(subsecs)
+        int(secs) * SECOND + int(subsecs)
 
 
 class DebugLevel (int):
@@ -112,6 +112,7 @@ class DebugLevel (int):
             raise ValueError("already the lowest debug level")
 
         return DebugLevel(self - 1)
+
 
 debug_level_none = DebugLevel("NONE")
 debug_level_error = DebugLevel("ERROR")
@@ -310,10 +311,10 @@ class LineCache (Producer):
                        "I": debug_level_info, "W": debug_level_warning,
                        "E": debug_level_error, " ": debug_level_none}
         ANSI = "(?:\x1b\\[[0-9;]*m)?"
-        ANSI_PATTERN = (r"\d:\d\d:\d\d\.\d+ " + ANSI +
-                        r" *\d+" + ANSI +
-                        r" +0x[0-9a-f]+ +" + ANSI +
-                        r"([TFLDIEW ])")
+        ANSI_PATTERN = r"\d:\d\d:\d\d\.\d+ " + ANSI + \
+                       r" *\d+" + ANSI + \
+                       r" +0x[0-9a-f]+ +" + ANSI + \
+                       r"([TFLDIEW ])"
         BARE_PATTERN = ANSI_PATTERN.replace(ANSI, "")
         rexp_bare = re.compile(BARE_PATTERN)
         rexp_ansi = re.compile(ANSI_PATTERN)
@@ -345,7 +346,7 @@ class LineCache (Producer):
                 break
             match = rexp_match(line)
             if match is None:
-                if rexp is rexp_ansi or not "\x1b" in line:
+                if rexp is rexp_ansi or "\x1b" not in line:
                     continue
 
                 match = rexp_ansi.match(line)
@@ -432,9 +433,9 @@ class LogLines (object):
 
     def __iter__(self):
 
-        l = len(self)
+        size = len(self)
         i = 0
-        while i < l:
+        while i < size:
             yield self[i]
             i += 1
 

@@ -19,12 +19,6 @@
 
 """GStreamer Debug Viewer GUI module."""
 
-ZOOM_FACTOR = 1.15
-
-
-def _(s):
-    return s
-
 import os.path
 from bisect import bisect_right, bisect_left
 import logging
@@ -46,6 +40,13 @@ from GstDebugViewer.GUI.models import (FilteredLogModel,
                                        LazyLogModel,
                                        LineViewLogModel,
                                        LogModelBase)
+
+
+ZOOM_FACTOR = 1.15
+
+
+def _(s):
+    return s
 
 
 def action(func):
@@ -242,10 +243,10 @@ class Window (object):
 
         group = Gtk.ActionGroup("MenuActions")
         group.add_actions([("AppMenuAction", None, _("_Application")),
-                         ("ViewMenuAction", None, _("_View")),
-            ("ViewColumnsMenuAction", None, _("_Columns")),
-            ("HelpMenuAction", None, _("_Help")),
-            ("LineViewContextMenuAction", None, "")])
+                           ("ViewMenuAction", None, _("_View")),
+                           ("ViewColumnsMenuAction", None, _("_Columns")),
+                           ("HelpMenuAction", None, _("_Help")),
+                           ("LineViewContextMenuAction", None, "")])
         self.actions.add_group(group)
 
         group = Gtk.ActionGroup("WindowActions")
@@ -567,8 +568,8 @@ class Window (object):
 
         dialog = Gtk.FileChooserDialog(None, self.gtk_window,
                                        Gtk.FileChooserAction.OPEN,
-                                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                       Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT,))
+                                       (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT,))
         response = dialog.run()
         dialog.hide()
         if response == Gtk.ResponseType.ACCEPT:
@@ -692,7 +693,8 @@ class Window (object):
     def handle_edit_copy_message_action_activate(self, action):
 
         col_id = LogModelBase.COL_MESSAGE
-        self.clipboard.set_text(self.get_active_line()[col_id].decode('utf8'), -1)
+        self.clipboard.set_text(self.get_active_line()[
+                                col_id].decode('utf8'), -1)
 
     @action
     def handle_enlarge_text_action_activate(self, action):

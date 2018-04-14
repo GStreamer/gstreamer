@@ -221,6 +221,7 @@ class ExceptHookManagerClass (object):
                  RuntimeWarning,
                  stacklevel=2)
 
+
 ExceptHookManager = ExceptHookManagerClass()
 
 
@@ -315,15 +316,16 @@ def _init_locale(gettext_domain=None):
             gettext.textdomain(gettext_domain)
             gettext.bind_textdomain_codeset(gettext_domain, "UTF-8")
 
+
 def _init_logging(level):
     if level == "none":
         return
 
-    mapping = { "debug": logging.DEBUG,
-                "info": logging.INFO,
-                "warning": logging.WARNING,
-                "error": logging.ERROR,
-                "critical": logging.CRITICAL }
+    mapping = {"debug": logging.DEBUG,
+               "info": logging.INFO,
+               "warning": logging.WARNING,
+               "error": logging.ERROR,
+               "critical": logging.CRITICAL}
     logging.basicConfig(level=mapping[level],
                         format='%(asctime)s.%(msecs)03d %(levelname)8s %(name)20s: %(message)s',
                         datefmt='%H:%M:%S')
@@ -331,6 +333,7 @@ def _init_logging(level):
     logger = logging.getLogger("main")
     logger.debug("logging at level %s", logging.getLevelName(level))
     logger.info("using Python %i.%i.%i %s %i", *sys.version_info)
+
 
 def _init_log_option(parser):
     choices = ["none", "debug", "info", "warning", "error", "critical"]
@@ -342,6 +345,7 @@ def _init_log_option(parser):
                       default="none",
                       help=_("Enable logging, possible values: ") + ", ".join(choices))
     return parser
+
 
 def main(main_function, option_parser, gettext_domain=None, paths=None):
 
