@@ -49,7 +49,8 @@ class MesonTest(Test):
 
         Test.__init__(self, test_infos['cmd'][0], name, options,
                       reporter, timeout=timeout, hard_timeout=timeout,
-                      is_parallel=getattr(test_infos, 'is_parallel', True))
+                      is_parallel=getattr(test_infos, 'is_parallel', True),
+                      workdir=test_infos['workdir'])
 
         self.test_infos = test_infos
 

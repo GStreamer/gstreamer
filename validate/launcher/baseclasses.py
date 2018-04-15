@@ -71,7 +71,8 @@ class Test(Loggable):
     def __init__(self, application_name, classname, options,
                  reporter, duration=0, timeout=DEFAULT_TIMEOUT,
                  hard_timeout=None, extra_env_variables=None,
-                 expected_failures=None, is_parallel=True):
+                 expected_failures=None, is_parallel=True,
+                 workdir=None):
         """
         @timeout: The timeout during which the value return by get_current_value
                   keeps being exactly equal
@@ -111,6 +112,7 @@ class Test(Loggable):
         self.generator = None
         # String representation of the test number in the testsuite
         self.number = ""
+        self.workdir = workdir
 
         self.clean()
 
@@ -356,7 +358,8 @@ class Test(Loggable):
         self.process = subprocess.Popen(self.command,
                                         stderr=self.out,
                                         stdout=self.out,
-                                        env=self.proc_env)
+                                        env=self.proc_env,
+                                        cwd=self.workdir)
         self.process.wait()
         if self.result is not Result.TIMEOUT:
             self.queue.put(None)
@@ -609,7 +612,7 @@ class GstValidateTest(Test):
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
                  media_descriptor=None, extra_env_variables=None,
-                 expected_failures=None):
+                 expected_failures=None, workdir=None):
 
         extra_env_variables = extra_env_variables or {}
 
@@ -651,7 +654,8 @@ class GstValidateTest(Test):
                                               timeout=timeout,
                                               hard_timeout=hard_timeout,
                                               extra_env_variables=extra_env_variables,
-                                              expected_failures=expected_failures)
+                                              expected_failures=expected_failures,
+                                              workdir=workdir)
 
         # defines how much the process can be outside of the configured
         # segment / seek
