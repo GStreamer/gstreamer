@@ -26,7 +26,7 @@ def main ():
     import os.path
 
     def substituted (s):
-        if s.startswith ("$") and s.endswith ("$"):
+        if s.startswith ("@") and s.endswith ("@"):
             return None
         else:
             return s
@@ -34,8 +34,8 @@ def main ():
     # These "$"-enclosed strings are substituted at install time by a custom
     # distutils extension (see setup.py).  If you don't see any dollar signs at
     # all, you are looking at an installed version of this file.
-    data_dir = substituted ("$DATADIR$")
-    lib_dir = substituted ("$LIBDIR$")
+    data_dir = substituted ("@DATADIR@")
+    lib_dir = substituted ("@LIBDIR@")
 
     if data_dir:
         installed = True

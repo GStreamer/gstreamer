@@ -19,8 +19,11 @@
 
 """GStreamer Debug Viewer package."""
 
-version = "0.1"
+version = "@VERSION@"
+
+if version.startswith('@'):
+    version = 'master'
 
 __version__ = version
 
-from GstDebugViewer.Main import Paths, GETTEXT_DOMAIN, main as run
+from GstDebugViewer.Main import Paths, GETTEXT_DOMAIN, main as run  # noqa

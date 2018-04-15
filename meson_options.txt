@@ -1,3 +1,9 @@
+option('disable_validate',
+        type : 'boolean', value : false,
+        description : 'Whether to disable GstValidate')
+option('disable_debug_viewer',
+        type : 'boolean', value : false,
+        description : 'Whether to disable GstDebugViewer')
 option('disable_introspection',
         type : 'boolean', value : false,
         description : 'Whether to disable the introspection generation')

@@ -270,9 +270,9 @@ class PathsProgramBase (PathsBase):
             raise NotImplementedError(
                 "derived classes need to set program_name attribute")
 
-        cls.data_dir = os.path.join(data_prefix, "share", cls.program_name)
-        cls.icon_dir = os.path.join(data_prefix, "share", "icons")
-        cls.locale_dir = os.path.join(data_prefix, "share", "locale")
+        cls.data_dir = os.path.join(data_prefix, cls.program_name)
+        cls.icon_dir = os.path.join(data_prefix, "icons")
+        cls.locale_dir = os.path.join(data_prefix, "locale")
 
     @classmethod
     def setup_uninstalled(cls, source_dir):

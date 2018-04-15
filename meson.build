@@ -130,7 +130,14 @@ foreach extra_arg : warning_flags
   endif
 endforeach
 
-subdir('validate')
+i18n = import('i18n')
+python3 = import('python3')
+if get_option('disable_validate') == false
+  subdir('validate')
+endif
 
-python3 = import('python3').find_python()
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')
+if get_option('disable_debug_viewer') == false
+  subdir('debug-viewer')
+endif
+
+run_command(python3.find_python(), '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')
