@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <gst/video/video.h>
 #include "gststreamsplitter.h"
 
 static GstStaticPadTemplate src_template =
@@ -464,6 +465,29 @@ beach:
   return res;
 }
 
+static gboolean
+gst_stream_splitter_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
+
+  if (gst_video_event_is_force_key_unit (event)) {
+    guint32 seqnum = gst_event_get_seqnum (event);
+    STREAMS_LOCK (stream_splitter);
+    if (seqnum == stream_splitter->keyunit_seqnum) {
+      STREAMS_UNLOCK (stream_splitter);
+      GST_TRACE_OBJECT (pad,
+          "Drop duplicated force-key-unit event %" G_GUINT32_FORMAT, seqnum);
+      gst_event_unref (event);
+      return TRUE;
+    }
+    stream_splitter->keyunit_seqnum = seqnum;
+    STREAMS_UNLOCK (stream_splitter);
+  }
+
+  return gst_pad_event_default (pad, parent, event);
+}
+
 static void
 gst_stream_splitter_init (GstStreamSplitter * stream_splitter)
 {
@@ -494,6 +518,7 @@ gst_stream_splitter_request_new_pad (GstElement * element,
   gst_pad_set_active (srcpad, TRUE);
   gst_element_add_pad (element, srcpad);
   stream_splitter->cookie++;
+  gst_pad_set_event_function (srcpad, gst_stream_splitter_src_event);
   STREAMS_UNLOCK (stream_splitter);
 
   return srcpad;

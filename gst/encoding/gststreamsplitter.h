@@ -49,6 +49,8 @@ struct _GstStreamSplitter {
 
   /* List of pending in-band events */
   GList *pending_events;
+
+  guint32 keyunit_seqnum;
 };
 
 struct _GstStreamSplitterClass {
