@@ -173,6 +173,7 @@ def printc(message, color="", title=False, title_char='', end="\n"):
     if not sys.stdout.isatty():
         end = "\n"
 
+    message = str(message)
     message += ' ' * max(0, last_carriage_return_len - len(message))
     last_carriage_return_len = len(message) if end == "\r" else 0
     sys.stdout.write(color + str(message) + Colors.ENDC + end)
