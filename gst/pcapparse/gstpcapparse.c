@@ -366,6 +366,8 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
   guint16 eth_type;
   guint8 b;
   guint8 ip_header_size;
+  guint8 flags;
+  guint16 fragment_offset;
   guint8 ip_protocol;
   guint32 ip_src_addr;
   guint32 ip_dst_addr;
@@ -427,6 +429,14 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
   ip_header_size = (b & 0x0f) * 4;
   if (buf_ip + ip_header_size > buf + buf_size)
     return FALSE;
+
+  flags = buf_ip[6] >> 5;
+  fragment_offset =
+      (GUINT16_FROM_BE (*((guint16 *) (buf_ip + 6))) & 0x1fff) * 8;
+  if (flags & 0x1 || fragment_offset > 0) {
+    GST_ERROR_OBJECT (self, "Fragmented packets are not supported");
+    return FALSE;
+  }
 
   ip_protocol = *(buf_ip + 9);
   GST_LOG_OBJECT (self, "ip proto %d", (gint) ip_protocol);
