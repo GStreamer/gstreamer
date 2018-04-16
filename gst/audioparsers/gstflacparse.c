@@ -212,6 +212,8 @@ static gboolean gst_flac_parse_src_event (GstBaseParse * parse,
     GstEvent * event);
 static GstCaps *gst_flac_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
+static gboolean gst_flac_parse_set_sink_caps (GstBaseParse * parse,
+    GstCaps * caps);
 
 #define gst_flac_parse_parent_class parent_class
 G_DEFINE_TYPE (GstFlacParse, gst_flac_parse, GST_TYPE_BASE_PARSE);
@@ -246,6 +248,8 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   baseparse_class->src_event = GST_DEBUG_FUNCPTR (gst_flac_parse_src_event);
   baseparse_class->get_sink_caps =
       GST_DEBUG_FUNCPTR (gst_flac_parse_get_sink_caps);
+  baseparse_class->set_sink_caps =
+      GST_DEBUG_FUNCPTR (gst_flac_parse_set_sink_caps);
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
@@ -1874,4 +1878,16 @@ gst_flac_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
   }
 
   return res;
+}
+
+static gboolean
+gst_flac_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
+{
+  /* If caps are changing, drain any pending frames we have so that afterwards
+   * we can potentially accept a new stream that is starting with the FLAC
+   * headers again. If headers appear in the middle of the stream we can't
+   * detect them
+   */
+  gst_base_parse_drain (parse);
+  return TRUE;
 }
