@@ -572,6 +572,9 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
         APP1, id_str, size);
 
   } else {
+    /* restore the byte position and size */
+    reader->size += 2;
+    reader->byte -= 2;
     if (!gst_jpeg_parse_skip_marker (parse, reader, APP1))
       return FALSE;
   }
