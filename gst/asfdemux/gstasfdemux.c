@@ -2841,10 +2841,18 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
           streamheader = gst_buffer_ref (buf);
           gst_asf_demux_add_stream_headers_to_caps (demux, buf, caps_s);
           gst_structure_remove_field (caps_s, "codec_data");
+          gst_structure_set (caps_s, "stream-format", G_TYPE_STRING,
+              "byte-stream", NULL);
+        } else {
+          gst_structure_set (caps_s, "stream-format", G_TYPE_STRING, "avc",
+              NULL);
         }
 
         gst_buffer_unmap (buf, &mapinfo);
       }
+    } else {
+      gst_structure_set (caps_s, "stream-format", G_TYPE_STRING, "byte-stream",
+          NULL);
     }
   }
 
