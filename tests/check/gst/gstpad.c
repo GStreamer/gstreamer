@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 
 static GstSegment dummy_segment;
 
@@ -3282,6 +3283,61 @@ GST_START_TEST (test_pad_offset_src)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+update_stream_start_event_cb (GstPad * pad, GstPadProbeInfo * info,
+    const gchar * wanted_stream_id)
+{
+  GstEvent *event = info->data;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
+    const gchar *stream_id;
+
+    gst_event_parse_stream_start (event, &stream_id);
+    g_assert_cmpstr (stream_id, !=, wanted_stream_id);
+
+    gst_event_unref (event);
+
+    info->data = gst_event_new_stream_start (wanted_stream_id);
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_sticky_events_changed_in_probe)
+{
+  GstPad *srcpad;
+  GstHarness *harness;
+  GstEvent *stream_start;
+  const gchar *stream_id;
+  const gchar *wanted_stream_id = "The right stream ID";
+  harness = gst_harness_new ("fakesrc");
+
+  gst_harness_add_probe (harness, "fakesrc", "src",
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) update_stream_start_event_cb,
+      (gpointer) wanted_stream_id, NULL);
+  gst_harness_play (harness);
+  gst_harness_set_blocking_push_mode (harness);
+  gst_buffer_unref (gst_harness_pull (harness));
+
+  stream_start =
+      gst_pad_get_sticky_event (harness->sinkpad, GST_EVENT_STREAM_START, 0);
+  gst_event_parse_stream_start (stream_start, &stream_id);
+  fail_unless_equals_string (stream_id, wanted_stream_id);
+  gst_event_unref (stream_start);
+
+  srcpad = gst_element_get_static_pad (harness->element, "src");
+  stream_start = gst_pad_get_sticky_event (srcpad, GST_EVENT_STREAM_START, 0);
+  gst_event_unref (stream_start);
+  gst_object_unref (srcpad);
+  gst_event_parse_stream_start (stream_start, &stream_id);
+  fail_unless_equals_string (stream_id, wanted_stream_id);
+
+  gst_harness_teardown (harness);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -3335,6 +3391,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async_full_destroy_dispose);
   tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
   tcase_add_test (tc_chain, test_sticky_events);
+  tcase_add_test (tc_chain, test_sticky_events_changed_in_probe);
   tcase_add_test (tc_chain, test_last_flow_return_push);
   tcase_add_test (tc_chain, test_last_flow_return_pull);
   tcase_add_test (tc_chain, test_flush_stop_inactive);
