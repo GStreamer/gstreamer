@@ -2500,6 +2500,18 @@ gst_harness_find_element (GstHarness * h, const gchar * element_name)
   GstIterator *iter;
   GValue data = G_VALUE_INIT;
 
+  if (!GST_IS_BIN (h->element)) {
+    GstPluginFeature *feature;
+
+    g_return_val_if_fail (GST_IS_ELEMENT (h->element), NULL);
+
+    feature = GST_PLUGIN_FEATURE (gst_element_get_factory (h->element));
+    if (!strcmp (element_name, gst_plugin_feature_get_name (feature)))
+      return gst_object_ref (h->element);
+
+    return NULL;
+  }
+
   iter = gst_bin_iterate_elements (GST_BIN (h->element));
   done = FALSE;
 
