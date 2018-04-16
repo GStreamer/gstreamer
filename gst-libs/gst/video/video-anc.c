@@ -458,8 +458,9 @@ gst_video_caption_meta_init (GstMeta * meta, gpointer params,
 {
   GstVideoCaptionMeta *emeta = (GstVideoCaptionMeta *) meta;
 
-  memset (emeta, 0, sizeof (GstVideoCaptionMeta));
   emeta->caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
+  emeta->data = NULL;
+  emeta->size = 0;
 
   return TRUE;
 }
