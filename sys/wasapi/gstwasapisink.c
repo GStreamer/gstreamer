@@ -474,6 +474,8 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   guint bpf, rate, devicep_frames;
   HRESULT hr;
 
+  CoInitialize (NULL);
+
   if (gst_wasapi_sink_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
@@ -577,9 +579,7 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
-  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE &&
-      !gst_wasapi_sink_can_audioclient3 (self))
-    CoUninitialize ();
+  CoUninitialize ();
 
   if (self->thread_priority_handle != NULL) {
     gst_wasapi_util_revert_thread_characteristics
@@ -595,6 +595,8 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
     IUnknown_Release (self->render_client);
     self->render_client = NULL;
   }
+
+  CoUninitialize ();
 
   return TRUE;
 }

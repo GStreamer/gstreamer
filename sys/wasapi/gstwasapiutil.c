@@ -870,10 +870,6 @@ gst_wasapi_util_initialize_audioclient (GstElement * self,
         min_period, &device_period, &device_buffer_duration);
   }
 
-  /* For some reason, we need to call this a second time for exclusive mode */
-  if (sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE)
-    CoInitialize (NULL);
-
   stream_flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   if (loopback)
     stream_flags |= AUDCLNT_STREAMFLAGS_LOOPBACK;
