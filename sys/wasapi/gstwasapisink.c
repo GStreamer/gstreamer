@@ -210,8 +210,6 @@ gst_wasapi_sink_finalize (GObject * object)
 
   g_clear_pointer (&self->mix_format, CoTaskMemFree);
 
-  CoUninitialize ();
-
   if (self->cached_caps != NULL) {
     gst_caps_unref (self->cached_caps);
     self->cached_caps = NULL;
@@ -220,6 +218,8 @@ gst_wasapi_sink_finalize (GObject * object)
   g_clear_pointer (&self->positions, g_free);
   g_clear_pointer (&self->device_strid, g_free);
   self->mute = FALSE;
+
+  CoUninitialize ();
 
   G_OBJECT_CLASS (gst_wasapi_sink_parent_class)->finalize (object);
 }
@@ -474,6 +474,8 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   guint bpf, rate, devicep_frames;
   HRESULT hr;
 
+  CoInitialize (NULL);
+
   if (gst_wasapi_sink_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
@@ -577,9 +579,7 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
-  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE &&
-      !gst_wasapi_sink_can_audioclient3 (self))
-    CoUninitialize ();
+  CoUninitialize ();
 
   if (self->thread_priority_handle != NULL) {
     gst_wasapi_util_revert_thread_characteristics

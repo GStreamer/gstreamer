@@ -213,11 +213,11 @@ gst_wasapi_src_finalize (GObject * object)
 
   g_clear_pointer (&self->mix_format, CoTaskMemFree);
 
-  CoUninitialize ();
-
   g_clear_pointer (&self->cached_caps, gst_caps_unref);
   g_clear_pointer (&self->positions, g_free);
   g_clear_pointer (&self->device_strid, g_free);
+
+  CoUninitialize ();
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -420,6 +420,8 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   guint bpf, rate, devicep_frames, buffer_frames;
   HRESULT hr;
 
+  CoInitialize (NULL);
+
   if (gst_wasapi_src_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
             (IAudioClient3 *) self->client, self->mix_format, self->low_latency,
@@ -501,9 +503,7 @@ gst_wasapi_src_unprepare (GstAudioSrc * asrc)
 {
   GstWasapiSrc *self = GST_WASAPI_SRC (asrc);
 
-  if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE &&
-      !gst_wasapi_src_can_audioclient3 (self))
-    CoUninitialize ();
+  CoUninitialize ();
 
   if (self->thread_priority_handle != NULL) {
     gst_wasapi_util_revert_thread_characteristics
