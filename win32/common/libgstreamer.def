@@ -236,6 +236,7 @@ EXPORTS
 	gst_caps_append_structure
 	gst_caps_append_structure_full
 	gst_caps_can_intersect
+	gst_caps_copy
 	gst_caps_copy_nth
 	gst_caps_features_add
 	gst_caps_features_add_id
