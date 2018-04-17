@@ -134,12 +134,12 @@ gst_rtsp_onvif_media_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
             if (sinkpad) {
               GstRTSPOnvifMedia *onvif_media = GST_RTSP_ONVIF_MEDIA (media);
 
-              gst_sdp_media_add_attribute (smedia, "recvonly", "");
+              gst_sdp_media_add_attribute (smedia, "sendonly", "");
               if (onvif_media->priv->backchannel_bandwidth > 0)
                 gst_sdp_media_add_bandwidth (smedia, GST_SDP_BWTYPE_AS,
                     onvif_media->priv->backchannel_bandwidth);
             } else {
-              gst_sdp_media_add_attribute (smedia, "sendonly", "");
+              gst_sdp_media_add_attribute (smedia, "recvonly", "");
             }
           }
         }
