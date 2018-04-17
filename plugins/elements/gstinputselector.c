@@ -1365,6 +1365,14 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
   if (pad == self->active_sinkpad)
     return FALSE;
 
+  /* guard against users setting a src pad or foreign pad as active pad */
+  if (pad != NULL) {
+    g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
+    g_return_val_if_fail (GST_IS_SELECTOR_PAD (pad), FALSE);
+    g_return_val_if_fail (GST_PAD_PARENT (pad) == GST_ELEMENT_CAST (self),
+        FALSE);
+  }
+
   old = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
   new = GST_SELECTOR_PAD_CAST (pad);
 

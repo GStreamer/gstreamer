@@ -219,6 +219,12 @@ gst_output_selector_set_property (GObject * object, guint prop_id,
       GST_INFO_OBJECT (sel, "Activating pad %s:%s",
           GST_DEBUG_PAD_NAME (next_pad));
 
+      /* guard against users setting a sink pad or foreign pad as active pad */
+      if (next_pad != NULL) {
+        g_return_if_fail (GST_PAD_IS_SRC (next_pad));
+        g_return_if_fail (GST_PAD_PARENT (next_pad) == GST_ELEMENT_CAST (sel));
+      }
+
       GST_OBJECT_LOCK (object);
       if (next_pad != sel->active_srcpad) {
         /* switch to new srcpad in next chain run */
