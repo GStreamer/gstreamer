@@ -227,6 +227,8 @@ gst_caps_unref (GstCaps * caps)
 GST_API
 GstCaps * gst_caps_copy (const GstCaps * caps);
 
+#define gst_caps_copy(caps) GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)))
+
 /**
  * gst_caps_is_writable:
  * @caps: a #GstCaps

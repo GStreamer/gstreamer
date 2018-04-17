@@ -2556,8 +2556,7 @@ gst_caps_filter_and_map_in_place (GstCaps * caps, GstCapsFilterMapFunc func,
  *
  * Returns: the new #GstCaps
  */
-GstCaps *
-gst_caps_copy (const GstCaps * caps)
+GstCaps *(gst_caps_copy) (const GstCaps * caps)
 {
   return GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
 }
