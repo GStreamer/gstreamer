@@ -1293,8 +1293,8 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
       "Julien Moutte <julien@moutte.net>, "
       "Jan Schmidt <thaytan@mad.scientist.com>, "
       "Wim Taymans <wim.taymans@gmail.com>");
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_input_selector_sink_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_input_selector_sink_factory, GST_TYPE_SELECTOR_PAD);
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_input_selector_src_factory);
 
