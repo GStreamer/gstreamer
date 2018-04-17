@@ -62,7 +62,7 @@ find_backchannel (GstElement * rtspsrc, guint idx, GstCaps * caps,
   g_free (caps_str);
 
   s = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_field (s, "a-recvonly")) {
+  if (gst_structure_has_field (s, "a-sendonly")) {
     stream_id = idx;
     caps = gst_caps_new_empty ();
     s = gst_structure_copy (s);

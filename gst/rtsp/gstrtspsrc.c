@@ -1772,10 +1772,10 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
   else
     goto unknown_proto;
 
-  if (gst_sdp_media_get_attribute_val (media, "recvonly") != NULL &&
+  if (gst_sdp_media_get_attribute_val (media, "sendonly") != NULL &&
       /* We want to setup caps for streams configured as backchannel */
       !stream->is_backchannel && src->backchannel != BACKCHANNEL_NONE)
-    goto recvonly_media;
+    goto sendonly_media;
 
   /* Parse global SDP attributes once */
   global_caps = gst_caps_new_empty_simple ("application/x-unknown");
@@ -1846,9 +1846,9 @@ unknown_proto:
     GST_ERROR_OBJECT (src, "unknown proto in media: '%s'", proto);
     return;
   }
-recvonly_media:
+sendonly_media:
   {
-    GST_WARNING_OBJECT (src, "recvonly media ignored, no backchannel");
+    GST_DEBUG_OBJECT (src, "sendonly media ignored, no backchannel");
     return;
   }
 }
@@ -1913,8 +1913,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
   g_mutex_init (&stream->conninfo.recv_lock);
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
 
-  /* stream is recvonly and onvif backchannel is requested */
-  if (gst_sdp_media_get_attribute_val (media, "recvonly") != NULL &&
+  /* stream is sendonly and onvif backchannel is requested */
+  if (gst_sdp_media_get_attribute_val (media, "sendonly") != NULL &&
       src->backchannel != BACKCHANNEL_NONE)
     stream->is_backchannel = TRUE;
 
@@ -3038,7 +3038,7 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   gst_pad_set_active (stream->srcpad, TRUE);
   gst_pad_sticky_events_foreach (pad, copy_sticky_events, stream->srcpad);
 
-  /* don't add the srcpad if this is a recvonly stream */
+  /* don't add the srcpad if this is a sendonly stream */
   if (stream->is_backchannel)
     add_backchannel_fakesink (src, stream, stream->srcpad);
   else
