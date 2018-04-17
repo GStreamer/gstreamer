@@ -591,7 +591,7 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
  * The list of @streams corresponds to the "Stream ID" of each stream to be
  * activated. Those ID can be obtained via the #GstStream objects present
  * in #GST_EVENT_STREAM_START, #GST_EVENT_STREAM_COLLECTION or
- * #GST_MESSAGE_STREAM_COLLECTION.
+ * #GST_EVENT_SELECT_STREAMS.
  *
  * Note: The list of @streams can not be empty.
  *
