@@ -20,6 +20,9 @@
 """GStreamer Debug Viewer GUI module."""
 
 import os.path
+import tempfile
+import shutil
+
 from bisect import bisect_right, bisect_left
 import logging
 
@@ -231,6 +234,7 @@ class Window (object):
         self.logger = logging.getLogger("ui.window")
         self.app = app
 
+        self.tmpfile = None
         self.dispatcher = None
         self.info_widget = None
         self.progress_dialog = None
@@ -937,6 +941,7 @@ class Window (object):
         if self.log_file is not None:
             for feature in self.features:
                 feature.handle_detach_log_file(self, self.log_file)
+            self.tmpfile = None
 
         if filename is None:
             if self.dispatcher is not None:
@@ -945,6 +950,9 @@ class Window (object):
             self.log_file = None
             self.actions.groups["RowActions"].props.sensitive = False
         else:
+            self.tmpfile = tempfile.NamedTemporaryFile()
+            shutil.copyfile(filename, self.tmpfile.name)
+            filename = self.tmpfile.name
             self.logger.debug("setting log file %r", filename)
 
             try:
