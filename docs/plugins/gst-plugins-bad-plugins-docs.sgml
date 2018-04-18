@@ -240,6 +240,7 @@
     <xi:include href="xml/element-synaescope.xml" />
     <xi:include href="xml/element-teletextdec.xml" />
     <xi:include href="xml/element-templatematch.xml" />
+    <xi:include href="xml/element-testsrcbin.xml" />
     <xi:include href="xml/element-tiger.xml" />
     <xi:include href="xml/element-timecodestamper.xml" />
     <xi:include href="xml/element-tonegeneratesrc.xml" />

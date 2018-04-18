@@ -9,7 +9,8 @@ libgstdebugutilsbad_la_SOURCES = \
 	gstcompare.c \
 	gstwatchdog.c \
 	gsterrorignore.c \
-	gstfakevideosink.c
+	gstfakevideosink.c \
+	gsttestsrcbin.c
 
 libgstdebugutilsbad_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstdebugutilsbad_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \

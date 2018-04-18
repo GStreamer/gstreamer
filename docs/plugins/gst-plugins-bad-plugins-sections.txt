@@ -3603,6 +3603,19 @@ gst_time_code_stamper_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-testsrcbin</FILE>
+<TITLE>testsrcbin</TITLE>
+GstTestSrcBin
+<SUBSECTION Standard>
+GstTestSrcBinClass
+GST_TEST_SRC_BIN
+GST_IS_TEST_SRC_BIN
+GST_TEST_SRC_BIN_CLASS
+<SUBSECTION Private>
+gst_test_src_bin_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-tonegeneratesrc</FILE>
 <TITLE>tonegeneratesrc</TITLE>
 GstToneGenerateSrc

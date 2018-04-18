@@ -8,6 +8,7 @@ debugutilsbad_sources = [
   'gstcompare.c',
   'gstfakevideosink.c',
   'gstwatchdog.c',
+  'gsttestsrcbin.c',
 ]
 
 gstdebugutilsbad = library('gstdebugutilsbad',
