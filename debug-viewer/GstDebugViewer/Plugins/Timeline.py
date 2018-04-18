@@ -1048,7 +1048,8 @@ class TimelineFeature (FeatureBase):
 
         self.action_group = Gtk.ActionGroup("TimelineActions")
         self.action_group.add_toggle_actions([("show-timeline",
-                                               None, _("_Timeline"),)])
+                                               None, _("_Timeline"),
+                                               "<Ctrl>t")])
 
         self.state = app.state.sections[TimelineState._name]
 
