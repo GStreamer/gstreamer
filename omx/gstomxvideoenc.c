@@ -2582,7 +2582,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
   if (!self->started) {
     if (gst_omx_port_is_flushing (self->enc_out_port)) {
       if (!gst_omx_video_enc_enable (self, frame->input_buffer))
-        return FALSE;
+        goto enable_error;
     }
 
     GST_DEBUG_OBJECT (self, "Starting task");
@@ -2756,6 +2756,21 @@ flow_error:
   {
     gst_video_codec_frame_unref (frame);
     return self->downstream_flow_ret;
+  }
+
+enable_error:
+  {
+    /* Report the OMX error, if any */
+    if (gst_omx_component_get_last_error (self->enc) != OMX_ErrorNone)
+      GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+          ("Failed to enable OMX encoder: %s (0x%08x)",
+              gst_omx_component_get_last_error_string (self->enc),
+              gst_omx_component_get_last_error (self->enc)));
+    else
+      GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
+          ("Failed to enable OMX encoder"));
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_ERROR;
   }
 
 component_error:
