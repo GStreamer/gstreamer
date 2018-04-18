@@ -57,6 +57,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_EXCLUSIVE     FALSE
 #define DEFAULT_LOW_LATENCY   FALSE
 #define DEFAULT_AUDIOCLIENT3  FALSE
+/* The clock provided by WASAPI is always off and causes buffers to be late
+ * very quickly on the sink. Disable pending further investigation. */
+#define DEFAULT_PROVIDE_CLOCK FALSE
 
 enum
 {
@@ -88,8 +91,10 @@ static guint gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data,
 static guint gst_wasapi_src_delay (GstAudioSrc * asrc);
 static void gst_wasapi_src_reset (GstAudioSrc * asrc);
 
+#ifdef DEFAULT_PROVIDE_CLOCK
 static GstClockTime gst_wasapi_src_get_time (GstClock * clock,
     gpointer user_data);
+#endif
 
 #define gst_wasapi_src_parent_class parent_class
 G_DEFINE_TYPE (GstWasapiSrc, gst_wasapi_src, GST_TYPE_AUDIO_SRC);
@@ -168,6 +173,7 @@ gst_wasapi_src_class_init (GstWasapiSrcClass * klass)
 static void
 gst_wasapi_src_init (GstWasapiSrc * self)
 {
+#ifdef DEFAULT_PROVIDE_CLOCK
   /* override with a custom clock */
   if (GST_AUDIO_BASE_SRC (self)->clock)
     gst_object_unref (GST_AUDIO_BASE_SRC (self)->clock);
@@ -175,6 +181,7 @@ gst_wasapi_src_init (GstWasapiSrc * self)
   GST_AUDIO_BASE_SRC (self)->clock = gst_audio_clock_new ("GstWasapiSrcClock",
       gst_wasapi_src_get_time, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
+#endif
 
   self->role = DEFAULT_ROLE;
   self->sharemode = AUDCLNT_SHAREMODE_SHARED;
@@ -489,6 +496,9 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   hr = IAudioClock_GetFrequency (self->client_clock, &self->client_clock_freq);
   HR_FAILED_GOTO (hr, IAudioClock::GetFrequency, beach);
 
+  GST_INFO_OBJECT (self, "wasapi clock freq is %" G_GUINT64_FORMAT,
+      self->client_clock_freq);
+
   /* Get capture source client and start it up */
   if (!gst_wasapi_util_get_capture_client (GST_ELEMENT (self), self->client,
           &self->capture_client)) {
@@ -668,6 +678,7 @@ gst_wasapi_src_reset (GstAudioSrc * asrc)
   GST_OBJECT_UNLOCK (self);
 }
 
+#ifdef DEFAULT_PROVIDE_CLOCK
 static GstClockTime
 gst_wasapi_src_get_time (GstClock * clock, gpointer user_data)
 {
@@ -694,3 +705,4 @@ gst_wasapi_src_get_time (GstClock * clock, gpointer user_data)
 
   return result;
 }
+#endif
