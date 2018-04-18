@@ -201,6 +201,12 @@ glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libg
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 
+# some of the examples want GTK+
+gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : false)
+gtk_x11_dep = dependency('gtk+-x11-3.0', version : '>= 3.10', required : false)
+gtk_quartz_dep = dependency('gtk+-quartz-3.0', version : '>= 3.10', required : false)
+gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : false)
+
 core_conf.set('HAVE_X', x11_dep.found())
 core_conf.set('HAVE_GIO_UNIX_2_0',
     (gio_dep.type_name() != 'pkgconfig' and host_machine.system() != 'windows')
