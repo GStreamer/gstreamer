@@ -1812,6 +1812,19 @@ gst_flv_mux_get_next_time_for_segment (GstAggregator * aggregator,
 static GstClockTime
 gst_flv_mux_get_next_time (GstAggregator * aggregator)
 {
+  GstFlvMux *mux = GST_FLV_MUX (aggregator);
+
+  GST_OBJECT_LOCK (aggregator);
+  if (mux->state == GST_FLV_MUX_STATE_HEADER &&
+      ((mux->audio_pad && mux->audio_pad->codec == G_MAXUINT) ||
+          (mux->video_pad && mux->video_pad->codec == G_MAXUINT)))
+    goto wait_for_data;
+  GST_OBJECT_UNLOCK (aggregator);
+
   return gst_flv_mux_get_next_time_for_segment (aggregator,
       &GST_AGGREGATOR_PAD (aggregator->srcpad)->segment);
+
+wait_for_data:
+  GST_OBJECT_UNLOCK (aggregator);
+  return GST_CLOCK_TIME_NONE;
 }
