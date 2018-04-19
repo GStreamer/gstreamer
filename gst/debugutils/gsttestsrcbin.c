@@ -52,8 +52,20 @@ static GstStaticPadTemplate audio_src_template =
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-raw(ANY);"));
 
-G_DECLARE_FINAL_TYPE (GstTestSrcBin, gst_test_src_bin, GST, TEST_SRC_BIN,
-    GstBin);
+#define GST_TYPE_TEST_SRC_BIN  gst_test_src_bin_get_type()
+#define GST_TEST_SRC_BIN(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), GST_TYPE_TEST_SRC_BIN, GstTestSrcBin))
+
+typedef struct _GstTestSrcBin GstTestSrcBin;
+typedef struct _GstTestSrcBinClass GstTestSrcBinClass;
+
+/* *INDENT-OFF* */
+GType gst_test_src_bin_get_type (void) G_GNUC_CONST;
+/* *INDENT-ON* */
+
+struct _GstTestSrcBinClass
+{
+  GstBinClass parent_class;
+};
 
 struct _GstTestSrcBin
 {
