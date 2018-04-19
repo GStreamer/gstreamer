@@ -1417,7 +1417,8 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
      * a body message, requests that go beyond the content limits will result
      * in an error. Here we convert those to EOS */
     if (msg->status_code == SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE &&
-        src->have_body && !src->have_size) {
+        src->have_body && (!src->have_size ||
+            (src->request_position >= src->content_size))) {
       GST_DEBUG_OBJECT (src, "Requested range out of limits and received full "
           "body, returning EOS");
       return GST_FLOW_EOS;
