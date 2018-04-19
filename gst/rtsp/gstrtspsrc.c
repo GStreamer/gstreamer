@@ -2400,33 +2400,26 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   GList *walk;
   const gchar *seek_style = NULL;
 
-  if (event) {
-    GST_DEBUG_OBJECT (src, "doing seek with event %" GST_PTR_FORMAT, event);
+  GST_DEBUG_OBJECT (src, "doing seek with event %" GST_PTR_FORMAT, event);
 
-    gst_event_parse_seek (event, &rate, &format, &flags,
-        &cur_type, &cur, &stop_type, &stop);
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
 
-    /* no negative rates yet */
-    if (rate < 0.0)
-      goto negative_rate;
+  /* no negative rates yet */
+  if (rate < 0.0)
+    goto negative_rate;
 
-    /* we need TIME format */
-    if (format != src->segment.format)
-      goto no_format;
+  /* we need TIME format */
+  if (format != src->segment.format)
+    goto no_format;
 
-    /* Check if we are not at all seekable */
-    if (src->seekable == -1.0)
-      goto not_seekable;
+  /* Check if we are not at all seekable */
+  if (src->seekable == -1.0)
+    goto not_seekable;
 
-    /* Additional seeking-to-beginning-only check */
-    if (src->seekable == 0.0 && cur != 0)
-      goto not_seekable;
-  } else {
-    GST_DEBUG_OBJECT (src, "doing seek without event");
-    flags = 0;
-    cur_type = GST_SEEK_TYPE_SET;
-    stop_type = GST_SEEK_TYPE_SET;
-  }
+  /* Additional seeking-to-beginning-only check */
+  if (src->seekable == 0.0 && cur != 0)
+    goto not_seekable;
 
   if (flags & GST_SEEK_FLAG_SEGMENT)
     goto invalid_segment_flag;
@@ -2465,11 +2458,9 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* configure the seek parameters in the seeksegment. We will then have the
    * right values in the segment to perform the seek */
-  if (event) {
-    GST_DEBUG_OBJECT (src, "configuring seek");
-    gst_segment_do_seek (&seeksegment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
-  }
+  GST_DEBUG_OBJECT (src, "configuring seek");
+  gst_segment_do_seek (&seeksegment, rate, format, flags,
+      cur_type, cur, stop_type, stop, &update);
 
   /* figure out the last position we need to play. If it's configured (stop !=
    * -1), use that, else we play until the total duration of the file */
