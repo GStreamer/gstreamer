@@ -108,7 +108,7 @@ class SearchSentinel (object):
             it_ = iter_next_()
 
             def iter_next(it):
-                return it_.next()
+                return it_.__next__()
 
         YIELD_LIMIT = 1000
         i = YIELD_LIMIT
