@@ -109,7 +109,7 @@ class MainLoopWrapper (ExceptionHandler):
         if self.exc_info != (None,) * 3:
             # Re-raise unhandled exception that occured while running the loop.
             exc_type, exc_value, exc_tb = self.exc_info
-            raise exc_type(exc_value).with_traceback(exc_tb)
+            raise exc_value
 
 
 class ExceptHookManagerClass (object):
