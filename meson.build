@@ -220,7 +220,7 @@ posix_timers_src = time_prefix + '''
 #error Either _POSIX_TIMERS or CLOCK_REALTIME not defined
 #endif
 '''
-if cc.compiles(posix_timers_src, prefix : time_prefix, name : 'posix timers from time.h')
+if cc.compiles(posix_timers_src, name : 'posix timers from time.h')
   cdata.set('HAVE_POSIX_TIMERS', 1)
 endif
 
@@ -229,7 +229,7 @@ monotonic_clock_src = time_prefix + '''
 #error Either _POSIX_MONOTONIC_CLOCK or CLOCK_MONOTONIC not defined
 #endif
 '''
-if cc.compiles(monotonic_clock_src, prefix : time_prefix, name : 'monotonic clock from time.h')
+if cc.compiles(monotonic_clock_src, name : 'monotonic clock from time.h')
   cdata.set('HAVE_MONOTONIC_CLOCK', 1)
 endif
 
