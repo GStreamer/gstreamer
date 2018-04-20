@@ -672,6 +672,58 @@ add_failure:
   }
 }
 
+static void
+ges_track_element_add_child_props (GESTrackElement * self,
+    GstElement * child, const gchar ** wanted_categories,
+    const gchar ** blacklist, const gchar ** whitelist)
+{
+  GstElementFactory *factory;
+  const gchar *klass;
+  GParamSpec **parray;
+  GObjectClass *gobject_klass;
+  gchar **categories;
+  guint i;
+
+  factory = gst_element_get_factory (child);
+  klass = gst_element_factory_get_metadata (factory,
+      GST_ELEMENT_METADATA_KLASS);
+
+  if (strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
+    GST_DEBUG_OBJECT (self, "%s blacklisted", GST_OBJECT_NAME (factory));
+    return;
+  }
+
+  GST_DEBUG_OBJECT (self, "Looking at element '%s' of klass '%s'",
+      GST_ELEMENT_NAME (child), klass);
+
+  categories = g_strsplit (klass, "/", 0);
+
+  for (i = 0; categories[i]; i++) {
+    if ((!wanted_categories ||
+            strv_find_str (wanted_categories, categories[i]))) {
+      guint i, nb_specs;
+
+      gobject_klass = G_OBJECT_GET_CLASS (child);
+      parray = g_object_class_list_properties (gobject_klass, &nb_specs);
+      for (i = 0; i < nb_specs; i++) {
+        if ((parray[i]->flags & G_PARAM_WRITABLE) &&
+            (!whitelist || strv_find_str (whitelist, parray[i]->name))) {
+          ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT
+              (self), parray[i], G_OBJECT (child));
+        }
+      }
+      g_free (parray);
+
+      GST_DEBUG
+          ("%d configurable properties of '%s' added to property hashtable",
+          nb_specs, GST_ELEMENT_NAME (child));
+      break;
+    }
+  }
+
+  g_strfreev (categories);
+}
+
 /**
  * ges_track_element_add_children_props:
  * @self: The #GESTrackElement to set chidlren props on
@@ -696,39 +748,11 @@ ges_track_element_add_children_props (GESTrackElement * self,
 {
   GValue item = { 0, };
   GstIterator *it;
-  GParamSpec **parray;
-  GObjectClass *class;
-  const gchar *klass;
-  GstElementFactory *factory;
   gboolean done = FALSE;
 
   if (!GST_IS_BIN (element)) {
-    guint i;
-    GParamSpec *pspec;
-
-    GObjectClass *class = G_OBJECT_GET_CLASS (element);
-
-    for (i = 0; whitelist[i]; i++) {
-
-      pspec = g_object_class_find_property (class, whitelist[i]);
-      if (!pspec) {
-        GST_WARNING ("no such property : %s in element : %s", whitelist[i],
-            gst_element_get_name (element));
-        continue;
-      }
-
-      if (pspec->flags) {
-        ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (self),
-            pspec, G_OBJECT (element));
-        GST_LOG_OBJECT (self,
-            "added property %s to controllable properties successfully !",
-            whitelist[i]);
-      } else
-        GST_WARNING
-            ("the property %s for element %s exists but is not writable",
-            whitelist[i], gst_element_get_name (element));
-
-    }
+    ges_track_element_add_child_props (self, element, wanted_categories,
+        blacklist, whitelist);
     return;
   }
 
@@ -739,48 +763,9 @@ ges_track_element_add_children_props (GESTrackElement * self,
     switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_OK:
       {
-        gchar **categories;
-        guint i;
         GstElement *child = g_value_get_object (&item);
-
-        factory = gst_element_get_factory (child);
-        klass = gst_element_factory_get_metadata (factory,
-            GST_ELEMENT_METADATA_KLASS);
-
-        if (strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
-          GST_DEBUG_OBJECT (self, "%s blacklisted", GST_OBJECT_NAME (factory));
-          continue;
-        }
-
-        GST_DEBUG ("Looking at element '%s' of klass '%s'",
-            GST_ELEMENT_NAME (child), klass);
-
-        categories = g_strsplit (klass, "/", 0);
-
-        for (i = 0; categories[i]; i++) {
-          if ((!wanted_categories ||
-                  strv_find_str (wanted_categories, categories[i]))) {
-            guint i, nb_specs;
-
-            class = G_OBJECT_GET_CLASS (child);
-            parray = g_object_class_list_properties (class, &nb_specs);
-            for (i = 0; i < nb_specs; i++) {
-              if ((parray[i]->flags & G_PARAM_WRITABLE) &&
-                  (!whitelist || strv_find_str (whitelist, parray[i]->name))) {
-                ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT
-                    (self), parray[i], G_OBJECT (child));
-              }
-            }
-            g_free (parray);
-
-            GST_DEBUG
-                ("%d configurable properties of '%s' added to property hashtable",
-                nb_specs, GST_ELEMENT_NAME (child));
-            break;
-          }
-        }
-
-        g_strfreev (categories);
+        ges_track_element_add_child_props (self, child, wanted_categories,
+            blacklist, whitelist);
         g_value_reset (&item);
         break;
       }
