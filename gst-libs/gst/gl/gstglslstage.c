@@ -195,7 +195,8 @@ _ensure_shader (GstGLSLStage * stage)
  * @version: the #GstGLSLVersion
  * @profile: the #GstGLSLProfile
  * @n_strings: the number of strings in @str
- * @str: an array of strings concatted together to produce a shader
+ * @str: (array length=n_strings):
+ *     an array of strings concatted together to produce a shader
  *
  * Returns: (transfer floating): a new #GstGLSLStage of the specified @type
  *
@@ -304,7 +305,7 @@ gst_glsl_stage_new_default_fragment (GstGLContext * context)
  * @version: a #GstGLSLVersion
  * @profile: a #GstGLSLProfile
  * @n_strings: number of strings in @str
- * @str: (transfer none): a GLSL shader string
+ * @str: (array length=n_strings) (transfer none): a GLSL shader string
  *
  * Replaces the current shader string with @str.
  *
