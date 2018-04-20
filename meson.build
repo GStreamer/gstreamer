@@ -88,6 +88,11 @@ USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl
 USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and get_option('with_wayland') != 'no'
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
 
+driverdir = libva_dep.get_pkgconfig_variable('driverdir')
+if driverdir == ''
+  driverdir = '@0@/@1@/@2@'.format(get_option('prefix'), get_option('libdir'), 'dri')
+endif
+
 cdata = configuration_data()
 cdata.set('GST_API_VERSION_S', '"@0@.@1@"'.format(gst_version_major, gst_version_minor))
 cdata.set('PACKAGE', '"gstreamer-vaapi"')
@@ -96,6 +101,7 @@ cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE_NAME', '"GStreamer VA-API Plug-ins"')
 cdata.set('PACKAGE_STRING', '"GStreamer VA-API Plug-ins @0@"'.format(gst_version))
 cdata.set('PACKAGE_BUGREPORT', '"http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"')
+cdata.set('VA_DRIVERS_PATH', '"@0@"'.format(driverdir))
 cdata.set10('USE_DRM', USE_DRM)
 cdata.set10('USE_EGL', USE_EGL)
 cdata.set10('USE_ENCODERS', USE_ENCODERS)
@@ -116,10 +122,6 @@ cdata.set10('HAVE_XRENDER', xrender_dep.found())
 cdata.set10('USE_VA_VPP', USE_VPP)
 cdata.set10('USE_GST_GL_HELPERS', gstgl_dep.found())
 cdata.set('GLES_VERSION_MASK', GLES_VERSION_MASK)
-runcmd = run_command('pkg-config', '--variable=driverdir', 'libva')
-if runcmd.returncode() == 0
-  cdata.set('VA_DRIVERS_PATH', '"@0@"'.format(runcmd.stdout().strip()))
-endif
 
 if libva_dep.version().version_compare('< 0.38.0')
   check_headers = [
