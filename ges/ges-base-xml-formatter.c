@@ -510,8 +510,15 @@ _set_child_property (GQuark field_id, const GValue * value,
 
   /* FIXME: error handling? */
   if (!ges_track_element_lookup_child (effect,
-          g_quark_to_string (field_id), &element, &pspec))
+          g_quark_to_string (field_id), &element, &pspec)) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar *tmp = gst_value_serialize (value);
+    GST_ERROR_OBJECT (effect, "Could not set %s=%s",
+        g_quark_to_string (field_id), tmp);
+    g_free (tmp);
+#endif
     return TRUE;
+  }
 
   g_object_set_property (G_OBJECT (element), pspec->name, value);
   g_param_spec_unref (pspec);
