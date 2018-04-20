@@ -2,7 +2,7 @@ fbdevsink_sources = [
   'gstfbdevsink.c',
 ]
 
-if cc.has_header('linux/fb.h', required : false)
+if cc.has_header('linux/fb.h')
   gstfbdevsink = library('gstfbdevsink',
     fbdevsink_sources,
     c_args : gst_plugins_bad_args,
