@@ -747,10 +747,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         bugs = []
         p = get_data_file('data', 'gstvalidate.supp')
         with open(p) as f:
-            for l in f.readlines():
-                l = l.strip()
-                if l.startswith('# PENDING:'):
-                    tmp = l.split(' ')
+            for line in f.readlines():
+                line = line.strip()
+                if line.startswith('# PENDING:'):
+                    tmp = line.split(' ')
                     bugs.append(tmp[2])
 
         if bugs:
@@ -998,6 +998,10 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             # hls known issues
             # ("hls.playback.seek_with_stop.*",
             #  "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
+
+            # testbin known issues
+            ("testbin.media_check.*",
+             "Not supported by GstDiscoverer."),
 
             # dash known issues
             ("dash.media_check.*",
