@@ -389,7 +389,7 @@ convert_line_v210 (GstVideoVBIParser * parser, const guint8 * data)
 /**
  * gst_video_vbi_parser_add_line:
  * @parser: a #GstVideoVBIParser
- * @data: (transfer none): The line of data to parse
+ * @data: (array) (transfer none): The line of data to parse
  *
  * Provide a new line of data to the @parser. Call gst_video_vbi_parser_get_ancillary()
  * to get the Ancillary data that might be present on that line.
