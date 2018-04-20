@@ -103,7 +103,7 @@ if build_gstgl and gstgl_dep.found()
     optional_deps += bcm_host_dep
   endif
 
-  if egl_dep.found() and cc.has_header('libdrm/drm_fourcc.h', required : false)
+  if egl_dep.found() and cc.has_header('libdrm/drm_fourcc.h')
     optional_deps += allocators_dep
   endif
 

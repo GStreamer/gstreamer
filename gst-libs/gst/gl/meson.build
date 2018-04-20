@@ -283,7 +283,7 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
       gl_dep = cc.find_library('GL', required : false)
     endif
 
-    if not cc.has_header('GL/gl.h', required : false)
+    if not cc.has_header('GL/gl.h')
       gl_dep = unneeded_dep
     endif
 
@@ -334,7 +334,7 @@ if need_api_gles2 != 'no'
       gles2_dep = cc.find_library('GLESv2', required : false)
 #    endif
 
-     if not cc.has_header('GLES2/gl2.h', required : false)
+     if not cc.has_header('GLES2/gl2.h')
        gles2_dep = unneeded_dep
      endif
 
@@ -343,7 +343,7 @@ if need_api_gles2 != 'no'
     endif
   endif
 
-  gles3_h = gles2_dep.found() and cc.has_header('GLES3/gl3.h', required : false, dependencies : gles2_dep)
+  gles3_h = gles2_dep.found() and cc.has_header('GLES3/gl3.h', dependencies : gles2_dep)
 
   gles_includes = '''
 #ifdef HAVE_IOS /* FIXME */
@@ -351,7 +351,7 @@ if need_api_gles2 != 'no'
 # include <OpenGLES/ES2/glext.h>
 #else'''
   if gles3_h
-    gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', required : false, dependencies : gles2_dep)
+    gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', dependencies : gles2_dep)
     gles_includes += '''
 # include <GLES3/gl3.h>
 # include <GLES2/gl2ext.h>'''
@@ -440,7 +440,7 @@ if need_platform_egl != 'no'
     gl_platform_deps += egl_dep
     glconf.set10('GST_GL_HAVE_PLATFORM_EGL', 1)
 
-    if cc.has_header('libdrm/drm_fourcc.h', required : false)
+    if cc.has_header('libdrm/drm_fourcc.h')
       gl_misc_deps += allocators_dep
       glconf.set10('GST_GL_HAVE_DMABUF', 1)
     endif
