@@ -1145,6 +1145,114 @@ GST_START_TEST (videodecoder_default_caps_on_gap_before_buffer)
 
 GST_END_TEST;
 
+GST_START_TEST (videodecoder_playback_event_order)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint i = 0;
+  GList *events_iter;
+
+  setup_videodecodertester (NULL, NULL);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push 5 buffer with one event each. All buffers except the last
+   * one are dropped in some way, so the events are collected in various
+   * places. The order must be preserved.
+   * With the first buffer the segment event is added to the pending event
+   * list to ensure that incorrect ordering can be detected for later
+   * events.
+   */
+  for (i = 0; i < 9; i++) {
+    if (i % 2 == 0) {
+      buffer = create_test_buffer (i);
+      if (i < 8)
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+      if (i < 6) {
+        GList *l, *ol;
+
+        ol = l = gst_video_decoder_get_frames (GST_VIDEO_DECODER (dec));
+        fail_unless (g_list_length (l) == 1);
+        while (l) {
+          GstVideoCodecFrame *tmp = l->data;
+
+          if (i < 4)
+            gst_video_decoder_release_frame (GST_VIDEO_DECODER (dec), tmp);
+          else
+            gst_video_decoder_drop_frame (GST_VIDEO_DECODER (dec), tmp);
+
+          l = g_list_next (l);
+        }
+        g_list_free (ol);
+      }
+    } else {
+      GstTagList *tags;
+      tags = gst_tag_list_new (GST_TAG_TRACK_NUMBER, i, NULL);
+      fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+    }
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  events_iter = events;
+  /* make sure the usual events have been received */
+  {
+    GstEvent *sstart = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (sstart) == GST_EVENT_STREAM_START);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *caps_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (caps_event) == GST_EVENT_CAPS);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *segment_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (segment_event) == GST_EVENT_SEGMENT);
+    events_iter = g_list_next (events_iter);
+  }
+
+  /* Check the order of the tag events */
+  for (i = 1; i < 9; i += 2) {
+    guint tag_v;
+    GstEvent *tag_event = events_iter->data;
+    GstTagList *taglist = NULL;
+
+    fail_unless (GST_EVENT_TYPE (tag_event) == GST_EVENT_TAG);
+    gst_event_parse_tag (tag_event, &taglist);
+
+    fail_unless (gst_tag_list_get_uint (taglist, GST_TAG_TRACK_NUMBER, &tag_v));
+    fail_unless (tag_v == i);
+
+    events_iter = g_list_next (events_iter);
+  }
+
+  /* check that EOS was received */
+  {
+    GstEvent *eos = events_iter->data;
+
+    fail_unless (GST_EVENT_TYPE (eos) == GST_EVENT_EOS);
+    events_iter = g_list_next (events_iter);
+  }
+
+  fail_unless (events_iter == NULL);
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_videodecoder_suite (void)
@@ -1170,6 +1278,8 @@ gst_videodecoder_suite (void)
 
   tcase_add_loop_test (tc, videodecoder_default_caps_on_gap_before_buffer, 0,
       G_N_ELEMENTS (test_default_caps));
+
+  tcase_add_test (tc, videodecoder_playback_event_order);
 
   return s;
 }
