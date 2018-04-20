@@ -1691,21 +1691,31 @@ static GstEncodingProfile *
 parse_encoding_profile (const gchar * value)
 {
   gchar *factory_name;
-  GstEncodingProfile *res;
-  gchar **strcaps_v = g_strsplit (value, ":", 0);
+  GstEncodingProfile *res = NULL;
+  gchar *caps_str = NULL;
+  gchar **strcaps_v =
+      g_regex_split_simple ("(?<!\\\\)(?:\\\\\\\\)*:", value, 0, 0);
   guint i;
 
+  /* The regex returns NULL if no ":" found, handle that case. */
+  if (strcaps_v == NULL)
+    strcaps_v = g_strsplit (value, ":", 0);
+
   if (strcaps_v[0] && *strcaps_v[0]) {
-    GstCaps *caps = get_profile_format_from_possible_factory_name (strcaps_v[0],
+    GstCaps *caps;
+
+    caps_str = g_strcompress (strcaps_v[0]);
+    caps = get_profile_format_from_possible_factory_name (caps_str,
         &factory_name, NULL);
 
     if (!caps)
-      caps = gst_caps_from_string (strcaps_v[0]);
+      caps = gst_caps_from_string (caps_str);
 
     if (caps == NULL) {
-      GST_ERROR ("Could not parse caps %s", strcaps_v[0]);
-      return NULL;
+      GST_ERROR ("Could not parse caps %s", caps_str);
+      goto error;
     }
+    g_clear_pointer (&caps_str, g_free);
 
     res =
         GST_ENCODING_PROFILE (gst_encoding_container_profile_new
@@ -1721,25 +1731,37 @@ parse_encoding_profile (const gchar * value)
   }
 
   for (i = 1; strcaps_v[i] && *strcaps_v[i]; i++) {
-    GstEncodingProfile *profile = create_encoding_stream_profile (strcaps_v[i]);
+    GstEncodingProfile *profile;
+    caps_str = g_strcompress (strcaps_v[i]);
+    profile = create_encoding_stream_profile (caps_str);
 
-    if (!profile)
-      return NULL;
+    if (!profile) {
+      GST_ERROR ("Could not create profile for caps: %s", caps_str);
+      goto error;
+    }
 
     if (res) {
       if (!gst_encoding_container_profile_add_profile
           (GST_ENCODING_CONTAINER_PROFILE (res), profile)) {
-        GST_ERROR ("Can not create a preset for caps: %s", strcaps_v[i]);
-
-        return NULL;
+        GST_ERROR ("Can not add profile for caps: %s", caps_str);
+        goto error;
       }
     } else {
       res = profile;
     }
+
+    g_clear_pointer (&caps_str, g_free);
   }
   g_strfreev (strcaps_v);
 
   return res;
+
+error:
+  g_free (caps_str);
+  g_strfreev (strcaps_v);
+  g_clear_object (&res);
+
+  return NULL;
 }
 
 static GstEncodingProfile *
