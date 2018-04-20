@@ -12,8 +12,6 @@ gstvaapi_baseutils = static_library('gstvaapi-baseutils-@0@'.format(api_version)
   gstvaapi_baseutils_sources,
   c_args : gstreamer_vaapi_args,
   include_directories: [configinc, libsinc],
-  version : libversion,
-  soversion : soversion,
   dependencies : gstvaapi_baseutils_deps,
 )
 
