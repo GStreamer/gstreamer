@@ -1784,7 +1784,7 @@ _upload_find_method (GstGLUpload * upload)
  * gst_gl_upload_perform_with_buffer:
  * @upload: a #GstGLUpload
  * @buffer: input #GstBuffer
- * @outbuf_ptr: resulting #GstBuffer
+ * @outbuf_ptr: (out): resulting #GstBuffer
  *
  * Uploads @buffer using the transformation specified by
  * gst_gl_upload_set_caps() creating a new #GstBuffer in @outbuf_ptr.

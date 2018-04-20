@@ -1425,8 +1425,10 @@ gst_gl_video_allocation_params_copy_data (GstGLVideoAllocationParams * src_vid,
  * @allocator: the @GstGLMemoryAllocator to allocate from
  * @buffer: a #GstBuffer to setup
  * @params: the #GstGLVideoAllocationParams to allocate with
- * @tex_formats: (allow-none): a list of #GstGLFormat's to allocate with.
- * @wrapped_data: a list of wrapped data pointers
+ * @tex_formats: (allow-none) (array length=n_wrapped_pointers):
+ *     a list of #GstGLFormat's to allocate with.
+ * @wrapped_data: (array length=n_wrapped_pointers) (element-type gpointer):
+ *     a list of wrapped data pointers
  * @n_wrapped_pointers: the number of elements in @tex_formats and @wrapped_data
  *
  * Returns: whether the buffer was correctly setup
