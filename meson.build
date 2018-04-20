@@ -203,8 +203,7 @@ elif omx_target == 'zynqultrascaleplus'
   have_allegro_header = cc.has_header (
       'OMX_Allegro.h',
       args : gst_omx_args,
-      include_directories : [omx_inc],
-      required : false)
+      include_directories : [omx_inc])
   if not have_allegro_header
     error ('Need Allegro OMX headers to build for Zynq UltraScale+. Use with_omx_header_path option to specify the path of those headers.')
   endif
@@ -224,8 +223,7 @@ extra_video_headers = ''
 if cc.has_header (
     'OMX_VideoExt.h',
     args : gst_omx_args,
-    include_directories : [omx_inc],
-    required : false)
+    include_directories : [omx_inc])
   extra_video_headers += '''
 #include <OMX_VideoExt.h>'''
   cdata.set ('HAVE_VIDEO_EXT', 1)
@@ -234,51 +232,44 @@ endif
 if cc.has_header (
     'OMX_IndexExt.h',
     args : gst_omx_args,
-    include_directories : [omx_inc],
-    required : false)
+    include_directories : [omx_inc])
   cdata.set ('HAVE_INDEX_EXT', 1)
 endif
 
 if cc.has_header (
     'OMX_ComponentExt.h',
     args : gst_omx_args,
-    include_directories : [omx_inc],
-    required : false)
+    include_directories : [omx_inc])
   cdata.set ('HAVE_COMPONENT_EXT', 1)
 endif
 
 if cc.has_header (
     'OMX_CoreExt.h',
-    args : gst_omx_args,
-    required : false)
+    args : gst_omx_args)
   cdata.set ('HAVE_CORE_EXT', 1)
 endif
 
 if cc.has_header (
     'OMX_AudioExt.h',
-    args : gst_omx_args,
-    required : false)
+    args : gst_omx_args)
   cdata.set ('HAVE_AUDIO_EXT', 1)
 endif
 
 if cc.has_header (
     'OMX_IVCommonExt.h',
-    args : gst_omx_args,
-    required : false)
+    args : gst_omx_args)
   cdata.set ('HAVE_IV_COMMON_EXT', 1)
 endif
 
 if cc.has_header (
     'OMX_ImageExt.h',
-    args : gst_omx_args,
-    required : false)
+    args : gst_omx_args)
   cdata.set ('HAVE_IMAGE_EXT', 1)
 endif
 
 if cc.has_header (
     'OMX_OtherExt.h',
-    args : gst_omx_args,
-    required : false)
+    args : gst_omx_args)
   cdata.set ('HAVE_OTHER_EXT', 1)
 endif
 
@@ -287,8 +278,7 @@ have_omx_vp8 = cc.has_header_symbol(
     'OMX_VIDEO_CodingVP8',
     prefix : extra_video_headers, 
     args : gst_omx_args,
-    include_directories : [omx_inc],
-    required : false)
+    include_directories : [omx_inc])
 if have_omx_vp8
   cdata.set('HAVE_VP8', 1)
 endif
@@ -298,8 +288,7 @@ have_omx_theora = cc.has_header_symbol(
     'OMX_VIDEO_CodingTheora',
     prefix : extra_video_headers,
     args : gst_omx_args,
-    include_directories : [omx_inc],
-    required : false)
+    include_directories : [omx_inc])
 if have_omx_theora
   cdata.set('HAVE_THEORA', 1)
 endif
@@ -309,8 +298,7 @@ have_omx_hevc = cc.has_header_symbol(
     'OMX_VIDEO_CodingHEVC',
     prefix : extra_video_headers,
     args : gst_omx_args,
-    include_directories : [omx_inc],
-    required : false)
+    include_directories : [omx_inc])
 if have_omx_hevc
   cdata.set('HAVE_HEVC', 1)
 endif
