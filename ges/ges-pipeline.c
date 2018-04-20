@@ -555,13 +555,14 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
         goto done;
       }
       if (self->priv->mode & (GES_PIPELINE_MODE_RENDER |
-              GES_PIPELINE_MODE_SMART_RENDER))
+              GES_PIPELINE_MODE_SMART_RENDER)) {
         GST_DEBUG ("rendering => Updating pipeline caps");
-      /* Set caps on all tracks according to profile if present */
-      if (!ges_pipeline_update_caps (self)) {
-        GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
-        ret = GST_STATE_CHANGE_FAILURE;
-        goto done;
+        /* Set caps on all tracks according to profile if present */
+        if (!ges_pipeline_update_caps (self)) {
+          GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
+          ret = GST_STATE_CHANGE_FAILURE;
+          goto done;
+        }
       }
       _link_tracks (self);
       break;
