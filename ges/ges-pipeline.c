@@ -43,6 +43,7 @@ GST_DEBUG_CATEGORY_STATIC (ges_pipeline_debug);
 #define GST_CAT_DEFAULT ges_pipeline_debug
 
 #define DEFAULT_TIMELINE_MODE  GES_PIPELINE_MODE_PREVIEW
+#define IN_RENDERING_MODE(timeline) ((timeline->priv->mode) & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))
 
 /* Structure corresponding to a timeline - sink link */
 
@@ -520,6 +521,56 @@ _link_tracks (GESPipeline * pipeline)
 
   for (tmp = pipeline->priv->timeline->tracks; tmp; tmp = tmp->next)
     _link_track (pipeline, tmp->data);
+
+  if (IN_RENDERING_MODE (pipeline)) {
+    GString *unlinked_issues = NULL;
+    GstIterator *pads;
+    gboolean done = FALSE;
+    GValue paditem = { 0, };
+
+    pads = gst_element_iterate_sink_pads (pipeline->priv->encodebin);
+    while (!done) {
+      switch (gst_iterator_next (pads, &paditem)) {
+        case GST_ITERATOR_OK:
+        {
+          GstPad *testpad = g_value_get_object (&paditem);
+          if (!gst_pad_is_linked (testpad)) {
+            GstCaps *sinkcaps = gst_pad_query_caps (testpad, NULL);
+            gchar *caps_string = gst_caps_to_string (sinkcaps);
+            gchar *path_string =
+                gst_object_get_path_string (GST_OBJECT (testpad));
+            gst_caps_unref (sinkcaps);
+
+            if (!unlinked_issues)
+              unlinked_issues =
+                  g_string_new ("Following encodebin pads are not linked:\n");
+
+            g_string_append_printf (unlinked_issues, " - %s: %s", path_string,
+                caps_string);
+            g_free (caps_string);
+            g_free (path_string);
+          }
+          g_value_reset (&paditem);
+        }
+          break;
+        case GST_ITERATOR_DONE:
+        case GST_ITERATOR_ERROR:
+          done = TRUE;
+          break;
+        case GST_ITERATOR_RESYNC:
+          gst_iterator_resync (pads);
+          break;
+      }
+    }
+    g_value_reset (&paditem);
+    gst_iterator_free (pads);
+
+    if (unlinked_issues) {
+      GST_ELEMENT_ERROR (pipeline, STREAM, FAILED, (NULL), ("%s",
+              unlinked_issues->str));
+      g_string_free (unlinked_issues, TRUE);
+    }
+  }
 }
 
 static void
@@ -554,8 +605,7 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->priv->mode & (GES_PIPELINE_MODE_RENDER |
-              GES_PIPELINE_MODE_SMART_RENDER)) {
+      if (IN_RENDERING_MODE (self)) {
         GST_DEBUG ("rendering => Updating pipeline caps");
         /* Set caps on all tracks according to profile if present */
         if (!ges_pipeline_update_caps (self)) {
@@ -728,8 +778,10 @@ _link_track (GESPipeline * self, GESTrack * track)
 
   gst_caps_unref (caps);
 
-  if (G_UNLIKELY (!track)) {
-    GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
+  if (G_UNLIKELY (!pad)) {
+    GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+        ("Trying to link %" GST_PTR_FORMAT
+            " but no pad is exposed for it.", track));
     return;
   }
 
@@ -774,7 +826,8 @@ _link_track (GESPipeline * self, GESTrack * track)
   sinkpad = gst_element_get_static_pad (chain->tee, "sink");
   lret = gst_pad_link (pad, sinkpad);
   if (lret != GST_PAD_LINK_OK) {
-    GST_ERROR_OBJECT (self, "Could not link the tee (%i)", lret);
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+        (NULL), ("Could not link the tee (%s)", gst_pad_link_get_name (lret)));
     goto error;
   }
 
@@ -807,15 +860,19 @@ _link_track (GESPipeline * self, GESTrack * track)
     if (G_UNLIKELY (!(sinkpad =
                 gst_element_get_request_pad (self->priv->playsink,
                     sinkpad_name)))) {
-      GST_ERROR_OBJECT (self, "Couldn't get a pad from the playsink !");
+      GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+          (NULL), ("Could not get a pad from playsink for %s", sinkpad_name));
       goto error;
     }
 
     tmppad = gst_element_get_request_pad (chain->tee, "src_%u");
-    if (G_UNLIKELY (gst_pad_link_full (tmppad, sinkpad,
-                GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
-      GST_ERROR_OBJECT (self, "Couldn't link track pad to encodebin");
+    lret = gst_pad_link_full (tmppad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+    if (G_UNLIKELY (lret != GST_PAD_LINK_OK)) {
       gst_object_unref (tmppad);
+      GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+          (NULL),
+          ("Could not link %" GST_PTR_FORMAT " and %" GST_PTR_FORMAT " (%s)",
+              tmppad, sinkpad, gst_pad_link_get_name (lret)));
       goto error;
     }
     gst_object_unref (tmppad);
@@ -831,9 +888,7 @@ _link_track (GESPipeline * self, GESTrack * track)
   }
 
   /* Connect to encodebin */
-  if (self->
-      priv->mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))
-  {
+  if (IN_RENDERING_MODE (self)) {
     GstPad *tmppad;
     GST_DEBUG_OBJECT (self, "Connecting to encodebin");
 
@@ -849,15 +904,14 @@ _link_track (GESPipeline * self, GESTrack * track)
             &sinkpad);
 
         if (G_UNLIKELY (sinkpad == NULL)) {
-          GST_INFO_OBJECT (self, "Couldn't get a pad from encodebin for: %"
-              GST_PTR_FORMAT, caps);
-          gst_caps_unref (caps);
           gst_element_set_locked_state (GST_ELEMENT (track), TRUE);
 
           self->priv->not_rendered_tracks =
               g_list_append (self->priv->not_rendered_tracks, track);
 
-
+          GST_INFO_OBJECT (self,
+              "Couldn't get a pad from encodebin for: %" GST_PTR_FORMAT, caps);
+          gst_caps_unref (caps);
           goto error;
         }
 
