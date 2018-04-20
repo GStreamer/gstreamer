@@ -249,7 +249,8 @@ ges_effect_create_element (GESTrackElement * object)
 
   GError *error = NULL;
   GESEffect *self = GES_EFFECT (object);
-  const gchar *wanted_categories[] = { "Effect", NULL };
+  const gchar *blacklisted_factories[] =
+      { "audioconvert", "audioresample", "videoconvert", NULL };
 
   GESTrackType type = ges_track_element_get_track_type (object);
 
@@ -276,10 +277,8 @@ ges_effect_create_element (GESTrackElement * object)
     return NULL;
   }
 
-  GST_DEBUG ("Created effect %p", effect);
-
-  ges_track_element_add_children_props (object, effect, wanted_categories,
-      NULL, NULL);
+  ges_track_element_add_children_props (object, effect, NULL,
+      blacklisted_factories, NULL);
 
   return effect;
 }
