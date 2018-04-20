@@ -346,7 +346,7 @@ class MessageColumn (TextColumn):
 
         def message_data_func(column, cell, model, tree_iter, user_data):
 
-            msg = model.get_value(tree_iter, id_).decode("utf8")
+            msg = model.get_value(tree_iter, id_).decode("utf8", errors="replace")
 
             if not highlighters:
                 cell.props.text = msg

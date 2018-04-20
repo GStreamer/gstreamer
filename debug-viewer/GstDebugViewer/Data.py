@@ -344,7 +344,7 @@ class LineCache (Producer):
                 yield True
 
             offset = tell()
-            line = readline().decode('utf-8')
+            line = readline().decode('utf-8', errors='replace')
             if not line:
                 break
             match = rexp_match(line)
@@ -384,7 +384,7 @@ class LogLine (list):
 
     @classmethod
     def parse_full(cls, line_string):
-        match = cls._line_regex.match(line_string.decode('utf8'))
+        match = cls._line_regex.match(line_string.decode('utf8', errors='replace'))
         if match is None:
             # raise ValueError ("not a valid log line (%r)" % (line_string,))
             groups = [0, 0, 0, 0, "", "", 0, "", "", 0]
