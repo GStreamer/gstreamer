@@ -179,7 +179,7 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
         if not utils.isuri(self.dest_file):
             self.dest_file = utils.path2url(self.dest_file)
 
-        profile = self.get_profile(video_restriction="video/x-raw,format=I420")
+        profile = self.get_profile()
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
