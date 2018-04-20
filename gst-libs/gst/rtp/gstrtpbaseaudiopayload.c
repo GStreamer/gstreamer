@@ -434,7 +434,7 @@ gst_rtp_base_audio_payload_set_meta (GstRTPBaseAudioPayload * payload,
 /**
  * gst_rtp_base_audio_payload_push:
  * @baseaudiopayload: a #GstRTPBasePayload
- * @data: data to set as payload
+ * @data: (array length=payload_len): data to set as payload
  * @payload_len: length of payload
  * @timestamp: a #GstClockTime
  *

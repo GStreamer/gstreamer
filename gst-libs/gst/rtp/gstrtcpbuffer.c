@@ -694,11 +694,11 @@ gst_rtcp_packet_get_length (GstRTCPPacket * packet)
 /**
  * gst_rtcp_packet_sr_get_sender_info:
  * @packet: a valid SR #GstRTCPPacket
- * @ssrc: result SSRC
- * @ntptime: result NTP time
- * @rtptime: result RTP time
- * @packet_count: result packet count
- * @octet_count: result octet count
+ * @ssrc: (out): result SSRC
+ * @ntptime: (out): result NTP time
+ * @rtptime: (out): result RTP time
+ * @packet_count: (out): result packet count
+ * @octet_count: (out): result octet count
  *
  * Parse the SR sender info and store the values.
  */
@@ -847,13 +847,13 @@ gst_rtcp_packet_get_rb_count (GstRTCPPacket * packet)
  * gst_rtcp_packet_get_rb:
  * @packet: a valid SR or RR #GstRTCPPacket
  * @nth: the nth report block in @packet
- * @ssrc: result for data source being reported
- * @fractionlost: result for fraction lost since last SR/RR
- * @packetslost: result for the cumululative number of packets lost
- * @exthighestseq: result for the extended last sequence number received
- * @jitter: result for the interarrival jitter
- * @lsr: result for the last SR packet from this source
- * @dlsr: result for the delay since last SR packet
+ * @ssrc: (out): result for data source being reported
+ * @fractionlost: (out): result for fraction lost since last SR/RR
+ * @packetslost: (out): result for the cumululative number of packets lost
+ * @exthighestseq: (out): result for the extended last sequence number received
+ * @jitter: (out): result for the interarrival jitter
+ * @lsr: (out): result for the last SR packet from this source
+ * @dlsr: (out): result for the delay since last SR packet
  *
  * Parse the values of the @nth report block in @packet and store the result in
  * the values.
@@ -1044,7 +1044,7 @@ gst_rtcp_packet_set_rb (GstRTCPPacket * packet, guint nth, guint32 ssrc,
 
 
 /**
- * gst_rtcp_packet_set_profile_specific_ext:
+ * gst_rtcp_packet_add_profile_specific_ext:
  * @packet: a valid SR or RR #GstRTCPPacket
  * @data: (array length=len) (transfer none): profile-specific data
  * @len: length of the profile-specific data in bytes
@@ -1747,7 +1747,7 @@ no_space:
 /**
  * gst_rtcp_packet_bye_add_ssrcs:
  * @packet: a valid BYE #GstRTCPPacket
- * @ssrc: an array of SSRCs to add
+ * @ssrc: (array length=len) (transfer none): an array of SSRCs to add
  * @len: number of elements in @ssrc
  *
  * Adds @len SSRCs in @ssrc to BYE @packet.

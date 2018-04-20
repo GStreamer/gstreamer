@@ -1249,7 +1249,7 @@ gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
 
 /**
  * gst_rtp_buffer_ext_timestamp:
- * @exttimestamp: a previous extended timestamp
+ * @exttimestamp: (inout): a previous extended timestamp
  * @timestamp: a new timestamp
  *
  * Update the @exttimestamp field with the extended timestamp of @timestamp
