@@ -274,7 +274,7 @@ get_default_lower_trans (GstRTSPTransport * transport)
 /**
  * gst_rtsp_transport_get_manager:
  * @trans: a #GstRTSPTransMode
- * @manager: location to hold the result
+ * @manager: (out) (nullable) (transfer none): location to hold the result
  * @option: option index.
  *
  * Get the #GstElement that can handle the buffers transported over @trans.
