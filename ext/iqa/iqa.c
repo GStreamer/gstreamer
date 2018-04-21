@@ -75,6 +75,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_iqa_debug);
                 "   RGBx, BGRx } "
 
 #define SRC_FORMAT " { RGBA } "
+#define DEFAULT_DSSIM_ERROR_THRESHOLD -1.0
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -86,6 +87,7 @@ enum
 {
   PROP_0,
   PROP_DO_SSIM,
+  PROP_SSIM_ERROR_THRESHOLD,
   PROP_LAST,
 };
 
@@ -178,6 +180,25 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   dssim = dssim_compare (attr, ref_image, cmp_image);
 
   map_meta = dssim_pop_ssim_map (attr, 0, 0);
+
+  /* Comparing floats... should not be a big deal anyway */
+  if (self->ssim_threshold > 0 && dssim > self->ssim_threshold) {
+    /* We do not really care about our state... we are going to error ou
+     * anyway! */
+    GST_OBJECT_UNLOCK (self);
+
+    GST_ELEMENT_ERROR (self, STREAM, FAILED,
+        ("Dssim check failed on %s at %"
+            GST_TIME_FORMAT " with dssim %f > %f",
+            padname,
+            GST_TIME_ARGS (GST_AGGREGATOR_PAD (GST_AGGREGATOR (self)->
+                    srcpad)->segment.position), dssim, self->ssim_threshold),
+        (NULL));
+
+    GST_OBJECT_LOCK (self);
+
+    return FALSE;
+  }
 
   if (dssim > self->max_dssim) {
     map = map_meta.data;
@@ -286,7 +307,14 @@ _set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case PROP_DO_SSIM:
+      GST_OBJECT_LOCK (self);
       self->do_dssim = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_SSIM_ERROR_THRESHOLD:
+      GST_OBJECT_LOCK (self);
+      self->ssim_threshold = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -302,7 +330,14 @@ _get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_DO_SSIM:
+      GST_OBJECT_LOCK (self);
       g_value_set_boolean (value, self->do_dssim);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_SSIM_ERROR_THRESHOLD:
+      GST_OBJECT_LOCK (self);
+      g_value_set_double (value, self->ssim_threshold);
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -333,6 +368,12 @@ gst_iqa_class_init (GstIqaClass * klass)
   g_object_class_install_property (gobject_class, PROP_DO_SSIM,
       g_param_spec_boolean ("do-dssim", "do-dssim",
           "Run structural similarity checks", FALSE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SSIM_ERROR_THRESHOLD,
+      g_param_spec_double ("dssim-error-threshold", "dssim error threshold",
+          "dssim value over which the element will post an error message on the bus."
+          " A value < 0.0 means 'disabled'.",
+          -1.0, G_MAXDOUBLE, DEFAULT_DSSIM_ERROR_THRESHOLD, G_PARAM_READWRITE));
 #endif
 
   gst_element_class_set_static_metadata (gstelement_class, "Iqa",
