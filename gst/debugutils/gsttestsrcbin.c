@@ -254,7 +254,7 @@ gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
   gchar *tmp, *location = gst_uri_get_location (uri);
   gint i, n_audio = 0, n_video = 0;
   GstStreamCollection *collection = gst_stream_collection_new (NULL);
-  GstIterator *it = gst_bin_iterate_elements (GST_BIN (self));
+  GstIterator *it;
   GstCaps *streams_defs;
 
   for (tmp = location; *tmp != '\0'; tmp++)
@@ -268,10 +268,13 @@ gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
     goto failed;
 
   /* Clear us up */
+  it = gst_bin_iterate_elements (GST_BIN (self));
   while (gst_iterator_foreach (it,
           (GstIteratorForeachFunction) gst_test_src_bin_remove_child,
           self) == GST_ITERATOR_RESYNC)
     gst_iterator_resync (it);
+
+  gst_iterator_free (it);
 
   self->group_id = gst_util_group_id_next ();
   for (i = 0; i < gst_caps_get_size (streams_defs); i++) {
