@@ -21,7 +21,7 @@ cc = meson.get_compiler('c')
 if not meson.is_subproject() and cc.get_id() == 'msvc'
   uname = find_program('uname')
   ret = run_command(uname, '-o')
-  if ret.returncode() == 0 and ret.stdout().lower() == 'msys'
+  if ret.returncode() == 0 and ret.stdout().to_lower() == 'msys'
     ret = run_command(uname, '-r')
     # The kernel version returned by uname is actually the msys version
     if ret.returncode() == 0 and ret.stdout().startswith('2')
