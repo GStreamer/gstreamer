@@ -33,7 +33,7 @@
  *
  * Example pipeline:
  * ```
- * gst-launcher-1.0 playbin uri=testbin://audio,volume=0.5+video,pattern=white
+ * gst-launch-1.0 playbin uri=testbin://audio,volume=0.5+video,pattern=white
  * ```
  */
 #include <gst/gst.h>
@@ -287,7 +287,7 @@ gst_test_src_bin_uri_handler_set_uri (GstURIHandler * handler,
       gst_test_src_bin_setup_src (self, "audiotestsrc", &audio_src_template,
           GST_STREAM_TYPE_AUDIO, collection, &n_audio, stream_def);
     else
-      GST_ERROR_OBJECT (self, "Unkown type %s",
+      GST_ERROR_OBJECT (self, "Unknown type %s",
           gst_structure_get_name (stream_def));
   }
 
