@@ -205,7 +205,7 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
   gchar *stream_id = g_strdup_printf ("%s_stream_%d", srcfactory, *n_stream);
   gchar *pad_name = g_strdup_printf (template->name_template, *n_stream);
   GstStream *stream = gst_stream_new (stream_id, NULL, stype,
-      n_stream ? GST_STREAM_FLAG_UNSELECT : GST_STREAM_FLAG_SELECT);
+      (*n_stream == 0) ? GST_STREAM_FLAG_SELECT : GST_STREAM_FLAG_UNSELECT);
   GstEvent *stream_start =
       gst_event_new_stream_start (gst_stream_get_stream_id (stream));
 
