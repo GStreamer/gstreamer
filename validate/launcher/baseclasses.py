@@ -24,6 +24,7 @@ import os
 import sys
 import re
 import copy
+import shlex
 import socketserver
 import struct
 import time
@@ -354,6 +355,9 @@ class Test(Loggable):
     def kill_subprocess(self):
         utils.kill_subprocess(self, self.process, DEFAULT_TIMEOUT)
 
+    def run_external_checks(self):
+        pass
+
     def thread_wrapper(self):
         self.process = subprocess.Popen(self.command,
                                         stderr=self.out,
@@ -362,6 +366,8 @@ class Test(Loggable):
                                         cwd=self.workdir)
         self.process.wait()
         if self.result is not Result.TIMEOUT:
+            if self.process.returncode == 0:
+                self.run_external_checks()
             self.queue.put(None)
 
     def get_valgrind_suppression_file(self, subdir, name):
@@ -417,7 +423,8 @@ class Test(Loggable):
         self.timeout *= VALGRIND_TIMEOUT_FACTOR
 
         # Enable 'valgrind.config'
-        self.add_validate_config(get_data_file('data', 'valgrind.config'), subenv)
+        self.add_validate_config(get_data_file(
+            'data', 'valgrind.config'), subenv)
         if subenv == self.proc_env:
             self.add_env_variable('G_DEBUG', 'gc-friendly')
             self.add_env_variable('G_SLICE', 'always-malloc')
@@ -982,6 +989,7 @@ class GstValidateEncodingTestInterface(object):
         """
         return re.sub(r"\(.+?\)\s*| |;", '', caps).split(',')
 
+    # pylint: disable=E1101
     def _has_caps_type_variant(self, c, ccaps):
         """
         Handle situations where we can have application/ogg or video/ogg or
@@ -1001,6 +1009,42 @@ class GstValidateEncodingTestInterface(object):
                     has_variant = True
 
         return has_variant
+
+    # pylint: disable=E1101
+    def run_iqa_test(self, reference_file_uri):
+        """
+        Runs IQA test if @reference_file_path exists
+        @test: The test to run tests on
+        """
+        pipeline_desc = """
+            uridecodebin uri=%s !
+                iqa name=iqa do-dssim=true dssim-error-threshold=1.0 ! fakesink
+            uridecodebin uri=%s ! iqa.
+        """ % (reference_file_uri, self.dest_file)
+        pipeline_desc = pipeline_desc.replace("\n", "")
+
+        command = [ScenarioManager.GST_VALIDATE_COMMAND] + \
+            shlex.split(pipeline_desc)
+        if not self.options.redirect_logs:
+            self.out.write(
+                "=================\n"
+                "Running IQA tests on results of: %s\n"
+                "Command: '%s'\n"
+                "=================\n\n" % (
+                    self.classname, ' '.join(command)))
+            self.out.flush()
+        else:
+            message = "Running IQA tests on results of:%s %s\n" \
+                "    Command: %s\n" % (
+                    Colors.ENDC, self.classname, ' '.join(command))
+            printc(message, Colors.OKBLUE)
+
+        self.process = subprocess.Popen(command,
+                                        stderr=self.out,
+                                        stdout=self.out,
+                                        env=self.proc_env,
+                                        cwd=self.workdir)
+        self.process.wait()
 
     def check_encoded_file(self):
         result_descriptor = GstValidateMediaDescriptor.new_from_uri(
@@ -1674,7 +1718,8 @@ class _TestsLauncher(Loggable):
             while jobs_running != 0:
                 test = self.tests_wait()
                 jobs_running -= 1
-                test.number = "[%d / %d] " % (current_test_num, self.total_num_tests)
+                test.number = "[%d / %d] " % (current_test_num,
+                                              self.total_num_tests)
                 current_test_num += 1
                 res = test.test_end()
                 self.reporter.after_test(test)

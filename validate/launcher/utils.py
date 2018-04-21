@@ -357,6 +357,7 @@ class BackTraceGenerator(Loggable):
                 # yet.
                 time.sleep(1)
 
+            application = test.process.args[0]
             try:
                 info = subprocess.check_output(['coredumpctl', 'info',
                                                 str(test.process.pid)],
@@ -375,9 +376,9 @@ class BackTraceGenerator(Loggable):
                 # The trace might not be ready yet
                 continue
 
-            if executable != test.application:
+            if executable != application:
                 self.debug("PID: %s -- executable %s != test application: %s" % (
-                    test.process.pid, executable, test.application))
+                    test.process.pid, executable, application))
                 # The trace might not be ready yet
                 continue
 
@@ -396,7 +397,7 @@ class BackTraceGenerator(Loggable):
                                              tf.name], stderr=subprocess.STDOUT)
 
                     gdb = ['gdb', '-ex', 't a a bt', '-ex', 'quit',
-                           test.application, tf.name]
+                           application, tf.name]
                     bt_all = subprocess.check_output(
                         gdb, stderr=subprocess.STDOUT).decode()
 

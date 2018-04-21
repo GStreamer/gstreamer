@@ -530,6 +530,11 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
 
         self.uri = uri
 
+    def run_external_checks(self):
+        if self.media_descriptor.get_num_tracks("video") == 1 and \
+                self.options.validate_enable_iqa_tests:
+            self.run_iqa_test(self.uri)
+
     def set_rendering_info(self):
         self.dest_file = os.path.join(self.options.dest,
                                       self.classname.replace(".transcode.", os.sep).
@@ -741,6 +746,9 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                            help="Run the server in GDB.")
         group.add_argument("--validate-disable-rtsp", dest="disable_rtsp",
                            help="Disable RTSP tests.")
+        group.add_argument("--validate-enable-iqa-tests", dest="validate_enable_iqa_tests",
+                           help="Enable Image Quality Assessment validation tests.",
+                           default=False, action='store_true')
 
     def print_valgrind_bugs(self):
         # Look for all the 'pending' bugs in our supp file
