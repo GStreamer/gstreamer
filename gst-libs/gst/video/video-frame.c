@@ -75,6 +75,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
 
   g_return_val_if_fail (frame != NULL, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (info->finfo != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
   if (id == -1)
