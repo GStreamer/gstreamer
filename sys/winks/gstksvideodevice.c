@@ -1176,7 +1176,8 @@ error_get_result:
 }
 
 gboolean
-gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self, GstBuffer ** bufptr)
+gst_ks_video_device_postprocess_frame (GstKsVideoDevice * self,
+    GstBuffer ** bufptr)
 {
   GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
   GstBuffer *buf = *bufptr;

@@ -904,7 +904,7 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
     GST_LOG (" - %s: %4d/%02d/%02d %02d:%02d:%09.6lf", property_name,
         year, month, day, hour, minute, second);
 
-    if (strrchr (str, '+') || strrchr (str, '-')){
+    if (strrchr (str, '+') || strrchr (str, '-')) {
       /* reuse some code from gst-plugins-base/gst-libs/gst/tag/gstxmptag.c */
       gint gmt_offset = -1;
       gchar *plus_pos = NULL;

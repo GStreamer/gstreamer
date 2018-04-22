@@ -93,8 +93,8 @@ static void gst_faad_reset (GstFaad * faad);
 static gboolean gst_faad_start (GstAudioDecoder * dec);
 static gboolean gst_faad_stop (GstAudioDecoder * dec);
 static gboolean gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps);
-static GstFlowReturn gst_faad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
-    gint * offset, gint * length);
+static GstFlowReturn gst_faad_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_faad_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static void gst_faad_flush (GstAudioDecoder * dec, gboolean hard);

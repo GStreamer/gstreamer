@@ -188,7 +188,7 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
 {
   GstVtdec *vtdec = GST_VTDEC (decoder);
 
-  gst_vtdec_push_frames_if_needed (vtdec, TRUE, TRUE); 
+  gst_vtdec_push_frames_if_needed (vtdec, TRUE, TRUE);
 
   if (vtdec->input_state)
     gst_video_codec_state_unref (vtdec->input_state);

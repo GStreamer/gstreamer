@@ -131,8 +131,8 @@ G_DEFINE_TYPE (GstDtsDec, gst_dtsdec, GST_TYPE_AUDIO_DECODER);
 static gboolean gst_dtsdec_start (GstAudioDecoder * dec);
 static gboolean gst_dtsdec_stop (GstAudioDecoder * dec);
 static gboolean gst_dtsdec_set_format (GstAudioDecoder * bdec, GstCaps * caps);
-static GstFlowReturn gst_dtsdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
-    gint * offset, gint * length);
+static GstFlowReturn gst_dtsdec_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
 static GstFlowReturn gst_dtsdec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 

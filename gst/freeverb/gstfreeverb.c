@@ -181,7 +181,7 @@ freeverb_allpass_init (freeverb_allpass * allpass)
   gfloat *buf = allpass->buffer;
 
   for (i = 0; i < len; i++) {
-    buf[i] = (gfloat) DC_OFFSET;         /* this is not 100 % correct. */
+    buf[i] = (gfloat) DC_OFFSET;        /* this is not 100 % correct. */
   }
 }
 
@@ -246,7 +246,7 @@ freeverb_comb_init (freeverb_comb * comb)
   gfloat *buf = comb->buffer;
 
   for (i = 0; i < len; i++) {
-    buf[i] = (gfloat) DC_OFFSET;         /* This is not 100 % correct. */
+    buf[i] = (gfloat) DC_OFFSET;        /* This is not 100 % correct. */
   }
 }
 

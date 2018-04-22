@@ -168,7 +168,7 @@ gst_dx9screencapsrc_init (GstDX9ScreenCapSrc * src)
 
   src->monitor = 0;
   src->show_cursor = FALSE;
-  src->monitor_info.cbSize = sizeof(MONITORINFO);
+  src->monitor_info.cbSize = sizeof (MONITORINFO);
 
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
@@ -322,7 +322,7 @@ gst_dx9screencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
   if (src->monitor >= IDirect3D9_GetAdapterCount (g_d3d9)) {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-      ("Specified monitor with index %d not found", src->monitor), (NULL));
+        ("Specified monitor with index %d not found", src->monitor), (NULL));
     return NULL;
   }
 
@@ -400,7 +400,7 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
 
   if (src->monitor >= IDirect3D9_GetAdapterCount (g_d3d9)) {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-      ("Specified monitor with index %d not found", src->monitor), (NULL));
+        ("Specified monitor with index %d not found", src->monitor), (NULL));
     return FALSE;
   }
 
