@@ -202,6 +202,7 @@ struct _StreamGroup
   GstElement *splitter;
   GList *converters;            /* List of conversion GstElement */
   GstElement *capsfilter;       /* profile->restriction (if non-NULL/ANY) */
+  gulong inputfilter_caps_sid;
   GstElement *encoder;          /* Encoder (can be NULL) */
   GstElement *fakesink;         /* Fakesink (can be NULL) */
   GstElement *combiner;
@@ -1118,21 +1119,21 @@ _profile_restriction_caps_cb (GstEncodingProfile * profile,
 }
 
 static void
-_outfilter_caps_set_cb (GstPad * outfilter_sinkpad,
-    GParamSpec * arg G_GNUC_UNUSED, StreamGroup * group)
+_capsfilter_force_format (GstPad * pad,
+    GParamSpec * arg G_GNUC_UNUSED, gulong * signal_id)
 {
   GstCaps *caps;
   GstStructure *structure;
 
-  g_object_get (outfilter_sinkpad, "caps", &caps, NULL);
+  g_object_get (pad, "caps", &caps, NULL);
   caps = gst_caps_copy (caps);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_remove_field (structure, "streamheader");
-  GST_INFO_OBJECT (group->ebin, "Forcing caps to %" GST_PTR_FORMAT, caps);
-  g_object_set (group->outfilter, "caps", caps, NULL);
-  g_signal_handler_disconnect (outfilter_sinkpad, group->outputfilter_caps_sid);
-  group->outputfilter_caps_sid = 0;
+  GST_DEBUG_OBJECT (pad, "Forcing caps to %" GST_PTR_FORMAT, caps);
+  g_object_set (GST_OBJECT_PARENT (pad), "caps", caps, NULL);
+  g_signal_handler_disconnect (pad, *signal_id);
+  *signal_id = 0;
   gst_caps_unref (caps);
 }
 
@@ -1146,7 +1147,8 @@ _set_group_caps_format (StreamGroup * sgroup, GstEncodingProfile * prof,
     if (!sgroup->outputfilter_caps_sid) {
       sgroup->outputfilter_caps_sid =
           g_signal_connect (sgroup->outfilter->sinkpads->data,
-          "notify::caps", G_CALLBACK (_outfilter_caps_set_cb), sgroup);
+          "notify::caps", G_CALLBACK (_capsfilter_force_format),
+          &sgroup->outputfilter_caps_sid);
     }
   }
 }
@@ -1439,6 +1441,16 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   last = sgroup->capsfilter = gst_element_factory_make ("capsfilter", NULL);
   if (restriction && !gst_caps_is_any (restriction))
     g_object_set (sgroup->capsfilter, "caps", restriction, NULL);
+
+  if (!gst_encoding_profile_get_allow_dynamic_output (sprof)) {
+    if (!sgroup->inputfilter_caps_sid) {
+      sgroup->inputfilter_caps_sid =
+          g_signal_connect (sgroup->capsfilter->sinkpads->data,
+          "notify::caps", G_CALLBACK (_capsfilter_force_format),
+          &sgroup->inputfilter_caps_sid);
+    }
+  }
+
   gst_bin_add ((GstBin *) ebin, sgroup->capsfilter);
   tosync = g_list_append (tosync, sgroup->capsfilter);
   if (sgroup->encoder == NULL) {
@@ -2105,6 +2117,12 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
       gst_element_unlink (sgroup->capsfilter, sgroup->encoder);
     else
       gst_element_unlink (sgroup->capsfilter, sgroup->fakesink);
+
+    if (sgroup->inputfilter_caps_sid) {
+      g_signal_handler_disconnect (sgroup->capsfilter->sinkpads->data,
+          sgroup->inputfilter_caps_sid);
+      sgroup->inputfilter_caps_sid = 0;
+    }
     gst_bin_remove ((GstBin *) ebin, sgroup->capsfilter);
   }
 
