@@ -509,17 +509,17 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
     GST_DEBUG_OBJECT (src, "Waiting for next frame time %" G_GUINT64_FORMAT,
         buf_time);
     ret = gst_clock_id_wait (id, NULL);
-    GST_OBJECT_LOCK (src);
 
+    GST_OBJECT_LOCK (src);
     gst_clock_id_unref (id);
     src->clock_id = NULL;
+    GST_OBJECT_UNLOCK (src);
+
     if (ret == GST_CLOCK_UNSCHEDULED) {
       /* Got woken up by the unlock function */
-      GST_OBJECT_UNLOCK (src);
       gst_object_unref (clock);
       return GST_FLOW_FLUSHING;
     }
-    GST_OBJECT_UNLOCK (src);
 
     /* Duration is a complete 1/fps frame duration */
     buf_dur =
