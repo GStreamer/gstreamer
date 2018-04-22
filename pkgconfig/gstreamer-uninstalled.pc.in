@@ -5,7 +5,7 @@ libdir=@gstlibdir@
 # includedir is builddir because it is used to find gstconfig.h in places
 includedir=@abs_top_builddir@
 toolsdir=@abs_top_builddir@/tools
-pluginsdir=@abs_top_builddir@
+pluginsdir=@abs_top_builddir@/plugins
 girdir=@abs_top_builddir@/gst
 bashhelpersdir=@abs_top_builddir@/data/bash-completion/helpers
 helpersdir=@abs_top_builddir@/libs/gst/helpers
