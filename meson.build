@@ -87,7 +87,7 @@ foreach dep: gst_deps_defs
 endforeach
 
 ges_dep = dependency('gst-editing-services-' + apiversion, version: gst_required_version,
-    fallback: ['gst-editing-services', 'ges_dep'])
+    fallback: ['gst-editing-services', 'ges_dep'], required: false)
 
 if ges_dep.found()
     gst_deps_defs +=  [
