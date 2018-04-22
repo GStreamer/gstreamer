@@ -19,15 +19,17 @@ cc = meson.get_compiler('c')
 # Make it possible to use msys2 built zlib which fails
 # when not using the mingw toolchain as it uses unistd.h
 if not meson.is_subproject() and cc.get_id() == 'msvc'
-  uname = find_program('uname')
-  ret = run_command(uname, '-o')
-  if ret.returncode() == 0 and ret.stdout().to_lower() == 'msys'
-    ret = run_command(uname, '-r')
-    # The kernel version returned by uname is actually the msys version
-    if ret.returncode() == 0 and ret.stdout().startswith('2')
-      # If a system zlib is found, disable UNIX features in zlib.h and zconf.h
-      if cc.find_library('z').found()
-        add_global_arguments('-DZ_SOLO', language: 'c')
+  uname = find_program('uname', required: false)
+  if uname.found()
+    ret = run_command(uname, '-o')
+    if ret.returncode() == 0 and ret.stdout().to_lower() == 'msys'
+      ret = run_command(uname, '-r')
+      # The kernel version returned by uname is actually the msys version
+      if ret.returncode() == 0 and ret.stdout().startswith('2')
+        # If a system zlib is found, disable UNIX features in zlib.h and zconf.h
+        if cc.find_library('z').found()
+          add_global_arguments('-DZ_SOLO', language: 'c')
+        endif
       endif
     endif
   endif
