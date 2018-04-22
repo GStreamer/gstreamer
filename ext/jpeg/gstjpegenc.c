@@ -113,7 +113,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 16, 65535 ], "
         "height = (int) [ 16, 65535 ], "
         "framerate = (fraction) [ 0/1, MAX ], "
-        "sof-marker = (int) { 0, 1, 2, 9 }")
+        "sof-marker = (int) { 0, 1, 2, 4, 9 }")
     );
 
 static void
