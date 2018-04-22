@@ -24,7 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -39,10 +38,11 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.support.v7.app.AppCompatActivity;
 
 import org.freedesktop.gstreamer.Player;
 
-public class Play extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
+public class Play extends AppCompatActivity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private PowerManager.WakeLock wake_lock;
     private Player player;
 

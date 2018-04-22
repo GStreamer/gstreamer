@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "org.freedesktop.gstreamer.play"
@@ -26,10 +26,11 @@ android {
 
                 arguments "NDK_APPLICATION_MK=src/main/jni/Application.mk", "GSTREAMER_JAVA_SRC_DIR=src/main/java", "GSTREAMER_ROOT_ANDROID=$gstRoot", "GSTREAMER_ASSETS_DIR=src/main/assets"
 
-                targets "gstplayer", "gstreamer_android"
+                targets "gstplayer"
 
                 // All archs except MIPS and MIPS64 are supported
-                abiFilters 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+                abiFilters  'armeabi', 'armeabi-v7a', 'arm64-v8a', 'x86'
+                // x86_64 abis disabled because of https://bugzilla.gnome.org/show_bug.cgi?id=795454
             }
         }
     }
