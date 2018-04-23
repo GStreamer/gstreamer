@@ -1717,28 +1717,6 @@ gst_video_aggregator_do_qos (GstVideoAggregator * vagg, GstClockTime timestamp)
   return jitter;
 }
 
-static GstClockTime
-gst_video_aggregator_get_next_time (GstAggregator * agg)
-{
-  GstClockTime next_time;
-  GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
-
-  GST_OBJECT_LOCK (agg);
-  if (agg_segment->position == -1 || agg_segment->position < agg_segment->start)
-    next_time = agg_segment->start;
-  else
-    next_time = agg_segment->position;
-
-  if (agg_segment->stop != -1 && next_time > agg_segment->stop)
-    next_time = agg_segment->stop;
-
-  next_time =
-      gst_segment_to_running_time (agg_segment, GST_FORMAT_TIME, next_time);
-  GST_OBJECT_UNLOCK (agg);
-
-  return next_time;
-}
-
 static void
 gst_video_aggregator_advance_on_timeout (GstVideoAggregator * vagg)
 {
@@ -2557,7 +2535,7 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
   agg_class->aggregate = gst_video_aggregator_aggregate;
   agg_class->src_event = gst_video_aggregator_src_event;
   agg_class->src_query = gst_video_aggregator_src_query;
-  agg_class->get_next_time = gst_video_aggregator_get_next_time;
+  agg_class->get_next_time = gst_aggregator_simple_get_next_time;
   agg_class->update_src_caps = gst_video_aggregator_default_update_src_caps;
   agg_class->fixate_src_caps = gst_video_aggregator_default_fixate_src_caps;
   agg_class->negotiated_src_caps =
