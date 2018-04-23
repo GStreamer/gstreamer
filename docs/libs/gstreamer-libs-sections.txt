@@ -245,6 +245,7 @@ gst_aggregator_pad_pop_buffer
 gst_aggregator_pad_peek_buffer
 gst_aggregator_pad_drop_buffer
 gst_aggregator_pad_is_eos
+gst_aggregator_pad_has_buffer
 <SUBSECTION Standard>
 GST_IS_AGGREGATOR_PAD
 GST_IS_AGGREGATOR_PAD_CLASS

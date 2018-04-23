@@ -2946,6 +2946,27 @@ gst_aggregator_pad_peek_buffer (GstAggregatorPad * pad)
 }
 
 /**
+ * gst_aggregator_pad_has_buffer:
+ * @pad: the pad to check the buffer on
+ *
+ * Returns: %TRUE if the pad has a buffer available as the next thing.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_aggregator_pad_has_buffer (GstAggregatorPad * pad)
+{
+  gboolean has_buffer;
+
+  PAD_LOCK (pad);
+  gst_aggregator_pad_clip_buffer_unlocked (pad);
+  has_buffer = (pad->priv->clipped_buffer != NULL);
+  PAD_UNLOCK (pad);
+
+  return has_buffer;
+}
+
+/**
  * gst_aggregator_pad_is_eos:
  * @pad: an aggregator pad
  *
