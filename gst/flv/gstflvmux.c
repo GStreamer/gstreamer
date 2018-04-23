@@ -656,6 +656,12 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 static GstFlowReturn
 gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
 {
+  GstAggregator *agg = GST_AGGREGATOR (mux);
+  GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (agg->srcpad);
+
+  if (GST_BUFFER_PTS_IS_VALID (buffer))
+    srcpad->segment.position = GST_BUFFER_PTS (buffer);
+
   /* pushing the buffer that rewrites the header will make it no longer be the
    * total output size in bytes, but it doesn't matter at that point */
   mux->byte_count += gst_buffer_get_size (buffer);
