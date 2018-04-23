@@ -1793,29 +1793,6 @@ gst_flv_mux_set_property (GObject * object,
 }
 
 static GstClockTime
-gst_flv_mux_get_next_time_for_segment (GstAggregator * aggregator,
-    const GstSegment * segment)
-{
-  GstClockTime next_time;
-
-  GST_OBJECT_LOCK (aggregator);
-  if (segment->position == -1 || segment->position < segment->start)
-    next_time = segment->start;
-  else
-    next_time = segment->position;
-
-  if (segment->stop != -1 && next_time > segment->stop)
-    next_time = segment->stop;
-
-  next_time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, next_time);
-  GST_OBJECT_UNLOCK (aggregator);
-
-  GST_DEBUG_OBJECT (aggregator, "next_time: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (next_time));
-  return next_time;
-}
-
-static GstClockTime
 gst_flv_mux_get_next_time (GstAggregator * aggregator)
 {
   GstFlvMux *mux = GST_FLV_MUX (aggregator);
@@ -1833,8 +1810,7 @@ gst_flv_mux_get_next_time (GstAggregator * aggregator)
     goto wait_for_data;
   GST_OBJECT_UNLOCK (aggregator);
 
-  return gst_flv_mux_get_next_time_for_segment (aggregator,
-      &GST_AGGREGATOR_PAD (aggregator->srcpad)->segment);
+  return gst_aggregator_simple_get_next_time (aggregator);
 
 wait_for_data:
   GST_OBJECT_UNLOCK (aggregator);
