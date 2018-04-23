@@ -650,6 +650,18 @@ gst_audio_aggregator_sink_getcaps (GstPad * pad, GstAggregator * agg,
   sink_template_caps = gst_caps_make_writable (sink_template_caps);
   s = gst_caps_get_structure (sink_template_caps, 0);
 
+  /* We will then use the rate in the first structure as the expected
+   * rate, we want to make sure only the compatible structures remain
+   * in downstream_caps
+   */
+  if (downstream_caps && filter) {
+    GstCaps *tmp = gst_caps_intersect_full (downstream_caps, filter,
+        GST_CAPS_INTERSECT_FIRST);
+
+    gst_caps_unref (downstream_caps);
+    downstream_caps = tmp;
+  }
+
   if (downstream_caps && !gst_caps_is_empty (downstream_caps))
     s2 = gst_caps_get_structure (downstream_caps, 0);
   else
