@@ -1535,10 +1535,16 @@ get_profile_format_from_possible_factory_name (const gchar * factory_desc,
     GstStaticPadTemplate *templ = ((GstStaticPadTemplate *) tmp->data);
 
     if (templ->direction == GST_PAD_SRC) {
-      if (!caps)
-        caps = gst_static_caps_get (&templ->static_caps);
-      else
-        gst_caps_append (caps, gst_static_caps_get (&templ->static_caps));
+      GstCaps *tmpcaps = gst_static_caps_get (&templ->static_caps);
+
+      if (gst_caps_get_size (tmpcaps) > 0)
+        caps =
+            gst_caps_new_empty_simple (gst_structure_get_name
+            (gst_caps_get_structure (tmpcaps, 0)));
+
+      gst_caps_unref (tmpcaps);
+      if (caps)
+        break;
     }
   }
 
@@ -1573,19 +1579,45 @@ done:
 
 static GstEncodingProfile *
 create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
-    GstCaps * restrictioncaps, gint presence, gchar * factory_name)
+    GstCaps * restrictioncaps, gint presence, gchar * factory_name,
+    GList * muxers_and_encoders, GstCaps * raw_audio_caps,
+    GstCaps * raw_video_caps)
 {
   GstEncodingProfile *profile = NULL;
-  const gchar *sname =
-      gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  GList *factories = NULL;
+  gboolean is_raw_audio = FALSE, is_raw_video = FALSE;
 
-  if (g_str_has_prefix (sname, "audio/"))
-    profile = GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps,
-            preset_name, restrictioncaps, presence));
-  else if (g_str_has_prefix (sname, "video/") ||
-      g_str_has_prefix (sname, "image/"))
-    profile = GST_ENCODING_PROFILE (gst_encoding_video_profile_new (caps,
-            preset_name, restrictioncaps, presence));
+  if (gst_caps_can_intersect (raw_audio_caps, caps)) {
+    is_raw_audio = TRUE;
+  } else if (gst_caps_can_intersect (raw_video_caps, caps)) {
+    is_raw_video = TRUE;
+  } else {
+    factories = gst_element_factory_list_filter (muxers_and_encoders, caps,
+        GST_PAD_SRC, FALSE);
+
+    if (!factories) {
+      GST_INFO ("Could not find factory for %" GST_PTR_FORMAT, caps);
+      return NULL;
+    }
+  }
+
+  if (is_raw_audio || (factories
+          && gst_element_factory_list_is_type (factories->data,
+              GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER)))
+    profile =
+        GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps, preset_name,
+            restrictioncaps, presence));
+  else if (is_raw_video || (factories
+          && gst_element_factory_list_is_type (factories->data,
+              GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER)))
+    profile =
+        GST_ENCODING_PROFILE (gst_encoding_video_profile_new (caps, preset_name,
+            restrictioncaps, presence));
+  else if (gst_element_factory_list_is_type (factories->data,
+          GST_ELEMENT_FACTORY_TYPE_MUXER))
+    profile =
+        GST_ENCODING_PROFILE (gst_encoding_container_profile_new
+        ("User profile", "User profile", caps, NULL));
 
   if (factory_name && profile)
     gst_encoding_profile_set_preset_name (profile, factory_name);
@@ -1596,7 +1628,9 @@ create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
 }
 
 static GstEncodingProfile *
-create_encoding_stream_profile (gchar * serialized_profile)
+create_encoding_stream_profile (gchar * serialized_profile,
+    GList * muxers_and_encoders, GstCaps * raw_audio_caps,
+    GstCaps * raw_video_caps)
 {
   GstCaps *caps;
   guint presence = 0;
@@ -1658,7 +1692,8 @@ create_encoding_stream_profile (gchar * serialized_profile)
   caps = gst_caps_from_string (strcaps);
   if (caps) {
     profile = create_encoding_profile_from_caps (caps, preset_name,
-        restrictioncaps, presence, NULL);
+        restrictioncaps, presence, NULL, muxers_and_encoders, raw_audio_caps,
+        raw_video_caps);
     gst_caps_unref (caps);
   }
 
@@ -1667,7 +1702,8 @@ create_encoding_stream_profile (gchar * serialized_profile)
         &factory_name, restrictioncaps ? NULL : &restrictioncaps);
     if (caps) {
       profile = create_encoding_profile_from_caps (caps, preset_name,
-          restrictioncaps, presence, factory_name);
+          restrictioncaps, presence, factory_name, muxers_and_encoders,
+          raw_audio_caps, raw_video_caps);
       gst_caps_unref (caps);
     }
   }
@@ -1690,50 +1726,28 @@ create_encoding_stream_profile (gchar * serialized_profile)
 static GstEncodingProfile *
 parse_encoding_profile (const gchar * value)
 {
-  gchar *factory_name;
   GstEncodingProfile *res = NULL;
   gchar *caps_str = NULL;
   gchar **strcaps_v =
       g_regex_split_simple ("(?<!\\\\)(?:\\\\\\\\)*:", value, 0, 0);
   guint i;
+  GList *muxers_and_encoders =
+      gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_ENCODER |
+      GST_ELEMENT_FACTORY_TYPE_MUXER,
+      GST_RANK_MARGINAL);
+  GstCaps *raw_video_caps = gst_caps_new_empty_simple ("video/x-raw");
+  GstCaps *raw_audio_caps = gst_caps_new_empty_simple ("audio/x-raw");
 
   /* The regex returns NULL if no ":" found, handle that case. */
   if (strcaps_v == NULL)
     strcaps_v = g_strsplit (value, ":", 0);
 
-  if (strcaps_v[0] && *strcaps_v[0]) {
-    GstCaps *caps;
-
-    caps_str = g_strcompress (strcaps_v[0]);
-    caps = get_profile_format_from_possible_factory_name (caps_str,
-        &factory_name, NULL);
-
-    if (!caps)
-      caps = gst_caps_from_string (caps_str);
-
-    if (caps == NULL) {
-      GST_ERROR ("Could not parse caps %s", caps_str);
-      goto error;
-    }
-    g_clear_pointer (&caps_str, g_free);
-
-    res =
-        GST_ENCODING_PROFILE (gst_encoding_container_profile_new
-        ("User profile", "User profile", caps, NULL));
-
-    if (factory_name) {
-      gst_encoding_profile_set_preset_name (res, factory_name);
-      g_free (factory_name);
-    }
-    gst_caps_unref (caps);
-  } else {
-    res = NULL;
-  }
-
-  for (i = 1; strcaps_v[i] && *strcaps_v[i]; i++) {
+  for (i = 0; strcaps_v[i] && *strcaps_v[i]; i++) {
     GstEncodingProfile *profile;
     caps_str = g_strcompress (strcaps_v[i]);
-    profile = create_encoding_stream_profile (caps_str);
+    profile =
+        create_encoding_stream_profile (caps_str, muxers_and_encoders,
+        raw_audio_caps, raw_video_caps);
 
     if (!profile) {
       GST_ERROR ("Could not create profile for caps: %s", caps_str);
@@ -1741,6 +1755,12 @@ parse_encoding_profile (const gchar * value)
     }
 
     if (res) {
+      if (!GST_IS_ENCODING_CONTAINER_PROFILE (res)) {
+        GST_ERROR ("The first described encoding profile was not a container"
+            " but you are trying to add more profiles to it. This is not possible");
+        goto error;
+      }
+
       if (!gst_encoding_container_profile_add_profile
           (GST_ENCODING_CONTAINER_PROFILE (res), profile)) {
         GST_ERROR ("Can not add profile for caps: %s", caps_str);
@@ -1752,16 +1772,20 @@ parse_encoding_profile (const gchar * value)
 
     g_clear_pointer (&caps_str, g_free);
   }
+
+done:
+  g_free (caps_str);
   g_strfreev (strcaps_v);
+  gst_caps_unref (raw_audio_caps);
+  gst_caps_unref (raw_video_caps);
+  gst_plugin_feature_list_free (muxers_and_encoders);
 
   return res;
 
 error:
-  g_free (caps_str);
-  g_strfreev (strcaps_v);
   g_clear_object (&res);
 
-  return NULL;
+  goto done;
 }
 
 static GstEncodingProfile *
