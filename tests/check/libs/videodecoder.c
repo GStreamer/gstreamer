@@ -182,7 +182,7 @@ static void
 gst_video_decoder_tester_class_init (GstVideoDecoderTesterClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstVideoDecoderClass *videosink_class = GST_VIDEO_DECODER_CLASS (klass);
+  GstVideoDecoderClass *videodecoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
   static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -198,11 +198,11 @@ gst_video_decoder_tester_class_init (GstVideoDecoderTesterClass * klass)
   gst_element_class_set_metadata (element_class,
       "VideoDecoderTester", "Decoder/Video", "yep", "me");
 
-  videosink_class->start = gst_video_decoder_tester_start;
-  videosink_class->stop = gst_video_decoder_tester_stop;
-  videosink_class->flush = gst_video_decoder_tester_flush;
-  videosink_class->handle_frame = gst_video_decoder_tester_handle_frame;
-  videosink_class->set_format = gst_video_decoder_tester_set_format;
+  videodecoder_class->start = gst_video_decoder_tester_start;
+  videodecoder_class->stop = gst_video_decoder_tester_stop;
+  videodecoder_class->flush = gst_video_decoder_tester_flush;
+  videodecoder_class->handle_frame = gst_video_decoder_tester_handle_frame;
+  videodecoder_class->set_format = gst_video_decoder_tester_set_format;
 }
 
 static void
