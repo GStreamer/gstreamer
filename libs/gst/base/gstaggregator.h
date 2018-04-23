@@ -113,6 +113,9 @@ GST_BASE_API
 gboolean    gst_aggregator_pad_drop_buffer  (GstAggregatorPad *  pad);
 
 GST_BASE_API
+gboolean    gst_aggregator_pad_has_buffer   (GstAggregatorPad * pad);
+
+GST_BASE_API
 gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
 
 /*********************
