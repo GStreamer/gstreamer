@@ -444,27 +444,6 @@ enum
 G_DEFINE_ABSTRACT_TYPE (GstAudioAggregator, gst_audio_aggregator,
     GST_TYPE_AGGREGATOR);
 
-static GstClockTime
-gst_audio_aggregator_get_next_time (GstAggregator * agg)
-{
-  GstClockTime next_time;
-  GstSegment *segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
-
-  GST_OBJECT_LOCK (agg);
-  if (segment->position == -1 || segment->position < segment->start)
-    next_time = segment->start;
-  else
-    next_time = segment->position;
-
-  if (segment->stop != -1 && next_time > segment->stop)
-    next_time = segment->stop;
-
-  next_time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, next_time);
-  GST_OBJECT_UNLOCK (agg);
-
-  return next_time;
-}
-
 static GstBuffer *
 gst_audio_aggregator_convert_buffer (GstAudioAggregator * aagg, GstPad * pad,
     GstAudioInfo * in_info, GstAudioInfo * out_info, GstBuffer * buffer)
@@ -502,7 +481,7 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
   gstaggregator_class->aggregate =
       GST_DEBUG_FUNCPTR (gst_audio_aggregator_aggregate);
   gstaggregator_class->clip = GST_DEBUG_FUNCPTR (gst_audio_aggregator_do_clip);
-  gstaggregator_class->get_next_time = gst_audio_aggregator_get_next_time;
+  gstaggregator_class->get_next_time = gst_aggregator_simple_get_next_time;
   gstaggregator_class->update_src_caps =
       GST_DEBUG_FUNCPTR (gst_audio_aggregator_update_src_caps);
   gstaggregator_class->fixate_src_caps = gst_audio_aggregator_fixate_src_caps;
