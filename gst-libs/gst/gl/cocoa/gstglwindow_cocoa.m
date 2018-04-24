@@ -484,7 +484,7 @@ _set_render_rectangle (gpointer data)
  }
 
  view = [internal_win_id contentView];
- CGRect newMainViewFrame = CGRectMake(render->rect.x,
+ NSRect newMainViewFrame = NSMakeRect(render->rect.x,
                                       render->rect.y,
                                       render->rect.w,
                                       render->rect.h);
