@@ -1117,11 +1117,15 @@ egl_context_new_wrapped (EglDisplay * display, EGLContext gl_context)
   args.display = display;
   args.config = config;
   args.gl_parent_context = gl_context;
+  args.context = NULL;
   success = egl_display_run (display, (EglContextRunFunc) do_egl_context_new,
       &args);
   egl_object_unref (config);
   if (!success)
     return NULL;
+
+  if (args.context)
+    args.context->base.is_wrapped = TRUE;
   return args.context;
 }
 
