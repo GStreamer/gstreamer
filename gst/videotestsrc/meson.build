@@ -27,3 +27,4 @@ gstvideotestsrc = library('gstvideotestsrc',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gstvideotestsrc, install_dir : plugins_pkgconfig_install_dir)

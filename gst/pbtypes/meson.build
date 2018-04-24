@@ -10,3 +10,4 @@ gstpbtypes = library('gstpbtypes',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gstpbtypes, install_dir : plugins_pkgconfig_install_dir)
