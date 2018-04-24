@@ -50,6 +50,7 @@ typedef struct
   gpointer display;
   guint display_type;
   guint gles_version;
+  gpointer gl_display;
 } InitParams;
 
 static gboolean
@@ -97,27 +98,36 @@ static gboolean
 gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
     gpointer native_params)
 {
-  GstVaapiDisplay *native_display = NULL;
+  GstVaapiDisplay *native_vaapi_display;
   GstVaapiDisplayEGL *display = GST_VAAPI_DISPLAY_EGL (base_display);
   EglDisplay *egl_display;
+  EGLDisplay *native_egl_display;
   guint gl_platform = EGL_PLATFORM_UNKNOWN;
   const InitParams *params = (InitParams *) native_params;
 
-  if (params->display) {
-    native_display = params->display;
-  } else {
+  native_vaapi_display = params->display;
+  native_egl_display = params->gl_display;
+
+  if (!native_vaapi_display) {
 #if USE_X11
-    native_display = gst_vaapi_display_x11_new (NULL);
+    if (params->display_type == GST_VAAPI_DISPLAY_TYPE_ANY
+        || params->display_type == GST_VAAPI_DISPLAY_TYPE_X11
+        || params->display_type == GST_VAAPI_DISPLAY_TYPE_EGL)
+      native_vaapi_display = gst_vaapi_display_x11_new (NULL);
 #endif
 #if USE_WAYLAND
-    if (!native_display)
-      native_display = gst_vaapi_display_wayland_new (NULL);
+    if (!native_vaapi_display)
+      native_vaapi_display = gst_vaapi_display_wayland_new (NULL);
 #endif
+  } else {
+    /* thus it could be unrefed */
+    gst_object_ref (native_vaapi_display);
   }
-  if (!native_display)
+  if (!native_vaapi_display)
     return FALSE;
 
-  gst_vaapi_display_replace (&display->display, native_display);
+  gst_vaapi_display_replace (&display->display, native_vaapi_display);
+  gst_object_unref (native_vaapi_display);
 
   switch (GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display->display)) {
     case GST_VAAPI_DISPLAY_TYPE_X11:
@@ -130,8 +140,12 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
       break;
   }
 
-  egl_display = egl_display_new (GST_VAAPI_DISPLAY_NATIVE (display->display),
-      gl_platform);
+  if (native_egl_display) {
+    egl_display = egl_display_new_wrapped (native_egl_display);
+  } else {
+    egl_display = egl_display_new (GST_VAAPI_DISPLAY_NATIVE (display->display),
+        gl_platform);
+  }
   if (!egl_display)
     return FALSE;
 
@@ -385,13 +399,14 @@ GstVaapiDisplay *
 gst_vaapi_display_egl_new_with_native_display (gpointer native_display,
     GstVaapiDisplayType display_type, guint gles_version)
 {
-  InitParams params;
+  InitParams params = { NULL, };
 
   g_return_val_if_fail (native_display != NULL, NULL);
 
-  params.display = native_display;
   params.display_type = display_type;
   params.gles_version = gles_version;
+  params.gl_display = native_display;
+
   return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_EGL, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, &params);
 }
