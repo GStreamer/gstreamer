@@ -1,6 +1,6 @@
 project('gstreamer', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.42',
+  meson_version : '>= 0.46',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -42,7 +42,7 @@ if cc.get_id() == 'msvc'
       '/wd4244', # lossy type conversion (e.g. double -> int)
       '/wd4305', # truncating type conversion (e.g. double -> float)
       language : 'c')
-elif cc.has_argument('-Wl,-Bsymbolic-functions')
+elif cc.has_link_argument('-Wl,-Bsymbolic-functions')
   # FIXME: Add an option for this if people ask for it
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
