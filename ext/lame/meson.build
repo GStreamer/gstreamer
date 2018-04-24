@@ -16,4 +16,5 @@ if lame_dep.found() and cc.has_header_symbol('lame/lame.h', 'lame_init')
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(lame, install_dir : plugins_pkgconfig_install_dir)
 endif

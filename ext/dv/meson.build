@@ -17,6 +17,7 @@ if dv_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstdv, install_dir : plugins_pkgconfig_install_dir)
 
   #executable('smpte_test',
   #  'smpte_test.c', 'gstsmptetimecode.c',

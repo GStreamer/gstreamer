@@ -13,6 +13,7 @@ gstequalizer = library('gstequalizer',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gstequalizer, install_dir : plugins_pkgconfig_install_dir)
 
 install_data(sources: ['GstIirEqualizer3Bands.prs',
   'GstIirEqualizer10Bands.prs'], install_dir: presetdir)

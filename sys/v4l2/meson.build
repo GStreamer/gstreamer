@@ -51,4 +51,5 @@ if cc.has_header('linux/videodev2.h') or cc.has_header('sys/videodev2.h') or cc.
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstv4l2, install_dir : plugins_pkgconfig_install_dir)
 endif

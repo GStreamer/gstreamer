@@ -25,4 +25,5 @@ if taglib_dep.found() and add_languages('cpp', required : false)
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gsttaglib, install_dir : plugins_pkgconfig_install_dir)
 endif

@@ -21,4 +21,5 @@ if host_machine.system() == 'windows' and cc.has_header('dsound.h')
     dependencies : [gstaudio_dep] + directsoundsink_dep,
     install : true,
     install_dir : plugins_install_dir)
+  pkgconfig.generate(gstdirectsoundsink, install_dir : plugins_pkgconfig_install_dir)
 endif
