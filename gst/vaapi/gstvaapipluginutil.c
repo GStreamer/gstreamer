@@ -41,6 +41,9 @@
 #endif
 #if USE_GST_GL_HELPERS
 # include <gst/gl/gl.h>
+#if USE_EGL && GST_GL_HAVE_PLATFORM_EGL
+# include <gst/gl/egl/gstgldisplay_egl.h>
+#endif
 #endif
 #include "gstvaapipluginutil.h"
 #include "gstvaapipluginbase.h"
@@ -140,7 +143,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   gpointer native_display =
       GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
   GstGLPlatform platform = gst_gl_context_get_gl_platform (gl_context);
-  GstVaapiDisplay *display, *out_display;
+  GstVaapiDisplay *display, *out_display = NULL;
   GstVaapiDisplayType display_type;
 
   switch (gst_gl_display_get_handle_type (gl_display)) {
@@ -195,16 +198,23 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
       display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
       break;
   }
-  gst_object_unref (gl_display);
 
   display = gst_vaapi_create_display_from_handle (display_type, native_display);
   if (!display)
-    return NULL;
+    goto bail;
 
   switch (platform) {
 #if USE_EGL
     case GST_GL_PLATFORM_EGL:{
       guint gles_version;
+      guintptr egl_handle = 0;
+#if GST_GL_HAVE_PLATFORM_EGL
+      GstGLDisplayEGL *egl_display;
+
+      egl_display = gst_gl_display_egl_from_gl_display (gl_display);
+      egl_handle = gst_gl_display_get_handle (GST_GL_DISPLAY (egl_display));
+      gst_object_unref (egl_display);
+#endif
 
       switch (gst_gl_context_get_gl_api (gl_context)) {
         case GST_GL_API_GLES1:
@@ -217,16 +227,22 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
         case GST_GL_API_OPENGL3:
           gles_version = 0;
         create_egl_display:
-          out_display = gst_vaapi_display_egl_new (display, gles_version);
+          if (egl_handle != 0) {
+            out_display =
+                gst_vaapi_display_egl_new_with_native_display
+                (GSIZE_TO_POINTER (egl_handle), display_type, gles_version);
+          } else {
+            out_display = gst_vaapi_display_egl_new (display, gles_version);
+          }
           break;
         default:
           out_display = NULL;
           break;
       }
-      if (!out_display) {
-        gst_vaapi_display_unref (display);
-        return NULL;
-      }
+
+      if (!out_display)
+        goto bail;
+
       gst_vaapi_display_egl_set_gl_context (GST_VAAPI_DISPLAY_EGL (out_display),
           GSIZE_TO_POINTER (gst_gl_context_get_gl_context (gl_context)));
       break;
@@ -236,7 +252,13 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
       out_display = gst_vaapi_display_ref (display);
       break;
   }
-  gst_vaapi_display_unref (display);
+
+bail:
+  if (display)
+    gst_vaapi_display_unref (display);
+
+  if (gl_display)
+    gst_object_unref (gl_display);
   return out_display;
 #endif
   GST_ERROR ("unsupported GStreamer version %s", GST_API_VERSION_S);
