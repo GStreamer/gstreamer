@@ -137,14 +137,27 @@ gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 
   window->priv->preferred_width = 320;
   window->priv->preferred_height = 240;
+#if OS_OBJECT_USE_OBJC
   window->priv->gl_queue = (__bridge_retained gpointer)
       (dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL));
+#else
+  window->priv->gl_queue = (gpointer)
+      (dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL));
+#endif
 }
 
 static void
 gst_gl_window_cocoa_finalize (GObject * object)
 {
   GstGLWindowCocoa *window = GST_GL_WINDOW_COCOA (object);
+
+#if OS_OBJECT_USE_OBJC
+  /* Let ARC clean up our queue */
+  dispatch_queue_t queue = (__bridge_transfer dispatch_queue_t) window->priv->gl_queue;
+#else
+  dispatch_release (window->priv->gl_queue);
+#endif
+
   window->priv->gl_queue = NULL;
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -431,7 +444,11 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
   GstGLContext *context = gst_gl_window_get_context (window);
   GThread *thread = gst_gl_context_get_thread (context);
   GstGLWindowCocoaPrivate *priv = window_cocoa->priv;
+#if OS_OBJECT_USE_OBJC
   dispatch_queue_t gl_queue = (__bridge dispatch_queue_t)priv->gl_queue;
+#else
+  dispatch_queue_t gl_queue = (dispatch_queue_t)priv->gl_queue;
+#endif
 
   if (thread == g_thread_self()) {
     /* this case happens for nested calls happening from inside the GCD queue */
