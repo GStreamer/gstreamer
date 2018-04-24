@@ -22,8 +22,11 @@
 
 #include "sysdeps.h"
 #include "gstvaapiutils_egl.h"
-#if USE_GST_GL_HELPERS && GST_GL_HAVE_PLATFORM_EGL
-# include <gst/gl/egl/gstgldisplay_egl.h>
+#if USE_GST_GL_HELPERS
+# include <gst/gl/gl.h>
+# if GST_GL_HAVE_PLATFORM_EGL
+#  include <gst/gl/egl/gstgldisplay_egl.h>
+# endif
 #endif
 
 #define DEBUG 1
