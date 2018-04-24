@@ -11,6 +11,8 @@ noinst_HEADERS = \
 	gstglwindow_viv_fb_egl.h
 
 libgstgl_viv_fbincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/viv-fb
+libgstgl_viv_fbinclude_HEADERS = \
+	gstgldisplay_viv_fb.h
 
 libgstgl_viv_fb_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
