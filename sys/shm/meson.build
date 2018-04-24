@@ -28,4 +28,5 @@ if cc.has_header ('sys/socket.h') and (host_system == 'osx' or
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstshm, install_dir : plugins_pkgconfig_install_dir)
 endif

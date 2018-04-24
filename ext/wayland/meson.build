@@ -41,4 +41,5 @@ if use_wayland
         install : true,
         install_dir : plugins_install_dir,
     )
+    pkgconfig.generate(gstwaylandsink, install_dir : plugins_pkgconfig_install_dir)
 endif

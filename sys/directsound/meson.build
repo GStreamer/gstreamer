@@ -22,4 +22,5 @@ if host_system == 'windows' and cc.has_header('dsound.h')
     dependencies : [gstaudio_dep] + directsoundsrc_dep,
     install : true,
     install_dir : plugins_install_dir)
+  pkgconfig.generate(gstdirectsoundsrc, install_dir : plugins_pkgconfig_install_dir)
 endif

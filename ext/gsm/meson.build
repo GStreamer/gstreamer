@@ -10,4 +10,5 @@ if gsm_dep.found() and (cc.has_header_symbol('gsm.h', 'gsm_create') or
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstgsm, install_dir : plugins_pkgconfig_install_dir)
 endif

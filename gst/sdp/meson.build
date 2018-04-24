@@ -13,3 +13,4 @@ gstsdpelem = library('gstsdpelem',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gstsdpelem, install_dir : plugins_pkgconfig_install_dir)

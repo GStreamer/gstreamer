@@ -27,4 +27,5 @@ if flite_deps.length() == flite_libs.length() and cc.has_header_symbol('flite/fl
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstflite, install_dir : plugins_pkgconfig_install_dir)
 endif

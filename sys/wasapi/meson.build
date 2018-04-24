@@ -17,4 +17,5 @@ if host_system == 'windows' and cc.has_header('audioclient.h')
     dependencies : [gstaudio_dep] + wasapi_dep,
     install : true,
     install_dir : plugins_install_dir)
+  pkgconfig.generate(gstwasapi, install_dir : plugins_pkgconfig_install_dir)
 endif

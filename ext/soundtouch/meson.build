@@ -29,4 +29,5 @@ if soundtouch_dep.found()
     dependencies : [gstaudio_dep, soundtouch_dep],
     install : true,
     install_dir : plugins_install_dir)
+  pkgconfig.generate(gstsoundtouch, install_dir : plugins_pkgconfig_install_dir)
 endif

@@ -14,5 +14,6 @@ if mjpegtools_dep.found()
       install : true,
       install_dir : plugins_install_dir,
     )
+    pkgconfig.generate(gstmplex2, install_dir : plugins_pkgconfig_install_dir)
   endif
 endif

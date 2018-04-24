@@ -13,4 +13,5 @@ if host_system == 'windows' and cc.has_header('d3d9.h')
     dependencies : [gstvideo_dep] + d3dvideosink_dep,
     install : true,
     install_dir : plugins_install_dir)
+  pkgconfig.generate(gstd3dvideosink, install_dir : plugins_pkgconfig_install_dir)
 endif

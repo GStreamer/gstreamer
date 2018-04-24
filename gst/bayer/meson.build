@@ -31,3 +31,4 @@ gstbayer = library('gstbayer',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gstbayer, install_dir : plugins_pkgconfig_install_dir)

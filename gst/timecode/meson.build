@@ -12,3 +12,4 @@ gsttimecode = library('gsttimecode',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gsttimecode, install_dir : plugins_pkgconfig_install_dir)

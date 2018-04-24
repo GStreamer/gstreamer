@@ -68,6 +68,7 @@ if vulkan_dep.found() and has_vulkan_header
       install : true,
       install_dir : plugins_install_dir,
     )
+    pkgconfig.generate(gstvulkan, install_dir : plugins_pkgconfig_install_dir)
   endif
 endif
 

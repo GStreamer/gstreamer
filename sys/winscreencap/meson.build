@@ -15,4 +15,5 @@ if host_system == 'windows' and cc.has_header('d3d9.h')
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstwinscreencap, install_dir : plugins_pkgconfig_install_dir)
 endif

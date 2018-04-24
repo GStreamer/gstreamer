@@ -11,4 +11,5 @@ if cc.has_header('linux/fb.h')
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstfbdevsink, install_dir : plugins_pkgconfig_install_dir)
 endif

@@ -9,4 +9,5 @@ if faac_dep.found() and cc.has_header_symbol('faac.h', 'faacEncOpen')
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstfaac, install_dir : plugins_pkgconfig_install_dir)
 endif

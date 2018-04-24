@@ -16,4 +16,5 @@ if lv2_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstrsvg, install_dir : plugins_pkgconfig_install_dir)
 endif
