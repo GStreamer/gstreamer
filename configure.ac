@@ -244,6 +244,7 @@ if test "x$HAVE_GST_GL" = "xyes"; then
   case "$GST_GL_APIS" in  *gles2*) GST_GL_HAVE_API_GLES2="1" ;; esac
   case "$GST_GL_APIS" in "gl"|"gl "*|*" gl"|*" gl "*) GST_GL_HAVE_API_GL="1" ;; esac
 fi
+AM_CONDITIONAL(USE_OPENGL, test "x$GST_GL_HAVE_API_GL" = "x1")
 
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
@@ -1050,7 +1051,7 @@ AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
       -a "x$HAVE_NVENCODEAPI_H" = "xyes" \
       -a "x$HAVE_NVENCODE_LIB" = "xyes"; then
     HAVE_NVENC="yes"
-    if test x"$USE_OPENGL" = x"yes"; then
+    if test "x$GST_GL_HAVE_API_GL" = "x1"; then
       dnl cuda-gl interop header
       save_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$save_CPPFLAGS $CUDA_CFLAGS"
