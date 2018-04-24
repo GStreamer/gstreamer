@@ -34,7 +34,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
-#define GST_USE_UNSTABLE_API
 #include <gst/gl/gl.h>
 #endif
 
