@@ -30,7 +30,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
 #define GST_CAT_DEFAULT gst_nv_h264_enc_debug
 
-#if HAVE_GST_GL
+#if HAVE_NVENC_GST_GL
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <cuda_gl_interop.h>
