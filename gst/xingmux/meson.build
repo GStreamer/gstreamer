@@ -11,3 +11,4 @@ gstxingmux = library('gstxingmux',
   install : true,
   install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gstxingmux, install_dir : plugins_pkgconfig_install_dir)

@@ -9,4 +9,5 @@ if mpeg2_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(mpeg2dec, install_dir : plugins_pkgconfig_install_dir)
 endif

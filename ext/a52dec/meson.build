@@ -9,4 +9,5 @@ if a52_dep.found() and cc.has_header_symbol('a52dec/a52.h', 'a52_init', prefix :
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(a52dec, install_dir : plugins_pkgconfig_install_dir)
 endif
