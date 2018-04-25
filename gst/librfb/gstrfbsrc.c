@@ -372,7 +372,11 @@ gst_rfb_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     size = info.size;
     min = 1;
     max = 0;
-    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+    if (gst_query_get_n_allocation_pools (query) > 0)
+      gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    else
+      gst_query_add_allocation_pool (query, pool, size, min, max);
   }
 
   config = gst_buffer_pool_get_config (pool);
