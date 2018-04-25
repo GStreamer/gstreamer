@@ -565,6 +565,9 @@ db_pad_removed_cb (GstElement * element, GstPad * pad, GstURIDecodeBin3 * dec)
   GList *tmp;
   OutputPad *output = NULL;
 
+  if (!GST_PAD_IS_SRC (pad))
+    return;
+
   GST_DEBUG_OBJECT (dec, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   /* FIXME: LOCK for list access */
 
