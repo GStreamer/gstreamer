@@ -50,12 +50,12 @@ nodist_libgstvalidate_@GST_API_VERSION@include_HEADERS = $(built_header_make)
 
 gst-validate-enum-types.h: $(source_h)
 	$(AM_V_GEN)$(GLIB_MKENUMS) \
-	--template gst-validate-enum-types.h.template \
+	--template $(top_srcdir)/gst/validate/gst-validate-enum-types.h.template \
 	$^ > gst-validate-enum-types.h
 
 gst-validate-enum-types.c: $(source_h)
 	$(AM_V_GEN)$(GLIB_MKENUMS) \
-	--template gst-validate-enum-types.c.template \
+	--template $(top_srcdir)/gst/validate/gst-validate-enum-types.c.template \
 	$^ > gst-validate-enum-types.c
 
 EXTRA_DIST= \
