@@ -325,32 +325,36 @@ gst_msdkvpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   else
     thiz->add_video_meta = FALSE;
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min_buffers,
-        &max_buffers);
+  /* Check whether the query has pool */
+  if (gst_query_get_n_allocation_pools (query) > 0)
     update_pool = TRUE;
-    size = MAX (size, GST_VIDEO_INFO_SIZE (&info));
 
-    if (pool && !GST_IS_MSDK_BUFFER_POOL (pool)) {
-      GST_INFO_OBJECT (thiz, "ignoring non-msdk pool: %" GST_PTR_FORMAT, pool);
-      g_clear_object (&pool);
-    }
-  }
+  /* increase the min_buffers with number of concurrent vpp operations */
+  min_buffers += thiz->async_depth;
 
-  if (!pool) {
+  /* invalidate the cached pool if there is an allocation_query */
+  if (thiz->srcpad_buffer_pool)
     gst_object_unref (thiz->srcpad_buffer_pool);
-    pool =
-        gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, caps, min_buffers);
-    thiz->srcpad_buffer_pool = pool;
 
-    /* get the configured pool properties inorder to set in query */
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
-        &max_buffers);
-    if (gst_buffer_pool_config_get_allocator (config, &allocator, &params))
-      gst_query_add_allocation_param (query, allocator, &params);
-    gst_structure_free (config);
-  }
+  /* Always create a pool for vpp out buffers. Each of the msdk element
+   * has to create it's own mfxsurfacepool which is an msdk contraint.
+   * For eg: Each Msdk component (vpp, dec and enc) will invoke the external
+   * Frame allocator for video-memory usage.So sharing the pool between
+   * gst-msdk elements might not be a good idea, rather each element
+   * can check the buffer type (whether it is from msdk-buffer pool)
+   * to make sure there is no copy. Since we share the context between
+   * msdk elements, using buffers from one sdk's framealloator in another
+   * sdk-components is perfectly fine */
+  pool = gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, caps, min_buffers);
+  thiz->srcpad_buffer_pool = pool;
+
+  /* get the configured pool properties inorder to set in query */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+      &max_buffers);
+  if (gst_buffer_pool_config_get_allocator (config, &allocator, &params))
+    gst_query_add_allocation_param (query, allocator, &params);
+  gst_structure_free (config);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min_buffers,
@@ -377,8 +381,9 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
   GstCaps *caps;
   GstStructure *config;
   gboolean need_pool;
-  guint size;
   GstAllocationParams params;
+  guint size;
+  guint min_buffers = thiz->async_depth + 1;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps) {
@@ -391,36 +396,36 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  size = MAX (info.size, GST_VIDEO_INFO_SIZE (&thiz->sinkpad_buffer_pool_info));
-
-  /* We already created a pool while setting the caps
-   * just to make sure the pipeline works even if there is
-   * no allocation query from upstream (theoratical ??).Provide the
-   * same pool in query if required/possible */
-  if (!gst_video_info_is_equal (&thiz->sinkpad_buffer_pool_info, &info)) {
-    gst_object_unref (thiz->sinkpad_buffer_pool);
-    thiz->sinkpad_buffer_pool =
-        gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SINK, caps,
-        thiz->in_num_surfaces);
+  if (need_pool) {
+    /* alwys provide a new pool for upstream to help re-negotiation
+     * more info here: https://bugzilla.gnome.org/show_bug.cgi?id=748344 */
+    pool = gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SINK, caps,
+        min_buffers);
   }
 
-  pool = thiz->sinkpad_buffer_pool;
+  /* Update the internal pool if any allocation attribute changed */
+  if (!gst_video_info_is_equal (&thiz->sinkpad_buffer_pool_info, &info)) {
+    gst_object_unref (thiz->sinkpad_buffer_pool);
+    thiz->sinkpad_buffer_pool = gst_msdkvpp_create_buffer_pool (thiz,
+        GST_PAD_SINK, caps, min_buffers);
+  }
 
+  /* get the size and allocator params from configured pool and set it in query */
+  if (!need_pool)
+    pool = gst_object_ref (thiz->sinkpad_buffer_pool);
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-
   gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
-
   if (gst_buffer_pool_config_get_allocator (config, &allocator, &params))
     gst_query_add_allocation_param (query, allocator, &params);
   gst_structure_free (config);
 
   /* if upstream does't have a pool requirement, set only
    *  size, min_buffers and max_buffers in query */
-  if (!need_pool)
-    pool = NULL;
-
-  gst_query_add_allocation_pool (query, pool, size, thiz->in_num_surfaces, 0);
+  gst_query_add_allocation_pool (query, need_pool ? pool : NULL, size,
+      min_buffers, 0);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  gst_object_unref (pool);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
       decide_query, query);
