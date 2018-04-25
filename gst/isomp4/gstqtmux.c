@@ -939,8 +939,10 @@ gst_qt_mux_prepare_caption_buffer (GstQTPad * qtpad, GstBuffer * buf,
       gsize cdat_size, cdt2_size, total_size = 0;
       gsize write_offs = 0;
 
-      cdat_size = extract_608_field_from_cc_data (map.data, map.size, 1, &cdat);
-      cdt2_size = extract_608_field_from_cc_data (map.data, map.size, 2, &cdt2);
+      cdat_size =
+          extract_608_field_from_cc_data (inmap.data, inmap.size, 1, &cdat);
+      cdt2_size =
+          extract_608_field_from_cc_data (inmap.data, inmap.size, 2, &cdt2);
 
       if (cdat_size)
         total_size += cdat_size + 8;
