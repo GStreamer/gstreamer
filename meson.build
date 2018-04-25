@@ -62,17 +62,24 @@ libudev_dep = dependency('libudev', required: false)
 egl_dep = dependency('egl', required: false)
 gl_dep = dependency('gl', required: false)
 glesv2_dep = dependency('glesv2', required: false)
-glesv3_dep = dependency('glesv3', required: false)
 libdl_dep = cc.find_library('dl', required: false)
 wayland_client_dep = dependency('wayland-client', required: false)
 x11_dep = dependency('x11', required: false)
 xrandr_dep = dependency('xrandr', required: false)
 xrender_dep = dependency('xrender', required: false)
 
-GLES_VERSION_MASK = 0
-GLES_VERSION_MASK += gl_dep.found() ? 1 : 0
-GLES_VERSION_MASK += glesv2_dep.found() ? 4 : 0
-GLES_VERSION_MASK += glesv3_dep.found() ? 8 : 0
+GLES_VERSION_MASK = gl_dep.found() ? 1 : 0
+if glesv2_dep.found()
+  if (cc.has_header('GLES2/gl2.h', dependencies: glesv2_dep) and
+      cc.has_header('GLES2/gl2ext.h', dependencies: glesv2_dep))
+    GLES_VERSION_MASK += 4
+  endif
+  if (cc.has_header('GLES3/gl3.h', dependencies: glesv2_dep) and
+      cc.has_header('GLES3/gl3ext.h', dependencies: glesv2_dep) and
+      cc.has_header('GLES2/gl2ext.h', dependencies: glesv2_dep))
+    GLES_VERSION_MASK += 8
+  endif
+endif
 
 USE_ENCODERS = libva_dep.version().version_compare('>= 0.34.0') and get_option('with_encoders') != 'no'
 USE_H265_DECODER = cc.has_header('va/va_dec_hevc.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
@@ -125,7 +132,7 @@ cdata.set10('HAVE_XRANDR', xrandr_dep.found())
 cdata.set10('HAVE_XRENDER', xrender_dep.found())
 cdata.set10('USE_VA_VPP', USE_VPP)
 cdata.set10('USE_GST_GL_HELPERS', gstgl_dep.found())
-cdata.set('GLES_VERSION_MASK', GLES_VERSION_MASK)
+cdata.set('USE_GLES_VERSION_MASK', GLES_VERSION_MASK)
 
 if libva_dep.version().version_compare('< 0.38.0')
   check_headers = [
