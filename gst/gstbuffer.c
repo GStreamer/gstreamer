@@ -140,7 +140,10 @@ struct _GstMetaItem
   GstMetaItem *next;
   GstMeta meta;
 };
-#define ITEM_SIZE(info) ((info)->size + sizeof (GstMetaItem))
+
+/* info->size will be sizeof(FooMeta) which contains a GstMeta at the beginning
+ * too, and then there is again a GstMeta in GstMetaItem, so subtract one. */
+#define ITEM_SIZE(info) ((info)->size + sizeof (GstMetaItem) - sizeof (GstMeta))
 
 #define GST_BUFFER_MEM_MAX         16
 
