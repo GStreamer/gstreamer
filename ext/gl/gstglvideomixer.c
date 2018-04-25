@@ -1272,10 +1272,10 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
 
   /* *INDENT-OFF* */
   gfloat v_vertices[] = {
-    -1.0,-1.0,-1.0f,
-     1.0,-1.0,-1.0f,
-     1.0, 1.0,-1.0f,
-    -1.0, 1.0,-1.0f,
+    -1.0,-1.0, 0.0f,
+     1.0,-1.0, 0.0f,
+     1.0, 1.0, 0.0f,
+    -1.0, 1.0, 0.0f,
   };
   /* *INDENT-ON* */
 
@@ -1513,10 +1513,10 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     /* *INDENT-OFF* */
     gfloat v_vertices[] = {
-      -1.0,-1.0,-1.0f, 0.0f, 0.0f,
-       1.0,-1.0,-1.0f, 1.0f, 0.0f,
-       1.0, 1.0,-1.0f, 1.0f, 1.0f,
-      -1.0, 1.0,-1.0f, 0.0f, 1.0f,
+      -1.0,-1.0, 0.0f, 0.0f, 0.0f,
+       1.0,-1.0, 0.0f, 1.0f, 0.0f,
+       1.0, 1.0, 0.0f, 1.0f, 1.0f,
+      -1.0, 1.0, 0.0f, 0.0f, 1.0f,
     };
     /* *INDENT-ON* */
 
