@@ -27,7 +27,7 @@
 import sys
 import inspect
 from ..overrides import override
-from ..importer import modules
+from ..module import get_introspection_module
 
 from gi.repository import GLib
 
@@ -40,7 +40,8 @@ else:
     _basestring = basestring
     _callable = callable
 
-Gst = modules['Gst']._introspection_module
+Gst = get_introspection_module('Gst')
+
 __all__ = []
 
 if Gst._version == '0.10':

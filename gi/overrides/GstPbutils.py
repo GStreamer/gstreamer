@@ -25,14 +25,14 @@
 # any later version.
 
 from ..overrides import override as override_
-from ..importer import modules
+from ..module import get_introspection_module
 
 import gi
 gi.require_version('Gst', '1.0')
 
 from gi.repository import Gst  # noqa
 
-GstPbutils = modules['GstPbutils']._introspection_module
+GstPbutils = get_introspection_module('GstPbutils')
 __all__ = []
 
 
