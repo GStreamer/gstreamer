@@ -1,6 +1,6 @@
 project('gst-rtsp-server', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.33.0',
+  meson_version : '>= 0.46.0',
   default_options : ['warning_level=1', 'buildtype=debugoptimized'])
 
 gst_version = meson.project_version()
@@ -26,6 +26,10 @@ libversion = '@0@.@1@.0'.format(soversion, gst_version_minor * 100 + gst_version
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+
+if cc.has_link_argument('-Wl,-Bsymbolic-functions')
+  add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
+endif
 
 # Symbol visibility
 if cc.has_argument('-fvisibility=hidden')
