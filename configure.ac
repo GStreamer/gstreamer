@@ -39,7 +39,7 @@ AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 dnl required versions of other packages
 dnl Note that they are runtime requirements
 AC_SUBST(GST_REQ, 1.15.0.1)
-AC_SUBST(PYGOBJECT_REQ, 3.0)
+AC_SUBST(PYGOBJECT_REQ, 3.8)
 
 AC_DISABLE_STATIC
 
