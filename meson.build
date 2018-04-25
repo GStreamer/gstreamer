@@ -1,6 +1,6 @@
 project('gst-plugins-bad', 'c', 'cpp',
   version : '1.15.0.1',
-  meson_version : '>= 0.42',
+  meson_version : '>= 0.46',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -51,6 +51,10 @@ else
   endif
 
   noseh_link_args = []
+endif
+
+if cc.has_link_argument('-Wl,-Bsymbolic-functions')
+  add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
 
 # Symbol visibility
