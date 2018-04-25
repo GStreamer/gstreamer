@@ -1,6 +1,6 @@
 project('All GStreamer modules', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.42.0',
+  meson_version : '>= 0.46.0',
   default_options : ['buildtype=debugoptimized'])
 
 gst_version = '>= @0@'.format(meson.project_version())
