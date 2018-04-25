@@ -995,6 +995,8 @@ gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
   int egl_fd = 0;
   EGLint egl_stride = 0;
   EGLint egl_offset = 0;
+  int fourcc;
+  EGLuint64KHR modifier;
 
   gst_eglExportDMABUFImageQueryMESA =
       gst_gl_context_get_proc_address (image->context,
@@ -1020,11 +1022,19 @@ gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
   gst_object_unref (display_egl);
 
   if (!gst_eglExportDMABUFImageQueryMESA (egl_display, image->image,
-          NULL, &num_planes, NULL))
+          &fourcc, &num_planes, &modifier))
     return FALSE;
 
   /* Don't allow multi-plane dmabufs */
   if (num_planes > 1)
+    return FALSE;
+
+  GST_DEBUG_OBJECT (image->context, "Export DMABuf with fourcc %"
+      GST_FOURCC_FORMAT " and modififers %" G_GUINT64_FORMAT,
+      GST_FOURCC_ARGS (fourcc), modifier);
+
+  /* FIXME We don't support modifiers */
+  if (modifier != DRM_FORMAT_MOD_LINEAR)
     return FALSE;
 
   if (!gst_eglExportDMABUFImageMESA (egl_display, image->image, &egl_fd,
