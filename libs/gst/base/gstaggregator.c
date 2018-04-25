@@ -2949,6 +2949,10 @@ gst_aggregator_pad_peek_buffer (GstAggregatorPad * pad)
  * gst_aggregator_pad_has_buffer:
  * @pad: the pad to check the buffer on
  *
+ * This checks if a pad has a buffer available that will be returned by
+ * a call to gst_aggregator_pad_peek_buffer() or
+ * gst_aggregator_pad_pop_buffer().
+ *
  * Returns: %TRUE if the pad has a buffer available as the next thing.
  *
  * Since: 1.16
