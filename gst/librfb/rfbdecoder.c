@@ -347,7 +347,7 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
   if (!rfb_decoder_read (decoder, 12))
     return FALSE;
 
-  g_return_val_if_fail (memcmp (decoder->data, "RFB 003.00", 10) == 0, FALSE);
+  g_return_val_if_fail (memcmp (decoder->data, "RFB 003.", 8) == 0, FALSE);
   g_return_val_if_fail (*(decoder->data + 11) == 0x0a, FALSE);
 
   GST_DEBUG ("\"%.11s\"", decoder->data);
