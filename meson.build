@@ -1,6 +1,6 @@
 project('gstreamer-vaapi', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.36.0',
+  meson_version : '>= 0.46.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -20,6 +20,10 @@ glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
+
+if cc.has_link_argument('-Wl,-Bsymbolic-functions')
+  add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
+endif
 
 # Symbol visibility
 if cc.has_argument('-fvisibility=hidden')
