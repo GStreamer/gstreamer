@@ -28,6 +28,7 @@
 
 G_BEGIN_DECLS
 
+GST_GL_API
 GType gst_gl_display_viv_fb_get_type (void);
 
 #define GST_TYPE_GL_DISPLAY_VIV_FB             (gst_gl_display_viv_fb_get_type())
@@ -60,6 +61,7 @@ struct _GstGLDisplayVivFBClass
   GstGLDisplayClass object_class;
 };
 
+GST_GL_API
 GstGLDisplayVivFB *gst_gl_display_viv_fb_new (gint disp_idx);
 
 G_END_DECLS
