@@ -2335,7 +2335,7 @@ gst_omx_video_dec_ensure_nb_in_buffers (GstOMXVideoDec * self)
   GstOMXVideoDecClass *klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   if ((klass->cdata.hacks & GST_OMX_HACK_ENSURE_BUFFER_COUNT_ACTUAL)) {
-    if (!gst_omx_port_ensure_buffer_count_actual (self->dec_in_port))
+    if (!gst_omx_port_ensure_buffer_count_actual (self->dec_in_port, 0))
       return FALSE;
   }
 
