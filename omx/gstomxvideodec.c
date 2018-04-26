@@ -74,6 +74,8 @@ static GstFlowReturn gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 static GstFlowReturn gst_omx_video_dec_finish (GstVideoDecoder * decoder);
 static gboolean gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec,
     GstQuery * query);
+static gboolean gst_omx_video_dec_propose_allocation (GstVideoDecoder * bdec,
+    GstQuery * query);
 
 static GstFlowReturn gst_omx_video_dec_drain (GstVideoDecoder * decoder);
 
@@ -178,6 +180,8 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
   video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_omx_video_dec_drain);
   video_decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_decide_allocation);
+  video_decoder_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_omx_video_dec_propose_allocation);
 
   klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
   klass->cdata.default_src_template_caps =
@@ -3231,4 +3235,22 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   gst_object_unref (pool);
 
   return TRUE;
+}
+
+static gboolean
+gst_omx_video_dec_propose_allocation (GstVideoDecoder * bdec, GstQuery * query)
+{
+  GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (bdec);
+  guint size, num_buffers;
+
+  size = self->dec_in_port->port_def.nBufferSize;
+  num_buffers = self->dec_in_port->port_def.nBufferCountMin + 1;
+
+  GST_DEBUG_OBJECT (self,
+      "request at least %d buffers of size %d", num_buffers, size);
+  gst_query_add_allocation_pool (query, NULL, size, num_buffers, 0);
+
+  return
+      GST_VIDEO_DECODER_CLASS
+      (gst_omx_video_dec_parent_class)->propose_allocation (bdec, query);
 }
