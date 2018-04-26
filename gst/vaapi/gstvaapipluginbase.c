@@ -1215,10 +1215,8 @@ gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin)
   GstGLContext *gl_other_context = NULL, *gl_context = NULL;
   GstGLDisplay *gl_display = NULL;
 
-  if (!gst_gl_ensure_element_data (plugin,
-          (GstGLDisplay **) & plugin->gl_display,
-          (GstGLContext **) & plugin->gl_other_context))
-    goto no_valid_gl_display;
+  if (!plugin->gl_display)
+    return NULL;
 
   gl_display = (GstGLDisplay *) plugin->gl_display;
   if (gst_gl_display_get_handle_type (gl_display) == GST_GL_DISPLAY_TYPE_ANY)

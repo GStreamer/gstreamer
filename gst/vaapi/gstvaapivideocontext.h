@@ -60,6 +60,6 @@ gst_vaapi_video_context_propagate (GstElement * element,
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_find_gl_local_context (GstElement * element,
-    GstObject ** gl_context_ptr, GstPadDirection * direction);
+    GstObject ** gl_context_ptr);
 
 #endif /* GST_VAAPI_VIDEO_CONTEXT_H */

@@ -307,8 +307,6 @@ gst_vaapi_video_context_propagate (GstElement * element,
  * @element: the #GstElement where the search begins
  * @gl_context_ptr: the pointer where the GstGL context is going to be
  * stored
- * @direction_ptr: the pointer of the #GstPadDirection where the GstGL
- * context was found
  *
  * Query the pipeline, downstream and upstream for a GstGL context
  *
@@ -316,42 +314,15 @@ gst_vaapi_video_context_propagate (GstElement * element,
  **/
 gboolean
 gst_vaapi_find_gl_local_context (GstElement * element,
-    GstObject ** gl_context_ptr, GstPadDirection * direction_ptr)
+    GstObject ** gl_context_ptr)
 {
 #if USE_GST_GL_HELPERS
-  GstQuery *query;
-  GstContext *context;
-  const GstStructure *s;
-  GstObject *gl_context;
-  GstPadDirection direction;
+  GstGLContext **context_ptr = (GstGLContext **) gl_context_ptr;
 
-  g_return_val_if_fail (gl_context_ptr, FALSE);
-
-  direction = GST_PAD_UNKNOWN;
-  gl_context = NULL;
-  query = gst_query_new_context ("gst.gl.local_context");
-  if (_gst_context_run_query (element, query, GST_PAD_SRC)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
-      direction = GST_PAD_SRC;
-    }
-  }
-  if (!gl_context && _gst_context_run_query (element, query, GST_PAD_SINK)) {
-    gst_query_parse_context (query, &context);
-    if (context) {
-      s = gst_context_get_structure (context);
-      gst_structure_get (s, "context", GST_TYPE_GL_CONTEXT, &gl_context, NULL);
-      direction = GST_PAD_SINK;
-    }
-  }
-  gst_query_unref (query);
-  if (gl_context) {
-    *gl_context_ptr = gl_context;
-    *direction_ptr = direction;
+  if (gst_gl_query_local_gl_context (element, GST_PAD_SRC, context_ptr))
     return TRUE;
-  }
+  if (gst_gl_query_local_gl_context (element, GST_PAD_SINK, context_ptr))
+    return TRUE;
 #endif
   return FALSE;
 }

@@ -246,9 +246,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 static void
 gst_vaapi_find_gl_context (GstElement * element)
 {
-  GstObject *gl_context;
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
-  GstPadDirection direction = GST_PAD_UNKNOWN;
 
   /* if the element is vaapisink or any vaapi encoder it doesn't need
    * to know a GstGLContext in order to create an appropriate
@@ -257,15 +255,32 @@ gst_vaapi_find_gl_context (GstElement * element)
   if (GST_IS_VIDEO_SINK (element) || GST_IS_VIDEO_ENCODER (element))
     return;
 
-  gl_context = NULL;
-  if (!gst_vaapi_find_gl_local_context (element, &gl_context, &direction))
-    gl_context = gst_vaapi_plugin_base_create_gl_context (plugin);
+  if (!gst_gl_ensure_element_data (plugin,
+          (GstGLDisplay **) & plugin->gl_display,
+          (GstGLContext **) & plugin->gl_other_context))
+    goto no_valid_gl_display;
 
-  if (gl_context) {
-    gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
-    if (direction == GST_PAD_SRC)
-      gst_vaapi_plugin_base_set_srcpad_can_dmabuf (plugin, gl_context);
-    gst_object_unref (gl_context);
+  gst_vaapi_find_gl_local_context (element, &plugin->gl_context);
+
+  if (plugin->gl_context) {
+    gst_vaapi_plugin_base_set_srcpad_can_dmabuf (plugin, plugin->gl_context);
+  } else {
+    GstObject *gl_context;
+
+    gl_context = gst_vaapi_plugin_base_create_gl_context (plugin);
+    if (gl_context) {
+      gst_vaapi_plugin_base_set_gl_context (plugin, gl_context);
+      gst_object_unref (gl_context);
+    }
+  }
+
+  /* ERRORS */
+no_valid_gl_display:
+  {
+    GST_INFO_OBJECT (plugin, "No valid GL display found");
+    gst_object_replace (&plugin->gl_display, NULL);
+    gst_object_replace (&plugin->gl_other_context, NULL);
+    return;
   }
 }
 
