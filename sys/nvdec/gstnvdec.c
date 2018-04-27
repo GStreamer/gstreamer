@@ -698,6 +698,104 @@ handle_pending_frames (GstNvDec * nvdec)
           else
             vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
 
+          GST_LOG_OBJECT (decoder,
+              "Reading colorimetry information full-range %d matrix %d transfer %d primaries %d",
+              format->video_signal_description.video_full_range_flag,
+              format->video_signal_description.matrix_coefficients,
+              format->video_signal_description.transfer_characteristics,
+              format->video_signal_description.color_primaries);
+
+          switch (format->video_signal_description.color_primaries) {
+            case 1:
+              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+              break;
+            case 4:
+              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+              break;
+            case 5:
+              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+              break;
+            case 6:
+              vinfo->colorimetry.primaries =
+                  GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+              break;
+            case 7:
+              vinfo->colorimetry.primaries =
+                  GST_VIDEO_COLOR_PRIMARIES_SMPTE240M;
+              break;
+            case 8:
+              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_FILM;
+              break;
+            case 9:
+              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+              break;
+            default:
+              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+
+          }
+
+          if (format->video_signal_description.video_full_range_flag)
+            vinfo->colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+          else
+            vinfo->colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+
+          switch (format->video_signal_description.transfer_characteristics) {
+            case 1:
+            case 6:
+            case 16:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+              break;
+            case 4:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA22;
+              break;
+            case 5:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA28;
+              break;
+            case 7:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE240M;
+              break;
+            case 8:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA10;
+              break;
+            case 9:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG100;
+              break;
+            case 10:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG316;
+              break;
+            case 15:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+              break;
+            default:
+              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+              break;
+          }
+          switch (format->video_signal_description.matrix_coefficients) {
+            case 0:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+              break;
+            case 1:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+              break;
+            case 4:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_FCC;
+              break;
+            case 5:
+            case 6:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+              break;
+            case 7:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
+              break;
+            case 9:
+            case 10:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+              break;
+            default:
+              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+              break;
+          }
+
           state->caps = gst_video_info_to_caps (&state->info);
 
           gst_caps_set_features (state->caps, 0,
