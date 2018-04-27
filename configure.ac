@@ -40,7 +40,7 @@ GST_API_VERSION=1.0
 AC_SUBST(GST_API_VERSION)
 
 dnl *** Check for external $AS vs detected by AS_LIBTOOL
-user_AS="$AS"
+orig_AS="$AS"
 AG_GST_LIBTOOL_PREPARE
 AS_LIBTOOL(GST, 1500, 0, 1500)
 
@@ -406,6 +406,7 @@ else
 
   if test x"$orig_AS" != x; then
     emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$orig_AS\\\""
+    export orig_AS
   elif test x"$CC" != x; then
     dnl No external $AS - try $CC for the libav assembler
     emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$CC\\\""
