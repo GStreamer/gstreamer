@@ -165,6 +165,11 @@ _check_pad_query_failures (GstPad * pad, GString * str,
 
   monitor = g_object_get_data (G_OBJECT (pad), "validate-monitor");
 
+  if (!monitor) {
+    GST_DEBUG_OBJECT (pad, "Has no monitor");
+    return;
+  }
+
   if (monitor->last_query_res && gst_caps_is_empty (monitor->last_query_res)) {
     gst_object_replace ((GstObject **) last_query_caps_fail_monitor,
         (GstObject *) monitor);
