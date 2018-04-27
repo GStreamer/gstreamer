@@ -62,7 +62,7 @@ typedef struct {
     /* Seek stuff */
     GstSeekType type; /* time, bytes, ... */
     gint64 offset;
-    gint64 lenth;
+    gint64 length;
     /* Caps stuff */
     GstCaps *caps;
   } data;

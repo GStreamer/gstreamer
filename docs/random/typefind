@@ -32,7 +32,7 @@ typefinding:
 ------------
 the typefind function type is currently defined as:
 
-typedef stuct _GstTypeDefinition {
+typedef struct _GstTypeDefinition {
   gchar *name;
   gchar *mimetype;
   gchar *extension;

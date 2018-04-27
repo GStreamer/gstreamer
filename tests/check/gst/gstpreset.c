@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2008 Nokia Corporation and its subsidary(-ies)
+ * Copyright (C) 2008 Nokia Corporation and its subsidiary(-ies)
  *               contact: <stefan.kost@nokia.com>
  *
  * gstpreset.c: Unit test for GstPreset

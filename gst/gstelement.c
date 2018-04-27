@@ -2448,7 +2448,7 @@ interrupted:
     if (pending)
       *pending = GST_STATE_VOID_PENDING;
 
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "interruped");
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "interrupted");
 
     GST_OBJECT_UNLOCK (element);
 

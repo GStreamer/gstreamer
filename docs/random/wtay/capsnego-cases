@@ -107,7 +107,7 @@ check caps against padtemplate, if compatible, connect
 +-+ -> -+-
 
 check caps against padtemplate, if compatible: connect
-alse call negotiate until it matches template
+also call negotiate until it matches template
 
 ++- -> -+-
 
@@ -116,7 +116,7 @@ check caps against padtemplate, if match, connect
 +++ -> -+-
 
 check caps against padtemplate, if match, connect
-alse check padtemplates if compatible,
+also check padtemplates if compatible,
 call negotiate until match template
 
 
