@@ -143,7 +143,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   gpointer native_display =
       GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
   GstGLPlatform platform = gst_gl_context_get_gl_platform (gl_context);
-  GstVaapiDisplay *display, *out_display = NULL;
+  GstVaapiDisplay *display = NULL, *out_display = NULL;
   GstVaapiDisplayType display_type;
 
   switch (gst_gl_display_get_handle_type (gl_display)) {
@@ -161,6 +161,12 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 #if USE_WAYLAND
     case GST_GL_DISPLAY_TYPE_WAYLAND:
       display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+      break;
+#endif
+#if USE_EGL
+    case GST_GL_DISPLAY_TYPE_EGL:
+      display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
+      goto egl_display;
       break;
 #endif
     case GST_GL_DISPLAY_TYPE_ANY:{
@@ -203,6 +209,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   if (!display)
     goto bail;
 
+egl_display:
   switch (platform) {
 #if USE_EGL
     case GST_GL_PLATFORM_EGL:{
