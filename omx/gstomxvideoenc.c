@@ -1368,6 +1368,19 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
   return flow_ret;
 }
 
+static gboolean
+gst_omx_video_enc_ensure_nb_out_buffers (GstOMXVideoEnc * self)
+{
+  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+
+  if ((klass->cdata.hacks & GST_OMX_HACK_ENSURE_BUFFER_COUNT_ACTUAL)) {
+    if (!gst_omx_port_ensure_buffer_count_actual (self->enc_out_port))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 {
@@ -1444,6 +1457,9 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
 
     if (acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURE) {
+      if (!gst_omx_video_enc_ensure_nb_out_buffers (self))
+        goto reconfigure_error;
+
       err = gst_omx_port_set_enabled (port, TRUE);
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
@@ -1875,6 +1891,19 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
 }
 
 static gboolean
+gst_omx_video_enc_ensure_nb_in_buffers (GstOMXVideoEnc * self)
+{
+  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+
+  if ((klass->cdata.hacks & GST_OMX_HACK_ENSURE_BUFFER_COUNT_ACTUAL)) {
+    if (!gst_omx_port_ensure_buffer_count_actual (self->enc_in_port))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_allocate_in_buffers (GstOMXVideoEnc * self)
 {
   switch (self->input_allocation) {
@@ -2008,6 +2037,12 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 #endif
 
   GST_DEBUG_OBJECT (self, "Enabling component");
+
+  if (!gst_omx_video_enc_ensure_nb_in_buffers (self))
+    return FALSE;
+  if (!gst_omx_video_enc_ensure_nb_out_buffers (self))
+    return FALSE;
+
   if (self->disabled) {
     if (gst_omx_port_set_enabled (self->enc_in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
@@ -2646,6 +2681,11 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
       err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
       if (err != OMX_ErrorNone) {
+        GST_VIDEO_ENCODER_STREAM_LOCK (self);
+        goto reconfigure_error;
+      }
+
+      if (!gst_omx_video_enc_ensure_nb_in_buffers (self)) {
         GST_VIDEO_ENCODER_STREAM_LOCK (self);
         goto reconfigure_error;
       }

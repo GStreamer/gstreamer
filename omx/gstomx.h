@@ -200,6 +200,13 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_PASS_COLOR_FORMAT_TO_DECODER        G_GUINT64_CONSTANT (0x0000000000001000)
 
+/* If set, automatically update nBufferCountActual to nBufferCountMin before
+ * allocating buffers. This can be used on OMX implementation decreasing
+ * nBufferCountMin depending of the format and so can reduce the number
+ * of allocated buffers.
+ */
+#define GST_OMX_HACK_ENSURE_BUFFER_COUNT_ACTUAL          G_GUINT64_CONSTANT (0x0000000000002000)
+
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
 typedef enum _GstOMXPortDirection GstOMXPortDirection;
@@ -448,6 +455,7 @@ OMX_ERRORTYPE     gst_omx_port_mark_reconfigured (GstOMXPort * port);
 OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled);
 OMX_ERRORTYPE     gst_omx_port_wait_enabled (GstOMXPort * port, GstClockTime timeout);
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
+gboolean          gst_omx_port_ensure_buffer_count_actual (GstOMXPort * port);
 
 /* OMX 1.2.0 dynamic allocation mode */
 gboolean          gst_omx_is_dynamic_allocation_supported (void);
