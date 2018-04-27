@@ -365,16 +365,15 @@ gst_vaapi_display_egl_class_init (GstVaapiDisplayEGLClass * klass)
 GstVaapiDisplay *
 gst_vaapi_display_egl_new (GstVaapiDisplay * display, guint gles_version)
 {
-  InitParams params;
+  InitParams params = {
+    .gles_version = gles_version,
+  };
 
   if (display) {
     params.display = display;
     params.display_type = GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display);
-  } else {
-    params.display = NULL;
-    params.display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
   }
-  params.gles_version = gles_version;
+
   return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_EGL, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, &params);
 }
@@ -399,13 +398,13 @@ GstVaapiDisplay *
 gst_vaapi_display_egl_new_with_native_display (gpointer native_display,
     GstVaapiDisplayType display_type, guint gles_version)
 {
-  InitParams params = { NULL, };
+  InitParams params = {
+    .display_type = display_type,
+    .gl_display = native_display,
+    .gles_version = gles_version,
+  };
 
   g_return_val_if_fail (native_display != NULL, NULL);
-
-  params.display_type = display_type;
-  params.gles_version = gles_version;
-  params.gl_display = native_display;
 
   return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_EGL, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, &params);
