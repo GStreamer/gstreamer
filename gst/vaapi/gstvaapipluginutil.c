@@ -143,7 +143,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   gpointer native_display =
       GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
   GstGLPlatform platform = gst_gl_context_get_gl_platform (gl_context);
-  GstVaapiDisplay *display, *out_display = NULL;
+  GstVaapiDisplay *display = NULL, *out_display = NULL;
   GstVaapiDisplayType display_type;
 
   switch (gst_gl_display_get_handle_type (gl_display)) {
@@ -163,10 +163,17 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
       display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
       break;
 #endif
+#if USE_EGL
+    case GST_GL_DISPLAY_TYPE_EGL:
+      display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
+      goto egl_display;
+      break;
+#endif
     case GST_GL_DISPLAY_TYPE_ANY:{
       /* Derive from the active window */
       GstGLWindow *const gl_window = gst_gl_context_get_window (gl_context);
       const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
+      const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
 
       display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
       if (!gl_window)
@@ -182,6 +189,10 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
         if (!display_type && g_strcmp0 (gl_window_type, "wayland") == 0)
           display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
 #endif
+#if USE_EGL
+        if (!display_type && g_strcmp0 (gl_platform_type, "egl") == 0)
+          display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
+#endif
       } else {
 #if USE_X11 && GST_GL_HAVE_WINDOW_X11
         if (!display_type)
@@ -189,9 +200,15 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 #elif USE_WAYLAND && GST_GL_HAVE_WINDOW_WAYLAND
         if (!display_type)
           display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+#elif USE_EGL && GST_GL_HAVE_PLATFORM_EGL
+        if (!display_type)
+          display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
 #endif
       }
       gst_object_unref (gl_window);
+
+      if (display_type == GST_VAAPI_DISPLAY_TYPE_EGL)
+        goto egl_display;
       break;
     }
     default:
@@ -203,6 +220,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
   if (!display)
     goto bail;
 
+egl_display:
   switch (platform) {
 #if USE_EGL
     case GST_GL_PLATFORM_EGL:{
@@ -233,7 +251,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
             out_display =
                 gst_vaapi_display_egl_new_with_native_display
                 (GSIZE_TO_POINTER (egl_handle), display_type, gles_version);
-          } else {
+          } else if (display) {
             out_display = gst_vaapi_display_egl_new (display, gles_version);
           }
           break;
