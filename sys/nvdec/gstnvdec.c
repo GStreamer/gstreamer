@@ -642,6 +642,7 @@ handle_pending_frames (GstNvDec * nvdec)
   GstNvDecQueueItem *item;
   CUVIDEOFORMAT *format;
   GstVideoCodecState *state;
+  GstVideoInfo *vinfo;
   guint width, height, fps_n, fps_d, i, num_resources;
   CUVIDPICPARAMS *decode_params;
   CUVIDPARSERDISPINFO *dispinfo;
@@ -689,16 +690,21 @@ handle_pending_frames (GstNvDec * nvdec)
           state = gst_video_decoder_set_output_state (decoder,
               GST_VIDEO_FORMAT_NV12, nvdec->width, nvdec->height,
               nvdec->input_state);
-          state->caps = gst_caps_new_simple ("video/x-raw",
-              "format", G_TYPE_STRING, "NV12",
-              "width", G_TYPE_INT, nvdec->width,
-              "height", G_TYPE_INT, nvdec->height,
-              "framerate", GST_TYPE_FRACTION, nvdec->fps_n, nvdec->fps_d,
-              "interlace-mode", G_TYPE_STRING, format->progressive_sequence
-              ? "progressive" : "interleaved",
-              "texture-target", G_TYPE_STRING, "2D", NULL);
+          vinfo = &state->info;
+          vinfo->fps_n = fps_n;
+          vinfo->fps_d = fps_d;
+          if (format->progressive_sequence)
+            vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+          else
+            vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+
+          state->caps = gst_video_info_to_caps (&state->info);
+
           gst_caps_set_features (state->caps, 0,
               gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+          gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
+              "2D", NULL);
+
           gst_video_codec_state_unref (state);
 
           if (!gst_video_decoder_negotiate (decoder)) {
