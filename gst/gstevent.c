@@ -1665,7 +1665,7 @@ gst_event_set_stream (GstEvent * event, GstStream * stream)
 /**
  * gst_event_parse_stream:
  * @event: a stream-start event
- * @stream: (out) (transfer full): adress of variable to store the stream
+ * @stream: (out) (transfer full): address of variable to store the stream
  *
  * Parse a stream-start @event and extract the #GstStream from it.
  *

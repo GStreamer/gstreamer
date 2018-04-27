@@ -254,7 +254,7 @@ Grouping
  * a group has at most one loop based element
  * elements in a group are sorted, src elements first (not mandatory)
  * a group has one cothread
- * a group is created immediatly for loop based elements, all other elements
+ * a group is created immediately for loop based elements, all other elements
    are added to a group when a pad connection is made
  * get-based plugins are put in the same group as a peer loop based element
  * chain based elements are put in the same group as sink peer elements

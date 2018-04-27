@@ -62,7 +62,7 @@ main (gint argc, gchar * argv[])
   g_object_set (playbin, "uri", uri, NULL);
   g_free (uri);
 
-  /* create and event loop and feed gstreamer bus mesages to it */
+  /* create an event loop and feed gstreamer bus messages to it */
   loop = g_main_loop_new (NULL, FALSE);
 
   bus = gst_element_get_bus (playbin);

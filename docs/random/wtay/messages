@@ -12,13 +12,13 @@ interesting information for the user app or for its parent.
 Consider the mp3parse element that could detect id3 tags in the stream.
 One way to let the app know about those tags is by emitting a signal. The
 problem with this signal is that the app has to perform a g_signal_connect
-on this element. This might not always be possible/feasable because
+on this element. This might not always be possible/feasible because
 the APP might not know about the mp3parse element (eg. an autoplugged
 pipeline or a compound object). The app could instrospect each element
 in the pipeline and look for known properties/signals to connect to,
 but that looks a bit ugly IMO.
 
-Signal proxying is also not very feasable because signals are tied to
+Signal proxying is also not very feasible because signals are tied to
 class instances.
 
 let's take the following use case:
@@ -42,7 +42,7 @@ every signal in each element this would work somewhat.
 Requirements 
 ------------
 
-The application can listen to an abritrary bin in the pipeline to collect
+The application can listen to an arbitrary bin in the pipeline to collect
 information about that bins children. The app can listen on the top
 level bin to collect all of the elements messages.
 

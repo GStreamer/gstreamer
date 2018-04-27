@@ -97,7 +97,7 @@ the equivalence of both types, even it they have a different mime type.
 5. type hierarchy
 -----------------
 
-some plugins can ouput a specific subset of an already existing type.
+some plugins can output a specific subset of an already existing type.
 
 example:
 
@@ -223,7 +223,7 @@ that it can handle all sorts of video/mpeg data.
 
 example 2:
 
-   suppose the typefind functions finds an mp3 stream, fillowing elments
+   suppose the typefind functions finds an mp3 stream, following elements
    are selected:
 
        libmpg123              mp3parse:

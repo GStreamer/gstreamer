@@ -19,11 +19,11 @@ A plugin init function would take this typefactory and hand it to the
 gst_type_new() (FIXME: badly named) function, which would first search for
 that same MIME type in the current list.  If it found one, it would
 compare the two to see if the new one is "better".  Better is defined as
-having more extentions (to be merged) or a typefind function verses none.
+having more extensions (to be merged) or a typefind function verses none.
 
 The point of returning an existing MIME type is a result of the goal of
 unifying types enough to guarantee that, for instance, all MP3 decoders
-will work interchangably.  If MP3 decoder A says "MIME type 'audio/mpeg'
+will work interchangeably.  If MP3 decoder A says "MIME type 'audio/mpeg'
 with extensions 'mpeg3'" and decoder B says "MIME type 'audio/mpeg' with
 extensions 'mp3'", we don't want to have two types defined, possibly with
 two typefind functions. If we did, it's not obvious which of the two would

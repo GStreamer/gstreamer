@@ -26,7 +26,7 @@
  * @see_also: #GstDevice, #GstDeviceMonitor
  *
  * A #GstDeviceProvider subclass is provided by a plugin that handles devices
- * if there is a way to programatically list connected devices. It can also
+ * if there is a way to programmatically list connected devices. It can also
  * optionally provide updates to the list of connected devices.
  *
  * Each #GstDeviceProvider subclass is a singleton, a plugin should

@@ -193,7 +193,7 @@ GST_API GType _gst_message_type;
 #define GST_MESSAGE(obj)                         (GST_MESSAGE_CAST(obj))
 
 /* the lock is used to handle the synchronous handling of messages,
- * the emiting thread is block until the handling thread processed
+ * the emitting thread is blocked until the handling thread processed
  * the message using this mutex/cond pair */
 #define GST_MESSAGE_GET_LOCK(message)   (&GST_MESSAGE_CAST(message)->lock)
 #define GST_MESSAGE_LOCK(message)       g_mutex_lock(GST_MESSAGE_GET_LOCK(message))

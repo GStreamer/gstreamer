@@ -1,8 +1,8 @@
 GStreamer data protocol
     Intended to wrap GstData objects in a line protocol for use with
     pipe / network elements.
-    IDEAS-- -- -*for transporting buffers, have a function that creates a header for a given buffer to be written before the buffer.This way, you don 't lose
-  time creating a GDP buffer from the buffer
+    IDEAS-- -- -*for transporting buffers, have a function that creates a header for a given buffer to be written before the buffer.
+    This way, you don't lose time creating a GDP buffer from the buffer
 * allow for CRC' ing of the GstBuffer, optionally * have a version number of the protocol * optimizing the header for size is not useful since the GstData structure
     already contains more than 32 bytes anyway, making up half the header size PROTOCOL-- -- ----*1 byte GDP major
 version (0)

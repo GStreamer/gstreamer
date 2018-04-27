@@ -1,7 +1,7 @@
 Registry Change Hooks
 ----------------------
 
-This document proposes a mechnism to register on registry updates.
+This document proposes a mechanism to register on registry updates.
 
 Last edited: 2009-11-09 Stefan Kost
 

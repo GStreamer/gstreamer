@@ -10,5 +10,5 @@ $Id$
   * functions in  gst-controller.c could try the key,
     if no handler is registered the try the type_parent and so on
 
-* implement quadric/qubic interpolation
+* implement quadric/cubic interpolation
 

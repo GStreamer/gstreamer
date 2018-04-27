@@ -28,7 +28,7 @@ or soon with the proposed 'new' standard of the W3C; Schemas.
 We can see obvious problems when a user app (unaware of the
 core tags) is also trying to use the 'element' tag for its 
 own purposes. The core might try to load the 'element' tag
-desscribing the user app data and the user app might get fed
+describing the user app data and the user app might get fed
 with XML data of the GStreamer core.
 
 In this document we try to describe how we will solve this problem
@@ -53,7 +53,7 @@ Were a typical XML document without namespaces would look like:
  </element>
 </GST-Pipeline>
 
-Tha same document with namespaces look like this:
+The same document with namespaces look like this:
 
 <?xml version="1.0"?>
 <gst:GST-Pipeline xmlns:gst="http://gstreamer.net/gst-core/1.0/">
@@ -98,7 +98,7 @@ editor as an example.  The editor will insert XML tags inside each
 element that describes the position and size of the element as it was
 laid out in the editor.
 
-For the examples sake, the tags that are used to descibe this meta data
+For the examples sake, the tags that are used to describe this meta data
 will also be names 'element' in order to demonstrate the namespaces.
 
 The editor will use its own namespace, being: 
@@ -154,7 +154,7 @@ The XML save procedure on a GstObject is performed with:
 
   gst_object_save_thyself (GstObject *object, xmlNodePtr parent)
 
-Wich will call the elements implementation of the save_thyself function.
+Which will call the elements implementation of the save_thyself function.
 
 An app that wants to insert its XML tags has to connect to a signal of
 the GstObject object called xml_saved. The object and the parent
@@ -174,7 +174,7 @@ freshly loaded objects.
 
 One obvious solution would be to attach a class signal to the 
 GstObject class that would be fired whenever an object is created from
-an XML document. Unfortunatly Gtk+ (or glib2.0) doesn't have class
+an XML document. Unfortunately Gtk+ (or glib2.0) doesn't have class
 signals so we need something else. Another problem with the class 
 signals would be that the user app would also be notified of object
 creation outside its context. For example, if two threads perform an 

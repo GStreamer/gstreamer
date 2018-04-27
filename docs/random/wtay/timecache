@@ -7,7 +7,7 @@ an index of possible seek positions (in time, bytes, samples, ...).
 The purpose of GstTimecache is to provide an infrastructure for
 plugins to maintain such an index.
 
-By creating a generic interace to this functionality, it is also
+By creating a generic interface to this functionality, it is also
 possible for the application to make use of the generated index.
 possible use cases are: saving/loading of indexes, obtain an 
 overview of the indexed stream (where is sample N, where is

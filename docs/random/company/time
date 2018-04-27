@@ -1,7 +1,7 @@
 Time in Gstreamer
 
 When talking about time in streams (or "clocking"), people often confuse 3 
-different things that need to be treated seperately. Older designs in GStreamer
+different things that need to be treated separately. Older designs in GStreamer
 confused those and this made it difficult to design solutions for time 
 management.
 

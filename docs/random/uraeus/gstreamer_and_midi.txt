@@ -319,7 +319,7 @@ KAR files are standard MIDI files that also contain a stream with lyrics, for ka
 synchronised on music. MIDI players play them without any problem, ignoring the
 additional data.
 
-It is the more widespread karaoke file format. (one other beeing .kok files, for mp3)
+It is the more widespread karaoke file format. (one other being .kok files, for mp3)
 
 KAR files are based on standard MIDI files with the following additional events:
  

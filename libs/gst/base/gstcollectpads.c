@@ -346,7 +346,7 @@ gst_collect_pads_set_buffer_function (GstCollectPads * pads,
  */
 /* NOTE allowing to change comparison seems not advisable;
 no known use-case, and collaboration with default algorithm is unpredictable.
-If custom compairing/operation is needed, just use a collect function of
+If custom comparing/operation is needed, just use a collect function of
 your own */
 void
 gst_collect_pads_set_compare_function (GstCollectPads * pads,

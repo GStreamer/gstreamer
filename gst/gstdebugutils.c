@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2007 Stefan Kost <ensonic@users.sf.net>
  *
- * gstdebugutils.c: debugging and analysis utillities
+ * gstdebugutils.c: debugging and analysis utilities
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +21,7 @@
 /* TODO:
  * edge [ constraint=false ];
  *   this creates strange graphs ("minlen=0" is better)
- * try puting src/sink ghostpads for each bin into invisible clusters
+ * try putting src/sink ghostpads for each bin into invisible clusters
  *
  * for more compact nodes, try
  * - changing node-shape from box into record

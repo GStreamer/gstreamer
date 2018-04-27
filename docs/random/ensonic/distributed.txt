@@ -9,7 +9,7 @@ respective machine.
 
 At runtime when the proxy-element receives data it sends it to the remote
 element and after processing it gets it back and forwards it to the element.
-The challenge is to optimize links when multiple conected elements are on the
+The challenge is to optimize links when multiple connected elements are on the
 same remote machine so that the data gets passed directly there.
 
 == proxy creation ==

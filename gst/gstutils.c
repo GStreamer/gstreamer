@@ -1984,7 +1984,7 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
     return FALSE;
   } else {
     /* no need to release any request pad as the case of unset destpatname and
-     * destpad being a requst pad has already been taken care of when looking
+     * destpad being a request pad has already been taken care of when looking
      * though the destination pads above */
     if (destpad) {
       gst_object_unref (destpad);
@@ -2613,7 +2613,7 @@ gst_pad_get_parent_element (GstPad * pad)
  * @debug: (in) (allow-none): an additional debug information string, or %NULL
  *
  * A default error function that uses g_printerr() to display the error message
- * and the optional debug sting..
+ * and the optional debug string..
  *
  * The default handler will simply print the error string using g_print.
  */

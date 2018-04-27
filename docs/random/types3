@@ -79,7 +79,7 @@ mpg123: an mpeg audio decoder.
   // a factory for the major type we use
   static GstTypeFactory mp3factory = {
     "audio/mp3",		// major type
-    ".mp3 .mp2 .mp1 .mpga",	// extenstions
+    ".mp3 .mp2 .mp1 .mpga",	// extensions
     NULL,			// typefind function
   };
 
@@ -128,7 +128,7 @@ mpeg2dec: an mpeg video decoder that can do mpeg1 and mpeg2.
 
   static GstTypeFactory mpegfactory = {
     "video/mpeg",		// major type
-    ".mpg .mpeg",		// extenstions
+    ".mpg .mpeg",		// extensions
     NULL,			// typefind function
   };
 

@@ -7,8 +7,8 @@ For avidemux I currently have a big patch doing memory optimized index handling.
 It basically thins out the index to save memory. Right now it only keeps index
 entries marked with the avi keyframe flag.
 
-In gstreamer core we have some indexing objects. They are curently used nowhere.
-The idea is to use them and to make the index strategy plugable or configurable
+In gstreamer core we have some indexing objects. They are currently used nowhere.
+The idea is to use them and to make the index strategy pluggable or configurable
 at run time.
 
 The challenge is then to rewrite muxers and demuxers to use them instead of the
@@ -20,13 +20,13 @@ encapsulated in the indexer strategy.
 == ranking ==
 Autopluggers like playbin and decodebin use the element caps plus static ranks
 to create piplines.
-The rank of an elemnt right now refers to the quality/maturity of the element.
+The rank of an element right now refers to the quality/maturity of the element.
 Elements with higher rank should be functionally more complete. If we have
 multiple elements that are feature complete there is a draw.
 
-There are more decission criteria thinkable:
+There are more decision criteria thinkable:
 * target processor (CPU,DSP,GPU)
-* ressource usage (CPU, memory)
+* resource usage (CPU, memory)
 * license (proprietary, open source)
 * quality (in terms of the audio/image quality)
 

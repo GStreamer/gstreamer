@@ -529,7 +529,7 @@ input_selector_push_eos (gint stream, gboolean active)
   if (active) {
     fail_unless (gst_pad_push_event (pad, gst_event_new_eos ()));
   } else {
-    /* The non-active pads will block when receving eos, so we need to do it
+    /* The non-active pads will block when receiving eos, so we need to do it
      * from a separate thread. This makes this test racy, but it should only
      * cause false positives, not false negatives */
     GThread *t = g_thread_new ("selector-test-push-eos",

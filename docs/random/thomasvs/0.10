@@ -47,7 +47,7 @@ gst-plugins-base
     - need possible porting to GNet (later)
   - typefind:
     - works
-    - need tests - this definately could use it
+    - need tests - this definitely could use it
     - is there any way they can be documented ?
     - should the plugin docs show a list of them ?
   - videorate:
@@ -58,7 +58,7 @@ gst-plugins-base
       - par conversion
       - different scale algorithms
     - needs docs
-      - negotation with five out of six free variables (src/sink w/h/par)
+      - negotiation with five out of six free variables (src/sink w/h/par)
   - videotestsrc:
     - could use tests for all possible caps
   - volume: OK

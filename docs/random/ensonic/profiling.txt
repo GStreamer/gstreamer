@@ -13,7 +13,7 @@ $Id$
 
 = qos profiling =
 * what data is needed ?
-  * (streamtime,propotion) pairs from sinks
+  * (streamtime,proportion) pairs from sinks
     draw a graph with gnuplot or similar
   * number of frames in total
   * number of audio/video frames dropped from each element that support QOS
@@ -23,7 +23,7 @@ $Id$
   * add -r, --report option to gst-launch
   * during playing we capture QOS-events to record 'streamtime,proportion' pairs
     gst_pad_add_event_probe(video_sink->sink_pad,handler,data)
-  * during playback we like to know when an elemnt drops frames
+  * during playback we like to know when an element drops frames
     what about elements sending a qos_action message?
   * after EOS, send qos-queries to each element in the pipeline
     * qos-query will return:
@@ -66,7 +66,7 @@ $Id$
   * 1:1 elements are easy to handle
   * 0:1 elements need a start timer
   * 1:0 elements need a end timer
-  * n:1, 1:m and n:m type elemnts are tricky
+  * n:1, 1:m and n:m type elements are tricky
     adapter based elements might have a fluctuating usage in addition
   
   // result data

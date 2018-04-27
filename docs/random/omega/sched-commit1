@@ -25,7 +25,7 @@ now have:
 
 loopfunc_wrapper: used for loop-based elements, it simply calls the
 	loopfunc in a loop, paying attention to COTHREAD_STOPPING (see
-	below).  It currently does other, soon to be depracated, stuff.
+	below).  It currently does other, soon to be deprecated, stuff.
 
 pullsrc_wrapper: wraps a Src that's not loop-based (since your options
 	are now loop- or pull-based)

@@ -55,5 +55,5 @@ Some notes on the error handling introduced after 0.7.3
       The plugin asked to read on the underlying resource (using bytestream),
       but failed.  The user will get a generic read error.  The debug info
       will contain the exact position in the stream at which the read error
-      occured.
+      occurred.
 

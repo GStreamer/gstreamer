@@ -69,7 +69,7 @@ plans:
  - The concept of GstBuffer from 0.8 will be split into two types.
    One type will focus solely on holding information pertaining to
    ownership of a memory area (call this GstMemBuffer), and the
-   other type will focus solely in transfering information between
+   other type will focus solely in transferring information between
    elements (call this GstPipeBuffer).  In case you get confused,
    GstMemBuffers _are not_ transferred between elements, and
    GstPipeBuffers _do not_ own the memory they point to.

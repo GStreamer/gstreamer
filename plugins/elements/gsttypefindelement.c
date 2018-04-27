@@ -217,7 +217,7 @@ gst_type_find_element_emit_have_type (GstTypeFindElement * typefind,
 {
   GstEvent *event;
 
-  /* Update caps field immediatly so that caps queries and properties can be
+  /* Update caps field immediately so that caps queries and properties can be
    * honored in all "have-type" signal handlers.
    */
   GST_OBJECT_LOCK (typefind);
@@ -969,7 +969,7 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
 
   GST_OBJECT_UNLOCK (typefind);
 
-  /* probability is good enough too, so let's make it known ... emiting this
+  /* probability is good enough too, so let's make it known ... emitting this
    * signal calls our object handler which sets the caps. */
   /* Set to MODE_NORMAL before emitting have-type, in case it triggers a seek */
   typefind->mode = MODE_NORMAL;
@@ -1163,7 +1163,7 @@ gst_type_find_element_loop (GstPad * pad)
       goto pause;
     }
 
-    GST_DEBUG ("Emiting found caps %" GST_PTR_FORMAT, found_caps);
+    GST_DEBUG ("Emitting found caps %" GST_PTR_FORMAT, found_caps);
     /* Set to MODE_NORMAL before emitting have-type, in case it triggers a seek */
     typefind->mode = MODE_NORMAL;
     gst_type_find_element_emit_have_type (typefind, probability, found_caps);

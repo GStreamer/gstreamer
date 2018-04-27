@@ -4,8 +4,8 @@ PadProbes
 Required functionality
 
  - get notification of data passing on arbitrary pad
- - posibility to drop data
- - posibility to change/inspect data
+ - possibility to drop data
+ - possibility to change/inspect data
  - single shot probe
  - filter on events/buffers?
  - filter on timestamp?

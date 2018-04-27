@@ -845,7 +845,7 @@ elementary:
 
 /*************************************************************
 * Grammar explanation: (cont'd)
-*   a _chain_ is a list of _elementary_s that have _link_s inbetween
+*   a _chain_ is a list of _elementary_s that have _link_s in between
 *   which are represented through infix-notation.
 *
 *	fakesrc ! sometransformation ! fakesink

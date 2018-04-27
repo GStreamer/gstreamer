@@ -97,14 +97,14 @@ Questions
 
  2) Threading:
 
-   - Can signals be emited from any thread?
+   - Can signals be emitted from any thread?
    - what operations are permited from a signal handler?
 
  3) Error reporting
 
    - How does error reporting work?
      * an audio/video device/port is busy.
-     * a fatal decoding error occured.
+     * a fatal decoding error occurred.
      * a media type is not supported
 
 
@@ -189,7 +189,7 @@ Phonon::AudioEffect/Phonon::VideoEffect
 
 Phonon::VolumeFaderEffect
 
-  Alows fade-in and fade-out with a configurable curve and time. Needs
+  Allows fade-in and fade-out with a configurable curve and time. Needs
   GstController.
 
 Phonon::BrightnessControl
@@ -239,7 +239,7 @@ Phonon::ByteStream
    - If called after starting ByteStream, the Phonon::ByteStream::seekStream
      signal can be called for push-based seekable streams.
 
-  * Can the signals be emited from a streaming thread?
+  * Can the signals be emitted from a streaming thread?
    
 
 Phonon::AudioDataOutput/Phonon::VideoDataOutput/
@@ -254,12 +254,12 @@ Phonon::AudioDataOutput/Phonon::VideoDataOutput/
  Notes :
 
   * Phonon::AudioDataOutput::dataReady
-    - can this be emited from the streaming threads?
+    - can this be emitted from the streaming threads?
 
   * Phonon::AudioDataOutput::endOfMedia 
-    - can this be emited from the streaming threads?
+    - can this be emitted from the streaming threads?
     - We need to grab this EOS message synchronously from the bus.
-    - should be emited _before_ sending the last dataReady. This means we need
+    - should be emitted _before_ sending the last dataReady. This means we need
       to cache at least one dataReady.
 
   * Phonon::AudioDataOutput::setDataSize

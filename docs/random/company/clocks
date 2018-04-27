@@ -60,7 +60,7 @@ Providers are elements that can provide timing information and therefore provide
 a clock to other elements. These elements have to update the clock, when it is
 used. When a clock is used (state != NULL - FIXME: or other states?), the 
 provider is guaranteed to use this clock. (FIXME: necessary?). The element is
-however required to synchronize to the clock it was assigned to, wether it is
+however required to synchronize to the clock it was assigned to, whether it is
 its own clock or not.
 
 SYNC POINTS
@@ -77,7 +77,7 @@ GstClockTime	gst_clock_get_time	(GstClock *clock);
 GstElementState	gst_clock_get_state 	(GstClock *clock); /* setting works internally */
 GstClockReturn	gst_clock_wait		(GstClock *clock, GstClockTime until, GstClockTimeDiff *jitter);
 
-GST_FLAG	GST_ELEMENT_NEEDS_CLOCK; /* wether we want a clock or not */
+GST_FLAG	GST_ELEMENT_NEEDS_CLOCK; /* whether we want a clock or not */
 GstClockTime	gst_element_get_time	(GstElement *element);
 void		gst_element_(clock_)seek (GstElement *element, GstClockTimeDiff diff);
 GstClock *	gst_element_get_clock	(GstElement *element);

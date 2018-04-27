@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2007 Stefan Kost <ensonic@users.sf.net>
  *
- * gstdebugutils.h: debugging and analysis utillities
+ * gstdebugutils.h: debugging and analysis utilities
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

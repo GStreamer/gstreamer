@@ -463,7 +463,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
    * @self: The #GstTimedValueControlSource on which a #GstTimedValue has changed
    * @timed_value: The #GstTimedValue where the value changed
    *
-   * Emited right after the new value has been set on @timed_signals
+   * Emitted right after the new value has been set on @timed_signals
    *
    * Since: 1.6
    */
@@ -479,7 +479,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
    *        added
    * @timed_value: The newly added #GstTimedValue
    *
-   * Emited right after the new value has been added to @self
+   * Emitted right after the new value has been added to @self
    *
    * Since: 1.6
    */
@@ -495,7 +495,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
    *        removed
    * @timed_value: The removed #GstTimedValue
    *
-   * Emited when @timed_value is removed from @self
+   * Emitted when @timed_value is removed from @self
    *
    * Since: 1.6
    */

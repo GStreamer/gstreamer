@@ -45,7 +45,7 @@ $Id$
   * GST_TYPE_QUALITY_VS_SPEED
     - get the name of a property that can be used to switch between
       - a fast version for e.g. realtime usage
-      - a slower version with higher precission that can be used for off-line
+      - a slower version with higher precision that can be used for off-line
         rendering
 * new interfaces for audio applications
   * GST_TYPE_MULTI_VOICE

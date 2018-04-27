@@ -48,7 +48,7 @@ case $pagesize in
 esac
 # http://www.gnuplot.info/docs/node341.html (terminal options)
 case $format in
-  # this doen't like fonts
+  # this doesn't like fonts
   png) echo "set term png truecolor font \"Sans,7\" size $plot_width,$plot_height";;
   # pdf makes a new page for each plot :/
   pdf) echo "set term pdf color font \"Sans,7\" size $page_with,$page_height";;

@@ -633,7 +633,7 @@ gst_register_core_elements (GstPlugin * plugin)
 
 /*
  * this bit handles:
- * - initalization of threads if we use them
+ * - initialization of threads if we use them
  * - log handler
  * - initial output
  * - initializes gst_format

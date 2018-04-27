@@ -604,7 +604,7 @@ restart:
     if (G_UNLIKELY (ev->event == NULL))
       goto next;
 
-    /* take aditional ref, func might release the lock */
+    /* take additional ref, func might release the lock */
     ev_ret.event = gst_event_ref (ev->event);
     ev_ret.received = ev->received;
 
@@ -1444,7 +1444,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "adding probe for mask 0x%08x",
       mask);
 
-  /* when no contraints are given for the types, assume all types are
+  /* when no constraints are given for the types, assume all types are
    * acceptable */
   if ((mask & _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH) == 0)
     mask |= GST_PAD_PROBE_TYPE_ALL_BOTH;
@@ -1461,7 +1461,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
   /* add the probe */
   g_hook_append (&pad->probes, hook);
   pad->num_probes++;
-  /* incremenent cookie so that the new hook get's called */
+  /* incremenent cookie so that the new hook gets called */
   pad->priv->probe_list_cookie++;
 
   /* get the id of the hook, we return this and it can be used to remove the

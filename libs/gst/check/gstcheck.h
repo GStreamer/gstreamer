@@ -71,7 +71,7 @@ typedef struct _GstCheckLogFilter GstCheckLogFilter;
  * GstCheckLogFilterFunc:
  * @log_domain: the log domain of the message
  * @log_level: the log level of the message
- * @message: the message that has occured
+ * @message: the message that has occurred
  * @user_data: user data
  *
  * A function that is called for messages matching the filter added by

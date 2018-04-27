@@ -614,7 +614,7 @@ gst_tag_get_nick (const gchar * tag)
   g_return_val_if_fail (tag != NULL, NULL);
   info = gst_tag_lookup (tag);
   if (!info) {
-    GST_WARNING ("Uknown tag: %s", tag);
+    GST_WARNING ("Unknown tag: %s", tag);
 
     return tag;
   }
@@ -1299,7 +1299,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
       g_warning ("%s: %s", G_STRLOC, error);
       g_free (error);
       /* we purposely leak the value here, it might not be
-       * in a sane state if an error condition occoured
+       * in a sane state if an error condition occurred
        */
       return;
     }

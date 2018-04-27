@@ -2,7 +2,7 @@ Dynamic pads are pads that are created while the element is playing.
 This means that the element will create a new pas depending on the 
 media type it is handling. For example, the mpeg1pdemuxer element will
 create one or more video pads and one or more audio pads depending
-on the number of elementtary streams found in the media stream.
+on the number of elementary streams found in the media stream.
 
 The element will present its dynamic pads with the padtemplate list
 attached to the elementfactory. both the MIME type, direction, presence
@@ -33,7 +33,7 @@ padtemplate provided by the compressor src pad and connect the
 compressor element to this pad.
 
 An element that can be requested for a new pad has to implement the
-gst_element_request_new_pad method and perform the nessesary steps 
+gst_element_request_new_pad method and perform the necessary steps
 to create a pad from that template. 
 
 This interesting behaviour can be extended to ghostpads too. A 

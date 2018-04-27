@@ -1,7 +1,7 @@
 Requirements
 ------------
 
-- plugable backends:
+- pluggable backends:
 
   - XML
   - flat file

@@ -14060,7 +14060,7 @@
 	gstpad. Modified the videosink to implement the pull. This function
 	allows a source element to request a buffer from the destination.
 	This is much more efficient because the videosink can then pass a
-	buffer with SHM to the element, which does not require an aditional
+	buffer with SHM to the element, which does not require an additional
 	memcpy.  removed scaling from the videosink. I need something
 	better.
 

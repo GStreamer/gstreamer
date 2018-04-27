@@ -23,12 +23,12 @@
  * @title: concat
  * @see_also: #GstFunnel
  *
- * Concatenates streams together to one continous stream.
+ * Concatenates streams together to one continuous stream.
  *
  * All streams but the current one are blocked until the current one
  * finished with %GST_EVENT_EOS. Then the next stream is enabled, while
- * keeping the running time continous for %GST_FORMAT_TIME segments or
- * keeping the segment continous for %GST_FORMAT_BYTES segments.
+ * keeping the running time continuous for %GST_FORMAT_TIME segments or
+ * keeping the segment continuous for %GST_FORMAT_BYTES segments.
  *
  * Streams are switched in the order in which the sinkpads were requested.
  *
@@ -574,7 +574,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           /* We know no duration */
           segment.duration = -1;
 
-          /* Update segment values to be continous with last stream */
+          /* Update segment values to be continuous with last stream */
           if (self->format == GST_FORMAT_TIME) {
             segment.base += self->current_start_offset;
           } else {

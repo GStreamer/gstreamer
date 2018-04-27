@@ -31,7 +31,7 @@ a key, which is always a string constant (internally converted to a GQuark)
 and a value, which can be one of the following:
 
  - an integer constant (ex. 5)
- - a float contant (ex. 1.0)
+ - a float constant (ex. 1.0)
  - a string constant (ex. "int")
  - a boolean constant (ex. FALSE)
  - a fourcc constant (ex. I420) 
@@ -186,7 +186,7 @@ If the intersection is a fixed caps, this means there is only one possible media
 that can be used for this connection.
 
 For all not NULL intersections the pad connect functions are called with the 
-intersection. Depending on the result of the connect funtion the connection is
+intersection. Depending on the result of the connect function the connection is
 allowed or refused.
 
 If the intersection is fixed and the pad connect functions agreed to the caps, 
@@ -275,7 +275,7 @@ Pad connect functions
 A Pad can be notified when another pad is connected or reconnected to it with
 fixed or variable caps. This notification will be done with the optional 
 GstPadConnectFunction callback that an element can provide for a pad.
-Remember that this connection is _always_ called, not only whith fixed caps
+Remember that this connection is _always_ called, not only with fixed caps
 but also with variable caps (if any).
 
 We will explain some of the common situations with some examples.

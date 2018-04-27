@@ -1973,7 +1973,7 @@ gst_ptp_is_supported (void)
  *
  * Check if the GStreamer PTP clock subsystem is initialized.
  *
- * Returns: %TRUE if the GStreamer PTP clock subsystem is intialized.
+ * Returns: %TRUE if the GStreamer PTP clock subsystem is initialized.
  *
  * Since: 1.6
  */

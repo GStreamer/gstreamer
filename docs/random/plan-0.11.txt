@@ -112,7 +112,7 @@ First attempt at making a list of tasks in roughly chronological order.
   are possible somewhere downstream.
 
   gst_pad_alloc_buffer() would take a GstBuffer as an input argument to make the
-  API easier, we can then use metadata to specify additional contraints for the
+  API easier, we can then use metadata to specify additional constraints for the
   new buffer (such as strides, etc)
   
 

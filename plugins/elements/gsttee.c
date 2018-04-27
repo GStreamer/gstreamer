@@ -624,7 +624,7 @@ gst_tee_query_allocation (const GValue * item, GValue * ret, gpointer user_data)
   gst_object_unref (peer_pad);
 
   /* Allocation Params:
-   * store the maximum alignment, prefix and pading, but ignore the
+   * store the maximum alignment, prefix and padding, but ignore the
    * allocators and the flags which are tied to downstream allocation */
   count = gst_query_get_n_allocation_params (query);
   for (i = 0; i < count; i++) {

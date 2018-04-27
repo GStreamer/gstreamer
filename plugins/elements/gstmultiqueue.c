@@ -241,7 +241,7 @@ enum
  * This is currently not yet implemented.
  * Since we dynamically scale the queue buffer size up to the limits but avoid
  * going above the max-size-buffers when we can, we don't really need this
- * aditional extra size. */
+ * additional extra size. */
 #define DEFAULT_EXTRA_SIZE_BYTES 10 * 1024 * 1024       /* 10 MB */
 #define DEFAULT_EXTRA_SIZE_BUFFERS 5
 #define DEFAULT_EXTRA_SIZE_TIME 3 * GST_SECOND

@@ -270,7 +270,7 @@ Other junk:
    circumstance, the getcaps function can be omitted.
    
  - If you use gst_pad_use_explicit_caps(), the getcaps function must
-   be ommitted.
+   be omitted.
 
  - fixate functions are a method for applications to exert influence
    on how a format is chosen from a caps.  It's also used as a hack to

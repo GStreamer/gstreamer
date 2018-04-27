@@ -9,7 +9,7 @@
   // in the queue
 
   // thread1 has put the last buffer on the queue
-  // here. A signal is going to be emited
+  // here. A signal is going to be emitted
 
   tosignal = (queue->level_buffers >= 0);
   queue->level_buffers++;

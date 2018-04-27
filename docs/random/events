@@ -56,7 +56,7 @@ There are 3 different directions an event can be processed.
 
 * vertical events
   
-  Vertical events travel from elements to their parents. They are targetted at
+  Vertical events travel from elements to their parents. They are targeted at
   the application. Vertical events should be used for information that an 
   application cannot receive in an easy way by using callbacks or properties.
   Vertical events are send to the application by the pipeline that collects those
@@ -142,7 +142,7 @@ from these infos. (eg converting stream length in bytes to song length in
 microseconds).
 Props consist of key / value pairs, where the key is a string identifier and the value
 is a GstPropEntry. Many key strings are predefined to allow consistency between elements.
-Elements should try to suppy any information they can as soon as possible.
+Elements should try to supply any information they can as soon as possible.
 
 GST_EVENT_HAS_INFO
 direction(s): upstream
@@ -177,7 +177,7 @@ References to events are handled similar to buffers. An element receives an even
 a single reference. If it forwards the event, this reference is lost.
 Events own a reference to the element that created them. They take care of all of all
 data inside them too (strings, props). So elements and applications that want to keep
-this informations need to copy or add a reference them.
+this information need to copy or add a reference them.
 
 
 Changing Events
@@ -215,7 +215,7 @@ Use Cases
 ---------
 
 Following are some simple use cases describing how events are generated. The pipeline
-decriptions use gst-launch syntax. "..." indicates that something follows there but is 
+descriptions use gst-launch syntax. "..." indicates that something follows there but is
 not important for the example.
 
 * filesrc ! fakesink
@@ -245,7 +245,7 @@ not important for the example.
     will not be forwarded by mad.
   - When playing starts, mad is able to compute bitrate and other information including playing
     time with the help of the previous length information supplied by the filesrc. It will then
-    issue another INFO event with that informations. This one will be send downstream and vertical.
+    issue another INFO event with that information. This one will be send downstream and vertical.
     
 * ... ! avimux ! filesink
 
@@ -253,7 +253,7 @@ not important for the example.
   files have a limited filesize. Only 4 GB are allowed. We now show what happens when the avimux
   encoder hits that limit.
   - When the internal counter of avimux shows that it is approaching the filesize limit, the 
-    avimux element pushes a buffer containig the footer to the filesink.
+    avimux element pushes a buffer containing the footer to the filesink.
   - After that it issues a DISCONTINUOUS event of the type DISCONT_NEW indicating a new stream.
     The filesink will close the file and reopen a new one.
   - The avimux plugin resets its internal size counter and restarts sending data to the new file.
@@ -271,7 +271,7 @@ not important for the example.
   - The gunzip element has already decoded the whole data so it knows the size of the stream. It
     calls the callback for "length_size" and forwards the event.
   - The filesrc supplies the "URI" and the "length_size" for a second time. It is now up to the
-    application's callback function to handle this second occurence of "length_size" information.
+    application's callback function to handle this second occurrence of "length_size" information.
     The filesrc does not forward the event and dereferences it.
   - During disposal of the event, the callback function is called again with name=NULL. The
     application now knows that no "title" can be supplied.  

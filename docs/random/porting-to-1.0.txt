@@ -409,7 +409,7 @@ CHANGES
     Also segment accumulation was removed from the segment event. This means
     that now the source/demuxer/parser needs to add the elapsed time of the
     previous segment themselves (this must be added to segment->base). If this
-    is not done, looped playback wont work.
+    is not done, looped playback won't work.
 
     accum was renamed to base. last_stop was renamed to position.
 

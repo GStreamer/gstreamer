@@ -304,7 +304,7 @@ CK_DLL_EXP void CK_EXPORT _tcase_add_test (TCase * tc, TFun tf,
  *
  * Note that if a setup function fails, the remaining setup functions
  * will be omitted, as will the test case and the teardown functions.
- * If a teardown function fails the remaining teardown functins will be
+ * If a teardown function fails the remaining teardown functions will be
  * omitted.
  *
  * @param tc test case to add unchecked fixture setup/teardown to
@@ -332,7 +332,7 @@ CK_DLL_EXP void CK_EXPORT tcase_add_unchecked_fixture (TCase * tc, SFun setup,
  *
  * Note that if a setup function fails, the remaining setup functions
  * will be omitted, as will the test and the teardown functions. If a
- * teardown function fails the remaining teardown functins will be
+ * teardown function fails the remaining teardown functions will be
  * omitted.
  *
  * @param tc test case to add checked fixture setup/teardown to

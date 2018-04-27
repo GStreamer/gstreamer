@@ -25,7 +25,7 @@ element factories provide the core library with elements (duh)
 an element factory has the following information:
 
   - a unique name for the element factory
-  - strings describing the element (name, desciption, copyright,...)
+  - strings describing the element (name, description, copyright,...)
   - a description of the media types it accepts (as capabilities) 
   - a description of the media types it outputs (as capabilities)
 

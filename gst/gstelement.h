@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-/* gstelement.h and gstelementfactory.h include eachother */
+/* gstelement.h and gstelementfactory.h include each other */
 typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 

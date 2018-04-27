@@ -205,7 +205,7 @@ always performed relative to 0, so if we convert track2 to bytes, we
 always get the number of bytes from track0->track2.
 
 If we want to get the number of bytes of one particular track, we have
-to substract two convert values. Look at the folowing figure to understand
+to substract two convert values. Look at the following figure to understand
 this. The --- defines the region we want to convert.
 
 
@@ -260,7 +260,7 @@ Several reasons:
  - stuff like length an position depend on the pads of the element, you cannot
    sanely expose a property for each pad to describe this.
  - element properties can only report stuff with one type. If your property
-   exposes somthing like "total_length", you cannot make it both report this
+   exposes something like "total_length", you cannot make it both report this
    in time/bytes/samples/frames...
  - impossible to sanely implement convert with element properties.
 

@@ -6,7 +6,7 @@ Possible application: DVD navigation, flash,...
 Requirements
 ------------
 
-- capture mouse clicks, mouse position, movement occuring on
+- capture mouse clicks, mouse position, movement occurring on
   a video display plugin
 - transport these events to the interested plugins
 - allow for automation (ie, the technique should work without
@@ -75,7 +75,7 @@ GST_CAPS_NEW (
 do we need a library for this?
 
 do we use custom events and use the mime type to detect the 
-type? do we creat a GST_EVENT_NAVIGATION?
+type? do we create a GST_EVENT_NAVIGATION?
 
 can we encapsulate all events into a GstCaps? I would think so
 

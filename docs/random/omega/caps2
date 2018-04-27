@@ -57,7 +57,7 @@ Again from the plugin registry we find an element audiosink that has appropriate
   };
 
 A copy of the audiosink is instantiated and attached, negotiation goes smoothly, and we're done.  No
-dataflow has occured, no failure found, etc.  An ideal autoplug.
+dataflow has occurred, no failure found, etc.  An ideal autoplug.
 
 
 Now, a slightly more convoluted example:
@@ -106,10 +106,10 @@ changed:
 
 Whoops.  It seems that the sound card we've got in this machine (FIXME how on earth to deal with
 multiple sound cards???) doesn't support mono output *at all*.  This is a problem.  We now find that we
-hae no options as far as directly matching the mpg123 to the audiosink.
+have no options as far as directly matching the mpg123 to the audiosink.
 
-A look through our (ficticious) plugin registry shows at least one element that at least has audio/raw
-on both input and ouput (since both mpg123 and audiosink have open pads with this mime type).  A closerlook shows that its caps are:
+A look through our (fictitious) plugin registry shows at least one element that at least has audio/raw
+on both input and output (since both mpg123 and audiosink have open pads with this mime type).  A closerlook shows that its caps are:
 
   static GstCapsFactory mono2stereo_sink_caps = {
     "audio/raw",
@@ -231,7 +231,7 @@ following caps:
   };
 
 This seems to be a task for typefind again.  But since data is flowing, we have to be careful with the
-buffers.  (This is the case in any typefind maneuver, but moreso when one really can't rewind the
+buffers.  (This is the case in any typefind maneuver, but more so when one really can't rewind the
 source without consequences)  The autoplug system attaches a special pseudo-element to mpeg2parse's new
 output pad, and attaches the typefind element to the end of that.  The pseudo-element takes the buffer,
 stores it, and passes a copy off to the attached element, in this case typefind.  This repeats until

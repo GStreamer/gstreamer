@@ -241,7 +241,7 @@ gst_latency_tracer_init (GstLatencyTracer * self)
   gst_tracing_register_hook (tracer, "pad-push-list-pre",
       G_CALLBACK (do_push_buffer_pre));
 
-  /* while in pull mode, pre/post will happend before and after the upstream
+  /* while in pull mode, pre/post will happen before and after the upstream
    * pull_range call is made, so it already only account for the upstream
    * processing time. As a side effect, in pull mode, we can measure the
    * source processing latency, while in push mode, we can't */

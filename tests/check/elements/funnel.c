@@ -279,7 +279,7 @@ event_counter (GstObject * pad, GstPadProbeInfo * info, gpointer user_data)
 
 /*
  * Push GAP events into funnel to forward sticky events.
- * Funnel element shoud also treat GAP events likes buffers.
+ * Funnel element should also treat GAP events likes buffers.
  * For example, funnel can be used for internal subtitle with streamiddemux. 
  *  +--------------------------------------------------------------------------+
  *  | playbin                               +--------------------------------+ |

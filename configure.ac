@@ -947,7 +947,7 @@ dnl *** finalize CFLAGS, LDFLAGS, LIBS
 dnl Overview:
 dnl GST_OPTION_CFLAGS:  common cflags for profiling, debugging, errors, ...
 dnl GST_ALL_*:          vars shared by all built objects
-dnl GST_LIB_LDFLAGS:    additional linker flags for all libaries
+dnl GST_LIB_LDFLAGS:    additional linker flags for all libraries
 dnl GST_OBJ_*:          additional vars to link to the core library
 dnl			include GST_ALL_*
 dnl GST_LT_LDFLAGS:	library versioning of our libraries

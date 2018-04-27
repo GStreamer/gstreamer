@@ -237,7 +237,7 @@ gst_stream_set_stream_id (GstStream * stream, const gchar * stream_id)
   if (stream_id)
     stream->stream_id = g_strdup (stream_id);
   else {
-    /* Create a randoom stream_id if NULL */
+    /* Create a random stream_id if NULL */
     GST_FIXME_OBJECT (stream, "Creating random stream-id, consider "
         "implementing a deterministic way of creating a stream-id");
     stream->stream_id =

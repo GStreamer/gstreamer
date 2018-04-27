@@ -1,7 +1,7 @@
 BufferPools
 -----------
 
-This document proposes a mechnism to build pools of reusable buffers. The
+This document proposes a mechanism to build pools of reusable buffers. The
 proposal should improve performance and help to implement zero-copy usecases.
 
 Last edited: 2009-09-01 Stefan Kost
@@ -20,24 +20,24 @@ Problems
 
   - hardware based elements like to reuse buffers as they e.g.
     - mlock them (dsp)
-    - establish a index<->adress relation (v4l2)
+    - establish a index<->address relation (v4l2)
   - not reusing buffers has overhead and makes run time behaviour
     non-deterministic:
-    - malloc (which usualy becomes an mmap for bigger buffers and thus a
+    - malloc (which usually becomes an mmap for bigger buffers and thus a
       syscall) and free (can trigger compression of freelists in the allocator)
     - shm alloc/attach, detach/free (xvideo)
   - some usecases cause memcpys
     - not having the right amount of buffers (e.g. too few buffers in v4l2src)
     - receiving buffers of wrong type (e.g. plain buffers in xvimagesink)
-    - receving buffers with wrong alignment (dsp)
-  - some usecases cause unneded cacheflushes when buffers are passed between
+    - receiving buffers with wrong alignment (dsp)
+  - some usecases cause unneeded cacheflushes when buffers are passed between
     user and kernel-space
 
 
 What is needed
 --------------
 
-Elements that sink raw data buffers of usualy constant size would like to 
+Elements that sink raw data buffers of usually constant size would like to
 maintain a bufferpool. These could be sinks or encoders. We need mechanims to
 select and dynamically update:
 
@@ -48,12 +48,12 @@ select and dynamically update:
 
 Proposal
 --------
-Querying the bufferpool size and buffer alignments can work simillar to latency
+Querying the bufferpool size and buffer alignments can work similar to latency
 queries (gst/gstbin.c:{gst_bin_query,bin_query_latency_fold}. Aggregation is
 quite straight forward : number-of-buffers is summed up and for alignment we
 gather the MAX value.
 
-Bins need to track which elemnts have been selected as bufferpools owners and
+Bins need to track which elements have been selected as bufferpools owners and
 update if those are removed (FIXME: in which states?).
 
 Bins would also need to track if elements that replied to the query are removed
@@ -65,7 +65,7 @@ Bufferpools owners need to handle caps changes to keep the queued buffers valid
 for the negotiated format.
 
 The bufferpool could be a helper GObject (like we use GstAdapter). If would
-manage a collection of GstBuffers. For each buffer t tracks wheter its in use or
+manage a collection of GstBuffers. For each buffer t tracks whether its in use or
 available. The bufferpool in gst-plugin-good/sys/v4l2/gstv4l2bufferpool might be
 a starting point.
 
@@ -106,7 +106,7 @@ There are more attributes on buffers needed to reduce the overhead even more:
     the end to a specific alignment
   - mlock: hardware that uses DMA needs buffers memory locked, if a buffer is
     already memory locked, it can be used by other hardware based elements as is
-  - cache flushes: hardware based elements usualy need to flush cpu caches when
+  - cache flushes: hardware based elements usually need to flush cpu caches when
     sending results as the dma based memory writes do no update eventually
     cached values on the cpu. now if there is no element next in the pipeline
     that actually reads from this memory area we could avoid the flushes. All

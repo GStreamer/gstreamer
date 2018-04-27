@@ -64,7 +64,7 @@ struct _GstMyData {
 
 You can even enhance the class struct, if you want to. This works just like inheritance in GLib.
 
-If it can be a parent class, it should implement these three functions publically:
+If it can be a parent class, it should implement these three functions publicly:
 void gst_my_data_init (GstMyData *data) {
   /* call the parent's init function, eg: */
   gst_data_init (GST_DATA (data));
@@ -206,7 +206,7 @@ FIXME: Write more, when sure how to do this.
 
 Upstream events
 ===============
-These will be discussed in a seperate doc.
+These will be discussed in a separate doc.
 
 
 

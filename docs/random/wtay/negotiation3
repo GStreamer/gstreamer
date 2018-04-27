@@ -224,7 +224,7 @@ Default implementations
 
 gst_pad_iterate_caps returns caps in the following order:
 
- 1) prefered caps (if any)
+ 1) preferred caps (if any)
  2) negotiated caps (if any)
  3) profile caps (if any, filtered against caps of current media type)
  4) padtemplate caps (filtered against caps of current media type)

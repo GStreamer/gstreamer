@@ -2,7 +2,7 @@ $Id$
 
 rethink log format. current format:
 * is not easy to parse/process by commandline tools
-* cannnot be easily diffed (timestamps, pid)
+* cannot be easily diffed (timestamps, pid)
 
 gst_debug_log_default() is default gst-log handler.
 try new via:

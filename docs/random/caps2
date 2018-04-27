@@ -130,7 +130,7 @@ The pad template caps should be the union of caps a pad supports
 in any potential situation.  Simultaneously, these caps should be
 as specific as possible, since it is used to decide which elements
 to attempt for autoplugging, without having to load the element.
-The pad template caps are generally detemined at compile time, but
+The pad template caps are generally determined at compile time, but
 might be actually computed at run-time from other information.
 
 The getcaps() function returns the caps supported by a given pad,

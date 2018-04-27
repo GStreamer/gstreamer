@@ -236,7 +236,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
     /* Initialize with zeroes because of struct padding and
-     * valgrind complaining about copying unitialized memory
+     * valgrind complaining about copying uninitialized memory
      */
     ef = g_slice_new0 (GstRegistryChunkElementFactory);
     pf_size = sizeof (GstRegistryChunkElementFactory);
@@ -296,7 +296,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     gchar *str;
 
     /* Initialize with zeroes because of struct padding and
-     * valgrind complaining about copying unitialized memory
+     * valgrind complaining about copying uninitialized memory
      */
     tff = g_slice_new0 (GstRegistryChunkTypeFindFactory);
     pf_size = sizeof (GstRegistryChunkTypeFindFactory);
@@ -330,7 +330,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     GstDeviceProviderFactory *factory = GST_DEVICE_PROVIDER_FACTORY (feature);
 
     /* Initialize with zeroes because of struct padding and
-     * valgrind complaining about copying unitialized memory
+     * valgrind complaining about copying uninitialized memory
      */
     tff = g_slice_new0 (GstRegistryChunkDeviceProviderFactory);
     chk =
@@ -344,7 +344,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
         gst_structure_to_string (factory->metadata));
   } else if (GST_IS_TRACER_FACTORY (feature)) {
     /* Initialize with zeroes because of struct padding and
-     * valgrind complaining about copying unitialized memory
+     * valgrind complaining about copying uninitialized memory
      */
     pf = g_slice_new0 (GstRegistryChunkPluginFeature);
     pf_size = sizeof (GstRegistryChunkPluginFeature);

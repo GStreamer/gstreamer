@@ -73,7 +73,7 @@ GST_START_TEST (test_subbuffer)
   gst_buffer_unmap (sub, &sinfo);
   gst_buffer_unref (sub);
 
-  /* test if metadata is coppied, not a complete buffer copy so only the
+  /* test if metadata is copied, not a complete buffer copy so only the
    * timestamp and offset fields are copied. */
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 1);
   fail_if (sub == NULL, "copy_region of buffer returned NULL");
@@ -86,7 +86,7 @@ GST_START_TEST (test_subbuffer)
       "subbuffer has wrong offset end");
   gst_buffer_unref (sub);
 
-  /* test if metadata is coppied, a complete buffer is copied so all the timing
+  /* test if metadata is copied, a complete buffer is copied so all the timing
    * fields should be copied. */
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 4);
   fail_if (sub == NULL, "copy_region of buffer returned NULL");

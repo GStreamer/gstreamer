@@ -1734,7 +1734,7 @@ gst_element_class_get_request_pad_template (GstElementClass *
 }
 
 /* get a random pad on element of the given direction.
- * The pad is random in a sense that it is the first pad that is (optionaly) linked.
+ * The pad is random in a sense that it is the first pad that is (optionally) linked.
  */
 static GstPad *
 gst_element_get_random_pad (GstElement * element,
@@ -2986,14 +2986,14 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_SUCCESS:
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element changed state SUCCESS");
-      /* we can commit the state now which will proceeed to
+      /* we can commit the state now which will proceed to
        * the next state */
       ret = gst_element_continue_state (element, ret);
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element changed state NO_PREROLL");
-      /* we can commit the state now which will proceeed to
+      /* we can commit the state now which will proceed to
        * the next state */
       ret = gst_element_continue_state (element, ret);
       break;

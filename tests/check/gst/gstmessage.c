@@ -502,7 +502,7 @@ GST_START_TEST (test_parsing)
     fail_unless (stream3 != NULL);
     gst_object_unref (stream3);
 
-    /* Shoul fail */
+    /* Should fail */
     ASSERT_CRITICAL (gst_message_streams_selected_get_stream (message, 1));
 
     gst_object_unref (res);

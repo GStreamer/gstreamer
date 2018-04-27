@@ -27,10 +27,10 @@
     </para>
 
     <chapter id="gstreamer-base">
-      <title>GStreamer Base and Utillity Classes</title>
+      <title>GStreamer Base and Utility Classes</title>
       <para>
         libgstbase-&GST_API_VERSION;.so provides some base classes to be extended
-        by elements and utillity classes that are most useful for plugin developers.
+        by elements and utility classes that are most useful for plugin developers.
       </para>
 
       <xi:include href="xml/gstaggregator.xml" />

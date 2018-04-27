@@ -1082,7 +1082,7 @@ gst_harness_teardown (GstHarness * h)
  * @h: a #GstHarness
  * @srcpad: a #GstPad to link to the harness sinkpad
  *
- * Links the specifed #GstPad the @GstHarness sinkpad. This can be useful if
+ * Links the specified #GstPad the @GstHarness sinkpad. This can be useful if
  * perhaps the srcpad did not exist at the time of creating the harness,
  * like a demuxer that provides a sometimes-pad after receiving data.
  *
@@ -1108,7 +1108,7 @@ gst_harness_add_element_src_pad (GstHarness * h, GstPad * srcpad)
  * @h: a #GstHarness
  * @sinkpad: a #GstPad to link to the harness srcpad
  *
- * Links the specifed #GstPad the @GstHarness srcpad.
+ * Links the specified #GstPad the @GstHarness srcpad.
  *
  * MT safe.
  *
@@ -1373,7 +1373,7 @@ gst_harness_wait_for_clock_id_waits (GstHarness * h, guint waits, guint timeout)
  * 3: Release the #GstClockID wait.
  * Together, this provides an easy way to not have to think about the details
  * around clocks and time, but still being able to write deterministic tests
- * that are dependant on this. A "crank" can be though of as the notion of
+ * that are dependent on this. A "crank" can be though of as the notion of
  * manually driving the clock forward to its next logical step.
  *
  * MT safe.
@@ -1427,7 +1427,7 @@ gst_harness_crank_multiple_clock_waits (GstHarness * h, guint waits)
  *
  * This will set the harnessed #GstElement to %GST_STATE_PLAYING.
  * #GstElements without a sink-#GstPad and with the %GST_ELEMENT_FLAG_SOURCE
- * flag set is concidered a src #GstElement
+ * flag set is considered a src #GstElement
  * Non-src #GstElements (like sinks and filters) are automatically set to
  * playing by the #GstHarness, but src #GstElements are not to avoid them
  * starting to produce buffers.
@@ -2172,7 +2172,7 @@ gst_harness_set_propose_allocator (GstHarness * h, GstAllocator * allocator,
  * By adding a src-type #GstElement, it is then easy to use functions like
  * gst_harness_push_from_src or gst_harness_src_crank_and_push_many
  * to provide your harnessed element with input. The @has_clock_wait variable
- * is a greate way to control you src-element with, in that you can have it
+ * is a great way to control you src-element with, in that you can have it
  * produce a buffer for you by simply cranking the clock, and not have it
  * spin out of control producing buffers as fast as possible.
  *
@@ -2364,7 +2364,7 @@ forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
  * responses the element output might create in sink elements. An example might
  * be an existing sink providing some analytical data on the input it receives that
  * can be useful to your testing. If the goal is to test a sink-element itself,
- * this is better acheived using gst_harness_new directly on the sink.
+ * this is better achieved using gst_harness_new directly on the sink.
  *
  * If a sink-harness already exists it will be replaced.
  *

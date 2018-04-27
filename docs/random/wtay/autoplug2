@@ -15,7 +15,7 @@ serious shortcommings:
 1) definition
 -------------
 
-We want to define a plugable framework for autoplugging this 
+We want to define a pluggable framework for autoplugging this
 includes: 
 
   - autoplugging algorithms can be added and removed at run time.

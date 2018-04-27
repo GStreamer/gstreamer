@@ -36,7 +36,7 @@ Although the GStreamer framework's focus is multimedia processing, the core
 has been used outside the real of multimedia, for example in the gst-sci
 package[8] that provides statistical data analysis.
 
-This paper focusses on the GStreamer core and explains the goals of the
+This paper focuses on the GStreamer core and explains the goals of the
 framework and how the core tries to achieve these by following a simple
 mp3 playback example. 
 
@@ -45,7 +45,7 @@ Plugins
 
 To allow easy extensibility, the complete media processing functionality
 inside GStreamer is provided via plugins. Upon initialization a plugin
-registeres its different capabilities with the GStreamer library. These
+registers its different capabilities with the GStreamer library. These
 capabilities are schedulers, typefind functions or - most common - elements.
 The capabilities of plugins are recorded inside the registry.
 
@@ -53,7 +53,7 @@ The capabilities of plugins are recorded inside the registry.
 The registry
 
 The registry is a cache file that is used to inspect certain plugin capabilities
-without the need to load the plugin. As an example those stored capabilites
+without the need to load the plugin. As an example those stored capabilities
 enabled automatically determining which plugins must be loaded in order to
 decode a certain media file.
 The gst-register(1) command updates the registry file. The gst-inspect(1)
@@ -146,7 +146,7 @@ elements implementing them.
 The last step in creating a pipeline is linking pads. When attempting to link
 two pads, GStreamer checks that a link is possible and if so, links them. After
 they are linked data may pass through this link. Most of the time (just like
-in this example) convenience funtions are used that automatically select the
+in this example) convenience functions are used that automatically select the
 right elements to connect inside a GStreamer pipeline.
 
 
@@ -166,7 +166,7 @@ GST_STATE_NULL to GST_STATE_READY
 GST_STATE_NULL is the 'uninitialized' state. Since it is always possible to
 create an element, nothing that might require interaction or can fail is done
 while creating the element. During the state transition elements are supposed
-to initialize external ressources. A file source opens its file, X elements
+to initialize external resource. A file source opens its file, X elements
 open connections to the X server etc. This ensures that all elements can
 provide the best possible information about their capabilities during future
 interactions. The GStreamer core essentially does nothing. After this
@@ -177,7 +177,7 @@ the element is ready to start.
 GST_STATE_READY to GST_STATE_PAUSED
 
 During this state change all internal dependencies are resolved. The GStreamer 
-core tries to resolve links between pads by negotiating capabilites of pads.
+core tries to resolve links between pads by negotiating capabilities of pads.
 (See below for an explanation.) The schedulers will prepare the elements for
 playback and the elements will prepare their internal data structures. After
 this state change is successful, nearly all elements are done with their setup.

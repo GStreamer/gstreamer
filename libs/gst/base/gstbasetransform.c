@@ -861,7 +861,7 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
       /* If change are not acceptable, fallback to generic pool */
       if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
               max)) {
-        GST_DEBUG_OBJECT (trans, "unsuported pool, making new pool");
+        GST_DEBUG_OBJECT (trans, "unsupported pool, making new pool");
 
         gst_object_unref (pool);
         pool = gst_buffer_pool_new ();
@@ -1773,7 +1773,7 @@ not_writable:
   }
 }
 
-/* Given @caps calcultate the size of one unit.
+/* Given @caps calculate the size of one unit.
  *
  * For video caps, this is the size of one frame (and thus one buffer).
  * For audio caps, this is the size of one sample.
@@ -2839,8 +2839,8 @@ gst_base_transform_get_allocator (GstBaseTransform * trans,
  *
  * Updates the srcpad caps and send the caps downstream. This function
  * can be used by subclasses when they have already negotiated their caps
- * but found a change in them (or computed new informations). This way,
- * they can notify downstream about that change without loosing any
+ * but found a change in them (or computed new information). This way,
+ * they can notify downstream about that change without losing any
  * buffer.
  *
  * Returns: %TRUE if the caps could be send downstream %FALSE otherwise

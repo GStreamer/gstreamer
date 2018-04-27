@@ -93,7 +93,7 @@ automatically means the element directly in front of / after the link is used
 to create the link to save you some typing work and that not specifying a pad
 name will automatically create 1 connection between the two elements. If more
 than one connection was possible you might end up surprised.
-You may even specify pad lists to connect elements. They are seperated by
+You may even specify pad lists to connect elements. They are separated by
 commas.
   example:#> gst-launch fakesrc ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink
   example:#> gst-launch fakesrc ! tee name=tee  aggregator name=aggregator ! fakesink   tee.src0,src1 ! aggregator.sink0, sink1

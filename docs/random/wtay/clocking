@@ -18,7 +18,7 @@ Clocks
 A clock extends the abstract GstClock class.
 
 gst_clock_get_time should always report an equal or increasing
-value with each succesive call.
+value with each successive call.
 
 
 
@@ -150,7 +150,7 @@ if no Src elements exist with a clock, select a random clock from the
 Sink elements.
 else use a default System Clock.
 
-Src elements with a clock are prefered because they usualy provide
+Src elements with a clock are preferred because they usually provide
 live audio/video.
 
 Issues

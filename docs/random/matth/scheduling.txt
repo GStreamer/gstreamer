@@ -5,8 +5,8 @@
 These notes describe deadlock scenarios and proposed solutions for
 GStreamer.  This will be implemented in the INCSCHED1 branch.
 
-I.   Miscelaneous proposals
-II.  Liveness problems (sometimes deadlock ;) and propsed solutions
+I.   Miscellaneous proposals
+II.  Liveness problems (sometimes deadlock ;) and proposed solutions
 III. State transition approach and responsibility
 
 MattH.

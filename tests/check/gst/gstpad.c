@@ -662,7 +662,7 @@ GST_START_TEST (test_events_query_unlinked)
       _probe_handler, GINT_TO_POINTER (GST_PAD_PROBE_DROP), NULL);
   fail_unless (gst_pad_push_event (src,
           gst_event_new_segment (&dummy_segment)) == TRUE);
-  /* Queries should stil fail */
+  /* Queries should still fail */
   query = gst_query_new_duration (GST_FORMAT_TIME);
   fail_unless (gst_pad_peer_query (src, query) == FALSE);
   ASSERT_MINI_OBJECT_REFCOUNT (query, "query", 1);

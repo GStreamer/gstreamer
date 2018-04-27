@@ -286,7 +286,7 @@ push_data (gpointer user_data)
       }
       fail_unless (gst_pad_push_event (srcpad, GST_EVENT_CAST (data)));
     } else if (GST_IS_QUERY (data)) {
-      /* we don't care whether the query actualy got handled */
+      /* we don't care whether the query actually got handled */
       gst_pad_peer_query (srcpad, GST_QUERY_CAST (data));
       gst_query_unref (GST_QUERY_CAST (data));
     } else {
@@ -311,7 +311,7 @@ _aggregate_timeout (GMainLoop * ml)
 static gboolean
 _quit (GMainLoop * ml)
 {
-  GST_DEBUG ("QUITING ML");
+  GST_DEBUG ("QUITTING ML");
   g_main_loop_quit (ml);
 
   return G_SOURCE_REMOVE;
@@ -1060,7 +1060,7 @@ GST_START_TEST (test_add_remove)
     if (count == 0)
       gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-    /* Now make sure the seek happend */
+    /* Now make sure the seek happened */
     carry_on = TRUE;
     do {
       message = gst_bus_timed_pop (bus, -1);

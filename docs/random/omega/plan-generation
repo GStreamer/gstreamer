@@ -5,7 +5,7 @@ Plan generation happens at transition from NULL to READY (and PLAYING to READY r
 that).  By way of some logic in gst_bin_change_state(), gst_bin_create_plan() is only called for the
 outer Bin, usually a Pipeline.  This keeps things from getting nasty later on.
 
-A major new concept in plan generation is that of the 'manager'.  This is the element that is reponsible
+A major new concept in plan generation is that of the 'manager'.  This is the element that is responsible
 for running a given element.  In general, Pipelines and Threads are the only managing-capable elements
 (have the MANAGER flag set), since they are the only ones with real scheduling authority (because they
 have a process context to play with, basically).
@@ -33,7 +33,7 @@ furtuer down the hierarchy, until everything is covered.
 
 For all MANAGER Bins, the last step is to actually create the scheduling plan.  This is still one of the
 nastiest chunks of code in the whole project, and probably will do nothing but get worse from now on (it
-got better recently, but only because I took a chainsaw to the code and broke everthing...).  It will
+got better recently, but only because I took a chainsaw to the code and broke everything...).  It will
 remain similar to what it is now, but with some definite differences.
 
 First task is now to find all the elements that we're responsible for.  This is normally a recursive

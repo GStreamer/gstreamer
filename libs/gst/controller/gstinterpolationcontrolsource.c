@@ -169,7 +169,7 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
 
 
 /*  linear interpolation */
-/*  smoothes inbetween values */
+/*  smoothes in between values */
 static inline gdouble
 _interpolate_linear (GstClockTime timestamp1, gdouble value1,
     GstClockTime timestamp2, gdouble value2, GstClockTime timestamp)

@@ -253,7 +253,7 @@ struct _GstDebugCategory {
  * GST_FUNCTION:
  *
  * This macro should evaluate to the name of the current function and be should
- * be defined when configuring your project, as it is compiler dependant. If it
+ * be defined when configuring your project, as it is compiler dependent. If it
  * is not defined, some default value is used. It is used to provide debugging
  * output with the function name of the message.
  *

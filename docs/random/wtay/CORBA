@@ -19,7 +19,7 @@ of allowing objects to live in other contexts, languages and
 even on other machines over the network.
 
 Wrapping the GStreamer objects in CORBA objects doesn't look
-like a problem. It will immediatly allow us to create objects
+like a problem. It will immediately allow us to create objects
 accros the network and use the framework in a distributed
 environment.
 
@@ -48,7 +48,7 @@ you to, for example, merge a pipeline with a document in one
 single stream. 
 
 I see bonobo as a high level service provider, you create a
-mediaplayer component that can be embeded into a document and
+mediaplayer component that can be embedded into a document and
 stuff like that.  The point here is that you use bonobo to 
 create services out of user apps build with GStreamer.
 

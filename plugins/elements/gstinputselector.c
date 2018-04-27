@@ -1279,7 +1279,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
    *
    * The active pad may push more buffers than what is currently displayed/consumed
    * and when changing pads those buffers will be discarded and the only way to
-   * reactivate that pad without loosing the already consumed buffers is to enable cache.
+   * reactivate that pad without losing the already consumed buffers is to enable cache.
    */
   g_object_class_install_property (gobject_class, PROP_CACHE_BUFFERS,
       g_param_spec_boolean ("cache-buffers", "Cache Buffers",

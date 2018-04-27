@@ -28,7 +28,7 @@ only travel in one direction.
     as close to the buffers are possible.
 
   - plugins should check the type of the GstData passed in the _chain
-    or _loop function and act appropriatly. This can be done by either 
+    or _loop function and act appropriately. This can be done by either
     doing their own stuff or by calling the default handler.
 
   - are handled on the sink pad.
@@ -145,7 +145,7 @@ are supposed to handle them.
 application generated events 
 ----------------------------
 
-The application can insert events into the pipeline at arbirary
+The application can insert events into the pipeline at arbitrary
 places. This is done by calling gst_pad_send_event() on a pad.
 
 An application can also insert events on any element. The element

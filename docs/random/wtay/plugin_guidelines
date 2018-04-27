@@ -253,7 +253,7 @@ complicated case
 
 * You can fix this by:
 
- - inserting gst_element_yield () in sane places, don't exagerate because
+ - inserting gst_element_yield () in sane places, don't exaggerate because
    every yield can potentially never return so you need to keep track of
    allocations (see the NOTES below).
  
@@ -267,8 +267,8 @@ NOTES:
    and free it in the state change function.
 
 
-IMPLEMENATION DETAILS
-=====================
+IMPLEMENTATION DETAILS
+======================
 
 The infinite loops are only problematic if the scheduler chooses to select
 the plugin as an entry point in the chain. _yield() will be a nop if this is
@@ -284,7 +284,7 @@ Calling yield, pulling, pushing can potentially never return because a state cha
 might have happened, killing off execution of the plugin. pulling/pushing buffers
 will cause no leaks in this case because the core will free pending buffers in a
 state change to READY. The plugin must free allocated data/buffers itself in the state
-change function if the yield didn't retrun. 
+change function if the yield didn't return.
 
 
 

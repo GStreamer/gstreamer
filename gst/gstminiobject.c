@@ -343,7 +343,7 @@ gst_mini_object_ref (GstMiniObject * mini_object)
 
   g_return_val_if_fail (mini_object != NULL, NULL);
   /* we can't assert that the refcount > 0 since the _free functions
-   * increments the refcount from 0 to 1 again to allow resurecting
+   * increments the refcount from 0 to 1 again to allow resurrecting
    * the object
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */

@@ -199,7 +199,7 @@ in this case, mad can both send "int" audio samples and "float" samples.
   function. osssink can try this list (or whatever remains of it) and whatever
   works is sent back as the return value of the request_caps function.
 - mad receives the caps list, takes the top caps and does a pad_set_caps
-- osssink recieves the final caps on its new_caps function and configures the
+- osssink receives the final caps on its new_caps function and configures the
   oss driver.
 
 

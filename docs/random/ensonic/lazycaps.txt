@@ -54,7 +54,7 @@ void gst_caps_merge_structure (GstCaps *caps,
 - fully evaluate caps?
 
 GstCaps * gst_caps_copy_nth (const GstCaps *caps, guint nth);
-- eval stucture and copy
+- eval structure and copy
 
 void gst_caps_truncate (GstCaps *caps);
 - eval first structure as needed and remove GST_CAPS_FLAGS_LAZY + call free_func

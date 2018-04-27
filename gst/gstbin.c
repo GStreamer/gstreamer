@@ -2573,7 +2573,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
 do_state:
   GST_OBJECT_LOCK (bin);
   /* the element was busy with an upwards async state change, we must wait for
-   * an ASYNC_DONE message before we attemp to change the state. */
+   * an ASYNC_DONE message before we attempt to change the state. */
   if ((found =
           find_message (bin, GST_OBJECT_CAST (element),
               GST_MESSAGE_ASYNC_START))) {
@@ -3058,12 +3058,12 @@ done:
   /* check if all elements managed to commit their state already */
   if (!find_message (bin, NULL, GST_MESSAGE_ASYNC_START)) {
     /* nothing found, remove all old ASYNC_DONE messages. This can happen when
-     * all the elements commited their state while we were doing the state
+     * all the elements committed their state while we were doing the state
      * change. We will still return ASYNC for consistency but we commit the
      * state already so that a _get_state() will return immediately. */
     bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
-    GST_DEBUG_OBJECT (bin, "async elements commited");
+    GST_DEBUG_OBJECT (bin, "async elements committed");
     bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, FALSE,
         GST_CLOCK_TIME_NONE);
   }
@@ -3518,7 +3518,7 @@ bin_do_eos (GstBin * bin)
 
   GST_OBJECT_LOCK (bin);
   /* If all sinks are EOS, we're in PLAYING and no state change is pending
-   * (or we're doing playing to playing and noone else will trigger posting
+   * (or we're doing playing to playing and no one else will trigger posting
    * EOS for us) we forward the EOS message to the parent bin or application
    */
   eos = GST_STATE (bin) == GST_STATE_PLAYING
@@ -3952,7 +3952,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         /* nothing found, remove all old ASYNC_DONE messages */
         bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
-        GST_DEBUG_OBJECT (bin, "async elements commited");
+        GST_DEBUG_OBJECT (bin, "async elements committed");
         /* when we get an async done message when a state change was busy, we
          * need to set the pending_done flag so that at the end of the state
          * change we can see if we need to verify pending async elements, hence

@@ -385,7 +385,7 @@ gst_capsfilter_push_pending_events (GstCapsFilter * filter, GList * events)
   g_list_free (events);
 }
 
-/* Ouput buffer preparation ... if the buffer has no caps, and our allowed
+/* Output buffer preparation ... if the buffer has no caps, and our allowed
  * output caps is fixed, then send the caps downstream, making sure caps are
  * sent before segment event.
  *

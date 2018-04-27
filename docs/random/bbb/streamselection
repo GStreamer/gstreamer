@@ -61,7 +61,7 @@ extremely useful here, and requires little code in the switch-like
 element itself. Note that there is a slight bit of duplication in the
 playbin interface and the switch-like element interface, but that's "just
 the way it is".
-The implemention of the switch-like element could initially be local to
+The implementation of the switch-like element could initially be local to
 playbin, until it has been cleaned up and confirmed to be useful to a
 wider audience. This allows a lot of experimenting with interfaces because
 we won't be forced to maintain a stable interface.

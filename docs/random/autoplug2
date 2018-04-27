@@ -236,7 +236,7 @@ now we loop over all the list and try to add the remaining elements
 (HACK) we always use a new thread for the elements when there is a common
 element found.
 
-if a new thread is needed (either becuase the previous element is a common
+if a new thread is needed (either because the previous element is a common
 element or the object flag of the next element is set to GST_SUGGEST_THREAD)
 we add a queue to the bin and we add a new thread. We add the elements to
 the bin and connect them using gst_pipeline_pads_autoplug. 

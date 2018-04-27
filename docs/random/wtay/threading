@@ -46,7 +46,7 @@ Fixing Threading
  - negotiation is not designed to work over multithread boundaries.
 
    negotiation over a queue is not possible. There is no method or policy of
-   discovering a media type and then commiting it. It is also not possible to
+   discovering a media type and then committing it. It is also not possible to
    tie the negotiated media to the relevant buffer. 
 
    ex1:
@@ -213,7 +213,7 @@ Fixing Threading
        +---------+     +-----------------------+
 
    This requirement is important when we need to sort the elements in the
-   bin to perfrom the state change.
+   bin to perform the state change.
      
 
    testcases:
@@ -250,7 +250,7 @@ Fixing Threading
      GST_STATE_FAILURE is returned when the element failed to go to the 
      required state. When dealing with a bin, this is returned when one
      of the elements failed to go to the required state. The other elements 
-     in the bin might have changed their states succesfully. This return
+     in the bin might have changed their states successfully. This return
      value means that the element did _not_ change state, for bins this
      means that not all children have changed their state.
 
@@ -345,7 +345,7 @@ Fixing Threading
      This function will block while the state change function is running inside
      the element because it grabs the element lock. 
      When the element did not perform an async state change, this function returns 
-     TRUE immediatly with the state updated to reflect the current state of the 
+     TRUE immediately with the state updated to reflect the current state of the
      element and pending set to None. 
      When the element performed an async state change, this function will block 
      for the value of timeout and will return TRUE if the element completed the
@@ -405,7 +405,7 @@ Fixing Threading
      the elements. To make this easier we require that elements are connected to
      bins using ghostpads on the bin.
 
-     The algoritm goes like this:
+     The algorithm goes like this:
 
        d = [ ]                            # list of delayed elements
        p = [ ]                            # list of pending async elements
@@ -478,7 +478,7 @@ Fixing Threading
      reply and will only commit the state change after receiving the first
      buffer. This will implement the preroll phase.
 
-     The following pseudo code shows an algorithm for commiting the state
+     The following pseudo code shows an algorithm for committing the state
      change in the streaming method.
 
 	  GST_OBJECT_LOCK (element);
@@ -529,7 +529,7 @@ Fixing Threading
         Data transport was successful
 
       GST_ERROR
-        An error occured during transport, such as a fatal decoding error,
+        An error occurred during transport, such as a fatal decoding error,
         the pad should not be used again.
 
       GST_NOT_CONNECTED
@@ -580,7 +580,7 @@ Fixing Threading
      pipeline when an error occurs.
 
      Whenever an element posts a message on the event queue, a signal is also
-     fired that can be catched by the application. When dealing with those
+     fired that can be caught by the application. When dealing with those
      signals the application has to be aware that they come from the streaming
      threads and need to make sure they use proper locking to protect their
      own data structures.

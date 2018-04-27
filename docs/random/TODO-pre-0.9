@@ -4,23 +4,23 @@ TODO:
 short term core API stability
 -----------------------------
 
-Changes that probably impact the API, carefull discussion (IRC) + design doc is required
+Changes that probably impact the API, careful discussion (IRC) + design doc is required
 before changes are accepted.
 
 target release ! description
                !
   0.4.1        ! expose and API to query the supported seek formats/flags on
-  (done)       ! pads, somthing like an extra arg to gst_pad_set_convert_function
+  (done)       ! pads, something like an extra arg to gst_pad_set_convert_function
                ! and gst_pad_set_event_function with some function to query the 
                ! flags and formats. more ideas in docs/random/wtay/query_events
-	       !  (API: medium dificulty)
+	       !  (API: medium difficulty)
 	       !
   0.4.1        ! add event for segment playback/looping and seeking (docs/random/wtay/segments)
-  (done)       !  (API: medium dificulty, plugins: HARD to very HARD)
+  (done)       !  (API: medium difficulty, plugins: HARD to very HARD)
 	       !
     ?          ! add event to adjust rate (reverse playback, slow motion, frame skipping)
                ! (docs/random/wtay/rate_event)
-    	       !  (API: medium dificulty, plugins: HARD to very HARD)
+	       !  (API: medium difficulty, plugins: HARD to very HARD)
 	       ! 
     ?	       ! add method in the scheduler to set the entry point (frame stepping?)
 	       ! (docs/random/wtay/scheduler_entry)

@@ -44,7 +44,7 @@ typedef struct _GstDevicePrivate GstDevicePrivate;
 
 /**
  * GstDevice:
- * @parent: The parent #GstObject strucuture.
+ * @parent: The parent #GstObject structure.
  *
  * A device object.
  *
@@ -62,7 +62,7 @@ struct _GstDevice {
 
 /**
  * GstDeviceClass:
- * @parent_class: The parent #GstObjectClass strucuture.
+ * @parent_class: The parent #GstObjectClass structure.
  * @create_element: Creates the fully configured element to access this device.
  *  Subclasses need to override this and return a new element.
  * @reconfigure_element: This only needs to be implemented by subclasses if the

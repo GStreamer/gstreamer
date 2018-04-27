@@ -24,7 +24,7 @@ to a lot of projects, including GLib and the kernel.
 The second version is an "interface" version, used in versioning tools, the
 library name, packages, GConf install paths, registry locations, and so on.
 It is of the form x.y
-Commonly, it is refered to as the "major/minor" number of GStreamer.
+Commonly, it is referred to as the "major/minor" number of GStreamer.
 In most cases it is the same as the one used in the source version; only
 when we are doing release candidates for a new major/minor source version do
 we manually force the major/minor to be the same as the one for the next

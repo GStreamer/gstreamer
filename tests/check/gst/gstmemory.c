@@ -64,7 +64,7 @@ GST_START_TEST (test_submemory)
   gst_memory_unmap (sub, &sinfo);
   gst_memory_unref (sub);
 
-  /* test if metadata is coppied, not a complete memory copy so only the
+  /* test if metadata is copied, not a complete memory copy so only the
    * timestamp and offset fields are copied. */
   sub = gst_memory_share (memory, 0, 1);
   fail_if (sub == NULL, "share of memory returned NULL");
@@ -72,7 +72,7 @@ GST_START_TEST (test_submemory)
       "submemory has wrong size");
   gst_memory_unref (sub);
 
-  /* test if metadata is coppied, a complete memory is copied so all the timing
+  /* test if metadata is copied, a complete memory is copied so all the timing
    * fields should be copied. */
   sub = gst_memory_share (memory, 0, 4);
   fail_if (sub == NULL, "share of memory returned NULL");
@@ -209,7 +209,7 @@ GST_START_TEST (test_copy)
   copy = gst_memory_copy (memory, 0, -1);
   ASSERT_MINI_OBJECT_REFCOUNT (memory, "memory", 1);
   ASSERT_MINI_OBJECT_REFCOUNT (copy, "copy", 1);
-  /* memorys are copied and must point to different memory */
+  /* memory is copied and must point to different memory */
   fail_if (memory == copy);
 
   fail_unless (gst_memory_map (memory, &info, GST_MAP_READ));
@@ -611,7 +611,7 @@ _my_opaque_free (GstAllocator * allocator, GstMemory * mem)
 static gpointer
 _my_opaque_mem_map (MyOpaqueMemory * mem, gsize maxsize, GstMapFlags flags)
 {
-  /* the subclass is reponsible for logging any error, by design choice and for
+  /* the subclass is responsible for logging any error, by design choice and for
    * testing purpose MyOpaqueMemory never logs any trace */
   return NULL;
 }
@@ -714,7 +714,7 @@ GST_START_TEST (test_no_error_and_no_warning_on_map_failure)
   gst_debug_add_log_function (_custom_log_func, NULL, NULL);
 
   /* Ensure that the map does not log any error on failure. It has to fail
-   * because the custom opaque memory here is desgined to not be mappable. */
+   * because the custom opaque memory here is designed to not be mappable. */
   fail_if (gst_memory_map (mem, &info, GST_MAP_READ));
   fail_if (info.data != NULL);
   fail_if (info.size != 0);

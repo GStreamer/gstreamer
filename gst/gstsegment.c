@@ -392,7 +392,7 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
  * negative stream-time.
  *
  * This function is typically used by elements that need to synchronize buffers
- * against the clock or eachother.
+ * against the clock or each other.
  *
  * @position can be any value and the result of this function for values outside
  * of the segment is extrapolated.
@@ -709,7 +709,7 @@ gst_segment_position_from_stream_time (const GstSegment * segment,
  * negative running-time.
  *
  * This function is typically used by elements that need to synchronize buffers
- * against the clock or eachother.
+ * against the clock or each other.
  *
  * @position can be any value and the result of this function for values outside
  * of the segment is extrapolated.

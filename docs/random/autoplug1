@@ -154,7 +154,7 @@ ex.
      the same procedure happens for the audio part. We are now left with the
      following pipeline:
 
-     We will also have set a signal "new_pad" on the mpeg1parse element bacause
+     We will also have set a signal "new_pad" on the mpeg1parse element because
      the element mp1videoparse could not be connected to the element just yet.
 
                                                  (------------------------------------)         (----------
@@ -180,7 +180,7 @@ Problems:
 ---------
 
 this is obviously a very naive solution. the creation of the elements actually happens
-beforehand. MPEG2, for one, fails bacause there are multiple possibilities to go
+beforehand. MPEG2, for one, fails because there are multiple possibilities to go
 from the mpeg demuxer to audio/raw (ac3, mp3)
 
 Also any intermedia elements like mixers (subtitles) are not possible because we 

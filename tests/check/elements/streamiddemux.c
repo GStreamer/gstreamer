@@ -147,7 +147,7 @@ GST_START_TEST (test_streamiddemux_with_stream_start)
 
   g_object_get (td.demux, "active-pad", &active_srcpad, NULL);
   fail_unless (active_srcpad != NULL, "Failed to generate a srcpad");
-  fail_unless (td.srcpad_cnt == 1, "pad-added signal has not emmited");
+  fail_unless (td.srcpad_cnt == 1, "pad-added signal has not emitted");
 
   GST_DEBUG ("Releasing mysink and mysrc");
   gst_pad_set_active (td.mysink[0], FALSE);
@@ -185,7 +185,7 @@ GST_START_TEST (test_streamiddemux_without_stream_start)
 
   g_object_get (td.demux, "active-pad", &active_srcpad, NULL);
   fail_unless (active_srcpad == NULL, "srcpad has created unexpectedly");
-  fail_unless (td.srcpad_cnt == 0, "pad-added signal is emmited unexpectedly");
+  fail_unless (td.srcpad_cnt == 0, "pad-added signal is emitted unexpectedly");
 
   GST_DEBUG ("Releasing mysink and mysrc");
   gst_pad_set_active (td.mysink[0], FALSE);

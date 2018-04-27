@@ -4,7 +4,7 @@ header stuff to do various checking of flags.  Unfortunately, because of the sel
 the pad, there is at least one case where scheduling has to be tricked, by providing a pointer to a
 function with no body.
 
-What I propse is that these functionos be replaced with macros that call a function pointer directly.
+What I propose is that these functions be replaced with macros that call a function pointer directly.
 The default functions (provided by GstPad) would be capable of chaining, that's about it.  When a
 schedule is formed, these get replaced with more specific functions, provided by GstBin or a subclass.
 

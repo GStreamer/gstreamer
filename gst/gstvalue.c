@@ -5495,7 +5495,7 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
 }
 
 /* "Pure" variant of gst_value_compare which is guaranteed to
- * not have list arguments and therefore does basic comparisions
+ * not have list arguments and therefore does basic comparisons
  */
 static inline gint
 _gst_value_compare_nolist (const GValue * value1, const GValue * value2)
