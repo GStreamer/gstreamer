@@ -1353,7 +1353,7 @@ class _TestsLauncher(Loggable):
         return (None, exceptions)
 
     def _load_testsuites(self):
-        testsuites = []
+        testsuites = set()
         for testsuite in self.options.testsuites:
             if os.path.exists(testsuite):
                 testsuite = os.path.abspath(os.path.expanduser(testsuite))
@@ -1374,13 +1374,13 @@ class _TestsLauncher(Loggable):
                         testsuite, loaded_module[1]), Colors.FAIL)
                 continue
 
-            testsuites.append(module)
+            testsuites.add(module)
             if not hasattr(module, "TEST_MANAGER"):
                 module.TEST_MANAGER = [tester.name for tester in self.testers]
             elif not isinstance(module.TEST_MANAGER, list):
                 module.TEST_MANAGER = [module.TEST_MANAGER]
 
-        self.options.testsuites = testsuites
+        self.options.testsuites = list(testsuites)
 
     def _setup_testsuites(self):
         for testsuite in self.options.testsuites:
