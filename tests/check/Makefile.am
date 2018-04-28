@@ -321,10 +321,6 @@ VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
 
-generic_rtp_LDADD = \
-        $(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
-        $(LDADD)
-
 libs_libsabi_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
