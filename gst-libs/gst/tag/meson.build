@@ -28,6 +28,7 @@ install_headers(tag_headers, subdir : 'gstreamer-1.0/gst/tag/')
 
 tag_enums = gnome.mkenums_simple('tag-enumtypes',
   sources : tag_mkenum_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/tag/tag-prelude.h>',
   decorator : 'GST_TAG_API',
   install_header: true,
@@ -75,7 +76,7 @@ core_conf.set('HAVE_ZLIB', zlib_dep.found())
 tag_deps = [gst_base_dep, libm, zlib_dep]
 gsttag = library('gsttag-@0@'.format(api_version),
   tag_sources, gsttag_h, gsttag_c,
-  c_args : gst_plugins_base_args + gst_tag_args,
+  c_args : gst_plugins_base_args + gst_tag_args + ['-DBUILDING_GST_TAG'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

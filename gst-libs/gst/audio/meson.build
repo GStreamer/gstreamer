@@ -64,6 +64,7 @@ install_headers(audio_headers, subdir : 'gstreamer-1.0/gst/audio/')
 
 audio_enums = gnome.mkenums_simple('audio-enumtypes',
   sources : audio_mkenum_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/audio/audio-prelude.h>',
   decorator : 'GST_AUDIO_API',
   install_header: true,
@@ -140,7 +141,7 @@ endif
 
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
-  c_args : gst_plugins_base_args + simd_cargs,
+  c_args : gst_plugins_base_args + simd_cargs + ['-DBUILDING_GST_AUDIO'],
   include_directories: [configinc, libsinc],
   link_with : simd_dependencies,
   version : libversion,

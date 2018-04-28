@@ -10,7 +10,7 @@ lib_LTLIBRARIES = libgstsdp-@GST_API_VERSION@.la
 
 libgstsdp_@GST_API_VERSION@_la_SOURCES = gstsdpmessage.c gstmikey.c
 
-libgstsdp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstsdp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) -DBUILDING_GST_SDP
 libgstsdp_@GST_API_VERSION@_la_LIBADD = $(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la $(GST_LIBS) $(GIO_LIBS)
 libgstsdp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

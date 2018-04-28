@@ -95,7 +95,7 @@ nodist_libgstvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
 noinst_HEADERS = gstvideoutilsprivate.h
 
 libgstvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
-					$(ORC_CFLAGS)
+					$(ORC_CFLAGS) -DBUILDING_GST_VIDEO
 libgstvideo_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 libgstvideo_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

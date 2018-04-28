@@ -104,7 +104,7 @@ noinst_HEADERS = \
 	audio-resampler-neon.h
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
-		$(ORC_CFLAGS)
+		$(ORC_CFLAGS) -DBUILDING_GST_AUDIO
 libgstaudio_@GST_API_VERSION@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ORC_LIBS)

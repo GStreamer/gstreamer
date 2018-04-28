@@ -25,7 +25,7 @@ libgstrtp_@GST_API_VERSION@_la_SOURCES = gstrtpbuffer.c \
 built_sources = gstrtp-enumtypes.c
 built_headers = gstrtp-enumtypes.h
 
-libgstrtp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) -DBUILDING_GST_RTP
 libgstrtp_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstrtp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

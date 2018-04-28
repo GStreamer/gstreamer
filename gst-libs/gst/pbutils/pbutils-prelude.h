@@ -24,8 +24,10 @@
 
 #include <gst/gst.h>
 
-#ifndef GST_PBUTILS_API
-#define GST_PBUTILS_API GST_EXPORT
+#ifdef BUILDING_GST_PBUTILS
+#define GST_PBUTILS_API GST_API_EXPORT         /* from config.h */
+#else
+#define GST_PBUTILS_API GST_API_IMPORT
 #endif
 
 #ifndef GST_DISABLE_DEPRECATED

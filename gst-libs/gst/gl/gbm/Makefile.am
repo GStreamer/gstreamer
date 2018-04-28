@@ -15,6 +15,7 @@ noinst_HEADERS = \
 libgstgl_gbm_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
+	-DBUILDING_GST_GL \
 	$(GL_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \

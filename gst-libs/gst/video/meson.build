@@ -89,6 +89,7 @@ video_mkenum_headers = [
 
 video_enums = gnome.mkenums_simple('video-enumtypes',
   sources : video_mkenum_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/video/video-prelude.h>',
   decorator : 'GST_VIDEO_API',
   install_header: true,
@@ -120,7 +121,7 @@ endif
 
 gstvideo = library('gstvideo-@0@'.format(api_version),
   video_sources, gstvideo_h, gstvideo_c, orc_c, orc_h,
-  c_args : gst_plugins_base_args,
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_VIDEO'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

@@ -18,7 +18,7 @@ libgstriff_@GST_API_VERSION@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS) $(GST_LIBS)
 
-libgstriff_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstriff_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) -DBUILDING_GST_RIFF
 libgstriff_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 # *** GIR DISABLED for this library ***

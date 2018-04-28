@@ -17,7 +17,7 @@ include $(top_srcdir)/common/gst-glib-gen.mak
 libgstapp_@GST_API_VERSION@_la_SOURCES = gstappsrc.c gstappsink.c
 nodist_libgstapp_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 libgstapp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) -DBUILDING_GST_APP
 libgstapp_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS)
 libgstapp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

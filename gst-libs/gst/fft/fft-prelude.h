@@ -24,8 +24,10 @@
 
 #include <gst/gst.h>
 
-#ifndef GST_FFT_API
-#define GST_FFT_API GST_EXPORT
+#ifdef BUILDING_GST_FFT
+#define GST_FFT_API GST_API_EXPORT         /* from config.h */
+#else
+#define GST_FFT_API GST_API_IMPORT
 #endif
 
 #endif /* __GST_FFT_PRELUDE_H__ */

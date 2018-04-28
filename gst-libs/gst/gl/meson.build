@@ -877,8 +877,8 @@ if build_gstgl
 
   gstgl = library('gstgl-' + api_version,
     gl_sources,
-    c_args : gst_plugins_base_args + gl_cpp_args,
-    objc_args : gst_plugins_base_args + gl_cpp_args + gl_objc_args,
+    c_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
+    objc_args : gst_plugins_base_args + gl_cpp_args + gl_objc_args + ['-DBUILDING_GST_GL'],
     include_directories : [configinc, libsinc, gl_includes],
     version : libversion,
     soversion : soversion,

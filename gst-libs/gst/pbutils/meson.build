@@ -40,6 +40,7 @@ pbutils_mkenum_headers = pbutils_headers
 
 pbutils_enums = gnome.mkenums_simple('pbutils-enumtypes',
   sources : pbutils_mkenum_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/pbutils/pbutils-prelude.h>',
   decorator : 'GST_PBUTILS_API',
   install_header: true,
@@ -50,7 +51,7 @@ gstpbutils_h = pbutils_enums[1]
 gstpbutils_deps = [video_dep, audio_dep, tag_dep]
 pbutils = library('gstpbutils-@0@'.format(api_version),
   pbutils_sources, gstpbutils_c, gstpbutils_h,
-  c_args : gst_plugins_base_args,
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_PBUTILS'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

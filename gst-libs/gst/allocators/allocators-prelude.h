@@ -24,8 +24,10 @@
 
 #include <gst/gst.h>
 
-#ifndef GST_ALLOCATORS_API
-#define GST_ALLOCATORS_API GST_EXPORT
+#ifdef BUILDING_GST_ALLOCATORS
+#define GST_ALLOCATORS_API GST_API_EXPORT         /* from config.h */
+#else
+#define GST_ALLOCATORS_API GST_API_IMPORT
 #endif
 
 #endif /* __GST_ALLOCATORS_PRELUDE_H__ */

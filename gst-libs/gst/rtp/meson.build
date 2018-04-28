@@ -24,6 +24,7 @@ install_headers(rtp_headers, subdir : 'gstreamer-1.0/gst/rtp/')
 
 rtp_enums = gnome.mkenums_simple('gstrtp-enumtypes',
   sources : rtp_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/rtp/rtp-prelude.h>',
   decorator : 'GST_RTP_API',
   install_header: true,
@@ -34,7 +35,7 @@ gstrtp_enum_h = rtp_enums[1]
 gstrtp_deps = [audio_dep, gst_base_dep]
 gst_rtp = library('gstrtp-@0@'.format(api_version),
   rtp_sources, gstrtp_enum_c, gstrtp_enum_h,
-  c_args : gst_plugins_base_args,
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RTP'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

@@ -24,6 +24,7 @@ install_headers(rtsp_headers, subdir : 'gstreamer-1.0/gst/rtsp/')
 
 rtsp_enums = gnome.mkenums_simple('gstrtsp-enumtypes',
   sources : rtsp_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/rtsp/rtsp-prelude.h>',
   decorator : 'GST_RTSP_API',
   install_header: true,
@@ -41,7 +42,7 @@ gstrtsp_deps = [gst_base_dep, gst_dep, gio_dep, libm, winsock2]
 gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   rtsp_sources,
   gstrtsp_h, gstrtsp_c,
-  c_args : gst_plugins_base_args,
+  c_args : gst_plugins_base_args + ['-DBUILDING_GST_RTSP'],
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,
