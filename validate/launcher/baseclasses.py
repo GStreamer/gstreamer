@@ -240,13 +240,13 @@ class Test(Loggable):
 
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
-                   message, error))
+                                                                    message, error))
 
         if result is Result.TIMEOUT:
             if self.options.debug is True:
                 if self.options.gdb:
                     printc("Timeout, you should process <ctrl>c to get into gdb",
-                        Colors.FAIL)
+                           Colors.FAIL)
                     # and wait here until gdb exits
                     self.process.communicate()
                 else:
@@ -379,15 +379,15 @@ class Test(Loggable):
         vg_args = []
 
         for o, v in [('trace-children', 'yes'),
-                ('tool', 'memcheck'),
-                ('leak-check', 'full'),
-                ('leak-resolution', 'high'),
-                # TODO: errors-for-leak-kinds should be set to all instead of definite
-                #       and all false positives should be added to suppression files.
-                ('errors-for-leak-kinds', 'definite'),
-                ('num-callers', '20'),
-                ('error-exitcode', str(VALGRIND_ERROR_CODE)),
-                ('gen-suppressions', 'all')]:
+                     ('tool', 'memcheck'),
+                     ('leak-check', 'full'),
+                     ('leak-resolution', 'high'),
+                     # TODO: errors-for-leak-kinds should be set to all instead of definite
+                     #       and all false positives should be added to suppression files.
+                     ('errors-for-leak-kinds', 'definite'),
+                     ('num-callers', '20'),
+                     ('error-exitcode', str(VALGRIND_ERROR_CODE)),
+                     ('gen-suppressions', 'all')]:
             vg_args.append("--%s=%s" % (o, v))
 
         if not self.options.redirect_logs:
@@ -412,14 +412,16 @@ class Test(Loggable):
         vg_config = get_data_file('data', 'valgrind.config')
 
         if self.proc_env.get('GST_VALIDATE_CONFIG'):
-            subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, vg_config)
+            subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (
+                self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, vg_config)
         else:
             subenv['GST_VALIDATE_CONFIG'] = vg_config
 
         if subenv == self.proc_env:
             self.add_env_variable('G_DEBUG', 'gc-friendly')
             self.add_env_variable('G_SLICE', 'always-malloc')
-            self.add_env_variable('GST_VALIDATE_CONFIG', self.proc_env['GST_VALIDATE_CONFIG'])
+            self.add_env_variable('GST_VALIDATE_CONFIG',
+                                  self.proc_env['GST_VALIDATE_CONFIG'])
 
         return command
 
@@ -507,7 +509,7 @@ class Test(Loggable):
         self.time_taken = time.time() - self._starting_time
 
         message = "%s: %s%s\n" % (self.classname, self.result,
-               " (" + self.message + ")" if self.message else "")
+                                  " (" + self.message + ")" if self.message else "")
         if not self.options.redirect_logs:
             message += self.get_logfile_repr()
 
@@ -531,8 +533,10 @@ class Test(Loggable):
 
         return self.result
 
+
 class GstValidateTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
+
 
 class GstValidateListener(socketserver.BaseRequestHandler):
     def handle(self):
@@ -560,13 +564,14 @@ class GstValidateListener(socketserver.BaseRequestHandler):
                         test = t
                         break
                 if test is None:
-                    self.server.launcher.error("Could not find test for UUID %s" % uuid)
+                    self.server.launcher.error(
+                        "Could not find test for UUID %s" % uuid)
                     return
 
             obj_type = obj.get("type", '')
             if obj_type == 'position':
                 test.set_position(obj['position'], obj['duration'],
-                                obj['speed'])
+                                  obj['speed'])
             elif obj_type == 'buffering':
                 test.set_position(obj['position'], 100)
             elif obj_type == 'action':
@@ -670,7 +675,8 @@ class GstValidateTest(Test):
     def get_override_file(self, media_descriptor):
         if media_descriptor:
             if media_descriptor.get_path():
-                override_path = os.path.splitext(media_descriptor.get_path())[0] + VALIDATE_OVERRIDE_EXTENSION
+                override_path = os.path.splitext(media_descriptor.get_path())[
+                    0] + VALIDATE_OVERRIDE_EXTENSION
                 if os.path.exists(override_path):
                     return override_path
 
@@ -830,7 +836,7 @@ class GstValidateTest(Test):
         for report in self.reports:
             if report.get('issue-id') == 'runtime::missing-plugin':
                 self.set_result(Result.SKIPPED, "%s\n%s" % (report['summary'],
-                                                         report['details']))
+                                                            report['details']))
                 return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
@@ -884,9 +890,9 @@ class GstValidateTest(Test):
                 msg += "(Expected errors not found: %s) " % mandatory_failures
                 result = Result.FAILED
         elif self.expected_failures:
-                msg += '%s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
-                                                           self.expected_failures,
-                                                           Colors.ENDC)
+            msg += '%s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
+                                                          self.expected_failures,
+                                                          Colors.ENDC)
 
         self.set_result(result, msg.strip())
 
@@ -1315,7 +1321,8 @@ class _TestsLauncher(Loggable):
             files = []
         for f in files:
             if f.endswith(".py"):
-                exec(compile(open(os.path.join(app_dir, f)).read(), os.path.join(app_dir, f), 'exec'), env)
+                exec(compile(open(os.path.join(app_dir, f)).read(),
+                             os.path.join(app_dir, f), 'exec'), env)
 
     def _exec_apps(self, env):
         app_dirs = self._list_app_dirs()
@@ -1360,14 +1367,15 @@ class _TestsLauncher(Loggable):
                 loaded_module = self._load_testsuite([testsuite])
             else:
                 possible_testsuites_paths = [os.path.join(d, testsuite + ".py")
-                              for d in self.options.testsuites_dirs]
+                                             for d in self.options.testsuites_dirs]
                 loaded_module = self._load_testsuite(possible_testsuites_paths)
 
             module = loaded_module[0]
             if not loaded_module[0]:
                 if "." in testsuite:
                     self.options.testsuites.append(testsuite.split('.')[0])
-                    self.info("%s looks like a test name, trying that" % testsuite)
+                    self.info("%s looks like a test name, trying that" %
+                              testsuite)
                     self.options.wanted_tests.append(testsuite)
                 else:
                     printc("Could not load testsuite: %s, reasons: %s" % (
@@ -1422,7 +1430,8 @@ class _TestsLauncher(Loggable):
         globals()["options"] = options
         c__file__ = __file__
         globals()["__file__"] = self.options.config
-        exec(compile(open(self.options.config).read(), self.options.config, 'exec'), globals())
+        exec(compile(open(self.options.config).read(),
+                     self.options.config, 'exec'), globals())
         globals()["__file__"] = c__file__
 
     def set_settings(self, options, args):
@@ -1508,7 +1517,7 @@ class _TestsLauncher(Loggable):
                         if not test.startswith('~'):
                             testlist_changed = True
                             printc("Test %s Not in testsuite %s anymore"
-                                % (test, testsuite.__file__), Colors.FAIL)
+                                   % (test, testsuite.__file__), Colors.FAIL)
                         else:
                             optional_out.append((test, None))
 
@@ -1553,7 +1562,8 @@ class _TestsLauncher(Loggable):
         sys.stdout.write("[%d / %d] " % (cur_test_num, self.total_num_tests))
 
     def server_wrapper(self, ready):
-        self.server = GstValidateTCPServer(('localhost', 0), GstValidateListener)
+        self.server = GstValidateTCPServer(
+            ('localhost', 0), GstValidateListener)
         self.server.socket.settimeout(None)
         self.server.launcher = self
         self.serverport = self.server.socket.getsockname()[1]
@@ -1657,7 +1667,7 @@ class _TestsLauncher(Loggable):
                 res = test.test_end()
                 self.reporter.after_test(test)
                 if res != Result.PASSED and (self.options.forever or
-                                            self.options.fatal_error):
+                                             self.options.fatal_error):
                     return test.result
                 if self.start_new_job(tests_left):
                     jobs_running += 1
@@ -1995,7 +2005,8 @@ class MediaDescriptor(Loggable):
             return False
 
         if self.is_live() and not scenario.compatible_with_live_content():
-            self.debug("Do not run %s as %s is a live content", scenario, self.get_uri())
+            self.debug("Do not run %s as %s is a live content",
+                       scenario, self.get_uri())
             return False
 
         if not self.prerrols() and getattr(scenario, 'needs_preroll', False):
@@ -2040,9 +2051,10 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                    Colors.FAIL)
             raise
 
-        self._extract_data (media_xml)
+        self._extract_data(media_xml)
 
-        self.set_protocol(urllib.parse.urlparse(urllib.parse.urlparse(self.get_uri()).scheme).scheme)
+        self.set_protocol(urllib.parse.urlparse(
+            urllib.parse.urlparse(self.get_uri()).scheme).scheme)
 
     def _extract_data(self, media_xml):
         # Extract the information we need from the xml
@@ -2054,7 +2066,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             pass
         else:
             for stream in streams:
-                self._track_caps.append((stream.attrib["type"], stream.attrib["caps"]))
+                self._track_caps.append(
+                    (stream.attrib["type"], stream.attrib["caps"]))
         self._uri = media_xml.attrib["uri"]
         self._duration = int(media_xml.attrib["duration"])
         self._protocol = media_xml.get("protocol", None)
@@ -2108,7 +2121,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             if verbose:
                 printc("Result: Failed", Colors.FAIL)
             else:
-                loggable.warning("GstValidateMediaDescriptor", "Exception: %s" % e)
+                loggable.warning("GstValidateMediaDescriptor",
+                                 "Exception: %s" % e)
             return None
 
         if verbose:
