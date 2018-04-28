@@ -689,7 +689,7 @@ gst_discoverer_stream_info_get_stream_id (GstDiscovererStreamInfo * info)
   return info->stream_id;
 }
 
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_discoverer_stream_info_get_misc:
  * @info: a #GstDiscovererStreamInfo
@@ -1041,7 +1041,7 @@ DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
 
 DISCOVERER_INFO_ACCESSOR_CODE (live, gboolean, FALSE);
 
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_discoverer_info_get_misc:
  * @info: a #GstDiscovererInfo
