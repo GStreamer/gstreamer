@@ -1271,6 +1271,13 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
     have_high |= profile == GST_VAAPI_PROFILE_H264_HIGH;
   }
 
+  if (have_high) {
+    allowed_sinkpad_caps =
+        add_h264_profile_in_caps (allowed_sinkpad_caps, "progressive-high");
+    allowed_sinkpad_caps =
+        add_h264_profile_in_caps (allowed_sinkpad_caps, "constrained-high");
+  }
+
   if (base_only && (!have_mvc || !have_svc) && have_high) {
     if (!have_mvc) {
       GST_DEBUG ("base_only: force adding MVC profiles in caps");
