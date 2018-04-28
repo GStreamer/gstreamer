@@ -50,6 +50,9 @@
  *
  * Provides methods for creating and parsing request, response and data messages.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 

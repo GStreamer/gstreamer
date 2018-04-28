@@ -38,6 +38,9 @@
  * gst_rtcp_packet_move_to_next().
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 

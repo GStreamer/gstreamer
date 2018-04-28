@@ -25,6 +25,9 @@
  *
  * Provides a base class for RTP depayloaders
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstrtpbasedepayload.h"
 

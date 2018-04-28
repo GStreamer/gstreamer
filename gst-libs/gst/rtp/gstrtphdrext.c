@@ -24,6 +24,9 @@
  * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, gstrtpbuffer
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstrtphdrext.h"
 

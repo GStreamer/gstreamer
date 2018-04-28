@@ -26,6 +26,9 @@
  * audio buffers. These functions in this module help to create and attach the
  * meta as well as extracting it.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 

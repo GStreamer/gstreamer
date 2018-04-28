@@ -47,6 +47,9 @@
  *
  * Provides helper functions to handle RTSP urls.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>

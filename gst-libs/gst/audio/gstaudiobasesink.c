@@ -30,6 +30,9 @@
  * ::create_ringbuffer vmethod. This base class will then take care of
  * writing samples to the ringbuffer, synchronisation, clipping and flushing.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 
