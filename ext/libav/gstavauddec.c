@@ -283,7 +283,7 @@ gst_ffmpegauddec_propose_allocation (GstAudioDecoder * decoder,
   gst_allocation_params_init (&params);
   params.flags = GST_MEMORY_FLAG_ZERO_PADDED;
   params.align = 15;
-  params.padding = FF_INPUT_BUFFER_PADDING_SIZE;
+  params.padding = AV_INPUT_BUFFER_PADDING_SIZE;
   /* we would like to have some padding so that we don't have to
    * memcpy. We don't suggest an allocator. */
   gst_query_add_allocation_param (query, NULL, &params);
@@ -744,10 +744,10 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   bsize = map.size;
 
   if (bsize > 0 && (!GST_MEMORY_IS_ZERO_PADDED (map.memory)
-          || (map.maxsize - map.size) < FF_INPUT_BUFFER_PADDING_SIZE)) {
+          || (map.maxsize - map.size) < AV_INPUT_BUFFER_PADDING_SIZE)) {
     /* add padding */
-    if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
-      ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
+    if (ffmpegdec->padded_size < bsize + AV_INPUT_BUFFER_PADDING_SIZE) {
+      ffmpegdec->padded_size = bsize + AV_INPUT_BUFFER_PADDING_SIZE;
       ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
@@ -755,7 +755,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
     memcpy (ffmpegdec->padded, bdata, bsize);
-    memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+    memset (ffmpegdec->padded + bsize, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
     bdata = ffmpegdec->padded;
     do_padding = TRUE;
@@ -764,7 +764,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   }
 
   do {
-    guint8 tmp_padding[FF_INPUT_BUFFER_PADDING_SIZE];
+    guint8 tmp_padding[AV_INPUT_BUFFER_PADDING_SIZE];
 
     data = bdata;
     size = bsize;
@@ -773,15 +773,15 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
       /* add temporary padding */
       GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
           "Add temporary input padding");
-      memcpy (tmp_padding, data + size, FF_INPUT_BUFFER_PADDING_SIZE);
-      memset (data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+      memcpy (tmp_padding, data + size, AV_INPUT_BUFFER_PADDING_SIZE);
+      memset (data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
     }
 
     /* decode a frame of audio now */
     len = gst_ffmpegauddec_frame (ffmpegdec, data, size, &have_data, &ret);
 
     if (do_padding) {
-      memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
+      memcpy (data + size, tmp_padding, AV_INPUT_BUFFER_PADDING_SIZE);
     }
 
     if (ret != GST_FLOW_OK) {

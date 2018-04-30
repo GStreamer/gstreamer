@@ -1822,10 +1822,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   bsize = minfo.size;
 
   if (bsize > 0 && (!GST_MEMORY_IS_ZERO_PADDED (minfo.memory)
-          || (minfo.maxsize - minfo.size) < FF_INPUT_BUFFER_PADDING_SIZE)) {
+          || (minfo.maxsize - minfo.size) < AV_INPUT_BUFFER_PADDING_SIZE)) {
     /* add padding */
-    if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
-      ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
+    if (ffmpegdec->padded_size < bsize + AV_INPUT_BUFFER_PADDING_SIZE) {
+      ffmpegdec->padded_size = bsize + AV_INPUT_BUFFER_PADDING_SIZE;
       ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
@@ -1833,7 +1833,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
     memcpy (ffmpegdec->padded, bdata, bsize);
-    memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+    memset (ffmpegdec->padded + bsize, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
     bdata = ffmpegdec->padded;
     do_padding = TRUE;
@@ -1842,7 +1842,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   }
 
   do {
-    guint8 tmp_padding[FF_INPUT_BUFFER_PADDING_SIZE];
+    guint8 tmp_padding[AV_INPUT_BUFFER_PADDING_SIZE];
 
     /* parse, if at all possible */
     data = bdata;
@@ -1852,8 +1852,8 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
       /* add temporary padding */
       GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
           "Add temporary input padding");
-      memcpy (tmp_padding, data + size, FF_INPUT_BUFFER_PADDING_SIZE);
-      memset (data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+      memcpy (tmp_padding, data + size, AV_INPUT_BUFFER_PADDING_SIZE);
+      memset (data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
     }
 
     /* decode a frame of audio/video now */
@@ -1869,7 +1869,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     }
 
     if (do_padding) {
-      memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
+      memcpy (data + size, tmp_padding, AV_INPUT_BUFFER_PADDING_SIZE);
     }
 
     if (len == 0 && have_data == 0) {
@@ -2150,7 +2150,7 @@ gst_ffmpegviddec_propose_allocation (GstVideoDecoder * decoder,
   gst_allocation_params_init (&params);
   params.flags = GST_MEMORY_FLAG_ZERO_PADDED;
   params.align = DEFAULT_STRIDE_ALIGN;
-  params.padding = FF_INPUT_BUFFER_PADDING_SIZE;
+  params.padding = AV_INPUT_BUFFER_PADDING_SIZE;
   /* we would like to have some padding so that we don't have to
    * memcpy. We don't suggest an allocator. */
   gst_query_add_allocation_param (query, NULL, &params);

@@ -3209,7 +3209,7 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
        * as is, as that is what most players do. */
       context->extradata =
           av_mallocz (GST_ROUND_UP_16 (size * 2 +
-              FF_INPUT_BUFFER_PADDING_SIZE));
+              AV_INPUT_BUFFER_PADDING_SIZE));
       copy_config (context->extradata, data, size, &extrasize);
       GST_DEBUG ("escaped size: %d", extrasize);
       context->extradata_size = extrasize;
@@ -3220,7 +3220,7 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
       GST_DEBUG ("copy codec_data");
       context->extradata =
           av_mallocz (GST_ROUND_UP_16 (map.size +
-              FF_INPUT_BUFFER_PADDING_SIZE));
+              AV_INPUT_BUFFER_PADDING_SIZE));
       memcpy (context->extradata, map.data, map.size);
       context->extradata_size = map.size;
     }
