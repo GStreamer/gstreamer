@@ -453,11 +453,10 @@ else
      dnl to detect out-of-tree builds
      if test -z "$srcdir" -o "$srcdir" = .; then
        confcmd=./configure
-       gasppdir=../gas-preprocessor
      else
        confcmd="$ac_abs_top_srcdir"/gst-libs/ext/libav/configure
-       gasppdir="$ac_abs_top_srcdir"/gst-libs/ext/gas-preprocessor
      fi
+     gasppdir="$ac_abs_top_srcdir"/gst-libs/ext/gas-preprocessor
 
      AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/libav])
      oldPATH="$PATH"
