@@ -231,7 +231,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
           DEFAULT_OUTPUT_CORRUPT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   caps = klass->in_plugin->capabilities;
-  if (caps & (CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS)) {
+  if (caps & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS)) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_THREADS,
         g_param_spec_int ("max-threads", "Maximum decode threads",
             "Maximum number of worker threads to spawn. (0 = auto)",
@@ -359,7 +359,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
       oclass->in_plugin->name, oclass->in_plugin->id);
 
   gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
-      CODEC_FLAG_OUTPUT_CORRUPT, ffmpegdec->output_corrupt);
+      AV_CODEC_FLAG_OUTPUT_CORRUPT, ffmpegdec->output_corrupt);
 
   return TRUE;
 
@@ -489,7 +489,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     gboolean is_live;
 
     if (ffmpegdec->max_threads == 0) {
-      if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
+      if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
         ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
       else
         ffmpegdec->context->thread_count = 0;
@@ -726,7 +726,8 @@ gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec * ffmpegdec)
     return FALSE;
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-  return ((oclass->in_plugin->capabilities & CODEC_CAP_DR1) == CODEC_CAP_DR1);
+  return ((oclass->in_plugin->capabilities & AV_CODEC_CAP_DR1) ==
+      AV_CODEC_CAP_DR1);
 }
 
 /* called when ffmpeg wants us to allocate a buffer to write the decoded frame
@@ -1776,7 +1777,7 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
+  if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
     gint have_data, len;
     GstFlowReturn ret;
 

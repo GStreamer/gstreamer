@@ -270,7 +270,7 @@ gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   ctx->width = width;
   ctx->height = height;
   ctx->pix_fmt = AV_PIX_FMT_NB;
-  gst_ffmpeg_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
+  gst_ffmpeg_caps_with_codectype (AV_CODEC_TYPE_VIDEO, caps, ctx);
   if (ctx->pix_fmt == AV_PIX_FMT_NB) {
     av_free (ctx);
     return FALSE;
@@ -317,7 +317,7 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   ctx->width = scale->in_width;
   ctx->height = scale->in_height;
   ctx->pix_fmt = AV_PIX_FMT_NB;
-  gst_ffmpeg_caps_with_codectype (CODEC_TYPE_VIDEO, incaps, ctx);
+  gst_ffmpeg_caps_with_codectype (AV_CODEC_TYPE_VIDEO, incaps, ctx);
   if (ctx->pix_fmt == AV_PIX_FMT_NB) {
     av_free (ctx);
     return FALSE;

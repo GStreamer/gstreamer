@@ -665,7 +665,7 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
+  if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
     gint have_data, len;
 
     GST_LOG_OBJECT (ffmpegdec,

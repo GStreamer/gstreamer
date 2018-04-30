@@ -825,10 +825,11 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       if (encode && context) {
 
         gst_caps_set_simple (caps,
-            "annex-f", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_4MV,
-            "annex-j", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_LOOP_FILTER,
-            "annex-i", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_AC_PRED,
-            "annex-t", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_AC_PRED,
+            "annex-f", G_TYPE_BOOLEAN, context->flags & AV_CODEC_FLAG_4MV,
+            "annex-j", G_TYPE_BOOLEAN,
+            context->flags & AV_CODEC_FLAG_LOOP_FILTER,
+            "annex-i", G_TYPE_BOOLEAN, context->flags & AV_CODEC_FLAG_AC_PRED,
+            "annex-t", G_TYPE_BOOLEAN, context->flags & AV_CODEC_FLAG_AC_PRED,
             NULL);
       }
       break;
@@ -3244,7 +3245,7 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
     {
       const gchar *mime = gst_structure_get_name (str);
 
-      context->flags |= CODEC_FLAG_4MV;
+      context->flags |= AV_CODEC_FLAG_4MV;
 
       if (!strcmp (mime, "video/x-divx"))
         context->codec_tag = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
@@ -3256,7 +3257,7 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
         profile = gst_structure_get_string (str, "profile");
         if (profile) {
           if (g_strcmp0 (profile, "advanced-simple") == 0)
-            context->flags |= CODEC_FLAG_GMC | CODEC_FLAG_QPEL;
+            context->flags |= CODEC_FLAG_GMC | AV_CODEC_FLAG_QPEL;
         }
       }
       break;
@@ -3362,18 +3363,18 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
       gboolean val;
 
       if (!gst_structure_get_boolean (str, "annex-f", &val) || val)
-        context->flags |= CODEC_FLAG_4MV;
+        context->flags |= AV_CODEC_FLAG_4MV;
       else
-        context->flags &= ~CODEC_FLAG_4MV;
+        context->flags &= ~AV_CODEC_FLAG_4MV;
       if ((!gst_structure_get_boolean (str, "annex-i", &val) || val) &&
           (!gst_structure_get_boolean (str, "annex-t", &val) || val))
-        context->flags |= CODEC_FLAG_AC_PRED;
+        context->flags |= AV_CODEC_FLAG_AC_PRED;
       else
-        context->flags &= ~CODEC_FLAG_AC_PRED;
+        context->flags &= ~AV_CODEC_FLAG_AC_PRED;
       if (!gst_structure_get_boolean (str, "annex-j", &val) || val)
-        context->flags |= CODEC_FLAG_LOOP_FILTER;
+        context->flags |= AV_CODEC_FLAG_LOOP_FILTER;
       else
-        context->flags &= ~CODEC_FLAG_LOOP_FILTER;
+        context->flags &= ~AV_CODEC_FLAG_LOOP_FILTER;
       break;
     }
     case AV_CODEC_ID_ADPCM_G726:

@@ -330,7 +330,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
             oclass->in_plugin) < 0)
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
 
-    if ((oclass->in_plugin->capabilities & CODEC_CAP_EXPERIMENTAL) &&
+    if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_EXPERIMENTAL) &&
         ffmpegaudenc->compliance != GST_FFMPEG_EXPERIMENTAL) {
       GST_ELEMENT_ERROR (ffmpegaudenc, LIBRARY, SETTINGS,
           ("Codec is experimental, but settings don't allow encoders to "
@@ -602,7 +602,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
         pkt->size, 0, pkt->size, pkt, gst_ffmpegaudenc_free_avpacket);
 
     codec = ffmpegaudenc->context->codec;
-    if ((codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE) || !buffer) {
+    if ((codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) || !buffer) {
       /* FIXME: Not really correct, as -1 means "all the samples we got
          given so far", which may not be true depending on the codec,
          but we have no way to know AFAICT */
@@ -626,7 +626,7 @@ gst_ffmpegaudenc_drain (GstFFMpegAudEnc * ffmpegaudenc)
 
   oclass = (GstFFMpegAudEncClass *) (G_OBJECT_GET_CLASS (ffmpegaudenc));
 
-  if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
+  if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
     gint have_data, try = 0;
 
     GST_LOG_OBJECT (ffmpegaudenc,

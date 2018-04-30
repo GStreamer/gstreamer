@@ -155,7 +155,7 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
 /*
  * _formatid_get_codecids () can be used to get the codecIDs
- * (CODEC_ID_NONE-terminated list) that fit that specific
+ * (AV_CODEC_ID_NONE-terminated list) that fit that specific
  * output format.
  */
 

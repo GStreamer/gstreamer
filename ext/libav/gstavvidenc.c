@@ -213,7 +213,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   caps = klass->in_plugin->capabilities;
-  if (caps & (CODEC_CAP_FRAME_THREADS | CODEC_CAP_SLICE_THREADS)) {
+  if (caps & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS)) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_THREADS,
         g_param_spec_int ("max-threads", "Maximum encode threads",
             "Maximum number of worker threads to spawn. (0 = auto)",
@@ -323,7 +323,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
       ffmpegenc->bitrate, ffmpegenc->gop_size);
 
   if (ffmpegenc->max_threads == 0) {
-    if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
+    if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
       ffmpegenc->context->thread_count = gst_ffmpeg_auto_max_threads ();
     else
       ffmpegenc->context->thread_count = 0;
@@ -345,7 +345,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
 
   if (ffmpegenc->interlaced) {
     ffmpegenc->context->flags |=
-        CODEC_FLAG_INTERLACED_DCT | CODEC_FLAG_INTERLACED_ME;
+        AV_CODEC_FLAG_INTERLACED_DCT | AV_CODEC_FLAG_INTERLACED_ME;
   }
 
   /* some other defaults */
@@ -359,18 +359,18 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   ffmpegenc->context->flags |= ffmpegenc->pass;
   switch (ffmpegenc->pass) {
       /* some additional action depends on type of pass */
-    case CODEC_FLAG_QSCALE:
+    case AV_CODEC_FLAG_QSCALE:
       ffmpegenc->context->global_quality
           = ffmpegenc->picture->quality = FF_QP2LAMBDA * ffmpegenc->quantizer;
       break;
-    case CODEC_FLAG_PASS1:     /* need to prepare a stats file */
+    case AV_CODEC_FLAG_PASS1:  /* need to prepare a stats file */
       /* we don't close when changing caps, fingers crossed */
       if (!ffmpegenc->file)
         ffmpegenc->file = g_fopen (ffmpegenc->filename, "w");
       if (!ffmpegenc->file)
         goto open_file_err;
       break;
-    case CODEC_FLAG_PASS2:
+    case AV_CODEC_FLAG_PASS2:
     {                           /* need to read the whole stats file ! */
       gsize size;
 

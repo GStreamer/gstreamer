@@ -42,9 +42,9 @@ gst_ffmpeg_pass_get_type (void)
   if (!ffmpeg_pass_type) {
     static const GEnumValue ffmpeg_passes[] = {
       {0, "Constant Bitrate Encoding", "cbr"},
-      {CODEC_FLAG_QSCALE, "Constant Quantizer", "quant"},
-      {CODEC_FLAG_PASS1, "VBR Encoding - Pass 1", "pass1"},
-      {CODEC_FLAG_PASS2, "VBR Encoding - Pass 2", "pass2"},
+      {AV_CODEC_FLAG_QSCALE, "Constant Quantizer", "quant"},
+      {AV_CODEC_FLAG_PASS1, "VBR Encoding - Pass 1", "pass1"},
+      {AV_CODEC_FLAG_PASS2, "VBR Encoding - Pass 2", "pass2"},
       {0, NULL, NULL},
     };
 
@@ -66,7 +66,7 @@ gst_ffmpeg_lim_pass_get_type (void)
   if (!ffmpeg_lim_pass_type) {
     static const GEnumValue ffmpeg_lim_passes[] = {
       {0, "Constant Bitrate Encoding", "cbr"},
-      {CODEC_FLAG_QSCALE, "Constant Quantizer", "quant"},
+      {AV_CODEC_FLAG_QSCALE, "Constant Quantizer", "quant"},
       {0, NULL, NULL},
     };
 
@@ -260,21 +260,22 @@ gst_ffmpeg_flags_get_type (void)
   /* FIXME: This needs some serious resyncing with avcodec.h */
   if (!ffmpeg_flags_type) {
     static const GFlagsValue ffmpeg_flags[] = {
-      {CODEC_FLAG_QSCALE, "Use fixed qscale", "qscale"},
-      {CODEC_FLAG_4MV, "Allow 4 MV per MB", "4mv"},
-      {CODEC_FLAG_QPEL, "Quartel Pel Motion Compensation", "qpel"},
+      {AV_CODEC_FLAG_QSCALE, "Use fixed qscale", "qscale"},
+      {AV_CODEC_FLAG_4MV, "Allow 4 MV per MB", "4mv"},
+      {AV_CODEC_FLAG_QPEL, "Quartel Pel Motion Compensation", "qpel"},
       {CODEC_FLAG_GMC, "GMC", "gmc"},
       {CODEC_FLAG_MV0, "Always try a MB with MV (0,0)", "mv0"},
-      {CODEC_FLAG_LOOP_FILTER, "Loop filter", "loop-filter"},
-      {CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
+      {AV_CODEC_FLAG_LOOP_FILTER, "Loop filter", "loop-filter"},
+      {AV_CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
       {CODEC_FLAG_NORMALIZE_AQP,
           "Normalize Adaptive Quantization (masking, etc)", "aqp"},
-      {CODEC_FLAG_GLOBAL_HEADER,
+      {AV_CODEC_FLAG_GLOBAL_HEADER,
             "Global headers in extradata instead of every keyframe",
           "global-headers"},
-      {CODEC_FLAG_AC_PRED, "H263 Advanced Intra Coding / MPEG4 AC prediction",
+      {AV_CODEC_FLAG_AC_PRED,
+            "H263 Advanced Intra Coding / MPEG4 AC prediction",
           "aic"},
-      {CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
+      {AV_CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
       {0, NULL, NULL},
     };
 
