@@ -4432,11 +4432,6 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
 {
   RTPSource *src;
 
-  if (!rtp_session_send_rtcp (sess, 5 * GST_SECOND)) {
-    GST_DEBUG ("FIR/PLI not sent");
-    return FALSE;
-  }
-
   RTP_SESSION_LOCK (sess);
   src = find_source (sess, ssrc);
   if (src == NULL)
@@ -4453,6 +4448,10 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
     src->send_pli = TRUE;
   }
   RTP_SESSION_UNLOCK (sess);
+
+  if (!rtp_session_send_rtcp (sess, 5 * GST_SECOND)) {
+    GST_DEBUG ("FIR/PLI not sent early, sending with next regular RTCP");
+  }
 
   return TRUE;
 
@@ -4481,11 +4480,6 @@ rtp_session_request_nack (RTPSession * sess, guint32 ssrc, guint16 seqnum,
 {
   RTPSource *source;
 
-  if (!rtp_session_send_rtcp (sess, max_delay)) {
-    GST_DEBUG ("NACK not sent");
-    return FALSE;
-  }
-
   RTP_SESSION_LOCK (sess);
   source = find_source (sess, ssrc);
   if (source == NULL)
@@ -4494,6 +4488,10 @@ rtp_session_request_nack (RTPSession * sess, guint32 ssrc, guint16 seqnum,
   GST_DEBUG ("request NACK for %08x, #%u", ssrc, seqnum);
   rtp_source_register_nack (source, seqnum);
   RTP_SESSION_UNLOCK (sess);
+
+  if (!rtp_session_send_rtcp (sess, max_delay)) {
+    GST_DEBUG ("NACK not sent early, sending with next regular RTCP");
+  }
 
   return TRUE;
 
