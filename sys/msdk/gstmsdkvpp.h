@@ -100,6 +100,7 @@ struct _GstMsdkVPP
   gboolean use_srcpad_dmabuf;
   gboolean shared_context;
   gboolean add_video_meta;
+  gboolean need_vpp;
   guint flags;
 
   /* element properties */

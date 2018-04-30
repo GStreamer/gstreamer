@@ -800,6 +800,14 @@ gst_msdkvpp_set_passthrough (GstMsdkVPP * thiz)
   if (thiz->flags)
     passthrough = FALSE;
 
+  /* vpp could be needed in some specific circumstances, for eg:
+   * input surface is dmabuf and output must be videomemory. So far
+   * the underline iHD driver doesn't seems to support dmabuf mapping,
+   * so we could explicitly ask msdkvpp to provide non-dambuf videomemory
+   * surfaces as output thourgh capsfileters */
+  if (thiz->need_vpp)
+    passthrough = FALSE;
+
   /* no passthrough if there is change in out width,height or format */
   if (GST_VIDEO_INFO_WIDTH (&thiz->sinkpad_info) !=
       GST_VIDEO_INFO_WIDTH (&thiz->srcpad_info)
@@ -946,6 +954,9 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   gboolean sinkpad_info_changed = FALSE;
   gboolean srcpad_info_changed = FALSE;
   gboolean deinterlace;
+
+  if (gst_caps_get_features (caps, 0) != gst_caps_get_features (out_caps, 0))
+    thiz->need_vpp = 1;
 
   gst_video_info_from_caps (&in_info, caps);
   gst_video_info_from_caps (&out_info, out_caps);
