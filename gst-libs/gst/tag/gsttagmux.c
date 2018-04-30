@@ -537,6 +537,10 @@ gst_tag_mux_change_state (GstElement * element, GstStateChange transition)
         gst_tag_list_unref (mux->priv->event_tags);
         mux->priv->event_tags = NULL;
       }
+      if (mux->priv->final_tags) {
+        gst_tag_list_unref (mux->priv->final_tags);
+        mux->priv->final_tags = NULL;
+      }
       mux->priv->start_tag_size = 0;
       mux->priv->end_tag_size = 0;
       mux->priv->render_start_tag = TRUE;
