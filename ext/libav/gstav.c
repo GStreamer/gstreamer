@@ -30,7 +30,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavfilter/avfiltergraph.h>
+#include <libavfilter/avfilter.h>
 
 #include "gstav.h"
 #include "gstavutils.h"
