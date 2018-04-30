@@ -21,6 +21,10 @@ Use `GstAudioInfo` and related helper API to create and parse raw audio caps.
 
 ## Metadata
 
+ - `GstAudioMeta`: Metadata that describes the layout of the data inside
+   the buffer. It is a requirement for buffers with non-interleaved layout
+   to have this metadata attached.
+
  - `GstAudioDownmixMeta`: A matrix for downmixing multichannel audio to a
    lower numer of channels.
 
