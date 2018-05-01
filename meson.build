@@ -1,6 +1,6 @@
 project('gst-python', 'c', 'cpp',
   version : '1.15.0.1',
-  meson_version : '>= 0.36.0',
+  meson_version : '>= 0.40.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
@@ -74,9 +74,7 @@ cdata.set('PY_LIB_LOC', '"@0@"'.format(pylib_loc))
 cdata.set('PY_ABI_FLAGS', '"@0@"'.format(python_abi_flags))
 cdata.set('PY_LIB_SUFFIX', '"@0@"'.format(pylib_suffix))
 cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
-configure_file(input : 'config.h.meson',
-  output : 'config.h',
-  configuration : cdata)
+configure_file(output : 'config.h', configuration : cdata)
 configinc = include_directories('.')
 
 subdir('gi')
