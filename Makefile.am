@@ -34,7 +34,6 @@ EXTRA_DIST = \
 	RELEASE gst-python.doap \
 	meson.build \
 	meson_options.txt \
-	config.h.meson \
 	pygst.py.in \
 	scripts/pythondetector \
 	examples/plugins/python/sinkelement.py \
