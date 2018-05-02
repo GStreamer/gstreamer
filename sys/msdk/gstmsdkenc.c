@@ -79,8 +79,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "format = (string) { NV12, I420, YV12, YUY2, UYVY, BGRA }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
-        "interlace-mode = (string) progressive")
-    );
+        "interlace-mode = (string) progressive" ";"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            "{ NV12 }")));
 
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         4
@@ -415,8 +416,11 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   if (thiz->has_vpp)
     request[0].NumFrameSuggested += thiz->num_vpp_surfaces + 1 - 4;
 
-  if (thiz->use_video_memory)
+  if (thiz->use_video_memory) {
+    if (thiz->use_dmabuf && !thiz->has_vpp)
+      request[0].Type |= MFX_MEMTYPE_EXPORT_FRAME;
     gst_msdk_frame_alloc (thiz->context, &(request[0]), &thiz->alloc_resp);
+  }
 
   /* Maximum of VPP output and encoder input, if using VPP */
   if (thiz->has_vpp)
@@ -878,7 +882,10 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
   gst_msdk_set_video_alignment (&info, &align);
   gst_video_info_align (&info, &align);
 
-  if (thiz->use_video_memory)
+  if (thiz->use_dmabuf)
+    allocator =
+        gst_msdk_dmabuf_allocator_new (thiz->context, &info, alloc_resp);
+  else if (thiz->use_video_memory)
     allocator = gst_msdk_video_allocator_new (thiz->context, &info, alloc_resp);
   else
     allocator = gst_msdk_system_allocator_new (&info);
@@ -892,9 +899,13 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  if (thiz->use_video_memory)
+  if (thiz->use_video_memory) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY);
+    if (thiz->use_dmabuf)
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF);
+  }
 
   gst_buffer_pool_config_set_video_alignment (config, &align);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
@@ -925,6 +936,52 @@ error_pool_config:
   }
 }
 
+/* Fixme: Common routine used by all msdk elements, should be
+ * moved to a common util file */
+static gboolean
+_gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
+{
+  guint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
+    /* Skip ANY features, we need an exact match for correct evaluation */
+    if (gst_caps_features_is_any (features))
+      continue;
+    if (gst_caps_features_contains (features, feature))
+      return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+sinkpad_can_dmabuf (GstMsdkEnc * thiz)
+{
+  gboolean ret = FALSE;
+  GstCaps *caps, *allowed_caps;
+  GstPad *sinkpad;
+
+  sinkpad = GST_VIDEO_ENCODER_SINK_PAD (thiz);
+  caps = gst_pad_get_pad_template_caps (sinkpad);
+
+  allowed_caps = gst_pad_peer_query_caps (sinkpad, caps);
+  if (!allowed_caps)
+    goto done;
+  if (gst_caps_is_any (allowed_caps) || gst_caps_is_empty (allowed_caps)
+      || allowed_caps == caps)
+    goto done;
+
+  if (_gst_caps_has_feature (allowed_caps, GST_CAPS_FEATURE_MEMORY_DMABUF))
+    ret = TRUE;
+
+done:
+  if (caps)
+    gst_caps_unref (caps);
+  if (allowed_caps)
+    gst_caps_unref (allowed_caps);
+  return ret;
+}
+
 static gboolean
 gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 {
@@ -952,6 +1009,17 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   if (klass->set_format) {
     if (!klass->set_format (thiz))
       return FALSE;
+  }
+
+  /* If upstream supports DMABufCapsfeatures, then we request for the dmabuf
+   * based pipeline usage. Ideally we should have dmabuf support even with
+   * raw-caps negotiation, but we don't have dmabuf-import support in msdk
+   * plugin yet */
+  if (sinkpad_can_dmabuf (thiz)) {
+    thiz->input_state->caps = gst_caps_make_writable (thiz->input_state->caps);
+    gst_caps_set_features (thiz->input_state->caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+    thiz->use_dmabuf = TRUE;
   }
 
   if (!gst_msdkenc_init_encoder (thiz))
@@ -1039,6 +1107,15 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     return msdk_surface;
   }
 
+  /* If the pipeline negotiated dmabuf (use_dmabuf == TRUE) and the
+   * upstream rejected the pool proposed by msdkencoder, then
+   * we won't be able create a mappalbe buffer from the internal pool.
+   *
+   * Fixme: One possible fix could be to maintain an internal pool backed by the
+   * videomemory always and providee a dmabuf-backed pool in propose_allocation */
+  if (thiz->use_dmabuf)
+    goto error_copying;
+
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
    * just copy frame to msdk buffer and take a surface from it.
    */
@@ -1080,8 +1157,13 @@ error:
     if (msdk_surface->buf)
       gst_buffer_unref (msdk_surface->buf);
     g_slice_free (MsdkSurface, msdk_surface);
+    return NULL;
   }
 
+error_copying:
+  GST_ERROR_OBJECT (thiz,
+      "Upstream rejected the proposed dmabuf pool, "
+      "and we can't copy the incoming buffers to msdk pool!");
   return NULL;
 }
 
@@ -1277,6 +1359,7 @@ gst_msdkenc_finish (GstVideoEncoder * encoder)
   return GST_FLOW_OK;
 }
 
+
 static gboolean
 gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 {
@@ -1300,6 +1383,13 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_INFO_OBJECT (encoder, "failed to get video info");
     return FALSE;
+  }
+
+  /* if upstream allocation query supports dmabuf-capsfeatures,
+   *  we do allocate dmabuf backed memory */
+  if (_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    GST_INFO_OBJECT (thiz, "MSDK VPP srcpad uses DMABuf memory");
+    thiz->use_dmabuf = TRUE;
   }
 
   num_buffers = gst_msdkenc_maximum_delayed_frames (thiz) + 1;
