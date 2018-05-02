@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */ = {isa = PBXBuildFile; fileRef = 19A176455D27298FE4041DC3 /* OnlineMedia.plist */; };
+		637F54472097C4DA00C00B38 /* libstdc++.6.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 637F54462097C4D900C00B38 /* libstdc++.6.tbd */; };
 		AD2B881F198D631B0070367B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B881E198D631B0070367B /* Foundation.framework */; };
 		AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8820198D631B0070367B /* CoreGraphics.framework */; };
 		AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8822198D631B0070367B /* UIKit.framework */; };
@@ -28,6 +29,8 @@
 
 /* Begin PBXFileReference section */
 		19A176455D27298FE4041DC3 /* OnlineMedia.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = OnlineMedia.plist; sourceTree = "<group>"; };
+		637F54422097C36400C00B38 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
+		637F54462097C4D900C00B38 /* libstdc++.6.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.6.tbd"; path = "usr/lib/libstdc++.6.tbd"; sourceTree = SDKROOT; };
 		AD2B881B198D631B0070367B /* GstPlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GstPlay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD2B881E198D631B0070367B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		AD2B8820198D631B0070367B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -60,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				637F54472097C4DA00C00B38 /* libstdc++.6.tbd in Frameworks */,
 				F4D8C7D71ED455260019B8A3 /* libiconv.tbd in Frameworks */,
 				AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */,
 				AD2B8825198D631B0070367B /* GStreamer.framework in Frameworks */,
@@ -91,6 +95,8 @@
 		AD2B881D198D631B0070367B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				637F54462097C4D900C00B38 /* libstdc++.6.tbd */,
+				637F54422097C36400C00B38 /* libstdc++.tbd */,
 				F4D8C7D61ED455260019B8A3 /* libiconv.tbd */,
 				AD2B881E198D631B0070367B /* Foundation.framework */,
 				AD2B8820198D631B0070367B /* CoreGraphics.framework */,
@@ -230,23 +236,31 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_CXX_LIBRARY = "libstdc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				ENABLE_BITCODE = NO;
+				ENABLE_BITCODE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -276,23 +290,31 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_CXX_LIBRARY = "libstdc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				ENABLE_BITCODE = NO;
+				ENABLE_BITCODE = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -316,6 +338,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				CLANG_CXX_LIBRARY = "libstdc++";
+				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"~/Library/Developer/GStreamer/iPhone.sdk",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -368,6 +392,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				CLANG_CXX_LIBRARY = "libstdc++";
+				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"~/Library/Developer/GStreamer/iPhone.sdk",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
