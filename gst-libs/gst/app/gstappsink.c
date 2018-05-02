@@ -719,6 +719,20 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
        * consumed, which is a bit confusing for the application
        */
       while (priv->num_buffers > 0 && !priv->flushing && priv->wait_on_eos) {
+        if (priv->unlock) {
+          /* we are asked to unlock, call the wait_preroll method */
+          g_mutex_unlock (&priv->mutex);
+          if (gst_base_sink_wait_preroll (sink) != GST_FLOW_OK) {
+            /* Directly go out of here */
+            gst_event_unref (event);
+            return FALSE;
+          }
+
+          /* we are allowed to continue now */
+          g_mutex_lock (&priv->mutex);
+          continue;
+        }
+
         priv->wait_status |= STREAM_WAITING;
         g_cond_wait (&priv->cond, &priv->mutex);
         priv->wait_status &= ~STREAM_WAITING;
