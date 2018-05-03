@@ -39,6 +39,7 @@ import xml
 import random
 import uuid
 
+from .utils import which
 from . import reporters
 from . import loggable
 from .loggable import Loggable
@@ -1023,7 +1024,7 @@ class GstValidateEncodingTestInterface(object):
         """ % (reference_file_uri, self.dest_file)
         pipeline_desc = pipeline_desc.replace("\n", "")
 
-        command = [ScenarioManager.GST_VALIDATE_COMMAND] + \
+        command = [GstValidateBaseTestManager.COMMAND] + \
             shlex.split(pipeline_desc)
         if not self.options.redirect_logs:
             self.out.write(
@@ -1854,7 +1855,6 @@ class ScenarioManager(Loggable):
     all_scenarios = []
 
     FILE_EXTENSION = "scenario"
-    GST_VALIDATE_COMMAND = ""
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -1890,7 +1890,7 @@ class ScenarioManager(Loggable):
                                  "scenarios_discovery.log"), 'w')
 
         try:
-            command = [self.GST_VALIDATE_COMMAND,
+            command = [GstValidateBaseTestManager.COMMAND,
                        "--scenarios-defs-output-file", scenario_defs]
             command.extend(scenario_paths)
             subprocess.check_call(command, stdout=logs, stderr=logs)
@@ -1954,6 +1954,14 @@ class GstValidateBaseTestManager(TestsManager):
         self._scenarios = []
         self._encoding_formats = []
 
+    @classmethod
+    def update_commands(cls, extra_paths=None):
+        for varname, cmd in {'': 'gst-validate',
+                             'TRANSCODING_': 'gst-validate-transcoding',
+                             'MEDIA_CHECK_': 'gst-validate-media-check',
+                             'RTSP_SERVER_': 'gst-validate-rtsp-server'}.items():
+            setattr(cls, varname + 'COMMAND', which(cmd + '-1.0', extra_paths))
+
     def add_scenarios(self, scenarios):
         """
         @scenarios A list or a unic scenario name(s) to be run on the tests.
@@ -1995,6 +2003,9 @@ class GstValidateBaseTestManager(TestsManager):
 
     def get_encoding_formats(self):
         return self._encoding_formats
+
+
+GstValidateBaseTestManager.update_commands()
 
 
 class MediaDescriptor(Loggable):
@@ -2092,10 +2103,6 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     MEDIA_INFO_EXT = "media_info"
     STREAM_INFO_EXT = "stream_info"
 
-    DISCOVERER_COMMAND = "gst-validate-media-check-1.0"
-    if "win32" in sys.platform:
-        DISCOVERER_COMMAND += ".exe"
-
     def __init__(self, xml_path):
         super(GstValidateMediaDescriptor, self).__init__()
 
@@ -2159,7 +2166,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         else:
             include_frames = bool(include_frames)
 
-        args = GstValidateMediaDescriptor.DISCOVERER_COMMAND.split(" ")
+        args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
         args.append(uri)
 
         args.extend(["--output-file", descriptor_path])

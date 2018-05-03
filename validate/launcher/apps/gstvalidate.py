@@ -48,15 +48,7 @@ parser.add_argument("--validate-tools-path", dest="validate_tools_path",
                     help="defines the paths to look for GstValidate tools.")
 options, args = parser.parse_known_args()
 
-GST_VALIDATE_COMMAND = which("gst-validate-1.0", options.validate_tools_path)
-GST_VALIDATE_TRANSCODING_COMMAND = which("gst-validate-transcoding-1.0",
-                                         options.validate_tools_path)
-G_V_DISCOVERER_COMMAND = which("gst-validate-media-check-1.0",
-                               options.validate_tools_path)
-GST_VALIDATE_RTSP_SERVER_COMMAND = which("gst-validate-rtsp-server-1.0",
-                                         options.validate_tools_path)
-
-ScenarioManager.GST_VALIDATE_COMMAND = GST_VALIDATE_COMMAND
+GstValidateBaseTestManager.update_commands(options.validate_tools_path)
 AUDIO_ONLY_FILE_TRANSCODING_RATIO = 5
 
 #
@@ -283,10 +275,10 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                           os.path.basename(minfo.media_descriptor.get_clean_name()))
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
-        test_rtsp = GST_VALIDATE_RTSP_SERVER_COMMAND
+        test_rtsp = GstValidateBaseTestManager.RTSP_SERVER_COMMAND
         if not test_rtsp:
             printc("\n\nRTSP server not available, you should make sure"
-                   " that %s is available in your $PATH." % GST_VALIDATE_RTSP_SERVER_COMMAND,
+                   " that %s is available in your $PATH." % GstValidateBaseTestManager.RTSP_SERVER_COMMAND,
                    Colors.FAIL)
         elif self.test_manager.options.disable_rtsp:
             printc("\n\nRTSP tests are disabled")
@@ -446,7 +438,8 @@ class GstValidateLaunchTest(GstValidateTest):
             duration = media_descriptor.get_duration() / GST_SECOND
 
         super(
-            GstValidateLaunchTest, self).__init__(GST_VALIDATE_COMMAND, classname,
+            GstValidateLaunchTest, self).__init__(GstValidateBaseTestManager.COMMAND,
+                                                  classname,
                                                   options, reporter,
                                                   duration=duration,
                                                   scenario=scenario,
@@ -476,7 +469,7 @@ class GstValidateMediaCheckTest(GstValidateTest):
         extra_env_variables = extra_env_variables or {}
 
         super(
-            GstValidateMediaCheckTest, self).__init__(G_V_DISCOVERER_COMMAND, classname,
+            GstValidateMediaCheckTest, self).__init__(GstValidateBaseTestManager.MEDIA_CHECK_COMMAND, classname,
                                                       options, reporter,
                                                       timeout=timeout,
                                                       media_descriptor=media_descriptor,
@@ -513,7 +506,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
             duration = file_dur
 
         super(
-            GstValidateTranscodingTest, self).__init__(GST_VALIDATE_TRANSCODING_COMMAND,
+            GstValidateTranscodingTest, self).__init__(GstValidateBaseTestManager.TRANSCODING_COMMAND,
                                                        classname,
                                                        options,
                                                        reporter,
@@ -617,7 +610,7 @@ class GstValidateBaseRTSPTest:
             self.rtspserver_logs = sys.stderr
 
         self.server_port = self.__get_open_port()
-        command = [GST_VALIDATE_RTSP_SERVER_COMMAND, self._local_uri, '--port', str(self.server_port)]
+        command = [GstValidateBaseTestManager.RTSP_SERVER_COMMAND, self._local_uri, '--port', str(self.server_port)]
 
         if self.options.validate_gdb_server:
             command = self.use_gdb(command)
@@ -724,9 +717,9 @@ class GstValidateTestManager(GstValidateBaseTestManager):
 
     def init(self):
         for command, name in [
-                (GST_VALIDATE_TRANSCODING_COMMAND, "gst-validate-1.0"),
-                (GST_VALIDATE_COMMAND, "gst-validate-transcoding-1.0"),
-                (G_V_DISCOVERER_COMMAND, "gst-validate-media-check-1.0")]:
+                (GstValidateBaseTestManager.TRANSCODING_COMMAND, "gst-validate-1.0"),
+                (GstValidateBaseTestManager.COMMAND, "gst-validate-transcoding-1.0"),
+                (GstValidateBaseTestManager.MEDIA_CHECK_COMMAND, "gst-validate-media-check-1.0")]:
             if not command:
                 self.error("%s not found" % command)
                 return False
@@ -840,7 +833,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         try:
             media_info = "%s.%s" % (
                 fpath, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
-            args = G_V_DISCOVERER_COMMAND.split(" ")
+            args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
             args.append(uri)
             if os.path.isfile(media_info) and not self.options.update_media_info:
                 self._add_media(media_info, uri)
