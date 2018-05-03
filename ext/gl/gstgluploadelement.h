@@ -50,8 +50,6 @@ struct _GstGLUploadElement
   GstGLBaseFilter     parent;
 
   GstGLUpload *upload;
-  GstCaps *in_caps;
-  GstCaps *out_caps;
 };
 
 /**

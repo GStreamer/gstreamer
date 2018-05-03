@@ -45,8 +45,6 @@ struct _GstGLColorConvertElement
   GstGLBaseFilter        parent;
 
   GstGLColorConvert *convert;
-  GstCaps *in_caps;
-  GstCaps *out_caps;
 };
 
 struct _GstGLColorConvertElementClass

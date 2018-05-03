@@ -63,7 +63,8 @@ enum
 #define gst_gl_base_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLBaseFilter, gst_gl_base_filter,
     GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_gl_base_filter_debug,
-        "glbasefilter", 0, "glbasefilter element"););
+        "glbasefilter", 0, "glbasefilter element");
+    );
 
 static void gst_gl_base_filter_finalize (GObject * object);
 static void gst_gl_base_filter_set_property (GObject * object, guint prop_id,
@@ -180,11 +181,13 @@ gst_gl_base_filter_set_context (GstElement * element, GstContext * context)
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
 
+  GST_OBJECT_LOCK (filter);
   gst_gl_handle_set_context (element, context, &filter->display,
       &filter->priv->other_context);
   if (filter->display)
     gst_gl_display_filter_gl_api (filter->display,
         filter_class->supported_gl_api);
+  GST_OBJECT_UNLOCK (filter);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -220,8 +223,12 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     }
     case GST_QUERY_CONTEXT:
     {
-      if (gst_gl_handle_context_query ((GstElement *) filter, query,
-              filter->display, filter->context, filter->priv->other_context))
+      gboolean ret;
+      GST_OBJECT_LOCK (filter);
+      ret = gst_gl_handle_context_query ((GstElement *) filter, query,
+          filter->display, filter->context, filter->priv->other_context);
+      GST_OBJECT_UNLOCK (filter);
+      if (ret)
         return TRUE;
       break;
     }
@@ -319,6 +326,100 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
 {
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (trans);
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
+
+  if (!gst_gl_base_filter_find_gl_context (filter))
+    return FALSE;
+
+  if (filter_class->gl_set_caps) {
+    gst_gl_context_thread_add (filter->context,
+        (GstGLContextThreadFunc) _gl_set_caps, filter);
+    if (!filter->priv->gl_result)
+      goto error;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
+      query);
+
+error:
+  {
+    GST_ELEMENT_ERROR (trans, LIBRARY, INIT,
+        ("Subclass failed to initialize."), (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_gl_base_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (bt);
+
+  gst_caps_replace (&filter->in_caps, incaps);
+  gst_caps_replace (&filter->out_caps, outcaps);
+
+  return TRUE;
+}
+
+static GstStateChangeReturn
+gst_gl_base_filter_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (filter, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_gl_ensure_element_data (element, &filter->display,
+              &filter->priv->other_context)) {
+        GST_OBJECT_UNLOCK (filter);
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
+      gst_gl_display_filter_gl_api (filter->display,
+          filter_class->supported_gl_api);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (filter->priv->other_context) {
+        gst_object_unref (filter->priv->other_context);
+        filter->priv->other_context = NULL;
+      }
+
+      if (filter->display) {
+        gst_object_unref (filter->display);
+        filter->display = NULL;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+/**
+ * gst_gl_base_filter_find_gl_context:
+ * @filter: a #GstGLBaseFilter
+ *
+ * Returns: Whether an OpenGL context could be retrieved or created successfully
+ */
+gboolean
+gst_gl_base_filter_find_gl_context (GstGLBaseFilter * filter)
+{
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
   GError *error = NULL;
   gboolean new_context = FALSE;
 
@@ -364,16 +465,7 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
       goto error;
   }
 
-  if (filter_class->gl_set_caps) {
-    gst_gl_context_thread_add (filter->context,
-        (GstGLContextThreadFunc) _gl_set_caps, filter);
-    if (!filter->priv->gl_result)
-      goto error;
-  }
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
-      query);
-
+  return TRUE;
 
 unsupported_gl_api:
   {
@@ -381,6 +473,7 @@ unsupported_gl_api:
     gchar *gl_api_str = gst_gl_api_to_string (gl_api);
     gchar *supported_gl_api_str =
         gst_gl_api_to_string (filter_class->supported_gl_api);
+
     GST_ELEMENT_ERROR (filter, RESOURCE, BUSY,
         ("GL API's not compatible context: %s supported: %s", gl_api_str,
             supported_gl_api_str), (NULL));
@@ -391,75 +484,15 @@ unsupported_gl_api:
   }
 context_error:
   {
-    GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("%s", error->message),
         (NULL));
     g_clear_error (&error);
     return FALSE;
   }
 error:
   {
-    GST_ELEMENT_ERROR (trans, LIBRARY, INIT,
+    GST_ELEMENT_ERROR (filter, LIBRARY, INIT,
         ("Subclass failed to initialize."), (NULL));
     return FALSE;
   }
-}
-
-static gboolean
-gst_gl_base_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (bt);
-
-  gst_caps_replace (&filter->in_caps, incaps);
-  gst_caps_replace (&filter->out_caps, outcaps);
-
-  return TRUE;
-}
-
-static GstStateChangeReturn
-gst_gl_base_filter_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
-  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-  GST_DEBUG_OBJECT (filter, "changing state: %s => %s",
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_gl_ensure_element_data (element, &filter->display,
-              &filter->priv->other_context))
-        return GST_STATE_CHANGE_FAILURE;
-
-      gst_gl_display_filter_gl_api (filter->display,
-          filter_class->supported_gl_api);
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      if (filter->priv->other_context) {
-        gst_object_unref (filter->priv->other_context);
-        filter->priv->other_context = NULL;
-      }
-
-      if (filter->display) {
-        gst_object_unref (filter->display);
-        filter->display = NULL;
-      }
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }

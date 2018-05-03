@@ -76,9 +76,6 @@ gst_gl_color_convert_element_stop (GstBaseTransform * bt)
     convert->convert = NULL;
   }
 
-  gst_caps_replace (&convert->in_caps, NULL);
-  gst_caps_replace (&convert->out_caps, NULL);
-
   return
       GST_BASE_TRANSFORM_CLASS (gst_gl_color_convert_element_parent_class)->stop
       (bt);
@@ -127,11 +124,8 @@ gst_gl_color_convert_element_set_caps (GstBaseTransform * bt,
 {
   GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (bt);
 
-  gst_caps_replace (&convert->in_caps, in_caps);
-  gst_caps_replace (&convert->out_caps, out_caps);
-
-  if (convert->convert)
-    gst_gl_color_convert_set_caps (convert->convert, in_caps, out_caps);
+  if (!gst_gl_color_convert_set_caps (convert->convert, in_caps, out_caps))
+    return FALSE;
 
   return TRUE;
 }
@@ -140,7 +134,17 @@ static GstCaps *
 gst_gl_color_convert_element_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
+  GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (bt);
+  GstGLBaseFilter *base_filter = GST_GL_BASE_FILTER (bt);
+  GstGLContext *context;
+
+  if (base_filter->display && !gst_gl_base_filter_find_gl_context (base_filter))
+    return NULL;
+
+  context = GST_GL_BASE_FILTER (bt)->context;
+
+  if (!convert->convert && context)
+    convert->convert = gst_gl_color_convert_new (context);
 
   return gst_gl_color_convert_transform_caps (context, direction, caps, filter);
 }
@@ -172,21 +176,11 @@ gst_gl_color_convert_element_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
   GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (trans);
-  GstGLContext *context;
 
   /* get gl context */
   if (!GST_BASE_TRANSFORM_CLASS
       (gst_gl_color_convert_element_parent_class)->decide_allocation (trans,
           query))
-    return FALSE;
-
-  context = GST_GL_BASE_FILTER (trans)->context;
-
-  if (!convert->convert)
-    convert->convert = gst_gl_color_convert_new (context);
-
-  if (!gst_gl_color_convert_set_caps (convert->convert, convert->in_caps,
-          convert->out_caps))
     return FALSE;
 
   if (!gst_gl_color_convert_decide_allocation (convert->convert, query))
