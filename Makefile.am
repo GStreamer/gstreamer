@@ -30,7 +30,7 @@ DIST_SUBDIRS = 			\
 
 EXTRA_DIST = \
 	depcomp \
-	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
+	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
 	ChangeLog gst-plugins-base.doap autogen.sh \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	gst-libs/gst/gl/gstglconfig.h.meson \
