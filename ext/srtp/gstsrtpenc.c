@@ -160,6 +160,7 @@ typedef struct ProcessBufferItData
   GstSrtpEnc *filter;
   GstPad *pad;
   GstBufferList *out_list;
+  GstFlowReturn flowret;
   gboolean is_rtcp;
 } ProcessBufferItData;
 
@@ -1029,10 +1030,11 @@ gst_srtp_enc_check_set_caps (GstSrtpEnc * filter, GstPad * pad,
   return GST_FLOW_OK;
 }
 
-static GstBuffer *
+static GstFlowReturn
 gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
-    GstBuffer * buf, gboolean is_rtcp)
+    GstBuffer * buf, gboolean is_rtcp, GstBuffer ** outbuf_ptr)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   gint size_max, size;
   GstBuffer *bufout = NULL;
   GstMapInfo mapout;
@@ -1050,6 +1052,13 @@ gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
   GST_OBJECT_LOCK (filter);
 
   gst_srtp_init_event_reporter ();
+
+  if (filter->session == NULL) {
+    /* The rtcp session disappeared (element shutting down) */
+    GST_OBJECT_UNLOCK (filter);
+    ret = GST_FLOW_FLUSHING;
+    goto fail;
+  }
 
   if (is_rtcp)
     err = srtp_protect_rtcp (filter->session, mapout.data, &size);
@@ -1073,20 +1082,23 @@ gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
     GST_ELEMENT_ERROR (GST_ELEMENT_CAST (filter), STREAM, ENCODE,
         ("Key usage limit has been reached"),
         ("Unable to protect buffer (hard key usage limit reached)"));
+    ret = GST_FLOW_ERROR;
     goto fail;
 
   } else {
     /* srtp_protect failed */
     GST_ELEMENT_ERROR (filter, LIBRARY, FAILED, (NULL),
         ("Unable to protect buffer (protect failed) code %d", err));
+    ret = GST_FLOW_ERROR;
     goto fail;
   }
 
-  return bufout;
+  *outbuf_ptr = bufout;
+  return ret;
 
 fail:
   gst_buffer_unref (bufout);
-  return NULL;
+  return ret;
 }
 
 static GstFlowReturn
@@ -1112,17 +1124,17 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
   GST_OBJECT_UNLOCK (filter);
 
-  if ((bufout = gst_srtp_enc_process_buffer (filter, pad, buf, is_rtcp))) {
-    /* Push buffer to source pad */
-    otherpad = get_rtp_other_pad (pad);
-    ret = gst_pad_push (otherpad, bufout);
-    bufout = NULL;
+  ret = gst_srtp_enc_process_buffer (filter, pad, buf, is_rtcp, &bufout);
+  if (ret != GST_FLOW_OK)
+    goto out;
 
-    if (ret != GST_FLOW_OK)
-      goto out;
-  } else {
-    goto fail;
-  }
+  /* Push buffer to source pad */
+  otherpad = get_rtp_other_pad (pad);
+  ret = gst_pad_push (otherpad, bufout);
+  bufout = NULL;
+
+  if (ret != GST_FLOW_OK)
+    goto out;
 
   GST_OBJECT_LOCK (filter);
 
@@ -1137,14 +1149,8 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
   GST_OBJECT_UNLOCK (filter);
 
 out:
-
   gst_buffer_unref (buf);
-
   return ret;
-
-fail:
-  ret = GST_FLOW_ERROR;
-  goto out;
 }
 
 static gboolean
@@ -1152,14 +1158,16 @@ process_buffer_it (GstBuffer ** buffer, guint index, gpointer user_data)
 {
   ProcessBufferItData *data = user_data;
   GstBuffer *bufout;
+  GstFlowReturn ret;
 
-  if ((bufout =
-          gst_srtp_enc_process_buffer (data->filter, data->pad, *buffer,
-              data->is_rtcp))) {
-    gst_buffer_list_add (data->out_list, bufout);
-  } else {
-    GST_WARNING_OBJECT (data->filter, "Error encoding buffer, dropping");
+  ret = gst_srtp_enc_process_buffer (data->filter, data->pad, *buffer,
+      data->is_rtcp, &bufout);
+  if (ret != GST_FLOW_OK) {
+    data->flowret = ret;
+    return FALSE;
   }
+
+  gst_buffer_list_add (data->out_list, bufout);
 
   return TRUE;
 }
@@ -1199,8 +1207,12 @@ gst_srtp_enc_chain_list (GstPad * pad, GstObject * parent,
   process_data.pad = pad;
   process_data.is_rtcp = is_rtcp;
   process_data.out_list = out_list;
+  process_data.flowret = GST_FLOW_OK;
 
-  gst_buffer_list_foreach (buf_list, process_buffer_it, &process_data);
+  if (!gst_buffer_list_foreach (buf_list, process_buffer_it, &process_data)) {
+    ret = process_data.flowret;
+    goto out;
+  }
 
   if (!gst_buffer_list_length (out_list)) {
     gst_buffer_list_unref (out_list);
