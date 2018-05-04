@@ -74,6 +74,8 @@
     
     is_local_media = [uri hasPrefix:@"file://"];
     is_playing_desired = NO;
+    time_slider.minimumValue = 0;
+    time_slider.maximumValue = 0;
 }
 
 - (void)viewDidDisappear:(BOOL)animated
