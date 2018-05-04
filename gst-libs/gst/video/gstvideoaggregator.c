@@ -65,6 +65,10 @@ enum
 
 struct _GstVideoAggregatorPadPrivate
 {
+  /* properties */
+  guint zorder;
+  gboolean repeat_after_eos;
+
   /* Converter, if NULL no conversion is done */
   GstVideoConverter *convert;
 
@@ -90,10 +94,10 @@ gst_video_aggregator_pad_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PAD_ZORDER:
-      g_value_set_uint (value, pad->zorder);
+      g_value_set_uint (value, pad->priv->zorder);
       break;
     case PROP_PAD_REPEAT_AFTER_EOS:
-      g_value_set_boolean (value, pad->repeat_after_eos);
+      g_value_set_boolean (value, pad->priv->repeat_after_eos);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -105,7 +109,7 @@ static int
 pad_zorder_compare (const GstVideoAggregatorPad * pad1,
     const GstVideoAggregatorPad * pad2)
 {
-  return pad1->zorder - pad2->zorder;
+  return pad1->priv->zorder - pad2->priv->zorder;
 }
 
 static void
@@ -119,13 +123,13 @@ gst_video_aggregator_pad_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PAD_ZORDER:
       GST_OBJECT_LOCK (vagg);
-      pad->zorder = g_value_get_uint (value);
+      pad->priv->zorder = g_value_get_uint (value);
       GST_ELEMENT (vagg)->sinkpads = g_list_sort (GST_ELEMENT (vagg)->sinkpads,
           (GCompareFunc) pad_zorder_compare);
       GST_OBJECT_UNLOCK (vagg);
       break;
     case PROP_PAD_REPEAT_AFTER_EOS:
-      pad->repeat_after_eos = g_value_get_boolean (value);
+      pad->priv->repeat_after_eos = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -361,10 +365,10 @@ gst_video_aggregator_pad_init (GstVideoAggregatorPad * vaggpad)
       G_TYPE_INSTANCE_GET_PRIVATE (vaggpad, GST_TYPE_VIDEO_AGGREGATOR_PAD,
       GstVideoAggregatorPadPrivate);
 
-  vaggpad->zorder = DEFAULT_PAD_ZORDER;
-  vaggpad->repeat_after_eos = DEFAULT_PAD_REPEAT_AFTER_EOS;
-  vaggpad->aggregated_frame = NULL;
+  vaggpad->priv->zorder = DEFAULT_PAD_ZORDER;
+  vaggpad->priv->repeat_after_eos = DEFAULT_PAD_REPEAT_AFTER_EOS;
   vaggpad->priv->converted_buffer = NULL;
+  vaggpad->aggregated_frame = NULL;
 
   vaggpad->priv->convert = NULL;
 }
@@ -1201,7 +1205,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
     } else {
-      if (is_eos && pad->repeat_after_eos) {
+      if (is_eos && pad->priv->repeat_after_eos) {
         eos = FALSE;
         GST_DEBUG_OBJECT (pad, "ignoring EOS and re-using previous buffer");
         continue;
@@ -1846,7 +1850,7 @@ gst_video_aggregator_request_new_pad (GstElement * element,
     return NULL;
 
   GST_OBJECT_LOCK (vagg);
-  vaggpad->zorder = GST_ELEMENT (vagg)->numsinkpads;
+  vaggpad->priv->zorder = GST_ELEMENT (vagg)->numsinkpads;
   vaggpad->priv->start_time = -1;
   vaggpad->priv->end_time = -1;
   element->sinkpads = g_list_sort (element->sinkpads,

@@ -67,15 +67,12 @@ struct _GstVideoAggregatorPad
 {
   GstAggregatorPad parent;
 
+  /*< public >*/
+  /* read-only, with OBJECT_LOCK */
   GstVideoInfo info;
 
   GstBuffer *buffer;
-
   GstVideoFrame *aggregated_frame;
-
-  /* properties */
-  guint zorder;
-  gboolean repeat_after_eos;
 
   /* Subclasses can force an alpha channel in the (input thus output)
    * colorspace format */
