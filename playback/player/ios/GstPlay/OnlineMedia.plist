@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <array>
+
+        <!-- https://github.com/video-dev/streams HLS streams  -->
+        <string>https://video-dev.github.io/streams/x36xhzz/x36xhzz.m3u8</string>
+        <string>https://video-dev.github.io/streams/test_001/stream.m3u8</string>
+
         <!-- Big Buck Bunny -->
         <string>http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_surround-fix.avi</string>
         <string>http://mirrorblender.top-ix.org/peach/bigbuckbunny_movies/big_buck_bunny_480p_h264.mov</string>
