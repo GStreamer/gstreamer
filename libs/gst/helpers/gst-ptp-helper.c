@@ -317,7 +317,7 @@ setup_sockets (void)
       gchar **ptr = ifaces;
 
       while (*ptr) {
-        strncpy (ifr.ifr_name, *ptr, IFNAMSIZ);
+        memcpy (ifr.ifr_name, *ptr, IFNAMSIZ);
         if (ioctl (g_socket_get_fd (socket_event), SIOCGIFHWADDR, &ifr) == 0) {
           clock_id_array[0] = ifr.ifr_hwaddr.sa_data[0];
           clock_id_array[1] = ifr.ifr_hwaddr.sa_data[1];
