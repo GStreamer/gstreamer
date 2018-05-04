@@ -120,6 +120,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
 
+static void gst_compositor_child_proxy_init (gpointer g_iface,
+    gpointer iface_data);
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_WIDTH  0
@@ -731,7 +734,9 @@ gst_compositor_set_property (GObject * object,
 }
 
 #define gst_compositor_parent_class parent_class
-G_DEFINE_TYPE (GstCompositor, gst_compositor, GST_TYPE_VIDEO_AGGREGATOR);
+G_DEFINE_TYPE_WITH_CODE (GstCompositor, gst_compositor,
+    GST_TYPE_VIDEO_AGGREGATOR, G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_compositor_child_proxy_init));
 
 static gboolean
 set_functions (GstCompositor * self, GstVideoInfo * info)
@@ -1168,6 +1173,46 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   return GST_FLOW_OK;
 }
 
+static GstPad *
+gst_compositor_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * req_name, const GstCaps * caps)
+{
+  GstPad *newpad;
+
+  newpad = (GstPad *)
+      GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
+      templ, req_name, caps);
+
+  if (newpad == NULL)
+    goto could_not_create;
+
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
+      GST_OBJECT_NAME (newpad));
+
+  return newpad;
+
+could_not_create:
+  {
+    GST_DEBUG_OBJECT (element, "could not create/add pad");
+    return NULL;
+  }
+}
+
+static void
+gst_compositor_release_pad (GstElement * element, GstPad * pad)
+{
+  GstCompositor *compositor;
+
+  compositor = GST_COMPOSITOR (element);
+
+  GST_DEBUG_OBJECT (compositor, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (compositor), G_OBJECT (pad),
+      GST_OBJECT_NAME (pad));
+
+  GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
+}
+
 static gboolean
 _sink_query (GstAggregator * agg, GstAggregatorPad * bpad, GstQuery * query)
 {
@@ -1223,6 +1268,10 @@ gst_compositor_class_init (GstCompositorClass * klass)
   gobject_class->get_property = gst_compositor_get_property;
   gobject_class->set_property = gst_compositor_set_property;
 
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_compositor_request_new_pad);
+  gstelement_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_compositor_release_pad);
   agg_class->sink_query = _sink_query;
   agg_class->fixate_src_caps = _fixate_caps;
   agg_class->negotiated_src_caps = _negotiated_caps;
@@ -1249,6 +1298,46 @@ gst_compositor_init (GstCompositor * self)
 {
   /* initialize variables */
   self->background = DEFAULT_BACKGROUND;
+}
+
+/* GstChildProxy implementation */
+static GObject *
+gst_compositor_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstCompositor *compositor = GST_COMPOSITOR (child_proxy);
+  GObject *obj = NULL;
+
+  GST_OBJECT_LOCK (compositor);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (compositor)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (compositor);
+
+  return obj;
+}
+
+static guint
+gst_compositor_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstCompositor *compositor = GST_COMPOSITOR (child_proxy);
+
+  GST_OBJECT_LOCK (compositor);
+  count = GST_ELEMENT_CAST (compositor)->numsinkpads;
+  GST_OBJECT_UNLOCK (compositor);
+  GST_INFO_OBJECT (compositor, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_compositor_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_compositor_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_compositor_child_proxy_get_children_count;
 }
 
 /* Element registration */

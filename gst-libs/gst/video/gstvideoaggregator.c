@@ -369,51 +369,6 @@ gst_video_aggregator_pad_init (GstVideoAggregatorPad * vaggpad)
   vaggpad->priv->convert = NULL;
 }
 
-/*********************************
- * GstChildProxy implementation  *
- *********************************/
-static GObject *
-gst_video_aggregator_child_proxy_get_child_by_index (GstChildProxy *
-    child_proxy, guint index)
-{
-  GObject *obj;
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (child_proxy);
-
-  GST_OBJECT_LOCK (vagg);
-  if ((obj = g_list_nth_data (GST_ELEMENT (vagg)->sinkpads, index)))
-    g_object_ref (obj);
-  GST_OBJECT_UNLOCK (vagg);
-
-  return obj;
-}
-
-static guint
-gst_video_aggregator_child_proxy_get_children_count (GstChildProxy *
-    child_proxy)
-{
-  guint count = 0;
-
-  GST_OBJECT_LOCK (child_proxy);
-  count = GST_ELEMENT (child_proxy)->numsinkpads;
-  GST_OBJECT_UNLOCK (child_proxy);
-
-  GST_INFO_OBJECT (child_proxy, "Children Count: %d", count);
-
-  return count;
-}
-
-static void
-gst_video_aggregator_child_proxy_init (gpointer g_iface, gpointer iface_data)
-{
-  GstChildProxyInterface *iface = g_iface;
-
-  GST_INFO ("intializing child proxy interface");
-  iface->get_child_by_index =
-      gst_video_aggregator_child_proxy_get_child_by_index;
-  iface->get_children_count =
-      gst_video_aggregator_child_proxy_get_children_count;
-}
-
 /**************************************
  * GstVideoAggregator implementation  *
  **************************************/
@@ -479,10 +434,6 @@ gst_video_aggregator_get_type (void)
         sizeof (GstVideoAggregator),
         (GInstanceInitFunc) gst_video_aggregator_init,
         (GTypeFlags) G_TYPE_FLAG_ABSTRACT);
-    {
-      G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
-          gst_video_aggregator_child_proxy_init);
-    }
     g_once_init_leave (&g_define_type_id_volatile, g_define_type_id);
   }
   return g_define_type_id_volatile;
@@ -1902,9 +1853,6 @@ gst_video_aggregator_request_new_pad (GstElement * element,
       (GCompareFunc) pad_zorder_compare);
   GST_OBJECT_UNLOCK (vagg);
 
-  gst_child_proxy_child_added (GST_CHILD_PROXY (vagg), G_OBJECT (vaggpad),
-      GST_OBJECT_NAME (vaggpad));
-
   return GST_PAD (vaggpad);
 }
 
@@ -1928,9 +1876,6 @@ gst_video_aggregator_release_pad (GstElement * element, GstPad * pad)
     gst_video_aggregator_reset (vagg);
 
   gst_buffer_replace (&vaggpad->buffer, NULL);
-
-  gst_child_proxy_child_removed (GST_CHILD_PROXY (vagg), G_OBJECT (vaggpad),
-      GST_OBJECT_NAME (vaggpad));
 
   GST_ELEMENT_CLASS (gst_video_aggregator_parent_class)->release_pad
       (GST_ELEMENT (vagg), pad);

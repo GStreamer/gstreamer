@@ -55,16 +55,25 @@ enum
   PROP_0,
 };
 
+static void gst_gl_mosaic_child_proxy_init (gpointer g_iface,
+    gpointer iface_data);
+
 #define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_mosaic_debug, "glmosaic", 0, "glmosaic element");
 
 G_DEFINE_TYPE_WITH_CODE (GstGLMosaic, gst_gl_mosaic, GST_TYPE_GL_MIXER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_gl_mosaic_child_proxy_init);
     DEBUG_INIT);
 
 static void gst_gl_mosaic_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_mosaic_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static GstPad *gst_gl_mosaic_request_new_pad (GstElement * element,
+    GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
+static void gst_gl_mosaic_release_pad (GstElement * element, GstPad * pad);
 
 static void gst_gl_mosaic_reset (GstGLMixer * mixer);
 static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
@@ -128,6 +137,10 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
   gobject_class->set_property = gst_gl_mosaic_set_property;
   gobject_class->get_property = gst_gl_mosaic_get_property;
 
+  element_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_gl_mosaic_request_new_pad);
+  element_class->release_pad = GST_DEBUG_FUNCPTR (gst_gl_mosaic_release_pad);
+
   gst_element_class_set_metadata (element_class, "OpenGL mosaic",
       "Filter/Effect/Video", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
@@ -169,6 +182,44 @@ gst_gl_mosaic_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstPad *
+gst_gl_mosaic_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * req_name, const GstCaps * caps)
+{
+  GstPad *newpad;
+
+  newpad = (GstPad *)
+      GST_ELEMENT_CLASS (gst_gl_mosaic_parent_class)->request_new_pad (element,
+      templ, req_name, caps);
+
+  if (newpad == NULL)
+    goto could_not_create;
+
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
+      GST_OBJECT_NAME (newpad));
+
+  return newpad;
+
+could_not_create:
+  {
+    GST_DEBUG_OBJECT (element, "could not create/add pad");
+    return NULL;
+  }
+}
+
+static void
+gst_gl_mosaic_release_pad (GstElement * element, GstPad * pad)
+{
+  GstGLMosaic *gl_mosaic = GST_GL_MOSAIC (element);
+
+  GST_DEBUG_OBJECT (gl_mosaic, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (gl_mosaic), G_OBJECT (pad),
+      GST_OBJECT_NAME (pad));
+
+  GST_ELEMENT_CLASS (gst_gl_mosaic_parent_class)->release_pad (element, pad);
 }
 
 static void
@@ -355,4 +406,44 @@ gst_gl_mosaic_callback (gpointer stuff)
   zrot += 0.8f;
 
   return TRUE;
+}
+
+/* GstChildProxy implementation */
+static GObject *
+gst_gl_mosaic_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstGLMosaic *gl_mosaic = GST_GL_MOSAIC (child_proxy);
+  GObject *obj = NULL;
+
+  GST_OBJECT_LOCK (gl_mosaic);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (gl_mosaic)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (gl_mosaic);
+
+  return obj;
+}
+
+static guint
+gst_gl_mosaic_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstGLMosaic *gl_mosaic = GST_GL_MOSAIC (child_proxy);
+
+  GST_OBJECT_LOCK (gl_mosaic);
+  count = GST_ELEMENT_CAST (gl_mosaic)->numsinkpads;
+  GST_OBJECT_UNLOCK (gl_mosaic);
+  GST_INFO_OBJECT (gl_mosaic, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_gl_mosaic_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_gl_mosaic_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_gl_mosaic_child_proxy_get_children_count;
 }
