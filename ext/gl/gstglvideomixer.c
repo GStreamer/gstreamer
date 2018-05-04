@@ -157,7 +157,7 @@ gst_gl_video_mixer_blend_function_get_type (void)
 #define DEFAULT_PAD_HEIGHT 0
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_ZORDER 0
-#define DEFAULT_PAD_IGNORE_EOS FALSE
+#define DEFAULT_PAD_REPEAT_AFTER_EOS FALSE
 #define DEFAULT_PAD_BLEND_EQUATION_RGB GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD
 #define DEFAULT_PAD_BLEND_EQUATION_ALPHA GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD
 #define DEFAULT_PAD_BLEND_FUNCTION_SRC_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA
@@ -184,7 +184,7 @@ enum
   PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
   PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
   PROP_INPUT_ZORDER,
-  PROP_INPUT_IGNORE_EOS,
+  PROP_INPUT_REPEAT_AFTER_EOS,
 };
 
 static void gst_gl_video_mixer_input_get_property (GObject * object,
@@ -225,10 +225,11 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, 10000, DEFAULT_PAD_ZORDER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_INPUT_IGNORE_EOS,
-      g_param_spec_boolean ("ignore-eos", "Ignore EOS", "Aggregate the last "
+  g_object_class_install_property (gobject_class, PROP_INPUT_REPEAT_AFTER_EOS,
+      g_param_spec_boolean ("repeat-after-eos", "Repeat After EOS",
+          "Aggregate the last "
           "frame on pads that are EOS till they are released",
-          DEFAULT_PAD_IGNORE_EOS,
+          DEFAULT_PAD_REPEAT_AFTER_EOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_XPOS,
       g_param_spec_int ("xpos", "X Position", "X Position of the picture",
@@ -239,12 +240,12 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
           G_MININT, G_MAXINT, DEFAULT_PAD_YPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_WIDTH,
-      g_param_spec_int ("width", "Width", "Width of the picture",
-          G_MININT, G_MAXINT, DEFAULT_PAD_WIDTH,
+      g_param_spec_int ("width", "Width", "Width of the picture", G_MININT,
+          G_MAXINT, DEFAULT_PAD_WIDTH,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_HEIGHT,
-      g_param_spec_int ("height", "Height", "Height of the picture",
-          G_MININT, G_MAXINT, DEFAULT_PAD_HEIGHT,
+      g_param_spec_int ("height", "Height", "Height of the picture", G_MININT,
+          G_MAXINT, DEFAULT_PAD_HEIGHT,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
@@ -252,8 +253,7 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_EQUATION_RGB,
       g_param_spec_enum ("blend-equation-rgb", "Blend Equation RGB",
-          "Blend Equation for RGB",
-          GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
+          "Blend Equation for RGB", GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
           DEFAULT_PAD_BLEND_EQUATION_RGB,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,

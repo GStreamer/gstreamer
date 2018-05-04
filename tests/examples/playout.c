@@ -873,9 +873,9 @@ playout_app_activate_item (PlayoutItem * item)
     /* If this is not the last item, on EOS, continue to aggregate using the
      * last buffer till the pad is released */
     if (item->app->play_queue->len != (item->app->play_queue_current + 2))
-      g_object_set (sinkpad, "ignore-eos", TRUE, NULL);
+      g_object_set (sinkpad, "repeat-after-eos", TRUE, NULL);
     else
-      GST_DEBUG ("%s: last item, not setting ignore-eos", item->fn);
+      GST_DEBUG ("%s: last item, not setting repeat-after-eos", item->fn);
     gst_pad_link (item->video_pad, sinkpad);
 
     if (app->elapsed_duration > 0) {

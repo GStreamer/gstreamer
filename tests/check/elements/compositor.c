@@ -1765,7 +1765,7 @@ _buffer_recvd (GstElement * appsink, gint * buffers_recvd)
   return GST_FLOW_OK;
 }
 
-GST_START_TEST (test_ignore_eos)
+GST_START_TEST (test_repeat_after_eos)
 {
   gboolean res;
   gint buffers_recvd;
@@ -1793,9 +1793,9 @@ GST_START_TEST (test_ignore_eos)
   ck_assert_msg (res == TRUE, "Could not link compositor with appsink");
   srcpad = gst_element_get_static_pad (src, "src");
   sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
-  /* When "ignore-eos" is set, compositor will keep sending the last buffer even
+  /* When "repeat-after-eos" is set, compositor will keep sending the last buffer even
    * after EOS, so we will receive more buffers than we sent. */
-  g_object_set (sinkpad, "ignore-eos", TRUE, NULL);
+  g_object_set (sinkpad, "repeat-after-eos", TRUE, NULL);
   link_res = gst_pad_link (srcpad, sinkpad);
   ck_assert_msg (GST_PAD_LINK_SUCCESSFUL (link_res), "videotestsrc -> "
       "compositor pad  link failed: %i", link_res);
@@ -2099,7 +2099,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_obscured_skipped);
-  tcase_add_test (tc_chain, test_ignore_eos);
+  tcase_add_test (tc_chain, test_repeat_after_eos);
   tcase_add_test (tc_chain, test_pad_z_order);
   tcase_add_test (tc_chain, test_pad_numbering);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_0);

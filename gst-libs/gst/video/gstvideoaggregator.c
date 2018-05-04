@@ -54,12 +54,12 @@ static void gst_video_aggregator_reset_qos (GstVideoAggregator * vagg);
  ****************************************/
 
 #define DEFAULT_PAD_ZORDER 0
-#define DEFAULT_PAD_IGNORE_EOS FALSE
+#define DEFAULT_PAD_REPEAT_AFTER_EOS FALSE
 enum
 {
   PROP_PAD_0,
   PROP_PAD_ZORDER,
-  PROP_PAD_IGNORE_EOS,
+  PROP_PAD_REPEAT_AFTER_EOS,
 };
 
 
@@ -92,8 +92,8 @@ gst_video_aggregator_pad_get_property (GObject * object, guint prop_id,
     case PROP_PAD_ZORDER:
       g_value_set_uint (value, pad->zorder);
       break;
-    case PROP_PAD_IGNORE_EOS:
-      g_value_set_boolean (value, pad->ignore_eos);
+    case PROP_PAD_REPEAT_AFTER_EOS:
+      g_value_set_boolean (value, pad->repeat_after_eos);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -124,8 +124,8 @@ gst_video_aggregator_pad_set_property (GObject * object, guint prop_id,
           (GCompareFunc) pad_zorder_compare);
       GST_OBJECT_UNLOCK (vagg);
       break;
-    case PROP_PAD_IGNORE_EOS:
-      pad->ignore_eos = g_value_get_boolean (value);
+    case PROP_PAD_REPEAT_AFTER_EOS:
+      pad->repeat_after_eos = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -337,10 +337,10 @@ gst_video_aggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, G_MAXUINT, DEFAULT_PAD_ZORDER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PAD_IGNORE_EOS,
-      g_param_spec_boolean ("ignore-eos", "Ignore EOS", "Aggregate the last "
-          "frame on pads that are EOS till they are released",
-          DEFAULT_PAD_IGNORE_EOS,
+  g_object_class_install_property (gobject_class, PROP_PAD_REPEAT_AFTER_EOS,
+      g_param_spec_boolean ("repeat-after-eos", "Repeat After EOS",
+          "Repeat the " "last frame after EOS until all pads are EOS",
+          DEFAULT_PAD_REPEAT_AFTER_EOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (klass, sizeof (GstVideoAggregatorPadPrivate));
@@ -362,7 +362,7 @@ gst_video_aggregator_pad_init (GstVideoAggregatorPad * vaggpad)
       GstVideoAggregatorPadPrivate);
 
   vaggpad->zorder = DEFAULT_PAD_ZORDER;
-  vaggpad->ignore_eos = DEFAULT_PAD_IGNORE_EOS;
+  vaggpad->repeat_after_eos = DEFAULT_PAD_REPEAT_AFTER_EOS;
   vaggpad->aggregated_frame = NULL;
   vaggpad->priv->converted_buffer = NULL;
 
@@ -1201,7 +1201,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         continue;
       }
     } else {
-      if (is_eos && pad->ignore_eos) {
+      if (is_eos && pad->repeat_after_eos) {
         eos = FALSE;
         GST_DEBUG_OBJECT (pad, "ignoring EOS and re-using previous buffer");
         continue;

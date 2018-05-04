@@ -75,7 +75,7 @@ struct _GstVideoAggregatorPad
 
   /* properties */
   guint zorder;
-  gboolean ignore_eos;
+  gboolean repeat_after_eos;
 
   /* Subclasses can force an alpha channel in the (input thus output)
    * colorspace format */
