@@ -237,7 +237,8 @@ static const gchar *interlace_mode[] = {
   "progressive",
   "interleaved",
   "mixed",
-  "fields"
+  "fields",
+  "alternate"
 };
 
 /**
@@ -604,6 +605,15 @@ gst_video_info_to_caps (GstVideoInfo * info)
         NULL);
   }
 
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
+    /* 'alternate' mode must always be accompanied by interlaced caps feature.
+     */
+    GstCapsFeatures *features;
+
+    features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+    gst_caps_set_features (caps, 0, features);
+  }
+
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
     const gchar *caps_str = NULL;
 
@@ -683,7 +693,11 @@ fill_planes (GstVideoInfo * info)
   gint bpp = 0, i;
 
   width = (gsize) info->width;
-  height = (gsize) info->height;
+  if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+    height = (gsize) info->height / 2;
+  else
+    height = (gsize) info->height;
 
   /* Sanity check the resulting frame size for overflows */
   for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)

@@ -1194,6 +1194,62 @@ GST_START_TEST (test_video_size_from_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_interlace_mode)
+{
+  GstVideoInfo vinfo;
+  GstCaps *caps;
+  GstStructure *structure;
+  GstCapsFeatures *features;
+  const char *mode_str;
+  int mode;
+
+  gst_video_info_init (&vinfo);
+
+  /* Progressive */
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_YV12, 320, 240);
+  GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  caps = gst_video_info_to_caps (&vinfo);
+  fail_unless (caps != NULL);
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (structure != NULL);
+  mode_str = gst_structure_get_string (structure, "interlace-mode");
+  mode = gst_video_interlace_mode_from_string (mode_str);
+  fail_unless (mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE);
+
+  /* Converting back to video info */
+  fail_unless (gst_video_info_from_caps (&vinfo, caps));
+  fail_unless (GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) ==
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE);
+
+  gst_caps_unref (caps);
+
+  /* Interlaced with alternate frame on buffers */
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_YV12, 320, 240);
+  GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+
+  caps = gst_video_info_to_caps (&vinfo);
+  fail_unless (caps != NULL);
+  structure = gst_caps_get_structure (caps, 0);
+  fail_unless (structure != NULL);
+  mode_str = gst_structure_get_string (structure, "interlace-mode");
+  mode = gst_video_interlace_mode_from_string (mode_str);
+  fail_unless (mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE);
+  /* 'alternate' mode must always be accompanied by interlaced caps feature. */
+  features = gst_caps_get_features (caps, 0);
+  fail_unless (gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_FORMAT_INTERLACED));
+
+  /* Converting back to video info */
+  fail_unless (gst_video_info_from_caps (&vinfo, caps));
+  fail_unless (GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) ==
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_overlay_composition)
 {
   GstVideoOverlayComposition *comp1, *comp2;
@@ -2851,6 +2907,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);
   tcase_add_test (tc_chain, test_video_size_from_caps);
+  tcase_add_test (tc_chain, test_interlace_mode);
   tcase_add_test (tc_chain, test_overlay_composition);
   tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
   tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
