@@ -451,11 +451,16 @@ enum
   PROP_BACKGROUND,
 };
 
+static void gst_gl_video_mixer_child_proxy_init (gpointer g_iface,
+    gpointer iface_data);
+
 #define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_video_mixer_debug, "glvideomixer", 0, "glvideomixer element");
 
 #define gst_gl_video_mixer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLVideoMixer, gst_gl_video_mixer, GST_TYPE_GL_MIXER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_gl_video_mixer_child_proxy_init);
     DEBUG_INIT);
 
 static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
@@ -837,10 +842,38 @@ _del_buffer (GstGLContext * context, GLuint * pBuffer)
   context->gl_vtable->DeleteBuffers (1, pBuffer);
 }
 
+static GstPad *
+gst_gl_video_mixer_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
+{
+  GstPad *newpad;
+
+  newpad = (GstPad *)
+      GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
+      templ, req_name, caps);
+
+  if (newpad == NULL)
+    goto could_not_create;
+
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
+      GST_OBJECT_NAME (newpad));
+
+  return newpad;
+
+could_not_create:
+  {
+    GST_DEBUG_OBJECT (element, "could not create/add  pad");
+    return NULL;
+  }
+}
+
 static void
 gst_gl_video_mixer_release_pad (GstElement * element, GstPad * p)
 {
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (p);
+
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (element), G_OBJECT (pad),
+      GST_OBJECT_NAME (pad));
 
   /* we call the base class first as this will remove the pad from
    * the aggregator, thus stopping misc callbacks from being called,
@@ -867,6 +900,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  element_class->request_new_pad = gst_gl_video_mixer_request_new_pad;
   element_class->release_pad = gst_gl_video_mixer_release_pad;
 
   gobject_class->set_property = gst_gl_video_mixer_set_property;
@@ -1589,4 +1623,44 @@ gst_gl_video_mixer_callback (gpointer stuff)
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
 
   return TRUE;
+}
+
+/* GstChildProxy implementation */
+static GObject *
+gst_gl_video_mixer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstGLVideoMixer *gl_video_mixer = GST_GL_VIDEO_MIXER (child_proxy);
+  GObject *obj = NULL;
+
+  GST_OBJECT_LOCK (gl_video_mixer);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (gl_video_mixer)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (gl_video_mixer);
+
+  return obj;
+}
+
+static guint
+gst_gl_video_mixer_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstGLVideoMixer *gl_video_mixer = GST_GL_VIDEO_MIXER (child_proxy);
+
+  GST_OBJECT_LOCK (gl_video_mixer);
+  count = GST_ELEMENT_CAST (gl_video_mixer)->numsinkpads;
+  GST_OBJECT_UNLOCK (gl_video_mixer);
+  GST_INFO_OBJECT (gl_video_mixer, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_gl_video_mixer_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_gl_video_mixer_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_gl_video_mixer_child_proxy_get_children_count;
 }

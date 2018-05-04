@@ -78,8 +78,13 @@ gst_gl_stereo_mix_pad_init (GstGLStereoMixPad * pad)
 {
 }
 
+static void gst_gl_stereo_mix_child_proxy_init (gpointer g_iface,
+    gpointer iface_data);
+
 #define gst_gl_stereo_mix_parent_class parent_class
-G_DEFINE_TYPE (GstGLStereoMix, gst_gl_stereo_mix, GST_TYPE_GL_MIXER);
+G_DEFINE_TYPE_WITH_CODE (GstGLStereoMix, gst_gl_stereo_mix, GST_TYPE_GL_MIXER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_gl_stereo_mix_child_proxy_init));
 
 static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
 static gboolean _negotiated_caps (GstAggregator * aggregator, GstCaps * caps);
@@ -133,6 +138,10 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
         "; " GST_VIDEO_CAPS_MAKE (GST_GL_COLOR_CONVERT_FORMATS))
     );
 
+static GstPad *gst_gl_stereo_mix_request_new_pad (GstElement * element,
+    GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
+static void gst_gl_stereo_mix_release_pad (GstElement * element, GstPad * pad);
+
 static GstFlowReturn gst_gl_stereo_mix_get_output_buffer (GstVideoAggregator *
     videoaggregator, GstBuffer ** outbuf);
 static gboolean gst_gl_stereo_mix_stop (GstAggregator * agg);
@@ -183,6 +192,11 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_factory, GST_TYPE_GL_STEREO_MIX_PAD);
+
+  element_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_gl_stereo_mix_request_new_pad);
+  element_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_gl_stereo_mix_release_pad);
 
   agg_class->stop = gst_gl_stereo_mix_stop;
   agg_class->start = gst_gl_stereo_mix_start;
@@ -397,6 +411,42 @@ gst_gl_stereo_mix_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstPad *
+gst_gl_stereo_mix_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * req_name, const GstCaps * caps)
+{
+  GstPad *newpad;
+
+  newpad = (GstPad *)
+      GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
+      templ, req_name, caps);
+
+  if (newpad == NULL)
+    goto could_not_create;
+
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
+      GST_OBJECT_NAME (newpad));
+
+  return GST_PAD_CAST (newpad);
+
+could_not_create:
+  {
+    GST_DEBUG_OBJECT (element, "could not create/add pad");
+    return NULL;
+  }
+}
+
+static void
+gst_gl_stereo_mix_release_pad (GstElement * element, GstPad * pad)
+{
+  GST_DEBUG_OBJECT (element, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (element), G_OBJECT (pad),
+      GST_OBJECT_NAME (pad));
+
+  GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
 static gboolean
@@ -695,4 +745,44 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer)
   }
 
   return TRUE;
+}
+
+/* GstChildProxy implementation */
+static GObject *
+gst_gl_stereo_mix_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstGLStereoMix *gl_stereo_mix = GST_GL_STEREO_MIX (child_proxy);
+  GObject *obj = NULL;
+
+  GST_OBJECT_LOCK (gl_stereo_mix);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (gl_stereo_mix)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (gl_stereo_mix);
+
+  return obj;
+}
+
+static guint
+gst_gl_stereo_mix_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstGLStereoMix *gl_stereo_mix = GST_GL_STEREO_MIX (child_proxy);
+
+  GST_OBJECT_LOCK (gl_stereo_mix);
+  count = GST_ELEMENT_CAST (gl_stereo_mix)->numsinkpads;
+  GST_OBJECT_UNLOCK (gl_stereo_mix);
+  GST_INFO_OBJECT (gl_stereo_mix, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_gl_stereo_mix_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_gl_stereo_mix_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_gl_stereo_mix_child_proxy_get_children_count;
 }
