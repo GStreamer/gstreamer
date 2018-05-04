@@ -42,7 +42,6 @@
 #include <string.h>
 
 #include "gstvideoaggregator.h"
-#include "gstvideoaggregatorpad.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_aggregator_debug);
 #define GST_CAT_DEFAULT gst_video_aggregator_debug
