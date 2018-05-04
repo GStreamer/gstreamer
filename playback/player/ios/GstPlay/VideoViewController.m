@@ -151,8 +151,6 @@
         video_width_constraint.constant = correct_width;
         video_height_constraint.constant = view_height;
     }
-
-    time_slider.frame = CGRectMake(time_slider.frame.origin.x, time_slider.frame.origin.y, toolbar.frame.size.width - time_slider.frame.origin.x - 8, time_slider.frame.size.height);
 }
 
 static void video_dimensions_changed (GstPlayer * unused, gint width, gint height, VideoViewController * self)
