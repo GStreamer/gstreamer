@@ -2207,7 +2207,8 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
     if (src->active_button < 1) {
       /* When setting the button for the first time, take the
          timestamp into account. */
-      GST_EVENT_TIMESTAMP (event) = MPEGTIME_TO_GSTTIME (area.pts);
+      gst_structure_set (s, "ts", GST_TYPE_CLOCK_TIME,
+          MPEGTIME_TO_GSTTIME (area.pts), NULL);
     }
 
     src->active_button = button;
