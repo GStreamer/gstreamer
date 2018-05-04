@@ -33,6 +33,89 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVideoAggregator GstVideoAggregator;
+typedef struct _GstVideoAggregatorClass GstVideoAggregatorClass;
+typedef struct _GstVideoAggregatorPrivate GstVideoAggregatorPrivate;
+
+#define GST_TYPE_VIDEO_AGGREGATOR_PAD (gst_video_aggregator_pad_get_type())
+#define GST_VIDEO_AGGREGATOR_PAD(obj) \
+        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD, GstVideoAggregatorPad))
+#define GST_VIDEO_AGGREGATOR_PAD_CAST(obj) ((GstVideoAggregatorPad *)(obj))
+#define GST_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COMPOSITOR_PAD, GstVideoAggregatorPadClass))
+#define GST_IS_VIDEO_AGGREGATOR_PAD(obj) \
+        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD))
+#define GST_IS_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
+        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_AGGREGATOR_PAD))
+#define GST_VIDEO_AGGREGATOR_PAD_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD,GstVideoAggregatorPadClass))
+
+typedef struct _GstVideoAggregatorPad GstVideoAggregatorPad;
+typedef struct _GstVideoAggregatorPadClass GstVideoAggregatorPadClass;
+typedef struct _GstVideoAggregatorPadPrivate GstVideoAggregatorPadPrivate;
+
+/**
+ * GstVideoAggregatorPad:
+ * @info: The #GstVideoInfo currently set on the pad
+ * @buffer_vinfo: The #GstVideoInfo representing the type contained
+ *                in @buffer
+ * @aggregated_frame: The #GstVideoFrame ready to be used for aggregation
+ *                    inside the aggregate_frames vmethod.
+ * @zorder: The zorder of this pad
+ */
+struct _GstVideoAggregatorPad
+{
+  GstAggregatorPad parent;
+
+  GstVideoInfo info;
+
+  GstBuffer *buffer;
+
+  GstVideoFrame *aggregated_frame;
+
+  /* properties */
+  guint zorder;
+  gboolean ignore_eos;
+
+  /* Subclasses can force an alpha channel in the (input thus output)
+   * colorspace format */
+  gboolean needs_alpha;
+
+  /* < private > */
+  GstVideoAggregatorPadPrivate *priv;
+
+  gpointer          _gst_reserved[GST_PADDING];
+};
+
+/**
+ * GstVideoAggregatorPadClass:
+ *
+ * @set_info: Lets subclass set a converter on the pad,
+ *                 right after a new format has been negotiated.
+ * @prepare_frame: Prepare the frame from the pad buffer (if any)
+ *                 and sets it to @aggregated_frame
+ * @clean_frame:   clean the frame previously prepared in prepare_frame
+ */
+struct _GstVideoAggregatorPadClass
+{
+  GstAggregatorPadClass parent_class;
+  gboolean           (*set_info)              (GstVideoAggregatorPad * pad,
+                                               GstVideoAggregator    * videoaggregator,
+                                               GstVideoInfo          * current_info,
+                                               GstVideoInfo          * wanted_info);
+
+  gboolean           (*prepare_frame)         (GstVideoAggregatorPad * pad,
+                                               GstVideoAggregator    * videoaggregator);
+
+  void               (*clean_frame)           (GstVideoAggregatorPad * pad,
+                                               GstVideoAggregator    * videoaggregator);
+
+  gpointer          _gst_reserved[GST_PADDING_LARGE];
+};
+
+GST_VIDEO_BAD_API
+GType gst_video_aggregator_pad_get_type   (void);
+
 #define GST_TYPE_VIDEO_AGGREGATOR (gst_video_aggregator_get_type())
 #define GST_VIDEO_AGGREGATOR(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR, GstVideoAggregator))
@@ -45,12 +128,6 @@ G_BEGIN_DECLS
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_AGGREGATOR))
 #define GST_VIDEO_AGGREGATOR_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_VIDEO_AGGREGATOR,GstVideoAggregatorClass))
-
-typedef struct _GstVideoAggregator GstVideoAggregator;
-typedef struct _GstVideoAggregatorClass GstVideoAggregatorClass;
-typedef struct _GstVideoAggregatorPrivate GstVideoAggregatorPrivate;
-
-#include "gstvideoaggregatorpad.h"
 
 /**
  * GstVideoAggregator:

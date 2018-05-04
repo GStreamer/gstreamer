@@ -2,7 +2,6 @@ badvideo_sources = [
   'gstvideoaggregator.c',
 ]
 badvideo_headers = [
-  'gstvideoaggregatorpad.h',
   'gstvideoaggregator.h',
   'video-bad-prelude.h',
 ]

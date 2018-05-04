@@ -23,4 +23,4 @@ libgstbadvideo_@GST_API_VERSION@_la_LIBADD = \
 libgstbadvideo_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstvideo_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/video
-libgstvideo_@GST_API_VERSION@include_HEADERS = gstvideoaggregatorpad.h gstvideoaggregator.h video-bad-prelude.h
+libgstvideo_@GST_API_VERSION@include_HEADERS = gstvideoaggregator.h video-bad-prelude.h
