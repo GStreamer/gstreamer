@@ -2,6 +2,8 @@
 #import "VideoViewController.h"
 #import <AssetsLibrary/AssetsLibrary.h>
 
+#define ENABLE_IOS_LIBRARY false
+
 @interface LibraryViewController ()
 
 @end
@@ -95,10 +97,14 @@ static NSString *CellIdentifier = @"CellIdentifier";
 
 - (void)refreshMediaItems {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSAllDomainsMask, YES);
+
+#if ENABLE_IOS_LIBRARY
+
     NSString *docsPath = [paths objectAtIndex:0];
+    NSMutableArray *entries;
 
     /* Entries from the Photo Library */
-    NSMutableArray *entries = [[NSMutableArray alloc] init];
+    entries = [[NSMutableArray alloc] init];
     ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     [library enumerateGroupsWithTypes:ALAssetsGroupAll
         usingBlock:^(ALAssetsGroup *group, BOOL *stop)
@@ -130,6 +136,8 @@ static NSString *CellIdentifier = @"CellIdentifier";
         [entries addObject:[NSString stringWithFormat:@"file://%@/%@", docsPath, e]];
     }
     self->mediaEntries = entries;
+#endif
+
     self->onlineEntries = [NSArray arrayWithContentsOfURL:[[NSBundle mainBundle] URLForResource:@"OnlineMedia" withExtension:@"plist"]];
 }
 
