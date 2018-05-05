@@ -230,7 +230,7 @@ static GstStaticPadTemplate gst_nvdec_sink_template =
     GST_STATIC_CAPS ("video/x-h264, stream-format=byte-stream, alignment=au; "
         "video/x-h265, stream-format=byte-stream, alignment=au; "
         "video/mpeg, mpegversion={ 1, 2, 4 }, systemstream=false; "
-        "image/jpeg")
+        "image/jpeg; video/x-vp8; video/x-vp9")
     );
 
 static GstStaticPadTemplate gst_nvdec_src_template =
@@ -542,6 +542,10 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     parser_params.CodecType = cudaVideoCodec_JPEG;
   } else if (!g_strcmp0 (caps_name, "video/x-h265")) {
     parser_params.CodecType = cudaVideoCodec_HEVC;
+  } else if (!g_strcmp0 (caps_name, "video/x-vp8")) {
+    parser_params.CodecType = cudaVideoCodec_VP8;
+  } else if (!g_strcmp0 (caps_name, "video/x-vp9")) {
+    parser_params.CodecType = cudaVideoCodec_VP9;
   } else {
     GST_ERROR_OBJECT (nvdec, "failed to determine codec type");
     return FALSE;
