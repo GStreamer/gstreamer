@@ -376,14 +376,13 @@ clamp_rectangle (gint x, gint y, gint w, gint h, gint outer_width,
 
 static gboolean
 gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
-    GstVideoAggregator * vagg)
+    GstVideoAggregator * vagg, GstBuffer * buffer,
+    GstVideoFrame * prepared_frame)
 {
   GstCompositor *comp = GST_COMPOSITOR (vagg);
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
   guint outsize;
-  GstVideoFrame *converted_frame;
-  GstBuffer *converted_buf = NULL;
-  GstVideoFrame *frame;
+  GstVideoFrame frame;
   static GstAllocationParams params = { 0, 15, 0, 0, };
   gint width, height;
   gboolean frame_obscured = FALSE;
@@ -391,9 +390,6 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   /* The rectangle representing this frame, clamped to the video's boundaries.
    * Due to the clamping, this is different from the frame width/height above. */
   GstVideoRectangle frame_rect;
-
-  if (!pad->buffer)
-    return TRUE;
 
   /* There's three types of width/height here:
    * 1. GST_VIDEO_FRAME_WIDTH/HEIGHT:
@@ -476,7 +472,6 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
 
   if (cpad->alpha == 0.0) {
     GST_DEBUG_OBJECT (vagg, "Pad has alpha 0.0, not converting frame");
-    converted_frame = NULL;
     goto done;
   }
 
@@ -486,7 +481,6 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   if (frame_rect.w == 0 || frame_rect.h == 0) {
     GST_DEBUG_OBJECT (vagg, "Resulting frame is zero-width or zero-height "
         "(w: %i, h: %i), skipping", frame_rect.w, frame_rect.h);
-    converted_frame = NULL;
     goto done;
   }
 
@@ -523,9 +517,9 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
 
     /* Check if there's a buffer to be aggregated, ensure it can't have an alpha
      * channel, then check opacity and frame boundaries */
-    if (pad2->buffer && cpad2->alpha == 1.0 &&
-        !GST_VIDEO_INFO_HAS_ALPHA (&pad2->info) &&
-        is_rectangle_contained (frame_rect, frame2_rect)) {
+    if (gst_video_aggregator_pad_has_current_buffer (pad2)
+        && cpad2->alpha == 1.0 && !GST_VIDEO_INFO_HAS_ALPHA (&pad2->info)
+        && is_rectangle_contained (frame_rect, frame2_rect)) {
       frame_obscured = TRUE;
       GST_DEBUG_OBJECT (pad, "%ix%i@(%i,%i) obscured by %s %ix%i@(%i,%i) "
           "in output of size %ix%i; skipping frame", frame_rect.w, frame_rect.h,
@@ -538,22 +532,18 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   }
   GST_OBJECT_UNLOCK (vagg);
 
-  if (frame_obscured) {
-    converted_frame = NULL;
+  if (frame_obscured)
     goto done;
-  }
 
-  frame = g_slice_new0 (GstVideoFrame);
-
-  if (!gst_video_frame_map (frame, &pad->info, pad->buffer, GST_MAP_READ)) {
+  if (!gst_video_frame_map (&frame, &pad->info, buffer, GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
     return FALSE;
   }
 
   if (cpad->convert) {
     gint converted_size;
-
-    converted_frame = g_slice_new0 (GstVideoFrame);
+    GstVideoFrame converted_frame;
+    GstBuffer *converted_buf = NULL;
 
     /* We wait until here to set the conversion infos, in case vagg->info changed */
     converted_size = GST_VIDEO_INFO_SIZE (&cpad->conversion_info);
@@ -561,40 +551,36 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     converted_size = converted_size > outsize ? converted_size : outsize;
     converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
 
-    if (!gst_video_frame_map (converted_frame, &(cpad->conversion_info),
+    if (!gst_video_frame_map (&converted_frame, &(cpad->conversion_info),
             converted_buf, GST_MAP_READWRITE)) {
       GST_WARNING_OBJECT (vagg, "Could not map converted frame");
 
-      g_slice_free (GstVideoFrame, converted_frame);
-      gst_video_frame_unmap (frame);
-      g_slice_free (GstVideoFrame, frame);
+      gst_video_frame_unmap (&frame);
       return FALSE;
     }
 
-    gst_video_converter_frame (cpad->convert, frame, converted_frame);
+    gst_video_converter_frame (cpad->convert, &frame, &converted_frame);
     cpad->converted_buffer = converted_buf;
-    gst_video_frame_unmap (frame);
-    g_slice_free (GstVideoFrame, frame);
+    gst_video_frame_unmap (&frame);
+    *prepared_frame = converted_frame;
   } else {
-    converted_frame = frame;
+    *prepared_frame = frame;
   }
 
 done:
-  pad->aggregated_frame = converted_frame;
 
   return TRUE;
 }
 
 static void
 gst_compositor_pad_clean_frame (GstVideoAggregatorPad * pad,
-    GstVideoAggregator * vagg)
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame)
 {
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
 
-  if (pad->aggregated_frame) {
-    gst_video_frame_unmap (pad->aggregated_frame);
-    g_slice_free (GstVideoFrame, pad->aggregated_frame);
-    pad->aggregated_frame = NULL;
+  if (prepared_frame->buffer) {
+    gst_video_frame_unmap (prepared_frame);
+    memset (prepared_frame, 0, sizeof (GstVideoFrame));
   }
 
   if (cpad->converted_buffer) {
@@ -1065,44 +1051,50 @@ gst_compositor_crossfade_frames (GstCompositor * self, GstVideoFrame * outframe)
   for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *pad = l->data;
     GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (pad);
+    GstVideoFrame *prepared_frame =
+        gst_video_aggregator_pad_get_prepared_frame (pad);
 
-    if (compo_pad->crossfade >= 0.0f && pad->aggregated_frame) {
+    if (compo_pad->crossfade >= 0.0f && prepared_frame) {
       gfloat alpha = compo_pad->crossfade * compo_pad->alpha;
       GstVideoAggregatorPad *npad = l->next ? l->next->data : NULL;
-      GstVideoFrame *nframe;
+      GstVideoFrame *next_prepared_frame;
+      GstVideoFrame nframe;
+
+      next_prepared_frame =
+          npad ? gst_video_aggregator_pad_get_prepared_frame (npad) : NULL;
 
       if (!all_crossfading) {
-        nframe = g_slice_new0 (GstVideoFrame);
-        gst_compositor_fill_transparent (self, outframe, nframe);
+        gst_compositor_fill_transparent (self, outframe, &nframe);
       } else {
-        nframe = outframe;
+        nframe = *outframe;
       }
 
-      self->overlay (pad->aggregated_frame,
+      self->overlay (prepared_frame,
           compo_pad->crossfaded ? 0 : compo_pad->xpos,
           compo_pad->crossfaded ? 0 : compo_pad->ypos,
-          alpha, nframe, COMPOSITOR_BLEND_MODE_ADDITIVE);
+          alpha, &nframe, COMPOSITOR_BLEND_MODE_ADDITIVE);
 
-      if (npad && npad->aggregated_frame) {
+      if (npad && next_prepared_frame) {
         GstCompositorPad *next_compo_pad = GST_COMPOSITOR_PAD (npad);
 
         alpha = (1.0 - compo_pad->crossfade) * next_compo_pad->alpha;
-        self->overlay (npad->aggregated_frame, next_compo_pad->xpos,
-            next_compo_pad->ypos, alpha, nframe,
+        self->overlay (next_prepared_frame, next_compo_pad->xpos,
+            next_compo_pad->ypos, alpha, &nframe,
             COMPOSITOR_BLEND_MODE_ADDITIVE);
 
         /* Replace frame with current frame */
-        gst_compositor_pad_clean_frame (npad, vagg);
-        npad->aggregated_frame = !all_crossfading ? nframe : NULL;
+        gst_compositor_pad_clean_frame (npad, vagg, next_prepared_frame);
+        if (!all_crossfading)
+          *next_prepared_frame = nframe;
         next_compo_pad->crossfaded = TRUE;
 
         /* Frame is now consumed, clean it up */
-        gst_compositor_pad_clean_frame (pad, vagg);
-        pad->aggregated_frame = NULL;
+        gst_compositor_pad_clean_frame (pad, vagg, prepared_frame);
       } else {
         GST_LOG_OBJECT (self, "Simply fading out as no following pad found");
-        gst_compositor_pad_clean_frame (pad, vagg);
-        pad->aggregated_frame = !all_crossfading ? nframe : NULL;
+        gst_compositor_pad_clean_frame (pad, vagg, prepared_frame);
+        if (!all_crossfading)
+          *prepared_frame = nframe;
         compo_pad->crossfaded = TRUE;
       }
     }
@@ -1156,9 +1148,11 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
     for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
       GstVideoAggregatorPad *pad = l->data;
       GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (pad);
+      GstVideoFrame *prepared_frame =
+          gst_video_aggregator_pad_get_prepared_frame (pad);
 
-      if (pad->aggregated_frame != NULL) {
-        composite (pad->aggregated_frame,
+      if (prepared_frame != NULL) {
+        composite (prepared_frame,
             compo_pad->crossfaded ? 0 : compo_pad->xpos,
             compo_pad->crossfaded ? 0 : compo_pad->ypos, compo_pad->alpha,
             outframe, COMPOSITOR_BLEND_MODE_NORMAL);

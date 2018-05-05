@@ -264,14 +264,16 @@ gst_iqa_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *pad = l->data;
+    GstVideoFrame *prepared_frame =
+        gst_video_aggregator_pad_get_prepared_frame (pad);
 
-    if (pad->aggregated_frame != NULL) {
+    if (prepared_frame != NULL) {
       if (!ref_frame) {
-        ref_frame = pad->aggregated_frame;
+        ref_frame = prepared_frame;
       } else {
         gboolean res;
         gchar *padname = gst_pad_get_name (pad);
-        GstVideoFrame *cmp_frame = pad->aggregated_frame;
+        GstVideoFrame *cmp_frame = prepared_frame;
 
         res = compare_frames (self, ref_frame, cmp_frame, outbuf, msg_structure,
             padname);

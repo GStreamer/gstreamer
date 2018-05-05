@@ -88,7 +88,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLStereoMix, gst_gl_stereo_mix, GST_TYPE_GL_MIXER,
 
 static GstCaps *_update_caps (GstVideoAggregator * vagg, GstCaps * caps);
 static gboolean _negotiated_caps (GstAggregator * aggregator, GstCaps * caps);
-gboolean gst_gl_stereo_mix_make_output (GstGLStereoMix * mix);
+static gboolean gst_gl_stereo_mix_make_output (GstGLStereoMix * mix);
 static gboolean gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer);
 
 #define DEFAULT_DOWNMIX GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS
@@ -301,7 +301,7 @@ gst_gl_stereo_mix_get_output_buffer (GstVideoAggregator * videoaggregator,
   return ret;
 }
 
-gboolean
+static gboolean
 gst_gl_stereo_mix_make_output (GstGLStereoMix * mix)
 {
   GList *walk;
@@ -316,11 +316,12 @@ gst_gl_stereo_mix_make_output (GstGLStereoMix * mix)
   while (walk) {
     GstVideoAggregatorPad *vaggpad = walk->data;
     GstGLStereoMixPad *pad = walk->data;
+    GstBuffer *buffer = gst_video_aggregator_pad_get_current_buffer (vaggpad);
 
     GST_LOG_OBJECT (mix, "Checking pad %" GST_PTR_FORMAT, vaggpad);
 
-    if (vaggpad->buffer != NULL) {
-      pad->current_buffer = vaggpad->buffer;
+    if (buffer != NULL) {
+      pad->current_buffer = buffer;
 
       GST_DEBUG_OBJECT (pad, "Got buffer %" GST_PTR_FORMAT,
           pad->current_buffer);
