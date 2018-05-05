@@ -55,27 +55,27 @@ if gst_libav.length() == 0
     message('WARNING: gst-libav not built as ffmpeg >= n3.1.2 not found on the system')
 endif
 
-if get_option('enable_python')
+if get_option('python')
     subprojects += ['gst-python']
 endif
 
-if not get_option('disable_gst_plugins_ugly')
-    subprojects += ['gst-plugins-ugly']
-endif
-
-if not get_option('disable_gst_plugins_bad')
+if get_option('bad')
     subprojects += ['gst-plugins-bad']
 endif
 
-if not get_option('disable_gst_libav')
+if get_option('ugly')
+    subprojects += ['gst-plugins-ugly']
+endif
+
+if get_option('libav')
     subprojects += gst_libav
 endif
 
-if not get_option('disable_gst_omx')
+if get_option('omx')
     subprojects += ['gst-omx']
 endif
 
-if not get_option('disable_gstreamer_vaapi')
+if get_option('vaapi')
   if dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : false).found()
     subprojects += ['gstreamer-vaapi']
   else
@@ -83,7 +83,7 @@ if not get_option('disable_gstreamer_vaapi')
   endif
 endif
 
-if not get_option('disable_gst_devtools')
+if get_option('devtools')
   if dependency('json-glib-1.0', required : false).found()
     subprojects += ['gst-devtools']
   else
@@ -91,7 +91,7 @@ if not get_option('disable_gst_devtools')
   endif
 endif
 
-if not get_option('disable_gst_editing_services')
+if get_option('ges')
   if dependency('libxml-2.0', required : false).found()
     subprojects += ['gst-editing-services']
   else
@@ -99,11 +99,11 @@ if not get_option('disable_gst_editing_services')
   endif
 endif
 
-if not get_option('disable_rtsp_server')
+if get_option('rtsp_server')
     subprojects += ['gst-rtsp-server']
 endif
 
-if not get_option('disable_gstreamer_sharp')
+if get_option('sharp')
   if add_languages('cs', required : false)
     if meson.version().version_compare('>=0.43')
       subprojects += ['gstreamer-sharp']
@@ -132,11 +132,7 @@ endforeach
 
 message('Building subprojects: ' + ', '.join(subprojects))
 foreach subproj: subprojects
-    default_options = []
-    if get_option('disable_introspection')
-        default_options += ['disable_introspection=true']
-    endif
-    subproject(subproj, version: gst_version, default_options: default_options)
+    subproject(subproj, version: gst_version)
 
     cmdres = run_command(python3, '-c', symlink.format(subproj, meson.current_source_dir()))
     if cmdres.returncode() == 0
