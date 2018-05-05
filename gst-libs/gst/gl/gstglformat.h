@@ -85,9 +85,13 @@ G_BEGIN_DECLS
  *               texture components
  * @GST_GL_RGB565: Three components of bit depth 5, 6 and 5 stored in the R, G,
  *                 and B texture components respectively.
+ * @GST_GL_RGB16: Three 16-bit components stored in the R, G, and B
+ *               texture components
  * @GST_GL_RGBA: Four components stored in the R, G, B, and A texture
  *               components respectively.
  * @GST_GL_RGBA8: Four 8-bit components stored in the R, G, B, and A texture
+ *                components respectively.
+ * @GST_GL_RGBA16: Four 16-bit components stored in the R, G, B, and A texture
  *                components respectively.
  * @GST_GL_DEPTH_COMPONENT16: A single 16-bit component for depth information.
  * @GST_GL_DEPTH24_STENCIL8: A 24-bit component for depth information and
@@ -111,9 +115,11 @@ typedef enum
   GST_GL_RGB                            = 0x1907,
   GST_GL_RGB8                           = 0x8051,
   GST_GL_RGB565                         = 0x8D62,
+  GST_GL_RGB16                          = 0x8054,
 
   GST_GL_RGBA                           = 0x1908,
   GST_GL_RGBA8                          = 0x8058,
+  GST_GL_RGBA16                         = 0x805B,
 
   GST_GL_DEPTH_COMPONENT16              = 0x81A5,
 

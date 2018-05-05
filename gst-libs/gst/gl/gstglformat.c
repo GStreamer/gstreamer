@@ -57,11 +57,13 @@ _gl_format_n_components (guint format)
     case GST_VIDEO_GL_TEXTURE_TYPE_RGBA:
     case GST_GL_RGBA:
     case GST_GL_RGBA8:
+    case GST_GL_RGBA16:
       return 4;
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB:
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB16:
     case GST_GL_RGB:
     case GST_GL_RGB8:
+    case GST_GL_RGB16:
     case GST_GL_RGB565:
       return 3;
     case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA:
@@ -87,6 +89,7 @@ _gl_type_n_components (guint type)
 {
   switch (type) {
     case GL_UNSIGNED_BYTE:
+    case GL_UNSIGNED_SHORT:
       return 1;
     case GL_UNSIGNED_SHORT_5_6_5:
       return 3;
@@ -102,6 +105,7 @@ _gl_type_n_bytes (guint type)
   switch (type) {
     case GL_UNSIGNED_BYTE:
       return 1;
+    case GL_UNSIGNED_SHORT:
     case GL_UNSIGNED_SHORT_5_6_5:
       return 2;
     default:
@@ -157,6 +161,8 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
     case GST_VIDEO_FORMAT_AYUV:
       n_plane_components = 4;
       break;
+    case GST_VIDEO_FORMAT_ARGB64:
+      return GST_GL_RGBA16;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       n_plane_components = 3;
@@ -229,6 +235,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
           return USING_GLES2 (context)
               && !USING_GLES3 (context) ? GST_GL_RGBA : GST_GL_RGBA8;
           break;
+        case GL_UNSIGNED_SHORT:
+          return GST_GL_RGBA16;
       }
       break;
     case GST_GL_RGB:
@@ -239,7 +247,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
           break;
         case GL_UNSIGNED_SHORT_5_6_5:
           return GST_GL_RGB565;
-          break;
+        case GL_UNSIGNED_SHORT:
+          return GST_GL_RGB16;
       }
       break;
     case GST_GL_RG:
@@ -261,7 +270,9 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
       }
       break;
     case GST_GL_RGBA8:
+    case GST_GL_RGBA16:
     case GST_GL_RGB8:
+    case GST_GL_RGB16:
     case GST_GL_RGB565:
     case GST_GL_RG8:
     case GST_GL_R8:
@@ -304,6 +315,14 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
     case GST_GL_RGB8:
       *unsized_format = GST_GL_RGB;
       *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case GST_GL_RGBA16:
+      *unsized_format = GST_GL_RGBA;
+      *gl_type = GL_UNSIGNED_SHORT;
+      break;
+    case GST_GL_RGB16:
+      *unsized_format = GST_GL_RGB;
+      *gl_type = GL_UNSIGNED_SHORT;
       break;
     case GST_GL_RGB565:
       *unsized_format = GST_GL_RGB;
