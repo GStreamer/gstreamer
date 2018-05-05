@@ -306,6 +306,7 @@ dnl *** set variables based on configure arguments ***
 
 dnl GTK is optional and used in examples
 HAVE_GTK3=NO
+HAVE_GTK3_WAYLAND=""
 if test "x$BUILD_EXAMPLES" = "xyes"; then
   PKG_CHECK_MODULES(GTK3, gtk+-3.0 >= 3.4, HAVE_GTK3=yes, HAVE_GTK3=no)
   if test "x$HAVE_GTK3" = "xyes"; then
@@ -314,12 +315,15 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
     AC_SUBST(GTK_VERSION)
     GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
     AC_SUBST(GTK_BASE_DIR)
+    GTK3_TARGETS=`$PKG_CONFIG --variable=targets gtk+-3.0`
+    case "$GTK3_TARGETS" in  *wayland*) HAVE_GTK3_WAYLAND="1" ;; esac
   fi
 fi
 AC_SUBST(GTK3_LIBS)
 AC_SUBST(GTK3_CFLAGS)
 AC_SUBST(HAVE_GTK3)
 AM_CONDITIONAL(HAVE_GTK3, test "x$HAVE_GTK3" = "xyes")
+AM_CONDITIONAL(HAVE_GTK3_WAYLAND, test "x$HAVE_GTK3_WAYLAND" = "x1")
 
 dnl x11 is optional for librfb
 HAVE_X11=NO
