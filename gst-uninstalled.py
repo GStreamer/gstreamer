@@ -18,6 +18,10 @@ from common import get_meson
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')
+# Use '_build' as the builddir instead of 'build'
+DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, 'build')
+if not os.path.exists(DEFAULT_BUILDDIR):
+    DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, '_build')
 
 
 def listify(o):
@@ -224,7 +228,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gstreamer-uninstalled")
 
     parser.add_argument("--builddir",
-                        default=os.path.join(SCRIPTDIR, "build"),
+                        default=DEFAULT_BUILDDIR,
                         help="The meson build directory")
     parser.add_argument("--srcdir",
                         default=SCRIPTDIR,
