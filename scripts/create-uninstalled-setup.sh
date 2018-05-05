@@ -6,6 +6,9 @@
 # Little shell script that creates a fresh GStreamer uninstalled setup in
 # your home directory.
 #
+# This is the legacy uninstalled setup for autotools. There is also the
+# gst-build module which provides the same using the meson build system.
+#
 # ----------------------------------------------------------------------------
 #
 # Copyright (C) 2011-2015 Tim-Philipp Müller <tim centricular net>
@@ -160,8 +163,4 @@ echo "into --prefix=$UNINSTALLED_ROOT/$BRANCH/prefix and it should be picked up"
 echo "by autogen.sh/configure"
 echo
 echo "==========================================================================================="
-#echo
-#echo "Also see http://gstreamer.freedesktop.org/wiki/UninstalledSetup"
-#echo
-#echo "==========================================================================================="
 
