@@ -35,7 +35,7 @@ if cc.has_header('linux/videodev2.h') or cc.has_header('sys/videodev2.h') or cc.
 
   # libv4l2 is only needed for converting some obscure formats
   # FIXME: Add a full list of the formats here
-  if get_option('with-libv4l2')
+  if get_option('libv4l2')
     libv4l2_dep = dependency('libv4l2', required : false)
     cdata.set('HAVE_LIBV4L2', libv4l2_dep.found())
     libv4l2_deps = [libv4l2_dep]

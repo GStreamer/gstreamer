@@ -187,7 +187,7 @@ foreach extra_arg : warning_c_flags
 endforeach
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer Good Plug-ins source release'
@@ -198,7 +198,7 @@ if gst_package_name == ''
   endif
 endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
@@ -314,8 +314,8 @@ libsinc = include_directories('gst-libs')
 
 have_orcc = false
 orcc_args = []
-if get_option('use_orc') != 'no'
-  need_orc = get_option('use_orc') == 'yes'
+if get_option('orc') != 'no'
+  need_orc = get_option('orc') == 'yes'
   # Used by various libraries/elements that use Orc code
   orc_dep = dependency('orc-0.4', version : '>= 0.4.17', required : need_orc)
   orcc = find_program('orcc', required : need_orc)
@@ -334,7 +334,7 @@ endif
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 
-    if gst_proj.get_variable('disable_gst_debug')
+    if not gst_proj.get_variable('gst_debug')
         message('GStreamer debug system is disabled')
         add_project_arguments('-Wno-unused', language: 'c')
     else

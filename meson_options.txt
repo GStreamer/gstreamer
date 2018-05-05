@@ -1,10 +1,12 @@
 # Enable V4L2 plugin to probe devices at plugin load
-option('v4l2-probe', type : 'boolean', value : true)
-# Use libv4l2 for some obscure format conversions
-option('with-libv4l2', type : 'boolean', value : true)
-# Whether to use orc or not (auto will autodetect, yes will error out if not found)
-option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('with-package-name', type : 'string',
+option('v4l2-probe', type : 'boolean', value : true,
+       description : 'Probe v4l2 devices when the v4l2 plugin is loaded')
+option('libv4l2', type : 'boolean', value : true,
+       description : 'Use libv4l2 for some obscure format conversions')
+
+# Common options
+option('orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
+option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
-option('with-package-origin', type : 'string', value : 'Unknown package origin',
+option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
        description : 'package origin URL to use in plugins')
