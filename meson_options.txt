@@ -1,18 +1,28 @@
-option('audioresample_format', type : 'combo', choices : ['int', 'float', 'auto'], value : 'auto')
-option('disable_examples', type : 'boolean', value : false)
-option('use_orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto')
-option('disable_introspection',
-        type : 'boolean', value : false,
-        description : 'Whether to disable the introspection generation')
-option('disable_gtkdoc', type : 'boolean', value : false)
-option('with-package-name', type : 'string',
-       description : 'package name to use in plugins')
-option('with-package-origin', type : 'string', value : 'Unknown package origin',
-       description : 'package origin URL to use in plugins')
-option('with_gl_api', type : 'string', value : 'auto', description : 'A comma separated list of opengl APIs to enable building against. Supported values are opengl and gles2.')
-option('with_gl_platform', type : 'string', value : 'auto', description : 'A comma separated list of opengl platforms to enable building against. Supported values are glx, egl, cgl, wgl and eagl')
-option('with_gl_winsys', type : 'string', value : 'auto', description : 'A comma separated list of opengl windows systems to enable building against. Supported values are x11, wayland, win32, cocoa, and dispmanx')
-option('with_egl_module_name', type : 'string', value : '', description : 'The file to pass to g_module_open to open the libEGL.so library (default: libEGL.so)')
-option('with_opengl_module_name', type : 'string', value : '', description : 'The file to pass to g_module_open to open the libGL.so library (default: libGL.so)')
-option('with_gles2_module_name', type : 'string', value : '', description : 'The file to pass to g_module_open to open the libGLESv2.so library (default: libGLESv2.so)')
+option('audioresample_format', type : 'combo',
+       choices : ['int', 'float', 'auto'], value : 'auto')
+option('gl_api', type : 'array', choices : ['opengl', 'gles2', 'auto'], value : ['auto'],
+       description : 'A comma separated list of opengl APIs to enable building against')
+option('gl_platform', type : 'array',
+       choices : ['glx', 'egl', 'cgl', 'wgl', 'eagl', 'auto'], value : ['auto'],
+       description : 'A comma separated list of opengl platforms to enable building against')
+option('gl_winsys', type : 'array',
+       choices : ['x11', 'wayland', 'win32', 'cocoa', 'dispmanx', 'auto'], value : ['auto'],
+       description : 'A comma separated list of opengl windows systems to enable building against. Supported values are x11, wayland, win32, cocoa, and dispmanx')
+option('egl_module_name', type : 'string', value : '',
+       description : 'The file to pass to g_module_open to open the libEGL library (default: libEGL)')
+option('opengl_module_name', type : 'string', value : '',
+       description : 'The file to pass to g_module_open to open the libGL library (default: libGL)')
+option('gles2_module_name', type : 'string', value : '',
+       description : 'The file to pass to g_module_open to open the libGLESv2 library (default: libGLESv2)')
 
+# Common options
+option('orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto', yield : true)
+option('examples', type : 'boolean', value : true, yield : true)
+option('gtkdoc', type : 'boolean', value : true, yield : true,
+       description : 'Build API documentation with gtk-doc')
+option('introspection', type : 'boolean', value : true, yield : true,
+        description : 'Generate gobject-introspection bindings')
+option('package-name', type : 'string', yield : true,
+       description : 'package name to use in plugins')
+option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
+       description : 'package origin URL to use in plugins')

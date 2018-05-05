@@ -171,7 +171,7 @@ foreach extra_arg : warning_c_flags
 endforeach
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer Base Plug-ins source release'
@@ -182,7 +182,7 @@ if gst_package_name == ''
   endif
 endif
 core_conf.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-core_conf.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+core_conf.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # FIXME: These should be configure options
 core_conf.set('DEFAULT_VIDEOSINK', '"autovideosink"')
@@ -251,8 +251,8 @@ gst_controller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 
 have_orcc = false
 orcc_args = []
-if get_option('use_orc') != 'no'
-  need_orc = get_option('use_orc') == 'yes'
+if get_option('orc') != 'no'
+  need_orc = get_option('orc') == 'yes'
   # Used by various libraries/elements that use Orc code
   orc_dep = dependency('orc-0.4', version : orc_req, required : need_orc)
   orcc = find_program('orcc', required : need_orc)
@@ -280,7 +280,7 @@ have_sse41 = cc.has_argument(sse41_args)
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 
-    if gst_proj.get_variable('disable_gst_debug')
+    if not gst_proj.get_variable('gst_debug')
         message('GStreamer debug system is disabled')
         add_project_arguments('-Wno-unused', language: 'c')
     else
@@ -303,7 +303,7 @@ endif
 
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
-build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
     'g_setenv("GST_REGISTRY_1.0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
@@ -333,7 +333,7 @@ endif
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif get_option('disable_gtkdoc')
+elif not get_option('gtkdoc')
   message('gtk-doc is disabled via options')
 else
   if find_program('gtkdoc-scan', required : false).found()

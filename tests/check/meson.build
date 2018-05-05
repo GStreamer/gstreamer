@@ -1,4 +1,4 @@
-have_registry = true # FIXME not get_option('disable_registry')
+have_registry = true # FIXME get_option('registry')
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [

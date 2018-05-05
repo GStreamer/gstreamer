@@ -153,27 +153,26 @@ enabled_gl_platforms = []
 enabled_gl_winsys = []
 
 # parse provided options
-libegl_module_name = get_option('with_egl_module_name')
+libegl_module_name = get_option('egl_module_name')
 if libegl_module_name != ''
   gl_cpp_args += ['-DGST_GL_LIBEGL_MODULE_NAME="@0@"'.format(libegl_module_name)]
 endif
-libgles2_module_name = get_option('with_gles2_module_name')
+libgles2_module_name = get_option('gles2_module_name')
 if libgles2_module_name != ''
   gl_cpp_args += ['-DGST_GL_LIBGLESV2_MODULE_NAME="@0@"'.format(libgles2_module_name)]
 endif
-libgl_module_name = get_option('with_opengl_module_name')
+libgl_module_name = get_option('opengl_module_name')
 if libgl_module_name != ''
   gl_cpp_args += ['-DGST_GL_LIBGL_MODULE_NAME="@0@"'.format(libgl_module_name)]
 endif
 
-gl_apis_s = get_option ('with_gl_api')
-if gl_apis_s == 'auto'
+gl_apis = get_option('gl_api')
+if gl_apis.contains('auto')
   need_api_opengl = 'auto'
   need_api_gles2 = 'auto'
 else
   need_api_opengl = 'no'
   need_api_gles2 = 'no'
-  gl_apis = gl_apis_s.split(',')
   foreach api : gl_apis
     if api == 'opengl'
       need_api_opengl = 'yes'
@@ -185,8 +184,8 @@ else
   endforeach
 endif
 
-gl_platforms_s = get_option ('with_gl_platform')
-if gl_platforms_s == 'auto'
+gl_platforms = get_option('gl_platform')
+if gl_platforms.contains('auto')
   need_platform_egl = 'auto'
   need_platform_glx = 'auto'
   need_platform_cgl = 'auto'
@@ -198,7 +197,6 @@ else
   need_platform_cgl = 'no'
   need_platform_wgl = 'no'
   need_platform_eagl = 'no'
-  gl_platforms = gl_platforms_s.split(',')
   foreach platform : gl_platforms
     if platform == 'egl'
       need_platform_egl = 'yes'
@@ -216,8 +214,8 @@ else
   endforeach
 endif
 
-gl_winsys_s = get_option ('with_gl_winsys')
-if gl_winsys_s == 'auto'
+gl_winsys = get_option('gl_winsys')
+if gl_winsys.contains('auto')
   need_win_x11 = 'auto'
   need_win_wayland = 'auto'
   need_win_win32 = 'auto'
@@ -235,7 +233,6 @@ else
   need_win_dispmanx = 'no'
   need_win_viv_fb = 'no'
   need_win_gbm = 'no'
-  gl_winsys = gl_winsys_s.split(',')
   foreach winsys : gl_winsys
     if winsys == 'x11'
       need_win_x11 = 'yes'
