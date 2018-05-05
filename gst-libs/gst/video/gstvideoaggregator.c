@@ -973,6 +973,69 @@ gst_video_aggregator_caps_has_alpha (GstCaps * caps)
 }
 
 static GstCaps *
+_get_non_alpha_caps (GstCaps * caps)
+{
+  GstCaps *result;
+  guint i, size;
+
+  size = gst_caps_get_size (caps);
+  result = gst_caps_new_empty ();
+  for (i = 0; i < size; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    const GValue *formats = gst_structure_get_value (s, "format");
+    GValue new_formats = { 0, };
+    gboolean has_format = FALSE;
+
+    /* FIXME what to do if formats are missing? */
+    if (formats) {
+      const GstVideoFormatInfo *info;
+
+      if (GST_VALUE_HOLDS_LIST (formats)) {
+        guint list_size = gst_value_list_get_size (formats);
+        guint index;
+
+        g_value_init (&new_formats, GST_TYPE_LIST);
+
+        for (index = 0; index < list_size; index++) {
+          const GValue *list_item = gst_value_list_get_value (formats, index);
+
+          info =
+              gst_video_format_get_info (gst_video_format_from_string
+              (g_value_get_string (list_item)));
+          if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
+            has_format = TRUE;
+            gst_value_list_append_value (&new_formats, list_item);
+          }
+        }
+
+      } else if (G_VALUE_HOLDS_STRING (formats)) {
+        info =
+            gst_video_format_get_info (gst_video_format_from_string
+            (g_value_get_string (formats)));
+        if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
+          has_format = TRUE;
+          gst_value_init_and_copy (&new_formats, formats);
+        }
+
+      } else {
+        g_assert_not_reached ();
+        GST_WARNING ("Unexpected type for video 'format' field: %s",
+            G_VALUE_TYPE_NAME (formats));
+      }
+
+      if (has_format) {
+        s = gst_structure_copy (s);
+        gst_structure_take_value (s, "format", &new_formats);
+        gst_caps_append_structure (result, s);
+      }
+
+    }
+  }
+
+  return result;
+}
+
+static GstCaps *
 gst_video_aggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
     GstCaps * filter)
 {
@@ -1020,11 +1083,11 @@ gst_video_aggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
     returned_caps = srccaps;
   }
 
-  if (has_alpha) {
-    sink_template_caps = gst_pad_get_pad_template_caps (pad);
-  } else {
-    GstVideoAggregatorClass *klass = GST_VIDEO_AGGREGATOR_GET_CLASS (vagg);
-    sink_template_caps = gst_caps_ref (klass->sink_non_alpha_caps);
+  sink_template_caps = gst_pad_get_pad_template_caps (pad);
+  if (!has_alpha) {
+    GstCaps *tmp = _get_non_alpha_caps (sink_template_caps);
+    gst_caps_unref (sink_template_caps);
+    sink_template_caps = tmp;
   }
 
   {
@@ -2288,83 +2351,10 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
   g_type_class_ref (GST_TYPE_VIDEO_AGGREGATOR_PAD);
 }
 
-static inline GstCaps *
-_get_non_alpha_caps_from_template (GstVideoAggregatorClass * klass)
-{
-  GstCaps *result;
-  GstCaps *templatecaps;
-  guint i, size;
-
-  templatecaps =
-      gst_pad_template_get_caps (gst_element_class_get_pad_template
-      (GST_ELEMENT_CLASS (klass), "sink_%u"));
-
-  size = gst_caps_get_size (templatecaps);
-  result = gst_caps_new_empty ();
-  for (i = 0; i < size; i++) {
-    GstStructure *s = gst_caps_get_structure (templatecaps, i);
-    const GValue *formats = gst_structure_get_value (s, "format");
-    GValue new_formats = { 0, };
-    gboolean has_format = FALSE;
-
-    /* FIXME what to do if formats are missing? */
-    if (formats) {
-      const GstVideoFormatInfo *info;
-
-      if (GST_VALUE_HOLDS_LIST (formats)) {
-        guint list_size = gst_value_list_get_size (formats);
-        guint index;
-
-        g_value_init (&new_formats, GST_TYPE_LIST);
-
-        for (index = 0; index < list_size; index++) {
-          const GValue *list_item = gst_value_list_get_value (formats, index);
-
-          info =
-              gst_video_format_get_info (gst_video_format_from_string
-              (g_value_get_string (list_item)));
-          if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
-            has_format = TRUE;
-            gst_value_list_append_value (&new_formats, list_item);
-          }
-        }
-
-      } else if (G_VALUE_HOLDS_STRING (formats)) {
-        info =
-            gst_video_format_get_info (gst_video_format_from_string
-            (g_value_get_string (formats)));
-        if (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info)) {
-          has_format = TRUE;
-          gst_value_init_and_copy (&new_formats, formats);
-        }
-
-      } else {
-        g_assert_not_reached ();
-        GST_WARNING ("Unexpected type for video 'format' field: %s",
-            G_VALUE_TYPE_NAME (formats));
-      }
-
-      if (has_format) {
-        s = gst_structure_copy (s);
-        gst_structure_take_value (s, "format", &new_formats);
-        gst_caps_append_structure (result, s);
-      }
-
-    }
-  }
-
-  gst_caps_unref (templatecaps);
-
-  return result;
-}
-
-static GMutex sink_caps_mutex;
-
 static void
 gst_video_aggregator_init (GstVideoAggregator * vagg,
     GstVideoAggregatorClass * klass)
 {
-
   vagg->priv =
       G_TYPE_INSTANCE_GET_PRIVATE (vagg, GST_TYPE_VIDEO_AGGREGATOR,
       GstVideoAggregatorPrivate);
@@ -2374,15 +2364,5 @@ gst_video_aggregator_init (GstVideoAggregator * vagg,
   g_mutex_init (&vagg->priv->lock);
 
   /* initialize variables */
-  g_mutex_lock (&sink_caps_mutex);
-  if (klass->sink_non_alpha_caps == NULL) {
-    klass->sink_non_alpha_caps = _get_non_alpha_caps_from_template (klass);
-
-    /* The caps is cached */
-    GST_MINI_OBJECT_FLAG_SET (klass->sink_non_alpha_caps,
-        GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-  }
-  g_mutex_unlock (&sink_caps_mutex);
-
   gst_video_aggregator_reset (vagg);
 }

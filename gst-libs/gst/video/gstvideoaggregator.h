@@ -188,8 +188,6 @@ struct _GstVideoAggregatorClass
                                                    GstVideoInfo       *  best_info,
                                                    gboolean           *  at_least_one_alpha);
 
-  GstCaps           *sink_non_alpha_caps;
-
   /* < private > */
   gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
