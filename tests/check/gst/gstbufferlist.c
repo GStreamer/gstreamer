@@ -474,6 +474,15 @@ GST_START_TEST (test_calc_size)
 
 GST_END_TEST;
 
+GST_START_TEST (test_new_sized_0)
+{
+  GstBufferList *b = gst_buffer_list_new_sized (0);
+
+  gst_buffer_list_unref (b);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_list_suite (void)
 {
@@ -491,6 +500,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_expand_and_remove);
   tcase_add_test (tc_chain, test_get_writable);
   tcase_add_test (tc_chain, test_calc_size);
+  tcase_add_test (tc_chain, test_new_sized_0);
 
   return s;
 }
