@@ -2216,6 +2216,34 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/G729",
           NULL);
       break;
+    case AV_CODEC_ID_DSD_LSBF:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
+          NULL);
+      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
+          TRUE, "planar", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case AV_CODEC_ID_DSD_MSBF:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
+          NULL);
+      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
+          FALSE, "planar", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case AV_CODEC_ID_DSD_LSBF_PLANAR:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
+          NULL);
+      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
+          TRUE, "planar", G_TYPE_BOOLEAN, TRUE, NULL);
+      break;
+    case AV_CODEC_ID_DSD_MSBF_PLANAR:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
+          NULL);
+      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
+          FALSE, "planar", G_TYPE_BOOLEAN, TRUE, NULL);
+      break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
       break;
