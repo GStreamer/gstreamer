@@ -38,6 +38,10 @@ static void gst_gl_mixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static gboolean gst_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg);
+static void gst_gl_mixer_pad_clean_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg);
 
 enum
 {
@@ -69,8 +73,8 @@ gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass)
   gobject_class->get_property = gst_gl_mixer_pad_get_property;
 
   vaggpad_class->set_info = NULL;
-  vaggpad_class->prepare_frame = NULL;
-  vaggpad_class->clean_frame = NULL;
+  vaggpad_class->prepare_frame = gst_gl_mixer_pad_prepare_frame;
+  vaggpad_class->clean_frame = gst_gl_mixer_pad_clean_frame;
 }
 
 static void
@@ -92,6 +96,59 @@ gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+static gboolean
+gst_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg)
+{
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (vpad);
+  GstGLMixer *mix = GST_GL_MIXER (vagg);
+
+  pad->current_texture = 0;
+  vpad->aggregated_frame = NULL;
+
+  if (vpad->buffer != NULL) {
+    GstVideoInfo gl_info;
+    GstVideoFrame aggregated_frame;
+    GstGLSyncMeta *sync_meta;
+
+    gst_video_info_set_format (&gl_info,
+        GST_VIDEO_FORMAT_RGBA,
+        GST_VIDEO_INFO_WIDTH (&vpad->info),
+        GST_VIDEO_INFO_HEIGHT (&vpad->info));
+
+    sync_meta = gst_buffer_get_gl_sync_meta (vpad->buffer);
+    if (sync_meta)
+      gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
+
+    if (!gst_video_frame_map (&aggregated_frame, &gl_info, vpad->buffer,
+            GST_MAP_READ | GST_MAP_GL)) {
+      GST_ERROR_OBJECT (pad, "Failed to map input frame");
+      return FALSE;
+    }
+
+    pad->current_texture = *(guint *) aggregated_frame.data[0];
+
+    vpad->aggregated_frame = g_slice_new0 (GstVideoFrame);
+    *vpad->aggregated_frame = aggregated_frame;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_gl_mixer_pad_clean_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg)
+{
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (vpad);
+
+  pad->current_texture = 0;
+  if (vpad->aggregated_frame) {
+    gst_video_frame_unmap (vpad->aggregated_frame);
+    g_slice_free (GstVideoFrame, vpad->aggregated_frame);
+    vpad->aggregated_frame = NULL;
   }
 }
 
@@ -561,42 +618,6 @@ context_error:
   }
 }
 
-static gboolean
-gst_gl_mixer_upload_frames (GstElement * element, GstPad * sink_pad,
-    gpointer user_data)
-{
-  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (sink_pad);
-  GstGLMixerPad *pad = GST_GL_MIXER_PAD (sink_pad);
-  GstGLMixer *mix = GST_GL_MIXER (element);
-
-  pad->current_texture = 0;
-  if (vaggpad->buffer != NULL) {
-    GstVideoInfo gl_info;
-    GstVideoFrame gl_frame;
-    GstGLSyncMeta *sync_meta;
-
-    gst_video_info_set_format (&gl_info,
-        GST_VIDEO_FORMAT_RGBA,
-        GST_VIDEO_INFO_WIDTH (&vaggpad->info),
-        GST_VIDEO_INFO_HEIGHT (&vaggpad->info));
-
-    sync_meta = gst_buffer_get_gl_sync_meta (vaggpad->buffer);
-    if (sync_meta)
-      gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
-
-    if (!gst_video_frame_map (&gl_frame, &gl_info, vaggpad->buffer,
-            GST_MAP_READ | GST_MAP_GL)) {
-      GST_ERROR_OBJECT (pad, "Failed to map input frame");
-      return FALSE;
-    }
-
-    pad->current_texture = *(guint *) gl_frame.data[0];
-    gst_video_frame_unmap (&gl_frame);
-  }
-
-  return TRUE;
-}
-
 gboolean
 gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 {
@@ -615,12 +636,6 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   }
 
   out_tex = (GstGLMemory *) out_frame.map[0].memory;
-
-  if (!gst_element_foreach_sink_pad (GST_ELEMENT_CAST (mix),
-          gst_gl_mixer_upload_frames, NULL)) {
-    res = FALSE;
-    goto out;
-  }
 
   g_mutex_lock (&priv->gl_resource_lock);
   if (!priv->gl_resource_ready)
