@@ -2955,7 +2955,7 @@ gst_aggregator_pad_peek_buffer (GstAggregatorPad * pad)
  *
  * Returns: %TRUE if the pad has a buffer available as the next thing.
  *
- * Since: 1.16
+ * Since: 1.14.1
  */
 gboolean
 gst_aggregator_pad_has_buffer (GstAggregatorPad * pad)
