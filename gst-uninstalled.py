@@ -216,6 +216,7 @@ if __name__ == "__main__":
         print("GStreamer not built in %s\n\nBuild it and try again" %
               options.builddir)
         exit(1)
+    options.builddir = os.path.abspath(options.builddir)
 
     if not os.path.exists(options.srcdir):
         print("The specified source dir does not exist" %
