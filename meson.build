@@ -1,6 +1,6 @@
 project('gst-libav', 'c', 'cpp',
   version : '1.15.0.1',
-  meson_version : '>= 0.36.0',
+  meson_version : '>= 0.46.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -41,7 +41,7 @@ cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-libav"')
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer FFMPEG Plug-ins source release'
@@ -52,7 +52,7 @@ if gst_package_name == ''
   endif
 endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 
 check_headers = [['unistd.h', 'HAVE_UNISTD_H']]
@@ -108,7 +108,7 @@ endif
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 
-    if gst_proj.get_variable('disable_gst_debug')
+    if not gst_proj.get_variable('gst_debug')
         message('GStreamer debug system is disabled')
         add_project_arguments('-Wno-unused', language: 'c')
     else

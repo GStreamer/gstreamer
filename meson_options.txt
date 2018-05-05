@@ -1,4 +1,5 @@
-option('with-package-name', type : 'string',
+option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
-option('with-package-origin', type : 'string', value : 'Unknown package origin',
+option('package-origin', type : 'string',
+       value : 'Unknown package origin', yield : true,
        description : 'package origin URL to use in plugins')
