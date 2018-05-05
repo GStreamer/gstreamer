@@ -909,7 +909,7 @@ add_packed_sequence_header (GstVaapiFEIPakH264 * feipak,
   guint8 *data;
 
   fill_hrd_params (feipak, &hrd_params);
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SPS);
   /* Set High profile for encoding the MVC base view. Otherwise, some
@@ -939,14 +939,14 @@ add_packed_sequence_header (GstVaapiFEIPakH264 * feipak,
 
   /* store sps data */
   _check_sps_pps_status (feipak, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write SPS NAL unit");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -966,7 +966,7 @@ add_packed_sequence_header_mvc (GstVaapiFEIPakH264 * feipak,
   fill_hrd_params (feipak, &hrd_params);
 
   /* non-base layer, pack one subset sps */
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SUBSET_SPS);
 
@@ -992,14 +992,14 @@ add_packed_sequence_header_mvc (GstVaapiFEIPakH264 * feipak,
 
   /* store subset sps data */
   _check_sps_pps_status (feipak, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write SPS NAL unit");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1017,7 +1017,7 @@ add_packed_picture_header (GstVaapiFEIPakH264 * feipak,
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_PPS);
   bs_write_pps (&bs, pic_param, feipak->profile);
@@ -1040,14 +1040,14 @@ add_packed_picture_header (GstVaapiFEIPakH264 * feipak,
 
   /* store pps data */
   _check_sps_pps_status (feipak, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write PPS NAL unit");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1091,7 +1091,7 @@ add_packed_prefix_nal_header (GstVaapiFEIPakH264 * feipak,
   guint8 *data;
   guint8 nal_ref_idc, nal_unit_type;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
 
   if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
@@ -1117,7 +1117,7 @@ add_packed_prefix_nal_header (GstVaapiFEIPakH264 * feipak,
   gst_vaapi_enc_slice_add_packed_header (slice, packed_prefix_nal);
   gst_vaapi_codec_object_replace (&packed_prefix_nal, NULL);
 
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
 
   return TRUE;
 
@@ -1125,7 +1125,7 @@ add_packed_prefix_nal_header (GstVaapiFEIPakH264 * feipak,
 bs_error:
   {
     GST_WARNING ("failed to write Prefix NAL unit header");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1144,7 +1144,7 @@ add_packed_slice_header (GstVaapiFEIPakH264 * feipak,
   guint8 *data;
   guint8 nal_ref_idc, nal_unit_type;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
 
   if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
@@ -1174,14 +1174,14 @@ add_packed_slice_header (GstVaapiFEIPakH264 * feipak,
   gst_vaapi_enc_slice_add_packed_header (slice, packed_slice);
   gst_vaapi_codec_object_replace (&packed_slice, NULL);
 
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write Slice NAL unit header");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }

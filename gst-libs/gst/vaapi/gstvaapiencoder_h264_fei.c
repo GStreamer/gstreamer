@@ -1405,7 +1405,7 @@ add_packed_sequence_header (GstVaapiEncoderH264Fei * encoder,
 
   fill_hrd_params (encoder, &hrd_params);
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SPS);
 
@@ -1436,14 +1436,14 @@ add_packed_sequence_header (GstVaapiEncoderH264Fei * encoder,
 
   /* store sps data */
   _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write SPS NAL unit");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1463,7 +1463,7 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264Fei * encoder,
   fill_hrd_params (encoder, &hrd_params);
 
   /* non-base layer, pack one subset sps */
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SUBSET_SPS);
 
@@ -1488,14 +1488,14 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264Fei * encoder,
 
   /* store subset sps data */
   _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write SPS NAL unit");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1513,7 +1513,7 @@ add_packed_picture_header (GstVaapiEncoderH264Fei * encoder,
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_PPS);
   bs_write_pps (&bs, pic_param, encoder->profile);
@@ -1535,14 +1535,14 @@ add_packed_picture_header (GstVaapiEncoderH264Fei * encoder,
 
   /* store pps data */
   _check_sps_pps_status (encoder, data + 4, data_bit_size / 8 - 4);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write PPS NAL unit");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1559,9 +1559,9 @@ add_packed_sei_header (GstVaapiEncoderH264Fei * encoder,
   guint8 *data, *buf_period_payload = NULL, *pic_timing_payload = NULL;
   gboolean need_buf_period, need_pic_timing;
 
-  gst_bit_writer_init (&bs_buf_period, 128 * 8);
-  gst_bit_writer_init (&bs_pic_timing, 128 * 8);
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs_buf_period, 128, FALSE);
+  gst_bit_writer_init_with_size (&bs_pic_timing, 128, FALSE);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
 
   need_buf_period = GST_VAAPI_H264_SEI_BUF_PERIOD & payloadtype;
   need_pic_timing = GST_VAAPI_H264_SEI_PIC_TIMING & payloadtype;
@@ -1624,18 +1624,18 @@ add_packed_sei_header (GstVaapiEncoderH264Fei * encoder,
   gst_vaapi_enc_picture_add_packed_header (picture, packed_sei);
   gst_vaapi_codec_object_replace ((GstVaapiCodecObject **) & packed_sei, NULL);
 
-  gst_bit_writer_clear (&bs_buf_period, TRUE);
-  gst_bit_writer_clear (&bs_pic_timing, TRUE);
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs_buf_period);
+  gst_bit_writer_reset (&bs_pic_timing);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write SEI NAL unit");
-    gst_bit_writer_clear (&bs_buf_period, TRUE);
-    gst_bit_writer_clear (&bs_pic_timing, TRUE);
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs_buf_period);
+    gst_bit_writer_reset (&bs_pic_timing);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1679,7 +1679,7 @@ add_packed_prefix_nal_header (GstVaapiEncoderH264Fei * encoder,
   guint8 *data;
   guint8 nal_ref_idc, nal_unit_type;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
 
   if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
@@ -1706,7 +1706,7 @@ add_packed_prefix_nal_header (GstVaapiEncoderH264Fei * encoder,
   gst_vaapi_codec_object_replace ((GstVaapiCodecObject **) & packed_prefix_nal,
       NULL);
 
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
 
   return TRUE;
 
@@ -1714,7 +1714,7 @@ add_packed_prefix_nal_header (GstVaapiEncoderH264Fei * encoder,
 bs_error:
   {
     GST_WARNING ("failed to write Prefix NAL unit header");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -1733,7 +1733,7 @@ add_packed_slice_header (GstVaapiEncoderH264Fei * encoder,
   guint8 *data;
   guint8 nal_ref_idc, nal_unit_type;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
 
   if (!get_nal_hdr_attributes (picture, &nal_ref_idc, &nal_unit_type))
@@ -1763,14 +1763,14 @@ add_packed_slice_header (GstVaapiEncoderH264Fei * encoder,
   gst_vaapi_codec_object_replace ((GstVaapiCodecObject **) & packed_slice,
       NULL);
 
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
   return TRUE;
 
   /* ERRORS */
 bs_error:
   {
     GST_WARNING ("failed to write Slice NAL unit header");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 }
@@ -2911,7 +2911,8 @@ gst_vaapi_encoder_h264_fei_get_codec_data (GstVaapiEncoder * base_encoder,
   level_idc = sps_info.data[3];
 
   /* Header */
-  gst_bit_writer_init (&bs, (sps_info.size + pps_info.size + 64) * 8);
+  gst_bit_writer_init_with_size (&bs, (sps_info.size + pps_info.size + 64),
+      FALSE);
   WRITE_UINT32 (&bs, configuration_version, 8);
   WRITE_UINT32 (&bs, profile_idc, 8);
   WRITE_UINT32 (&bs, profile_comp, 8);
@@ -2934,13 +2935,12 @@ gst_vaapi_encoder_h264_fei_get_codec_data (GstVaapiEncoder * base_encoder,
   gst_buffer_unmap (encoder->pps_data, &pps_info);
   gst_buffer_unmap (encoder->sps_data, &sps_info);
 
-  buffer = gst_buffer_new_wrapped (GST_BIT_WRITER_DATA (&bs),
-      GST_BIT_WRITER_BIT_SIZE (&bs) / 8);
+  buffer = gst_bit_writer_reset_and_get_buffer (&bs);
   if (!buffer)
     goto error_alloc_buffer;
   *out_buffer_ptr = buffer;
 
-  gst_bit_writer_clear (&bs, FALSE);
+  gst_bit_writer_reset (&bs);
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
   /* ERRORS */
@@ -2949,7 +2949,7 @@ bs_error:
     GST_ERROR ("failed to write codec-data");
     gst_buffer_unmap (encoder->sps_data, &sps_info);
     gst_buffer_unmap (encoder->pps_data, &pps_info);
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return FALSE;
   }
 error_map_sps_buffer:
@@ -2966,7 +2966,7 @@ error_map_pps_buffer:
 error_alloc_buffer:
   {
     GST_ERROR ("failed to allocate codec-data buffer");
-    gst_bit_writer_clear (&bs, TRUE);
+    gst_bit_writer_reset (&bs);
     return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
 }

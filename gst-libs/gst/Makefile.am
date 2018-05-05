@@ -1,3 +1,3 @@
-SUBDIRS = base vaapi
+SUBDIRS = vaapi
 
 -include $(top_srcdir)/git.mk

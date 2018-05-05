@@ -611,7 +611,7 @@ add_packed_header (GstVaapiEncoderJpeg * encoder, GstVaapiEncPicture * picture)
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&bs, 128 * 8);
+  gst_bit_writer_init_with_size (&bs, 128, FALSE);
   bs_write_jpeg_header (&bs, encoder, picture);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
   data = GST_BIT_WRITER_DATA (&bs);
@@ -629,7 +629,7 @@ add_packed_header (GstVaapiEncoderJpeg * encoder, GstVaapiEncPicture * picture)
   gst_vaapi_enc_picture_add_packed_header (picture, packed_raw_data_hdr);
   gst_vaapi_codec_object_replace (&packed_raw_data_hdr, NULL);
 
-  gst_bit_writer_clear (&bs, TRUE);
+  gst_bit_writer_reset (&bs);
 
   return TRUE;
 }

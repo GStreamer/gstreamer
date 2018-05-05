@@ -40,7 +40,6 @@ libgstvaapi_libs =				\
 	$(GST_VIDEO_LIBS)			\
 	$(GST_CODEC_PARSERS_LIBS)		\
 	$(LIBVA_LIBS)				\
-	$(top_builddir)/gst-libs/gst/base/libgstvaapi-baseutils.la \
 	$(NULL)
 
 libgstvaapi_source_c =				\

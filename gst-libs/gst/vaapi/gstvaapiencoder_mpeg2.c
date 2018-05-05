@@ -347,7 +347,7 @@ set_sequence_packed_header (GstVaapiEncoderMpeg2 * encoder,
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&writer, 128 * 8);
+  gst_bit_writer_init_with_size (&writer, 128, FALSE);
   if (encoder->new_gop)
     gst_bit_writer_write_sps (&writer, seq_param);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
@@ -365,7 +365,7 @@ set_sequence_packed_header (GstVaapiEncoderMpeg2 * encoder,
 
   gst_vaapi_enc_picture_add_packed_header (picture, packed_seq);
   gst_vaapi_codec_object_replace (&packed_seq, NULL);
-  gst_bit_writer_clear (&writer, TRUE);
+  gst_bit_writer_reset (&writer);
 
   return TRUE;
 }
@@ -381,7 +381,7 @@ set_picture_packed_header (GstVaapiEncoderMpeg2 * encoder,
   guint32 data_bit_size;
   guint8 *data;
 
-  gst_bit_writer_init (&writer, 128 * 8);
+  gst_bit_writer_init_with_size (&writer, 128, FALSE);
   gst_bit_writer_write_pps (&writer, pic_param);
   g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&writer);
@@ -398,7 +398,7 @@ set_picture_packed_header (GstVaapiEncoderMpeg2 * encoder,
 
   gst_vaapi_enc_picture_add_packed_header (picture, packed_pic);
   gst_vaapi_codec_object_replace (&packed_pic, NULL);
-  gst_bit_writer_clear (&writer, TRUE);
+  gst_bit_writer_reset (&writer);
 
   return TRUE;
 }
