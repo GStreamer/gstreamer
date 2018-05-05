@@ -103,7 +103,7 @@ gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
 
 # Fixme, not very elegant.
-build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
 gir_init_section = [ '--add-init-section=' + \
     'extern void gst_init(gint*,gchar**);' + \
     'extern void ges_init(void);' + \
@@ -118,7 +118,7 @@ ges_c_args = ['-DHAVE_CONFIG_H']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 if gst_dep.type_name() == 'internal'
-  gst_debug_disabled = subproject('gstreamer').get_variable('disable_gst_debug')
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
   # We can't check that in the case of subprojects as we won't
   # be able to build against an internal dependency (which is not built yet)
@@ -162,7 +162,7 @@ subdir('examples')
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif get_option('disable_gtkdoc')
+elif not get_option('gtkdoc')
   message('gtk-doc is disabled via options')
 else
   if find_program('gtkdoc-scan', required : false).found()

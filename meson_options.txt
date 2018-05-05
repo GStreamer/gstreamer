@@ -1,6 +1,4 @@
-option('disable_introspection',
-        type : 'boolean', value : false,
-        description : 'Whether to disable the introspection generation')
-option('disable_gtkdoc',
-        type : 'boolean', value : false,
-        description : 'Whether to disable the documentation generation')
+option('introspection', type : 'boolean', value : true, yield : true,
+       description : 'Generate gobject-introspection bindings')
+option('gtkdoc', type : 'boolean', value : true, yield : true,
+       description : 'Build API documentation with gtk-doc')
