@@ -13,7 +13,8 @@ webrtc_sources = [
   'webrtctransceiver.c',
 ]
 
-libnice_dep = dependency('nice', version : '>=0.1.14', required : false)
+libnice_dep = dependency('nice', version : '>=0.1.14', required : false,
+                         fallback : ['libnice', 'libnice_dep'])
 
 if libnice_dep.found()
   library('gstwebrtc',
