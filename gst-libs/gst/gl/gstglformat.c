@@ -192,22 +192,18 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
   switch (n_plane_components) {
     case 4:
       return GST_GL_RGBA;
-      break;
     case 3:
       return GST_GL_RGB;
-      break;
     case 2:
       return texture_rg ? GST_GL_RG : GST_GL_LUMINANCE_ALPHA;
-      break;
     case 1:
       return texture_rg ? GST_GL_RED : GST_GL_LUMINANCE;
-      break;
     default:
-      g_assert_not_reached ();
       break;
   }
 
-  return GST_GL_RGBA;
+  g_critical ("Unknown video format 0x%x provided", v_format);
+  return 0;
 }
 
 /**
@@ -276,7 +272,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
     case GST_GL_DEPTH24_STENCIL8:
       return format;
     default:
-      break;
+      g_critical ("Unknown GL format 0x%x type 0x%x provided", format, type);
+      return format;
   }
 
   g_assert_not_reached ();
@@ -331,8 +328,73 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
       *gl_type = GL_UNSIGNED_BYTE;
       break;
     default:
-      g_assert_not_reached ();
+      g_critical ("Unknown GL format 0x%x provided", format);
+      *unsized_format = format;
+      *gl_type = GL_UNSIGNED_BYTE;
       return;
+  }
+}
+
+/**
+ * gst_gl_format_is_supported:
+ * @context: a #GstGLContext
+ * @format: the #GstGLFormat to check is supported by @context
+ *
+ * Returns: Whether @format is supported by @context based on the OpenGL API,
+ *          version, or available OpenGL extension/s.
+ */
+gboolean
+gst_gl_format_is_supported (GstGLContext * context, GstGLFormat format)
+{
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+
+  switch (format) {
+    case GST_GL_RGBA:
+    case GST_GL_RGB:
+      return TRUE;
+    case GST_GL_LUMINANCE:
+    case GST_GL_ALPHA:
+    case GST_GL_LUMINANCE_ALPHA:
+      /* deprecated/removed in core GL3 contexts */
+      return USING_OPENGL (context) || USING_GLES2 (context);
+    case GST_GL_RG:
+    case GST_GL_RED:
+      return gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0)
+          || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0)
+          || gst_gl_context_check_feature (context, "GL_EXT_texture_rg")
+          || gst_gl_context_check_feature (context, "GL_ARB_texture_rg");
+    case GST_GL_R8:
+    case GST_GL_RG8:
+      return USING_GLES3 (context)
+          || gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 0)
+          || gst_gl_context_check_feature (context, "GL_ARB_texture_rg");
+    case GST_GL_RGB8:
+    case GST_GL_RGBA8:
+      return (USING_GLES3 (context) && !USING_GLES2 (context))
+          || USING_OPENGL (context) || USING_OPENGL3 (context);
+    case GST_GL_RGB16:
+    case GST_GL_RGBA16:
+      return USING_OPENGL (context) || USING_OPENGL3 (context)
+          || USING_GLES3 (context);
+    case GST_GL_RGB565:
+      return USING_GLES2 (context) || (USING_OPENGL3 (context)
+          && gst_gl_context_check_feature (context,
+              "GL_ARB_ES2_compatibility"));
+    case GST_GL_DEPTH_COMPONENT16:
+      return gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 4)
+          || USING_GLES2 (context)
+          || gst_gl_context_check_feature (context, "GL_ARB_depth_texture")
+          || gst_gl_context_check_feature (context, "GL_OES_depth_texture");
+    case GST_GL_DEPTH24_STENCIL8:
+      return gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 3, 0)
+          || USING_GLES3 (context)
+          || gst_gl_context_check_feature (context,
+          "GL_OES_packed_depth_stencil")
+          || gst_gl_context_check_feature (context,
+          "GL_EXT_packed_depth_stencil");
+    default:
+      g_assert_not_reached ();
+      return FALSE;
   }
 }
 
