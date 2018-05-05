@@ -23,11 +23,12 @@
  * @title: tcpserversink
  * @see_also: #multifdsink
  *
- * ## Example launch line
+ * ## Example launch line (server):
  * |[
- * # server:
  * gst-launch-1.0 fdsrc fd=1 ! tcpserversink port=3000
- * # client:
+ * ]|
+ * ## Example launch line (client):
+ * |[
  * gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
  * ]|
  *

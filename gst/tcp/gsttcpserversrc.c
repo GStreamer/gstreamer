@@ -25,11 +25,12 @@
  * @title: tcpserversrc
  * @see_also: #tcpserversink
  *
- * ## Example launch line
+ * ## Example launch line (server):
  * |[
- * # server:
  * gst-launch-1.0 tcpserversrc port=3000 ! fdsink fd=2
- * # client:
+ * ]|
+ * ## Example launch line (client):
+ * |[
  * gst-launch-1.0 fdsrc fd=1 ! tcpclientsink port=3000
  * ]|
  *

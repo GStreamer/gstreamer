@@ -25,11 +25,12 @@
  * @title: tcpclientsrc
  * @see_also: #tcpclientsink
  *
- * ## Example launch line
+ * ## Example launch line (server):
  * |[
- * # server:
  * nc -l -p 3000
- * # client:
+ * ]|
+ * ## Example launch line (client):
+ * |[
  * gst-launch-1.0 tcpclientsrc port=3000 ! fdsink fd=2
  * ]|
  *  everything you type in the server is shown on the client.
