@@ -1583,9 +1583,10 @@ gst_gl_video_mixer_callback (gpointer stuff)
     {
       GstVideoAffineTransformationMeta *af_meta;
       gfloat matrix[16];
+      GstBuffer *buffer =
+          gst_video_aggregator_pad_get_current_buffer (vagg_pad);
 
-      af_meta =
-          gst_buffer_get_video_affine_transformation_meta (vagg_pad->buffer);
+      af_meta = gst_buffer_get_video_affine_transformation_meta (buffer);
       gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, matrix);
       gst_gl_shader_set_uniform_matrix_4fv (video_mixer->shader,
           "u_transformation", 1, FALSE, matrix);

@@ -65,6 +65,9 @@ enum
 
 struct _GstVideoAggregatorPadPrivate
 {
+  GstBuffer *buffer;
+  GstVideoFrame prepared_frame;
+
   /* properties */
   guint zorder;
   gboolean repeat_after_eos;
@@ -146,7 +149,7 @@ _flush_pad (GstAggregatorPad * aggpad, GstAggregator * aggregator)
   GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (aggpad);
 
   gst_video_aggregator_reset_qos (vagg);
-  gst_buffer_replace (&pad->buffer, NULL);
+  gst_buffer_replace (&pad->priv->buffer, NULL);
   pad->priv->start_time = -1;
   pad->priv->end_time = -1;
 
@@ -259,28 +262,26 @@ gst_video_aggregator_pad_finalize (GObject * o)
 
 static gboolean
 gst_video_aggregator_pad_prepare_frame (GstVideoAggregatorPad * pad,
-    GstVideoAggregator * vagg)
+    GstVideoAggregator * vagg, GstBuffer * buffer,
+    GstVideoFrame * prepared_frame)
 {
-  guint outsize;
-  GstVideoFrame *converted_frame;
-  GstBuffer *converted_buf = NULL;
-  GstVideoFrame *frame;
-  static GstAllocationParams params = { 0, 15, 0, 0, };
+  GstVideoFrame frame;
 
-  if (!pad->buffer)
+  if (!pad->priv->buffer)
     return TRUE;
 
-  frame = g_slice_new0 (GstVideoFrame);
-
-  if (!gst_video_frame_map (frame, &pad->info, pad->buffer, GST_MAP_READ)) {
+  if (!gst_video_frame_map (&frame, &pad->info, pad->priv->buffer,
+          GST_MAP_READ)) {
     GST_WARNING_OBJECT (vagg, "Could not map input buffer");
     return FALSE;
   }
 
   if (pad->priv->convert) {
+    GstVideoFrame converted_frame;
+    GstBuffer *converted_buf = NULL;
+    static GstAllocationParams params = { 0, 15, 0, 0, };
     gint converted_size;
-
-    converted_frame = g_slice_new0 (GstVideoFrame);
+    guint outsize;
 
     /* We wait until here to set the conversion infos, in case vagg->info changed */
     converted_size = pad->priv->conversion_info.size;
@@ -288,37 +289,32 @@ gst_video_aggregator_pad_prepare_frame (GstVideoAggregatorPad * pad,
     converted_size = converted_size > outsize ? converted_size : outsize;
     converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
 
-    if (!gst_video_frame_map (converted_frame, &(pad->priv->conversion_info),
+    if (!gst_video_frame_map (&converted_frame, &(pad->priv->conversion_info),
             converted_buf, GST_MAP_READWRITE)) {
       GST_WARNING_OBJECT (vagg, "Could not map converted frame");
 
-      g_slice_free (GstVideoFrame, converted_frame);
-      gst_video_frame_unmap (frame);
-      g_slice_free (GstVideoFrame, frame);
+      gst_video_frame_unmap (&frame);
       return FALSE;
     }
 
-    gst_video_converter_frame (pad->priv->convert, frame, converted_frame);
+    gst_video_converter_frame (pad->priv->convert, &frame, &converted_frame);
     pad->priv->converted_buffer = converted_buf;
-    gst_video_frame_unmap (frame);
-    g_slice_free (GstVideoFrame, frame);
+    gst_video_frame_unmap (&frame);
+    *prepared_frame = converted_frame;
   } else {
-    converted_frame = frame;
+    *prepared_frame = frame;
   }
-
-  pad->aggregated_frame = converted_frame;
 
   return TRUE;
 }
 
 static void
 gst_video_aggregator_pad_clean_frame (GstVideoAggregatorPad * pad,
-    GstVideoAggregator * vagg)
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame)
 {
-  if (pad->aggregated_frame) {
-    gst_video_frame_unmap (pad->aggregated_frame);
-    g_slice_free (GstVideoFrame, pad->aggregated_frame);
-    pad->aggregated_frame = NULL;
+  if (prepared_frame->buffer) {
+    gst_video_frame_unmap (prepared_frame);
+    memset (prepared_frame, 0, sizeof (GstVideoFrame));
   }
 
   if (pad->priv->converted_buffer) {
@@ -368,9 +364,75 @@ gst_video_aggregator_pad_init (GstVideoAggregatorPad * vaggpad)
   vaggpad->priv->zorder = DEFAULT_PAD_ZORDER;
   vaggpad->priv->repeat_after_eos = DEFAULT_PAD_REPEAT_AFTER_EOS;
   vaggpad->priv->converted_buffer = NULL;
-  vaggpad->aggregated_frame = NULL;
+  memset (&vaggpad->priv->prepared_frame, 0, sizeof (GstVideoFrame));
 
   vaggpad->priv->convert = NULL;
+}
+
+/**
+ * gst_video_aggregator_pad_has_current_buffer:
+ * @pad: a #GstVideoAggregatorPad
+ *
+ * Checks if the pad currently has a buffer queued that is going to be used
+ * for the current output frame.
+ *
+ * This must only be called from the aggregate_frames() virtual method,
+ * or from the prepare_frame() virtual method of the aggregator pads.
+ *
+ * Returns: %TRUE if the pad has currently a buffer queued
+ */
+gboolean
+gst_video_aggregator_pad_has_current_buffer (GstVideoAggregatorPad * pad)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_AGGREGATOR_PAD (pad), FALSE);
+
+  return pad->priv->buffer != NULL;
+}
+
+/**
+ * gst_video_aggregator_pad_has_current_buffer:
+ * @pad: a #GstVideoAggregatorPad
+ *
+ * Returns the currently queued buffer that is going to be used
+ * for the current output frame.
+ *
+ * This must only be called from the aggregate_frames() virtual method,
+ * or from the prepare_frame() virtual method of the aggregator pads.
+ *
+ * The return value is only valid until aggregate_frames() or prepare_frames()
+ * returns.
+ *
+ * Returns: (transfer none): The currently queued buffer
+ */
+GstBuffer *
+gst_video_aggregator_pad_get_current_buffer (GstVideoAggregatorPad * pad)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_AGGREGATOR_PAD (pad), NULL);
+
+  return pad->priv->buffer;
+}
+
+/**
+ * gst_video_aggregator_pad_get_prepared_frame:
+ * @pad: a #GstVideoAggregatorPad
+ *
+ * Returns the currently prepared video frame that has to be aggregated into
+ * the current output frame.
+ *
+ * This must only be called from the aggregate_frames() virtual method,
+ * or from the prepare_frame() virtual method of the aggregator pads.
+ *
+ * The return value is only valid until aggregate_frames() or prepare_frames()
+ * returns.
+ *
+ * Returns: (transfer none): The currently prepared video frame
+ */
+GstVideoFrame *
+gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorPad * pad)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_AGGREGATOR_PAD (pad), NULL);
+
+  return pad->priv->prepared_frame.buffer ? &pad->priv->prepared_frame : NULL;
 }
 
 /**************************************
@@ -1017,7 +1079,7 @@ gst_video_aggregator_reset (GstVideoAggregator * vagg)
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     GstVideoAggregatorPad *p = l->data;
 
-    gst_buffer_replace (&p->buffer, NULL);
+    gst_buffer_replace (&p->priv->buffer, NULL);
     p->priv->start_time = -1;
     p->priv->end_time = -1;
 
@@ -1038,7 +1100,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
   gboolean need_reconfigure = FALSE;
   GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
-  /* get a set of buffers into pad->buffer that are within output_start_running_time
+  /* get a set of buffers into pad->priv->buffer that are within output_start_running_time
    * and output_end_running_time taking into account finished and unresponsive pads */
 
   GST_OBJECT_LOCK (vagg);
@@ -1078,7 +1140,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
             gst_segment_to_running_time (&segment, GST_FORMAT_TIME, start_time);
 
         if (start_time >= output_end_running_time) {
-          if (pad->buffer) {
+          if (pad->priv->buffer) {
             GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time >= "
                 "output_end_running_time. Keeping previous buffer");
           } else {
@@ -1090,7 +1152,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         } else if (start_time < output_start_running_time) {
           GST_DEBUG_OBJECT (pad, "buffer duration is -1, start_time < "
               "output_start_running_time.  Discarding old buffer");
-          gst_buffer_replace (&pad->buffer, buf);
+          gst_buffer_replace (&pad->priv->buffer, buf);
           if (pad->priv->pending_vinfo.finfo) {
             pad->info = pad->priv->pending_vinfo;
             need_reconfigure = TRUE;
@@ -1103,7 +1165,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         }
         gst_buffer_unref (buf);
         buf = gst_aggregator_pad_pop_buffer (bpad);
-        gst_buffer_replace (&pad->buffer, buf);
+        gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
           pad->info = pad->priv->pending_vinfo;
           need_reconfigure = TRUE;
@@ -1168,7 +1230,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         GST_DEBUG_OBJECT (pad,
             "Taking new buffer with start time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start_time));
-        gst_buffer_replace (&pad->buffer, buf);
+        gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
           pad->info = pad->priv->pending_vinfo;
           need_reconfigure = TRUE;
@@ -1186,7 +1248,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
         gst_buffer_unref (buf);
         eos = FALSE;
       } else {
-        gst_buffer_replace (&pad->buffer, buf);
+        gst_buffer_replace (&pad->priv->buffer, buf);
         if (pad->priv->pending_vinfo.finfo) {
           pad->info = pad->priv->pending_vinfo;
           need_reconfigure = TRUE;
@@ -1218,13 +1280,13 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
             GST_DEBUG ("I just need more data");
             need_more_data = TRUE;
           } else {
-            gst_buffer_replace (&pad->buffer, NULL);
+            gst_buffer_replace (&pad->priv->buffer, NULL);
           }
         } else if (is_eos) {
           eos = FALSE;
         }
       } else if (is_eos) {
-        gst_buffer_replace (&pad->buffer, NULL);
+        gst_buffer_replace (&pad->priv->buffer, NULL);
       }
     }
   }
@@ -1249,10 +1311,10 @@ sync_pad_values (GstElement * vagg, GstPad * pad, gpointer user_data)
   GstClockTime timestamp;
   gint64 stream_time;
 
-  if (vpad->buffer == NULL)
+  if (vpad->priv->buffer == NULL)
     return TRUE;
 
-  timestamp = GST_BUFFER_TIMESTAMP (vpad->buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (vpad->priv->buffer);
   GST_OBJECT_LOCK (bpad);
   stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
       timestamp);
@@ -1272,10 +1334,13 @@ prepare_frames (GstElement * agg, GstPad * pad, gpointer user_data)
   GstVideoAggregatorPadClass *vaggpad_class =
       GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (pad);
 
-  if (vpad->buffer == NULL || !vaggpad_class->prepare_frame)
+  memset (&vpad->priv->prepared_frame, 0, sizeof (GstVideoFrame));
+
+  if (vpad->priv->buffer == NULL || !vaggpad_class->prepare_frame)
     return TRUE;
 
-  return vaggpad_class->prepare_frame (vpad, GST_VIDEO_AGGREGATOR_CAST (agg));
+  return vaggpad_class->prepare_frame (vpad, GST_VIDEO_AGGREGATOR_CAST (agg),
+      vpad->priv->buffer, &vpad->priv->prepared_frame);
 }
 
 static gboolean
@@ -1287,7 +1352,9 @@ clean_pad (GstElement * agg, GstPad * pad, gpointer user_data)
       GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (pad);
 
   if (vaggpad_class->clean_frame)
-    vaggpad_class->clean_frame (vpad, vagg);
+    vaggpad_class->clean_frame (vpad, vagg, &vpad->priv->prepared_frame);
+
+  memset (&vpad->priv->prepared_frame, 0, sizeof (GstVideoFrame));
 
   return TRUE;
 }
@@ -1749,11 +1816,11 @@ gst_video_aggregator_flush (GstAggregator * agg)
 
     /* Convert to the output segment rate */
     if (ABS (agg_segment->rate) != abs_rate) {
-      if (ABS (agg_segment->rate) != 1.0 && p->buffer) {
+      if (ABS (agg_segment->rate) != 1.0 && p->priv->buffer) {
         p->priv->start_time /= ABS (agg_segment->rate);
         p->priv->end_time /= ABS (agg_segment->rate);
       }
-      if (abs_rate != 1.0 && p->buffer) {
+      if (abs_rate != 1.0 && p->priv->buffer) {
         p->priv->start_time *= abs_rate;
         p->priv->end_time *= abs_rate;
       }
@@ -1879,7 +1946,7 @@ gst_video_aggregator_release_pad (GstElement * element, GstPad * pad)
   if (last_pad)
     gst_video_aggregator_reset (vagg);
 
-  gst_buffer_replace (&vaggpad->buffer, NULL);
+  gst_buffer_replace (&vaggpad->priv->buffer, NULL);
 
   GST_ELEMENT_CLASS (gst_video_aggregator_parent_class)->release_pad
       (GST_ELEMENT (vagg), pad);
