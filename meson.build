@@ -1,6 +1,6 @@
 project('gst-devtools', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.36.0',
+  meson_version : '>= 0.46.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
@@ -89,13 +89,13 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'gst_init(NULL,NULL);' ]
 gir = find_program('g-ir-scanner', required : false)
-build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
 gnome = import('gnome')
 
 gtkdoc = find_program('gtkdoc-scan', required : false)
 
 if gst_dep.type_name() == 'internal'
-  gst_debug_disabled = subproject('gstreamer').get_variable('disable_gst_debug')
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
   # We can't check that in the case of subprojects as we won't
   # be able to build against an internal dependency (which is not built yet)
@@ -132,11 +132,11 @@ endforeach
 
 i18n = import('i18n')
 python3 = import('python3')
-if get_option('disable_validate') == false
+if get_option('validate')
   subdir('validate')
 endif
 
-if get_option('disable_debug_viewer') == false
+if get_option('debug_viewer')
   subdir('debug-viewer')
 endif
 

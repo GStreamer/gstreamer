@@ -1,12 +1,8 @@
-option('disable_validate',
-        type : 'boolean', value : false,
-        description : 'Whether to disable GstValidate')
-option('disable_debug_viewer',
-        type : 'boolean', value : false,
-        description : 'Whether to disable GstDebugViewer')
-option('disable_introspection',
-        type : 'boolean', value : false,
-        description : 'Whether to disable the introspection generation')
-option('disable_gtkdoc',
-        type : 'boolean', value : false,
-        description : 'Whether to disable the documentation generation')
+option('validate', type : 'boolean', value : true,
+       description : 'Build GstValidate')
+option('debug_viewer', type : 'boolean', value : true,
+        description : 'Build GstDebugViewer')
+option('introspection', type : 'boolean', value : true, yield : true,
+        description : 'Generate gobject-introspection bindings')
+option('gtkdoc', type : 'boolean', value : true, yield : true,
+        description : 'Generate API documentation with gtk-doc')
