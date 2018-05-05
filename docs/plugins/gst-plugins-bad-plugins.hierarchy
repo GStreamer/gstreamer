@@ -239,6 +239,7 @@ GObject
           GstProxySrc
           GstSDPDemux
           GstSdpSrc
+          GstTestSrcBin
           GstVideoParse
           GstViewfinderBin
           GstWebRTCBin

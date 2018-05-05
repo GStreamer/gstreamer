@@ -88,6 +88,7 @@ GstSbcEnc GstPreset
 GstSdpSrc GstChildProxy GstURIHandler
 GstSirenEnc GstPreset
 GstTagMux GstTagSetter
+GstTestSrcBin GstChildProxy GstURIHandler
 GstUnalignedAudioParse GstChildProxy
 GstUnalignedVideoParse GstChildProxy
 GstUvcH264Src GstChildProxy

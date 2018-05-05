@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRA, BGRx, RGBA, RGBx, UYVY, YUY2, YVYU, I420, YV12, Y42B, NV12, NV21, NV16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRA, BGRx, RGBA, RGBx, RGB, BGR, UYVY, YUY2, YVYU, I420, YV12, Y42B, NV12, NV21, NV16 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

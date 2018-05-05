@@ -67311,6 +67311,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSrc::output-cc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Closed Caption</NICK>
+<BLURB>Extract and output CC as GstMeta (if present).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -68778,6 +68788,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Tune options</NICK>
 <BLURB>Preset name for tuning options.</BLURB>
 <DEFAULT>ssim</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX265Enc::key-int-max</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max key frame</NICK>
+<BLURB>Maximal distance between two key-frames (0 = x265 default / 250).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73138,5 +73158,15 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Print latencies</NICK>
 <BLURB>Print the measured latencies on stdout.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTestSrcBin::stream-types</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream types</NICK>
+<BLURB>String describing the stream types to expose, eg. "video+audio".</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

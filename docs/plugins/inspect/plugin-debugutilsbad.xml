@@ -145,6 +145,27 @@
       </pads>
     </element>
     <element>
+      <name>testsrcbin</name>
+      <longname>Generic bin</longname>
+      <class>Generic/Bin</class>
+      <description>Simple container object</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;,Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/x-raw(ANY)</details>
+        </caps>
+        <caps>
+          <name>video_src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/x-raw(ANY)</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>watchdog</name>
       <longname>Watchdog</longname>
       <class>Generic</class>
