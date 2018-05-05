@@ -320,7 +320,7 @@ foreach extra_arg : warning_flags
 endforeach
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer Bad Plug-ins source release'
@@ -331,7 +331,7 @@ if gst_package_name == ''
   endif
 endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # FIXME: This should be exposed as a configuration option
 host_system = host_machine.system()
@@ -456,8 +456,8 @@ endif
 
 have_orcc = false
 orcc_args = []
-if get_option('use_orc') != 'no'
-  need_orc = get_option('use_orc') == 'yes'
+if get_option('orc') != 'no'
+  need_orc = get_option('orc') == 'yes'
   # Used by various libraries/elements that use Orc code
   orc_dep = dependency('orc-0.4', required : need_orc)
   orcc = find_program('orcc', required : need_orc)
@@ -474,7 +474,7 @@ else
 endif
 
 if gst_dep.type_name() == 'internal'
-  gst_debug_disabled = subproject('gstreamer').get_variable('disable_gst_debug')
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
   # We can't check that in the case of subprojects as we won't
   # be able to build against an internal dependency (which is not built yet)
@@ -493,7 +493,7 @@ python3 = import('python3').find_python()
 
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
-build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_1.0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \

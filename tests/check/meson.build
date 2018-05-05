@@ -1,4 +1,4 @@
-have_registry = true # FIXME not get_option('disable_registry')
+have_registry = true # FIXME get_option('registry')
 
 libparser = static_library('parser',
   'elements/parser.c',
@@ -11,7 +11,7 @@ libparser_dep = declare_dependency(link_with: libparser,
 
 exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
 
-enable_gst_player_tests = get_option('enable_gst_player_tests')
+enable_gst_player_tests = get_option('gst_player_tests')
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [
