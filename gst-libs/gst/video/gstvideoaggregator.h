@@ -71,10 +71,6 @@ struct _GstVideoAggregatorPad
   /* read-only, with OBJECT_LOCK */
   GstVideoInfo info;
 
-  /* Subclasses can force an alpha channel in the (input thus output)
-   * colorspace format */
-  gboolean needs_alpha;
-
   /* < private > */
   GstVideoAggregatorPadPrivate *priv;
 
@@ -121,6 +117,9 @@ GstBuffer * gst_video_aggregator_pad_get_current_buffer (GstVideoAggregatorPad *
 
 GST_VIDEO_BAD_API
 GstVideoFrame * gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorPad *pad);
+
+GST_VIDEO_BAD_API
+void gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad *pad, gboolean needs_alpha);
 
 #define GST_TYPE_VIDEO_AGGREGATOR (gst_video_aggregator_get_type())
 #define GST_VIDEO_AGGREGATOR(obj) \

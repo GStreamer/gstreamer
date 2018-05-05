@@ -72,6 +72,10 @@ struct _GstVideoAggregatorPadPrivate
   guint zorder;
   gboolean repeat_after_eos;
 
+  /* Subclasses can force an alpha channel in the (input thus output)
+   * colorspace format */
+  gboolean needs_alpha;
+
   /* Converter, if NULL no conversion is done */
   GstVideoConverter *convert;
 
@@ -435,6 +439,32 @@ gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorPad * pad)
   return pad->priv->prepared_frame.buffer ? &pad->priv->prepared_frame : NULL;
 }
 
+/**
+ * gst_video_aggregator_pad_set_needs_alpha:
+ * @pad: a #GstVideoAggregatorPad
+ * @needs_alpha: %TRUE if this pad requires alpha output
+ *
+ * Allows selecting that this pad requires an output format with alpha
+ *
+ * Returns: (transfer none): The currently prepared video frame
+ */
+void
+gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad * pad,
+    gboolean needs_alpha)
+{
+  g_return_if_fail (GST_IS_VIDEO_AGGREGATOR_PAD (pad));
+
+  if (needs_alpha != pad->priv->needs_alpha) {
+    GstAggregator *agg =
+        GST_AGGREGATOR (gst_object_get_parent (GST_OBJECT (pad)));
+    pad->priv->needs_alpha = needs_alpha;
+    if (agg) {
+      gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (agg));
+      gst_object_unref (agg);
+    }
+  }
+}
+
 /**************************************
  * GstVideoAggregator implementation  *
  **************************************/
@@ -562,7 +592,7 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
         GINT_TO_POINTER (format_number));
 
     /* If that pad is the first with alpha, set it as the new best format */
-    if (!need_alpha && (pad->needs_alpha
+    if (!need_alpha && (pad->priv->needs_alpha
             && (!GST_VIDEO_FORMAT_INFO_HAS_ALPHA (pad->info.finfo)))) {
       need_alpha = TRUE;
       /* Just fallback to ARGB in case we require alpha but the input pad
