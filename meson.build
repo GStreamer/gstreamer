@@ -120,7 +120,7 @@ cdata.set('GETTEXT_PACKAGE', '"gst-plugins-ugly-1.0"')
 cdata.set('GST_LICENSE', '"LGPL"')
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer Ugly Plug-ins source release'
@@ -131,7 +131,7 @@ if gst_package_name == ''
   endif
 endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
@@ -181,7 +181,7 @@ configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
 
 if gst_dep.type_name() == 'internal'
-  gst_debug_disabled = subproject('gstreamer').get_variable('disable_gst_debug')
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
   # We can't check that in the case of subprojects as we won't
   # be able to build against an internal dependency (which is not built yet)
