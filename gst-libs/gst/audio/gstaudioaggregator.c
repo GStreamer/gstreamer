@@ -832,7 +832,7 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 /* Must be called with OBJECT_LOCK taken */
 static void
 gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
-    GstAudioInfo * new_info)
+    GstAudioInfo * new_info, GstAudioInfo * old_info)
 {
   GList *l;
 
@@ -849,7 +849,7 @@ gst_audio_aggregator_update_converters (GstAudioAggregator * aagg,
     if (aaggpad->priv->buffer) {
       GstBuffer *new_converted_buffer =
           gst_audio_aggregator_convert_buffer (aagg, GST_PAD (aaggpad),
-          &aaggpad->info, new_info, aaggpad->priv->input_buffer);
+          old_info, new_info, aaggpad->priv->input_buffer);
       gst_buffer_replace (&aaggpad->priv->buffer, new_converted_buffer);
       gst_buffer_unref (new_converted_buffer);
     }
@@ -874,31 +874,31 @@ gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (aagg);
 
-  if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad)->convert_buffer) {
-    gst_audio_aggregator_update_converters (aagg, &info);
-
-    if (aagg->priv->current_buffer
-        && !gst_audio_info_is_equal (&srcpad->info, &info)) {
-      GstBuffer *converted;
-      GstAudioAggregatorPadClass *klass =
-          GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad);
-
-      if (klass->update_conversion_info)
-        klass->update_conversion_info (GST_AUDIO_AGGREGATOR_PAD (agg->srcpad));
-
-      converted =
-          gst_audio_aggregator_convert_buffer (aagg, agg->srcpad, &srcpad->info,
-          &info, aagg->priv->current_buffer);
-      gst_buffer_unref (aagg->priv->current_buffer);
-      aagg->priv->current_buffer = converted;
-    }
-  }
-
   if (!gst_audio_info_is_equal (&info, &srcpad->info)) {
+    GstAudioInfo old_info = srcpad->info;
+    GstAudioAggregatorPadClass *srcpad_klass =
+        GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad);
+
     GST_INFO_OBJECT (aagg, "setting caps to %" GST_PTR_FORMAT, caps);
     gst_caps_replace (&aagg->current_caps, caps);
 
     memcpy (&srcpad->info, &info, sizeof (info));
+
+    gst_audio_aggregator_update_converters (aagg, &info, &old_info);
+
+    if (srcpad_klass->update_conversion_info)
+      srcpad_klass->
+          update_conversion_info (GST_AUDIO_AGGREGATOR_PAD (agg->srcpad));
+
+    if (aagg->priv->current_buffer) {
+      GstBuffer *converted;
+
+      converted =
+          gst_audio_aggregator_convert_buffer (aagg, agg->srcpad, &old_info,
+          &info, aagg->priv->current_buffer);
+      gst_buffer_unref (aagg->priv->current_buffer);
+      aagg->priv->current_buffer = converted;
+    }
   }
 
   GST_OBJECT_UNLOCK (aagg);
