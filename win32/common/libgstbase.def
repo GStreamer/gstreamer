@@ -37,6 +37,7 @@ EXPORTS
 	gst_aggregator_get_type
 	gst_aggregator_pad_drop_buffer
 	gst_aggregator_pad_get_type
+	gst_aggregator_pad_has_buffer
 	gst_aggregator_pad_is_eos
 	gst_aggregator_pad_peek_buffer
 	gst_aggregator_pad_pop_buffer
