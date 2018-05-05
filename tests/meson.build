@@ -1,6 +1,6 @@
 subdir('benchmarks')
 subdir('check')
-if not get_option('disable_examples')
+if get_option('examples')
   subdir('examples')
 endif
 subdir('misc')

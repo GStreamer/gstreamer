@@ -83,19 +83,19 @@ if have_ptp
   setcap = find_program('setcap', '/usr/sbin/setcap', '/sbin/setcap', required : false)
 
   # user/group to change to in gst-ptp-helper
-  ptp_helper_setuid_user = get_option('with-ptp-helper-setuid-user')
+  ptp_helper_setuid_user = get_option('ptp-helper-setuid-user')
   if ptp_helper_setuid_user != ''
     cdata.set_quoted('HAVE_PTP_HELPER_SETUID_USER', ptp_helper_setuid_user,
       description : 'PTP helper setuid user')
   endif
-  ptp_helper_setuid_group = get_option('with-ptp-helper-setuid-group')
+  ptp_helper_setuid_group = get_option('ptp-helper-setuid-group')
   if ptp_helper_setuid_group != ''
     cdata.set_quoted('HAVE_PTP_HELPER_SETUID_GROUP', ptp_helper_setuid_group,
       description : 'PTP helper setuid group')
   endif
 
   # how to install gst-ptp-helper
-  with_ptp_helper_permissions = get_option('with-ptp-helper-permissions')
+  with_ptp_helper_permissions = get_option('ptp-helper-permissions')
   if with_ptp_helper_permissions == 'auto'
     if gst_ptp_have_cap and setcap.found()
       with_ptp_helper_permissions = 'capabilities'

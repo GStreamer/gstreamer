@@ -94,7 +94,7 @@ else
 endif
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer source release'
@@ -105,7 +105,7 @@ if gst_package_name == ''
   endif
 endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # These are only needed/used by the ABI tests
 host_defines = [
@@ -301,7 +301,7 @@ if host_machine.system() == 'windows'
 endif
 
 backtrace_deps = []
-if not get_option('disable_libunwind')
+if get_option('libunwind')
   unwind_dep = dependency('libunwind', required : false)
   dw_dep = dependency('libdw', required: false)
   backtrace_deps = [unwind_dep, dw_dep]
@@ -333,8 +333,8 @@ if cc.has_header('execinfo.h')
   endif
 endif
 
-disable_gst_debug = get_option('disable_gst_debug')
-if disable_gst_debug
+gst_debug = get_option('gst_debug')
+if not gst_debug
   add_project_arguments(['-Wno-unused'], language: 'c')
 endif
 
@@ -408,7 +408,7 @@ gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
 
 # Fixme, not very elegant.
-build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
 
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
@@ -481,7 +481,7 @@ configure_file(output : 'config.h', configuration : cdata)
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif get_option('disable_gtkdoc')
+elif not get_option('gtkdoc')
   message('gtk-doc is disabled via options')
 else
   if find_program('gtkdoc-scan', required : false).found()

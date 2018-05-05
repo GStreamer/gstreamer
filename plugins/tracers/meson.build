@@ -5,7 +5,7 @@ gst_tracers_sources = [
   'gsttracers.c',
 ]
 
-if not disable_gst_debug
+if gst_debug
   gst_tracers_sources += ['gstlog.c']
 endif
 

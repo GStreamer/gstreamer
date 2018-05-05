@@ -150,27 +150,27 @@ gst_headers = [
 ]
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
-disable_registry = get_option('disable_registry')
-if not disable_registry
-  gst_registry = ['gstregistrybinary.c']
+gst_registry = get_option('registry')
+if gst_registry
+  gst_registry_sources = ['gstregistrybinary.c']
 else
-  gst_registry = []
+  gst_registry_sources = []
 endif
 
 # Make copy so configure_file consumes the copy and we can
 # still add to the original cdata later.
 gst_cdata = cdata
 
-if disable_gst_debug
-  gst_cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#define GST_DISABLE_GST_DEBUG 1')
-else
+if gst_debug
   gst_cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#undef GST_DISABLE_GST_DEBUG')
+else
+  gst_cdata.set('GST_DISABLE_GST_DEBUG_DEFINE', '#define GST_DISABLE_GST_DEBUG 1')
 endif
 
-if disable_registry
-  gst_cdata.set('GST_DISABLE_REGISTRY_DEFINE', '#define GST_DISABLE_REGISTRY 1')
-else
+if gst_registry
   gst_cdata.set('GST_DISABLE_REGISTRY_DEFINE', '#undef GST_DISABLE_REGISTRY')
+else
+  gst_cdata.set('GST_DISABLE_REGISTRY_DEFINE', '#define GST_DISABLE_REGISTRY 1')
 endif
 
 # FIXME: add --disable-parse option? (but autotools doesn't seem to set this
@@ -218,8 +218,8 @@ libgst_c_args = gst_c_args + [
   '-DGST_DISABLE_DEPRECATED',
 ]
 
-disable_tracer_hooks = get_option('disable_tracer_hooks')
-if disable_tracer_hooks
+tracer_hooks = get_option('tracer_hooks')
+if not tracer_hooks
   libgst_c_args += ['-DGST_DISABLE_GST_TRACER_HOOKS']
 endif
 
@@ -227,7 +227,7 @@ endif
 gst_incdirs = [configinc]
 gst_gen_sources = [gstenum_h]
 libgst = library('gstreamer-1.0', gst_sources,
-  gstenum_h, gstenum_c, grammar, parser, gst_registry,
+  gstenum_h, gstenum_c, grammar, parser, gst_registry_sources,
   version : libversion,
   soversion : soversion,
   c_args : libgst_c_args,
