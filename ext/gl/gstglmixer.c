@@ -26,6 +26,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#include <string.h>
+
 #include "gstglmixer.h"
 
 #define gst_gl_mixer_parent_class parent_class
