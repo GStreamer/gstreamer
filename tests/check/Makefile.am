@@ -42,6 +42,7 @@ check_gl=\
     libs/gstglslstage \
     libs/gstglshader \
     libs/gstglheaders \
+    libs/gstglformat \
     elements/glimagesink \
     elements/glbin \
     pipelines/gl-launch-lines
@@ -503,6 +504,14 @@ libs_gstglheaders_LDADD = \
 libs_gstglheaders_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglformat_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+
+libs_gstglformat_LDADD = \
+	$(top_builddir)/gst-libs/gst/gl/libgstgl-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 elements_glimagesink_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
