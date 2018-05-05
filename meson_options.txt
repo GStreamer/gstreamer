@@ -1,11 +1,11 @@
-option('disable_introspection',
-        type : 'boolean', value : false,
-        description : 'Whether to disable the introspection generation')
-option('with-package-name', type : 'string',
+option('introspection', type : 'boolean', value : true, yield : true,
+        description : 'Generate gobject-introspection bindings')
+option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
-option('with-package-origin', type : 'string', value : 'Unknown package origin',
+option('package-origin', type : 'string',
+       value : 'Unknown package origin', yield : true,
        description : 'package origin URL to use in plugins')
 option('tests', type : 'boolean', value : true,
        description : 'Build and enable unit tests')
-option('examples', type : 'boolean', value : true,
+option('examples', type : 'boolean', value : true, yield : true,
        description : 'Build the examples')

@@ -54,7 +54,7 @@ cdata.set_quoted('GST_LICENSE', 'LGPL')
 # cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
 # GStreamer package name and origin url
-gst_package_name = get_option('with-package-name')
+gst_package_name = get_option('package-name')
 if gst_package_name == ''
   if gst_version_nano == 0
     gst_package_name = 'GStreamer RTSP Server Library source release'
@@ -65,7 +65,7 @@ if gst_package_name == ''
   endif
 endif
 cdata.set_quoted('GST_PACKAGE_NAME', gst_package_name)
-cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('with-package-origin'))
+cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 configure_file(output : 'config.h', configuration : cdata)
 
@@ -117,7 +117,7 @@ gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
 
 gir = find_program('g-ir-scanner', required : false)
 gnome = import('gnome')
-build_gir = gir.found() and not meson.is_cross_build() and not get_option('disable_introspection')
+build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_1.0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
