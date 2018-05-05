@@ -3114,3 +3114,40 @@ gst_aggregator_get_allocator (GstAggregator * self,
   if (params)
     *params = self->priv->allocation_params;
 }
+
+/**
+ * gst_aggregator_simple_get_next_time:
+ * @self: A #GstAggregator
+ *
+ * This is a simple #GstAggregator::get_next_time implementation that
+ * just looks at the #GstSegment on the srcpad of the aggregator and bases
+ * the next time on the running there there.
+ *
+ * This is the desired behaviour in most cases where you have a live source
+ * and you have a dead line based aggregator subclass.
+ *
+ * Returns: The running time based on the position
+ *
+ * Since: 1.16
+ */
+GstClockTime
+gst_aggregator_simple_get_next_time (GstAggregator * self)
+{
+  GstClockTime next_time;
+  GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (self->srcpad);
+  GstSegment *segment = &srcpad->segment;
+
+  GST_OBJECT_LOCK (self);
+  if (segment->position == -1 || segment->position < segment->start)
+    next_time = segment->start;
+  else
+    next_time = segment->position;
+
+  if (segment->stop != -1 && next_time > segment->stop)
+    next_time = segment->stop;
+
+  next_time = gst_segment_to_running_time (segment, GST_FORMAT_TIME, next_time);
+  GST_OBJECT_UNLOCK (self);
+
+  return next_time;
+}

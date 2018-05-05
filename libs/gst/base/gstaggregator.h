@@ -348,6 +348,10 @@ void            gst_aggregator_get_allocator       (GstAggregator               
                                                     GstAllocator                 ** allocator,
                                                     GstAllocationParams           * params);
 
+GST_BASE_API
+GstClockTime    gst_aggregator_simple_get_next_time (GstAggregator                * self);
+
+
 G_END_DECLS
 
 #endif /* __GST_AGGREGATOR_H__ */

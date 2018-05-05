@@ -231,6 +231,7 @@ gst_aggregator_get_latency
 gst_aggregator_set_latency
 gst_aggregator_get_buffer_pool
 gst_aggregator_get_allocator
+gst_aggregator_simple_get_next_time
 <SUBSECTION Standard>
 GST_IS_AGGREGATOR
 GST_IS_AGGREGATOR_CLASS
