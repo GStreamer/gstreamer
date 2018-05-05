@@ -325,7 +325,8 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   buffers_per_list = packlines_per_list * packets_per_packline;
   buffers_per_list = GST_ROUND_UP_8 (buffers_per_list);
 
-  use_buffer_lists = (rtpvrawpay->chunks_per_frame < (height / yinc));
+  use_buffer_lists = buffers_per_list > 1 &&
+      (rtpvrawpay->chunks_per_frame < (height / yinc));
 
   fields = 1 + interlaced;
 
