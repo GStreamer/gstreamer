@@ -1582,9 +1582,9 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
   GstVideoAggregatorClass *vagg_klass = (GstVideoAggregatorClass *) klass;
 
   g_assert (vagg_klass->aggregate_frames != NULL);
-  g_assert (vagg_klass->get_output_buffer != NULL);
+  g_assert (vagg_klass->create_output_buffer != NULL);
 
-  if ((ret = vagg_klass->get_output_buffer (vagg, outbuf)) != GST_FLOW_OK) {
+  if ((ret = vagg_klass->create_output_buffer (vagg, outbuf)) != GST_FLOW_OK) {
     GST_WARNING_OBJECT (vagg, "Could not get an output buffer, reason: %s",
         gst_flow_get_name (ret));
     return ret;
@@ -2278,7 +2278,7 @@ config_failed:
 }
 
 static GstFlowReturn
-gst_video_aggregator_get_output_buffer (GstVideoAggregator * videoaggregator,
+gst_video_aggregator_create_output_buffer (GstVideoAggregator * videoaggregator,
     GstBuffer ** outbuf)
 {
   GstAggregator *aggregator = GST_AGGREGATOR (videoaggregator);
@@ -2499,7 +2499,7 @@ gst_video_aggregator_class_init (GstVideoAggregatorClass * klass)
   agg_class->propose_allocation = gst_video_aggregator_propose_allocation;
 
   klass->find_best_format = gst_video_aggregator_find_best_format;
-  klass->get_output_buffer = gst_video_aggregator_get_output_buffer;
+  klass->create_output_buffer = gst_video_aggregator_create_output_buffer;
   klass->update_caps = gst_video_aggregator_default_update_caps;
 
   /* Register the pad class */

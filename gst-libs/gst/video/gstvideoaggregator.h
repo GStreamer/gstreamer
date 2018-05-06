@@ -213,7 +213,7 @@ struct _GstVideoAggregator
  *                            or directly use the #GstBuffer from GstVideoAggregatorPad.buffer
  *                            if it needs to map the buffer in a special way. The result of the
  *                            aggregation should land in @outbuffer.
- * @get_output_buffer:        Optional.
+ * @create_output_buffer:     Optional.
  *                            Lets subclasses provide a #GstBuffer to be used as @outbuffer of
  *                            the #aggregate_frames vmethod.
  * @negotiated_caps:          Optional.
@@ -231,7 +231,7 @@ struct _GstVideoAggregatorClass
                                                    GstCaps            *  caps);
   GstFlowReturn      (*aggregate_frames)          (GstVideoAggregator *  videoaggregator,
                                                    GstBuffer          *  outbuffer);
-  GstFlowReturn      (*get_output_buffer)         (GstVideoAggregator *  videoaggregator,
+  GstFlowReturn      (*create_output_buffer)      (GstVideoAggregator *  videoaggregator,
                                                    GstBuffer          ** outbuffer);
   void               (*find_best_format)          (GstVideoAggregator *  vagg,
                                                    GstCaps            *  downstream_caps,
