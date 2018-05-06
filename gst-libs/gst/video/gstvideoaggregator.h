@@ -37,6 +37,10 @@ typedef struct _GstVideoAggregator GstVideoAggregator;
 typedef struct _GstVideoAggregatorClass GstVideoAggregatorClass;
 typedef struct _GstVideoAggregatorPrivate GstVideoAggregatorPrivate;
 
+/*************************
+ * GstVideoAggregatorPad *
+ *************************/
+
 #define GST_TYPE_VIDEO_AGGREGATOR_PAD (gst_video_aggregator_pad_get_type())
 #define GST_VIDEO_AGGREGATOR_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD, GstVideoAggregatorPad))
@@ -57,31 +61,26 @@ typedef struct _GstVideoAggregatorPadPrivate GstVideoAggregatorPadPrivate;
 /**
  * GstVideoAggregatorPad:
  * @info: The #GstVideoInfo currently set on the pad
- * @buffer_vinfo: The #GstVideoInfo representing the type contained
- *                in @buffer
- * @aggregated_frame: The #GstVideoFrame ready to be used for aggregation
- *                    inside the aggregate_frames vmethod.
- * @zorder: The zorder of this pad
  */
 struct _GstVideoAggregatorPad
 {
-  GstAggregatorPad parent;
+  GstAggregatorPad              parent;
 
   /*< public >*/
   /* read-only, with OBJECT_LOCK */
-  GstVideoInfo info;
+  GstVideoInfo                  info;
 
   /* < private > */
   GstVideoAggregatorPadPrivate *priv;
 
-  gpointer          _gst_reserved[GST_PADDING];
+  gpointer                     _gst_reserved[GST_PADDING];
 };
 
 /**
  * GstVideoAggregatorPadClass:
  *
- * @set_info: Lets subclass set a converter on the pad,
- *                 right after a new format has been negotiated.
+ * @update_conversion_info: Called when either the input or output formats
+ *                          have changed.
  * @prepare_frame: Prepare the frame from the pad buffer (if any)
  *                 and sets it to @aggregated_frame
  * @clean_frame:   clean the frame previously prepared in prepare_frame
@@ -91,14 +90,14 @@ struct _GstVideoAggregatorPadClass
   GstAggregatorPadClass parent_class;
   void               (*update_conversion_info) (GstVideoAggregatorPad * pad);
 
-  gboolean           (*prepare_frame)         (GstVideoAggregatorPad * pad,
-                                               GstVideoAggregator    * videoaggregator,
-                                               GstBuffer             * buffer,
-                                               GstVideoFrame         * prepared_frame);
+  gboolean           (*prepare_frame)          (GstVideoAggregatorPad * pad,
+                                                GstVideoAggregator    * videoaggregator,
+                                                GstBuffer             * buffer,
+                                                GstVideoFrame         * prepared_frame);
 
-  void               (*clean_frame)           (GstVideoAggregatorPad * pad,
-                                               GstVideoAggregator    * videoaggregator,
-                                               GstVideoFrame         * prepared_frame);
+  void               (*clean_frame)            (GstVideoAggregatorPad * pad,
+                                                GstVideoAggregator    * videoaggregator,
+                                                GstVideoFrame         * prepared_frame);
 
   gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
@@ -118,10 +117,9 @@ GstVideoFrame * gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorP
 GST_VIDEO_BAD_API
 void gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad *pad, gboolean needs_alpha);
 
-/****************************
- * GstVideoAggregatorPad Structs *
- ***************************/
-
+/********************************
+ * GstVideoAggregatorConvertPad *
+ *******************************/
 
 #define GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD            (gst_video_aggregator_convert_pad_get_type())
 #define GST_VIDEO_AGGREGATOR_CONVERT_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD, GstVideoAggregatorConvertPad))
@@ -171,6 +169,10 @@ GType gst_video_aggregator_convert_pad_get_type           (void);
 GST_VIDEO_BAD_API
 void gst_video_aggregator_convert_pad_update_conversion_info (GstVideoAggregatorConvertPad * pad);
 
+/**********************
+ * GstVideoAggregator *
+ *********************/
+
 #define GST_TYPE_VIDEO_AGGREGATOR (gst_video_aggregator_get_type())
 #define GST_VIDEO_AGGREGATOR(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR, GstVideoAggregator))
@@ -191,15 +193,15 @@ void gst_video_aggregator_convert_pad_update_conversion_info (GstVideoAggregator
  */
 struct _GstVideoAggregator
 {
-  GstAggregator aggregator;
+  GstAggregator              aggregator;
 
   /*< public >*/
   /* Output caps */
-  GstVideoInfo info;
+  GstVideoInfo               info;
 
   /* < private > */
   GstVideoAggregatorPrivate *priv;
-  gpointer          _gst_reserved[GST_PADDING_LARGE];
+  gpointer                  _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -216,8 +218,6 @@ struct _GstVideoAggregator
  * @create_output_buffer:     Optional.
  *                            Lets subclasses provide a #GstBuffer to be used as @outbuffer of
  *                            the #aggregate_frames vmethod.
- * @negotiated_caps:          Optional.
- *                            Notifies subclasses what caps format has been negotiated
  * @find_best_format:         Optional.
  *                            Lets subclasses decide of the best common format to use.
  **/

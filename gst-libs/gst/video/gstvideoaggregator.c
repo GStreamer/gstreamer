@@ -313,7 +313,6 @@ gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorPad * pad)
  *
  * Allows selecting that this pad requires an output format with alpha
  *
- * Returns: (transfer none): The currently prepared video frame
  */
 void
 gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad * pad,
