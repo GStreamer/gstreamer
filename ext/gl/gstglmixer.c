@@ -75,7 +75,6 @@ gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass)
   gobject_class->set_property = gst_gl_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_mixer_pad_get_property;
 
-  vaggpad_class->set_info = NULL;
   vaggpad_class->prepare_frame = gst_gl_mixer_pad_prepare_frame;
   vaggpad_class->clean_frame = gst_gl_mixer_pad_clean_frame;
 }

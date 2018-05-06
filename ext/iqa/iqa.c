@@ -361,7 +361,7 @@ gst_iqa_class_init (GstIqaClass * klass)
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
-      &sink_factory, GST_TYPE_VIDEO_AGGREGATOR_PAD);
+      &sink_factory, GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD);
 
   gobject_class->set_property = _set_property;
   gobject_class->get_property = _get_property;

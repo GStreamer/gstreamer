@@ -46,7 +46,7 @@ typedef struct _GstCompositorPadClass GstCompositorPadClass;
  */
 struct _GstCompositorPad
 {
-  GstVideoAggregatorPad parent;
+  GstVideoAggregatorConvertPad parent;
 
   /* properties */
   gint xpos, ypos;
@@ -54,16 +54,12 @@ struct _GstCompositorPad
   gdouble alpha;
   gdouble crossfade;
 
-  GstVideoConverter *convert;
-  GstVideoInfo conversion_info;
-  GstBuffer *converted_buffer;
-
   gboolean crossfaded;
 };
 
 struct _GstCompositorPadClass
 {
-  GstVideoAggregatorPadClass parent_class;
+  GstVideoAggregatorConvertPadClass parent_class;
 };
 
 GType gst_compositor_pad_get_type (void);

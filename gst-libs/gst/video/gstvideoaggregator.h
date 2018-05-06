@@ -42,7 +42,7 @@ typedef struct _GstVideoAggregatorPrivate GstVideoAggregatorPrivate;
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD, GstVideoAggregatorPad))
 #define GST_VIDEO_AGGREGATOR_PAD_CAST(obj) ((GstVideoAggregatorPad *)(obj))
 #define GST_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COMPOSITOR_PAD, GstVideoAggregatorPadClass))
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_AGGREGATOR_PAD, GstVideoAggregatorPadClass))
 #define GST_IS_VIDEO_AGGREGATOR_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_AGGREGATOR_PAD))
 #define GST_IS_VIDEO_AGGREGATOR_PAD_CLASS(klass) \
@@ -89,10 +89,7 @@ struct _GstVideoAggregatorPad
 struct _GstVideoAggregatorPadClass
 {
   GstAggregatorPadClass parent_class;
-  gboolean           (*set_info)              (GstVideoAggregatorPad * pad,
-                                               GstVideoAggregator    * videoaggregator,
-                                               GstVideoInfo          * current_info,
-                                               GstVideoInfo          * wanted_info);
+  void               (*update_conversion_info) (GstVideoAggregatorPad * pad);
 
   gboolean           (*prepare_frame)         (GstVideoAggregatorPad * pad,
                                                GstVideoAggregator    * videoaggregator,
@@ -120,6 +117,59 @@ GstVideoFrame * gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorP
 
 GST_VIDEO_BAD_API
 void gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad *pad, gboolean needs_alpha);
+
+/****************************
+ * GstVideoAggregatorPad Structs *
+ ***************************/
+
+
+#define GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD            (gst_video_aggregator_convert_pad_get_type())
+#define GST_VIDEO_AGGREGATOR_CONVERT_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD, GstVideoAggregatorConvertPad))
+#define GST_VIDEO_AGGREGATOR_CONVERT_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD, GstVideoAggregatorConvertPadClass))
+#define GST_VIDEO_AGGREGATOR_CONVERT_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD, GstVideoAggregatorConvertPadClass))
+#define GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD))
+#define GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_AGGREGATOR_CONVERT_PAD))
+
+typedef struct _GstVideoAggregatorConvertPad GstVideoAggregatorConvertPad;
+typedef struct _GstVideoAggregatorConvertPadClass GstVideoAggregatorConvertPadClass;
+typedef struct _GstVideoAggregatorConvertPadPrivate GstVideoAggregatorConvertPadPrivate;
+
+/**
+ * GstVideoAggregatorConvertPad:
+ *
+ * An implementation of GstPad that can be used with #GstVideoAggregator.
+ *
+ * See #GstVideoAggregator for more details.
+ */
+struct _GstVideoAggregatorConvertPad
+{
+  /*< private >*/
+  GstVideoAggregatorPad                  parent;
+
+  GstVideoAggregatorConvertPadPrivate   *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
+ * GstVideoAggregatorConvertPadClass:
+ *
+ */
+struct _GstVideoAggregatorConvertPadClass
+{
+  GstVideoAggregatorPadClass   parent_class;
+
+  void (*create_conversion_info) (GstVideoAggregatorConvertPad *pad, GstVideoAggregator *agg, GstVideoInfo *conversion_info);
+
+  /*< private >*/
+  gpointer      _gst_reserved[GST_PADDING];
+};
+
+GST_VIDEO_BAD_API
+GType gst_video_aggregator_convert_pad_get_type           (void);
+
+GST_VIDEO_BAD_API
+void gst_video_aggregator_convert_pad_update_conversion_info (GstVideoAggregatorConvertPad * pad);
 
 #define GST_TYPE_VIDEO_AGGREGATOR (gst_video_aggregator_get_type())
 #define GST_VIDEO_AGGREGATOR(obj) \
