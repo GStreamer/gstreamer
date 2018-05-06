@@ -995,7 +995,6 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
       if (have_rgb_formats) {
         gst_structure_set_value (st, "format", &supported_formats);
       } else {
-        GValue supported_rgb_formats = G_VALUE_INIT;
         /* add passthrough structure, then the rgb conversion structure */
         gst_structure_set_value (st, "format", &passthrough_formats);
         gst_caps_append_structure_full (res, gst_structure_copy (st),
@@ -1013,9 +1012,9 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
         gst_structure_set_value (st, "format", format);
         gst_caps_append_structure_full (res, gst_structure_copy (st),
             gst_caps_features_copy (f));
-        gst_structure_set_value (st, "format", &rgb_formats);
-      } else {                  /* RGB */
         gst_structure_set_value (st, "format", &supported_rgb_formats);
+      } else {                  /* RGB */
+        gst_structure_set_value (st, "format", &supported_formats);
       }
     }
     gst_structure_remove_fields (st, "colorimetry", "chroma-site",
