@@ -142,8 +142,8 @@ static GstPad *gst_gl_stereo_mix_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
 static void gst_gl_stereo_mix_release_pad (GstElement * element, GstPad * pad);
 
-static GstFlowReturn gst_gl_stereo_mix_get_output_buffer (GstVideoAggregator *
-    videoaggregator, GstBuffer ** outbuf);
+static GstFlowReturn gst_gl_stereo_mix_create_output_buffer (GstVideoAggregator
+    * videoaggregator, GstBuffer ** outbuf);
 static gboolean gst_gl_stereo_mix_stop (GstAggregator * agg);
 static gboolean gst_gl_stereo_mix_start (GstAggregator * agg);
 static gboolean gst_gl_stereo_mix_src_query (GstAggregator * agg,
@@ -205,8 +205,8 @@ gst_gl_stereo_mix_class_init (GstGLStereoMixClass * klass)
 
   videoaggregator_class->aggregate_frames = gst_gl_stereo_mix_aggregate_frames;
   videoaggregator_class->update_caps = _update_caps;
-  videoaggregator_class->get_output_buffer =
-      gst_gl_stereo_mix_get_output_buffer;
+  videoaggregator_class->create_output_buffer =
+      gst_gl_stereo_mix_create_output_buffer;
 
   base_mix_class->supported_gl_api =
       GST_GL_API_GLES2 | GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
@@ -263,7 +263,7 @@ gst_gl_stereo_mix_src_query (GstAggregator * agg, GstQuery * query)
 
 
 static GstFlowReturn
-gst_gl_stereo_mix_get_output_buffer (GstVideoAggregator * videoaggregator,
+gst_gl_stereo_mix_create_output_buffer (GstVideoAggregator * videoaggregator,
     GstBuffer ** outbuf)
 {
   GstGLStereoMix *mix = GST_GL_STEREO_MIX (videoaggregator);
