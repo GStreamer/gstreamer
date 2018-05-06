@@ -2186,14 +2186,15 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstAllocationParams params = { 0, 15, 0, 0 };
   guint i;
   GstBufferPool *pool;
+  GstAllocator *allocator;
   guint size, min, max;
   gboolean update = FALSE;
   GstStructure *config = NULL;
   GstCaps *caps = NULL;
 
-  if (gst_query_get_n_allocation_params (query) == 0)
+  if (gst_query_get_n_allocation_params (query) == 0) {
     gst_query_add_allocation_param (query, NULL, &params);
-  else
+  } else {
     for (i = 0; i < gst_query_get_n_allocation_params (query); i++) {
       GstAllocator *allocator;
 
@@ -2201,6 +2202,9 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
       params.align = MAX (params.align, 15);
       gst_query_set_nth_allocation_param (query, i, allocator, &params);
     }
+  }
+
+  gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -2215,21 +2219,39 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
     update = FALSE;
   }
 
+  gst_query_parse_allocation (query, &caps, NULL);
+
   /* no downstream pool, make our own */
   if (pool == NULL)
     pool = gst_video_buffer_pool_new ();
 
   config = gst_buffer_pool_get_config (pool);
 
-  gst_query_parse_allocation (query, &caps, NULL);
-  if (caps)
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+  /* buffer pool may have to do some changes */
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    config = gst_buffer_pool_get_config (pool);
+
+    /* If change are not acceptable, fallback to generic pool */
+    if (!gst_buffer_pool_config_validate_params (config, caps, size, min, max)) {
+      GST_DEBUG_OBJECT (agg, "unsupported pool, making new pool");
+
+      gst_object_unref (pool);
+      pool = gst_video_buffer_pool_new ();
+      gst_buffer_pool_config_set_params (config, caps, size, min, max);
+      gst_buffer_pool_config_set_allocator (config, allocator, &params);
+    }
+
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
 
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
-  gst_buffer_pool_set_config (pool, config);
 
   if (update)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -2238,8 +2260,21 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
 
   if (pool)
     gst_object_unref (pool);
+  if (allocator)
+    gst_object_unref (allocator);
 
   return TRUE;
+
+config_failed:
+  if (pool)
+    gst_object_unref (pool);
+  if (allocator)
+    gst_object_unref (allocator);
+
+  GST_ELEMENT_ERROR (agg, RESOURCE, SETTINGS,
+      ("Failed to configure the buffer pool"),
+      ("Configuration is most likely invalid, please report this issue."));
+  return FALSE;
 }
 
 static GstFlowReturn
