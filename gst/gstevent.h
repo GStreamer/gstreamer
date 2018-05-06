@@ -252,6 +252,7 @@ GST_API GType _gst_event_type;
  * Get the #GstClockTime timestamp of the event. This is the time when the event
  * was created.
  */
+/* FIXME 2.0: Remove the GstEvent::timestamp field */
 #define GST_EVENT_TIMESTAMP(event)      (GST_EVENT_CAST(event)->timestamp)
 
 /**
@@ -406,6 +407,7 @@ struct _GstEvent {
 
   /*< public >*/ /* with COW */
   GstEventType  type;
+  /* FIXME 2.0: Remove the GstEvent::timestamp field */
   guint64       timestamp;
   guint32       seqnum;
 };
