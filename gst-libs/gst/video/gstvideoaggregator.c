@@ -335,6 +335,12 @@ gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad * pad,
  * GstVideoAggregatorConvertPad implementation *
  ****************************************/
 
+enum
+{
+  PROP_CONVERT_PAD_0,
+  PROP_CONVERT_PAD_CONVERTER_CONFIG,
+};
+
 struct _GstVideoAggregatorConvertPadPrivate
 {
   /* Converter, if NULL no conversion is done */
@@ -344,6 +350,7 @@ struct _GstVideoAggregatorConvertPadPrivate
   GstVideoInfo conversion_info;
   GstBuffer *converted_buffer;
 
+  GstStructure *converter_config;
   gboolean converter_config_changed;
 };
 
@@ -358,6 +365,10 @@ gst_video_aggregator_convert_pad_finalize (GObject * o)
   if (vaggpad->priv->convert)
     gst_video_converter_free (vaggpad->priv->convert);
   vaggpad->priv->convert = NULL;
+
+  if (vaggpad->priv->converter_config)
+    gst_structure_free (vaggpad->priv->converter_config);
+  vaggpad->priv->converter_config = NULL;
 
   G_OBJECT_CLASS (gst_video_aggregator_pad_parent_class)->finalize (o);
 }
@@ -403,7 +414,8 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
       if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
         pad->priv->convert =
             gst_video_converter_new (&vpad->info, &pad->priv->conversion_info,
-            NULL);
+            pad->priv->converter_config ? gst_structure_copy (pad->
+                priv->converter_config) : NULL);
         if (!pad->priv->convert) {
           GST_WARNING_OBJECT (pad, "No path found for conversion");
           return FALSE;
@@ -531,6 +543,46 @@ static void
 }
 
 static void
+gst_video_aggregator_convert_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVideoAggregatorConvertPad *pad = GST_VIDEO_AGGREGATOR_CONVERT_PAD (object);
+
+  switch (prop_id) {
+    case PROP_CONVERT_PAD_CONVERTER_CONFIG:
+      GST_OBJECT_LOCK (pad);
+      if (pad->priv->converter_config)
+        g_value_set_boxed (value, pad->priv->converter_config);
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_aggregator_convert_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoAggregatorConvertPad *pad = GST_VIDEO_AGGREGATOR_CONVERT_PAD (object);
+
+  switch (prop_id) {
+    case PROP_CONVERT_PAD_CONVERTER_CONFIG:
+      GST_OBJECT_LOCK (pad);
+      if (pad->priv->converter_config)
+        gst_structure_free (pad->priv->converter_config);
+      pad->priv->converter_config = g_value_dup_boxed (value);
+      pad->priv->converter_config_changed = TRUE;
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_video_aggregator_convert_pad_class_init (GstVideoAggregatorConvertPadClass *
     klass)
 {
@@ -542,6 +594,18 @@ gst_video_aggregator_convert_pad_class_init (GstVideoAggregatorConvertPadClass *
 
   g_type_class_add_private (klass,
       sizeof (GstVideoAggregatorConvertPadPrivate));
+
+  g_object_class_install_property (gobject_class,
+      PROP_CONVERT_PAD_CONVERTER_CONFIG, g_param_spec_boxed ("converter-config",
+          "Converter configuration",
+          "A GstStructure describing the configuration that should be used "
+          "when scaling and converting this pad's video frames",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_convert_pad_get_property);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_convert_pad_set_property);
 
   vaggpadclass->update_conversion_info =
       GST_DEBUG_FUNCPTR
@@ -565,6 +629,7 @@ gst_video_aggregator_convert_pad_init (GstVideoAggregatorConvertPad * vaggpad)
 
   vaggpad->priv->converted_buffer = NULL;
   vaggpad->priv->convert = NULL;
+  vaggpad->priv->converter_config = NULL;
   vaggpad->priv->converter_config_changed = FALSE;
 }
 
