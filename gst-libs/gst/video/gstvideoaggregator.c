@@ -261,7 +261,7 @@ gst_video_aggregator_pad_has_current_buffer (GstVideoAggregatorPad * pad)
 }
 
 /**
- * gst_video_aggregator_pad_has_current_buffer:
+ * gst_video_aggregator_pad_get_current_buffer:
  * @pad: a #GstVideoAggregatorPad
  *
  * Returns the currently queued buffer that is going to be used
