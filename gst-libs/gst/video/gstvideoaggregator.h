@@ -81,8 +81,7 @@ struct _GstVideoAggregatorPad
  *
  * @update_conversion_info: Called when either the input or output formats
  *                          have changed.
- * @prepare_frame: Prepare the frame from the pad buffer (if any)
- *                 and sets it to @aggregated_frame
+ * @prepare_frame: Prepare the frame from the pad buffer and sets it to prepared_frame
  * @clean_frame:   clean the frame previously prepared in prepare_frame
  */
 struct _GstVideoAggregatorPadClass
@@ -211,8 +210,8 @@ struct _GstVideoAggregator
  *                            the src pad caps before usage.  Return %NULL to indicate failure.
  * @aggregate_frames:         Lets subclasses aggregate frames that are ready. Subclasses
  *                            should iterate the GstElement.sinkpads and use the already
- *                            mapped #GstVideoFrame from GstVideoAggregatorPad.aggregated_frame
- *                            or directly use the #GstBuffer from GstVideoAggregatorPad.buffer
+ *                            mapped #GstVideoFrame from gst_video_aggregator_pad_get_prepared_frame()
+ *                            or directly use the #GstBuffer from gst_video_aggregator_pad_get_current_buffer()
  *                            if it needs to map the buffer in a special way. The result of the
  *                            aggregation should land in @outbuffer.
  * @create_output_buffer:     Optional.
