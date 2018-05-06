@@ -5250,7 +5250,7 @@ static GstStaticCaps tap_caps = GST_STATIC_CAPS ("audio/x-tap-tap");
 static void
 tap_type_find (GstTypeFind * tf, gpointer unused)
 {
-  const guint8 *data = gst_type_find_peek (tf, 0, 8);
+  const guint8 *data = gst_type_find_peek (tf, 0, 16);
 
   if (data) {
     if (memcmp (data, "C64-TAPE-RAW", 12) == 0
