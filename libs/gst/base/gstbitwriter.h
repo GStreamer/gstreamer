@@ -26,6 +26,8 @@
 #include <gst/gst.h>
 #include <gst/base/base-prelude.h>
 
+#include <string.h>
+
 G_BEGIN_DECLS
 
 #define GST_BIT_WRITER_DATA(writer)     ((writer)->data)
