@@ -86,6 +86,7 @@ struct _GstMsdkDec
   /* element properties */
   gboolean hardware;
   guint async_depth;
+  guint output_order;
 };
 
 struct _GstMsdkDecClass

@@ -33,6 +33,26 @@
 
 #include "msdk-enums.h"
 
+/*========= MSDK Decoder Enums =========================*/
+GType
+gst_msdkdec_output_order_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue values[] = {
+    {GST_MSDKDEC_OUTPUT_ORDER_DISPLAY, "Output frames in Display order",
+        "display"},
+    {GST_MSDKDEC_OUTPUT_ORDER_DECODE, "Output frames in Decoded order",
+        "decoded"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstMsdkDecOutputOrder", values);
+  }
+  return type;
+}
+
 /*========= MSDK Encoder Enums =========================*/
 GType
 gst_msdkenc_rate_control_get_type (void)

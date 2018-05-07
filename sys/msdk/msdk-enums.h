@@ -40,6 +40,16 @@ G_BEGIN_DECLS
 
 #define _MFX_TRELLIS_NONE    0
 
+/*========= MSDK Decoder Enums =========================*/
+typedef enum
+{
+  GST_MSDKDEC_OUTPUT_ORDER_DISPLAY = 0,
+  GST_MSDKDEC_OUTPUT_ORDER_DECODE,
+} GstMskdDecOutputOrder;
+
+GType
+gst_msdkdec_output_order_get_type (void);
+
 /*========= MSDK Encoder Enums =========================*/
 GType
 gst_msdkenc_rate_control_get_type (void);

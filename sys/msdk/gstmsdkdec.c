@@ -40,6 +40,7 @@
 #include "gstmsdkvideomemory.h"
 #include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
+#include "msdk-enums.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkdec_debug);
 #define GST_CAT_DEFAULT gst_msdkdec_debug
@@ -61,10 +62,12 @@ enum
   PROP_0,
   PROP_HARDWARE,
   PROP_ASYNC_DEPTH,
+  PROP_OUTPUT_ORDER,
 };
 
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         1
+#define PROP_OUTPUT_ORDER_DEFAULT        GST_MSDKDEC_OUTPUT_ORDER_DISPLAY
 
 #define gst_msdkdec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkDec, gst_msdkdec, GST_TYPE_VIDEO_DECODER);
@@ -272,6 +275,10 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
 
+  /* This is a deprecated attribute in msdk-2017 version, but some
+   * customers still using this for low-latency streaming of non-b-frame
+   * encoded streams */
+  thiz->param.mfx.DecodedOrder = thiz->output_order;
   /* allow subclass configure further */
   if (klass->configure) {
     if (!klass->configure (thiz))
@@ -1060,6 +1067,9 @@ gst_msdkdec_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_ASYNC_DEPTH:
       thiz->async_depth = g_value_get_uint (value);
       break;
+    case PROP_OUTPUT_ORDER:
+      thiz->output_order = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1088,6 +1098,9 @@ gst_msdkdec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ASYNC_DEPTH:
       g_value_set_uint (value, thiz->async_depth);
+      break;
+    case PROP_OUTPUT_ORDER:
+      g_value_set_enum (value, thiz->output_order);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1144,6 +1157,13 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
           1, 20, PROP_ASYNC_DEPTH_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_ORDER,
+      g_param_spec_enum ("output-order", "DecodedFramesOutputOrder",
+          "Decoded frames output order",
+          gst_msdkdec_output_order_get_type (),
+          PROP_OUTPUT_ORDER_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
@@ -1156,6 +1176,7 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->tasks = g_array_new (FALSE, TRUE, sizeof (MsdkDecTask));
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
+  thiz->output_order = PROP_OUTPUT_ORDER_DEFAULT;
   thiz->is_packetized = TRUE;
   thiz->adapter = gst_adapter_new ();
 }
