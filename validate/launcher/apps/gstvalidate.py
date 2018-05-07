@@ -996,8 +996,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
     def register_default_blacklist(self):
         self.set_default_blacklist([
             # hls known issues
-            ("hls.playback.seek_with_stop.*",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
+            # ("hls.playback.seek_with_stop.*",
+            #  "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
 
             # dash known issues
             ("dash.media_check.*",
