@@ -1097,7 +1097,6 @@ AC_CONFIG_FILES([
     docs/plugins/gstreamer-vaapi-plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
-    gst-libs/gst/base/Makefile
     gst-libs/gst/vaapi/Makefile
     gst/Makefile
     gst/vaapi/Makefile
