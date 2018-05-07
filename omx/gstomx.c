@@ -972,10 +972,6 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
 
   gst_omx_component_handle_messages (comp);
 
-  ret = comp->state;
-  if (comp->pending_state == OMX_StateInvalid)
-    goto done;
-
   if (comp->last_error != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent, "Component %s in error state: %s (0x%08x)",
         comp->name, gst_omx_error_to_string (comp->last_error),
@@ -983,6 +979,10 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
     ret = OMX_StateInvalid;
     goto done;
   }
+
+  ret = comp->state;
+  if (comp->pending_state == OMX_StateInvalid)
+    goto done;
 
   while (signalled && comp->last_error == OMX_ErrorNone
       && comp->pending_state != OMX_StateInvalid) {
