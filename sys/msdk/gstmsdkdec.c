@@ -64,7 +64,7 @@ enum
 };
 
 #define PROP_HARDWARE_DEFAULT            TRUE
-#define PROP_ASYNC_DEPTH_DEFAULT         4
+#define PROP_ASYNC_DEPTH_DEFAULT         1
 
 #define gst_msdkdec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkDec, gst_msdkdec, GST_TYPE_VIDEO_DECODER);
