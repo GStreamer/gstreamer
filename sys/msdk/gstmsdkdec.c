@@ -651,6 +651,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     bitstream.Data = map_info.data;
     bitstream.DataLength = map_info.size;
     bitstream.MaxLength = map_info.size;
+    bitstream.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
   } else {
     /* Non packetized streams: eg: vc1 advanced profile with per buffer bdu */
     gst_adapter_push (thiz->adapter, gst_buffer_ref (frame->input_buffer));
