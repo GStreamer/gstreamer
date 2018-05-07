@@ -591,6 +591,10 @@ gst_video_aggregator_convert_pad_class_init (GstVideoAggregatorConvertPadClass *
       (GstVideoAggregatorPadClass *) klass;
 
   gobject_class->finalize = gst_video_aggregator_convert_pad_finalize;
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_convert_pad_get_property);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_video_aggregator_convert_pad_set_property);
 
   g_type_class_add_private (klass,
       sizeof (GstVideoAggregatorConvertPadPrivate));
@@ -601,11 +605,6 @@ gst_video_aggregator_convert_pad_class_init (GstVideoAggregatorConvertPadClass *
           "A GstStructure describing the configuration that should be used "
           "when scaling and converting this pad's video frames",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_video_aggregator_convert_pad_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_video_aggregator_convert_pad_set_property);
 
   vaggpadclass->update_conversion_info =
       GST_DEBUG_FUNCPTR
