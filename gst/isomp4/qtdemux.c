@@ -265,6 +265,7 @@ struct _QtDemuxStream
   GstPad *pad;
 
   GstQTDemux *demux;
+  gchar *stream_id;
 
   QtDemuxStreamStsdEntry *stsd_entries;
   guint stsd_entries_length;
@@ -1928,13 +1929,60 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
     *_index = index;
 }
 
+/* Copied from mpegtsbase code */
+/* FIXME: replace this function when we add new util function for stream-id creation */
+static gchar *
+_get_upstream_id (GstQTDemux * demux)
+{
+  gchar *upstream_id = gst_pad_get_stream_id (demux->sinkpad);
+
+  if (!upstream_id) {
+    /* Try to create one from the upstream URI, else use a randome number */
+    GstQuery *query;
+    gchar *uri = NULL;
+
+    /* Try to generate one from the URI query and
+     * if it fails take a random number instead */
+    query = gst_query_new_uri ();
+    if (gst_element_query (GST_ELEMENT_CAST (demux), query)) {
+      gst_query_parse_uri (query, &uri);
+    }
+
+    if (uri) {
+      GChecksum *cs;
+
+      /* And then generate an SHA256 sum of the URI */
+      cs = g_checksum_new (G_CHECKSUM_SHA256);
+      g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+      g_free (uri);
+      upstream_id = g_strdup (g_checksum_get_string (cs));
+      g_checksum_free (cs);
+    } else {
+      /* Just get some random number if the URI query fails */
+      GST_FIXME_OBJECT (demux, "Creating random stream-id, consider "
+          "implementing a deterministic way of creating a stream-id");
+      upstream_id =
+          g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
+          g_random_int (), g_random_int ());
+    }
+
+    gst_query_unref (query);
+  }
+  return upstream_id;
+}
+
 static QtDemuxStream *
-_create_stream (GstQTDemux * demux)
+_create_stream (GstQTDemux * demux, guint32 track_id)
 {
   QtDemuxStream *stream;
+  gchar *upstream_id;
 
   stream = g_new0 (QtDemuxStream, 1);
   stream->demux = demux;
+  stream->track_id = track_id;
+  upstream_id = _get_upstream_id (demux);
+  stream->stream_id = g_strdup_printf ("%s/%03u", upstream_id, track_id);
+  g_free (upstream_id);
   /* new streams always need a discont */
   stream->discont = TRUE;
   /* we enable clipping for raw audio/video streams */
@@ -1993,7 +2041,7 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
       /* TODO update when stream changes during playback */
 
       if (demux->n_streams == 0) {
-        stream = _create_stream (demux);
+        stream = _create_stream (demux, 1);
         demux->active_streams = g_list_append (demux->active_streams, stream);
         demux->n_streams = 1;
         /* mss has no stsd/stsd entry, use id 0 as default */
@@ -2409,6 +2457,12 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       res = TRUE;
       goto drop;
     }
+    case GST_EVENT_STREAM_START:
+    {
+      res = TRUE;
+      gst_event_unref (event);
+      goto drop;
+    }
     default:
       break;
   }
@@ -2583,6 +2637,7 @@ gst_qtdemux_stream_free (QtDemuxStream * stream)
     gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
     gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
   }
+  g_free (stream->stream_id);
   g_free (stream);
 }
 
@@ -8152,7 +8207,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT,
         CUR_STREAM (stream)->caps);
     if (stream->new_stream) {
-      gchar *stream_id;
       GstEvent *event;
       GstStreamFlags stream_flags = GST_STREAM_FLAG_NONE;
 
@@ -8172,10 +8226,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       }
 
       stream->new_stream = FALSE;
-      stream_id =
-          gst_pad_create_stream_id_printf (stream->pad,
-          GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
-      event = gst_event_new_stream_start (stream_id);
+      event = gst_event_new_stream_start (stream->stream_id);
       if (qtdemux->have_group_id)
         gst_event_set_group_id (event, qtdemux->group_id);
       if (stream->disabled)
@@ -8187,7 +8238,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       }
       gst_event_set_stream_flags (event, stream_flags);
       gst_pad_push_event (stream->pad, event);
-      g_free (stream_id);
     }
 
     prev_caps = gst_pad_get_current_caps (stream->pad);
@@ -9825,7 +9875,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (!qtdemux->got_moov) {
     if (qtdemux_find_stream (qtdemux, track_id))
       goto existing_stream;
-    stream = _create_stream (qtdemux);
+    stream = _create_stream (qtdemux, track_id);
     stream->track_id = track_id;
     new_stream = TRUE;
   } else {
