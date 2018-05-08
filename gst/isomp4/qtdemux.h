@@ -71,6 +71,9 @@ struct _GstQTDemux {
 
   gboolean posted_redirect;
 
+  /* Protect pad exposing from flush event */
+  GMutex expose_lock;
+
   /* list of QtDemuxStream */
   GList *active_streams;
   GList *old_streams;

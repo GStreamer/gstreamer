@@ -140,6 +140,18 @@ struct _QtDemuxSample
 
 #define QTSAMPLE_KEYFRAME(stream,sample) ((stream)->all_keyframe || (sample)->keyframe)
 
+#define QTDEMUX_EXPOSE_GET_LOCK(demux) (&((demux)->expose_lock))
+#define QTDEMUX_EXPOSE_LOCK(demux) G_STMT_START { \
+    GST_TRACE("Locking from thread %p", g_thread_self()); \
+    g_mutex_lock (QTDEMUX_EXPOSE_GET_LOCK (demux)); \
+    GST_TRACE("Locked from thread %p", g_thread_self()); \
+ } G_STMT_END
+
+#define QTDEMUX_EXPOSE_UNLOCK(demux) G_STMT_START { \
+    GST_TRACE("Unlocking from thread %p", g_thread_self()); \
+    g_mutex_unlock (QTDEMUX_EXPOSE_GET_LOCK (demux)); \
+ } G_STMT_END
+
 /*
  * Quicktime has tracks and segments. A track is a continuous piece of
  * multimedia content. The track is not always played from start to finish but
@@ -645,6 +657,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->adapter = gst_adapter_new ();
   g_queue_init (&qtdemux->protection_event_queue);
   qtdemux->flowcombiner = gst_flow_combiner_new ();
+  g_mutex_init (&qtdemux->expose_lock);
 
   GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
 
@@ -668,6 +681,7 @@ gst_qtdemux_dispose (GObject * object)
 
   g_free (qtdemux->cenc_aux_info_sizes);
   qtdemux->cenc_aux_info_sizes = NULL;
+  g_mutex_clear (&qtdemux->expose_lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -2378,7 +2392,10 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         gst_event_unref (event);
         goto drop;
       }
-      break;
+      QTDEMUX_EXPOSE_LOCK (demux);
+      res = gst_pad_event_default (demux->sinkpad, parent, event);
+      QTDEMUX_EXPOSE_UNLOCK (demux);
+      goto drop;
     }
     case GST_EVENT_FLUSH_STOP:
     {
@@ -4533,7 +4550,9 @@ beach:
   if (ret == GST_FLOW_EOS && (qtdemux->got_moov || qtdemux->media_caps)) {
     /* digested all data, show what we have */
     qtdemux_prepare_streams (qtdemux);
+    QTDEMUX_EXPOSE_LOCK (qtdemux);
     ret = qtdemux_expose_streams (qtdemux);
+    QTDEMUX_EXPOSE_UNLOCK (qtdemux);
 
     qtdemux->state = QTDEMUX_STATE_MOVIE;
     GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
@@ -6815,7 +6834,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             qtdemux_node_dump (demux, demux->moov_node);
             qtdemux_parse_tree (demux);
             qtdemux_prepare_streams (demux);
+            QTDEMUX_EXPOSE_LOCK (demux);
             qtdemux_expose_streams (demux);
+            QTDEMUX_EXPOSE_UNLOCK (demux);
 
             demux->got_moov = TRUE;
             gst_qtdemux_check_send_pending_segment (demux);
@@ -6920,7 +6941,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                   gst_event_set_seqnum (demux->pending_newsegment,
                       demux->segment_seqnum);
               }
+              QTDEMUX_EXPOSE_LOCK (demux);
               qtdemux_expose_streams (demux);
+              QTDEMUX_EXPOSE_UNLOCK (demux);
             }
           } else {
             GST_DEBUG_OBJECT (demux, "Discarding [moof]");
@@ -12195,6 +12218,7 @@ qtdemux_update_streams (GstQTDemux * qtdemux)
   return TRUE;
 }
 
+/* Must be called with expose lock */
 static GstFlowReturn
 qtdemux_expose_streams (GstQTDemux * qtdemux)
 {
