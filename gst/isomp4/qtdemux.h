@@ -73,6 +73,7 @@ struct _GstQTDemux {
 
   /* list of QtDemuxStream */
   GList *active_streams;
+  GList *old_streams;
 
   gint     n_streams;
   gint     n_video_streams;
@@ -152,6 +153,9 @@ struct _GstQTDemux {
   guint8 *cenc_aux_info_sizes;
   guint32 cenc_aux_sample_count;
 
+  /* Whether the parent bin is streams-aware, meaning we can
+   * add/remove streams at any point in time */
+  gboolean streams_aware;
 
   /*
    * ALL VARIABLES BELOW ARE ONLY USED IN PUSH-BASED MODE

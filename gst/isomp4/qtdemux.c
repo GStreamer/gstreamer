@@ -2146,7 +2146,10 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   if (hard) {
     g_list_free_full (qtdemux->active_streams,
         (GDestroyNotify) gst_qtdemux_stream_free);
+    g_list_free_full (qtdemux->old_streams,
+        (GDestroyNotify) gst_qtdemux_stream_free);
     qtdemux->active_streams = NULL;
+    qtdemux->old_streams = NULL;
     qtdemux->n_streams = 0;
     qtdemux->n_video_streams = 0;
     qtdemux->n_audio_streams = 0;
@@ -2164,6 +2167,9 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       g_ptr_array_free (qtdemux->protection_system_ids, TRUE);
       qtdemux->protection_system_ids = NULL;
     }
+    qtdemux->streams_aware = GST_OBJECT_PARENT (qtdemux)
+        && GST_OBJECT_FLAG_IS_SET (GST_OBJECT_PARENT (qtdemux),
+        GST_BIN_FLAG_STREAMS_AWARE);
   } else if (qtdemux->mss_mode) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     g_list_foreach (qtdemux->active_streams,
@@ -2439,6 +2445,15 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
     {
       res = TRUE;
       gst_event_unref (event);
+
+      /* Drain all the buffers */
+      gst_qtdemux_process_adapter (demux, TRUE);
+      gst_qtdemux_reset (demux, FALSE);
+      /* We expect new moov box after new stream-start event */
+      demux->old_streams =
+          g_list_concat (demux->old_streams, demux->active_streams);
+      demux->active_streams = NULL;
+
       goto drop;
     }
     default:
@@ -6791,20 +6806,16 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
             demux->last_moov_offset = demux->offset;
 
+            /* Update streams with new moov */
+            demux->old_streams =
+                g_list_concat (demux->old_streams, demux->active_streams);
+            demux->active_streams = NULL;
+
             qtdemux_parse_moov (demux, data, demux->neededbytes);
             qtdemux_node_dump (demux, demux->moov_node);
             qtdemux_parse_tree (demux);
             qtdemux_prepare_streams (demux);
-            if (!demux->got_moov)
-              qtdemux_expose_streams (demux);
-            else {
-
-              for (iter = demux->active_streams; iter;
-                  iter = g_list_next (iter)) {
-                gst_qtdemux_configure_stream (demux,
-                    QTDEMUX_STREAM (iter->data));
-              }
-            }
+            qtdemux_expose_streams (demux);
 
             demux->got_moov = TRUE;
             gst_qtdemux_check_send_pending_segment (demux);
@@ -12046,6 +12057,12 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
       GST_DEBUG_OBJECT (qtdemux, "no samples for stream; discarding");
       gst_qtdemux_remove_stream (qtdemux, stream);
       continue;
+    } else if (stream->track_id == qtdemux->chapters_track_id &&
+        (stream->subtype == FOURCC_text || stream->subtype == FOURCC_sbtl)) {
+      /* TODO - parse chapters track and expose it as GstToc; For now just ignore it
+         so that it doesn't look like a subtitle track */
+      gst_qtdemux_remove_stream (qtdemux, stream);
+      continue;
     }
 
     /* parse the initial sample for use in setting the frame rate cap */
@@ -12064,59 +12081,190 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
   return ret;
 }
 
-static GstFlowReturn
-qtdemux_expose_streams (GstQTDemux * qtdemux)
+static GList *
+_stream_in_list (GList * list, QtDemuxStream * stream)
 {
-  GSList *oldpads = NULL;
-  GSList *iter;
-  GList *walk, *next;
+  GList *iter;
 
-  GST_DEBUG_OBJECT (qtdemux, "exposing streams");
+  for (iter = list; iter; iter = g_list_next (iter)) {
+    QtDemuxStream *tmp = QTDEMUX_STREAM (iter->data);
+    if (!g_strcmp0 (tmp->stream_id, stream->stream_id))
+      return iter;
+  }
 
-  for (walk = qtdemux->active_streams; walk; walk = next) {
-    QtDemuxStream *stream = QTDEMUX_STREAM (walk->data);
-    GstPad *oldpad = stream->pad;
-    GstTagList *list;
+  return NULL;
+}
 
-    next = walk->next;
+static gboolean
+qtdemux_is_streams_update (GstQTDemux * qtdemux)
+{
+  GList *new, *old;
+
+  g_return_val_if_fail (qtdemux->active_streams != NULL, FALSE);
+
+  /* streams in list are sorted in track-id order */
+  for (new = qtdemux->active_streams, old = qtdemux->old_streams; new && old;
+      new = g_list_next (new), old = g_list_next (old)) {
+
+    /* Different stream-id, updated */
+    if (g_strcmp0 (QTDEMUX_STREAM (new->data)->stream_id,
+            QTDEMUX_STREAM (old->data)->stream_id))
+      return TRUE;
+  }
+
+  /* Different length, updated */
+  if (new != NULL || old != NULL)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+qtdemux_reuse_and_configure_stream (GstQTDemux * qtdemux,
+    QtDemuxStream * oldstream, QtDemuxStream * newstream)
+{
+  /* Connect old stream's srcpad to new stream */
+  newstream->pad = oldstream->pad;
+  oldstream->pad = NULL;
+
+  /* unset new_stream to prevent stream-start event */
+  newstream->new_stream = FALSE;
+
+  return gst_qtdemux_configure_stream (qtdemux, newstream);
+}
+
+static gboolean
+qtdemux_update_streams (GstQTDemux * qtdemux)
+{
+  GList *iter, *next;
+
+  /* At below, figure out which stream in active_streams has identical stream-id
+   * with that of in old_streams. If there is matching stream-id,
+   * corresponding newstream will not be exposed again,
+   * but demux will reuse srcpad of matched old stream
+   *
+   * active_streams : newly created streams from the latest moov
+   * old_streams : existing streams (belong to previous moov)
+   */
+
+  /* Count n_streams again */
+  qtdemux->n_streams = 0;
+
+  for (iter = qtdemux->active_streams;iter; iter = next) {
+    GList *tmp;
+    QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
+
+    next = iter->next;
 
     GST_DEBUG_OBJECT (qtdemux, "track-id %u, fourcc %" GST_FOURCC_FORMAT,
         stream->track_id, GST_FOURCC_ARGS (CUR_STREAM (stream)->fourcc));
 
-    if ((stream->subtype == FOURCC_text || stream->subtype == FOURCC_sbtl) &&
-        stream->track_id == qtdemux->chapters_track_id) {
-      /* TODO - parse chapters track and expose it as GstToc; For now just ignore it
-         so that it doesn't look like a subtitle track */
-      gst_qtdemux_remove_stream (qtdemux, stream);
-      continue;
+    qtdemux->n_streams++;
+
+    if (qtdemux->streams_aware
+        && (tmp = _stream_in_list (qtdemux->old_streams, stream)) != NULL
+        && QTDEMUX_STREAM (tmp->data)->pad) {
+      QtDemuxStream *oldstream = QTDEMUX_STREAM (tmp->data);
+
+      GST_DEBUG_OBJECT (qtdemux, "Reuse track-id %d", oldstream->track_id);
+
+      if (!qtdemux_reuse_and_configure_stream (qtdemux, oldstream, stream))
+        return FALSE;
+
+      qtdemux->old_streams = g_list_remove (qtdemux->old_streams, oldstream);
+      gst_qtdemux_stream_free (oldstream);
+    } else {
+      GstTagList *list;
+
+      /* now we have all info and can expose */
+      list = stream->stream_tags;
+      stream->stream_tags = NULL;
+      if (!gst_qtdemux_add_stream (qtdemux, stream, list))
+        return FALSE;
+
+      /* New segment will be exposed at _update_segment in case of pull mode */
+      if (!qtdemux->pending_newsegment && !qtdemux->pullbased) {
+        qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
+        if (qtdemux->segment_seqnum)
+          gst_event_set_seqnum (qtdemux->pending_newsegment,
+              qtdemux->segment_seqnum);
+      }
+    }
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+qtdemux_expose_streams (GstQTDemux * qtdemux)
+{
+  GList *iter, *next;
+
+  GST_DEBUG_OBJECT (qtdemux, "exposing streams");
+
+  if (!qtdemux_is_streams_update (qtdemux)) {
+    GList *new, *old;
+
+    GST_DEBUG_OBJECT (qtdemux, "Reuse all streams");
+    for (new = qtdemux->active_streams, old = qtdemux->old_streams; new && old;
+        new = g_list_next (new), old = g_list_next (old)) {
+      if (!qtdemux_reuse_and_configure_stream (qtdemux,
+              QTDEMUX_STREAM (old->data), QTDEMUX_STREAM (new->data)))
+        return GST_FLOW_ERROR;
     }
 
-    /* now we have all info and can expose */
-    list = stream->stream_tags;
-    stream->stream_tags = NULL;
-    if (oldpad)
-      oldpads = g_slist_prepend (oldpads, oldpad);
-    if (!gst_qtdemux_add_stream (qtdemux, stream, list))
+    g_list_free_full (qtdemux->old_streams,
+        (GDestroyNotify) gst_qtdemux_stream_free);
+    qtdemux->old_streams = NULL;
+
+    return GST_FLOW_OK;
+  }
+
+  if (qtdemux->streams_aware) {
+    if (!qtdemux_update_streams (qtdemux))
       return GST_FLOW_ERROR;
+  } else {
+    for (iter = qtdemux->active_streams; iter; iter = g_list_next (iter)) {
+      QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
+      GstTagList *list;
+
+      /* now we have all info and can expose */
+      list = stream->stream_tags;
+      stream->stream_tags = NULL;
+      if (!gst_qtdemux_add_stream (qtdemux, stream, list))
+        return GST_FLOW_ERROR;
+
+      /* New segment will be exposed at _update_segment in case of pull mode */
+      if (!qtdemux->pending_newsegment && !qtdemux->pullbased) {
+        qtdemux->pending_newsegment = gst_event_new_segment (&qtdemux->segment);
+        if (qtdemux->segment_seqnum)
+          gst_event_set_seqnum (qtdemux->pending_newsegment,
+              qtdemux->segment_seqnum);
+      }
+    }
   }
 
   gst_qtdemux_guess_bitrate (qtdemux);
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
 
-  for (iter = oldpads; iter; iter = g_slist_next (iter)) {
-    GstPad *oldpad = iter->data;
-    GstEvent *event;
+  /* If we have still old_streams, it's no more used stream */
+  for (iter = qtdemux->old_streams; iter; iter = next) {
+    QtDemuxStream *stream = QTDEMUX_STREAM (iter->data);
+    next = g_list_next (iter);
 
-    event = gst_event_new_eos ();
-    if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
-      gst_event_set_seqnum (event, qtdemux->segment_seqnum);
+    if (stream->pad) {
+      GstEvent *event;
 
-    gst_pad_push_event (oldpad, event);
-    gst_pad_set_active (oldpad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT (qtdemux), oldpad);
-    gst_flow_combiner_remove_pad (qtdemux->flowcombiner, oldpad);
-    gst_object_unref (oldpad);
+      event = gst_event_new_eos ();
+      if (qtdemux->segment_seqnum)
+        gst_event_set_seqnum (event, qtdemux->segment_seqnum);
+
+      gst_pad_push_event (stream->pad, event);
+    }
+
+    qtdemux->old_streams = g_list_remove (qtdemux->old_streams, stream);
+    gst_qtdemux_stream_free (stream);
   }
 
   /* check if we should post a redirect in case there is a single trak
@@ -12135,8 +12283,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     qtdemux->posted_redirect = TRUE;
   }
 
-  for (walk = qtdemux->active_streams; walk; walk = g_list_next (walk)) {
-    qtdemux_do_allocation (qtdemux, QTDEMUX_STREAM (walk->data));
+  for (iter = qtdemux->active_streams; iter; iter = g_list_next (iter)) {
+    qtdemux_do_allocation (qtdemux, QTDEMUX_STREAM (iter->data));
   }
 
   qtdemux->exposed = TRUE;
