@@ -45,8 +45,6 @@ G_BEGIN_DECLS
 #define GST_QT_DEMUX_PRIVATE_TAG "private-qt-tag"
 #define GST_QT_DEMUX_CLASSIFICATION_TAG "classification"
 
-#define GST_QTDEMUX_MAX_STREAMS         32
-
 typedef struct _GstQTDemux GstQTDemux;
 typedef struct _GstQTDemuxClass GstQTDemuxClass;
 typedef struct _QtDemuxStream QtDemuxStream;
@@ -73,7 +71,9 @@ struct _GstQTDemux {
 
   gboolean posted_redirect;
 
-  QtDemuxStream *streams[GST_QTDEMUX_MAX_STREAMS];
+  /* list of QtDemuxStream */
+  GList *active_streams;
+
   gint     n_streams;
   gint     n_video_streams;
   gint     n_audio_streams;
