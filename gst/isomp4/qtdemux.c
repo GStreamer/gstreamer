@@ -590,6 +590,7 @@ static GstStructure *qtdemux_get_cenc_sample_properties (GstQTDemux * qtdemux,
 static void gst_qtdemux_append_protection_system_id (GstQTDemux * qtdemux,
     const gchar * id);
 static void qtdemux_gst_structure_free (GstStructure * gststructure);
+static void gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard);
 
 static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
@@ -641,39 +642,13 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   gst_pad_set_event_function (qtdemux->sinkpad, gst_qtdemux_handle_sink_event);
   gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), qtdemux->sinkpad);
 
-  qtdemux->state = QTDEMUX_STATE_INITIAL;
-  qtdemux->pullbased = FALSE;
-  qtdemux->posted_redirect = FALSE;
-  qtdemux->neededbytes = 16;
-  qtdemux->todrop = 0;
   qtdemux->adapter = gst_adapter_new ();
-  qtdemux->offset = 0;
-  qtdemux->first_mdat = -1;
-  qtdemux->got_moov = FALSE;
-  qtdemux->mdatoffset = -1;
-  qtdemux->mdatbuffer = NULL;
-  qtdemux->restoredata_buffer = NULL;
-  qtdemux->restoredata_offset = -1;
-  qtdemux->fragment_start = -1;
-  qtdemux->fragment_start_offset = -1;
-  qtdemux->media_caps = NULL;
-  qtdemux->exposed = FALSE;
-  qtdemux->mss_mode = FALSE;
-  qtdemux->pending_newsegment = NULL;
-  qtdemux->upstream_format_is_time = FALSE;
-  qtdemux->have_group_id = FALSE;
-  qtdemux->group_id = G_MAXUINT;
-  qtdemux->cenc_aux_info_offset = 0;
-  qtdemux->cenc_aux_info_sizes = NULL;
-  qtdemux->cenc_aux_sample_count = 0;
-  qtdemux->protection_system_ids = NULL;
   g_queue_init (&qtdemux->protection_event_queue);
-  gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
-  qtdemux->tag_list = gst_tag_list_new_empty ();
-  gst_tag_list_set_scope (qtdemux->tag_list, GST_TAG_SCOPE_GLOBAL);
   qtdemux->flowcombiner = gst_flow_combiner_new ();
 
   GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
+
+  gst_qtdemux_reset (qtdemux, TRUE);
 }
 
 static void
@@ -2182,6 +2157,9 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     gst_caps_replace (&qtdemux->media_caps, NULL);
     qtdemux->timescale = 0;
     qtdemux->got_moov = FALSE;
+    qtdemux->cenc_aux_info_offset = 0;
+    qtdemux->cenc_aux_info_sizes = NULL;
+    qtdemux->cenc_aux_sample_count = 0;
     if (qtdemux->protection_system_ids) {
       g_ptr_array_free (qtdemux->protection_system_ids, TRUE);
       qtdemux->protection_system_ids = NULL;
@@ -2656,7 +2634,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_qtdemux_reset (qtdemux, TRUE);
       break;
     default:
       break;
