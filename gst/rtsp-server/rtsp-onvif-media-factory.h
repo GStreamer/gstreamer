@@ -74,6 +74,7 @@ void gst_rtsp_onvif_media_factory_set_backchannel_bandwidth (GstRTSPOnvifMediaFa
 GST_RTSP_SERVER_API
 guint gst_rtsp_onvif_media_factory_get_backchannel_bandwidth (GstRTSPOnvifMediaFactory * factory);
 
+GST_RTSP_SERVER_API
 gboolean gst_rtsp_onvif_media_factory_requires_backchannel (GstRTSPMediaFactory * factory, GstRTSPContext * ctx);
 
 #endif /* __GST_RTSP_ONVIF_MEDIA_FACTORY_H__ */
