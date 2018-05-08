@@ -9820,6 +9820,12 @@ qtdemux_parse_protection_scheme_info (GstQTDemux * qtdemux,
   return TRUE;
 }
 
+static gint
+qtdemux_track_id_compare_func (QtDemuxStream * stream1, QtDemuxStream * stream2)
+{
+  return (gint) stream1->track_id - (gint) stream2->track_id;
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -9844,7 +9850,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *svmi;
 
   QtDemuxStream *stream = NULL;
-  gboolean new_stream = FALSE;
   const guint8 *stsd_data;
   const guint8 *stsd_entry_data;
   guint remaining_stsd_len;
@@ -9872,22 +9877,13 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       !gst_byte_reader_get_uint32_be (&tkhd, &track_id))
     goto corrupt_file;
 
-  if (!qtdemux->got_moov) {
-    if (qtdemux_find_stream (qtdemux, track_id))
-      goto existing_stream;
-    stream = _create_stream (qtdemux, track_id);
-    stream->track_id = track_id;
-    new_stream = TRUE;
-  } else {
-    stream = qtdemux_find_stream (qtdemux, track_id);
-    if (!stream) {
-      GST_WARNING_OBJECT (qtdemux, "Stream not found, going to ignore it");
-      goto skip_track;
-    }
+  /* Check if current moov has duplicated track_id */
+  if (qtdemux_find_stream (qtdemux, track_id))
+    goto existing_stream;
 
-    /* reset reused stream */
-    gst_qtdemux_stream_reset (stream);
-  }
+  stream = _create_stream (qtdemux, track_id);
+  stream->stream_tags = gst_tag_list_make_writable (stream->stream_tags);
+
   /* need defaults for fragments */
   qtdemux_parse_trex (qtdemux, stream, &dummy, &dummy, &dummy);
 
@@ -9980,8 +9976,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           "found, assuming preview image or something; skipping track",
           stream->duration, stream->timescale, qtdemux->duration,
           qtdemux->timescale);
-      if (new_stream)
-        gst_qtdemux_stream_free (stream);
+      gst_qtdemux_stream_free (stream);
       return TRUE;
     }
   }
@@ -10078,8 +10073,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (stsd_len < 24) {
     /* .. but skip stream with empty stsd produced by some Vivotek cameras */
     if (stream->subtype == FOURCC_vivo) {
-      if (new_stream)
-        gst_qtdemux_stream_free (stream);
+      gst_qtdemux_stream_free (stream);
       return TRUE;
     } else {
       goto corrupt_file;
@@ -11879,36 +11873,29 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     qtdemux_parse_udta (qtdemux, stream->stream_tags, udta);
   }
 
-  /* now we are ready to add the stream */
-  if (!qtdemux->got_moov) {
-    qtdemux->active_streams = g_list_append (qtdemux->active_streams, stream);
-    qtdemux->n_streams++;
-    GST_DEBUG_OBJECT (qtdemux, "n_streams is now %d", qtdemux->n_streams);
-  }
+  /* Insert and sort new stream in track-id order.
+   * This will help in comparing old/new streams during stream update check */
+  qtdemux->active_streams =
+      g_list_insert_sorted (qtdemux->active_streams, stream,
+      (GCompareFunc) qtdemux_track_id_compare_func);
+  qtdemux->n_streams++;
+  GST_DEBUG_OBJECT (qtdemux, "n_streams is now %d", qtdemux->n_streams);
 
   return TRUE;
 
 /* ERRORS */
-skip_track:
-  {
-    GST_INFO_OBJECT (qtdemux, "skip disabled track");
-    if (new_stream)
-      gst_qtdemux_stream_free (stream);
-    return TRUE;
-  }
 corrupt_file:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
-    if (new_stream)
+    if (stream)
       gst_qtdemux_stream_free (stream);
     return FALSE;
   }
 error_encrypted:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECRYPT, (NULL), (NULL));
-    if (new_stream)
-      gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_free (stream);
     return FALSE;
   }
 samples_failed:
@@ -11917,24 +11904,20 @@ segments_failed:
     /* we posted an error already */
     /* free stbl sub-atoms */
     gst_qtdemux_stbl_free (stream);
-    if (new_stream)
-      gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_free (stream);
     return FALSE;
   }
 existing_stream:
   {
     GST_INFO_OBJECT (qtdemux, "stream with track id %i already exists",
         track_id);
-    if (new_stream)
-      gst_qtdemux_stream_free (stream);
     return TRUE;
   }
 unknown_stream:
   {
     GST_INFO_OBJECT (qtdemux, "unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
-    if (new_stream)
-      gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_free (stream);
     return TRUE;
   }
 }
