@@ -209,7 +209,8 @@ gst_rtsp_client_sink_pad_class_init (GstRtspClientSinkPadClass * klass)
 
   g_object_class_install_property (gobject_klass, PROP_PAD_ULPFEC_PERCENTAGE,
       g_param_spec_uint ("ulpfec-percentage", "ULPFEC percentage",
-          "The percentage of ULP redundancy to apply", 0, 100, DEFAULT_PAD_ULPFEC_PERCENTAGE,
+          "The percentage of ULP redundancy to apply", 0, 100,
+          DEFAULT_PAD_ULPFEC_PERCENTAGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -2035,7 +2036,10 @@ gst_rtsp_conninfo_close (GstRTSPClientSink * sink, GstRTSPConnInfo * info,
     /* free connection */
     GST_DEBUG_OBJECT (sink, "freeing connection...");
     gst_rtsp_connection_free (info->connection);
+    g_mutex_lock (&sink->preroll_lock);
     info->connection = NULL;
+    g_cond_broadcast (&sink->preroll_cond);
+    g_mutex_unlock (&sink->preroll_lock);
   }
   GST_RTSP_STATE_UNLOCK (sink);
   return GST_RTSP_OK;
@@ -3532,7 +3536,8 @@ request_aux_sender (GstElement * rtpbin, guint sessid, GstRTSPClientSink * sink)
 }
 
 static GstElement *
-request_fec_encoder (GstElement * rtpbin, guint sessid, GstRTSPClientSink * sink)
+request_fec_encoder (GstElement * rtpbin, guint sessid,
+    GstRTSPClientSink * sink)
 {
   GstRTSPStream *stream = NULL;
   GstElement *ret = NULL;
@@ -3643,7 +3648,8 @@ gst_rtsp_client_sink_collect_streams (GstRTSPClientSink * sink)
 
   /* Now wait for the preroll of the rtp bin */
   g_mutex_lock (&sink->preroll_lock);
-  while (!sink->prerolled && !sink->conninfo.flushing) {
+  while (!sink->prerolled && sink->conninfo.connection
+      && !sink->conninfo.flushing) {
     GST_LOG_OBJECT (sink, "Waiting for preroll before continuing");
     g_cond_wait (&sink->preroll_cond, &sink->preroll_lock);
   }
