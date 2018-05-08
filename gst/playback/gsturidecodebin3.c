@@ -652,6 +652,8 @@ gst_uri_decode_bin3_finalize (GObject * obj)
   GstURIDecodeBin3 *dec = GST_URI_DECODE_BIN3 (obj);
 
   g_mutex_clear (&dec->lock);
+  g_free (dec->uri);
+  g_free (dec->suburi);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
