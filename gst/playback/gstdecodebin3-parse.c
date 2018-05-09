@@ -35,6 +35,20 @@
 #include "gstplayback.h"
 #endif
 
+#define CUSTOM_EOS_QUARK _custom_eos_quark_get ()
+#define CUSTOM_EOS_QUARK_DATA "custom-eos"
+static GQuark
+_custom_eos_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("decodebin3-custom-eos");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
 /* Streams that come from demuxers (input/upstream) */
 /* FIXME : All this is hardcoded. Switch to tree of chains */
 struct _DecodebinInputStream
@@ -263,16 +277,14 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
           GstPad *peer = gst_pad_get_peer (input->srcpad);
           if (peer) {
             /* Send custom-eos event to multiqueue slot */
-            GstStructure *s;
             GstEvent *event;
 
             GST_DEBUG_OBJECT (pad,
                 "Got EOS end of input stream, post custom-eos");
             event = gst_event_new_eos ();
             gst_event_set_seqnum (event, gst_event_get_seqnum (ev));
-            s = gst_event_writable_structure (event);
-            gst_structure_set (s, "decodebin3-custom-eos", G_TYPE_BOOLEAN, TRUE,
-                NULL);
+            gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (event),
+                CUSTOM_EOS_QUARK, (gchar *) CUSTOM_EOS_QUARK_DATA, NULL);
             gst_pad_send_event (peer, event);
             gst_object_unref (peer);
           } else {

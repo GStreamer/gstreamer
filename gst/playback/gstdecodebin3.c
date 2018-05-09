@@ -181,6 +181,21 @@ GST_DEBUG_CATEGORY_STATIC (decodebin3_debug);
 
 #define EXTRA_DEBUG 1
 
+#define CUSTOM_FINAL_EOS_QUARK _custom_final_eos_quark_get ()
+#define CUSTOM_FINAL_EOS_QUARK_DATA "custom-final-eos"
+static GQuark
+_custom_final_eos_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark =
+        (gsize) g_quark_from_static_string ("decodebin3-custom-final-eos");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
 typedef struct _GstDecodebin3 GstDecodebin3;
 typedef struct _GstDecodebin3Class GstDecodebin3Class;
 
@@ -1585,7 +1600,6 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
 
       /* Send EOS to all slots */
       if (peer) {
-        GstStructure *s;
         GstEvent *stream_start, *eos;
 
         stream_start =
@@ -1603,9 +1617,9 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
         }
 
         eos = gst_event_new_eos ();
-        s = gst_event_writable_structure (eos);
-        gst_structure_set (s, "decodebin3-custom-final-eos", G_TYPE_BOOLEAN,
-            TRUE, NULL);
+        gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
+            CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA,
+            NULL);
         gst_pad_send_event (peer, eos);
         gst_object_unref (peer);
       } else
@@ -1704,12 +1718,15 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
         break;
       case GST_EVENT_EOS:
       {
-        const GstStructure *s = gst_event_get_structure (ev);
         gboolean was_drained = slot->is_drained;
         slot->is_drained = TRUE;
 
         /* Custom EOS handling first */
-        if (s && gst_structure_has_field (s, "decodebin3-custom-eos")) {
+        if (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (ev),
+                CUSTOM_EOS_QUARK)) {
+          /* remove custom-eos */
+          gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ev),
+              CUSTOM_EOS_QUARK, NULL, NULL);
           GST_LOG_OBJECT (pad, "Received custom EOS");
           ret = GST_PAD_PROBE_HANDLED;
           SELECTION_LOCK (dbin);
@@ -1762,8 +1779,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
 
           free_multiqueue_slot_async (dbin, slot);
           ret = GST_PAD_PROBE_REMOVE;
-        } else if (s
-            && gst_structure_has_field (s, "decodebin3-custom-final-eos")) {
+        } else if (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (ev),
+                CUSTOM_FINAL_EOS_QUARK)) {
           GST_DEBUG_OBJECT (pad, "Got final eos, propagating downstream");
         } else {
           GST_DEBUG_OBJECT (pad, "Got regular eos (all_inputs_are_eos)");
