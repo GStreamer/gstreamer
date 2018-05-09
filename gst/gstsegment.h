@@ -81,6 +81,10 @@ typedef enum {
  * @GST_SEEK_FLAG_TRICKMODE_NO_AUDIO: when doing fast forward or fast reverse
  *                     playback, request that audio decoder elements skip
  *                     decoding and output only gap events or silence. (Since: 1.6)
+ * @GST_SEEK_FLAG_INSTANT_RATE_CHANGE: Signals that a rate change should be
+ *                     applied immediately. Only valid if start/stop position
+ *                     are GST_CLOCK_TIME_NONE, the playback direction does not change
+ *                     and the seek is not flushing. (Since: 1.18)
  * @GST_SEEK_FLAG_SKIP: Deprecated backward compatibility flag, replaced
  *                     by %GST_SEEK_FLAG_TRICKMODE
  *
@@ -100,6 +104,16 @@ typedef enum {
  * When this message is posted, it is possible to send a new seek event to
  * continue playback. With this seek method it is possible to perform seamless
  * looping or simple linear editing.
+ *
+ * When only changing the playback rate and not the direction, the
+ * %GST_SEEK_FLAG_INSTANT_RATE_CHANGE flag can be used for a non-flushing seek
+ * to signal that the rate change should be applied immediately. This requires
+ * special support in the seek handlers (e.g. demuxers) and any elements
+ * synchronizing to the clock, and in general can't work in all cases (for example
+ * UDP streaming where the delivery rate is controlled by a remote server). The
+ * instant-rate-change mode supports changing the trickmode-related GST_SEEK_ flags,
+ * but can't be used in conjunction with other seek flags that affect the new
+ * playback position - as the playback position will not be changing.
  *
  * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode
  * playback, the %GST_SEEK_FLAG_TRICKMODE flag can be used to instruct decoders
@@ -143,6 +157,7 @@ typedef enum {
   GST_SEEK_FLAG_TRICKMODE_KEY_UNITS = (1 << 7),
   GST_SEEK_FLAG_TRICKMODE_NO_AUDIO  = (1 << 8),
   GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED = (1 << 9),
+  GST_SEEK_FLAG_INSTANT_RATE_CHANGE = (1 << 10),
 } GstSeekFlags;
 
 /**
@@ -177,6 +192,10 @@ typedef enum { /*< flags >*/
   GST_SEGMENT_FLAG_TRICKMODE_FORWARD_PREDICTED = GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED,
   GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO      = GST_SEEK_FLAG_TRICKMODE_NO_AUDIO
 } GstSegmentFlags;
+
+/* Flags that are reflected for instant-rate-change seeks */
+#define GST_SEGMENT_INSTANT_FLAGS \
+    (GST_SEGMENT_FLAG_TRICKMODE|GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS|GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED|GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO)
 
 /**
  * GstSegment:

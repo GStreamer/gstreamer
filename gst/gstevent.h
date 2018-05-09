@@ -121,6 +121,8 @@ typedef enum {
  * @GST_EVENT_RECONFIGURE: A request for upstream renegotiating caps and reconfiguring.
  * @GST_EVENT_TOC_SELECT: A request for a new playback position based on TOC
  *                        entry's UID.
+ * @GST_EVENT_INSTANT_RATE_CHANGE: Notify downstream that a playback rate override
+ *                                 should be applied as soon as possible. (Since: 1.18)
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
@@ -162,6 +164,9 @@ typedef enum {
   /* non-sticky downstream serialized */
   GST_EVENT_SEGMENT_DONE          = GST_EVENT_MAKE_TYPE (150, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
   GST_EVENT_GAP                   = GST_EVENT_MAKE_TYPE (160, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+
+  /* sticky downstream non-serialized */
+  GST_EVENT_INSTANT_RATE_CHANGE   = GST_EVENT_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(STICKY)),
 
   /* upstream events */
   GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (190, FLAG(UPSTREAM)),
@@ -730,6 +735,15 @@ GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 positi
 
 GST_API
 void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
+
+/* instant-rate-change event */
+
+GST_API
+GstEvent *      gst_event_new_instant_rate_change   (gdouble rate_multiplier, GstSegmentFlags new_flags) G_GNUC_MALLOC;
+
+GST_API
+void            gst_event_parse_instant_rate_change (GstEvent *event,
+                                                     gdouble  *rate_multiplier, GstSegmentFlags *new_flags);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEvent, gst_event_unref)
 

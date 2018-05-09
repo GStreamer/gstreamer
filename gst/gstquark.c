@@ -77,6 +77,7 @@ static const gchar *_quark_strings[] = {
   "redirect-entry-taglists", "redirect-entry-structures",
   "GstEventStreamGroupDone", "GstQueryBitrate", "nominal-bitrate",
   "GstMessageDeviceChanged", "device-changed", "trickmode-interval",
+  "GstEventInstantRateChange",
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

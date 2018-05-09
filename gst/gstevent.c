@@ -132,6 +132,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_CUSTOM_BOTH, "custom-both", 0},
   {GST_EVENT_CUSTOM_BOTH_OOB, "custom-both-oob", 0},
   {GST_EVENT_STREAM_GROUP_DONE, "stream-group-done", 0},
+  {GST_EVENT_INSTANT_RATE_CHANGE, "instant-rate-change", 0},
 
   {0, NULL, 0}
 };
@@ -1270,6 +1271,10 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
   GstStructure *structure;
 
   g_return_val_if_fail (rate != 0.0, NULL);
+  g_return_val_if_fail ((flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE) == 0
+      || (start_type == GST_SEEK_TYPE_NONE
+          && stop_type == GST_SEEK_TYPE_NONE
+          && (flags & GST_SEEK_FLAG_FLUSH) == 0), NULL);
 
   /* SNAP flags only make sense in combination with the KEYUNIT flag. Warn
    * and unset the SNAP flags if they're set without the KEYUNIT flag */
@@ -2166,4 +2171,71 @@ gst_event_parse_segment_done (GstEvent * event, GstFormat * format,
   val = gst_structure_id_get_value (structure, GST_QUARK (POSITION));
   if (position != NULL)
     *position = g_value_get_int64 (val);
+}
+
+/**
+ * gst_event_new_instant_rate_change:
+ * @rate_multiplier: the multiplier to be applied to the playback rate
+ * @new_flags: A new subset of segment flags to replace in segments
+ *
+ * Create a new instant-rate-change event. This event is sent by seek
+ * handlers (e.g. demuxers) when receiving a seek with the
+ * %GST_SEEK_FLAG_INSTANT_RATE_CHANGE and signals to downstream elements that
+ * the playback rate in the existing segment should be immediately multiplied
+ * by the @rate_multiplier factor.
+ *
+ * The flags provided replace any flags in the existing segment, for the
+ * flags within the %GST_SEGMENT_INSTANT_FLAGS set. Other GstSegmentFlags
+ * are ignored and not transferred in the event.
+ *
+ * Returns: (transfer full): the new instant-rate-change event.
+ *
+ * Since: 1.18
+ */
+GstEvent *
+gst_event_new_instant_rate_change (gdouble rate_multiplier,
+    GstSegmentFlags new_flags)
+{
+  GstEvent *event;
+
+  g_return_val_if_fail (rate_multiplier != 0.0, NULL);
+
+  new_flags &= GST_SEGMENT_INSTANT_FLAGS;
+
+  GST_CAT_TRACE (GST_CAT_EVENT, "creating instant-rate-change event %lf %08x",
+      rate_multiplier, new_flags);
+
+  event = gst_event_new_custom (GST_EVENT_INSTANT_RATE_CHANGE,
+      gst_structure_new_id (GST_QUARK (EVENT_INSTANT_RATE_CHANGE),
+          GST_QUARK (RATE), G_TYPE_DOUBLE, rate_multiplier,
+          GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, new_flags, NULL));
+
+  return event;
+}
+
+/**
+ * gst_event_parse_instant_rate_change:
+ * @event: a #GstEvent of type #GST_EVENT_INSTANT_RATE_CHANGE
+ * @rate_multiplier: (out) (allow-none): location in which to store the rate
+ *     multiplier of the instant-rate-change event, or %NULL
+ * @new_flags: (out) (allow-none): location in which to store the new
+ *     segment flags of the instant-rate-change event, or %NULL
+ *
+ * Extract rate and flags from an instant-rate-change event.
+ *
+ * Since: 1.18
+ */
+void
+gst_event_parse_instant_rate_change (GstEvent * event,
+    gdouble * rate_multiplier, GstSegmentFlags * new_flags)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_CHANGE);
+
+  structure = GST_EVENT_STRUCTURE (event);
+  gst_structure_id_get (structure, GST_QUARK (RATE), G_TYPE_DOUBLE,
+      rate_multiplier, GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, new_flags,
+      NULL);
 }
