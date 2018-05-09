@@ -576,7 +576,7 @@ db_pad_removed_cb (GstElement * element, GstPad * pad, GstURIDecodeBin3 * dec)
 
     if (cand->target_pad == pad) {
       output = cand;
-      dec->output_pads = g_list_remove_link (dec->output_pads, tmp);
+      dec->output_pads = g_list_delete_link (dec->output_pads, tmp);
       break;
     }
   }
