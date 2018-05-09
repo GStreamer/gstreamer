@@ -10,9 +10,9 @@ the core and base gstreamer libraries.
 
 Prerequisites
 ----
-These libraries are needed for clutter-sharp to compile:
-* gstreamer core, base and good 1.4 or higher
-* [gtk-sharp] 3.22.6 or higher - *NOTE: This can be built as a meson subproject if using the meson build system.*
+These libraries are needed for gstreamer-sharp to compile:
+* gstreamer core, base and good 1.14 or higher
+* [gtk-sharp] 3.22.0 or higher - *NOTE: This can be built as a meson subproject.*
 
 You will also need various .NET/mono bits (mcs and al). On debian-based distros
 you can install these with:
@@ -70,5 +70,5 @@ License
 gstreamer-sharp is licensed under the [LGPL 2.1](https://www.gnu.org/licenses/lgpl-2.1.html)
 
 [bindinator]:https://github.com/GLibSharp/bindinator
-[gtk-sharp]:https://github.com/GLibSharp/GtlSharp
+[gtk-sharp]:https://github.com/GLibSharp/GtkSharp
 [gstreamer]: http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/
