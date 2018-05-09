@@ -21,6 +21,9 @@ namespace Gst {
 
 	partial class Application 
 	{
+		// Because of: https://bugzilla.gnome.org/show_bug.cgi?id=743062#c30
+		private static uint MIN_GSTREAMER_MINOR = 14;
+
 		static Application () {
 			GLib.GType.Register (List.GType, typeof(List));
 			GLib.GType.Register (Fraction.GType, typeof(Fraction));
@@ -39,9 +42,15 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_init(IntPtr argc, IntPtr argv);
 
+		private static void CheckVersion() {
+			if (Gst.Version.Minor < MIN_GSTREAMER_MINOR)
+				throw new Exception(Gst.Version.Description + " found but GStreamer 1." +
+					MIN_GSTREAMER_MINOR + " required.");
+		}
 
 		public static void Init() {
 			gst_init (IntPtr.Zero, IntPtr.Zero);
+			CheckVersion();
 		}
 			
 		public static void Init(ref string[] argv) {
@@ -53,6 +62,8 @@ namespace Gst {
 			gst_init(ref cnt_argv, ref native_argv);
 			foreach (var native_arg in native_arg_list)
 				GLib.Marshaller.Free (native_arg);
+
+			CheckVersion();
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -64,6 +75,8 @@ namespace Gst {
 		public static bool InitCheck() {
 			IntPtr error = IntPtr.Zero;
 			bool ret = gst_init_check (IntPtr.Zero, IntPtr.Zero, out error);
+
+			CheckVersion();
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}
@@ -79,6 +92,8 @@ namespace Gst {
 			foreach (var native_arg in native_arg_list)
 				GLib.Marshaller.Free (native_arg);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
+
+			CheckVersion();
 			return ret;
 		}
 	}
