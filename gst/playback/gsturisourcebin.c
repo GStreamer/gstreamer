@@ -218,6 +218,21 @@ enum
   PROP_RING_BUFFER_MAX_SIZE
 };
 
+#define CUSTOM_EOS_QUARK _custom_eos_quark_get ()
+#define CUSTOM_EOS_QUARK_DATA "custom-eos"
+static GQuark
+_custom_eos_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark =
+        (gsize) g_quark_from_static_string ("urisourcebin-custom-eos");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
 static void post_missing_plugin_error (GstElement * dec,
     const gchar * element_name);
 
@@ -747,7 +762,6 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   switch (GST_EVENT_TYPE (ev)) {
     case GST_EVENT_EOS:
     {
-      GstStructure *s;
       gboolean all_streams_eos;
 
       GST_LOG_OBJECT (urisrc, "EOS on pad %" GST_PTR_FORMAT, pad);
@@ -771,11 +785,8 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
           GST_OBJECT_CAST (child_info->output_slot->queue));
 
       /* Mark this custom EOS */
-      ev = gst_event_make_writable (ev);
-      GST_PAD_PROBE_INFO_DATA (info) = ev;
-      s = gst_event_writable_structure (ev);
-      gst_structure_set (s, "urisourcebin-custom-eos", G_TYPE_BOOLEAN, TRUE,
-          NULL);
+      gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ev), CUSTOM_EOS_QUARK,
+          (gchar *) CUSTOM_EOS_QUARK_DATA, NULL);
       if (all_streams_eos) {
         GST_DEBUG_OBJECT (urisrc, "POSTING ABOUT TO FINISH");
         g_signal_emit (urisrc,
@@ -965,11 +976,15 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
 
   GST_LOG_OBJECT (pad, "%s, urisrc %p", GST_EVENT_TYPE_NAME (event), event);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS && gst_event_get_structure (event)
-      && gst_structure_has_field (gst_event_get_structure (event),
-          "urisourcebin-custom-eos")) {
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
+      gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (event),
+          CUSTOM_EOS_QUARK)) {
     OutputSlotInfo *slot;
     GST_DEBUG_OBJECT (pad, "we received EOS");
+
+    /* remove custom-eos */
+    gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (event), CUSTOM_EOS_QUARK,
+        NULL, NULL);
 
     GST_URI_SOURCE_BIN_LOCK (urisrc);
 
