@@ -114,7 +114,6 @@ static GstWlWindow *
 gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
 {
   GstWlWindow *window;
-  struct wl_region *region;
 
   window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
   window->display = g_object_ref (display);
@@ -146,13 +145,8 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   }
 
   /* do not accept input */
-  region = wl_compositor_create_region (display->compositor);
-  wl_surface_set_input_region (window->area_surface, region);
-  wl_region_destroy (region);
-
-  region = wl_compositor_create_region (display->compositor);
-  wl_surface_set_input_region (window->video_surface, region);
-  wl_region_destroy (region);
+  wl_surface_set_input_region (window->area_surface, NULL);
+  wl_surface_set_input_region (window->video_surface, NULL);
 
   return window;
 }
