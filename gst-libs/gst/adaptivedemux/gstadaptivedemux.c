@@ -3783,8 +3783,11 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         if (!demux_class->requires_periodical_playlist_update (demux)) {
           ret = gst_adaptive_demux_update_manifest (demux);
           break;
-        } else if (gst_adaptive_demux_stream_wait_manifest_update (demux,
-                stream)) {
+          /* Wait only if we can ensure current manifest has been expired.
+           * The meaning "we have next period" *WITH* EOS is that, current
+           * period has been ended but we can continue to the next period */
+        } else if (!gst_adaptive_demux_has_next_period (demux) &&
+            gst_adaptive_demux_stream_wait_manifest_update (demux, stream)) {
           goto end;
         }
         gst_task_stop (stream->download_task);
@@ -3793,13 +3796,14 @@ gst_adaptive_demux_stream_download_loop (GstAdaptiveDemuxStream * stream)
         }
       } else {
         gst_task_stop (stream->download_task);
-        if (gst_adaptive_demux_combine_flows (demux) == GST_FLOW_EOS) {
-          if (gst_adaptive_demux_has_next_period (demux)) {
-            GST_DEBUG_OBJECT (stream->pad,
-                "Next period available, not sending EOS");
-            gst_adaptive_demux_advance_period (demux);
-            ret = GST_FLOW_OK;
-          }
+      }
+
+      if (gst_adaptive_demux_combine_flows (demux) == GST_FLOW_EOS) {
+        if (gst_adaptive_demux_has_next_period (demux)) {
+          GST_DEBUG_OBJECT (stream->pad,
+              "Next period available, not sending EOS");
+          gst_adaptive_demux_advance_period (demux);
+          ret = GST_FLOW_OK;
         }
       }
       break;
