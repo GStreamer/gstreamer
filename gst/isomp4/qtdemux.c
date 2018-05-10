@@ -56,6 +56,8 @@
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
+#include <gst/riff/riff.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "qtatomparser.h"
 #include "qtdemux_types.h"
@@ -65,11 +67,6 @@
 #include "qtdemux_lang.h"
 #include "qtdemux.h"
 #include "qtpalette.h"
-
-#include "gst/riff/riff-media.h"
-#include "gst/riff/riff-read.h"
-
-#include <gst/pbutils/pbutils.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -639,7 +636,7 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
       "David Schleef <ds@schleef.org>, Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
-
+  gst_riff_init ();
 }
 
 static void
