@@ -859,11 +859,16 @@ gst_decklink_video_src_got_frame (GstElement * element,
     }
 
     if (skipped_frames == 0 && self->skipped_last > 0) {
-      GST_WARNING_OBJECT (self,
-          "Dropped %u old frames from %" GST_TIME_FORMAT " to %"
+      GST_ELEMENT_WARNING_WITH_DETAILS (self,
+          STREAM, FAILED,
+          ("Dropped %u old frames from %" GST_TIME_FORMAT " to %"
           GST_TIME_FORMAT, self->skipped_last,
           GST_TIME_ARGS (self->skip_from_timestamp),
-          GST_TIME_ARGS (self->skip_to_timestamp));
+          GST_TIME_ARGS (self->skip_to_timestamp)),
+          (NULL),
+          ("dropped", G_TYPE_UINT, self->skipped_last,
+           "from", G_TYPE_UINT64, self->skip_from_timestamp,
+           "to", G_TYPE_UINT64, self->skip_to_timestamp, NULL));
       self->skipped_last = 0;
     }
 
