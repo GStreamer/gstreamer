@@ -6,7 +6,7 @@ filternovideooverlay_CXXFLAGS= \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CXXFLAGS) \
 	$(GL_CFLAGS) \
-	$(GTK_CFLAGS)
+	$(GTK_CFLAGS) -Wno-error=parentheses
 
 filternovideooverlay_LDADD= \
 	$(GST_LIBS)  \

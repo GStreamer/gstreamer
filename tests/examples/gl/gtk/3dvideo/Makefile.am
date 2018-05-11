@@ -4,7 +4,7 @@ noinst_HEADERS = mviewwidget.h
 
 3dvideo_SOURCES = mviewwidget.c main.cpp
 
-3dvideo_CXXFLAGS=$(GST_CXXFLAGS)
+3dvideo_CXXFLAGS=$(GST_CXXFLAGS) -Wno-error=parentheses
 3dvideo_CFLAGS=$(GST_CFLAGS)
 
 3dvideo_CPPFLAGS=\
