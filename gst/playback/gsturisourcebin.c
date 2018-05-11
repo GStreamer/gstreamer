@@ -420,7 +420,8 @@ gst_uri_source_bin_init (GstURISourceBin * urisrc)
   urisrc->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
   urisrc->last_buffering_pct = -1;
 
-  GST_OBJECT_FLAG_SET (urisrc, GST_ELEMENT_FLAG_SOURCE);
+  GST_OBJECT_FLAG_SET (urisrc,
+      GST_ELEMENT_FLAG_SOURCE | GST_BIN_FLAG_STREAMS_AWARE);
   gst_bin_set_suppressed_flags (GST_BIN (urisrc),
       GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 }
