@@ -726,7 +726,6 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
   if (best_pad != NULL) {
     GstBuffer *buf;
     AVPacket pkt;
-    gboolean need_free = FALSE;
     GstMapInfo map;
 
     /* push out current buffer */
@@ -757,11 +756,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     else
       pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);
-    if (need_free) {
-      g_free (pkt.data);
-    } else {
-      gst_buffer_unmap (buf, &map);
-    }
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
   } else {
     /* close down */
