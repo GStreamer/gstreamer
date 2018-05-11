@@ -315,7 +315,7 @@ gst_grabcut_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buffer,
     gc->facepos.width = meta->w * gc->scale * 0.9;
     gc->facepos.height = meta->h * gc->scale * 1.1;
   } else {
-    memset (&(gc->facepos), 0, sizeof (gc->facepos));
+    memset (static_cast<void*>(&(gc->facepos)), 0, sizeof (gc->facepos));
   }
 
   /*  normally input should be RGBA */
