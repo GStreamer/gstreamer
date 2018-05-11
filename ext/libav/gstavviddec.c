@@ -27,13 +27,6 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/stereo3d.h>
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideodecoder.h>
-#include <gst/video/gstvideometa.h>
-#include <gst/video/gstvideopool.h>
-#include <gst/video/video-anc.h>
-
 #include "gstav.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"

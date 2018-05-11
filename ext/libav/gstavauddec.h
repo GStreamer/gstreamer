@@ -23,7 +23,6 @@ G_BEGIN_DECLS
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
-#include <gst/audio/gstaudiodecoder.h>
 #include <libavcodec/avcodec.h>
 
 typedef struct _GstFFMpegAudDec GstFFMpegAudDec;
