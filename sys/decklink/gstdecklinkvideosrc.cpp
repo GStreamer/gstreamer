@@ -800,7 +800,7 @@ extract_cc_from_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
     return;
   }
 
-  if (videoformat != self->anc_vformat) {
+  if (videoformat != self->anc_vformat && self->vbiparser) {
     gst_video_vbi_parser_free (self->vbiparser);
     self->vbiparser = NULL;
   }
