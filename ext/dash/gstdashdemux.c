@@ -2488,6 +2488,12 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
          * 10 microseconds to get back to the correct segment. The errors are
          * usually on the order of nanoseconds so it should be enough.
          */
+
+        /* _get_next_fragment_timestamp() returned relative timestamp to
+         * corresponding period start, but _client_stream_seek expects absolute
+         * MPD time. */
+        ts += gst_mpd_parser_get_period_start_time (dashdemux->client);
+
         GST_DEBUG_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (demux_stream),
             "Current position: %" GST_TIME_FORMAT ", updating to %"
             GST_TIME_FORMAT, GST_TIME_ARGS (ts),
