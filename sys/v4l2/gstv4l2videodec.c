@@ -139,14 +139,14 @@ gst_v4l2_video_dec_open (GstVideoDecoder * decoder)
 
 no_encoded_format:
   GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-      (_("Encoder on device %s has no supported input format"),
+      (_("Decoder on device %s has no supported input format"),
           self->v4l2output->videodev), (NULL));
   goto failure;
 
 
 no_raw_format:
   GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-      (_("Encoder on device %s has no supported output format"),
+      (_("Decoder on device %s has no supported output format"),
           self->v4l2output->videodev), (NULL));
   goto failure;
 
