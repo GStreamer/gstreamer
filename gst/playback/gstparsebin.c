@@ -228,9 +228,6 @@ enum
 };
 
 #define DEFAULT_SUBTITLE_ENCODING NULL
-#define DEFAULT_USE_BUFFERING     FALSE
-#define DEFAULT_LOW_PERCENT       10
-#define DEFAULT_HIGH_PERCENT      99
 /* by default we use the automatic values above */
 #define DEFAULT_EXPOSE_ALL_STREAMS  TRUE
 #define DEFAULT_CONNECTION_SPEED    0
