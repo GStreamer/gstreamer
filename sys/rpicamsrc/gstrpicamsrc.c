@@ -189,7 +189,7 @@ enum
   "framerate = " GST_VIDEO_FPS_RANGE ", "       \
   "stream-format = (string) byte-stream, "  \
   "alignment = (string) nal, "               \
-  "profile = (string) { baseline, main, high }"
+  "profile = (string) { constrained-baseline, baseline, main, high }"
 #define RAW_CAPS \
   GST_VIDEO_CAPS_MAKE ("{ I420, RGB, BGR, RGBA }") /* FIXME: Map more raw formats */
 
@@ -1317,6 +1317,8 @@ gst_rpi_cam_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     if (profile_str) {
       if (g_str_equal (profile_str, "baseline"))
         src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_BASELINE;
+      else if (g_str_equal (profile_str, "constrained-baseline"))
+        src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_CONSTRAINED_BASELINE;
       else if (g_str_equal (profile_str, "main"))
         src->capture_config.profile = MMAL_VIDEO_PROFILE_H264_MAIN;
       else if (g_str_equal (profile_str, "high"))
