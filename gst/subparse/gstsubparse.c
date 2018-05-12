@@ -837,8 +837,8 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
 
     s = g_string_new (*p_txt);
     while (num_open_tags > 0) {
-      GST_LOG ("adding missing closing tag '%s'", g_ptr_array_index (open_tags,
-              num_open_tags - 1));
+      GST_LOG ("adding missing closing tag '%s'",
+          (char *) g_ptr_array_index (open_tags, num_open_tags - 1));
       g_string_append_c (s, '<');
       g_string_append_c (s, '/');
       g_string_append (s, g_ptr_array_index (open_tags, num_open_tags - 1));
