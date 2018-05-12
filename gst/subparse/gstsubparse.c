@@ -758,7 +758,7 @@ static void
 subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
 {
   gchar *cur, *next_tag;
-  gchar *open_tags[32];
+  GPtrArray *open_tags = NULL;
   guint num_open_tags = 0;
   const gchar *iter_tag;
   guint offset = 0;
@@ -771,6 +771,7 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
 
   g_assert (*p_txt != NULL);
 
+  open_tags = g_ptr_array_new_with_free_func (g_free);
   cur = *p_txt;
   while (*cur != '\0') {
     next_tag = strchr (cur, '<');
@@ -800,7 +801,7 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
       index++;
       if (offset) {
         /* OK we found a tag, let's keep track of it */
-        open_tags[num_open_tags] = g_strdup (iter_tag);
+        g_ptr_array_add (open_tags, g_ascii_strdown (iter_tag, -1));
         ++num_open_tags;
         break;
       }
@@ -815,15 +816,15 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
     if (*next_tag == '<' && *(next_tag + 1) == '/') {
       end_tag = strchr (cur, '>');
       if (end_tag) {
+        const gchar *last = g_ptr_array_index (open_tags, num_open_tags - 1);
         if (num_open_tags == 0
-            || g_ascii_strncasecmp (end_tag - 1, open_tags[num_open_tags - 1],
-                strlen (open_tags[num_open_tags - 1]))) {
-          GST_LOG ("broken input, closing tag '%s' is not open", next_tag);
+            || g_ascii_strncasecmp (end_tag - 1, last, strlen (last))) {
+          GST_LOG ("broken input, closing tag '%s' is not open", end_tag - 1);
           memmove (next_tag, end_tag + 1, strlen (end_tag) + 1);
           next_tag -= strlen (end_tag);
         } else {
           --num_open_tags;
-          g_free (open_tags[num_open_tags]);
+          g_ptr_array_remove_index (open_tags, num_open_tags);
         }
       }
     }
@@ -836,17 +837,18 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
 
     s = g_string_new (*p_txt);
     while (num_open_tags > 0) {
-      GST_LOG ("adding missing closing tag '%s'", open_tags[num_open_tags - 1]);
+      GST_LOG ("adding missing closing tag '%s'", g_ptr_array_index (open_tags,
+              num_open_tags - 1));
       g_string_append_c (s, '<');
       g_string_append_c (s, '/');
-      g_string_append (s, open_tags[num_open_tags - 1]);
+      g_string_append (s, g_ptr_array_index (open_tags, num_open_tags - 1));
       g_string_append_c (s, '>');
-      g_free (open_tags[num_open_tags - 1]);
       --num_open_tags;
     }
     g_free (*p_txt);
     *p_txt = g_string_free (s, FALSE);
   }
+  g_ptr_array_free (open_tags, TRUE);
 }
 
 static gboolean

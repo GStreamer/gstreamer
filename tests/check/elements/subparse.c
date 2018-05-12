@@ -93,6 +93,9 @@ static SubParseInputChunk srt_input[] = {
       11 * GST_SECOND, 12 * GST_SECOND, "<i>xyz</i>"}, {
         "12\n00:00:12,000 --> 00:00:13,000\n<i>xyz</b>\n\n",
       12 * GST_SECOND, 13 * GST_SECOND, "<i>xyz</i>"}, {
+        "13\n00:00:13,000 --> 00:00:14,000\n<i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i>Keep them comiiiiiing\n\n",
+        13 * GST_SECOND, 14 * GST_SECOND,
+      "<i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i><i>Keep them comiiiiiing</i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i></i>"}, {
         /* skip a few chunk numbers here, the numbers shouldn't matter */
         "24\n00:01:00,000 --> 00:02:00,000\nYep, still here\n\n",
       60 * GST_SECOND, 120 * GST_SECOND, "Yep, still here"}, {
