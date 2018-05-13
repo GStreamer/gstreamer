@@ -26,3 +26,5 @@ endif
 endif
 
 DIST_SUBDIRS=cocoa generic qt clutter sdl gtk
+
+include $(top_srcdir)/common/parallel-subdirs.mak
