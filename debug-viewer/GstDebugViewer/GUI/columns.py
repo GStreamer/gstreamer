@@ -229,7 +229,7 @@ class LevelColumn (TextColumn):
 
         values = [Data.debug_level_log, Data.debug_level_debug,
                   Data.debug_level_info, Data.debug_level_warning,
-                  Data.debug_level_error]
+                  Data.debug_level_error, Data.debug_level_memdump]
 
         return values
 

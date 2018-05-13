@@ -136,6 +136,7 @@ class LevelColorThemeTango (LevelColorTheme):
         self.add_color(Data.debug_level_info, p.black, p.chameleon1)
         self.add_color(Data.debug_level_warning, p.black, p.orange1)
         self.add_color(Data.debug_level_error, p.white, p.scarletred1)
+        self.add_color(Data.debug_level_memdump, p.white, p.aluminium3)
 
 
 class ThreadColorTheme (ColorTheme):

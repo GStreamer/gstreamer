@@ -74,8 +74,8 @@ def parse_time(st):
 
 class DebugLevel (int):
 
-    __names = ["NONE", "ERROR", "WARN",
-               "INFO", "DEBUG", "LOG", "FIXME", "TRACE"]
+    __names = ["NONE", "ERROR", "WARN", "FIXME",
+               "INFO", "DEBUG", "LOG", "TRACE", "MEMDUMP"]
     __instances = {}
 
     def __new__(cls, level):
@@ -122,6 +122,7 @@ debug_level_debug = DebugLevel("DEBUG")
 debug_level_log = DebugLevel("LOG")
 debug_level_fixme = DebugLevel("FIXME")
 debug_level_trace = DebugLevel("TRACE")
+debug_level_memdump = DebugLevel("MEMDUMP")
 debug_levels = [debug_level_none,
                 debug_level_trace,
                 debug_level_fixme,
@@ -129,7 +130,8 @@ debug_levels = [debug_level_none,
                 debug_level_debug,
                 debug_level_info,
                 debug_level_warning,
-                debug_level_error]
+                debug_level_error,
+                debug_level_memdump]
 
 # For stripping color codes:
 _escape = re.compile(b"\x1b\\[[0-9;]*m")
@@ -147,7 +149,7 @@ def strip_escape(s):
 def default_log_line_regex_():
 
     # "DEBUG             "
-    LEVEL = "([A-Z]+)\s+"
+    LEVEL = "([A-Z]+)\s*"
     # "0x8165430 "
     THREAD = r"(0x[0-9a-f]+)\s+"  # r"\((0x[0-9a-f]+) - "
     # "0:00:00.777913000  "
@@ -309,12 +311,13 @@ class LineCache (Producer):
         dict_levels = {"T": debug_level_trace, "F": debug_level_fixme,
                        "L": debug_level_log, "D": debug_level_debug,
                        "I": debug_level_info, "W": debug_level_warning,
-                       "E": debug_level_error, " ": debug_level_none}
+                       "E": debug_level_error, " ": debug_level_none,
+                       "M": debug_level_memdump, }
         ANSI = "(?:\x1b\\[[0-9;]*m)?"
         ANSI_PATTERN = r"\d:\d\d:\d\d\.\d+ " + ANSI + \
                        r" *\d+" + ANSI + \
                        r" +0x[0-9a-f]+ +" + ANSI + \
-                       r"([TFLDIEW ])"
+                       r"([TFLDIEWM ])"
         BARE_PATTERN = ANSI_PATTERN.replace(ANSI, "")
         rexp_bare = re.compile(BARE_PATTERN)
         rexp_ansi = re.compile(ANSI_PATTERN)

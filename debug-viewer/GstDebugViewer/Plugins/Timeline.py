@@ -157,7 +157,7 @@ class LevelDistributionSentinel (object):
 
     def process(self):
 
-        MAX_LEVELS = 8
+        MAX_LEVELS = 9
         YIELD_LIMIT = 10000
         y = YIELD_LIMIT
 
