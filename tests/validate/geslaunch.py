@@ -171,6 +171,11 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
         GESTest.build_arguments(self)
         self._set_rendering_info()
 
+    def run_external_checks(self):
+        reference_file_path = urllib.parse.urlsplit(self.media_descriptor.get_uri()).path + ".expected_result"
+        if os.path.exists(reference_file_path):
+            self.run_iqa_test(utils.path2url(reference_file_path))
+
     def _set_rendering_info(self):
         self.dest_file = path = os.path.join(self.options.dest,
                                              self.classname.replace(".render.", os.sep).
