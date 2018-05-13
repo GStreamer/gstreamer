@@ -1017,6 +1017,10 @@ class GstValidateEncodingTestInterface(object):
         Runs IQA test if @reference_file_path exists
         @test: The test to run tests on
         """
+        if not GstValidateBaseTestManager.has_feature('iqa'):
+            self.debug('Iqa element not present, not running extra test.')
+            return
+
         pipeline_desc = """
             uridecodebin uri=%s !
                 iqa name=iqa do-dssim=true dssim-error-threshold=1.0 ! fakesink
@@ -1948,6 +1952,7 @@ class ScenarioManager(Loggable):
 
 class GstValidateBaseTestManager(TestsManager):
     scenarios_manager = ScenarioManager()
+    features_cache = {}
 
     def __init__(self):
         super(GstValidateBaseTestManager, self).__init__()
@@ -1959,8 +1964,25 @@ class GstValidateBaseTestManager(TestsManager):
         for varname, cmd in {'': 'gst-validate',
                              'TRANSCODING_': 'gst-validate-transcoding',
                              'MEDIA_CHECK_': 'gst-validate-media-check',
-                             'RTSP_SERVER_': 'gst-validate-rtsp-server'}.items():
+                             'RTSP_SERVER_': 'gst-validate-rtsp-server',
+                             'INSPECT_': 'gst-inspect'}.items():
             setattr(cls, varname + 'COMMAND', which(cmd + '-1.0', extra_paths))
+
+    @classmethod
+    def has_feature(cls, featurename):
+        try:
+            return cls.features_cache[featurename]
+        except KeyError:
+            pass
+
+        try:
+            subprocess.check_output([cls.INSPECT_COMMAND, featurename])
+            res = True
+        except subprocess.CalledProcessError:
+            res = False
+
+        cls.features_cache[featurename] = res
+        return res
 
     def add_scenarios(self, scenarios):
         """
