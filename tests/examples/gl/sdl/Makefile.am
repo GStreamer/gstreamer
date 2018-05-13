@@ -16,7 +16,7 @@ sdlshare_CFLAGS= \
 	$(SDL_CFLAGS)
 sdlshare_LDADD= $(GST_LIBS) $(GL_LIBS) $(SDL_LIBS) \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
-	-lgstvideo-$(GST_API_VERSION)
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la
 
 sdlshare2_SOURCES = sdlshare2.c
 
@@ -29,6 +29,6 @@ sdlshare2_CFLAGS= \
 	$(SDL_CFLAGS)
 sdlshare2_LDADD= $(GST_LIBS) $(GL_LIBS) $(SDL_LIBS) \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
-	-lgstvideo-$(GST_API_VERSION)
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la
 
 endif
