@@ -1512,6 +1512,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
     stream_flags |= GST_STREAM_FLAG_SPARSE;
   if (context->flags & GST_MATROSKA_TRACK_DEFAULT)
     stream_flags |= GST_STREAM_FLAG_SELECT;
+  else if (!(context->flags & GST_MATROSKA_TRACK_ENABLED))
+    stream_flags |= GST_STREAM_FLAG_UNSELECT;
+
   gst_event_set_stream_flags (stream_start, stream_flags);
   gst_pad_push_event (context->pad, stream_start);
   gst_pad_set_caps (context->pad, context->caps);
