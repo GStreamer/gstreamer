@@ -4917,8 +4917,10 @@ gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segment.rate = rate;
   stream->segment.start = start + QTSTREAMTIME_TO_GSTTIME (stream,
       stream->cslg_shift) + min_ts;
-  stream->segment.stop = stop + QTSTREAMTIME_TO_GSTTIME (stream,
-      stream->cslg_shift) + min_ts;
+  if (GST_CLOCK_TIME_IS_VALID (stop)) {
+    stream->segment.stop = stop + QTSTREAMTIME_TO_GSTTIME (stream,
+        stream->cslg_shift) + min_ts;
+  }
   stream->segment.time = time + min_ts;
   stream->segment.position = stream->segment.start + min_ts;
 
