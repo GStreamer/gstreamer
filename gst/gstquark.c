@@ -78,6 +78,8 @@ static const gchar *_quark_strings[] = {
   "GstEventStreamGroupDone", "GstQueryBitrate", "nominal-bitrate",
   "GstMessageDeviceChanged", "device-changed", "trickmode-interval",
   "GstEventInstantRateChange",
+  "GstEventInstantRateSyncTime", "GstMessageInstantRateRequest",
+  "upstream-running-time"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

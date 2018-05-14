@@ -121,6 +121,9 @@ typedef struct _GstMessage GstMessage;
  *     response is received with a non-HTTP URL inside. (Since: 1.10)
  * @GST_MESSAGE_DEVICE_CHANGED: Message indicating a #GstDevice was changed
  *     a #GstDeviceProvider (Since: 1.16)
+ * @GST_MESSAGE_INSTANT_RATE_REQUEST: Message sent by elements to request the
+ *     running time from the pipeline when an instant rate change should
+ *     be applied (which may be in the past when the answer arrives). (Since: 1.18)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -174,6 +177,7 @@ typedef enum
   GST_MESSAGE_STREAMS_SELECTED  = GST_MESSAGE_EXTENDED + 5,
   GST_MESSAGE_REDIRECT          = GST_MESSAGE_EXTENDED + 6,
   GST_MESSAGE_DEVICE_CHANGED    = GST_MESSAGE_EXTENDED + 7,
+  GST_MESSAGE_INSTANT_RATE_REQUEST = GST_MESSAGE_EXTENDED + 8,
   GST_MESSAGE_ANY               = (gint) (0xffffffff)
 } GstMessageType;
 
@@ -868,6 +872,13 @@ void            gst_message_parse_redirect_entry     (GstMessage * message, gsiz
 
 GST_API
 gsize           gst_message_get_num_redirect_entries (GstMessage * message);
+
+/* INSTANT_RATE_REQUEST */
+
+GST_API
+GstMessage *    gst_message_new_instant_rate_request   (GstObject * src, gdouble rate_multiplier) G_GNUC_MALLOC;
+GST_API
+void            gst_message_parse_instant_rate_request (GstMessage * message, gdouble * rate_multiplier);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMessage, gst_message_unref)
 

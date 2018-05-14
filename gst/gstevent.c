@@ -133,6 +133,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_CUSTOM_BOTH_OOB, "custom-both-oob", 0},
   {GST_EVENT_STREAM_GROUP_DONE, "stream-group-done", 0},
   {GST_EVENT_INSTANT_RATE_CHANGE, "instant-rate-change", 0},
+  {GST_EVENT_INSTANT_RATE_SYNC_TIME, "instant-rate-sync-time", 0},
 
   {0, NULL, 0}
 };
@@ -2238,4 +2239,84 @@ gst_event_parse_instant_rate_change (GstEvent * event,
   gst_structure_id_get (structure, GST_QUARK (RATE), G_TYPE_DOUBLE,
       rate_multiplier, GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, new_flags,
       NULL);
+}
+
+/**
+ * gst_event_new_instant_rate_sync_time:
+ * @rate_multiplier: the new playback rate multiplier to be applied
+ * @running_time: Running time when the rate change should be applied
+ * @upstream_running_time: The upstream-centric running-time when the
+ *    rate change should be applied.
+ *
+ * Create a new instant-rate-sync-time event. This event is sent by the
+ * pipeline to notify elements handling the instant-rate-change event about
+ * the running-time when the new rate should be applied. The running time
+ * may be in the past when elements handle this event, which can lead to
+ * switching artifacts. The magnitude of those depends on the exact timing
+ * of event delivery to each element and the magnitude of the change in
+ * playback rate being applied.
+ *
+ * The @running_time and @upstream_running_time are the same if this
+ * is the first instant-rate adjustment, but will differ for later ones
+ * to compensate for the accumulated offset due to playing at a rate
+ * different to the one indicated in the playback segments.
+ *
+ * Returns: (transfer full): the new instant-rate-sync-time event.
+ *
+ * Since: 1.18
+ */
+GstEvent *
+gst_event_new_instant_rate_sync_time (gdouble rate_multiplier,
+    GstClockTime running_time, GstClockTime upstream_running_time)
+{
+  GstEvent *event;
+
+  g_return_val_if_fail (rate_multiplier != 0.0, NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (running_time), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (upstream_running_time), NULL);
+
+  GST_CAT_TRACE (GST_CAT_EVENT,
+      "creating instant-rate-sync-time event %lf %" GST_TIME_FORMAT
+      " %" GST_TIME_FORMAT, rate_multiplier,
+      GST_TIME_ARGS (running_time), GST_TIME_ARGS (upstream_running_time));
+
+  event = gst_event_new_custom (GST_EVENT_INSTANT_RATE_SYNC_TIME,
+      gst_structure_new_id (GST_QUARK (EVENT_INSTANT_RATE_SYNC_TIME),
+          GST_QUARK (RATE), G_TYPE_DOUBLE, rate_multiplier,
+          GST_QUARK (RUNNING_TIME), GST_TYPE_CLOCK_TIME, running_time,
+          GST_QUARK (UPSTREAM_RUNNING_TIME), GST_TYPE_CLOCK_TIME,
+          upstream_running_time, NULL));
+
+  return event;
+}
+
+/**
+ * gst_event_parse_instant_rate_sync_time:
+ * @event: a #GstEvent of type #GST_EVENT_INSTANT_RATE_CHANGE
+ * @rate_multiplier: (out) (allow-none): location where to store the rate of
+ *     the instant-rate-sync-time event, or %NULL
+ * @running_time: (out) (allow-none): location in which to store the running time
+ *     of the instant-rate-sync-time event, or %NULL
+ * @upstream_running_time: (out) (allow-none): location in which to store the
+ *     upstream running time of the instant-rate-sync-time event, or %NULL
+ *
+ * Extract the rate multiplier and running times from an instant-rate-sync-time event.
+ *
+ * Since: 1.18
+ */
+void
+gst_event_parse_instant_rate_sync_time (GstEvent * event,
+    gdouble * rate_multiplier, GstClockTime * running_time,
+    GstClockTime * upstream_running_time)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_SYNC_TIME);
+
+  structure = GST_EVENT_STRUCTURE (event);
+  gst_structure_id_get (structure, GST_QUARK (RATE), G_TYPE_DOUBLE,
+      rate_multiplier, GST_QUARK (RUNNING_TIME), GST_TYPE_CLOCK_TIME,
+      running_time, GST_QUARK (UPSTREAM_RUNNING_TIME), GST_TYPE_CLOCK_TIME,
+      upstream_running_time, NULL);
 }

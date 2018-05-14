@@ -123,6 +123,9 @@ typedef enum {
  *                        entry's UID.
  * @GST_EVENT_INSTANT_RATE_CHANGE: Notify downstream that a playback rate override
  *                                 should be applied as soon as possible. (Since: 1.18)
+ * @GST_EVENT_INSTANT_RATE_SYNC_TIME: Sent by the pipeline to notify elements that handle the
+ *                                    instant-rate-change event about the running-time when
+ *                                    the rate multiplier should be applied (or was applied). (Since: 1.18)
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
@@ -169,14 +172,15 @@ typedef enum {
   GST_EVENT_INSTANT_RATE_CHANGE   = GST_EVENT_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(STICKY)),
 
   /* upstream events */
-  GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (190, FLAG(UPSTREAM)),
-  GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (200, FLAG(UPSTREAM)),
-  GST_EVENT_NAVIGATION            = GST_EVENT_MAKE_TYPE (210, FLAG(UPSTREAM)),
-  GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (220, FLAG(UPSTREAM)),
-  GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (230, FLAG(UPSTREAM)),
-  GST_EVENT_RECONFIGURE           = GST_EVENT_MAKE_TYPE (240, FLAG(UPSTREAM)),
-  GST_EVENT_TOC_SELECT            = GST_EVENT_MAKE_TYPE (250, FLAG(UPSTREAM)),
-  GST_EVENT_SELECT_STREAMS        = GST_EVENT_MAKE_TYPE (260, FLAG(UPSTREAM)),
+  GST_EVENT_QOS                    = GST_EVENT_MAKE_TYPE (190, FLAG(UPSTREAM)),
+  GST_EVENT_SEEK                   = GST_EVENT_MAKE_TYPE (200, FLAG(UPSTREAM)),
+  GST_EVENT_NAVIGATION             = GST_EVENT_MAKE_TYPE (210, FLAG(UPSTREAM)),
+  GST_EVENT_LATENCY                = GST_EVENT_MAKE_TYPE (220, FLAG(UPSTREAM)),
+  GST_EVENT_STEP                   = GST_EVENT_MAKE_TYPE (230, FLAG(UPSTREAM)),
+  GST_EVENT_RECONFIGURE            = GST_EVENT_MAKE_TYPE (240, FLAG(UPSTREAM)),
+  GST_EVENT_TOC_SELECT             = GST_EVENT_MAKE_TYPE (250, FLAG(UPSTREAM)),
+  GST_EVENT_SELECT_STREAMS         = GST_EVENT_MAKE_TYPE (260, FLAG(UPSTREAM)),
+  GST_EVENT_INSTANT_RATE_SYNC_TIME = GST_EVENT_MAKE_TYPE (261, FLAG(UPSTREAM)),
 
   /* custom events start here */
   GST_EVENT_CUSTOM_UPSTREAM          = GST_EVENT_MAKE_TYPE (270, FLAG(UPSTREAM)),
@@ -744,6 +748,19 @@ GstEvent *      gst_event_new_instant_rate_change   (gdouble rate_multiplier, Gs
 GST_API
 void            gst_event_parse_instant_rate_change (GstEvent *event,
                                                      gdouble  *rate_multiplier, GstSegmentFlags *new_flags);
+
+/* instant-rate-change-sync-time event */
+
+GST_API
+GstEvent *      gst_event_new_instant_rate_sync_time   (gdouble      rate,
+                                                        GstClockTime running_time,
+                                                        GstClockTime upstream_running_time) G_GNUC_MALLOC;
+
+GST_API
+void            gst_event_parse_instant_rate_sync_time (GstEvent     *event,
+                                                        gdouble      *rate,
+                                                        GstClockTime *running_time,
+                                                        GstClockTime *upstream_running_time);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEvent, gst_event_unref)
 
