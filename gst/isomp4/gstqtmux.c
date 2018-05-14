@@ -4200,6 +4200,21 @@ gst_qt_mux_register_and_push_sample (GstQTMux * qtmux, GstQTPad * pad,
         GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
             ("Unexpected values in sample %" G_GUINT64_FORMAT,
                 pad->sample_offset + 1));
+        GST_ERROR_OBJECT (qtmux, "Expected: samples %u, delta %u, size %u, "
+            "chunk offset %" G_GUINT64_FORMAT ", "
+            "pts offset %" G_GUINT64_FORMAT ", sync %d",
+            sample_entry->nsamples,
+            sample_entry->delta,
+            sample_entry->size,
+            sample_entry->chunk_offset,
+            sample_entry->pts_offset, sample_entry->sync);
+        GST_ERROR_OBJECT (qtmux, "Got: samples %u, delta %u, size %u, "
+            "chunk offset %" G_GUINT64_FORMAT ", "
+            "pts offset %" G_GUINT64_FORMAT ", sync %d",
+            nsamples,
+            (guint) scaled_duration,
+            sample_size, chunk_offset, pts_offset, sync);
+
         gst_buffer_unref (buffer);
         return GST_FLOW_ERROR;
       }
