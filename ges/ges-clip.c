@@ -49,6 +49,17 @@ static void _compute_height (GESContainer * container);
 
 G_DEFINE_ABSTRACT_TYPE (GESClip, ges_clip, GES_TYPE_CONTAINER);
 
+typedef enum
+{
+  GES_CLIP_IS_SPLITTING = (1 << 0),
+  GES_CLIP_IS_MOVING = (1 << 1),
+} GESClipFlags;
+
+#define FLAGS(obj)             (GES_CLIP(obj)->priv->flags)
+#define SET_FLAG(obj,flag)     (FLAGS(obj) |= (flag))
+#define UNSET_FLAG(obj,flag)   (FLAGS(obj) &= ~(flag))
+#define FLAG_IS_SET(obj,flag)  (FLAGS(obj) == (flag))
+
 struct _GESClipPrivate
 {
   /*< public > */
@@ -59,7 +70,7 @@ struct _GESClipPrivate
   /* Set to TRUE when the clip is doing updates of track element
    * properties so we don't end up in infinite property update loops
    */
-  gboolean is_moving;
+  GESClipFlags flags;
 
   guint nb_effects;
 
@@ -153,7 +164,8 @@ _set_start (GESTimelineElement * element, GstClockTime start)
       /* Make the snapping happen if in a timeline */
       timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
       if (timeline && !container->initiated_move) {
-        if (ges_timeline_move_object_simple (timeline, child, NULL, GES_EDGE_NONE, start))
+        if (ges_timeline_move_object_simple (timeline, child, NULL,
+                GES_EDGE_NONE, start))
           continue;
       }
 
@@ -199,9 +211,12 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     if (child != container->initiated_move) {
       /* Make the snapping happen if in a timeline */
       timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-      if (timeline == NULL || ges_timeline_trim_object_simple (timeline, child,
-              NULL, GES_EDGE_END, _START (child) + duration, TRUE) == FALSE)
+      if (timeline == NULL || FLAG_IS_SET (element, GES_CLIP_IS_SPLITTING) ||
+          (ges_timeline_trim_object_simple (timeline, child,
+                  NULL, GES_EDGE_END, _START (child) + duration,
+                  TRUE) == FALSE)) {
         _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
+      }
     }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
@@ -841,7 +856,7 @@ ges_clip_init (GESClip * self)
   /* FIXME, check why it was done this way _DURATION (self) = GST_SECOND; */
   self->priv->layer = NULL;
   self->priv->nb_effects = 0;
-  self->priv->is_moving = FALSE;
+  self->priv->flags = 0;
 }
 
 /**
@@ -984,7 +999,7 @@ ges_clip_set_layer (GESClip * clip, GESLayer * layer)
    * it is actually the result of a move between layer (as we know
    * that it will be added to another layer right after, and this
    * is what imports here.) */
-  if (!clip->priv->is_moving)
+  if (!FLAG_IS_SET (clip, GES_CLIP_IS_MOVING))
     g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 }
 
@@ -1012,7 +1027,10 @@ ges_clip_set_moving_from_layer (GESClip * clip, gboolean is_moving)
 {
   g_return_if_fail (GES_IS_CLIP (clip));
 
-  clip->priv->is_moving = is_moving;
+  if (is_moving)
+    SET_FLAG (clip, GES_CLIP_IS_MOVING);
+  else
+    UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
 }
 
 /**
@@ -1031,7 +1049,7 @@ ges_clip_is_moving_from_layer (GESClip * clip)
 {
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
-  return clip->priv->is_moving;
+  return FLAG_IS_SET (clip, GES_CLIP_IS_MOVING);
 }
 
 /**
@@ -1064,7 +1082,7 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
   GST_DEBUG_OBJECT (clip, "moving to layer %p, priority: %d", layer,
       ges_layer_get_priority (layer));
 
-  clip->priv->is_moving = TRUE;
+  SET_FLAG (clip, GES_CLIP_IS_MOVING);
   gst_object_ref (clip);
   ret = ges_layer_remove_clip (current_layer, clip);
 
@@ -1074,7 +1092,7 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
   }
 
   ret = ges_layer_add_clip (layer, clip);
-  clip->priv->is_moving = FALSE;
+  UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
 
   gst_object_unref (clip);
   g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
@@ -1383,7 +1401,9 @@ ges_clip_split (GESClip * clip, guint64 position)
         position - start + inpoint);
   }
 
+  SET_FLAG (clip, GES_CLIP_IS_SPLITTING);
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
+  UNSET_FLAG (clip, GES_CLIP_IS_SPLITTING);
 
   if (GES_TIMELINE_ELEMENT_TIMELINE (clip)) {
     for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {
