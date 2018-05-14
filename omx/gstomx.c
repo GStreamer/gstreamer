@@ -655,16 +655,18 @@ log_omx_performance (GstOMXComponent * comp, const gchar * event,
     return;
 
   if (buf) {
-    gchar *buf_str, *omx_buf_str;
+    gchar *buf_str, *omx_buf_str, *pbuffer_str;
 
     /* GST_PTR_FORMAT won't serialize G_TYPE_POINTER fields so stringify pointers */
     buf_str = g_strdup_printf ("%p", buf);
     omx_buf_str = g_strdup_printf ("%p", buf->omx_buf);
+    pbuffer_str = g_strdup_printf ("%p", buf->omx_buf->pBuffer);
 
     /* *INDENT-OFF* */
     s = gst_structure_new (event,
         "GstOMXBuffer", G_TYPE_STRING, buf_str,
         "OMX-buffer", G_TYPE_STRING, omx_buf_str,
+        "pBuffer", G_TYPE_STRING, pbuffer_str,
         "TimeStamp", G_TYPE_UINT64, GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp),
         "AllocLen", G_TYPE_UINT, buf->omx_buf->nAllocLen,
         "FilledLen", G_TYPE_UINT, buf->omx_buf->nFilledLen,
@@ -675,6 +677,7 @@ log_omx_performance (GstOMXComponent * comp, const gchar * event,
 
     g_free (buf_str);
     g_free (omx_buf_str);
+    g_free (pbuffer_str);
   } else {
     s = gst_structure_new_empty (event);
   }
