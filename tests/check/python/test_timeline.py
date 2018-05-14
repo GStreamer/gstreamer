@@ -193,6 +193,26 @@ class TestSnapping(GESSimpleTimelineTest):
                    clip2.props.start - 1)
         self.assertEqual(clip2.props.start, split_position)
 
+    def test_no_snapping_on_split(self):
+        self.timeline.props.auto_transition = True
+        self.timeline.set_snapping_distance(1)
+
+        not_called = []
+        def snapping_started_cb(timeline, element1, element2, dist, self):
+            Gst.error("Here %s %s" % (Gst.TIME_ARGS(element1.props.start + element1.props.duration),
+                Gst.TIME_ARGS(element2.props.start)))
+            not_called.append("No snapping should happen")
+
+        self.timeline.connect('snapping-started', snapping_started_cb, self)
+        clip1 = self.add_clip(0, 0, 100)
+
+        # Split clip1.
+        split_position = 50
+        clip2 = clip1.split(split_position)
+        self.assertEqual(not_called, [])
+        self.assertEqual(len(self.layer.get_clips()), 2)
+        self.assertEqual(clip1.props.duration, split_position)
+        self.assertEqual(clip2.props.start, split_position)
 
 class TestTransitions(GESSimpleTimelineTest):
 
