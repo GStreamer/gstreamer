@@ -11,6 +11,8 @@ gst_version_major = version_arr[0]
 gst_version_minor = version_arr[1]
 api_version = '@0@.0'.format(gst_version_major)
 
+add_project_arguments('-DHAVE_CONFIG_H', language: 'c')
+
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
@@ -21,32 +23,32 @@ gmodule_dep = dependency('gmodule-2.0')
 pygobject_dep = dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_dep'], version : '>= 3.8')
 python_dep = dependency('python3')
 
-python3 = import('python3').find_python()
-pythondetector = find_program('scripts/pythondetector')
+pymod = import('python')
+python = pymod.find_installation(get_option('python'))
+python_dep = python.dependency(required : true)
 
-cres = run_command(pythondetector, '--sosuffix')
-if cres.returncode() != 0
-    error('Could not detect python sosuffix' + cres.stdout() + cres.stderr())
+python_abi_flags = python.get_variable('ABIFLAGS', '')
+pylib_loc = python.get_variable('LIBPL', '')
+if host_machine.system() != 'windows'
+    assert(pylib_loc != '', 'Python dynamic library path could not be determined')
 endif
-py_so_suffix = cres.stdout().strip()
+message('python_abi_flags = @0@'.format(python_abi_flags))
+message('pylib_loc = @0@'.format(pylib_loc))
 
-cres = run_command(pythondetector, '--abiflags')
-if cres.returncode() != 0
-    error('Could not detect python abiflags' + cres.stdout() + cres.stderr())
-endif
-python_abi_flags = cres.stdout().strip()
-
-cres = run_command(pythondetector, '--libloc')
-if cres.returncode() != 0
-    error('Could not detect python library location' + cres.stdout() + cres.stderr())
-endif
-pylib_loc = cres.stdout().strip()
-
-assert(pylib_loc != 'None', 'Python dynamic library path could not be determined')
 pygi_override_dir = get_option('pygi-overrides-dir')
 if pygi_override_dir == ''
-    cres = run_command(pythondetector, '--pygi-overridedir',
-            get_option('prefix'))
+    cres = run_command(python, '-c','''
+import os, sys, gi.overrides
+paths = gi.overrides.__path__
+prefix = os.path.abspath(sys.argv[1])
+for path in paths:
+    path = os.path.abspath(path)
+    if os.path.commonprefix([path, prefix]) == prefix:
+        print(path)
+        exit(0)
+exit(1)
+''', get_option('prefix'))
+
     if cres.returncode() != 0
         error('Could not detect PyGObject overrides location' + cres.stdout() + cres.stderr())
     endif
@@ -55,7 +57,7 @@ if pygi_override_dir == ''
         message(cres.stderr())
     endif
 endif
-message('pygobject overrides directory ' + pygi_override_dir)
+message('pygobject overrides directory = @0@'.format(pygi_override_dir))
 
 pylib_suffix = 'so'
 if host_machine.system() == 'windows'
@@ -81,4 +83,4 @@ subdir('gi')
 subdir('plugin')
 subdir('testsuite')
 
-run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
+run_command(python, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
