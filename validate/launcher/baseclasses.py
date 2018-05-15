@@ -1594,7 +1594,8 @@ class _TestsLauncher(Loggable):
                     testlist_file.write("%s\n" % (tname))
                     if tname and tname not in know_tests:
                         printc("Test %s is NEW in testsuite %s"
-                               % (tname, testsuite.__file__), Colors.OKGREEN)
+                               % (tname, testsuite.__file__),
+                               Colors.FAIL if self.options.fail_on_testlist_change else Colors.OKGREEN)
                         testlist_changed = True
 
                 testlist_file.close()
@@ -1610,7 +1611,7 @@ class _TestsLauncher(Loggable):
             tests = tester.list_tests()
             if self._check_defined_tests(tester, tests) and \
                     self.options.fail_on_testlist_change:
-                return -1
+                raise RuntimeError("Unexpected new test in testsuite.")
 
             self.tests.extend(tests)
         return sorted(list(self.tests), key=lambda t: t.classname)
@@ -1689,8 +1690,6 @@ class _TestsLauncher(Loggable):
 
         if not self.all_tests:
             all_tests = self.list_tests()
-            if all_tests == -1:
-                return False
             self.all_tests = all_tests
         self.total_num_tests = len(self.all_tests)
 
