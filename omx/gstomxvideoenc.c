@@ -915,6 +915,15 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
 }
 
 static gboolean
+gst_omx_video_enc_deallocate_in_buffers (GstOMXVideoEnc * self)
+{
+  if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_shutdown (GstOMXVideoEnc * self)
 {
   OMX_STATETYPE state;
@@ -928,7 +937,7 @@ gst_omx_video_enc_shutdown (GstOMXVideoEnc * self)
       gst_omx_component_get_state (self->enc, 5 * GST_SECOND);
     }
     gst_omx_component_set_state (self->enc, OMX_StateLoaded);
-    gst_omx_port_deallocate_buffers (self->enc_in_port);
+    gst_omx_video_enc_deallocate_in_buffers (self);
     gst_omx_port_deallocate_buffers (self->enc_out_port);
     if (state > OMX_StateLoaded)
       gst_omx_component_get_state (self->enc, 5 * GST_SECOND);
@@ -1767,7 +1776,7 @@ gst_omx_video_enc_disable (GstOMXVideoEnc * self)
     if (gst_omx_port_wait_buffers_released (self->enc_in_port,
             5 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+    if (!gst_omx_video_enc_deallocate_in_buffers (self))
       return FALSE;
     if (gst_omx_port_wait_enabled (self->enc_in_port,
             1 * GST_SECOND) != OMX_ErrorNone)
