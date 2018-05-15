@@ -2730,7 +2730,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   GstFormat format;
-  gboolean flush, keyunit, before, after, accurate, snap_next;
+  gboolean flush, keyunit, instant_rate_change, before, after, accurate,
+      snap_next;
   gdouble rate;
   gint64 cur, stop;
   GstMatroskaTrackContext *track = NULL;
@@ -2758,6 +2759,40 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     return FALSE;
   }
 
+  GST_DEBUG_OBJECT (demux, "configuring seek");
+
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
+  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  accurate = ! !(flags & GST_SEEK_FLAG_ACCURATE);
+  instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
+
+  /* Directly send the instant-rate-change event here before taking the
+   * stream-lock so that it can be applied as soon as possible */
+  if (instant_rate_change) {
+    GstEvent *ev;
+
+    /* instant rate change only supported if direction does not change. All
+     * other requirements are already checked before creating the seek event
+     * but let's double-check here to be sure */
+    if ((rate > 0 && demux->common.segment.rate < 0) ||
+        (rate < 0 && demux->common.segment.rate > 0) ||
+        cur_type != GST_SEEK_TYPE_NONE ||
+        stop_type != GST_SEEK_TYPE_NONE || flush) {
+      GST_ERROR_OBJECT (demux,
+          "Instant rate change seeks only supported in the "
+          "same direction, without flushing and position change");
+      return FALSE;
+    }
+
+    ev = gst_event_new_instant_rate_change (rate /
+        demux->common.segment.rate, (GstSegmentFlags) flags);
+    gst_event_set_seqnum (ev, seqnum);
+    gst_matroska_demux_send_event (demux, ev);
+    return TRUE;
+  }
+
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
   memcpy (&seeksegment, &demux->common.segment, sizeof (GstSegment));
@@ -2770,7 +2805,6 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     seeksegment.duration = GST_CLOCK_TIME_NONE;
   }
 
-  GST_DEBUG_OBJECT (demux, "configuring seek");
   /* Subtract stream_start_time so we always seek on a segment
    * in stream time */
   if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
@@ -2798,12 +2832,6 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* restore segment duration (if any effect),
    * would be determined again when parsing, but anyway ... */
   seeksegment.duration = demux->common.segment.duration;
-
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
-  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
-  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
-  accurate = ! !(flags & GST_SEEK_FLAG_ACCURATE);
 
   /* always do full update if flushing,
    * otherwise problems might arise downstream with missing keyframes etc */
@@ -3022,6 +3050,35 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
+
+  /* Directly send the instant-rate-change event here before taking the
+   * stream-lock so that it can be applied as soon as possible */
+  if (flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE) {
+    guint32 seqnum;
+    GstEvent *ev;
+
+    /* instant rate change only supported if direction does not change. All
+     * other requirements are already checked before creating the seek event
+     * but let's double-check here to be sure */
+    if ((rate > 0 && demux->common.segment.rate < 0) ||
+        (rate < 0 && demux->common.segment.rate > 0) ||
+        cur_type != GST_SEEK_TYPE_NONE ||
+        stop_type != GST_SEEK_TYPE_NONE || (flags & GST_SEEK_FLAG_FLUSH)) {
+      GST_ERROR_OBJECT (demux,
+          "Instant rate change seeks only supported in the "
+          "same direction, without flushing and position change");
+      return FALSE;
+    }
+
+    seqnum = gst_event_get_seqnum (event);
+    ev = gst_event_new_instant_rate_change (rate / demux->common.segment.rate,
+        (GstSegmentFlags) flags);
+    gst_event_set_seqnum (ev, seqnum);
+    gst_matroska_demux_send_event (demux, ev);
+    return TRUE;
+  }
+
+
 
   /* sanity checks */
 
