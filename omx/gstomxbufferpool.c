@@ -203,8 +203,6 @@ gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
  * back to the component (OMX_FillThisBuffer()) when it is released.
  */
 
-static GQuark gst_omx_buffer_data_quark = 0;
-
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_buffer_pool_debug_category, "omxbufferpool", 0, \
       "debug category for gst-omx buffer pool base class");
@@ -491,8 +489,7 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     }
   }
 
-  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (buf),
-      gst_omx_buffer_data_quark, omx_buf, NULL);
+  gst_omx_buffer_set_omx_buf (buf, omx_buf);
 
   *buffer = buf;
 
@@ -514,8 +511,7 @@ gst_omx_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
   }
   GST_OBJECT_UNLOCK (pool);
 
-  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (buffer),
-      gst_omx_buffer_data_quark, NULL, NULL);
+  gst_omx_buffer_set_omx_buf (buffer, NULL);
 
   GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->free_buffer (bpool,
       buffer);
@@ -544,9 +540,7 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
       GstOMXBuffer *omx_buf;
 
       if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF) {
-        omx_buf =
-            gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (buf),
-            gst_omx_buffer_data_quark);
+        omx_buf = gst_omx_buffer_get_omx_buf (buf);
       } else {
         g_assert (mem
             && g_strcmp0 (mem->allocator->mem_type, GST_OMX_MEMORY_TYPE) == 0);
@@ -578,9 +572,7 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
   g_assert (pool->component && pool->port);
 
   if (!pool->allocating && !pool->deactivated) {
-    omx_buf =
-        gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (buffer),
-        gst_omx_buffer_data_quark);
+    omx_buf = gst_omx_buffer_get_omx_buf (buffer);
     if (pool->port->port_def.eDir == OMX_DirOutput && !omx_buf->used) {
       /* Release back to the port, can be filled again */
       err = gst_omx_port_release_buffer (pool->port, omx_buf);
@@ -644,8 +636,6 @@ gst_omx_buffer_pool_class_init (GstOMXBufferPoolClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
-
-  gst_omx_buffer_data_quark = g_quark_from_static_string ("GstOMXBufferData");
 
   gobject_class->finalize = gst_omx_buffer_pool_finalize;
   gstbufferpool_class->start = gst_omx_buffer_pool_start;
