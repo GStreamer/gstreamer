@@ -2002,6 +2002,43 @@ gst_omx_video_enc_pick_input_allocation_mode (GstOMXVideoEnc * self,
 }
 
 static gboolean
+gst_omx_video_enc_set_to_idle (GstOMXVideoEnc * self)
+{
+  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+  gboolean no_disable_outport;
+
+  no_disable_outport = klass->cdata.hacks & GST_OMX_HACK_NO_DISABLE_OUTPORT;
+
+  if (!no_disable_outport) {
+    /* Disable output port */
+    if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
+      return FALSE;
+
+    if (gst_omx_port_wait_enabled (self->enc_out_port,
+            1 * GST_SECOND) != OMX_ErrorNone)
+      return FALSE;
+  }
+
+  if (gst_omx_component_set_state (self->enc, OMX_StateIdle) != OMX_ErrorNone)
+    return FALSE;
+
+  /* Need to allocate buffers to reach Idle state */
+  if (!gst_omx_video_enc_allocate_in_buffers (self))
+    return FALSE;
+
+  if (no_disable_outport) {
+    if (gst_omx_port_allocate_buffers (self->enc_out_port) != OMX_ErrorNone)
+      return FALSE;
+  }
+
+  if (gst_omx_component_get_state (self->enc,
+          GST_CLOCK_TIME_NONE) != OMX_StateIdle)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 {
   GstOMXVideoEncClass *klass;
@@ -2060,36 +2097,7 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
     if (gst_omx_port_mark_reconfigured (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
   } else {
-    if (!(klass->cdata.hacks & GST_OMX_HACK_NO_DISABLE_OUTPORT)) {
-      /* Disable output port */
-      if (gst_omx_port_set_enabled (self->enc_out_port, FALSE) != OMX_ErrorNone)
-        return FALSE;
-
-      if (gst_omx_port_wait_enabled (self->enc_out_port,
-              1 * GST_SECOND) != OMX_ErrorNone)
-        return FALSE;
-
-      if (gst_omx_component_set_state (self->enc,
-              OMX_StateIdle) != OMX_ErrorNone)
-        return FALSE;
-
-      /* Need to allocate buffers to reach Idle state */
-      if (!gst_omx_video_enc_allocate_in_buffers (self))
-        return FALSE;
-    } else {
-      if (gst_omx_component_set_state (self->enc,
-              OMX_StateIdle) != OMX_ErrorNone)
-        return FALSE;
-
-      /* Need to allocate buffers to reach Idle state */
-      if (!gst_omx_video_enc_allocate_in_buffers (self))
-        return FALSE;
-      if (gst_omx_port_allocate_buffers (self->enc_out_port) != OMX_ErrorNone)
-        return FALSE;
-    }
-
-    if (gst_omx_component_get_state (self->enc,
-            GST_CLOCK_TIME_NONE) != OMX_StateIdle)
+    if (!gst_omx_video_enc_set_to_idle (self))
       return FALSE;
 
     if (gst_omx_component_set_state (self->enc,
