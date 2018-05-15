@@ -645,7 +645,7 @@ gst_rg_volume_determine_gain (GstRgVolume * self, gdouble * target_gain,
 
     GST_DEBUG_OBJECT (self, "using fallback gain");
     gain = self->fallback_gain;
-    peak = 0.000001;
+    peak = 1.0;
 
   } else if ((self->album_mode && self->has_album_gain)
       || (!self->album_mode && !self->has_track_gain)) {
