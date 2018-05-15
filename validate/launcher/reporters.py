@@ -98,10 +98,11 @@ class Reporter(Loggable):
         print("\n")
         lenstat = (len("Statistics") + 1)
         printc("Statistics:\n%s" % (lenstat * "-"), Colors.OKBLUE)
-        printc("\n%sTotal time spent: %s seconds\n" %
-               ((lenstat * " "), datetime.timedelta(
-                   seconds=(time.time() - self._start_time))),
-               Colors.OKBLUE)
+        if self._start_time > 0:
+            printc("\n%sTotal time spent: %s seconds\n" %
+                ((lenstat * " "), datetime.timedelta(
+                    seconds=(time.time() - self._start_time))),
+                Colors.OKBLUE)
         printc("%sPassed: %d" %
                (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
         printc("%sFailed: %d" %
