@@ -28,6 +28,7 @@
 
 #include <string.h>
 
+#include "gstomxbufferpool.h"
 #include "gstomxvideo.h"
 #include "gstomxvideoenc.h"
 
@@ -917,7 +918,9 @@ gst_omx_video_enc_open (GstVideoEncoder * encoder)
 static gboolean
 gst_omx_video_enc_deallocate_in_buffers (GstOMXVideoEnc * self)
 {
-  if (gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
+  /* Pool will take care of deallocating buffers when deactivated upstream */
+  if (!self->in_pool_used
+      && gst_omx_port_deallocate_buffers (self->enc_in_port) != OMX_ErrorNone)
     return FALSE;
 
   return TRUE;
@@ -1659,6 +1662,7 @@ gst_omx_video_enc_start (GstVideoEncoder * encoder)
   self->last_upstream_ts = 0;
   self->downstream_flow_ret = GST_FLOW_OK;
   self->nb_downstream_buffers = 0;
+  self->in_pool_used = FALSE;
 
   return TRUE;
 }
@@ -2036,40 +2040,66 @@ gst_omx_video_enc_set_to_idle (GstOMXVideoEnc * self)
 }
 
 static gboolean
+buffer_is_from_input_pool (GstOMXVideoEnc * self, GstBuffer * buffer)
+{
+  /* Buffer from our input pool will already have a GstOMXBuffer associated
+   * with our input port. */
+  GstOMXBuffer *buf;
+
+  buf = gst_omx_buffer_get_omx_buf (buffer);
+  if (!buf)
+    return FALSE;
+
+  return buf->port == self->enc_in_port;
+}
+
+static gboolean
 gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 {
   GstOMXVideoEncClass *klass;
 
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
 
-  if (!gst_omx_video_enc_configure_input_buffer (self, input))
-    return FALSE;
+  /* Is downstream using our buffer pool? */
+  if (buffer_is_from_input_pool (self, input)) {
+    /* We're done allocating as we received the first buffer from upstream */
+    GST_OMX_BUFFER_POOL (input->pool)->allocating = FALSE;
+    self->in_pool_used = TRUE;
+  }
 
-  self->input_allocation = gst_omx_video_enc_pick_input_allocation_mode (self,
-      input);
-  self->input_dmabuf = FALSE;
+  if (!self->in_pool_used) {
+    if (!gst_omx_video_enc_configure_input_buffer (self, input))
+      return FALSE;
+
+    self->input_allocation = gst_omx_video_enc_pick_input_allocation_mode (self,
+        input);
+    self->input_dmabuf = FALSE;
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
-  if (gst_is_dmabuf_memory (gst_buffer_peek_memory (input, 0))) {
-    if (self->input_allocation == GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
-      GST_DEBUG_OBJECT (self, "Configure encoder input to import dmabuf");
-      gst_omx_port_set_dmabuf (self->enc_in_port, TRUE);
-    } else {
-      GST_DEBUG_OBJECT (self,
-          "Wrong input allocation mode (%d); dynamic buffers are required to use dmabuf import",
-          self->input_allocation);
-    }
+    if (gst_is_dmabuf_memory (gst_buffer_peek_memory (input, 0))) {
+      if (self->input_allocation ==
+          GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC) {
+        GST_DEBUG_OBJECT (self, "Configure encoder input to import dmabuf");
+        gst_omx_port_set_dmabuf (self->enc_in_port, TRUE);
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Wrong input allocation mode (%d); dynamic buffers are required to use dmabuf import",
+            self->input_allocation);
+      }
 
-    self->input_dmabuf = TRUE;
-  }
+      self->input_dmabuf = TRUE;
+    }
 #endif
+  }
 
   GST_DEBUG_OBJECT (self, "Enabling component");
 
-  if (!gst_omx_video_enc_ensure_nb_in_buffers (self))
-    return FALSE;
-  if (!gst_omx_video_enc_ensure_nb_out_buffers (self))
-    return FALSE;
+  if (!self->in_pool_used) {
+    if (!gst_omx_video_enc_ensure_nb_in_buffers (self))
+      return FALSE;
+    if (!gst_omx_video_enc_ensure_nb_out_buffers (self))
+      return FALSE;
+  }
 
   if (self->disabled) {
     if (gst_omx_port_set_enabled (self->enc_in_port, TRUE) != OMX_ErrorNone)
@@ -2094,8 +2124,11 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
     if (gst_omx_port_mark_reconfigured (self->enc_in_port) != OMX_ErrorNone)
       return FALSE;
   } else {
-    if (!gst_omx_video_enc_set_to_idle (self))
-      return FALSE;
+    /* If the input pool is active we already allocated buffers and set the component to Idle. */
+    if (!self->in_pool_used) {
+      if (!gst_omx_video_enc_set_to_idle (self))
+        return FALSE;
+    }
 
     if (gst_omx_component_set_state (self->enc,
             OMX_StateExecuting) != OMX_ErrorNone)
@@ -2668,12 +2701,32 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
   while (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK) {
     GstClockTime timestamp, duration;
+    gboolean fill_buffer = TRUE;
 
     /* Make sure to release the base class stream lock, otherwise
      * _loop() can't call _finish_frame() and we might block forever
      * because no input buffers are released */
     GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
-    acq_ret = gst_omx_port_acquire_buffer (port, &buf, GST_OMX_WAIT);
+
+    if (buffer_is_from_input_pool (self, frame->input_buffer)) {
+      /* Receiving a buffer from our input pool */
+      buf = gst_omx_buffer_get_omx_buf (frame->input_buffer);
+
+      GST_LOG_OBJECT (self,
+          "Input buffer %p already has a OMX buffer associated: %p",
+          frame->input_buffer, buf);
+
+      g_assert (!buf->input_buffer);
+      /* Prevent the buffer to be released to the pool while it's being
+       * processed by OMX. The reference will be dropped in EmptyBufferDone() */
+      buf->input_buffer = gst_buffer_ref (frame->input_buffer);
+
+      acq_ret = GST_OMX_ACQUIRE_BUFFER_OK;
+      fill_buffer = FALSE;
+      buf->omx_buf->nFilledLen = gst_buffer_get_size (frame->input_buffer);
+    } else {
+      acq_ret = gst_omx_port_acquire_buffer (port, &buf, GST_OMX_WAIT);
+    }
 
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
       GST_VIDEO_ENCODER_STREAM_LOCK (self);
@@ -2789,7 +2842,8 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
-    if (!gst_omx_video_enc_fill_buffer (self, frame->input_buffer, buf)) {
+    if (fill_buffer
+        && !gst_omx_video_enc_fill_buffer (self, frame->input_buffer, buf)) {
       gst_omx_port_release_buffer (port, buf);
       goto buffer_fill_error;
     }
@@ -2968,6 +3022,71 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
   return GST_FLOW_OK;
 }
 
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+static gboolean
+pool_request_allocate_cb (GstBufferPool * pool, GstOMXVideoEnc * self)
+{
+  GstStructure *config;
+  guint min;
+
+  gst_omx_port_set_dmabuf (self->enc_in_port, TRUE);
+
+  config = gst_buffer_pool_get_config (pool);
+
+  if (!gst_buffer_pool_config_get_params (config, NULL, NULL, &min, NULL)) {
+    gst_structure_free (config);
+    return FALSE;
+  }
+  gst_structure_free (config);
+
+  GST_DEBUG_OBJECT (self,
+      "input pool configured for %d buffers, adjust nBufferCountActual", min);
+
+  if (!gst_omx_port_update_buffer_count_actual (self->enc_in_port, min))
+    return FALSE;
+
+  if (!gst_omx_video_enc_set_to_idle (self))
+    return FALSE;
+
+  self->input_allocation = GST_OMX_BUFFER_ALLOCATION_ALLOCATE_BUFFER;
+  self->input_dmabuf = TRUE;
+
+  /* gst_omx_port_acquire_buffer() will fail if the input port is stil flushing
+   * which will prevent upstream from acquiring buffers. */
+  gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
+
+  return TRUE;
+}
+
+static GstBufferPool *
+create_input_pool (GstOMXVideoEnc * self, GstCaps * caps, guint num_buffers)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  pool =
+      gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->enc,
+      self->enc_in_port, GST_OMX_BUFFER_MODE_DMABUF);
+  GST_OMX_BUFFER_POOL (pool)->allocating = TRUE;
+
+  g_signal_connect_object (pool, "allocate",
+      G_CALLBACK (pool_request_allocate_cb), self, 0);
+
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps,
+      self->enc_in_port->port_def.nBufferSize, num_buffers, 0);
+
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_INFO_OBJECT (self, "Failed to set config on input pool");
+    gst_object_unref (pool);
+    return NULL;
+  }
+
+  return pool;
+}
+#endif
+
 static gboolean
 gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query)
@@ -2976,6 +3095,7 @@ gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
   guint num_buffers;
   GstCaps *caps;
   GstVideoInfo info;
+  GstBufferPool *pool = NULL;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -2992,10 +3112,25 @@ gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   num_buffers = self->enc_in_port->port_def.nBufferCountMin + 1;
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  /* dmabuf export is currently only supported on Zynqultrascaleplus */
+  pool = create_input_pool (self, caps, num_buffers);
+  if (!pool) {
+    GST_WARNING_OBJECT (self, "Failed to create and configure pool");
+    return FALSE;
+  }
+#endif
+
   GST_DEBUG_OBJECT (self,
       "request at least %d buffers of size %" G_GSIZE_FORMAT, num_buffers,
       info.size);
-  gst_query_add_allocation_pool (query, NULL, info.size, num_buffers, 0);
+  gst_query_add_allocation_pool (query, pool,
+      self->enc_in_port->port_def.nBufferSize, num_buffers, 0);
+
+  self->in_pool_used = FALSE;
+
+  g_clear_object (&pool);
 
   return
       GST_VIDEO_ENCODER_CLASS

@@ -324,6 +324,7 @@ struct _GstOMXPort {
   gboolean disabled_pending; /* was done until it took effect */
   gboolean eos; /* TRUE after a buffer with EOS flag was received */
   GstOMXBufferAllocation allocation;
+  gboolean using_pool; /* TRUE if the buffers of this port are managed by a pool */
 
   /* Increased whenever the settings of these port change.
    * If settings_cookie != configured_settings_cookie
@@ -467,6 +468,7 @@ OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)
 OMX_ERRORTYPE     gst_omx_port_wait_enabled (GstOMXPort * port, GstClockTime timeout);
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
 gboolean          gst_omx_port_ensure_buffer_count_actual (GstOMXPort * port, guint extra);
+gboolean          gst_omx_port_update_buffer_count_actual (GstOMXPort * port, guint nb);
 
 gboolean          gst_omx_port_set_dmabuf (GstOMXPort * port, gboolean dmabuf);
 
