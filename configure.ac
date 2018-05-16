@@ -1139,9 +1139,34 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
   else
     HAVE_MSDK="no"
   fi
-])
+], [], [
+  dnl check the availability of vp9 apis
+  USE_MSDK_VP9_DEC=0
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$LIBMFX_CFLAGS $MSDK_CFLAGS $save_CPPFLAGS"
+  AC_CHECK_HEADER(mfxvp9.h, [HAVE_MFXVP9_H=1], [HAVE_MFXVP9_H=0],
+  [
+    #include <mfxplugin.h>
+  ])
+  dnl check the availability of vp9 apis in PREFIX/include/mfx
+  AC_CHECK_HEADER(mfx/mfxvp9.h, [HAVE_MFX_MFXVP9_H=1], [HAVE_MFX_MFXVP9_H=0],
+  [
+    #include <mfx/mfxplugin.h>
+  ])
+  if test $HAVE_MFX_MFXVP9_H -eq 1; then
+    AC_DEFINE(HAVE_MFX_MFXVP9_H, 1, [Define if mfx/mfxdefs.h available])
+  fi
+
+  if test $HAVE_MFXVP9_H -eq 1 \
+    -o $HAVE_MFX_MFXVP9_H -eq 1; then
+      USE_MSDK_VP9_DEC=1
+      AC_DEFINE(USE_MSDK_VP9_DEC, 1, [Define if MediaSDK VP9 decoder api is available])
+  fi
+  ], [USE_MSDK_VP9_DEC=0])
 AM_CONDITIONAL(USE_MSDK_LIBVA,
     test "x$HAVE_MSDK" = "xyes" -a "x$HAVE_LIBVA_DRM" = "xyes")
+AM_CONDITIONAL([USE_MSDK_VP9_DEC],
+    [test $USE_MSDK_VP9_DEC -eq 1])
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !

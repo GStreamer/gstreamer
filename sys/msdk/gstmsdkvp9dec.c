@@ -35,7 +35,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_LIBMFX
+#ifdef HAVE_MFX_MFXVP9_H
 #  include <mfx/mfxplugin.h>
 #  include <mfx/mfxvp9.h>
 #else

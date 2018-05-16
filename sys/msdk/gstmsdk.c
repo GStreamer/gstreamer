@@ -47,7 +47,9 @@
 #include "gstmsdkvp8dec.h"
 #include "gstmsdkvp8enc.h"
 #include "gstmsdkvc1dec.h"
+#ifdef USE_MSDK_VP9_DEC
 #include "gstmsdkvp9dec.h"
+#endif
 #include "gstmsdkvpp.h"
 
 GST_DEBUG_CATEGORY (gst_msdk_debug);
@@ -132,9 +134,10 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
       GST_TYPE_MSDKVC1DEC);
-
+#ifdef USE_MSDK_VP9_DEC
   ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_NONE,
       GST_TYPE_MSDKVP9DEC);
+#endif
 
   ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
       GST_TYPE_MSDKVPP);

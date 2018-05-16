@@ -17,7 +17,6 @@ libgstmsdk_la_SOURCES = \
 	gstmsdkvp8dec.c \
 	gstmsdkvp8enc.c \
 	gstmsdkvc1dec.c \
-	gstmsdkvp9dec.c \
 	gstmsdkdec.c \
 	gstmsdkenc.c \
 	gstmsdkvpp.c \
@@ -48,11 +47,18 @@ noinst_HEADERS = \
 	gstmsdkvp8dec.h \
 	gstmsdkvp8enc.h \
 	gstmsdkvc1dec.h \
-	gstmsdkvp9dec.h \
 	gstmsdkdec.h \
 	gstmsdkenc.h \
 	gstmsdkvpp.h \
 	gstmsdkvpputil.h
+
+# Conditional build for vp9 decoder
+libgstmsdk_vp9dec_source_c = gstmsdkvp9dec.c
+libgstmsdk_vp9dec_source_h = gstmsdkvp9dec.h
+if USE_MSDK_VP9_DEC
+libgstmsdk_la_SOURCES += $(libgstmsdk_vp9dec_source_c)
+noinst_HEADERS += $(libgstmsdk_vp9dec_source_h)
+endif
 
 libgstmsdk_la_CFLAGS = \
 	$(GST_CFLAGS) \
