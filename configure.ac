@@ -1088,6 +1088,14 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
   [
     AC_DEFINE(HAVE_LIBMFX, 1, [Define if mfx_dispatcher is available])
     HAVE_MSDK="yes"
+    dnl external msdk dispatchers sometimes install headers into prefix/mfx/
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$LIBMFX_CFLAGS $save_CPPFLAGS"
+    AC_CHECK_HEADER(mfx/mfxdefs.h, [HAVE_MFX_MFXDEFS_H=1], [HAVE_MFX_MFXDEFS_H=0])
+    if test $HAVE_MFX_MFXDEFS_H -eq 1; then
+      AC_DEFINE(HAVE_MFX_MFXDEFS_H, 1, [Define if mfx/mfxdefs.h available])
+    fi
+    CPPFLAGS="$save_CPPFLAGS"
   ], [
     AC_ARG_WITH([msdk-prefix],
             AS_HELP_STRING([--with-msdk-prefix],

@@ -41,7 +41,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#ifdef HAVE_LIBMFX
+#ifdef HAVE_MFX_MFXDEFS_H
 #  include <mfx/mfxvideo.h>
 #else
 #  include "mfxvideo.h"

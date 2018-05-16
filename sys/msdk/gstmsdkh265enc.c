@@ -33,7 +33,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_LIBMFX
+#ifdef HAVE_MFX_MFXDEFS_H
 #  include <mfx/mfxplugin.h>
 #else
 #  include "mfxplugin.h"
