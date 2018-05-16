@@ -74,7 +74,7 @@ struct _GstOMXVideoDec
   GMutex drain_lock;
   GCond drain_cond;
   /* TRUE if EOS buffers shouldn't be forwarded */
-  gboolean draining;
+  gboolean draining; /* protected by drain_lock */
 
   GstFlowReturn downstream_flow_ret;
   /* Initially FALSE. Switched to TRUE when all requirements

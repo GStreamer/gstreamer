@@ -1532,7 +1532,7 @@ copy_frame (const GstVideoInfo * info, GstBuffer * outbuf)
 }
 
 static void
-gst_omx_video_enc_pause_loop (GstOMXVideoDec * self, GstFlowReturn flow_ret)
+gst_omx_video_dec_pause_loop (GstOMXVideoDec * self, GstFlowReturn flow_ret)
 {
   g_mutex_lock (&self->drain_lock);
   if (self->draining) {
@@ -1833,16 +1833,14 @@ component_error:
             gst_omx_component_get_last_error_string (self->dec),
             gst_omx_component_get_last_error (self->dec)));
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_ERROR;
-    self->started = FALSE;
+    gst_omx_video_dec_pause_loop (self, GST_FLOW_ERROR);
     return;
   }
 
 flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
-    gst_omx_video_enc_pause_loop (self, GST_FLOW_FLUSHING);
+    gst_omx_video_dec_pause_loop (self, GST_FLOW_FLUSHING);
     return;
   }
 
@@ -1887,8 +1885,6 @@ flow_error:
 
       gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self),
           gst_event_new_eos ());
-      gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-      self->started = FALSE;
     } else if (flow_ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           ("Internal data stream error."), ("stream stopped, reason %s",
@@ -1896,12 +1892,10 @@ flow_error:
 
       gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self),
           gst_event_new_eos ());
-      gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-      self->started = FALSE;
     } else if (flow_ret == GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
-      gst_omx_video_enc_pause_loop (self, flow_ret);
     }
+    gst_omx_video_dec_pause_loop (self, flow_ret);
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
   }
@@ -1911,9 +1905,7 @@ reconfigure_error:
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Unable to reconfigure output port"));
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_ERROR;
-    self->started = FALSE;
+    gst_omx_video_dec_pause_loop (self, GST_FLOW_ERROR);
     return;
   }
 
@@ -1922,9 +1914,7 @@ invalid_buffer:
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Invalid sized input buffer"));
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
-    self->started = FALSE;
+    gst_omx_video_dec_pause_loop (self, GST_FLOW_NOT_NEGOTIATED);
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
   }
@@ -1933,10 +1923,8 @@ caps_failed:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL), ("Failed to set caps"));
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
+    gst_omx_video_dec_pause_loop (self, GST_FLOW_NOT_NEGOTIATED);
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
-    self->started = FALSE;
     return;
   }
 release_error:
@@ -1945,9 +1933,7 @@ release_error:
         ("Failed to relase output buffer to component: %s (0x%08x)",
             gst_omx_error_to_string (err), err));
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_ERROR;
-    self->started = FALSE;
+    gst_omx_video_dec_pause_loop (self, GST_FLOW_ERROR);
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
   }
