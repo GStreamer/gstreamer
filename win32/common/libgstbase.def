@@ -43,6 +43,7 @@ EXPORTS
 	gst_aggregator_pad_pop_buffer
 	gst_aggregator_set_latency
 	gst_aggregator_set_src_caps
+	gst_aggregator_simple_get_next_time
 	gst_base_parse_add_index_entry
 	gst_base_parse_convert_default
 	gst_base_parse_drain
