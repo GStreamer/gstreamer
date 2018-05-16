@@ -1,5 +1,6 @@
 /* GStreamer Intel MSDK plugin
  * Copyright (c) 2016, Oblong Industries, Inc.
+ * Copyright (c) 2018, Intel Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +47,7 @@
 #include "gstmsdkvp8dec.h"
 #include "gstmsdkvp8enc.h"
 #include "gstmsdkvc1dec.h"
+#include "gstmsdkvp9dec.h"
 #include "gstmsdkvpp.h"
 
 GST_DEBUG_CATEGORY (gst_msdk_debug);
@@ -63,6 +65,7 @@ GST_DEBUG_CATEGORY (gst_msdkmpeg2dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp8dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp8enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkvc1dec_debug);
+GST_DEBUG_CATEGORY (gst_msdkvp9dec_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -92,6 +95,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp8dec_debug, "msdkvp8dec", 0, "msdkvp8dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp8enc_debug, "msdkvp8enc", 0, "msdkvp8enc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvc1dec_debug, "msdkvc1dec", 0, "msdkvc1dec");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkvp8dec_debug, "msdkvp9dec", 0, "msdkvp8dec");
 
   if (!msdk_is_available ())
     return FALSE;
@@ -128,6 +132,9 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
       GST_TYPE_MSDKVC1DEC);
+
+  ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_NONE,
+      GST_TYPE_MSDKVP9DEC);
 
   ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
       GST_TYPE_MSDKVPP);

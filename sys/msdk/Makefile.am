@@ -17,6 +17,7 @@ libgstmsdk_la_SOURCES = \
 	gstmsdkvp8dec.c \
 	gstmsdkvp8enc.c \
 	gstmsdkvc1dec.c \
+	gstmsdkvp9dec.c \
 	gstmsdkdec.c \
 	gstmsdkenc.c \
 	gstmsdkvpp.c \
@@ -47,6 +48,7 @@ noinst_HEADERS = \
 	gstmsdkvp8dec.h \
 	gstmsdkvp8enc.h \
 	gstmsdkvc1dec.h \
+	gstmsdkvp9dec.h \
 	gstmsdkdec.h \
 	gstmsdkenc.h \
 	gstmsdkvpp.h \
