@@ -1532,6 +1532,20 @@ copy_frame (const GstVideoInfo * info, GstBuffer * outbuf)
 }
 
 static void
+gst_omx_video_enc_pause_loop (GstOMXVideoDec * self, GstFlowReturn flow_ret)
+{
+  g_mutex_lock (&self->drain_lock);
+  if (self->draining) {
+    self->draining = FALSE;
+    g_cond_broadcast (&self->drain_cond);
+  }
+  gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
+  self->downstream_flow_ret = flow_ret;
+  self->started = FALSE;
+  g_mutex_unlock (&self->drain_lock);
+}
+
+static void
 gst_omx_video_dec_loop (GstOMXVideoDec * self)
 {
   GstOMXPort *port;
@@ -1828,15 +1842,7 @@ component_error:
 flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
-    g_mutex_lock (&self->drain_lock);
-    if (self->draining) {
-      self->draining = FALSE;
-      g_cond_broadcast (&self->drain_cond);
-    }
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_FLUSHING;
-    self->started = FALSE;
-    g_mutex_unlock (&self->drain_lock);
+    gst_omx_video_enc_pause_loop (self, GST_FLOW_FLUSHING);
     return;
   }
 
@@ -1894,14 +1900,7 @@ flow_error:
       self->started = FALSE;
     } else if (flow_ret == GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
-      g_mutex_lock (&self->drain_lock);
-      if (self->draining) {
-        self->draining = FALSE;
-        g_cond_broadcast (&self->drain_cond);
-      }
-      gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-      self->started = FALSE;
-      g_mutex_unlock (&self->drain_lock);
+      gst_omx_video_enc_pause_loop (self, flow_ret);
     }
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
