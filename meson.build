@@ -14,6 +14,7 @@ subprojects = [
     'gst-plugins-good',
 ]
 
+build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
 # Make it possible to use msys2 built zlib which fails
@@ -129,6 +130,13 @@ foreach custom_subproj: get_option('custom_subprojects').split(',')
         subprojects += [custom_subproj]
     endif
 endforeach
+
+# On Windows, if flex/bison aren't found, we use a subproject to get them
+flex = find_program('flex', 'win_flex', required : build_system != 'windows')
+bison = find_program('bison', 'win_bison', required : build_system != 'windows')
+if not flex.found() or not bison.found()
+  subproject('win-flex-bison-binaries')
+endif
 
 message('Building subprojects: ' + ', '.join(subprojects))
 foreach subproj: subprojects
