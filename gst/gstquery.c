@@ -105,6 +105,7 @@ static GstQueryQuarks query_quarks[] = {
   {GST_QUERY_CAPS, "caps", 0},
   {GST_QUERY_DRAIN, "drain", 0},
   {GST_QUERY_CONTEXT, "context", 0},
+  {GST_QUERY_BITRATE, "bitrate", 0},
 
   {0, NULL, 0}
 };
@@ -2653,4 +2654,76 @@ gst_query_parse_context_type (GstQuery * query, const gchar ** context_type)
   }
 
   return TRUE;
+}
+
+/**
+ * gst_query_new_bitrate:
+ *
+ * Constructs a new query object for querying the bitrate.
+ *
+ * Free-function: gst_query_unref()
+ *
+ * Returns: (transfer full): a new #GstQuery
+ *
+ * Since: 1.16
+ */
+GstQuery *
+gst_query_new_bitrate (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id_empty (GST_QUARK (QUERY_BITRATE));
+  query = gst_query_new_custom (GST_QUERY_BITRATE, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_bitrate:
+ * @query: a GST_QUERY_BITRATE type #GstQuery
+ * @nominal_bitrate: the nominal bitrate in bits per second
+ *
+ * Set the results of a bitrate query.  The nominal bitrate is the average
+ * bitrate expected over the length of the stream as advertised in file
+ * headers (or similar).
+ *
+ * Since: 1.16
+ */
+void
+gst_query_set_bitrate (GstQuery * query, guint nominal_bitrate)
+{
+  GstStructure *s;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BITRATE);
+
+  s = GST_QUERY_STRUCTURE (query);
+
+  gst_structure_id_set (s,
+      GST_QUARK (NOMINAL_BITRATE), G_TYPE_UINT, nominal_bitrate, NULL);
+}
+
+/**
+ * gst_query_parse_bitrate:
+ * @query: a GST_QUERY_BITRATE type #GstQuery
+ * @nominal_bitrate: (out) (allow-none): The resulting bitrate in bits per second
+ *
+ * Get the results of a bitrate query. See also gst_query_set_bitrate().
+ *
+ * Since: 1.16
+ */
+void
+gst_query_parse_bitrate (GstQuery * query, guint * nominal_bitrate)
+{
+  GstStructure *structure;
+  const GValue *value;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BITRATE);
+
+  structure = GST_QUERY_STRUCTURE (query);
+
+  if (nominal_bitrate) {
+    value = gst_structure_id_get_value (structure, GST_QUARK (NOMINAL_BITRATE));
+    *nominal_bitrate = g_value_get_uint (value);
+  }
 }

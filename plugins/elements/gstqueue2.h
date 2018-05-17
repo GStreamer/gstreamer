@@ -109,8 +109,10 @@ struct _GstQueue2
   GstQueue2Size max_level;       /* max. amount of data allowed in the queue */
   gboolean use_buffering;
   gboolean use_tags_bitrate;
+  gboolean use_bitrate_query;
   gboolean use_rate_estimate;
   GstClockTime buffering_interval;
+  guint downstream_bitrate;     /* the bitrate reported by downstream */
 
   /* low/high watermarks for buffering */
   gint low_watermark;

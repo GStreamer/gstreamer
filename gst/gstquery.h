@@ -99,6 +99,7 @@ typedef enum {
  * @GST_QUERY_DRAIN: wait till all serialized data is consumed downstream
  * @GST_QUERY_CONTEXT: query the pipeline-local context from
  *     downstream or upstream (since 1.2)
+ * @GST_QUERY_BITRATE: the bitrate query (since 1.16)
  *
  * Standard predefined Query types
  */
@@ -123,7 +124,8 @@ typedef enum {
   GST_QUERY_ACCEPT_CAPS  = GST_QUERY_MAKE_TYPE (160, FLAG(BOTH)),
   GST_QUERY_CAPS         = GST_QUERY_MAKE_TYPE (170, FLAG(BOTH)),
   GST_QUERY_DRAIN        = GST_QUERY_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_QUERY_CONTEXT      = GST_QUERY_MAKE_TYPE (190, FLAG(BOTH))
+  GST_QUERY_CONTEXT      = GST_QUERY_MAKE_TYPE (190, FLAG(BOTH)),
+  GST_QUERY_BITRATE      = GST_QUERY_MAKE_TYPE (200, FLAG(DOWNSTREAM)),
 } GstQueryType;
 #undef FLAG
 
@@ -685,6 +687,17 @@ void            gst_query_set_context              (GstQuery *query, GstContext 
 
 GST_API
 void            gst_query_parse_context            (GstQuery *query, GstContext **context);
+
+/* bitrate query */
+
+GST_API
+GstQuery *      gst_query_new_bitrate              (void) G_GNUC_MALLOC;
+
+GST_API
+void            gst_query_set_bitrate              (GstQuery * query, guint nominal_bitrate);
+
+GST_API
+void            gst_query_parse_bitrate            (GstQuery * query, guint * nominal_bitrate);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstQuery, gst_query_unref)

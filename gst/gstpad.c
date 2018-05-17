@@ -3415,6 +3415,10 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
       ret = gst_pad_query_latency_default (pad, query);
       forward = FALSE;
       break;
+    case GST_QUERY_BITRATE:
+      /* FIXME: better default handling */
+      forward = TRUE;
+      break;
     case GST_QUERY_POSITION:
     case GST_QUERY_SEEKING:
     case GST_QUERY_FORMATS:

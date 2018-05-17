@@ -246,9 +246,16 @@ pad_push_datablock_thread (gpointer data)
 }
 
 static GstPadProbeReturn
-block_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+block_without_queries_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
 {
-  return GST_PAD_PROBE_OK;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  /* allows queries to pass through */
+  if ((GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_QUERY_BOTH) != 0)
+    ret = GST_PAD_PROBE_PASS;
+
+  return ret;
 }
 
 #define CHECK_FOR_BUFFERING_MSG(PIPELINE, EXPECTED_PERC) \
@@ -298,8 +305,8 @@ GST_START_TEST (test_watermark_and_fill_level)
   /* Block fakesink sinkpad flow to ensure the queue isn't emptied
    * by the prerolling sink */
   sinkpad = gst_element_get_static_pad (fakesink, "sink");
-  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK, block_probe, NULL,
-      NULL);
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK,
+      block_without_queries_probe, NULL, NULL);
   gst_object_unref (sinkpad);
 
   g_object_set (queue2,
@@ -544,6 +551,116 @@ GST_START_TEST (test_small_ring_buffer)
 
 GST_END_TEST;
 
+#define DOWNSTREAM_BITRATE (8 * 100 * 1000)
+
+static GstPadProbeReturn
+bitrate_query_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  /* allows queries to pass through */
+  if ((GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM) !=
+      0) {
+    GstQuery *query = GST_PAD_PROBE_INFO_QUERY (info);
+
+    switch (GST_QUERY_TYPE (query)) {
+      case GST_QUERY_BITRATE:{
+        gst_query_set_bitrate (query, DOWNSTREAM_BITRATE);
+        ret = GST_PAD_PROBE_HANDLED;
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  return ret;
+}
+
+GST_START_TEST (test_bitrate_query)
+{
+  /* This test checks the behavior of the bitrate query usage with the
+   * fill levels and buffering messages */
+
+  GstElement *pipe;
+  GstElement *queue2, *fakesink;
+  GstPad *inputpad;
+  GstPad *queue2_sinkpad;
+  GstPad *sinkpad;
+  GstSegment segment;
+  GThread *thread;
+
+  /* Setup test pipeline with one queue2 and one fakesink */
+
+  pipe = gst_pipeline_new ("pipeline");
+  queue2 = gst_element_factory_make ("queue2", NULL);
+  fail_unless (queue2 != NULL);
+  gst_bin_add (GST_BIN (pipe), queue2);
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (fakesink != NULL);
+  gst_bin_add (GST_BIN (pipe), fakesink);
+
+  /* Block fakesink sinkpad flow to ensure the queue isn't emptied
+   * by the prerolling sink */
+  sinkpad = gst_element_get_static_pad (fakesink, "sink");
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK,
+      block_without_queries_probe, NULL, NULL);
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
+      bitrate_query_probe, NULL, NULL);
+  gst_object_unref (sinkpad);
+
+  g_object_set (queue2,
+      "use-buffering", (gboolean) TRUE,
+      "use-bitrate-query", (gboolean) TRUE,
+      "max-size-bytes", (guint) 0,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) 1 * GST_SECOND, NULL);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  inputpad = gst_pad_new ("dummysrc", GST_PAD_SRC);
+  gst_pad_set_query_function (inputpad, queue2_dummypad_query);
+
+  queue2_sinkpad = gst_element_get_static_pad (queue2, "sink");
+  fail_unless (queue2_sinkpad != NULL);
+  fail_unless (gst_pad_link (inputpad, queue2_sinkpad) == GST_PAD_LINK_OK);
+
+  gst_pad_set_active (inputpad, TRUE);
+
+  gst_pad_push_event (inputpad, gst_event_new_stream_start ("test"));
+  gst_pad_push_event (inputpad, gst_event_new_segment (&segment));
+
+  gst_object_unref (queue2_sinkpad);
+
+  fail_unless (gst_element_link (queue2, fakesink));
+
+  /* Start pipeline in paused state to ensure the sink remains
+   * in preroll mode and blocks */
+  gst_element_set_state (pipe, GST_STATE_PAUSED);
+
+  /* When the use-buffering property is set to TRUE, a buffering
+   * message is posted. Since the queue is empty at that point,
+   * the buffering message contains a value of 0%. */
+  CHECK_FOR_BUFFERING_MSG (pipe, 0);
+
+  /* Feed data. queue will be filled to 80% (80000 bytes is pushed and
+   * with a bitrate of 100 * 1000, 80000 bytes is 80% of 1 second of data as
+   * set in the max-size-time limit) */
+  thread = g_thread_new ("push1", pad_push_datablock_thread, inputpad);
+  g_thread_join (thread);
+
+  /* Check for the buffering message; it should indicate 80% fill level
+   * (Note that the percentage from the message is normalized) */
+  CHECK_FOR_BUFFERING_MSG (pipe, 80);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+  gst_object_unref (inputpad);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue2_suite (void)
 {
@@ -560,6 +677,7 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_filled_read);
   tcase_add_test (tc_chain, test_percent_overflow);
   tcase_add_test (tc_chain, test_small_ring_buffer);
+  tcase_add_test (tc_chain, test_bitrate_query);
 
   return s;
 }
