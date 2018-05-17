@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:12+0300\n"
-"PO-Revision-Date: 2016-11-19 10:23-0800\n"
+"POT-Creation-Date: 2016-11-01 17:53+0200\n"
+"PO-Revision-Date: 2018-04-12 16:24-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -16,68 +16,65 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 1.8.7.1\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Lokalize 2.0\n"
 
+#: ext/cdio/gstcdiocddasrc.c:199
 msgid "Could not read from CD."
 msgstr "CD nije moguće čitati."
 
+#: ext/cdio/gstcdiocddasrc.c:406
 msgid "Could not open CD device for reading."
 msgstr "CD uređaj nije moguće otvoriti za čitanje."
 
+#: ext/cdio/gstcdiocddasrc.c:413
 msgid "Disc is not an Audio CD."
 msgstr "Disk nije Audio CD."
 
+#: ext/dvdread/dvdreadsrc.c:231 ext/dvdread/dvdreadsrc.c:238
 msgid "Could not open DVD"
 msgstr "DVD nije moguće otvoriti"
 
+#: ext/dvdread/dvdreadsrc.c:245 ext/dvdread/dvdreadsrc.c:621
+#: ext/dvdread/dvdreadsrc.c:628
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "DVD naslov %d nije moguće otvoriti"
 
+#: ext/dvdread/dvdreadsrc.c:251
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Greška pri otvaranju poglavlja %d od DVD naslova %d"
 
+#: ext/dvdread/dvdreadsrc.c:635
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Nije moguće otvoriti DVD naslov %d. Ovaj element ne podržava interaktivne "
-"naslove"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Nije moguće otvoriti DVD naslov %d. Ovaj element ne podržava interaktivne naslove"
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"DVD nije moguće pročitati. DVD je možda kriptiran, a biblioteka za "
-"dekriptiranje DVD-a nije instalirana."
+#: ext/dvdread/dvdreadsrc.c:990
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "DVD nije moguće pročitati. DVD je možda šifrirani, a biblioteka za dešifriranje DVD-a nije instalirana."
 
+#: ext/dvdread/dvdreadsrc.c:993
 msgid "Could not read DVD."
 msgstr "DVD nije moguće čitati."
 
-msgid ""
-"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr ""
-"Konfiguracija LAME mp3 audiokodera nije uspjela. Provjerite parametre "
-"kodiranja."
+#: ext/lame/gstlamemp3enc.c:395
+msgid "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr "Konfiguracija LAME mp3 audiokodera nije uspjela. Provjerite parametre kodiranja."
 
+#: ext/lame/gstlamemp3enc.c:427 ext/twolame/gsttwolamemp2enc.c:488
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Tražena brzina (bitrate) %d kbit/s za svojstvo ‘%s’ nije dopuštena. Brzina "
-"(bitrate) je promijenjena u %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Tražena brzina (bitrate) %d kbit/s za svojstvo „%s“ nije dopuštena. Brzina (bitrate) je promijenjena u %d kbit/s."
 
+#: ext/twolame/gsttwolamemp2enc.c:411
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Konfiguracija TwoLAME kodera nije uspjela. Provjerite parametre kodiranja."
+msgstr "Konfiguracija TwoLAME kodera nije uspjela. Provjerite parametre kodiranja."
 
+#: gst/asfdemux/gstasfdemux.c:446
 msgid "This stream contains no data."
-msgstr "Ovaj stream (tok podataka) ne sadrži podatke."
+msgstr "Ovo strujanje ne sadrži podatke."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna greška toka (stream) podataka."
