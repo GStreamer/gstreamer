@@ -3,7 +3,7 @@
   <description>Adjusts video frames</description>
   <filename>../../gst/videorate/.libs/libgstvideorate.so</filename>
   <basename>libgstvideorate.so</basename>
-  <version>1.14.0</version>
+  <version>1.14.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

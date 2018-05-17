@@ -3,7 +3,7 @@
   <description>libvisual visualization plugins</description>
   <filename>../../ext/libvisual/.libs/libgstlibvisual.so</filename>
   <basename>libgstlibvisual.so</basename>
-  <version>1.14.0</version>
+  <version>1.14.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
