@@ -67,7 +67,7 @@ struct _GstOMXVideoEnc
   GMutex drain_lock;
   GCond drain_cond;
   /* TRUE if EOS buffers shouldn't be forwarded */
-  gboolean draining;
+  gboolean draining; /* protected by drain_lock */
 
   /* properties */
   guint32 control_rate;
