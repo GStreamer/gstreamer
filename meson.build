@@ -162,11 +162,13 @@ bindinate = find_program('bindinate', required: false)
 if bindinate.found()
   run_target('bindinate_gstreamer',
     command: [bindinate,
-      '--name=gstreamer', '--regenerate=true',
-      '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstFft-1.0,GstNet-1.0,GstPbutils-1.0,GstRiff-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0',
-      '--gir=Gst-1.0']
-    )
-  run_target('bindinate_ges',
+        '--name=gstreamer', '--regenerate=true',
+        '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0',
+        '--gir=Gst-1.0',
+        '--copy-girs=@0@'.format(join_paths(meson.current_source_dir(), 'girs'))],
+    depends: []
+)
+run_target('bindinate_ges',
     command: ['sh', '-c',
       '''bindinate --name=gst-editing-services --regenerate=true --gir=GES-1.0 && mv @0@/sources/gst-editing-services-sharp-api.raw @0@/ges/gst-editing-services-api.raw '''.format(
         meson.current_source_dir())
