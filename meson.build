@@ -158,24 +158,28 @@ custom_target('GstSharp-nuget',
 
 subdir('samples')
 
-bindinate = find_program('bindinate', required: false)
-if bindinate.found()
-  run_target('bindinate_gstreamer',
-    command: [bindinate,
-        '--name=gstreamer', '--regenerate=true',
-        '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0',
-        '--gir=Gst-1.0',
-        '--copy-girs=@0@'.format(join_paths(meson.current_source_dir(), 'girs'))],
-    depends: []
-)
-run_target('bindinate_ges',
-    command: ['sh', '-c',
-      '''bindinate --name=gst-editing-services --regenerate=true --gir=GES-1.0 && mv @0@/sources/gst-editing-services-sharp-api.raw @0@/ges/gst-editing-services-api.raw '''.format(
-        meson.current_source_dir())
-    ]
-  )
-  python3 = import('python3').find_python()
-  run_target('update-code', command: [find_program('update_sources.py')])
-  run_target('update-all', command: [find_program('update_sources.py'), 'bindinate'])
+bindinator = subproject('bindinator', default_options: ['gapi_fixup=@0@'.format(gapi_fixup)])
+if bindinator.get_variable('found')
+    bindinate = bindinator.get_variable('bindinate')
+    run_target('bindinate_gstreamer',
+        command: [bindinate,
+            '--name=gstreamer', '--regenerate=true',
+            '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0',
+            '--gir=Gst-1.0',
+            '--copy-girs=@0@'.format(join_paths(meson.current_source_dir(), 'girs'))],
+        depends: []
+    )
+    run_target('bindinate_ges',
+        command: ['sh', '-c',
+            '''@0@ --name=gst-editing-services --regenerate=true --gir=GES-1.0 && mv @1@/sources/gst-editing-services-sharp-api.raw @1@/ges/gst-editing-services-api.raw '''.format(
+            bindinate.path(),
+            meson.current_source_dir()),
+        ],
+        depends: []
+    )
+    python3 = import('python3').find_python()
+    run_target('update-code', command: [find_program('update_sources.py')])
+    run_target('update-all', command: [find_program('update_sources.py'), 'bindinate'])
+else
+    warning('Bindinator not usable as some required dependencies are not avalaible.')
 endif
-
