@@ -1,0 +1,4 @@
+[wrap-git]
+directory=libnice
+url=https://github.com/centricular/libnice.git
+revision=meson
