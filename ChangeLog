@@ -1,3 +1,86 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:33:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-05-09 04:09:02 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Don't deadlock in preroll on early close
+	  If the connection is closed very early, the flushing
+	  marker might not get set and rtspclientsink can get
+	  deadlocked waiting for preroll forever.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786961
+
+2018-04-17 11:03:11 +0200  Joakim Johansson <joakimj@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix session timeout
+	  When streaming data over TCP then is not the keep-alive
+	  functionality working.
+	  The reason is that the function do_send_data have changed
+	  to boolean but the code is still checking the received result
+	  from send_func with GST_RTSP_OK.
+	  The result is that a successful send_func will always lead to
+	  that do_send_data is returning false and the keep-alive will
+	  not be updated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795321
+
+2018-04-17 17:47:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  Revert "rtsp-server: Switch around sendonly/recvonly attributes"
+	  This reverts commit 3d275b1345b76151418e3f56ed014d9089ac1a57.
+	  While RFC 3264 (SDP) says that sendonly/recvonly are from the point of view of
+	  the requester, the actual RTSP RFCs (RFC 2326 / 7826) disagree and say
+	  the opposite, just like the ONVIF standard.
+	  Let's follow those RFCs as we're doing RTSP here, and add a property at
+	  a later time if needed to switch to the SDP RFC behaviour.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793964
+
+2018-04-02 12:35:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: make sure not to use freed string
+	  Set transport string to NULL after freeing it, so that
+	  at worst we get a NULL pointer if constructing a new
+	  transport string fails (which shouldn't really fail here).
+	  Also check return value of that, just in case.
+	  CID 1433768.
+
+2018-03-29 02:51:02 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* tests/check/gst/rtspclientsink.c:
+	  rtspclientsink: Fix client ports for the RTCP backchannel
+	  This was broken since the work for delayed transport creation
+	  was merged: the creation of the transports string depends on
+	  calling stream_get_server_port, which only starts returning
+	  something meaningful after a call to stream_allocate_udp_sockets
+	  has been made, this function expects a transport that we parse
+	  from the transport string ...
+	  Significant refactoring is in order, but does not look entirely
+	  trivial, for now we put a band aid on and create a second transport
+	  string after the stream has been completed, to pass it in
+	  the request headers instead of the previous, incomplete one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794789
+
+2018-03-20 16:21:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-media-factory-uri: Fix compilation with latest GLib
+	  rtsp-media-factory-uri.c: In function ‘rtsp_media_factory_uri_create_element’:
+	  rtsp-media-factory-uri.c:621:17: error: assignment from incompatible pointer type [-Werror=incompatible-pointer-types]
+	  data->factory = g_object_ref (factory);
+	  ^
+
 === release 1.14.0 ===
 
 2018-03-19 20:27:04 +0000  Tim-Philipp Müller <tim@centricular.com>
