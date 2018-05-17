@@ -5,6 +5,6 @@ namespace Gst.Base {
 
 	using System;
 
-	public delegate Gst.FlowReturn CollectPadsClipFunction(Gst.Base.CollectPads pads, Gst.Base.CollectData data, Gst.Buffer inbuffer, Gst.Buffer outbuffer);
+	public delegate Gst.FlowReturn CollectPadsClipFunction(Gst.Base.CollectPads pads, Gst.Base.CollectData data, Gst.Buffer inbuffer, out Gst.Buffer outbuffer);
 
 }

@@ -206,19 +206,6 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtsp_message_parse_auth_credentials(IntPtr raw, int field);
-
-		public Gst.Rtsp.RTSPAuthCredential ParseAuthCredentials(Gst.Rtsp.RTSPHeaderField field) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			IntPtr raw_ret = gst_rtsp_message_parse_auth_credentials(this_as_native, (int) field);
-			Gst.Rtsp.RTSPAuthCredential ret = Gst.Rtsp.RTSPAuthCredential.New (raw_ret);
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_parse_data(IntPtr raw, out byte channel);
 
 		public Gst.Rtsp.RTSPResult ParseData(out byte channel) {
@@ -245,7 +232,7 @@ namespace Gst.Rtsp {
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			method = (Gst.Rtsp.RTSPMethod) native_method;
-			uri = GLib.Marshaller.PtrToStringGFree(native_uri);
+			uri = GLib.Marshaller.Utf8PtrToString (native_uri);
 			version = (Gst.Rtsp.RTSPVersion) native_version;
 			return ret;
 		}
@@ -264,7 +251,7 @@ namespace Gst.Rtsp {
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			code = (Gst.Rtsp.RTSPStatusCode) native_code;
-			reason = GLib.Marshaller.PtrToStringGFree(native_reason);
+			reason = GLib.Marshaller.Utf8PtrToString (native_reason);
 			version = (Gst.Rtsp.RTSPVersion) native_version;
 			return ret;
 		}

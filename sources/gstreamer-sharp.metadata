@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<!-- <attr path="/api/namespace/boxed[@cname='GstRTSPMessage']" name="noequals">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstRTSPMessage']" name="nohash">true</attr> -->
 	<attr path="/api/namespace/boxed[@cname='GstRTSPMessage']/field[@cname='body']" name="type">guint8*</attr>
+	<attr path="/api/namespace//method[@cname='gst_rtsp_message_parse_auth_credentials']" name="hidden">true</attr>
 
 	<!-- GstCaps fixes -->
 	<remove-node path="/api/namespace/boxed[@cname='GstCaps']/constructor[@cname='gst_caps_new_any']"/>
@@ -212,7 +213,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace//struct[@cname='GstAudioDownmixMeta']/field[@cname='from_position']" name="type">GstAudioChannelPosition*</attr>
 	<attr path="/api/namespace//struct[@cname='GstAudioDownmixMeta']/field[@cname='to_position']" name="type">GstAudioChannelPosition*</attr>
 	<attr path="/api/namespace/boxed/method[@cname='gst_audio_converter_convert']" name="hidden">true</attr>
+	<attr path="/api/namespace/object/method[@cname='gst_audio_ring_buffer_prepare_read']" name="hidden">true</attr>
 	<remove-attr path="/api/namespace/boxed/method[@cname='gst_audio_info_set_format']/parameters/parameter[@name='position']" name="array_len"/>
+
 	<!-- FIXME Make GstAudioAggregator working  -->
 	<attr path="/api/namespace/object[@cname='GstAudioAggregator']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstAudioAggregatorPad']" name="hidden">true</attr>

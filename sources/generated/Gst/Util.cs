@@ -212,9 +212,9 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_util_dump_mem(byte mem, uint size);
+		static extern void gst_util_dump_mem(byte[] mem, uint size);
 
-		public static void DumpMem(byte mem, uint size) {
+		public static void DumpMem(byte[] mem, uint size) {
 			gst_util_dump_mem(mem, size);
 		}
 

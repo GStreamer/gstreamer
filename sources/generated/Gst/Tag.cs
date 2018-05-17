@@ -165,15 +165,28 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_freeform_string_to_utf8(IntPtr data, int size, IntPtr env_vars);
+		static extern IntPtr gst_tag_freeform_string_to_utf8(IntPtr[] data, int size, IntPtr[] env_vars);
 
-		public static string FreeformStringToUtf8(string data, int size, string env_vars) {
-			IntPtr native_data = GLib.Marshaller.StringToPtrGStrdup (data);
-			IntPtr native_env_vars = GLib.Marshaller.StringToPtrGStrdup (env_vars);
+		public static string FreeformStringToUtf8(string[] data, int size, string[] env_vars) {
+			int cnt_data = data == null ? 0 : data.Length;
+			IntPtr[] native_data = new IntPtr [cnt_data];
+			for (int i = 0; i < cnt_data; i++)
+				native_data [i] = GLib.Marshaller.StringToPtrGStrdup (data[i]);
+			int cnt_env_vars = env_vars == null ? 0 : env_vars.Length;
+			IntPtr[] native_env_vars = new IntPtr [cnt_env_vars + 1];
+			for (int i = 0; i < cnt_env_vars; i++)
+				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup (env_vars[i]);
+			native_env_vars [cnt_env_vars] = IntPtr.Zero;
 			IntPtr raw_ret = gst_tag_freeform_string_to_utf8(native_data, size, native_env_vars);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
-			GLib.Marshaller.Free (native_data);
-			GLib.Marshaller.Free (native_env_vars);
+			for (int i = 0; i < native_data.Length; i++) {
+				data [i] = GLib.Marshaller.Utf8PtrToString (native_data[i]);
+				GLib.Marshaller.Free (native_data[i]);
+			}
+			for (int i = 0; i < native_env_vars.Length - 1; i++) {
+				env_vars [i] = GLib.Marshaller.Utf8PtrToString (native_env_vars[i]);
+				GLib.Marshaller.Free (native_env_vars[i]);
+			}
 			return ret;
 		}
 
@@ -368,18 +381,18 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_image_data_to_image_sample(byte image_data, uint image_data_len, int image_type);
+		static extern IntPtr gst_tag_image_data_to_image_sample(byte[] image_data, uint image_data_len, int image_type);
 
-		public static Gst.Sample ImageDataToImageSample(byte image_data, uint image_data_len, Gst.Tags.TagImageType image_type) {
+		public static Gst.Sample ImageDataToImageSample(byte[] image_data, uint image_data_len, Gst.Tags.TagImageType image_type) {
 			IntPtr raw_ret = gst_tag_image_data_to_image_sample(image_data, image_data_len, (int) image_type);
 			Gst.Sample ret = raw_ret == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Sample), true);
 			return ret;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_tag_list_add_id3_image(IntPtr tag_list, byte image_data, uint image_data_len, uint id3_picture_type);
+		static extern bool gst_tag_list_add_id3_image(IntPtr tag_list, byte[] image_data, uint image_data_len, uint id3_picture_type);
 
-		public static bool ListAddId3Image(Gst.TagList tag_list, byte image_data, uint image_data_len, uint id3_picture_type) {
+		public static bool ListAddId3Image(Gst.TagList tag_list, byte[] image_data, uint image_data_len, uint id3_picture_type) {
 			bool raw_ret = gst_tag_list_add_id3_image(tag_list == null ? IntPtr.Zero : tag_list.Handle, image_data, image_data_len, id3_picture_type);
 			bool ret = raw_ret;
 			return ret;
@@ -413,24 +426,24 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_from_vorbiscomment(byte data, UIntPtr size, byte id_data, uint id_data_length, IntPtr vendor_string);
+		static extern IntPtr gst_tag_list_from_vorbiscomment(byte[] data, UIntPtr size, byte[] id_data, uint id_data_length, out IntPtr vendor_string);
 
-		public static Gst.TagList ListFromVorbiscomment(byte data, ulong size, byte id_data, uint id_data_length, string vendor_string) {
-			IntPtr native_vendor_string = GLib.Marshaller.StringToPtrGStrdup (vendor_string);
-			IntPtr raw_ret = gst_tag_list_from_vorbiscomment(data, new UIntPtr (size), id_data, id_data_length, native_vendor_string);
+		public static Gst.TagList ListFromVorbiscomment(byte[] data, ulong size, byte[] id_data, uint id_data_length, out string vendor_string) {
+			IntPtr native_vendor_string;
+			IntPtr raw_ret = gst_tag_list_from_vorbiscomment(data, new UIntPtr (size), id_data, id_data_length, out native_vendor_string);
 			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
-			GLib.Marshaller.Free (native_vendor_string);
+			vendor_string = GLib.Marshaller.PtrToStringGFree(native_vendor_string);
 			return ret;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_from_vorbiscomment_buffer(IntPtr buffer, byte id_data, uint id_data_length, IntPtr vendor_string);
+		static extern IntPtr gst_tag_list_from_vorbiscomment_buffer(IntPtr buffer, byte[] id_data, uint id_data_length, out IntPtr vendor_string);
 
-		public static Gst.TagList ListFromVorbiscommentBuffer(Gst.Buffer buffer, byte id_data, uint id_data_length, string vendor_string) {
-			IntPtr native_vendor_string = GLib.Marshaller.StringToPtrGStrdup (vendor_string);
-			IntPtr raw_ret = gst_tag_list_from_vorbiscomment_buffer(buffer == null ? IntPtr.Zero : buffer.Handle, id_data, id_data_length, native_vendor_string);
+		public static Gst.TagList ListFromVorbiscommentBuffer(Gst.Buffer buffer, byte[] id_data, uint id_data_length, out string vendor_string) {
+			IntPtr native_vendor_string;
+			IntPtr raw_ret = gst_tag_list_from_vorbiscomment_buffer(buffer == null ? IntPtr.Zero : buffer.Handle, id_data, id_data_length, out native_vendor_string);
 			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
-			GLib.Marshaller.Free (native_vendor_string);
+			vendor_string = GLib.Marshaller.PtrToStringGFree(native_vendor_string);
 			return ret;
 		}
 
@@ -444,9 +457,10 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_new_from_id3v1(byte data);
+		static extern IntPtr gst_tag_list_new_from_id3v1(byte[] data);
 
-		public static Gst.TagList ListNewFromId3v1(byte data) {
+		public static Gst.TagList ListNewFromId3v1(byte[] data) {
+			data = new byte[128];
 			IntPtr raw_ret = gst_tag_list_new_from_id3v1(data);
 			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
 			return ret;
@@ -471,9 +485,9 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_to_vorbiscomment_buffer(IntPtr list, byte id_data, uint id_data_length, IntPtr vendor_string);
+		static extern IntPtr gst_tag_list_to_vorbiscomment_buffer(IntPtr list, byte[] id_data, uint id_data_length, IntPtr vendor_string);
 
-		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte id_data, uint id_data_length, string vendor_string) {
+		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte[] id_data, uint id_data_length, string vendor_string) {
 			IntPtr native_vendor_string = GLib.Marshaller.StringToPtrGStrdup (vendor_string);
 			IntPtr raw_ret = gst_tag_list_to_vorbiscomment_buffer(list == null ? IntPtr.Zero : list.Handle, id_data, id_data_length, native_vendor_string);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
@@ -481,31 +495,42 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_to_xmp_buffer(IntPtr list, bool read_only, IntPtr schemas);
+		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte[] id_data, uint id_data_length) {
+			return ListToVorbiscommentBuffer (list, id_data, id_data_length, null);
+		}
 
-		public static Gst.Buffer ListToXmpBuffer(Gst.TagList list, bool read_only, string schemas) {
-			IntPtr native_schemas = GLib.Marshaller.StringToPtrGStrdup (schemas);
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_tag_list_to_xmp_buffer(IntPtr list, bool read_only, IntPtr[] schemas);
+
+		public static Gst.Buffer ListToXmpBuffer(Gst.TagList list, bool read_only, string[] schemas) {
+			int cnt_schemas = schemas == null ? 0 : schemas.Length;
+			IntPtr[] native_schemas = new IntPtr [cnt_schemas + 1];
+			for (int i = 0; i < cnt_schemas; i++)
+				native_schemas [i] = GLib.Marshaller.StringToPtrGStrdup (schemas[i]);
+			native_schemas [cnt_schemas] = IntPtr.Zero;
 			IntPtr raw_ret = gst_tag_list_to_xmp_buffer(list == null ? IntPtr.Zero : list.Handle, read_only, native_schemas);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
-			GLib.Marshaller.Free (native_schemas);
+			for (int i = 0; i < native_schemas.Length - 1; i++) {
+				schemas [i] = GLib.Marshaller.Utf8PtrToString (native_schemas[i]);
+				GLib.Marshaller.Free (native_schemas[i]);
+			}
 			return ret;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_tag_parse_extended_comment(IntPtr ext_comment, IntPtr key, IntPtr lang, IntPtr value, bool fail_if_no_key);
+		static extern bool gst_tag_parse_extended_comment(IntPtr ext_comment, out IntPtr key, out IntPtr lang, out IntPtr value, bool fail_if_no_key);
 
-		public static bool ParseExtendedComment(string ext_comment, string key, string lang, string value, bool fail_if_no_key) {
+		public static bool ParseExtendedComment(string ext_comment, out string key, out string lang, out string value, bool fail_if_no_key) {
 			IntPtr native_ext_comment = GLib.Marshaller.StringToPtrGStrdup (ext_comment);
-			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
-			IntPtr native_lang = GLib.Marshaller.StringToPtrGStrdup (lang);
-			IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup (value);
-			bool raw_ret = gst_tag_parse_extended_comment(native_ext_comment, native_key, native_lang, native_value, fail_if_no_key);
+			IntPtr native_key;
+			IntPtr native_lang;
+			IntPtr native_value;
+			bool raw_ret = gst_tag_parse_extended_comment(native_ext_comment, out native_key, out native_lang, out native_value, fail_if_no_key);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_ext_comment);
-			GLib.Marshaller.Free (native_key);
-			GLib.Marshaller.Free (native_lang);
-			GLib.Marshaller.Free (native_value);
+			key = GLib.Marshaller.PtrToStringGFree(native_key);
+			lang = GLib.Marshaller.PtrToStringGFree(native_lang);
+			value = GLib.Marshaller.PtrToStringGFree(native_value);
 			return ret;
 		}
 

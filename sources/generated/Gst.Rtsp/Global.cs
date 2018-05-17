@@ -238,11 +238,11 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtsp_range_get_times(IntPtr range, ulong min, ulong max);
+		static extern bool gst_rtsp_range_get_times(IntPtr range, out ulong min, out ulong max);
 
-		public static bool RtspRangeGetTimes(Gst.Rtsp.RTSPTimeRange range, ulong min, ulong max) {
+		public static bool RtspRangeGetTimes(Gst.Rtsp.RTSPTimeRange range, out ulong min, out ulong max) {
 			IntPtr native_range = GLib.Marshaller.StructureToPtrAlloc (range);
-			bool raw_ret = gst_rtsp_range_get_times(native_range, min, max);
+			bool raw_ret = gst_rtsp_range_get_times(native_range, out min, out max);
 			bool ret = raw_ret;
 			Marshal.FreeHGlobal (native_range);
 			return ret;
@@ -251,12 +251,13 @@ namespace Gst.Rtsp {
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_range_parse(IntPtr rangestr, IntPtr range);
 
-		public static Gst.Rtsp.RTSPResult RtspRangeParse(string rangestr, Gst.Rtsp.RTSPTimeRange range) {
+		public static Gst.Rtsp.RTSPResult RtspRangeParse(string rangestr, out Gst.Rtsp.RTSPTimeRange range) {
 			IntPtr native_rangestr = GLib.Marshaller.StringToPtrGStrdup (rangestr);
-			IntPtr native_range = GLib.Marshaller.StructureToPtrAlloc (range);
+			IntPtr native_range = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Rtsp.RTSPTimeRange)));
 			int raw_ret = gst_rtsp_range_parse(native_rangestr, native_range);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			GLib.Marshaller.Free (native_rangestr);
+			range = Gst.Rtsp.RTSPTimeRange.New (native_range);
 			Marshal.FreeHGlobal (native_range);
 			return ret;
 		}
@@ -291,13 +292,13 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_transport_get_manager(int trans, IntPtr manager, uint option);
+		static extern int gst_rtsp_transport_get_manager(int trans, out IntPtr manager, uint option);
 
-		public static Gst.Rtsp.RTSPResult RtspTransportGetManager(Gst.Rtsp.RTSPTransMode trans, string manager, uint option) {
-			IntPtr native_manager = GLib.Marshaller.StringToPtrGStrdup (manager);
-			int raw_ret = gst_rtsp_transport_get_manager((int) trans, native_manager, option);
+		public static Gst.Rtsp.RTSPResult RtspTransportGetManager(Gst.Rtsp.RTSPTransMode trans, out string manager, uint option) {
+			IntPtr native_manager;
+			int raw_ret = gst_rtsp_transport_get_manager((int) trans, out native_manager, option);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
-			GLib.Marshaller.Free (native_manager);
+			manager = GLib.Marshaller.Utf8PtrToString (native_manager);
 			return ret;
 		}
 

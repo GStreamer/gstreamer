@@ -36,9 +36,9 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_type_find_helper_for_data(IntPtr obj, byte data, UIntPtr size, out int prob);
+		static extern IntPtr gst_type_find_helper_for_data(IntPtr obj, byte[] data, UIntPtr size, out int prob);
 
-		public static Gst.Caps TypeFindHelperForData(Gst.Object obj, byte data, ulong size, out Gst.TypeFindProbability prob) {
+		public static Gst.Caps TypeFindHelperForData(Gst.Object obj, byte[] data, ulong size, out Gst.TypeFindProbability prob) {
 			int native_prob;
 			IntPtr raw_ret = gst_type_find_helper_for_data(obj == null ? IntPtr.Zero : obj.Handle, data, new UIntPtr (size), out native_prob);
 			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
@@ -46,7 +46,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		public static Gst.Caps TypeFindHelperForData(byte data, ulong size, out Gst.TypeFindProbability prob) {
+		public static Gst.Caps TypeFindHelperForData(byte[] data, ulong size, out Gst.TypeFindProbability prob) {
 			return TypeFindHelperForData (null, data, size, out prob);
 		}
 

@@ -57,11 +57,11 @@ namespace Gst {
 		public const int MAP_READWRITE = 3;
 		public const string META_TAG_MEMORY_STR = @"memory";
 		public const long MSECOND = 1000000;
-		public const int PARAM_CONTROLLABLE = 2;
-		public const int PARAM_MUTABLE_PAUSED = 8;
-		public const int PARAM_MUTABLE_PLAYING = 16;
-		public const int PARAM_MUTABLE_READY = 4;
-		public const int PARAM_USER_SHIFT = 256;
+		public const int PARAM_CONTROLLABLE = 512;
+		public const int PARAM_MUTABLE_PAUSED = 2048;
+		public const int PARAM_MUTABLE_PLAYING = 4096;
+		public const int PARAM_MUTABLE_READY = 1024;
+		public const int PARAM_USER_SHIFT = 65536;
 		public const string PROTECTION_SYSTEM_ID_CAPS_FIELD = @"protection-system";
 		public const string PTR_FORMAT = @"paA";
 		public const int QUERY_NUM_SHIFT = 8;

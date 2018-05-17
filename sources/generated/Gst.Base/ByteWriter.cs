@@ -368,24 +368,17 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_byte_writer_put_string_utf8(IntPtr raw, IntPtr[] data);
+		static extern bool gst_byte_writer_put_string_utf8(IntPtr raw, IntPtr data);
 
-		public bool PutStringUtf8(string[] data) {
+		public bool PutStringUtf8(string data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			int cnt_data = data == null ? 0 : data.Length;
-			IntPtr[] native_data = new IntPtr [cnt_data + 1];
-			for (int i = 0; i < cnt_data; i++)
-				native_data [i] = GLib.Marshaller.StringToPtrGStrdup (data[i]);
-			native_data [cnt_data] = IntPtr.Zero;
+			IntPtr native_data = GLib.Marshaller.StringToPtrGStrdup (data);
 			bool raw_ret = gst_byte_writer_put_string_utf8(this_as_native, native_data);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			for (int i = 0; i < native_data.Length - 1; i++) {
-				data [i] = GLib.Marshaller.Utf8PtrToString (native_data[i]);
-				GLib.Marshaller.Free (native_data[i]);
-			}
+			GLib.Marshaller.Free (native_data);
 			return ret;
 		}
 

@@ -5,6 +5,6 @@ namespace Gst.Base {
 
 	using System;
 
-	public delegate Gst.FlowReturn TypeFindHelperGetRangeFunction(Gst.Object obj, Gst.Object parent, ulong offset, uint length, Gst.Buffer buffer);
+	public delegate Gst.FlowReturn TypeFindHelperGetRangeFunction(Gst.Object obj, Gst.Object parent, ulong offset, uint length, out Gst.Buffer buffer);
 
 }

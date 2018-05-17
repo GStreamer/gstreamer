@@ -204,6 +204,17 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_aggregator_pad_has_buffer(IntPtr raw);
+
+		public bool HasBuffer { 
+			get {
+				bool raw_ret = gst_aggregator_pad_has_buffer(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_aggregator_pad_is_eos(IntPtr raw);
 
 		public bool IsEos { 
