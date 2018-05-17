@@ -546,6 +546,8 @@ static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent,
     GstBuffer * inbuf);
 static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_qtdemux_handle_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_qtdemux_setcaps (GstQTDemux * qtdemux, GstCaps * caps);
 static gboolean gst_qtdemux_configure_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
@@ -553,6 +555,8 @@ static void gst_qtdemux_stream_check_and_change_stsd_index (GstQTDemux * demux,
     QtDemuxStream * stream);
 static GstFlowReturn gst_qtdemux_process_adapter (GstQTDemux * demux,
     gboolean force);
+
+static void gst_qtdemux_check_seekability (GstQTDemux * demux);
 
 static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux,
     const guint8 * buffer, guint length);
@@ -656,6 +660,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
       qtdemux_sink_activate_mode);
   gst_pad_set_chain_function (qtdemux->sinkpad, gst_qtdemux_chain);
   gst_pad_set_event_function (qtdemux->sinkpad, gst_qtdemux_handle_sink_event);
+  gst_pad_set_query_function (qtdemux->sinkpad, gst_qtdemux_handle_sink_query);
   gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), qtdemux->sinkpad);
 
   qtdemux->adapter = gst_adapter_new ();
@@ -2504,6 +2509,46 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 drop:
   return res;
 }
+
+static gboolean
+gst_qtdemux_handle_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstQTDemux *demux = GST_QTDEMUX (parent);
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_BITRATE:
+    {
+      GstClockTime duration;
+
+      /* populate demux->upstream_size if not done yet */
+      gst_qtdemux_check_seekability (demux);
+
+      if (demux->upstream_size != -1
+          && gst_qtdemux_get_duration (demux, &duration)) {
+        guint bitrate =
+            gst_util_uint64_scale (8 * demux->upstream_size, GST_SECOND,
+            duration);
+
+        GST_LOG_OBJECT (demux, "bitrate query byte length: %" G_GUINT64_FORMAT
+            " duration %" GST_TIME_FORMAT " resulting a bitrate of %u",
+            demux->upstream_size, GST_TIME_ARGS (duration), bitrate);
+
+        /* TODO: better results based on ranges/index tables */
+        gst_query_set_bitrate (query, bitrate);
+        res = TRUE;
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, (GstObject *) demux, query);
+      break;
+  }
+
+  return res;
+}
+
 
 #if 0
 static void
@@ -5167,8 +5212,8 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   if (G_UNLIKELY (stream->segment_index != seg_idx))
     gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
 
-  if (G_UNLIKELY (QTSEGMENT_IS_EMPTY (&stream->segments[stream->
-                  segment_index]))) {
+  if (G_UNLIKELY (QTSEGMENT_IS_EMPTY (&stream->
+              segments[stream->segment_index]))) {
     QtDemuxSegment *seg = &stream->segments[stream->segment_index];
 
     GST_LOG_OBJECT (qtdemux, "Empty segment activated,"
@@ -6154,8 +6199,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   }
 
   /* If we're doing a keyframe-only trickmode, only push keyframes on video streams */
-  if (G_UNLIKELY (qtdemux->
-          segment.flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) {
+  if (G_UNLIKELY (qtdemux->segment.
+          flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) {
     if (stream->subtype == FOURCC_vide && !keyframe) {
       GST_LOG_OBJECT (qtdemux, "Skipping non-keyframe on track-id %u",
           stream->track_id);
