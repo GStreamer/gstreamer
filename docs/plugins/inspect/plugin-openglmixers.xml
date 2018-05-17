@@ -3,7 +3,7 @@
   <description>OpenGL mixers</description>
   <filename>../../ext/gl/.libs/libgstopenglmixers.so</filename>
   <basename>libgstopenglmixers.so</basename>
-  <version>1.14.0</version>
+  <version>1.14.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
