@@ -1,3 +1,51 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:37:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-04-18 12:42:55 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc/dec: fix handling of component enabling failing
+	  - Report the error from OMX if any (OMX_EventError)
+	  - If not report the failing to the application (GST_ELEMENT_ERROR)
+	  - return GST_FLOW_ERROR rather than FALSE
+	  - don't leak @frame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795352
+
+2018-03-14 14:53:50 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  log_omx_performance: convert pointers to strings
+	  G_TYPE_POINTER are not serialized in logs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794331
+
+2018-04-02 15:14:51 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: remove duplicated debug message
+	  We already have the exact same message at the beginning of
+	  gst_omx_video_enc_handle_frame(). Having it twice is confusing when
+	  reading/grepping logs.
+	  I kept the earlier one to keep the symetry with
+	  gst_omx_video_dec_handle_frame().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794897
+
+2018-02-22 11:27:03 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: add 'roi' qp-mode on zynqultrascaleplus
+	  New QP mode used to handle ROI metadata.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793696
+
 === release 1.14.0 ===
 
 2018-03-19 20:31:02 +0000  Tim-Philipp Müller <tim@centricular.com>
