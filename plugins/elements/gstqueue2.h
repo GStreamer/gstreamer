@@ -119,6 +119,7 @@ struct _GstQueue2
   /* current buffering state */
   gboolean is_buffering;
   gint buffering_percent;
+  gint last_posted_buffering_percent;
 
   /* for measuring input/output rates */
   GTimer *in_timer;

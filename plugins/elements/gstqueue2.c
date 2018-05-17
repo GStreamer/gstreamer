@@ -531,6 +531,7 @@ gst_queue2_init (GstQueue2 * queue)
 
   g_mutex_init (&queue->buffering_post_lock);
   queue->buffering_percent = 100;
+  queue->last_posted_buffering_percent = -1;
 
   /* tempfile related */
   queue->temp_template = NULL;
@@ -1056,17 +1057,31 @@ static GstMessage *
 gst_queue2_get_buffering_message (GstQueue2 * queue)
 {
   GstMessage *msg = NULL;
-
   if (queue->percent_changed) {
-    gint percent = queue->buffering_percent;
+    /* Don't change the buffering level if the sinkpad is waiting for
+     * space to become available.  This prevents the situation where,
+     * upstream is pushing buffers larger than our limits so only 1 buffer
+     * is ever in the queue at a time.
+     * Changing the level causes a buffering message to be posted saying that
+     * we are buffering which the application may pause to wait for another
+     * 100% buffering message which would be posted very soon after the
+     * waiting sink thread adds it's buffer to the queue */
+    /* FIXME: This situation above can still occur later if
+     * the sink pad is waiting to push a serialized event into the queue and
+     * the queue becomes empty for a short period of time. */
+    if (!queue->waiting_del
+        && queue->last_posted_buffering_percent != queue->buffering_percent) {
+      gint percent = queue->buffering_percent;
 
+      GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", percent);
+      msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
+
+      gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
+          queue->avg_out, queue->buffering_left);
+
+      queue->last_posted_buffering_percent = percent;
+    }
     queue->percent_changed = FALSE;
-
-    GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", percent);
-    msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
-
-    gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
-        queue->avg_out, queue->buffering_left);
   }
 
   return msg;
