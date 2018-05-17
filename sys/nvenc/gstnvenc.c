@@ -287,9 +287,13 @@ gst_nvenc_create_cuda_context (guint device_id)
   for (i = 0; i < dev_count; ++i) {
     if (cuDeviceGet (&cdev, i) == CUDA_SUCCESS
         && cuDeviceGetName (name, sizeof (name), cdev) == CUDA_SUCCESS
-        && cuDeviceComputeCapability (&maj, &min, cdev) == CUDA_SUCCESS) {
-      GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)",
-          i, (((maj << 4) + min) >= 0x30) ? "yes" : "no", name, maj, min);
+        && cuDeviceGetAttribute (&maj,
+            CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, cdev) == CUDA_SUCCESS
+        && cuDeviceGetAttribute (&min,
+            CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR,
+            cdev) == CUDA_SUCCESS) {
+      GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)", i,
+          (((maj << 4) + min) >= 0x30) ? "yes" : "no", name, maj, min);
       if (i == device_id) {
         cuda_dev = cdev;
       }
