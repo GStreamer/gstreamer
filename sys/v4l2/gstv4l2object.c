@@ -720,15 +720,12 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       break;
     case PROP_DEVICE_NAME:
     {
-      const guchar *new = NULL;
+      const guchar *name = NULL;
 
-      if (GST_V4L2_IS_OPEN (v4l2object)) {
-        new = v4l2object->vcap.card;
-      } else if (gst_v4l2_open (v4l2object)) {
-        new = v4l2object->vcap.card;
-        gst_v4l2_close (v4l2object);
-      }
-      g_value_set_string (value, (gchar *) new);
+      if (GST_V4L2_IS_OPEN (v4l2object))
+        name = v4l2object->vcap.card;
+
+      g_value_set_string (value, (gchar *) name);
       break;
     }
     case PROP_DEVICE_FD:
