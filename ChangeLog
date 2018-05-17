@@ -1,3 +1,45 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:35:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-03-20 08:54:24 +0100  Havard Graff <havard.graff@gmail.com>
+
+	* gi/overrides/gstmodule.c:
+	  gstmodule: fix warning when building against python2
+	  PyMapping_GetItemString’ discards ‘const’ qualifier from pointer target type
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796093
+
+2018-04-25 15:11:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	  Bump pygobject dependency to 3.8
+
+2018-04-25 19:47:19 +0200  Emilio Pozuelo Monfort <pochu27@gmail.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/GstPbutils.py:
+	  overrides: use get_introspection_module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795555
+
+2018-04-07 21:46:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: Fix mixup between query function and chain one
+
+2018-04-03 13:28:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Dist autogen.sh and configure.ac
+
 === release 1.14.0 ===
 
 2018-03-19 20:29:28 +0000  Tim-Philipp Müller <tim@centricular.com>
