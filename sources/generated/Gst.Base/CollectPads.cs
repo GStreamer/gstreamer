@@ -90,18 +90,16 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_collect_pads_clip_running_time(IntPtr raw, IntPtr cdata, IntPtr buf, IntPtr outbuf, IntPtr user_data);
+		static extern int gst_collect_pads_clip_running_time(IntPtr raw, IntPtr cdata, IntPtr buf, out IntPtr outbuf, IntPtr user_data);
 
-		public Gst.FlowReturn ClipRunningTime(Gst.Base.CollectData cdata, Gst.Buffer buf, Gst.Buffer outbuf, IntPtr user_data) {
+		public Gst.FlowReturn ClipRunningTime(Gst.Base.CollectData cdata, Gst.Buffer buf, out Gst.Buffer outbuf, IntPtr user_data) {
 			IntPtr native_cdata = GLib.Marshaller.StructureToPtrAlloc (cdata);
-			int raw_ret = gst_collect_pads_clip_running_time(Handle, native_cdata, buf == null ? IntPtr.Zero : buf.Handle, outbuf == null ? IntPtr.Zero : outbuf.Handle, user_data);
+			IntPtr native_outbuf;
+			int raw_ret = gst_collect_pads_clip_running_time(Handle, native_cdata, buf == null ? IntPtr.Zero : buf.Handle, out native_outbuf, user_data);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			Marshal.FreeHGlobal (native_cdata);
+			outbuf = native_outbuf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_outbuf, typeof (Gst.Buffer), true);
 			return ret;
-		}
-
-		public Gst.FlowReturn ClipRunningTime(Gst.Base.CollectData cdata, Gst.Buffer buf) {
-			return ClipRunningTime (cdata, buf, null, IntPtr.Zero);
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

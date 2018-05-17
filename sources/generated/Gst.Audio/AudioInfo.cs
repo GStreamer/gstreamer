@@ -113,10 +113,10 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_info_convert(IntPtr raw, int src_fmt, long src_val, int dest_fmt, long dest_val);
+		static extern bool gst_audio_info_convert(IntPtr raw, int src_fmt, long src_val, int dest_fmt, out long dest_val);
 
-		public bool Convert(Gst.Format src_fmt, long src_val, Gst.Format dest_fmt, long dest_val) {
-			bool raw_ret = gst_audio_info_convert(Handle, (int) src_fmt, src_val, (int) dest_fmt, dest_val);
+		public bool Convert(Gst.Format src_fmt, long src_val, Gst.Format dest_fmt, out long dest_val) {
+			bool raw_ret = gst_audio_info_convert(Handle, (int) src_fmt, src_val, (int) dest_fmt, out dest_val);
 			bool ret = raw_ret;
 			return ret;
 		}

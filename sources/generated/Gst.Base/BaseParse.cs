@@ -910,10 +910,10 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_base_parse_convert_default(IntPtr raw, int src_format, long src_value, int dest_format, long dest_value);
+		static extern bool gst_base_parse_convert_default(IntPtr raw, int src_format, long src_value, int dest_format, out long dest_value);
 
-		public bool ConvertDefault(Gst.Format src_format, long src_value, Gst.Format dest_format, long dest_value) {
-			bool raw_ret = gst_base_parse_convert_default(Handle, (int) src_format, src_value, (int) dest_format, dest_value);
+		public bool ConvertDefault(Gst.Format src_format, long src_value, Gst.Format dest_format, out long dest_value) {
+			bool raw_ret = gst_base_parse_convert_default(Handle, (int) src_format, src_value, (int) dest_format, out dest_value);
 			bool ret = raw_ret;
 			return ret;
 		}

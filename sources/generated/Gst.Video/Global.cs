@@ -439,10 +439,10 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_color_matrix_get_Kr_Kb(int matrix, double Kr, double Kb);
+		static extern bool gst_video_color_matrix_get_Kr_Kb(int matrix, out double Kr, out double Kb);
 
-		public static bool VideoColorMatrixGetKrKb(Gst.Video.VideoColorMatrix matrix, double Kr, double Kb) {
-			bool raw_ret = gst_video_color_matrix_get_Kr_Kb((int) matrix, Kr, Kb);
+		public static bool VideoColorMatrixGetKrKb(Gst.Video.VideoColorMatrix matrix, out double Kr, out double Kb) {
+			bool raw_ret = gst_video_color_matrix_get_Kr_Kb((int) matrix, out Kr, out Kb);
 			bool ret = raw_ret;
 			return ret;
 		}
@@ -457,10 +457,12 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_color_range_offsets(int range, IntPtr info, out int offset, out int scale);
+		static extern void gst_video_color_range_offsets(int range, IntPtr info, out int[] offset, out int[] scale);
 
-		public static void VideoColorRangeOffsets(Gst.Video.VideoColorRange range, Gst.Video.VideoFormatInfo info, out int offset, out int scale) {
+		public static void VideoColorRangeOffsets(Gst.Video.VideoColorRange range, Gst.Video.VideoFormatInfo info, out int[] offset, out int[] scale) {
 			IntPtr native_info = GLib.Marshaller.StructureToPtrAlloc (info);
+			offset = new int[4];
+			scale = new int[4];
 			gst_video_color_range_offsets((int) range, native_info, out offset, out scale);
 			Marshal.FreeHGlobal (native_info);
 		}
@@ -575,10 +577,10 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_event_parse_still_frame(IntPtr evnt, bool in_still);
+		static extern bool gst_video_event_parse_still_frame(IntPtr evnt, out bool in_still);
 
-		public static bool VideoEventParseStillFrame(Gst.Event evnt, bool in_still) {
-			bool raw_ret = gst_video_event_parse_still_frame(evnt == null ? IntPtr.Zero : evnt.Handle, in_still);
+		public static bool VideoEventParseStillFrame(Gst.Event evnt, out bool in_still) {
+			bool raw_ret = gst_video_event_parse_still_frame(evnt == null ? IntPtr.Zero : evnt.Handle, out in_still);
 			bool ret = raw_ret;
 			return ret;
 		}

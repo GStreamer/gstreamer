@@ -1459,10 +1459,10 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_decoder_get_parse_state(IntPtr raw, bool sync, bool eos);
+		static extern void gst_audio_decoder_get_parse_state(IntPtr raw, out bool sync, out bool eos);
 
-		public void GetParseState(bool sync, bool eos) {
-			gst_audio_decoder_get_parse_state(Handle, sync, eos);
+		public void GetParseState(out bool sync, out bool eos) {
+			gst_audio_decoder_get_parse_state(Handle, out sync, out eos);
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

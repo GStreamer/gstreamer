@@ -35,9 +35,9 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_packet_add_profile_specific_ext(IntPtr raw, byte data, uint len);
+		static extern bool gst_rtcp_packet_add_profile_specific_ext(IntPtr raw, byte[] data, uint len);
 
-		public bool AddProfileSpecificExt(byte data, uint len) {
+		public bool AddProfileSpecificExt(byte[] data, uint len) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			bool raw_ret = gst_rtcp_packet_add_profile_specific_ext(this_as_native, data, len);
@@ -187,9 +187,9 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_packet_bye_add_ssrcs(IntPtr raw, uint ssrc, uint len);
+		static extern bool gst_rtcp_packet_bye_add_ssrcs(IntPtr raw, uint[] ssrc, uint len);
 
-		public bool ByeAddSsrcs(uint ssrc, uint len) {
+		public bool ByeAddSsrcs(uint[] ssrc, uint len) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			bool raw_ret = gst_rtcp_packet_bye_add_ssrcs(this_as_native, ssrc, len);
@@ -419,12 +419,12 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_rtcp_packet_get_rb(IntPtr raw, uint nth, uint ssrc, byte fractionlost, int packetslost, uint exthighestseq, uint jitter, uint lsr, uint dlsr);
+		static extern void gst_rtcp_packet_get_rb(IntPtr raw, uint nth, out uint ssrc, out byte fractionlost, out int packetslost, out uint exthighestseq, out uint jitter, out uint lsr, out uint dlsr);
 
-		public void GetRb(uint nth, uint ssrc, byte fractionlost, int packetslost, uint exthighestseq, uint jitter, uint lsr, uint dlsr) {
+		public void GetRb(uint nth, out uint ssrc, out byte fractionlost, out int packetslost, out uint exthighestseq, out uint jitter, out uint lsr, out uint dlsr) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			gst_rtcp_packet_get_rb(this_as_native, nth, ssrc, fractionlost, packetslost, exthighestseq, jitter, lsr, dlsr);
+			gst_rtcp_packet_get_rb(this_as_native, nth, out ssrc, out fractionlost, out packetslost, out exthighestseq, out jitter, out lsr, out dlsr);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
@@ -625,12 +625,12 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_rtcp_packet_sr_get_sender_info(IntPtr raw, uint ssrc, ulong ntptime, uint rtptime, uint packet_count, uint octet_count);
+		static extern void gst_rtcp_packet_sr_get_sender_info(IntPtr raw, out uint ssrc, out ulong ntptime, out uint rtptime, out uint packet_count, out uint octet_count);
 
-		public void SrGetSenderInfo(uint ssrc, ulong ntptime, uint rtptime, uint packet_count, uint octet_count) {
+		public void SrGetSenderInfo(out uint ssrc, out ulong ntptime, out uint rtptime, out uint packet_count, out uint octet_count) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			gst_rtcp_packet_sr_get_sender_info(this_as_native, ssrc, ntptime, rtptime, packet_count, octet_count);
+			gst_rtcp_packet_sr_get_sender_info(this_as_native, out ssrc, out ntptime, out rtptime, out packet_count, out octet_count);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}

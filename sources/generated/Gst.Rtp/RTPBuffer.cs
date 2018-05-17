@@ -501,10 +501,10 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern ulong gst_rtp_buffer_ext_timestamp(ulong exttimestamp, uint timestamp);
+		static extern ulong gst_rtp_buffer_ext_timestamp(ref ulong exttimestamp, uint timestamp);
 
-		public static ulong ExtTimestamp(ulong exttimestamp, uint timestamp) {
-			ulong raw_ret = gst_rtp_buffer_ext_timestamp(exttimestamp, timestamp);
+		public static ulong ExtTimestamp(ref ulong exttimestamp, uint timestamp) {
+			ulong raw_ret = gst_rtp_buffer_ext_timestamp(ref exttimestamp, timestamp);
 			ulong ret = raw_ret;
 			return ret;
 		}

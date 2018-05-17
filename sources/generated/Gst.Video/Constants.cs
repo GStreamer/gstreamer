@@ -77,9 +77,9 @@ namespace Gst.Video {
 		public const string VIDEO_RESAMPLER_OPT_SHARPNESS = @"GstVideoResampler.sharpness";
 		public const string VIDEO_SCALER_OPT_DITHER_METHOD = @"GstVideoScaler.dither-method";
 		public const string VIDEO_SIZE_RANGE = @"(int) [ 1, max ]";
-		public const int VIDEO_TILE_TYPE_MASK = 0;
+		public const int VIDEO_TILE_TYPE_MASK = 65535;
 		public const int VIDEO_TILE_TYPE_SHIFT = 16;
-		public const int VIDEO_TILE_X_TILES_MASK = 0;
+		public const int VIDEO_TILE_X_TILES_MASK = 65535;
 		public const int VIDEO_TILE_Y_TILES_SHIFT = 16;
 #endregion
 	}

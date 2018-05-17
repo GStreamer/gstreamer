@@ -125,9 +125,9 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtp_base_audio_payload_push(IntPtr raw, byte data, uint payload_len, ulong timestamp);
+		static extern int gst_rtp_base_audio_payload_push(IntPtr raw, byte[] data, uint payload_len, ulong timestamp);
 
-		public Gst.FlowReturn Push(byte data, uint payload_len, ulong timestamp) {
+		public Gst.FlowReturn Push(byte[] data, uint payload_len, ulong timestamp) {
 			int raw_ret = gst_rtp_base_audio_payload_push(Handle, data, payload_len, timestamp);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;

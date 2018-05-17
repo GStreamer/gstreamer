@@ -747,14 +747,14 @@ namespace Gst.Audio {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate uint CommitNativeDelegate (IntPtr inst, ulong sample, byte data, int in_samples, int out_samples, int accum);
+		delegate uint CommitNativeDelegate (IntPtr inst, ulong sample, byte[] data, int in_samples, int out_samples, ref int accum);
 
-		static uint Commit_cb (IntPtr inst, ulong sample, byte data, int in_samples, int out_samples, int accum)
+		static uint Commit_cb (IntPtr inst, ulong sample, byte[] data, int in_samples, int out_samples, ref int accum)
 		{
 			try {
 				AudioRingBuffer __obj = GLib.Object.GetObject (inst, false) as AudioRingBuffer;
 				uint __result;
-				__result = __obj.OnCommit (sample, data, in_samples, out_samples, accum);
+				__result = __obj.OnCommit (sample, data, in_samples, out_samples, ref accum);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -764,12 +764,12 @@ namespace Gst.Audio {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioRingBuffer), ConnectionMethod="OverrideCommit")]
-		protected virtual uint OnCommit (ulong sample, byte data, int in_samples, int out_samples, int accum)
+		protected virtual uint OnCommit (ulong sample, byte[] data, int in_samples, int out_samples, ref int accum)
 		{
-			return InternalCommit (sample, data, in_samples, out_samples, accum);
+			return InternalCommit (sample, data, in_samples, out_samples, ref accum);
 		}
 
-		private uint InternalCommit (ulong sample, byte data, int in_samples, int out_samples, int accum)
+		private uint InternalCommit (ulong sample, byte[] data, int in_samples, int out_samples, ref int accum)
 		{
 			CommitNativeDelegate unmanaged = null;
 			unsafe {
@@ -778,7 +778,7 @@ namespace Gst.Audio {
 			}
 			if (unmanaged == null) return 0;
 
-			uint __result = unmanaged (this.Handle, sample, data, in_samples, out_samples, accum);
+			uint __result = unmanaged (this.Handle, sample, data, in_samples, out_samples, ref accum);
 			return __result;
 		}
 
@@ -1038,19 +1038,19 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_audio_ring_buffer_commit(IntPtr raw, ulong sample, byte data, int in_samples, int out_samples, int accum);
+		static extern uint gst_audio_ring_buffer_commit(IntPtr raw, ulong sample, byte[] data, int in_samples, int out_samples, ref int accum);
 
-		public uint Commit(ulong sample, byte data, int in_samples, int out_samples, int accum) {
-			uint raw_ret = gst_audio_ring_buffer_commit(Handle, sample, data, in_samples, out_samples, accum);
+		public uint Commit(ulong sample, byte[] data, int in_samples, int out_samples, ref int accum) {
+			uint raw_ret = gst_audio_ring_buffer_commit(Handle, sample, data, in_samples, out_samples, ref accum);
 			uint ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_ring_buffer_convert(IntPtr raw, int src_fmt, long src_val, int dest_fmt, long dest_val);
+		static extern bool gst_audio_ring_buffer_convert(IntPtr raw, int src_fmt, long src_val, int dest_fmt, out long dest_val);
 
-		public bool Convert(Gst.Format src_fmt, long src_val, Gst.Format dest_fmt, long dest_val) {
-			bool raw_ret = gst_audio_ring_buffer_convert(Handle, (int) src_fmt, src_val, (int) dest_fmt, dest_val);
+		public bool Convert(Gst.Format src_fmt, long src_val, Gst.Format dest_fmt, out long dest_val) {
+			bool raw_ret = gst_audio_ring_buffer_convert(Handle, (int) src_fmt, src_val, (int) dest_fmt, out dest_val);
 			bool ret = raw_ret;
 			return ret;
 		}
@@ -1132,19 +1132,10 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_ring_buffer_prepare_read(IntPtr raw, int segment, byte readptr, int len);
+		static extern uint gst_audio_ring_buffer_read(IntPtr raw, ulong sample, byte[] data, uint len, out ulong timestamp);
 
-		public bool PrepareRead(int segment, byte readptr, int len) {
-			bool raw_ret = gst_audio_ring_buffer_prepare_read(Handle, segment, readptr, len);
-			bool ret = raw_ret;
-			return ret;
-		}
-
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_audio_ring_buffer_read(IntPtr raw, ulong sample, byte data, uint len, ulong timestamp);
-
-		public uint Read(ulong sample, byte data, uint len, ulong timestamp) {
-			uint raw_ret = gst_audio_ring_buffer_read(Handle, sample, data, len, timestamp);
+		public uint Read(ulong sample, byte[] data, uint len, out ulong timestamp) {
+			uint raw_ret = gst_audio_ring_buffer_read(Handle, sample, data, len, out timestamp);
 			uint ret = raw_ret;
 			return ret;
 		}
@@ -1187,11 +1178,15 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_ring_buffer_set_channel_positions(IntPtr raw, int position);
+		static extern void gst_audio_ring_buffer_set_channel_positions(IntPtr raw, int[] position);
 
-		public Gst.Audio.AudioChannelPosition ChannelPositions { 
+		public Gst.Audio.AudioChannelPosition[] ChannelPositions { 
 			set {
-				gst_audio_ring_buffer_set_channel_positions(Handle, (int) value);
+				int cnt_value = value == null ? 0 : value.Length;
+				int[] native_value = new int [cnt_value];
+				for (int i = 0; i < cnt_value; i++)
+					native_value [i] = (int) value[i];
+				gst_audio_ring_buffer_set_channel_positions(Handle, native_value);
 			}
 		}
 

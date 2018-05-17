@@ -93,13 +93,13 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_transport_get_manager(int trans, IntPtr manager, uint option);
+		static extern int gst_rtsp_transport_get_manager(int trans, out IntPtr manager, uint option);
 
-		public static Gst.Rtsp.RTSPResult GetManager(Gst.Rtsp.RTSPTransMode trans, string manager, uint option) {
-			IntPtr native_manager = GLib.Marshaller.StringToPtrGStrdup (manager);
-			int raw_ret = gst_rtsp_transport_get_manager((int) trans, native_manager, option);
+		public static Gst.Rtsp.RTSPResult GetManager(Gst.Rtsp.RTSPTransMode trans, out string manager, uint option) {
+			IntPtr native_manager;
+			int raw_ret = gst_rtsp_transport_get_manager((int) trans, out native_manager, option);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
-			GLib.Marshaller.Free (native_manager);
+			manager = GLib.Marshaller.Utf8PtrToString (native_manager);
 			return ret;
 		}
 

@@ -176,10 +176,10 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern ulong gst_rtp_buffer_ext_timestamp(ulong exttimestamp, uint timestamp);
+		static extern ulong gst_rtp_buffer_ext_timestamp(ref ulong exttimestamp, uint timestamp);
 
-		public static ulong RtpBufferExtTimestamp(ulong exttimestamp, uint timestamp) {
-			ulong raw_ret = gst_rtp_buffer_ext_timestamp(exttimestamp, timestamp);
+		public static ulong RtpBufferExtTimestamp(ref ulong exttimestamp, uint timestamp) {
+			ulong raw_ret = gst_rtp_buffer_ext_timestamp(ref exttimestamp, timestamp);
 			ulong ret = raw_ret;
 			return ret;
 		}
@@ -233,19 +233,19 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_hdrext_get_ntp_56(IntPtr data, uint size, ulong ntptime);
+		static extern bool gst_rtp_hdrext_get_ntp_56(IntPtr[] data, uint size, out ulong ntptime);
 
-		public static bool RtpHdrextGetNtp56(IntPtr data, uint size, ulong ntptime) {
-			bool raw_ret = gst_rtp_hdrext_get_ntp_56(data, size, ntptime);
+		public static bool RtpHdrextGetNtp56(IntPtr[] data, uint size, out ulong ntptime) {
+			bool raw_ret = gst_rtp_hdrext_get_ntp_56(data, size, out ntptime);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_hdrext_get_ntp_64(IntPtr data, uint size, ulong ntptime);
+		static extern bool gst_rtp_hdrext_get_ntp_64(IntPtr[] data, uint size, out ulong ntptime);
 
-		public static bool RtpHdrextGetNtp64(IntPtr data, uint size, ulong ntptime) {
-			bool raw_ret = gst_rtp_hdrext_get_ntp_64(data, size, ntptime);
+		public static bool RtpHdrextGetNtp64(IntPtr[] data, uint size, out ulong ntptime) {
+			bool raw_ret = gst_rtp_hdrext_get_ntp_64(data, size, out ntptime);
 			bool ret = raw_ret;
 			return ret;
 		}

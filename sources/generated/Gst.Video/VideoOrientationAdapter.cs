@@ -37,14 +37,14 @@ namespace Gst.Video {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool GetHflipNativeDelegate (IntPtr inst, bool flip);
+		delegate bool GetHflipNativeDelegate (IntPtr inst, out bool flip);
 
-		static bool GetHflip_cb (IntPtr inst, bool flip)
+		static bool GetHflip_cb (IntPtr inst, out bool flip)
 		{
 			try {
 				IVideoOrientationImplementor __obj = GLib.Object.GetObject (inst, false) as IVideoOrientationImplementor;
 				bool __result;
-				__result = __obj.GetHflip (flip);
+				__result = __obj.GetHflip (out flip);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -54,14 +54,14 @@ namespace Gst.Video {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool GetVflipNativeDelegate (IntPtr inst, bool flip);
+		delegate bool GetVflipNativeDelegate (IntPtr inst, out bool flip);
 
-		static bool GetVflip_cb (IntPtr inst, bool flip)
+		static bool GetVflip_cb (IntPtr inst, out bool flip)
 		{
 			try {
 				IVideoOrientationImplementor __obj = GLib.Object.GetObject (inst, false) as IVideoOrientationImplementor;
 				bool __result;
-				__result = __obj.GetVflip (flip);
+				__result = __obj.GetVflip (out flip);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -71,14 +71,14 @@ namespace Gst.Video {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool GetHcenterNativeDelegate (IntPtr inst, int center);
+		delegate bool GetHcenterNativeDelegate (IntPtr inst, out int center);
 
-		static bool GetHcenter_cb (IntPtr inst, int center)
+		static bool GetHcenter_cb (IntPtr inst, out int center)
 		{
 			try {
 				IVideoOrientationImplementor __obj = GLib.Object.GetObject (inst, false) as IVideoOrientationImplementor;
 				bool __result;
-				__result = __obj.GetHcenter (center);
+				__result = __obj.GetHcenter (out center);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -88,14 +88,14 @@ namespace Gst.Video {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool GetVcenterNativeDelegate (IntPtr inst, int center);
+		delegate bool GetVcenterNativeDelegate (IntPtr inst, out int center);
 
-		static bool GetVcenter_cb (IntPtr inst, int center)
+		static bool GetVcenter_cb (IntPtr inst, out int center)
 		{
 			try {
 				IVideoOrientationImplementor __obj = GLib.Object.GetObject (inst, false) as IVideoOrientationImplementor;
 				bool __result;
-				__result = __obj.GetVcenter (center);
+				__result = __obj.GetVcenter (out center);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -266,37 +266,37 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_orientation_get_hcenter(IntPtr raw, int center);
+		static extern bool gst_video_orientation_get_hcenter(IntPtr raw, out int center);
 
-		public bool GetHcenter(int center) {
-			bool raw_ret = gst_video_orientation_get_hcenter(Handle, center);
+		public bool GetHcenter(out int center) {
+			bool raw_ret = gst_video_orientation_get_hcenter(Handle, out center);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_orientation_get_hflip(IntPtr raw, bool flip);
+		static extern bool gst_video_orientation_get_hflip(IntPtr raw, out bool flip);
 
-		public bool GetHflip(bool flip) {
-			bool raw_ret = gst_video_orientation_get_hflip(Handle, flip);
+		public bool GetHflip(out bool flip) {
+			bool raw_ret = gst_video_orientation_get_hflip(Handle, out flip);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_orientation_get_vcenter(IntPtr raw, int center);
+		static extern bool gst_video_orientation_get_vcenter(IntPtr raw, out int center);
 
-		public bool GetVcenter(int center) {
-			bool raw_ret = gst_video_orientation_get_vcenter(Handle, center);
+		public bool GetVcenter(out int center) {
+			bool raw_ret = gst_video_orientation_get_vcenter(Handle, out center);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_orientation_get_vflip(IntPtr raw, bool flip);
+		static extern bool gst_video_orientation_get_vflip(IntPtr raw, out bool flip);
 
-		public bool GetVflip(bool flip) {
-			bool raw_ret = gst_video_orientation_get_vflip(Handle, flip);
+		public bool GetVflip(out bool flip) {
+			bool raw_ret = gst_video_orientation_get_vflip(Handle, out flip);
 			bool ret = raw_ret;
 			return ret;
 		}

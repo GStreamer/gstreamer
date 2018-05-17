@@ -229,10 +229,10 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_info_convert(IntPtr raw, int src_format, long src_value, int dest_format, long dest_value);
+		static extern bool gst_video_info_convert(IntPtr raw, int src_format, long src_value, int dest_format, out long dest_value);
 
-		public bool Convert(Gst.Format src_format, long src_value, Gst.Format dest_format, long dest_value) {
-			bool raw_ret = gst_video_info_convert(Handle, (int) src_format, src_value, (int) dest_format, dest_value);
+		public bool Convert(Gst.Format src_format, long src_value, Gst.Format dest_format, out long dest_value) {
+			bool raw_ret = gst_video_info_convert(Handle, (int) src_format, src_value, (int) dest_format, out dest_value);
 			bool ret = raw_ret;
 			return ret;
 		}

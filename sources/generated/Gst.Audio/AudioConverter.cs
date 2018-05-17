@@ -43,12 +43,12 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_audio_converter_get_config(IntPtr raw, int in_rate, int out_rate);
+		static extern IntPtr gst_audio_converter_get_config(IntPtr raw, out int in_rate, out int out_rate);
 
-		public Gst.Structure GetConfig(int in_rate, int out_rate) {
+		public Gst.Structure GetConfig(out int in_rate, out int out_rate) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			IntPtr raw_ret = gst_audio_converter_get_config(this_as_native, in_rate, out_rate);
+			IntPtr raw_ret = gst_audio_converter_get_config(this_as_native, out in_rate, out out_rate);
 			Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
