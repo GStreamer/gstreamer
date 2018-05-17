@@ -1,3 +1,50 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:34:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-04-20 18:45:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Properly error out when linking fails
+	  In the rendering case we were getting random issues and often the
+	  pipeline was not be able to preroll as some pad were not linked inside
+	  encodebin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795422
+
+2018-04-20 17:34:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  xml-formatter: Print error if an effect can't be set when deserializing
+
+2018-04-20 17:36:55 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Update caps only when rendering as comment suggests
+	  We used to update caps for any more because of missing brackets.
+
+2018-04-20 17:56:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Stop forcing I420 in profiles restriction caps
+	  This was a workaround for encoders bad behavior in the reconfigure case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795420
+
+2018-05-13 21:12:35 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/python/test_timeline.py:
+	  clip: Make sure to never snap when splitting clips
+	  It makes no sense to snap in that context.
+	  https://gitlab.gnome.org/GNOME/pitivi/issues/2193
+
 === release 1.14.0 ===
 
 2018-03-19 20:28:10 +0000  Tim-Philipp Müller <tim@centricular.com>
