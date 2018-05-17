@@ -1,3 +1,43 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:26:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-05-17 13:26:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2018-05-17 12:37:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/hr.po:
+	  Update translations
+
+2018-04-16 20:13:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Set the stream-format field of H264 streams
+	  If we have codec_data it will be AVC, otherwise assume byte-stream.
+
 === release 1.14.0 ===
 
 2018-03-19 20:19:43 +0000  Tim-Philipp Müller <tim@centricular.com>
