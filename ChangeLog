@@ -1,3 +1,91 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:36:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-05-17 13:36:46 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2018-04-26 18:15:47 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideocontext.h:
+	  plugin: remove custom GstGL context handling
+	  Instead of using our own context handling for looking for GstGL
+	  parameters (display, context and other context), this patch changes
+	  the logic to use the utility function offered by GstGL.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793643
+
+2018-04-26 15:03:23 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: GstGL API must use the member variables
+	  This commit basically is a revert of commits 8092537 and fc1c415
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793643
+
+2018-04-25 16:24:32 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst/vaapi/gstvaapipluginbase.c:
+	  plugins: pass members as parameters of gst_gl_ensure_element_data()
+	  The parameters of gst_gl_ensure_element_data() have to be not
+	  local variable since they are going to be used to see if they're
+	  set in gst_element_set_context() inside the API.
+	  This is basically a revert of commit 3d56306c
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793643
+
+2018-04-25 17:50:14 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	  meson: fix USE_GLES_VERSION_MASK
+	  1. The macro in the code is USE_GLES_VERSION_MASK
+	  2. glesv3 is provided by glesv2 pkg-config, then it's required to
+	  check headers
+	  3. fix syntax error
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795391
+
+2018-04-24 18:12:44 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	  libs: egl: utils: mark context as wrapped when it is
+	  The returning egl context may be null, so we should check the
+	  return value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795391
+
+2018-04-24 10:02:33 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	  libs: egl: utils: fix usage of GstGL macros
+	  Include gl.h for the required GstGL symbols.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795391
+
+2018-04-13 09:28:53 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  wayland: don't poll if there are no pending frames
+	  Otherwise the following poll may not return for an arbitrary amount of
+	  time. This can happen if another wayland event queue has flushed and read
+	  our events.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795224
+
+2018-03-30 20:39:18 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: find best profile in those available
+	  Instead to look for the best profile in the allowed profiles by
+	  downstream, the encoder should look for the base profile in the
+	  available profile in VA-API.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794306
+
 === release 1.14.0 ===
 
 2018-03-19 20:30:28 +0000  Tim-Philipp Müller <tim@centricular.com>
@@ -13082,8 +13170,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.9 ===
-
 2014-07-29 10:31:58 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* AUTHORS:
@@ -14761,8 +14847,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.5.8 ===
 
 2014-01-24 10:55:39 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -16776,8 +16860,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.7 ===
-
 2013-11-22 11:28:09 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst/vaapi/Makefile.am:
@@ -17777,8 +17859,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.6 ===
-
 2013-08-31 15:47:33 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -18325,8 +18405,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.5 ===
-
 2013-07-15 17:49:31 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg2.c:
@@ -18863,8 +18941,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.5.4 ===
 
 2013-06-14 11:47:50 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -19412,8 +19488,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.3 ===
-
 2013-04-18 19:09:45 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -19911,8 +19985,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.2 ===
-
 2013-03-28 10:18:51 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -20398,8 +20470,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.1 ===
-
 2013-01-30 09:37:38 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -20863,8 +20933,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.5.0 ===
 
 2013-01-15 09:21:08 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -23901,8 +23969,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.3.6 ===
-
 2012-04-02 10:07:33 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* configure.ac:
@@ -24216,8 +24282,6 @@
 	  bitstream. i.e. the direct slice() information. VA drivers will be fixed
 	  accordingly.
 
-=== release 0.3.5 ===
-
 2012-03-02 15:03:57 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst/vaapi/gstvaapidecode.c:
@@ -24390,8 +24454,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.3.4 ===
 
 2012-02-01 23:34:09 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -24669,8 +24731,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.3.3 ===
 
 2012-01-16 11:05:31 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -25105,8 +25165,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.3.2 ===
-
 2012-01-06 11:20:48 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -25233,8 +25291,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.3.1 ===
 
 2012-01-03 13:42:12 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -25415,8 +25471,6 @@
 	* gst-libs/gst/video/gstbasevideoutils.c:
 	* gst-libs/gst/video/gstbasevideoutils.h:
 	  Drop unused copy of GstBaseVideoDecoder.
-
-=== release 0.3.0 ===
 
 2011-12-09 11:46:45 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -25848,8 +25902,6 @@
 	* tests/Makefile.am:
 	  Fix build with libva headers not in a standard include dir.
 
-=== release 0.2.6 ===
-
 2011-06-14 15:59:08 +0200  Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>
 
 	* configure.ac:
@@ -26064,8 +26116,6 @@
 	* gst-libs/gst/vaapi/gstvaapicompat.h:
 	  Fix build with older VA-API 0.29-sds.
 
-=== release 0.2.4 ===
-
 2010-05-18 11:22:54 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst/vaapisink/gstvaapisink.c:
@@ -26098,8 +26148,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.2.3 ===
 
 2010-05-16 21:44:17 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -26177,8 +26225,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.2.2 ===
-
 2010-05-13 21:52:22 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* NEWS:
@@ -26246,8 +26292,6 @@
 
 	* gst/vaapisink/gstvaapisink.c:
 	  Use XGetGeometry() to retrieve the window size.
-
-=== release 0.2.1 ===
 
 2010-05-12 19:40:30 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -26398,8 +26442,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.2.0 ===
 
 2010-05-05 12:29:28 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -27113,8 +27155,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.1.2 ===
-
 2010-03-30 13:29:34 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* configure.ac:
@@ -27784,8 +27824,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.1.1 ===
-
 2010-03-23 17:29:47 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst-libs/gst/vaapi/gstvaapiutils_x11.c:
@@ -28314,8 +28352,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.1.0 ===
 
 2010-03-16 14:07:53 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
