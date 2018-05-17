@@ -1,3 +1,46 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:32:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.14.1
+
+2018-05-17 13:32:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2014-07-12 15:26:36 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/libav/gstavdemux.c:
+	  gstavdemux: adjust seeking offset according to start_time
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733094
+
+2018-05-01 14:57:43 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/ext/gas-preprocessor:
+	  Update gas-preprocessor submodule
+
+2018-05-01 05:19:28 +1000  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	  configure: Always use full path for gas-preprocessor PATH entry
+	  Don't pass a relative path to gas-preprocessor, always use an
+	  absolute path to make sure it's found
+
+2018-04-28 00:14:45 +1000  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	  configure: fix handling of the input AS var passed to ffmpeg
+	  Store the original AS environment variable passed to configure
+	  correctly, and export it so it's actually available to the sub-process
+	  when configuring the embedded ffmpeg
+
 === release 1.14.0 ===
 
 2018-03-19 20:25:38 +0000  Tim-Philipp Müller <tim@centricular.com>
