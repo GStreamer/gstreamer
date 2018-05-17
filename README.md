@@ -34,13 +34,12 @@ is triggered right after.
 Updating to new GStreamer version
 --------------------------------
 
-* Make sure [bindinator] is installed on the system
-
-Make sure you are in an environement where latest `.gir` files are available (either install
-or through the `$GI_TYPELIB_PATH` env var).
+Make sure you are in an environement where latest `.gir` files are available (either installed
+or through the `$GI_TYPELIB_PATH` env var), those files are automatically copied to `girs/`.
 
     ninja -C update-all
 
+* Verify newly copied gir files in `girs/` and `git add` them
 * Verify newly generated code and `git add` files in `sources/generated/` and `ges/generated`
 * Commit
 
