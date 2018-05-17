@@ -1,3 +1,57 @@
+=== release 1.14.1 ===
+
+2018-05-17 13:35:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.14.1
+
+2018-05-15 14:40:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Error out loudly if the testlist changes
+	  When --fail-on-testlist-change is set.
+
+2018-05-15 14:35:30 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/reporters.py:
+	  validate:launcher: Do not print time spent if the testsuite never started
+
+2018-04-28 10:15:17 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/configure.ac:
+	  validate: Set TESTSUITE_VERSION to 1.14 in configure.ac
+
+2018-04-28 10:16:09 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Pass baseclass.py into autopep8
+
+2018-04-28 10:15:17 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Make sure testsuites are used/configured once only
+
+2018-05-07 17:30:13 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Remove hls.*seek_with_stop blacklisting
+	  The issue is closed upstream (because of concentrating on decodebin3
+	  instead), and initial forever testing seems to show the issue doesn't
+	  happen anymore
+
+2018-04-25 10:57:14 +0800  Kai Kang <kai.kang@windriver.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: fix out of source tree build error
+	  It fails to generate gst-validate-enum-types.h and gst-validate-enum-types.c
+	  when build out of source tree. Add the path for template files.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795531
+	  Signed-off-by: Kai Kang <kai.kang@windriver.com>
+
 === release 1.14.0 ===
 
 2018-03-19 20:29:07 +0000  Tim-Philipp Müller <tim@centricular.com>
