@@ -4199,6 +4199,10 @@ fill_RefPicList (GstVaapiDecoderH264 * decoder,
   slice_param->num_ref_idx_l0_active_minus1 = 0;
   slice_param->num_ref_idx_l1_active_minus1 = 0;
 
+  /* ensure empty list by default */
+  vaapi_init_picture (&slice_param->RefPicList0[0]);
+  vaapi_init_picture (&slice_param->RefPicList1[0]);
+
   if (GST_H264_IS_B_SLICE (slice_hdr))
     num_ref_lists = 2;
   else if (GST_H264_IS_I_SLICE (slice_hdr))
@@ -4215,7 +4219,7 @@ fill_RefPicList (GstVaapiDecoderH264 * decoder,
   for (i = 0; i < priv->RefPicList0_count && priv->RefPicList0[i]; i++)
     vaapi_fill_picture_for_RefPicListX (&slice_param->RefPicList0[i],
         priv->RefPicList0[i]);
-  for (; i <= slice_param->num_ref_idx_l0_active_minus1; i++)
+  if (i < 32)
     vaapi_init_picture (&slice_param->RefPicList0[i]);
 
   if (num_ref_lists < 2)
@@ -4227,8 +4231,9 @@ fill_RefPicList (GstVaapiDecoderH264 * decoder,
   for (i = 0; i < priv->RefPicList1_count && priv->RefPicList1[i]; i++)
     vaapi_fill_picture_for_RefPicListX (&slice_param->RefPicList1[i],
         priv->RefPicList1[i]);
-  for (; i <= slice_param->num_ref_idx_l1_active_minus1; i++)
+  if (i < 32)
     vaapi_init_picture (&slice_param->RefPicList1[i]);
+
   return TRUE;
 }
 
