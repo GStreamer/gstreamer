@@ -66,6 +66,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined (USE_OMX_TARGET_RPI)
 #include <bcm_host.h>
+#include <EGL/eglext.h>
 #elif defined(HAVE_X11)
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
