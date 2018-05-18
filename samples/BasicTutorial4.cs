@@ -66,11 +66,11 @@ namespace GstreamerSharp
 						}
 
 						// Print current position and total duration
-						Console.WriteLine ("Position {0} / {1}", new TimeSpan (current), new TimeSpan (duration));
+						Console.Write("Position {0} / {1}\r", new TimeSpan (current), new TimeSpan (duration));
 
-						if (seekEnabled && seekDone && current > 10L * Constants.SECOND) {
-							Console.WriteLine ("Readed 10s, performing seek...");
-							playbin.SeekSimple (fmt, SeekFlags.KeyUnit, 30L * Constants.SECOND);
+						if (seekEnabled && !seekDone && current > 10L * Constants.SECOND) {
+							Console.WriteLine ("\nRead 10s, performing seek...");
+							playbin.SeekSimple (fmt, SeekFlags.KeyUnit | SeekFlags.Flush, 30L * Constants.SECOND);
 							seekDone = true;
 						}
 					}
