@@ -98,6 +98,9 @@ struct _GstVaapiDecoderVC1Class
   GstVaapiDecoderClass parent_class;
 };
 
+G_DEFINE_TYPE (GstVaapiDecoderVC1, gst_vaapi_decoder_vc1,
+    GST_TYPE_VAAPI_DECODER);
+
 static GstVaapiDecoderStatus
 get_status (GstVC1ParserResult result)
 {
@@ -1426,14 +1429,21 @@ gst_vaapi_decoder_vc1_flush (GstVaapiDecoder * base_decoder)
 }
 
 static void
+gst_vaapi_decoder_vc1_finalize (GObject * object)
+{
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (object);
+
+  gst_vaapi_decoder_vc1_destroy (base_decoder);
+  G_OBJECT_CLASS (gst_vaapi_decoder_vc1_parent_class)->finalize (object);
+}
+
+static void
 gst_vaapi_decoder_vc1_class_init (GstVaapiDecoderVC1Class * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
 
-  object_class->size = sizeof (GstVaapiDecoderVC1);
-  object_class->finalize = (GDestroyNotify) gst_vaapi_decoder_finalize;
+  object_class->finalize = gst_vaapi_decoder_vc1_finalize;
 
   decoder_class->create = gst_vaapi_decoder_vc1_create;
   decoder_class->destroy = gst_vaapi_decoder_vc1_destroy;
@@ -1446,17 +1456,12 @@ gst_vaapi_decoder_vc1_class_init (GstVaapiDecoderVC1Class * klass)
   decoder_class->decode_codec_data = gst_vaapi_decoder_vc1_decode_codec_data;
 }
 
-static inline const GstVaapiDecoderClass *
-gst_vaapi_decoder_vc1_class (void)
+static void
+gst_vaapi_decoder_vc1_init (GstVaapiDecoderVC1 * decoder)
 {
-  static GstVaapiDecoderVC1Class g_class;
-  static gsize g_class_init = FALSE;
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (decoder);
 
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_decoder_vc1_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_DECODER_CLASS (&g_class);
+  gst_vaapi_decoder_vc1_create (base_decoder);
 }
 
 /**
@@ -1472,5 +1477,6 @@ gst_vaapi_decoder_vc1_class (void)
 GstVaapiDecoder *
 gst_vaapi_decoder_vc1_new (GstVaapiDisplay * display, GstCaps * caps)
 {
-  return gst_vaapi_decoder_new (gst_vaapi_decoder_vc1_class (), display, caps);
+  return g_object_new (GST_TYPE_VAAPI_DECODER_VC1, "display", display,
+      "caps", caps, NULL);
 }

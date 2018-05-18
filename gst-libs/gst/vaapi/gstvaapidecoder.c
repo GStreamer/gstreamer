@@ -38,6 +38,16 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+enum
+{
+  PROP_DISPLAY = 1,
+  PROP_CAPS,
+  N_PROPERTIES
+};
+static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
+
+G_DEFINE_TYPE (GstVaapiDecoder, gst_vaapi_decoder, GST_TYPE_OBJECT);
+
 static void drop_frame (GstVaapiDecoder * decoder, GstVideoCodecFrame * frame);
 
 static void
@@ -453,14 +463,10 @@ notify_codec_state_changed (GstVaapiDecoder * decoder)
         decoder->codec_state_changed_data);
 }
 
-void
-gst_vaapi_decoder_finalize (GstVaapiDecoder * decoder)
+static void
+gst_vaapi_decoder_finalize (GObject * object)
 {
-  const GstVaapiDecoderClass *const klass =
-      GST_VAAPI_DECODER_GET_CLASS (decoder);
-
-  if (klass->destroy)
-    klass->destroy (decoder);
+  GstVaapiDecoder *const decoder = GST_VAAPI_DECODER (object);
 
   gst_video_codec_state_unref (decoder->codec_state);
   decoder->codec_state = NULL;
@@ -482,16 +488,90 @@ gst_vaapi_decoder_finalize (GstVaapiDecoder * decoder)
 
   gst_vaapi_display_replace (&decoder->display, NULL);
   decoder->va_display = NULL;
+
+  G_OBJECT_CLASS (gst_vaapi_decoder_parent_class)->finalize (object);
 }
 
-static gboolean
-gst_vaapi_decoder_init (GstVaapiDecoder * decoder, GstVaapiDisplay * display,
-    GstCaps * caps)
+static void
+gst_vaapi_decoder_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  const GstVaapiDecoderClass *const klass =
-      GST_VAAPI_DECODER_GET_CLASS (decoder);
+  GstVaapiDecoder *const decoder = GST_VAAPI_DECODER (object);
+
+  switch (property_id) {
+    case PROP_DISPLAY:
+      g_assert (decoder->display == NULL);
+      decoder->display = g_value_dup_object (value);
+      g_assert (decoder->display != NULL);
+      decoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (decoder->display);
+      break;
+    case PROP_CAPS:{
+      GstCaps *caps = g_value_get_boxed (value);
+      if (!set_caps (decoder, caps)) {
+        GST_WARNING_OBJECT (decoder, "failed to set caps %" GST_PTR_FORMAT,
+            caps);
+      }
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_decoder_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiDecoder *const decoder = GST_VAAPI_DECODER (object);
+
+  switch (property_id) {
+    case PROP_DISPLAY:
+      g_value_set_object (value, decoder->display);
+      break;
+    case PROP_CAPS:
+      g_value_set_boxed (value, get_caps (decoder));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_decoder_class_init (GstVaapiDecoderClass * klass)
+{
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+
+  object_class->set_property = gst_vaapi_decoder_set_property;
+  object_class->get_property = gst_vaapi_decoder_get_property;
+  object_class->finalize = gst_vaapi_decoder_finalize;
+
+  /**
+   * GstVaapiDecoder:display:
+   *
+   * #GstVaapiDisplay to be used.
+   */
+  g_properties[PROP_DISPLAY] =
+      g_param_spec_object ("display", "Gst VA-API Display",
+      "The VA-API display object to use", GST_TYPE_VAAPI_DISPLAY,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
+
+  /**
+   * GstCaps:caps:
+   *
+   * #GstCaps the caps describing the media to process.
+   */
+  g_properties[PROP_CAPS] =
+      g_param_spec_boxed ("caps", "Caps",
+      "The caps describing the media to process", GST_TYPE_CAPS,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
+
+  g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
+}
+
+static void
+gst_vaapi_decoder_init (GstVaapiDecoder * decoder)
+{
   GstVideoCodecState *codec_state;
-  guint sub_size;
 
   parser_state_init (&decoder->parser_state);
 
@@ -499,56 +579,21 @@ gst_vaapi_decoder_init (GstVaapiDecoder * decoder, GstVaapiDisplay * display,
   codec_state->ref_count = 1;
   gst_video_info_init (&codec_state->info);
 
-  decoder->user_data = NULL;
-  decoder->display = gst_object_ref (display);
-  decoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display);
-  decoder->context = NULL;
   decoder->va_context = VA_INVALID_ID;
-  decoder->codec = 0;
   decoder->codec_state = codec_state;
-  decoder->codec_state_changed_func = NULL;
-  decoder->codec_state_changed_data = NULL;
-
   decoder->buffers = g_async_queue_new_full ((GDestroyNotify) gst_buffer_unref);
   decoder->frames = g_async_queue_new_full ((GDestroyNotify)
       gst_video_codec_frame_unref);
-
-  if (!set_caps (decoder, caps))
-    return FALSE;
-
-  sub_size = GST_VAAPI_MINI_OBJECT_CLASS (klass)->size - sizeof (*decoder);
-  if (sub_size > 0)
-    memset (((guchar *) decoder) + sizeof (*decoder), 0, sub_size);
-
-  if (klass->create && !klass->create (decoder))
-    return FALSE;
-  return TRUE;
 }
 
 GstVaapiDecoder *
-gst_vaapi_decoder_new (const GstVaapiDecoderClass * klass,
-    GstVaapiDisplay * display, GstCaps * caps)
+gst_vaapi_decoder_new (GstVaapiDisplay * display, GstCaps * caps)
 {
-  GstVaapiDecoder *decoder;
-
   g_return_val_if_fail (display != NULL, NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  decoder = (GstVaapiDecoder *)
-      gst_vaapi_mini_object_new (GST_VAAPI_MINI_OBJECT_CLASS (klass));
-  if (!decoder)
-    return NULL;
-
-  if (!gst_vaapi_decoder_init (decoder, display, caps))
-    goto error;
-  return decoder;
-
-  /* ERRORS */
-error:
-  {
-    gst_vaapi_decoder_unref (decoder);
-    return NULL;
-  }
+  return g_object_new (GST_TYPE_VAAPI_DECODER, "display", display,
+      "caps", caps, NULL);
 }
 
 /**
@@ -562,7 +607,7 @@ error:
 GstVaapiDecoder *
 gst_vaapi_decoder_ref (GstVaapiDecoder * decoder)
 {
-  return gst_vaapi_object_ref (decoder);
+  return gst_object_ref (decoder);
 }
 
 /**
@@ -575,7 +620,7 @@ gst_vaapi_decoder_ref (GstVaapiDecoder * decoder)
 void
 gst_vaapi_decoder_unref (GstVaapiDecoder * decoder)
 {
-  gst_vaapi_object_unref (decoder);
+  gst_object_unref (decoder);
 }
 
 /**
@@ -591,8 +636,7 @@ void
 gst_vaapi_decoder_replace (GstVaapiDecoder ** old_decoder_ptr,
     GstVaapiDecoder * new_decoder)
 {
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_decoder_ptr,
-      GST_VAAPI_MINI_OBJECT (new_decoder));
+  gst_object_replace ((GstObject **) old_decoder_ptr, GST_OBJECT (new_decoder));
 }
 
 /**

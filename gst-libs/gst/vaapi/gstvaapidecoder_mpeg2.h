@@ -28,10 +28,20 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DECODER_MPEG2 \
+    (gst_vaapi_decoder_mpeg2_get_type ())
+#define GST_VAAPI_DECODER_MPEG2(decoder) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DECODER_MPEG2, GstVaapiDecoderMpeg2))
+#define GST_VAAPI_IS_DECODER_MPEG2(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DECODER_MPEG2))
+
 typedef struct _GstVaapiDecoderMpeg2            GstVaapiDecoderMpeg2;
 
+GType
+gst_vaapi_decoder_mpeg2_get_type (void) G_GNUC_CONST;
+
 GstVaapiDecoder *
-gst_vaapi_decoder_mpeg2_new(GstVaapiDisplay *display, GstCaps *caps);
+gst_vaapi_decoder_mpeg2_new (GstVaapiDisplay *display, GstCaps *caps);
 
 G_END_DECLS
 

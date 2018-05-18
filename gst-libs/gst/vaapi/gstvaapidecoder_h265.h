@@ -28,8 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_DECODER_H265(decoder) \
-    ((GstVaapiDecoderH265 *)(decoder))
+#define GST_TYPE_VAAPI_DECODER_H265 \
+    (gst_vaapi_decoder_h265_get_type ())
+#define GST_VAAPI_DECODER_H265(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DECODER_H265, GstVaapiDecoderH265))
+#define GST_VAAPI_IS_DECODER_H265(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DECODER_H265))
 
 typedef struct _GstVaapiDecoderH265             GstVaapiDecoderH265;
 
@@ -49,11 +53,14 @@ typedef enum {
     GST_VAAPI_STREAM_ALIGN_H265_AU
 } GstVaapiStreamAlignH265;
 
+GType
+gst_vaapi_decoder_h265_get_type (void) G_GNUC_CONST;
+
 GstVaapiDecoder *
-gst_vaapi_decoder_h265_new(GstVaapiDisplay *display, GstCaps *caps);
+gst_vaapi_decoder_h265_new (GstVaapiDisplay *display, GstCaps *caps);
 
 void
-gst_vaapi_decoder_h265_set_alignment(GstVaapiDecoderH265 *decoder,
+gst_vaapi_decoder_h265_set_alignment (GstVaapiDecoderH265 *decoder,
     GstVaapiStreamAlignH265 alignment);
 
 G_END_DECLS

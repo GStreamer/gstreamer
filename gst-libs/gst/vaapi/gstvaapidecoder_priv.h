@@ -25,11 +25,10 @@
 #ifndef GST_VAAPI_DECODER_PRIV_H
 #define GST_VAAPI_DECODER_PRIV_H
 
-#include <glib.h>
+#include "sysdeps.h"
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapidecoder_unit.h>
 #include <gst/vaapi/gstvaapicontext.h>
-#include "gstvaapiminiobject.h"
 
 G_BEGIN_DECLS
 
@@ -37,13 +36,13 @@ G_BEGIN_DECLS
     ((GstVaapiDecoder *)(decoder))
 
 #define GST_VAAPI_DECODER_CLASS(klass) \
-    ((GstVaapiDecoderClass *)(klass))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPI_DECODER, GstVaapiDecoderClass))
 
 #define GST_VAAPI_IS_DECODER_CLASS(klass) \
-    ((klass) != NULL))
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPI_DECODER))
 
 #define GST_VAAPI_DECODER_GET_CLASS(obj) \
-    GST_VAAPI_DECODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_DECODER, GstVaapiDecoderClass))
 
 typedef struct _GstVaapiDecoderClass GstVaapiDecoderClass;
 
@@ -187,7 +186,7 @@ struct _GstVaapiParserState
 struct _GstVaapiDecoder
 {
   /*< private >*/
-  GstVaapiMiniObject parent_instance;
+  GstObject parent_instance;
 
   gpointer user_data;
   GstVaapiDisplay *display;
@@ -211,7 +210,7 @@ struct _GstVaapiDecoder
 struct _GstVaapiDecoderClass
 {
   /*< private >*/
-  GstVaapiMiniObjectClass parent_class;
+  GstObjectClass parent_class;
 
   gboolean (*create) (GstVaapiDecoder * decoder);
   void (*destroy) (GstVaapiDecoder * decoder);
@@ -231,12 +230,7 @@ struct _GstVaapiDecoderClass
 
 G_GNUC_INTERNAL
 GstVaapiDecoder *
-gst_vaapi_decoder_new (const GstVaapiDecoderClass * klass,
-    GstVaapiDisplay * display, GstCaps * caps);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_decoder_finalize (GstVaapiDecoder * decoder);
+gst_vaapi_decoder_new (GstVaapiDisplay * display, GstCaps * caps);
 
 G_GNUC_INTERNAL
 void

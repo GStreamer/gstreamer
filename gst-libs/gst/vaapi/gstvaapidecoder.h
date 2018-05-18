@@ -32,8 +32,12 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DECODER \
+    (gst_vaapi_decoder_get_type ())
 #define GST_VAAPI_DECODER(obj) \
-    ((GstVaapiDecoder *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DECODER, GstVaapiDecoder))
+#define GST_VAAPI_IS_DECODER(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DECODER))
 
 typedef struct _GstVaapiDecoder GstVaapiDecoder;
 typedef void (*GstVaapiDecoderStateChangedFunc) (GstVaapiDecoder * decoder,
@@ -72,6 +76,9 @@ typedef enum {
   GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER,
   GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN = -1
 } GstVaapiDecoderStatus;
+
+GType
+gst_vaapi_decoder_get_type (void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_ref (GstVaapiDecoder * decoder);
@@ -140,6 +147,10 @@ gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder);
 
 gboolean
 gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps);
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoder, gst_vaapi_decoder_unref)
+#endif
 
 G_END_DECLS
 

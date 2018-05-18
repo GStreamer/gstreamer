@@ -96,6 +96,9 @@ struct _GstVaapiDecoderJpegClass
   GstVaapiDecoderClass parent_class;
 };
 
+G_DEFINE_TYPE (GstVaapiDecoderJpeg, gst_vaapi_decoder_jpeg,
+    GST_TYPE_VAAPI_DECODER);
+
 static inline void
 unit_set_marker_code (GstVaapiDecoderUnit * unit, GstJpegMarker marker)
 {
@@ -845,14 +848,21 @@ gst_vaapi_decoder_jpeg_end_frame (GstVaapiDecoder * base_decoder)
 }
 
 static void
+gst_vaapi_decoder_jpeg_finalize (GObject * object)
+{
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (object);
+
+  gst_vaapi_decoder_jpeg_destroy (base_decoder);
+  G_OBJECT_CLASS (gst_vaapi_decoder_jpeg_parent_class)->finalize (object);
+}
+
+static void
 gst_vaapi_decoder_jpeg_class_init (GstVaapiDecoderJpegClass * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
 
-  object_class->size = sizeof (GstVaapiDecoderJpeg);
-  object_class->finalize = (GDestroyNotify) gst_vaapi_decoder_finalize;
+  object_class->finalize = gst_vaapi_decoder_jpeg_finalize;
 
   decoder_class->create = gst_vaapi_decoder_jpeg_create;
   decoder_class->destroy = gst_vaapi_decoder_jpeg_destroy;
@@ -862,17 +872,12 @@ gst_vaapi_decoder_jpeg_class_init (GstVaapiDecoderJpegClass * klass)
   decoder_class->end_frame = gst_vaapi_decoder_jpeg_end_frame;
 }
 
-static inline const GstVaapiDecoderClass *
-gst_vaapi_decoder_jpeg_class (void)
+static void
+gst_vaapi_decoder_jpeg_init (GstVaapiDecoderJpeg * decoder)
 {
-  static GstVaapiDecoderJpegClass g_class;
-  static gsize g_class_init = FALSE;
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (decoder);
 
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_decoder_jpeg_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_DECODER_CLASS (&g_class);
+  gst_vaapi_decoder_jpeg_create (base_decoder);
 }
 
 /**
@@ -888,5 +893,6 @@ gst_vaapi_decoder_jpeg_class (void)
 GstVaapiDecoder *
 gst_vaapi_decoder_jpeg_new (GstVaapiDisplay * display, GstCaps * caps)
 {
-  return gst_vaapi_decoder_new (gst_vaapi_decoder_jpeg_class (), display, caps);
+  return g_object_new (GST_TYPE_VAAPI_DECODER_JPEG, "display", display,
+      "caps", caps, NULL);
 }

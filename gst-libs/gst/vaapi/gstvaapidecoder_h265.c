@@ -445,6 +445,9 @@ struct _GstVaapiDecoderH265Class
   GstVaapiDecoderClass parent_class;
 };
 
+G_DEFINE_TYPE (GstVaapiDecoderH265, gst_vaapi_decoder_h265,
+    GST_TYPE_VAAPI_DECODER);
+
 #define RSV_VCL_N10 10
 #define RSV_VCL_N12 12
 #define RSV_VCL_N14 14
@@ -3033,14 +3036,22 @@ gst_vaapi_decoder_h265_flush (GstVaapiDecoder * base_decoder)
 }
 
 static void
+gst_vaapi_decoder_h265_finalize (GObject * object)
+{
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (object);
+
+  gst_vaapi_decoder_h265_destroy (base_decoder);
+  G_OBJECT_CLASS (gst_vaapi_decoder_h265_parent_class)->finalize (object);
+}
+
+static void
 gst_vaapi_decoder_h265_class_init (GstVaapiDecoderH265Class * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
 
-  object_class->size = sizeof (GstVaapiDecoderH265);
-  object_class->finalize = (GDestroyNotify) gst_vaapi_decoder_finalize;
+  object_class->finalize = gst_vaapi_decoder_h265_finalize;
+
   decoder_class->create = gst_vaapi_decoder_h265_create;
   decoder_class->destroy = gst_vaapi_decoder_h265_destroy;
   decoder_class->parse = gst_vaapi_decoder_h265_parse;
@@ -3051,17 +3062,12 @@ gst_vaapi_decoder_h265_class_init (GstVaapiDecoderH265Class * klass)
   decoder_class->decode_codec_data = gst_vaapi_decoder_h265_decode_codec_data;
 }
 
-static inline const GstVaapiDecoderClass *
-gst_vaapi_decoder_h265_class (void)
+static void
+gst_vaapi_decoder_h265_init (GstVaapiDecoderH265 * decoder)
 {
-  static GstVaapiDecoderH265Class g_class;
-  static gsize g_class_init = FALSE;
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (decoder);
 
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_decoder_h265_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_DECODER_CLASS (&g_class);
+  gst_vaapi_decoder_h265_create (base_decoder);
 }
 
 /**
@@ -3094,5 +3100,6 @@ gst_vaapi_decoder_h265_set_alignment (GstVaapiDecoderH265 * decoder,
 GstVaapiDecoder *
 gst_vaapi_decoder_h265_new (GstVaapiDisplay * display, GstCaps * caps)
 {
-  return gst_vaapi_decoder_new (gst_vaapi_decoder_h265_class (), display, caps);
+  return g_object_new (GST_TYPE_VAAPI_DECODER_H265, "display", display,
+      "caps", caps, NULL);
 }

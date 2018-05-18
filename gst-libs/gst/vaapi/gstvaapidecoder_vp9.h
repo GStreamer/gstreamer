@@ -27,7 +27,17 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DECODER_VP9 \
+    (gst_vaapi_decoder_vp9_get_type ())
+#define GST_VAAPI_DECODER_VP9(decoder) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DECODER_VP9, GstVaapiDecoderVp9))
+#define GST_VAAPI_IS_DECODER_VP9(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DECODER_VP9))
+
 typedef struct _GstVaapiDecoderVp9              GstVaapiDecoderVp9;
+
+GType
+gst_vaapi_decoder_vp9_get_type (void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_vp9_new (GstVaapiDisplay * display, GstCaps * caps);

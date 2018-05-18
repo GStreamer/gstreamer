@@ -119,6 +119,9 @@ struct _GstVaapiDecoderMpeg4Class
   GstVaapiDecoderClass parent_class;
 };
 
+G_DEFINE_TYPE (GstVaapiDecoderMpeg4, gst_vaapi_decoder_mpeg4,
+    GST_TYPE_VAAPI_DECODER);
+
 static void
 gst_vaapi_decoder_mpeg4_close (GstVaapiDecoderMpeg4 * decoder)
 {
@@ -1158,34 +1161,35 @@ gst_vaapi_decoder_mpeg4_decode (GstVaapiDecoder * base_decoder,
 }
 
 static void
+gst_vaapi_decoder_mpeg4_finalize (GObject * object)
+{
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (object);
+
+  gst_vaapi_decoder_mpeg4_destroy (base_decoder);
+  G_OBJECT_CLASS (gst_vaapi_decoder_mpeg4_parent_class)->finalize (object);
+}
+
+static void
 gst_vaapi_decoder_mpeg4_class_init (GstVaapiDecoderMpeg4Class * klass)
 {
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
 
-  object_class->size = sizeof (GstVaapiDecoderMpeg4);
-  object_class->finalize = (GDestroyNotify) gst_vaapi_decoder_finalize;
+  object_class->finalize = gst_vaapi_decoder_mpeg4_finalize;
 
   decoder_class->create = gst_vaapi_decoder_mpeg4_create;
   decoder_class->destroy = gst_vaapi_decoder_mpeg4_destroy;
   decoder_class->parse = gst_vaapi_decoder_mpeg4_parse;
   decoder_class->decode = gst_vaapi_decoder_mpeg4_decode;
-
   decoder_class->decode_codec_data = gst_vaapi_decoder_mpeg4_decode_codec_data;
 }
 
-static inline const GstVaapiDecoderClass *
-gst_vaapi_decoder_mpeg4_class (void)
+static void
+gst_vaapi_decoder_mpeg4_init (GstVaapiDecoderMpeg4 * decoder)
 {
-  static GstVaapiDecoderMpeg4Class g_class;
-  static gsize g_class_init = FALSE;
+  GstVaapiDecoder *const base_decoder = GST_VAAPI_DECODER (decoder);
 
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_decoder_mpeg4_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_DECODER_CLASS (&g_class);
+  gst_vaapi_decoder_mpeg4_create (base_decoder);
 }
 
 /**
@@ -1201,6 +1205,6 @@ gst_vaapi_decoder_mpeg4_class (void)
 GstVaapiDecoder *
 gst_vaapi_decoder_mpeg4_new (GstVaapiDisplay * display, GstCaps * caps)
 {
-  return gst_vaapi_decoder_new (gst_vaapi_decoder_mpeg4_class (),
-      display, caps);
+  return g_object_new (GST_TYPE_VAAPI_DECODER_MPEG4, "display", display,
+      "caps", caps, NULL);
 }

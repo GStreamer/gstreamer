@@ -27,10 +27,20 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DECODER_VC1 \
+    (gst_vaapi_decoder_vc1_get_type ())
+#define GST_VAAPI_DECODER_VC1(decoder) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DECODER_VC1, GstVaapiDecoderVC1))
+#define GST_VAAPI_IS_DECODER_VC1(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DECODER_VC1))
+
 typedef struct _GstVaapiDecoderVC1              GstVaapiDecoderVC1;
 
+GType
+gst_vaapi_decoder_vc1_get_type (void) G_GNUC_CONST;
+
 GstVaapiDecoder *
-gst_vaapi_decoder_vc1_new(GstVaapiDisplay *display, GstCaps *caps);
+gst_vaapi_decoder_vc1_new (GstVaapiDisplay *display, GstCaps *caps);
 
 G_END_DECLS
 

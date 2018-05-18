@@ -28,10 +28,20 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_DECODER_JPEG \
+    (gst_vaapi_decoder_jpeg_get_type ())
+#define GST_VAAPI_DECODER_JPEG(decoder) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_DECODER_JPEG, GstVaapiDecoderJpeg))
+#define GST_VAAPI_IS_DECODER_JPEG(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_DECODER_JPEG))
+
 typedef struct _GstVaapiDecoderJpeg             GstVaapiDecoderJpeg;
 
+GType
+gst_vaapi_decoder_jpeg_get_type (void) G_GNUC_CONST;
+
 GstVaapiDecoder *
-gst_vaapi_decoder_jpeg_new(GstVaapiDisplay *display, GstCaps *caps);
+gst_vaapi_decoder_jpeg_new (GstVaapiDisplay *display, GstCaps *caps);
 
 G_END_DECLS
 
