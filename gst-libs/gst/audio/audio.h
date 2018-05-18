@@ -97,6 +97,9 @@ GstBuffer *    gst_audio_buffer_clip     (GstBuffer *buffer,
                                           const GstSegment *segment,
                                           gint rate, gint bpf);
 
+GST_EXPORT
+GstBuffer *    gst_audio_buffer_truncate (GstBuffer *buffer,
+                                          gint bpf, gsize trim, gsize samples);
 
 G_END_DECLS
 
