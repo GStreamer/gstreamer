@@ -437,7 +437,13 @@ main (int argc, gchar ** argv)
     g_object_unref (runner);
 
     exit (1);
+  } else if (err) {
+    g_printerr ("Erroneous pipeline: %s\n",
+        err->message ? err->message : "unknown reason");
+    g_clear_error (&err);
+    return 1;
   }
+
   if (!GST_IS_PIPELINE (pipeline)) {
     GstElement *new_pipeline = gst_pipeline_new ("");
 
