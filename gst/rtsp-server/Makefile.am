@@ -98,7 +98,7 @@ GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstRtsp-@GST_API_VERSION@ \
 		--include=GstNet-@GST_API_VERSION@ \
-		--libtool="$(top_builddir)/libtool" \
+		--libtool="${LIBTOOL}" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-rtsp-@GST_API_VERSION@ \
 		--pkg gstreamer-net-@GST_API_VERSION@ \
