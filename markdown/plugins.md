@@ -203,51 +203,51 @@ properly (help welcome!).
 |[giosrc][element-giosrc]|Read from any GIO-supported location|[gio][gio]|[gst-plugins-base][base]|
 |[giostreamsink][element-giostreamsink]|Write to any GIO stream|[gio][gio]|[gst-plugins-base][base]|
 |[giostreamsrc][element-giostreamsrc]|Read from any GIO stream|[gio][gio]|[gst-plugins-base][base]|
-|[glcolorbalance][element-glcolorbalance]|Adjusts brightness, contrast, hue, saturation on a video stream|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glcolorconvert][element-glcolorconvert]|Converts between color spaces using OpenGL shaders|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glcolorscale][element-glcolorscale]|Colorspace converter and video scaler|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[gldeinterlace][element-gldeinterlace]|Deinterlacing based on fragment shaders|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[gldifferencematte][element-gldifferencematte]|Saves a background frame and replace it with a pixbuf|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[gldownload][element-gldownload]|Downloads data from OpenGL|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[gleffects][element-gleffects]|GL Shading Language effects|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_blur|GL Shading Language effects - Blur with 9x9 separable convolution Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_bulge|GL Shading Language effects - Bulge Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_fisheye|GL Shading Language effects - FishEye Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_glow|GL Shading Language effects - Glow Lighting Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_heat|GL Shading Language effects - Heat Signature Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_identity|GL Shading Language effects - Do nothing Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_laplacian|GL Shading Language effects - Laplacian Convolution Demo Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_lumaxpro|GL Shading Language effects - Luma Cross Processing Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_mirror|GL Shading Language effects - Mirror Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_sepia|GL Shading Language effects - Sepia Toning Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_sin|GL Shading Language effects - All Grey but Red Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_sobel|GL Shading Language effects - Sobel edge detection Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_square|GL Shading Language effects - Square Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_squeeze|GL Shading Language effects - Squeeze Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_stretch|GL Shading Language effects - Stretch Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_tunnel|GL Shading Language effects - Light Tunnel Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_twirl|GL Shading Language effects - Twirl Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_xpro|GL Shading Language effects - Cross Processing Effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|gleffects_xray|GL Shading Language effects - Glowing negative effect|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glfilterapp][element-glfilterapp]|Use client callbacks to define the scene|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glfilterbin][element-glfilterbin]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glfiltercube][element-glfiltercube]|Map input texture on the 6 cube faces|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glfilterglass][element-glfilterglass]|Glass Filter|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glimagesink][element-glimagesink]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glimagesinkelement][element-glimagesinkelement]|A videosink based on OpenGL|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glmixerbin][element-glmixerbin]|OpenGL video_mixer empty bin|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glmosaic][element-glmosaic]|OpenGL mosaic|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[gloverlay][element-gloverlay]|Overlay GL video texture with a JPEG/PNG image|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glshader][element-glshader]|Perform operations with a GLSL shader|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glsinkbin][element-glsinkbin]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glsrcbin][element-glsrcbin]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glstereomix][element-glstereomix]|OpenGL stereo video combiner|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glstereosplit][element-glstereosplit]|Splits a stereoscopic stream into separate left/right streams|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[gltestsrc][element-gltestsrc]|Creates a test video stream|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glupload][element-glupload]|Uploads data into OpenGL|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glvideomixer][element-glvideomixer]|OpenGL video_mixer bin|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glvideomixerelement][element-glvideomixerelement]|OpenGL video_mixer|[opengl][opengl]|[gst-plugins-bad][bad]|
-|[glviewconvert][element-glviewconvert]|Convert stereoscopic/multiview video formats|[opengl][opengl]|[gst-plugins-bad][bad]|
+|[glcolorbalance][element-glcolorbalance]|Adjusts brightness, contrast, hue, saturation on a video stream|[opengl][opengl]|[gst-plugins-base][base]|
+|[glcolorconvert][element-glcolorconvert]|Converts between color spaces using OpenGL shaders|[opengl][opengl]|[gst-plugins-base][base]|
+|[glcolorscale][element-glcolorscale]|Colorspace converter and video scaler|[opengl][opengl]|[gst-plugins-base][base]|
+|[gldeinterlace][element-gldeinterlace]|Deinterlacing based on fragment shaders|[opengl][opengl]|[gst-plugins-base][base]|
+|[gldifferencematte][element-gldifferencematte]|Saves a background frame and replace it with a pixbuf|[opengl][opengl]|[gst-plugins-base][base]|
+|[gldownload][element-gldownload]|Downloads data from OpenGL|[opengl][opengl]|[gst-plugins-base][base]|
+|[gleffects][element-gleffects]|GL Shading Language effects|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_blur|GL Shading Language effects - Blur with 9x9 separable convolution Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_bulge|GL Shading Language effects - Bulge Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_fisheye|GL Shading Language effects - FishEye Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_glow|GL Shading Language effects - Glow Lighting Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_heat|GL Shading Language effects - Heat Signature Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_identity|GL Shading Language effects - Do nothing Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_laplacian|GL Shading Language effects - Laplacian Convolution Demo Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_lumaxpro|GL Shading Language effects - Luma Cross Processing Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_mirror|GL Shading Language effects - Mirror Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_sepia|GL Shading Language effects - Sepia Toning Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_sin|GL Shading Language effects - All Grey but Red Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_sobel|GL Shading Language effects - Sobel edge detection Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_square|GL Shading Language effects - Square Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_squeeze|GL Shading Language effects - Squeeze Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_stretch|GL Shading Language effects - Stretch Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_tunnel|GL Shading Language effects - Light Tunnel Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_twirl|GL Shading Language effects - Twirl Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_xpro|GL Shading Language effects - Cross Processing Effect|[opengl][opengl]|[gst-plugins-base][base]|
+|gleffects_xray|GL Shading Language effects - Glowing negative effect|[opengl][opengl]|[gst-plugins-base][base]|
+|[glfilterapp][element-glfilterapp]|Use client callbacks to define the scene|[opengl][opengl]|[gst-plugins-base][base]|
+|[glfilterbin][element-glfilterbin]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-base][base]|
+|[glfiltercube][element-glfiltercube]|Map input texture on the 6 cube faces|[opengl][opengl]|[gst-plugins-base][base]|
+|[glfilterglass][element-glfilterglass]|Glass Filter|[opengl][opengl]|[gst-plugins-base][base]|
+|[glimagesink][element-glimagesink]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-base][base]|
+|[glimagesinkelement][element-glimagesinkelement]|A videosink based on OpenGL|[opengl][opengl]|[gst-plugins-base][base]|
+|[glmixerbin][element-glmixerbin]|OpenGL video_mixer empty bin|[openglmixers][openglmixers]|[gst-plugins-bad][bad]|
+|[glmosaic][element-glmosaic]|OpenGL mosaic|[openglmixers][openglmixers]|[gst-plugins-bad][bad]|
+|[gloverlay][element-gloverlay]|Overlay GL video texture with a JPEG/PNG image|[opengl][opengl]|[gst-plugins-base][base]|
+|[glshader][element-glshader]|Perform operations with a GLSL shader|[opengl][opengl]|[gst-plugins-base][base]|
+|[glsinkbin][element-glsinkbin]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-base][base]|
+|[glsrcbin][element-glsrcbin]|Infrastructure to process GL textures|[opengl][opengl]|[gst-plugins-base][base]|
+|[glstereomix][element-glstereomix]|OpenGL stereo video combiner|[openglmixer][openglmixer]|[gst-plugins-bad][bad]|
+|[glstereosplit][element-glstereosplit]|Splits a stereoscopic stream into separate left/right streams|[opengl][opengl]|[gst-plugins-base][base]|
+|[gltestsrc][element-gltestsrc]|Creates a test video stream|[opengl][opengl]|[gst-plugins-base][base]|
+|[glupload][element-glupload]|Uploads data into OpenGL|[opengl][opengl]|[gst-plugins-base][base]|
+|[glvideomixer][element-glvideomixer]|OpenGL video_mixer bin|[openglmixer][openglmixer]|[gst-plugins-bad][bad]|
+|[glvideomixerelement][element-glvideomixerelement]|OpenGL video_mixer|[openglmixer][openglmixer]|[gst-plugins-bad][bad]|
+|[glviewconvert][element-glviewconvert]|Convert stereoscopic/multiview video formats|[opengl][opengl]|[gst-plugins-base][base]|
 |gmedec|Uses libgme to emulate a gaming console sound processors|gmedec|[gst-plugins-bad][bad]|
 |[goom][element-goom]|Takes frames of data and outputs video frames using the GOOM filter|[goom][goom]|[gst-plugins-good][good]|
 |[goom2k1][element-goom2k1]|Takes frames of data and outputs video frames using the GOOM 2k1 filter|[goom2k1][goom2k1]|[gst-plugins-good][good]|
