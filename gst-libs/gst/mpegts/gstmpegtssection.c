@@ -45,7 +45,7 @@
 /**
  * SECTION:gstmpegtssection
  * @title: Base MPEG-TS sections
- * @short_description: Sections for ITU H.222.0 | ISO/IEC 13818-1 
+ * @short_description: Sections for ITU H.222.0 | ISO/IEC 13818-1
  * @include: gst/mpegts/mpegts.h
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
@@ -55,7 +55,7 @@
 /*
  * TODO
  *
- * * Check minimum size for section parsing in the various 
+ * * Check minimum size for section parsing in the various
  *   gst_mpegts_section_get_<tabld>() methods
  *
  * * Implement parsing code for
@@ -1161,7 +1161,7 @@ _packetize_common_section (GstMpegtsSection * section, gsize length)
 /**
  * gst_mpegts_section_new:
  * @pid: the PID to which this section belongs
- * @data: (transfer full): a pointer to the beginning of the section (i.e. the first byte
+ * @data: (transfer full) (array length=data_size): a pointer to the beginning of the section (i.e. the first byte
  * should contain the table_id field).
  * @data_size: size of the @data argument.
  *

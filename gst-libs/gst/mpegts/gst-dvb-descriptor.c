@@ -1,7 +1,7 @@
 /*
- * gstmpegtsdescriptor.c - 
+ * gstmpegtsdescriptor.c -
  * Copyright (C) 2013 Edward Hervey
- * 
+ *
  * Authors:
  *   Edward Hervey <edward@collabora.com>
  *
@@ -40,7 +40,7 @@
  *
  * * Add common validation code for data presence and minimum/maximum expected
  *   size.
- * * Add parsing methods for the following descriptors that were previously 
+ * * Add parsing methods for the following descriptors that were previously
  *   handled in mpegtsbase:
  *   * GST_MTS_DESC_DVB_DATA_BROADCAST_ID
  *   * GST_MTS_DESC_DVB_CAROUSEL_IDENTIFIER
@@ -1743,7 +1743,7 @@ static void
  * gst_mpegts_descriptor_parse_dvb_multilingual_component:
  * @descriptor: a %GST_MTS_DESC_DVB_MULTILINGUAL_COMPONENT
  * #GstMpegtsDescriptor
- * @component_tag: the component tag
+ * @component_tag: (out): the component tag
  * @component_description_items: (out) (transfer full) (element-type GstMpegtsDvbMultilingualComponentItem):
  * a #GstMpegtsDvbMultilingualComponentItem
  *
@@ -1796,7 +1796,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
  * @descriptor: a %GST_MTS_DESC_DVB_PRIVATE_DATA_SPECIFIER #GstMpegtsDescriptor
  * @private_data_specifier: (out): the private data specifier id
  * registered by http://www.dvbservices.com/
- * @private_data: (out) (transfer full)(allow-none): additional data or NULL
+ * @private_data: (out) (transfer full) (allow-none) (array length=length): additional data or NULL
  * @length: (out) (allow-none): length of %private_data
  *
  * Parses out the private data specifier from the @descriptor.
@@ -2003,7 +2003,7 @@ gst_mpegts_descriptor_parse_dvb_scrambling (const GstMpegtsDescriptor *
  * gst_mpegts_descriptor_parse_dvb_data_broadcast_id:
  * @descriptor: a %GST_MTS_DESC_DVB_DATA_BROADCAST_ID #GstMpegtsDescriptor
  * @data_broadcast_id: (out): the data broadcast id
- * @id_selector_bytes: (out) (transfer full): the selector bytes, if present
+ * @id_selector_bytes: (out) (transfer full) (array length=len): the selector bytes, if present
  * @len: (out): the length of #id_selector_bytes
  *
  * Parses out the data broadcast id from the @descriptor.
