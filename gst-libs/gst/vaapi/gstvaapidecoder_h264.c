@@ -1289,14 +1289,11 @@ gst_vaapi_decoder_h264_destroy (GstVaapiDecoder * base_decoder)
   gst_vaapi_decoder_h264_close (decoder);
   priv->is_opened = FALSE;
 
-  g_free (priv->dpb);
-  priv->dpb = NULL;
+  g_clear_pointer (&priv->dpb, g_free);
   priv->dpb_size_max = priv->dpb_size = 0;
 
-  g_free (priv->prev_ref_frames);
-  priv->prev_ref_frames = NULL;
-  g_free (priv->prev_frames);
-  priv->prev_frames = NULL;
+  g_clear_pointer (&priv->prev_ref_frames, g_free);
+  g_clear_pointer (&priv->prev_frames, g_free);
   priv->prev_frames_alloc = 0;
 
   for (i = 0; i < G_N_ELEMENTS (priv->pps); i++)
@@ -1339,10 +1336,8 @@ gst_vaapi_decoder_h264_reset (GstVaapiDecoder * base_decoder)
 
   priv->dpb_size = 0;
 
-  g_free (priv->prev_ref_frames);
-  priv->prev_ref_frames = NULL;
-  g_free (priv->prev_frames);
-  priv->prev_frames = NULL;
+  g_clear_pointer (&priv->prev_ref_frames, g_free);
+  g_clear_pointer (&priv->prev_frames, g_free);
   priv->prev_frames_alloc = 0;
   gst_vaapi_parser_info_h264_replace (&priv->active_pps, NULL);
   gst_vaapi_parser_info_h264_replace (&priv->active_sps, NULL);
