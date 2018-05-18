@@ -18,6 +18,7 @@ testegl_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(GST_GL_LIBS) \
+	$(BRCMEGL_LIBS) \
 	-lm
 
 if HAVE_GLES2
@@ -32,12 +33,9 @@ if HAVE_X11
 testegl_LDADD += $(X11_LIBS)
 endif
 
-if USE_OMX_TARGET_RPI
-testegl_LDADD += -lbcm_host
-endif
-
 testegl_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(GST_GL_CFLAGS)
+	$(GST_GL_CFLAGS) \
+	$(BRCMEGL_CFLAGS)

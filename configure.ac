@@ -253,6 +253,10 @@ if test "x$ac_cv_omx_target" = "xtizonia"; then
     AC_SUBST(TIZONIA_LIBDIR)
 fi
 
+if test "x$ac_cv_omx_target" = "xrpi"; then
+    PKG_CHECK_MODULES([BRCMEGL], [brcmegl])
+fi
+
 AC_ARG_WITH([omx-header-path],
             AS_HELP_STRING([--with-omx-header-path],[path of external OpenMAX IL header files]),
         [omx_header_path="$withval"], [omx_header_path="none"])

@@ -16,6 +16,11 @@ if x11_dep.found() or omx_target == 'rpi'
     gles2_dep = cc.find_library ('GLESv2')
   endif
 
+  if omx_target == 'rpi'
+    brcmegl_dep = dependency('brcmegl', required : true)
+    optional_deps += brcmegl_dep
+  endif
+
   executable ('testegl',
       sources : egl_sources,
       c_args : gst_omx_args,
