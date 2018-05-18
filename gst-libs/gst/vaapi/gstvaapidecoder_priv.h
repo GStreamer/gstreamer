@@ -46,7 +46,6 @@ G_BEGIN_DECLS
     GST_VAAPI_DECODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
 
 typedef struct _GstVaapiDecoderClass GstVaapiDecoderClass;
-struct _GstVaapiDecoderUnit;
 
 /**
  * GST_VAAPI_PARSER_STATE:
