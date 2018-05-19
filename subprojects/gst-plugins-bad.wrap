@@ -2,4 +2,4 @@
 directory=gst-plugins-bad
 url=https://anongit.freedesktop.org/git/gstreamer/gst-plugins-bad.git
 push-url=ssh://git.freedesktop.org/git/gstreamer/gst-plugins-bad
-revision=1.14
+revision=1.14.1

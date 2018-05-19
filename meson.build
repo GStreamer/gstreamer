@@ -1,10 +1,10 @@
 project('All GStreamer modules', 'c',
-  version : '1.14.0',
+  version : '1.14.1',
   meson_version : '>= 0.42.0',
   default_options : ['buildtype=debugoptimized'])
 
 gst_version = '>= @0@'.format(meson.project_version())
-gst_branch = '1.14'
+gst_branch = '1.14.1'
 
 glib_req = '>= 2.40.0'
 
@@ -123,7 +123,12 @@ foreach subproj: subprojects
     if get_option('disable_introspection')
         default_options += ['disable_introspection=true']
     endif
-    subproject(subproj, version: gst_version, default_options: default_options)
+    if subproj == 'gstreamer-sharp'
+      req_version = '1.14.0' # there was no 1.14.1 release
+    else
+      req_version = gst_version
+    endif
+    subproject(subproj, version: req_version, default_options: default_options)
 
     cmdres = run_command(python3, '-c', symlink.format(subproj, meson.current_source_dir()))
     if cmdres.returncode() == 0
