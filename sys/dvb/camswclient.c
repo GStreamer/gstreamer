@@ -84,7 +84,7 @@ cam_sw_client_open (CamSwClient * client, const char *sock_path)
   }
 
   addr.sun_family = AF_UNIX;
-  strncpy (addr.sun_path, sock_path, strlen (sock_path));
+  memcpy (addr.sun_path, sock_path, strlen (sock_path) + 1);
 
   GST_INFO ("connecting to softcam socket: %s", sock_path);
   if ((client->sock = socket (PF_UNIX, SOCK_STREAM, 0)) < 0) {
