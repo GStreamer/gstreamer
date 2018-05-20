@@ -36,10 +36,23 @@ gsttag_c = tag_enums[0]
 gsttag_h = tag_enums[1]
 tag_gen_sources = [gsttag_h]
 
+install_data('license-translations.dict',
+  install_dir : join_paths(get_option('datadir'), 'gst-plugins-base', api_version))
+
+gst_tag_args = [
+  '-DLICENSE_TRANSLATIONS_PATH="@0@"'.format(
+    join_paths(
+      get_option('prefix'),
+      get_option('datadir'),
+      'gst-plugins-base',
+      api_version,
+      'license-translations.dict'))
+]
+
 tag_deps = [gst_base_dep, libm]
 gsttag = library('gsttag-@0@'.format(api_version),
   tag_sources, gsttag_h, gsttag_c,
-  c_args : gst_plugins_base_args,
+  c_args : gst_plugins_base_args + gst_tag_args,
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,
