@@ -22,6 +22,8 @@ option('gtkdoc', type : 'boolean', value : true, yield : true,
        description : 'Build API documentation with gtk-doc')
 option('introspection', type : 'boolean', value : true, yield : true,
         description : 'Generate gobject-introspection bindings')
+option('nls', type : 'boolean', value : true, yield: true,
+        description : 'Enable native language support (translations)')
 option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
 option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,

@@ -112,7 +112,11 @@ core_conf.set('SIZEOF_LONG', cc.sizeof('long'))
 core_conf.set('SIZEOF_SHORT', cc.sizeof('short'))
 core_conf.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 
+if get_option('nls')
+  core_conf.set('ENABLE_NLS', 1)
+endif
 core_conf.set('GETTEXT_PACKAGE', '"gst-plugins-base-1.0"')
+core_conf.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 core_conf.set('PACKAGE', '"gst-plugins-base"')
 core_conf.set('VERSION', '"@0@"'.format(gst_version))
 core_conf.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
@@ -327,7 +331,7 @@ subdir('tests')
 subdir('pkgconfig')
 
 # xgettext is optional (on Windows for instance)
-if find_program('xgettext', required : false).found()
+if get_option('nls') and find_program('xgettext', required : false).found()
   subdir('po')
 endif
 
