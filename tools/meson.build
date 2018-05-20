@@ -7,6 +7,7 @@ executable('gst-device-monitor-@0@'.format(api_version),
   include_directories: [configinc],
   dependencies : tool_deps,
 )
+install_man('gst-device-monitor-@0@.1'.format(api_version))
 
 executable('gst-discoverer-@0@'.format(api_version),
   'gst-discoverer.c',
@@ -15,6 +16,7 @@ executable('gst-discoverer-@0@'.format(api_version),
   include_directories: [configinc],
   dependencies : tool_deps,
 )
+install_man('gst-discoverer-@0@.1'.format(api_version))
 
 executable('gst-play-@0@'.format(api_version),
   'gst-play.c', 'gst-play-kb.c',
@@ -23,3 +25,4 @@ executable('gst-play-@0@'.format(api_version),
   include_directories: [configinc],
   dependencies : tool_deps + [libm],
 )
+install_man('gst-play-@0@.1'.format(api_version))
