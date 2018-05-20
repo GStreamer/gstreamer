@@ -106,7 +106,7 @@ static int n_instances = 0;
  * These are declared non-static for signal auto-connection
  */
 
-gboolean window_delete_event_cb (GtkObject * window, GdkEvent * event,
+gboolean window_delete_event_cb (GtkWidget * window, GdkEvent * event,
     App * app);
 void new_activate_cb (GtkMenuItem * item, App * app);
 void open_activate_cb (GtkMenuItem * item, App * app);
@@ -1076,14 +1076,14 @@ gboolean
 add_effect_dlg_delete_event_cb (GtkWidget * widget, GdkEvent * event,
     gpointer * app)
 {
-  gtk_widget_hide_all (((App *) app)->add_effect_dlg);
+  gtk_widget_hide (((App *) app)->add_effect_dlg);
   return TRUE;
 }
 
 void
 on_cancel_add_effect_cb (GtkButton * button, App * app)
 {
-  gtk_widget_hide_all (app->add_effect_dlg);
+  gtk_widget_hide (app->add_effect_dlg);
 }
 
 void
@@ -1103,7 +1103,7 @@ on_apply_effect_cb (GtkButton * button, App * app)
 
   gtk_entry_set_text (GTK_ENTRY (app->audio_effect_entry), "");
 
-  gtk_widget_hide_all (app->add_effect_dlg);
+  gtk_widget_hide (app->add_effect_dlg);
 }
 
 static void
@@ -1347,7 +1347,7 @@ app_new_from_uri (gchar * uri)
 /* UI callbacks  ************************************************************/
 
 gboolean
-window_delete_event_cb (GtkObject * window, GdkEvent * event, App * app)
+window_delete_event_cb (GtkWidget * window, GdkEvent * event, App * app)
 {
   app_dispose (app);
   return FALSE;
