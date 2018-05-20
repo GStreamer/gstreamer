@@ -77,6 +77,7 @@ cdata.set_quoted('PLUGINDIR', join_paths(get_option('prefix'), get_option('libdi
 cdata.set_quoted('VERSION', gst_version)
 # FIXME: --with-memory-alignment],[8,N,malloc,pagesize (default is 32)]) option
 cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
+cdata.set('ENABLE_NLS', get_option('nls'))
 cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-plugin-scanner'))
 cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
 cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
@@ -473,7 +474,7 @@ subdir('tests')
 subdir('data')
 
 # xgettext is optional (on Windows for instance)
-if find_program('xgettext', required : false).found()
+if get_option('nls') and find_program('xgettext', required : false).found()
   subdir('po')
 endif
 
