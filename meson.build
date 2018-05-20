@@ -115,15 +115,15 @@ core_conf.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 if get_option('nls')
   core_conf.set('ENABLE_NLS', 1)
 endif
-core_conf.set('GETTEXT_PACKAGE', '"gst-plugins-base-1.0"')
+core_conf.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-base-1.0')
 core_conf.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
-core_conf.set('PACKAGE', '"gst-plugins-base"')
-core_conf.set('VERSION', '"@0@"'.format(gst_version))
-core_conf.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-core_conf.set('GST_API_VERSION', '"@0@"'.format(api_version))
-core_conf.set('GST_INSTALL_PLUGINS_HELPER', '"/FIXME"')
-core_conf.set('GST_DATADIR', '"/FIXME"')
-core_conf.set('GST_LICENSE', '"LGPL"')
+core_conf.set_quoted('PACKAGE', 'gst-plugins-base')
+core_conf.set_quoted('VERSION', gst_version)
+core_conf.set_quoted('PACKAGE_VERSION', gst_version)
+core_conf.set_quoted('GST_API_VERSION', api_version)
+core_conf.set_quoted('GST_INSTALL_PLUGINS_HELPER', 'FIXME')
+core_conf.set_quoted('GST_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
+core_conf.set_quoted('GST_LICENSE', 'LGPL')
 
 warning_flags = [
   '-Wmissing-declarations',
@@ -189,8 +189,8 @@ core_conf.set_quoted('GST_PACKAGE_NAME', gst_package_name)
 core_conf.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 
 # FIXME: These should be configure options
-core_conf.set('DEFAULT_VIDEOSINK', '"autovideosink"')
-core_conf.set('DEFAULT_AUDIOSINK', '"autoaudiosink"')
+core_conf.set_quoted('DEFAULT_VIDEOSINK', 'autovideosink')
+core_conf.set_quoted('DEFAULT_AUDIOSINK', 'autoaudiosink')
 
 # Set whether the audioresampling method should be detected at runtime
 core_conf.set('AUDIORESAMPLE_FORMAT_' + get_option('audioresample_format').to_upper(), true)
