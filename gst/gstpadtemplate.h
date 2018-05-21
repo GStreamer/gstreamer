@@ -178,8 +178,14 @@ struct _GstStaticPadTemplate {
  * @pres: the GstPadPresence of the pad
  * @caps: the GstStaticCaps of the pad
  *
- * Convenience macro to fill the values of a GstStaticPadTemplate
+ * Convenience macro to fill the values of a #GstStaticPadTemplate
  * structure.
+ * Example:
+ * |[<!-- language="C" -->
+ * static GstStaticPadTemplate my_src_template = \
+ *   GST_STATIC_PAD_TEMPLATE("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+ *                           GST_STATIC_CAPS_ANY);
+ * ]|
  */
 #define GST_STATIC_PAD_TEMPLATE(padname, dir, pres, caps) \
 { \
