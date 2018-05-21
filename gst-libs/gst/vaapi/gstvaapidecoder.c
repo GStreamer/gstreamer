@@ -1084,11 +1084,7 @@ gst_vaapi_decoder_reset (GstVaapiDecoder * decoder)
   if (klass->reset) {
     ret = klass->reset (decoder);
   } else {
-    if (klass->destroy)
-      klass->destroy (decoder);
-    if (klass->create)
-      if (!klass->create (decoder))
-        ret = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    GST_WARNING_OBJECT (decoder, "missing reset() implementation");
   }
 
   if (ret != GST_VAAPI_DECODER_STATUS_SUCCESS)

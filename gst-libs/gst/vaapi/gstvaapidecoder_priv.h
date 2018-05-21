@@ -212,8 +212,6 @@ struct _GstVaapiDecoderClass
   /*< private >*/
   GstObjectClass parent_class;
 
-  gboolean (*create) (GstVaapiDecoder * decoder);
-  void (*destroy) (GstVaapiDecoder * decoder);
   GstVaapiDecoderStatus (*parse) (GstVaapiDecoder * decoder,
       GstAdapter * adapter, gboolean at_eos,
       struct _GstVaapiDecoderUnit * unit);
