@@ -196,7 +196,7 @@ gst_date_time_has_second (const GstDateTime * datetime)
  * @datetime: a #GstDateTime
  *
  * Returns the year of this #GstDateTime
- * Call gst_date_time_has_year before, to avoid warnings.
+ * Call gst_date_time_has_year() before, to avoid warnings.
  *
  * Return value: The year of this #GstDateTime
  */
@@ -213,7 +213,7 @@ gst_date_time_get_year (const GstDateTime * datetime)
  * @datetime: a #GstDateTime
  *
  * Returns the month of this #GstDateTime. January is 1, February is 2, etc..
- * Call gst_date_time_has_month before, to avoid warnings.
+ * Call gst_date_time_has_month() before, to avoid warnings.
  *
  * Return value: The month of this #GstDateTime
  */
@@ -231,7 +231,7 @@ gst_date_time_get_month (const GstDateTime * datetime)
  * @datetime: a #GstDateTime
  *
  * Returns the day of the month of this #GstDateTime.
- * Call gst_date_time_has_day before, to avoid warnings.
+ * Call gst_date_time_has_day() before, to avoid warnings.
  *
  * Return value: The day of this #GstDateTime
  */
@@ -250,7 +250,7 @@ gst_date_time_get_day (const GstDateTime * datetime)
  *
  * Retrieves the hour of the day represented by @datetime in the gregorian
  * calendar. The return is in the range of 0 to 23.
- * Call gst_date_time_has_haur before, to avoid warnings.
+ * Call gst_date_time_has_time() before, to avoid warnings.
  *
  * Return value: the hour of the day
  */
@@ -269,7 +269,7 @@ gst_date_time_get_hour (const GstDateTime * datetime)
  *
  * Retrieves the minute of the hour represented by @datetime in the gregorian
  * calendar.
- * Call gst_date_time_has_minute before, to avoid warnings.
+ * Call gst_date_time_has_time() before, to avoid warnings.
  *
  * Return value: the minute of the hour
  */
@@ -288,7 +288,7 @@ gst_date_time_get_minute (const GstDateTime * datetime)
  *
  * Retrieves the second of the minute represented by @datetime in the gregorian
  * calendar.
- * Call gst_date_time_has_second before, to avoid warnings.
+ * Call gst_date_time_has_time() before, to avoid warnings.
  *
  * Return value: the second represented by @datetime
  */
