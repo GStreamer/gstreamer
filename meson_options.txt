@@ -11,7 +11,7 @@ option('sharp', type : 'boolean', value : true)
 option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
 
 # Common options, automatically inherited by subprojects
-option('gtkdoc', type : 'boolean', value : true,
+option('gtk_doc', type : 'boolean', value : true,
         description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'boolean', value : true,
        description : 'Whether to disable the introspection generation')
