@@ -121,9 +121,16 @@ core_conf.set_quoted('PACKAGE', 'gst-plugins-base')
 core_conf.set_quoted('VERSION', gst_version)
 core_conf.set_quoted('PACKAGE_VERSION', gst_version)
 core_conf.set_quoted('GST_API_VERSION', api_version)
-core_conf.set_quoted('GST_INSTALL_PLUGINS_HELPER', 'FIXME')
 core_conf.set_quoted('GST_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
 core_conf.set_quoted('GST_LICENSE', 'LGPL')
+
+install_plugins_helper = get_option('install_plugins_helper')
+if install_plugins_helper == ''
+  install_plugins_helper = join_paths(get_option('prefix'),
+                                      get_option('libexecdir'),
+                                      'gst-install-plugins-helper')
+endif
+core_conf.set_quoted('GST_INSTALL_PLUGINS_HELPER', install_plugins_helper)
 
 warning_flags = [
   '-Wmissing-declarations',

@@ -14,6 +14,8 @@ option('opengl_module_name', type : 'string', value : '',
        description : 'The file to pass to g_module_open to open the libGL library (default: libGL)')
 option('gles2_module_name', type : 'string', value : '',
        description : 'The file to pass to g_module_open to open the libGLESv2 library (default: libGLESv2)')
+option('install_plugins_helper', type: 'string', value: '',
+       description: 'Path of distro helper script to call to install missing plugins')
 
 # Common options
 option('orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto', yield : true)
