@@ -160,6 +160,14 @@ gst_vaapi_decoder_jpeg_create (GstVaapiDecoder * base_decoder)
 }
 
 static GstVaapiDecoderStatus
+gst_vaapi_decoder_jpeg_reset (GstVaapiDecoder * base_decoder)
+{
+  gst_vaapi_decoder_jpeg_destroy (base_decoder);
+  gst_vaapi_decoder_jpeg_create (base_decoder);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
 ensure_context (GstVaapiDecoderJpeg * decoder)
 {
   GstVaapiDecoderJpegPrivate *const priv = &decoder->priv;
@@ -864,8 +872,7 @@ gst_vaapi_decoder_jpeg_class_init (GstVaapiDecoderJpegClass * klass)
 
   object_class->finalize = gst_vaapi_decoder_jpeg_finalize;
 
-  decoder_class->create = gst_vaapi_decoder_jpeg_create;
-  decoder_class->destroy = gst_vaapi_decoder_jpeg_destroy;
+  decoder_class->reset = gst_vaapi_decoder_jpeg_reset;
   decoder_class->parse = gst_vaapi_decoder_jpeg_parse;
   decoder_class->decode = gst_vaapi_decoder_jpeg_decode;
   decoder_class->start_frame = gst_vaapi_decoder_jpeg_start_frame;
