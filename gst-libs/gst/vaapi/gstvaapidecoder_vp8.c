@@ -148,6 +148,15 @@ gst_vaapi_decoder_vp8_create (GstVaapiDecoder * base_decoder)
 }
 
 static GstVaapiDecoderStatus
+gst_vaapi_decoder_vp8_reset (GstVaapiDecoder * base_decoder)
+{
+  gst_vaapi_decoder_vp8_destroy (base_decoder);
+  if (gst_vaapi_decoder_vp8_create (base_decoder))
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+}
+
+static GstVaapiDecoderStatus
 ensure_context (GstVaapiDecoderVp8 * decoder)
 {
   GstVaapiDecoderVp8Private *const priv = &decoder->priv;
@@ -635,8 +644,7 @@ gst_vaapi_decoder_vp8_class_init (GstVaapiDecoderVp8Class * klass)
 
   object_class->finalize = gst_vaapi_decoder_vp8_finalize;
 
-  decoder_class->create = gst_vaapi_decoder_vp8_create;
-  decoder_class->destroy = gst_vaapi_decoder_vp8_destroy;
+  decoder_class->reset = gst_vaapi_decoder_vp8_reset;
   decoder_class->parse = gst_vaapi_decoder_vp8_parse;
   decoder_class->decode = gst_vaapi_decoder_vp8_decode;
   decoder_class->start_frame = gst_vaapi_decoder_vp8_start_frame;
