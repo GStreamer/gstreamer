@@ -164,7 +164,7 @@ main (int argc, char *argv[])
 
   gst_video_overlay_composition_unref (compo);
   gst_vaapi_surface_proxy_unref (proxy);
-  gst_vaapi_decoder_unref (decoder);
+  gst_object_unref (decoder);
   gst_vaapi_window_unref (window);
   gst_object_unref (display);
   g_free (g_codec_str);

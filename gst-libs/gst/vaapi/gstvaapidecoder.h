@@ -81,9 +81,6 @@ GType
 gst_vaapi_decoder_get_type (void) G_GNUC_CONST;
 
 void
-gst_vaapi_decoder_unref (GstVaapiDecoder * decoder);
-
-void
 gst_vaapi_decoder_replace (GstVaapiDecoder ** old_decoder_ptr,
     GstVaapiDecoder * new_decoder);
 
@@ -146,7 +143,7 @@ gboolean
 gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoder, gst_vaapi_decoder_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoder, gst_object_unref)
 #endif
 
 G_END_DECLS

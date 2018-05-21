@@ -587,19 +587,6 @@ gst_vaapi_decoder_init (GstVaapiDecoder * decoder)
 }
 
 /**
- * gst_vaapi_decoder_unref:
- * @decoder: a #GstVaapiDecoder
- *
- * Atomically decreases the reference count of the @decoder by one. If
- * the reference count reaches zero, the decoder will be free'd.
- */
-void
-gst_vaapi_decoder_unref (GstVaapiDecoder * decoder)
-{
-  gst_object_unref (decoder);
-}
-
-/**
  * gst_vaapi_decoder_replace:
  * @old_decoder_ptr: a pointer to a #GstVaapiDecoder
  * @new_decoder: a #GstVaapiDecoder
