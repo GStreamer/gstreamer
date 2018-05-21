@@ -187,8 +187,8 @@ gst_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
  * gst_video_color_range_offsets:
  * @range: a #GstVideoColorRange
  * @info: a #GstVideoFormatInfo
- * @offset: (out) (array fixed-size=4): output offsets
- * @scale: (out) (array fixed-size=4): output scale
+ * @offset: (out caller-allocates) (array fixed-size=4): output offsets
+ * @scale: (out caller-allocates) (array fixed-size=4): output scale
  *
  * Compute the offset and scale values for each component of @info. For each
  * component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
