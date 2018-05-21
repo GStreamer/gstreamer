@@ -153,6 +153,15 @@ gst_vaapi_decoder_vp9_create (GstVaapiDecoder * base_decoder)
   return TRUE;
 }
 
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vp9_reset (GstVaapiDecoder * base_decoder)
+{
+  gst_vaapi_decoder_vp9_destroy (base_decoder);
+  if (gst_vaapi_decoder_vp9_create (base_decoder))
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+  return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+}
+
 /* Returns GstVaapiProfile from VP9 frame_hdr profile value */
 static GstVaapiProfile
 get_profile (guint profile_idc)
@@ -749,8 +758,7 @@ gst_vaapi_decoder_vp9_class_init (GstVaapiDecoderVp9Class * klass)
 
   object_class->finalize = gst_vaapi_decoder_vp9_finalize;
 
-  decoder_class->create = gst_vaapi_decoder_vp9_create;
-  decoder_class->destroy = gst_vaapi_decoder_vp9_destroy;
+  decoder_class->reset = gst_vaapi_decoder_vp9_reset;
   decoder_class->parse = gst_vaapi_decoder_vp9_parse;
   decoder_class->decode = gst_vaapi_decoder_vp9_decode;
   decoder_class->start_frame = gst_vaapi_decoder_vp9_start_frame;
