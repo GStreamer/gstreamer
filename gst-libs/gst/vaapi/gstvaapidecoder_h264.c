@@ -4728,8 +4728,6 @@ gst_vaapi_decoder_h264_class_init (GstVaapiDecoderH264Class * klass)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiDecoderClass *const decoder_class = GST_VAAPI_DECODER_CLASS (klass);
 
-  decoder_class->create = gst_vaapi_decoder_h264_create;
-  decoder_class->destroy = gst_vaapi_decoder_h264_destroy;
   decoder_class->reset = gst_vaapi_decoder_h264_reset;
   decoder_class->parse = gst_vaapi_decoder_h264_parse;
   decoder_class->decode = gst_vaapi_decoder_h264_decode;
