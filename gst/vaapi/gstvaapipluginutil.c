@@ -246,6 +246,7 @@ gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 static void
 gst_vaapi_find_gl_context (GstElement * element)
 {
+#if USE_GST_GL_HELPERS
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
 
   /* if the element is vaapisink or any vaapi encoder it doesn't need
@@ -282,6 +283,7 @@ no_valid_gl_display:
     gst_object_replace (&plugin->gl_other_context, NULL);
     return;
   }
+#endif
 }
 
 gboolean
