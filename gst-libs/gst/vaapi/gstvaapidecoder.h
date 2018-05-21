@@ -80,9 +80,6 @@ typedef enum {
 GType
 gst_vaapi_decoder_get_type (void) G_GNUC_CONST;
 
-GstVaapiDecoder *
-gst_vaapi_decoder_ref (GstVaapiDecoder * decoder);
-
 void
 gst_vaapi_decoder_unref (GstVaapiDecoder * decoder);
 

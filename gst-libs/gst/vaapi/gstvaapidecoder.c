@@ -587,20 +587,6 @@ gst_vaapi_decoder_init (GstVaapiDecoder * decoder)
 }
 
 /**
- * gst_vaapi_decoder_ref:
- * @decoder: a #GstVaapiDecoder
- *
- * Atomically increases the reference count of the given @decoder by one.
- *
- * Returns: The same @decoder argument
- */
-GstVaapiDecoder *
-gst_vaapi_decoder_ref (GstVaapiDecoder * decoder)
-{
-  return gst_object_ref (decoder);
-}
-
-/**
  * gst_vaapi_decoder_unref:
  * @decoder: a #GstVaapiDecoder
  *
