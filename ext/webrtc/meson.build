@@ -15,7 +15,7 @@ webrtc_sources = [
 
 libnice_dep = dependency('nice', version : '>=0.1.14', required : false,
                          fallback : ['libnice', 'libnice_dep'],
-                         default_options: ['-Dtests=false'])
+                         default_options: ['tests=false'])
 
 if libnice_dep.found()
   library('gstwebrtc',
