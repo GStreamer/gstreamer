@@ -148,6 +148,10 @@ cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
 cdata.set('GST_LICENSE', '"LGPL"')
 cdata.set('PACKAGE', '"gst-plugins-good"')
 cdata.set('GETTEXT_PACKAGE', '"gst-plugins-good-1.0"')
+cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
+if get_option('nls')
+  cdata.set('ENABLE_NLS', 1)
+endif
 
 warning_flags = [
   '-Wmissing-declarations',
@@ -371,7 +375,7 @@ subdir('tests')
 subdir('pkgconfig')
 
 # xgettext is optional (on Windows for instance)
-if find_program('xgettext', required : false).found()
+if get_option('nls') and find_program('xgettext', required : false).found()
   subdir('po')
 endif
 
