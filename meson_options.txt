@@ -20,7 +20,7 @@ option('install_plugins_helper', type: 'string', value: '',
 # Common options
 option('orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto', yield : true)
 option('examples', type : 'boolean', value : true, yield : true)
-option('gtkdoc', type : 'boolean', value : true, yield : true,
+option('gtk_doc', type : 'boolean', value : true, yield : true,
        description : 'Build API documentation with gtk-doc')
 option('introspection', type : 'boolean', value : true, yield : true,
         description : 'Generate gobject-introspection bindings')
