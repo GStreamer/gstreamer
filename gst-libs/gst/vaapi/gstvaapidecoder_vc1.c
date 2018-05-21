@@ -170,8 +170,7 @@ gst_vaapi_decoder_vc1_destroy (GstVaapiDecoder * base_decoder)
   gst_vaapi_decoder_vc1_close (decoder);
 
   if (priv->rbdu_buffer) {
-    g_free (priv->rbdu_buffer);
-    priv->rbdu_buffer = NULL;
+    g_clear_pointer (&priv->rbdu_buffer, g_free);
     priv->rbdu_buffer_size = 0;
   }
 }
@@ -186,10 +185,18 @@ gst_vaapi_decoder_vc1_create (GstVaapiDecoder * base_decoder)
       priv->size_changed = priv->profile_changed =
       priv->closed_entry = priv->broken_link = FALSE;
 
-  priv->profile = (GstVaapiProfile) 0;
+  priv->profile = GST_VAAPI_PROFILE_UNKNOWN;
   priv->rndctrl = 0;
   priv->width = priv->height = 0;
   return TRUE;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_vc1_reset (GstVaapiDecoder * base_decoder)
+{
+  gst_vaapi_decoder_vc1_destroy (base_decoder);
+  gst_vaapi_decoder_vc1_create (base_decoder);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
@@ -1445,8 +1452,7 @@ gst_vaapi_decoder_vc1_class_init (GstVaapiDecoderVC1Class * klass)
 
   object_class->finalize = gst_vaapi_decoder_vc1_finalize;
 
-  decoder_class->create = gst_vaapi_decoder_vc1_create;
-  decoder_class->destroy = gst_vaapi_decoder_vc1_destroy;
+  decoder_class->reset = gst_vaapi_decoder_vc1_reset;
   decoder_class->parse = gst_vaapi_decoder_vc1_parse;
   decoder_class->decode = gst_vaapi_decoder_vc1_decode;
   decoder_class->start_frame = gst_vaapi_decoder_vc1_start_frame;
