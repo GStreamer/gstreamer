@@ -361,6 +361,14 @@ gst_vaapi_decoder_mpeg2_create (GstVaapiDecoder * base_decoder)
   return TRUE;
 }
 
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_mpeg2_reset (GstVaapiDecoder * base_decoder)
+{
+  gst_vaapi_decoder_mpeg2_destroy (base_decoder);
+  gst_vaapi_decoder_mpeg2_create (base_decoder);
+  return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 static inline void
 copy_quant_matrix (guint8 dst[64], const guint8 src[64])
 {
@@ -1584,8 +1592,7 @@ gst_vaapi_decoder_mpeg2_class_init (GstVaapiDecoderMpeg2Class * klass)
 
   object_class->finalize = gst_vaapi_decoder_mpeg2_finalize;
 
-  decoder_class->create = gst_vaapi_decoder_mpeg2_create;
-  decoder_class->destroy = gst_vaapi_decoder_mpeg2_destroy;
+  decoder_class->reset = gst_vaapi_decoder_mpeg2_reset;
   decoder_class->parse = gst_vaapi_decoder_mpeg2_parse;
   decoder_class->decode = gst_vaapi_decoder_mpeg2_decode;
   decoder_class->start_frame = gst_vaapi_decoder_mpeg2_start_frame;
