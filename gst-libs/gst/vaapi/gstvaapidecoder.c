@@ -586,16 +586,6 @@ gst_vaapi_decoder_init (GstVaapiDecoder * decoder)
       gst_video_codec_frame_unref);
 }
 
-GstVaapiDecoder *
-gst_vaapi_decoder_new (GstVaapiDisplay * display, GstCaps * caps)
-{
-  g_return_val_if_fail (display != NULL, NULL);
-  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-
-  return g_object_new (GST_TYPE_VAAPI_DECODER, "display", display,
-      "caps", caps, NULL);
-}
-
 /**
  * gst_vaapi_decoder_ref:
  * @decoder: a #GstVaapiDecoder

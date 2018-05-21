@@ -229,10 +229,6 @@ struct _GstVaapiDecoderClass
 };
 
 G_GNUC_INTERNAL
-GstVaapiDecoder *
-gst_vaapi_decoder_new (GstVaapiDisplay * display, GstCaps * caps);
-
-G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_set_picture_size (GstVaapiDecoder * decoder,
     guint width, guint height);
