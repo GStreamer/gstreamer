@@ -569,8 +569,8 @@ gst_sample_new
 gst_sample_ref
 gst_sample_unref
 gst_sample_copy
-gst_buffer_is_writable
-gst_buffer_make_writable
+gst_sample_is_writable
+gst_sample_make_writable
 <SUBSECTION Standard>
 GST_IS_SAMPLE
 GST_SAMPLE

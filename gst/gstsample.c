@@ -266,6 +266,8 @@ gst_sample_set_buffer_list (GstSample * sample, GstBufferList * buffer_list)
 
 /**
  * gst_sample_set_buffer:
+ * @sample: A #GstSample
+ * @buffer: (transfer none): A #GstBuffer
  *
  * Set the buffer associated with @sample. @sample must be writable.
  *
@@ -282,6 +284,8 @@ gst_sample_set_buffer (GstSample * sample, GstBuffer * buffer)
 
 /**
  * gst_sample_set_caps:
+ * @sample: A #GstSample
+ * @caps: (transfer none): A #GstCaps
  *
  * Set the caps associated with @sample. @sample must be writable.
  *
@@ -298,6 +302,8 @@ gst_sample_set_caps (GstSample * sample, GstCaps * caps)
 
 /**
  * gst_sample_set_segment:
+ * @sample: A #GstSample
+ * @segment: (transfer none): A #GstSegment
  *
  * Set the segment associated with @sample. @sample must be writable.
  *
@@ -318,6 +324,8 @@ gst_sample_set_segment (GstSample * sample, const GstSegment * segment)
 
 /**
  * gst_sample_set_info:
+ * @sample: A #GstSample
+ * @info: (transfer full): A #GstStructure
  *
  * Set the info structure associated with @sample. @sample must be writable,
  * and @info must not have a parent set already.

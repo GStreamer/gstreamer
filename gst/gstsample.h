@@ -118,6 +118,7 @@ gst_sample_unref (GstSample * sample)
 
 /**
  * gst_sample_is_writable:
+ * @sample: A #GstSample
  *
  * Tests if you can safely set the buffer and / or buffer list of @sample.
  *
@@ -127,7 +128,7 @@ gst_sample_unref (GstSample * sample)
 
 /**
  * gst_sample_make_writable:
- * @sample: (transfer full):
+ * @sample: (transfer full): A #GstSample
  *
  * Returns a writable copy of @sample. If the source sample is
  * already writable, this will simply return the same sample.
