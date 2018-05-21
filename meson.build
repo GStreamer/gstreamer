@@ -114,10 +114,14 @@ cdata.set('SIZEOF_LONG', cc.sizeof('long'))
 cdata.set('SIZEOF_SHORT', cc.sizeof('short'))
 cdata.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 
-cdata.set('VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE', '"gst-plugins-ugly"')
-cdata.set('GETTEXT_PACKAGE', '"gst-plugins-ugly-1.0"')
-cdata.set('GST_LICENSE', '"LGPL"')
+cdata.set_quoted('VERSION', gst_version)
+cdata.set_quoted('PACKAGE', 'gst-plugins-ugly')
+cdata.set_quoted('GST_LICENSE', 'LGPL')
+cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-ugly-1.0')
+cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
+if get_option('nls')
+  cdata.set('ENABLE_NLS', 1)
+endif
 
 # GStreamer package name and origin url
 gst_package_name = get_option('package-name')
@@ -248,7 +252,7 @@ subdir('ext')
 subdir('tests')
 
 # xgettext is optional (on Windows for instance)
-if find_program('xgettext', required : false).found()
+if get_option('nls') and find_program('xgettext', required : false).found()
   subdir('po')
 endif
 
