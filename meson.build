@@ -272,6 +272,10 @@ cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-bad-1.0')
 cdata.set_quoted('GST_API_VERSION', api_version)
 cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
+cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
+if get_option('nls')
+  cdata.set('ENABLE_NLS', 1)
+endif
 
 warning_flags = [
   '-Wmissing-declarations',
@@ -517,7 +521,7 @@ subdir('pkgconfig')
 configure_file(output : 'config.h', configuration : cdata)
 
 # xgettext is optional (on Windows for instance)
-if find_program('xgettext', required : false).found()
+if get_option('nls') and find_program('xgettext', required : false).found()
   subdir('po')
 endif
 

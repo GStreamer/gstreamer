@@ -2,6 +2,8 @@ option('gst_player_tests', type: 'boolean', value: false,
        description: 'Enable GstPlayer tests that need network access')
 
 # Common options
+option('nls', type : 'boolean', value : true, yield: true,
+        description : 'Enable native language support (translations)')
 option('orc', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'auto', yield : true)
 option('introspection', type : 'boolean', value : true, yield : true,
         description : 'Generate gobject-introspection bindings')
