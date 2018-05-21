@@ -14,7 +14,7 @@ option('ptp-helper-permissions', type : 'combo',
 
 # Common options
 option('examples', type : 'boolean', value : true, yield : true)
-option('gtkdoc', type : 'boolean', value : true, yield : true,
+option('gtk_doc', type : 'boolean', value : true, yield : true,
         description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'boolean', value : true, yield : true,
         description : 'Generate gobject-introspection bindings')

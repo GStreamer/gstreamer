@@ -482,7 +482,7 @@ configure_file(output : 'config.h', configuration : cdata)
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif not get_option('gtkdoc')
+elif not get_option('gtk_doc')
   message('gtk-doc is disabled via options')
 else
   if find_program('gtkdoc-scan', required : false).found()
