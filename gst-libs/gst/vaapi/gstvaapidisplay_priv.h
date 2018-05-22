@@ -203,30 +203,6 @@ GstVaapiDisplay *
 gst_vaapi_display_new (GstVaapiDisplay * display,
     GstVaapiDisplayInitType init_type, gpointer init_value);
 
-/* Inline reference counting for core libgstvaapi library */
-#ifdef IN_LIBGSTVAAPI_CORE
-#define gst_vaapi_display_ref_internal(display) \
-    ((gpointer) gst_object_ref (GST_OBJECT (display)))
-
-#define gst_vaapi_display_unref_internal(display) \
-    gst_object_unref (GST_OBJECT (display))
-
-#define gst_vaapi_display_replace_internal(old_display_ptr, new_display) \
-    gst_object_replace ((GstObject **)(old_display_ptr), GST_OBJECT (new_display))
-
-#undef  gst_vaapi_display_ref
-#define gst_vaapi_display_ref(display) \
-    gst_vaapi_display_ref_internal ((display))
-
-#undef  gst_vaapi_display_unref
-#define gst_vaapi_display_unref(display) \
-    gst_vaapi_display_unref_internal ((display))
-
-#undef  gst_vaapi_display_replace
-#define gst_vaapi_display_replace(old_display_ptr, new_display) \
-    gst_vaapi_display_replace_internal ((old_display_ptr), (new_display))
-#endif
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_PRIV_H */

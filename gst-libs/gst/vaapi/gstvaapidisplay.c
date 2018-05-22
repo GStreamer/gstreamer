@@ -52,11 +52,6 @@ GST_DEBUG_CATEGORY (gst_debug_vaapi_display);
 G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplay, gst_vaapi_display, GST_TYPE_OBJECT,
     _do_init);
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_display_ref
-#undef gst_vaapi_display_unref
-#undef gst_vaapi_display_replace
-
 typedef struct _GstVaapiConfig GstVaapiConfig;
 struct _GstVaapiConfig
 {
@@ -1159,7 +1154,7 @@ gst_vaapi_display_new (GstVaapiDisplay * display,
   /* ERRORS */
 error:
   {
-    gst_vaapi_display_unref_internal (display);
+    gst_vaapi_display_unref (display);
     return NULL;
   }
 }
@@ -1195,7 +1190,7 @@ gst_vaapi_display_new_with_display (VADisplay va_display)
 GstVaapiDisplay *
 gst_vaapi_display_ref (GstVaapiDisplay * display)
 {
-  return gst_vaapi_display_ref_internal (display);
+  return gst_object_ref (display);
 }
 
 /**
@@ -1208,7 +1203,7 @@ gst_vaapi_display_ref (GstVaapiDisplay * display)
 void
 gst_vaapi_display_unref (GstVaapiDisplay * display)
 {
-  gst_vaapi_display_unref_internal (display);
+  gst_object_unref (display);
 }
 
 /**
@@ -1224,7 +1219,8 @@ void
 gst_vaapi_display_replace (GstVaapiDisplay ** old_display_ptr,
     GstVaapiDisplay * new_display)
 {
-  gst_vaapi_display_replace_internal (old_display_ptr, new_display);
+  gst_object_replace ((GstObject **) old_display_ptr,
+      (GstObject *) new_display);
 }
 
 /**
