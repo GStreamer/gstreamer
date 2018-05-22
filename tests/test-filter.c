@@ -440,7 +440,7 @@ main (int argc, char *argv[])
 
   pause ();
 
-  gst_vaapi_filter_unref (filter);
+  gst_object_unref (filter);
   gst_vaapi_object_unref (dst_surface);
   gst_vaapi_object_unref (src_surface);
   gst_vaapi_window_unref (window);

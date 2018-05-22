@@ -162,7 +162,7 @@ create_surface_from_egl_image (GstVaapiDisplayEGL * display,
     goto error_convert_surface;
 
   gst_vaapi_object_unref (img_surface);
-  gst_vaapi_filter_unref (filter);
+  gst_object_unref (filter);
   return out_surface;
 
   /* ERRORS */

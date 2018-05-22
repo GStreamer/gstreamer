@@ -180,12 +180,6 @@ gst_vaapi_filter_get_type (void) G_GNUC_CONST;
 GstVaapiFilter *
 gst_vaapi_filter_new (GstVaapiDisplay * display);
 
-GstVaapiFilter *
-gst_vaapi_filter_ref (GstVaapiFilter * filter);
-
-void
-gst_vaapi_filter_unref (GstVaapiFilter * filter);
-
 void
 gst_vaapi_filter_replace (GstVaapiFilter ** old_filter_ptr,
     GstVaapiFilter * new_filter);

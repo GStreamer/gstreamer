@@ -1204,7 +1204,7 @@ gst_vaapi_filter_new (GstVaapiDisplay * display)
   /* ERRORS */
 error:
   {
-    gst_vaapi_filter_unref (filter);
+    gst_object_unref (filter);
     return NULL;
   }
 #else
@@ -1212,39 +1212,6 @@ error:
       "please consider an upgrade to VA-API >= 0.34");
   return NULL;
 #endif
-}
-
-/**
- * gst_vaapi_filter_ref:
- * @filter: a #GstVaapiFilter
- *
- * Atomically increases the reference count of the given @filter by one.
- *
- * Returns: The same @filter argument
- */
-GstVaapiFilter *
-gst_vaapi_filter_ref (GstVaapiFilter * filter)
-{
-  g_return_val_if_fail (filter != NULL, NULL);
-
-  return
-      GST_VAAPI_FILTER (gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT
-          (filter)));
-}
-
-/**
- * gst_vaapi_filter_unref:
- * @filter: a #GstVaapiFilter
- *
- * Atomically decreases the reference count of the @filter by one. If
- * the reference count reaches zero, the filter will be free'd.
- */
-void
-gst_vaapi_filter_unref (GstVaapiFilter * filter)
-{
-  g_return_if_fail (filter != NULL);
-
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (filter));
 }
 
 /**
