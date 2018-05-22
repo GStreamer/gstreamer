@@ -286,7 +286,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-sample:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
    * Signal that a new sample is available.
    *
