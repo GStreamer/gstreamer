@@ -82,7 +82,7 @@ typedef struct
 
   /* Attributes */
   GstCaps *caps;
-  GstSegment segment;
+  GList * segments;
   gchar *id;
   gchar *padname;
 
@@ -111,6 +111,16 @@ typedef struct
   gchar *str_open;
   gchar *str_close;
 } GstValidateMediaFrameNode;
+
+typedef struct
+{
+  gint next_frame_id;
+
+  GstSegment segment;
+
+  gchar *str_open;
+  gchar *str_close;
+} GstValidateSegmentNode;
 
 GST_VALIDATE_API
 void gst_validate_filenode_free (GstValidateMediaFileNode *

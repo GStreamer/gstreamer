@@ -146,7 +146,14 @@ serialize_filenode (GstValidateMediaDescriptorWriter * writer)
     GstValidateMediaStreamNode
         * snode = ((GstValidateMediaStreamNode *) tmp->data);
 
+
     STR_APPEND2 (snode->str_open);
+
+    /* Segment are always prepended, let's bring them back to the right order */
+    STR_APPEND3 ("<segments>");
+    for (tmp2 = snode->segments; tmp2; tmp2 = tmp2->next)
+      STR_APPEND4 (((GstValidateSegmentNode *) tmp2->data)->str_open);
+    STR_APPEND3 ("</segments>");
 
     for (tmp2 = snode->frames; tmp2; tmp2 = tmp2->next) {
       STR_APPEND3 (((GstValidateMediaFrameNode *) tmp2->data)->str_open);
@@ -317,8 +324,28 @@ _uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info,
             (GstValidateMediaDescriptor *)
             writer, pad);
         if (streamnode) {
+          GstValidateSegmentNode *segment_node =
+              g_slice_new0 (GstValidateSegmentNode);
+
           gst_event_parse_segment (event, &segment);
-          gst_segment_copy_into (segment, &streamnode->segment);
+          gst_segment_copy_into (segment, &segment_node->segment);
+          segment_node->next_frame_id = g_list_length (streamnode->frames);
+
+          segment_node->str_open =
+              g_markup_printf_escaped ("<segment next-frame-id=\"%d\""
+              " flags=\"%d\" rate=\"%f\" applied-rate=\"%f\""
+              " format=\"%d\" base=\"%" G_GUINT64_FORMAT "\" offset=\"%"
+              G_GUINT64_FORMAT "\" start=\"%" G_GUINT64_FORMAT "\""
+              " stop=\"%" G_GUINT64_FORMAT "\" time=\"%" G_GUINT64_FORMAT
+              "\" position=\"%" G_GUINT64_FORMAT "\" duration=\"%"
+              G_GUINT64_FORMAT "\"/>", segment_node->next_frame_id,
+              segment->flags, segment->rate, segment->applied_rate,
+              segment->format, segment->base, segment->offset, segment->start,
+              segment->stop, segment->time, segment->position,
+              segment->duration);
+
+          streamnode->segments =
+              g_list_prepend (streamnode->segments, segment_node);
         }
         break;
       }
@@ -519,8 +546,10 @@ _run_frame_analysis (GstValidateMediaDescriptorWriter * writer,
     GstValidateRunner * runner, const gchar * uri)
 {
   GstBus *bus;
+  GList *tmp;
   GstStateChangeReturn sret;
   GstValidateMonitor *monitor;
+  GstValidateMediaFileNode *filenode;
 
   GstElement *uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
 
@@ -551,6 +580,15 @@ _run_frame_analysis (GstValidateMediaDescriptorWriter * writer,
   }
 
   g_main_loop_run (writer->priv->loop);
+
+  filenode = ((GstValidateMediaDescriptor *) writer)->filenode;
+  /* Segment are always prepended, let's reorder them. */
+  for (tmp = filenode->streams; tmp; tmp = tmp->next) {
+    GstValidateMediaStreamNode
+        * snode = ((GstValidateMediaStreamNode *) tmp->data);
+    snode->segments = g_list_reverse (snode->segments);
+  }
+
   gst_element_set_state (writer->priv->pipeline, GST_STATE_NULL);
   gst_object_unref (writer->priv->pipeline);
   writer->priv->pipeline = NULL;
@@ -846,6 +884,7 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   gchar *checksum;
   guint id;
   GstValidateMediaFrameNode *fnode;
+  GstSegment * segment;
 
   g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR_WRITER (writer),
       FALSE);
@@ -877,8 +916,11 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   fnode->duration = GST_BUFFER_DURATION (buf);
   fnode->pts = GST_BUFFER_PTS (buf);
   fnode->dts = GST_BUFFER_DTS (buf);
+
+  g_assert (streamnode->segments);
+  segment = &((GstValidateSegmentNode *)streamnode->segments->data)->segment;
   fnode->running_time =
-      gst_segment_to_running_time (&streamnode->segment, GST_FORMAT_TIME,
+      gst_segment_to_running_time (segment, GST_FORMAT_TIME,
       GST_BUFFER_PTS (buf));
   fnode->is_keyframe =
       (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) == FALSE);

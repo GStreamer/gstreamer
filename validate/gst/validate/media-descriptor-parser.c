@@ -95,6 +95,43 @@ deserialize_streamnode (const gchar ** names, const gchar ** values)
   return streamnode;
 }
 
+static GstValidateSegmentNode *
+deserialize_segmentnode (const gchar ** names, const gchar ** values)
+{
+  gint i;
+  GstValidateSegmentNode *node = g_slice_new0 (GstValidateSegmentNode);
+
+  for (i = 0; names[i] != NULL; i++) {
+    if (!g_strcmp0 (names[i], "next-frame-id"))
+      node->next_frame_id = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "flags"))
+      node->segment.flags = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "rate"))
+      node->segment.rate = g_ascii_strtod (values[i], NULL);
+    else if (!g_strcmp0 (names[i], "applied-rate"))
+      node->segment.applied_rate = g_ascii_strtod (values[i], NULL);
+    else if (!g_strcmp0 (names[i], "format"))
+      node->segment.format = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "base"))
+      node->segment.base = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "offset"))
+      node->segment.offset = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "start"))
+      node->segment.start = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "stop"))
+      node->segment.stop = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "time"))
+      node->segment.time = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "position"))
+      node->segment.position = g_ascii_strtoull (values[i], NULL, 0);
+    else if (!g_strcmp0 (names[i], "duration"))
+      node->segment.duration = g_ascii_strtoull (values[i], NULL, 0);
+  }
+
+
+  return node;
+}
+
 static GstValidateMediaTagsNode *
 deserialize_tagsnode (const gchar ** names, const gchar ** values)
 {
@@ -199,6 +236,13 @@ on_start_element_cb (GMarkupParseContext * context,
         * node = deserialize_streamnode (attribute_names, attribute_values);
     priv->in_stream = TRUE;
     filenode->streams = g_list_prepend (filenode->streams, node);
+  } else if (g_strcmp0 (element_name, "segment") == 0) {
+    GstValidateMediaStreamNode *streamnode = filenode->streams->data;
+    GstValidateSegmentNode *node =
+        deserialize_segmentnode (attribute_names, attribute_values);
+
+    streamnode->segments = g_list_append (streamnode->segments, node);
+
   } else if (g_strcmp0 (element_name, "frame") == 0) {
     GstValidateMediaStreamNode *streamnode = filenode->streams->data;
 

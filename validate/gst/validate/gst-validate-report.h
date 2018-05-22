@@ -104,6 +104,7 @@ typedef enum {
 #define FILE_SEEKABLE_INCORRECT                  _QUARK("file-checking::seekable-incorrect")
 #define FILE_PROFILE_INCORRECT                   _QUARK("file-checking::profile-incorrect")
 #define FILE_FRAMES_INCORRECT                    _QUARK("file-checking::frames-incorrect")
+#define FILE_SEGMENT_INCORRECT                   _QUARK("file-checking::segment-incorrect")
 
 #define ALLOCATION_FAILURE                       _QUARK("runtime::allocation-failure")
 #define MISSING_PLUGIN                           _QUARK("runtime::missing-plugin")
