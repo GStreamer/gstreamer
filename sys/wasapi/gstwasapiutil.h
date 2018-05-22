@@ -43,7 +43,7 @@
 /* Standard error path */
 #define HR_FAILED_AND(hr,func,and) \
   do { \
-    if (hr != S_OK) { \
+    if (FAILED (hr)) { \
       gchar *msg = gst_wasapi_util_hresult_to_string (hr); \
       GST_ERROR_OBJECT (self, #func " failed (%x): %s", (guint) hr, msg); \
       g_free (msg); \
