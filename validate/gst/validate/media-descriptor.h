@@ -27,7 +27,11 @@
 #include <gst/gst.h>
 #include "gst-validate-report.h"
 
-G_BEGIN_DECLS typedef struct
+G_BEGIN_DECLS
+
+#define GST_VALIDATE_UKNOWN_UINT64 (G_MAXUINT64 - 2)
+#define GST_VALIDATE_UKNOWN_BOOL (G_MAXUINT32 - 2)
+typedef struct
 {
   /* Children */
   /* GstValidateMediaTagNode */

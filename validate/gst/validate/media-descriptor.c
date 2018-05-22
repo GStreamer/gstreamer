@@ -456,8 +456,8 @@ compare_frames (GstValidateMediaDescriptor * ref,
         G_GUINT64_FORMAT, rstream->id, rframe->id, cframe->id);
     return FALSE;
   }
-#define CHECK_FRAME_FIELD(fieldname, format) \
-  if (rframe->fieldname != cframe->fieldname) { \
+#define CHECK_FRAME_FIELD(fieldname, format, unknown_value) \
+  if (rframe->fieldname != unknown_value && rframe->fieldname != cframe->fieldname) { \
     GST_VALIDATE_REPORT (ref, FILE_FRAMES_INCORRECT, \
         "Stream %s frames with id %" G_GUINT64_FORMAT " have " #fieldname \
         " mismatch. Expected " format ", got " format, rstream->id, \
@@ -465,11 +465,13 @@ compare_frames (GstValidateMediaDescriptor * ref,
     return FALSE; \
   }
 
-  CHECK_FRAME_FIELD (pts, "%" G_GUINT64_FORMAT);
-  CHECK_FRAME_FIELD (dts, "%" G_GUINT64_FORMAT);
-  CHECK_FRAME_FIELD (duration, "%" G_GUINT64_FORMAT);
-  CHECK_FRAME_FIELD (running_time, "%" G_GUINT64_FORMAT);
-  CHECK_FRAME_FIELD (is_keyframe, "%d");
+  CHECK_FRAME_FIELD (pts, "%" G_GUINT64_FORMAT, GST_VALIDATE_UKNOWN_UINT64);
+  CHECK_FRAME_FIELD (dts, "%" G_GUINT64_FORMAT, GST_VALIDATE_UKNOWN_UINT64);
+  CHECK_FRAME_FIELD (duration, "%" G_GUINT64_FORMAT,
+      GST_VALIDATE_UKNOWN_UINT64);
+  CHECK_FRAME_FIELD (running_time, "%" G_GUINT64_FORMAT,
+      GST_VALIDATE_UKNOWN_UINT64);
+  CHECK_FRAME_FIELD (is_keyframe, "%d", GST_VALIDATE_UKNOWN_BOOL);
 
   return TRUE;
 }

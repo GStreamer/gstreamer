@@ -128,7 +128,6 @@ deserialize_segmentnode (const gchar ** names, const gchar ** values)
       node->segment.duration = g_ascii_strtoull (values[i], NULL, 0);
   }
 
-
   return node;
 }
 
@@ -162,30 +161,35 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
   GstValidateMediaFrameNode *framenode =
       g_slice_new0 (GstValidateMediaFrameNode);
 
+/* *INDENT-OFF* */
+#define IF_SET_UINT64_FIELD(name,fieldname) \
+    if (g_strcmp0 (names[i], name) == 0) { \
+      if (g_strcmp0 (values[i], "unknown") == 0)  \
+        framenode->fieldname = GST_VALIDATE_UKNOWN_UINT64; \
+      else\
+        framenode->fieldname = g_ascii_strtoull (values[i], NULL, 0); \
+    }
+
   for (i = 0; names[i] != NULL; i++) {
-    if (g_strcmp0 (names[i], "id") == 0)
-      framenode->id = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "offset") == 0)
-      framenode->offset = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "offset-end") == 0)
-      framenode->offset_end = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "duration") == 0)
-      framenode->duration = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "pts") == 0)
-      framenode->pts = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "dts") == 0)
-      framenode->dts = g_ascii_strtoull (values[i], NULL, 0);
-    else if (g_strcmp0 (names[i], "running-time") == 0)
-      framenode->running_time = g_ascii_strtoull (values[i], NULL, 0);
+    IF_SET_UINT64_FIELD ("id", id)
+    else IF_SET_UINT64_FIELD ("offset", offset)
+    else IF_SET_UINT64_FIELD ("offset-end", offset_end)
+    else IF_SET_UINT64_FIELD ("duration", duration)
+    else IF_SET_UINT64_FIELD ("pts", pts)
+    else IF_SET_UINT64_FIELD ("dts", dts)
+    else IF_SET_UINT64_FIELD ("running-time", running_time)
     else if (g_strcmp0 (names[i], "checksum") == 0)
       framenode->checksum = g_strdup (values[i]);
     else if (g_strcmp0 (names[i], "is-keyframe") == 0) {
       if (!g_ascii_strcasecmp (values[i], "true"))
         framenode->is_keyframe = TRUE;
+      else if (!g_ascii_strcasecmp (values[i], "unknown"))
+        framenode->is_keyframe = GST_VALIDATE_UKNOWN_BOOL;
       else
         framenode->is_keyframe = FALSE;
     }
   }
+/* *INDENT-ON* */
 
   framenode->buf = gst_buffer_new_wrapped (framenode->checksum,
       strlen (framenode->checksum) + 1);
