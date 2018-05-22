@@ -28,6 +28,13 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_FILTER \
+    (gst_vaapi_filter_get_type ())
+#define GST_VAAPI_FILTER(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_FILTER, GstVaapiFilter))
+#define GST_VAAPI_IS_FILTER(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_FILTER))
+
 typedef struct _GstVaapiFilter                  GstVaapiFilter;
 typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
 
@@ -166,6 +173,9 @@ gst_vaapi_deinterlace_method_get_type (void) G_GNUC_CONST;
 
 GType
 gst_vaapi_deinterlace_flags_get_type (void) G_GNUC_CONST;
+
+GType
+gst_vaapi_filter_get_type (void) G_GNUC_CONST;
 
 GstVaapiFilter *
 gst_vaapi_filter_new (GstVaapiDisplay * display);

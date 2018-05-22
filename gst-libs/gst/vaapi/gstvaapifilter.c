@@ -33,7 +33,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define GST_VAAPI_FILTER(obj) \
+#define GST_VAAPI_FILTER_CAST(obj) \
     ((GstVaapiFilter *)(obj))
 
 typedef struct _GstVaapiFilterOpData GstVaapiFilterOpData;
@@ -55,7 +55,7 @@ struct _GstVaapiFilterOpData
 struct _GstVaapiFilter
 {
   /*< private > */
-  GstVaapiMiniObject parent_instance;
+  GstObject parent_instance;
 
   GstVaapiDisplay *display;
   VADisplay va_display;
@@ -72,6 +72,15 @@ struct _GstVaapiFilter
   guint use_crop_rect:1;
   guint use_target_rect:1;
 };
+
+typedef struct _GstVaapiFilterClass GstVaapiFilterClass;
+struct _GstVaapiFilterClass
+{
+  /*< private > */
+  GstObjectClass parent_class;
+};
+
+G_DEFINE_TYPE (GstVaapiFilter, gst_vaapi_filter, GST_TYPE_OBJECT);
 
 /* ------------------------------------------------------------------------- */
 /* --- VPP Types                                                         --- */
@@ -267,6 +276,11 @@ vpp_get_filter_caps (GstVaapiFilter * filter, VAProcFilterType type,
 #if USE_VA_VPP
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
 #define DEFAULT_SCALING GST_VAAPI_SCALE_METHOD_DEFAULT
+
+enum
+{
+  PROP_DISPLAY = 1,
+};
 
 enum
 {
@@ -1025,28 +1039,26 @@ find_format (GstVaapiFilter * filter, GstVideoFormat format)
 /* ------------------------------------------------------------------------- */
 
 #if USE_VA_VPP
-static gboolean
-gst_vaapi_filter_init (GstVaapiFilter * filter, GstVaapiDisplay * display)
+static void
+gst_vaapi_filter_init (GstVaapiFilter * filter)
 {
-  VAStatus va_status;
-
-  filter->display = gst_object_ref (display);
-  filter->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display);
   filter->va_config = VA_INVALID_ID;
   filter->va_context = VA_INVALID_ID;
   filter->format = DEFAULT_FORMAT;
 
   filter->forward_references =
       g_array_sized_new (FALSE, FALSE, sizeof (VASurfaceID), 4);
-  if (!filter->forward_references)
-    return FALSE;
 
   filter->backward_references =
       g_array_sized_new (FALSE, FALSE, sizeof (VASurfaceID), 4);
-  if (!filter->backward_references)
-    return FALSE;
+}
 
-  if (!GST_VAAPI_DISPLAY_HAS_VPP (display))
+static gboolean
+gst_vaapi_filter_initialize (GstVaapiFilter * filter)
+{
+  VAStatus va_status;
+
+  if (!filter->display)
     return FALSE;
 
   va_status = vaCreateConfig (filter->va_display, VAProfileNone,
@@ -1062,8 +1074,9 @@ gst_vaapi_filter_init (GstVaapiFilter * filter, GstVaapiDisplay * display)
 }
 
 static void
-gst_vaapi_filter_finalize (GstVaapiFilter * filter)
+gst_vaapi_filter_finalize (GObject * object)
 {
+  GstVaapiFilter *const filter = GST_VAAPI_FILTER (object);
   guint i;
 
   GST_VAAPI_DISPLAY_LOCK (filter->display);
@@ -1103,16 +1116,68 @@ gst_vaapi_filter_finalize (GstVaapiFilter * filter)
     g_array_unref (filter->formats);
     filter->formats = NULL;
   }
+
+  G_OBJECT_CLASS (gst_vaapi_filter_parent_class)->finalize (object);
 }
 
-static inline const GstVaapiMiniObjectClass *
-gst_vaapi_filter_class (void)
+static void
+gst_vaapi_filter_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  static const GstVaapiMiniObjectClass GstVaapiFilterClass = {
-    sizeof (GstVaapiFilter),
-    (GDestroyNotify) gst_vaapi_filter_finalize
-  };
-  return &GstVaapiFilterClass;
+  GstVaapiFilter *const filter = GST_VAAPI_FILTER (object);
+
+  switch (property_id) {
+    case PROP_DISPLAY:{
+      GstVaapiDisplay *display = g_value_get_object (value);;
+
+      if (display) {
+        if (GST_VAAPI_DISPLAY_HAS_VPP (display)) {
+          filter->display = gst_object_ref (display);
+          filter->va_display = GST_VAAPI_DISPLAY_VADISPLAY (filter->display);
+        } else {
+          GST_WARNING_OBJECT (filter, "VA display doesn't support VPP");
+        }
+      }
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_filter_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiFilter *const filter = GST_VAAPI_FILTER (object);
+
+  switch (property_id) {
+    case PROP_DISPLAY:
+      g_value_set_object (value, filter->display);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_filter_class_init (GstVaapiFilterClass * klass)
+{
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+
+  object_class->set_property = gst_vaapi_filter_set_property;
+  object_class->get_property = gst_vaapi_filter_get_property;
+  object_class->finalize = gst_vaapi_filter_finalize;
+
+  /**
+   * GstVaapiFilter:display:
+   *
+   * #GstVaapiDisplay to be used.
+   */
+  g_object_class_install_property (object_class, PROP_DISPLAY,
+      g_param_spec_object ("display", "Gst VA-API Display",
+          "The VA-API display object to use", GST_TYPE_VAAPI_DISPLAY,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME));
 }
 #endif
 
@@ -1131,12 +1196,8 @@ gst_vaapi_filter_new (GstVaapiDisplay * display)
 #if USE_VA_VPP
   GstVaapiFilter *filter;
 
-  filter = (GstVaapiFilter *)
-      gst_vaapi_mini_object_new0 (gst_vaapi_filter_class ());
-  if (!filter)
-    return NULL;
-
-  if (!gst_vaapi_filter_init (filter, display))
+  filter = g_object_new (GST_TYPE_VAAPI_FILTER, "display", display, NULL);
+  if (!gst_vaapi_filter_initialize (filter))
     goto error;
   return filter;
 
@@ -1201,8 +1262,7 @@ gst_vaapi_filter_replace (GstVaapiFilter ** old_filter_ptr,
 {
   g_return_if_fail (old_filter_ptr != NULL);
 
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_filter_ptr,
-      GST_VAAPI_MINI_OBJECT (new_filter));
+  gst_object_replace ((GstObject **) old_filter_ptr, GST_OBJECT (new_filter));
 }
 
 /**
