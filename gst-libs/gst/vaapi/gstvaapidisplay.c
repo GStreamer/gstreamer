@@ -976,7 +976,7 @@ _set_property (GstVaapiDisplay * display, const GstVaapiProperty * prop,
 }
 
 static void
-_gst_vaapi_display_set_property (GObject * object, guint property_id,
+gst_vaapi_display_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
@@ -1036,7 +1036,7 @@ _get_property (GstVaapiDisplay * display, const GstVaapiProperty * prop,
 }
 
 static void
-_gst_vaapi_display_get_property (GObject * object, guint property_id,
+gst_vaapi_display_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVaapiDisplay *display = GST_VAAPI_DISPLAY (object);
@@ -1072,8 +1072,8 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_vaapi_display_finalize;
-  object_class->set_property = _gst_vaapi_display_set_property;
-  object_class->get_property = _gst_vaapi_display_get_property;
+  object_class->set_property = gst_vaapi_display_set_property;
+  object_class->get_property = gst_vaapi_display_get_property;
 
   klass->lock = gst_vaapi_display_lock_default;
   klass->unlock = gst_vaapi_display_unlock_default;
@@ -1720,48 +1720,6 @@ gst_vaapi_display_has_property (GstVaapiDisplay * display, const gchar * name)
     return FALSE;
   return find_property (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->properties,
       name) != NULL;
-}
-
-gboolean
-gst_vaapi_display_get_property (GstVaapiDisplay * display, const gchar * name,
-    GValue * out_value)
-{
-  const GstVaapiProperty *prop;
-
-  g_return_val_if_fail (display != NULL, FALSE);
-  g_return_val_if_fail (name != NULL, FALSE);
-  g_return_val_if_fail (out_value != NULL, FALSE);
-
-  if (!ensure_properties (display))
-    return FALSE;
-
-  prop =
-      find_property (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->properties, name);
-  if (!prop)
-    return FALSE;
-
-  return _get_property (display, prop, out_value);
-}
-
-gboolean
-gst_vaapi_display_set_property (GstVaapiDisplay * display, const gchar * name,
-    const GValue * value)
-{
-  const GstVaapiProperty *prop;
-
-  g_return_val_if_fail (display != NULL, FALSE);
-  g_return_val_if_fail (name != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
-  if (!ensure_properties (display))
-    return FALSE;
-
-  prop =
-      find_property (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->properties, name);
-  if (!prop)
-    return FALSE;
-
-  return _set_property (display, prop, value);
 }
 
 static gboolean

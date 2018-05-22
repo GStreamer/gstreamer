@@ -234,14 +234,6 @@ gboolean
 gst_vaapi_display_has_property (GstVaapiDisplay * display, const gchar * name);
 
 gboolean
-gst_vaapi_display_get_property (GstVaapiDisplay * display, const gchar * name,
-    GValue * out_value);
-
-gboolean
-gst_vaapi_display_set_property (GstVaapiDisplay * display, const gchar * name,
-    const GValue * value);
-
-gboolean
 gst_vaapi_display_get_render_mode (GstVaapiDisplay * display,
     GstVaapiRenderMode * pmode);
 
