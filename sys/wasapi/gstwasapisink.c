@@ -208,7 +208,8 @@ gst_wasapi_sink_finalize (GObject * object)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (object);
 
-  g_clear_pointer (&self->mix_format, CoTaskMemFree);
+  CoTaskMemFree (self->mix_format);
+  self->mix_format = NULL;
 
   CoUninitialize ();
 

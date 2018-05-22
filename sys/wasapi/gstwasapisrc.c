@@ -227,7 +227,8 @@ gst_wasapi_src_finalize (GObject * object)
 {
   GstWasapiSrc *self = GST_WASAPI_SRC (object);
 
-  g_clear_pointer (&self->mix_format, CoTaskMemFree);
+  CoTaskMemFree (self->mix_format);
+  self->mix_format = NULL;
 
   CoUninitialize ();
 
