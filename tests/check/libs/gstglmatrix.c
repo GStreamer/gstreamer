@@ -26,6 +26,8 @@
 #undef GST_CAT_DEFAULT
 #include <gst/check/gstcheck.h>
 
+#define VEC4_FORMAT "10.4f %10.4f %10.4f %10.4f"
+#define VEC4_ARGS(v) (v)[0], (v)[1], (v)[2], (v)[3]
 #define EPSILON 0.0001f
 #define FEQ(a,b) (fabs(a-b) < EPSILON)
 
@@ -34,8 +36,7 @@ debug_matrix (const float *m)
 {
   int i;
   for (i = 0; i < 4; i++) {
-    GST_DEBUG ("%10.4f %10.4f %10.4f %10.4f", m[i * 4 + 0], m[i * 4 + 1],
-        m[i * 4 + 2], m[i * 4 + 3]);
+    GST_DEBUG ("%" VEC4_FORMAT, VEC4_ARGS (&m[i * 4]));
   }
 }
 
@@ -67,7 +68,13 @@ GST_START_TEST (test_matrix_multiply)
   int i;
 
   gst_gl_multiply_matrix4 (A, B, res);
-  GST_DEBUG ("result");
+  GST_DEBUG ("Matrix A:");
+  debug_matrix (A);
+  GST_DEBUG ("Matrix B:");
+  debug_matrix (B);
+  GST_DEBUG ("Matrix C:");
+  debug_matrix (C);
+  GST_DEBUG ("Multiplication Result == C == A * B:");
   debug_matrix (res);
 
   for (i = 0; i < G_N_ELEMENTS (res); i++) {
@@ -103,7 +110,7 @@ GST_START_TEST (test_matrix_ndc)
 
   /* test default identity matrix */
   gst_gl_get_affine_transformation_meta_as_ndc (aff_meta, res);
-  GST_DEBUG ("result");
+  GST_DEBUG ("Default matrix in the affine meta:");
   debug_matrix (res);
 
   for (i = 0; i < G_N_ELEMENTS (res); i++) {
@@ -112,10 +119,13 @@ GST_START_TEST (test_matrix_ndc)
   }
 
   /* test setting and receiving the same values */
+  GST_DEBUG ("Set matrix on the affine transformation meta:");
+  debug_matrix (n);
+
   gst_gl_set_affine_transformation_meta_from_ndc (aff_meta, n);
   gst_gl_get_affine_transformation_meta_as_ndc (aff_meta, res);
 
-  GST_DEBUG ("result");
+  GST_DEBUG ("Retrieve the matrix set on the affine meta:");
   debug_matrix (res);
 
   for (i = 0; i < G_N_ELEMENTS (res); i++) {
@@ -145,7 +155,7 @@ transpose_matrix4 (float *m, float *res)
     }
   }
 }
-
+#endif
 static float
 dot4 (float *v1, float *v2)
 {
@@ -164,16 +174,21 @@ _matrix_mult_vertex4 (float *m, float *v, float *res)
   res[3] = dot4 (&m[12], v);
 }
 
+#if 0
 /* v * m */
+/* Not the prevailing multiplication convention and not really used in
+ * GStreamer. Kept around for extra testing */
 static void
 _vertex_mult_matrix4 (float *v, float *m, float *res)
 {
   float tmp[16] = { 0., };
 
   transpose_matrix4 (m, tmp);
+  GST_TRACE ("transposed matrix");
+  debug_matrix (tmp);
   _matrix_mult_vertex4 (tmp, v, res);
 }
-
+#endif
 GST_START_TEST (test_matrix_vertex_identity)
 {
   float identity[] = {
@@ -187,18 +202,9 @@ GST_START_TEST (test_matrix_vertex_identity)
   float res[4] = { 0., };
   int i;
 
-  _vertex_mult_matrix4 (v, identity, res);
-  GST_DEBUG ("vertex: %.4f %.4f %.4f %.4f", v[0], v[1], v[2], v[3]);
-  GST_DEBUG ("result: %.4f %.4f %.4f %.4f", res[0], res[1], res[2], res[3]);
-
-  for (i = 0; i < 4; i++) {
-    fail_unless (FEQ (res[i], v[i]), "value %f at index %u does not match "
-        "expected value %f", res[i], i, v[i]);
-  }
-
   _matrix_mult_vertex4 (identity, v, res);
-  GST_DEBUG ("vertex: %.4f %.4f %.4f %.4f", v[0], v[1], v[2], v[3]);
-  GST_DEBUG ("result: %.4f %.4f %.4f %.4f", res[0], res[1], res[2], res[3]);
+  GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
+  GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
   for (i = 0; i < 4; i++) {
     fail_unless (FEQ (res[i], v[i]), "value %f at index %u does not match "
@@ -222,19 +228,9 @@ GST_START_TEST (test_matrix_vertex_scale)
   float res[4] = { 0., };
   int i;
 
-  _vertex_mult_matrix4 (v, scale, res);
-  GST_DEBUG ("vertex: %.4f %.4f %.4f %.4f", v[0], v[1], v[2], v[3]);
-  GST_DEBUG ("result: %.4f %.4f %.4f %.4f", res[0], res[1], res[2], res[3]);
-
-  for (i = 0; i < 4; i++) {
-    fail_unless (FEQ (res[i], expected[i]),
-        "value %f at index %u does not match " "expected value %f", res[i], i,
-        expected[i]);
-  }
-
   _matrix_mult_vertex4 (scale, v, res);
-  GST_DEBUG ("vertex: %.4f %.4f %.4f %.4f", v[0], v[1], v[2], v[3]);
-  GST_DEBUG ("result: %.4f %.4f %.4f %.4f", res[0], res[1], res[2], res[3]);
+  GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
+  GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
   for (i = 0; i < 4; i++) {
     fail_unless (FEQ (res[i], expected[i]),
@@ -244,10 +240,92 @@ GST_START_TEST (test_matrix_vertex_scale)
 }
 
 GST_END_TEST;
-#endif
+
+GST_START_TEST (test_matrix_vertex_y_invert)
+{
+  float y_invert[] = {
+    1., 0., 0., 0.,
+    0., -1., 0., 0.,
+    0., 0., 1., 0.,
+    0., 0., 0., 1.,
+  };
+
+  /* These two matrices are copied from
+   * gst_gl_set_affine_transformation_meta_from_ndc{,_ext}() gstglutils.c
+   * in ext/gl and gst-libs/gst/gl */
+  static const gfloat from_ndc_matrix[] = {
+    0.5, 0.0, 0.0, 0.5,
+    0.0, 0.5, 0.0, 0.5,
+    0.0, 0.0, 0.5, 0.5,
+    0.0, 0.0, 0.0, 1.0,
+  };
+
+  static const gfloat to_ndc_matrix[] = {
+    2.0, 0.0, 0.0, -1.0,
+    0.0, 2.0, 0.0, -1.0,
+    0.0, 0.0, 2.0, -1.0,
+    0.0, 0.0, 0.0, 1.0,
+  };
+
+  float v[] = { 1., 1., 1., 1. };
+  float expected[] = { 1., -1., 1., 1. };
+  float res[4] = { 0., };
+  int i;
+
+  /* The y_invert matrix but with a coordinate space of [0, 1]^3 instead
+   * of [-1, 1]^3 */
+  float y_invert_0_1[16] = { 0., };
+  float m1[16] = { 0., };
+
+  GST_DEBUG ("y-invert");
+  debug_matrix (y_invert);
+
+  _matrix_mult_vertex4 (y_invert, v, res);
+  GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
+  GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
+
+  for (i = 0; i < 4; i++) {
+    fail_unless (FEQ (res[i], expected[i]),
+        "value %f at index %u does not match " "expected value %f", res[i], i,
+        expected[i]);
+  }
+
+  /* now test the [0, 1]^3 matrix and update the test values acoordingly */
+  expected[1] = 0.;
+  gst_gl_multiply_matrix4 (from_ndc_matrix, y_invert, m1);
+  gst_gl_multiply_matrix4 (m1, to_ndc_matrix, y_invert_0_1);
+
+  GST_DEBUG ("y-invert from ndc [-1,1]^3 to [0,1]^3");
+  debug_matrix (y_invert_0_1);
+
+  _matrix_mult_vertex4 (y_invert_0_1, v, res);
+  GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
+  GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
+
+  for (i = 0; i < 4; i++) {
+    fail_unless (FEQ (res[i], expected[i]),
+        "value %f at index %u does not match " "expected value %f", res[i], i,
+        expected[i]);
+  }
+
+  /* test vec4(1,0,1,1) -> vec4(1,1,1,1) */
+  v[1] = 0.;
+  expected[1] = 1.;
+  _matrix_mult_vertex4 (y_invert_0_1, v, res);
+  GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
+  GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
+
+  for (i = 0; i < 4; i++) {
+    fail_unless (FEQ (res[i], expected[i]),
+        "value %f at index %u does not match " "expected value %f", res[i], i,
+        expected[i]);
+  }
+}
+
+GST_END_TEST;
 
 static Suite *
-gst_gl_upload_suite (void)
+gst_gl_matrix_suite (void)
 {
   Suite *s = suite_create ("GstGLMatrix");
   TCase *tc_chain = tcase_create ("matrix");
@@ -255,8 +333,11 @@ gst_gl_upload_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_matrix_multiply);
   tcase_add_test (tc_chain, test_matrix_ndc);
+  tcase_add_test (tc_chain, test_matrix_vertex_identity);
+  tcase_add_test (tc_chain, test_matrix_vertex_scale);
+  tcase_add_test (tc_chain, test_matrix_vertex_y_invert);
 
   return s;
 }
 
-GST_CHECK_MAIN (gst_gl_upload);
+GST_CHECK_MAIN (gst_gl_matrix);
