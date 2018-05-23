@@ -227,7 +227,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @host: the hostname/IP address of the added client
    * @port: the port of the added client
    *
-   * Signal emited when a new client is added to the list of
+   * Signal emitted when a new client is added to the list of
    * clients.
    */
   gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED] =
@@ -241,7 +241,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @host: the hostname/IP address of the removed client
    * @port: the port of the removed client
    *
-   * Signal emited when a client is removed from the list of
+   * Signal emitted when a client is removed from the list of
    * clients.
    */
   gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED] =

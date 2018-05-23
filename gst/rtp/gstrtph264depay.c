@@ -281,9 +281,7 @@ gst_rtp_h264_depay_set_output_caps (GstRtpH264Depay * rtph264depay,
   gst_allocation_params_init (&params);
 
   srcpad = GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay);
-
   res = gst_pad_set_caps (srcpad, caps);
-
   if (res) {
     GstQuery *query;
 

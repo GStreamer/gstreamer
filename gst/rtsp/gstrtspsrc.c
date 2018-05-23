@@ -901,7 +901,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @rtspsrc: a #GstRTSPSrc
    * @sdp: a #GstSDPMessage
    *
-   * Emited when the client has retrieved the SDP and before it configures the
+   * Emitted when the client has retrieved the SDP and before it configures the
    * streams in the SDP. @sdp can be inspected and modified.
    *
    * This signal is called from the streaming thread, you should therefore not
@@ -923,7 +923,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @num: the stream number
    * @caps: the stream caps
    *
-   * Emited before the client decides to configure the stream @num with
+   * Emitted before the client decides to configure the stream @num with
    * @caps.
    *
    * Returns: %TRUE when the stream should be selected, %FALSE when the stream
@@ -942,7 +942,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @rtspsrc: a #GstRTSPSrc
    * @manager: a #GstElement
    *
-   * Emited after a new manager (like rtpbin) was created and the default
+   * Emitted after a new manager (like rtpbin) was created and the default
    * properties were configured.
    *
    * Since: 1.4
@@ -957,7 +957,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @rtspsrc: a #GstRTSPSrc
    * @num: the stream number
    *
-   * Signal emited to get the crypto parameters relevant to the RTCP
+   * Signal emitted to get the crypto parameters relevant to the RTCP
    * stream. User should provide the key and the RTCP encryption ciphers
    * and authentication, and return them wrapped in a GstCaps.
    *

@@ -3402,7 +3402,7 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   return TRUE;
 }
 
-/* a new pad (SSRC) was created in @session. This signal is emited from the
+/* a new pad (SSRC) was created in @session. This signal is emitted from the
  * payload demuxer. */
 static void
 new_payload_found (GstElement * element, guint pt, GstPad * pad,
@@ -3584,7 +3584,7 @@ payload_type_change (GstElement * element, guint pt, GstRtpBinSession * session)
       0, session->id, pt);
 }
 
-/* emited when caps changed for the session */
+/* emitted when caps changed for the session */
 static void
 caps_changed (GstPad * pad, GParamSpec * pspec, GstRtpBinSession * session)
 {
@@ -3672,7 +3672,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     stream->demux_padremoved_sig = g_signal_connect (stream->demux,
         "pad-removed", (GCallback) payload_pad_removed, stream);
 
-    /* connect to the request-pt-map signal. This signal will be emited by the
+    /* connect to the request-pt-map signal. This signal will be emitted by the
      * demuxer so that it can apply a proper caps on the buffers for the
      * depayloaders. */
     stream->demux_ptreq_sig = g_signal_connect (stream->demux,

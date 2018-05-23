@@ -284,8 +284,8 @@ struct _RTPSession {
 
 /**
  * RTPSessionClass:
- * @on_new_ssrc: emited when a new source is found
- * @on_bye_ssrc: emited when a source is gone
+ * @on_new_ssrc: emitted when a new source is found
+ * @on_bye_ssrc: emitted when a source is gone
  *
  * The session class.
  */
