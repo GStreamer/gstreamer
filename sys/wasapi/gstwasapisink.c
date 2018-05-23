@@ -613,7 +613,8 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   GST_OBJECT_LOCK (self);
   if (self->client_needs_restart) {
     hr = IAudioClient_Start (self->client);
-    HR_FAILED_AND (hr, IAudioClient::Start, length = 0; goto beach);
+    HR_FAILED_AND (hr, IAudioClient::Start,
+      GST_OBJECT_UNLOCK (self); length = 0; goto beach);
     self->client_needs_restart = FALSE;
   }
   GST_OBJECT_UNLOCK (self);
