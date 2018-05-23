@@ -833,48 +833,56 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             self.debug("Exception: %s for %s", e, media_info)
 
     def _discover_file(self, uri, fpath):
-        try:
-            media_info = "%s.%s" % (
-                fpath, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
-            args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
-            args.append(uri)
-            if os.path.isfile(media_info) and not self.options.update_media_info:
-                self._add_media(media_info, uri)
-                return True
-            elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
-                self._add_media(fpath)
-                return True
-            elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
-                self.info(
-                    "%s not present. Use --generate-media-info", media_info)
-                return True
-            elif self.options.update_media_info and not os.path.isfile(media_info):
-                self.info(
-                    "%s not present. Use --generate-media-info", media_info)
-                return True
+        for ext in (GstValidateMediaDescriptor.MEDIA_INFO_EXT,
+                GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT):
+            try:
+                is_push = False
+                media_info = "%s.%s" % (fpath, ext)
+                if ext == GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT:
+                    if not os.path.exists(media_info):
+                        continue
+                    is_push = True
+                    uri = "push" + uri
+                args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
 
-            include_frames = 0
-            if self.options.update_media_info:
-                include_frames = 2
-            elif self.options.generate_info_full:
-                include_frames = 1
+                args.append(uri)
+                if os.path.isfile(media_info) and not self.options.update_media_info:
+                    self._add_media(media_info, uri)
+                    continue
+                elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
+                    self._add_media(fpath)
+                    continue
+                elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
+                    continue
+                elif self.options.update_media_info and not os.path.isfile(media_info):
+                    self.info(
+                        "%s not present. Use --generate-media-info", media_info)
+                    continue
+                elif os.path.islink(media_info):
+                    self.info(
+                        "%s is a symlink, not updating and hopefully the actual file gets updated!", media_info)
+                    continue
 
-            media_descriptor = GstValidateMediaDescriptor.new_from_uri(
-                uri, True,
-                include_frames)
-            if media_descriptor:
-                self._add_media(media_descriptor, uri)
-            else:
-                self.warning("Could not get any descriptor for %s" % uri)
+                include_frames = 0
+                if self.options.update_media_info:
+                    include_frames = 2
+                elif self.options.generate_info_full:
+                    include_frames = 1
 
-            return True
+                media_descriptor = GstValidateMediaDescriptor.new_from_uri(
+                    uri, True, include_frames, is_push)
+                if media_descriptor:
+                    self._add_media(media_descriptor, uri)
+                else:
+                    self.warning("Could not get any descriptor for %s" % uri)
 
-        except subprocess.CalledProcessError as e:
-            if self.options.generate_info:
-                printc("Result: Failed", Colors.FAIL)
-            else:
-                self.error("Exception: %s", e)
-            return False
+            except subprocess.CalledProcessError as e:
+                if self.options.generate_info:
+                    printc("Result: Failed", Colors.FAIL)
+                else:
+                    self.error("Exception: %s", e)
+                return False
+        return True
 
     def _list_uris(self):
         if self._uris:

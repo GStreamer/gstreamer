@@ -97,6 +97,11 @@ testsuite_folder/
         <programlisting>gst-validate-launcher --medias-paths /path/to/sample_files/ --generate-media-info</programlisting>
       </informalexample>
       <para>
+        <command>gst-validate-launcher</command> allows specifying that a local media file should also be tested in push mode.
+        To do so you will need to generate (or symlink) a media info file with the extension <filename>.media_info.push</filename>.
+        In that case a "pushfile" source will be used instead of the usual "filesource".
+      </para>
+      <para>
             For remote streams, you should use <command>gst-validate-media-check-&GST_API_VERSION;</command>. For an http stream you can for example do:
       </para>
       <informalexample>

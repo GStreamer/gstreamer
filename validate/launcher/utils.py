@@ -63,6 +63,7 @@ class Result(object):
 class Protocols(object):
     HTTP = "http"
     FILE = "file"
+    PUSHFILE = "pushfile"
     HLS = "hls"
     DASH = "dash"
     RTSP = "rtsp"
