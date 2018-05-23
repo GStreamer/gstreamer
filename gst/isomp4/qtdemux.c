@@ -2234,10 +2234,10 @@ gst_qtdemux_map_and_push_segments (GstQTDemux * qtdemux, GstSegment * segment)
      * supported and are discarded when parsing the edts */
     for (i = 0; i < stream->n_segments; i++) {
       if (stream->segments[i].stop_time > segment->start) {
+        /* push the empty segment and move to the next one */
         gst_qtdemux_activate_segment (qtdemux, stream, i,
             stream->time_position);
         if (QTSEGMENT_IS_EMPTY (&stream->segments[i])) {
-          /* push the empty segment and move to the next one */
           gst_qtdemux_send_gap_for_segment (qtdemux, stream, i,
               stream->time_position);
 
@@ -6546,23 +6546,30 @@ gst_qtdemux_check_send_pending_segment (GstQTDemux * demux)
   }
 }
 
+/* Used for push mode only. */
 static void
 gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
     QtDemuxStream * stream, gint segment_index, GstClockTime pos)
 {
   GstClockTime ts, dur;
-  GstEvent *gap;
 
   ts = pos;
   dur =
       stream->segments[segment_index].duration - (pos -
       stream->segments[segment_index].time);
-  gap = gst_event_new_gap (ts, dur);
   stream->time_position += dur;
 
-  GST_DEBUG_OBJECT (stream->pad, "Pushing gap for empty "
-      "segment: %" GST_PTR_FORMAT, gap);
-  gst_pad_push_event (stream->pad, gap);
+  /* Only gaps with a duration of at least one second are propagated.
+   * Same workaround as in pull mode.
+   * (See 2e45926a96ec5298c6ef29bf912e5e6a06dc3e0e) */
+  if (dur >= GST_SECOND) {
+    GstEvent *gap;
+    gap = gst_event_new_gap (ts, dur);
+
+    GST_DEBUG_OBJECT (stream->pad, "Pushing gap for empty "
+        "segment: %" GST_PTR_FORMAT, gap);
+    gst_pad_push_event (stream->pad, gap);
+  }
 }
 
 static GstFlowReturn
