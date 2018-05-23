@@ -2240,6 +2240,12 @@ gst_qtdemux_map_and_push_segments (GstQTDemux * qtdemux, GstSegment * segment)
           /* push the empty segment and move to the next one */
           gst_qtdemux_send_gap_for_segment (qtdemux, stream, i,
               stream->time_position);
+
+          /* accumulate previous segments */
+          if (GST_CLOCK_TIME_IS_VALID (stream->segment.stop))
+            stream->accumulated_base +=
+                (stream->segment.stop -
+                stream->segment.start) / ABS (stream->segment.rate);
           continue;
         }
 
@@ -6559,30 +6565,6 @@ gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
   gst_pad_push_event (stream->pad, gap);
 }
 
-static void
-gst_qtdemux_stream_send_initial_gap_segments (GstQTDemux * demux,
-    QtDemuxStream * stream)
-{
-  gint i;
-
-  /* Push any initial gap segments before proceeding to the
-   * 'real' data */
-  for (i = 0; i < stream->n_segments; i++) {
-    gst_qtdemux_activate_segment (demux, stream, i, stream->time_position);
-
-    if (QTSEGMENT_IS_EMPTY (&stream->segments[i])) {
-      gst_qtdemux_send_gap_for_segment (demux, stream, i,
-          stream->time_position);
-    } else {
-      /* Only support empty segment at the beginning followed by
-       * one non-empty segment, this was checked when parsing the
-       * edts atom, arriving here is unexpected */
-      g_assert (i + 1 == stream->n_segments);
-      break;
-    }
-  }
-}
-
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 {
@@ -6820,8 +6802,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         extract_initial_length_and_fourcc (data, demux->neededbytes, NULL,
             &fourcc);
         if (fourcc == FOURCC_moov) {
-          GList *iter;
-
           /* in usual fragmented setup we could try to scan for more
            * and end up at the the moov (after mdat) again */
           if (demux->got_moov && demux->n_streams > 0 &&
@@ -6871,15 +6851,12 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             QTDEMUX_EXPOSE_UNLOCK (demux);
 
             demux->got_moov = TRUE;
-            gst_qtdemux_check_send_pending_segment (demux);
 
-            /* fragmented streams headers shouldn't contain edts atoms */
-            if (!demux->fragmented) {
-              for (iter = demux->active_streams; iter;
-                  iter = g_list_next (iter)) {
-                gst_qtdemux_stream_send_initial_gap_segments (demux,
-                    QTDEMUX_STREAM (iter->data));
-              }
+            if (demux->fragmented) {
+              gst_qtdemux_check_send_pending_segment (demux);
+            } else {
+              gst_event_replace (&demux->pending_newsegment, NULL);
+              gst_qtdemux_map_and_push_segments (demux, &demux->segment);
             }
 
             if (demux->moov_node_compressed) {
