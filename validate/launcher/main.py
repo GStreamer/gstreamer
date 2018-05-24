@@ -237,6 +237,9 @@ class LauncherConfig(Loggable):
         else:
             self.output_dir = os.path.abspath(self.output_dir)
 
+        if self.gdb_non_stop:
+            self.gdb = True
+
         if self.gdb:
             self.logsdir = "stdout"
             self.debug = True
@@ -457,6 +460,9 @@ Note that all testsuite should be inside python modules, so the directory should
                         action="store_true",
                         help="Run the tests inside gdb (implies"
                         " --output-dir=stdout and --jobs=1)")
+    parser.add_argument("--gdb-non-stop", dest="gdb_non_stop",
+                        action="store_true",
+                        help="Run the test automatically in gdb (implies --gdb)")
     parser.add_argument("-nd", "--no-display", dest="no_display",
                         action="store_true",
                         help="Run the tests without outputting graphics"

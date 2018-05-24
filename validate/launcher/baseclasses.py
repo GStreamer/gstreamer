@@ -385,7 +385,11 @@ class Test(Loggable):
         if self.hard_timeout is not None:
             self.hard_timeout *= GDB_TIMEOUT_FACTOR
         self.timeout *= GDB_TIMEOUT_FACTOR
-        return ["gdb", "-ex", "run", "-ex", "backtrace", "-ex", "quit", "--args"] + command
+        args = ["gdb"]
+        if self.options.gdb_non_stop:
+            args += ["-ex", "run", "-ex", "backtrace", "-ex", "quit"]
+        args += ["--args"] + command
+        return args
 
     def use_valgrind(self, command, subenv):
         vglogsfile = self.logfile + '.valgrind'
