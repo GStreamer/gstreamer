@@ -163,7 +163,7 @@ gmodule_dep = dependency('gmodule-2.0', version : glib_req)
 
 gst_omx_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
-omx_header_path = get_option('with_omx_header_path')
+omx_header_path = get_option('header_path')
 if omx_header_path != ''
   omx_inc = []
   gst_omx_args += ['-I' + omx_header_path]
@@ -172,7 +172,7 @@ else
 endif
 
 default_omx_struct_packing = 0
-omx_target = get_option ('with_omx_target')
+omx_target = get_option ('target')
 if omx_target == 'generic'
   cdata.set('USE_OMX_TARGET_GENERIC', 1)
 elif omx_target == 'rpi'
@@ -205,7 +205,7 @@ elif omx_target == 'zynqultrascaleplus'
       args : gst_omx_args,
       include_directories : [omx_inc])
   if not have_allegro_header
-    error ('Need Allegro OMX headers to build for Zynq UltraScale+. Use with_omx_header_path option to specify the path of those headers.')
+    error ('Need Allegro OMX headers to build for Zynq UltraScale+. Use -Dheader_path option to specify the path of those headers.')
   endif
 elif omx_target == 'tizonia'
   cdata.set('USE_OMX_TARGET_TIZONIA', 1)
@@ -214,7 +214,7 @@ elif omx_target == 'tizonia'
   tizil_includedir = tizil_dep.get_pkgconfig_variable('includedir')
   gst_omx_args += ['-I' + tizil_includedir + '/tizonia']
 else
-  error ('Unsupported omx target specified. Use the -Dwith_omx_target option')
+  error ('Unsupported omx target specified. Use the -Dtarget option')
 endif
 
 extra_video_headers = ''
@@ -311,7 +311,7 @@ if x11_dep.found()
   cdata.set ('HAVE_X11', 1)
 endif
 
-omx_struct_packing = get_option ('with_omx_struct_packing').to_int()
+omx_struct_packing = get_option ('struct_packing').to_int()
 if omx_struct_packing == 0
   omx_struct_packing = default_omx_struct_packing
 endif
