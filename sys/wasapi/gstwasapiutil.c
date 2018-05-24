@@ -845,6 +845,7 @@ gst_wasapi_util_initialize_audioclient (GstElement * self,
   REFERENCE_TIME default_period, min_period;
   REFERENCE_TIME device_period, device_buffer_duration;
   guint rate, stream_flags;
+  guint32 n_frames;
   HRESULT hr;
 
   hr = IAudioClient_GetDevicePeriod (client, &default_period, &min_period);
@@ -881,8 +882,6 @@ gst_wasapi_util_initialize_audioclient (GstElement * self,
 
   if (hr == AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED &&
       sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
-    guint32 n_frames;
-
     GST_WARNING_OBJECT (self, "initialize failed due to unaligned period %i",
         (int) device_period);
 
@@ -900,7 +899,10 @@ gst_wasapi_util_initialize_audioclient (GstElement * self,
   }
   HR_FAILED_RET (hr, IAudioClient::Initialize, FALSE);
 
-  *ret_devicep_frames = (rate * device_period * 100) / GST_SECOND;
+  hr = IAudioClient_GetBufferSize (client, &n_frames);
+  HR_FAILED_RET (hr, IAudioClient::GetBufferSize, FALSE);
+
+  *ret_devicep_frames = n_frames;
 
   return TRUE;
 }
