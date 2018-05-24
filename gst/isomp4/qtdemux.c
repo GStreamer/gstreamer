@@ -310,8 +310,6 @@ struct _QtDemuxStream
   guint32 n_samples;
   QtDemuxSample *samples;
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
-  guint32 first_duration;       /* duration in timescale of first sample, used for figuring out
-                                   the framerate */
   guint32 n_samples_moof;       /* sample count in a moof */
   guint64 duration_moof;        /* duration in timescale of a moof, used for figure out
                                  * the framerate of fragmented format stream */
@@ -8201,8 +8199,12 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     /* fps is calculated base on the duration of the average framerate since
      * qt does not have a fixed framerate. */
     gboolean fps_available = TRUE;
+    guint32 first_duration = 0;
 
-    if ((stream->n_samples == 1 && stream->first_duration == 0)
+    if (stream->n_samples > 0)
+      first_duration = stream->samples[0].duration;
+
+    if ((stream->n_samples == 1 && first_duration == 0)
         || (qtdemux->fragmented && stream->n_samples_moof == 1)) {
       /* still frame */
       CUR_STREAM (stream)->fps_n = 0;
@@ -8232,14 +8234,14 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
         /* stream->duration is guint64, timescale, n_samples are guint32 */
         avg_duration =
             gst_util_uint64_scale_round (duration -
-            stream->first_duration, GST_SECOND,
+            first_duration, GST_SECOND,
             (guint64) (stream->timescale) * (n_samples - 1));
 
         GST_LOG_OBJECT (qtdemux,
             "Calculating avg sample duration based on stream (or moof) duration %"
             G_GUINT64_FORMAT
             " minus first sample %u, leaving %d samples gives %"
-            GST_TIME_FORMAT, duration, stream->first_duration,
+            GST_TIME_FORMAT, duration, first_duration,
             n_samples - 1, GST_TIME_ARGS (avg_duration));
 
         gst_video_guess_framerate (avg_duration, &CUR_STREAM (stream)->fps_n,
@@ -12263,11 +12265,6 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
       if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
         break;
       ++sample_num;
-    }
-    if (stream->n_samples > 0 && stream->stbl_index >= 0) {
-      stream->first_duration = stream->samples[0].duration;
-      GST_LOG_OBJECT (qtdemux, "track-id %u first duration %u",
-          stream->track_id, stream->first_duration);
     }
   }
 
