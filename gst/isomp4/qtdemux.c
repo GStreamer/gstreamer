@@ -8056,6 +8056,13 @@ gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
   g_ptr_array_add (qtdemux->protection_system_ids, NULL);
   filtered_sys_ids = gst_protection_filter_systems_by_available_decryptors (
       (const gchar **) qtdemux->protection_system_ids->pdata);
+
+  if (!filtered_sys_ids) {
+    GST_INFO_OBJECT (element,
+        "No avalaible decryptor, not worth asking the user to choose.");
+    return;
+  }
+
   g_ptr_array_remove_index (qtdemux->protection_system_ids,
       qtdemux->protection_system_ids->len - 1);
   GST_TRACE_OBJECT (qtdemux, "detected %u protection systems, we have "
