@@ -360,11 +360,22 @@ class Test(Loggable):
         pass
 
     def thread_wrapper(self):
+        def enable_sigint():
+            # Restore the SIGINT handler for the child process (gdb) to ensure
+            # it can handle it.
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+        if self.options.gdb and os.name != "nt":
+            preexec_fn = enable_sigint
+        else:
+            preexec_fn = None
+
         self.process = subprocess.Popen(self.command,
                                         stderr=self.out,
                                         stdout=self.out,
                                         env=self.proc_env,
-                                        cwd=self.workdir)
+                                        cwd=self.workdir,
+                                        preexec_fn=preexec_fn)
         self.process.wait()
         if self.result is not Result.TIMEOUT:
             if self.process.returncode == 0:
@@ -492,6 +503,11 @@ class Test(Loggable):
 
         if self.options.gdb:
             self.command = self.use_gdb(self.command)
+
+            self.previous_sigint_handler = signal.getsignal(signal.SIGINT)
+            # Make the gst-validate executable ignore SIGINT while gdb is running.
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         if self.options.valgrind:
             self.command = self.use_valgrind(self.command, self.proc_env)
 
@@ -532,6 +548,9 @@ class Test(Loggable):
         self.kill_subprocess()
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
+
+        if self.options.gdb:
+            signal.signal(signal.SIGINT, self.previous_sigint_handler)
 
         if self.result != Result.PASSED:
             message = str(self)
