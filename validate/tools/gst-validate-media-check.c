@@ -44,9 +44,12 @@ main (int argc, gchar ** argv)
   guint ret = 0;
   GError *err = NULL;
   gboolean full = FALSE;
+  gboolean skip_parsers = FALSE;
   gchar *output_file = NULL;
   gchar *expected_file = NULL;
   gchar *output = NULL;
+  GstValidateMediaDescriptorWriterFlags writer_flags =
+      GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_HANDLE_GLOGS;
   GstValidateMediaDescriptorWriter *writer = NULL;
   GstValidateRunner *runner = NULL;
   GstValidateMediaDescriptorParser *reference = NULL;
@@ -61,6 +64,9 @@ main (int argc, gchar ** argv)
     {"expected-results", 'e', 0, G_OPTION_ARG_FILENAME,
           &expected_file, "Path to file containing the expected results "
           "(or the last results found) for comparison with new results",
+        NULL},
+    {"skip-parsers", 's', 0, G_OPTION_ARG_NONE,
+          &skip_parsers, "Do not plug a parser after demuxer.",
         NULL},
     {NULL}
   };
@@ -116,9 +122,16 @@ main (int argc, gchar ** argv)
       full = TRUE;              /* Reference has frame info, activate to do comparison */
   }
 
+  if (full)
+    writer_flags |= GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_FULL;
+
+  if (skip_parsers)
+    writer_flags |= GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER;
+
+
   writer =
-      gst_validate_media_descriptor_writer_new_discover (runner, argv[1], full,
-      TRUE, NULL);
+      gst_validate_media_descriptor_writer_new_discover (runner, argv[1],
+      writer_flags, NULL);
   if (writer == NULL) {
     g_print ("Could not discover file: %s\n", argv[1]);
     ret = 1;

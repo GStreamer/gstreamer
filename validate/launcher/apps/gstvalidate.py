@@ -483,6 +483,9 @@ class GstValidateMediaCheckTest(GstValidateTest):
         self.add_arguments(self._uri, "--expected-results",
                            self._media_info_path)
 
+        if self.media_descriptor.skip_parsers():
+            self.add_arguments("--skip-parsers")
+
 
 class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterface):
     scenarios_manager = ScenarioManager()

@@ -465,13 +465,13 @@ compare_frames (GstValidateMediaDescriptor * ref,
     return FALSE; \
   }
 
-  CHECK_FRAME_FIELD (pts, "%" G_GUINT64_FORMAT, GST_VALIDATE_UKNOWN_UINT64);
-  CHECK_FRAME_FIELD (dts, "%" G_GUINT64_FORMAT, GST_VALIDATE_UKNOWN_UINT64);
+  CHECK_FRAME_FIELD (pts, "%" G_GUINT64_FORMAT, GST_VALIDATE_UNKNOWN_UINT64);
+  CHECK_FRAME_FIELD (dts, "%" G_GUINT64_FORMAT, GST_VALIDATE_UNKNOWN_UINT64);
   CHECK_FRAME_FIELD (duration, "%" G_GUINT64_FORMAT,
-      GST_VALIDATE_UKNOWN_UINT64);
+      GST_VALIDATE_UNKNOWN_UINT64);
   CHECK_FRAME_FIELD (running_time, "%" G_GUINT64_FORMAT,
-      GST_VALIDATE_UKNOWN_UINT64);
-  CHECK_FRAME_FIELD (is_keyframe, "%d", GST_VALIDATE_UKNOWN_BOOL);
+      GST_VALIDATE_UNKNOWN_UINT64);
+  CHECK_FRAME_FIELD (is_keyframe, "%d", GST_VALIDATE_UNKNOWN_BOOL);
 
   return TRUE;
 }
@@ -526,42 +526,39 @@ caps_cleanup_parsing_fields (GstCaps * caps)
   return res;
 }
 
-/*  Return -1 if not found 1 if OK 0 if an error occured */
-static gint
+/*  Return TRUE if found FALSE otherwise */
+static gboolean
 compare_streams (GstValidateMediaDescriptor * ref,
     GstValidateMediaStreamNode * rstream, GstValidateMediaStreamNode * cstream)
 {
-  if (stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id)) {
-    GstCaps *rcaps = caps_cleanup_parsing_fields (rstream->caps),
-        *ccaps = caps_cleanup_parsing_fields (cstream->caps);
+  GstCaps *rcaps, *ccaps;
 
-    if (!gst_caps_is_equal (rcaps, ccaps)) {
-      gchar *rcaps_str = gst_caps_to_string (rcaps),
-          *ccaps_str = gst_caps_to_string (ccaps);
-      GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
-          "Reference descriptor for stream %s has caps: %s"
-          " but compared stream %s has caps: %s",
-          rstream->id, rcaps_str, cstream->id, ccaps_str);
-      gst_caps_unref (rcaps);
-      gst_caps_unref (ccaps);
-      g_free (rcaps_str);
-      g_free (ccaps_str);
-      return 0;
-    }
+  if (!stream_id_is_equal (ref->filenode->uri, rstream->id, cstream->id))
+    return FALSE;
 
-    gst_caps_unref (rcaps);
-    gst_caps_unref (ccaps);
-    /* We ignore the return value on purpose as this is not critical */
-    compare_tags (ref, rstream, cstream);
+  rcaps = caps_cleanup_parsing_fields (rstream->caps);
+  ccaps = caps_cleanup_parsing_fields (cstream->caps);
 
-    compare_segment_list (ref, rstream, cstream);
-
-    if (compare_frames_list (ref, rstream, cstream))
-      return 1;
-    return 0;
+  if (!gst_caps_is_equal (rcaps, ccaps)) {
+    gchar *rcaps_str = gst_caps_to_string (rcaps),
+        *ccaps_str = gst_caps_to_string (ccaps);
+    GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
+        "Reference descriptor for stream %s has caps: %s"
+        " but compared stream %s has caps: %s",
+        rstream->id, rcaps_str, cstream->id, ccaps_str);
+    g_free (rcaps_str);
+    g_free (ccaps_str);
   }
 
-  return -1;
+  gst_caps_unref (rcaps);
+  gst_caps_unref (ccaps);
+  /* We ignore the return value on purpose as this is not critical */
+  compare_tags (ref, rstream, cstream);
+
+  compare_segment_list (ref, rstream, cstream);
+  compare_frames_list (ref, rstream, cstream);
+
+  return TRUE;
 }
 
 gboolean
@@ -598,25 +595,20 @@ gst_validate_media_descriptors_compare (GstValidateMediaDescriptor * ref,
   for (rstream_list = rfilenode->streams; rstream_list;
       rstream_list = rstream_list->next) {
     GList *cstream_list;
-    gint sfound = -1;
+    gboolean sfound = FALSE;
 
     for (cstream_list = cfilenode->streams; cstream_list;
         cstream_list = cstream_list->next) {
 
       sfound = compare_streams (ref, rstream_list->data, cstream_list->data);
-      if (sfound == 0) {
-        return FALSE;
-      } else if (sfound == 1) {
+      if (sfound)
         break;
-      }
     }
 
-    if (sfound == -1) {
+    if (!sfound) {
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Could not find stream %s in the compared descriptor",
           ((GstValidateMediaStreamNode *) rstream_list->data)->id);
-
-      return FALSE;
     }
   }
 

@@ -2068,6 +2068,9 @@ class MediaDescriptor(Loggable):
     def get_media_filepath(self):
         raise NotImplemented
 
+    def skip_parsers(self):
+        return False
+
     def get_caps(self):
         raise NotImplemented
 
@@ -2168,6 +2171,9 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self.set_protocol(urllib.parse.urlparse(
             urllib.parse.urlparse(self.get_uri()).scheme).scheme)
 
+    def skip_parsers(self):
+        return self._skip_parsers
+
     def _extract_data(self, media_xml):
         # Extract the information we need from the xml
         self._caps = media_xml.findall("streams")[0].attrib["caps"]
@@ -2181,6 +2187,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                 self._track_caps.append(
                     (stream.attrib["type"], stream.attrib["caps"]))
         self._uri = media_xml.attrib["uri"]
+        self._skip_parsers = bool(int(media_xml.attrib.get('skip-parsers', 0)))
         self._duration = int(media_xml.attrib["duration"])
         self._protocol = media_xml.get("protocol", None)
         self._is_seekable = media_xml.attrib["seekable"].lower() == "true"
@@ -2205,18 +2212,19 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
         descriptor_path = "%s.%s" % (
             media_path, GstValidateMediaDescriptor.MEDIA_INFO_EXT)
+        args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
+        args.append(uri)
         if include_frames == 2:
             try:
                 media_xml = ET.parse(descriptor_path).getroot()
-                frames = media_xml.findall('streams/stream/frame')
-                include_frames = bool(frames)
+
+                include_frames = bool(int(media_xml.attrib["frame-detection"]))
+                if bool(int(media_xml.attrib.get("skip-parsers"))):
+                    args.append("--skip-parsers")
             except FileNotFoundError:
                 pass
         else:
             include_frames = bool(include_frames)
-
-        args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
-        args.append(uri)
 
         args.extend(["--output-file", descriptor_path])
         if include_frames:

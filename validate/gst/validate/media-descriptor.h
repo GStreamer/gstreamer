@@ -29,8 +29,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_VALIDATE_UKNOWN_UINT64 (G_MAXUINT64 - 2)
-#define GST_VALIDATE_UKNOWN_BOOL (G_MAXUINT32 - 2)
+#define GST_VALIDATE_UNKNOWN_UINT64 (G_MAXUINT64 - 2)
+#define GST_VALIDATE_UNKNOWN_BOOL (G_MAXUINT32 - 2)
 typedef struct
 {
   /* Children */
@@ -55,6 +55,7 @@ typedef struct
   gchar *uri;
   GstClockTime duration;
   gboolean frame_detection;
+  gboolean skip_parsers;
   gboolean seekable;
 
   GstCaps *caps;

@@ -4,6 +4,7 @@
 
 #include <glib-object.h>
 #include <gst/validate/validate.h>
+#include <gst/validate/media-descriptor-writer.h>
 
 G_BEGIN_DECLS
 /*** END file-header ***/

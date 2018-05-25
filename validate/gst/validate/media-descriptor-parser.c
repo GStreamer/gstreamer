@@ -165,7 +165,7 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
 #define IF_SET_UINT64_FIELD(name,fieldname) \
     if (g_strcmp0 (names[i], name) == 0) { \
       if (g_strcmp0 (values[i], "unknown") == 0)  \
-        framenode->fieldname = GST_VALIDATE_UKNOWN_UINT64; \
+        framenode->fieldname = GST_VALIDATE_UNKNOWN_UINT64; \
       else\
         framenode->fieldname = g_ascii_strtoull (values[i], NULL, 0); \
     }
@@ -184,7 +184,7 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
       if (!g_ascii_strcasecmp (values[i], "true"))
         framenode->is_keyframe = TRUE;
       else if (!g_ascii_strcasecmp (values[i], "unknown"))
-        framenode->is_keyframe = GST_VALIDATE_UKNOWN_BOOL;
+        framenode->is_keyframe = GST_VALIDATE_UNKNOWN_BOOL;
       else
         framenode->is_keyframe = FALSE;
     }

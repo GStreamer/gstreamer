@@ -35,6 +35,7 @@ G_DEFINE_TYPE (GstValidateMediaDescriptorWriter,
 #define STR_APPEND3(arg) STR_APPEND((arg), 6)
 #define STR_APPEND4(arg) STR_APPEND((arg), 8)
 
+#define FLAG_IS_SET(writer,flag)       ((writer->priv->flags & (flag)) == (flag))
 
 enum
 {
@@ -50,6 +51,7 @@ struct _GstValidateMediaDescriptorWriterPrivate
   GMainLoop *loop;
 
   GList *parsers;
+  GstValidateMediaDescriptorWriterFlags flags;
 };
 
 static void
@@ -127,9 +129,9 @@ serialize_filenode (GstValidateMediaDescriptorWriter * writer)
       * filenode = ((GstValidateMediaDescriptor *) writer)->filenode;
 
   tmpstr = g_markup_printf_escaped ("<file duration=\"%" G_GUINT64_FORMAT
-      "\" frame-detection=\"%i\" uri=\"%s\" seekable=\"%s\">\n",
-      filenode->duration, filenode->frame_detection, filenode->uri,
-      filenode->seekable ? "true" : "false");
+      "\" frame-detection=\"%i\" skip-parsers=\"%i\" uri=\"%s\" seekable=\"%s\">\n",
+      filenode->duration, filenode->frame_detection, filenode->skip_parsers,
+      filenode->uri, filenode->seekable ? "true" : "false");
 
   if (filenode->caps)
     caps_str = gst_caps_to_string (filenode->caps);
@@ -230,6 +232,33 @@ gst_validate_media_descriptor_writer_new (GstValidateRunner * runner,
   return writer;
 }
 
+static GstCaps *
+strip_caps_to_avoid_parsers (GstValidateMediaDescriptorWriter * writer,
+    GstCaps * caps)
+{
+  gint i;
+  GstStructure *structure, *new_struct;
+  GstCaps *stripped;
+
+  /* If parsers are wanted, use exactly the caps reported by the discoverer (which also
+   * plugs parsers). */
+  if (!FLAG_IS_SET (writer,
+          GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER))
+    return gst_caps_copy (caps);
+
+  /* Otherwise use the simplest version of those caps (with the names only),
+   * meaning that decodebin will never plug any parser */
+  stripped = gst_caps_new_empty ();
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    structure = gst_caps_get_structure (caps, i);
+    new_struct = gst_structure_new_empty (gst_structure_get_name (structure));
+
+    gst_caps_append_structure (stripped, new_struct);
+  }
+
+  return stripped;
+}
+
 static gboolean
     gst_validate_media_descriptor_writer_add_stream
     (GstValidateMediaDescriptorWriter * writer, GstDiscovererStreamInfo * info)
@@ -295,10 +324,10 @@ static gboolean
   }
 
   if (writer->priv->raw_caps == NULL)
-    writer->priv->raw_caps = gst_caps_copy (caps);
+    writer->priv->raw_caps = strip_caps_to_avoid_parsers (writer, caps);
   else {
     writer->priv->raw_caps = gst_caps_merge (writer->priv->raw_caps,
-        gst_caps_copy (caps));
+        strip_caps_to_avoid_parsers (writer, caps));
   }
   g_free (capsstr);
 
@@ -403,6 +432,10 @@ _get_parser (GstValidateMediaDescriptorWriter * writer, GstPad * pad)
   GstElement *parser = NULL;
   GstElementFactory *parserfact = NULL;
   GstCaps *format;
+
+  if (FLAG_IS_SET (writer,
+          GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER))
+    return NULL;
 
   format = gst_pad_get_current_caps (pad);
 
@@ -604,7 +637,8 @@ _run_frame_analysis (GstValidateMediaDescriptorWriter * writer,
 
 GstValidateMediaDescriptorWriter *
 gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
-    const gchar * uri, gboolean full, gboolean handle_g_logs, GError ** err)
+    const gchar * uri, GstValidateMediaDescriptorWriterFlags flags,
+    GError ** err)
 {
   GList *tmp, *streams = NULL;
   GstDiscovererInfo *info = NULL;
@@ -670,7 +704,9 @@ gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
         gst_discoverer_info_get_duration (info),
         gst_discoverer_info_get_seekable (info));
 
-    if (handle_g_logs)
+    writer->priv->flags = flags;
+    if (FLAG_IS_SET (writer,
+            GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_HANDLE_GLOGS))
       gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (writer));
 
     tags = gst_discoverer_info_get_tags (info);
@@ -704,7 +740,7 @@ gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
   gst_discoverer_stream_info_list_free (streams);
 
 
-  if (full == TRUE)
+  if (FLAG_IS_SET (writer, GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_FULL))
     _run_frame_analysis (writer, runner, uri);
 
 out:
@@ -883,15 +919,20 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   GstMapInfo map;
   gchar *checksum;
   guint id;
+  GstSegment *segment;
   GstValidateMediaFrameNode *fnode;
-  GstSegment * segment;
+  GstValidateMediaFileNode *filenode;
 
   g_return_val_if_fail (GST_IS_VALIDATE_MEDIA_DESCRIPTOR_WRITER (writer),
       FALSE);
   g_return_val_if_fail (((GstValidateMediaDescriptor *) writer)->filenode,
       FALSE);
 
-  ((GstValidateMediaDescriptor *) writer)->filenode->frame_detection = TRUE;
+  filenode = ((GstValidateMediaDescriptor *) writer)->filenode;
+  filenode->frame_detection = TRUE;
+  filenode->skip_parsers =
+      FLAG_IS_SET (writer,
+      GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER);
   GST_VALIDATE_MEDIA_DESCRIPTOR_LOCK (writer);
   streamnode =
       gst_validate_media_descriptor_find_stream_node_by_pad (
@@ -918,7 +959,7 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   fnode->dts = GST_BUFFER_DTS (buf);
 
   g_assert (streamnode->segments);
-  segment = &((GstValidateSegmentNode *)streamnode->segments->data)->segment;
+  segment = &((GstValidateSegmentNode *) streamnode->segments->data)->segment;
   fnode->running_time =
       gst_segment_to_running_time (segment, GST_FORMAT_TIME,
       GST_BUFFER_PTS (buf));

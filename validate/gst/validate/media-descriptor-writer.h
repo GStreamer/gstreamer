@@ -56,11 +56,18 @@ typedef struct {
 
 } GstValidateMediaDescriptorWriterClass;
 
+typedef enum
+{
+    GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NONE         = 1 << 0,
+    GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER    = 1 << 1,
+    GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_FULL         = 1 << 2,
+    GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_HANDLE_GLOGS = 1 << 3,
+} GstValidateMediaDescriptorWriterFlags;
+
 GST_VALIDATE_API
 GstValidateMediaDescriptorWriter * gst_validate_media_descriptor_writer_new_discover (GstValidateRunner *runner,
                                                                      const gchar *uri,
-                                                                     gboolean full,
-                                                                     gboolean handle_g_logs,
+                                                                     GstValidateMediaDescriptorWriterFlags flags,
                                                                      GError **err);
 
 GST_VALIDATE_API
