@@ -2600,7 +2600,9 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
     entry->sparse = FALSE;
   }
 
-  gst_tag_list_unref (stream->stream_tags);
+  if (stream->stream_tags)
+    gst_tag_list_unref (stream->stream_tags);
+
   stream->stream_tags = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
   g_free (stream->redirect_uri);
