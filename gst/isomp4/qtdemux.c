@@ -8096,12 +8096,6 @@ gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
   filtered_sys_ids = gst_protection_filter_systems_by_available_decryptors (
       (const gchar **) qtdemux->protection_system_ids->pdata);
 
-  if (!filtered_sys_ids) {
-    GST_INFO_OBJECT (element,
-        "No avalaible decryptor, not worth asking the user to choose.");
-    return;
-  }
-
   g_ptr_array_remove_index (qtdemux->protection_system_ids,
       qtdemux->protection_system_ids->len - 1);
   GST_TRACE_OBJECT (qtdemux, "detected %u protection systems, we have "
@@ -8133,7 +8127,8 @@ gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
   query = gst_query_new_context ("drm-preferred-decryption-system-id");
   st = gst_query_writable_structure (query);
   gst_structure_set (st, "track-id", G_TYPE_UINT, stream->track_id,
-      "stream-encryption-systems", G_TYPE_STRV, filtered_sys_ids, NULL);
+      "available-stream-encryption-systems", G_TYPE_STRV, filtered_sys_ids,
+      NULL);
   gst_structure_set_value (st, "stream-encryption-events", &event_list);
   if (gst_qtdemux_run_query (element, query, GST_PAD_SRC)) {
     gst_query_parse_context (query, &ctxt);
@@ -8157,7 +8152,9 @@ gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
         "drm-preferred-decryption-system-id");
     st = (GstStructure *) gst_message_get_structure (msg);
     gst_structure_set (st, "track-id", G_TYPE_UINT, stream->track_id,
-        "stream-encryption-systems", G_TYPE_STRV, filtered_sys_ids, NULL);
+        "available-stream-encryption-systems", G_TYPE_STRV, filtered_sys_ids,
+        NULL);
+
     gst_structure_set_value (st, "stream-encryption-events", &event_list);
     gst_element_post_message (element, msg);
   }
