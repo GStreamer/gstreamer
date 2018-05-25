@@ -385,6 +385,11 @@ class Test(Loggable):
         if self.hard_timeout is not None:
             self.hard_timeout *= GDB_TIMEOUT_FACTOR
         self.timeout *= GDB_TIMEOUT_FACTOR
+
+        if not self.options.gdb_non_stop:
+            self.timeout = sys.maxsize
+            self.hard_timeout = sys.maxsize
+
         args = ["gdb"]
         if self.options.gdb_non_stop:
             args += ["-ex", "run", "-ex", "backtrace", "-ex", "quit"]
