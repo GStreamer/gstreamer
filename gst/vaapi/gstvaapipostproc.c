@@ -1280,6 +1280,11 @@ gst_vaapipostproc_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
   /* dont' GstVideoCropMeta if use_vpp */
   if (meta->info->api == GST_VIDEO_CROP_META_API_TYPE && postproc->use_vpp)
     return FALSE;
+
+  /* don't copy GstParentBufferMeta if use_vpp */
+  if (meta->info->api == GST_PARENT_BUFFER_META_API_TYPE && postproc->use_vpp)
+    return FALSE;
+
   return TRUE;
 }
 
