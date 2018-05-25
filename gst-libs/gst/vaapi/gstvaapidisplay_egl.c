@@ -104,6 +104,7 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
   EGLDisplay *native_egl_display;
   guint gl_platform = EGL_PLATFORM_UNKNOWN;
   const InitParams *params = (InitParams *) native_params;
+  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
 
   native_vaapi_display = params->display;
   native_egl_display = params->gl_display;
@@ -124,7 +125,7 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
     return FALSE;
 
   gst_vaapi_display_replace (&display->display, native_vaapi_display);
-  gst_object_unref (native_vaapi_display);
+  priv->parent = native_vaapi_display;
 
   switch (GST_VAAPI_DISPLAY_GET_CLASS_TYPE (display->display)) {
     case GST_VAAPI_DISPLAY_TYPE_X11:
