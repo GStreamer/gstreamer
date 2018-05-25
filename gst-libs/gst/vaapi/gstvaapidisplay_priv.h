@@ -109,6 +109,7 @@ typedef enum _GstVaapiDisplayInitType           GstVaapiDisplayInitType;
 
 struct _GstVaapiDisplayPrivate
 {
+  GstVaapiDisplay *parent;
   GRecMutex mutex;
   gchar *display_name;
   VADisplay display;
