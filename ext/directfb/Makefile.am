@@ -1,3 +1,5 @@
+# directfb headers on debian will trigger redundant redeclaration warnings
+ERROR_CFLAGS=
 
 plugin_LTLIBRARIES = libgstdfbvideosink.la
 

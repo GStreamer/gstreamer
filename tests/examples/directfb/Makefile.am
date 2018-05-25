@@ -1,3 +1,6 @@
+# directfb headers on debian will trigger redundant redeclaration warnings
+ERROR_CFLAGS=
+
 noinst_PROGRAMS = gstdfb
 
 gstdfb_SOURCES = gstdfb.c
