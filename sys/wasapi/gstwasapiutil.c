@@ -899,10 +899,16 @@ gst_wasapi_util_initialize_audioclient (GstElement * self,
   }
   HR_FAILED_RET (hr, IAudioClient::Initialize, FALSE);
 
-  hr = IAudioClient_GetBufferSize (client, &n_frames);
-  HR_FAILED_RET (hr, IAudioClient::GetBufferSize, FALSE);
+  if (sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
+    /* We use the device period for the segment size and that needs to match
+     * the buffer size exactly when we write into it */
+    hr = IAudioClient_GetBufferSize (client, &n_frames);
+    HR_FAILED_RET (hr, IAudioClient::GetBufferSize, FALSE);
 
-  *ret_devicep_frames = n_frames;
+    *ret_devicep_frames = n_frames;
+  } else {
+    *ret_devicep_frames = (rate * device_period * 100) / GST_SECOND;
+  }
 
   return TRUE;
 }
