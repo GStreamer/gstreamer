@@ -98,16 +98,17 @@ GST_START_TEST (rtpstorage_resize)
   guint i, j;
   GstBuffer *bufin, *bufout, *bufs[10];
   GstHarness *h = gst_harness_new ("rtpstorage");
+
   gst_harness_set_src_caps_str (h, "application/x-rtp");
 
-  g_object_set (h->element, "size-time", 0, NULL);
+  g_object_set (h->element, "size-time", (guint64) 0, NULL);
   bufin = create_rtp_packet (96, 0xabe2b0b, 0x111111, 0);
   bufout = gst_harness_push_and_pull (h, bufin);
   fail_unless (bufin == bufout);
   fail_unless (gst_buffer_is_writable (bufout));
 
-  g_object_set (h->element, "size-time",
-      (G_N_ELEMENTS (bufs) - 1) * RTP_PACKET_DUR, NULL);
+  g_object_set (h->element,
+      "size-time", (guint64) (G_N_ELEMENTS (bufs) - 1) * RTP_PACKET_DUR, NULL);
 
   // Pushing 10 buffers all of them should have ref. count =2
   for (i = 0; i < G_N_ELEMENTS (bufs); ++i) {
@@ -139,7 +140,7 @@ GST_START_TEST (rtpstorage_stop_redundant_packets)
   GstHarness *h = gst_harness_new ("rtpstorage");
   GstBuffer *bufinp;
 
-  g_object_set (h->element, "size-time", 2 * RTP_PACKET_DUR, NULL);
+  g_object_set (h->element, "size-time", (guint64) 2 * RTP_PACKET_DUR, NULL);
   gst_harness_set_src_caps_str (h, "application/x-rtp");
 
   bufinp = create_rtp_packet (96, 0xabe2b0b, 0x111111, 0);
@@ -159,7 +160,7 @@ GST_START_TEST (rtpstorage_unknown_ssrc)
 {
   GstBufferList *bufs_out;
   GstHarness *h = gst_harness_new ("rtpstorage");
-  g_object_set (h->element, "size-time", RTP_PACKET_DUR, NULL);
+  g_object_set (h->element, "size-time", (guint64) RTP_PACKET_DUR, NULL);
   gst_harness_set_src_caps_str (h, "application/x-rtp");
 
   /* No packets has been pushed through yet */
@@ -182,7 +183,7 @@ GST_START_TEST (rtpstorage_packet_not_lost)
   GstBuffer *buf;
   GstBufferList *bufs_out;
   GstHarness *h = gst_harness_new ("rtpstorage");
-  g_object_set (h->element, "size-time", 10 * RTP_PACKET_DUR, NULL);
+  g_object_set (h->element, "size-time", (guint64) 10 * RTP_PACKET_DUR, NULL);
   gst_harness_set_src_caps_str (h, "application/x-rtp");
 
   /* Pushing through 2 frames + 2 FEC */
@@ -212,7 +213,7 @@ GST_START_TEST (test_rtpstorage_put_recovered_packet)
   GstBuffer *bufs_in[4];
   GstBufferList *bufs_out;
   GstHarness *h = gst_harness_new ("rtpstorage");
-  g_object_set (h->element, "size-time", 10 * RTP_PACKET_DUR, NULL);
+  g_object_set (h->element, "size-time", (guint64) 10 * RTP_PACKET_DUR, NULL);
   gst_harness_set_src_caps_str (h, "application/x-rtp");
 
   /* Pushing through 2 frames + 2 FEC
@@ -331,7 +332,7 @@ _multiple_ssrcs_test (guint16 nth_to_loose,
   guint16 stream0_seq_start = 200;
   guint16 stream1_seq_start = 65529;
   GstHarness *h = gst_harness_new ("rtpstorage");
-  g_object_set (h->element, "size-time", 12 * RTP_PACKET_DUR, NULL);
+  g_object_set (h->element, "size-time", (guint64) 12 * RTP_PACKET_DUR, NULL);
   gst_harness_set_src_caps_str (h, "application/x-rtp");
 
   _single_ssrc_test (h, 0x0abe2b0b, stream0_seq_start,
@@ -453,8 +454,8 @@ GST_START_TEST (rtpstorage_stress)
   StressTestData test_data;
   guint seed, i, total, requested;
   GstHarness *h = gst_harness_new ("rtpstorage");
-  g_object_set (h->element, "size-time",
-      STRESS_TEST_STORAGE_DEPTH * RTP_PACKET_DUR, NULL);
+  g_object_set (h->element,
+      "size-time", (guint64) STRESS_TEST_STORAGE_DEPTH * RTP_PACKET_DUR, NULL);
 
   /* The stress test pushes buffers with STRESS_TEST_SSRCS different
    * ssrcs from one thread and requests packets for FEC recovery from

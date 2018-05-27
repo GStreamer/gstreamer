@@ -125,7 +125,8 @@ harness_rtpulpfecdec (guint32 ssrc, guint8 lost_pt, guint8 fec_pt)
       g_strdup_printf ("application/x-rtp,ssrc=(uint)%u,payload=(int)%u",
       ssrc, lost_pt);
 
-  gst_harness_set (h, "rtpstorage", "size-time", 200 * RTP_PACKET_DUR, NULL);
+  gst_harness_set (h, "rtpstorage", "size-time", (guint64) 200 * RTP_PACKET_DUR,
+      NULL);
   gst_harness_get (h, "rtpstorage", "internal-storage", &internal_storage,
       NULL);
   gst_harness_set (h, "rtpulpfecdec", "storage", internal_storage, "pt", fec_pt,
