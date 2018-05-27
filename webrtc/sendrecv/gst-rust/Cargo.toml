@@ -1,0 +1,20 @@
+[package]
+name = "gst-rust"
+version = "0.1.0"
+authors = ["maxmcd <max.t.mcdonnell@gmail.com>"]
+
+[dependencies]
+clap = "2.31.2"
+failure = "0.1.1"
+glib = { git = "https://github.com/gtk-rs/glib" }
+gstreamer = { git = "https://github.com/sdroege/gstreamer-rs", features = ["v1_14"] }
+gstreamer-rtsp-server = { git = "https://github.com/sdroege/gstreamer-rs" }
+gstreamer-sdp = { git = "https://github.com/sdroege/gstreamer-rs" }
+gstreamer-sdp-sys = { git = "https://github.com/sdroege/gstreamer-sys" }
+gstreamer-webrtc = { git = "https://github.com/sdroege/gstreamer-rs" }
+lazy_static = "1.0"
+rand = "0.5"
+serde = "1.0.66"
+serde_derive = "1.0.66"
+serde_json = "1.0.19"
+websocket = "0.20.2"
