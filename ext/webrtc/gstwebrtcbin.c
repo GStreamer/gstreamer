@@ -3666,7 +3666,7 @@ on_rtpbin_new_storage (GstElement * rtpbin, GstElement * storage,
     guint session_id, GstWebRTCBin * webrtc)
 {
   /* TODO: when exposing latency, set size-time based on that */
-  g_object_set (storage, "size-time", 250 * GST_MSECOND, NULL);
+  g_object_set (storage, "size-time", (guint64) 250 * GST_MSECOND, NULL);
 }
 
 static GstElement *
