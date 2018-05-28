@@ -197,11 +197,19 @@ qtdemux_probe_for_reconfig (GstPad * pad, GstPadProbeInfo * info,
     ReconfigTestData * data)
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
-  GstEventType expected = data->expected_events[data->step];
+  GstEventType expected;
+
+  if (data->step < data->total_step) {
+    expected = data->expected_events[data->step];
+  } else {
+    expected = GST_EVENT_UNKNOWN;
+  }
 
   GST_DEBUG ("Got event %p %s", event, GST_EVENT_TYPE_NAME (event));
 
-  fail_unless (GST_EVENT_TYPE (event) == expected);
+  fail_unless (GST_EVENT_TYPE (event) == expected,
+      "Received unexpected event: %s (expected: %s)",
+      GST_EVENT_TYPE_NAME (event), gst_event_type_get_name (expected));
   data->step++;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS && data->step < data->total_step) {
@@ -259,7 +267,7 @@ GST_START_TEST (test_qtdemux_duplicated_moov)
 
   data.expected_events = expected;
   data.expected_num_srcpad = 1;
-  data.total_step = G_N_ELEMENTS (expected);;
+  data.total_step = G_N_ELEMENTS (expected);
 
   /* The goal of this test is to check that qtdemux can properly handle
    * duplicated moov without redundant events and pad exposing
