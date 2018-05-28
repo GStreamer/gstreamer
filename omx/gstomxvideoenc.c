@@ -2224,8 +2224,11 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Updating outport port definition");
+  GST_DEBUG_OBJECT (self, "Updating ports definition");
   if (gst_omx_port_update_port_definition (self->enc_out_port,
+          NULL) != OMX_ErrorNone)
+    return FALSE;
+  if (gst_omx_port_update_port_definition (self->enc_in_port,
           NULL) != OMX_ErrorNone)
     return FALSE;
 

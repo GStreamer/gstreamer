@@ -2597,8 +2597,11 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Updating outport port definition");
+  GST_DEBUG_OBJECT (self, "Updating ports definition");
   if (gst_omx_port_update_port_definition (self->dec_out_port,
+          NULL) != OMX_ErrorNone)
+    return FALSE;
+  if (gst_omx_port_update_port_definition (self->dec_in_port,
           NULL) != OMX_ErrorNone)
     return FALSE;
 
