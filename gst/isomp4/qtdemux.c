@@ -6901,6 +6901,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             demux->got_moov = TRUE;
             demux->need_segment = TRUE;
             gst_qtdemux_map_and_push_segments (demux, &demux->segment);
+            if (demux->exposed)
+              demux->need_segment = FALSE;
 
             if (demux->moov_node_compressed) {
               g_node_destroy (demux->moov_node_compressed);
