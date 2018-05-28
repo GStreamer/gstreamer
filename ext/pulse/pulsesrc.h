@@ -60,7 +60,9 @@ struct _GstPulseSrc
   pa_stream *stream;
   guint32 source_output_idx;
 
-  pa_sample_spec sample_spec;
+  pa_format_info *format;
+  guint rate;
+  guint channels;
 
   const void *read_buffer;
   size_t read_buffer_length;
