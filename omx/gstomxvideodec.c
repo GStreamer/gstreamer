@@ -81,7 +81,7 @@ static GstFlowReturn gst_omx_video_dec_drain (GstVideoDecoder * decoder);
 
 static OMX_ERRORTYPE gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec *
     self);
-static OMX_ERRORTYPE gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec
+static gboolean gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec
     * self);
 
 enum
@@ -1135,12 +1135,11 @@ done:
   return err;
 }
 
-static OMX_ERRORTYPE
+static gboolean
 gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec * self)
 {
-  OMX_ERRORTYPE err;
-
   if (self->out_port_pool) {
+    /* Pool will free buffers when stopping */
     gst_buffer_pool_set_active (self->out_port_pool, FALSE);
 #if 0
     gst_buffer_pool_wait_released (self->out_port_pool);
@@ -1148,16 +1147,21 @@ gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec * self)
     GST_OMX_BUFFER_POOL (self->out_port_pool)->deactivated = TRUE;
     gst_object_unref (self->out_port_pool);
     self->out_port_pool = NULL;
-  }
+  } else {
+    OMX_ERRORTYPE err;
+
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
-  err =
-      gst_omx_port_deallocate_buffers (self->eglimage ? self->
-      egl_out_port : self->dec_out_port);
+    err =
+        gst_omx_port_deallocate_buffers (self->eglimage ? self->
+        egl_out_port : self->dec_out_port);
 #else
-  err = gst_omx_port_deallocate_buffers (self->dec_out_port);
+    err = gst_omx_port_deallocate_buffers (self->dec_out_port);
 #endif
 
-  return err;
+    return err == OMX_ErrorNone;
+  }
+
+  return TRUE;
 }
 
 static OMX_ERRORTYPE
@@ -1573,8 +1577,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
 
-      err = gst_omx_video_dec_deallocate_output_buffers (self);
-      if (err != OMX_ErrorNone)
+      if (!gst_omx_video_dec_deallocate_output_buffers (self))
         goto reconfigure_error;
 
       err = gst_omx_port_wait_enabled (port, 1 * GST_SECOND);
@@ -2179,7 +2182,7 @@ gst_omx_video_dec_disable (GstOMXVideoDec * self)
     if (gst_omx_port_wait_buffers_released (out_port,
             1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
-    if (gst_omx_video_dec_deallocate_output_buffers (self) != OMX_ErrorNone)
+    if (!gst_omx_video_dec_deallocate_output_buffers (self))
       return FALSE;
     if (gst_omx_port_wait_enabled (out_port, 1 * GST_SECOND) != OMX_ErrorNone)
       return FALSE;
