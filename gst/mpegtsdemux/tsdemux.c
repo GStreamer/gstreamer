@@ -322,6 +322,7 @@ static void gst_ts_demux_stream_flush (TSDemuxStream * stream,
     GstTSDemux * demux, gboolean hard);
 
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
+static gboolean sink_query (MpegTSBase * base, GstQuery * query);
 static void gst_ts_demux_check_and_sync_streams (GstTSDemux * demux,
     GstClockTime time);
 
@@ -394,6 +395,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->reset = GST_DEBUG_FUNCPTR (gst_ts_demux_reset);
   ts_class->push = GST_DEBUG_FUNCPTR (gst_ts_demux_push);
   ts_class->push_event = GST_DEBUG_FUNCPTR (push_event);
+  ts_class->sink_query = GST_DEBUG_FUNCPTR (sink_query);
   ts_class->program_started = GST_DEBUG_FUNCPTR (gst_ts_demux_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (gst_ts_demux_program_stopped);
   ts_class->update_program = GST_DEBUG_FUNCPTR (gst_ts_demux_update_program);
@@ -1000,6 +1002,41 @@ push_event (MpegTSBase * base, GstEvent * event)
   gst_event_unref (event);
 
   return TRUE;
+}
+
+static gboolean
+sink_query (MpegTSBase * base, GstQuery * query)
+{
+  GstTSDemux *demux = (GstTSDemux *) base;
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_BITRATE:{
+      gint64 size_bytes;
+      GstClockTime duration;
+
+      if (gst_pad_peer_query_duration (base->sinkpad, GST_FORMAT_BYTES,
+              &size_bytes) && size_bytes > 0) {
+        if (gst_ts_demux_get_duration (demux, &duration) && duration > 0
+            && duration != GST_CLOCK_TIME_NONE) {
+          guint bitrate =
+              gst_util_uint64_scale (8 * size_bytes, GST_SECOND, duration);
+
+          GST_LOG_OBJECT (demux, "bitrate query byte length: %" G_GINT64_FORMAT
+              " duration %" GST_TIME_FORMAT " resulting in a bitrate of %u",
+              size_bytes, GST_TIME_ARGS (duration), bitrate);
+          gst_query_set_bitrate (query, bitrate);
+          res = TRUE;
+        }
+      }
+      break;
+    }
+    default:
+      res = GST_MPEGTS_BASE_CLASS (parent_class)->sink_query (base, query);
+      break;
+  }
+
+  return res;
 }
 
 static inline void

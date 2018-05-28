@@ -83,6 +83,10 @@ static GstFlowReturn mpegts_base_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean mpegts_base_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean mpegts_base_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean mpegts_base_default_sink_query (MpegTSBase * base,
+    GstQuery * query);
 static GstStateChangeReturn mpegts_base_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean mpegts_base_get_tags_from_eit (MpegTSBase * base,
@@ -138,6 +142,7 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
           "Parse private sections", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  klass->sink_query = GST_DEBUG_FUNCPTR (mpegts_base_default_sink_query);
 }
 
 static void
@@ -228,6 +233,7 @@ mpegts_base_init (MpegTSBase * base)
       mpegts_base_sink_activate_mode);
   gst_pad_set_chain_function (base->sinkpad, mpegts_base_chain);
   gst_pad_set_event_function (base->sinkpad, mpegts_base_sink_event);
+  gst_pad_set_query_function (base->sinkpad, mpegts_base_sink_query);
   gst_element_add_pad (GST_ELEMENT (base), base->sinkpad);
 
   base->disposed = FALSE;
@@ -1354,6 +1360,23 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     res = TRUE;
 
   return res;
+}
+
+static gboolean
+mpegts_base_default_sink_query (MpegTSBase * base, GstQuery * query)
+{
+  return gst_pad_query_default (base->sinkpad, GST_OBJECT (base), query);
+}
+
+static gboolean
+mpegts_base_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  MpegTSBase *base = GST_MPEGTS_BASE (parent);
+
+  GST_DEBUG_OBJECT (base, "Got query %s",
+      gst_query_type_get_name (GST_QUERY_TYPE (query)));
+
+  return GST_MPEGTS_BASE_GET_CLASS (base)->sink_query (base, query);
 }
 
 static GstFlowReturn

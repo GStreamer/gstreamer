@@ -211,6 +211,9 @@ struct _MpegTSBaseClass {
   void (*nit_info) (GstStructure *nit);
   void (*sdt_info) (GstStructure *sdt);
   void (*eit_info) (GstStructure *eit);
+
+  /* takes ownership of @query */
+  gboolean (*sink_query) (MpegTSBase *base, GstQuery * query);
 };
 
 #define MPEGTS_BIT_SET(field, offs)    ((field)[(offs) >> 3] |=  (1 << ((offs) & 0x7)))
