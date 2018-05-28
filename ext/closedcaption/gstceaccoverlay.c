@@ -1565,9 +1565,11 @@ extract_ccdata_from_cdp (const guint8 * indata, gsize insize,
 {
   GstByteReader br;
   guint8 cdp_length;
-  guint8 framerate_code;
   guint8 flags;
+#ifndef GST_DISABLE_GST_DEBUG
+  guint8 framerate_code;
   guint16 seqhdr;
+#endif
 
   GST_MEMDUMP ("CDP", indata, insize);
 
@@ -1589,9 +1591,17 @@ extract_ccdata_from_cdp (const guint8 * indata, gsize insize,
         cdp_length, insize);
     return FALSE;
   }
+#ifndef GST_DISABLE_GST_DEBUG
   framerate_code = gst_byte_reader_get_uint8_unchecked (&br) >> 4;
+#else
+  gst_byte_reader_skip (&br, 1);
+#endif
   flags = gst_byte_reader_get_uint8_unchecked (&br);
+#ifndef GST_DISABLE_GST_DEBUG
   seqhdr = gst_byte_reader_get_uint16_be_unchecked (&br);
+#else
+  gst_byte_reader_skip (&br, 2);
+#endif
 
   GST_DEBUG
       ("framerate_code : 0x%02x , flags : 0x%02x , sequencer_counter : %u",
@@ -1800,11 +1810,16 @@ wait_for_text_buf:
 
       GstClockTime text_running_time = GST_CLOCK_TIME_NONE;
       GstClockTime next_buffer_text_running_time = GST_CLOCK_TIME_NONE;
-      GstClockTime vid_running_time, vid_running_time_end;
+#ifndef GST_DISABLE_GST_DEBUG
+      GstClockTime vid_running_time;
+#endif
+      GstClockTime vid_running_time_end;
 
+#ifndef GST_DISABLE_GST_DEBUG
       vid_running_time =
           gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
           start);
+#endif
       vid_running_time_end =
           gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
           stop);

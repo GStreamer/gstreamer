@@ -205,8 +205,11 @@ gst_cea708dec_process_dtvcc_packet (Cea708Dec * decoder, guint8 * dtvcc_buffer,
   guint8 service_number;
 
   guint parse_index = 0;
+#ifndef GST_DISABLE_GST_DEBUG
   guint8 sequence_number = (dtvcc_buffer[parse_index] & 0xC0) >> 6;
   guint8 pkt_size = DTVCC_PKT_SIZE (dtvcc_buffer[parse_index] & 0x3F);
+#endif
+
   parse_index += 1;
 
   block_size = dtvcc_buffer[parse_index] & 0x1F;
@@ -768,8 +771,10 @@ gst_cea708dec_define_window (Cea708Dec * decoder,
   gboolean visible = FALSE;
   guint8 style_id = 0;
   guint8 pen_style_id = 0;
+#ifndef GST_DISABLE_GST_DEBUG
   guint v_anchor = 0;
   guint h_anchor = 0;
+#endif
 
   GST_LOG ("current_window=%d", decoder->current_window);
   GST_LOG ("dtvcc_buffer %02x %02x %02x %02x %02x %02x",

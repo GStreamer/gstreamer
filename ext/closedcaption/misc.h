@@ -297,19 +297,20 @@ _vbi_grow_vector_capacity	(void **		vector,
 
 GST_DEBUG_CATEGORY_EXTERN (libzvbi_debug);
 
+#ifndef GST_DISABLE_GST_DEBUG
 /* Logging stuff. */
 #ifdef G_HAVE_ISO_VARARGS
-#define VBI_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
+#define VBI_CAT_LEVEL_LOG(level,object,...) G_STMT_START{		\
   if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
-    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
+	  gst_debug_log (libzvbi_debug, (level), __FILE__, GST_FUNCTION, __LINE__, \
         (GObject *) (object), __VA_ARGS__);				\
   }									\
 }G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
-#define VBI_CAT_LEVEL_LOG(cat,level,object,args...) G_STMT_START{	\
+#define VBI_CAT_LEVEL_LOG(level,object,args...) G_STMT_START{	\
   if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
-    gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
+	  gst_debug_log (libzvbi_debug, (level), __FILE__, GST_FUNCTION, __LINE__, \
         (GObject *) (object), ##args );					\
   }									\
 }G_STMT_END
@@ -325,32 +326,39 @@ VBI_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
 }
 
 static inline void
-VBI_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
+VBI_CAT_LEVEL_LOG (GstDebugLevel level,
     gpointer object, const char *format, ...)
 {
   va_list varargs;
 
   va_start (varargs, format);
-  GST_CAT_LEVEL_LOG_valist (cat, level, object, format, varargs);
+  GST_CAT_LEVEL_LOG_valist (libzvbi_debug, level, object, format, varargs);
   va_end (varargs);
 }
 #endif
 #endif /* G_HAVE_ISO_VARARGS */
+#else
+static inline void
+VBI_CAT_LEVEL_LOG (GstDebugLevel level,
+    gpointer object, const char *format, ...)
+{
+}
+#endif	/* GST_DISABLE_GST_DEBUG */
 
 #define error(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_ERROR, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, templ , ##args)
 #define warning(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_WARNING, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_WARNING, NULL, templ , ##args)
 #define notice(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_INFO, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ , ##args)
 #define info(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_INFO, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ , ##args)
 #define debug1(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_DEBUG, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_DEBUG, NULL, templ , ##args)
 #define debug2(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_LOG, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_LOG, NULL, templ , ##args)
 #define debug3(hook, templ, args...)					\
-	VBI_CAT_LEVEL_LOG (libzvbi_debug, GST_LEVEL_TRACE, NULL, templ , ##args)
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_TRACE, NULL, templ , ##args)
 
 #if 0				/* Replaced logging with GStreamer logging system */
 extern _vbi_log_hook		_vbi_global_log;
