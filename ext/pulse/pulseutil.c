@@ -467,7 +467,7 @@ gst_pulse_format_info_to_caps (pa_format_info * format)
         ret = gst_caps_from_string (_PULSE_CAPS_LINEAR);
 
         if (sformat)
-          gst_caps_set_simple (ret, "format", G_TYPE_STRING, NULL);
+          gst_caps_set_simple (ret, "format", G_TYPE_STRING, sformat, NULL);
       }
 
       pa_xfree (tmp);
