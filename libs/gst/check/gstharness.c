@@ -1055,6 +1055,14 @@ gst_harness_teardown (GstHarness * h)
     g_free (priv->element_sinkpad_name);
 
     gst_pad_set_active (h->srcpad, FALSE);
+
+    /* Make sure our funcs are not called after harness is teared down since
+     * they try to access this harness through pad data */
+    GST_PAD_STREAM_LOCK (h->srcpad);
+    gst_pad_set_event_function (h->srcpad, NULL);
+    gst_pad_set_query_function (h->srcpad, NULL);
+    GST_PAD_STREAM_UNLOCK (h->srcpad);
+
     gst_object_unref (h->srcpad);
 
     g_async_queue_unref (priv->src_event_queue);
@@ -1066,6 +1074,15 @@ gst_harness_teardown (GstHarness * h)
     g_free (priv->element_srcpad_name);
 
     gst_pad_set_active (h->sinkpad, FALSE);
+
+    /* Make sure our funcs are not called after harness is teared down since
+     * they try to access this harness through pad data */
+    GST_PAD_STREAM_LOCK (h->sinkpad);
+    gst_pad_set_chain_function (h->sinkpad, NULL);
+    gst_pad_set_event_function (h->sinkpad, NULL);
+    gst_pad_set_query_function (h->sinkpad, NULL);
+    GST_PAD_STREAM_UNLOCK (h->sinkpad);
+
     gst_object_unref (h->sinkpad);
 
     g_async_queue_unref (priv->buffer_queue);
