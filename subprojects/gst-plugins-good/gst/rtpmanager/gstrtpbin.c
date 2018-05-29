@@ -260,7 +260,7 @@ G_STMT_START {                                   \
 
 /* Minimum time offset to apply. This compensates for rounding errors in NTP to
  * RTP timestamp conversions */
-#define MIN_TS_OFFSET (4 * GST_MSECOND)
+#define MIN_TS_OFFSET_ROUND_OFF_COMP (4 * GST_MSECOND)
 
 struct _GstRtpBinPrivate
 {
@@ -353,6 +353,7 @@ enum
 #define DEFAULT_MAX_STREAMS          G_MAXUINT
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT G_GUINT64_CONSTANT(0)
 #define DEFAULT_MAX_TS_OFFSET        G_GINT64_CONSTANT(3000000000)
+#define DEFAULT_MIN_TS_OFFSET        MIN_TS_OFFSET_ROUND_OFF_COMP
 
 enum
 {
@@ -380,6 +381,7 @@ enum
   PROP_MAX_STREAMS,
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_MAX_TS_OFFSET,
+  PROP_MIN_TS_OFFSET,
   PROP_FEC_DECODERS,
   PROP_FEC_ENCODERS,
 };
@@ -1327,7 +1329,7 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
 
 static void
 stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
-    gint64 ts_offset, gint64 max_ts_offset, gint64 min_ts_offset,
+    gint64 ts_offset, gint64 max_ts_offset, guint64 min_ts_offset,
     gboolean allow_positive_ts_offset)
 {
   gint64 prev_ts_offset;
@@ -1513,7 +1515,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     stream->rt_delta = rtdiff - ntpdiff;
 
     stream_set_ts_offset (bin, stream, stream->rt_delta, bin->max_ts_offset,
-        0, FALSE);
+        bin->min_ts_offset, FALSE);
   } else {
     gint64 min, rtp_min, clock_base = stream->clock_base;
     gboolean all_sync, use_rtp;
@@ -1666,7 +1668,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         ts_offset = ostream->rt_delta - min;
 
       stream_set_ts_offset (bin, ostream, ts_offset, bin->max_ts_offset,
-          MIN_TS_OFFSET, TRUE);
+          bin->min_ts_offset, TRUE);
     }
   }
   gst_rtp_bin_send_sync_event (stream);
@@ -2762,6 +2764,28 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpBin:min-ts-offset:
+   *
+   * Used to set an lower limit for when a time offset is deemed large enough
+   * to be useful for sync corrections.
+   *
+   * When streaming for instance audio, even very small ts_offsets cause
+   * audible glitches. This property is used for controlling how sensitive the
+   * adjustments should be to small deviations in ts_offset, occurring for
+   * instance due to jittery network conditions or system load.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_MIN_TS_OFFSET,
+      g_param_spec_uint64 ("min-ts-offset", "Min TS Offset",
+          "The minimum absolute value of the time offset in (nanoseconds). "
+          "Used to set an lower limit for when a time offset is deemed large "
+          "enough to be useful for sync corrections."
+          "Note, if the ntp-sync parameter is set the default value is "
+          "changed to 0 (no limit)", 0, G_MAXUINT64, DEFAULT_MIN_TS_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpBin:fec-decoders:
    *
    * Used to provide a factory used to build the FEC decoder for a
@@ -2883,6 +2907,8 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
   rtpbin->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
   rtpbin->max_ts_offset_is_set = FALSE;
+  rtpbin->min_ts_offset = DEFAULT_MIN_TS_OFFSET;
+  rtpbin->min_ts_offset_is_set = FALSE;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -3079,6 +3105,13 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
           rtpbin->max_ts_offset = DEFAULT_MAX_TS_OFFSET;
         }
       }
+      if (!rtpbin->min_ts_offset_is_set) {
+        if (rtpbin->ntp_sync) {
+          rtpbin->min_ts_offset = 0;
+        } else {
+          rtpbin->min_ts_offset = DEFAULT_MIN_TS_OFFSET;
+        }
+      }
       break;
     case PROP_RTCP_SYNC:
       g_atomic_int_set (&rtpbin->rtcp_sync, g_value_get_enum (value));
@@ -3197,6 +3230,10 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       rtpbin->max_ts_offset = g_value_get_int64 (value);
       rtpbin->max_ts_offset_is_set = TRUE;
       break;
+    case PROP_MIN_TS_OFFSET:
+      rtpbin->min_ts_offset = g_value_get_uint64 (value);
+      rtpbin->min_ts_offset_is_set = TRUE;
+      break;
     case PROP_FEC_DECODERS:
       gst_rtp_bin_set_fec_decoders_struct (rtpbin, g_value_get_boxed (value));
       break;
@@ -3296,6 +3333,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_TS_OFFSET:
       g_value_set_int64 (value, rtpbin->max_ts_offset);
+      break;
+    case PROP_MIN_TS_OFFSET:
+      g_value_set_uint64 (value, rtpbin->min_ts_offset);
       break;
     case PROP_FEC_DECODERS:
       g_value_take_boxed (value, gst_rtp_bin_get_fec_decoders_struct (rtpbin));

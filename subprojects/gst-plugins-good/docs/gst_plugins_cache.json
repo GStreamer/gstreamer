@@ -16807,6 +16807,20 @@
                         "type": "guint64",
                         "writable": true
                     },
+                    "min-ts-offset": {
+                        "blurb": "The minimum absolute value of the time offset in (nanoseconds). Used to set an lower limit for when a time offset is deemed large enough to be useful for sync corrections.Note, if the ntp-sync parameter is set the default value is changed to 0 (no limit)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "ntp-sync": {
                         "blurb": "Synchronize received streams to the NTP clock",
                         "conditionally-available": false,
