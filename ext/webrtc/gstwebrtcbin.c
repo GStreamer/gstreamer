@@ -3289,6 +3289,17 @@ gst_webrtc_bin_get_transceivers (GstWebRTCBin * webrtc)
   return arr;
 }
 
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *gpad = GST_PAD_CAST (user_data);
+
+  GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
+  gst_pad_store_sticky_event (gpad, *event);
+
+  return TRUE;
+}
+
 /* === rtpbin signal implementations === */
 
 static void
@@ -3333,6 +3344,7 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
 
     if (webrtc->priv->running)
       gst_pad_set_active (GST_PAD (pad), TRUE);
+    gst_pad_sticky_events_foreach (new_pad, copy_sticky_events, pad);
     gst_element_add_pad (GST_ELEMENT (webrtc), GST_PAD (pad));
     _remove_pending_pad (webrtc, pad);
 
