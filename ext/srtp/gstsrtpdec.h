@@ -84,7 +84,7 @@ struct _GstSrtpDec
   gboolean rtcp_has_segment;
 
 #ifndef HAVE_SRTP2
-  gboolean roc_changed;
+  GHashTable *streams_roc_changed;
 #endif
 };
 

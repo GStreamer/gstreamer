@@ -415,10 +415,6 @@ gst_srtp_dec_init (GstSrtpDec * filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->rtcp_srcpad);
 
   filter->first_session = TRUE;
-
-#ifndef HAVE_SRTP2
-  filter->roc_changed = FALSE;
-#endif
 }
 
 static GstStructure *
@@ -780,7 +776,7 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
       /* Here, we just set the ROC, but we also need to set the initial
        * RTP sequence number later, otherwise libsrtp will not be able
        * to get the right packet index. */
-      filter->roc_changed = TRUE;
+      g_hash_table_add (filter->streams_roc_changed, GUINT_TO_POINTER (ssrc));
     }
 #endif
 
@@ -1353,7 +1349,8 @@ unprotect:
 #ifndef HAVE_SRTP2
     /* If ROC has changed, we know we need to set the initial RTP
      * sequence number too. */
-    if (filter->roc_changed) {
+    if (g_hash_table_contains (filter->streams_roc_changed,
+            GUINT_TO_POINTER (ssrc))) {
       srtp_stream_t stream;
 
       stream = srtp_get_stream (filter->session, htonl (ssrc));
@@ -1373,7 +1370,8 @@ unprotect:
         stream->rtp_rdbx.index |= seqnum;
       }
 
-      filter->roc_changed = FALSE;
+      g_hash_table_remove (filter->streams_roc_changed,
+          GUINT_TO_POINTER (ssrc));
     }
 #endif
 
@@ -1527,6 +1525,12 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       filter->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
           NULL, (GDestroyNotify) free_stream);
+
+#ifndef HAVE_SRTP2
+      filter->streams_roc_changed =
+          g_hash_table_new (g_direct_hash, g_direct_equal);
+#endif
+
       filter->rtp_has_segment = FALSE;
       filter->rtcp_has_segment = FALSE;
       break;
@@ -1548,6 +1552,12 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
       gst_srtp_dec_clear_streams (filter);
       g_hash_table_unref (filter->streams);
       filter->streams = NULL;
+
+#ifndef HAVE_SRTP2
+      g_hash_table_unref (filter->streams_roc_changed);
+      filter->streams_roc_changed = NULL;
+#endif
+
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
