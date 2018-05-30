@@ -434,6 +434,11 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   /* 2 bits + 3 bits = 5 bits KFGSHIFT */
   pad->granuleshift = ((GST_READ_UINT8 (data + 40) & 0x03) << 3) +
       (GST_READ_UINT8 (data + 41) >> 5);
+  if (pad->granuleshift >= 63) {
+    /* Granuleshift can't be greater than the storage size of a granule */
+    GST_WARNING ("Invalid granuleshift (%u >= 63)", pad->granuleshift);
+    return FALSE;
+  }
   GST_LOG ("granshift: %d", pad->granuleshift);
 
   pad->is_video = TRUE;
@@ -1335,6 +1340,11 @@ gst_ogg_map_add_fisbone (GstOggStream * pad, GstOggStream * skel_pad,
   }
   if (pad->granuleshift == G_MAXUINT32) {
     pad->granuleshift = GST_READ_UINT8 (data + 28);
+    if (pad->granuleshift >= 63) {
+      /* Granuleshift can't be greater than the storage size of a granule */
+      GST_WARNING ("Invalid granuleshift (%u >= 63)", pad->granuleshift);
+      return FALSE;
+    }
   }
 
   start_granule = GST_READ_UINT64_LE (data + 16);
@@ -1838,6 +1848,11 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT64_LE (data + 12);
   pad->granulerate_d = GST_READ_UINT64_LE (data + 20);
   pad->granuleshift = data[28];
+  if (pad->granuleshift >= 63) {
+    /* Granuleshift can't be greater than the storage size of a granule */
+    GST_WARNING ("Invalid granuleshift (%u >= 63)", pad->granuleshift);
+    return FALSE;
+  }
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = 3;
@@ -1895,6 +1910,11 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_LE (data + 24);
   pad->granulerate_d = GST_READ_UINT32_LE (data + 28);
   pad->granuleshift = GST_READ_UINT8 (data + 15);
+  if (pad->granuleshift >= 63) {
+    /* Granuleshift can't be greater than the storage size of a granule */
+    GST_WARNING ("Invalid granuleshift (%u >= 63)", pad->granuleshift);
+    return FALSE;
+  }
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = GST_READ_UINT8 (data + 11);
@@ -2155,6 +2175,11 @@ setup_daala_mapper (GstOggStream * pad, ogg_packet * packet)
       h);
 
   pad->granuleshift = GST_READ_UINT8 (data + 37);
+  if (pad->granuleshift >= 63) {
+    /* Granuleshift can't be greater than the storage size of a granule */
+    GST_WARNING ("Invalid granuleshift (%u >= 63)", pad->granuleshift);
+    return FALSE;
+  }
   GST_LOG ("granshift: %d", pad->granuleshift);
 
   pad->is_video = TRUE;
