@@ -816,7 +816,9 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
     if (*next_tag == '<' && *(next_tag + 1) == '/') {
       end_tag = strchr (cur, '>');
       if (end_tag) {
-        const gchar *last = g_ptr_array_index (open_tags, num_open_tags - 1);
+        const gchar *last = NULL;
+        if (num_open_tags > 0)
+          last = g_ptr_array_index (open_tags, num_open_tags - 1);
         if (num_open_tags == 0
             || g_ascii_strncasecmp (end_tag - 1, last, strlen (last))) {
           GST_LOG ("broken input, closing tag '%s' is not open", end_tag - 1);
