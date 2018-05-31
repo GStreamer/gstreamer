@@ -44,6 +44,10 @@
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkvpputil.h"
 
+#ifndef _WIN32
+#include "gstmsdkallocator_libva.h"
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #define GST_CAT_DEFAULT gst_msdkvpp_debug
 
@@ -508,11 +512,76 @@ get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
   return msdk_surface;
 }
 
+static gboolean
+import_dmabuf_to_msdk_surface (GstMsdkVPP * thiz, GstBuffer * buf,
+    MsdkSurface * msdk_surface)
+{
+  GstMemory *mem = NULL;
+  GstVideoInfo vinfo;
+  GstVideoMeta *vmeta;
+  GstMsdkMemoryID *msdk_mid = NULL;
+  mfxFrameSurface1 *mfx_surface = NULL;
+  gint fd, i;
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  fd = gst_dmabuf_memory_get_fd (mem);
+  if (fd < 0)
+    return FALSE;
+
+  vinfo = thiz->sinkpad_info;
+
+  /* Update offset/stride/size if there is VideoMeta attached to
+   * the buffer */
+  vmeta = gst_buffer_get_video_meta (buf);
+  if (vmeta) {
+    if (GST_VIDEO_INFO_FORMAT (&vinfo) != vmeta->format ||
+        GST_VIDEO_INFO_WIDTH (&vinfo) != vmeta->width ||
+        GST_VIDEO_INFO_HEIGHT (&vinfo) != vmeta->height ||
+        GST_VIDEO_INFO_N_PLANES (&vinfo) != vmeta->n_planes) {
+      GST_ERROR_OBJECT (thiz, "VideoMeta attached to buffer is not matching"
+          "the negotiated width/height/format");
+      return FALSE;
+    }
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); ++i) {
+      GST_VIDEO_INFO_PLANE_OFFSET (&vinfo, i) = vmeta->offset[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, i) = vmeta->stride[i];
+    }
+    GST_VIDEO_INFO_SIZE (&vinfo) = gst_buffer_get_size (buf);
+  }
+
+  /* Upstream neither accepted the msdk pool nor the msdk buffer size restrictions.
+   * Current media-driver and GMMLib will fail due to strict memory size restrictions.
+   * Ideally, media-driver should accept what ever memory coming from other drivers
+   * in case of dmabuf-import and this is how the intel-vaapi-driver works.
+   * For now, in order to avoid any crash we check the buffer size and fallback
+   * to copy frame method.
+   *
+   * See this: https://github.com/intel/media-driver/issues/169
+   * */
+  if (GST_VIDEO_INFO_SIZE (&vinfo) <
+      GST_VIDEO_INFO_SIZE (&thiz->sinkpad_buffer_pool_info))
+    return FALSE;
+
+  mfx_surface = msdk_surface->surface;
+  msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
+
+  /* release the internal memory storage of associated mfxSurface */
+  gst_msdk_replace_mfx_memid (thiz->context, mfx_surface, VA_INVALID_ID);
+
+  /* export dmabuf to vasurface */
+  if (!gst_msdk_export_dmabuf_to_vasurface (thiz->context, &vinfo, fd,
+          msdk_mid->surface))
+    return FALSE;
+
+  return TRUE;
+}
+
 static MsdkSurface *
 get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
 {
   GstVideoFrame src_frame, out_frame;
   MsdkSurface *msdk_surface;
+  GstMemory *mem = NULL;
 
   if (gst_msdk_is_msdk_buffer (inbuf)) {
     msdk_surface = g_slice_new0 (MsdkSurface);
@@ -522,11 +591,25 @@ get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
   }
 
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
-   * just copy frame to msdk buffer and take a surface from it.
-   */
+   * just copy frame (if not dmabuf backed) to msdk buffer and
+   * take a surface from it.   */
   if (!(msdk_surface =
           get_surface_from_pool (thiz, thiz->sinkpad_buffer_pool, NULL)))
     goto error;
+
+#ifndef _WIN32
+  /************ dmabuf-import ************* */
+  /* if upstream provided a dmabuf backed memory, but not an msdk
+   * buffer, we could export the dmabuf to underlined vasurface */
+  mem = gst_buffer_peek_memory (inbuf, 0);
+  if (gst_is_dmabuf_memory (mem)) {
+    if (import_dmabuf_to_msdk_surface (thiz, inbuf, msdk_surface))
+      return msdk_surface;
+    else
+      GST_INFO_OBJECT (thiz, "Upstream dmabuf-backed memory is not imported"
+          "to the msdk surface, fall back to the copy input frame method");
+  }
+#endif
 
   if (!gst_video_frame_map (&src_frame, &thiz->sinkpad_info, inbuf,
           GST_MAP_READ)) {
