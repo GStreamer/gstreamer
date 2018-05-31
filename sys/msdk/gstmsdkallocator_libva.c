@@ -129,6 +129,10 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
           vaDestroyImage (gst_msdk_context_get_handle (context),
               msdk_mids[i].image.image_id);
         }
+      } else {
+        /* useful to check the image mapping state later */
+        msdk_mids[i].image.image_id = VA_INVALID_ID;
+        msdk_mids[i].image.buf = VA_INVALID_ID;
       }
 
       msdk_mids[i].surface = &surfaces[i];
@@ -462,6 +466,66 @@ error_unsupported_format:
 error_create_surface:
   {
     GST_ERROR ("Failed to create the VASurface from DRM_PRIME FD");
+    return FALSE;
+  }
+}
+
+/**
+ * gst_msdk_replace_mfx_memid:
+ * This method replace the internal VA Suface in mfxSurface with a new one
+ *
+ * Caution: Not a thread-safe routine, this method is here to work around
+ * the dmabuf-import use case with dynamic memID replacement where msdk
+ * originally Inited with fake memIDs.
+ *
+ * Don't use anywhere else unless you really know what you are doing!
+ */
+gboolean
+gst_msdk_replace_mfx_memid (GstMsdkContext * context,
+    mfxFrameSurface1 * mfx_surface, VASurfaceID surface_id)
+{
+  GstMsdkMemoryID *msdk_mid = NULL;
+  VADisplay dpy;
+  VASurfaceID *old_surface_id;
+  VAStatus va_status;
+  mfxStatus status = MFX_ERR_NONE;
+
+  g_return_val_if_fail (mfx_surface != NULL, FALSE);
+  g_return_val_if_fail (context != NULL, FALSE);
+
+  msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
+  dpy = gst_msdk_context_get_handle (context);
+
+  /* Destory the underlined VAImage if already mapped */
+  if (msdk_mid->image.image_id != VA_INVALID_ID
+      && msdk_mid->image.buf != VA_INVALID_ID) {
+    status =
+        gst_msdk_frame_unlock ((mfxHDL) context, (mfxMemId) msdk_mid, NULL);
+    if (status != MFX_ERR_NONE)
+      goto error_destroy_va_image;
+  }
+
+  /* Destroy the associated VASurface */
+  old_surface_id = msdk_mid->surface;
+  if (*old_surface_id != VA_INVALID_ID) {
+    va_status = vaDestroySurfaces (dpy, old_surface_id, 1);
+    status = gst_msdk_get_mfx_status_from_va_status (va_status);
+    if (status != MFX_ERR_NONE)
+      goto error_destroy_va_surface;
+  }
+
+  *msdk_mid->surface = surface_id;
+
+  return TRUE;
+
+error_destroy_va_image:
+  {
+    GST_ERROR ("Failed to Destroy the VAImage");
+    return FALSE;
+  }
+error_destroy_va_surface:
+  {
+    GST_ERROR ("Failed to Destroy the VASurfaceID %x", *old_surface_id);
     return FALSE;
   }
 }
