@@ -3098,7 +3098,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
     gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_WRITINGAPP, mux->writing_app);
   }
   gst_ebml_write_date (ebml, GST_MATROSKA_ID_DATEUTC,
-      g_get_real_time () / G_USEC_PER_SEC);
+      g_get_real_time () * GST_USECOND);
   gst_ebml_write_master_finish (ebml, master);
 
   /* tracks */

@@ -628,7 +628,7 @@ gst_ebml_read_utf8 (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 
 /*
  * Read the next element as a date.
- * Returns the seconds since the unix epoch.
+ * Returns the nanoseconds since the unix epoch.
  */
 
 GstFlowReturn
@@ -641,7 +641,7 @@ gst_ebml_read_date (GstEbmlRead * ebml, guint32 * id, gint64 * date)
   if (ret != GST_FLOW_OK)
     return ret;
 
-  *date = (ebml_date / GST_SECOND) + GST_EBML_DATE_OFFSET;
+  *date = ebml_date + GST_EBML_DATE_OFFSET;
 
   return ret;
 }
