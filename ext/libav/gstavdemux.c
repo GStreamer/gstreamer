@@ -1077,53 +1077,55 @@ safe_utf8_copy (gchar * input)
   return output;
 }
 
-/* g_hash_table_insert requires non-const arguments, so
- * we need to cast const strings to void * */
-#define ADD_TAG_MAPPING(h, k, g) \
-    g_hash_table_insert ((h), (void *) (k), (void *) (g));
+/* This is a list of standard tag keys taken from the avformat.h
+ * header, without handling any variants. */
+static const struct
+{
+  const gchar *ffmpeg_tag_name;
+  const gchar *gst_tag_name;
+} tagmapping[] = {
+  {
+  "album", GST_TAG_ALBUM}, {
+  "album_artist", GST_TAG_ALBUM_ARTIST}, {
+  "artist", GST_TAG_ARTIST}, {
+  "comment", GST_TAG_COMMENT}, {
+  "composer", GST_TAG_COMPOSER}, {
+  "copyright", GST_TAG_COPYRIGHT}, {
+    /* Need to convert ISO 8601 to GstDateTime: */
+  "creation_time", GST_TAG_DATE_TIME}, {
+    /* Need to convert ISO 8601 to GDateTime: */
+  "date", GST_TAG_DATE_TIME}, {
+  "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+  "encoder", GST_TAG_ENCODER}, {
+  "encoded_by", GST_TAG_ENCODED_BY}, {
+  "genre", GST_TAG_GENRE}, {
+  "language", GST_TAG_LANGUAGE_CODE}, {
+  "performer", GST_TAG_PERFORMER}, {
+  "publisher", GST_TAG_PUBLISHER}, {
+  "title", GST_TAG_TITLE}, {
+  "track", GST_TAG_TRACK_NUMBER}
+};
+
+static const gchar *
+match_tag_name (gchar * ffmpeg_tag_name)
+{
+  gint i;
+  for (i = 0; i < G_N_ELEMENTS (tagmapping); i++) {
+    if (!g_strcmp0 (tagmapping[i].ffmpeg_tag_name, ffmpeg_tag_name))
+      return tagmapping[i].gst_tag_name;
+  }
+  return NULL;
+}
 
 static GstTagList *
 gst_ffmpeg_metadata_to_tag_list (AVDictionary * metadata)
 {
-  GHashTable *tagmap = NULL;
   AVDictionaryEntry *tag = NULL;
   GstTagList *list;
-
-  if (g_once_init_enter (&tagmap)) {
-    GHashTable *tmp = g_hash_table_new (g_str_hash, g_str_equal);
-
-    /* This is a list of standard tag keys taken from the avformat.h
-     * header, without handling any variants. */
-    ADD_TAG_MAPPING (tmp, "album", GST_TAG_ALBUM);
-    ADD_TAG_MAPPING (tmp, "album_artist", GST_TAG_ALBUM_ARTIST);
-    ADD_TAG_MAPPING (tmp, "artist", GST_TAG_ARTIST);
-    ADD_TAG_MAPPING (tmp, "comment", GST_TAG_COMMENT);
-    ADD_TAG_MAPPING (tmp, "composer", GST_TAG_COMPOSER);
-    ADD_TAG_MAPPING (tmp, "copyright", GST_TAG_COPYRIGHT);
-    /* Need to convert ISO 8601 to GstDateTime: */
-    ADD_TAG_MAPPING (tmp, "creation_time", GST_TAG_DATE_TIME);
-    /* Need to convert ISO 8601 to GDateTime: */
-    ADD_TAG_MAPPING (tmp, "date", GST_TAG_DATE_TIME);
-    ADD_TAG_MAPPING (tmp, "disc", GST_TAG_ALBUM_VOLUME_NUMBER);
-    ADD_TAG_MAPPING (tmp, "encoder", GST_TAG_ENCODER);
-    ADD_TAG_MAPPING (tmp, "encoded_by", GST_TAG_ENCODED_BY);
-    /* ADD_TAG_MAPPING (tmp, "filename", ); -- No mapping */
-    ADD_TAG_MAPPING (tmp, "genre", GST_TAG_GENRE);
-    ADD_TAG_MAPPING (tmp, "language", GST_TAG_LANGUAGE_CODE);
-    ADD_TAG_MAPPING (tmp, "performer", GST_TAG_PERFORMER);
-    ADD_TAG_MAPPING (tmp, "publisher", GST_TAG_PUBLISHER);
-    /* ADD_TAG_MAPPING(tmp, "service_name", ); -- No mapping */
-    /* ADD_TAG_MAPPING(tmp, "service_provider", ); -- No mapping */
-    ADD_TAG_MAPPING (tmp, "title", GST_TAG_TITLE);
-    ADD_TAG_MAPPING (tmp, "track", GST_TAG_TRACK_NUMBER);
-
-    g_once_init_leave (&tagmap, tmp);
-  }
-
   list = gst_tag_list_new_empty ();
 
   while ((tag = av_dict_get (metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
-    const gchar *gsttag = g_hash_table_lookup (tagmap, tag->key);
+    const gchar *gsttag = match_tag_name (tag->key);
     GType t;
     GST_LOG ("mapping tag %s=%s\n", tag->key, tag->value);
     if (gsttag == NULL) {
@@ -1315,7 +1317,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
       }
     }
   }
-
+  if (tags)
+    gst_tag_list_unref (tags);
   return TRUE;
 
   /* ERRORS */
@@ -1389,7 +1392,7 @@ static void
 gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 {
   GstFlowReturn ret;
-  gint res;
+  gint res = -1;
   AVPacket pkt;
   GstPad *srcpad;
   GstFFStream *stream;
@@ -1541,7 +1544,9 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 
 done:
   /* can destroy the packet now */
-  av_packet_unref (&pkt);
+  if (res == 0) {
+    av_packet_unref (&pkt);
+  }
 
   return;
 
@@ -1585,7 +1590,7 @@ pause:
       GST_ELEMENT_FLOW_ERROR (demux, ret);
       gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
     }
-    return;
+    goto done;
   }
 open_failed:
   {
