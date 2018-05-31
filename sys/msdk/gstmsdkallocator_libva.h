@@ -41,6 +41,10 @@ G_BEGIN_DECLS
 gboolean
 gst_msdk_get_dmabuf_info_from_surface (mfxFrameSurface1 * surface, gint *handle, gsize *size);
 
+gboolean
+gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext *context,
+    GstVideoInfo *vinfo, gint fd, VASurfaceID *surface_id);
+
 G_END_DECLS
 
 #endif /* GST_MSDK_ALLOCATOR_LIBVA_H_ */

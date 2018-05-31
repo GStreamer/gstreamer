@@ -374,3 +374,94 @@ gst_msdk_get_dmabuf_info_from_surface (mfxFrameSurface1 * surface,
 
   return TRUE;
 }
+
+gboolean
+gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
+    GstVideoInfo * vinfo, gint fd, VASurfaceID * surface_id)
+{
+  GstVideoFormat format;
+  guint width, height, size, i;
+  unsigned long extbuf_handle;
+  guint va_fourcc = 0, va_chroma = 0;
+  VASurfaceAttrib attribs[2], *attrib;
+  VASurfaceAttribExternalBuffers extbuf;
+  VAStatus va_status;
+  mfxStatus status = MFX_ERR_NONE;
+
+  g_return_val_if_fail (context != NULL, FALSE);
+  g_return_val_if_fail (vinfo != NULL, FALSE);
+  g_return_val_if_fail (fd >= 0, FALSE);
+
+  extbuf_handle = (guintptr) (fd);
+
+  format = GST_VIDEO_INFO_FORMAT (vinfo);
+  width = GST_VIDEO_INFO_WIDTH (vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (vinfo);
+  size = GST_VIDEO_INFO_SIZE (vinfo);
+
+  /* Fixme: Move to common format handling util */
+  switch (format) {
+    case GST_VIDEO_FORMAT_NV12:
+      va_chroma = VA_RT_FORMAT_YUV420;
+      va_fourcc = VA_FOURCC_NV12;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      va_chroma = VA_RT_FORMAT_YUV444;
+      va_fourcc = VA_FOURCC_BGRA;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      va_chroma = VA_RT_FORMAT_YUV422;
+      va_fourcc = VA_FOURCC_YUY2;
+      break;
+    default:
+      goto error_unsupported_format;
+  }
+
+  /* Fill the VASurfaceAttribExternalBuffers */
+  extbuf.pixel_format = va_fourcc;
+  extbuf.width = width;
+  extbuf.height = height;
+  extbuf.data_size = size;
+  extbuf.num_planes = GST_VIDEO_INFO_N_PLANES (vinfo);
+  for (i = 0; i < extbuf.num_planes; i++) {
+    extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i);
+    extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i);
+  }
+  extbuf.buffers = (uintptr_t *) & extbuf_handle;
+  extbuf.num_buffers = 1;
+  extbuf.flags = 0;
+  extbuf.private_data = NULL;
+
+  /* Fill the Surface Attributes */
+  attrib = attribs;
+  attrib->type = VASurfaceAttribMemoryType;
+  attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+  attrib->value.type = VAGenericValueTypeInteger;
+  attrib->value.value.i = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
+  attrib++;
+  attrib->type = VASurfaceAttribExternalBufferDescriptor;
+  attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+  attrib->value.type = VAGenericValueTypePointer;
+  attrib->value.value.p = &extbuf;
+  attrib++;
+
+  va_status = vaCreateSurfaces (gst_msdk_context_get_handle (context),
+      va_chroma, width, height, surface_id, 1, attribs, attrib - attribs);
+  status = gst_msdk_get_mfx_status_from_va_status (va_status);
+  if (status != MFX_ERR_NONE)
+    goto error_create_surface;
+
+  return TRUE;
+
+error_unsupported_format:
+  {
+    GST_ERROR ("Unsupported Video format %s, Can't export dmabuf to vaSurface",
+        gst_video_format_to_string (format));
+    return FALSE;
+  }
+error_create_surface:
+  {
+    GST_ERROR ("Failed to create the VASurface from DRM_PRIME FD");
+    return FALSE;
+  }
+}
