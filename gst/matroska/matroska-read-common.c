@@ -1974,12 +1974,20 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
 
       case GST_MATROSKA_ID_DATEUTC:{
         gint64 time;
+        GstDateTime *datetime;
+        GstTagList *taglist;
 
         if ((ret = gst_ebml_read_date (ebml, &id, &time)) != GST_FLOW_OK)
           break;
 
         GST_DEBUG_OBJECT (common->sinkpad, "DateUTC: %" G_GINT64_FORMAT, time);
         common->created = time;
+        datetime =
+            gst_date_time_new_from_unix_epoch_utc_usecs (time / GST_USECOND);
+        taglist = gst_tag_list_new (GST_TAG_DATE_TIME, datetime, NULL);
+        gst_tag_list_set_scope (taglist, GST_TAG_SCOPE_GLOBAL);
+        gst_matroska_read_common_found_global_tag (common, el, taglist);
+        gst_date_time_unref (datetime);
         break;
       }
 

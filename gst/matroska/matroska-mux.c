@@ -74,6 +74,7 @@ enum
   PROP_MIN_CLUSTER_DURATION,
   PROP_MAX_CLUSTER_DURATION,
   PROP_OFFSET_TO_ZERO,
+  PROP_CREATION_TIME,
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
@@ -369,6 +370,11 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_boolean ("offset-to-zero", "Offset To Zero",
           "Offsets all streams so that the " "earliest stream starts at 0.",
           DEFAULT_OFFSET_TO_ZERO, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CREATION_TIME,
+      g_param_spec_boxed ("creation-time", "Creation Time",
+          "Date and time of creation. This will be used for the DateUTC field."
+          " NULL means that the current time will be used.",
+          G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -528,6 +534,7 @@ gst_matroska_mux_finalize (GObject * object)
   gst_object_unref (mux->collect);
   gst_object_unref (mux->ebml_write);
   g_free (mux->writing_app);
+  g_clear_pointer (&mux->creation_time, g_date_time_unref);
 
   if (mux->internal_toc) {
     gst_toc_unref (mux->internal_toc);
@@ -2960,6 +2967,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
   GstClockTime earliest_time = GST_CLOCK_TIME_NONE;
   GstClockTime duration = 0;
   guint32 segment_uid[4];
+  gint64 time;
   gchar s_id[32];
   GstToc *toc;
 
@@ -3097,8 +3105,13 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
   if (mux->writing_app && mux->writing_app[0]) {
     gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_WRITINGAPP, mux->writing_app);
   }
-  gst_ebml_write_date (ebml, GST_MATROSKA_ID_DATEUTC,
-      g_get_real_time () * GST_USECOND);
+  if (mux->creation_time != NULL) {
+    time = g_date_time_to_unix (mux->creation_time) * GST_SECOND;
+    time += g_date_time_get_microsecond (mux->creation_time) * GST_USECOND;
+  } else {
+    time = g_get_real_time () * GST_USECOND;
+  }
+  gst_ebml_write_date (ebml, GST_MATROSKA_ID_DATEUTC, time);
   gst_ebml_write_master_finish (ebml, master);
 
   /* tracks */
@@ -4235,6 +4248,10 @@ gst_matroska_mux_set_property (GObject * object,
     case PROP_OFFSET_TO_ZERO:
       mux->offset_to_zero = g_value_get_boolean (value);
       break;
+    case PROP_CREATION_TIME:
+      g_clear_pointer (&mux->creation_time, g_date_time_unref);
+      mux->creation_time = g_value_dup_boxed (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4274,6 +4291,9 @@ gst_matroska_mux_get_property (GObject * object,
       break;
     case PROP_OFFSET_TO_ZERO:
       g_value_set_boolean (value, mux->offset_to_zero);
+      break;
+    case PROP_CREATION_TIME:
+      g_value_set_boxed (value, mux->creation_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
