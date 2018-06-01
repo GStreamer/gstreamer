@@ -1038,21 +1038,25 @@ static void
 gst_qtdemux_push_pending_newsegment (GstQTDemux * qtdemux)
 {
   if (G_UNLIKELY (qtdemux->need_segment)) {
-    GstClockTime min_ts;
     GstEvent *newsegment;
 
-    if (!gst_qtdemux_streams_have_samples (qtdemux)) {
-      /* No samples yet, can't decide on segment.start */
-      GST_DEBUG_OBJECT (qtdemux, "No samples yet, postponing segment event");
-      return;
+    if (!qtdemux->upstream_format_is_time) {
+      GstClockTime min_ts;
+
+      if (!gst_qtdemux_streams_have_samples (qtdemux)) {
+        /* No samples yet, can't decide on segment.start */
+        GST_DEBUG_OBJECT (qtdemux, "No samples yet, postponing segment event");
+        return;
+      }
+
+      min_ts = gst_qtdemux_streams_get_first_sample_ts (qtdemux);
+
+      /* have_samples() above should guarantee we have a valid time */
+      g_assert (GST_CLOCK_TIME_IS_VALID (min_ts));
+
+      qtdemux->segment.start = min_ts;
     }
 
-    min_ts = gst_qtdemux_streams_get_first_sample_ts (qtdemux);
-
-    /* have_samples() above should guarantee we have a valid time */
-    g_assert (GST_CLOCK_TIME_IS_VALID (min_ts));
-
-    qtdemux->segment.start = min_ts;
     newsegment = gst_event_new_segment (&qtdemux->segment);
     if (qtdemux->segment_seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (newsegment, qtdemux->segment_seqnum);
@@ -6900,7 +6904,16 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
             demux->got_moov = TRUE;
             demux->need_segment = TRUE;
-            gst_qtdemux_map_and_push_segments (demux, &demux->segment);
+
+            /* Forward upstream driven time format segment, and also do not try
+             * to map edit list with the upstream time format segment.
+             * It's upstream element's role (the origin of time format segment)
+             */
+            if (demux->upstream_format_is_time)
+              gst_qtdemux_check_send_pending_segment (demux);
+            else
+              gst_qtdemux_map_and_push_segments (demux, &demux->segment);
+
             if (demux->exposed)
               demux->need_segment = FALSE;
 
