@@ -181,8 +181,8 @@ h265_get_log2_max_pic_order_cnt (guint num)
   }
   if (ret <= 4)
     ret = 4;
-  else if (ret > 10)
-    ret = 10;
+  else if (ret > 16)
+    ret = 16;
   /* must be greater than 4 */
   return ret;
 }
