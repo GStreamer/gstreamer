@@ -33,19 +33,42 @@ typedef struct
 static GstPadProbeReturn
 qtdemux_probe (GstPad * pad, GstPadProbeInfo * info, CommonTestData * data)
 {
-  GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
+    GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
 
-  fail_unless_equals_int (gst_buffer_get_size (buf), data->expected_size);
-  fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), data->expected_time);
-  gst_buffer_unref (buf);
-  return GST_PAD_PROBE_HANDLED;
+    switch (GST_EVENT_TYPE (ev)) {
+      case GST_EVENT_SEGMENT:
+      {
+        const GstSegment *segment;
+        gst_event_parse_segment (ev, &segment);
+        fail_unless (GST_CLOCK_TIME_IS_VALID (segment->format));
+        fail_unless (GST_CLOCK_TIME_IS_VALID (segment->start));
+        fail_unless (GST_CLOCK_TIME_IS_VALID (segment->base));
+        fail_unless (GST_CLOCK_TIME_IS_VALID (segment->time));
+        fail_unless (GST_CLOCK_TIME_IS_VALID (segment->position));
+        break;
+      }
+        break;
+      default:
+        break;
+    }
+
+    return GST_PAD_PROBE_OK;
+  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info))) {
+    GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+
+    fail_unless_equals_int (gst_buffer_get_size (buf), data->expected_size);
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), data->expected_time);
+  }
+
+  return GST_PAD_PROBE_DROP;
 }
 
 static void
 qtdemux_pad_added_cb (GstElement * element, GstPad * pad, CommonTestData * data)
 {
   data->srcpad = pad;
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
       (GstPadProbeCallback) qtdemux_probe, data, NULL);
 }
 
