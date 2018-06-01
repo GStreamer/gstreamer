@@ -1,6 +1,7 @@
 .dirstamp
 aggregator
 h264parser
+h265parser
 isoff
 mpegvideoparser
 mpegts
