@@ -264,7 +264,7 @@ gst_mpeg_video_parse (GstMpegVideoPacket * packet,
   size -= off + 4;
   off = scan_for_start_codes (&br, 0, size);
 
-  if (off > 0)
+  if (off >= 0)
     packet->size = off;
 
   return TRUE;
