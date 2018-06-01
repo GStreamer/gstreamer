@@ -4,7 +4,7 @@
  * Copyright (C) 2014 Samsung Electronics. All rights reserved.
  * 
  * Authors:
- *   Alessandro Decina <alessandro@nnva.org>
+ *   Alessandro Decina <alessandro.d@gmail.com>
  *   Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -341,7 +341,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   gst_element_class_set_static_metadata (element_class, "DVB bin",
       "Source/Bin/Video",
       "Access descramble and split DVB streams",
-      "Alessandro Decina <alessandro@nnva.org>\n"
+      "Alessandro Decina <alessandro.d@gmail.com>\n"
       "Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>");
 
   gobject_class = G_OBJECT_CLASS (klass);
