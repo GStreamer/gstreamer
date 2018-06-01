@@ -325,9 +325,11 @@ gst_vaapi_display_wayland_class_init (GstVaapiDisplayWaylandClass * klass)
 GstVaapiDisplay *
 gst_vaapi_display_wayland_new (const gchar * display_name)
 {
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND,
-          NULL), GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME,
-      (gpointer) display_name);
+  GstVaapiDisplay *display;
+
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND, NULL);
+  return gst_vaapi_display_config (display,
+      GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) display_name);
 }
 
 /**
@@ -344,10 +346,13 @@ gst_vaapi_display_wayland_new (const gchar * display_name)
 GstVaapiDisplay *
 gst_vaapi_display_wayland_new_with_display (struct wl_display * wl_display)
 {
+  GstVaapiDisplay *display;
+
   g_return_val_if_fail (wl_display, NULL);
 
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND,
-          NULL), GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, wl_display);
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND, NULL);
+  return gst_vaapi_display_config (display,
+      GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, wl_display);
 }
 
 /**
@@ -368,6 +373,7 @@ GstVaapiDisplay *
 gst_vaapi_display_wayland_new_with_va_display (VADisplay va_display,
     struct wl_display * wl_display)
 {
+  GstVaapiDisplay *display;
   GstVaapiDisplayInfo info = {
     .va_display = va_display,
     .native_display = wl_display,
@@ -375,8 +381,14 @@ gst_vaapi_display_wayland_new_with_va_display (VADisplay va_display,
 
   g_return_val_if_fail (wl_display, NULL);
 
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND,
-          NULL), GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info);
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_WAYLAND, NULL);
+  if (!gst_vaapi_display_config (display,
+          GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info)) {
+    gst_object_unref (display);
+    return NULL;
+  }
+
+  return display;
 }
 
 /**

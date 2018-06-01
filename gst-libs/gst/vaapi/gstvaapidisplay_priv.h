@@ -201,7 +201,7 @@ enum _GstVaapiDisplayInitType
 };
 
 GstVaapiDisplay *
-gst_vaapi_display_new (GstVaapiDisplay * display,
+gst_vaapi_display_config (GstVaapiDisplay * display,
     GstVaapiDisplayInitType init_type, gpointer init_value);
 
 G_END_DECLS

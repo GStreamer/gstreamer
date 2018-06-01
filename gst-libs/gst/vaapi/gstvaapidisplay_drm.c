@@ -395,8 +395,8 @@ gst_vaapi_display_drm_new (const gchar * device_path)
 
   for (i = 0; i < num_types; i++) {
     g_drm_device_type = types[i];
-    display =
-        gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_DRM, NULL),
+    display = g_object_new (GST_TYPE_VAAPI_DISPLAY_DRM, NULL);
+    display = gst_vaapi_display_config (display,
         GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) device_path);
     if (display || device_path)
       break;
@@ -419,9 +419,12 @@ gst_vaapi_display_drm_new (const gchar * device_path)
 GstVaapiDisplay *
 gst_vaapi_display_drm_new_with_device (gint device)
 {
+  GstVaapiDisplay *display;
+
   g_return_val_if_fail (device >= 0, NULL);
 
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_DRM, NULL),
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_DRM, NULL);
+  return gst_vaapi_display_config (display,
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, GINT_TO_POINTER (device));
 }
 

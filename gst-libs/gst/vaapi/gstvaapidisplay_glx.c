@@ -128,7 +128,10 @@ gst_vaapi_display_glx_class_init (GstVaapiDisplayGLXClass * klass)
 GstVaapiDisplay *
 gst_vaapi_display_glx_new (const gchar * display_name)
 {
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_GLX, NULL),
+  GstVaapiDisplay *display;
+
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_GLX, NULL);
+  return gst_vaapi_display_config (display,
       GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME, (gpointer) display_name);
 }
 
@@ -146,8 +149,11 @@ gst_vaapi_display_glx_new (const gchar * display_name)
 GstVaapiDisplay *
 gst_vaapi_display_glx_new_with_display (Display * x11_display)
 {
+  GstVaapiDisplay *display;
+
   g_return_val_if_fail (x11_display != NULL, NULL);
 
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY_GLX, NULL),
+  display = g_object_new (GST_TYPE_VAAPI_DISPLAY_GLX, NULL);
+  return gst_vaapi_display_config (display,
       GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY, x11_display);
 }

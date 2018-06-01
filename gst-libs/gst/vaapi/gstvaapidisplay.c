@@ -1143,11 +1143,24 @@ gst_vaapi_display_class_init (GstVaapiDisplayClass * klass)
   g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
 }
 
+/**
+ * gst_vaapi_display_config:
+ * @display: instance of #GstVaapiDisplay
+ * @init_type: type of initialization #GstVaapiDisplayInitType
+ * @init_value: a pointer to the structure with the initialization
+ * parameters
+ *
+ * Binds @display to the VA layer; otherwise it is just an empty
+ * structure.
+ *
+ * Returns: the configured @display if it was configured correctly;
+ * otherwise unrefs @display and returns %NULL.
+ **/
 GstVaapiDisplay *
-gst_vaapi_display_new (GstVaapiDisplay * display,
+gst_vaapi_display_config (GstVaapiDisplay * display,
     GstVaapiDisplayInitType init_type, gpointer init_value)
 {
-  g_return_val_if_fail (display != NULL, NULL);
+  g_return_val_if_fail (display && GST_VAAPI_IS_DISPLAY (display), NULL);
 
   if (!gst_vaapi_display_create (display, init_type, init_value))
     goto error;
@@ -1156,7 +1169,7 @@ gst_vaapi_display_new (GstVaapiDisplay * display,
   /* ERRORS */
 error:
   {
-    gst_vaapi_display_unref (display);
+    gst_object_unref (display);
     return NULL;
   }
 }
@@ -1177,7 +1190,7 @@ gst_vaapi_display_new_with_display (VADisplay va_display)
     .va_display = va_display,
   };
 
-  return gst_vaapi_display_new (g_object_new (GST_TYPE_VAAPI_DISPLAY, NULL),
+  return gst_vaapi_display_config (g_object_new (GST_TYPE_VAAPI_DISPLAY, NULL),
       GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY, &info);
 }
 
