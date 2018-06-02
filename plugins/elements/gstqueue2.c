@@ -190,7 +190,7 @@ enum
                       queue->max_level.time, \
                       (guint64) (!QUEUE_IS_USING_QUEUE(queue) ? \
                         queue->current->writing_pos - queue->current->max_reading_pos : \
-                        queue->queue.length))
+                        gst_queue_array_get_length(queue->queue)))
 
 #define GST_QUEUE2_MUTEX_LOCK(q) G_STMT_START {                          \
   g_mutex_lock (&q->qlock);                                              \
@@ -524,7 +524,7 @@ gst_queue2_init (GstQueue2 * queue)
   g_cond_init (&queue->item_add);
   queue->waiting_del = FALSE;
   g_cond_init (&queue->item_del);
-  g_queue_init (&queue->queue);
+  queue->queue = gst_queue_array_new_for_struct (sizeof (GstQueue2Item), 32);
 
   g_cond_init (&queue->query_handled);
   queue->last_query = FALSE;
@@ -549,19 +549,17 @@ static void
 gst_queue2_finalize (GObject * object)
 {
   GstQueue2 *queue = GST_QUEUE2 (object);
+  GstQueue2Item *qitem;
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while (!g_queue_is_empty (&queue->queue)) {
-    GstQueue2Item *qitem = g_queue_pop_head (&queue->queue);
-
+  while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
     if (qitem->type != GST_QUEUE2_ITEM_TYPE_QUERY)
       gst_mini_object_unref (qitem->item);
-    g_slice_free (GstQueue2Item, qitem);
   }
+  gst_queue_array_free (queue->queue);
 
   queue->last_query = FALSE;
-  g_queue_clear (&queue->queue);
   g_mutex_clear (&queue->qlock);
   g_mutex_clear (&queue->buffering_post_lock);
   g_cond_clear (&queue->item_add);
@@ -1768,9 +1766,9 @@ gst_queue2_locked_flush (GstQueue2 * queue, gboolean full, gboolean clear_temp)
       gst_queue2_flush_temp_file (queue);
     init_ranges (queue);
   } else {
-    while (!g_queue_is_empty (&queue->queue)) {
-      GstQueue2Item *qitem = g_queue_pop_head (&queue->queue);
+    GstQueue2Item *qitem;
 
+    while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
       if (!full && qitem->type == GST_QUEUE2_ITEM_TYPE_EVENT
           && GST_EVENT_IS_STICKY (qitem->item)
           && GST_EVENT_TYPE (qitem->item) != GST_EVENT_SEGMENT
@@ -1783,7 +1781,6 @@ gst_queue2_locked_flush (GstQueue2 * queue, gboolean full, gboolean clear_temp)
          data when flushing */
       if (qitem->type != GST_QUEUE2_ITEM_TYPE_QUERY)
         gst_mini_object_unref (qitem->item);
-      g_slice_free (GstQueue2Item, qitem);
     }
   }
   queue->last_query = FALSE;
@@ -2299,10 +2296,11 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
       update_buffering (queue);
 
     if (QUEUE_IS_USING_QUEUE (queue)) {
-      GstQueue2Item *qitem = g_slice_new (GstQueue2Item);
-      qitem->type = item_type;
-      qitem->item = item;
-      g_queue_push_tail (&queue->queue, qitem);
+      GstQueue2Item qitem;
+
+      qitem.type = item_type;
+      qitem.item = item;
+      gst_queue_array_push_tail_struct (queue->queue, &qitem);
     } else {
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (item));
     }
@@ -2334,13 +2332,12 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
   if (!QUEUE_IS_USING_QUEUE (queue)) {
     item = gst_queue2_read_item_from_file (queue);
   } else {
-    GstQueue2Item *qitem = g_queue_pop_head (&queue->queue);
+    GstQueue2Item *qitem = gst_queue_array_pop_head_struct (queue->queue);
 
     if (qitem == NULL)
       goto no_item;
 
     item = qitem->item;
-    g_slice_free (GstQueue2Item, qitem);
   }
 
   if (item == NULL)
@@ -2709,7 +2706,7 @@ gst_queue2_is_empty (GstQueue2 * queue)
   if (!QUEUE_IS_USING_QUEUE (queue) && queue->current) {
     return queue->current->writing_pos <= queue->current->max_reading_pos;
   } else {
-    if (queue->queue.length == 0)
+    if (gst_queue_array_get_length (queue->queue) == 0)
       return TRUE;
   }
 

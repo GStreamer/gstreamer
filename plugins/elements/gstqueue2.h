@@ -26,6 +26,7 @@
 
 #include <gst/gst.h>
 #include <stdio.h>
+#include <gst/base/gstqueuearray.h>
 
 G_BEGIN_DECLS
 
@@ -98,7 +99,7 @@ struct _GstQueue2
   gboolean unexpected;
 
   /* the queue of data we're keeping our hands on */
-  GQueue queue;
+  GstQueueArray *queue;
 
   GCond query_handled;
   gboolean last_query; /* result of last serialized query */
