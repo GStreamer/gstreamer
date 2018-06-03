@@ -562,7 +562,7 @@ _gst_data_queue_wait_non_empty (GstDataQueue * queue)
 /**
  * gst_data_queue_pop: (skip)
  * @queue: a #GstDataQueue.
- * @item: pointer to store the returned #GstDataQueueItem.
+ * @item: (out): pointer to store the returned #GstDataQueueItem.
  *
  * Retrieves the first @item available on the @queue. If the queue is currently
  * empty, the call will block until at least one item is available, OR the
@@ -632,7 +632,7 @@ is_of_type (gconstpointer a, gconstpointer b)
 /**
  * gst_data_queue_peek: (skip)
  * @queue: a #GstDataQueue.
- * @item: pointer to store the returned #GstDataQueueItem.
+ * @item: (out): pointer to store the returned #GstDataQueueItem.
  *
  * Retrieves the first @item available on the @queue without removing it.
  * If the queue is currently empty, the call will block until at least
@@ -759,7 +759,7 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
 /**
  * gst_data_queue_get_level: (skip)
  * @queue: The #GstDataQueue
- * @level: the location to store the result
+ * @level: (out): the location to store the result
  *
  * Get the current level of the queue.
  *
