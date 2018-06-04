@@ -612,20 +612,28 @@ set_zynqultrascaleplus_props (GstOMXVideoEnc * self)
   }
 
   if (self->control_rate != OMX_Video_ControlRateDisable) {
-    OMX_ALG_VIDEO_PARAM_CODED_PICTURE_BUFFER cpb;
+    if (self->cpb_size < self->initial_delay) {
+      GST_ERROR_OBJECT (self,
+          "cpb-size (%d) cannot be smaller than initial-delay (%d)",
+          self->cpb_size, self->initial_delay);
+      g_critical ("cpb-size (%d) cannot be smaller than initial-delay (%d)",
+          self->cpb_size, self->initial_delay);
+    } else {
+      OMX_ALG_VIDEO_PARAM_CODED_PICTURE_BUFFER cpb;
 
-    GST_OMX_INIT_STRUCT (&cpb);
-    cpb.nPortIndex = self->enc_out_port->index;
-    cpb.nCodedPictureBufferSize = self->cpb_size;
-    cpb.nInitialRemovalDelay = self->initial_delay;
+      GST_OMX_INIT_STRUCT (&cpb);
+      cpb.nPortIndex = self->enc_out_port->index;
+      cpb.nCodedPictureBufferSize = self->cpb_size;
+      cpb.nInitialRemovalDelay = self->initial_delay;
 
-    GST_DEBUG_OBJECT (self, "setting cpb size to %d and initial delay to %d",
-        self->cpb_size, self->initial_delay);
+      GST_DEBUG_OBJECT (self, "setting cpb size to %d and initial delay to %d",
+          self->cpb_size, self->initial_delay);
 
-    err =
-        gst_omx_component_set_parameter (self->enc,
-        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoCodedPictureBuffer, &cpb);
-    CHECK_ERR ("cpb size & initial delay");
+      err =
+          gst_omx_component_set_parameter (self->enc,
+          (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoCodedPictureBuffer, &cpb);
+      CHECK_ERR ("cpb size & initial delay");
+    }
   }
 
   {
