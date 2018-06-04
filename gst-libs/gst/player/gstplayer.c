@@ -1499,7 +1499,8 @@ emit_duration_changed (GstPlayer * self, GstClockTime duration)
 {
   gboolean updated = FALSE;
 
-  g_return_if_fail (self->cached_duration != duration);
+  if (self->cached_duration == duration)
+    return;
 
   GST_DEBUG_OBJECT (self, "Duration changed %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration));
