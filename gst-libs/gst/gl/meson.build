@@ -144,7 +144,7 @@ gl_winsys_deps = []
 # other things we need.
 gl_misc_deps = []
 # Other preprocessor arguments
-gl_cpp_args = ['-DGST_EXPORTS']
+gl_cpp_args = []
 
 enabled_gl_apis = []
 enabled_gl_platforms = []
