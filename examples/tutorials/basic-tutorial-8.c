@@ -96,9 +96,10 @@ static GstFlowReturn new_sample (GstElement *sink, CustomData *data) {
     /* The only thing we do in this example is print a * to indicate a received buffer */
     g_print ("*");
     gst_sample_unref (sample);
+    return GST_FLOW_OK;
   }
 
-  return GST_FLOW_OK;
+  return GST_FLOW_ERROR;
 }
 
 /* This function is called when an error message is posted on the bus */

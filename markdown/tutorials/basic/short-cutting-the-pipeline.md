@@ -114,7 +114,7 @@ typedef struct _CustomData {
 } CustomData;
 
 /* This method is called by the idle GSource in the mainloop, to feed CHUNK_SIZE bytes into appsrc.
- * The ide handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
+ * The idle handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
  * and is removed when appsrc has enough data (enough-data signal).
  */
 static gboolean push_data (CustomData *data) {
@@ -181,7 +181,7 @@ static void stop_feed (GstElement *source, CustomData *data) {
 }
 
 /* The appsink has received a buffer */
-static void new_sample (GstElement *sink, CustomData *data) {
+static GstFlowReturn new_sample (GstElement *sink, CustomData *data) {
   GstSample *sample;
 
   /* Retrieve the buffer */
@@ -190,7 +190,10 @@ static void new_sample (GstElement *sink, CustomData *data) {
     /* The only thing we do in this example is print a * to indicate a received buffer */
     g_print ("*");
     gst_sample_unref (sample);
+    return GST_FLOW_OK;
   }
+
+  return GST_FLOW_ERROR;
 }
 
 /* This function is called when an error message is posted on the bus */
@@ -234,7 +237,7 @@ int main(int argc, char *argv[]) {
   data.video_queue = gst_element_factory_make ("queue", "video_queue");
   data.audio_convert2 = gst_element_factory_make ("audioconvert", "audio_convert2");
   data.visual = gst_element_factory_make ("wavescope", "visual");
-  data.video_convert = gst_element_factory_make ("videoconvert", "csp");
+  data.video_convert = gst_element_factory_make ("videoconvert", "video_convert");
   data.video_sink = gst_element_factory_make ("autovideosink", "video_sink");
   data.app_queue = gst_element_factory_make ("queue", "app_queue");
   data.app_sink = gst_element_factory_make ("appsink", "app_sink");
