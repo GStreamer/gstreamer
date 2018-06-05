@@ -2334,6 +2334,7 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   ogg->stats_bisection_max_steps[1] = 0;
 
   ogg->newsegment = NULL;
+  ogg->seqnum = GST_SEQNUM_INVALID;
 
   ogg->chunk_size = CHUNKSIZE;
   ogg->flowcombiner = gst_flow_combiner_new ();
@@ -2403,11 +2404,15 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
+      if (ogg->seqnum != GST_SEQNUM_INVALID)
+        gst_event_set_seqnum (event, ogg->seqnum);
       res = gst_ogg_demux_send_event (ogg, event);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (ogg, "got a flush stop event");
       ogg_sync_reset (&ogg->sync);
+      if (ogg->seqnum != GST_SEQNUM_INVALID)
+        gst_event_set_seqnum (event, ogg->seqnum);
       res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->pullmode || ogg->push_state != PUSH_DURATION) {
         /* it's starting to feel reaaaally dirty :(
@@ -2437,6 +2442,8 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
                 GST_FORMAT_TIME, ogg->push_seek_flags, GST_SEEK_TYPE_SET,
                 ogg->push_seek_time_original_target, stop_type,
                 ogg->push_seek_time_original_stop, &update);
+          } else if (ogg->seqnum == GST_SEQNUM_INVALID) {
+            ogg->seqnum = GST_EVENT_SEQNUM (event);
           }
 
           if (!ogg->pullmode && !(ogg->push_seek_flags & GST_SEEK_FLAG_FLUSH)) {
@@ -2464,8 +2471,9 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
           if (!ogg->pullmode) {
             if (ogg->seek_event_drop_till == gst_event_get_seqnum (event)) {
-              GST_DEBUG_OBJECT (ogg, "Got event seqnum %u, stopping dropping",
-                  ogg->seek_event_drop_till);
+              GST_DEBUG_OBJECT (ogg,
+                  "Got event seqnum %u, stopping dropping (ogg->seqnum:%u)",
+                  ogg->seek_event_drop_till, ogg->seqnum);
               ogg->seek_event_drop_till = 0;
             }
           }
@@ -5165,6 +5173,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       ogg->push_state = PUSH_PLAYING;
       ogg->have_group_id = FALSE;
       ogg->group_id = G_MAXUINT;
+      ogg->seqnum = GST_SEQNUM_INVALID;
 
       ogg->push_disable_seeking = FALSE;
       gst_ogg_demux_query_duration_push (ogg);
