@@ -410,6 +410,8 @@ retry:
     ret = TRUE;
   }
 
+  GST_INFO_OBJECT (encode, "out caps %" GST_PTR_FORMAT, caps);
+
   if (!ret)
     GST_LOG ("There is no compatible profile in the requested caps.");
 
