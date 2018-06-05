@@ -76,8 +76,17 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
 
 #define ACTION_EXPECTED_STREAM_QUARK g_quark_from_static_string ("ACTION_EXPECTED_STREAM_QUARK")
 
-#define SCENARIO_LOCK(scenario) (g_mutex_lock(&scenario->priv->lock))
-#define SCENARIO_UNLOCK(scenario) (g_mutex_unlock(&scenario->priv->lock))
+#define SCENARIO_LOCK(scenario) G_STMT_START {				\
+    GST_LOG_OBJECT (scenario, "About to lock %p", &scenario->priv->lock); \
+    g_mutex_lock(&scenario->priv->lock);				\
+    GST_LOG_OBJECT (scenario, "Acquired lock %p", &scenario->priv->lock); \
+  } G_STMT_END
+
+#define SCENARIO_UNLOCK(scenario) G_STMT_START {			\
+    GST_LOG_OBJECT (scenario, "About to unlock %p", &scenario->priv->lock); \
+    g_mutex_unlock(&scenario->priv->lock);				\
+    GST_LOG_OBJECT (scenario, "unlocked %p", &scenario->priv->lock);	\
+  } G_STMT_END
 
 #define DECLARE_AND_GET_PIPELINE(s,a) \
   GstElement * pipeline = gst_validate_scenario_get_pipeline (s); \
