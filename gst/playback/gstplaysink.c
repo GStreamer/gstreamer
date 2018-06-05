@@ -2220,6 +2220,8 @@ gst_play_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer,
     /* make the bin drop all cached data.
      * This event will be dropped on the src pad, if any. */
     event = gst_event_new_flush_start ();
+    if (segment_event)
+      gst_event_set_seqnum (event, gst_event_get_seqnum (segment_event));
     structure = gst_event_writable_structure (event);
     gst_structure_id_set (structure,
         _playsink_reset_segment_event_marker_id, G_TYPE_BOOLEAN, TRUE, NULL);
@@ -2232,6 +2234,8 @@ gst_play_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer,
     /* make queue drop all cached data.
      * This event will be dropped on the src pad. */
     event = gst_event_new_flush_stop (TRUE);
+    if (segment_event)
+      gst_event_set_seqnum (event, gst_event_get_seqnum (segment_event));
     structure = gst_event_writable_structure (event);
     gst_structure_id_set (structure,
         _playsink_reset_segment_event_marker_id, G_TYPE_BOOLEAN, TRUE, NULL);
