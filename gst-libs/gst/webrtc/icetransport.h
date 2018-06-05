@@ -53,7 +53,7 @@ struct _GstWebRTCICETransport
 
 struct _GstWebRTCICETransportClass
 {
-  GstBinClass               parent_class;
+  GstObjectClass               parent_class;
 
   gboolean                  (*gather_candidates)        (GstWebRTCICETransport * transport);
 

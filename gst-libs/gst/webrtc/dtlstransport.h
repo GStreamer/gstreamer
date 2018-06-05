@@ -53,7 +53,7 @@ struct _GstWebRTCDTLSTransport
 
 struct _GstWebRTCDTLSTransportClass
 {
-  GstBinClass               parent_class;
+  GstObjectClass               parent_class;
 
   gpointer                  _padding[GST_PADDING];
 };
