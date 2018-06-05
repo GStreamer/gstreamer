@@ -49,12 +49,12 @@ build*/
 /m4/*m4
 
 /po
-*docs/launcher/html
-*tools/gst-validate-launcher
 
-tests/check/validate/monitoring
-tests/check/validate/overrides
-tests/check/validate/reporting
-tests/check/validate/padmonitor
+/gst/validate/*-enum-types.[ch]
+
+/tests/check/validate/monitoring
+/tests/check/validate/overrides
+/tests/check/validate/reporting
+/tests/check/validate/padmonitor
 
 /launcher/config.py
