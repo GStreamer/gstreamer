@@ -367,6 +367,7 @@ void
 gst_message_set_seqnum (GstMessage * message, guint32 seqnum)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (seqnum != GST_SEQNUM_INVALID);
 
   GST_MESSAGE_SEQNUM (message) = seqnum;
 }
