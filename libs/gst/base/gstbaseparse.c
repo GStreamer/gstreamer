@@ -343,6 +343,9 @@ struct _GstBaseParsePrivate
   GstTagList *parser_tags;
   GstTagMergeMode parser_tags_merge_mode;
   gboolean tags_changed;
+
+  /* Current segment seqnum */
+  guint32 segment_seqnum;
 };
 
 typedef struct _GstBaseParseSeek
@@ -881,6 +884,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   g_list_free (parse->priv->detect_buffers);
   parse->priv->detect_buffers = NULL;
   parse->priv->detect_buffers_size = 0;
+
+  parse->priv->segment_seqnum = GST_SEQNUM_INVALID;
   GST_OBJECT_UNLOCK (parse);
 }
 
@@ -1186,14 +1191,16 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
       const GstSegment *in_segment;
       GstSegment out_segment;
       gint64 offset = 0, next_dts;
-      guint32 seqnum = gst_event_get_seqnum (event);
 
+      parse->priv->segment_seqnum = gst_event_get_seqnum (event);
       gst_event_parse_segment (event, &in_segment);
       gst_segment_init (&out_segment, GST_FORMAT_TIME);
       out_segment.rate = in_segment->rate;
       out_segment.applied_rate = in_segment->applied_rate;
 
-      GST_DEBUG_OBJECT (parse, "segment %" GST_SEGMENT_FORMAT, in_segment);
+      GST_DEBUG_OBJECT (parse, "New segment %" GST_SEGMENT_FORMAT, in_segment);
+      GST_DEBUG_OBJECT (parse, "Current segment %" GST_SEGMENT_FORMAT,
+          &parse->segment);
 
       parse->priv->upstream_format = in_segment->format;
       if (in_segment->format == GST_FORMAT_BYTES) {
@@ -1245,7 +1252,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         gst_event_unref (event);
 
         event = gst_event_new_segment (&out_segment);
-        gst_event_set_seqnum (event, seqnum);
+        gst_event_set_seqnum (event, parse->priv->segment_seqnum);
 
         GST_DEBUG_OBJECT (parse, "Converted incoming segment to TIME. %"
             GST_SEGMENT_FORMAT, in_segment);
@@ -1260,7 +1267,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         out_segment.time = 0;
 
         event = gst_event_new_segment (&out_segment);
-        gst_event_set_seqnum (event, seqnum);
+        gst_event_set_seqnum (event, parse->priv->segment_seqnum);
 
         next_dts = 0;
       } else {
@@ -1271,6 +1278,8 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
         gst_event_copy_segment (event, &out_segment);
       }
 
+      GST_DEBUG_OBJECT (parse, "OUT segment %" GST_SEGMENT_FORMAT,
+          &out_segment);
       memcpy (&parse->segment, &out_segment, sizeof (GstSegment));
 
       /*
@@ -2467,6 +2476,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
               && last_start > parse->segment.start
               && (!GST_CLOCK_TIME_IS_VALID (parse->segment.stop)
                   || last_start < parse->segment.stop))) {
+        GstEvent *topush;
 
         GST_DEBUG_OBJECT (parse,
             "Gap of %" G_GINT64_FORMAT " ns detected in stream " "(%"
@@ -2476,8 +2486,10 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
             GST_TIME_ARGS (last_start));
 
         /* skip gap FIXME */
-        gst_pad_push_event (parse->srcpad,
-            gst_event_new_segment (&parse->segment));
+        topush = gst_event_new_segment (&parse->segment);
+        if (parse->priv->segment_seqnum != GST_SEQNUM_INVALID)
+          gst_event_set_seqnum (topush, parse->priv->segment_seqnum);
+        gst_pad_push_event (parse->srcpad, topush);
 
         parse->segment.position = last_start;
       }
@@ -3634,13 +3646,19 @@ pause:
       push_eos = TRUE;
     }
     if (push_eos) {
+      GstEvent *topush;
       if (parse->priv->estimated_duration <= 0) {
         gst_base_parse_update_duration (parse);
       }
       /* Push pending events, including SEGMENT events */
       gst_base_parse_push_pending_events (parse);
 
-      gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
+      topush = gst_event_new_eos ();
+      GST_DEBUG_OBJECT (parse, "segment_seqnum:%" G_GUINT32_FORMAT,
+          parse->priv->segment_seqnum);
+      if (parse->priv->segment_seqnum != GST_SEQNUM_INVALID)
+        gst_event_set_seqnum (topush, parse->priv->segment_seqnum);
+      gst_pad_push_event (parse->srcpad, topush);
     }
     gst_object_unref (parse);
   }
@@ -3743,9 +3761,10 @@ gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
   switch (mode) {
     case GST_PAD_MODE_PULL:
       if (active) {
+        GstEvent *ev = gst_event_new_segment (&parse->segment);
+        parse->priv->segment_seqnum = gst_event_get_seqnum (ev);
         parse->priv->pending_events =
-            g_list_prepend (parse->priv->pending_events,
-            gst_event_new_segment (&parse->segment));
+            g_list_prepend (parse->priv->pending_events, ev);
         result = TRUE;
       } else {
         result = gst_pad_stop_task (pad);
