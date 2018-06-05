@@ -604,6 +604,9 @@ do_query_position (GstRTSPStream * stream, DoQueryPositionData * data)
 {
   gint64 tmp;
 
+  if (!gst_rtsp_stream_is_sender (stream))
+    return;
+
   if (data->complete_streams_only && !gst_rtsp_stream_is_complete (stream)) {
     GST_DEBUG_OBJECT (stream, "stream not complete, do not query position");
     return;
@@ -3917,8 +3920,11 @@ static void
 do_set_seqnum (GstRTSPStream * stream)
 {
   guint16 seq_num;
-  seq_num = gst_rtsp_stream_get_current_seqnum (stream);
-  gst_rtsp_stream_set_seqnum_offset (stream, seq_num + 1);
+
+  if (gst_rtsp_stream_is_sender (stream)) {
+    seq_num = gst_rtsp_stream_get_current_seqnum (stream);
+    gst_rtsp_stream_set_seqnum_offset (stream, seq_num + 1);
+  }
 }
 
 /* call with state_lock */

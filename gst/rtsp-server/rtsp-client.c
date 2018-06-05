@@ -1826,6 +1826,9 @@ default_configure_client_media (GstRTSPClient * client, GstRTSPMedia * media,
   GstRTSPMessage *request = ctx->request;
   gchar *blocksize_str;
 
+  if (!gst_rtsp_stream_is_sender (stream))
+    return TRUE;
+
   if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_BLOCKSIZE,
           &blocksize_str, 0) == GST_RTSP_OK) {
     guint64 blocksize;
