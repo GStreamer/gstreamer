@@ -448,6 +448,7 @@ void
 gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
 {
   g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (seqnum != GST_SEQNUM_INVALID);
 
   GST_EVENT_SEQNUM (event) = seqnum;
 }
