@@ -82,6 +82,12 @@ G_DEFINE_TYPE_WITH_CODE (GstValidatePadMonitor, gst_validate_pad_monitor,
             GST_VALIDATE_MONITOR_GET_PARENT(m)) : \
         FALSE)
 
+#define PAD_PARENT_IS_SINK(m) \
+    (GST_VALIDATE_MONITOR_GET_PARENT(m) ? \
+        GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_SINK ( \
+            GST_VALIDATE_MONITOR_GET_PARENT(m)) : \
+        FALSE)
+
 
 /*
  * Locking the parent should always be done before locking the
@@ -1895,6 +1901,39 @@ gst_validate_monitor_find_next_buffer (GstValidatePadMonitor * pad_monitor)
     pad_monitor->current_buf = tmp;
 }
 
+static void
+post_segment_message (GstValidatePadMonitor * pad_monitor, GstPad * pad,
+    const GstSegment * segment, guint32 seqnum)
+{
+  GstValidateMonitor *element_monitor =
+      GST_VALIDATE_MONITOR_GET_PARENT (pad_monitor);
+  GstElement *element;
+  GstStructure *structure;
+  GstMessage *msg;
+
+  if (element_monitor == NULL)
+    return;
+
+  element = gst_validate_monitor_get_element (element_monitor);
+  if (element == NULL)
+    return;
+
+  GST_DEBUG_OBJECT (pad,
+      "Posting application message for seqnum:%" G_GUINT32_FORMAT " %"
+      GST_SEGMENT_FORMAT, seqnum, segment);
+
+  structure =
+      gst_structure_new ("validate-segment", "segment", GST_TYPE_SEGMENT,
+      segment, NULL);
+  msg = gst_message_new_application ((GstObject *) element, structure);
+  gst_message_set_seqnum (msg, seqnum);
+  gst_element_post_message (element, msg);
+
+  gst_object_unref (element);
+
+  return;
+}
+
 /* Checks whether a segment is just an update of another,
  * That is to say that only the base and offset field differ and all
  * other fields are identical */
@@ -2091,6 +2130,8 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
         gst_segment_copy_into (segment, &pad_monitor->segment);
         pad_monitor->has_segment = TRUE;
         gst_validate_monitor_find_next_buffer (pad_monitor);
+        if (PAD_PARENT_IS_SINK (pad_monitor))
+          post_segment_message (pad_monitor, pad, segment, seqnum);
       }
       break;
     case GST_EVENT_CAPS:{
