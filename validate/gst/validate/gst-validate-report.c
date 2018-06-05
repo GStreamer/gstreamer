@@ -342,6 +342,10 @@ gst_validate_report_load_issues (void)
           " EOS being some kind of data flow, there is no exception"
           " in that regard"));
 
+  REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_INVALID_SEQNUM,
+      _("Event has an invalid seqnum"),
+      _("An event is using GST_SEQNUM_INVALID. This should never happen"));
+
   REGISTER_VALIDATE_ISSUE (CRITICAL, STATE_CHANGE_FAILURE,
       _("state change failed"), NULL);
 

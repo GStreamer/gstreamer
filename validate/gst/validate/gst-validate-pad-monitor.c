@@ -1616,6 +1616,11 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
 {
   guint32 seqnum = gst_event_get_seqnum (event);
 
+  if (seqnum == GST_SEQNUM_INVALID)
+    GST_VALIDATE_REPORT (pad_monitor, EVENT_INVALID_SEQNUM,
+        "Event %p (%s) has an invalid SEQNUM", event,
+        GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
