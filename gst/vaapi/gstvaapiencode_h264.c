@@ -308,7 +308,7 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     const char *stream_format = NULL;
     GstStructure *structure;
     guint i, num_structures;
-    GstVaapiProfile profile;
+    GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
     GstCaps *available_caps;
 
     available_caps = get_available_caps (encode);
@@ -319,7 +319,27 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     }
     if (!gst_caps_can_intersect (allowed_caps, available_caps)) {
       GST_INFO_OBJECT (encode, "downstream requested an unsupported profile, "
-          "but encoder will output a compatible one");
+          "but encoder will try to output a compatible one");
+
+      /* Let's try the best profile in the allowed caps.
+       * The internal encoder will fail later if it can't handle it */
+      profile = find_best_profile (allowed_caps);
+
+    } else {
+      GstCaps *profile_caps;
+      const gchar *profile_str;
+
+      profile_caps = gst_caps_intersect (allowed_caps, available_caps);
+
+      /* let's fixate to adjust to minimal profile */
+      profile_caps = gst_caps_fixate (profile_caps);
+
+      structure = gst_caps_get_structure (profile_caps, 0);
+      profile_str = gst_structure_get_string (structure, "profile");
+      if (profile_str)
+        profile = gst_vaapi_utils_h264_get_profile_from_string (profile_str);
+
+      gst_caps_unref (profile_caps);
     }
 
     /* Check whether "stream-format" is avcC mode */
@@ -331,14 +351,14 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
         continue;
       stream_format = gst_structure_get_string (structure, "stream-format");
     }
-    encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
+    encode->is_avc = (g_strcmp0 (stream_format, "avc") == 0);
 
-    /* Check for the largest profile that is supported */
-    profile = find_best_profile (available_caps);
     if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
       GST_INFO ("using %s profile as target decoder constraints",
           gst_vaapi_utils_h264_get_profile_string (profile));
       ret = gst_vaapi_encoder_h264_set_max_profile (encoder, profile);
+    } else {
+      ret = FALSE;
     }
 
     gst_caps_unref (allowed_caps);
