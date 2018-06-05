@@ -207,6 +207,8 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
   } else
     GST_ERROR_OBJECT (element, "no klassname");
 
+  monitor->is_sink = GST_IS_BASE_SINK (element);
+
   gst_object_unref (element);
 }
 
