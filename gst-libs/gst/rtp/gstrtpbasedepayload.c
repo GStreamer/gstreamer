@@ -56,6 +56,7 @@ struct _GstRTPBaseDepayloadPrivate
 
   GstCaps *last_caps;
   GstEvent *segment_event;
+  guint32 segment_seqnum;       /* Note: this is a GstEvent seqnum */
 };
 
 /* Filter signals and args */
@@ -583,6 +584,7 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
         GST_ERROR_OBJECT (filter, "Segment with non-TIME format not supported");
         res = FALSE;
       }
+      filter->priv->segment_seqnum = gst_event_get_seqnum (event);
       filter->segment = segment;
       GST_OBJECT_UNLOCK (filter);
 
@@ -703,6 +705,8 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   GST_DEBUG_OBJECT (filter, "Creating segment event %" GST_SEGMENT_FORMAT,
       &segment);
   event = gst_event_new_segment (&segment);
+  if (filter->priv->segment_seqnum != GST_SEQNUM_INVALID)
+    gst_event_set_seqnum (event, filter->priv->segment_seqnum);
 
   return event;
 }
@@ -877,6 +881,7 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       priv->next_seqnum = -1;
       priv->negotiated = FALSE;
       priv->discont = FALSE;
+      priv->segment_seqnum = GST_SEQNUM_INVALID;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
