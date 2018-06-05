@@ -383,7 +383,7 @@ namespace Gst
 				query.param_types = new Type[q.n_params];
 
 				for (int i = 0; i < query.n_params; i++) {
-					IntPtr t = Marshal.ReadIntPtr (q.param_types, i);
+					IntPtr t = Marshal.ReadIntPtr (q.param_types, i * IntPtr.Size);
 					GType g = new GType (t);
 
 					query.param_types [i] = (Type)g;
