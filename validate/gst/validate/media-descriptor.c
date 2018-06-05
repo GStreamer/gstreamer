@@ -428,7 +428,7 @@ compare_streams (GstValidateMediaDescriptor * ref,
 
     if (!gst_caps_is_equal (rcaps, ccaps)) {
       gchar *rcaps_str = gst_caps_to_string (rcaps),
-        *ccaps_str = gst_caps_to_string (ccaps);
+          *ccaps_str = gst_caps_to_string (ccaps);
       GST_VALIDATE_REPORT (ref, FILE_PROFILE_INCORRECT,
           "Reference descriptor for stream %s has caps: %s"
           " but compared stream %s has caps: %s",
