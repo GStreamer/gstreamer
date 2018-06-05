@@ -559,6 +559,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       GSList *pads = NULL;
       GstPad *srcpad;
       GstClockTime timestamp;
+      guint32 seqnum;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
@@ -573,6 +574,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
 
       seen_data = stream->seen_data;
       srcpad = gst_object_ref (stream->srcpad);
+      seqnum = stream->segment_seqnum;
 
       if (seen_data && stream->segment.position != -1)
         timestamp = stream->segment.position;
@@ -635,10 +637,13 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
        * send EOS. Or no any valid media data in one track, so decoder can't
        * get valid CAPS for the track. sink can't ready without received CAPS.*/
       if (!seen_data || self->eos) {
+        GstEvent *topush;
         GST_DEBUG_OBJECT (pad, "send EOS event");
         /* drop lock when sending eos, which may block in e.g. preroll */
+        topush = gst_event_new_eos ();
+        gst_event_set_seqnum (topush, seqnum);
         GST_STREAM_SYNCHRONIZER_UNLOCK (self);
-        ret = gst_pad_push_event (srcpad, gst_event_new_eos ());
+        ret = gst_pad_push_event (srcpad, topush);
         GST_STREAM_SYNCHRONIZER_LOCK (self);
         stream = gst_pad_get_element_private (pad);
         if (stream) {
