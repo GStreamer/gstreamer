@@ -3513,7 +3513,7 @@ nothing_pending:
 static void
 bin_do_eos (GstBin * bin)
 {
-  guint32 seqnum = 0;
+  guint32 seqnum = GST_SEQNUM_INVALID;
   gboolean eos;
 
   GST_OBJECT_LOCK (bin);
@@ -3542,7 +3542,8 @@ bin_do_eos (GstBin * bin)
     GST_OBJECT_UNLOCK (bin);
 
     tmessage = gst_message_new_eos (GST_OBJECT_CAST (bin));
-    gst_message_set_seqnum (tmessage, seqnum);
+    if (seqnum != GST_SEQNUM_INVALID)
+      gst_message_set_seqnum (tmessage, seqnum);
     GST_DEBUG_OBJECT (bin,
         "all sinks posted EOS, posting seqnum #%" G_GUINT32_FORMAT, seqnum);
     gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
@@ -3555,7 +3556,7 @@ bin_do_eos (GstBin * bin)
 static void
 bin_do_stream_start (GstBin * bin)
 {
-  guint32 seqnum = 0;
+  guint32 seqnum = GST_SEQNUM_INVALID;
   gboolean stream_start;
   gboolean have_group_id = FALSE;
   guint group_id = 0;
@@ -3575,7 +3576,8 @@ bin_do_stream_start (GstBin * bin)
     GST_OBJECT_UNLOCK (bin);
 
     tmessage = gst_message_new_stream_start (GST_OBJECT_CAST (bin));
-    gst_message_set_seqnum (tmessage, seqnum);
+    if (seqnum != GST_SEQNUM_INVALID)
+      gst_message_set_seqnum (tmessage, seqnum);
     if (have_group_id)
       gst_message_set_group_id (tmessage, group_id);
 
