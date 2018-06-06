@@ -158,7 +158,7 @@ gst_vdp_sink_window_set_title (VdpSink * vdp_sink,
                     &xproperty)) != 0) {
           XSetWMName (vdp_sink->device->display, window->win, &xproperty);
           XFree (xproperty.value);
-	}
+        }
 
         g_free (title_mem);
       }
