@@ -219,8 +219,10 @@ egl_display:
       GstGLDisplayEGL *egl_display;
 
       egl_display = gst_gl_display_egl_from_gl_display (gl_display);
-      egl_handle = gst_gl_display_get_handle (GST_GL_DISPLAY (egl_display));
-      gst_object_unref (egl_display);
+      if (egl_display) {
+        egl_handle = gst_gl_display_get_handle (GST_GL_DISPLAY (egl_display));
+        gst_object_unref (egl_display);
+      }
 #endif
 
       switch (gst_gl_context_get_gl_api (gl_context)) {
