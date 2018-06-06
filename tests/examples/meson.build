@@ -10,7 +10,7 @@ subdir('mpegts')
 #subdir('mxf')
 #subdir('opencv')
 #subdir('uvch264')
-#subdir('waylandsink')
+subdir('waylandsink')
 subdir('webrtc')
 
 executable('playout',
