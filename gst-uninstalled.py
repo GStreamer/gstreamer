@@ -71,6 +71,7 @@ def get_subprocess_env(options):
         PREFIX_DIR, 'share', 'gstreamer-1.0', 'validate', 'scenarios'))
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                          'lib', 'girepository-1.0'))
+    prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'))
 
     meson = get_meson()
     targets_s = subprocess.check_output([sys.executable, meson, 'introspect', options.builddir, '--targets'])
