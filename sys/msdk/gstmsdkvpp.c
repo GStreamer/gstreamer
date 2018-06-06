@@ -830,16 +830,6 @@ ensure_filters (GstMsdkVPP * thiz)
     n_filters++;
   }
 
-  /* mfxExtVPPDoUse */
-  if (n_filters) {
-    mfxExtVPPDoUse *mfx_vpp_douse = &thiz->mfx_vpp_douse;
-    mfx_vpp_douse->Header.BufferId = MFX_EXTBUFF_VPP_DOUSE;
-    mfx_vpp_douse->Header.BufferSz = sizeof (mfxExtVPPDoUse);
-    mfx_vpp_douse->NumAlg = n_filters;
-    mfx_vpp_douse->AlgList = thiz->max_filter_algorithms;
-    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_vpp_douse);
-  }
-
   /* Mirroring */
   if (thiz->flags & GST_MSDK_FLAG_MIRRORING) {
     mfxExtVPPMirroring *mfx_mirroring = &thiz->mfx_mirroring;
@@ -872,6 +862,16 @@ ensure_filters (GstMsdkVPP * thiz)
     thiz->max_filter_algorithms[n_filters] =
         MFX_EXTBUFF_VPP_FRAME_RATE_CONVERSION;
     n_filters++;
+  }
+
+  /* mfxExtVPPDoUse */
+  if (n_filters) {
+    mfxExtVPPDoUse *mfx_vpp_douse = &thiz->mfx_vpp_douse;
+    mfx_vpp_douse->Header.BufferId = MFX_EXTBUFF_VPP_DOUSE;
+    mfx_vpp_douse->Header.BufferSz = sizeof (mfxExtVPPDoUse);
+    mfx_vpp_douse->NumAlg = n_filters;
+    mfx_vpp_douse->AlgList = thiz->max_filter_algorithms;
+    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_vpp_douse);
   }
 }
 
