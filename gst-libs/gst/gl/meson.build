@@ -268,7 +268,9 @@ gl_include_header = '''
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
 if need_api_opengl != 'no' or need_platform_glx != 'no'
-  gl_dep = dependency('gl', required : false)
+  # override meson's braindead gl detection on osx/windows/etc by forcing pkg-config
+  gl_dep = dependency('gl', method: 'pkg-config', required : false)
+
   if not gl_dep.found()
     if host_machine.system() == 'windows'
       gl_dep = cc.find_library('opengl32', required : false)
