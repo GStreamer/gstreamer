@@ -45,12 +45,13 @@ static SoupWebsocketConnection *ws_conn = NULL;
 static enum AppState app_state = 0;
 static const gchar *peer_id = NULL;
 static const gchar *server_url = "wss://webrtc.nirbheek.in:8443";
-static gboolean strict_ssl = TRUE;
+static gboolean disable_ssl = FALSE;
 
 static GOptionEntry entries[] =
 {
   { "peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id, "String ID of the peer to connect to", "ID" },
   { "server", 0, 0, G_OPTION_ARG_STRING, &server_url, "Signalling server to connect to", "URL" },
+  { "disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL },
   { NULL },
 };
 
@@ -569,7 +570,7 @@ connect_to_websocket_server_async (void)
   SoupSession *session;
   const char *https_aliases[] = {"wss", NULL};
 
-  session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, strict_ssl,
+  session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, !disable_ssl,
       SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
       //SOUP_SESSION_SSL_CA_FILE, "/etc/ssl/certs/ca-bundle.crt",
       SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
@@ -634,13 +635,13 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  /* Don't use strict ssl when running a localhost server, because
+  /* Disable ssl when running a localhost server, because
    * it's probably a test server with a self-signed certificate */
   {
     GstUri *uri = gst_uri_from_string (server_url);
     if (g_strcmp0 ("localhost", gst_uri_get_host (uri)) == 0 ||
         g_strcmp0 ("127.0.0.1", gst_uri_get_host (uri)) == 0)
-      strict_ssl = FALSE;
+      disable_ssl = TRUE;
     gst_uri_unref (uri);
   }
 
