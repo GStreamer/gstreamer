@@ -390,7 +390,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   gboolean update;
   GstSegment seeksegment = { 0, };
   gint64 last_stop;
-  guint32 seqnum = 0;
+  guint32 seqnum = GST_SEQNUM_INVALID;
 
   if (event) {
     GST_DEBUG_OBJECT (wav, "doing seek with event");
@@ -463,7 +463,8 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       /* BYTE seek event */
       event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, cur,
           stop_type, stop);
-      gst_event_set_seqnum (event, seqnum);
+      if (seqnum != GST_SEQNUM_INVALID)
+        gst_event_set_seqnum (event, seqnum);
       res = gst_pad_push_event (wav->sinkpad, event);
     }
     return res;
@@ -483,7 +484,8 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     GST_DEBUG_OBJECT (wav, "sending flush start");
 
     fevent = gst_event_new_flush_start ();
-    gst_event_set_seqnum (fevent, seqnum);
+    if (seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (fevent, seqnum);
     gst_pad_push_event (wav->sinkpad, gst_event_ref (fevent));
     gst_pad_push_event (wav->srcpad, fevent);
   } else {
@@ -573,7 +575,8 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     GST_DEBUG_OBJECT (wav, "sending flush stop");
 
     fevent = gst_event_new_flush_stop (TRUE);
-    gst_event_set_seqnum (fevent, seqnum);
+    if (seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (fevent, seqnum);
     gst_pad_push_event (wav->sinkpad, gst_event_ref (fevent));
     gst_pad_push_event (wav->srcpad, fevent);
   }
@@ -596,7 +599,8 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   if (wav->start_segment)
     gst_event_unref (wav->start_segment);
   wav->start_segment = gst_event_new_segment (&wav->segment);
-  gst_event_set_seqnum (wav->start_segment, seqnum);
+  if (seqnum != GST_SEQNUM_INVALID)
+    gst_event_set_seqnum (wav->start_segment, seqnum);
 
   /* mark discont if we are going to stream from another position. */
   if (last_stop != wav->segment.position) {
