@@ -2371,7 +2371,8 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         if (demux->fragmented) {
           GstEvent *segment_event = gst_event_new_segment (&segment);
 
-          gst_event_set_seqnum (segment_event, demux->segment_seqnum);
+          if (demux->segment_seqnum != GST_SEQNUM_INVALID)
+            gst_event_set_seqnum (segment_event, demux->segment_seqnum);
           gst_qtdemux_push_event (demux, segment_event);
         } else {
           gst_qtdemux_map_and_push_segments (demux, &segment);
