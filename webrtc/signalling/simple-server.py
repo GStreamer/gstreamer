@@ -22,6 +22,7 @@ parser.add_argument('--addr', default='0.0.0.0', help='Address to listen on')
 parser.add_argument('--port', default=8443, type=int, help='Port to listen on')
 parser.add_argument('--keepalive-timeout', dest='keepalive_timeout', default=30, type=int, help='Timeout for keepalive (in seconds)')
 parser.add_argument('--cert-path', default=os.path.dirname(__file__))
+parser.add_argument('--disable-ssl', default=False, help='Disable ssl', action='store_true')
 
 options = parser.parse_args(sys.argv[1:])
 
@@ -239,25 +240,27 @@ async def handler(ws, path):
     finally:
         await remove_peer(peer_id)
 
-# Create an SSL context to be used by the websocket server
-certpath = options.cert_path
-print('Using TLS with keys in {!r}'.format(certpath))
-if 'letsencrypt' in certpath:
-    chain_pem = os.path.join(certpath, 'fullchain.pem')
-    key_pem = os.path.join(certpath, 'privkey.pem')
-else:
-    chain_pem = os.path.join(certpath, 'cert.pem')
-    key_pem = os.path.join(certpath, 'key.pem')
+sslctx = None
+if not options.disable_ssl:
+    # Create an SSL context to be used by the websocket server
+    certpath = options.cert_path
+    print('Using TLS with keys in {!r}'.format(certpath))
+    if 'letsencrypt' in certpath:
+        chain_pem = os.path.join(certpath, 'fullchain.pem')
+        key_pem = os.path.join(certpath, 'privkey.pem')
+    else:
+        chain_pem = os.path.join(certpath, 'cert.pem')
+        key_pem = os.path.join(certpath, 'key.pem')
 
-sslctx = ssl.create_default_context()
-try:
-    sslctx.load_cert_chain(chain_pem, keyfile=key_pem)
-except FileNotFoundError:
-    print("Certificates not found, did you run generate_cert.sh?")
-    sys.exit(1)
-# FIXME
-sslctx.check_hostname = False
-sslctx.verify_mode = ssl.CERT_NONE
+    sslctx = ssl.create_default_context()
+    try:
+        sslctx.load_cert_chain(chain_pem, keyfile=key_pem)
+    except FileNotFoundError:
+        print("Certificates not found, did you run generate_cert.sh?")
+        sys.exit(1)
+    # FIXME
+    sslctx.check_hostname = False
+    sslctx.verify_mode = ssl.CERT_NONE
 
 print("Listening on https://{}:{}".format(*ADDR_PORT))
 # Websocket server
