@@ -148,7 +148,7 @@ struct _MpegTSBase {
   /* Upstream segment */
   GstSegment segment;
 
-  /* Last received seek event seqnum (default -1) */
+  /* Last received seek event seqnum (default GST_SEQNUM_INVALID) */
   guint last_seek_seqnum;
 
   /* Whether to parse private section or not */

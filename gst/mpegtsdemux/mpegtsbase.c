@@ -201,7 +201,7 @@ mpegts_base_reset (MpegTSBase * base)
   }
 
   gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
-  base->last_seek_seqnum = (guint32) - 1;
+  base->last_seek_seqnum = GST_SEQNUM_INVALID;
 
   base->mode = BASE_MODE_STREAMING;
   base->seen_pat = FALSE;
@@ -1321,10 +1321,13 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (base->segment.format == GST_FORMAT_TIME) {
         base->packetizer->calculate_offset = FALSE;
         base->packetizer->calculate_skew = TRUE;
+        /* Seek was handled upstream */
+        base->last_seek_seqnum = gst_event_get_seqnum (event);
       } else {
         base->packetizer->calculate_offset = TRUE;
         base->packetizer->calculate_skew = FALSE;
       }
+
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
       break;
     case GST_EVENT_STREAM_START:
@@ -1583,6 +1586,10 @@ mpegts_base_loop (MpegTSBase * base)
 
       GST_DEBUG ("Pulling data from %" G_GUINT64_FORMAT, base->seek_offset);
 
+      if (G_UNLIKELY (base->last_seek_seqnum == GST_SEQNUM_INVALID)) {
+        /* No configured seek, set a valid seqnum */
+        base->last_seek_seqnum = gst_util_seqnum_next ();
+      }
       ret = gst_pad_pull_range (base->sinkpad, base->seek_offset,
           100 * base->packetsize, &buf);
       if (G_UNLIKELY (ret != GST_FLOW_OK))
