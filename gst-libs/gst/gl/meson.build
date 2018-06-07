@@ -145,7 +145,6 @@ gl_winsys_deps = []
 gl_misc_deps = []
 # Other preprocessor arguments
 gl_cpp_args = []
-gl_includes = []
 
 enabled_gl_apis = []
 enabled_gl_platforms = []
@@ -265,9 +264,6 @@ gl_include_header = '''
 #endif
 '''
 
-# this will only use the includes if they're not found
-compat_includes = subproject('gl-headers').get_variable('compatibility_includes')
-
 # Desktop OpenGL checks
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
@@ -284,16 +280,12 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
       gl_dep = cc.find_library('GL', required : false)
     endif
 
-    if not cc.has_header('GL/gl.h', include_directories : compat_includes)
+    if not cc.has_header('GL/gl.h')
       gl_dep = unneeded_dep
     endif
 
     if not gl_dep.found() and need_api_opengl == 'yes'
       error ('Could not find requested OpenGL library')
-    endif
-
-    if gl_dep.found()
-      gl_includes += [compat_includes]
     endif
   endif
 
@@ -339,20 +331,16 @@ if need_api_gles2 != 'no'
       gles2_dep = cc.find_library('GLESv2', required : false)
 #    endif
 
-     if not cc.has_header('GLES2/gl2.h', include_directories : compat_includes)
+     if not cc.has_header('GLES2/gl2.h')
        gles2_dep = unneeded_dep
      endif
 
     if not gles2_dep.found() and need_api_gles2 == 'yes'
       error ('Could not find requested OpenGL ES library')
     endif
-
-    if gles2_dep.found()
-      gl_includes += [compat_includes]
-    endif
   endif
 
-  gles3_h = gles2_dep.found() and cc.has_header('GLES3/gl3.h', dependencies : gles2_dep, include_directories : compat_includes)
+  gles3_h = gles2_dep.found() and cc.has_header('GLES3/gl3.h', dependencies : gles2_dep)
 
   gles_includes = '''
 #ifdef HAVE_IOS /* FIXME */
@@ -360,8 +348,7 @@ if need_api_gles2 != 'no'
 # include <OpenGLES/ES2/glext.h>
 #else'''
   if gles3_h
-    gl_includes += [compat_includes]
-    gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', dependencies : gles2_dep, include_directories : compat_includes)
+    gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', dependencies : gles2_dep)
     gles_includes += '''
 # include <GLES3/gl3.h>
 # include <GLES2/gl2ext.h>'''
@@ -384,7 +371,7 @@ if gles2_dep.found() and gl_dep.found()
   gl_include_block = gl_include_header + gles_includes + opengl_includes
   # TODO: Revert to passing gl_include_block via prefix: once
   # https://github.com/mesonbuild/meson/issues/2364 is fixed
-  if not cc.compiles(gl_include_block + '\n' + 'void f (void) {}',dependencies : [gles2_dep, gl_dep], include_directories : compat_includes)
+  if not cc.compiles(gl_include_block + '\n' + 'void f (void) {}',dependencies : [gles2_dep, gl_dep])
     message ('Cannot include both OpenGL and OpenGL ES headers')
     if need_api_gles2 != 'yes'
       gles2_dep = unneeded_dep
@@ -581,16 +568,15 @@ if need_platform_wgl == 'yes'
   endif
 endif
 
+# XXX: untested
 if need_platform_wgl != 'no' and need_win_win32 != 'no'
   gdi_dep = cc.find_library('gdi32', required : false)
   # FIXME: Revert back to has_header once it gains prefix support
   wglext_h = cc.has_header_symbol('GL/wglext.h', 'WGL_WGLEXT_VERSION',
                                   prefix : '''#include <windows.h>
-                                              #include <GL/gl.h>''',
-                                  include_directories : compat_includes)
+                                              #include <GL/gl.h>''')
 
   if wglext_h and gdi_dep.found() and gl_dep.found()
-    gl_includes += [compat_includes]
     gl_platform_deps += gdi_dep
     gl_sources += [
       'win32/win32_message_source.c',
@@ -663,7 +649,7 @@ if need_platform_egl != 'no' and need_win_viv_fb != 'no'
 endif
 
 # TODO: Add rest of gl config here.
-# iOS, OS X specific support
+# iOS, OS X, win32 specific support
 
 build_gstgl = true
 if enabled_gl_apis.length() == 0
@@ -681,28 +667,28 @@ endif
 
 if build_gstgl
   # find some types that may or may not be defined
-  if cc.has_type('GLeglImageOES', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLeglImageOES', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLEGLIMAGEOES', 1)
   endif
-  if cc.has_type('GLchar', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLchar', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLCHAR', 1)
   endif
-  if cc.has_type('GLsizeiptr', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLsizeiptr', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLSIZEIPTR', 1)
   endif
-  if cc.has_type('GLintptr', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLintptr', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLINTPTR', 1)
   endif
-  if cc.has_type('GLsync', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLsync', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLSYNC', 1)
   endif
-  if cc.has_type('GLuint64', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLuint64', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLUINT64', 1)
   endif
-  if cc.has_type('GLint64', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
+  if cc.has_type('GLint64', prefix : gl_include_block, dependencies : gl_lib_deps)
     glconf.set('GST_GL_HAVE_GLINT64', 1)
   endif
-  if egl_dep.found() and cc.has_type('EGLAttrib', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep], include_directories : gl_includes)
+  if egl_dep.found() and cc.has_type('EGLAttrib', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep])
     glconf.set('GST_GL_HAVE_EGLATTRIB', 1)
   endif
 
@@ -725,7 +711,7 @@ if build_gstgl
   gstgl = library('gstgl-' + api_version,
     gl_sources,
     c_args : gst_plugins_base_args + gl_cpp_args,
-    include_directories : [configinc, libsinc, gl_includes],
+    include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
     install : true,
@@ -750,7 +736,7 @@ if build_gstgl
 
 
   gstgl_dep = declare_dependency(link_with : gstgl,
-    include_directories : [libsinc, compat_includes],
+    include_directories : [libsinc],
     sources: gen_sources,
     dependencies : [video_dep, gst_base_dep] + gl_winsys_deps)
 endif
