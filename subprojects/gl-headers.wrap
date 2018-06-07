@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gl-headers
+url=https://github.com/centricular/gl-headers.git
+revision=master
