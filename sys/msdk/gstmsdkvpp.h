@@ -52,7 +52,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKVPP))
 
 #define MAX_EXTRA_PARAMS                 8
-#define MAX_FILTER_ALGORITHMS            7
 
 typedef struct _GstMsdkVPP GstMsdkVPP;
 typedef struct _GstMsdkVPPClass GstMsdkVPPClass;
@@ -125,7 +124,6 @@ struct _GstMsdkVPP
 
   /* MFX Filters */
   mfxExtVPPDoUse mfx_vpp_douse;
-  mfxU32 max_filter_algorithms [MAX_FILTER_ALGORITHMS];
   mfxExtVPPDenoise mfx_denoise;
   mfxExtVPPRotation mfx_rotation;
   mfxExtVPPDeinterlacing mfx_deinterlace;

@@ -769,7 +769,6 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
 static void
 ensure_filters (GstMsdkVPP * thiz)
 {
-  guint n_filters = 0;
 
   /* Denoise */
   if (thiz->flags & GST_MSDK_FLAG_DENOISE) {
@@ -778,8 +777,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_denoise->Header.BufferSz = sizeof (mfxExtVPPDenoise);
     mfx_denoise->DenoiseFactor = thiz->denoise_factor;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_denoise);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_DENOISE;
-    n_filters++;
   }
 
   /* Rotation */
@@ -789,8 +786,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_rotation->Header.BufferSz = sizeof (mfxExtVPPRotation);
     mfx_rotation->Angle = thiz->rotation;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_rotation);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_ROTATION;
-    n_filters++;
   }
 
   /* Deinterlace */
@@ -800,8 +795,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_deinterlace->Header.BufferSz = sizeof (mfxExtVPPDeinterlacing);
     mfx_deinterlace->Mode = thiz->deinterlace_method;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_deinterlace);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_DEINTERLACING;
-    n_filters++;
   }
 
   /* Colorbalance(ProcAmp) */
@@ -815,8 +808,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_procamp->Brightness = thiz->brightness;
     mfx_procamp->Contrast = thiz->contrast;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_procamp);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_PROCAMP;
-    n_filters++;
   }
 
   /* Detail/Edge enhancement */
@@ -826,8 +817,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_detail->Header.BufferSz = sizeof (mfxExtVPPDetail);
     mfx_detail->DetailFactor = thiz->detail;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_detail);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_DETAIL;
-    n_filters++;
   }
 
   /* Mirroring */
@@ -837,8 +826,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_mirroring->Header.BufferSz = sizeof (mfxExtVPPMirroring);
     mfx_mirroring->Type = thiz->mirroring;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_mirroring);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_MIRRORING;
-    n_filters++;
   }
 
   /* Scaling Mode */
@@ -848,8 +835,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_scaling->Header.BufferSz = sizeof (mfxExtVPPScaling);
     mfx_scaling->ScalingMode = thiz->scaling_mode;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_scaling);
-    thiz->max_filter_algorithms[n_filters] = MFX_EXTBUFF_VPP_SCALING;
-    n_filters++;
   }
 
   /* FRC */
@@ -859,19 +844,6 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_frc->Header.BufferSz = sizeof (mfxExtVPPFrameRateConversion);
     mfx_frc->Algorithm = thiz->frc_algm;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_frc);
-    thiz->max_filter_algorithms[n_filters] =
-        MFX_EXTBUFF_VPP_FRAME_RATE_CONVERSION;
-    n_filters++;
-  }
-
-  /* mfxExtVPPDoUse */
-  if (n_filters) {
-    mfxExtVPPDoUse *mfx_vpp_douse = &thiz->mfx_vpp_douse;
-    mfx_vpp_douse->Header.BufferId = MFX_EXTBUFF_VPP_DOUSE;
-    mfx_vpp_douse->Header.BufferSz = sizeof (mfxExtVPPDoUse);
-    mfx_vpp_douse->NumAlg = n_filters;
-    mfx_vpp_douse->AlgList = thiz->max_filter_algorithms;
-    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_vpp_douse);
   }
 }
 
