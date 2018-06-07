@@ -1019,6 +1019,7 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
         msdk_status_to_string (status));
   }
 
+  thiz->initialized = TRUE;
   GST_OBJECT_UNLOCK (thiz);
   return TRUE;
 
@@ -1058,7 +1059,7 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   thiz->use_video_memory = FALSE;
 #endif
 
-  if (!sinkpad_info_changed && !srcpad_info_changed)
+  if (!sinkpad_info_changed && !srcpad_info_changed && thiz->initialized)
     return TRUE;
 
   /* check for deinterlace requirement */
@@ -1480,6 +1481,7 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
 static void
 gst_msdkvpp_init (GstMsdkVPP * thiz)
 {
+  thiz->initialized = FALSE;
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
   thiz->denoise_factor = PROP_DENOISE_DEFAULT;

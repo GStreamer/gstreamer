@@ -95,6 +95,7 @@ struct _GstMsdkVPP
   mfxFrameAllocResponse in_alloc_resp;
   mfxFrameAllocResponse out_alloc_resp;
 
+  gboolean initialized;
   gboolean use_video_memory;
   gboolean use_sinkpad_dmabuf;
   gboolean use_srcpad_dmabuf;
