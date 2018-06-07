@@ -7,7 +7,7 @@ if have_cxx and build_gstgl and gstgl_dep.found()
   qt5qml_deps = dependency('qt5', modules : ['Core', 'Gui', 'Widgets', 'Qml', 'Quick'], required: false)
 
   # FIXME Add a way to get that information out of the qt5 module
-  moc = find_program('moc-qt5', required : false)
+  moc = find_program('moc-qt5', 'moc', required : false)
   if qt5qml_deps.found() and moc.found()
     qt_preprocessed = qt5_mod.preprocess(qresources : 'qmlsink.qrc')
     executable('qmlsink', sources, qt_preprocessed,

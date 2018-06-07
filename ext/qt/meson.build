@@ -19,7 +19,7 @@ if have_cxx and build_gstgl
   qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'], required: false)
 
   # FIXME Add a way to get that information out of the qt5 module
-  moc = find_program('moc-qt5', required : false)
+  moc = find_program('moc-qt5', 'moc', required : false)
   if qt5qml_dep.found() and moc.found()
     optional_deps = []
     qt_defines = []
@@ -97,13 +97,13 @@ if have_cxx and build_gstgl
     endif
 
     if gst_gl_have_platform_wgl and gst_gl_have_window_win32
-	  # for wglMakeCurrent()
+      # for wglMakeCurrent()
       opengl32_dep = cc.find_library('opengl32', required : false)
       if opengl32_dep.found()
         qt_defines += ['-DHAVE_QT_WIN32']
-		optional_deps += opengl32_dep
+        optional_deps += opengl32_dep
         have_qt_windowing = true
-	  endif
+      endif
     endif
 
     # FIXME: OSX/iOS definitions
