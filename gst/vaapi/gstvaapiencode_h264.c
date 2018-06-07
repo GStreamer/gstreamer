@@ -327,18 +327,9 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
 
     } else {
       GstCaps *profile_caps;
-      const gchar *profile_str;
 
       profile_caps = gst_caps_intersect (allowed_caps, available_caps);
-
-      /* let's fixate to adjust to minimal profile */
-      profile_caps = gst_caps_fixate (profile_caps);
-
-      structure = gst_caps_get_structure (profile_caps, 0);
-      profile_str = gst_structure_get_string (structure, "profile");
-      if (profile_str)
-        profile = gst_vaapi_utils_h264_get_profile_from_string (profile_str);
-
+      profile = find_best_profile (profile_caps);
       gst_caps_unref (profile_caps);
     }
 
