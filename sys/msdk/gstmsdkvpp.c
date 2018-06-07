@@ -959,6 +959,15 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
   if (thiz->flags & GST_MSDK_FLAG_DEINTERLACE)
     thiz->param.vpp.Out.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
 
+  /* Enable the required filters */
+  ensure_filters (thiz);
+
+  /* Add exteneded buffers */
+  if (thiz->num_extra_params) {
+    thiz->param.NumExtParam = thiz->num_extra_params;
+    thiz->param.ExtParam = thiz->extra_params;
+  }
+
   /* validate parameters and allow the Media SDK to make adjustments */
   status = MFXVideoVPP_Query (session, &thiz->param, &thiz->param);
   if (status < MFX_ERR_NONE) {
@@ -970,17 +979,8 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
         msdk_status_to_string (status));
   }
 
-  /* Enable the required filters */
-  ensure_filters (thiz);
-
   /* set passthrough according to filter operation change */
   gst_msdkvpp_set_passthrough (thiz);
-
-  /* Add exteneded buffers */
-  if (thiz->num_extra_params) {
-    thiz->param.NumExtParam = thiz->num_extra_params;
-    thiz->param.ExtParam = thiz->extra_params;
-  }
 
   status = MFXVideoVPP_QueryIOSurf (session, &thiz->param, request);
   if (status < MFX_ERR_NONE) {
