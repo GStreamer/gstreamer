@@ -901,9 +901,7 @@ gst_msdkvpp_set_passthrough (GstMsdkVPP * thiz)
       GST_VIDEO_INFO_FORMAT (&thiz->srcpad_info))
     passthrough = FALSE;
 
-  GST_OBJECT_UNLOCK (thiz);
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (thiz), passthrough);
-  GST_OBJECT_LOCK (thiz);
 }
 
 static gboolean
@@ -978,9 +976,6 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
     GST_WARNING_OBJECT (thiz, "Video VPP Query returned: %s",
         msdk_status_to_string (status));
   }
-
-  /* set passthrough according to filter operation change */
-  gst_msdkvpp_set_passthrough (thiz);
 
   status = MFXVideoVPP_QueryIOSurf (session, &thiz->param, request);
   if (status < MFX_ERR_NONE) {
@@ -1073,6 +1068,9 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
 
   if (!gst_msdkvpp_initialize (thiz))
     return FALSE;
+
+  /* set passthrough according to filter operation change */
+  gst_msdkvpp_set_passthrough (thiz);
 
   /* Ensure sinkpad buffer pool */
   thiz->sinkpad_buffer_pool =
