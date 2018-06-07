@@ -50,6 +50,10 @@
 #include <math.h>
 #include <gst/gl/gstglfuncs.h>
 
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (glalpha_debug);
 #define GST_CAT_DEFAULT glalpha_debug
 
