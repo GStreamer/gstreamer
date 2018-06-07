@@ -279,7 +279,7 @@ gst_vaapi_window_x11_destroy (GstVaapiWindow * window)
   Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_OBJECT_ID (window);
 
-#ifdef HAVE_XRENDER
+#if HAVE_XRENDER
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
   if (priv->picture) {
@@ -496,7 +496,7 @@ gst_vaapi_window_x11_render_pixmap_xrender (GstVaapiWindow * window,
     GstVaapiPixmap * pixmap,
     const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect)
 {
-#ifdef HAVE_XRENDER
+#if HAVE_XRENDER
   GstVaapiWindowX11Private *const priv =
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
   Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (window);

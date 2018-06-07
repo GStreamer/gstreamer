@@ -35,11 +35,11 @@
 #include "gstvaapidisplay_x11_priv.h"
 #include "gstvaapiwindow_x11.h"
 
-#ifdef HAVE_XRANDR
+#if HAVE_XRANDR
 # include <X11/extensions/Xrandr.h>
 #endif
 
-#ifdef HAVE_XRENDER
+#if HAVE_XRENDER
 # include <X11/extensions/Xrender.h>
 #endif
 
@@ -114,11 +114,11 @@ check_extensions (GstVaapiDisplayX11 * display)
   GstVaapiDisplayX11Private *const priv = display->priv;
   int evt_base, err_base;
 
-#ifdef HAVE_XRANDR
+#if HAVE_XRANDR
   priv->use_xrandr = XRRQueryExtension (priv->x11_display,
       &evt_base, &err_base);
 #endif
-#ifdef HAVE_XRENDER
+#if HAVE_XRENDER
   priv->has_xrender = XRenderQueryExtension (priv->x11_display,
       &evt_base, &err_base);
 #endif
@@ -260,7 +260,7 @@ gst_vaapi_display_x11_get_size_mm (GstVaapiDisplay * display,
   width_mm = DisplayWidthMM (priv->x11_display, priv->x11_screen);
   height_mm = DisplayHeightMM (priv->x11_display, priv->x11_screen);
 
-#ifdef HAVE_XRANDR
+#if HAVE_XRANDR
   /* XXX: fix up physical size if the display is rotated */
   if (priv->use_xrandr) {
     XRRScreenConfiguration *xrr_config = NULL;

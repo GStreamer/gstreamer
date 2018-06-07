@@ -27,7 +27,7 @@
 
 #include "gstvaapiwindow_priv.h"
 
-#ifdef HAVE_XRENDER
+#if HAVE_XRENDER
 # include <X11/extensions/Xrender.h>
 #endif
 
@@ -49,7 +49,7 @@ struct _GstVaapiWindowX11Private
 {
   Atom atom_NET_WM_STATE;
   Atom atom_NET_WM_STATE_FULLSCREEN;
-#ifdef HAVE_XRENDER
+#if HAVE_XRENDER
   Picture picture;
 #endif
   guint is_mapped:1;
