@@ -304,12 +304,17 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture)
     status = vaRenderPicture (va_display, va_context, va_buffers, 2);
     if (!vaapi_check_status (status, "vaRenderPicture()"))
       return FALSE;
+  }
+
+  status = vaEndPicture (va_display, va_context);
+
+  for (i = 0; i < picture->slices->len; i++) {
+    GstVaapiSlice *const slice = g_ptr_array_index (picture->slices, i);
 
     vaapi_destroy_buffer (va_display, &slice->param_id);
     vaapi_destroy_buffer (va_display, &slice->data_id);
   }
 
-  status = vaEndPicture (va_display, va_context);
   if (!vaapi_check_status (status, "vaEndPicture()"))
     return FALSE;
   return TRUE;
