@@ -57,7 +57,11 @@ if gst_libav.length() == 0
 endif
 
 if get_option('python')
+  if dependency('pygobject-3.0', required : false).found()
     subprojects += ['gst-python']
+  else
+    message('WARNING: not building gst-python module, missing pygobject-3.0')
+  endif
 endif
 
 if get_option('bad')
