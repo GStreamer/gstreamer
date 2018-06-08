@@ -1073,9 +1073,10 @@ gst_poll_fd_ctl_read (GstPoll * set, GstPollFD * fd, gboolean active)
  * Control whether the descriptor @fd in @set will be monitored for
  * exceptional conditions (POLLPRI).
  *
- * Not available on Windows.
+ * Not implemented on Windows (will just return %FALSE there).
  *
  * Returns: %TRUE if the descriptor was successfully updated.
+ *
  * Since: 1.16
  */
 gboolean
@@ -1343,9 +1344,10 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
  *
  * Check if @fd in @set has an exceptional condition (POLLPRI).
  *
- * Not available on Windows.
+ * Not implemented on Windows (will just return %FALSE there).
  *
  * Returns: %TRUE if the descriptor has an exceptional condition.
+ *
  * Since: 1.16
  */
 gboolean
