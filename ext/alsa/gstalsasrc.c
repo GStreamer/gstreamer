@@ -54,9 +54,10 @@
 #define ESTRPIPE EPIPE
 #endif
 
-#define DEFAULT_PROP_DEVICE		"default"
-#define DEFAULT_PROP_DEVICE_NAME	""
-#define DEFAULT_PROP_CARD_NAME	        ""
+#define DEFAULT_PROP_DEVICE		  "default"
+#define DEFAULT_PROP_DEVICE_NAME	  ""
+#define DEFAULT_PROP_CARD_NAME	          ""
+#define DEFAULT_PROP_USE_DRIVER_TIMESTAMP TRUE
 
 enum
 {
@@ -64,6 +65,7 @@ enum
   PROP_DEVICE,
   PROP_DEVICE_NAME,
   PROP_CARD_NAME,
+  PROP_USE_DRIVER_TIMESTAMP,
   PROP_LAST
 };
 
@@ -171,6 +173,12 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
       g_param_spec_string ("card-name", "Card name",
           "Human-readable name of the sound card",
           DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_USE_DRIVER_TIMESTAMP,
+      g_param_spec_boolean ("use-driver-timestamps", "Use driver timestamps",
+          "Use driver timestamps or the pipeline clock timestamps",
+          DEFAULT_PROP_USE_DRIVER_TIMESTAMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -188,6 +196,11 @@ gst_alsasrc_set_property (GObject * object, guint prop_id,
       if (src->device == NULL) {
         src->device = g_strdup (DEFAULT_PROP_DEVICE);
       }
+      break;
+    case PROP_USE_DRIVER_TIMESTAMP:
+      GST_OBJECT_LOCK (src);
+      src->use_driver_timestamps = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -216,6 +229,11 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
       g_value_take_string (value,
           gst_alsa_find_card_name (GST_OBJECT_CAST (src),
               src->device, SND_PCM_STREAM_CAPTURE));
+      break;
+    case PROP_USE_DRIVER_TIMESTAMP:
+      GST_OBJECT_LOCK (src);
+      g_value_set_boolean (value, src->use_driver_timestamps);
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -250,9 +268,13 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
         if (GST_IS_SYSTEM_CLOCK (clk)) {
           gint clocktype;
           g_object_get (clk, "clock-type", &clocktype, NULL);
-          if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
+          if (clocktype == GST_CLOCK_TYPE_MONOTONIC &&
+              alsa->use_driver_timestamps) {
             GST_INFO ("Using driver timestamps !");
             alsa->driver_timestamps = TRUE;
+          } else {
+            GST_INFO ("Not using driver timestamps !");
+            alsa->driver_timestamps = FALSE;
           }
         }
 
@@ -273,6 +295,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc)
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
   alsasrc->driver_timestamps = FALSE;
+  alsasrc->use_driver_timestamps = DEFAULT_PROP_USE_DRIVER_TIMESTAMP;
 
   g_mutex_init (&alsasrc->alsa_lock);
 }
