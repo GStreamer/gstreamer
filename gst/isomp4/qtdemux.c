@@ -1496,6 +1496,31 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
       &cur_type, &cur, &stop_type, &stop);
   seqnum = gst_event_get_seqnum (event);
 
+  /* Directly send the instant-rate-change event here before taking the
+   * stream-lock so that it can be applied as soon as possible */
+  if (flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE) {
+    GstEvent *ev;
+
+    /* instant rate change only supported if direction does not change. All
+     * other requirements are already checked before creating the seek event
+     * but let's double-check here to be sure */
+    if ((qtdemux->segment.rate > 0 && rate < 0) ||
+        (qtdemux->segment.rate < 0 && rate > 0) ||
+        cur_type != GST_SEEK_TYPE_NONE ||
+        stop_type != GST_SEEK_TYPE_NONE || (flags & GST_SEEK_FLAG_FLUSH)) {
+      GST_ERROR_OBJECT (qtdemux,
+          "Instant rate change seeks only supported in the "
+          "same direction, without flushing and position change");
+      return FALSE;
+    }
+
+    ev = gst_event_new_instant_rate_change (rate / qtdemux->segment.rate,
+        (GstSegmentFlags) flags);
+    gst_event_set_seqnum (ev, seqnum);
+    gst_qtdemux_push_event (qtdemux, ev);
+    return TRUE;
+  }
+
   /* only forward streaming and seeking is possible */
   if (rate <= 0)
     goto unsupported_seek;
@@ -1658,12 +1683,12 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
 static gboolean
 gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 {
-  gdouble rate;
+  gdouble rate = 1.0;
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
-  gboolean flush;
+  gboolean flush, instant_rate_change;
   gboolean update;
   GstSegment seeksegment;
   guint32 seqnum = GST_SEQNUM_INVALID;
@@ -1684,7 +1709,33 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
   GST_DEBUG_OBJECT (qtdemux, "seek format %s", gst_format_get_name (format));
 
-  flush = flags & GST_SEEK_FLAG_FLUSH;
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
+
+  /* Directly send the instant-rate-change event here before taking the
+   * stream-lock so that it can be applied as soon as possible */
+  if (instant_rate_change) {
+    GstEvent *ev;
+
+    /* instant rate change only supported if direction does not change. All
+     * other requirements are already checked before creating the seek event
+     * but let's double-check here to be sure */
+    if ((qtdemux->segment.rate > 0 && rate < 0) ||
+        (qtdemux->segment.rate < 0 && rate > 0) ||
+        cur_type != GST_SEEK_TYPE_NONE ||
+        stop_type != GST_SEEK_TYPE_NONE || flush) {
+      GST_ERROR_OBJECT (qtdemux,
+          "Instant rate change seeks only supported in the "
+          "same direction, without flushing and position change");
+      return FALSE;
+    }
+
+    ev = gst_event_new_instant_rate_change (rate / qtdemux->segment.rate,
+        (GstSegmentFlags) flags);
+    gst_event_set_seqnum (ev, seqnum);
+    gst_qtdemux_push_event (qtdemux, ev);
+    return TRUE;
+  }
 
   /* stop streaming, either by flushing or by pausing the task */
   if (flush) {
@@ -1793,12 +1844,18 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
       break;
     case GST_EVENT_SEEK:
     {
+      GstSeekFlags flags = 0;
+      gboolean instant_rate_change;
+
 #ifndef GST_DISABLE_GST_DEBUG
       GstClockTime ts = gst_util_get_timestamp ();
 #endif
       guint32 seqnum = gst_event_get_seqnum (event);
 
       qtdemux->received_seek = TRUE;
+
+      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
+      instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
 
       if (seqnum == qtdemux->segment_seqnum) {
         GST_LOG_OBJECT (pad,
@@ -1818,16 +1875,17 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
           &qtdemux->trickmode_interval);
 
       /* Build complete index for seeking;
-       * if not a fragmented file at least */
-      if (!qtdemux->fragmented)
+       * if not a fragmented file at least and we're really doing a seek,
+       * not just an instant-rate-change */
+      if (!qtdemux->fragmented && !instant_rate_change) {
         if (!qtdemux_ensure_index (qtdemux))
           goto index_failed;
+      }
 #ifndef GST_DISABLE_GST_DEBUG
       ts = gst_util_get_timestamp () - ts;
       GST_INFO_OBJECT (qtdemux,
           "Time taken to parse index %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
 #endif
-    }
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
       } else if (gst_pad_push_event (qtdemux->sinkpad, gst_event_ref (event))) {
@@ -1843,6 +1901,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
         res = FALSE;
       }
       gst_event_unref (event);
+    }
       break;
     default:
     upstream:
