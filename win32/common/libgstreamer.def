@@ -1063,10 +1063,12 @@ EXPORTS
 	gst_poll_add_fd
 	gst_poll_fd_can_read
 	gst_poll_fd_can_write
+	gst_poll_fd_ctl_pri
 	gst_poll_fd_ctl_read
 	gst_poll_fd_ctl_write
 	gst_poll_fd_has_closed
 	gst_poll_fd_has_error
+	gst_poll_fd_has_pri
 	gst_poll_fd_ignored
 	gst_poll_fd_init
 	gst_poll_free
