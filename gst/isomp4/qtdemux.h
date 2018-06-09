@@ -119,7 +119,10 @@ struct _GstQTDemux {
   /* configured playback region */
   GstSegment segment;
 
-  /* If a segment event needs to be pushed */
+  /* PUSH-BASED only: If the initial segment event, or a segment consequence of
+   * a seek or incoming TIME segment from upstream needs to be pushed. This
+   * variable is used instead of pushing the event directly because at that
+   * point we may not have yet emitted the srcpads. */
   gboolean need_segment;
 
   guint32 segment_seqnum;
@@ -237,6 +240,17 @@ struct _GstQTDemux {
    * header start.
    * Note : This is not computed from the GST_BUFFER_OFFSET field */
   guint64 fragment_start_offset;
+
+  /* These two fields are used to perform an implicit seek when a fragmented
+   * file whose first tfdt is not zero. This way if the first fragment starts
+   * at 1 hour, the user does not have to wait 1 hour or perform a manual seek
+   * for the image to move and the sound to play.
+   *
+   * This implicit seek is only done if the first parsed fragment has a non-zero
+   * decode base time and a seek has not been received previously, hence these
+   * fields. */
+  gboolean received_seek;
+  gboolean first_moof_already_parsed;
 };
 
 struct _GstQTDemuxClass {
