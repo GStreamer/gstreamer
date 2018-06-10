@@ -134,153 +134,189 @@ gst_vaapi_create_display_from_handle (GstVaapiDisplayType display_type,
 }
 #endif
 
+#if USE_GST_GL_HELPERS
+static GstVaapiDisplayType
+gst_vaapi_get_display_type_from_gl (GstGLDisplayType gl_display_type,
+    GstGLPlatform gl_platform)
+{
+  switch (gl_display_type) {
+#if USE_X11
+    case GST_GL_DISPLAY_TYPE_X11:{
+#if USE_GLX
+      if (gl_platform == GST_GL_PLATFORM_GLX)
+        return GST_VAAPI_DISPLAY_TYPE_GLX;
+#endif
+#endif
+      return GST_VAAPI_DISPLAY_TYPE_X11;
+    }
+#if USE_WAYLAND
+    case GST_GL_DISPLAY_TYPE_WAYLAND:{
+      return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+    }
+#endif
+#if USE_EGL
+    case GST_GL_DISPLAY_TYPE_EGL:{
+      return GST_VAAPI_DISPLAY_TYPE_EGL;
+    }
+#endif
+    default:
+      /* unsupported display. Still DRM may work. */
+      break;
+  }
+
+  return GST_VAAPI_DISPLAY_TYPE_ANY;
+}
+
+static GstVaapiDisplayType
+gst_vaapi_get_display_type_from_gl_env ()
+{
+  const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
+  const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
+
+  if (!gl_window_type) {
+#if USE_X11 && GST_GL_HAVE_WINDOW_X11
+    return GST_VAAPI_DISPLAY_TYPE_X11;
+#elif USE_WAYLAND && GST_GL_HAVE_WINDOW_WAYLAND
+    return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+#elif USE_EGL && GST_GL_HAVE_PLATFORM_EGL
+    return GST_VAAPI_DISPLAY_TYPE_EGL;
+#endif
+  }
+#if USE_X11
+  if (g_strcmp0 (gl_window_type, "x11") == 0)
+    return GST_VAAPI_DISPLAY_TYPE_X11;
+#endif
+#if USE_WAYLAND
+  if (g_strcmp0 (gl_window_type, "wayland") == 0)
+    return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
+#endif
+#if USE_EGL
+  if (g_strcmp0 (gl_platform_type, "egl") == 0)
+    return GST_VAAPI_DISPLAY_TYPE_EGL;
+#endif
+
+  return GST_VAAPI_DISPLAY_TYPE_ANY;
+}
+
+static gint
+gst_vaapi_get_gles_version_from_gl_api (GstGLAPI gl_api)
+{
+  switch (gl_api) {
+    case GST_GL_API_GLES1:
+      return 1;
+    case GST_GL_API_GLES2:
+      return 2;
+    case GST_GL_API_OPENGL:
+    case GST_GL_API_OPENGL3:
+      return 0;
+    default:
+      break;
+  }
+  return -1;
+}
+
+static guintptr
+gst_vaapi_get_egl_handle_from_gl_display (GstGLDisplay * gl_display)
+{
+  guintptr egl_handle = 0;
+
+#if USE_EGL && GST_GL_HAVE_PLATFORM_EGL
+  GstGLDisplayEGL *egl_display;
+  egl_display = gst_gl_display_egl_from_gl_display (gl_display);
+  if (egl_display) {
+    egl_handle = gst_gl_display_get_handle (GST_GL_DISPLAY (egl_display));
+    gst_object_unref (egl_display);
+  }
+#endif
+  return egl_handle;
+}
+
+static GstVaapiDisplay *
+gst_vaapi_create_display_from_egl (GstGLDisplay * gl_display,
+    GstGLContext * gl_context, GstVaapiDisplayType display_type,
+    gpointer native_display)
+{
+  GstGLAPI gl_api;
+  gint gles_version;
+  guintptr egl_handler;
+  GstVaapiDisplay *display = NULL;
+
+  gl_api = gst_gl_context_get_gl_api (gl_context);
+  gles_version = gst_vaapi_get_gles_version_from_gl_api (gl_api);
+  if (gles_version == -1)
+    return NULL;
+
+  egl_handler = gst_vaapi_get_egl_handle_from_gl_display (gl_display);
+  if (egl_handler != 0) {
+    gpointer native_display_egl = GSIZE_TO_POINTER (egl_handler);
+    display = gst_vaapi_display_egl_new_with_native_display (native_display_egl,
+        display_type, gles_version);
+  }
+
+  if (!display) {
+    GstVaapiDisplay *wrapped_display;
+
+    wrapped_display =
+        gst_vaapi_create_display_from_handle (display_type, native_display);
+    if (wrapped_display) {
+      display = gst_vaapi_display_egl_new (wrapped_display, gles_version);
+      gst_vaapi_display_unref (wrapped_display);
+    }
+  }
+
+  if (display) {
+    gst_vaapi_display_egl_set_gl_context (GST_VAAPI_DISPLAY_EGL (display),
+        GSIZE_TO_POINTER (gst_gl_context_get_gl_context (gl_context)));
+  }
+
+  return display;
+}
+#endif /* USE_GST_GL_HELPERS */
+
 static GstVaapiDisplay *
 gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 {
 #if USE_GST_GL_HELPERS
   GstGLContext *const gl_context = GST_GL_CONTEXT (gl_context_object);
   GstGLDisplay *const gl_display = gst_gl_context_get_display (gl_context);
-  gpointer native_display =
-      GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
-  GstGLPlatform platform = gst_gl_context_get_gl_platform (gl_context);
-  GstVaapiDisplay *display = NULL, *out_display = NULL;
+  GstGLDisplayType gl_display_type;
+  GstGLPlatform gl_platform;
+  gpointer native_display;
+  GstVaapiDisplay *display = NULL;
   GstVaapiDisplayType display_type;
 
-  switch (gst_gl_display_get_handle_type (gl_display)) {
-#if USE_X11
-    case GST_GL_DISPLAY_TYPE_X11:
-#if USE_GLX
-      if (platform == GST_GL_PLATFORM_GLX) {
-        display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
-        break;
-      }
-#endif
-      display_type = GST_VAAPI_DISPLAY_TYPE_X11;
-      break;
-#endif
-#if USE_WAYLAND
-    case GST_GL_DISPLAY_TYPE_WAYLAND:
-      display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
-      break;
-#endif
-#if USE_EGL
-    case GST_GL_DISPLAY_TYPE_EGL:
-      display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
-      goto egl_display;
-      break;
-#endif
-    case GST_GL_DISPLAY_TYPE_ANY:{
-      /* Derive from the active window */
-      GstGLWindow *const gl_window = gst_gl_context_get_window (gl_context);
-      const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
-      const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
+  /* Get display type and the native hanler */
+  gl_display_type = gst_gl_display_get_handle_type (gl_display);
+  gl_platform = gst_gl_context_get_gl_platform (gl_context);
+  display_type =
+      gst_vaapi_get_display_type_from_gl (gl_display_type, gl_platform);
 
-      display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
-      if (!gl_window)
-        break;
+  native_display = GSIZE_TO_POINTER (gst_gl_display_get_handle (gl_display));
+
+  if (display_type == GST_VAAPI_DISPLAY_TYPE_ANY) {
+    /* derive type and native_display from the active window */
+    GstGLWindow *const gl_window = gst_gl_context_get_window (gl_context);
+    if (gl_window)
       native_display = GSIZE_TO_POINTER (gst_gl_window_get_display (gl_window));
-
-      if (gl_window_type) {
-#if USE_X11
-        if (!display_type && g_strcmp0 (gl_window_type, "x11") == 0)
-          display_type = GST_VAAPI_DISPLAY_TYPE_X11;
-#endif
-#if USE_WAYLAND
-        if (!display_type && g_strcmp0 (gl_window_type, "wayland") == 0)
-          display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
-#endif
-#if USE_EGL
-        if (!display_type && g_strcmp0 (gl_platform_type, "egl") == 0)
-          display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
-#endif
-      } else {
-#if USE_X11 && GST_GL_HAVE_WINDOW_X11
-        if (!display_type)
-          display_type = GST_VAAPI_DISPLAY_TYPE_X11;
-#elif USE_WAYLAND && GST_GL_HAVE_WINDOW_WAYLAND
-        if (!display_type)
-          display_type = GST_VAAPI_DISPLAY_TYPE_WAYLAND;
-#elif USE_EGL && GST_GL_HAVE_PLATFORM_EGL
-        if (!display_type)
-          display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
-#endif
-      }
-      gst_object_unref (gl_window);
-
-      if (display_type == GST_VAAPI_DISPLAY_TYPE_EGL)
-        goto egl_display;
-      break;
-    }
-    default:
-      display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
-      break;
+    display_type = gst_vaapi_get_display_type_from_gl_env ();
   }
 
-  display = gst_vaapi_create_display_from_handle (display_type, native_display);
-  if (!display)
-    goto bail;
-
-egl_display:
-  switch (platform) {
-#if USE_EGL
-    case GST_GL_PLATFORM_EGL:{
-      guint gles_version;
-      guintptr egl_handle = 0;
-#if GST_GL_HAVE_PLATFORM_EGL
-      GstGLDisplayEGL *egl_display;
-
-      egl_display = gst_gl_display_egl_from_gl_display (gl_display);
-      if (egl_display) {
-        egl_handle = gst_gl_display_get_handle (GST_GL_DISPLAY (egl_display));
-        gst_object_unref (egl_display);
-      }
-#endif
-
-      switch (gst_gl_context_get_gl_api (gl_context)) {
-        case GST_GL_API_GLES1:
-          gles_version = 1;
-          goto create_egl_display;
-        case GST_GL_API_GLES2:
-          gles_version = 2;
-          goto create_egl_display;
-        case GST_GL_API_OPENGL:
-        case GST_GL_API_OPENGL3:
-          gles_version = 0;
-        create_egl_display:
-          if (egl_handle != 0) {
-            out_display =
-                gst_vaapi_display_egl_new_with_native_display
-                (GSIZE_TO_POINTER (egl_handle), display_type, gles_version);
-          } else if (display) {
-            out_display = gst_vaapi_display_egl_new (display, gles_version);
-          }
-          break;
-        default:
-          out_display = NULL;
-          break;
-      }
-      if (!out_display)
-        goto bail;
-
-      gst_vaapi_display_egl_set_gl_context (GST_VAAPI_DISPLAY_EGL (out_display),
-          GSIZE_TO_POINTER (gst_gl_context_get_gl_context (gl_context)));
-      break;
-    }
-#endif
-    default:
-      out_display = gst_vaapi_display_ref (display);
-      break;
+  if (gl_platform == GST_GL_PLATFORM_EGL) {
+    display = gst_vaapi_create_display_from_egl (gl_display, gl_context,
+        display_type, native_display);
   }
 
-bail:
-  if (display)
-    gst_vaapi_display_unref (display);
+  /* Non-EGL and fallback */
+  if (!display) {
+    display =
+        gst_vaapi_create_display_from_handle (display_type, native_display);
+  }
 
-  if (gl_display)
-    gst_object_unref (gl_display);
-  return out_display;
+  gst_object_unref (gl_display);
+
+  return display;
 #endif
-  GST_ERROR ("unsupported GStreamer version %s", GST_API_VERSION_S);
+  GST_ERROR ("No GstGL support");
   return NULL;
 }
 
