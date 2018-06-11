@@ -1983,6 +1983,7 @@ GstSDPMedia
 GstSDPMessage
 
 gst_sdp_message_new
+gst_sdp_message_new_from_text
 gst_sdp_message_copy
 gst_sdp_message_init
 gst_sdp_message_uninit

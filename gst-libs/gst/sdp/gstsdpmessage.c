@@ -237,6 +237,30 @@ gst_sdp_message_new (GstSDPMessage ** msg)
 }
 
 /**
+ * gst_sdp_message_new_from_text:
+ * @msg: (out) (transfer full): pointer to new #GstSDPMessage
+ * @text: A dynamically allocated string representing the SDP description
+ *
+ * Parse @text and create a new SDPMessage from these.
+ *
+ * Returns: a #GstSDPResult.
+ * Since: 1.16
+ */
+GstSDPResult
+gst_sdp_message_new_from_text (const gchar * text, GstSDPMessage ** msg)
+{
+  GstSDPResult res;
+
+  if ((res = gst_sdp_message_new (msg)) != GST_SDP_OK)
+    return res;
+
+  res =
+      gst_sdp_message_parse_buffer ((const guint8 *) text, strlen (text), *msg);
+
+  return res;
+}
+
+/**
  * gst_sdp_message_init:
  * @msg: a #GstSDPMessage
  *

@@ -340,6 +340,9 @@ GstSDPResult            gst_sdp_message_parse_buffer        (const guint8 *data,
 GST_SDP_API
 gchar*                  gst_sdp_message_as_text             (const GstSDPMessage *msg);
 
+GST_SDP_API
+GstSDPResult            gst_sdp_message_new_from_text       (const gchar *text, GstSDPMessage ** msg);
+
 /* convert from/to uri */
 
 GST_SDP_API
