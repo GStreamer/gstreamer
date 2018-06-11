@@ -743,18 +743,6 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   /* operating on copy of segment until we know the seek worked */
   segment = demux->segment;
 
-  if (G_UNLIKELY (demux->segment_running && !flush)) {
-    GstSegment newsegment;
-    GstEvent *newseg;
-
-    /* create the segment event to close the current segment */
-    gst_segment_copy_into (&segment, &newsegment);
-    newseg = gst_event_new_segment (&newsegment);
-    gst_event_set_seqnum (newseg, seqnum);
-
-    gst_asf_demux_send_event_unlocked (demux, newseg);
-  }
-
   gst_segment_do_seek (&segment, rate, format, flags, cur_type,
       cur, stop_type, stop, &only_need_update);
 
