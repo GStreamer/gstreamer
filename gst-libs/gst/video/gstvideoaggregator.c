@@ -1402,7 +1402,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
       start_time = GST_BUFFER_TIMESTAMP (buf);
       if (start_time == -1) {
         gst_buffer_unref (buf);
-        GST_DEBUG_OBJECT (pad, "Need timestamped buffers!");
+        GST_ERROR_OBJECT (pad, "Need timestamped buffers!");
         GST_OBJECT_UNLOCK (vagg);
         return GST_FLOW_ERROR;
       }
