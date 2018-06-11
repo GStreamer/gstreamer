@@ -56,17 +56,31 @@ http://blog.nirbheek.in/2018/02/gstreamer-webrtc.html
 
 * Serve the `js/` directory on the root of your website, or open https://webrtc.nirbheek.in
   - The JS code assumes the signalling server is on port 8443 of the same server serving the HTML
+
+* Open the website in a browser and ensure that the status is "Registered with server, waiting for call", and note the `id` too.
+
+#### Running the C version
+
 * Build the sources in the `gst/` directory on your machine
 
 ```console
 $ gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstreamer-sdp-1.0 libsoup-2.4 json-glib-1.0) -o webrtc-sendrecv
 ```
 
-* Open the website in a browser and ensure that the status is "Registered with server, waiting for call", and note the `id` too.
 * Run `webrtc-sendrecv --peer-id=ID` with the `id` from the browser. You will see state changes and an SDP exchange.
-* You will see a bouncing ball + hear red noise in the browser, and your browser's webcam + mic in the gst app
 
-TODO: Port to Python and Rust.
+#### Running the Python version
+
+* python3 -m pip install --user websockets
+* run `python3 sendrecv/gst/webrtc-sendrecv.py ID` with the `id` from the browser. You will see state changes and an SDP exchange.
+
+With all versions, you will see a bouncing ball + hear red noise in the browser, and your browser's webcam + mic in the gst app.
+
+You can pass a --server argument to all versions, for example `--server=wss://127.0.0.1:8443`.
+
+<!---
+TODO: Port to Rust.
+-->
 
 ### multiparty-sendrecv: Multiparty audio conference with N peers
 
