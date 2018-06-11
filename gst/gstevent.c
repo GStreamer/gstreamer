@@ -1268,6 +1268,18 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
 
   g_return_val_if_fail (rate != 0.0, NULL);
 
+  /* SNAP flags only make sense in combination with the KEYUNIT flag. Warn
+   * and unset the SNAP flags if they're set without the KEYUNIT flag */
+  if (!(flags & GST_SEEK_FLAG_KEY_UNIT) &&
+      (flags & (GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_SNAP_AFTER |
+              GST_SEEK_FLAG_SNAP_NEAREST))) {
+    g_warning ("SNAP seeks only work in combination with the KEY_UNIT "
+        "flag, ignoring SNAP flags");
+    flags &=
+        ~(GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_SNAP_AFTER |
+        GST_SEEK_FLAG_SNAP_NEAREST);
+  }
+
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating seek rate %lf, format TIME, flags %d, "
