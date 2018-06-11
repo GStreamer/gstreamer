@@ -74,6 +74,12 @@ $ gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstrea
 * python3 -m pip install --user websockets
 * run `python3 sendrecv/gst/webrtc-sendrecv.py ID` with the `id` from the browser. You will see state changes and an SDP exchange.
 
+> The python version currently requires the master branches from `gst-plugins-bad` and `gst-plugins-base`.
+
+<!---
+TODO: replace the note above when 1.16 is released
+-->
+
 With all versions, you will see a bouncing ball + hear red noise in the browser, and your browser's webcam + mic in the gst app.
 
 You can pass a --server argument to all versions, for example `--server=wss://127.0.0.1:8443`.
