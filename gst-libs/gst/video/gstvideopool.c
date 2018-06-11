@@ -94,7 +94,6 @@ gst_buffer_pool_config_get_video_alignment (GstStructure * config,
 /* bufferpool */
 struct _GstVideoBufferPoolPrivate
 {
-  GstCaps *caps;
   GstVideoInfo info;
   GstVideoAlignment video_align;
   gboolean add_videometa;
@@ -153,10 +152,6 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   height = info.height;
 
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, width, height, caps);
-
-  if (priv->caps)
-    gst_caps_unref (priv->caps);
-  priv->caps = gst_caps_ref (caps);
 
   priv->params = params;
   if (priv->allocator)
@@ -326,9 +321,6 @@ gst_video_buffer_pool_finalize (GObject * object)
   GstVideoBufferPoolPrivate *priv = pool->priv;
 
   GST_LOG_OBJECT (pool, "finalize video buffer pool %p", pool);
-
-  if (priv->caps)
-    gst_caps_unref (priv->caps);
 
   if (priv->allocator)
     gst_object_unref (priv->allocator);
