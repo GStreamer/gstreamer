@@ -98,7 +98,7 @@ gst_webrtc_session_description_free (GstWebRTCSessionDescription * desc)
 /**
  * gst_webrtc_session_description_new:
  * @type: a #GstWebRTCSDPType
- * @sdp: a #GstSDPMessage
+ * @sdp: (transfer full): a #GstSDPMessage
  *
  * Returns: (transfer full): a new #GstWebRTCSessionDescription from @type
  *      and @sdp
