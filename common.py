@@ -67,7 +67,7 @@ def get_meson():
             continue
         if os.path.exists (comp):
             mesondir = os.path.dirname(comp)
-            if mesonintrospect.endswith('.py'):
+            if mesonintrospect.endswith('.py') or mesonintrospect.endswith('.py introspect'):
                 meson = os.path.join(mesondir, 'meson.py')
             else:
                 meson = os.path.join(mesondir, 'meson')
