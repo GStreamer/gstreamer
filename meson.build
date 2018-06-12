@@ -52,17 +52,11 @@ gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
 gmodule_dep = dependency('gmodule-2.0', required: false)
+libva_dep = dependency('libva', version: libva_req)
 
-
-libva_dep = dependency('libva', version: libva_req,
-    fallback : ['libva', 'libva_dep'])
-libva_drm_dep = dependency('libva-drm', version: '>= 0.33.0',
-    fallback : ['libva', 'libva_drm_dep'], required: false)
-libva_wayland_dep = dependency('libva-wayland', version: '>= 0.33.0',
-    fallback : ['libva', 'libva_wayland_dep'], required: false)
-libva_x11_dep = dependency('libva-x11', version: '>= 0.31.0',
-    fallback : ['libva', 'libva_x11_dep'], required: false)
-
+libva_drm_dep = dependency('libva-drm', version: '>= 0.33.0', required: false)
+libva_wayland_dep = dependency('libva-wayland', version: '>= 0.33.0', required: false)
+libva_x11_dep = dependency('libva-x11', version: '>= 0.31.0', required: false)
 libdrm_dep = dependency('libdrm', required: false)
 libudev_dep = dependency('libudev', required: false)
 egl_dep = dependency('egl', required: false)
@@ -88,16 +82,16 @@ if glesv2_dep.found()
 endif
 
 USE_ENCODERS = libva_dep.version().version_compare('>= 0.34.0') and get_option('with_encoders') != 'no'
-USE_H265_DECODER = libva_dep.version().version_compare('>= 0.38.0')
-USE_H265_ENCODER = USE_ENCODERS and libva_dep.version().version_compare('>= 0.38.0')
-USE_JPEG_DECODER = libva_dep.version().version_compare('>= 0.34.0')
-USE_JPEG_ENCODER = USE_ENCODERS and libva_dep.version().version_compare('>= 0.38.0')
-USE_VP8_DECODER = libva_dep.version().version_compare('>= 0.36.0')
-USE_VP8_ENCODER = USE_ENCODERS and libva_dep.version().version_compare('>= 0.36.0')
-USE_VP9_DECODER = libva_dep.version().version_compare('>= 0.39.0')
-USE_VP9_ENCODER = USE_ENCODERS and libva_dep.version().version_compare('>= 0.40.0')
+USE_H265_DECODER = cc.has_header('va/va_dec_hevc.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_H265_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_hevc.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_JPEG_DECODER = cc.has_header('va/va_dec_jpeg.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_JPEG_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_jpeg.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_VP8_DECODER = cc.has_header('va/va_dec_vp8.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_VP8_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_vp8.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_VP9_DECODER = cc.has_header('va/va_dec_vp9.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
+USE_VP9_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_vp9.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
 
-USE_VPP = libva_dep.version().version_compare('>= 0.34.0')
+USE_VPP = cc.has_header('va/va_vpp.h', dependencies: libva_dep, prefix: '#include <va/va_vpp.h>')
 
 USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() and get_option('with_drm') != 'no'
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
@@ -105,12 +99,7 @@ USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl
 USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and get_option('with_wayland') != 'no'
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
 
-if libva_dep.type_name() == 'pkgconfig'
-  driverdir = libva_dep.get_pkgconfig_variable('driverdir')
-else
-  libva = subproject('libva')
-  driverdir = libva.get_variable('driverdir')
-endif
+driverdir = libva_dep.get_pkgconfig_variable('driverdir')
 if driverdir == ''
   driverdir = '@0@/@1@/@2@'.format(get_option('prefix'), get_option('libdir'), 'dri')
 endif
@@ -165,11 +154,13 @@ if libva_dep.version().version_compare('< 0.38.0')
 
   if USE_ENCODERS
     check_headers = [
-      'HAVE_VA_VA_ENC_MPEG2_H',
-      'HAVE_VA_VA_ENC_H264_H',
+      ['HAVE_VA_VA_ENC_MPEG2_H', 'va/va_enc_mpeg2.h'],
+      ['HAVE_VA_VA_ENC_H264_H', 'va/va_enc_h264.h'],
     ]
     foreach h : check_headers
-      cdata.set(h, 1)
+      if cc.has_header(h.get(1), dependencies: libva_dep, prefix: '#include <va/va.h>')
+        cdata.set(h.get(0), 1)
+      endif
     endforeach
   endif
 endif
