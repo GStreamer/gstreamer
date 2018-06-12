@@ -496,6 +496,11 @@ gst_ts_demux_get_duration (GstTSDemux * demux, GstClockTime * dur)
   gboolean res = FALSE;
   gint64 val;
 
+  if (!demux->program) {
+    GST_DEBUG_OBJECT (demux, "No active program yet, can't provide duration");
+    return FALSE;
+  }
+
   /* Get total size in bytes */
   if (gst_pad_peer_query_duration (base->sinkpad, GST_FORMAT_BYTES, &val)) {
     /* Convert it to duration */
