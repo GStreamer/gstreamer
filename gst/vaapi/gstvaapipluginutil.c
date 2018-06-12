@@ -168,7 +168,7 @@ gst_vaapi_get_display_type_from_gl (GstGLDisplayType gl_display_type,
 }
 
 static GstVaapiDisplayType
-gst_vaapi_get_display_type_from_gl_env ()
+gst_vaapi_get_display_type_from_gl_env (void)
 {
   const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
   const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
