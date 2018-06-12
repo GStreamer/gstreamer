@@ -11,7 +11,9 @@ linkage problems.
 
 ## Hello GStreamer \[Java code\]
 
-The tutorial code is in the [gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the `tutorials/android-tutorial-1` subdirectory. This directories contains the usual Android NDK structure: a `src` folder for the Java code,
+The tutorial code is in the [gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/)
+in the `examples/tutorials/android/android-tutorial-1` subdirectory.
+This directory contains the usual Android NDK structure: a `src` folder for the Java code,
 a `jni` folder for the C code and a `res` folder for UI resources.
 
 We recommend that you open this project in Eclipse (as explained

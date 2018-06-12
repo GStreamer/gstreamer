@@ -192,6 +192,51 @@ OpenGL ES).
 > your Android NDK installation. You might need the free [7-Zip
 > archiving utility]
 
+#### Using gradle from the command-line
+
+Edit examples/tutorials/android/gradle.properties in order to set gstAndroidRoot to point to the
+unpacked GStreamer Android binaries.
+
+Then, to build and deploy the tutorials to your device, use a command similar to:
+
+```bash
+$ cd examples/tutorials/android
+$ PATH=~/dev/android/tools/bin:~/dev/android/ndk-bundle:$PATH ANDROID_HOME="$HOME/dev/android/" ./gradlew installDebug
+```
+
+To build and deploy a single tutorial:
+
+```bash
+$ cd examples/tutorials/android
+$ GSTREAMER_ROOT_ANDROID=/path/to/gst-android-1.14/ PATH=~/dev/android/tools/bin:~/dev/android/ndk-bundle:$PATH ANDROID_HOME="$HOME/dev/android/" ./gradlew :android-tutorial-1:installDebug
+```
+
+To run the application, you can either directly launch it from the device,
+or from the command line:
+
+```bash
+$ adb shell am start -n adb shell am start -n org.freedesktop.gstreamer.tutorials.tutorial_1/.Tutorial1
+```
+
+To see the GStreamer logs at runtime:
+
+```bash
+$ adb logcat | egrep '(gst)'
+```
+
+#### Using Android-studio
+
+Edit examples/tutorials/android/gradle.properties in order to set gstAndroidRoot to point to the
+unpacked GStreamer Android binaries.
+
+Launch Android-studio, opening examples/tutorials/android/ as a project.
+
+The project should build automatically, once it has done successfully,
+it should be possible to run the tutorials with Run > Run 'tutorial X', provided
+a device is attached and USB debugging enabled.
+
+The logs can be seen in the logcat tab.
+
 ### Creating new projects
 
 Create a normal NDK project, either from the command line as described
