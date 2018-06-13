@@ -1430,6 +1430,11 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
     lang = gst_tag_get_language_code (context->language);
     gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_LANGUAGE_CODE, (lang) ? lang : context->language, NULL);
+
+    if (context->name) {
+      gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
+          GST_TAG_TITLE, context->name, NULL);
+    }
     context->tags_changed = TRUE;
   }
 
