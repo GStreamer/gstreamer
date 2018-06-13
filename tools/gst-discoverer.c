@@ -153,17 +153,23 @@ format_channel_mask (GstDiscovererAudioInfo * ainfo)
   guint channels = gst_discoverer_audio_info_get_channels (ainfo);
   GEnumClass *enum_class = g_type_class_ref (GST_TYPE_AUDIO_CHANNEL_POSITION);
   guint i;
+  guint64 channel_mask;
 
   if (channels == 0)
     goto done;
 
-  gst_audio_channel_positions_from_mask (channels,
-      gst_discoverer_audio_info_get_channel_mask (ainfo), position);
+  channel_mask = gst_discoverer_audio_info_get_channel_mask (ainfo);
 
-  for (i = 0; i < channels; i++) {
-    GEnumValue *value = g_enum_get_value (enum_class, position[i]);
-    my_g_string_append_printf (s, 0, "%s%s", value->value_nick,
-        i + 1 == channels ? "" : ", ");
+  if (channel_mask != 0) {
+    gst_audio_channel_positions_from_mask (channels, channel_mask, position);
+
+    for (i = 0; i < channels; i++) {
+      GEnumValue *value = g_enum_get_value (enum_class, position[i]);
+      my_g_string_append_printf (s, 0, "%s%s", value->value_nick,
+          i + 1 == channels ? "" : ", ");
+    }
+  } else {
+    g_string_append (s, "unknown layout");
   }
 
   g_type_class_unref (enum_class);
