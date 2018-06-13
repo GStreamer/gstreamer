@@ -939,6 +939,9 @@ gst_video_encoder_push_event (GstVideoEncoder * encoder, GstEvent * event)
 
       if (encoder->priv->time_adjustment != GST_CLOCK_TIME_NONE) {
         segment.start += encoder->priv->time_adjustment;
+        if (GST_CLOCK_TIME_IS_VALID (segment.position)) {
+          segment.position += encoder->priv->time_adjustment;
+        }
         if (GST_CLOCK_TIME_IS_VALID (segment.stop)) {
           segment.stop += encoder->priv->time_adjustment;
         }
