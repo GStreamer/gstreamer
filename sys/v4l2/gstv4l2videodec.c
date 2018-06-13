@@ -417,7 +417,7 @@ done:
   return ret;
 }
 
-static gboolean
+static GstFlowReturn
 gst_v4l2_video_dec_drain (GstVideoDecoder * decoder)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
@@ -426,7 +426,7 @@ gst_v4l2_video_dec_drain (GstVideoDecoder * decoder)
   gst_v4l2_video_dec_finish (decoder);
   gst_v4l2_video_dec_flush (decoder);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstVideoCodecFrame *
