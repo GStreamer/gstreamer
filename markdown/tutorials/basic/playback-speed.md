@@ -141,7 +141,7 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
     }
 
     gst_element_send_event (data->video_sink,
-        gst_event_new_step (GST_FORMAT_BUFFERS, 1, data->rate, TRUE, FALSE));
+        gst_event_new_step (GST_FORMAT_BUFFERS, 1, ABS (data->rate), TRUE, FALSE));
     g_print ("Stepping one frame\n");
     break;
   case 'q':
@@ -345,7 +345,7 @@ case 'n':
   }
 
   gst_element_send_event (data->video_sink,
-      gst_event_new_step (GST_FORMAT_BUFFERS, 1, data->rate, TRUE, FALSE));
+      gst_event_new_step (GST_FORMAT_BUFFERS, 1, ABS (data->rate), TRUE, FALSE));
   g_print ("Stepping one frame\n");
   break;
 ```
