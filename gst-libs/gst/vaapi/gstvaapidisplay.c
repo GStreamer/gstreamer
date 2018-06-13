@@ -1195,20 +1195,6 @@ gst_vaapi_display_new_with_display (VADisplay va_display)
 }
 
 /**
- * gst_vaapi_display_ref:
- * @display: a #GstVaapiDisplay
- *
- * Atomically increases the reference count of the given @display by one.
- *
- * Returns: The same @display argument
- */
-GstVaapiDisplay *
-gst_vaapi_display_ref (GstVaapiDisplay * display)
-{
-  return gst_object_ref (display);
-}
-
-/**
  * gst_vaapi_display_replace:
  * @old_display_ptr: a pointer to a #GstVaapiDisplay
  * @new_display: a #GstVaapiDisplay

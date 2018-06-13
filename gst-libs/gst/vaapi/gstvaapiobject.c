@@ -91,7 +91,7 @@ gst_vaapi_object_new (const GstVaapiObjectClass * klass,
   if (!object)
     return NULL;
 
-  object->display = gst_vaapi_display_ref (display);
+  object->display = gst_object_ref (display);
   object->object_id = VA_INVALID_ID;
 
   sub_size = object_class->size - sizeof (*object);

@@ -1401,7 +1401,7 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 
 #undef CHECK_VTABLE_HOOK
 
-  encoder->display = gst_vaapi_display_ref (display);
+  encoder->display = gst_object_ref (display);
   encoder->va_display = gst_vaapi_display_get_display (display);
   encoder->va_context = VA_INVALID_ID;
 

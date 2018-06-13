@@ -500,7 +500,7 @@ gst_vaapi_decoder_init (GstVaapiDecoder * decoder, GstVaapiDisplay * display,
   gst_video_info_init (&codec_state->info);
 
   decoder->user_data = NULL;
-  decoder->display = gst_vaapi_display_ref (display);
+  decoder->display = gst_object_ref (display);
   decoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display);
   decoder->context = NULL;
   decoder->va_context = VA_INVALID_ID;

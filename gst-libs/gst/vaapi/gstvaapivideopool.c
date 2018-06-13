@@ -60,7 +60,7 @@ gst_vaapi_video_pool_init (GstVaapiVideoPool * pool, GstVaapiDisplay * display,
     GstVaapiVideoPoolObjectType object_type)
 {
   pool->object_type = object_type;
-  pool->display = gst_vaapi_display_ref (display);
+  pool->display = gst_object_ref (display);
   pool->used_objects = NULL;
   pool->used_count = 0;
   pool->capacity = 0;

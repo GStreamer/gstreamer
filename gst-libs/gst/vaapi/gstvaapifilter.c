@@ -1030,7 +1030,7 @@ gst_vaapi_filter_init (GstVaapiFilter * filter, GstVaapiDisplay * display)
 {
   VAStatus va_status;
 
-  filter->display = gst_vaapi_display_ref (display);
+  filter->display = gst_object_ref (display);
   filter->va_display = GST_VAAPI_DISPLAY_VADISPLAY (display);
   filter->va_config = VA_INVALID_ID;
   filter->va_context = VA_INVALID_ID;

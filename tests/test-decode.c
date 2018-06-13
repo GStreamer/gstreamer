@@ -79,7 +79,7 @@ main (int argc, char *argv[])
   if (CHECK_DISPLAY_CACHE)
     display2 = video_output_create_display (NULL);
   else
-    display2 = gst_vaapi_display_ref (display);
+    display2 = gst_object_ref (display);
   if (!display2)
     g_error ("could not create second VA display");
 

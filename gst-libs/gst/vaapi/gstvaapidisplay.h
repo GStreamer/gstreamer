@@ -151,9 +151,6 @@ struct _GstVaapiDisplayInfo
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display (VADisplay va_display);
 
-GstVaapiDisplay *
-gst_vaapi_display_ref (GstVaapiDisplay * display);
-
 void
 gst_vaapi_display_replace (GstVaapiDisplay ** old_display_ptr,
     GstVaapiDisplay * new_display);

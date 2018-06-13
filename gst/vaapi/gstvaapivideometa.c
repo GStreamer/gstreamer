@@ -226,7 +226,7 @@ gst_vaapi_video_meta_copy (GstVaapiVideoMeta * meta)
 
   copy->buffer = NULL;
   copy->ref_count = 1;
-  copy->display = gst_vaapi_display_ref (meta->display);
+  copy->display = gst_object_ref (meta->display);
   copy->image_pool = NULL;
   copy->image = meta->image ? gst_vaapi_object_ref (meta->image) : NULL;
   copy->proxy = meta->proxy ? gst_vaapi_surface_proxy_copy (meta->proxy) : NULL;

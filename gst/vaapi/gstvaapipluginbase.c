@@ -1269,7 +1269,7 @@ ensure_allowed_raw_caps (GstVaapiPluginBase * plugin)
   out_formats = formats = NULL;
   surface = NULL;
 
-  display = gst_vaapi_display_ref (plugin->display);
+  display = gst_object_ref (plugin->display);
   formats = gst_vaapi_display_get_image_formats (display);
   if (!formats)
     goto bail;
