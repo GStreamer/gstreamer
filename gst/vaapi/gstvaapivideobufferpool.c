@@ -77,7 +77,7 @@ gst_vaapi_video_buffer_pool_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:
-      priv->display = gst_vaapi_display_ref (g_value_get_pointer (value));
+      priv->display = g_value_dup_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -516,10 +516,9 @@ gst_vaapi_video_buffer_pool_class_init (GstVaapiVideoBufferPoolClass * klass)
   g_object_class_install_property
       (object_class,
       PROP_DISPLAY,
-      g_param_spec_pointer ("display",
-          "Display",
+      g_param_spec_object ("display", "Display",
           "The GstVaapiDisplay to use for this video pool",
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          GST_TYPE_VAAPI_DISPLAY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
