@@ -232,6 +232,8 @@ gst_stream_new (const gchar * stream_id, GstCaps * caps, GstStreamType type,
 static void
 gst_stream_set_stream_id (GstStream * stream, const gchar * stream_id)
 {
+  g_return_if_fail (GST_IS_STREAM (stream));
+
   GST_OBJECT_LOCK (stream);
   g_assert (stream->stream_id == NULL);
   if (stream_id)
@@ -262,6 +264,8 @@ gst_stream_set_stream_id (GstStream * stream, const gchar * stream_id)
 const gchar *
 gst_stream_get_stream_id (GstStream * stream)
 {
+  g_return_val_if_fail (GST_IS_STREAM (stream), NULL);
+
   return stream->stream_id;
 }
 
@@ -277,6 +281,8 @@ gst_stream_get_stream_id (GstStream * stream)
 void
 gst_stream_set_stream_flags (GstStream * stream, GstStreamFlags flags)
 {
+  g_return_if_fail (GST_IS_STREAM (stream));
+
   GST_OBJECT_LOCK (stream);
   stream->priv->flags = flags;
   GST_OBJECT_UNLOCK (stream);
@@ -300,6 +306,8 @@ gst_stream_get_stream_flags (GstStream * stream)
 {
   GstStreamFlags res;
 
+  g_return_val_if_fail (GST_IS_STREAM (stream), GST_STREAM_FLAG_NONE);
+
   GST_OBJECT_LOCK (stream);
   res = stream->priv->flags;
   GST_OBJECT_UNLOCK (stream);
@@ -319,6 +327,8 @@ gst_stream_get_stream_flags (GstStream * stream)
 void
 gst_stream_set_stream_type (GstStream * stream, GstStreamType stream_type)
 {
+  g_return_if_fail (GST_IS_STREAM (stream));
+
   GST_OBJECT_LOCK (stream);
   stream->priv->type = stream_type;
   GST_OBJECT_UNLOCK (stream);
@@ -342,6 +352,8 @@ gst_stream_get_stream_type (GstStream * stream)
 {
   GstStreamType res;
 
+  g_return_val_if_fail (GST_IS_STREAM (stream), GST_STREAM_TYPE_UNKNOWN);
+
   GST_OBJECT_LOCK (stream);
   res = stream->priv->type;
   GST_OBJECT_UNLOCK (stream);
@@ -362,6 +374,8 @@ void
 gst_stream_set_tags (GstStream * stream, GstTagList * tags)
 {
   gboolean notify = FALSE;
+
+  g_return_if_fail (GST_IS_STREAM (stream));
 
   GST_OBJECT_LOCK (stream);
   if (stream->priv->tags == NULL || tags == NULL
@@ -391,6 +405,8 @@ gst_stream_get_tags (GstStream * stream)
 {
   GstTagList *res = NULL;
 
+  g_return_val_if_fail (GST_IS_STREAM (stream), NULL);
+
   GST_OBJECT_LOCK (stream);
   if (stream->priv->tags)
     res = gst_tag_list_ref (stream->priv->tags);
@@ -412,6 +428,8 @@ void
 gst_stream_set_caps (GstStream * stream, GstCaps * caps)
 {
   gboolean notify = FALSE;
+
+  g_return_if_fail (GST_IS_STREAM (stream));
 
   GST_OBJECT_LOCK (stream);
   if (stream->priv->caps == NULL || (caps
@@ -440,6 +458,8 @@ GstCaps *
 gst_stream_get_caps (GstStream * stream)
 {
   GstCaps *res = NULL;
+
+  g_return_val_if_fail (GST_IS_STREAM (stream), NULL);
 
   GST_OBJECT_LOCK (stream);
   if (stream->priv->caps)
