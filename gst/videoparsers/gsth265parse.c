@@ -1960,10 +1960,11 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
     if (G_UNLIKELY (h265parse->width != crop_width ||
             h265parse->height != crop_height)) {
-      GST_INFO_OBJECT (h265parse, "resolution changed %dx%d",
-          crop_width, crop_height);
       h265parse->width = crop_width;
-      h265parse->height = crop_height;
+      h265parse->height = sps->profile_tier_level.interlaced_source_flag ?
+          crop_height * 2 : crop_height;
+      GST_INFO_OBJECT (h265parse, "resolution changed %dx%d",
+          h265parse->width, h265parse->height);
       modified = TRUE;
     }
 
@@ -2052,6 +2053,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       /* but not necessarily or reliably this */
       if (fps_num > 0 && fps_den > 0) {
         GstStructure *s2;
+        GstClockTime val;
+
         GST_INFO_OBJECT (h265parse, "setting framerate in caps");
         gst_caps_set_simple (caps, "framerate",
             GST_TYPE_FRACTION, fps_num, fps_den, NULL);
@@ -2060,7 +2063,9 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             &h265parse->parsed_fps_d);
         gst_base_parse_set_frame_rate (GST_BASE_PARSE (h265parse),
             fps_num, fps_den, 0, 0);
-        latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+        val = sps->profile_tier_level.interlaced_source_flag ? GST_SECOND / 2 :
+            GST_SECOND;
+        latency = gst_util_uint64_scale (val, fps_den, fps_num);
         gst_base_parse_set_latency (GST_BASE_PARSE (h265parse), latency,
             latency);
       }
@@ -2129,6 +2134,10 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       profile = gst_h265_profile_to_string (p);
       if (profile != NULL)
         gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+
+      if (sps->profile_tier_level.interlaced_source_flag)
+        gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, "alternate",
+            NULL);
 
       tier = get_tier_string (sps->profile_tier_level.tier_flag);
       if (tier != NULL)
