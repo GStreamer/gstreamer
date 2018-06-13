@@ -135,7 +135,7 @@ main (int argc, char *argv[])
   }
 
   gst_vaapi_object_unref (surface);
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
 #endif
 
 #if USE_X11
@@ -200,7 +200,7 @@ main (int argc, char *argv[])
   }
 
   gst_vaapi_object_unref (surface);
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
 #endif
 
 #if USE_WAYLAND
@@ -230,7 +230,7 @@ main (int argc, char *argv[])
   }
 
   gst_vaapi_object_unref (surface);
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
 #endif
 
   gst_deinit ();

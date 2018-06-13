@@ -244,7 +244,7 @@ plugin_init (GstPlugin * plugin)
   gst_vaapiencode_register (plugin, display);
 #endif
 
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
 
   return TRUE;
 
@@ -258,7 +258,7 @@ error_no_display:
   }
 unsupported_driver:
   {
-    gst_vaapi_display_unref (display);
+    gst_object_unref (display);
     return TRUE;                /* return TRUE to avoid get blacklisted */
   }
 }

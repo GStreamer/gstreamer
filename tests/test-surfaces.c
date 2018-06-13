@@ -98,7 +98,7 @@ main (int argc, char *argv[])
   }
 
   /* Unref in random order to check objects are correctly refcounted */
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
   gst_vaapi_video_pool_unref (pool);
   gst_vaapi_object_unref (surface);
   video_output_exit ();

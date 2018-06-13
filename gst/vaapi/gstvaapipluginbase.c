@@ -57,7 +57,7 @@ plugin_set_display (GstVaapiPluginBase * plugin, GstVaapiDisplay * display)
     plugin->display_type = gst_vaapi_display_get_display_type (display);
     gst_vaapi_plugin_base_set_display_name (plugin, display_name);
   }
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
 }
 
 /**
@@ -1313,7 +1313,7 @@ bail:
     g_array_unref (out_formats);
   if (surface)
     gst_vaapi_object_unref (surface);
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
 
   return ret;
 }

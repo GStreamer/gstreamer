@@ -182,7 +182,7 @@ video_output_create_display (const gchar * display_name)
         if (display) {
           if (gst_vaapi_display_get_display (display))
             break;
-          gst_vaapi_display_unref (display);
+          gst_object_unref (display);
           display = NULL;
         }
       }
@@ -203,7 +203,7 @@ video_output_create_display (const gchar * display_name)
     egl_display = NULL;
     g_print ("error: unsupported EGL renderering mode\n");
 #endif
-    gst_vaapi_display_unref (display);
+    gst_object_unref (display);
     if (!egl_display)
       return NULL;
     display = egl_display;

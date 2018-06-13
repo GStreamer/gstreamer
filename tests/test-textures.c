@@ -173,7 +173,7 @@ main (int argc, char *argv[])
   glDeleteTextures (1, &texture_id);
 
   gst_vaapi_window_unref (window);
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
   gst_deinit ();
   return 0;
 }

@@ -260,7 +260,7 @@ gst_vaapi_create_display_from_egl (GstGLDisplay * gl_display,
         gst_vaapi_create_display_from_handle (display_type, native_display);
     if (wrapped_display) {
       display = gst_vaapi_display_egl_new (wrapped_display, gles_version);
-      gst_vaapi_display_unref (wrapped_display);
+      gst_object_unref (wrapped_display);
     }
   }
 
@@ -397,7 +397,7 @@ gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type)
     return FALSE;
 
   gst_vaapi_video_context_propagate (element, display);
-  gst_vaapi_display_unref (display);
+  gst_object_unref (display);
   return TRUE;
 }
 
@@ -887,7 +887,7 @@ gst_video_info_force_nv12_if_encoded (GstVideoInfo * vinfo)
  * supported features.
  *
  * Returns: a new #GstVaapiDisplay instances. Free with
- * gst_vaapi_display_unref () after use. Or %NULL if no VA display is
+ * gst_object_unref () after use. Or %NULL if no VA display is
  * available.
  **/
 GstVaapiDisplay *

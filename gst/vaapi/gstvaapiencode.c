@@ -530,7 +530,7 @@ gst_vaapiencode_open (GstVideoEncoder * venc)
   GST_VAAPI_PLUGIN_BASE_DISPLAY (encode) = NULL;
   success = ensure_display (encode);
   if (old_display)
-    gst_vaapi_display_unref (old_display);
+    gst_object_unref (old_display);
   return success;
 }
 

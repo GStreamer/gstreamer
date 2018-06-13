@@ -1085,7 +1085,7 @@ gst_vaapidecode_start (GstVideoDecoder * vdec)
   success =
       gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (decode));
   if (old_display)
-    gst_vaapi_display_unref (old_display);
+    gst_object_unref (old_display);
 
   return success;
 }

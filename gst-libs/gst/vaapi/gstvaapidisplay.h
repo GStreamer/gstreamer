@@ -155,9 +155,6 @@ GstVaapiDisplay *
 gst_vaapi_display_ref (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_unref (GstVaapiDisplay * display);
-
-void
 gst_vaapi_display_replace (GstVaapiDisplay ** old_display_ptr,
     GstVaapiDisplay * new_display);
 
@@ -258,7 +255,7 @@ void
 gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplay, gst_vaapi_display_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplay, gst_object_unref)
 #endif
 
 G_END_DECLS

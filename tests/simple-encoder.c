@@ -302,7 +302,7 @@ app_free (App * app)
   }
 
   if (app->display)
-    gst_vaapi_display_unref (app->display);
+    gst_object_unref (app->display);
 
   if (app->output_file)
     fclose (app->output_file);

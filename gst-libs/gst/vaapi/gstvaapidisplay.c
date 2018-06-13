@@ -1209,19 +1209,6 @@ gst_vaapi_display_ref (GstVaapiDisplay * display)
 }
 
 /**
- * gst_vaapi_display_unref:
- * @display: a #GstVaapiDisplay
- *
- * Atomically decreases the reference count of the @display by one. If
- * the reference count reaches zero, the display will be free'd.
- */
-void
-gst_vaapi_display_unref (GstVaapiDisplay * display)
-{
-  gst_object_unref (display);
-}
-
-/**
  * gst_vaapi_display_replace:
  * @old_display_ptr: a pointer to a #GstVaapiDisplay
  * @new_display: a #GstVaapiDisplay
