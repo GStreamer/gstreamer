@@ -848,7 +848,7 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
 }
 
 static gboolean
-gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
+gst_vaapi_display_create (GstVaapiDisplay * display,
     GstVaapiDisplayInitType init_type, gpointer data)
 {
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
@@ -900,13 +900,6 @@ gst_vaapi_display_create_unlocked (GstVaapiDisplay * display,
   g_free (priv->display_name);
   priv->display_name = g_strdup (info.display_name);
   return TRUE;
-}
-
-static gboolean
-gst_vaapi_display_create (GstVaapiDisplay * display,
-    GstVaapiDisplayInitType init_type, gpointer init_value)
-{
-  return gst_vaapi_display_create_unlocked (display, init_type, init_value);
 }
 
 static void
