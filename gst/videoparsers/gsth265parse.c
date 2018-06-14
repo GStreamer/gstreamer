@@ -1969,15 +1969,27 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     }
 
     /* 0/1 is set as the default in the codec parser */
-    if ((vui->timing_info_present_flag ||
-            (vps && vps->timing_info_present_flag)) &&
-        !(sps->fps_num == 0 && sps->fps_den == 1)) {
-      if (G_UNLIKELY (h265parse->fps_num != sps->fps_num
-              || h265parse->fps_den != sps->fps_den)) {
+    if (vui->timing_info_present_flag) {
+      gint fps_num = 0, fps_den = 1;
+
+      if (!(sps->fps_num == 0 && sps->fps_den == 1)) {
+        fps_num = sps->fps_num;
+        fps_den = sps->fps_den;
+      } else if (!(sps->vui_params.time_scale == 0 &&
+              sps->vui_params.num_units_in_tick == 1)) {
+        fps_num = sps->vui_params.time_scale;
+        fps_den = sps->vui_params.num_units_in_tick;
+
+        if (sps->profile_tier_level.interlaced_source_flag)
+          fps_num /= 2;
+      }
+
+      if (G_UNLIKELY (h265parse->fps_num != fps_num
+              || h265parse->fps_den != fps_den)) {
         GST_INFO_OBJECT (h265parse, "framerate changed %d/%d",
-            sps->fps_num, sps->fps_den);
-        h265parse->fps_num = sps->fps_num;
-        h265parse->fps_den = sps->fps_den;
+            fps_num, fps_den);
+        h265parse->fps_num = fps_num;
+        h265parse->fps_den = fps_den;
         modified = TRUE;
       }
     }
