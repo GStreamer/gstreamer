@@ -941,18 +941,19 @@ class Window (object):
         if self.log_file is not None:
             for feature in self.features:
                 feature.handle_detach_log_file(self, self.log_file)
-            self.tmpfile = None
 
         if filename is None:
             if self.dispatcher is not None:
                 self.dispatcher.cancel()
             self.dispatcher = None
             self.log_file = None
+            self.tmpfile = None
             self.actions.groups["RowActions"].props.sensitive = False
         else:
-            self.tmpfile = tempfile.NamedTemporaryFile()
-            shutil.copyfile(filename, self.tmpfile.name)
-            filename = self.tmpfile.name
+            if self.tmpfile and filename != self.tmpfile.name:
+                self.tmpfile = tempfile.NamedTemporaryFile()
+                shutil.copyfile(filename, self.tmpfile.name)
+                filename = self.tmpfile.name
             self.logger.debug("setting log file %r", filename)
 
             try:
