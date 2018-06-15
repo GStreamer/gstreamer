@@ -10,6 +10,7 @@ fft
 gstglcolorconvert
 gstglcontext
 gstglheaders
+gstglfeature
 gstglformat
 gstglmatrix
 gstglmemory

@@ -75,6 +75,7 @@ if build_gstgl
   base_tests += [
     [ 'libs/gstglcolorconvert.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglcontext.c', not build_gstgl, [gstgl_dep]],
+    [ 'libs/gstglfeature.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglformat.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglheaders.c', not build_gstgl, [gstgl_dep]],
     [ 'libs/gstglmatrix.c', not build_gstgl, [gstgl_dep]],
