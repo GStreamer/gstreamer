@@ -383,6 +383,8 @@ gst_validate_report_load_issues (void)
       "seek event wasn't handled", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_SEEK_RESULT_POSITION_WRONG,
       "position after a seek is wrong", NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_SEEK_INVALID_SEQNUM,
+      "segments after a seek don't have the same seqnum", NULL);
 
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_EOS_WITHOUT_SEGMENT,
       "EOS received without segment event before",
