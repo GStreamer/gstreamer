@@ -428,7 +428,7 @@ compare_segment_list (GstValidateMediaDescriptor * ref,
       rsegments = rsegments->next, csegments = csegments->next, i++) {
     GstValidateSegmentNode *rsegment, *csegment;
 
-    if (csegment == NULL) {
+    if (csegments == NULL) {
       /* The list was checked to be of the same size */
       g_assert_not_reached ();
       return FALSE;
