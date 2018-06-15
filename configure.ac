@@ -179,20 +179,10 @@ if test "x$HAVE_UNISTD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
 fi
 
-dnl *** checks for nose2 ***
+dnl *** checks for gst-validate-launcher ***
 
-AC_MSG_CHECKING(for nose2)
-NOSE2=nose2
-if $NOSE2 1>&AC_FD_CC 2>&AC_FD_CC
-then
-  HAVE_NOSE2=yes
-  AC_MSG_RESULT(yes)
-else
-  HAVE_NOSE2=no
-  AC_MSG_RESULT(no nose2)
-fi
-AC_SUBST([NOSE2])
-AM_CONDITIONAL(HAVE_NOSE2, test "x$HAVE_NOSE2" = "xyes")
+AC_CHECK_PROG(GST_VALIDATE_LAUNCHER, gst-validate-launcher, yes)
+AM_CONDITIONAL(HAVE_GST_VALIDATE_LAUNCHER, [test "x$GST_VALIDATE_LAUNCHER" = "xyes"])
 
 dnl *** checks for types/defines ***
 

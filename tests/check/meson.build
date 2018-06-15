@@ -72,33 +72,15 @@ foreach t : ges_tests
 endforeach
 
 if build_gir
-  runtests = find_program('nose2', required : false)
+  # Make sure to use the subproject gst-validate-launcher if avalaible.
+  if gstvalidate_dep.found() and gstvalidate_dep.type_name() == 'internal'
+    runtests = subproject('gst-devtools').get_variable('launcher')
+  else
+    runtests = find_program('gst-validate-launcher', required : false)
+  endif
 
   if runtests.found()
-    testdir = '@0@/python/'.format(meson.current_source_dir())
-
-    tests = [
-        ['Test clip', 'test_clip'],
-        ['Test timeline', 'test_timeline'],
-        ['Test groups', 'test_group']
-    ]
-
-    foreach i: tests
-      env = environment()
-      env.prepend('GI_TYPELIB_PATH', meson.current_build_dir() + '/../../ges/')
-      env.prepend('LD_LIBRARY_PATH', meson.current_build_dir() + '/../../ges/')
-
-      args = ['--start-dir', meson.current_source_dir()]
-      xunitfile = join_paths(meson.current_build_dir(), i.get(0).underscorify() + '.xunit')
-      config = configuration_data()
-      config.set('path', xunitfile)
-      cfg = '' + i.get(0).underscorify() + '.cfg'
-      configure_file(input : 'nose2-junit-xml.cfg.in', configuration : config,
-        output : cfg)
-      args = args + ['--plugin', 'nose2.plugins.junitxml', '--config',
-          join_paths(meson.current_build_dir(), cfg)]
-
-      test(i.get(0), runtests, args: args + ['python.' + i.get(1)], env: env)
-    endforeach
+    test('pythontests', runtests, args: ['--pyunittest-dir', meson.current_source_dir(), 'pyunittest', '--dump-on-failure'],
+         env: env)
   endif
 endif

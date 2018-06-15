@@ -129,11 +129,11 @@ coverage-report:
 	done
 
 check:
-if HAVE_NOSE2
+if HAVE_GST_VALIDATE_LAUNCHER
 if WITH_PYTHON
-	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} ${NOSE2} --verbose -s $(top_srcdir)/tests/check/python
+	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} gst-validate-launcher --pyunittest-dir  $(top_srcdir)/tests/check/ pyunittest --dump-on-failure
 
 check-python:
-	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} ${NOSE2} --verbose -s $(top_srcdir)/tests/check/python
+	GI_TYPELIB_PATH=$(top_srcdir)/ges/:${GI_TYPELIB_PATH} LD_LIBRARY_PATH=$(top_srcdir)/ges/.libs:${LD_LIBRARY_PATH} gst-validate-launcher --pyunittest-dir  $(top_srcdir)/tests/check/ pyunittest --dump-on-failure
 endif
 endif
