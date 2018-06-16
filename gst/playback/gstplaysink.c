@@ -3550,7 +3550,6 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       goto no_chain;
 
     if (!playsink->audio_sinkpad_stream_synchronizer) {
-      GstPad *audio_queue_srcpad;
       GValue item = { 0, };
       GstIterator *it;
 
@@ -3565,8 +3564,19 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       g_value_unset (&item);
       g_assert (playsink->audio_srcpad_stream_synchronizer);
       gst_iterator_free (it);
+    }
 
-      if (need_vis) {
+    if (need_vis) {
+      GstPad *audio_queue_srcpad;
+
+      if (gst_pad_is_linked (playsink->audio_sinkpad_stream_synchronizer)) {
+        GstPad *peer_pad =
+            gst_pad_get_peer (playsink->audio_sinkpad_stream_synchronizer);
+        gst_pad_unlink (peer_pad, playsink->audio_sinkpad_stream_synchronizer);
+        gst_object_unref (peer_pad);
+      }
+
+      if (!playsink->audio_ssync_queue) {
         GST_DEBUG_OBJECT (playsink, "adding audio stream synchronizer queue");
         playsink->audio_ssync_queue =
             gst_element_factory_make ("queue", "audiossyncqueue");
@@ -3582,14 +3592,15 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_ssync_queue);
         playsink->audio_ssync_queue_sinkpad =
             gst_element_get_static_pad (playsink->audio_ssync_queue, "sink");
-        audio_queue_srcpad =
-            gst_element_get_static_pad (playsink->audio_ssync_queue, "src");
-        gst_element_sync_state_with_parent (playsink->audio_ssync_queue);
-        gst_pad_link_full (audio_queue_srcpad,
-            playsink->audio_sinkpad_stream_synchronizer,
-            GST_PAD_LINK_CHECK_NOTHING);
-        gst_object_unref (audio_queue_srcpad);
       }
+
+      audio_queue_srcpad =
+          gst_element_get_static_pad (playsink->audio_ssync_queue, "src");
+      gst_pad_link_full (audio_queue_srcpad,
+          playsink->audio_sinkpad_stream_synchronizer,
+          GST_PAD_LINK_CHECK_NOTHING);
+      gst_object_unref (audio_queue_srcpad);
+      gst_element_sync_state_with_parent (playsink->audio_ssync_queue);
     }
 
     if (playsink->audiochain) {
@@ -3667,7 +3678,26 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
 
-      /* Just change vis plugin or set up chain? */
+      /* Lazily add and activate chain */
+      if (!playsink->vischain->chain.added) {
+        srcpad =
+            gst_element_get_static_pad (playsink->vischain->chain.bin, "src");
+        add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
+        activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
+        if (playsink->audio_tee_vissrc == NULL) {
+          playsink->audio_tee_vissrc =
+              gst_element_get_request_pad (playsink->audio_tee, "src_%u");
+        }
+        gst_pad_link_full (playsink->audio_tee_vissrc,
+            playsink->vischain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+        gst_pad_link_full (srcpad, playsink->video_sinkpad_stream_synchronizer,
+            GST_PAD_LINK_CHECK_NOTHING);
+        gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+        gst_object_unref (srcpad);
+      }
+
+      /* Is a reconfiguration required? */
       if (playsink->vischain->vis != playsink->visualisation) {
         /* unlink the old plugin and unghost the pad */
         gst_pad_unlink (playsink->vischain->vispeerpad,
@@ -3697,22 +3727,6 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
             playsink->vischain->vissinkpad, GST_PAD_LINK_CHECK_NOTHING);
         gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->vischain->
                 srcpad), playsink->vischain->vissrcpad);
-      } else {
-        srcpad =
-            gst_element_get_static_pad (playsink->vischain->chain.bin, "src");
-        add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
-        activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
-        if (playsink->audio_tee_vissrc == NULL) {
-          playsink->audio_tee_vissrc =
-              gst_element_get_request_pad (playsink->audio_tee, "src_%u");
-        }
-        gst_pad_link_full (playsink->audio_tee_vissrc,
-            playsink->vischain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-        gst_pad_link_full (srcpad, playsink->video_sinkpad_stream_synchronizer,
-            GST_PAD_LINK_CHECK_NOTHING);
-        gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
-            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-        gst_object_unref (srcpad);
       }
     }
   } else {
