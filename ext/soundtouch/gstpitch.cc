@@ -645,8 +645,6 @@ gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           min += pitch->min_latency;
           if (max != GST_CLOCK_TIME_NONE)
             max += pitch->max_latency;
-          else
-            max = pitch->max_latency;
 
           GST_DEBUG ("Calculated total latency : min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
