@@ -424,6 +424,7 @@ gst_pitch_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
       gfloat stream_time_ratio;
+      guint32 seqnum;
 
       GST_OBJECT_LOCK (pitch);
       stream_time_ratio = pitch->priv->stream_time_ratio;
@@ -431,6 +432,8 @@ gst_pitch_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_event_parse_seek (event, &rate, &format, &flags,
           &cur_type, &cur, &stop_type, &stop);
+
+      seqnum = gst_event_get_seqnum (event);
 
       gst_event_unref (event);
 
@@ -441,6 +444,7 @@ gst_pitch_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         event = gst_event_new_seek (rate, format, flags,
             cur_type, cur, stop_type, stop);
+        gst_event_set_seqnum (event, seqnum);
         res = gst_pad_event_default (pad, parent, event);
       } else {
         GST_WARNING_OBJECT (pitch,
