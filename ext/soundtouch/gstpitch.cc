@@ -393,9 +393,6 @@ gst_pitch_flush_buffer (GstPitch * pitch, gboolean send)
 
   GST_DEBUG_OBJECT (pitch, "flushing buffer");
 
-  if (pitch->next_buffer_offset == 0)
-    return GST_FLOW_OK;
-
   pitch->priv->st->flush ();
   if (!send)
     return GST_FLOW_OK;
