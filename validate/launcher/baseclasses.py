@@ -1757,7 +1757,7 @@ class _TestsLauncher(Loggable):
                 self.reporter.after_test(test)
                 if res != Result.PASSED and (self.options.forever or
                                              self.options.fatal_error):
-                    return test.result
+                    return False
                 if self.start_new_job(tests_left):
                     jobs_running += 1
 
