@@ -7240,7 +7240,8 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
           /* check for segment end */
           if (G_UNLIKELY (demux->segment.stop != -1
-                  && demux->segment.stop <= pts && stream->on_keyframe)) {
+                  && demux->segment.stop <= pts && stream->on_keyframe)
+              && !(demux->upstream_format_is_time && demux->segment.rate < 0)) {
             GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
             stream->time_position = GST_CLOCK_TIME_NONE;        /* this means EOS */
 
