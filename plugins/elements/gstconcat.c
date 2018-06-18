@@ -569,6 +569,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         ret = FALSE;
       } else {
         GstSegment segment = spad->segment;
+        GstEvent *topush;
 
         if (adjust_base) {
           /* We know no duration */
@@ -584,8 +585,10 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
               segment.stop += self->current_start_offset;
           }
         }
+        topush = gst_event_new_segment (&segment);
+        gst_event_set_seqnum (topush, gst_event_get_seqnum (event));
 
-        gst_pad_push_event (self->srcpad, gst_event_new_segment (&segment));
+        gst_pad_push_event (self->srcpad, topush);
       }
       break;
     }
