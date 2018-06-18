@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C)  2005 Wim Taymans <wim@fluendo.com>
  *
- * gstalsasink.h: 
+ * gstalsasink.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -73,6 +73,11 @@ struct _GstAlsaSink {
   snd_pcm_uframes_t period_size;
 
   GstCaps *cached_caps;
+
+  gboolean is_paused;
+  gboolean after_paused;
+  gboolean hw_support_pause;
+  snd_pcm_sframes_t pos_in_buffer;
 
   GMutex alsa_lock;
   GMutex delay_lock;
