@@ -390,10 +390,12 @@ static GstFlowReturn
 gst_pitch_flush_buffer (GstPitch * pitch, gboolean send)
 {
   GstBuffer *buffer;
+  
+  if (pitch->priv->st->numUnprocessedSamples() != 0) {
+    GST_DEBUG_OBJECT (pitch, "flushing buffer");
+    pitch->priv->st->flush ();   
+  }
 
-  GST_DEBUG_OBJECT (pitch, "flushing buffer");
-
-  pitch->priv->st->flush ();
   if (!send)
     return GST_FLOW_OK;
 
