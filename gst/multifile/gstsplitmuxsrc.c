@@ -424,8 +424,10 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
       if (gst_splitmux_end_of_part (splitmux, splitpad))
         // Continuing to next part, drop the EOS
         goto drop_event;
-      if (splitmux->segment_seqnum)
+      if (splitmux->segment_seqnum) {
+        event = gst_event_make_writable (event);
         gst_event_set_seqnum (event, splitmux->segment_seqnum);
+      }
       break;
     }
     case GST_EVENT_SEGMENT:{
@@ -921,8 +923,10 @@ gst_splitmux_push_event (GstSplitMuxSrc * splitmux, GstEvent * e,
 {
   GList *cur;
 
-  if (seqnum)
+  if (seqnum) {
+    e = gst_event_make_writable (e);
     gst_event_set_seqnum (e, seqnum);
+  }
 
   SPLITMUX_SRC_PADS_LOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
@@ -942,8 +946,10 @@ gst_splitmux_push_flush_stop (GstSplitMuxSrc * splitmux, guint32 seqnum)
   GstEvent *e = gst_event_new_flush_stop (TRUE);
   GList *cur;
 
-  if (seqnum)
+  if (seqnum) {
+    e = gst_event_make_writable (e);
     gst_event_set_seqnum (e, seqnum);
+  }
 
   SPLITMUX_SRC_PADS_LOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
