@@ -756,7 +756,8 @@ GST_START_TEST (testSeekSnapBeforePosition)
 {
   /* Seek to 1.5s, snap before, it go to 1s */
   run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
-      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE,
+      GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SNAP_BEFORE,
       1000 * GST_MSECOND, -1, 3, 0);
 }
 
@@ -767,7 +768,8 @@ GST_START_TEST (testSeekSnapAfterPosition)
 {
   /* Seek to 1.5s with snap after, it should move to 2s */
   run_seek_position_test (1.0, GST_SEEK_TYPE_SET, 1500 * GST_MSECOND,
-      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER,
+      GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SNAP_AFTER,
       2000 * GST_MSECOND, -1, 2, 0);
 }
 
@@ -778,7 +780,8 @@ GST_START_TEST (testSeekSnapBeforeSamePosition)
 {
   /* Snap seek without position */
   run_seek_position_test (1.0, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
-      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE,
+      GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SNAP_BEFORE,
       2 * GST_MSECOND, -1, 2, SEGMENT_SIZE * 3 + 1);
 }
 
@@ -789,7 +792,8 @@ GST_START_TEST (testSeekSnapAfterSamePosition)
 {
   /* Snap seek without position */
   run_seek_position_test (1.0, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
-      GST_SEEK_TYPE_NONE, 0, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER,
+      GST_SEEK_TYPE_NONE, 0,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SNAP_AFTER,
       3 * GST_MSECOND, -1, 1, SEGMENT_SIZE * 3 + 1);
 }
 
@@ -801,8 +805,8 @@ GST_START_TEST (testReverseSeekSnapBeforePosition)
 {
   run_seek_position_test (-1.0, GST_SEEK_TYPE_SET, 1000 * GST_MSECOND,
       GST_SEEK_TYPE_SET, 2500 * GST_MSECOND,
-      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_BEFORE, 1000 * GST_MSECOND,
-      3000 * GST_MSECOND, 2, 0);
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SNAP_BEFORE,
+      1000 * GST_MSECOND, 3000 * GST_MSECOND, 2, 0);
 }
 
 GST_END_TEST;
@@ -812,8 +816,8 @@ GST_START_TEST (testReverseSeekSnapAfterPosition)
 {
   run_seek_position_test (-1.0, GST_SEEK_TYPE_SET, 1000 * GST_MSECOND,
       GST_SEEK_TYPE_SET, 2500 * GST_MSECOND,
-      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SNAP_AFTER, 1000 * GST_MSECOND,
-      2000 * GST_MSECOND, 1, 0);
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT | GST_SEEK_FLAG_SNAP_AFTER,
+      1000 * GST_MSECOND, 2000 * GST_MSECOND, 1, 0);
 }
 
 GST_END_TEST;

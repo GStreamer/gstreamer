@@ -5812,7 +5812,8 @@ GST_START_TEST (dash_mpdparser_datetime_with_tz_offset)
   assert_equals_int (gst_date_time_get_minute (availabilityStartTime), 10);
   assert_equals_int (gst_date_time_get_second (availabilityStartTime), 50);
   assert_equals_int (gst_date_time_get_microsecond (availabilityStartTime), 0);
-  assert_equals_float (gst_date_time_get_time_zone_offset (availabilityStartTime), 8.0);
+  assert_equals_float (gst_date_time_get_time_zone_offset
+      (availabilityStartTime), 8.0);
 
   availabilityEndTime = mpdclient->mpd_node->availabilityEndTime;
   assert_equals_int (gst_date_time_get_year (availabilityEndTime), 2015);
@@ -5823,7 +5824,8 @@ GST_START_TEST (dash_mpdparser_datetime_with_tz_offset)
   assert_equals_int (gst_date_time_get_second (availabilityEndTime), 50);
   assert_equals_int (gst_date_time_get_microsecond (availabilityEndTime),
       123456);
-  assert_equals_float (gst_date_time_get_time_zone_offset (availabilityEndTime), -4.5);
+  assert_equals_float (gst_date_time_get_time_zone_offset (availabilityEndTime),
+      -4.5);
 
   gst_mpd_client_free (mpdclient);
 }
