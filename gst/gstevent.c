@@ -449,6 +449,7 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
 {
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (seqnum != GST_SEQNUM_INVALID);
+  g_return_if_fail (gst_event_is_writable (event));
 
   GST_EVENT_SEQNUM (event) = seqnum;
 }
@@ -497,6 +498,7 @@ void
 gst_event_set_running_time_offset (GstEvent * event, gint64 offset)
 {
   g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (gst_event_is_writable (event));
 
   ((GstEventImpl *) event)->running_time_offset = offset;
 }
