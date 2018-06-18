@@ -2303,11 +2303,15 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
 
   if (flush) {
     event = gst_event_new_flush_start ();
+    if (src->segment_seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (event, src->segment_seqnum);
     GST_DEBUG_OBJECT (src, "start flush");
     cmd = CMD_WAIT;
     state = GST_STATE_PAUSED;
   } else {
     event = gst_event_new_flush_stop (FALSE);
+    if (src->segment_seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (event, src->segment_seqnum);
     GST_DEBUG_OBJECT (src, "stop flush; playing %d", playing);
     cmd = CMD_LOOP;
     if (playing)
@@ -2431,6 +2435,9 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
   skip = flags & GST_SEEK_FLAG_SKIP;
+
+  /* Store the seqnum of the seek */
+  src->segment_seqnum = gst_event_get_seqnum (event);
 
   /* now we need to make sure the streaming thread is stopped. We do this by
    * either sending a FLUSH_START event downstream which will cause the
@@ -8466,6 +8473,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       /* first attempt, don't ignore timeouts */
       rtspsrc->ignore_timeout = FALSE;
       rtspsrc->open_error = FALSE;
+      rtspsrc->segment_seqnum = GST_SEQNUM_INVALID;
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_OPEN, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
