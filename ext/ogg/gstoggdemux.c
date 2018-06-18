@@ -2404,15 +2404,19 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      if (ogg->seqnum != GST_SEQNUM_INVALID)
+      if (ogg->seqnum != GST_SEQNUM_INVALID) {
+        event = gst_event_make_writable (event);
         gst_event_set_seqnum (event, ogg->seqnum);
+      }
       res = gst_ogg_demux_send_event (ogg, event);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (ogg, "got a flush stop event");
       ogg_sync_reset (&ogg->sync);
-      if (ogg->seqnum != GST_SEQNUM_INVALID)
+      if (ogg->seqnum != GST_SEQNUM_INVALID) {
+        event = gst_event_make_writable (event);
         gst_event_set_seqnum (event, ogg->seqnum);
+      }
       res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->pullmode || ogg->push_state != PUSH_DURATION) {
         /* it's starting to feel reaaaally dirty :(
