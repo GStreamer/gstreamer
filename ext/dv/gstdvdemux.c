@@ -327,6 +327,8 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
 
   pad = gst_pad_new_from_static_template (template, template->name_template);
 
+  GST_DEBUG_OBJECT (dvdemux, "Adding pad %s", GST_OBJECT_NAME (pad));
+
   gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_dvdemux_src_query));
 
   gst_pad_set_event_function (pad,
@@ -346,7 +348,10 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
 
   gst_pad_set_caps (pad, caps);
 
-  gst_pad_push_event (pad, gst_event_new_segment (&dvdemux->time_segment));
+  event = gst_event_new_segment (&dvdemux->time_segment);
+  if (dvdemux->segment_seqnum != GST_SEQNUM_INVALID)
+    gst_event_set_seqnum (event, dvdemux->segment_seqnum);
+  gst_pad_push_event (pad, event);
 
   gst_element_add_pad (GST_ELEMENT (dvdemux), pad);
 
