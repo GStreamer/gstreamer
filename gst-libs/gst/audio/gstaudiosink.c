@@ -560,10 +560,10 @@ gst_audio_sink_ring_buffer_resume (GstAudioRingBuffer * buf)
     GST_DEBUG_OBJECT (sink, "resume...");
     csink->resume (sink);
     GST_DEBUG_OBJECT (sink, "resume done");
-  } else {
-    /* fallback to start for audio sinks that don't provide resume */
-    gst_audio_sink_ring_buffer_start (buf);
   }
+
+  gst_audio_sink_ring_buffer_start (buf);
+
   return TRUE;
 }
 

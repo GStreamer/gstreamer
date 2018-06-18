@@ -78,8 +78,6 @@ struct _GstAudioSink {
  *         For retro compatibility, the audio sink will fallback
  *         to calling reset if this vmethod is not provided.
  * @resume: Resume the device.
- *          For retro compatibility, the audio sink will fallback
- *          to calling start if this vmethod is not provided.
  * @stop: Stop the device and unblock write as fast as possible.
  *        Pending samples are flushed from the device.
  *        For retro compatibility, the audio sink will fallback
