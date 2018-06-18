@@ -578,6 +578,9 @@ do_seek (PlaybackApp * app, GstFormat format, gint64 position)
       g_warning ("Instant rate change seek not supported with flushing");
       return;
     }
+  } else if (position == GST_CLOCK_TIME_NONE) {
+    start_type = stop_type = GST_SEEK_TYPE_NONE;
+    start = stop = GST_CLOCK_TIME_NONE;
   } else if (app->rate < 0) {
     stop = position;
     start = 0;
@@ -658,6 +661,8 @@ advanced_seek_button_cb (GtkButton * button, PlaybackApp * app)
   pos = g_ascii_strtoll (text, &endptr, 10);
   if (endptr != text && pos != G_MAXINT64 && pos != G_MININT64) {
     do_seek (app, fmt, pos);
+  } else if (strlen (text) == 0) {
+    do_seek (app, fmt, GST_CLOCK_TIME_NONE);
   }
 }
 
