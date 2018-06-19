@@ -1,6 +1,7 @@
 examples = [
   'test-appsrc',
   'test-auth',
+  'test-auth-digest',
   'test-launch',
   'test-mp4',
   'test-multicast2',
