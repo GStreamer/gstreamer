@@ -2476,7 +2476,9 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (!demux->segment_event) {
     demux->segment_event = gst_event_new_segment (&demux->segment);
-    gst_event_set_seqnum (demux->segment_event, base->last_seek_seqnum);
+
+    if (base->last_seek_seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (demux->segment_event, base->last_seek_seqnum);
   }
 
 push_new_segment:
