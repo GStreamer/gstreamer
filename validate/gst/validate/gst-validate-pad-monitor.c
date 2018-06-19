@@ -909,22 +909,75 @@ gst_validate_pad_monitor_class_init (GstValidatePadMonitorClass * klass)
   monitor_klass->get_element = gst_validate_pad_monitor_get_element;
 }
 
+/* Called when a pad is being flushed */
 static void
-gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
+gst_validate_pad_monitor_flush (GstValidatePadMonitor * pad_monitor)
 {
-  pad_monitor->pending_setcaps_fields =
-      gst_structure_new_empty (PENDING_FIELDS);
-  pad_monitor->serialized_events =
-      g_ptr_array_new_with_free_func ((GDestroyNotify)
-      _serialized_event_data_free);
-  pad_monitor->expired_events = NULL;
-  gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
+  /* Note: Keep in the same order as in the GstValidatePadMonitor structure */
+
+  gst_caps_replace (&pad_monitor->last_caps, NULL);
+  pad_monitor->caps_is_audio = pad_monitor->caps_is_video =
+      pad_monitor->caps_is_raw = FALSE;
+
   pad_monitor->first_buffer = TRUE;
+
+  pad_monitor->has_segment = FALSE;
+  pad_monitor->is_eos = FALSE;
+
   pad_monitor->pending_buffer_discont = TRUE;
+
+  gst_event_replace (&pad_monitor->expected_segment, NULL);
+  if (pad_monitor->serialized_events->len)
+    g_ptr_array_remove_range (pad_monitor->serialized_events, 0,
+        pad_monitor->serialized_events->len);
+  g_list_free_full (pad_monitor->expired_events,
+      (GDestroyNotify) gst_event_unref);
+  pad_monitor->expired_events = NULL;
+
+  gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
+  pad_monitor->current_timestamp = GST_CLOCK_TIME_NONE;
+  pad_monitor->current_duration = GST_CLOCK_TIME_NONE;
+
+  pad_monitor->last_flow_return = GST_FLOW_OK;
 
   pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
   pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
+}
+
+/* Called when the pad monitor is initialized or when
+ * the pad is deactivated */
+static void
+gst_validate_pad_monitor_reset (GstValidatePadMonitor * pad_monitor)
+{
+  gst_validate_pad_monitor_flush (pad_monitor);
+
+  /* Note : For the entries that haven't been resetted in _flush(), do
+   * it here and keep in the same order as the GstValidatePadMonitor
+   * structure */
+
+  pad_monitor->pending_flush_stop = FALSE;
+  pad_monitor->pending_newsegment_seqnum = GST_SEQNUM_INVALID;
+  pad_monitor->pending_eos_seqnum = GST_SEQNUM_INVALID;
+
   pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
+
+  if (pad_monitor->pending_setcaps_fields)
+    gst_structure_free (pad_monitor->pending_setcaps_fields);
+  pad_monitor->pending_setcaps_fields =
+      gst_structure_new_empty (PENDING_FIELDS);
+
+  /* FIXME : Why BYTES and not UNDEFINED ? */
+  gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
+}
+
+static void
+gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
+{
+  pad_monitor->serialized_events =
+      g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _serialized_event_data_free);
+
+  gst_validate_pad_monitor_reset (pad_monitor);
 }
 
 /**
@@ -1584,29 +1637,6 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
   }
   gst_iterator_free (iter);
   gst_object_unref (pad);
-}
-
-static void
-gst_validate_pad_monitor_flush (GstValidatePadMonitor * pad_monitor)
-{
-  pad_monitor->current_timestamp = GST_CLOCK_TIME_NONE;
-  pad_monitor->current_duration = GST_CLOCK_TIME_NONE;
-  pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
-  pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
-  pad_monitor->has_segment = FALSE;
-  pad_monitor->is_eos = FALSE;
-  pad_monitor->last_flow_return = GST_FLOW_OK;
-  gst_caps_replace (&pad_monitor->last_caps, NULL);
-  pad_monitor->caps_is_audio = pad_monitor->caps_is_video =
-      pad_monitor->caps_is_raw = FALSE;
-
-  g_list_free_full (pad_monitor->expired_events,
-      (GDestroyNotify) gst_event_unref);
-  pad_monitor->expired_events = NULL;
-
-  if (pad_monitor->serialized_events->len)
-    g_ptr_array_remove_range (pad_monitor->serialized_events, 0,
-        pad_monitor->serialized_events->len);
 }
 
 /* common checks for both sink and src event functions */
@@ -2406,12 +2436,13 @@ gst_validate_pad_monitor_activatemode_func (GstPad * pad, GstObject * parent,
   gboolean ret = TRUE;
 
   /* TODO add overrides for activate func */
+  GST_DEBUG_OBJECT (pad, "active:%d", active);
 
   if (pad_monitor->activatemode_func)
     ret = pad_monitor->activatemode_func (pad, parent, mode, active);
   if (ret && active == FALSE) {
     GST_VALIDATE_MONITOR_LOCK (pad_monitor);
-    gst_validate_pad_monitor_flush (pad_monitor);
+    gst_validate_pad_monitor_reset (pad_monitor);
     GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   }
 
