@@ -1434,6 +1434,9 @@ gst_rtsp_client_sink_release_pad (GstElement * element, GstPad * pad)
 
   context = gst_pad_get_element_private (pad);
 
+  /* FIXME: we may need to change our blocking state waiting for
+   * GstRTSPStreamBlocking messages */
+
   GST_RTSP_STATE_LOCK (sink);
   sink->contexts = g_list_remove (sink->contexts, context);
   GST_RTSP_STATE_UNLOCK (sink);
@@ -4331,7 +4334,7 @@ gst_rtsp_client_sink_record (GstRTSPClientSink * sink, gboolean async)
 
   g_mutex_lock (&sink->block_streams_lock);
   /* Wait for streams to be blocked */
-  while (!sink->streams_blocked) {
+  while (sink->n_streams_blocked < g_list_length (sink->contexts)) {
     GST_DEBUG_OBJECT (sink, "waiting for streams to be blocked");
     g_cond_wait (&sink->block_streams_cond, &sink->block_streams_lock);
   }
@@ -4677,7 +4680,7 @@ gst_rtsp_client_sink_handle_message (GstBin * bin, GstMessage * message)
         /* An RTSPStream has prerolled */
         GST_DEBUG_OBJECT (rtsp_client_sink, "received GstRTSPStreamBlocking");
         g_mutex_lock (&rtsp_client_sink->block_streams_lock);
-        rtsp_client_sink->streams_blocked = TRUE;
+        rtsp_client_sink->n_streams_blocked++;
         g_cond_broadcast (&rtsp_client_sink->block_streams_cond);
         g_mutex_unlock (&rtsp_client_sink->block_streams_lock);
       }
