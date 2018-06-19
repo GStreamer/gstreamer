@@ -3068,12 +3068,14 @@ create_receiver_part (GstRTSPStream * stream, const GstRTSPTransport *
     }
 
     /* make funnel for the RTP/RTCP receivers */
-    priv->funnel[i] = gst_element_factory_make ("funnel", NULL);
-    gst_bin_add (bin, priv->funnel[i]);
+    if (!priv->funnel[i]) {
+      priv->funnel[i] = gst_element_factory_make ("funnel", NULL);
+      gst_bin_add (bin, priv->funnel[i]);
 
-    pad = gst_element_get_static_pad (priv->funnel[i], "src");
-    gst_pad_link (pad, priv->recv_sink[i]);
-    gst_object_unref (pad);
+      pad = gst_element_get_static_pad (priv->funnel[i], "src");
+      gst_pad_link (pad, priv->recv_sink[i]);
+      gst_object_unref (pad);
+    }
 
     if (udp && !priv->udpsrc_v4[i] && priv->server_addr_v4) {
       GST_DEBUG_OBJECT (stream, "udp IPv4, create and configure udpsources");
