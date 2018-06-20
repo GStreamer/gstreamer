@@ -51,9 +51,13 @@ gst_rtsp_auth_set_tls_authentication_mode
 gst_rtsp_auth_make_basic
 gst_rtsp_auth_add_basic
 gst_rtsp_auth_remove_basic
+gst_rtsp_auth_add_digest
+gst_rtsp_auth_remove_digest
 gst_rtsp_auth_check
 gst_rtsp_auth_get_default_token
 gst_rtsp_auth_set_default_token
+gst_rtsp_auth_get_supported_methods
+gst_rtsp_auth_set_supported_methods
 
 <SUBSECTION AuthChecks>
 GST_RTSP_AUTH_CHECK_CONNECT
