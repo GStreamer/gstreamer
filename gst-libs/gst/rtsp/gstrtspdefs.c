@@ -536,27 +536,40 @@ gst_rtsp_header_allow_multiple (GstRTSPHeaderField field)
     return rtsp_headers[field - 1].multiple;
 }
 
-/* See RFC2069, 2.1.2 */
 static gchar *
-auth_digest_compute_response_md5 (const gchar * method, const gchar * realm,
-    const gchar * username, const gchar * password, const gchar * uri,
-    const gchar * nonce)
+auth_digest_compute_a1_md5 (const gchar * realm, const gchar * username,
+    const gchar * password)
 {
-  gchar hex_a1[33] = { 0, };
-  gchar hex_a2[33] = { 0, };
   GChecksum *md5_context = g_checksum_new (G_CHECKSUM_MD5);
-  const gchar *digest_string;
-  gchar *response;
+  gchar *ret;
 
-  /* Compute A1 */
   g_checksum_update (md5_context, (const guchar *) username, strlen (username));
   g_checksum_update (md5_context, (const guchar *) ":", 1);
   g_checksum_update (md5_context, (const guchar *) realm, strlen (realm));
   g_checksum_update (md5_context, (const guchar *) ":", 1);
   g_checksum_update (md5_context, (const guchar *) password, strlen (password));
-  digest_string = g_checksum_get_string (md5_context);
-  g_assert (strlen (digest_string) == 32);
-  memcpy (hex_a1, digest_string, 32);
+  ret = g_strdup (g_checksum_get_string (md5_context));
+  g_assert (strlen (ret) == 32);
+  g_checksum_free (md5_context);
+
+  return ret;
+}
+
+/* See RFC2069, 2.1.2 */
+static gchar *
+auth_digest_compute_response_md5 (const gchar * method, const gchar * a1,
+    const gchar * uri, const gchar * nonce)
+{
+  gchar hex_a1[33] = { 0, };
+  gchar hex_a2[33] = { 0, };
+  GChecksum *md5_context = g_checksum_new (G_CHECKSUM_MD5);
+  const gchar *digest_string;
+  gchar *response = NULL;
+
+  if (strlen (a1) != 32)
+    goto done;
+
+  memcpy (hex_a1, a1, 32);
   g_checksum_reset (md5_context);
 
   /* compute A2 */
@@ -576,6 +589,8 @@ auth_digest_compute_response_md5 (const gchar * method, const gchar * realm,
 
   g_checksum_update (md5_context, (const guchar *) hex_a2, 32);
   response = g_strdup (g_checksum_get_string (md5_context));
+
+done:
   g_checksum_free (md5_context);
 
   return response;
@@ -605,6 +620,7 @@ gst_rtsp_generate_digest_auth_response (const gchar * algorithm,
     const gchar * method, const gchar * realm, const gchar * username,
     const gchar * password, const gchar * uri, const gchar * nonce)
 {
+  gchar *ret = NULL;
   g_return_val_if_fail (method != NULL, NULL);
   g_return_val_if_fail (realm != NULL, NULL);
   g_return_val_if_fail (username != NULL, NULL);
@@ -612,9 +628,42 @@ gst_rtsp_generate_digest_auth_response (const gchar * algorithm,
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (nonce != NULL, NULL);
 
+  if (algorithm == NULL || g_ascii_strcasecmp (algorithm, "md5") == 0) {
+    gchar *a1 = auth_digest_compute_a1_md5 (realm, username, password);
+    ret = auth_digest_compute_response_md5 (method, a1, uri, nonce);
+    g_free (a1);
+  }
+
+  return ret;
+}
+
+/**
+ * gst_rtsp_generate_digest_auth_response_from_md5:
+ * @algorithm: (allow-none): Hash algorithm to use, or %NULL for MD5
+ * @method: Request method, e.g. PLAY
+ * @md5: The md5 sum of username:realm:password
+ * @uri: Original request URI
+ * @nonce: Nonce
+ *
+ * Calculates the digest auth response from the values given by the server and
+ * the md5sum. See RFC2069 for details.
+ *
+ * This function is useful when the passwords are not stored in clear text,
+ * but instead in the same format as the .htdigest file.
+ *
+ * Currently only supported algorithm "md5".
+ *
+ * Returns: Authentication response or %NULL if unsupported
+ *
+ * Since: 1.16
+ */
+gchar *
+gst_rtsp_generate_digest_auth_response_from_md5 (const gchar * algorithm,
+    const gchar * method, const gchar * md5, const gchar * uri,
+    const gchar * nonce)
+{
   if (algorithm == NULL || g_ascii_strcasecmp (algorithm, "md5") == 0)
-    return auth_digest_compute_response_md5 (method, realm, username, password,
-        uri, nonce);
+    return auth_digest_compute_response_md5 (method, md5, uri, nonce);
 
   return NULL;
 }

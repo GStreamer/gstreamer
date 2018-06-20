@@ -1704,6 +1704,7 @@ gst_rtsp_options_from_text
 gst_rtsp_find_header_field
 gst_rtsp_find_method
 gst_rtsp_generate_digest_auth_response
+gst_rtsp_generate_digest_auth_response_from_md5
 <SUBSECTION Standard>
 GST_TYPE_RTSP_AUTH_METHOD
 GST_TYPE_RTSP_EVENT
