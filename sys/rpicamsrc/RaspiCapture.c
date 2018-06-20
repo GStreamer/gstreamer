@@ -1268,9 +1268,8 @@ raspi_capture_set_format_and_start(RASPIVID_STATE *state)
    return status;
 
 error:
-
    if (camera)
-      mmal_component_destroy(camera);
+      mmal_component_disable(camera);
 
    return status;
 }
