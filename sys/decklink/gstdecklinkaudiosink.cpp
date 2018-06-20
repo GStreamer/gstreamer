@@ -722,7 +722,7 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         // or are not started yet and there's nothing we can do at this point
         GST_INFO_OBJECT (self,
             "Ignoring scheduling error 0x%08x because we're not started yet"
-            " or not anymore", ret);
+            " or not anymore", (guint) ret);
         flow_ret = GST_FLOW_OK;
         break;
       }
