@@ -454,10 +454,12 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
   src->increase_blocksize_count = 0;
 
   g_cancellable_reset (src->cancellable);
+  g_mutex_lock (&src->mutex);
   if (src->input_stream) {
     g_object_unref (src->input_stream);
     src->input_stream = NULL;
   }
+  g_mutex_unlock (&src->mutex);
 
   gst_caps_replace (&src->src_caps, NULL);
   g_free (src->iradio_name);
@@ -1519,6 +1521,7 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
   return TRUE;
 }
 
+/* Lock taken */
 static GstFlowReturn
 gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
 {
@@ -1526,6 +1529,7 @@ gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
   GError *error = NULL;
 
   g_return_val_if_fail (src->msg != NULL, GST_FLOW_ERROR);
+  g_assert (src->input_stream == NULL);
 
   src->input_stream =
       soup_session_send (src->session, src->msg, src->cancellable, &error);
