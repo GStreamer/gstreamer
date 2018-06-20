@@ -67,12 +67,14 @@ struct _GstRTSPAuthPrivate
   GstRTSPToken *default_token;
   GstRTSPMethod methods;
   GstRTSPAuthMethod auth_methods;
+  gchar *realm;
 };
 
 typedef struct
 {
   GstRTSPToken *token;
   gchar *pass;
+  gchar *md5_pass;
 } GstRTSPDigestEntry;
 
 typedef struct
@@ -88,6 +90,7 @@ gst_rtsp_digest_entry_free (GstRTSPDigestEntry * entry)
 {
   gst_rtsp_token_unref (entry->token);
   g_free (entry->pass);
+  g_free (entry->md5_pass);
   g_free (entry);
 }
 
@@ -195,6 +198,7 @@ gst_rtsp_auth_init (GstRTSPAuth * auth)
   /* bitwise or of all methods that need authentication */
   priv->methods = 0;
   priv->auth_methods = GST_RTSP_AUTH_BASIC;
+  priv->realm = g_strdup ("GStreamer RTSP Server");
 }
 
 static void
@@ -213,6 +217,7 @@ gst_rtsp_auth_finalize (GObject * obj)
   g_hash_table_unref (priv->digest);
   g_hash_table_unref (priv->nonces);
   g_mutex_clear (&priv->lock);
+  g_free (priv->realm);
 
   G_OBJECT_CLASS (gst_rtsp_auth_parent_class)->finalize (obj);
 }
@@ -565,6 +570,99 @@ gst_rtsp_auth_add_digest (GstRTSPAuth * auth, const gchar * user,
   g_mutex_unlock (&priv->lock);
 }
 
+/* With auth lock taken */
+static gboolean
+update_digest_cb (gchar *key, GstRTSPDigestEntry *entry, GHashTable *digest)
+{
+  g_hash_table_replace (digest, key, entry);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_auth_parse_htdigest:
+ * @path: (type filename): Path to the htdigest file
+ * @token: (transfer none): authorisation token
+ *
+ * Parse the contents of the file at @path and enable the privileges
+ * listed in @token for the users it describes.
+ *
+ * The format of the file is expected to match the format described by
+ * <https://en.wikipedia.org/wiki/Digest_access_authentication#The_.htdigest_file>,
+ * as output by the `htdigest` command.
+ *
+ * Returns: %TRUE if the file was successfully parsed, %FALSE otherwise.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtsp_auth_parse_htdigest (GstRTSPAuth *auth, const gchar *path,
+    GstRTSPToken *token)
+{
+  GstRTSPAuthPrivate *priv;
+  gboolean ret = FALSE;
+  gchar *line = NULL;
+  gchar *eol = NULL;
+  gchar *contents = NULL;
+  GError *error = NULL;
+  GHashTable *new_entries = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) gst_rtsp_digest_entry_free);
+
+
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), FALSE);
+  g_return_val_if_fail (path != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RTSP_TOKEN (token), FALSE);
+
+  priv = auth->priv;
+  if (!g_file_get_contents (path, &contents, NULL, &error)) {
+    GST_ERROR_OBJECT(auth, "Could not parse htdigest: %s", error->message);
+    goto done;
+  }
+
+  for (line = contents; line && *line; line = eol ? eol + 1 : NULL) {
+    GstRTSPDigestEntry *entry;
+    gchar **strv;
+    eol = strchr (line, '\n');
+
+    if (eol)
+      *eol = '\0';
+
+    strv = g_strsplit (line, ":", -1);
+
+    if (!(strv[0] && strv[1] && strv[2] && !strv[3])) {
+      GST_ERROR_OBJECT (auth, "Invalid htdigest format");
+      g_strfreev (strv);
+      goto done;
+    }
+
+    if (strlen (strv[2]) != 32) {
+      GST_ERROR_OBJECT (auth, "Invalid htdigest format, hash is expected to be 32 characters long");
+      g_strfreev (strv);
+      goto done;
+    }
+
+    entry = g_new0 (GstRTSPDigestEntry, 1);
+    entry->token = gst_rtsp_token_ref (token);
+    entry->md5_pass = g_strdup (strv[2]);
+    g_hash_table_replace (new_entries, g_strdup (strv[0]), entry);
+    g_strfreev (strv);
+  }
+
+  ret = TRUE;
+
+  /* We only update digest if the file was entirely valid */
+  g_mutex_lock (&priv->lock);
+  g_hash_table_foreach_steal (new_entries, (GHRFunc) update_digest_cb, priv->digest);
+  g_mutex_unlock (&priv->lock);
+
+done:
+  if (error)
+    g_clear_error (&error);
+  g_free(contents);
+  g_hash_table_unref (new_entries);
+  return ret;
+}
+
 /**
  * gst_rtsp_auth_remove_digest:
  * @auth: a #GstRTSPAuth
@@ -709,10 +807,17 @@ default_digest_auth (GstRTSPAuth * auth, GstRTSPContext * ctx,
   if (nonce_entry->client && nonce_entry->client != ctx->client)
     goto out;
 
-  expected_response =
-      gst_rtsp_generate_digest_auth_response (NULL,
-      gst_rtsp_method_as_text (ctx->method), "GStreamer RTSP Server", user,
-      digest_entry->pass, uri, nonce);
+  if (digest_entry->md5_pass) {
+    expected_response = gst_rtsp_generate_digest_auth_response_from_md5 (NULL,
+        gst_rtsp_method_as_text (ctx->method), digest_entry->md5_pass,
+        uri, nonce);
+  } else {
+    expected_response =
+        gst_rtsp_generate_digest_auth_response (NULL,
+        gst_rtsp_method_as_text (ctx->method), realm, user,
+        digest_entry->pass, uri, nonce);
+  }
+
   if (!expected_response || strcmp (response, expected_response) != 0)
     goto out;
 
@@ -794,8 +899,10 @@ static void
 default_generate_authenticate_header (GstRTSPAuth * auth, GstRTSPContext * ctx)
 {
   if (auth->priv->auth_methods & GST_RTSP_AUTH_BASIC) {
+    gchar *auth_header = g_strdup_printf("Basic realm=\"%s\"", auth->priv->realm);
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-        "Basic realm=\"GStreamer RTSP Server\"");
+        auth_header);
+    g_free (auth_header);
   }
 
   if (auth->priv->auth_methods & GST_RTSP_AUTH_DIGEST) {
@@ -807,7 +914,7 @@ default_generate_authenticate_header (GstRTSPAuth * auth, GstRTSPContext * ctx)
 
     auth_header =
         g_strdup_printf
-        ("Digest realm=\"GStreamer RTSP Server\", nonce=\"%s\"", nonce_value);
+        ("Digest realm=\"%s\", nonce=\"%s\"", auth->priv->realm, nonce_value);
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
         auth_header);
     g_free (auth_header);
@@ -1116,4 +1223,38 @@ gst_rtsp_auth_make_basic (const gchar * user, const gchar * pass)
   g_free (user_pass);
 
   return result;
+}
+
+/**
+ * gst_rtsp_auth_set_realm:
+ *
+ * Set the @realm of @auth
+ *
+ * Since: 1.16
+ */
+void
+gst_rtsp_auth_set_realm         (GstRTSPAuth *auth, const gchar *realm)
+{
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+  g_return_if_fail (realm != NULL);
+
+  if (auth->priv->realm)
+    g_free (auth->priv->realm);
+
+  auth->priv->realm = g_strdup (realm);
+}
+
+/**
+ * gst_rtsp_auth_get_realm:
+ *
+ * Returns: (transfer full): the @realm of @auth
+ *
+ * Since: 1.16
+ */
+gchar *
+gst_rtsp_auth_get_realm         (GstRTSPAuth *auth)
+{
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), NULL);
+
+  return g_strdup(auth->priv->realm);
 }

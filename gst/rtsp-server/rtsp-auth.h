@@ -135,6 +135,14 @@ GstRTSPAuthMethod   gst_rtsp_auth_get_supported_methods (GstRTSPAuth *auth);
 GST_RTSP_SERVER_API
 gboolean            gst_rtsp_auth_check             (const gchar *check);
 
+GST_RTSP_SERVER_API
+gboolean            gst_rtsp_auth_parse_htdigest    (GstRTSPAuth *auth, const gchar *path, GstRTSPToken *token);
+
+GST_RTSP_SERVER_API
+void                gst_rtsp_auth_set_realm         (GstRTSPAuth *auth, const gchar *realm);
+
+GST_RTSP_SERVER_API
+gchar *             gst_rtsp_auth_get_realm         (GstRTSPAuth *auth);
 
 /* helpers */
 

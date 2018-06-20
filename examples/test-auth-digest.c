@@ -21,6 +21,18 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+static gchar *htdigest_path = NULL;
+static gchar *realm = NULL;
+
+static GOptionEntry entries[] = {
+  {"htdigest-path", 'h', 0, G_OPTION_ARG_STRING, &htdigest_path,
+      "Path to an htdigest file to parse (default: None)", "PATH"},
+  {"realm", 'r', 0, G_OPTION_ARG_STRING, &realm,
+      "Authentication realm (default: None)", "REALM"},
+  {NULL}
+};
+
+
 static gboolean
 remove_func (GstRTSPSessionPool * pool, GstRTSPSession * session,
     GstRTSPServer * server)
@@ -63,8 +75,19 @@ main (int argc, char *argv[])
   GstRTSPMediaFactory *factory;
   GstRTSPAuth *auth;
   GstRTSPToken *token;
+  GOptionContext *optctx;
+  GError *error = NULL;
 
-  gst_init (&argc, &argv);
+  optctx = g_option_context_new (NULL);
+  g_option_context_add_main_entries (optctx, entries, NULL);
+  g_option_context_add_group (optctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (optctx, &argc, &argv, &error)) {
+    g_printerr ("Error parsing options: %s\n", error->message);
+    g_option_context_free (optctx);
+    g_clear_error (&error);
+    return -1;
+  }
+  g_option_context_free (optctx);
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -142,6 +165,23 @@ main (int argc, char *argv[])
   gst_rtsp_auth_add_digest (auth, "user", "password", token);
   gst_rtsp_token_unref (token);
 
+  if (htdigest_path) {
+    token =
+        gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+        "user", NULL);
+
+    if (!gst_rtsp_auth_parse_htdigest (auth, htdigest_path, token)) {
+      g_printerr ("Could not parse htdigest at %s\n", htdigest_path);
+      gst_rtsp_token_unref (token);
+      goto failed;
+    }
+
+    gst_rtsp_token_unref (token);
+  }
+
+  if (realm)
+    gst_rtsp_auth_set_realm (auth, realm);
+
   /* make admin token */
   token =
       gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
@@ -171,6 +211,10 @@ main (int argc, char *argv[])
   g_print ("stream with user:password ready at rtsp://127.0.0.1:8554/test\n");
   g_print ("stream with admin:power ready at rtsp://127.0.0.1:8554/test\n");
   g_print ("stream with admin2:power2 ready at rtsp://127.0.0.1:8554/test2\n");
+
+  if (htdigest_path)
+    g_print ("stream with htdigest users ready at rtsp://127.0.0.1:8554/test\n");
+
   g_main_loop_run (loop);
 
   return 0;
