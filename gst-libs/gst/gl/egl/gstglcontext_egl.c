@@ -152,6 +152,249 @@ gst_gl_context_egl_choose_format (GstGLContext * context, GError ** error)
   return TRUE;
 }
 
+static void
+gst_gl_context_egl_dump_config (GstGLContextEGL * egl, EGLConfig config)
+{
+  int id;
+  int buffer_type;
+
+  if (!egl->egl_display)
+    return;
+
+  {
+    int native_visual_id, native_visual_type;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_CONFIG_ID, &id))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_NATIVE_VISUAL_ID,
+            &native_visual_id))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_NATIVE_VISUAL_TYPE,
+            &native_visual_type))
+      return;
+    GST_DEBUG_OBJECT (egl, "dumping EGLConfig %p with id 0x%x and "
+        "native visual id 0x%x of type 0x%x", config, id, native_visual_id,
+        native_visual_type);
+  }
+
+  {
+#define MAX_CONFORMANT 8
+    int conformant, i = 0;
+    const char *conformant_values[MAX_CONFORMANT] = { NULL, };
+    char *conformant_str = NULL;;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_CONFORMANT,
+            &conformant))
+      return;
+
+    if (conformant & EGL_OPENGL_BIT)
+      conformant_values[i++] = "OpenGL";
+    if (conformant & EGL_OPENGL_ES_BIT)
+      conformant_values[i++] = "OpenGL ES";
+    if (conformant & EGL_OPENGL_ES2_BIT)
+      conformant_values[i++] = "OpenGL ES 2.x";
+    if (conformant & EGL_OPENGL_ES3_BIT)
+      conformant_values[i++] = "OpenGL ES 3.x";
+    if (conformant & EGL_OPENVG_BIT)
+      conformant_values[i++] = "OpenVG";
+
+    /* bad things have happened if this fails: we haven't allocated enough
+     * space to hold all the values */
+    g_assert (i < MAX_CONFORMANT);
+
+    conformant_str = g_strjoinv ("|", (char **) conformant_values);
+    GST_DEBUG_OBJECT (egl, "Conformant for %s", conformant_str);
+    g_free (conformant_str);
+#undef MAX_CONFORMANT
+  }
+
+  {
+#define MAX_RENDERABLE 8
+    int renderable, i = 0;
+    const char *renderable_values[MAX_RENDERABLE] = { NULL, };
+    char *renderable_str = NULL;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_RENDERABLE_TYPE,
+            &renderable))
+      return;
+
+    if (renderable & EGL_OPENGL_BIT)
+      renderable_values[i++] = "OpenGL";
+    if (renderable & EGL_OPENGL_ES_BIT)
+      renderable_values[i++] = "OpenGL ES";
+    if (renderable & EGL_OPENGL_ES2_BIT)
+      renderable_values[i++] = "OpenGL ES 2.x";
+    if (renderable & EGL_OPENGL_ES3_BIT)
+      renderable_values[i++] = "OpenGL ES 3.x";
+    if (renderable & EGL_OPENVG_BIT)
+      renderable_values[i++] = "OpenVG";
+
+    /* bad things have happened if this fails: we haven't allocated enough
+     * space to hold all the values */
+    g_assert (i < MAX_RENDERABLE);
+
+    renderable_str = g_strjoinv ("|", (char **) renderable_values);
+    GST_DEBUG_OBJECT (egl, "Renderable for %s", renderable_str);
+    g_free (renderable_str);
+#undef MAX_RENDERABLE
+  }
+
+  {
+#define MAX_SURFACE 8
+    int surface, i = 0;
+    const char *surface_values[MAX_SURFACE] = { NULL, };
+    char *surface_str = NULL;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_SURFACE_TYPE,
+            &surface))
+      return;
+
+    if (surface & EGL_WINDOW_BIT)
+      surface_values[i++] = "window";
+    if (surface & EGL_PBUFFER_BIT)
+      surface_values[i++] = "pbuffer";
+    if (surface & EGL_MULTISAMPLE_RESOLVE_BOX_BIT)
+      surface_values[i++] = "multisample-resolve-box";
+    if (surface & EGL_SWAP_BEHAVIOR_PRESERVED_BIT)
+      surface_values[i++] = "swap-behaviour-preserved";
+    if (surface & EGL_VG_ALPHA_FORMAT_PRE_BIT)
+      surface_values[i++] = "vg-alpha-format-pre";
+    if (surface & EGL_VG_COLORSPACE_LINEAR_BIT)
+      surface_values[i++] = "vg-colorspace-linear";
+
+    /* bad things have happened if this fails: we haven't allocated enough
+     * space to hold all the values */
+    g_assert (i < MAX_SURFACE);
+
+    surface_str = g_strjoinv ("|", (char **) surface_values);
+    GST_DEBUG_OBJECT (egl, "Surface for %s", surface_str);
+    g_free (surface_str);
+#undef MAX_RENDERABLE
+  }
+
+  {
+#define MAX_CAVEAT 8
+    int caveat, i = 0;
+    const char *caveat_values[MAX_CAVEAT] = { NULL, };
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_CONFIG_CAVEAT,
+            &caveat))
+      return;
+    if (caveat == EGL_SLOW_CONFIG) {
+      caveat_values[i++] = "slow";
+    } else if (caveat == EGL_NON_CONFORMANT_CONFIG) {
+      caveat_values[i++] = "non-conformant";
+    }
+    if (i > 0) {
+      char *caveat_str = g_strjoinv ("|", (char **) caveat_values);
+      GST_DEBUG_OBJECT (egl, "Advertised as %s", caveat_str);
+      g_free (caveat_str);
+    }
+#undef MAX_CAVEAT
+  }
+
+  if (!eglGetConfigAttrib (egl->egl_display, config, EGL_COLOR_BUFFER_TYPE,
+          &buffer_type))
+    return;
+  if (buffer_type == EGL_RGB_BUFFER) {
+    int red, blue, green, alpha;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_RED_SIZE, &red))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_GREEN_SIZE, &green))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_BLUE_SIZE, &blue))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_ALPHA_SIZE, &alpha))
+      return;
+
+    GST_DEBUG_OBJECT (egl, "[R, G, B, A] = [%i, %i, %i, %i]", red, green, blue,
+        alpha);
+  } else if (buffer_type == EGL_LUMINANCE_BUFFER) {
+    int luminance, alpha;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_LUMINANCE_SIZE,
+            &luminance))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_ALPHA_SIZE, &alpha))
+      return;
+    GST_DEBUG_OBJECT (egl, "[L, A] = [%i, %i]", luminance, alpha);
+  } else {
+    GST_WARNING_OBJECT (egl, "unknown EGL_COLOR_BUFFER_TYPE value %x",
+        buffer_type);
+    return;
+  }
+  {
+    int depth, stencil;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_DEPTH_SIZE, &depth))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_STENCIL_SIZE,
+            &stencil))
+      return;
+    GST_DEBUG_OBJECT (egl, "[D, S] = [%i, %i]", depth, stencil);
+  }
+  {
+    int min, max;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_MIN_SWAP_INTERVAL,
+            &min))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_MAX_SWAP_INTERVAL,
+            &max))
+      return;
+    GST_DEBUG_OBJECT (egl, "Swap interval range is [%i, %i]", min, max);
+  }
+  {
+    int width, height, pixels;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_MAX_PBUFFER_WIDTH,
+            &width))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_MAX_PBUFFER_HEIGHT,
+            &height))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_MAX_PBUFFER_PIXELS,
+            &pixels))
+      return;
+    GST_DEBUG_OBJECT (egl,
+        "PBuffer maximum dimensions are [%i, %i]. Max pixels are %i", width,
+        height, pixels);
+  }
+  {
+    int sample_buffers, samples_per_pixel;
+
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_SAMPLE_BUFFERS,
+            &sample_buffers))
+      return;
+    if (!eglGetConfigAttrib (egl->egl_display, config, EGL_SAMPLES,
+            &samples_per_pixel))
+      return;
+    GST_DEBUG_OBJECT (egl, "Multisample buffers: %i and Samples per pixel: %i",
+        sample_buffers, samples_per_pixel);
+  }
+}
+
+static void
+gst_gl_context_egl_dump_all_configs (GstGLContextEGL * egl)
+{
+  int i, n;
+  EGLConfig *configs;
+
+  if (!eglGetConfigs (egl->egl_display, NULL, 0, &n)) {
+    GST_WARNING_OBJECT (egl, "Failed to get number of EGLConfig's");
+    return;
+  }
+
+  configs = g_new0 (EGLConfig, n);
+  if (!eglGetConfigs (egl->egl_display, configs, n, &n)) {
+    GST_WARNING_OBJECT (egl, "Failed to get the list of EGLConfig's");
+    goto out;
+  }
+
+  for (i = 0; i < n; i++)
+    gst_gl_context_egl_dump_config (egl, configs[i]);
+
+out:
+  g_free (configs);
+}
+
 static gboolean
 gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
     gint major, GError ** error)
@@ -160,30 +403,35 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   EGLint numConfigs;
   gint i = 0;
   EGLint config_attrib[20];
+  EGLint egl_api = 0;
+
+  gst_gl_context_egl_dump_all_configs (egl);
 
   create_context =
       gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
   /* silence unused warnings */
   (void) create_context;
 
-  config_attrib[i++] = EGL_SURFACE_TYPE;
-  config_attrib[i++] = EGL_WINDOW_BIT;
-  config_attrib[i++] = EGL_RENDERABLE_TYPE;
   if (gl_api & GST_GL_API_GLES2) {
     if (major == 3) {
 #if defined(EGL_KHR_create_context)
       if (create_context) {
-        config_attrib[i++] = EGL_OPENGL_ES3_BIT_KHR;
+        egl_api = EGL_OPENGL_ES3_BIT_KHR;
       } else
 #endif
       {
         return FALSE;
       }
     } else {
-      config_attrib[i++] = EGL_OPENGL_ES2_BIT;
+      egl_api = EGL_OPENGL_ES2_BIT;
     }
   } else
-    config_attrib[i++] = EGL_OPENGL_BIT;
+    egl_api = EGL_OPENGL_BIT;
+
+  config_attrib[i++] = EGL_SURFACE_TYPE;
+  config_attrib[i++] = EGL_WINDOW_BIT;
+  config_attrib[i++] = EGL_RENDERABLE_TYPE;
+  config_attrib[i++] = egl_api;
 #if defined(USE_EGL_RPI) && GST_GL_HAVE_WINDOW_WAYLAND
   /* The configurations with a=0 seems to be buggy whereas
    * it works when using dispmanx directly */
@@ -210,6 +458,9 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
         gst_egl_get_error_string (eglGetError ()));
     goto failure;
   }
+
+  GST_DEBUG_OBJECT (egl, "chosen EGLConfig");
+  gst_gl_context_egl_dump_config (egl, egl->egl_config);
 
   return TRUE;
 
