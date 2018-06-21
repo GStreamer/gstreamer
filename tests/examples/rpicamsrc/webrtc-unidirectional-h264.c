@@ -15,6 +15,7 @@
 
 #define RTP_PAYLOAD_TYPE "96"
 #define SOUP_HTTP_PORT 57778
+#define STUN_SERVER "stun.l.google.com:19302"
 
 
 
@@ -150,7 +151,8 @@ const gchar *html_source = " \n \
  \n \
       window.onload = function() { \n \
         var vidstream = document.getElementById(\"stream\"); \n \
-        playStream(vidstream, null, null, null, null, function (errmsg) { console.error(errmsg); }); \n \
+        var config = { 'iceServers': [{ 'urls': 'stun:" STUN_SERVER "' }] }; \n\
+        playStream(vidstream, null, null, null, config, function (errmsg) { console.error(errmsg); }); \n \
       }; \n \
  \n \
     </script> \n \
@@ -182,8 +184,8 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       G_CALLBACK (soup_websocket_message_cb), (gpointer) receiver_entry);
 
   error = NULL;
-  receiver_entry->pipeline = gst_parse_launch ("webrtcbin name=webrtcbin "
-      "rpicamsrc bitrate=300000 annotation-mode=12 ! video/x-h264,profile=baseline,width=640,height=480 ! queue max-size-time=100000000 ! h264parse ! "
+  receiver_entry->pipeline = gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://" STUN_SERVER " "
+      "rpicamsrc bitrate=600000 annotation-mode=12 preview=false ! video/x-h264,profile=constrained-baseline,width=640,height=360,level=3.0 ! queue max-size-time=100000000 ! h264parse ! "
       "rtph264pay config-interval=-1 name=payloader ! "
       "application/x-rtp,media=video,encoding-name=H264,payload="
       RTP_PAYLOAD_TYPE " ! webrtcbin. ", &error);
