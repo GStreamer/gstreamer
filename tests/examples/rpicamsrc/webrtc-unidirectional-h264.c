@@ -56,13 +56,6 @@ struct _ReceiverEntry
 
   GstElement *pipeline;
   GstElement *webrtcbin;
-  GstElement *payloader;
-
-  GCond profile_level_id_cond;
-  GMutex profile_level_id_mutex;
-  gchar *profile_level_id;
-
-  gboolean shutting_down;
 };
 
 
@@ -176,13 +169,9 @@ create_receiver_entry (SoupWebsocketConnection * connection)
 {
   GError *error;
   ReceiverEntry *receiver_entry;
-  GstPad *payloader_srcpad;
 
   receiver_entry = g_slice_alloc0 (sizeof (ReceiverEntry));
   receiver_entry->connection = connection;
-
-  g_cond_init (&receiver_entry->profile_level_id_cond);
-  g_mutex_init (&receiver_entry->profile_level_id_mutex);
 
   g_object_ref (G_OBJECT (connection));
 
@@ -203,16 +192,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
 
   receiver_entry->webrtcbin =
       gst_bin_get_by_name (GST_BIN (receiver_entry->pipeline), "webrtcbin");
-  receiver_entry->payloader =
-      gst_bin_get_by_name (GST_BIN (receiver_entry->pipeline), "payloader");
   g_assert (receiver_entry->webrtcbin != NULL);
-  g_assert (receiver_entry->payloader != NULL);
-
-  payloader_srcpad =
-      gst_element_get_static_pad (receiver_entry->payloader, "src");
-  gst_pad_add_probe (payloader_srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      payloader_caps_event_probe_cb, (gpointer) receiver_entry, NULL);
-  gst_object_unref (GST_OBJECT (payloader_srcpad));
 
   g_signal_connect (receiver_entry->webrtcbin, "on-negotiation-needed",
       G_CALLBACK (on_negotiation_needed_cb), (gpointer) receiver_entry);
@@ -236,23 +216,13 @@ destroy_receiver_entry (gpointer receiver_entry_ptr)
 
   g_assert (receiver_entry != NULL);
 
-  g_mutex_lock (&receiver_entry->profile_level_id_mutex);
-  receiver_entry->shutting_down = TRUE;
-  g_cond_signal (&receiver_entry->profile_level_id_cond);
-  g_mutex_unlock (&receiver_entry->profile_level_id_mutex);
-
   if (receiver_entry->pipeline != NULL) {
     gst_element_set_state (GST_ELEMENT (receiver_entry->pipeline),
         GST_STATE_NULL);
 
     gst_object_unref (GST_OBJECT (receiver_entry->webrtcbin));
-    gst_object_unref (GST_OBJECT (receiver_entry->payloader));
     gst_object_unref (GST_OBJECT (receiver_entry->pipeline));
   }
-
-  g_cond_clear (&receiver_entry->profile_level_id_cond);
-  g_mutex_clear (&receiver_entry->profile_level_id_mutex);
-  g_free (receiver_entry->profile_level_id);
 
   if (receiver_entry->connection != NULL)
     g_object_unref (G_OBJECT (receiver_entry->connection));
@@ -261,48 +231,13 @@ destroy_receiver_entry (gpointer receiver_entry_ptr)
 }
 
 
-GstPadProbeReturn
-payloader_caps_event_probe_cb (G_GNUC_UNUSED GstPad * pad,
-    GstPadProbeInfo * info, gpointer user_data)
-{
-  ReceiverEntry *receiver_entry = (ReceiverEntry *) user_data;
-  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
-    gchar const *profile_level_id;
-    GstStructure *s;
-    GstCaps *caps;
-
-    caps = NULL;
-    gst_event_parse_caps (event, &caps);
-
-    s = gst_caps_get_structure (caps, 0);
-    profile_level_id = gst_structure_get_string (s, "profile-level-id");
-    g_assert (profile_level_id != NULL);
-
-    g_mutex_lock (&receiver_entry->profile_level_id_mutex);
-
-    g_free (receiver_entry->profile_level_id);
-    receiver_entry->profile_level_id = g_strdup (profile_level_id);
-
-    g_cond_signal (&receiver_entry->profile_level_id_cond);
-
-    g_mutex_unlock (&receiver_entry->profile_level_id_mutex);
-  }
-
-  return GST_PAD_PROBE_OK;
-}
-
-
 void
 on_offer_created_cb (GstPromise * promise, gpointer user_data)
 {
-  gchar *fmtp_value;
   gchar *sdp_string;
   gchar *json_string;
   JsonObject *sdp_json;
   JsonObject *sdp_data_json;
-  GstSDPMedia *sdp_media;
   GstStructure const *reply;
   GstPromise *local_desc_promise;
   GstWebRTCSessionDescription *offer = NULL;
@@ -312,13 +247,6 @@ on_offer_created_cb (GstPromise * promise, gpointer user_data)
   gst_structure_get (reply, "offer", GST_TYPE_WEBRTC_SESSION_DESCRIPTION,
       &offer, NULL);
   gst_promise_unref (promise);
-
-  fmtp_value = g_strdup_printf (RTP_PAYLOAD_TYPE " profile-level-id=%s",
-      receiver_entry->profile_level_id);
-  sdp_media =
-      (GstSDPMedia *) & g_array_index (offer->sdp->medias, GstSDPMedia, 0);
-  gst_sdp_media_add_attribute (sdp_media, "fmtp", fmtp_value);
-  g_free (fmtp_value);
 
   local_desc_promise = gst_promise_new ();
   g_signal_emit_by_name (receiver_entry->webrtcbin, "set-local-description",
@@ -350,23 +278,8 @@ on_offer_created_cb (GstPromise * promise, gpointer user_data)
 void
 on_negotiation_needed_cb (GstElement * webrtcbin, gpointer user_data)
 {
-  gboolean exit_early;
   GstPromise *promise;
   ReceiverEntry *receiver_entry = (ReceiverEntry *) user_data;
-
-  g_mutex_lock (&receiver_entry->profile_level_id_mutex);
-
-  while ((receiver_entry->profile_level_id == NULL)
-      && !receiver_entry->shutting_down)
-    g_cond_wait (&receiver_entry->profile_level_id_cond,
-        &receiver_entry->profile_level_id_mutex);
-
-  exit_early = receiver_entry->shutting_down;
-
-  g_mutex_unlock (&receiver_entry->profile_level_id_mutex);
-
-  if (exit_early)
-    return;
 
   g_print ("Creating negotiation offer\n");
 
