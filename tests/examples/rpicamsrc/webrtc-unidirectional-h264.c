@@ -132,10 +132,13 @@ const gchar *html_source = " \n \
  \n \
  \n \
       function playStream(videoElement, hostname, port, path, configuration, reportErrorCB) { \n \
-        var wsHost = (hostname != undefined) ? hostname : window.location.hostname; \n \
-        var wsPort = (port != undefined) ? port : 57778; \n \
+        var l = window.location;\n \
+        var wsHost = (hostname != undefined) ? hostname : l.hostname; \n \
+        var wsPort = (port != undefined) ? port : l.port; \n \
         var wsPath = (path != undefined) ? path : \"ws\"; \n \
-        var wsUrl = \"ws://\" + wsHost + \":\" + wsPort + \"/\" + wsPath; \n \
+        if (wsPort) \n\
+          wsPort = \":\" + wsPort; \n\
+        var wsUrl = \"ws://\" + wsHost + wsPort + \"/\" + wsPath; \n \
  \n \
         html5VideoElement = videoElement; \n \
         webrtcConfiguration = configuration; \n \
