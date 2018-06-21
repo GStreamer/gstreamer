@@ -1,3 +1,4 @@
+#include <locale.h>
 #include <glib.h>
 #include <glib-unix.h>
 #include <gst/gst.h>
@@ -629,6 +630,7 @@ main (int argc, char *argv[])
   SoupServer *soup_server;
   GHashTable *receiver_entry_table;
 
+  setlocale (LC_ALL, "");
   gst_init (&argc, &argv);
 
   receiver_entry_table =
