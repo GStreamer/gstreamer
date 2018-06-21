@@ -1,7 +1,7 @@
 /*
  *  libzvbi -- Miscellaneous cows and chickens
  *
- *  Copyright (C) 2000-2003 Iñaki García Etxebarria
+ *  Copyright (C) 2000-2003 IÃ±aki GarcÃ­a Etxebarria
  *  Copyright (C) 2002-2007 Michael H. Schimek
  *
  *  This library is free software; you can redistribute it and/or
