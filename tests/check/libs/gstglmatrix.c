@@ -243,28 +243,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_matrix_vertex_y_invert)
 {
+  GstBuffer *buffer = gst_buffer_new ();
+  GstVideoAffineTransformationMeta *aff_meta;
+
   float y_invert[] = {
     1., 0., 0., 0.,
     0., -1., 0., 0.,
     0., 0., 1., 0.,
     0., 0., 0., 1.,
-  };
-
-  /* These two matrices are copied from
-   * gst_gl_set_affine_transformation_meta_from_ndc{,_ext}() gstglutils.c
-   * in ext/gl and gst-libs/gst/gl */
-  static const gfloat from_ndc_matrix[] = {
-    0.5, 0.0, 0.0, 0.5,
-    0.0, 0.5, 0.0, 0.5,
-    0.0, 0.0, 0.5, 0.5,
-    0.0, 0.0, 0.0, 1.0,
-  };
-
-  static const gfloat to_ndc_matrix[] = {
-    2.0, 0.0, 0.0, -1.0,
-    0.0, 2.0, 0.0, -1.0,
-    0.0, 0.0, 2.0, -1.0,
-    0.0, 0.0, 0.0, 1.0,
   };
 
   float v[] = { 1., 1., 1., 1. };
@@ -274,8 +260,8 @@ GST_START_TEST (test_matrix_vertex_y_invert)
 
   /* The y_invert matrix but with a coordinate space of [0, 1]^3 instead
    * of [-1, 1]^3 */
-  float y_invert_0_1[16] = { 0., };
-  float m1[16] = { 0., };
+
+  aff_meta = gst_buffer_add_video_affine_transformation_meta (buffer);
 
   GST_DEBUG ("y-invert");
   debug_matrix (y_invert);
@@ -291,14 +277,13 @@ GST_START_TEST (test_matrix_vertex_y_invert)
   }
 
   /* now test the [0, 1]^3 matrix and update the test values acoordingly */
+  gst_gl_set_affine_transformation_meta_from_ndc (aff_meta, y_invert);
   expected[1] = 0.;
-  gst_gl_multiply_matrix4 (from_ndc_matrix, y_invert, m1);
-  gst_gl_multiply_matrix4 (m1, to_ndc_matrix, y_invert_0_1);
 
   GST_DEBUG ("y-invert from ndc [-1,1]^3 to [0,1]^3");
-  debug_matrix (y_invert_0_1);
+  debug_matrix (aff_meta->matrix);
 
-  _matrix_mult_vertex4 (y_invert_0_1, v, res);
+  _matrix_mult_vertex4 (aff_meta->matrix, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
@@ -311,7 +296,7 @@ GST_START_TEST (test_matrix_vertex_y_invert)
   /* test vec4(1,0,1,1) -> vec4(1,1,1,1) */
   v[1] = 0.;
   expected[1] = 1.;
-  _matrix_mult_vertex4 (y_invert_0_1, v, res);
+  _matrix_mult_vertex4 (aff_meta->matrix, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
