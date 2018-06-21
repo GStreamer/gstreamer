@@ -22,7 +22,7 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use websocket::message::OwnedMessage;
 
-const STUN_SERVER: &'static str = "stun://stun.l.google.com:19302 ";
+const STUN_SERVER: &str = "stun://stun.l.google.com:19302 ";
 lazy_static! {
     static ref RTP_CAPS_OPUS: gst::GstRc<gst::CapsRef> = {
         gst::Caps::new_simple(
@@ -46,9 +46,9 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, PartialOrd, Eq, Debug, Clone, Ord)]
+#[derive(PartialEq, PartialOrd, Eq, Debug, Copy, Clone, Ord)]
 enum AppState {
-    AppStateErr = 1,
+    Error = 1,
     ServerConnected,
     ServerRegistering = 2000,
     ServerRegisteringError,
@@ -76,7 +76,7 @@ enum JsonMsg {
     },
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum MediaType {
     Audio,
     Video,
@@ -138,14 +138,14 @@ fn check_plugins() -> Result<(), Error> {
             missing.push(plugin_name)
         }
     }
-    if missing.len() > 0 {
+    if !missing.is_empty() {
         Err(MissingElements(missing))?
     } else {
         Ok(())
     }
 }
 
-fn send_sdp_offer(app_control: &AppControl, offer: gst_webrtc::WebRTCSessionDescription) {
+fn send_sdp_offer(app_control: &AppControl, offer: &gst_webrtc::WebRTCSessionDescription) {
     if app_control.app_state_cmp(
         AppState::PeerCallNegotiating,
         "Can't send offer, not in call",
@@ -162,7 +162,7 @@ fn send_sdp_offer(app_control: &AppControl, offer: gst_webrtc::WebRTCSessionDesc
 
 fn on_offer_created(
     app_control: &AppControl,
-    webrtc: gst::Element,
+    webrtc: &gst::Element,
     promise: &gst::Promise,
 ) -> Result<(), Error> {
     if !app_control.app_state_eq(
@@ -180,7 +180,7 @@ fn on_offer_created(
         .expect("Invalid argument");
     webrtc.emit("set-local-description", &[&offer, &None::<gst::Promise>])?;
 
-    send_sdp_offer(&app_control, offer);
+    send_sdp_offer(&app_control, &offer);
     Ok(())
 }
 
@@ -190,7 +190,7 @@ fn on_negotiation_needed(app_control: &AppControl, values: &[glib::Value]) -> Re
     let webrtc_clone = webrtc.clone();
     let app_control_clone = app_control.clone();
     let promise = gst::Promise::new_with_change_func(move |promise| {
-        on_offer_created(&app_control_clone, webrtc, promise).unwrap();
+        on_offer_created(&app_control_clone, &webrtc, promise).unwrap();
     });
     webrtc_clone.emit("create-offer", &[&None::<gst::Structure>, &promise])?;
     Ok(())
@@ -252,20 +252,21 @@ fn on_incoming_decodebin_stream(
 
     let caps = pad.get_current_caps().unwrap();
     let name = caps.get_structure(0).unwrap().get_name();
-    match if name.starts_with("video") {
+
+    let handled = if name.starts_with("video") {
         handle_media_stream(&pad, &pipe, MediaType::Video)
     } else if name.starts_with("audio") {
         handle_media_stream(&pad, &pipe, MediaType::Audio)
     } else {
         println!("Unknown pad {:?}, ignoring", pad);
         Ok(())
-    } {
-        Ok(()) => return None,
-        Err(err) => {
-            app_control.send_bus_error(format!("Error adding pad with caps {} {:?}", name, err));
-            return None;
-        }
     };
+
+    if let Err(err) = handled {
+        app_control.send_bus_error(&format!("Error adding pad with caps {} {:?}", name, err));
+    }
+
+    None
 }
 
 fn on_incoming_stream(
@@ -302,7 +303,7 @@ fn send_ice_candidate_message(app_control: &AppControl, values: &[glib::Value]) 
     let mlineindex = values[1].get::<u32>().expect("Invalid argument");
     let candidate = values[2].get::<String>().expect("Invalid argument");
     let message = serde_json::to_string(&JsonMsg::Ice {
-        candidate: candidate,
+        candidate,
         sdp_mline_index: mlineindex,
     }).unwrap();
     app_control.send_text_msg(message.to_string());
@@ -374,7 +375,7 @@ fn add_audio_source(pipeline: &gst::Pipeline, webrtcbin: &gst::Element) -> Resul
 impl AppControl {
     fn app_state_eq(&self, state: AppState, error_msg: &'static str) -> bool {
         if { self.0.lock().unwrap().app_state != state } {
-            self.send_bus_error(String::from(error_msg));
+            self.send_bus_error(error_msg);
             false
         } else {
             true
@@ -384,14 +385,14 @@ impl AppControl {
     fn app_state_cmp(&self, state: AppState, error_msg: &'static str) -> Ordering {
         match { self.0.lock().unwrap().app_state.cmp(&state) } {
             Ordering::Less => {
-                self.send_bus_error(String::from(error_msg));
+                self.send_bus_error(error_msg);
                 Ordering::Less
             }
             _foo => _foo,
         }
     }
 
-    fn send_bus_error(&self, body: String) {
+    fn send_bus_error(&self, body: &str) {
         let mbuilder =
             gst::Message::new_application(gst::Structure::new("error", &[("body", &body)]));
         let _ = self.0.lock().unwrap().bus.post(&mbuilder.build());
@@ -422,7 +423,8 @@ impl AppControl {
 
     fn start_pipeline(&self) -> Result<(), Error> {
         let pipe = self.construct_pipeline()?;
-        let webrtc = pipe.clone()
+        let webrtc = pipe
+            .clone()
             .dynamic_cast::<gst::Bin>()
             .unwrap()
             .get_by_name("sendrecv")
@@ -495,20 +497,21 @@ impl AppControl {
             AppState::ServerRegisteringError => AppState::ServerRegisteringError,
             AppState::PeerConnectionError => AppState::PeerConnectionError,
             AppState::PeerCallError => AppState::PeerCallError,
-            AppState::AppStateErr => AppState::AppStateErr,
-            AppState::ServerConnected => AppState::AppStateErr,
-            AppState::ServerRegistered => AppState::AppStateErr,
-            AppState::PeerCallStarted => AppState::AppStateErr,
+            AppState::Error => AppState::Error,
+            AppState::ServerConnected => AppState::Error,
+            AppState::ServerRegistered => AppState::Error,
+            AppState::PeerCallStarted => AppState::Error,
         };
-        return Err(WsError(error))?;
+
+        Err(WsError(error))?
     }
-    fn handle_sdp(&self, type_: String, sdp: String) {
+    fn handle_sdp(&self, type_: &str, sdp: &str) {
         if !self.app_state_eq(AppState::PeerCallNegotiating, "Not ready to handle sdp") {
             return;
         }
 
         if type_ != "answer" {
-            self.send_bus_error(String::from("Sdp type is not \"anser\""));
+            self.send_bus_error("Sdp type is not \"answer\"");
             return;
         }
 
@@ -527,7 +530,7 @@ impl AppControl {
             .unwrap();
         app_control.app_state = AppState::PeerCallStarted;
     }
-    fn handle_ice(&self, sdp_mline_index: u32, candidate: String) {
+    fn handle_ice(&self, sdp_mline_index: u32, candidate: &str) {
         let app_control = self.0.lock().unwrap();
         app_control
             .webrtc
@@ -536,7 +539,7 @@ impl AppControl {
             .emit("add-ice-candidate", &[&sdp_mline_index, &candidate])
             .unwrap();
     }
-    fn on_message(&mut self, msg: String) -> Result<(), Error> {
+    fn on_message(&mut self, msg: &str) -> Result<(), Error> {
         if msg == "HELLO" {
             return self.handle_hello();
         }
@@ -548,18 +551,18 @@ impl AppControl {
             println!("Got error message! {}", msg);
             return self.handle_error();
         }
-        let json_msg: JsonMsg = serde_json::from_str(&msg)?;
+        let json_msg: JsonMsg = serde_json::from_str(msg)?;
         match json_msg {
-            JsonMsg::Sdp { type_, sdp } => self.handle_sdp(type_, sdp),
+            JsonMsg::Sdp { type_, sdp } => self.handle_sdp(&type_, &sdp),
             JsonMsg::Ice {
                 sdp_mline_index,
                 candidate,
-            } => self.handle_ice(sdp_mline_index, candidate),
+            } => self.handle_ice(sdp_mline_index, &candidate),
         };
         Ok(())
     }
 
-    fn close_and_quit(&self, err: Error) {
+    fn close_and_quit(&self, err: &Error) {
         let app_control = self.0.lock().unwrap();
         println!("{}\nquitting", err);
         app_control
@@ -614,13 +617,12 @@ fn send_loop(
                 return;
             }
         };
-        match msg {
-            OwnedMessage::Close(_) => {
-                let _ = sender.send_message(&msg);
-                return;
-            }
-            _ => (),
+
+        if let OwnedMessage::Close(_) = msg {
+            let _ = sender.send_message(&msg);
+            return;
         }
+
         match sender.send_message(&msg) {
             Ok(()) => (),
             Err(err) => println!("Error sending {:?}", err),
@@ -683,7 +685,7 @@ fn handle_application_msg(
             let msg = struc.get_value("body").unwrap();
             app_control.on_message(msg.get().unwrap())
         }
-        "ws-error" => Err(WsError(app_control.0.lock().unwrap().app_state.clone()))?,
+        "ws-error" => Err(WsError(app_control.0.lock().unwrap().app_state))?,
         "error" => {
             let msg: String = struc.get_value("body").unwrap().get().unwrap();
             Err(BusError(msg))?
@@ -697,12 +699,9 @@ fn handle_application_msg(
 
 fn main() {
     gst::init().unwrap();
-    match check_plugins() {
-        Err(err) => {
-            println!("{:?}", err);
-            return;
-        }
-        _ => {}
+    if let Err(err) = check_plugins() {
+        println!("{:?}", err);
+        return;
     }
 
     let (server, peer_id) = parse_args();
@@ -733,8 +732,8 @@ fn main() {
 
     let app_control = AppControl(Arc::new(Mutex::new(AppControlInner {
         webrtc: None,
-        pipeline: pipeline,
-        send_msg_tx: send_msg_tx,
+        pipeline,
+        send_msg_tx,
         bus: bus.clone(),
         main_loop: main_loop.clone(),
         peer_id: peer_id.to_string(),
@@ -746,16 +745,15 @@ fn main() {
         let mut app_control = app_control.clone();
         use gst::message::MessageView;
         match msg.view() {
-            MessageView::Error(err) => app_control.close_and_quit(Error::from(err.get_error())),
+            MessageView::Error(err) => app_control.close_and_quit(&Error::from(err.get_error())),
             MessageView::Warning(warning) => {
                 println!("Warning: \"{}\"", warning.get_debug().unwrap());
             }
             MessageView::Application(a) => {
                 let struc = a.get_structure().unwrap();
-                match handle_application_msg(&mut app_control, struc) {
-                    Err(err) => app_control.close_and_quit(err),
-                    _ => {}
-                };
+                if let Err(err) = handle_application_msg(&mut app_control, struc) {
+                    app_control.close_and_quit(&err)
+                }
             }
             _ => {}
         };
