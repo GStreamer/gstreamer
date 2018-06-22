@@ -813,6 +813,7 @@ gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstVideoCodecState *state = gst_video_encoder_get_output_state (encoder);
+  GstCaps *caps;
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstClockTime latency;
   gboolean ret = FALSE;
@@ -821,11 +822,15 @@ gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
    * GstVideoEncoder have set the width, height and framerate into the state
    * caps. These are needed by the driver to calculate the buffer size and to
    * implement bitrate adaptation. */
-  if (!gst_v4l2_object_set_format (self->v4l2capture, state->caps, &error)) {
+  caps = gst_caps_copy (state->caps);
+  gst_structure_remove_field (gst_caps_get_structure (caps, 0), "colorimetry");
+  if (!gst_v4l2_object_set_format (self->v4l2capture, caps, &error)) {
     gst_v4l2_error (self, &error);
+    gst_caps_unref (caps);
     ret = FALSE;
     goto done;
   }
+  gst_caps_unref (caps);
 
   if (gst_v4l2_object_decide_allocation (self->v4l2capture, query)) {
     GstVideoEncoderClass *enc_class = GST_VIDEO_ENCODER_CLASS (parent_class);
