@@ -8113,7 +8113,9 @@ gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
       qtdemux->protection_system_ids->len - 1);
   GST_TRACE_OBJECT (qtdemux, "detected %u protection systems, we have "
       "decryptors for %u of them, running context request",
-      qtdemux->protection_system_ids->len, g_strv_length (filtered_sys_ids));
+      qtdemux->protection_system_ids->len,
+      filtered_sys_ids ? g_strv_length (filtered_sys_ids) : 0);
+
 
   if (stream->protection_scheme_event_queue.length) {
     GST_TRACE_OBJECT (qtdemux, "using stream event queue, length %u",
