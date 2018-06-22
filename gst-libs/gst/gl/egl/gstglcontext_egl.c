@@ -192,8 +192,10 @@ gst_gl_context_egl_dump_config (GstGLContextEGL * egl, EGLConfig config)
       conformant_values[i++] = "OpenGL ES";
     if (conformant & EGL_OPENGL_ES2_BIT)
       conformant_values[i++] = "OpenGL ES 2.x";
-    if (conformant & EGL_OPENGL_ES3_BIT)
+#if defined(EGL_KHR_create_context)
+    if (conformant & EGL_OPENGL_ES3_BIT_KHR)
       conformant_values[i++] = "OpenGL ES 3.x";
+#endif
     if (conformant & EGL_OPENVG_BIT)
       conformant_values[i++] = "OpenVG";
 
@@ -223,8 +225,10 @@ gst_gl_context_egl_dump_config (GstGLContextEGL * egl, EGLConfig config)
       renderable_values[i++] = "OpenGL ES";
     if (renderable & EGL_OPENGL_ES2_BIT)
       renderable_values[i++] = "OpenGL ES 2.x";
-    if (renderable & EGL_OPENGL_ES3_BIT)
+#if defined(EGL_KHR_create_context)
+    if (renderable & EGL_OPENGL_ES3_BIT_KHR)
       renderable_values[i++] = "OpenGL ES 3.x";
+#endif
     if (renderable & EGL_OPENVG_BIT)
       renderable_values[i++] = "OpenVG";
 
