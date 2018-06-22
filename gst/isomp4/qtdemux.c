@@ -2740,6 +2740,62 @@ qtdemux_handle_xmp_taglist (GstQTDemux * qtdemux, GstTagList * taglist,
 }
 
 static void
+qtdemux_update_default_sample_encryption_settings (GstQTDemux * qtdemux,
+    QtDemuxCencSampleSetInfo * info, guint32 is_encrypted, guint8 iv_size,
+    const guint8 * kid)
+{
+  GstBuffer *kid_buf = gst_buffer_new_allocate (NULL, 16, NULL);
+  gst_buffer_fill (kid_buf, 0, kid, 16);
+  if (info->default_properties)
+    gst_structure_free (info->default_properties);
+  info->default_properties =
+      gst_structure_new ("application/x-cenc",
+      "iv_size", G_TYPE_UINT, iv_size,
+      "encrypted", G_TYPE_BOOLEAN, (is_encrypted == 1),
+      "kid", GST_TYPE_BUFFER, kid_buf, NULL);
+  GST_DEBUG_OBJECT (qtdemux, "default sample properties: "
+      "is_encrypted=%u, iv_size=%u", is_encrypted, iv_size);
+  gst_buffer_unref (kid_buf);
+}
+
+static gboolean
+qtdemux_update_default_piff_encryption_settings (GstQTDemux * qtdemux,
+    QtDemuxCencSampleSetInfo * info, GstByteReader * br)
+{
+  guint32 algorithm_id = 0;
+  const guint8 *kid;
+  gboolean is_encrypted = TRUE;
+  guint8 iv_size = 8;
+
+  if (!gst_byte_reader_get_uint24_le (br, &algorithm_id)) {
+    GST_ERROR_OBJECT (qtdemux, "Error getting box's algorithm ID field");
+    return FALSE;
+  }
+
+  algorithm_id >>= 8;
+  if (algorithm_id == 0) {
+    is_encrypted = FALSE;
+  } else if (algorithm_id == 1) {
+    GST_DEBUG_OBJECT (qtdemux, "AES 128-bits CTR encrypted stream");
+  } else if (algorithm_id == 2) {
+    GST_DEBUG_OBJECT (qtdemux, "AES 128-bits CBC encrypted stream");
+  }
+
+  if (!gst_byte_reader_get_uint8 (br, &iv_size))
+    return FALSE;
+
+  if (!gst_byte_reader_get_data (br, 16, &kid))
+    return FALSE;
+
+  qtdemux_update_default_sample_encryption_settings (qtdemux, info,
+      is_encrypted, iv_size, kid);
+  gst_structure_set (info->default_properties, "piff_algorithm_id",
+      G_TYPE_UINT, algorithm_id, NULL);
+  return TRUE;
+}
+
+
+static void
 qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     guint offset)
 {
@@ -2747,7 +2803,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
   guint8 version;
   guint32 flags = 0;
   guint i;
-  guint8 iv_size = 8;
+  guint iv_size = 8;
   QtDemuxStream *stream;
   GstStructure *structure;
   QtDemuxCencSampleSetInfo *ss_info = NULL;
@@ -2777,13 +2833,13 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     stream->protection_scheme_info = g_new0 (QtDemuxCencSampleSetInfo, 1);
 
   ss_info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+  if (!ss_info->default_properties) {
+    ss_info->default_properties =
+        gst_structure_new ("application/x-cenc",
+        "iv_size", G_TYPE_UINT, iv_size, "encrypted", G_TYPE_BOOLEAN, TRUE,
+        NULL);
 
-  if (ss_info->default_properties)
-    gst_structure_free (ss_info->default_properties);
-
-  ss_info->default_properties =
-      gst_structure_new ("application/x-cenc",
-      "iv_size", G_TYPE_UINT, iv_size, "encrypted", G_TYPE_BOOLEAN, TRUE, NULL);
+  }
 
   if (ss_info->crypto_info) {
     GST_LOG_OBJECT (qtdemux, "unreffing existing crypto_info");
@@ -2805,47 +2861,17 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
   }
 
   if ((flags & 0x000001)) {
-    guint32 algorithm_id = 0;
-    const guint8 *kid;
-    GstBuffer *kid_buf;
-    gboolean is_encrypted = TRUE;
-
-    if (!gst_byte_reader_get_uint24_le (&br, &algorithm_id)) {
-      GST_ERROR_OBJECT (qtdemux, "Error getting box's algorithm ID field");
+    if (!qtdemux_update_default_piff_encryption_settings (qtdemux, ss_info,
+            &br))
       return;
-    }
-
-    algorithm_id >>= 8;
-    if (algorithm_id == 0) {
-      is_encrypted = FALSE;
-    } else if (algorithm_id == 1) {
-      /* FIXME: maybe store this in properties? */
-      GST_DEBUG_OBJECT (qtdemux, "AES 128-bits CTR encrypted stream");
-    } else if (algorithm_id == 2) {
-      /* FIXME: maybe store this in properties? */
-      GST_DEBUG_OBJECT (qtdemux, "AES 128-bits CBC encrypted stream");
-    }
-
-    if (!gst_byte_reader_get_uint8 (&br, &iv_size))
-      return;
-
-    if (!gst_byte_reader_get_data (&br, 16, &kid))
-      return;
-
-    kid_buf = gst_buffer_new_allocate (NULL, 16, NULL);
-    gst_buffer_fill (kid_buf, 0, kid, 16);
-    if (ss_info->default_properties)
-      gst_structure_free (ss_info->default_properties);
-    ss_info->default_properties =
-        gst_structure_new ("application/x-cenc",
-        "iv_size", G_TYPE_UINT, iv_size,
-        "encrypted", G_TYPE_BOOLEAN, is_encrypted,
-        "kid", GST_TYPE_BUFFER, kid_buf, NULL);
-    GST_DEBUG_OBJECT (qtdemux, "default sample properties: "
-        "is_encrypted=%u, iv_size=%u", is_encrypted, iv_size);
-    gst_buffer_unref (kid_buf);
   } else if ((flags & 0x000002)) {
     uses_sub_sample_encryption = TRUE;
+  }
+
+  if (!gst_structure_get_uint (ss_info->default_properties, "iv_size",
+          &iv_size)) {
+    GST_ERROR_OBJECT (qtdemux, "Error getting encryption IV size field");
+    return;
   }
 
   if (!gst_byte_reader_get_uint32_be (&br, &sample_count)) {
@@ -2881,6 +2907,7 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
 
     if (uses_sub_sample_encryption) {
       guint16 n_subsamples;
+      const GValue *kid_buf_value;
 
       if (!gst_byte_reader_get_uint16_be (&br, &n_subsamples)
           || n_subsamples == 0) {
@@ -2899,9 +2926,14 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
         return;
       }
       buf = gst_buffer_new_wrapped (data, n_subsamples * 6);
+
+      kid_buf_value =
+          gst_structure_get_value (ss_info->default_properties, "kid");
+
       gst_structure_set (properties,
           "subsample_count", G_TYPE_UINT, n_subsamples,
           "subsamples", GST_TYPE_BUFFER, buf, NULL);
+      gst_structure_set_value (properties, "kid", kid_buf_value);
       gst_buffer_unref (buf);
     } else {
       gst_structure_set (properties, "subsample_count", G_TYPE_UINT, 0, NULL);
@@ -8158,7 +8190,9 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
       FALSE);
 
   if (stream->protection_scheme_type != FOURCC_cenc) {
-    GST_ERROR_OBJECT (qtdemux, "unsupported protection scheme");
+    GST_ERROR_OBJECT (qtdemux,
+        "unsupported protection scheme: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (stream->protection_scheme_type));
     return FALSE;
   }
   if (qtdemux->protection_system_ids == NULL) {
@@ -9940,6 +9974,9 @@ qtdemux_parse_protection_scheme_info (GstQTDemux * qtdemux,
   GNode *frma;
   GNode *schm;
   GNode *schi;
+  QtDemuxCencSampleSetInfo *info;
+  GNode *tenc;
+  const guint8 *tenc_data;
 
   g_return_val_if_fail (qtdemux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -9986,20 +10023,24 @@ qtdemux_parse_protection_scheme_info (GstQTDemux * qtdemux,
     GST_DEBUG_OBJECT (qtdemux, "sinf box does not contain schi box");
     return FALSE;
   }
+  if (stream->protection_scheme_type != FOURCC_cenc &&
+      stream->protection_scheme_type != FOURCC_piff) {
+    GST_ERROR_OBJECT (qtdemux,
+        "Invalid protection_scheme_type: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (stream->protection_scheme_type));
+    return FALSE;
+  }
+
+  if (G_UNLIKELY (!stream->protection_scheme_info))
+    stream->protection_scheme_info =
+        g_malloc0 (sizeof (QtDemuxCencSampleSetInfo));
+
+  info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+
   if (stream->protection_scheme_type == FOURCC_cenc) {
-    QtDemuxCencSampleSetInfo *info;
-    GNode *tenc;
-    const guint8 *tenc_data;
-    guint32 isEncrypted;
+    guint32 is_encrypted;
     guint8 iv_size;
     const guint8 *default_kid;
-    GstBuffer *kid_buf;
-
-    if (G_UNLIKELY (!stream->protection_scheme_info))
-      stream->protection_scheme_info =
-          g_malloc0 (sizeof (QtDemuxCencSampleSetInfo));
-
-    info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
 
     tenc = qtdemux_tree_get_child_by_type (schi, FOURCC_tenc);
     if (!tenc) {
@@ -10008,22 +10049,42 @@ qtdemux_parse_protection_scheme_info (GstQTDemux * qtdemux,
       return FALSE;
     }
     tenc_data = (const guint8 *) tenc->data + 12;
-    isEncrypted = QT_UINT24 (tenc_data);
+    is_encrypted = QT_UINT24 (tenc_data);
     iv_size = QT_UINT8 (tenc_data + 3);
     default_kid = (tenc_data + 4);
-    kid_buf = gst_buffer_new_allocate (NULL, 16, NULL);
-    gst_buffer_fill (kid_buf, 0, default_kid, 16);
-    if (info->default_properties)
-      gst_structure_free (info->default_properties);
-    info->default_properties =
-        gst_structure_new ("application/x-cenc",
-        "iv_size", G_TYPE_UINT, iv_size,
-        "encrypted", G_TYPE_BOOLEAN, (isEncrypted == 1),
-        "kid", GST_TYPE_BUFFER, kid_buf, NULL);
-    GST_DEBUG_OBJECT (qtdemux, "default sample properties: "
-        "is_encrypted=%u, iv_size=%u", isEncrypted, iv_size);
-    gst_buffer_unref (kid_buf);
+    qtdemux_update_default_sample_encryption_settings (qtdemux, info,
+        is_encrypted, iv_size, default_kid);
+  } else if (stream->protection_scheme_type == FOURCC_piff) {
+    GstByteReader br;
+    static const guint8 piff_track_encryption_uuid[] = {
+      0x89, 0x74, 0xdb, 0xce, 0x7b, 0xe7, 0x4c, 0x51,
+      0x84, 0xf9, 0x71, 0x48, 0xf9, 0x88, 0x25, 0x54
+    };
+
+    tenc = qtdemux_tree_get_child_by_type (schi, FOURCC_uuid);
+    if (!tenc) {
+      GST_ERROR_OBJECT (qtdemux, "schi box does not contain tenc box, "
+          "which is mandatory for Common Encryption");
+      return FALSE;
+    }
+
+    tenc_data = (const guint8 *) tenc->data + 8;
+    if (memcmp (tenc_data, piff_track_encryption_uuid, 16) != 0) {
+      gchar *box_uuid = qtdemux_uuid_bytes_to_string (tenc_data);
+      GST_ERROR_OBJECT (qtdemux,
+          "Unsupported track encryption box with uuid: %s", box_uuid);
+      g_free (box_uuid);
+      return FALSE;
+    }
+    tenc_data = (const guint8 *) tenc->data + 16 + 12;
+    gst_byte_reader_init (&br, tenc_data, 20);
+    if (!qtdemux_update_default_piff_encryption_settings (qtdemux, info, &br)) {
+      GST_ERROR_OBJECT (qtdemux, "PIFF track box parsing error");
+      return FALSE;
+    }
+    stream->protection_scheme_type = FOURCC_cenc;
   }
+
   return TRUE;
 }
 
