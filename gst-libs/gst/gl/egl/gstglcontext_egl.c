@@ -409,8 +409,6 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   EGLint config_attrib[20];
   EGLint egl_api = 0;
 
-  gst_gl_context_egl_dump_all_configs (egl);
-
   create_context =
       gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
   /* silence unused warnings */
@@ -601,6 +599,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
 
   egl->egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
+
+  gst_gl_context_egl_dump_all_configs (egl);
 
   if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
     GstGLAPI chosen_gl_api = 0;
