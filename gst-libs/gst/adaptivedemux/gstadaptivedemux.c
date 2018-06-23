@@ -126,10 +126,6 @@ that the demux object and its streams are not changed by anybody else.
 GST_DEBUG_CATEGORY (adaptivedemux_debug);
 #define GST_CAT_DEFAULT adaptivedemux_debug
 
-#define GST_ADAPTIVE_DEMUX_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_ADAPTIVE_DEMUX, \
-        GstAdaptiveDemuxPrivate))
-
 #define MAX_DOWNLOAD_ERROR_COUNT 3
 #define DEFAULT_FAILED_COUNT 3
 #define DEFAULT_CONNECTION_SPEED 0
@@ -222,6 +218,8 @@ typedef struct _GstAdaptiveDemuxTimer
 } GstAdaptiveDemuxTimer;
 
 static GstBinClass *parent_class = NULL;
+static gint private_offset = 0;
+
 static void gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass);
 static void gst_adaptive_demux_init (GstAdaptiveDemux * dec,
     GstAdaptiveDemuxClass * klass);
@@ -331,9 +329,19 @@ gst_adaptive_demux_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_BIN,
         "GstAdaptiveDemux", &info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstAdaptiveDemuxPrivate));
+
     g_once_init_leave (&type, _type);
   }
   return type;
+}
+
+static inline GstAdaptiveDemuxPrivate *
+gst_adaptive_demux_get_instance_private (GstAdaptiveDemux * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -401,7 +409,9 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
       "Base Adaptive Demux");
 
   parent_class = g_type_class_peek_parent (klass);
-  g_type_class_add_private (klass, sizeof (GstAdaptiveDemuxPrivate));
+
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   gobject_class->set_property = gst_adaptive_demux_set_property;
   gobject_class->get_property = gst_adaptive_demux_get_property;
@@ -443,7 +453,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
 
   GST_DEBUG_OBJECT (demux, "gst_adaptive_demux_init");
 
-  demux->priv = GST_ADAPTIVE_DEMUX_GET_PRIVATE (demux);
+  demux->priv = gst_adaptive_demux_get_instance_private (demux);
   demux->priv->input_adapter = gst_adapter_new ();
   demux->downloader = gst_uri_downloader_new ();
   gst_uri_downloader_set_parent (demux->downloader, GST_ELEMENT_CAST (demux));

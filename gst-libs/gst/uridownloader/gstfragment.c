@@ -27,8 +27,6 @@
 
 #define GST_CAT_DEFAULT uridownloader_debug
 
-#define GST_FRAGMENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_FRAGMENT, GstFragmentPrivate))
-
 enum
 {
   PROP_0,
@@ -48,7 +46,7 @@ struct _GstFragmentPrivate
   GMutex lock;
 };
 
-G_DEFINE_TYPE (GstFragment, gst_fragment, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstFragment, gst_fragment, G_TYPE_OBJECT);
 
 static void gst_fragment_dispose (GObject * object);
 static void gst_fragment_finalize (GObject * object);
@@ -116,8 +114,6 @@ gst_fragment_class_init (GstFragmentClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GstFragmentPrivate));
-
   gobject_class->set_property = gst_fragment_set_property;
   gobject_class->get_property = gst_fragment_get_property;
   gobject_class->dispose = gst_fragment_dispose;
@@ -156,7 +152,7 @@ gst_fragment_init (GstFragment * fragment)
 {
   GstFragmentPrivate *priv;
 
-  fragment->priv = priv = GST_FRAGMENT_GET_PRIVATE (fragment);
+  fragment->priv = priv = gst_fragment_get_instance_private (fragment);
 
   g_mutex_init (&fragment->priv->lock);
   priv->buffer = NULL;

@@ -120,7 +120,7 @@ static void gst_insert_bin_do_change (GstInsertBin * self, GstPad * pad);
 static GstPadProbeReturn pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data);
 
-G_DEFINE_TYPE (GstInsertBin, gst_insert_bin, GST_TYPE_BIN);
+G_DEFINE_TYPE_WITH_PRIVATE (GstInsertBin, gst_insert_bin, GST_TYPE_BIN);
 
 static void
 gst_insert_bin_class_init (GstInsertBinClass * klass)
@@ -129,8 +129,6 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (insert_bin_debug, "insertbin", 0, "Insert Bin");
-
-  g_type_class_add_private (klass, sizeof (GstInsertBinPrivate));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_insert_bin_src_template);
@@ -273,8 +271,7 @@ gst_insert_bin_init (GstInsertBin * self)
 {
   GstProxyPad *internal;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_INSERT_BIN,
-      GstInsertBinPrivate);
+  self->priv = gst_insert_bin_get_instance_private (self);
 
   g_queue_init (&self->priv->change_queue);
 

@@ -27,10 +27,6 @@
 #define GST_CAT_DEFAULT uridownloader_debug
 GST_DEBUG_CATEGORY (uridownloader_debug);
 
-#define GST_URI_DOWNLOADER_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GST_TYPE_URI_DOWNLOADER, GstUriDownloaderPrivate))
-
 struct _GstUriDownloaderPrivate
 {
   /* Fragments fetcher */
@@ -75,6 +71,7 @@ static GstStaticPadTemplate sinkpadtemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstUriDownloader, gst_uri_downloader, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstUriDownloader)
     _do_init);
 
 static void
@@ -84,8 +81,6 @@ gst_uri_downloader_class_init (GstUriDownloaderClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstUriDownloaderPrivate));
-
   gobject_class->dispose = gst_uri_downloader_dispose;
   gobject_class->finalize = gst_uri_downloader_finalize;
 }
@@ -93,7 +88,7 @@ gst_uri_downloader_class_init (GstUriDownloaderClass * klass)
 static void
 gst_uri_downloader_init (GstUriDownloader * downloader)
 {
-  downloader->priv = GST_URI_DOWNLOADER_GET_PRIVATE (downloader);
+  downloader->priv = gst_uri_downloader_get_instance_private (downloader);
 
   /* Initialize the sink pad. This pad will be connected to the src pad of the
    * element created with gst_element_make_from_uri and will handle the download */
