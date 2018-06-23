@@ -50,12 +50,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_certificate_debug);
 #define GST_CAT_DEFAULT gst_dtls_certificate_debug
 
-G_DEFINE_TYPE_WITH_CODE (GstDtlsCertificate, gst_dtls_certificate,
-    G_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (gst_dtls_certificate_debug,
-        "dtlscertificate", 0, "DTLS Certificate"));
-
-#define GST_DTLS_CERTIFICATE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_CERTIFICATE, GstDtlsCertificatePrivate))
-
 enum
 {
   PROP_0,
@@ -75,6 +69,11 @@ struct _GstDtlsCertificatePrivate
   gchar *pem;
 };
 
+G_DEFINE_TYPE_WITH_CODE (GstDtlsCertificate, gst_dtls_certificate,
+    G_TYPE_OBJECT, G_ADD_PRIVATE (GstDtlsCertificate)
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_certificate_debug,
+        "dtlscertificate", 0, "DTLS Certificate"));
+
 static void gst_dtls_certificate_finalize (GObject * gobject);
 static void gst_dtls_certificate_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
@@ -88,8 +87,6 @@ static void
 gst_dtls_certificate_class_init (GstDtlsCertificateClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstDtlsCertificatePrivate));
 
   gobject_class->set_property = gst_dtls_certificate_set_property;
   gobject_class->get_property = gst_dtls_certificate_get_property;
@@ -111,8 +108,9 @@ gst_dtls_certificate_class_init (GstDtlsCertificateClass * klass)
 static void
 gst_dtls_certificate_init (GstDtlsCertificate * self)
 {
-  GstDtlsCertificatePrivate *priv = GST_DTLS_CERTIFICATE_GET_PRIVATE (self);
-  self->priv = priv;
+  GstDtlsCertificatePrivate *priv;
+
+  self->priv = priv = gst_dtls_certificate_get_instance_private (self);
 
   priv->x509 = NULL;
   priv->private_key = NULL;

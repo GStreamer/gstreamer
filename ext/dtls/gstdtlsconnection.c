@@ -46,11 +46,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_connection_debug);
 #define GST_CAT_DEFAULT gst_dtls_connection_debug
-G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (gst_dtls_connection_debug, "dtlsconnection", 0,
-        "DTLS Connection"));
-
-#define GST_DTLS_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_CONNECTION, GstDtlsConnectionPrivate))
 
 #define SRTP_KEY_LEN 16
 #define SRTP_SALT_LEN 14
@@ -99,6 +94,11 @@ struct _GstDtlsConnectionPrivate
   GThreadPool *thread_pool;
 };
 
+G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstDtlsConnection)
+    GST_DEBUG_CATEGORY_INIT (gst_dtls_connection_debug, "dtlsconnection", 0,
+        "DTLS Connection"));
+
 static void gst_dtls_connection_finalize (GObject * gobject);
 static void gst_dtls_connection_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
@@ -120,8 +120,6 @@ static void
 gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstDtlsConnectionPrivate));
 
   gobject_class->set_property = gst_dtls_connection_set_property;
 
@@ -163,8 +161,9 @@ gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
 static void
 gst_dtls_connection_init (GstDtlsConnection * self)
 {
-  GstDtlsConnectionPrivate *priv = GST_DTLS_CONNECTION_GET_PRIVATE (self);
-  self->priv = priv;
+  GstDtlsConnectionPrivate *priv;
+
+  self->priv = priv = gst_dtls_connection_get_instance_private (self);
 
   priv->ssl = NULL;
   priv->bio = NULL;

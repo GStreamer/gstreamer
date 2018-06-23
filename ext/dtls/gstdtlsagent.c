@@ -42,10 +42,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_agent_debug);
 #define GST_CAT_DEFAULT gst_dtls_agent_debug
 
-G_DEFINE_TYPE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT);
-
-#define GST_DTLS_AGENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GST_TYPE_DTLS_AGENT, GstDtlsAgentPrivate))
-
 enum
 {
   PROP_0,
@@ -61,6 +57,8 @@ struct _GstDtlsAgentPrivate
 
   GstDtlsCertificate *certificate;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT);
 
 static void gst_dtls_agent_finalize (GObject * gobject);
 static void gst_dtls_agent_set_property (GObject *, guint prop_id,
@@ -151,8 +149,6 @@ gst_dtls_agent_class_init (GstDtlsAgentClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GstDtlsAgentPrivate));
-
   gobject_class->set_property = gst_dtls_agent_set_property;
   gobject_class->finalize = gst_dtls_agent_finalize;
 
@@ -171,7 +167,7 @@ gst_dtls_agent_class_init (GstDtlsAgentClass * klass)
 static void
 gst_dtls_agent_init (GstDtlsAgent * self)
 {
-  GstDtlsAgentPrivate *priv = GST_DTLS_AGENT_GET_PRIVATE (self);
+  GstDtlsAgentPrivate *priv = gst_dtls_agent_get_instance_private (self);
   self->priv = priv;
 
   ERR_clear_error ();
