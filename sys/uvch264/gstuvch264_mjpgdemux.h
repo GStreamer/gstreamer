@@ -47,13 +47,56 @@ G_BEGIN_DECLS
       GST_TYPE_UVC_H264_MJPG_DEMUX))
 
 typedef struct _GstUvcH264MjpgDemux           GstUvcH264MjpgDemux;
-typedef struct _GstUvcH264MjpgDemuxPrivate    GstUvcH264MjpgDemuxPrivate;
 typedef struct _GstUvcH264MjpgDemuxClass      GstUvcH264MjpgDemuxClass;
+
+typedef struct
+{
+  guint32 dev_stc;
+  guint32 dev_sof;
+  GstClockTime host_ts;
+  guint32 host_sof;
+} GstUvcH264ClockSample;
+
+typedef struct
+{
+  guint16 version;
+  guint16 header_len;
+  guint32 type;
+  guint16 width;
+  guint16 height;
+  guint32 frame_interval;
+  guint16 delay;
+  guint32 pts;
+} __attribute__ ((packed)) AuxiliaryStreamHeader;
 
 struct _GstUvcH264MjpgDemux {
   GstElement element;
-  GstUvcH264MjpgDemuxPrivate *priv;
-};
+
+  /* private */
+  int device_fd;
+  int num_clock_samples;
+  GstUvcH264ClockSample *clock_samples;
+  int last_sample;
+  int num_samples;
+  GstPad *sink_pad;
+  GstPad *jpeg_pad;
+  GstPad *h264_pad;
+  GstPad *yuy2_pad;
+  GstPad *nv12_pad;
+  GstCaps *h264_caps;
+  GstCaps *yuy2_caps;
+  GstCaps *nv12_caps;
+  guint16 h264_width;
+  guint16 h264_height;
+  guint16 yuy2_width;
+  guint16 yuy2_height;
+  guint16 nv12_width;
+  guint16 nv12_height;
+
+  /* input segment */
+  GstSegment segment;
+  GstClockTime last_pts;
+  gboolean pts_reordered_warning;};
 
 struct _GstUvcH264MjpgDemuxClass {
   GstElementClass  parent_class;

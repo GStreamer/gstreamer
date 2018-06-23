@@ -116,54 +116,6 @@ GST_STATIC_PAD_TEMPLATE ("nv12",
 GST_DEBUG_CATEGORY_STATIC (uvc_h264_mjpg_demux_debug);
 #define GST_CAT_DEFAULT uvc_h264_mjpg_demux_debug
 
-typedef struct
-{
-  guint32 dev_stc;
-  guint32 dev_sof;
-  GstClockTime host_ts;
-  guint32 host_sof;
-} GstUvcH264ClockSample;
-
-struct _GstUvcH264MjpgDemuxPrivate
-{
-  int device_fd;
-  int num_clock_samples;
-  GstUvcH264ClockSample *clock_samples;
-  int last_sample;
-  int num_samples;
-  GstPad *sink_pad;
-  GstPad *jpeg_pad;
-  GstPad *h264_pad;
-  GstPad *yuy2_pad;
-  GstPad *nv12_pad;
-  GstCaps *h264_caps;
-  GstCaps *yuy2_caps;
-  GstCaps *nv12_caps;
-  guint16 h264_width;
-  guint16 h264_height;
-  guint16 yuy2_width;
-  guint16 yuy2_height;
-  guint16 nv12_width;
-  guint16 nv12_height;
-
-  /* input segment */
-  GstSegment segment;
-  GstClockTime last_pts;
-  gboolean pts_reordered_warning;
-};
-
-typedef struct
-{
-  guint16 version;
-  guint16 header_len;
-  guint32 type;
-  guint16 width;
-  guint16 height;
-  guint32 frame_interval;
-  guint16 delay;
-  guint32 pts;
-} __attribute__ ((packed)) AuxiliaryStreamHeader;
-
 static void gst_uvc_h264_mjpg_demux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_uvc_h264_mjpg_demux_get_property (GObject * object,
@@ -186,8 +138,6 @@ gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
-  g_type_class_add_private (gobject_class, sizeof (GstUvcH264MjpgDemuxPrivate));
 
   gobject_class->set_property = gst_uvc_h264_mjpg_demux_set_property;
   gobject_class->get_property = gst_uvc_h264_mjpg_demux_get_property;
@@ -229,58 +179,54 @@ gst_uvc_h264_mjpg_demux_class_init (GstUvcH264MjpgDemuxClass * klass)
 static void
 gst_uvc_h264_mjpg_demux_init (GstUvcH264MjpgDemux * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_UVC_H264_MJPG_DEMUX,
-      GstUvcH264MjpgDemuxPrivate);
-
-
-  self->priv->last_pts = GST_CLOCK_TIME_NONE;
-  self->priv->pts_reordered_warning = FALSE;
-  self->priv->device_fd = -1;
+  self->last_pts = GST_CLOCK_TIME_NONE;
+  self->pts_reordered_warning = FALSE;
+  self->device_fd = -1;
 
   /* create the sink and src pads */
-  self->priv->sink_pad =
+  self->sink_pad =
       gst_pad_new_from_static_template (&mjpgsink_pad_template, "sink");
-  gst_pad_set_chain_function (self->priv->sink_pad,
+  gst_pad_set_chain_function (self->sink_pad,
       GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_chain));
-  gst_pad_set_event_function (self->priv->sink_pad,
+  gst_pad_set_event_function (self->sink_pad,
       GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_sink_event));
-  gst_pad_set_query_function (self->priv->sink_pad,
+  gst_pad_set_query_function (self->sink_pad,
       GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_query));
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->sink_pad);
+  gst_element_add_pad (GST_ELEMENT (self), self->sink_pad);
 
   /* JPEG */
-  self->priv->jpeg_pad =
+  self->jpeg_pad =
       gst_pad_new_from_static_template (&jpegsrc_pad_template, "jpeg");
-  gst_pad_set_query_function (self->priv->jpeg_pad,
+  gst_pad_set_query_function (self->jpeg_pad,
       GST_DEBUG_FUNCPTR (gst_uvc_h264_mjpg_demux_query));
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->jpeg_pad);
+  gst_element_add_pad (GST_ELEMENT (self), self->jpeg_pad);
 
   /* H264 */
-  self->priv->h264_pad =
+  self->h264_pad =
       gst_pad_new_from_static_template (&h264src_pad_template, "h264");
-  gst_pad_use_fixed_caps (self->priv->h264_pad);
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->h264_pad);
+  gst_pad_use_fixed_caps (self->h264_pad);
+  gst_element_add_pad (GST_ELEMENT (self), self->h264_pad);
 
   /* YUY2 */
-  self->priv->yuy2_pad =
+  self->yuy2_pad =
       gst_pad_new_from_static_template (&yuy2src_pad_template, "yuy2");
-  gst_pad_use_fixed_caps (self->priv->yuy2_pad);
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->yuy2_pad);
+  gst_pad_use_fixed_caps (self->yuy2_pad);
+  gst_element_add_pad (GST_ELEMENT (self), self->yuy2_pad);
 
   /* NV12 */
-  self->priv->nv12_pad =
+  self->nv12_pad =
       gst_pad_new_from_static_template (&nv12src_pad_template, "nv12");
-  gst_pad_use_fixed_caps (self->priv->nv12_pad);
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->nv12_pad);
+  gst_pad_use_fixed_caps (self->nv12_pad);
+  gst_element_add_pad (GST_ELEMENT (self), self->nv12_pad);
 
-  self->priv->h264_caps = gst_caps_new_empty_simple ("video/x-h264");
-  self->priv->yuy2_caps = gst_caps_new_simple ("video/x-raw",
+  self->h264_caps = gst_caps_new_empty_simple ("video/x-h264");
+  self->yuy2_caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, "YUY2", NULL);
-  self->priv->nv12_caps = gst_caps_new_simple ("video/x-raw",
+  self->nv12_caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, "NV12", NULL);
-  self->priv->h264_width = self->priv->h264_height = 0;
-  self->priv->yuy2_width = self->priv->yuy2_height = 0;
-  self->priv->nv12_width = self->priv->nv12_height = 0;
+  self->h264_width = self->h264_height = 0;
+  self->yuy2_width = self->yuy2_height = 0;
+  self->nv12_width = self->nv12_height = 0;
 }
 
 static void
@@ -288,17 +234,17 @@ gst_uvc_h264_mjpg_demux_dispose (GObject * object)
 {
   GstUvcH264MjpgDemux *self = GST_UVC_H264_MJPG_DEMUX (object);
 
-  if (self->priv->h264_caps)
-    gst_caps_unref (self->priv->h264_caps);
-  self->priv->h264_caps = NULL;
-  if (self->priv->yuy2_caps)
-    gst_caps_unref (self->priv->yuy2_caps);
-  self->priv->yuy2_caps = NULL;
-  if (self->priv->nv12_caps)
-    gst_caps_unref (self->priv->nv12_caps);
-  self->priv->nv12_caps = NULL;
-  g_free (self->priv->clock_samples);
-  self->priv->clock_samples = NULL;
+  if (self->h264_caps)
+    gst_caps_unref (self->h264_caps);
+  self->h264_caps = NULL;
+  if (self->yuy2_caps)
+    gst_caps_unref (self->yuy2_caps);
+  self->yuy2_caps = NULL;
+  if (self->nv12_caps)
+    gst_caps_unref (self->nv12_caps);
+  self->nv12_caps = NULL;
+  g_free (self->clock_samples);
+  self->clock_samples = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -311,31 +257,31 @@ gst_uvc_h264_mjpg_demux_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_DEVICE_FD:
-      self->priv->device_fd = g_value_get_int (value);
+      self->device_fd = g_value_get_int (value);
       break;
     case PROP_NUM_CLOCK_SAMPLES:
-      self->priv->num_clock_samples = g_value_get_int (value);
-      if (self->priv->clock_samples) {
-        if (self->priv->num_clock_samples) {
-          self->priv->clock_samples = g_realloc_n (self->priv->clock_samples,
-              self->priv->num_clock_samples, sizeof (GstUvcH264ClockSample));
-          if (self->priv->num_samples > self->priv->num_clock_samples) {
-            self->priv->num_samples = self->priv->num_clock_samples;
-            if (self->priv->last_sample >= self->priv->num_samples)
-              self->priv->last_sample = self->priv->num_samples - 1;
+      self->num_clock_samples = g_value_get_int (value);
+      if (self->clock_samples) {
+        if (self->num_clock_samples) {
+          self->clock_samples = g_realloc_n (self->clock_samples,
+              self->num_clock_samples, sizeof (GstUvcH264ClockSample));
+          if (self->num_samples > self->num_clock_samples) {
+            self->num_samples = self->num_clock_samples;
+            if (self->last_sample >= self->num_samples)
+              self->last_sample = self->num_samples - 1;
           }
         } else {
-          g_free (self->priv->clock_samples);
-          self->priv->clock_samples = NULL;
-          self->priv->last_sample = -1;
-          self->priv->num_samples = 0;
+          g_free (self->clock_samples);
+          self->clock_samples = NULL;
+          self->last_sample = -1;
+          self->num_samples = 0;
         }
       }
-      if (self->priv->num_clock_samples > 0) {
-        self->priv->clock_samples = g_malloc0_n (self->priv->num_clock_samples,
+      if (self->num_clock_samples > 0) {
+        self->clock_samples = g_malloc0_n (self->num_clock_samples,
             sizeof (GstUvcH264ClockSample));
-        self->priv->last_sample = -1;
-        self->priv->num_samples = 0;
+        self->last_sample = -1;
+        self->num_samples = 0;
       }
       break;
     default:
@@ -352,10 +298,10 @@ gst_uvc_h264_mjpg_demux_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_DEVICE_FD:
-      g_value_set_int (value, self->priv->device_fd);
+      g_value_set_int (value, self->device_fd);
       break;
     case PROP_NUM_CLOCK_SAMPLES:
-      g_value_set_int (value, self->priv->num_clock_samples);
+      g_value_set_int (value, self->num_clock_samples);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -372,12 +318,12 @@ gst_uvc_h264_mjpg_demux_sink_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
-      gst_event_copy_segment (event, &self->priv->segment);
-      self->priv->last_pts = GST_CLOCK_TIME_NONE;
-      res = gst_pad_push_event (self->priv->jpeg_pad, event);
+      gst_event_copy_segment (event, &self->segment);
+      self->last_pts = GST_CLOCK_TIME_NONE;
+      res = gst_pad_push_event (self->jpeg_pad, event);
       break;
     case GST_EVENT_CAPS:
-      res = gst_pad_push_event (self->priv->jpeg_pad, event);
+      res = gst_pad_push_event (self->jpeg_pad, event);
       break;
     default:
       res = gst_pad_event_default (pad, parent, event);
@@ -395,10 +341,10 @@ gst_uvc_h264_mjpg_demux_query (GstPad * pad, GstObject * parent,
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
-      if (pad == self->priv->sink_pad)
-        ret = gst_pad_peer_query (self->priv->jpeg_pad, query);
+      if (pad == self->sink_pad)
+        ret = gst_pad_peer_query (self->jpeg_pad, query);
       else
-        ret = gst_pad_peer_query (self->priv->sink_pad, query);
+        ret = gst_pad_peer_query (self->sink_pad, query);
       break;
     default:
       ret = gst_pad_query_default (pad, parent, query);
@@ -410,36 +356,35 @@ gst_uvc_h264_mjpg_demux_query (GstPad * pad, GstObject * parent,
 static gboolean
 _pts_to_timestamp (GstUvcH264MjpgDemux * self, GstBuffer * buf, guint32 pts)
 {
-  GstUvcH264MjpgDemuxPrivate *priv = self->priv;
   GstUvcH264ClockSample *current_sample = NULL;
   GstUvcH264ClockSample *oldest_sample = NULL;
   guint32 next_sample;
   struct uvc_last_scr_sample sample;
   guint32 dev_sof;
 
-  if (self->priv->device_fd == -1 || priv->clock_samples == NULL)
+  if (self->device_fd == -1 || self->clock_samples == NULL)
     return FALSE;
 
-  if (-1 == ioctl (priv->device_fd, UVCIOC_GET_LAST_SCR, &sample)) {
+  if (-1 == ioctl (self->device_fd, UVCIOC_GET_LAST_SCR, &sample)) {
     //GST_WARNING_OBJECT (self, " GET_LAST_SCR error");
     return FALSE;
   }
 
   dev_sof = (guint32) (sample.dev_sof + 2048) << 16;
-  if (priv->num_samples > 0 &&
-      priv->clock_samples[priv->last_sample].dev_sof == dev_sof) {
-    current_sample = &priv->clock_samples[priv->last_sample];
+  if (self->num_samples > 0 &&
+      self->clock_samples[self->last_sample].dev_sof == dev_sof) {
+    current_sample = &self->clock_samples[self->last_sample];
   } else {
-    next_sample = (priv->last_sample + 1) % priv->num_clock_samples;
-    current_sample = &priv->clock_samples[next_sample];
+    next_sample = (self->last_sample + 1) % self->num_clock_samples;
+    current_sample = &self->clock_samples[next_sample];
     current_sample->dev_stc = sample.dev_stc;
     current_sample->dev_sof = dev_sof;
     current_sample->host_ts = sample.host_ts.tv_sec * GST_SECOND +
         sample.host_ts.tv_nsec * GST_NSECOND;
     current_sample->host_sof = (guint32) (sample.host_sof + 2048) << 16;
 
-    priv->num_samples++;
-    priv->last_sample = next_sample;
+    self->num_samples++;
+    self->last_sample = next_sample;
 
     /* Debug printing */
     GST_DEBUG_OBJECT (self, "device frequency: %u", sample.dev_frequency);
@@ -454,11 +399,11 @@ _pts_to_timestamp (GstUvcH264MjpgDemux * self, GstBuffer * buf, guint32 pts)
         (gdouble) (sample.dev_stc - pts) / sample.dev_frequency);
   }
 
-  if (priv->num_samples < priv->num_clock_samples)
+  if (self->num_samples < self->num_clock_samples)
     return FALSE;
 
-  next_sample = (priv->last_sample + 1) % priv->num_clock_samples;
-  oldest_sample = &priv->clock_samples[next_sample];
+  next_sample = (self->last_sample + 1) % self->num_clock_samples;
+  oldest_sample = &self->clock_samples[next_sample];
 
   /* TODO: Use current_sample and oldest_sample to do the
    * double linear regression and calculate a new PTS */
@@ -487,7 +432,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
   self = GST_UVC_H264_MJPG_DEMUX (GST_PAD_PARENT (pad));
 
   if (gst_buffer_get_size (buf) == 0) {
-    return gst_pad_push (self->priv->jpeg_pad, buf);
+    return gst_pad_push (self->jpeg_pad, buf);
   }
 
   last_offset = 0;
@@ -564,22 +509,22 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
           /* Find the auxiliary stream's pad and caps */
           switch (aux_header.type) {
             case GST_MAKE_FOURCC ('H', '2', '6', '4'):
-              aux_pad = self->priv->h264_pad;
-              aux_caps = &self->priv->h264_caps;
-              width = &self->priv->h264_width;
-              height = &self->priv->h264_height;
+              aux_pad = self->h264_pad;
+              aux_caps = &self->h264_caps;
+              width = &self->h264_width;
+              height = &self->h264_height;
               break;
             case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-              aux_pad = self->priv->yuy2_pad;
-              aux_caps = &self->priv->yuy2_caps;
-              width = &self->priv->yuy2_width;
-              height = &self->priv->yuy2_height;
+              aux_pad = self->yuy2_pad;
+              aux_caps = &self->yuy2_caps;
+              width = &self->yuy2_width;
+              height = &self->yuy2_height;
               break;
             case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
-              aux_pad = self->priv->nv12_pad;
-              aux_caps = &self->priv->nv12_caps;
-              width = &self->priv->nv12_width;
-              height = &self->priv->nv12_height;
+              aux_pad = self->nv12_pad;
+              aux_caps = &self->nv12_caps;
+              width = &self->nv12_width;
+              height = &self->nv12_height;
               break;
             default:
               GST_ELEMENT_ERROR (self, STREAM, DEMUX,
@@ -625,7 +570,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
                 "framerate", GST_TYPE_FRACTION, fps_num, fps_den, NULL);
             gst_pad_push_event (aux_pad, gst_event_new_caps (*aux_caps));
             gst_pad_push_event (aux_pad,
-                gst_event_new_segment (&self->priv->segment));
+                gst_event_new_segment (&self->segment));
           }
 
           /* Create new auxiliary buffer list and adjust i/segment size */
@@ -662,14 +607,14 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
           /* Last attempt to apply timestamp. FIXME: This
            * is broken for H.264 with B-frames */
           if (GST_BUFFER_PTS (aux_buf) == GST_CLOCK_TIME_NONE) {
-            if (!self->priv->pts_reordered_warning &&
-                self->priv->last_pts != GST_CLOCK_TIME_NONE &&
-                self->priv->last_pts > GST_BUFFER_PTS (buf)) {
+            if (!self->pts_reordered_warning &&
+                self->last_pts != GST_CLOCK_TIME_NONE &&
+                self->last_pts > GST_BUFFER_PTS (buf)) {
               GST_WARNING_OBJECT (self, "PTS went backward, timestamping "
                   "might be broken");
-              self->priv->pts_reordered_warning = TRUE;
+              self->pts_reordered_warning = TRUE;
             }
-            self->priv->last_pts = GST_BUFFER_PTS (buf);
+            self->last_pts = GST_BUFFER_PTS (buf);
 
             GST_BUFFER_PTS (aux_buf) = GST_BUFFER_PTS (buf);
           }
@@ -727,7 +672,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
     gst_buffer_unref (jpeg_buf);
     jpeg_buf = NULL;
   } else {
-    ret = gst_pad_push (self->priv->jpeg_pad, jpeg_buf);
+    ret = gst_pad_push (self->jpeg_pad, jpeg_buf);
     jpeg_buf = NULL;
   }
 
