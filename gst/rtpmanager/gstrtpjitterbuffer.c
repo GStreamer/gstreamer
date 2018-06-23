@@ -400,10 +400,6 @@ typedef struct
   guint num_rtx_received;
 } TimerData;
 
-#define GST_RTP_JITTER_BUFFER_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_RTP_JITTER_BUFFER, \
-                                GstRtpJitterBufferPrivate))
-
 static GstStaticPadTemplate gst_rtp_jitter_buffer_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -436,7 +432,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static guint gst_rtp_jitter_buffer_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_rtp_jitter_buffer_parent_class parent_class
-G_DEFINE_TYPE (GstRtpJitterBuffer, gst_rtp_jitter_buffer, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRtpJitterBuffer, gst_rtp_jitter_buffer,
+    GST_TYPE_ELEMENT);
 
 /* object overrides */
 static void gst_rtp_jitter_buffer_set_property (GObject * object,
@@ -515,8 +512,6 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstRtpJitterBufferPrivate));
 
   gobject_class->finalize = gst_rtp_jitter_buffer_finalize;
 
@@ -994,7 +989,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv;
 
-  priv = GST_RTP_JITTER_BUFFER_GET_PRIVATE (jitterbuffer);
+  priv = gst_rtp_jitter_buffer_get_instance_private (jitterbuffer);
   jitterbuffer->priv = priv;
 
   priv->latency_ms = DEFAULT_LATENCY_MS;

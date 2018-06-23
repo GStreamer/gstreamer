@@ -51,13 +51,6 @@
 #define GST_CAT_DEFAULT gtk_gst_gl_widget_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gtkgstglwidget", 0,
-        "Gtk Gst GL Widget"););
-
-#define GTK_GST_GL_WIDGET_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GTK_TYPE_GST_GL_WIDGET, GtkGstGLWidgetPrivate))
-
 struct _GtkGstGLWidgetPrivate
 {
   gboolean initted;
@@ -81,6 +74,11 @@ static const GLfloat vertices[] = {
   -1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
   1.0f, -1.0f, 0.0f, 1.0f, 1.0f
 };
+
+G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
+    G_ADD_PRIVATE (GtkGstGLWidget)
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gtkgstglwidget", 0,
+        "Gtk Gst GL Widget"););
 
 static void
 gtk_gst_gl_widget_bind_buffer (GtkGstGLWidget * gst_widget)
@@ -365,7 +363,6 @@ gtk_gst_gl_widget_class_init (GtkGstGLWidgetClass * klass)
   GObjectClass *gobject_klass = (GObjectClass *) klass;
   GtkGLAreaClass *gl_widget_klass = (GtkGLAreaClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GtkGstGLWidgetPrivate));
   gtk_gst_base_widget_class_init (GTK_GST_BASE_WIDGET_CLASS (klass));
 
   gobject_klass->finalize = gtk_gst_gl_widget_finalize;
@@ -381,7 +378,7 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * gst_widget)
 
   gtk_gst_base_widget_init (base_widget);
 
-  gst_widget->priv = priv = GTK_GST_GL_WIDGET_GET_PRIVATE (gst_widget);
+  gst_widget->priv = priv = gtk_gst_gl_widget_get_instance_private (gst_widget);
 
   display = gdk_display_get_default ();
 

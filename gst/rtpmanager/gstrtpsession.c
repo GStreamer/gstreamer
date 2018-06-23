@@ -251,9 +251,6 @@ enum
   PROP_RTCP_SYNC_SEND_TIME
 };
 
-#define GST_RTP_SESSION_GET_PRIVATE(obj)  \
-	   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_SESSION, GstRtpSessionPrivate))
-
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->priv->lock)
 #define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock (&(sess)->priv->lock)
 
@@ -473,7 +470,7 @@ on_notify_stats (RTPSession * session, GParamSpec * spec,
 }
 
 #define gst_rtp_session_parent_class parent_class
-G_DEFINE_TYPE (GstRtpSession, gst_rtp_session, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRtpSession, gst_rtp_session, GST_TYPE_ELEMENT);
 
 static void
 gst_rtp_session_class_init (GstRtpSessionClass * klass)
@@ -483,8 +480,6 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstRtpSessionPrivate));
 
   gobject_class->finalize = gst_rtp_session_finalize;
   gobject_class->set_property = gst_rtp_session_set_property;
@@ -802,7 +797,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 static void
 gst_rtp_session_init (GstRtpSession * rtpsession)
 {
-  rtpsession->priv = GST_RTP_SESSION_GET_PRIVATE (rtpsession);
+  rtpsession->priv = gst_rtp_session_get_instance_private (rtpsession);
   g_mutex_init (&rtpsession->priv->lock);
   g_cond_init (&rtpsession->priv->cond);
   rtpsession->priv->sysclock = gst_system_clock_obtain ();

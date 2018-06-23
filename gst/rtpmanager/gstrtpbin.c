@@ -204,9 +204,6 @@ static GstStaticPadTemplate rtpbin_send_rtp_src_template =
     GST_STATIC_CAPS ("application/x-rtp;application/x-srtp")
     );
 
-#define GST_RTP_BIN_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BIN, GstRtpBinPrivate))
-
 #define GST_RTP_BIN_LOCK(bin)   g_mutex_lock (&(bin)->priv->bin_lock)
 #define GST_RTP_BIN_UNLOCK(bin) g_mutex_unlock (&(bin)->priv->bin_lock)
 
@@ -1983,7 +1980,7 @@ static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
 static void gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message);
 
 #define gst_rtp_bin_parent_class parent_class
-G_DEFINE_TYPE (GstRtpBin, gst_rtp_bin, GST_TYPE_BIN);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRtpBin, gst_rtp_bin, GST_TYPE_BIN);
 
 static gboolean
 _gst_element_accumulator (GSignalInvocationHint * ihint,
@@ -2027,8 +2024,6 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbin_class = (GstBinClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstRtpBinPrivate));
 
   gobject_class->dispose = gst_rtp_bin_dispose;
   gobject_class->finalize = gst_rtp_bin_finalize;
@@ -2754,7 +2749,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
 {
   gchar *cname;
 
-  rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
+  rtpbin->priv = gst_rtp_bin_get_instance_private (rtpbin);
   g_mutex_init (&rtpbin->priv->bin_lock);
   g_mutex_init (&rtpbin->priv->dyn_lock);
 
