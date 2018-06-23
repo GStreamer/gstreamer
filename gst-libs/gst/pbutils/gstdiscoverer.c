@@ -158,7 +158,7 @@ _do_init (void)
 };
 
 G_DEFINE_TYPE_EXTENDED (GstDiscoverer, gst_discoverer, G_TYPE_OBJECT, 0,
-    _do_init ());
+    G_ADD_PRIVATE (GstDiscoverer) _do_init ());
 
 enum
 {
@@ -211,8 +211,6 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
 
   gobject_class->set_property = gst_discoverer_set_property;
   gobject_class->get_property = gst_discoverer_get_property;
-
-  g_type_class_add_private (klass, sizeof (GstDiscovererPrivate));
 
   /* properties */
   /**
@@ -312,8 +310,7 @@ gst_discoverer_init (GstDiscoverer * dc)
   GstElement *tmp;
   GstFormat format = GST_FORMAT_TIME;
 
-  dc->priv = G_TYPE_INSTANCE_GET_PRIVATE (dc, GST_TYPE_DISCOVERER,
-      GstDiscovererPrivate);
+  dc->priv = gst_discoverer_get_instance_private (dc);
 
   dc->priv->timeout = DEFAULT_PROP_TIMEOUT;
   dc->priv->async = FALSE;
