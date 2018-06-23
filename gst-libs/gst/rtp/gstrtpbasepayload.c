@@ -33,9 +33,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpbasepayload_debug);
 #define GST_CAT_DEFAULT (rtpbasepayload_debug)
 
-#define GST_RTP_BASE_PAYLOAD_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BASE_PAYLOAD, GstRTPBasePayloadPrivate))
-
 struct _GstRTPBasePayloadPrivate
 {
   gboolean ts_offset_random;
@@ -141,6 +138,7 @@ static gboolean gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload);
 
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
 
 GType
 gst_rtp_base_payload_get_type (void)
@@ -159,12 +157,23 @@ gst_rtp_base_payload_get_type (void)
       0,
       (GInstanceInitFunc) gst_rtp_base_payload_init,
     };
+    GType _type;
 
-    g_once_init_leave ((gsize *) & rtpbasepayload_type,
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRTPBasePayload",
-            &rtpbasepayload_info, G_TYPE_FLAG_ABSTRACT));
+    _type = g_type_register_static (GST_TYPE_ELEMENT, "GstRTPBasePayload",
+        &rtpbasepayload_info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstRTPBasePayloadPrivate));
+
+    g_once_init_leave ((gsize *) & rtpbasepayload_type, _type);
   }
   return rtpbasepayload_type;
+}
+
+static inline GstRTPBasePayloadPrivate *
+gst_rtp_base_payload_get_instance_private (GstRTPBasePayload * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -176,7 +185,8 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstRTPBasePayloadPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -307,7 +317,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   GstRTPBasePayloadPrivate *priv;
 
   rtpbasepayload->priv = priv =
-      GST_RTP_BASE_PAYLOAD_GET_PRIVATE (rtpbasepayload);
+      gst_rtp_base_payload_get_instance_private (rtpbasepayload);
 
   templ =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");

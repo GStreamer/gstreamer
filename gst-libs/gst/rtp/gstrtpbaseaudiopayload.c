@@ -114,11 +114,6 @@ struct _GstRTPBaseAudioPayloadPrivate
   gboolean buffer_list;
 };
 
-
-#define GST_RTP_BASE_AUDIO_PAYLOAD_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_RTP_BASE_AUDIO_PAYLOAD, \
-                                GstRTPBaseAudioPayloadPrivate))
-
 static void gst_rtp_base_audio_payload_finalize (GObject * object);
 
 static void gst_rtp_base_audio_payload_set_property (GObject * object,
@@ -158,7 +153,7 @@ static gboolean gst_rtp_base_payload_audio_sink_event (GstRTPBasePayload
     * payload, GstEvent * event);
 
 #define gst_rtp_base_audio_payload_parent_class parent_class
-G_DEFINE_TYPE (GstRTPBaseAudioPayload, gst_rtp_base_audio_payload,
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTPBaseAudioPayload, gst_rtp_base_audio_payload,
     GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
@@ -167,8 +162,6 @@ gst_rtp_base_audio_payload_class_init (GstRTPBaseAudioPayloadClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstRTPBasePayloadClass *gstrtpbasepayload_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTPBaseAudioPayloadPrivate));
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -198,7 +191,7 @@ gst_rtp_base_audio_payload_class_init (GstRTPBaseAudioPayloadClass * klass)
 static void
 gst_rtp_base_audio_payload_init (GstRTPBaseAudioPayload * payload)
 {
-  payload->priv = GST_RTP_BASE_AUDIO_PAYLOAD_GET_PRIVATE (payload);
+  payload->priv = gst_rtp_base_audio_payload_get_instance_private (payload);
 
   /* these need to be set by child object if frame based */
   payload->frame_size = 0;
