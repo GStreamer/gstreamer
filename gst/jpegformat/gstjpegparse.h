@@ -44,12 +44,41 @@ G_BEGIN_DECLS
 #define GST_JPEG_PARSE_CAST(obj) ((GstJpegParse *)obj)
 
 typedef struct _GstJpegParse           GstJpegParse;
-typedef struct _GstJpegParsePrivate    GstJpegParsePrivate;
 typedef struct _GstJpegParseClass      GstJpegParseClass;
 
 struct _GstJpegParse {
   GstBaseParse parse;
-  GstJpegParsePrivate *priv;
+
+  guint last_offset;
+  guint last_entropy_len;
+  gboolean last_resync;
+
+  /* negotiated state */
+  gint caps_width, caps_height;
+  gint caps_framerate_numerator;
+  gint caps_framerate_denominator;
+
+  /* the parsed frame size */
+  guint16 width, height;
+
+  /* format color space */
+  const gchar *format;
+
+  /* TRUE if the src caps sets a specific framerate */
+  gboolean has_fps;
+
+  /* the (expected) timestamp of the next frame */
+  guint64 next_ts;
+
+  /* duration of the current frame */
+  guint64 duration;
+
+  /* video state */
+  gint framerate_numerator;
+  gint framerate_denominator;
+
+  /* tags */
+  GstTagList *tags;
 };
 
 struct _GstJpegParseClass {

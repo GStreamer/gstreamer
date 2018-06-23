@@ -75,40 +75,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (jpeg_parse_debug);
 #define GST_CAT_DEFAULT jpeg_parse_debug
 
-struct _GstJpegParsePrivate
-{
-  guint last_offset;
-  guint last_entropy_len;
-  gboolean last_resync;
-
-  /* negotiated state */
-  gint caps_width, caps_height;
-  gint caps_framerate_numerator;
-  gint caps_framerate_denominator;
-
-  /* the parsed frame size */
-  guint16 width, height;
-
-  /* format color space */
-  const gchar *format;
-
-  /* TRUE if the src caps sets a specific framerate */
-  gboolean has_fps;
-
-  /* the (expected) timestamp of the next frame */
-  guint64 next_ts;
-
-  /* duration of the current frame */
-  guint64 duration;
-
-  /* video state */
-  gint framerate_numerator;
-  gint framerate_denominator;
-
-  /* tags */
-  GstTagList *tags;
-};
-
 static GstFlowReturn
 gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
     gint * skipsize);
@@ -129,13 +95,9 @@ gst_jpeg_parse_class_init (GstJpegParseClass * klass)
 {
   GstBaseParseClass *gstbaseparse_class;
   GstElementClass *gstelement_class;
-  GObjectClass *gobject_class;
 
   gstbaseparse_class = (GstBaseParseClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (gobject_class, sizeof (GstJpegParsePrivate));
 
   gstbaseparse_class->start = gst_jpeg_parse_start;
   gstbaseparse_class->stop = gst_jpeg_parse_stop;
@@ -161,10 +123,7 @@ gst_jpeg_parse_class_init (GstJpegParseClass * klass)
 static void
 gst_jpeg_parse_init (GstJpegParse * parse)
 {
-  parse->priv = G_TYPE_INSTANCE_GET_PRIVATE (parse, GST_TYPE_JPEG_PARSE,
-      GstJpegParsePrivate);
-
-  parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+  parse->next_ts = GST_CLOCK_TIME_NONE;
 }
 
 static gboolean
@@ -176,13 +135,12 @@ gst_jpeg_parse_set_sink_caps (GstBaseParse * bparse, GstCaps * caps)
 
   if ((framerate = gst_structure_get_value (s, "framerate")) != NULL) {
     if (GST_VALUE_HOLDS_FRACTION (framerate)) {
-      parse->priv->framerate_numerator =
-          gst_value_get_fraction_numerator (framerate);
-      parse->priv->framerate_denominator =
+      parse->framerate_numerator = gst_value_get_fraction_numerator (framerate);
+      parse->framerate_denominator =
           gst_value_get_fraction_denominator (framerate);
-      parse->priv->has_fps = TRUE;
+      parse->has_fps = TRUE;
       GST_DEBUG_OBJECT (parse, "got framerate of %d/%d",
-          parse->priv->framerate_numerator, parse->priv->framerate_denominator);
+          parse->framerate_numerator, parse->framerate_denominator);
     }
   }
 
@@ -253,15 +211,14 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
   GST_DEBUG ("Parsing jpeg image data (%u bytes)", size);
 
   GST_DEBUG ("Parse state: offset=%d, resync=%d, entropy len=%d",
-      parse->priv->last_offset, parse->priv->last_resync,
-      parse->priv->last_entropy_len);
+      parse->last_offset, parse->last_resync, parse->last_entropy_len);
 
   /* offset is 2 less than actual offset;
    * - adapter needs at least 4 bytes for scanning,
    * - start and end marker ensure at least that much
    */
   /* resume from state offset */
-  offset = parse->priv->last_offset;
+  offset = parse->last_offset;
 
   while (1) {
     guint frame_len;
@@ -275,7 +232,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
       GST_DEBUG ("Lost sync at 0x%08x, resyncing", offset + 2);
     }
     /* may have marker, but could have been resyncng */
-    resync = resync || parse->priv->last_resync;
+    resync = resync || parse->last_resync;
     /* Skip over extra 0xff */
     while ((noffset >= 0) && ((value & 0xff) == 0xff)) {
       noffset++;
@@ -295,15 +252,15 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
     if (value == 0xd9) {
       GST_DEBUG ("0x%08x: EOI marker", offset + 2);
       /* clear parse state */
-      parse->priv->last_resync = FALSE;
-      parse->priv->last_offset = 0;
+      parse->last_resync = FALSE;
+      parse->last_offset = 0;
       return (offset + 4);
     } else if (value == 0xd8) {
       /* Skip this frame if we found another SOI marker */
       GST_DEBUG ("0x%08x: SOI marker before EOI, skipping", offset + 2);
       /* clear parse state */
-      parse->priv->last_resync = FALSE;
-      parse->priv->last_offset = 0;
+      parse->last_resync = FALSE;
+      parse->last_offset = 0;
       return -(offset + 2);
     }
 
@@ -326,7 +283,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
     }
 
     if (gst_jpeg_parse_parse_tag_has_entropy_segment (value)) {
-      guint eseglen = parse->priv->last_entropy_len;
+      guint eseglen = parse->last_entropy_len;
 
       GST_DEBUG ("0x%08x: finding entropy segment length", offset + 2);
       noffset = offset + 2 + frame_len + eseglen;
@@ -335,7 +292,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
             0x0000ff00, noffset, size - noffset, &value);
         if (noffset < 0) {
           /* need more data */
-          parse->priv->last_entropy_len = size - offset - 4 - frame_len - 2;
+          parse->last_entropy_len = size - offset - 4 - frame_len - 2;
           goto need_more_data;
         }
         if ((value & 0xff) != 0x00) {
@@ -344,7 +301,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
         }
         noffset++;
       }
-      parse->priv->last_entropy_len = 0;
+      parse->last_entropy_len = 0;
       frame_len += eseglen;
       GST_DEBUG ("entropy segment length=%u => frame_len=%u", eseglen,
           frame_len);
@@ -371,8 +328,8 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse, GstMapInfo * mapinfo)
   /* EXITS */
 need_more_data:
   {
-    parse->priv->last_offset = offset;
-    parse->priv->last_resync = resync;
+    parse->last_offset = offset;
+    parse->last_resync = resync;
     return 0;
   }
 }
@@ -400,9 +357,9 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
     return FALSE;
 
   /* Get w and h */
-  if (!gst_byte_reader_get_uint16_be (reader, &parse->priv->height))
+  if (!gst_byte_reader_get_uint16_be (reader, &parse->height))
     return FALSE;
-  if (!gst_byte_reader_get_uint16_be (reader, &parse->priv->width))
+  if (!gst_byte_reader_get_uint16_be (reader, &parse->width))
     return FALSE;
 
   /* Get number of components */
@@ -433,20 +390,20 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
 
   if (numcomps == 1) {
     /* gray image - no format */
-    parse->priv->format = "";
+    parse->format = "";
   } else if (numcomps == 3) {
     temp = (blockWidth[0] * blockHeight[0]) / (blockWidth[1] * blockHeight[1]);
 
     if (temp == 4 && blockHeight[0] == 2)
-      parse->priv->format = "I420";
+      parse->format = "I420";
     else if (temp == 4 && blockHeight[0] == 4)
-      parse->priv->format = "Y41B";
+      parse->format = "Y41B";
     else if (temp == 2)
-      parse->priv->format = "UYVY";
+      parse->format = "UYVY";
     else if (temp == 1)
-      parse->priv->format = "YV12";
+      parse->format = "YV12";
     else
-      parse->priv->format = "";
+      parse->format = "";
   } else {
     return FALSE;
   }
@@ -492,9 +449,9 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
 static inline GstTagList *
 get_tag_list (GstJpegParse * parse)
 {
-  if (!parse->priv->tags)
-    parse->priv->tags = gst_tag_list_new_empty ();
-  return parse->priv->tags;
+  if (!parse->tags)
+    parse->tags = gst_tag_list_new_empty ();
+  return parse->tags;
 }
 
 static inline void
@@ -511,15 +468,14 @@ extract_and_queue_tags (GstJpegParse * parse, guint size, guint8 * data,
   gst_buffer_unref (buf);
 
   if (tags) {
-    GstTagList *taglist = parse->priv->tags;
+    GstTagList *taglist = parse->tags;
     if (taglist) {
       gst_tag_list_insert (taglist, tags, GST_TAG_MERGE_REPLACE);
       gst_tag_list_unref (tags);
     } else {
-      parse->priv->tags = tags;
+      parse->tags = tags;
     }
-    GST_DEBUG_OBJECT (parse, "collected tags: %" GST_PTR_FORMAT,
-        parse->priv->tags);
+    GST_DEBUG_OBJECT (parse, "collected tags: %" GST_PTR_FORMAT, parse->tags);
   }
 }
 
@@ -719,32 +675,31 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
   gboolean res;
 
   GST_DEBUG_OBJECT (parse, "setting caps on srcpad (hdr_ok=%d, have_fps=%d)",
-      header_ok, parse->priv->has_fps);
+      header_ok, parse->has_fps);
 
   caps = gst_caps_new_simple ("image/jpeg",
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (header_ok == TRUE) {
     gst_caps_set_simple (caps,
-        "format", G_TYPE_STRING, parse->priv->format,
-        "width", G_TYPE_INT, parse->priv->width,
-        "height", G_TYPE_INT, parse->priv->height, NULL);
+        "format", G_TYPE_STRING, parse->format,
+        "width", G_TYPE_INT, parse->width,
+        "height", G_TYPE_INT, parse->height, NULL);
   }
 
-  if (parse->priv->has_fps == TRUE) {
+  if (parse->has_fps == TRUE) {
     /* we have a framerate */
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
-        parse->priv->framerate_numerator,
-        parse->priv->framerate_denominator, NULL);
+        parse->framerate_numerator, parse->framerate_denominator, NULL);
 
-    if (!GST_CLOCK_TIME_IS_VALID (parse->priv->duration)
-        && parse->priv->framerate_numerator != 0) {
-      parse->priv->duration = gst_util_uint64_scale_int (GST_SECOND,
-          parse->priv->framerate_denominator, parse->priv->framerate_numerator);
+    if (!GST_CLOCK_TIME_IS_VALID (parse->duration)
+        && parse->framerate_numerator != 0) {
+      parse->duration = gst_util_uint64_scale_int (GST_SECOND,
+          parse->framerate_denominator, parse->framerate_numerator);
     }
   } else {
     /* unknown duration */
-    parse->priv->duration = GST_CLOCK_TIME_NONE;
+    parse->duration = GST_CLOCK_TIME_NONE;
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
   }
 
@@ -764,17 +719,17 @@ gst_jpeg_parse_pre_push_frame (GstBaseParse * bparse, GstBaseParseFrame * frame)
   GstJpegParse *parse = GST_JPEG_PARSE_CAST (bparse);
   GstBuffer *outbuf = frame->buffer;
 
-  GST_BUFFER_TIMESTAMP (outbuf) = parse->priv->next_ts;
+  GST_BUFFER_TIMESTAMP (outbuf) = parse->next_ts;
 
-  if (parse->priv->has_fps && GST_CLOCK_TIME_IS_VALID (parse->priv->next_ts)
-      && GST_CLOCK_TIME_IS_VALID (parse->priv->duration)) {
-    parse->priv->next_ts += parse->priv->duration;
+  if (parse->has_fps && GST_CLOCK_TIME_IS_VALID (parse->next_ts)
+      && GST_CLOCK_TIME_IS_VALID (parse->duration)) {
+    parse->next_ts += parse->duration;
   } else {
-    parse->priv->duration = GST_CLOCK_TIME_NONE;
-    parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+    parse->duration = GST_CLOCK_TIME_NONE;
+    parse->next_ts = GST_CLOCK_TIME_NONE;
   }
 
-  GST_BUFFER_DURATION (outbuf) = parse->priv->duration;
+  GST_BUFFER_DURATION (outbuf) = parse->duration;
 
   return GST_FLOW_OK;
 }
@@ -801,11 +756,11 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
     return GST_FLOW_OK;
   }
 
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (parse->priv->next_ts)))
-    parse->priv->next_ts = timestamp;
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (parse->next_ts)))
+    parse->next_ts = timestamp;
 
   if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (duration)))
-    parse->priv->duration = duration;
+    parse->duration = duration;
 
   len = gst_jpeg_parse_get_image_length (parse, &mapinfo);
   if (len == 0) {
@@ -821,38 +776,35 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
   GST_LOG_OBJECT (parse, "parsed image of size %d", len);
 
   /* reset the offset (only when we flushed) */
-  parse->priv->last_offset = 0;
-  parse->priv->last_entropy_len = 0;
+  parse->last_offset = 0;
+  parse->last_entropy_len = 0;
 
   header_ok = gst_jpeg_parse_read_header (parse, &mapinfo, len);
 
   gst_buffer_unmap (frame->buffer, &mapinfo);
 
-  if (parse->priv->width != parse->priv->caps_width
-      || parse->priv->height != parse->priv->caps_height
-      || parse->priv->framerate_numerator !=
-      parse->priv->caps_framerate_numerator
-      || parse->priv->framerate_denominator !=
-      parse->priv->caps_framerate_denominator) {
+  if (parse->width != parse->caps_width
+      || parse->height != parse->caps_height
+      || parse->framerate_numerator !=
+      parse->caps_framerate_numerator
+      || parse->framerate_denominator != parse->caps_framerate_denominator) {
     if (!gst_jpeg_parse_set_new_caps (parse, header_ok)) {
       GST_ELEMENT_ERROR (parse, CORE, NEGOTIATION,
           ("Can't set caps to the src pad"), ("Can't set caps to the src pad"));
       return GST_FLOW_ERROR;
     }
 
-    if (parse->priv->tags) {
-      GST_DEBUG_OBJECT (parse, "Pushing tags: %" GST_PTR_FORMAT,
-          parse->priv->tags);
+    if (parse->tags) {
+      GST_DEBUG_OBJECT (parse, "Pushing tags: %" GST_PTR_FORMAT, parse->tags);
       gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (parse),
-          gst_event_new_tag (parse->priv->tags));
-      parse->priv->tags = NULL;
+          gst_event_new_tag (parse->tags));
+      parse->tags = NULL;
     }
 
-    parse->priv->caps_width = parse->priv->width;
-    parse->priv->caps_height = parse->priv->height;
-    parse->priv->caps_framerate_numerator = parse->priv->framerate_numerator;
-    parse->priv->caps_framerate_denominator =
-        parse->priv->framerate_denominator;
+    parse->caps_width = parse->width;
+    parse->caps_height = parse->height;
+    parse->caps_framerate_numerator = parse->framerate_numerator;
+    parse->caps_framerate_denominator = parse->framerate_denominator;
   }
 
 
@@ -869,11 +821,11 @@ gst_jpeg_parse_sink_event (GstBaseParse * bparse, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      parse->priv->next_ts = GST_CLOCK_TIME_NONE;
-      parse->priv->duration = GST_CLOCK_TIME_NONE;
-      parse->priv->last_offset = 0;
-      parse->priv->last_entropy_len = 0;
-      parse->priv->last_resync = FALSE;
+      parse->next_ts = GST_CLOCK_TIME_NONE;
+      parse->duration = GST_CLOCK_TIME_NONE;
+      parse->last_offset = 0;
+      parse->last_entropy_len = 0;
+      parse->last_resync = FALSE;
       res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (bparse, event);
       break;
     case GST_EVENT_TAG:{
@@ -886,7 +838,7 @@ gst_jpeg_parse_sink_event (GstBaseParse * bparse, GstEvent * event)
         /* Hold on to the tags till the srcpad caps are definitely set */
         gst_tag_list_insert (get_tag_list (parse), taglist,
             GST_TAG_MERGE_REPLACE);
-        GST_DEBUG ("collected tags: %" GST_PTR_FORMAT, parse->priv->tags);
+        GST_DEBUG ("collected tags: %" GST_PTR_FORMAT, parse->tags);
         gst_event_unref (event);
       }
       break;
@@ -906,24 +858,23 @@ gst_jpeg_parse_start (GstBaseParse * bparse)
 
   parse = GST_JPEG_PARSE_CAST (bparse);
 
-  parse->priv->has_fps = FALSE;
+  parse->has_fps = FALSE;
 
-  parse->priv->width = parse->priv->height = 0;
-  parse->priv->framerate_numerator = 0;
-  parse->priv->framerate_denominator = 1;
+  parse->width = parse->height = 0;
+  parse->framerate_numerator = 0;
+  parse->framerate_denominator = 1;
 
-  parse->priv->caps_framerate_numerator =
-      parse->priv->caps_framerate_denominator = 0;
-  parse->priv->caps_width = parse->priv->caps_height = -1;
+  parse->caps_framerate_numerator = parse->caps_framerate_denominator = 0;
+  parse->caps_width = parse->caps_height = -1;
 
-  parse->priv->next_ts = GST_CLOCK_TIME_NONE;
-  parse->priv->duration = GST_CLOCK_TIME_NONE;
+  parse->next_ts = GST_CLOCK_TIME_NONE;
+  parse->duration = GST_CLOCK_TIME_NONE;
 
-  parse->priv->last_offset = 0;
-  parse->priv->last_entropy_len = 0;
-  parse->priv->last_resync = FALSE;
+  parse->last_offset = 0;
+  parse->last_entropy_len = 0;
+  parse->last_resync = FALSE;
 
-  parse->priv->tags = NULL;
+  parse->tags = NULL;
 
   return TRUE;
 }
@@ -935,9 +886,9 @@ gst_jpeg_parse_stop (GstBaseParse * bparse)
 
   parse = GST_JPEG_PARSE_CAST (bparse);
 
-  if (parse->priv->tags) {
-    gst_tag_list_unref (parse->priv->tags);
-    parse->priv->tags = NULL;
+  if (parse->tags) {
+    gst_tag_list_unref (parse->tags);
+    parse->tags = NULL;
   }
 
   return TRUE;

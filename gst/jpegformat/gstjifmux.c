@@ -95,16 +95,6 @@ typedef struct _GstJifMuxMarker
   gboolean owned;
 } GstJifMuxMarker;
 
-struct _GstJifMuxPrivate
-{
-  GstPad *srcpad;
-
-  /* list of GstJifMuxMarker */
-  GList *markers;
-  guint scan_size;
-  const guint8 *scan_data;
-};
-
 static void gst_jif_mux_finalize (GObject * object);
 
 static void gst_jif_mux_reset (GstJifMux * self);
@@ -130,8 +120,6 @@ gst_jif_mux_class_init (GstJifMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_type_class_add_private (gobject_class, sizeof (GstJifMuxPrivate));
-
   gobject_class->finalize = gst_jif_mux_finalize;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_jif_mux_change_state);
@@ -156,9 +144,6 @@ gst_jif_mux_init (GstJifMux * self)
 {
   GstPad *sinkpad;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_JIF_MUX,
-      GstJifMuxPrivate);
-
   /* create the sink and src pads */
   sinkpad = gst_pad_new_from_static_template (&gst_jif_mux_sink_pad_template,
       "sink");
@@ -167,9 +152,9 @@ gst_jif_mux_init (GstJifMux * self)
       GST_DEBUG_FUNCPTR (gst_jif_mux_sink_event));
   gst_element_add_pad (GST_ELEMENT (self), sinkpad);
 
-  self->priv->srcpad =
+  self->srcpad =
       gst_pad_new_from_static_template (&gst_jif_mux_src_pad_template, "src");
-  gst_element_add_pad (GST_ELEMENT (self), self->priv->srcpad);
+  gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 }
 
 static void
@@ -193,7 +178,7 @@ gst_jif_mux_sink_setcaps (GstJifMux * self, GstCaps * caps)
     /* FIXME: do we want to switch it like this or use a gobject property ? */
   }
 
-  return gst_pad_set_caps (self->priv->srcpad, caps);
+  return gst_pad_set_caps (self->srcpad, caps);
 }
 
 static gboolean
@@ -246,12 +231,12 @@ gst_jif_mux_reset (GstJifMux * self)
   GList *node;
   GstJifMuxMarker *m;
 
-  for (node = self->priv->markers; node; node = g_list_next (node)) {
+  for (node = self->markers; node; node = g_list_next (node)) {
     m = (GstJifMuxMarker *) node->data;
     gst_jif_mux_marker_free (m);
   }
-  g_list_free (self->priv->markers);
-  self->priv->markers = NULL;
+  g_list_free (self->markers);
+  self->markers = NULL;
 }
 
 static GstJifMuxMarker *
@@ -305,12 +290,12 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
       case SOI:
         GST_DEBUG_OBJECT (self, "marker = %x", marker);
         m = gst_jif_mux_new_marker (marker, 0, NULL, FALSE);
-        self->priv->markers = g_list_prepend (self->priv->markers, m);
+        self->markers = g_list_prepend (self->markers, m);
         break;
       case EOI:
         GST_DEBUG_OBJECT (self, "marker = %x", marker);
         m = gst_jif_mux_new_marker (marker, 0, NULL, FALSE);
-        self->priv->markers = g_list_prepend (self->priv->markers, m);
+        self->markers = g_list_prepend (self->markers, m);
         goto done;
       default:
         if (!gst_byte_reader_get_uint16_be (&reader, &size))
@@ -319,7 +304,7 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
           goto error;
 
         m = gst_jif_mux_new_marker (marker, size - 2, data, FALSE);
-        self->priv->markers = g_list_prepend (self->priv->markers, m);
+        self->markers = g_list_prepend (self->markers, m);
 
         GST_DEBUG_OBJECT (self, "marker = %2x, size = %u", marker, size);
         break;
@@ -343,12 +328,12 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
       }
 
       /* remaining size except EOI is scan data */
-      self->priv->scan_size = eoi_pos - gst_byte_reader_get_pos (&reader);
-      if (!gst_byte_reader_get_data (&reader, self->priv->scan_size,
-              &self->priv->scan_data))
+      self->scan_size = eoi_pos - gst_byte_reader_get_pos (&reader);
+      if (!gst_byte_reader_get_data (&reader, self->scan_size,
+              &self->scan_data))
         goto error;
 
-      GST_DEBUG_OBJECT (self, "scan data, size = %u", self->priv->scan_size);
+      GST_DEBUG_OBJECT (self, "scan data, size = %u", self->scan_size);
     }
 
     if (!gst_byte_reader_peek_uint8 (&reader, &marker))
@@ -358,7 +343,7 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
       gst_byte_reader_get_pos (&reader), (guint) map.size);
 
 done:
-  self->priv->markers = g_list_reverse (self->priv->markers);
+  self->markers = g_list_reverse (self->markers);
   gst_buffer_unmap (buf, &map);
 
   return TRUE;
@@ -396,8 +381,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
    */
 
   /* find some reference points where we insert before/after */
-  file_hdr = self->priv->markers;
-  for (node = self->priv->markers; node; node = g_list_next (node)) {
+  file_hdr = self->markers;
+  for (node = self->markers; node; node = g_list_next (node)) {
     m = (GstJifMuxMarker *) node->data;
 
     switch (m->marker) {
@@ -506,8 +491,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     m = gst_jif_mux_new_marker (APP0, sizeof (jfif_data),
         (const guint8 *) &jfif_data, FALSE);
     /* insert into self->markers list */
-    self->priv->markers = g_list_insert (self->priv->markers, m, 1);
-    app0_jfif = g_list_nth (self->priv->markers, 1);
+    self->markers = g_list_insert (self->markers, m, 1);
+    app0_jfif = g_list_nth (self->markers, 1);
   }
   /* else */
   /* remove JFIF if exists */
@@ -563,12 +548,11 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
           pos = app0_jfif;
         pos = g_list_next (pos);
 
-        self->priv->markers =
-            g_list_insert_before (self->priv->markers, pos, m);
+        self->markers = g_list_insert_before (self->markers, pos, m);
         if (pos) {
           app1_exif = g_list_previous (pos);
         } else {
-          app1_exif = g_list_last (self->priv->markers);
+          app1_exif = g_list_last (self->markers);
         }
       }
       modified = TRUE;
@@ -607,7 +591,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
         pos = app0_jfif;
       pos = g_list_next (pos);
 
-      self->priv->markers = g_list_insert_before (self->priv->markers, pos, m);
+      self->markers = g_list_insert_before (self->markers, pos, m);
 
     }
     gst_buffer_unref (xmp_data);
@@ -626,8 +610,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
         TRUE);
     /* FIXME: if we have one already, replace */
     /* this should go before SOS, maybe at the end of file-header */
-    self->priv->markers = g_list_insert_before (self->priv->markers,
-        frame_hdr, m);
+    self->markers = g_list_insert_before (self->markers, frame_hdr, m);
 
     modified = TRUE;
   }
@@ -645,12 +628,12 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
   GstByteWriter *writer;
   GstJifMuxMarker *m;
   GList *node;
-  guint size = self->priv->scan_size;
+  guint size = self->scan_size;
   gboolean writer_status = TRUE;
   GstMapInfo map;
 
   /* iterate list and collect size */
-  for (node = self->priv->markers; node; node = g_list_next (node)) {
+  for (node = self->markers; node; node = g_list_next (node)) {
     m = (GstJifMuxMarker *) node->data;
 
     /* some markers like e.g. SOI are empty */
@@ -674,8 +657,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   writer = gst_byte_writer_new_with_data (map.data, map.size, TRUE);
 
-  for (node = self->priv->markers; node && writer_status;
-      node = g_list_next (node)) {
+  for (node = self->markers; node && writer_status; node = g_list_next (node)) {
     m = (GstJifMuxMarker *) node->data;
 
     writer_status &= gst_byte_writer_put_uint8 (writer, 0xff);
@@ -689,10 +671,9 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
     }
 
     if (m->marker == SOS) {
-      GST_DEBUG_OBJECT (self, "scan data, size = %u", self->priv->scan_size);
+      GST_DEBUG_OBJECT (self, "scan data, size = %u", self->scan_size);
       writer_status &=
-          gst_byte_writer_put_data (writer, self->priv->scan_data,
-          self->priv->scan_size);
+          gst_byte_writer_put_data (writer, self->scan_data, self->scan_size);
     }
   }
   gst_buffer_unmap (buf, &map);
@@ -736,7 +717,7 @@ gst_jif_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   gst_jif_mux_reset (self);
 
   if (fret == GST_FLOW_OK) {
-    fret = gst_pad_push (self->priv->srcpad, buf);
+    fret = gst_pad_push (self->srcpad, buf);
   }
   return fret;
 }

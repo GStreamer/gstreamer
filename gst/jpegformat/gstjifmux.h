@@ -42,12 +42,17 @@ G_BEGIN_DECLS
 #define GST_JIF_MUX_CAST(obj) ((GstJifMux *) (obj))
 
 typedef struct _GstJifMux           GstJifMux;
-typedef struct _GstJifMuxPrivate    GstJifMuxPrivate;
 typedef struct _GstJifMuxClass      GstJifMuxClass;
 
 struct _GstJifMux {
   GstElement element;
-  GstJifMuxPrivate *priv;
+
+  GstPad *srcpad;
+
+  /* list of GstJifMuxMarker */
+  GList *markers;
+  guint scan_size;
+  const guint8 *scan_data;
 };
 
 struct _GstJifMuxClass {
