@@ -126,9 +126,8 @@ enum
 static void gst_gl_mixer_bin_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
 
-#define GST_GL_MIXER_BIN_GET_PRIVATE(o)					\
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_MIXER_BIN, GstGLMixerBinPrivate))
 G_DEFINE_TYPE_WITH_CODE (GstGLMixerBin, gst_gl_mixer_bin, GST_TYPE_BIN,
+    G_ADD_PRIVATE (GstGLMixerBin)
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_gl_mixer_bin_child_proxy_init));
 
@@ -158,8 +157,6 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *upload_caps;
-
-  g_type_class_add_private (klass, sizeof (GstGLMixerBinPrivate));
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixerbin", 0,
       "opengl mixer bin");
@@ -233,7 +230,7 @@ gst_gl_mixer_bin_init (GstGLMixerBin * self)
   gboolean res = TRUE;
   GstPad *pad;
 
-  self->priv = GST_GL_MIXER_BIN_GET_PRIVATE (self);
+  self->priv = gst_gl_mixer_bin_get_instance_private (self);
 
   self->out_convert = gst_element_factory_make ("glcolorconvert", NULL);
   self->download = gst_element_factory_make ("gldownload", NULL);
