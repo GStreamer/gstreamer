@@ -27,12 +27,6 @@
 #define GST_CAT_DEFAULT gst_webrtc_ice_stream_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define gst_webrtc_ice_stream_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstWebRTCICEStream, gst_webrtc_ice_stream,
-    GST_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_stream_debug,
-        "webrtcicestream", 0, "webrtcicestream"););
-
 enum
 {
   SIGNAL_0,
@@ -53,6 +47,12 @@ struct _GstWebRTCICEStreamPrivate
   gboolean gathered;
   GList *transports;
 };
+
+#define gst_webrtc_ice_stream_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstWebRTCICEStream, gst_webrtc_ice_stream,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstWebRTCICEStream)
+    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_stream_debug,
+        "webrtcicestream", 0, "webrtcicestream"););
 
 static void
 gst_webrtc_ice_stream_set_property (GObject * object, guint prop_id,
@@ -201,8 +201,6 @@ gst_webrtc_ice_stream_class_init (GstWebRTCICEStreamClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstWebRTCICEStreamPrivate));
-
   gobject_class->constructed = gst_webrtc_ice_stream_constructed;
   gobject_class->get_property = gst_webrtc_ice_stream_get_property;
   gobject_class->set_property = gst_webrtc_ice_stream_set_property;
@@ -226,9 +224,7 @@ gst_webrtc_ice_stream_class_init (GstWebRTCICEStreamClass * klass)
 static void
 gst_webrtc_ice_stream_init (GstWebRTCICEStream * ice)
 {
-  ice->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE ((ice), GST_TYPE_WEBRTC_ICE_STREAM,
-      GstWebRTCICEStreamPrivate);
+  ice->priv = gst_webrtc_ice_stream_get_instance_private (ice);
 }
 
 GstWebRTCICEStream *

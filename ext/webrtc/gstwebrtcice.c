@@ -35,12 +35,6 @@
 #define GST_CAT_DEFAULT gst_webrtc_ice_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define gst_webrtc_ice_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstWebRTCICE, gst_webrtc_ice,
-    GST_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_debug, "webrtcice", 0, "webrtcice");
-    );
-
 GQuark
 gst_webrtc_ice_error_quark (void)
 {
@@ -79,6 +73,12 @@ struct _GstWebRTCICEPrivate
   GMutex lock;
   GCond cond;
 };
+
+#define gst_webrtc_ice_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstWebRTCICE, gst_webrtc_ice,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstWebRTCICE)
+    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_debug, "webrtcice", 0, "webrtcice");
+    );
 
 static gboolean
 _unlock_pc_thread (GMutex * lock)
@@ -815,8 +815,6 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstWebRTCICEPrivate));
-
   gobject_class->get_property = gst_webrtc_ice_get_property;
   gobject_class->set_property = gst_webrtc_ice_set_property;
   gobject_class->finalize = gst_webrtc_ice_finalize;
@@ -860,9 +858,7 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
 static void
 gst_webrtc_ice_init (GstWebRTCICE * ice)
 {
-  ice->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE ((ice), GST_TYPE_WEBRTC_ICE,
-      GstWebRTCICEPrivate);
+  ice->priv = gst_webrtc_ice_get_instance_private (ice);
 
   g_mutex_init (&ice->priv->lock);
   g_cond_init (&ice->priv->cond);

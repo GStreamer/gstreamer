@@ -219,6 +219,7 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 
 #define gst_webrtc_bin_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
+    G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
         "webrtcbin element"););
 
@@ -4025,8 +4026,6 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstWebRTCBinPrivate));
-
   element_class->request_new_pad = gst_webrtc_bin_request_new_pad;
   element_class->release_pad = gst_webrtc_bin_release_pad;
   element_class->change_state = gst_webrtc_bin_change_state;
@@ -4334,9 +4333,7 @@ _transport_free (GObject ** object)
 static void
 gst_webrtc_bin_init (GstWebRTCBin * webrtc)
 {
-  webrtc->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE ((webrtc), GST_TYPE_WEBRTC_BIN,
-      GstWebRTCBinPrivate);
+  webrtc->priv = gst_webrtc_bin_get_instance_private (webrtc);
 
   _start_thread (webrtc);
 

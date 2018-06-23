@@ -27,13 +27,6 @@
 #define GST_CAT_DEFAULT gst_webrtc_nice_transport_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define gst_webrtc_nice_transport_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstWebRTCNiceTransport, gst_webrtc_nice_transport,
-    GST_TYPE_WEBRTC_ICE_TRANSPORT,
-    GST_DEBUG_CATEGORY_INIT (gst_webrtc_nice_transport_debug,
-        "webrtcnicetransport", 0, "webrtcnicetransport");
-    );
-
 enum
 {
   SIGNAL_0,
@@ -52,6 +45,13 @@ struct _GstWebRTCNiceTransportPrivate
 {
   gboolean running;
 };
+
+#define gst_webrtc_nice_transport_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstWebRTCNiceTransport, gst_webrtc_nice_transport,
+    GST_TYPE_WEBRTC_ICE_TRANSPORT, G_ADD_PRIVATE (GstWebRTCNiceTransport)
+    GST_DEBUG_CATEGORY_INIT (gst_webrtc_nice_transport_debug,
+        "webrtcnicetransport", 0, "webrtcnicetransport");
+    );
 
 static NiceComponentType
 _gst_component_to_nice (GstWebRTCICEComponent component)
@@ -236,8 +236,6 @@ gst_webrtc_nice_transport_class_init (GstWebRTCNiceTransportClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstWebRTCNiceTransportPrivate));
-
   gobject_class->constructed = gst_webrtc_nice_transport_constructed;
   gobject_class->get_property = gst_webrtc_nice_transport_get_property;
   gobject_class->set_property = gst_webrtc_nice_transport_set_property;
@@ -254,9 +252,7 @@ gst_webrtc_nice_transport_class_init (GstWebRTCNiceTransportClass * klass)
 static void
 gst_webrtc_nice_transport_init (GstWebRTCNiceTransport * nice)
 {
-  nice->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE ((nice), GST_TYPE_WEBRTC_NICE_TRANSPORT,
-      GstWebRTCNiceTransportPrivate);
+  nice->priv = gst_webrtc_nice_transport_get_instance_private (nice);
 }
 
 GstWebRTCNiceTransport *
