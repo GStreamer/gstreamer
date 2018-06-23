@@ -62,16 +62,9 @@
 /*                                                              */
 /* =============================================================*/
 
-#define GST_GL_WINDOW_COCOA_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_COCOA, GstGLWindowCocoaPrivate))
-
 #define GST_CAT_DEFAULT gst_gl_window_cocoa_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
-#define gst_gl_window_cocoa_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_TYPE_GL_WINDOW, DEBUG_INIT);
 static void gst_gl_window_cocoa_finalize (GObject * object);
 
 static gboolean gst_gl_window_cocoa_open (GstGLWindow *window, GError **err);
@@ -103,13 +96,19 @@ struct _GstGLWindowCocoaPrivate
   gpointer gl_queue;
 };
 
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
+
+#define gst_gl_window_cocoa_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_TYPE_GL_WINDOW,
+    G_ADD_PRIVATE (GstGLWindowCocoa)
+    DEBUG_INIT);
+
 static void
 gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstGLWindowCocoaPrivate));
 
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_close);
@@ -133,7 +132,7 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 static void
 gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 {
-  window->priv = GST_GL_WINDOW_COCOA_GET_PRIVATE (window);
+  window->priv = gst_gl_window_cocoa_get_instance_private (window);
 
   window->priv->preferred_width = 320;
   window->priv->preferred_height = 240;

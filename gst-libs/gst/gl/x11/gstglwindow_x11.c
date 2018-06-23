@@ -36,13 +36,7 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
-#define GST_GL_WINDOW_X11_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_X11, GstGLWindowX11Private))
-
 #define GST_CAT_DEFAULT gst_gl_window_debug
-
-#define gst_gl_window_x11_parent_class parent_class
-G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_TYPE_GL_WINDOW);
 
 G_GNUC_INTERNAL
     gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11,
@@ -70,6 +64,10 @@ struct _GstGLWindowX11Private
 
   GstVideoRectangle render_rect;
 };
+
+#define gst_gl_window_x11_parent_class parent_class
+G_DEFINE_TYPE_WITH_PRIVATE (GstGLWindowX11, gst_gl_window_x11,
+    GST_TYPE_GL_WINDOW);
 
 static guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
 guintptr gst_gl_window_x11_get_gl_context (GstGLWindow * window);
@@ -102,8 +100,6 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstGLWindowX11Private));
-
   obj_class->finalize = gst_gl_window_x11_finalize;
 
   window_class->get_display = GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_display);
@@ -126,7 +122,7 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
 static void
 gst_gl_window_x11_init (GstGLWindowX11 * window)
 {
-  window->priv = GST_GL_WINDOW_X11_GET_PRIVATE (window);
+  window->priv = gst_gl_window_x11_get_instance_private (window);
 }
 
 /* Must be called in the gl thread */

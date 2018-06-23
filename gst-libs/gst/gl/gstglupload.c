@@ -63,15 +63,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 #define GST_CAT_DEFAULT gst_gl_upload_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");
-
-G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
-    DEBUG_INIT);
 static void gst_gl_upload_finalize (GObject * object);
-
-#define GST_GL_UPLOAD_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GST_TYPE_GL_UPLOAD, GstGLUploadPrivate))
 
 static GstGLTextureTarget
 _caps_get_texture_target (GstCaps * caps, GstGLTextureTarget default_target)
@@ -112,6 +104,12 @@ struct _GstGLUploadPrivate
   gpointer method_impl;
   int method_i;
 };
+
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "upload");
+
+G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstGLUpload) DEBUG_INIT);
 
 static GstCaps *
 _set_caps_features_with_passthrough (const GstCaps * caps,
@@ -1559,15 +1557,13 @@ gst_gl_upload_get_input_template_caps (void)
 static void
 gst_gl_upload_class_init (GstGLUploadClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstGLUploadPrivate));
-
   G_OBJECT_CLASS (klass)->finalize = gst_gl_upload_finalize;
 }
 
 static void
 gst_gl_upload_init (GstGLUpload * upload)
 {
-  upload->priv = GST_GL_UPLOAD_GET_PRIVATE (upload);
+  upload->priv = gst_gl_upload_get_instance_private (upload);
 }
 
 /**

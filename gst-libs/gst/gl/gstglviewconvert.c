@@ -102,14 +102,11 @@ struct _GstGLViewConvertPrivate
   GLuint attr_texture;
 };
 
-#define GST_GL_VIEW_CONVERT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), \
-    GST_TYPE_GL_VIEW_CONVERT, GstGLViewConvertPrivate))
-
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_view_convert_debug, "glviewconvert", 0, "glviewconvert object");
 
 G_DEFINE_TYPE_WITH_CODE (GstGLViewConvert, gst_gl_view_convert,
-    GST_TYPE_OBJECT, DEBUG_INIT);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLViewConvert) DEBUG_INIT);
 
 static void gst_gl_view_convert_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -261,8 +258,6 @@ gst_gl_view_convert_class_init (GstGLViewConvertClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstGLViewConvertPrivate));
-
   gobject_class->set_property = gst_gl_view_convert_set_property;
   gobject_class->get_property = gst_gl_view_convert_get_property;
   gobject_class->finalize = gst_gl_view_convert_finalize;
@@ -302,7 +297,7 @@ gst_gl_view_convert_class_init (GstGLViewConvertClass * klass)
 static void
 gst_gl_view_convert_init (GstGLViewConvert * convert)
 {
-  convert->priv = GST_GL_VIEW_CONVERT_GET_PRIVATE (convert);
+  convert->priv = gst_gl_view_convert_get_instance_private (convert);
 
   convert->shader = NULL;
   convert->downmix_mode = DEFAULT_DOWNMIX;

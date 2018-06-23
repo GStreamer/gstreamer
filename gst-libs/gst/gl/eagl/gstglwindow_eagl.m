@@ -29,9 +29,6 @@
 #include "gstglwindow_eagl.h"
 #include "gstglcontext_eagl.h"
 
-#define GST_GL_WINDOW_EAGL_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_EAGL, GstGLWindowEaglPrivate))
-
 #define GST_CAT_DEFAULT gst_gl_window_eagl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -39,7 +36,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_eagl_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowEagl, gst_gl_window_eagl,
-    GST_TYPE_GL_WINDOW, DEBUG_INIT);
+    GST_TYPE_GL_WINDOW, G_ADD_PRIVATE (GstGLWindowEagl) DEBUG_INIT);
+
 static void gst_gl_window_eagl_finalize (GObject * object);
 
 static guintptr gst_gl_window_eagl_get_display (GstGLWindow * window);
@@ -66,8 +64,6 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstGLWindowEaglPrivate));
-
   gobject_class->finalize = gst_gl_window_eagl_finalize;
 
   window_class->get_display =
@@ -86,7 +82,7 @@ gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
 static void
 gst_gl_window_eagl_init (GstGLWindowEagl * window)
 {
-  window->priv = GST_GL_WINDOW_EAGL_GET_PRIVATE (window);
+  window->priv = gst_gl_window_eagl_get_instance_private (window);
   window->priv->gl_queue =
       (__bridge_retained gpointer)dispatch_queue_create ("org.freedesktop.gstreamer.glwindow", NULL);
 }

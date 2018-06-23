@@ -36,21 +36,18 @@ static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
 static GstGLPlatform gst_gl_context_cocoa_get_gl_platform (GstGLContext * context);
 static void gst_gl_context_cocoa_swap_buffers (GstGLContext * context);
 
-#define GST_GL_CONTEXT_COCOA_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_COCOA, GstGLContextCocoaPrivate))
-
 GST_DEBUG_CATEGORY_STATIC (gst_gl_context_cocoa_debug);
 #define GST_CAT_DEFAULT gst_gl_context_cocoa_debug
 
 G_DEFINE_TYPE_WITH_CODE (GstGLContextCocoa, gst_gl_context_cocoa,
-    GST_TYPE_GL_CONTEXT, GST_DEBUG_CATEGORY_INIT (gst_gl_context_cocoa_debug, "glcontext_cocoa", 0, "Cocoa GL Context"); );
+    GST_TYPE_GL_CONTEXT,
+    G_ADD_PRIVATE (GstGLContextCocoa)
+    GST_DEBUG_CATEGORY_INIT (gst_gl_context_cocoa_debug, "glcontext_cocoa", 0, "Cocoa GL Context"); );
 
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 {
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
 
   context_class->swap_buffers =
     GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_swap_buffers);
@@ -70,7 +67,7 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 static void
 gst_gl_context_cocoa_init (GstGLContextCocoa * context)
 {
-  context->priv = GST_GL_CONTEXT_COCOA_GET_PRIVATE (context);
+  context->priv = gst_gl_context_cocoa_get_instance_private (context);
 }
 
 /* Must be called in the gl thread */

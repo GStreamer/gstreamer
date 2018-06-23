@@ -42,9 +42,6 @@
 #define GST_CAT_DEFAULT gst_gl_base_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define GST_GL_BASE_FILTER_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_BASE_FILTER, GstGLBaseFilterPrivate))
-
 struct _GstGLBaseFilterPrivate
 {
   GstGLContext *other_context;
@@ -62,7 +59,8 @@ enum
 
 #define gst_gl_base_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLBaseFilter, gst_gl_base_filter,
-    GST_TYPE_BASE_TRANSFORM, GST_DEBUG_CATEGORY_INIT (gst_gl_base_filter_debug,
+    GST_TYPE_BASE_TRANSFORM, G_ADD_PRIVATE (GstGLBaseFilter)
+    GST_DEBUG_CATEGORY_INIT (gst_gl_base_filter_debug,
         "glbasefilter", 0, "glbasefilter element");
     );
 
@@ -99,8 +97,6 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
 
-  g_type_class_add_private (klass, sizeof (GstGLBaseFilterPrivate));
-
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
@@ -134,7 +130,7 @@ gst_gl_base_filter_init (GstGLBaseFilter * filter)
 {
   gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (filter), TRUE);
 
-  filter->priv = GST_GL_BASE_FILTER_GET_PRIVATE (filter);
+  filter->priv = gst_gl_base_filter_get_instance_private (filter);
 }
 
 static void

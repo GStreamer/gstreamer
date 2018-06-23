@@ -38,9 +38,6 @@
 #define GLhandleARB GLuint
 #endif
 
-#define GST_GL_SHADER_GET_PRIVATE(o)					\
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_SHADER, GstGLShaderPrivate))
-
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
 #define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
@@ -91,7 +88,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_shader_debug, "glshader", 0, "shader");
 G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, GST_TYPE_OBJECT,
-    DEBUG_INIT);
+    G_ADD_PRIVATE (GstGLShader) DEBUG_INIT);
 
 static void
 _cleanup_shader (GstGLContext * context, GstGLShader * shader)
@@ -174,8 +171,6 @@ gst_gl_shader_class_init (GstGLShaderClass * klass)
   /* bind class methods .. */
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GstGLShaderPrivate));
-
   obj_class->finalize = gst_gl_shader_finalize;
   obj_class->set_property = gst_gl_shader_set_property;
   obj_class->get_property = gst_gl_shader_get_property;
@@ -195,7 +190,7 @@ gst_gl_shader_init (GstGLShader * self)
   /* initialize sources and create program object */
   GstGLShaderPrivate *priv;
 
-  priv = self->priv = GST_GL_SHADER_GET_PRIVATE (self);
+  priv = self->priv = gst_gl_shader_get_instance_private (self);
 
   priv->linked = FALSE;
   priv->uniform_locations =

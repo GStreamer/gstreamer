@@ -41,12 +41,6 @@
 
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
-#define gst_gl_context_glx_parent_class parent_class
-G_DEFINE_TYPE (GstGLContextGLX, gst_gl_context_glx, GST_TYPE_GL_CONTEXT);
-
-#define GST_GL_CONTEXT_GLX_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_GLX, GstGLContextGLXPrivate))
-
 static guintptr gst_gl_context_glx_get_gl_context (GstGLContext * context);
 static void gst_gl_context_glx_swap_buffers (GstGLContext * context);
 static gboolean gst_gl_context_glx_activate (GstGLContext * context,
@@ -74,12 +68,14 @@ struct _GstGLContextGLXPrivate
       GLXContext, Bool, const int *);
 };
 
+#define gst_gl_context_glx_parent_class parent_class
+G_DEFINE_TYPE_WITH_PRIVATE (GstGLContextGLX, gst_gl_context_glx,
+    GST_TYPE_GL_CONTEXT);
+
 static void
 gst_gl_context_glx_class_init (GstGLContextGLXClass * klass)
 {
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstGLContextGLXPrivate));
 
   context_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_glx_get_gl_context);
@@ -107,7 +103,7 @@ gst_gl_context_glx_class_init (GstGLContextGLXClass * klass)
 static void
 gst_gl_context_glx_init (GstGLContextGLX * context)
 {
-  context->priv = GST_GL_CONTEXT_GLX_GET_PRIVATE (context);
+  context->priv = gst_gl_context_glx_get_instance_private (context);
 }
 
 GstGLContextGLX *

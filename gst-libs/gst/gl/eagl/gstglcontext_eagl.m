@@ -56,10 +56,8 @@ struct _GstGLContextEaglPrivate
   GLuint depth_renderbuffer;
 };
 
-#define GST_GL_CONTEXT_EAGL_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_EAGL, GstGLContextEaglPrivate))
-
-G_DEFINE_TYPE (GstGLContextEagl, gst_gl_context_eagl, GST_TYPE_GL_CONTEXT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstGLContextEagl, gst_gl_context_eagl,
+    GST_TYPE_GL_CONTEXT);
 
 static void
 gst_gl_context_eagl_class_init (GstGLContextEaglClass * klass)
@@ -67,8 +65,6 @@ gst_gl_context_eagl_class_init (GstGLContextEaglClass * klass)
   GstGLContextClass *context_class;
 
   context_class = (GstGLContextClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstGLContextEaglPrivate));
 
   context_class->destroy_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_eagl_destroy_context);
@@ -90,7 +86,7 @@ gst_gl_context_eagl_class_init (GstGLContextEaglClass * klass)
 static void
 gst_gl_context_eagl_init (GstGLContextEagl * context)
 {
-  context->priv = GST_GL_CONTEXT_EAGL_GET_PRIVATE (context);
+  context->priv = gst_gl_context_eagl_get_instance_private (context);
 }
 
 /* Must be called in the gl thread */

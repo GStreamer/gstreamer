@@ -31,9 +31,6 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
 LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 
-#define GST_GL_WINDOW_WIN32_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_WINDOW_WIN32, GstGLWindowWin32Private))
-
 enum
 {
   PROP_0
@@ -52,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_win32_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32, gst_gl_window_win32,
-    GST_TYPE_GL_WINDOW, DEBUG_INIT);
+    GST_TYPE_GL_WINDOW, G_ADD_PRIVATE (GstGLWindowWin32) DEBUG_INIT);
 
 static void gst_gl_window_win32_set_window_handle (GstGLWindow * window,
     guintptr handle);
@@ -70,8 +67,6 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstGLWindowWin32Private));
-
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_set_window_handle);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
@@ -87,7 +82,7 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
 static void
 gst_gl_window_win32_init (GstGLWindowWin32 * window)
 {
-  window->priv = GST_GL_WINDOW_WIN32_GET_PRIVATE (window);
+  window->priv = gst_gl_window_win32_get_instance_private (window);
 }
 
 GstGLWindowWin32 *

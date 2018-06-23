@@ -462,7 +462,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_debug);
   GST_DEBUG_CATEGORY_INIT (gst_gl_color_convert_debug, "glconvert", 0, "convert");
 
 G_DEFINE_TYPE_WITH_CODE (GstGLColorConvert, gst_gl_color_convert,
-    GST_TYPE_OBJECT, DEBUG_INIT);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLColorConvert) DEBUG_INIT);
+
 static void gst_gl_color_convert_finalize (GObject * object);
 static void gst_gl_color_convert_reset (GstGLColorConvert * convert);
 
@@ -472,15 +473,13 @@ static void gst_gl_color_convert_reset (GstGLColorConvert * convert);
 static void
 gst_gl_color_convert_class_init (GstGLColorConvertClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstGLColorConvertPrivate));
-
   G_OBJECT_CLASS (klass)->finalize = gst_gl_color_convert_finalize;
 }
 
 static void
 gst_gl_color_convert_init (GstGLColorConvert * convert)
 {
-  convert->priv = GST_GL_COLOR_CONVERT_GET_PRIVATE (convert);
+  convert->priv = gst_gl_color_convert_get_instance_private (convert);
 
   gst_gl_color_convert_reset (convert);
 }

@@ -59,13 +59,14 @@ static void gst_gl_buffer_pool_finalize (GObject * object);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_BUFFER_POOL);
 #define GST_CAT_DEFAULT GST_CAT_GL_BUFFER_POOL
 
-#define GST_GL_BUFFER_POOL_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_GL_BUFFER_POOL, GstGLBufferPoolPrivate))
+#define _init \
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_GL_BUFFER_POOL, "glbufferpool", 0, \
+        "GL Buffer Pool");
 
 #define gst_gl_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLBufferPool, gst_gl_buffer_pool,
-    GST_TYPE_BUFFER_POOL, GST_DEBUG_CATEGORY_INIT (GST_CAT_GL_BUFFER_POOL,
-        "glbufferpool", 0, "GL Buffer Pool"));
+    GST_TYPE_BUFFER_POOL, G_ADD_PRIVATE (GstGLBufferPool)
+    _init);
 
 static const gchar **
 gst_gl_buffer_pool_get_options (GstBufferPool * pool)
@@ -327,8 +328,6 @@ gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstGLBufferPoolPrivate));
-
   gobject_class->finalize = gst_gl_buffer_pool_finalize;
 
   gstbufferpool_class->get_options = gst_gl_buffer_pool_get_options;
@@ -342,7 +341,7 @@ gst_gl_buffer_pool_init (GstGLBufferPool * pool)
 {
   GstGLBufferPoolPrivate *priv = NULL;
 
-  pool->priv = GST_GL_BUFFER_POOL_GET_PRIVATE (pool);
+  pool->priv = gst_gl_buffer_pool_get_instance_private (pool);
   priv = pool->priv;
 
   priv->allocator = NULL;

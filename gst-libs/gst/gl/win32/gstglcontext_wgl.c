@@ -44,9 +44,8 @@ struct _GstGLContextWGLPrivate
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
 #define gst_gl_context_wgl_parent_class parent_class
-G_DEFINE_TYPE (GstGLContextWGL, gst_gl_context_wgl, GST_TYPE_GL_CONTEXT);
-#define GST_GL_CONTEXT_WGL_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_CONTEXT_WGL, GstGLContextWGLPrivate))
+G_DEFINE_TYPE_PRIVATE (GstGLContextWGL, gst_gl_context_wgl,
+    GST_TYPE_GL_CONTEXT);
 
 static guintptr gst_gl_context_wgl_get_gl_context (GstGLContext * context);
 static void gst_gl_context_wgl_swap_buffers (GstGLContext * context);
@@ -65,8 +64,6 @@ static void
 gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
 {
   GstGLContextClass *context_class = (GstGLContextClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstGLContextWGLPrivate));
 
   context_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_wgl_get_gl_context);
@@ -90,7 +87,7 @@ gst_gl_context_wgl_class_init (GstGLContextWGLClass * klass)
 static void
 gst_gl_context_wgl_init (GstGLContextWGL * context_wgl)
 {
-  context_wgl->priv = GST_GL_CONTEXT_WGL_GET_PRIVATE (context_wgl);
+  context_wgl->priv = gst_gl_context_wgl_get_instance_private (context_wgl);
 
   context_wgl->priv->context_api = GST_GL_API_OPENGL | GST_GL_API_OPENGL3;
 }
