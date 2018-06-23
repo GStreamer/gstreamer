@@ -54,12 +54,6 @@ _init_debug (void)
   }
 }
 
-G_DEFINE_TYPE_WITH_CODE (GstVulkanDisplay, gst_vulkan_display, GST_TYPE_OBJECT,
-    _init_debug ());
-
-#define GST_VULKAN_DISPLAY_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_VULKAN_DISPLAY, GstVulkanDisplayPrivate))
-
 enum
 {
   SIGNAL_0,
@@ -82,6 +76,9 @@ struct _GstVulkanDisplayPrivate
   GMutex thread_lock;
   GCond thread_cond;
 };
+
+G_DEFINE_TYPE_WITH_CODE (GstVulkanDisplay, gst_vulkan_display, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstVulkanDisplay) _init_debug ());
 
 static gpointer
 _event_thread_main (GstVulkanDisplay * display)
@@ -113,8 +110,6 @@ _event_thread_main (GstVulkanDisplay * display)
 static void
 gst_vulkan_display_class_init (GstVulkanDisplayClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstVulkanDisplayPrivate));
-
   klass->get_handle = gst_vulkan_display_default_get_handle;
   klass->create_window = gst_vulkan_display_default_create_window;
 
@@ -124,7 +119,7 @@ gst_vulkan_display_class_init (GstVulkanDisplayClass * klass)
 static void
 gst_vulkan_display_init (GstVulkanDisplay * display)
 {
-  display->priv = GST_VULKAN_DISPLAY_GET_PRIVATE (display);
+  display->priv = gst_vulkan_display_get_instance_private (display);
   display->type = GST_VULKAN_DISPLAY_TYPE_ANY;
 
   g_mutex_init (&display->priv->thread_lock);

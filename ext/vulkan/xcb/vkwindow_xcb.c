@@ -46,10 +46,6 @@ _init_debug (void)
   }
 }
 
-#define gst_vulkan_window_xcb_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanWindowXCB, gst_vulkan_window_xcb,
-    GST_TYPE_VULKAN_WINDOW, _init_debug ());
-
 gboolean gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb);
 
 enum
@@ -67,6 +63,10 @@ struct _GstVulkanWindowXCBPrivate
 
   xcb_intern_atom_reply_t *atom_wm_delete_window;
 };
+
+#define gst_vulkan_window_xcb_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanWindowXCB, gst_vulkan_window_xcb,
+    GST_TYPE_VULKAN_WINDOW, G_ADD_PRIVATE (GstVulkanWindowXCB) _init_debug ());
 
 static VkSurfaceKHR gst_vulkan_window_xcb_get_surface (GstVulkanWindow * window,
     GError ** error);
@@ -88,8 +88,6 @@ gst_vulkan_window_xcb_class_init (GstVulkanWindowXCBClass * klass)
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   GstVulkanWindowClass *window_class = (GstVulkanWindowClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstVulkanWindowXCBPrivate));
-
   obj_class->finalize = gst_vulkan_window_xcb_finalize;
 
   window_class->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_xcb_open);
@@ -102,7 +100,7 @@ gst_vulkan_window_xcb_class_init (GstVulkanWindowXCBClass * klass)
 static void
 gst_vulkan_window_xcb_init (GstVulkanWindowXCB * window)
 {
-  window->priv = GST_VULKAN_WINDOW_XCB_GET_PRIVATE (window);
+  window->priv = gst_vulkan_window_xcb_get_instance_private (window);
 }
 
 /* Must be called in the gl thread */

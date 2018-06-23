@@ -50,17 +50,15 @@
 #define GST_CAT_DEFAULT gst_vulkan_window_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
-#define gst_vulkan_window_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstVulkanWindow, gst_vulkan_window, GST_TYPE_OBJECT);
-
-#define GST_VULKAN_WINDOW_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_VULKAN_WINDOW, GstVulkanWindowPrivate))
-
 struct _GstVulkanWindowPrivate
 {
   guint surface_width;
   guint surface_height;
 };
+
+#define gst_vulkan_window_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstVulkanWindow, gst_vulkan_window,
+    GST_TYPE_OBJECT);
 
 static void gst_vulkan_window_finalize (GObject * object);
 
@@ -132,16 +130,12 @@ _init_debug (void)
 static void
 gst_vulkan_window_init (GstVulkanWindow * window)
 {
-  window->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (window, GST_TYPE_VULKAN_WINDOW,
-      GstVulkanWindowPrivate);
+  window->priv = gst_vulkan_window_get_instance_private (window);
 }
 
 static void
 gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstVulkanWindowPrivate));
-
   klass->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_default_open);
   klass->close = GST_DEBUG_FUNCPTR (gst_vulkan_window_default_close);
 

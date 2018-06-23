@@ -42,18 +42,19 @@ static const char *device_validation_layers[] = {
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
-#define gst_vulkan_device_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandevice", 0,
-        "Vulkan Device");
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
-
 static void gst_vulkan_device_finalize (GObject * object);
 
 struct _GstVulkanDevicePrivate
 {
   gboolean opened;
 };
+
+#define gst_vulkan_device_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstVulkanDevice)
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandevice", 0,
+        "Vulkan Device");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
 
 GstVulkanDevice *
 gst_vulkan_device_new (GstVulkanInstance * instance)
@@ -72,16 +73,13 @@ gst_vulkan_device_new (GstVulkanInstance * instance)
 static void
 gst_vulkan_device_init (GstVulkanDevice * device)
 {
-  device->priv = G_TYPE_INSTANCE_GET_PRIVATE ((device),
-      GST_TYPE_VULKAN_DEVICE, GstVulkanDevicePrivate);
+  device->priv = gst_vulkan_device_get_instance_private (device);
 }
 
 static void
 gst_vulkan_device_class_init (GstVulkanDeviceClass * device_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) device_class;
-
-  g_type_class_add_private (device_class, sizeof (GstVulkanDevicePrivate));
 
   gobject_class->finalize = gst_vulkan_device_finalize;
 }

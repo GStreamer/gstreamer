@@ -54,20 +54,21 @@ enum
 
 static guint gst_vulkan_instance_signals[LAST_SIGNAL] = { 0 };
 
-#define gst_vulkan_instance_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
-    GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
-        "vulkaninstance", 0, "Vulkan Instance");
-    GST_DEBUG_CATEGORY_INIT (GST_VULKAN_DEBUG_CAT,
-        "vulkandebug", 0, "Vulkan Debug");
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
-
 static void gst_vulkan_instance_finalize (GObject * object);
 
 struct _GstVulkanInstancePrivate
 {
   gboolean opened;
 };
+
+#define gst_vulkan_instance_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanInstance)
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
+        "vulkaninstance", 0, "Vulkan Instance");
+    GST_DEBUG_CATEGORY_INIT (GST_VULKAN_DEBUG_CAT,
+        "vulkandebug", 0, "Vulkan Debug");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
 
 GstVulkanInstance *
 gst_vulkan_instance_new (void)
@@ -83,8 +84,7 @@ gst_vulkan_instance_new (void)
 static void
 gst_vulkan_instance_init (GstVulkanInstance * instance)
 {
-  instance->priv = G_TYPE_INSTANCE_GET_PRIVATE ((instance),
-      GST_TYPE_VULKAN_INSTANCE, GstVulkanInstancePrivate);
+  instance->priv = gst_vulkan_instance_get_instance_private (instance);
 }
 
 static void
@@ -93,8 +93,6 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
   gst_vulkan_memory_init_once ();
   gst_vulkan_image_memory_init_once ();
   gst_vulkan_buffer_memory_init_once ();
-
-  g_type_class_add_private (klass, sizeof (GstVulkanInstancePrivate));
 
   /**
    * GstVulkanInstance::create-device:

@@ -29,11 +29,6 @@
 #define GST_CAT_DEFAULT gst_vulkan_swapper_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
-#define gst_vulkan_swapper_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanSwapper, gst_vulkan_swapper,
-    GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
-        "vulkanswapper", 0, "Vulkan Swapper"));
-
 #define RENDER_GET_LOCK(o) &(GST_VULKAN_SWAPPER (o)->priv->render_lock)
 #define RENDER_LOCK(o) g_mutex_lock (RENDER_GET_LOCK(o));
 #define RENDER_UNLOCK(o) g_mutex_unlock (RENDER_GET_LOCK(o));
@@ -44,6 +39,12 @@ struct _GstVulkanSwapperPrivate
 
   GList *trash_list;
 };
+
+#define gst_vulkan_swapper_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanSwapper, gst_vulkan_swapper,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanSwapper)
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
+        "vulkanswapper", 0, "Vulkan Swapper"));
 
 static void _on_window_draw (GstVulkanWindow * window,
     GstVulkanSwapper * swapper);
@@ -389,9 +390,7 @@ gst_vulkan_swapper_finalize (GObject * object)
 static void
 gst_vulkan_swapper_init (GstVulkanSwapper * swapper)
 {
-  swapper->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (swapper, GST_TYPE_VULKAN_SWAPPER,
-      GstVulkanSwapperPrivate);
+  swapper->priv = gst_vulkan_swapper_get_instance_private (swapper);
 
   g_mutex_init (&swapper->priv->render_lock);
 }
@@ -399,8 +398,6 @@ gst_vulkan_swapper_init (GstVulkanSwapper * swapper)
 static void
 gst_vulkan_swapper_class_init (GstVulkanSwapperClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GstVulkanSwapperPrivate));
-
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_swapper_finalize;
 }
 
