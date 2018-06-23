@@ -188,6 +188,7 @@ static guint gst_app_sink_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_app_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAppSink, gst_app_sink, GST_TYPE_BASE_SINK,
+    G_ADD_PRIVATE (GstAppSink)
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_app_sink_uri_handler_init));
 
@@ -447,8 +448,6 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   klass->pull_sample = gst_app_sink_pull_sample;
   klass->try_pull_preroll = gst_app_sink_try_pull_preroll;
   klass->try_pull_sample = gst_app_sink_try_pull_sample;
-
-  g_type_class_add_private (klass, sizeof (GstAppSinkPrivate));
 }
 
 static void
@@ -456,9 +455,7 @@ gst_app_sink_init (GstAppSink * appsink)
 {
   GstAppSinkPrivate *priv;
 
-  priv = appsink->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (appsink, GST_TYPE_APP_SINK,
-      GstAppSinkPrivate);
+  priv = appsink->priv = gst_app_sink_get_instance_private (appsink);
 
   g_mutex_init (&priv->mutex);
   g_cond_init (&priv->cond);

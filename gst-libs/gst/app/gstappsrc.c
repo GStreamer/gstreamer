@@ -242,6 +242,7 @@ static guint gst_app_src_signals[LAST_SIGNAL] = { 0 };
 
 #define gst_app_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAppSrc, gst_app_src, GST_TYPE_BASE_SRC,
+    G_ADD_PRIVATE (GstAppSrc)
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_app_src_uri_handler_init));
 
 static void
@@ -562,8 +563,6 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   klass->push_buffer_list = gst_app_src_push_buffer_list_action;
   klass->push_sample = gst_app_src_push_sample_action;
   klass->end_of_stream = gst_app_src_end_of_stream;
-
-  g_type_class_add_private (klass, sizeof (GstAppSrcPrivate));
 }
 
 static void
@@ -571,8 +570,7 @@ gst_app_src_init (GstAppSrc * appsrc)
 {
   GstAppSrcPrivate *priv;
 
-  priv = appsrc->priv = G_TYPE_INSTANCE_GET_PRIVATE (appsrc, GST_TYPE_APP_SRC,
-      GstAppSrcPrivate);
+  priv = appsrc->priv = gst_app_src_get_instance_private (appsrc);
 
   g_mutex_init (&priv->mutex);
   g_cond_init (&priv->cond);
