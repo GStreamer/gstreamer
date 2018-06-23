@@ -74,6 +74,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_tag_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_mux_debug
 
 static GstElementClass *parent_class;
+static gint private_offset = 0;
 
 static void gst_tag_mux_class_init (GstTagMuxClass * klass);
 static void gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class);
@@ -100,11 +101,20 @@ gst_tag_mux_get_type (void)
         (GClassInitFunc) gst_tag_mux_class_init, sizeof (GstTagMux),
         (GInstanceInitFunc) gst_tag_mux_init, G_TYPE_FLAG_ABSTRACT);
 
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstTagMuxPrivate));
+
     g_type_add_interface_static (_type, GST_TYPE_TAG_SETTER, &interface_info);
 
     g_once_init_leave (&tag_mux_type, _type);
   }
   return tag_mux_type;
+}
+
+static inline GstTagMuxPrivate *
+gst_tag_mux_get_instance_private (GstTagMux * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -144,7 +154,8 @@ gst_tag_mux_class_init (GstTagMuxClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tag_mux_finalize);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_tag_mux_change_state);
 
-  g_type_class_add_private (klass, sizeof (GstTagMuxPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   GST_DEBUG_CATEGORY_INIT (gst_tag_mux_debug, "tagmux", 0,
       "tag muxer base class");
@@ -156,8 +167,7 @@ gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
   GstElementClass *element_klass = GST_ELEMENT_CLASS (mux_class);
   GstPadTemplate *tmpl;
 
-  mux->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (mux, GST_TYPE_TAG_MUX, GstTagMuxPrivate);
+  mux->priv = gst_tag_mux_get_instance_private (mux);
 
   /* pad through which data comes in to the element */
   tmpl = gst_element_class_get_pad_template (element_klass, "sink");

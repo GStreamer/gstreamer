@@ -167,6 +167,7 @@ static void gst_tag_demux_class_init (gpointer g_class, gpointer d);
 static void gst_tag_demux_init (GstTagDemux * obj, GstTagDemuxClass * klass);
 
 static gpointer parent_class;   /* NULL */
+static gint private_offset = 0;
 
 /* Cannot use boilerplate macros here because we want the abstract flag */
 GType
@@ -189,9 +190,18 @@ gst_tag_demux_get_type (void)
 
     object_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstTagDemux", &object_info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (object_type, sizeof (GstTagDemuxPrivate));
   }
 
   return object_type;
+}
+
+static inline GstTagDemuxPrivate *
+gst_tag_demux_get_instance_private (GstTagDemux * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -218,7 +228,8 @@ gst_tag_demux_class_init (gpointer klass, gpointer d)
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_tag_demux_change_state);
 
-  g_type_class_add_private (klass, sizeof (GstTagDemuxPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   /* subclasses must set at least one of these */
   tagdemux_class->min_start_size = 0;
@@ -267,8 +278,7 @@ gst_tag_demux_init (GstTagDemux * demux, GstTagDemuxClass * gclass)
   GstElementClass *element_klass = GST_ELEMENT_CLASS (gclass);
   GstPadTemplate *tmpl;
 
-  demux->priv = g_type_instance_get_private ((GTypeInstance *) demux,
-      GST_TYPE_TAG_DEMUX);
+  demux->priv = gst_tag_demux_get_instance_private (demux);
 
   /* sink pad */
   tmpl = gst_element_class_get_pad_template (element_klass, "sink");
