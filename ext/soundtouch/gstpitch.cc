@@ -117,7 +117,7 @@ static gboolean gst_pitch_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
 #define gst_pitch_parent_class parent_class
-G_DEFINE_TYPE (GstPitch, gst_pitch, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstPitch, gst_pitch, GST_TYPE_ELEMENT);
 
 static void
 gst_pitch_class_init (GstPitchClass * klass)
@@ -130,8 +130,6 @@ gst_pitch_class_init (GstPitchClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (pitch_debug, "pitch", 0,
       "audio pitch control element");
-
-  g_type_class_add_private (gobject_class, sizeof (GstPitchPrivate));
 
   gobject_class->set_property = gst_pitch_set_property;
   gobject_class->get_property = gst_pitch_get_property;
@@ -174,8 +172,7 @@ gst_pitch_class_init (GstPitchClass * klass)
 static void
 gst_pitch_init (GstPitch * pitch)
 {
-  pitch->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE ((pitch), GST_TYPE_PITCH, GstPitchPrivate);
+  pitch->priv = (GstPitchPrivate *) gst_pitch_get_instance_private (pitch);
 
   pitch->sinkpad =
       gst_pad_new_from_static_template (&gst_pitch_sink_template, "sink");
