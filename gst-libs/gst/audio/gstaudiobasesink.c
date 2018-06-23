@@ -39,9 +39,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_audio_base_sink_debug);
 #define GST_CAT_DEFAULT gst_audio_base_sink_debug
 
-#define GST_AUDIO_BASE_SINK_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_AUDIO_BASE_SINK, GstAudioBaseSinkPrivate))
-
 struct _GstAudioBaseSinkPrivate
 {
   /* upstream latency */
@@ -125,7 +122,7 @@ enum
     GST_DEBUG_CATEGORY_INIT (gst_audio_base_sink_debug, "audiobasesink", 0, "audiobasesink element");
 #define gst_audio_base_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioBaseSink, gst_audio_base_sink,
-    GST_TYPE_BASE_SINK, _do_init);
+    GST_TYPE_BASE_SINK, G_ADD_PRIVATE (GstAudioBaseSink) _do_init);
 
 static void gst_audio_base_sink_dispose (GObject * object);
 
@@ -179,8 +176,6 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstAudioBaseSinkPrivate));
 
   gobject_class->set_property = gst_audio_base_sink_set_property;
   gobject_class->get_property = gst_audio_base_sink_get_property;
@@ -278,9 +273,10 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
 static void
 gst_audio_base_sink_init (GstAudioBaseSink * audiobasesink)
 {
-  GstBaseSink *basesink;
+  GstBaseSink *basesink = GST_BASE_SINK_CAST (audiobasesink);
 
-  audiobasesink->priv = GST_AUDIO_BASE_SINK_GET_PRIVATE (audiobasesink);
+  audiobasesink->priv =
+      gst_audio_base_sink_get_instance_private (audiobasesink);
 
   audiobasesink->buffer_time = DEFAULT_BUFFER_TIME;
   audiobasesink->latency_time = DEFAULT_LATENCY_TIME;
@@ -296,7 +292,6 @@ gst_audio_base_sink_init (GstAudioBaseSink * audiobasesink)
       (GstAudioClockGetTimeFunc) gst_audio_base_sink_get_time, audiobasesink,
       NULL);
 
-  basesink = GST_BASE_SINK_CAST (audiobasesink);
   basesink->can_activate_push = TRUE;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 

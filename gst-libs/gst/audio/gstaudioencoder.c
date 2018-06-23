@@ -137,10 +137,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_audio_encoder_debug);
 #define GST_CAT_DEFAULT gst_audio_encoder_debug
 
-#define GST_AUDIO_ENCODER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_AUDIO_ENCODER, \
-        GstAudioEncoderPrivate))
-
 enum
 {
   PROP_0,
@@ -247,6 +243,7 @@ struct _GstAudioEncoderPrivate
 
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
 
 static void gst_audio_encoder_class_init (GstAudioEncoderClass * klass);
 static void gst_audio_encoder_init (GstAudioEncoder * parse,
@@ -278,10 +275,20 @@ gst_audio_encoder_get_type (void)
     audio_encoder_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstAudioEncoder", &audio_encoder_info, G_TYPE_FLAG_ABSTRACT);
 
+    private_offset =
+        g_type_add_instance_private (audio_encoder_type,
+        sizeof (GstAudioEncoderPrivate));
+
     g_type_add_interface_static (audio_encoder_type, GST_TYPE_PRESET,
         &preset_interface_info);
   }
   return audio_encoder_type;
+}
+
+static inline GstAudioEncoderPrivate *
+gst_audio_encoder_get_instance_private (GstAudioEncoder * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void gst_audio_encoder_finalize (GObject * object);
@@ -345,7 +352,8 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_audio_encoder_debug, "audioencoder", 0,
       "audio encoder base class");
 
-  g_type_class_add_private (klass, sizeof (GstAudioEncoderPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   gobject_class->set_property = gst_audio_encoder_set_property;
   gobject_class->get_property = gst_audio_encoder_get_property;
@@ -392,7 +400,7 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
 
   GST_DEBUG_OBJECT (enc, "gst_audio_encoder_init");
 
-  enc->priv = GST_AUDIO_ENCODER_GET_PRIVATE (enc);
+  enc->priv = gst_audio_encoder_get_instance_private (enc);
 
   /* only push mode supported */
   pad_template =

@@ -106,7 +106,7 @@ struct _GstAudioAggregatorPadPrivate
 /*****************************************
  * GstAudioAggregatorPad implementation  *
  *****************************************/
-G_DEFINE_TYPE (GstAudioAggregatorPad, gst_audio_aggregator_pad,
+G_DEFINE_TYPE_WITH_PRIVATE (GstAudioAggregatorPad, gst_audio_aggregator_pad,
     GST_TYPE_AGGREGATOR_PAD);
 
 enum
@@ -136,8 +136,6 @@ gst_audio_aggregator_pad_class_init (GstAudioAggregatorPadClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAggregatorPadClass *aggpadclass = (GstAggregatorPadClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstAudioAggregatorPadPrivate));
-
   gobject_class->finalize = gst_audio_aggregator_pad_finalize;
   aggpadclass->flush = GST_DEBUG_FUNCPTR (gst_audio_aggregator_pad_flush_pad);
 }
@@ -145,9 +143,7 @@ gst_audio_aggregator_pad_class_init (GstAudioAggregatorPadClass * klass)
 static void
 gst_audio_aggregator_pad_init (GstAudioAggregatorPad * pad)
 {
-  pad->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (pad, GST_TYPE_AUDIO_AGGREGATOR_PAD,
-      GstAudioAggregatorPadPrivate);
+  pad->priv = gst_audio_aggregator_pad_get_instance_private (pad);
 
   gst_audio_info_init (&pad->info);
 
@@ -187,8 +183,8 @@ struct _GstAudioAggregatorConvertPadPrivate
 };
 
 
-G_DEFINE_TYPE (GstAudioAggregatorConvertPad, gst_audio_aggregator_convert_pad,
-    GST_TYPE_AUDIO_AGGREGATOR_PAD);
+G_DEFINE_TYPE_WITH_PRIVATE (GstAudioAggregatorConvertPad,
+    gst_audio_aggregator_convert_pad, GST_TYPE_AUDIO_AGGREGATOR_PAD);
 
 static void
 gst_audio_aggregator_convert_pad_update_converter (GstAudioAggregatorConvertPad
@@ -337,8 +333,6 @@ gst_audio_aggregator_convert_pad_class_init (GstAudioAggregatorConvertPadClass *
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAudioAggregatorPadClass *aaggpad_class =
       (GstAudioAggregatorPadClass *) klass;
-  g_type_class_add_private (klass,
-      sizeof (GstAudioAggregatorConvertPadPrivate));
 
   gobject_class->set_property = gst_audio_aggregator_convert_pad_set_property;
   gobject_class->get_property = gst_audio_aggregator_convert_pad_get_property;
@@ -361,9 +355,7 @@ gst_audio_aggregator_convert_pad_class_init (GstAudioAggregatorConvertPadClass *
 static void
 gst_audio_aggregator_convert_pad_init (GstAudioAggregatorConvertPad * pad)
 {
-  pad->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (pad, GST_TYPE_AUDIO_AGGREGATOR_CONVERT_PAD,
-      GstAudioAggregatorConvertPadPrivate);
+  pad->priv = gst_audio_aggregator_convert_pad_get_instance_private (pad);
 }
 
 /**************************************
@@ -441,7 +433,7 @@ enum
   PROP_DISCONT_WAIT,
 };
 
-G_DEFINE_ABSTRACT_TYPE (GstAudioAggregator, gst_audio_aggregator,
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstAudioAggregator, gst_audio_aggregator,
     GST_TYPE_AGGREGATOR);
 
 static GstBuffer *
@@ -461,8 +453,6 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAggregatorClass *gstaggregator_class = (GstAggregatorClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstAudioAggregatorPrivate));
 
   gobject_class->set_property = gst_audio_aggregator_set_property;
   gobject_class->get_property = gst_audio_aggregator_get_property;
@@ -516,9 +506,7 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
 static void
 gst_audio_aggregator_init (GstAudioAggregator * aagg)
 {
-  aagg->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (aagg, GST_TYPE_AUDIO_AGGREGATOR,
-      GstAudioAggregatorPrivate);
+  aagg->priv = gst_audio_aggregator_get_instance_private (aagg);
 
   g_mutex_init (&aagg->priv->mutex);
 

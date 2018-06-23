@@ -129,10 +129,6 @@
 GST_DEBUG_CATEGORY (audiodecoder_debug);
 #define GST_CAT_DEFAULT audiodecoder_debug
 
-#define GST_AUDIO_DECODER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_AUDIO_DECODER, \
-        GstAudioDecoderPrivate))
-
 enum
 {
   LAST_SIGNAL
@@ -312,6 +308,7 @@ static gboolean gst_audio_decoder_transform_meta_default (GstAudioDecoder *
     decoder, GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
 
 static void gst_audio_decoder_class_init (GstAudioDecoderClass * klass);
 static void gst_audio_decoder_init (GstAudioDecoder * dec,
@@ -338,11 +335,20 @@ gst_audio_decoder_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstAudioDecoder", &audio_decoder_info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstAudioDecoderPrivate));
+
     g_once_init_leave (&audio_decoder_type, _type);
   }
   return audio_decoder_type;
 }
 
+static inline GstAudioDecoderPrivate *
+gst_audio_decoder_get_instance_private (GstAudioDecoder * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
+}
 
 static void
 gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
@@ -357,7 +363,8 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_type_class_add_private (klass, sizeof (GstAudioDecoderPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   GST_DEBUG_CATEGORY_INIT (audiodecoder_debug, "audiodecoder", 0,
       "audio decoder base class");
@@ -412,7 +419,7 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
 
   GST_DEBUG_OBJECT (dec, "gst_audio_decoder_init");
 
-  dec->priv = GST_AUDIO_DECODER_GET_PRIVATE (dec);
+  dec->priv = gst_audio_decoder_get_instance_private (dec);
 
   /* Setup sink pad */
   pad_template =

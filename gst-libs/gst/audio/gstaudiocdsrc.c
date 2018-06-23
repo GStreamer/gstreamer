@@ -179,6 +179,7 @@ static GstIndex *gst_audio_cd_src_get_index (GstElement * src);
 
 #define gst_audio_cd_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioCdSrc, gst_audio_cd_src, GST_TYPE_PUSH_SRC,
+    G_ADD_PRIVATE (GstAudioCdSrc)
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_audio_cd_src_uri_handler_init));
 
@@ -215,8 +216,6 @@ gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_cd_src_debug, "audiocdsrc", 0,
       "Audio CD source base class");
-
-  g_type_class_add_private (klass, sizeof (GstAudioCdSrcPrivate));
 
   /* our very own formats */
   track_format = gst_format_register ("track", "CD track");
@@ -285,9 +284,7 @@ gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
 static void
 gst_audio_cd_src_init (GstAudioCdSrc * src)
 {
-  src->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (src, GST_TYPE_AUDIO_CD_SRC,
-      GstAudioCdSrcPrivate);
+  src->priv = gst_audio_cd_src_get_instance_private (src);
 
   /* we're not live and we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
