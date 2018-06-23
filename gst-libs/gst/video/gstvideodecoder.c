@@ -288,10 +288,6 @@
 GST_DEBUG_CATEGORY (videodecoder_debug);
 #define GST_CAT_DEFAULT videodecoder_debug
 
-#define GST_VIDEO_DECODER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_VIDEO_DECODER, \
-        GstVideoDecoderPrivate))
-
 struct _GstVideoDecoderPrivate
 {
   /* FIXME introduce a context ? */
@@ -410,6 +406,8 @@ struct _GstVideoDecoderPrivate
 };
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
+
 static void gst_video_decoder_class_init (GstVideoDecoderClass * klass);
 static void gst_video_decoder_init (GstVideoDecoder * dec,
     GstVideoDecoderClass * klass);
@@ -493,9 +491,19 @@ gst_video_decoder_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstVideoDecoder", &info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstVideoDecoderPrivate));
+
     g_once_init_leave (&type, _type);
   }
   return type;
+}
+
+static inline GstVideoDecoderPrivate *
+gst_video_decoder_get_instance_private (GstVideoDecoder * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -511,7 +519,9 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
       "Base Video Decoder");
 
   parent_class = g_type_class_peek_parent (klass);
-  g_type_class_add_private (klass, sizeof (GstVideoDecoderPrivate));
+
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   gobject_class->finalize = gst_video_decoder_finalize;
 
@@ -536,7 +546,7 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
 
   GST_DEBUG_OBJECT (decoder, "gst_video_decoder_init");
 
-  decoder->priv = GST_VIDEO_DECODER_GET_PRIVATE (decoder);
+  decoder->priv = gst_video_decoder_get_instance_private (decoder);
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");

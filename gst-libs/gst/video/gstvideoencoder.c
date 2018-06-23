@@ -111,10 +111,6 @@
 GST_DEBUG_CATEGORY (videoencoder_debug);
 #define GST_CAT_DEFAULT videoencoder_debug
 
-#define GST_VIDEO_ENCODER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_VIDEO_ENCODER, \
-        GstVideoEncoderPrivate))
-
 /* properties */
 
 #define DEFAULT_QOS                 FALSE
@@ -211,6 +207,8 @@ forced_key_unit_event_new (GstClockTime running_time, gboolean all_headers,
 }
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
+
 static void gst_video_encoder_class_init (GstVideoEncoderClass * klass);
 static void gst_video_encoder_init (GstVideoEncoder * enc,
     GstVideoEncoderClass * klass);
@@ -285,11 +283,19 @@ gst_video_encoder_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstVideoEncoder", &info, G_TYPE_FLAG_ABSTRACT);
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstVideoEncoderPrivate));
     g_type_add_interface_static (_type, GST_TYPE_PRESET,
         &preset_interface_info);
     g_once_init_leave (&type, _type);
   }
   return type;
+}
+
+static inline GstVideoEncoderPrivate *
+gst_video_encoder_get_instance_private (GstVideoEncoder * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -338,7 +344,8 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_type_class_add_private (klass, sizeof (GstVideoEncoderPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   gobject_class->set_property = gst_video_encoder_set_property;
   gobject_class->get_property = gst_video_encoder_get_property;
@@ -491,7 +498,7 @@ gst_video_encoder_init (GstVideoEncoder * encoder, GstVideoEncoderClass * klass)
 
   GST_DEBUG_OBJECT (encoder, "gst_video_encoder_init");
 
-  priv = encoder->priv = GST_VIDEO_ENCODER_GET_PRIVATE (encoder);
+  priv = encoder->priv = gst_video_encoder_get_instance_private (encoder);
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");
