@@ -121,7 +121,8 @@ enum
   PROP_SHOW_ALL = 1,
 };
 
-G_DEFINE_TYPE (GstDeviceMonitor, gst_device_monitor, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstDeviceMonitor, gst_device_monitor,
+    GST_TYPE_OBJECT);
 
 static void gst_device_monitor_dispose (GObject * object);
 
@@ -181,8 +182,6 @@ static void
 gst_device_monitor_class_init (GstDeviceMonitorClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstDeviceMonitorPrivate));
 
   object_class->get_property = gst_device_monitor_get_property;
   object_class->set_property = gst_device_monitor_set_property;
@@ -280,8 +279,7 @@ bus_sync_message (GstBus * bus, GstMessage * message,
 static void
 gst_device_monitor_init (GstDeviceMonitor * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GST_TYPE_DEVICE_MONITOR, GstDeviceMonitorPrivate);
+  self->priv = gst_device_monitor_get_instance_private (self);
 
   self->priv->show_all = DEFAULT_SHOW_ALL;
 

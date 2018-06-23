@@ -121,9 +121,6 @@ enum
       /* FILL ME */
 };
 
-#define GST_PAD_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
-
 #define _PAD_PROBE_TYPE_ALL_BOTH_AND_FLUSH (GST_PAD_PROBE_TYPE_ALL_BOTH | GST_PAD_PROBE_TYPE_EVENT_FLUSH)
 
 /* we have a pending and an active event on the pad. On source pads only the
@@ -320,7 +317,8 @@ gst_pad_link_get_name (GstPadLinkReturn ret)
 }
 
 #define gst_pad_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstPad, gst_pad, GST_TYPE_OBJECT, _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstPad, gst_pad, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstPad) _do_init);
 
 static void
 gst_pad_class_init (GstPadClass * klass)
@@ -330,8 +328,6 @@ gst_pad_class_init (GstPadClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstobject_class = GST_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstPadPrivate));
 
   gobject_class->dispose = gst_pad_dispose;
   gobject_class->finalize = gst_pad_finalize;
@@ -402,7 +398,7 @@ gst_pad_class_init (GstPadClass * klass)
 static void
 gst_pad_init (GstPad * pad)
 {
-  pad->priv = GST_PAD_GET_PRIVATE (pad);
+  pad->priv = gst_pad_get_instance_private (pad);
 
   GST_PAD_DIRECTION (pad) = GST_PAD_UNKNOWN;
 

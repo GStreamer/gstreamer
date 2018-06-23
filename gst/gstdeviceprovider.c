@@ -79,6 +79,7 @@ static void gst_device_provider_dispose (GObject * object);
 static void gst_device_provider_finalize (GObject * object);
 
 static gpointer gst_device_provider_parent_class = NULL;
+static gint private_offset = 0;
 
 GType
 gst_device_provider_get_type (void)
@@ -103,11 +104,20 @@ gst_device_provider_get_type (void)
     _type = g_type_register_static (GST_TYPE_OBJECT, "GstDeviceProvider",
         &element_info, G_TYPE_FLAG_ABSTRACT);
 
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstDeviceProviderPrivate));
+
     __gst_deviceproviderclass_factory =
         g_quark_from_static_string ("GST_DEVICEPROVIDERCLASS_FACTORY");
     g_once_init_leave (&gst_device_provider_type, _type);
   }
   return gst_device_provider_type;
+}
+
+static inline gpointer
+gst_device_provider_get_instance_private (GstDeviceProvider * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void
@@ -133,7 +143,8 @@ gst_device_provider_class_init (GstDeviceProviderClass * klass)
 
   gst_device_provider_parent_class = g_type_class_peek_parent (klass);
 
-  g_type_class_add_private (klass, sizeof (GstDeviceProviderPrivate));
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
   gobject_class->dispose = gst_device_provider_dispose;
   gobject_class->finalize = gst_device_provider_finalize;
@@ -152,8 +163,7 @@ gst_device_provider_class_init (GstDeviceProviderClass * klass)
 static void
 gst_device_provider_init (GstDeviceProvider * provider)
 {
-  provider->priv = G_TYPE_INSTANCE_GET_PRIVATE (provider,
-      GST_TYPE_DEVICE_PROVIDER, GstDeviceProviderPrivate);
+  provider->priv = gst_device_provider_get_instance_private (provider);
 
   g_mutex_init (&provider->priv->start_lock);
 

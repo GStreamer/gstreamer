@@ -621,18 +621,19 @@ enum
   PROP_MODE = 1
 };
 
+struct _GstInterpolationControlSourcePrivate
+{
+  GstInterpolationMode interpolation_mode;
+};
+
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "interpolation control source", 0, \
     "timeline value interpolating control source")
 
 G_DEFINE_TYPE_WITH_CODE (GstInterpolationControlSource,
     gst_interpolation_control_source, GST_TYPE_TIMED_VALUE_CONTROL_SOURCE,
+    G_ADD_PRIVATE (GstInterpolationControlSource)
     _do_init);
-
-struct _GstInterpolationControlSourcePrivate
-{
-  GstInterpolationMode interpolation_mode;
-};
 
 /**
  * gst_interpolation_control_source_new:
@@ -680,9 +681,7 @@ static gboolean
 static void
 gst_interpolation_control_source_init (GstInterpolationControlSource * self)
 {
-  self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_INTERPOLATION_CONTROL_SOURCE,
-      GstInterpolationControlSourcePrivate);
+  self->priv = gst_interpolation_control_source_get_instance_private (self);
   gst_interpolation_control_source_set_interpolation_mode (self,
       GST_INTERPOLATION_MODE_NONE);
 }
@@ -727,10 +726,6 @@ gst_interpolation_control_source_class_init (GstInterpolationControlSourceClass
     * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  //GstControlSourceClass *csource_class = GST_CONTROL_SOURCE_CLASS (klass);
-
-  g_type_class_add_private (klass,
-      sizeof (GstInterpolationControlSourcePrivate));
 
   gobject_class->set_property = gst_interpolation_control_source_set_property;
   gobject_class->get_property = gst_interpolation_control_source_get_property;

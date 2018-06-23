@@ -152,9 +152,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
 #define GST_CAT_DEFAULT gst_base_sink_debug
 
-#define GST_BASE_SINK_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_SINK, GstBaseSinkPrivate))
-
 #define GST_FLOW_STEP GST_FLOW_CUSTOM_ERROR
 
 typedef struct
@@ -309,6 +306,7 @@ enum
 };
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
 
 static void gst_base_sink_class_init (GstBaseSinkClass * klass);
 static void gst_base_sink_init (GstBaseSink * trans, gpointer g_class);
@@ -335,9 +333,19 @@ gst_base_sink_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseSink", &base_sink_info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstBaseSinkPrivate));
+
     g_once_init_leave (&base_sink_type, _type);
   }
   return base_sink_type;
+}
+
+static inline GstBaseSinkPrivate *
+gst_base_sink_get_instance_private (GstBaseSink * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void gst_base_sink_set_property (GObject * object, guint prop_id,
@@ -407,10 +415,11 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
+
   GST_DEBUG_CATEGORY_INIT (gst_base_sink_debug, "basesink", 0,
       "basesink element");
-
-  g_type_class_add_private (klass, sizeof (GstBaseSinkPrivate));
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -622,7 +631,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   GstPadTemplate *pad_template;
   GstBaseSinkPrivate *priv;
 
-  basesink->priv = priv = GST_BASE_SINK_GET_PRIVATE (basesink);
+  basesink->priv = priv = gst_base_sink_get_instance_private (basesink);
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
@@ -734,14 +743,10 @@ void
 gst_base_sink_set_drop_out_of_segment (GstBaseSink * sink,
     gboolean drop_out_of_segment)
 {
-  GstBaseSinkPrivate *priv;
-
   g_return_if_fail (GST_IS_BASE_SINK (sink));
 
-  priv = GST_BASE_SINK_GET_PRIVATE (sink);
-
   GST_OBJECT_LOCK (sink);
-  priv->drop_out_of_segment = drop_out_of_segment;
+  sink->priv->drop_out_of_segment = drop_out_of_segment;
   GST_OBJECT_UNLOCK (sink);
 
 }
@@ -761,15 +766,12 @@ gst_base_sink_set_drop_out_of_segment (GstBaseSink * sink,
 gboolean
 gst_base_sink_get_drop_out_of_segment (GstBaseSink * sink)
 {
-  GstBaseSinkPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
 
-  priv = GST_BASE_SINK_GET_PRIVATE (sink);
-
   GST_OBJECT_LOCK (sink);
-  res = priv->drop_out_of_segment;
+  res = sink->priv->drop_out_of_segment;
   GST_OBJECT_UNLOCK (sink);
 
   return res;

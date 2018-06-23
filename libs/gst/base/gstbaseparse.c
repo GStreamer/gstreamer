@@ -207,9 +207,6 @@ static const GstFormat fmtlist[] = {
   GST_FORMAT_UNDEFINED
 };
 
-#define GST_BASE_PARSE_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_PARSE, GstBaseParsePrivate))
-
 struct _GstBaseParsePrivate
 {
   GstPadMode pad_mode;
@@ -371,6 +368,7 @@ enum
   g_mutex_unlock (&parse->priv->index_lock);
 
 static GstElementClass *parent_class = NULL;
+static gint base_parse_private_offset = 0;
 
 static void gst_base_parse_class_init (GstBaseParseClass * klass);
 static void gst_base_parse_init (GstBaseParse * parse,
@@ -397,9 +395,19 @@ gst_base_parse_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseParse", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
+
+    base_parse_private_offset =
+        g_type_add_instance_private (_type, sizeof (GstBaseParsePrivate));
+
     g_once_init_leave (&base_parse_type, _type);
   }
   return (GType) base_parse_type;
+}
+
+static inline GstBaseParsePrivate *
+gst_base_parse_get_instance_private (GstBaseParse * self)
+{
+  return (G_STRUCT_MEMBER_P (self, base_parse_private_offset));
 }
 
 static void gst_base_parse_finalize (GObject * object);
@@ -531,7 +539,10 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GstBaseParsePrivate));
+
+  if (base_parse_private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &base_parse_private_offset);
+
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_parse_finalize);
@@ -581,7 +592,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 
   GST_DEBUG_OBJECT (parse, "gst_base_parse_init");
 
-  parse->priv = GST_BASE_PARSE_GET_PRIVATE (parse);
+  parse->priv = gst_base_parse_get_instance_private (parse);
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "sink");

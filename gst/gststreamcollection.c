@@ -41,9 +41,6 @@
 GST_DEBUG_CATEGORY_STATIC (stream_collection_debug);
 #define GST_CAT_DEFAULT stream_collection_debug
 
-#define GST_STREAM_COLLECTION_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_STREAM_COLLECTION, GstStreamCollectionPrivate))
-
 struct _GstStreamCollectionPrivate
 {
   /* Maybe switch this to a GArray if performance is
@@ -87,7 +84,7 @@ proxy_stream_notify_cb (GstStream * stream, GParamSpec * pspec,
 
 #define gst_stream_collection_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstStreamCollection, gst_stream_collection,
-    GST_TYPE_OBJECT, _do_init);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstStreamCollection) _do_init);
 
 static void
 gst_stream_collection_class_init (GstStreamCollectionClass * klass)
@@ -95,8 +92,6 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstStreamCollectionPrivate));
 
   gobject_class->set_property = gst_stream_collection_set_property;
   gobject_class->get_property = gst_stream_collection_get_property;
@@ -134,7 +129,7 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
 static void
 gst_stream_collection_init (GstStreamCollection * collection)
 {
-  collection->priv = GST_STREAM_COLLECTION_GET_PRIVATE (collection);
+  collection->priv = gst_stream_collection_get_instance_private (collection);
   g_queue_init (&collection->priv->streams);
 }
 

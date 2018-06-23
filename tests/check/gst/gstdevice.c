@@ -233,7 +233,7 @@ GST_START_TEST (test_device_provider)
   register_test_device_provider ();
 
   dp = gst_device_provider_factory_get_by_name ("testdeviceprovider");
-
+  fail_unless (dp != NULL);
   fail_unless (gst_device_provider_get_devices (dp) == NULL);
 
   devices = g_list_append (NULL, test_device_new ());

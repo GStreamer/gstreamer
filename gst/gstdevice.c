@@ -68,7 +68,7 @@ struct _GstDevicePrivate
 
 static guint signals[LAST_SIGNAL];
 
-G_DEFINE_ABSTRACT_TYPE (GstDevice, gst_device, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstDevice, gst_device, GST_TYPE_OBJECT);
 
 static void gst_device_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec);
@@ -81,8 +81,6 @@ static void
 gst_device_class_init (GstDeviceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstDevicePrivate));
 
   object_class->get_property = gst_device_get_property;
   object_class->set_property = gst_device_set_property;
@@ -112,8 +110,7 @@ gst_device_class_init (GstDeviceClass * klass)
 static void
 gst_device_init (GstDevice * device)
 {
-  device->priv = G_TYPE_INSTANCE_GET_PRIVATE (device, GST_TYPE_DEVICE,
-      GstDevicePrivate);
+  device->priv = gst_device_get_instance_private (device);
 }
 
 static void

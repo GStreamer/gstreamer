@@ -196,7 +196,7 @@ static GstPlugin *gst_registry_lookup_bn_locked (GstRegistry * registry,
     const char *basename);
 
 #define gst_registry_parent_class parent_class
-G_DEFINE_TYPE (GstRegistry, gst_registry, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRegistry, gst_registry, GST_TYPE_OBJECT);
 
 static void
 gst_registry_class_init (GstRegistryClass * klass)
@@ -204,8 +204,6 @@ gst_registry_class_init (GstRegistryClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstRegistryPrivate));
 
   /**
    * GstRegistry::plugin-added:
@@ -239,9 +237,7 @@ gst_registry_class_init (GstRegistryClass * klass)
 static void
 gst_registry_init (GstRegistry * registry)
 {
-  registry->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (registry, GST_TYPE_REGISTRY,
-      GstRegistryPrivate);
+  registry->priv = gst_registry_get_instance_private (registry);
   registry->priv->feature_hash = g_hash_table_new (g_str_hash, g_str_equal);
   registry->priv->basename_hash = g_hash_table_new (g_str_hash, g_str_equal);
 }

@@ -2283,9 +2283,6 @@ enum
   PROP_GRANDMASTER_CLOCK_ID
 };
 
-#define GST_PTP_CLOCK_GET_PRIVATE(obj)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PTP_CLOCK, GstPtpClockPrivate))
-
 struct _GstPtpClockPrivate
 {
   guint domain;
@@ -2294,7 +2291,7 @@ struct _GstPtpClockPrivate
 };
 
 #define gst_ptp_clock_parent_class parent_class
-G_DEFINE_TYPE (GstPtpClock, gst_ptp_clock, GST_TYPE_SYSTEM_CLOCK);
+G_DEFINE_TYPE_WITH_PRIVATE (GstPtpClock, gst_ptp_clock, GST_TYPE_SYSTEM_CLOCK);
 
 static void gst_ptp_clock_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -2312,8 +2309,6 @@ gst_ptp_clock_class_init (GstPtpClockClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   clock_class = GST_CLOCK_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstPtpClockPrivate));
 
   gobject_class->finalize = gst_ptp_clock_finalize;
   gobject_class->get_property = gst_ptp_clock_get_property;
@@ -2348,7 +2343,7 @@ gst_ptp_clock_init (GstPtpClock * self)
 {
   GstPtpClockPrivate *priv;
 
-  self->priv = priv = GST_PTP_CLOCK_GET_PRIVATE (self);
+  self->priv = priv = gst_ptp_clock_get_instance_private (self);
 
   GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_CAN_SET_MASTER);
   GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC);

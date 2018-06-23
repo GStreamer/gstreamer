@@ -163,9 +163,6 @@ enum
   PROP_QOS
 };
 
-#define GST_BASE_TRANSFORM_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_TRANSFORM, GstBaseTransformPrivate))
-
 struct _GstBaseTransformPrivate
 {
   /* Set by sub-class */
@@ -207,6 +204,7 @@ struct _GstBaseTransformPrivate
 
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
 
 static void gst_base_transform_class_init (GstBaseTransformClass * klass);
 static void gst_base_transform_init (GstBaseTransform * trans,
@@ -239,9 +237,19 @@ gst_base_transform_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseTransform", &base_transform_info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstBaseTransformPrivate));
+
     g_once_init_leave (&base_transform_type, _type);
   }
   return base_transform_type;
+}
+
+static inline GstBaseTransformPrivate *
+gst_base_transform_get_instance_private (GstBaseTransform * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static void gst_base_transform_finalize (GObject * object);
@@ -316,12 +324,13 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
+
   GST_DEBUG_CATEGORY_INIT (gst_base_transform_debug, "basetransform", 0,
       "basetransform element");
 
   GST_DEBUG ("gst_base_transform_class_init");
-
-  g_type_class_add_private (klass, sizeof (GstBaseTransformPrivate));
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -371,7 +380,7 @@ gst_base_transform_init (GstBaseTransform * trans,
 
   GST_DEBUG ("gst_base_transform_init");
 
-  priv = trans->priv = GST_BASE_TRANSFORM_GET_PRIVATE (trans);
+  priv = trans->priv = gst_base_transform_get_instance_private (trans);
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "sink");

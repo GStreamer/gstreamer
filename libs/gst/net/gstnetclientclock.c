@@ -163,6 +163,7 @@ struct _GstNetClientInternalClockClass
 
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (ncc_debug, "netclock", 0, "Network client clock");
+
 G_DEFINE_TYPE_WITH_CODE (GstNetClientInternalClock,
     gst_net_client_internal_clock, GST_TYPE_SYSTEM_CLOCK, _do_init);
 
@@ -967,9 +968,6 @@ gst_net_client_internal_clock_stop (GstNetClientInternalClock * self)
   GST_INFO_OBJECT (self, "stopped");
 }
 
-#define GST_NET_CLIENT_CLOCK_GET_PRIVATE(obj)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_NET_CLIENT_CLOCK, GstNetClientClockPrivate))
-
 struct _GstNetClientClockPrivate
 {
   GstClock *internal_clock;
@@ -990,7 +988,8 @@ struct _GstNetClientClockPrivate
   gulong synced_id;
 };
 
-G_DEFINE_TYPE (GstNetClientClock, gst_net_client_clock, GST_TYPE_SYSTEM_CLOCK);
+G_DEFINE_TYPE_WITH_PRIVATE (GstNetClientClock, gst_net_client_clock,
+    GST_TYPE_SYSTEM_CLOCK);
 
 static void gst_net_client_clock_finalize (GObject * object);
 static void gst_net_client_clock_set_property (GObject * object, guint prop_id,
@@ -1009,8 +1008,6 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   clock_class = GST_CLOCK_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstNetClientClockPrivate));
 
   gobject_class->finalize = gst_net_client_clock_finalize;
   gobject_class->get_property = gst_net_client_clock_get_property;
@@ -1084,7 +1081,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   GstNetClientClockPrivate *priv;
   GstClock *clock;
 
-  self->priv = priv = GST_NET_CLIENT_CLOCK_GET_PRIVATE (self);
+  self->priv = priv = gst_net_client_clock_get_instance_private (self);
 
   GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_CAN_SET_MASTER);
   GST_OBJECT_FLAG_SET (self, GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC);

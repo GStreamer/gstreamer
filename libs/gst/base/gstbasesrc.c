@@ -201,9 +201,6 @@ enum
   PROP_DO_TIMESTAMP
 };
 
-#define GST_BASE_SRC_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_SRC, GstBaseSrcPrivate))
-
 /* The basesrc implementation need to respect the following locking order:
  *   1. STREAM_LOCK
  *   2. LIVE_LOCK
@@ -270,6 +267,7 @@ struct _GstBaseSrcPrivate
     ((src)->priv->pending_bufferlist != NULL)
 
 static GstElementClass *parent_class = NULL;
+static gint private_offset = 0;
 
 static void gst_base_src_class_init (GstBaseSrcClass * klass);
 static void gst_base_src_init (GstBaseSrc * src, gpointer g_class);
@@ -297,9 +295,19 @@ gst_base_src_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseSrc", &base_src_info, G_TYPE_FLAG_ABSTRACT);
+
+    private_offset =
+        g_type_add_instance_private (_type, sizeof (GstBaseSrcPrivate));
+
     g_once_init_leave (&base_src_type, _type);
   }
   return base_src_type;
+}
+
+static inline GstBaseSrcPrivate *
+gst_base_src_get_instance_private (GstBaseSrc * self)
+{
+  return (G_STRUCT_MEMBER_P (self, private_offset));
 }
 
 static GstCaps *gst_base_src_default_get_caps (GstBaseSrc * bsrc,
@@ -365,9 +373,10 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
+  if (private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &private_offset);
 
-  g_type_class_add_private (klass, sizeof (GstBaseSrcPrivate));
+  GST_DEBUG_CATEGORY_INIT (gst_base_src_debug, "basesrc", 0, "basesrc element");
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -426,7 +435,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   GstPad *pad;
   GstPadTemplate *pad_template;
 
-  basesrc->priv = GST_BASE_SRC_GET_PRIVATE (basesrc);
+  basesrc->priv = gst_base_src_get_instance_private (basesrc);
 
   basesrc->is_live = FALSE;
   g_mutex_init (&basesrc->live_lock);

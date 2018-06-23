@@ -144,9 +144,6 @@ GST_DEBUG_CATEGORY_STATIC (bin_debug);
  * a toplevel bin */
 #define BIN_IS_TOPLEVEL(bin) ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling)
 
-#define GST_BIN_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BIN, GstBinPrivate))
-
 struct _GstBinPrivate
 {
   gboolean asynchandling;
@@ -272,7 +269,9 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 }
 
 #define gst_bin_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstBin, gst_bin, GST_TYPE_ELEMENT, _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstBin, gst_bin, GST_TYPE_ELEMENT,
+    G_ADD_PRIVATE (GstBin)
+    _do_init);
 
 static GObject *
 gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
@@ -339,8 +338,6 @@ gst_bin_class_init (GstBinClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstBinPrivate));
 
   gobject_class->set_property = gst_bin_set_property;
   gobject_class->get_property = gst_bin_get_property;
@@ -503,7 +500,7 @@ gst_bin_init (GstBin * bin)
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin,
       NULL);
 
-  bin->priv = GST_BIN_GET_PRIVATE (bin);
+  bin->priv = gst_bin_get_instance_private (bin);
   bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
   bin->priv->structure_cookie = 0;
   bin->priv->message_forward = DEFAULT_MESSAGE_FORWARD;

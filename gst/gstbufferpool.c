@@ -90,9 +90,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_buffer_pool_debug
 
-#define GST_BUFFER_POOL_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BUFFER_POOL, GstBufferPoolPrivate))
-
 #define GST_BUFFER_POOL_LOCK(pool)   (g_rec_mutex_lock(&pool->priv->rec_lock))
 #define GST_BUFFER_POOL_UNLOCK(pool) (g_rec_mutex_unlock(&pool->priv->rec_lock))
 
@@ -120,7 +117,7 @@ struct _GstBufferPoolPrivate
 
 static void gst_buffer_pool_finalize (GObject * object);
 
-G_DEFINE_TYPE (GstBufferPool, gst_buffer_pool, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstBufferPool, gst_buffer_pool, GST_TYPE_OBJECT);
 
 static gboolean default_start (GstBufferPool * pool);
 static gboolean default_stop (GstBufferPool * pool);
@@ -138,8 +135,6 @@ static void
 gst_buffer_pool_class_init (GstBufferPoolClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstBufferPoolPrivate));
 
   gobject_class->finalize = gst_buffer_pool_finalize;
 
@@ -161,7 +156,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
 {
   GstBufferPoolPrivate *priv;
 
-  priv = pool->priv = GST_BUFFER_POOL_GET_PRIVATE (pool);
+  priv = pool->priv = gst_buffer_pool_get_instance_private (pool);
 
   g_rec_mutex_init (&priv->rec_lock);
 

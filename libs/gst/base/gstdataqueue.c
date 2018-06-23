@@ -129,14 +129,13 @@ static guint gst_data_queue_signals[LAST_SIGNAL] = { 0 };
 }
 
 #define parent_class gst_data_queue_parent_class
-G_DEFINE_TYPE_WITH_CODE (GstDataQueue, gst_data_queue, G_TYPE_OBJECT, _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstDataQueue, gst_data_queue, G_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstDataQueue) _do_init);
 
 static void
 gst_data_queue_class_init (GstDataQueueClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstDataQueuePrivate));
 
   gobject_class->set_property = gst_data_queue_set_property;
   gobject_class->get_property = gst_data_queue_get_property;
@@ -191,9 +190,7 @@ gst_data_queue_class_init (GstDataQueueClass * klass)
 static void
 gst_data_queue_init (GstDataQueue * queue)
 {
-  queue->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (queue, GST_TYPE_DATA_QUEUE,
-      GstDataQueuePrivate);
+  queue->priv = gst_data_queue_get_instance_private (queue);
 
   queue->priv->cur_level.visible = 0;   /* no content */
   queue->priv->cur_level.bytes = 0;     /* no content */

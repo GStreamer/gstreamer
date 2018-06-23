@@ -61,9 +61,6 @@ enum
   PROP_QOS_DSCP
 };
 
-#define GST_NET_TIME_PROVIDER_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_NET_TIME_PROVIDER, GstNetTimeProviderPrivate))
-
 struct _GstNetTimeProviderPrivate
 {
   gchar *address;
@@ -101,7 +98,7 @@ static void gst_net_time_provider_get_property (GObject * object, guint prop_id,
 
 #define gst_net_time_provider_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstNetTimeProvider, gst_net_time_provider,
-    GST_TYPE_OBJECT, _do_init);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstNetTimeProvider) _do_init);
 
 static void
 gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
@@ -111,8 +108,6 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   g_assert (sizeof (GstClockTime) == 8);
-
-  g_type_class_add_private (klass, sizeof (GstNetTimeProviderPrivate));
 
   gobject_class->finalize = gst_net_time_provider_finalize;
   gobject_class->set_property = gst_net_time_provider_set_property;
@@ -145,7 +140,7 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
 static void
 gst_net_time_provider_init (GstNetTimeProvider * self)
 {
-  self->priv = GST_NET_TIME_PROVIDER_GET_PRIVATE (self);
+  self->priv = gst_net_time_provider_get_instance_private (self);
 
   self->priv->port = DEFAULT_PORT;
   self->priv->address = g_strdup (DEFAULT_ADDRESS);

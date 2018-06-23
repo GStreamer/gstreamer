@@ -109,13 +109,12 @@ static void gst_plugin_desc_copy (GstPluginDesc * dest,
 
 static void gst_plugin_ext_dep_free (GstPluginDep * dep);
 
-G_DEFINE_TYPE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
 
 static void
 gst_plugin_init (GstPlugin * plugin)
 {
-  plugin->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (plugin, GST_TYPE_PLUGIN, GstPluginPrivate);
+  plugin->priv = gst_plugin_get_instance_private (plugin);
 }
 
 static void
@@ -154,8 +153,6 @@ static void
 gst_plugin_class_init (GstPluginClass * klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gst_plugin_finalize;
-
-  g_type_class_add_private (klass, sizeof (GstPluginPrivate));
 }
 
 GQuark

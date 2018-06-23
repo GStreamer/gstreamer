@@ -668,7 +668,7 @@ gst_clock_id_unschedule (GstClockID id)
  * GstClock abstract base class implementation
  */
 #define gst_clock_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstClock, gst_clock, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstClock, gst_clock, GST_TYPE_OBJECT);
 
 static void
 gst_clock_class_init (GstClockClass * klass)
@@ -713,8 +713,6 @@ gst_clock_class_init (GstClockClass * klass)
       g_signal_new ("synced", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       0, NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
-
-  g_type_class_add_private (klass, sizeof (GstClockPrivate));
 }
 
 static void
@@ -722,8 +720,7 @@ gst_clock_init (GstClock * clock)
 {
   GstClockPrivate *priv;
 
-  clock->priv = priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (clock, GST_TYPE_CLOCK, GstClockPrivate);
+  clock->priv = priv = gst_clock_get_instance_private (clock);
 
   priv->last_time = 0;
 

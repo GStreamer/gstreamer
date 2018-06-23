@@ -95,10 +95,6 @@ struct _GstSystemClockPrivate
 #endif
 };
 
-#define GST_SYSTEM_CLOCK_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_SYSTEM_CLOCK, \
-        GstSystemClockPrivate))
-
 #ifdef HAVE_POSIX_TIMERS
 # ifdef HAVE_MONOTONIC_CLOCK
 #  define DEFAULT_CLOCK_TYPE GST_CLOCK_TYPE_MONOTONIC
@@ -146,7 +142,7 @@ static GMutex _gst_sysclock_mutex;
 /* static guint gst_system_clock_signals[LAST_SIGNAL] = { 0 }; */
 
 #define gst_system_clock_parent_class parent_class
-G_DEFINE_TYPE (GstSystemClock, gst_system_clock, GST_TYPE_CLOCK);
+G_DEFINE_TYPE_WITH_PRIVATE (GstSystemClock, gst_system_clock, GST_TYPE_CLOCK);
 
 static void
 gst_system_clock_class_init (GstSystemClockClass * klass)
@@ -156,8 +152,6 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstSystemClockPrivate));
 
   gobject_class->dispose = gst_system_clock_dispose;
   gobject_class->set_property = gst_system_clock_set_property;
@@ -187,7 +181,7 @@ gst_system_clock_init (GstSystemClock * clock)
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC |
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC);
 
-  clock->priv = priv = GST_SYSTEM_CLOCK_GET_PRIVATE (clock);
+  clock->priv = priv = gst_system_clock_get_instance_private (clock);
 
   priv->clock_type = DEFAULT_CLOCK_TYPE;
   priv->timer = gst_poll_new_timer ();

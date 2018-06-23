@@ -218,7 +218,7 @@ G_STMT_START { \
 } G_STMT_END
 
 G_DEFINE_TYPE_WITH_CODE (GstTestClock, gst_test_clock,
-    GST_TYPE_CLOCK, _do_init);
+    GST_TYPE_CLOCK, G_ADD_PRIVATE (GstTestClock) _do_init);
 
 static GstObjectClass *parent_class = NULL;
 
@@ -261,8 +261,6 @@ gst_test_clock_class_init (GstTestClockClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_type_class_add_private (klass, sizeof (GstTestClockPrivate));
-
   gobject_class->constructed = GST_DEBUG_FUNCPTR (gst_test_clock_constructed);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_test_clock_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_test_clock_finalize);
@@ -304,8 +302,7 @@ gst_test_clock_init (GstTestClock * test_clock)
 {
   GstTestClockPrivate *priv;
 
-  test_clock->priv = G_TYPE_INSTANCE_GET_PRIVATE (test_clock,
-      GST_TYPE_TEST_CLOCK, GstTestClockPrivate);
+  test_clock->priv = gst_test_clock_get_instance_private (test_clock);
 
   priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 

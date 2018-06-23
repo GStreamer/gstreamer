@@ -129,7 +129,7 @@ struct _GstBusPrivate
 };
 
 #define gst_bus_parent_class parent_class
-G_DEFINE_TYPE (GstBus, gst_bus, GST_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstBus, gst_bus, GST_TYPE_OBJECT);
 
 static void
 gst_bus_set_property (GObject * object,
@@ -217,14 +217,12 @@ gst_bus_class_init (GstBusClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
       G_STRUCT_OFFSET (GstBusClass, message), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
-
-  g_type_class_add_private (klass, sizeof (GstBusPrivate));
 }
 
 static void
 gst_bus_init (GstBus * bus)
 {
-  bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
+  bus->priv = gst_bus_get_instance_private (bus);
   bus->priv->enable_async = DEFAULT_ENABLE_ASYNC;
   g_mutex_init (&bus->priv->queue_lock);
   bus->priv->queue = gst_atomic_queue_new (32);

@@ -300,6 +300,7 @@ gst_aggregator_pad_flush (GstAggregatorPad * aggpad, GstAggregator * agg)
  * GstAggregator implementation  *
  *************************************/
 static GstElementClass *aggregator_parent_class = NULL;
+static gint aggregator_private_offset = 0;
 
 /* All members are protected by the object lock unless otherwise noted */
 
@@ -2287,10 +2288,12 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   aggregator_parent_class = g_type_class_peek_parent (klass);
-  g_type_class_add_private (klass, sizeof (GstAggregatorPrivate));
 
   GST_DEBUG_CATEGORY_INIT (aggregator_debug, "aggregator",
       GST_DEBUG_FG_MAGENTA, "GstAggregator");
+
+  if (aggregator_private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &aggregator_private_offset);
 
   klass->finish_buffer = gst_aggregator_default_finish_buffer;
 
@@ -2338,6 +2341,12 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
+static inline gpointer
+gst_aggregator_get_instance_private (GstAggregator * self)
+{
+  return (G_STRUCT_MEMBER_P (self, aggregator_private_offset));
+}
+
 static void
 gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 {
@@ -2346,9 +2355,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 
   g_return_if_fail (klass->aggregate != NULL);
 
-  self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_AGGREGATOR,
-      GstAggregatorPrivate);
+  self->priv = gst_aggregator_get_instance_private (self);
 
   priv = self->priv;
 
@@ -2408,6 +2415,10 @@ gst_aggregator_get_type (void)
 
     _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstAggregator", &info, G_TYPE_FLAG_ABSTRACT);
+
+    aggregator_private_offset =
+        g_type_add_instance_private (_type, sizeof (GstAggregatorPrivate));
+
     g_once_init_leave (&type, _type);
   }
   return type;
@@ -2741,7 +2752,7 @@ gst_aggregator_pad_activate_mode_func (GstPad * pad,
 /***********************************
  * GstAggregatorPad implementation  *
  ************************************/
-G_DEFINE_TYPE (GstAggregatorPad, gst_aggregator_pad, GST_TYPE_PAD);
+G_DEFINE_TYPE_WITH_PRIVATE (GstAggregatorPad, gst_aggregator_pad, GST_TYPE_PAD);
 
 static void
 gst_aggregator_pad_constructed (GObject * object)
@@ -2787,8 +2798,6 @@ gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstAggregatorPadPrivate));
-
   gobject_class->constructed = gst_aggregator_pad_constructed;
   gobject_class->finalize = gst_aggregator_pad_finalize;
   gobject_class->dispose = gst_aggregator_pad_dispose;
@@ -2797,9 +2806,7 @@ gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
 static void
 gst_aggregator_pad_init (GstAggregatorPad * pad)
 {
-  pad->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (pad, GST_TYPE_AGGREGATOR_PAD,
-      GstAggregatorPadPrivate);
+  pad->priv = gst_aggregator_pad_get_instance_private (pad);
 
   g_queue_init (&pad->priv->data);
   g_cond_init (&pad->priv->event_cond);

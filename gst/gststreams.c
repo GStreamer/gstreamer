@@ -55,9 +55,6 @@
 GST_DEBUG_CATEGORY_STATIC (streams_debug);
 #define GST_CAT_DEFAULT streams_debug
 
-#define GST_STREAM_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_STREAM, GstStreamPrivate))
-
 struct _GstStreamPrivate
 {
   GstStreamFlags flags;
@@ -104,7 +101,8 @@ static void gst_stream_get_property (GObject * object, guint prop_id,
 }
 
 #define gst_stream_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstStream, gst_stream, GST_TYPE_OBJECT, _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstStream, gst_stream, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstStream) _do_init);
 
 static void
 gst_stream_class_init (GstStreamClass * klass)
@@ -112,8 +110,6 @@ gst_stream_class_init (GstStreamClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstStreamPrivate));
 
   gobject_class->set_property = gst_stream_set_property;
   gobject_class->get_property = gst_stream_get_property;
@@ -182,7 +178,7 @@ gst_stream_class_init (GstStreamClass * klass)
 static void
 gst_stream_init (GstStream * stream)
 {
-  stream->priv = GST_STREAM_GET_PRIVATE (stream);
+  stream->priv = gst_stream_get_instance_private (stream);
   stream->priv->type = GST_STREAM_TYPE_UNKNOWN;
 }
 
