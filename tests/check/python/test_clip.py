@@ -92,6 +92,10 @@ class TestTransitionClip(unittest.TestCase):
             timeline.save_to_uri(uri, None, True)
 
             timeline = GES.Timeline.new_from_uri(uri)
+            project = timeline.get_asset()
+            mainloop = common.create_main_loop()
+            project.connect("loaded", lambda _, __: mainloop.quit())
+            mainloop.run()
             self.assertIsNotNone(timeline)
             layer, = timeline.get_layers()
             clip, = layer.get_clips()

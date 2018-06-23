@@ -494,6 +494,9 @@ ges_layer_set_auto_transition (GESLayer * layer, gboolean auto_transition)
 
   g_return_if_fail (GES_IS_LAYER (layer));
 
+  if (layer->priv->auto_transition == auto_transition)
+    return;
+
   layer->priv->auto_transition = auto_transition;
   g_object_notify (G_OBJECT (layer), "auto-transition");
 }

@@ -130,10 +130,9 @@ _start_loading (GESAsset * asset, GError ** error)
   const gchar *uri;
   GESUriClipAssetClass *class = GES_URI_CLIP_ASSET_GET_CLASS (asset);
 
-  GST_DEBUG ("Started loading %p", asset);
-
   uri = ges_asset_get_id (asset);
 
+  GST_DEBUG_OBJECT (asset, "Started loading %s", uri);
   ret = gst_discoverer_discover_uri_async (class->discoverer, uri);
   if (ret)
     return GES_ASSET_LOADING_ASYNC;
