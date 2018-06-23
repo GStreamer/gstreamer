@@ -30,9 +30,6 @@
 
 #include "gstglmixer.h"
 
-#define gst_gl_mixer_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLMixer, gst_gl_mixer, GST_TYPE_GL_BASE_MIXER);
-
 #define GST_CAT_DEFAULT gst_gl_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
 
@@ -51,9 +48,6 @@ enum
   PROP_PAD_0
 };
 
-#define GST_GL_MIXER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_GL_MIXER, GstGLMixerPrivate))
-
 struct _GstGLMixerPrivate
 {
   gboolean negotiated;
@@ -62,6 +56,10 @@ struct _GstGLMixerPrivate
   GMutex gl_resource_lock;
   GCond gl_resource_cond;
 };
+
+#define gst_gl_mixer_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstGLMixer, gst_gl_mixer,
+    GST_TYPE_GL_BASE_MIXER);
 
 G_DEFINE_TYPE (GstGLMixerPad, gst_gl_mixer_pad, GST_TYPE_GL_BASE_MIXER_PAD);
 
@@ -407,8 +405,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixer", 0, "OpenGL mixer");
 
-  g_type_class_add_private (klass, sizeof (GstGLMixerPrivate));
-
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gl_mixer_finalize);
 
   gobject_class->get_property = gst_gl_mixer_get_property;
@@ -446,7 +442,7 @@ gst_gl_mixer_reset (GstGLMixer * mix)
 static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
-  mix->priv = GST_GL_MIXER_GET_PRIVATE (mix);
+  mix->priv = gst_gl_mixer_get_instance_private (mix);
 
   mix->priv->gl_resource_ready = FALSE;
   g_mutex_init (&mix->priv->gl_resource_lock);
