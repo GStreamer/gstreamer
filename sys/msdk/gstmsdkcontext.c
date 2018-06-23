@@ -41,15 +41,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_msdkcontext);
 #define GST_CAT_DEFAULT gst_debug_msdkcontext
 
-#define GST_MSDK_CONTEXT_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_MSDK_CONTEXT, \
-      GstMsdkContextPrivate))
-
-#define gst_msdk_context_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstMsdkContext, gst_msdk_context, GST_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (gst_debug_msdkcontext, "msdkcontext", 0,
-        "MSDK Context"));
-
 struct _GstMsdkContextPrivate
 {
   mfxSession session;
@@ -65,6 +56,12 @@ struct _GstMsdkContextPrivate
   VADisplay dpy;
 #endif
 };
+
+#define gst_msdk_context_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstMsdkContext, gst_msdk_context, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstMsdkContext)
+    GST_DEBUG_CATEGORY_INIT (gst_debug_msdkcontext, "msdkcontext", 0,
+        "MSDK Context"));
 
 #ifndef _WIN32
 
@@ -208,7 +205,7 @@ failed:
 static void
 gst_msdk_context_init (GstMsdkContext * context)
 {
-  GstMsdkContextPrivate *priv = GST_MSDK_CONTEXT_GET_PRIVATE (context);
+  GstMsdkContextPrivate *priv = gst_msdk_context_get_instance_private (context);
 
   context->priv = priv;
 
@@ -257,7 +254,6 @@ static void
 gst_msdk_context_class_init (GstMsdkContextClass * klass)
 {
   GObjectClass *const g_object_class = G_OBJECT_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GstMsdkContextPrivate));
 
   g_object_class->finalize = gst_msdk_context_finalize;
 }

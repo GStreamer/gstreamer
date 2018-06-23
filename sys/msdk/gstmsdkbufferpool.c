@@ -40,16 +40,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_msdkbufferpool);
 #define GST_CAT_DEFAULT gst_debug_msdkbufferpool
 
-#define GST_MSDK_BUFFER_POOL_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_MSDK_BUFFER_POOL, \
-      GstMsdkBufferPoolPrivate))
-
-#define gst_msdk_buffer_pool_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstMsdkBufferPool, gst_msdk_buffer_pool,
-    GST_TYPE_VIDEO_BUFFER_POOL,
-    GST_DEBUG_CATEGORY_INIT (gst_debug_msdkbufferpool, "msdkbufferpool", 0,
-        "MSDK Buffer Pool"));
-
 typedef enum _GstMsdkMemoryType
 {
   GST_MSDK_MEMORY_TYPE_SYSTEM,
@@ -65,6 +55,12 @@ struct _GstMsdkBufferPoolPrivate
   GstMsdkMemoryType memory_type;
   gboolean add_videometa;
 };
+
+#define gst_msdk_buffer_pool_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstMsdkBufferPool, gst_msdk_buffer_pool,
+    GST_TYPE_VIDEO_BUFFER_POOL, G_ADD_PRIVATE (GstMsdkBufferPool)
+    GST_DEBUG_CATEGORY_INIT (gst_debug_msdkbufferpool, "msdkbufferpool", 0,
+        "MSDK Buffer Pool"));
 
 static const gchar **
 gst_msdk_buffer_pool_get_options (GstBufferPool * pool)
@@ -351,7 +347,7 @@ gst_msdk_buffer_pool_finalize (GObject * object)
 static void
 gst_msdk_buffer_pool_init (GstMsdkBufferPool * pool)
 {
-  pool->priv = GST_MSDK_BUFFER_POOL_GET_PRIVATE (pool);
+  pool->priv = gst_msdk_buffer_pool_get_instance_private (pool);
 }
 
 static void
@@ -359,8 +355,6 @@ gst_msdk_buffer_pool_class_init (GstMsdkBufferPoolClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstBufferPoolClass *pool_class = GST_BUFFER_POOL_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstMsdkBufferPoolPrivate));
 
   object_class->finalize = gst_msdk_buffer_pool_finalize;
 
