@@ -51,7 +51,7 @@ struct _GstKsClockPrivate
 static void gst_ks_clock_dispose (GObject * object);
 static void gst_ks_clock_finalize (GObject * object);
 
-G_DEFINE_TYPE (GstKsClock, gst_ks_clock, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstKsClock, gst_ks_clock, G_TYPE_OBJECT);
 
 static GstKsClockClass *parent_class = NULL;
 
@@ -63,8 +63,6 @@ gst_ks_clock_class_init (GstKsClockClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_type_class_add_private (klass, sizeof (GstKsClockPrivate));
-
   gobject_class->dispose = gst_ks_clock_dispose;
   gobject_class->finalize = gst_ks_clock_finalize;
 }
@@ -74,8 +72,7 @@ gst_ks_clock_init (GstKsClock * self)
 {
   GstKsClockPrivate *priv;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_KS_CLOCK,
-      GstKsClockPrivate);
+  self->priv = gst_ks_clock_get_instance_private (self);
 
   priv = GST_KS_CLOCK_GET_PRIVATE (self);
 

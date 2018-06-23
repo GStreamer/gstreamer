@@ -106,7 +106,8 @@ static void gst_ks_video_device_set_property (GObject * object, guint prop_id,
 static void gst_ks_video_device_reset_caps (GstKsVideoDevice * self);
 static guint gst_ks_video_device_get_frame_size (GstKsVideoDevice * self);
 
-G_DEFINE_TYPE (GstKsVideoDevice, gst_ks_video_device, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstKsVideoDevice, gst_ks_video_device,
+    G_TYPE_OBJECT);
 
 static GstKsVideoDeviceClass *parent_class = NULL;
 
@@ -116,8 +117,6 @@ gst_ks_video_device_class_init (GstKsVideoDeviceClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
-
-  g_type_class_add_private (klass, sizeof (GstKsVideoDevicePrivate));
 
   gobject_class->dispose = gst_ks_video_device_dispose;
   gobject_class->get_property = gst_ks_video_device_get_property;
@@ -139,8 +138,7 @@ gst_ks_video_device_init (GstKsVideoDevice * self)
 {
   GstKsVideoDevicePrivate *priv;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_KS_VIDEO_DEVICE,
-      GstKsVideoDevicePrivate);
+  self->priv = gst_ks_video_device_get_instance_private (self);
 
   priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
   priv->open = FALSE;

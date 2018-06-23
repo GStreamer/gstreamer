@@ -152,7 +152,7 @@ static GstFlowReturn gst_ks_video_src_create (GstPushSrc * pushsrc,
 static GstBuffer *gst_ks_video_src_alloc_buffer (guint size, guint alignment,
     gpointer user_data);
 
-G_DEFINE_TYPE (GstKsVideoSrc, gst_ks_video_src, GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE_WITH_PRIVATE (GstKsVideoSrc, gst_ks_video_src, GST_TYPE_PUSH_SRC);
 
 static GstKsVideoSrcClass *parent_class = NULL;
 
@@ -163,8 +163,6 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstKsVideoSrcPrivate));
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -229,8 +227,7 @@ gst_ks_video_src_init (GstKsVideoSrc * self)
   GstBaseSrc *basesrc = GST_BASE_SRC (self);
   GstKsVideoSrcPrivate *priv;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_KS_VIDEO_SRC,
-      GstKsVideoSrcPrivate);
+  self->priv = gst_ks_video_src_get_instance_private (self);
   priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
 
   gst_base_src_set_live (basesrc, TRUE);
