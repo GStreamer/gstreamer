@@ -44,7 +44,7 @@ struct _GstGLContextWGLPrivate
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
 #define gst_gl_context_wgl_parent_class parent_class
-G_DEFINE_TYPE_PRIVATE (GstGLContextWGL, gst_gl_context_wgl,
+G_DEFINE_TYPE_WITH_PRIVATE (GstGLContextWGL, gst_gl_context_wgl,
     GST_TYPE_GL_CONTEXT);
 
 static guintptr gst_gl_context_wgl_get_gl_context (GstGLContext * context);
