@@ -32,9 +32,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_vaapivideopool);
 #define GST_CAT_DEFAULT gst_debug_vaapivideopool
 
-G_DEFINE_TYPE (GstVaapiVideoBufferPool,
-    gst_vaapi_video_buffer_pool, GST_TYPE_BUFFER_POOL);
-
 enum
 {
   PROP_0,
@@ -52,9 +49,8 @@ struct _GstVaapiVideoBufferPoolPrivate
   guint forced_video_meta:1;
 };
 
-#define GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_VAAPI_TYPE_VIDEO_BUFFER_POOL, \
-      GstVaapiVideoBufferPoolPrivate))
+G_DEFINE_TYPE_WITH_PRIVATE (GstVaapiVideoBufferPool,
+    gst_vaapi_video_buffer_pool, GST_TYPE_BUFFER_POOL);
 
 static void
 gst_vaapi_video_buffer_pool_finalize (GObject * object)
@@ -497,8 +493,6 @@ gst_vaapi_video_buffer_pool_class_init (GstVaapiVideoBufferPoolClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_debug_vaapivideopool,
       "vaapivideopool", 0, "VA-API video pool");
 
-  g_type_class_add_private (klass, sizeof (GstVaapiVideoBufferPoolPrivate));
-
   object_class->finalize = gst_vaapi_video_buffer_pool_finalize;
   object_class->set_property = gst_vaapi_video_buffer_pool_set_property;
   object_class->get_property = gst_vaapi_video_buffer_pool_get_property;
@@ -524,10 +518,7 @@ gst_vaapi_video_buffer_pool_class_init (GstVaapiVideoBufferPoolClass * klass)
 static void
 gst_vaapi_video_buffer_pool_init (GstVaapiVideoBufferPool * pool)
 {
-  GstVaapiVideoBufferPoolPrivate *const priv =
-      GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE (pool);
-
-  pool->priv = priv;
+  pool->priv = gst_vaapi_video_buffer_pool_get_instance_private (pool);
 }
 
 GstBufferPool *
@@ -551,10 +542,9 @@ gst_vaapi_video_buffer_pool_new (GstVaapiDisplay * display)
 gboolean
 gst_vaapi_video_buffer_pool_copy_buffer (GstBufferPool * pool)
 {
-  GstVaapiVideoBufferPoolPrivate *priv;
+  GstVaapiVideoBufferPool *va_pool = (GstVaapiVideoBufferPool *) pool;
 
   g_return_val_if_fail (GST_VAAPI_IS_VIDEO_BUFFER_POOL (pool), FALSE);
 
-  priv = GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE (pool);
-  return priv->forced_video_meta;
+  return va_pool->priv->forced_video_meta;
 }
