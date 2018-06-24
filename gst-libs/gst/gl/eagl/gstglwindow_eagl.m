@@ -32,12 +32,6 @@
 #define GST_CAT_DEFAULT gst_gl_window_eagl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
-#define gst_gl_window_eagl_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowEagl, gst_gl_window_eagl,
-    GST_TYPE_GL_WINDOW, G_ADD_PRIVATE (GstGLWindowEagl) DEBUG_INIT);
-
 static void gst_gl_window_eagl_finalize (GObject * object);
 
 static guintptr gst_gl_window_eagl_get_display (GstGLWindow * window);
@@ -57,6 +51,12 @@ struct _GstGLWindowEaglPrivate
   gint preferred_width, preferred_height;
   gpointer gl_queue;
 };
+
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
+#define gst_gl_window_eagl_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGLWindowEagl, gst_gl_window_eagl,
+    GST_TYPE_GL_WINDOW, G_ADD_PRIVATE (GstGLWindowEagl) DEBUG_INIT);
 
 static void
 gst_gl_window_eagl_class_init (GstGLWindowEaglClass * klass)
