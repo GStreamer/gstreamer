@@ -572,7 +572,7 @@ gst_rtsp_auth_add_digest (GstRTSPAuth * auth, const gchar * user,
 
 /* With auth lock taken */
 static gboolean
-update_digest_cb (gchar *key, GstRTSPDigestEntry *entry, GHashTable *digest)
+update_digest_cb (gchar * key, GstRTSPDigestEntry * entry, GHashTable * digest)
 {
   g_hash_table_replace (digest, key, entry);
 
@@ -596,8 +596,8 @@ update_digest_cb (gchar *key, GstRTSPDigestEntry *entry, GHashTable *digest)
  * Since: 1.16
  */
 gboolean
-gst_rtsp_auth_parse_htdigest (GstRTSPAuth *auth, const gchar *path,
-    GstRTSPToken *token)
+gst_rtsp_auth_parse_htdigest (GstRTSPAuth * auth, const gchar * path,
+    GstRTSPToken * token)
 {
   GstRTSPAuthPrivate *priv;
   gboolean ret = FALSE;
@@ -605,7 +605,8 @@ gst_rtsp_auth_parse_htdigest (GstRTSPAuth *auth, const gchar *path,
   gchar *eol = NULL;
   gchar *contents = NULL;
   GError *error = NULL;
-  GHashTable *new_entries = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
+  GHashTable *new_entries =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) gst_rtsp_digest_entry_free);
 
 
@@ -615,7 +616,7 @@ gst_rtsp_auth_parse_htdigest (GstRTSPAuth *auth, const gchar *path,
 
   priv = auth->priv;
   if (!g_file_get_contents (path, &contents, NULL, &error)) {
-    GST_ERROR_OBJECT(auth, "Could not parse htdigest: %s", error->message);
+    GST_ERROR_OBJECT (auth, "Could not parse htdigest: %s", error->message);
     goto done;
   }
 
@@ -636,7 +637,8 @@ gst_rtsp_auth_parse_htdigest (GstRTSPAuth *auth, const gchar *path,
     }
 
     if (strlen (strv[2]) != 32) {
-      GST_ERROR_OBJECT (auth, "Invalid htdigest format, hash is expected to be 32 characters long");
+      GST_ERROR_OBJECT (auth,
+          "Invalid htdigest format, hash is expected to be 32 characters long");
       g_strfreev (strv);
       goto done;
     }
@@ -652,13 +654,14 @@ gst_rtsp_auth_parse_htdigest (GstRTSPAuth *auth, const gchar *path,
 
   /* We only update digest if the file was entirely valid */
   g_mutex_lock (&priv->lock);
-  g_hash_table_foreach_steal (new_entries, (GHRFunc) update_digest_cb, priv->digest);
+  g_hash_table_foreach_steal (new_entries, (GHRFunc) update_digest_cb,
+      priv->digest);
   g_mutex_unlock (&priv->lock);
 
 done:
   if (error)
     g_clear_error (&error);
-  g_free(contents);
+  g_free (contents);
   g_hash_table_unref (new_entries);
   return ret;
 }
@@ -899,7 +902,8 @@ static void
 default_generate_authenticate_header (GstRTSPAuth * auth, GstRTSPContext * ctx)
 {
   if (auth->priv->auth_methods & GST_RTSP_AUTH_BASIC) {
-    gchar *auth_header = g_strdup_printf("Basic realm=\"%s\"", auth->priv->realm);
+    gchar *auth_header =
+        g_strdup_printf ("Basic realm=\"%s\"", auth->priv->realm);
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
         auth_header);
     g_free (auth_header);
@@ -1233,7 +1237,7 @@ gst_rtsp_auth_make_basic (const gchar * user, const gchar * pass)
  * Since: 1.16
  */
 void
-gst_rtsp_auth_set_realm         (GstRTSPAuth *auth, const gchar *realm)
+gst_rtsp_auth_set_realm (GstRTSPAuth * auth, const gchar * realm)
 {
   g_return_if_fail (GST_IS_RTSP_AUTH (auth));
   g_return_if_fail (realm != NULL);
@@ -1252,9 +1256,9 @@ gst_rtsp_auth_set_realm         (GstRTSPAuth *auth, const gchar *realm)
  * Since: 1.16
  */
 gchar *
-gst_rtsp_auth_get_realm         (GstRTSPAuth *auth)
+gst_rtsp_auth_get_realm (GstRTSPAuth * auth)
 {
   g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), NULL);
 
-  return g_strdup(auth->priv->realm);
+  return g_strdup (auth->priv->realm);
 }

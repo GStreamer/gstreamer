@@ -1539,7 +1539,8 @@ gst_rtsp_media_set_latency (GstRTSPMedia * media, guint latency)
       g_signal_emit_by_name (G_OBJECT (media->priv->rtpbin), "get-storage",
           i, &storage);
       if (storage)
-        g_object_set (storage, "size-time", (media->priv->latency + 50) * GST_MSECOND, NULL);
+        g_object_set (storage, "size-time",
+            (media->priv->latency + 50) * GST_MSECOND, NULL);
     }
   }
 
@@ -3150,9 +3151,11 @@ request_fec_decoder (GstElement * rtpbin, guint sessid, GstRTSPMedia * media)
 }
 
 static void
-new_storage_cb (GstElement * rtpbin, GObject * storage, guint sessid, GstRTSPMedia * media)
+new_storage_cb (GstElement * rtpbin, GObject * storage, guint sessid,
+    GstRTSPMedia * media)
 {
-  g_object_set (storage, "size-time", (media->priv->latency + 50) * GST_MSECOND, NULL);
+  g_object_set (storage, "size-time", (media->priv->latency + 50) * GST_MSECOND,
+      NULL);
 }
 
 static gboolean
@@ -3166,8 +3169,10 @@ start_prepare (GstRTSPMedia * media)
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
     goto no_longer_preparing;
 
-  g_signal_connect (priv->rtpbin, "new-storage", G_CALLBACK (new_storage_cb), media);
-  g_signal_connect (priv->rtpbin, "request-fec-decoder", G_CALLBACK (request_fec_decoder), media);
+  g_signal_connect (priv->rtpbin, "new-storage", G_CALLBACK (new_storage_cb),
+      media);
+  g_signal_connect (priv->rtpbin, "request-fec-decoder",
+      G_CALLBACK (request_fec_decoder), media);
 
   /* link streams we already have, other streams might appear when we have
    * dynamic elements */

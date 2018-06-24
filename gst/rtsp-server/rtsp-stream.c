@@ -2374,7 +2374,7 @@ done:
 }
 
 static void
-retrieve_ulpfec_pt (gpointer key, GstCaps *caps, GstElement *ulpfec_decoder)
+retrieve_ulpfec_pt (gpointer key, GstCaps * caps, GstElement * ulpfec_decoder)
 {
   guint pt = GPOINTER_TO_INT (key);
   const GstStructure *s = gst_caps_get_structure (caps, 0);
@@ -2389,7 +2389,8 @@ update_ulpfec_decoder_pt (GstRTSPStream * stream)
   if (!stream->priv->ulpfec_decoder)
     goto done;
 
-  g_hash_table_foreach (stream->priv->ptmap, (GHFunc) retrieve_ulpfec_pt, stream->priv->ulpfec_decoder);
+  g_hash_table_foreach (stream->priv->ptmap, (GHFunc) retrieve_ulpfec_pt,
+      stream->priv->ulpfec_decoder);
 
 done:
   return;
@@ -5028,7 +5029,7 @@ gst_rtsp_stream_handle_keymgmt (GstRTSPStream * stream, const gchar * keymgmt)
  * Since: 1.16
  */
 guint
-gst_rtsp_stream_get_ulpfec_pt (GstRTSPStream *stream)
+gst_rtsp_stream_get_ulpfec_pt (GstRTSPStream * stream)
 {
   guint res;
 
@@ -5069,15 +5070,19 @@ gst_rtsp_stream_set_ulpfec_pt (GstRTSPStream * stream, guint pt)
  * Since: 1.16
  */
 GstElement *
-gst_rtsp_stream_request_ulpfec_decoder (GstRTSPStream * stream, GstElement *rtpbin, guint sessid)
+gst_rtsp_stream_request_ulpfec_decoder (GstRTSPStream * stream,
+    GstElement * rtpbin, guint sessid)
 {
   GObject *internal_storage = NULL;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
-  stream->priv->ulpfec_decoder = gst_object_ref (gst_element_factory_make ("rtpulpfecdec", NULL));
+  stream->priv->ulpfec_decoder =
+      gst_object_ref (gst_element_factory_make ("rtpulpfecdec", NULL));
 
-  g_signal_emit_by_name (G_OBJECT (rtpbin), "get-internal-storage", sessid, &internal_storage);
-  g_object_set (stream->priv->ulpfec_decoder, "storage", internal_storage, NULL);
+  g_signal_emit_by_name (G_OBJECT (rtpbin), "get-internal-storage", sessid,
+      &internal_storage);
+  g_object_set (stream->priv->ulpfec_decoder, "storage", internal_storage,
+      NULL);
   g_object_unref (internal_storage);
   update_ulpfec_decoder_pt (stream);
 
@@ -5101,9 +5106,11 @@ gst_rtsp_stream_request_ulpfec_encoder (GstRTSPStream * stream, guint sessid)
   if (!stream->priv->ulpfec_percentage)
     return NULL;
 
-  stream->priv->ulpfec_encoder = gst_object_ref (gst_element_factory_make ("rtpulpfecenc", NULL));
+  stream->priv->ulpfec_encoder =
+      gst_object_ref (gst_element_factory_make ("rtpulpfecenc", NULL));
 
-  g_object_set (stream->priv->ulpfec_encoder, "pt", stream->priv->ulpfec_pt, "percentage", stream->priv->ulpfec_percentage, NULL);
+  g_object_set (stream->priv->ulpfec_encoder, "pt", stream->priv->ulpfec_pt,
+      "percentage", stream->priv->ulpfec_percentage, NULL);
 
   return stream->priv->ulpfec_encoder;
 }
@@ -5117,7 +5124,7 @@ gst_rtsp_stream_request_ulpfec_encoder (GstRTSPStream * stream, guint sessid)
  * Since: 1.16
  */
 void
-gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream *stream, guint percentage)
+gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream * stream, guint percentage)
 {
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
 
@@ -5138,7 +5145,7 @@ gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream *stream, guint percentage)
  * Since: 1.16
  */
 guint
-gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream *stream)
+gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream * stream)
 {
   guint res;
 

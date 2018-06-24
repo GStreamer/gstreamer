@@ -438,8 +438,7 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
         gst_sdp_media_add_attribute (smedia, "rtpmap", tmp);
         g_free (tmp);
 
-        tmp =
-            g_strdup_printf ("%d apt=%d", ulpfec_pt, caps_pt);
+        tmp = g_strdup_printf ("%d apt=%d", ulpfec_pt, caps_pt);
         gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
         g_free (tmp);
       }
