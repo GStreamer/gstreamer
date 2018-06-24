@@ -58,9 +58,6 @@
 #include "rtsp-server.h"
 #include "rtsp-client.h"
 
-#define GST_RTSP_SERVER_GET_PRIVATE(obj)  \
-       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_SERVER, GstRTSPServerPrivate))
-
 #define GST_RTSP_SERVER_GET_LOCK(server)  (&(GST_RTSP_SERVER_CAST(server)->priv->lock))
 #define GST_RTSP_SERVER_LOCK(server)      (g_mutex_lock(GST_RTSP_SERVER_GET_LOCK(server)))
 #define GST_RTSP_SERVER_UNLOCK(server)    (g_mutex_unlock(GST_RTSP_SERVER_GET_LOCK(server)))
@@ -123,7 +120,7 @@ enum
   SIGNAL_LAST
 };
 
-G_DEFINE_TYPE (GstRTSPServer, gst_rtsp_server, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPServer, gst_rtsp_server, G_TYPE_OBJECT);
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_server_debug);
 #define GST_CAT_DEFAULT rtsp_server_debug
@@ -144,8 +141,6 @@ static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPServerPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -237,7 +232,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 static void
 gst_rtsp_server_init (GstRTSPServer * server)
 {
-  GstRTSPServerPrivate *priv = GST_RTSP_SERVER_GET_PRIVATE (server);
+  GstRTSPServerPrivate *priv = gst_rtsp_server_get_instance_private (server);
 
   server->priv = priv;
 

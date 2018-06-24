@@ -129,7 +129,8 @@ typedef struct
 #define RANGE_IS_SINGLE(r) (memcmp ((r)->min.bytes, (r)->max.bytes, (r)->min.size) == 0)
 
 #define gst_rtsp_address_pool_parent_class parent_class
-G_DEFINE_TYPE (GstRTSPAddressPool, gst_rtsp_address_pool, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPAddressPool, gst_rtsp_address_pool,
+    G_TYPE_OBJECT);
 
 static void gst_rtsp_address_pool_finalize (GObject * obj);
 
@@ -142,8 +143,6 @@ gst_rtsp_address_pool_class_init (GstRTSPAddressPoolClass * klass)
 
   gobject_class->finalize = gst_rtsp_address_pool_finalize;
 
-  g_type_class_add_private (klass, sizeof (GstRTSPAddressPoolPrivate));
-
   GST_DEBUG_CATEGORY_INIT (rtsp_address_pool_debug, "rtspaddresspool", 0,
       "GstRTSPAddressPool");
 }
@@ -151,7 +150,7 @@ gst_rtsp_address_pool_class_init (GstRTSPAddressPoolClass * klass)
 static void
 gst_rtsp_address_pool_init (GstRTSPAddressPool * pool)
 {
-  pool->priv = GST_RTSP_ADDRESS_POOL_GET_PRIVATE (pool);
+  pool->priv = gst_rtsp_address_pool_get_instance_private (pool);
 
   g_mutex_init (&pool->priv->lock);
 }

@@ -40,9 +40,6 @@
 
 #include "rtsp-media-factory.h"
 
-#define GST_RTSP_MEDIA_FACTORY_GET_PRIVATE(obj)  \
-       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_MEDIA_FACTORY, GstRTSPMediaFactoryPrivate))
-
 #define GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)       (&(GST_RTSP_MEDIA_FACTORY_CAST(f)->priv->lock))
 #define GST_RTSP_MEDIA_FACTORY_LOCK(f)           (g_mutex_lock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
 #define GST_RTSP_MEDIA_FACTORY_UNLOCK(f)         (g_mutex_unlock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
@@ -136,14 +133,13 @@ static void default_configure (GstRTSPMediaFactory * factory,
 static GstElement *default_create_pipeline (GstRTSPMediaFactory * factory,
     GstRTSPMedia * media);
 
-G_DEFINE_TYPE (GstRTSPMediaFactory, gst_rtsp_media_factory, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPMediaFactory, gst_rtsp_media_factory,
+    G_TYPE_OBJECT);
 
 static void
 gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPMediaFactoryPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -252,7 +248,7 @@ static void
 gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
 {
   GstRTSPMediaFactoryPrivate *priv =
-      GST_RTSP_MEDIA_FACTORY_GET_PRIVATE (factory);
+      gst_rtsp_media_factory_get_instance_private (factory);
   factory->priv = priv;
 
   priv->launch = g_strdup (DEFAULT_LAUNCH);

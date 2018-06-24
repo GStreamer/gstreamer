@@ -81,9 +81,6 @@
 
 #include "rtsp-media.h"
 
-#define GST_RTSP_MEDIA_GET_PRIVATE(obj)  \
-     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_MEDIA, GstRTSPMediaPrivate))
-
 struct _GstRTSPMediaPrivate
 {
   GMutex lock;
@@ -297,14 +294,12 @@ gst_rtsp_publish_clock_mode_get_type (void)
   return (GType) id;
 }
 
-G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
 
 static void
 gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPMediaPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -429,7 +424,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
-  GstRTSPMediaPrivate *priv = GST_RTSP_MEDIA_GET_PRIVATE (media);
+  GstRTSPMediaPrivate *priv = gst_rtsp_media_get_instance_private (media);
 
   media->priv = priv;
 

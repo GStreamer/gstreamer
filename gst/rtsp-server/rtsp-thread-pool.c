@@ -184,9 +184,6 @@ gst_rtsp_thread_stop (GstRTSPThread * thread)
     gst_rtsp_thread_unref (thread);
 }
 
-#define GST_RTSP_THREAD_POOL_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_THREAD_POOL, GstRTSPThreadPoolPrivate))
-
 struct _GstRTSPThreadPoolPrivate
 {
   GMutex lock;
@@ -220,14 +217,13 @@ static gpointer do_loop (GstRTSPThread * thread);
 static GstRTSPThread *default_get_thread (GstRTSPThreadPool * pool,
     GstRTSPThreadType type, GstRTSPContext * ctx);
 
-G_DEFINE_TYPE (GstRTSPThreadPool, gst_rtsp_thread_pool, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPThreadPool, gst_rtsp_thread_pool,
+    G_TYPE_OBJECT);
 
 static void
 gst_rtsp_thread_pool_class_init (GstRTSPThreadPoolClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPThreadPoolPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -261,7 +257,7 @@ gst_rtsp_thread_pool_init (GstRTSPThreadPool * pool)
 {
   GstRTSPThreadPoolPrivate *priv;
 
-  pool->priv = priv = GST_RTSP_THREAD_POOL_GET_PRIVATE (pool);
+  pool->priv = priv = gst_rtsp_thread_pool_get_instance_private (pool);
 
   g_mutex_init (&priv->lock);
   priv->max_threads = DEFAULT_MAX_THREADS;

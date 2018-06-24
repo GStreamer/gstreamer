@@ -51,9 +51,6 @@
 #include "rtsp-sdp.h"
 #include "rtsp-params.h"
 
-#define GST_RTSP_CLIENT_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_CLIENT, GstRTSPClientPrivate))
-
 typedef enum
 {
   TUNNEL_STATE_UNKNOWN,
@@ -192,14 +189,12 @@ static GstRTSPStatusCode default_pre_signal_handler (GstRTSPClient * client,
 static gboolean pre_signal_accumulator (GSignalInvocationHint * ihint,
     GValue * return_accu, const GValue * handler_return, gpointer data);
 
-G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
 static void
 gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPClientPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -584,7 +579,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
-  GstRTSPClientPrivate *priv = GST_RTSP_CLIENT_GET_PRIVATE (client);
+  GstRTSPClientPrivate *priv = gst_rtsp_client_get_instance_private (client);
 
   client->priv = priv;
 

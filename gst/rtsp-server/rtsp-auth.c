@@ -50,9 +50,6 @@
 
 #include "rtsp-auth.h"
 
-#define GST_RTSP_AUTH_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_AUTH, GstRTSPAuthPrivate))
-
 struct _GstRTSPAuthPrivate
 {
   GMutex lock;
@@ -132,14 +129,12 @@ static void default_generate_authenticate_header (GstRTSPAuth * auth,
     GstRTSPContext * ctx);
 
 
-G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
 
 static void
 gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPAuthPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -184,7 +179,7 @@ gst_rtsp_auth_init (GstRTSPAuth * auth)
 {
   GstRTSPAuthPrivate *priv;
 
-  auth->priv = priv = GST_RTSP_AUTH_GET_PRIVATE (auth);
+  auth->priv = priv = gst_rtsp_auth_get_instance_private (auth);
 
   g_mutex_init (&priv->lock);
 

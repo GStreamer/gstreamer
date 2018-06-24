@@ -39,9 +39,6 @@
 
 #include "rtsp-session.h"
 
-#define GST_RTSP_SESSION_MEDIA_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_SESSION_MEDIA, GstRTSPSessionMediaPrivate))
-
 struct _GstRTSPSessionMediaPrivate
 {
   GMutex lock;
@@ -65,14 +62,13 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_session_media_debug);
 
 static void gst_rtsp_session_media_finalize (GObject * obj);
 
-G_DEFINE_TYPE (GstRTSPSessionMedia, gst_rtsp_session_media, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPSessionMedia, gst_rtsp_session_media,
+    G_TYPE_OBJECT);
 
 static void
 gst_rtsp_session_media_class_init (GstRTSPSessionMediaClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPSessionMediaPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -85,9 +81,9 @@ gst_rtsp_session_media_class_init (GstRTSPSessionMediaClass * klass)
 static void
 gst_rtsp_session_media_init (GstRTSPSessionMedia * media)
 {
-  GstRTSPSessionMediaPrivate *priv = GST_RTSP_SESSION_MEDIA_GET_PRIVATE (media);
+  GstRTSPSessionMediaPrivate *priv;
 
-  media->priv = priv;
+  media->priv = priv = gst_rtsp_session_media_get_instance_private (media);
 
   g_mutex_init (&priv->lock);
   priv->state = GST_RTSP_STATE_INIT;

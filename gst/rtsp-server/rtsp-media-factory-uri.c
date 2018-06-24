@@ -34,9 +34,6 @@
 
 #include "rtsp-media-factory-uri.h"
 
-#define GST_RTSP_MEDIA_FACTORY_URI_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_MEDIA_FACTORY_URI, GstRTSPMediaFactoryURIPrivate))
-
 struct _GstRTSPMediaFactoryURIPrivate
 {
   GMutex lock;
@@ -98,7 +95,7 @@ static void gst_rtsp_media_factory_uri_finalize (GObject * obj);
 static GstElement *rtsp_media_factory_uri_create_element (GstRTSPMediaFactory *
     factory, const GstRTSPUrl * url);
 
-G_DEFINE_TYPE (GstRTSPMediaFactoryURI, gst_rtsp_media_factory_uri,
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPMediaFactoryURI, gst_rtsp_media_factory_uri,
     GST_TYPE_RTSP_MEDIA_FACTORY);
 
 static void
@@ -106,8 +103,6 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
 {
   GObjectClass *gobject_class;
   GstRTSPMediaFactoryClass *mediafactory_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPMediaFactoryURIPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
   mediafactory_class = GST_RTSP_MEDIA_FACTORY_CLASS (klass);
@@ -188,7 +183,7 @@ static void
 gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
 {
   GstRTSPMediaFactoryURIPrivate *priv =
-      GST_RTSP_MEDIA_FACTORY_URI_GET_PRIVATE (factory);
+      gst_rtsp_media_factory_uri_get_instance_private (factory);
   FilterData data = { NULL, NULL, NULL };
 
   GST_DEBUG_OBJECT (factory, "new");

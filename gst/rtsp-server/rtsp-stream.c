@@ -59,9 +59,6 @@
 
 #include "rtsp-stream.h"
 
-#define GST_RTSP_STREAM_GET_PRIVATE(obj)  \
-     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_STREAM, GstRTSPStreamPrivate))
-
 struct _GstRTSPStreamPrivate
 {
   GMutex lock;
@@ -211,14 +208,12 @@ static void gst_rtsp_stream_finalize (GObject * obj);
 
 static guint gst_rtsp_stream_signals[SIGNAL_LAST] = { 0 };
 
-G_DEFINE_TYPE (GstRTSPStream, gst_rtsp_stream, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPStream, gst_rtsp_stream, G_TYPE_OBJECT);
 
 static void
 gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPStreamPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -259,7 +254,7 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 static void
 gst_rtsp_stream_init (GstRTSPStream * stream)
 {
-  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
 
   GST_DEBUG ("new stream %p", stream);
 
@@ -4016,7 +4011,7 @@ gst_rtsp_stream_update_crypto (GstRTSPStream * stream,
 GSocket *
 gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GstRTSPStreamPrivate *priv = stream->priv;
   GSocket *socket;
   const gchar *name;
 
@@ -4050,7 +4045,7 @@ gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
 GSocket *
 gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
   GSocket *socket;
   const gchar *name;
 
@@ -4083,7 +4078,7 @@ GSocket *
 gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream,
     GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
   GSocket *socket;
   const gchar *name;
 
@@ -4116,7 +4111,7 @@ GSocket *
 gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream,
     GSocketFamily family)
 {
-  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GstRTSPStreamPrivate *priv = gst_rtsp_stream_get_instance_private (stream);
   GSocket *socket;
   const gchar *name;
 

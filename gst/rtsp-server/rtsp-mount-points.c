@@ -38,9 +38,6 @@
 
 #include "rtsp-mount-points.h"
 
-#define GST_RTSP_MOUNT_POINTS_GET_PRIVATE(obj)  \
-       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_MOUNT_POINTS, GstRTSPMountPointsPrivate))
-
 typedef struct
 {
   gchar *path;
@@ -97,7 +94,8 @@ struct _GstRTSPMountPointsPrivate
   gboolean dirty;
 };
 
-G_DEFINE_TYPE (GstRTSPMountPoints, gst_rtsp_mount_points, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPMountPoints, gst_rtsp_mount_points,
+    G_TYPE_OBJECT);
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
@@ -110,8 +108,6 @@ static void
 gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPMountPointsPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -126,11 +122,11 @@ gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
 static void
 gst_rtsp_mount_points_init (GstRTSPMountPoints * mounts)
 {
-  GstRTSPMountPointsPrivate *priv = GST_RTSP_MOUNT_POINTS_GET_PRIVATE (mounts);
+  GstRTSPMountPointsPrivate *priv;
 
   GST_DEBUG_OBJECT (mounts, "created");
 
-  mounts->priv = priv;
+  mounts->priv = priv = gst_rtsp_mount_points_get_instance_private (mounts);
 
   g_mutex_init (&priv->lock);
   priv->mounts = g_sequence_new (data_item_free);

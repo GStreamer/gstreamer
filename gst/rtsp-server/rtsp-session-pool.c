@@ -42,9 +42,6 @@
 
 #include "rtsp-session-pool.h"
 
-#define GST_RTSP_SESSION_POOL_GET_PRIVATE(obj)  \
-         (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_SESSION_POOL, GstRTSPSessionPoolPrivate))
-
 struct _GstRTSPSessionPoolPrivate
 {
   GMutex lock;                  /* protects everything in this struct */
@@ -91,14 +88,13 @@ static gchar *create_session_id (GstRTSPSessionPool * pool);
 static GstRTSPSession *create_session (GstRTSPSessionPool * pool,
     const gchar * id);
 
-G_DEFINE_TYPE (GstRTSPSessionPool, gst_rtsp_session_pool, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPSessionPool, gst_rtsp_session_pool,
+    G_TYPE_OBJECT);
 
 static void
 gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPSessionPoolPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -128,9 +124,9 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
 static void
 gst_rtsp_session_pool_init (GstRTSPSessionPool * pool)
 {
-  GstRTSPSessionPoolPrivate *priv = GST_RTSP_SESSION_POOL_GET_PRIVATE (pool);
+  GstRTSPSessionPoolPrivate *priv;
 
-  pool->priv = priv;
+  pool->priv = priv = gst_rtsp_session_pool_get_instance_private (pool);
 
   g_mutex_init (&priv->lock);
   priv->sessions = g_hash_table_new_full (g_str_hash, g_str_equal,

@@ -43,9 +43,6 @@
 
 #include "rtsp-stream-transport.h"
 
-#define GST_RTSP_STREAM_TRANSPORT_GET_PRIVATE(obj)  \
-       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_STREAM_TRANSPORT, GstRTSPStreamTransportPrivate))
-
 struct _GstRTSPStreamTransportPrivate
 {
   GstRTSPStream *stream;
@@ -78,15 +75,13 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_stream_transport_debug);
 
 static void gst_rtsp_stream_transport_finalize (GObject * obj);
 
-G_DEFINE_TYPE (GstRTSPStreamTransport, gst_rtsp_stream_transport,
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPStreamTransport, gst_rtsp_stream_transport,
     G_TYPE_OBJECT);
 
 static void
 gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPStreamTransportPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -99,10 +94,7 @@ gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
 static void
 gst_rtsp_stream_transport_init (GstRTSPStreamTransport * trans)
 {
-  GstRTSPStreamTransportPrivate *priv =
-      GST_RTSP_STREAM_TRANSPORT_GET_PRIVATE (trans);
-
-  trans->priv = priv;
+  trans->priv = gst_rtsp_stream_transport_get_instance_private (trans);
 }
 
 static void

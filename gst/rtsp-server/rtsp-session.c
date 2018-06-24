@@ -47,9 +47,6 @@
 
 #include "rtsp-session.h"
 
-#define GST_RTSP_SESSION_GET_PRIVATE(obj)  \
-       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_SESSION, GstRTSPSessionPrivate))
-
 struct _GstRTSPSessionPrivate
 {
   GMutex lock;                  /* protects everything but sessionid and create_time */
@@ -90,14 +87,12 @@ static void gst_rtsp_session_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_session_finalize (GObject * obj);
 
-G_DEFINE_TYPE (GstRTSPSession, gst_rtsp_session, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPSession, gst_rtsp_session, G_TYPE_OBJECT);
 
 static void
 gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
 {
   GObjectClass *gobject_class;
-
-  g_type_class_add_private (klass, sizeof (GstRTSPSessionPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -127,9 +122,9 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
 static void
 gst_rtsp_session_init (GstRTSPSession * session)
 {
-  GstRTSPSessionPrivate *priv = GST_RTSP_SESSION_GET_PRIVATE (session);
+  GstRTSPSessionPrivate *priv;
 
-  session->priv = priv;
+  session->priv = priv = gst_rtsp_session_get_instance_private (session);
 
   GST_INFO ("init session %p", session);
 
