@@ -633,8 +633,6 @@ gst_player_set_suburi_internal (gpointer user_data)
       GST_STR_NULL (self->suburi));
 
   g_object_set (self->playbin, "suburi", self->suburi, NULL);
-  g_object_set (self->playbin, "uri",
-      self->redirect_uri ? self->redirect_uri : self->uri, NULL);
 
   g_mutex_unlock (&self->lock);
 
