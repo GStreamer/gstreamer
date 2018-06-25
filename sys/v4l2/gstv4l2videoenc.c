@@ -661,6 +661,15 @@ gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
   frame = gst_v4l2_video_enc_get_oldest_frame (encoder);
 
   if (frame) {
+    /* At this point, the delta unit buffer flag is already correctly set by
+     * gst_v4l2_buffer_pool_process. Since gst_video_encoder_finish_frame
+     * will overwrite it from GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame),
+     * set that here.
+     */
+    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+      GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
+    else
+      GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     frame->output_buffer = buffer;
     buffer = NULL;
     ret = gst_video_encoder_finish_frame (encoder, frame);
