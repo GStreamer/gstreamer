@@ -948,7 +948,7 @@ gst_vaapi_driver_is_whitelisted (GstVaapiDisplay * display)
       return TRUE;
   }
 
-  GST_ERROR ("Unsupported VA driver: %s. Export environment variable "
+  GST_WARNING ("Unsupported VA driver: %s. Export environment variable "
       GST_VAAPI_ALL_DRIVERS_ENV " to bypass", vendor);
   return FALSE;
 
