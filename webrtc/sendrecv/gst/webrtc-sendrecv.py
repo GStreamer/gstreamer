@@ -121,7 +121,8 @@ class WebRTCClient:
             assert(sdp['type'] == 'answer')
             sdp = sdp['sdp']
             print ('Received answer:\n%s' % sdp)
-            res, sdpmsg = GstSdp.SDPMessage.new_from_text(sdp)
+            res, sdpmsg = GstSdp.SDPMessage.new()
+            GstSdp.sdp_message_parse_buffer(bytes(sdp.encode()), sdpmsg)
             answer = GstWebRTC.WebRTCSessionDescription.new(GstWebRTC.WebRTCSDPType.ANSWER, sdpmsg)
             promise = Gst.Promise.new()
             self.webrtc.emit('set-remote-description', answer, promise)
