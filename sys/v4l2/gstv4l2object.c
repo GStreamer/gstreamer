@@ -3949,13 +3949,19 @@ unsupported_format:
 gboolean
 gst_v4l2_object_set_crop (GstV4l2Object * obj)
 {
+  struct v4l2_selection sel = { 0 };
   struct v4l2_crop crop = { 0 };
 
+  sel.type = obj->type;
+  sel.target = V4L2_SEL_TGT_CROP;
+  sel.flags = 0;
+  sel.r.left = obj->align.padding_left;
+  sel.r.top = obj->align.padding_top;
+  sel.r.width = obj->info.width;
+  sel.r.height = obj->info.height;
+
   crop.type = obj->type;
-  crop.c.left = obj->align.padding_left;
-  crop.c.top = obj->align.padding_top;
-  crop.c.width = obj->info.width;
-  crop.c.height = obj->info.height;
+  crop.c = sel.r;
 
   if (obj->align.padding_left + obj->align.padding_top +
       obj->align.padding_right + obj->align.padding_bottom == 0) {
@@ -3967,14 +3973,25 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj)
       "Desired cropping left %u, top %u, size %ux%u", crop.c.left, crop.c.top,
       crop.c.width, crop.c.height);
 
-  if (obj->ioctl (obj->video_fd, VIDIOC_S_CROP, &crop) < 0) {
-    GST_WARNING_OBJECT (obj->dbg_obj, "VIDIOC_S_CROP failed");
-    return FALSE;
-  }
+  if (obj->ioctl (obj->video_fd, VIDIOC_S_SELECTION, &sel) < 0) {
+    if (errno != ENOTTY) {
+      GST_WARNING_OBJECT (obj->dbg_obj,
+          "Failed to set crop rectangle with VIDIOC_S_SELECTION: %s",
+          g_strerror (errno));
+      return FALSE;
+    } else {
+      if (obj->ioctl (obj->video_fd, VIDIOC_S_CROP, &crop) < 0) {
+        GST_WARNING_OBJECT (obj->dbg_obj, "VIDIOC_S_CROP failed");
+        return FALSE;
+      }
 
-  if (obj->ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
-    GST_WARNING_OBJECT (obj->dbg_obj, "VIDIOC_G_CROP failed");
-    return FALSE;
+      if (obj->ioctl (obj->video_fd, VIDIOC_G_CROP, &crop) < 0) {
+        GST_WARNING_OBJECT (obj->dbg_obj, "VIDIOC_G_CROP failed");
+        return FALSE;
+      }
+
+      sel.r = crop.c;
+    }
   }
 
   GST_DEBUG_OBJECT (obj->dbg_obj,
