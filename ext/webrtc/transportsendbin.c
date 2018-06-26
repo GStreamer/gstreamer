@@ -219,34 +219,41 @@ transport_send_bin_change_state (GstElement * element,
       gst_object_unref (pad);
       break;
     }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  /* Do downward state change cleanups after the element
+   * has been stopped, as this will have set pads to flushing as needed
+   * and unblocked any pad probes that are blocked */
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       /* Release pad blocks */
       if (send->rtp_block && send->rtp_block->block_id) {
-        gst_pad_set_active (send->rtp_block->pad, FALSE);
         gst_pad_remove_probe (send->rtp_block->pad, send->rtp_block->block_id);
         send->rtp_block->block_id = 0;
       }
       if (send->rtcp_mux_block && send->rtcp_mux_block->block_id) {
-        gst_pad_set_active (send->rtcp_mux_block->pad, FALSE);
         gst_pad_remove_probe (send->rtcp_mux_block->pad,
             send->rtcp_mux_block->block_id);
         send->rtcp_mux_block->block_id = 0;
       }
       if (send->rtcp_block && send->rtcp_block->block_id) {
-        gst_pad_set_active (send->rtcp_block->pad, FALSE);
         gst_pad_remove_probe (send->rtcp_block->pad,
             send->rtcp_block->block_id);
         send->rtcp_block->block_id = 0;
       }
       if (send->rtp_nice_block && send->rtp_nice_block->block_id) {
-        gst_pad_set_active (send->rtp_nice_block->pad, FALSE);
         gst_pad_remove_probe (send->rtp_nice_block->pad,
             send->rtp_nice_block->block_id);
         send->rtp_nice_block->block_id = 0;
       }
       if (send->rtcp_nice_block && send->rtcp_nice_block->block_id) {
-        gst_pad_set_active (send->rtcp_nice_block->pad, FALSE);
         gst_pad_remove_probe (send->rtcp_nice_block->pad,
             send->rtcp_nice_block->block_id);
         send->rtcp_nice_block->block_id = 0;
@@ -283,7 +290,6 @@ transport_send_bin_change_state (GstElement * element,
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   return ret;
 }
 
