@@ -200,6 +200,10 @@ fourcc_to_media_type (guint32 fourcc)
       break;
     case GST_MAKE_FOURCC ('V', 'P', '9', '0'):
       return "video/x-vp9";
+      break;
+    case GST_MAKE_FOURCC ('A', 'V', '0', '1'):
+      return "video/x-av1";
+      break;
     default:
       return NULL;
   }
@@ -341,8 +345,12 @@ gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
           height = GST_READ_UINT16_LE (map.data + 8) & 0x3fff;
           gst_ivf_parse_set_size (ivf, width, height);
         }
-      } else {
+      } else if (ivf->fourcc == GST_MAKE_FOURCC ('V', 'P', '9', '0')) {
         /* Fixme: Add vp9 frame header parsing? */
+      } else if (ivf->fourcc == GST_MAKE_FOURCC ('A', 'V', '0', '1')) {
+        /* Fixme: Add av1 frame header parsing? */
+        /* This would allow to parse dynamic resolution changes */
+        /* implement when gstav1parser is ready */
       }
       gst_buffer_unmap (frame->out_buffer, &map);
     }
