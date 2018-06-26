@@ -78,8 +78,8 @@
  *
  * ]|
  *
- * You can request the creation of #GESAssets using either #ges_asset_request_async or
- * #ges_asset_request_async. All the #GESAssets are cached and thus any asset that has already
+ * You can request the creation of #GESAssets using either ges_asset_request() or
+ * ges_asset_request_async(). All the #GESAssets are cached and thus any asset that has already
  * been created can be requested again without overhead.
  */
 
