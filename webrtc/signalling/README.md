@@ -12,15 +12,15 @@ Read Protocol.md
 In three separate tabs, run consecutively:
 
 ```console
-$ ./generate_certs.sh
+$ ./generate_cert.sh
 $ ./simple-server.py
 ```
 
 ```console
-$ ./client.py
+$ ./session-client.py
 Our uid is 'ws-test-client-8f63b9'
 ```
 
 ```console
-$ ./client.py --call ws-test-client-8f63b9
+$ ./session-client.py --call ws-test-client-8f63b9
 ```
