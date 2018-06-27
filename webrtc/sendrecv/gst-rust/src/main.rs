@@ -126,7 +126,7 @@ fn check_plugins() -> Result<(), Error> {
     let registry = gst::Registry::get();
     let missing = needed
         .iter()
-        .filter(|n| registry.find_plugin(n).is_some())
+        .filter(|n| registry.find_plugin(n).is_none())
         .map(|n| *n)
         .collect::<Vec<_>>();
 
