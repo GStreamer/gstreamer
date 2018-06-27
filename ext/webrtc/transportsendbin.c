@@ -68,6 +68,8 @@ enum
   PROP_RTCP_MUX,
 };
 
+static void cleanup_blocks (TransportSendBin * send);
+
 static void
 _set_rtcp_mux (TransportSendBin * send, gboolean rtcp_mux)
 {
@@ -263,27 +265,13 @@ transport_send_bin_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_NULL:{
       GstElement *elem;
 
-      if (send->rtp_block)
-        _free_pad_block (send->rtp_block);
-      send->rtp_block = NULL;
-      if (send->rtcp_mux_block)
-        _free_pad_block (send->rtcp_mux_block);
-      send->rtcp_mux_block = NULL;
+      cleanup_blocks (send);
+
       elem = send->stream->transport->dtlssrtpenc;
       gst_element_set_locked_state (elem, FALSE);
-
-      if (send->rtcp_block)
-        _free_pad_block (send->rtcp_block);
-      send->rtcp_block = NULL;
       elem = send->stream->rtcp_transport->dtlssrtpenc;
       gst_element_set_locked_state (elem, FALSE);
 
-      if (send->rtp_nice_block)
-        _free_pad_block (send->rtp_nice_block);
-      send->rtp_nice_block = NULL;
-      if (send->rtcp_nice_block)
-        _free_pad_block (send->rtcp_nice_block);
-      send->rtcp_nice_block = NULL;
       break;
     }
     default:
@@ -421,6 +409,28 @@ transport_send_bin_constructed (GObject * object)
 }
 
 static void
+cleanup_blocks (TransportSendBin * send)
+{
+  if (send->rtp_block)
+    _free_pad_block (send->rtp_block);
+  send->rtp_block = NULL;
+  if (send->rtcp_mux_block)
+    _free_pad_block (send->rtcp_mux_block);
+  send->rtcp_mux_block = NULL;
+
+  if (send->rtcp_block)
+    _free_pad_block (send->rtcp_block);
+  send->rtcp_block = NULL;
+
+  if (send->rtp_nice_block)
+    _free_pad_block (send->rtp_nice_block);
+  send->rtp_nice_block = NULL;
+  if (send->rtcp_nice_block)
+    _free_pad_block (send->rtcp_nice_block);
+  send->rtcp_nice_block = NULL;
+}
+
+static void
 transport_send_bin_dispose (GObject * object)
 {
   TransportSendBin *send = TRANSPORT_SEND_BIN (object);
@@ -432,6 +442,7 @@ transport_send_bin_dispose (GObject * object)
         rtcp_transport->transport, send);
   }
   send->stream = NULL;
+  cleanup_blocks (send);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
