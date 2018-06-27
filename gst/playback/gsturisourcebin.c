@@ -145,7 +145,6 @@ struct _GstURISourceBin
   GstElement *demuxer;          /* Adaptive demuxer if any */
   GSList *out_slots;
 
-  GHashTable *streams;
   guint numpads;
 
   /* for dynamic sources */
