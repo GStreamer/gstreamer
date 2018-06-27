@@ -285,7 +285,7 @@ static void
 gst_av1_dec_image_to_buffer (GstAV1Dec * dec, const aom_image_t * img,
     GstBuffer * buffer)
 {
-  int deststride, srcstride, height, width, line, comp;
+  int deststride, srcstride, height, width, line, comp, y;
   guint8 *dest, *src;
   GstVideoFrame frame;
   GstVideoInfo *info = &dec->output_state->info;
@@ -298,13 +298,25 @@ gst_av1_dec_image_to_buffer (GstAV1Dec * dec, const aom_image_t * img,
   for (comp = 0; comp < 3; comp++) {
     dest = GST_VIDEO_FRAME_COMP_DATA (&frame, comp);
     src = img->planes[comp];
-    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, comp)
-        * GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, comp);
+    width =
+        GST_VIDEO_FRAME_COMP_WIDTH (&frame,
+        comp) * GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, comp);
     height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, comp);
     deststride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, comp);
     srcstride = img->stride[comp];
 
-    if (srcstride == deststride) {
+    if ((img->fmt & AOM_IMG_FMT_HIGHBITDEPTH) && img->bit_depth == 8) {
+      GST_TRACE_OBJECT (dec,
+          "HIGHBITDEPTH image with 8 bit_depth. Comp %d: %d != %d, copying "
+          "line by line.", comp, srcstride, deststride);
+      for (line = 0; line < height; line++) {
+        for (y = 0; y < width; y++) {
+          dest[y] = src[y * 2];
+        }
+        dest += deststride;
+        src += srcstride;
+      }
+    } else if (srcstride == deststride) {
       GST_TRACE_OBJECT (dec, "Stride matches. Comp %d: %d, copying full plane",
           comp, srcstride);
       memcpy (dest, src, srcstride * height);
