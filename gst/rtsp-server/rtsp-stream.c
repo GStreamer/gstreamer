@@ -2885,10 +2885,15 @@ plug_src (GstRTSPStream * stream, GstBin * bin, GstElement * src,
 {
   GstRTSPStreamPrivate *priv;
   GstPad *pad, *selpad;
+  gulong id = 0;
 
   priv = stream->priv;
 
+  pad = gst_element_get_static_pad (src, "src");
   if (priv->srcpad) {
+    /* block pad so src can't push data while it's not yet linked */
+    id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK |
+        GST_PAD_PROBE_TYPE_BUFFER, NULL, NULL, NULL);
     /* we set and keep these to playing so that they don't cause NO_PREROLL return
      * values. This is only relevant for PLAY pipelines */
     gst_element_set_state (src, GST_STATE_PLAYING);
@@ -2900,8 +2905,9 @@ plug_src (GstRTSPStream * stream, GstBin * bin, GstElement * src,
 
   /* and link to the funnel */
   selpad = gst_element_get_request_pad (funnel, "sink_%u");
-  pad = gst_element_get_static_pad (src, "src");
   gst_pad_link (pad, selpad);
+  if (id != 0)
+    gst_pad_remove_probe (pad, id);
   gst_object_unref (pad);
   gst_object_unref (selpad);
 }
