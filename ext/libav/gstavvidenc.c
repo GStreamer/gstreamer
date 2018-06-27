@@ -30,6 +30,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavutil/stereo3d.h>
+#include <libavutil/opt.h>
 
 #include "gstav.h"
 #include "gstavcodecmap.h"
@@ -37,56 +38,16 @@
 #include "gstavvidenc.h"
 #include "gstavcfg.h"
 
-#define DEFAULT_VIDEO_BITRATE 300000    /* in bps */
-#define DEFAULT_VIDEO_GOP_SIZE 15
-
-#define DEFAULT_WIDTH 352
-#define DEFAULT_HEIGHT 288
-
-
-#define VIDEO_BUFFER_SIZE (1024*1024)
-
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 enum
 {
   PROP_0,
-  PROP_BIT_RATE,
-  PROP_GOP_SIZE,
-  PROP_ME_METHOD,
-  PROP_BUFSIZE,
-  PROP_RTP_PAYLOAD_SIZE,
-  PROP_MAX_THREADS,
-  PROP_COMPLIANCE,
+  PROP_QUANTIZER,
+  PROP_PASS,
+  PROP_FILENAME,
   PROP_CFG_BASE,
 };
 
-#define GST_TYPE_ME_METHOD (gst_ffmpegvidenc_me_method_get_type())
-static GType
-gst_ffmpegvidenc_me_method_get_type (void)
-{
-  static GType ffmpegenc_me_method_type = 0;
-  static GEnumValue ffmpegenc_me_methods[] = {
-    {ME_ZERO, "None (Very low quality)", "zero"},
-    {ME_FULL, "Full (Slow, unmaintained)", "full"},
-    {ME_LOG, "Logarithmic (Low quality, unmaintained)", "logarithmic"},
-    {ME_PHODS, "phods (Low quality, unmaintained)", "phods"},
-    {ME_EPZS, "EPZS (Best quality, Fast)", "epzs"},
-    {ME_X1, "X1 (Experimental)", "x1"},
-    {0, NULL, NULL},
-  };
-  if (!ffmpegenc_me_method_type) {
-    ffmpegenc_me_method_type =
-        g_enum_register_static ("GstLibAVVidEncMeMethod", ffmpegenc_me_methods);
-  }
-  return ffmpegenc_me_method_type;
-}
-
-/* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass);
 static void gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass);
 static void gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc);
@@ -113,7 +74,27 @@ static void gst_ffmpegvidenc_get_property (GObject * object,
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_ffmpegvidenc_signals[LAST_SIGNAL] = { 0 }; */
+#define GST_TYPE_FFMPEG_PASS (gst_ffmpeg_pass_get_type ())
+static GType
+gst_ffmpeg_pass_get_type (void)
+{
+  static GType ffmpeg_pass_type = 0;
+
+  if (!ffmpeg_pass_type) {
+    static const GEnumValue ffmpeg_passes[] = {
+      {0, "Constant Bitrate Encoding", "cbr"},
+      {AV_CODEC_FLAG_QSCALE, "Constant Quantizer", "quant"},
+      {AV_CODEC_FLAG_PASS1, "VBR Encoding - Pass 1", "pass1"},
+      {AV_CODEC_FLAG_PASS2, "VBR Encoding - Pass 2", "pass2"},
+      {0, NULL, NULL},
+    };
+
+    ffmpeg_pass_type =
+        g_enum_register_static ("GstLibAVEncPass", ffmpeg_passes);
+  }
+
+  return ffmpeg_pass_type;
+}
 
 static void
 gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass)
@@ -178,7 +159,6 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstVideoEncoderClass *venc_class;
-  int caps;
 
   gobject_class = (GObjectClass *) klass;
   venc_class = (GstVideoEncoderClass *) klass;
@@ -188,46 +168,23 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
   gobject_class->set_property = gst_ffmpegvidenc_set_property;
   gobject_class->get_property = gst_ffmpegvidenc_get_property;
 
-  /* FIXME: could use -1 for a sensible per-codec default based on
-   * e.g. input resolution and framerate */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BIT_RATE,
-      g_param_spec_int ("bitrate", "Bit Rate",
-          "Target Video Bitrate", 0, G_MAXINT, DEFAULT_VIDEO_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GOP_SIZE,
-      g_param_spec_int ("gop-size", "GOP Size",
-          "Number of frames within one GOP", 0, G_MAXINT,
-          DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ME_METHOD,
-      g_param_spec_enum ("me-method", "ME Method", "Motion Estimation Method",
-          GST_TYPE_ME_METHOD, ME_EPZS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QUANTIZER,
+      g_param_spec_float ("quantizer", "Constant Quantizer",
+          "Constant Quantizer", 0, 30, 0.01f,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFSIZE,
-      g_param_spec_int ("buffer-size", "Buffer Size",
-          "Size of the video buffers", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
-          "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PASS,
+      g_param_spec_enum ("pass", "Encoding pass/type",
+          "Encoding pass/type", GST_TYPE_FFMPEG_PASS, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
-  caps = klass->in_plugin->capabilities;
-  if (caps & (AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_SLICE_THREADS)) {
-    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_THREADS,
-        g_param_spec_int ("max-threads", "Maximum encode threads",
-            "Maximum number of worker threads to spawn. (0 = auto)",
-            0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  }
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLIANCE,
-      g_param_spec_enum ("compliance", "Compliance",
-          "Adherence of the encoder to the specifications",
-          GST_TYPE_FFMPEG_COMPLIANCE, FFMPEG_DEFAULT_COMPLIANCE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FILENAME,
+      g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
+          "Filename for multipass cache file", "stats.log",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   /* register additional properties, possibly dependent on the exact CODEC */
-  gst_ffmpeg_cfg_install_property (klass, PROP_CFG_BASE);
+  gst_ffmpeg_cfg_install_properties (klass, PROP_CFG_BASE);
 
   venc_class->start = gst_ffmpegvidenc_start;
   venc_class->stop = gst_ffmpegvidenc_stop;
@@ -248,26 +205,11 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
 
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (ffmpegenc));
 
-  /* ffmpeg objects */
   ffmpegenc->context = avcodec_alloc_context3 (klass->in_plugin);
+  ffmpegenc->refcontext = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegenc->picture = av_frame_alloc ();
   ffmpegenc->opened = FALSE;
-
   ffmpegenc->file = NULL;
-
-  ffmpegenc->bitrate = DEFAULT_VIDEO_BITRATE;
-  ffmpegenc->me_method = ME_EPZS;
-  ffmpegenc->buffer_size = 512 * 1024;
-  ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
-  ffmpegenc->rtp_payload_size = 0;
-  ffmpegenc->compliance = FFMPEG_DEFAULT_COMPLIANCE;
-  ffmpegenc->max_threads = 0;
-
-  ffmpegenc->lmin = 2;
-  ffmpegenc->lmax = 31;
-  ffmpegenc->max_key_interval = 0;
-
-  gst_ffmpeg_cfg_set_defaults (ffmpegenc);
 }
 
 static void
@@ -281,8 +223,7 @@ gst_ffmpegvidenc_finalize (GObject * object)
   av_frame_free (&ffmpegenc->picture);
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
   av_free (ffmpegenc->context);
-
-  g_free (ffmpegenc->filename);
+  av_free (ffmpegenc->refcontext);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -311,49 +252,8 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     }
   }
 
-  /* if we set it in _getcaps we should set it also in _link */
-  ffmpegenc->context->strict_std_compliance = ffmpegenc->compliance;
-
-  /* user defined properties */
-  ffmpegenc->context->bit_rate = ffmpegenc->bitrate;
-  ffmpegenc->context->bit_rate_tolerance = ffmpegenc->bitrate;
-  ffmpegenc->context->gop_size = ffmpegenc->gop_size;
-  ffmpegenc->context->me_method = ffmpegenc->me_method;
-  GST_DEBUG_OBJECT (ffmpegenc, "Setting avcontext to bitrate %d, gop_size %d",
-      ffmpegenc->bitrate, ffmpegenc->gop_size);
-
-  if (ffmpegenc->max_threads == 0) {
-    if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
-      ffmpegenc->context->thread_count = gst_ffmpeg_auto_max_threads ();
-    else
-      ffmpegenc->context->thread_count = 0;
-  } else
-    ffmpegenc->context->thread_count = ffmpegenc->max_threads;
-
-  /* RTP payload used for GOB production (for Asterisk) */
-  if (ffmpegenc->rtp_payload_size) {
-    ffmpegenc->context->rtp_payload_size = ffmpegenc->rtp_payload_size;
-  }
-
   /* additional avcodec settings */
-  /* first fill in the majority by copying over */
   gst_ffmpeg_cfg_fill_context (ffmpegenc, ffmpegenc->context);
-
-  /* then handle some special cases */
-  ffmpegenc->context->lmin = (ffmpegenc->lmin * FF_QP2LAMBDA + 0.5);
-  ffmpegenc->context->lmax = (ffmpegenc->lmax * FF_QP2LAMBDA + 0.5);
-
-  if (ffmpegenc->interlaced) {
-    ffmpegenc->context->flags |=
-        AV_CODEC_FLAG_INTERLACED_DCT | AV_CODEC_FLAG_INTERLACED_ME;
-  }
-
-  /* some other defaults */
-  ffmpegenc->context->rc_strategy = 2;
-  ffmpegenc->context->b_frame_strategy = 0;
-  ffmpegenc->context->coder_type = 0;
-  ffmpegenc->context->context_model = 0;
-  ffmpegenc->context->scenechange_threshold = 0;
 
   /* and last but not least the pass; CBR, 2-pass, etc */
   ffmpegenc->context->flags |= ffmpegenc->pass;
@@ -408,18 +308,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
 
   pix_fmt = ffmpegenc->context->pix_fmt;
-
-  /* max-key-interval may need the framerate set above */
-  if (ffmpegenc->max_key_interval) {
-    AVCodecContext *ctx;
-
-    /* override gop-size */
-    ctx = ffmpegenc->context;
-    ctx->gop_size = (ffmpegenc->max_key_interval < 0) ?
-        (-ffmpegenc->max_key_interval
-        * (ctx->time_base.den * ctx->ticks_per_frame / ctx->time_base.num))
-        : ffmpegenc->max_key_interval;
-  }
 
   /* some codecs support more than one format, first auto-choose one */
   GST_DEBUG_OBJECT (ffmpegenc, "picking an output format ...");
@@ -642,7 +530,8 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   int have_data = 0;
   BufferInfo *buffer_info;
 
-  if (ffmpegenc->interlaced) {
+  if (ffmpegenc->context->flags & (AV_CODEC_FLAG_INTERLACED_DCT |
+          AV_CODEC_FLAG_INTERLACED_ME)) {
     ffmpegenc->picture->interlaced_frame = TRUE;
     /* if this is not the case, a filter element should be used to swap fields */
     ffmpegenc->picture->top_field_first =
@@ -822,14 +711,12 @@ done:
   return flow_ret;
 }
 
-
 static void
 gst_ffmpegvidenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstFFMpegVidEnc *ffmpegenc;
 
-  /* Get a pointer of the right type. */
   ffmpegenc = (GstFFMpegVidEnc *) (object);
 
   if (ffmpegenc->opened) {
@@ -838,27 +725,16 @@ gst_ffmpegvidenc_set_property (GObject * object,
     return;
   }
 
-  /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
-    case PROP_BIT_RATE:
-      ffmpegenc->bitrate = g_value_get_int (value);
+    case PROP_QUANTIZER:
+      ffmpegenc->quantizer = g_value_get_float (value);
       break;
-    case PROP_GOP_SIZE:
-      ffmpegenc->gop_size = g_value_get_int (value);
+    case PROP_PASS:
+      ffmpegenc->pass = g_value_get_enum (value);
       break;
-    case PROP_ME_METHOD:
-      ffmpegenc->me_method = g_value_get_enum (value);
-      break;
-    case PROP_BUFSIZE:
-      break;
-    case PROP_RTP_PAYLOAD_SIZE:
-      ffmpegenc->rtp_payload_size = g_value_get_int (value);
-      break;
-    case PROP_COMPLIANCE:
-      ffmpegenc->compliance = g_value_get_enum (value);
-      break;
-    case PROP_MAX_THREADS:
-      ffmpegenc->max_threads = g_value_get_int (value);
+    case PROP_FILENAME:
+      g_free (ffmpegenc->filename);
+      ffmpegenc->filename = g_value_dup_string (value);
       break;
     default:
       if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
@@ -867,37 +743,23 @@ gst_ffmpegvidenc_set_property (GObject * object,
   }
 }
 
-/* The set function is simply the inverse of the get fuction. */
 static void
 gst_ffmpegvidenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstFFMpegVidEnc *ffmpegenc;
 
-  /* It's not null if we got it, but it might not be ours */
   ffmpegenc = (GstFFMpegVidEnc *) (object);
 
   switch (prop_id) {
-    case PROP_BIT_RATE:
-      g_value_set_int (value, ffmpegenc->bitrate);
+    case PROP_QUANTIZER:
+      g_value_set_float (value, ffmpegenc->quantizer);
       break;
-    case PROP_GOP_SIZE:
-      g_value_set_int (value, ffmpegenc->gop_size);
+    case PROP_PASS:
+      g_value_set_enum (value, ffmpegenc->pass);
       break;
-    case PROP_ME_METHOD:
-      g_value_set_enum (value, ffmpegenc->me_method);
-      break;
-    case PROP_BUFSIZE:
-      g_value_set_int (value, ffmpegenc->buffer_size);
-      break;
-    case PROP_RTP_PAYLOAD_SIZE:
-      g_value_set_int (value, ffmpegenc->rtp_payload_size);
-      break;
-    case PROP_COMPLIANCE:
-      g_value_set_enum (value, ffmpegenc->compliance);
-      break;
-    case PROP_MAX_THREADS:
-      g_value_set_int (value, ffmpegenc->max_threads);
+    case PROP_FILENAME:
+      g_value_take_string (value, g_strdup (ffmpegenc->filename));
       break;
     default:
       if (!gst_ffmpeg_cfg_get_property (object, value, pspec))
@@ -943,10 +805,6 @@ gst_ffmpegvidenc_stop (GstVideoEncoder * encoder)
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
   ffmpegenc->opened = FALSE;
 
-  if (ffmpegenc->file) {
-    fclose (ffmpegenc->file);
-    ffmpegenc->file = NULL;
-  }
   if (ffmpegenc->input_state) {
     gst_video_codec_state_unref (ffmpegenc->input_state);
     ffmpegenc->input_state = NULL;

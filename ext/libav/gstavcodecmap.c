@@ -3257,7 +3257,7 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
         profile = gst_structure_get_string (str, "profile");
         if (profile) {
           if (g_strcmp0 (profile, "advanced-simple") == 0)
-            context->flags |= CODEC_FLAG_GMC | AV_CODEC_FLAG_QPEL;
+            context->flags |= AV_CODEC_FLAG_QPEL;
         }
       }
       break;

@@ -24,11 +24,11 @@
 #ifndef __GST_FFMPEGVIDENC_H__
 #define __GST_FFMPEGVIDENC_H__
 
-G_BEGIN_DECLS
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <libavcodec/avcodec.h>
+
+G_BEGIN_DECLS
 
 typedef struct _GstFFMpegVidEnc GstFFMpegVidEnc;
 
@@ -42,34 +42,18 @@ struct _GstFFMpegVidEnc
   AVFrame *picture;
   gboolean opened;
   gboolean discont;
+  guint pass;
+  gfloat quantizer;
+
+  /* statistics file */
+  gchar *filename;
+  FILE *file;
 
   /* cache */
-  gint bitrate;
-  gint me_method;
-  gint gop_size;
-  gint buffer_size;
-  gint rtp_payload_size;
-  gint compliance;
-  gint max_threads;
-
   guint8 *working_buf;
   gsize working_buf_size;
 
-  /* settings with some special handling */
-  guint pass;
-  gfloat quantizer;
-  gchar *filename;
-  guint lmin;
-  guint lmax;
-  gint max_key_interval;
-  gboolean interlaced;
-
-  /* statistics file */
-  FILE *file;
-
-  /* other settings are copied over straight,
-   * include a context here, rather than copy-and-past it from avcodec.h */
-  AVCodecContext config;
+  AVCodecContext *refcontext;
 };
 
 typedef struct _GstFFMpegVidEncClass GstFFMpegVidEncClass;
