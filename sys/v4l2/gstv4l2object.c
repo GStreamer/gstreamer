@@ -3449,22 +3449,20 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   }
 #endif
 
-  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
-    if (is_mplane) {
-      format.fmt.pix_mp.colorspace = colorspace;
-      format.fmt.pix_mp.quantization = range;
-      format.fmt.pix_mp.ycbcr_enc = matrix;
-      format.fmt.pix_mp.xfer_func = transfer;
-    } else {
-      format.fmt.pix.colorspace = colorspace;
-      format.fmt.pix.quantization = range;
-      format.fmt.pix.ycbcr_enc = matrix;
-      format.fmt.pix.xfer_func = transfer;
-    }
-
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Desired colorspace is %d:%d:%d:%d",
-        colorspace, range, matrix, transfer);
+  if (is_mplane) {
+    format.fmt.pix_mp.colorspace = colorspace;
+    format.fmt.pix_mp.quantization = range;
+    format.fmt.pix_mp.ycbcr_enc = matrix;
+    format.fmt.pix_mp.xfer_func = transfer;
+  } else {
+    format.fmt.pix.colorspace = colorspace;
+    format.fmt.pix.quantization = range;
+    format.fmt.pix.ycbcr_enc = matrix;
+    format.fmt.pix.xfer_func = transfer;
   }
+
+  GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Desired colorspace is %d:%d:%d:%d",
+      colorspace, range, matrix, transfer);
 
   if (try_only) {
     if (v4l2object->ioctl (fd, VIDIOC_TRY_FMT, &format) < 0)
