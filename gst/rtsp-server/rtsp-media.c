@@ -2260,8 +2260,9 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
     }
 
     g_object_set (appsrc, "block", TRUE, "format", GST_FORMAT_TIME, "is-live",
-        TRUE, NULL);
-    g_object_set (appsink, "sync", FALSE, "async", FALSE, NULL);
+        TRUE, "emit-signals", FALSE, NULL);
+    g_object_set (appsink, "sync", FALSE, "async", FALSE, "emit-signals",
+        FALSE, "buffer-list", TRUE, NULL);
 
     data = g_new0 (AppSinkSrcData, 1);
     data->appsink = appsink;

@@ -1198,6 +1198,27 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   return ret;
 }
 
+static gboolean
+do_send_data_list (GstBufferList * buffer_list, guint8 channel,
+    GstRTSPClient * client)
+{
+  gboolean ret = TRUE;
+  guint i, n = gst_buffer_list_length (buffer_list);
+
+  /* TODO: Needs support for a) queueing up multiple messages on the
+   * GstRTSPWatch in do_send_data() above and b) for one message having a body
+   * consisting of multiple parts here */
+  for (i = 0; i < n; i++) {
+    GstBuffer *buffer = gst_buffer_list_get (buffer_list, i);
+
+    ret = do_send_data (buffer, channel, client);
+    if (!ret)
+      break;
+  }
+
+  return ret;
+}
+
 /**
  * gst_rtsp_client_close:
  * @client: a #GstRTSPClient
@@ -2527,6 +2548,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     gst_rtsp_stream_transport_set_callbacks (trans,
         (GstRTSPSendFunc) do_send_data,
         (GstRTSPSendFunc) do_send_data, client, NULL);
+    gst_rtsp_stream_transport_set_list_callbacks (trans,
+        (GstRTSPSendListFunc) do_send_data_list,
+        (GstRTSPSendListFunc) do_send_data_list, client, NULL);
 
     g_hash_table_insert (priv->transports,
         GINT_TO_POINTER (ct->interleaved.min), trans);
@@ -4628,7 +4652,8 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   /* create watch for the connection and attach */
   priv->watch = gst_rtsp_watch_new (priv->connection, &watch_funcs,
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
-  gst_rtsp_client_set_send_func (client, do_send_message, priv->watch,
+  gst_rtsp_client_set_send_func (client, do_send_message,
+      g_source_ref ((GSource *) priv->watch),
       (GDestroyNotify) gst_rtsp_watch_unref);
 
   gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);

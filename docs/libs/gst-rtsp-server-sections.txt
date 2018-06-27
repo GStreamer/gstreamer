@@ -680,6 +680,8 @@ gst_rtsp_stream_transport_get_rtpinfo
 
 GstRTSPSendFunc
 gst_rtsp_stream_transport_set_callbacks
+GstRTSPSendListFunc
+gst_rtsp_stream_transport_set_list_callbacks
 
 GstRTSPKeepAliveFunc
 gst_rtsp_stream_transport_set_keepalive
@@ -690,8 +692,10 @@ gst_rtsp_stream_transport_set_active
 gst_rtsp_stream_transport_set_timed_out
 gst_rtsp_stream_transport_is_timed_out
 
-gst_rtsp_stream_transport_send_rtcp
 gst_rtsp_stream_transport_send_rtp
+gst_rtsp_stream_transport_send_rtp_list
+gst_rtsp_stream_transport_send_rtcp
+gst_rtsp_stream_transport_send_rtcp_list
 
 <SUBSECTION Standard>
 GST_RTSP_STREAM_TRANSPORT_CAST

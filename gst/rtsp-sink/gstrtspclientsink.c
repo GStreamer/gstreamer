@@ -3850,6 +3850,27 @@ do_send_data (GstBuffer * buffer, guint8 channel,
   return res == GST_RTSP_OK;
 }
 
+static gboolean
+do_send_data_list (GstBufferList * buffer_list, guint8 channel,
+    GstRTSPStreamContext * context)
+{
+  gboolean ret = TRUE;
+  guint i, n = gst_buffer_list_length (buffer_list);
+
+  /* TODO: Needs support for a) queueing up multiple messages on the
+   * GstRTSPWatch in do_send_data() above and b) for one message having a body
+   * consisting of multiple parts here */
+  for (i = 0; i < n; i++) {
+    GstBuffer *buffer = gst_buffer_list_get (buffer_list, i);
+
+    ret = do_send_data (buffer, channel, context);
+    if (!ret)
+      break;
+  }
+
+  return ret;
+}
+
 static GstRTSPResult
 gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
 {
@@ -4147,6 +4168,10 @@ gst_rtsp_client_sink_setup_streams (GstRTSPClientSink * sink, gboolean async)
           gst_rtsp_stream_transport_set_callbacks (context->stream_transport,
               (GstRTSPSendFunc) do_send_data,
               (GstRTSPSendFunc) do_send_data, context, NULL);
+          gst_rtsp_stream_transport_set_list_callbacks
+              (context->stream_transport,
+              (GstRTSPSendListFunc) do_send_data_list,
+              (GstRTSPSendListFunc) do_send_data_list, context, NULL);
         }
 
         /* The stream_transport now owns the transport */

@@ -2456,6 +2456,8 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   GList *walk;
   GstSample *sample;
   GstBuffer *buffer;
+  GstBufferList *buffer_list;
+  guint n_messages = 0;
   gboolean is_rtp;
 
   if (priv->n_outstanding > 0 || !priv->have_buffer[idx]) {
@@ -2476,6 +2478,14 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   }
 
   buffer = gst_sample_get_buffer (sample);
+  buffer_list = gst_sample_get_buffer_list (sample);
+
+  /* We will get one message-sent notification per message,
+   * i.e. per buffer that is actually sent out */
+  if (buffer)
+    n_messages += 1;
+  if (buffer_list)
+    n_messages += gst_buffer_list_length (buffer_list);
 
   is_rtp = (idx == 0);
 
@@ -2513,17 +2523,24 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
     }
   }
 
-  priv->n_outstanding += priv->n_tcp_transports;
+  priv->n_outstanding += n_messages * priv->n_tcp_transports;
 
   g_mutex_unlock (&priv->lock);
 
   if (is_rtp) {
     for (walk = priv->tr_cache_rtp; walk; walk = g_list_next (walk)) {
       GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-      if (!gst_rtsp_stream_transport_send_rtp (tr, buffer)) {
+      gboolean send_ret = TRUE;
+
+      if (buffer)
+        send_ret = gst_rtsp_stream_transport_send_rtp (tr, buffer);
+      if (buffer_list)
+        send_ret = gst_rtsp_stream_transport_send_rtp_list (tr, buffer_list);
+
+      if (!send_ret) {
         /* remove transport on send error */
         g_mutex_lock (&priv->lock);
-        priv->n_outstanding--;
+        priv->n_outstanding -= n_messages;
         update_transport (stream, tr, FALSE);
         g_mutex_unlock (&priv->lock);
       }
@@ -2531,10 +2548,17 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   } else {
     for (walk = priv->tr_cache_rtcp; walk; walk = g_list_next (walk)) {
       GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-      if (!gst_rtsp_stream_transport_send_rtcp (tr, buffer)) {
+      gboolean send_ret = TRUE;
+
+      if (buffer)
+        send_ret = gst_rtsp_stream_transport_send_rtcp (tr, buffer);
+      if (buffer_list)
+        send_ret = gst_rtsp_stream_transport_send_rtcp_list (tr, buffer_list);
+
+      if (!send_ret) {
         /* remove transport on send error */
         g_mutex_lock (&priv->lock);
-        priv->n_outstanding--;
+        priv->n_outstanding -= n_messages;
         update_transport (stream, tr, FALSE);
         g_mutex_unlock (&priv->lock);
       }
@@ -3369,8 +3393,8 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
     } else if (is_tcp && !priv->appsink[i]) {
       /* make appsink */
       priv->appsink[i] = gst_element_factory_make ("appsink", NULL);
-      g_object_set (priv->appsink[i], "emit-signals", FALSE, "max-buffers", 1,
-          NULL);
+      g_object_set (priv->appsink[i], "emit-signals", FALSE, "buffer-list",
+          TRUE, "max-buffers", 1, NULL);
 
       /* we need to set sync and preroll to FALSE for the sink to avoid
        * deadlock. This is only needed for sink sending RTCP data. */

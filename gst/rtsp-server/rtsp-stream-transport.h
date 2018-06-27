@@ -56,6 +56,22 @@ typedef struct _GstRTSPStreamTransportPrivate GstRTSPStreamTransportPrivate;
  * Returns: %TRUE on success
  */
 typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
+
+/**
+ * GstRTSPSendListFunc:
+ * @buffer_list: a #GstBufferList
+ * @channel: a channel
+ * @user_data: user data
+ *
+ * Function registered with gst_rtsp_stream_transport_set_callbacks() and
+ * called when @buffer_list must be sent on @channel.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.16
+ */
+typedef gboolean (*GstRTSPSendListFunc)      (GstBufferList *buffer_list, guint8 channel, gpointer user_data);
+
 /**
  * GstRTSPKeepAliveFunc:
  * @user_data: user data
@@ -132,6 +148,13 @@ void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamT
                                                                   GDestroyNotify  notify);
 
 GST_RTSP_SERVER_API
+void                     gst_rtsp_stream_transport_set_list_callbacks (GstRTSPStreamTransport *trans,
+                                                                       GstRTSPSendListFunc send_rtp_list,
+                                                                       GstRTSPSendListFunc send_rtcp_list,
+                                                                       gpointer user_data,
+                                                                       GDestroyNotify  notify);
+
+GST_RTSP_SERVER_API
 void                     gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamTransport *trans,
                                                                   GstRTSPKeepAliveFunc keep_alive,
                                                                   gpointer user_data,
@@ -169,6 +192,14 @@ gboolean                 gst_rtsp_stream_transport_send_rtp      (GstRTSPStreamT
 GST_RTSP_SERVER_API
 gboolean                 gst_rtsp_stream_transport_send_rtcp     (GstRTSPStreamTransport *trans,
                                                                   GstBuffer *buffer);
+
+GST_RTSP_SERVER_API
+gboolean                 gst_rtsp_stream_transport_send_rtp_list (GstRTSPStreamTransport *trans,
+                                                                  GstBufferList *buffer_list);
+
+GST_RTSP_SERVER_API
+gboolean                 gst_rtsp_stream_transport_send_rtcp_list(GstRTSPStreamTransport *trans,
+                                                                  GstBufferList *buffer_list);
 
 GST_RTSP_SERVER_API
 GstFlowReturn            gst_rtsp_stream_transport_recv_data     (GstRTSPStreamTransport *trans,

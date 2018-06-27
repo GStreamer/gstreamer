@@ -58,6 +58,11 @@ struct _GstRTSPStreamTransportPrivate
   gpointer user_data;
   GDestroyNotify notify;
 
+  GstRTSPSendListFunc send_rtp_list;
+  GstRTSPSendListFunc send_rtcp_list;
+  gpointer list_user_data;
+  GDestroyNotify list_notify;
+
   GstRTSPKeepAliveFunc keep_alive;
   gpointer ka_user_data;
   GDestroyNotify ka_notify;
@@ -205,6 +210,38 @@ gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport * trans,
     priv->notify (priv->user_data);
   priv->user_data = user_data;
   priv->notify = notify;
+}
+
+/**
+ * gst_rtsp_stream_transport_set_list_callbacks:
+ * @trans: a #GstRTSPStreamTransport
+ * @send_rtp_list: (scope notified): a callback called when RTP should be sent
+ * @send_rtcp_list: (scope notified): a callback called when RTCP should be sent
+ * @user_data: (closure): user data passed to callbacks
+ * @notify: (allow-none): called with the user_data when no longer needed.
+ *
+ * Install callbacks that will be called when data for a stream should be sent
+ * to a client. This is usually used when sending RTP/RTCP over TCP.
+ *
+ * Since: 1.16
+ */
+void
+gst_rtsp_stream_transport_set_list_callbacks (GstRTSPStreamTransport * trans,
+    GstRTSPSendListFunc send_rtp_list, GstRTSPSendListFunc send_rtcp_list,
+    gpointer user_data, GDestroyNotify notify)
+{
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  priv->send_rtp_list = send_rtp_list;
+  priv->send_rtcp_list = send_rtcp_list;
+  if (priv->list_notify)
+    priv->list_notify (priv->list_user_data);
+  priv->list_user_data = user_data;
+  priv->list_notify = notify;
 }
 
 /**
@@ -524,6 +561,98 @@ gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
     res =
         priv->send_rtcp (buffer, priv->transport->interleaved.max,
         priv->user_data);
+
+  if (res)
+    gst_rtsp_stream_transport_keep_alive (trans);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_stream_transport_send_rtp_list:
+ * @trans: a #GstRTSPStreamTransport
+ * @buffer_list: (transfer none): a #GstBufferList
+ *
+ * Send @buffer_list to the installed RTP callback for @trans.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtsp_stream_transport_send_rtp_list (GstRTSPStreamTransport * trans,
+    GstBufferList * buffer_list)
+{
+  GstRTSPStreamTransportPrivate *priv;
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (buffer_list), FALSE);
+
+  priv = trans->priv;
+
+  if (priv->send_rtp_list) {
+    res =
+        priv->send_rtp_list (buffer_list, priv->transport->interleaved.min,
+        priv->list_user_data);
+  } else if (priv->send_rtp) {
+    guint n = gst_buffer_list_length (buffer_list), i;
+
+    for (i = 0; i < n; i++) {
+      GstBuffer *buffer = gst_buffer_list_get (buffer_list, i);
+
+      res =
+          priv->send_rtp (buffer, priv->transport->interleaved.min,
+          priv->user_data);
+      if (!res)
+        break;
+    }
+  }
+
+  if (res)
+    gst_rtsp_stream_transport_keep_alive (trans);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_stream_transport_send_rtcp_list:
+ * @trans: a #GstRTSPStreamTransport
+ * @buffer_list: (transfer none): a #GstBuffer
+ *
+ * Send @buffer_list to the installed RTCP callback for @trans.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtsp_stream_transport_send_rtcp_list (GstRTSPStreamTransport * trans,
+    GstBufferList * buffer_list)
+{
+  GstRTSPStreamTransportPrivate *priv;
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (buffer_list), FALSE);
+
+  priv = trans->priv;
+
+  if (priv->send_rtcp_list) {
+    res =
+        priv->send_rtcp_list (buffer_list, priv->transport->interleaved.max,
+        priv->list_user_data);
+  } else if (priv->send_rtcp) {
+    guint n = gst_buffer_list_length (buffer_list), i;
+
+    for (i = 0; i < n; i++) {
+      GstBuffer *buffer = gst_buffer_list_get (buffer_list, i);
+
+      res =
+          priv->send_rtcp (buffer, priv->transport->interleaved.max,
+          priv->user_data);
+      if (!res)
+        break;
+    }
+  }
 
   if (res)
     gst_rtsp_stream_transport_keep_alive (trans);
