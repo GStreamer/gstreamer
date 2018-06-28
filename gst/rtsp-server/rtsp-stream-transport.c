@@ -35,6 +35,9 @@
  * is received from the client. It will also call
  * gst_rtsp_stream_transport_set_timed_out() when a receiver has timed out.
  *
+ * A #GstRTSPClient will call gst_rtsp_stream_transport_message_sent() when it
+ * has sent a data message for the transport.
+ *
  * Last reviewed on 2013-07-16 (1.0.0)
  */
 
@@ -57,6 +60,10 @@ struct _GstRTSPStreamTransportPrivate
   GDestroyNotify ka_notify;
   gboolean active;
   gboolean timed_out;
+
+  GstRTSPMessageSentFunc message_sent;
+  gpointer ms_user_data;
+  GDestroyNotify ms_notify;
 
   GstRTSPTransport *transport;
   GstRTSPUrl *url;
@@ -109,6 +116,7 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
   /* remove callbacks now */
   gst_rtsp_stream_transport_set_callbacks (trans, NULL, NULL, NULL, NULL);
   gst_rtsp_stream_transport_set_keepalive (trans, NULL, NULL, NULL);
+  gst_rtsp_stream_transport_set_message_sent (trans, NULL, NULL, NULL);
 
   if (priv->stream)
     g_object_unref (priv->stream);
@@ -221,6 +229,33 @@ gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamTransport * trans,
     priv->ka_notify (priv->ka_user_data);
   priv->ka_user_data = user_data;
   priv->ka_notify = notify;
+}
+
+/**
+ * gst_rtsp_stream_transport_set_message_sent:
+ * @trans: a #GstRTSPStreamTransport
+ * @message_sent: (scope notified): a callback called when a message has been sent
+ * @user_data: (closure): user data passed to callback
+ * @notify: (allow-none): called with the user_data when no longer needed
+ *
+ * Install a callback that will be called when a message has been sent on @trans.
+ */
+void
+gst_rtsp_stream_transport_set_message_sent (GstRTSPStreamTransport * trans,
+    GstRTSPMessageSentFunc message_sent, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  priv->message_sent = message_sent;
+  if (priv->ms_notify)
+    priv->ms_notify (priv->ms_user_data);
+  priv->ms_user_data = user_data;
+  priv->ms_notify = notify;
 }
 
 
@@ -508,6 +543,23 @@ gst_rtsp_stream_transport_keep_alive (GstRTSPStreamTransport * trans)
 
   if (priv->keep_alive)
     priv->keep_alive (priv->ka_user_data);
+}
+
+/**
+ * gst_rtsp_stream_transport_message_sent:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Signal the installed message_sent callback for @trans.
+ */
+void
+gst_rtsp_stream_transport_message_sent (GstRTSPStreamTransport * trans)
+{
+  GstRTSPStreamTransportPrivate *priv;
+
+  priv = trans->priv;
+
+  if (priv->message_sent)
+    priv->message_sent (priv->ms_user_data);
 }
 
 /**

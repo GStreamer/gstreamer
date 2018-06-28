@@ -70,13 +70,15 @@ struct _GstRTSPClientPrivate
   GstRTSPConnection *connection;
   GstRTSPWatch *watch;
   GMainContext *watch_context;
-  guint close_seq;
   gchar *server_ip;
   gboolean is_ipv6;
 
-  GstRTSPClientSendFunc send_func;      /* protected by send_lock */
-  gpointer send_data;           /* protected by send_lock */
-  GDestroyNotify send_notify;   /* protected by send_lock */
+  /* protected by send_lock */
+  GstRTSPClientSendFunc send_func;
+  gpointer send_data;
+  GDestroyNotify send_notify;
+  guint close_seq;
+  GArray *data_seqs;
 
   GstRTSPSessionPool *session_pool;
   gulong session_removed_id;
@@ -105,11 +107,15 @@ struct _GstRTSPClientPrivate
   GstRTSPTunnelState tstate;
 };
 
+typedef struct
+{
+  guint8 channel;
+  guint seq;
+} DataSeq;
+
 static GMutex tunnels_lock;
 static GHashTable *tunnels;     /* protected by tunnels_lock */
 
-/* FIXME make this configurable. We don't want to do this yet because it will
- * be superceeded by a cache object later */
 #define WATCH_BACKLOG_SIZE              100
 
 #define DEFAULT_SESSION_POOL            NULL
@@ -587,6 +593,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
   g_mutex_init (&priv->send_lock);
   g_mutex_init (&priv->watch_lock);
   priv->close_seq = 0;
+  priv->data_seqs = g_array_new (FALSE, FALSE, sizeof (DataSeq));
   priv->drop_backlog = DEFAULT_DROP_BACKLOG;
   priv->transports =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
@@ -754,6 +761,7 @@ gst_rtsp_client_finalize (GObject * obj)
   g_assert (priv->sessions == NULL);
   g_assert (priv->session_removed_id == 0);
 
+  g_array_unref (priv->data_seqs);
   g_hash_table_unref (priv->transports);
   g_hash_table_unref (priv->pipelined_requests);
 
@@ -1055,6 +1063,82 @@ no_prepare:
   }
 }
 
+static inline DataSeq *
+get_data_seq_element (GstRTSPClient * client, guint8 channel)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GArray *data_seqs = priv->data_seqs;
+  gint i = 0;
+
+  while (i < data_seqs->len) {
+    DataSeq *data_seq = &g_array_index (data_seqs, DataSeq, i);
+    if (data_seq->channel == channel)
+      return data_seq;
+    i++;
+  }
+
+  return NULL;
+}
+
+static void
+add_data_seq (GstRTSPClient * client, guint8 channel)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  DataSeq data_seq = {.channel = channel,.seq = 0 };
+
+  if (get_data_seq_element (client, channel) == NULL)
+    g_array_append_val (priv->data_seqs, data_seq);
+}
+
+static void
+set_data_seq (GstRTSPClient * client, guint8 channel, guint seq)
+{
+  DataSeq *data_seq;
+
+  data_seq = get_data_seq_element (client, channel);
+  g_assert_nonnull (data_seq);
+  data_seq->seq = seq;
+}
+
+static guint
+get_data_seq (GstRTSPClient * client, guint8 channel)
+{
+  DataSeq *data_seq;
+
+  data_seq = get_data_seq_element (client, channel);
+  g_assert_nonnull (data_seq);
+  return data_seq->seq;
+}
+
+static gboolean
+get_data_channel (GstRTSPClient * client, guint seq, guint8 * channel)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GArray *data_seqs = priv->data_seqs;
+  gint i = 0;
+
+  while (i < data_seqs->len) {
+    DataSeq *data_seq = &g_array_index (data_seqs, DataSeq, i);
+    if (data_seq->seq == seq) {
+      *channel = data_seq->channel;
+      return TRUE;
+    }
+    i++;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+do_close (gpointer user_data)
+{
+  GstRTSPClient *client = user_data;
+
+  gst_rtsp_client_close (client);
+
+  return G_SOURCE_REMOVE;
+}
+
 static gboolean
 do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 {
@@ -1074,6 +1158,11 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   gst_rtsp_message_take_body (&message, map_info.data, map_info.size);
 
   g_mutex_lock (&priv->send_lock);
+  if (get_data_seq (client, channel) != 0) {
+    GST_WARNING ("already a queued data message for channel %d", channel);
+    g_mutex_unlock (&priv->send_lock);
+    return FALSE;
+  }
   if (priv->send_func)
     ret = priv->send_func (client, &message, FALSE, priv->send_data);
   g_mutex_unlock (&priv->send_lock);
@@ -1082,6 +1171,16 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   gst_buffer_unmap (buffer, &map_info);
 
   gst_rtsp_message_unset (&message);
+
+  if (!ret) {
+    GSource *idle_src;
+
+    /* close in watch context */
+    idle_src = g_idle_source_new ();
+    g_source_set_callback (idle_src, do_close, client, NULL);
+    g_source_attach (idle_src, priv->watch_context);
+    g_source_unref (idle_src);
+  }
 
   return ret;
 }
@@ -2355,6 +2454,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     g_hash_table_insert (priv->transports,
         GINT_TO_POINTER (ct->interleaved.max), trans);
     g_object_ref (trans);
+    add_data_seq (client, ct->interleaved.min);
+    add_data_seq (client, ct->interleaved.max);
   }
 
   /* create and serialize the server transport */
@@ -4058,33 +4159,48 @@ do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
     gboolean close, gpointer user_data)
 {
   GstRTSPClientPrivate *priv = client->priv;
+  guint id = 0;
   GstRTSPResult ret;
-  GTimeVal time;
 
-  time.tv_sec = 1;
-  time.tv_usec = 0;
+  /* send the message */
+  ret = gst_rtsp_watch_send_message (priv->watch, message, &id);
+  if (ret != GST_RTSP_OK)
+    goto error;
 
-  do {
-    /* send the response and store the seq number so we can wait until it's
-     * written to the client to close the connection */
-    ret =
-        gst_rtsp_watch_send_message (priv->watch, message,
-        close ? &priv->close_seq : NULL);
-    if (ret == GST_RTSP_OK)
-      break;
+  /* if close flag is set, store the seq number so we can wait until it's
+   * written to the client to close the connection */
+  if (close)
+    priv->close_seq = id;
 
-    if (ret != GST_RTSP_ENOMEM)
+  if (gst_rtsp_message_get_type (message) == GST_RTSP_MESSAGE_DATA) {
+    guint8 channel = 0;
+    GstRTSPResult r;
+
+    r = gst_rtsp_message_parse_data (message, &channel);
+    if (r != GST_RTSP_OK) {
+      ret = r;
       goto error;
+    }
 
-    /* drop backlog */
-    if (priv->drop_backlog)
-      break;
+    /* check if the message has been queued for transmission in watch */
+    if (id) {
+      /* store the seq number so we can wait until it has been sent */
+      GST_DEBUG_OBJECT (client, "wait for message %d, channel %d", id, channel);
+      set_data_seq (client, channel, id);
+    } else {
+      GstRTSPStreamTransport *trans;
 
-    /* queue was full, wait for more space */
-    GST_DEBUG_OBJECT (client, "waiting for backlog");
-    ret = gst_rtsp_watch_wait_backlog (priv->watch, &time);
-    GST_DEBUG_OBJECT (client, "Resend due to backlog full");
-  } while (ret != GST_RTSP_EINTR);
+      trans =
+          g_hash_table_lookup (priv->transports,
+          GINT_TO_POINTER ((gint) channel));
+      if (trans) {
+        GST_DEBUG_OBJECT (client, "emit 'message-sent' signal");
+        g_mutex_unlock (&priv->send_lock);
+        gst_rtsp_stream_transport_message_sent (trans);
+        g_mutex_lock (&priv->send_lock);
+      }
+    }
+  }
 
   return ret == GST_RTSP_OK;
 
@@ -4092,7 +4208,7 @@ do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
 error:
   {
     GST_DEBUG_OBJECT (client, "got error %d", ret);
-    return ret == GST_RTSP_OK;
+    return FALSE;
   }
 }
 
@@ -4108,12 +4224,32 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   GstRTSPClientPrivate *priv = client->priv;
+  GstRTSPStreamTransport *trans = NULL;
+  guint8 channel = 0;
+  gboolean close = FALSE;
+
+  g_mutex_lock (&priv->send_lock);
+
+  if (get_data_channel (client, cseq, &channel)) {
+    trans = g_hash_table_lookup (priv->transports, GINT_TO_POINTER (channel));
+    set_data_seq (client, channel, 0);
+  }
 
   if (priv->close_seq && priv->close_seq == cseq) {
     GST_INFO ("client %p: send close message", client);
+    close = TRUE;
     priv->close_seq = 0;
-    gst_rtsp_client_close (client);
   }
+
+  g_mutex_unlock (&priv->send_lock);
+
+  if (trans) {
+    GST_DEBUG_OBJECT (client, "emit 'message-sent' signal");
+    gst_rtsp_stream_transport_message_sent (trans);
+  }
+
+  if (close)
+    gst_rtsp_client_close (client);
 
   return GST_RTSP_OK;
 }

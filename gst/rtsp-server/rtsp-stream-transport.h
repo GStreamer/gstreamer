@@ -66,6 +66,15 @@ typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpo
 typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 
 /**
+ * GstRTSPMessageSentFunc:
+ * @user_data: user data
+ *
+ * Function registered with gst_rtsp_stream_transport_set_message_sent()
+ * and called when a message has been sent on the transport.
+ */
+typedef void     (*GstRTSPMessageSentFunc) (gpointer user_data);
+
+/**
  * GstRTSPStreamTransport:
  * @parent: parent instance
  *
@@ -129,7 +138,16 @@ void                     gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamT
                                                                   GDestroyNotify  notify);
 
 GST_RTSP_SERVER_API
+void                     gst_rtsp_stream_transport_set_message_sent (GstRTSPStreamTransport *trans,
+                                                                  GstRTSPMessageSentFunc message_sent,
+                                                                  gpointer user_data,
+                                                                  GDestroyNotify  notify);
+
+GST_RTSP_SERVER_API
 void                     gst_rtsp_stream_transport_keep_alive    (GstRTSPStreamTransport *trans);
+
+GST_RTSP_SERVER_API
+void                     gst_rtsp_stream_transport_message_sent  (GstRTSPStreamTransport *trans);
 
 GST_RTSP_SERVER_API
 gboolean                 gst_rtsp_stream_transport_set_active    (GstRTSPStreamTransport *trans,
