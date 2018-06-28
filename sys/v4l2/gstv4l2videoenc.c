@@ -521,6 +521,10 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
   GST_DEBUG_OBJECT (self, "Negotiating %s profile and level.",
       klass->codec_name);
 
+  /* Only renegotiate on upstream changes */
+  if (self->input_state)
+    return TRUE;
+
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
 
   if (allowed_caps) {
