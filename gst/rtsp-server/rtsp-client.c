@@ -3175,11 +3175,7 @@ client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
   GST_INFO ("client %p: session %p removed", client, session);
 
   g_mutex_lock (&priv->lock);
-  if (priv->watch != NULL)
-    gst_rtsp_watch_set_send_backlog (priv->watch, 0, 0);
   client_unwatch_session (client, session, NULL);
-  if (priv->watch != NULL)
-    gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
   g_mutex_unlock (&priv->lock);
 }
 
@@ -3369,37 +3365,6 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   if (!check_request_requirements (ctx, &unsupported_reqs))
     goto unsupported_requirement;
 
-  /* the backlog must be unlimited while processing requests.
-   * the causes of this are two cases of deadlocks while streaming over TCP:
-   *
-   * 1. consider the scenario where the media pipeline's streaming thread
-   * is blocking in the appsink (taking the appsink's preroll lock) because
-   * the backlog is full. when a PAUSE request is received by the RTSP
-   * client thread then the the state of the session media ought to change
-   * to PAUSED. while most elements in the pipeline can change state this
-   * can never happen for the appsink since its preroll lock is taken by
-   * another thread.
-   *
-   * 2. consider the scenario where the media pipeline's streaming thread
-   * is blocking in the appsink new_sample callback (taking the send lock
-   * in RTSP client) because the backlog is full. when e.g. a GET request
-   * is received by the RTSP client thread then a response ought to be sent
-   * but this can never happen since it requires taking the send lock
-   * already taken by another thread.
-   *
-   * the reason that the backlog is never emptied is that the source used
-   * for dequeing messages from the backlog is never dispatched because it
-   * is attached to the same mainloop as the source receving RTSP requests and
-   * therefore run by the RTSP client thread which is alreayd blocking.
-   *
-   * without significant changes the easiest way to cope with this is to
-   * not block indefinitely when the backlog is full, but rather let the
-   * backlog grow in size. this in effect means that there can not be any
-   * upper boundary on its size.
-   */
-  if (priv->watch != NULL)
-    gst_rtsp_watch_set_send_backlog (priv->watch, 0, 0);
-
   /* now see what is asked and dispatch to a dedicated handler */
   switch (method) {
     case GST_RTSP_OPTIONS:
@@ -3438,18 +3403,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
       handle_record_request (client, ctx);
       break;
     case GST_RTSP_REDIRECT:
-      if (priv->watch != NULL)
-        gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
       goto not_implemented;
     case GST_RTSP_INVALID:
     default:
-      if (priv->watch != NULL)
-        gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
       goto bad_request;
   }
-
-  if (priv->watch != NULL)
-    gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
 
 done:
   if (ctx == &sctx)
@@ -3470,9 +3428,6 @@ not_supported:
   }
 invalid_command_for_version:
   {
-    if (priv->watch != NULL)
-      gst_rtsp_watch_set_send_backlog (priv->watch, 0, WATCH_BACKLOG_SIZE);
-
     GST_ERROR ("client %p: invalid command for version", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     goto done;
