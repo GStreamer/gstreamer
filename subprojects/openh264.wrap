@@ -1,0 +1,4 @@
+[wrap-git]
+directory=openh264
+url=https://github.com/cisco/openh264.git
+revision=a1b3f07c5271f312997fcc3451237031444c4475 # 1.8.0 + fix for gcc 8.
