@@ -446,10 +446,10 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   /* AVStream needs to be created */
   st = avformat_new_stream (ffmpegmux->context, NULL);
   st->id = collect_pad->padnum;
-  st->codec->codec_type = type;
-  st->codec->codec_id = AV_CODEC_ID_NONE;       /* this is a check afterwards */
-  st->codec->bit_rate = bitrate;
-  st->codec->frame_size = framesize;
+  st->codecpar->codec_type = type;
+  st->codecpar->codec_id = AV_CODEC_ID_NONE;    /* this is a check afterwards */
+  st->codecpar->bit_rate = bitrate;
+  st->codecpar->frame_size = framesize;
   /* we fill in codec during capsnego */
 
   /* we love debug output (c) (tm) (r) */
@@ -475,6 +475,7 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) (gst_pad_get_parent (pad));
   GstFFMpegMuxPad *collect_pad;
   AVStream *st;
+  AVCodecContext tmp;
 
   collect_pad = (GstFFMpegMuxPad *) gst_pad_get_element_private (pad);
 
@@ -484,12 +485,14 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
-  if (gst_ffmpeg_caps_to_codecid (caps, st->codec) == AV_CODEC_ID_NONE)
+  if (gst_ffmpeg_caps_to_codecid (caps, &tmp) == AV_CODEC_ID_NONE)
     goto not_accepted;
+
+  avcodec_parameters_from_context (st->codecpar, &tmp);
 
   /* copy over the aspect ratios, ffmpeg expects the stream aspect to match the
    * codec aspect. */
-  st->sample_aspect_ratio = st->codec->sample_aspect_ratio;
+  st->sample_aspect_ratio = st->codecpar->sample_aspect_ratio;
 
   GST_LOG_OBJECT (pad, "accepted caps %" GST_PTR_FORMAT, caps);
   return TRUE;
@@ -563,7 +566,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       AVStream *st = ffmpegmux->context->streams[collect_pad->padnum];
 
       /* check whether the pad has successfully completed capsnego */
-      if (st->codec->codec_id == AV_CODEC_ID_NONE) {
+      if (st->codecpar->codec_id == AV_CODEC_ID_NONE) {
         GST_ELEMENT_ERROR (ffmpegmux, CORE, NEGOTIATION, (NULL),
             ("no caps set on stream %d (%s)", collect_pad->padnum,
                 (st->codec->codec_type == AVMEDIA_TYPE_VIDEO) ?
@@ -571,15 +574,15 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
         return GST_FLOW_ERROR;
       }
       /* set framerate for audio */
-      if (st->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
-        switch (st->codec->codec_id) {
+      if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+        switch (st->codecpar->codec_id) {
           case AV_CODEC_ID_PCM_S16LE:
           case AV_CODEC_ID_PCM_S16BE:
           case AV_CODEC_ID_PCM_U16LE:
           case AV_CODEC_ID_PCM_U16BE:
           case AV_CODEC_ID_PCM_S8:
           case AV_CODEC_ID_PCM_U8:
-            st->codec->frame_size = 1;
+            st->codecpar->frame_size = 1;
             break;
           default:
           {
@@ -590,8 +593,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
             buffer = gst_collect_pads_peek (ffmpegmux->collect,
                 (GstCollectData *) collect_pad);
             if (buffer) {
-              st->codec->frame_size =
-                  st->codec->sample_rate *
+              st->codecpar->frame_size =
+                  st->codecpar->sample_rate *
                   GST_BUFFER_DURATION (buffer) / GST_SECOND;
               gst_buffer_unref (buffer);
             }
@@ -731,8 +734,6 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     /* push out current buffer */
     buf =
         gst_collect_pads_pop (ffmpegmux->collect, (GstCollectData *) best_pad);
-
-    ffmpegmux->context->streams[best_pad->padnum]->codec->frame_number++;
 
     /* set time */
     pkt.pts = gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (buf),
