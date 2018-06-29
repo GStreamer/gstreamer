@@ -247,7 +247,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
 {
   guint i, len;
   gboolean ret = TRUE;
-  gboolean list_was_writable;
+  gboolean list_was_writable, first_warning = TRUE;
 
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
@@ -281,7 +281,22 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
 
     /* Check if the function changed the buffer */
     if (buf != buf_ret) {
-      if (buf_ret == NULL) {
+      /* If the list was not writable but the callback was actually changing
+       * our buffer, then it wouldn't have been allowed to do so.
+       *
+       * Fortunately we still have a reference to the old buffer in that case
+       * and just not modify the list, unref the new buffer (if any) and warn
+       * about this */
+      if (!list_was_writable) {
+        if (first_warning) {
+          g_critical
+              ("gst_buffer_list_foreach: non-writable list %p was changed from callback",
+              list);
+          first_warning = FALSE;
+        }
+        if (buf_ret)
+          gst_buffer_unref (buf_ret);
+      } else if (buf_ret == NULL) {
         gst_buffer_list_remove_range_internal (list, i, 1, !was_writable);
         --len;
       } else {

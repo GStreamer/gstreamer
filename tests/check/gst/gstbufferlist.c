@@ -508,6 +508,37 @@ GST_START_TEST (test_multiple_mutable_buffer_references)
 
 GST_END_TEST;
 
+static gboolean
+foreach_replace_buffer (GstBuffer ** buffer, guint idx, gpointer user_data)
+{
+  gst_buffer_unref (*buffer);
+  *buffer = gst_buffer_new ();
+
+  return TRUE;
+}
+
+GST_START_TEST (test_foreach_modify_non_writeable_list)
+{
+  GstBufferList *b = gst_buffer_list_new_sized (1);
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  gst_buffer_list_add (b, gst_buffer_ref (buf));
+  gst_buffer_list_ref (b);
+
+  fail_if (gst_buffer_list_is_writable (b));
+
+  ASSERT_CRITICAL (gst_buffer_list_foreach (b, foreach_replace_buffer, NULL));
+
+  fail_unless (gst_buffer_list_get (b, 0) == buf);
+
+  gst_buffer_list_unref (b);
+  gst_buffer_list_unref (b);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_list_suite (void)
 {
@@ -527,6 +558,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_calc_size);
   tcase_add_test (tc_chain, test_new_sized_0);
   tcase_add_test (tc_chain, test_multiple_mutable_buffer_references);
+  tcase_add_test (tc_chain, test_foreach_modify_non_writeable_list);
 
   return s;
 }
