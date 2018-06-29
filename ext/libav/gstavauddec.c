@@ -880,15 +880,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
         (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
             in_plugin->id <= AV_CODEC_ID_PCM_BLURAY) ||
         (in_plugin->id >= AV_CODEC_ID_PCM_S8_PLANAR &&
-#if AV_VERSION_INT (LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, LIBAVCODEC_VERSION_MICRO) >= AV_VERSION_INT (57,69,0)
-            in_plugin->id <= AV_CODEC_ID_PCM_F24LE)) {
-#elif AV_VERSION_INT (LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, LIBAVCODEC_VERSION_MICRO) >= AV_VERSION_INT (57,54,0)
-            in_plugin->id <= AV_CODEC_ID_PCM_S64BE)) {
-#else
-            in_plugin->id <= AV_CODEC_ID_PCM_S16BE_PLANAR)) {
-#endif
+            in_plugin->id <= AV_CODEC_ID_PCM_F24LE))
       continue;
-    }
 
     /* No decoders depending on external libraries (we don't build them, but
      * people who build against an external ffmpeg might have them.
