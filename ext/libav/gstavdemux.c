@@ -1961,7 +1961,7 @@ gboolean
 gst_ffmpegdemux_register (GstPlugin * plugin)
 {
   GType type;
-  AVInputFormat *in_plugin;
+  const AVInputFormat *in_plugin;
   gchar *extensions;
   GTypeInfo typeinfo = {
     sizeof (GstFFMpegDemuxClass),
@@ -1975,11 +1975,11 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     (GInstanceInitFunc) gst_ffmpegdemux_init,
   };
 
-  in_plugin = av_iformat_next (NULL);
+  void *i = 0;
 
   GST_LOG ("Registering demuxers");
 
-  while (in_plugin) {
+  while ((in_plugin = av_demuxer_iterate (&i))) {
     gchar *type_name, *typefind_name;
     gint rank;
     gboolean register_typefind_func = TRUE;
@@ -2007,14 +2007,14 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strncmp (in_plugin->name, "f64", 3) ||
         !strcmp (in_plugin->name, "mulaw") || !strcmp (in_plugin->name, "alaw")
         )
-      goto next;
+      continue;
 
     /* no network demuxers */
     if (!strcmp (in_plugin->name, "sdp") ||
         !strcmp (in_plugin->name, "rtsp") ||
         !strcmp (in_plugin->name, "applehttp")
         )
-      goto next;
+      continue;
 
     /* these don't do what one would expect or
      * are only partially functional/useful */
@@ -2022,7 +2022,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "wv") ||
         !strcmp (in_plugin->name, "ass") ||
         !strcmp (in_plugin->name, "ffmetadata"))
-      goto next;
+      continue;
 
     /* Don't use the typefind functions of formats for which we already have
      * better typefind functions */
@@ -2103,7 +2103,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     else {
       GST_DEBUG ("ignoring %s", in_plugin->name);
       rank = GST_RANK_NONE;
-      goto next;
+      continue;
     }
 
     /* construct the type */
@@ -2113,7 +2113,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name)) {
       g_free (type_name);
-      goto next;
+      continue;
     }
 
     typefind_name = g_strdup_printf ("avtype_%s", in_plugin->name);
@@ -2131,8 +2131,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     if (!gst_element_register (plugin, type_name, rank, type) ||
         (register_typefind_func == TRUE &&
             !gst_type_find_register (plugin, typefind_name, rank,
-                gst_ffmpegdemux_type_find, extensions, NULL, in_plugin,
-                NULL))) {
+                gst_ffmpegdemux_type_find, extensions, NULL,
+                (gpointer) in_plugin, NULL))) {
       g_warning ("Registration of type %s failed", type_name);
       g_free (type_name);
       g_free (typefind_name);
@@ -2143,9 +2143,6 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     g_free (type_name);
     g_free (typefind_name);
     g_free (extensions);
-
-  next:
-    in_plugin = av_iformat_next (in_plugin);
   }
 
   GST_LOG ("Finished registering demuxers");
