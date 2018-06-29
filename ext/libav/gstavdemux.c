@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
 /* #include <ffmpeg/avi.h> */
 #include <gst/gst.h>
 #include <gst/base/gstflowcombiner.h>
@@ -1491,7 +1492,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   /* copy the data from packet into the target buffer
    * and do conversions for raw video packets */
   if (rawvideo) {
-    AVPicture src, dst;
+    AVFrame src, dst;
     const gchar *plugin_name =
         ((GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux)))->in_plugin->name;
     GstMapInfo map;
@@ -1506,8 +1507,9 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
         avstream->codec->pix_fmt, avstream->codec->width,
         avstream->codec->height);
 
-    av_picture_copy (&dst, &src, avstream->codec->pix_fmt,
-        avstream->codec->width, avstream->codec->height);
+    av_image_copy (dst.data, dst.linesize, (const uint8_t **) src.data,
+        src.linesize, avstream->codec->pix_fmt, avstream->codec->width,
+        avstream->codec->height);
     gst_buffer_unmap (outbuf, &map);
   } else {
     gst_buffer_fill (outbuf, 0, pkt.data, outsize);

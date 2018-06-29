@@ -96,7 +96,7 @@ typedef struct _GstFFMpegDeinterlace
   GstFFMpegDeinterlaceMode new_mode;
 
   enum AVPixelFormat pixfmt;
-  AVPicture from_frame, to_frame;
+  AVFrame from_frame, to_frame;
 
   AVFilterContext *buffersink_ctx;
   AVFilterContext *buffersrc_ctx;
@@ -355,8 +355,8 @@ init_filter_graph (GstFFMpegDeinterlace * deinterlace,
 }
 
 static int
-process_filter_graph (GstFFMpegDeinterlace * deinterlace, AVPicture * dst,
-    const AVPicture * src, enum AVPixelFormat pixfmt, int width, int height)
+process_filter_graph (GstFFMpegDeinterlace * deinterlace, AVFrame * dst,
+    const AVFrame * src, enum AVPixelFormat pixfmt, int width, int height)
 {
   int res;
 
@@ -384,8 +384,9 @@ process_filter_graph (GstFFMpegDeinterlace * deinterlace, AVPicture * dst,
       deinterlace->filter_frame);
   if (res < 0)
     return res;
-  av_picture_copy (dst, (const AVPicture *) deinterlace->filter_frame, pixfmt,
-      width, height);
+  av_image_copy (dst->data, dst->linesize,
+      (const uint8_t **) deinterlace->filter_frame->data,
+      deinterlace->filter_frame->linesize, pixfmt, width, height);
   av_frame_unref (deinterlace->filter_frame);
 
   return 0;

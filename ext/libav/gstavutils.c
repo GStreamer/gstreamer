@@ -77,7 +77,7 @@ av_smp_format_depth (enum AVSampleFormat smp_fmt)
 
 
 /*
- * Fill in pointers to memory in a AVPicture, where
+ * Fill in pointers to memory in a AVFrame, where
  * everything is aligned by 4 (as required by X).
  * This is mostly a copy from imgconvert.c with some
  * small changes.
@@ -88,7 +88,7 @@ av_smp_format_depth (enum AVSampleFormat smp_fmt)
 #define FF_COLOR_YUV      2     /* YUV color space. 16 <= Y <= 235, 16 <= U, V <= 240 */
 #define FF_COLOR_YUV_JPEG 3     /* YUV color space. 0 <= Y <= 255, 0 <= U, V <= 255 */
 
-#define FF_PIXEL_PLANAR   0     /* each channel has one component in AVPicture */
+#define FF_PIXEL_PLANAR   0     /* each channel has one component in AVFrame */
 #define FF_PIXEL_PACKED   1     /* only one components containing all the channels */
 #define FF_PIXEL_PALETTE  2     /* one components containing indexes for a palette */
 
@@ -267,7 +267,7 @@ gst_ffmpeg_init_pix_fmt_info (void)
 int
 gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height)
 {
-  AVPicture dummy_pict;
+  AVFrame dummy_pict;
 
   return gst_ffmpeg_avpicture_fill (&dummy_pict, NULL, pix_fmt, width, height);
 }
@@ -280,7 +280,7 @@ gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height)
 #define DIV_ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) >> (x))
 
 int
-gst_ffmpeg_avpicture_fill (AVPicture * picture,
+gst_ffmpeg_avpicture_fill (AVFrame * picture,
     uint8_t * ptr, enum AVPixelFormat pix_fmt, int width, int height)
 {
   int size, w2, h2, size2;

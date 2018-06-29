@@ -36,11 +36,11 @@ int
 gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height);
 
 /*
- * Fill in pointers in an AVPicture, aligned by 4 (required by X).
+ * Fill in pointers in an AVFrame, aligned by 4 (required by X).
  */
 
 int
-gst_ffmpeg_avpicture_fill (AVPicture * picture,
+gst_ffmpeg_avpicture_fill (AVFrame * picture,
                            uint8_t *   ptr,
                            enum AVPixelFormat pix_fmt,
                            int         width,
