@@ -356,15 +356,14 @@ static gboolean
 settings_changed (GstFFMpegAudDec * ffmpegdec, AVFrame * frame)
 {
   GstAudioFormat format;
-  gint channels =
-      av_get_channel_layout_nb_channels (av_frame_get_channel_layout (frame));
+  gint channels = av_get_channel_layout_nb_channels (frame->channel_layout);
 
   format = gst_ffmpeg_smpfmt_to_audioformat (frame->format);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     return TRUE;
 
   return !(ffmpegdec->info.rate ==
-      av_frame_get_sample_rate (frame) &&
+      frame->sample_rate &&
       ffmpegdec->info.channels == channels &&
       ffmpegdec->info.finfo->format == format);
 }
@@ -383,10 +382,9 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
   format = gst_ffmpeg_smpfmt_to_audioformat (frame->format);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     goto no_caps;
-  channels =
-      av_get_channel_layout_nb_channels (av_frame_get_channel_layout (frame));
+  channels = av_get_channel_layout_nb_channels (frame->channel_layout);
   if (channels == 0)
-    channels = av_frame_get_channels (frame);
+    channels = frame->channels;
   if (channels == 0)
     goto no_caps;
 
@@ -396,11 +394,9 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec,
       "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
       ffmpegdec->info.rate, ffmpegdec->info.channels,
-      ffmpegdec->info.finfo->format, av_frame_get_sample_rate (frame), channels,
-      format);
+      ffmpegdec->info.finfo->format, frame->sample_rate, channels, format);
 
-  gst_ffmpeg_channel_layout_to_gst (av_frame_get_channel_layout (frame),
-      channels, pos);
+  gst_ffmpeg_channel_layout_to_gst (frame->channel_layout, channels, pos);
   memcpy (ffmpegdec->ffmpeg_layout, pos,
       sizeof (GstAudioChannelPosition) * channels);
 
@@ -409,7 +405,7 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
   ffmpegdec->needs_reorder =
       memcmp (pos, ffmpegdec->ffmpeg_layout, sizeof (pos[0]) * channels) != 0;
   gst_audio_info_set_format (&ffmpegdec->info, format,
-      av_frame_get_sample_rate (frame), channels, pos);
+      frame->sample_rate, channels, pos);
 
   if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (ffmpegdec),
           &ffmpegdec->info))
