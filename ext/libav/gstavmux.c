@@ -876,13 +876,12 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     NULL, NULL, NULL
   };
   GType type;
-  AVOutputFormat *in_plugin;
-
-  in_plugin = av_oformat_next (NULL);
+  const AVOutputFormat *in_plugin;
+  void *i = 0;
 
   GST_LOG ("Registering muxers");
 
-  while (in_plugin) {
+  while ((in_plugin = av_muxer_iterate (&i))) {
     gchar *type_name;
     GstRank rank = GST_RANK_MARGINAL;
 
@@ -921,12 +920,12 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         !strncmp (in_plugin->name, "webm", 4)
         ) {
       GST_LOG ("Ignoring muxer %s", in_plugin->name);
-      goto next;
+      continue;
     }
 
     if ((!strncmp (in_plugin->long_name, "raw ", 4))) {
       GST_LOG ("Ignoring raw muxer %s", in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (gst_ffmpegmux_get_replacement (in_plugin->name))
@@ -954,9 +953,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     }
 
     g_free (type_name);
-
-  next:
-    in_plugin = av_oformat_next (in_plugin);
   }
 
   GST_LOG ("Finished registering muxers");
