@@ -887,6 +887,23 @@ GST_START_TEST (test_parent_buffer_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_writable_memory)
+{
+  GstBuffer *buf;
+  GstMemory *mem;
+
+  buf = gst_buffer_new_and_alloc (10);
+  /* make buffer read-only */
+  gst_buffer_ref (buf);
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  fail_if (gst_memory_is_writable (mem));
+
+  gst_buffer_unref (buf);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_buffer_suite (void)
@@ -911,6 +928,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_find);
   tcase_add_test (tc_chain, test_fill);
   tcase_add_test (tc_chain, test_parent_buffer_meta);
+  tcase_add_test (tc_chain, test_writable_memory);
 
   return s;
 }
