@@ -221,21 +221,14 @@ transport_send_bin_change_state (GstElement * element,
       gst_object_unref (pad);
       break;
     }
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  /* Do downward state change cleanups after the element
-   * has been stopped, as this will have set pads to flushing as needed
-   * and unblocked any pad probes that are blocked */
-  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      /* Release pad blocks */
+      /* Normally, we do downward state change cleanups after the element
+       * has been stopped, as this will have set pads to flushing as needed
+       * and unblocked any pad probes that are blocked, but sometimes that's
+       * causing a deadlock on the build server in tests, with a race around
+       * the pad blocking/release timing, so free the pad blocks before
+       * stopping everything */
       if (send->rtp_block && send->rtp_block->block_id) {
         gst_pad_remove_probe (send->rtp_block->pad, send->rtp_block->block_id);
         send->rtp_block->block_id = 0;
@@ -262,6 +255,15 @@ transport_send_bin_change_state (GstElement * element,
       }
       break;
     }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:{
       GstElement *elem;
 
