@@ -75,10 +75,12 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		--library=libgstrtsp-@GST_API_VERSION@.la \
 		--include=Gio-2.0 \
 		--include=Gst-@GST_API_VERSION@ \
+		--include=GstBase-@GST_API_VERSION@ \
 		--include=GstSdp-@GST_API_VERSION@ \
 		--libtool="${LIBTOOL}" \
 		--pkg gio-2.0 \
 		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg gstreamer-base-@GST_API_VERSION@ \
 		--pkg gstreamer-sdp-@GST_API_VERSION@ \
 		--pkg-export gstreamer-rtsp-@GST_API_VERSION@ \
 		--add-init-section="$(INTROSPECTION_INIT)" \
