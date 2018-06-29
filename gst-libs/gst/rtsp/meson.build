@@ -33,7 +33,7 @@ gstrtsp_h = rtsp_enums[1]
 
 winsock2 = cc.find_library('ws2_32', required : false)
 
-gstrtsp_deps = [gst_dep, gio_dep, libm, winsock2]
+gstrtsp_deps = [gst_base_dep, gst_dep, gio_dep, libm, winsock2]
 gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   rtsp_sources,
   gstrtsp_h, gstrtsp_c,
@@ -55,7 +55,7 @@ if build_gir
     identifier_prefix : 'Gst',
     symbol_prefix : 'gst',
     export_packages : 'gstreamer-rtsp-1.0',
-    includes : ['Gst-1.0', 'GstSdp-1.0', 'Gio-2.0'],
+    includes : ['Gst-1.0', 'GstBase-1.0', 'GstSdp-1.0', 'Gio-2.0'],
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstrtsp_deps + [sdp_dep]
