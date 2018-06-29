@@ -277,6 +277,8 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   GstRTSPMediaFactory *factory = GST_RTSP_MEDIA_FACTORY (obj);
   GstRTSPMediaFactoryPrivate *priv = factory->priv;
 
+  if (priv->clock)
+    gst_object_unref (priv->clock);
   if (priv->permissions)
     gst_rtsp_permissions_unref (priv->permissions);
   g_hash_table_unref (priv->medias);
