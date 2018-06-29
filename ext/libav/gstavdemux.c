@@ -923,17 +923,18 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   gint num;
   gchar *padname;
   const gchar *codec;
-  AVCodecContext *ctx;
+  AVCodecContext *ctx = NULL;
   GstFFStream *stream;
   GstEvent *event;
   gchar *stream_id;
-
-  ctx = avstream->codec;
 
   oclass = (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
 
   if (demux->streams[avstream->index] != NULL)
     goto exists;
+
+  ctx = avcodec_alloc_context3 (NULL);
+  avcodec_parameters_to_context (ctx, avstream->codecpar);
 
   /* create new stream */
   stream = g_new0 (GstFFStream, 1);
@@ -1043,23 +1044,27 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
         GST_TAG_VIDEO_CODEC : GST_TAG_AUDIO_CODEC, codec, NULL);
   }
 
+done:
+  if (ctx)
+    avcodec_free_context (&ctx);
   return stream;
 
   /* ERRORS */
 exists:
   {
     GST_DEBUG_OBJECT (demux, "Pad existed (stream %d)", avstream->index);
-    return demux->streams[avstream->index];
+    stream = demux->streams[avstream->index];
+    goto done;
   }
 unknown_type:
   {
     GST_WARNING_OBJECT (demux, "Unknown pad type %d", ctx->codec_type);
-    return stream;
+    goto done;
   }
 unknown_caps:
   {
     GST_WARNING_OBJECT (demux, "Unknown caps for codec %d", ctx->codec_id);
-    return stream;
+    goto done;
   }
 }
 
@@ -1478,12 +1483,12 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   /* prepare to push packet to peer */
   srcpad = stream->pad;
 
-  rawvideo = (avstream->codec->codec_type == AVMEDIA_TYPE_VIDEO &&
-      avstream->codec->codec_id == AV_CODEC_ID_RAWVIDEO);
+  rawvideo = (avstream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO &&
+      avstream->codecpar->codec_id == AV_CODEC_ID_RAWVIDEO);
 
   if (rawvideo)
-    outsize = gst_ffmpeg_avpicture_get_size (avstream->codec->pix_fmt,
-        avstream->codec->width, avstream->codec->height);
+    outsize = gst_ffmpeg_avpicture_get_size (avstream->codecpar->format,
+        avstream->codecpar->width, avstream->codecpar->height);
   else
     outsize = pkt.size;
 
@@ -1499,17 +1504,17 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 
     GST_WARNING ("Unknown demuxer %s, no idea what to do", plugin_name);
     gst_ffmpeg_avpicture_fill (&src, pkt.data,
-        avstream->codec->pix_fmt, avstream->codec->width,
-        avstream->codec->height);
+        avstream->codecpar->format, avstream->codecpar->width,
+        avstream->codecpar->height);
 
     gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
     gst_ffmpeg_avpicture_fill (&dst, map.data,
-        avstream->codec->pix_fmt, avstream->codec->width,
-        avstream->codec->height);
+        avstream->codecpar->format, avstream->codecpar->width,
+        avstream->codecpar->height);
 
     av_image_copy (dst.data, dst.linesize, (const uint8_t **) src.data,
-        src.linesize, avstream->codec->pix_fmt, avstream->codec->width,
-        avstream->codec->height);
+        src.linesize, avstream->codecpar->format, avstream->codecpar->width,
+        avstream->codecpar->height);
     gst_buffer_unmap (outbuf, &map);
   } else {
     gst_buffer_fill (outbuf, 0, pkt.data, outsize);
