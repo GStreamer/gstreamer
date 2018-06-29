@@ -772,18 +772,18 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
   };
   GType type;
   AVCodec *in_plugin;
+  void *i = 0;
 
 
   GST_LOG ("Registering encoders");
 
-  in_plugin = av_codec_next (NULL);
-  while (in_plugin) {
+  while ((in_plugin = (AVCodec *) av_codec_iterate (&i))) {
     gchar *type_name;
     guint rank;
 
     /* Skip non-AV codecs */
     if (in_plugin->type != AVMEDIA_TYPE_AUDIO)
-      goto next;
+      continue;
 
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_PCM_S16LE_PLANAR ||
@@ -797,7 +797,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
 #else
             in_plugin->id <= AV_CODEC_ID_PCM_S16BE_PLANAR)) {
 #endif
-      goto next;
+      continue;
     }
 
     /* No encoders depending on external libraries (we don't build them, but
@@ -807,12 +807,12 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
       GST_DEBUG
           ("Not using external library encoder %s. Use the gstreamer-native ones instead.",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* only encoders */
     if (!av_codec_is_encoder (in_plugin)) {
-      goto next;
+      continue;
     }
 
     /* FIXME : We should have a method to know cheaply whether we have a mapping
@@ -824,7 +824,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
     if (!strcmp (in_plugin->name, "vorbis")
         || !strcmp (in_plugin->name, "flac")) {
       GST_LOG ("Ignoring encoder %s", in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* construct the type */
@@ -866,9 +866,6 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
     }
 
     g_free (type_name);
-
-  next:
-    in_plugin = av_codec_next (in_plugin);
   }
 
   GST_LOG ("Finished registering encoders");

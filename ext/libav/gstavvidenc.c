@@ -837,6 +837,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
   };
   GType type;
   AVCodec *in_plugin;
+  void *i = 0;
 
 
   GST_LOG ("Registering encoders");
@@ -844,13 +845,12 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
   /* build global ffmpeg param/property info */
   gst_ffmpeg_cfg_init ();
 
-  in_plugin = av_codec_next (NULL);
-  while (in_plugin) {
+  while ((in_plugin = (AVCodec *) av_codec_iterate (&i))) {
     gchar *type_name;
 
     /* Skip non-AV codecs */
     if (in_plugin->type != AVMEDIA_TYPE_VIDEO)
-      goto next;
+      continue;
 
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_RAWVIDEO ||
@@ -869,7 +869,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
         || in_plugin->id == AV_CODEC_ID_WRAPPED_AVFRAME
 #endif
         || in_plugin->id == AV_CODEC_ID_ZLIB) {
-      goto next;
+      continue;
     }
 
     /* No encoders depending on external libraries (we don't build them, but
@@ -879,41 +879,41 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       GST_DEBUG
           ("Not using external library encoder %s. Use the gstreamer-native ones instead.",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (strstr (in_plugin->name, "vaapi")) {
       GST_DEBUG
           ("Ignoring VAAPI encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (strstr (in_plugin->name, "nvenc")) {
       GST_DEBUG
           ("Ignoring nvenc encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_qsv")) {
       GST_DEBUG
           ("Ignoring qsv encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_v4l2m2m")) {
       GST_DEBUG
           ("Ignoring V4L2 mem-to-mem encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* only video encoders */
     if (!av_codec_is_encoder (in_plugin)
         || in_plugin->type != AVMEDIA_TYPE_VIDEO)
-      goto next;
+      continue;
 
     /* FIXME : We should have a method to know cheaply whether we have a mapping
      * for the given plugin or not */
@@ -923,7 +923,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     /* no codecs for which we're GUARANTEED to have better alternatives */
     if (!strcmp (in_plugin->name, "gif")) {
       GST_LOG ("Ignoring encoder %s", in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* construct the type */
@@ -955,9 +955,6 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     }
 
     g_free (type_name);
-
-  next:
-    in_plugin = av_codec_next (in_plugin);
   }
 
   GST_LOG ("Finished registering encoders");

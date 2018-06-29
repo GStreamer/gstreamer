@@ -2231,19 +2231,18 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
   GType type;
   AVCodec *in_plugin;
   gint rank;
-
-  in_plugin = av_codec_next (NULL);
+  void *i = 0;
 
   GST_LOG ("Registering decoders");
 
-  while (in_plugin) {
+  while ((in_plugin = (AVCodec *) av_codec_iterate (&i))) {
     gchar *type_name;
     gchar *plugin_name;
 
     /* only video decoders */
     if (!av_codec_is_decoder (in_plugin)
         || in_plugin->type != AVMEDIA_TYPE_VIDEO)
-      goto next;
+      continue;
 
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_RAWVIDEO ||
@@ -2262,7 +2261,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
         || in_plugin->id == AV_CODEC_ID_WRAPPED_AVFRAME
 #endif
         || in_plugin->id == AV_CODEC_ID_ZLIB) {
-      goto next;
+      continue;
     }
 
     /* No decoders depending on external libraries (we don't build them, but
@@ -2272,7 +2271,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       GST_DEBUG
           ("Not using external library decoder %s. Use the gstreamer-native ones instead.",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* No vdpau plugins until we can figure out how to properly use them
@@ -2281,42 +2280,42 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       GST_DEBUG
           ("Ignoring VDPAU decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_xvmc")) {
       GST_DEBUG
           ("Ignoring XVMC decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (strstr (in_plugin->name, "vaapi")) {
       GST_DEBUG
           ("Ignoring VAAPI decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_qsv")) {
       GST_DEBUG
           ("Ignoring qsv decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_cuvid")) {
       GST_DEBUG
           ("Ignoring CUVID decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_v4l2m2m")) {
       GST_DEBUG
           ("Ignoring V4L2 mem-to-mem decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
@@ -2335,7 +2334,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "dvdsub") ||
         !strcmp (in_plugin->name, "dvbsub")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* construct the type */
@@ -2393,9 +2392,6 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     }
 
     g_free (type_name);
-
-  next:
-    in_plugin = av_codec_next (in_plugin);
   }
 
   GST_LOG ("Finished Registering decoders");

@@ -861,19 +861,18 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
   };
   GType type;
   AVCodec *in_plugin;
+  void *i = 0;
   gint rank;
-
-  in_plugin = av_codec_next (NULL);
 
   GST_LOG ("Registering decoders");
 
-  while (in_plugin) {
+  while ((in_plugin = (AVCodec *) av_codec_iterate (&i))) {
     gchar *type_name;
 
     /* only decoders */
     if (!av_codec_is_decoder (in_plugin)
         || in_plugin->type != AVMEDIA_TYPE_AUDIO) {
-      goto next;
+      continue;
     }
 
     /* no quasi codecs, please */
@@ -888,7 +887,7 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
 #else
             in_plugin->id <= AV_CODEC_ID_PCM_S16BE_PLANAR)) {
 #endif
-      goto next;
+      continue;
     }
 
     /* No decoders depending on external libraries (we don't build them, but
@@ -898,7 +897,7 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
       GST_DEBUG
           ("Not using external library decoder %s. Use the gstreamer-native ones instead.",
           in_plugin->name);
-      goto next;
+      continue;
     }
 
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
@@ -919,7 +918,7 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "dvdsub") ||
         !strcmp (in_plugin->name, "dvbsub")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
-      goto next;
+      continue;
     }
 
     /* construct the type */
@@ -963,9 +962,6 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
     }
 
     g_free (type_name);
-
-  next:
-    in_plugin = av_codec_next (in_plugin);
   }
 
   GST_LOG ("Finished Registering decoders");
