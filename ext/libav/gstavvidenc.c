@@ -184,7 +184,8 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   /* register additional properties, possibly dependent on the exact CODEC */
-  gst_ffmpeg_cfg_install_properties (klass, PROP_CFG_BASE);
+  gst_ffmpeg_cfg_install_properties (gobject_class, klass->in_plugin,
+      PROP_CFG_BASE, AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM);
 
   venc_class->start = gst_ffmpegvidenc_start;
   venc_class->stop = gst_ffmpegvidenc_stop;
@@ -216,8 +217,6 @@ static void
 gst_ffmpegvidenc_finalize (GObject * object)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) object;
-
-  gst_ffmpeg_cfg_finalize (ffmpegenc);
 
   /* clean up remaining allocated data */
   av_frame_free (&ffmpegenc->picture);
@@ -253,7 +252,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
 
   /* additional avcodec settings */
-  gst_ffmpeg_cfg_fill_context (ffmpegenc, ffmpegenc->context);
+  gst_ffmpeg_cfg_fill_context (G_OBJECT (ffmpegenc), ffmpegenc->context);
 
   /* and last but not least the pass; CBR, 2-pass, etc */
   ffmpegenc->context->flags |= ffmpegenc->pass;
@@ -737,7 +736,7 @@ gst_ffmpegvidenc_set_property (GObject * object,
       ffmpegenc->filename = g_value_dup_string (value);
       break;
     default:
-      if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
+      if (!gst_ffmpeg_cfg_set_property (ffmpegenc->refcontext, value, pspec))
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
@@ -762,7 +761,7 @@ gst_ffmpegvidenc_get_property (GObject * object,
       g_value_take_string (value, g_strdup (ffmpegenc->filename));
       break;
     default:
-      if (!gst_ffmpeg_cfg_get_property (object, value, pspec))
+      if (!gst_ffmpeg_cfg_get_property (ffmpegenc->refcontext, value, pspec))
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
@@ -839,11 +838,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
   AVCodec *in_plugin;
   void *i = 0;
 
-
   GST_LOG ("Registering encoders");
-
-  /* build global ffmpeg param/property info */
-  gst_ffmpeg_cfg_init ();
 
   while ((in_plugin = (AVCodec *) av_codec_iterate (&i))) {
     gchar *type_name;

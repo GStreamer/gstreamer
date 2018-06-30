@@ -37,16 +37,8 @@ struct _GstFFMpegAudEnc
   GstAudioEncoder parent;
 
   AVCodecContext *context;
+  AVCodecContext *refcontext;
   gboolean opened;
-
-  /* cache */
-  gint bitrate;
-  gint rtp_payload_size;
-  gint compliance;
-
-  /* other settings are copied over straight,
-   * include a context here, rather than copy-and-past it from avcodec.h */
-  AVCodecContext config;
 
   AVFrame *frame;
 

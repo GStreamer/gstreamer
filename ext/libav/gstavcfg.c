@@ -33,22 +33,24 @@
 #include <libavutil/opt.h>
 
 static GQuark avoption_quark;
-static GHashTable *venc_overrides = NULL;
+static GHashTable *generic_overrides = NULL;
 
 static void
-make_venc_overrides (void)
+make_generic_overrides (void)
 {
-  g_assert (!venc_overrides);
-  venc_overrides = g_hash_table_new_full (g_str_hash, g_str_equal,
+  g_assert (!generic_overrides);
+  generic_overrides = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, (GDestroyNotify) gst_structure_free);
 
-  g_hash_table_insert (venc_overrides, g_strdup ("b"),
+  g_hash_table_insert (generic_overrides, g_strdup ("b"),
       gst_structure_new_empty ("bitrate"));
-  g_hash_table_insert (venc_overrides, g_strdup ("g"),
+  g_hash_table_insert (generic_overrides, g_strdup ("ab"),
+      gst_structure_new_empty ("bitrate"));
+  g_hash_table_insert (generic_overrides, g_strdup ("g"),
       gst_structure_new_empty ("gop-size"));
-  g_hash_table_insert (venc_overrides, g_strdup ("bt"),
+  g_hash_table_insert (generic_overrides, g_strdup ("bt"),
       gst_structure_new_empty ("bitrate-tolerance"));
-  g_hash_table_insert (venc_overrides, g_strdup ("bf"),
+  g_hash_table_insert (generic_overrides, g_strdup ("bf"),
       gst_structure_new_empty ("max-bframes"));
 }
 
@@ -56,7 +58,7 @@ void
 gst_ffmpeg_cfg_init (void)
 {
   avoption_quark = g_quark_from_static_string ("ffmpeg-cfg-param-spec-data");
-  make_venc_overrides ();
+  make_generic_overrides ();
 }
 
 static gint
@@ -335,7 +337,8 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
 }
 
 void
-gst_ffmpeg_cfg_install_properties (GstFFMpegVidEncClass * klass, guint base)
+gst_ffmpeg_cfg_install_properties (GObjectClass * klass, AVCodec * in_plugin,
+    guint base, gint flags)
 {
   gint prop_id;
   AVCodecContext *ctx;
@@ -343,18 +346,16 @@ gst_ffmpeg_cfg_install_properties (GstFFMpegVidEncClass * klass, guint base)
   prop_id = base;
   g_return_if_fail (base > 0);
 
-  ctx = avcodec_alloc_context3 (klass->in_plugin);
+  ctx = avcodec_alloc_context3 (in_plugin);
   if (!ctx)
     g_warning ("could not get context");
 
   prop_id =
-      install_opts ((GObjectClass *) klass, &klass->in_plugin->priv_class,
-      prop_id, AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM,
+      install_opts ((GObjectClass *) klass, &in_plugin->priv_class, prop_id, 0,
       " (Private codec option)", NULL);
   prop_id =
-      install_opts ((GObjectClass *) klass, &ctx->av_class, prop_id,
-      AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM,
-      " (Generic codec option, might have no effect)", venc_overrides);
+      install_opts ((GObjectClass *) klass, &ctx->av_class, prop_id, flags,
+      " (Generic codec option, might have no effect)", generic_overrides);
 
   if (ctx) {
     gst_ffmpeg_avcodec_close (ctx);
@@ -421,10 +422,9 @@ set_option_value (AVCodecContext * ctx, GParamSpec * pspec,
 }
 
 gboolean
-gst_ffmpeg_cfg_set_property (GObject * object,
-    const GValue * value, GParamSpec * pspec)
+gst_ffmpeg_cfg_set_property (AVCodecContext * refcontext, const GValue * value,
+    GParamSpec * pspec)
 {
-  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) (object);
   const AVOption *opt;
 
   opt = g_param_spec_get_qdata (pspec, avoption_quark);
@@ -432,14 +432,13 @@ gst_ffmpeg_cfg_set_property (GObject * object,
   if (!opt)
     return FALSE;
 
-  return set_option_value (ffmpegenc->refcontext, pspec, value, opt) >= 0;
+  return set_option_value (refcontext, pspec, value, opt) >= 0;
 }
 
 gboolean
-gst_ffmpeg_cfg_get_property (GObject * object,
-    GValue * value, GParamSpec * pspec)
+gst_ffmpeg_cfg_get_property (AVCodecContext * refcontext, GValue * value,
+    GParamSpec * pspec)
 {
-  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) (object);
   const AVOption *opt;
 
   opt = g_param_spec_get_qdata (pspec, avoption_quark);
@@ -455,7 +454,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_INT:
       {
         int64_t val;
-        if ((res = av_opt_get_int (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get_int (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN, &val) >= 0))
           g_value_set_int (value, val);
         break;
@@ -463,7 +462,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_INT64:
       {
         int64_t val;
-        if ((res = av_opt_get_int (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get_int (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN, &val) >= 0))
           g_value_set_int64 (value, val);
         break;
@@ -471,7 +470,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_UINT64:
       {
         int64_t val;
-        if ((res = av_opt_get_int (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get_int (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN, &val) >= 0))
           g_value_set_uint64 (value, val);
         break;
@@ -479,7 +478,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_DOUBLE:
       {
         gdouble val;
-        if ((res = av_opt_get_double (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get_double (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN, &val) >= 0))
           g_value_set_double (value, val);
         break;
@@ -487,7 +486,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_FLOAT:
       {
         gdouble val;
-        if ((res = av_opt_get_double (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get_double (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN, &val) >= 0))
           g_value_set_float (value, (gfloat) val);
         break;
@@ -495,7 +494,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_STRING:
       {
         uint8_t *val;
-        if ((res = av_opt_get (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN | AV_OPT_ALLOW_NULL, &val) >= 0)) {
           g_value_set_string (value, (gchar *) val);
         }
@@ -504,7 +503,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       case G_TYPE_BOOLEAN:
       {
         int64_t val;
-        if ((res = av_opt_get_int (ffmpegenc->refcontext, opt->name,
+        if ((res = av_opt_get_int (refcontext, opt->name,
                     AV_OPT_SEARCH_CHILDREN, &val) >= 0))
           g_value_set_boolean (value, val ? TRUE : FALSE);
         break;
@@ -513,13 +512,13 @@ gst_ffmpeg_cfg_get_property (GObject * object,
         if (G_IS_PARAM_SPEC_ENUM (pspec)) {
           int64_t val;
 
-          if ((res = av_opt_get_int (ffmpegenc->refcontext, opt->name,
+          if ((res = av_opt_get_int (refcontext, opt->name,
                       AV_OPT_SEARCH_CHILDREN, &val) >= 0))
             g_value_set_enum (value, val);
         } else if (G_IS_PARAM_SPEC_FLAGS (pspec)) {
           int64_t val;
 
-          if ((res = av_opt_get_int (ffmpegenc->refcontext, opt->name,
+          if ((res = av_opt_get_int (refcontext, opt->name,
                       AV_OPT_SEARCH_CHILDREN, &val) >= 0))
             g_value_set_flags (value, val);
         } else {                /* oops, bit lazy we don't cover this case yet */
@@ -534,13 +533,12 @@ gst_ffmpeg_cfg_get_property (GObject * object,
 }
 
 void
-gst_ffmpeg_cfg_fill_context (GstFFMpegVidEnc * ffmpegenc,
-    AVCodecContext * context)
+gst_ffmpeg_cfg_fill_context (GObject * object, AVCodecContext * context)
 {
   GParamSpec **pspecs;
   guint num_props, i;
 
-  pspecs = g_object_class_list_properties (G_OBJECT_GET_CLASS (ffmpegenc),
+  pspecs = g_object_class_list_properties (G_OBJECT_GET_CLASS (object),
       &num_props);
 
   for (i = 0; i < num_props; ++i) {
@@ -553,15 +551,16 @@ gst_ffmpeg_cfg_fill_context (GstFFMpegVidEnc * ffmpegenc,
     if (!opt)
       continue;
 
-    g_object_getv (G_OBJECT (ffmpegenc), 1, &pspec->name, &value);
+    g_object_getv (object, 1, &pspec->name, &value);
     set_option_value (context, pspec, &value, opt);
   }
   g_free (pspecs);
 }
 
 void
-gst_ffmpeg_cfg_finalize (GstFFMpegVidEnc * ffmpegenc)
+gst_ffmpeg_cfg_finalize (void)
 {
-  g_assert (venc_overrides);
-  g_hash_table_unref (venc_overrides);
+  GST_ERROR ("Finalizing");
+  g_assert (generic_overrides);
+  g_hash_table_unref (generic_overrides);
 }

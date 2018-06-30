@@ -31,10 +31,12 @@
 #include <errno.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/opt.h>
 
 #include <gst/gst.h>
 
 #include "gstav.h"
+#include "gstavcfg.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"
 #include "gstavaudenc.h"
@@ -50,9 +52,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_BIT_RATE,
-  PROP_RTP_PAYLOAD_SIZE,
-  PROP_COMPLIANCE,
+  PROP_CFG_BASE,
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
@@ -148,16 +148,8 @@ gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass)
   gobject_class->set_property = gst_ffmpegaudenc_set_property;
   gobject_class->get_property = gst_ffmpegaudenc_get_property;
 
-  /* FIXME: could use -1 for a sensible per-codec defaults */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BIT_RATE,
-      g_param_spec_int ("bitrate", "Bit Rate",
-          "Target Audio Bitrate", 0, G_MAXINT, DEFAULT_AUDIO_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLIANCE,
-      g_param_spec_enum ("compliance", "Compliance",
-          "Adherence of the encoder to the specifications",
-          GST_TYPE_FFMPEG_COMPLIANCE, FFMPEG_DEFAULT_COMPLIANCE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gst_ffmpeg_cfg_install_properties (gobject_class, klass->in_plugin,
+      PROP_CFG_BASE, AV_OPT_FLAG_ENCODING_PARAM | AV_OPT_FLAG_AUDIO_PARAM);
 
   gobject_class->finalize = gst_ffmpegaudenc_finalize;
 
@@ -180,10 +172,9 @@ gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc)
 
   /* ffmpeg objects */
   ffmpegaudenc->context = avcodec_alloc_context3 (klass->in_plugin);
+  ffmpegaudenc->refcontext = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegaudenc->opened = FALSE;
   ffmpegaudenc->frame = av_frame_alloc ();
-
-  ffmpegaudenc->compliance = FFMPEG_DEFAULT_COMPLIANCE;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (ffmpegaudenc), TRUE);
 }
@@ -197,6 +188,7 @@ gst_ffmpegaudenc_finalize (GObject * object)
   av_frame_free (&ffmpegaudenc->frame);
   gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
   av_free (ffmpegaudenc->context);
+  av_free (ffmpegaudenc->refcontext);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -262,31 +254,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     }
   }
 
-  /* if we set it in _getcaps we should set it also in _link */
-  ffmpegaudenc->context->strict_std_compliance = ffmpegaudenc->compliance;
-
-  /* user defined properties */
-  if (ffmpegaudenc->bitrate > 0) {
-    GST_INFO_OBJECT (ffmpegaudenc, "Setting avcontext to bitrate %d",
-        ffmpegaudenc->bitrate);
-    ffmpegaudenc->context->bit_rate = ffmpegaudenc->bitrate;
-    ffmpegaudenc->context->bit_rate_tolerance = ffmpegaudenc->bitrate;
-  } else {
-    GST_INFO_OBJECT (ffmpegaudenc,
-        "Using avcontext default bitrate %" G_GINT64_FORMAT,
-        (gint64) ffmpegaudenc->context->bit_rate);
-  }
-
-  /* RTP payload used for GOB production (for Asterisk) */
-  if (ffmpegaudenc->rtp_payload_size) {
-    ffmpegaudenc->context->rtp_payload_size = ffmpegaudenc->rtp_payload_size;
-  }
-
-  /* some other defaults */
-  ffmpegaudenc->context->b_frame_strategy = 0;
-  ffmpegaudenc->context->coder_type = 0;
-  ffmpegaudenc->context->context_model = 0;
-  ffmpegaudenc->context->scenechange_threshold = 0;
+  gst_ffmpeg_cfg_fill_context (G_OBJECT (ffmpegaudenc), ffmpegaudenc->context);
 
   /* fetch pix_fmt and so on */
   gst_ffmpeg_audioinfo_to_context (info, ffmpegaudenc->context);
@@ -330,7 +298,8 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
 
     if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_EXPERIMENTAL) &&
-        ffmpegaudenc->compliance != GST_FFMPEG_EXPERIMENTAL) {
+        ffmpegaudenc->context->strict_std_compliance !=
+        GST_FFMPEG_EXPERIMENTAL) {
       GST_ELEMENT_ERROR (ffmpegaudenc, LIBRARY, SETTINGS,
           ("Codec is experimental, but settings don't allow encoders to "
               "produce output of experimental quality"),
@@ -703,7 +672,6 @@ gst_ffmpegaudenc_set_property (GObject * object,
 {
   GstFFMpegAudEnc *ffmpegaudenc;
 
-  /* Get a pointer of the right type. */
   ffmpegaudenc = (GstFFMpegAudEnc *) (object);
 
   if (ffmpegaudenc->opened) {
@@ -712,46 +680,26 @@ gst_ffmpegaudenc_set_property (GObject * object,
     return;
   }
 
-  /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
-    case PROP_BIT_RATE:
-      ffmpegaudenc->bitrate = g_value_get_int (value);
-      break;
-    case PROP_RTP_PAYLOAD_SIZE:
-      ffmpegaudenc->rtp_payload_size = g_value_get_int (value);
-      break;
-    case PROP_COMPLIANCE:
-      ffmpegaudenc->compliance = g_value_get_enum (value);
-      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_ffmpeg_cfg_set_property (ffmpegaudenc->refcontext, value, pspec))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
-/* The set function is simply the inverse of the get fuction. */
 static void
 gst_ffmpegaudenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstFFMpegAudEnc *ffmpegaudenc;
 
-  /* It's not null if we got it, but it might not be ours */
   ffmpegaudenc = (GstFFMpegAudEnc *) (object);
 
   switch (prop_id) {
-    case PROP_BIT_RATE:
-      g_value_set_int (value, ffmpegaudenc->bitrate);
-      break;
-      break;
-    case PROP_RTP_PAYLOAD_SIZE:
-      g_value_set_int (value, ffmpegaudenc->rtp_payload_size);
-      break;
-    case PROP_COMPLIANCE:
-      g_value_set_enum (value, ffmpegaudenc->compliance);
-      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_ffmpeg_cfg_get_property (ffmpegaudenc->refcontext, value, pspec))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

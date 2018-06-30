@@ -30,6 +30,7 @@
 
 #include "gstav.h"
 #include "gstavutils.h"
+#include "gstavcfg.h"
 
 #ifdef GST_LIBAV_ENABLE_GPL
 #define LICENSE "GPL"
@@ -152,6 +153,9 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   gst_ffmpeg_init_pix_fmt_info ();
+
+  /* build global ffmpeg param/property info */
+  gst_ffmpeg_cfg_init ();
 
   gst_ffmpegaudenc_register (plugin);
   gst_ffmpegvidenc_register (plugin);

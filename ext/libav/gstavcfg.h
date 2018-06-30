@@ -21,21 +21,23 @@
 #ifndef __GST_FFMPEGCFG_H__
 #define __GST_FFMPEGCFG_H__
 
+#include <glib-object.h>
+#include <libavcodec/avcodec.h>
+
 G_BEGIN_DECLS
 
 void gst_ffmpeg_cfg_init (void);
 
-void gst_ffmpeg_cfg_install_properties (GstFFMpegVidEncClass * klass, guint base);
+void gst_ffmpeg_cfg_install_properties (GObjectClass * klass, AVCodec *in_plugin, guint base, gint flags);
 
-gboolean gst_ffmpeg_cfg_set_property (GObject * object,
+gboolean gst_ffmpeg_cfg_set_property (AVCodecContext *refcontext,
     const GValue * value, GParamSpec * pspec);
 
-gboolean gst_ffmpeg_cfg_get_property (GObject * object,
+gboolean gst_ffmpeg_cfg_get_property (AVCodecContext *refcontext,
     GValue * value, GParamSpec * pspec);
 
-void gst_ffmpeg_cfg_fill_context (GstFFMpegVidEnc * ffmpegenc, AVCodecContext * context);
-void gst_ffmpeg_cfg_set_defaults (GstFFMpegVidEnc * ffmpegenc);
-void gst_ffmpeg_cfg_finalize (GstFFMpegVidEnc * ffmpegenc);
+void gst_ffmpeg_cfg_fill_context (GObject *object, AVCodecContext * context);
+void gst_ffmpeg_cfg_finalize (void);
 
 G_END_DECLS
 
