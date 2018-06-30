@@ -41,21 +41,12 @@
 #include "gstavutils.h"
 #include "gstavaudenc.h"
 
-#define DEFAULT_AUDIO_BITRATE 128000
-
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 enum
 {
   PROP_0,
   PROP_CFG_BASE,
 };
 
-/* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass);
 static void gst_ffmpegaudenc_base_init (GstFFMpegAudEncClass * klass);
 static void gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc);
@@ -77,8 +68,6 @@ static void gst_ffmpegaudenc_get_property (GObject * object,
 #define GST_FFENC_PARAMS_QDATA g_quark_from_static_string("avenc-params")
 
 static GstElementClass *parent_class = NULL;
-
-/*static guint gst_ffmpegaudenc_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
 gst_ffmpegaudenc_base_init (GstFFMpegAudEncClass * klass)
@@ -676,7 +665,7 @@ gst_ffmpegaudenc_set_property (GObject * object,
 
   if (ffmpegaudenc->opened) {
     GST_WARNING_OBJECT (ffmpegaudenc,
-        "Can't change properties once decoder is setup !");
+        "Can't change properties once encoder is setup !");
     return;
   }
 
@@ -738,13 +727,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
         (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
             in_plugin->id <= AV_CODEC_ID_PCM_BLURAY) ||
         (in_plugin->id >= AV_CODEC_ID_PCM_S8_PLANAR &&
-#if AV_VERSION_INT (LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, LIBAVCODEC_VERSION_MICRO) >= AV_VERSION_INT (57,69,0)
             in_plugin->id <= AV_CODEC_ID_PCM_F24LE)) {
-#elif AV_VERSION_INT (LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, LIBAVCODEC_VERSION_MICRO) >= AV_VERSION_INT (57,54,0)
-            in_plugin->id <= AV_CODEC_ID_PCM_S64BE)) {
-#else
-            in_plugin->id <= AV_CODEC_ID_PCM_S16BE_PLANAR)) {
-#endif
       continue;
     }
 
