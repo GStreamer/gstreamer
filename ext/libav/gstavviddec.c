@@ -1450,28 +1450,18 @@ gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
   packet->size = size;
 }
 
-/* gst_ffmpegviddec_[video|audio]_frame:
- * ffmpegdec:
- * data: pointer to the data to decode
- * size: size of data in bytes
- * in_timestamp: incoming timestamp.
- * in_duration: incoming duration.
- * in_offset: incoming offset (frame number).
- * ret: Return flow.
- *
- * Returns: number of bytes used in decoding. The check for successful decode is
- *   outbuf being non-NULL.
+/*
+ * Returns: whether a frame was decoded
  */
-static gint
+static gboolean
 gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
-    guint8 * data, guint size, gint * have_data, GstVideoCodecFrame * frame,
-    GstFlowReturn * ret)
+    GstVideoCodecFrame * frame, GstFlowReturn * ret)
 {
-  gint len = -1;
+  gint res;
+  gboolean got_frame = FALSE;
   gboolean mode_switch;
   GstVideoCodecFrame *out_frame;
   GstFFMpegVidDecVideoFrame *out_dframe;
-  AVPacket packet;
   GstBufferPool *pool;
 
   *ret = GST_FLOW_OK;
@@ -1483,48 +1473,24 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
    * else we might skip a reference frame */
   gst_ffmpegviddec_do_qos (ffmpegdec, frame, &mode_switch);
 
-  if (frame) {
-    /* save reference to the timing info */
-    ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
-    ffmpegdec->picture->reordered_opaque = (gint64) frame->system_frame_number;
+  res = avcodec_receive_frame (ffmpegdec->context, ffmpegdec->picture);
 
-    GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d",
-        frame->system_frame_number);
-  }
-
-  /* now decode the frame */
-  gst_avpacket_init (&packet, data, size);
-
-  if (ffmpegdec->palette) {
-    guint8 *pal;
-
-    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
-        AVPALETTE_SIZE);
-    gst_buffer_extract (ffmpegdec->palette, 0, pal, AVPALETTE_SIZE);
-    GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
-  }
-
-  /* This might call into get_buffer() from another thread,
-   * which would cause a deadlock. Release the lock here
-   * and taking it again later seems safe
-   * See https://bugzilla.gnome.org/show_bug.cgi?id=726020
-   */
-  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
-  len = avcodec_decode_video2 (ffmpegdec->context,
-      ffmpegdec->picture, have_data, &packet);
-  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
-
-  GST_DEBUG_OBJECT (ffmpegdec, "after decode: len %d, have_data %d",
-      len, *have_data);
-
-  /* when we are in skip_frame mode, don't complain when ffmpeg returned
-   * no data because we told it to skip stuff. */
-  if (len < 0 && (mode_switch || ffmpegdec->context->skip_frame))
-    len = 0;
-
-  /* no data, we're done */
-  if (len < 0 || *have_data == 0)
+  /* No frames available at this time */
+  if (res == AVERROR (EAGAIN))
     goto beach;
+  else if (res == AVERROR_EOF) {        /* Should not happen */
+    *ret = GST_FLOW_EOS;
+    GST_WARNING_OBJECT (ffmpegdec,
+        "Tried to receive frame on a flushed context");
+    goto beach;
+  } else if (res < 0) {
+    *ret = GST_FLOW_ERROR;
+    GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, ("Decoding problem"),
+        ("Legitimate decoding error"));
+    goto beach;
+  }
+
+  got_frame = TRUE;
 
   /* get the output picture timing info again */
   out_dframe = ffmpegdec->picture->opaque;
@@ -1677,16 +1643,15 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
 
 beach:
-  GST_DEBUG_OBJECT (ffmpegdec, "return flow %s, len %d",
-      gst_flow_get_name (*ret), len);
-  return len;
+  GST_DEBUG_OBJECT (ffmpegdec, "return flow %s, got frame: %d",
+      gst_flow_get_name (*ret), got_frame);
+  return got_frame;
 
   /* special cases */
 no_output:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "no output buffer");
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
-    len = -1;
     goto beach;
   }
 
@@ -1703,49 +1668,22 @@ negotiation_error:
 }
 
 
-/* gst_ffmpegviddec_frame:
- * ffmpegdec:
- * data: pointer to the data to decode
- * size: size of data in bytes
- * got_data: 0 if no data was decoded, != 0 otherwise.
- * in_time: timestamp of data
- * in_duration: duration of data
- * ret: GstFlowReturn to return in the chain function
- *
- * Decode the given frame and pushes it downstream.
- *
- * Returns: Number of bytes used in decoding, -1 on error/failure.
- */
-
-static gint
-gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec,
-    guint8 * data, guint size, gint * have_data, GstVideoCodecFrame * frame,
+ /* Returns: Whether a frame was decoded */
+static gboolean
+gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame,
     GstFlowReturn * ret)
 {
-  GstFFMpegVidDecClass *oclass;
-  gint len = 0;
+  gboolean got_frame = FALSE;
 
   if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
     goto no_codec;
 
-  GST_LOG_OBJECT (ffmpegdec, "data:%p, size:%d", data, size);
-
   *ret = GST_FLOW_OK;
   ffmpegdec->context->frame_number++;
 
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  got_frame = gst_ffmpegviddec_video_frame (ffmpegdec, frame, ret);
 
-  len =
-      gst_ffmpegviddec_video_frame (ffmpegdec, data, size, have_data, frame,
-      ret);
-
-  if (len < 0) {
-    GST_WARNING_OBJECT (ffmpegdec,
-        "avdec_%s: decoding error (len: %d, have_data: %d)",
-        oclass->in_plugin->name, len, *have_data);
-  }
-
-  return len;
+  return got_frame;
 
   /* ERRORS */
 no_codec:
@@ -1768,15 +1706,15 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
-    gint have_data, len;
     GstFlowReturn ret;
+    gboolean got_frame = FALSE;
 
     GST_LOG_OBJECT (ffmpegdec,
         "codec has delay capabilities, calling until ffmpeg has drained everything");
 
     do {
-      len = gst_ffmpegviddec_frame (ffmpegdec, NULL, 0, &have_data, NULL, &ret);
-    } while (len >= 0 && have_data == 1 && ret == GST_FLOW_OK);
+      got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
+    } while (got_frame && ret == GST_FLOW_OK);
   }
 
   return GST_FLOW_OK;
@@ -1787,11 +1725,12 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
-  guint8 *data, *bdata;
-  gint size, len, have_data, bsize;
+  guint8 *data;
+  gint size;
+  gboolean got_frame;
   GstMapInfo minfo;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean do_padding;
+  AVPacket packet;
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %" G_GSIZE_FORMAT ", dts %" GST_TIME_FORMAT
@@ -1809,94 +1748,84 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
       GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
-  bdata = minfo.data;
-  bsize = minfo.size;
+  data = minfo.data;
+  size = minfo.size;
 
-  if (bsize > 0 && (!GST_MEMORY_IS_ZERO_PADDED (minfo.memory)
+  if (size > 0 && (!GST_MEMORY_IS_ZERO_PADDED (minfo.memory)
           || (minfo.maxsize - minfo.size) < AV_INPUT_BUFFER_PADDING_SIZE)) {
     /* add padding */
-    if (ffmpegdec->padded_size < bsize + AV_INPUT_BUFFER_PADDING_SIZE) {
-      ffmpegdec->padded_size = bsize + AV_INPUT_BUFFER_PADDING_SIZE;
+    if (ffmpegdec->padded_size < size + AV_INPUT_BUFFER_PADDING_SIZE) {
+      ffmpegdec->padded_size = size + AV_INPUT_BUFFER_PADDING_SIZE;
       ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
     GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
-    memcpy (ffmpegdec->padded, bdata, bsize);
-    memset (ffmpegdec->padded + bsize, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+    memcpy (ffmpegdec->padded, data, size);
+    memset (ffmpegdec->padded + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
-    bdata = ffmpegdec->padded;
-    do_padding = TRUE;
-  } else {
-    do_padding = FALSE;
+    data = ffmpegdec->padded;
   }
 
+  /* now decode the frame */
+  gst_avpacket_init (&packet, data, size);
+
+  if (ffmpegdec->palette) {
+    guint8 *pal;
+
+    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
+        AVPALETTE_SIZE);
+    gst_buffer_extract (ffmpegdec->palette, 0, pal, AVPALETTE_SIZE);
+    GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
+  }
+
+  if (!packet.size)
+    goto done;
+
+  if (frame) {
+    /* save reference to the timing info */
+    ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
+    ffmpegdec->picture->reordered_opaque = (gint64) frame->system_frame_number;
+
+    GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d",
+        frame->system_frame_number);
+  }
+
+  /* This might call into get_buffer() from another thread,
+   * which would cause a deadlock. Release the lock here
+   * and taking it again later seems safe
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=726020
+   */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
+  if (avcodec_send_packet (ffmpegdec->context, &packet) < 0) {
+    GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
+    goto send_packet_failed;
+  }
+  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
+
   do {
-    guint8 tmp_padding[AV_INPUT_BUFFER_PADDING_SIZE];
-
-    /* parse, if at all possible */
-    data = bdata;
-    size = bsize;
-
-    if (do_padding) {
-      /* add temporary padding */
-      GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
-          "Add temporary input padding");
-      memcpy (tmp_padding, data + size, AV_INPUT_BUFFER_PADDING_SIZE);
-      memset (data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-    }
-
     /* decode a frame of audio/video now */
-    len =
-        gst_ffmpegviddec_frame (ffmpegdec, data, size, &have_data, frame, &ret);
+    got_frame = gst_ffmpegviddec_frame (ffmpegdec, frame, &ret);
 
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
           gst_flow_get_name (ret));
-      /* bad flow return, make sure we discard all data and exit */
-      bsize = 0;
       break;
     }
+  } while (got_frame);
 
-    if (do_padding) {
-      memcpy (data + size, tmp_padding, AV_INPUT_BUFFER_PADDING_SIZE);
-    }
-
-    if (len == 0 && have_data == 0) {
-      /* nothing was decoded, this could be because no data was available or
-       * because we were skipping frames.
-       * If we have no context we must exit and wait for more data, we keep the
-       * data we tried. */
-      GST_LOG_OBJECT (ffmpegdec, "Decoding didn't return any data, breaking");
-      break;
-    }
-
-    if (len < 0) {
-      /* a decoding error happened, we must break and try again with next data. */
-      GST_LOG_OBJECT (ffmpegdec, "Decoding error, breaking");
-      bsize = 0;
-      break;
-    }
-
-    /* prepare for the next round, for codecs with a context we did this
-     * already when using the parser. */
-    bsize -= len;
-    bdata += len;
-
-    do_padding = TRUE;
-
-    GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
-        bsize, bdata);
-  } while (bsize > 0);
-
-  if (bsize > 0)
-    GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
-
+done:
   gst_buffer_unmap (frame->input_buffer, &minfo);
   gst_video_codec_frame_unref (frame);
 
   return ret;
+
+send_packet_failed:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "Failed to send data for decoding");
+    goto done;
+  }
 }
 
 static gboolean
