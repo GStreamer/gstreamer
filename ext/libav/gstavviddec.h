@@ -60,7 +60,7 @@ struct _GstFFMpegVidDec
   GstBuffer *palette;
 
   guint8 *padded;
-  guint padded_size;
+  gint padded_size;
 
   /* some properties */
   enum AVDiscard skip_frame;

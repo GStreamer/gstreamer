@@ -307,7 +307,7 @@ static gboolean
 gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
 {
   GstFFMpegVidDecClass *oclass;
-  gint i;
+  guint i;
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -343,7 +343,7 @@ static gboolean
 gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
 {
   GstFFMpegVidDecClass *oclass;
-  gint i;
+  guint i;
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -664,7 +664,7 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
   GstVideoFormat format;
   GstCaps *caps;
   GstStructure *config;
-  gint i;
+  guint i;
 
   if (ffmpegdec->internal_pool != NULL &&
       ffmpegdec->pool_width == picture->width &&
@@ -729,7 +729,7 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   GstVideoCodecFrame *frame;
   GstFFMpegVidDecVideoFrame *dframe;
   GstFFMpegVidDec *ffmpegdec;
-  gint c;
+  guint c;
   GstFlowReturn ret;
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
@@ -1369,7 +1369,7 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
   AVFrame pic, *outpic;
   GstVideoFrame vframe;
   GstVideoInfo *info;
-  gint c;
+  guint c;
 
   GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
@@ -1561,8 +1561,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     GstVideoMeta *vmeta = gst_buffer_get_video_meta (out_frame->output_buffer);
     if (vmeta) {
       GstVideoInfo *info = &ffmpegdec->output_state->info;
-      g_assert (vmeta->width == GST_VIDEO_INFO_WIDTH (info));
-      g_assert (vmeta->height == GST_VIDEO_INFO_HEIGHT (info));
+      g_assert ((gint) vmeta->width == GST_VIDEO_INFO_WIDTH (info));
+      g_assert ((gint) vmeta->height == GST_VIDEO_INFO_HEIGHT (info));
     }
   }
 #endif
@@ -1992,7 +1992,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       if (ret == GST_FLOW_OK) {
         GstVideoMeta *vmeta = gst_buffer_get_video_meta (tmp);
         gboolean same_stride = TRUE;
-        gint i;
+        guint i;
 
         for (i = 0; i < vmeta->n_planes; i++) {
           if (vmeta->stride[i] != ffmpegdec->stride[i]) {
