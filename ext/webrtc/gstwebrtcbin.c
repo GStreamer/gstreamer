@@ -4017,6 +4017,9 @@ gst_webrtc_bin_finalize (GObject * object)
     gst_structure_free (webrtc->priv->stats);
   webrtc->priv->stats = NULL;
 
+  g_mutex_clear (PC_GET_LOCK (webrtc));
+  g_cond_clear (PC_GET_COND (webrtc));
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -4334,6 +4337,8 @@ static void
 gst_webrtc_bin_init (GstWebRTCBin * webrtc)
 {
   webrtc->priv = gst_webrtc_bin_get_instance_private (webrtc);
+  g_mutex_init (PC_GET_LOCK (webrtc));
+  g_cond_init (PC_GET_COND (webrtc));
 
   _start_thread (webrtc);
 
