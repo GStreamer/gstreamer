@@ -27,6 +27,7 @@ import os
 import platform
 import re
 import shutil
+import shlex
 import signal
 import subprocess
 import sys
@@ -309,13 +310,25 @@ def get_scenarios():
 
 class BackTraceGenerator(Loggable):
     __instance = None
-    _executable_regex = re.compile(r'Executable: (.*)\n')
+    _command_line_regex = re.compile(r'Command Line: (.*)\n')
     _timestamp_regex = re.compile(r'Timestamp: .*\((\d*)s ago\)')
+    _pid_regex = re.compile(r'PID: (\d+) \(.*\)')
 
     def __init__(self):
         Loggable.__init__(self)
 
-        self.coredumpctl = shutil.which('coredumpctl')
+        self.in_flatpak = os.path.exists("/usr/manifest.json")
+        if self.in_flatpak:
+            coredumpctl = ['flatpak-spawn', '--host', 'coredumpctl']
+        else:
+            coredumpctl = ['coredumpctl']
+
+        try:
+            subprocess.check_output(coredumpctl)
+            self.coredumpctl = coredumpctl
+        except Exception as e:
+            self.warning(e)
+            self.coredumpctl = None
         self.gdb = shutil.which('gdb')
 
     @classmethod
@@ -358,11 +371,15 @@ class BackTraceGenerator(Loggable):
                 # yet.
                 time.sleep(1)
 
-            application = test.process.args[0]
+            if not self.in_flatpak:
+                coredumpctl = self.coredumpctl + ['info', str(test.process.pid)]
+            else:
+                newer_than = time.strftime("%a %Y-%m-%d %H:%M:%S %Z", time.localtime(test._starting_time))
+                coredumpctl = self.coredumpctl + ['info', os.path.basename(test.command[0]),
+                    '--since', newer_than]
+
             try:
-                info = subprocess.check_output(['coredumpctl', 'info',
-                                                str(test.process.pid)],
-                                               stderr=subprocess.STDOUT)
+                info = subprocess.check_output(coredumpctl, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError:
                 # The trace might not be ready yet
                 time.sleep(1)
@@ -370,16 +387,16 @@ class BackTraceGenerator(Loggable):
 
             info = info.decode()
             try:
-                executable = BackTraceGenerator._executable_regex.findall(info)[
-                    0]
+                pid = self._pid_regex.findall(info)[0]
             except IndexError:
                 self.debug("Backtrace could not be found yet, trying harder.")
-                # The trace might not be ready yet
                 continue
 
-            if executable != application:
+            application = test.process.args[0]
+            command_line = BackTraceGenerator._command_line_regex.findall(info)[0]
+            if shlex.split(command_line)[0] != application:
                 self.debug("PID: %s -- executable %s != test application: %s" % (
-                    test.process.pid, executable, application))
+                    pid, command_line[0], test.application))
                 # The trace might not be ready yet
                 continue
 
@@ -392,20 +409,21 @@ class BackTraceGenerator(Loggable):
             bt_all = None
             if self.gdb:
                 try:
-                    tf = tempfile.NamedTemporaryFile()
-                    subprocess.check_output(['coredumpctl', 'dump',
-                                             str(test.process.pid), '--output=' +
-                                             tf.name], stderr=subprocess.STDOUT)
+                    with tempfile.NamedTemporaryFile() as stderr:
+                        coredump = subprocess.check_output(self.coredumpctl + ['dump', pid],
+                            stderr=stderr)
 
-                    gdb = ['gdb', '-ex', 't a a bt', '-ex', 'quit',
-                           application, tf.name]
-                    bt_all = subprocess.check_output(
-                        gdb, stderr=subprocess.STDOUT).decode()
+                    with tempfile.NamedTemporaryFile() as tf:
+                        tf.write(coredump)
+                        tf.flush()
+                        gdb = ['gdb', '-ex', 't a a bt', '-ex', 'quit', application, tf.name]
+                        bt_all = subprocess.check_output(
+                            gdb, stderr=subprocess.STDOUT).decode()
 
-                    info += "\nThread apply all bt:\n\n%s" % (
-                        bt_all.replace('\n', '\n' + 15 * ' '))
+                        info += "\nThread apply all bt:\n\n%s" % (
+                            bt_all.replace('\n', '\n' + 15 * ' '))
                 except Exception as e:
-                    self.debug("Could not get backtrace from gdb: %s" % e)
+                    self.error("Could not get backtrace from gdb: %s" % e)
 
             return info
 
