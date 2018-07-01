@@ -188,13 +188,14 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
     return;
   }
 
-  if (new_layer && (layer_prio + offset < 0 ||
+  if (new_layer && old_layer && (layer_prio + offset < 0 ||
           (GES_TIMELINE_ELEMENT_TIMELINE (group) &&
               layer_prio + offset + GES_CONTAINER_HEIGHT (group) - 1 >
               g_list_length (GES_TIMELINE_ELEMENT_TIMELINE (group)->layers)))) {
 
-    GST_INFO_OBJECT (container, "Trying to move to a layer outside of"
-        "the timeline layers, moving back to old layer (prio %i)",
+    GST_INFO_OBJECT (container,
+        "Trying to move to a layer %" GST_PTR_FORMAT " outside of"
+        "the timeline layers, moving back to old layer (prio %i)", new_layer,
         _PRIORITY (group) - offset);
 
     container->children_control_mode = GES_CHILDREN_INIBIT_SIGNAL_EMISSION;
@@ -204,7 +205,7 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
     return;
   }
 
-  if (!new_layer) {
+  if (!new_layer || !old_layer) {
     _update_our_values (group);
 
     return;
