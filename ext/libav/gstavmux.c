@@ -160,7 +160,7 @@ gst_ffmpegmux_get_replacement (const char *name)
     {"mp3", "id3v2mux"},
     {"mp2", "id3v2mux"}
   };
-  int i;
+  guint i;
 
   for (i = 0; i < sizeof (blacklist) / sizeof (blacklist[0]); i++) {
     if (strcmp (blacklist[i].name, name) == 0) {
@@ -569,7 +569,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       if (st->codecpar->codec_id == AV_CODEC_ID_NONE) {
         GST_ELEMENT_ERROR (ffmpegmux, CORE, NEGOTIATION, (NULL),
             ("no caps set on stream %d (%s)", collect_pad->padnum,
-                (st->codec->codec_type == AVMEDIA_TYPE_VIDEO) ?
+                (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) ?
                 "video" : "audio"));
         return GST_FLOW_ERROR;
       }
@@ -840,7 +840,7 @@ gst_ffmpeg_mux_simple_caps_set_int_list (GstCaps * caps, const gchar * field,
 {
   GValue list = { 0, };
   GValue val = { 0, };
-  gint i;
+  guint i;
 
   g_return_if_fail (GST_CAPS_IS_SIMPLE (caps));
 
