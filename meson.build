@@ -110,7 +110,7 @@ gir_init_section = [ '--add-init-section=' + \
     'gst_init(NULL,NULL);' + \
     'ges_init();' ]
 
-ges_c_args = ['-DHAVE_CONFIG_H']
+ges_c_args = ['-DHAVE_CONFIG_H', '-DG_LOG_DOMAIN="GES"']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 if gst_dep.type_name() == 'internal'
