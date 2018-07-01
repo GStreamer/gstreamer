@@ -268,7 +268,7 @@ class Test(Loggable):
         self.debug("%s returncode: %s", self, self.process.returncode)
         if self.process.returncode == 0:
             self.set_result(Result.PASSED)
-        elif self.process.returncode in [-signal.SIGSEGV, -signal.SIGABRT, 139]:
+        elif self.process.returncode in COREDUMP_SIGNALS:
             self.add_stack_trace_to_logfile()
             self.set_result(Result.FAILED,
                             "Application segfaulted, returne code: %d" % (
