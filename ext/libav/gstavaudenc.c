@@ -402,15 +402,13 @@ buffer_info_free (void *opaque, guint8 * data)
 }
 
 static GstFlowReturn
-gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
-    GstBuffer * buffer, gint * have_data)
+gst_ffmpegaudenc_send_frame (GstFFMpegAudEnc * ffmpegaudenc, GstBuffer * buffer)
 {
   GstAudioEncoder *enc;
   AVCodecContext *ctx;
-  gint res;
   GstFlowReturn ret;
+  gint res;
   GstAudioInfo *info;
-  AVPacket *pkt;
   AVFrame *frame = ffmpegaudenc->frame;
   gboolean planar;
   gint nsamples = -1;
@@ -418,8 +416,6 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   enc = GST_AUDIO_ENCODER (ffmpegaudenc);
 
   ctx = ffmpegaudenc->context;
-
-  pkt = g_slice_new0 (AVPacket);
 
   if (buffer != NULL) {
     BufferInfo *buffer_info = g_slice_new0 (BufferInfo);
@@ -529,28 +525,47 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     }
 
     /* we have a frame to feed the encoder */
-    res = avcodec_encode_audio2 (ctx, pkt, frame, have_data);
+    res = avcodec_send_frame (ctx, frame);
 
     av_frame_unref (frame);
   } else {
     GST_LOG_OBJECT (ffmpegaudenc, "draining");
     /* flushing the encoder */
-    res = avcodec_encode_audio2 (ctx, pkt, NULL, have_data);
+    res = avcodec_send_frame (ctx, NULL);
   }
 
-  if (res < 0) {
-    char error_str[128] = { 0, };
-
-    g_slice_free (AVPacket, pkt);
-    av_strerror (res, error_str, sizeof (error_str));
-    GST_ERROR_OBJECT (enc, "Failed to encode buffer: %d - %s", res, error_str);
-    return GST_FLOW_OK;
+  if (res == 0) {
+    ret = GST_FLOW_OK;
+  } else if (res == AVERROR_EOF) {
+    ret = GST_FLOW_EOS;
+  } else {                      /* Any other return value is an error in our context */
+    ret = GST_FLOW_OK;
+    GST_WARNING_OBJECT (ffmpegaudenc, "Failed to encode buffer");
   }
-  GST_LOG_OBJECT (ffmpegaudenc, "got output size %d", res);
 
-  if (*have_data) {
+  return ret;
+}
+
+static GstFlowReturn
+gst_ffmpegaudenc_receive_packet (GstFFMpegAudEnc * ffmpegaudenc,
+    gboolean * got_packet)
+{
+  GstAudioEncoder *enc;
+  AVCodecContext *ctx;
+  gint res;
+  GstFlowReturn ret;
+  AVPacket *pkt;
+
+  enc = GST_AUDIO_ENCODER (ffmpegaudenc);
+
+  ctx = ffmpegaudenc->context;
+
+  pkt = g_slice_new0 (AVPacket);
+
+  res = avcodec_receive_packet (ctx, pkt);
+
+  if (res == 0) {
     GstBuffer *outbuf;
-    const AVCodec *codec;
 
     GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt->size);
 
@@ -558,45 +573,39 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
         gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
         pkt->size, 0, pkt->size, pkt, gst_ffmpegaudenc_free_avpacket);
 
-    codec = ffmpegaudenc->context->codec;
-    if ((codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) || !buffer) {
-      /* FIXME: Not really correct, as -1 means "all the samples we got
-         given so far", which may not be true depending on the codec,
-         but we have no way to know AFAICT */
-      ret = gst_audio_encoder_finish_frame (enc, outbuf, -1);
-    } else {
-      ret = gst_audio_encoder_finish_frame (enc, outbuf, nsamples);
-    }
+    ret =
+        gst_audio_encoder_finish_frame (enc, outbuf,
+        pkt->duration > 0 ? pkt->duration : -1);
+    *got_packet = TRUE;
   } else {
     GST_LOG_OBJECT (ffmpegaudenc, "no output produced");
     g_slice_free (AVPacket, pkt);
     ret = GST_FLOW_OK;
+    *got_packet = FALSE;
   }
 
   return ret;
 }
 
-static void
+static GstFlowReturn
 gst_ffmpegaudenc_drain (GstFFMpegAudEnc * ffmpegaudenc)
 {
-  GstFFMpegAudEncClass *oclass;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean got_packet;
 
-  oclass = (GstFFMpegAudEncClass *) (G_OBJECT_GET_CLASS (ffmpegaudenc));
+  ret = gst_ffmpegaudenc_send_frame (ffmpegaudenc, NULL);
 
-  if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
-    gint have_data, try = 0;
-
-    GST_LOG_OBJECT (ffmpegaudenc,
-        "codec has delay capabilities, calling until libav has drained everything");
-
+  if (ret == GST_FLOW_OK) {
     do {
-      GstFlowReturn ret;
-
-      ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, NULL, &have_data);
-      if (ret != GST_FLOW_OK || have_data == 0)
+      ret = gst_ffmpegaudenc_receive_packet (ffmpegaudenc, &got_packet);
+      if (ret != GST_FLOW_OK)
         break;
-    } while (try++ < 10);
+    } while (got_packet);
   }
+
+  avcodec_flush_buffers (ffmpegaudenc->context);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -604,17 +613,15 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
 {
   GstFFMpegAudEnc *ffmpegaudenc;
   GstFlowReturn ret;
-  gint have_data;
+  gboolean got_packet;
 
   ffmpegaudenc = (GstFFMpegAudEnc *) encoder;
 
   if (G_UNLIKELY (!ffmpegaudenc->opened))
     goto not_negotiated;
 
-  if (!inbuf) {
-    gst_ffmpegaudenc_drain (ffmpegaudenc);
-    return GST_FLOW_OK;
-  }
+  if (!inbuf)
+    return gst_ffmpegaudenc_drain (ffmpegaudenc);
 
   inbuf = gst_buffer_ref (inbuf);
 
@@ -632,10 +639,14 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
         info->channels, info->position, ffmpegaudenc->ffmpeg_layout);
   }
 
-  ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, inbuf, &have_data);
+  ret = gst_ffmpegaudenc_send_frame (ffmpegaudenc, inbuf);
 
   if (ret != GST_FLOW_OK)
-    goto push_failed;
+    goto send_frame_failed;
+
+  do {
+    ret = gst_ffmpegaudenc_receive_packet (ffmpegaudenc, &got_packet);
+  } while (got_packet);
 
   return GST_FLOW_OK;
 
@@ -647,9 +658,9 @@ not_negotiated:
     gst_buffer_unref (inbuf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
-push_failed:
+send_frame_failed:
   {
-    GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to push buffer %d (%s)", ret,
+    GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to send frame %d (%s)", ret,
         gst_flow_get_name (ret));
     return ret;
   }
