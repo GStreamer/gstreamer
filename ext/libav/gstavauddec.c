@@ -453,25 +453,19 @@ gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
   packet->size = size;
 }
 
-static gint
+/*
+ * Returns: whether a frame was decoded
+ */
+static gboolean
 gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
-    AVCodec * in_plugin, guint8 * data, guint size, gint * have_data,
-    GstBuffer ** outbuf, GstFlowReturn * ret)
+    AVCodec * in_plugin, GstBuffer ** outbuf, GstFlowReturn * ret)
 {
-  gint len = -1;
-  AVPacket packet;
+  gboolean got_frame = FALSE;
+  gint res;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "size: %d", size);
+  res = avcodec_receive_frame (ffmpegdec->context, ffmpegdec->frame);
 
-  gst_avpacket_init (&packet, data, size);
-  len =
-      avcodec_decode_audio4 (ffmpegdec->context, ffmpegdec->frame, have_data,
-      &packet);
-
-  GST_DEBUG_OBJECT (ffmpegdec,
-      "Decode audio: len=%d, have_data=%d", len, *have_data);
-
-  if (len >= 0 && *have_data) {
+  if (res >= 0) {
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
 
@@ -479,9 +473,10 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
             ffmpegdec->frame, FALSE)) {
       *outbuf = NULL;
       *ret = GST_FLOW_NOT_NEGOTIATED;
-      len = -1;
       goto beach;
     }
+
+    got_frame = TRUE;
 
     channels = ffmpegdec->info.channels;
     nsamples = ffmpegdec->frame->nb_samples;
@@ -578,59 +573,45 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     /* Mark corrupted frames as corrupted */
     if (ffmpegdec->frame->flags & AV_FRAME_FLAG_CORRUPT)
       GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_CORRUPTED);
-  } else {
+  } else if (res == AVERROR (EAGAIN)) {
     *outbuf = NULL;
+  } else if (res == AVERROR_EOF) {      /* Should not happen */
+    *ret = GST_FLOW_EOS;
+    GST_WARNING_OBJECT (ffmpegdec,
+        "Tried to receive frame on a flushed context");
+  } else if (res < 0) {
+    *ret = GST_FLOW_ERROR;
+    GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, ("Decoding problem"),
+        ("Legitimate decoding error"));
   }
 
 beach:
   av_frame_unref (ffmpegdec->frame);
-  GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, out %p, len %d",
-      *ret, *outbuf, len);
-  return len;
+  GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, out %p, got_frame %d",
+      *ret, *outbuf, got_frame);
+  return got_frame;
 }
 
-/* gst_ffmpegauddec_frame:
- * ffmpegdec:
- * data: pointer to the data to decode
- * size: size of data in bytes
- * got_data: 0 if no data was decoded, != 0 otherwise.
- * in_time: timestamp of data
- * in_duration: duration of data
- * ret: GstFlowReturn to return in the chain function
- *
- * Decode the given frame and pushes it downstream.
- *
- * Returns: Number of bytes used in decoding, -1 on error/failure.
+/*
+ * Returns: whether a frame was decoded
  */
-
-static gint
-gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec,
-    guint8 * data, guint size, gint * have_data, GstFlowReturn * ret)
+static gboolean
+gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec, GstFlowReturn * ret)
 {
   GstFFMpegAudDecClass *oclass;
   GstBuffer *outbuf = NULL;
-  gint len = 0;
+  gboolean got_frame = FALSE;
 
   if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
     goto no_codec;
-
-  GST_LOG_OBJECT (ffmpegdec, "data:%p, size:%d", data, size);
 
   *ret = GST_FLOW_OK;
   ffmpegdec->context->frame_number++;
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  len =
-      gst_ffmpegauddec_audio_frame (ffmpegdec, oclass->in_plugin, data, size,
-      have_data, &outbuf, ret);
-
-  if (len < 0) {
-    GST_WARNING_OBJECT (ffmpegdec,
-        "avdec_%s: decoding error (len: %d, have_data: %d)",
-        oclass->in_plugin->name, len, *have_data);
-    goto beach;
-  }
+  got_frame =
+      gst_ffmpegauddec_audio_frame (ffmpegdec, oclass->in_plugin, &outbuf, ret);
 
   if (outbuf) {
     GST_LOG_OBJECT (ffmpegdec, "Decoded data, now storing buffer %p", outbuf);
@@ -644,13 +625,13 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec,
   }
 
 beach:
-  return len;
+  return got_frame;
 
   /* ERRORS */
 no_codec:
   {
     GST_ERROR_OBJECT (ffmpegdec, "no codec context");
-    return -1;
+    goto beach;
   }
 }
 
@@ -662,7 +643,7 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
-    gint have_data, len;
+    gboolean got_frame;
 
     GST_LOG_OBJECT (ffmpegdec,
         "codec has delay capabilities, calling until libav has drained everything");
@@ -670,9 +651,8 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
     do {
       GstFlowReturn ret;
 
-      len = gst_ffmpegauddec_frame (ffmpegdec, NULL, 0, &have_data, &ret);
-
-    } while (len >= 0 && have_data == 1);
+      got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
+    } while (got_frame);
     avcodec_flush_buffers (ffmpegdec->context);
   }
 
@@ -697,11 +677,13 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 {
   GstFFMpegAudDec *ffmpegdec;
   GstFFMpegAudDecClass *oclass;
-  guint8 *data, *bdata;
+  guint8 *data;
   GstMapInfo map;
-  gint size, bsize, len, have_data;
+  gint size;
+  gboolean got_frame;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean do_padding, is_header;
+  gboolean is_header;
+  AVPacket packet;
 
   ffmpegdec = (GstFFMpegAudDec *) decoder;
 
@@ -736,81 +718,46 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
   gst_buffer_map (inbuf, &map, GST_MAP_READ);
 
-  bdata = map.data;
-  bsize = map.size;
+  data = map.data;
+  size = map.size;
 
-  if (bsize > 0 && (!GST_MEMORY_IS_ZERO_PADDED (map.memory)
+  if (size > 0 && (!GST_MEMORY_IS_ZERO_PADDED (map.memory)
           || (map.maxsize - map.size) < AV_INPUT_BUFFER_PADDING_SIZE)) {
     /* add padding */
-    if (ffmpegdec->padded_size < bsize + AV_INPUT_BUFFER_PADDING_SIZE) {
-      ffmpegdec->padded_size = bsize + AV_INPUT_BUFFER_PADDING_SIZE;
+    if (ffmpegdec->padded_size < size + AV_INPUT_BUFFER_PADDING_SIZE) {
+      ffmpegdec->padded_size = size + AV_INPUT_BUFFER_PADDING_SIZE;
       ffmpegdec->padded = g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
     GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
-    memcpy (ffmpegdec->padded, bdata, bsize);
-    memset (ffmpegdec->padded + bsize, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+    memcpy (ffmpegdec->padded, data, size);
+    memset (ffmpegdec->padded + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
 
-    bdata = ffmpegdec->padded;
-    do_padding = TRUE;
-  } else {
-    do_padding = FALSE;
+    data = ffmpegdec->padded;
+  }
+
+  gst_avpacket_init (&packet, data, size);
+
+  if (!packet.size)
+    goto done;
+
+  if (avcodec_send_packet (ffmpegdec->context, &packet) < 0) {
+    goto send_packet_failed;
   }
 
   do {
-    guint8 tmp_padding[AV_INPUT_BUFFER_PADDING_SIZE];
-
-    data = bdata;
-    size = bsize;
-
-    if (do_padding) {
-      /* add temporary padding */
-      GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
-          "Add temporary input padding");
-      memcpy (tmp_padding, data + size, AV_INPUT_BUFFER_PADDING_SIZE);
-      memset (data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-    }
-
     /* decode a frame of audio now */
-    len = gst_ffmpegauddec_frame (ffmpegdec, data, size, &have_data, &ret);
-
-    if (do_padding) {
-      memcpy (data + size, tmp_padding, AV_INPUT_BUFFER_PADDING_SIZE);
-    }
+    got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
 
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
           gst_flow_get_name (ret));
       /* bad flow return, make sure we discard all data and exit */
-      bsize = 0;
       break;
     }
-
-    if (len == 0 && have_data == 0) {
-      /* nothing was decoded, this could be because no data was available or
-       * because we were skipping frames.
-       * If we have no context we must exit and wait for more data, we keep the
-       * data we tried. */
-      GST_LOG_OBJECT (ffmpegdec, "Decoding didn't return any data, breaking");
-      break;
-    } else if (len < 0) {
-      /* a decoding error happened, we must break and try again with next data. */
-      GST_LOG_OBJECT (ffmpegdec, "Decoding error, breaking");
-      bsize = 0;
-      break;
-    }
-    /* prepare for the next round, for codecs with a context we did this
-     * already when using the parser. */
-    bsize -= len;
-    bdata += len;
-
-    do_padding = TRUE;
-
-    GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
-        bsize, bdata);
-  } while (bsize > 0);
+  } while (got_frame);
 
   gst_buffer_unmap (inbuf, &map);
   gst_buffer_unref (inbuf);
@@ -819,15 +766,12 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
         ffmpegdec->outbuf, 1);
-  else if (len < 0 || is_header)
+  else if (is_header)
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
   ffmpegdec->outbuf = NULL;
 
-  if (bsize > 0) {
-    GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
-  }
-
+done:
   return ret;
 
   /* ERRORS */
@@ -837,7 +781,14 @@ not_negotiated:
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("avdec_%s: input format was not set before data start",
             oclass->in_plugin->name));
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+
+send_packet_failed:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "decoding error");
+    goto done;
   }
 }
 
