@@ -19,6 +19,8 @@
 #ifndef __GST_FFMPEGAUDDEC_H__
 #define __GST_FFMPEGAUDDEC_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 #include <gst/gst.h>
@@ -37,7 +39,7 @@ struct _GstFFMpegAudDec
   AVFrame *frame;
 
   guint8 *padded;
-  guint padded_size;
+  gint padded_size;
 
   /* prevent reopening the decoder on GST_EVENT_CAPS when caps are same as last time. */
   GstCaps *last_caps;
