@@ -518,27 +518,31 @@ stereo_gst_to_av (GstVideoMultiviewMode mview_mode)
 }
 
 static GstFlowReturn
-gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
+gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
     GstVideoCodecFrame * frame)
 {
-  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
-  GstBuffer *outbuf;
-  gint ret = 0, c;
   GstVideoInfo *info = &ffmpegenc->input_state->info;
-  AVPacket *pkt;
-  int have_data = 0;
   BufferInfo *buffer_info;
+  guint c;
+  gint res;
+  GstFlowReturn ret = GST_FLOW_ERROR;
+  AVFrame *picture = NULL;
+
+  if (!frame)
+    goto send_frame;
+
+  picture = ffmpegenc->picture;
 
   if (ffmpegenc->context->flags & (AV_CODEC_FLAG_INTERLACED_DCT |
           AV_CODEC_FLAG_INTERLACED_ME)) {
-    ffmpegenc->picture->interlaced_frame = TRUE;
+    picture->interlaced_frame = TRUE;
     /* if this is not the case, a filter element should be used to swap fields */
-    ffmpegenc->picture->top_field_first =
+    picture->top_field_first =
         GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
   }
 
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
-    AVStereo3D *stereo = av_stereo3d_create_side_data (ffmpegenc->picture);
+    AVStereo3D *stereo = av_stereo3d_create_side_data (picture);
     stereo->type = stereo_gst_to_av (GST_VIDEO_INFO_MULTIVIEW_MODE (info));
 
     if (GST_VIDEO_INFO_MULTIVIEW_FLAGS (info) &
@@ -548,63 +552,85 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   }
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
-    ffmpegenc->picture->pict_type = AV_PICTURE_TYPE_I;
+    picture->pict_type = AV_PICTURE_TYPE_I;
 
   buffer_info = g_slice_new0 (BufferInfo);
   buffer_info->buffer = gst_buffer_ref (frame->input_buffer);
 
   if (!gst_video_frame_map (&buffer_info->vframe, info, frame->input_buffer,
           GST_MAP_READ)) {
-    GST_ERROR_OBJECT (encoder, "Failed to map input buffer");
+    GST_ERROR_OBJECT (ffmpegenc, "Failed to map input buffer");
     gst_buffer_unref (buffer_info->buffer);
     g_slice_free (BufferInfo, buffer_info);
     gst_video_codec_frame_unref (frame);
-    return GST_FLOW_ERROR;
+    goto done;
   }
 
   /* Fill avpicture */
-  ffmpegenc->picture->buf[0] =
+  picture->buf[0] =
       av_buffer_create (NULL, 0, buffer_info_free, buffer_info, 0);
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_COMPONENTS (info)) {
-      ffmpegenc->picture->data[c] =
-          GST_VIDEO_FRAME_PLANE_DATA (&buffer_info->vframe, c);
-      ffmpegenc->picture->linesize[c] =
+      picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&buffer_info->vframe, c);
+      picture->linesize[c] =
           GST_VIDEO_FRAME_COMP_STRIDE (&buffer_info->vframe, c);
     } else {
-      ffmpegenc->picture->data[c] = NULL;
-      ffmpegenc->picture->linesize[c] = 0;
+      picture->data[c] = NULL;
+      picture->linesize[c] = 0;
     }
   }
 
-  ffmpegenc->picture->format = ffmpegenc->context->pix_fmt;
-  ffmpegenc->picture->width = GST_VIDEO_FRAME_WIDTH (&buffer_info->vframe);
-  ffmpegenc->picture->height = GST_VIDEO_FRAME_HEIGHT (&buffer_info->vframe);
+  picture->format = ffmpegenc->context->pix_fmt;
+  picture->width = GST_VIDEO_FRAME_WIDTH (&buffer_info->vframe);
+  picture->height = GST_VIDEO_FRAME_HEIGHT (&buffer_info->vframe);
 
-  ffmpegenc->picture->pts =
+  picture->pts =
       gst_ffmpeg_time_gst_to_ff (frame->pts /
       ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
 
-  have_data = 0;
+send_frame:
+  res = avcodec_send_frame (ffmpegenc->context, picture);
+
+  if (picture)
+    av_frame_unref (picture);
+
+  if (res == 0)
+    ret = GST_FLOW_OK;
+  else if (res == AVERROR_EOF)
+    ret = GST_FLOW_EOS;
+
+done:
+  return ret;
+}
+
+static GstFlowReturn
+gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
+    gboolean * got_packet, gboolean send)
+{
+  AVPacket *pkt;
+  GstBuffer *outbuf;
+  GstVideoCodecFrame *frame;
+  gint res;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  *got_packet = FALSE;
+
   pkt = g_slice_new0 (AVPacket);
 
-  ret =
-      avcodec_encode_video2 (ffmpegenc->context, pkt, ffmpegenc->picture,
-      &have_data);
+  res = avcodec_receive_packet (ffmpegenc->context, pkt);
 
-  av_frame_unref (ffmpegenc->picture);
-
-  if (ret < 0 || !have_data)
+  if (res == AVERROR (EAGAIN)) {
     g_slice_free (AVPacket, pkt);
-
-  if (ret < 0)
-    goto encode_fail;
-
-  /* Encoder needs more data */
-  if (!have_data) {
-    gst_video_codec_frame_unref (frame);
-    return GST_FLOW_OK;
+    goto done;
+  } else if (res == AVERROR_EOF) {
+    ret = GST_FLOW_EOS;
+    goto done;
+  } else if (res < 0) {
+    res = GST_FLOW_ERROR;
+    goto done;
   }
+
+  *got_packet = TRUE;
 
   /* save stats info if there is some as well as a stats file */
   if (ffmpegenc->file && ffmpegenc->context->stats_out)
@@ -613,24 +639,52 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
           (("Could not write to file \"%s\"."), ffmpegenc->filename),
           GST_ERROR_SYSTEM);
 
+  /* Get oldest frame */
+  frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (ffmpegenc));
+
+  if (send) {
+    outbuf =
+        gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
+        pkt->size, 0, pkt->size, pkt, gst_ffmpegvidenc_free_avpacket);
+    frame->output_buffer = outbuf;
+
+    if (pkt->flags & AV_PKT_FLAG_KEY)
+      GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    else
+      GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
+  }
+
+  ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
+
+done:
+  return ret;
+}
+
+static GstFlowReturn
+gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame)
+{
+  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
+  GstFlowReturn ret;
+  gboolean got_packet;
+
+  ret = gst_ffmpegvidenc_send_frame (ffmpegenc, frame);
+
+  if (ret != GST_FLOW_OK)
+    goto encode_fail;
+
   gst_video_codec_frame_unref (frame);
 
-  /* Get oldest frame */
-  frame = gst_video_encoder_get_oldest_frame (encoder);
+  do {
+    ret = gst_ffmpegvidenc_receive_packet (ffmpegenc, &got_packet, TRUE);
+    if (ret != GST_FLOW_OK)
+      break;
+  } while (got_packet);
 
-  outbuf =
-      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
-      pkt->size, 0, pkt->size, pkt, gst_ffmpegvidenc_free_avpacket);
-  frame->output_buffer = outbuf;
+done:
+  return ret;
 
-  if (pkt->flags & AV_PKT_FLAG_KEY)
-    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
-  else
-    GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
-
-  return gst_video_encoder_finish_frame (encoder, frame);
-
-  /* ERRORS */
+  /* We choose to be error-resilient */
 encode_fail:
   {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -640,19 +694,16 @@ encode_fail:
         "avenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
     /* avoid frame (and ts etc) piling up */
-    return gst_video_encoder_finish_frame (encoder, frame);
+    ret = gst_video_encoder_finish_frame (encoder, frame);
+    goto done;
   }
 }
 
 static GstFlowReturn
 gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
 {
-  GstVideoCodecFrame *frame;
-  GstFlowReturn flow_ret = GST_FLOW_OK;
-  GstBuffer *outbuf;
-  gint ret;
-  AVPacket *pkt;
-  int have_data = 0;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean got_packet;
 
   GST_DEBUG_OBJECT (ffmpegenc, "flushing buffers with sending %d", send);
 
@@ -660,54 +711,19 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
   if (!ffmpegenc->opened)
     goto done;
 
-  while ((frame =
-          gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (ffmpegenc)))) {
-    pkt = g_slice_new0 (AVPacket);
-    have_data = 0;
+  ret = gst_ffmpegvidenc_send_frame (ffmpegenc, NULL);
 
-    ret = avcodec_encode_video2 (ffmpegenc->context, pkt, NULL, &have_data);
+  if (ret != GST_FLOW_OK)
+    goto done;
 
-    if (ret < 0) {              /* there should be something, notify and give up */
-#ifndef GST_DISABLE_GST_DEBUG
-      GstFFMpegVidEncClass *oclass =
-          (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
-      GST_WARNING_OBJECT (ffmpegenc,
-          "avenc_%s: failed to flush buffer", oclass->in_plugin->name);
-#endif /* GST_DISABLE_GST_DEBUG */
-      g_slice_free (AVPacket, pkt);
-      gst_video_codec_frame_unref (frame);
+  do {
+    ret = gst_ffmpegvidenc_receive_packet (ffmpegenc, &got_packet, send);
+    if (ret != GST_FLOW_OK)
       break;
-    }
-
-    /* save stats info if there is some as well as a stats file */
-    if (ffmpegenc->file && ffmpegenc->context->stats_out)
-      if (fprintf (ffmpegenc->file, "%s", ffmpegenc->context->stats_out) < 0)
-        GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, WRITE,
-            (("Could not write to file \"%s\"."), ffmpegenc->filename),
-            GST_ERROR_SYSTEM);
-
-    if (send && have_data) {
-      outbuf =
-          gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, pkt->data,
-          pkt->size, 0, pkt->size, pkt, gst_ffmpegvidenc_free_avpacket);
-      frame->output_buffer = outbuf;
-
-      if (pkt->flags & AV_PKT_FLAG_KEY)
-        GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
-      else
-        GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
-
-      flow_ret =
-          gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
-    } else {
-      /* no frame attached, so will be skipped and removed from frame list */
-      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
-    }
-  }
+  } while (got_packet);
 
 done:
-
-  return flow_ret;
+  return ret;
 }
 
 static void
