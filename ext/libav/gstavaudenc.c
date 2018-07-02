@@ -283,7 +283,6 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   }
 
   /* some other defaults */
-  ffmpegaudenc->context->rc_strategy = 2;
   ffmpegaudenc->context->b_frame_strategy = 0;
   ffmpegaudenc->context->coder_type = 0;
   ffmpegaudenc->context->context_model = 0;
