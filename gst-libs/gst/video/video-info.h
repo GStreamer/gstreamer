@@ -351,6 +351,15 @@ GType gst_video_info_get_type            (void);
 #define GST_VIDEO_INFO_FLAGS(i)          ((i)->flags)
 #define GST_VIDEO_INFO_WIDTH(i)          ((i)->width)
 #define GST_VIDEO_INFO_HEIGHT(i)         ((i)->height)
+/**
+ * GST_VIDEO_INFO_FIELD_HEIGHT:
+ *
+ * The height of a field. It's the height of the full frame unless split-field
+ * (alternate) interlacing is in use.
+ *
+ * Since: 1.16.
+ */
+#define GST_VIDEO_INFO_FIELD_HEIGHT(i)   ((i)->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE? (i)->height / 2 : (i)->height)
 #define GST_VIDEO_INFO_SIZE(i)           ((i)->size)
 #define GST_VIDEO_INFO_VIEWS(i)          ((i)->views)
 #define GST_VIDEO_INFO_PAR_N(i)          ((i)->par_n)
@@ -381,7 +390,7 @@ GType gst_video_info_get_type            (void);
 #define GST_VIDEO_INFO_COMP_OFFSET(i,c)  GST_VIDEO_FORMAT_INFO_OFFSET((i)->finfo,(i)->offset,(c))
 #define GST_VIDEO_INFO_COMP_STRIDE(i,c)  GST_VIDEO_FORMAT_INFO_STRIDE((i)->finfo,(i)->stride,(c))
 #define GST_VIDEO_INFO_COMP_WIDTH(i,c)   GST_VIDEO_FORMAT_INFO_SCALE_WIDTH((i)->finfo,(c),(i)->width)
-#define GST_VIDEO_INFO_COMP_HEIGHT(i,c)  GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT((i)->finfo,(c),(i)->height)
+#define GST_VIDEO_INFO_COMP_HEIGHT(i,c)  GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT((i)->finfo,(c),GST_VIDEO_INFO_FIELD_HEIGHT(i))
 #define GST_VIDEO_INFO_COMP_PLANE(i,c)   GST_VIDEO_FORMAT_INFO_PLANE((i)->finfo,(c))
 #define GST_VIDEO_INFO_COMP_PSTRIDE(i,c) GST_VIDEO_FORMAT_INFO_PSTRIDE((i)->finfo,(c))
 #define GST_VIDEO_INFO_COMP_POFFSET(i,c) GST_VIDEO_FORMAT_INFO_POFFSET((i)->finfo,(c))
