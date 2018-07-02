@@ -38,7 +38,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_webrtc_dtls_transport_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCDTLSTransport, gst_webrtc_dtls_transport,
     GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (gst_webrtc_dtls_transport_debug,
-        "dtlstransport", 0, "dtlstransport");
+        "webrtcdtlstransport", 0, "webrtcdtlstransport");
     );
 
 enum
