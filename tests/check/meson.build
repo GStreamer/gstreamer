@@ -43,6 +43,7 @@ base_tests = [
   [['elements/rtponviftimestamp.c']],
   [['elements/rtpsrc.c']],
   [['elements/rtpsink.c']],
+  [['elements/switchbin.c']],
   [['elements/videoframe-audiolevel.c']],
   [['elements/viewfinderbin.c']],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
