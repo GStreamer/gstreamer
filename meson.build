@@ -80,9 +80,7 @@ libm = cc.find_library('m', required : false)
 configure_file(output : 'config.h', configuration : cdata)
 
 gst_libav_args = ['-DHAVE_CONFIG_H']
-if cc.get_id() != 'msvc'
-  gst_libav_args += ['-Wno-deprecated-declarations']
-else
+if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
   # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
   # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
