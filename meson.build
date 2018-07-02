@@ -15,10 +15,10 @@ else
   gst_version_nano = 0
 endif
 
-libavfilter_dep = dependency('libavfilter', version: '>= 6.47.100')
-libavformat_dep = dependency('libavformat', version: '>= 57.41.100')
-libavcodec_dep = dependency('libavcodec', version: '>= 57.48.101')
-libavutil_dep = dependency('libavutil', version: '>= 55.28.100')
+libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100')
+libavformat_dep = dependency('libavformat', version: '>= 58.12.100')
+libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100')
+libavutil_dep = dependency('libavutil', version: '>= 56.14.100')
 
 libav_deps = [libavfilter_dep, libavformat_dep, libavcodec_dep, libavutil_dep]
 

@@ -255,7 +255,7 @@ AC_ARG_WITH(system-libav,
 HAVE_LZMA="no"
 HAVE_BZ2="no"
 if test "x$with_system_libav" = "xyes"; then
-  PKG_CHECK_MODULES(LIBAV, libavfilter libavformat libavcodec >= 57 libavutil)
+  PKG_CHECK_MODULES(LIBAV, libavfilter libavformat libavcodec >= 58 libavutil)
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
