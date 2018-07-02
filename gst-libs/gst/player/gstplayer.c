@@ -492,7 +492,10 @@ gst_player_dispose (GObject * object)
   if (self->loop) {
     g_main_loop_quit (self->loop);
 
-    g_thread_join (self->thread);
+    if (self->thread != g_thread_self ())
+      g_thread_join (self->thread);
+    else
+      g_thread_unref (self->thread);
     self->thread = NULL;
 
     g_main_loop_unref (self->loop);
