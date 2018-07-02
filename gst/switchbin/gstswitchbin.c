@@ -66,18 +66,21 @@
 GST_DEBUG_CATEGORY (switch_bin_debug);
 #define GST_CAT_DEFAULT switch_bin_debug
 
-
-#define PATH_LOCK(obj) g_mutex_lock(&(((GstSwitchBin *)(obj))->path_mutex))
-#define PATH_UNLOCK(obj) g_mutex_unlock(&(((GstSwitchBin *)(obj))->path_mutex))
-
-
 enum
 {
   PROP_0,
-  PROP_NUM_PATHS
+  PROP_NUM_PATHS,
+  PROP_CURRENT_PATH,
+  PROP_LAST
 };
 
 #define DEFAULT_NUM_PATHS 0
+GParamSpec *switchbin_props[PROP_LAST];
+
+#define PATH_LOCK(obj) g_mutex_lock(&(GST_SWITCH_BIN_CAST (obj)->path_mutex))
+#define PATH_UNLOCK(obj) g_mutex_unlock(&(GST_SWITCH_BIN_CAST (obj)->path_mutex))
+#define PATH_UNLOCK_AND_CHECK(obj) gst_switch_bin_unlock_paths_and_notify(GST_SWITCH_BIN_CAST (obj));
+
 
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -109,7 +112,7 @@ G_DEFINE_TYPE_WITH_CODE (GstSwitchBin,
         gst_switch_bin_child_proxy_iface_init)
     );
 
-
+static void gst_switch_bin_unlock_paths_and_notify (GstSwitchBin * switchbin);
 
 static void gst_switch_bin_finalize (GObject * object);
 static void gst_switch_bin_set_property (GObject * object, guint prop_id,
@@ -143,7 +146,17 @@ static GstCaps *gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
 static gboolean gst_switch_bin_are_caps_acceptable (GstSwitchBin *
     switch_bin, GstCaps const *caps);
 
+static void
+gst_switch_bin_unlock_paths_and_notify (GstSwitchBin * switchbin)
+{
+  gboolean do_notify = switchbin->path_changed;
+  switchbin->path_changed = FALSE;
+  PATH_UNLOCK (switchbin);
 
+  if (do_notify)
+    g_object_notify_by_pspec (G_OBJECT (switchbin),
+        switchbin_props[PROP_CURRENT_PATH]);
+}
 
 static void
 gst_switch_bin_child_proxy_iface_init (gpointer iface,
@@ -221,14 +234,24 @@ gst_switch_bin_class_init (GstSwitchBinClass * klass)
    * number of paths will release any paths outside the new range, which might
    * trigger activation of a new path by re-assessing the current caps.
    */
+  switchbin_props[PROP_NUM_PATHS] = g_param_spec_uint ("num-paths",
+      "Number of paths", "Number of paths", 0, G_MAXUINT - 1,
+      DEFAULT_NUM_PATHS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class,
-      PROP_NUM_PATHS,
-      g_param_spec_uint ("num-paths",
-          "Number of paths",
-          "Number of paths",
-          0, G_MAXUINT,
-          DEFAULT_NUM_PATHS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
-      );
+      PROP_NUM_PATHS, switchbin_props[PROP_NUM_PATHS]);
+
+  /**
+   * GstSwitchBin:current-path
+   *
+   * Returns the currently selected path number. If there is no current
+   * path (due to no caps, or unsupported caps), the value is #G_MAXUINT. Read-only.
+   */
+  switchbin_props[PROP_CURRENT_PATH] =
+      g_param_spec_uint ("current-path", "Current Path",
+      "Currently selected path", 0, G_MAXUINT,
+      0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class,
+      PROP_CURRENT_PATH, switchbin_props[PROP_CURRENT_PATH]);
 
   gst_element_class_set_static_metadata (element_class,
       "switchbin",
@@ -301,7 +324,7 @@ gst_switch_bin_set_property (GObject * object, guint prop_id,
     case PROP_NUM_PATHS:
       PATH_LOCK (switch_bin);
       gst_switch_bin_set_num_paths (switch_bin, g_value_get_uint (value));
-      PATH_UNLOCK (switch_bin);
+      PATH_UNLOCK_AND_CHECK (switch_bin);
       break;
 
     default:
@@ -320,9 +343,24 @@ gst_switch_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_NUM_PATHS:
       PATH_LOCK (switch_bin);
       g_value_set_uint (value, switch_bin->num_paths);
+      PATH_UNLOCK_AND_CHECK (switch_bin);
+      break;
+    case PROP_CURRENT_PATH:
+      PATH_LOCK (switch_bin);
+      if (switch_bin->current_path) {
+        guint i;
+        for (i = 0; i < switch_bin->num_paths; ++i) {
+          if (switch_bin->paths[i] == switch_bin->current_path) {
+            g_value_set_uint (value, i);
+            break;
+          }
+        }
+      } else {
+        /* No valid path, return MAXUINT */
+        g_value_set_uint (value, G_MAXUINT);
+      }
       PATH_UNLOCK (switch_bin);
       break;
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -360,7 +398,7 @@ gst_switch_bin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       PATH_LOCK (switch_bin);
       ret = gst_switch_bin_select_path_for_caps (switch_bin, caps);
-      PATH_UNLOCK (switch_bin);
+      PATH_UNLOCK_AND_CHECK (switch_bin);
 
       if (!ret) {
         gst_event_unref (event);
@@ -647,6 +685,7 @@ gst_switch_bin_switch_to_path (GstSwitchBin * switch_bin,
     gst_ghost_pad_set_target (GST_GHOST_PAD (switch_bin->srcpad), NULL);
 
     switch_bin->current_path = NULL;
+    switch_bin->path_changed = TRUE;
   }
 
   /* Link the new path's element (if a new path is specified) */
@@ -724,6 +763,7 @@ gst_switch_bin_switch_to_path (GstSwitchBin * switch_bin,
   }
 
   switch_bin->current_path = switch_bin_path;
+  switch_bin->path_changed = TRUE;
 
   /* If there is a new path to use, unblock the input */
   if (switch_bin_path != NULL)
@@ -992,7 +1032,7 @@ gst_switch_bin_path_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (switch_bin_path);
       PATH_LOCK (switch_bin_path->bin);
       gst_switch_bin_path_use_new_element (switch_bin_path, new_element);
-      PATH_UNLOCK (switch_bin_path->bin);
+      PATH_UNLOCK_AND_CHECK (switch_bin_path->bin);
       GST_OBJECT_UNLOCK (switch_bin_path);
 
       break;

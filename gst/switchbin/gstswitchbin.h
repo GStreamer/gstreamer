@@ -50,6 +50,8 @@ struct _GstSwitchBin
 
 	GstSwitchBinPath **paths;
 	GstSwitchBinPath *current_path;
+	gboolean path_changed;
+
 	guint num_paths;
 
 	GstElement *input_identity;
