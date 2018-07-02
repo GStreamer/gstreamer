@@ -678,6 +678,12 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
   format = gst_ffmpeg_pixfmt_to_videoformat (picture->format);
   gst_video_info_set_format (&info, format, picture->width, picture->height);
 
+  /* If we have not yet been negotiated, a NONE format here would
+   * result in invalid initial dimension alignments, and potential
+   * out of bounds writes.
+   */
+  ffmpegdec->context->pix_fmt = picture->format;
+
   for (i = 0; i < G_N_ELEMENTS (ffmpegdec->stride); i++)
     ffmpegdec->stride[i] = -1;
 
