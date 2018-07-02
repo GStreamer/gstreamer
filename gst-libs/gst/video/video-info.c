@@ -195,6 +195,28 @@ validate_colorimetry (GstVideoInfo * info)
   return TRUE;
 }
 
+static gboolean
+gst_video_info_set_format_common (GstVideoInfo * info, GstVideoFormat format,
+    guint width, guint height)
+{
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  if (width > G_MAXINT || height > G_MAXINT)
+    return FALSE;
+
+  gst_video_info_init (info);
+
+  info->finfo = gst_video_format_get_info (format);
+  info->width = width;
+  info->height = height;
+  info->views = 1;
+
+  set_default_colorimetry (info);
+
+  return TRUE;
+}
+
 /**
  * gst_video_info_set_format:
  * @info: a #GstVideoInfo
@@ -215,21 +237,37 @@ gboolean
 gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
     guint width, guint height)
 {
-  g_return_val_if_fail (info != NULL, FALSE);
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-
-  if (width > G_MAXINT || height > G_MAXINT)
+  if (!gst_video_info_set_format_common (info, format, width, height))
     return FALSE;
 
-  gst_video_info_init (info);
+  return fill_planes (info);
+}
 
-  info->finfo = gst_video_format_get_info (format);
-  info->width = width;
-  info->height = height;
-  info->views = 1;
+/**
+ * gst_video_info_set_interlaced_format:
+ * @info: a #GstVideoInfo
+ * @format: the format
+ * @mode: a #GstVideoInterlaceMode
+ * @width: a width
+ * @height: a height
+ *
+ * Same as #gst_video_info_set_format but also allowing to set the interlaced
+ * mode.
+ *
+ * Returns: %FALSE if the returned video info is invalid, e.g. because the
+ *   size of a frame can't be represented as a 32 bit integer.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_video_info_set_interlaced_format (GstVideoInfo * info,
+    GstVideoFormat format, GstVideoInterlaceMode mode, guint width,
+    guint height)
+{
+  if (!gst_video_info_set_format_common (info, format, width, height))
+    return FALSE;
 
-  set_default_colorimetry (info);
-
+  GST_VIDEO_INFO_INTERLACE_MODE (info) = mode;
   return fill_planes (info);
 }
 

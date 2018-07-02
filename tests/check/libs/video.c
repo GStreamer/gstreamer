@@ -1206,8 +1206,10 @@ GST_START_TEST (test_interlace_mode)
   gst_video_info_init (&vinfo);
 
   /* Progressive */
-  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_YV12, 320, 240);
-  GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  fail_unless (gst_video_info_set_interlaced_format (&vinfo,
+          GST_VIDEO_FORMAT_YV12, GST_VIDEO_INTERLACE_MODE_PROGRESSIVE, 320,
+          240));
+  fail_unless (GST_VIDEO_INFO_SIZE (&vinfo) == 115200);
 
   caps = gst_video_info_to_caps (&vinfo);
   fail_unless (caps != NULL);
@@ -1225,8 +1227,9 @@ GST_START_TEST (test_interlace_mode)
   gst_caps_unref (caps);
 
   /* Interlaced with alternate frame on buffers */
-  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_YV12, 320, 240);
-  GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+  fail_unless (gst_video_info_set_interlaced_format (&vinfo,
+          GST_VIDEO_FORMAT_YV12, GST_VIDEO_INTERLACE_MODE_ALTERNATE, 320, 240));
+  fail_unless (GST_VIDEO_INFO_SIZE (&vinfo) == 57600);
 
   caps = gst_video_info_to_caps (&vinfo);
   fail_unless (caps != NULL);

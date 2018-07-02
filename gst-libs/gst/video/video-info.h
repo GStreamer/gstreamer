@@ -403,6 +403,14 @@ gboolean       gst_video_info_set_format  (GstVideoInfo *info, GstVideoFormat fo
                                            guint width, guint height);
 
 GST_VIDEO_API
+gboolean       gst_video_info_set_interlaced_format
+                                          (GstVideoInfo         *info,
+                                           GstVideoFormat        format,
+                                           GstVideoInterlaceMode mode,
+                                           guint                 width,
+                                           guint                 height);
+
+GST_VIDEO_API
 gboolean       gst_video_info_from_caps   (GstVideoInfo *info, const GstCaps  * caps);
 
 GST_VIDEO_API
