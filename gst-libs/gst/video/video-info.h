@@ -365,6 +365,9 @@ GType gst_video_info_get_type            (void);
 #define GST_VIDEO_INFO_PAR_N(i)          ((i)->par_n)
 #define GST_VIDEO_INFO_PAR_D(i)          ((i)->par_d)
 #define GST_VIDEO_INFO_FPS_N(i)          ((i)->fps_n)
+#define GST_VIDEO_INFO_FIELD_RATE_N(i)   ((GST_VIDEO_INFO_INTERLACE_MODE ((i)) == \
+                                           GST_VIDEO_INTERLACE_MODE_ALTERNATE) ? \
+                                           (i)->fps_n * 2 : (i)->fps_n)
 #define GST_VIDEO_INFO_FPS_D(i)          ((i)->fps_d)
 
 #define GST_VIDEO_INFO_COLORIMETRY(i) ((i)->colorimetry)
