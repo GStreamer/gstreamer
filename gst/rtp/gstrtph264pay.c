@@ -716,7 +716,7 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
         payloader->sps, payloader->pps, nal);
 
     /* remember when we last saw SPS */
-    if (updated && pts != -1)
+    if (pts != -1)
       payloader->last_spspps =
           gst_segment_to_running_time (&GST_RTP_BASE_PAYLOAD_CAST
           (payloader)->segment, GST_FORMAT_TIME, pts);

@@ -801,7 +801,7 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
         payloader->vps, payloader->sps, payloader->pps, nal);
 
     /* remember when we last saw VPS */
-    if (updated && pts != -1)
+    if (pts != -1)
       payloader->last_vps_sps_pps =
           gst_segment_to_running_time (&GST_RTP_BASE_PAYLOAD_CAST
           (payloader)->segment, GST_FORMAT_TIME, pts);
