@@ -86,6 +86,50 @@ static gboolean gst_msdkdec_drain (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_flush (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_negotiate (GstMsdkDec * thiz, gboolean hard_reset);
 
+static GstVideoCodecFrame *
+gst_msdkdec_get_oldest_frame (GstVideoDecoder * decoder)
+{
+  GstVideoCodecFrame *frame = NULL, *old_frame = NULL;
+  GList *frames, *l;
+  gint count = 0;
+
+  frames = gst_video_decoder_get_frames (decoder);
+
+  for (l = frames; l != NULL; l = l->next) {
+    GstVideoCodecFrame *f = l->data;
+
+    if (!GST_CLOCK_TIME_IS_VALID (f->pts)) {
+      GST_INFO
+          ("Frame doesn't have a valid pts yet, Use gst_video_decoder_get_oldest_frame()"
+          "with out considering the PTS for selecting the frame to be finished");
+      old_frame = gst_video_decoder_get_oldest_frame (decoder);
+      break;
+    }
+
+    if (!frame || frame->pts > f->pts)
+      frame = f;
+
+    count++;
+  }
+
+  if (old_frame)
+    frame = old_frame;
+
+  if (frame) {
+    GST_LOG_OBJECT (decoder,
+        "Oldest frame is %d %" GST_TIME_FORMAT " and %d frames left",
+        frame->system_frame_number, GST_TIME_ARGS (frame->pts), count - 1);
+    gst_video_codec_frame_ref (frame);
+  }
+
+  if (old_frame)
+    gst_video_codec_frame_unref (old_frame);
+
+  g_list_free_full (frames, (GDestroyNotify) gst_video_codec_frame_unref);
+
+  return frame;
+}
+
 static GstFlowReturn
 allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
 {
@@ -93,7 +137,7 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
   GstVideoCodecFrame *frame;
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (thiz);
 
-  frame = gst_video_decoder_get_oldest_frame (decoder);
+  frame = gst_msdkdec_get_oldest_frame (decoder);
   if (!frame) {
     if (GST_PAD_IS_FLUSHING (decoder->srcpad))
       return GST_FLOW_FLUSHING;
@@ -564,7 +608,7 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
       return GST_FLOW_ERROR;
     }
 
-    frame = gst_video_decoder_get_oldest_frame (decoder);
+    frame = gst_msdkdec_get_oldest_frame (decoder);
     task->sync_point = NULL;
 
     l = g_list_find_custom (thiz->decoded_msdk_surfaces, task->surface,
