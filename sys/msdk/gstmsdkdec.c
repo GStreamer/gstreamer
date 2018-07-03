@@ -318,7 +318,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
    * dealing with different allocators */
   /* Fixme: msdk sometimes only requires 16 bit rounding, optimization possible */
   thiz->param.mfx.FrameInfo.Width =
-      GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Width);
+      GST_ROUND_UP_16 (thiz->param.mfx.FrameInfo.Width);
   thiz->param.mfx.FrameInfo.Height =
       GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Height);
   /* Set framerate only if provided.
@@ -521,7 +521,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   if (need_allocation) {
     /* Find allocation width and height */
     width =
-        GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Width ? thiz->param.mfx.
+        GST_ROUND_UP_16 (thiz->param.mfx.FrameInfo.Width ? thiz->param.mfx.
         FrameInfo.Width : GST_VIDEO_INFO_WIDTH (&output_state->info));
     height =
         GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Height ? thiz->param.mfx.
@@ -1055,7 +1055,7 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   if (!pool)
     goto error_no_pool;
 
-  if (G_UNLIKELY (!IS_ALIGNED (GST_VIDEO_INFO_WIDTH (info), 32)
+  if (G_UNLIKELY (!IS_ALIGNED (GST_VIDEO_INFO_WIDTH (info), 16)
           || !IS_ALIGNED (GST_VIDEO_INFO_HEIGHT (info), 32))) {
     gst_msdk_set_video_alignment (info, &align);
     gst_video_info_align (info, &align);

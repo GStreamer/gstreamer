@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdk_debug);
 #define GST_CAT_DEFAULT gst_msdk_debug
 
 #define INVALID_INDEX         ((guint) -1)
-#define GST_MSDK_ALIGNMENT_PADDING(num) (32 - ((num) & 31))
+#define GST_MSDK_ALIGNMENT_PADDING(num,padding) ((padding) - ((num) & ((padding) - 1)))
 
 struct map
 {
@@ -215,12 +215,12 @@ gst_msdk_set_video_alignment (GstVideoInfo * info,
 
   gst_video_alignment_reset (alignment);
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
-    alignment->stride_align[i] = 31;    /* 32-byte alignment */
+    alignment->stride_align[i] = 15;    /* 16-byte alignment */
 
-  if (width & 31)
-    alignment->padding_right = GST_MSDK_ALIGNMENT_PADDING (width);
+  if (width & 15)
+    alignment->padding_right = GST_MSDK_ALIGNMENT_PADDING (width, 16);
   if (height & 31)
-    alignment->padding_bottom = GST_MSDK_ALIGNMENT_PADDING (height);
+    alignment->padding_bottom = GST_MSDK_ALIGNMENT_PADDING (height, 32);
 }
 
 static const struct map *
@@ -257,7 +257,7 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
 {
   g_return_if_fail (info && mfx_info);
 
-  mfx_info->Width = GST_ROUND_UP_32 (GST_VIDEO_INFO_WIDTH (info));
+  mfx_info->Width = GST_ROUND_UP_16 (GST_VIDEO_INFO_WIDTH (info));
   mfx_info->Height = GST_ROUND_UP_32 (GST_VIDEO_INFO_HEIGHT (info));
   mfx_info->CropW = GST_VIDEO_INFO_WIDTH (info);
   mfx_info->CropH = GST_VIDEO_INFO_HEIGHT (info);
