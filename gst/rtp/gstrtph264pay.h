@@ -79,6 +79,11 @@ struct _GstRtpH264Pay
   gboolean delta_unit;
   /* TRUE if the next NALU processed should have the DISCONT flag */
   gboolean discont;
+
+  /* aggregate buffers with STAP-A */
+  GstBufferList *bundle;
+  guint bundle_size;
+  gboolean do_aggregate;
 };
 
 struct _GstRtpH264PayClass

@@ -539,6 +539,8 @@ GST_START_TEST (test_rtph264pay_reserved_nals)
   guint8 nal_27[sizeof (h264_aud)];
   GstFlowReturn ret;
 
+  g_object_set (h->element, "do-aggregate", FALSE, NULL);
+
   gst_harness_set_src_caps_str (h,
       "video/x-h264,alignment=nal,stream-format=byte-stream");
 
@@ -603,6 +605,7 @@ GST_START_TEST (test_rtph264pay_two_slices_timestamp)
           sizeof (h264_idr_slice_2), GST_SECOND));
   fail_unless_equals_int (ret, GST_FLOW_OK);
 
+  gst_harness_push_event (h, gst_event_new_eos ());
 
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 4);
 
@@ -641,7 +644,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_marker_for_flag)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h =
+      gst_harness_new_parse ("rtph264pay timestamp-offset=123 do-aggregate=0");
   GstFlowReturn ret;
   GstBuffer *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -680,7 +684,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph264pay_marker_for_au)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstHarness *h =
+      gst_harness_new_parse ("rtph264pay timestamp-offset=123 do-aggregate=0");
   GstFlowReturn ret;
   GstBuffer *slice1, *slice2, *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;

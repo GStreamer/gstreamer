@@ -879,8 +879,10 @@ static const guint8 rtp_h264_list_lt_mtu_frame_data_avc[] =
   0xad, 0x80, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x0d, 0x00
 };
 
-/* NAL = 4 bytes */
-static int rtp_h264_list_lt_mtu_bytes_sent_avc = 2 * (16 - 2 * 4);
+/* Only the last NAL of each packet is computed by the strange algorithm in
+ * rtp_pipeline_chain_list()
+ */
+static int rtp_h264_list_lt_mtu_bytes_sent_avc = 7 + 3;
 
 //static int rtp_h264_list_lt_mtu_mtu_size = 1024;
 
