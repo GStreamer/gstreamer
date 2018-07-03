@@ -86,6 +86,7 @@ gst_msdkvp9dec_configure (GstMsdkDec * decoder)
   decoder->param.mfx.FrameInfo.Height =
       GST_ROUND_UP_16 (decoder->param.mfx.FrameInfo.CropH);
 
+  decoder->force_reset_on_res_change = FALSE;
   return TRUE;
 }
 
