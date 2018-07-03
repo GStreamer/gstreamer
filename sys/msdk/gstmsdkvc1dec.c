@@ -94,10 +94,12 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
     /* asf advanced profile codec-data has 1 byte in the begining
      * which is the ASF binding byte. MediaSDK can't recognize this
      * byte, so discard it */
-    buffer = gst_buffer_copy_region (decoder->input_state->codec_data,
-        GST_BUFFER_COPY_DEEP | GST_BUFFER_COPY_MEMORY, 1,
-        gst_buffer_get_size (decoder->input_state->codec_data) - 1);
-    gst_adapter_push (decoder->adapter, buffer);
+    if (decoder->input_state->codec_data) {
+      buffer = gst_buffer_copy_region (decoder->input_state->codec_data,
+          GST_BUFFER_COPY_DEEP | GST_BUFFER_COPY_MEMORY, 1,
+          gst_buffer_get_size (decoder->input_state->codec_data) - 1);
+      gst_adapter_push (decoder->adapter, buffer);
+    }
 
     decoder->is_packetized = FALSE;
   }
