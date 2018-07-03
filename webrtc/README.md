@@ -36,7 +36,7 @@ https://cgit.freedesktop.org/gstreamer/gst-build/
 
 You may need to install the following packages using your package manager:
 
-json-glib, libsoup, libnice, libnice-gstreamer1 (the gstreamer plugin for libnice)
+json-glib, libsoup, libnice, libnice-gstreamer1 (the gstreamer plugin for libnice, called gstreamer1.0-nice Debian)
 
 ## Filing bugs
 
