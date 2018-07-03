@@ -203,7 +203,6 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz, gboolean reset_param)
   }
 
   g_array_set_size (thiz->tasks, 0);
-  g_ptr_array_set_size (thiz->extra_params, 0);
 
   if (reset_param)
     memset (&thiz->param, 0, sizeof (thiz->param));
@@ -303,9 +302,6 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   thiz->param.mfx.FrameInfo.ChromaFormat =
       thiz->param.mfx.FrameInfo.ChromaFormat ? thiz->param.mfx.
       FrameInfo.ChromaFormat : MFX_CHROMAFORMAT_YUV420;
-
-  thiz->param.NumExtParam = thiz->extra_params->len;
-  thiz->param.ExtParam = (mfxExtBuffer **) thiz->extra_params->pdata;
 
   session = gst_msdk_context_get_session (thiz->context);
   /* validate parameters and allow the Media SDK to make adjustments */
@@ -1336,7 +1332,6 @@ gst_msdkdec_finalize (GObject * object)
   GstMsdkDec *thiz = GST_MSDKDEC (object);
 
   g_array_unref (thiz->tasks);
-  g_ptr_array_unref (thiz->extra_params);
   g_object_unref (thiz->adapter);
 }
 
@@ -1393,7 +1388,6 @@ gst_msdkdec_init (GstMsdkDec * thiz)
 {
   gst_video_info_init (&thiz->output_info);
   gst_video_info_init (&thiz->non_msdk_pool_info);
-  thiz->extra_params = g_ptr_array_new_with_free_func (g_free);
   thiz->tasks = g_array_new (FALSE, TRUE, sizeof (MsdkDecTask));
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;

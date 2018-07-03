@@ -90,7 +90,6 @@ struct _GstMsdkDec
   /* MFX context */
   GstMsdkContext *context;
   mfxVideoParam param;
-  GPtrArray *extra_params;
   GArray *tasks;
   guint next_task;
 
