@@ -922,6 +922,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     if (thiz->force_reset_on_res_change)
       hard_reset = TRUE;
 
+    /* Config changed dynamically and we are going to do a full reset,
+     * this will unref the input frame which has the new configuration.
+     * Keep a ref to the input_frame to keep it alive */
+    if (thiz->initialized && thiz->do_renego)
+      gst_video_codec_frame_ref (frame);
+
     gst_msdkdec_negotiate (thiz, hard_reset);
   }
 
