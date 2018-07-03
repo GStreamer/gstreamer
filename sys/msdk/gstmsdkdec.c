@@ -842,6 +842,30 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   gsize data_size;
   gboolean hard_reset = FALSE;
 
+  /* configure the subclss inorder to fill the CodecID field of mfxVideoParam
+   * and also to load the PluginID for some of the codecs which is mandatory
+   * to invoke the MFXVideoDECODE_DecodeHeader API.
+   *
+   * For non packetized formats (currently only vc1), there
+   * could be headers received as codec_data which are not available
+   * instream and in that case subclass implementation will
+   * push it to the internal adapter. We invoke the subclass configure
+   * well early to make sure the codec_data received has been correctly
+   * pushed to the adapter by the subclasses before doing
+   * the DecodeHeader() later on
+   */
+  if (!thiz->initialized || thiz->do_renego) {
+    /* Clear the internal adapter in renegotiation for non-packetized
+     * formats */
+    if (!thiz->is_packetized)
+      gst_adapter_clear (thiz->adapter);
+
+    if (!klass->configure || !klass->configure (thiz)) {
+      flow = GST_FLOW_OK;
+      goto error;
+    }
+  }
+
   if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ))
     return GST_FLOW_ERROR;
 
@@ -870,14 +894,6 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   session = gst_msdk_context_get_session (thiz->context);
 
   if (!thiz->initialized || thiz->do_renego) {
-
-    /* configure the subclss inorder to fill the CodecID field of mfxVideoParam
-     * and also to load the PluginID for some of the codecs which is mandatory
-     * to invoke the MFXVideoDECODE_DecodeHeader API */
-    if (!klass->configure || !klass->configure (thiz)) {
-      flow = GST_FLOW_OK;
-      goto error;
-    }
 
     /* gstreamer caps will not bring all the necessary parameters
      * required for optimal decode configuration. For eg: the required numbers
