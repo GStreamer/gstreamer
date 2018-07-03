@@ -15,10 +15,14 @@ else
   gst_version_nano = 0
 endif
 
-libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100')
-libavformat_dep = dependency('libavformat', version: '>= 58.12.100')
-libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100')
-libavutil_dep = dependency('libavutil', version: '>= 56.14.100')
+libavfilter_dep = dependency('libavfilter', version: '>= 7.16.100',
+  fallback: ['FFmpeg', 'libavfilter_dep'])
+libavformat_dep = dependency('libavformat', version: '>= 58.12.100',
+  fallback: ['FFmpeg', 'libavformat_dep'])
+libavcodec_dep = dependency('libavcodec', version: '>= 58.18.100',
+  fallback: ['FFmpeg', 'libavcodec_dep'])
+libavutil_dep = dependency('libavutil', version: '>= 56.14.100',
+  fallback: ['FFmpeg', 'libavutil_dep'])
 
 libav_deps = [libavfilter_dep, libavformat_dep, libavcodec_dep, libavutil_dep]
 
@@ -31,8 +35,24 @@ check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
 #error libav provider should be FFmpeg
 #endif'''
 
-if not cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'libav is provided by FFmpeg')
+libav_deps_type_name = ''
+
+foreach dep: libav_deps
+  message('type name: @0@'.format(dep.type_name()))
+endforeach
+
+foreach dep: libav_deps
+  message('[@0@] / [@1@]'.format(libav_deps_type_name, dep.type_name()))
+  if libav_deps_type_name != '' and dep.type_name() != libav_deps_type_name
+    error('Libav deps must be either all internal or all external')
+  endif
+  libav_deps_type_name = dep.type_name()
+endforeach
+
+if dep.type_name() != 'internal'
+  if not cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'libav is provided by FFmpeg')
     error('Uncompatible libavcodec found')
+  endif
 endif
 
 cdata = configuration_data()
