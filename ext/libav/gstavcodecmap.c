@@ -3770,6 +3770,18 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     };
     *video_codec_list = gif_image_list;
     *audio_codec_list = NULL;
+  } else if ((!strcmp (format_name, "pva"))) {
+    static enum AVCodecID pga_video_list[] = {
+      AV_CODEC_ID_MPEG2VIDEO,
+      AV_CODEC_ID_NONE
+    };
+    static enum AVCodecID pga_audio_list[] = {
+      AV_CODEC_ID_MP2,
+      AV_CODEC_ID_NONE
+    };
+
+    *video_codec_list = pga_video_list;
+    *audio_codec_list = pga_audio_list;
   } else if ((plugin->audio_codec != AV_CODEC_ID_NONE) ||
       (plugin->video_codec != AV_CODEC_ID_NONE)) {
     tmp_vlist[0] = plugin->video_codec;
@@ -3777,18 +3789,6 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
 
     *video_codec_list = tmp_vlist;
     *audio_codec_list = tmp_alist;
-  } else if ((!strcmp (format_name, "pva"))) {
-    static enum AVCodecID tgp_video_list[] = {
-      AV_CODEC_ID_MPEG2VIDEO,
-      AV_CODEC_ID_NONE
-    };
-    static enum AVCodecID tgp_audio_list[] = {
-      AV_CODEC_ID_MP2,
-      AV_CODEC_ID_NONE
-    };
-
-    *video_codec_list = tgp_video_list;
-    *audio_codec_list = tgp_audio_list;
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;
