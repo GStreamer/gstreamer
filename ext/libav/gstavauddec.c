@@ -149,7 +149,7 @@ gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
 
   ffmpegdec->frame = av_frame_alloc ();
 
-  GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec));
+  GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (ffmpegdec));
   gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
       (ffmpegdec), TRUE);
 
