@@ -66,9 +66,11 @@ _gst_sample_copy (GstSample * sample)
   copy = gst_sample_new (sample->buffer, sample->caps, &sample->segment,
       (sample->info) ? gst_structure_copy (sample->info) : NULL);
 
-  if (sample->buffer_list)
-    copy->buffer_list = (GstBufferList *)
-        gst_mini_object_ref (GST_MINI_OBJECT_CAST (sample->buffer_list));
+  if (sample->buffer_list) {
+    copy->buffer_list = gst_buffer_list_ref (sample->buffer_list);
+    gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (copy->buffer_list),
+        GST_MINI_OBJECT_CAST (copy));
+  }
 
   return copy;
 }
@@ -78,16 +80,27 @@ _gst_sample_free (GstSample * sample)
 {
   GST_LOG ("free %p", sample);
 
-  if (sample->buffer)
+  if (sample->buffer) {
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (sample->buffer),
+        GST_MINI_OBJECT_CAST (sample));
     gst_buffer_unref (sample->buffer);
-  if (sample->caps)
+  }
+
+  if (sample->caps) {
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (sample->caps),
+        GST_MINI_OBJECT_CAST (sample));
     gst_caps_unref (sample->caps);
+  }
+
   if (sample->info) {
     gst_structure_set_parent_refcount (sample->info, NULL);
     gst_structure_free (sample->info);
   }
-  if (sample->buffer_list)
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (sample->buffer_list));
+  if (sample->buffer_list) {
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (sample->buffer_list),
+        GST_MINI_OBJECT_CAST (sample));
+    gst_buffer_list_unref (sample->buffer_list);
+  }
 
   g_slice_free1 (sizeof (GstSample), sample);
 }
@@ -120,8 +133,17 @@ gst_sample_new (GstBuffer * buffer, GstCaps * caps, const GstSegment * segment,
       (GstMiniObjectCopyFunction) _gst_sample_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_sample_free);
 
-  sample->buffer = buffer ? gst_buffer_ref (buffer) : NULL;
-  sample->caps = caps ? gst_caps_ref (caps) : NULL;
+  if (buffer) {
+    sample->buffer = gst_buffer_ref (buffer);
+    gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->buffer),
+        GST_MINI_OBJECT_CAST (sample));
+  }
+
+  if (caps) {
+    sample->caps = gst_caps_ref (caps);
+    gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->caps),
+        GST_MINI_OBJECT_CAST (sample));
+  }
 
   /* FIXME 2.0: initialize with GST_FORMAT_UNDEFINED by default */
   if (segment)
@@ -257,11 +279,21 @@ gst_sample_set_buffer_list (GstSample * sample, GstBufferList * buffer_list)
   g_return_if_fail (gst_sample_is_writable (sample));
 
   old = sample->buffer_list;
-  sample->buffer_list = buffer_list ? (GstBufferList *)
-      gst_mini_object_ref (GST_MINI_OBJECT_CAST (buffer_list)) : NULL;
 
-  if (old)
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (old));
+  if (old == buffer_list)
+    return;
+
+  if (buffer_list) {
+    sample->buffer_list = gst_buffer_list_ref (buffer_list);
+    gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->buffer_list),
+        GST_MINI_OBJECT_CAST (sample));
+  }
+
+  if (old) {
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (old),
+        GST_MINI_OBJECT_CAST (sample));
+    gst_buffer_list_unref (old);
+  }
 }
 
 /**
@@ -276,10 +308,27 @@ gst_sample_set_buffer_list (GstSample * sample, GstBufferList * buffer_list)
 void
 gst_sample_set_buffer (GstSample * sample, GstBuffer * buffer)
 {
+  GstBuffer *old = NULL;
+
   g_return_if_fail (GST_IS_SAMPLE (sample));
   g_return_if_fail (gst_sample_is_writable (sample));
 
-  gst_buffer_replace (&sample->buffer, buffer);
+  old = sample->buffer;
+
+  if (old == buffer)
+    return;
+
+  if (buffer) {
+    sample->buffer = gst_buffer_ref (buffer);
+    gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->buffer),
+        GST_MINI_OBJECT_CAST (sample));
+  }
+
+  if (old) {
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (old),
+        GST_MINI_OBJECT_CAST (sample));
+    gst_buffer_unref (old);
+  }
 }
 
 /**
@@ -294,10 +343,27 @@ gst_sample_set_buffer (GstSample * sample, GstBuffer * buffer)
 void
 gst_sample_set_caps (GstSample * sample, GstCaps * caps)
 {
+  GstCaps *old = NULL;
+
   g_return_if_fail (GST_IS_SAMPLE (sample));
   g_return_if_fail (gst_sample_is_writable (sample));
 
-  gst_caps_replace (&sample->caps, caps);
+  old = sample->caps;
+
+  if (old == caps)
+    return;
+
+  if (caps) {
+    sample->caps = gst_caps_ref (caps);
+    gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->caps),
+        GST_MINI_OBJECT_CAST (sample));
+  }
+
+  if (old) {
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (old),
+        GST_MINI_OBJECT_CAST (sample));
+    gst_caps_unref (old);
+  }
 }
 
 /**

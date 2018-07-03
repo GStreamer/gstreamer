@@ -835,6 +835,7 @@ EXPORTS
 	gst_meta_flags_get_type
 	gst_meta_get_info
 	gst_meta_register
+	gst_mini_object_add_parent
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
 	gst_mini_object_get_qdata
@@ -843,6 +844,7 @@ EXPORTS
 	gst_mini_object_lock
 	gst_mini_object_make_writable
 	gst_mini_object_ref
+	gst_mini_object_remove_parent
 	gst_mini_object_replace
 	gst_mini_object_set_qdata
 	gst_mini_object_steal

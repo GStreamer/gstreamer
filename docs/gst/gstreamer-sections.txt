@@ -1820,6 +1820,9 @@ gst_mini_object_unlock
 gst_mini_object_is_writable
 gst_mini_object_make_writable
 
+gst_mini_object_add_parent
+gst_mini_object_remove_parent
+
 gst_mini_object_copy
 
 gst_mini_object_set_qdata

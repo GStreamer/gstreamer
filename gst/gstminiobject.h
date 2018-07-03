@@ -213,9 +213,9 @@ struct _GstMiniObject {
   GstMiniObjectFreeFunction free;
 
   /* < private > */
-  /* Used to keep track of weak ref notifies and qdata */
-  guint n_qdata;
-  gpointer qdata;
+  /* Used to keep track of parents, weak ref notifies and qdata */
+  guint priv_uint;
+  gpointer priv_pointer;
 };
 
 GST_API
@@ -271,6 +271,11 @@ gpointer        gst_mini_object_get_qdata       (GstMiniObject *object, GQuark q
 
 GST_API
 gpointer        gst_mini_object_steal_qdata     (GstMiniObject *object, GQuark quark);
+
+GST_API
+void            gst_mini_object_add_parent      (GstMiniObject *object, GstMiniObject *parent);
+GST_API
+void            gst_mini_object_remove_parent   (GstMiniObject *object, GstMiniObject *parent);
 
 GST_API
 gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
