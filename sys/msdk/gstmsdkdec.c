@@ -560,7 +560,7 @@ gst_msdkdec_set_latency (GstMsdkDec * thiz)
   gint min_delayed_frames;
   GstClockTime latency;
 
-  min_delayed_frames = thiz->tasks->len;
+  min_delayed_frames = thiz->async_depth;
 
   if (info->fps_n) {
     latency = gst_util_uint64_scale_ceil (GST_SECOND * info->fps_d,
