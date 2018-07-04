@@ -1665,6 +1665,21 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   GstCaps *result, *tmp;
   gint i;
 
+  if (upload->priv->method) {
+    tmp = upload->priv->method->transform_caps (upload->priv->method_impl,
+        context, direction, caps);
+    if (filter) {
+      result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (tmp);
+    } else {
+      result = tmp;
+    }
+    if (!gst_caps_is_empty (result))
+      return result;
+    else
+      gst_caps_unref (result);
+  }
+
   tmp = gst_caps_new_empty ();
 
   for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
@@ -1868,6 +1883,15 @@ restart:
     }
     goto restart;
   } else if (ret == GST_GL_UPLOAD_DONE || ret == GST_GL_UPLOAD_RECONFIGURE) {
+    if (last_impl != upload->priv->method_impl) {
+      GstCaps *caps = gst_gl_upload_transform_caps (upload, upload->context,
+          GST_PAD_SINK, upload->priv->in_caps, NULL);
+      if (!gst_caps_is_equal (upload->priv->out_caps, caps)) {
+        gst_buffer_replace (&outbuf, NULL);
+        ret = GST_GL_UPLOAD_RECONFIGURE;
+      }
+      gst_caps_unref (caps);
+    }
     /* we are done */
   } else {
     upload->priv->method_impl = NULL;
