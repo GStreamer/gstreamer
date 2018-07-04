@@ -94,20 +94,20 @@ get_real_pad_parent (GstPad * pad)
 static void
 log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
 {
-  GstPad *src_pad;
   guint64 src_ts;
-  gchar *src, *sink;
+  const char *src;
+  const GValue *value;
+  gchar *sink;
 
-  gst_structure_id_get (data,
-      latency_probe_pad, GST_TYPE_PAD, &src_pad,
-      latency_probe_ts, G_TYPE_UINT64, &src_ts, NULL);
+  value = gst_structure_id_get_value (data, latency_probe_ts);
+  src_ts = g_value_get_uint64 (value);
 
-  src = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (src_pad));
+  value = gst_structure_id_get_value (data, latency_probe_pad);
+  src = g_value_get_string (value);
+
   sink = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (sink_pad));
-
   gst_tracer_record_log (tr_latency, src, sink,
       GST_CLOCK_DIFF (src_ts, sink_ts), sink_ts);
-  g_free (src);
   g_free (sink);
 }
 
@@ -118,11 +118,16 @@ send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
    * rtspsrc for TCP connections */
   if (!parent || (!GST_IS_BIN (parent) &&
           GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE))) {
-    GstEvent *latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+    gchar *pad_name;
+    GstEvent *latency_probe;
+
+    pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (pad));
+    latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
         gst_structure_new_id (latency_probe_id,
-            latency_probe_pad, GST_TYPE_PAD, pad,
-            latency_probe_ts, G_TYPE_UINT64, ts,
-            NULL));
+            latency_probe_pad, G_TYPE_STRING, pad_name,
+            latency_probe_ts, G_TYPE_UINT64, ts, NULL));
+    g_free (pad_name);
+
     gst_pad_push_event (pad, latency_probe);
   }
 }
