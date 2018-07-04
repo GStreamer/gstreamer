@@ -3038,13 +3038,13 @@ _gst_structure_get_any_list (GstStructure * structure, GType type,
  * @array: (out): a pointer to a #GValueArray
  *
  * This is useful in language bindings where unknown #GValue types are not
- * supported. This function will convert the %GST_TYPE_ARRAY and
- * %GST_TYPE_LIST into a newly allocated #GValueArray and return it through
- * @array. Be aware that this is slower then getting the #GValue directly.
+ * supported. This function will convert the %GST_TYPE_ARRAY into a newly
+ * allocated #GValueArray and return it through @array. Be aware that this is
+ * slower then getting the #GValue directly.
  *
  * Returns: %TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain an int, this function
- * returns %FALSE.
+ * with @fieldname or the existing field did not contain a %GST_TYPE_ARRAY,
+ * this function returns %FALSE.
  */
 gboolean
 gst_structure_get_array (GstStructure * structure, const gchar * fieldname,
@@ -3061,13 +3061,13 @@ gst_structure_get_array (GstStructure * structure, const gchar * fieldname,
  * @array: (out): a pointer to a #GValueArray
  *
  * This is useful in language bindings where unknown #GValue types are not
- * supported. This function will convert the %GST_TYPE_ARRAY and
- * %GST_TYPE_LIST into a newly allocated GValueArray and return it through
- * @array. Be aware that this is slower then getting the #GValue directly.
+ * supported. This function will convert the %GST_TYPE_LIST into a newly
+ * allocated GValueArray and return it through @array. Be aware that this is
+ * slower then getting the #GValue directly.
  *
  * Returns: %TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain an int, this function
- * returns %FALSE.
+ * with @fieldname or the existing field did not contain a %GST_TYPE_LIST, this
+ * function returns %FALSE.
  *
  * Since 1.12
  */
@@ -3133,9 +3133,9 @@ gst_structure_set_array (GstStructure * structure, const gchar * fieldname,
  * @array: a pointer to a #GValueArray
  *
  * This is useful in language bindings where unknown GValue types are not
- * supported. This function will convert a @array to %GST_TYPE_ARRAY and set
+ * supported. This function will convert a @array to %GST_TYPE_LIST and set
  * the field specified by @fieldname. Be aware that this is slower then using
- * %GST_TYPE_ARRAY in a #GValue directly.
+ * %GST_TYPE_LIST in a #GValue directly.
  *
  * Since 1.12
  */
