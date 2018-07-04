@@ -103,6 +103,9 @@ struct _GstGLUploadPrivate
   const UploadMethod *method;
   gpointer method_impl;
   int method_i;
+
+  /* saved method for reconfigure */
+  int saved_method_i;
 };
 
 #define DEBUG_INIT \
@@ -1766,14 +1769,29 @@ gst_gl_upload_get_caps (GstGLUpload * upload, GstCaps ** in_caps,
 }
 
 static gboolean
-_upload_find_method (GstGLUpload * upload)
+_upload_find_method (GstGLUpload * upload, gpointer last_impl)
 {
   gint method_i;
 
-  if (upload->priv->method_i >= G_N_ELEMENTS (upload_methods))
-    return FALSE;
+  /* start with the last used method after explicitly reconfiguring to
+   * negotiate caps for this method */
+  if (upload->priv->method_i == 0) {
+    upload->priv->method_i = upload->priv->saved_method_i;
+    upload->priv->saved_method_i = 0;
+  }
+
+  if (upload->priv->method_i >= G_N_ELEMENTS (upload_methods)) {
+    if (last_impl)
+      upload->priv->method_i = 0;
+    else
+      return FALSE;
+  }
 
   method_i = upload->priv->method_i;
+
+  if (last_impl == upload->priv->upload_impl[method_i])
+    return FALSE;
+
   upload->priv->method = upload_methods[method_i];
   upload->priv->method_impl = upload->priv->upload_impl[method_i];
 
@@ -1802,6 +1820,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
 {
   GstGLUploadReturn ret = GST_GL_UPLOAD_ERROR;
   GstBuffer *outbuf;
+  gpointer last_impl = upload->priv->method_impl;
 
   g_return_val_if_fail (GST_IS_GL_UPLOAD (upload), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -1811,7 +1830,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
 
 #define NEXT_METHOD \
 do { \
-  if (!_upload_find_method (upload)) { \
+  if (!_upload_find_method (upload, last_impl)) { \
     GST_OBJECT_UNLOCK (upload); \
     return FALSE; \
   } \
@@ -1819,7 +1838,7 @@ do { \
 } while (0)
 
   if (!upload->priv->method_impl)
-    _upload_find_method (upload);
+    _upload_find_method (upload, last_impl);
 
 restart:
   if (!upload->priv->method->accept (upload->priv->method_impl, buffer,
@@ -1853,6 +1872,9 @@ restart:
     gst_buffer_copy_into (outbuf, buffer,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
   *outbuf_ptr = outbuf;
+
+  if (ret == GST_GL_UPLOAD_RECONFIGURE)
+    upload->priv->saved_method_i = upload->priv->method_i - 1;
 
   GST_OBJECT_UNLOCK (upload);
 
