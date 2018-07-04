@@ -205,6 +205,7 @@ fill_picture (GstVaapiEncoderJpeg * encoder,
     GstVaapiEncPicture * picture,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
+  guint i;
   VAEncPictureParameterBufferJPEG *const pic_param = picture->param;
 
   memset (pic_param, 0, sizeof (VAEncPictureParameterBufferJPEG));
@@ -224,6 +225,11 @@ fill_picture (GstVaapiEncoderJpeg * encoder,
   pic_param->num_scan = 1;
   pic_param->num_components = encoder->n_components;
   pic_param->quality = encoder->quality;
+  for (i = 0; i < pic_param->num_components; i++) {
+    pic_param->component_id[i] = i + 1;
+    if (i != 0)
+      pic_param->quantiser_table_selector[i] = 1;
+  }
   return TRUE;
 }
 
@@ -437,13 +443,11 @@ generate_frame_hdr (GstJpegFrameHdr * frame_hdr, GstVaapiEncoderJpeg * encoder,
   frame_hdr->num_components = pic_param->num_components;
 
   for (i = 0; i < frame_hdr->num_components; i++) {
-    frame_hdr->components[i].identifier = i + 1;
+    frame_hdr->components[i].identifier = pic_param->component_id[i];
     frame_hdr->components[i].horizontal_factor = encoder->h_samp[i];
     frame_hdr->components[i].vertical_factor = encoder->v_samp[i];
-    if (i == 0)
-      frame_hdr->components[i].quant_table_selector = 0;
-    else
-      frame_hdr->components[i].quant_table_selector = 1;
+    frame_hdr->components[i].quant_table_selector =
+        pic_param->quantiser_table_selector[i];
   }
 }
 
