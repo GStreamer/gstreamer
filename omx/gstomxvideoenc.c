@@ -2366,10 +2366,18 @@ gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
 
     for (j = 0; j < height; j++) {
       memcpy (dest, src, width);
-      outbuf->omx_buf->nFilledLen += dest_stride;
       src += src_stride;
       dest += dest_stride;
     }
+
+    /* nFilledLen should include the vertical padding in each slice (spec 3.1.3.7.1) */
+    if (i == 0)
+      outbuf->omx_buf->nFilledLen +=
+          port_def->format.video.nSliceHeight * port_def->format.video.nStride;
+    else
+      outbuf->omx_buf->nFilledLen +=
+          (port_def->format.video.nSliceHeight / 2) *
+          port_def->format.video.nStride;
   }
 
   gst_video_frame_unmap (&frame);
@@ -2501,10 +2509,19 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
 
         for (j = 0; j < height; j++) {
           memcpy (dest, src, width);
-          outbuf->omx_buf->nFilledLen += dest_stride;
           src += src_stride;
           dest += dest_stride;
         }
+
+        /* nFilledLen should include the vertical padding in each slice (spec 3.1.3.7.1) */
+        if (i == 0)
+          outbuf->omx_buf->nFilledLen +=
+              port_def->format.video.nSliceHeight *
+              port_def->format.video.nStride;
+        else
+          outbuf->omx_buf->nFilledLen +=
+              (port_def->format.video.nSliceHeight / 2) *
+              (port_def->format.video.nStride / 2);
       }
       gst_video_frame_unmap (&frame);
       ret = TRUE;
