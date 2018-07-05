@@ -24,6 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/base/gstbitwriter.h>
 
 #include <stdio.h>
 #include <glib/gstdio.h>
@@ -803,6 +804,69 @@ GST_START_TEST (test_pb_utils_versions)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_aac_get_profile)
+{
+  const guint8 aac_config[] = { 0x11, 0x90, 0x56, 0xE5, 0x00 };
+  const guint8 aac_config_sre[] = { 0x17, 0x80, 0x91, 0xA2, 0x82, 0x00 };
+  const guint8 heaac_config[] = { 0x2B, 0x11, 0x88, 0x00, 0x06, 0x01, 0x02 };
+  const gchar *profile, *level;
+  guint sample_rate;
+  GstBitWriter *wr;
+  guint8 *buf;
+  guint buf_len;
+
+  profile = gst_codec_utils_aac_get_profile (aac_config, sizeof (aac_config));
+  fail_unless (profile != NULL);
+  fail_unless_equals_string (profile, "lc");
+
+  level = gst_codec_utils_aac_get_level (aac_config, sizeof (aac_config));
+  fail_unless_equals_string (level, "2");
+
+  sample_rate =
+      gst_codec_utils_aac_get_sample_rate (aac_config, sizeof (aac_config));
+  fail_unless_equals_int (sample_rate, 48000);
+
+  sample_rate =
+      gst_codec_utils_aac_get_sample_rate (aac_config_sre,
+      sizeof (aac_config_sre));
+  fail_unless_equals_int (sample_rate, 0x12345);
+
+  profile =
+      gst_codec_utils_aac_get_profile (heaac_config, sizeof (heaac_config));
+  fail_unless (profile != NULL);
+  fail_unless_equals_string (profile, "lc");
+
+  level = gst_codec_utils_aac_get_level (heaac_config, sizeof (heaac_config));
+  fail_unless_equals_string (level, "2");
+
+  sample_rate =
+      gst_codec_utils_aac_get_sample_rate (heaac_config, sizeof (heaac_config));
+  fail_unless_equals_int (sample_rate, 48000);
+
+  wr = gst_bit_writer_new ();
+  fail_if (wr == NULL);
+  gst_bit_writer_put_bits_uint8 (wr, 5, 5);     /* object_type = 5 (SBR) */
+  gst_bit_writer_put_bits_uint8 (wr, 3, 4);     /* freq_index = 3 (48KHz) */
+  gst_bit_writer_put_bits_uint8 (wr, 2, 4);     /* channel_config = 2 (L&R) */
+  gst_bit_writer_put_bits_uint8 (wr, 0x0f, 4);  /* freq_index extension */
+  gst_bit_writer_put_bits_uint32 (wr, 87654, 24);       /* freq */
+  gst_bit_writer_put_bits_uint8 (wr, 2, 5);     /* object_type = 2 (LC) */
+
+  buf = gst_bit_writer_get_data (wr);
+  buf_len = gst_bit_writer_get_size (wr);
+  profile = gst_codec_utils_aac_get_profile (buf, buf_len);
+  fail_unless (profile != NULL);
+  fail_unless_equals_string (profile, "lc");
+  level = gst_codec_utils_aac_get_level (buf, buf_len);
+  fail_unless (level != NULL);
+  fail_unless_equals_string (level, "5");
+  sample_rate = gst_codec_utils_aac_get_sample_rate (buf, buf_len);
+  fail_unless_equals_int (sample_rate, 87654);
+  gst_bit_writer_free (wr);
+}
+
+GST_END_TEST;
+
 static Suite *
 libgstpbutils_suite (void)
 {
@@ -817,6 +881,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_install_plugins);
   tcase_add_test (tc_chain, test_pb_utils_installer_details);
   tcase_add_test (tc_chain, test_pb_utils_versions);
+  tcase_add_test (tc_chain, test_pb_utils_aac_get_profile);
   return s;
 }
 
