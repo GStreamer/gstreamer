@@ -106,6 +106,7 @@
 #include "gstplay-enum.h"
 #include "gstplayback.h"
 #include "gstplaybackutils.h"
+#include "gstrawcaps.h"
 
 /* generic templates */
 static GstStaticPadTemplate parse_bin_sink_template =
@@ -1106,9 +1107,18 @@ static gboolean
 gst_parse_bin_autoplug_continue (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
+  static GstStaticCaps raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
+
+  GST_DEBUG_OBJECT (element, "caps %" GST_PTR_FORMAT, caps);
+
+  /* If it matches our target caps, expose it */
+  if (gst_caps_can_intersect (caps, gst_static_caps_get (&raw_caps))) {
+    GST_DEBUG_OBJECT (element, "autoplug-continue returns FALSE");
+    return FALSE;
+  }
+
   GST_DEBUG_OBJECT (element, "autoplug-continue returns TRUE");
 
-  /* by default we always continue */
   return TRUE;
 }
 
