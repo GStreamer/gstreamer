@@ -55,7 +55,7 @@ typedef struct
 {
   guint64 offset;
   const guint8 *data;
-  gint size;
+  guint size;
 } DataScanCtx;
 
 static inline void
@@ -72,7 +72,7 @@ data_scan_ctx_advance (GstTypeFind * tf, DataScanCtx * c, guint bytes_to_skip)
 }
 
 static inline gboolean
-data_scan_ctx_ensure_data (GstTypeFind * tf, DataScanCtx * c, gint min_len)
+data_scan_ctx_ensure_data (GstTypeFind * tf, DataScanCtx * c, guint min_len)
 {
   const guint8 *data;
   guint64 len;
@@ -112,6 +112,9 @@ static inline gboolean
 data_scan_ctx_memcmp (GstTypeFind * tf, DataScanCtx * c, guint offset,
     const gchar * data, guint len)
 {
+  if (G_UNLIKELY (offset + len >= G_MAXUINT32))
+    return FALSE;
+
   if (!data_scan_ctx_ensure_data (tf, c, offset + len))
     return FALSE;
 
