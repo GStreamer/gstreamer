@@ -4388,6 +4388,11 @@ ebml_parse_chunk (GstTypeFind * tf, DataScanCtx * ctx, guint32 chunk_id,
         SPACES + sizeof (SPACES) - 1 - (2 * depth), id, element_size,
         hdr_len + element_size);
 
+    if (element_size >= G_MAXUINT32) {
+      GST_DEBUG ("Chunk too big for typefinding");
+      return FALSE;
+    }
+
     if (!data_scan_ctx_ensure_data (tf, &c, element_size)) {
       GST_DEBUG ("not enough data");
       return FALSE;
