@@ -49,10 +49,13 @@ G_DEFINE_TYPE_WITH_CODE (GstLatencyTracer, gst_latency_tracer, GST_TYPE_TRACER,
     _do_init);
 
 static GQuark latency_probe_id;
+static GQuark sub_latency_probe_id;
 static GQuark latency_probe_pad;
 static GQuark latency_probe_ts;
+static GQuark drop_sub_latency_quark;
 
 static GstTracerRecord *tr_latency;
+static GstTracerRecord *tr_element_latency;
 
 /* data helpers */
 
@@ -105,43 +108,94 @@ log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
   value = gst_structure_id_get_value (data, latency_probe_pad);
   src = g_value_get_string (value);
 
-  sink = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (sink_pad));
+  sink = g_strdup_printf ("%s_%s",
+      GST_DEBUG_PAD_NAME (GST_PAD_PEER (sink_pad)));
   gst_tracer_record_log (tr_latency, src, sink,
       GST_CLOCK_DIFF (src_ts, sink_ts), sink_ts);
   g_free (sink);
 }
 
 static void
+log_element_latency (const GstStructure * data, GstElement * element,
+    guint64 sink_ts)
+{
+  guint64 src_ts;
+  const gchar *element_name;
+  const GValue *value;
+
+  element_name = GST_ELEMENT_NAME (element);
+
+  /* TODO filtering */
+
+  value = gst_structure_id_get_value (data, latency_probe_ts);
+  src_ts = g_value_get_uint64 (value);
+
+  gst_tracer_record_log (tr_element_latency, element_name,
+      GST_CLOCK_DIFF (src_ts, sink_ts), sink_ts);
+}
+
+static void
 send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
 {
+  GstPad *peer_pad = GST_PAD_PEER (pad);
+
   /* allow for non-parented pads to send latency probes as used in e.g.
    * rtspsrc for TCP connections */
-  if (!parent || (!GST_IS_BIN (parent) &&
-          GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE))) {
+  if (peer_pad && (!parent || (!GST_IS_BIN (parent)))) {
     gchar *pad_name;
     GstEvent *latency_probe;
 
-    pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (pad));
+    if (GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) {
+      pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (pad));
+
+      GST_DEBUG ("%s: Sending latency event", pad_name);
+
+      latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new_id (latency_probe_id,
+              latency_probe_pad, G_TYPE_STRING, pad_name,
+              latency_probe_ts, G_TYPE_UINT64, ts, NULL));
+      g_free (pad_name);
+      gst_pad_push_event (pad, latency_probe);
+    }
+
+    GST_DEBUG ("%s_%s: Sending sub-latency event", GST_DEBUG_PAD_NAME (pad));
+
+    pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (peer_pad));
     latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new_id (latency_probe_id,
+        gst_structure_new_id (sub_latency_probe_id,
             latency_probe_pad, G_TYPE_STRING, pad_name,
             latency_probe_ts, G_TYPE_UINT64, ts, NULL));
-    g_free (pad_name);
-
     gst_pad_push_event (pad, latency_probe);
+    g_free (pad_name);
   }
 }
 
 static void
 calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
 {
-  if (parent && (!GST_IS_BIN (parent)) &&
-      GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SINK)) {
-    GstEvent *ev = g_object_get_qdata ((GObject *) pad, latency_probe_id);
+  GstElement *peer_parent = get_real_pad_parent (GST_PAD_PEER (pad));
 
+  if (parent && (!GST_IS_BIN (parent)) &&
+      (!GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE))) {
+    GstEvent *ev;
+
+    /* FIXME unsafe use of peer */
+    if (GST_OBJECT_FLAG_IS_SET (peer_parent, GST_ELEMENT_FLAG_SINK)) {
+      GST_DEBUG ("%s_%s: Should log full lantency now",
+          GST_DEBUG_PAD_NAME (pad));
+      ev = g_object_get_qdata ((GObject *) pad, latency_probe_id);
+      if (ev) {
+        g_object_set_qdata ((GObject *) pad, latency_probe_id, NULL);
+        log_latency (gst_event_get_structure (ev), pad, ts);
+        gst_event_unref (ev);
+      }
+    }
+
+    GST_DEBUG ("%s_%s: Should log sub lantency now", GST_DEBUG_PAD_NAME (pad));
+    ev = g_object_get_qdata ((GObject *) pad, sub_latency_probe_id);
     if (ev) {
-      g_object_set_qdata ((GObject *) pad, latency_probe_id, NULL);
-      log_latency (gst_event_get_structure (ev), pad, ts);
+      g_object_set_qdata ((GObject *) pad, sub_latency_probe_id, NULL);
+      log_element_latency (gst_event_get_structure (ev), parent, ts);
       gst_event_unref (ev);
     }
   }
@@ -150,12 +204,10 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
 static void
 do_push_buffer_pre (GstTracer * self, guint64 ts, GstPad * pad)
 {
-  GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (pad);
-  GstElement *peer_parent = get_real_pad_parent (peer_pad);
 
   send_latency_probe (parent, pad, ts);
-  calculate_latency (peer_parent, peer_pad, ts);
+  calculate_latency (parent, pad, ts);
 }
 
 static void
@@ -175,23 +227,85 @@ do_pull_range_post (GstTracer * self, guint64 ts, GstPad * pad)
   calculate_latency (parent, pad, ts);
 }
 
+static GstPadProbeReturn
+do_drop_sub_latency_event (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstEvent *ev = info->data;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  if (GST_EVENT_TYPE (ev) == GST_EVENT_CUSTOM_DOWNSTREAM) {
+    const GstStructure *data = gst_event_get_structure (ev);
+
+    if (gst_structure_get_name_id (data) == sub_latency_probe_id) {
+      const GValue *value;
+      /* FIXME unsafe peer pad usage */
+      gchar *pad_name = g_strdup_printf ("%s_%s",
+          GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
+
+      value = gst_structure_id_get_value (data, latency_probe_pad);
+      if (!g_str_equal (g_value_get_string (value), pad_name)) {
+        GST_DEBUG ("%s: Dropping sub-latency event", pad_name);
+        ret = GST_PAD_PROBE_DROP;
+      }
+
+      g_free (pad_name);
+    }
+  }
+
+  return ret;
+}
+
 static void
 do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
 {
+  GstElement *parent = get_real_pad_parent (pad);
   GstPad *peer_pad = GST_PAD_PEER (pad);
-  GstElement *parent = get_real_pad_parent (peer_pad);
+  GstElement *peer_parent = get_real_pad_parent (peer_pad);
 
   if (parent && (!GST_IS_BIN (parent)) &&
-      GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SINK)) {
-    if (GST_EVENT_TYPE (ev) == GST_EVENT_CUSTOM_DOWNSTREAM) {
-      const GstStructure *data = gst_event_get_structure (ev);
+      (!GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) &&
+      GST_EVENT_TYPE (ev) == GST_EVENT_CUSTOM_DOWNSTREAM) {
+    const GstStructure *data = gst_event_get_structure (ev);
 
-      if (gst_structure_get_name_id (data) == latency_probe_id) {
-        /* store event and calculate latency when the buffer that follows
-         * has been processed */
-        g_object_set_qdata ((GObject *) peer_pad, latency_probe_id,
+    /* if not set yet, add a pad probe that prevents sub-latency event from
+     * flowing further */
+    if (gst_structure_get_name_id (data) == latency_probe_id) {
+
+      if (!g_object_get_qdata ((GObject *) pad, drop_sub_latency_quark)) {
+        GST_DEBUG ("%s_%s: Adding pad probe to drop sub-latency event",
+            GST_DEBUG_PAD_NAME (pad));
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+            do_drop_sub_latency_event, NULL, NULL);
+        g_object_set_qdata ((GObject *) pad, drop_sub_latency_quark,
+            (gpointer) 1);
+      }
+
+      /* FIXME unsafe peer access */
+      if (GST_OBJECT_FLAG_IS_SET (peer_parent, GST_ELEMENT_FLAG_SINK)) {
+        GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
+
+        /* store event so that we can calculate latency when the buffer that
+         * follows has been processed */
+        g_object_set_qdata ((GObject *) pad, latency_probe_id,
             gst_event_ref (ev));
       }
+    }
+
+    if (gst_structure_get_name_id (data) == sub_latency_probe_id) {
+      const GValue *value;
+      gchar *pad_name = g_strdup_printf ("%s_%s",
+          GST_DEBUG_PAD_NAME (peer_pad));
+
+      value = gst_structure_id_get_value (data, latency_probe_pad);
+
+      if (!g_str_equal (g_value_get_string (value), pad_name)) {
+        GST_DEBUG ("%s: Storing sub-latency event", pad_name);
+        g_object_set_qdata ((GObject *) pad, sub_latency_probe_id,
+            gst_event_ref (ev));
+      }
+
+      g_free (pad_name);
     }
   }
 }
@@ -202,8 +316,11 @@ static void
 gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 {
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
+  sub_latency_probe_id = g_quark_from_static_string ("sub_latency_probe.id");
   latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
   latency_probe_ts = g_quark_from_static_string ("latency_probe.ts");
+  drop_sub_latency_quark =
+      g_quark_from_static_string ("drop_sub_latency.quark");
 
   /* announce trace formats */
   /* *INDENT-OFF* */
@@ -215,6 +332,26 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
       "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
+          NULL),
+      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING,
+              "time it took for the buffer to go from src to sink ns",
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "ts when the latency has been logged",
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      NULL);
+
+  tr_element_latency = gst_tracer_record_new ("element-latency.class",
+      "element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
