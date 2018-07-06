@@ -1501,6 +1501,7 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   }
   GST_OBJECT_UNLOCK (qtdemux);
 
+  qtdemux->segment_seqnum = seqnum;
   /* BYTE seek event */
   event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, byte_cur,
       stop_type, stop);
@@ -2147,10 +2148,10 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
-  qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
   qtdemux->need_segment = TRUE;
 
   if (hard) {
+    qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
     g_list_free_full (qtdemux->active_streams,
         (GDestroyNotify) gst_qtdemux_stream_free);
     g_list_free_full (qtdemux->old_streams,
@@ -2266,6 +2267,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 
       if (segment.format == GST_FORMAT_TIME) {
         demux->upstream_format_is_time = TRUE;
+        demux->segment_seqnum = gst_event_get_seqnum (event);
       } else {
         GST_DEBUG_OBJECT (demux, "Not storing upstream newsegment, "
             "not in time format");
