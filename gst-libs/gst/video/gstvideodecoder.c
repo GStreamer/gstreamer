@@ -619,15 +619,16 @@ parse_fail:
 }
 
 static GstVideoCodecState *
-_new_output_state (GstVideoFormat fmt, guint width, guint height,
-    GstVideoCodecState * reference)
+_new_output_state (GstVideoFormat fmt, GstVideoInterlaceMode mode, guint width,
+    guint height, GstVideoCodecState * reference)
 {
   GstVideoCodecState *state;
 
   state = g_slice_new0 (GstVideoCodecState);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
-  if (!gst_video_info_set_format (&state->info, fmt, width, height)) {
+  if (!gst_video_info_set_interlaced_format (&state->info, fmt, mode, width,
+          height)) {
     g_slice_free (GstVideoCodecState, state);
     return NULL;
   }
@@ -3486,6 +3487,31 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
     GstVideoFormat fmt, guint width, guint height,
     GstVideoCodecState * reference)
 {
+  return gst_video_decoder_set_interlaced_output_state (decoder, fmt,
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE, width, height, reference);
+}
+
+/**
+ * gst_video_decoder_set_interlaced_output_state:
+ * @decoder: a #GstVideoDecoder
+ * @fmt: a #GstVideoFormat
+ * @width: The width in pixels
+ * @height: The height in pixels
+ * @mode: A #GstVideoInterlaceMode
+ * @reference: (allow-none) (transfer none): An optional reference #GstVideoCodecState
+ *
+ * Same as #gst_video_decoder_set_output_state() but also allows you to also set
+ * the interlacing mode.
+ *
+ * Returns: (transfer full): the newly configured output state.
+ *
+ * Since: 1.16.
+ */
+GstVideoCodecState *
+gst_video_decoder_set_interlaced_output_state (GstVideoDecoder * decoder,
+    GstVideoFormat fmt, GstVideoInterlaceMode mode, guint width, guint height,
+    GstVideoCodecState * reference)
+{
   GstVideoDecoderPrivate *priv = decoder->priv;
   GstVideoCodecState *state;
 
@@ -3493,7 +3519,7 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
       fmt, width, height, reference);
 
   /* Create the new output state */
-  state = _new_output_state (fmt, width, height, reference);
+  state = _new_output_state (fmt, mode, width, height, reference);
   if (!state)
     return NULL;
 

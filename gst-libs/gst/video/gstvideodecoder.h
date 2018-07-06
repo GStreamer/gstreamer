@@ -434,6 +434,11 @@ GstVideoCodecState *gst_video_decoder_set_output_state (GstVideoDecoder *decoder
 							GstVideoCodecState *reference);
 
 GST_VIDEO_API
+GstVideoCodecState *gst_video_decoder_set_interlaced_output_state (GstVideoDecoder *decoder,
+                                                                   GstVideoFormat fmt, GstVideoInterlaceMode mode,
+                                                                   guint width, guint height, GstVideoCodecState *reference);
+
+GST_VIDEO_API
 GstVideoCodecState *gst_video_decoder_get_output_state (GstVideoDecoder *decoder);
 
 GST_VIDEO_API
