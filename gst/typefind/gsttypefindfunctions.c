@@ -279,8 +279,8 @@ static void
 unicode_type_find (GstTypeFind * tf, const GstUnicodeTester * tester,
     guint n_tester, const char *media_type, gboolean require_bom)
 {
-  size_t n;
-  gint len = 4;
+  gsize n;
+  gsize len = 4;
   const guint8 *data = gst_type_find_peek (tf, 0, len);
   int prob = -1;
   const gint max_scan_size = 256 * 1024;
@@ -1096,7 +1096,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
   DataScanCtx c = { 0, NULL, 0 };
   GstTypeFindProbability best_probability = GST_TYPE_FIND_NONE;
   GstCaps *best_caps = NULL;
-  guint best_count = 0;
+  gint best_count = 0;
 
   while (c.offset < AAC_AMOUNT) {
     guint snc, len, offset, i;
@@ -2470,7 +2470,7 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
 
     /* Have at least MPEGTS_HDR_SIZE bytes at this point */
     if (IS_MPEGTS_HEADER (data)) {
-      gint p;
+      gsize p;
 
       GST_LOG ("possible mpeg-ts sync at offset %" G_GUINT64_FORMAT, skipped);
 
@@ -2923,7 +2923,7 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
   gboolean seen_seq = FALSE;
   gboolean seen_gop = FALSE;
   guint64 last_pic_offset = 0;
-  guint num_pic_headers = 0;
+  gint num_pic_headers = 0;
   gint found = 0;
 
   while (c.offset < GST_MPEGVID_TYPEFIND_TRY_SYNC) {
@@ -3122,7 +3122,7 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
 {
   const gchar *profile;
   guint32 ftyp_size = 0;
-  gint offset = 0;
+  guint32 offset = 0;
   const guint8 *data = NULL;
 
   if ((data = gst_type_find_peek (tf, 0, 12)) == NULL) {
