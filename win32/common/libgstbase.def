@@ -74,6 +74,7 @@ EXPORTS
 	gst_base_sink_get_latency
 	gst_base_sink_get_max_bitrate
 	gst_base_sink_get_max_lateness
+	gst_base_sink_get_processing_deadline
 	gst_base_sink_get_render_delay
 	gst_base_sink_get_sync
 	gst_base_sink_get_throttle_time
@@ -89,6 +90,7 @@ EXPORTS
 	gst_base_sink_set_last_sample_enabled
 	gst_base_sink_set_max_bitrate
 	gst_base_sink_set_max_lateness
+	gst_base_sink_set_processing_deadline
 	gst_base_sink_set_qos_enabled
 	gst_base_sink_set_render_delay
 	gst_base_sink_set_sync
