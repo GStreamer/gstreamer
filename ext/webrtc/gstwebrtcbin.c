@@ -1258,8 +1258,11 @@ _find_codec_preferences (GstWebRTCBin * webrtc, GstWebRTCRTPTransceiver * trans,
   } else {
     GstWebRTCBinPad *pad = _find_pad_for_mline (webrtc, direction, media_idx);
     if (pad) {
-      GstCaps *caps = gst_pad_get_current_caps (GST_PAD (pad));
-      if (caps) {
+      GstCaps *caps = NULL;
+
+      if (pad->received_caps) {
+        caps = gst_caps_ref (pad->received_caps);
+      } else if ((caps = gst_pad_get_current_caps (GST_PAD (pad)))) {
         GST_LOG_OBJECT (webrtc, "Using current pad caps: %" GST_PTR_FORMAT,
             caps);
       } else {
