@@ -61,7 +61,11 @@ struct _GstDecklinkVideoSink
   GstClockTime internal_base_time;
   GstClockTime external_base_time;
 
-  GstClockTime scheduled_stop_time;
+  /* all in internal time of the decklink clock */
+  /* really an internal base time */
+  GstClockTime playing_start_time;      /* time that we entered playing */
+  /* really an internal start time */
+  GstClockTime paused_start_time;       /* time we entered paused, used to track how long we are in paused while the clock is running */
 
   GstDecklinkOutput *output;
 };
