@@ -17,20 +17,18 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
-import gi
+from . import overrides_hack
 
+import gi
 gi.require_version("Gst", "1.0")
 gi.require_version("GES", "1.0")
 
 from gi.repository import Gst  # noqa
+Gst.init(None)  # noqa
 from gi.repository import GES  # noqa
+GES.init()
 
 import unittest  # noqa
-
-
-
-Gst.init(None)
-GES.init()
 
 
 class TestCopyPaste(unittest.TestCase):
@@ -71,6 +69,13 @@ class TestCopyPaste(unittest.TestCase):
 
 
 class TestTitleClip(unittest.TestCase):
+
+    def testSetColor(self):
+        timeline = GES.Timeline.new_audio_video()
+        clip = GES.TitleClip.new()
+        timeline.append_layer().add_clip(clip )
+        self.assertTrue(clip.set_child_property('color', 1))
+        self.assertTrue(clip.set_child_property('color', 4294967295))
 
     def testGetPropertyNotInTrack(self):
         title_clip = GES.TitleClip.new()

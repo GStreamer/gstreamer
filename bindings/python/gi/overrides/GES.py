@@ -28,6 +28,7 @@ import sys
 from ..overrides import override
 from ..importer import modules
 
+
 if sys.version_info >= (3, 0):
     _basestring = str
     _callable = lambda c: hasattr(c, '__call__')
@@ -48,6 +49,29 @@ port your app to GES 1 or greater. static python bindings is the recomended \
 python module to use with GES 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
+
+
+class TrackElement(GES.TrackElement):
+    def set_child_property(self, prop_name, prop_value):
+        return TimelineElement.set_child_property(self, prop_name, prop_value)
+
+
+TrackElement = override(TrackElement)
+__all__.append('TrackElement')
+
+
+class TimelineElement(GES.TimelineElement):
+    def set_child_property(self, prop_name, prop_value):
+        res, child, unused_pspec = self.lookup_child(prop_name)
+        if not res:
+            return res
+
+        child.set_property(prop_name, prop_value)
+        return res
+
+
+TimelineElement = override(TimelineElement)
+__all__.append('TimelineElement')
 
 
 try:

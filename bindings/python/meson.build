@@ -1,0 +1,1 @@
+install_data(['gi/overrides/GES.py'], install_dir: pygi_override_dir)

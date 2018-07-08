@@ -156,6 +156,50 @@ subdir('pkgconfig')
 subdir('tests')
 subdir('examples')
 
+override_detector = '''
+import sys
+import os
+
+prefix = sys.argv[1]
+version = sys.version_info
+
+# If we are installing in the same prefix as PyGobject
+# make sure to install in the right place.
+import gi.overrides
+
+overrides_path = os.path.dirname(gi.overrides.__file__)
+if os.path.commonprefix([overrides_path, prefix]) == prefix:
+    print(overrides_path)
+    exit(0)
+
+# Otherwise follow python's way of install site packages inside
+# the provided prefix
+if os.name == 'posix':
+    print(os.path.join(
+        prefix, 'lib', 'python%d.%d' % (version.major, version.minor),
+        'site-packages', 'gi', 'overrides'))
+else:
+    print(os.path.join(
+        prefix, 'Lib', 'Python%d%d' % (version.major, version.minor),
+        'site-packages', 'gi', 'overrides'))
+'''
+python3 = import('python3').find_python()
+pygi_override_dir = get_option('pygi-overrides-dir')
+if pygi_override_dir == ''
+    cres = run_command(python3, '-c', override_detector, get_option('prefix'))
+    if cres.returncode() == 0
+      pygi_override_dir = cres.stdout().strip()
+    endif
+    if cres.stderr() != ''
+        message(cres.stderr())
+    endif
+endif
+
+if pygi_override_dir != ''
+  message('pygobject overrides directory ' + pygi_override_dir)
+  subdir('bindings/python')
+endif
+
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
 elif get_option('disable_gtkdoc')
@@ -168,5 +212,4 @@ else
   endif
 endif
 
-python3 = import('python3').find_python()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

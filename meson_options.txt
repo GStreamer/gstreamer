@@ -4,3 +4,5 @@ option('disable_introspection',
 option('disable_gtkdoc',
         type : 'boolean', value : false,
         description : 'Whether to disable the documentation generation')
+option('pygi-overrides-dir', type : 'string', value : '',
+        description: 'Path to pygobject overrides directory')
