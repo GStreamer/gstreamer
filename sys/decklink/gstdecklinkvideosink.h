@@ -61,6 +61,8 @@ struct _GstDecklinkVideoSink
   GstClockTime internal_base_time;
   GstClockTime external_base_time;
 
+  GstClockTime scheduled_stop_time;
+
   GstDecklinkOutput *output;
 };
 
