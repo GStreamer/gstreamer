@@ -65,7 +65,8 @@ class MesonTest(Test):
         env['CK_FORK'] = 'no'
         self.add_env_variable('CK_FORK', 'no')
         for var, val in self.child_env.items():
-            self.add_env_variable(var, val)
+            if val != os.environ.get(var):
+                self.add_env_variable(var, val)
 
         return env
 
