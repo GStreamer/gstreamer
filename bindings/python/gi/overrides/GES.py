@@ -64,7 +64,6 @@ class TimelineElement(GES.TimelineElement):
     def set_child_property(self, prop_name, prop_value):
         res, child, unused_pspec = self.lookup_child(prop_name)
         if not res:
-            print("No found any child")
             return res
 
         child.set_property(prop_name, prop_value)
