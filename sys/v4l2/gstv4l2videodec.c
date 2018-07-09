@@ -260,10 +260,12 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
      * block. */
     {
       GstCaps *caps = gst_pad_get_current_caps (decoder->srcpad);
-      GstQuery *query = gst_query_new_allocation (caps, FALSE);
-      gst_pad_peer_query (decoder->srcpad, query);
-      gst_query_unref (query);
-      gst_caps_unref (caps);
+      if (caps) {
+        GstQuery *query = gst_query_new_allocation (caps, FALSE);
+        gst_pad_peer_query (decoder->srcpad, query);
+        gst_query_unref (query);
+        gst_caps_unref (caps);
+      }
     }
 
     gst_v4l2_object_stop (self->v4l2capture);
