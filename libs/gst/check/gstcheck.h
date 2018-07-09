@@ -500,6 +500,24 @@ G_STMT_START {                                                    \
  */
 #define assert_equals_pointer(a, b) fail_unless_equals_pointer(a, b)
 
+/**
+ * fail_unless_equals_clocktime:
+ * @a: a #GstClockTime value or expression
+ * @b: a #GstClockTime value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
+#define fail_unless_equals_clocktime(a, b)                              \
+G_STMT_START {                                                          \
+  GstClockTime first = a;                                                        \
+  GstClockTime second = b;                                                       \
+  fail_unless(first == second,                                          \
+    "'" #a "' (%" GST_TIME_FORMAT") is not equal to '" #b"' (%" GST_TIME_FORMAT")", \
+      GST_TIME_ARGS (first), GST_TIME_ARGS (second));       \
+} G_STMT_END;
+
 /***
  * thread test macros and variables
  */
