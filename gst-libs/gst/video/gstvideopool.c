@@ -221,7 +221,8 @@ wrong_caps:
 wrong_size:
   {
     GST_WARNING_OBJECT (pool,
-        "Provided size is to small for the caps: %u", size);
+        "Provided size is to small for the caps: %u < %" G_GSIZE_FORMAT, size,
+        info.size);
     return FALSE;
   }
 failed_to_align:
