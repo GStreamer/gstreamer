@@ -1190,7 +1190,8 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       GList *frame_events;
 
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+      if (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS)
+        flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
 
       /* Ensure we have caps before forwarding the event */
@@ -2124,7 +2125,8 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
   /* Draining on DISCONT is handled in chain_reverse() for reverse playback,
    * and this function would only be called to get everything collected GOP
    * by GOP in the parse_gather list */
-  if (decoder->input_segment.rate > 0.0 && GST_BUFFER_IS_DISCONT (buf))
+  if (decoder->input_segment.rate > 0.0 && GST_BUFFER_IS_DISCONT (buf)
+      && (decoder->input_segment.flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS))
     ret = gst_video_decoder_drain_out (decoder, FALSE);
 
   if (priv->current_frame == NULL)
