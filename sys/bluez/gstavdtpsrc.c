@@ -40,6 +40,7 @@ enum
 {
   PROP_0,
   PROP_TRANSPORT,
+  PROP_TRANSPORT_VOLUME,
 };
 
 #define parent_class gst_avdtp_src_parent_class
@@ -101,6 +102,12 @@ gst_avdtp_src_class_init (GstAvdtpSrcClass * klass)
       g_param_spec_string ("transport",
           "Transport", "Use configured transport", NULL, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_TRANSPORT_VOLUME,
+      g_param_spec_uint ("transport-volume",
+          "Transport volume",
+          "Volume of the transport (only valid if transport is acquired)",
+          0, 127, 127, G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (element_class,
       "Bluetooth AVDTP Source",
       "Source/Audio/Network/RTP",
@@ -149,6 +156,11 @@ gst_avdtp_src_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, avdtpsrc->conn.transport);
       break;
 
+    case PROP_TRANSPORT_VOLUME:
+      g_value_set_uint (value,
+          gst_avdtp_connection_get_volume (&avdtpsrc->conn));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -165,6 +177,10 @@ gst_avdtp_src_set_property (GObject * object, guint prop_id,
     case PROP_TRANSPORT:
       gst_avdtp_connection_set_transport (&avdtpsrc->conn,
           g_value_get_string (value));
+      break;
+
+    case PROP_TRANSPORT_VOLUME:
+      /* This is no-op because setting is handled via a GBinding */
       break;
 
     default:
@@ -375,6 +391,11 @@ gst_avdtp_src_start (GstBaseSrc * bsrc)
   gst_poll_set_flushing (avdtpsrc->poll, FALSE);
 
   g_atomic_int_set (&avdtpsrc->unlocked, FALSE);
+
+  /* The life time of the connection is shorter than the src object, so we
+   * don't need to worry about memory management */
+  gst_avdtp_connection_notify_volume (&avdtpsrc->conn, G_OBJECT (avdtpsrc),
+      "transport-volume");
 
   gst_avdtp_src_start_avrcp (avdtpsrc);
 
