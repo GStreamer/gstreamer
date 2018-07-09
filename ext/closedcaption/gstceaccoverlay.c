@@ -1521,7 +1521,8 @@ gst_cea_cc_overlay_user_data_decode (GstCeaCcOverlay * overlay,
       case CCTYPE_608_CC2:
         if (cc_valid) {
           if (overlay->cea608_index[cc_type] <= DTVCC_LENGTH - 2) {
-            for (size_t j = 0; j < 2; ++j) {
+            size_t j;
+            for (j = 0; j < 2; ++j) {
               if ((cc_data[j] < ' ') || (cc_data[j] > '~')) {
                 gst_cea_cc_overlay_process_packet (overlay, cc_type);
               }
