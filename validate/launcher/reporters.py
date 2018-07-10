@@ -178,7 +178,7 @@ class XunitReporter(Reporter):
         xml_file.write('<?xml version="1.0" encoding="%(encoding)s"?>'
                        '<testsuite name="gst-validate-launcher" tests="%(total)d" '
                        'errors="%(timeout)d" failures="%(failures)d" '
-                       'skip="%(skipped)d">' % self.stats)
+                       'skipped="%(skipped)d">' % self.stats)
 
         tmp_xml_file = codecs.open(self.tmp_xml_file.name, 'r',
                                    self.encoding, 'replace')
