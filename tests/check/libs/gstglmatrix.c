@@ -137,7 +137,7 @@ GST_START_TEST (test_matrix_ndc)
 }
 
 GST_END_TEST;
-#if 0
+
 static void
 transpose_matrix4 (float *m, float *res)
 {
@@ -148,6 +148,8 @@ transpose_matrix4 (float *m, float *res)
       int idx = i + (j * 4);
       int swapped_idx = j + (i * 4);
 
+      GST_ERROR ("swapping %i %f into %i", idx, m[idx], swapped_idx);
+
       if (i == j)
         fail_unless (idx == swapped_idx);
 
@@ -155,7 +157,7 @@ transpose_matrix4 (float *m, float *res)
     }
   }
 }
-#endif
+
 static float
 dot4 (float *v1, float *v2)
 {
@@ -174,21 +176,22 @@ _matrix_mult_vertex4 (float *m, float *v, float *res)
   res[3] = dot4 (&m[12], v);
 }
 
-#if 0
 /* v * m */
-/* Not the prevailing multiplication convention and not really used in
- * GStreamer. Kept around for extra testing */
+/* Used because the default is for OpenGL to read matrices transposed on
+ * uploading */
 static void
-_vertex_mult_matrix4 (float *v, float *m, float *res)
+_vertex_mult_matrix4 (float *m, float *v, float *res)
 {
   float tmp[16] = { 0., };
 
+  GST_TRACE ("original matrix");
+  debug_matrix (m);
   transpose_matrix4 (m, tmp);
   GST_TRACE ("transposed matrix");
   debug_matrix (tmp);
   _matrix_mult_vertex4 (tmp, v, res);
 }
-#endif
+
 GST_START_TEST (test_matrix_vertex_identity)
 {
   float identity[] = {
@@ -202,7 +205,7 @@ GST_START_TEST (test_matrix_vertex_identity)
   float res[4] = { 0., };
   int i;
 
-  _matrix_mult_vertex4 (identity, v, res);
+  _vertex_mult_matrix4 (identity, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
@@ -228,9 +231,34 @@ GST_START_TEST (test_matrix_vertex_scale)
   float res[4] = { 0., };
   int i;
 
-  _matrix_mult_vertex4 (scale, v, res);
+  _vertex_mult_matrix4 (scale, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
+
+  for (i = 0; i < 4; i++) {
+    fail_unless (FEQ (res[i], expected[i]),
+        "value %f at index %u does not match " "expected value %f", res[i], i,
+        expected[i]);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_matrix_vertex_translate)
+{
+  float translate_1[] = {
+    1., 0., 0., 0.,
+    0., 1., 0., 0.,
+    0., 0., 1., 0.,
+    1., 2., 3., 1.,
+  };
+
+  float v[] = { 1., 1., 1., 1. };
+  float expected[] = { 2., 3., 4., 1. };
+  float res[4] = { 0., };
+  int i;
+
+  _vertex_mult_matrix4 (translate_1, v, res);
 
   for (i = 0; i < 4; i++) {
     fail_unless (FEQ (res[i], expected[i]),
@@ -266,7 +294,7 @@ GST_START_TEST (test_matrix_vertex_y_invert)
   GST_DEBUG ("y-invert");
   debug_matrix (y_invert);
 
-  _matrix_mult_vertex4 (y_invert, v, res);
+  _vertex_mult_matrix4 (y_invert, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
@@ -283,7 +311,7 @@ GST_START_TEST (test_matrix_vertex_y_invert)
   GST_DEBUG ("y-invert from ndc [-1,1]^3 to [0,1]^3");
   debug_matrix (aff_meta->matrix);
 
-  _matrix_mult_vertex4 (aff_meta->matrix, v, res);
+  _vertex_mult_matrix4 (aff_meta->matrix, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
@@ -296,7 +324,7 @@ GST_START_TEST (test_matrix_vertex_y_invert)
   /* test vec4(1,0,1,1) -> vec4(1,1,1,1) */
   v[1] = 0.;
   expected[1] = 1.;
-  _matrix_mult_vertex4 (aff_meta->matrix, v, res);
+  _vertex_mult_matrix4 (aff_meta->matrix, v, res);
   GST_DEBUG ("vertex: %" VEC4_FORMAT, VEC4_ARGS (v));
   GST_DEBUG ("result: %" VEC4_FORMAT, VEC4_ARGS (res));
 
@@ -320,6 +348,7 @@ gst_gl_matrix_suite (void)
   tcase_add_test (tc_chain, test_matrix_ndc);
   tcase_add_test (tc_chain, test_matrix_vertex_identity);
   tcase_add_test (tc_chain, test_matrix_vertex_scale);
+  tcase_add_test (tc_chain, test_matrix_vertex_translate);
   tcase_add_test (tc_chain, test_matrix_vertex_y_invert);
 
   return s;
