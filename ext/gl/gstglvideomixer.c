@@ -43,6 +43,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <gst/controller/gstproxycontrolbinding.h>
 #include <gst/gl/gstglfuncs.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
