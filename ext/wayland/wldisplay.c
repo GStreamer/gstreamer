@@ -90,6 +90,9 @@ gst_wl_display_finalize (GObject * gobject)
   if (self->shell)
     wl_shell_destroy (self->shell);
 
+  if (self->fullscreen_shell)
+    zwp_fullscreen_shell_v1_release (self->fullscreen_shell);
+
   if (self->compositor)
     wl_compositor_destroy (self->compositor);
 
@@ -225,6 +228,9 @@ registry_handle_global (void *data, struct wl_registry *registry,
         wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     self->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
+  } else if (g_strcmp0 (interface, "zwp_fullscreen_shell_v1") == 0) {
+    self->fullscreen_shell = wl_registry_bind (registry, id,
+        &zwp_fullscreen_shell_v1_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shm") == 0) {
     self->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
     wl_shm_add_listener (self->shm, &shm_listener, self);
@@ -336,7 +342,6 @@ gst_wl_display_new_existing (struct wl_display * display,
 
   VERIFY_INTERFACE_EXISTS (compositor, "wl_compositor");
   VERIFY_INTERFACE_EXISTS (subcompositor, "wl_subcompositor");
-  VERIFY_INTERFACE_EXISTS (shell, "wl_shell");
   VERIFY_INTERFACE_EXISTS (shm, "wl_shm");
 
 #undef VERIFY_INTERFACE_EXISTS
@@ -351,6 +356,15 @@ gst_wl_display_new_existing (struct wl_display * display,
 
   if (!self->dmabuf) {
     g_warning ("Could not bind to zwp_linux_dmabuf_v1");
+  }
+
+  if (!self->shell && !self->fullscreen_shell) {
+    /* If wl_surface and wl_display are passed via GstContext
+     * wl_shell, zwp_fullscreen_shell are not used.
+     * In this case is correct to continue.
+     */
+    g_warning ("Could not bind to wl_shell or zwp_fullscreen_shell, video "
+        "display may not work properly.");
   }
 
   self->thread = g_thread_try_new ("GstWlDisplay", gst_wl_display_thread_run,

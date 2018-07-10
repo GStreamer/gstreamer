@@ -172,17 +172,26 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
 
   window = gst_wl_window_new_internal (display, render_lock);
 
-  /* go toplevel */
-  window->shell_surface = wl_shell_get_shell_surface (display->shell,
-      window->area_surface);
+  if (display->shell) {
+    /* go toplevel */
+    window->shell_surface = wl_shell_get_shell_surface (display->shell,
+        window->area_surface);
 
-  if (window->shell_surface) {
-    wl_shell_surface_add_listener (window->shell_surface,
-        &shell_surface_listener, window);
-    gst_wl_window_ensure_fullscreen (window, fullscreen);
+    if (window->shell_surface) {
+      wl_shell_surface_add_listener (window->shell_surface,
+          &shell_surface_listener, window);
+      gst_wl_window_ensure_fullscreen (window, fullscreen);
+    } else {
+      GST_ERROR ("Unable to get wl_shell_surface");
+      g_object_unref (window);
+      return NULL;
+    }
+  } else if (display->fullscreen_shell) {
+    zwp_fullscreen_shell_v1_present_surface (display->fullscreen_shell,
+        window->area_surface, ZWP_FULLSCREEN_SHELL_V1_PRESENT_METHOD_ZOOM,
+        NULL);
   } else {
-    GST_ERROR ("Unable to get wl_shell_surface");
-
+    GST_ERROR ("Unable to use wl_shell or zwp_fullscreen_shell.");
     g_object_unref (window);
     return NULL;
   }

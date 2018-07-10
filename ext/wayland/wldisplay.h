@@ -26,6 +26,7 @@
 #include <wayland-client.h>
 #include "viewporter-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
+#include "fullscreen-shell-unstable-v1-client-protocol.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,7 @@ struct _GstWlDisplay
   struct wl_compositor *compositor;
   struct wl_subcompositor *subcompositor;
   struct wl_shell *shell;
+  struct zwp_fullscreen_shell_v1 *fullscreen_shell;
   struct wl_shm *shm;
   struct wp_viewporter *viewporter;
   struct zwp_linux_dmabuf_v1 *dmabuf;

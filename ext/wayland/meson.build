@@ -14,7 +14,9 @@ if use_wayland
     protocol_defs = [
         ['/stable/viewporter/viewporter.xml', 'viewporter-protocol.c', 'viewporter-client-protocol.h'],
         ['/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml',
-         'linux-dmabuf-unstable-v1-protocol.c', 'linux-dmabuf-unstable-v1-client-protocol.h']
+         'linux-dmabuf-unstable-v1-protocol.c', 'linux-dmabuf-unstable-v1-client-protocol.h'],
+        ['/unstable/fullscreen-shell/fullscreen-shell-unstable-v1.xml',
+         'fullscreen-shell-unstable-v1-protocol.c', 'fullscreen-shell-unstable-v1-client-protocol.h']
     ]
     protocols_files = []
 
