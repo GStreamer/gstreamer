@@ -287,6 +287,8 @@ gst_sample_set_buffer_list (GstSample * sample, GstBufferList * buffer_list)
     sample->buffer_list = gst_buffer_list_ref (buffer_list);
     gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->buffer_list),
         GST_MINI_OBJECT_CAST (sample));
+  } else {
+    sample->buffer_list = NULL;
   }
 
   if (old) {
@@ -322,6 +324,8 @@ gst_sample_set_buffer (GstSample * sample, GstBuffer * buffer)
     sample->buffer = gst_buffer_ref (buffer);
     gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->buffer),
         GST_MINI_OBJECT_CAST (sample));
+  } else {
+    sample->buffer = NULL;
   }
 
   if (old) {
@@ -357,6 +361,8 @@ gst_sample_set_caps (GstSample * sample, GstCaps * caps)
     sample->caps = gst_caps_ref (caps);
     gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (sample->caps),
         GST_MINI_OBJECT_CAST (sample));
+  } else {
+    sample->caps = NULL;
   }
 
   if (old) {
