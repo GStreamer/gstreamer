@@ -15,6 +15,12 @@ noinst_PROGRAMS += test-cgroups
 LDADD += $(LIBCGROUP_LIBS)
 endif
 
+test_appsrc2_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS)
+test_appsrc2_LDADD = \
+	$(LDADD) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstapp-1.0
 test_netclock_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GST_NET_CFLAGS)
