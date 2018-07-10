@@ -45,6 +45,7 @@ stamp-h.in
 /examples/test-multicast
 /examples/test-multicast2
 /examples/test-auth-digest
+/examples/test-video-disconnect
 
 /test-driver
 /tests/check/gst/*.log
