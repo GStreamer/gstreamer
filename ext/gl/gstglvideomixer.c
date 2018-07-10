@@ -618,7 +618,7 @@ gst_gl_video_mixer_pad_init (GstGLVideoMixerPad * pad)
   pad->blend_function_src_alpha = DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA;
   pad->blend_function_dst_rgb = DEFAULT_PAD_BLEND_FUNCTION_DST_RGB;
   pad->blend_function_dst_alpha = DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA;
-  memset(pad->m_matrix, 0, sizeof(gfloat) * 4 * 4);
+  memset (pad->m_matrix, 0, sizeof (gfloat) * 4 * 4);
   pad->m_matrix[0] = 1.0;
   pad->m_matrix[5] = 1.0;
   pad->m_matrix[10] = 1.0;
@@ -1558,7 +1558,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
       pad->m_matrix[5] = h;
       pad->m_matrix[12] = (gfloat) pad->xpos / (gfloat) out_width;
       pad->m_matrix[13] = (gfloat) pad->ypos / (gfloat) out_height;
-      
+
       GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f with "
           "alpha:%f", in_tex, in_width, in_height, v_vertices[0], v_vertices[1],
           v_vertices[5], v_vertices[11], pad->alpha);
@@ -1590,7 +1590,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
       af_meta = gst_buffer_get_video_affine_transformation_meta (buffer);
       gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, af_matrix);
-      gst_gl_multiply_matrix4(af_matrix, pad->m_matrix, matrix);
+      gst_gl_multiply_matrix4 (af_matrix, pad->m_matrix, matrix);
       gst_gl_shader_set_uniform_matrix_4fv (video_mixer->shader,
           "u_transformation", 1, FALSE, matrix);
     }
