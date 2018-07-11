@@ -4020,6 +4020,46 @@ gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
 }
 
 gboolean
+gst_v4l2_object_caps_is_subset (GstV4l2Object * v4l2object, GstCaps * caps)
+{
+  GstStructure *config;
+  GstCaps *oldcaps;
+  gboolean ret;
+
+  if (!v4l2object->pool)
+    return FALSE;
+
+  config = gst_buffer_pool_get_config (v4l2object->pool);
+  gst_buffer_pool_config_get_params (config, &oldcaps, NULL, NULL, NULL);
+
+  ret = oldcaps && gst_caps_is_subset (oldcaps, caps);
+
+  gst_structure_free (config);
+
+  return ret;
+}
+
+GstCaps *
+gst_v4l2_object_get_current_caps (GstV4l2Object * v4l2object)
+{
+  GstStructure *config;
+  GstCaps *oldcaps;
+
+  if (!v4l2object->pool)
+    return NULL;
+
+  config = gst_buffer_pool_get_config (v4l2object->pool);
+  gst_buffer_pool_config_get_params (config, &oldcaps, NULL, NULL, NULL);
+
+  if (oldcaps)
+    gst_caps_ref (oldcaps);
+
+  gst_structure_free (config);
+
+  return oldcaps;
+}
+
+gboolean
 gst_v4l2_object_unlock (GstV4l2Object * v4l2object)
 {
   gboolean ret = TRUE;
