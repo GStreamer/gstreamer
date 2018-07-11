@@ -113,9 +113,9 @@ GST_START_TEST (test_element_negotiation)
    * will apply those caps to the buffers.
    * see http://bugzilla.gnome.org/show_bug.cgi?id=315126 */
   s = "fakesrc num-buffers=2 ! "
-      "audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=22050,channels=1 "
+      "audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=22050,channels=1,layout=interleaved "
       "! audioconvert "
-      "! audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=22050,channels=1 "
+      "! audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=22050,channels=1,layout=interleaved "
       "! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
