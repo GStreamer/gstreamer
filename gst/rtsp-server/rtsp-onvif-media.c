@@ -284,7 +284,7 @@ out:
 
 /**
  * gst_rtsp_onvif_media_set_backchannel_bandwidth:
- * @factory: a #GstRTSPMedia
+ * @media: a #GstRTSPMedia
  * @bandwidth: the bandwidth in bits per second
  *
  * Set the configured/supported bandwidth of the ONVIF backchannel pipeline in
@@ -305,7 +305,7 @@ gst_rtsp_onvif_media_set_backchannel_bandwidth (GstRTSPOnvifMedia * media,
 
 /**
  * gst_rtsp_onvif_media_get_backchannel_bandwidth:
- * @factory: a #GstRTSPMedia
+ * @media: a #GstRTSPMedia
  *
  * Get the configured/supported bandwidth of the ONVIF backchannel pipeline in
  * bits per second.
