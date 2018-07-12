@@ -219,8 +219,14 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
     const gchar *name;
 
     if (overrides && g_hash_table_contains (overrides, opt->name)) {
-      name =
-          gst_structure_get_name (g_hash_table_lookup (overrides, opt->name));
+      gboolean skip;
+      const GstStructure *s =
+          (GstStructure *) g_hash_table_lookup (overrides, opt->name);
+
+      name = gst_structure_get_name (s);
+      if (gst_structure_get_boolean (s, "skip", &skip) && skip) {
+        continue;
+      }
     } else {
       name = opt->name;
     }
