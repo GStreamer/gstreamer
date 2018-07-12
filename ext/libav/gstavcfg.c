@@ -52,6 +52,21 @@ make_generic_overrides (void)
       gst_structure_new_empty ("bitrate-tolerance"));
   g_hash_table_insert (generic_overrides, g_strdup ("bf"),
       gst_structure_new_empty ("max-bframes"));
+
+  /* Those are exposed through caps */
+  g_hash_table_insert (generic_overrides, g_strdup ("profile"),
+      gst_structure_new ("profile", "skip", G_TYPE_BOOLEAN, TRUE, NULL));
+  g_hash_table_insert (generic_overrides, g_strdup ("level"),
+      gst_structure_new ("level", "skip", G_TYPE_BOOLEAN, TRUE, NULL));
+  g_hash_table_insert (generic_overrides, g_strdup ("color_primaries"),
+      gst_structure_new ("color_primaries", "skip", G_TYPE_BOOLEAN, TRUE,
+          NULL));
+  g_hash_table_insert (generic_overrides, g_strdup ("color_trc"),
+      gst_structure_new ("color_trc", "skip", G_TYPE_BOOLEAN, TRUE, NULL));
+  g_hash_table_insert (generic_overrides, g_strdup ("colorspace"),
+      gst_structure_new ("colorspace", "skip", G_TYPE_BOOLEAN, TRUE, NULL));
+  g_hash_table_insert (generic_overrides, g_strdup ("color_range"),
+      gst_structure_new ("color_range", "skip", G_TYPE_BOOLEAN, TRUE, NULL));
 }
 
 void
