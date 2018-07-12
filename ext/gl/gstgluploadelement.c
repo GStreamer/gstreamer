@@ -194,6 +194,12 @@ static gboolean
 _gst_gl_upload_element_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
+  GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (trans);
+  GstGLContext *context = GST_GL_BASE_FILTER (trans)->context;
+
+  if (upload->upload && context)
+    gst_gl_upload_set_context (upload->upload, context);
+
   return
       GST_BASE_TRANSFORM_CLASS
       (gst_gl_upload_element_parent_class)->decide_allocation (trans, query);
