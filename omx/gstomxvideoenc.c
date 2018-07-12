@@ -2320,7 +2320,7 @@ gst_omx_video_enc_flush (GstVideoEncoder * encoder)
 
 static gboolean
 gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
-    GstBuffer * inbuf, GstOMXBuffer * outbuf, gboolean variant_10)
+    GstBuffer * inbuf, GstOMXBuffer * outbuf, const GstVideoFormatInfo * finfo)
 {
   GstVideoInfo *info = &self->input_state->info;
   OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
@@ -2352,7 +2352,7 @@ gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
     height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
     width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
 
-    if (variant_10)
+    if (GST_VIDEO_FORMAT_INFO_BITS (finfo) == 10)
       /* Need ((width + 2) / 3) 32-bits words */
       width = (width + 2) / 3 * 4;
 
@@ -2371,13 +2371,9 @@ gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
     }
 
     /* nFilledLen should include the vertical padding in each slice (spec 3.1.3.7.1) */
-    if (i == 0)
-      outbuf->omx_buf->nFilledLen +=
-          port_def->format.video.nSliceHeight * port_def->format.video.nStride;
-    else
-      outbuf->omx_buf->nFilledLen +=
-          (port_def->format.video.nSliceHeight / 2) *
-          port_def->format.video.nStride;
+    outbuf->omx_buf->nFilledLen +=
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
+        port_def->format.video.nSliceHeight) * port_def->format.video.nStride;
   }
 
   gst_video_frame_unmap (&frame);
@@ -2529,14 +2525,11 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
     }
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV16:
-      ret =
-          gst_omx_video_enc_semi_planar_manual_copy (self, inbuf, outbuf,
-          FALSE);
-      break;
     case GST_VIDEO_FORMAT_NV12_10LE32:
     case GST_VIDEO_FORMAT_NV16_10LE32:
       ret =
-          gst_omx_video_enc_semi_planar_manual_copy (self, inbuf, outbuf, TRUE);
+          gst_omx_video_enc_semi_planar_manual_copy (self, inbuf, outbuf,
+          info->finfo);
       break;
     default:
       GST_ERROR_OBJECT (self, "Unsupported format");
