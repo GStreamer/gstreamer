@@ -850,8 +850,16 @@ void
 ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
 {
   guint i;
-  GstCaps *new_restriction_caps = gst_caps_copy (self->priv->restriction_caps);
+  GstCaps *new_restriction_caps;
 
+  g_return_if_fail (GES_IS_TRACK (self));
+
+  if (!self->priv->restriction_caps) {
+    ges_track_set_restriction_caps (self, caps);
+    return;
+  }
+
+  new_restriction_caps = gst_caps_copy (self->priv->restriction_caps);
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *new = gst_caps_get_structure (caps, i);
 
@@ -865,6 +873,7 @@ ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
   }
 
   ges_track_set_restriction_caps (self, new_restriction_caps);
+  gst_caps_unref (new_restriction_caps);
 }
 
 /**
