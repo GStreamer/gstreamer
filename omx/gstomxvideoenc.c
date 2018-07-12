@@ -108,6 +108,8 @@ gst_omx_video_enc_gop_mode_get_type (void)
           "low-delay-p"},
       {OMX_ALG_GOP_MODE_LOW_DELAY_B, "Single I-frame followed by B-frames only",
           "low-delay-b"},
+      {OMX_ALG_GOP_MODE_ADAPTIVE, "Advanced GOP pattern with adaptive B-frames",
+          "adaptive"},
       {0, NULL, NULL}
     };
 
