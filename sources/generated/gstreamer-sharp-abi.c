@@ -332,8 +332,8 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstMiniObject.copy\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, copy));
 	g_print("\"GstMiniObject.dispose\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, dispose));
 	g_print("\"GstMiniObject.free\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, free));
-	g_print("\"GstMiniObject.n_qdata\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, n_qdata));
-	g_print("\"GstMiniObject.qdata\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, qdata));
+	g_print("\"GstMiniObject.priv_uint\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, priv_uint));
+	g_print("\"GstMiniObject.priv_pointer\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstMiniObject, priv_pointer));
 	g_print("\"sizeof(GstQuery)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstQuery));
 	g_print("\"GstQuery.type\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstQuery, type));
 	g_print("\"sizeof(GstStructure)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstStructure));

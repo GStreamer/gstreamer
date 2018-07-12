@@ -274,22 +274,22 @@ namespace Gst {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // free
 							, "dispose"
-							, "n_qdata"
+							, "priv_uint"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
-						new GLib.AbiField("n_qdata"
+						new GLib.AbiField("priv_uint"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(uint)) // n_qdata
+							, (uint) Marshal.SizeOf(typeof(uint)) // priv_uint
 							, "free"
-							, "qdata"
-							, (long) Marshal.OffsetOf(typeof(GstMiniObject_n_qdataAlign), "n_qdata")
+							, "priv_pointer"
+							, (long) Marshal.OffsetOf(typeof(GstMiniObject_n_qdataAlign), "priv_uint")
 							, 0
 							),
-						new GLib.AbiField("qdata"
+						new GLib.AbiField("priv_pointer"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) // qdata
-							, "n_qdata"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // priv_pointer
+							, "priv_uint"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -332,7 +332,7 @@ namespace Gst {
 		public struct GstMiniObject_n_qdataAlign
 		{
 			sbyte f1;
-			private uint n_qdata;
+			private uint priv_uint;
 		}
 
 

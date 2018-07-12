@@ -326,8 +326,8 @@ namespace AbiTester {
 			Console.WriteLine("\"GstMiniObject.copy\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("copy") + "\"");
 			Console.WriteLine("\"GstMiniObject.dispose\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("dispose") + "\"");
 			Console.WriteLine("\"GstMiniObject.free\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("free") + "\"");
-			Console.WriteLine("\"GstMiniObject.n_qdata\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("n_qdata") + "\"");
-			Console.WriteLine("\"GstMiniObject.qdata\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("qdata") + "\"");
+			Console.WriteLine("\"GstMiniObject.priv_uint\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("priv_uint") + "\"");
+			Console.WriteLine("\"GstMiniObject.priv_pointer\": \"" + Gst.MiniObject.abi_info.GetFieldOffset("priv_pointer") + "\"");
 			Console.WriteLine("\"sizeof(GstQuery)\": \"" + Gst.Query.abi_info.Size + "\"");
 			Console.WriteLine("\"GstQuery.type\": \"" + Gst.Query.abi_info.GetFieldOffset("type") + "\"");
 			Console.WriteLine("\"sizeof(GstStructure)\": \"" + Gst.Structure.abi_info.Size + "\"");
