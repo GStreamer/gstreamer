@@ -1332,13 +1332,14 @@ void
 gst_rtsp_media_factory_set_clock (GstRTSPMediaFactory * factory,
     GstClock * clock)
 {
-  GstRTSPMediaFactoryPrivate *priv;
+  GstClock **clock_p;
 
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
   g_return_if_fail (GST_IS_CLOCK (clock) || clock == NULL);
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  priv = factory->priv;
-  priv->clock = clock ? gst_object_ref (clock) : NULL;
+  clock_p = &factory->priv->clock;
+  gst_object_replace ((GstObject **) clock_p, (GstObject *) clock);
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
@@ -1358,6 +1359,8 @@ gst_rtsp_media_factory_get_clock (GstRTSPMediaFactory * factory)
 {
   GstRTSPMediaFactoryPrivate *priv;
   GstClock *ret;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   priv = factory->priv;
