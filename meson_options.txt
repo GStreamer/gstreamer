@@ -7,7 +7,7 @@ option('ges', type : 'feature', value : 'auto')
 option('rtsp_server', type : 'feature', value : 'auto')
 option('omx', type : 'feature', value : 'disabled')
 option('vaapi', type : 'feature', value : 'auto')
-option('sharp', type : 'feature', value : 'auto')
+option('sharp', type : 'feature', value : 'disabled')
 option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
 
 # Common options, automatically inherited by subprojects
