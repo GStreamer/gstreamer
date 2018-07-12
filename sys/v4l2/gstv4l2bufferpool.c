@@ -1057,17 +1057,12 @@ no_buffers:
 }
 
 static GstFlowReturn
-gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
+gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
+    GstV4l2MemoryGroup * group)
 {
-  GstV4l2MemoryGroup *group = NULL;
   const GstV4l2Object *obj = pool->obj;
   GstClockTime timestamp;
   gint index;
-
-  if (!gst_v4l2_is_buffer_valid (buf, &group)) {
-    GST_ERROR_OBJECT (pool, "invalid buffer %p", buf);
-    return GST_FLOW_ERROR;
-  }
 
   index = group->buffer.index;
 
@@ -1415,7 +1410,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             /* queue back in the device */
             if (pool->other_pool)
               gst_v4l2_buffer_pool_prepare_buffer (pool, buffer, NULL);
-            if (gst_v4l2_buffer_pool_qbuf (pool, buffer) != GST_FLOW_OK)
+            if (gst_v4l2_buffer_pool_qbuf (pool, buffer, group) != GST_FLOW_OK)
               pclass->release_buffer (bpool, buffer);
           } else {
             /* Simply release invalide/modified buffer, the allocator will
@@ -1915,9 +1910,13 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
               gst_buffer_unref (to_queue);
               goto prepare_failed;
             }
+
+            /* retreive the group */
+            gst_v4l2_is_buffer_valid (to_queue, &group);
           }
 
-          if ((ret = gst_v4l2_buffer_pool_qbuf (pool, to_queue)) != GST_FLOW_OK)
+          if ((ret = gst_v4l2_buffer_pool_qbuf (pool, to_queue, group))
+              != GST_FLOW_OK)
             goto queue_failed;
 
           /* if we are not streaming yet (this is the first buffer, start
