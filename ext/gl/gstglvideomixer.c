@@ -461,8 +461,7 @@ static void gst_gl_video_mixer_child_proxy_init (gpointer g_iface,
 #define gst_gl_video_mixer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLVideoMixer, gst_gl_video_mixer, GST_TYPE_GL_MIXER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
-        gst_gl_video_mixer_child_proxy_init);
-    DEBUG_INIT);
+        gst_gl_video_mixer_child_proxy_init); DEBUG_INIT);
 
 static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -1556,12 +1555,14 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
       pad->m_matrix[0] = w;
       pad->m_matrix[5] = h;
-      pad->m_matrix[12] = (gfloat) pad->xpos / (gfloat) out_width;
-      pad->m_matrix[13] = (gfloat) pad->ypos / (gfloat) out_height;
+      pad->m_matrix[12] =
+          2. * (gfloat) pad->xpos / (gfloat) out_width - (1. - w);
+      pad->m_matrix[13] =
+          2. * (gfloat) pad->ypos / (gfloat) out_height - (1. - h);
 
       GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f with "
-          "alpha:%f", in_tex, in_width, in_height, v_vertices[0], v_vertices[1],
-          v_vertices[5], v_vertices[11], pad->alpha);
+          "alpha:%f", in_tex, in_width, in_height, pad->m_matrix[12],
+          pad->m_matrix[13], pad->m_matrix[0], pad->m_matrix[5], pad->alpha);
 
       if (!pad->vertex_buffer)
         gl->GenBuffers (1, &pad->vertex_buffer);
