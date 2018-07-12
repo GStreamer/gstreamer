@@ -280,7 +280,7 @@ class Test(Loggable):
         elif self.process.returncode in COREDUMP_SIGNALS:
             self.add_stack_trace_to_logfile()
             self.set_result(Result.FAILED,
-                            "Application segfaulted, returne code: %d" % (
+                            "Application crashed, return code: %d" % (
                                 self.process.returncode))
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             self.set_result(Result.FAILED, "Valgrind reported errors")
