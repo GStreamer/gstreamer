@@ -1,18 +1,12 @@
 project('All GStreamer modules', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.46.0',
+  meson_version : '>= 0.47.0',
   default_options : ['buildtype=debugoptimized'])
 
 gst_version = '>= @0@'.format(meson.project_version())
 gst_branch = 'master'
 
 glib_req = '>= 2.40.0'
-
-subprojects = [
-    'gstreamer',
-    'gst-plugins-base',
-    'gst-plugins-good',
-]
 
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
@@ -37,103 +31,64 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
 endif
 
 # FIXME Remove that check once we have ffmpeg as a gst-libav subproject
-libavfilter_dep = dependency('libavfilter', version: '>= 6.47.100', required: false)
-gst_libav = []
-if libavfilter_dep.found()
-    cc = meson.get_compiler('c')
-    check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
-    #if LIBAVCODEC_VERSION_MICRO >= 100
-    /* FFmpeg uses 100+ as its micro version */
-    #else
-    #error libav provider should be FFmpeg
-    #endif'''
-    if cc.compiles(check_ffmpeg_src, dependencies : libavfilter_dep, name : 'whether libav is provided by FFmpeg')
-        gst_libav = ['gst-libav']
-    endif
-endif
-
-if gst_libav.length() == 0
-    message('WARNING: gst-libav not built as ffmpeg >= n3.1.2 not found on the system')
-endif
-
-if get_option('python')
-  if dependency('pygobject-3.0', required : false).found()
-    subprojects += ['gst-python']
-  else
-    message('WARNING: not building gst-python module, missing pygobject-3.0')
-  endif
-endif
-
-if get_option('bad')
-    subprojects += ['gst-plugins-bad']
-endif
-
-if get_option('ugly')
-    subprojects += ['gst-plugins-ugly']
-endif
-
-if get_option('libav')
-    subprojects += gst_libav
-endif
-
-if get_option('omx')
-    subprojects += ['gst-omx']
-endif
-
-if get_option('vaapi')
-  if dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : false).found()
-    subprojects += ['gstreamer-vaapi']
-  else
-    message('WARNING: not building gstreamer-vaapi module, missing libva')
-  endif
-endif
-
-if get_option('devtools')
-  if dependency('json-glib-1.0', required : false).found()
-    subprojects += ['gst-devtools']
-  else
-    message('WARNING: not building gst-devtools module, missing glib-json-1.0')
-  endif
-endif
-
-if get_option('ges')
-  if dependency('libxml-2.0', required : false).found()
-    subprojects += ['gst-editing-services']
-  else
-    message('WARNING: not building gst-editing-services module, missing libxml-2.0')
-  endif
-endif
-
-if get_option('rtsp_server')
-    subprojects += ['gst-rtsp-server']
-endif
-
-if get_option('sharp')
-  if add_languages('cs', required : false)
-    if meson.version().version_compare('>=0.43')
-      subprojects += ['gstreamer-sharp']
+libav_opt = get_option('libav')
+libav_deps = [dependency('libavfilter', version: '>= 6.47.100', required: libav_opt)]
+if libav_deps[0].found()
+  cc = meson.get_compiler('c')
+  check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
+  #if LIBAVCODEC_VERSION_MICRO >= 100
+  /* FFmpeg uses 100+ as its micro version */
+  #else
+  #error libav provider should be FFmpeg
+  #endif'''
+  if cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'whether libav is provided by FFmpeg') == false
+    if libav_opt.enabled()
+      error('gst-libav is enabled but can\'t be built')
     else
-      message('WARNING: Not building gstreamer-sharp as meson >=0.43 not found.')
+      message('WARNING: gst-libav not built as ffmpeg n3.1.2 not found on the system')
+      libav_deps += [disabler()]
     endif
-  else
-    message('WARNING: Not building gstreamer-sharp as no CS compiler found.')
   endif
 endif
+
+if add_languages('cs', required : get_option('sharp'))
+  sharp_deps = []
+else
+  sharp_deps = [disabler()]
+endif
+
+python_opt = get_option('python')
+vaapi_opt = get_option('vaapi')
+devtools_opt = get_option('devtools')
+ges_opt = get_option('ges')
+subprojects = {
+    'gstreamer': {},
+    'gst-plugins-base': {},
+    'gst-plugins-good': {},
+    'gst-plugins-bad': { 'option': get_option('bad') },
+    'gst-plugins-ugly': { 'option': get_option('ugly') },
+    'gst-python': { 'option': python_opt, 'dependencies': [dependency('pygobject-3.0', required : python_opt)] },
+    'gst-omx': { 'option': get_option('omx'), },
+    'gstreamer-vaapi': {
+      'option': vaapi_opt,
+      'dependencies': [dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : vaapi_opt)]
+    },
+    'gst-devtools': {
+      'option': devtools_opt,
+      'dependencies': [dependency('json-glib-1.0', required: devtools_opt)],
+    },
+    'gst-editing-services': { 'option': ges_opt, 'dependencies': [dependency('libxml-2.0', required : ges_opt)] },
+    'gst-rtsp-server': { 'option': get_option('rtsp_server') },
+    'gstreamer-sharp': { 'option': get_option('sharp'), 'dependencies': sharp_deps },
+}
 
 python3 = import('python3').find_python()
 symlink = '''
 import os
 
 os.symlink(os.path.join('@1@', 'subprojects', '@0@'),
-    os.path.join('@1@', '@0@'))
+  os.path.join('@1@', '@0@'))
 '''
-
-foreach custom_subproj: get_option('custom_subprojects').split(',')
-    if custom_subproj != ''
-        message ('Adding custom subproject ' + custom_subproj)
-        subprojects += [custom_subproj]
-    endif
-endforeach
 
 # On Windows, if flex/bison aren't found, we use a subproject to get them
 flex = find_program('flex', 'win_flex', required : build_system != 'windows')
@@ -142,17 +97,40 @@ if not flex.found() or not bison.found()
   subproject('win-flex-bison-binaries')
 endif
 
-message('Building subprojects: ' + ', '.join(subprojects))
-foreach subproj: subprojects
-    subproject(subproj, version: gst_version)
+subprojects_names = []
+foreach project_name, build_infos: subprojects
+    build = true
+    if build_infos.has_key('option')
+      build = not build_infos.get('option').disabled()
+      if build
+        foreach dep: build_infos.get('dependencies', [])
+          if dep.found() == false
+            warning('@0@ dependency @1@ not found - NOT BUILDING'.format(project_name, dep))
+            build = false
+          endif
+        endforeach
+      endif
+    endif
 
-    cmdres = run_command(python3, '-c', symlink.format(subproj, meson.current_source_dir()))
-    if cmdres.returncode() == 0
-       message('Created symlink to ' + subproj)
-    else
-       message('Could not create symlink to @0@'.format(subproj))
+    if build
+      subprojects_names += [project_name]
+      subproject(project_name, version: gst_version)
+      cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
+      if cmdres.returncode() == 0
+        message('Created symlink to ' + project_name)
+      endif
     endif
 endforeach
+
+foreach custom_subproj: get_option('custom_subprojects').split(',')
+    if custom_subproj != ''
+        message ('Adding custom subproject ' + custom_subproj)
+        subproject(custom_subproj)
+        subprojects_names += [custom_subproj]
+    endif
+endforeach
+
+message('Building subprojects: ' + ', '.join(subprojects_names))
 
 setenv = find_program('gst-uninstalled.py')
 run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.build_root()),
