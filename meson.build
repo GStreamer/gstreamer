@@ -30,10 +30,9 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
   endif
 endif
 
-# FIXME Remove that check once we have ffmpeg as a gst-libav subproject
 libav_opt = get_option('libav')
-libav_deps = [dependency('libavfilter', version: '>= 6.47.100', required: libav_opt)]
-if libav_deps[0].found()
+libav_deps = [dependency('libavfilter', version: '>= 7.16.100', fallback: ['FFmpeg', 'libavfilter_dep'])]
+if libav_deps[0].found() and libav_deps[0].type_name() != 'internal'
   cc = meson.get_compiler('c')
   check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
   #if LIBAVCODEC_VERSION_MICRO >= 100
