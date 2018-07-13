@@ -742,6 +742,10 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
   GST_DEBUG_OBJECT (pool, "activating pool");
 
+  if (pool->other_pool)
+    if (!gst_buffer_pool_set_active (pool->other_pool, TRUE))
+      goto other_pool_failed;
+
   config = gst_buffer_pool_get_config (bpool);
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers))
@@ -860,10 +864,6 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
       max_buffers);
   pclass->set_config (bpool, config);
   gst_structure_free (config);
-
-  if (pool->other_pool)
-    if (!gst_buffer_pool_set_active (pool->other_pool, TRUE))
-      goto other_pool_failed;
 
   /* now, allocate the buffers: */
   if (!pclass->start (bpool))
