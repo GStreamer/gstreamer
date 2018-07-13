@@ -829,17 +829,21 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
   /* there is a config request, see if we need to insert it */
   if (rtpvorbispay->config_interval > 0 && rtpvorbispay->config_data) {
     gboolean send_config = FALSE;
+    GstClockTime running_time =
+        gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+        timestamp);
 
     if (rtpvorbispay->last_config != -1) {
       guint64 diff;
 
       GST_LOG_OBJECT (rtpvorbispay,
           "now %" GST_TIME_FORMAT ", last config %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtpvorbispay->last_config));
+          GST_TIME_ARGS (running_time),
+          GST_TIME_ARGS (rtpvorbispay->last_config));
 
       /* calculate diff between last config in milliseconds */
-      if (timestamp > rtpvorbispay->last_config) {
-        diff = timestamp - rtpvorbispay->last_config;
+      if (running_time > rtpvorbispay->last_config) {
+        diff = running_time - rtpvorbispay->last_config;
       } else {
         diff = 0;
       }
@@ -848,7 +852,6 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
           "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
 
       /* bigger than interval, queue config */
-      /* FIXME should convert timestamps to running time */
       if (GST_TIME_AS_SECONDS (diff) >= rtpvorbispay->config_interval) {
         GST_DEBUG_OBJECT (rtpvorbispay, "time to send config");
         send_config = TRUE;
@@ -866,8 +869,8 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
           NULL, rtpvorbispay->config_data, rtpvorbispay->config_size,
           timestamp, GST_CLOCK_TIME_NONE, rtpvorbispay->config_extra_len);
 
-      if (timestamp != -1) {
-        rtpvorbispay->last_config = timestamp;
+      if (running_time != -1) {
+        rtpvorbispay->last_config = running_time;
       }
     }
   }

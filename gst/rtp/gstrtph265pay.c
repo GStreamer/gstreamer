@@ -802,7 +802,9 @@ gst_rtp_h265_pay_decode_nal (GstRtpH265Pay * payloader,
 
     /* remember when we last saw VPS */
     if (updated && pts != -1)
-      payloader->last_vps_sps_pps = pts;
+      payloader->last_vps_sps_pps =
+          gst_segment_to_running_time (&GST_RTP_BASE_PAYLOAD_CAST
+          (payloader)->segment, GST_FORMAT_TIME, pts);
   } else {
     GST_DEBUG_OBJECT (payloader, "NALU type 0x%x, size %u", type, size);
   }
@@ -856,7 +858,9 @@ gst_rtp_h265_pay_send_vps_sps_pps (GstRTPBasePayload * basepayload,
   }
 
   if (pts != -1 && sent_all_vps_sps_pps)
-    rtph265pay->last_vps_sps_pps = pts;
+    rtph265pay->last_vps_sps_pps =
+        gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+        pts);
 
   return ret;
 }
@@ -929,15 +933,18 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
       if (rtph265pay->vps_sps_pps_interval > 0) {
         if (rtph265pay->last_vps_sps_pps != -1) {
           guint64 diff;
+          GstClockTime running_time =
+              gst_segment_to_running_time (&basepayload->segment,
+              GST_FORMAT_TIME, pts);
 
           GST_LOG_OBJECT (rtph265pay,
               "now %" GST_TIME_FORMAT ", last VPS/SPS/PPS %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (pts),
+              GST_TIME_ARGS (running_time),
               GST_TIME_ARGS (rtph265pay->last_vps_sps_pps));
 
           /* calculate diff between last SPS/PPS in milliseconds */
-          if (pts > rtph265pay->last_vps_sps_pps)
-            diff = pts - rtph265pay->last_vps_sps_pps;
+          if (running_time > rtph265pay->last_vps_sps_pps)
+            diff = running_time - rtph265pay->last_vps_sps_pps;
           else
             diff = 0;
 

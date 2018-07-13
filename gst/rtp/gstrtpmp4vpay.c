@@ -472,23 +472,32 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       size = gst_buffer_get_size (buffer);
     } else {
+      GstClockTime running_time =
+          gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+          timestamp);
+
       GST_LOG_OBJECT (rtpmp4vpay, "found config in stream");
-      rtpmp4vpay->last_config = timestamp;
+      rtpmp4vpay->last_config = running_time;
     }
   }
 
   /* there is a config request, see if we need to insert it */
   if (vopi && (rtpmp4vpay->config_interval > 0) && rtpmp4vpay->config) {
+    GstClockTime running_time =
+        gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+        timestamp);
+
     if (rtpmp4vpay->last_config != -1) {
       guint64 diff;
 
       GST_LOG_OBJECT (rtpmp4vpay,
           "now %" GST_TIME_FORMAT ", last VOP-I %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtpmp4vpay->last_config));
+          GST_TIME_ARGS (running_time),
+          GST_TIME_ARGS (rtpmp4vpay->last_config));
 
       /* calculate diff between last config in milliseconds */
-      if (timestamp > rtpmp4vpay->last_config) {
-        diff = timestamp - rtpmp4vpay->last_config;
+      if (running_time > rtpmp4vpay->last_config) {
+        diff = running_time - rtpmp4vpay->last_config;
       } else {
         diff = 0;
       }
@@ -497,7 +506,6 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
           "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
 
       /* bigger than interval, queue config */
-      /* FIXME should convert timestamps to running time */
       if (GST_TIME_AS_SECONDS (diff) >= rtpmp4vpay->config_interval) {
         GST_DEBUG_OBJECT (rtpmp4vpay, "time to send config");
         send_config = TRUE;
@@ -518,8 +526,8 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
       GST_BUFFER_PTS (buffer) = timestamp;
       size = gst_buffer_get_size (buffer);
 
-      if (timestamp != -1) {
-        rtpmp4vpay->last_config = timestamp;
+      if (running_time != -1) {
+        rtpmp4vpay->last_config = running_time;
       }
     }
   }
