@@ -572,7 +572,6 @@ gst_ffmpeg_cfg_fill_context (GObject * object, AVCodecContext * context)
     if (!opt)
       continue;
 
-    g_object_getv (object, 1, &pspec->name, &value);
     g_object_get_property (object, pspec->name, &value);
     set_option_value (context, pspec, &value, opt);
   }
