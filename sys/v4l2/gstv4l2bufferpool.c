@@ -1712,12 +1712,9 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             guint num_queued;
             gsize size = gst_buffer_get_size (*buf);
 
-            if (size == 0) {
-              if (GST_BUFFER_FLAG_IS_SET (*buf, GST_BUFFER_FLAG_CORRUPTED))
-                goto buffer_corrupted;
-              else
-                goto eos;
-            }
+            /* Legacy M2M devices return empty buffer when drained */
+            if (size == 0 && GST_V4L2_IS_M2M (obj->device_caps))
+              goto eos;
 
             if (GST_VIDEO_INFO_FORMAT (&pool->caps_info) !=
                 GST_VIDEO_FORMAT_ENCODED && size < pool->size)
@@ -1767,14 +1764,10 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
 
           /* An empty buffer on capture indicates the end of stream */
           if (gst_buffer_get_size (tmp) == 0) {
-            gboolean corrupted = GST_BUFFER_FLAG_IS_SET (tmp,
-                GST_BUFFER_FLAG_CORRUPTED);
-
             gst_v4l2_buffer_pool_release_buffer (bpool, tmp);
 
-            if (corrupted)
-              goto buffer_corrupted;
-            else
+            /* Legacy M2M devices return empty buffer when drained */
+            if (GST_V4L2_IS_M2M (obj->device_caps))
               goto eos;
           }
 
@@ -1944,13 +1937,6 @@ copy_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to copy buffer");
     return ret;
-  }
-buffer_corrupted:
-  {
-    GST_WARNING_OBJECT (pool, "Dropping corrupted buffer without payload");
-    gst_buffer_unref (*buf);
-    *buf = NULL;
-    return GST_V4L2_FLOW_CORRUPTED_BUFFER;
   }
 buffer_truncated:
   {
