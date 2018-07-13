@@ -63,6 +63,9 @@
 
 #include "../../gst-libs/gst/gst-i18n-plugin.h"
 #include "gsttemplatematch.h"
+#if (CV_MAJOR_VERSION >= 3)
+#include <opencv2/imgproc.hpp>
+#endif
 #include <opencv2/imgproc/imgproc_c.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_template_match_debug);
