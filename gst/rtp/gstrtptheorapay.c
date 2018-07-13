@@ -819,17 +819,21 @@ gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * basepayload,
   if (keyframe && (rtptheorapay->config_interval > 0) &&
       rtptheorapay->config_data) {
     gboolean send_config = FALSE;
+    GstClockTime running_time =
+        gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+        timestamp);
 
     if (rtptheorapay->last_config != -1) {
       guint64 diff;
 
       GST_LOG_OBJECT (rtptheorapay,
           "now %" GST_TIME_FORMAT ", last VOP-I %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtptheorapay->last_config));
+          GST_TIME_ARGS (running_time),
+          GST_TIME_ARGS (rtptheorapay->last_config));
 
       /* calculate diff between last config in milliseconds */
-      if (timestamp > rtptheorapay->last_config) {
-        diff = timestamp - rtptheorapay->last_config;
+      if (running_time > rtptheorapay->last_config) {
+        diff = running_time - rtptheorapay->last_config;
       } else {
         diff = 0;
       }
@@ -838,7 +842,6 @@ gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * basepayload,
           "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
 
       /* bigger than interval, queue config */
-      /* FIXME should convert timestamps to running time */
       if (GST_TIME_AS_SECONDS (diff) >= rtptheorapay->config_interval) {
         GST_DEBUG_OBJECT (rtptheorapay, "time to send config");
         send_config = TRUE;
@@ -856,8 +859,8 @@ gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * basepayload,
           NULL, rtptheorapay->config_data, rtptheorapay->config_size,
           timestamp, GST_CLOCK_TIME_NONE, rtptheorapay->config_extra_len);
 
-      if (timestamp != -1) {
-        rtptheorapay->last_config = timestamp;
+      if (running_time != -1) {
+        rtptheorapay->last_config = running_time;
       }
     }
   }

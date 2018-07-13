@@ -717,7 +717,9 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 
     /* remember when we last saw SPS */
     if (updated && pts != -1)
-      payloader->last_spspps = pts;
+      payloader->last_spspps =
+          gst_segment_to_running_time (&GST_RTP_BASE_PAYLOAD_CAST
+          (payloader)->segment, GST_FORMAT_TIME, pts);
   } else {
     GST_DEBUG ("NAL: %x %x %x Len = %u", (header >> 7),
         (header >> 5) & 3, type, size);
@@ -769,7 +771,9 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
   }
 
   if (pts != -1 && sent_all_sps_pps)
-    rtph264pay->last_spspps = pts;
+    rtph264pay->last_spspps =
+        gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+        pts);
 
   return ret;
 }
@@ -816,14 +820,18 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   if (nalType == IDR_TYPE_ID && rtph264pay->spspps_interval > 0) {
     if (rtph264pay->last_spspps != -1) {
       guint64 diff;
+      GstClockTime running_time =
+          gst_segment_to_running_time (&basepayload->segment, GST_FORMAT_TIME,
+          pts);
 
       GST_LOG_OBJECT (rtph264pay,
           "now %" GST_TIME_FORMAT ", last SPS/PPS %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (pts), GST_TIME_ARGS (rtph264pay->last_spspps));
+          GST_TIME_ARGS (running_time),
+          GST_TIME_ARGS (rtph264pay->last_spspps));
 
       /* calculate diff between last SPS/PPS in milliseconds */
-      if (pts > rtph264pay->last_spspps)
-        diff = pts - rtph264pay->last_spspps;
+      if (running_time > rtph264pay->last_spspps)
+        diff = running_time - rtph264pay->last_spspps;
       else
         diff = 0;
 
