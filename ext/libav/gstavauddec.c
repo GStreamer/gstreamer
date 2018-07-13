@@ -580,9 +580,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     GST_WARNING_OBJECT (ffmpegdec,
         "Tried to receive frame on a flushed context");
   } else if (res < 0) {
-    *ret = GST_FLOW_ERROR;
-    GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, ("Decoding problem"),
-        ("Legitimate decoding error"));
+    *ret = GST_FLOW_OK;
+    GST_WARNING_OBJECT (ffmpegdec, "Legitimate decoding error");
   }
 
 beach:
