@@ -153,12 +153,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     else
       device_caps = vcap.capabilities;
 
-    if (!((device_caps & (V4L2_CAP_VIDEO_M2M | V4L2_CAP_VIDEO_M2M_MPLANE)) ||
-            /* But legacy driver may expose both CAPTURE and OUTPUT */
-            ((device_caps &
-                    (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)) &&
-                (device_caps &
-                    (V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE)))))
+    if (!GST_V4L2_IS_M2M (device_caps))
       continue;
 
     GST_DEBUG ("Probing '%s' located at '%s'",

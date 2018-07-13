@@ -575,14 +575,7 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
     goto not_output;
 
   if (GST_IS_V4L2_VIDEO_DEC (v4l2object->element) &&
-      /* Today's M2M device only expose M2M */
-      !((v4l2object->device_caps & (V4L2_CAP_VIDEO_M2M |
-                  V4L2_CAP_VIDEO_M2M_MPLANE)) ||
-          /* But legacy driver may expose both CAPTURE and OUTPUT */
-          ((v4l2object->device_caps &
-                  (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)) &&
-              (v4l2object->device_caps &
-                  (V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE)))))
+      !GST_V4L2_IS_M2M (v4l2object->device_caps))
     goto not_m2m;
 
   gst_v4l2_adjust_buf_type (v4l2object);
