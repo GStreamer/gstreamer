@@ -1451,7 +1451,7 @@ gst_base_sink_get_max_bitrate (GstBaseSink * sink)
 /**
  * gst_base_sink_set_processing_deadline:
  * @sink: a #GstBaseSink
- * @delay: the new processing deadline in nanoseconds.
+ * @processing_deadline: the new processing deadline in nanoseconds.
  *
  * Maximum amount of time (in nanoseconds) that the pipeline can take
  * for processing the buffer. This is added to the latency of live
@@ -1462,7 +1462,8 @@ gst_base_sink_get_max_bitrate (GstBaseSink * sink)
  * Since: 1.16
  */
 void
-gst_base_sink_set_processing_deadline (GstBaseSink * sink, GstClockTime delay)
+gst_base_sink_set_processing_deadline (GstBaseSink * sink,
+    GstClockTime processing_deadline)
 {
   GstClockTime old_processing_deadline;
 
@@ -1470,12 +1471,12 @@ gst_base_sink_set_processing_deadline (GstBaseSink * sink, GstClockTime delay)
 
   GST_OBJECT_LOCK (sink);
   old_processing_deadline = sink->priv->processing_deadline;
-  sink->priv->processing_deadline = delay;
-  GST_LOG_OBJECT (sink, "set render delay to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (delay));
+  sink->priv->processing_deadline = processing_deadline;
+  GST_LOG_OBJECT (sink, "set render processing_deadline to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (processing_deadline));
   GST_OBJECT_UNLOCK (sink);
 
-  if (delay != old_processing_deadline) {
+  if (processing_deadline != old_processing_deadline) {
     GST_DEBUG_OBJECT (sink, "posting latency changed");
     gst_element_post_message (GST_ELEMENT_CAST (sink),
         gst_message_new_latency (GST_OBJECT_CAST (sink)));
