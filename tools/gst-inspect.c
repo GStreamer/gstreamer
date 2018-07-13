@@ -269,6 +269,12 @@ flags_to_string (GFlagsValue * vals, guint flags)
   GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | \
   GST_PARAM_MUTABLE_PAUSED | GST_PARAM_MUTABLE_READY)
 
+static int
+sort_gparamspecs (GParamSpec ** a, GParamSpec ** b)
+{
+  return g_strcmp0 (g_param_spec_get_name (*a), g_param_spec_get_name (*b));
+}
+
 /* obj will be NULL if we're printing properties of pad template pads */
 static void
 print_object_properties_info (GObject * obj, GObjectClass * obj_class,
@@ -280,6 +286,9 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
   gboolean first_flag;
 
   property_specs = g_object_class_list_properties (obj_class, &num_properties);
+  g_qsort_with_data (property_specs, num_properties, sizeof (gpointer),
+      (GCompareDataFunc) sort_gparamspecs, NULL);
+
   n_print ("%s:\n", desc);
 
   push_indent ();
