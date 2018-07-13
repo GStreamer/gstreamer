@@ -41,6 +41,24 @@ G_BEGIN_DECLS
   } \
 }
 
+/**
+ * GST_V4L2_IS_M2M:
+ * @_dcaps: The device capabilities
+ *
+ * Checks if the device caps represent an M2M device. Note that modern M2M
+ * devices uses V4L2_CAP_VIDEO_M2M* flag, but legacy uses to set both CAPTURE
+ * and OUTPUT flags instead.
+ *
+ * Returns: %TRUE if this is a M2M device.
+ */
+#define GST_V4L2_IS_M2M(_dcaps) \
+  (((_dcaps) & (V4L2_CAP_VIDEO_M2M | V4L2_CAP_VIDEO_M2M_MPLANE)) ||\
+            (((_dcaps) & \
+                    (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)) && \
+                ((_dcaps) & \
+                    (V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE))))
+
+
 typedef struct _GstV4l2Iterator GstV4l2Iterator;
 typedef struct _GstV4l2Error GstV4l2Error;
 
