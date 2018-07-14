@@ -1505,6 +1505,7 @@ _pick_rtx_payload_types (GstWebRTCBin * webrtc, WebRTCTransceiver * trans,
     str = g_strdup_printf ("%u", target_ssrc);
     gst_structure_set (trans->local_rtx_ssrc_map, str, G_TYPE_UINT,
         g_random_int (), NULL);
+    g_free (str);
 
     str = g_strdup_printf ("%u", pt);
     gst_sdp_media_add_format (media, str);
