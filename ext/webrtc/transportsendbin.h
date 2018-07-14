@@ -32,20 +32,43 @@ GType transport_send_bin_get_type(void);
 #define TRANSPORT_SEND_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_WEBRTC_TRANSPORT_SEND_BIN,TransportSendBinClass))
 #define TRANSPORT_SEND_BIN_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_WEBRTC_TRANSPORT_SEND_BIN,TransportSendBinClass))
 
+typedef struct _TransportSendBinDTLSContext TransportSendBinDTLSContext;
+
+struct _TransportSendBinDTLSContext {
+  GstElement *dtlssrtpenc;
+  GstElement *nicesink;
+
+  /* Block on the dtlssrtpenc RTP sink pad, if any */
+  struct pad_block          *rtp_block;
+  /* Block on the dtlssrtpenc RTCP sink pad, if any */
+  struct pad_block          *rtcp_block;
+  /* Block on the nicesink sink pad, if any */
+  struct pad_block          *nice_block;
+};
+
 struct _TransportSendBin
 {
   GstBin                     parent;
+
+  GMutex                     lock; /* Lock for managing children and pad blocks */
+  gboolean                   active; /* Flag that's cleared on shutdown */
 
   TransportStream           *stream;        /* parent transport stream */
   gboolean                   rtcp_mux;
 
   GstElement                *outputselector;
 
+  TransportSendBinDTLSContext rtp_ctx;
+  TransportSendBinDTLSContext rtcp_ctx;
+
+  /*
   struct pad_block          *rtp_block;
   struct pad_block          *rtcp_mux_block;
-  struct pad_block          *rtcp_block;
   struct pad_block          *rtp_nice_block;
+
+  struct pad_block          *rtcp_block;
   struct pad_block          *rtcp_nice_block;
+  */
 };
 
 struct _TransportSendBinClass
