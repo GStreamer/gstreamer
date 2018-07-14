@@ -1375,32 +1375,46 @@ static GstValidateExecuteActionReturn
 _execute_set_rank (GstValidateScenario * scenario, GstValidateAction * action)
 {
   guint rank;
+  GList *features, *origlist;
+  GstPlugin *plugin;
   GstPluginFeature *feature;
-  const gchar *feature_name;
+  const gchar *name;
 
-  if (!(feature_name =
-          gst_structure_get_string (action->structure, "feature-name"))) {
-    GST_ERROR ("Could not find the name of the feature to tweak");
+  if (!(name = gst_structure_get_string (action->structure, "feature-name")) &&
+      !(name = gst_structure_get_string (action->structure, "name"))) {
+    GST_ERROR ("Could not find the name of the plugin feature(s) to tweak");
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
   if (!(gst_structure_get_uint (action->structure, "rank", &rank) ||
           gst_structure_get_int (action->structure, "rank", (gint *) & rank))) {
-    GST_ERROR ("Could not get rank to set on %s", feature_name);
+    GST_ERROR ("Could not get rank to set on %s", name);
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
-  feature = gst_registry_lookup_feature (gst_registry_get (), feature_name);
-  if (!feature) {
-    GST_ERROR ("Could not find feature %s", feature_name);
+  feature = gst_registry_lookup_feature (gst_registry_get (), name);
+  if (feature) {
+    gst_plugin_feature_set_rank (feature, rank);
+    gst_object_unref (feature);
+
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
+  }
+
+  plugin = gst_registry_find_plugin (gst_registry_get (), name);
+  if (!plugin) {
+    GST_ERROR ("Could not find %s", name);
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
-  gst_plugin_feature_set_rank (feature, rank);
-  gst_object_unref (feature);
+  origlist = features =
+      gst_registry_get_feature_list_by_plugin (gst_registry_get (),
+      gst_plugin_get_name (plugin));
+  for (; features; features = features->next)
+    gst_plugin_feature_set_rank (features->data, rank);
+  gst_plugin_feature_list_free (origlist);
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
@@ -4129,6 +4143,25 @@ init_scenarios (void)
       "For more information have a look at the GST_DEBUG_BIN_TO_DOT_FILE documentation.\n"
       "Note that the GST_DEBUG_DUMP_DOT_DIR env variable needs to be set",
       GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("set-rank", _execute_set_rank,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "name",
+          .description = "The name of a GstFeature or GstPlugin",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL},
+        {
+          .name = "rank",
+          .description = "The GstRank to set on @name",
+          .mandatory = TRUE,
+          .types = "string, int",
+          NULL},
+        {NULL}
+      }),
+      "Changes the ranking of a particular plugin feature(s)",
+      GST_VALIDATE_ACTION_TYPE_CONFIG);
 
   REGISTER_ACTION_TYPE ("set-feature-rank", _execute_set_rank,
       ((GstValidateActionParameter []) {
