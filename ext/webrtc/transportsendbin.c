@@ -304,6 +304,17 @@ _on_dtls_enc_key_set (GstElement * element, TransportSendBin * send)
 }
 
 static void
+_on_notify_dtls_client_status (GstElement * dtlssrtpenc,
+    GParamSpec * pspec, TransportSendBin * send)
+{
+  GST_DEBUG_OBJECT (send,
+      "DTLS-SRTP encoder configured. Unlocking it and changing state %"
+      GST_PTR_FORMAT, dtlssrtpenc);
+  gst_element_set_locked_state (dtlssrtpenc, FALSE);
+  gst_element_sync_state_with_parent (dtlssrtpenc);
+}
+
+static void
 _on_notify_ice_connection_state (GstWebRTCICETransport * transport,
     GParamSpec * pspec, TransportSendBin * send)
 {
@@ -356,6 +367,9 @@ transport_send_bin_constructed (GObject * object)
   /* unblock the encoder once the key is set */
   g_signal_connect (transport->dtlssrtpenc, "on-key-set",
       G_CALLBACK (_on_dtls_enc_key_set), send);
+  /* Bring the encoder up to current state only once the is-client prop is set */
+  g_signal_connect (transport->dtlssrtpenc, "notify::is-client",
+      G_CALLBACK (_on_notify_dtls_client_status), send);
   gst_bin_add (GST_BIN (send), GST_ELEMENT (transport->dtlssrtpenc));
 
   /* unblock ice sink once it signals a connection */
@@ -386,6 +400,9 @@ transport_send_bin_constructed (GObject * object)
   /* unblock the encoder once the key is set */
   g_signal_connect (transport->dtlssrtpenc, "on-key-set",
       G_CALLBACK (_on_dtls_enc_key_set), send);
+  /* Bring the encoder up to current state only once the is-client prop is set */
+  g_signal_connect (transport->dtlssrtpenc, "notify::is-client",
+      G_CALLBACK (_on_notify_dtls_client_status), send);
   gst_bin_add (GST_BIN (send), GST_ELEMENT (transport->dtlssrtpenc));
 
   /* unblock ice sink once it signals a connection */
