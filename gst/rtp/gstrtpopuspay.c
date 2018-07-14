@@ -103,21 +103,28 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   gboolean res;
   GstCaps *src_caps;
   GstStructure *s;
-  char *encoding_name;
+  const char *encoding_name = "OPUS";
   gint channels, rate;
   const char *sprop_stereo = NULL;
   char *sprop_maxcapturerate = NULL;
 
   src_caps = gst_pad_get_allowed_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
   if (src_caps) {
-    src_caps = gst_caps_make_writable (src_caps);
-    src_caps = gst_caps_truncate (src_caps);
+    GstStructure *s;
+    const GValue *value;
+
     s = gst_caps_get_structure (src_caps, 0);
-    gst_structure_fixate_field_string (s, "encoding-name", "OPUS");
-    encoding_name = g_strdup (gst_structure_get_string (s, "encoding-name"));
-    gst_caps_unref (src_caps);
-  } else {
-    encoding_name = g_strdup ("X-GST-OPUS-DRAFT-SPITTKA-00");
+
+    if (gst_structure_has_field (s, "encoding-name")) {
+      GValue default_value = G_VALUE_INIT;
+
+      g_value_init (&default_value, G_TYPE_STRING);
+      g_value_set_static_string (&default_value, encoding_name);
+
+      value = gst_structure_get_value (s, "encoding-name");
+      if (!gst_value_can_intersect (&default_value, value))
+        encoding_name = "X-GST-OPUS-DRAFT-SPITTKA-00";
+    }
   }
 
   s = gst_caps_get_structure (caps, 0);
@@ -139,7 +146,6 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 
   gst_rtp_base_payload_set_options (payload, "audio", FALSE,
       encoding_name, 48000);
-  g_free (encoding_name);
 
   if (sprop_maxcapturerate && sprop_stereo) {
     res =
