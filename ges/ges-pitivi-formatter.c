@@ -111,7 +111,7 @@ pitivi_can_load_uri (GESFormatter * dummy_instance, const gchar * uri,
   xmlXPathContextPtr xpathCtx;
   gchar *filename = g_filename_from_uri (uri, NULL, NULL);
 
-  if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+  if (!filename || !g_file_test (filename, G_FILE_TEST_EXISTS)) {
     g_free (filename);
     return FALSE;
   }
