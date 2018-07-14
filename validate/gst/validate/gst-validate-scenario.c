@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2013 Collabora Ltd.
  *  Author: Thibault Saunier <thibault.saunier@collabora.com>
+ * Copyright (C) 2018 Thibault Saunier <tsaunier@igalia.com>
  *
  * gst-validate-scenario.c - Validate Scenario class
  *
@@ -3592,6 +3593,172 @@ done:
   return res;
 }
 
+static GstValidateExecuteActionReturn
+_check_last_sample_checksum (GstValidateScenario * scenario,
+    GstValidateAction * action, GstElement * sink)
+{
+  GstSample *sample;
+  gchar *sum;
+  GstMapInfo map;
+  GstBuffer *buffer;
+  const gchar *target_sum;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+  target_sum = gst_validate_action_get_string (action, "checksum");
+  g_object_get (sink, "last-sample", &sample, NULL);
+  if (sample == NULL) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not \"check-last-sample\" as %" GST_PTR_FORMAT
+        " 'last-sample' property is NULL"
+        ". MAKE SURE THE 'enable-last-sample' PROPERTY IS SET TO 'TRUE'!",
+        sink);
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+
+  buffer = gst_sample_get_buffer (sample);
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Last sample buffer could not be mapped, action can't run.");
+    goto done;
+  }
+
+  sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
+
+  if (g_strcmp0 (sum, target_sum)) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Last buffer checksum '%s' is different than the expected one: '%s'",
+        sum, target_sum);
+
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+  g_free (sum);
+
+done:
+  return res;
+}
+
+static gboolean
+_sink_matches_last_sample_specs (GstElement * sink, const gchar * name,
+    const gchar * fname, GstCaps * sinkpad_caps)
+{
+  GstCaps *tmpcaps;
+  GstPad *sinkpad;
+  GObjectClass *klass = G_OBJECT_GET_CLASS (sink);
+  GParamSpec *paramspec = g_object_class_find_property (klass, "last-sample");
+
+  if (!paramspec)
+    return FALSE;
+
+  if (paramspec->value_type != GST_TYPE_SAMPLE)
+    return FALSE;
+
+  if (!name && !fname && !sinkpad_caps)
+    return TRUE;
+
+  if (name && !g_strcmp0 (GST_OBJECT_NAME (sink), name))
+    return TRUE;
+
+  if (fname
+      && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (sink)), fname))
+    return TRUE;
+
+  if (!sinkpad_caps)
+    return FALSE;
+
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  if (!sinkpad)
+    return FALSE;
+
+  tmpcaps = gst_pad_get_current_caps (sinkpad);
+  if (tmpcaps) {
+    gboolean res = gst_caps_can_intersect (tmpcaps, sinkpad_caps);
+
+    GST_DEBUG_OBJECT (sink, "Matches caps: %" GST_PTR_FORMAT, tmpcaps);
+    gst_caps_unref (tmpcaps);
+
+    return res;
+  } else {
+    GST_INFO_OBJECT (sink, "No caps set yet, can't check it.");
+  }
+
+  return FALSE;
+}
+
+static GstValidateExecuteActionReturn
+_execute_check_last_sample (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstIterator *it;
+  GValue data = { 0, };
+  gboolean done = FALSE;
+  GstCaps *caps = NULL;
+  GstElement *sink = NULL, *tmpelement;
+  const gchar *name = gst_structure_get_string (action->structure, "sink-name"),
+      *factory_name =
+      gst_structure_get_string (action->structure, "sink-factory-name"),
+      *caps_str = gst_structure_get_string (action->structure, "sinkpad-caps");
+  DECLARE_AND_GET_PIPELINE (scenario, action);
+
+  if (caps_str) {
+    caps = gst_caps_from_string (caps_str);
+
+    g_assert (caps);
+  }
+
+  it = gst_bin_iterate_recurse (GST_BIN (pipeline));
+  while (!done) {
+    switch (gst_iterator_next (it, &data)) {
+      case GST_ITERATOR_OK:
+        tmpelement = g_value_get_object (&data);
+        if (_sink_matches_last_sample_specs (tmpelement, name, factory_name,
+                caps)) {
+          if (sink) {
+
+            GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+                "Could not \"check-last-sample\" as several elements were found "
+                "from describing string: '%" GST_PTR_FORMAT
+                "' (%s and %s match)", action->structure,
+                GST_OBJECT_NAME (sink), GST_OBJECT_NAME (tmpelement));
+
+            gst_object_unref (sink);
+          }
+
+          sink = gst_object_ref (tmpelement);
+        }
+        g_value_reset (&data);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        g_clear_object (&sink);
+        break;
+      case GST_ITERATOR_ERROR:
+        /* Fallthrough */
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (it);
+  if (caps)
+    gst_caps_unref (caps);
+
+  if (!sink) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not \"check-last-sample\" as no sink was found from description: '%"
+        GST_PTR_FORMAT "'", action->structure);
+
+    goto error;
+  }
+
+  return _check_last_sample_checksum (scenario, action, sink);
+
+error:
+  g_clear_object (&sink);
+  return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+}
+
 static gboolean
 _action_set_done (GstValidateAction * action)
 {
@@ -3622,6 +3789,7 @@ _action_set_done (GstValidateAction * action)
       ")\n", action->type, GST_TIME_ARGS (execution_duration));
   action->priv->execution_time = GST_CLOCK_TIME_NONE;
   action->priv->state = _execute_sub_action_action (action);
+
   if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
 
@@ -4352,6 +4520,44 @@ init_scenarios (void)
       }),
       "Disables a GstPlugin",
       GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("check-last-sample", _execute_check_last_sample,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "sink-name",
+          .description = "The name of the sink element to check sample on.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "sink-factory-name",
+          .description = "The name of the factory of the sink element to check sample on.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "sinkpad-caps",
+          .description = "The caps (as string) of the sink to check.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "checksum",
+          .description = "The reference checksum of the buffer.",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      }),
+      "Checks the last-sample checksum on declared Sink element."
+      " This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit'"
+      " for example",
+      GST_VALIDATE_ACTION_TYPE_INTERLACED);
+
   /*  *INDENT-ON* */
 
   for (tmp = gst_validate_plugin_get_config (NULL); tmp; tmp = tmp->next) {
