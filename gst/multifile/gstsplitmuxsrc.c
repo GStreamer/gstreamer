@@ -480,10 +480,8 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
 
       gst_event_unref (event);
       event = gst_event_new_segment (&seg);
-      if (splitmux->segment_seqnum) {
-        event = gst_event_make_writable (event);
+      if (splitmux->segment_seqnum)
         gst_event_set_seqnum (event, splitmux->segment_seqnum);
-      }
       splitpad->sent_segment = TRUE;
       break;
     }
