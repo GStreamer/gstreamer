@@ -226,6 +226,7 @@ gst_rtsp_media_set_pipeline_state
 
 <SUBSECTION MediaClocks>
 gst_rtsp_media_get_clock
+gst_rtsp_media_set_clock
 gst_rtsp_media_get_base_time
 gst_rtsp_media_use_time_provider
 gst_rtsp_media_is_time_provider
@@ -259,6 +260,9 @@ gst_rtsp_media_factory_get_permissions
 gst_rtsp_media_factory_set_permissions
 gst_rtsp_media_factory_add_role
 gst_rtsp_media_factory_add_role_from_structure
+
+gst_rtsp_media_factory_get_clock
+gst_rtsp_media_factory_set_clock
 
 gst_rtsp_media_factory_set_shared
 gst_rtsp_media_factory_is_shared
