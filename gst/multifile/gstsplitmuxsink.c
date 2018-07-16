@@ -2277,14 +2277,19 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
     switch (splitmux->input_state) {
       case SPLITMUX_INPUT_STATE_COLLECTING_GOP_START:
         if (ctx->is_reference) {
-          /* If a keyframe, we have a complete GOP */
-          if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ||
-              !GST_CLOCK_STIME_IS_VALID (ctx->in_running_time) ||
-              splitmux->max_in_running_time >= ctx->in_running_time) {
-            /* Pass this buffer through */
-            loop_again = FALSE;
+          /* This is the reference context. If it's a keyframe,
+           * it marks the start of a new GOP and we should wait in
+           * check_completed_gop before continuing, but either way
+           * (keyframe or no, we'll pass this buffer through after
+           * so set loop_again to FALSE */
+          loop_again = FALSE;
+
+          if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
             /* Allow other input pads to catch up to here too */
             splitmux->max_in_running_time = ctx->in_running_time;
+            GST_LOG_OBJECT (splitmux,
+                "Max in running time now %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (splitmux->max_in_running_time));
             GST_SPLITMUX_BROADCAST_INPUT (splitmux);
             break;
           }
@@ -2294,6 +2299,8 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
           keyframe = TRUE;
           splitmux->input_state = SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT;
           splitmux->max_in_running_time = ctx->in_running_time;
+          GST_LOG_OBJECT (splitmux, "Max in running time now %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (splitmux->max_in_running_time));
           /* Wake up other input pads to collect this GOP */
           GST_SPLITMUX_BROADCAST_INPUT (splitmux);
           check_completed_gop (splitmux, ctx);
