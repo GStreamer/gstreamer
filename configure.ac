@@ -256,7 +256,6 @@ HAVE_LZMA="no"
 HAVE_BZ2="no"
 if test "x$with_system_libav" = "xyes"; then
   PKG_CHECK_MODULES(LIBAV, libavfilter libavformat libavcodec >= 58 libavutil)
-  PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
   AC_CHECK_HEADERS([avi.h])
@@ -327,23 +326,6 @@ else
               $ac_pwd/gst-libs/ext/libswresample.la \
               $ac_pwd/gst-libs/ext/libavutil.la"
 
-  dnl
-  SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
-                  -I \$(top_builddir)/gst-libs/ext/libav \
-                  -Wno-deprecated-declarations"
-
-  SWSCALE_DEPS="\$(top_builddir)/gst-libs/ext/libav/libswscale/libswscale.a \
-                \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
-  if test "x$enable_static_plugins" = xyes; then
-      dnl with static linking we can't use the .a archive directly as they would
-      dnl be included in the final libgstswscale.a as a file and won't be usable.
-      dnl libav*.a must be copied to the final destination too
-      SWSCALE_LIBS="-lswscale -lavutil"
-  else
-      dnl libgstswscale.la: libs to statically link to
-      SWSCALE_LIBS="$SWSCALE_DEPS"
-  fi
-
   LIBAV_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([LIBAV_SOURCE], ["local snapshot"], [Describes where the Libav libraries come from.])
@@ -359,7 +341,7 @@ else
   # Enable pic and static so that we get .a files, but with PIC code.
   emblibav_configure_args="$emblibav_configure_args \
         --enable-static --enable-pic \
-        --disable-avdevice --disable-postproc \
+        --disable-avdevice --disable-postproc --disable-swscale \
         --disable-programs --disable-ffplay --disable-ffprobe --disable-ffmpeg \
         --disable-encoder=flac --disable-protocols --disable-devices \
         --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau \
@@ -431,11 +413,6 @@ else
   if test "$can_disable" != ""; then
     emblibav_configure_args="$emblibav_configure_args --disable-ffmpeg"
   fi
-  dnl check if libswscale needs enabling explicitly
-  can_enable=`echo "$LIBAV_OPTS" | grep 'enable-swscale'`
-  if test "$can_enable" != ""; then
-    emblibav_configure_args="$emblibav_configure_args --enable-swscale"
-  fi
 
   # append extra configure options to emblibav_configure_args if needed
   if test "x$with_libav_extra_configure" != "xno"; then
@@ -479,9 +456,6 @@ AC_SUBST(LIBAV_CFLAGS)
 AC_SUBST(LIBAV_DEPS)
 AC_SUBST(LIBAV_LIBS)
 AC_SUBST(LIBAV_SUBDIRS)
-AC_SUBST(SWSCALE_CFLAGS)
-AC_SUBST(SWSCALE_DEPS)
-AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
 AC_SUBST(BZ2_LIBS)
 AC_SUBST(LZMA_LIBS)
@@ -497,7 +471,6 @@ common/Makefile
 common/m4/Makefile
 ext/Makefile
 ext/libav/Makefile
-ext/libswscale/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
 docs/Makefile
