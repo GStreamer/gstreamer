@@ -86,7 +86,7 @@
 #define EGL_DMA_BUF_PLANE0_PITCH_EXT 0x3274
 #endif
 
-#ifdef USE_EGL_RPI
+#if !GST_GL_HAVE_EGLUINT64KHR
 typedef khronos_uint64_t EGLuint64KHR;
 #endif
 
