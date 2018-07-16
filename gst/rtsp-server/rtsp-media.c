@@ -475,6 +475,8 @@ gst_rtsp_media_finalize (GObject * obj)
     g_object_unref (priv->pool);
   if (priv->payloads)
     g_list_free (priv->payloads);
+  if (priv->clock)
+    gst_object_unref (priv->clock);
   g_free (priv->multicast_iface);
   g_mutex_clear (&priv->lock);
   g_cond_clear (&priv->cond);
