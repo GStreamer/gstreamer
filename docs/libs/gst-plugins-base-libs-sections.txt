@@ -226,6 +226,11 @@ GST_AUDIO_DEF_CHANNELS
 GST_AUDIO_DEF_FORMAT
 gst_audio_buffer_clip
 
+GstAudioBuffer
+gst_audio_buffer_map
+gst_audio_buffer_truncate
+gst_audio_buffer_unmap
+
 GstAudioResampler
 GstAudioResamplerFilterInterpolation
 GstAudioResamplerFilterMode
@@ -303,6 +308,10 @@ _GST_AUDIO_FORMAT_NE
 <SECTION>
 <FILE>gstaudiometa</FILE>
 <INCLUDE>gst/audio/audio.h</INCLUDE>
+GstAudioMeta
+gst_buffer_add_audio_meta
+gst_buffer_get_audio_meta
+
 GstAudioDownmixMeta
 gst_buffer_add_audio_downmix_meta
 gst_buffer_get_audio_downmix_meta
@@ -311,7 +320,10 @@ gst_buffer_get_audio_downmix_meta_for_channels
 GstAudioClippingMeta
 gst_buffer_add_audio_clipping_meta
 gst_buffer_get_audio_clipping_meta
+
 <SUBSECTION Standard>
+gst_audio_meta_api_get_type
+gst_audio_meta_get_info
 GST_AUDIO_CLIPPING_META_API_TYPE
 GST_AUDIO_CLIPPING_META_INFO
 gst_audio_clipping_meta_api_get_type
@@ -2734,6 +2746,8 @@ gst_video_format_flags_get_type
 GST_TYPE_VIDEO_FORMAT_FLAGS
 gst_video_pack_flags_get_type
 GST_TYPE_VIDEO_PACK_FLAGS
+GST_VIDEO_OE
+GST_VIDEO_NE
 
 #video-color.h
 <SUBSECTION>
@@ -3998,6 +4012,7 @@ gst_gl_insert_debug_marker
 <INCLUDE>gst/gl/gl.h</INCLUDE>
 GstGLBaseFilter
 GstGLBaseFilterClass
+gst_gl_base_filter_find_gl_context
 <SUBSECTION Standard>
 GST_GL_BASE_FILTER
 GST_IS_GL_BASE_FILTER
@@ -4073,6 +4088,7 @@ gst_gl_texture_target_to_string
 gst_gl_texture_target_to_gl
 gst_gl_texture_target_from_gl
 gst_gl_texture_target_to_buffer_pool_option
+gst_gl_format_type_from_sized_gl_format
 <SUBSECTION Standard>
 </SECTION>
 
