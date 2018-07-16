@@ -663,6 +663,147 @@ GST_START_TEST (test_pipeline_reset_start_time)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pipeline_processing_deadline)
+{
+  GstElement *pipeline, *fakesrc, *queue, *fakesink;
+  GstState state;
+  GstClock *clock;
+  GstClockID id;
+  gint64 position;
+  GstQuery *q;
+  gboolean live;
+  GstClockTime min, max;
+  GstBus *bus;
+  GstMessage *msg;
+
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
+  queue = gst_element_factory_make ("queue", "queue");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+
+  /* no more than 100 buffers per second */
+  g_object_set (fakesrc, "do-timestamp", TRUE, "format", GST_FORMAT_TIME,
+      "sizetype", 2, "sizemax", 4096, "datarate", 4096 * 100, "is-live", TRUE,
+      NULL);
+
+  g_object_set (fakesink, "sync", TRUE, NULL);
+
+  fail_unless (pipeline && fakesrc && queue && fakesink);
+
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, queue, fakesink, NULL);
+  gst_element_link_many (fakesrc, queue, fakesink, NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (state, GST_STATE_PLAYING);
+
+  q = gst_query_new_latency ();
+  fail_unless (gst_element_query (pipeline, q));
+  gst_query_parse_latency (q, &live, &min, &max);
+  fail_unless (live == TRUE);
+  fail_unless (min == 20 * GST_MSECOND);
+  fail_unless (max >= min);
+  gst_query_unref (q);
+
+  /* Wait for 50 msecs */
+  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
+  fail_unless (clock != NULL);
+  id = gst_clock_new_single_shot_id (clock,
+      gst_element_get_base_time (pipeline) + 50 * GST_MSECOND);
+  gst_clock_id_wait (id, NULL);
+  gst_clock_id_unref (id);
+  gst_object_unref (clock);
+
+  /* We waited 50ms, but the position should be now < 40ms */
+  fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
+          &position));
+  fail_unless (position < 40 * GST_MSECOND,
+      "Pipeline position is not at least 50millisecond (reported %"
+      G_GUINT64_FORMAT " nanoseconds)", position);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_NO_PREROLL);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_NO_PREROLL);
+  fail_unless_equals_int (state, GST_STATE_PAUSED);
+
+  /* And now after pausing the start time should be bigger than the last
+   * position */
+  fail_unless (gst_element_get_start_time (fakesink) >= 50 * GST_MSECOND);
+  fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
+          &position));
+  fail_unless (position < 50 * GST_MSECOND);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_NO_PREROLL);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_NO_PREROLL);
+  fail_unless_equals_int (state, GST_STATE_PAUSED);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  msg = gst_bus_pop_filtered (bus, GST_MESSAGE_WARNING);
+  fail_unless (msg == NULL);
+  gst_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_pipeline_processing_deadline_no_queue)
+{
+  GstElement *pipeline, *fakesrc, *fakesink;
+  GstState state;
+  GstBus *bus;
+  GstMessage *msg;
+  GError *gerror = NULL;
+
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+
+  /* no more than 100 buffers per second */
+  g_object_set (fakesrc, "do-timestamp", TRUE, "format", GST_FORMAT_TIME,
+      "sizetype", 2, "sizemax", 4096, "datarate", 4096 * 100, "is-live", TRUE,
+      NULL);
+
+  g_object_set (fakesink, "sync", TRUE, "processing-deadline", 60 * GST_MSECOND,
+      NULL);
+
+  fail_unless (pipeline && fakesrc && fakesink);
+
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+  gst_element_link (fakesrc, fakesink);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (pipeline, &state, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_WARNING);
+  fail_unless (msg != NULL);
+  gst_message_parse_warning (msg, &gerror, NULL);
+  fail_unless (g_error_matches (gerror, GST_CORE_ERROR, GST_CORE_ERROR_CLOCK));
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_pipeline_suite (void)
 {
@@ -681,6 +822,8 @@ gst_pipeline_suite (void)
   tcase_add_test (tc_chain, test_concurrent_create);
   tcase_add_test (tc_chain, test_pipeline_in_pipeline);
   tcase_add_test (tc_chain, test_pipeline_reset_start_time);
+  tcase_add_test (tc_chain, test_pipeline_processing_deadline);
+  tcase_add_test (tc_chain, test_pipeline_processing_deadline_no_queue);
 
   return s;
 }
