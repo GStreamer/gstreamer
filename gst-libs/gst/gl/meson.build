@@ -122,6 +122,7 @@ glconf_options = [
     'GST_GL_HAVE_GLUINT64',
     'GST_GL_HAVE_GLINT64',
     'GST_GL_HAVE_EGLATTRIB',
+    'GST_GL_HAVE_EGLUINT64KHR',
 ]
 
 foreach option : glconf_options
@@ -715,6 +716,9 @@ if build_gstgl
   endif
   if egl_dep.found() and cc.has_type('EGLAttrib', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep], include_directories : gl_includes)
     glconf.set('GST_GL_HAVE_EGLATTRIB', 1)
+  endif
+  if egl_dep.found() and cc.has_type('EGLuint64KHR', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep], include_directories : gl_includes)
+    glconf.set('GST_GL_HAVE_EGLUINT64KHR', 1)
   endif
 
   message('Building libgstgl with GL api:      ' + ' '.join(enabled_gl_apis))
