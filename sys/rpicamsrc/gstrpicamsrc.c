@@ -1439,6 +1439,13 @@ gst_rpi_cam_src_create (GstPushSrc * parent, GstBuffer ** buf)
       GST_BUFFER_DURATION (*buf) = src->duration;
   }
 
+  if (ret == GST_FLOW_ERROR_TIMEOUT) {
+    GST_ELEMENT_ERROR (src, STREAM, FAILED,
+        ("Camera capture timed out."),
+        ("Waiting for a buffer from the camera took too long."));
+    ret = GST_FLOW_ERROR;
+  }
+
   if (clock)
     gst_object_unref (clock);
   return ret;

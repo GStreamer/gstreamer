@@ -66,6 +66,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_rpi_cam_src_debug);
 #undef vcos_log_warn
 #define vcos_log_warn GST_WARNING
 
+#define GST_FLOW_ERROR_TIMEOUT GST_FLOW_CUSTOM_ERROR
+
 G_BEGIN_DECLS
 
 typedef enum

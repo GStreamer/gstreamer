@@ -942,7 +942,7 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
   buffer = mmal_queue_timedwait(state->encoded_buffer_q, 500);
 
   if (G_UNLIKELY(buffer == NULL)) {
-      return GST_FLOW_ERROR;
+      return GST_FLOW_ERROR_TIMEOUT;
   }
 
   if (G_LIKELY (config->useSTC && clock)) {
