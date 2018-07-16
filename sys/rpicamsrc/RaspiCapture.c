@@ -937,9 +937,16 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp,
   /* No timestamps if no clockm or invalid PTS */
   GstClockTime gst_pts = GST_CLOCK_TIME_NONE;
 
-  /* FIXME: Use our own interruptible cond wait: */
-
-  buffer = mmal_queue_timedwait(state->encoded_buffer_q, 500);
+  do {
+    buffer = mmal_queue_timedwait(state->encoded_buffer_q, 500);
+    // Work around a bug where mmal_queue_timedwait() might return
+    // immediately if the internal timeout time aligns exactly
+    // with a 1 second rollover boundary by checking errno.
+    if (errno == EINVAL) {
+      GST_WARNING ("Retrying mmal_queue_timedwait() due to spurious failure.");
+      continue;
+    }
+  } while (0);
 
   if (G_UNLIKELY(buffer == NULL)) {
       return GST_FLOW_ERROR_TIMEOUT;
