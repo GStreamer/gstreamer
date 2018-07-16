@@ -565,15 +565,17 @@ gst_ffmpeg_cfg_fill_context (GObject * object, AVCodecContext * context)
   for (i = 0; i < num_props; ++i) {
     GParamSpec *pspec = pspecs[i];
     const AVOption *opt;
-    GValue value;
+    GValue value = G_VALUE_INIT;
 
     opt = g_param_spec_get_qdata (pspec, avoption_quark);
 
     if (!opt)
       continue;
 
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     g_object_get_property (object, pspec->name, &value);
     set_option_value (context, pspec, &value, opt);
+    g_value_unset (&value);
   }
   g_free (pspecs);
 }
