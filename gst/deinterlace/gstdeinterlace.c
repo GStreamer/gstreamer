@@ -735,6 +735,7 @@ gst_deinterlace_init (GstDeinterlace * self)
   self->pattern_base_ts = GST_CLOCK_TIME_NONE;
   self->pattern_buf_dur = GST_CLOCK_TIME_NONE;
   self->still_frame_mode = FALSE;
+  self->telecine_tc_warned = FALSE;
 
   gst_deinterlace_reset (self);
 }
@@ -782,6 +783,9 @@ gst_deinterlace_reset_history (GstDeinterlace * self, gboolean drop_all)
       if (self->field_history[i].frame) {
         gst_video_frame_unmap_and_free (self->field_history[i].frame);
         self->field_history[i].frame = NULL;
+        if (self->field_history[i].tc) {
+          gst_video_time_code_free (self->field_history[i].tc);
+        }
       }
     }
   }
@@ -833,6 +837,7 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->have_eos = FALSE;
 
   self->discont = TRUE;
+  self->telecine_tc_warned = FALSE;
 
   gst_deinterlace_set_allocation (self, NULL, NULL, NULL);
 }
@@ -1089,8 +1094,6 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
    * if this is not the case, change the map flags as appropriate
    */
   frame = gst_video_frame_new_and_map (&self->vinfo, buffer, GST_MAP_READ);
-  /* we can manage the buffer ref count using the maps from here on */
-  gst_buffer_unref (buffer);
 
   tff = GST_VIDEO_FRAME_IS_TFF (frame);
   onefield = GST_VIDEO_FRAME_IS_ONEFIELD (frame);
@@ -1126,6 +1129,14 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
         self->field_history[i - fields_to_push].frame;
     self->field_history[i].flags =
         self->field_history[i - fields_to_push].flags;
+    if (self->field_history[i].tc)
+      gst_video_time_code_free (self->field_history[i].tc);
+    if (self->field_history[i - fields_to_push].tc) {
+      self->field_history[i].tc =
+          gst_video_time_code_copy (self->field_history[i - fields_to_push].tc);
+    } else {
+      self->field_history[i].tc = NULL;
+    }
   }
 
   if (field_layout == GST_DEINTERLACE_LAYOUT_AUTO) {
@@ -1159,18 +1170,39 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   }
 
   if (!onefield) {
+    GstVideoTimeCodeMeta *meta = gst_buffer_get_video_time_code_meta (buffer);
+
     GST_DEBUG_OBJECT (self, "Two fields");
     self->field_history[1].frame = field1;
     self->field_history[1].flags = field1_flags;
 
     self->field_history[0].frame = field2;
     self->field_history[0].flags = field2_flags;
+
+    if (meta) {
+      self->field_history[0].tc = gst_video_time_code_copy (&meta->tc);
+      self->field_history[0].tc->config.flags &=
+          ~GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
+      self->field_history[1].tc = gst_video_time_code_copy (&meta->tc);
+      self->field_history[1].tc->config.flags &=
+          ~GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
+    }
   } else {                      /* onefield */
+    GstVideoTimeCodeMeta *meta = gst_buffer_get_video_time_code_meta (buffer);
+
     GST_DEBUG_OBJECT (self, "One field");
     self->field_history[0].frame = field1;
     self->field_history[0].flags = field1_flags;
+    if (meta) {
+      self->field_history[0].tc = gst_video_time_code_copy (&meta->tc);
+      self->field_history[0].tc->config.flags &=
+          ~GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
+    }
     gst_video_frame_unmap_and_free (field2);
   }
+
+  /* we can manage the buffer ref count using the maps from here on */
+  gst_buffer_unref (buffer);
 
   self->history_count += fields_to_push;
   self->cur_field_idx += fields_to_push;
@@ -1733,6 +1765,8 @@ restart:
               || IS_TELECINE (interlacing_mode)))
       || (self->fields == GST_DEINTERLACE_ALL
           && !IS_TELECINE (interlacing_mode))) {
+    gint index;
+
     GST_DEBUG_OBJECT (self, "deinterlacing top field");
 
     /* create new buffer */
@@ -1743,10 +1777,28 @@ restart:
     g_return_val_if_fail (self->history_count >=
         1 + gst_deinterlace_method_get_latency (self->method), GST_FLOW_ERROR);
 
-    buf =
-        self->field_history[self->history_count - 1 -
-        gst_deinterlace_method_get_latency (self->method)].frame->buffer;
+    index =
+        self->history_count - 1 -
+        gst_deinterlace_method_get_latency (self->method);
+    buf = self->field_history[index].frame->buffer;
 
+    if (self->field_history[index].tc) {
+      gst_buffer_add_video_time_code_meta (outbuf,
+          self->field_history[index].tc);
+    }
+    if (IS_TELECINE (interlacing_mode) && !self->telecine_tc_warned) {
+      self->telecine_tc_warned = TRUE;
+      GST_FIXME_OBJECT (self,
+          "Detected telecine timecodes when deinterlacing. This is not "
+          "supported yet. Resulting timecode may be wrong");
+    }
+    if (self->fields == GST_DEINTERLACE_ALL) {
+      GstVideoTimeCodeMeta *meta = gst_buffer_get_video_time_code_meta (outbuf);
+      if (meta) {
+        meta->tc.config.fps_n = 2 * meta->tc.config.fps_n;
+        meta->tc.frames = 2 * meta->tc.frames;
+      }
+    }
     if (!IS_TELECINE (interlacing_mode)) {
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
@@ -1880,6 +1932,8 @@ restart:
               || IS_TELECINE (interlacing_mode)))
       || (self->fields == GST_DEINTERLACE_ALL
           && !IS_TELECINE (interlacing_mode))) {
+    gint index;
+
     GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
 
     /* create new buffer */
@@ -1890,9 +1944,28 @@ restart:
     g_return_val_if_fail (self->history_count >=
         gst_deinterlace_method_get_latency (self->method) + 1, GST_FLOW_ERROR);
 
-    buf =
-        self->field_history[self->history_count - 1 -
-        gst_deinterlace_method_get_latency (self->method)].frame->buffer;
+    index =
+        self->history_count - 1 -
+        gst_deinterlace_method_get_latency (self->method);
+    buf = self->field_history[index].frame->buffer;
+
+    if (self->field_history[index].tc) {
+      gst_buffer_add_video_time_code_meta (outbuf,
+          self->field_history[index].tc);
+    }
+    if (IS_TELECINE (interlacing_mode) && !self->telecine_tc_warned) {
+      self->telecine_tc_warned = TRUE;
+      GST_FIXME_OBJECT (self,
+          "Detected telecine timecodes when deinterlacing. This is not "
+          "supported yet. Resulting timecode may be wrong");
+    }
+    if (self->fields == GST_DEINTERLACE_ALL) {
+      GstVideoTimeCodeMeta *meta = gst_buffer_get_video_time_code_meta (outbuf);
+      if (meta) {
+        meta->tc.config.fps_n = 2 * meta->tc.config.fps_n;
+        meta->tc.frames = 2 * meta->tc.frames + 1;
+      }
+    }
     if (!IS_TELECINE (interlacing_mode)) {
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
@@ -2900,6 +2973,7 @@ gst_deinterlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_DEBUG_OBJECT (self, "Ending still frames");
         self->still_frame_mode = FALSE;
       }
+      self->telecine_tc_warned = FALSE;
       gst_deinterlace_reset_qos (self);
       res = gst_pad_push_event (self->srcpad, event);
       gst_deinterlace_reset_history (self, TRUE);

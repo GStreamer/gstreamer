@@ -194,6 +194,7 @@ struct _GstDeinterlace
 
   gboolean need_more;
   gboolean have_eos;
+  gboolean telecine_tc_warned;
 };
 
 struct _GstDeinterlaceClass
