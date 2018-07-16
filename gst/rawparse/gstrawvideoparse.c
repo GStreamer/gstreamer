@@ -298,7 +298,7 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
       PROP_PLANE_OFFSETS,
       gst_param_spec_array ("plane-offsets",
           "Plane offsets",
-          "Offsets of the planes in bytes (e.g. plane-offset=\"<0,76800>\")",
+          "Offsets of the planes in bytes (e.g. plane-offsets=\"<0,76800>\")",
           g_param_spec_int ("plane-offset",
               "Plane offset",
               "Offset of the n-th plane in bytes",
