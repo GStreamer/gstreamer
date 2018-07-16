@@ -1201,28 +1201,30 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
          * values to create the complete latency. */
         min = us_min;
         max = us_max;
+
+        if (l) {
+          if (max == -1 || min + processing_deadline <= max)
+            min += processing_deadline;
+          else {
+            GST_ELEMENT_WARNING (sink, CORE, CLOCK,
+                (_("Pipeline construction is invalid, please add queues.")),
+                ("Not enough buffering available for "
+                    " the processing deadline of %" GST_TIME_FORMAT
+                    ", add enough queues to buffer  %" GST_TIME_FORMAT
+                    " additional data. Shortening processing latency to %"
+                    GST_TIME_FORMAT ".",
+                    GST_TIME_ARGS (processing_deadline),
+                    GST_TIME_ARGS (min + processing_deadline - max),
+                    GST_TIME_ARGS (max - min)));
+            min = max;
+          }
+        }
       }
       if (l) {
         /* we need to add the render delay if we are live */
         min += render_delay;
         if (max != -1)
           max += render_delay;
-
-        if (max == -1 || min + processing_deadline <= max)
-          min += processing_deadline;
-        else {
-          GST_ELEMENT_WARNING (sink, CORE, CLOCK,
-              (_("Pipeline construction is invalid, please add queues.")),
-              ("Not enough buffering available for "
-                  " the processing deadline of %" GST_TIME_FORMAT
-                  ", add enough queues to buffer  %" GST_TIME_FORMAT
-                  " additional data. Shortening processing latency to %"
-                  GST_TIME_FORMAT ".",
-                  GST_TIME_ARGS (processing_deadline),
-                  GST_TIME_ARGS (min + processing_deadline - max),
-                  GST_TIME_ARGS (max - min)));
-          min = max;
-        }
       }
     }
     gst_query_unref (query);
