@@ -512,6 +512,15 @@ _dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
       (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   GstCaps *ret;
 
+  if (context) {
+    /* Don't propose DMABuf caps feature unless it can be supported */
+    if (gst_gl_context_get_gl_platform (context) != GST_GL_PLATFORM_EGL)
+      return NULL;
+
+    if (!gst_gl_context_check_feature (context, "EGL_KHR_image_base"))
+      return NULL;
+  }
+
   if (direction == GST_PAD_SINK) {
     GstCaps *tmp;
 
