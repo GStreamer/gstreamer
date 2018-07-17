@@ -29,7 +29,7 @@
 #include <QtGui/qtgui-config.h>
 #endif
 
-#if defined(QT_OPENGL_ES_2) && GST_GL_HAVE_WINDOW_ANDROID
+#if defined(QT_OPENGL_ES_2)
 #define GLsync gst_qt_GLsync
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
