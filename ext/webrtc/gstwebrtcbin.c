@@ -2806,6 +2806,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
   if (!validate_sdp (webrtc, sd->source, sd->sdp, &error)) {
     GST_ERROR_OBJECT (webrtc, "%s", error->message);
+    g_clear_error (&error);
     goto out;
   }
 
