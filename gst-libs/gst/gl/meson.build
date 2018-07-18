@@ -693,7 +693,7 @@ if build_gstgl
   if egl_dep.found() and cc.has_type('EGLAttrib', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep])
     glconf.set('GST_GL_HAVE_EGLATTRIB', 1)
   endif
-  if egl_dep.found() and cc.has_type('EGLuint64KHR', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep], include_directories : gl_includes)
+  if egl_dep.found() and cc.has_type('EGLuint64KHR', prefix : gl_include_block + egl_includes, dependencies : gl_lib_deps + [egl_dep])
     glconf.set('GST_GL_HAVE_EGLUINT64KHR', 1)
   endif
 
