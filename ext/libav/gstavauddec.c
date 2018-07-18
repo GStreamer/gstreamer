@@ -36,6 +36,8 @@
 #include "gstavutils.h"
 #include "gstavauddec.h"
 
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+
 /* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegauddec_base_init (GstFFMpegAudDecClass * klass);
 static void gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass);
@@ -134,6 +136,8 @@ gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass)
   gstaudiodecoder_class->flush = GST_DEBUG_FUNCPTR (gst_ffmpegauddec_flush);
   gstaudiodecoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_ffmpegauddec_propose_allocation);
+
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
@@ -752,7 +756,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
-    GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
+    GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
     memcpy (ffmpegdec->padded, bdata, bsize);
     memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
@@ -771,7 +775,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
     if (do_padding) {
       /* add temporary padding */
-      GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
+      GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
           "Add temporary input padding");
       memcpy (tmp_padding, data + size, FF_INPUT_BUFFER_PADDING_SIZE);
       memset (data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
