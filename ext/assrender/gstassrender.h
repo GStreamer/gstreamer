@@ -67,7 +67,7 @@ struct _GstAssRender
 
   GstVideoInfo info;
 
-  GstBuffer *subtitle_pending;
+  GSList *subtitle_pending;
   gboolean subtitle_flushing;
   gboolean subtitle_eos;
   GstSegment subtitle_segment;
