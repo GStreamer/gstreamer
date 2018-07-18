@@ -23258,7 +23258,9 @@ buffers.</doc>
           </parameter>
           <parameter name="tags" transfer-ownership="none">
             <doc xml:space="preserve">tags for @api</doc>
-            <type name="utf8" c:type="const gchar**"/>
+            <array c:type="gchar**">
+              <type name="utf8" c:type="gchar*"/>
+            </array>
           </parameter>
         </parameters>
       </function>
@@ -44723,7 +44725,7 @@ determine a order for the two provided values.</doc>
       <doc xml:space="preserve">The major version of GStreamer at compile time:</doc>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MICRO" value="0" c:type="GST_VERSION_MICRO">
+    <constant name="VERSION_MICRO" value="1" c:type="GST_VERSION_MICRO">
       <doc xml:space="preserve">The micro version of GStreamer at compile time:</doc>
       <type name="gint" c:type="gint"/>
     </constant>
@@ -46330,7 +46332,9 @@ or gst_init_check().</doc>
         </parameter>
         <parameter name="tags" transfer-ownership="none">
           <doc xml:space="preserve">tags for @api</doc>
-          <type name="utf8" c:type="const gchar**"/>
+          <array c:type="gchar**">
+            <type name="utf8" c:type="gchar*"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -46984,7 +46988,8 @@ This function is primarily for printing debug output.</doc>
       <doc xml:space="preserve">Iterates the supplied list of UUIDs and checks the GstRegistry for
 all the decryptors supporting one of the supplied UUIDs.</doc>
       <return-value transfer-ownership="full" nullable="1">
-        <doc xml:space="preserve">A null terminated array containing all
+        <doc xml:space="preserve">
+A null terminated array containing all
 the @system_identifiers supported by the set of available decryptors, or
 %NULL if no matches were found.</doc>
         <array c:type="gchar**">
@@ -46993,10 +46998,12 @@ the @system_identifiers supported by the set of available decryptors, or
       </return-value>
       <parameters>
         <parameter name="system_identifiers" transfer-ownership="none">
-          <doc xml:space="preserve">A null terminated array of strings
-that contains the UUID values of each protection system that is to be
-checked.</doc>
-          <type name="utf8" c:type="const gchar**"/>
+          <doc xml:space="preserve">
+A null terminated array of strings that contains the UUID values of each
+protection system that is to be checked.</doc>
+          <array c:type="gchar**">
+            <type name="utf8" c:type="gchar*"/>
+          </array>
         </parameter>
       </parameters>
     </function>

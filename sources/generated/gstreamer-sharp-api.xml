@@ -8594,7 +8594,7 @@
         <return-type type="GType" />
         <parameters>
           <parameter name="api" type="const-gchar*" />
-          <parameter name="tags" type="const-gchar*" />
+          <parameter name="tags" type="const-gchar**" array="true" null_term_array="true" />
         </parameters>
       </method>
       <method name="GetInfo" cname="gst_meta_get_info" shared="true">
@@ -11158,7 +11158,7 @@
         <return-type type="GType" />
         <parameters>
           <parameter name="api" type="const-gchar*" />
-          <parameter name="tags" type="const-gchar*" />
+          <parameter name="tags" type="const-gchar**" array="true" null_term_array="true" />
         </parameters>
       </method>
       <method name="MetaGetInfo" cname="gst_meta_get_info" shared="true">
@@ -11252,7 +11252,7 @@
       <method name="ProtectionFilterSystemsByAvailableDecryptors" cname="gst_protection_filter_systems_by_available_decryptors" shared="true" version="1.14">
         <return-type type="gchar***" owned="true" array="true" null_term_array="true" />
         <parameters>
-          <parameter name="system_identifiers" type="const-gchar*" />
+          <parameter name="system_identifiers" type="const-gchar**" array="true" null_term_array="true" />
         </parameters>
       </method>
       <method name="ProtectionMetaApiGetType" cname="gst_protection_meta_api_get_type" shared="true">
@@ -11541,7 +11541,7 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN" />
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED" />
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR" />
-      <constant value="0" ctype="gint" gtype="gint" name="VERSION_MICRO" />
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_MICRO" />
       <constant value="14" ctype="gint" gtype="gint" name="VERSION_MINOR" />
       <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO" />
     </object>
@@ -15684,9 +15684,9 @@
             <warning>missing glib:type-name</warning>
           </parameter>
           <parameter name="format" type="GstAudioFormat" />
-          <parameter name="channels" type="gint" />
-          <parameter name="from" type="GstAudioChannelPosition*" array="true" />
-          <parameter name="to" type="GstAudioChannelPosition*" array="true" />
+          <parameter name="channels" type="gint" array_index="4" />
+          <parameter name="from" type="GstAudioChannelPosition*" array="true" array_length_param_index="2" />
+          <parameter name="to" type="GstAudioChannelPosition*" array="true" array_length_param_index="2" />
         </parameters>
       </method>
       <method name="AudioChannelGetFallbackMask" cname="gst_audio_channel_get_fallback_mask" shared="true" version="1.8">
@@ -15793,12 +15793,12 @@
         </parameters>
       </method>
       <method name="AudioGetChannelReorderMap" cname="gst_audio_get_channel_reorder_map" shared="true">
-        <return-type type="gboolean" />
+        <return-type type="gboolean" array_index="3" />
         <parameters>
-          <parameter name="channels" type="gint" />
-          <parameter name="from" type="GstAudioChannelPosition*" array="true" />
-          <parameter name="to" type="GstAudioChannelPosition*" array="true" />
-          <parameter name="reorder_map" type="gint*" array="true" />
+          <parameter name="channels" type="gint" array_index="3" />
+          <parameter name="from" type="GstAudioChannelPosition*" array="true" array_length_param_index="0" />
+          <parameter name="to" type="GstAudioChannelPosition*" array="true" array_length_param_index="0" />
+          <parameter name="reorder_map" type="gint*" array="true" array_length_param_index="0" />
         </parameters>
       </method>
       <method name="AudioIec61937FrameSize" cname="gst_audio_iec61937_frame_size" shared="true">
@@ -15828,9 +15828,9 @@
           <parameter name="data" type="guint8*" array="true" array_length_param_index="1" />
           <parameter name="n_length" type="gsize" />
           <parameter name="format" type="GstAudioFormat" />
-          <parameter name="channels" type="gint" />
-          <parameter name="from" type="GstAudioChannelPosition*" array="true" />
-          <parameter name="to" type="GstAudioChannelPosition*" array="true" />
+          <parameter name="channels" type="gint" array_index="5" />
+          <parameter name="from" type="GstAudioChannelPosition*" array="true" array_length_param_index="3" />
+          <parameter name="to" type="GstAudioChannelPosition*" array="true" array_length_param_index="3" />
         </parameters>
       </method>
       <method name="AudioResamplerNew" cname="gst_audio_resampler_new" shared="true">
@@ -20492,7 +20492,7 @@
       <constant value="online-service" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_ONLINE_SERVICE" />
       <constant value="storage-editing" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_STORAGE_EDITING" />
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR" />
-      <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO" />
+      <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO" />
       <constant value="14" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR" />
       <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO" />
     </object>
@@ -28400,8 +28400,8 @@
           <parameter name="info" type="GstVideoFormatInfo*">
             <warning>missing glib:type-name</warning>
           </parameter>
-          <parameter name="offset" type="gint*" owned="true" pass_as="out" array="true" array_len="4" />
-          <parameter name="scale" type="gint*" owned="true" pass_as="out" array="true" array_len="4" />
+          <parameter name="offset" type="gint" pass_as="out" array="true" array_len="4" />
+          <parameter name="scale" type="gint" pass_as="out" array="true" array_len="4" />
         </parameters>
       </method>
       <method name="VideoColorTransferDecode" cname="gst_video_color_transfer_decode" shared="true" version="1.6">
@@ -28828,6 +28828,10 @@
       <member cname="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTING" name="Connecting" value="3" />
       <member cname="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED" name="Connected" value="4" />
     </enum>
+    <enum name="WebRTCFECType" cname="GstWebRTCFECType" type="enum" gtype="gst_webrtc_fec_type_get_type">
+      <member cname="GST_WEBRTC_FEC_TYPE_NONE" name="None" value="0" />
+      <member cname="GST_WEBRTC_FEC_TYPE_ULP_RED" name="UlpRed" value="1" />
+    </enum>
     <enum name="WebRTCICEComponent" cname="GstWebRTCICEComponent" type="enum" gtype="gst_webrtc_ice_component_get_type">
       <member cname="GST_WEBRTC_ICE_COMPONENT_RTP" name="Rtp" value="0" />
       <member cname="GST_WEBRTC_ICE_COMPONENT_RTCP" name="Rtcp" value="1" />
@@ -28897,7 +28901,7 @@
     </enum>
     <object name="WebRTCDTLSTransport" cname="GstWebRTCDTLSTransport" opaque="false" hidden="false" parent="GstObject">
       <class_struct cname="GstWebRTCDTLSTransportClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstBinClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
         </field>
         <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
@@ -28936,7 +28940,7 @@
     </object>
     <object name="WebRTCICETransport" cname="GstWebRTCICETransport" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
       <class_struct cname="GstWebRTCICETransportClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstBinClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
         </field>
         <method vm="gather_candidates" />
@@ -29089,7 +29093,7 @@
       <constructor cname="gst_webrtc_session_description_new">
         <parameters>
           <parameter name="type" type="GstWebRTCSDPType" />
-          <parameter name="sdp" type="GstSDPMessage*">
+          <parameter name="sdp" type="GstSDPMessage*" owned="true">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>

@@ -742,6 +742,7 @@ generated_sources = [
     'Gst.WebRTC/WebRTCRTPReceiver.cs',
     'Gst.WebRTC/WebRTCStatsType.cs',
     'Gst.WebRTC/Constants.cs',
+    'Gst.WebRTC/WebRTCFECType.cs',
 ]
 
 run_target('update_gstreamer_code',

@@ -46,15 +46,22 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr tags);
+		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr[] tags);
 
-		public static GLib.GType ApiTypeRegister(string api, string tags) {
+		public static GLib.GType ApiTypeRegister(string api, string[] tags) {
 			IntPtr native_api = GLib.Marshaller.StringToPtrGStrdup (api);
-			IntPtr native_tags = GLib.Marshaller.StringToPtrGStrdup (tags);
+			int cnt_tags = tags == null ? 0 : tags.Length;
+			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
+			for (int i = 0; i < cnt_tags; i++)
+				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup (tags[i]);
+			native_tags [cnt_tags] = IntPtr.Zero;
 			IntPtr raw_ret = gst_meta_api_type_register(native_api, native_tags);
 			GLib.GType ret = new GLib.GType(raw_ret);
 			GLib.Marshaller.Free (native_api);
-			GLib.Marshaller.Free (native_tags);
+			for (int i = 0; i < native_tags.Length - 1; i++) {
+				tags [i] = GLib.Marshaller.Utf8PtrToString (native_tags[i]);
+				GLib.Marshaller.Free (native_tags[i]);
+			}
 			return ret;
 		}
 

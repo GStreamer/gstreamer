@@ -140,7 +140,7 @@ GST_WEBRTC_DTLS_SETUP_PASSIVE: recvonly</doc>
             c:type="GstWebRTCDTLSTransportClass"
             glib:is-gtype-struct-for="WebRTCDTLSTransport">
       <field name="parent_class">
-        <type name="Gst.BinClass" c:type="GstBinClass"/>
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="_padding">
         <array zero-terminated="0" c:type="gpointer" fixed-size="4">
@@ -445,7 +445,7 @@ GST_WEBRTC_ICE_ROLE_CONTROLLING: controlling</doc>
             c:type="GstWebRTCICETransportClass"
             glib:is-gtype-struct-for="WebRTCICETransport">
       <field name="parent_class">
-        <type name="Gst.BinClass" c:type="GstBinClass"/>
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="gather_candidates">
         <callback name="gather_candidates">
@@ -819,7 +819,7 @@ See &lt;ulink url="http://w3c.github.io/webrtc-pc/#rtcsdptype"&gt;http://w3c.git
             <doc xml:space="preserve">a #GstWebRTCSDPType</doc>
             <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
           </parameter>
-          <parameter name="sdp" transfer-ownership="none">
+          <parameter name="sdp" transfer-ownership="full">
             <doc xml:space="preserve">a #GstSDPMessage</doc>
             <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
           </parameter>

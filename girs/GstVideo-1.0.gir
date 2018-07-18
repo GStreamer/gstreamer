@@ -2811,8 +2811,8 @@ the component values in range [0.0 .. 1.0] back to their representation in
           </parameter>
           <parameter name="offset"
                      direction="out"
-                     caller-allocates="0"
-                     transfer-ownership="full">
+                     caller-allocates="1"
+                     transfer-ownership="none">
             <doc xml:space="preserve">output offsets</doc>
             <array zero-terminated="0" c:type="gint" fixed-size="4">
               <type name="gint" c:type="gint"/>
@@ -2820,8 +2820,8 @@ the component values in range [0.0 .. 1.0] back to their representation in
           </parameter>
           <parameter name="scale"
                      direction="out"
-                     caller-allocates="0"
-                     transfer-ownership="full">
+                     caller-allocates="1"
+                     transfer-ownership="none">
             <doc xml:space="preserve">output scale</doc>
             <array zero-terminated="0" c:type="gint" fixed-size="4">
               <type name="gint" c:type="gint"/>
@@ -12718,8 +12718,8 @@ the component values in range [0.0 .. 1.0] back to their representation in
         </parameter>
         <parameter name="offset"
                    direction="out"
-                   caller-allocates="0"
-                   transfer-ownership="full">
+                   caller-allocates="1"
+                   transfer-ownership="none">
           <doc xml:space="preserve">output offsets</doc>
           <array zero-terminated="0" c:type="gint" fixed-size="4">
             <type name="gint" c:type="gint"/>
@@ -12727,8 +12727,8 @@ the component values in range [0.0 .. 1.0] back to their representation in
         </parameter>
         <parameter name="scale"
                    direction="out"
-                   caller-allocates="0"
-                   transfer-ownership="full">
+                   caller-allocates="1"
+                   transfer-ownership="none">
           <doc xml:space="preserve">output scale</doc>
           <array zero-terminated="0" c:type="gint" fixed-size="4">
             <type name="gint" c:type="gint"/>

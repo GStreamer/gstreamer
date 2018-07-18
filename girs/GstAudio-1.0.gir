@@ -8955,14 +8955,18 @@ positions and the same positions, only in a different order.
         </parameter>
         <parameter name="from" transfer-ownership="none">
           <doc xml:space="preserve">The channel positions in the buffer.</doc>
-          <array zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <array length="2"
+                 zero-terminated="0"
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
         </parameter>
         <parameter name="to" transfer-ownership="none">
           <doc xml:space="preserve">The channel positions to convert to.</doc>
-          <array zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <array length="2"
+                 zero-terminated="0"
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9369,21 +9373,25 @@ is possible.</doc>
         </parameter>
         <parameter name="from" transfer-ownership="none">
           <doc xml:space="preserve">The channel positions to reorder from.</doc>
-          <array zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <array length="0"
+                 zero-terminated="0"
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
         </parameter>
         <parameter name="to" transfer-ownership="none">
           <doc xml:space="preserve">The channel positions to reorder to.</doc>
-          <array zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <array length="0"
+                 zero-terminated="0"
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
         </parameter>
         <parameter name="reorder_map" transfer-ownership="none">
           <doc xml:space="preserve">Pointer to the reorder map.</doc>
-          <array zero-terminated="0" c:type="gint*">
+          <array length="0" zero-terminated="0" c:type="gint*">
             <type name="gint" c:type="gint"/>
           </array>
         </parameter>
@@ -9523,14 +9531,18 @@ positions and the same positions, only in a different order.</doc>
         </parameter>
         <parameter name="from" transfer-ownership="none">
           <doc xml:space="preserve">The channel positions in the buffer.</doc>
-          <array zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <array length="3"
+                 zero-terminated="0"
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
         </parameter>
         <parameter name="to" transfer-ownership="none">
           <doc xml:space="preserve">The channel positions to convert to.</doc>
-          <array zero-terminated="0" c:type="GstAudioChannelPosition*">
+          <array length="3"
+                 zero-terminated="0"
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
