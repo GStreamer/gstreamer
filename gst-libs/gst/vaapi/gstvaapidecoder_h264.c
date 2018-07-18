@@ -36,7 +36,6 @@
 #include "gstvaapiobject_priv.h"
 #include "gstvaapiutils_h264_priv.h"
 
-#define DEBUG 1
 #include "gstvaapidebug.h"
 
 /* Defined to 1 if strict ordering of DPB is needed. Only useful for debug */
@@ -2738,7 +2737,7 @@ find_long_term_reference (GstVaapiDecoderH264 * decoder,
   return -1;
 }
 
-static void
+static gboolean
 exec_picture_refs_modification_1 (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 * picture, GstH264SliceHdr * slice_hdr, guint list)
 {
@@ -2752,6 +2751,7 @@ exec_picture_refs_modification_1 (GstVaapiDecoderH264 * decoder,
   guint i, j, n, num_refs, num_view_ids = 0;
   gint found_ref_idx;
   gint32 MaxPicNum, CurrPicNum, picNumPred, picViewIdxPred;
+  gboolean ret = TRUE;
 
   GST_DEBUG ("modification process of reference picture list %u", list);
 
@@ -2920,30 +2920,38 @@ exec_picture_refs_modification_1 (GstVaapiDecoderH264 * decoder,
     }
   }
 
-#if DEBUG
-  for (i = 0; i < num_refs; i++)
-    if (!ref_list[i])
+  for (i = 0; i < num_refs; i++) {
+    if (!ref_list[i]) {
+      ret = FALSE;
       GST_ERROR ("list %u entry %u is empty", list, i);
-#endif
+    }
+  }
+
   *ref_list_count_ptr = num_refs;
+
+  return ret;
 }
 
 /* 8.2.4.3 - Modification process for reference picture lists */
-static void
+static gboolean
 exec_picture_refs_modification (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 * picture, GstH264SliceHdr * slice_hdr)
 {
+  gboolean ret = TRUE;
+
   GST_DEBUG ("execute ref_pic_list_modification()");
 
   /* RefPicList0 */
   if (!GST_H264_IS_I_SLICE (slice_hdr) && !GST_H264_IS_SI_SLICE (slice_hdr) &&
       slice_hdr->ref_pic_list_modification_flag_l0)
-    exec_picture_refs_modification_1 (decoder, picture, slice_hdr, 0);
+    ret = exec_picture_refs_modification_1 (decoder, picture, slice_hdr, 0);
 
   /* RefPicList1 */
   if (GST_H264_IS_B_SLICE (slice_hdr) &&
       slice_hdr->ref_pic_list_modification_flag_l1)
-    exec_picture_refs_modification_1 (decoder, picture, slice_hdr, 1);
+    ret = exec_picture_refs_modification_1 (decoder, picture, slice_hdr, 1);
+
+  return ret;
 }
 
 static gboolean
@@ -3028,12 +3036,13 @@ init_picture_ref_lists (GstVaapiDecoderH264 * decoder,
   priv->long_ref_count = long_ref_count;
 }
 
-static void
+static gboolean
 init_picture_refs (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 * picture, GstH264SliceHdr * slice_hdr)
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   guint i, num_refs;
+  gboolean ret = TRUE;
 
   init_picture_ref_lists (decoder, picture);
   init_picture_refs_pic_num (decoder, picture, slice_hdr);
@@ -3053,7 +3062,7 @@ init_picture_refs (GstVaapiDecoderH264 * decoder,
       break;
   }
 
-  exec_picture_refs_modification (decoder, picture, slice_hdr);
+  ret = exec_picture_refs_modification (decoder, picture, slice_hdr);
 
   switch (slice_hdr->type % 5) {
     case GST_H264_B_SLICE:
@@ -3075,6 +3084,8 @@ init_picture_refs (GstVaapiDecoderH264 * decoder,
   }
 
   mark_picture_refs (decoder, picture);
+
+  return ret;
 }
 
 static GstVaapiPictureH264 *
@@ -4222,7 +4233,11 @@ decode_slice (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
     return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
 
-  init_picture_refs (decoder, picture, slice_hdr);
+  if (!init_picture_refs (decoder, picture, slice_hdr)) {
+    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (slice));
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+  }
+
   if (!fill_slice (decoder, slice, pi)) {
     gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (slice));
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
