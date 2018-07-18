@@ -4236,6 +4236,9 @@ decode_slice (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
 static inline gint
 scan_for_start_code (GstAdapter * adapter, guint ofs, guint size, guint32 * scp)
 {
+  if (size == 0)
+    return -1;
+
   return (gint) gst_adapter_masked_scan_uint32_peek (adapter,
       0xffffff00, 0x00000100, ofs, size, scp);
 }
