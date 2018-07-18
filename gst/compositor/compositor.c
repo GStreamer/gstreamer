@@ -158,13 +158,9 @@ gst_compositor_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_WIDTH:
       g_value_set_int (value, pad->width);
-      gst_video_aggregator_convert_pad_update_conversion_info
-          (GST_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
       break;
     case PROP_PAD_HEIGHT:
       g_value_set_int (value, pad->height);
-      gst_video_aggregator_convert_pad_update_conversion_info
-          (GST_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
       break;
     case PROP_PAD_ALPHA:
       g_value_set_double (value, pad->alpha);
@@ -193,9 +189,13 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_WIDTH:
       pad->width = g_value_get_int (value);
+      gst_video_aggregator_convert_pad_update_conversion_info
+          (GST_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
       break;
     case PROP_PAD_HEIGHT:
       pad->height = g_value_get_int (value);
+      gst_video_aggregator_convert_pad_update_conversion_info
+          (GST_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
       break;
     case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
