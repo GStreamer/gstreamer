@@ -26,7 +26,6 @@
 GST_DEBUG_CATEGORY (gst_debug_xv_context);
 GST_DEBUG_CATEGORY (gst_debug_xv_image_pool);
 GST_DEBUG_CATEGORY (gst_debug_xv_image_sink);
-GST_DEBUG_CATEGORY (CAT_PERFORMANCE);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -41,8 +40,6 @@ plugin_init (GstPlugin * plugin)
       "xvimagesink element");
   GST_DEBUG_CATEGORY_INIT (gst_debug_xv_image_pool, "xvimagepool", 0,
       "xvimagepool object");
-
-  GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   return TRUE;
 }
