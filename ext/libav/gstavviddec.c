@@ -32,6 +32,8 @@
 #include "gstavutils.h"
 #include "gstavviddec.h"
 
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+
 #define MAX_TS_MASK 0xff
 
 #define DEFAULT_LOWRES			0
@@ -248,6 +250,8 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->drain = gst_ffmpegviddec_drain;
   viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
+
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
@@ -1765,7 +1769,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
-    GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, ffmpegdec,
+    GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
     memcpy (ffmpegdec->padded, data, size);
     memset (ffmpegdec->padded + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
