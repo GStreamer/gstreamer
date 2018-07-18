@@ -164,12 +164,6 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpegdemux_register (plugin);
   gst_ffmpegmux_register (plugin);
   gst_ffmpegdeinterlace_register (plugin);
-#if 0
-  gst_ffmpegscale_register (plugin);
-#endif
-#if 0
-  gst_ffmpegaudioresample_register (plugin);
-#endif
 
   /* Now we can return the pointer to the newly created Plugin object. */
   return TRUE;
