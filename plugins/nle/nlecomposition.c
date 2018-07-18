@@ -165,9 +165,10 @@ struct _NleCompositionPrivate
    *    otherwise, it will be the composition duration.
    */
   GstSegment *segment;
-  GstSegment *outside_segment;
 
-  /* Next running base_time to set on outgoing segment */
+  /* Segment representing the last seek. Simply initialized
+   * segment if no seek occured. */
+  GstSegment *seek_segment;
   guint64 next_base_time;
 
   /*
@@ -546,7 +547,7 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
 
   gst_segment_do_seek (priv->segment,
       rate, format, flags, cur_type, cur, stop_type, stop, NULL);
-  gst_segment_do_seek (priv->outside_segment,
+  gst_segment_do_seek (priv->seek_segment,
       rate, format, flags, cur_type, cur, stop_type, stop, NULL);
 
   GST_DEBUG_OBJECT (seekd->comp, "Segment now has flags:%d",
@@ -1049,7 +1050,7 @@ nle_composition_init (NleComposition * comp)
   priv->objects_stop = NULL;
 
   priv->segment = gst_segment_new ();
-  priv->outside_segment = gst_segment_new ();
+  priv->seek_segment = gst_segment_new ();
 
   g_rec_mutex_init (&comp->task_rec_lock);
 
@@ -1140,7 +1141,7 @@ nle_composition_finalize (GObject * object)
   g_hash_table_destroy (priv->objects_hash);
 
   gst_segment_free (priv->segment);
-  gst_segment_free (priv->outside_segment);
+  gst_segment_free (priv->seek_segment);
 
   g_rec_mutex_clear (&comp->task_rec_lock);
 
@@ -1205,7 +1206,7 @@ nle_composition_reset (NleComposition * comp)
   priv->next_base_time = 0;
 
   gst_segment_init (priv->segment, GST_FORMAT_TIME);
-  gst_segment_init (priv->outside_segment, GST_FORMAT_TIME);
+  gst_segment_init (priv->seek_segment, GST_FORMAT_TIME);
 
   if (priv->current)
     g_node_destroy (priv->current);
@@ -1680,8 +1681,8 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
           " segment.stop:%" GST_TIME_FORMAT " current_stack_start%"
           GST_TIME_FORMAT " current_stack_stop:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (timestamp),
-          GST_TIME_ARGS (priv->outside_segment->start),
-          GST_TIME_ARGS (priv->outside_segment->stop),
+          GST_TIME_ARGS (priv->seek_segment->start),
+          GST_TIME_ARGS (priv->seek_segment->stop),
           GST_TIME_ARGS (priv->current_stack_start),
           GST_TIME_ARGS (priv->current_stack_stop));
 
@@ -1712,16 +1713,16 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
        *
        */
 
-      if (GST_CLOCK_TIME_IS_VALID (priv->outside_segment->start)) {
+      if (GST_CLOCK_TIME_IS_VALID (priv->seek_segment->start)) {
         GstClockTimeDiff curdiff;
 
         /* We'll either create a new event or discard it */
         gst_event_unref (event);
 
         if (priv->segment->rate < 0.0)
-          curdiff = priv->outside_segment->stop - priv->current_stack_stop;
+          curdiff = priv->seek_segment->stop - priv->current_stack_stop;
         else
-          curdiff = priv->current_stack_start - priv->outside_segment->start;
+          curdiff = priv->current_stack_start - priv->seek_segment->start;
         GST_DEBUG ("curdiff %" GST_TIME_FORMAT, GST_TIME_ARGS (curdiff));
         if ((curdiff != 0) && ((timestamp < curdiff)
                 || (curdiff > timestamp + diff))) {
