@@ -129,10 +129,13 @@ GST_START_TEST (test_tempochange)
     }
   }
 
-  fail_if (((NleObject *) source1)->media_duration_factor != 1.0f);
-  fail_if (((NleObject *) source1)->recursive_media_duration_factor != 2.0f);
-  fail_if (((NleObject *) oper)->media_duration_factor != 2.0f);
-  fail_if (((NleObject *) oper)->recursive_media_duration_factor != 2.0f);
+  fail_unless_equals_float (((NleObject *) source1)->media_duration_factor,
+      1.0f);
+  fail_unless_equals_float (((NleObject *)
+          source1)->recursive_media_duration_factor, 2.0f);
+  fail_unless_equals_float (((NleObject *) oper)->media_duration_factor, 2.0f);
+  fail_unless_equals_float (((NleObject *)
+          oper)->recursive_media_duration_factor, 2.0f);
 
   GST_DEBUG ("Setting pipeline to READY");
 
