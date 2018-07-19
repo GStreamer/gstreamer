@@ -3,7 +3,7 @@
   <description>Theora plugin library</description>
   <filename>../../ext/theora/.libs/libgsttheora.so</filename>
   <basename>libgsttheora.so</basename>
-  <version>1.14.1</version>
+  <version>1.14.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

@@ -3,7 +3,7 @@
   <description>OpenGL plugin</description>
   <filename>../../ext/gl/.libs/libgstopengl.so</filename>
   <basename>libgstopengl.so</basename>
-  <version>1.14.1</version>
+  <version>1.14.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -20,13 +20,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw(ANY), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D; video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D</details>
+          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string){ 2D, external-oes }; video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string){ 2D, external-oes }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D; video/x-raw(ANY), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string)2D</details>
+          <details>video/x-raw(memory:GLMemory), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string){ 2D, external-oes }; video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition), format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], texture-target=(string){ 2D, external-oes }</details>
         </caps>
       </pads>
     </element>

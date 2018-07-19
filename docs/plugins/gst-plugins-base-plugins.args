@@ -3464,7 +3464,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane offsets</NICK>
-<BLURB>Offsets of the planes in bytes (e.g. plane-offset="<0,76800>").</BLURB>
+<BLURB>Offsets of the planes in bytes (e.g. plane-offsets="<0,76800>").</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
