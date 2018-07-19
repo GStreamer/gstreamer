@@ -257,6 +257,7 @@ check_PROGRAMS = \
 	elements/videoframe-audiolevel \
 	elements/autoconvert \
 	elements/autovideoconvert \
+	elements/avwait \
 	elements/asfmux \
 	elements/camerabin \
 	elements/gdppay \
@@ -402,6 +403,13 @@ elements_videoframe_audiolevel_CFLAGS = \
 elements_videoframe_audiolevel_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
 	$(GST_AUDIO_LIBS)
+
+elements_avwait_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_avwait_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	$(GST_AUDIO_LIBS) $(GST_VIDEO_LIBS)
 
 elements_faad_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
