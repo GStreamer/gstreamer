@@ -1,3 +1,45 @@
+=== release 1.14.2 ===
+
+2018-07-20 00:56:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.14.2
+
+2018-07-20 00:56:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2018-06-11 14:43:20 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Remove 0.10 code
+	  This was used to "close" a segment. It's no longer needed anymore
+	  in 1.x (it was essentially sending the same thing again)
+
+2018-05-11 09:21:09 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Only send flush event on seeking flushes
+	  And not on all the time
+
 === release 1.14.1 ===
 
 2018-05-17 13:26:15 +0100  Tim-Philipp Müller <tim@centricular.com>
