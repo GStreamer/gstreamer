@@ -117,6 +117,15 @@ AC_ARG_ENABLE([dispmanx],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-dispmanx]) ;;
      esac],[NEED_DISPMANX=auto])
 
+AC_ARG_ENABLE([gbm],
+     [  --enable-gbm        Enable Mesa3D GBM support (requires EGL) @<:@default=auto@:>@],
+     [case "${enableval}" in
+       yes)  NEED_GBM=yes ;;
+       no)   NEED_GBM=no ;;
+       auto) NEED_GBM=auto ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-gbm]) ;;
+     esac],[NEED_GBM=auto])
+
 AG_GST_PKG_CHECK_MODULES(X11_XCB, x11-xcb)
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
@@ -172,15 +181,32 @@ case $host in
         AC_CHECK_LIB([EGL], [fbGetDisplay], [HAVE_VIV_FB_EGL=yes])
     fi
 
-    if test "x$HAVE_EGL" = "xyes"; then
+    if test "x$NEED_GBM" != "xno"; then
+      if test "x$HAVE_EGL" = "xyes"; then
         PKG_CHECK_MODULES(DRM, libdrm >= 2.4.55, HAVE_DRM=yes, HAVE_DRM=no)
         AC_SUBST(DRM_CFLAGS)
         AC_SUBST(DRM_LIBS)
+        if test "x$NEED_GBM" = "xyes"; then
+          if test "x$HAVE_DRM" = "xno"; then
+            AC_MSG_ERROR([GBM support requested but libdrm is not available])
+          fi
+          if test "x$HAVE_GUDEV" = "xno"; then
+            AC_MSG_ERROR([GBM support requested but gudev is not available])
+          fi
+        fi
         if test "x$HAVE_DRM" = "xyes" -a "x$HAVE_GUDEV" = "xyes"; then
           PKG_CHECK_MODULES(GBM, gbm, HAVE_GBM_EGL=yes, HAVE_GBM_EGL=no)
+          if test "x$HAVE_GBM_EGL" = "xno" -a "x$NEED_GBM" = "xyes"; then
+            AC_MSG_ERROR([GBM support requested but gbm library is not available])
+          fi
           AC_SUBST(GBM_CFLAGS)
           AC_SUBST(GBM_LIBS)
-       fi
+        fi
+      elif test "x$NEED_GBM" = "xyes"; then
+        AC_MSG_ERROR([GBM support requested but EGL is not available])
+      else
+        AC_MSG_NOTICE([GBM support requested but EGL is not available; not enabling GBM support])
+      fi
     fi
 
     dnl FIXME: Mali EGL depends on GLESv1 or GLESv2
