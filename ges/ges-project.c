@@ -782,13 +782,15 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
       GESAsset *tmpasset;
 
       tmpasset = ges_asset_cache_lookup (extractable_type, id);
-      g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, tmpasset);
-      g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, *error, id,
-          extractable_type);
       possible_id = ges_project_try_updating_id (project, tmpasset, *error);
 
-      if (possible_id == NULL)
+      if (possible_id == NULL) {
+        g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, tmpasset);
+        g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, *error, id,
+            extractable_type);
         return NULL;
+      }
+
 
       g_clear_error (error);
 
