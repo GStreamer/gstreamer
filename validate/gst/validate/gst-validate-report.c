@@ -800,7 +800,7 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
     if (gst_structure_get_int (action->structure, "repeat", &nrepeats))
       g_string_append_printf (string, "(%d/%d)", action->repeat, nrepeats);
 
-    g_string_append_printf (string, " %s",
+    g_string_append_printf (string, "%s",
         gst_structure_get_name (action->structure));
 
     g_string_append_len (string, ": ", 2);
