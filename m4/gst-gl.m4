@@ -126,6 +126,24 @@ AC_ARG_ENABLE([gbm],
        *) AC_MSG_ERROR([bad value ${enableval} for --enable-gbm]) ;;
      esac],[NEED_GBM=auto])
 
+AC_ARG_ENABLE([png],
+     [  --enable-png        Enable libpng support @<:@default=auto@:>@],
+     [case "${enableval}" in
+       yes)  NEED_PNG=yes ;;
+       no)   NEED_PNG=no ;;
+       auto) NEED_PNG=auto ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-png]) ;;
+     esac],[NEED_PNG=auto])
+
+AC_ARG_ENABLE([jpeg],
+     [  --enable-jpeg        Enable libjpeg support @<:@default=auto@:>@],
+     [case "${enableval}" in
+       yes)  NEED_JPEG=yes ;;
+       no)   NEED_JPEG=no ;;
+       auto) NEED_JPEG=auto ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-jpeg]) ;;
+     esac],[NEED_JPEG=auto])
+
 AG_GST_PKG_CHECK_MODULES(X11_XCB, x11-xcb)
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
@@ -1056,9 +1074,13 @@ dnl Needed by plugins that use g_module_*() API
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
 
 dnl libpng is optional
-PKG_CHECK_MODULES(LIBPNG, libpng >= 1.0, HAVE_PNG=yes, HAVE_PNG=no)
-if test "x$HAVE_PNG" = "xyes"; then
-  AC_DEFINE(HAVE_PNG, [1] , [Use libpng])
+if test "x$NEED_PNG" != "xno"; then
+  PKG_CHECK_MODULES(LIBPNG, libpng >= 1.0, HAVE_PNG=yes, HAVE_PNG=no)
+  if test "x$HAVE_PNG" = "xyes"; then
+    AC_DEFINE(HAVE_PNG, [1] , [Use libpng])
+  elif test "x$NEED_PNG" = "xyes"; then
+    AC_MSG_ERROR([libpng support requested but libpng is not available])
+  fi
 fi
 AC_SUBST(HAVE_PNG)
 AC_SUBST(LIBPNG_LIBS)
@@ -1066,25 +1088,29 @@ AC_SUBST(LIBPNG_CFLAGS)
 
 dnl libjpeg is optional
 AC_ARG_WITH(jpeg-mmx, [  --with-jpeg-mmx, path to MMX'ified JPEG library])
-OLD_LIBS="$LIBS"
-if test x$with_jpeg_mmx != x; then
-  LIBS="$LIBS -L$with_jpeg_mmx"
-fi
-AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-JPEG_LIBS="$LIBS -ljpeg-mmx"
-LIBS="$OLD_LIBS"
-if test x$HAVE_JPEG != xyes; then
-  JPEG_LIBS="-ljpeg"
-  AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
-fi
+if test "x$NEED_JPEG" != "xno"; then
+  OLD_LIBS="$LIBS"
+  if test x$with_jpeg_mmx != x; then
+    LIBS="$LIBS -L$with_jpeg_mmx"
+  fi
+  AC_CHECK_LIB(jpeg-mmx, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  JPEG_LIBS="$LIBS -ljpeg-mmx"
+  LIBS="$OLD_LIBS"
+  if test x$HAVE_JPEG != xyes; then
+    JPEG_LIBS="-ljpeg"
+    AC_CHECK_LIB(jpeg, jpeg_set_defaults, HAVE_JPEG="yes", HAVE_JPEG="no")
+  fi
 
-if test x$HAVE_JPEG = xyes; then
-  AC_DEFINE(HAVE_JPEG, [1], [Use libjpeg])
-else
-  JPEG_LIBS=
+  if test x$HAVE_JPEG = xyes; then
+    AC_DEFINE(HAVE_JPEG, [1], [Use libjpeg])
+  elif test "x$NEED_JPEG" = "xyes"; then
+    AC_MSG_ERROR([libjpeg support requested but libjpeg is not available])
+  else
+    JPEG_LIBS=
+  fi
+  AC_SUBST(JPEG_LIBS)
+  AC_SUBST(HAVE_JPEG)
 fi
-AC_SUBST(JPEG_LIBS)
-AC_SUBST(HAVE_JPEG)
 ])
 
 dnl --------------------------------------------------------------------------
