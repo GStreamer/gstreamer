@@ -196,16 +196,10 @@ gst_rtp_L8_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
 
       if (gst_structure_get_int (structure, "channels", &channels)) {
         gst_caps_set_simple (caps, "channels", G_TYPE_INT, channels, NULL);
-      } else {
-        /* Support any number of channels, if not explicitly specified */
-        gst_structure_remove_field (structure, "channels");
       }
 
       if (gst_structure_get_int (structure, "clock-rate", &rate)) {
         gst_caps_set_simple (caps, "rate", G_TYPE_INT, rate, NULL);
-      } else {
-        /* Support any rate, if not explicitly specified */
-        gst_structure_remove_field (structure, "rate");
       }
 
     }
