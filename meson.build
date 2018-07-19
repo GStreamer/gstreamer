@@ -31,7 +31,7 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
 endif
 
 libav_opt = get_option('libav')
-libav_deps = [dependency('libavfilter', version: '>= 7.16.100', fallback: ['FFmpeg', 'libavfilter_dep'])]
+libav_deps = [dependency('libavfilter', version: '>= 7.16.100', fallback: ['FFmpeg', 'libavfilter_dep'], required: false)]
 if libav_deps[0].found() and libav_deps[0].type_name() != 'internal'
   cc = meson.get_compiler('c')
   check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
