@@ -1,3 +1,45 @@
+=== release 1.14.2 ===
+
+2018-07-20 01:06:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.14.2
+
+2018-07-08 10:36:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* bindings/python/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	* tests/check/python/overrides_hack.py:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_group.py:
+	* tests/check/python/test_timeline.py:
+	  python: Fix GES.Timelineset_child_property
+	  Implementing it in the overrides as PyGObject won't be able to properly
+	  convert python values to GValues in some cases. Using
+	  g_object_set_property works as some logic is implemented inside
+	  PyGObject for that particular case. This is a "regression" due
+	  to https://bugzilla.gnome.org/review?bug=769789&attachment=348766 were
+	  we end up with an OverflowError while setting G_TYPE_UINT children
+	  properties.
+
+2018-07-01 16:22:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/Makefile.am:
+	* meson.build:
+	  Set GLib log domain to GES
+
+2018-07-01 12:21:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	  group: Fix handling clips that are added to a layer
+
 === release 1.14.1 ===
 
 2018-05-17 13:34:35 +0100  Tim-Philipp Müller <tim@centricular.com>
