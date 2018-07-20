@@ -1,3 +1,81 @@
+=== release 1.14.2 ===
+
+2018-07-20 01:05:51 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.14.2
+
+2018-07-16 21:57:08 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: unref clock (if set) when finalizing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796814
+
+2018-07-16 21:56:44 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  rtsp-media: add gst_rtsp_media_*_set_clock to docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796814
+
+2018-07-12 19:01:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: unref old clock when setting new clock
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796724
+
+2018-06-29 15:20:57 -0700  Brendan Shanks <brendan.shanks@teradek.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: unref clock in finalize
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796724
+
+2018-07-12 18:57:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  rtsp-onvif-media: fix g-ir-scanner warnings
+
+2016-01-08 18:12:14 -0500  Louis-Francis Ratté-Boulianne <lfrb@collabora.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Strip transport parts as whitespaces could be around commas
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758428
+
+2018-06-27 08:30:42 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: avoid pushing data on unlinked udpsrc pad during setup
+	  Fix race when setting up source elements.
+	  Since we set the source element(s) to PLAYING state before hooking
+	  them up to the downstream funnel, it's possible for the source element
+	  to receive packets before we actually get to linking it to the funnel,
+	  in which case buffers would be pushed out on an unlinked pad, causing
+	  it to error out and stop receiving more data.
+	  We fix this by blocking the source's srcpad until we have linked it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796160
+
+2018-06-19 14:53:02 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  rtspclientsink: fix waiting for multiple streams
+	  We were previously only ever waiting for a single stream to notify it's
+	  blocked status through GstRTSPStreamBlocking.  Actually count streams to
+	  wait for.
+	  Fixes rtspclientsink sending SDP's without out some of the input
+	  streams.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796624
+
+2018-05-08 14:13:31 +0200  Johan Bjäreholt <johanbj@axis.com>
+
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	  rtsp-onvif-media-factory: export gst_rtsp_onvif_media_factory_requires_backchannel
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796229
+
 === release 1.14.1 ===
 
 2018-05-17 13:33:35 +0100  Tim-Philipp Müller <tim@centricular.com>
