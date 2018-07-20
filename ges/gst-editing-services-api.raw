@@ -226,17 +226,13 @@
       <parameters>
         <parameter name="container" type="GESMetaContainer*"/>
         <parameter name="key" type="const-gchar*"/>
-        <parameter name="value" type="GValue*">
-          <warning>missing glib:type-name</warning>
-        </parameter>
+        <parameter name="value" type="GObject.Value"/>
         <parameter allow-none="1" closure="3" name="user_data" type="gpointer"/>
       </parameters>
     </callback>
     <interface name="Extractable" cname="GESExtractable" opaque="false" hidden="false">
       <class_struct cname="GESExtractableInterface">
-        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GTypeInterface">
-          <warning>missing glib:type-name</warning>
-        </field>
+        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject.TypeInterface"/>
         <field cname="asset_type" access="public" writeable="false" readable="true" is_callback="false" name="AssetType" type="GType"/>
         <field cname="check_id" access="public" writeable="false" readable="true" is_callback="false" name="CheckId" type="GESExtractableCheckId"/>
         <field cname="can_update_asset" access="public" writeable="false" readable="true" is_callback="false" name="CanUpdateAsset" type="gboolean"/>
@@ -249,9 +245,7 @@
         <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
       </class_struct>
       <virtual_method name="GetParametersFromId" cname="get_parameters_from_id" shared="true" hidden="true">
-        <return-type type="GParameter*">
-          <warning>missing glib:type-name</warning>
-        </return-type>
+        <return-type type="GObject.Parameter"/>
         <parameters>
           <parameter name="id" type="const-gchar*"/>
           <parameter name="n_params" type="guint"/>
@@ -270,9 +264,7 @@
           <parameter name="self" type="GESExtractableInterface*">
             <warning>missing glib:type-name</warning>
           </parameter>
-          <parameter name="klass" type="GObjectClass*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="klass" type="GObject.ObjectClass"/>
           <parameter name="asset" type="GESAsset*"/>
         </parameters>
       </virtual_method>
@@ -312,9 +304,7 @@
     </interface>
     <interface name="MetaContainer" cname="GESMetaContainer" opaque="false" hidden="false">
       <class_struct cname="GESMetaContainerInterface">
-        <field cname="parent_iface" access="public" writeable="false" readable="true" is_callback="false" name="ParentIface" type="GTypeInterface">
-          <warning>missing glib:type-name</warning>
-        </field>
+        <field cname="parent_iface" access="public" writeable="false" readable="true" is_callback="false" name="ParentIface" type="GObject.TypeInterface"/>
         <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
       </class_struct>
       <method name="GetType" cname="ges_meta_container_get_type" shared="true">
@@ -393,9 +383,7 @@
         </parameters>
       </method>
       <method name="GetMeta" cname="ges_meta_container_get_meta">
-        <return-type type="GValue*">
-          <warning>missing glib:type-name</warning>
-        </return-type>
+        <return-type type="GObject.Value"/>
         <parameters>
           <parameter name="key" type="const-gchar*"/>
         </parameters>
@@ -429,9 +417,7 @@
         <parameters>
           <parameter name="flags" type="GESMetaFlag"/>
           <parameter name="meta_item" type="const-gchar*"/>
-          <parameter name="value" type="GValue*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="value" type="GObject.Value"/>
         </parameters>
       </method>
       <method name="RegisterMetaBoolean" cname="ges_meta_container_register_meta_boolean">
@@ -571,9 +557,7 @@
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="meta_item" type="const-gchar*"/>
-          <parameter allow-none="1" name="value" type="GValue*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter allow-none="1" name="value" type="GObject.Value"/>
         </parameters>
       </method>
       <method name="SetString" cname="ges_meta_container_set_string">
@@ -601,22 +585,18 @@
         <return-type type="void"/>
         <parameters>
           <parameter name="_object" type="const-gchar*"/>
-          <parameter name="p0" type="GValue*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="p0" type="GObject.Value"/>
         </parameters>
       </signal>
     </interface>
-    <object name="Asset" cname="GESAsset" opaque="false" hidden="false" parent="GObject">
+    <object name="Asset" cname="GESAsset" opaque="false" hidden="false" parent="GObject.Object">
       <implements>
         <interface cname="GESMetaContainer"/>
         <interface cname="GAsyncInitable"/>
         <interface cname="GInitable"/>
       </implements>
       <class_struct cname="GESAssetClass">
-        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObjectClass">
-          <warning>missing glib:type-name</warning>
-        </field>
+        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject.ObjectClass"/>
         <method vm="start_loading"/>
         <method vm="extract"/>
         <method vm="inform_proxy"/>
@@ -736,7 +716,7 @@
       <property name="Id" cname="id" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true"/>
       <property name="Proxy" cname="proxy" type="GESAsset*" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="ProxyTarget" cname="proxy-target" type="GESAsset*" readable="true" writeable="true" construct="false" construct-only="false"/>
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject.Object"/>
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESAssetPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
@@ -1333,14 +1313,12 @@
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="Formatter" cname="GESFormatter" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GInitiallyUnowned">
+    <object name="Formatter" cname="GESFormatter" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GObject.InitiallyUnowned">
       <implements>
         <interface cname="GESExtractable"/>
       </implements>
       <class_struct cname="GESFormatterClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GInitiallyUnownedClass">
-          <warning>missing glib:type-name</warning>
-        </field>
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObject.InitiallyUnownedClass"/>
         <field cname="can_load_uri" access="public" writeable="false" readable="true" is_callback="false" name="CanLoadUri" type="GESFormatterCanLoadURIMethod"/>
         <field cname="load_from_uri" access="public" writeable="false" readable="true" is_callback="false" name="LoadFromUri" type="GESFormatterLoadFromURIMethod"/>
         <field cname="save_to_uri" access="public" writeable="false" readable="true" is_callback="false" name="SaveToUri" type="GESFormatterSaveToURIMethod"/>
@@ -1424,7 +1402,7 @@
           <parameter name="error" type="GError**"/>
         </parameters>
       </method>
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GInitiallyUnowned*"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject.InitiallyUnowned"/>
       <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESFormatterPrivate*">
         <warning>missing glib:type-name</warning>
       </field>
@@ -1480,15 +1458,13 @@
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
     </object>
-    <object name="Layer" cname="GESLayer" opaque="false" hidden="false" parent="GInitiallyUnowned">
+    <object name="Layer" cname="GESLayer" opaque="false" hidden="false" parent="GObject.InitiallyUnowned">
       <implements>
         <interface cname="GESExtractable"/>
         <interface cname="GESMetaContainer"/>
       </implements>
       <class_struct cname="GESLayerClass">
-        <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GInitiallyUnownedClass">
-          <warning>missing glib:type-name</warning>
-        </field>
+        <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GObject.InitiallyUnownedClass"/>
         <method vm="get_objects"/>
         <method vm="object_added"/>
         <method vm="object_removed"/>
@@ -1587,7 +1563,7 @@
       </method>
       <property name="AutoTransition" cname="auto-transition" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Priority" cname="priority" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GInitiallyUnowned*"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject.InitiallyUnowned"/>
       <field cname="timeline" access="public" writeable="false" readable="true" is_callback="false" name="Timeline" type="GESTimeline*"/>
       <field cname="min_nle_priority" access="public" writeable="false" readable="true" is_callback="false" name="MinNlePriority" type="guint32"/>
       <field cname="max_nle_priority" access="public" writeable="false" readable="true" is_callback="false" name="MaxNlePriority" type="guint32"/>
@@ -2525,15 +2501,13 @@
         </parameters>
       </signal>
     </object>
-    <object name="TimelineElement" cname="GESTimelineElement" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GInitiallyUnowned">
+    <object name="TimelineElement" cname="GESTimelineElement" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GObject.InitiallyUnowned">
       <implements>
         <interface cname="GESExtractable"/>
         <interface cname="GESMetaContainer"/>
       </implements>
       <class_struct cname="GESTimelineElementClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GInitiallyUnownedClass">
-          <warning>missing glib:type-name</warning>
-        </field>
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObject.InitiallyUnownedClass"/>
         <method vm="set_parent"/>
         <method vm="set_start"/>
         <method vm="set_inpoint"/>
@@ -2566,7 +2540,7 @@
         <parameters/>
       </virtual_method>
       <virtual_method name="ListChildrenProperties" cname="list_children_properties" hidden="true">
-        <return-type type="GParamSpec*"/>
+        <return-type type="GObject.ParamSpec"/>
         <parameters>
           <parameter name="n_properties" type="guint"/>
         </parameters>
@@ -2575,8 +2549,8 @@
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="prop_name" type="const-gchar*"/>
-          <parameter allow-none="1" name="child" type="GObject*" owned="true" pass_as="out"/>
-          <parameter allow-none="1" name="pspec" type="GParamSpec*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="child" type="GObject.Object*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="pspec" type="GObject.ParamSpec*" owned="true" pass_as="out"/>
         </parameters>
       </virtual_method>
       <virtual_method name="Paste" cname="paste" hidden="true">
@@ -2655,8 +2629,8 @@
       <method name="AddChildProperty" cname="ges_timeline_element_add_child_property">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="pspec" type="GParamSpec*"/>
-          <parameter name="child" type="GObject*"/>
+          <parameter name="pspec" type="GObject.ParamSpec"/>
+          <parameter name="child" type="GObject.Object"/>
         </parameters>
       </method>
       <method name="Copy" cname="ges_timeline_element_copy">
@@ -2669,18 +2643,14 @@
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="property_name" type="const-gchar*"/>
-          <parameter name="value" type="GValue*" pass_as="out">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="value" type="GObject.Value" pass_as="out"/>
         </parameters>
       </method>
       <method name="GetChildPropertyByPspec" cname="ges_timeline_element_get_child_property_by_pspec">
         <return-type type="void"/>
         <parameters>
-          <parameter name="pspec" type="GParamSpec*"/>
-          <parameter name="value" type="GValue*" pass_as="out">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="pspec" type="GObject.ParamSpec"/>
+          <parameter name="value" type="GObject.Value" pass_as="out"/>
         </parameters>
       </method>
       <method name="GetDuration" cname="ges_timeline_element_get_duration">
@@ -2733,8 +2703,8 @@
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="prop_name" type="const-gchar*"/>
-          <parameter allow-none="1" name="child" type="GObject*" owned="true" pass_as="out"/>
-          <parameter allow-none="1" name="pspec" type="GParamSpec*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="child" type="GObject.Object*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="pspec" type="GObject.ParamSpec*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="Paste" cname="ges_timeline_element_paste" version="1.6.0">
@@ -2746,7 +2716,7 @@
       <method name="RemoveChildProperty" cname="ges_timeline_element_remove_child_property">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="pspec" type="GParamSpec*"/>
+          <parameter name="pspec" type="GObject.ParamSpec"/>
         </parameters>
       </method>
       <method name="Ripple" cname="ges_timeline_element_ripple">
@@ -2777,18 +2747,14 @@
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="property_name" type="const-gchar*"/>
-          <parameter name="value" type="GValue*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="value" type="GObject.Value"/>
         </parameters>
       </method>
       <method name="SetChildPropertyByPspec" cname="ges_timeline_element_set_child_property_by_pspec">
         <return-type type="void"/>
         <parameters>
-          <parameter name="pspec" type="GParamSpec*"/>
-          <parameter name="value" type="GValue*">
-            <warning>missing glib:type-name</warning>
-          </parameter>
+          <parameter name="pspec" type="GObject.ParamSpec"/>
+          <parameter name="value" type="GObject.Value"/>
         </parameters>
       </method>
       <method name="SetDuration" cname="ges_timeline_element_set_duration">
@@ -2854,7 +2820,7 @@
       <property name="Serialize" cname="serialize" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Start" cname="start" type="guint64" readable="true" writeable="true" construct="false" construct-only="false"/>
       <property name="Timeline" cname="timeline" type="GESTimeline*" readable="true" writeable="true" construct="false" construct-only="false"/>
-      <field cname="parent_instance" access="public" writeable="false" readable="true" is_callback="false" name="ParentInstance" type="GInitiallyUnowned*"/>
+      <field cname="parent_instance" access="public" writeable="false" readable="true" is_callback="false" name="ParentInstance" type="GObject.InitiallyUnowned"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="ParentField" type="GESTimelineElement*"/>
       <field cname="asset" access="public" writeable="false" readable="true" is_callback="false" name="Asset" type="GESAsset*"/>
       <field cname="start" access="public" writeable="false" readable="true" is_callback="false" name="StartField" type="guint64"/>
@@ -2871,8 +2837,8 @@
       <signal name="DeepNotify" cname="deep-notify" when="first">
         <return-type type="void"/>
         <parameters>
-          <parameter name="prop_object" type="GObject*"/>
-          <parameter name="prop" type="GParamSpec*"/>
+          <parameter name="prop_object" type="GObject.Object"/>
+          <parameter name="prop" type="GObject.ParamSpec"/>
         </parameters>
       </signal>
     </object>
@@ -3242,7 +3208,7 @@
         <parameters/>
       </virtual_method>
       <virtual_method name="ListChildrenProperties" cname="list_children_properties" hidden="true">
-        <return-type type="GParamSpec*"/>
+        <return-type type="GObject.ParamSpec"/>
         <parameters>
           <parameter name="n_properties" type="guint"/>
         </parameters>
@@ -3252,7 +3218,7 @@
         <parameters>
           <parameter name="prop_name" type="const-gchar*"/>
           <parameter allow-none="1" name="element" type="GstElement*" owned="true" pass_as="out"/>
-          <parameter allow-none="1" name="pspec" type="GParamSpec*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="pspec" type="GObject.ParamSpec*" owned="true" pass_as="out"/>
         </parameters>
       </virtual_method>
       <method name="AddChildrenProps" cname="ges_track_element_add_children_props">
@@ -3318,7 +3284,7 @@
         <parameters>
           <parameter name="prop_name" type="const-gchar*"/>
           <parameter allow-none="1" name="element" type="GstElement*" owned="true" pass_as="out"/>
-          <parameter allow-none="1" name="pspec" type="GParamSpec*" owned="true" pass_as="out"/>
+          <parameter allow-none="1" name="pspec" type="GObject.ParamSpec*" owned="true" pass_as="out"/>
         </parameters>
       </method>
       <method name="RemoveControlBinding" cname="ges_track_element_remove_control_binding">
@@ -3909,6 +3875,10 @@
       <constant value="multifile://" ctype="gchar*" gtype="gchar*" name="MULTI_FILE_URI_PREFIX"/>
       <constant value="4" ctype="gint" gtype="gint" name="PADDING"/>
       <constant value="20" ctype="gint" gtype="gint" name="PADDING_LARGE"/>
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
+      <constant value="2" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="14" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
+      <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
   </namespace>
 </api>
