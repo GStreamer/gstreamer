@@ -1925,7 +1925,8 @@ class ScenarioManager(Loggable):
                        "--scenarios-defs-output-file", scenario_defs]
             command.extend(scenario_paths)
             subprocess.check_call(command, stdout=logs, stderr=logs)
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
+            self.error(e)
             pass
 
         config = configparser.RawConfigParser()
