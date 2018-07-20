@@ -127,7 +127,10 @@ class GESTest(GstValidateTest):
         if not self.options.paths:
             if self.options.disable_recurse:
                 return
-            paths = [os.path.dirname(self.project.get_media_filepath())]
+            if self.project:
+                paths = [os.path.dirname(self.project.get_media_filepath())]
+            else:
+                paths = []
         else:
             paths = self.options.paths
 
@@ -149,13 +152,34 @@ class GESTest(GstValidateTest):
             self.add_arguments("--mute")
 
         self.set_sample_paths()
-        self.add_arguments("-l", self.project.get_uri())
+
+        if self.project:
+            self.add_arguments("-l", self.project.get_uri())
 
 
 class GESPlaybackTest(GESTest):
     def __init__(self, classname, options, reporter, project, scenario):
         super(GESPlaybackTest, self).__init__(classname, options, reporter,
                                       project, scenario=scenario)
+
+    def get_current_value(self):
+        return self.get_current_position()
+
+class GESScenarioTest(GESTest):
+    def __init__(self, classname, options, reporter, scenario):
+        super().__init__(classname, options, reporter, None, scenario=scenario)
+
+    def build_arguments(self):
+        super().build_arguments()
+        self.add_arguments("--set-scenario", self.scenario.path)
+
+    def get_subproc_env(self):
+        scenario = self.scenario
+        self.scenario = None
+        res = super().get_subproc_env()
+        self.scenario = scenario
+
+        return res
 
     def get_current_value(self):
         return self.get_current_position()
@@ -255,6 +279,11 @@ Available options:""")
                                               "ges",
                                               "ges-projects"),
                          help="Paths in which to look for moved medias")
+        group.add_argument("--ges-scenario-paths", dest="scenarios_path",
+                         default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
+                                              "ges",
+                                              "scenarios"),
+                         help="Paths in which to look for moved medias")
         group.add_argument("-r", "--disable-recurse-paths", dest="disable_recurse",
                          default=False, action="store_true",
                          help="Whether to recurse into paths to find medias")
@@ -273,6 +302,7 @@ Available options:""")
 
     def register_defaults(self, project_paths=None):
         projects = list()
+        all_scenarios = list()
         if not self.args:
             if project_paths == None:
                 path = self.options.projects_paths
@@ -284,6 +314,12 @@ Available options:""")
                     if not f.endswith(".xges"):
                         continue
                     projects.append(utils.path2url(os.path.join(path, root, f)))
+
+            for root, dirs, files in os.walk(self.options.scenarios_path):
+                for f in files:
+                    if not f.endswith(".scenario"):
+                        continue
+                    all_scenarios.append(os.path.join(root, f))
         else:
             for proj_uri in self.args:
                 if not utils.isuri(proj_uri):
@@ -328,3 +364,9 @@ Available options:""")
                                             self.reporter, project,
                                             combination=comb)
                                   )
+        for scenario in self._scenarios.discover_scenarios(all_scenarios):
+            classname = "scenario.%s" % scenario.name
+            self.add_test(GESScenarioTest(classname,
+                                          self.options,
+                                          self.reporter,
+                                          scenario=scenario))
