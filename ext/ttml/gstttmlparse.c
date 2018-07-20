@@ -427,11 +427,11 @@ feed_textbuf (GstTtmlParse * self, GstBuffer * buf)
   input = convert_encoding (self, (const gchar *) data, avail, &consumed);
 
   if (input && consumed > 0) {
-    if (self->textbuf) {
-      g_string_free (self->textbuf, TRUE);
-      self->textbuf = NULL;
-    }
-    self->textbuf = g_string_new (input);
+    if (!self->textbuf)
+      self->textbuf = g_string_new (input);
+    else
+      self->textbuf = g_string_append (self->textbuf, input);
+
     gst_adapter_unmap (self->adapter);
     gst_adapter_flush (self->adapter, consumed);
   } else {
@@ -446,9 +446,11 @@ handle_buffer (GstTtmlParse * self, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL;
-  GList *subtitle_list, *subtitle;
+  GList *subtitle_list = NULL;
+  GList *iter;
   GstClockTime begin = GST_BUFFER_PTS (buf);
   GstClockTime duration = GST_BUFFER_DURATION (buf);
+  guint consumed;
 
   if (self->first_buffer) {
     GstMapInfo map;
@@ -474,19 +476,31 @@ handle_buffer (GstTtmlParse * self, GstBuffer * buf)
     self->need_segment = FALSE;
   }
 
-  subtitle_list = ttml_parse (self->textbuf->str, begin, duration);
+  do {
+    consumed = ttml_parse (self->textbuf->str, begin, duration, &subtitle_list);
 
-  for (subtitle = subtitle_list; subtitle; subtitle = subtitle->next) {
-    GstBuffer *op_buffer = subtitle->data;
-    self->segment.position = GST_BUFFER_PTS (op_buffer);
+    if (!consumed) {
+      GST_DEBUG_OBJECT (self, "need more data");
+      return ret;
+    }
 
-    ret = gst_pad_push (self->srcpad, op_buffer);
+    self->textbuf = g_string_erase (self->textbuf, 0, consumed);
 
-    if (ret != GST_FLOW_OK)
-      GST_DEBUG_OBJECT (self, "flow: %s", gst_flow_get_name (ret));
-  }
+    for (iter = subtitle_list; iter; iter = g_list_next (iter)) {
+      GstBuffer *op_buffer = GST_BUFFER (iter->data);
+      self->segment.position = GST_BUFFER_PTS (op_buffer);
 
-  g_list_free (subtitle_list);
+      ret = gst_pad_push (self->srcpad, op_buffer);
+
+      if (ret != GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (self, "flow: %s", gst_flow_get_name (ret));
+        break;
+      }
+    }
+
+    g_list_free (subtitle_list);
+  } while (TRUE);
+
   return ret;
 }
 
