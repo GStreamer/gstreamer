@@ -1,6 +1,5 @@
 subdir('audiofx')
 subdir('cairo')
-#FIXME: subdir('gtk')
 subdir('level')
 subdir('qt')
 subdir('rtp')
@@ -12,5 +11,6 @@ if gtk_dep.found()
   subdir('equalizer')
   subdir('jack')
   subdir('spectrum')
+  subdir('gtk')
 endif
 
