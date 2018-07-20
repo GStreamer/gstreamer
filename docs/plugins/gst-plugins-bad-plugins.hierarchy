@@ -284,6 +284,7 @@ GObject
           GstRtpAsfPay
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
+        GstSFDec
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
@@ -333,6 +334,9 @@ GObject
               GstGLMixerPad
                 GstGLStereoMixPad
                 GstGLVideoMixerPad
+        GstProxyPad
+          GstGhostPad
+            GstWebRTCBinPad
       GstPadTemplate
       GstPlugin
       GstPluginFeature

@@ -833,3 +833,11 @@ GstWebRTCSessionDescription *arg1
 GstPromise *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstWebRTCBin::on-new-transceiver</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstWebRTCRTPTransceiver *arg1
+</SIGNAL>
+

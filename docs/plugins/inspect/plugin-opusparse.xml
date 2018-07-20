@@ -3,7 +3,7 @@
   <description>OPUS parse plugin</description>
   <filename>../../ext/opus/.libs/libgstopusparse.so</filename>
   <basename>libgstopusparse.so</basename>
-  <version>1.14.1</version>
+  <version>1.14.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
