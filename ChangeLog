@@ -1,3 +1,35 @@
+=== release 1.14.2 ===
+
+2018-07-20 01:04:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.14.2
+
+2018-07-20 01:04:22 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2018-07-18 19:41:50 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  libav: Fix symbol redefine build error
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796827
+
+2018-05-31 17:28:44 +0800  Roland Jon <rlandjon@gmail.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796452
+
 === release 1.14.1 ===
 
 2018-05-17 13:32:10 +0100  Tim-Philipp Müller <tim@centricular.com>
