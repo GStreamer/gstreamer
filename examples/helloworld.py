@@ -9,7 +9,7 @@ from gi.repository import GObject, Gst
 def bus_call(bus, message, loop):
     t = message.type
     if t == Gst.MessageType.EOS:
-        sys.stout.write("End-of-stream\n")
+        sys.stdout.write("End-of-stream\n")
         loop.quit()
     elif t == Gst.MessageType.ERROR:
         err, debug = message.parse_error()
