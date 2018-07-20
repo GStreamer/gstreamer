@@ -238,7 +238,7 @@ gst_srt_client_src_start (GstBaseSrc * src)
   GstUri *uri = gst_uri_ref (base->uri);
   GSocketAddress *socket_address = NULL;
 
-  priv->sock = gst_srt_client_connect_full (GST_ELEMENT (src), FALSE,
+  priv->sock = gst_srt_client_connect (GST_ELEMENT (src), FALSE,
       gst_uri_get_host (uri), gst_uri_get_port (uri), priv->rendez_vous,
       priv->bind_address, priv->bind_port, base->latency,
       &socket_address, &priv->poll_id, base->passphrase, base->key_length);

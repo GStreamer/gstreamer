@@ -159,7 +159,7 @@ gst_srt_client_sink_start (GstBaseSink * sink)
   GstSRTBaseSink *base = GST_SRT_BASE_SINK (sink);
   GstUri *uri = gst_uri_ref (GST_SRT_BASE_SINK (self)->uri);
 
-  priv->sock = gst_srt_client_connect_full (GST_ELEMENT (sink), FALSE,
+  priv->sock = gst_srt_client_connect (GST_ELEMENT (sink), FALSE,
       gst_uri_get_host (uri), gst_uri_get_port (uri), priv->rendez_vous,
       priv->bind_address, priv->bind_port, base->latency,
       &priv->sockaddr, &priv->poll_id, base->passphrase, base->key_length);
