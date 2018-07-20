@@ -33,8 +33,6 @@
 
 #include <gst/video/video.h>
 
-#define BLEND(D,S,alpha) (((D) * (256 - (alpha)) + (S) * (alpha)) >> 8)
-
 GST_DEBUG_CATEGORY_STATIC (gst_compositor_blend_debug);
 #define GST_CAT_DEFAULT gst_compositor_blend_debug
 
@@ -61,7 +59,7 @@ method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   dest_width = GST_VIDEO_FRAME_COMP_WIDTH (destframe, 0); \
   dest_height = GST_VIDEO_FRAME_COMP_HEIGHT (destframe, 0); \
   \
-  s_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
+  s_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (s_alpha == 0)) \
@@ -247,7 +245,7 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
     return; \
   } \
   \
-  b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
   \
   BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width, src_height);\
 } \
@@ -492,7 +490,7 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
     return; \
   } \
   \
-  b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
   \
   BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width, src_height); \
 } \
@@ -691,7 +689,7 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
   dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
   \
-  b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
   \
   /* adjust src pointers for negative sizes */ \
   if (xpos < 0) { \
@@ -857,7 +855,7 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
   dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
   \
-  b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
   \
   xpos = GST_ROUND_UP_2 (xpos); \
   \
