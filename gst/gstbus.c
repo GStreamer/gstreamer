@@ -762,7 +762,7 @@ no_replace:
 /**
  * gst_bus_get_pollfd:
  * @bus: A #GstBus
- * @fd: A GPollFD to fill
+ * @fd: (out): A GPollFD to fill
  *
  * Gets the file descriptor from the bus which can be used to get notified about
  * messages being available with functions like g_poll(), and allows integration
