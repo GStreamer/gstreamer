@@ -1,7 +1,7 @@
 /* GStreamer SRT plugin based on libsrt
  * Copyright (C) 2017, Collabora Ltd.
  *   Author:Justin Kim <justin.kim@collabora.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -284,8 +284,8 @@ gst_srt_client_src_class_init (GstSRTClientSrcClass * klass)
 
   /**
    * GstSRTClientSrc:poll-timeout:
-   * 
-   * The timeout(ms) value when polling SRT socket. 
+   *
+   * The timeout(ms) value when polling SRT socket.
    */
   properties[PROP_POLL_TIMEOUT] =
       g_param_spec_int ("poll-timeout", "Poll timeout",

@@ -1,7 +1,7 @@
 /* GStreamer SRT plugin based on libsrt
  * Copyright (C) 2017, Collabora Ltd.
  *   Author:Justin Kim <justin.kim@collabora.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -30,9 +30,9 @@
  * <title>Examples</title>
  * |[
  * gst-launch-1.0 -v srtserversrc uri="srt://:7001" ! fakesink
- * ]| This pipeline shows how to bind SRT server by setting #GstSRTServerSrc:uri property. 
+ * ]| This pipeline shows how to bind SRT server by setting #GstSRTServerSrc:uri property.
  * </refsect2>
- * 
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -441,7 +441,7 @@ gst_srt_server_src_class_init (GstSRTServerSrcClass * klass)
 
   /**
    * GstSRTServerSrc:poll-timeout:
-   * 
+   *
    * The timeout(ms) value when polling SRT socket. For #GstSRTServerSrc,
    * this value shouldn't be set as -1 (infinite) because "srt_epoll_wait"
    * isn't cancellable unless closing the socket.
@@ -459,7 +459,7 @@ gst_srt_server_src_class_init (GstSRTServerSrcClass * klass)
    * @sock: the client socket descriptor that was added to srtserversrc
    * @addr: the pointer of "struct sockaddr" that describes the @sock
    * @addr_len: the length of @addr
-   * 
+   *
    * The given socket descriptor was added to srtserversrc.
    */
   signals[SIG_CLIENT_ADDED] =

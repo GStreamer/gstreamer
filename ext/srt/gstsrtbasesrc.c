@@ -1,7 +1,7 @@
 /* GStreamer SRT plugin based on libsrt
  * Copyright (C) 2017, Collabora Ltd.
  *   Author:Justin Kim <justin.kim@collabora.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -179,7 +179,7 @@ gst_srt_base_src_class_init (GstSRTBaseSrcClass * klass)
 
   /**
    * GstSRTBaseSrc:uri:
-   * 
+   *
    * The URI used by SRT Connection.
    */
   properties[PROP_URI] = g_param_spec_string ("uri", "URI",

@@ -1,7 +1,7 @@
 /* GStreamer SRT plugin based on libsrt
  * Copyright (C) 2017, Collabora Ltd.
  *   Author:Justin Kim <justin.kim@collabora.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -32,7 +32,7 @@
  * gst-launch-1.0 -v audiotestsrc ! srtserversink
  * ]| This pipeline shows how to serve SRT packets through the default port.
  * </refsect2>
- * 
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -537,7 +537,7 @@ gst_srt_server_sink_class_init (GstSRTServerSinkClass * klass)
    * @sock: the client socket descriptor that was added to srtserversink
    * @addr: the pointer of "struct sockaddr" that describes the @sock
    * @addr_len: the length of @addr
-   * 
+   *
    * The given socket descriptor was added to srtserversink.
    */
   signals[SIG_CLIENT_ADDED] =
