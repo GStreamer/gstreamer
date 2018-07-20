@@ -264,13 +264,9 @@ gst_srt_server_sink_start (GstBaseSink * sink)
   GstSRTServerSinkPrivate *priv = GST_SRT_SERVER_SINK_GET_PRIVATE (self);
   GstSRTBaseSink *base = GST_SRT_BASE_SINK (sink);
   GstUri *uri = gst_uri_ref (GST_SRT_BASE_SINK (self)->uri);
-  GSocketAddress *socket_address = NULL;
   GError *error = NULL;
   gboolean ret = TRUE;
-  struct sockaddr sa;
-  size_t sa_len;
   const gchar *host;
-  int lat = base->latency;
 
   if (gst_uri_get_port (uri) == GST_URI_NO_PORT) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, NULL, (("Invalid port")));
@@ -278,76 +274,13 @@ gst_srt_server_sink_start (GstBaseSink * sink)
   }
 
   host = gst_uri_get_host (uri);
-  if (host == NULL) {
-    GInetAddress *any = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
 
-    socket_address = g_inet_socket_address_new (any, gst_uri_get_port (uri));
-    g_object_unref (any);
-  } else {
-    socket_address =
-        g_inet_socket_address_new_from_string (host, gst_uri_get_port (uri));
-  }
+  priv->sock = gst_srt_server_listen (GST_ELEMENT (self),
+      TRUE, host, gst_uri_get_port (uri),
+      base->latency, &priv->poll_id, base->passphrase, base->key_length);
 
-  if (socket_address == NULL) {
-    GST_WARNING_OBJECT (self,
-        "failed to extract host or port from the given URI");
-    goto failed;
-  }
-
-  sa_len = g_socket_address_get_native_size (socket_address);
-  if (!g_socket_address_to_native (socket_address, &sa, sa_len, &error)) {
-    GST_WARNING_OBJECT (self, "cannot resolve address (reason: %s)",
-        error->message);
-    goto failed;
-  }
-
-  priv->sock = srt_socket (sa.sa_family, SOCK_DGRAM, 0);
   if (priv->sock == SRT_INVALID_SOCK) {
-    GST_WARNING_OBJECT (self, "failed to create SRT socket (reason: %s)",
-        srt_getlasterror_str ());
-    goto failed;
-  }
-
-  /* Make SRT non-blocking */
-  srt_setsockopt (priv->sock, 0, SRTO_SNDSYN, &(int) {
-      0}, sizeof (int));
-
-  /* Make sure TSBPD mode is enable (SRT mode) */
-  srt_setsockopt (priv->sock, 0, SRTO_TSBPDMODE, &(int) {
-      1}, sizeof (int));
-
-  /* This is a sink, we're always a sender */
-  srt_setsockopt (priv->sock, 0, SRTO_SENDER, &(int) {
-      1}, sizeof (int));
-
-  srt_setsockopt (priv->sock, 0, SRTO_TSBPDDELAY, &lat, sizeof (int));
-
-  if (base->passphrase != NULL && base->passphrase[0] != '\0') {
-    srt_setsockopt (priv->sock, 0, SRTO_PASSPHRASE,
-        base->passphrase, strlen (base->passphrase));
-    srt_setsockopt (priv->sock, 0, SRTO_PBKEYLEN,
-        &base->key_length, sizeof (int));
-  }
-
-  priv->poll_id = srt_epoll_create ();
-  if (priv->poll_id == -1) {
-    GST_WARNING_OBJECT (self,
-        "failed to create poll id for SRT socket (reason: %s)",
-        srt_getlasterror_str ());
-    goto failed;
-  }
-  srt_epoll_add_usock (priv->poll_id, priv->sock, &(int) {
-      SRT_EPOLL_IN});
-
-  if (srt_bind (priv->sock, &sa, sa_len) == SRT_ERROR) {
-    GST_WARNING_OBJECT (self, "failed to bind SRT server socket (reason: %s)",
-        srt_getlasterror_str ());
-    goto failed;
-  }
-
-  if (srt_listen (priv->sock, 1) == SRT_ERROR) {
-    GST_WARNING_OBJECT (self, "failed to listen SRT socket (reason: %s)",
-        srt_getlasterror_str ());
+    GST_ERROR_OBJECT (sink, "Failed to create srt socket");
     goto failed;
   }
 
@@ -369,7 +302,6 @@ gst_srt_server_sink_start (GstBaseSink * sink)
   }
 
   g_clear_pointer (&uri, gst_uri_unref);
-  g_clear_object (&socket_address);
 
   return ret;
 
@@ -386,7 +318,6 @@ failed:
 
   g_clear_error (&error);
   g_clear_pointer (&uri, gst_uri_unref);
-  g_clear_object (&socket_address);
 
   return FALSE;
 }

@@ -43,6 +43,11 @@ gst_srt_client_connect (GstElement * elem, int sender,
     GSocketAddress ** socket_address, gint * poll_id,
     gchar * passphrase, int key_length);
 
+SRTSOCKET
+gst_srt_server_listen (GstElement * elem, int sender,
+    const gchar * host, guint16 port, gint latency, gint * poll_id,
+    const gchar * passphrase, int key_length);
+
 G_END_DECLS
 
 

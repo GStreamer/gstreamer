@@ -165,6 +165,111 @@ failed:
   return SRT_INVALID_SOCK;
 }
 
+SRTSOCKET
+gst_srt_server_listen (GstElement * elem, int sender, const gchar * host,
+    guint16 port, int latency, gint * poll_id, const gchar * passphrase,
+    int key_length)
+{
+  SRTSOCKET sock = SRT_INVALID_SOCK;
+  GError *error = NULL;
+  struct sockaddr sa;
+  size_t sa_len;
+  GSocketAddress *addr = NULL;
+
+  if (host == NULL) {
+    GInetAddress *any = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+
+    addr = g_inet_socket_address_new (any, port);
+    g_object_unref (any);
+  } else {
+    addr = g_inet_socket_address_new_from_string (host, port);
+  }
+
+  if (addr == NULL) {
+    GST_WARNING_OBJECT (elem,
+        "failed to extract host or port from the given URI");
+    goto failed;
+  }
+
+  sa_len = g_socket_address_get_native_size (addr);
+  if (!g_socket_address_to_native (addr, &sa, sa_len, &error)) {
+    GST_ELEMENT_ERROR (elem, RESOURCE, OPEN_READ, ("Invalid address"),
+        ("cannot resolve address (reason: %s)", error->message));
+    goto failed;
+  }
+
+  sock = srt_socket (sa.sa_family, SOCK_DGRAM, 0);
+  if (sock == SRT_INVALID_SOCK) {
+    GST_WARNING_OBJECT (elem, "failed to create SRT socket (reason: %s)",
+        srt_getlasterror_str ());
+    goto failed;
+  }
+
+  /* Make SRT server socket non-blocking */
+  /* for non-blocking srt_close() */
+  srt_setsockopt (sock, 0, SRTO_SNDSYN, &(int) {
+      0}, sizeof (int));
+
+  /* for non-blocking srt_accept() */
+  srt_setsockopt (sock, 0, SRTO_RCVSYN, &(int) {
+      0}, sizeof (int));
+
+  /* Make sure TSBPD mode is enable (SRT mode) */
+  srt_setsockopt (sock, 0, SRTO_TSBPDMODE, &(int) {
+      1}, sizeof (int));
+
+  srt_setsockopt (sock, 0, SRTO_SENDER, &sender, sizeof (int));
+  srt_setsockopt (sock, 0, SRTO_TSBPDDELAY, &latency, sizeof (int));
+
+  if (passphrase != NULL && passphrase[0] != '\0') {
+    srt_setsockopt (sock, 0, SRTO_PASSPHRASE, passphrase, strlen (passphrase));
+    srt_setsockopt (sock, 0, SRTO_PBKEYLEN, &key_length, sizeof (int));
+  }
+
+  *poll_id = srt_epoll_create ();
+  if (*poll_id == -1) {
+    GST_ELEMENT_ERROR (elem, LIBRARY, INIT, (NULL),
+        ("failed to create poll id for SRT socket (reason: %s)",
+            srt_getlasterror_str ()));
+    goto failed;
+  }
+
+  srt_epoll_add_usock (*poll_id, sock, &(int) {
+      SRT_EPOLL_IN});
+
+  if (srt_bind (sock, &sa, sa_len) == SRT_ERROR) {
+    GST_WARNING_OBJECT (elem, "failed to bind SRT server socket (reason: %s)",
+        srt_getlasterror_str ());
+    goto failed;
+  }
+
+  if (srt_listen (sock, 1) == SRT_ERROR) {
+    GST_WARNING_OBJECT (elem, "failed to listen SRT socket (reason: %s)",
+        srt_getlasterror_str ());
+    goto failed;
+  }
+
+  g_clear_object (&addr);
+
+  return sock;
+
+failed:
+  if (*poll_id != SRT_ERROR) {
+    srt_epoll_release (*poll_id);
+    *poll_id = SRT_ERROR;
+  }
+
+  if (sock != SRT_INVALID_SOCK) {
+    srt_close (sock);
+    sock = SRT_INVALID_SOCK;
+  }
+
+  g_clear_error (&error);
+  g_clear_object (&addr);
+
+  return SRT_INVALID_SOCK;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
