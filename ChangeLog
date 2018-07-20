@@ -1,3 +1,126 @@
+=== release 1.14.2 ===
+
+2018-07-20 01:08:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.14.2
+
+2018-07-20 01:08:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2018-06-13 18:10:28 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	  vaapibufferpool: declare parameter display as object
+	  We have neglected to update this code since GstVaapiDisplay turned
+	  into a GstObject descendant.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796470
+
+2018-06-07 12:50:33 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: set best profile in the intersected caps
+	  The previous behavior when selecting a profile was to select the
+	  best one in the intersection of allowed, in the pipelne, and
+	  available (by the hardware). This was changed in commit 1f1e9ee
+	  to choose the first one at fixate.
+	  Nonetheless, it's a bad idea change the behavior on a stable
+	  release. Thus, this patch selects the best profile in the
+	  intersected caps as before.
+
+2018-06-06 19:45:28 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: verify EGL display is not NULL
+
+2018-05-25 12:17:21 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_priv.h:
+	  libs: display: resurrect parent private memember
+	  This is, practically, a revert of commit dcf135e2.
+	  The parent logic is useful for the EGL display, which is a decorator
+	  of the real windowing subsystem (X11 or Wayland). Thus it is avoided
+	  calling vaInitialize() and vaTerminate() twice.
+
+2018-04-27 18:35:30 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	  libs: display: egl: initialize params structure
+	  Statically initialise the internal params structure.
+
+2018-04-27 18:34:37 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: handle EGL when creating VAAPI display from gl
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795391
+
+2018-04-24 18:17:24 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	  display: egl: fix to create VaapiDisplayEGL with native EGL display
+	  gst_vaapi_display_egl_new_with_native_display has been broken since no
+	  one uses it.
+	  Currently it needs to call this api to create display with provided EGL
+	  display so that it could avoid duplicated calls for the native display
+	  (eg. eglTerminate).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795391
+
+2018-06-05 15:16:53 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: log output caps
+
+2018-06-05 22:38:37 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapiencode_h264.c:
+	  vaapiencode: h264: find profile in available and allowed caps
+	  The commit 67e33d3de225d0e006d7bf606e7abb20d4544eab ("vaapiencode: h264:
+	  find best profile in those available") changed the code to pick a profile
+	  that is actually supported by the hardware. Unfortunately it dropped the
+	  downstream constraints. This can cause negotiation failures under certain
+	  circumstances.
+	  The fix is split in two cases:
+	  1\ the available VA-API caps doesn't intersect with pipeline's allowed
+	  caps:
+	  * The best allowed profile (pipeline's caps) is set as the encoding
+	  target profile (it will be adjusted later by the available profiles
+	  and properties)
+	  2\ the available VA-API caps does intersect with pipeline's allowed
+	  caps:
+	  * The intersected caps are fixed, and its profile is set as the
+	  encoding target profile. In this case the is not the best profile,
+	  but the minimal one (if VA-API reports the profiles in order).
+	  Setting the minimal profile of the intersected caps is better for
+	  compatibility.
+	  This patch fixes other tests related with caps negotiation, for
+	  example, it handles baseline profile, even when VA only supports
+	  constrained-baseline.
+	  Original-patch-by: Michael Olbrich <m.olbrich@pengutronix.de>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794306
+
+2018-06-01 15:27:25 +0900  Hyunjun Ko <zzoon@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: increase log2_max_pic_order_cnt range according to spec
+	  The specification says,
+	  "log2_max_pic_order_cnt_lsb_minus4 shall be in the range of 0 to 12, inclusive."
+	  This patch changes the upper limit from 6 to 12.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796179
+
+2018-05-21 13:27:14 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: guard GstGL code
+
 === release 1.14.1 ===
 
 2018-05-17 13:36:46 +0100  Tim-Philipp Müller <tim@centricular.com>
