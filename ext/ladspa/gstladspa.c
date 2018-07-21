@@ -302,7 +302,19 @@ ladspa_plugin_directory_search (GstPlugin * ladspa_plugin, const char *dir_name)
     return FALSE;
 
   while ((entry_name = g_dir_read_name (dir))) {
+    /* Only attempt to open files with the module suffixes */
+    if (!g_str_has_suffix (entry_name, "." G_MODULE_SUFFIX)
+#ifdef GST_EXTRA_MODULE_SUFFIX
+        && !g_str_has_suffix (entry_name, GST_EXTRA_MODULE_SUFFIX)
+#endif
+        ) {
+      GST_TRACE ("Ignoring file %s as it has the wrong suffix for a plugin",
+          entry_name);
+      continue;
+    }
+
     file_name = g_build_filename (dir_name, entry_name, NULL);
+    GST_LOG ("Probing file %s as a LADSPA plugin", file_name);
     plugin =
         g_module_open (file_name, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
     if (plugin) {
