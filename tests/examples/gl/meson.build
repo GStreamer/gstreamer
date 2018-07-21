@@ -2,6 +2,6 @@
 #subdir('clutter')
 #subdir('cocoa')
 #subdir('generic')
-subdir('gtk', is_found : gtk_dep)
+subdir('gtk', if_found : gtk_dep)
 #subdir('qt')
 subdir('sdl')
