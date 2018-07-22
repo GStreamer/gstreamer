@@ -322,7 +322,7 @@ ladspa_plugin_directory_search (GstPlugin * ladspa_plugin, const char *dir_name)
       if (g_module_symbol (plugin, "ladspa_descriptor",
               (gpointer *) & descriptor_function)) {
         /* we've found a ladspa_descriptor function, now introspect it. */
-        GST_INFO ("describe %s", file_name);
+        GST_INFO ("Found LADSPA descriptor in %s", file_name);
         ladspa_describe_plugin (file_name, entry_name, descriptor_function);
         ok = TRUE;
       } else {
@@ -363,18 +363,24 @@ ladspa_plugin_path_search (GstPlugin * plugin)
 #ifdef G_OS_WIN32
   path = g_getenv ("APPDATA");
   if (path) {
+    gchar *path_subdir = g_build_filename (path, "LADSPA", NULL);
     if (ladspa_path->len)
-      g_string_append_printf (ladspa_path, G_SEARCHPATH_SEPARATOR_S "%s", path);
+      g_string_append_printf (ladspa_path, G_SEARCHPATH_SEPARATOR_S "%s",
+          path_subdir);
     else
-      g_string_append (ladspa_path, path);
+      g_string_append (ladspa_path, path_subdir);
+    g_free (path_subdir);
   }
 
   path = g_getenv ("COMMONPROGRAMFILES");
   if (path) {
+    gchar *path_subdir = g_build_filename (path, "LADSPA", NULL);
     if (ladspa_path->len)
-      g_string_append_printf (ladspa_path, G_SEARCHPATH_SEPARATOR_S "%s", path);
+      g_string_append_printf (ladspa_path, G_SEARCHPATH_SEPARATOR_S "%s",
+          path_subdir);
     else
-      g_string_append (ladspa_path, path);
+      g_string_append (ladspa_path, path_subdir);
+    g_free (path_subdir);
   }
 #else
   path = g_getenv ("HOME");
