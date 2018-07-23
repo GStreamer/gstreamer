@@ -103,13 +103,13 @@ gst_srt_client_src_get_property (GObject * object,
       g_value_set_int (value, priv->poll_timeout);
       break;
     case PROP_BIND_PORT:
-      g_value_set_int (value, priv->rendez_vous);
+      g_value_set_int (value, priv->bind_port);
       break;
     case PROP_BIND_ADDRESS:
       g_value_set_string (value, priv->bind_address);
       break;
     case PROP_RENDEZ_VOUS:
-      g_value_set_boolean (value, priv->bind_port);
+      g_value_set_boolean (value, priv->rendez_vous);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
