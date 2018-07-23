@@ -280,9 +280,7 @@ Available options:""")
                                               "ges-projects"),
                          help="Paths in which to look for moved medias")
         group.add_argument("--ges-scenario-paths", dest="scenarios_path",
-                         default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
-                                              "ges",
-                                              "scenarios"),
+                         default=None,
                          help="Paths in which to look for moved medias")
         group.add_argument("-r", "--disable-recurse-paths", dest="disable_recurse",
                          default=False, action="store_true",
@@ -300,7 +298,7 @@ Available options:""")
     def list_tests(self):
         return self.tests
 
-    def register_defaults(self, project_paths=None):
+    def register_defaults(self, project_paths=None, scenarios_path=None):
         projects = list()
         all_scenarios = list()
         if not self.args:
@@ -315,11 +313,15 @@ Available options:""")
                         continue
                     projects.append(utils.path2url(os.path.join(path, root, f)))
 
-            for root, dirs, files in os.walk(self.options.scenarios_path):
-                for f in files:
-                    if not f.endswith(".scenario"):
-                        continue
-                    all_scenarios.append(os.path.join(root, f))
+            if self.options.scenarios_path:
+                scenarios_path = self.options.scenarios_path
+
+            if scenarios_path:
+                for root, dirs, files in os.walk(scenarios_path):
+                    for f in files:
+                        if not f.endswith(".scenario"):
+                            continue
+                        all_scenarios.append(os.path.join(root, f))
         else:
             for proj_uri in self.args:
                 if not utils.isuri(proj_uri):
@@ -364,9 +366,10 @@ Available options:""")
                                             self.reporter, project,
                                             combination=comb)
                                   )
-        for scenario in self._scenarios.discover_scenarios(all_scenarios):
-            classname = "scenario.%s" % scenario.name
-            self.add_test(GESScenarioTest(classname,
-                                          self.options,
-                                          self.reporter,
-                                          scenario=scenario))
+        if all_scenarios:
+            for scenario in self._scenarios.discover_scenarios(all_scenarios):
+                classname = "scenario.%s" % scenario.name
+                self.add_test(GESScenarioTest(classname,
+                                            self.options,
+                                            self.reporter,
+                                            scenario=scenario))
