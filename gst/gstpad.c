@@ -190,7 +190,7 @@ static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
 static GstFlowReturn gst_pad_send_event_unchecked (GstPad * pad,
     GstEvent * event, GstPadProbeType type);
 static GstFlowReturn gst_pad_push_event_unchecked (GstPad * pad,
-    GstEvent ** event, GstPadProbeType type);
+    GstEvent * event, GstPadProbeType type);
 
 static gboolean activate_mode_internal (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active);
@@ -644,8 +644,7 @@ restart:
 
 /* should be called with LOCK */
 static GstEvent *
-_apply_pad_offset (GstPad * pad, GstEvent * event, gint64 applied_offset,
-    gboolean upstream)
+_apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
 {
   gint64 offset;
 
@@ -661,16 +660,16 @@ _apply_pad_offset (GstPad * pad, GstEvent * event, gint64 applied_offset,
     gst_event_copy_segment (event, &segment);
     gst_event_unref (event);
 
-    gst_segment_offset_running_time (&segment, segment.format, applied_offset);
+    gst_segment_offset_running_time (&segment, segment.format, pad->offset);
     event = gst_event_new_segment (&segment);
   }
 
   event = gst_event_make_writable (event);
   offset = gst_event_get_running_time_offset (event);
   if (upstream)
-    offset -= applied_offset;
+    offset -= pad->offset;
   else
-    offset += applied_offset;
+    offset += pad->offset;
   gst_event_set_running_time_offset (event, offset);
 
   return event;
@@ -680,7 +679,7 @@ static inline GstEvent *
 apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
 {
   if (G_UNLIKELY (pad->offset != 0))
-    return _apply_pad_offset (pad, event, pad->offset, upstream);
+    return _apply_pad_offset (pad, event, upstream);
   return event;
 }
 
@@ -3841,16 +3840,9 @@ gst_pad_get_offset (GstPad * pad)
   return result;
 }
 
-/* This function will make sure that previously set offset is
- * reverted as otherwise we would end up applying the new offset
- * on top of the previously set one, which is not what we want.
- * The event is also marked as not received. */
 static gboolean
-reschedule_event (GstPad * pad, PadEvent * ev, gint64 * prev_offset)
+mark_event_not_received (GstPad * pad, PadEvent * ev, gpointer user_data)
 {
-  if (*prev_offset != 0)
-    ev->event = _apply_pad_offset (pad, ev->event, -*prev_offset, FALSE);
-
   ev->received = FALSE;
   return TRUE;
 }
@@ -3865,7 +3857,6 @@ reschedule_event (GstPad * pad, PadEvent * ev, gint64 * prev_offset)
 void
 gst_pad_set_offset (GstPad * pad, gint64 offset)
 {
-  gint64 prev_offset;
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_OBJECT_LOCK (pad);
@@ -3873,15 +3864,13 @@ gst_pad_set_offset (GstPad * pad, gint64 offset)
   if (pad->offset == offset)
     goto done;
 
-  prev_offset = pad->offset;
   pad->offset = offset;
   GST_DEBUG_OBJECT (pad, "changed offset to %" GST_STIME_FORMAT,
       GST_STIME_ARGS (offset));
 
   /* resend all sticky events with updated offset on next buffer push */
-  events_foreach (pad, (PadEventFunction) reschedule_event, &prev_offset);
+  events_foreach (pad, mark_event_not_received, NULL);
   GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-
 
 done:
   GST_OBJECT_UNLOCK (pad);
@@ -3924,10 +3913,8 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       GST_EVENT_TYPE (data->event) < GST_EVENT_TYPE (event)) {
     data->ret = GST_FLOW_CUSTOM_SUCCESS_1;
   } else {
-    gst_event_ref (event);
-    data->ret = gst_pad_push_event_unchecked (pad, &event,
+    data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
-    gst_event_replace (&ev->event, event);
     if (data->ret == GST_FLOW_CUSTOM_SUCCESS_1)
       data->ret = GST_FLOW_OK;
   }
@@ -3998,8 +3985,7 @@ check_sticky (GstPad * pad, GstEvent * event)
       PadEvent *ev = find_event_by_type (pad, GST_EVENT_EOS, 0);
 
       if (ev && !ev->received) {
-        gst_event_ref (ev->event);
-        data.ret = gst_pad_push_event_unchecked (pad, &ev->event,
+        data.ret = gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
             GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
         /* the event could have been dropped. Because this can only
          * happen if the user asked for it, it's not an error */
@@ -5301,13 +5287,12 @@ sticky_changed (GstPad * pad, PadEvent * ev, gpointer user_data)
 
 /* should be called with pad LOCK */
 static GstFlowReturn
-gst_pad_push_event_unchecked (GstPad * pad, GstEvent ** in_event,
+gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
     GstPadProbeType type)
 {
   GstFlowReturn ret;
   GstPad *peerpad;
   GstEventType event_type;
-  GstEvent *event = *in_event;
 
   /* pass the adjusted event on. We need to do this even if
    * there is no peer pad because of the probes. */
@@ -5419,9 +5404,6 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent ** in_event,
     PROBE_NO_DATA (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
         idle_probe_stopped, ret);
   }
-
-  *in_event = event;
-
   return ret;
 
   /* ERROR handling */
@@ -5542,7 +5524,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     GstFlowReturn ret;
 
     /* other events are pushed right away */
-    ret = gst_pad_push_event_unchecked (pad, &event, type);
+    ret = gst_pad_push_event_unchecked (pad, event, type);
     /* dropped events by a probe are not an error */
     res = (ret == GST_FLOW_OK || ret == GST_FLOW_CUSTOM_SUCCESS
         || ret == GST_FLOW_CUSTOM_SUCCESS_1);
