@@ -2122,6 +2122,7 @@ clear_tr_cache (GstRTSPStreamPrivate * priv, gboolean is_rtp)
   }
 }
 
+/* Must be called with priv->lock */
 static void
 send_tcp_message (GstRTSPStream * stream, gint idx)
 {
@@ -2132,10 +2133,7 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   GstBuffer *buffer;
   gboolean is_rtp;
 
-  g_mutex_lock (&priv->lock);
-
   if (priv->n_outstanding > 0 || !priv->have_buffer[idx]) {
-    g_mutex_unlock (&priv->lock);
     return;
   }
 
@@ -2143,14 +2141,12 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
 
   if (priv->appsink[idx] == NULL) {
     /* session expired */
-    g_mutex_unlock (&priv->lock);
     return;
   }
 
   sink = GST_APP_SINK (priv->appsink[idx]);
   sample = gst_app_sink_pull_sample (sink);
   if (!sample) {
-    g_mutex_unlock (&priv->lock);
     return;
   }
 
@@ -2163,7 +2159,8 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
       clear_tr_cache (priv, is_rtp);
       for (walk = priv->transports; walk; walk = g_list_next (walk)) {
         GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-        const GstRTSPTransport *t = gst_rtsp_stream_transport_get_transport (tr);
+        const GstRTSPTransport *t =
+            gst_rtsp_stream_transport_get_transport (tr);
 
         if (t->lower_transport != GST_RTSP_LOWER_TRANS_TCP)
           continue;
@@ -2178,7 +2175,8 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
       clear_tr_cache (priv, is_rtp);
       for (walk = priv->transports; walk; walk = g_list_next (walk)) {
         GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-        const GstRTSPTransport *t = gst_rtsp_stream_transport_get_transport (tr);
+        const GstRTSPTransport *t =
+            gst_rtsp_stream_transport_get_transport (tr);
 
         if (t->lower_transport != GST_RTSP_LOWER_TRANS_TCP)
           continue;
@@ -2218,6 +2216,8 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
     }
   }
   gst_sample_unref (sample);
+
+  g_mutex_lock (&priv->lock);
 }
 
 static GstFlowReturn
@@ -2240,10 +2240,10 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
       break;
     }
 
-  g_mutex_unlock (&priv->lock);
-
   if (idx != -1)
     send_tcp_message (stream, idx);
+
+  g_mutex_unlock (&priv->lock);
 
   return GST_FLOW_OK;
 }
@@ -4042,10 +4042,10 @@ on_message_sent (gpointer user_data)
     }
   }
 
-  g_mutex_unlock (&priv->lock);
-
   if (idx != -1)
     send_tcp_message (stream, idx);
+
+  g_mutex_unlock (&priv->lock);
 
   return;
 
