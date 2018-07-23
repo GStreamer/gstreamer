@@ -111,6 +111,8 @@ struct _OutputSlotInfo
   GstPad *sinkpad;              /* Sink pad of the queue eleemnt */
   GstPad *srcpad;               /* Output ghost pad */
   gboolean is_eos;              /* Did EOS get fed into the buffering element */
+
+  gulong bitrate_changed_id;    /* queue bitrate changed notification */
 };
 
 /**
@@ -839,6 +841,80 @@ pre_queue_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   return ret;
 }
 
+static void
+update_byte_limits (GstElement * elem, gpointer user_data)
+{
+  GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (elem);
+  guint64 cumulative_bitrate = 0;
+  GSList *cur;
+
+  GST_URI_SOURCE_BIN_LOCK (urisrc);
+  if (urisrc->buffer_size == -1) {
+    GST_TRACE_OBJECT (urisrc, "Buffer size not set, not recalculating queue "
+        "limits");
+    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+    return;
+  }
+
+  for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
+    OutputSlotInfo *slot = (OutputSlotInfo *) (cur->data);
+    guint64 bitrate = 0;
+
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (slot->queue),
+            "bitrate")) {
+      g_object_get (G_OBJECT (slot->queue), "bitrate", &bitrate, NULL);
+    }
+
+    if (bitrate > 0)
+      cumulative_bitrate += bitrate;
+    else {
+      GST_TRACE_OBJECT (urisrc, "Unknown bitrate detected from %" GST_PTR_FORMAT
+          ", resetting all bitrates", slot->queue);
+      cumulative_bitrate = 0;
+      break;
+    }
+  }
+
+  GST_DEBUG_OBJECT (urisrc, "recalculating queue limits with cumulative "
+      "bitrate %" G_GUINT64_FORMAT " and buffer size %u", cumulative_bitrate,
+      urisrc->buffer_size);
+
+  for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
+    OutputSlotInfo *slot = (OutputSlotInfo *) (cur->data);
+    guint64 bitrate;
+    guint byte_limit;
+
+    if (cumulative_bitrate > 0) {
+      if (g_object_class_find_property (G_OBJECT_GET_CLASS (slot->queue),
+              "bitrate")) {
+        g_object_get (G_OBJECT (slot->queue), "bitrate", &bitrate, NULL);
+      }
+
+      byte_limit =
+          gst_util_uint64_scale (urisrc->buffer_size, bitrate,
+          cumulative_bitrate);
+    } else {
+      byte_limit = urisrc->buffer_size;
+    }
+
+    GST_DEBUG_OBJECT (urisrc,
+        "calculated new byte limit for queue2 %" GST_PTR_FORMAT ", %u",
+        slot->queue, byte_limit);
+    g_object_set (G_OBJECT (slot->queue), "max-size-bytes", byte_limit, NULL);
+  }
+
+  GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+}
+
+static void
+on_queue_bitrate_changed (GstElement * queue, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (user_data);
+
+  gst_element_call_async (GST_ELEMENT (urisrc), update_byte_limits, NULL, NULL);
+}
+
 /* Called with lock held */
 static OutputSlotInfo *
 get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
@@ -885,6 +961,10 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
 
   /* Set the slot onto the queue (needed in buffering msg handling) */
   g_object_set_data (G_OBJECT (queue), "urisourcebin.slotinfo", slot);
+
+  slot->bitrate_changed_id =
+      g_signal_connect (G_OBJECT (queue), "notify::bitrate",
+      (GCallback) on_queue_bitrate_changed, urisrc);
 
   if (do_download) {
     gchar *temp_template, *filename;
@@ -1794,6 +1874,10 @@ free_output_slot (OutputSlotInfo * slot, GstURISourceBin * urisrc)
 {
   GST_DEBUG_OBJECT (urisrc, "removing old queue element and freeing slot %p",
       slot);
+  if (slot->bitrate_changed_id > 0)
+    g_signal_handler_disconnect (slot->queue, slot->bitrate_changed_id);
+  slot->bitrate_changed_id = 0;
+
   gst_element_set_locked_state (slot->queue, TRUE);
   gst_element_set_state (slot->queue, GST_STATE_NULL);
   gst_bin_remove (GST_BIN_CAST (urisrc), slot->queue);
