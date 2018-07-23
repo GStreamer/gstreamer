@@ -153,8 +153,12 @@ The included property sheets make creating new projects extremely easy.
 In Visual Studio 2010 create a new project (Normally a `Win32
 Console` or `Win32 Application`). Then go to the Property Manager
 (View→Property Manager), right-click on your project and select “Add
-Existing Property Sheet...”. Navigate to
-`%GSTREAMER_ROOT_X86%`\\`share\vs\2010\libs` and
+Existing Property Sheet...”.
+
+> In Visual Studio 2017, the property manager can be found in
+> View→Other Windows→Property Manager
+
+Navigate to `%GSTREAMER_ROOT_X86%`\\`share\vs\2010\libs` and
 load `gstreamer-1.0.props `
 
 This property sheet contains the directories where the headers and
