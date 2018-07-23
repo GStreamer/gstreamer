@@ -73,6 +73,7 @@ def get_subprocess_env(options):
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                          'lib', 'girepository-1.0'))
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'))
+    setup_python_env(options, env)
 
     meson = get_meson()
     targets_s = subprocess.check_output([sys.executable, meson, 'introspect', options.builddir, '--targets'])
@@ -150,12 +151,7 @@ def in_venv():
     return (hasattr(sys, 'real_prefix') or
             (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
-def python_env(options, unset_env=False):
-    """
-    Setup our overrides_hack.py as sitecustomize.py script in user
-    site-packages if unset_env=False, else unset, previously set
-    env.
-    """
+def setup_python_env(options, env):
     subprojects_path = os.path.join(options.builddir, "subprojects")
     gst_python_path = os.path.join(SCRIPTDIR, "subprojects", "gst-python")
     if not os.path.exists(os.path.join(subprojects_path, "gst-python")) or \
@@ -167,46 +163,22 @@ def python_env(options, unset_env=False):
     else:
         sitepackages = site.getusersitepackages()
 
-    if not sitepackages:
-        return False
-
-    sitecustomize = os.path.join(sitepackages, "sitecustomize.py")
+    sitecustomize = os.path.join(
+        subprocess.check_output([sys.executable, '-c', 'import site; print(site.USER_SITE)'],
+        env={"PYTHONUSERBASE": PREFIX_DIR}).decode().strip("\n"), "sitecustomize.py")
     overrides_hack = os.path.join(gst_python_path, "testsuite", "overrides_hack.py")
     mesonconfig = os.path.join(gst_python_path, "testsuite", "mesonconfig.py")
     mesonconfig_link = os.path.join(sitepackages, "mesonconfig.py")
 
-    if not unset_env:
-        if os.path.exists(sitecustomize):
-            if os.path.realpath(sitecustomize) == overrides_hack:
-                print("Customize user site script already linked to the GStreamer one")
-                return False
-
-            old_sitecustomize = os.path.join(sitepackages,
-                                            "old.sitecustomize.gstuninstalled.py")
-            shutil.move(sitecustomize, old_sitecustomize)
-        elif not os.path.exists(sitepackages):
-            os.makedirs(sitepackages)
-
-        with contextlib.suppress(FileNotFoundError):
-            os.remove(sitecustomize)
-            os.remove(mesonconfig_link)
+    os.makedirs(os.path.dirname(sitecustomize), exist_ok=True)
+    with contextlib.suppress(FileExistsError):
         os.symlink(overrides_hack, sitecustomize)
+    with contextlib.suppress(FileExistsError):
         os.symlink(mesonconfig, mesonconfig_link)
-        return os.path.realpath(sitecustomize) == overrides_hack
-    else:
-        if not os.path.realpath(sitecustomize) == overrides_hack:
-            return False
 
-        os.remove(sitecustomize)
-        os.remove (mesonconfig_link)
-        old_sitecustomize = os.path.join(sitepackages,
-                                            "old.sitecustomize.gstuninstalled.py")
-
-        if os.path.exists(old_sitecustomize):
-            shutil.move(old_sitecustomize, sitecustomize)
-
-        return True
-
+    env["PYTHONUSERBASE"] = PREFIX_DIR
+    if sitepackages:
+        prepend_env_var(env, "PYTHONPATH", sitepackages)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gstreamer-uninstalled")
@@ -248,12 +220,8 @@ if __name__ == "__main__":
                 # Let the GC remove the tmp file
                 args.append("--rcfile")
                 args.append(tmprc.name)
-    python_set = python_env(options)
     try:
         exit(subprocess.call(args, cwd=options.srcdir, close_fds=False,
                              env=get_subprocess_env(options)))
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
-    finally:
-        if python_set:
-            python_env(options, unset_env=True)
