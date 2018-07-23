@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import contextlib
 import json
 import os
 import platform
@@ -186,6 +187,9 @@ def python_env(options, unset_env=False):
         elif not os.path.exists(sitepackages):
             os.makedirs(sitepackages)
 
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(sitecustomize)
+            os.remove(mesonconfig_link)
         os.symlink(overrides_hack, sitecustomize)
         os.symlink(mesonconfig, mesonconfig_link)
         return os.path.realpath(sitecustomize) == overrides_hack
