@@ -360,16 +360,17 @@ static gboolean
 settings_changed (GstFFMpegAudDec * ffmpegdec, AVFrame * frame)
 {
   GstAudioFormat format;
+  GstAudioLayout layout;
   gint channels = av_get_channel_layout_nb_channels (frame->channel_layout);
 
-  format = gst_ffmpeg_smpfmt_to_audioformat (frame->format);
+  format = gst_ffmpeg_smpfmt_to_audioformat (frame->format, &layout);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     return TRUE;
 
-  return !(ffmpegdec->info.rate ==
-      frame->sample_rate &&
+  return !(ffmpegdec->info.rate == frame->sample_rate &&
       ffmpegdec->info.channels == channels &&
-      ffmpegdec->info.finfo->format == format);
+      ffmpegdec->info.finfo->format == format &&
+      ffmpegdec->info.layout == layout);
 }
 
 static gboolean
@@ -378,12 +379,13 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
 {
   GstFFMpegAudDecClass *oclass;
   GstAudioFormat format;
+  GstAudioLayout layout;
   gint channels;
   GstAudioChannelPosition pos[64] = { 0, };
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  format = gst_ffmpeg_smpfmt_to_audioformat (frame->format);
+  format = gst_ffmpeg_smpfmt_to_audioformat (frame->format, &layout);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     goto no_caps;
   channels = av_get_channel_layout_nb_channels (frame->channel_layout);
@@ -396,9 +398,13 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
     return TRUE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
-      "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
+      "Renegotiating audio from %dHz@%dchannels (%d, interleaved=%d) "
+      "to %dHz@%dchannels (%d, interleaved=%d)",
       ffmpegdec->info.rate, ffmpegdec->info.channels,
-      ffmpegdec->info.finfo->format, frame->sample_rate, channels, format);
+      ffmpegdec->info.finfo->format,
+      ffmpegdec->info.layout == GST_AUDIO_LAYOUT_INTERLEAVED,
+      frame->sample_rate, channels, format,
+      layout == GST_AUDIO_LAYOUT_INTERLEAVED);
 
   gst_ffmpeg_channel_layout_to_gst (frame->channel_layout, channels, pos);
   memcpy (ffmpegdec->ffmpeg_layout, pos,
@@ -410,6 +416,7 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
       memcmp (pos, ffmpegdec->ffmpeg_layout, sizeof (pos[0]) * channels) != 0;
   gst_audio_info_set_format (&ffmpegdec->info, format,
       frame->sample_rate, channels, pos);
+  ffmpegdec->info.layout = layout;
 
   if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (ffmpegdec),
           &ffmpegdec->info))
@@ -472,6 +479,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
   if (res >= 0) {
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
+    gboolean planar;
 
     if (!gst_ffmpegauddec_negotiate (ffmpegdec, ffmpegdec->context,
             ffmpegdec->frame, FALSE)) {
@@ -485,81 +493,33 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     channels = ffmpegdec->info.channels;
     nsamples = ffmpegdec->frame->nb_samples;
     byte_per_sample = ffmpegdec->info.finfo->width / 8;
+    planar = av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt);
+
+    g_return_val_if_fail (ffmpegdec->info.layout == (planar ?
+            GST_AUDIO_LAYOUT_NON_INTERLEAVED : GST_AUDIO_LAYOUT_INTERLEAVED),
+        GST_FLOW_NOT_NEGOTIATED);
+
+    GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
 
     /* ffmpegdec->frame->linesize[0] might contain padding, allocate only what's needed */
     output_size = nsamples * byte_per_sample * channels;
 
-    GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
-    if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)
-        && channels > 1) {
-      gint i, j;
-      GstMapInfo minfo;
+    *outbuf =
+        gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER
+        (ffmpegdec), output_size);
 
-      /* note: linesize[0] might contain padding, allocate only what's needed */
-      *outbuf =
-          gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER
-          (ffmpegdec), output_size);
+    if (planar) {
+      gint i;
+      GstAudioMeta *meta;
 
-      gst_buffer_map (*outbuf, &minfo, GST_MAP_WRITE);
+      meta = gst_buffer_add_audio_meta (*outbuf, &ffmpegdec->info, nsamples,
+          NULL);
 
-      switch (ffmpegdec->info.finfo->width) {
-        case 8:{
-          guint8 *odata = minfo.data;
-
-          for (i = 0; i < nsamples; i++) {
-            for (j = 0; j < channels; j++) {
-              odata[j] =
-                  ((const guint8 *) ffmpegdec->frame->extended_data[j])[i];
-            }
-            odata += channels;
-          }
-          break;
-        }
-        case 16:{
-          guint16 *odata = (guint16 *) minfo.data;
-
-          for (i = 0; i < nsamples; i++) {
-            for (j = 0; j < channels; j++) {
-              odata[j] =
-                  ((const guint16 *) ffmpegdec->frame->extended_data[j])[i];
-            }
-            odata += channels;
-          }
-          break;
-        }
-        case 32:{
-          guint32 *odata = (guint32 *) minfo.data;
-
-          for (i = 0; i < nsamples; i++) {
-            for (j = 0; j < channels; j++) {
-              odata[j] =
-                  ((const guint32 *) ffmpegdec->frame->extended_data[j])[i];
-            }
-            odata += channels;
-          }
-          break;
-        }
-        case 64:{
-          guint64 *odata = (guint64 *) minfo.data;
-
-          for (i = 0; i < nsamples; i++) {
-            for (j = 0; j < channels; j++) {
-              odata[j] =
-                  ((const guint64 *) ffmpegdec->frame->extended_data[j])[i];
-            }
-            odata += channels;
-          }
-          break;
-        }
-        default:
-          g_assert_not_reached ();
-          break;
+      for (i = 0; i < channels; i++) {
+        gst_buffer_fill (*outbuf, meta->offsets[i],
+            ffmpegdec->frame->extended_data[i], nsamples * byte_per_sample);
       }
-      gst_buffer_unmap (*outbuf, &minfo);
     } else {
-      *outbuf =
-          gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER
-          (ffmpegdec), output_size);
       gst_buffer_fill (*outbuf, 0, ffmpegdec->frame->data[0], output_size);
     }
 

@@ -141,7 +141,8 @@ gst_ffmpeg_audioinfo_to_context (GstAudioInfo *info,
 GstVideoFormat gst_ffmpeg_pixfmt_to_videoformat (enum AVPixelFormat pixfmt);
 enum AVPixelFormat gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format);
 
-GstAudioFormat gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt);
+GstAudioFormat gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt,
+                                                 GstAudioLayout * layout);
 
 /*
  * _formatid_to_caps () is meant for muxers/demuxers, it

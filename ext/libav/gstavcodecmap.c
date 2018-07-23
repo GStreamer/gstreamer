@@ -474,11 +474,14 @@ get_nbits_set (guint64 n)
 
 static void
 gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
-    const enum AVSampleFormat *fmts)
+    const enum AVSampleFormat *fmts, gboolean always_interleaved)
 {
   GValue va = { 0, };
+  GValue vap = { 0, };
   GValue v = { 0, };
   GstAudioFormat format;
+  GstAudioLayout layout;
+  GstCaps *caps_copy = NULL;
 
   if (!fmts || fmts[0] == -1) {
     gint i;
@@ -486,38 +489,73 @@ gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
     g_value_init (&va, GST_TYPE_LIST);
     g_value_init (&v, G_TYPE_STRING);
     for (i = 0; i <= AV_SAMPLE_FMT_DBL; i++) {
-      format = gst_ffmpeg_smpfmt_to_audioformat (i);
+      format = gst_ffmpeg_smpfmt_to_audioformat (i, NULL);
       if (format == GST_AUDIO_FORMAT_UNKNOWN)
         continue;
       g_value_set_string (&v, gst_audio_format_to_string (format));
       gst_value_list_append_value (&va, &v);
     }
     gst_caps_set_value (caps, "format", &va);
+    if (!always_interleaved) {
+      g_value_init (&vap, GST_TYPE_LIST);
+      g_value_set_string (&v, "interleaved");
+      gst_value_list_append_value (&vap, &v);
+      g_value_set_string (&v, "non-interleaved");
+      gst_value_list_append_value (&vap, &v);
+      gst_caps_set_value (caps, "layout", &vap);
+      g_value_unset (&vap);
+    } else {
+      gst_caps_set_simple (caps, "layout", G_TYPE_STRING, "interleaved", NULL);
+    }
     g_value_unset (&v);
     g_value_unset (&va);
     return;
   }
 
   g_value_init (&va, GST_TYPE_LIST);
+  g_value_init (&vap, GST_TYPE_LIST);
   g_value_init (&v, G_TYPE_STRING);
   while (*fmts != -1) {
-    format = gst_ffmpeg_smpfmt_to_audioformat (*fmts);
+    format = gst_ffmpeg_smpfmt_to_audioformat (*fmts, &layout);
     if (format != GST_AUDIO_FORMAT_UNKNOWN) {
       g_value_set_string (&v, gst_audio_format_to_string (format));
       /* Only append values we don't have yet */
-      if (!_gst_value_list_contains (&va, &v))
-        gst_value_list_append_value (&va, &v);
+      if (layout == GST_AUDIO_LAYOUT_INTERLEAVED || always_interleaved) {
+        if (!_gst_value_list_contains (&va, &v))
+          gst_value_list_append_value (&va, &v);
+      } else {
+        if (!_gst_value_list_contains (&vap, &v))
+          gst_value_list_append_value (&vap, &v);
+      }
     }
     fmts++;
   }
+  if (gst_value_list_get_size (&va) >= 1 && gst_value_list_get_size (&vap) >= 1) {
+    caps_copy = gst_caps_copy (caps);
+  }
   if (gst_value_list_get_size (&va) == 1) {
-    /* The single value is still in v */
-    gst_caps_set_value (caps, "format", &v);
+    gst_caps_set_value (caps, "format", gst_value_list_get_value (&va, 0));
+    gst_caps_set_simple (caps, "layout", G_TYPE_STRING, "interleaved", NULL);
   } else if (gst_value_list_get_size (&va) > 1) {
     gst_caps_set_value (caps, "format", &va);
+    gst_caps_set_simple (caps, "layout", G_TYPE_STRING, "interleaved", NULL);
+  }
+  if (gst_value_list_get_size (&vap) == 1) {
+    gst_caps_set_value (caps_copy ? caps_copy : caps, "format",
+        gst_value_list_get_value (&vap, 0));
+    gst_caps_set_simple (caps_copy ? caps_copy : caps, "layout", G_TYPE_STRING,
+        "non-interleaved", NULL);
+  } else if (gst_value_list_get_size (&vap) > 1) {
+    gst_caps_set_value (caps_copy ? caps_copy : caps, "format", &vap);
+    gst_caps_set_simple (caps_copy ? caps_copy : caps, "layout", G_TYPE_STRING,
+        "non-interleaved", NULL);
+  }
+  if (caps_copy) {
+    gst_caps_append (caps, caps_copy);
   }
   g_value_unset (&v);
   g_value_unset (&va);
+  g_value_unset (&vap);
 }
 
 /* same for audio - now with channels/sample rate
@@ -2333,29 +2371,47 @@ gst_ffmpeg_pixfmt_to_caps (enum AVPixelFormat pix_fmt, AVCodecContext * context,
 }
 
 GstAudioFormat
-gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt)
+gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt,
+    GstAudioLayout * layout)
 {
+  if (layout)
+    *layout = GST_AUDIO_LAYOUT_NON_INTERLEAVED;
+
   switch (sample_fmt) {
     case AV_SAMPLE_FMT_U8:
+      if (layout)
+        *layout = GST_AUDIO_LAYOUT_INTERLEAVED;
     case AV_SAMPLE_FMT_U8P:
       return GST_AUDIO_FORMAT_U8;
       break;
+
     case AV_SAMPLE_FMT_S16:
+      if (layout)
+        *layout = GST_AUDIO_LAYOUT_INTERLEAVED;
     case AV_SAMPLE_FMT_S16P:
       return GST_AUDIO_FORMAT_S16;
       break;
+
     case AV_SAMPLE_FMT_S32:
+      if (layout)
+        *layout = GST_AUDIO_LAYOUT_INTERLEAVED;
     case AV_SAMPLE_FMT_S32P:
       return GST_AUDIO_FORMAT_S32;
       break;
     case AV_SAMPLE_FMT_FLT:
+      if (layout)
+        *layout = GST_AUDIO_LAYOUT_INTERLEAVED;
     case AV_SAMPLE_FMT_FLTP:
       return GST_AUDIO_FORMAT_F32;
       break;
+
     case AV_SAMPLE_FMT_DBL:
+      if (layout)
+        *layout = GST_AUDIO_LAYOUT_INTERLEAVED;
     case AV_SAMPLE_FMT_DBLP:
       return GST_AUDIO_FORMAT_F64;
       break;
+
     default:
       /* .. */
       return GST_AUDIO_FORMAT_UNKNOWN;
@@ -2376,13 +2432,16 @@ gst_ffmpeg_smpfmt_to_caps (enum AVSampleFormat sample_fmt,
 {
   GstCaps *caps = NULL;
   GstAudioFormat format;
+  GstAudioLayout layout;
 
-  format = gst_ffmpeg_smpfmt_to_audioformat (sample_fmt);
+  format = gst_ffmpeg_smpfmt_to_audioformat (sample_fmt, &layout);
 
   if (format != GST_AUDIO_FORMAT_UNKNOWN) {
     caps = gst_ff_aud_caps_new (context, codec, codec_id, TRUE, "audio/x-raw",
         "format", G_TYPE_STRING, gst_audio_format_to_string (format),
-        "layout", G_TYPE_STRING, "interleaved", NULL);
+        "layout", G_TYPE_STRING,
+        (layout == GST_AUDIO_LAYOUT_INTERLEAVED) ?
+        "interleaved" : "non-interleaved", NULL);
     GST_LOG ("caps for sample_fmt=%d: %" GST_PTR_FORMAT, sample_fmt, caps);
   } else {
     GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
@@ -2426,10 +2485,10 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
         codec_id);
   } else {
     caps = gst_ff_aud_caps_new (context, codec, codec_id, encode, "audio/x-raw",
-        "layout", G_TYPE_STRING, "interleaved", NULL);
+        NULL);
     if (!caps_has_field (caps, "format"))
       gst_ffmpeg_audio_set_sample_fmts (caps,
-          codec ? codec->sample_fmts : NULL);
+          codec ? codec->sample_fmts : NULL, encode);
   }
 
   return caps;
@@ -2470,6 +2529,8 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   const gchar *fmt;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
   gint bitrate;
+  const gchar *layout;
+  gboolean interleaved;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
 
@@ -2490,18 +2551,25 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
     }
   }
 
+  layout = gst_structure_get_string (structure, "layout");
+  interleaved = ! !g_strcmp0 (layout, "non-interleaved");
+
   switch (format) {
     case GST_AUDIO_FORMAT_F32:
-      context->sample_fmt = AV_SAMPLE_FMT_FLT;
+      context->sample_fmt =
+          interleaved ? AV_SAMPLE_FMT_FLT : AV_SAMPLE_FMT_FLTP;
       break;
     case GST_AUDIO_FORMAT_F64:
-      context->sample_fmt = AV_SAMPLE_FMT_DBL;
+      context->sample_fmt =
+          interleaved ? AV_SAMPLE_FMT_DBL : AV_SAMPLE_FMT_DBLP;
       break;
     case GST_AUDIO_FORMAT_S32:
-      context->sample_fmt = AV_SAMPLE_FMT_S32;
+      context->sample_fmt =
+          interleaved ? AV_SAMPLE_FMT_S32 : AV_SAMPLE_FMT_S32P;
       break;
     case GST_AUDIO_FORMAT_S16:
-      context->sample_fmt = AV_SAMPLE_FMT_S16;
+      context->sample_fmt =
+          interleaved ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_S16P;
       break;
     default:
       break;
