@@ -152,11 +152,19 @@ def in_venv():
             (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
 def setup_python_env(options, env):
-    subprojects_path = os.path.join(options.builddir, "subprojects")
-    gst_python_path = os.path.join(SCRIPTDIR, "subprojects", "gst-python")
-    if not os.path.exists(os.path.join(subprojects_path, "gst-python")) or \
-            not os.path.exists(gst_python_path):
-        return False
+    some_overrides_built = False
+    for override_path in [os.path.join("subprojects", "gst-editing-services", "bindings", "python", "gi", "overrides"),
+                          os.path.join("subprojects", "gst-python", "gi", "overrides")]:
+        if os.path.exists(os.path.join(SCRIPTDIR, override_path)):
+            some_overrides_built = True
+        else:
+            continue
+
+        prepend_env_var(env, "PYGOBJECT_OVERRIDES_PATH", os.path.join(SCRIPTDIR, override_path))
+        prepend_env_var(env, "PYGOBJECT_OVERRIDES_PATH", os.path.join(options.builddir, override_path))
+
+    if not some_overrides_built:
+        return
 
     if in_venv ():
         sitepackages = get_python_lib()
@@ -167,16 +175,15 @@ def setup_python_env(options, env):
         subprocess.check_output([sys.executable, '-c', 'import site; print(site.USER_SITE)'],
         env={"PYTHONUSERBASE": PREFIX_DIR}).decode().strip("\n"), "sitecustomize.py")
 
-    custom_sitecustomize = os.path.dirname(sitecustomize)
-    overrides_hack = os.path.join(gst_python_path, "testsuite", "overrides_hack.py")
-    mesonconfig = os.path.join(gst_python_path, "testsuite", "mesonconfig.py")
-    mesonconfig_link = os.path.join(custom_sitecustomize, "mesonconfig.py")
+    custom_user_sitepackage = os.path.dirname(sitecustomize)
+    os.makedirs(custom_user_sitepackage, exist_ok=True)
+    with open(sitecustomize, "w") as f:
+         f.write("""import os
+import gi.overrides
 
-    os.makedirs(custom_sitecustomize, exist_ok=True)
-    with contextlib.suppress(FileExistsError):
-        os.symlink(overrides_hack, sitecustomize)
-    with contextlib.suppress(FileExistsError):
-        os.symlink(mesonconfig, mesonconfig_link)
+for override_path in os.environ.get("PYGOBJECT_OVERRIDES_PATH", "").split(os.pathsep):
+    gi.overrides.__path__.insert(0, override_path)
+""")
 
     env["PYTHONUSERBASE"] = PREFIX_DIR
     if sitepackages:
