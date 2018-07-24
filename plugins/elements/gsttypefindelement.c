@@ -930,6 +930,7 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
   gsize avail;
   const guint8 *data;
   gboolean have_min, have_max;
+  gchar *ext;
 
   GST_OBJECT_LOCK (typefind);
   if (typefind->force_caps) {
@@ -951,11 +952,13 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
     if (!have_min)
       goto not_enough_data;
 
+    ext = gst_type_find_get_extension (typefind, typefind->sink);
     /* map all available data */
     data = gst_adapter_map (typefind->adapter, avail);
-    caps = gst_type_find_helper_for_data (GST_OBJECT (typefind),
-        data, avail, &probability);
+    caps = gst_type_find_helper_for_data_with_extension (GST_OBJECT (typefind),
+        data, avail, ext, &probability);
     gst_adapter_unmap (typefind->adapter);
+    g_free (ext);
 
     if (caps == NULL && have_max)
       goto no_type_found;

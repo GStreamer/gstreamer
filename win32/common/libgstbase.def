@@ -353,6 +353,8 @@ EXPORTS
 	gst_queue_array_push_tail_struct
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
+	gst_type_find_helper_for_buffer_with_extension
 	gst_type_find_helper_for_data
+	gst_type_find_helper_for_data_with_extension
 	gst_type_find_helper_for_extension
 	gst_type_find_helper_get_range

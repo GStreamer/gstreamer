@@ -946,8 +946,10 @@ gst_push_src_get_type
 <INCLUDE>gst/base/gsttypefindhelper.h</INCLUDE>
 gst_type_find_helper
 gst_type_find_helper_for_buffer
+gst_type_find_helper_for_buffer_with_extension
 gst_type_find_helper_for_extension
 gst_type_find_helper_for_data
+gst_type_find_helper_for_data_with_extension
 GstTypeFindHelperGetRangeFunction
 gst_type_find_helper_get_range
 <SUBSECTION Private>
