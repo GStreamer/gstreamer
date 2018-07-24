@@ -89,8 +89,7 @@ gst_parse_unescape (gchar *str)
       /* make sure we don't read beyond the end of the string */
       if (*walk == '\0')
         break;
-    } else if (*walk == '"' && (!in_quotes || (in_quotes
-                && (*(walk - 1) != '\\')))) {
+    } else if (*walk == '"' && (!in_quotes || *(walk - 1) != '\\')) {
       /* don't unescape inside quotes and don't switch
        * state with escaped quoted inside quotes */
       in_quotes = !in_quotes;

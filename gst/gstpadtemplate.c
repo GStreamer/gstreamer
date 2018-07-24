@@ -279,7 +279,7 @@ name_is_valid (const gchar * name, GstPadPresence presence)
       underscore = strchr (str, '_');
       str = strchr (str + 1, '%');
 
-      if (str && (!underscore || (underscore && str < underscore))) {
+      if (str && (!underscore || str < underscore)) {
         g_warning
             ("invalid name template %s: each of conversion specifications "
             "must be separated by an underscore", name);

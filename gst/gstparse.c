@@ -193,7 +193,7 @@ _gst_parse_escape (const gchar * str)
   in_quotes = FALSE;
 
   while (*str) {
-    if (*str == '"' && (!in_quotes || (in_quotes && *(str - 1) != '\\')))
+    if (*str == '"' && (!in_quotes || *(str - 1) != '\\'))
       in_quotes = !in_quotes;
 
     if (*str == ' ' && !in_quotes)
