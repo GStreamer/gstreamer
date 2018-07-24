@@ -1087,6 +1087,9 @@ gst_vaapidecode_start (GstVideoDecoder * vdec)
   if (old_display)
     gst_object_unref (old_display);
 
+  /* Disable errors on decode errors */
+  gst_video_decoder_set_max_errors (vdec, -1);
+
   return success;
 }
 
