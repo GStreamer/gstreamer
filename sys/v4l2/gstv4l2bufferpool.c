@@ -1414,11 +1414,14 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
         {
           GstV4l2MemoryGroup *group;
           if (gst_v4l2_is_buffer_valid (buffer, &group)) {
+            GstFlowReturn ret = GST_FLOW_OK;
+
             gst_v4l2_allocator_reset_group (pool->vallocator, group);
             /* queue back in the device */
             if (pool->other_pool)
-              gst_v4l2_buffer_pool_prepare_buffer (pool, buffer, NULL);
-            if (gst_v4l2_buffer_pool_qbuf (pool, buffer, group) != GST_FLOW_OK)
+              ret = gst_v4l2_buffer_pool_prepare_buffer (pool, buffer, NULL);
+            if (ret != GST_FLOW_OK ||
+                gst_v4l2_buffer_pool_qbuf (pool, buffer, group) != GST_FLOW_OK)
               pclass->release_buffer (bpool, buffer);
           } else {
             /* Simply release invalide/modified buffer, the allocator will
