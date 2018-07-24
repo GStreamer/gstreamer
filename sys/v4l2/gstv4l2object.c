@@ -2923,7 +2923,8 @@ gst_v4l2_object_setup_pool (GstV4l2Object * v4l2object, GstCaps * caps)
         mode = GST_V4L2_IO_MMAP;
       }
     }
-  } else if (v4l2object->req_mode == GST_V4L2_IO_MMAP)
+  } else if (v4l2object->req_mode == GST_V4L2_IO_MMAP ||
+      v4l2object->req_mode == GST_V4L2_IO_DMABUF)
     goto method_not_supported;
 
   /* if still no transport selected, error out */
