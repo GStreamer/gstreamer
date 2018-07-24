@@ -631,6 +631,8 @@ gst_omx_buffer_pool_finalize (GObject * object)
     gst_caps_unref (pool->caps);
   pool->caps = NULL;
 
+  g_clear_pointer (&pool->component, gst_omx_component_unref);
+
   G_OBJECT_CLASS (gst_omx_buffer_pool_parent_class)->finalize (object);
 }
 
@@ -667,7 +669,7 @@ gst_omx_buffer_pool_new (GstElement * element, GstOMXComponent * component,
 
   pool = g_object_new (gst_omx_buffer_pool_get_type (), NULL);
   pool->element = gst_object_ref (element);
-  pool->component = component;
+  pool->component = gst_omx_component_ref (component);
   pool->port = port;
   pool->output_mode = output_mode;
 
