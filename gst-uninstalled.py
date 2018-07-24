@@ -166,11 +166,13 @@ def setup_python_env(options, env):
     sitecustomize = os.path.join(
         subprocess.check_output([sys.executable, '-c', 'import site; print(site.USER_SITE)'],
         env={"PYTHONUSERBASE": PREFIX_DIR}).decode().strip("\n"), "sitecustomize.py")
+
+    custom_sitecustomize = os.path.dirname(sitecustomize)
     overrides_hack = os.path.join(gst_python_path, "testsuite", "overrides_hack.py")
     mesonconfig = os.path.join(gst_python_path, "testsuite", "mesonconfig.py")
-    mesonconfig_link = os.path.join(sitepackages, "mesonconfig.py")
+    mesonconfig_link = os.path.join(custom_sitecustomize, "mesonconfig.py")
 
-    os.makedirs(os.path.dirname(sitecustomize), exist_ok=True)
+    os.makedirs(custom_sitecustomize, exist_ok=True)
     with contextlib.suppress(FileExistsError):
         os.symlink(overrides_hack, sitecustomize)
     with contextlib.suppress(FileExistsError):
