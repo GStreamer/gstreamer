@@ -163,7 +163,7 @@ gst_audio_buffer_map (GstAudioBuffer * buffer, const GstAudioInfo * info,
               flags))
         goto cannot_map;
 
-      buffer->planes[i] = buffer->map_infos[0].data + skip;
+      buffer->planes[i] = buffer->map_infos[i].data + skip;
     }
   }
 
