@@ -98,6 +98,7 @@ struct _GstRTSPMediaPrivate
   guint buffer_size;
   GstRTSPAddressPool *pool;
   gchar *multicast_iface;
+  guint max_mcast_ttl;
   gboolean blocked;
   GstRTSPTransportMode transport_mode;
   gboolean stop_on_disconnect;
@@ -158,6 +159,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_LATENCY         200
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
+#define DEFAULT_MAX_MCAST_TTL   255
 
 #define DEFAULT_DO_RETRANSMISSION FALSE
 
@@ -180,6 +182,7 @@ enum
   PROP_TRANSPORT_MODE,
   PROP_STOP_ON_DISCONNECT,
   PROP_CLOCK,
+  PROP_MAX_MCAST_TTL,
   PROP_LAST
 };
 
@@ -375,6 +378,12 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "Clock to be used by the media pipeline",
           GST_TYPE_CLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_MCAST_TTL,
+      g_param_spec_uint ("max-mcast-ttl", "Maximum multicast ttl",
+          "The maximum time-to-live value of outgoing multicast packets", 1,
+          255, DEFAULT_MAX_MCAST_TTL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
@@ -445,6 +454,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
+  priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
 }
 
 static void
@@ -531,6 +541,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_CLOCK:
       g_value_take_object (value, gst_rtsp_media_get_clock (media));
       break;
+    case PROP_MAX_MCAST_TTL:
+      g_value_set_uint (value, gst_rtsp_media_get_max_mcast_ttl (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -583,6 +596,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_CLOCK:
       gst_rtsp_media_set_clock (media, g_value_get_object (value));
+      break;
+    case PROP_MAX_MCAST_TTL:
+      gst_rtsp_media_set_max_mcast_ttl (media, g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1823,6 +1839,70 @@ gst_rtsp_media_get_multicast_iface (GstRTSPMedia * media)
   return result;
 }
 
+/**
+ * gst_rtsp_media_set_max_mcast_ttl:
+ * @media: a #GstRTSPMedia
+ * @ttl: the new multicast ttl value
+ *
+ * Set the maximum time-to-live value of outgoing multicast packets.
+ *
+ * Returns: %TRUE if the requested ttl has been set successfully.
+ */
+gboolean
+gst_rtsp_media_set_max_mcast_ttl (GstRTSPMedia * media, guint ttl)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  GST_LOG_OBJECT (media, "set max mcast ttl %u", ttl);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+
+  if (ttl == 0 || ttl > DEFAULT_MAX_MCAST_TTL) {
+    GST_WARNING_OBJECT (media, "The reqested mcast TTL value is not valid.");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+  priv->max_mcast_ttl = ttl;
+
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    gst_rtsp_stream_set_max_mcast_ttl (stream, ttl);
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_media_get_max_mcast_ttl:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the the maximum time-to-live value of outgoing multicast packets.
+ *
+ * Returns: the maximum time-to-live value of outgoing multicast packets.
+ */
+guint
+gst_rtsp_media_get_max_mcast_ttl (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  guint res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->max_mcast_ttl;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
 static GList *
 _find_payload_types (GstRTSPMedia * media)
 {
@@ -2140,6 +2220,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   if (priv->pool)
     gst_rtsp_stream_set_address_pool (stream, priv->pool);
   gst_rtsp_stream_set_multicast_iface (stream, priv->multicast_iface);
+  gst_rtsp_stream_set_max_mcast_ttl (stream, priv->max_mcast_ttl);
   gst_rtsp_stream_set_profiles (stream, priv->profiles);
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);

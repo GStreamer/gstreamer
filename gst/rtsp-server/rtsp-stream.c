@@ -145,6 +145,7 @@ struct _GstRTSPStreamPrivate
   GstRTSPAddress *mcast_addr_v6;
 
   gchar *multicast_iface;
+  guint max_mcast_ttl;
 
   /* the caps of the stream */
   gulong caps_sig;
@@ -181,6 +182,7 @@ struct _GstRTSPStreamPrivate
 #define DEFAULT_PROFILES        GST_RTSP_PROFILE_AVP
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
+#define DEFAULT_MAX_MCAST_TTL   255
 
 enum
 {
@@ -280,6 +282,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->allowed_protocols = DEFAULT_PROTOCOLS;
   priv->configured_protocols = 0;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
+  priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
 
   g_mutex_init (&priv->lock);
 
@@ -1882,6 +1885,54 @@ gst_rtsp_stream_get_buffer_size (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return buffer_size;
+}
+
+/**
+ * gst_rtsp_stream_set_max_mcast_ttl:
+ * @stream: a #GstRTSPStream
+ * @ttl: the new multicast ttl value
+ *
+ * Set the maximum time-to-live value of outgoing multicast packets.
+ *
+ * Returns: %TRUE if the requested ttl has been set successfully.
+ *
+ */
+gboolean
+gst_rtsp_stream_set_max_mcast_ttl (GstRTSPStream * stream, guint ttl)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  g_mutex_lock (&stream->priv->lock);
+  if (ttl == 0 || ttl > DEFAULT_MAX_MCAST_TTL) {
+    GST_WARNING_OBJECT (stream, "The reqested mcast TTL value is not valid.");
+    g_mutex_unlock (&stream->priv->lock);
+    return FALSE;
+  }
+  stream->priv->max_mcast_ttl = ttl;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_stream_get_max_mcast_ttl:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the the maximum time-to-live value of outgoing multicast packets.
+ *
+ * Returns: the maximum time-to-live value of outgoing multicast packets.
+ *
+ */
+guint
+gst_rtsp_stream_get_max_mcast_ttl (GstRTSPStream * stream)
+{
+  guint ttl;
+
+  g_mutex_lock (&stream->priv->lock);
+  ttl = stream->priv->max_mcast_ttl;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return ttl;
 }
 
 /* executed from streaming thread */
