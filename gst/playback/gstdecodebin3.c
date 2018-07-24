@@ -1825,6 +1825,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
           } else if (!was_drained) {
             check_all_slot_for_eos (dbin);
           }
+          if (ret == GST_PAD_PROBE_HANDLED)
+            gst_event_unref (ev);
           SELECTION_UNLOCK (dbin);
           break;
         }
