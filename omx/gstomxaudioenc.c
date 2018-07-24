@@ -194,7 +194,7 @@ gst_omx_audio_enc_close (GstAudioEncoder * encoder)
   self->enc_in_port = NULL;
   self->enc_out_port = NULL;
   if (self->enc)
-    gst_omx_component_free (self->enc);
+    gst_omx_component_unref (self->enc);
   self->enc = NULL;
 
   return TRUE;

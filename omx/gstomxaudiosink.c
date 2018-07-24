@@ -358,7 +358,7 @@ gst_omx_audio_sink_close (GstAudioSink * audiosink)
   self->in_port = NULL;
   self->out_port = NULL;
   if (self->comp)
-    gst_omx_component_free (self->comp);
+    gst_omx_component_unref (self->comp);
   self->comp = NULL;
 
   GST_DEBUG_OBJECT (self, "Closed audio sink");

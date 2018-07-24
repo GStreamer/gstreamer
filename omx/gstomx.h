@@ -327,6 +327,8 @@ struct _GstOMXPort {
 };
 
 struct _GstOMXComponent {
+  GstMiniObject mini_object;
+
   GstObject *parent;
 
   gchar *name; /* for debugging mostly */
@@ -411,9 +413,11 @@ guint64           gst_omx_parse_hacks (gchar ** hacks);
 GstOMXCore *      gst_omx_core_acquire (const gchar * filename);
 void              gst_omx_core_release (GstOMXCore * core);
 
+GType             gst_omx_component_get_type (void);
 
 GstOMXComponent * gst_omx_component_new (GstObject * parent, const gchar *core_name, const gchar *component_name, const gchar * component_role, guint64 hacks);
-void              gst_omx_component_free (GstOMXComponent * comp);
+GstOMXComponent * gst_omx_component_ref   (GstOMXComponent * comp);
+void              gst_omx_component_unref (GstOMXComponent * comp);
 
 OMX_ERRORTYPE     gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state);
 OMX_STATETYPE     gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout);

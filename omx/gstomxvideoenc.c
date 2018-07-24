@@ -959,7 +959,7 @@ gst_omx_video_enc_close (GstVideoEncoder * encoder)
   self->enc_in_port = NULL;
   self->enc_out_port = NULL;
   if (self->enc)
-    gst_omx_component_free (self->enc);
+    gst_omx_component_unref (self->enc);
   self->enc = NULL;
 
   self->started = FALSE;

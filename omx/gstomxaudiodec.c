@@ -206,7 +206,7 @@ gst_omx_audio_dec_close (GstAudioDecoder * decoder)
   self->dec_in_port = NULL;
   self->dec_out_port = NULL;
   if (self->dec)
-    gst_omx_component_free (self->dec);
+    gst_omx_component_unref (self->dec);
   self->dec = NULL;
 
   self->started = FALSE;

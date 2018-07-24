@@ -428,14 +428,14 @@ gst_omx_video_dec_close (GstVideoDecoder * decoder)
   self->dec_in_port = NULL;
   self->dec_out_port = NULL;
   if (self->dec)
-    gst_omx_component_free (self->dec);
+    gst_omx_component_unref (self->dec);
   self->dec = NULL;
 
 #if defined (USE_OMX_TARGET_RPI) && defined (HAVE_GST_GL)
   self->egl_in_port = NULL;
   self->egl_out_port = NULL;
   if (self->egl_render)
-    gst_omx_component_free (self->egl_render);
+    gst_omx_component_unref (self->egl_render);
   self->egl_render = NULL;
 #endif
 
