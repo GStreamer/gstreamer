@@ -314,6 +314,63 @@ GST_START_TEST (test_reset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_mcast_ttl)
+{
+  GstRTSPMediaFactory *factory;
+  GstElement *element;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPStream *stream;
+
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_shared (factory, TRUE);
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 "
+      " audiotestsrc ! audioconvert ! rtpL16pay name=pay1 )");
+
+  /* try to set an invalid ttl and make sure that the default ttl value (255) is
+   * set */
+  gst_rtsp_media_factory_set_max_mcast_ttl (factory, 0);
+  fail_unless (gst_rtsp_media_factory_get_max_mcast_ttl (factory) == 255);
+  gst_rtsp_media_factory_set_max_mcast_ttl (factory, 300);
+  fail_unless (gst_rtsp_media_factory_get_max_mcast_ttl (factory) == 255);
+
+  /* set a valid ttl value */
+  gst_rtsp_media_factory_set_max_mcast_ttl (factory, 3);
+  fail_unless (gst_rtsp_media_factory_get_max_mcast_ttl (factory) == 3);
+
+  element = gst_rtsp_media_factory_create_element (factory, url);
+  fail_unless (GST_IS_BIN (element));
+  fail_if (GST_IS_PIPELINE (element));
+  gst_object_unref (element);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 2);
+  fail_unless (gst_rtsp_media_get_max_mcast_ttl (media) == 3);
+
+  /* verify that the correct ttl value has been propageted to the media
+   * streams */
+  stream = gst_rtsp_media_get_stream (media, 0);
+  fail_unless (stream != NULL);
+  fail_unless (gst_rtsp_stream_get_max_mcast_ttl (stream) == 3);
+
+  stream = gst_rtsp_media_get_stream (media, 1);
+  fail_unless (stream != NULL);
+  fail_unless (gst_rtsp_stream_get_max_mcast_ttl (stream) == 3);
+
+  g_object_unref (media);
+
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmediafactory_suite (void)
 {
@@ -329,6 +386,7 @@ rtspmediafactory_suite (void)
   tcase_add_test (tc, test_addresspool);
   tcase_add_test (tc, test_permissions);
   tcase_add_test (tc, test_reset);
+  tcase_add_test (tc, test_mcast_ttl);
 
   return s;
 }
