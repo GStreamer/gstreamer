@@ -306,7 +306,7 @@ prioritize_extension (GstObject * obj, GList * type_list,
  * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
  *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
- * @extension: extension of the media
+ * @extension: (allow-none): extension of the media, or %NULL
  * @prob: (out) (allow-none): location to store the probability of the found
  *     caps, or %NULL
  *
