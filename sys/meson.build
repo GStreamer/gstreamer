@@ -1,4 +1,6 @@
-subdir('directsound')
+if host_system == 'windows'
+  subdir('directsound')
+endif
 subdir('oss')
 subdir('oss4')
 subdir('v4l2')

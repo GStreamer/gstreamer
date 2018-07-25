@@ -4,10 +4,11 @@ sources = [
 
 if have_cxx and build_gstgl and gstgl_dep.found()
   qt5_mod = import('qt5')
-  qt5qml_deps = dependency('qt5', modules : ['Core', 'Gui', 'Widgets', 'Qml', 'Quick'], required: false)
+  qt5qml_deps = dependency('qt5', modules : ['Core', 'Gui', 'Widgets', 'Qml', 'Quick'],
+                           required: get_option('examples'))
 
   # FIXME Add a way to get that information out of the qt5 module
-  moc = find_program('moc-qt5', 'moc', required : false)
+  moc = find_program('moc-qt5', 'moc', required : get_option('examples'))
   if qt5qml_deps.found() and moc.found()
     qt_preprocessed = qt5_mod.preprocess(qresources : 'qmlsink.qrc')
     executable('qmlsink', sources, qt_preprocessed,

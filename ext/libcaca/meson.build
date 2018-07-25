@@ -1,4 +1,4 @@
-libcaca_dep = dependency('caca', required : false)
+libcaca_dep = dependency('caca', required : get_option('caca'))
 
 if libcaca_dep.found()
   library('gstcacasink', 'gstcacasink.c',

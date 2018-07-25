@@ -4,7 +4,7 @@ speex_sources = [
   'gstspeexenc.c',
 ]
 
-speex_dep = dependency('speex', version : '>=1.1.6', required : false)
+speex_dep = dependency('speex', version : '>=1.1.6', required : get_option('speex'))
 
 if speex_dep.found()
   gstspeex = library('gstspeex',

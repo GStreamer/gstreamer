@@ -1,6 +1,6 @@
 project('gst-plugins-good', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.46.0',
+  meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -15,9 +15,11 @@ else
   gst_version_nano = 0
 endif
 
+# FIXME: automagic
 have_cxx = add_languages('cpp', required : false)
 
 glib_req = '>= 2.40.0'
+orc_req = '>= 0.4.17'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 api_version = '1.0'
@@ -25,6 +27,7 @@ api_version = '1.0'
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+host_system = host_machine.system()
 
 if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
@@ -149,9 +152,6 @@ cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('PACKAGE', 'gst-plugins-good')
 cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-good-1.0')
 cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
-if get_option('nls')
-  cdata.set('ENABLE_NLS', 1)
-endif
 
 warning_flags = [
   '-Wmissing-declarations',
@@ -211,7 +211,7 @@ gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
 gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
-if host_machine.system() != 'windows'
+if host_system != 'windows'
   gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
@@ -242,6 +242,7 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
 
 # GStreamer OpenGL
+# FIXME: automagic
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
 
@@ -276,41 +277,12 @@ if build_gstgl
   endforeach
 endif
 
-zlib_dep = dependency('zlib', required : false)
-bz2lib = cc.find_library('bz2', required : false)
+zlib_dep = dependency('zlib', fallback: ['zlib', 'zlib_dep'])
 glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 
 cdata.set('HAVE_ZLIB', zlib_dep.found())
-cdata.set('HAVE_BZ2', bz2lib.found())
-
-# Check all of the things.
-# TODO: None of these are actually used yet because
-# the build files haven't been written
-deps = [
-  ['gtk_dep','gtk+-3.0', '', ''],
-  ['gtkx_dep','gtk+-x11-3.0', '', ''],
-  ['caca_dep','caca', '', ''],
-  ['libraw1394_dep','libraw1394', '>=2.0.0', ''],
-  ['libiec61883_dep','libiec61883', '>=1.0.0', ''],
-]
-
-foreach d : deps
-  varname = d[0]
-  depname = d[1]
-  version = d[2]
-  confhname = d[3]
-  if version == ''
-    curdep = dependency(depname, required : false)
-  else
-    curdep = dependency(depname, required : false, version : version)
-  endif
-  set_variable(varname, curdep)
-  if curdep.found() and confhname != ''
-    cdata.set(confhname, 1)
-  endif
-endforeach
 
 gst_plugins_good_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
@@ -318,20 +290,15 @@ libsinc = include_directories('gst-libs')
 
 have_orcc = false
 orcc_args = []
-if get_option('orc') != 'no'
-  need_orc = get_option('orc') == 'yes'
-  # Used by various libraries/elements that use Orc code
-  orc_dep = dependency('orc-0.4', version : '>= 0.4.17', required : need_orc)
-  orcc = find_program('orcc', required : need_orc)
-  if orc_dep.found() and orcc.found()
-    have_orcc = true
-    orcc_args = [orcc, '--include', 'glib.h']
-    cdata.set('HAVE_ORC', 1)
-  else
-    message('Orc Compiler not found, will use backup C code')
-    cdata.set('DISABLE_ORC', 1)
-  endif
+# Used by various libraries/elements that use Orc code
+orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'))
+orcc = find_program('orcc', required : get_option('orc'))
+if orc_dep.found() and orcc.found()
+  have_orcc = true
+  orcc_args = [orcc, '--include', 'glib.h']
+  cdata.set('HAVE_ORC', 1)
 else
+  message('Orc Compiler not found, will use backup C code')
   cdata.set('DISABLE_ORC', 1)
 endif
 
@@ -375,7 +342,8 @@ subdir('tests')
 subdir('pkgconfig')
 
 # xgettext is optional (on Windows for instance)
-if get_option('nls') and find_program('xgettext', required : false).found()
+if find_program('xgettext', required : get_option('nls')).found()
+  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
 

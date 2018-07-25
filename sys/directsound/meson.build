@@ -11,7 +11,17 @@ directsoundsink_device_flags = [
   '-DGstDirectSoundDeviceClass=GstDirectSoundSinkDeviceClass',
 ]
 
-if host_machine.system() == 'windows' and cc.has_header('dsound.h')
+have_dsound = false
+# TODO: https://github.com/mesonbuild/meson/issues/3940
+dsound_option = get_option('directsound')
+if not dsound_option.disabled()
+  have_dsound = cc.has_header('dsound.h')
+  if not have_dsound and dsound_option.enabled()
+    error('directsound plugin was enabled but dsound.h was not found')
+  endif
+endif
+
+if have_dsound
   directsoundsink_dep = [cc.find_library('dsound'), cc.find_library('winmm'), cc.find_library('ole32')]
 
   gstdirectsoundsink = library('gstdirectsound',

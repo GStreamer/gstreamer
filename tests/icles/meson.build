@@ -7,7 +7,6 @@ tests = [
   ['videocrop2-test'],
 ]
 
-gtk_dep = dependency('gtk+-3.0', version : '>= 3.0.0', required : false)
 if gtk_dep.found()
   tests += [
     ['gdkpixbufsink-test', gtk_dep],
@@ -19,7 +18,7 @@ if get_variable('have_oss4', false)
   tests += [['test-oss4']]
 endif
 
-if get_variable('x11_dep', dependency('', required: false)).found()
+if x11_dep.found()
   tests += [['ximagesrc-test']]
 endif
 

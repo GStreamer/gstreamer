@@ -16,7 +16,7 @@ vpx_features = [
   [ 'vpx/vp8dx.h', 'vpx_codec_vp9_dx_algo', '-DHAVE_VP9_DECODER', 'VP9 decoder' ],
 ]
 
-vpx_dep = dependency('vpx', version : '>=1.3.0', required : false)
+vpx_dep = dependency('vpx', version : '>=1.3.0', required : get_option('vpx'))
 
 if vpx_dep.found()
   vpx_args = []
@@ -29,8 +29,7 @@ if vpx_dep.found()
                      const vpx_codec_iface_t *c = &@1@;
                      return c != 0;
                    }'''.format(header,codec_iface)
-    # FIXME: should take dependencies : vpx_dep argument
-    if cc.links(link_code, args : ['-lvpx'])
+    if cc.links(link_code, dependencies : vpx_dep)
       vpx_args += extra_define
       message('libvpx provides @0@ interface (@1@)'.format(f.get(3),f.get(1)))
       have_vpx_feature = true

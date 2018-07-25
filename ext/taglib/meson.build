@@ -4,9 +4,9 @@ taglib_sources = [
   'gsttaglibplugin.c',
 ]
 
-taglib_dep = dependency('taglib', version : '>= 1.5', required : false)
+taglib_dep = dependency('taglib', version : '>= 1.5', required : get_option('taglib'))
 
-if taglib_dep.found() and add_languages('cpp', required : false)
+if taglib_dep.found() and add_languages('cpp')
   extra_args = []
   cxx = meson.get_compiler('cpp')
   if cxx.has_argument('-fvisibility=hidden')

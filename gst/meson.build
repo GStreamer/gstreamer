@@ -1,43 +1,13 @@
-subdir('alpha')
-subdir('apetag')
-subdir('audiofx')
-subdir('audioparsers')
-subdir('auparse')
-subdir('autodetect')
-subdir('avi')
-subdir('cutter')
-subdir('debugutils')
-subdir('deinterlace')
-subdir('dtmf')
-subdir('effectv')
-subdir('equalizer')
-subdir('flv')
-subdir('flx')
-subdir('goom')
-subdir('goom2k1')
-subdir('icydemux')
-subdir('id3demux')
-subdir('imagefreeze')
-subdir('interleave')
-subdir('isomp4')
-subdir('law')
-subdir('level')
-subdir('matroska')
-subdir('monoscope')
-subdir('multifile')
-subdir('multipart')
-subdir('replaygain')
-subdir('rtp')
-subdir('rtpmanager')
-subdir('rtsp')
-subdir('shapewipe')
-subdir('smpte')
-subdir('spectrum')
-subdir('udp')
-subdir('videobox')
-subdir('videocrop')
-subdir('videofilter')
-subdir('videomixer')
-subdir('wavenc')
-subdir('wavparse')
-subdir('y4m')
+foreach plugin : ['alpha', 'apetag', 'audiofx', 'audioparsers', 'auparse',
+                  'autodetect', 'avi', 'cutter', 'debugutils', 'deinterlace',
+                  'dtmf', 'effectv', 'equalizer', 'flv', 'flx', 'goom',
+                  'goom2k1', 'icydemux', 'id3demux', 'imagefreeze',
+                  'interleave', 'isomp4', 'law', 'level', 'matroska',
+                  'monoscope', 'multifile', 'multipart', 'replaygain', 'rtp',
+                  'rtpmanager', 'rtsp', 'shapewipe', 'smpte', 'spectrum',
+                  'udp', 'videobox', 'videocrop', 'videofilter', 'videomixer',
+                  'wavenc', 'wavparse', 'y4m']
+  if not get_option(plugin).disabled()
+    subdir(plugin)
+  endif
+endforeach

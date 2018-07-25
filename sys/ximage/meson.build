@@ -1,4 +1,4 @@
-x11_dep = dependency('x11', required : false)
+x11_dep = dependency('x11', required : get_option('x11'))
 
 if x11_dep.found()
   x_args = []

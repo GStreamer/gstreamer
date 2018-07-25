@@ -1,6 +1,6 @@
 shout2_sources = ['gstshout2.c']
 
-shout2_dep = dependency('shout', version : '>= 2.0', required : false)
+shout2_dep = dependency('shout', version : '>= 2.0', required : get_option('shout2'))
 
 if shout2_dep.found()
   gstshout2 = library('gstshout2',

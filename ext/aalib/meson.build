@@ -1,7 +1,18 @@
 # Very much not going to implement all kinds of logic around aalib-config
-# or cater for non-standard prefixes.
-if cc.has_header('aalib.h')
-  libaa_dep = cc.find_library('aa', required : false)
+
+have_aalib = false
+
+# TODO: https://github.com/mesonbuild/meson/issues/3940
+aalib_option = get_option('aalib')
+if not aalib_option.disabled()
+  have_aalib = cc.has_header('aalib.h')
+  if not have_aalib and aalib_option.enabled()
+    error('aalib plugin enabled, but aalib.h not found')
+  endif
+endif
+
+if have_aalib
+  libaa_dep = cc.find_library('aa', required : aalib_option)
   if libaa_dep.found()
     library('gstaasink', 'gstaasink.c',
       c_args : gst_plugins_good_args,

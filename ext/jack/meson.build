@@ -6,7 +6,7 @@ jack_sources = [
   'gstjackutil.c',
 ]
 
-libjack_dep = dependency('jack', version : '>= 1.9.7', required : false)
+libjack_dep = dependency('jack', version : '>= 1.9.7', required : get_option('jack'))
 
 if libjack_dep.found()
   gstjack = library('gstjack',

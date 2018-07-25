@@ -11,6 +11,9 @@ matroska_sources = [
   'lzo.c',
 ]
 
+bz2_dep = cc.find_library('bz2', required : get_option('bz2'))
+cdata.set('HAVE_BZ2', bz2_dep.found())
+
 gstmatroska = library('gstmatroska',
   matroska_sources,
   c_args : gst_plugins_good_args,
@@ -18,7 +21,7 @@ gstmatroska = library('gstmatroska',
   include_directories : [configinc],
   dependencies : [gstpbutils_dep, gstaudio_dep, gstriff_dep,
                   gstvideo_dep, gsttag_dep, gstbase_dep,
-                  gst_dep, zlib_dep, bz2lib, libm],
+                  gst_dep, zlib_dep, bz2_dep, libm],
   install : true,
   install_dir : plugins_install_dir,
 )

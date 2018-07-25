@@ -5,7 +5,7 @@ flac_sources = [
   'gstflactag.c',
 ]
 
-flac_dep = dependency('flac', version : '>=1.1.4', required : false)
+flac_dep = dependency('flac', version : '>=1.1.4', required : get_option('flac'))
 
 if flac_dep.found()
   gstflac = library('gstflac',

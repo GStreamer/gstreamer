@@ -1,4 +1,4 @@
-cairo_dep = dependency('cairo-gobject', version : '>=1.10.0', required : false)
+cairo_dep = dependency('cairo-gobject', version : '>=1.10.0', required : get_option('cairo'))
 
 if cairo_dep.found()
   gstcairo = library('gstcairo',

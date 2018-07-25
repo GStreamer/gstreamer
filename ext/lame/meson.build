@@ -1,6 +1,16 @@
-lame_dep = cc.find_library('mp3lame', required : false)
+lame_option = get_option('lame')
+lame_dep = cc.find_library('mp3lame', required : lame_option)
+have_lame = lame_dep.found()
 
-if lame_dep.found() and cc.has_header_symbol('lame/lame.h', 'lame_init')
+# TODO: https://github.com/mesonbuild/meson/issues/3940
+if have_lame
+  have_lame = cc.has_header_symbol('lame/lame.h', 'lame_init')
+  if not have_lame and lame_option.enabled()
+    error('Found libmp3lame but lame.h was not usable')
+  endif
+endif
+
+if have_lame
   lame_extra_c_args = []
   if cc.has_header_symbol('lame/lame.h', 'lame_set_VBR_quality')
     lame_extra_c_args += ['-DHAVE_LAME_SET_VBR_QUALITY']

@@ -5,7 +5,7 @@ pixbuf_sources = [
   'gstgdkpixbufsink.c',
 ]
 
-gdkpixbuf_dep = dependency('gdk-pixbuf-2.0', version : '>=2.8.0', required : false)
+gdkpixbuf_dep = dependency('gdk-pixbuf-2.0', version : '>=2.8.0', required : get_option('gdk-pixbuf'))
 
 if gdkpixbuf_dep.found()
   gstgdkpixbuf = library('gstgdkpixbuf',

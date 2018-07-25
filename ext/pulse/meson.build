@@ -6,7 +6,7 @@ pulse_sources = [
   'pulseutil.c',
 ]
 
-libpulse_dep = dependency('libpulse', version : '>=2.0', required : false)
+libpulse_dep = dependency('libpulse', version : '>=2.0', required : get_option('pulse'))
 
 if libpulse_dep.found()
   gstpulse = library('gstpulseaudio',

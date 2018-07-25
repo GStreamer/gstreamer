@@ -1,4 +1,4 @@
-mpg123_dep = dependency('libmpg123', version : '>= 1.3', required : false)
+mpg123_dep = dependency('libmpg123', version : '>= 1.3', required : get_option('mpg123'))
 
 if mpg123_dep.found()
   gstmpg123 = library('gstmpg123',

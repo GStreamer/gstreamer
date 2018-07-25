@@ -1,4 +1,4 @@
-twolame_dep = dependency('twolame', version : '>= 0.3.10', required : false)
+twolame_dep = dependency('twolame', version : '>= 0.3.10', required : get_option('twolame'))
 
 if twolame_dep.found()
   twolame = library('gsttwolame',

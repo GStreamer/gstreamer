@@ -14,12 +14,14 @@ moc_headers = [
   'gstqsgtexture.h',
 ]
 
+# FIXME: -Dqt5=enabled is silently ignored if a c++ compiler is not found
 if have_cxx and build_gstgl
   qt5_mod = import('qt5')
-  qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'], required: false)
+  qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
+                          required: get_option('qt5'))
 
   # FIXME Add a way to get that information out of the qt5 module
-  moc = find_program('moc-qt5', 'moc', required : false)
+  moc = find_program('moc-qt5', 'moc', required : get_option('qt5'))
   if qt5qml_dep.found() and moc.found()
     optional_deps = []
     qt_defines = []
@@ -30,6 +32,7 @@ if have_cxx and build_gstgl
     # This semi-matches what meson does internally with the qt5 module
     # FIXME Add a way to get some of this information out of the qt5 module
     if not have_qpa_include
+      # FIXME: automagic
       qt5core_dep = dependency('Qt5Core', required: false)
       if qt5core_dep.found() and qt5core_dep.type_name() == 'pkgconfig'
         qt_version = qt5core_dep.version()
@@ -64,6 +67,7 @@ if have_cxx and build_gstgl
     # Try to come up with all the platform/winsys combinations that will work
 
     if gst_gl_have_window_x11 and gst_gl_have_platform_glx
+      # FIXME: automagic
       qt5x11extras = dependency('qt5', modules : ['X11Extras'], required : false)
       if qt5x11extras.found()
         optional_deps += qt5x11extras
@@ -75,6 +79,7 @@ if have_cxx and build_gstgl
     if gst_gl_have_platform_egl
       if have_qpa_include
         if gst_gl_have_window_wayland
+          # FIXME: automagic
           qt5waylandextras = dependency('qt5', modules : ['WaylandClient'], required : false)
           if qt5waylandextras.found()
             optional_deps += qt5waylandextras
@@ -83,6 +88,7 @@ if have_cxx and build_gstgl
           endif
         endif
         if gst_gl_have_window_android
+          # FIXME: automagic
           # FIXME: untested
           qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], required : false)
           if qt5androidextras.found()
@@ -98,6 +104,7 @@ if have_cxx and build_gstgl
 
     if gst_gl_have_platform_wgl and gst_gl_have_window_win32
       # for wglMakeCurrent()
+      # FIXME: automagic
       opengl32_dep = cc.find_library('opengl32', required : false)
       if opengl32_dep.found()
         qt_defines += ['-DHAVE_QT_WIN32']

@@ -10,12 +10,13 @@ gtk_sources = [
 gtk_defines = []
 optional_deps = []
 
-gtk_dep = dependency('gtk+-3.0', required : false)
+gtk_dep = dependency('gtk+-3.0', required : get_option('gtk3'))
 if gtk_dep.found()
   if build_gstgl and gstgl_dep.found() and gtk_dep.version().version_compare('>=3.15.0')
     have_gtk3_gl_windowing = false
 
     if gst_gl_have_window_x11 and gst_gl_have_platform_glx
+      # FIXME: automagic
       gtk_x11_dep = dependency('gtk+-x11-3.0', required : false)
       if gtk_x11_dep.found()
         optional_deps += gtk_x11_dep
@@ -24,6 +25,7 @@ if gtk_dep.found()
     endif
 
     if gst_gl_have_window_wayland and gst_gl_have_platform_egl
+      # FIXME: automagic
       gtk_wayland_dep = dependency('gtk+-wayland-3.0', required : false)
       if gtk_wayland_dep.found()
         optional_deps += gtk_wayland_dep

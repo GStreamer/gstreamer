@@ -8,14 +8,21 @@ oss_header_locations = [
 ]
 
 have_oss = false
-foreach hdr : oss_header_locations
-  if not have_oss
-    if cc.has_header(hdr[0])
-      cdata.set(hdr[1], 1, description: hdr[2])
-      have_oss = true
+oss_option = get_option('oss')
+if not oss_option.disabled()
+  foreach hdr : oss_header_locations
+    if not have_oss
+      if cc.has_header(hdr[0])
+        cdata.set(hdr[1], 1, description: hdr[2])
+        have_oss = true
+      endif
     endif
+  endforeach
+
+  if not have_oss and oss_option.enabled()
+    error('OSS plugin was enabled but soundcard.h was not found')
   endif
-endforeach
+endif
 
 if have_oss
   library('gstossaudio',

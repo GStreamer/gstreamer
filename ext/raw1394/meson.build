@@ -1,6 +1,6 @@
-raw1394_dep = dependency('libraw1394', version: '>= 2.0.0', required: false)
-avc1394_dep = dependency('libavc1394', version: '>= 0.5.4', required: false)
-iec61883_dep = dependency('libiec61883', version: '>= 1.0.0', required: false)
+raw1394_dep = dependency('libraw1394', version: '>= 2.0.0', required: get_option('dv1394'))
+avc1394_dep = dependency('libavc1394', version: '>= 0.5.4', required: get_option('dv1394'))
+iec61883_dep = dependency('libiec61883', version: '>= 1.0.0', required: get_option('dv1394'))
 
 have_1394 = false
 if raw1394_dep.found() and iec61883_dep.found() and avc1394_dep.found()
