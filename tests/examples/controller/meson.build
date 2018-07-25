@@ -13,7 +13,7 @@ foreach prog : progs
   )
 endforeach
 
-gtk_dep = dependency('gtk+-3.0', required : false)
+gtk_dep = dependency('gtk+-3.0', required : get_option('examples'))
 if gtk_dep.found()
   executable('controller-graph', 'controller-graph.c',
     install: false,

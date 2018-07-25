@@ -76,7 +76,6 @@ cdata.set_quoted('PLUGINDIR', join_paths(get_option('prefix'), get_option('libdi
 cdata.set_quoted('VERSION', gst_version)
 # FIXME: --with-memory-alignment],[8,N,malloc,pagesize (default is 32)]) option
 cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
-cdata.set('ENABLE_NLS', get_option('nls'))
 cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-plugin-scanner'))
 cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
 cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
@@ -301,23 +300,21 @@ if host_system == 'windows'
 endif
 
 backtrace_deps = []
-if get_option('libunwind')
-  unwind_dep = dependency('libunwind', required : false)
-  dw_dep = dependency('libdw', required: false)
-  backtrace_deps = [unwind_dep, dw_dep]
-  if unwind_dep.found()
-    cdata.set('HAVE_UNWIND', 1)
-    if dw_dep.found()
-      cdata.set('HAVE_DW', 1)
-    else
-      message('Support for backtraces is partial only.')
-    endif
+unwind_dep = dependency('libunwind', required : get_option('libunwind'))
+dw_dep = dependency('libdw', required: get_option('libunwind'))
+backtrace_deps = [unwind_dep, dw_dep]
+if unwind_dep.found()
+  cdata.set('HAVE_UNWIND', 1)
+  if dw_dep.found()
+    cdata.set('HAVE_DW', 1)
   else
-    if cc.has_function('backtrace')
-      cdata.set('HAVE_BACKTRACE', 1)
-    else
-        message('NO backtraces support.')
-    endif
+    message('Support for backtraces is partial only.')
+  endif
+else
+  if cc.has_function('backtrace')
+    cdata.set('HAVE_BACKTRACE', 1)
+  else
+      message('NO backtraces support.')
   endif
 endif
 
@@ -404,11 +401,10 @@ mathlib = cc.find_library('m', required : false)
 # Also provides clock_gettime in glibc < 2.17
 rt_lib = cc.find_library('rt', required : false)
 
-gir = find_program('g-ir-scanner', required : false)
+gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 
-# Fixme, not very elegant.
-build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
+build_gir = gir.found() and not meson.is_cross_build()
 
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
@@ -429,22 +425,33 @@ endif
 # Used in gst/parse/meson.build and below
 python3 = import('python3').find_python()
 
-bashcomp_dep = dependency('bash-completion', version : '>= 2.0', required : false)
-
-bashcomp_found = bashcomp_dep.found()
+bashcomp_option = get_option('bash-completion')
+bashcomp_dep = dependency('bash-completion', version : '>= 2.0', required : bashcomp_option)
 bash_completions_dir = ''
 bash_helpers_dir = ''
 
-if bashcomp_found
+bashcomp_found = false
+if bashcomp_dep.found()
+  bashcomp_found = true
   bash_completions_dir = bashcomp_dep.get_pkgconfig_variable('completionsdir', define_variable: ['prefix', '.'])
   if bash_completions_dir == ''
-    message('Found bash-completion but the .pc file did not set \'completionsdir\'.')
+    msg = 'Found bash-completion but the .pc file did not set \'completionsdir\'.'
+    if bashcomp_option.enabled()
+      error(msg)
+    else
+      message(msg)
+    endif
     bashcomp_found = false
   endif
 
   bash_helpers_dir = bashcomp_dep.get_pkgconfig_variable('helpersdir', define_variable: ['prefix', '.'])
   if bash_helpers_dir == ''
-    message('Found bash-completion, but the .pc file did not set \'helpersdir\'.')
+    msg = 'Found bash-completion, but the .pc file did not set \'helpersdir\'.'
+    if bashcomp_option.enabled()
+      error(msg)
+    else
+      message(msg)
+    endif
     bashcomp_found = false
   endif
 endif
@@ -458,7 +465,8 @@ subdir('tests')
 subdir('data')
 
 # xgettext is optional (on Windows for instance)
-if get_option('nls') and find_program('xgettext', required : false).found()
+if find_program('xgettext', required : get_option('nls')).found()
+  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
 
@@ -466,10 +474,8 @@ configure_file(output : 'config.h', configuration : cdata)
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif not get_option('gtk_doc')
-  message('gtk-doc is disabled via options')
 else
-  if find_program('gtkdoc-scan', required : false).found()
+  if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
     subdir('docs')
   else
     message('Not building documentation as gtk-doc was not found')
