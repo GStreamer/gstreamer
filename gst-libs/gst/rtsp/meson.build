@@ -31,9 +31,13 @@ rtsp_enums = gnome.mkenums_simple('gstrtsp-enumtypes',
 gstrtsp_c = rtsp_enums[0]
 gstrtsp_h = rtsp_enums[1]
 
-winsock2 = cc.find_library('ws2_32', required : false)
-
+if host_system == 'windows'
+  winsock2 = cc.find_library('ws2_32')
+else
+  winsock2 = []
+endif
 gstrtsp_deps = [gst_base_dep, gst_dep, gio_dep, libm, winsock2]
+
 gst_rtsp = library('gstrtsp-@0@'.format(api_version),
   rtsp_sources,
   gstrtsp_h, gstrtsp_c,

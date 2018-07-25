@@ -2,7 +2,7 @@
 if host_machine.system() != 'windows'
   subdir('check')
 endif
-if get_option('examples')
+if not get_option('examples').disabled()
   subdir('examples')
 endif
 #subdir('files')

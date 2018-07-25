@@ -2,7 +2,7 @@
 # but then what about the other files (sections, sgml)
 types = configure_file(input : 'gst-plugins-base-libs.types',
   output : 'gst-plugins-base-libs.types',
-  configuration : configuration_data())
+  copy : true)
 
 ignored_headers = ['pbutils-private.h', 'gsttageditingprivate.h', 'id3v2.h',
   'kiss_fft_f32.h', 'kiss_fft_f64.h', 'kiss_fftr_f32.h', 'kiss_fftr_f64.h',

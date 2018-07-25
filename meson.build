@@ -1,6 +1,6 @@
 project('gst-plugins-base', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.46.0',
+  meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -31,6 +31,7 @@ libversion = '@0@.@1@.0'.format(soversion, gst_version_minor * 100 + gst_version
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+host_system = host_machine.system()
 
 if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
@@ -112,9 +113,6 @@ core_conf.set('SIZEOF_LONG', cc.sizeof('long'))
 core_conf.set('SIZEOF_SHORT', cc.sizeof('short'))
 core_conf.set('SIZEOF_VOIDP', cc.sizeof('void*'))
 
-if get_option('nls')
-  core_conf.set('ENABLE_NLS', 1)
-endif
 core_conf.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-base-1.0')
 core_conf.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 core_conf.set_quoted('PACKAGE', 'gst-plugins-base')
@@ -208,24 +206,32 @@ if get_option('default_library') == 'static'
 endif
 
 # X11 checks are for sys/ and tests/
-x11_dep = dependency('x11', required : false)
+x11_dep = dependency('x11', required : get_option('x11'))
 # GLib checks are for the entire project
-giounix_dep = dependency('gio-unix-2.0', version : glib_req, required : false)
 # Almost everything that uses glib also uses gobject
 glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
+# GIO is used by the GIO plugin, and by the TCP, SDP, and RTSP plugins
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
+giounix_dep = dependency('gio-unix-2.0', version : glib_req, required : host_system != 'windows',
+                         fallback: ['glib', 'libgiounix_dep'])
 
-# some of the examples want GTK+
-gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : false)
-gtk_x11_dep = dependency('gtk+-x11-3.0', version : '>= 3.10', required : false)
-gtk_quartz_dep = dependency('gtk+-quartz-3.0', version : '>= 3.10', required : false)
-gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : false)
+# some of the examples can use gdk-pixbuf and GTK+3
+gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : get_option('examples'))
+gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : get_option('examples'))
+# TODO: https://github.com/mesonbuild/meson/issues/3941
+if not get_option('x11').disabled()
+  gtk_x11_dep = dependency('gtk+-x11-3.0', version : '>= 3.10', required : get_option('examples'))
+endif
+# gtk+ quartz backend is only available on macOS
+if host_system == 'darwin'
+  gtk_quartz_dep = dependency('gtk+-quartz-3.0', version : '>= 3.10', required : get_option('examples'))
+else
+  gtk_quartz_dep = dependency('', required : false)
+endif
 
 core_conf.set('HAVE_X', x11_dep.found())
-core_conf.set('HAVE_GIO_UNIX_2_0',
-    (gio_dep.type_name() != 'pkgconfig' and host_machine.system() != 'windows')
-    or giounix_dep.found())
+core_conf.set('HAVE_GIO_UNIX_2_0', giounix_dep.found())
 
 if gio_dep.type_name() == 'pkgconfig'
     core_conf.set_quoted('GIO_MODULE_DIR',
@@ -253,7 +259,7 @@ gst_base_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
 gst_net_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
-if host_machine.system() != 'windows'
+if host_system != 'windows'
   gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
@@ -262,20 +268,15 @@ gst_controller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 
 have_orcc = false
 orcc_args = []
-if get_option('orc') != 'no'
-  need_orc = get_option('orc') == 'yes'
-  # Used by various libraries/elements that use Orc code
-  orc_dep = dependency('orc-0.4', version : orc_req, required : need_orc)
-  orcc = find_program('orcc', required : need_orc)
-  if orc_dep.found() and orcc.found()
-    have_orcc = true
-    orcc_args = [orcc, '--include', 'glib.h']
-    core_conf.set('HAVE_ORC', 1)
-  else
-    message('Orc Compiler not found, will use backup C code')
-    core_conf.set('DISABLE_ORC', 1)
-  endif
+# Used by various libraries/elements that use Orc code
+orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'))
+orcc = find_program('orcc', required : get_option('orc'))
+if orc_dep.found() and orcc.found()
+  have_orcc = true
+  orcc_args = [orcc, '--include', 'glib.h']
+  core_conf.set('HAVE_ORC', 1)
 else
+  message('Orc Compiler not found or disabled, will use backup C code')
   core_conf.set('DISABLE_ORC', 1)
 endif
 
@@ -312,9 +313,9 @@ else
     endif
 endif
 
-gir = find_program('g-ir-scanner', required : false)
+gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
-build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
+build_gir = gir.found() and not meson.is_cross_build()
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
     'g_setenv("GST_REGISTRY_1.0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
@@ -338,16 +339,15 @@ subdir('tests')
 subdir('pkgconfig')
 
 # xgettext is optional (on Windows for instance)
-if get_option('nls') and find_program('xgettext', required : false).found()
+if find_program('xgettext', required : get_option('nls')).found()
+  core_conf.set('ENABLE_NLS', 1)
   subdir('po')
 endif
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif not get_option('gtk_doc')
-  message('gtk-doc is disabled via options')
 else
-  if find_program('gtkdoc-scan', required : false).found()
+  if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
     subdir('docs')
   else
     message('Not building documentation as gtk-doc was not found')

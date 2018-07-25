@@ -1,4 +1,4 @@
-if x11_dep.found() # FIXME: originally if USE_X
+if x11_dep.found()
   if gtk_x11_dep.found()
     executable('gtk-videooverlay', 'gtk-videooverlay.c',
       c_args : gst_plugins_base_args,
@@ -9,10 +9,11 @@ if x11_dep.found() # FIXME: originally if USE_X
 
   if have_cxx                                      # check for C++ support
     qt5_mod = import('qt5')
-    qt5widgets_dep = dependency('qt5', modules : ['Gui', 'Widgets'], required: false)
+    qt5widgets_dep = dependency('qt5', modules : ['Gui', 'Widgets'],
+                                required: get_option('examples'))
 
     # FIXME Add a way to get that information out of the qt5 module
-    moc = find_program('moc-qt5', required : false)
+    moc = find_program('moc-qt5', required : get_option('examples'))
     if qt5widgets_dep.found() and moc.found()
       executable('qt-videooverlay', 'qt-videooverlay.cpp',
         cpp_args : gst_plugins_base_args,

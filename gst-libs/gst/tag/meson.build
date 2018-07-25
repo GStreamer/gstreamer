@@ -49,6 +49,7 @@ gst_tag_args = [
       'license-translations.dict'))
 ]
 
+# FIXME: optional zlib support?
 tag_deps = [gst_base_dep, libm]
 gsttag = library('gsttag-@0@'.format(api_version),
   tag_sources, gsttag_h, gsttag_c,

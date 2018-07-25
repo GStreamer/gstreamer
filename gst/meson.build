@@ -1,20 +1,8 @@
-subdir('adder')
-subdir('app')
-subdir('audioconvert')
-subdir('audiomixer')
-subdir('audiorate')
-subdir('audioresample')
-subdir('audiotestsrc')
-subdir('encoding')
-subdir('gio')
-subdir('pbtypes')
-subdir('playback')
-subdir('rawparse')
-subdir('subparse')
-subdir('tcp')
-subdir('typefind')
-subdir('videoconvert')
-subdir('videorate')
-subdir('videoscale')
-subdir('videotestsrc')
-subdir('volume')
+foreach plugin : ['adder', 'app', 'audioconvert', 'audiomixer', 'audiorate', 'audioresample',
+                  'audiotestsrc', 'encoding', 'gio', 'pbtypes', 'playback', 'rawparse',
+                  'subparse', 'tcp', 'typefind', 'videoconvert', 'videorate', 'videoscale',
+                  'videotestsrc', 'volume']
+  if not get_option(plugin).disabled()
+    subdir(plugin)
+  endif
+endforeach

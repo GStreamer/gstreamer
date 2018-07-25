@@ -2,13 +2,14 @@ cdparanoia_deps = []
 cdparanoia_found = false
 
 # cdparanoia upstream has a pkg-config file only in post-10.2 SVN so far, no release yet
-cdparanoia_dep = dependency('cdparanoia-3', version : '>=10.2', required : false)
+cdparanoia_dep = dependency('cdparanoia-3', version : '>=10.2',
+                            required : get_option('cdparanoia'))
 if cdparanoia_dep.found()
   cdparanoia_deps = [cdparanoia_dep]
   cdparanoia_found = true
 else
-  cdparanoia_dep = cc.find_library('cdda_paranoia', required : false)
-  cdinterface_dep = cc.find_library('cdda_interface', required : false)
+  cdparanoia_dep = cc.find_library('cdda_paranoia', required : get_option('cdparanoia'))
+  cdinterface_dep = cc.find_library('cdda_interface', required : get_option('cdparanoia'))
   if cdparanoia_dep.found() and cdinterface_dep.found()
     cdparanoia_deps = [cdparanoia_dep, cdinterface_dep]
     cdparanoia_found = true

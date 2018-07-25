@@ -9,4 +9,5 @@ subdir('pbutils')
 subdir('riff')
 subdir('app')
 subdir('allocators')
+# FIXME: gl deps are automagic
 subdir('gl')

@@ -1,4 +1,4 @@
-sdl_dep = dependency('sdl', version : '>=1.2.0', required : false)
+sdl_dep = dependency('sdl', version : '>=1.2.0', required : get_option('examples'))
 if sdl_dep.found() and build_gstgl
   executable('sdlshare',
     'sdlshare.c',
