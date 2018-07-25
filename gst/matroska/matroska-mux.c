@@ -139,7 +139,8 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-prores, "
         COMMON_VIDEO_CAPS "; "
-        "video/x-wmv, " "wmvversion = (int) [ 1, 3 ], " COMMON_VIDEO_CAPS)
+        "video/x-wmv, " "wmvversion = (int) [ 1, 3 ], " COMMON_VIDEO_CAPS "; "
+        "video/x-av1, " COMMON_VIDEO_CAPS)
     );
 
 #define COMMON_AUDIO_CAPS \
