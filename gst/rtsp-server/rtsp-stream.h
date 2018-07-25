@@ -299,6 +299,9 @@ GST_RTSP_SERVER_API
 guint             gst_rtsp_stream_get_max_mcast_ttl  (GstRTSPStream *stream);
 
 GST_RTSP_SERVER_API
+gboolean          gst_rtsp_stream_verify_mcast_ttl  (GstRTSPStream *stream, guint ttl);
+
+GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_complete_stream (GstRTSPStream * stream, const GstRTSPTransport * transport);
 
 GST_RTSP_SERVER_API

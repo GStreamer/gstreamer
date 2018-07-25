@@ -1497,6 +1497,12 @@ again:
 
   g_clear_object (&inetaddr);
 
+  if (multicast && (ct->ttl > 0) && (ct->ttl <= priv->max_mcast_ttl)) {
+    GST_DEBUG ("setting mcast ttl to %d", ct->ttl);
+    g_socket_set_multicast_ttl (rtp_socket, ct->ttl);
+    g_socket_set_multicast_ttl (rtcp_socket, ct->ttl);
+  }
+
   socket_out[0] = rtp_socket;
   socket_out[1] = rtcp_socket;
   *server_addr_out = addr;
@@ -2004,6 +2010,29 @@ gst_rtsp_stream_get_max_mcast_ttl (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return ttl;
+}
+
+/**
+ * gst_rtsp_stream_verify_mcast_ttl:
+ * @stream: a #GstRTSPStream
+ * @ttl: a requested multicast ttl
+ *
+ * Check if the requested multicast ttl value is allowed.
+ *
+ * Returns: TRUE if the requested ttl value is allowed.
+ *
+ */
+gboolean
+gst_rtsp_stream_verify_mcast_ttl (GstRTSPStream * stream, guint ttl)
+{
+  gboolean res = FALSE;
+
+  g_mutex_lock (&stream->priv->lock);
+  if ((ttl > 0) && (ttl <= stream->priv->max_mcast_ttl))
+    res = TRUE;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return res;
 }
 
 /* executed from streaming thread */
@@ -4058,7 +4087,6 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         if (!check_mcast_part_for_transport (stream, tr))
           goto mcast_error;
 
-        /* FIXME: Is it ok to set ttl-mc if media is shared? */
         if (tr->ttl > 0) {
           GST_INFO ("setting ttl-mc %d", tr->ttl);
           if (priv->mcast_udpsink[0])
