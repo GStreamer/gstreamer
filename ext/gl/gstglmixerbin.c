@@ -473,7 +473,7 @@ gst_gl_mixer_bin_set_property (GObject * object,
   switch (prop_id) {
     case PROP_MIXER:
     {
-      GstElement *mixer = g_value_get_object (value);
+      GstElement *mixer = g_value_dup_object (value);
       /* FIXME: deal with replacing a mixer */
       g_return_if_fail (!self->mixer || (self->mixer == mixer));
       gst_gl_mixer_bin_set_mixer (self, mixer);

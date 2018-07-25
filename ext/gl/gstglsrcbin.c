@@ -221,7 +221,7 @@ gst_gl_src_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SRC:
-      gst_gl_src_bin_set_src (self, g_value_get_object (value));
+      gst_gl_src_bin_set_src (self, g_value_dup_object (value));
       break;
     default:
       if (self->src)
