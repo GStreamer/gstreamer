@@ -11187,6 +11187,81 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             }
             break;
           }
+          case FOURCC_av01:
+          {
+            gint len = QT_UINT32 (stsd_entry_data) - 0x56;
+            const guint8 *av1_data = stsd_entry_data + 0x56;
+
+            /* find av1C */
+            while (len >= 0x8) {
+              gint size;
+
+              if (QT_UINT32 (av1_data) <= len)
+                size = QT_UINT32 (av1_data) - 0x8;
+              else
+                size = len - 0x8;
+
+              if (size < 1)
+                /* No real data, so break out */
+                break;
+
+              switch (QT_FOURCC (av1_data + 0x4)) {
+                case FOURCC_av1C:
+                {
+                  /* parse, if found */
+                  GstBuffer *buf;
+                  guint8 pres_delay_field;
+
+                  GST_DEBUG_OBJECT (qtdemux,
+                      "found av1C codec_data in stsd of size %d", size);
+
+                  /* not enough data, just ignore and hope for the best */
+                  if (size < 5)
+                    break;
+
+                  /* Content is:
+                   * 4 bytes: atom length
+                   * 4 bytes: fourcc
+                   * 1 byte: version
+                   * 3 bytes: flags
+                   * 3 bits: reserved
+                   * 1 bits:  initial_presentation_delay_present
+                   * 4 bits: initial_presentation_delay (if present else reserved
+                   * rest: OBUs.
+                   */
+
+                  if (av1_data[9] != 0) {
+                    GST_WARNING ("Unknown version %d of av1C box", av1_data[9]);
+                    break;
+                  }
+
+                  /* We skip initial_presentation_delay* for now */
+                  pres_delay_field = *(av1_data + 12);
+                  if (pres_delay_field & (1 << 5)) {
+                    gst_caps_set_simple (entry->caps,
+                        "presentation-delay", G_TYPE_INT,
+                        (gint) (pres_delay_field & 0x0F) + 1, NULL);
+                  }
+                  if (size > 5) {
+                    buf = gst_buffer_new_and_alloc (size - 5);
+                    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+                    gst_buffer_fill (buf, 0, av1_data + 13, size - 5);
+                    gst_caps_set_simple (entry->caps,
+                        "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                    gst_buffer_unref (buf);
+                  }
+                  break;
+                }
+                default:
+                  break;
+              }
+
+              len -= size + 8;
+              av1_data += size + 8;
+            }
+
+            break;
+          }
           default:
             break;
         }
