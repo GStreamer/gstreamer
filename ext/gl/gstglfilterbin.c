@@ -245,7 +245,7 @@ gst_gl_filter_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILTER:
-      gst_gl_filter_bin_set_filter (self, g_value_get_object (value));
+      gst_gl_filter_bin_set_filter (self, g_value_dup_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

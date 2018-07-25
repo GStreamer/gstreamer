@@ -347,7 +347,7 @@ gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SINK:
-      gst_gl_sink_bin_set_sink (self, g_value_get_object (value));
+      gst_gl_sink_bin_set_sink (self, g_value_dup_object (value));
       break;
     case PROP_CONTRAST:
     case PROP_BRIGHTNESS:
