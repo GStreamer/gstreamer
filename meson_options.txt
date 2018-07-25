@@ -2,7 +2,7 @@ option('validate', type : 'boolean', value : true,
        description : 'Build GstValidate')
 option('debug_viewer', type : 'boolean', value : true,
         description : 'Build GstDebugViewer')
-option('introspection', type : 'boolean', value : true, yield : true,
-        description : 'Generate gobject-introspection bindings')
-option('gtk_doc', type : 'boolean', value : true, yield : true,
-        description : 'Generate API documentation with gtk-doc')
+option('gtk_doc', type : 'feature', value : 'auto', yield : true,
+       description : 'Build API documentation with gtk-doc')
+option('introspection', type : 'feature', value : 'auto', yield : true,
+       description : 'Generate gobject-introspection bindings')

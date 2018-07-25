@@ -27,10 +27,9 @@ subdir('launcher')
 subdir('tools')
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif not get_option('gtk_doc')
-  message('gtk-doc is disabled via options')
 else
-  if find_program('gtkdoc-scan', required : false).found()
+  gtkdoc = find_program('gtkdoc-scan', required : get_option('gtk_doc'))
+  if gtkdoc.found()
     subdir('docs')
   else
     message('Not building documentation as gtk-doc was not found')
