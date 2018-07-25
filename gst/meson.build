@@ -1,63 +1,18 @@
-subdir('accurip')
-subdir('adpcmdec')
-subdir('adpcmenc')
-subdir('aiff')
-subdir('asfmux')
-subdir('audiobuffersplit')
-subdir('audiofxbad')
-subdir('audiomixmatrix')
-subdir('audiolatency')
-subdir('audiovisualizers')
-subdir('autoconvert')
-subdir('bayer')
-subdir('camerabin2')
-subdir('coloreffects')
-subdir('compositor')
-subdir('debugutils')
-subdir('dvbsuboverlay')
-subdir('dvdspu')
-subdir('faceoverlay')
-subdir('festival')
-subdir('fieldanalysis')
-subdir('freeverb')
-subdir('frei0r')
-subdir('gaudieffects')
-subdir('gdp')
-subdir('geometrictransform')
-subdir('id3tag')
-subdir('inter')
-subdir('interlace')
-subdir('ivfparse')
-subdir('ivtc')
-subdir('jp2kdecimator')
-subdir('jpegformat')
-subdir('librfb')
-subdir('midi')
-subdir('mpegdemux')
-subdir('mpegpsmux')
-subdir('mpegtsdemux')
-subdir('mpegtsmux')
-subdir('mxf')
-subdir('netsim')
-subdir('onvif')
-subdir('pcapparse')
-subdir('pnm')
-subdir('proxy')
-subdir('rawparse')
-subdir('removesilence')
-subdir('sdp')
-subdir('segmentclip')
-subdir('siren')
-subdir('smooth')
-#subdir('smoothwave')
-subdir('speed')
-subdir('stereo')
-subdir('subenc')
-subdir('timecode')
-subdir('videofilters')
-subdir('videoframe_audiolevel')
-subdir('videoparsers')
-subdir('videosignal')
-subdir('vmnc')
-subdir('y4m')
-subdir('yadif')
+foreach plugin : ['accurip', 'adpcmdec', 'adpcmenc', 'aiff', 'asfmux',
+                  'audiobuffersplit', 'audiofxbad', 'audiomixmatrix',
+                  'audiolatency', 'audiovisualizers', 'autoconvert', 'bayer',
+                  'camerabin2', 'coloreffects', 'compositor', 'debugutils',
+                  'dvbsuboverlay', 'dvdspu', 'faceoverlay', 'festival',
+                  'fieldanalysis', 'freeverb', 'frei0r', 'gaudieffects', 'gdp',
+                  'geometrictransform', 'id3tag', 'inter', 'interlace',
+                  'ivfparse', 'ivtc', 'jp2kdecimator', 'jpegformat', 'librfb',
+                  'midi', 'mpegdemux', 'mpegpsmux', 'mpegtsdemux', 'mpegtsmux',
+                  'mxf', 'netsim', 'onvif', 'pcapparse', 'pnm', 'proxy',
+                  'rawparse', 'removesilence', 'sdp', 'segmentclip', 'siren',
+                  'smooth', 'speed', 'stereo', 'subenc', 'timecode',
+                  'videofilters', 'videoframe_audiolevel', 'videoparsers',
+                  'videosignal', 'vmnc', 'y4m', 'yadif']
+  if not get_option(plugin).disabled()
+    subdir(plugin)
+  endif
+endforeach

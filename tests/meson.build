@@ -2,5 +2,6 @@
 if host_machine.system() != 'windows'
   subdir('check')
 endif
-
-subdir('examples')
+if not get_option('examples').disabled()
+  subdir('examples')
+endif

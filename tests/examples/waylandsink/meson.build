@@ -1,5 +1,5 @@
-gtk_dep = dependency('gtk+-3.0', required : false)
-gtk_wayland_dep = dependency('gtk+-wayland-3.0', required : false)
+gtk_dep = dependency('gtk+-3.0', required : get_option('examples'))
+gtk_wayland_dep = dependency('gtk+-wayland-3.0', required : get_option('examples'))
 
 if use_wayland and gtk_dep.found() and gtk_wayland_dep.found()
   executable('waylandsink',

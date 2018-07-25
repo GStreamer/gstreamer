@@ -1,6 +1,6 @@
 project('gst-plugins-bad', 'c', 'cpp',
   version : '1.15.0.1',
-  meson_version : '>= 0.46',
+  meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -273,9 +273,6 @@ cdata.set_quoted('GST_API_VERSION', api_version)
 cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
-if get_option('nls')
-  cdata.set('ENABLE_NLS', 1)
-endif
 
 warning_flags = [
   '-Wmissing-declarations',
@@ -460,20 +457,15 @@ endif
 
 have_orcc = false
 orcc_args = []
-if get_option('orc') != 'no'
-  need_orc = get_option('orc') == 'yes'
-  # Used by various libraries/elements that use Orc code
-  orc_dep = dependency('orc-0.4', required : need_orc)
-  orcc = find_program('orcc', required : need_orc)
-  if orc_dep.found() and orcc.found()
-    have_orcc = true
-    orcc_args = [orcc, '--include', 'glib.h']
-    cdata.set('HAVE_ORC', 1)
-  else
-    message('Orc Compiler not found, will use backup C code')
-    cdata.set('DISABLE_ORC', 1)
-  endif
+# Used by various libraries/elements that use Orc code
+orc_dep = dependency('orc-0.4', required : get_option('orc'))
+orcc = find_program('orcc', required : get_option('orc'))
+if orc_dep.found() and orcc.found()
+  have_orcc = true
+  orcc_args = [orcc, '--include', 'glib.h']
+  cdata.set('HAVE_ORC', 1)
 else
+  message('Orc Compiler not found or disabled, will use backup C code')
   cdata.set('DISABLE_ORC', 1)
 endif
 
@@ -495,9 +487,9 @@ libsinc = include_directories('gst-libs')
 
 python3 = import('python3').find_python()
 
-gir = find_program('g-ir-scanner', required : false)
+gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
-build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
+build_gir = gir.found() and not meson.is_cross_build()
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_1.0", "@0@", TRUE);'.format(meson.current_build_dir() + '/gir_empty_registry.reg') + \
     'g_setenv("GST_PLUGIN_PATH_1_0", "", TRUE);' + \
@@ -518,11 +510,12 @@ subdir('ext')
 subdir('tests')
 subdir('pkgconfig')
 
-configure_file(output : 'config.h', configuration : cdata)
-
 # xgettext is optional (on Windows for instance)
-if get_option('nls') and find_program('xgettext', required : false).found()
+if find_program('xgettext', required : get_option('nls')).found()
+  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
+
+configure_file(output : 'config.h', configuration : cdata)
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
