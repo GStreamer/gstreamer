@@ -408,8 +408,15 @@ gst_omx_video_dec_shutdown (GstOMXVideoDec * self)
     gst_omx_component_set_state (self->dec, OMX_StateLoaded);
     gst_omx_port_deallocate_buffers (self->dec_in_port);
     gst_omx_video_dec_deallocate_output_buffers (self);
-    if (state > OMX_StateLoaded)
-      gst_omx_component_get_state (self->dec, 5 * GST_SECOND);
+    if (state > OMX_StateLoaded) {
+      if (self->dec_out_port->buffers)
+        /* Don't wait for the state transition if the pool still has outstanding
+         * buffers as it will timeout anyway */
+        GST_WARNING_OBJECT (self,
+            "Output buffers haven't been freed; still owned downstream?");
+      else
+        gst_omx_component_get_state (self->dec, 5 * GST_SECOND);
+    }
   }
 
   return TRUE;
