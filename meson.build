@@ -1,6 +1,6 @@
 project('gst-editing-services', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.46.0',
+  meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -99,11 +99,11 @@ endif
 configure_file(output : 'config.h', configuration : cdata)
 
 
-gir = find_program('g-ir-scanner', required : false)
+gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 
 # Fixme, not very elegant.
-build_gir = gir.found() and not meson.is_cross_build() and get_option('introspection')
+build_gir = gir.found() and not meson.is_cross_build()
 gir_init_section = [ '--add-init-section=' + \
     'extern void gst_init(gint*,gchar**);' + \
     'extern void ges_init(void);' + \
@@ -206,10 +206,8 @@ endif
 
 if build_machine.system() == 'windows'
   message('Disabling gtk-doc while building on Windows')
-elif not get_option('gtk_doc')
-  message('gtk-doc is disabled via options')
 else
-  if find_program('gtkdoc-scan', required : false).found()
+  if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
     subdir('docs')
   else
     message('Not building documentation as gtk-doc was not found')

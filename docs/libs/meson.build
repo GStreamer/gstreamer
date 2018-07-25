@@ -1,6 +1,6 @@
 types = configure_file(input : 'ges.types',
   output : 'ges.types',
-  configuration : configuration_data())
+  copy: true)
 
 doc_deps_names = ['glib-2.0',
                   'gstreamer-@0@'.format(apiversion),
@@ -8,6 +8,7 @@ doc_deps_names = ['glib-2.0',
 
 doc_deps = []
 foreach doc_dep : doc_deps_names
+    # TODO: Use get_pkgconfig_variable()
     runcmd = run_command('pkg-config', '--variable=prefix', doc_dep)
     if runcmd.returncode() == 0
         tmp = '--extra-dir=' + runcmd.stdout().strip() + '/share/gtk-doc/html/'
