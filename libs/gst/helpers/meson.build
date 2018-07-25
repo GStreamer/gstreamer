@@ -3,7 +3,6 @@ executable('gst-plugin-scanner',
   c_args : gst_c_args,
   include_directories : [configinc],
   dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, gst_dep],
-  link_with : [printf_lib],
   install_dir : helpers_install_dir,
   install: true,
 )
@@ -124,7 +123,6 @@ if have_ptp
     c_args : gst_c_args,
     include_directories : [configinc, libsinc],
     dependencies : [gio_dep, gobject_dep, glib_dep, mathlib, gst_dep, cap_dep],
-    link_with : [printf_lib],
     install_dir : helpers_install_dir,
     install : true)
 

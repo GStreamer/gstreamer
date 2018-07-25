@@ -9,7 +9,6 @@ foreach tool : tools
     install: true,
     include_directories : [configinc],
     dependencies : [glib_dep, gobject_dep, gmodule_dep, mathlib, gst_dep],
-    link_with: [printf_lib],
     c_args: gst_c_args,
   )
 
