@@ -1179,7 +1179,8 @@ gst_vaapidecode_parse_frame (GstVideoDecoder * vdec,
       break;
     default:
       GST_ERROR ("parse error %d", status);
-      ret = GST_FLOW_EOS;
+      /* just keep parsing, the decoder should have flushed the broken unit */
+      ret = GST_VAAPI_DECODE_FLOW_PARSE_DATA;
       decode->current_frame_size = 0;
       break;
   }

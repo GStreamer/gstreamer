@@ -4640,6 +4640,7 @@ gst_vaapi_decoder_h264_parse (GstVaapiDecoder * base_decoder,
 
 exit:
   {
+    gst_adapter_flush (adapter, unit->size);
     gst_vaapi_parser_info_h264_unref (pi);
     return status;
   }

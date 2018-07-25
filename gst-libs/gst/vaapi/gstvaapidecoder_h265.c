@@ -2984,6 +2984,7 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 exit:
+  gst_adapter_flush (adapter, unit->size);
   gst_vaapi_parser_info_h265_unref (pi);
   return status;
 }
