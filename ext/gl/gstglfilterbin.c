@@ -173,7 +173,7 @@ _connect_filter_element (GstGLFilterBin * self)
 }
 
 /*
- * @filter: (transfer full):
+ * @filter: (transfer floating):
  */
 static gboolean
 gst_gl_filter_bin_set_filter (GstGLFilterBin * self, GstElement * filter)
@@ -189,10 +189,10 @@ gst_gl_filter_bin_set_filter (GstGLFilterBin * self, GstElement * filter)
   }
   self->filter = filter;
 
-  if (filter && g_object_is_floating (filter))
-    gst_object_ref_sink (filter);
+  gst_object_ref_sink (filter);
 
   if (filter && !_connect_filter_element (self)) {
+    gst_object_unref (self->filter);
     self->filter = NULL;
     return FALSE;
   }
@@ -204,8 +204,7 @@ void
 gst_gl_filter_bin_finish_init_with_element (GstGLFilterBin * self,
     GstElement * element)
 {
-  if (!gst_gl_filter_bin_set_filter (self, element))
-    gst_object_unref (element);
+  gst_gl_filter_bin_set_filter (self, element);
 }
 
 void
@@ -245,7 +244,7 @@ gst_gl_filter_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILTER:
-      gst_gl_filter_bin_set_filter (self, g_value_dup_object (value));
+      gst_gl_filter_bin_set_filter (self, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
