@@ -436,29 +436,14 @@ bash_completions_dir = ''
 bash_helpers_dir = ''
 
 if bashcomp_found
-  # get_pkgconfig_variable() won't let us set the prefix
-  pkgconfig = find_program('pkg-config')
-
-  runcmd = run_command(pkgconfig,
-      '--define-variable=prefix=.',
-      '--variable=completionsdir',
-      'bash-completion')
-
-  if (runcmd.returncode() == 0)
-    bash_completions_dir = runcmd.stdout().strip()
-  else
+  bash_completions_dir = bashcomp_dep.get_pkgconfig_variable('completionsdir', define_variable: ['prefix', ''])
+  if bash_completions_dir == ''
     message('Found bash-completion but the .pc file did not set \'completionsdir\'.')
     bashcomp_found = false
   endif
 
-  runcmd = run_command(pkgconfig,
-      '--define-variable=prefix=.',
-      '--variable=helpersdir',
-      'bash-completion')
-
-  if (runcmd.returncode() == 0)
-    bash_helpers_dir = runcmd.stdout().strip()
-  else
+  bash_helpers_dir = bashcomp_dep.get_pkgconfig_variable('helpersdir', define_variable: ['prefix', ''])
+  if bash_helpers_dir == ''
     message('Found bash-completion, but the .pc file did not set \'helpersdir\'.')
     bashcomp_found = false
   endif
