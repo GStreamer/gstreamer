@@ -2439,7 +2439,7 @@ is_inter_view_reference_for_next_pictures (GstVaapiDecoderH264 * decoder,
 }
 
 /* H.8.2.1 - Initialization process for inter-view prediction references */
-static void
+static gboolean
 init_picture_refs_mvc_1 (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 ** ref_list, guint * ref_list_count_ptr, guint num_refs,
     const guint16 * view_ids, guint num_view_ids)
@@ -2448,30 +2448,36 @@ init_picture_refs_mvc_1 (GstVaapiDecoderH264 * decoder,
 
   n = *ref_list_count_ptr;
   for (j = 0; j < num_view_ids && n < num_refs; j++) {
-    GstVaapiPictureH264 *const pic =
-        find_inter_view_reference (decoder, view_ids[j]);
-    if (pic)
-      ref_list[n++] = pic;
+    GstVaapiPictureH264 *pic;
+
+    if (!(pic = find_inter_view_reference (decoder, view_ids[j])))
+      return FALSE;
+
+    ref_list[n++] = pic;
   }
+
   *ref_list_count_ptr = n;
+
+  return TRUE;
 }
 
-static inline void
+static inline gboolean
 init_picture_refs_mvc (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 * picture, GstH264SliceHdr * slice_hdr, guint list)
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   const GstH264SPS *const sps = get_sps (decoder);
   const GstH264SPSExtMVCView *view;
+  gboolean ret = TRUE;
 
   GST_DEBUG ("initialize reference picture list for inter-view prediction");
 
   if (sps->extension_type != GST_H264_NAL_EXTENSION_MVC)
-    return;
+    return TRUE;
   view = &sps->extension.mvc.view[picture->base.voc];
 
 #define INVOKE_INIT_PICTURE_REFS_MVC(ref_list, view_list) do {          \
-        init_picture_refs_mvc_1(decoder,                                \
+        ret = init_picture_refs_mvc_1(decoder,                          \
             priv->RefPicList##ref_list,                                 \
             &priv->RefPicList##ref_list##_count,                        \
             slice_hdr->num_ref_idx_l##ref_list##_active_minus1 + 1,     \
@@ -2491,16 +2497,19 @@ init_picture_refs_mvc (GstVaapiDecoderH264 * decoder,
       INVOKE_INIT_PICTURE_REFS_MVC (1, non_anchor_ref);
   }
 
+  return ret;
+
 #undef INVOKE_INIT_PICTURE_REFS_MVC
 }
 
-static void
+static gboolean
 init_picture_refs_p_slice (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 * picture, GstH264SliceHdr * slice_hdr)
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstVaapiPictureH264 **ref_list;
   guint i;
+  gboolean ret = TRUE;
 
   GST_DEBUG ("decode reference picture list for P and SP slices");
 
@@ -2549,17 +2558,20 @@ init_picture_refs_p_slice (GstVaapiDecoderH264 * decoder,
 
   if (GST_VAAPI_PICTURE_IS_MVC (picture)) {
     /* RefPicList0 */
-    init_picture_refs_mvc (decoder, picture, slice_hdr, 0);
+    ret = init_picture_refs_mvc (decoder, picture, slice_hdr, 0);
   }
+
+  return ret;
 }
 
-static void
+static gboolean
 init_picture_refs_b_slice (GstVaapiDecoderH264 * decoder,
     GstVaapiPictureH264 * picture, GstH264SliceHdr * slice_hdr)
 {
   GstVaapiDecoderH264Private *const priv = &decoder->priv;
   GstVaapiPictureH264 **ref_list;
   guint i, n;
+  gboolean ret = TRUE;
 
   GST_DEBUG ("decode reference picture list for B slices");
 
@@ -2700,11 +2712,13 @@ init_picture_refs_b_slice (GstVaapiDecoderH264 * decoder,
 
   if (GST_VAAPI_PICTURE_IS_MVC (picture)) {
     /* RefPicList0 */
-    init_picture_refs_mvc (decoder, picture, slice_hdr, 0);
+    ret = init_picture_refs_mvc (decoder, picture, slice_hdr, 0);
 
     /* RefPicList1 */
-    init_picture_refs_mvc (decoder, picture, slice_hdr, 1);
+    ret = init_picture_refs_mvc (decoder, picture, slice_hdr, 1);
   }
+
+  return ret;
 }
 
 #undef SORT_REF_LIST
@@ -3055,16 +3069,16 @@ init_picture_refs (GstVaapiDecoderH264 * decoder,
   switch (slice_hdr->type % 5) {
     case GST_H264_P_SLICE:
     case GST_H264_SP_SLICE:
-      init_picture_refs_p_slice (decoder, picture, slice_hdr);
+      ret = init_picture_refs_p_slice (decoder, picture, slice_hdr);
       break;
     case GST_H264_B_SLICE:
-      init_picture_refs_b_slice (decoder, picture, slice_hdr);
+      ret = init_picture_refs_b_slice (decoder, picture, slice_hdr);
       break;
     default:
       break;
   }
 
-  ret = exec_picture_refs_modification (decoder, picture, slice_hdr);
+  ret = ret && exec_picture_refs_modification (decoder, picture, slice_hdr);
 
   switch (slice_hdr->type % 5) {
     case GST_H264_B_SLICE:
