@@ -1896,7 +1896,6 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
     } else {
       ret = gst_pad_send_event (peer, gst_event_ref (evdata->event));
       GST_DEBUG_OBJECT (pad, "return of event push is %d", ret);
-      gst_object_unref (peer);
     }
   }
 
@@ -1935,6 +1934,9 @@ gst_aggregator_event_forward_func (GstPad * pad, gpointer user_data)
   }
 
   evdata->result &= ret;
+
+  if (peer)
+    gst_object_unref (peer);
 
   /* Always send to all pads */
   return FALSE;
