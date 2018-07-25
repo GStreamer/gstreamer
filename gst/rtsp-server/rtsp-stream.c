@@ -1469,28 +1469,28 @@ again:
   /* ERRORS */
 no_udp_protocol:
   {
-    GST_ERROR_OBJECT (stream, "failed to allocate UDP ports: protocol error");
+    GST_WARNING_OBJECT (stream, "failed to allocate UDP ports: protocol error");
     goto cleanup;
   }
 no_pool:
   {
-    GST_ERROR_OBJECT (stream,
+    GST_WARNING_OBJECT (stream,
         "failed to allocate UDP ports: no address pool specified");
     goto cleanup;
   }
 no_address:
   {
-    GST_ERROR_OBJECT (stream, "failed to acquire address from pool");
+    GST_WARNING_OBJECT (stream, "failed to acquire address from pool");
     goto cleanup;
   }
 no_ports:
   {
-    GST_ERROR_OBJECT (stream, "failed to allocate UDP ports: no ports");
+    GST_WARNING_OBJECT (stream, "failed to allocate UDP ports: no ports");
     goto cleanup;
   }
 socket_error:
   {
-    GST_ERROR_OBJECT (stream, "failed to allocate UDP ports: socket error");
+    GST_WARNING_OBJECT (stream, "failed to allocate UDP ports: socket error");
     goto cleanup;
   }
 cleanup:

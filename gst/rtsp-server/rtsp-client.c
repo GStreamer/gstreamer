@@ -1964,19 +1964,29 @@ default_configure_client_transport (GstRTSPClient * client,
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST ||
       ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP) {
-
     /* allocate UDP ports */
     GSocketFamily family;
     gboolean use_client_settings = FALSE;
 
     family = priv->is_ipv6 ? G_SOCKET_FAMILY_IPV6 : G_SOCKET_FAMILY_IPV4;
+
     if ((ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) &&
         gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS) &&
         (ct->destination != NULL))
       use_client_settings = TRUE;
 
-    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, family, ct,
-            use_client_settings))
+    /* We need to allocate the sockets for both families before starting
+     * multiudpsink, otherwise multiudpsink won't accept new clients with
+     * a different family.
+     */
+    /* FIXME: could be more adequately solved by making it possible
+     * to set a socket on multiudpsink after it has already been started */
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, G_SOCKET_FAMILY_IPV4, ct,
+            use_client_settings) && family == G_SOCKET_FAMILY_IPV4)
+      goto error_allocating_ports;
+
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, G_SOCKET_FAMILY_IPV6, ct,
+            use_client_settings) && family == G_SOCKET_FAMILY_IPV6)
       goto error_allocating_ports;
 
     if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
