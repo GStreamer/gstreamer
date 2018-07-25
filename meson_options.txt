@@ -2,8 +2,8 @@ option('x264_libraries', type : 'string', value : '',
        description : 'Colon separated list of additional x264 library paths, e.g. for 10-bit version')
 
 # Common options
-option('nls', type : 'boolean', value : true, yield: true,
-        description : 'Enable native language support (translations)')
+option('nls', type : 'feature', value : 'auto', yield: true,
+       description : 'Enable native language support (translations)')
 option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
 option('package-origin', type : 'string', value : 'Unknown package origin', yield: true,

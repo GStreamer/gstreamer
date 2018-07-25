@@ -1,6 +1,6 @@
 project('gst-plugins-ugly', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.46.0',
+  meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -119,9 +119,6 @@ cdata.set_quoted('PACKAGE', 'gst-plugins-ugly')
 cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-ugly-1.0')
 cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
-if get_option('nls')
-  cdata.set('ENABLE_NLS', 1)
-endif
 
 # GStreamer package name and origin url
 gst_package_name = get_option('package-name')
@@ -177,8 +174,6 @@ if orc_dep.found()
 else
   cdata.set('DISABLE_ORC', 1)
 endif
-
-configure_file(output : 'config.h', configuration : cdata)
 
 ugly_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
@@ -252,9 +247,12 @@ subdir('ext')
 subdir('tests')
 
 # xgettext is optional (on Windows for instance)
-if get_option('nls') and find_program('xgettext', required : false).found()
+if find_program('xgettext', required : get_option('nls')).found()
+  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
+
+configure_file(output : 'config.h', configuration : cdata)
 
 python3 = import('python3').find_python()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
