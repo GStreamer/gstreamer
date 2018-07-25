@@ -4,7 +4,7 @@ project('All GStreamer modules', 'c',
   default_options : ['buildtype=debugoptimized'])
 
 gst_version = '>= @0@'.format(meson.project_version())
-gst_branch = '1.14.2'
+gst_branch = '1.14'
 
 glib_req = '>= 2.40.0'
 

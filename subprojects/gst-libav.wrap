@@ -2,4 +2,4 @@
 directory=gst-libav
 url=https://anongit.freedesktop.org/git/gstreamer/gst-libav.git
 push-url=ssh://git.freedesktop.org/git/gstreamer/gst-libav
-revision=1.14.2
+revision=1.14
