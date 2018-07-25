@@ -1,5 +1,5 @@
-option('introspection', type : 'boolean', value : true, yield : true,
-        description : 'Generate gobject-introspection bindings')
+option('introspection', type : 'feature', value : 'auto', yield : true,
+       description : 'Generate gobject-introspection bindings')
 option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
 option('package-origin', type : 'string',
@@ -7,5 +7,5 @@ option('package-origin', type : 'string',
        description : 'package origin URL to use in plugins')
 option('tests', type : 'boolean', value : true,
        description : 'Build and enable unit tests')
-option('examples', type : 'boolean', value : true, yield : true,
+option('examples', type : 'feature', value : 'auto', yield : true,
        description : 'Build the examples')
