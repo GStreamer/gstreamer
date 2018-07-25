@@ -214,6 +214,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_tenc, "track encryption", 0},
   {FOURCC_stpp, "XML subtitle sample entry", 0},
   {FOURCC_clcp, "Closed Caption", 0},
+  {FOURCC_av01, "AV1 Sample Entry", 0},
   {0, "unknown", 0,},
 };
 

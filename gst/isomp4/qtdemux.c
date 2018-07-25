@@ -14651,6 +14651,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
       break;
+    case FOURCC_av01:
+      _codec ("AV1");
+      caps = gst_caps_new_empty_simple ("video/x-av1");
+      break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
