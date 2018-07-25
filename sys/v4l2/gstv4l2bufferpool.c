@@ -742,9 +742,22 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
   GST_DEBUG_OBJECT (pool, "activating pool");
 
-  if (pool->other_pool)
+  if (pool->other_pool) {
+    GstBuffer *buffer;
+
     if (!gst_buffer_pool_set_active (pool->other_pool, TRUE))
       goto other_pool_failed;
+
+    if (gst_buffer_pool_acquire_buffer (pool->other_pool, &buffer, NULL) !=
+        GST_FLOW_OK)
+      goto other_pool_failed;
+
+    if (!gst_v4l2_object_try_import (obj, buffer)) {
+      gst_buffer_unref (buffer);
+      goto cannot_import;
+    }
+    gst_buffer_unref (buffer);
+  }
 
   config = gst_buffer_pool_get_config (bpool);
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
@@ -910,6 +923,11 @@ other_pool_failed:
 queue_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to queue buffers into the capture queue");
+    return FALSE;
+  }
+cannot_import:
+  {
+    GST_ERROR_OBJECT (pool, "cannot import buffers from downstream pool");
     return FALSE;
   }
 }
