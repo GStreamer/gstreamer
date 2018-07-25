@@ -436,13 +436,13 @@ bash_completions_dir = ''
 bash_helpers_dir = ''
 
 if bashcomp_found
-  bash_completions_dir = bashcomp_dep.get_pkgconfig_variable('completionsdir', define_variable: ['prefix', ''])
+  bash_completions_dir = bashcomp_dep.get_pkgconfig_variable('completionsdir', define_variable: ['prefix', '.'])
   if bash_completions_dir == ''
     message('Found bash-completion but the .pc file did not set \'completionsdir\'.')
     bashcomp_found = false
   endif
 
-  bash_helpers_dir = bashcomp_dep.get_pkgconfig_variable('helpersdir', define_variable: ['prefix', ''])
+  bash_helpers_dir = bashcomp_dep.get_pkgconfig_variable('helpersdir', define_variable: ['prefix', '.'])
   if bash_helpers_dir == ''
     message('Found bash-completion, but the .pc file did not set \'helpersdir\'.')
     bashcomp_found = false
