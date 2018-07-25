@@ -5760,6 +5760,35 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-cineform") == 0) {
     entry.fourcc = FOURCC_cfhd;
     sync = FALSE;
+  } else if (strcmp (mimetype, "video/x-av1") == 0) {
+    gint presentation_delay;
+    guint8 presentation_delay_byte = 0;
+    GstBuffer *av1_codec_data;
+
+    if (gst_structure_get_int (structure, "presentation-delay",
+            &presentation_delay)) {
+      presentation_delay_byte = 1 << 5;
+      presentation_delay_byte |= MAX (0xF, presentation_delay & 0xF);
+    }
+
+
+    av1_codec_data = gst_buffer_new_allocate (NULL, 5, NULL);
+    /* Fill version and 3 bytes of flags to 0 */
+    gst_buffer_memset (av1_codec_data, 0, 0, 4);
+    gst_buffer_fill (av1_codec_data, 4, &presentation_delay_byte, 1);
+    if (codec_data)
+      av1_codec_data = gst_buffer_append (av1_codec_data,
+          gst_buffer_ref ((GstBuffer *) codec_data));
+
+    entry.fourcc = FOURCC_av01;
+
+    ext_atom = build_btrt_extension (0, qtpad->avg_bitrate, qtpad->max_bitrate);
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+    ext_atom = build_codec_data_extension (FOURCC_av1C, av1_codec_data);
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+    gst_buffer_unref (av1_codec_data);
   }
 
   if (!entry.fourcc)

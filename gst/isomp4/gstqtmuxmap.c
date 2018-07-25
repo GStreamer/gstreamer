@@ -204,7 +204,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "video/x-vp9, "
             COMMON_VIDEO_CAPS "; "
             "video/x-dirac, "
-            COMMON_VIDEO_CAPS "; " "video/x-qt-part, " COMMON_VIDEO_CAPS),
+            COMMON_VIDEO_CAPS "; " "video/x-qt-part, " COMMON_VIDEO_CAPS "; "
+            "video/x-av1, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (PCM_CAPS_FULL "; "
             PCM_CAPS_UNPOSITIONED " ; "
             MP123_CAPS " ; "
@@ -227,7 +228,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "GstMP4Mux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";" H265_CAPS ";"
-            "video/x-mp4-part," COMMON_VIDEO_CAPS),
+            "video/x-mp4-part," COMMON_VIDEO_CAPS "; "
+            "video/x-av1, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP123_CAPS "; "
             AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
         GST_STATIC_CAPS (TEXT_UTF8),
