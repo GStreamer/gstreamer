@@ -1,6 +1,6 @@
 types = configure_file(input : 'gstreamer-libs.types',
   output : 'gstreamer-libs.types',
-  configuration : configuration_data())
+  copy: true)
 
 gnome.gtkdoc('gstreamer-libs',
   main_sgml : 'gstreamer-libs-docs.sgml',
