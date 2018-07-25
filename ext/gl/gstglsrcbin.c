@@ -165,7 +165,7 @@ _connect_src_element (GstGLSrcBin * self)
 }
 
 /*
- * @src: (transfer full):
+ * @src: (transfer floating):
  */
 static gboolean
 gst_gl_src_bin_set_src (GstGLSrcBin * self, GstElement * src)
@@ -181,10 +181,10 @@ gst_gl_src_bin_set_src (GstGLSrcBin * self, GstElement * src)
   }
   self->src = src;
 
-  if (src && g_object_is_floating (src))
-    gst_object_ref_sink (src);
+  gst_object_ref_sink (src);
 
   if (src && !_connect_src_element (self)) {
+    gst_object_unref (self->src);
     self->src = NULL;
     return FALSE;
   }
@@ -196,8 +196,7 @@ void
 gst_gl_src_bin_finish_init_with_element (GstGLSrcBin * self,
     GstElement * element)
 {
-  if (!gst_gl_src_bin_set_src (self, element))
-    gst_object_unref (self->src);
+  gst_gl_src_bin_set_src (self, element);
 }
 
 void
@@ -221,7 +220,7 @@ gst_gl_src_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SRC:
-      gst_gl_src_bin_set_src (self, g_value_dup_object (value));
+      gst_gl_src_bin_set_src (self, g_value_get_object (value));
       break;
     default:
       if (self->src)

@@ -399,7 +399,7 @@ _connect_mixer_element (GstGLMixerBin * self)
 }
 
 /*
- * @mixer: (transfer full):
+ * @mixer: (transfer floating):
  */
 static gboolean
 gst_gl_mixer_bin_set_mixer (GstGLMixerBin * self, GstElement * mixer)
@@ -415,10 +415,10 @@ gst_gl_mixer_bin_set_mixer (GstGLMixerBin * self, GstElement * mixer)
   }
   self->mixer = mixer;
 
-  if (mixer && g_object_is_floating (mixer))
-    gst_object_ref_sink (mixer);
+  gst_object_ref_sink (mixer);
 
   if (mixer && !_connect_mixer_element (self)) {
+    gst_object_unref (self->mixer);
     self->mixer = NULL;
     return FALSE;
   }
@@ -430,8 +430,7 @@ void
 gst_gl_mixer_bin_finish_init_with_element (GstGLMixerBin * self,
     GstElement * element)
 {
-  if (!gst_gl_mixer_bin_set_mixer (self, element))
-    gst_object_unref (element);
+  gst_gl_mixer_bin_set_mixer (self, element);
 }
 
 void
@@ -473,7 +472,7 @@ gst_gl_mixer_bin_set_property (GObject * object,
   switch (prop_id) {
     case PROP_MIXER:
     {
-      GstElement *mixer = g_value_dup_object (value);
+      GstElement *mixer = g_value_get_object (value);
       /* FIXME: deal with replacing a mixer */
       g_return_if_fail (!self->mixer || (self->mixer == mixer));
       gst_gl_mixer_bin_set_mixer (self, mixer);

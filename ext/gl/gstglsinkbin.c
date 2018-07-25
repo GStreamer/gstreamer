@@ -307,10 +307,10 @@ gst_gl_sink_bin_set_sink (GstGLSinkBin * self, GstElement * sink)
   }
   self->sink = sink;
 
-  if (sink && g_object_is_floating (sink))
-    gst_object_ref_sink (sink);
+  gst_object_ref_sink (sink);
 
   if (sink && !_connect_sink_element (self)) {
+    gst_object_unref (self->sink);
     self->sink = NULL;
     return FALSE;
   }
@@ -322,8 +322,7 @@ void
 gst_gl_sink_bin_finish_init_with_element (GstGLSinkBin * self,
     GstElement * element)
 {
-  if (!gst_gl_sink_bin_set_sink (self, element))
-    gst_object_unref (element);
+  gst_gl_sink_bin_set_sink (self, element);
 }
 
 void
@@ -347,7 +346,7 @@ gst_gl_sink_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SINK:
-      gst_gl_sink_bin_set_sink (self, g_value_dup_object (value));
+      gst_gl_sink_bin_set_sink (self, g_value_get_object (value));
       break;
     case PROP_CONTRAST:
     case PROP_BRIGHTNESS:
