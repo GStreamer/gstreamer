@@ -2,4 +2,4 @@
 directory=gst-omx
 url=https://anongit.freedesktop.org/git/gstreamer/gst-omx.git
 push-url=ssh://git.freedesktop.org/git/gstreamer/gst-omx
-revision=1.14.1
+revision=1.14.2

@@ -2,4 +2,4 @@
 directory=gst-plugins-ugly
 url=https://anongit.freedesktop.org/git/gstreamer/gst-plugins-ugly.git
 push-url=ssh://git.freedesktop.org/git/gstreamer/gst-plugins-ugly
-revision=1.14.1
+revision=1.14.2
