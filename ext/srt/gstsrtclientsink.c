@@ -151,6 +151,17 @@ gst_srt_client_sink_set_property (GObject * object,
   }
 }
 
+static void
+gst_srt_client_sink_finalize (GObject * object)
+{
+  GstSRTClientSink *self = GST_SRT_CLIENT_SINK (object);
+  GstSRTClientSinkPrivate *priv = GST_SRT_CLIENT_SINK_GET_PRIVATE (self);
+
+  g_free (priv->bind_address);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static gboolean
 gst_srt_client_sink_start (GstBaseSink * sink)
 {
@@ -239,6 +250,7 @@ gst_srt_client_sink_class_init (GstSRTClientSinkClass * klass)
 
   gobject_class->set_property = gst_srt_client_sink_set_property;
   gobject_class->get_property = gst_srt_client_sink_get_property;
+  gobject_class->finalize = gst_srt_client_sink_finalize;
 
   properties[PROP_POLL_TIMEOUT] =
       g_param_spec_int ("poll-timeout", "Poll Timeout",
