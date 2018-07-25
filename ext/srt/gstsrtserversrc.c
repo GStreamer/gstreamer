@@ -380,7 +380,7 @@ gst_srt_server_src_stop (GstBaseSrc * src)
   GstSRTServerSrcPrivate *priv = GST_SRT_SERVER_SRC_GET_PRIVATE (self);
 
   if (priv->client_sock != SRT_INVALID_SOCK) {
-    g_signal_emit (self, signals[SIG_CLIENT_ADDED], 0,
+    g_signal_emit (self, signals[SIG_CLIENT_CLOSED], 0,
         priv->client_sock, priv->client_sockaddr);
     srt_close (priv->client_sock);
     g_clear_object (&priv->client_sockaddr);
