@@ -36,6 +36,7 @@
 #include "gstvaapiobject_priv.h"
 #include "gstvaapiutils_h264_priv.h"
 
+#define DEBUG 1
 #include "gstvaapidebug.h"
 
 /* Defined to 1 if strict ordering of DPB is needed. Only useful for debug */
