@@ -156,7 +156,7 @@ check_headers = [
   'sys/resource.h',
 ]
 
-if host_machine.system() == 'windows'
+if host_system == 'windows'
   check_headers += ['winsock2.h']
 endif
 
@@ -269,7 +269,7 @@ if cc.has_function('strdup')
 elif host_system == 'windows' and cc.has_function('_strdup')
   cdata.set('HAVE__STRDUP', 1) # Windows (MSVC)
 endif
-if host_machine.system() != 'windows'
+if host_system != 'windows'
   cdata.set('HAVE_FORK', 1)
 else
   # libcheck requires HAVE_FORK to be 0 when fork() is not available
@@ -296,7 +296,7 @@ endif
 
 # Platform deps; only ws2_32 and execinfo for now
 platform_deps = []
-if host_machine.system() == 'windows'
+if host_system == 'windows'
   platform_deps = [cc.find_library('ws2_32')]
 endif
 
@@ -389,7 +389,7 @@ gobject_dep = dependency('gobject-2.0',
   fallback: ['glib', 'libgobject_dep'])
 gmodule_dep = dependency('gmodule-2.0',
   fallback: ['glib', 'libgmodule_dep'])
-if host_machine.system() == 'windows'
+if host_system == 'windows'
     gio_dep = dependency('gio-2.0',
         fallback: ['glib', 'libgio_dep'])
 else
