@@ -24,7 +24,6 @@ soversion = 0
 libversion = '@0@.@1@.0'.format(soversion, gst_version_minor * 100 + gst_version_micro)
 
 prefix = get_option('prefix')
-libtype = get_option('default_library')
 
 libexecdir = get_option('libexecdir')
 helpers_install_dir = join_paths(libexecdir, 'gstreamer-1.0')
@@ -421,9 +420,9 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
 gst_c_args = ['-DHAVE_CONFIG_H']
 
 # FIXME: This is only needed on windows and probably breaks when
-# libtype=='both'. We should add this flag to static_c_args instead when Meson
-# supports it: https://github.com/mesonbuild/meson/issues/3304
-if libtype == 'static'
+# default_library = 'both'. We should add this flag to static_c_args instead
+# when Meson supports it: https://github.com/mesonbuild/meson/issues/3304
+if get_option('default_library') == 'static'
   gst_c_args += ['-DGST_STATIC_COMPILATION']
 endif
 
