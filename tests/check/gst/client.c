@@ -542,6 +542,35 @@ test_setup_response_200_multicast (GstRTSPClient * client,
 }
 
 static gboolean
+test_setup_response_461 (GstRTSPClient * client,
+    GstRTSPMessage * response, gboolean close, gpointer user_data)
+{
+  GstRTSPStatusCode code;
+  const gchar *reason;
+  GstRTSPVersion version;
+  gchar *str;
+
+  fail_unless (expected_transport == NULL);
+
+  fail_unless (gst_rtsp_message_get_type (response) ==
+      GST_RTSP_MESSAGE_RESPONSE);
+
+  fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
+          &version)
+      == GST_RTSP_OK);
+  fail_unless (code == GST_RTSP_STS_UNSUPPORTED_TRANSPORT);
+  fail_unless (g_str_equal (reason, "Unsupported transport"));
+  fail_unless (version == GST_RTSP_VERSION_1_0);
+
+  fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_CSEQ, &str,
+          0) == GST_RTSP_OK);
+  fail_unless (atoi (str) == cseq++);
+
+
+  return TRUE;
+}
+
+static gboolean
 test_teardown_response_200 (GstRTSPClient * client,
     GstRTSPMessage * response, gboolean close, gpointer user_data)
 {
@@ -584,7 +613,7 @@ send_teardown (GstRTSPClient * client)
 }
 
 static GstRTSPClient *
-setup_multicast_client (void)
+setup_multicast_client (guint max_ttl)
 {
   GstRTSPClient *client;
   GstRTSPSessionPool *session_pool;
@@ -611,6 +640,7 @@ setup_multicast_client (void)
       "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
   gst_rtsp_client_set_mount_points (client, mount_points);
+  gst_rtsp_media_factory_set_max_mcast_ttl (factory, max_ttl);
 
   thread_pool = gst_rtsp_thread_pool_new ();
   gst_rtsp_client_set_thread_pool (client, thread_pool);
@@ -629,7 +659,7 @@ GST_START_TEST (test_client_multicast_transport_404)
   GstRTSPMessage request = { 0, };
   gchar *str;
 
-  client = setup_multicast_client ();
+  client = setup_multicast_client (1);
 
   /* simple SETUP for non-existing url */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
@@ -662,7 +692,7 @@ GST_START_TEST (test_client_multicast_transport)
   GstRTSPMessage request = { 0, };
   gchar *str;
 
-  client = setup_multicast_client ();
+  client = setup_multicast_client (1);
 
   expected_session_timeout = 20;
   g_signal_connect (G_OBJECT (client), "new-session",
@@ -699,7 +729,7 @@ GST_START_TEST (test_client_multicast_ignore_transport_specific)
   GstRTSPMessage request = { 0, };
   gchar *str;
 
-  client = setup_multicast_client ();
+  client = setup_multicast_client (1);
 
   /* simple SETUP with a valid URI and multicast and a specific dest,
    * but ignore it  */
@@ -735,7 +765,7 @@ multicast_transport_specific (void)
   GstRTSPSessionPool *session_pool;
   GstRTSPContext ctx = { NULL };
 
-  client = setup_multicast_client ();
+  client = setup_multicast_client (1);
 
   ctx.client = client;
   ctx.auth = gst_rtsp_auth_new ();
@@ -950,9 +980,12 @@ GST_START_TEST (test_client_sdp_with_no_bitrate_tags)
 GST_END_TEST;
 
 static void
-mcast_transport_specific_two_clients (gboolean shared)
+mcast_transport_two_clients (gboolean shared, const gchar * transport1,
+    const gchar * expected_transport1, const gchar * addr1,
+    const gchar * transport2, const gchar * expected_transport2,
+    const gchar * addr2)
 {
-  GstRTSPClient *client, *client2;
+  GstRTSPClient *client1, *client2;
   GstRTSPMessage request = { 0, };
   gchar *str;
   GstRTSPSessionPool *session_pool;
@@ -963,6 +996,7 @@ mcast_transport_specific_two_clients (gboolean shared)
   GstRTSPAddressPool *address_pool;
   GstRTSPThreadPool *thread_pool;
   gchar *session_id1;
+  gchar *client_addr = NULL;
 
   mount_points = gst_rtsp_mount_points_new ();
   factory = gst_rtsp_media_factory_new ();
@@ -983,12 +1017,12 @@ mcast_transport_specific_two_clients (gboolean shared)
   thread_pool = gst_rtsp_thread_pool_new ();
 
   /* first multicast client with transport specific request */
-  client = gst_rtsp_client_new ();
-  gst_rtsp_client_set_session_pool (client, session_pool);
-  gst_rtsp_client_set_mount_points (client, mount_points);
-  gst_rtsp_client_set_thread_pool (client, thread_pool);
+  client1 = gst_rtsp_client_new ();
+  gst_rtsp_client_set_session_pool (client1, session_pool);
+  gst_rtsp_client_set_mount_points (client1, mount_points);
+  gst_rtsp_client_set_thread_pool (client1, thread_pool);
 
-  ctx.client = client;
+  ctx.client = client1;
   ctx.auth = gst_rtsp_auth_new ();
   ctx.token =
       gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
@@ -996,20 +1030,18 @@ mcast_transport_specific_two_clients (gboolean shared)
       "user", NULL);
   gst_rtsp_context_push_current (&ctx);
 
-  expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
-      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  expected_transport = expected_transport1;
 
   /* send SETUP request */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
           "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
   gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
-  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
-      expected_transport);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transport1);
 
-  gst_rtsp_client_set_send_func (client, test_setup_response_200_multicast,
+  gst_rtsp_client_set_send_func (client1, test_setup_response_200_multicast,
       NULL, NULL);
-  fail_unless (gst_rtsp_client_handle_message (client,
+  fail_unless (gst_rtsp_client_handle_message (client1,
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
   expected_transport = NULL;
@@ -1020,10 +1052,17 @@ mcast_transport_specific_two_clients (gboolean shared)
   str = g_strdup_printf ("%d", cseq);
   gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
   gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
-  gst_rtsp_client_set_send_func (client, test_response_200, NULL, NULL);
-  fail_unless (gst_rtsp_client_handle_message (client,
+  gst_rtsp_client_set_send_func (client1, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client1,
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
+
+  /* check address */
+  client_addr = gst_rtsp_stream_get_multicast_client_addresses (ctx.stream);
+  fail_if (client_addr == NULL);
+  fail_unless (g_str_equal (client_addr, addr1));
+  g_free (client_addr);
+
   gst_rtsp_context_pop_current (&ctx);
   session_id1 = session_id;
 
@@ -1042,16 +1081,14 @@ mcast_transport_specific_two_clients (gboolean shared)
       "user", NULL);
   gst_rtsp_context_push_current (&ctx2);
 
-  expected_transport = "RTP/AVP;multicast;destination=233.252.0.2;"
-      "ttl=1;port=5002-5003;mode=\"PLAY\"";
+  expected_transport = expected_transport2;
 
   /* send SETUP request */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
           "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
   gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
-  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
-      expected_transport);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transport2);
 
   gst_rtsp_client_set_send_func (client2, test_setup_response_200_multicast,
       NULL, NULL);
@@ -1071,15 +1108,31 @@ mcast_transport_specific_two_clients (gboolean shared)
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
+  /* check addresses */
+  client_addr = gst_rtsp_stream_get_multicast_client_addresses (ctx2.stream);
+  fail_if (client_addr == NULL);
+  if (shared) {
+    if (g_str_equal (addr1, addr2)) {
+      fail_unless (g_str_equal (client_addr, addr1));
+    } else {
+      gchar *addr_str = g_strdup_printf ("%s,%s", addr2, addr1);
+      fail_unless (g_str_equal (client_addr, addr_str));
+      g_free (addr_str);
+    }
+  } else {
+    fail_unless (g_str_equal (client_addr, addr2));
+  }
+  g_free (client_addr);
+
   send_teardown (client2);
   gst_rtsp_context_pop_current (&ctx2);
 
   gst_rtsp_context_push_current (&ctx);
   session_id = session_id1;
-  send_teardown (client);
+  send_teardown (client1);
   gst_rtsp_context_pop_current (&ctx);
 
-  teardown_client (client);
+  teardown_client (client1);
   teardown_client (client2);
   g_object_unref (ctx.auth);
   g_object_unref (ctx2.auth);
@@ -1095,7 +1148,19 @@ mcast_transport_specific_two_clients (gboolean shared)
  * CASE: media is shared */
 GST_START_TEST
     (test_client_multicast_transport_specific_two_clients_shared_media) {
-  mcast_transport_specific_two_clients (TRUE);
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=1;port=5002-5003;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = transport_client_2;
+  const gchar *addr_client_2 = "233.252.0.2:5002";
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
 }
 
 GST_END_TEST;
@@ -1104,7 +1169,195 @@ GST_END_TEST;
  * CASE: media is not shared */
 GST_START_TEST (test_client_multicast_transport_specific_two_clients)
 {
-  mcast_transport_specific_two_clients (FALSE);
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=1;port=5002-5003;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = transport_client_2;
+  const gchar *addr_client_2 = "233.252.0.2:5002";
+
+  mcast_transport_two_clients (FALSE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+
+/* test if two multicast clients can choose the same transport settings.
+ * CASE: media is shared */
+GST_START_TEST
+    (test_client_multicast_transport_specific_two_clients_shared_media_same_transport)
+{
+
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = transport_client_1;
+  const gchar *expected_transport_2 = expected_transport_1;
+  const gchar *addr_client_2 = addr_client_1;
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+
+/* test if two multicast clients get the same transport settings without
+ * requesting specific transport.
+ * CASE: media is shared */
+GST_START_TEST (test_client_multicast_two_clients_shared_media)
+{
+  const gchar *transport_client_1 = "RTP/AVP;multicast;mode=\"PLAY\"";
+  const gchar *expected_transport_1 =
+      "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = transport_client_1;
+  const gchar *expected_transport_2 = expected_transport_1;
+  const gchar *addr_client_2 = addr_client_1;
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+
+/* test if two multicast clients get the different transport settings: the first client 
+ * requests the specific transport configuration while the second client lets
+ * the server select the multicast address and the ports.
+ * CASE: media is shared */
+GST_START_TEST
+    (test_client_multicast_two_clients_first_specific_transport_shared_media) {
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = expected_transport_1;
+  const gchar *addr_client_2 = addr_client_1;
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+/* test if two multicast clients get the different transport settings: the first client lets
+ * the server select the multicast address and the ports while the second client requests 
+ * the specific transport configuration.
+ * CASE: media is shared */
+GST_START_TEST
+    (test_client_multicast_two_clients_second_specific_transport_shared_media) {
+  const gchar *transport_client_1 = "RTP/AVP;multicast;mode=\"PLAY\"";
+  const gchar *expected_transport_1 =
+      "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=2;port=5004-5005;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = transport_client_2;
+  const gchar *addr_client_2 = "233.252.0.2:5004";
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+
+/* test if the maximum ttl multicast value is chosen by the server
+ * CASE: the first client provides the highest ttl value */
+GST_START_TEST (test_client_multicast_max_ttl_first_client)
+{
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=3;port=5000-5001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=1;port=5002-5003;mode=\"PLAY\"";
+  const gchar *expected_transport_2 =
+      "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=3;port=5002-5003;mode=\"PLAY\"";
+  const gchar *addr_client_2 = "233.252.0.2:5002";
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+
+/* test if the maximum ttl multicast value is chosen by the server
+ * CASE: the second client provides the highest ttl value */
+GST_START_TEST (test_client_multicast_max_ttl_second_client)
+{
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=2;port=5000-5001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:5000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=4;port=5002-5003;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = transport_client_2;
+  const gchar *addr_client_2 = "233.252.0.2:5002";
+
+  mcast_transport_two_clients (TRUE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2);
+}
+
+GST_END_TEST;
+GST_START_TEST (test_client_multicast_invalid_ttl)
+{
+  GstRTSPClient *client;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+  GstRTSPSessionPool *session_pool;
+  GstRTSPContext ctx = { NULL };
+
+  client = setup_multicast_client (3);
+
+  ctx.client = client;
+  ctx.auth = gst_rtsp_auth_new ();
+  ctx.token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
+  gst_rtsp_context_push_current (&ctx);
+
+  /* simple SETUP with an invalid ttl=0 */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP;multicast;destination=233.252.0.1;ttl=0;port=5000-5001;");
+
+  gst_rtsp_client_set_send_func (client, test_setup_response_461, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  session_pool = gst_rtsp_client_get_session_pool (client);
+  fail_unless (session_pool != NULL);
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 0);
+  g_object_unref (session_pool);
+
+  teardown_client (client);
+  g_object_unref (ctx.auth);
+  gst_rtsp_token_unref (ctx.token);
+  gst_rtsp_context_pop_current (&ctx);
 }
 
 GST_END_TEST;
@@ -1133,7 +1386,17 @@ rtspclient_suite (void)
       test_client_multicast_transport_specific_two_clients_shared_media);
   tcase_add_test (tc, test_client_multicast_transport_specific_two_clients);
   tcase_add_test (tc,
+      test_client_multicast_transport_specific_two_clients_shared_media_same_transport);
+  tcase_add_test (tc, test_client_multicast_two_clients_shared_media);
+  tcase_add_test (tc,
+      test_client_multicast_two_clients_first_specific_transport_shared_media);
+  tcase_add_test (tc,
+      test_client_multicast_two_clients_second_specific_transport_shared_media);
+  tcase_add_test (tc,
       test_client_multicast_transport_specific_no_address_in_pool);
+  tcase_add_test (tc, test_client_multicast_max_ttl_first_client);
+  tcase_add_test (tc, test_client_multicast_max_ttl_second_client);
+  tcase_add_test (tc, test_client_multicast_invalid_ttl);
 
   return s;
 }

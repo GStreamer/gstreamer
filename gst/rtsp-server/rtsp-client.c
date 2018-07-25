@@ -1972,8 +1972,13 @@ default_configure_client_transport (GstRTSPClient * client,
 
     if ((ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) &&
         gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS) &&
-        (ct->destination != NULL))
+        (ct->destination != NULL)) {
+
+      if (!gst_rtsp_stream_verify_mcast_ttl (ctx->stream, ct->ttl))
+        goto error_ttl;
+
       use_client_settings = TRUE;
+    }
 
     /* We need to allocate the sockets for both families before starting
      * multiudpsink, otherwise multiudpsink won't accept new clients with
@@ -1992,14 +1997,29 @@ default_configure_client_transport (GstRTSPClient * client,
       goto error_allocating_ports;
 
     if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-      /* FIXME: the address has been successfully allocated, however, in
-       * the use_client_settings case we need to verify that the allocated
-       * address is the one requested by the client and if this address is
-       * an allowed destination. Verifying this via the address pool in not
-       * the proper way as the address pool should only be used for choosing
-       * the server-selected address/port pairs. */
+      if (use_client_settings) {
+        /* FIXME: the address has been successfully allocated, however, in
+         * the use_client_settings case we need to verify that the allocated
+         * address is the one requested by the client and if this address is
+         * an allowed destination. Verifying this via the address pool in not
+         * the proper way as the address pool should only be used for choosing
+         * the server-selected address/port pairs. */
+        GSocket *rtp_socket;
+        guint ttl;
 
-      if (!use_client_settings) {
+        rtp_socket =
+            gst_rtsp_stream_get_rtp_multicast_socket (ctx->stream, family);
+        if (rtp_socket == NULL)
+          goto no_socket;
+        ttl = g_socket_get_multicast_ttl (rtp_socket);
+        g_object_unref (rtp_socket);
+        if (ct->ttl < ttl) {
+          /* use the maximum ttl that is requested by multicast clients */
+          GST_DEBUG ("requested ttl %u, but keeping ttl %u", ct->ttl, ttl);
+          ct->ttl = ttl;
+        }
+
+      } else {
         GstRTSPAddress *addr = NULL;
 
         g_free (ct->destination);
@@ -2012,6 +2032,11 @@ default_configure_client_transport (GstRTSPClient * client,
         ct->ttl = addr->ttl;
         gst_rtsp_address_free (addr);
       }
+
+      if (!gst_rtsp_stream_add_multicast_client_address (ctx->stream,
+              ct->destination, ct->port.min, ct->port.max, family))
+        goto error_mcast_transport;
+
     } else {
       GstRTSPUrl *url;
 
@@ -2064,6 +2089,12 @@ default_configure_client_transport (GstRTSPClient * client,
   return TRUE;
 
   /* ERRORS */
+error_ttl:
+  {
+    GST_ERROR_OBJECT (client,
+        "Failed to allocate UDP ports: invalid ttl value");
+    return FALSE;
+  }
 error_allocating_ports:
   {
     GST_ERROR_OBJECT (client, "Failed to allocate UDP ports");
@@ -2072,6 +2103,16 @@ error_allocating_ports:
 no_address:
   {
     GST_ERROR_OBJECT (client, "Failed to acquire address for stream");
+    return FALSE;
+  }
+no_socket:
+  {
+    GST_ERROR_OBJECT (client, "Failed to get UDP socket");
+    return FALSE;
+  }
+error_mcast_transport:
+  {
+    GST_ERROR_OBJECT (client, "Failed to add multicast client transport");
     return FALSE;
   }
 }
