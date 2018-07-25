@@ -1005,8 +1005,13 @@ gst_compositor_fill_transparent (GstCompositor * self, GstVideoFrame * frame,
 
     if (!gst_video_frame_map (nframe, &frame->info, cbuffer, GST_MAP_WRITE)) {
       GST_WARNING_OBJECT (self, "Could not map output buffer");
+      gst_buffer_unref (cbuffer);
       return GST_FLOW_ERROR;
     }
+
+    /* the last reference is owned by the frame and released once the frame
+     * is unmapped. We leak it if we don't unref here */
+    gst_buffer_unref (cbuffer);
   } else {
     nframe = frame;
   }
