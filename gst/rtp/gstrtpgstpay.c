@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/video/video.h>
 
 #include "gstrtpgstpay.h"
 #include "gstrtputils.h"
@@ -96,6 +97,8 @@ static GstFlowReturn gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * payload,
     GstBuffer * buffer);
 static gboolean gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
+static gboolean gst_rtp_gst_pay_src_event (GstRTPBasePayload * payload,
+    GstEvent * event);
 
 #define gst_rtp_gst_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpGSTPay, gst_rtp_gst_pay, GST_TYPE_RTP_BASE_PAYLOAD);
@@ -139,6 +142,7 @@ gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
   gstrtpbasepayload_class->set_caps = gst_rtp_gst_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_gst_pay_handle_buffer;
   gstrtpbasepayload_class->sink_event = gst_rtp_gst_pay_sink_event;
+  gstrtpbasepayload_class->src_event = gst_rtp_gst_pay_src_event;
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_pay_debug, "rtpgstpay", 0,
       "rtpgstpay element");
@@ -504,6 +508,10 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 
   rtpgstpay = GST_RTP_GST_PAY (payload);
 
+  if (gst_video_event_is_force_key_unit (event)) {
+    g_atomic_int_set (&rtpgstpay->force_config, TRUE);
+  }
+
   ret =
       GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload,
       gst_event_ref (event));
@@ -572,6 +580,20 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_rtp_gst_pay_src_event (GstRTPBasePayload * payload, GstEvent * event)
+{
+  GstRtpGSTPay *rtpgstpay;
+
+  rtpgstpay = GST_RTP_GST_PAY (payload);
+
+  if (gst_video_event_is_force_key_unit (event)) {
+    g_atomic_int_set (&rtpgstpay->force_config, TRUE);
+  }
+
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->src_event (payload, event);
+}
+
 static void
 gst_rtp_gst_pay_send_config (GstRtpGSTPay * rtpgstpay,
     GstClockTime running_time)
@@ -621,7 +643,9 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
       timestamp);
 
   /* check if we need to send the caps and taglist now */
-  if (rtpgstpay->config_interval > 0) {
+  if (rtpgstpay->config_interval > 0
+      || g_atomic_int_compare_and_exchange (&rtpgstpay->force_config, TRUE,
+          FALSE)) {
     GST_DEBUG_OBJECT (rtpgstpay,
         "running time %" GST_TIME_FORMAT ", last config %" GST_TIME_FORMAT,
         GST_TIME_ARGS (running_time), GST_TIME_ARGS (rtpgstpay->last_config));

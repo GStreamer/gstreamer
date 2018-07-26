@@ -27,6 +27,8 @@
 #include "gstrtpgstdepay.h"
 #include "gstrtputils.h"
 
+#include <gst/video/video.h>
+
 GST_DEBUG_CATEGORY_STATIC (rtpgstdepay_debug);
 #define GST_CAT_DEFAULT (rtpgstdepay_debug)
 
@@ -558,6 +560,11 @@ missing_caps:
   {
     GST_INFO_OBJECT (rtpgstdepay, "No caps received yet %u", CV);
     gst_buffer_unref (outbuf);
+
+    gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (rtpgstdepay),
+        gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+            TRUE, 0));
+
     return NULL;
   }
 }
