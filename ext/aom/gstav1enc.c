@@ -185,12 +185,25 @@ gst_av1_enc_finalize (GObject * object)
 static void
 gst_av1_enc_set_latency (GstAV1Enc * av1enc)
 {
-  GstClockTime latency =
-      gst_util_uint64_scale (av1enc->aom_cfg.g_lag_in_frames, 1 * GST_SECOND,
-      30);
+  GstClockTime latency;
+  gint fps_n, fps_d;
+
+  if (av1enc->input_state->info.fps_n && av1enc->input_state->info.fps_d) {
+    fps_n = av1enc->input_state->info.fps_n;
+    fps_d = av1enc->input_state->info.fps_d;
+  } else {
+    fps_n = 25;
+    fps_d = 1;
+  }
+
+  latency =
+      gst_util_uint64_scale (av1enc->aom_cfg.g_lag_in_frames * GST_SECOND,
+      fps_d, fps_n);
   gst_video_encoder_set_latency (GST_VIDEO_ENCODER (av1enc), latency, latency);
 
-  GST_WARNING_OBJECT (av1enc, "Latency unimplemented");
+  GST_DEBUG_OBJECT (av1enc, "Latency set to %" GST_TIME_FORMAT
+      " = %d frames at %d/%d fps ", GST_TIME_ARGS (latency),
+      av1enc->aom_cfg.g_lag_in_frames, fps_n, fps_d);
 }
 
 static const gchar *
@@ -275,8 +288,6 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   }
   av1enc->input_state = gst_video_codec_state_ref (state);
 
-  gst_av1_enc_set_latency (av1enc);
-
   g_mutex_lock (&av1enc->encoder_lock);
   if (aom_codec_enc_config_default (av1enc_class->codec_algo, &av1enc->aom_cfg,
           0)) {
@@ -287,6 +298,7 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   GST_DEBUG_OBJECT (av1enc, "Got default encoder config");
   gst_av1_enc_debug_encoder_cfg (&av1enc->aom_cfg);
 
+  gst_av1_enc_set_latency (av1enc);
 
   av1enc->aom_cfg.g_w = av1enc->input_state->info.width;
   av1enc->aom_cfg.g_h = av1enc->input_state->info.height;
