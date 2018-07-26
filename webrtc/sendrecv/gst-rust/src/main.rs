@@ -21,7 +21,7 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use websocket::message::OwnedMessage;
 
-const STUN_SERVER: &str = "stun://stun.l.google.com:19302 ";
+const STUN_SERVER: &str = "stun://stun.l.google.com:19302";
 lazy_static! {
     static ref RTP_CAPS_OPUS: gst::Caps = {
         gst::Caps::new_simple(
