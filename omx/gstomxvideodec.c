@@ -721,7 +721,7 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       max = min;
     } else if (max < min) {
       /* Can't use pool because can't have enough buffers */
-      gst_caps_replace (&caps, NULL);
+      caps = NULL;
     } else {
       min = max;
     }
