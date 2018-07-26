@@ -948,6 +948,9 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       was_enabled = FALSE;
     }
 
+    if (!caps)
+      self->use_buffers = FALSE;
+
     if (self->use_buffers) {
       GList *images = NULL;
       GList *frames = NULL;
