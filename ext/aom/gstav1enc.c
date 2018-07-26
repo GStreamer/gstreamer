@@ -74,6 +74,7 @@ static gboolean gst_av1_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_av1_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
+static GstFlowReturn gst_av1_enc_finish (GstVideoEncoder * encoder);
 static gboolean gst_av1_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 
@@ -131,6 +132,7 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
   venc_class->stop = gst_av1_enc_stop;
   venc_class->set_format = gst_av1_enc_set_format;
   venc_class->handle_frame = gst_av1_enc_handle_frame;
+  venc_class->finish = gst_av1_enc_finish;
   venc_class->propose_allocation = gst_av1_enc_propose_allocation;
 
   klass->codec_algo = &aom_codec_av1_cx_algo;
@@ -317,7 +319,7 @@ gst_av1_enc_process (GstAV1Enc * encoder)
   const aom_codec_cx_pkt_t *pkt;
   GstVideoCodecFrame *frame;
   GstVideoEncoder *video_encoder;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_CUSTOM_SUCCESS;
 
   video_encoder = GST_VIDEO_ENCODER (encoder);
 
@@ -342,11 +344,11 @@ gst_av1_enc_process (GstAV1Enc * encoder)
               pkt->data.frame.sz), pkt->data.frame.sz);
       ret = gst_video_encoder_finish_frame (video_encoder, frame);
       if (ret != GST_FLOW_OK)
-        return ret;
+        break;
     }
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
@@ -399,10 +401,41 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   aom_img_free (&raw);
   gst_video_codec_frame_unref (frame);
 
-  if (ret == GST_FLOW_ERROR) {
+  if (ret == GST_FLOW_ERROR)
     return ret;
+
+  ret = gst_av1_enc_process (av1enc);
+
+  if (ret == GST_FLOW_CUSTOM_SUCCESS)
+    ret = GST_FLOW_OK;
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_av1_enc_finish (GstVideoEncoder * encoder)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
+
+  while (ret == GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (encoder, "Calling finish");
+    g_mutex_lock (&av1enc->encoder_lock);
+    if (aom_codec_encode (&av1enc->encoder, NULL, 0, 1, 0)
+        != AOM_CODEC_OK) {
+      gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
+      ret = GST_FLOW_ERROR;
+    }
+    g_mutex_unlock (&av1enc->encoder_lock);
+
+    ret = gst_av1_enc_process (av1enc);
   }
-  return gst_av1_enc_process (av1enc);
+
+
+  if (ret == GST_FLOW_CUSTOM_SUCCESS)
+    ret = GST_FLOW_OK;
+
+  return ret;
 }
 
 static void
