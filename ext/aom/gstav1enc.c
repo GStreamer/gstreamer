@@ -317,6 +317,7 @@ gst_av1_enc_process (GstAV1Enc * encoder)
   const aom_codec_cx_pkt_t *pkt;
   GstVideoCodecFrame *frame;
   GstVideoEncoder *video_encoder;
+  GstFlowReturn ret;
 
   video_encoder = GST_VIDEO_ENCODER (encoder);
 
@@ -339,7 +340,9 @@ gst_av1_enc_process (GstAV1Enc * encoder)
       frame->output_buffer =
           gst_buffer_new_wrapped (g_memdup (pkt->data.frame.buf,
               pkt->data.frame.sz), pkt->data.frame.sz);
-      gst_video_encoder_finish_frame (video_encoder, frame);
+      ret = gst_video_encoder_finish_frame (video_encoder, frame);
+      if (ret != GST_FLOW_OK)
+        return ret;
     }
   }
 
