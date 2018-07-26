@@ -8314,9 +8314,10 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       CUR_STREAM (stream)->caps =
           gst_caps_make_writable (CUR_STREAM (stream)->caps);
 
-      gst_caps_set_simple (CUR_STREAM (stream)->caps,
-          "width", G_TYPE_INT, CUR_STREAM (stream)->width,
-          "height", G_TYPE_INT, CUR_STREAM (stream)->height, NULL);
+      if (CUR_STREAM (stream)->width && CUR_STREAM (stream)->height)
+        gst_caps_set_simple (CUR_STREAM (stream)->caps,
+            "width", G_TYPE_INT, CUR_STREAM (stream)->width,
+            "height", G_TYPE_INT, CUR_STREAM (stream)->height, NULL);
 
       /* set framerate if calculated framerate is reliable */
       if (fps_available) {
