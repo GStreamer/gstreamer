@@ -903,7 +903,7 @@ start_failed:
   }
 other_pool_failed:
   {
-    GST_ERROR_OBJECT (pool, "failed to active the other pool %"
+    GST_ERROR_OBJECT (pool, "failed to activate the other pool %"
         GST_PTR_FORMAT, pool->other_pool);
     return FALSE;
   }
