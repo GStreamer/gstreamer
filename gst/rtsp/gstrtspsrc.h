@@ -200,6 +200,7 @@ struct _GstRTSPSrc {
   /* UDP mode loop */
   gint             pending_cmd;
   gint             busy_cmd;
+  GCond            cmd_cond;
   gboolean         ignore_timeout;
   gboolean         open_error;
 
@@ -256,6 +257,7 @@ struct _GstRTSPSrc {
   gint64            max_ts_offset;
   gboolean          max_ts_offset_is_set;
   gint              backchannel;
+  GstClockTime      teardown_timeout;
 
   /* state */
   GstRTSPState       state;

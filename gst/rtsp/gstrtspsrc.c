@@ -264,6 +264,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_MAX_TS_OFFSET   G_GINT64_CONSTANT(3000000000)
 #define DEFAULT_VERSION         GST_RTSP_VERSION_1_0
 #define DEFAULT_BACKCHANNEL  GST_RTSP_BACKCHANNEL_NONE
+#define DEFAULT_TEARDOWN_TIMEOUT  (100 * GST_MSECOND)
 
 enum
 {
@@ -308,6 +309,7 @@ enum
   PROP_MAX_TS_OFFSET,
   PROP_DEFAULT_VERSION,
   PROP_BACKCHANNEL,
+  PROP_TEARDOWN_TIMEOUT,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -876,6 +878,21 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtspSrc:teardown-timeout
+   *
+   * When transitioning PAUSED-READY, allow up to timeout (in nanoseconds)
+   * delay in order to send teardown (0 = disabled)
+   *
+   * Since: 1.14
+   */
+  g_object_class_install_property (gobject_class, PROP_TEARDOWN_TIMEOUT,
+      g_param_spec_uint64 ("teardown-timeout", "Teardown Timeout",
+          "When transitioning PAUSED-READY, allow up to timeout (in nanoseconds) "
+          "delay in order to send teardown (0 = disabled)",
+          0, G_MAXUINT64, DEFAULT_TEARDOWN_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -1087,6 +1104,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->max_ts_offset_is_set = FALSE;
   src->default_version = DEFAULT_VERSION;
   src->version = GST_RTSP_VERSION_INVALID;
+  src->teardown_timeout = DEFAULT_TEARDOWN_TIMEOUT;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1106,6 +1124,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
 
   g_mutex_init (&src->conninfo.send_lock);
   g_mutex_init (&src->conninfo.recv_lock);
+  g_cond_init (&src->cmd_cond);
 
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
   gst_bin_set_suppressed_flags (GST_BIN (src),
@@ -1150,6 +1169,7 @@ gst_rtspsrc_finalize (GObject * object)
 
   g_mutex_clear (&rtspsrc->conninfo.send_lock);
   g_mutex_clear (&rtspsrc->conninfo.recv_lock);
+  g_cond_clear (&rtspsrc->cmd_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1399,6 +1419,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_BACKCHANNEL:
       rtspsrc->backchannel = g_value_get_enum (value);
       break;
+    case PROP_TEARDOWN_TIMEOUT:
+      rtspsrc->teardown_timeout = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1559,6 +1582,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BACKCHANNEL:
       g_value_set_enum (value, rtspsrc->backchannel);
+      break;
+    case PROP_TEARDOWN_TIMEOUT:
+      g_value_set_uint64 (value, rtspsrc->teardown_timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5600,6 +5626,28 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
 }
 
 static gboolean
+gst_rtspsrc_loop_send_cmd_and_wait (GstRTSPSrc * src, gint cmd, gint mask,
+    GstClockTime timeout)
+{
+  gboolean flushed = gst_rtspsrc_loop_send_cmd (src, cmd, mask);
+
+  if (timeout > 0) {
+    gint64 end_time = g_get_monotonic_time () + (timeout / 1000);
+    GST_OBJECT_LOCK (src);
+    while (src->pending_cmd == cmd || src->busy_cmd == cmd) {
+      if (!g_cond_wait_until (&src->cmd_cond, GST_OBJECT_GET_LOCK (src),
+              end_time)) {
+        GST_WARNING_OBJECT (src,
+            "Timed out waiting for TEARDOWN to be processed.");
+        break;                  /* timeout passed */
+      }
+    }
+    GST_OBJECT_UNLOCK (src);
+  }
+  return flushed;
+}
+
+static gboolean
 gst_rtspsrc_loop (GstRTSPSrc * src)
 {
   GstFlowReturn ret;
@@ -7603,6 +7651,7 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
     /* do TEARDOWN */
     res =
         gst_rtspsrc_init_request (src, &request, GST_RTSP_TEARDOWN, setup_url);
+    GST_LOG_OBJECT (src, "Teardown on %s", setup_url);
     if (res < 0)
       goto create_request_failed;
 
@@ -8370,6 +8419,8 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
   }
 
   GST_OBJECT_LOCK (src);
+  /* No more cmds, wake any waiters */
+  g_cond_broadcast (&src->cmd_cond);
   /* and go back to sleep */
   if (src->pending_cmd == CMD_WAIT) {
     if (src->task)
@@ -8505,7 +8556,8 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_CLOSE, CMD_ALL);
+      gst_rtspsrc_loop_send_cmd_and_wait (rtspsrc, CMD_CLOSE, CMD_ALL,
+          rtspsrc->teardown_timeout);
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
