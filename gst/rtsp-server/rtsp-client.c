@@ -2030,6 +2030,11 @@ default_configure_client_transport (GstRTSPClient * client,
         ct->ttl = addr->ttl;
         gst_rtsp_address_free (addr);
       }
+
+      if (!gst_rtsp_stream_add_multicast_client_address (ctx->stream,
+              ct->destination, ct->port.min, ct->port.max, family))
+        goto error_mcast_transport;
+
     } else {
       GstRTSPUrl *url;
 
@@ -2101,6 +2106,11 @@ no_address:
 no_socket:
   {
     GST_ERROR_OBJECT (client, "Failed to get UDP socket");
+    return FALSE;
+  }
+error_mcast_transport:
+  {
+    GST_ERROR_OBJECT (client, "Failed to add multicast client transport");
     return FALSE;
   }
 }

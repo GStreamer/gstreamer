@@ -110,6 +110,7 @@ struct _GstRTSPStreamPrivate
   GstElement *mcast_udpsink[2];
   GSocket *mcast_socket_v4[2];
   GSocket *mcast_socket_v6[2];
+  GList *mcast_clients;
 
   /* for TCP transport */
   GstElement *appsrc[2];
@@ -292,6 +293,24 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
       (GDestroyNotify) gst_caps_unref);
 }
 
+typedef struct _UdpClientAddrInfo UdpClientAddrInfo;
+
+struct _UdpClientAddrInfo
+{
+  gchar *address;
+  guint rtp_port;
+  guint add_count;              /* how often this address has been added */
+};
+
+static void
+free_mcast_client (gpointer data)
+{
+  UdpClientAddrInfo *client = data;
+
+  g_free (client->address);
+  g_free (client);
+}
+
 static void
 gst_rtsp_stream_finalize (GObject * obj)
 {
@@ -338,6 +357,7 @@ gst_rtsp_stream_finalize (GObject * obj)
   }
 
   g_free (priv->multicast_iface);
+  g_list_free_full (priv->mcast_clients, (GDestroyNotify) free_mcast_client);
 
   gst_object_unref (priv->payloader);
   if (priv->srcpad)
@@ -1584,6 +1604,100 @@ cleanup:
     return FALSE;
   }
 }
+
+/* must be called with lock */
+static gboolean
+add_mcast_client_addr (GstRTSPStream * stream, const gchar * destination,
+    guint rtp_port, guint rtcp_port)
+{
+  GstRTSPStreamPrivate *priv;
+  GList *walk;
+  UdpClientAddrInfo *client;
+  GInetAddress *inet;
+
+  priv = stream->priv;
+
+  if (destination == NULL)
+    return FALSE;
+
+  inet = g_inet_address_new_from_string (destination);
+  if (inet == NULL)
+    goto invalid_address;
+
+  if (!g_inet_address_get_is_multicast (inet)) {
+    g_object_unref (inet);
+    goto invalid_address;
+  }
+  g_object_unref (inet);
+
+  for (walk = priv->mcast_clients; walk; walk = g_list_next (walk)) {
+    UdpClientAddrInfo *cli = walk->data;
+
+    if ((g_strcmp0 (cli->address, destination) == 0) &&
+        (cli->rtp_port == rtp_port)) {
+      GST_DEBUG ("requested destination already exists: %s:%u-%u",
+          destination, rtp_port, rtcp_port);
+      cli->add_count++;
+      return TRUE;
+    }
+  }
+
+  client = g_new0 (UdpClientAddrInfo, 1);
+  client->address = g_strdup (destination);
+  client->rtp_port = rtp_port;
+  client->add_count = 1;
+  priv->mcast_clients = g_list_prepend (priv->mcast_clients, client);
+
+  GST_DEBUG ("added mcast client %s:%u-%u", destination, rtp_port, rtcp_port);
+
+  return TRUE;
+
+invalid_address:
+  {
+    GST_WARNING_OBJECT (stream, "Multicast address is invalid: %s",
+        destination);
+    return FALSE;
+  }
+}
+
+/* must be called with lock */
+static gboolean
+remove_mcast_client_addr (GstRTSPStream * stream, const gchar * destination,
+    guint rtp_port, guint rtcp_port)
+{
+  GstRTSPStreamPrivate *priv;
+  GList *walk;
+
+  priv = stream->priv;
+
+  if (destination == NULL)
+    goto no_destination;
+
+  for (walk = priv->mcast_clients; walk; walk = g_list_next (walk)) {
+    UdpClientAddrInfo *cli = walk->data;
+
+    if ((g_strcmp0 (cli->address, destination) == 0) &&
+        (cli->rtp_port == rtp_port)) {
+      cli->add_count--;
+
+      if (!cli->add_count) {
+        priv->mcast_clients = g_list_remove (priv->mcast_clients, cli);
+        free_mcast_client (cli);
+      }
+      return TRUE;
+    }
+  }
+
+  GST_WARNING_OBJECT (stream, "Address not found");
+  return FALSE;
+
+no_destination:
+  {
+    GST_WARNING_OBJECT (stream, "No destination has been provided");
+    return FALSE;
+  }
+}
+
 
 /**
  * gst_rtsp_stream_allocate_udp_sockets:
@@ -3368,38 +3482,29 @@ udpsrc_error:
 }
 
 static gboolean
-check_mcast_part_for_transport (GstRTSPStream * stream,
-    const GstRTSPTransport * tr)
+check_mcast_client_addr (GstRTSPStream * stream, const GstRTSPTransport * tr)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
-  GInetAddress *inetaddr;
-  GSocketFamily family;
-  GstRTSPAddress *mcast_addr;
+  GList *walk;
 
-  /* Check if it's a ipv4 or ipv6 transport */
-  inetaddr = g_inet_address_new_from_string (tr->destination);
-  family = g_inet_address_get_family (inetaddr);
-  g_object_unref (inetaddr);
-
-  /* Select fields corresponding to the family */
-  if (family == G_SOCKET_FAMILY_IPV4) {
-    mcast_addr = priv->mcast_addr_v4;
-  } else {
-    mcast_addr = priv->mcast_addr_v6;
-  }
-
-  /* We support only one mcast group per family, make sure this transport
-   * matches it. */
-  if (!mcast_addr)
+  if (priv->mcast_clients == NULL)
     goto no_addr;
 
-  if (g_ascii_strcasecmp (tr->destination, mcast_addr->address) != 0 ||
-      tr->port.min != mcast_addr->port ||
-      tr->port.max != mcast_addr->port + mcast_addr->n_ports - 1 ||
-      tr->ttl != mcast_addr->ttl)
-    goto wrong_addr;
+  if (tr == NULL)
+    goto no_transport;
 
-  return TRUE;
+  if (tr->destination == NULL)
+    goto no_destination;
+
+  for (walk = priv->mcast_clients; walk; walk = g_list_next (walk)) {
+    UdpClientAddrInfo *cli = walk->data;
+
+    if ((g_strcmp0 (cli->address, tr->destination) == 0) &&
+        (cli->rtp_port == tr->port.min))
+      return TRUE;
+  }
+
+  return FALSE;
 
 no_addr:
   {
@@ -3407,7 +3512,13 @@ no_addr:
         "has been reserved");
     return FALSE;
   }
-wrong_addr:
+no_transport:
+  {
+    GST_WARNING_OBJECT (stream, "Adding mcast transport, but no transport "
+        "has been provided");
+    return FALSE;
+  }
+no_destination:
   {
     GST_WARNING_OBJECT (stream, "Adding mcast transport, but it doesn't match "
         "the reserved address");
@@ -4084,8 +4195,10 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
 
       if (add) {
         GST_INFO ("adding %s:%d-%d", dest, min, max);
-        if (!check_mcast_part_for_transport (stream, tr))
+        if (!check_mcast_client_addr (stream, tr))
           goto mcast_error;
+        add_client (priv->mcast_udpsink[0], priv->mcast_udpsink[1], dest, min,
+            max);
 
         if (tr->ttl > 0) {
           GST_INFO ("setting ttl-mc %d", tr->ttl);
@@ -4096,11 +4209,12 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
             g_object_set (G_OBJECT (priv->mcast_udpsink[1]), "ttl-mc", tr->ttl,
                 NULL);
         }
-        add_client (priv->mcast_udpsink[0], priv->mcast_udpsink[1], dest, min,
-            max);
         priv->transports = g_list_prepend (priv->transports, trans);
       } else {
         GST_INFO ("removing %s:%d-%d", dest, min, max);
+        if (!remove_mcast_client_addr (stream, dest, min, max))
+          GST_WARNING_OBJECT (stream,
+              "Failed to remove multicast address: %s:%d-%d", dest, min, max);
         remove_client (priv->mcast_udpsink[0], priv->mcast_udpsink[1], dest,
             min, max);
         priv->transports = g_list_remove (priv->transports, trans);
@@ -4448,6 +4562,95 @@ gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream,
   g_mutex_unlock (&priv->lock);
 
   return socket;
+}
+
+/**
+ * gst_rtsp_stream_add_multicast_client_address:
+ * @stream: a #GstRTSPStream
+ * @destination: (transfer none): a multicast address to add
+ * @rtp_port: RTP port
+ * @rtcp_port: RTCP port
+ * @family: socket family
+ *
+ * Add multicast client address to stream. At this point, the sockets that
+ * will stream RTP and RTCP data to @destination are supposed to be
+ * allocated.
+ *
+ * Returns: %TRUE if @destination can be addedd and handled by @stream.
+ */
+gboolean
+gst_rtsp_stream_add_multicast_client_address (GstRTSPStream * stream,
+    const gchar * destination, guint rtp_port, guint rtcp_port,
+    GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  g_return_val_if_fail (destination != NULL, FALSE);
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  if ((family == G_SOCKET_FAMILY_IPV4) && (priv->mcast_socket_v4[0] == NULL))
+    goto socket_error;
+  else if ((family == G_SOCKET_FAMILY_IPV6) &&
+      (priv->mcast_socket_v6[0] == NULL))
+    goto socket_error;
+
+  if (!add_mcast_client_addr (stream, destination, rtp_port, rtcp_port))
+    goto add_addr_error;
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
+
+socket_error:
+  {
+    GST_WARNING_OBJECT (stream,
+        "Failed to add multicast address: no udp socket");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+add_addr_error:
+  {
+    GST_WARNING_OBJECT (stream,
+        "Failed to add multicast address: invalid address");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_stream_get_multicast_client_addresses
+ * @stream: a #GstRTSPStream
+ *
+ * Get all multicast client addresses that RTP data will be sent to
+ *
+ * Returns: A comma separated list of host:port pairs with destinations
+ */
+gchar *
+gst_rtsp_stream_get_multicast_client_addresses (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GString *str;
+  GList *clients;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+  str = g_string_new ("");
+
+  g_mutex_lock (&priv->lock);
+  clients = priv->mcast_clients;
+  while (clients != NULL) {
+    UdpClientAddrInfo *client;
+
+    client = (UdpClientAddrInfo *) clients->data;
+    clients = g_list_next (clients);
+    g_string_append_printf (str, "%s:%d%s", client->address, client->rtp_port,
+        (clients != NULL ? "," : ""));
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return g_string_free (str, FALSE);
 }
 
 /**
