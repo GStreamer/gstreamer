@@ -43,6 +43,9 @@ gst_srt_client_connect (GstElement * elem, int sender,
   GError *error = NULL;
   gpointer sa;
   size_t sa_len;
+  int poll_event = SRT_EPOLL_ERR;
+
+  poll_event |= sender ? SRT_EPOLL_OUT : SRT_EPOLL_IN;
 
   if (host == NULL) {
     GST_ELEMENT_ERROR (elem, RESOURCE, OPEN_READ, ("Invalid host"),
@@ -137,8 +140,7 @@ gst_srt_client_connect (GstElement * elem, int sender,
     goto failed;
   }
 
-  srt_epoll_add_usock (*poll_id, sock, &(int) {
-      SRT_EPOLL_OUT});
+  srt_epoll_add_usock (*poll_id, sock, &poll_event);
 
   if (srt_connect (sock, sa, sa_len) == SRT_ERROR) {
     GST_ELEMENT_ERROR (elem, RESOURCE, OPEN_READ, ("Connection error"),
@@ -235,7 +237,7 @@ gst_srt_server_listen (GstElement * elem, int sender, const gchar * host,
   }
 
   srt_epoll_add_usock (*poll_id, sock, &(int) {
-      SRT_EPOLL_IN});
+      SRT_EPOLL_IN | SRT_EPOLL_ERR});
 
   if (srt_bind (sock, &sa, sa_len) == SRT_ERROR) {
     GST_WARNING_OBJECT (elem, "failed to bind SRT server socket (reason: %s)",

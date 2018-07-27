@@ -175,8 +175,8 @@ gst_srt_client_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   SRTSOCKET ready[2];
   gint recv_len;
 
-  if (srt_epoll_wait (priv->poll_id, 0, 0, ready, &(int) {
-          2}, priv->poll_timeout, 0, 0, 0, 0) == -1) {
+  if (srt_epoll_wait (priv->poll_id, ready, &(int) {
+          2}, 0, 0, priv->poll_timeout, 0, 0, 0, 0) == -1) {
 
     /* Assuming that timeout error is normal */
     if (srt_getlasterror (NULL) != SRT_ETIMEOUT) {
