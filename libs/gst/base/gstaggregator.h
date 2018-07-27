@@ -279,6 +279,11 @@ struct _GstAggregatorClass {
                                         GstPadTemplate * templ,
                                         const gchar    * req_name,
                                         const GstCaps  * caps);
+
+  /**
+   * GstAggregatorClass::update_src_caps:
+   * @ret: (out) (allow-none):
+   */
   GstFlowReturn     (*update_src_caps) (GstAggregator *  self,
                                         GstCaps       *  caps,
                                         GstCaps       ** ret);
