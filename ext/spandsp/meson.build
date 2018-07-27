@@ -8,7 +8,7 @@ spandsp_sources = [
   'gsttonegeneratesrc.h',
 ]
 
-spandsp_dep = dependency('spandsp', version : '>= 0.0.6', required : false)
+spandsp_dep = dependency('spandsp', version : '>= 0.0.6', required : get_option('spandsp'))
 
 if spandsp_dep.found()
   gstspandsp = library('gstspandsp',

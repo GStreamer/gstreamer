@@ -15,18 +15,22 @@ dvb_sources = [
   'parsechannels.c',
 ]
 
-dvb_check_code_lines = [
-  '#include <linux/dvb/version.h>\n\n',
-  '#if DVB_API_VERSION < 5 || (DVB_API_VERSION == 5 && DVB_API_VERSION_MINOR <= 4)\n\n',
-  '#error "Incompatible dvb API"\n\n',
-  '#endif',
-]
-dvb_check_code=''
-foreach l : dvb_check_code_lines
-  dvb_check_code = dvb_check_code + l
-endforeach
+if get_option('dvb').disabled()
+  subdir_done()
+endif
 
-if cc.compiles(dvb_check_code)
+dvb_check_code = '''
+#include <linux/dvb/version.h>
+#if DVB_API_VERSION < 5 || (DVB_API_VERSION == 5 && DVB_API_VERSION_MINOR <= 4)
+#error "Incompatible dvb API"
+#endif'
+'''
+have_dvb = cc.compiles(dvb_check_code)
+if not have_dvb and get_option('dvb').enabled()
+  error('DVB plugin enabled but dvb headers not found')
+endif
+
+if have_dvb
   gstdvb = library('gstdvb',
     dvb_sources,
     c_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],

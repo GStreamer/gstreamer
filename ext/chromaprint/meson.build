@@ -1,4 +1,4 @@
-chromaprint_dep = dependency('libchromaprint', required : false)
+chromaprint_dep = dependency('libchromaprint', required : get_option('chromaprint'))
 
 if chromaprint_dep.found()
   gstchromaprint = library('gstchromaprint',

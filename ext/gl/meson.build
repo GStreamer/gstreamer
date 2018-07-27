@@ -8,7 +8,7 @@ opengl_sources = [
   'gstglutils.c',
 ]
 
-if build_gstgl and gstgl_dep.found()
+if gstgl_dep.found()
   optional_deps = []
   opengl_defines = ['-DGST_USE_UNSTABLE_API'] # for videoaggregator
 

@@ -20,15 +20,22 @@ vulkan_sources = [
 
 vulkan_defines = []
 optional_deps = []
+if get_option('vulkan').disabled()
+  subdir_done()
+endif
 
-vulkan_dep = cc.find_library('vulkan', required : false)
+vulkan_dep = cc.find_library('vulkan', required : get_option('vulkan'))
 has_vulkan_header = cc.has_header('vulkan/vulkan.h')
+if not has_vulkan_header and get_option('vulkan').enabled()
+  error('vulkan plugin enabled, but vulkan.h not found')
+endif
+
 if vulkan_dep.found() and has_vulkan_header
   have_vulkan_windowing = false
 
   vkconf = configuration_data()
 
-  xcb_dep = dependency('xcb', version : '>=1.10', required : false)
+  xcb_dep = dependency('xcb', version : '>=1.10', required : get_option('x11'))
   if xcb_dep.found()
     vulkan_sources += [
       'xcb/vkdisplay_xcb.c',
@@ -41,7 +48,7 @@ if vulkan_dep.found() and has_vulkan_header
     vkconf.set10('GST_VULKAN_HAVE_WINDOW_XCB', 1)
   endif
 
-  wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : false)
+  wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : get_option('wayland'))
   if wayland_client_dep.found()
     vulkan_sources += [
       'wayland/vkdisplay_wayland.c',

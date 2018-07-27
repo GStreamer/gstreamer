@@ -13,7 +13,7 @@ webrtc_sources = [
   'webrtctransceiver.c',
 ]
 
-libnice_dep = dependency('nice', version : '>=0.1.14', required : false,
+libnice_dep = dependency('nice', version : '>=0.1.14', required : get_option('webrtc'),
                          fallback : ['libnice', 'libnice_dep'],
                          default_options: ['tests=false'])
 

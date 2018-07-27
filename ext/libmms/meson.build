@@ -1,4 +1,4 @@
-mms_dep = dependency('libmms', version : '>= 0.4', required : false)
+mms_dep = dependency('libmms', version : '>= 0.4', required : get_option('libmms'))
 
 if mms_dep.found()
   gstmms = library('gstmms',

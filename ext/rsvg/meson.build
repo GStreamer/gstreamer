@@ -4,7 +4,7 @@ rsvg_sources = [
   'gstrsvgoverlay.c',
 ]
 
-rsvg_dep = dependency('librsvg-2.0', version : '>= 2.36.2', required : false)
+rsvg_dep = dependency('librsvg-2.0', version : '>= 2.36.2', required : get_option('rsvg'))
 if rsvg_dep.found()
   gstrsvg = library('gstrsvg',
     rsvg_sources,

@@ -11,7 +11,8 @@ dtls_sources = [
   'plugin.c',
 ]
 
-libcrypto_dep = dependency('libcrypto', required : false)
+openssl_dep = dependency('openssl', version : '>= 1.0.1', required : get_option('dtls'))
+libcrypto_dep = dependency('libcrypto', required : get_option('dtls'))
 
 if openssl_dep.found() and libcrypto_dep.found()
   gstdtls = library('gstdtls',

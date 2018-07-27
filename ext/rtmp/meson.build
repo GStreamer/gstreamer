@@ -4,7 +4,7 @@ rtmp_sources = [
   'gstrtmpsrc.c',
 ]
 
-rtmp_dep = dependency('librtmp', required : false)
+rtmp_dep = dependency('librtmp', required : get_option('rtmp'))
 
 if rtmp_dep.found()
   gstrtmp = library('gstrtmp',

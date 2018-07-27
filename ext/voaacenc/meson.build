@@ -1,6 +1,6 @@
 voaac_sources = ['gstvoaac.c', 'gstvoaacenc.c']
 
-voaac_dep = dependency('vo-aacenc', required : false)
+voaac_dep = dependency('vo-aacenc', required : get_option('voaacenc'))
 
 if voaac_dep.found()
   gstbz2 = library('gstvoaacenc',

@@ -1,4 +1,4 @@
-zbar_dep = dependency('zbar', version : '>= 0.9', required : false)
+zbar_dep = dependency('zbar', version : '>= 0.9', required : get_option('zbar'))
 if zbar_dep.found()
   gstzbar = library('gstzbar',
     'gstzbar.c',

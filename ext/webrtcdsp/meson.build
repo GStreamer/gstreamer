@@ -3,7 +3,8 @@ webrtc_sources = [
   'gstwebrtcechoprobe.cpp'
 ]
 
-webrtc_dep = dependency('webrtc-audio-processing', version : ['>= 0.2', '< 0.4'], required : false)
+webrtc_dep = dependency('webrtc-audio-processing', version : ['>= 0.2', '< 0.4'],
+                        required : get_option('webrtcdsp'))
 
 if webrtc_dep.found()
   gstwebrtcdsp = library('gstwebrtcdsp',

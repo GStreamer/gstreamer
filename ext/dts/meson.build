@@ -1,7 +1,17 @@
-dca_dep = dependency('libdca', required : false)
+# Don't do any dependency checks if disabled
+if get_option('dts').disabled()
+  subdir_done()
+endif
 
-if not dca_dep.found() and cc.has_header_symbol('dca.h', 'dca_init')
-  dca_dep = cc.find_library('dca', required : false)
+# Detect libdca using a pkg-config file, or manually
+dca_dep = dependency('libdca', required : false)
+if not dca_dep.found()
+  if cc.has_header_symbol('dca.h', 'dca_init')
+    dca_dep = cc.find_library('dca', required : false)
+  endif
+  if not dca_dep.found() and get_option('dts').enabled()
+    error('DTS plugin enabled, but libdca not found')
+  endif
 endif
 
 # autotools didn't use the libdca pkg-config cflags, and they

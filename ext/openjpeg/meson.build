@@ -6,11 +6,18 @@ openjpeg_sources = [
 
 openjpeg_cargs = []
 
+if get_option('openjpeg').disabled()
+  subdir_done()
+endif
+
 openjpeg_dep = dependency('libopenjp2', version : '>=2.1', required : false)
 if not openjpeg_dep.found()
   # Fallback to v1.5
   openjpeg_dep = dependency('libopenjpeg1', required : false)
   openjpeg_cargs += ['-DHAVE_OPENJPEG_1']
+endif
+if not openjpeg_dep.found() and get_option('openjpeg').enabled()
+  error('openjpeg plugin enabled, but neither libopenjp2 nor libopenjpeg1 not found')
 endif
 
 if openjpeg_dep.found()

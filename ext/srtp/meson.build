@@ -5,6 +5,9 @@ srtp_sources = [
 ]
 
 srtp_cargs = []
+if get_option('srtp').disabled()
+  subdir_done()
+endif
 
 srtp_dep = dependency('libsrtp2', version : '>= 2.1.0', required : false)
 if srtp_dep.found()
@@ -14,6 +17,9 @@ else
   if not srtp_dep.found() and cc.has_header_symbol('srtp/srtp.h', 'srtp_init')
     srtp_dep = cc.find_library('srtp', required : false)
   endif
+endif
+if not srtp_dep.found() and get_option('srtp').enabled()
+  error('srtp plugin enabled but libsrtp not found')
 endif
 
 if srtp_dep.found()

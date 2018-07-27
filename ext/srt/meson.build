@@ -7,11 +7,17 @@ srt_sources = [
   'gstsrtclientsink.c',
   'gstsrtserversink.c',
 ]
+srt_option = get_option('srt')
+if srt_option.disabled()
+  subdir_done()
+endif
 
 srt_dep = dependency('srt', required : false)
-
 if not srt_dep.found() and cc.has_header_symbol('srt/srt.h', 'srt_startup')
   srt_dep = cc.find_library('srt', required : false)
+endif
+if not srt_dep.found() and srt_option.enabled()
+  error('srt plugin enabled, but srt library not found')
 endif
 
 if srt_dep.found()

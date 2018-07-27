@@ -1,4 +1,4 @@
-aom_dep = dependency('aom', required: false)
+aom_dep = dependency('aom', required: get_option('aom'))
 if aom_dep.found()
   gstaom = library('gstaom',
     ['gstaom.c', 'gstav1enc.c', 'gstav1dec.c'],

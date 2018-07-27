@@ -1,4 +1,4 @@
-x265_dep = dependency('x265', required: false)
+x265_dep = dependency('x265', required: get_option('x265'))
 if x265_dep.found()
   gstx265 = library('gstx265',
     'gstx265enc.c',

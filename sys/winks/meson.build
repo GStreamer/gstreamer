@@ -8,9 +8,12 @@ winks_sources = [
 ]
 
 if host_system == 'windows'
-  winks_dep = [cc.find_library('ksuser'), cc.find_library('uuid'),
-               cc.find_library('strmiids'), cc.find_library('dxguid'),
-               cc.find_library('setupapi'), cc.find_library('ole32')]
+  winks_dep = [cc.find_library('ksuser', required : get_option('winks')),
+               cc.find_library('uuid', required : get_option('winks')),
+               cc.find_library('strmiids', required : get_option('winks')),
+               cc.find_library('dxguid', required : get_option('winks')),
+               cc.find_library('setupapi', required : get_option('winks')),
+               cc.find_library('ole32', required : get_option('winks'))]
 
   gstwinks = library('gstwinks',
     winks_sources,

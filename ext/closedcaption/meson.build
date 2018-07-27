@@ -1,4 +1,5 @@
-pangocairo_dep = dependency('pangocairo', version : '>= 1.22.0', required : false)
+pangocairo_dep = dependency('pangocairo', version : '>= 1.22.0',
+                            required : get_option('closedcaption'))
 
 zvbi_sources = [
   'bit_slicer.c',

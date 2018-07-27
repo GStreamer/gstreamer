@@ -6,15 +6,19 @@ decklink_sources = [
   'gstdecklinkvideosrc.cpp',
 ]
 
+if get_option('decklink').disabled()
+  subdir_done()
+endif
+
 build_decklink = false
 decklink_ldflags = []
 decklink_libs = []
 
-if host_machine.system() == 'windows'
+if host_system == 'windows'
   decklink_sources += ['win/DeckLinkAPIDispatch.cpp', 'win/DeckLinkAPI_i.c']
   if cxx.get_id() == 'msvc'
     # FIXME: Use commsuppwd.lib for debug builds?
-    comutil_dep = cxx.find_library('comsuppw')
+    comutil_dep = cxx.find_library('comsuppw', required : get_option('decklink'))
     if comutil_dep.found()
       build_decklink = true
       decklink_libs = [comutil_dep]
@@ -23,7 +27,7 @@ if host_machine.system() == 'windows'
     build_decklink = true
   endif
 else
-  libdl = cc.find_library('dl', required: false)
+  libdl = cc.find_library('dl', required: get_option('decklink'))
   have_pthread_h = cdata.has('HAVE_PTHREAD_H')
   if libdl.found() and have_pthread_h
     decklink_libs = [libm, libdl, dependency('threads')]

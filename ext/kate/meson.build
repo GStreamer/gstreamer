@@ -8,9 +8,9 @@ kate_sources = [
   'gstkatespu.c',
 ]
 
-kate_dep = dependency('kate', version : '>=0.1.7', required : false)
+kate_dep = dependency('kate', version : '>=0.1.7', required : get_option('kate'))
 # Not used
-#tiger_dep = dependency('tiger', version : '>=0.3.2', required : false)
+#tiger_dep = dependency('tiger', version : '>=0.3.2', required : get_option('kate'))
 
 if kate_dep.found()
   gstkate = library('gstkate',

@@ -1,4 +1,4 @@
-dssim_dep = dependency('dssim', required : false,
+dssim_dep = dependency('dssim', required : get_option('iqa'),
     fallback: ['dssim', 'dssim_dep'])
 
 if dssim_dep.found()

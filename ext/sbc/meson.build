@@ -4,7 +4,7 @@ sbc_sources = [
   'gstsbcenc.c',
 ]
 
-sbc_dep = dependency('sbc', version : '>= 1.0', required : false)
+sbc_dep = dependency('sbc', version : '>= 1.0', required : get_option('sbc'))
 
 if sbc_dep.found()
   gstsbc = library('gstsbc',

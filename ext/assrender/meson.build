@@ -1,5 +1,4 @@
-ass_dep = dependency('libass', version : '>= 0.10.2', required : false)
-
+ass_dep = dependency('libass', version : '>= 0.10.2', required : get_option('assrender'))
 if ass_dep.found()
   gstassrender = library('gstassrender',
     'gstassrender.c',

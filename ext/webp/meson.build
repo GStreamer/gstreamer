@@ -4,7 +4,7 @@ webp_sources = [
   'gstwebpenc.c',
 ]
 
-webp_dep = dependency('libwebp', version : '>= 0.2.1', required : false)
+webp_dep = dependency('libwebp', version : '>= 0.2.1', required : get_option('webp'))
 
 if webp_dep.found()
   gstwebp = library('gstwebp',

@@ -1,4 +1,4 @@
-fdkaac_dep = dependency('fdk-aac', required : false)
+fdkaac_dep = dependency('fdk-aac', required : get_option('fdkaac'))
 
 if fdkaac_dep.found()
   fdkaac_defines = []

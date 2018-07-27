@@ -1,4 +1,4 @@
-fluidsynth_dep = dependency('fluidsynth', version : '>= 1.0', required : false)
+fluidsynth_dep = dependency('fluidsynth', version : '>= 1.0', required : get_option('fluidsynth'))
 
 if fluidsynth_dep.found()
   gstfluidsynth = library('gstfluidsynthmidi',

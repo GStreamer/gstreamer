@@ -9,6 +9,7 @@ libparser = static_library('parser',
 libparser_dep = declare_dependency(link_with: libparser,
   sources: ['elements/parser.h'])
 
+# FIXME: automagic
 exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
 
 enable_gst_player_tests = get_option('gst_player_tests')

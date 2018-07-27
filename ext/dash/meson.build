@@ -4,7 +4,7 @@ dash_sources = [
   'gstplugin.c',
 ]
 
-xml2_dep = dependency('libxml-2.0', version : '>= 2.8', required : false)
+xml2_dep = dependency('libxml-2.0', version : '>= 2.8', required : get_option('dash'))
 if xml2_dep.found()
   gstsouphttpsrc = library('gstdashdemux',
     dash_sources,

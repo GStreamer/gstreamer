@@ -6,25 +6,35 @@ shm_sources = [
   'gstshmsink.c',
 ]
 
-shm_enabled = false
+if get_option('shm').disabled()
+  subdir_done()
+endif
+
 shm_deps = []
-rt_dep = cc.find_library ('rt', required: false)
-
-if cc.has_header ('sys/socket.h') and (host_system == 'osx' or
-    host_system == 'bsd' or rt_dep.found())
-
+if ['osx', 'bsd'].contains(host_system)
+  rt_dep = []
   shm_enabled = true
-  shm_deps = [gstbase_dep]
+else
+  rt_dep = cc.find_library ('rt', required: false)
+  shm_enabled = rt_dep.found()
+endif
 
-  if rt_dep.found()
-    shm_deps += [rt_dep]
-  endif
-  
+if shm_enabled
+  shm_enabled = cc.has_header('sys/socket.h')
+elif get_option('shm').enabled()
+  error('shm plugin enabled but librt not found')
+endif
+
+if not shm_enabled and get_option('shm').enabled()
+  error('shm plugin enabled but socket.h not found')
+endif
+
+if shm_enabled
   gstshm = library('gstshm',
     shm_sources,
     c_args : gst_plugins_bad_args + ['-DSHM_PIPE_USE_GLIB'],
     include_directories : [configinc],
-    dependencies : shm_deps,
+    dependencies : [gstbase_dep, rt_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

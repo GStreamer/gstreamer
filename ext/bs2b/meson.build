@@ -1,6 +1,6 @@
 bs2b_sources = [ 'gstbs2b.c', ]
 
-bs2b_dep = dependency('libbs2b', version : '>=3.1.0', required : false)
+bs2b_dep = dependency('libbs2b', version : '>=3.1.0', required : get_option('bs2b'))
 
 if bs2b_dep.found()
   gstbs2b = library('gstbs2b',

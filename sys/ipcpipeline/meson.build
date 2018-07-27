@@ -6,8 +6,25 @@ ipcpipeline_sources = [
   'gstipcslavepipeline.c'
 ]
 
-if cc.has_header ('sys/socket.h') and cc.has_function ('pipe') and cc.has_function ('socketpair')
+if get_option('ipcpipeline').disabled()
+  subdir_done()
+endif
 
+have_socket_h = cc.has_header('sys/socket.h')
+if not have_socket_h and get_option('ipcpipeline').enabled()
+  error('ipcpipeline plugin enabled but socket.h not found')
+endif
+have_pipe = cc.has_function('pipe')
+if not have_pipe and get_option('ipcpipeline').enabled()
+  error('ipcpipeline plugin enabled but pipe() not found')
+endif
+have_socketpair = cc.has_function('socketpair')
+if not have_socketpair and get_option('ipcpipeline').enabled()
+  error('ipcpipeline plugin enabled but socketpair() not found')
+endif
+
+
+if have_socket_h and have_pipe and have_socketpair
   gstipcpipeline = library('gstipcpipeline',
     ipcpipeline_sources,
     c_args : gst_plugins_bad_args,
@@ -17,5 +34,4 @@ if cc.has_header ('sys/socket.h') and cc.has_function ('pipe') and cc.has_functi
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstipcpipeline, install_dir : plugins_pkgconfig_install_dir)
-
 endif

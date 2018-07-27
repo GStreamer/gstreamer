@@ -10,8 +10,8 @@ resindvd_sources = [
   'rsnparsetter.c',
 ]
 
-dvdnav_dep = dependency('dvdnav', version : '>= 4.1.2', required : false)
-dvdread_dep = dependency('dvdread', version : '>= 4.1.2', required : false)
+dvdnav_dep = dependency('dvdnav', version : '>= 4.1.2', required : get_option('resindvd'))
+dvdread_dep = dependency('dvdread', version : '>= 4.1.2', required : get_option('resindvd'))
 
 if dvdnav_dep.found() and dvdread_dep.found()
   gstresindvd = library('gstresindvd',

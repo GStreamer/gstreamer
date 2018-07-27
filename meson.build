@@ -387,11 +387,9 @@ endif
 
 # GStreamer OpenGL
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
-    fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
+    fallback : ['gst-plugins-base', 'gstgl_dep'], required: get_option('gl'))
 
-build_gstgl = gstgl_dep.found() # FIXME: add option?
-
-if build_gstgl
+if gstgl_dep.found()
   if gstgl_dep.type_name() == 'pkgconfig'
     gst_gl_apis = gstgl_dep.get_pkgconfig_variable('gl_apis').split()
     gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split()
@@ -421,33 +419,16 @@ if build_gstgl
 endif
 
 libm = cc.find_library('m', required : false)
-glib_dep = dependency('glib-2.0', version : glib_req,
-  fallback: ['glib', 'libglib_dep'])
-gmodule_dep = dependency('gmodule-2.0',
-  fallback: ['glib', 'libgmodule_dep'])
-gio_dep = dependency('gio-2.0',
-  fallback: ['glib', 'libgio_dep'])
-x11_dep = dependency('x11', required : false)
+glib_dep = dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep'])
+gmodule_dep = dependency('gmodule-2.0', fallback: ['glib', 'libgmodule_dep'])
+gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
+# gio-unix-2.0 is used by sys/bluez
 
-# Used by dtls and hls
-openssl_dep = dependency('openssl', version : '>= 1.0.1', required : false)
-
-# Used by mpeg2enc and mplex
-# mjpegtools upstream breaks API constantly and doesn't export the version in
-# a header anywhere. The configure file has a lot of logic to support old
-# versions, but it all seems untested and broken. Require 2.0.0. Can be changed
-# if someone complains.
-mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : false)
-mjpegtools_api = '0'
-if mjpegtools_dep.found()
-  mjpegtools_api = '20000'
-endif
-
+# Optional dep of ext/gl and gst/librfb
+x11_dep = dependency('x11', required : get_option('x11'))
 if x11_dep.found()
   cdata.set('HAVE_X11', 1)
 endif
-
-mathlib = cc.find_library('m', required : false)
 
 if host_machine.system() == 'windows'
   winsock2 = [cc.find_library('ws2_32')]
