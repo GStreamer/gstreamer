@@ -2,7 +2,7 @@ x264_sources = [
   'gstx264enc.c',
 ]
 
-x264_dep = dependency('x264', required : false)
+x264_dep = dependency('x264', required : get_option('x264'))
 
 if x264_dep.found()
   x264_libraries = get_option('x264_libraries')

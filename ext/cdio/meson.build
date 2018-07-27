@@ -1,4 +1,4 @@
-cdio_dep = dependency('libcdio', version : '>= 0.76', required : false)
+cdio_dep = dependency('libcdio', version : '>= 0.76', required : get_option('cdio'))
 
 if cdio_dep.found()
   cdio = library('gstcdio',

@@ -1,4 +1,4 @@
-amrwb_dep = dependency('opencore-amrwb', version : '>= 0.1.3', required : false)
+amrwb_dep = dependency('opencore-amrwb', version : '>= 0.1.3', required : get_option('amrwbdec'))
 
 if amrwb_dep.found()
   amrwbdec = library('gstamrwbdec',

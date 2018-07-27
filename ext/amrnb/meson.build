@@ -1,4 +1,4 @@
-amrnb_dep = dependency('opencore-amrnb', version : '>= 0.1.3', required : false)
+amrnb_dep = dependency('opencore-amrnb', version : '>= 0.1.3', required : get_option('amrnb'))
 
 if amrnb_dep.found()
   amrnb = library('gstamrnb',

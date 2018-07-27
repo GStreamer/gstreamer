@@ -25,6 +25,9 @@ api_version = '1.0'
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+if have_cxx
+  cxx = meson.get_compiler('cpp')
+endif
 
 if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
@@ -47,15 +50,8 @@ endif
 if cc.has_link_argument('-Wl,-Bsymbolic-functions')
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
-
-# Symbol visibility
-if cc.has_argument('-fvisibility=hidden')
-  add_project_arguments('-fvisibility=hidden', language: 'c')
-endif
-
-# Disable strict aliasing
-if cc.has_argument('-fno-strict-aliasing')
-  add_project_arguments('-fno-strict-aliasing', language: 'c')
+if have_cxx and cxx.has_link_argument('-Wl,-Bsymbolic-functions')
+  add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'cpp')
 endif
 
 cdata = configuration_data()
@@ -168,7 +164,7 @@ endif
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
 
-orc_dep = dependency('orc-0.4', version : '>= 0.4.16', required : false)
+orc_dep = dependency('orc-0.4', version : '>= 0.4.16', required : get_option('orc'))
 if orc_dep.found()
   cdata.set('HAVE_ORC', 1) # used by a52dec for cpu detection
 else
@@ -205,6 +201,9 @@ warning_flags = [
   '-Wvla',
   '-Wpointer-arith',
   '-Waggregate-return',
+  '-fno-strict-aliasing',
+  # Symbol visibility
+  '-fvisibility=hidden',
 ]
 
 warning_c_flags = [
@@ -213,10 +212,6 @@ warning_c_flags = [
   '-Wdeclaration-after-statement',
   '-Wnested-externs'
 ]
-
-if have_cxx
-  cxx = meson.get_compiler('cpp')
-endif
 
 foreach extra_arg : warning_flags
   if cc.has_argument (extra_arg)

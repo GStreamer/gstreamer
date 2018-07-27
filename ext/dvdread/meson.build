@@ -1,5 +1,6 @@
-gmodule_dep = dependency('gmodule-2.0', required : false)
-dvdread_dep = dependency('dvdread', version : '>= 0.5.0', required : false)
+gmodule_dep = dependency('gmodule-2.0', fallback : ['glib', 'libgmodule_dep'],
+                         required : get_option('dvdread'))
+dvdread_dep = dependency('dvdread', version : '>= 0.5.0', required : get_option('dvdread'))
 
 if gmodule_dep.found() and dvdread_dep.found()
   dvdread = library('gstdvdread',
