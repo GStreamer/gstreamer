@@ -235,20 +235,10 @@ gst_srt_server_src_fill (GstPushSrc * src, GstBuffer * outbuf)
     goto out;
   }
 
-  GST_BUFFER_PTS (outbuf) =
-      gst_clock_get_time (GST_ELEMENT_CLOCK (src)) -
-      GST_ELEMENT_CAST (src)->base_time;
-
   gst_buffer_resize (outbuf, 0, recv_len);
 
-  GST_LOG_OBJECT (src,
-      "filled buffer from _get of size %" G_GSIZE_FORMAT ", ts %"
-      GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT
-      ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
-      gst_buffer_get_size (outbuf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
-      GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
+  GST_LOG_OBJECT (src, "filled buffer from _get of size %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (outbuf));
 
 out:
   return ret;
