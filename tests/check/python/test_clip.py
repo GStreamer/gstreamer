@@ -19,6 +19,8 @@
 
 from . import overrides_hack
 
+import tempfile
+
 import gi
 gi.require_version("Gst", "1.0")
 gi.require_version("GES", "1.0")
@@ -67,6 +69,32 @@ class TestCopyPaste(unittest.TestCase):
         copy.paste(10)
         self.assertEqual(len(self.layer.get_clips()), 2)
 
+
+class TestTransitionClip(unittest.TestCase):
+
+    def test_serialize_invert(self):
+        timeline = GES.Timeline.new()
+        timeline.add_track(GES.VideoTrack.new())
+        layer = timeline.append_layer()
+
+        clip1 = GES.TransitionClip.new_for_nick("crossfade")
+        clip1.props.duration = Gst.SECOND
+        self.assertTrue(layer.add_clip(clip1))
+
+        vtransition, = clip1.children
+        vtransition.set_inverted(True)
+        self.assertEqual(vtransition.props.invert, True)
+
+        with tempfile.NamedTemporaryFile() as tmpxges:
+            uri = Gst.filename_to_uri(tmpxges.name)
+            timeline.save_to_uri(uri, None, True)
+
+            timeline = GES.Timeline.new_from_uri(uri)
+            self.assertIsNotNone(timeline)
+            layer, = timeline.get_layers()
+            clip, = layer.get_clips()
+            vtransition, = clip.children
+            self.assertEqual(vtransition.props.invert, True)
 
 class TestTitleClip(unittest.TestCase):
 
