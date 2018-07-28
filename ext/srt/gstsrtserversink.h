@@ -48,8 +48,8 @@ struct _GstSRTServerSink {
 struct _GstSRTServerSinkClass {
   GstSRTBaseSinkClass parent_class;
 
-  void (*client_added)      (GstSRTServerSink *self, int sock, struct sockaddr *addr, int addr_len);
-  void (*client_removed)    (GstSRTServerSink *self, int sock, struct sockaddr *addr, int addr_len);
+  void (*client_added)      (GstSRTServerSink *self, int sock, GSocketAddress *addr);
+  void (*client_removed)    (GstSRTServerSink *self, int sock, GSocketAddress *addr);
 
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
