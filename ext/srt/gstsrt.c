@@ -81,7 +81,6 @@ gst_srt_client_connect (GstElement * elem, int sender,
   srt_setsockopt (sock, 0, SRTO_TSBPDMODE, &(int) {
       1}, sizeof (int));
 
-  /* This is a sink, we're always a receiver */
   srt_setsockopt (sock, 0, SRTO_SENDER, &sender, sizeof (int));
 
   srt_setsockopt (sock, 0, SRTO_TSBPDDELAY, &latency, sizeof (int));
