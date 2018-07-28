@@ -13,7 +13,7 @@ gio_unix_dep = dependency('gio-unix-2.0', version : glib_req,
                           required : get_option('bluez'))
 
 if bluez_dep.found() and gio_unix_dep.found()
-  bluez_ch = gnome.gdbus_codegen('bluez-interface',
+  bluez_ch = gnome.gdbus_codegen('bluez',
       sources : 'org.bluez.xml',
       interface_prefix : 'org.bluez',
       namespace : 'Bluez')
