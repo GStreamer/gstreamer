@@ -313,6 +313,13 @@ ges_missing_uri_default (GESProject * self, GError * error,
 {
   guint i;
   const gchar *old_uri = ges_asset_get_id (wrong_asset);
+  gchar *new_id = NULL;
+
+  if (ges_asset_request_id_update (wrong_asset, &new_id, error) && new_id) {
+    GST_INFO_OBJECT (self, "Returned guessed new ID: %s", new_id);
+
+    return new_id;
+  }
 
   if (new_paths == NULL)
     return NULL;
@@ -588,11 +595,10 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
     return NULL;
   }
 
-  if (new_id == NULL) {
-    GST_DEBUG_OBJECT (project, "Sending 'missing-uri' signal for %s", id);
-    g_signal_emit (project, _signals[MISSING_URI_SIGNAL], 0, error, asset,
-        &new_id);
-  }
+  /* Always send the MISSING_URI signal if requesting new ID is possible
+   * so that subclasses of GESProject are aware of the missing-uri */
+  g_signal_emit (project, _signals[MISSING_URI_SIGNAL], 0, error, asset,
+      &new_id);
 
   if (new_id) {
     GST_DEBUG_OBJECT (project, "new id found: %s", new_id);
