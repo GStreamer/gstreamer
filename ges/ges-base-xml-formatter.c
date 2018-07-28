@@ -77,6 +77,7 @@ typedef struct PendingClip
   GESLayer *layer;
 
   GstStructure *properties;
+  GstStructure *children_properties;
   gchar *metadatas;
 
   GList *effects;
@@ -503,26 +504,26 @@ _loading_done_cb (GESFormatter * self)
 
 static gboolean
 _set_child_property (GQuark field_id, const GValue * value,
-    GESTrackElement * effect)
+    GESTimelineElement * tlelement)
 {
   GParamSpec *pspec;
-  GstElement *element;
+  GObject *object;
 
   /* FIXME: error handling? */
-  if (!ges_track_element_lookup_child (effect,
-          g_quark_to_string (field_id), &element, &pspec)) {
+  if (!ges_timeline_element_lookup_child (tlelement,
+          g_quark_to_string (field_id), &object, &pspec)) {
 #ifndef GST_DISABLE_GST_DEBUG
     gchar *tmp = gst_value_serialize (value);
-    GST_ERROR_OBJECT (effect, "Could not set %s=%s",
+    GST_ERROR_OBJECT (tlelement, "Could not set %s=%s",
         g_quark_to_string (field_id), tmp);
     g_free (tmp);
 #endif
     return TRUE;
   }
 
-  g_object_set_property (G_OBJECT (element), pspec->name, value);
+  g_object_set_property (G_OBJECT (object), pspec->name, value);
   g_param_spec_unref (pspec);
-  gst_object_unref (element);
+  gst_object_unref (object);
   return TRUE;
 }
 
@@ -538,7 +539,7 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
     GESLayer * layer, GESAsset * asset, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration,
     GESTrackType track_types, const gchar * metadatas,
-    GstStructure * properties)
+    GstStructure * properties, GstStructure * children_properties)
 {
   GESClip *clip = ges_layer_add_asset (layer,
       asset, start, inpoint, duration, track_types);
@@ -557,6 +558,10 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
   if (properties)
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, clip);
+
+  if (children_properties)
+    gst_structure_foreach (children_properties,
+        (GstStructureForeachFunc) _set_child_property, clip);
 
   g_hash_table_insert (priv->containers, g_strdup (id), gst_object_ref (clip));
   return clip;
@@ -758,7 +763,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
     clip =
         _add_object_to_layer (priv, pend->id, pend->layer, asset,
         pend->start, pend->inpoint, pend->duration, pend->track_types,
-        pend->metadatas, pend->properties);
+        pend->metadatas, pend->properties, pend->children_properties);
 
     if (clip == NULL)
       continue;
@@ -944,6 +949,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     const gchar * id, const char *asset_id, GType type, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration,
     guint layer_prio, GESTrackType track_types, GstStructure * properties,
+    GstStructure * children_properties,
     const gchar * metadatas, GError ** error)
 {
   GESAsset *asset;
@@ -999,6 +1005,8 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     pclip->layer = gst_object_ref (entry->layer);
 
     pclip->properties = properties ? gst_structure_copy (properties) : NULL;
+    pclip->children_properties =
+        properties ? gst_structure_copy (children_properties) : NULL;
     pclip->metadatas = g_strdup (metadatas);
 
     /* Add the new pending object to the hashtable */
@@ -1013,7 +1021,8 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
   }
 
   nclip = _add_object_to_layer (priv, id, entry->layer,
-      asset, start, inpoint, duration, track_types, metadatas, properties);
+      asset, start, inpoint, duration, track_types, metadatas, properties,
+      children_properties);
 
   if (!nclip)
     return;

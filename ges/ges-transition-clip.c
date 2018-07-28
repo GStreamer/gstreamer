@@ -227,6 +227,22 @@ ges_transition_clip_set_property (GObject * object,
   }
 }
 
+static gboolean
+_lookup_child (GESTimelineElement * self, const gchar * prop_name,
+    GObject ** child, GParamSpec ** pspec)
+{
+  GESTimelineElementClass *element_klass =
+      g_type_class_peek (GES_TYPE_TIMELINE_ELEMENT);
+
+  /* Bypass the container implementation as we handle children properties directly */
+  /* FIXME Implement a syntax to precisely get properties by path */
+  if (element_klass->lookup_child (self, prop_name, child, pspec))
+    return TRUE;
+
+  return FALSE;
+}
+
+
 static void
 ges_transition_clip_class_init (GESTransitionClipClass * klass)
 {
@@ -251,6 +267,7 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
           GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  GES_TIMELINE_ELEMENT_CLASS (klass)->lookup_child = _lookup_child;
   container_class->child_added = _child_added;
   container_class->child_removed = _child_removed;
 
@@ -287,9 +304,16 @@ _child_added (GESContainer * container, GESTimelineElement * element)
   GESTransitionClipPrivate *priv = GES_TRANSITION_CLIP (container)->priv;
 
   if (GES_IS_VIDEO_TRANSITION (element)) {
+    GObjectClass *eklass = G_OBJECT_GET_CLASS (element);
+
     GST_DEBUG_OBJECT (container, "%" GST_PTR_FORMAT " added", element);
     priv->video_transitions =
         g_slist_prepend (priv->video_transitions, gst_object_ref (element));
+
+    ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
+        g_object_class_find_property (eklass, "invert"), G_OBJECT (element));
+    ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
+        g_object_class_find_property (eklass, "border"), G_OBJECT (element));
   }
 }
 

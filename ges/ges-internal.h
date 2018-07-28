@@ -232,6 +232,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self
                                                                  guint layer_prio,
                                                                  GESTrackType track_types,
                                                                  GstStructure *properties,
+                                                                 GstStructure * children_properties,
                                                                  const gchar *metadatas,
                                                                  GError **error);
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_asset        (GESBaseXmlFormatter * self,

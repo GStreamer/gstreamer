@@ -281,9 +281,8 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
 {
   GList *tmp;
 
-  /* FIXME Implement a synthax to precisely get properties by path */
+  /* FIXME Implement a syntax to precisely get properties by path */
   for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
-
     if (ges_timeline_element_lookup_child (tmp->data, prop_name, child, pspec))
       return TRUE;
   }

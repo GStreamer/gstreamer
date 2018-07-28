@@ -465,13 +465,13 @@ _parse_clip (GMarkupParseContext * context,
     const gchar ** attribute_values, GESXmlFormatter * self, GError ** error)
 {
   GType type;
-  GstStructure *props = NULL;
+  GstStructure *props = NULL, *children_props = NULL;
   GESTrackType track_types;
   GstClockTime start, inpoint = 0, duration, layer_prio;
 
   const gchar *strid, *asset_id, *strstart, *strin, *strduration, *strrate,
       *strtrack_types, *strtype, *metadatas = NULL, *properties =
-      NULL, *strlayer_prio;
+      NULL, *children_properties = NULL, *strlayer_prio;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
@@ -483,6 +483,7 @@ _parse_clip (GMarkupParseContext * context,
           G_MARKUP_COLLECT_STRING, "track-types", &strtrack_types,
           G_MARKUP_COLLECT_STRING, "layer-priority", &strlayer_prio,
           COLLECT_STR_OPT, "properties", &properties,
+          COLLECT_STR_OPT, "children-properties", &children_properties,
           COLLECT_STR_OPT, "metadatas", &metadatas,
           COLLECT_STR_OPT, "rate", &strrate,
           COLLECT_STR_OPT, "inpoint", &strin, G_MARKUP_COLLECT_INVALID)) {
@@ -521,9 +522,15 @@ _parse_clip (GMarkupParseContext * context,
       goto wrong_properties;
   }
 
+  if (children_properties) {
+    children_props = gst_structure_from_string (children_properties, NULL);
+    if (children_props == NULL)
+      goto wrong_children_properties;
+  }
+
   ges_base_xml_formatter_add_clip (GES_BASE_XML_FORMATTER (self),
       strid, asset_id, type, start, inpoint, duration, layer_prio,
-      track_types, props, metadatas, error);
+      track_types, props, children_props, metadatas, error);
   if (props)
     gst_structure_free (props);
 
@@ -534,6 +541,13 @@ wrong_properties:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Clip %s properties '%s', could no be deserialized",
       element_name, asset_id, properties);
+  return;
+
+wrong_children_properties:
+  g_set_error (error, G_MARKUP_ERROR,
+      G_MARKUP_ERROR_INVALID_CONTENT,
+      "element '%s', Clip %s children properties '%s', could no be deserialized",
+      element_name, asset_id, children_properties);
   return;
 
 convertion_failed:
@@ -1001,14 +1015,14 @@ _save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 }
 
 static inline void
-_save_children_properties (GString * str, GESTrackElement * trackelement)
+_save_children_properties (GString * str, GESTimelineElement * element)
 {
   GstStructure *structure;
   GParamSpec **pspecs, *spec;
   guint i, n_props;
   gchar *struct_str;
 
-  pspecs = ges_track_element_list_children_properties (trackelement, &n_props);
+  pspecs = ges_timeline_element_list_children_properties (element, &n_props);
 
   structure = gst_structure_new_empty ("properties");
   for (i = 0; i < n_props; i++) {
@@ -1021,7 +1035,7 @@ _save_children_properties (GString * str, GESTrackElement * trackelement)
           spec->name);
 
       _init_value_from_spec_for_serialization (&val, spec);
-      ges_track_element_get_child_property_by_pspec (trackelement, spec, &val);
+      ges_timeline_element_get_child_property_by_pspec (element, spec, &val);
       gst_structure_set_value (structure, spec_name, &val);
 
       g_free (spec_name);
@@ -1146,7 +1160,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   g_free (properties);
   g_free (metas);
 
-  _save_children_properties (str, trackelement);
+  _save_children_properties (str, GES_TIMELINE_ELEMENT (trackelement));
   append_escaped (str, g_markup_printf_escaped (">\n"));
 
   _save_keyframes (str, trackelement, -1);
@@ -1203,16 +1217,22 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
           g_markup_printf_escaped ("        <clip id='%i' asset-id='%s'"
               " type-name='%s' layer-priority='%i' track-types='%i' start='%"
               G_GUINT64_FORMAT "' duration='%" G_GUINT64_FORMAT "' inpoint='%"
-              G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n",
+              G_GUINT64_FORMAT "' rate='%d' properties='%s' ",
               priv->nbelements, extractable_id,
               g_type_name (G_OBJECT_TYPE (clip)), priority,
               ges_clip_get_supported_formats (clip), _START (clip),
               _DURATION (clip), _INPOINT (clip), 0, properties));
+
+      if (GES_IS_TRANSITION_CLIP (clip))
+        _save_children_properties (str, GES_TIMELINE_ELEMENT (clip));
+      g_string_append (str, ">\n");
+
       g_free (extractable_id);
       g_free (properties);
 
       g_hash_table_insert (self->priv->element_id, clip,
           GINT_TO_POINTER (priv->nbelements));
+
 
       /* Effects must always be serialized in the right priority order.
        * List order is guaranteed by the fact that ges_clip_get_top_effects
@@ -1222,6 +1242,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
         _save_effect (str, priv->nbelements,
             GES_TRACK_ELEMENT (tmpeffect->data), timeline);
       }
+
 
       tracks = ges_timeline_get_tracks (timeline);
 
