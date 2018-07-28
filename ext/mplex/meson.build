@@ -8,7 +8,7 @@ if mjpegtools_dep.found() and mplex2_dep.found()
     'gstmplexibitstream.cc',
     'gstmplexjob.cc',
     'gstmplexoutputstream.cc',
-    cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=2000'],
+    cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=20000'],
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, mjpegtools_dep, mplex2_dep],
