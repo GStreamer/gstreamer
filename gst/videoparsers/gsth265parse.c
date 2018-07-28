@@ -2288,9 +2288,15 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_h265_parse_update_src_caps (h265parse, NULL);
 
-  /* Fixme: Implement timestamp interpolation based on SEI Messagses */
-  GST_FIXME_OBJECT (h265parse,
-      "Implement timestamp/duration interpolation based on SEI message");
+  if (h265parse->fps_num > 0 && h265parse->fps_den > 0) {
+    GstH265SPS *sps = h265parse->nalparser->last_sps;
+    GstClockTime val;
+
+    val = (sps != NULL && sps->profile_tier_level.interlaced_source_flag) ?
+        GST_SECOND / 2 : GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (val,
+        h265parse->fps_den, h265parse->fps_num);
+  }
 
   if (h265parse->keyframe)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
