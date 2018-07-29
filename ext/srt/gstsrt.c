@@ -32,6 +32,56 @@
 #define GST_CAT_DEFAULT gst_debug_srt
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
+static GSocketAddress *
+gst_srt_socket_address_new (GstElement * elem, const gchar * host, guint16 port)
+{
+  GInetAddress *iaddr = NULL;
+  GSocketAddress *addr = NULL;
+  GError *error = NULL;
+
+  if (host == NULL) {
+    iaddr = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
+  } else {
+    iaddr = g_inet_address_new_from_string (host);
+  }
+
+  if (!iaddr) {
+    GList *results;
+    GResolver *resolver = g_resolver_get_default ();
+
+    results = g_resolver_lookup_by_name (resolver, host, NULL, &error);
+
+    if (!results) {
+      GST_ERROR_OBJECT (elem, "Failed to resolve %s: %s", host, error->message);
+      g_object_unref (resolver);
+      goto failed;
+    }
+
+    iaddr = G_INET_ADDRESS (g_object_ref (results->data));
+
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *ip = g_inet_address_to_string (iaddr);
+
+    GST_DEBUG_OBJECT (elem, "IP address for host %s is %s", host, ip);
+    g_free (ip);
+  }
+#endif
+
+  addr = g_inet_socket_address_new (iaddr, port);
+  g_object_unref (iaddr);
+
+  return addr;
+
+failed:
+  g_clear_error (&error);
+
+  return NULL;
+}
+
 SRTSOCKET
 gst_srt_client_connect (GstElement * elem, int sender,
     const gchar * host, guint16 port, int rendez_vous,
@@ -53,7 +103,7 @@ gst_srt_client_connect (GstElement * elem, int sender,
     goto failed;
   }
 
-  *socket_address = g_inet_socket_address_new_from_string (host, port);
+  *socket_address = gst_srt_socket_address_new (elem, host, port);
 
   if (*socket_address == NULL) {
     GST_ELEMENT_ERROR (elem, RESOURCE, OPEN_READ, ("Invalid host"),
@@ -177,14 +227,7 @@ gst_srt_server_listen (GstElement * elem, int sender, const gchar * host,
   size_t sa_len;
   GSocketAddress *addr = NULL;
 
-  if (host == NULL) {
-    GInetAddress *any = g_inet_address_new_any (G_SOCKET_FAMILY_IPV4);
-
-    addr = g_inet_socket_address_new (any, port);
-    g_object_unref (any);
-  } else {
-    addr = g_inet_socket_address_new_from_string (host, port);
-  }
+  addr = gst_srt_socket_address_new (elem, host, port);
 
   if (addr == NULL) {
     GST_WARNING_OBJECT (elem,
