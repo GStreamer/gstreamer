@@ -1223,8 +1223,10 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
               ges_clip_get_supported_formats (clip), _START (clip),
               _DURATION (clip), _INPOINT (clip), 0, properties));
 
-      if (GES_IS_TRANSITION_CLIP (clip))
+      if (GES_IS_TRANSITION_CLIP (clip)) {
         _save_children_properties (str, GES_TIMELINE_ELEMENT (clip));
+        self->priv->min_version = MAX (self->priv->min_version, 4);
+      }
       g_string_append (str, ">\n");
 
       g_free (extractable_id);
