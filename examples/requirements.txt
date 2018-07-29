@@ -1,2 +1,7 @@
 # py_videomixer plugin
 Pillow >= 5.1.0
+
+# audioplot plugin
+matplotlib >= 2.1.1
+numpy >= 1.14.5
+numpy_ringbuffer >= 0.2.1
