@@ -1,0 +1,2 @@
+# py_videomixer plugin
+Pillow >= 5.1.0
