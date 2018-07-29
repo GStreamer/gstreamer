@@ -1006,7 +1006,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
 
     pclip->properties = properties ? gst_structure_copy (properties) : NULL;
     pclip->children_properties =
-        properties ? gst_structure_copy (children_properties) : NULL;
+        children_properties ? gst_structure_copy (children_properties) : NULL;
     pclip->metadatas = g_strdup (metadatas);
 
     /* Add the new pending object to the hashtable */
