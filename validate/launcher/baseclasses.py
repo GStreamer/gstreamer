@@ -480,11 +480,12 @@ class Test(Loggable):
         return message
 
     def get_command_repr(self):
-        message = "%s %s" % (self._env_variable, ' '.join(self.command))
+        message = "%s %s" % (self._env_variable, ' '.join(
+            shlex.quote(arg) for arg in self.command))
         if self.server_command:
             message = "%s & %s" % (self.server_command, message)
 
-        return "'%s'" % message
+        return message
 
     def test_start(self, queue):
         self.open_logfile()
