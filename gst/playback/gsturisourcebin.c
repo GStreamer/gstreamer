@@ -229,6 +229,7 @@ enum
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_LOW_WATERMARK,
   PROP_HIGH_WATERMARK,
+  PROP_STATISTICS,
 };
 
 #define CUSTOM_EOS_QUARK _custom_eos_quark_get ()
@@ -279,6 +280,7 @@ static GstPad *create_output_pad (GstURISourceBin * urisrc, GstPad * pad);
 static void remove_buffering_msgs (GstURISourceBin * bin, GstObject * src);
 
 static void update_queue_values (GstURISourceBin * urisrc);
+static GstStructure *get_queue_statistics (GstURISourceBin * urisrc);
 
 static void
 gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
@@ -383,6 +385,25 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
           "High threshold for buffering to finish. Only used if use-buffering is True",
           0.0, 1.0, DEFAULT_HIGH_WATERMARK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstURISourceBin::statistics
+   *
+   * A GStructure containing the following values based on the values from
+   * all the queue's contained in this urisourcebin.
+   *
+   *  "minimum-byte-level"  G_TYPE_UINT               Minimum of the current byte levels
+   *  "maximum-byte-level"  G_TYPE_UINT               Maximum of the current byte levels
+   *  "average-byte-level"  G_TYPE_UINT               Average of the current byte levels
+   *  "minimum-time-level"  G_TYPE_UINT64             Minimum of the current time levels
+   *  "maximum-time-level"  G_TYPE_UINT64             Maximum of the current time levels
+   *  "average-time-level"  G_TYPE_UINT64             Average of the current time levels
+   */
+  g_object_class_install_property (gobject_class, PROP_STATISTICS,
+      g_param_spec_boxed ("statistics", "Queue Statistics",
+          "A set of statistics over all the queue-like elements contained in "
+          "this element", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstURISourceBin::drained:
@@ -579,6 +600,9 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HIGH_WATERMARK:
       g_value_set_double (value, urisrc->high_watermark);
+      break;
+    case PROP_STATISTICS:
+      g_value_take_boxed (value, get_queue_statistics (dec));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -889,6 +913,53 @@ pre_queue_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     default:
       break;
   }
+  return ret;
+}
+
+static GstStructure *
+get_queue_statistics (GstURISourceBin * urisrc)
+{
+  GstStructure *ret = NULL;
+  guint min_byte_level = 0, max_byte_level = 0;
+  guint64 min_time_level = 0, max_time_level = 0;
+  gdouble avg_byte_level = 0., avg_time_level = 0.;
+  guint i = 0;
+  GSList *cur;
+
+  GST_URI_SOURCE_BIN_LOCK (urisrc);
+
+  for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
+    OutputSlotInfo *slot = (OutputSlotInfo *) (cur->data);
+    guint byte_limit = 0;
+    guint64 time_limit = 0;
+
+    g_object_get (slot->queue, "current-level-bytes", &byte_limit,
+        "current-level-time", &time_limit, NULL);
+
+    if (byte_limit < min_byte_level)
+      min_byte_level = byte_limit;
+    if (byte_limit > max_byte_level)
+      max_byte_level = byte_limit;
+    avg_byte_level = (avg_byte_level * i + byte_limit) / (gdouble) (i + 1);
+
+    if (time_limit < min_time_level)
+      min_time_level = time_limit;
+    if (time_limit > max_time_level)
+      max_time_level = time_limit;
+    avg_time_level = (avg_time_level * i + time_limit) / (gdouble) (i + 1);
+
+    i++;
+  }
+  GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+
+  ret = gst_structure_new ("application/x-urisourcebin-stats",
+      "minimum-byte-level", G_TYPE_UINT, (guint) min_byte_level,
+      "maximum-byte-level", G_TYPE_UINT, (guint) max_byte_level,
+      "average-byte-level", G_TYPE_UINT, (guint) avg_byte_level,
+      "minimum-time-level", G_TYPE_UINT64, (guint64) min_time_level,
+      "maximum-time-level", G_TYPE_UINT64, (guint64) max_time_level,
+      "average-time-level", G_TYPE_UINT64, (guint64) avg_time_level, NULL);
+
   return ret;
 }
 

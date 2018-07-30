@@ -51,6 +51,7 @@ base_tests = [
   [ 'elements/streamsynchronizer.c' ],
   [ 'elements/subparse.c' ],
   [ 'elements/textoverlay.c', not pango_dep.found() ],
+  [ 'elements/urisourcebin.c' ],
   [ 'elements/videoconvert.c' ],
   [ 'elements/videorate.c' ],
   [ 'elements/videoscale.c' ],
