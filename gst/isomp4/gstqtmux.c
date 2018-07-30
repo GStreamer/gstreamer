@@ -996,11 +996,11 @@ gst_qt_mux_prepare_caption_buffer (GstQTPad * qtpad, GstBuffer * buf,
     case FOURCC_c708:
     {
       /* Take the whole CDP */
-      if (in_prefill && size > 92) {
+      if (in_prefill && size > 256) {
         GST_ERROR_OBJECT (qtmux, "Input C708 CDP too big for prefill mode !");
         break;
       }
-      newbuf = gst_buffer_new_and_alloc (in_prefill ? 100 : size + 8);
+      newbuf = gst_buffer_new_and_alloc (in_prefill ? 256 + 8 : size + 8);
 
       /* Let's copy over all metadata and not the memory */
       gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_METADATA, 0, size);
