@@ -67,6 +67,24 @@ GST_START_TEST (test_initial_statistics)
 
 GST_END_TEST;
 
+GST_START_TEST (test_get_set_watermark)
+{
+  GstElement *urisrc;
+  gdouble watermark;
+
+  urisrc = gst_element_factory_make ("urisourcebin", NULL);
+  fail_unless (urisrc != NULL);
+
+  g_object_set (urisrc, "low-watermark", 0.2, "high-watermark", 0.8, NULL);
+  g_object_get (urisrc, "low-watermark", &watermark, NULL);
+  fail_unless_equals_float (watermark, 0.2);
+  g_object_get (urisrc, "high-watermark", &watermark, NULL);
+  fail_unless_equals_float (watermark, 0.8);
+
+  gst_object_unref (urisrc);
+}
+
+GST_END_TEST;
 
 static Suite *
 urisourcebin_suite (void)
@@ -77,6 +95,7 @@ urisourcebin_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_initial_statistics);
+  tcase_add_test (tc_chain, test_get_set_watermark);
 
   return s;
 }
