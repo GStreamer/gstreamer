@@ -91,6 +91,15 @@ GstCaps * gst_type_find_helper_get_range (GstObject                         *obj
                                           const gchar                       *extension,
                                           GstTypeFindProbability            *prob);
 
+GST_BASE_API
+GstFlowReturn gst_type_find_helper_get_range_full (GstObject                         *obj,
+                                                   GstObject                         *parent,
+                                                   GstTypeFindHelperGetRangeFunction  func,
+                                                   guint64                            size,
+                                                   const gchar                       *extension,
+                                                   GstCaps                          **caps,
+                                                   GstTypeFindProbability            *prob);
+
 G_END_DECLS
 
 #endif /* __GST_TYPEFINDHELPER_H__ */

@@ -358,3 +358,4 @@ EXPORTS
 	gst_type_find_helper_for_data_with_extension
 	gst_type_find_helper_for_extension
 	gst_type_find_helper_get_range
+	gst_type_find_helper_get_range_full
