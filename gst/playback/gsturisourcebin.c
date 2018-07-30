@@ -209,6 +209,12 @@ enum
 #define DEFAULT_LOW_WATERMARK       0.01
 #define DEFAULT_HIGH_WATERMARK      0.99
 
+#define ACTUAL_DEFAULT_BUFFER_SIZE  10 * 1024 * 1024    /* The value used for byte limits when buffer-size == -1 */
+#define ACTUAL_DEFAULT_BUFFER_DURATION  5 * GST_SECOND  /* The value used for time limits when buffer-duration == -1 */
+
+#define GET_BUFFER_SIZE(u) ((u)->buffer_size == -1 ? ACTUAL_DEFAULT_BUFFER_SIZE : (u)->buffer_size)
+#define GET_BUFFER_DURATION(u) ((u)->buffer_duration == -1 ? ACTUAL_DEFAULT_BUFFER_DURATION : (u)->buffer_duration)
+
 #define DEFAULT_CAPS (gst_static_caps_get (&default_raw_caps))
 enum
 {
@@ -271,6 +277,8 @@ static void free_output_slot_async (GstURISourceBin * urisrc,
     OutputSlotInfo * slot);
 static GstPad *create_output_pad (GstURISourceBin * urisrc, GstPad * pad);
 static void remove_buffering_msgs (GstURISourceBin * bin, GstObject * src);
+
+static void update_queue_values (GstURISourceBin * urisrc);
 
 static void
 gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
@@ -496,9 +504,11 @@ gst_uri_source_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BUFFER_SIZE:
       urisrc->buffer_size = g_value_get_int (value);
+      update_queue_values (urisrc);
       break;
     case PROP_BUFFER_DURATION:
       urisrc->buffer_duration = g_value_get_int64 (value);
+      update_queue_values (urisrc);
       break;
     case PROP_DOWNLOAD:
       urisrc->download = g_value_get_boolean (value);
@@ -510,10 +520,12 @@ gst_uri_source_bin_set_property (GObject * object, guint prop_id,
       urisrc->ring_buffer_max_size = g_value_get_uint64 (value);
       break;
     case PROP_LOW_WATERMARK:
-      dec->low_watermark = g_value_get_double (value);
+      urisrc->low_watermark = g_value_get_double (value);
+      update_queue_values (urisrc);
       break;
     case PROP_HIGH_WATERMARK:
-      dec->high_watermark = g_value_get_double (value);
+      urisrc->high_watermark = g_value_get_double (value);
+      update_queue_values (urisrc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -563,21 +575,16 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
       g_value_set_uint64 (value, urisrc->ring_buffer_max_size);
       break;
     case PROP_LOW_WATERMARK:
-      g_value_set_double (value, dec->low_watermark);
+      g_value_set_double (value, urisrc->low_watermark);
       break;
     case PROP_HIGH_WATERMARK:
-      g_value_set_double (value, dec->high_watermark);
+      g_value_set_double (value, urisrc->high_watermark);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
-
-
-#define DEFAULT_QUEUE_SIZE          (3 * GST_SECOND)
-#define DEFAULT_QUEUE_MIN_THRESHOLD ((DEFAULT_QUEUE_SIZE * 30) / 100)
-#define DEFAULT_QUEUE_THRESHOLD     ((DEFAULT_QUEUE_SIZE * 95) / 100)
 
 static gboolean
 copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
@@ -886,19 +893,19 @@ pre_queue_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 }
 
 static void
-update_byte_limits (GstElement * elem, gpointer user_data)
+update_queue_values (GstURISourceBin * urisrc)
 {
-  GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (elem);
+  gint64 duration;
+  guint buffer_size;
+  gdouble low_watermark, high_watermark;
   guint64 cumulative_bitrate = 0;
   GSList *cur;
 
   GST_URI_SOURCE_BIN_LOCK (urisrc);
-  if (urisrc->buffer_size == -1) {
-    GST_TRACE_OBJECT (urisrc, "Buffer size not set, not recalculating queue "
-        "limits");
-    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-    return;
-  }
+  duration = GET_BUFFER_DURATION (urisrc);
+  buffer_size = GET_BUFFER_SIZE (urisrc);
+  low_watermark = urisrc->low_watermark;
+  high_watermark = urisrc->high_watermark;
 
   for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
     OutputSlotInfo *slot = (OutputSlotInfo *) (cur->data);
@@ -920,8 +927,8 @@ update_byte_limits (GstElement * elem, gpointer user_data)
   }
 
   GST_DEBUG_OBJECT (urisrc, "recalculating queue limits with cumulative "
-      "bitrate %" G_GUINT64_FORMAT " and buffer size %u", cumulative_bitrate,
-      urisrc->buffer_size);
+      "bitrate %" G_GUINT64_FORMAT ", buffer size %u, buffer duration %"
+      G_GINT64_FORMAT, cumulative_bitrate, buffer_size, duration);
 
   for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
     OutputSlotInfo *slot = (OutputSlotInfo *) (cur->data);
@@ -935,18 +942,23 @@ update_byte_limits (GstElement * elem, gpointer user_data)
       }
 
       byte_limit =
-          gst_util_uint64_scale (urisrc->buffer_size, bitrate,
-          cumulative_bitrate);
+          gst_util_uint64_scale (buffer_size, bitrate, cumulative_bitrate);
     } else {
-      byte_limit = urisrc->buffer_size;
+      /* if not all queue's have valid bitrates, use the buffer-size as the
+       * limit */
+      byte_limit = buffer_size;
     }
 
     GST_DEBUG_OBJECT (urisrc,
-        "calculated new byte limit for queue2 %" GST_PTR_FORMAT ", %u",
-        slot->queue, byte_limit);
-    g_object_set (G_OBJECT (slot->queue), "max-size-bytes", byte_limit, NULL);
+        "calculated new limits for queue-like element %" GST_PTR_FORMAT
+        ", bytes:%u, time:%" G_GUINT64_FORMAT
+        ", low-watermark:%f, high-watermark:%f",
+        slot->queue, byte_limit, (guint64) duration, low_watermark,
+        high_watermark);
+    g_object_set (G_OBJECT (slot->queue), "max-size-bytes", byte_limit,
+        "max-size-time", (guint64) duration, "low-watermark", low_watermark,
+        "high-watermark", high_watermark, NULL);
   }
-
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 }
 
@@ -956,7 +968,8 @@ on_queue_bitrate_changed (GstElement * queue, GParamSpec * pspec,
 {
   GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (user_data);
 
-  gst_element_call_async (GST_ELEMENT (urisrc), update_byte_limits, NULL, NULL);
+  gst_element_call_async (GST_ELEMENT (urisrc),
+      (GstElementCallAsyncFunc) update_queue_values, NULL, NULL);
 }
 
 /* Called with lock held */
@@ -1052,13 +1065,11 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
     g_object_set (queue, "low-percent", 1, "high-percent", 60, NULL);
   }
 
-  /* If buffer size or duration are set, set them on the element */
-  if (urisrc->buffer_size != -1)
-    g_object_set (queue, "max-size-bytes", urisrc->buffer_size, NULL);
-  if (urisrc->buffer_duration != -1)
-    g_object_set (queue, "max-size-time", urisrc->buffer_duration, NULL);
-  g_object_set (queue, "low-watermark", urisrc->low_watermark,
-      "high-watermark", urisrc->high_watermark, NULL);
+  /* set the necessary limits on the queue-like elements */
+  g_object_set (queue, "max-size-bytes", GET_BUFFER_SIZE (urisrc),
+      "max-size-time", (guint64) GET_BUFFER_DURATION (urisrc),
+      "low-watermark", urisrc->low_watermark, "high-watermark",
+      urisrc->high_watermark, NULL);
 #if 0
   /* Disabled because this makes initial startup slower for radio streams */
   else {
