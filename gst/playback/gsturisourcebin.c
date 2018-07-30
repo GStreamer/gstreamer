@@ -140,6 +140,8 @@ struct _GstURISourceBin
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
   gboolean use_buffering;
+  gdouble low_watermark;
+  gdouble high_watermark;
 
   GstElement *source;
   GList *typefinds;             /* list of typefind element */
@@ -204,6 +206,8 @@ enum
 #define DEFAULT_DOWNLOAD            FALSE
 #define DEFAULT_USE_BUFFERING       TRUE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
+#define DEFAULT_LOW_WATERMARK       0.01
+#define DEFAULT_HIGH_WATERMARK      0.99
 
 #define DEFAULT_CAPS (gst_static_caps_get (&default_raw_caps))
 enum
@@ -216,7 +220,9 @@ enum
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
   PROP_USE_BUFFERING,
-  PROP_RING_BUFFER_MAX_SIZE
+  PROP_RING_BUFFER_MAX_SIZE,
+  PROP_LOW_WATERMARK,
+  PROP_HIGH_WATERMARK,
 };
 
 #define CUSTOM_EOS_QUARK _custom_eos_quark_get ()
@@ -347,6 +353,30 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstURISourceBin::low-watermark
+   *
+   * Proportion of the queue size (either in bytes or time) for buffering
+   * to restart when crossed from above.  Only used if use-buffering is TRUE.
+   */
+  g_object_class_install_property (gobject_class, PROP_LOW_WATERMARK,
+      g_param_spec_double ("low-watermark", "Low watermark",
+          "Low threshold for buffering to start. Only used if use-buffering is True",
+          0.0, 1.0, DEFAULT_LOW_WATERMARK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstURISourceBin::high-watermark
+   *
+   * Proportion of the queue size (either in bytes or time) to complete
+   * buffering.  Only used if use-buffering is TRUE.
+   */
+  g_object_class_install_property (gobject_class, PROP_HIGH_WATERMARK,
+      g_param_spec_double ("high-watermark", "High watermark",
+          "High threshold for buffering to finish. Only used if use-buffering is True",
+          0.0, 1.0, DEFAULT_HIGH_WATERMARK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstURISourceBin::drained:
    *
    * This signal is emitted when the data for the current uri is played.
@@ -420,6 +450,8 @@ gst_uri_source_bin_init (GstURISourceBin * urisrc)
   urisrc->use_buffering = DEFAULT_USE_BUFFERING;
   urisrc->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
   urisrc->last_buffering_pct = -1;
+  urisrc->low_watermark = DEFAULT_LOW_WATERMARK;
+  urisrc->high_watermark = DEFAULT_HIGH_WATERMARK;
 
   GST_OBJECT_FLAG_SET (urisrc,
       GST_ELEMENT_FLAG_SOURCE | GST_BIN_FLAG_STREAMS_AWARE);
@@ -477,6 +509,12 @@ gst_uri_source_bin_set_property (GObject * object, guint prop_id,
     case PROP_RING_BUFFER_MAX_SIZE:
       urisrc->ring_buffer_max_size = g_value_get_uint64 (value);
       break;
+    case PROP_LOW_WATERMARK:
+      dec->low_watermark = g_value_get_double (value);
+      break;
+    case PROP_HIGH_WATERMARK:
+      dec->high_watermark = g_value_get_double (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -523,6 +561,12 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       g_value_set_uint64 (value, urisrc->ring_buffer_max_size);
+      break;
+    case PROP_LOW_WATERMARK:
+      g_value_set_double (value, dec->low_watermark);
+      break;
+    case PROP_HIGH_WATERMARK:
+      g_value_set_double (value, dec->high_watermark);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1013,6 +1057,8 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
     g_object_set (queue, "max-size-bytes", urisrc->buffer_size, NULL);
   if (urisrc->buffer_duration != -1)
     g_object_set (queue, "max-size-time", urisrc->buffer_duration, NULL);
+  g_object_set (queue, "low-watermark", urisrc->low_watermark,
+      "high-watermark", urisrc->high_watermark, NULL);
 #if 0
   /* Disabled because this makes initial startup slower for radio streams */
   else {
