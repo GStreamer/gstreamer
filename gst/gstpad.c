@@ -3557,11 +3557,17 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
 
   info->id = hook->hook_id;
 
+  if ((flags & GST_PAD_PROBE_TYPE_IDLE))
+    pad->priv->idle_running++;
+
   GST_OBJECT_UNLOCK (pad);
 
   ret = callback (pad, info, hook->data);
 
   GST_OBJECT_LOCK (pad);
+
+  if ((flags & GST_PAD_PROBE_TYPE_IDLE))
+    pad->priv->idle_running--;
 
   if (original_data != NULL && info->data == NULL) {
     GST_DEBUG_OBJECT (pad, "data item in pad probe info was dropped");
