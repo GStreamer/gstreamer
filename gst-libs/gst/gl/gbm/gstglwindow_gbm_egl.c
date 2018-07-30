@@ -149,6 +149,12 @@ draw_cb (gpointer data)
     .revents = 0,
   };
 
+  /* No display connected */
+  if (!display->drm_mode_info) {
+    GST_ERROR ("No display connected");
+    return;
+  };
+
   /* Rendering, page flipping etc. are connect this way:
    *
    * The frames are stored in buffer objects (BOs). Inside the eglSwapBuffers()
@@ -295,6 +301,15 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
   GstGLContext *context = gst_gl_window_get_context (window);
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
   EGLint gbm_format;
+  int hdisplay, vdisplay;
+
+  if (drm_mode_info) {
+    vdisplay = drm_mode_info->vdisplay;
+    hdisplay = drm_mode_info->hdisplay;
+  } else {
+    vdisplay = 0;
+    hdisplay = 0;
+  }
 
   /* With GBM-based EGL displays and configs, the native visual ID
    * is a GBM pixel format. */
@@ -308,11 +323,10 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
   /* Create a GBM surface that shall contain the BOs we are
    * going to render into. */
   window_egl->gbm_surf = gbm_surface_create (display->gbm_dev,
-      drm_mode_info->hdisplay, drm_mode_info->vdisplay, gbm_format,
+      hdisplay, vdisplay, gbm_format,
       GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
 
-  gst_gl_window_resize (window, drm_mode_info->hdisplay,
-      drm_mode_info->vdisplay);
+  gst_gl_window_resize (window, hdisplay, vdisplay);
 
   GST_DEBUG ("Successfully created GBM surface");
 

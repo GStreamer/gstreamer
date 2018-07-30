@@ -400,8 +400,7 @@ gst_gl_display_gbm_new (void)
   display->drm_fd = drm_fd;
 
   if (!gst_gl_display_gbm_setup_drm (display)) {
-    GST_ERROR ("Failed to initialize DRM");
-    goto cleanup;
+    GST_WARNING ("Failed to initialize DRM");
   }
 
   if (!gst_gl_display_gbm_setup_gbm (display)) {
