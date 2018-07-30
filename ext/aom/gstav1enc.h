@@ -49,6 +49,60 @@ G_BEGIN_DECLS
 typedef struct _GstAV1Enc GstAV1Enc;
 typedef struct _GstAV1EncClass GstAV1EncClass;
 
+/**
+ * GstAV1EncResizeMode:
+ * @GST_AV1_ENC_RESIZE_NONE: No frame resizing allowed
+ * @GST_AV1_ENC_RESIZE_FIXED: All frames are coded at the specified scale
+ * @GST_AV1_ENC_RESIZE_RANDOM: All frames are coded at a random scale
+ *
+ * Frame resize mode
+ */
+typedef enum
+{
+  GST_AV1_ENC_RESIZE_NONE = 0,
+  GST_AV1_ENC_RESIZE_FIXED = 1,
+  GST_AV1_ENC_RESIZE_RANDOM = 2,
+  GST_AV1_ENC_RESIZE_MODES
+} GstAV1EncResizeMode;
+
+/**
+ * GstAV1EncSuperresMode
+ * @GST_AV1_ENC_SUPERRES_NONE: No frame superres allowed
+ * @GST_AV1_ENC_SUPERRES_FIXED: All frames are coded at the specified scale and
+ *   super-resolved
+ * @GST_AV1_ENC_SUPERRES_QTHRESH: Superres scale for a frame is determined based
+ *   on q_index
+ *
+ * Frame super-resolution mode
+ */
+typedef enum
+{
+  GST_AV1_ENC_SUPERRES_NONE = 0,
+  GST_AV1_ENC_SUPERRES_FIXED = 1,
+  GST_AV1_ENC_SUPERRES_RANDOM = 2,
+  GST_AV1_ENC_SUPERRES_QTHRESH = 3,
+  GST_AV1_ENC_SUPERRES_MODES
+} GstAV1EncSuperresMode;
+
+/**
+ * GstAV1EncEndUsageMode
+ * @GST_AV1_ENC_END_USAGE_VBR: Variable Bit Rate Mode
+ * @GST_AV1_ENC_END_USAGE_CBR: Constant Bit Rate Mode
+ * @GST_AV1_ENC_END_USAGE_CQ: Constrained Quality Mode
+ * @GST_AV1_ENC_END_USAGE_Q: Constant Quality Mode
+ *
+ * Rate control algorithm to use
+ */
+
+typedef enum
+{
+  GST_AV1_ENC_END_USAGE_VBR = 0,
+  GST_AV1_ENC_END_USAGE_CBR = 1,
+  GST_AV1_ENC_END_USAGE_CQ = 2,
+  GST_AV1_ENC_END_USAGE_Q = 3,
+  GST_AV1_ENC_END_USAGE_MODES
+} GstAV1EncEndUsageMode;
+
 struct _GstAV1Enc
 {
   GstVideoEncoder base_video_encoder;
@@ -62,7 +116,10 @@ struct _GstAV1Enc
   GstVideoCodecState *input_state;
   aom_codec_enc_cfg_t aom_cfg;
   aom_codec_ctx_t encoder;
+  aom_img_fmt_t format;
   GMutex encoder_lock;
+
+  gboolean target_bitrate_set;
 };
 
 struct _GstAV1EncClass
