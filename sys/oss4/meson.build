@@ -1,12 +1,11 @@
-have_oss4 = true
+have_oss4 = false
 oss4_option = get_option('oss4')
 if not oss4_option.disabled()
+  have_oss4 = true
   message('Checking headers needed for Open Sound System 4 plugin...')
   foreach hdr : ['fcntl.h', 'sys/ioctl.h', 'sys/stat.h', 'sys/types.h']
-    if have_oss4
-      if not cc.has_header(hdr)
-        have_oss4 = false
-      endif
+    if have_oss4 and not cc.has_header(hdr)
+      have_oss4 = false
     endif
   endforeach
 
