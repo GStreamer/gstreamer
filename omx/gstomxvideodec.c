@@ -3203,6 +3203,7 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (bdec);
+  guint i;
 
 #if defined (HAVE_GST_GL)
   {
@@ -3249,14 +3250,25 @@ gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 #endif /* defined (HAVE_GST_GL) */
 
   self->use_buffers = FALSE;
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
-    if (pool) {
+
+  /* Importing OMX buffers from downstream isn't supported.
+   * That wouldn't bring us much as the dynamic buffer mode already
+   * prevent copies between OMX components. */
+  i = 0;
+  while (i < gst_query_get_n_allocation_pools (query)) {
+    gst_query_parse_nth_allocation_pool (query, i, &pool, NULL, NULL, NULL);
+    if (GST_IS_OMX_BUFFER_POOL (pool)) {
+      GST_DEBUG_OBJECT (self, "Discard OMX pool from downstream");
+      gst_query_remove_nth_allocation_pool (query, i);
+    } else {
       GST_DEBUG_OBJECT (self,
           "Try using downstream buffers with OMX_UseBuffer");
       self->use_buffers = TRUE;
-      gst_object_unref (pool);
+      i++;
     }
+
+    if (pool)
+      gst_object_unref (pool);
   }
 
   if (!GST_VIDEO_DECODER_CLASS
