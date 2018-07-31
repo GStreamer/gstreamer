@@ -27,7 +27,7 @@ v4l2_sources = [
 
 v4l2 = get_option('v4l2')
 if v4l2.disabled()
-  build_v4l2 = false
+  have_v4l2 = false
   message('V4L2 plugin is disabled')
 else
   have_v4l2 = cc.has_header('linux/videodev2.h') or cc.has_header('sys/videodev2.h') or cc.has_header('sys/videoio.h')
