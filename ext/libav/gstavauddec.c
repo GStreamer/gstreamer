@@ -539,10 +539,9 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_CORRUPTED);
   } else if (res == AVERROR (EAGAIN)) {
     *outbuf = NULL;
-  } else if (res == AVERROR_EOF) {      /* Should not happen */
+  } else if (res == AVERROR_EOF) {
     *ret = GST_FLOW_EOS;
-    GST_WARNING_OBJECT (ffmpegdec,
-        "Tried to receive frame on a flushed context");
+    GST_DEBUG_OBJECT (ffmpegdec, "Context was entirely flushed");
   } else if (res < 0) {
     *ret = GST_FLOW_OK;
     GST_WARNING_OBJECT (ffmpegdec, "Legitimate decoding error");
@@ -611,6 +610,9 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
     GST_LOG_OBJECT (ffmpegdec,
         "codec has delay capabilities, calling until libav has drained everything");
 
+    if (avcodec_send_packet (ffmpegdec->context, NULL))
+      goto send_packet_failed;
+
     do {
       GstFlowReturn ret;
 
@@ -623,6 +625,9 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
     gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
         ffmpegdec->outbuf, 1);
   ffmpegdec->outbuf = NULL;
+
+send_packet_failed:
+  GST_WARNING_OBJECT (ffmpegdec, "send packet failed, could not drain decoder");
 }
 
 static void

@@ -1488,10 +1488,9 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* No frames available at this time */
   if (res == AVERROR (EAGAIN))
     goto beach;
-  else if (res == AVERROR_EOF) {        /* Should not happen */
+  else if (res == AVERROR_EOF) {
     *ret = GST_FLOW_EOS;
-    GST_WARNING_OBJECT (ffmpegdec,
-        "Tried to receive frame on a flushed context");
+    GST_DEBUG_OBJECT (ffmpegdec, "Context was entirely flushed");
     goto beach;
   } else if (res < 0) {
     *ret = GST_FLOW_OK;
@@ -1721,12 +1720,21 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
     GST_LOG_OBJECT (ffmpegdec,
         "codec has delay capabilities, calling until ffmpeg has drained everything");
 
+    if (avcodec_send_packet (ffmpegdec->context, NULL))
+      goto send_packet_failed;
+
     do {
       got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
     } while (got_frame && ret == GST_FLOW_OK);
+    avcodec_flush_buffers (ffmpegdec->context);
   }
 
+done:
   return GST_FLOW_OK;
+
+send_packet_failed:
+  GST_WARNING_OBJECT (ffmpegdec, "send packet failed, could not drain decoder");
+  goto done;
 }
 
 static GstFlowReturn
