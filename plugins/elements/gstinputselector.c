@@ -1203,6 +1203,8 @@ static GstStateChangeReturn gst_input_selector_change_state (GstElement *
 
 static gboolean gst_input_selector_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_input_selector_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (input_selector_debug, \
@@ -1311,6 +1313,8 @@ gst_input_selector_init (GstInputSelector * sel)
       GST_DEBUG_FUNCPTR (gst_selector_pad_iterate_linked_pads));
   gst_pad_set_event_function (sel->srcpad,
       GST_DEBUG_FUNCPTR (gst_input_selector_event));
+  gst_pad_set_query_function (sel->srcpad,
+      GST_DEBUG_FUNCPTR (gst_input_selector_query));
   GST_OBJECT_FLAG_SET (sel->srcpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT (sel), sel->srcpad);
   /* sinkpad management */
@@ -1570,6 +1574,143 @@ gst_input_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
   gst_event_unref (event);
 
   return result;
+}
+
+typedef struct
+{
+  guint count;
+  gboolean live;
+  GstClockTime min, max;
+} LatencyFoldData;
+
+static gboolean
+query_latency_default_fold (const GValue * item, GValue * ret,
+    gpointer user_data)
+{
+  GstPad *pad = g_value_get_object (item), *peer;
+  LatencyFoldData *fold_data = user_data;
+  GstQuery *query;
+  gboolean res = FALSE;
+
+  query = gst_query_new_latency ();
+
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    res = gst_pad_peer_query (pad, query);
+  } else {
+    GST_LOG_OBJECT (pad, "No peer pad found, ignoring this pad");
+  }
+
+  if (res) {
+    gboolean live;
+    GstClockTime min, max;
+
+    gst_query_parse_latency (query, &live, &min, &max);
+
+    GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
+        " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
+
+    /* FIXME : Why do we only take values into account if it's live ? */
+    if (live || fold_data->count == 0) {
+      if (min > fold_data->min)
+        fold_data->min = min;
+
+      if (fold_data->max == GST_CLOCK_TIME_NONE)
+        fold_data->max = max;
+      else if (max < fold_data->max)
+        fold_data->max = max;
+
+      fold_data->live = live;
+    }
+    fold_data->count += 1;
+  } else if (peer) {
+    GST_DEBUG_OBJECT (pad, "latency query failed");
+    g_value_set_boolean (ret, FALSE);
+  }
+
+  gst_query_unref (query);
+  if (peer)
+    gst_object_unref (peer);
+
+  return TRUE;
+}
+
+static gboolean
+gst_input_selector_query_latency (GstInputSelector * sel, GstPad * pad,
+    GstQuery * query)
+{
+  GstIterator *it;
+  GstIteratorResult res;
+  GValue ret = G_VALUE_INIT;
+  gboolean query_ret;
+  LatencyFoldData fold_data;
+
+  /* This is basically gst_pad_query_latency_default() but with a different
+   * iterator. We query all sinkpads! */
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
+  if (!it) {
+    GST_DEBUG_OBJECT (pad, "Can't iterate internal links");
+    return FALSE;
+  }
+
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+
+retry:
+  fold_data.count = 0;
+  fold_data.live = FALSE;
+  fold_data.min = 0;
+  fold_data.max = GST_CLOCK_TIME_NONE;
+
+  g_value_set_boolean (&ret, TRUE);
+  res = gst_iterator_fold (it, query_latency_default_fold, &ret, &fold_data);
+  switch (res) {
+    case GST_ITERATOR_OK:
+      g_assert_not_reached ();
+      break;
+    case GST_ITERATOR_DONE:
+      break;
+    case GST_ITERATOR_ERROR:
+      g_value_set_boolean (&ret, FALSE);
+      break;
+    case GST_ITERATOR_RESYNC:
+      gst_iterator_resync (it);
+      goto retry;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  gst_iterator_free (it);
+
+  query_ret = g_value_get_boolean (&ret);
+  if (query_ret) {
+    GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
+        " max:%" G_GINT64_FORMAT, fold_data.live ? "true" : "false",
+        fold_data.min, fold_data.max);
+
+    if (fold_data.min > fold_data.max) {
+      GST_ERROR_OBJECT (pad, "minimum latency bigger than maximum latency");
+    }
+
+    gst_query_set_latency (query, fold_data.live, fold_data.min, fold_data.max);
+  } else {
+    GST_LOG_OBJECT (pad, "latency query failed");
+  }
+
+  return query_ret;
+}
+
+static gboolean
+gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstInputSelector *sel = GST_INPUT_SELECTOR (parent);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+      /* Query all sink pads for the latency, not just the active one */
+      return gst_input_selector_query_latency (sel, pad, query);
+    default:
+      return gst_pad_query_default (pad, parent, query);
+  }
 }
 
 /* check if the pad is the active sinkpad */
