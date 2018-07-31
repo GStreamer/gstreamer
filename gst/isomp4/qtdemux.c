@@ -12377,7 +12377,8 @@ qtdemux_is_streams_update (GstQTDemux * qtdemux)
 {
   GList *new, *old;
 
-  g_return_val_if_fail (qtdemux->active_streams != NULL, FALSE);
+  if (!qtdemux->active_streams)
+    return FALSE;
 
   /* streams in list are sorted in track-id order */
   for (new = qtdemux->active_streams, old = qtdemux->old_streams; new && old;
