@@ -222,6 +222,8 @@ gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : get_option('exa
 # TODO: https://github.com/mesonbuild/meson/issues/3941
 if not get_option('x11').disabled()
   gtk_x11_dep = dependency('gtk+-x11-3.0', version : '>= 3.10', required : get_option('examples'))
+else
+  gtk_x11_dep = dependency('', required : false)
 endif
 # gtk+ quartz backend is only available on macOS
 if host_system == 'darwin'
