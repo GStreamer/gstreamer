@@ -644,12 +644,13 @@ restart:
 
 /* should be called with LOCK */
 static GstEvent *
-_apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
+_apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream,
+    gint64 pad_offset)
 {
   gint64 offset;
 
   GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_STIME_FORMAT,
-      GST_STIME_ARGS (pad->offset));
+      GST_STIME_ARGS (pad_offset));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GstSegment segment;
@@ -660,16 +661,16 @@ _apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
     gst_event_copy_segment (event, &segment);
     gst_event_unref (event);
 
-    gst_segment_offset_running_time (&segment, segment.format, pad->offset);
+    gst_segment_offset_running_time (&segment, segment.format, pad_offset);
     event = gst_event_new_segment (&segment);
   }
 
   event = gst_event_make_writable (event);
   offset = gst_event_get_running_time_offset (event);
   if (upstream)
-    offset -= pad->offset;
+    offset -= pad_offset;
   else
-    offset += pad->offset;
+    offset += pad_offset;
   gst_event_set_running_time_offset (event, offset);
 
   return event;
@@ -679,10 +680,9 @@ static inline GstEvent *
 apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream)
 {
   if (G_UNLIKELY (pad->offset != 0))
-    return _apply_pad_offset (pad, event, upstream);
+    return _apply_pad_offset (pad, event, upstream, pad->offset);
   return event;
 }
-
 
 /* should be called with the OBJECT_LOCK */
 static GstCaps *
@@ -5299,6 +5299,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
   GstFlowReturn ret;
   GstPad *peerpad;
   GstEventType event_type;
+  gint64 old_pad_offset = pad->offset;
 
   /* pass the adjusted event on. We need to do this even if
    * there is no peer pad because of the probes. */
@@ -5379,6 +5380,15 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
     /* Push all sticky events before our current one
      * that have changed */
     events_foreach (pad, sticky_changed, &data);
+  }
+
+  /* the pad offset might've been changed by any of the probes above. It
+   * would've been taken into account when repushing any of the sticky events
+   * above but not for our current event here */
+  if (G_UNLIKELY (old_pad_offset != pad->offset)) {
+    event =
+        _apply_pad_offset (pad, event, GST_PAD_IS_SINK (pad),
+        pad->offset - old_pad_offset);
   }
 
   /* now check the peer pad */
@@ -5622,9 +5632,11 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
   GstPadEventFunction eventfunc;
   GstPadEventFullFunction eventfullfunc = NULL;
   GstObject *parent;
+  gint64 old_pad_offset;
 
   GST_OBJECT_LOCK (pad);
 
+  old_pad_offset = pad->offset;
   event = apply_pad_offset (pad, event, GST_PAD_IS_SRC (pad));
 
   if (GST_PAD_IS_SINK (pad))
@@ -5719,6 +5731,15 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
 
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
+
+  /* the pad offset might've been changed by any of the probes above. It
+   * would've been taken into account when repushing any of the sticky events
+   * above but not for our current event here */
+  if (G_UNLIKELY (old_pad_offset != pad->offset)) {
+    event =
+        _apply_pad_offset (pad, event, GST_PAD_IS_SRC (pad),
+        pad->offset - old_pad_offset);
+  }
 
   eventfullfunc = GST_PAD_EVENTFULLFUNC (pad);
   eventfunc = GST_PAD_EVENTFUNC (pad);
