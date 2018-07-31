@@ -707,6 +707,13 @@ gst_omx_try_importing_buffer (GstOMXVideoDec * self, GstBufferPool * pool,
     goto out;
   }
 
+  if (self->dmabuf && !gst_is_dmabuf_memory (mem)) {
+    GST_INFO_OBJECT (self,
+        "%d-th buffer doesn't contain dmabuf while the decoder is in dmabuf mode",
+        i);
+    goto out;
+  }
+
   *frame = g_slice_new0 (GstVideoFrame);
 
   is_mapped = gst_video_frame_map (*frame, v_info, buffer, flags);
