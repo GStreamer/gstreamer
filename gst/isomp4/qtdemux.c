@@ -4079,8 +4079,17 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
     min_dts = MIN (min_dts, QTSTREAMTIME_TO_GSTTIME (stream, decode_time));
 
-    if (qtdemux->upstream_format_is_time)
+    if (!qtdemux->pullbased) {
+      /* Sample tables can grow enough to be problematic if the system memory
+       * is very low (e.g. embedded devices) and the videos very long
+       * (~8 MiB/hour for 25-30 fps video + typical AAC audio frames).
+       * Fortunately, we can easily discard them for each new fragment when
+       * we know qtdemux will not receive seeks outside of the current fragment.
+       * adaptivedemux honors this assumption.
+       * This optimization is also useful for applications that use qtdemux as
+       * a push-based simple demuxer, like Media Source Extensions. */
       gst_qtdemux_stream_flush_samples_data (stream);
+    }
 
     /* initialise moof sample data */
     stream->n_samples_moof = 0;
