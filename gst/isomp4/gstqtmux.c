@@ -3428,21 +3428,15 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
         GstCollectData *cdata = (GstCollectData *) walk->data;
         GstQTPad *qpad = (GstQTPad *) cdata;
-        const TrakBufferEntryInfo *sample_entry;
         guint64 block_idx;
         AtomSTBL *stbl = &qpad->trak->mdia.minf.stbl;
 
         /* Get the block index of the last sample we wrote, not of the next
          * sample we would write */
         block_idx = prefill_get_block_index (qtmux, qpad);
-        g_assert (block_idx > 0);
-        block_idx--;
-
-        sample_entry =
-            &g_array_index (qpad->samples, TrakBufferEntryInfo, block_idx);
 
         /* stts */
-        {
+        if (block_idx > 0) {
           STTSEntry *entry;
           guint64 nsamples = 0;
           gint i, n;
@@ -3458,6 +3452,8 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
             nsamples += entry->sample_count;
           }
           g_assert (i < n);
+        } else {
+          stbl->stts.entries.len = 0;
         }
 
         /* stsz */
@@ -3471,56 +3467,66 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
           gint i, n;
           guint64 nsamples = 0;
           gint chunk_index = 0;
+          const TrakBufferEntryInfo *sample_entry;
 
-          n = stbl->stco64.entries.len;
-          for (i = 0; i < n; i++) {
-            guint64 *entry = &atom_array_index (&stbl->stco64.entries, i);
+          if (block_idx > 0) {
+            sample_entry =
+                &g_array_index (qpad->samples, TrakBufferEntryInfo,
+                block_idx - 1);
 
-            if (*entry == sample_entry->chunk_offset) {
-              stbl->stco64.entries.len = i + 1;
-              chunk_index = i + 1;
-              break;
+            n = stbl->stco64.entries.len;
+            for (i = 0; i < n; i++) {
+              guint64 *entry = &atom_array_index (&stbl->stco64.entries, i);
+
+              if (*entry == sample_entry->chunk_offset) {
+                stbl->stco64.entries.len = i + 1;
+                chunk_index = i + 1;
+                break;
+              }
             }
-          }
-          g_assert (i < n);
-          g_assert (chunk_index > 0);
+            g_assert (i < n);
+            g_assert (chunk_index > 0);
 
-          n = stbl->stsc.entries.len;
-          for (i = 0; i < n; i++) {
-            STSCEntry *entry = &atom_array_index (&stbl->stsc.entries, i);
+            n = stbl->stsc.entries.len;
+            for (i = 0; i < n; i++) {
+              STSCEntry *entry = &atom_array_index (&stbl->stsc.entries, i);
 
-            if (entry->first_chunk >= chunk_index)
-              break;
+              if (entry->first_chunk >= chunk_index)
+                break;
+
+              if (i > 0) {
+                nsamples +=
+                    (entry->first_chunk - atom_array_index (&stbl->stsc.entries,
+                        i -
+                        1).first_chunk) * atom_array_index (&stbl->stsc.entries,
+                    i - 1).samples_per_chunk;
+              }
+            }
+            g_assert (i <= n);
 
             if (i > 0) {
+              STSCEntry *prev_entry =
+                  &atom_array_index (&stbl->stsc.entries, i - 1);
               nsamples +=
-                  (entry->first_chunk - atom_array_index (&stbl->stsc.entries,
-                      i -
-                      1).first_chunk) * atom_array_index (&stbl->stsc.entries,
-                  i - 1).samples_per_chunk;
-            }
-          }
-          g_assert (i <= n);
-
-          if (i > 0) {
-            STSCEntry *prev_entry =
-                &atom_array_index (&stbl->stsc.entries, i - 1);
-            nsamples +=
-                (chunk_index -
-                prev_entry->first_chunk) * prev_entry->samples_per_chunk;
-            if (qpad->sample_offset - nsamples > 0) {
-              stbl->stsc.entries.len = i;
-              atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
-                  qpad->sample_offset - nsamples);
+                  (chunk_index -
+                  prev_entry->first_chunk) * prev_entry->samples_per_chunk;
+              if (qpad->sample_offset - nsamples > 0) {
+                stbl->stsc.entries.len = i;
+                atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
+                    qpad->sample_offset - nsamples);
+              } else {
+                stbl->stsc.entries.len = i;
+                stbl->stco64.entries.len--;
+              }
             } else {
-              stbl->stsc.entries.len = i;
-              stbl->stco64.entries.len--;
+              /* Everything in a single chunk */
+              stbl->stsc.entries.len = 0;
+              atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
+                  qpad->sample_offset);
             }
           } else {
-            /* Everything in a single chunk */
+            stbl->stco64.entries.len = 0;
             stbl->stsc.entries.len = 0;
-            atom_stsc_add_new_entry (&stbl->stsc, chunk_index,
-                qpad->sample_offset);
           }
         }
 
