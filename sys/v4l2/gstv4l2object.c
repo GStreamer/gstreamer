@@ -42,6 +42,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include <gst/video/video.h>
+#include <gst/allocators/gstdmabuf.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
@@ -4600,4 +4601,155 @@ different_caps:
     GST_DEBUG_OBJECT (obj->dbg_obj, "pool has different caps");
     return FALSE;
   }
+}
+
+gboolean
+gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
+{
+  GstVideoMeta *vmeta;
+  guint n_mem = gst_buffer_n_memory (buffer);
+
+  /* only import if requested */
+  switch (obj->mode) {
+    case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF_IMPORT:
+      break;
+    default:
+      GST_DEBUG_OBJECT (obj->dbg_obj,
+          "The io-mode does not enable importation");
+      return FALSE;
+  }
+
+  vmeta = gst_buffer_get_video_meta (buffer);
+  if (!vmeta && obj->need_video_meta) {
+    GST_DEBUG_OBJECT (obj->dbg_obj, "Downstream buffer uses standard "
+        "stride/offset while the driver does not.");
+    return FALSE;
+  }
+
+  /* we need matching strides/offsets and size */
+  if (vmeta) {
+    guint p;
+    gboolean need_fmt_update = FALSE;
+
+    if (vmeta->n_planes != GST_VIDEO_INFO_N_PLANES (&obj->info)) {
+      GST_WARNING_OBJECT (obj->dbg_obj,
+          "Cannot import buffers with different number planes");
+      return FALSE;
+    }
+
+    for (p = 0; p < vmeta->n_planes; p++) {
+      if (vmeta->stride[p] < obj->info.stride[p]) {
+        GST_DEBUG_OBJECT (obj->dbg_obj,
+            "Not importing as remote stride %i is smaller then %i on plane %u",
+            vmeta->stride[p], obj->info.stride[p], p);
+        return FALSE;
+      } else if (vmeta->stride[p] > obj->info.stride[p]) {
+        need_fmt_update = TRUE;
+      }
+
+      if (vmeta->offset[p] < obj->info.offset[p]) {
+        GST_DEBUG_OBJECT (obj->dbg_obj,
+            "Not importing as offset %" G_GSIZE_FORMAT
+            " is smaller then %" G_GSIZE_FORMAT " on plane %u",
+            vmeta->offset[p], obj->info.offset[p], p);
+        return FALSE;
+      } else if (vmeta->offset[p] > obj->info.offset[p]) {
+        need_fmt_update = TRUE;
+      }
+    }
+
+    if (need_fmt_update) {
+      struct v4l2_format format;
+      gint wanted_stride[GST_VIDEO_MAX_PLANES] = { 0, };
+
+      format = obj->format;
+
+      /* update the current format with the stride we want to import from */
+      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+        guint i;
+
+        GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted strides:");
+
+        for (i = 0; i < obj->n_v4l2_planes; i++) {
+          gint stride = vmeta->stride[i];
+
+          if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
+            stride = GST_VIDEO_TILE_X_TILES (stride) <<
+                GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
+
+          format.fmt.pix_mp.plane_fmt[i].bytesperline = stride;
+          wanted_stride[i] = stride;
+          GST_DEBUG_OBJECT (obj->dbg_obj, "    [%u] %i", i, wanted_stride[i]);
+        }
+      } else {
+        gint stride = vmeta->stride[0];
+
+        GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted stride: %i", stride);
+
+        if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
+          stride = GST_VIDEO_TILE_X_TILES (stride) <<
+              GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
+
+        format.fmt.pix.bytesperline = stride;
+        wanted_stride[0] = stride;
+      }
+
+      if (obj->ioctl (obj->video_fd, VIDIOC_S_FMT, &format) < 0) {
+        GST_WARNING_OBJECT (obj->dbg_obj,
+            "Something went wrong trying to update current format: %s",
+            g_strerror (errno));
+        return FALSE;
+      }
+
+      gst_v4l2_object_save_format (obj, obj->fmtdesc, &format, &obj->info,
+          &obj->align);
+
+      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+        guint i;
+
+        for (i = 0; i < obj->n_v4l2_planes; i++) {
+          if (format.fmt.pix_mp.plane_fmt[i].bytesperline != wanted_stride[i]) {
+            GST_DEBUG_OBJECT (obj->dbg_obj,
+                "[%i] Driver did not accept the new stride (wants %i, got %i)",
+                i, format.fmt.pix_mp.plane_fmt[i].bytesperline,
+                wanted_stride[i]);
+            return FALSE;
+          }
+        }
+      } else {
+        if (format.fmt.pix.bytesperline != wanted_stride[0]) {
+          GST_DEBUG_OBJECT (obj->dbg_obj,
+              "Driver did not accept the new stride (wants %i, got %i)",
+              format.fmt.pix.bytesperline, wanted_stride[0]);
+          return FALSE;
+        }
+      }
+    }
+  }
+
+  /* we can always import single memory buffer, but otherwise we need the same
+   * amount of memory object. */
+  if (n_mem != 1 && n_mem != obj->n_v4l2_planes) {
+    GST_DEBUG_OBJECT (obj->dbg_obj, "Can only import %i memory, "
+        "buffers contains %u memory", obj->n_v4l2_planes, n_mem);
+    return FALSE;
+  }
+
+  /* For DMABuf importation we need DMABuf of course */
+  if (obj->mode == GST_V4L2_IO_DMABUF_IMPORT) {
+    guint i;
+
+    for (i = 0; i < n_mem; i++) {
+      GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+
+      if (!gst_is_dmabuf_memory (mem)) {
+        GST_DEBUG_OBJECT (obj->dbg_obj, "Cannot import non-DMABuf memory.");
+        return FALSE;
+      }
+    }
+  }
+
+  /* for the remaining, only the kernel driver can tell */
+  return TRUE;
 }
