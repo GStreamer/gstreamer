@@ -52,7 +52,7 @@ in a GIT repository in the `examples/tutorials` subdirectory.
 The GIT repository can be cloned with:
 
 ```
-git clone git://anongit.freedesktop.org/gstreamer/gst-docs
+git clone https://gitlab.freedesktop.org/gstreamer/gst-docs
 ```
 
 #### Building the tutorials

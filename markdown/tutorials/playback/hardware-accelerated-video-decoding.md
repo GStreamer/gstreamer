@@ -36,7 +36,7 @@ currently not limited to Intel GPUs as other manufacturers are free to
 use this API, for example, [Imagination
 Technologies](http://en.wikipedia.org/wiki/Imagination_Technologies) or
 [S3 Graphics](http://en.wikipedia.org/wiki/S3_Graphics). Accessible to
-GStreamer through the [gstreamer-vaapi](https://cgit.freedesktop.org/gstreamer/gstreamer-vaapi/) package.
+GStreamer through the [gstreamer-vaapi](https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/) package.
 
 - [VDPAU](http://en.wikipedia.org/wiki/VDPAU) (*Video Decode and
 Presentation API for UNIX*): Initially designed by
@@ -44,7 +44,7 @@ Presentation API for UNIX*): Initially designed by
 Window System on Unix-based operating systems, now open-source. Although
 it is also an open-source library, no manufacturer other than NVidia is
 using it yet. Accessible to GStreamer through
-the [vdpau](http://cgit.freedesktop.org/gstreamer/gst-plugins-bad/tree/sys/vdpau) element in plugins-bad.
+the [vdpau](http://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/tree/master/sys/vdpau) element in plugins-bad.
 
  - [OpenMAX](http://en.wikipedia.org/wiki/OpenMAX) (*Open Media
 Acceleration*): Managed by the non-profit technology consortium [Khronos

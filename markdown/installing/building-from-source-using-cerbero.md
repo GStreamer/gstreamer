@@ -81,7 +81,7 @@ architectures and distributions.
 
 Get a copy of Cerbero by cloning the git repository:
 
-    git clone git://anongit.freedesktop.org/gstreamer/cerbero
+    git clone https://gitlab.freedesktop.org/gstreamer/cerbero
 
 Cerbero can be run uninstalled and for convenience you can create an
 alias in your `.bashrc` file*. *If you prefer to skip this step,
@@ -193,7 +193,7 @@ command:
 Once you are in Cerbero's shell you can compile new projects targeting
 GStreamer using the regular build process:
 
-    $ git clone git://anongit.freedesktop.org/gstreamer/gst-plugins-good; cd gst-plugins-good
+    $ git clone https://gitlab.freedesktop.org/gstreamer/gst-plugins-good; cd gst-plugins-good
     $ sh autogen.sh --disable-gtk-doc --prefix=<prefix>
     $ make -C gst/isomp4
 

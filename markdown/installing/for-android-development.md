@@ -71,7 +71,7 @@ interact through [JNI][Java Native Interface].
 ### Building the tutorials
 
 The tutorials code are in the
-[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+[gst-docs](https://gitlab.freedesktop.org/gstreamer/gst-docs/) in the
 `examples/tutorials/` folder.
 
 There are a few Android-specific tutorials in the `tutorials/`

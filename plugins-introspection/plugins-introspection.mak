@@ -28,7 +28,7 @@ update-xml: checkoutdir
 	    } ; \
 	  else \
 	    echo "$$m checkout: creating (cloning)"; \
-	    git clone -b $$branch https://anongit.freedesktop.org/git/gstreamer/$$m.git $$moduledir || { \
+	    git clone -b $$branch https://gitlab.freedesktop.org/gstreamer/$$m.git $$moduledir || { \
 	      echo "git clone failed"; exit 1; \
 	    } ; \
 	  cd ../../ ; \

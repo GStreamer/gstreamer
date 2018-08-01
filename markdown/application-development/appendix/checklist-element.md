@@ -33,8 +33,8 @@ applications around them.
     `GstBus` and only update the user interface whenever this message is
     received.
 
-  - Report all bugs that you find in GStreamer bugzilla at
-    [http://bugzilla.gnome.org/](http://bugzilla.gnome.org).
+  - Report all bugs that you find to Gitlab at
+    [https://gitlab.freedesktop.org/gstreamer/](https://gitlab.freedesktop.org/gstreamer).
 
 ## Debugging
 

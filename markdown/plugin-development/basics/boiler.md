@@ -28,7 +28,7 @@ command
 console:
 
 ```
-shell $ git clone git://anongit.freedesktop.org/gstreamer/gst-template.git
+shell $ git clone https://gitlab.freedesktop.org/gstreamer/gst-template.git
 Initialized empty Git repository in /some/path/gst-template/.git/
 remote: Counting objects: 373, done.
 remote: Compressing objects: 100% (114/114), done.
@@ -46,8 +46,8 @@ for a plugin.
 
 If for some reason you can't access the git repository, you can also
 [download a snapshot of the latest
-revision](http://cgit.freedesktop.org/gstreamer/gst-template/commit/)
-via the cgit web interface.
+revision](https://gitlab.freedesktop.org/gstreamer/gst-template)
+via the gitlab web interface.
 
 ## Using the Project Stamp
 

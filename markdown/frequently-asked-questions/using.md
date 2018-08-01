@@ -103,13 +103,14 @@ $ gst-inspect-1.0 volume
 
 will give you information about the volume plugin.
 
-## Where should I report bugs?
+## Where should I report issues?
 
-Bugs are tracked in GNOME's Bugzilla at <http://bugzilla.gnome.org>, under
-the product GStreamer. Using bugzilla you can view past bug history, report
-new bugs, submit patches etc. Bugzilla requires you to create an account there,
-which might seem cumbersome, but allows us to at least have a chance at
-contacting you for further information, as we will often have to do.
+Issues are tracked in Freedesktop.org's Gitlab at
+<https://gitlab.freedesktop.org/gstreamer>. Using Gitlab you can view past
+issues, report new issues, submit merge requests etc. Gitlab requires you to
+create an account there, which might seem cumbersome, but allows us to at least
+have a chance at contacting you for further information, as we will often have
+to do.
 
 ## How should I report bugs?
 

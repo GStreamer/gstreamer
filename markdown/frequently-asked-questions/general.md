@@ -67,8 +67,8 @@ GStreamer aims to support every format imaginable, but that
 doesn't mean the developers have managed to achieve that aim yet. If a
 GStreamer enabled application doesn't play back your files, you can help
 us solve that problem by [filing an enhancement request
-bug](http://bugzilla.gnome.org) for that format. If you have it, please
-provide:
+issue](https://gitlab.freedesktop.org/gstreamer) for that format. If you have it,
+please provide:
 
   - links to other players, preferably Open Source and working on Unix
 

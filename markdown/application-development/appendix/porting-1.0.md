@@ -7,7 +7,7 @@ title: Porting 0.10 applications to 1.0
 This section outlines some of the changes necessary to port applications
 from GStreamer-0.10 to GStreamer-1.0. For a comprehensive and up-to-date
 list, see the separate [Porting
-to 1.0](http://cgit.freedesktop.org/gstreamer/gstreamer/plain/docs/random/porting-to-1.0.txt)
+to 1.0](https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/docs/random/porting-to-1.0.txt)
 document.
 
 It should be possible to port simple applications to GStreamer-1.0 in

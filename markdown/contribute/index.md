@@ -4,34 +4,31 @@ short-description: Contributing to GStreamer
 
 # How to Contribute to GStreamer
 
-This document provides instructions and guidelines for submitting bug reports
-, feature requests and patches to GStreamer. The following applies to all
+This document provides instructions and guidelines for submitting issues,
+feature requests and patches to GStreamer. The following applies to all
 these operations:
 
-- Please use the [GNOME bugzilla][bugzilla] to perform any of the aforementioned
-  operations. You will need to create a GNOME bugzilla account if you don't have
-  one yet (yep, that's just how it is. Sorry for the inconvenience).
+- Please use [Freedesktop.org Gitlab][gitlab] to perform any of the aforementioned
+  operations. You will need to create a Freedekstop.org Gitlab account if you
+  don't have one yet (yep, that's just how it is. Sorry for the inconvenience).
 
-- Create a new bug if there is no bug report for this issue yet. Bugzilla will
-  show you a list of existing and similar-looking issues when you file your
-  bug. Please have a look at the list to see if anything looks like it matches.
+## How to File Issues and Request for Enhancements
+
+### Where to File Issues and Feature Requests
+
+- Create a new issue if there is no report for this problem yet.
   The GStreamer [bugs page][bugs] also has shortcuts for the major components
   and simple search functionality if you'd like to browse or search for
-  existing bugs.
-
-## How to File Bug Reports and Request for Enhancements
-
-### Where to File Bug Reports and Feature Requests
-
-After completing the common steps:
+  existing issues.
 
 - If you are filing a feature request (i.e. anything that is not supposed to
-  work already, that is anything not a bug), please set your bug's severity
-  to *enhancement*. This won't affect the way we prioritise the issue, but
-  it will make triaging easier for us.
+  work already, that is anything not an issue), please add the *Enhancement* label.
+  Feel free to add any other appropriate already existing labels.  Please don't
+  create new labels just for your issue. This won't affect the way we prioritise
+  the issue, but it will make triaging easier for us.
 
-- If your bug is about a specific plugin, element or utility library,
-  please prefix the bug summary with `element-name:`, `plugin-name:` or `lib:`
+- If your issue is about a specific plugin, element or utility library,
+  please prefix the issue summary with `element-name:`, `plugin-name:` or `lib:`
   and keep the rest of the description as short and precise as possible.
 
   Examples:
@@ -40,8 +37,8 @@ After completing the common steps:
    - `tsdemux: does not detect audio stream`
    - `Internal flow error when playing matroska file`
 
-  This makes sure developers looking through the list of open bugs or bug
-  notification mails can quickly identify what your bug is about. If your text
+  This makes sure developers looking through the list of open issues or issue
+  notification mails can quickly identify what your issue is about. If your text
   is too long and only contains fill words at the beginning, the important
   information will be cut off and not show up in the list view or mail client.
 
@@ -56,9 +53,9 @@ After completing the common steps:
    - if you're on Linux, please mention your distro and distro version
    - if this is on an embedded device please provide details
 
-- Try to describe how the bug can be reproduced. If it is triggered by any
+- Try to describe how the issue can be reproduced. If it is triggered by any
   specific file, try to make the file available somewhere for download and
-  put the link into the bug report. The easier it is for us to reproduce
+  put the link into the issue. The easier it is for us to reproduce
   the issue, the easier it is to fix it.
 
 - If you experience a crash (that is: the application shuts down unexpectedly,
@@ -84,19 +81,17 @@ After completing the common steps:
 
 After completing the common steps:
 
-- Once you have created a bug you can attach your patch(es) to the bug report,
-  see below for more details. You can add one attachment when you file the bug,
-  but if you have multiple things to attach you will have to do that after the
-  bug has been submitted.
+- Once you have created an issue you can submit a merge request, see below for
+  more details.
 
-- If your patch is for an enhancement (anything that is not supposed to work
-  already, i.e. anything not a bug) or adds new API, please set your bug's
-  severity to *enhancement*. This won't affect the way we prioritise your bug,
+- If your change is for an enhancement (anything that is not supposed to work
+  already, i.e. anything not a bug) or adds new API, please add the
+  *Enhancement* label. This won't affect the way we prioritise your issue,
   but it does make triaging easier for us.
 
-- If your patch is against a specific plugin or element or utility library,
-  please prefix the bug summary with `element-name:`, `plugin-name:` or `lib:`
-  and keep the rest of the description as short and precise as possible.
+- If your merge request is against a specific plugin or element or utility library,
+  please prefix the merge request summary with `element-name:`, `plugin-name:`
+  or `lib:` and keep the rest of the description as short and precise as possible.
 
   Examples:
 
@@ -105,65 +100,81 @@ After completing the common steps:
    - `playbin: detect if video-sink supports deinterlacing`
    - `tests: rtprtx unit test is racy`
 
-  This makes sure developers looking through the list of open bugs or bug
-  notification mails can quickly identify what your bug is about. If your text
+  This makes sure developers looking through the list of open merge requests or
+  notification mails can quickly identify what your change is about. If your text
   is too long and only contains fill words at the beginning, the important
   information will be cut off and not show up in the list view or mail client.
 
-- Please create separate bugs for separate issues. There is no golden rule when
-  something counts as a separate issue, please just use your best judgment. For
-  example, if you have a change that needs to be done in each module, one bug
-  for all the patches for the various modules is fine. If there is an issue
-  that requires related fixes in multiple elements or libraries, please also
-  feel free to put everything into one bug report. If you just happen to have
-  multiple patches for us but they are not really related, please put them in
-  separate bugs. The main question is if it makes sense to discuss and review
-  these patches together or if they could just as well be handled completely
-  separately.
+- Make liberal use of the reference syntax available to help cross-linking
+  different issues and merge requests. e.g. `#100` references issue 100 in the
+  current module. `!100` references merge request 100 in the current project.
+  A complete list is available from [gitlab's documentation][special-md-references].
+
+- Please create separate merge requests for separate issues and for different
+  modules. There is no golden rule when something counts as a separate issue,
+  please just use your best judgment.  If a merge request is related to another
+  merge request in another module please mention that in the description using
+  a gitlab reference as outlined above.  For example, if you have a change that
+  needs to be done in each module, one issue with one merge request per module
+  is fine. If there is an issue that requires related fixes in multiple elements
+  or libraries, please also feel free to put everything into one issue. If you
+  just happen to have multiple patches for us but they are not really related,
+  please put them in separate issues and merge requests. The main question is
+  if it makes sense to discuss and review these patches together or if they
+  could just as well be handled completely separately.
 
 - Please do not send patches to the gstreamer-devel mailing list. Patches
   submitted on the mailing list are most likely going to be ignored, overlooked,
-  or you will get a brief reply asking you to put them into bugzilla. We do
-  not use the mailing list for bug review.
+  or you will get a brief reply asking you to put them into gitlab. We do
+  not use the mailing list for patch review.
 
 - Please do not send pull requests to our github mirror. They will be closed
   automatically.
 
-- Please also do not attach patches to already-existing bugs unless they
-  really are directly relevant to the issue, i.e. do not attach patches to
-  already-existing bugs that are only vaguely related to your issue.
+- Please do not attach patches to existing bugs on [GNOME Bugzilla][bugzilla]
+  If you want to reopen an already closed bug, let one of the developers know
+  and we will look into that on a case-by-case basis.
 
-[bugzilla]: https://bugzilla.gnome.org
+- Please do not attach patches to issues.
+
+
+[special-md-references]: https://docs.gitlab.com/ee/user/markdown.html#special-gitlab-references
+[bugzilla]: https://bugzilla.gnome.org/
 [bugs]: https://gstreamer.freedesktop.org/bugs/
-[open-bugs]: https://bugzilla.gnome.org/buglist.cgi?product=GStreamer&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=NEEDINFO&bug_status=REOPENED&form_name=query
+[gitlab]: https://gitlab.freedesktop.org/gstreamer
 
-### How to Prepare a Patch for Submission
+### How to Prepare a Merge Request for Submission
 
-If possible at all, you should prepare patches against a current git checkout,
-ideally against the tip of the master branch, but in many cases patches against
-a stable release will be acceptable as well if the plugin or code hasn't
-changed much since then. If a patch was prepared against an old branch and
+If possible at all, you should prepare a merge request against a current git
+checkout, ideally against the tip of the master branch.  The gitlab mrege request
+UI will contain information about whether the merge request can be applied to the
+current code. If a merge request was prepared against an old commit and
 does not apply any longer to master you may be asked to provide an updated
-patch.
+branch to merge.
 
-If you have created a new plugin, please submit a patch that adds it to the
-gst-plugins-bad module, including `configure.ac` and the various `Makefile.am`
-modifications and all new files.
+If you have created a new plugin, please submit a merge request that adds it to
+the gst-plugins-bad module, including `configure.ac`, the various `Makefile.am`
+modifications, `meson.build` modifications, and all new files.
 
 #### Patch Format
 
-Please submit patches in `git format-patch` format, as attachment to a bug
-in bugzilla.
+The easiest way to create a merge request is to create one or more local commits
+for your changes in a branch in a local git repository. This should be a git
+clone checkout of your fork of the module in question.  To fork a module go to
+the module in question (e.g.
+[https://gitlab.freedesktop.org/gstreamer/gstreamer](https://gitlab.freedesktop.org/gstreamer/gstreamer))
+and hit the fork button.  A new repository will be created in your user namespace
+and should accessible as
+[https://gitlab.freedesktop.org/$USERNAME/gstreamer](https://gitlab.freedesktop.org/$USERNAME/gstreamer).
+You should clone this repository with valid ssh credentials to be able to
+automatically push code to your fork.
 
-The easiest way to create such patches is to create one or more local commits
-for your changes in a local git repository. This can be a git clone checkout
-of the module in question, or you could create a git repository in any
-directory that has the source code, e.g. the directory created when unpacking
-the source tarball (using `git init`, then `git add .` and
-`git commit -m 'import tarball as initial revision'`).
+Once you have a git repository with the original code in it, you should create a
+branch for your change. e.g. to create a branch and checkout:
 
-Once you have a git repository with the original code in it, you can make
-your modifications and create a local commit with e.g.
+    git checkout -b topic-branch
+
+Then you can make your modifications and create a local commit with e.g.
 
     git commit path/to/file1.[ch]
 
@@ -208,20 +219,16 @@ You can make changes to the last commit using:
     use `git add -p file.c`, then it will ask you for each individual change
     whether you want to add it or leave it.
 
-Once everything looks fine, create the patch file for the last commit with:
+Once everything looks fine, push your branch to your local fork e.g. using
 
-    git format-patch -1
+    git push origin topic-branch
 
-If you have multiple commits, pass -2, -3, etc.
+This push will display a link to be able create a merge request from your branch.
+Click this link and fill out the details of the merge request.  You can also
+create a merge request from an existing branch. See the
+[gitlab documentation][create-mr] for more details.
 
-This should create one or more patch files named
-
-    0001-exampledemux-do-this.patch
-    0002-exampledemux-also-do-that.patch
-
-in the current directory. Attach these files to a bug report in bugzilla.
-
-Please make sure your patches are as terse and precise as possible. Do not
+Please make sure your commits are as terse and precise as possible. Do not
 include 'clean-ups' or non-functional changes, since they distract from the
 real changes and make things harder to review, and also lower the chances that
 the patch will still apply cleanly to the latest version in git. If you feel
@@ -236,7 +243,8 @@ header files, our header file indentation is free-form. If you build GStreamer
 from git, a local commit hook will be installed that checks if your commit
 conforms to the required style (also using GNU indent).
 
-[gst-indent]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/tools/gst-indent
+[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/tools/gst-indent
+[create-mr]: https://docs.gitlab.com/ee/gitlab-basics/add-merge-request.html
 
 ### Writing Good Commit Messages
 
@@ -283,38 +291,34 @@ The important part is really what the reasoning behind the change is, since
 that's what people want to know if they try to figure out twelve months later
 why a line of code does what it does.
 
-If the commit is related to any particular bugs in bugzilla, please add the
-full bug URL at the end of the commit message.
+If the commit is related to any particular issues in gitlab, please add the
+full issue URL at the end of the commit message.
 
-We do not use `Signed-off by:` lines in GStreamer, please create patches
+    https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/123
+
+We do not use `Signed-off by:` lines in GStreamer, please create commits
 without those.
 
 ### After Submitting your Patch
 
-Whenever you submit a new bug report, add a comment to an existing bug or add
-an attachment to a bug, Bugzilla will send a notification e-mail to GStreamer
+Whenever you submit a new merge request, add a comment to an existing issue or
+merge request, Gitlab will send a notification e-mail to GStreamer
 developers. This means that there is usually no need to advertise the fact that
 you have done so in other forums such as on IRC or on the mailing list, unless
-you have been asked to file a bug there, in which case it's nice to follow up
-with the link to the bug.
+you have been asked to file an issue there, in which case it's nice to follow up
+with the link to the issue.
 
 Most of all, please be patient.
 
 We try to review patches as quickly as possible, but there is such a high
-turnaround of bugs, patches and feature requests that it is not always
+turnaround of issues, merge requests and feature requests that it is not always
 possible to tend to them all as quickly as we'd like. This is especially
 true for completely new plugins or new features.
 
 If you haven't received any response at all for a while (say two weeks or so),
 do feel free to ping developers by posting a quick follow-up comment on the
-bug.
+issue or merge request.
 
 If you do not get a response, this is usually not a sign of people *ignoring*
 the issue, but usually just means that it's fallen through the cracks or
 people have been busy with other things.
-
-### Tools
-
-#### git-bz
-
-FIXME: add link to docs / repo plus some examples

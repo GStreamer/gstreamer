@@ -11,17 +11,17 @@ GNOME's jhbuild.
 
 GStreamer and its various official modules are hosted on Freedesktop.org. For
 starters, you will likely be interested in the core `gstreamer` module and the
-basic base functionality provided by the `gstreamer-plugins-base` and
-`gstreamer-plugins-good` modules. Additionally, and in case you want more
+basic base functionality provided by the `gst-plugins-base` and
+`gst-plugins-good` modules. Additionally, and in case you want more
 comprehensive media format support, you might want to check out the
-`gst-plugins-ugly`, `gst-plugins-bad` and `gst-ffmpeg` modules.
+`gst-plugins-ugly`, `gst-plugins-bad` and `gst-libav` modules.
 
 You can use the following command to download the latest source code for the
 base modules:
 
 ```
 for module in gstreamer gst-plugins-base gst-plugins-good; do
-  git clone git://anongit.freedesktop.org/git/gstreamer/$module ;
+  git clone https://gitlab.freedesktop.org/gstreamer/$module ;
 done
 ```
 
@@ -41,26 +41,6 @@ If you want to gain developer access to the GStreamer source-code repositories,
 you need to either send a request to the development lists, or directly ask one
 of the maintainers. We usually only consider requests by developers who have
 been active for some time and have shown to be competent GStreamer contributors.
-If you are not already a registered developer with a user account on
-Freedesktop.org, you will have to provide them with:
-
-1.  your desired username
-
-2.  your full name
-
-3.  your e-mail address
-
-4.  a copy of your public `sshv2` identity. If you do not have this yet,
-    you can generate one by running `ssh-keygen -t rsa -f
-    ~/.ssh/id_rsa.pub-fdo`. The resulting public key will be left in
-    `~/.ssh/id_rsa.pub-fdo`
-
-5.  your GPG fingerprint. This will allow you to add and remove `ssh` keys to
-    your account.
-
-Once you have all these items, review
-<http://freedesktop.org/wiki/AccountRequests> for instructions on what to do
-with them.
 
 ## I ran autogen.sh, but it failed with aclocal errors. What's wrong?
 

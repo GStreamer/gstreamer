@@ -65,10 +65,10 @@ latest stable branch and one for git master. Have a look at the
 [gst-uninstalled][gst-uninstalled] script to see how it determines which
 environment is used.
 
-[gst-build]: https://cgit.freedesktop.org/gstreamer/gst-build/
+[gst-build]: https://gitlab.freedesktop.org/gstreamer/gst-build/
 [meson]: http://mesonbuild.com
-[gst-uninstalled]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/gst-uninstalled
-[create-uninstalled]: http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/create-uninstalled-setup.sh
+[gst-uninstalled]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/scripts/gst-uninstalled
+[create-uninstalled]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/scripts/create-uninstalled-setup.sh
 
 ## How can I use GConf to get the system-wide defaults?
 
@@ -101,7 +101,7 @@ directory.
 
 ## Why is mail traffic so low on gstreamer-devel?
 
-Our main arenas for coordination and discussion are IRC and bugzilla, not
+Our main arenas for coordination and discussion are IRC and Gitlab, not
 the mailing lists. Join us in [`#gstreamer`][irc-gstreamer] on irc.freenode.net.
 There is also a [webchat interface][webchat-gstreamer]. For larger picture
 questions or getting more input from more people, a mail to the gstreamer-devel
@@ -174,11 +174,8 @@ Comments should be in `/* ANSI C comment style */` and code should generally
 be compatible with ANSI C89, so please declare all variables at the beginning
 of the block, etc.
 
-Patches should ideally be made against git master or a recent release and
-should be created using `git format-patch` format. They should then be
-attached individually to a bug report or feature request in
-[bugzilla](http://bugzilla.gnome.org). Please don't send patches to the
-mailing list. They will likely get lost there.
+Merge requests should ideally be made against git master or a recent release.
+Please don't send patches to the mailing list. They will likely get lost there.
 
 See [How to submit patches][submit-patches] for more details.
 

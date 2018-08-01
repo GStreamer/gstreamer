@@ -14,7 +14,7 @@ all about.
  * <a href="/data/doc/gstreamer/head/gstreamer/html/">Core Reference</a>
  * <a href="/data/doc/gstreamer/head/gstreamer-libs/html/">Core Libraries Reference</a>
  * [Core Design Documentation](design/index.md)
- * [GStreamer 0.10 to 1.0 porting guide](http://cgit.freedesktop.org/gstreamer/gstreamer/plain/docs/random/porting-to-1.0.txt)
+ * [GStreamer 0.10 to 1.0 porting guide](https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/master/docs/random/porting-to-1.0.txt)
 
 <!-- FIXME: save useful bits from wiki
 | GStreamer Wiki (see esp. <a href="&site;/wiki/ReleasePlanning">ReleasePlanning</a> and <a href="&site;/wiki/SubmittingPatches">SubmittingPatches</a>)

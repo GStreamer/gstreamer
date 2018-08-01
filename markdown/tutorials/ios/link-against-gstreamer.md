@@ -11,7 +11,7 @@ GStreamer library from Xcode using objective-C.
 ## Hello GStreamer!
 
 The tutorials code are in the
-[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+[gst-docs](https://gitlab.freedesktop.org/gstreamer/gst-docs/) in the
 `tutorials/xcode iOS` folder.
 
 It was created using the GStreamer Single View

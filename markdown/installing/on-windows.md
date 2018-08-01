@@ -96,7 +96,7 @@ plugins are located.
 
 The tutorials code, along with project files and a solution file for
 Visual Studio 2010, are in the
-[gst-docs](https://cgit.freedesktop.org/gstreamer/gst-docs/) in the
+[gst-docs](https://gitlab.freedesktop.org/gstreamer/gst-docs/) in the
 `examples/tutorials` folder.
 
 In order to prevent accidental modification of the original code, and to
