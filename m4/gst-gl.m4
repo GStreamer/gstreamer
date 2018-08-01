@@ -528,7 +528,7 @@ case $host in
         AC_MSG_WARN([EGL is required by the Mesa GBM EGL backend])
       else
         HAVE_WINDOW_GBM=yes
-        GL_CFLAGS="$GL_CFLAGS $DRM_CFLAGS"
+        GL_CFLAGS="$GL_CFLAGS $DRM_CFLAGS $GBM_CFLAGS"
       fi
     fi
 
