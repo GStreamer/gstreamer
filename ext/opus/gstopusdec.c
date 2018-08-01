@@ -83,12 +83,14 @@ G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_AUDIO_DECODER);
 
 #define DEFAULT_USE_INBAND_FEC FALSE
 #define DEFAULT_APPLY_GAIN TRUE
+#define DEFAULT_PHASE_INVERSION FALSE
 
 enum
 {
   PROP_0,
   PROP_USE_INBAND_FEC,
-  PROP_APPLY_GAIN
+  PROP_APPLY_GAIN,
+  PROP_PHASE_INVERSION
 };
 
 
@@ -144,6 +146,16 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
           "Apply gain if any is specified in the header", DEFAULT_APPLY_GAIN,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifdef OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST
+  g_object_class_install_property (gobject_class, PROP_PHASE_INVERSION,
+      g_param_spec_boolean ("phase-inversion",
+          "Control Phase Inversion", "Set to true to enable phase inversion, "
+          "this will slightly improve stereo quality, but will have side "
+          "effects when downmixed to mono.", DEFAULT_PHASE_INVERSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+#endif
+
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
 }
@@ -175,6 +187,7 @@ gst_opus_dec_init (GstOpusDec * dec)
 {
   dec->use_inband_fec = FALSE;
   dec->apply_gain = DEFAULT_APPLY_GAIN;
+  dec->phase_inversion = DEFAULT_PHASE_INVERSION;
 
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
   gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
@@ -498,6 +511,20 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
         dec->n_streams, dec->n_stereo_streams, dec->channel_mapping, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
+
+#ifdef OPUS_SET_PHASE_INVERSION_DISABLED_REQUEST
+    {
+      int err;
+      err = opus_multistream_decoder_ctl (dec->state,
+          OPUS_SET_PHASE_INVERSION_DISABLED (!dec->phase_inversion));
+      if (err != OPUS_OK)
+        GST_WARNING_OBJECT (dec, "Could not configure phase inversion: %s",
+            opus_strerror (err));
+    }
+#else
+    GST_WARNING_OBJECT (dec, "Phase inversion request is not support by this "
+        "version of the Opus Library");
+#endif
   }
 
   if (buffer) {
@@ -929,6 +956,9 @@ gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_APPLY_GAIN:
       g_value_set_boolean (value, dec->apply_gain);
       break;
+    case PROP_PHASE_INVERSION:
+      g_value_set_boolean (value, dec->phase_inversion);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -947,6 +977,9 @@ gst_opus_dec_set_property (GObject * object, guint prop_id,
       break;
     case PROP_APPLY_GAIN:
       dec->apply_gain = g_value_get_boolean (value);
+      break;
+    case PROP_PHASE_INVERSION:
+      dec->phase_inversion = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -75,6 +75,8 @@ struct _GstOpusDec {
   guint64 leftover_plc_duration;
 
   GstClockTime last_known_buffer_duration;
+
+  gboolean phase_inversion;
 };
 
 struct _GstOpusDecClass {
