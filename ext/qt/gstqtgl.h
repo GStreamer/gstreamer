@@ -24,6 +24,7 @@
  * warnings/errors */
 
 #include <gst/gl/gstglconfig.h>
+#include <gst/gl/gstglfuncs.h>
 #include <QtCore/qglobal.h>
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 9, 0))
 #include <QtGui/qtgui-config.h>
