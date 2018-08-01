@@ -836,15 +836,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         gst_avwait_send_element_message (self, TRUE, running_time);
       } else if (running_time < self->running_time_to_wait_for
           && self->running_time_to_wait_for != GST_CLOCK_TIME_NONE) {
-        /* We should set audio_running_time_to_wait_for to a value far enough
-         * in the future, so that it will never be reached. However, setting
-         * it to GST_CLOCK_TIME_NONE would eternally trigger the g_cond_wait
-         * in the audio chain function, causing audio upstream to be queued up
-         * forever. There is already code in place to ensure that audio will
-         * not exceed the video at the same place, so we just set it to
-         * GST_CLOCK_TIME_NONE - 1 here to ensure it will never be reached,
-         * but still not trigger the eternal waiting code */
-        self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE - 1;
+        self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
       }
     }
     /* Recording is FALSE: we drop all buffers */
@@ -959,9 +951,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       (video_running_time == GST_CLOCK_TIME_NONE
           /* Wait if audio is after the video: dunno what to do */
           || gst_avwait_compare_guint64_with_signs (asign,
-              running_time_at_end, vsign, video_running_time) == 1
-          /* Wait if we don't even know what to wait for yet */
-          || self->audio_running_time_to_wait_for == GST_CLOCK_TIME_NONE)) {
+              running_time_at_end, vsign, video_running_time) == 1)) {
     g_cond_wait (&self->cond, &self->mutex);
     vsign =
         gst_segment_to_running_time_full (&self->vsegment, GST_FORMAT_TIME,
