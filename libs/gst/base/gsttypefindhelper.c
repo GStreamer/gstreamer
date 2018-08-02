@@ -370,7 +370,7 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
  * Returns: the last %GstFlowReturn from pulling a buffer or %GST_FLOW_OK if
  *          typefinding was successful.
  *
- * Since: 1.16
+ * Since: 1.14.3
  */
 GstFlowReturn
 gst_type_find_helper_get_range_full (GstObject * obj, GstObject * parent,
