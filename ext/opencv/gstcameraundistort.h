@@ -48,7 +48,7 @@
 
 #include <gst/opencv/gstopencvvideofilter.h>
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 G_BEGIN_DECLS
 

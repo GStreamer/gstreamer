@@ -44,7 +44,7 @@
 #ifndef __GST_RETINEX_H__
 #define __GST_RETINEX_H__
 
-#include <opencv2/core/core_c.h>
+#include <opencv2/core.hpp>
 
 #include <gst/opencv/gstopencvvideofilter.h>
 

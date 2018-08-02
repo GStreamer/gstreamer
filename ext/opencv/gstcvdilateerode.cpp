@@ -53,7 +53,7 @@
 #include "gst/opencv/gstopencvutils.h"
 #include "gstcvdilateerode.h"
 
-#include <opencv2/core/core_c.h>
+#include <opencv2/core.hpp>
 
 /*
 GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_erode_debug);

@@ -49,10 +49,10 @@
 #define __GST_FACE_DETECT_H__
 
 #include <gst/gst.h>
-#include <opencv2/core/version.hpp>
-#include <cv.h>
 #include <gst/opencv/gstopencvvideofilter.h>
-#include <opencv2/objdetect/objdetect.hpp>
+
+#include <opencv2/core.hpp>
+#include <opencv2/objdetect.hpp>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */

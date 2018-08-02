@@ -46,7 +46,7 @@
 #define __GST_MOTIONCELLS_H__
 
 #include <gst/opencv/gstopencvvideofilter.h>
-#include <opencv2/core/core_c.h>
+#include <opencv2/core.hpp>
 #include "motioncells_wrapper.h"
 
 G_BEGIN_DECLS

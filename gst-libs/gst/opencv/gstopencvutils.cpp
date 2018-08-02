@@ -24,7 +24,7 @@
 #endif
 
 #include "gstopencvutils.h"
-#include <opencv2/core/core_c.h>
+#include <opencv2/core.hpp>
 
 /*
 The various opencv image containers or headers store the following information:
