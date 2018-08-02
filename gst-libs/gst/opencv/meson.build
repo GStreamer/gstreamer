@@ -9,7 +9,7 @@ opencv_headers = [
   'gstopencvvideofilter.h',
 ]
 
-opencv_dep = dependency('opencv', version : '>= 2.3.0', required : get_option('opencv'))
+opencv_dep = dependency('opencv', version : '>= 3.0.0', required : get_option('opencv'))
 if opencv_dep.found()
   gstopencv = library('gstopencv-' + api_version,
     opencv_sources,

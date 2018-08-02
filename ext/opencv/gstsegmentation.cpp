@@ -97,9 +97,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_segmentation_debug);
 #define GST_CAT_DEFAULT gst_segmentation_debug
 
 using namespace cv;
-#if (CV_MAJOR_VERSION >= 3)
-  using namespace cv::bgsegm;
-#endif
+using namespace cv::bgsegm;
+
 /* Filter signals and args */
 enum
 {
@@ -776,13 +775,8 @@ initialise_mog (GstSegmentation * filter)
   filter->img_input_as_cvMat = (void *) new Mat (cvarrToMat (filter->cvYUV, false));
   filter->img_fg_as_cvMat = (void *) new Mat (cvarrToMat(filter->cvFG, false));
 
-#if (CV_MAJOR_VERSION >= 3)
   filter->mog = bgsegm::createBackgroundSubtractorMOG ();
   filter->mog2 = createBackgroundSubtractorMOG2 ();
-#else
-  filter->mog = (void *) new BackgroundSubtractorMOG ();
-  filter->mog2 = (void *) new BackgroundSubtractorMOG2 ();
-#endif
 
   return (0);
 }
@@ -805,15 +799,9 @@ run_mog_iteration (GstSegmentation * filter)
      European Workshop on Advanced Video-Based Surveillance Systems, 2001
    */
 
-#if (CV_MAJOR_VERSION >= 3)
   filter->mog->apply (*((Mat *) filter->
           img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
       filter->learning_rate);
-#else
-  (*((BackgroundSubtractorMOG *) filter->mog)) (*((Mat *) filter->
-          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
-      filter->learning_rate);
-#endif
 
   return (0);
 }
@@ -839,15 +827,9 @@ run_mog2_iteration (GstSegmentation * filter)
      Letters, vol. 27, no. 7, pages 773-780, 2006.
    */
 
-#if (CV_MAJOR_VERSION >= 3)
   filter->mog2->apply (*((Mat *) filter->
           img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
       filter->learning_rate);
-#else
-  (*((BackgroundSubtractorMOG *) filter->mog2)) (*((Mat *) filter->
-          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
-      filter->learning_rate);
-#endif
 
   return (0);
 }
@@ -857,12 +839,9 @@ finalise_mog (GstSegmentation * filter)
 {
   delete (Mat *) filter->img_input_as_cvMat;
   delete (Mat *) filter->img_fg_as_cvMat;
-#if (CV_MAJOR_VERSION >= 3)
+
   filter->mog.release ();
   filter->mog2.release ();
-#else
-  delete (BackgroundSubtractorMOG *) filter->mog;
-  delete (BackgroundSubtractorMOG2 *) filter->mog2;
-#endif
+
   return (0);
 }

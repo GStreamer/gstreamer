@@ -42,19 +42,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* This breaks the build for reasons that aren't entirely clear to me yet */
-#if 0
-//#ifdef HAVE_CONFIG_H
-//#include "config.h"
-//#endif
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
 
 #include <errno.h>
 #include "MotionCells.h"
-#if (CV_MAJOR_VERSION >= 3)
 #include <opencv2/imgproc.hpp>
-#endif
-#include <opencv2/imgproc/imgproc_c.h>
 
 MotionCells::MotionCells ()
 {

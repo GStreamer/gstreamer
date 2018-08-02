@@ -47,9 +47,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/core/version.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/calib3d.hpp>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -97,13 +96,9 @@ struct _GstDisparity
   void *img_right_as_cvMat_gray;        /* cv::Mat */
   void *img_left_as_cvMat_gray; /* cv::Mat */
   void *depth_map_as_cvMat;     /* cv::Mat */
-#if (CV_MAJOR_VERSION >= 3)
+
   cv::Ptr<cv::StereoBM> sbm;                    /* cv::StereoBM */
   cv::Ptr<cv::StereoSGBM> sgbm;                /* cv::StereoSGBM */
-#else
- void *sbm;                    /* cv::StereoBM */
- void *sgbm;                   /* cv::StereoSGBM */
-#endif
 };
 
 struct _GstDisparityClass

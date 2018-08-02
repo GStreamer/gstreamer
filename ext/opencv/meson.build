@@ -28,7 +28,7 @@ gstopencv_sources = [
   'gstcameraundistort.cpp'
 ]
 
-libopencv2_headers = [
+libopencv_headers = [
   'opencv2/core/core_c.h',
   'opencv2/core/version.hpp',
   'opencv2/highgui/highgui_c.h',
@@ -36,33 +36,21 @@ libopencv2_headers = [
   'opencv2/imgproc/imgproc_c.h',
   'opencv2/objdetect/objdetect.hpp',
   'opencv2/video/background_segm.hpp',
-]
-
-libopencv3_headers = [
   'opencv2/bgsegm.hpp',
 ]
 
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
 
-opencv_dep = dependency('opencv', version : ['>= 2.3.0', '< 3.5.0'], required : false)
+opencv_dep = dependency('opencv', version : ['>= 3.0.0', '< 3.5.0'], required : false)
 opencv_found = opencv_dep.found()
 
 if opencv_found
-  foreach h : libopencv2_headers
+  foreach h : libopencv_headers
     if not cxx.has_header(h)
       message('Needed header "' + h + '" not found')
       opencv_found = false
     endif
   endforeach
-
-  if opencv_dep.version() >= '3.0.0'
-    foreach h : libopencv3_headers
-      if not cxx.has_header(h)
-        message('Needed header "' + h + '" not found')
-        opencv_found = false
-      endif
-    endforeach
-  endif
 endif
 
 if opencv_found

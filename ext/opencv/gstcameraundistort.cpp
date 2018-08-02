@@ -77,9 +77,7 @@
 
 #include "gstcameraundistort.h"
 
-#if (CV_MAJOR_VERSION >= 3)
 #include <opencv2/imgproc.hpp>
-#endif
 #include <opencv2/calib3d.hpp>
 
 #include <gst/opencv/gstopencvutils.h>
