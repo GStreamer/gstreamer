@@ -50,12 +50,6 @@
 #include <gst/opencv/gstopencvvideofilter.h>
 /* opencv */
 #include <opencv2/core.hpp>
-#ifdef HAVE_HIGHGUI_H
-#include <highgui.h>            // includes highGUI definitions
-#endif
-#ifdef HAVE_OPENCV2_HIGHGUI_HIGHGUI_C_H
-#include <opencv2/highgui.hpp>            // includes highGUI definitions
-#endif
 #include <opencv2/objdetect.hpp>
 
 G_BEGIN_DECLS

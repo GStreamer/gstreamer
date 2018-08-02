@@ -48,13 +48,6 @@
 
 #include <gst/opencv/gstopencvvideofilter.h>
 
-#ifdef HAVE_HIGHGUI_H
-#include <highgui.h>            // includes highGUI definitions
-#endif
-#ifdef HAVE_OPENCV2_HIGHGUI_HIGHGUI_C_H
-#include <opencv2/highgui.hpp>            // includes highGUI definitions
-#endif
-
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_TEMPLATE_MATCH \

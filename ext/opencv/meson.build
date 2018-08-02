@@ -29,14 +29,14 @@ gstopencv_sources = [
 ]
 
 libopencv_headers = [
-  'opencv2/core/core_c.h',
-  'opencv2/core/version.hpp',
-  'opencv2/highgui/highgui_c.h',
-  'opencv2/imgproc/imgproc.hpp',
-  'opencv2/imgproc/imgproc_c.h',
-  'opencv2/objdetect/objdetect.hpp',
-  'opencv2/video/background_segm.hpp',
   'opencv2/bgsegm.hpp',
+  'opencv2/calib3d.hpp',
+  'opencv2/core.hpp',
+  'opencv2/imgcodecs/imgcodecs_c.h',
+  'opencv2/imgproc.hpp',
+  'opencv2/objdetect.hpp',
+  'opencv2/opencv.hpp',
+  'opencv2/video.hpp',
 ]
 
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
