@@ -2500,8 +2500,9 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTPad * qpad)
       /* We always write both cdat and cdt2 atom in prefill mode */
       return 20;
     case FOURCC_c708:
-      /* We're cheating a bit by always allocating 256 bytes even if we use less  */
-      return 256;
+      /* We're cheating a bit by always allocating 256 bytes plus 8 bytes for the atom header
+       * even if we use less  */
+      return 256 + 8;
     case FOURCC_sowt:
     case FOURCC_twos:{
       guint64 block_idx;
