@@ -996,11 +996,11 @@ gst_qt_mux_prepare_caption_buffer (GstQTPad * qtpad, GstBuffer * buf,
     case FOURCC_c708:
     {
       /* Take the whole CDP */
-      if (in_prefill && size > 320) {
+      if (in_prefill && size > 256) {
         GST_ERROR_OBJECT (qtmux, "Input C708 CDP too big for prefill mode !");
         break;
       }
-      newbuf = gst_buffer_new_and_alloc (in_prefill ? 320 + 8 : size + 8);
+      newbuf = gst_buffer_new_and_alloc (in_prefill ? 256 + 8 : size + 8);
 
       /* Let's copy over all metadata and not the memory */
       gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_METADATA, 0, size);
@@ -2500,8 +2500,8 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTPad * qpad)
       /* We always write both cdat and cdt2 atom in prefill mode */
       return 20;
     case FOURCC_c708:
-      /* We're cheating a bit by always allocating 320 bytes even if we use less  */
-      return 320;
+      /* We're cheating a bit by always allocating 100bytes even if we use less  */
+      return 100;
     case FOURCC_sowt:
     case FOURCC_twos:{
       guint64 block_idx;
