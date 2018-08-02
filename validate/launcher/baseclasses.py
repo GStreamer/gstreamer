@@ -1370,6 +1370,19 @@ class GstValidateTestsGenerator(TestsGenerator):
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         pass
 
+    @staticmethod
+    def get_fakesink_for_media_type(media_type, needs_clock=False):
+        if media_type == "video":
+            if needs_clock:
+                return 'fakevideosink qos=true max-lateness=20000000'
+
+            return "fakevideosink sync=false"
+
+        if needs_clock:
+            return "fakesink sync=true"
+
+        return "fakesink"
+
     def generate_tests(self, uri_minfo_special_scenarios, scenarios):
         self.populate_tests(uri_minfo_special_scenarios, scenarios)
         return super(GstValidateTestsGenerator, self).generate_tests()

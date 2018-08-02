@@ -217,11 +217,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     continue
 
                 if self.test_manager.options.mute:
-                    if scenario and scenario.needs_clock_sync():
-                        audiosink = "fakesink sync=true"
-                        videosink = "fakesink sync=true qos=true max-lateness=20000000"
-                    else:
-                        audiosink = videosink = "fakesink"
+                    audiosink = self.get_fakesink_for_media_type("audio", needs_clock)
+                    videosink = self.get_fakesink_for_media_type("video", needs_clock)
                 else:
                     audiosink = 'autoaudiosink'
                     videosink = 'autovideosink'
@@ -257,14 +254,11 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
     def _set_sinks(self, minfo, pipe_str, scenario):
         if self.test_manager.options.mute:
-            if scenario.needs_clock_sync() or \
-                    minfo.media_descriptor.need_clock_sync():
-                afakesink = "'fakesink sync=true'"
-                vfakesink = "'fakesink sync=true qos=true max-lateness=20000000'"
-            else:
-                vfakesink = afakesink = "'fakesink'"
+            needs_clock = scenario.needs_clock_sync() or minfo.media_descriptor.need_clock_sync()
 
-            pipe_str += " audio-sink=%s video-sink=%s" % (
+            afakesink = self.get_fakesink_for_media_type("audio", needs_clock)
+            vfakesink = self.get_fakesink_for_media_type("video", needs_clock)
+            pipe_str += " audio-sink='%s' video-sink='%s'" % (
                 afakesink, vfakesink)
 
         return pipe_str
@@ -403,10 +397,8 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                 self.debug("Adding: %s", fname)
 
                 if self.test_manager.options.mute:
-                    if scenario.needs_clock_sync():
-                        pipe_arguments["sink"] = "fakesink sync=true"
-                    else:
-                        pipe_arguments["sink"] = "'fakesink'"
+                    pipe_arguments["sink"] = self.get_fakesink_for_media_type(self.media_type,
+                        scenario.needs_clock_sync())
                 else:
                     pipe_arguments["sink"] = "auto%ssink" % self.media_type
 
