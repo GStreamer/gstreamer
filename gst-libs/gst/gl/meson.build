@@ -212,8 +212,8 @@ else
       need_platform_cgl = 'yes'
     elif platform == 'wgl'
       need_platform_wgl = 'yes'
-#    elif platform == 'eagl'
-#      need_platform_eagl = 'yes'
+    elif platform == 'eagl'
+      need_platform_eagl = 'yes'
     else
       error('Unsupported GL platform provided ' + platform)
     endif
@@ -248,8 +248,8 @@ else
       need_win_win32 = 'yes'
     elif winsys == 'cocoa'
       need_win_cocoa = 'yes'
-#    elif winsys == 'eagl'
-#      need_win_eagl = 'yes'
+    elif winsys == 'eagl'
+      need_win_eagl = 'yes'
     elif winsys == 'dispmanx'
       need_win_dispmanx = 'yes'
     elif winsys == 'viv-fb'
@@ -290,7 +290,7 @@ endif
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
 if need_api_opengl != 'no' or need_platform_glx != 'no'
-  if ['darwin', 'ios'].contains(host_system)
+  if host_system == 'darwin'
     gl_dep = dependency('OpenGL', required : false)
   else
     # override meson's braindead gl detection on osx/windows/etc by forcing pkg-config
@@ -298,7 +298,7 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
   endif
 
   if not gl_dep.found()
-    if host_machine.system() == 'windows'
+    if host_system == 'windows'
       gl_dep = cc.find_library('opengl32', required : false)
     else
       gl_dep = cc.find_library('GL', required : false)
@@ -326,7 +326,7 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
   endif
 
   opengl_includes = ''
-  if ['darwin', 'ios'].contains(host_system)
+  if host_system == 'darwin'
     opengl_includes += '''
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl.h>
@@ -353,18 +353,23 @@ gles2_dep = unneeded_dep
 gles3_h = false
 gles3ext3_h = false
 if need_api_gles2 != 'no'
-  gles2_dep = dependency('glesv2', required : false)
+  if host_system == 'ios'
+    gles2_dep = dependency('appleframeworks', modules : ['OpenGLES'], required : false)
+  else
+    gles2_dep = dependency('glesv2', required : false)
+  endif
+
   if not gles2_dep.found()
-#    if host_machine.system() == 'windows'
-#    elif ['darwin', 'ios'].contains(host_system)
+#    if host_system == 'windows'
+#    elif host_system == ios
 #      gles2_dep = cc.find_library('GLESv2', required : false)
 #    else
       gles2_dep = cc.find_library('GLESv2', required : false)
 #    endif
 
-     if not cc.has_header('GLES2/gl2.h', include_directories : compat_includes)
-       gles2_dep = unneeded_dep
-     endif
+    if not cc.has_header('GLES2/gl2.h', include_directories : compat_includes)
+      gles2_dep = unneeded_dep
+    endif
 
     if not gles2_dep.found() and need_api_gles2 == 'yes'
       error ('Could not find requested OpenGL ES library')
@@ -377,29 +382,29 @@ if need_api_gles2 != 'no'
 
   gles3_h = gles2_dep.found() and cc.has_header('GLES3/gl3.h', dependencies : gles2_dep, include_directories : compat_includes)
 
-  gles_includes = '''
-#ifdef HAVE_IOS /* FIXME */
+  gles_includes = ''
+  if host_system == 'ios'
+    gles_includes += '''
 # include <OpenGLES/ES2/gl.h>
 # include <OpenGLES/ES2/glext.h>
-#else'''
-  if gles3_h
-    gl_includes += [compat_includes]
-    gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', dependencies : gles2_dep, include_directories : compat_includes)
-    gles_includes += '''
+'''
+  else
+    if gles3_h
+      gl_includes += [compat_includes]
+      gles3ext3_h = gles3_h and cc.has_header('GLES3/gl3ext.h', dependencies : gles2_dep, include_directories : compat_includes)
+      gles_includes += '''
 # include <GLES3/gl3.h>
 # include <GLES2/gl2ext.h>'''
-    if gles3ext3_h
-      gles_includes += '''
+      if gles3ext3_h
+        gles_includes += '''
 # include <GLES3/gl3ext.h>'''
-    endif
-  else
-    gles_includes += '''
+      endif
+    else
+      gles_includes += '''
 # include <GLES2/gl2.h>
 # include <GLES2/gl2ext.h>'''
+    endif
   endif
-  gles_includes += '''
-#endif
-'''
 endif
 
 # can we include both gles2 and opengl headers?
@@ -629,17 +634,6 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
   endif
 endif
 
-# OSX check
-if need_platform_cgl == 'yes'
-  if need_win_cocoa == 'no'
-    error('Impossible situation requested: Cannot use CGL without Cocoa support')
-  elif need_api_opengl == 'no'
-    error('Impossible situation requested: Cannot use CGL without the OpenGL library')
-  endif
-elif need_platform_cgl == 'no' and need_win_cocoa == 'yes'
-  error('Impossible situation requested: Cannot use Cocoa without CGL support')
-endif
-
 if ['darwin', 'ios'].contains(host_system)
   if not have_objc
     error('No ObjC compiler found')
@@ -651,18 +645,32 @@ if ['darwin', 'ios'].contains(host_system)
   endif
 
   gl_objc_args += ['-fobjc-arc']
+endif
 
-  quartzcore_dep = dependency('QuartzCore', required : false)
-  corefoundation_dep = dependency('CoreFoundation', required : false)
+# OSX check
+if need_platform_cgl == 'yes'
+  if need_win_cocoa == 'no'
+    error('Impossible situation requested: Cannot use CGL without Cocoa support')
+  elif need_api_opengl == 'no'
+    error('Impossible situation requested: Cannot use CGL without the OpenGL library')
+  endif
+elif need_platform_cgl == 'no' and need_win_cocoa == 'yes'
+  error('Impossible situation requested: Cannot use Cocoa without CGL support')
+endif
+
+if host_system == 'darwin'
+  foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : false)
+  quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : false)
+  corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : false)
 
   if need_platform_cgl != 'no'
-    if quartzcore_dep.found() and corefoundation_dep.found()
-      gl_platform_deps += [quartzcore_dep, corefoundation_dep]
+    if foundation_dep.found() and quartzcore_dep.found() and corefoundation_dep.found()
+      gl_platform_deps += [quartzcore_dep, corefoundation_dep, foundation_dep]
       enabled_gl_platforms += 'cgl'
       glconf.set10('GST_GL_HAVE_PLATFORM_CGL', 1)
 
       if need_win_cocoa != 'no'
-        cocoa_dep = dependency('Cocoa', required : false)
+        cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : false)
         if cocoa_dep.found()
           gl_sources += [
             'cocoa/gstglcaopengllayer.m',
@@ -680,6 +688,45 @@ if ['darwin', 'ios'].contains(host_system)
     elif need_platform_cgl == 'yes'
       error('Could not find CGL dependencies')
     endif
+  endif
+endif
+
+if need_platform_eagl == 'yes'
+  if host_system != 'ios'
+    error('Can only use EAGL on iOS')
+  endif
+  if need_win_eagl == 'no'
+    error('Impossible situation requested: Cannot use EAGL platform without the EAGL window system')
+  elif need_api_gles == 'no'
+    error('Impossible situation requested: Cannot use EAGL platform without the GLES library')
+  endif
+elif need_platform_eagl == 'no' and need_win_eagl == 'yes'
+  error('Impossible situation requested: Cannot use EAGL window system without the EAGL platform')
+endif
+
+if host_system == 'ios' and need_platform_eagl != 'no' and need_win_eagl != 'no'
+  foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : false)
+  corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : false)
+  coregraphics_dep = dependency('appleframeworks', modules : ['CoreGraphics'], required : false)
+  uikit_dep = dependency('appleframeworks', modules : ['UIkit'], required : false)
+
+  if foundation_dep.found() and corefoundation_dep.found() and coregraphics_dep.found() and uikit_dep.found()
+    gl_platform_deps += [
+      corefoundation_dep,
+      foundation_dep,
+      coregraphics_dep,
+      uikit_dep,
+    ]
+    gl_sources += [
+      'eagl/gstglcontext_eagl.m',
+      'eagl/gstglwindow_eagl.m',
+    ]
+    enabled_gl_winsys += 'eagl'
+    enabled_gl_platforms += 'eagl'
+    glconf.set('GST_GL_HAVE_WINDOW_EAGL', 1)
+    glconf.set('GST_GL_HAVE_PLATFORM_EAGL', 1)
+  elif need_platform_eagl == 'yes' or need_win_eagl == 'yes'
+    error('Could not find dependencies for EAGL')
   endif
 endif
 
