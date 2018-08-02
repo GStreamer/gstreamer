@@ -678,6 +678,64 @@ done:
   return ret;
 }
 
+static GstBuffer *
+gst_omx_try_importing_buffer (GstOMXVideoDec * self, GstBufferPool * pool,
+    GstOMXPort * port, GstVideoInfo * v_info, guint i, GstVideoFrame ** frame)
+{
+  GstBufferPoolAcquireParams params = { 0, };
+  GstBuffer *buffer = NULL;
+  GstMemory *mem;
+  GstMapFlags flags = GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF;
+  gboolean is_mapped = FALSE;
+
+  *frame = NULL;
+
+  if (gst_buffer_pool_acquire_buffer (pool, &buffer, &params) != GST_FLOW_OK) {
+    GST_INFO_OBJECT (self, "Failed to acquire %d-th buffer", i);
+    return NULL;
+  }
+
+  if (gst_buffer_n_memory (buffer) != 1) {
+    GST_INFO_OBJECT (self, "%d-th buffer has more than one memory (%d)", i,
+        gst_buffer_n_memory (buffer));
+    goto out;
+  }
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!mem) {
+    GST_INFO_OBJECT (self, "Failed to acquire memory of %d-th buffer", i);
+    goto out;
+  }
+
+  *frame = g_slice_new0 (GstVideoFrame);
+
+  is_mapped = gst_video_frame_map (*frame, v_info, buffer, flags);
+  if (!is_mapped) {
+    GST_INFO_OBJECT (self, "Failed to map %d-th buffer", i);
+    goto out;
+  }
+
+  if (GST_VIDEO_FRAME_SIZE (*frame) < port->port_def.nBufferSize) {
+    GST_INFO_OBJECT (self,
+        "Frame size of %d-th buffer (%" G_GSIZE_FORMAT
+        ") is too small for port buffer size (%d)", i,
+        GST_VIDEO_FRAME_SIZE (*frame), (guint32) port->port_def.nBufferSize);
+    goto out;
+  }
+
+  return buffer;
+
+out:
+  if (*frame) {
+    if (is_mapped)
+      gst_video_frame_unmap (*frame);
+    g_slice_free (GstVideoFrame, *frame);
+    *frame = NULL;
+  }
+  gst_buffer_unref (buffer);
+  return NULL;
+}
+
 static OMX_ERRORTYPE
 gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
 {
@@ -956,7 +1014,6 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       GList *frames = NULL;
       GstVideoInfo v_info;
       gint i;
-      GstBufferPoolAcquireParams params = { 0, };
 
       if (!gst_video_info_from_caps (&v_info, caps)) {
         GST_INFO_OBJECT (self,
@@ -969,28 +1026,13 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
 
       for (i = 0; i < min && self->use_buffers; i++) {
         GstBuffer *buffer = NULL;
-        GstMemory *mem = NULL;
-        GstVideoFrame *frame = g_slice_new0 (GstVideoFrame);
-        GstMapFlags flags = GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF;
-        gboolean is_mapped = FALSE;
+        GstVideoFrame *frame = NULL;
 
-        if (gst_buffer_pool_acquire_buffer (pool, &buffer,
-                &params) != GST_FLOW_OK || gst_buffer_n_memory (buffer) != 1
-            || !(mem = gst_buffer_peek_memory (buffer, 0))
-            || !(is_mapped =
-                gst_video_frame_map (frame, &v_info, buffer, flags))
-            || GST_VIDEO_FRAME_SIZE (frame) < port->port_def.nBufferSize) {
+        buffer =
+            gst_omx_try_importing_buffer (self, pool, port, &v_info, i, &frame);
+        if (!buffer) {
           /* buffer does not match minimal requirement to try OMX_UseBuffer */
-          GST_INFO_OBJECT (self,
-              "Failed to allocated %d-th buffer of type %s, n_mem: %d, "
-              "is mapped: %d, frame size: %" G_GSIZE_FORMAT, i,
-              mem ? mem->allocator->mem_type : "(null)",
-              buffer ? gst_buffer_n_memory (buffer) : -1, is_mapped,
-              is_mapped ? GST_VIDEO_FRAME_SIZE (frame) : 0);
-          if (is_mapped)
-            gst_video_frame_unmap (frame);
-          g_slice_free (GstVideoFrame, frame);
-          gst_buffer_replace (&buffer, NULL);
+          GST_DEBUG_OBJECT (self, "Failed to import %d-th buffer", i);
           g_list_free (images);
           g_list_free_full (frames, (GDestroyNotify) gst_video_frame_unmap);
           g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
