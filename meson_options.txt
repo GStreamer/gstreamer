@@ -10,6 +10,7 @@ option('ptp-helper-setuid-group', type : 'string',
 option('ptp-helper-permissions', type : 'combo',
        choices : ['none', 'setuid-root', 'capabilities', 'auto'], value : 'auto')
 option('extra-checks', type : 'boolean', value : true, description : 'Enable extra runtime checks')
+option('poisoning', type : 'boolean', value : false, description : 'Enable poisoning of deallocated objects')
 
 # Feature options
 option('libunwind', type : 'feature', value : 'auto', description : 'Use libunwind to generate backtraces')
