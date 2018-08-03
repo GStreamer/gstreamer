@@ -320,6 +320,11 @@ gst_rsvg_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
       size = i + 6;
       break;
     }
+    if (memcmp (data + i, "</svg:svg>", 10) == 0) {
+      completed = TRUE;
+      size = i + 10;
+      break;
+    }
   }
 
   if (completed) {
