@@ -247,7 +247,7 @@ AC_ARG_ENABLE(poisoning,
       *)   AC_MSG_ERROR(bad value ${enableval} for --enable-poisoning) ;;
     esac
   ],
-  [USE_POISONING=no]) dnl Default value
+  [USE_POISONING=$GST_GIT]) dnl Default value
 if test "x$USE_POISONING" = xyes; then
   AC_DEFINE(USE_POISONING, 1,
     [Define if we should poison deallocated memory])
