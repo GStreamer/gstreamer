@@ -624,6 +624,17 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
   endif
 endif
 
+# OSX check
+if need_platform_cgl == 'yes'
+  if need_win_cocoa == 'no'
+    error('Impossible situation requested: Cannot use CGL without Cocoa support')
+  elif need_api_opengl == 'no'
+    error('Impossible situation requested: Cannot use CGL without the OpenGL library')
+  endif
+elif need_platform_cgl == 'no' and need_win_cocoa == 'yes'
+  error('Impossible situation requested: Cannot use Cocoa without CGL support')
+endif
+
 if host_machine.system() == 'darwin'
   if not have_objc
     error('No ObjC compiler found')
@@ -638,43 +649,32 @@ if host_machine.system() == 'darwin'
 
   quartzcore_dep = dependency('QuartzCore', required : false)
   corefoundation_dep = dependency('CoreFoundation', required : false)
-endif
 
-# OSX check
-if need_platform_cgl == 'yes'
-  if need_win_cocoa == 'no'
-    error('Impossible situation requested: Cannot use CGL without Cocoa support')
-  elif need_api_opengl == 'no'
-    error('Impossible situation requested: Cannot use CGL without the OpenGL library')
-  endif
-elif need_platform_cgl == 'no' and need_win_cocoa == 'yes'
-  error('Impossible situation requested: Cannot use Cocoa without CGL support')
-endif
+  if need_platform_cgl != 'no'
+    if quartzcore_dep.found() and corefoundation_dep.found()
+      gl_platform_deps += [quartzcore_dep, corefoundation_dep]
+      enabled_gl_platforms += 'cgl'
+      glconf.set10('GST_GL_HAVE_PLATFORM_CGL', 1)
 
-if need_platform_cgl != 'no'
-  if quartzcore_dep.found() and corefoundation_dep.found()
-    gl_platform_deps += [quartzcore_dep, corefoundation_dep]
-    enabled_gl_platforms += 'cgl'
-    glconf.set10('GST_GL_HAVE_PLATFORM_CGL', 1)
-
-    if need_win_cocoa != 'no'
-      cocoa_dep = dependency('Cocoa', required : false)
-      if cocoa_dep.found()
-        gl_sources += [
-          'cocoa/gstglcaopengllayer.m',
-          'cocoa/gstglcontext_cocoa.m',
-          'cocoa/gstgldisplay_cocoa.m',
-          'cocoa/gstglwindow_cocoa.m'
-        ]
-        gl_winsys_deps += cocoa_dep
-        enabled_gl_winsys += 'cocoa'
-        glconf.set10('GST_GL_HAVE_WINDOW_COCOA', 1)
-      elif need_win_cocoa == 'yes'
-        error('Could not find Cocoa')
+      if need_win_cocoa != 'no'
+        cocoa_dep = dependency('Cocoa', required : false)
+        if cocoa_dep.found()
+          gl_sources += [
+            'cocoa/gstglcaopengllayer.m',
+            'cocoa/gstglcontext_cocoa.m',
+            'cocoa/gstgldisplay_cocoa.m',
+            'cocoa/gstglwindow_cocoa.m'
+          ]
+          gl_winsys_deps += cocoa_dep
+          enabled_gl_winsys += 'cocoa'
+          glconf.set10('GST_GL_HAVE_WINDOW_COCOA', 1)
+        elif need_win_cocoa == 'yes'
+          error('Could not find Cocoa')
+        endif
       endif
+    elif need_platform_cgl == 'yes'
+      error('Could not find CGL dependencies')
     endif
-  elif need_platform_cgl == 'yes'
-    error('Could not find CGL dependencies')
   endif
 endif
 
