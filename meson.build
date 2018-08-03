@@ -373,7 +373,7 @@ test_deps = [gmp_dep, gsl_dep, gslcblas_dep]
 # Used by gstinfo.c
 dl_dep = cc.find_library('dl', required : false)
 cdata.set('HAVE_DLADDR', cc.has_function('dladdr', dependencies : dl_dep))
-cdata.set10('GST_ENABLE_EXTRA_CHECKS', get_option('extra-checks'))
+cdata.set('GST_ENABLE_EXTRA_CHECKS', get_option('extra-checks'))
 cdata.set('USE_POISONING', get_option('poisoning'))
 
 configinc = include_directories('.')
