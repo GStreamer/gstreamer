@@ -61,6 +61,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
   GESUriClipAssetClass *uriasset_klass = NULL;
+  GstElementFactory *nlecomposition_factory = NULL;
 
   if (ges_initialized) {
     GST_DEBUG ("already initialized ges");
@@ -73,6 +74,19 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   if (!uriasset_klass->sync_discoverer)
     goto failed;
+
+  nlecomposition_factory = gst_element_factory_find ("nlecomposition");
+  if (!nlecomposition_factory) {
+    GST_ERROR ("The `nlecomposition` object was not found.");
+    if (error)
+      *error = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN,
+          "The `nle` plugin is missing.");
+
+    goto failed;
+  }
+  gst_object_unref (nlecomposition_factory);
+
+
 
   /* register clip classes with the system */
 
