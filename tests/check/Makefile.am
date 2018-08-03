@@ -595,7 +595,7 @@ libs_planaraudioadapter_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_AUDIO_LIBS) $(LDADD)
 libs_planaraudioadapter_CFLAGS = \
 	$(GST_PLUGINS_BASE_CLAGS) $(GST_PLUGINS_BAD_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+	$(GST_BASE_CFLAGS) $(GST_AUDIO_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 distclean-local-orc:
 	rm -rf orc
