@@ -335,6 +335,10 @@ gst_promise_free (GstMiniObject * object)
   g_cond_clear (GST_PROMISE_COND (promise));
   GST_LOG ("%p finalized", promise);
 
+#ifdef USE_POISONING
+  memset (promise, 0xff, sizeof (GstPromiseImpl));
+#endif
+
   g_free (promise);
 }
 

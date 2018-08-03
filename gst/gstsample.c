@@ -101,6 +101,9 @@ _gst_sample_free (GstSample * sample)
         GST_MINI_OBJECT_CAST (sample));
     gst_buffer_list_unref (sample->buffer_list);
   }
+#ifdef USE_POISONING
+  memset (sample, 0xff, sizeof (GstSample));
+#endif
 
   g_slice_free1 (sizeof (GstSample), sample);
 }

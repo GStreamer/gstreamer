@@ -217,6 +217,9 @@ _gst_message_free (GstMessage * message)
     gst_structure_set_parent_refcount (structure, NULL);
     gst_structure_free (structure);
   }
+#ifdef USE_POISONING
+  memset (message, 0xff, sizeof (GstMessageImpl));
+#endif
 
   g_slice_free1 (sizeof (GstMessageImpl), message);
 }

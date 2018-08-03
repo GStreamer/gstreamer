@@ -95,6 +95,7 @@ _gst_memory_free (GstMemory * mem)
   allocator = mem->allocator;
 
   gst_allocator_free (allocator, mem);
+
   gst_object_unref (allocator);
 }
 

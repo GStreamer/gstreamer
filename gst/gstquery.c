@@ -195,6 +195,9 @@ _gst_query_free (GstQuery * query)
     gst_structure_set_parent_refcount (s, NULL);
     gst_structure_free (s);
   }
+#ifdef USE_POISONING
+  memset (query, 0xff, sizeof (GstQueryImpl));
+#endif
 
   g_slice_free1 (sizeof (GstQueryImpl), query);
 }

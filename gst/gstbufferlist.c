@@ -103,6 +103,7 @@ static void
 _gst_buffer_list_free (GstBufferList * list)
 {
   guint i, len;
+  gsize slice_size;
 
   GST_LOG ("free %p", list);
 
@@ -117,7 +118,13 @@ _gst_buffer_list_free (GstBufferList * list)
   if (GST_BUFFER_LIST_IS_USING_DYNAMIC_ARRAY (list))
     g_free (list->buffers);
 
-  g_slice_free1 (list->slice_size, list);
+  slice_size = list->slice_size;
+
+#ifdef USE_POISONING
+  memset (list, 0xff, slice_size);
+#endif
+
+  g_slice_free1 (slice_size, list);
 }
 
 static void

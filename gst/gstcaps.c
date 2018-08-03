@@ -216,6 +216,11 @@ _gst_caps_free (GstCaps * caps)
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE (GST_CAT_CAPS, "freeing caps %p", caps);
 #endif
+
+#ifdef USE_POISONING
+  memset (caps, 0xff, sizeof (GstCapsImpl));
+#endif
+
   g_slice_free1 (sizeof (GstCapsImpl), caps);
 }
 

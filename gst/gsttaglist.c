@@ -719,6 +719,10 @@ __gst_tag_list_free (GstTagList * list)
 
   gst_structure_free (GST_TAG_LIST_STRUCTURE (list));
 
+#ifdef USE_POISONING
+  memset (list, 0xff, sizeof (GstTagListImpl));
+#endif
+
   g_slice_free1 (sizeof (GstTagListImpl), list);
 }
 

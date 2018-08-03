@@ -1014,6 +1014,10 @@ _gst_uri_free (GstUri * uri)
     g_hash_table_unref (uri->query);
   g_free (uri->fragment);
 
+#ifdef USE_POISONING
+  memset (uri, 0xff, sizeof (*uri));
+#endif
+
   g_slice_free1 (sizeof (*uri), uri);
 }
 

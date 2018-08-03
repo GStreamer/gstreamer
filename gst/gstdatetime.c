@@ -922,6 +922,11 @@ static void
 gst_date_time_free (GstDateTime * datetime)
 {
   g_date_time_unref (datetime->datetime);
+
+#ifdef USE_POISONING
+  memset (datetime, 0xff, sizeof (GstDateTime));
+#endif
+
   g_slice_free (GstDateTime, datetime);
 }
 

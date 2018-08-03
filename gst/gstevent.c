@@ -228,6 +228,9 @@ _gst_event_free (GstEvent * event)
     gst_structure_set_parent_refcount (s, NULL);
     gst_structure_free (s);
   }
+#ifdef USE_POISONING
+  memset (event, 0xff, sizeof (GstEventImpl));
+#endif
 
   g_slice_free1 (sizeof (GstEventImpl), event);
 }
