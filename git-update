@@ -17,24 +17,30 @@ def manifest_get_commits(manifest):
     res = {}
     tree = ET.parse(manifest)
     root = tree.getroot()
+    remotes = {}
     for child in root:
+        if child.tag == 'remote':
+            remotes[child.attrib['name']] = child.attrib['fetch']
         if child.tag == 'project':
-            res[child.attrib["name"]] = child.attrib["revision"]
+            name = child.attrib['name']
+
+            remote = child.attrib.get('remote')
+            if remote:
+                res[name] = ['FETCH_HEAD', [os.path.join(remotes[remote], name), child.attrib['revision']]]
+            else:
+                res[name] = child.attrib["revision"]
+
     return res
 
 
-def update_subprojects(manifest, no_interaction=False):
-    if manifest:
-        repos_commits = manifest_get_commits(manifest)
-    else:
-        repos_commits = {}
-
+def update_subprojects(repos_commits, no_interaction=False):
     subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
     for repo_name in os.listdir(subprojects_dir):
         repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
         if not os.path.exists(os.path.join(repo_dir, '.git')):
             continue
-        revision = repos_commits.get(repo_name)
+
+        revision, args = repos_commits.get(repo_name, [None, []])
         if not revision:
             # If we're on a detached head because the revision= value in the
             # wrap file is a commit, don't try to git pull --rebase because
@@ -42,18 +48,18 @@ def update_subprojects(manifest, no_interaction=False):
             ret = git('-C', repo_dir, 'rev-parse', '--symbolic-full-name', 'HEAD')
             if ret.strip() == 'HEAD':
                 revision = git('-C', repo_dir, 'rev-parse', 'HEAD').strip()
-        if not update_repo(repo_name, repo_dir, revision, no_interaction):
+        if not update_repo(repo_name, repo_dir, revision, no_interaction, args):
             return False
 
     return True
 
 
-def update_repo(repo_name, repo_dir, revision, no_interaction, recurse_i=0):
+def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], recurse_i=0):
     print("Updating %s..." % repo_name)
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
     try:
         if revision:
-            git("fetch", repository_path=repo_dir)
+            git("fetch", *fetch_args, repository_path=repo_dir)
             git("checkout", revision, repository_path=repo_dir)
         else:
             git("pull", "--rebase", repository_path=repo_dir)
@@ -125,9 +131,16 @@ if __name__ == "__main__":
     if options.no_interaction:
         sys.stdin.close()
 
-    if not update_repo('gst-build', SCRIPTDIR, None, options.no_interaction):
+    if options.manifest:
+        repos_commits = manifest_get_commits(options.manifest)
+    else:
+        repos_commits = {}
+
+    revision, args = repos_commits.get('gst-build', [None, []])
+    if not update_repo('gst-build', SCRIPTDIR, revision, options.no_interaction, args):
         exit(1)
-    if not update_subprojects(options.manifest, options.no_interaction):
+
+    if not update_subprojects(repos_commits, options.no_interaction):
         exit(1)
 
     if options.builddir:
