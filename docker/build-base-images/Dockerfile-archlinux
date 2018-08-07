@@ -10,7 +10,7 @@ ENV PATH="/usr/lib/ccache/bin/:${PATH}"
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
 
 RUN pacman -Sy --noconfirm python3 libxml2 libxslt cmake libyaml git make nodejs ninja clang llvm flex python-gobject gstreamer gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav gst-editing-services python-pip npm json-glib gobject-introspection wget mono unzip glib2-docs xorg-xset xorg-server-xvfb ccache
-RUN pip install --upgrade git+https://github.com/hotdoc/hotdoc.git@gst git+https://github.com/hotdoc/hotdoc_c_extension.git@gst git+https://github.com/thiblahute/meson.git@hotdoc
+RUN pip install --upgrade git+https://github.com/hotdoc/hotdoc.git@gst git+https://github.com/hotdoc/hotdoc_c_extension.git@gst meson
 
 RUN mkdir $GST_VALIDATE_OUTPUT && \
     git clone https://anongit.freedesktop.org/git/gstreamer/gst-integration-testsuites.git $GST_VALIDATE_TESTSUITES && \
@@ -20,6 +20,6 @@ RUN mkdir $GST_VALIDATE_OUTPUT && \
 # get gst-build and make all subprojects available
 RUN git clone git://anongit.freedesktop.org/gstreamer/gst-build $GST_BUILD_PATH && \
     cd $GST_BUILD_PATH && \
-    meson build/ $GST_BUILD_MESON_ARGS
+    meson build/ $GST_BUILD_MESON_ARGS && rm -Rf build/
 
 RUN rm -Rf /var/cache/pacman/

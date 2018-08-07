@@ -2,62 +2,40 @@ FROM registry.freedesktop.org/thiblahute/gst-ci/ubuntu-runtime
 
 # make source packages available in order to figure out build dependencies
 RUN  \
-     sed -i "s/# deb-src/deb-src/g" /etc/apt/sources.list && \
-     apt-get update && \
-     apt-get -y build-dep \
-	orc \
-	gstreamer1.0 \
-	gst-plugins-base1.0 \
-	gst-plugins-good1.0 \
-	gst-plugins-bad1.0 \
-	gst-plugins-ugly1.0 \
-	gst-libav1.0 \
-	gst-rtsp-server1.0 \
-	gst-python1.0 \
-	gstreamer-vaapi \
-	gstreamer-editing-services1.0 && \
-     apt-get -y install \
-        ccache \
-	gdb \
-        git \
-	xvfb \
-	wget
+    sed -i "s/# deb-src/deb-src/g" /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get -y build-dep \
+    orc \
+    gstreamer1.0 \
+    gst-plugins-base1.0 \
+    gst-plugins-good1.0 \
+    gst-plugins-bad1.0 \
+    gst-plugins-ugly1.0 \
+    gst-libav1.0 \
+    gst-rtsp-server1.0 \
+    gst-python1.0 \
+    gstreamer-vaapi \
+    gstreamer-editing-services1.0 && \
+    apt-get -y install \
+    ccache \
+    gdb \
+    git \
+    xvfb \
+    python3-pip \
+    wget
 
-# Clone copies of all repositories to avoid extra downloads
-RUN mkdir /repositories && \
-    cd /repositories && \
-    for i in orc \
-             common \
-	     gstreamer \
-	     gst-plugins-base \
-	     gst-plugins-good \
-	     gst-plugins-bad \
-	     gst-plugins-ugly \
-	     gst-libav \
-	     gst-build \
-	     gst-devtools\
-             gst-docs \
-	     gst-editing-services \
-	     gst-omx \
-	     gst-python \
-	     gst-rtsp-server; \
-      do \
-        git clone --mirror https://anongit.freedesktop.org/git/gstreamer/$i; \
-      done
+RUN pip3 install meson
 
-# Install repo tool
-RUN wget -nd https://storage.googleapis.com/git-repo-downloads/repo -O /usr/bin/repo && chmod a+x /usr/bin/repo
-
-# Add the user UID:1000, GID:1000, home at /gstbuild
-RUN groupadd -r gstbuild -g 1000 && useradd -u 1000 -r -g gstbuild -m -d /gstbuild -s /sbin/nologin -c "Gstbuild user" gstbuild && \
-    chmod 755 /gstbuild
-
-# Set the working directory to gstbuild home directory
-WORKDIR /gstbuild
-
-# Specify the user to execute all commands below
-USER gstbuild
+ENV GST_BUILD_PATH="/gst-build/"
+ENV GST_VALIDATE_OUTPUT="/validate-output"
+ENV GST_VALIDATE_TESTSUITES="$GST_VALIDATE_OUTPUT/gst-integration-testsuites"
+# FIXME Enabled gst-libav.
+ENV GST_BUILD_MESON_ARGS="-Dpython=disabled -Dlibav=disabled -Dugly=enabled -Dbad=enabled -Ddevtools=enabled -Dges=enabled -Drtsp_server=enabled -Domx=disabled -Dvaapi=disabled -Dsharp=disabled"
 
 # Configure git for various usage
-RUN git config --global user.email "gstbuild@gstreamer.net" && git config --global user.name "Gstbuild Runner"
+RUN git config --global user.email "gst-build@gstreamer.net" && git config --global user.name "Gstbuild Runner"
 
+# get gst-build and make all subprojects available
+RUN git clone git://anongit.freedesktop.org/gstreamer/gst-build $GST_BUILD_PATH && \
+    cd $GST_BUILD_PATH && \
+    meson build/ $GST_BUILD_MESON_ARGS

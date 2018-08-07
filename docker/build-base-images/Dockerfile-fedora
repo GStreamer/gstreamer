@@ -33,19 +33,22 @@ RUN dnf builddep -y \
 	redhat-rpm-config \
 	xorg-x11-server-Xvfb \
 	xorg-x11-server-utils \
-    wget \
-    meson    && \
+	ninja-build \
+    wget && \
     dnf clean all
 
-# Add the user UID:1000, GID:1000, home at /gstbuild
-RUN groupadd -r gstbuild -g 1000 && useradd -u 1000 -r -g gstbuild -m -d /gstbuild -s /sbin/nologin -c "Gstbuild user" gstbuild && \
-    chmod 755 /gstbuild
+RUN pip3 install meson
 
-# Set the working directory to gstbuild home directory
-WORKDIR /gstbuild
-
-# Specify the user to execute all commands below
-USER gstbuild
+ENV GST_BUILD_PATH="/gst-build/"
+ENV GST_VALIDATE_OUTPUT="/validate-output"
+ENV GST_VALIDATE_TESTSUITES="$GST_VALIDATE_OUTPUT/gst-integration-testsuites"
+# FIXME Enabled gst-libav.
+ENV GST_BUILD_MESON_ARGS="-Dpython=disabled -Dlibav=disabled -Dugly=enabled -Dbad=enabled -Ddevtools=enabled -Dges=enabled -Drtsp_server=enabled -Domx=disabled -Dvaapi=disabled -Dsharp=disabled"
 
 # Configure git for various usage
-RUN git config --global user.email "gstbuild@gstreamer.net" && git config --global user.name "Gstbuild Runner"
+RUN git config --global user.email "gst-build@gstreamer.net" && git config --global user.name "Gstbuild Runner"
+
+# get gst-build and make all subprojects available
+RUN git clone git://anongit.freedesktop.org/gstreamer/gst-build $GST_BUILD_PATH && \
+    cd $GST_BUILD_PATH && \
+    meson build/ $GST_BUILD_MESON_ARGS
