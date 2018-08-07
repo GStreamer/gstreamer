@@ -16,13 +16,14 @@ typedef interface IAudioClient3 IAudioClient3;
 #ifndef __IAudioClient3_INTERFACE_DEFINED__
 #define __IAudioClient3_INTERFACE_DEFINED__
 
-/* This is only available with IAudioClient3 */
+#ifndef HAVE_AUDCLNT_STREAMOPTIONS
 typedef enum AUDCLNT_STREAMOPTIONS
 {
     AUDCLNT_STREAMOPTIONS_NONE	        = 0,
     AUDCLNT_STREAMOPTIONS_RAW	        = 0x1,
     AUDCLNT_STREAMOPTIONS_MATCH_FORMAT	= 0x2
 } AUDCLNT_STREAMOPTIONS;
+#endif
 
 /* These should be available when the IAudioClient2 interface is defined */
 #ifndef __IAudioClient2_FWD_DEFINED__
