@@ -22,9 +22,14 @@ if not have_audioclient_h and get_option('wasapi').enabled()
 endif
 
 if ole32_dep.found() and ksuser_dep.found() and have_audioclient_h
+  wasapi_args = ['-DCOBJMACROS']
+  if cc.has_header_symbol('audioclient.h', 'AUDCLNT_STREAMOPTIONS_NONE')
+    wasapi_args += ['-DHAVE_AUDCLNT_STREAMOPTIONS']
+  endif
+
   gstwasapi = library('gstwasapi',
     wasapi_sources,
-    c_args : gst_plugins_bad_args + ['-DCOBJMACROS'],
+    c_args : gst_plugins_bad_args + wasapi_args,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, ole32_dep, ksuser_dep],
     install : true,
