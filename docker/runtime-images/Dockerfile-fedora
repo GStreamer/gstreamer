@@ -1,12 +1,12 @@
-FROM fedora:26
+FROM fedora:29
 
 # Add rpmfusion repositories and install all build dependencies of GStreamer
 # and then remove the gst packages themselves
 RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
-    dnf install -y http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-26.noarch.rpm \
-    http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-26.noarch.rpm && \
-    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-fedora-26 && \
-    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-fedora-26 && \
+    dnf install -y http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-29.noarch.rpm \
+    http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-29.noarch.rpm && \
+    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-fedora-29 && \
+    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-fedora-29 && \
     dnf upgrade -y && \
     dnf install -y \
        dnf-plugins-core \
@@ -31,8 +31,6 @@ RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
        gstreamer1-rtsp-server  \
     && \
     rpm -e \
-       gstreamer1 \
-       gstreamer1-plugins-base \
        gstreamer1-plugins-good \
        gstreamer1-plugins-good-extras \
        gstreamer1-plugins-ugly \
