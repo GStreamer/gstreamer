@@ -1149,21 +1149,11 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
   if (V4L2_TYPE_IS_OUTPUT (obj->type)) {
     enum v4l2_field field;
 
-    /* Except when field is set to alternate, buffer field is the same as
-     * the one defined in format */
+    /* Buffer field is the same as the one defined in format */
     if (V4L2_TYPE_IS_MULTIPLANAR (obj->type))
       field = obj->format.fmt.pix_mp.field;
     else
       field = obj->format.fmt.pix.field;
-
-    /* NB: At this moment, we can't have alternate mode because it not handled
-     * yet */
-    if (field == V4L2_FIELD_ALTERNATE) {
-      if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_FRAME_FLAG_TFF))
-        field = V4L2_FIELD_TOP;
-      else
-        field = V4L2_FIELD_BOTTOM;
-    }
 
     group->buffer.field = field;
   }
@@ -1302,6 +1292,14 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
     case V4L2_FIELD_NONE:
       GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
       GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
+      break;
+    case V4L2_FIELD_TOP:
+      GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+      GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
+      break;
+    case V4L2_FIELD_BOTTOM:
+      GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+      GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
       break;
     case V4L2_FIELD_INTERLACED_TB:
       GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);

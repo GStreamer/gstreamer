@@ -696,8 +696,11 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
         goto done;
       }
 
-      /* min latency is the time to capture one frame */
+      /* min latency is the time to capture one frame/field */
       min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+      if (GST_VIDEO_INFO_INTERLACE_MODE (&obj->info) ==
+          GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+        min_latency /= 2;
 
       /* max latency is total duration of the frame buffer */
       if (obj->pool != NULL)
@@ -739,6 +742,7 @@ gst_v4l2src_start (GstBaseSrc * src)
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
   v4l2src->offset = 0;
+  v4l2src->next_offset_same = FALSE;
   v4l2src->renegotiation_adjust = 0;
 
   /* activate settings for first frame */
@@ -828,6 +832,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   GstClockTime abs_time, base_time, timestamp, duration;
   GstClockTime delay;
   GstMessage *qos_msg;
+  gboolean half_frame;
 
   do {
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
@@ -920,7 +925,7 @@ retry:
         " delay %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (gstnow), GST_TIME_ARGS (delay));
   } else {
-    /* we assume 1 frame latency otherwise */
+    /* we assume 1 frame/field latency otherwise */
     if (GST_CLOCK_TIME_IS_VALID (duration))
       delay = duration;
     else
@@ -956,12 +961,28 @@ retry:
   GST_LOG_OBJECT (src, "sync to %" GST_TIME_FORMAT " out ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (v4l2src->ctrl_time), GST_TIME_ARGS (timestamp));
 
+  if (v4l2src->next_offset_same &&
+      GST_BUFFER_OFFSET_IS_VALID (*buf) &&
+      GST_BUFFER_OFFSET (*buf) != v4l2src->offset) {
+    /* Probably had a lost field then, best to forget about last field. */
+    GST_WARNING_OBJECT (v4l2src,
+        "lost field detected - ts: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    v4l2src->next_offset_same = FALSE;
+  }
+
+  half_frame = (GST_BUFFER_FLAG_IS_SET (*buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD));
+  if (half_frame)
+    v4l2src->next_offset_same = !v4l2src->next_offset_same;
+
   /* use generated offset values only if there are not already valid ones
    * set by the v4l2 device */
   if (!GST_BUFFER_OFFSET_IS_VALID (*buf)
       || !GST_BUFFER_OFFSET_END_IS_VALID (*buf)) {
-    GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
-    GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
+    GST_BUFFER_OFFSET (*buf) = v4l2src->offset;
+    GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset + 1;
+    if (!half_frame || !v4l2src->next_offset_same)
+      v4l2src->offset++;
   } else {
     /* adjust raw v4l2 device sequence, will restart at null in case of renegotiation
      * (streamoff/streamon) */
@@ -969,6 +990,7 @@ retry:
     GST_BUFFER_OFFSET_END (*buf) += v4l2src->renegotiation_adjust;
     /* check for frame loss with given (from v4l2 device) buffer offset */
     if ((v4l2src->offset != 0)
+        && (!half_frame || v4l2src->next_offset_same)
         && (GST_BUFFER_OFFSET (*buf) != (v4l2src->offset + 1))) {
       guint64 lost_frame_count = GST_BUFFER_OFFSET (*buf) - v4l2src->offset - 1;
       GST_WARNING_OBJECT (v4l2src,

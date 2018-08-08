@@ -1617,6 +1617,25 @@ done:
   return template;
 }
 
+/* Add an 'alternate' variant of the caps with the feature */
+static void
+add_alternate_variant (GstV4l2Object * v4l2object, GstCaps * caps,
+    GstStructure * structure)
+{
+  GstStructure *alt_s;
+
+  if (v4l2object && v4l2object->never_interlaced)
+    return;
+
+  if (!gst_structure_has_name (structure, "video/x-raw"))
+    return;
+
+  alt_s = gst_structure_copy (structure);
+  gst_structure_set (alt_s, "interlace-mode", G_TYPE_STRING, "alternate", NULL);
+
+  gst_caps_append_structure_full (caps, alt_s,
+      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
+}
 
 static GstCaps *
 gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
@@ -1660,6 +1679,8 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
 
       if (alt_s)
         gst_caps_append_structure (caps, alt_s);
+
+      add_alternate_variant (NULL, caps, structure);
     }
   }
 
@@ -1984,6 +2005,9 @@ gst_v4l2_object_get_interlace_mode (enum v4l2_field field,
     case V4L2_FIELD_INTERLACED_BT:
       *interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
       return TRUE;
+    case V4L2_FIELD_ALTERNATE:
+      *interlace_mode = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+      return TRUE;
     default:
       GST_ERROR ("Unknown enum v4l2_field %d", field);
       return FALSE;
@@ -2214,7 +2238,9 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
 {
   struct v4l2_format fmt;
   GValue interlace_formats = { 0, };
-  enum v4l2_field formats[] = { V4L2_FIELD_NONE, V4L2_FIELD_INTERLACED };
+  enum v4l2_field formats[] = { V4L2_FIELD_NONE,
+    V4L2_FIELD_INTERLACED, V4L2_FIELD_ALTERNATE
+  };
   gsize i;
   GstVideoInterlaceMode interlace_mode, prev = -1;
 
@@ -2228,7 +2254,7 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
 
   g_value_init (&interlace_formats, GST_TYPE_LIST);
 
-  /* Try twice - once for NONE, once for INTERLACED. */
+  /* Try thrice - once for NONE, once for INTERLACED and once for ALTERNATE. */
   for (i = 0; i < G_N_ELEMENTS (formats); i++) {
     memset (&fmt, 0, sizeof (fmt));
     fmt.type = v4l2object->type;
@@ -2237,8 +2263,19 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
     fmt.fmt.pix.pixelformat = pixelformat;
     fmt.fmt.pix.field = formats[i];
 
-    if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0 &&
-        gst_v4l2_object_get_interlace_mode (fmt.fmt.pix.field, &interlace_mode)
+    if (fmt.fmt.pix.field == V4L2_FIELD_ALTERNATE)
+      fmt.fmt.pix.height /= 2;
+
+    /* if skip_try_fmt_probes is set it's up to the caller to filter out the
+     * formats from the formats requested by peer.
+     * For this negotiation to work with 'alternate' we need the caps to contain
+     * the feature so we have an intersection with downstream caps.
+     */
+    if (!v4l2object->skip_try_fmt_probes
+        && gst_v4l2_object_try_fmt (v4l2object, &fmt) != 0)
+      continue;
+
+    if (gst_v4l2_object_get_interlace_mode (fmt.fmt.pix.field, &interlace_mode)
         && prev != interlace_mode) {
       GValue interlace_enum = { 0, };
       const gchar *mode_string;
@@ -2575,6 +2612,54 @@ sort_by_frame_size (GstStructure * s1, GstStructure * s2)
 }
 
 static void
+check_alternate_and_append_struct (GstCaps * caps, GstStructure * s)
+{
+  const GValue *mode;
+
+  mode = gst_structure_get_value (s, "interlace-mode");
+  if (!mode)
+    goto done;
+
+  if (G_VALUE_HOLDS_STRING (mode)) {
+    /* Add the INTERLACED feature if the mode is alternate */
+    if (!g_strcmp0 (gst_structure_get_string (s, "interlace-mode"),
+            "alternate")) {
+      GstCapsFeatures *feat;
+
+      feat = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+      gst_caps_set_features (caps, gst_caps_get_size (caps) - 1, feat);
+    }
+  } else if (GST_VALUE_HOLDS_LIST (mode)) {
+    /* If the mode is a list containing alternate, remove it from the list and add a
+     * variant with interlace-mode=alternate and the INTERLACED feature. */
+    GValue alter = G_VALUE_INIT;
+    GValue inter = G_VALUE_INIT;
+
+    g_value_init (&alter, G_TYPE_STRING);
+    g_value_set_string (&alter, "alternate");
+
+    /* Cannot use gst_value_can_intersect() as it requires args to have the
+     * same type. */
+    if (gst_value_intersect (&inter, mode, &alter)) {
+      GValue minus_alter = G_VALUE_INIT;
+      GstStructure *copy;
+
+      gst_value_subtract (&minus_alter, mode, &alter);
+      gst_structure_take_value (s, "interlace-mode", &minus_alter);
+
+      copy = gst_structure_copy (s);
+      gst_structure_take_value (copy, "interlace-mode", &inter);
+      gst_caps_append_structure_full (caps, copy,
+          gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
+    }
+    g_value_unset (&alter);
+  }
+
+done:
+  gst_caps_append_structure (caps, s);
+}
+
+static void
 gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     guint32 format, GstCaps * caps, GstStructure * s)
 {
@@ -2612,10 +2697,11 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     }
   }
 
-  gst_caps_append_structure (caps, s);
+  check_alternate_and_append_struct (caps, s);
 
-  if (alt_s)
-    gst_caps_append_structure (caps, alt_s);
+  if (alt_s) {
+    check_alternate_and_append_struct (caps, alt_s);
+  }
 }
 
 static GstCaps *
@@ -2850,10 +2936,11 @@ default_frame_sizes:
 
     gst_v4l2_object_add_aspect_ratio (v4l2object, tmp);
 
+    /* We could consider setting interlace mode from min and max. */
+    gst_v4l2_object_add_interlace_mode (v4l2object, tmp, max_w, max_h,
+        pixelformat);
+
     if (!v4l2object->skip_try_fmt_probes) {
-      /* We could consider setting interlace mode from min and max. */
-      gst_v4l2_object_add_interlace_mode (v4l2object, tmp, max_w, max_h,
-          pixelformat);
       /* We could consider to check colorspace for min too, in case it depends on
        * the size. But in this case, min and max could not be enough */
       gst_v4l2_object_add_colorspace (v4l2object, tmp, max_w, max_h,
@@ -3220,6 +3307,9 @@ store_info:
   if (info->fps_n > 0 && info->fps_d > 0) {
     v4l2object->duration = gst_util_uint64_scale_int (GST_SECOND, info->fps_d,
         info->fps_n);
+    if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+        GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+      v4l2object->duration /= 2;
   } else {
     v4l2object->duration = GST_CLOCK_TIME_NONE;
   }
@@ -3247,6 +3337,27 @@ gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
   }
 
   return estride;
+}
+
+static enum v4l2_field
+get_v4l2_field_for_info (GstVideoInfo * info)
+{
+  if (!GST_VIDEO_INFO_IS_INTERLACED (info))
+    return V4L2_FIELD_NONE;
+
+  if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+    return V4L2_FIELD_ALTERNATE;
+
+  switch (GST_VIDEO_INFO_FIELD_ORDER (info)) {
+    case GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST:
+      return V4L2_FIELD_INTERLACED_TB;
+    case GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST:
+      return V4L2_FIELD_INTERLACED_BT;
+    case GST_VIDEO_FIELD_ORDER_UNKNOWN:
+    default:
+      return V4L2_FIELD_INTERLACED;
+  }
 }
 
 static gboolean
@@ -3356,16 +3467,11 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (!n_v4l_planes || !v4l2object->prefered_non_contiguous)
     n_v4l_planes = 1;
 
-  if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "interlaced video");
-    /* ideally we would differentiate between types of interlaced video
-     * but there is not sufficient information in the caps..
-     */
-    field = V4L2_FIELD_INTERLACED;
-  } else {
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "progressive video");
-    field = V4L2_FIELD_NONE;
-  }
+  field = get_v4l2_field_for_info (&info);
+  if (field != V4L2_FIELD_NONE)
+    GST_DEBUG_OBJECT (v4l2object->element, "interlaced video");
+  else
+    GST_DEBUG_OBJECT (v4l2object->element, "progressive video");
 
   /* We first pick the main colorspace from the primaries */
   switch (info.colorimetry.primaries) {
@@ -3675,17 +3781,13 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   }
 
   /* In case we have skipped the try_fmt probes, we'll need to set the
-   * colorimetry and interlace-mode back into the caps. */
+   * colorimetry back into the caps. */
   if (v4l2object->skip_try_fmt_probes) {
     if (!disable_colorimetry && !gst_structure_has_field (s, "colorimetry")) {
       gchar *str = gst_video_colorimetry_to_string (&info.colorimetry);
       gst_structure_set (s, "colorimetry", G_TYPE_STRING, str, NULL);
       g_free (str);
     }
-
-    if (!gst_structure_has_field (s, "interlace-mode"))
-      gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
-          gst_video_interlace_mode_to_string (info.interlace_mode), NULL);
   }
 
   if (try_only)                 /* good enough for trying only */
@@ -3989,6 +4091,7 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
   GstVideoFormat format;
   guint width, height;
   GstVideoAlignment align;
+  GstVideoInterlaceMode interlace_mode;
 
   gst_video_info_init (info);
   gst_video_alignment_reset (&align);
@@ -4038,21 +4141,25 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
     height = r->height;
   }
 
-  gst_video_info_set_format (info, format, width, height);
-
   switch (fmt.fmt.pix.field) {
     case V4L2_FIELD_ANY:
     case V4L2_FIELD_NONE:
-      info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
       break;
     case V4L2_FIELD_INTERLACED:
     case V4L2_FIELD_INTERLACED_TB:
     case V4L2_FIELD_INTERLACED_BT:
-      info->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      break;
+    case V4L2_FIELD_ALTERNATE:
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_ALTERNATE;
       break;
     default:
       goto unsupported_field;
   }
+
+  gst_video_info_set_interlaced_format (info, format, interlace_mode, width,
+      height);
 
   gst_v4l2_object_get_colorspace (&fmt, &info->colorimetry);
 
@@ -4322,8 +4429,13 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
     tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
         format->pixelformat, template);
-    if (tmp)
+    if (tmp) {
       gst_caps_append (ret, tmp);
+
+      /* Add a variant of the caps with the Interlaced feature so we can negotiate it if needed */
+      add_alternate_variant (v4l2object, ret, gst_caps_get_structure (ret,
+              gst_caps_get_size (ret) - 1));
+    }
 
     gst_structure_free (template);
   }

@@ -56,6 +56,7 @@ struct _GstV4l2Src
   GstV4l2Object * v4l2object;
 
   guint64 offset;
+  gboolean next_offset_same;
 
   /* offset adjust after renegotiation */
   guint64 renegotiation_adjust;
