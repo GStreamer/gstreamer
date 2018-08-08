@@ -53,6 +53,8 @@
 #include <string.h>
 #include <glib/gprintf.h>
 
+#include <gst/base/base.h>
+
 /* For AVI compatibility mode
    and for fourcc stuff */
 #include <gst/riff/riff-read.h>
@@ -2021,6 +2023,245 @@ exit:
   return ret;
 }
 
+/* Three states to express: starts with I-frame, starts with delta, don't know */
+typedef enum
+{
+  CLUSTER_STATUS_NONE = 0,
+  CLUSTER_STATUS_STARTS_WITH_KEYFRAME,
+  CLUSTER_STATUS_STARTS_WITH_DELTAUNIT,
+} ClusterStatus;
+
+typedef struct
+{
+  guint64 offset;
+  guint64 size;
+  guint64 prev_size;
+  GstClockTime time;
+  ClusterStatus status;
+} ClusterInfo;
+
+static const gchar *
+cluster_status_get_nick (ClusterStatus status)
+{
+  switch (status) {
+    case CLUSTER_STATUS_NONE:
+      return "none";
+    case CLUSTER_STATUS_STARTS_WITH_KEYFRAME:
+      return "key";
+    case CLUSTER_STATUS_STARTS_WITH_DELTAUNIT:
+      return "delta";
+  }
+  return "???";
+}
+
+/* Skip ebml-coded number:
+ *  1xxx.. = 1 byte
+ *  01xx.. = 2 bytes
+ *  001x.. = 3 bytes, etc.
+ */
+static gboolean
+bit_reader_skip_ebml_num (GstBitReader * br)
+{
+  guint8 i, v = 0;
+
+  if (!gst_bit_reader_peek_bits_uint8 (br, &v, 8))
+    return FALSE;
+
+  for (i = 0; i < 8; i++) {
+    if ((v & (0x80 >> i)) != 0)
+      break;
+  }
+  return gst_bit_reader_skip (br, (i + 1) * 8);
+}
+
+/* Don't probe more than that many bytes into the cluster for keyframe info
+ * (random value, mostly for sanity checking) */
+#define MAX_CLUSTER_INFO_PROBE_LENGTH 256
+
+static gboolean
+gst_matroska_demux_peek_cluster_info (GstMatroskaDemux * demux,
+    ClusterInfo * cluster, guint64 offset)
+{
+  demux->common.offset = offset;
+  demux->cluster_time = GST_CLOCK_TIME_NONE;
+
+  cluster->offset = offset;
+  cluster->size = 0;
+  cluster->prev_size = 0;
+  cluster->time = GST_CLOCK_TIME_NONE;
+  cluster->status = CLUSTER_STATUS_NONE;
+
+  /* parse first few elements in cluster */
+  do {
+    GstFlowReturn flow;
+    guint64 length;
+    guint32 id;
+    guint needed;
+
+    flow = gst_matroska_read_common_peek_id_length_pull (&demux->common,
+        GST_ELEMENT_CAST (demux), &id, &length, &needed);
+
+    if (flow != GST_FLOW_OK)
+      break;
+
+    GST_LOG_OBJECT (demux, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
+        "size %" G_GUINT64_FORMAT ", needed %d", demux->common.offset, id,
+        length, needed);
+
+    /* Reached start of next cluster without finding data, stop processing */
+    if (id == GST_MATROSKA_ID_CLUSTER && cluster->offset != offset)
+      break;
+
+    /* Not going to parse into these for now, stop processing */
+    if (id == GST_MATROSKA_ID_ENCRYPTEDBLOCK
+        || id == GST_MATROSKA_ID_BLOCKGROUP || id == GST_MATROSKA_ID_BLOCK)
+      break;
+
+    /* SimpleBlock: peek at headers to check if it's a keyframe */
+    if (id == GST_MATROSKA_ID_SIMPLEBLOCK) {
+      GstBitReader br;
+      guint8 *d, hdr_len, v = 0;
+
+      GST_DEBUG_OBJECT (demux, "SimpleBlock found");
+
+      /* SimpleBlock header is max. 21 bytes */
+      hdr_len = MIN (21, length);
+
+      flow = gst_matroska_read_common_peek_bytes (&demux->common,
+          demux->common.offset, hdr_len, NULL, &d);
+
+      if (flow != GST_FLOW_OK)
+        break;
+
+      gst_bit_reader_init (&br, d, hdr_len);
+
+      /* skip prefix: ebml id (SimpleBlock) + element length */
+      if (!gst_bit_reader_skip (&br, 8 * needed))
+        break;
+
+      /* skip track number (ebml coded) */
+      if (!bit_reader_skip_ebml_num (&br))
+        break;
+
+      /* skip Timecode */
+      if (!gst_bit_reader_skip (&br, 16))
+        break;
+
+      /* read flags */
+      if (!gst_bit_reader_get_bits_uint8 (&br, &v, 8))
+        break;
+
+      if ((v & 0x80) != 0)
+        cluster->status = CLUSTER_STATUS_STARTS_WITH_KEYFRAME;
+      else
+        cluster->status = CLUSTER_STATUS_STARTS_WITH_DELTAUNIT;
+
+      break;
+    }
+
+    flow = gst_matroska_demux_parse_id (demux, id, length, needed);
+
+    if (flow != GST_FLOW_OK)
+      break;
+
+    switch (id) {
+      case GST_MATROSKA_ID_CLUSTER:
+        if (length == G_MAXUINT64)
+          cluster->size = 0;
+        else
+          cluster->size = length + needed;
+        break;
+      case GST_MATROSKA_ID_PREVSIZE:
+        cluster->prev_size = demux->cluster_prevsize;
+        break;
+      case GST_MATROSKA_ID_CLUSTERTIMECODE:
+        cluster->time = demux->cluster_time * demux->common.time_scale;
+        break;
+      case GST_MATROSKA_ID_SILENTTRACKS:
+        /* ignore and continue */
+        break;
+      default:
+        GST_WARNING_OBJECT (demux, "Unknown ebml id 0x%08x (possibly garbage), "
+            "bailing out", id);
+        goto out;
+    }
+  } while (demux->common.offset - offset < MAX_CLUSTER_INFO_PROBE_LENGTH);
+
+out:
+
+  GST_INFO_OBJECT (demux, "Cluster @ %" G_GUINT64_FORMAT ": "
+      "time %" GST_TIME_FORMAT ", size %" G_GUINT64_FORMAT ", "
+      "prev_size %" G_GUINT64_FORMAT ", %s", cluster->offset,
+      GST_TIME_ARGS (cluster->time), cluster->size, cluster->prev_size,
+      cluster_status_get_nick (cluster->status));
+
+  /* return success as long as we could extract the minimum useful information */
+  return cluster->time != GST_CLOCK_TIME_NONE;
+}
+
+/* returns TRUE if the cluster offset was updated */
+static gboolean
+gst_matroska_demux_scan_back_for_keyframe_cluster (GstMatroskaDemux * demux,
+    gint64 * cluster_offset, GstClockTime * cluster_time)
+{
+  GstClockTime stream_start_time = demux->stream_start_time;
+  guint64 first_cluster_offset = demux->first_cluster_offset;
+  gint64 off = *cluster_offset;
+  ClusterInfo cluster = { 0, };
+
+  GST_INFO_OBJECT (demux, "Checking if cluster starts with keyframe");
+  while (off > first_cluster_offset) {
+    if (!gst_matroska_demux_peek_cluster_info (demux, &cluster, off)) {
+      GST_LOG_OBJECT (demux,
+          "Couldn't get info on cluster @ %" G_GUINT64_FORMAT, off);
+      break;
+    }
+
+    /* Keyframe? Then we're done */
+    if (cluster.status == CLUSTER_STATUS_STARTS_WITH_KEYFRAME) {
+      GST_LOG_OBJECT (demux,
+          "Found keyframe at start of cluster @ %" G_GUINT64_FORMAT, off);
+      break;
+    }
+
+    /* We only scan back if we *know* we landed on a cluster that
+     * starts with a delta frame. */
+    if (cluster.status != CLUSTER_STATUS_STARTS_WITH_DELTAUNIT) {
+      GST_LOG_OBJECT (demux,
+          "No delta frame at start of cluster @ %" G_GUINT64_FORMAT, off);
+      break;
+    }
+
+    GST_DEBUG_OBJECT (demux, "Cluster starts with delta frame, backtracking");
+
+    if (cluster.prev_size == 0 || cluster.prev_size > off) {
+      GST_LOG_OBJECT (demux, "Cluster has no or invalid prev size, stopping");
+      break;
+    }
+
+    off -= cluster.prev_size;
+    if (off <= first_cluster_offset) {
+      GST_LOG_OBJECT (demux, "Reached first cluster, stopping");
+      *cluster_offset = first_cluster_offset;
+      *cluster_time = stream_start_time;
+      return TRUE;
+    }
+    GST_LOG_OBJECT (demux, "Trying prev cluster @ %" G_GUINT64_FORMAT, off);
+  }
+
+  /* If we found a cluster starting with a keyframe jump to that instead,
+   * otherwise leave everything as it was before */
+  if (cluster.time != GST_CLOCK_TIME_NONE
+      && (cluster.offset == first_cluster_offset
+          || cluster.status == CLUSTER_STATUS_STARTS_WITH_KEYFRAME)) {
+    *cluster_offset = cluster.offset;
+    *cluster_time = cluster.time;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 /* bisect and scan through file for cluster starting before @time,
  * returns fake index entry with corresponding info on cluster */
 static GstMatroskaIndex *
@@ -2042,7 +2283,7 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   /* estimate new position, resync using cluster ebml id,
    * and bisect further or scan forward to appropriate cluster */
 
-  /* store some current state */
+  /* save some current global state which will be touched by our scanning */
   current_state = demux->common.state;
   g_return_val_if_fail (current_state == GST_MATROSKA_READ_STATE_DATA, NULL);
 
@@ -2224,9 +2465,31 @@ retry:
     goto exit;
   }
 
+  /* In the bisect loop above we always undershoot and then jump forward
+   * cluster-by-cluster until we overshoot, so if we get here we've gone
+   * over and the previous cluster is where we need to go to. */
+  cluster_offset = prev_cluster_offset;
+  cluster_time = prev_cluster_time;
+
+  /* If we have video and can easily backtrack, check if we landed on a cluster
+   * that starts with a keyframe - and if not backtrack until we find one that
+   * does. */
+  /* FIXME: skip if all video streams are I-frame only streams (should probably
+   * set the default value in peek_cluster_info() accordingly then) */
+  if (demux->num_v_streams > 0 && demux->seen_cluster_prevsize) {
+    if (gst_matroska_demux_scan_back_for_keyframe_cluster (demux,
+            &cluster_offset, &cluster_time)) {
+      GST_INFO_OBJECT (demux, "Adjusted cluster to %" GST_TIME_FORMAT " @ "
+          "%" G_GUINT64_FORMAT, GST_TIME_ARGS (cluster_time), cluster_offset);
+    }
+  } else if (demux->num_v_streams > 0) {
+    GST_FIXME_OBJECT (demux, "implement scanning back to prev cluster without "
+        "cluster prev size field");
+  }
+
   entry = g_new0 (GstMatroskaIndex, 1);
-  entry->time = prev_cluster_time;
-  entry->pos = prev_cluster_offset - demux->common.ebml_segment_start;
+  entry->time = cluster_time;
+  entry->pos = cluster_offset - demux->common.ebml_segment_start;
   GST_DEBUG_OBJECT (demux, "simulated index entry; time %" GST_TIME_FORMAT
       ", pos %" G_GUINT64_FORMAT, GST_TIME_ARGS (entry->time), entry->pos);
 
