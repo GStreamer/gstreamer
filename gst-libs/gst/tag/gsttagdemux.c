@@ -1365,11 +1365,13 @@ gst_tag_demux_element_find (GstTagDemux * demux)
   if (GST_PAD_MODE (demux->priv->srcpad) == GST_PAD_MODE_PULL)
     goto skip_typefinding;
 
-  caps = gst_type_find_helper_get_range (GST_OBJECT (demux), NULL,
+  ret = gst_type_find_helper_get_range_full (GST_OBJECT (demux), NULL,
       (GstTypeFindHelperGetRangeFunction) gst_tag_demux_read_range,
       demux->priv->upstream_size
       - (demux->priv->strip_start + demux->priv->strip_end), NULL,
-      &probability);
+      &caps, &probability);
+  if (ret != GST_FLOW_OK)
+    goto read_tag_error;
 
   GST_INFO_OBJECT (demux, "Found type %" GST_PTR_FORMAT " with a "
       "probability of %u", caps, probability);
