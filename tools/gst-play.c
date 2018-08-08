@@ -817,9 +817,9 @@ shuffle_uris (gchar ** uris, guint num)
   if (num < 2)
     return;
 
-  for (i = 0; i < num; i++) {
-    /* gets equally distributed random number in 0..num-1 [0;num[ */
-    j = g_random_int_range (0, num);
+  for (i = num - 1; i >= 1; i--) {
+    /* +1 because number returned will be in range [a;b[ so excl. stop */
+    j = g_random_int_range (0, i + 1);
     tmp = uris[j];
     uris[j] = uris[i];
     uris[i] = tmp;
