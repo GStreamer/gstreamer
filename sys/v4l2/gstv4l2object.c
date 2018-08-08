@@ -2166,6 +2166,8 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
 {
   struct v4l2_format fmt;
   GValue interlace_formats = { 0, };
+  enum v4l2_field formats[] = { V4L2_FIELD_NONE, V4L2_FIELD_INTERLACED };
+  gsize i;
   GstVideoInterlaceMode interlace_mode, prev = -1;
 
   if (!g_str_equal (gst_structure_get_name (s), "video/x-raw"))
@@ -2179,40 +2181,26 @@ gst_v4l2_object_add_interlace_mode (GstV4l2Object * v4l2object,
   g_value_init (&interlace_formats, GST_TYPE_LIST);
 
   /* Try twice - once for NONE, once for INTERLACED. */
-  memset (&fmt, 0, sizeof (fmt));
-  fmt.type = v4l2object->type;
-  fmt.fmt.pix.width = width;
-  fmt.fmt.pix.height = height;
-  fmt.fmt.pix.pixelformat = pixelformat;
-  fmt.fmt.pix.field = V4L2_FIELD_NONE;
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    memset (&fmt, 0, sizeof (fmt));
+    fmt.type = v4l2object->type;
+    fmt.fmt.pix.width = width;
+    fmt.fmt.pix.height = height;
+    fmt.fmt.pix.pixelformat = pixelformat;
+    fmt.fmt.pix.field = formats[i];
 
-  if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0 &&
-      gst_v4l2_object_get_interlace_mode (fmt.fmt.pix.field, &interlace_mode)) {
-    GValue interlace_enum = { 0, };
-    const gchar *mode_string;
-    g_value_init (&interlace_enum, G_TYPE_STRING);
-    mode_string = gst_video_interlace_mode_to_string (interlace_mode);
-    g_value_set_string (&interlace_enum, mode_string);
-    gst_value_list_append_and_take_value (&interlace_formats, &interlace_enum);
-    prev = interlace_mode;
-  }
-
-  memset (&fmt, 0, sizeof (fmt));
-  fmt.type = v4l2object->type;
-  fmt.fmt.pix.width = width;
-  fmt.fmt.pix.height = height;
-  fmt.fmt.pix.pixelformat = pixelformat;
-  fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
-
-  if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0 &&
-      gst_v4l2_object_get_interlace_mode (fmt.fmt.pix.field, &interlace_mode) &&
-      prev != interlace_mode) {
-    GValue interlace_enum = { 0, };
-    const gchar *mode_string;
-    g_value_init (&interlace_enum, G_TYPE_STRING);
-    mode_string = gst_video_interlace_mode_to_string (interlace_mode);
-    g_value_set_string (&interlace_enum, mode_string);
-    gst_value_list_append_and_take_value (&interlace_formats, &interlace_enum);
+    if (gst_v4l2_object_try_fmt (v4l2object, &fmt) == 0 &&
+        gst_v4l2_object_get_interlace_mode (fmt.fmt.pix.field, &interlace_mode)
+        && prev != interlace_mode) {
+      GValue interlace_enum = { 0, };
+      const gchar *mode_string;
+      g_value_init (&interlace_enum, G_TYPE_STRING);
+      mode_string = gst_video_interlace_mode_to_string (interlace_mode);
+      g_value_set_string (&interlace_enum, mode_string);
+      gst_value_list_append_and_take_value (&interlace_formats,
+          &interlace_enum);
+      prev = interlace_mode;
+    }
   }
 
   if (gst_v4l2src_value_simplify (&interlace_formats)
