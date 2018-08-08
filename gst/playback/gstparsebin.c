@@ -3469,14 +3469,16 @@ retry:
 
   /* Get the pads that we're going to expose and mark things as exposed */
   uncollected_streams = FALSE;
+  CHAIN_MUTEX_LOCK (parsebin->parse_chain);
   if (!gst_parse_chain_expose (parsebin->parse_chain, &endpads, &missing_plugin,
           missing_plugin_details, &last_group, &uncollected_streams)) {
     g_list_free_full (endpads, (GDestroyNotify) gst_object_unref);
     g_string_free (missing_plugin_details, TRUE);
     GST_ERROR_OBJECT (parsebin, "Broken chain/group tree");
-    g_return_val_if_reached (FALSE);
+    CHAIN_MUTEX_UNLOCK (parsebin->parse_chain);
     return FALSE;
   }
+  CHAIN_MUTEX_UNLOCK (parsebin->parse_chain);
   if (endpads == NULL) {
     if (missing_plugin) {
       if (missing_plugin_details->len > 0) {
@@ -3726,8 +3728,10 @@ gst_parse_chain_expose (GstParseChain * chain, GList ** endpads,
   for (l = group->children; l; l = l->next) {
     GstParseChain *childchain = l->data;
 
+    CHAIN_MUTEX_LOCK (childchain);
     ret |= gst_parse_chain_expose (childchain, endpads, missing_plugin,
         missing_plugin_details, last_group, uncollected_streams);
+    CHAIN_MUTEX_UNLOCK (childchain);
   }
 
   return ret;
