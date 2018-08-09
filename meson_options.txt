@@ -10,6 +10,8 @@ option('ptp-helper-setuid-group', type : 'string',
 option('ptp-helper-permissions', type : 'combo',
        choices : ['none', 'setuid-root', 'capabilities', 'auto'], value : 'auto')
 option('extra-checks', type : 'boolean', value : true, description : 'Enable extra runtime checks')
+option('option-parsing', type : 'boolean', value : true,
+       description: 'Enable command line option parsing')
 option('poisoning', type : 'boolean', value : false, description : 'Enable poisoning of deallocated objects')
 
 # Feature options

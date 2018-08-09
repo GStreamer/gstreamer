@@ -80,6 +80,7 @@ cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_inst
 cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
 cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
   description: 'libexecdir path component, used to find plugin-scanner on relocatable builds on windows')
+cdata.set('GST_DISABLE_OPTION_PARSING', not get_option('option-parsing'))
 
 if host_system == 'darwin'
   cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
