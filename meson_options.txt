@@ -1,5 +1,3 @@
-option('build_tools', type : 'boolean', value : true)
-option('poisoning', type : 'boolean', value : false)
 option('gst_debug', type : 'boolean', value : true)
 option('registry', type : 'boolean', value : true)
 option('tracer_hooks', type : 'boolean', value : true)
@@ -18,6 +16,9 @@ option('bash-completion', type : 'feature', value : 'auto', description : 'Insta
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
+option('tests', type : 'feature', value : 'auto', yield : true)
+option('benchmarks', type : 'feature', value : 'auto', yield : true)
+option('tools', type : 'feature', value : 'auto', yield : true)
 option('gtk_doc', type : 'feature', value : 'auto', yield : true, description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')

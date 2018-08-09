@@ -460,7 +460,9 @@ endif
 subdir('gst')
 subdir('libs')
 subdir('plugins')
-subdir('tools')
+if not get_option('tools').disabled()
+  subdir('tools')
+endif
 subdir('pkgconfig')
 subdir('tests')
 subdir('data')
