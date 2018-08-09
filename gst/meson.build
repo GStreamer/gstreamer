@@ -173,9 +173,12 @@ else
   gst_cdata.set('GST_DISABLE_REGISTRY_DEFINE', '#define GST_DISABLE_REGISTRY 1')
 endif
 
-# FIXME: add --disable-parse option? (but autotools doesn't seem to set this
-# define properly at all either even though it does expose the option)
-gst_cdata.set('GST_DISABLE_PARSE_DEFINE', '#undef GST_DISABLE_PARSE')
+gst_parse = get_option('gst_parse')
+if gst_parse
+  gst_cdata.set('GST_DISABLE_PARSE_DEFINE', '#undef GST_DISABLE_PARSE')
+else
+  gst_cdata.set('GST_DISABLE_PARSE_DEFINE', '#define GST_DISABLE_PARSE 1')
+endif
 
 # FIXME: add --disable-plugin option?
 gst_cdata.set('GST_DISABLE_PLUGIN_DEFINE', '#undef GST_DISABLE_PLUGIN')
@@ -207,8 +210,11 @@ gst_enums = gnome.mkenums_simple('gstenumtypes',
 gstenum_h = gst_enums[1]
 gstenum_c = gst_enums[0]
 
+gst_parse_sources = []
+if gst_parse
+  subdir('parse')
+endif
 
-subdir('parse')
 subdir('printf')
 
 libgst_c_args = gst_c_args + [
@@ -227,7 +233,7 @@ endif
 gst_incdirs = [configinc]
 gst_gen_sources = [gstenum_h]
 libgst = library('gstreamer-1.0', gst_sources,
-  gstenum_h, gstenum_c, grammar, parser, gst_registry_sources,
+  gstenum_h, gstenum_c, gst_parse_sources, gst_registry_sources,
   version : libversion,
   soversion : soversion,
   c_args : libgst_c_args,

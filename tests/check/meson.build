@@ -1,5 +1,4 @@
 have_debug = true # FIXME
-have_parse = true # FIXME
 
 # tests and condition when to skip the test
 core_tests = [
@@ -18,7 +17,7 @@ core_tests = [
   [ 'gst/gstdatetime.c' ],
   [ 'gst/gstdeinit.c' ],
   [ 'gst/gstdevice.c' ],
-  [ 'gst/gstelement.c', not gst_registry ],
+  [ 'gst/gstelement.c', not gst_registry or not gst_parse],
   [ 'gst/gstelementfactory.c', not gst_registry ],
   [ 'gst/gstghostpad.c', not gst_registry ],
   [ 'gst/gstinfo.c' ],
@@ -68,7 +67,7 @@ core_tests = [
   [ 'libs/collectpads.c', not gst_registry ],
   [ 'libs/controller.c' ],
   [ 'libs/flowcombiner.c' ],
-  [ 'libs/gstharness.c' ],
+  [ 'libs/gstharness.c', not gst_parse ],
   [ 'libs/gstnetclientclock.c' ],
   [ 'libs/gstnettimeprovider.c' ],
   [ 'libs/gsttestclock.c' ],
@@ -86,20 +85,20 @@ core_tests = [
   [ 'elements/filesink.c', not gst_registry ],
   [ 'elements/filesrc.c', not gst_registry ],
   [ 'elements/funnel.c', not gst_registry ],
-  [ 'elements/identity.c', not gst_registry ],
+  [ 'elements/identity.c', not gst_registry or not gst_parse ],
   [ 'elements/multiqueue.c', not gst_registry ],
   [ 'elements/selector.c', not gst_registry ],
   [ 'elements/streamiddemux.c', not gst_registry ],
-  [ 'elements/tee.c', not gst_registry ],
+  [ 'elements/tee.c', not gst_registry or not gst_parse],
   [ 'elements/queue.c', not gst_registry ],
-  [ 'elements/queue2.c', not gst_registry ],
+  [ 'elements/queue2.c', not gst_registry or not gst_parse],
   [ 'elements/valve.c', not gst_registry ],
   [ 'pipelines/seek.c', not gst_registry ],
-  [ 'pipelines/queue-error.c', not gst_registry ],
-  [ 'pipelines/parse-disabled.c', have_parse ],
-  [ 'pipelines/simple-launch-lines.c', not have_parse ],
-  [ 'pipelines/parse-launch.c', not have_parse ],
-  [ 'pipelines/cleanup.c', not have_parse ],
+  [ 'pipelines/queue-error.c', not gst_registry or not gst_parse],
+  [ 'pipelines/parse-disabled.c', gst_parse ],
+  [ 'pipelines/simple-launch-lines.c', not gst_parse ],
+  [ 'pipelines/parse-launch.c', not gst_parse ],
+  [ 'pipelines/cleanup.c', not gst_parse ],
   [ 'tools/gstinspect.c' ],
   # These take quite long, put them at the end
   [ 'elements/fakesink.c', not gst_registry ],

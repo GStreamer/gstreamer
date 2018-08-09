@@ -69,3 +69,5 @@ grammar = custom_target('parsegrammar',
   command : [python3, gen_grammar, '@OUTPUT0@', '@OUTPUT1@', '@INPUT@'],
   depends : [parser],
 )
+
+gst_parse_sources += [parser, grammar]

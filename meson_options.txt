@@ -1,4 +1,6 @@
 option('gst_debug', type : 'boolean', value : true)
+option('gst_parse', type : 'boolean', value : true,
+       description: 'Enable pipeline string parser')
 option('registry', type : 'boolean', value : true)
 option('tracer_hooks', type : 'boolean', value : true)
 option('ptp-helper-setuid-user', type : 'string',
