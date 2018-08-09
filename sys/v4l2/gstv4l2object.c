@@ -3460,6 +3460,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     format.fmt.pix_mp.ycbcr_enc = matrix;
     format.fmt.pix_mp.xfer_func = transfer;
   } else {
+    format.fmt.pix.priv = V4L2_PIX_FMT_PRIV_MAGIC;
     format.fmt.pix.colorspace = colorspace;
     format.fmt.pix.quantization = range;
     format.fmt.pix.ycbcr_enc = matrix;
