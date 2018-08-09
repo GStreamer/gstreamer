@@ -3283,7 +3283,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     field = V4L2_FIELD_NONE;
   }
 
-  /* We first pick th main colorspace from the primaries */
+  /* We first pick the main colorspace from the primaries */
   switch (info.colorimetry.primaries) {
     case GST_VIDEO_COLOR_PRIMARIES_BT709:
       /* There is two colorspaces using these primaries, use the range to
