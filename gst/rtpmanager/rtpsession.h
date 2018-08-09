@@ -375,7 +375,6 @@ gboolean        rtp_session_add_source             (RTPSession *sess, RTPSource 
 guint           rtp_session_get_num_sources        (RTPSession *sess);
 guint           rtp_session_get_num_active_sources (RTPSession *sess);
 RTPSource*      rtp_session_get_source_by_ssrc     (RTPSession *sess, guint32 ssrc);
-RTPSource*      rtp_session_create_source          (RTPSession *sess);
 
 /* processing packets from receivers */
 GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer *buffer,

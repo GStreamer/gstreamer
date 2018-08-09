@@ -1984,34 +1984,6 @@ rtp_session_create_new_ssrc (RTPSession * sess)
   return ssrc;
 }
 
-
-/**
- * rtp_session_create_source:
- * @sess: an #RTPSession
- *
- * Create an #RTPSource for use in @sess. This function will create a source
- * with an ssrc that is currently not used by any participants in the session.
- *
- * Returns: an #RTPSource.
- */
-RTPSource *
-rtp_session_create_source (RTPSession * sess)
-{
-  guint32 ssrc;
-  RTPSource *source;
-
-  RTP_SESSION_LOCK (sess);
-  ssrc = rtp_session_create_new_ssrc (sess);
-  source = rtp_source_new (ssrc);
-  rtp_source_set_callbacks (source, &callbacks, sess);
-  /* we need an additional ref for the source in the hashtable */
-  g_object_ref (source);
-  add_source (sess, source);
-  RTP_SESSION_UNLOCK (sess);
-
-  return source;
-}
-
 static gboolean
 update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
 {
