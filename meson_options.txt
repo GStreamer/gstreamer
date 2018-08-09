@@ -13,6 +13,9 @@ option('extra-checks', type : 'boolean', value : true, description : 'Enable ext
 option('option-parsing', type : 'boolean', value : true,
        description: 'Enable command line option parsing')
 option('poisoning', type : 'boolean', value : false, description : 'Enable poisoning of deallocated objects')
+option('memory-alignment', type: 'combo',
+       choices : ['1', '2', '4', '8', '16', '32', '64', '128', '256', '512', '1024', '2048', '4096', '8192', 'malloc', 'pagesize'],
+       value: 'malloc')
 
 # Feature options
 option('libunwind', type : 'feature', value : 'auto', description : 'Use libunwind to generate backtraces')

@@ -74,13 +74,20 @@ cdata.set_quoted('PACKAGE_URL', '')
 cdata.set_quoted('PACKAGE_VERSION', gst_version)
 cdata.set_quoted('PLUGINDIR', join_paths(get_option('prefix'), get_option('libdir'), 'gstreamer-1.0'))
 cdata.set_quoted('VERSION', gst_version)
-# FIXME: --with-memory-alignment],[8,N,malloc,pagesize (default is 32)]) option
-cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
 cdata.set_quoted('GST_PLUGIN_SCANNER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-plugin-scanner'))
 cdata.set_quoted('GST_PTP_HELPER_INSTALLED', join_paths(prefix, helpers_install_dir, 'gst-ptp-helper'))
 cdata.set_quoted('GST_PLUGIN_SCANNER_SUBDIR', libexecdir,
   description: 'libexecdir path component, used to find plugin-scanner on relocatable builds on windows')
 cdata.set('GST_DISABLE_OPTION_PARSING', not get_option('option-parsing'))
+
+mem_align_opt = get_option('memory-alignment')
+if mem_align_opt == 'malloc'
+  cdata.set('MEMORY_ALIGNMENT_MALLOC', 1)
+elif mem_align_opt == 'pagesize'
+  cdata.set('MEMORY_ALIGNMENT_PAGESIZE', 1)
+else
+  cdata.set('MEMORY_ALIGNMENT', mem_align_opt.to_int())
+endif
 
 if host_system == 'darwin'
   cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
