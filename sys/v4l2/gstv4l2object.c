@@ -3198,6 +3198,32 @@ gst_v4l2_object_extrapolate_stride (const GstVideoFormatInfo * finfo,
 }
 
 static gboolean
+gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
+    const gchar * color)
+{
+  GstVideoColorimetry ci;
+  static const GstVideoColorimetry ci_likely_jpeg = {
+      GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
+      GST_VIDEO_TRANSFER_UNKNOWN, GST_VIDEO_COLOR_PRIMARIES_UNKNOWN };
+  static const GstVideoColorimetry ci_jpeg = {
+      GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
+      GST_VIDEO_TRANSFER_SRGB, GST_VIDEO_COLOR_PRIMARIES_BT709 };
+
+  if (!gst_video_colorimetry_from_string (&ci, color))
+    return FALSE;
+
+  if (gst_video_colorimetry_is_equal (&ci, cinfo))
+    return TRUE;
+
+  /* Allow 1:4:0:0 (produced by jpegdec) if the device expects 1:4:7:1 */
+  if (gst_video_colorimetry_is_equal (&ci, &ci_likely_jpeg)
+      && gst_video_colorimetry_is_equal (cinfo, &ci_jpeg))
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     gboolean try_only, GstV4l2Error * error)
 {
@@ -3376,11 +3402,19 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (colorspace == 0) {
     /* Try to guess colorspace according to pixelformat and size */
     if (GST_VIDEO_INFO_IS_YUV (&info)) {
-      /* SD streams likely use SMPTE170M and HD streams REC709 */
-      if (width <= 720 && height <= 576)
-        colorspace = V4L2_COLORSPACE_SMPTE170M;
-      else
-        colorspace = V4L2_COLORSPACE_REC709;
+      if (range == V4L2_QUANTIZATION_FULL_RANGE
+          && matrix == V4L2_YCBCR_ENC_601 && transfer == 0) {
+        /* Full range BT.601 YCbCr encoding with unknown primaries and transfer
+         * function most likely is JPEG */
+        colorspace = V4L2_COLORSPACE_JPEG;
+        transfer = V4L2_XFER_FUNC_SRGB;
+      } else {
+        /* SD streams likely use SMPTE170M and HD streams REC709 */
+        if (width <= 720 && height <= 576)
+          colorspace = V4L2_COLORSPACE_SMPTE170M;
+        else
+          colorspace = V4L2_COLORSPACE_REC709;
+      }
     } else if (GST_VIDEO_INFO_IS_RGB (&info)) {
       colorspace = V4L2_COLORSPACE_SRGB;
       transfer = V4L2_XFER_FUNC_NONE;
@@ -3527,10 +3561,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   s = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_field (s, "colorimetry")) {
-    GstVideoColorimetry ci;
-    if (!gst_video_colorimetry_from_string (&ci,
-            gst_structure_get_string (s, "colorimetry"))
-        || !gst_video_colorimetry_is_equal (&ci, &info.colorimetry))
+    if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry,
+            gst_structure_get_string (s, "colorimetry")))
       goto invalid_colorimetry;
   }
 
