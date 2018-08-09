@@ -3512,12 +3512,24 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       goto set_fmt_failed;
   }
 
+  if (is_mplane) {
+    colorspace = format.fmt.pix_mp.colorspace;
+    range = format.fmt.pix_mp.quantization;
+    matrix = format.fmt.pix_mp.ycbcr_enc;
+    transfer = format.fmt.pix_mp.xfer_func;
+  } else {
+    colorspace = format.fmt.pix.colorspace;
+    range = format.fmt.pix.quantization;
+    matrix = format.fmt.pix.ycbcr_enc;
+    transfer = format.fmt.pix.xfer_func;
+  }
+
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Got format of %dx%d, format "
-      "%" GST_FOURCC_FORMAT ", nb planes %d, colorspace %d",
+      "%" GST_FOURCC_FORMAT ", nb planes %d, colorspace %d:%d:%d:%d",
       format.fmt.pix.width, format.fmt.pix_mp.height,
       GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
       is_mplane ? format.fmt.pix_mp.num_planes : 1,
-      is_mplane ? format.fmt.pix_mp.colorspace : format.fmt.pix.colorspace);
+      colorspace, range, matrix, transfer);
 
 #ifndef GST_DISABLE_GST_DEBUG
   if (is_mplane) {
