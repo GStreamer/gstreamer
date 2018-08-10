@@ -1949,6 +1949,9 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (from_gl_target, priv->in_tex[0]->tex_id);
 
+  gl->ClearColor (0.0, 0.0, 0.0, 1.0);
+  gl->Clear (GL_COLOR_BUFFER_BIT);
+
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL);
 
   if (gl->BindVertexArray)
