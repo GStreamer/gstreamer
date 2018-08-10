@@ -126,6 +126,13 @@ test_defines = [
   '-DGST_DISABLE_DEPRECATED',
 ]
 
+# sanity checking
+if get_option('check').disabled()
+  if get_option('tests').enabled()
+    error('Building of unit tests was requested, but GStreamer check library was disabled.')
+  endif
+endif
+
 glib_deps = [gio_dep, gobject_dep, gmodule_dep, glib_dep]
 gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_dep]
 

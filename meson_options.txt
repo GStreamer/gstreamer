@@ -18,6 +18,7 @@ option('memory-alignment', type: 'combo',
        value: 'malloc')
 
 # Feature options
+option('check', type : 'feature', value : 'auto', description : 'Build unit test libraries')
 option('libunwind', type : 'feature', value : 'auto', description : 'Use libunwind to generate backtraces')
 option('bash-completion', type : 'feature', value : 'auto', description : 'Install bash completion files')
 

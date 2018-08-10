@@ -22,14 +22,17 @@ pkgconf.set('netlibdir', join_paths(meson.build_root(), gst_net.outdir()))
 
 pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
-pkg_files = ['gstreamer-base',
+pkg_files = [
+  'gstreamer-base',
   'gstreamer-controller',
-  'gstreamer-check',
   'gstreamer-net',
   'gstreamer'
 ]
 
-pkgconf.set('checklibdir', join_paths(meson.build_root(), gst_check.outdir()))
+if not get_option('check').disabled()
+  pkg_files += ['gstreamer-check']
+  pkgconf.set('checklibdir', join_paths(meson.build_root(), gst_check.outdir()))
+endif
 
 foreach p : pkg_files
   infile = p + '.pc.in'
