@@ -27,7 +27,7 @@ rtsp_enums = gnome.mkenums_simple('gstrtsp-enumtypes',
   header_prefix : '#include <gst/rtsp/rtsp-prelude.h>',
   decorator : 'GST_RTSP_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/rtsp/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/rtsp'))
 gstrtsp_c = rtsp_enums[0]
 gstrtsp_h = rtsp_enums[1]
 

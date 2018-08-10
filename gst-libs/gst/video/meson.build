@@ -92,7 +92,7 @@ video_enums = gnome.mkenums_simple('video-enumtypes',
   header_prefix : '#include <gst/video/video-prelude.h>',
   decorator : 'GST_VIDEO_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/video/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/video'))
 gstvideo_c = video_enums[0]
 gstvideo_h = video_enums[1]
 video_gen_sources = [gstvideo_h]

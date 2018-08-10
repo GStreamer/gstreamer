@@ -31,7 +31,7 @@ tag_enums = gnome.mkenums_simple('tag-enumtypes',
   header_prefix : '#include <gst/tag/tag-prelude.h>',
   decorator : 'GST_TAG_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/tag/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/tag'))
 gsttag_c = tag_enums[0]
 gsttag_h = tag_enums[1]
 tag_gen_sources = [gsttag_h]

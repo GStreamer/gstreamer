@@ -12,7 +12,7 @@ app_enums = gnome.mkenums_simple('app-enumtypes',
   header_prefix : '#include <gst/app/app-prelude.h>',
   decorator : 'GST_APP_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/app/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/app'))
 gstapp_c = app_enums[0]
 gstapp_h = app_enums[1]
 

@@ -19,7 +19,7 @@ pbconf.set('PACKAGE_VERSION_MICRO', gst_version_micro)
 pbconf.set('PACKAGE_VERSION_NANO', gst_version_nano)
 gst_pbutils_version_h = configure_file(input : 'gstpluginsbaseversion.h.in',
   output: 'gstpluginsbaseversion.h',
-  install_dir : 'include/gstreamer-1.0/gst/pbutils/',
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/pbutils'),
   configuration: pbconf)
 
 pbutils_headers = [
@@ -43,7 +43,7 @@ pbutils_enums = gnome.mkenums_simple('pbutils-enumtypes',
   header_prefix : '#include <gst/pbutils/pbutils-prelude.h>',
   decorator : 'GST_PBUTILS_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/pbutils/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/pbutils'))
 gstpbutils_c = pbutils_enums[0]
 gstpbutils_h = pbutils_enums[1]
 

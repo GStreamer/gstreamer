@@ -67,7 +67,7 @@ audio_enums = gnome.mkenums_simple('audio-enumtypes',
   header_prefix : '#include <gst/audio/audio-prelude.h>',
   decorator : 'GST_AUDIO_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/audio/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/audio'))
 gstaudio_c = audio_enums[0]
 gstaudio_h = audio_enums[1]
 
