@@ -7,7 +7,8 @@ photo_enums = gnome.mkenums_simple('photography-enumtypes',
   header_prefix : '#include <gst/interfaces/photography-prelude.h>',
   decorator: 'GST_PHOTOGRAPHY_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/interfaces/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/interfaces'))
+
 photoenum_c = photo_enums[0]
 photoenum_h = photo_enums[1]
 

@@ -23,7 +23,7 @@ mpegts_enums = gnome.mkenums_simple('gstmpegts-enumtypes',
   header_prefix : '#include <gst/mpegts/mpegts-prelude.h>',
   decorator : 'GST_MPEGTS_API',
   install_header: true,
-  install_dir : 'include/gstreamer-1.0/gst/mpegts/')
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/mpegts'))
 
 mpegtsenumtypes_h = mpegts_enums[1]
 
