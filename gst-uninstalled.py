@@ -76,7 +76,7 @@ def get_subprocess_env(options):
     setup_python_env(options, env)
 
     meson = get_meson()
-    targets_s = subprocess.check_output([sys.executable, meson, 'introspect', options.builddir, '--targets'])
+    targets_s = subprocess.check_output(meson + ['introspect', options.builddir, '--targets'])
     targets = json.loads(targets_s.decode())
     paths = set()
     mono_paths = set()
@@ -111,9 +111,8 @@ def get_subprocess_env(options):
     presets = set()
     encoding_targets = set()
     pkg_dirs = set()
-    if '--installed' in subprocess.check_output([sys.executable, meson, 'introspect', '-h']).decode():
-        installed_s = subprocess.check_output([sys.executable, meson, 'introspect',
-                                               options.builddir, '--installed'])
+    if '--installed' in subprocess.check_output(meson + ['introspect', '-h']).decode():
+        installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
             if path.endswith('.prs'):
                 presets.add(os.path.dirname(path))

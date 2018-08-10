@@ -21,8 +21,7 @@ def checkout_subprojects(worktree_dir, branch):
     worktree_subdir = os.path.join(worktree_dir, "subprojects")
 
     meson = get_meson()
-    installed_s = subprocess.check_output([sys.executable, meson, 'introspect',
-                                            options.builddir, '--projectinfo'])
+    installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--projectinfo'])
     for subproj in json.loads(installed_s.decode())["subprojects"]:
         repo_name = subproj["name"]
         if not repo_name.startswith("gst"):

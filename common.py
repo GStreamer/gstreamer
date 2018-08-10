@@ -51,13 +51,12 @@ def accept_command(commands):
         command = shutil.which(command)
         if command:
             return command
-
     return None
 
 def get_meson():
     meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
     if os.path.exists(meson):
-        return meson
+        return [sys.executable, meson]
 
     mesonintrospect = os.environ.get('MESONINTROSPECT', '')
     for comp in shlex.split (mesonintrospect):
@@ -65,15 +64,16 @@ def get_meson():
         # let's not get tricked
         if 'python' in os.path.basename (comp):
             continue
-        if os.path.exists (comp):
-            mesondir = os.path.dirname(comp)
-            if mesonintrospect.endswith('.py') or mesonintrospect.endswith('.py introspect'):
-                meson = os.path.join(mesondir, 'meson.py')
+        if os.path.exists(comp):
+            if comp.endswith('.py'):
+                return [sys.executable, comp]
             else:
-                meson = os.path.join(mesondir, 'meson')
-            if os.path.exists (meson):
-                return meson
+                return [comp]
 
-    meson = accept_command(["meson.py", "meson"])
-
-    return meson
+    meson = accept_command(['meson.py'])
+    if meson:
+        return [sys.executable, meson]
+    meson = accept_command(['meson'])
+    if meson:
+        return [meson]
+    raise RuntimeError('Could not find Meson')

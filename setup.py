@@ -33,8 +33,9 @@ class GstBuildConfigurer:
                 print("Not reconfiguring")
                 return True
 
-        meson = get_meson()
-        if not meson:
+        try:
+            meson = get_meson()
+        except RuntimeError:
             print("Install mesonbuild to build %s: http://mesonbuild.com/\n"
                   "You can simply install it with:\n"
                   "    $ sudo pip3 install meson" % PROJECTNAME)
@@ -51,8 +52,8 @@ class GstBuildConfigurer:
         os.mkdir(build_dir)
 
         try:
-            subprocess.check_call(
-                [sys.executable, meson, "../"] + self.args + self.get_configs(), cwd=build_dir)
+            subprocess.check_call(meson + ["../"] + self.args + self.get_configs(),
+                                  cwd=build_dir)
             print("\nYou can now build GStreamer and its various subprojects running:\n"
                   " $ {} -C {!r}".format(os.path.basename(ninja), build_dir))
         except subprocess.CalledProcessError:
