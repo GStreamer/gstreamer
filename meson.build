@@ -57,6 +57,11 @@ if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
 endif
 
+# Define G_DISABLE_DEPRECATED for development versions
+if gst_version_minor % 2 == 1 and gst_version_micro < 90
+  add_project_arguments('-DG_DISABLE_DEPRECATED', language: 'c')
+endif
+
 cdata = configuration_data()
 cdata.set_quoted('GST_API_VERSION', apiversion)
 cdata.set_quoted('GST_DATADIR', join_paths(prefix, get_option('datadir')))
