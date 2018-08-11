@@ -49,8 +49,11 @@ gst_tag_args = [
       'license-translations.dict'))
 ]
 
-# FIXME: optional zlib support?
-tag_deps = [gst_base_dep, libm]
+# could drop optional zlib dep and use g_zlib_decompressor_new()
+zlib_dep = dependency('zlib', required: false, fallback: ['zlib', 'zlib_dep'])
+core_conf.set('HAVE_ZLIB', zlib_dep.found())
+
+tag_deps = [gst_base_dep, libm, zlib_dep]
 gsttag = library('gsttag-@0@'.format(api_version),
   tag_sources, gsttag_h, gsttag_c,
   c_args : gst_plugins_base_args + gst_tag_args,
