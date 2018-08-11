@@ -784,7 +784,7 @@ gst_player_media_info_get_container_format (const GstPlayerMediaInfo * info)
  * @info: a #GstPlayerMediaInfo
  *
  * Function to get the image (or preview-image) stored in taglist.
- * Application can use gst_sample_*_() API's to get caps, buffer etc.
+ * Application can use `gst_sample_*_()` API's to get caps, buffer etc.
  *
  * Returns: (transfer none): GstSample or NULL.
  */

@@ -179,7 +179,7 @@ gst_gm_mod_float (gdouble a, gdouble b)
   return a;
 }
 
-/**
+/*
  * Returns a repeating triangle shape in the range 0..1 with wavelength 1.0
  */
 gdouble
@@ -190,7 +190,7 @@ gst_gm_triangle (gdouble x)
   return 2.0 * (r < 0.5 ? r : 1 - r);
 }
 
-/**
+/*
  * Hermite interpolation
  */
 gdouble

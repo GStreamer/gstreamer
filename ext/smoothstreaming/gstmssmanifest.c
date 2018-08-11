@@ -975,7 +975,7 @@ gst_mss_manifest_get_duration (GstMssManifest * manifest)
 }
 
 
-/**
+/*
  * Gets the duration in nanoseconds
  */
 GstClockTime
@@ -1194,7 +1194,7 @@ gst_mss_stream_type_name (GstMssStreamType streamtype)
   }
 }
 
-/**
+/*
  * Seeks all streams to the fragment that contains the set time
  *
  * @forward: if this is forward playback
@@ -1215,7 +1215,7 @@ gst_mss_manifest_seek (GstMssManifest * manifest, gboolean forward,
     ((forward && (flags & GST_SEEK_FLAG_SNAP_AFTER)) || \
     (!forward && (flags & GST_SEEK_FLAG_SNAP_BEFORE)))
 
-/**
+/*
  * Seeks this stream to the fragment that contains the sample at time
  *
  * @time: time in nanoseconds

@@ -47,7 +47,7 @@
 
 #include "io-sim.h"
 
-/**
+/*
  * @addtogroup Rawenc Raw VBI encoder
  * @ingroup Raw
  * @brief Converting sliced VBI data to raw VBI images.
@@ -375,7 +375,7 @@ clear_image (uint8_t * p,
   }
 }
 
-/**
+/*
  * @param raw Noise will be added to this raw VBI image.
  * @param sp Describes the raw VBI data in the buffer. @a sp->sampling_format
  *   must be @c VBI_PIXFMT_Y8 (@c VBI_PIXFMT_YUV420 in libzvbi 0.2.x).
@@ -1008,12 +1008,12 @@ _vbi_raw_video_image (uint8_t * raw,
   return TRUE;
 }
 
-/**
+/*
  * @example examples/rawout.c
  * Raw VBI output example.
  */
 
-/**
+/*
  * @param raw A raw VBI image will be stored here.
  * @param raw_size Size of the @a raw buffer in bytes. The buffer
  *   must be large enough for @a sp->count[0] + count[1] lines
@@ -1079,7 +1079,7 @@ vbi_raw_vbi_image (uint8_t * raw,
       swap_fields ? _VBI_RAW_SWAP_FIELDS : 0, sliced, n_sliced_lines);
 }
 
-/**
+/*
  * @param raw A raw VBI image will be stored here.
  * @param raw_size Size of the @a raw buffer in bytes. The buffer
  *   must be large enough for @a sp->count[0] + count[1] lines

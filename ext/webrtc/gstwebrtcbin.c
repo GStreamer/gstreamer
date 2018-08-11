@@ -1188,7 +1188,7 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
   /* FIXME: emit when input caps/format changes? */
 
   /* If connection has created any RTCDataChannel's, and no m= section has
-   * been negotiated yet for data, return "true". 
+   * been negotiated yet for data, return "true".
    * FIXME */
 
   if (!webrtc->current_local_description) {
@@ -3674,7 +3674,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
   if (sd->sdp->type == GST_WEBRTC_SDP_TYPE_ROLLBACK) {
     /* FIXME:
-     * If the mid value of an RTCRtpTransceiver was set to a non-null value 
+     * If the mid value of an RTCRtpTransceiver was set to a non-null value
      * by the RTCSessionDescription that is being rolled back, set the mid
      * value of that transceiver to null, as described by [JSEP]
      * (section 4.1.7.2.).
@@ -5054,7 +5054,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::create-offer:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @options: create-offer options
    * @promise: a #GstPromise which will contain the offer
    */
@@ -5067,7 +5067,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::create-answer:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @options: create-answer options
    * @promise: a #GstPromise which will contain the answer
    */
@@ -5080,7 +5080,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::set-local-description:
-   * @object: the #GstWebRtcBin
+   * @object: the #GstWebRTCBin
    * @desc: a #GstWebRTCSessionDescription description
    * @promise: (nullable): a #GstPromise to be notified when it's set
    */
@@ -5093,7 +5093,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::set-remote-description:
-   * @object: the #GstWebRtcBin
+   * @object: the #GstWebRTCBin
    * @desc: a #GstWebRTCSessionDescription description
    * @promise: (nullable): a #GstPromise to be notified when it's set
    */
@@ -5106,7 +5106,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::add-ice-candidate:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @mline_index: the index of the media description in the SDP
    * @ice-candidate: an ice candidate
    */
@@ -5118,7 +5118,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::get-stats:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @pad: (nullable): A #GstPad to get the stats for, or %NULL for all
    * @promise: a #GstPromise for the result
    *
@@ -5195,7 +5195,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::on-negotiation-needed:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    */
   gst_webrtc_bin_signals[ON_NEGOTIATION_NEEDED_SIGNAL] =
       g_signal_new ("on-negotiation-needed", G_TYPE_FROM_CLASS (klass),
@@ -5204,7 +5204,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::on-ice-candidate:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @mline_index: the index of the media description in the SDP
    * @candidate: the ICE candidate
    */
@@ -5215,7 +5215,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::on-new-transceiver:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @candidate: the new #GstWebRTCRTPTransceiver
    */
   gst_webrtc_bin_signals[ON_NEW_TRANSCEIVER_SIGNAL] =
@@ -5225,8 +5225,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::on-data-channel:
-   * @object: the #GstWebRtcBin
-   * @candidate: the new #GstWebRTCDataChannel
+   * @object: the #GstWebRTCBin
+   * @candidate: the new `GstWebRTCDataChannel`
    */
   gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL] =
       g_signal_new ("on-data-channel", G_TYPE_FROM_CLASS (klass),
@@ -5235,7 +5235,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::add-transceiver:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    * @direction: the direction of the new transceiver
    * @caps: (allow none): the codec preferences for this transceiver
    *
@@ -5250,7 +5250,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::get-transceivers:
-   * @object: the #GstWebRtcBin
+   * @object: the #webrtcbin
    *
    * Returns: a #GArray of #GstWebRTCRTPTransceivers
    */
@@ -5262,7 +5262,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::get-transceiver:
-   * @object: the #GstWebRtcBin
+   * @object: the #GstWebRTCBin
    * @idx: The index of the transceiver
    *
    * Returns: the #GstWebRTCRTPTransceiver, or %NULL
@@ -5277,7 +5277,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /**
    * GstWebRTCBin::add-turn-server:
-   * @object: the #GstWebRtcBin
+   * @object: the #GstWebRTCBin
    * @uri: The uri of the server of the form turn(s)://username:password@host:port
    *
    * Add a turn server to obtain ICE candidates from
@@ -5290,7 +5290,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 
   /*
    * GstWebRTCBin::create-data-channel:
-   * @object: the #GstWebRtcBin
+   * @object: the #GstWebRTCBin
    * @label: the label for the data channel
    * @options: a #GstStructure of options for creating the data channel
    *

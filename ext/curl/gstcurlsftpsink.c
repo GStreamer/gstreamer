@@ -21,7 +21,6 @@
  * SECTION:element-curlsftpsink
  * @title: curlsftpsink
  * @short_description: sink that uploads data to a server using libcurl
- * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * a SFTP (SSH File Transfer Protocol) server.

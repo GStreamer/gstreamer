@@ -69,6 +69,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_player_debug);
 #define DEFAULT_AUDIO_VIDEO_OFFSET 0
 #define DEFAULT_SUBTITLE_VIDEO_OFFSET 0
 
+/**
+ * gst_player_error_quark:
+ */
 GQuark
 gst_player_error_quark (void)
 {

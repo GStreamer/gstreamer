@@ -941,7 +941,7 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
 
   /**
    * GstWebRTCICE::on-ice-candidate:
-   * @object: the #GstWebRtcBin
+   * @object: the #GstWebRTCBin
    * @candidate: the ICE candidate
    */
   gst_webrtc_ice_signals[ON_ICE_CANDIDATE_SIGNAL] =

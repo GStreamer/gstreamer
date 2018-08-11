@@ -200,7 +200,7 @@ static void
  * @application_context: (allow-none): GMainContext to use or %NULL
  *
  * Creates a new GstPlayerSignalDispatcher that uses @application_context,
- * or the thread default one if %NULL is used. See gst_player_new_full().
+ * or the thread default one if %NULL is used. See gst_player_new().
  *
  * Returns: (transfer full): the new GstPlayerSignalDispatcher
  */

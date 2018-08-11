@@ -27,7 +27,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/**
+/*
  * Common code for NAL parsing from h264 and h265 parsers.
  */
 

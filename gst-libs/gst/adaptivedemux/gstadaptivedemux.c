@@ -22,7 +22,6 @@
 /**
  * SECTION:gstadaptivedemux
  * @short_description: Base class for adaptive demuxers
- * @see_also:
  *
  * What is an adaptive demuxer?
  * Adaptive demuxers are special demuxers in the sense that they don't

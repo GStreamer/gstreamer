@@ -464,8 +464,8 @@ struct _GstMpegtsDVBLinkageExtendedEvent
  * @transport_stream_id: the transport id
  * @original_network_id: the original network id
  * @service_id: the service id
- * @linkage_type: the type which %linkage_data has
- * @private_data_length: the length for %private_data_bytes
+ * @linkage_type: the type which @linkage_data has
+ * @private_data_length: the length for @private_data_bytes
  * @private_data_bytes: additional data bytes
  */
 struct _GstMpegtsDVBLinkageDescriptor

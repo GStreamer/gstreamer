@@ -1988,7 +1988,7 @@ gst_mpegts_descriptor_parse_dvb_multilingual_component (const
  * @private_data_specifier: (out): the private data specifier id
  * registered by http://www.dvbservices.com/
  * @private_data: (out) (transfer full) (allow-none) (array length=length): additional data or NULL
- * @length: (out) (allow-none): length of %private_data
+ * @length: (out) (allow-none): length of @private_data
  *
  * Parses out the private data specifier from the @descriptor.
  *
@@ -2024,7 +2024,7 @@ gst_mpegts_descriptor_parse_dvb_private_data_specifier (const
  * @descriptor: a %GST_MTS_DESC_DVB_FREQUENCY_LIST #GstMpegtsDescriptor
  * @offset: (out): %FALSE in Hz, %TRUE in kHz
  * @list: (out) (transfer full) (element-type guint32): a list of all frequencies in Hz/kHz
- * depending on %offset
+ * depending on @offset
  *
  * Parses out a list of frequencies from the @descriptor.
  *
@@ -2195,7 +2195,7 @@ gst_mpegts_descriptor_parse_dvb_scrambling (const GstMpegtsDescriptor *
  * @descriptor: a %GST_MTS_DESC_DVB_DATA_BROADCAST_ID #GstMpegtsDescriptor
  * @data_broadcast_id: (out): the data broadcast id
  * @id_selector_bytes: (out) (transfer full) (array length=len): the selector bytes, if present
- * @len: (out): the length of #id_selector_bytes
+ * @len: (out): the length of @id_selector_bytes
  *
  * Parses out the data broadcast id from the @descriptor.
  *

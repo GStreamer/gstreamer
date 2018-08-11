@@ -658,7 +658,7 @@ struct _GstH264SPSExtMVCLevelValue
  *   level values signalled for the coded video sequence.
  * @level_value: array of #GstH264SPSExtMVCLevelValue
  *
- * Represents the parsed seq_parameter_set_mvc_extension().
+ * Represents the parsed `seq_parameter_set_mvc_extension()`.
  *
  * Since: 1.6
 	 */

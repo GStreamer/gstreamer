@@ -21,7 +21,6 @@
  * SECTION:element-curltlssink
  * @title: curltlssink
  * @short_description: sink that uploads data to a server using libcurl
- * @see_also:
  *
  * This is a network sink that uses libcurl.
  *

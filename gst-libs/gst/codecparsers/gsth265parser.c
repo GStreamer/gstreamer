@@ -39,7 +39,7 @@
  *
  *   * From #GST_H265_NAL_SLICE_TRAIL_N to #GST_H265_NAL_SLICE_CRA_NUT: gst_h265_parser_parse_slice_hdr()
  *
- *   * #GST_H265_NAL_SEI: gst_h265_parser_parse_sei()
+ *   * `GST_H265_NAL_*_SEI`: gst_h265_parser_parse_sei()
  *
  *   * #GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
  *
@@ -2119,7 +2119,7 @@ gst_h265_parser_parse_pps (GstH265Parser * parser,
 /**
  * gst_h265_parser_parse_slice_hdr:
  * @parser: a #GstH265Parser
- * @nalu: The #GST_H265_NAL_SLICE #GstH265NalUnit to parse
+ * @nalu: The `GST_H265_NAL_SLICE` #GstH265NalUnit to parse
  * @slice: The #GstH265SliceHdr to fill.
  *
  * Parses @data, and fills the @slice structure.
@@ -2656,7 +2656,7 @@ gst_h265_sei_free (GstH265SEIMessage * sei)
 /**
  * gst_h265_parser_parse_sei:
  * @nalparser: a #GstH265Parser
- * @nalu: The #GST_H265_NAL_SEI #GstH265NalUnit to parse
+ * @nalu: The `GST_H265_NAL_*_SEI` #GstH265NalUnit to parse
  * @messages: The GArray of #GstH265SEIMessage to fill. The caller must free it when done.
  *
  * Parses @data, create and fills the @messages array.

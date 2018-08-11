@@ -21,7 +21,6 @@
  * SECTION:element-curlsink
  * @title: curlsink
  * @short_description: sink that uploads data to a server using libcurl
- * @see_also:
  *
  * This is a network sink that uses libcurl as a client to upload data to
  * an SMTP server.

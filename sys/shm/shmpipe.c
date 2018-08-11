@@ -263,8 +263,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   return NULL;                                            \
   } while (0)
 
-/**
- * sp_open_shm:
+/* sp_open_shm:
  * @path: Path of the shm area for a reader,
  *  NULL if this is a writer (then it will allocate its own path)
  *
@@ -857,8 +856,7 @@ sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf,
   int i;
   int had_client = 0;
 
-  /**
-   * Remove client from the list of buffer users. Here we make sure that
+  /* Remove client from the list of buffer users. Here we make sure that
    * if a client closes connection but already decremented the use count
    * for this buffer, but other clients didn't have time to decrement
    * buffer will not be freed too early in sp_writer_close_client.
