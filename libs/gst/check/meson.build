@@ -39,7 +39,7 @@ configure_file(input : 'libcheck/check.h.in',
 
 gst_check = shared_library('gstcheck-@0@'.format(apiversion),
   gst_check_sources,
-  c_args : gst_c_args + ['-DGST_EXPORTS'],
+  c_args : gst_c_args + ['-DGST_EXPORTS', '-UG_DISABLE_ASSERT'],
   version : libversion,
   soversion : soversion,
   install : true,
