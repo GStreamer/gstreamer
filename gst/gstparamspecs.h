@@ -61,6 +61,15 @@ G_BEGIN_DECLS
 #define GST_PARAM_MUTABLE_PLAYING  (1 << (G_PARAM_USER_SHIFT + 4))
 
 /**
+ * GST_PARAM_DOC_SHOW_DEFAULT: (value 8192)
+ *
+ * Use this flag on GObject properties of GstObject to indicate that
+ * during `gst-inspect` and friends, the default value should be used
+ * as default instead of the current value.
+ */
+#define GST_PARAM_DOC_SHOW_DEFAULT  (1 << (G_PARAM_USER_SHIFT + 5))
+
+/**
  * GST_PARAM_USER_SHIFT: (value 65536)
  *
  * Bits based on GST_PARAM_USER_SHIFT can be used by 3rd party applications.

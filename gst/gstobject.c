@@ -153,7 +153,8 @@ gst_object_class_init (GstObjectClass * klass)
 
   properties[PROP_NAME] =
       g_param_spec_string ("name", "Name", "The name of the object", NULL,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS |
+      GST_PARAM_DOC_SHOW_DEFAULT);
 
   /**
    * GstObject:parent:
@@ -166,7 +167,8 @@ gst_object_class_init (GstObjectClass * klass)
    */
   properties[PROP_PARENT] =
       g_param_spec_object ("parent", "Parent", "The parent of the object",
-      GST_TYPE_OBJECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_TYPE_OBJECT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
