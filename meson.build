@@ -283,6 +283,7 @@ gst_net_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
 if host_system != 'windows'
   gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    required : get_option('tests'),
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
 gst_controller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
@@ -356,7 +357,9 @@ subdir('gst-libs')
 subdir('gst')
 subdir('ext')
 subdir('sys')
-subdir('tools')
+if not get_option('tools').disabled()
+  subdir('tools')
+endif
 subdir('tests')
 subdir('pkgconfig')
 
