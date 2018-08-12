@@ -1261,7 +1261,7 @@ gst_check_object_destroyed_on_unref (gpointer object_to_unref)
 
 /* For ABI compatibility with GStreamer < 1.5 */
 /* *INDENT-OFF* */
-void
+GST_CHECK_API void
 _fail_unless (int result, const char *file, int line, const char *expr, ...)
 G_GNUC_PRINTF (4, 5);
 /* *INDENT-ON* */
