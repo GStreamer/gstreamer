@@ -41,12 +41,6 @@ typedef struct _GstBitWriter GstBitWriter;
  * @data: Allocated @data for bit writer to write
  * @bit_size: Size of written @data in bits
  *
- * Private:
- * @bit_capacity: Capacity of the allocated @data
- * @auto_grow: @data space can auto grow
- * @destroy_data: The #GDestroyNotify function called with #data when the memory
- *                is freed
- *
  * A bit writer instance.
  */
 struct _GstBitWriter
@@ -55,8 +49,8 @@ struct _GstBitWriter
   guint bit_size;
 
   /*< private >*/
-  guint bit_capacity;
-  gboolean auto_grow;
+  guint bit_capacity; /* Capacity of the allocated data */
+  gboolean auto_grow; /* Whether space can auto grow */
   gboolean owned;
   gpointer _gst_reserved[GST_PADDING];
 };
