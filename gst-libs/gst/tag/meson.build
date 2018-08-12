@@ -49,6 +49,25 @@ gst_tag_args = [
       'license-translations.dict'))
 ]
 
+# iso-codes (optional, used for language names lookup and translation)
+have_iso_codes = false
+iso_codes_dep = dependency('iso-codes', required: get_option('iso-codes'))
+if iso_codes_dep.found()
+  if iso_codes_dep.get_pkgconfig_variable('domains').split(' ').contains('iso_639-2')
+    iso_codes_prefix = iso_codes_dep.get_pkgconfig_variable('prefix')
+    if iso_codes_prefix != ''
+      core_conf.set_quoted('ISO_CODES_PREFIX', iso_codes_prefix)
+      core_conf.set_quoted('ISO_CODES_VERSION', iso_codes_dep.version())
+      have_iso_codes = true
+    elif get_option('iso-codes').enabled()
+      error('iso-codes was requested for libgsttag, but could not determine prefix')
+    endif
+  elif get_option('iso-codes').enabled()
+    error('iso-codes was requested for libgsttag, but does not provide iso 639')
+  endif
+endif
+core_conf.set('HAVE_ISO_CODES', have_iso_codes)
+
 # could drop optional zlib dep and use g_zlib_decompressor_new()
 zlib_dep = dependency('zlib', required: false, fallback: ['zlib', 'zlib_dep'])
 core_conf.set('HAVE_ZLIB', zlib_dep.found())
@@ -85,19 +104,21 @@ tag_dep = declare_dependency(link_with: gsttag,
   dependencies : tag_deps,
   sources: tag_gen_sources)
 
-# FIXME: iso-codes stuff
-# little program that reads iso_639.xml and outputs tables for us as fallback
+# Little program that reads iso_639.xml and outputs tables for us as fallback
 # for when iso-codes are not available (and so we don't have to read the xml
 # just to map codes)
-#executable('mklangtables', 'mklangtables.c',
-#  dependencies : gst_dep,
-#  install : false,
-#)
+if have_iso_codes
+  executable('mklangtables', 'mklangtables.c',
+    c_args: ['-DHAVE_CONFIG_H'],
+    include_directories: [configinc, libsinc],
+    dependencies: gst_dep,
+    install: false)
+endif
+
 executable('mklicensestables', 'mklicensestables.c',
   c_args : gst_plugins_base_args,
   include_directories: [configinc],
   dependencies : [tag_dep, gst_base_dep],
-  install : false,
-)
+  install : false)
 
 gst_tag_dir = meson.current_source_dir()

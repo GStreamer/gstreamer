@@ -16,6 +16,8 @@ option('gles2_module_name', type : 'string', value : '',
        description : 'The file to pass to g_module_open to open the libGLESv2 library (default: libGLESv2)')
 option('install_plugins_helper', type: 'string', value: '',
        description: 'Path of distro helper script to call to install missing plugins')
+option('iso-codes', type : 'feature', value : 'auto',
+       description: 'Use iso-codes in libgsttag (for language names)')
 
 # Feature options for plugins with no external deps
 option('adder', type : 'feature', value : 'auto')
