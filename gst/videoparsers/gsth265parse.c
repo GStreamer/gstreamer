@@ -633,6 +633,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
         return FALSE;
 
+      h265parse->header |= TRUE;
       /*Fixme: parse sei messages */
       /* mark SEI pos */
       if (h265parse->sei_pos == -1) {
