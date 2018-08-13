@@ -505,7 +505,7 @@ _nal_name (GstH265NalUnitType nal_type)
 #endif
 
 /* caller guarantees 2 bytes of nal payload */
-static void
+static gboolean
 gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 {
   GstH265PPS pps = { 0, };
@@ -519,7 +519,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
   /* nothing to do for broken input */
   if (G_UNLIKELY (nalu->size < 2)) {
     GST_DEBUG_OBJECT (h265parse, "not processing nal size %u", nalu->size);
-    return;
+    return TRUE;
   }
 
   /* we have a peek as well */
@@ -532,8 +532,10 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       /* It is not mandatory to have VPS in the stream. But it might
        * be needed for other extensions like svc */
       pres = gst_h265_parser_parse_vps (nalparser, nalu, &vps);
-      if (pres != GST_H265_PARSER_OK)
+      if (pres != GST_H265_PARSER_OK) {
         GST_WARNING_OBJECT (h265parse, "failed to parse VPS");
+        return FALSE;
+      }
 
       GST_DEBUG_OBJECT (h265parse, "triggering src caps check");
       h265parse->update_caps = TRUE;
@@ -559,8 +561,10 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
 
       /* arranged for a fallback sps.id, so use that one and only warn */
-      if (pres != GST_H265_PARSER_OK)
+      if (pres != GST_H265_PARSER_OK) {
         GST_WARNING_OBJECT (h265parse, "failed to parse SPS:");
+        return FALSE;
+      }
 
       GST_DEBUG_OBJECT (h265parse, "triggering src caps check");
       h265parse->update_caps = TRUE;
@@ -579,13 +583,20 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       h265parse->state |= GST_H265_PARSE_STATE_GOT_SPS;
       break;
     case GST_H265_NAL_PPS:
+      /* expected state: got-sps */
       h265parse->state &= GST_H265_PARSE_STATE_GOT_SPS;
+      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
+        return FALSE;
+
       pres = gst_h265_parser_parse_pps (nalparser, nalu, &pps);
 
 
       /* arranged for a fallback pps.id, so use that one and only warn */
-      if (pres != GST_H265_PARSER_OK)
+      if (pres != GST_H265_PARSER_OK) {
         GST_WARNING_OBJECT (h265parse, "failed to parse PPS:");
+        if (pres != GST_H265_PARSER_BROKEN_LINK)
+          return FALSE;
+      }
 
       /* parameters might have changed, force caps check */
       if (!h265parse->have_pps) {
@@ -608,6 +619,10 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       break;
     case GST_H265_NAL_PREFIX_SEI:
     case GST_H265_NAL_SUFFIX_SEI:
+      /* expected state: got-sps */
+      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
+        return FALSE;
+
       /*Fixme: parse sei messages */
       /* mark SEI pos */
       if (h265parse->sei_pos == -1) {
@@ -639,7 +654,11 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
     {
       GstH265SliceHdr slice;
 
+      /* expected state: got-sps|got-pps (valid picture headers) */
       h265parse->state &= GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS;
+      if (!GST_H265_PARSE_STATE_VALID (h265parse,
+              GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS))
+        return FALSE;
 
       pres = gst_h265_parser_parse_slice_hdr (nalparser, nalu, &slice);
 
@@ -686,7 +705,14 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
       break;
     default:
-      gst_h265_parser_parse_nal (nalparser, nalu);
+      /* drop anything before the initial SPS */
+      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
+        return FALSE;
+
+      pres = gst_h265_parser_parse_nal (nalparser, nalu);
+      if (pres != GST_H265_PARSER_OK)
+        return FALSE;
+      break;
   }
 
   /* if HEVC output needed, collect properly prefixed nal in adapter,
@@ -699,6 +725,8 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         nalu->data + nalu->offset, nalu->size);
     gst_adapter_push (h265parse->frame_out, buf);
   }
+
+  return TRUE;
 }
 
 /* caller guarantees at least 3 bytes of nal payload for each nal
@@ -1006,15 +1034,9 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
       }
     }
 
-    if (nalu.type == GST_H265_NAL_VPS ||
-        nalu.type == GST_H265_NAL_SPS ||
-        nalu.type == GST_H265_NAL_PPS ||
-        GST_H265_PARSE_STATE_VALID (h265parse,
-            GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS)) {
-      gst_h265_parse_process_nal (h265parse, &nalu);
-    } else {
+    if (!gst_h265_parse_process_nal (h265parse, &nalu)) {
       GST_WARNING_OBJECT (h265parse,
-          "no SPS/PPS yet, nal Type: %d %s, Size: %u will be dropped",
+          "broken/invalid nal Type: %d %s, Size: %u will be dropped",
           nalu.type, _nal_name (nalu.type), nalu.size);
       *skipsize = nalu.size;
       goto skip;
