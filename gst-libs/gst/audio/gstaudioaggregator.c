@@ -1014,6 +1014,12 @@ gst_audio_aggregator_sink_event (GstAggregator * agg,
       break;
   }
 
+  if (!res) {
+    if (event)
+      gst_event_unref (event);
+    return res;
+  }
+
   if (event != NULL)
     return
         GST_AGGREGATOR_CLASS (gst_audio_aggregator_parent_class)->sink_event
@@ -1276,10 +1282,13 @@ gst_audio_aggregator_do_clip (GstAggregator * agg,
   GstAudioAggregatorPad *pad = GST_AUDIO_AGGREGATOR_PAD (bpad);
   gint rate, bpf;
 
-  rate = GST_AUDIO_INFO_RATE (&pad->info);
-  bpf = GST_AUDIO_INFO_BPF (&pad->info);
+  /* Guard against invalid audio info, we just don't clip here then */
+  if (!GST_AUDIO_INFO_IS_VALID (&pad->info))
+    return buffer;
 
   GST_OBJECT_LOCK (bpad);
+  rate = GST_AUDIO_INFO_RATE (&pad->info);
+  bpf = GST_AUDIO_INFO_BPF (&pad->info);
   buffer = gst_audio_buffer_clip (buffer, &bpad->segment, rate, bpf);
   GST_OBJECT_UNLOCK (bpad);
 
@@ -1775,6 +1784,10 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
       }
       GST_OBJECT_UNLOCK (pad);
       continue;
+    } else if (!GST_AUDIO_INFO_IS_VALID (&pad->info)) {
+      GST_OBJECT_UNLOCK (pad);
+      GST_OBJECT_UNLOCK (agg);
+      goto not_negotiated;
     }
 
     /* New buffer? */
