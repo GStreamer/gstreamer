@@ -199,7 +199,7 @@ gst_h265_parse_reset (GstH265Parse * h265parse)
   h265parse->sent_codec_tag = FALSE;
 
   h265parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
-  h265parse->force_key_unit_event = NULL;
+  gst_event_replace (&h265parse->force_key_unit_event, NULL);
 
   h265parse->discont = FALSE;
 
