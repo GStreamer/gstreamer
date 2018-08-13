@@ -78,6 +78,8 @@ struct _GstH265Parse
   GstBuffer *sps_nals[GST_H265_MAX_SPS_COUNT];
   GstBuffer *pps_nals[GST_H265_MAX_PPS_COUNT];
 
+  gboolean discont;
+
   /* frame parsing */
   gint idr_pos, sei_pos;
   gboolean update_caps;

@@ -201,6 +201,8 @@ gst_h265_parse_reset (GstH265Parse * h265parse)
   h265parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   h265parse->force_key_unit_event = NULL;
 
+  h265parse->discont = FALSE;
+
   gst_h265_parse_reset_frame (h265parse);
 }
 
@@ -832,6 +834,11 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
   GstH265NalUnit nalu;
   GstH265ParserResult pres;
   gint framesize;
+
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (frame->buffer,
+              GST_BUFFER_FLAG_DISCONT))) {
+    h265parse->discont = TRUE;
+  }
 
   /* delegate in packetized case, no skipping should be needed */
   if (h265parse->packetized)
@@ -1720,6 +1727,11 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
   else
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_HEADER);
+
+  if (h265parse->discont) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    h265parse->discont = FALSE;
+  }
 
   /* replace with transformed HEVC output if applicable */
   av = gst_adapter_available (h265parse->frame_out);
