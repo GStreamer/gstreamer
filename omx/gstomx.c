@@ -1372,7 +1372,8 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
 GstOMXAcquireBufferReturn
-gst_omx_port_acquire_buffer (GstOMXPort * port, GstOMXBuffer ** buf)
+gst_omx_port_acquire_buffer (GstOMXPort * port, GstOMXBuffer ** buf,
+    GstOMXWait wait)
 {
   GstOMXAcquireBufferReturn ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXComponent *comp;
@@ -1504,11 +1505,17 @@ retry:
   if (g_queue_is_empty (&port->pending_buffers)) {
     GST_DEBUG_OBJECT (comp->parent, "Queue of %s port %u is empty",
         comp->name, port->index);
-    gst_omx_component_wait_message (comp,
-        timeout == -2 ? GST_CLOCK_TIME_NONE : timeout);
 
-    /* And now check everything again and maybe get a buffer */
-    goto retry;
+    if (wait == GST_OMX_WAIT) {
+      gst_omx_component_wait_message (comp,
+          timeout == -2 ? GST_CLOCK_TIME_NONE : timeout);
+
+      /* And now check everything again and maybe get a buffer */
+      goto retry;
+    } else {
+      ret = GST_OMX_ACQUIRE_BUFFER_NO_AVAILABLE;
+      goto done;
+    }
   }
 
   GST_DEBUG_OBJECT (comp->parent, "%s port %u has pending buffers",

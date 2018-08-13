@@ -760,7 +760,7 @@ gst_omx_audio_sink_acquire_buffer (GstOMXAudioSink * self)
   GstOMXBuffer *buf = NULL;
 
   while (!buf) {
-    acq_ret = gst_omx_port_acquire_buffer (port, &buf);
+    acq_ret = gst_omx_port_acquire_buffer (port, &buf, GST_OMX_WAIT);
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_ERROR) {
       goto component_error;
     } else if (acq_ret == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {

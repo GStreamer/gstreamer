@@ -225,7 +225,9 @@ typedef enum {
   /* The port is EOS */
   GST_OMX_ACQUIRE_BUFFER_EOS,
   /* A fatal error happened */
-  GST_OMX_ACQUIRE_BUFFER_ERROR
+  GST_OMX_ACQUIRE_BUFFER_ERROR,
+  /* No buffer is currently available (used when calling gst_omx_port_acquire_buffer() in not waiting mode) */
+  GST_OMX_ACQUIRE_BUFFER_NO_AVAILABLE,
 } GstOMXAcquireBufferReturn;
 
 struct _GstOMXCore {
@@ -268,6 +270,11 @@ typedef enum {
   GST_OMX_BUFFER_ALLOCATION_USE_BUFFER,
   GST_OMX_BUFFER_ALLOCATION_USE_BUFFER_DYNAMIC, /* Only supported by OMX 1.2.0 */
 } GstOMXBufferAllocation;
+
+typedef enum {
+  GST_OMX_WAIT,
+  GST_OMX_DONT_WAIT,
+} GstOMXWait;
 
 struct _GstOMXMessage {
   GstOMXMessageType type;
@@ -441,7 +448,7 @@ OMX_ERRORTYPE     gst_omx_close_tunnel (GstOMXPort * port1, GstOMXPort * port2);
 OMX_ERRORTYPE     gst_omx_port_get_port_definition (GstOMXPort * port, OMX_PARAM_PORTDEFINITIONTYPE * port_def);
 OMX_ERRORTYPE     gst_omx_port_update_port_definition (GstOMXPort *port, OMX_PARAM_PORTDEFINITIONTYPE *port_definition);
 
-GstOMXAcquireBufferReturn gst_omx_port_acquire_buffer (GstOMXPort *port, GstOMXBuffer **buf);
+GstOMXAcquireBufferReturn gst_omx_port_acquire_buffer (GstOMXPort *port, GstOMXBuffer **buf, GstOMXWait wait);
 OMX_ERRORTYPE     gst_omx_port_release_buffer (GstOMXPort *port, GstOMXBuffer *buf);
 
 OMX_ERRORTYPE     gst_omx_port_set_flushing (GstOMXPort *port, GstClockTime timeout, gboolean flush);
