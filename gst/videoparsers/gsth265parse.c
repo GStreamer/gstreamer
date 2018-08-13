@@ -187,8 +187,10 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
 }
 
 static void
-gst_h265_parse_reset (GstH265Parse * h265parse)
+gst_h265_parse_reset_stream_info (GstH265Parse * h265parse)
 {
+  gint i;
+
   h265parse->width = 0;
   h265parse->height = 0;
   h265parse->fps_num = 0;
@@ -197,20 +199,35 @@ gst_h265_parse_reset (GstH265Parse * h265parse)
   h265parse->upstream_par_d = -1;
   h265parse->parsed_par_n = 0;
   h265parse->parsed_par_n = 0;
-  gst_buffer_replace (&h265parse->codec_data, NULL);
-  gst_buffer_replace (&h265parse->codec_data_in, NULL);
-  h265parse->nal_length_size = 4;
-  h265parse->packetized = FALSE;
-  h265parse->transform = FALSE;
+  h265parse->have_pps = FALSE;
+  h265parse->have_sps = FALSE;
+  h265parse->have_vps = FALSE;
 
   h265parse->align = GST_H265_PARSE_ALIGN_NONE;
   h265parse->format = GST_H265_PARSE_FORMAT_NONE;
 
-  h265parse->last_report = GST_CLOCK_TIME_NONE;
+  h265parse->transform = FALSE;
+  h265parse->nal_length_size = 4;
+  h265parse->packetized = FALSE;
   h265parse->push_codec = FALSE;
-  h265parse->have_pps = FALSE;
-  h265parse->have_sps = FALSE;
-  h265parse->have_vps = FALSE;
+
+  gst_buffer_replace (&h265parse->codec_data, NULL);
+  gst_buffer_replace (&h265parse->codec_data_in, NULL);
+
+  gst_h265_parse_reset_frame (h265parse);
+
+  for (i = 0; i < GST_H265_MAX_VPS_COUNT; i++)
+    gst_buffer_replace (&h265parse->vps_nals[i], NULL);
+  for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++)
+    gst_buffer_replace (&h265parse->sps_nals[i], NULL);
+  for (i = 0; i < GST_H265_MAX_PPS_COUNT; i++)
+    gst_buffer_replace (&h265parse->pps_nals[i], NULL);
+}
+
+static void
+gst_h265_parse_reset (GstH265Parse * h265parse)
+{
+  h265parse->last_report = GST_CLOCK_TIME_NONE;
 
   h265parse->sent_codec_tag = FALSE;
 
@@ -219,7 +236,7 @@ gst_h265_parse_reset (GstH265Parse * h265parse)
 
   h265parse->discont = FALSE;
 
-  gst_h265_parse_reset_frame (h265parse);
+  gst_h265_parse_reset_stream_info (h265parse);
 }
 
 static gboolean
@@ -241,18 +258,10 @@ gst_h265_parse_start (GstBaseParse * parse)
 static gboolean
 gst_h265_parse_stop (GstBaseParse * parse)
 {
-  guint i;
   GstH265Parse *h265parse = GST_H265_PARSE (parse);
 
   GST_DEBUG_OBJECT (parse, "stop");
   gst_h265_parse_reset (h265parse);
-
-  for (i = 0; i < GST_H265_MAX_VPS_COUNT; i++)
-    gst_buffer_replace (&h265parse->vps_nals[i], NULL);
-  for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++)
-    gst_buffer_replace (&h265parse->sps_nals[i], NULL);
-  for (i = 0; i < GST_H265_MAX_PPS_COUNT; i++)
-    gst_buffer_replace (&h265parse->pps_nals[i], NULL);
 
   gst_h265_parser_free (h265parse->nalparser);
 
@@ -2137,11 +2146,19 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   guint num_nals, i, j;
   GstH265NalUnit nalu;
   GstH265ParserResult parseres;
+  GstCaps *old_caps;
 
   h265parse = GST_H265_PARSE (parse);
 
   /* reset */
   h265parse->push_codec = FALSE;
+
+  old_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
+  if (old_caps) {
+    if (!gst_caps_is_equal (old_caps, caps))
+      gst_h265_parse_reset_stream_info (h265parse);
+    gst_caps_unref (old_caps);
+  }
 
   str = gst_caps_get_structure (caps, 0);
 
