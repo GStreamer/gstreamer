@@ -69,6 +69,7 @@ struct _GstRtpVP9Depay
    * packets.
    */
   gboolean stop_lost_events;
+  gboolean inter_picture;
 };
 
 GType gst_rtp_vp9_depay_get_type (void);

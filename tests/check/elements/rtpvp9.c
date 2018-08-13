@@ -343,6 +343,110 @@ GST_START_TEST (test_depay_resend_gap_event)
 
 GST_END_TEST;
 
+GST_START_TEST (test_depay_svc_merge_layers)
+{
+  /* This simulates a simple SVC stream, for simplicity we handcraft a couple
+   * of rtp packets. */
+
+  /* First packet contains a complete base layer I-frame (s-bit and e-bit).
+   * Note the marker bit is not set to indicate that there will be more
+   * packets for this picture. */
+  guint8 layer0[] = {
+    0x80, 0x74, 0x00, 0x00, 0x49, 0x88, 0xd9, 0xf8, 0xa0, 0x6c, 0x65, 0x6c,
+    0xac, 0x80, 0x01, 0x00, 0x01, 0x02, 0x49, 0x3f, 0x1c, 0x12, 0x0e, 0x0c,
+    0xd0, 0x1b, 0xb9, 0x80, 0x80, 0xb0, 0x18, 0x0f, 0xa6, 0x4d, 0x01, 0xa5
+  };
+  /* s-bit, e-bit, d-bit and sid=1 set to indicate a complete enhancement
+   * frame. marker bit set to indicate last packet of picture. */
+  guint8 layer1_with_marker[] = {
+    0x80, 0xf4, 0x00, 0x01, 0x49, 0x88, 0xd9, 0xf8, 0xa0, 0x6c, 0x65, 0x6c,
+    0xac, 0x80, 0x01, 0x03, 0x01, 0x02, 0x49, 0x3f, 0x1c, 0x12, 0x0e, 0x0c,
+    0xd0, 0x1b, 0xb9, 0x80, 0x80, 0xb0, 0x18, 0x0f, 0xa6, 0x4d, 0x01, 0xa5
+  };
+
+  GstBuffer *buf;
+  GstHarness *h = gst_harness_new ("rtpvp9depay");
+  gst_harness_set_src_caps_str (h, RTP_VP9_CAPS_STR);
+
+  /* The first packet contains a complete base layer frame that. Since the
+   * marker bit is not set, it will wait for an enhancement layer before it
+   * pushes it downstream. */
+  gst_harness_push (h, gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          layer0, sizeof (layer0), 0, sizeof (layer0), NULL, NULL));
+  fail_unless_equals_int (0, gst_harness_buffers_received (h));
+
+  /* Next packet contains a complete enhancement frame. The picture is
+   * complete (marker bit set) and can be pushed */
+  gst_harness_push (h, gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          layer1_with_marker, sizeof (layer1_with_marker), 0,
+          sizeof (layer1_with_marker), NULL, NULL));
+  fail_unless_equals_int (1, gst_harness_buffers_received (h));
+
+  /* The buffer should contain both layer 0 and layer 1. */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (19 * 2, gst_buffer_get_size (buf));
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_depay_svc_forgive_invalid_sid)
+{
+  /* This simulates an invalid stream received from FF61 and Chromium 66
+   * (Electron). The RTP header signals the same spatial layer ID for all
+   * packets of a picture (SID=0), but the s-bit, e-bit and d-bit suggests
+   * there is a second layer. The conservative approach would be to drop the
+   * enhancement layers since we don't want to push a bitstream we're
+   * uncertain of to the decoder. However, this reduces the quality
+   * significantly and also sometimes results in an encoder/decoder mismatch
+   * (altough it shouldn't). */
+
+  /* The first packet contains a complete base layer frame. Since the
+   * marker bit is not set, it will wait for an enhancement layer before it
+   * pushes it downstream. s-bit, e-bit set, no marker*/
+  guint8 layer0[] = {
+    0x80, 0x74, 0x00, 0x00, 0x49, 0x88, 0xd9, 0xf8, 0xa0, 0x6c, 0x65, 0x6c,
+    0xac, 0x80, 0x01, 0x00, 0x01, 0x02, 0x49, 0x3f, 0x1c, 0x12, 0x0e, 0x0c,
+    0xd0, 0x1b, 0xb9, 0x80, 0x80, 0xb0, 0x18, 0x0f, 0xa6, 0x4d, 0x01, 0xa5
+  };
+
+  /* Next packet contains a complete enhancement frame. The picture is
+   * complete (marker bit set) and picture can be pushed. However, the SID is
+   * invalid (SID=0, but should be SID=1). Let's forgive that and push the
+   * packet downstream anyway. s-bit, e-bit, d-bit and sid=0 and marker
+   * bit. */
+  guint8 layer1_with_sid0_and_marker[] = {
+    0x80, 0xf4, 0x00, 0x01, 0x49, 0x88, 0xd9, 0xf8, 0xa0, 0x6c, 0x65, 0x6c,
+    0xac, 0x80, 0x01, 0x01, 0x01, 0x02, 0x49, 0x3f, 0x1c, 0x12, 0x0e, 0x0c,
+    0xd0, 0x1b, 0xb9, 0x80, 0x80, 0xb0, 0x18, 0x0f, 0xa6, 0x4d, 0x01, 0xa5
+  };
+
+  GstBuffer *buf;
+  GstHarness *h = gst_harness_new ("rtpvp9depay");
+  gst_harness_set_src_caps_str (h, RTP_VP9_CAPS_STR);
+
+  gst_harness_push (h, gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          layer0, sizeof (layer0), 0, sizeof (layer0), NULL, NULL));
+  fail_unless_equals_int (0, gst_harness_buffers_received (h));
+
+  gst_harness_push (h, gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          layer1_with_sid0_and_marker, sizeof (layer1_with_sid0_and_marker), 0,
+          sizeof (layer1_with_sid0_and_marker), NULL, NULL));
+  fail_unless_equals_int (1, gst_harness_buffers_received (h));
+
+  /* The buffer should contain both layer 0 and layer 1. */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (19 * 2, gst_buffer_get_size (buf));
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpvp9_suite (void)
 {
@@ -355,6 +459,8 @@ rtpvp9_suite (void)
       G_N_ELEMENTS (stop_gap_events_test_data));
   tcase_add_loop_test (tc_chain, test_depay_resend_gap_event, 0,
       G_N_ELEMENTS (resend_gap_event_test_data));
+  tcase_add_test (tc_chain, test_depay_svc_merge_layers);
+  tcase_add_test (tc_chain, test_depay_svc_forgive_invalid_sid);
 
   return s;
 }
