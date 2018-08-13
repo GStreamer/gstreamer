@@ -375,7 +375,8 @@ gst_h265_parse_negotiate (GstH265Parse * h265parse, gint in_format,
   h265parse->format = format;
   h265parse->align = align;
 
-  h265parse->transform = (in_format != h265parse->format);
+  h265parse->transform = in_format != h265parse->format ||
+      align == GST_H265_PARSE_ALIGN_AU;
 
   if (caps)
     gst_caps_unref (caps);
@@ -1076,7 +1077,13 @@ out:
 
 skip:
   GST_DEBUG_OBJECT (h265parse, "skipping %d", *skipsize);
-  gst_h265_parse_reset_frame (h265parse);
+  /* If we are collecting access units, we need to preserve the initial
+   * config headers (SPS, PPS et al.) and only reset the frame if another
+   * slice NAL was received. This means that broken pictures are discarded */
+  if (h265parse->align != GST_H265_PARSE_ALIGN_AU ||
+      !(h265parse->state & GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS) ||
+      (h265parse->state & GST_H265_PARSE_STATE_GOT_SLICE))
+    gst_h265_parse_reset_frame (h265parse);
   goto out;
 
 invalid_stream:
