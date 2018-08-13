@@ -2098,10 +2098,12 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (h265parse->interval > 0 || h265parse->push_codec) {
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
     guint64 diff;
+    gboolean initial_frame = FALSE;
 
     /* init */
     if (!GST_CLOCK_TIME_IS_VALID (h265parse->last_report)) {
       h265parse->last_report = timestamp;
+      initial_frame = TRUE;
     }
 
     if (h265parse->idr_pos >= 0) {
@@ -2121,7 +2123,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           GST_TIME_ARGS (diff));
 
       if (GST_TIME_AS_SECONDS (diff) >= h265parse->interval ||
-          h265parse->push_codec) {
+          initial_frame || h265parse->push_codec) {
         GstClockTime new_ts;
 
         /* avoid overwriting a perfectly fine timestamp */
@@ -2436,6 +2438,8 @@ gst_h265_parse_event (GstBaseParse * parse, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
+      h265parse->last_report = GST_CLOCK_TIME_NONE;
+
       res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
     }
