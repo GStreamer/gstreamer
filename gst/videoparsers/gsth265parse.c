@@ -55,6 +55,22 @@ enum
   GST_H265_PARSE_ALIGN_AU
 };
 
+enum
+{
+  GST_H265_PARSE_STATE_GOT_SPS = 1 << 0,
+  GST_H265_PARSE_STATE_GOT_PPS = 1 << 1,
+  GST_H265_PARSE_STATE_GOT_SLICE = 1 << 2,
+
+  GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS = (GST_H265_PARSE_STATE_GOT_SPS |
+      GST_H265_PARSE_STATE_GOT_PPS),
+  GST_H265_PARSE_STATE_VALID_PICTURE =
+      (GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS |
+      GST_H265_PARSE_STATE_GOT_SLICE)
+};
+
+#define GST_H265_PARSE_STATE_VALID(parse, expected_state) \
+  (((parse)->state & (expected_state)) == (expected_state))
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -215,6 +231,7 @@ gst_h265_parse_start (GstBaseParse * parse)
   gst_h265_parse_reset (h265parse);
 
   h265parse->nalparser = gst_h265_parser_new ();
+  h265parse->state = 0;
 
   gst_base_parse_set_min_frame_size (parse, 7);
 
@@ -535,6 +552,9 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       h265parse->header |= TRUE;
       break;
     case GST_H265_NAL_SPS:
+      /* reset state, everything else is obsolete */
+      h265parse->state = 0;
+
       pres = gst_h265_parser_parse_sps (nalparser, nalu, &sps, TRUE);
 
 
@@ -556,8 +576,10 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
       gst_h265_parser_store_nal (h265parse, sps.id, nal_type, nalu);
       h265parse->header |= TRUE;
+      h265parse->state |= GST_H265_PARSE_STATE_GOT_SPS;
       break;
     case GST_H265_NAL_PPS:
+      h265parse->state &= GST_H265_PARSE_STATE_GOT_SPS;
       pres = gst_h265_parser_parse_pps (nalparser, nalu, &pps);
 
 
@@ -582,6 +604,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
       gst_h265_parser_store_nal (h265parse, pps.id, nal_type, nalu);
       h265parse->header |= TRUE;
+      h265parse->state |= GST_H265_PARSE_STATE_GOT_PPS;
       break;
     case GST_H265_NAL_PREFIX_SEI:
     case GST_H265_NAL_SUFFIX_SEI:
@@ -616,11 +639,15 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
     {
       GstH265SliceHdr slice;
 
+      h265parse->state &= GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS;
+
       pres = gst_h265_parser_parse_slice_hdr (nalparser, nalu, &slice);
 
       if (pres == GST_H265_PARSER_OK) {
         if (GST_H265_IS_I_SLICE (&slice))
           h265parse->keyframe |= TRUE;
+
+        h265parse->state |= GST_H265_PARSE_STATE_GOT_SLICE;
       }
       if (slice.first_slice_segment_in_pic_flag == 1)
         GST_DEBUG_OBJECT (h265parse,
@@ -982,7 +1009,8 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
     if (nalu.type == GST_H265_NAL_VPS ||
         nalu.type == GST_H265_NAL_SPS ||
         nalu.type == GST_H265_NAL_PPS ||
-        (h265parse->have_sps && h265parse->have_pps)) {
+        GST_H265_PARSE_STATE_VALID (h265parse,
+            GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS)) {
       gst_h265_parse_process_nal (h265parse, &nalu);
     } else {
       GST_WARNING_OBJECT (h265parse,
@@ -2059,6 +2087,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       h265parse->have_vps = FALSE;
       h265parse->have_sps = FALSE;
       h265parse->have_pps = FALSE;
+      h265parse->state &= GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS;
     }
   }
 

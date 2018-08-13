@@ -63,12 +63,15 @@ struct _GstH265Parse
 
   /* state */
   GstH265Parser *nalparser;
+  guint state;
   guint align;
   guint format;
   gint current_off;
 
   GstClockTime last_report;
   gboolean push_codec;
+  /* The following variables have a meaning in context of "have
+   * VPS/SPS/PPS to push downstream", e.g. to update caps */
   gboolean have_vps;
   gboolean have_sps;
   gboolean have_pps;
