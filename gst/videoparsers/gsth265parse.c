@@ -872,7 +872,6 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
     if (h265parse->split_packetized) {
       GST_ELEMENT_ERROR (h265parse, STREAM, FAILED, (NULL),
           ("invalid HEVC input data"));
-      gst_buffer_unref (buffer);
 
       return GST_FLOW_ERROR;
     } else {
