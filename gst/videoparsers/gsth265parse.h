@@ -93,7 +93,7 @@ struct _GstH265Parse
   gboolean picture_start;
 
   /* props */
-  guint interval;
+  gint interval;
 
   gboolean sent_codec_tag;
 
