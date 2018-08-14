@@ -529,9 +529,11 @@ check_multicast_client_address (const gchar * destination, guint port,
           G_SOCKET_FAMILY_IPV4, transport, TRUE) == expected_res);
 
   fail_unless (gst_rtsp_stream_add_multicast_client_address (stream,
-          destination, ports.min, ports.max, G_SOCKET_FAMILY_IPV4) == expected_res);
+          destination, ports.min, ports.max,
+          G_SOCKET_FAMILY_IPV4) == expected_res);
 
-  fail_unless (gst_rtsp_stream_complete_stream (stream, transport) == expected_res);
+  fail_unless (gst_rtsp_stream_complete_stream (stream,
+          transport) == expected_res);
 
   fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
   addr_str = gst_rtsp_stream_get_multicast_client_addresses (stream);

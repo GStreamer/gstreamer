@@ -1986,12 +1986,14 @@ default_configure_client_transport (GstRTSPClient * client,
      */
     /* FIXME: could be more adequately solved by making it possible
      * to set a socket on multiudpsink after it has already been started */
-    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, G_SOCKET_FAMILY_IPV4, ct,
-            use_client_settings) && family == G_SOCKET_FAMILY_IPV4)
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream,
+            G_SOCKET_FAMILY_IPV4, ct, use_client_settings)
+        && family == G_SOCKET_FAMILY_IPV4)
       goto error_allocating_ports;
 
-    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, G_SOCKET_FAMILY_IPV6, ct,
-            use_client_settings) && family == G_SOCKET_FAMILY_IPV6)
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream,
+            G_SOCKET_FAMILY_IPV6, ct, use_client_settings)
+        && family == G_SOCKET_FAMILY_IPV6)
       goto error_allocating_ports;
 
     if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
