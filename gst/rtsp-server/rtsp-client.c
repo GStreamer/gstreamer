@@ -1981,27 +1981,26 @@ default_configure_client_transport (GstRTSPClient * client,
      */
     /* FIXME: could be more adequately solved by making it possible
      * to set a socket on multiudpsink after it has already been started */
-    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream,
-            G_SOCKET_FAMILY_IPV4, ct, use_client_settings)
-        && family == G_SOCKET_FAMILY_IPV4)
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, G_SOCKET_FAMILY_IPV4, ct,
+            use_client_settings) && family == G_SOCKET_FAMILY_IPV4)
       goto error_allocating_ports;
 
-    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream,
-            G_SOCKET_FAMILY_IPV6, ct, use_client_settings)
-        && family == G_SOCKET_FAMILY_IPV6)
+    if (!gst_rtsp_stream_allocate_udp_sockets (ctx->stream, G_SOCKET_FAMILY_IPV6, ct,
+            use_client_settings) && family == G_SOCKET_FAMILY_IPV6)
       goto error_allocating_ports;
 
     if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-      /* FIXME: the address has been successfully allocated, however, in
-       * the use_client_settings case we need to verify that the allocated
-       * address is the one requested by the client and if this address is
-       * an allowed destination. Verifying this via the address pool in not
-       * the proper way as the address pool should only be used for choosing
-       * the server-selected address/port pairs. */
+      GstRTSPAddress *addr = NULL;
 
-      if (!use_client_settings) {
-        GstRTSPAddress *addr = NULL;
+      if (use_client_settings) {
+        /* the address has been successfully allocated, let's check if it's
+         * the one requested by the client */
+        addr = gst_rtsp_stream_reserve_address (ctx->stream, ct->destination,
+            ct->port.min, ct->port.max - ct->port.min + 1, ct->ttl);
 
+        if (addr == NULL)
+          goto no_address;
+      } else {
         g_free (ct->destination);
         addr = gst_rtsp_stream_get_multicast_address (ctx->stream, family);
         if (addr == NULL)
@@ -2010,8 +2009,9 @@ default_configure_client_transport (GstRTSPClient * client,
         ct->port.min = addr->port;
         ct->port.max = addr->port + addr->n_ports - 1;
         ct->ttl = addr->ttl;
-        gst_rtsp_address_free (addr);
       }
+
+      gst_rtsp_address_free (addr);
     } else {
       GstRTSPUrl *url;
 

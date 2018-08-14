@@ -314,12 +314,6 @@ void                    gst_rtsp_media_set_publish_clock_mode (GstRTSPMedia * me
 GST_RTSP_SERVER_API
 GstRTSPPublishClockMode gst_rtsp_media_get_publish_clock_mode (GstRTSPMedia * media);
 
-GST_RTSP_SERVER_API
-gboolean                gst_rtsp_media_set_max_mcast_ttl  (GstRTSPMedia *media, guint ttl);
-
-GST_RTSP_SERVER_API
-guint                 gst_rtsp_media_get_max_mcast_ttl  (GstRTSPMedia *media);
-
 /* prepare the media for playback */
 
 GST_RTSP_SERVER_API

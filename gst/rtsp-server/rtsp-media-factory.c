@@ -59,7 +59,6 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPTransportMode transport_mode;
   gboolean stop_on_disconnect;
   gchar *multicast_iface;
-  guint max_mcast_ttl;
 
   GstClockTime rtx_time;
   guint latency;
@@ -84,7 +83,6 @@ struct _GstRTSPMediaFactoryPrivate
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_LATENCY         200
-#define DEFAULT_MAX_MCAST_TTL   255
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
 #define DEFAULT_DO_RETRANSMISSION FALSE
@@ -103,7 +101,6 @@ enum
   PROP_TRANSPORT_MODE,
   PROP_STOP_ON_DISCONNECT,
   PROP_CLOCK,
-  PROP_MAX_MCAST_TTL,
   PROP_LAST
 };
 
@@ -225,12 +222,6 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "medias of this factory", GST_TYPE_CLOCK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_MAX_MCAST_TTL,
-      g_param_spec_uint ("max-mcast-ttl", "Maximum multicast ttl",
-          "The maximum time-to-live value of outgoing multicast packets", 1,
-          255, DEFAULT_MAX_MCAST_TTL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -272,7 +263,6 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
-  priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -347,9 +337,6 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_CLOCK:
       g_value_take_object (value, gst_rtsp_media_factory_get_clock (factory));
       break;
-    case PROP_MAX_MCAST_TTL:
-      g_value_set_uint (value,
-          gst_rtsp_media_factory_get_max_mcast_ttl (factory));
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -400,9 +387,6 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_CLOCK:
       gst_rtsp_media_factory_set_clock (factory, g_value_get_object (value));
       break;
-    case PROP_MAX_MCAST_TTL:
-      gst_rtsp_media_factory_set_max_mcast_ttl (factory,
-          g_value_get_uint (value));
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -1479,62 +1463,6 @@ gst_rtsp_media_factory_get_publish_clock_mode (GstRTSPMediaFactory * factory)
   return ret;
 }
 
-/**
- * gst_rtsp_media_factory_set_max_mcast_ttl:
- * @factory: a #GstRTSPMedia
- * @ttl: the new multicast ttl value
- *
- * Set the maximum time-to-live value of outgoing multicast packets.
- *
- * Returns: %TRUE if the requested ttl has been set successfully.
- */
-gboolean
-gst_rtsp_media_factory_set_max_mcast_ttl (GstRTSPMediaFactory * factory,
-    guint ttl)
-{
-  GstRTSPMediaFactoryPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
-
-  priv = factory->priv;
-
-  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  if (ttl == 0 || ttl > DEFAULT_MAX_MCAST_TTL) {
-    GST_WARNING_OBJECT (factory, "The requested mcast TTL value is not valid.");
-    GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
-    return FALSE;
-  }
-  priv->max_mcast_ttl = ttl;
-  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
-
-  return TRUE;
-}
-
-/**
- * gst_rtsp_media_factory_get_max_mcast_ttl:
- * @factory: a #GstRTSPMedia
- *
- * Get the the maximum time-to-live value of outgoing multicast packets.
- *
- * Returns: the maximum time-to-live value of outgoing multicast packets.
- */
-guint
-gst_rtsp_media_factory_get_max_mcast_ttl (GstRTSPMediaFactory * factory)
-{
-  GstRTSPMediaFactoryPrivate *priv;
-  guint result;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), 0);
-
-  priv = factory->priv;
-
-  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  result = priv->max_mcast_ttl;
-  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
-
-  return result;
-}
-
 static gchar *
 default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -1685,7 +1613,6 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstClock *clock;
   gchar *multicast_iface;
   GstRTSPPublishClockMode publish_clock_mode;
-  guint ttl;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1701,7 +1628,6 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   stop_on_disconnect = priv->stop_on_disconnect;
   clock = priv->clock ? gst_object_ref (priv->clock) : NULL;
   publish_clock_mode = priv->publish_clock_mode;
-  ttl = priv->max_mcast_ttl;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1716,7 +1642,6 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_transport_mode (media, transport_mode);
   gst_rtsp_media_set_stop_on_disconnect (media, stop_on_disconnect);
   gst_rtsp_media_set_publish_clock_mode (media, publish_clock_mode);
-  gst_rtsp_media_set_max_mcast_ttl (media, ttl);
 
   if (clock) {
     gst_rtsp_media_set_clock (media, clock);
