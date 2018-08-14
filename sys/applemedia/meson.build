@@ -18,16 +18,20 @@ applemedia_args = [
 ]
 
 applemedia_objc_args = []
+applemedia_option = get_option('applemedia')
+if host_system != 'darwin' or applemedia_option.disabled()
+  subdir_done()
+endif
 
 applemedia_deps_found = false
 applemedia_frameworks = []
-corefoundation_dep = dependency('CoreFoundation', required : false)
-coremedia_dep = dependency('CoreMedia', required : false)
-corevideo_dep = dependency('CoreVideo', required : false)
-audiotoolbox_dep = dependency('AudioToolbox', required : false)
+corefoundation_dep = dependency('CoreFoundation', required : applemedia_option)
+coremedia_dep = dependency('CoreMedia', required : applemedia_option)
+corevideo_dep = dependency('CoreVideo', required : applemedia_option)
+audiotoolbox_dep = dependency('AudioToolbox', required : applemedia_option)
 applemedia_frameworks += [corefoundation_dep, coremedia_dep, corevideo_dep, audiotoolbox_dep]
 
-avfoundation_dep = dependency('AVFoundation', required : false)
+avfoundation_dep = dependency('AVFoundation', required : applemedia_option)
 if avfoundation_dep.found()
     applemedia_sources += [
         'avfvideosrc.m',
@@ -37,7 +41,7 @@ if avfoundation_dep.found()
     applemedia_frameworks += [avfoundation_dep]
 endif
 
-videotoolbox_dep = dependency('VideoToolbox', required : false)
+videotoolbox_dep = dependency('VideoToolbox', required : applemedia_option)
 if videotoolbox_dep.found()
     applemedia_sources += [
         'vtenc.c',
@@ -53,17 +57,17 @@ if cdata.has('HAVE_IOS')
     ]
     applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
 
-    foundation_dep = dependency('Foundation', required : false)
-    coremedia_dep = dependency('AssetsLibrary', required : false)
+    foundation_dep = dependency('Foundation', required : applemedia_option)
+    coremedia_dep = dependency('AssetsLibrary', required : applemedia_option)
     applemedia_frameworks += [foundation_dep, coremedia_dep]
 else
     applemedia_sources += [
         'iosurfacememory.c'
     ]
     applemedia_objc_args += ['-mmacosx-version-min=10.8']
-    cocoa_dep = dependency('Cocoa', required : false)
-    iosurface_dep = dependency('IOSurface', required : false)
-    applemedia_opengl_dep = dependency('OpenGL', required : false)
+    cocoa_dep = dependency('Cocoa', required : applemedia_option)
+    iosurface_dep = dependency('IOSurface', required : applemedia_option)
+    applemedia_opengl_dep = dependency('OpenGL', required : applemedia_option)
     applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
 endif
 

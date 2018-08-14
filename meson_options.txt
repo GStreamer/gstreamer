@@ -74,6 +74,7 @@ option('x11', type : 'feature', value : 'auto', description : 'X11 support in Vu
 
 # Feature options for plugins that need external deps
 option('aom', type : 'feature', value : 'auto', description : 'AOM AV1 video codec plugin')
+option('applemedia', type : 'feature', value : 'auto', description : 'Video capture and codec access plugins for macOS and iOS')
 option('assrender', type : 'feature', value : 'auto', description : 'ASS/SSA subtitle renderer plugin')
 option('bluez', type : 'feature', value : 'auto', description : 'Bluetooth audio A2DP/AVDTP sink, AVDTP source plugin')
 option('bs2b', type : 'feature', value : 'auto', description : 'Bauer stereophonic-to-binaural audio plugin')
