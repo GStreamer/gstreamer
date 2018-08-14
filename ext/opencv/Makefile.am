@@ -78,8 +78,8 @@ noinst_HEADERS = \
 		gstdewarp.h
 		camerautils.hpp \
 		cameraevent.hpp \
-		gstcameracalibrate.hpp \
-		gstcameraundistort.hpp
+		gstcameracalibrate.h \
+		gstcameraundistort.h
 
 opencv_haarcascadesdir = $(pkgdatadir)/$(GST_API_VERSION)/opencv_haarcascades
 opencv_haarcascades_DATA = fist.xml palm.xml
