@@ -1122,7 +1122,7 @@ gst_aggregator_aggregate_func (GstAggregator * self)
     if (!gst_aggregator_wait_and_check (self, &timeout))
       continue;
 
-    events_query_data.processed_event = TRUE;
+    events_query_data.processed_event = FALSE;
     events_query_data.flow_ret = GST_FLOW_OK;
     gst_element_foreach_sink_pad (GST_ELEMENT_CAST (self),
         gst_aggregator_do_events_and_queries, &events_query_data);
