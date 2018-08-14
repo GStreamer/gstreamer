@@ -1157,6 +1157,8 @@ set_multicast_socket_for_udpsink (GstElement * udpsink, GSocket * socket,
     GST_INFO ("setting ttl-mc %d", mcast_ttl);
     g_object_set (G_OBJECT (udpsink), "ttl-mc", mcast_ttl, NULL);
   }
+
+  g_signal_emit_by_name (udpsink, "add", addr_str, port, NULL);
 }
 
 
