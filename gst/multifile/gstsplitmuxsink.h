@@ -68,8 +68,6 @@ typedef struct _MqStreamBuf
 
 typedef struct _MqStreamCtx
 {
-  gint refcount;
-
   GstSplitMuxSink *splitmux;
 
   guint q_overrun_id;

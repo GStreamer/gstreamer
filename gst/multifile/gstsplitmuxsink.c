@@ -208,7 +208,7 @@ static GstStateChangeReturn gst_splitmux_sink_change_state (GstElement *
 static void bus_handler (GstBin * bin, GstMessage * msg);
 static void set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx);
 static void start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx);
-static void mq_stream_ctx_unref (MqStreamCtx * ctx);
+static void mq_stream_ctx_free (MqStreamCtx * ctx);
 static void grow_blocked_queues (GstSplitMuxSink * splitmux);
 
 static void gst_splitmux_sink_ensure_max_files (GstSplitMuxSink * splitmux);
@@ -527,8 +527,9 @@ gst_splitmux_sink_finalize (GObject * object)
 
   g_free (splitmux->location);
 
-  /* Make sure to free any un-released contexts */
-  g_list_foreach (splitmux->contexts, (GFunc) mq_stream_ctx_unref, NULL);
+  /* Make sure to free any un-released contexts. There should not be any,
+   * because the dispose will have freed all request pads though */
+  g_list_foreach (splitmux->contexts, (GFunc) mq_stream_ctx_free, NULL);
   g_list_free (splitmux->contexts);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -814,7 +815,6 @@ mq_stream_ctx_new (GstSplitMuxSink * splitmux)
   MqStreamCtx *ctx;
 
   ctx = g_new0 (MqStreamCtx, 1);
-  g_atomic_int_set (&ctx->refcount, 1);
   ctx->splitmux = splitmux;
   gst_segment_init (&ctx->in_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
@@ -827,10 +827,16 @@ static void
 mq_stream_ctx_free (MqStreamCtx * ctx)
 {
   if (ctx->q) {
+    GstObject *parent = gst_object_get_parent (GST_OBJECT (ctx->q));
+
     g_signal_handler_disconnect (ctx->q, ctx->q_overrun_id);
-    gst_element_set_locked_state (ctx->q, TRUE);
-    gst_element_set_state (ctx->q, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (ctx->splitmux), ctx->q);
+
+    if (parent == GST_OBJECT_CAST (ctx->splitmux)) {
+      gst_element_set_locked_state (ctx->q, TRUE);
+      gst_element_set_state (ctx->q, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN (ctx->splitmux), ctx->q);
+      gst_object_unref (parent);
+    }
     gst_object_unref (ctx->q);
   }
   gst_buffer_replace (&ctx->prev_in_keyframe, NULL);
@@ -839,33 +845,6 @@ mq_stream_ctx_free (MqStreamCtx * ctx)
   g_queue_foreach (&ctx->queued_bufs, (GFunc) mq_stream_buf_free, NULL);
   g_queue_clear (&ctx->queued_bufs);
   g_free (ctx);
-}
-
-static void
-mq_stream_ctx_unref (MqStreamCtx * ctx)
-{
-  if (g_atomic_int_dec_and_test (&ctx->refcount))
-    mq_stream_ctx_free (ctx);
-}
-
-static void
-mq_stream_ctx_ref (MqStreamCtx * ctx)
-{
-  g_atomic_int_inc (&ctx->refcount);
-}
-
-static void
-_pad_block_destroy_sink_notify (MqStreamCtx * ctx)
-{
-  ctx->sink_pad_block_id = 0;
-  mq_stream_ctx_unref (ctx);
-}
-
-static void
-_pad_block_destroy_src_notify (MqStreamCtx * ctx)
-{
-  ctx->src_pad_block_id = 0;
-  mq_stream_ctx_unref (ctx);
 }
 
 static void
@@ -2564,12 +2543,10 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       g_signal_connect (q, "overrun", (GCallback) handle_q_overrun, ctx);
   g_signal_connect (q, "underrun", (GCallback) handle_q_underrun, ctx);
 
-  mq_stream_ctx_ref (ctx);
   ctx->src_pad_block_id =
       gst_pad_add_probe (q_src,
       GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
-      (GstPadProbeCallback) handle_mq_output, ctx, (GDestroyNotify)
-      _pad_block_destroy_src_notify);
+      (GstPadProbeCallback) handle_mq_output, ctx, NULL);
   if (is_video && splitmux->reference_ctx != NULL) {
     splitmux->reference_ctx->is_reference = FALSE;
     splitmux->reference_ctx = NULL;
@@ -2582,13 +2559,11 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   res = gst_ghost_pad_new_from_template (gname, q_sink, templ);
   g_object_set_qdata ((GObject *) (res), PAD_CONTEXT, ctx);
 
-  mq_stream_ctx_ref (ctx);
   ctx->sink_pad_block_id =
       gst_pad_add_probe (q_sink,
       GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
       GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
-      (GstPadProbeCallback) handle_mq_input, ctx, (GDestroyNotify)
-      _pad_block_destroy_sink_notify);
+      (GstPadProbeCallback) handle_mq_input, ctx, NULL);
 
   GST_DEBUG_OBJECT (splitmux, "Request pad %" GST_PTR_FORMAT
       " feeds queue pad %" GST_PTR_FORMAT, res, q_sink);
@@ -2647,7 +2622,7 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
     gst_pad_remove_probe (ctx->srcpad, ctx->src_pad_block_id);
 
   /* Can release the context now */
-  mq_stream_ctx_unref (ctx);
+  mq_stream_ctx_free (ctx);
   if (ctx == splitmux->reference_ctx)
     splitmux->reference_ctx = NULL;
 
