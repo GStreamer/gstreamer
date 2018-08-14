@@ -213,7 +213,8 @@ main (int argc, char *argv[])
   g_print ("stream with admin2:power2 ready at rtsp://127.0.0.1:8554/test2\n");
 
   if (htdigest_path)
-    g_print ("stream with htdigest users ready at rtsp://127.0.0.1:8554/test\n");
+    g_print
+        ("stream with htdigest users ready at rtsp://127.0.0.1:8554/test\n");
 
   g_main_loop_run (loop);
 
