@@ -86,7 +86,8 @@ gst_file_sink_buffer_mode_get_type (void)
   static const GEnumValue buffer_mode[] = {
     {GST_FILE_SINK_BUFFER_MODE_DEFAULT, "Default buffering", "default"},
     {GST_FILE_SINK_BUFFER_MODE_FULL, "Fully buffered", "full"},
-    {GST_FILE_SINK_BUFFER_MODE_LINE, "Line buffered", "line"},
+    {GST_FILE_SINK_BUFFER_MODE_LINE, "Line buffered (deprecated, like full)",
+        "line"},
     {GST_FILE_SINK_BUFFER_MODE_UNBUFFERED, "Unbuffered", "unbuffered"},
     {0, NULL, NULL},
   };
@@ -255,7 +256,6 @@ gst_file_sink_init (GstFileSink * filesink)
   filesink->current_pos = 0;
   filesink->buffer_mode = DEFAULT_BUFFER_MODE;
   filesink->buffer_size = DEFAULT_BUFFER_SIZE;
-  filesink->buffer = NULL;
   filesink->append = FALSE;
 
   gst_base_sink_set_sync (GST_BASE_SINK (filesink), FALSE);
@@ -272,9 +272,6 @@ gst_file_sink_dispose (GObject * object)
   sink->uri = NULL;
   g_free (sink->filename);
   sink->filename = NULL;
-  g_free (sink->buffer);
-  sink->buffer = NULL;
-  sink->buffer_size = 0;
 }
 
 static gboolean
@@ -365,8 +362,6 @@ gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_file_sink_open_file (GstFileSink * sink)
 {
-  gint mode;
-
   /* open the file */
   if (sink->filename == NULL || sink->filename[0] == '\0')
     goto no_filename;
@@ -377,36 +372,6 @@ gst_file_sink_open_file (GstFileSink * sink)
     sink->file = gst_fopen (sink->filename, "wb");
   if (sink->file == NULL)
     goto open_failed;
-
-  /* see if we are asked to perform a specific kind of buffering */
-  if ((mode = sink->buffer_mode) != -1) {
-    guint buffer_size;
-
-    /* free previous buffer if any */
-    g_free (sink->buffer);
-
-    if (mode == _IONBF) {
-      /* no buffering */
-      sink->buffer = NULL;
-      buffer_size = 0;
-    } else {
-      /* allocate buffer */
-      sink->buffer = g_malloc (sink->buffer_size);
-      buffer_size = sink->buffer_size;
-    }
-    /* Cygwin does not have __fbufsize, android adds it in API 23 */
-#if defined(HAVE_STDIO_EXT_H) && (!defined(__CYGWIN__) && (!defined(__ANDROID_API__) || __ANDROID_API__ >= 23))
-    GST_DEBUG_OBJECT (sink, "change buffer size %u to %u, mode %d",
-        (guint) __fbufsize (sink->file), buffer_size, mode);
-#else
-    GST_DEBUG_OBJECT (sink, "change buffer size to %u, mode %d",
-        sink->buffer_size, mode);
-#endif
-    if (setvbuf (sink->file, sink->buffer, mode, buffer_size) != 0) {
-      GST_WARNING_OBJECT (sink, "warning: setvbuf failed: %s",
-          g_strerror (errno));
-    }
-  }
 
   sink->current_pos = 0;
   /* try to seek in the file to figure out if it is seekable */
@@ -443,9 +408,6 @@ gst_file_sink_close_file (GstFileSink * sink)
 
     GST_DEBUG_OBJECT (sink, "closed file");
     sink->file = NULL;
-
-    g_free (sink->buffer);
-    sink->buffer = NULL;
   }
 }
 
@@ -515,9 +477,6 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
   GST_DEBUG_OBJECT (filesink, "Seeking to offset %" G_GUINT64_FORMAT
       " using " __GST_STDIO_SEEK_FUNCTION, new_offset);
 
-  if (fflush (filesink->file))
-    goto flush_failed;
-
 #ifdef HAVE_FSEEKO
   if (fseeko (filesink->file, (off_t) new_offset, SEEK_SET) != 0)
     goto seek_failed;
@@ -537,11 +496,6 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
   return TRUE;
 
   /* ERRORS */
-flush_failed:
-  {
-    GST_DEBUG_OBJECT (filesink, "Flush failed: %s", g_strerror (errno));
-    return FALSE;
-  }
 seek_failed:
   {
     GST_DEBUG_OBJECT (filesink, "Seeking failed: %s", g_strerror (errno));
@@ -591,12 +545,8 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
       if (filesink->current_pos != 0 && filesink->seekable) {
         gst_file_sink_do_seek (filesink, 0);
         if (ftruncate (fileno (filesink->file), 0))
-          goto flush_failed;
+          goto truncate_failed;
       }
-      break;
-    case GST_EVENT_EOS:
-      if (fflush (filesink->file))
-        goto flush_failed;
       break;
     default:
       break;
@@ -613,7 +563,7 @@ seek_failed:
     gst_event_unref (event);
     return FALSE;
   }
-flush_failed:
+truncate_failed:
   {
     GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
         (_("Error while writing to file \"%s\"."), filesink->filename),
@@ -631,10 +581,6 @@ gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
 #ifdef HAVE_FTELLO
   ret = ftello (filesink->file);
 #elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
-  if (fflush (filesink->file)) {
-    GST_DEBUG_OBJECT (filesink, "Flush failed: %s", g_strerror (errno));
-    /* ignore and continue */
-  }
   ret = lseek (fileno (filesink->file), 0, SEEK_CUR);
 #else
   ret = (off_t) ftell (filesink->file);
@@ -691,7 +637,7 @@ gst_file_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
       total_mems);
 
   if (flow == GST_FLOW_OK && sync_after) {
-    if (fflush (sink->file) || fsync (fileno (sink->file))) {
+    if (fsync (fileno (sink->file))) {
       GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
           (_("Error while writing to file \"%s\"."), sink->filename),
           ("%s", g_strerror (errno)));
@@ -726,7 +672,7 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   if (flow == GST_FLOW_OK &&
       GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_SYNC_AFTER)) {
-    if (fflush (filesink->file) || fsync (fileno (filesink->file))) {
+    if (fsync (fileno (filesink->file))) {
       GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
           (_("Error while writing to file \"%s\"."), filesink->filename),
           ("%s", g_strerror (errno)));
