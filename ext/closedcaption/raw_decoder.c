@@ -407,6 +407,7 @@ _vbi3_raw_decoder_dump (const vbi3_raw_decoder * rd, FILE * fp)
   }
 }
 
+#if 0                           /* @UNUSED */
 _vbi_inline int
 cpr1204_crc (const vbi_sliced * sliced)
 {
@@ -426,6 +427,7 @@ cpr1204_crc (const vbi_sliced * sliced)
 
   return crc;
 }
+#endif
 
 static vbi_bool
 slice (vbi3_raw_decoder * rd,
