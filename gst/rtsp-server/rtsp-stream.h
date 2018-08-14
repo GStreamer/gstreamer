@@ -234,16 +234,6 @@ GSocket *         gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream *stre
                                                              GSocketFamily family);
 
 GST_RTSP_SERVER_API
-gboolean          gst_rtsp_stream_add_multicast_client_address (GstRTSPStream * stream,
-                                                                const gchar * destination,
-                                                                guint rtp_port,
-                                                                guint rtcp_port,
-                                                                GSocketFamily family);
-
-GST_RTSP_SERVER_API
-gchar *           gst_rtsp_stream_get_multicast_client_addresses (GstRTSPStream * stream);
-
-GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_update_crypto    (GstRTSPStream * stream,
                                                     guint ssrc, GstCaps * crypto);
 
@@ -307,9 +297,6 @@ gboolean                gst_rtsp_stream_set_max_mcast_ttl  (GstRTSPStream *strea
 
 GST_RTSP_SERVER_API
 guint             gst_rtsp_stream_get_max_mcast_ttl  (GstRTSPStream *stream);
-
-GST_RTSP_SERVER_API
-gboolean          gst_rtsp_stream_verify_mcast_ttl  (GstRTSPStream *stream, guint ttl);
 
 GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_complete_stream (GstRTSPStream * stream, const GstRTSPTransport * transport);

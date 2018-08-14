@@ -486,95 +486,6 @@ GST_START_TEST (test_tcp_transport)
 
 GST_END_TEST;
 
-static void
-check_multicast_client_address (const gchar * destination, guint port,
-    const gchar * expected_addr_str, gboolean expected_res)
-{
-  GstPad *srcpad;
-  GstElement *pay;
-  GstRTSPStream *stream;
-  GstBin *bin;
-  GstElement *rtpbin;
-  GstRTSPTransport *transport;
-  GstRTSPRange ports = { 0 };
-  gchar *addr_str = NULL;
-
-  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
-  fail_unless (srcpad != NULL);
-  gst_pad_set_active (srcpad, TRUE);
-  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
-  fail_unless (pay != NULL);
-  stream = gst_rtsp_stream_new (0, pay, srcpad);
-  fail_unless (stream != NULL);
-  gst_object_unref (pay);
-  gst_object_unref (srcpad);
-  rtpbin = gst_element_factory_make ("rtpbin", "testrtpbin");
-  fail_unless (rtpbin != NULL);
-  bin = GST_BIN (gst_bin_new ("testbin"));
-  fail_unless (bin != NULL);
-  fail_unless (gst_bin_add (bin, rtpbin));
-
-  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
-
-  fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
-  transport->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
-  transport->destination = g_strdup (destination);
-  transport->ttl = 1;
-  ports.min = port;
-  ports.max = port + 1;
-  transport->port = ports;
-
-  /* allocate ports */
-  fail_unless (gst_rtsp_stream_allocate_udp_sockets (stream,
-          G_SOCKET_FAMILY_IPV4, transport, TRUE) == expected_res);
-
-  fail_unless (gst_rtsp_stream_add_multicast_client_address (stream,
-          destination, ports.min, ports.max,
-          G_SOCKET_FAMILY_IPV4) == expected_res);
-
-  fail_unless (gst_rtsp_stream_complete_stream (stream,
-          transport) == expected_res);
-
-  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
-  addr_str = gst_rtsp_stream_get_multicast_client_addresses (stream);
-
-  fail_unless (g_str_equal (addr_str, expected_addr_str));
-  g_free (addr_str);
-
-  fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
-
-  gst_object_unref (bin);
-  gst_object_unref (stream);
-}
-
-/* test if the provided transport destination is correct.
- * CASE: valid multicast address */
-GST_START_TEST (test_multicast_client_address)
-{
-  const gchar *addr = "233.252.0.1";
-  guint port = 50000;
-  const gchar *expected_addr_str = "233.252.0.1:50000";
-  gboolean expected_res = TRUE;
-
-  check_multicast_client_address (addr, port, expected_addr_str, expected_res);
-}
-
-GST_END_TEST;
-
-/* test if the provided transport destination is correct.
- * CASE: invalid multicast address */
-GST_START_TEST (test_multicast_client_address_invalid)
-{
-  const gchar *addr = "1.2.3.4";
-  guint port = 50000;
-  const gchar *expected_addr_str = "";
-  gboolean expected_res = FALSE;
-
-  check_multicast_client_address (addr, port, expected_addr_str, expected_res);
-}
-
-GST_END_TEST;
-
 static Suite *
 rtspstream_suite (void)
 {
@@ -590,8 +501,6 @@ rtspstream_suite (void)
   tcase_add_test (tc, test_allocate_udp_ports_multicast);
   tcase_add_test (tc, test_allocate_udp_ports_client_settings);
   tcase_add_test (tc, test_tcp_transport);
-  tcase_add_test (tc, test_multicast_client_address);
-  tcase_add_test (tc, test_multicast_client_address_invalid);
 
   return s;
 }
