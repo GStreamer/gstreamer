@@ -1610,6 +1610,8 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
               GINT_TO_POINTER (2));
         }
       }
+      gst_object_unref (muxer);
+      gst_object_unref (sink);
       muxer = new_muxer;
       sink = new_sink;
       gst_object_ref (muxer);
