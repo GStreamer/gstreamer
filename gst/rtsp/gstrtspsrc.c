@@ -127,6 +127,9 @@ enum
   SIGNAL_ACCEPT_CERTIFICATE,
   SIGNAL_BEFORE_SEND,
   SIGNAL_PUSH_BACKCHANNEL_BUFFER,
+  SIGNAL_GET_PARAMETER,
+  SIGNAL_GET_PARAMETERS,
+  SIGNAL_SET_PARAMETER,
   LAST_SIGNAL
 };
 
@@ -338,6 +341,14 @@ gst_rtsp_nat_method_get_type (void)
          "rtsp-status-reason", G_TYPE_STRING, GST_STR_NULL((response_msg)->type_data.response.reason), NULL)); \
   } while (0)
 
+typedef struct _ParameterRequest
+{
+  gint cmd;
+  gchar *content_type;
+  GString *body;
+  GstPromise *promise;
+} ParameterRequest;
+
 static void gst_rtspsrc_finalize (GObject * object);
 
 static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
@@ -390,6 +401,21 @@ gst_rtspsrc_print_rtsp_message (GstRTSPSrc * src, const GstRTSPMessage * msg);
 static void
 gst_rtspsrc_print_sdp_message (GstRTSPSrc * src, const GstSDPMessage * msg);
 
+static GstRTSPResult
+gst_rtspsrc_get_parameter (GstRTSPSrc * src, ParameterRequest * req);
+
+static GstRTSPResult
+gst_rtspsrc_set_parameter (GstRTSPSrc * src, ParameterRequest * req);
+
+static gboolean get_parameter (GstRTSPSrc * src, const gchar * parameter,
+    const gchar * content_type, GstPromise * promise);
+
+static gboolean get_parameters (GstRTSPSrc * src, gchar ** parameters,
+    const gchar * content_type, GstPromise * promise);
+
+static gboolean set_parameter (GstRTSPSrc * src, const gchar * name,
+    const gchar * value, const gchar * content_type, GstPromise * promise);
+
 static GstFlowReturn gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src,
     guint id, GstSample * sample);
 
@@ -400,16 +426,18 @@ typedef struct
 } PtMapItem;
 
 /* commands we send to out loop to notify it of events */
-#define CMD_OPEN       (1 << 0)
-#define CMD_PLAY       (1 << 1)
-#define CMD_PAUSE      (1 << 2)
-#define CMD_CLOSE      (1 << 3)
-#define CMD_WAIT       (1 << 4)
-#define CMD_RECONNECT  (1 << 5)
-#define CMD_LOOP       (1 << 6)
+#define CMD_OPEN            (1 << 0)
+#define CMD_PLAY            (1 << 1)
+#define CMD_PAUSE           (1 << 2)
+#define CMD_CLOSE           (1 << 3)
+#define CMD_WAIT            (1 << 4)
+#define CMD_RECONNECT       (1 << 5)
+#define CMD_LOOP            (1 << 6)
+#define CMD_GET_PARAMETER   (1 << 7)
+#define CMD_SET_PARAMETER   (1 << 8)
 
 /* mask for all commands */
-#define CMD_ALL         ((CMD_LOOP << 1) - 1)
+#define CMD_ALL         ((CMD_SET_PARAMETER << 1) - 1)
 
 #define GST_ELEMENT_PROGRESS(el, type, code, text)      \
 G_STMT_START {                                          \
@@ -445,6 +473,10 @@ cmd_to_string (guint cmd)
       return "RECONNECT";
     case CMD_LOOP:
       return "LOOP";
+    case CMD_GET_PARAMETER:
+      return "GET_PARAMETER";
+    case CMD_SET_PARAMETER:
+      return "SET_PARAMETER";
   }
 
   return "unknown";
@@ -1041,6 +1073,62 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           push_backchannel_buffer), NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 2,
       G_TYPE_UINT, GST_TYPE_BUFFER);
 
+  /**
+   * GstRTSPSrc::get-parameter:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: the parameter name
+   * @parameter: the content type
+   * @parameter: a pointer to #GstPromise
+   *
+   * Handle the GET_PARAMETER signal.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   */
+  gst_rtspsrc_signals[SIGNAL_GET_PARAMETER] =
+      g_signal_new ("get-parameter", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          get_parameter), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 3, G_TYPE_STRING, G_TYPE_STRING, GST_TYPE_PROMISE);
+
+  /**
+   * GstRTSPSrc::get-parameters:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: a NULL-terminated array of parameters
+   * @parameter: the content type
+   * @parameter: a pointer to #GstPromise
+   *
+   * Handle the GET_PARAMETERS signal.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   */
+  gst_rtspsrc_signals[SIGNAL_GET_PARAMETERS] =
+      g_signal_new ("get-parameters", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          get_parameters), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 3, G_TYPE_STRV, G_TYPE_STRING, GST_TYPE_PROMISE);
+
+  /**
+   * GstRTSPSrc::set-parameter:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: the parameter name
+   * @parameter: the parameter value
+   * @parameter: the content type
+   * @parameter: a pointer to #GstPromise
+   *
+   * Handle the SET_PARAMETER signal.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   */
+  gst_rtspsrc_signals[SIGNAL_SET_PARAMETER] =
+      g_signal_new ("set-parameter", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          set_parameter), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_BOOLEAN, 4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
+      GST_TYPE_PROMISE);
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -1057,8 +1145,139 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
 
   klass->push_backchannel_buffer = gst_rtspsrc_push_backchannel_buffer;
+  klass->get_parameter = GST_DEBUG_FUNCPTR (get_parameter);
+  klass->get_parameters = GST_DEBUG_FUNCPTR (get_parameters);
+  klass->set_parameter = GST_DEBUG_FUNCPTR (set_parameter);
 
   gst_rtsp_ext_list_init ();
+}
+
+static gboolean
+validate_set_get_parameter_name (const gchar * parameter_name)
+{
+  gchar *ptr = (gchar *) parameter_name;
+
+  while (*ptr) {
+    /* Don't allow '\r', '\n', \'t', ' ' etc in the parameter name */
+    if (g_ascii_isspace (*ptr) || g_ascii_iscntrl (*ptr)) {
+      GST_DEBUG ("invalid parameter name '%s'", parameter_name);
+      return FALSE;
+    }
+    ptr++;
+  }
+  return TRUE;
+}
+
+static gboolean
+validate_set_get_parameters (gchar ** parameter_names)
+{
+  while (*parameter_names) {
+    if (!validate_set_get_parameter_name (*parameter_names)) {
+      return FALSE;
+    }
+    parameter_names++;
+  }
+  return TRUE;
+}
+
+static gboolean
+get_parameter (GstRTSPSrc * src, const gchar * parameter,
+    const gchar * content_type, GstPromise * promise)
+{
+  gchar *parameters[] = { (gchar *) parameter, NULL };
+
+  GST_LOG_OBJECT (src, "get_parameter: %s", GST_STR_NULL (parameter));
+
+  if (parameter == NULL || parameter[0] == '\0' || promise == NULL) {
+    GST_DEBUG ("invalid input");
+    return FALSE;
+  }
+
+  return get_parameters (src, parameters, content_type, promise);
+}
+
+static gboolean
+get_parameters (GstRTSPSrc * src, gchar ** parameters,
+    const gchar * content_type, GstPromise * promise)
+{
+  ParameterRequest *req;
+
+  GST_LOG_OBJECT (src, "get_parameters: %d", g_strv_length (parameters));
+
+  if (parameters == NULL || promise == NULL) {
+    GST_DEBUG ("invalid input");
+    return FALSE;
+  }
+
+  if (src->state == GST_RTSP_STATE_INVALID) {
+    GST_DEBUG ("invalid state");
+    return FALSE;
+  }
+
+  if (!validate_set_get_parameters (parameters)) {
+    return FALSE;
+  }
+
+  req = g_new0 (ParameterRequest, 1);
+  req->promise = gst_promise_ref (promise);
+  req->cmd = CMD_GET_PARAMETER;
+  /* Set the request body according to RFC 2326 or RFC 7826 */
+  req->body = g_string_new (NULL);
+  while (*parameters) {
+    g_string_append_printf (req->body, "%s:\r\n", *parameters);
+    parameters++;
+  }
+  if (content_type)
+    req->content_type = g_strdup (content_type);
+
+  GST_OBJECT_LOCK (src);
+  g_queue_push_tail (&src->set_get_param_q, req);
+  GST_OBJECT_UNLOCK (src);
+
+  gst_rtspsrc_loop_send_cmd (src, CMD_GET_PARAMETER, CMD_LOOP);
+
+  return TRUE;
+}
+
+static gboolean
+set_parameter (GstRTSPSrc * src, const gchar * name, const gchar * value,
+    const gchar * content_type, GstPromise * promise)
+{
+  ParameterRequest *req;
+
+  GST_LOG_OBJECT (src, "set_parameter: %s: %s", GST_STR_NULL (name),
+      GST_STR_NULL (value));
+
+  if (name == NULL || name[0] == '\0' || value == NULL || promise == NULL) {
+    GST_DEBUG ("invalid input");
+    return FALSE;
+  }
+
+  if (src->state == GST_RTSP_STATE_INVALID) {
+    GST_DEBUG ("invalid state");
+    return FALSE;
+  }
+
+  if (!validate_set_get_parameter_name (name)) {
+    return FALSE;
+  }
+
+  req = g_new0 (ParameterRequest, 1);
+  req->cmd = CMD_SET_PARAMETER;
+  req->promise = gst_promise_ref (promise);
+  req->body = g_string_new (NULL);
+  /* Set the request body according to RFC 2326 or RFC 7826 */
+  g_string_append_printf (req->body, "%s: %s\r\n", name, value);
+  if (content_type)
+    req->content_type = g_strdup (content_type);
+
+  GST_OBJECT_LOCK (src);
+  g_queue_push_tail (&src->set_get_param_q, req);
+  GST_OBJECT_UNLOCK (src);
+
+  gst_rtspsrc_loop_send_cmd (src, CMD_SET_PARAMETER, CMD_LOOP);
+
+  return TRUE;
 }
 
 static void
@@ -1120,6 +1339,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   /* protects our state changes from multiple invocations */
   g_rec_mutex_init (&src->state_rec_lock);
 
+  g_queue_init (&src->set_get_param_q);
+
   src->state = GST_RTSP_STATE_INVALID;
 
   g_mutex_init (&src->conninfo.send_lock);
@@ -1129,6 +1350,25 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
   gst_bin_set_suppressed_flags (GST_BIN (src),
       GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
+}
+
+static void
+free_param_data (ParameterRequest * req)
+{
+  gst_promise_unref (req->promise);
+  if (req->body)
+    g_string_free (req->body, TRUE);
+  g_free (req->content_type);
+  g_free (req);
+}
+
+static void
+free_param_queue (gpointer data)
+{
+  ParameterRequest *req = data;
+
+  gst_promise_expire (req->promise);
+  free_param_data (req);
 }
 
 static void
@@ -2121,6 +2361,11 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     gst_object_unref (src->provided_clock);
     src->provided_clock = NULL;
   }
+
+  /* free parameter requests queue */
+  if (!g_queue_is_empty (&src->set_get_param_q))
+    g_queue_free_full (&src->set_get_param_q, free_param_queue);
+
 }
 
 static gboolean
@@ -5494,6 +5739,14 @@ gst_rtspsrc_loop_start_cmd (GstRTSPSrc * src, gint cmd)
     case CMD_PAUSE:
       GST_ELEMENT_PROGRESS (src, START, "request", ("Sending PAUSE request"));
       break;
+    case CMD_GET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, START, "request",
+          ("Sending GET_PARAMETER request"));
+      break;
+    case CMD_SET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, START, "request",
+          ("Sending SET_PARAMETER request"));
+      break;
     case CMD_CLOSE:
       GST_ELEMENT_PROGRESS (src, START, "close", ("Closing Stream"));
       break;
@@ -5514,6 +5767,14 @@ gst_rtspsrc_loop_complete_cmd (GstRTSPSrc * src, gint cmd)
       break;
     case CMD_PAUSE:
       GST_ELEMENT_PROGRESS (src, COMPLETE, "request", ("Sent PAUSE request"));
+      break;
+    case CMD_GET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "request",
+          ("Sent GET_PARAMETER request"));
+      break;
+    case CMD_SET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, COMPLETE, "request",
+          ("Sent SET_PARAMETER request"));
       break;
     case CMD_CLOSE:
       GST_ELEMENT_PROGRESS (src, COMPLETE, "close", ("Closed Stream"));
@@ -5536,6 +5797,14 @@ gst_rtspsrc_loop_cancel_cmd (GstRTSPSrc * src, gint cmd)
     case CMD_PAUSE:
       GST_ELEMENT_PROGRESS (src, CANCELED, "request", ("PAUSE canceled"));
       break;
+    case CMD_GET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, CANCELED, "request",
+          ("GET_PARAMETER canceled"));
+      break;
+    case CMD_SET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, CANCELED, "request",
+          ("SET_PARAMETER canceled"));
+      break;
     case CMD_CLOSE:
       GST_ELEMENT_PROGRESS (src, CANCELED, "close", ("Close canceled"));
       break;
@@ -5556,6 +5825,12 @@ gst_rtspsrc_loop_error_cmd (GstRTSPSrc * src, gint cmd)
       break;
     case CMD_PAUSE:
       GST_ELEMENT_PROGRESS (src, ERROR, "request", ("PAUSE failed"));
+      break;
+    case CMD_GET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("GET_PARAMETER failed"));
+      break;
+    case CMD_SET_PARAMETER:
+      GST_ELEMENT_PROGRESS (src, ERROR, "request", ("SET_PARAMETER failed"));
       break;
     case CMD_CLOSE:
       GST_ELEMENT_PROGRESS (src, ERROR, "close", ("Close failed"));
@@ -5589,6 +5864,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
 
   GST_OBJECT_LOCK (src);
   old = src->pending_cmd;
+
   if (old == CMD_RECONNECT) {
     GST_DEBUG_OBJECT (src, "ignore, we were reconnecting");
     cmd = CMD_RECONNECT;
@@ -5599,6 +5875,12 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
      * still the pending command. */
     GST_DEBUG_OBJECT (src, "ignore, we were closing");
     cmd = CMD_CLOSE;
+  } else if (old == CMD_SET_PARAMETER) {
+    GST_DEBUG_OBJECT (src, "ignore, we have a pending %s", cmd_to_string (old));
+    cmd = CMD_SET_PARAMETER;
+  } else if (old == CMD_GET_PARAMETER) {
+    GST_DEBUG_OBJECT (src, "ignore, we have a pending %s", cmd_to_string (old));
+    cmd = CMD_GET_PARAMETER;
   } else if (old != CMD_WAIT) {
     src->pending_cmd = CMD_WAIT;
     GST_OBJECT_UNLOCK (src);
@@ -8379,13 +8661,22 @@ static void
 gst_rtspsrc_thread (GstRTSPSrc * src)
 {
   gint cmd;
+  ParameterRequest *req = NULL;
 
   GST_OBJECT_LOCK (src);
   cmd = src->pending_cmd;
   if (cmd == CMD_RECONNECT || cmd == CMD_PLAY || cmd == CMD_PAUSE
-      || cmd == CMD_LOOP || cmd == CMD_OPEN)
-    src->pending_cmd = CMD_LOOP;
-  else
+      || cmd == CMD_LOOP || cmd == CMD_OPEN || cmd == CMD_GET_PARAMETER
+      || cmd == CMD_SET_PARAMETER) {
+    if (g_queue_is_empty (&src->set_get_param_q)) {
+      src->pending_cmd = CMD_LOOP;
+    } else {
+      ParameterRequest *next_req;
+      req = g_queue_pop_head (&src->set_get_param_q);
+      next_req = g_queue_peek_head (&src->set_get_param_q);
+      src->pending_cmd = next_req ? next_req->cmd : CMD_LOOP;
+    }
+  } else
     src->pending_cmd = CMD_WAIT;
   GST_DEBUG_OBJECT (src, "got command %s", cmd_to_string (cmd));
 
@@ -8407,6 +8698,12 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
       break;
     case CMD_CLOSE:
       gst_rtspsrc_close (src, TRUE, FALSE);
+      break;
+    case CMD_GET_PARAMETER:
+      gst_rtspsrc_get_parameter (src, req);
+      break;
+    case CMD_SET_PARAMETER:
+      gst_rtspsrc_set_parameter (src, req);
       break;
     case CMD_LOOP:
       gst_rtspsrc_loop (src);
@@ -8731,6 +9028,227 @@ gst_rtspsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_rtspsrc_uri_get_protocols;
   iface->get_uri = gst_rtspsrc_uri_get_uri;
   iface->set_uri = gst_rtspsrc_uri_set_uri;
+}
+
+
+/* send GET_PARAMETER */
+static GstRTSPResult
+gst_rtspsrc_get_parameter (GstRTSPSrc * src, ParameterRequest * req)
+{
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
+  GstRTSPResult res;
+  GstRTSPStatusCode code = GST_RTSP_STS_OK;
+  const gchar *control;
+  gchar *recv_body = NULL;
+  guint recv_body_len;
+
+  GST_DEBUG_OBJECT (src, "creating server get_parameter");
+
+  if ((res = gst_rtspsrc_ensure_open (src, FALSE)) < 0)
+    goto open_failed;
+
+  control = get_aggregate_control (src);
+  if (control == NULL)
+    goto no_control;
+
+  if (!(src->methods & GST_RTSP_GET_PARAMETER))
+    goto not_supported;
+
+  gst_rtspsrc_connection_flush (src, FALSE);
+
+  res = gst_rtsp_message_init_request (&request, GST_RTSP_GET_PARAMETER,
+      control);
+  if (res < 0)
+    goto create_request_failed;
+
+  res = gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CONTENT_TYPE,
+      req->content_type == NULL ? "text/parameters" : req->content_type);
+  if (res < 0)
+    goto add_content_hdr_failed;
+
+  if (req->body && req->body->len) {
+    res =
+        gst_rtsp_message_set_body (&request, (guint8 *) req->body->str,
+        req->body->len);
+    if (res < 0)
+      goto set_body_failed;
+  }
+
+  if ((res = gst_rtspsrc_send (src, &src->conninfo,
+              &request, &response, &code, NULL)) < 0)
+    goto send_error;
+
+  res = gst_rtsp_message_get_body (&response, (guint8 **) & recv_body,
+      &recv_body_len);
+  if (res < 0)
+    goto get_body_failed;
+
+done:
+  {
+    gst_promise_reply (req->promise,
+        gst_structure_new ("get-parameter-reply",
+            "rtsp-result", G_TYPE_INT, res,
+            "rtsp-code", G_TYPE_INT, code,
+            "rtsp-reason", G_TYPE_STRING, gst_rtsp_status_as_text (code),
+            "body", G_TYPE_STRING, GST_STR_NULL (recv_body), NULL));
+    free_param_data (req);
+
+
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
+
+    return res;
+  }
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (src, "failed to open stream");
+    goto done;
+  }
+no_control:
+  {
+    GST_DEBUG_OBJECT (src, "no control url to send GET_PARAMETER");
+    res = GST_RTSP_ERROR;
+    goto done;
+  }
+not_supported:
+  {
+    GST_DEBUG_OBJECT (src, "GET_PARAMETER is not supported");
+    res = GST_RTSP_ERROR;
+    goto done;
+  }
+create_request_failed:
+  {
+    GST_DEBUG_OBJECT (src, "could not create GET_PARAMETER request");
+    goto done;
+  }
+add_content_hdr_failed:
+  {
+    GST_DEBUG_OBJECT (src, "could not add content header");
+    goto done;
+  }
+set_body_failed:
+  {
+    GST_DEBUG_OBJECT (src, "could not set body");
+    goto done;
+  }
+send_error:
+  {
+    gchar *str = gst_rtsp_strresult (res);
+
+    GST_ELEMENT_WARNING (src, RESOURCE, WRITE, (NULL),
+        ("Could not send get-parameter. (%s)", str));
+    g_free (str);
+    goto done;
+  }
+get_body_failed:
+  {
+    GST_DEBUG_OBJECT (src, "could not get body");
+    goto done;
+  }
+}
+
+/* send SET_PARAMETER */
+static GstRTSPResult
+gst_rtspsrc_set_parameter (GstRTSPSrc * src, ParameterRequest * req)
+{
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
+  GstRTSPResult res = GST_RTSP_OK;
+  GstRTSPStatusCode code = GST_RTSP_STS_OK;
+  const gchar *control;
+
+  GST_DEBUG_OBJECT (src, "creating server set_parameter");
+
+  if ((res = gst_rtspsrc_ensure_open (src, FALSE)) < 0)
+    goto open_failed;
+
+  control = get_aggregate_control (src);
+  if (control == NULL)
+    goto no_control;
+
+  if (!(src->methods & GST_RTSP_SET_PARAMETER))
+    goto not_supported;
+
+  gst_rtspsrc_connection_flush (src, FALSE);
+
+  res =
+      gst_rtsp_message_init_request (&request, GST_RTSP_SET_PARAMETER, control);
+  if (res < 0)
+    goto send_error;
+
+  res = gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CONTENT_TYPE,
+      req->content_type == NULL ? "text/parameters" : req->content_type);
+  if (res < 0)
+    goto add_content_hdr_failed;
+
+  if (req->body && req->body->len) {
+    res =
+        gst_rtsp_message_set_body (&request, (guint8 *) req->body->str,
+        req->body->len);
+
+    if (res < 0)
+      goto set_body_failed;
+  }
+
+  if ((res = gst_rtspsrc_send (src, &src->conninfo,
+              &request, &response, &code, NULL)) < 0)
+    goto send_error;
+
+done:
+  {
+    gst_promise_reply (req->promise, gst_structure_new ("set-parameter-reply",
+            "rtsp-result", G_TYPE_INT, res,
+            "rtsp-code", G_TYPE_INT, code,
+            "rtsp-reason", G_TYPE_STRING, gst_rtsp_status_as_text (code),
+            NULL));
+    free_param_data (req);
+
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
+
+    return res;
+  }
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (src, "failed to open stream");
+    goto done;
+  }
+no_control:
+  {
+    GST_DEBUG_OBJECT (src, "no control url to send SET_PARAMETER");
+    res = GST_RTSP_ERROR;
+    goto done;
+  }
+not_supported:
+  {
+    GST_DEBUG_OBJECT (src, "SET_PARAMETER is not supported");
+    res = GST_RTSP_ERROR;
+    goto done;
+  }
+add_content_hdr_failed:
+  {
+    GST_DEBUG_OBJECT (src, "could not add content header");
+    goto done;
+  }
+set_body_failed:
+  {
+    GST_DEBUG_OBJECT (src, "could not set body");
+    goto done;
+  }
+send_error:
+  {
+    gchar *str = gst_rtsp_strresult (res);
+
+    GST_ELEMENT_WARNING (src, RESOURCE, WRITE, (NULL),
+        ("Could not send set-parameter. (%s)", str));
+    g_free (str);
+    goto done;
+  }
 }
 
 typedef struct _RTSPKeyValue

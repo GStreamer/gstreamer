@@ -293,6 +293,9 @@ struct _GstRTSPSrc {
 
   GstRTSPConnInfo  conninfo;
 
+  /* SET/GET PARAMETER requests queue */
+  GQueue set_get_param_q;
+
   /* a list of RTSP extensions as GstElement */
   GstRTSPExtensionList  *extensions;
 
@@ -303,6 +306,10 @@ struct _GstRTSPSrc {
 struct _GstRTSPSrcClass {
   GstBinClass parent_class;
 
+ /* action signals */
+  gboolean (*get_parameter) (GstRTSPSrc *rtsp, const gchar *parameter, const gchar *content_type, GstPromise *promise);
+  gboolean (*get_parameters) (GstRTSPSrc *rtsp, gchar **parameters, const gchar *content_type, GstPromise *promise);
+  gboolean (*set_parameter) (GstRTSPSrc *rtsp, const gchar *name, const gchar *value, const gchar *content_type, GstPromise *promise);
   GstFlowReturn (*push_backchannel_buffer) (GstRTSPSrc *src, guint id, GstSample *sample);
 };
 
