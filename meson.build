@@ -201,7 +201,6 @@ check_functions = [
 # check token HAVE_OPENSLES
 # check token HAVE_OPUS
 # check token HAVE_ORC
-# check token HAVE_OSX
 # check token HAVE_OSX_VIDEO
   ['HAVE_PIPE2', 'pipe2'],
 # check token HAVE_PNG
@@ -333,14 +332,12 @@ cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 host_system = host_machine.system()
 if host_system == 'linux'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'v4l2src')
-elif host_system == 'osx'
+elif host_system == 'darwin'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'avfvideosrc')
+  cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
+  cdata.set('HAVE_OSX', 1)
 else
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'videotestsrc')
-endif
-
-if host_system == 'darwin'
-  cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
 endif
 
 # Mandatory GST deps
