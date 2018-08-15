@@ -4975,10 +4975,10 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                 goto no_tracks;
             }
           }
-          if (G_UNLIKELY (demux->common.state
-                  == GST_MATROSKA_READ_STATE_HEADER)) {
+          if (demux->common.state == GST_MATROSKA_READ_STATE_HEADER) {
             demux->common.state = GST_MATROSKA_READ_STATE_DATA;
             demux->first_cluster_offset = demux->common.offset;
+
             if (!demux->streaming &&
                 !GST_CLOCK_TIME_IS_VALID (demux->common.segment.duration)) {
               GstMatroskaIndex *last = NULL;
@@ -4999,6 +4999,22 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                     GST_TIME_ARGS (demux->common.segment.duration));
               }
             }
+
+            /* Peek at second cluster in order to figure out if we have cluster
+             * prev_size or not (which is never set on the first cluster for
+             * obvious reasons). This is useful in case someone initiates a
+             * seek or direction change before we reach the second cluster. */
+            if (!demux->streaming) {
+              ClusterInfo cluster = { 0, };
+
+              if (gst_matroska_demux_peek_cluster_info (demux, &cluster,
+                      demux->first_cluster_offset) && cluster.size > 0) {
+                gst_matroska_demux_peek_cluster_info (demux, &cluster,
+                    demux->first_cluster_offset + cluster.size);
+              }
+              demux->common.offset = demux->first_cluster_offset;
+            }
+
             GST_DEBUG_OBJECT (demux, "signaling no more pads");
             gst_element_no_more_pads (GST_ELEMENT (demux));
             /* send initial segment - we wait till we know the first
