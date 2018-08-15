@@ -2082,6 +2082,12 @@ bit_reader_skip_ebml_num (GstBitReader * br)
  * (random value, mostly for sanity checking) */
 #define MAX_CLUSTER_INFO_PROBE_LENGTH 256
 
+/* Don't scan back more than this much in time from the cluster we originally
+ * landed on. This is mostly a sanity check in case a file always has keyframes
+ * in the middle of clusters and never at the beginning. Without this we would
+ * always scan back to the beginning of the file in that case. */
+#define MAX_CLUSTER_BACKTRACK_SECS 30
+
 static gboolean
 gst_matroska_demux_peek_cluster_info (GstMatroskaDemux * demux,
     ClusterInfo * cluster, guint64 offset)
@@ -2241,6 +2247,17 @@ gst_matroska_demux_scan_back_for_keyframe_cluster (GstMatroskaDemux * demux,
     if (cluster.prev_size == 0 || cluster.prev_size > off) {
       GST_LOG_OBJECT (demux, "Cluster has no or invalid prev size, stopping");
       break;
+    }
+
+    if (cluster.time != GST_CLOCK_TIME_NONE) {
+      GstClockTimeDiff distance = GST_CLOCK_DIFF (cluster.time, *cluster_time);
+
+      if (distance < 0 || distance > MAX_CLUSTER_BACKTRACK_SECS * GST_SECOND) {
+        GST_DEBUG_OBJECT (demux, "Haven't found cluster with keyframe within "
+            "%u secs of original seek target cluster, stopping",
+            MAX_CLUSTER_BACKTRACK_SECS);
+        break;
+      }
     }
 
     off -= cluster.prev_size;
