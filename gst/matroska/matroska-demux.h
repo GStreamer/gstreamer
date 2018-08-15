@@ -52,6 +52,7 @@ typedef struct _GstMatroskaDemux {
 
   /* pads */
   GstClock                *clock;
+  gboolean                 have_nonintraonly_v_streams;
   guint                    num_v_streams;
   guint                    num_a_streams;
   guint                    num_t_streams;

@@ -285,6 +285,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->num_a_streams = 0;
   demux->num_t_streams = 0;
   demux->num_v_streams = 0;
+  demux->have_nonintraonly_v_streams = FALSE;
 
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
@@ -1376,6 +1377,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       caps = gst_matroska_demux_video_caps (videocontext,
           context->codec_id, context->codec_priv,
           context->codec_priv_size, &codec, &riff_fourcc);
+
+      if (!context->intra_only)
+        demux->have_nonintraonly_v_streams = TRUE;
 
       if (codec) {
         gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
@@ -2474,15 +2478,13 @@ retry:
   /* If we have video and can easily backtrack, check if we landed on a cluster
    * that starts with a keyframe - and if not backtrack until we find one that
    * does. */
-  /* FIXME: skip if all video streams are I-frame only streams (should probably
-   * set the default value in peek_cluster_info() accordingly then) */
-  if (demux->num_v_streams > 0 && demux->seen_cluster_prevsize) {
+  if (demux->have_nonintraonly_v_streams && demux->seen_cluster_prevsize) {
     if (gst_matroska_demux_scan_back_for_keyframe_cluster (demux,
             &cluster_offset, &cluster_time)) {
       GST_INFO_OBJECT (demux, "Adjusted cluster to %" GST_TIME_FORMAT " @ "
           "%" G_GUINT64_FORMAT, GST_TIME_ARGS (cluster_time), cluster_offset);
     }
-  } else if (demux->num_v_streams > 0) {
+  } else if (demux->have_nonintraonly_v_streams) {
     GST_FIXME_OBJECT (demux, "implement scanning back to prev cluster without "
         "cluster prev size field");
   }
