@@ -116,6 +116,8 @@ typedef struct _GstMatroskaDemux {
                                                     * cluster has it, all but
                                                     * the first will have it. */
 
+  guint                    max_backtrack_distance; /* in seconds (0 = don't backtrack) */
+
   /* gap handling */
   guint64                  max_gap_time;
 

@@ -85,11 +85,13 @@ enum
   PROP_0,
   PROP_METADATA,
   PROP_STREAMINFO,
-  PROP_MAX_GAP_TIME
+  PROP_MAX_GAP_TIME,
+  PROP_MAX_BACKTRACK_DISTANCE
 };
 
-#define  DEFAULT_MAX_GAP_TIME      (2 * GST_SECOND)
-#define  INVALID_DATA_THRESHOLD    (2 * 1024 * 1024)
+#define DEFAULT_MAX_GAP_TIME           (2 * GST_SECOND)
+#define DEFAULT_MAX_BACKTRACK_DISTANCE 30
+#define INVALID_DATA_THRESHOLD         (2 * 1024 * 1024)
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -217,6 +219,15 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
           "gaps longer than this (0 = disabled).", 0, G_MAXUINT64,
           DEFAULT_MAX_GAP_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_BACKTRACK_DISTANCE,
+      g_param_spec_uint ("max-backtrack-distance",
+          "Maximum backtrack distance",
+          "Maximum backtrack distance in seconds when seeking without "
+          "and index in pull mode and search for a keyframe "
+          "(0 = disable backtracking).",
+          0, G_MAXUINT, DEFAULT_MAX_BACKTRACK_DISTANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_change_state);
   gstelement_class->send_event =
@@ -264,6 +275,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
 
   /* property defaults */
   demux->max_gap_time = DEFAULT_MAX_GAP_TIME;
+  demux->max_backtrack_distance = DEFAULT_MAX_BACKTRACK_DISTANCE;
 
   GST_OBJECT_FLAG_SET (demux, GST_ELEMENT_FLAG_INDEXABLE);
 
@@ -2082,12 +2094,6 @@ bit_reader_skip_ebml_num (GstBitReader * br)
  * (random value, mostly for sanity checking) */
 #define MAX_CLUSTER_INFO_PROBE_LENGTH 256
 
-/* Don't scan back more than this much in time from the cluster we originally
- * landed on. This is mostly a sanity check in case a file always has keyframes
- * in the middle of clusters and never at the beginning. Without this we would
- * always scan back to the beginning of the file in that case. */
-#define MAX_CLUSTER_BACKTRACK_SECS 30
-
 static gboolean
 gst_matroska_demux_peek_cluster_info (GstMatroskaDemux * demux,
     ClusterInfo * cluster, guint64 offset)
@@ -2249,13 +2255,18 @@ gst_matroska_demux_scan_back_for_keyframe_cluster (GstMatroskaDemux * demux,
       break;
     }
 
+    /* Don't scan back more than this much in time from the cluster we
+     * originally landed on. This is mostly a sanity check in case a file
+     * always has keyframes in the middle of clusters and never at the
+     * beginning. Without this we would always scan back to the beginning
+     * of the file in that case. */
     if (cluster.time != GST_CLOCK_TIME_NONE) {
       GstClockTimeDiff distance = GST_CLOCK_DIFF (cluster.time, *cluster_time);
 
-      if (distance < 0 || distance > MAX_CLUSTER_BACKTRACK_SECS * GST_SECOND) {
+      if (distance < 0 || distance > demux->max_backtrack_distance * GST_SECOND) {
         GST_DEBUG_OBJECT (demux, "Haven't found cluster with keyframe within "
             "%u secs of original seek target cluster, stopping",
-            MAX_CLUSTER_BACKTRACK_SECS);
+            demux->max_backtrack_distance);
         break;
       }
     }
@@ -2495,15 +2506,17 @@ retry:
   /* If we have video and can easily backtrack, check if we landed on a cluster
    * that starts with a keyframe - and if not backtrack until we find one that
    * does. */
-  if (demux->have_nonintraonly_v_streams && demux->seen_cluster_prevsize) {
-    if (gst_matroska_demux_scan_back_for_keyframe_cluster (demux,
-            &cluster_offset, &cluster_time)) {
-      GST_INFO_OBJECT (demux, "Adjusted cluster to %" GST_TIME_FORMAT " @ "
-          "%" G_GUINT64_FORMAT, GST_TIME_ARGS (cluster_time), cluster_offset);
+  if (demux->have_nonintraonly_v_streams && demux->max_backtrack_distance > 0) {
+    if (demux->seen_cluster_prevsize) {
+      if (gst_matroska_demux_scan_back_for_keyframe_cluster (demux,
+              &cluster_offset, &cluster_time)) {
+        GST_INFO_OBJECT (demux, "Adjusted cluster to %" GST_TIME_FORMAT " @ "
+            "%" G_GUINT64_FORMAT, GST_TIME_ARGS (cluster_time), cluster_offset);
+      }
+    } else {
+      GST_FIXME_OBJECT (demux, "implement scanning back to prev cluster "
+          "without cluster prev size field");
     }
-  } else if (demux->have_nonintraonly_v_streams) {
-    GST_FIXME_OBJECT (demux, "implement scanning back to prev cluster without "
-        "cluster prev size field");
   }
 
   entry = g_new0 (GstMatroskaIndex, 1);
@@ -6716,6 +6729,11 @@ gst_matroska_demux_set_property (GObject * object,
       demux->max_gap_time = g_value_get_uint64 (value);
       GST_OBJECT_UNLOCK (demux);
       break;
+    case PROP_MAX_BACKTRACK_DISTANCE:
+      GST_OBJECT_LOCK (demux);
+      demux->max_backtrack_distance = g_value_get_uint (value);
+      GST_OBJECT_UNLOCK (demux);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -6735,6 +6753,11 @@ gst_matroska_demux_get_property (GObject * object,
     case PROP_MAX_GAP_TIME:
       GST_OBJECT_LOCK (demux);
       g_value_set_uint64 (value, demux->max_gap_time);
+      GST_OBJECT_UNLOCK (demux);
+      break;
+    case PROP_MAX_BACKTRACK_DISTANCE:
+      GST_OBJECT_LOCK (demux);
+      g_value_set_uint (value, demux->max_backtrack_distance);
       GST_OBJECT_UNLOCK (demux);
       break;
     default:
