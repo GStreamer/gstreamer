@@ -70,3 +70,17 @@ gstreamer_doc = hotdoc.generate_doc('GStreamer',
     build_always_stale: true,
     edit_on_github_repository: 'https://gitlab.freedesktop.org/gstreamer/gst-docs/',
 )
+
+cdata = configuration_data()
+cdata.set('GST_API_VERSION', apiversion)
+readme = configure_file(input: 'scripts/RELEASE_README.md',
+               output: 'README.md',
+               configuration : cdata)
+
+run_target('release',
+  command: [find_program('scripts/release.py'),
+            gstreamer_doc.full_path(),
+            'GStreamer-doc-@0@.tar.xz'.format(meson.project_version()),
+            join_paths(meson.current_build_dir(), 'README.md')],
+  depends: [gstreamer_doc]
+)
