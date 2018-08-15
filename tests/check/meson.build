@@ -36,12 +36,10 @@ pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
   pbase = dependency('gstreamer-plugins-base-' + apiversion, required : false)
   pbad = dependency('gstreamer-plugins-bad-' + apiversion, required : false)
-  pgood = dependency('gstreamer-plugins-good-' + apiversion, required : false)
 
   pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir'),
                  pbase.get_pkgconfig_variable('pluginsdir'),
-                 pbad.get_pkgconfig_variable('pluginsdir'),
-                 pgood.get_pkgconfig_variable('pluginsdir')]
+                 pbad.get_pkgconfig_variable('pluginsdir')]
 endif
 
 foreach t : ges_tests
