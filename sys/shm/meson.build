@@ -11,7 +11,7 @@ if get_option('shm').disabled()
 endif
 
 shm_deps = []
-if ['osx', 'bsd'].contains(host_system)
+if host_system == 'darwin' or host_system.contains('bsd')
   rt_dep = []
   shm_enabled = true
 else
