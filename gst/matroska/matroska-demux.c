@@ -2250,11 +2250,6 @@ gst_matroska_demux_scan_back_for_keyframe_cluster (GstMatroskaDemux * demux,
 
     GST_DEBUG_OBJECT (demux, "Cluster starts with delta frame, backtracking");
 
-    if (cluster.prev_size == 0 || cluster.prev_size > off) {
-      GST_LOG_OBJECT (demux, "Cluster has no or invalid prev size, stopping");
-      break;
-    }
-
     /* Don't scan back more than this much in time from the cluster we
      * originally landed on. This is mostly a sanity check in case a file
      * always has keyframes in the middle of clusters and never at the
@@ -2271,7 +2266,24 @@ gst_matroska_demux_scan_back_for_keyframe_cluster (GstMatroskaDemux * demux,
       }
     }
 
-    off -= cluster.prev_size;
+    /* If we have cluster prev_size we can skip back efficiently. If not,
+     * we'll just do a brute force search for a cluster identifier */
+    if (cluster.prev_size > 0 && off >= cluster.prev_size) {
+      off -= cluster.prev_size;
+    } else {
+      GstFlowReturn flow;
+
+      GST_LOG_OBJECT (demux, "Cluster has no or invalid prev size, searching "
+          "for previous cluster instead then");
+
+      flow = gst_matroska_demux_search_cluster (demux, &off, FALSE);
+      if (flow != GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (demux, "cluster search yielded flow %s, stopping",
+            gst_flow_get_name (flow));
+        break;
+      }
+    }
+
     if (off <= first_cluster_offset) {
       GST_LOG_OBJECT (demux, "Reached first cluster, stopping");
       *cluster_offset = first_cluster_offset;
@@ -2507,15 +2519,10 @@ retry:
    * that starts with a keyframe - and if not backtrack until we find one that
    * does. */
   if (demux->have_nonintraonly_v_streams && demux->max_backtrack_distance > 0) {
-    if (demux->seen_cluster_prevsize) {
-      if (gst_matroska_demux_scan_back_for_keyframe_cluster (demux,
-              &cluster_offset, &cluster_time)) {
-        GST_INFO_OBJECT (demux, "Adjusted cluster to %" GST_TIME_FORMAT " @ "
-            "%" G_GUINT64_FORMAT, GST_TIME_ARGS (cluster_time), cluster_offset);
-      }
-    } else {
-      GST_FIXME_OBJECT (demux, "implement scanning back to prev cluster "
-          "without cluster prev size field");
+    if (gst_matroska_demux_scan_back_for_keyframe_cluster (demux,
+            &cluster_offset, &cluster_time)) {
+      GST_INFO_OBJECT (demux, "Adjusted cluster to %" GST_TIME_FORMAT " @ "
+          "%" G_GUINT64_FORMAT, GST_TIME_ARGS (cluster_time), cluster_offset);
     }
   }
 
