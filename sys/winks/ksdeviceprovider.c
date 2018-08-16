@@ -338,13 +338,14 @@ msg_window_message_proc (HWND window_handle, UINT message,
 
           bcdi = (PDEV_BROADCAST_DEVICEINTERFACE) lparam;
 
-          if (!IsEqualGUID (&bcdi->dbcc_classguid, &KSCATEGORY_CAPTURE) &&
-              !IsEqualGUID (&bcdi->dbcc_classguid, &KSCATEGORY_RENDER))
+          /* Since both video and audio capture device declare KSCATEGORY_CAPTURE, we filter on
+             KSCATEGORY_VIDEO here. To add audio support we should accept also KSCATEGORY_AUDIO. */
+          if (!IsEqualGUID (&bcdi->dbcc_classguid, &KSCATEGORY_VIDEO))
             break;
 
           devices =
               ks_enumerate_devices (&bcdi->dbcc_classguid,
-              &bcdi->dbcc_classguid);
+              &KSCATEGORY_CAPTURE);
           if (devices == NULL)
             break;
 
@@ -356,7 +357,7 @@ msg_window_message_proc (HWND window_handle, UINT message,
 
             if ((source == NULL) &&
                 (g_ascii_strcasecmp (entry->path, bcdi->dbcc_name) == 0))
-              source = new_video_source (entry);
+              source = new_video_source (entry); /* Or audio source, not implemented yet */
 
             ks_device_entry_free (entry);
           }
