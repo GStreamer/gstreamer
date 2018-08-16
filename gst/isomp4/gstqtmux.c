@@ -2968,6 +2968,10 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
             (NULL));
         return GST_FLOW_ERROR;
       }
+      if (qtmux->reserved_moov_update_period == GST_CLOCK_TIME_NONE) {
+        GST_WARNING_OBJECT (qtmux,
+            "Robust muxing requires reserved-moov-update-period to be set");
+      }
       break;
     case GST_QT_MUX_MODE_FAST_START:
     case GST_QT_MUX_MODE_FRAGMENTED_STREAMABLE:

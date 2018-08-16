@@ -338,7 +338,8 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           "reserved-duration-remaining properties and use them if so. "
           "(Only present on qtmux and mp4mux for now). splitmuxsink may then also "
           " create new fragments if the reserved header space is about to overflow. "
-          "Note this does not set reserved-moov-update-period - apps should do that manually",
+          "Note that for mp4mux and qtmux, reserved-moov-update-period must be set "
+          "manually by the app to a non-zero value for robust muxing to have an effect.",
           DEFAULT_USE_ROBUST_MUXING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
