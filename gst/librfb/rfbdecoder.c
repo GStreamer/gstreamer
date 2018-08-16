@@ -983,7 +983,6 @@ rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
   number_of_rectangles = RFB_GET_UINT32 (decoder->data);
   color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (decoder->data + 4)));
-  g_free (decoder->data);
 
   GST_DEBUG ("number of rectangles :%d", number_of_rectangles);
 
@@ -1003,8 +1002,6 @@ rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
     /* draw the rectangle in the foreground */
     rfb_decoder_fill_rectangle (decoder, start_x + x, start_y + y, w, h, color);
-
-    g_free (decoder->data);
   }
 
   return TRUE;
