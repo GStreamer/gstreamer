@@ -750,6 +750,8 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 
   first_configured_pad = gst_audio_aggregator_get_first_configured_pad (agg);
 
+  caps = gst_caps_make_writable (caps);
+
   if (first_configured_pad) {
     GstStructure *s, *s2;
     GstCaps *first_configured_caps =
@@ -757,7 +759,6 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
     gint first_configured_rate, first_configured_channels;
     gint channels;
 
-    caps = gst_caps_make_writable (caps);
     s = gst_caps_get_structure (caps, 0);
     s2 = gst_caps_get_structure (first_configured_caps, 0);
 
@@ -786,6 +787,21 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 
     gst_caps_unref (first_configured_caps);
     gst_object_unref (first_configured_pad);
+  } else {
+    GstStructure *s;
+    gint channels;
+
+    s = gst_caps_get_structure (caps, 0);
+
+    gst_structure_fixate_field_nearest_int (s, "rate", GST_AUDIO_DEF_RATE);
+    gst_structure_fixate_field_string (s, "format", GST_AUDIO_NE ("S16"));
+    gst_structure_fixate_field_string (s, "layout", "interleaved");
+    gst_structure_fixate_field_nearest_int (s, "channels", 2);
+
+    if (gst_structure_get_int (s, "channels", &channels) && channels > 2) {
+      if (!gst_structure_has_field_typed (s, "channel-mask", GST_TYPE_BITMASK))
+        gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, 0ULL, NULL);
+    }
   }
 
   if (!gst_caps_is_fixed (caps))
