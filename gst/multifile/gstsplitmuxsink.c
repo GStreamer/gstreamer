@@ -84,6 +84,7 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 #define GST_SPLITMUX_BROADCAST_OUTPUT(s) g_cond_broadcast (&(s)->output_cond)
 
 static void split_now (GstSplitMuxSink * splitmux);
+static void split_after (GstSplitMuxSink * splitmux);
 
 enum
 {
@@ -130,6 +131,7 @@ enum
   SIGNAL_FORMAT_LOCATION,
   SIGNAL_FORMAT_LOCATION_FULL,
   SIGNAL_SPLIT_NOW,
+  SIGNAL_SPLIT_AFTER,
   SIGNAL_MUXER_ADDED,
   SIGNAL_SINK_ADDED,
   SIGNAL_LAST
@@ -407,7 +409,7 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    * @splitmux: the #GstSplitMuxSink
    *
    * When called by the user, this action signal splits the video file (and begins a new one) immediately.
-   *
+   * The current GOP will be output to the new file.
    *
    * Since: 1.14
    */
@@ -415,6 +417,20 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       g_signal_new ("split-now", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
           split_now), NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  /**
+   * GstSplitMuxSink::split-after:
+   * @splitmux: the #GstSplitMuxSink
+   *
+   * When called by the user, this action signal splits the video file (and begins a new one) immediately.
+   * The current GOP will be output to the old file.
+   *
+   * Since: 1.16
+   */
+  signals[SIGNAL_SPLIT_AFTER] =
+      g_signal_new ("split-after", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
+          split_after), NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   /**
    * GstSplitMuxSink::muxer-added:
@@ -439,6 +455,7 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   klass->split_now = split_now;
+  klass->split_after = split_after;
 }
 
 static void
@@ -468,7 +485,8 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->sink_properties = NULL;
 
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
-  splitmux->split_now = FALSE;
+  splitmux->split_requested = FALSE;
+  splitmux->do_split_next_gop = FALSE;
 }
 
 static void
@@ -1830,7 +1848,7 @@ need_new_fragment (GstSplitMuxSink * splitmux,
     return FALSE;
 
   /* User told us to split now */
-  if (g_atomic_int_get (&(splitmux->split_now)) == TRUE)
+  if (g_atomic_int_get (&(splitmux->do_split_next_gop)) == TRUE)
     return TRUE;
 
   if (thresh_bytes > 0 && queued_bytes > thresh_bytes)
@@ -1933,7 +1951,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
     *sink_running_time = splitmux->reference_ctx->out_running_time;
     g_object_set_qdata_full (G_OBJECT (splitmux->sink),
         RUNNING_TIME, sink_running_time, g_free);
-    g_atomic_int_set (&(splitmux->split_now), FALSE);
+    g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
     /* Tell the output side to start a new fragment */
     GST_INFO_OBJECT (splitmux,
         "This GOP (dur %" GST_STIME_FORMAT
@@ -2063,6 +2081,13 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
           "Collected GOP is complete. Processing (ctx %p)", ctx);
       /* All pads have a complete GOP, release it into the multiqueue */
       handle_gathered_gop (splitmux);
+
+      /* The user has requested a split, we can split now that the previous GOP
+       * has been collected to the correct location */
+      if (g_atomic_int_compare_and_exchange (&(splitmux->split_requested), TRUE,
+              FALSE)) {
+        g_atomic_int_set (&(splitmux->do_split_next_gop), TRUE);
+      }
     }
   }
 
@@ -2955,7 +2980,8 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_atomic_int_set (&(splitmux->split_now), FALSE);
+      g_atomic_int_set (&(splitmux->split_requested), FALSE);
+      g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_SPLITMUX_LOCK (splitmux);
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_STOPPED;
@@ -3038,5 +3064,11 @@ gst_splitmux_sink_ensure_max_files (GstSplitMuxSink * splitmux)
 static void
 split_now (GstSplitMuxSink * splitmux)
 {
-  g_atomic_int_set (&(splitmux->split_now), TRUE);
+  g_atomic_int_set (&(splitmux->do_split_next_gop), TRUE);
+}
+
+static void
+split_after (GstSplitMuxSink * splitmux)
+{
+  g_atomic_int_set (&(splitmux->split_requested), TRUE);
 }
