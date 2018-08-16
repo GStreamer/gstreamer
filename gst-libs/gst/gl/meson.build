@@ -290,7 +290,7 @@ endif
 gl_dep = unneeded_dep
 glx_dep = unneeded_dep
 if need_api_opengl != 'no' or need_platform_glx != 'no'
-  if host_machine.system() == 'darwin'
+  if ['darwin', 'ios'].contains(host_system)
     gl_dep = dependency('OpenGL', required : false)
   else
     # override meson's braindead gl detection on osx/windows/etc by forcing pkg-config
@@ -326,7 +326,7 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
   endif
 
   opengl_includes = ''
-  if host_machine.system() == 'darwin'
+  if ['darwin', 'ios'].contains(host_system)
     opengl_includes += '''
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl.h>
@@ -356,7 +356,7 @@ if need_api_gles2 != 'no'
   gles2_dep = dependency('glesv2', required : false)
   if not gles2_dep.found()
 #    if host_machine.system() == 'windows'
-#    elif host_machine.system() == 'darwin'
+#    elif ['darwin', 'ios'].contains(host_system)
 #      gles2_dep = cc.find_library('GLESv2', required : false)
 #    else
       gles2_dep = cc.find_library('GLESv2', required : false)
@@ -640,7 +640,7 @@ elif need_platform_cgl == 'no' and need_win_cocoa == 'yes'
   error('Impossible situation requested: Cannot use Cocoa without CGL support')
 endif
 
-if host_machine.system() == 'darwin'
+if ['darwin', 'ios'].contains(host_system)
   if not have_objc
     error('No ObjC compiler found')
   endif
