@@ -80,6 +80,7 @@ option('v4l2-gudev', type : 'feature', value : 'auto', description : 'Use libgud
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
+option('tests', type : 'feature', value : 'auto', yield : true)
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
 
