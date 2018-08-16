@@ -1134,6 +1134,7 @@ gst_decklink_video_src_open (GstDecklinkVideoSrc * self)
   g_assert (mode != NULL);
   g_mutex_lock (&self->input->lock);
   self->input->mode = mode;
+  self->input->format = self->caps_format;
   self->input->got_video_frame = gst_decklink_video_src_got_frame;
   self->input->start_streams = gst_decklink_video_src_start_streams;
   g_mutex_unlock (&self->input->lock);
