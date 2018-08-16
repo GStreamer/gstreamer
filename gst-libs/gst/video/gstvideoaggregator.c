@@ -717,6 +717,23 @@ gst_video_aggregator_default_update_src_caps (GstAggregator * agg,
 }
 
 static gboolean
+_pad_set_info (GstElement * element, GstPad * pad, gpointer user_data)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (element);
+  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (pad);
+  GstVideoAggregatorPadClass *vaggpad_klass =
+      GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (vaggpad);
+
+  if (vaggpad_klass->set_info
+      && !vaggpad_klass->set_info (vaggpad, vagg, &vaggpad->info,
+          &vagg->info)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
     GstCaps * caps)
 {
@@ -768,16 +785,7 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
   }
 
   /* Then browse the sinks once more, setting or unsetting conversion if needed */
-  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
-    GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (l->data);
-    GstVideoAggregatorPadClass *vaggpad_klass =
-        GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (pad);
-
-    if (vaggpad_klass->set_info
-        && !vaggpad_klass->set_info (pad, vagg, &pad->info, &vagg->info)) {
-      return FALSE;
-    }
-  }
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), _pad_set_info, NULL);
 
   if (vagg->priv->current_caps == NULL ||
       gst_caps_is_equal (caps, vagg->priv->current_caps) == FALSE) {
@@ -800,6 +808,7 @@ gst_video_aggregator_get_sinkpads_interlace_mode (GstVideoAggregator * vagg,
 {
   GList *walk;
 
+  GST_OBJECT_LOCK (vagg);
   for (walk = GST_ELEMENT (vagg)->sinkpads; walk; walk = g_list_next (walk)) {
     GstVideoAggregatorPad *vaggpad = walk->data;
 
@@ -808,9 +817,11 @@ gst_video_aggregator_get_sinkpads_interlace_mode (GstVideoAggregator * vagg,
     if (vaggpad->info.finfo
         && GST_VIDEO_INFO_FORMAT (&vaggpad->info) != GST_VIDEO_FORMAT_UNKNOWN) {
       *mode = GST_VIDEO_INFO_INTERLACE_MODE (&vaggpad->info);
+      GST_OBJECT_UNLOCK (vagg);
       return TRUE;
     }
   }
+  GST_OBJECT_UNLOCK (vagg);
   return FALSE;
 }
 
