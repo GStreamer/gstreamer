@@ -129,7 +129,7 @@ gst_watchdog_init (GstWatchdog * watchdog)
 {
 }
 
-void
+static void
 gst_watchdog_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -150,7 +150,7 @@ gst_watchdog_set_property (GObject * object, guint property_id,
   }
 }
 
-void
+static void
 gst_watchdog_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
@@ -417,6 +417,4 @@ gst_watchdog_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-
-
 }
