@@ -774,14 +774,10 @@ gst_audio_aggregator_update_src_caps (GstAggregator * agg,
 static GstCaps *
 gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 {
-  GstAudioAggregatorPad *first_configured_pad;
+  GstAudioAggregatorPad *first_configured_pad = NULL;
 
-  if (!GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad)->convert_buffer)
-    return
-        GST_AGGREGATOR_CLASS
-        (gst_audio_aggregator_parent_class)->fixate_src_caps (agg, caps);
-
-  first_configured_pad = gst_audio_aggregator_get_first_configured_pad (agg);
+  if (GST_AUDIO_AGGREGATOR_PAD_GET_CLASS (agg->srcpad)->convert_buffer)
+    first_configured_pad = gst_audio_aggregator_get_first_configured_pad (agg);
 
   caps = gst_caps_make_writable (caps);
 
