@@ -332,9 +332,10 @@ cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
 host_system = host_machine.system()
 if host_system == 'linux'
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'v4l2src')
-elif host_system == 'darwin'
+elif ['darwin', 'ios'].contains(host_system)
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'avfvideosrc')
   cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
+  # Yes, we set this for iOS too. Same as Autotools.
   cdata.set('HAVE_OSX', 1)
 else
   cdata.set_quoted('DEFAULT_VIDEOSRC', 'videotestsrc')
@@ -429,10 +430,9 @@ else
   winsock2 = []
 endif
 
-if host_machine.system() == 'darwin'
+if ['darwin', 'ios'].contains(host_system)
   add_languages('objc')
-  mobilecoreservices_dep = dependency('MobileCoreServices', required : false)
-  if mobilecoreservices_dep.found()
+  if host_system == 'ios'
     cdata.set('HAVE_IOS', 1)
   endif
 

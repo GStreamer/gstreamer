@@ -31,10 +31,10 @@ else
   have_pthread_h = cdata.has('HAVE_PTHREAD_H')
   if libdl.found() and have_pthread_h
     decklink_libs = [libm, libdl, dependency('threads')]
-    if host_machine.system() == 'linux'
+    if host_system == 'linux'
       decklink_sources += ['linux/DeckLinkAPIDispatch.cpp']
       build_decklink = true
-    elif host_machine.system() == 'darwin'
+    elif ['darwin', 'ios'].contains(host_system)
       decklink_sources += ['osx/DeckLinkAPIDispatch.cpp']
       decklink_ldflags = ['-Wl,-framework,CoreFoundation']
       build_decklink = true

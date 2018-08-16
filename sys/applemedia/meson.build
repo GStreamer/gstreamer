@@ -19,7 +19,7 @@ applemedia_args = [
 
 applemedia_objc_args = []
 applemedia_option = get_option('applemedia')
-if host_system != 'darwin' or applemedia_option.disabled()
+if not ['darwin', 'ios'].contains(host_system) or applemedia_option.disabled()
   subdir_done()
 endif
 
@@ -50,7 +50,7 @@ if videotoolbox_dep.found()
     applemedia_frameworks += [videotoolbox_dep]
 endif
 
-if cdata.has('HAVE_IOS')
+if host_system == 'ios'
     applemedia_sources += [
         'iosassetsrc.m',
         'iosglmemory.c'
