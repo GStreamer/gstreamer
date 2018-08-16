@@ -846,9 +846,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream->is_isobmff = gst_structure_has_name (s, "video/quicktime")
         || gst_structure_has_name (s, "audio/x-m4a");
     stream->first_sync_sample_always_after_moof = TRUE;
-    if (stream->is_isobmff
-        || gst_mpd_client_has_isoff_ondemand_profile (demux->client))
-      stream->adapter = gst_adapter_new ();
+    stream->adapter = gst_adapter_new ();
     gst_adaptive_demux_stream_set_caps (GST_ADAPTIVE_DEMUX_STREAM_CAST (stream),
         caps);
     if (tags)
