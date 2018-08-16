@@ -1586,6 +1586,9 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   /* set up encoder parameters */
+#if X264_BUILD >= 153
+  encoder->x264param.i_bitdepth = GST_VIDEO_INFO_COMP_DEPTH (info, 0);
+#endif
   encoder->x264param.i_csp =
       gst_x264_enc_gst_to_x264_video_format (info->finfo->format, NULL);
   if (info->fps_d == 0 || info->fps_n == 0) {
