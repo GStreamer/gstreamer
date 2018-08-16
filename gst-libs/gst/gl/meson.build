@@ -136,8 +136,6 @@ foreach option : glconf_options
   glconf.set10(option, false)
 endforeach
 
-gmodule_dep = dependency('gmodule-no-export-2.0',
-  fallback: ['glib', 'libgmodule_dep'])
 unneeded_dep = dependency('', required : false)
 if unneeded_dep.found()
   error ('Found unfindable dependency')

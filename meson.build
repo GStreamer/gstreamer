@@ -235,6 +235,8 @@ glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libg
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 giounix_dep = dependency('gio-unix-2.0', version : glib_req, required : host_system != 'windows',
                          fallback: ['glib', 'libgiounix_dep'])
+gmodule_dep = dependency('gmodule-no-export-2.0',
+                         fallback: ['glib', 'libgmodule_dep'])
 
 # some of the examples can use gdk-pixbuf and GTK+3
 gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : get_option('examples'))
