@@ -128,7 +128,7 @@ static void gst_compositor_child_proxy_init (gpointer g_iface,
 #define DEFAULT_PAD_WIDTH  0
 #define DEFAULT_PAD_HEIGHT 0
 #define DEFAULT_PAD_ALPHA  1.0
-#define DEFAULT_PAD_CROSSFADE_RATIO  -1.0
+#define DEFAULT_PAD_CROSSFADE_RATIO  0.0
 enum
 {
   PROP_PAD_0,
@@ -203,7 +203,7 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
     case PROP_PAD_CROSSFADE_RATIO:
       pad->crossfade = g_value_get_double (value);
       gst_video_aggregator_pad_set_needs_alpha (GST_VIDEO_AGGREGATOR_PAD (pad),
-          pad->crossfade >= 0.0f);
+          pad->crossfade > 0.0);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -336,8 +336,8 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
   GST_OBJECT_LOCK (vagg);
   /* Check if we are crossfading the pad one way or another */
   l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad);
-  if ((l->prev && GST_COMPOSITOR_PAD (l->prev->data)->crossfade >= 0.0) ||
-      (GST_COMPOSITOR_PAD (pad)->crossfade >= 0.0)) {
+  if ((l->prev && GST_COMPOSITOR_PAD (l->prev->data)->crossfade > 0.0) ||
+      (GST_COMPOSITOR_PAD (pad)->crossfade > 0.0)) {
     GST_DEBUG_OBJECT (pad, "Is being crossfaded with previous pad");
     l = NULL;
   } else {
@@ -471,9 +471,8 @@ gst_compositor_pad_class_init (GstCompositorPadClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_CROSSFADE_RATIO,
       g_param_spec_double ("crossfade-ratio", "Crossfade ratio",
-          "The crossfade ratio to use while crossfading with the following pad."
-          "A value inferior to 0 means no crossfading.",
-          -1.0, 1.0, DEFAULT_PAD_CROSSFADE_RATIO,
+          "The crossfade ratio to use while crossfading with the following pad",
+          0.0, 1.0, DEFAULT_PAD_CROSSFADE_RATIO,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   vaggpadclass->prepare_frame =
@@ -881,8 +880,8 @@ gst_compositor_crossfade_frames (GstCompositor * self, GstVideoFrame * outframe)
     for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next) {
       GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (l->data);
 
-      if (compo_pad->crossfade < 0.0 && l->next &&
-          GST_COMPOSITOR_PAD (l->next->data)->crossfade < 0) {
+      if (compo_pad->crossfade == 0.0 && l->next &&
+          GST_COMPOSITOR_PAD (l->next->data)->crossfade == 0.0) {
         all_crossfading = FALSE;
 
         break;
@@ -898,7 +897,7 @@ gst_compositor_crossfade_frames (GstCompositor * self, GstVideoFrame * outframe)
     GstVideoFrame *prepared_frame =
         gst_video_aggregator_pad_get_prepared_frame (pad);
 
-    if (compo_pad->crossfade >= 0.0f && prepared_frame) {
+    if (compo_pad->crossfade > 0.0 && prepared_frame) {
       gfloat alpha = compo_pad->crossfade * compo_pad->alpha;
       GstVideoAggregatorPad *npad = l->next ? l->next->data : NULL;
       GstVideoFrame *next_prepared_frame;
