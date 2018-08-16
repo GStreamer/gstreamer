@@ -133,7 +133,6 @@ struct _GstX264EncVTable
   const x264_level_t (*x264_levels)[];
   void (*x264_param_apply_fastfirstpass) (x264_param_t *);
   int (*x264_param_apply_profile) (x264_param_t *, const char *);
-  void (*x264_param_default) (x264_param_t *);
   int (*x264_param_default_preset) (x264_param_t *, const char *preset,
       const char *tune);
   int (*x264_param_parse) (x264_param_t *, const char *name, const char *value);
@@ -186,7 +185,6 @@ load_x264 (const gchar * filename)
   LOAD_SYMBOL (x264_levels);
   LOAD_SYMBOL (x264_param_apply_fastfirstpass);
   LOAD_SYMBOL (x264_param_apply_profile);
-  LOAD_SYMBOL (x264_param_default);
   LOAD_SYMBOL (x264_param_default_preset);
   LOAD_SYMBOL (x264_param_parse);
 
@@ -1519,12 +1517,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->vtable = vtable_10bit;
 
   g_assert (encoder->vtable != NULL);
-
-  encoder->vtable->x264_param_default (&encoder->x264param);
-  /* log callback setup; part of parameters */
-  encoder->x264param.pf_log = gst_x264_enc_log_callback;
-  encoder->x264param.p_log_private = encoder;
-  encoder->x264param.i_log_level = X264_LOG_DEBUG;
 
   gst_x264_enc_build_tunings_string (encoder);
 
@@ -2973,7 +2965,6 @@ plugin_init (GstPlugin * plugin)
   default_vtable.x264_param_apply_fastfirstpass =
       x264_param_apply_fastfirstpass;
   default_vtable.x264_param_apply_profile = x264_param_apply_profile;
-  default_vtable.x264_param_default = x264_param_default;
   default_vtable.x264_param_default_preset = x264_param_default_preset;
   default_vtable.x264_param_parse = x264_param_parse;
 
