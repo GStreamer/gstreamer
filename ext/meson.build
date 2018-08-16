@@ -1,6 +1,5 @@
 subdir('alsa')
 subdir('cdparanoia')
-# FIXME: gl deps are automagic
 subdir('gl')
 if cc.get_id() != 'msvc'
   # FIXME: libvisual has MinGW-specific headers which are not compatible with
