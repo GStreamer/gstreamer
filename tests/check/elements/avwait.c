@@ -40,6 +40,7 @@ static GstVideoTimeCode *end_tc;
 static GstClockTime target_running_time;
 static gboolean recording;
 static gint mode;
+static gboolean audio_late;
 
 static GstAudioInfo ainfo;
 
@@ -54,6 +55,12 @@ typedef struct _ElementPadAndSwitchType
   SwitchType switch_after_2s;
 } ElementPadAndSwitchType;
 
+typedef struct _PadAndBoolean
+{
+  GstPad *pad;
+  gboolean b;
+} PadAndBoolean;
+
 static void
 set_default_params (void)
 {
@@ -65,6 +72,7 @@ set_default_params (void)
   target_running_time = GST_CLOCK_TIME_NONE;
   recording = TRUE;
   mode = 2;
+  audio_late = FALSE;
 
   first_audio_timestamp = GST_CLOCK_TIME_NONE;
   last_audio_timestamp = GST_CLOCK_TIME_NONE;
@@ -114,12 +122,20 @@ static gpointer
 push_abuffers (gpointer data)
 {
   GstSegment segment;
-  GstPad *pad = data;
   gint i;
-  GstClockTime timestamp = 0;
   GstCaps *caps;
   guint buf_size = 1000;
   guint channels = 2;
+  PadAndBoolean *e = data;
+  GstPad *pad = e->pad;
+  gboolean audio_late = e->b;
+  GstClockTime timestamp;
+
+  if (audio_late) {
+    timestamp = 50 * GST_MSECOND;
+  } else {
+    timestamp = 0;
+  }
 
   gst_pad_send_event (pad, gst_event_new_stream_start ("test"));
 
@@ -195,6 +211,7 @@ test_avwait_generic (void)
   GThread *athread, *vthread;
   GstBus *bus;
   ElementPadAndSwitchType *e;
+  PadAndBoolean *pb;
 
   audio_buffer_count = 0;
   video_buffer_count = 0;
@@ -239,8 +256,11 @@ test_avwait_generic (void)
   e->element = avwait;
   e->pad = vsink;
   e->switch_after_2s = switch_after_2s;
+  pb = g_new0 (PadAndBoolean, 1);
+  pb->pad = asink;
+  pb->b = audio_late;
 
-  athread = g_thread_new ("athread", (GThreadFunc) push_abuffers, asink);
+  athread = g_thread_new ("athread", (GThreadFunc) push_abuffers, pb);
   vthread = g_thread_new ("vthread", (GThreadFunc) push_vbuffers, e);
 
   g_thread_join (vthread);
@@ -251,6 +271,7 @@ test_avwait_generic (void)
   gst_bus_set_flushing (bus, TRUE);
   gst_object_unref (bus);
   g_free (e);
+  g_free (pb);
   gst_pad_unlink (asrc, aoutput_sink);
   gst_object_unref (asrc);
   gst_pad_unlink (vsrc, voutput_sink);
@@ -282,7 +303,7 @@ GST_START_TEST (test_avwait_switch_to_false)
   recording = TRUE;
   switch_after_2s = SWITCH_FALSE;
   test_avwait_generic ();
-  fail_unless_equals_uint64 (first_audio_timestamp, 0);
+  fail_unless_equals_uint64 (first_audio_timestamp, first_video_timestamp);
   fail_unless_equals_uint64 (first_video_timestamp, 0);
   fail_unless_equals_uint64 (last_video_timestamp, 2 * GST_SECOND);
   fail_unless_equals_uint64 (last_audio_timestamp, 2 * GST_SECOND);
@@ -426,6 +447,17 @@ GST_START_TEST (test_avwait_3stc_switch_to_false)
 
 GST_END_TEST;
 
+GST_START_TEST (test_avwait_audio_late)
+{
+  set_default_params ();
+  recording = TRUE;
+  audio_late = TRUE;
+  test_avwait_generic ();
+  fail_unless_equals_uint64 (first_audio_timestamp, 50 * GST_MSECOND);
+  fail_unless_equals_uint64 (first_video_timestamp, 50 * GST_MSECOND);
+}
+
+GST_END_TEST;
 
 static Suite *
 avwait_suite (void)
@@ -444,6 +476,7 @@ avwait_suite (void)
   tcase_add_test (tc_chain, test_avwait_1stc_switch_to_false);
   tcase_add_test (tc_chain, test_avwait_3stc_switch_to_true);
   tcase_add_test (tc_chain, test_avwait_3stc_switch_to_false);
+  tcase_add_test (tc_chain, test_avwait_audio_late);
   suite_add_tcase (s, tc_chain);
 
   return s;

@@ -63,6 +63,7 @@ struct _GstAvWait
 
   GstClockTime running_time_to_wait_for;
   GstClockTime last_seen_video_running_time;
+  GstClockTime first_audio_running_time;
   GstVideoTimeCode *last_seen_tc;
 
   /* If running_time_to_wait_for has been reached but we are
@@ -75,6 +76,8 @@ struct _GstAvWait
   GstClockTime audio_running_time_to_end_at;
 
   gboolean video_eos_flag;
+  gboolean audio_eos_flag;
+  gboolean video_flush_flag;
   gboolean audio_flush_flag;
   gboolean shutdown_flag;
 
@@ -84,6 +87,7 @@ struct _GstAvWait
 
   GCond cond;
   GMutex mutex;
+  GCond audio_cond;
 };
 
 struct _GstAvWaitClass

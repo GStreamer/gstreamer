@@ -21,6 +21,7 @@ base_tests = [
   [['elements/assrender.c'], not ass_dep.found(), [ass_dep]],
   [['elements/autoconvert.c']],
   [['elements/autovideoconvert.c']],
+  [['elements/avwait.c']],
   [['elements/camerabin.c']],
   [['elements/compositor.c']],
   [['elements/curlhttpsink.c'], not curl_dep.found(), [curl_dep]],
