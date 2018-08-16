@@ -4794,7 +4794,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
       /* now go to the next keyframe, this is where we should start
        * decoding from. */
       index = gst_avi_demux_index_next (avi, stream, index, TRUE);
-      GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", index);
+      GST_DEBUG_OBJECT (avi, "Found next keyframe at %u", index);
     } else {
       GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
       /* now go to the previous keyframe, this is where we should start
