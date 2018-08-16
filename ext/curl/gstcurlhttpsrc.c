@@ -1509,7 +1509,7 @@ static void
 gst_curl_http_src_curl_multi_loop (gpointer thread_data)
 {
   GstCurlHttpSrcMultiTaskContext *context;
-  GstCurlHttpSrcQueueElement *qelement;
+  GstCurlHttpSrcQueueElement *qelement, *qnext;
   int i, still_running;
   gboolean cond = FALSE;
   CURLMsg *curl_message;
@@ -1655,6 +1655,7 @@ gst_curl_http_src_curl_multi_loop (gpointer thread_data)
   } else if (context->state == GSTCURL_MULTI_LOOP_STATE_REQUEST_REMOVAL) {
     qelement = context->queue;
     while (qelement != NULL) {
+      qnext = qelement->next;
       if (qelement->p == context->request_removal_element) {
         g_mutex_lock (&qelement->p->buffer_mutex);
         curl_multi_remove_handle (context->multi_handle,
@@ -1668,7 +1669,7 @@ gst_curl_http_src_curl_multi_loop (gpointer thread_data)
         g_mutex_unlock (&qelement->p->buffer_mutex);
         gst_curl_http_src_remove_queue_item (&context->queue, qelement->p);
       }
-      qelement = qelement->next;
+      qelement = qnext;
     }
     context->request_removal_element = NULL;
     context->state = GSTCURL_MULTI_LOOP_STATE_RUNNING;
