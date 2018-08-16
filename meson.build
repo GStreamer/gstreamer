@@ -108,7 +108,7 @@ else
   cdata.set('MEMORY_ALIGNMENT', mem_align_opt.to_int())
 endif
 
-if host_system == 'darwin'
+if ['darwin', 'ios'].contains(host_system)
   cdata.set_quoted('GST_EXTRA_MODULE_SUFFIX', '.dylib')
 endif
 
