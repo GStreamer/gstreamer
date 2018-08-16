@@ -21,6 +21,12 @@ option('opengl_module_name', type : 'string', value : '',
 option('gles2_module_name', type : 'string', value : '',
        description : 'The file to pass to g_module_open to open the libGLESv2 library (default: libGLESv2)')
 
+# Feature option for opengl plugin and integration library
+option('gl', type : 'feature', value : 'auto', description : 'OpenGL integration library and OpenGL plugin')
+option('gl-graphene', type : 'feature', value : 'auto', description : 'Use Graphene in OpenGL plugin')
+option('gl-jpeg', type : 'feature', value : 'auto', description : 'Use libjpeg in OpenGL plugin')
+option('gl-png', type : 'feature', value : 'auto', description : 'Use libpng in OpenGL plugin')
+
 # Feature options for plugins with no external deps
 option('adder', type : 'feature', value : 'auto')
 option('app', type : 'feature', value : 'auto')

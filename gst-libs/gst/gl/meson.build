@@ -1,3 +1,10 @@
+if get_option('gl').disabled()
+  message('GStreamer OpenGL integration disabled via options.')
+  gstgl_dep = disabler()
+  build_gstgl = false
+  subdir_done()
+endif
+
 gl_sources = [
   'gstglapi.c',
   'gstglbasefilter.c',
@@ -821,4 +828,7 @@ if build_gstgl
     include_directories : [libsinc, compat_includes],
     sources: gen_sources,
     dependencies : [video_dep, gst_base_dep] + gl_winsys_deps)
+
+elif get_option('gl').enabled()
+  error('GStreamer OpenGL integration required via options, but needed dependencies not found.')
 endif
