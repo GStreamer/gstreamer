@@ -345,6 +345,10 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
     size = MIN (size, avail);
     buffer = gst_adapter_take_buffer (self->adapter, size);
 
+    /* After a reset we have to set the discont flag */
+    if (self->current_offset == 0)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+
     resync_time_diff =
         gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
     if (self->segment.rate < 0.0) {
