@@ -381,6 +381,13 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
     ret = gst_pad_push (self->srcpad, buffer);
     if (ret != GST_FLOW_OK)
       break;
+
+    /* Update the size based on the accumulated error we have now after
+     * taking out a buffer. Same code as above */
+    size = samples_per_buffer * bpf;
+    if (self->error_per_buffer + self->accumulated_error >=
+        self->output_buffer_duration_d)
+      size += bpf;
   }
 
   return ret;
