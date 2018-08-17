@@ -416,6 +416,14 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::get-storage</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -489,7 +497,7 @@ guint  arg1
 <SIGNAL>
 <NAME>GstRtpSession::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>a</FLAGS>
+<FLAGS>la</FLAGS>
 GstRtpSession *gstrtpsession
 </SIGNAL>
 
@@ -712,6 +720,37 @@ GstBuffer *arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRTSPSrc::get-parameter</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>la</FLAGS>
+GstRTSPSrc *gstrtspsrc
+gchar *arg1
+gchar *arg2
+GstPromise *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTSPSrc::get-parameters</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>la</FLAGS>
+GstRTSPSrc *gstrtspsrc
+GStrv  arg1
+gchar *arg2
+GstPromise *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTSPSrc::set-parameter</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>la</FLAGS>
+GstRTSPSrc *gstrtspsrc
+gchar *arg1
+gchar *arg2
+gchar *arg3
+GstPromise *arg4
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSplitMuxSink::format-location</NAME>
 <RETURNS>gchar*</RETURNS>
 <FLAGS>l</FLAGS>
@@ -733,6 +772,22 @@ GstSample *arg2
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstSplitMuxSink *gstsplitmuxsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSplitMuxSink::muxer-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
+GstElement *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSplitMuxSink::sink-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
+GstElement *arg1
 </SIGNAL>
 
 <SIGNAL>

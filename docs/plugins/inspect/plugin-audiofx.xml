@@ -264,7 +264,7 @@
     <element>
       <name>scaletempo</name>
       <longname>Scaletempo</longname>
-      <class>Filter/Effect/Rate</class>
+      <class>Filter/Effect/Rate/Audio</class>
       <description>Sync audio tempo with playback rate</description>
       <author>Rov Juvano &lt;rovjuvano@users.sourceforge.net&gt;</author>
       <pads>

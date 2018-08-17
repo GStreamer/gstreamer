@@ -629,6 +629,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::mtu</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Expected Maximum Transmission Unit</NICK>
+<BLURB>Maximum expected packet size. This directly defines the allocationsize of the receive buffer pool.</BLURB>
+<DEFAULT>1492</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -1076,6 +1086,16 @@
 <NICK>Backchannel type</NICK>
 <BLURB>The type of backchannel to setup. Default is 'none'.</BLURB>
 <DEFAULT>No backchannel</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::teardown-timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Teardown Timeout</NICK>
+<BLURB>When transitioning PAUSED-READY, allow up to timeout (in nanoseconds) delay in order to send teardown (0 = disabled).</BLURB>
+<DEFAULT>100000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -24284,7 +24304,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Muxer</NICK>
-<BLURB>The muxer element to use (NULL = default mp4mux).</BLURB>
+<BLURB>The muxer element to use (NULL = default mp4mux). Valid only for async-finalize = FALSE.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -24294,7 +24314,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sink</NICK>
-<BLURB>The sink element (or element chain) to use (NULL = default filesink).</BLURB>
+<BLURB>The sink element (or element chain) to use (NULL = default filesink). Valid only for async-finalize = FALSE.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -24344,8 +24364,68 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Support robust-muxing mode of some muxers</NICK>
-<BLURB>Check if muxers support robust muxing via the reserved-max-duration and reserved-duration-remaining properties and use them if so. (Only present on qtmux and mp4mux for now). splitmuxsink may then also  create new fragments if the reserved header space is about to overflow. Note this does not set reserved-moov-update-period - apps should do that manually.</BLURB>
+<BLURB>Check if muxers support robust muxing via the reserved-max-duration and reserved-duration-remaining properties and use them if so. (Only present on qtmux and mp4mux for now). splitmuxsink may then also  create new fragments if the reserved header space is about to overflow. Note that for mp4mux and qtmux, reserved-moov-update-period must be set manually by the app to a non-zero value for robust muxing to have an effect.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::async-finalize</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Finalize fragments asynchronously</NICK>
+<BLURB>Finalize each fragment asynchronously and start a new one.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::muxer-factory</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Muxer factory</NICK>
+<BLURB>The muxer element factory to use (default = mp4mux). Valid only for async-finalize = TRUE.</BLURB>
+<DEFAULT>"mp4mux"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::muxer-properties</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Muxer properties</NICK>
+<BLURB>The muxer element properties to use. Example: {properties,boolean-prop=true,string-prop="hi"}. Valid only for async-finalize = TRUE.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::reset-muxer</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reset Muxer</NICK>
+<BLURB>Reset the muxer after each segment. Disabling this will not work for most muxers.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::sink-factory</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sink factory</NICK>
+<BLURB>The sink element factory to use (default = filesink). Valid only for async-finalize = TRUE.</BLURB>
+<DEFAULT>"filesink"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSplitMuxSink::sink-properties</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sink properties</NICK>
+<BLURB>The sink element properties to use. Example: {properties,boolean-prop=true,string-prop="hi"}. Valid only for async-finalize = TRUE.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>

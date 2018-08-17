@@ -68,6 +68,12 @@
           <details>ANY</details>
         </caps>
         <caps>
+          <name>caption_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
           <name>subtitle_%u</name>
           <direction>sink</direction>
           <presence>request</presence>

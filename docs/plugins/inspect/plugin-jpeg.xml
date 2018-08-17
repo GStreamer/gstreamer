@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/jpeg, width=(int)[ 16, 65535 ], height=(int)[ 16, 65535 ], framerate=(fraction)[ 0/1, 2147483647/1 ], sof-marker=(int){ 0, 1, 2, 9 }</details>
+          <details>image/jpeg, width=(int)[ 16, 65535 ], height=(int)[ 16, 65535 ], framerate=(fraction)[ 0/1, 2147483647/1 ], sof-marker=(int){ 0, 1, 2, 4, 9 }</details>
         </caps>
       </pads>
     </element>
