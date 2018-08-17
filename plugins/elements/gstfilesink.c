@@ -452,7 +452,8 @@ gst_file_sink_query (GstBaseSink * bsink, GstQuery * query)
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (query, GST_FORMAT_BYTES, self->current_pos);
+          gst_query_set_position (query, GST_FORMAT_BYTES,
+              self->current_pos + self->current_buffer_size);
           res = TRUE;
           break;
         default:
@@ -557,7 +558,8 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
       if (segment->format == GST_FORMAT_BYTES) {
         /* only try to seek and fail when we are going to a different
          * position */
-        if (filesink->current_pos != segment->start) {
+        if (filesink->current_pos + filesink->current_buffer_size !=
+            segment->start) {
           /* FIXME, the seek should be performed on the pos field, start/stop are
            * just boundaries for valid bytes offsets. We should also fill the file
            * with zeroes if the new position extends the current EOF (sparse streams
