@@ -1296,6 +1296,24 @@ name_resolve:
   }
 }
 
+static gint
+gst_udpsrc_get_rcvbuf (GstUDPSrc * src)
+{
+  gint val = 0;
+
+  /* read the value of the receive buffer. Note that on linux this returns
+   * 2x the value we set because the kernel allocates extra memory for
+   * metadata. The default on Linux is about 100K (which is about 50K
+   * without metadata) */
+  if (!g_socket_get_option (src->used_socket, SOL_SOCKET, SO_RCVBUF, &val,
+          NULL)) {
+    GST_DEBUG_OBJECT (src, "could not get udp buffer size");
+    return 0;
+  }
+
+  return val;
+}
+
 /* create a socket for sending to remote machine */
 static gboolean
 gst_udpsrc_open (GstUDPSrc * src)
@@ -1387,7 +1405,7 @@ gst_udpsrc_open (GstUDPSrc * src)
   }
 
   {
-    gint val = 0;
+    gint val;
 
     if (src->buffer_size != 0) {
       GError *opt_err = NULL;
@@ -1406,16 +1424,9 @@ gst_udpsrc_open (GstUDPSrc * src)
       }
     }
 
-    /* read the value of the receive buffer. Note that on linux this returns
-     * 2x the value we set because the kernel allocates extra memory for
-     * metadata. The default on Linux is about 100K (which is about 50K
-     * without metadata) */
-    if (g_socket_get_option (src->used_socket, SOL_SOCKET, SO_RCVBUF, &val,
-            NULL)) {
+    val = gst_udpsrc_get_rcvbuf (src);
+    if (val)
       GST_INFO_OBJECT (src, "have udp buffer of %d bytes", val);
-    } else {
-      GST_DEBUG_OBJECT (src, "could not get udp buffer size");
-    }
   }
 
   g_socket_set_broadcast (src->used_socket, TRUE);
