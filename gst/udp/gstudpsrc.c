@@ -1310,6 +1310,10 @@ gst_udpsrc_get_rcvbuf (GstUDPSrc * src)
     GST_DEBUG_OBJECT (src, "could not get udp buffer size");
     return 0;
   }
+#ifdef __linux__
+  /* Devise by 2 so that the numbers matches when we do get/set */
+  val /= 2;
+#endif
 
   return val;
 }
