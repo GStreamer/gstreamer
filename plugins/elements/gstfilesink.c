@@ -389,6 +389,7 @@ gst_file_sink_open_file (GstFileSink * sink)
     }
 
     sink->buffer = gst_buffer_list_new ();
+    sink->current_buffer_size = 0;
   }
 
   GST_DEBUG_OBJECT (sink, "opened file %s, seekable %d",
@@ -432,6 +433,7 @@ gst_file_sink_close_file (GstFileSink * sink)
     gst_buffer_list_unref (sink->buffer);
     sink->buffer = NULL;
   }
+  sink->current_buffer_size = 0;
 }
 
 static gboolean
@@ -577,6 +579,11 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
         gst_file_sink_do_seek (filesink, 0);
         if (ftruncate (fileno (filesink->file), 0))
           goto truncate_failed;
+      }
+      if (filesink->buffer) {
+        gst_buffer_list_unref (filesink->buffer);
+        filesink->buffer = gst_buffer_list_new ();
+        filesink->current_buffer_size = 0;
       }
       break;
     case GST_EVENT_EOS:
