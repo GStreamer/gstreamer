@@ -16,6 +16,18 @@ else
 CAIRO_DIR=
 endif
 
+EXTRA_DIST = \
+	qt/qmlsrc/main.qml \
+	qt/qmlsrc/qml.qrc \
+	qt/qmlsrc/grabqml.pro \
+	qt/qmlsrc/main.cpp \
+	qt/qmlsink/main.qml \
+	qt/qmlsink/qml.qrc \
+	qt/qmlsink/CMakeLists.txt \
+	qt/qmlsink/play.pro \
+	qt/qmlsink/main.cpp
+
+
 SUBDIRS = audiofx equalizer $(GTK_DIR) $(JACK_DIR) level \
 	rtp rtsp shapewipe spectrum v4l2 $(CAIRO_DIR)
 
