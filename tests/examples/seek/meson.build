@@ -30,3 +30,10 @@ executable('stepping2', 'stepping2.c',
   include_directories: [configinc, libsinc],
   dependencies : [libm, glib_deps, gst_dep, video_dep],
   install: false)
+
+executable('instant-rate-change', 'instant-rate-change.c',
+  c_args : gst_plugins_base_args,
+  include_directories: [configinc, libsinc],
+  dependencies : [libm, glib_deps, gst_dep, video_dep],
+  install: false)
+
