@@ -44,7 +44,7 @@ class Colors:
 
 def git(*args, repository_path='.'):
     return subprocess.check_output(["git"] + list(args), cwd=repository_path,
-                                   stderr=subprocess.STDOUT).decode()
+                                   ).decode()
 
 def accept_command(commands):
     """Search @commands and returns the first found absolute path."""
