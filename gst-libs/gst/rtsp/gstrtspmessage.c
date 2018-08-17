@@ -507,6 +507,7 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
     g_array_free (msg->hdr_fields, TRUE);
   }
   g_free (msg->body);
+  gst_buffer_replace (&msg->body_buffer, NULL);
 
   memset (msg, 0, sizeof (GstRTSPMessage));
 
@@ -586,7 +587,10 @@ gst_rtsp_message_copy (const GstRTSPMessage * msg, GstRTSPMessage ** copy)
   }
 
   key_value_foreach (msg->hdr_fields, (GFunc) key_value_append, cp->hdr_fields);
-  gst_rtsp_message_set_body (cp, msg->body, msg->body_size);
+  if (msg->body)
+    gst_rtsp_message_set_body (cp, msg->body, msg->body_size);
+  else
+    gst_rtsp_message_set_body_buffer (cp, msg->body_buffer);
 
   return GST_RTSP_OK;
 }
@@ -928,7 +932,8 @@ gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
  * @data: (array length=size) (transfer none): the data
  * @size: the size of @data
  *
- * Set the body of @msg to a copy of @data.
+ * Set the body of @msg to a copy of @data. Any existing body or body buffer
+ * will be replaced by the new body.
  *
  * Returns: #GST_RTSP_OK.
  */
@@ -948,7 +953,7 @@ gst_rtsp_message_set_body (GstRTSPMessage * msg, const guint8 * data,
  * @size: the size of @data
  *
  * Set the body of @msg to @data and @size. This method takes ownership of
- * @data.
+ * @data. Any existing body or body buffer will be replaced by the new body.
  *
  * Returns: #GST_RTSP_OK.
  */
@@ -958,6 +963,7 @@ gst_rtsp_message_take_body (GstRTSPMessage * msg, guint8 * data, guint size)
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL || size == 0, GST_RTSP_EINVAL);
 
+  gst_buffer_replace (&msg->body_buffer, NULL);
   g_free (msg->body);
 
   msg->body = data;
@@ -975,6 +981,10 @@ gst_rtsp_message_take_body (GstRTSPMessage * msg, guint8 * data, guint size)
  * Get the body of @msg. @data remains valid for as long as @msg is valid and
  * unchanged.
  *
+ * If the message body was set as a #GstBuffer before this will cause the data
+ * to be copied and stored in the message. The #GstBuffer will no longer be
+ * kept in the message.
+ *
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
@@ -984,6 +994,16 @@ gst_rtsp_message_get_body (const GstRTSPMessage * msg, guint8 ** data,
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (size != NULL, GST_RTSP_EINVAL);
+
+  if (msg->body_buffer) {
+    gsize size;
+
+    gst_buffer_extract_dup (msg->body_buffer, 0,
+        gst_buffer_get_size (msg->body_buffer),
+        (gpointer *) & ((GstRTSPMessage *) msg)->body, &size);
+    gst_buffer_replace (&((GstRTSPMessage *) msg)->body_buffer, NULL);
+    ((GstRTSPMessage *) msg)->body_size = size;
+  }
 
   *data = msg->body;
   *size = msg->body_size;
@@ -1009,6 +1029,16 @@ gst_rtsp_message_steal_body (GstRTSPMessage * msg, guint8 ** data, guint * size)
   g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (size != NULL, GST_RTSP_EINVAL);
 
+  if (msg->body_buffer) {
+    gsize size;
+
+    gst_buffer_extract_dup (msg->body_buffer, 0,
+        gst_buffer_get_size (msg->body_buffer),
+        (gpointer *) & msg->body, &size);
+    gst_buffer_replace (&msg->body_buffer, NULL);
+    msg->body_size = size;
+  }
+
   *data = msg->body;
   *size = msg->body_size;
 
@@ -1016,6 +1046,134 @@ gst_rtsp_message_steal_body (GstRTSPMessage * msg, guint8 ** data, guint * size)
   msg->body_size = 0;
 
   return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_set_body_buffer:
+ * @msg: a #GstRTSPMessage
+ * @buffer: a #GstBuffer
+ *
+ * Set the body of @msg to @buffer. Any existing body or body buffer
+ * will be replaced by the new body.
+ *
+ * Returns: #GST_RTSP_OK.
+ *
+ * Since: 1.16
+ */
+GstRTSPResult
+gst_rtsp_message_set_body_buffer (GstRTSPMessage * msg, GstBuffer * buffer)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+
+  return gst_rtsp_message_take_body_buffer (msg,
+      buffer ? gst_buffer_ref (buffer) : NULL);
+}
+
+/**
+ * gst_rtsp_message_take_body_buffer:
+ * @msg: a #GstRTSPMessage
+ * @buffer: (transfer full): a #GstBuffer
+ *
+ * Set the body of @msg to @buffer. This method takes ownership of @buffer.
+ * Any existing body or body buffer will be replaced by the new body.
+ *
+ * Returns: #GST_RTSP_OK.
+ *
+ * Since: 1.16
+ */
+GstRTSPResult
+gst_rtsp_message_take_body_buffer (GstRTSPMessage * msg, GstBuffer * buffer)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+
+  g_free (msg->body);
+  msg->body = NULL;
+  if (msg->body_buffer)
+    gst_buffer_unref (msg->body_buffer);
+  msg->body_buffer = buffer;
+  msg->body_size = buffer ? gst_buffer_get_size (buffer) : 0;
+
+  return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_get_body_buffer:
+ * @msg: a #GstRTSPMessage
+ * @buffer: (out) (transfer none): location for the buffer
+ *
+ * Get the body of @msg. @buffer remains valid for as long as @msg is valid and
+ * unchanged.
+ *
+ * If body data was set from raw memory instead of a #GstBuffer this function
+ * will always return %NULL. The caller can check if there is a body buffer by
+ * calling gst_rtsp_message_has_body_buffer().
+ *
+ * Returns: #GST_RTSP_OK.
+ *
+ * Since: 1.16
+ */
+GstRTSPResult
+gst_rtsp_message_get_body_buffer (const GstRTSPMessage * msg,
+    GstBuffer ** buffer)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (buffer != NULL, GST_RTSP_EINVAL);
+
+  *buffer = msg->body_buffer;
+
+  return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_steal_body_buffer:
+ * @msg: a #GstRTSPMessage
+ * @buffer: (out) (transfer full): location for the buffer
+ *
+ * Take the body of @msg and store it in @buffer. After this method,
+ * the body and size of @msg will be set to %NULL and 0 respectively.
+ *
+ * If body data was set from raw memory instead of a #GstBuffer this function
+ * will always return %NULL. The caller can check if there is a body buffer by
+ * calling gst_rtsp_message_has_body_buffer().
+ *
+ * Returns: #GST_RTSP_OK.
+ *
+ * Since: 1.16
+ */
+GstRTSPResult
+gst_rtsp_message_steal_body_buffer (GstRTSPMessage * msg, GstBuffer ** buffer)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (buffer != NULL, GST_RTSP_EINVAL);
+
+  if (msg->body_buffer) {
+    *buffer = msg->body_buffer;
+    msg->body_buffer = NULL;
+    msg->body_size = 0;
+  } else {
+    *buffer = NULL;
+  }
+
+  return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_has_body_buffer:
+ * @msg: a #GstRTSPMessage
+ *
+ * Checks if @msg has a body and the body is stored as #GstBuffer.
+ *
+ * Returns: %TRUE if @msg has a body and it's stored as #GstBuffer, %FALSE
+ * otherwise.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_rtsp_message_has_body_buffer (const GstRTSPMessage * msg)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+
+  return msg->body_buffer != NULL;
 }
 
 static void
@@ -1043,8 +1201,20 @@ dump_key_value (gpointer data, gpointer user_data G_GNUC_UNUSED)
 GstRTSPResult
 gst_rtsp_message_dump (GstRTSPMessage * msg)
 {
-  guint8 *data;
+  guint8 *data = NULL;
   guint size;
+  GstBuffer *body_buffer = NULL;
+
+#define PRINT_BODY G_STMT_START { \
+  gst_rtsp_message_get_body_buffer (msg, &body_buffer); \
+  if (body_buffer) { \
+    gst_util_dump_buffer (body_buffer); \
+  } else { \
+    gst_rtsp_message_get_body (msg, &data, &size); \
+    if (data) \
+      gst_util_dump_mem (data, size); \
+  } \
+} G_STMT_END;
 
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
 
@@ -1060,8 +1230,7 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
       g_print (" headers:\n");
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       g_print (" body:\n");
-      gst_rtsp_message_get_body (msg, &data, &size);
-      gst_util_dump_mem (data, size);
+      PRINT_BODY;
       break;
     case GST_RTSP_MESSAGE_RESPONSE:
       g_print ("RTSP response message %p\n", msg);
@@ -1072,9 +1241,7 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
           gst_rtsp_version_as_text (msg->type_data.response.version));
       g_print (" headers:\n");
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
-      gst_rtsp_message_get_body (msg, &data, &size);
-      g_print (" body: length %d\n", size);
-      gst_util_dump_mem (data, size);
+      PRINT_BODY;
       break;
     case GST_RTSP_MESSAGE_HTTP_REQUEST:
       g_print ("HTTP request message %p\n", msg);
@@ -1087,8 +1254,7 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
       g_print (" headers:\n");
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       g_print (" body:\n");
-      gst_rtsp_message_get_body (msg, &data, &size);
-      gst_util_dump_mem (data, size);
+      PRINT_BODY;
       break;
     case GST_RTSP_MESSAGE_HTTP_RESPONSE:
       g_print ("HTTP response message %p\n", msg);
@@ -1099,22 +1265,21 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
           gst_rtsp_version_as_text (msg->type_data.response.version));
       g_print (" headers:\n");
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
-      gst_rtsp_message_get_body (msg, &data, &size);
-      g_print (" body: length %d\n", size);
-      gst_util_dump_mem (data, size);
+      PRINT_BODY;
       break;
     case GST_RTSP_MESSAGE_DATA:
       g_print ("RTSP data message %p\n", msg);
       g_print (" channel: '%d'\n", msg->type_data.data.channel);
       g_print (" size:    '%d'\n", msg->body_size);
-      gst_rtsp_message_get_body (msg, &data, &size);
-      gst_util_dump_mem (data, size);
+      PRINT_BODY;
       break;
     default:
       g_print ("unsupported message type %d\n", msg->type);
       return GST_RTSP_EINVAL;
   }
   return GST_RTSP_OK;
+
+#undef PRINT_BODY
 }
 
 
