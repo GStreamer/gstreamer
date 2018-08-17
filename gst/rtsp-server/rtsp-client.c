@@ -2084,6 +2084,16 @@ default_configure_client_transport (GstRTSPClient * client,
         gst_rtsp_session_media_alloc_channels (ctx->sessmedia,
             &ct->interleaved);
       }
+      /* alloc new channels if they are already taken */
+      while (g_hash_table_contains (priv->transports,
+              GINT_TO_POINTER (ct->interleaved.min))
+          || g_hash_table_contains (priv->transports,
+              GINT_TO_POINTER (ct->interleaved.max))) {
+        gst_rtsp_session_media_alloc_channels (ctx->sessmedia,
+            &ct->interleaved);
+        if (ct->interleaved.max > 255)
+          goto error_allocating_channels;
+      }
     }
   }
   return TRUE;
@@ -2113,6 +2123,11 @@ no_socket:
 error_mcast_transport:
   {
     GST_ERROR_OBJECT (client, "Failed to add multicast client transport");
+    return FALSE;
+  }
+error_allocating_channels:
+  {
+    GST_ERROR_OBJECT (client, "Failed to allocate interleaved channels");
     return FALSE;
   }
 }

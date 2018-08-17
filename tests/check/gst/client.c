@@ -21,6 +21,13 @@
 
 #include <rtsp-client.h>
 
+#define VIDEO_PIPELINE "videotestsrc ! " \
+  "video/x-raw,width=352,height=288 ! " \
+  "rtpgstpay name=pay0 pt=96"
+#define AUDIO_PIPELINE "audiotestsrc ! " \
+  "audio/x-raw,rate=8000 ! " \
+  "rtpgstpay name=pay1 pt=97"
+
 static gchar *session_id;
 static gint cseq;
 static guint expected_session_timeout = 60;
@@ -167,7 +174,7 @@ setup_client (const gchar * launch_line)
   factory = gst_rtsp_media_factory_new ();
   if (launch_line == NULL)
     gst_rtsp_media_factory_set_launch (factory,
-        "videotestsrc ! video/x-raw,width=352,height=288 ! rtpgstpay name=pay0 pt=96");
+        "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
   else
     gst_rtsp_media_factory_set_launch (factory, launch_line);
 
@@ -637,7 +644,7 @@ GST_START_TEST (test_setup_tcp)
   fail_unless (gst_rtsp_client_set_connection (client, conn));
 
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
-          "rtsp://localhost/test") == GST_RTSP_OK);
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
   gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
   g_free (str);
@@ -650,6 +657,55 @@ GST_START_TEST (test_setup_tcp)
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
 
+  gst_rtsp_message_unset (&request);
+
+  send_teardown (client);
+  teardown_client (client);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_setup_tcp_two_streams_same_channels)
+{
+  GstRTSPClient *client;
+  GstRTSPConnection *conn;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+
+  client = setup_client (NULL);
+  create_connection (&conn);
+  fail_unless (gst_rtsp_client_set_connection (client, conn));
+
+  /* test SETUP of a video stream with 0-1 as interleaved channels */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP/TCP;unicast;interleaved=0-1");
+  gst_rtsp_client_set_send_func (client, test_setup_response_200, NULL, NULL);
+  expected_transport =
+      "RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=.*;mode=\"PLAY\"";
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* test SETUP of an audio stream with *the same* interleaved channels.
+   * we expect the server to allocate new channel numbers */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=1") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP/TCP;unicast;interleaved=0-1");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
+  gst_rtsp_client_set_send_func (client, test_setup_response_200, NULL, NULL);
+  expected_transport =
+      "RTP/AVP/TCP;unicast;interleaved=2-3;ssrc=.*;mode=\"PLAY\"";
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
   send_teardown (client);
@@ -1415,6 +1471,7 @@ rtspclient_suite (void)
   tcase_add_test (tc, test_options);
   tcase_add_test (tc, test_describe);
   tcase_add_test (tc, test_setup_tcp);
+  tcase_add_test (tc, test_setup_tcp_two_streams_same_channels);
   tcase_add_test (tc, test_client_multicast_transport_404);
   tcase_add_test (tc, test_client_multicast_transport);
   tcase_add_test (tc, test_client_multicast_ignore_transport_specific);
