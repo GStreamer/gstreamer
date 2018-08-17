@@ -1411,7 +1411,7 @@ gst_udpsrc_open (GstUDPSrc * src)
   {
     gint val;
     GError *opt_err = NULL;
-    gboolean force_rcvbuf = FALSE;
+    gboolean force_rcvbuf G_GNUC_UNUSED = FALSE;
 
     if (src->buffer_size != 0) {
       GST_INFO_OBJECT (src, "setting udp buffer of %d bytes", src->buffer_size);
@@ -1427,7 +1427,7 @@ gst_udpsrc_open (GstUDPSrc * src)
         force_rcvbuf = TRUE;
       }
     }
-
+#if defined(SO_RCVBUFFORCE)
     val = gst_udpsrc_get_rcvbuf (src);
     if (val < src->buffer_size)
       force_rcvbuf = TRUE;
@@ -1445,6 +1445,7 @@ gst_udpsrc_open (GstUDPSrc * src)
         g_clear_error (&opt_err);
       }
     }
+#endif
 
     val = gst_udpsrc_get_rcvbuf (src);
     if (val < src->buffer_size)
