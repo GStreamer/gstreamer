@@ -55,12 +55,14 @@ struct _GstAudioBufferSplit {
   GstAudioStreamAlign *stream_align;
   GstClockTime resync_time;
   guint64 current_offset; /* offset from start time in samples */
+  guint64 drop_samples; /* number of samples to drop in gapless mode */
 
   guint samples_per_buffer;
   guint error_per_buffer;
   guint accumulated_error;
 
   gboolean strict_buffer_size;
+  gboolean gapless;
 };
 
 struct _GstAudioBufferSplitClass {
