@@ -1406,26 +1406,48 @@ gst_udpsrc_open (GstUDPSrc * src)
 
   {
     gint val;
+    GError *opt_err = NULL;
+    gboolean force_rcvbuf = FALSE;
 
     if (src->buffer_size != 0) {
-      GError *opt_err = NULL;
-
       GST_INFO_OBJECT (src, "setting udp buffer of %d bytes", src->buffer_size);
       /* set buffer size, Note that on Linux this is typically limited to a
        * maximum of around 100K. Also a minimum of 128 bytes is required on
        * Linux. */
       if (!g_socket_set_option (src->used_socket, SOL_SOCKET, SO_RCVBUF,
               src->buffer_size, &opt_err)) {
-        GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
-            ("Could not create a buffer of requested %d bytes: %s",
-                src->buffer_size, opt_err->message));
-        g_error_free (opt_err);
-        opt_err = NULL;
+        GST_INFO_OBJECT (src,
+            "Could not create a buffer of requested %d bytes (%s) try forcing",
+            src->buffer_size, opt_err->message);
+        g_clear_error (&opt_err);
+        force_rcvbuf = TRUE;
       }
     }
 
     val = gst_udpsrc_get_rcvbuf (src);
-    if (val)
+    if (val < src->buffer_size)
+      force_rcvbuf = TRUE;
+
+    if (force_rcvbuf) {
+      GST_INFO_OBJECT (src,
+          "forcibly setting udp buffer of %d bytes", src->buffer_size);
+
+      /* Will only work with CAP_NET_ADMIN privilege */
+      if (!g_socket_set_option (src->used_socket, SOL_SOCKET, SO_RCVBUFFORCE,
+              src->buffer_size, &opt_err)) {
+        GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
+            ("Could not create a buffer of requested %d bytes (%s). Need net.admin privilege?",
+                src->buffer_size, opt_err->message));
+        g_clear_error (&opt_err);
+      }
+    }
+
+    val = gst_udpsrc_get_rcvbuf (src);
+    if (val < src->buffer_size)
+      GST_WARNING_OBJECT (src,
+          "have udp buffer of %d bytes while %d were requested",
+          val, src->buffer_size);
+    else
       GST_INFO_OBJECT (src, "have udp buffer of %d bytes", val);
   }
 
