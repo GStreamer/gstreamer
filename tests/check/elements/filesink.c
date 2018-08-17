@@ -31,6 +31,7 @@
 #include <gst/check/gstcheck.h>
 
 static GstPad *mysrcpad;
+static gboolean sync_buffers = FALSE;
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -83,6 +84,8 @@ cleanup_filesink (GstElement * filesink)
       GRand *rand = g_rand_new_with_seed (num_bytes);                     \
       GstMapInfo info;                                                    \
       guint i;                                                            \
+      if (sync_buffers)                                                   \
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);            \
       fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));           \
       for (i = 0; i < num_bytes; ++i)                                     \
         ((guint8 *)info.data)[i] = (g_rand_int (rand) >> 24) & 0xff;      \
@@ -96,6 +99,8 @@ cleanup_filesink (GstElement * filesink)
     G_STMT_START {                                                           \
       GstBuffer *buf = gst_buffer_new();                                     \
       guint i;                                                               \
+      if (sync_buffers)                                                      \
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);               \
       for (i = 0; i < num_mem_blocks; ++i){                                  \
         GstMapInfo info;                                                     \
         GstMemory* mem_block = gst_allocator_alloc(NULL,num_bytes,NULL);     \
@@ -120,6 +125,8 @@ cleanup_filesink (GstElement * filesink)
       for(i = 0; i < num_buffers; ++i){                                        \
         GstBuffer *buf = gst_buffer_new();                                     \
         guint j;                                                               \
+        if (sync_buffers)                                                      \
+          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);               \
         for (j = 0; j < num_mem_blocks; ++j){                                  \
           GstMapInfo info;                                                     \
           GstMemory* mem_block = gst_allocator_alloc(NULL,num_bytes,NULL);     \
@@ -150,6 +157,8 @@ cleanup_filesink (GstElement * filesink)
         GRand *rand = g_rand_new_with_seed (num_bytes);                   \
         GstMapInfo info;                                                  \
         guint j;                                                          \
+        if (sync_buffers)                                                 \
+          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_SYNC_AFTER);          \
         fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));         \
         for (j = 0; j < num_bytes; ++j)                                   \
           ((guint8 *)info.data)[j] = (g_rand_int (rand) >> 24) & 0xff;    \
@@ -219,6 +228,8 @@ GST_START_TEST (test_seeking)
   if (tmp_fn == NULL)
     return;
   filesink = setup_filesink ();
+
+  sync_buffers = TRUE;
 
   GST_LOG ("using temp file '%s'", tmp_fn);
   g_object_set (filesink, "location", tmp_fn, NULL);
@@ -309,6 +320,8 @@ GST_START_TEST (test_seeking)
 
   CHECK_WRITTEN_BYTES (8801, 9256, 18057);
 
+  sync_buffers = FALSE;
+
   /* remove file */
   g_remove (tmp_fn);
   g_free (tmp_fn);
@@ -326,6 +339,8 @@ GST_START_TEST (test_flush)
   if (tmp_fn == NULL)
     return;
   filesink = setup_filesink ();
+
+  sync_buffers = FALSE;
 
   GST_LOG ("using temp file '%s'", tmp_fn);
   g_object_set (filesink, "location", tmp_fn, NULL);
