@@ -328,11 +328,7 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime resync_time;
 
-  GST_OBJECT_LOCK (self);
-  resync_time =
-      gst_audio_stream_align_get_timestamp_at_discont (self->stream_align);
-  GST_OBJECT_UNLOCK (self);
-
+  resync_time = self->resync_time;
   size = samples_per_buffer * bpf;
 
   /* If we accumulated enough error for one sample, include one
@@ -418,6 +414,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
     self->current_offset = 0;
     self->accumulated_error = 0;
+    self->resync_time = GST_BUFFER_PTS (buffer);
   }
 
   return ret;
