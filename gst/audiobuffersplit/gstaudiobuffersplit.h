@@ -53,6 +53,7 @@ struct _GstAudioBufferSplit {
   GstAdapter *adapter;
 
   GstAudioStreamAlign *stream_align;
+  GstClockTime resync_time;
   guint64 current_offset; /* offset from start time in samples */
 
   guint samples_per_buffer;
