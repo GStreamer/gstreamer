@@ -60,6 +60,8 @@ option('lame', type : 'feature', value : 'auto', description : 'LAME mp3 audio e
 option('mpg123', type : 'feature', value : 'auto', description : 'mpg123 mp3 audio decoder plugin')
 option('oss', type : 'feature', value : 'auto', description : 'OSS audio source/sink plugin')
 option('oss4', type : 'feature', value : 'auto', description : 'OSSv4 audio source/sink plugin')
+option('osxaudio', type : 'feature', value : 'auto', description : 'macOS/iOS CoreAudio source/sink plugin')
+option('osxvideo', type : 'feature', value : 'auto', description : 'macOS Cocoa video sink plugin')
 option('png', type : 'feature', value : 'auto', description : 'PNG image codec plugin')
 option('pulse', type : 'feature', value : 'auto', description : 'Pulseaudio audio source/sink plugin')
 option('qt5', type : 'feature', value : 'auto', description : 'Qt5 QML video sink plugin')
@@ -69,6 +71,7 @@ option('speex', type : 'feature', value : 'auto', description : 'Speex audio cod
 option('taglib', type : 'feature', value : 'auto', description : 'Tag-writing plugin based on taglib')
 option('twolame', type : 'feature', value : 'auto', description : 'twolame mp2 audio encoder plugin')
 option('vpx', type : 'feature', value : 'auto', description : 'VP8 and VP9 video codec plugin')
+option('waveform', type : 'feature', value : 'auto', description : 'Windows waveform audio sink plugin')
 option('wavpack', type : 'feature', value : 'auto', description : 'Wavpack audio codec plugin')
 option('x11', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin')
 
