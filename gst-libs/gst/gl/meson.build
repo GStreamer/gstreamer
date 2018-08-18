@@ -1,6 +1,6 @@
 if get_option('gl').disabled()
   message('GStreamer OpenGL integration disabled via options.')
-  gstgl_dep = disabler()
+  gstgl_dep = dependency('', required: false)
   build_gstgl = false
   subdir_done()
 endif

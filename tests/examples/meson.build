@@ -5,7 +5,9 @@ subdir('decodebin_next')
 subdir('encoding')
 subdir('fft')
 subdir('gio')
-subdir('gl')
+if build_gstgl
+  subdir('gl')
+endif
 subdir('overlay')
 subdir('playback')
 subdir('playrec')
