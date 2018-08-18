@@ -110,7 +110,7 @@ Notes:          This dependency is entirely optional, the video4linux plugin
 
 Package:        JPEG library
 Plugins:        jpeg (jpegenc, jpegdec, smokeenc, smokedec)
-DebianPackage:  libjpeg-dev
+DebianPackage:  libjpeg62-turbo-dev
 URL:            http://www.libjpeg-turbo.org/
                 or http://www.ijg.org/ for the IJG version
 
