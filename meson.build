@@ -78,25 +78,7 @@ foreach h : check_headers
 endforeach
 
 check_functions = [
-# check token HAVE_CPU_ALPHA
-# check token HAVE_CPU_ARM
-# check token HAVE_CPU_CRIS
-# check token HAVE_CPU_CRISV32
-# check token HAVE_CPU_HPPA
-# check token HAVE_CPU_I386
-# check token HAVE_CPU_IA64
-# check token HAVE_CPU_M68K
-# check token HAVE_CPU_MIPS
-# check token HAVE_CPU_PPC
-# check token HAVE_CPU_PPC64
-# check token HAVE_CPU_S390
-# check token HAVE_CPU_SPARC
-# check token HAVE_CPU_X86_64
-  ['HAVE_DCGETTEXT', 'dcgettext'],
-# check token HAVE_EXPERIMENTAL
-# check token HAVE_EXTERNAL
-# check token HAVE_GETTEXT
-# check token HAVE_VALGRIND
+  ['HAVE_DCGETTEXT', 'dcgettext'], # FIXME: this looks unused
 ]
 
 foreach f : check_functions
