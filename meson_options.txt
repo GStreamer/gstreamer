@@ -22,6 +22,7 @@ option('x264', type : 'feature', value : 'auto', description : 'H.264 video enco
 option('nls', type : 'feature', value : 'auto', yield: true,
        description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
+option('tests', type : 'feature', value : 'auto', yield : true)
 option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
        description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases')
 option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
