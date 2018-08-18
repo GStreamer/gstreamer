@@ -14,6 +14,7 @@ gst_version_micro = version_arr[2].to_int()
 else
   gst_version_nano = 0
 endif
+gst_version_is_dev = gst_version_minor % 2 == 1 and gst_version_micro < 90
 
 # FIXME: automagic
 have_cxx = add_languages('cpp', required : false)
@@ -59,6 +60,24 @@ endif
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
+endif
+
+# Define G_DISABLE_DEPRECATED for development versions
+if gst_version_is_dev
+  message('Disabling deprecated GLib API')
+  add_project_arguments('-DG_DISABLE_DEPRECATED', language: 'c')
+endif
+
+cast_checks = get_option('gobject-cast-checks')
+if cast_checks.disabled() or (cast_checks.auto() and not gst_version_is_dev)
+  message('Disabling GLib cast checks')
+  add_project_arguments('-DG_DISABLE_CAST_CHECKS', language: 'c')
+endif
+
+glib_asserts = get_option('glib-asserts')
+if glib_asserts.disabled() or (glib_asserts.auto() and not gst_version_is_dev)
+  message('Disabling GLib asserts')
+  add_project_arguments('-DG_DISABLE_ASSERT', language: 'c')
 endif
 
 cdata = configuration_data()
