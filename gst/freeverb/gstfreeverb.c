@@ -89,9 +89,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "layout = (string) interleaved")
     );
 
-G_DEFINE_TYPE_WITH_CODE (GstFreeverb, gst_freeverb, GST_TYPE_BASE_TRANSFORM,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
-
 static void gst_freeverb_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_freeverb_get_property (GObject * object, guint prop_id,
@@ -347,6 +344,10 @@ struct _GstFreeverbPrivate
   freeverb_allpass allpassR[numallpasses];
 };
 
+G_DEFINE_TYPE_WITH_CODE (GstFreeverb, gst_freeverb, GST_TYPE_BASE_TRANSFORM,
+    G_ADD_PRIVATE (GstFreeverb)
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+
 static void
 freeverb_revmodel_init (GstFreeverb * filter)
 {
@@ -386,8 +387,6 @@ gst_freeverb_class_init (GstFreeverbClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
-
-  g_type_class_add_private (klass, sizeof (GstFreeverbPrivate));
 
   GST_DEBUG_CATEGORY_INIT (gst_freeverb_debug, "freeverb", 0,
       "freeverb element");
@@ -440,9 +439,7 @@ gst_freeverb_class_init (GstFreeverbClass * klass)
 static void
 gst_freeverb_init (GstFreeverb * filter)
 {
-  filter->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (filter, GST_TYPE_FREEVERB,
-      GstFreeverbPrivate);
+  filter->priv = gst_freeverb_get_instance_private (filter);
 
   gst_audio_info_init (&filter->info);
   filter->process = NULL;
