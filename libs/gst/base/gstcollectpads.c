@@ -24,7 +24,6 @@
  * SECTION:gstcollectpads
  * @title: GstCollectPads
  * @short_description: manages a set of pads that operate in collect mode
- * @see_also:
  *
  * Manages a set of pads that operate in collect mode. This means that control
  * is given to the manager of this object when all pads have data.

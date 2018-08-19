@@ -106,8 +106,8 @@
  * since then can be queried with gst_adapter_distance_from_discont().
  *
  * A last thing to note is that while #GstAdapter is pretty optimized,
- * merging buffers still might be an operation that requires a malloc() and
- * memcpy() operation, and these operations are not the fastest. Because of
+ * merging buffers still might be an operation that requires a `malloc()` and
+ * `memcpy()` operation, and these operations are not the fastest. Because of
  * this, some functions like gst_adapter_available_fast() are provided to help
  * speed up such cases should you want to. To avoid repeated memory allocations,
  * gst_adapter_copy() can be used to copy data into a (statically allocated)

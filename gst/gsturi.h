@@ -33,6 +33,9 @@ G_BEGIN_DECLS
 
 #include <gst/gstconfig.h>
 
+/**
+ * gst_uri_error_quark: (attributes doc.skip=true)
+ */
 GST_API
 GQuark gst_uri_error_quark (void);
 

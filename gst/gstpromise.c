@@ -32,7 +32,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
  * SECTION:gstpromise
  * @title: GstPromise
  * @short_description: a miniobject for future/promise-like functionality
- * @see_also:
  *
  * The #GstPromise object implements the container for values that may
  * be available later. i.e. a Future or a Promise in

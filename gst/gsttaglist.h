@@ -450,7 +450,7 @@ gboolean     gst_tag_list_get_sample_index  (const GstTagList * list,
 
 /* refcounting */
 /**
- * gst_tag_list_ref:
+ * gst_tag_list_ref: (skip)
  * @taglist: the #GstTagList to reference
  *
  * Add a reference to a #GstTagList mini object.
@@ -463,6 +463,7 @@ gboolean     gst_tag_list_get_sample_index  (const GstTagList * list,
  *
  * Returns: the same #GstTagList mini object.
  */
+static inline GstTagList* gst_tag_list_ref(GstTagList* taglist);
 static inline GstTagList *
 gst_tag_list_ref (GstTagList * taglist)
 {
@@ -470,11 +471,12 @@ gst_tag_list_ref (GstTagList * taglist)
 }
 
 /**
- * gst_tag_list_unref:
+ * gst_tag_list_unref: (skip)
  * @taglist: a #GstTagList.
  *
  * Unref a #GstTagList, and and free all its memory when the refcount reaches 0.
  */
+static inline void gst_tag_list_unref(GstTagList* taglist);
 static inline void
 gst_tag_list_unref (GstTagList * taglist)
 {
@@ -501,7 +503,7 @@ gst_clear_tag_list (GstTagList ** taglist_ptr)
 }
 
 /**
- * gst_tag_list_copy:
+ * gst_tag_list_copy: (skip)
  * @taglist: a #GstTagList.
  *
  * Creates a new #GstTagList as a copy of the old @taglist. The new taglist
@@ -516,6 +518,7 @@ gst_clear_tag_list (GstTagList ** taglist_ptr)
  *
  * Returns: the new #GstTagList
  */
+static inline GstTagList* gst_tag_list_copy(const GstTagList* taglist);
 static inline GstTagList *
 gst_tag_list_copy (const GstTagList * taglist)
 {

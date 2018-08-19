@@ -170,7 +170,7 @@ gst_proxy_control_binding_class_init (GstProxyControlBindingClass * klass)
  *              #GstControlBinding requests to
  * @ref_property_name: the property_name in @ref_object to control
  *
- * #GstProxyControlBinding forwards all access to data or sync_values()
+ * #GstProxyControlBinding forwards all access to data or `sync_values()`
  * requests from @property_name on @object to the control binding at
  * @ref_property_name on @ref_object.
  *

@@ -313,7 +313,7 @@ GST_API GType _gst_event_type;
  */
 #define         gst_event_make_writable(ev)   GST_EVENT_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (ev)))
 /**
- * gst_event_replace:
+ * gst_event_replace: (skip)
  * @old_event: (inout) (transfer full) (nullable): pointer to a
  *     pointer to a #GstEvent to be replaced.
  * @new_event: (allow-none) (transfer none): pointer to a #GstEvent that will
@@ -328,14 +328,15 @@ GST_API GType _gst_event_type;
  *
  * Returns: %TRUE if @new_event was different from @old_event
  */
+static inline gboolean gst_event_replace(GstEvent** old_event, GstEvent* new_event);
 static inline gboolean
-gst_event_replace (GstEvent **old_event, GstEvent *new_event)
+gst_event_replace(GstEvent** old_event, GstEvent* new_event)
 {
   return gst_mini_object_replace ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
 }
 
 /**
- * gst_event_steal:
+ * gst_event_steal: (skip)
  * @old_event: (inout) (transfer full) (nullable): pointer to a
  *     pointer to a #GstEvent to be stolen.
  *
@@ -344,6 +345,7 @@ gst_event_replace (GstEvent **old_event, GstEvent *new_event)
  *
  * Returns: the #GstEvent that was in @old_event
  */
+static inline GstEvent* gst_event_steal(GstEvent** old_event);
 static inline GstEvent *
 gst_event_steal (GstEvent **old_event)
 {
@@ -351,7 +353,7 @@ gst_event_steal (GstEvent **old_event)
 }
 
 /**
- * gst_event_take:
+ * gst_event_take: (skip)
  * @old_event: (inout) (transfer full) (nullable): pointer to a
  *     pointer to a #GstEvent to be stolen.
  * @new_event: (allow-none) (transfer full): pointer to a #GstEvent that will
@@ -365,6 +367,7 @@ gst_event_steal (GstEvent **old_event)
  *
  * Returns: %TRUE if @new_event was different from @old_event
  */
+static inline gboolean gst_event_take(GstEvent** old_event, GstEvent* new_event);
 static inline gboolean
 gst_event_take (GstEvent **old_event, GstEvent *new_event)
 {
@@ -425,13 +428,14 @@ GstEventTypeFlags
 
 /* refcounting */
 /**
- * gst_event_ref:
+ * gst_event_ref: (skip)
  * @event: The event to refcount
  *
  * Increase the refcount of this event.
  *
  * Returns: (transfer full): @event (for convenience when doing assignments)
  */
+static inline GstEvent* gst_event_ref(GstEvent* event);
 static inline GstEvent *
 gst_event_ref (GstEvent * event)
 {
@@ -439,11 +443,12 @@ gst_event_ref (GstEvent * event)
 }
 
 /**
- * gst_event_unref:
+ * gst_event_unref: (skip)
  * @event: (transfer full): the event to refcount
  *
  * Decrease the refcount of an event, freeing it if the refcount reaches 0.
  */
+static inline void gst_event_unref(GstEvent* event);
 static inline void
 gst_event_unref (GstEvent * event)
 {
@@ -471,13 +476,14 @@ gst_clear_event (GstEvent ** event_ptr)
 
 /* copy event */
 /**
- * gst_event_copy:
+ * gst_event_copy: (skip)
  * @event: The event to copy
  *
  * Copy the event using the event specific copy function.
  *
  * Returns: (transfer full): the new event
  */
+static inline GstEvent* gst_event_copy(const GstEvent* event);
 static inline GstEvent *
 gst_event_copy (const GstEvent * event)
 {

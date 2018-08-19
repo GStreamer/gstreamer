@@ -76,7 +76,7 @@
  * @short_description: #GstPad subclass for pads managed by #GstAggregator
  * @see_also: gstcollectpads for historical reasons.
  *
- * Pads managed by a #GstAggregor subclass.
+ * Pads managed by a #GstAggregator subclass.
  *
  * This class used to live in gst-plugins-bad and was moved to core.
  *
@@ -3289,7 +3289,7 @@ gst_aggregator_get_allocator (GstAggregator * self,
  * gst_aggregator_simple_get_next_time:
  * @self: A #GstAggregator
  *
- * This is a simple #GstAggregator::get_next_time implementation that
+ * This is a simple #GstAggregatorClass.get_next_time() implementation that
  * just looks at the #GstSegment on the srcpad of the aggregator and bases
  * the next time on the running time there.
  *

@@ -948,7 +948,7 @@ gst_mini_object_get_qdata (GstMiniObject * object, GQuark quark)
  * @quark: A #GQuark, naming the user data pointer
  *
  * This function gets back user data pointers stored via gst_mini_object_set_qdata()
- * and removes the data from @object without invoking its destroy() function (if
+ * and removes the data from @object without invoking its `destroy()` function (if
  * any was set).
  *
  * Returns: (transfer full) (nullable): The user data pointer set, or

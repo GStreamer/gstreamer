@@ -72,7 +72,7 @@
  * So don't take addresses of these functions or use other tricks.
  * If you must do that for some reason, there is still an option.
  * If the debugging
- * subsystem was compiled out, #GST_DISABLE_GST_DEBUG is defined in
+ * subsystem was compiled out, GST_DISABLE_GST_DEBUG is defined in
  * &lt;gst/gst.h&gt;,
  * so you can check that before doing your trick.
  * Disabling the debugging subsystem will give you a slight (read: unnoticeable)

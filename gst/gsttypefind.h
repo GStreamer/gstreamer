@@ -91,6 +91,9 @@ struct _GstTypeFind {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * gst_type_find_get_type: (attributes doc.skip=true)
+ */
 GST_API
 GType     gst_type_find_get_type   (void);
 

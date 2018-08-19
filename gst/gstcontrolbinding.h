@@ -48,7 +48,10 @@ typedef struct _GstControlBindingPrivate GstControlBindingPrivate;
 
 #include <gst/gstcontrolsource.h>
 
-/* FIXME(2.0): remove, this is unused */
+/**
+ * GstControlBindingConvert: (attributes doc.skip=true)
+ * FIXME(2.0): remove, this is unused
+ */
 typedef void (* GstControlBindingConvert) (GstControlBinding *binding, gdouble src_value, GValue *dest_value);
 
 /**

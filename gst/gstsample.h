@@ -89,13 +89,14 @@ gboolean             gst_sample_set_info      (GstSample *sample, GstStructure *
 
 /* refcounting */
 /**
- * gst_sample_ref:
+ * gst_sample_ref: (skip)
  * @sample: a #GstSample
  *
  * Increases the refcount of the given sample by one.
  *
  * Returns: (transfer full): @sample
  */
+static inline GstSample* gst_sample_ref(GstSample* sample);
 static inline GstSample *
 gst_sample_ref (GstSample * sample)
 {
@@ -104,12 +105,13 @@ gst_sample_ref (GstSample * sample)
 }
 
 /**
- * gst_sample_unref:
+ * gst_sample_unref: (skip)
  * @sample: (transfer full): a #GstSample
  *
  * Decreases the refcount of the sample. If the refcount reaches 0, the
  * sample will be freed.
  */
+static inline void gst_sample_unref(GstSample* sample);
 static inline void
 gst_sample_unref (GstSample * sample)
 {
@@ -157,7 +159,7 @@ gst_sample_unref (GstSample * sample)
 
 /* copy sample */
 /**
- * gst_sample_copy:
+ * gst_sample_copy: (skip)
  * @buf: a #GstSample.
  *
  * Create a copy of the given sample. This will also make a newly allocated
@@ -167,6 +169,7 @@ gst_sample_unref (GstSample * sample)
  *
  * Since: 1.2
  */
+static inline GstSample* gst_sample_copy(const GstSample* buf);
 static inline GstSample *
 gst_sample_copy (const GstSample * buf)
 {

@@ -362,7 +362,9 @@ void _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
     const gchar * func, gint line, GObject * obj, const gchar * msg,
     const guint8 * data, guint length);
 
-/* we define this to avoid a compiler warning regarding a cast from a function
+/**
+ * GstDebugFuncPtr: (attributes doc.skip=true)
+ * we define this to avoid a compiler warning regarding a cast from a function
  * pointer to a void pointer
  * (see https://bugzilla.gnome.org/show_bug.cgi?id=309253)
  */

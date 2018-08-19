@@ -659,7 +659,7 @@ gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic)
  * When @src operates in %GST_FORMAT_TIME, #GstBaseSrc will send an EOS
  * when a buffer outside of the currently configured segment is pushed if
  * @automatic_eos is %TRUE. Since 1.16, if @automatic_eos is %FALSE an
- * EOS will be pushed only when the #GstBaseSrc.create implementation
+ * EOS will be pushed only when the #GstBaseSrcClass.create() implementation
  * returns %GST_FLOW_EOS.
  *
  * Since: 1.4
@@ -856,7 +856,7 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
  * @time: The new time value for the start of the new segment
  *
  * Prepare a new seamless segment for emission downstream. This function must
- * only be called by derived sub-classes, and only from the create() function,
+ * only be called by derived sub-classes, and only from the #GstBaseSrcClass::create function,
  * as the stream-lock needs to be held.
  *
  * The format for the new segment will be the current format of the source, as

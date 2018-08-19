@@ -356,13 +356,14 @@ GQuark          gst_message_type_to_quark       (GstMessageType type);
 
 /* refcounting */
 /**
- * gst_message_ref:
+ * gst_message_ref: (skip)
  * @msg: the message to ref
  *
  * Convenience macro to increase the reference count of the message.
  *
  * Returns: @msg (for convenience when doing assignments)
  */
+static inline GstMessage * gst_message_ref (GstMessage * msg);
 static inline GstMessage *
 gst_message_ref (GstMessage * msg)
 {
@@ -370,12 +371,13 @@ gst_message_ref (GstMessage * msg)
 }
 
 /**
- * gst_message_unref:
+ * gst_message_unref: (skip)
  * @msg: the message to unref
  *
  * Convenience macro to decrease the reference count of the message, possibly
  * freeing it.
  */
+static inline void gst_message_unref (GstMessage * msg);
 static inline void
 gst_message_unref (GstMessage * msg)
 {
@@ -403,7 +405,7 @@ gst_clear_message (GstMessage ** msg_ptr)
 
 /* copy message */
 /**
- * gst_message_copy:
+ * gst_message_copy: (skip)
  * @msg: the message to copy
  *
  * Creates a copy of the message. Returns a copy of the message.
@@ -412,6 +414,7 @@ gst_clear_message (GstMessage ** msg_ptr)
  *
  * MT safe
  */
+static inline GstMessage * gst_message_copy (const GstMessage * msg);
 static inline GstMessage *
 gst_message_copy (const GstMessage * msg)
 {
@@ -439,7 +442,7 @@ gst_message_copy (const GstMessage * msg)
  */
 #define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (msg)))
 /**
- * gst_message_replace:
+ * gst_message_replace: (skip)
  * @old_message: (inout) (transfer full) (nullable): pointer to a
  *     pointer to a #GstMessage to be replaced.
  * @new_message: (allow-none) (transfer none): pointer to a #GstMessage that will
@@ -454,6 +457,7 @@ gst_message_copy (const GstMessage * msg)
  *
  * Returns: %TRUE if @new_message was different from @old_message
  */
+static inline gboolean gst_message_replace (GstMessage **old_message, GstMessage *new_message);
 static inline gboolean
 gst_message_replace (GstMessage **old_message, GstMessage *new_message)
 {

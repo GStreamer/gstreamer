@@ -200,6 +200,9 @@ struct _GstStaticPadTemplate {
 GST_API
 GType			gst_pad_template_get_type		(void);
 
+/**
+ * gst_static_pad_template_get_type: (attributes doc.skip=true)
+ */
 GST_API
 GType			gst_static_pad_template_get_type	(void);
 

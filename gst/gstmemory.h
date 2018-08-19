@@ -320,13 +320,14 @@ gboolean       gst_memory_is_type      (GstMemory *mem, const gchar *mem_type);
 
 /* refcounting */
 /**
- * gst_memory_ref:
+ * gst_memory_ref: (skip)
  * @memory: The memory to refcount
  *
  * Increase the refcount of this memory.
  *
  * Returns: (transfer full): @memory (for convenience when doing assignments)
  */
+static inline GstMemory* gst_memory_ref(GstMemory* memory);
 static inline GstMemory *
 gst_memory_ref (GstMemory * memory)
 {
@@ -334,11 +335,12 @@ gst_memory_ref (GstMemory * memory)
 }
 
 /**
- * gst_memory_unref:
+ * gst_memory_unref: (skip)
  * @memory: (transfer full): the memory to refcount
  *
  * Decrease the refcount of an memory, freeing it if the refcount reaches 0.
  */
+static inline void gst_memory_unref(GstMemory* memory);
 static inline void
 gst_memory_unref (GstMemory * memory)
 {

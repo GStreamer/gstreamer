@@ -19,7 +19,7 @@
 
 /**
  * SECTION:gsterror
- * @title: GstError
+ * @title: GstGError
  * @short_description: Categorized error messages
  * @see_also: #GstMessage
  * @symbols:

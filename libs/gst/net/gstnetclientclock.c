@@ -1415,7 +1415,7 @@ gst_net_client_clock_get_internal_time (GstClock * clock)
  * @remote_port: the port of the remote clock provider
  * @base_time: initial time of the clock
  *
- * Create a new #GstNetClientInternalClock that will report the time
+ * Create a new #GstNetClientClock that will report the time
  * provided by the #GstNetTimeProvider on @remote_address and
  * @remote_port.
  *

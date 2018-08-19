@@ -65,7 +65,7 @@ G_BEGIN_DECLS
  * GST_FOURCC_FORMAT: (skip):
  *
  * Can be used together with #GST_FOURCC_ARGS to properly output a
- * #guint32 fourcc value in a printf()-style text message.
+ * #guint32 fourcc value in a printf\()-style text message.
  *
  * |[
  * printf ("fourcc: %" GST_FOURCC_FORMAT "\n", GST_FOURCC_ARGS (fcc));
@@ -79,7 +79,7 @@ G_BEGIN_DECLS
  * @fourcc: a #guint32 fourcc value to output
  *
  * Can be used together with #GST_FOURCC_FORMAT to properly output a
- * #guint32 fourcc value in a printf()-style text message.
+ * #guint32 fourcc value in a printf\()-style text message.
  */
 
 #define __GST_PRINT_CHAR(c) \

@@ -43,7 +43,7 @@
  * then a guaranteed unique name will be assigned to it.
  *
  * A #GstElement creating a pad will typically use the various
- * gst_pad_set_*_function() calls to register callbacks for events, queries or
+ * gst_pad_set_*_function\() calls to register callbacks for events, queries or
  * dataflow on the pads.
  *
  * gst_pad_get_parent() will retrieve the #GstElement that owns the pad.

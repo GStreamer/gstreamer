@@ -2628,6 +2628,9 @@ _gst_parent_buffer_meta_init (GstParentBufferMeta * parent_meta,
   return TRUE;
 }
 
+/**
+ * gst_parent_buffer_meta_api_get_type: (attributes doc.skip=true)
+ */
 GType
 gst_parent_buffer_meta_api_get_type (void)
 {
@@ -2796,6 +2799,9 @@ _gst_reference_timestamp_meta_init (GstReferenceTimestampMeta * meta,
   return TRUE;
 }
 
+/**
+ * gst_reference_timestamp_meta_api_get_type: (attributes doc.skip=true)
+ */
 GType
 gst_reference_timestamp_meta_api_get_type (void)
 {
