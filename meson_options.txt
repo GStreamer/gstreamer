@@ -108,6 +108,7 @@ option('libmms', type : 'feature', value : 'auto', description : 'Microsoft mult
 option('lv2', type : 'feature', value : 'auto', description : 'LV2 audio plugin bridge')
 option('mpeg2enc', type : 'feature', value : 'auto', description : 'mpeg2enc video encoder plugin')
 option('mplex', type : 'feature', value : 'auto', description : 'mplex audio/video multiplexer plugin')
+option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Musepack decoder plugin')
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
 option('openh264', type : 'feature', value : 'auto', description : 'H.264 video codec plugin')
 option('openjpeg', type : 'feature', value : 'auto', description : 'JPEG2000 image codec plugin')
