@@ -20,12 +20,7 @@
 #ifndef __GST_MUSEPACK_READER_H__
 #define __GST_MUSEPACK_READER_H__
 
-#ifdef MPC_IS_OLD_API
-#include <mpcdec/mpcdec.h>
-#else
 #include <mpc/mpcdec.h>
-#endif
-
 #include "gstmusepackdec.h"
 
 void gst_musepack_init_reader (mpc_reader * r, GstMusepackDec * musepackdec);

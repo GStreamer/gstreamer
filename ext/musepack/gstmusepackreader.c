@@ -29,16 +29,6 @@
 GST_DEBUG_CATEGORY_EXTERN (musepackdec_debug);
 #define GST_CAT_DEFAULT musepackdec_debug
 
-#ifdef MPC_IS_OLD_API
-static mpc_int32_t gst_musepack_reader_peek (void *this, void *ptr,
-    mpc_int32_t size);
-static mpc_int32_t gst_musepack_reader_read (void *this, void *ptr,
-    mpc_int32_t size);
-static mpc_bool_t gst_musepack_reader_seek (void *this, mpc_int32_t offset);
-static mpc_int32_t gst_musepack_reader_tell (void *this);
-static mpc_int32_t gst_musepack_reader_get_size (void *this);
-static mpc_bool_t gst_musepack_reader_canseek (void *this);
-#else
 static mpc_int32_t gst_musepack_reader_peek (mpc_reader * this, void *ptr,
     mpc_int32_t size);
 static mpc_int32_t gst_musepack_reader_read (mpc_reader * this, void *ptr,
@@ -48,19 +38,11 @@ static mpc_bool_t gst_musepack_reader_seek (mpc_reader * this,
 static mpc_int32_t gst_musepack_reader_tell (mpc_reader * this);
 static mpc_int32_t gst_musepack_reader_get_size (mpc_reader * this);
 static mpc_bool_t gst_musepack_reader_canseek (mpc_reader * this);
-#endif
 
-#ifdef MPC_IS_OLD_API
-static mpc_int32_t
-gst_musepack_reader_peek (void *this, void *ptr, mpc_int32_t size)
-{
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-#else
 static mpc_int32_t
 gst_musepack_reader_peek (mpc_reader * this, void *ptr, mpc_int32_t size)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this->data);
-#endif
   GstFlowReturn flow_ret;
   GstBuffer *buf = NULL;
   guint read;
@@ -91,17 +73,10 @@ gst_musepack_reader_peek (mpc_reader * this, void *ptr, mpc_int32_t size)
   return read;
 }
 
-#ifdef MPC_IS_OLD_API
-static mpc_int32_t
-gst_musepack_reader_read (void *this, void *ptr, mpc_int32_t size)
-{
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-#else
 static mpc_int32_t
 gst_musepack_reader_read (mpc_reader * this, void *ptr, mpc_int32_t size)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this->data);
-#endif
   gint read;
 
   /* read = peek + flush */
@@ -112,17 +87,10 @@ gst_musepack_reader_read (mpc_reader * this, void *ptr, mpc_int32_t size)
   return read;
 }
 
-#ifdef MPC_IS_OLD_API
-static mpc_bool_t
-gst_musepack_reader_seek (void *this, mpc_int32_t offset)
-{
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-#else
 static mpc_bool_t
 gst_musepack_reader_seek (mpc_reader * this, mpc_int32_t offset)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this->data);
-#endif
   mpc_int32_t length;
 
   length = gst_musepack_reader_get_size (this);
@@ -136,31 +104,17 @@ gst_musepack_reader_seek (mpc_reader * this, mpc_int32_t offset)
   }
 }
 
-#ifdef MPC_IS_OLD_API
-static mpc_int32_t
-gst_musepack_reader_tell (void *this)
-{
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-#else
 static mpc_int32_t
 gst_musepack_reader_tell (mpc_reader * this)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this->data);
-#endif
   return musepackdec->offset;
 }
 
-#ifdef MPC_IS_OLD_API
-static mpc_int32_t
-gst_musepack_reader_get_size (void *this)
-{
-  GstMusepackDec *dec = GST_MUSEPACK_DEC (this);
-#else
 static mpc_int32_t
 gst_musepack_reader_get_size (mpc_reader * this)
 {
   GstMusepackDec *dec = GST_MUSEPACK_DEC (this->data);
-#endif
   GstQuery *query;
   GstFormat format;
   gint64 length;
@@ -174,13 +128,8 @@ gst_musepack_reader_get_size (mpc_reader * this)
   return (mpc_int32_t) length;
 }
 
-#ifdef MPC_IS_OLD_API
-static mpc_bool_t
-gst_musepack_reader_canseek (void *this)
-#else
 static mpc_bool_t
 gst_musepack_reader_canseek (mpc_reader * this)
-#endif
 {
   return TRUE;
 }

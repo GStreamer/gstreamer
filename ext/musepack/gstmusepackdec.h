@@ -20,12 +20,7 @@
 #ifndef __GST_MUSEPACK_DEC_H__
 #define __GST_MUSEPACK_DEC_H__
 
-#ifdef MPC_IS_OLD_API
-#include <mpcdec/mpcdec.h>
-#else
 #include <mpc/mpcdec.h>
-#endif
-
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -51,11 +46,7 @@ typedef struct _GstMusepackDec {
   guint64       offset;
 
   /* MUSEPACK_DEC object */
-#ifdef MPC_IS_OLD_API
-  mpc_decoder  *d;
-#else
   mpc_demux    *d;
-#endif
   mpc_reader   *r;
 
   gint          bps;     /* bytes per sample */ /* ATOMIC */

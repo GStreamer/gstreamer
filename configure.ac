@@ -1838,12 +1838,7 @@ AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
     HAVE_MUSEPACK="yes"
     MUSEPACK_LIBS="-lmpcdec"
     AC_SUBST(MUSEPACK_LIBS)
-    ], [AC_CHECK_HEADER([mpcdec/mpcdec.h], [
-      HAVE_MUSEPACK="yes"
-      MUSEPACK_LIBS="-lmpcdec"
-      AC_DEFINE(MPC_IS_OLD_API, 1, [Define if the old MusePack API is used])
-      AC_SUBST(MUSEPACK_LIBS)
-    ], [HAVE_MUSEPACK="no"])])
+    ], [HAVE_MUSEPACK="no"])
 ])
 
 dnl *** neon ***
