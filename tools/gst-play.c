@@ -55,6 +55,7 @@ typedef enum
   GST_PLAY_TRICK_MODE_DEFAULT_NO_AUDIO,
   GST_PLAY_TRICK_MODE_KEY_UNITS,
   GST_PLAY_TRICK_MODE_KEY_UNITS_NO_AUDIO,
+  GST_PLAY_TRICK_MODE_INSTANT_RATE,
   GST_PLAY_TRICK_MODE_LAST
 } GstPlayTrickMode;
 
@@ -104,6 +105,7 @@ typedef struct
 } GstPlay;
 
 static gboolean quiet = FALSE;
+static gboolean instant_rate_changes = FALSE;
 
 static gboolean play_bus_msg (GstBus * bus, GstMessage * msg, gpointer data);
 static gboolean play_next (GstPlay * play);
@@ -934,7 +936,7 @@ play_do_seek (GstPlay * play, gint64 pos, gdouble rate, GstPlayTrickMode mode)
   if (!seekable)
     return FALSE;
 
-  seek_flags = GST_SEEK_FLAG_FLUSH;
+  seek_flags = 0;
 
   switch (mode) {
     case GST_PLAY_TRICK_MODE_DEFAULT:
@@ -955,6 +957,19 @@ play_do_seek (GstPlay * play, gint64 pos, gdouble rate, GstPlayTrickMode mode)
       break;
   }
 
+  /* See if we can do an instant rate change (not changing dir) */
+  if (mode & GST_PLAY_TRICK_MODE_INSTANT_RATE && rate * play->rate > 0) {
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        seek_flags | GST_SEEK_FLAG_INSTANT_RATE_CHANGE,
+        GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
+        GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+    if (gst_element_send_event (play->playbin, seek)) {
+      goto done;
+    }
+  }
+
+  /* No instant rate change, need to do a flushing seek */
+  seek_flags |= GST_SEEK_FLAG_FLUSH;
   if (rate >= 0)
     seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
         seek_flags | GST_SEEK_FLAG_ACCURATE,
@@ -969,15 +984,21 @@ play_do_seek (GstPlay * play, gint64 pos, gdouble rate, GstPlayTrickMode mode)
   if (!gst_element_send_event (play->playbin, seek))
     return FALSE;
 
+done:
   play->rate = rate;
-  play->trick_mode = mode;
+  play->trick_mode = mode & ~GST_PLAY_TRICK_MODE_INSTANT_RATE;
   return TRUE;
 }
 
 static void
 play_set_playback_rate (GstPlay * play, gdouble rate)
 {
-  if (play_set_rate_and_trick_mode (play, rate, play->trick_mode)) {
+  GstPlayTrickMode mode = play->trick_mode;
+
+  if (instant_rate_changes)
+    mode |= GST_PLAY_TRICK_MODE_INSTANT_RATE;
+
+  if (play_set_rate_and_trick_mode (play, rate, mode)) {
     gst_print (_("Playback rate: %.2f"), rate);
     gst_print ("                               \n");
   } else {
@@ -1460,6 +1481,10 @@ main (int argc, char **argv)
         N_("Volume"), NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
         N_("Playlist file containing input media files"), NULL},
+    {"instant-rate-changes", 'i', 0, G_OPTION_ARG_NONE, &instant_rate_changes,
+          N_
+          ("Use the experimental instant-rate-change flag when changing rate"),
+        NULL},
     {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
         N_("Do not print any output (apart from errors)"), NULL},
     {"use-playbin3", 0, 0, G_OPTION_ARG_NONE, &use_playbin3,
