@@ -1070,6 +1070,17 @@ gst_omx_component_unref (GstOMXComponent * comp)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (comp));
 }
 
+static OMX_ERRORTYPE
+gst_omx_component_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
+    guint32 param, gpointer cmd_data)
+{
+  OMX_ERRORTYPE err;
+
+  err = OMX_SendCommand (comp->handle, cmd, param, cmd_data);
+
+  return err;
+}
+
 /* NOTE: Uses comp->lock and comp->messages_lock */
 OMX_ERRORTYPE
 gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
@@ -1110,7 +1121,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
     gst_omx_component_send_message (comp, NULL);
   }
 
-  err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
+  err = gst_omx_component_send_command (comp, OMX_CommandStateSet, state, NULL);
   /* No need to check if anything has changed here */
 
 done:
@@ -1818,7 +1829,9 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
     /* Now flush the port */
     port->flushed = FALSE;
 
-    err = OMX_SendCommand (comp->handle, OMX_CommandFlush, port->index, NULL);
+    err =
+        gst_omx_component_send_command (comp, OMX_CommandFlush, port->index,
+        NULL);
 
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (comp->parent,
@@ -2369,11 +2382,11 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
   if (enabled)
     err =
-        OMX_SendCommand (comp->handle, OMX_CommandPortEnable, port->index,
-        NULL);
+        gst_omx_component_send_command (comp, OMX_CommandPortEnable,
+        port->index, NULL);
   else
     err =
-        OMX_SendCommand (comp->handle, OMX_CommandPortDisable,
+        gst_omx_component_send_command (comp, OMX_CommandPortDisable,
         port->index, NULL);
 
   if (err != OMX_ErrorNone) {
