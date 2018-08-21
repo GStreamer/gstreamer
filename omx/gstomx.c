@@ -491,11 +491,152 @@ gst_omx_component_wait_message (GstOMXComponent * comp, GstClockTime timeout)
   return signalled;
 }
 
+static const gchar *
+omx_event_type_to_str (OMX_EVENTTYPE event)
+{
+  switch (event) {
+    case OMX_EventCmdComplete:
+      return "EventCmdComplete";
+    case OMX_EventError:
+      return "EventError";
+    case OMX_EventMark:
+      return "EventMark";
+    case OMX_EventPortSettingsChanged:
+      return "EventPortSettingsChanged";
+    case OMX_EventBufferFlag:
+      return "EventBufferFlag";
+    case OMX_EventResourcesAcquired:
+      return "EventResourcesAcquired";
+    case OMX_EventComponentResumed:
+      return "EventComponentResumed";
+    case OMX_EventDynamicResourcesAvailable:
+      return "EventDynamicResourcesAvailable";
+    case OMX_EventPortFormatDetected:
+      return "EventPortFormatDetected";
+#ifdef OMX_EventIndexSettingChanged
+    case OMX_EventIndexSettingChanged:
+      return "EventIndexSettingChanged";
+#endif
+#ifdef OMX_EventPortNeedsDisable
+    case OMX_EventPortNeedsDisable:
+      return "EventPortNeedsDisable";
+#endif
+#ifdef OMX_EventPortNeedsFlush
+    case OMX_EventPortNeedsFlush:
+      return "EventPortNeedsFlush";
+#endif
+    case OMX_EventKhronosExtensions:
+    case OMX_EventVendorStartUnused:
+    case OMX_EventMax:
+    default:
+      break;
+  }
+
+  return NULL;
+}
+
+/* See "Table 3-11: Event Parameter Usage" */
+static GstStructure *
+omx_event_to_debug_struct (OMX_EVENTTYPE event,
+    guint32 data1, guint32 data2, gpointer event_data)
+{
+  const gchar *name;
+
+  name = omx_event_type_to_str (event);
+  switch (event) {
+    case OMX_EventCmdComplete:
+    {
+      const gchar *cmd = gst_omx_command_to_string (data1);
+
+      if (!cmd)
+        break;
+
+      switch (data1) {
+        case OMX_CommandStateSet:
+          return gst_structure_new (name,
+              "command", G_TYPE_STRING, cmd,
+              "state-reached", G_TYPE_STRING, gst_omx_state_to_string (data2),
+              NULL);
+        case OMX_CommandFlush:
+        case OMX_CommandPortDisable:
+        case OMX_CommandPortEnable:
+        case OMX_CommandMarkBuffer:
+          return gst_structure_new (name,
+              "command", G_TYPE_STRING, cmd, "port", G_TYPE_UINT, data2,
+              "error", G_TYPE_STRING,
+              gst_omx_error_to_string (GPOINTER_TO_UINT (event_data)), NULL);
+        case OMX_CommandKhronosExtensions:
+        case OMX_CommandVendorStartUnused:
+        case OMX_CommandMax:
+          break;
+      }
+    }
+      break;
+    case OMX_EventError:
+      return gst_structure_new (name, "error", G_TYPE_STRING,
+          gst_omx_error_to_string (data1), "extra-info", G_TYPE_STRING,
+          gst_omx_error_to_string (data2), NULL);
+    case OMX_EventMark:
+    case OMX_EventComponentResumed:
+    case OMX_EventResourcesAcquired:
+    case OMX_EventDynamicResourcesAvailable:
+    case OMX_EventPortFormatDetected:
+      return gst_structure_new_empty (name);
+    case OMX_EventPortSettingsChanged:
+#ifdef OMX_EventIndexSettingChanged
+    case OMX_EventIndexSettingChanged:
+#endif
+#ifdef OMX_EventPortNeedsDisable
+    case OMX_EventPortNeedsDisable:
+#endif
+#ifdef OMX_EventPortNeedsFlush
+    case OMX_EventPortNeedsFlush:
+#endif
+      return gst_structure_new (name, "port", G_TYPE_UINT,
+          data1, "param-config", G_TYPE_UINT, data2, NULL);
+    case OMX_EventBufferFlag:
+      return gst_structure_new (name, "port", G_TYPE_UINT,
+          data1, "flags", gst_omx_buffer_flags_to_string (data2), NULL);
+    case OMX_EventKhronosExtensions:
+    case OMX_EventVendorStartUnused:
+    case OMX_EventMax:
+    default:
+      break;
+  }
+
+  return NULL;
+}
+
+static void
+log_omx_performance_event (GstOMXComponent * comp, OMX_EVENTTYPE event,
+    guint32 data1, guint32 data2, gpointer event_data)
+{
+  GstStructure *s;
+
+  /* Don't bother creating useless structs if not needed */
+  if (gst_debug_category_get_threshold (OMX_PERFORMANCE) < GST_LEVEL_DEBUG)
+    return;
+
+  s = omx_event_to_debug_struct (event, data1, data2, event_data);
+  if (!s) {
+    GST_CAT_WARNING_OBJECT (OMX_PERFORMANCE, comp->parent,
+        "invalid event 0x%08x Data1 %u Data2 %u EventData %p", event, data1,
+        data2, event_data);
+    return;
+  }
+
+  GST_CAT_DEBUG_OBJECT (OMX_PERFORMANCE, comp->parent, "%" GST_PTR_FORMAT, s);
+
+  gst_structure_free (s);
+}
+
 static OMX_ERRORTYPE
 EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     OMX_U32 nData1, OMX_U32 nData2, OMX_PTR pEventData)
 {
   GstOMXComponent *comp = (GstOMXComponent *) pAppData;
+
+  log_omx_performance_event (comp, eEvent, nData1, nData2, pEventData);
 
   switch (eEvent) {
     case OMX_EventCmdComplete:
