@@ -1070,12 +1070,67 @@ gst_omx_component_unref (GstOMXComponent * comp)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (comp));
 }
 
+static GstStructure *
+omx_command_to_debug_struct (OMX_COMMANDTYPE cmd,
+    guint32 param, gpointer cmd_data)
+{
+  const gchar *cmd_str;
+
+  cmd_str = gst_omx_command_to_string (cmd);
+
+  switch (cmd) {
+    case OMX_CommandStateSet:
+      return gst_structure_new ("SendCommand",
+          "command", G_TYPE_STRING, cmd_str,
+          "state", G_TYPE_STRING, gst_omx_state_to_string (param), NULL);
+    case OMX_CommandFlush:
+    case OMX_CommandPortDisable:
+    case OMX_CommandPortEnable:
+      return gst_structure_new ("SendCommand",
+          "command", G_TYPE_STRING, cmd_str, "port", G_TYPE_UINT, param, NULL);
+    case OMX_CommandMarkBuffer:
+      return gst_structure_new ("SendCommand",
+          "command", G_TYPE_STRING, cmd_str,
+          "mark-type", G_TYPE_POINTER, cmd_data, NULL);
+    case OMX_CommandKhronosExtensions:
+    case OMX_CommandVendorStartUnused:
+    case OMX_CommandMax:
+    default:
+      break;
+  }
+
+  return NULL;
+}
+
+static void
+log_omx_performance_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
+    guint32 param, gpointer cmd_data)
+{
+  GstStructure *s;
+
+  /* Don't bother creating useless structs if not needed */
+  if (gst_debug_category_get_threshold (OMX_PERFORMANCE) < GST_LEVEL_DEBUG)
+    return;
+
+  s = omx_command_to_debug_struct (cmd, param, cmd_data);
+  if (!s) {
+    GST_CAT_WARNING_OBJECT (OMX_PERFORMANCE, comp->parent,
+        "invalid command 0x%08x Param %u CmdData %p", cmd, param, cmd_data);
+    return;
+  }
+
+  GST_CAT_DEBUG_OBJECT (OMX_PERFORMANCE, comp->parent, "%" GST_PTR_FORMAT, s);
+
+  gst_structure_free (s);
+}
+
 static OMX_ERRORTYPE
 gst_omx_component_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
     guint32 param, gpointer cmd_data)
 {
   OMX_ERRORTYPE err;
 
+  log_omx_performance_send_command (comp, cmd, param, cmd_data);
   err = OMX_SendCommand (comp->handle, cmd, param, cmd_data);
 
   return err;
