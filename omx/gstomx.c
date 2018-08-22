@@ -1569,17 +1569,27 @@ done:
   return err;
 }
 
+/* NOTE: Must be called while holding comp->lock */
 static gboolean
 should_wait_until_flushed (GstOMXPort * port)
 {
-  if (port->flushed)
-    return FALSE;
+  if (!port->flushed)
+    /* Flush command hasn't been completed yet by OMX */
+    return TRUE;
 
-  if (port->buffers
-      && port->buffers->len == g_queue_get_length (&port->pending_buffers))
-    return FALSE;
+  if (port->buffers) {
+    guint i;
 
-  return TRUE;
+    /* Wait for all the buffers used by OMX to be released */
+    for (i = 0; i < port->buffers->len; i++) {
+      GstOMXBuffer *buf = g_ptr_array_index (port->buffers, i);
+
+      if (buf->used)
+        return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 /* NOTE: Uses comp->lock and comp->messages_lock */
