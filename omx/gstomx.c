@@ -656,7 +656,7 @@ gst_omx_buffer_unmap (GstOMXBuffer * buffer)
 }
 
 static void
-log_omx_performance (GstOMXComponent * comp, const gchar * event,
+log_omx_performance_buffer (GstOMXComponent * comp, const gchar * event,
     GstOMXBuffer * buf)
 {
   GstStructure *s;
@@ -728,7 +728,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   msg->content.buffer_done.buffer = pBuffer;
   msg->content.buffer_done.empty = OMX_TRUE;
 
-  log_omx_performance (comp, "EmptyBufferDone", buf);
+  log_omx_performance_buffer (comp, "EmptyBufferDone", buf);
   GST_LOG_OBJECT (comp->parent, "%s port %u emptied buffer %p (%p)",
       comp->name, buf->port->index, buf, buf->omx_buf->pBuffer);
 
@@ -767,7 +767,7 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   msg->content.buffer_done.buffer = pBuffer;
   msg->content.buffer_done.empty = OMX_FALSE;
 
-  log_omx_performance (comp, "FillBufferDone", buf);
+  log_omx_performance_buffer (comp, "FillBufferDone", buf);
   GST_LOG_OBJECT (comp->parent, "%s port %u filled buffer %p (%p)", comp->name,
       buf->port->index, buf, buf->omx_buf->pBuffer);
 
@@ -1596,10 +1596,10 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   buf->used = TRUE;
 
   if (port->port_def.eDir == OMX_DirInput) {
-    log_omx_performance (comp, "EmptyThisBuffer", buf);
+    log_omx_performance_buffer (comp, "EmptyThisBuffer", buf);
     err = OMX_EmptyThisBuffer (comp->handle, buf->omx_buf);
   } else {
-    log_omx_performance (comp, "FillThisBuffer", buf);
+    log_omx_performance_buffer (comp, "FillThisBuffer", buf);
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
   DEBUG_IF_OK (comp->parent, err, "Released buffer %p to %s port %u: %s "
@@ -2400,7 +2400,7 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
        */
       gst_omx_buffer_reset (buf);
 
-      log_omx_performance (comp, "FillThisBuffer", buf);
+      log_omx_performance_buffer (comp, "FillThisBuffer", buf);
       err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
 
       if (err != OMX_ErrorNone) {
