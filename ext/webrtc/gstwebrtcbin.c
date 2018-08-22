@@ -250,6 +250,7 @@ enum
   GET_STATS_SIGNAL,
   ADD_TRANSCEIVER_SIGNAL,
   GET_TRANSCEIVERS_SIGNAL,
+  ADD_TURN_SERVER_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -3300,6 +3301,17 @@ gst_webrtc_bin_get_transceivers (GstWebRTCBin * webrtc)
 }
 
 static gboolean
+gst_webrtc_bin_add_turn_server (GstWebRTCBin * webrtc, const gchar * uri)
+{
+  g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), FALSE);
+  g_return_val_if_fail (uri != NULL, FALSE);
+
+  GST_DEBUG_OBJECT (webrtc, "Adding turn server: %s", uri);
+
+  return gst_webrtc_ice_add_turn_server (webrtc->priv->ice, uri);
+}
+
+static gboolean
 copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstPad *gpad = GST_PAD_CAST (user_data);
@@ -4078,7 +4090,9 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_TURN_SERVER,
       g_param_spec_string ("turn-server", "TURN Server",
-          "The TURN server of the form turn(s)://username:password@host:port",
+          "The TURN server of the form turn(s)://username:password@host:port. "
+          "This is a convenience property, use #GstWebRTCBin::add-turn-server "
+          "if you wish to use multiple TURN servers",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
@@ -4309,6 +4323,19 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_get_transceivers), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_ARRAY, 0);
+
+  /**
+   * GstWebRTCBin::add-turn-server:
+   * @object: the #GstWebRtcBin
+   * @uri: The uri of the server of the form turn(s)://username:password@host:port
+   *
+   * Add a turn server to obtain ICE candidates from
+   */
+  gst_webrtc_bin_signals[ADD_TURN_SERVER_SIGNAL] =
+      g_signal_new_class_handler ("add-turn-server", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_webrtc_bin_add_turn_server), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 }
 
 static void

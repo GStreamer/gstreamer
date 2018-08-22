@@ -48,6 +48,8 @@ struct _GstWebRTCICE
   GstUri                           *stun_server;
   GstUri                           *turn_server;
 
+  GHashTable                       *turn_servers;
+
   GstWebRTCICEPrivate              *priv;
 };
 
@@ -77,6 +79,8 @@ gboolean                    gst_webrtc_ice_set_remote_credentials   (GstWebRTCIC
                                                                      GstWebRTCICEStream * stream,
                                                                      gchar * ufrag,
                                                                      gchar * pwd);
+gboolean                    gst_webrtc_ice_add_turn_server          (GstWebRTCICE * ice,
+                                                                     const gchar * uri);
 
 G_END_DECLS
 

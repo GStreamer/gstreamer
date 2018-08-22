@@ -32,6 +32,8 @@
  * - are locally generated remote candidates meant to be readded to libnice?
  */
 
+static GstUri *_validate_turn_server (GstWebRTCICE * ice, const gchar * s);
+
 #define GST_CAT_DEFAULT gst_webrtc_ice_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -292,11 +294,76 @@ _parse_userinfo (const gchar * userinfo, gchar ** user, gchar ** pass)
   *pass = g_strdup (&colon[1]);
 }
 
+static void
+_add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
+    GstUri * turn_server)
+{
+  gboolean ret;
+  gchar *user, *pass;
+  const gchar *userinfo, *transport, *scheme;
+  NiceRelayType relays[4] = { 0, };
+  int i, relay_n = 0;
+
+  scheme = gst_uri_get_scheme (turn_server);
+  transport = gst_uri_get_query_value (turn_server, "transport");
+  userinfo = gst_uri_get_userinfo (turn_server);
+  _parse_userinfo (userinfo, &user, &pass);
+
+  if (g_strcmp0 (scheme, "turns") == 0) {
+    relays[relay_n++] = NICE_RELAY_TYPE_TURN_TLS;
+  } else if (g_strcmp0 (scheme, "turn") == 0) {
+    if (!transport || g_strcmp0 (transport, "udp") == 0)
+      relays[relay_n++] = NICE_RELAY_TYPE_TURN_UDP;
+    if (!transport || g_strcmp0 (transport, "tcp") == 0)
+      relays[relay_n++] = NICE_RELAY_TYPE_TURN_TCP;
+  }
+  g_assert (relay_n < G_N_ELEMENTS (relays));
+
+  for (i = 0; i < relay_n; i++) {
+    ret = nice_agent_set_relay_info (ice->priv->nice_agent,
+        item->nice_stream_id, NICE_COMPONENT_TYPE_RTP,
+        gst_uri_get_host (turn_server),
+        gst_uri_get_port (turn_server), user, pass, relays[i]);
+    if (!ret) {
+      gchar *uri = gst_uri_to_string (turn_server);
+      GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
+      g_free (uri);
+      break;
+    }
+    ret = nice_agent_set_relay_info (ice->priv->nice_agent,
+        item->nice_stream_id, NICE_COMPONENT_TYPE_RTCP,
+        gst_uri_get_host (turn_server),
+        gst_uri_get_port (turn_server), user, pass, relays[i]);
+    if (!ret) {
+      gchar *uri = gst_uri_to_string (turn_server);
+      GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
+      g_free (uri);
+      break;
+    }
+  }
+  g_free (user);
+  g_free (pass);
+}
+
+typedef struct
+{
+  GstWebRTCICE *ice;
+  struct NiceStreamItem *item;
+} AddTurnServerData;
+
+static void
+_add_turn_server_func (const gchar * uri, GstUri * turn_server,
+    AddTurnServerData * data)
+{
+  _add_turn_server (data->ice, data->item, turn_server);
+}
+
 GstWebRTCICEStream *
 gst_webrtc_ice_add_stream (GstWebRTCICE * ice, guint session_id)
 {
   struct NiceStreamItem m = NICE_MATCH_INIT;
   struct NiceStreamItem *item;
+  AddTurnServerData add_data;
 
   m.session_id = session_id;
   item = _nice_stream_item_find (ice, (NiceStreamItemFindFunc) _match, &m);
@@ -309,52 +376,14 @@ gst_webrtc_ice_add_stream (GstWebRTCICE * ice, guint session_id)
   item = _create_nice_stream_item (ice, session_id);
 
   if (ice->turn_server) {
-    gboolean ret;
-    gchar *user, *pass;
-    const gchar *userinfo, *transport, *scheme;
-    NiceRelayType relays[4] = { 0, };
-    int i, relay_n = 0;
-
-    scheme = gst_uri_get_scheme (ice->turn_server);
-    transport = gst_uri_get_query_value (ice->turn_server, "transport");
-    userinfo = gst_uri_get_userinfo (ice->turn_server);
-    _parse_userinfo (userinfo, &user, &pass);
-
-    if (g_strcmp0 (scheme, "turns") == 0) {
-      relays[relay_n++] = NICE_RELAY_TYPE_TURN_TLS;
-    } else if (g_strcmp0 (scheme, "turn") == 0) {
-      if (!transport || g_strcmp0 (transport, "udp") == 0)
-        relays[relay_n++] = NICE_RELAY_TYPE_TURN_UDP;
-      if (!transport || g_strcmp0 (transport, "tcp") == 0)
-        relays[relay_n++] = NICE_RELAY_TYPE_TURN_TCP;
-    }
-    g_assert (relay_n < G_N_ELEMENTS (relays));
-
-    for (i = 0; i < relay_n; i++) {
-      ret = nice_agent_set_relay_info (ice->priv->nice_agent,
-          item->nice_stream_id, NICE_COMPONENT_TYPE_RTP,
-          gst_uri_get_host (ice->turn_server),
-          gst_uri_get_port (ice->turn_server), user, pass, relays[i]);
-      if (!ret) {
-        gchar *uri = gst_uri_to_string (ice->turn_server);
-        GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
-        g_free (uri);
-        break;
-      }
-      ret = nice_agent_set_relay_info (ice->priv->nice_agent,
-          item->nice_stream_id, NICE_COMPONENT_TYPE_RTCP,
-          gst_uri_get_host (ice->turn_server),
-          gst_uri_get_port (ice->turn_server), user, pass, relays[i]);
-      if (!ret) {
-        gchar *uri = gst_uri_to_string (ice->turn_server);
-        GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
-        g_free (uri);
-        break;
-      }
-    }
-    g_free (user);
-    g_free (pass);
+    _add_turn_server (ice, item, ice->turn_server);
   }
+
+  add_data.ice = ice;
+  add_data.item = item;
+
+  g_hash_table_foreach (ice->turn_servers, (GHFunc) _add_turn_server_func,
+      &add_data);
 
   return item->stream;
 }
@@ -533,6 +562,23 @@ gst_webrtc_ice_set_remote_credentials (GstWebRTCICE * ice,
 }
 
 gboolean
+gst_webrtc_ice_add_turn_server (GstWebRTCICE * ice, const gchar * uri)
+{
+  gboolean ret = FALSE;
+  GstUri *valid_uri;
+
+  if (!(valid_uri = _validate_turn_server (ice, uri)))
+    goto done;
+
+  g_hash_table_insert (ice->turn_servers, g_strdup (uri), valid_uri);
+
+  ret = TRUE;
+
+done:
+  return ret;
+}
+
+gboolean
 gst_webrtc_ice_set_local_credentials (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
 {
@@ -600,8 +646,8 @@ _resolve_host (const gchar * host)
   return g_inet_address_to_string (addr);
 }
 
-static void
-_set_turn_server (GstWebRTCICE * ice, const gchar * s)
+static GstUri *
+_validate_turn_server (GstWebRTCICE * ice, const gchar * s)
 {
   GstUri *uri = gst_uri_from_string (s);
   const gchar *userinfo, *host, *scheme;
@@ -610,11 +656,11 @@ _set_turn_server (GstWebRTCICE * ice, const gchar * s)
   gboolean turn_tls = FALSE;
   guint port;
 
-  GST_DEBUG_OBJECT (ice, "setting turn server, %s", s);
+  GST_DEBUG_OBJECT (ice, "validating turn server, %s", s);
 
   if (!uri) {
     GST_ERROR_OBJECT (ice, "Could not parse turn server '%s'", s);
-    return;
+    return NULL;
   }
 
   scheme = gst_uri_get_scheme (uri);
@@ -679,15 +725,13 @@ _set_turn_server (GstWebRTCICE * ice, const gchar * s)
   /* Set the resolved IP as the host since that's what libnice wants */
   gst_uri_set_host (uri, ip);
 
-  if (ice->turn_server)
-    gst_uri_unref (ice->turn_server);
-  ice->turn_server = uri;
-
 out:
   g_list_free (keys);
   g_free (ip);
   g_free (user);
   g_free (pass);
+
+  return uri;
 }
 
 static void
@@ -741,7 +785,13 @@ gst_webrtc_ice_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_TURN_SERVER:{
-      _set_turn_server (ice, g_value_get_string (value));
+      GstUri *uri = _validate_turn_server (ice, g_value_get_string (value));
+
+      if (uri) {
+        if (ice->turn_server)
+          gst_uri_unref (ice->turn_server);
+        ice->turn_server = uri;
+      }
       break;
     }
     case PROP_CONTROLLER:
@@ -807,6 +857,8 @@ gst_webrtc_ice_finalize (GObject * object)
 
   g_object_unref (ice->priv->nice_agent);
 
+  g_hash_table_unref (ice->turn_servers);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -862,6 +914,10 @@ gst_webrtc_ice_init (GstWebRTCICE * ice)
 
   g_mutex_init (&ice->priv->lock);
   g_cond_init (&ice->priv->cond);
+
+  ice->turn_servers =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) gst_uri_unref);
 
   _start_thread (ice);
 
