@@ -61,6 +61,8 @@ struct _GstV4l2Transform
   /* Selected caps */
   GstCaps *incaps;
   GstCaps *outcaps;
+
+  gboolean disable_passthrough;
 };
 
 struct _GstV4l2TransformClass
