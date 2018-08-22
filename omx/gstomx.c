@@ -1569,6 +1569,19 @@ done:
   return err;
 }
 
+static gboolean
+should_wait_until_flushed (GstOMXPort * port)
+{
+  if (port->flushed)
+    return FALSE;
+
+  if (port->buffers
+      && port->buffers->len == g_queue_get_length (&port->pending_buffers))
+    return FALSE;
+
+  return TRUE;
+}
+
 /* NOTE: Uses comp->lock and comp->messages_lock */
 OMX_ERRORTYPE
 gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
@@ -1633,9 +1646,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
     }
 
     if (timeout == 0) {
-      if (!port->flushed || (port->buffers
-              && port->buffers->len >
-              g_queue_get_length (&port->pending_buffers)))
+      if (should_wait_until_flushed (port))
         err = OMX_ErrorTimeout;
       goto done;
     }
@@ -1646,10 +1657,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
     signalled = TRUE;
     last_error = OMX_ErrorNone;
     gst_omx_component_handle_messages (comp);
-    while (!port->flushed &&
-        (port->buffers
-            && port->buffers->len >
-            g_queue_get_length (&port->pending_buffers))) {
+    while (should_wait_until_flushed (port)) {
       signalled = gst_omx_component_wait_message (comp, timeout);
       if (signalled)
         gst_omx_component_handle_messages (comp);
