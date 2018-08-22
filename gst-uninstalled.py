@@ -171,13 +171,13 @@ def setup_python_env(options, env):
     else:
         sitepackages = site.getusersitepackages()
 
-    sitecustomize = os.path.join(
+    usercustomize = os.path.join(
         subprocess.check_output([sys.executable, '-c', 'import site; print(site.USER_SITE)'],
-        env={"PYTHONUSERBASE": PREFIX_DIR}).decode().strip("\n"), "sitecustomize.py")
+        env={"PYTHONUSERBASE": PREFIX_DIR}).decode().strip("\n"), "usercustomize.py")
 
-    custom_user_sitepackage = os.path.dirname(sitecustomize)
+    custom_user_sitepackage = os.path.dirname(usercustomize)
     os.makedirs(custom_user_sitepackage, exist_ok=True)
-    with open(sitecustomize, "w") as f:
+    with open(usercustomize, "w") as f:
          f.write("""import os
 import gi.overrides
 
