@@ -4555,8 +4555,16 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   if (caps == NULL)
     goto no_caps;
 
-  if ((pool = obj->pool))
-    gst_object_ref (pool);
+  switch (obj->mode) {
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_DMABUF:
+      if ((pool = obj->pool))
+        gst_object_ref (pool);
+      break;
+    default:
+      pool = NULL;
+      break;
+  }
 
   if (pool != NULL) {
     GstCaps *pcaps;
