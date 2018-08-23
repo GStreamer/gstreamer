@@ -869,11 +869,105 @@ GST_START_TEST (segment_full)
   segment.offset = 0;
   gst_segment_set_running_time (&segment, GST_FORMAT_TIME, 100);
   fail_unless_equals_int (segment.base, 100);
+
   fail_unless (gst_segment_position_from_running_time_full (&segment,
-          GST_FORMAT_TIME, 70, &pos) == -1);
+          GST_FORMAT_TIME, 70, &pos) == 1);
+  fail_unless_equals_int (pos, 120);
+
   fail_unless (gst_segment_position_from_running_time_full (&segment,
           GST_FORMAT_TIME, 140, &pos) == 1);
   fail_unless_equals_int (pos, 190);
+
+  /* Test a non-1.0 rate that lands right before the segment, but still +ve */
+  segment.rate = 1.1;
+  segment.start = 100;
+  segment.offset = 0;
+  segment.stop = 500;
+  segment.position = 40;
+  segment.base = 150;
+  segment.time = 10000;
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 140, &pos) == 1);
+  fail_unless (pos == 89);
+  /* And now one that should give a position < 0 */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 0, &pos) == -1);
+  fail_unless (pos == 65);
+
+  /* Test a non-1.0 negative rate that lands right after the (reversed) segment, but still +ve position */
+  segment.rate = -2.0;
+  segment.start = 100;
+  segment.offset = 0;
+  segment.stop = 500;
+  segment.position = 150;
+  segment.base = 133;
+  segment.time = 10000;
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 200 + 133 + 20, &pos) == 1);
+  fail_unless (pos == 60);
+  /* And now one that should give a position < 0, reported as a negated value */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 200 + 133 + 70, &pos) == -1);
+  fail_unless (pos == 40);
+
+  /* Test gst_segment_position_from_running_time_full() with offsets */
+  segment.rate = 2.0;
+  segment.start = 100;
+  segment.offset = 100;
+  segment.stop = 500;
+  segment.position = 150;
+  segment.base = 175;
+  segment.time = 10000;
+  /* Position before the segment but >= 0 */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 75, &pos) == 1);
+  fail_unless (pos == 0);
+  fail_unless (gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME, 75) == -1);
+
+  /* Position before the segment and < 0 */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 65, &pos) == -1);
+  fail_unless (pos == 20);      /* Actually -20 */
+  fail_unless (gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME, 65) == -1);
+
+  /* After the segment */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 175 + 150 + 10, &pos) == 1);
+  fail_unless (pos == 520);
+  fail_unless (gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME, 175 + 150 + 10) == -1);
+
+  /* And with negative rate, so the segment is reversed */
+  segment.rate = -2.0;
+
+  /* Before the segment */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 75, &pos) == 1);
+  fail_unless (pos == 600);
+  fail_unless (gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME, 75) == -1);
+
+  /* Position after the segment and < 0 */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 400, &pos) == -1);
+  fail_unless (pos == 50);      /* Actually -50 */
+  fail_unless (gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME, 400) == -1);
+
+  /* Position after the segment and >= 0 */
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 325 + 10, &pos) == 1);
+  fail_unless (pos == 80);
+  fail_unless (gst_segment_position_from_running_time (&segment,
+          GST_FORMAT_TIME, 325 + 10) == -1);
+
+  /* Big offset can clip away an entire reversed segment and produce a negative position anyway */
+  segment.offset = 1000;
+  fail_unless (gst_segment_position_from_running_time_full (&segment,
+          GST_FORMAT_TIME, 75, &pos) == -1);
+  fail_unless (pos == 300);     /* Actually -300 */
 }
 
 GST_END_TEST;
