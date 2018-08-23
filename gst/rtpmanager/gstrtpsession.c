@@ -281,7 +281,8 @@ struct _GstRtpSessionPrivate
   GstRtpNtpTimeSource ntp_time_source;
   gboolean rtcp_sync_send_time;
 
-  guint rtx_count;
+  guint recv_rtx_req_count;
+  guint sent_rtx_req_count;
 };
 
 /* callbacks to handle actions from the session manager */
@@ -728,13 +729,17 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
    * Various session statistics. This property returns a GstStructure
    * with name application/x-rtp-session-stats with the following fields:
    *
-   *  "rtx-count"       G_TYPE_UINT   The number of retransmission events
-   *      received from downstream (in receiver mode)
-   *  "rtx-drop-count"  G_TYPE_UINT   The number of retransmission events
+   *  "recv-rtx-req-count  G_TYPE_UINT   The number of retransmission event
+   *      received from downstream (in receiver mode) (Since 1.16)
+   *  "sent-rtx-req-count" G_TYPE_UINT   The number of retransmission event
+   *      sent downstream (in sender mode) (Since 1.16)
+   *  "rtx-count"          G_TYPE_UINT   DEPRECATED Since 1.16, same as
+   *      "recv-rtx-req-count".
+   *  "rtx-drop-count"     G_TYPE_UINT   The number of retransmission events
    *      dropped (due to bandwidth constraints)
-   *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
-   *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
-   *  "source-stats"    G_TYPE_BOXED  GValueArray of #RTPSource::stats for all
+   *  "sent-nack-count"    G_TYPE_UINT   Number of NACKs sent
+   *  "recv-nack-count"    G_TYPE_UINT   Number of NACKs received
+   *  "source-stats"       G_TYPE_BOXED  GValueArray of #RTPSource::stats for all
    *      RTP sources (Since 1.8)
    *
    * Since: 1.4
@@ -845,7 +850,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession)
 
   rtpsession->priv->thread_stopped = TRUE;
 
-  rtpsession->priv->rtx_count = 0;
+  rtpsession->priv->recv_rtx_req_count = 0;
+  rtpsession->priv->sent_rtx_req_count = 0;
 
   rtpsession->priv->ntp_time_source = DEFAULT_NTP_TIME_SOURCE;
 }
@@ -1007,8 +1013,10 @@ gst_rtp_session_create_stats (GstRtpSession * rtpsession)
   GstStructure *s;
 
   g_object_get (rtpsession->priv->session, "stats", &s, NULL);
-  gst_structure_set (s, "rtx-count", G_TYPE_UINT, rtpsession->priv->rtx_count,
-      NULL);
+  gst_structure_set (s, "rtx-count", G_TYPE_UINT,
+      rtpsession->priv->recv_rtx_req_count, "recv-rtx-req-count", G_TYPE_UINT,
+      rtpsession->priv->recv_rtx_req_count, "sent-rtx-req-count", G_TYPE_UINT,
+      rtpsession->priv->sent_rtx_req_count, NULL);
 
   return s;
 }
@@ -1801,7 +1809,7 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
         guint seqnum, delay, deadline, max_delay, avg_rtt;
 
         GST_RTP_SESSION_LOCK (rtpsession);
-        rtpsession->priv->rtx_count++;
+        rtpsession->priv->recv_rtx_req_count++;
         GST_RTP_SESSION_UNLOCK (rtpsession);
 
         if (!gst_structure_get_clock_time (s, "running-time", &running_time))
@@ -2705,6 +2713,10 @@ gst_rtp_session_notify_nack (RTPSession * sess, guint16 seqnum,
               "seqnum", G_TYPE_UINT, (guint) seqnum,
               "ssrc", G_TYPE_UINT, (guint) ssrc, NULL));
       gst_pad_push_event (send_rtp_sink, event);
+
+      GST_RTP_SESSION_LOCK (rtpsession);
+      rtpsession->priv->sent_rtx_req_count++;
+      GST_RTP_SESSION_UNLOCK (rtpsession);
 
       if (blp == 0)
         break;
