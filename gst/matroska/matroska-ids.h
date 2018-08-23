@@ -500,8 +500,10 @@ typedef enum {
 } GstMatroskaTrackFlags;
 
 typedef enum {
-  GST_MATROSKA_VIDEOTRACK_INTERLACED = (GST_MATROSKA_TRACK_SHIFT<<0)
-} GstMatroskaVideoTrackFlags;
+  GST_MATROSKA_INTERLACE_MODE_UNKNOWN = 0,
+  GST_MATROSKA_INTERLACE_MODE_INTERLACED = 1,
+  GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE = 2,
+} GstMatroskaInterlaceMode;
 
 typedef enum {
   GST_MATROSKA_STEREO_MODE_SBS_LR      = 0x1,
@@ -595,6 +597,8 @@ typedef struct _GstMatroskaTrackVideoContext {
   gdouble       default_fps;
   GstMatroskaAspectRatioMode asr_mode;
   guint32       fourcc;
+
+  GstMatroskaInterlaceMode interlace_mode;
 
   GstVideoMultiviewMode multiview_mode;
   GstVideoMultiviewFlags multiview_flags;
