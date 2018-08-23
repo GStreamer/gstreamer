@@ -542,13 +542,18 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
               if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
                 break;
 
-              if (num)
-                context->flags |= GST_MATROSKA_VIDEOTRACK_INTERLACED;
+              if (num == 1)
+                videocontext->interlace_mode =
+                    GST_MATROSKA_INTERLACE_MODE_INTERLACED;
+              else if (num == 2)
+                videocontext->interlace_mode =
+                    GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE;
               else
-                context->flags &= ~GST_MATROSKA_VIDEOTRACK_INTERLACED;
-              GST_DEBUG_OBJECT (parse, "TrackVideoInterlaced: %d",
-                  (context->flags & GST_MATROSKA_VIDEOTRACK_INTERLACED) ? 1 :
-                  0);
+                videocontext->interlace_mode =
+                    GST_MATROSKA_INTERLACE_MODE_UNKNOWN;
+
+              GST_DEBUG_OBJECT (parse, "video track interlacing mode: %d",
+                  videocontext->interlace_mode);
               break;
             }
 

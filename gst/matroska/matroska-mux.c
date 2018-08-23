@@ -1005,8 +1005,14 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   mimetype = gst_structure_get_name (structure);
 
   interlace_mode = gst_structure_get_string (structure, "interlace-mode");
-  if (interlace_mode != NULL && strcmp (interlace_mode, "progressive") != 0)
-    context->flags |= GST_MATROSKA_VIDEOTRACK_INTERLACED;
+  if (interlace_mode != NULL) {
+    if (strcmp (interlace_mode, "progressive") == 0)
+      videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE;
+    else
+      videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_INTERLACED;
+  } else {
+    videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_UNKNOWN;
+  }
 
   if (!strcmp (mimetype, "video/x-theora")) {
     /* we'll extract the details later from the theora identification header */
@@ -2693,8 +2699,17 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
         gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEODISPLAYHEIGHT,
             videocontext->display_height);
       }
-      if (context->flags & GST_MATROSKA_VIDEOTRACK_INTERLACED)
-        gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 1);
+      switch (videocontext->interlace_mode) {
+        case GST_MATROSKA_INTERLACE_MODE_INTERLACED:
+          gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 1);
+          break;
+        case GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE:
+          gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 2);
+          break;
+        default:
+          break;
+      }
+
       if (videocontext->fourcc) {
         guint32 fcc_le = GUINT32_TO_LE (videocontext->fourcc);
 
