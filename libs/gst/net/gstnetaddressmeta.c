@@ -26,6 +26,9 @@
  * in a #GstBuffer so that it network elements can track the to and from address
  * of the buffer.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 

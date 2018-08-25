@@ -36,6 +36,9 @@
  * All functions are MT-safe.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <glib-object.h>
 #include <gst/gst.h>

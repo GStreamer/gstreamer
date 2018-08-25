@@ -29,6 +29,9 @@
  * These macros and functions are for internal use of the unit tests found
  * inside the 'check' directories of various GStreamer packages.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstconsistencychecker.h"
 

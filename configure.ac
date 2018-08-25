@@ -892,7 +892,13 @@ AC_ARG_WITH([memory-alignment],
 
 dnl Symbol visibility
 VISIBILITY_CFLAGS=""
-AS_COMPILER_FLAG([-fvisibility=hidden], [VISIBILITY_CFLAGS="-fvisibility=hidden"])
+AS_COMPILER_FLAG([-fvisibility=hidden], [
+  VISIBILITY_CFLAGS="-fvisibility=hidden"
+  AC_DEFINE(GST_API_EXPORT, [extern __attribute__ ((visibility ("default")))], [public symbol export define])
+], [
+  VISIBILITY_CFLAGS=""
+  AC_DEFINE(GST_API_EXPORT, [extern], [public symbol export define])
+])
 AC_SUBST(VISIBILITY_CFLAGS)
 
 dnl Check for -Bsymbolic-functions linker flag used to avoid

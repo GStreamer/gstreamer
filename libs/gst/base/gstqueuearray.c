@@ -29,7 +29,9 @@
  * based on an array instead of linked lists. This reduces the overhead
  * caused by memory management by a large factor.
  */
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 #include <gst/gst.h>

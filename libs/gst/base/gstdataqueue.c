@@ -28,6 +28,9 @@
  * also provides size-related functionality. This object should be used for
  * any #GstElement that wishes to provide some sort of queueing functionality.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include "string.h"

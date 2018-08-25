@@ -33,6 +33,8 @@ helpers_install_dir = join_paths(libexecdir, 'gstreamer-1.0')
 
 cc = meson.get_compiler('c')
 
+cdata = configuration_data()
+
 # Ignore several spurious warnings for things gstreamer does very commonly
 # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
 # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
@@ -51,10 +53,19 @@ elif cc.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 # Symbol visibility
-have_visibility_hidden = cc.has_argument('-fvisibility=hidden')
-if have_visibility_hidden
+have_visibility_hidden = false
+if cc.get_id() == 'msvc'
+  export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
+  export_define = 'extern __attribute__ ((visibility ("default")))'
+  have_visibility_hidden = true
+else
+  export_define = 'extern'
 endif
+
+# Passing this through the command line would be too messy
+cdata.set('GST_API_EXPORT', export_define)
 
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
@@ -85,7 +96,6 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
 
-cdata = configuration_data()
 cdata.set_quoted('GST_API_VERSION', apiversion)
 cdata.set_quoted('GST_DATADIR', join_paths(prefix, get_option('datadir')))
 cdata.set_quoted('LOCALEDIR', join_paths(prefix, get_option('localedir')))

@@ -26,7 +26,7 @@
 
 #ifndef GST_NET_API
 #ifdef BUILDING_GST_NET
-#define GST_NET_API GST_EXPORT
+#define GST_NET_API GST_API_EXPORT        /* from config.h */
 #else
 #define GST_NET_API GST_API_IMPORT
 #endif

@@ -60,6 +60,9 @@
  *
  * Since: 1.4
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include "gstflowcombiner.h"

@@ -28,6 +28,9 @@
  * sending and receiving ancillary data such as unix credentials (See
  * #GUnixCredentialsMessage) and Unix file descriptions (See #GUnixFDMessage).
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 
