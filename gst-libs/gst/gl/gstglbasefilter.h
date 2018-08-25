@@ -88,7 +88,7 @@ struct _GstGLBaseFilterClass
   gpointer _padding[GST_PADDING];
 };
 
-GST_EXPORT
+GST_GL_API
 gboolean        gst_gl_base_filter_find_gl_context          (GstGLBaseFilter * filter);
 
 G_END_DECLS
