@@ -90,6 +90,7 @@ enum
   PROP_CONNECTOR_ID,
   PROP_PLANE_ID,
   PROP_FORCE_MODESETTING,
+  PROP_RESTORE_CRTC,
   PROP_CAN_SCALE,
   PROP_DISPLAY_WIDTH,
   PROP_DISPLAY_HEIGHT,
@@ -740,6 +741,10 @@ gst_kms_sink_start (GstBaseSink * bsink)
     universal_planes = TRUE;
   }
 
+  if (crtc->mode_valid && self->modesetting_enabled && self->restore_crtc) {
+    self->saved_crtc = (drmModeCrtc *) crtc;
+  }
+
 retry_find_plane:
   if (universal_planes &&
       drmSetClientCap (self->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1))
@@ -805,7 +810,7 @@ bail:
     drmModeFreePlane (plane);
   if (pres)
     drmModeFreePlaneResources (pres);
-  if (crtc)
+  if (crtc != self->saved_crtc)
     drmModeFreeCrtc (crtc);
   if (conn)
     drmModeFreeConnector (conn);
@@ -890,6 +895,7 @@ static gboolean
 gst_kms_sink_stop (GstBaseSink * bsink)
 {
   GstKMSSink *self;
+  int err;
 
   self = GST_KMS_SINK (bsink);
 
@@ -904,6 +910,19 @@ gst_kms_sink_stop (GstBaseSink * bsink)
   gst_poll_remove_fd (self->poll, &self->pollfd);
   gst_poll_restart (self->poll);
   gst_poll_fd_init (&self->pollfd);
+
+  if (self->saved_crtc) {
+    drmModeCrtc *crtc = (drmModeCrtc *) self->saved_crtc;
+
+    err = drmModeSetCrtc (self->fd, crtc->crtc_id, crtc->buffer_id, crtc->x,
+        crtc->y, (uint32_t *) & self->conn_id, 1, &crtc->mode);
+    if (err)
+      GST_ERROR_OBJECT (self, "Failed to restore previous CRTC mode: %s",
+          g_strerror (errno));
+
+    drmModeFreeCrtc (crtc);
+    self->saved_crtc = NULL;
+  }
 
   if (self->fd >= 0) {
     drmClose (self->fd);
@@ -1723,6 +1742,9 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
     case PROP_FORCE_MODESETTING:
       sink->modesetting_enabled = g_value_get_boolean (value);
       break;
+    case PROP_RESTORE_CRTC:
+      sink->restore_crtc = g_value_get_boolean (value);
+      break;
     case PROP_CAN_SCALE:
       sink->can_scale = g_value_get_boolean (value);
       break;
@@ -1776,6 +1798,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FORCE_MODESETTING:
       g_value_set_boolean (value, sink->modesetting_enabled);
+      break;
+    case PROP_RESTORE_CRTC:
+      g_value_set_boolean (value, sink->restore_crtc);
       break;
     case PROP_CAN_SCALE:
       g_value_set_boolean (value, sink->can_scale);
@@ -1918,6 +1943,19 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
   g_properties[PROP_FORCE_MODESETTING] =
       g_param_spec_boolean ("force-modesetting", "Force modesetting",
       "When enabled, the sink try to configure the display mode", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:restore-crtc:
+   *
+   * Restore previous CRTC setting if new CRTC mode was set forcefully.
+   * By default this is enabled if user set CRTC with a new mode on an already
+   * active CRTC wich was having a valid mode.
+   */
+  g_properties[PROP_RESTORE_CRTC] =
+      g_param_spec_boolean ("restore-crtc", "Restore CRTC mode",
+      "When enabled and CRTC was set with a new mode, previous CRTC mode will"
+      "be restored when going to NULL state.", TRUE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**

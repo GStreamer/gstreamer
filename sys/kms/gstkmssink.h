@@ -65,6 +65,7 @@ struct _GstKMSSink {
   gboolean can_scale;
 
   gboolean modesetting_enabled;
+  gboolean restore_crtc;
   GstStructure *connector_props;
   GstStructure *plane_props;
 
@@ -79,7 +80,7 @@ struct _GstKMSSink {
   gchar *bus_id;
 
   guint32 mm_width, mm_height;
-
+  gpointer saved_crtc;
   GstPoll *poll;
   GstPollFD pollfd;
 
