@@ -262,7 +262,7 @@ gst_bit_writer_align_bytes_unchecked (GstBitWriter * bitwriter,
   bit_left = 8 - bit_offset;
   if (trailing_bit)
     value = _gst_bit_writer_bit_filling_mask[bit_left];
-  return gst_bit_writer_put_bits_uint8_unchecked (bitwriter, value, bit_left);
+  gst_bit_writer_put_bits_uint8_unchecked (bitwriter, value, bit_left);
 }
 
 #define __GST_BIT_WRITER_WRITE_BITS_INLINE(bits) \
