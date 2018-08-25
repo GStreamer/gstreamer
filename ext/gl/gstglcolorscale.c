@@ -170,7 +170,7 @@ gst_gl_colorscale_gl_stop (GstGLBaseFilter * base_filter)
     colorscale->shader = NULL;
   }
 
-  return GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
+  GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
 }
 
 static gboolean
