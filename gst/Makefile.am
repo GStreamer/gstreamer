@@ -136,7 +136,7 @@ DISTCLEANFILES = $(built_headers_configure)
 
 libgstreamer_@GST_API_VERSION@_la_CFLAGS =		\
 	-D_GNU_SOURCE					\
-	-DGST_EXPORTS					\
+	-DBUILDING_GST					\
 	-DG_LOG_DOMAIN=g_log_domain_gstreamer 		\
 	-DGST_API_VERSION=\""$(GST_API_VERSION)"\" 	\
 	-DGST_DISABLE_DEPRECATED			\

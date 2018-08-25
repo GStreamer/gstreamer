@@ -40,7 +40,7 @@ libgstcontroller_@GST_API_VERSION@_la_SOURCES = \
 
 nodist_libgstcontroller_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
-libgstcontroller_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS)
+libgstcontroller_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) -DBUILDING_GST_CONTROLLER
 libgstcontroller_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(LIBM)
 libgstcontroller_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

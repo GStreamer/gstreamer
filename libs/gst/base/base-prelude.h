@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_BASE_API
+#ifdef BUILDING_GST_BASE
 #define GST_BASE_API GST_EXPORT
+#else
+#define GST_BASE_API GST_API_IMPORT
+#endif
 #endif
 
 #endif /* __GST_BASE_PRELUDE_H__ */

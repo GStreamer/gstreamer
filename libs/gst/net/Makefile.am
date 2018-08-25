@@ -24,7 +24,7 @@ libgstnet_@GST_API_VERSION@_la_SOURCES = \
 
 noinst_HEADERS = gstptp_private.h gstntppacket.h gstnetutils.h
 
-libgstnet_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
+libgstnet_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS) -DBUILDING_GST_NET
 libgstnet_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS) \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la
 libgstnet_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)

@@ -38,7 +38,7 @@ gstcontroller_h = controller_enums[1]
 gst_controller_gen_sources = [gstcontroller_h]
 gst_controller = library('gstcontroller-@0@'.format(apiversion),
   gst_controller_sources, gstcontroller_h, gstcontroller_c,
-  c_args : gst_c_args,
+  c_args : gst_c_args + ['-DBUILDING_GST_CONTROLLER'],
   install : true,
   version : libversion,
   soversion : soversion,

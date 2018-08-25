@@ -14,6 +14,7 @@ libgstcheck_@GST_API_VERSION@_la_SOURCES =	\
 
 libgstcheck_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
 	-UG_DISABLE_ASSERT \
+	-DBUILDING_GST_CHECK \
 	-I$(top_builddir)/libs \
 	-I$(top_builddir)/libs/gst/check \
 	-I$(top_builddir)/libs/gst/check/libcheck

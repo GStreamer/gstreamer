@@ -162,7 +162,11 @@
 #endif
 
 #ifndef GST_API
+# ifdef BUILDING_GST
 #define GST_API GST_EXPORT
+# else
+#  define GST_API GST_API_IMPORT
+# endif
 #endif
 
 /* These macros are used to mark deprecated functions in GStreamer headers,

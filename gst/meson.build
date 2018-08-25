@@ -219,7 +219,6 @@ subdir('printf')
 
 libgst_c_args = gst_c_args + [
   '-D_GNU_SOURCE',
-  '-DGST_EXPORTS',
   '-DG_LOG_DOMAIN=g_log_domain_gstreamer',
   '-DGST_DISABLE_DEPRECATED',
 ]
@@ -237,7 +236,7 @@ libgst = library('gstreamer-1.0', gst_sources,
   version : libversion,
   soversion : soversion,
   darwin_versions : osxversion,
-  c_args : libgst_c_args,
+  c_args : libgst_c_args + ['-DBUILDING_GST'],
   include_directories : [configinc,
     # HACK, change include paths in .y and .l in final version.
     include_directories('parse')],
