@@ -155,6 +155,12 @@
 # endif
 #endif
 
+#if defined(_MSC_VER) && !defined(GST_STATIC_COMPILATION)
+# define GST_API_IMPORT __declspec(dllimport) extern
+#else
+# define GST_API_IMPORT extern
+#endif
+
 #ifndef GST_API
 #define GST_API GST_EXPORT
 #endif
