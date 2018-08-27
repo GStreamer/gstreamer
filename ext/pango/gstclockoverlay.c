@@ -138,8 +138,6 @@ gst_clock_overlay_class_init (GstClockOverlayClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseTextOverlayClass *gsttextoverlay_class;
-  PangoContext *context;
-  PangoFontDescription *font_description;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -160,23 +158,6 @@ gst_clock_overlay_class_init (GstClockOverlayClass * klass)
       g_param_spec_string ("time-format", "Date/Time Format",
           "Format to use for time and date value, as in strftime.",
           DEFAULT_PROP_TIMEFORMAT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_mutex_lock (gsttextoverlay_class->pango_lock);
-  context = gsttextoverlay_class->pango_context;
-
-  pango_context_set_language (context, pango_language_from_string ("en_US"));
-  pango_context_set_base_dir (context, PANGO_DIRECTION_LTR);
-
-  font_description = pango_font_description_new ();
-  pango_font_description_set_family_static (font_description, "Monospace");
-  pango_font_description_set_style (font_description, PANGO_STYLE_NORMAL);
-  pango_font_description_set_variant (font_description, PANGO_VARIANT_NORMAL);
-  pango_font_description_set_weight (font_description, PANGO_WEIGHT_NORMAL);
-  pango_font_description_set_stretch (font_description, PANGO_STRETCH_NORMAL);
-  pango_font_description_set_size (font_description, 18 * PANGO_SCALE);
-  pango_context_set_font_description (context, font_description);
-  pango_font_description_free (font_description);
-  g_mutex_unlock (gsttextoverlay_class->pango_lock);
 }
 
 
@@ -197,6 +178,8 @@ static void
 gst_clock_overlay_init (GstClockOverlay * overlay)
 {
   GstBaseTextOverlay *textoverlay;
+  PangoContext *context;
+  PangoFontDescription *font_description;
 
   textoverlay = GST_BASE_TEXT_OVERLAY (overlay);
 
@@ -204,8 +187,22 @@ gst_clock_overlay_init (GstClockOverlay * overlay)
   textoverlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_LEFT;
 
   overlay->format = g_strdup (DEFAULT_PROP_TIMEFORMAT);
-}
 
+  context = textoverlay->pango_context;
+
+  pango_context_set_language (context, pango_language_from_string ("en_US"));
+  pango_context_set_base_dir (context, PANGO_DIRECTION_LTR);
+
+  font_description = pango_font_description_new ();
+  pango_font_description_set_family_static (font_description, "Monospace");
+  pango_font_description_set_style (font_description, PANGO_STYLE_NORMAL);
+  pango_font_description_set_variant (font_description, PANGO_VARIANT_NORMAL);
+  pango_font_description_set_weight (font_description, PANGO_WEIGHT_NORMAL);
+  pango_font_description_set_stretch (font_description, PANGO_STRETCH_NORMAL);
+  pango_font_description_set_size (font_description, 18 * PANGO_SCALE);
+  pango_context_set_font_description (context, font_description);
+  pango_font_description_free (font_description);
+}
 
 static void
 gst_clock_overlay_set_property (GObject * object, guint prop_id,

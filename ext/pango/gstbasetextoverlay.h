@@ -144,6 +144,8 @@ struct _GstBaseTextOverlay {
     GstPad                  *text_sinkpad;
     GstPad                  *srcpad;
 
+    PangoContext            *pango_context;
+
     GstSegment               segment;
     GstSegment               text_segment;
     GstBuffer               *text_buffer;
@@ -231,9 +233,6 @@ struct _GstBaseTextOverlay {
 
 struct _GstBaseTextOverlayClass {
     GstElementClass parent_class;
-
-    PangoContext *pango_context;
-    GMutex       *pango_lock;
 
     gchar *     (*get_text) (GstBaseTextOverlay *overlay, GstBuffer *video_frame);
 };

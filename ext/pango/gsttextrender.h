@@ -83,6 +83,8 @@ struct _GstTextRender {
     gint                  baseline_y;
     gboolean              use_ARGB;
 
+    PangoContext         *pango_context;
+
     GstTextRenderVAlign     valign;
     GstTextRenderHAlign     halign;
     GstTextRenderLineAlign  line_align;
@@ -95,8 +97,6 @@ struct _GstTextRender {
 
 struct _GstTextRenderClass {
     GstElementClass parent_class;
-
-    PangoContext *pango_context;
 };
 
 GType gst_text_render_get_type(void) G_GNUC_CONST;

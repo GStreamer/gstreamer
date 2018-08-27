@@ -258,7 +258,6 @@ gst_base_text_overlay_scale_mode_get_type (void)
 #define GST_BASE_TEXT_OVERLAY_BROADCAST(ov)(g_cond_broadcast (GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
 
 static GstElementClass *parent_class = NULL;
-static void gst_base_text_overlay_base_init (gpointer g_class);
 static void gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass);
 static void gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
     GstBaseTextOverlayClass * klass);
@@ -318,7 +317,7 @@ gst_base_text_overlay_get_type (void)
   if (g_once_init_enter ((gsize *) & type)) {
     static const GTypeInfo info = {
       sizeof (GstBaseTextOverlayClass),
-      (GBaseInitFunc) gst_base_text_overlay_base_init,
+      (GBaseInitFunc) NULL,
       NULL,
       (GClassInitFunc) gst_base_text_overlay_class_init,
       NULL,
@@ -344,25 +343,6 @@ gst_base_text_overlay_get_text (GstBaseTextOverlay * overlay,
 }
 
 static void
-gst_base_text_overlay_base_init (gpointer g_class)
-{
-  GstBaseTextOverlayClass *klass = GST_BASE_TEXT_OVERLAY_CLASS (g_class);
-  PangoFontMap *fontmap;
-
-  /* Only lock for the subclasses here, the base class
-   * doesn't have this mutex yet and it's not necessary
-   * here */
-  if (klass->pango_lock)
-    g_mutex_lock (klass->pango_lock);
-  fontmap = pango_cairo_font_map_get_default ();
-  klass->pango_context =
-      pango_font_map_create_context (PANGO_FONT_MAP (fontmap));
-  pango_context_set_base_gravity (klass->pango_context, PANGO_GRAVITY_SOUTH);
-  if (klass->pango_lock)
-    g_mutex_unlock (klass->pango_lock);
-}
-
-static void
 gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
 {
   GObjectClass *gobject_class;
@@ -384,9 +364,6 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_change_state);
-
-  klass->pango_lock = g_slice_new (GMutex);
-  g_mutex_init (klass->pango_lock);
 
   klass->get_text = gst_base_text_overlay_get_text;
 
@@ -682,6 +659,11 @@ gst_base_text_overlay_finalize (GObject * object)
     overlay->text_buffer = NULL;
   }
 
+  if (overlay->pango_context) {
+    g_object_unref (overlay->pango_context);
+    overlay->pango_context = NULL;
+  }
+
   g_mutex_clear (&overlay->lock);
   g_cond_clear (&overlay->cond);
 
@@ -694,6 +676,13 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
 {
   GstPadTemplate *template;
   PangoFontDescription *desc;
+  PangoFontMap *fontmap;
+
+  fontmap = pango_cairo_font_map_new ();
+  overlay->pango_context =
+      pango_font_map_create_context (PANGO_FONT_MAP (fontmap));
+  g_object_unref (fontmap);
+  pango_context_set_base_gravity (overlay->pango_context, PANGO_GRAVITY_SOUTH);
 
   /* video sink */
   template = gst_static_pad_template_get (&video_sink_template_factory);
@@ -736,13 +725,8 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_src_query));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
-  g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
-  overlay->layout =
-      pango_layout_new (GST_BASE_TEXT_OVERLAY_GET_CLASS
-      (overlay)->pango_context);
-  desc =
-      pango_context_get_font_description (GST_BASE_TEXT_OVERLAY_GET_CLASS
-      (overlay)->pango_context);
+  overlay->layout = pango_layout_new (overlay->pango_context);
+  desc = pango_context_get_font_description (overlay->pango_context);
   gst_base_text_overlay_adjust_values_with_fontdesc (overlay, desc);
 
   overlay->color = DEFAULT_PROP_COLOR;
@@ -803,7 +787,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   g_mutex_init (&overlay->lock);
   g_cond_init (&overlay->cond);
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
-  g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 }
 
 static void
@@ -1101,7 +1084,6 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
       const gchar *fontdesc_str;
 
       fontdesc_str = g_value_get_string (value);
-      g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       desc = pango_font_description_from_string (fontdesc_str);
       if (desc) {
         GST_LOG_OBJECT (overlay, "font description set: %s", fontdesc_str);
@@ -1112,7 +1094,6 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
         GST_WARNING_OBJECT (overlay, "font description parse failed: %s",
             fontdesc_str);
       }
-      g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     }
     case PROP_COLOR:
@@ -1132,10 +1113,8 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_LINE_ALIGNMENT:
       overlay->line_align = g_value_get_enum (value);
-      g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       pango_layout_set_alignment (overlay->layout,
           (PangoAlignment) overlay->line_align);
-      g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     case PROP_WAIT_TEXT:
       overlay->wait_text = g_value_get_boolean (value);
@@ -1149,10 +1128,8 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
         overlay->valign = GST_BASE_TEXT_OVERLAY_VALIGN_TOP;
         overlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_RIGHT;
         overlay->line_align = GST_BASE_TEXT_OVERLAY_LINE_ALIGN_LEFT;
-        g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
         pango_layout_set_alignment (overlay->layout,
             (PangoAlignment) overlay->line_align);
-        g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       }
       break;
     case PROP_SCALE_MODE:
@@ -1262,14 +1239,12 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
     {
       const PangoFontDescription *desc;
 
-      g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       desc = pango_layout_get_font_description (overlay->layout);
       if (!desc)
         g_value_set_string (value, "");
       else {
         g_value_take_string (value, pango_font_description_to_string (desc));
       }
-      g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
       break;
     }
     case PROP_TEXT_X:
@@ -1755,8 +1730,6 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   GstBuffer *buffer;
   GstMapInfo map;
 
-  g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
-
   if (overlay->auto_adjust_size) {
     /* 640 pixel is default */
     scalef_x = scalef_y = (double) (overlay->width) / DEFAULT_SCALE_BASIS;
@@ -1918,14 +1891,12 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   scalef_y *= overlay->render_scale;
 
   if (width <= 0 || height <= 0) {
-    g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     GST_DEBUG_OBJECT (overlay,
         "Overlay is outside video frame. Skipping text rendering");
     return;
   }
 
   if (unscaled_height <= 0 || unscaled_width <= 0) {
-    g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     GST_DEBUG_OBJECT (overlay,
         "Overlay is outside video frame. Skipping text rendering");
     return;
@@ -2057,7 +2028,6 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     overlay->text_width = width;
   if (height != 0)
     overlay->text_height = height;
-  g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
   gst_base_text_overlay_set_composition (overlay);
 }

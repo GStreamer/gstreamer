@@ -177,7 +177,6 @@ gst_text_render_class_init (GstTextRenderClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  PangoFontMap *fontmap;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -199,9 +198,6 @@ gst_text_render_class_init (GstTextRenderClass * klass)
       "David Schleef <ds@schleef.org>, "
       "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
 
-  fontmap = pango_cairo_font_map_get_default ();
-  klass->pango_context =
-      pango_font_map_create_context (PANGO_FONT_MAP (fontmap));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font "
@@ -631,6 +627,9 @@ gst_text_render_finalize (GObject * object)
   if (render->layout)
     g_object_unref (render->layout);
 
+  if (render->pango_context)
+    g_object_unref (render->pango_context);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -638,6 +637,7 @@ static void
 gst_text_render_init (GstTextRender * render)
 {
   GstPadTemplate *template;
+  PangoFontMap *fontmap;
 
   /* sink */
   template = gst_static_pad_template_get (&sink_template_factory);
@@ -657,9 +657,13 @@ gst_text_render_init (GstTextRender * render)
 
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
 
+  fontmap = pango_cairo_font_map_new ();
+  render->pango_context =
+      pango_font_map_create_context (PANGO_FONT_MAP (fontmap));
+  g_object_unref (fontmap);
+
   render->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
-  render->layout =
-      pango_layout_new (GST_TEXT_RENDER_GET_CLASS (render)->pango_context);
+  render->layout = pango_layout_new (render->pango_context);
   pango_layout_set_alignment (render->layout,
       (PangoAlignment) render->line_align);
 
