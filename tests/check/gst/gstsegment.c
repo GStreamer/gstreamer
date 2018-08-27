@@ -862,6 +862,15 @@ GST_START_TEST (segment_full)
   GST_DEBUG ("%" G_GUINT64_FORMAT, rt);
   fail_unless (rt == 50);
 
+  /* Forward jump will be applied directly to the base field */
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          50) == TRUE);
+  fail_unless (segment.base == 50);
+  /* Now there's enough base, a negative offset should come from there */
+  fail_unless (gst_segment_offset_running_time (&segment, GST_FORMAT_TIME,
+          -50) == TRUE);
+  fail_unless (segment.base == 0);
+
   segment.start = 50;
   segment.stop = 300;
   segment.position = 150;
