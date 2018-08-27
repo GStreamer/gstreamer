@@ -66,6 +66,7 @@ struct _GstKMSSink {
 
   gboolean modesetting_enabled;
   GstStructure *connector_props;
+  GstStructure *plane_props;
 
   GstVideoInfo vinfo;
   GstCaps *allowed_caps;
