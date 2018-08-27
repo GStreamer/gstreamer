@@ -27,24 +27,6 @@ for *stable* automatic formatting.
 * We *experimentally* use the hotdoc C extension to include functions by
   name, follow the steps outlined [here](https://github.com/hotdoc/hotdoc_c_extension)
 
-* We recompile and override hotdoc's default theme, which is a submodule of this project:
-
-```
-git submodule update --init
-```
-
-Follow the instructions outlined in the theme's README.md, you can dispense
-with the last step (building the theme):
-
-```
-cd theme/hotdoc_bootstrap_theme
-sudo dnf install nodejs # On Fedora
-sudo apt-get install nodejs nodejs-legacy npm # debian
-sudo pacman -S nodejs npm # arch
-npm install && ./node_modules/bower/bin/bower install
-cd ../..
-```
-
 * Build the portal:
 
 ```
@@ -54,7 +36,7 @@ make
 * And browse it:
 
 ```
-xdg-open built_doc/html/index.html
+gio open built_doc/html/index.html
 ```
 
 ## Licensing

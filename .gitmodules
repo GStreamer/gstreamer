@@ -1,3 +1,0 @@
-[submodule "hotdoc_bootstrap_theme"]
-	path = theme/hotdoc_bootstrap_theme
-	url = git@github.com:hotdoc/hotdoc_bootstrap_theme.git
