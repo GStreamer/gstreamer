@@ -829,4 +829,6 @@ if build_gstgl
 
 elif get_option('gl').enabled()
   error('GStreamer OpenGL integration required via options, but needed dependencies not found.')
+else
+  gstgl_dep = dependency('', required : false)
 endif
