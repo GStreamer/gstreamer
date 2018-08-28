@@ -2294,6 +2294,14 @@ gst_omx_video_enc_flush (GstVideoEncoder * encoder)
   if (gst_omx_component_get_state (self->enc, 0) == OMX_StateLoaded)
     return TRUE;
 
+  /* 0) Pause the components */
+  if (gst_omx_component_get_state (self->enc, 0) == OMX_StateExecuting) {
+    gst_omx_component_set_state (self->enc, OMX_StatePause);
+    gst_omx_component_get_state (self->enc, GST_CLOCK_TIME_NONE);
+  }
+
+  /* 1) Flush the ports */
+  GST_DEBUG_OBJECT (self, "flushing ports");
   gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, TRUE);
   gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, TRUE);
 
@@ -2305,6 +2313,11 @@ gst_omx_video_enc_flush (GstVideoEncoder * encoder)
   GST_PAD_STREAM_UNLOCK (GST_VIDEO_ENCODER_SRC_PAD (self));
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
+  /* 3) Resume components */
+  gst_omx_component_set_state (self->enc, OMX_StateExecuting);
+  gst_omx_component_get_state (self->enc, GST_CLOCK_TIME_NONE);
+
+  /* 4) Unset flushing to allow ports to accept data again */
   gst_omx_port_set_flushing (self->enc_in_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_set_flushing (self->enc_out_port, 5 * GST_SECOND, FALSE);
   gst_omx_port_populate (self->enc_out_port);
