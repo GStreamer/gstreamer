@@ -573,8 +573,8 @@ gst_audio_buffer_split_clip_buffer_start_for_gapless (GstAudioBufferSplit *
 
   nsamples = gst_buffer_get_size (buffer) / bpf;
 
-  GST_DEBUG_OBJECT (self, "Have to drop %lu samples, got %u samples",
-      self->drop_samples, nsamples);
+  GST_DEBUG_OBJECT (self, "Have to drop %" G_GUINT64_FORMAT
+      " samples, got %u samples", self->drop_samples, nsamples);
 
   if (nsamples <= self->drop_samples) {
     gst_buffer_unref (buffer);
