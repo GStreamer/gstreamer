@@ -942,16 +942,22 @@ dpb_bump (GstVaapiDecoderH264 * decoder, GstVaapiPictureH264 * picture)
   if (found_index < 0)
     return FALSE;
 
+  gst_vaapi_picture_ref (found_picture);
+
   if (picture && picture->base.poc != found_picture->base.poc)
     dpb_output_other_views (decoder, found_picture, found_picture->base.voc);
 
   success = dpb_output (decoder, priv->dpb[found_index]);
+
   dpb_evict (decoder, found_picture, found_index);
   if (priv->max_views == 1)
-    return success;
+    goto done;
 
   if (picture && picture->base.poc != found_picture->base.poc)
     dpb_output_other_views (decoder, found_picture, G_MAXUINT32);
+
+done:
+  gst_vaapi_picture_unref (found_picture);
   return success;
 }
 
