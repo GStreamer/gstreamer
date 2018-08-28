@@ -758,10 +758,22 @@ gst_decklink_video_src_got_frame (GstElement * element,
           flags =
               (GstVideoTimeCodeFlags) (flags |
               GST_VIDEO_TIME_CODE_FLAGS_INTERLACED);
-        if (bmode->fps_d == 1001 && (bmode->fps_n == 30000 || bmode->fps_n == 60000))
-          flags =
-              (GstVideoTimeCodeFlags) (flags |
-              GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+        if (bmode->fps_d == 1001) {
+          if (bmode->fps_n == 30000 || bmode->fps_n == 60000) {
+            /* Some occurrences have been spotted where the driver mistakenly
+             * fails to set the drop-frame flag for drop-frame timecodes.
+             * Assume always drop-frame for 29.97 and 59.94 FPS */
+            flags =
+                (GstVideoTimeCodeFlags) (flags |
+                GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+          } else {
+            /* Drop-frame isn't defined for any other framerates (e.g. 23.976)
+             * */
+            flags =
+                (GstVideoTimeCodeFlags) (flags &
+                ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+          }
+        }
         f.tc =
             gst_video_time_code_new (bmode->fps_n, bmode->fps_d, NULL, flags,
             hours, minutes, seconds, frames, field_count);
