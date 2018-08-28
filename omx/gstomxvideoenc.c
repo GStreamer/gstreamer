@@ -282,6 +282,7 @@ enum
   PROP_DEFAULT_ROI_QUALITY,
   PROP_LONGTERM_REF,
   PROP_LONGTERM_FREQUENCY,
+  PROP_LOOK_AHEAD,
 };
 
 /* FIXME: Better defaults */
@@ -308,6 +309,7 @@ enum
 #define GST_OMX_VIDEO_ENC_DEFAULT_ROI_QUALITY OMX_ALG_ROI_QUALITY_HIGH
 #define GST_OMX_VIDEO_ENC_LONGTERM_REF_DEFAULT (FALSE)
 #define GST_OMX_VIDEO_ENC_LONGTERM_FREQUENCY_DEFAULT (0)
+#define GST_OMX_VIDEO_ENC_LOOK_AHEAD_DEFAULT (0)
 
 /* ZYNQ_USCALE_PLUS encoder custom events */
 #define OMX_ALG_GST_EVENT_INSERT_LONGTERM "omx-alg/insert-longterm"
@@ -511,6 +513,13 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
           0, G_MAXUINT, GST_OMX_VIDEO_ENC_LONGTERM_REF_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_LOOK_AHEAD,
+      g_param_spec_uint ("look-ahead", "look ahead size",
+          "The number of frames processed ahead of second pass encoding. If smaller than 2, dual pass encoding is disabled",
+          0, G_MAXUINT, GST_OMX_VIDEO_ENC_LOOK_AHEAD_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 #endif
 
   element_class->change_state =
@@ -569,6 +578,7 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self)
   self->default_roi_quality = GST_OMX_VIDEO_ENC_DEFAULT_ROI_QUALITY;
   self->long_term_ref = GST_OMX_VIDEO_ENC_LONGTERM_REF_DEFAULT;
   self->long_term_freq = GST_OMX_VIDEO_ENC_LONGTERM_FREQUENCY_DEFAULT;
+  self->look_ahead = GST_OMX_VIDEO_ENC_LOOK_AHEAD_DEFAULT;
 #endif
 
   self->default_target_bitrate = GST_OMX_PROP_OMX_DEFAULT;
@@ -853,6 +863,21 @@ set_zynqultrascaleplus_props (GstOMXVideoEnc * self)
         gst_omx_component_set_parameter (self->enc,
         (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoLongTerm, &longterm);
     CHECK_ERR ("longterm");
+  }
+
+  {
+    OMX_ALG_VIDEO_PARAM_LOOKAHEAD look_ahead;
+
+    GST_OMX_INIT_STRUCT (&look_ahead);
+    look_ahead.nPortIndex = self->enc_in_port->index;
+    look_ahead.nLookAhead = self->look_ahead;
+
+    GST_DEBUG_OBJECT (self, "setting look_ahead to %d", self->look_ahead);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoLookAhead, &look_ahead);
+    CHECK_ERR ("look-ahead");
   }
 
   return TRUE;
@@ -1193,6 +1218,9 @@ gst_omx_video_enc_set_property (GObject * object, guint prop_id,
     case PROP_LONGTERM_FREQUENCY:
       self->long_term_freq = g_value_get_uint (value);
       break;
+    case PROP_LOOK_AHEAD:
+      self->look_ahead = g_value_get_uint (value);
+      break;
 #endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1278,6 +1306,9 @@ gst_omx_video_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_LONGTERM_FREQUENCY:
       g_value_set_uint (value, self->long_term_freq);
+      break;
+    case PROP_LOOK_AHEAD:
+      g_value_set_uint (value, self->look_ahead);
       break;
 #endif
     default:
