@@ -236,6 +236,7 @@ libgst = library('gstreamer-1.0', gst_sources,
   gstenum_h, gstenum_c, gst_parse_sources, gst_registry_sources,
   version : libversion,
   soversion : soversion,
+  darwin_versions : osxversion,
   c_args : libgst_c_args,
   include_directories : [configinc,
     # HACK, change include paths in .y and .l in final version.
