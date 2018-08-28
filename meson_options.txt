@@ -74,6 +74,7 @@ option('x11', type : 'feature', value : 'auto', description : 'X11 support in Vu
 
 # Feature options for plugins that need external deps
 option('aom', type : 'feature', value : 'auto', description : 'AOM AV1 video codec plugin')
+option('androidmedia', type : 'feature', value : 'auto', description : 'Video capture and codec plugins for Android')
 option('applemedia', type : 'feature', value : 'auto', description : 'Video capture and codec access plugins for macOS and iOS')
 option('assrender', type : 'feature', value : 'auto', description : 'ASS/SSA subtitle renderer plugin')
 option('bluez', type : 'feature', value : 'auto', description : 'Bluetooth audio A2DP/AVDTP sink, AVDTP source plugin')
@@ -112,6 +113,7 @@ option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Mu
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
 option('openh264', type : 'feature', value : 'auto', description : 'H.264 video codec plugin')
 option('openjpeg', type : 'feature', value : 'auto', description : 'JPEG2000 image codec plugin')
+option('opensles', type : 'feature', value : 'auto', description : 'OpenSL ES audio source/sink plugin')
 option('opus', type : 'feature', value : 'auto', description : 'OPUS audio parser plugin')
 option('resindvd', type : 'feature', value : 'auto', description : 'Resin DVD playback plugin')
 option('rsvg', type : 'feature', value : 'auto', description : 'SVG overlayer and image decoder plugin')
