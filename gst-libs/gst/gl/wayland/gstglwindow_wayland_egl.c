@@ -306,7 +306,16 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
     }
   }
 
-  if (window_egl->window.window_width > 0)
+  /*
+   * render_rect is the application requested size so choose that first if
+   * available.
+   * Else choose the already chosen size if set
+   * Else choose the preferred size if set
+   * Else choose a default value
+   */
+  if (window_egl->window.render_rect.w > 0)
+    width = window_egl->window.render_rect.w;
+  else if (window_egl->window.window_width > 0)
     width = window_egl->window.window_width;
   else if (window_egl->window.preferred_width > 0)
     width = window_egl->window.preferred_width;
@@ -314,7 +323,9 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
     width = 320;
   window_egl->window.window_width = width;
 
-  if (window_egl->window.window_height > 0)
+  if (window_egl->window.render_rect.h > 0)
+    height = window_egl->window.render_rect.h;
+  else if (window_egl->window.window_height > 0)
     height = window_egl->window.window_height;
   else if (window_egl->window.preferred_height > 0)
     height = window_egl->window.preferred_height;
@@ -357,6 +368,7 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
 static void
 gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 {
+  window->window.render_rect.w = window->window.render_rect.h = -1;
 }
 
 /* Must be called in the gl thread */
@@ -569,6 +581,8 @@ _set_render_rectangle (gpointer data)
   }
 
   window_resize (render->window_egl, render->rect.w, render->rect.h);
+
+  render->window_egl->window.render_rect = render->rect;
 }
 
 static gboolean
@@ -600,9 +614,12 @@ gst_gl_window_wayland_egl_set_preferred_size (GstGLWindow * window, gint width,
 
   window_egl->window.preferred_width = width;
   window_egl->window.preferred_height = height;
-  if (window_egl->window.window_height != height
-      || window_egl->window.window_width != width) {
-    window_resize (window_egl, width, height);
+  if (window_egl->window.render_rect.w < 0
+      && window_egl->window.render_rect.h < 0) {
+    if (window_egl->window.window_height != height
+        || window_egl->window.window_width != width) {
+      window_resize (window_egl, width, height);
+    }
   }
 }
 

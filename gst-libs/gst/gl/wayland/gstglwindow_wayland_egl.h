@@ -74,6 +74,7 @@ struct window {
   int window_width, window_height;
   int preferred_width, preferred_height;
   int window_x, window_y;
+  GstVideoRectangle render_rect;
 };
 
 struct _GstGLWindowWaylandEGL {
