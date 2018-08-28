@@ -650,11 +650,12 @@ gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
 
 static GstFlowReturn
 gst_file_sink_render_buffers (GstFileSink * sink, GstBuffer ** buffers,
-    guint num_buffers, guint8 * mem_nums, guint total_mems)
+    guint num_buffers, guint8 * mem_nums, guint total_mems, gsize size)
 {
   GST_DEBUG_OBJECT (sink,
-      "writing %u buffers (%u memories) at position %" G_GUINT64_FORMAT,
-      num_buffers, total_mems, sink->current_pos);
+      "writing %u buffers (%u memories, %" G_GSIZE_FORMAT
+      " bytes) at position %" G_GUINT64_FORMAT, num_buffers, total_mems, size,
+      sink->current_pos);
 
   return gst_writev_buffers (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
       buffers, num_buffers, mem_nums, total_mems, &sink->current_pos, 0);
@@ -668,6 +669,7 @@ gst_file_sink_render_list_internal (GstFileSink * sink,
   GstBuffer **buffers;
   guint8 *mem_nums;
   guint total_mems;
+  gsize total_size = 0;
   guint i, num_buffers;
 
   num_buffers = gst_buffer_list_length (buffer_list);
@@ -681,11 +683,12 @@ gst_file_sink_render_list_internal (GstFileSink * sink,
     buffers[i] = gst_buffer_list_get (buffer_list, i);
     mem_nums[i] = gst_buffer_n_memory (buffers[i]);
     total_mems += mem_nums[i];
+    total_size += gst_buffer_get_size (buffers[i]);
   }
 
   flow =
       gst_file_sink_render_buffers (sink, buffers, num_buffers, mem_nums,
-      total_mems);
+      total_mems, total_size);
 
   return flow;
 
@@ -761,10 +764,17 @@ gst_file_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
   gst_buffer_list_foreach (buffer_list, has_sync_after_buffer, &sync_after);
 
   if (sync_after || !sink->buffer) {
-    flow = gst_file_sink_render_list_internal (sink, buffer_list);
+    flow = gst_file_sink_flush_buffer (sink);
+    if (flow == GST_FLOW_OK)
+      flow = gst_file_sink_render_list_internal (sink, buffer_list);
   } else {
     guint size = 0;
     gst_buffer_list_foreach (buffer_list, accumulate_size, &size);
+
+    GST_DEBUG_OBJECT (sink,
+        "Queueing buffer list of %u bytes (%u buffers) at offset %"
+        G_GSIZE_FORMAT, size, num_buffers,
+        sink->current_pos + sink->current_buffer_size);
 
     for (i = 0; i < num_buffers; ++i)
       gst_buffer_list_add (sink->buffer,
@@ -810,8 +820,16 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   n_mem = gst_buffer_n_memory (buffer);
 
   if (n_mem > 0 && (sync_after || !filesink->buffer)) {
-    flow = gst_file_sink_render_buffers (filesink, &buffer, 1, &n_mem, n_mem);
+    flow = gst_file_sink_flush_buffer (filesink);
+    if (flow == GST_FLOW_OK)
+      flow =
+          gst_file_sink_render_buffers (filesink, &buffer, 1, &n_mem, n_mem,
+          gst_buffer_get_size (buffer));
   } else if (n_mem > 0) {
+    GST_DEBUG_OBJECT (filesink,
+        "Queueing buffer of %" G_GSIZE_FORMAT " bytes at offset %"
+        G_GSIZE_FORMAT, gst_buffer_get_size (buffer),
+        filesink->current_pos + filesink->current_buffer_size);
 
     filesink->current_buffer_size += gst_buffer_get_size (buffer);
     gst_buffer_list_add (filesink->buffer, gst_buffer_ref (buffer));
