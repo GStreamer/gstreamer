@@ -294,15 +294,55 @@ _parse_userinfo (const gchar * userinfo, gchar ** user, gchar ** pass)
   *pass = g_strdup (&colon[1]);
 }
 
+static gchar *
+_resolve_host (GstWebRTCICE * ice, const gchar * host)
+{
+  GResolver *resolver = g_resolver_get_default ();
+  GError *error = NULL;
+  GInetAddress *addr;
+  GList *addresses;
+
+  GST_DEBUG_OBJECT (ice, "Resolving host %s", host);
+
+  if (!(addresses = g_resolver_lookup_by_name (resolver, host, NULL, &error))) {
+    GST_ERROR ("%s", error->message);
+    g_clear_error (&error);
+    return NULL;
+  }
+
+  GST_DEBUG_OBJECT (ice, "Resolved %d addresses for host %s",
+      g_list_length (addresses), host);
+
+  /* XXX: only the first address is used */
+  addr = addresses->data;
+
+  return g_inet_address_to_string (addr);
+}
+
 static void
 _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
     GstUri * turn_server)
 {
   gboolean ret;
   gchar *user, *pass;
-  const gchar *userinfo, *transport, *scheme;
+  const gchar *host, *userinfo, *transport, *scheme;
   NiceRelayType relays[4] = { 0, };
   int i, relay_n = 0;
+  gchar *ip = NULL;
+
+  host = gst_uri_get_host (turn_server);
+  if (!host) {
+    GST_ERROR_OBJECT (ice, "Turn server has no host");
+    goto out;
+  }
+  ip = _resolve_host (ice, host);
+  if (!ip) {
+    GST_ERROR_OBJECT (ice, "Failed to resolve turn server '%s'", host);
+    goto out;
+  }
+
+  /* Set the resolved IP as the host since that's what libnice wants */
+  gst_uri_set_host (turn_server, ip);
 
   scheme = gst_uri_get_scheme (turn_server);
   transport = gst_uri_get_query_value (turn_server, "transport");
@@ -322,8 +362,7 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
   for (i = 0; i < relay_n; i++) {
     ret = nice_agent_set_relay_info (ice->priv->nice_agent,
         item->nice_stream_id, NICE_COMPONENT_TYPE_RTP,
-        gst_uri_get_host (turn_server),
-        gst_uri_get_port (turn_server), user, pass, relays[i]);
+        host, gst_uri_get_port (turn_server), user, pass, relays[i]);
     if (!ret) {
       gchar *uri = gst_uri_to_string (turn_server);
       GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
@@ -332,8 +371,7 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
     }
     ret = nice_agent_set_relay_info (ice->priv->nice_agent,
         item->nice_stream_id, NICE_COMPONENT_TYPE_RTCP,
-        gst_uri_get_host (turn_server),
-        gst_uri_get_port (turn_server), user, pass, relays[i]);
+        host, gst_uri_get_port (turn_server), user, pass, relays[i]);
     if (!ret) {
       gchar *uri = gst_uri_to_string (turn_server);
       GST_ERROR_OBJECT (ice, "Failed to set TURN server '%s'", uri);
@@ -343,6 +381,9 @@ _add_turn_server (GstWebRTCICE * ice, struct NiceStreamItem *item,
   }
   g_free (user);
   g_free (pass);
+
+out:
+  g_free (ip);
 }
 
 typedef struct
@@ -358,6 +399,46 @@ _add_turn_server_func (const gchar * uri, GstUri * turn_server,
   _add_turn_server (data->ice, data->item, turn_server);
 }
 
+static void
+_add_stun_server (GstWebRTCICE * ice, GstUri * stun_server)
+{
+  const gchar *msg = "must be of the form stun://<host>:<port>";
+  const gchar *host;
+  gchar *s = NULL;
+  gchar *ip = NULL;
+  guint port;
+
+  GST_DEBUG_OBJECT (ice, "adding stun server, %s", s);
+
+  s = gst_uri_to_string (stun_server);
+
+  host = gst_uri_get_host (stun_server);
+  if (!host) {
+    GST_ERROR_OBJECT (ice, "Stun server '%s' has no host, %s", s, msg);
+    goto out;
+  }
+
+  port = gst_uri_get_port (stun_server);
+  if (port == GST_URI_NO_PORT) {
+    GST_INFO_OBJECT (ice, "Stun server '%s' has no port, assuming 3478", s);
+    port = 3478;
+    gst_uri_set_port (stun_server, port);
+  }
+
+  ip = _resolve_host (ice, host);
+  if (!ip) {
+    GST_ERROR_OBJECT (ice, "Failed to resolve stun server '%s'", host);
+    goto out;
+  }
+
+  g_object_set (ice->priv->nice_agent, "stun-server", ip,
+      "stun-server-port", port, NULL);
+
+out:
+  g_free (s);
+  g_free (ip);
+}
+
 GstWebRTCICEStream *
 gst_webrtc_ice_add_stream (GstWebRTCICE * ice, guint session_id)
 {
@@ -371,6 +452,10 @@ gst_webrtc_ice_add_stream (GstWebRTCICE * ice, guint session_id)
     GST_ERROR_OBJECT (ice, "stream already added with session_id=%u",
         session_id);
     return 0;
+  }
+
+  if (ice->stun_server) {
+    _add_stun_server (ice, ice->stun_server);
   }
 
   item = _create_nice_stream_item (ice, session_id);
@@ -626,33 +711,13 @@ _clear_ice_stream (struct NiceStreamItem *item)
   }
 }
 
-static gchar *
-_resolve_host (const gchar * host)
-{
-  GResolver *resolver = g_resolver_get_default ();
-  GError *error = NULL;
-  GInetAddress *addr;
-  GList *addresses;
-
-  if (!(addresses = g_resolver_lookup_by_name (resolver, host, NULL, &error))) {
-    GST_ERROR ("%s", error->message);
-    g_clear_error (&error);
-    return NULL;
-  }
-
-  /* XXX: only the first address is used */
-  addr = addresses->data;
-
-  return g_inet_address_to_string (addr);
-}
-
 static GstUri *
 _validate_turn_server (GstWebRTCICE * ice, const gchar * s)
 {
   GstUri *uri = gst_uri_from_string (s);
-  const gchar *userinfo, *host, *scheme;
+  const gchar *userinfo, *scheme;
   GList *keys = NULL, *l;
-  gchar *ip = NULL, *user = NULL, *pass = NULL;
+  gchar *user = NULL, *pass = NULL;
   gboolean turn_tls = FALSE;
   guint port;
 
@@ -703,16 +768,6 @@ _validate_turn_server (GstWebRTCICE * ice, const gchar * s)
     goto out;
   }
 
-  host = gst_uri_get_host (uri);
-  if (!host) {
-    GST_ERROR_OBJECT (ice, "Turn server has no host");
-    goto out;
-  }
-  ip = _resolve_host (host);
-  if (!ip) {
-    GST_ERROR_OBJECT (ice, "Failed to resolve turn server '%s'", host);
-    goto out;
-  }
   port = gst_uri_get_port (uri);
 
   if (port == GST_URI_NO_PORT) {
@@ -722,12 +777,9 @@ _validate_turn_server (GstWebRTCICE * ice, const gchar * s)
       gst_uri_set_port (uri, 3478);
     }
   }
-  /* Set the resolved IP as the host since that's what libnice wants */
-  gst_uri_set_host (uri, ip);
 
 out:
   g_list_free (keys);
-  g_free (ip);
   g_free (user);
   g_free (pass);
 
@@ -745,9 +797,6 @@ gst_webrtc_ice_set_property (GObject * object, guint prop_id,
       const gchar *s = g_value_get_string (value);
       GstUri *uri = gst_uri_from_string (s);
       const gchar *msg = "must be of the form stun://<host>:<port>";
-      const gchar *host;
-      gchar *ip;
-      guint port;
 
       GST_DEBUG_OBJECT (ice, "setting stun server, %s", s);
 
@@ -756,32 +805,9 @@ gst_webrtc_ice_set_property (GObject * object, guint prop_id,
         return;
       }
 
-      host = gst_uri_get_host (uri);
-      if (!host) {
-        GST_ERROR_OBJECT (ice, "Stun server '%s' has no host, %s", s, msg);
-        return;
-      }
-      port = gst_uri_get_port (uri);
-      if (port == GST_URI_NO_PORT) {
-        GST_INFO_OBJECT (ice, "Stun server '%s' has no port, assuming 3478", s);
-        port = 3478;
-        gst_uri_set_port (uri, port);
-      }
-
-      ip = _resolve_host (host);
-      if (!ip) {
-        GST_ERROR_OBJECT (ice, "Failed to resolve stun server '%s'", host);
-        return;
-      }
-
       if (ice->stun_server)
         gst_uri_unref (ice->stun_server);
       ice->stun_server = uri;
-
-      g_object_set (ice->priv->nice_agent, "stun-server", ip,
-          "stun-server-port", port, NULL);
-
-      g_free (ip);
       break;
     }
     case PROP_TURN_SERVER:{
