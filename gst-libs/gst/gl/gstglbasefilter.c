@@ -411,6 +411,8 @@ gst_gl_base_filter_change_state (GstElement * element,
  * @filter: a #GstGLBaseFilter
  *
  * Returns: Whether an OpenGL context could be retrieved or created successfully
+ *
+ * Since: 1.16
  */
 gboolean
 gst_gl_base_filter_find_gl_context (GstGLBaseFilter * filter)
