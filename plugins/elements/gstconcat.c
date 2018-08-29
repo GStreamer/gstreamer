@@ -324,6 +324,8 @@ gst_concat_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (do_notify)
     gst_concat_notify_active_pad (self);
 
+  GST_DEBUG_OBJECT (sinkpad, "requested pad");
+
   return sinkpad;
 }
 
@@ -337,7 +339,7 @@ gst_concat_release_pad (GstElement * element, GstPad * pad)
   gboolean eos = FALSE;
   gboolean do_notify = FALSE;
 
-  GST_DEBUG_OBJECT (self, "releasing pad");
+  GST_DEBUG_OBJECT (pad, "releasing pad");
 
   g_mutex_lock (&self->lock);
   spad->flushing = TRUE;
