@@ -42,11 +42,11 @@ typedef struct _GstVaapiEncoderH265 GstVaapiEncoderH265;
  * @GST_VAAPI_ENCODER_H265_PROP_NUM_SLICES: Number of slices per frame (uint).
  * @GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
  * @GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH: Length of the CPB buffer
+ *   in milliseconds (uint).
  * @GST_VAAPI_ENCODER_H265_PROP_MBBRC: Macroblock level Bitrate Control.
  * @GST_VAAPI_ENCODER_H265_PROP_QP_IP: Difference of QP between I and P frame.
  * @GST_VAAPI_ENCODER_H265_PROP_QP_IB: Difference of QP between I and B frame.
  * @GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B: use low delay b feature.
- *   in milliseconds (uint).
  *
  * The set of H.265 encoder specific configurable properties.
  */
