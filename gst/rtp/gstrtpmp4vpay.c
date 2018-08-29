@@ -622,6 +622,10 @@ gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
 gboolean
 gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin)
 {
+  /* Note: This element is marked at a "+1" rank to make sure that
+   * auto-plugging of payloaders for MPEG4 elementary streams don't
+   * end up using the 'rtpmp4gpay' element (generic mpeg4) which isn't
+   * as well supported as this RFC */
   return gst_element_register (plugin, "rtpmp4vpay",
-      GST_RANK_SECONDARY, GST_TYPE_RTP_MP4V_PAY);
+      GST_RANK_SECONDARY + 1, GST_TYPE_RTP_MP4V_PAY);
 }
