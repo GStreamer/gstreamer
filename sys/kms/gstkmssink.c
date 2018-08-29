@@ -31,9 +31,14 @@
  * kmssink is a simple video sink that renders video frames directly
  * in a plane of a DRM device.
  *
+ * In advance usage, the behaviour of kmssink can be change using the
+ * supported properties. Note that plane and connectors IDs and properties can
+ * be enumerated using the modetest command line tool.
+ *
  * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! kmssink
+ * gst-launch-1.0 videotestsrc ! kmssink plane-properties=s,rotation=4
  * ]|
  *
  */
