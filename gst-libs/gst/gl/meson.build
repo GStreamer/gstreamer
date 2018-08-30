@@ -230,6 +230,7 @@ if gl_winsys.contains('auto')
   need_win_dispmanx = 'auto'
   need_win_viv_fb = 'auto'
   need_win_gbm = 'auto'
+  need_win_android = 'auto'
 else
   need_win_x11 = 'no'
   need_win_wayland = 'no'
@@ -239,6 +240,7 @@ else
   need_win_dispmanx = 'no'
   need_win_viv_fb = 'no'
   need_win_gbm = 'no'
+  need_win_android = 'no'
   foreach winsys : gl_winsys
     if winsys == 'x11'
       need_win_x11 = 'yes'
@@ -256,6 +258,8 @@ else
       need_win_viv_fb = 'yes'
     elif winsys == 'gbm'
       need_win_gbm = 'no'
+    elif winsys == 'android'
+      need_win_android = 'yes'
     else
       error('Unsupported GL winsys provided ' + winsys)
     endif
@@ -775,6 +779,26 @@ if need_platform_egl != 'no' and need_win_viv_fb != 'no'
       ]
       gl_cpp_args += ['-DEGL_API_FB']
     endif
+  endif
+endif
+
+if need_win_android == 'yes'
+  if need_platform_egl == 'no'
+    error('Impossible situation requested: Cannot build for Android without EGL')
+  elif need_api_gles2 == 'no'
+    error('Impossible situation requested: Cannot build for Android without GLES2 support')
+  elif host_system != 'android'
+    error('Impossible situation requested: Cannot build for Android without an android system')
+  endif
+endif
+
+if host_system == 'android' and need_win_android != 'no' and need_platform_egl != 'no'
+  if gles2_dep.found() and egl_dep.found()
+    enabled_gl_winsys += ['android']
+    glconf.set10('GST_GL_HAVE_WINDOW_ANDROID', 1)
+    gl_sources += [
+      'android/gstglwindow_android_egl.c'
+    ]
   endif
 endif
 
