@@ -110,6 +110,7 @@ struct _GstVaapiEncoderH265
   guint32 luma_height;
   GstClockTime cts_offset;
   gboolean config_changed;
+  gboolean low_delay_b;
 
   /* maximum required size of the decoded picture buffer */
   guint32 max_dec_pic_buffering;
@@ -1684,6 +1685,9 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     }
     slice_param->num_ctu_in_slice = cur_slice_ctus;
     slice_param->slice_type = h265_get_slice_type (picture->type);
+    if (encoder->low_delay_b && slice_param->slice_type == GST_H265_P_SLICE) {
+      slice_param->slice_type = GST_H265_B_SLICE;
+    }
     slice_param->slice_pic_parameter_set_id = 0;
 
     slice_param->slice_fields.bits.num_ref_idx_active_override_flag =
@@ -1716,6 +1720,13 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
         slice_param->ref_pic_list1[i_ref].picture_id =
             GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_1[i_ref]->pic);
         slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_1[i_ref]->poc;
+      }
+    } else if (picture->type == GST_VAAPI_PICTURE_TYPE_P
+        && encoder->low_delay_b) {
+      for (; i_ref < reflist_0_count; ++i_ref) {
+        slice_param->ref_pic_list1[i_ref].picture_id =
+            GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
+        slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_0[i_ref]->poc;
       }
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list1); ++i_ref) {
@@ -2583,6 +2594,10 @@ gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H265_PROP_MBBRC:
       encoder->mbbrc = g_value_get_enum (value);
       break;
+    case GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B:
+      encoder->low_delay_b = g_value_get_boolean (value);
+      break;
+
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -2747,6 +2762,18 @@ gst_vaapi_encoder_h265_get_default_properties (void)
           "Macroblock level Bitrate Control",
           GST_VAAPI_TYPE_ENCODER_MBBRC, GST_VAAPI_ENCODER_MBBRC_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH265:low_delay_b:
+   *
+   * Enable low delay b frame, which will change P frame with B frame.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B,
+      g_param_spec_boolean ("low-delay-b",
+          "Enable low delay b",
+          "Transforms P frames into predictive B frames. Enable it when P frames are not supported.",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
