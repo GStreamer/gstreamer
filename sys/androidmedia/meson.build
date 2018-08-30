@@ -34,7 +34,7 @@ if have_jni_h
     androidmedia_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstgl_dep, gstpbutils_dep, gstaudio_dep, gstvideo_dep, gstphotography_dep],
+    dependencies : [gstgl_dep, gstpbutils_dep, gstaudio_dep, gstvideo_dep, gstphotography_dep, gmodule_dep, orc_dep],
     install : true,
     install_dir : plugins_install_dir)
   pkgconfig.generate(gstandroidmedia, install_dir : plugins_pkgconfig_install_dir)
