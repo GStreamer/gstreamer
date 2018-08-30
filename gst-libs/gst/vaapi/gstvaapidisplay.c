@@ -654,8 +654,11 @@ ensure_image_formats (GstVaapiDisplay * display)
   gint i, n;
   gboolean success = FALSE;
 
-  if (priv->image_formats)
+  GST_VAAPI_DISPLAY_LOCK (display);
+  if (priv->image_formats) {
+    GST_VAAPI_DISPLAY_UNLOCK (display);
     return TRUE;
+  }
 
   priv->image_formats = g_array_new (FALSE, FALSE, sizeof (GstVaapiFormatInfo));
   if (!priv->image_formats)
@@ -681,6 +684,7 @@ ensure_image_formats (GstVaapiDisplay * display)
 
 cleanup:
   g_free (formats);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
   return success;
 }
 
@@ -695,8 +699,11 @@ ensure_subpicture_formats (GstVaapiDisplay * display)
   guint i, n;
   gboolean success = FALSE;
 
-  if (priv->subpicture_formats)
+  GST_VAAPI_DISPLAY_LOCK (display);
+  if (priv->subpicture_formats) {
+    GST_VAAPI_DISPLAY_UNLOCK (display);
     return TRUE;
+  }
 
   priv->subpicture_formats =
       g_array_new (FALSE, FALSE, sizeof (GstVaapiFormatInfo));
@@ -730,6 +737,7 @@ ensure_subpicture_formats (GstVaapiDisplay * display)
 cleanup:
   g_free (formats);
   g_free (flags);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
   return success;
 }
 
