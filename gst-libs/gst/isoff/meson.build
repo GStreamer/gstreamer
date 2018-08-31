@@ -12,6 +12,7 @@ gstisoff = library('gstisoff-' + api_version,
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,
+  darwin_versions : osxversion,
   install : true,
   dependencies : [gstbase_dep],
 )

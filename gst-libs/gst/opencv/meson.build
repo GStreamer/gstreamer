@@ -17,6 +17,7 @@ if opencv_dep.found()
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,
+  darwin_versions : osxversion,
     install : true,
     dependencies : [gstbase_dep, gstvideo_dep, opencv_dep],
   )
