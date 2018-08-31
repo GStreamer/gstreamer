@@ -3246,9 +3246,9 @@ done:
 /* Default latency implementation */
 typedef struct
 {
-  guint count;
   gboolean live;
-  GstClockTime min, max;
+  GstClockTime live_min, live_max;
+  GstClockTime non_live_min, non_live_max;
 } LatencyFoldData;
 
 static gboolean
@@ -3272,25 +3272,29 @@ query_latency_default_fold (const GValue * item, GValue * ret,
   if (res) {
     gboolean live;
     GstClockTime min, max;
+    GstClockTime *min_store, *max_store;
 
     gst_query_parse_latency (query, &live, &min, &max);
 
     GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
         " max:%" G_GINT64_FORMAT, live ? "true" : "false", min, max);
 
-    /* FIXME : Why do we only take values into account if it's live ? */
-    if (live || fold_data->count == 0) {
-      if (min > fold_data->min)
-        fold_data->min = min;
-
-      if (fold_data->max == GST_CLOCK_TIME_NONE)
-        fold_data->max = max;
-      else if (max < fold_data->max)
-        fold_data->max = max;
-
+    if (live) {
+      min_store = &fold_data->live_min;
+      max_store = &fold_data->live_max;
       fold_data->live = live;
+    } else {
+      min_store = &fold_data->non_live_min;
+      max_store = &fold_data->non_live_max;
     }
-    fold_data->count += 1;
+
+    if (min > *min_store)
+      *min_store = min;
+
+    if (*max_store == GST_CLOCK_TIME_NONE)
+      *max_store = max;
+    else if (max < *max_store)
+      *max_store = max;
   } else if (peer) {
     GST_DEBUG_OBJECT (pad, "latency query failed");
     g_value_set_boolean (ret, FALSE);
@@ -3321,10 +3325,9 @@ gst_pad_query_latency_default (GstPad * pad, GstQuery * query)
   g_value_init (&ret, G_TYPE_BOOLEAN);
 
 retry:
-  fold_data.count = 0;
   fold_data.live = FALSE;
-  fold_data.min = 0;
-  fold_data.max = GST_CLOCK_TIME_NONE;
+  fold_data.live_min = fold_data.non_live_min = 0;
+  fold_data.live_max = fold_data.non_live_max = GST_CLOCK_TIME_NONE;
 
   g_value_set_boolean (&ret, TRUE);
   res = gst_iterator_fold (it, query_latency_default_fold, &ret, &fold_data);
@@ -3348,15 +3351,24 @@ retry:
 
   query_ret = g_value_get_boolean (&ret);
   if (query_ret) {
-    GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
-        " max:%" G_GINT64_FORMAT, fold_data.live ? "true" : "false",
-        fold_data.min, fold_data.max);
+    GstClockTime min, max;
 
-    if (fold_data.min > fold_data.max) {
+    if (fold_data.live) {
+      min = fold_data.live_min;
+      max = fold_data.live_max;
+    } else {
+      min = fold_data.non_live_min;
+      max = fold_data.non_live_max;
+    }
+
+    GST_LOG_OBJECT (pad, "got latency live:%s min:%" G_GINT64_FORMAT
+        " max:%" G_GINT64_FORMAT, fold_data.live ? "true" : "false", min, max);
+
+    if (min > max) {
       GST_ERROR_OBJECT (pad, "minimum latency bigger than maximum latency");
     }
 
-    gst_query_set_latency (query, fold_data.live, fold_data.min, fold_data.max);
+    gst_query_set_latency (query, fold_data.live, min, max);
   } else {
     GST_LOG_OBJECT (pad, "latency query failed");
   }
