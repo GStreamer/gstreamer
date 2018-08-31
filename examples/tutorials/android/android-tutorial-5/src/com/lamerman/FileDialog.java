@@ -45,7 +45,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-import com.gst_sdk_tutorials.tutorial_5.R;
+import org.freedesktop.gstreamer.tutorials.tutorial_5.R;
 
 /**
  * Activity para escolha de arquivos/diretorios.

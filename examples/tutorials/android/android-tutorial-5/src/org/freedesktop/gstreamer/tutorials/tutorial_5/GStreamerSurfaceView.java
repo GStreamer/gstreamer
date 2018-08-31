@@ -1,4 +1,4 @@
-package com.gst_sdk_tutorials.tutorial_5;
+package org.freedesktop.gstreamer.tutorials.tutorial_5;
 
 import android.content.Context;
 import android.util.AttributeSet;
