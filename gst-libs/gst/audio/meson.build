@@ -145,6 +145,7 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
   link_with : simd_dependencies,
   version : libversion,
   soversion : soversion,
+  darwin_versions : osxversion,
   install : true,
   dependencies : gstaudio_deps,
 )

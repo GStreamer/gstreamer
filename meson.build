@@ -27,8 +27,9 @@ api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
-# FIXME: should be able to convert string to int somehow so we can just do maths
-libversion = '@0@.@1@.0'.format(soversion, gst_version_minor * 100 + gst_version_micro)
+curversion = gst_version_minor * 100 + gst_version_micro
+libversion = '@0@.@1@.0'.format(soversion, curversion)
+osxversion = curversion + 1
 
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 

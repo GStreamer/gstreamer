@@ -872,6 +872,7 @@ if build_gstgl
     include_directories : [configinc, libsinc, gl_includes],
     version : libversion,
     soversion : soversion,
+  darwin_versions : osxversion,
     install : true,
     dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps])

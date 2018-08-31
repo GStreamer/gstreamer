@@ -24,6 +24,7 @@ gstapp = library('gstapp-@0@'.format(api_version),
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,
+  darwin_versions : osxversion,
   install : true,
   dependencies : [gst_base_dep],
 )
