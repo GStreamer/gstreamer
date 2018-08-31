@@ -257,7 +257,7 @@ else
     elif winsys == 'viv-fb'
       need_win_viv_fb = 'yes'
     elif winsys == 'gbm'
-      need_win_gbm = 'no'
+      need_win_gbm = 'yes'
     elif winsys == 'android'
       need_win_android = 'yes'
     else
@@ -734,7 +734,7 @@ if host_system == 'ios' and need_platform_eagl != 'no' and need_win_eagl != 'no'
   endif
 endif
 
-# GDM Checks
+# GBM Checks
 gbm_gudev_dep = unneeded_dep
 gbm_libdrm_dep = unneeded_dep
 gbm_dep = unneeded_dep
