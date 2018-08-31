@@ -239,17 +239,14 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (sink->first) {
     /* open the connection */
     if (!RTMP_IsConnected (sink->rtmp)) {
-      if (!RTMP_Connect (sink->rtmp, NULL)
-          || !RTMP_ConnectStream (sink->rtmp, 0)) {
-        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-            ("Could not connect to RTMP stream \"%s\" for writing", sink->uri));
-        RTMP_Free (sink->rtmp);
-        sink->rtmp = NULL;
-        g_free (sink->rtmp_uri);
-        sink->rtmp_uri = NULL;
-        sink->have_write_error = TRUE;
-        return GST_FLOW_ERROR;
+      if (!RTMP_Connect (sink->rtmp, NULL))
+        goto connection_failed;
+
+      if (!RTMP_ConnectStream (sink->rtmp, 0)) {
+        RTMP_Close (sink->rtmp);
+        goto connection_failed;
       }
+
       GST_DEBUG_OBJECT (sink, "Opened connection to %s", sink->rtmp_uri);
     }
 
@@ -288,6 +285,19 @@ write_failed:
     if (need_unref)
       gst_buffer_unref (buf);
     sink->have_write_error = TRUE;
+    return GST_FLOW_ERROR;
+  }
+
+connection_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
+        ("Could not connect to RTMP stream \"%s\" for writing", sink->uri));
+    RTMP_Free (sink->rtmp);
+    sink->rtmp = NULL;
+    g_free (sink->rtmp_uri);
+    sink->rtmp_uri = NULL;
+    sink->have_write_error = TRUE;
+
     return GST_FLOW_ERROR;
   }
 }
