@@ -124,6 +124,13 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'gst_init(NULL,NULL);' ]
 
+pkgconfig = import('pkgconfig')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+if get_option('default_library') == 'shared'
+  # If we don't build static plugins there is no need to generate pc files
+  plugins_pkgconfig_install_dir = disabler()
+endif
+
 subdir('gst')
 if get_option('tests')
   subdir('tests')
