@@ -26,6 +26,7 @@
 #include "gstalsasink.h"
 #include "gstalsasrc.h"
 #include "gstalsamidisrc.h"
+#include "gstalsadeviceprovider.h"
 
 #include <gst/gst-i18n-plugin.h>
 
@@ -46,7 +47,7 @@ gst_alsa_error_wrapper (const char *file, int line, const char *function,
   va_start (args, fmt);
   str = g_strdup_vprintf (fmt, args);
   va_end (args);
-  /* FIXME: use GST_LEVEL_ERROR here? Currently warning is used because we're 
+  /* FIXME: use GST_LEVEL_ERROR here? Currently warning is used because we're
    * able to catch enough of the errors that would be printed otherwise
    */
   gst_debug_log (alsa_debug, GST_LEVEL_WARNING, file, function, line, NULL,
@@ -69,6 +70,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   if (!gst_element_register (plugin, "alsamidisrc", GST_RANK_PRIMARY,
           GST_TYPE_ALSA_MIDI_SRC))
+    return FALSE;
+  if (!gst_device_provider_register (plugin, "alsadeviceprovider",
+          GST_RANK_PRIMARY, GST_TYPE_ALSA_DEVICE_PROVIDER))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");

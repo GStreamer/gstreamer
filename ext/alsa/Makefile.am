@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstalsa.la
 
 libgstalsa_la_SOURCES = \
-	gstalsadeviceprobe.c \
+	gstalsadeviceprovider.c \
 	gstalsaplugin.c \
 	gstalsasink.c 	\
 	gstalsasrc.c \
@@ -22,7 +22,7 @@ libgstalsa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
 	gstalsa.h \
-	gstalsadeviceprobe.h \
+	gstalsadeviceprovider.h \
 	gstalsasrc.h \
 	gstalsasink.h \
 	gstalsamidisrc.h

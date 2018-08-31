@@ -49,7 +49,6 @@
 
 #include "gstalsa.h"
 #include "gstalsasink.h"
-#include "gstalsadeviceprobe.h"
 
 #include <gst/audio/gstaudioiec61937.h>
 #include <gst/gst-i18n-plugin.h>

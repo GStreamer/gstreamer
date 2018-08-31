@@ -1,6 +1,6 @@
 alsa_sources = [
   'gstalsa.c',
-  'gstalsadeviceprobe.c',
+  'gstalsadeviceprovider.c',
   'gstalsamidisrc.c',
   'gstalsaplugin.c',
   'gstalsasink.c',
