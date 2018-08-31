@@ -413,7 +413,6 @@ gst_ts_demux_reset (MpegTSBase * base)
   GstTSDemux *demux = (GstTSDemux *) base;
 
   demux->rate = 1.0;
-  gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
     demux->segment_event = NULL;
@@ -598,17 +597,18 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstFormat format;
       gint64 start, stop;
 
-      format = demux->segment.format;
+      format = base->out_segment.format;
 
       start =
-          gst_segment_to_stream_time (&demux->segment, format,
-          demux->segment.start);
-      if ((stop = demux->segment.stop) == -1)
-        stop = demux->segment.duration;
+          gst_segment_to_stream_time (&base->out_segment, format,
+          base->out_segment.start);
+      if ((stop = base->out_segment.stop) == -1)
+        stop = base->out_segment.duration;
       else
-        stop = gst_segment_to_stream_time (&demux->segment, format, stop);
+        stop = gst_segment_to_stream_time (&base->out_segment, format, stop);
 
-      gst_query_set_segment (query, demux->segment.rate, format, start, stop);
+      gst_query_set_segment (query, base->out_segment.rate, format, start,
+          stop);
       res = TRUE;
       break;
     }
@@ -871,7 +871,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
 
       stream->need_newsegment = TRUE;
     }
-    gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+    gst_segment_init (&base->out_segment, GST_FORMAT_UNDEFINED);
     if (demux->segment_event) {
       gst_event_unref (demux->segment_event);
       demux->segment_event = NULL;
@@ -887,7 +887,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   demux->rate = rate;
   res = GST_FLOW_OK;
 
-  gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+  gst_segment_do_seek (&base->out_segment, rate, format, flags, start_type,
       start, stop_type, stop, NULL);
   /* Reset segment if we're not doing an accurate seek */
   demux->reset_segment = (!(flags & GST_SEEK_FLAG_ACCURATE));
@@ -1795,7 +1795,8 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
 
     stream->need_newsegment = TRUE;
     /* Reset segment if we're not doing an accurate seek */
-    demux->reset_segment = (!(demux->segment.flags & GST_SEEK_FLAG_ACCURATE));
+    demux->reset_segment =
+        (!(base->out_segment.flags & GST_SEEK_FLAG_ACCURATE));
     stream->needs_keyframe = FALSE;
     stream->discont = TRUE;
     stream->pts = GST_CLOCK_TIME_NONE;
@@ -2482,37 +2483,37 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream,
   GST_DEBUG ("lowest_pts %" G_GUINT64_FORMAT " => clocktime %" GST_TIME_FORMAT,
       lowest_pts, GST_TIME_ARGS (firstts));
 
-  if (demux->segment.format != GST_FORMAT_TIME || demux->reset_segment) {
+  if (base->out_segment.format != GST_FORMAT_TIME || demux->reset_segment) {
     /* It will happen only if it's first program or after flushes. */
     GST_DEBUG ("Calculating actual segment");
     if (base->segment.format == GST_FORMAT_TIME) {
       /* Try to recover segment info from base if it's in TIME format */
-      demux->segment = base->segment;
+      base->out_segment = base->segment;
     } else {
       /* Start from the first ts/pts */
-      GstClockTime base =
-          demux->segment.base + demux->segment.position - demux->segment.start;
-      gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-      demux->segment.start = firstts;
-      demux->segment.stop = GST_CLOCK_TIME_NONE;
-      demux->segment.position = firstts;
-      demux->segment.time = firstts;
-      demux->segment.rate = demux->rate;
-      demux->segment.base = base;
+      GstSegment *seg = &base->out_segment;
+      GstClockTime base = seg->base + seg->position - seg->start;
+      gst_segment_init (seg, GST_FORMAT_TIME);
+      seg->start = firstts;
+      seg->stop = GST_CLOCK_TIME_NONE;
+      seg->position = firstts;
+      seg->time = firstts;
+      seg->rate = demux->rate;
+      seg->base = base;
     }
-  } else if (demux->segment.start < firstts) {
+  } else if (base->out_segment.start < firstts) {
     /* Take into account the offset to the first buffer timestamp */
-    if (demux->segment.rate > 0) {
-      demux->segment.start = firstts;
+    if (base->out_segment.rate > 0) {
+      base->out_segment.start = firstts;
 
-      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
-        demux->segment.stop += firstts - demux->segment.start;
-      demux->segment.position = firstts;
+      if (GST_CLOCK_TIME_IS_VALID (base->out_segment.stop))
+        base->out_segment.stop += firstts - base->out_segment.start;
+      base->out_segment.position = firstts;
     }
   }
 
   if (!demux->segment_event) {
-    demux->segment_event = gst_event_new_segment (&demux->segment);
+    demux->segment_event = gst_event_new_segment (&base->out_segment);
 
     if (base->last_seek_seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (demux->segment_event, base->last_seek_seqnum);
@@ -2852,6 +2853,7 @@ static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSBaseProgram * target_program)
 {
+  MpegTSBase *base = GST_MPEGTS_BASE (demux);
   GstFlowReturn res = GST_FLOW_OK;
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
   GstBuffer *buffer = NULL;
@@ -3050,9 +3052,9 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       GST_TIME_ARGS (stream->dts));
 
   if (GST_CLOCK_TIME_IS_VALID (stream->dts))
-    demux->segment.position = stream->dts;
+    base->out_segment.position = stream->dts;
   else if (GST_CLOCK_TIME_IS_VALID (stream->pts))
-    demux->segment.position = stream->pts;
+    base->out_segment.position = stream->pts;
 
   if (buffer) {
     res = gst_pad_push (stream->pad, buffer);
@@ -3158,7 +3160,7 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
   if (hard) {
     /* For pull mode seeks the current segment needs to be preserved */
     demux->rate = 1.0;
-    gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+    gst_segment_init (&base->out_segment, GST_FORMAT_UNDEFINED);
   }
 }
 

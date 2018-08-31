@@ -343,14 +343,16 @@ prepare_src_pad (MpegTSBase * base, MpegTSParse2 * parse)
 
   /* If setting output timestamps, ensure that the output segment is TIME */
   if (parse->set_timestamps == FALSE || base->segment.format == GST_FORMAT_TIME)
-    gst_pad_push_event (parse->srcpad, gst_event_new_segment (&base->segment));
+    /* Just use the upstream segment */
+    base->out_segment = base->segment;
   else {
-    GstSegment seg;
-    gst_segment_init (&seg, GST_FORMAT_TIME);
+    GstSegment *seg = &base->out_segment;
+    gst_segment_init (seg, GST_FORMAT_TIME);
     GST_DEBUG_OBJECT (parse,
-        "Generating time output segment %" GST_SEGMENT_FORMAT, &seg);
-    gst_pad_push_event (parse->srcpad, gst_event_new_segment (&seg));
+        "Generating time output segment %" GST_SEGMENT_FORMAT, seg);
   }
+  gst_pad_push_event (parse->srcpad,
+      gst_event_new_segment (&base->out_segment));
 
   parse->first = FALSE;
 

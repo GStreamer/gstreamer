@@ -84,7 +84,6 @@ struct _GstTSDemux
 					* the new program becomes active */
 
   /* segments to be sent */
-  GstSegment segment;
   GstEvent *segment_event;
   gboolean reset_segment;
 

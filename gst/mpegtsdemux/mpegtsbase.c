@@ -206,6 +206,7 @@ mpegts_base_reset (MpegTSBase * base)
   }
 
   gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&base->out_segment, GST_FORMAT_UNDEFINED);
   base->last_seek_seqnum = GST_SEQNUM_INVALID;
 
   base->mode = BASE_MODE_STREAMING;

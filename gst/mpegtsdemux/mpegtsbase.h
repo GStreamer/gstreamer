@@ -148,6 +148,9 @@ struct _MpegTSBase {
   /* Upstream segment */
   GstSegment segment;
 
+  /* Downstream segment, for use by sub-classes */
+  GstSegment out_segment;
+
   /* Last received seek event seqnum (default GST_SEQNUM_INVALID) */
   guint last_seek_seqnum;
 
