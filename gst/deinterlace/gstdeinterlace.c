@@ -1163,6 +1163,9 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
     self->field_history[i].tc = self->field_history[i - fields_to_push].tc;
     self->field_history[i].caption =
         self->field_history[i - fields_to_push].caption;
+    self->field_history[i - fields_to_push].frame = NULL;
+    self->field_history[i - fields_to_push].tc = NULL;
+    self->field_history[i - fields_to_push].caption = NULL;
   }
 
   if (field_layout == GST_DEINTERLACE_LAYOUT_AUTO) {
