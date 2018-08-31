@@ -7,10 +7,10 @@ project('gst-devtools', 'c',
 
 gst_version = meson.project_version()
 version_arr = gst_version.split('.')
-gst_version_major = version_arr[0]
-gst_version_minor = version_arr[1]
-gst_version_micro = version_arr[2]
-if gst_version_minor.to_int().is_even()
+gst_version_major = version_arr[0].to_int()
+gst_version_minor = version_arr[1].to_int()
+gst_version_micro = version_arr[2].to_int()
+if gst_version_minor.is_even()
   TESTSUITE_VERSION = '@0@.@1@'.format(gst_version_major, gst_version_minor)
 else
   TESTSUITE_VERSION = 'master'
