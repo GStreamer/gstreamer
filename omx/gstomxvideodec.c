@@ -1718,7 +1718,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       gst_omx_buffer_flags_to_string (buf->omx_buf->nFlags),
       (guint64) GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp));
 
-  GST_VIDEO_DECODER_STREAM_LOCK (self);
   frame = gst_omx_video_find_nearest_frame (buf,
       gst_video_decoder_get_frames (GST_VIDEO_DECODER (self)));
 
@@ -1862,12 +1861,12 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       goto release_error;
   }
 
+  GST_VIDEO_DECODER_STREAM_LOCK (self);
   self->downstream_flow_ret = flow_ret;
+  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
 
   if (flow_ret != GST_FLOW_OK)
     goto flow_error;
-
-  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
 
   return;
 
@@ -1941,7 +1940,6 @@ flow_error:
       GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
     }
     gst_omx_video_dec_pause_loop (self, flow_ret);
-    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
   }
 
