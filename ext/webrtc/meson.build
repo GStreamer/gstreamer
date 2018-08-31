@@ -18,7 +18,7 @@ libnice_dep = dependency('nice', version : '>=0.1.14', required : get_option('we
                          default_options: ['tests=false'])
 
 if libnice_dep.found()
-  library('gstwebrtc',
+  gstwebrtc_plugin = library('gstwebrtc',
     webrtc_sources,
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
     include_directories : [configinc],
@@ -26,4 +26,5 @@ if libnice_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
+  pkgconfig.generate(gstwebrtc_plugin, install_dir : plugins_pkgconfig_install_dir)
 endif
