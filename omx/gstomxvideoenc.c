@@ -1429,9 +1429,19 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     }
 
     if (frame) {
-      frame->output_buffer = outbuf;
-      flow_ret =
-          gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
+      if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_ENDOFFRAME)
+          || !gst_omx_port_get_subframe (self->enc_out_port)) {
+        frame->output_buffer = outbuf;
+        flow_ret =
+            gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
+        if (buf->omx_buf->nFlags | ~OMX_BUFFERFLAG_ENDOFFRAME)
+          GST_WARNING_OBJECT (self,
+              "OMX_BUFFERFLAG_ENDOFFRAME is missing flags");
+      } else {
+        flow_ret =
+            gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (self), frame);
+        gst_video_codec_frame_unref (frame);
+      }
     } else {
       GST_ERROR_OBJECT (self, "No corresponding frame found");
       flow_ret = gst_pad_push (GST_VIDEO_ENCODER_SRC_PAD (self), outbuf);
