@@ -337,6 +337,10 @@ GstFlowReturn        gst_video_encoder_finish_frame (GstVideoEncoder *encoder,
 						     GstVideoCodecFrame *frame);
 
 GST_VIDEO_API
+GstFlowReturn        gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
+						     GstVideoCodecFrame * frame);
+
+GST_VIDEO_API
 GstCaps *            gst_video_encoder_proxy_getcaps (GstVideoEncoder * enc,
 						      GstCaps         * caps,
                                                       GstCaps         * filter);
