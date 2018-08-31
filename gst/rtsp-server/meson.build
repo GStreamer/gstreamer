@@ -51,6 +51,7 @@ gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   c_args: rtspserver_args,
   version : libversion,
   soversion : soversion,
+  darwin_versions : osxversion,
   install : true,
   dependencies : gst_rtsp_server_deps)
 
