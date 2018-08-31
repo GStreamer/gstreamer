@@ -134,8 +134,7 @@ message('Building subprojects: ' + ', '.join(subprojects_names))
 
 setenv = find_program('gst-uninstalled.py')
 run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.build_root()),
-	   '--srcdir=@0@'.format(meson.source_root()),
-           '--gst-version=@0@'.format(gst_branch)])
+	   '--srcdir=@0@'.format(meson.source_root())])
 
 update = find_program('git-update')
 run_target('git-update', command : [update])
