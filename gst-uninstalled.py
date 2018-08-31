@@ -212,7 +212,8 @@ if __name__ == "__main__":
         exit(1)
 
     # The following incantation will retrieve the current branch name.
-    gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD", repository_path=options.srcdir)
+    gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD",
+                      repository_path=options.srcdir).strip('\n')
 
     if not args:
         if os.name is 'nt':
