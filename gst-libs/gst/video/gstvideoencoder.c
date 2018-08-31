@@ -2087,6 +2087,226 @@ gst_video_encoder_drop_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   gst_element_post_message (GST_ELEMENT_CAST (enc), qos_msg);
 }
 
+static GstFlowReturn
+gst_video_encoder_can_push_unlocked (GstVideoEncoder * encoder)
+{
+  GstVideoEncoderPrivate *priv = encoder->priv;
+  gboolean needs_reconfigure;
+
+  needs_reconfigure = gst_pad_check_reconfigure (encoder->srcpad);
+  if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
+              && needs_reconfigure))) {
+    if (!gst_video_encoder_negotiate_unlocked (encoder)) {
+      gst_pad_mark_reconfigure (encoder->srcpad);
+      if (GST_PAD_IS_FLUSHING (encoder->srcpad))
+        return GST_FLOW_FLUSHING;
+      else
+        return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+
+  if (G_UNLIKELY (priv->output_state == NULL)) {
+    GST_ERROR_OBJECT (encoder, "Output state was not configured");
+    GST_ELEMENT_ERROR (encoder, LIBRARY, FAILED,
+        ("Output state was not configured"), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
+}
+
+static void
+gst_video_encoder_push_pending_unlocked (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame)
+{
+  GstVideoEncoderPrivate *priv = encoder->priv;
+  GList *l;
+
+  /* Push all pending events that arrived before this frame */
+  for (l = priv->frames; l; l = l->next) {
+    GstVideoCodecFrame *tmp = l->data;
+
+    if (tmp->events) {
+      GList *k;
+
+      for (k = g_list_last (tmp->events); k; k = k->prev)
+        gst_video_encoder_push_event (encoder, k->data);
+      g_list_free (tmp->events);
+      tmp->events = NULL;
+    }
+
+    if (tmp == frame)
+      break;
+  }
+
+  gst_video_encoder_check_and_push_tags (encoder);
+}
+
+static void
+gst_video_encoder_infer_dts_unlocked (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame)
+{
+  /* DTS is expected to be monotonously increasing,
+   * so a good guess is the lowest unsent PTS (all being OK) */
+  GstVideoEncoderPrivate *priv = encoder->priv;
+  GList *l;
+  GstClockTime min_ts = GST_CLOCK_TIME_NONE;
+  GstVideoCodecFrame *oframe = NULL;
+  gboolean seen_none = FALSE;
+
+  /* some maintenance regardless */
+  for (l = priv->frames; l; l = l->next) {
+    GstVideoCodecFrame *tmp = l->data;
+
+    if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts)) {
+      seen_none = TRUE;
+      continue;
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (min_ts) || tmp->abidata.ABI.ts < min_ts) {
+      min_ts = tmp->abidata.ABI.ts;
+      oframe = tmp;
+    }
+  }
+  /* save a ts if needed */
+  if (oframe && oframe != frame) {
+    oframe->abidata.ABI.ts = frame->abidata.ABI.ts;
+  }
+
+  /* and set if needed */
+  if (!GST_CLOCK_TIME_IS_VALID (frame->dts) && !seen_none) {
+    frame->dts = min_ts;
+    GST_DEBUG_OBJECT (encoder,
+        "no valid DTS, using oldest PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->pts));
+  }
+}
+
+static void
+gst_video_encoder_send_header_unlocked (GstVideoEncoder * encoder,
+    gboolean * discont)
+{
+  GstVideoEncoderPrivate *priv = encoder->priv;
+
+  if (G_UNLIKELY (priv->new_headers)) {
+    GList *tmp, *copy = NULL;
+
+    GST_DEBUG_OBJECT (encoder, "Sending headers");
+
+    /* First make all buffers metadata-writable */
+    for (tmp = priv->headers; tmp; tmp = tmp->next) {
+      GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
+
+      copy = g_list_append (copy, gst_buffer_make_writable (tmpbuf));
+    }
+    g_list_free (priv->headers);
+    priv->headers = copy;
+
+    for (tmp = priv->headers; tmp; tmp = tmp->next) {
+      GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
+
+      GST_OBJECT_LOCK (encoder);
+      priv->bytes += gst_buffer_get_size (tmpbuf);
+      GST_OBJECT_UNLOCK (encoder);
+      if (G_UNLIKELY (*discont)) {
+        GST_LOG_OBJECT (encoder, "marking discont");
+        GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
+        *discont = FALSE;
+      }
+
+      gst_pad_push (encoder->srcpad, gst_buffer_ref (tmpbuf));
+    }
+    priv->new_headers = FALSE;
+  }
+}
+
+static void
+gst_video_encoder_transform_meta_unlocked (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame)
+{
+  GstVideoEncoderClass *encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+
+  if (encoder_class->transform_meta) {
+    if (G_LIKELY (frame->input_buffer)) {
+      CopyMetaData data;
+
+      data.encoder = encoder;
+      data.frame = frame;
+      gst_buffer_foreach_meta (frame->input_buffer, foreach_metadata, &data);
+    } else {
+      GST_FIXME_OBJECT (encoder,
+          "Can't copy metadata because input frame disappeared");
+    }
+  }
+}
+
+static void
+gst_video_encoder_send_key_unit_unlocked (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame, gboolean * send_headers)
+{
+  GstVideoEncoderPrivate *priv = encoder->priv;
+  GstClockTime stream_time, running_time;
+  GstEvent *ev;
+  ForcedKeyUnitEvent *fevt = NULL;
+  GList *l;
+
+  running_time =
+      gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
+      frame->pts);
+
+  GST_OBJECT_LOCK (encoder);
+  for (l = priv->force_key_unit; l; l = l->next) {
+    ForcedKeyUnitEvent *tmp = l->data;
+
+    /* Skip non-pending keyunits */
+    if (!tmp->pending)
+      continue;
+
+    /* Exact match using the frame id */
+    if (frame->system_frame_number == tmp->frame_id) {
+      fevt = tmp;
+      break;
+    }
+
+    /* Simple case, keyunit ASAP */
+    if (tmp->running_time == GST_CLOCK_TIME_NONE) {
+      fevt = tmp;
+      break;
+    }
+
+    /* Event for before this frame */
+    if (tmp->running_time <= running_time) {
+      fevt = tmp;
+      break;
+    }
+  }
+
+  if (fevt) {
+    priv->force_key_unit = g_list_remove (priv->force_key_unit, fevt);
+  }
+  GST_OBJECT_UNLOCK (encoder);
+
+  if (fevt) {
+    stream_time =
+        gst_segment_to_stream_time (&encoder->output_segment, GST_FORMAT_TIME,
+        frame->pts);
+
+    ev = gst_video_event_new_downstream_force_key_unit
+        (frame->pts, stream_time, running_time, fevt->all_headers, fevt->count);
+
+    gst_video_encoder_push_event (encoder, ev);
+
+    if (fevt->all_headers)
+      *send_headers = TRUE;
+
+    GST_DEBUG_OBJECT (encoder,
+        "Forced key unit: running-time %" GST_TIME_FORMAT
+        ", all_headers %d, count %u",
+        GST_TIME_ARGS (running_time), fevt->all_headers, fevt->count);
+    forced_key_unit_event_free (fevt);
+  }
+}
+
 /**
  * gst_video_encoder_finish_frame:
  * @encoder: a #GstVideoEncoder
@@ -2111,11 +2331,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GstVideoEncoderPrivate *priv = encoder->priv;
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoEncoderClass *encoder_class;
-  GList *l;
   gboolean send_headers = FALSE;
   gboolean discont = (frame->presentation_frame_number == 0);
   GstBuffer *buffer;
-  gboolean needs_reconfigure = FALSE;
 
   encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
 
@@ -2128,40 +2346,11 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
-  needs_reconfigure = gst_pad_check_reconfigure (encoder->srcpad);
-  if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
-              && needs_reconfigure))) {
-    if (!gst_video_encoder_negotiate_unlocked (encoder)) {
-      gst_pad_mark_reconfigure (encoder->srcpad);
-      if (GST_PAD_IS_FLUSHING (encoder->srcpad))
-        ret = GST_FLOW_FLUSHING;
-      else
-        ret = GST_FLOW_NOT_NEGOTIATED;
-      goto done;
-    }
-  }
+  ret = gst_video_encoder_can_push_unlocked (encoder);
+  if (ret != GST_FLOW_OK)
+    goto done;
 
-  if (G_UNLIKELY (priv->output_state == NULL))
-    goto no_output_state;
-
-  /* Push all pending events that arrived before this frame */
-  for (l = priv->frames; l; l = l->next) {
-    GstVideoCodecFrame *tmp = l->data;
-
-    if (tmp->events) {
-      GList *k;
-
-      for (k = g_list_last (tmp->events); k; k = k->prev)
-        gst_video_encoder_push_event (encoder, k->data);
-      g_list_free (tmp->events);
-      tmp->events = NULL;
-    }
-
-    if (tmp == frame)
-      break;
-  }
-
-  gst_video_encoder_check_and_push_tags (encoder);
+  gst_video_encoder_push_pending_unlocked (encoder, frame);
 
   /* no buffer data means this frame is skipped/dropped */
   if (!frame->output_buffer) {
@@ -2171,69 +2360,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   priv->processed++;
 
-  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit) {
-    GstClockTime stream_time, running_time;
-    GstEvent *ev;
-    ForcedKeyUnitEvent *fevt = NULL;
-    GList *l;
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && priv->force_key_unit)
+    gst_video_encoder_send_key_unit_unlocked (encoder, frame, &send_headers);
 
-    running_time =
-        gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
-        frame->pts);
-
-    GST_OBJECT_LOCK (encoder);
-    for (l = priv->force_key_unit; l; l = l->next) {
-      ForcedKeyUnitEvent *tmp = l->data;
-
-      /* Skip non-pending keyunits */
-      if (!tmp->pending)
-        continue;
-
-      /* Exact match using the frame id */
-      if (frame->system_frame_number == tmp->frame_id) {
-        fevt = tmp;
-        break;
-      }
-
-      /* Simple case, keyunit ASAP */
-      if (tmp->running_time == GST_CLOCK_TIME_NONE) {
-        fevt = tmp;
-        break;
-      }
-
-      /* Event for before this frame */
-      if (tmp->running_time <= running_time) {
-        fevt = tmp;
-        break;
-      }
-    }
-
-    if (fevt) {
-      priv->force_key_unit = g_list_remove (priv->force_key_unit, fevt);
-    }
-    GST_OBJECT_UNLOCK (encoder);
-
-    if (fevt) {
-      stream_time =
-          gst_segment_to_stream_time (&encoder->output_segment, GST_FORMAT_TIME,
-          frame->pts);
-
-      ev = gst_video_event_new_downstream_force_key_unit
-          (frame->pts, stream_time, running_time,
-          fevt->all_headers, fevt->count);
-
-      gst_video_encoder_push_event (encoder, ev);
-
-      if (fevt->all_headers)
-        send_headers = TRUE;
-
-      GST_DEBUG_OBJECT (encoder,
-          "Forced key unit: running-time %" GST_TIME_FORMAT
-          ", all_headers %d, count %u",
-          GST_TIME_ARGS (running_time), fevt->all_headers, fevt->count);
-      forced_key_unit_event_free (fevt);
-    }
-  }
 
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
     priv->distance_from_sync = 0;
@@ -2246,40 +2375,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  /* DTS is expected monotone ascending,
-   * so a good guess is the lowest unsent PTS (all being OK) */
-  {
-    GstClockTime min_ts = GST_CLOCK_TIME_NONE;
-    GstVideoCodecFrame *oframe = NULL;
-    gboolean seen_none = FALSE;
-
-    /* some maintenance regardless */
-    for (l = priv->frames; l; l = l->next) {
-      GstVideoCodecFrame *tmp = l->data;
-
-      if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts)) {
-        seen_none = TRUE;
-        continue;
-      }
-
-      if (!GST_CLOCK_TIME_IS_VALID (min_ts) || tmp->abidata.ABI.ts < min_ts) {
-        min_ts = tmp->abidata.ABI.ts;
-        oframe = tmp;
-      }
-    }
-    /* save a ts if needed */
-    if (oframe && oframe != frame) {
-      oframe->abidata.ABI.ts = frame->abidata.ABI.ts;
-    }
-
-    /* and set if needed */
-    if (!GST_CLOCK_TIME_IS_VALID (frame->dts) && !seen_none) {
-      frame->dts = min_ts;
-      GST_DEBUG_OBJECT (encoder,
-          "no valid DTS, using oldest PTS %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (frame->pts));
-    }
-  }
+  gst_video_encoder_infer_dts_unlocked (encoder, frame);
 
   frame->distance_from_sync = priv->distance_from_sync;
   priv->distance_from_sync++;
@@ -2299,38 +2395,8 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   }
   GST_OBJECT_UNLOCK (encoder);
 
-  if (G_UNLIKELY (send_headers || priv->new_headers)) {
-    GList *tmp, *copy = NULL;
-
-    GST_DEBUG_OBJECT (encoder, "Sending headers");
-
-    /* First make all buffers metadata-writable */
-    for (tmp = priv->headers; tmp; tmp = tmp->next) {
-      GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
-
-      copy = g_list_append (copy, gst_buffer_make_writable (tmpbuf));
-    }
-    g_list_free (priv->headers);
-    priv->headers = copy;
-
-    for (tmp = priv->headers; tmp; tmp = tmp->next) {
-      GstBuffer *tmpbuf = GST_BUFFER (tmp->data);
-
-      GST_OBJECT_LOCK (encoder);
-      priv->bytes += gst_buffer_get_size (tmpbuf);
-      GST_OBJECT_UNLOCK (encoder);
-      if (G_UNLIKELY (discont)) {
-        GST_LOG_OBJECT (encoder, "marking discont");
-        GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
-        discont = FALSE;
-      }
-
-      GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-      gst_pad_push (encoder->srcpad, gst_buffer_ref (tmpbuf));
-      GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-    }
-    priv->new_headers = FALSE;
-  }
+  if (G_UNLIKELY (send_headers))
+    gst_video_encoder_send_header_unlocked (encoder, &discont);
 
   if (G_UNLIKELY (discont)) {
     GST_LOG_OBJECT (encoder, "marking discont");
@@ -2340,18 +2406,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (encoder_class->pre_push)
     ret = encoder_class->pre_push (encoder, frame);
 
-  if (encoder_class->transform_meta) {
-    if (G_LIKELY (frame->input_buffer)) {
-      CopyMetaData data;
-
-      data.encoder = encoder;
-      data.frame = frame;
-      gst_buffer_foreach_meta (frame->input_buffer, foreach_metadata, &data);
-    } else {
-      GST_WARNING_OBJECT (encoder,
-          "Can't copy metadata because input frame disappeared");
-    }
-  }
+  gst_video_encoder_transform_meta_unlocked (encoder, frame);
 
   /* Get an additional ref to the buffer, which is going to be pushed
    * downstream, the original ref is owned by the frame */
@@ -2379,15 +2434,6 @@ done:
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return ret;
-
-  /* ERRORS */
-no_output_state:
-  {
-    gst_video_encoder_release_frame (encoder, frame);
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-    GST_ERROR_OBJECT (encoder, "Output state was not configured");
-    return GST_FLOW_ERROR;
-  }
 }
 
 /**
