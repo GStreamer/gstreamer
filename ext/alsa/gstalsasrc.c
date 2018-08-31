@@ -46,7 +46,6 @@
 #include <alsa/asoundlib.h>
 
 #include "gstalsasrc.h"
-#include "gstalsadeviceprobe.h"
 
 #include <gst/gst-i18n-plugin.h>
 
