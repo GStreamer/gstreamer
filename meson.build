@@ -116,6 +116,11 @@ gstapp_dep = dependency('gstreamer-app-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'app_dep'])
 gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
+if host_machine.system() != 'windows'
+  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    required : get_option('tests'),
+    fallback : ['gstreamer', 'gst_check_dep'])
+endif
 
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
@@ -134,7 +139,7 @@ if get_option('default_library') == 'shared'
 endif
 
 subdir('gst')
-if get_option('tests')
+if not get_option('tests').disabled()
   subdir('tests')
 endif
 if not get_option('examples').disabled()

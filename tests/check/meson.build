@@ -1,8 +1,4 @@
 # FIXME: something is wrong with plugin paths / whitelisting here
-gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gst_check_dep'])
-
-
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
   pbase = dependency('gstreamer-plugins-base-' + api_version, required : false)
