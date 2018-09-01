@@ -77,7 +77,8 @@ gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])
 if host_machine.system() != 'windows'
   gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-    fallback : ['gstreamer', 'gst_check_dep'], required: false)
+    required : get_option('tests'),
+    fallback : ['gstreamer', 'gst_check_dep'])
 endif
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
