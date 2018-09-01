@@ -763,6 +763,11 @@ error_decode:
         ret = GST_FLOW_OK;
         GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding error"),
             ("Decode error %d", status), ret);
+        GST_INFO ("requesting upstream a key unit");
+        gst_pad_push_event (GST_VIDEO_DECODER_SINK_PAD (decode),
+            gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              FALSE, 0));
+        ret = GST_FLOW_OK;
         break;
     }
     gst_video_decoder_drop_frame (vdec, frame);
@@ -1179,10 +1184,15 @@ gst_vaapidecode_parse_frame (GstVideoDecoder * vdec,
       decode->current_frame_size = 0;
       break;
     default:
-      GST_ERROR ("parse error %d", status);
+      GST_WARNING ("parse error %d", status);
       /* just keep parsing, the decoder should have flushed the broken unit */
       ret = GST_VAAPI_DECODE_FLOW_PARSE_DATA;
       decode->current_frame_size = 0;
+
+      GST_INFO ("requesting upstream a key unit");
+      gst_pad_push_event (GST_VIDEO_DECODER_SINK_PAD (decode),
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              FALSE, 0));
       break;
   }
   return ret;
