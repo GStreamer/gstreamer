@@ -760,6 +760,7 @@ error_decode:
         ret = GST_FLOW_NOT_SUPPORTED;
         break;
       default:
+        ret = GST_FLOW_OK;
         GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding error"),
             ("Decode error %d", status), ret);
         break;
