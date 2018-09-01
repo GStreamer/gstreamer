@@ -27,16 +27,17 @@ if not have_osxaudio and osxaudio_option.enabled()
 endif
 
 if have_osxaudio
-  osxaudio_dep = [dependency('CoreAudio'), dependency('AudioToolbox')]
+  modules = ['CoreAudio', 'AudioToolBox']
   if host_system == 'darwin'
-    osxaudio_dep += [dependency('AudioUnit'), dependency('CoreServices')]
+    modules += ['AudioUnit', 'CoreServices']
   endif
+  osxaudio_dep = dependency('appleframeworks', modules : modules)
 
   gstosxaudio = library('gstosxaudio',
     osxaudio_sources,
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gstaudio_dep] + osxaudio_dep,
+    dependencies : [gstaudio_dep, osxaudio_dep],
     install : true,
     install_dir : plugins_install_dir)
   pkgconfig.generate(gstosxaudio, install_dir : plugins_pkgconfig_install_dir)

@@ -134,7 +134,6 @@ check_functions = [
   ['HAVE_GETPAGESIZE', 'getpagesize', '#include<unistd.h>'],
 # check token HAVE_GETTEXT
 # check token HAVE_GST_V4L2
-# check token HAVE_IOS
   ['HAVE_ISINF', 'isinf', '#include<math.h>'],
 # check token HAVE_LIBV4L2
   ['HAVE_MMAP', 'mmap', '#include<sys/mman.h>'],
@@ -153,6 +152,8 @@ foreach f : check_functions
     cdata.set(f.get(0), 1)
   endif
 endforeach
+
+cdata.set('HAVE_IOS', host_system == 'ios')
 
 cdata.set('SIZEOF_CHAR', cc.sizeof('char'))
 cdata.set('SIZEOF_INT', cc.sizeof('int'))
