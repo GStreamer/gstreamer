@@ -23,7 +23,6 @@ if not ['darwin', 'ios'].contains(host_system) or applemedia_option.disabled()
   subdir_done()
 endif
 
-applemedia_deps_found = false
 applemedia_frameworks = []
 corefoundation_dep = dependency('CoreFoundation', required : applemedia_option)
 coremedia_dep = dependency('CoreMedia', required : applemedia_option)
@@ -57,9 +56,8 @@ if host_system == 'ios'
     ]
     applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
 
-    foundation_dep = dependency('Foundation', required : applemedia_option)
-    coremedia_dep = dependency('AssetsLibrary', required : applemedia_option)
-    applemedia_frameworks += [foundation_dep, coremedia_dep]
+    ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
+    applemedia_frameworks += [ios_media_dep]
 else
     applemedia_sources += [
         'iosurfacememory.c'
