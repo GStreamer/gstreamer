@@ -37,7 +37,7 @@ foreach t : validate_tests
         'validate/test-utils.c',
         c_args : gst_c_args + test_defines,
         include_directories : [inc_dirs],
-        dependencies : [validate_dep, gstcheck_dep],
+        dependencies : [validate_dep, gst_check_dep],
     )
     env.set('GST_REGISTRY',
             '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))

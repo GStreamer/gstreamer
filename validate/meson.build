@@ -36,6 +36,8 @@ else
   endif
 endif
 subdir('pkgconfig')
-subdir('tests')
+if not get_option('tests').disabled()
+  subdir('tests')
+endif
 subdir('plugins')
 #subdir('po')

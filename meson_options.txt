@@ -6,3 +6,5 @@ option('gtk_doc', type : 'feature', value : 'auto', yield : true,
        description : 'Build API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', yield : true,
        description : 'Generate gobject-introspection bindings')
+option('tests', type : 'feature', value : 'auto', yield : true,
+       description : 'Build and enable unit tests')

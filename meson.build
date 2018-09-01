@@ -66,7 +66,8 @@ gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_re
 gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
 if host_machine.system() != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    required : get_option('tests'),
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
 
