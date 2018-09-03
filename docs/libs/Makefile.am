@@ -57,6 +57,7 @@ IGNORE_HFILES = \
 	$(top_srcdir)/gst-libs/gst/audio/audio-resampler-neon.h \
 	$(top_srcdir)/gst-libs/gst/gl/gstglcontext_private.h \
 	$(top_srcdir)/gst-libs/gst/gl/gstglfeature_private.h \
+	$(top_srcdir)/gst-libs/gst/gl/gstglfuncs.h \
 	$(top_srcdir)/gst-libs/gst/gl/gstglsl_private.h \
 	$(top_srcdir)/gst-libs/gst/gl/gstglutil_private.h \
 	$(top_srcdir)/gst-libs/gst/gl/gstglwindow_private.h \

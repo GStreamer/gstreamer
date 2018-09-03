@@ -35,7 +35,7 @@ gl_sources = [
   'gstglwindow.c',
 ]
 
-gl_headers = [
+gir_gl_headers = [
   'gl.h',
   'gl-prelude.h',
   'gstgl_enums.h',
@@ -52,7 +52,6 @@ gl_headers = [
   'gstglfeature.h',
   'gstglfilter.h',
   'gstglformat.h',
-  'gstglfuncs.h',
   'gstglframebuffer.h',
   'gstglmemory.h',
   'gstglmemorypbo.h',
@@ -68,6 +67,10 @@ gl_headers = [
   'gstglutils.h',
   'gstglviewconvert.h',
   'gstglwindow.h',
+]
+
+gl_headers = gir_gl_headers + [
+  'gstglfuncs.h',
 ]
 
 gl_prototype_headers = [
@@ -887,7 +890,7 @@ if build_gstgl
   gen_sources = []
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
-      sources : gl_sources + gl_headers,
+      sources : gl_sources + gir_gl_headers,
       namespace : 'GstGL',
       nsversion : api_version,
       identifier_prefix : 'Gst',

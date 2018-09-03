@@ -36,7 +36,8 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglquery.c
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
-libgstgl_@GST_API_VERSION@include_HEADERS = \
+
+gstgl_headers = \
 	gstglwindow.h \
 	gstgldisplay.h \
 	gstglcontext.h \
@@ -49,7 +50,6 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglbufferpool.h \
 	gstglfilter.h \
 	gstglformat.h \
-	gstglfuncs.h \
 	gstglbasefilter.h \
 	gstglshader.h \
 	gstglshaderstrings.h \
@@ -70,6 +70,10 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gl-prelude.h \
 	gl.h
 
+libgstgl_@GST_API_VERSION@include_HEADERS = \
+	gstglfuncs.h \
+	$(gstgl_headers)
+
 noinst_HEADERS = \
 	gstglcontext_private.h \
 	gstglfeature_private.h \
@@ -88,7 +92,7 @@ libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_LIBS) \
 	$(GL_LIBS)
 
-gstgl_gir_headers = $(libgstgl_@GST_API_VERSION@include_HEADERS)
+gstgl_gir_headers = $(gstgl_headers)
 gstgl_gir_sources = $(libgstgl_@GST_API_VERSION@_la_SOURCES)
 
 if HAVE_WINDOW_WIN32
