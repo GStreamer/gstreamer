@@ -31,7 +31,8 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
 endif
 
 libav_opt = get_option('libav')
-libav_deps = [dependency('libavfilter', version: '>= 7.16.100', fallback: ['FFmpeg', 'libavfilter_dep'], required: false)]
+libav_deps = [dependency('libavfilter', version: '>= 7.16.100',
+              fallback: ['FFmpeg', 'libavfilter_dep'], required: libav_opt)]
 if libav_deps[0].found() and libav_deps[0].type_name() != 'internal'
   cc = meson.get_compiler('c')
   check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
@@ -40,13 +41,9 @@ if libav_deps[0].found() and libav_deps[0].type_name() != 'internal'
   #else
   #error libav provider should be FFmpeg
   #endif'''
-  if cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'whether libav is provided by FFmpeg') == false
-    if libav_opt.enabled()
-      error('gst-libav is enabled but can\'t be built')
-    else
-      message('WARNING: gst-libav not built as ffmpeg n3.1.2 not found on the system')
-      libav_deps += [disabler()]
-    endif
+  if not cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'whether libav is provided by FFmpeg')
+    message('WARNING: gst-libav not built as ffmpeg n3.1.2 not found on the system')
+    libav_deps += [disabler()]
   endif
 endif
 
