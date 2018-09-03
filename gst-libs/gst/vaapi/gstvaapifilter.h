@@ -273,4 +273,9 @@ gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter);
 
 gboolean
 gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter);
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiFilter, gst_object_unref)
+#endif
+
 #endif /* GST_VAAPI_FILTER_H */
