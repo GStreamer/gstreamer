@@ -216,6 +216,9 @@ _get_uniform_location (GstGLShader * shader, const gchar * name)
     location = GPOINTER_TO_INT (value);
   }
 
+  GST_TRACE_OBJECT (shader, "Retrieved uniform \'%s\' location %i", name,
+      location);
+
   return location;
 }
 
@@ -456,8 +459,8 @@ gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
   }
 
   if (shader->context->gl_vtable->IsProgram)
-    g_assert (shader->context->gl_vtable->IsProgram (shader->priv->
-            program_handle));
+    g_assert (shader->context->gl_vtable->IsProgram (shader->
+            priv->program_handle));
   if (shader->context->gl_vtable->IsShader)
     g_assert (shader->context->gl_vtable->IsShader (stage_handle));
 
@@ -543,8 +546,8 @@ gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
   }
 
   if (shader->context->gl_vtable->IsProgram)
-    g_assert (shader->context->gl_vtable->IsProgram (shader->priv->
-            program_handle));
+    g_assert (shader->context->gl_vtable->IsProgram (shader->
+            priv->program_handle));
   if (shader->context->gl_vtable->IsShader)
     g_assert (shader->context->gl_vtable->IsShader (stage_handle));
 
@@ -822,6 +825,81 @@ gst_gl_context_clear_shader (GstGLContext * context)
     gl->UseProgramObject (0);
 }
 
+#define set_uniform_pre_check(shader, name)                                 \
+  GLint location = -1;                                                      \
+  g_return_if_fail (shader != NULL);                                        \
+  g_return_if_fail (shader->priv->program_handle != 0);                     \
+  location = _get_uniform_location (shader, name);
+
+#if G_HAVE_ISO_VARARGS
+
+#define set_uniform_v(gl_suffix, c_type, debug_stride, debug_str, ...)      \
+void \
+G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
+        const gchar * name, guint count, const c_type * value)              \
+{                                                                           \
+  guint i;                                                                  \
+  set_uniform_pre_check(shader, name)                                       \
+  for (i = 0; i < count; i++) {                                             \
+    const c_type * item = &value[i * debug_stride];                         \
+    GST_TRACE_OBJECT (shader, "Setting uniform %s (%i) index %i to "        \
+        debug_str, name, location, i, __VA_ARGS__);                         \
+  }                                                                         \
+  shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, count, value); \
+}
+
+#define set_uniform_func_decl(gl_suffix, ...)                               \
+void                                                                        \
+G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
+    const gchar * name, __VA_ARGS__)
+
+#define set_uniform_body(gl_suffix, debug_str, ...)                         \
+{                                                                           \
+  set_uniform_pre_check(shader, name)                                       \
+  GST_TRACE_OBJECT (shader, "Setting uniform %s (%i) = " debug_str,         \
+      name, location, __VA_ARGS__);                                         \
+  shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, __VA_ARGS__); \
+}
+
+#else /* G_HAVE_ISO_VARARGS */
+#if G_HAVE_GNUC_VARARGS
+
+#define set_uniform_v(gl_suffix, c_type, debug_stride, debug_str, args...)  \
+void                                                                        \
+G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
+        const gchar * name, guint count, const c_type * value)              \
+{                                                                           \
+  guint i;                                                                  \
+  set_uniform_pre_check(shader, name)                                       \
+  for (i = 0; i < count; i++) {                                             \
+    const c_type * item = &value[i * debug_stride];                         \
+    GST_TRACE_OBJECT (shader, "Setting uniform %s (%i) index %i to "        \
+        debug_str, name, location, i, ##args);                              \
+  }                                                                         \
+  shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, count, value); \
+}
+
+#define set_uniform_func_decl(gl_suffix, args...)                           \
+void                                                                        \
+G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
+    const gchar * name, ##args)
+
+#define set_uniform_body(gl_suffix, debug_str, args...)                     \
+{                                                                           \
+  set_uniform_pre_check(shader, name)                                       \
+  GST_TRACE_OBJECT (shader, "Setting uniform %s (%i) = " debug_str,         \
+      name, location, ##args);                                              \
+  shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, ##args); \
+}
+
+#else
+
+#error "No vararg support in C macros. What kind of C compiler is this?!"
+
+#endif /* G_HAVE_GNUC_VARARGS */
+#endif /* G_HAVE_ISO_VARARGS */
+
+/* *INDENT-OFF* */
 /**
  * gst_gl_shader_set_uniform_1f:
  * @shader: a #GstGLShader
@@ -830,24 +908,8 @@ gst_gl_context_clear_shader (GstGLContext * context)
  *
  * Perform glUniform1f() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_1f (GstGLShader * shader, const gchar * name,
-    gfloat value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform1f (location, value);
-}
+set_uniform_func_decl(1f, float value)
+set_uniform_body(1f, "%f", value);
 
 /**
  * gst_gl_shader_set_uniform_1fv:
@@ -858,23 +920,7 @@ gst_gl_shader_set_uniform_1f (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform1fv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_1fv (GstGLShader * shader, const gchar * name,
-    guint count, const gfloat * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform1fv (location, count, value);
-}
+set_uniform_v(1fv, float, 1, "%f", item[0]);
 
 /**
  * gst_gl_shader_set_uniform_1i:
@@ -884,23 +930,8 @@ gst_gl_shader_set_uniform_1fv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform1i() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
-    gint value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform1i (location, value);
-}
+set_uniform_func_decl(1i, int value)
+set_uniform_body(1i, "%i", value);
 
 /**
  * gst_gl_shader_set_uniform_1iv:
@@ -911,23 +942,7 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform1iv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_1iv (GstGLShader * shader, const gchar * name,
-    guint count, const gint * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform1iv (location, count, value);
-}
+set_uniform_v(1iv, int, 1, "%i", item[0]);
 
 /**
  * gst_gl_shader_set_uniform_2f:
@@ -938,23 +953,8 @@ gst_gl_shader_set_uniform_1iv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform2f() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_2f (GstGLShader * shader, const gchar * name,
-    gfloat v0, gfloat v1)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform2f (location, v0, v1);
-}
+set_uniform_func_decl(2f, float v0, float v1)
+set_uniform_body(2f, "%f, %f", v0, v1);
 
 /**
  * gst_gl_shader_set_uniform_2fv:
@@ -965,23 +965,7 @@ gst_gl_shader_set_uniform_2f (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform2fv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_2fv (GstGLShader * shader, const gchar * name,
-    guint count, const gfloat * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform2fv (location, count, value);
-}
+set_uniform_v(2fv, float, 2, "%f, %f", item[0], item[1]);
 
 /**
  * gst_gl_shader_set_uniform_2i:
@@ -992,23 +976,8 @@ gst_gl_shader_set_uniform_2fv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform2i() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_2i (GstGLShader * shader, const gchar * name,
-    gint v0, gint v1)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform2i (location, v0, v1);
-}
+set_uniform_func_decl(2i, int v0, int v1)
+set_uniform_body(2i, "%i, %i", v0, v1);
 
 /**
  * gst_gl_shader_set_uniform_2iv:
@@ -1019,23 +988,7 @@ gst_gl_shader_set_uniform_2i (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform2iv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_2iv (GstGLShader * shader, const gchar * name,
-    guint count, const gint * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform2iv (location, count, value);
-}
+set_uniform_v(2iv, int, 2, "%i, %i", item[0], item[1]);
 
 /**
  * gst_gl_shader_set_uniform_3f:
@@ -1047,23 +1000,8 @@ gst_gl_shader_set_uniform_2iv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform3f() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_3f (GstGLShader * shader, const gchar * name,
-    gfloat v0, gfloat v1, gfloat v2)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform3f (location, v0, v1, v2);
-}
+set_uniform_func_decl(3f, float v0, float v1, float v2)
+set_uniform_body(3f, "%f, %f, %f", v0, v1, v2);
 
 /**
  * gst_gl_shader_set_uniform_3fv:
@@ -1074,23 +1012,7 @@ gst_gl_shader_set_uniform_3f (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform3fv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_3fv (GstGLShader * shader, const gchar * name,
-    guint count, const gfloat * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform3fv (location, count, value);
-}
+set_uniform_v(3fv, float, 3, "%f, %f, %f", item[0], item[1], item[2]);
 
 /**
  * gst_gl_shader_set_uniform_3i:
@@ -1102,23 +1024,8 @@ gst_gl_shader_set_uniform_3fv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform3i() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_3i (GstGLShader * shader, const gchar * name,
-    gint v0, gint v1, gint v2)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform3i (location, v0, v1, v2);
-}
+set_uniform_func_decl(3i, int v0, int v1, int v2)
+set_uniform_body(3i, "%i, %i, %i", v0, v1, v2);
 
 /**
  * gst_gl_shader_set_uniform_3iv:
@@ -1129,23 +1036,7 @@ gst_gl_shader_set_uniform_3i (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform3iv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_3iv (GstGLShader * shader, const gchar * name,
-    guint count, const gint * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform3iv (location, count, value);
-}
+set_uniform_v(3iv, int, 3, "%i, %i, %i", item[0], item[1], item[2]);
 
 /**
  * gst_gl_shader_set_uniform_4f:
@@ -1158,23 +1049,8 @@ gst_gl_shader_set_uniform_3iv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform4f() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_4f (GstGLShader * shader, const gchar * name,
-    gfloat v0, gfloat v1, gfloat v2, gfloat v3)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform4f (location, v0, v1, v2, v3);
-}
+set_uniform_func_decl(4f, float v0, float v1, float v2, float v3)
+set_uniform_body(4f, "%f, %f, %f, %f", v0, v1, v2, v3);
 
 /**
  * gst_gl_shader_set_uniform_4fv:
@@ -1185,23 +1061,7 @@ gst_gl_shader_set_uniform_4f (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform4fv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_4fv (GstGLShader * shader, const gchar * name,
-    guint count, const gfloat * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform4fv (location, count, value);
-}
+set_uniform_v(4fv, float, 4, "%f, %f, %f, %f", item[0], item[1], item[2], item[3]);
 
 /**
  * gst_gl_shader_set_uniform_4i:
@@ -1214,23 +1074,8 @@ gst_gl_shader_set_uniform_4fv (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform4i() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_4i (GstGLShader * shader, const gchar * name,
-    gint v0, gint v1, gint v2, gint v3)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform4i (location, v0, v1, v2, v3);
-}
+set_uniform_func_decl(4i, int v0, int v1, int v2, int v3)
+set_uniform_body(4i, "%i, %i, %i, %i", v0, v1, v2, v3);
 
 /**
  * gst_gl_shader_set_uniform_4iv:
@@ -1241,23 +1086,8 @@ gst_gl_shader_set_uniform_4i (GstGLShader * shader, const gchar * name,
  *
  * Perform glUniform4iv() for @name on @shader
  */
-void
-gst_gl_shader_set_uniform_4iv (GstGLShader * shader, const gchar * name,
-    guint count, const gint * value)
-{
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->Uniform4iv (location, count, value);
-}
+set_uniform_v(4iv, int, 4, "%i, %i, %i, %i", item[0], item[1], item[2], item[3]);
+/* *INDENT-ON* */
 
 /**
  * gst_gl_shader_set_uniform_matrix_2fv:
@@ -1273,18 +1103,9 @@ void
 gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
     gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix2fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix2fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1301,18 +1122,9 @@ void
 gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
     gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix3fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix3fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1329,18 +1141,9 @@ void
 gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
     gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix4fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix4fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1357,18 +1160,9 @@ void
 gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix2x3fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix2x3fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1385,18 +1179,9 @@ void
 gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix2x4fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix2x4fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1413,18 +1198,9 @@ void
 gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix3x2fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix3x2fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1441,18 +1217,9 @@ void
 gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix3x4fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix3x4fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1469,18 +1236,9 @@ void
 gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix4x2fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix4x2fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1497,18 +1255,9 @@ void
 gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
     const gchar * name, gint count, gboolean transpose, const gfloat * value)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-  GLint location = -1;
-
-  g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
-
-  location = _get_uniform_location (shader, name);
-
-  gl->UniformMatrix4x3fv (location, count, transpose, value);
+  set_uniform_pre_check (shader, name);
+  shader->context->gl_vtable->UniformMatrix4x3fv (location, count, transpose,
+      value);
 }
 
 /**
@@ -1521,20 +1270,17 @@ gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
 GLint
 gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
   gint ret;
 
   g_return_val_if_fail (shader != NULL, -1);
-  priv = shader->priv;
-  g_return_val_if_fail (priv->program_handle != 0, -1);
+  g_return_val_if_fail (shader->priv->program_handle != 0, -1);
 
-  gl = shader->context->gl_vtable;
-
-  ret = gl->GetAttribLocation (priv->program_handle, name);
+  ret =
+      shader->context->gl_vtable->GetAttribLocation (shader->priv->
+      program_handle, name);
 
   GST_TRACE_OBJECT (shader, "retreived program %i attribute \'%s\' location %i",
-      (int) priv->program_handle, name, ret);
+      (int) shader->priv->program_handle, name, ret);
 
   return ret;
 }
@@ -1552,18 +1298,14 @@ void
 gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
     const gchar * name)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-
   g_return_if_fail (shader != NULL);
-  priv = shader->priv;
-  g_return_if_fail (priv->program_handle != 0);
-  gl = shader->context->gl_vtable;
+  g_return_if_fail (shader->priv->program_handle != 0);
 
   GST_TRACE_OBJECT (shader, "binding program %i attribute \'%s\' location %i",
-      (int) priv->program_handle, name, index);
+      (int) shader->priv->program_handle, name, index);
 
-  gl->BindAttribLocation (priv->program_handle, index, name);
+  shader->context->gl_vtable->BindAttribLocation (shader->priv->program_handle,
+      index, name);
 }
 
 /**
@@ -1579,18 +1321,14 @@ void
 gst_gl_shader_bind_frag_data_location (GstGLShader * shader,
     guint index, const gchar * name)
 {
-  GstGLShaderPrivate *priv;
-  GstGLFuncs *gl;
-
   g_return_if_fail (shader != NULL);
   if (!_ensure_program (shader))
     g_return_if_fail (shader->priv->program_handle);
-  priv = shader->priv;
-  gl = shader->context->gl_vtable;
-  g_return_if_fail (gl->BindFragDataLocation);
+  g_return_if_fail (shader->context->gl_vtable->BindFragDataLocation);
 
   GST_TRACE_OBJECT (shader, "binding program %i frag data \'%s\' location %i",
-      (int) priv->program_handle, name, index);
+      (int) shader->priv->program_handle, name, index);
 
-  gl->BindFragDataLocation (priv->program_handle, index, name);
+  shader->context->gl_vtable->BindFragDataLocation (shader->priv->
+      program_handle, index, name);
 }
