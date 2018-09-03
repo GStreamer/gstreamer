@@ -263,7 +263,7 @@ gst_timecodestamper_set_drop_frame (GstTimeCodeStamper * timecodestamper)
 {
   if (timecodestamper->drop_frame && timecodestamper->vinfo.fps_d == 1001 &&
       (timecodestamper->vinfo.fps_n == 30000 ||
-          timecodestamper->vinfo.fps_d == 60000))
+          timecodestamper->vinfo.fps_n == 60000))
     timecodestamper->current_tc->config.flags |=
         GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
   else
