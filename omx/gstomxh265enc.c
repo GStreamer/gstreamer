@@ -60,8 +60,10 @@ enum
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
 /* zynqultrascaleplus's OMX uses a param struct different of Android's one */
 #define INDEX_PARAM_VIDEO_HEVC OMX_ALG_IndexParamVideoHevc
+#define ALIGNMENT "{ au, nal }"
 #else
 #define INDEX_PARAM_VIDEO_HEVC OMX_IndexParamVideoHevc
+#define ALIGNMENT "au"
 #endif
 
 /* class initialization */
@@ -164,8 +166,8 @@ gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h265, "
       "width=(int) [ 1, MAX ], " "height=(int) [ 1, MAX ], "
-      "framerate = (fraction) [0, MAX], "
-      "stream-format=(string) byte-stream, alignment=(string) au ";
+      "framerate = (fraction) [0, MAX], stream-format=(string) byte-stream, "
+      "aligmment = (string) " ALIGNMENT;
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX H.265 Video Encoder",
@@ -446,6 +448,7 @@ gst_omx_h265_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   const gchar *profile_string, *level_string, *tier_string;
   OMX_VIDEO_HEVCPROFILETYPE profile = OMX_VIDEO_HEVCProfileUnknown;
   OMX_VIDEO_HEVCLEVELTYPE level = OMX_VIDEO_HEVCLevelUnknown;
+  gboolean enable_subframe = FALSE;
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   if (self->periodicity_idr !=
@@ -468,6 +471,7 @@ gst_omx_h265_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
   if (peercaps) {
     GstStructure *s;
+    const gchar *alignment_string;
 
     if (gst_caps_is_empty (peercaps)) {
       gst_caps_unref (peercaps);
@@ -491,6 +495,10 @@ gst_omx_h265_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         goto unsupported_level;
     }
 
+    alignment_string = gst_structure_get_string (s, "alignment");
+    if (alignment_string && g_str_equal (alignment_string, "nal"))
+      enable_subframe = TRUE;
+
     gst_caps_unref (peercaps);
   }
 
@@ -505,6 +513,9 @@ gst_omx_h265_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
 
   if (!update_param_hevc (self, profile, level))
     return FALSE;
+
+  gst_omx_port_set_subframe (GST_OMX_VIDEO_ENC (self)->enc_out_port,
+      enable_subframe);
 
   return TRUE;
 
@@ -527,7 +538,7 @@ gst_omx_h265_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *caps;
   OMX_ERRORTYPE err;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
-  const gchar *profile, *level, *tier;
+  const gchar *profile, *level, *tier, *alignment;
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
@@ -538,9 +549,14 @@ gst_omx_h265_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex)
     return NULL;
 
+  if (gst_omx_port_get_subframe (GST_OMX_VIDEO_ENC (self)->enc_out_port))
+    alignment = "nal";
+  else
+    alignment = "au";
+
   caps = gst_caps_new_simple ("video/x-h265",
       "stream-format", G_TYPE_STRING, "byte-stream",
-      "alignment", G_TYPE_STRING, "au", NULL);
+      "alignment", G_TYPE_STRING, alignment, NULL);
 
   if (err == OMX_ErrorNone) {
     profile = gst_omx_h265_utils_get_profile_from_enum (param.eProfile);

@@ -70,7 +70,13 @@ enum
 #endif
 #define GST_OMX_H264_VIDEO_ENC_PERIODICITY_OF_IDR_FRAMES_DEFAULT    (0xffffffff)
 #define GST_OMX_H264_VIDEO_ENC_INTERVAL_OF_CODING_INTRA_FRAMES_DEFAULT (0xffffffff)
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+#define GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT (0)
+#define ALIGNMENT "{ au, nal }"
+#else
 #define GST_OMX_H264_VIDEO_ENC_B_FRAMES_DEFAULT (0xffffffff)
+#define ALIGNMENT "au"
+#endif
 #define GST_OMX_H264_VIDEO_ENC_ENTROPY_MODE_DEFAULT (0xffffffff)
 #define GST_OMX_H264_VIDEO_ENC_CONSTRAINED_INTRA_PREDICTION_DEFAULT (FALSE)
 #define GST_OMX_H264_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT (0xffffffff)
@@ -226,7 +232,9 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
   basevideoenc_class->stop = gst_omx_h264_enc_stop;
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h264, "
-      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
+      "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], "
+      "framerate = (fraction) [0, MAX], stream-format=(string) byte-stream, "
+      "alignment = (string) " ALIGNMENT;
   videoenc_class->handle_output_frame =
       GST_DEBUG_FUNCPTR (gst_omx_h264_enc_handle_output_frame);
 
@@ -614,6 +622,7 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   const gchar *profile_string, *level_string;
   OMX_VIDEO_AVCPROFILETYPE profile = OMX_VIDEO_AVCProfileMax;
   OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevelMax;
+  gboolean enable_subframe = FALSE;
 
 #ifdef USE_OMX_TARGET_RPI
   GST_OMX_INIT_STRUCT (&config_inline_header);
@@ -674,6 +683,7 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
   if (peercaps) {
     GstStructure *s;
+    const gchar *alignment_string;
 
     if (gst_caps_is_empty (peercaps)) {
       gst_caps_unref (peercaps);
@@ -695,6 +705,10 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
         goto unsupported_level;
     }
 
+    alignment_string = gst_structure_get_string (s, "alignment");
+    if (alignment_string && g_str_equal (alignment_string, "nal"))
+      enable_subframe = TRUE;
+
     gst_caps_unref (peercaps);
   }
 
@@ -705,6 +719,9 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
     if (!update_param_profile_level (self, profile, level))
       return FALSE;
   }
+
+  gst_omx_port_set_subframe (GST_OMX_VIDEO_ENC (self)->enc_out_port,
+      enable_subframe);
 
   if (!update_param_avc (self, profile, level))
     return FALSE;
@@ -730,7 +747,7 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstCaps *caps;
   OMX_ERRORTYPE err;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
-  const gchar *profile, *level;
+  const gchar *profile, *level, *alignment;
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->enc_out_port->index;
@@ -741,9 +758,14 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   if (err != OMX_ErrorNone && err != OMX_ErrorUnsupportedIndex)
     return NULL;
 
+  if (gst_omx_port_get_subframe (GST_OMX_VIDEO_ENC (self)->enc_out_port))
+    alignment = "nal";
+  else
+    alignment = "au";
+
   caps = gst_caps_new_simple ("video/x-h264",
       "stream-format", G_TYPE_STRING, "byte-stream",
-      "alignment", G_TYPE_STRING, "au", NULL);
+      "alignment", G_TYPE_STRING, alignment, NULL);
 
   if (err == OMX_ErrorNone) {
     profile = gst_omx_h264_utils_get_profile_from_enum (param.eProfile);
