@@ -544,16 +544,29 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
   return GST_PAD_PROBE_OK;
 }
 
-static GstStaticCaps subtitle_caps = GST_STATIC_CAPS ("text/x-raw; "
-    "subpicture/x-pgs; subpicture/x-dvb; subpicture/x-dvd; "
-    "application/x-subtitle-unknown; application/x-ssa; application/x-ass; "
-    "subtitle/x-kate; application/x-kate; subpicture/x-xsub");
+static GstStaticCaps subtitle_caps =
+    GST_STATIC_CAPS
+    ("application/x-ssa; application/x-ass; application/x-kate");
 
 static gboolean
 is_subtitle_caps (const GstCaps * caps)
 {
   GstCaps *subs_caps;
+  GstStructure *s;
+  const gchar *name;
   gboolean ret;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!s)
+    return FALSE;
+
+  name = gst_structure_get_name (s);
+  if (g_str_has_prefix (name, "text/") ||
+      g_str_has_prefix (name, "subpicture/") ||
+      g_str_has_prefix (name, "subtitle/") ||
+      g_str_has_prefix (name, "closedcaption/") ||
+      g_str_has_prefix (name, "application/x-subtitle"))
+    return TRUE;
 
   subs_caps = gst_static_caps_get (&subtitle_caps);
   ret = gst_caps_can_intersect (caps, subs_caps);
