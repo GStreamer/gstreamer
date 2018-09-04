@@ -39,10 +39,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-	    sourceSets {
+            sourceSets {
                 main {
                     manifest.srcFile 'AndroidManifest.xml'
-		    java.srcDirs = ['src']
+                    java.srcDirs = ['src']
                     resources.srcDirs = ['src']
                     aidl.srcDirs = ['src']
                     renderscript.srcDirs = ['src']
@@ -61,8 +61,10 @@ android {
 }
 
 afterEvaluate {
-    compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
-    compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
+    if (project.hasProperty('compileDebugJavaWithJavac'))
+        project.compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
+    if (project.hasProperty('compileReleaseJavaWithJavac'))
+        project.compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
 }
 
 dependencies {
