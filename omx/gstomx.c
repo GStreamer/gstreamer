@@ -3440,6 +3440,61 @@ gst_omx_port_set_dmabuf (GstOMXPort * port, gboolean dmabuf)
 #endif
 }
 
+gboolean
+gst_omx_port_set_subframe (GstOMXPort * port, gboolean enabled)
+{
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  OMX_ALG_VIDEO_PARAM_SUBFRAME subframe_mode;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&subframe_mode);
+  subframe_mode.nPortIndex = port->index;
+
+  subframe_mode.bEnableSubframe = enabled;
+
+  err = gst_omx_component_set_parameter (port->comp,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoSubframe, &subframe_mode);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (port->comp->parent,
+        "Failed to %s subframe mode on port %d: %s (0x%08x)",
+        enabled ? "enable" : "disable", port->index,
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return TRUE;
+#else
+  /* subframe mode is not supported on this platform */
+  return FALSE;
+#endif
+}
+
+gboolean
+gst_omx_port_get_subframe (GstOMXPort * port)
+{
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  OMX_ALG_VIDEO_PARAM_SUBFRAME subframe_mode;
+  OMX_ERRORTYPE err;
+
+  GST_OMX_INIT_STRUCT (&subframe_mode);
+  subframe_mode.nPortIndex = port->index;
+
+  err = gst_omx_component_get_parameter (port->comp,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoSubframe, &subframe_mode);
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (port->comp->parent,
+        "Failed to get subframe mode on port %d: %s (0x%08x)",
+        port->index, gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  return subframe_mode.bEnableSubframe;
+#else
+  /* subframe mode is not supported on this platform */
+  return FALSE;
+#endif
+}
+
 typedef GType (*GGetTypeFunction) (void);
 
 static const GGetTypeFunction types[] = {
