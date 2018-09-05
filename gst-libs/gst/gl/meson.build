@@ -459,10 +459,17 @@ if need_platform_egl != 'no'
   egl_dep = dependency('egl', required : false)
   if not egl_dep.found()
     egl_dep = cc.find_library('EGL', required : false)
+  endif
 
-    if not egl_dep.found() and need_platform_egl == 'yes'
-      error ('Could not find requested EGL library')
-    endif
+  if egl_dep.found() and not cc.has_header('EGL/egl.h',
+                                           dependencies : egl_dep,
+                                           include_directories : compat_includes)
+    egl_dep = unneeded_dep
+  endif
+  if egl_dep.found() and not cc.has_header('EGL/eglext.h',
+                                           dependencies : egl_dep,
+                                           include_directories : compat_includes)
+    egl_dep = unneeded_dep
   endif
 
   if egl_dep.found()
@@ -492,8 +499,9 @@ if need_platform_egl != 'no'
 #include <EGL/eglext.h>
 '''
     enabled_gl_platforms += 'egl'
+  elif need_platform_egl == 'yes'
+    error ('Could not find requested EGL library')
   endif
-
 endif
 
 # wayland checks
