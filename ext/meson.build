@@ -46,14 +46,8 @@ subdir('rtmp')
 subdir('sbc')
 subdir('smoothstreaming')
 #subdir('sndfile')
-if cc.get_id() != 'msvc'
-  # soundtouch doesn't do exporting of symbols for DLLs and I'm not sure how to
-  # do that for C++ classes. -- Nirbheek
-  subdir('soundtouch')
-  # libspandsp has a bunch of portability issues in the headers
-  # If someone really wants to use this, it shouldn't be hard to port
-  subdir('spandsp')
-endif
+subdir('soundtouch')
+subdir('spandsp')
 #subdir('spc')
 subdir('srt')
 subdir('srtp')
