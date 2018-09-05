@@ -154,6 +154,7 @@ struct _GstQTPad
 
   /* for keeping track in pre-fill mode */
   GArray *samples;
+  guint first_cc_sample_size;
   /* current sample */
   GstAdapter *raw_audio_adapter;
   guint64 raw_audio_adapter_offset;

@@ -681,6 +681,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->total_duration = 0;
   qtpad->total_bytes = 0;
   qtpad->sparse = FALSE;
+  qtpad->first_cc_sample_size = 0;
 
   gst_buffer_replace (&qtpad->last_buf, NULL);
 
@@ -1004,21 +1005,35 @@ gst_qt_mux_prepare_caption_buffer (GstQTPad * qtpad, GstBuffer * buf,
       break;
     case FOURCC_c708:
     {
+      gsize actual_size;
+
       /* Take the whole CDP */
-      if (in_prefill && size > 256) {
-        GST_ERROR_OBJECT (qtmux, "Input C708 CDP too big for prefill mode !");
-        break;
+      if (in_prefill) {
+        if (size > qtpad->first_cc_sample_size) {
+          GST_ELEMENT_WARNING (qtmux, RESOURCE, WRITE,
+              ("Truncating too big CEA708 sample (%" G_GSIZE_FORMAT " > %u)",
+                  size, qtpad->first_cc_sample_size), (NULL));
+        } else if (size < qtpad->first_cc_sample_size) {
+          GST_ELEMENT_WARNING (qtmux, RESOURCE, WRITE,
+              ("Padding too small CEA708 sample (%" G_GSIZE_FORMAT " < %u)",
+                  size, qtpad->first_cc_sample_size), (NULL));
+        }
+
+        actual_size = MIN (qtpad->first_cc_sample_size, size);
+      } else {
+        actual_size = size;
       }
-      newbuf = gst_buffer_new_and_alloc (in_prefill ? 256 + 8 : size + 8);
+
+      newbuf = gst_buffer_new_and_alloc (actual_size + 8);
 
       /* Let's copy over all metadata and not the memory */
-      gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_METADATA, 0, size);
+      gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
 
       gst_buffer_map (newbuf, &map, GST_MAP_WRITE);
 
-      GST_WRITE_UINT32_BE (map.data, size + 8);
+      GST_WRITE_UINT32_BE (map.data, actual_size + 8);
       GST_WRITE_UINT32_LE (map.data + 4, FOURCC_ccdp);
-      memcpy (map.data + 8, inmap.data, inmap.size);
+      memcpy (map.data + 8, inmap.data, actual_size);
 
       gst_buffer_unmap (newbuf, &map);
       break;
@@ -2508,10 +2523,17 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTPad * qpad)
     case FOURCC_c608:
       /* We always write both cdat and cdt2 atom in prefill mode */
       return 20;
-    case FOURCC_c708:
-      /* We're cheating a bit by always allocating 256 bytes plus 8 bytes for the atom header
-       * even if we use less  */
-      return 256 + 8;
+    case FOURCC_c708:{
+      if (qpad->first_cc_sample_size == 0) {
+        GstBuffer *buf =
+            gst_collect_pads_peek (qtmux->collect, (GstCollectData *) qpad);
+        g_assert (buf != NULL);
+        qpad->first_cc_sample_size = gst_buffer_get_size (buf);
+        g_assert (qpad->first_cc_sample_size != 0);
+        gst_buffer_unref (buf);
+      }
+      return qpad->first_cc_sample_size + 8;
+    }
     case FOURCC_sowt:
     case FOURCC_twos:{
       guint64 block_idx;
