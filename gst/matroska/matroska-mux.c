@@ -501,9 +501,6 @@ gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
   mux->num_v_streams = 0;
   mux->internal_toc = NULL;
 
-  /* create used uid list */
-  mux->used_uids = g_array_sized_new (FALSE, FALSE, sizeof (guint64), 10);
-
   /* initialize remaining variables */
   gst_matroska_mux_reset (GST_ELEMENT (mux));
 }
@@ -526,8 +523,6 @@ gst_matroska_mux_finalize (GObject * object)
   gst_object_unref (mux->ebml_write);
   g_free (mux->writing_app);
 
-  g_array_free (mux->used_uids, TRUE);
-
   if (mux->internal_toc) {
     gst_toc_unref (mux->internal_toc);
     mux->internal_toc = NULL;
@@ -541,29 +536,14 @@ gst_matroska_mux_finalize (GObject * object)
  * gst_matroska_mux_create_uid:
  * @mux: #GstMatroskaMux to generate UID for.
  *
- * Generate new unused track UID.
+ * Generate new track UID.
  *
  * Returns: New track UID.
  */
 static guint64
 gst_matroska_mux_create_uid (GstMatroskaMux * mux)
 {
-  guint64 uid = 0;
-
-  while (!uid) {
-    guint i;
-
-    uid = (((guint64) g_random_int ()) << 32) | g_random_int ();
-    for (i = 0; i < mux->used_uids->len; i++) {
-      if (g_array_index (mux->used_uids, guint64, i) == uid) {
-        uid = 0;
-        break;
-      }
-    }
-    g_array_append_val (mux->used_uids, uid);
-  }
-
-  return uid;
+  return (((guint64) g_random_int ()) << 32) | g_random_int ();
 }
 
 
@@ -712,11 +692,6 @@ gst_matroska_mux_reset (GstElement * element)
   }
 
   mux->chapters_pos = 0;
-
-  /* clear used uids */
-  if (mux->used_uids->len > 0) {
-    g_array_remove_range (mux->used_uids, 0, mux->used_uids->len);
-  }
 }
 
 /**

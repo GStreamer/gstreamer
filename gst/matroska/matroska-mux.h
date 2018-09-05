@@ -140,9 +140,6 @@ struct _GstMatroskaMux {
 
   /* Flag to ease handling of WebM specifics */
   gboolean is_webm;
-
-  /* used uids */
-  GArray *used_uids;
 };
 
 typedef struct _GstMatroskaMuxClass {
