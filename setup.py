@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         ' make sure meson is rerun but the build folder'
                         ' is kept.')
     parser.add_argument("--no-error", action='store_true',
-                        default=False, help="Do not error out on warnings")
+                        default=True, help="Do not error out on warnings")
 
     options, args = parser.parse_known_args()
     configurer = GstBuildConfigurer(options, args)
