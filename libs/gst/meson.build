@@ -4,7 +4,7 @@ subdir('net')
 subdir('helpers')
 
 if get_option('check').disabled()
-  gst_check_dep = disabler() # KISS for now
+  gst_check_dep = dependency('', required : false)
 else
   subdir('check')
 endif
