@@ -366,9 +366,12 @@ _dispose (GObject * object)
 {
   GList *tmp;
   GESContainer *self = GES_CONTAINER (object);
-  GList *children = ges_container_get_children (self, FALSE);
+  GList *children;
 
-  for (tmp = children; tmp; tmp = tmp->next)
+  _ges_container_sort_children (self);
+  children = ges_container_get_children (self, FALSE);
+
+  for (tmp = g_list_last (children); tmp; tmp = tmp->prev)
     ges_container_remove (self, tmp->data);
 
   g_list_free_full (children, gst_object_unref);
