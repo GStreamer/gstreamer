@@ -29,7 +29,7 @@
 #include <gst/validate/gst-validate-report.h>
 
 /* public symbol */
-int gst_validate_create_overrides (void);
+GST_PLUGIN_EXPORT int gst_validate_create_overrides (void);
 
 int
 gst_validate_create_overrides (void)
