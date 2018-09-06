@@ -63,6 +63,7 @@ struct _GstRTSPMediaFactoryPrivate
   gboolean stop_on_disconnect;
   gchar *multicast_iface;
   guint max_mcast_ttl;
+  gboolean bind_mcast_address;
 
   GstClockTime rtx_time;
   guint latency;
@@ -88,6 +89,7 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_LATENCY         200
 #define DEFAULT_MAX_MCAST_TTL   255
+#define DEFAULT_BIND_MCAST_ADDRESS FALSE
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
 #define DEFAULT_DO_RETRANSMISSION FALSE
@@ -107,6 +109,7 @@ enum
   PROP_STOP_ON_DISCONNECT,
   PROP_CLOCK,
   PROP_MAX_MCAST_TTL,
+  PROP_BIND_MCAST_ADDRESS,
   PROP_LAST
 };
 
@@ -234,6 +237,13 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           255, DEFAULT_MAX_MCAST_TTL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BIND_MCAST_ADDRESS,
+      g_param_spec_boolean ("bind-mcast-address", "Bind mcast address",
+          "Whether the multicast sockets should be bound to multicast addresses "
+          "or INADDR_ANY",
+          DEFAULT_BIND_MCAST_ADDRESS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -276,6 +286,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
+  priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->medias_lock);
@@ -354,6 +365,10 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
       g_value_set_uint (value,
           gst_rtsp_media_factory_get_max_mcast_ttl (factory));
       break;
+    case PROP_BIND_MCAST_ADDRESS:
+      g_value_set_boolean (value,
+          gst_rtsp_media_factory_is_bind_mcast_address (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -407,6 +422,10 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_MAX_MCAST_TTL:
       gst_rtsp_media_factory_set_max_mcast_ttl (factory,
           g_value_get_uint (value));
+      break;
+    case PROP_BIND_MCAST_ADDRESS:
+      gst_rtsp_media_factory_set_bind_mcast_address (factory,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1540,6 +1559,54 @@ gst_rtsp_media_factory_get_max_mcast_ttl (GstRTSPMediaFactory * factory)
   return result;
 }
 
+/**
+ * gst_rtsp_media_factory_set_bind_mcast_address:
+ * @factory: a #GstRTSPMediaFactory
+ * @bind_mcast_addr: the new value
+ *
+ * Decide whether the multicast socket should be bound to a multicast address or
+ * INADDR_ANY.
+ */
+void
+gst_rtsp_media_factory_set_bind_mcast_address (GstRTSPMediaFactory * factory,
+    gboolean bind_mcast_addr)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->bind_mcast_address = bind_mcast_addr;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_is_bind_mcast_address:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Check if multicast sockets are configured to be bound to multicast addresses.
+ *
+ * Returns: %TRUE if multicast sockets are configured to be bound to multicast addresses.
+ */
+gboolean
+gst_rtsp_media_factory_is_bind_mcast_address (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = priv->bind_mcast_address;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
 static gchar *
 default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -1691,6 +1758,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gchar *multicast_iface;
   GstRTSPPublishClockMode publish_clock_mode;
   guint ttl;
+  gboolean bind_mcast;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -1707,6 +1775,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   clock = priv->clock ? gst_object_ref (priv->clock) : NULL;
   publish_clock_mode = priv->publish_clock_mode;
   ttl = priv->max_mcast_ttl;
+  bind_mcast = priv->bind_mcast_address;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   gst_rtsp_media_set_suspend_mode (media, suspend_mode);
@@ -1722,6 +1791,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_stop_on_disconnect (media, stop_on_disconnect);
   gst_rtsp_media_set_publish_clock_mode (media, publish_clock_mode);
   gst_rtsp_media_set_max_mcast_ttl (media, ttl);
+  gst_rtsp_media_set_bind_mcast_address (media, bind_mcast);
 
   if (clock) {
     gst_rtsp_media_set_clock (media, clock);

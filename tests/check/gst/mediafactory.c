@@ -371,6 +371,55 @@ GST_START_TEST (test_mcast_ttl)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_allow_bind_mcast)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPStream *stream;
+
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_shared (factory, TRUE);
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 "
+      " audiotestsrc ! audioconvert ! rtpL16pay name=pay1 )");
+
+  /* verify that by default binding sockets to multicast addresses is not enabled */
+  fail_unless (gst_rtsp_media_factory_is_bind_mcast_address (factory) == FALSE);
+
+  /* allow multicast sockets to be bound to multicast addresses */
+  gst_rtsp_media_factory_set_bind_mcast_address (factory, TRUE);
+  /* verify that the socket binding to multicast address has been enabled */
+  fail_unless (gst_rtsp_media_factory_is_bind_mcast_address (factory) == TRUE);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  /* verify that the correct socket binding configuration has been propageted to the media */
+  fail_unless (gst_rtsp_media_is_bind_mcast_address (media) == TRUE);
+
+  fail_unless (gst_rtsp_media_n_streams (media) == 2);
+
+  /* verify that the correct socket binding configuration has been propageted to the media streams */
+  stream = gst_rtsp_media_get_stream (media, 0);
+  fail_unless (stream != NULL);
+  fail_unless (gst_rtsp_stream_is_bind_mcast_address (stream) == TRUE);
+
+  stream = gst_rtsp_media_get_stream (media, 1);
+  fail_unless (stream != NULL);
+  fail_unless (gst_rtsp_stream_is_bind_mcast_address (stream) == TRUE);
+
+  g_object_unref (media);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmediafactory_suite (void)
 {
@@ -387,6 +436,7 @@ rtspmediafactory_suite (void)
   tcase_add_test (tc, test_permissions);
   tcase_add_test (tc, test_reset);
   tcase_add_test (tc, test_mcast_ttl);
+  tcase_add_test (tc, test_allow_bind_mcast);
 
   return s;
 }

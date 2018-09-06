@@ -102,6 +102,7 @@ struct _GstRTSPMediaPrivate
   GstRTSPAddressPool *pool;
   gchar *multicast_iface;
   guint max_mcast_ttl;
+  gboolean bind_mcast_address;
   gboolean blocked;
   GstRTSPTransportMode transport_mode;
   gboolean stop_on_disconnect;
@@ -163,6 +164,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_TRANSPORT_MODE  GST_RTSP_TRANSPORT_MODE_PLAY
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
 #define DEFAULT_MAX_MCAST_TTL   255
+#define DEFAULT_BIND_MCAST_ADDRESS FALSE
 
 #define DEFAULT_DO_RETRANSMISSION FALSE
 
@@ -186,6 +188,7 @@ enum
   PROP_STOP_ON_DISCONNECT,
   PROP_CLOCK,
   PROP_MAX_MCAST_TTL,
+  PROP_BIND_MCAST_ADDRESS,
   PROP_LAST
 };
 
@@ -387,6 +390,13 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           255, DEFAULT_MAX_MCAST_TTL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BIND_MCAST_ADDRESS,
+      g_param_spec_boolean ("bind-mcast-address", "Bind mcast address",
+          "Whether the multicast sockets should be bound to multicast addresses "
+          "or INADDR_ANY",
+          DEFAULT_BIND_MCAST_ADDRESS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
@@ -458,6 +468,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
+  priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
 }
 
 static void
@@ -547,6 +558,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_MAX_MCAST_TTL:
       g_value_set_uint (value, gst_rtsp_media_get_max_mcast_ttl (media));
       break;
+    case PROP_BIND_MCAST_ADDRESS:
+      g_value_set_boolean (value, gst_rtsp_media_is_bind_mcast_address (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -602,6 +616,10 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_MAX_MCAST_TTL:
       gst_rtsp_media_set_max_mcast_ttl (media, g_value_get_uint (value));
+      break;
+    case PROP_BIND_MCAST_ADDRESS:
+      gst_rtsp_media_set_bind_mcast_address (media,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1906,6 +1924,59 @@ gst_rtsp_media_get_max_mcast_ttl (GstRTSPMedia * media)
   return res;
 }
 
+/**
+ * gst_rtsp_media_set_bind_mcast_address:
+ * @media: a #GstRTSPMedia
+ * @bind_mcast_addr: the new value
+ *
+ * Decide whether the multicast socket should be bound to a multicast address or
+ * INADDR_ANY.
+ */
+void
+gst_rtsp_media_set_bind_mcast_address (GstRTSPMedia * media,
+    gboolean bind_mcast_addr)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->bind_mcast_address = bind_mcast_addr;
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    gst_rtsp_stream_set_bind_mcast_address (stream, bind_mcast_addr);
+  }
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_is_bind_mcast_address:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if multicast sockets are configured to be bound to multicast addresses.
+ *
+ * Returns: %TRUE if multicast sockets are configured to be bound to multicast addresses.
+ */
+gboolean
+gst_rtsp_media_is_bind_mcast_address (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  result = priv->bind_mcast_address;
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
 static GList *
 _find_payload_types (GstRTSPMedia * media)
 {
@@ -2224,6 +2295,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
     gst_rtsp_stream_set_address_pool (stream, priv->pool);
   gst_rtsp_stream_set_multicast_iface (stream, priv->multicast_iface);
   gst_rtsp_stream_set_max_mcast_ttl (stream, priv->max_mcast_ttl);
+  gst_rtsp_stream_set_bind_mcast_address (stream, priv->bind_mcast_address);
   gst_rtsp_stream_set_profiles (stream, priv->profiles);
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);

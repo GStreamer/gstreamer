@@ -875,9 +875,6 @@ multicast_transport_specific (void)
       "user", NULL);
   gst_rtsp_context_push_current (&ctx);
 
-  expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
-      "ttl=1;port=5000-5001;mode=\"PLAY\"";
-
   /* simple SETUP with a valid URI */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
           "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
@@ -1081,7 +1078,7 @@ static void
 mcast_transport_two_clients (gboolean shared, const gchar * transport1,
     const gchar * expected_transport1, const gchar * addr1,
     const gchar * transport2, const gchar * expected_transport2,
-    const gchar * addr2)
+    const gchar * addr2, gboolean bind_mcast_address)
 {
   GstRTSPClient *client1, *client2;
   GstRTSPMessage request = { 0, };
@@ -1101,6 +1098,7 @@ mcast_transport_two_clients (gboolean shared, const gchar * transport1,
   if (shared)
     gst_rtsp_media_factory_set_shared (factory, TRUE);
   gst_rtsp_media_factory_set_max_mcast_ttl (factory, 5);
+  gst_rtsp_media_factory_set_bind_mcast_address (factory, bind_mcast_address);
   gst_rtsp_media_factory_set_launch (factory,
       "audiotestsrc ! audio/x-raw,rate=44100 ! audioconvert ! rtpL16pay name=pay0");
   address_pool = gst_rtsp_address_pool_new ();
@@ -1256,7 +1254,7 @@ GST_START_TEST
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1277,11 +1275,59 @@ GST_START_TEST (test_client_multicast_transport_specific_two_clients)
 
   mcast_transport_two_clients (FALSE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
 
+/* test if two multicast clients can choose the same ports but different
+ * multicast destinations
+ * CASE: media is not shared */
+GST_START_TEST (test_client_multicast_transport_specific_two_clients_same_ports)
+{
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=9000-9001;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.1:9000";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=1;port=9000-9001;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = transport_client_2;
+  const gchar *addr_client_2 = "233.252.0.2:9000";
+
+  /* configure the multicast socket to be bound to the requested multicast address instead of INADDR_ANY.
+   * The clients request the same rtp/rtcp borts and having the socket that are bound to ANY would result
+   * in bind() failure */
+  gboolean allow_bind_mcast_address = TRUE;
+
+  mcast_transport_two_clients (FALSE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2, allow_bind_mcast_address);
+}
+
+GST_END_TEST;
+
+/* test if two multicast clients can choose the same multicast destination but different
+ * ports
+ * CASE: media is not shared */
+GST_START_TEST
+    (test_client_multicast_transport_specific_two_clients_same_destination) {
+  const gchar *transport_client_1 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=1;port=9002-9003;mode=\"PLAY\"";
+  const gchar *expected_transport_1 = transport_client_1;
+  const gchar *addr_client_1 = "233.252.0.2:9002";
+
+  const gchar *transport_client_2 = "RTP/AVP;multicast;destination=233.252.0.2;"
+      "ttl=1;port=9004-9005;mode=\"PLAY\"";
+  const gchar *expected_transport_2 = transport_client_2;
+  const gchar *addr_client_2 = "233.252.0.2:9004";
+
+  mcast_transport_two_clients (FALSE, transport_client_1,
+      expected_transport_1, addr_client_1, transport_client_2,
+      expected_transport_2, addr_client_2, FALSE);
+}
+
+GST_END_TEST;
 /* test if two multicast clients can choose the same transport settings.
  * CASE: media is shared */
 GST_START_TEST
@@ -1299,7 +1345,7 @@ GST_START_TEST
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1321,7 +1367,7 @@ GST_START_TEST (test_client_multicast_two_clients_shared_media)
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1343,7 +1389,7 @@ GST_START_TEST
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1366,7 +1412,7 @@ GST_START_TEST
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1389,7 +1435,7 @@ GST_START_TEST (test_client_multicast_max_ttl_first_client)
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1410,7 +1456,7 @@ GST_START_TEST (test_client_multicast_max_ttl_second_client)
 
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
-      expected_transport_2, addr_client_2);
+      expected_transport_2, addr_client_2, FALSE);
 }
 
 GST_END_TEST;
@@ -1483,6 +1529,17 @@ rtspclient_suite (void)
   tcase_add_test (tc,
       test_client_multicast_transport_specific_two_clients_shared_media);
   tcase_add_test (tc, test_client_multicast_transport_specific_two_clients);
+#ifndef G_OS_WIN32
+  tcase_add_test (tc,
+      test_client_multicast_transport_specific_two_clients_same_ports);
+#else
+  /* skip the test on windows as the test restricts the multicast sockets to multicast traffic only,
+   * by specifying the multicast IP as the bind address and this currently doesn't work on Windows */
+  tcase_skip_broken_test (tc,
+      test_client_multicast_transport_specific_two_clients_same_ports);
+#endif
+  tcase_add_test (tc,
+      test_client_multicast_transport_specific_two_clients_same_destination);
   tcase_add_test (tc,
       test_client_multicast_transport_specific_two_clients_shared_media_same_transport);
   tcase_add_test (tc, test_client_multicast_two_clients_shared_media);

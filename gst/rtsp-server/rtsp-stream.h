@@ -312,6 +312,12 @@ GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_verify_mcast_ttl  (GstRTSPStream *stream, guint ttl);
 
 GST_RTSP_SERVER_API
+void              gst_rtsp_stream_set_bind_mcast_address  (GstRTSPStream * stream, gboolean bind_mcast_addr);
+
+GST_RTSP_SERVER_API
+gboolean          gst_rtsp_stream_is_bind_mcast_address (GstRTSPStream * stream);
+
+GST_RTSP_SERVER_API
 gboolean          gst_rtsp_stream_complete_stream (GstRTSPStream * stream, const GstRTSPTransport * transport);
 
 GST_RTSP_SERVER_API

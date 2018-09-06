@@ -320,6 +320,11 @@ gboolean                gst_rtsp_media_set_max_mcast_ttl  (GstRTSPMedia *media, 
 GST_RTSP_SERVER_API
 guint                 gst_rtsp_media_get_max_mcast_ttl  (GstRTSPMedia *media);
 
+GST_RTSP_SERVER_API
+void                  gst_rtsp_media_set_bind_mcast_address  (GstRTSPMedia *media, gboolean bind_mcast_addr);
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_is_bind_mcast_address  (GstRTSPMedia *media);
+
 /* prepare the media for playback */
 
 GST_RTSP_SERVER_API

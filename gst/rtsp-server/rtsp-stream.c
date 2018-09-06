@@ -150,6 +150,7 @@ struct _GstRTSPStreamPrivate
 
   gchar *multicast_iface;
   guint max_mcast_ttl;
+  gboolean bind_mcast_address;
 
   /* the caps of the stream */
   gulong caps_sig;
@@ -187,6 +188,7 @@ struct _GstRTSPStreamPrivate
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_MAX_MCAST_TTL   255
+#define DEFAULT_BIND_MCAST_ADDRESS FALSE
 
 enum
 {
@@ -287,6 +289,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->configured_protocols = 0;
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
+  priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
 
   g_mutex_init (&priv->lock);
 
@@ -1381,13 +1384,19 @@ alloc_ports_one_family (GstRTSPStream * stream, GSocketFamily family,
     if (ct->destination != NULL) {
       tmp_rtp = ct->port.min;
       tmp_rtcp = ct->port.max;
+
+      /* check if the provided address is a multicast address */
       inetaddr = g_inet_address_new_from_string (ct->destination);
       if (inetaddr == NULL)
         goto destination_error;
       if (!g_inet_address_get_is_multicast (inetaddr))
         goto destination_no_mcast;
-      g_object_unref (inetaddr);
-      inetaddr = g_inet_address_new_any (family);
+
+
+      if (!priv->bind_mcast_address) {
+        g_clear_object (&inetaddr);
+        inetaddr = g_inet_address_new_any (family);
+      }
 
       GST_DEBUG_OBJECT (stream, "use transport settings");
       transport_settings_defined = TRUE;
@@ -1444,10 +1453,10 @@ again:
       g_clear_object (&inetaddr);
       /* FIXME: Does it really work with the IP_MULTICAST_ALL socket option and
        * socket control message set in udpsrc? */
-      if (multicast)
-        inetaddr = g_inet_address_new_any (family);
-      else
+      if (priv->bind_mcast_address || !multicast)
         inetaddr = g_inet_address_new_from_string (addr->address);
+      else
+        inetaddr = g_inet_address_new_any (family);
     } else {
       if (tmp_rtp != 0) {
         tmp_rtp += 2;
@@ -2150,6 +2159,47 @@ gst_rtsp_stream_verify_mcast_ttl (GstRTSPStream * stream, guint ttl)
   g_mutex_unlock (&stream->priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_stream_set_bind_mcast_address:
+ * @stream: a #GstRTSPStream,
+ * @bind_mcast_addr: the new value
+ *
+ * Decide whether the multicast socket should be bound to a multicast address or
+ * INADDR_ANY.
+ */
+void
+gst_rtsp_stream_set_bind_mcast_address (GstRTSPStream * stream,
+    gboolean bind_mcast_addr)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->bind_mcast_address = bind_mcast_addr;
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_is_bind_mcast_address:
+ * @stream: a #GstRTSPStream
+ *
+ * Check if multicast sockets are configured to be bound to multicast addresses.
+ *
+ * Returns: %TRUE if multicast sockets are configured to be bound to multicast addresses.
+ */
+gboolean
+gst_rtsp_stream_is_bind_mcast_address (GstRTSPStream * stream)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  g_mutex_lock (&stream->priv->lock);
+  result = stream->priv->bind_mcast_address;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return result;
 }
 
 /* executed from streaming thread */
