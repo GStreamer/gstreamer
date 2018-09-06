@@ -2976,10 +2976,17 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   gboolean done = FALSE;
   gboolean first_ouput_buffer = TRUE;
   guint memory_idx = 0;         /* only used in dynamic buffer mode */
+  gboolean last_subframe = GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
+      GST_VIDEO_BUFFER_FLAG_MARKER);
+  gboolean header =
+      GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_BUFFER_FLAG_HEADER);
+  gboolean subframe_mode = gst_video_decoder_get_subframe_mode (decoder);
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
-  GST_DEBUG_OBJECT (self, "Handling frame");
+  GST_DEBUG_OBJECT (self,
+      "Handling frame %p last_subframe=%d header %d subframes %d", frame,
+      last_subframe, header, frame->abidata.ABI.num_subframes);
 
   if (self->downstream_flow_ret != GST_FLOW_OK) {
     gst_video_codec_frame_unref (frame);
@@ -3203,8 +3210,18 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
      *     the segment
      */
 
-    if (done)
-      buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
+    if (done) {
+      /* If the input buffer is a subframe mark the OMX buffer as such */
+      if (subframe_mode && !last_subframe) {
+#ifdef OMX_BUFFERFLAG_ENDOFSUBFRAME
+        buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFSUBFRAME;
+#endif
+      } else {
+        buf->omx_buf->nFlags |= OMX_BUFFERFLAG_ENDOFFRAME;
+        if (subframe_mode && last_subframe)
+          gst_video_decoder_have_last_subframe (decoder, frame);
+      }
+    }
 
     self->started = TRUE;
     err = gst_omx_port_release_buffer (port, buf);

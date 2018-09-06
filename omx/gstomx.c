@@ -3462,7 +3462,8 @@ gst_omx_port_set_subframe (GstOMXPort * port, gboolean enabled)
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   OMX_ALG_VIDEO_PARAM_SUBFRAME subframe_mode;
   OMX_ERRORTYPE err;
-
+  GST_DEBUG_OBJECT (port->comp->parent, "%s subframe mode for Zynq",
+      enabled ? "Enable" : "Disable");
   GST_OMX_INIT_STRUCT (&subframe_mode);
   subframe_mode.nPortIndex = port->index;
 
