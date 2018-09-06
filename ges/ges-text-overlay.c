@@ -30,8 +30,6 @@
 #include "ges-title-source.h"
 #include "ges-text-overlay.h"
 
-G_DEFINE_TYPE (GESTextOverlay, ges_text_overlay, GES_TYPE_OPERATION);
-
 struct _GESTextOverlayPrivate
 {
   gchar *text;
@@ -48,6 +46,9 @@ enum
 {
   PROP_0,
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESTextOverlay, ges_text_overlay,
+    GES_TYPE_OPERATION);
 
 static void ges_text_overlay_dispose (GObject * object);
 
@@ -67,8 +68,6 @@ ges_text_overlay_class_init (GESTextOverlayClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTextOverlayPrivate));
-
   object_class->get_property = ges_text_overlay_get_property;
   object_class->set_property = ges_text_overlay_set_property;
   object_class->dispose = ges_text_overlay_dispose;
@@ -80,8 +79,7 @@ ges_text_overlay_class_init (GESTextOverlayClass * klass)
 static void
 ges_text_overlay_init (GESTextOverlay * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TEXT_OVERLAY, GESTextOverlayPrivate);
+  self->priv = ges_text_overlay_get_instance_private (self);
 
   self->priv->text = NULL;
   self->priv->font_desc = NULL;

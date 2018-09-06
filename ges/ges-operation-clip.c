@@ -30,22 +30,21 @@
 #include "ges-internal.h"
 #include "ges-operation-clip.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESOperationClip, ges_operation_clip, GES_TYPE_CLIP);
-
 struct _GESOperationClipPrivate
 {
   void *nada;
 };
 
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESOperationClip, ges_operation_clip,
+    GES_TYPE_CLIP);
+
 static void
 ges_operation_clip_class_init (GESOperationClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESOperationClipPrivate));
 }
 
 static void
 ges_operation_clip_init (GESOperationClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_OPERATION_CLIP, GESOperationClipPrivate);
+  self->priv = ges_operation_clip_get_instance_private (self);
 }

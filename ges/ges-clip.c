@@ -47,8 +47,6 @@ static gboolean _roll_end (GESTimelineElement * element, GstClockTime end);
 static gboolean _trim (GESTimelineElement * element, GstClockTime start);
 static void _compute_height (GESContainer * container);
 
-G_DEFINE_ABSTRACT_TYPE (GESClip, ges_clip, GES_TYPE_CONTAINER);
-
 typedef enum
 {
   GES_CLIP_IS_SPLITTING = (1 << 0),
@@ -96,6 +94,8 @@ enum
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESClip, ges_clip, GES_TYPE_CONTAINER);
 
 /****************************************************
  *              Listen to our children              *
@@ -803,8 +803,6 @@ ges_clip_class_init (GESClipClass * klass)
   GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESClipPrivate));
-
   object_class->get_property = ges_clip_get_property;
   object_class->set_property = ges_clip_set_property;
   object_class->finalize = ges_clip_finalize;
@@ -864,8 +862,7 @@ ges_clip_class_init (GESClipClass * klass)
 static void
 ges_clip_init (GESClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_CLIP, GESClipPrivate);
+  self->priv = ges_clip_get_instance_private (self);
   /* FIXME, check why it was done this way _DURATION (self) = GST_SECOND; */
   self->priv->layer = NULL;
   self->priv->nb_effects = 0;

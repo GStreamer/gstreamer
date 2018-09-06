@@ -39,8 +39,6 @@
 #include <string.h>
 
 #define parent_class ges_group_parent_class
-G_DEFINE_TYPE (GESGroup, ges_group, GES_TYPE_CONTAINER);
-
 #define GES_CHILDREN_INIBIT_SIGNAL_EMISSION (GES_CHILDREN_LAST + 1)
 #define GES_GROUP_SIGNALS_IDS_DATA_KEY_FORMAT "ges-group-signals-ids-%p"
 
@@ -75,6 +73,8 @@ enum
 };
 
 static GParamSpec *properties[PROP_LAST] = { NULL, };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESGroup, ges_group, GES_TYPE_CONTAINER);
 
 /****************************************************
  *              Our listening of children           *
@@ -711,8 +711,6 @@ ges_group_class_init (GESGroupClass * klass)
   GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESGroupPrivate));
-
   object_class->get_property = ges_group_get_property;
   object_class->set_property = ges_group_set_property;
 
@@ -790,8 +788,7 @@ ges_group_class_init (GESGroupClass * klass)
 static void
 ges_group_init (GESGroup * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_GROUP, GESGroupPrivate);
+  self->priv = ges_group_get_instance_private (self);
 
   self->priv->setting_value = FALSE;
 }

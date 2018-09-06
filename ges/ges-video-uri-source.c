@@ -119,7 +119,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESVideoUriSource, ges_video_uri_source,
-    GES_TYPE_VIDEO_SOURCE,
+    GES_TYPE_VIDEO_SOURCE, G_ADD_PRIVATE (GESVideoUriSource)
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
@@ -177,8 +177,6 @@ ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESVideoUriSourcePrivate));
-
   object_class->get_property = ges_video_uri_source_get_property;
   object_class->set_property = ges_video_uri_source_set_property;
   object_class->dispose = ges_video_uri_source_dispose;
@@ -198,8 +196,7 @@ ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
 static void
 ges_video_uri_source_init (GESVideoUriSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourcePrivate);
+  self->priv = ges_video_uri_source_get_instance_private (self);
 
   g_signal_connect (self, "notify::track",
       G_CALLBACK (ges_video_uri_source_track_set_cb), NULL);

@@ -29,7 +29,6 @@
 
 #include "ges-clip-asset.h"
 
-G_DEFINE_TYPE (GESClipAsset, ges_clip_asset, GES_TYPE_ASSET);
 #define GES_CLIP_ASSET_GET_PRIVATE(o)\
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_CLIP_ASSET, \
    GESClipAssetPrivate))
@@ -50,6 +49,8 @@ enum
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESClipAsset, ges_clip_asset, GES_TYPE_ASSET);
 
 /***********************************************
  *                                             *
@@ -89,7 +90,7 @@ _set_property (GObject * object, guint property_id,
 static void
 ges_clip_asset_init (GESClipAsset * self)
 {
-  self->priv = GES_CLIP_ASSET_GET_PRIVATE (self);
+  self->priv = ges_clip_asset_get_instance_private (self);
 }
 
 static void
@@ -113,7 +114,6 @@ ges_clip_asset_class_init (GESClipAssetClass * self_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class, sizeof (GESClipAssetPrivate));
   object_class->constructed = _constructed;
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;

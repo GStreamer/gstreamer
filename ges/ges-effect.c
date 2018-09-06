@@ -33,10 +33,6 @@
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE (GESEffect,
-    ges_effect, GES_TYPE_BASE_EFFECT,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
 
 static void ges_effect_dispose (GObject * object);
 static void ges_effect_finalize (GObject * object);
@@ -52,6 +48,11 @@ enum
   PROP_0,
   PROP_BIN_DESCRIPTION,
 };
+
+G_DEFINE_TYPE_WITH_CODE (GESEffect,
+    ges_effect, GES_TYPE_BASE_EFFECT, G_ADD_PRIVATE (GESEffect)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static gchar *
 extractable_check_id (GType type, const gchar * id, GError ** error)
@@ -186,8 +187,6 @@ ges_effect_class_init (GESEffectClass * klass)
   obj_bg_class = GES_TRACK_ELEMENT_CLASS (klass);
   element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESEffectPrivate));
-
   object_class->get_property = ges_effect_get_property;
   object_class->set_property = ges_effect_set_property;
   object_class->dispose = ges_effect_dispose;
@@ -220,8 +219,7 @@ ges_effect_class_init (GESEffectClass * klass)
 static void
 ges_effect_init (GESEffect * self)
 {
-  self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_EFFECT, GESEffectPrivate);
+  self->priv = ges_effect_get_instance_private (self);
 }
 
 static void

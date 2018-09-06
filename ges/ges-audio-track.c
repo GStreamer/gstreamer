@@ -56,7 +56,7 @@ struct _GESAudioTrackPrivate
   gpointer nothing;
 };
 
-G_DEFINE_TYPE (GESAudioTrack, ges_audio_track, GES_TYPE_TRACK);
+G_DEFINE_TYPE_WITH_PRIVATE (GESAudioTrack, ges_audio_track, GES_TYPE_TRACK);
 
 /****************************************************
  *              Private methods and utils           *
@@ -80,8 +80,7 @@ create_element_for_raw_audio_gap (GESTrack * track)
 static void
 ges_audio_track_init (GESAudioTrack * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self), GES_TYPE_AUDIO_TRACK,
-      GESAudioTrackPrivate);
+  self->priv = ges_audio_track_get_instance_private (self);
 }
 
 static void
@@ -98,8 +97,6 @@ ges_audio_track_class_init (GESAudioTrackClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 /*   GESTrackClass *parent_class = GES_TRACK_CLASS (klass);
  */
-
-  g_type_class_add_private (klass, sizeof (GESAudioTrackPrivate));
 
   object_class->finalize = ges_audio_track_finalize;
 

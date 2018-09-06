@@ -96,8 +96,6 @@
 #define DEFAULT_TEXT ""
 #define DEFAULT_FONT_DESC "Serif 36"
 
-G_DEFINE_TYPE (GESTitleSource, ges_title_source, GES_TYPE_VIDEO_SOURCE);
-
 struct _GESTitleSourcePrivate
 {
   gchar *text;
@@ -111,6 +109,9 @@ struct _GESTitleSourcePrivate
   GstElement *text_el;
   GstElement *background_el;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESTitleSource, ges_title_source,
+    GES_TYPE_VIDEO_SOURCE);
 
 enum
 {
@@ -159,8 +160,6 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   GESTimelineElementClass *timeline_element_class =
       GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTitleSourcePrivate));
-
   object_class->get_property = ges_title_source_get_property;
   object_class->set_property = ges_title_source_set_property;
   object_class->dispose = ges_title_source_dispose;
@@ -174,8 +173,7 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
 static void
 ges_title_source_init (GESTitleSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TITLE_SOURCE, GESTitleSourcePrivate);
+  self->priv = ges_title_source_get_instance_private (self);
 
   self->priv->text = g_strdup (DEFAULT_TEXT);
   self->priv->font_desc = g_strdup (DEFAULT_FONT_DESC);

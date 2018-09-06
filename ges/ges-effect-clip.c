@@ -31,13 +31,14 @@
 #include "ges-internal.h"
 #include "ges-types.h"
 
-G_DEFINE_TYPE (GESEffectClip, ges_effect_clip, GES_TYPE_BASE_EFFECT_CLIP);
-
 struct _GESEffectClipPrivate
 {
   gchar *video_bin_description;
   gchar *audio_bin_description;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESEffectClip, ges_effect_clip,
+    GES_TYPE_BASE_EFFECT_CLIP);
 
 enum
 {
@@ -103,8 +104,6 @@ ges_effect_clip_class_init (GESEffectClipClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESEffectClipPrivate));
-
   object_class->get_property = ges_effect_clip_get_property;
   object_class->set_property = ges_effect_clip_set_property;
   object_class->finalize = ges_effect_clip_finalize;
@@ -143,9 +142,7 @@ ges_effect_clip_class_init (GESEffectClipClass * klass)
 static void
 ges_effect_clip_init (GESEffectClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_EFFECT_CLIP, GESEffectClipPrivate);
-
+  self->priv = ges_effect_clip_get_instance_private (self);
 }
 
 static GESTrackElement *

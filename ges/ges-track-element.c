@@ -36,9 +36,6 @@
 #include "ges-clip.h"
 #include "ges-meta-container.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackElement, ges_track_element,
-    GES_TYPE_TIMELINE_ELEMENT);
-
 struct _GESTrackElementPrivate
 {
   GESTrackType track_type;
@@ -74,6 +71,9 @@ enum
 };
 
 static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESTrackElement, ges_track_element,
+    GES_TYPE_TIMELINE_ELEMENT);
 
 static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
     object);
@@ -245,8 +245,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackElementPrivate));
-
   object_class->get_property = ges_track_element_get_property;
   object_class->set_property = ges_track_element_set_property;
   object_class->dispose = ges_track_element_dispose;
@@ -317,8 +315,8 @@ ges_track_element_class_init (GESTrackElementClass * klass)
 static void
 ges_track_element_init (GESTrackElement * self)
 {
-  GESTrackElementPrivate *priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_ELEMENT, GESTrackElementPrivate);
+  GESTrackElementPrivate *priv = self->priv =
+      ges_track_element_get_instance_private (self);
 
   /* Sane default values */
   GES_TIMELINE_ELEMENT_START (self) = 0;

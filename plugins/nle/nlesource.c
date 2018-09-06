@@ -44,8 +44,6 @@ GST_DEBUG_CATEGORY_STATIC (nlesource);
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (nlesource, "nlesource", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Source Element");
 #define nle_source_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (NleSource, nle_source, NLE_TYPE_OBJECT, _do_init);
-
 struct _NleSourcePrivate
 {
   gboolean dispose_has_run;
@@ -63,6 +61,11 @@ struct _NleSourcePrivate
   GstEvent *seek_event;
   gulong probeid;
 };
+
+G_DEFINE_TYPE_WITH_CODE (NleSource, nle_source, NLE_TYPE_OBJECT,
+    G_ADD_PRIVATE (NleSource)
+    _do_init);
+
 
 static gboolean nle_source_prepare (NleObject * object);
 static gboolean nle_source_send_event (GstElement * element, GstEvent * event);
@@ -85,8 +88,6 @@ nle_source_class_init (NleSourceClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbin_class = (GstBinClass *) klass;
   nleobject_class = (NleObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (NleSourcePrivate));
 
   gst_element_class_set_static_metadata (gstelement_class, "GNonLin Source",
       "Filter/Editor",
@@ -117,8 +118,7 @@ nle_source_init (NleSource * source)
 {
   GST_OBJECT_FLAG_SET (source, NLE_OBJECT_SOURCE);
   source->element = NULL;
-  source->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (source, NLE_TYPE_SOURCE, NleSourcePrivate);
+  source->priv = nle_source_get_instance_private (source);
 
   GST_DEBUG_OBJECT (source, "Setting GstBin async-handling to TRUE");
   g_object_set (G_OBJECT (source), "async-handling", TRUE, NULL);

@@ -32,8 +32,6 @@
 #include "ges-track-element.h"
 #include "ges-audio-test-source.h"
 
-G_DEFINE_TYPE (GESAudioTestSource, ges_audio_test_source,
-    GES_TYPE_AUDIO_SOURCE);
 #define DEFAULT_VOLUME 1.0
 
 struct _GESAudioTestSourcePrivate
@@ -46,6 +44,9 @@ enum
 {
   PROP_0,
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESAudioTestSource, ges_audio_test_source,
+    GES_TYPE_AUDIO_SOURCE);
 
 static void ges_audio_test_source_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
@@ -61,8 +62,6 @@ ges_audio_test_source_class_init (GESAudioTestSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESAudioTestSourcePrivate));
-
   object_class->get_property = ges_audio_test_source_get_property;
   object_class->set_property = ges_audio_test_source_set_property;
 
@@ -72,9 +71,7 @@ ges_audio_test_source_class_init (GESAudioTestSourceClass * klass)
 static void
 ges_audio_test_source_init (GESAudioTestSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_AUDIO_TEST_SOURCE, GESAudioTestSourcePrivate);
-
+  self->priv = ges_audio_test_source_get_instance_private (self);
   self->priv->freq = 440;
   self->priv->volume = DEFAULT_VOLUME;
 }

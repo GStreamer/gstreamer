@@ -118,7 +118,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESAudioUriSource, ges_audio_uri_source,
-    GES_TYPE_AUDIO_SOURCE,
+    GES_TYPE_AUDIO_SOURCE, G_ADD_PRIVATE (GESAudioUriSource)
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
@@ -176,8 +176,6 @@ ges_audio_uri_source_class_init (GESAudioUriSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESAudioUriSourcePrivate));
-
   object_class->get_property = ges_audio_uri_source_get_property;
   object_class->set_property = ges_audio_uri_source_set_property;
   object_class->dispose = ges_audio_uri_source_dispose;
@@ -197,8 +195,7 @@ ges_audio_uri_source_class_init (GESAudioUriSourceClass * klass)
 static void
 ges_audio_uri_source_init (GESAudioUriSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSourcePrivate);
+  self->priv = ges_audio_uri_source_get_instance_private (self);
 
   g_signal_connect (self, "notify::track",
       G_CALLBACK (ges_audio_uri_source_track_set_cb), NULL);

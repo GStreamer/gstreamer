@@ -29,14 +29,13 @@
 #include "ges-track-element.h"
 #include "ges-internal.h"
 
-G_DEFINE_TYPE (GESEffectAsset, ges_effect_asset, GES_TYPE_TRACK_ELEMENT_ASSET);
-
 struct _GESEffectAssetPrivate
 {
   gpointer nothing;
 };
 
-
+G_DEFINE_TYPE_WITH_PRIVATE (GESEffectAsset, ges_effect_asset,
+    GES_TYPE_TRACK_ELEMENT_ASSET);
 
 static void
 _fill_track_type (GESAsset * asset)
@@ -78,8 +77,7 @@ _extract (GESAsset * asset, GError ** error)
 static void
 ges_effect_asset_init (GESEffectAsset * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_EFFECT_ASSET, GESEffectAssetPrivate);
+  self->priv = ges_effect_asset_get_instance_private (self);
 }
 
 static void
@@ -101,8 +99,6 @@ ges_effect_asset_class_init (GESEffectAssetClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESAssetClass *asset_class = GES_ASSET_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESEffectAssetPrivate));
 
   object_class->finalize = ges_effect_asset_finalize;
   object_class->constructed = ges_effect_asset_constructed;

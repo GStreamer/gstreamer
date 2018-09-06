@@ -48,11 +48,6 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->check_id = ges_extractable_check_id;
 }
 
-G_DEFINE_TYPE_WITH_CODE (GESMultiFileSource, ges_multi_file_source,
-    GES_TYPE_VIDEO_SOURCE,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
-
 struct _GESMultiFileSourcePrivate
 {
   /*  Dummy variable */
@@ -64,6 +59,11 @@ enum
   PROP_0,
   PROP_URI
 };
+
+G_DEFINE_TYPE_WITH_CODE (GESMultiFileSource, ges_multi_file_source,
+    GES_TYPE_VIDEO_SOURCE, G_ADD_PRIVATE (GESMultiFileSource)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static void
 ges_multi_file_source_get_property (GObject * object, guint property_id,
@@ -222,8 +222,6 @@ ges_multi_file_source_class_init (GESMultiFileSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESMultiFileSourcePrivate));
-
   object_class->get_property = ges_multi_file_source_get_property;
   object_class->set_property = ges_multi_file_source_set_property;
   object_class->dispose = ges_multi_file_source_dispose;
@@ -252,8 +250,7 @@ ges_multi_file_source_class_init (GESMultiFileSourceClass * klass)
 static void
 ges_multi_file_source_init (GESMultiFileSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_MULTI_FILE_SOURCE, GESMultiFileSourcePrivate);
+  self->priv = ges_multi_file_source_get_instance_private (self);
 }
 
 /**

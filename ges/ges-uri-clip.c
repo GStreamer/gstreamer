@@ -44,11 +44,6 @@ static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
 #define parent_class ges_uri_clip_parent_class
 
-G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
-    GES_TYPE_SOURCE_CLIP,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
-
 GESExtractableInterface *parent_extractable_iface;
 
 struct _GESUriClipPrivate
@@ -68,6 +63,10 @@ enum
   PROP_SUPPORTED_FORMATS,
 };
 
+G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
+    GES_TYPE_SOURCE_CLIP, G_ADD_PRIVATE (GESUriClip)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static GList *ges_uri_clip_create_track_elements (GESClip *
     clip, GESTrackType type);
@@ -145,8 +144,6 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESUriClipPrivate));
 
   object_class->get_property = ges_uri_clip_get_property;
   object_class->set_property = ges_uri_clip_set_property;
@@ -360,8 +357,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 static void
 ges_uri_clip_init (GESUriClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_URI_CLIP, GESUriClipPrivate);
+  self->priv = ges_uri_clip_get_instance_private (self);
 
   /* Setting the duration to -1 by default. */
   GES_TIMELINE_ELEMENT (self)->duration = GST_CLOCK_TIME_NONE;

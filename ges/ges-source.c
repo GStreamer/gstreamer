@@ -30,14 +30,13 @@
 #include "ges-source.h"
 #include "ges-layer.h"
 #include "gstframepositioner.h"
-
-G_DEFINE_TYPE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
-
 struct _GESSourcePrivate
 {
   /*  Dummy variable */
   GstFramePositioner *positioner;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESSource, ges_source, GES_TYPE_TRACK_ELEMENT);
 
 /******************************
  *   Internal helper methods  *
@@ -145,8 +144,6 @@ ges_source_class_init (GESSourceClass * klass)
 {
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESSourcePrivate));
-
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = NULL;
 }
@@ -154,6 +151,5 @@ ges_source_class_init (GESSourceClass * klass)
 static void
 ges_source_init (GESSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_SOURCE, GESSourcePrivate);
+  self->priv = ges_source_get_instance_private (self);
 }

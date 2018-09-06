@@ -33,18 +33,16 @@ struct _GESBaseTransitionClipPrivate
   void *nothing;
 };
 
-G_DEFINE_ABSTRACT_TYPE (GESBaseTransitionClip, ges_base_transition_clip,
-    GES_TYPE_OPERATION_CLIP);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseTransitionClip,
+    ges_base_transition_clip, GES_TYPE_OPERATION_CLIP);
 
 static void
 ges_base_transition_clip_class_init (GESBaseTransitionClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESBaseTransitionClipPrivate));
 }
 
 static void
 ges_base_transition_clip_init (GESBaseTransitionClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_BASE_TRANSITION_CLIP, GESBaseTransitionClipPrivate);
+  self->priv = ges_base_transition_clip_get_instance_private (self);
 }

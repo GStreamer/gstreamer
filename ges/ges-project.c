@@ -53,8 +53,6 @@ static GHashTable *tried_uris = NULL;
 /* TODO We should rely on both extractable_type and @id to identify
  * a Asset, not only @id
  */
-G_DEFINE_TYPE (GESProject, ges_project, GES_TYPE_ASSET);
-
 struct _GESProjectPrivate
 {
   GHashTable *assets;
@@ -86,6 +84,8 @@ enum
   ASSET_LOADING_SIGNAL,
   LAST_SIGNAL
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESProject, ges_project, GES_TYPE_ASSET);
 
 static guint _signals[LAST_SIGNAL] = { 0 };
 
@@ -422,8 +422,6 @@ ges_project_class_init (GESProjectClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESProjectPrivate));
-
   klass->asset_added = NULL;
   klass->missing_uri = ges_missing_uri_default;
   klass->loading_error = NULL;
@@ -545,8 +543,7 @@ static void
 ges_project_init (GESProject * project)
 {
   GESProjectPrivate *priv = project->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (project,
-      GES_TYPE_PROJECT, GESProjectPrivate);
+      ges_project_get_instance_private (project);
 
   priv->uri = NULL;
   priv->formatters = NULL;

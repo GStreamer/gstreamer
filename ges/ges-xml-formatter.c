@@ -29,15 +29,13 @@
 #include "ges-internal.h"
 
 #define parent_class ges_xml_formatter_parent_class
-G_DEFINE_TYPE (GESXmlFormatter, ges_xml_formatter, GES_TYPE_BASE_XML_FORMATTER);
-
 #define API_VERSION 0
 #define MINOR_VERSION 4
 #define VERSION 0.4
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
-#define _GET_PRIV(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_XML_FORMATTER, GESXmlFormatterPrivate))
+#define _GET_PRIV(o) (((GESXmlFormatter*)o)->priv)
 
 struct _GESXmlFormatterPrivate
 {
@@ -52,6 +50,9 @@ struct _GESXmlFormatterPrivate
 
   guint min_version;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESXmlFormatter, ges_xml_formatter,
+    GES_TYPE_BASE_XML_FORMATTER);
 
 static inline void
 _parse_ges_element (GMarkupParseContext * context, const gchar * element_name,
@@ -1618,7 +1619,7 @@ _set_property (GObject * object, guint property_id,
 static void
 ges_xml_formatter_init (GESXmlFormatter * self)
 {
-  GESXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESXmlFormatterPrivate *priv = ges_xml_formatter_get_instance_private (self);
 
   priv->project_opened = FALSE;
   priv->element_id = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -1644,7 +1645,6 @@ ges_xml_formatter_class_init (GESXmlFormatterClass * self_class)
 
   basexmlformatter_class = GES_BASE_XML_FORMATTER_CLASS (self_class);
 
-  g_type_class_add_private (self_class, sizeof (GESXmlFormatterPrivate));
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
   object_class->dispose = _dispose;

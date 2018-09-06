@@ -32,8 +32,6 @@
 #include "ges-text-overlay.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTextOverlayClip, ges_text_overlay_clip,
-    GES_TYPE_OVERLAY_CLIP);
 
 #define DEFAULT_PROP_TEXT ""
 #define DEFAULT_PROP_FONT_DESC "Serif 36"
@@ -62,6 +60,9 @@ enum
   PROP_XPOS,
   PROP_YPOS,
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESTextOverlayClip, ges_text_overlay_clip,
+    GES_TYPE_OVERLAY_CLIP);
 
 static GESTrackElement
     * ges_text_overlay_clip_create_track_element (GESClip * clip,
@@ -152,8 +153,6 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTextOverlayClipPrivate));
-
   object_class->get_property = ges_text_overlay_clip_get_property;
   object_class->set_property = ges_text_overlay_clip_set_property;
   object_class->dispose = ges_text_overlay_clip_dispose;
@@ -239,8 +238,7 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 static void
 ges_text_overlay_clip_init (GESTextOverlayClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_OVERLAY_TEXT_CLIP, GESTextOverlayClipPrivate);
+  self->priv = ges_text_overlay_clip_get_instance_private (self);
 
   GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% needed since gobject contents are memzero'd when created */

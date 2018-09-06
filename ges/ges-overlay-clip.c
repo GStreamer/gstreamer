@@ -35,24 +35,22 @@
 #include "ges-operation-clip.h"
 #include "ges-overlay-clip.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESOverlayClip, ges_overlay_clip,
-    GES_TYPE_OPERATION_CLIP);
-
 struct _GESOverlayClipPrivate
 {
   /*  Dummy variable */
   void *nothing;
 };
 
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESOverlayClip, ges_overlay_clip,
+    GES_TYPE_OPERATION_CLIP);
+
 static void
 ges_overlay_clip_class_init (GESOverlayClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESOverlayClipPrivate));
 }
 
 static void
 ges_overlay_clip_init (GESOverlayClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_OVERLAY_CLIP, GESOverlayClipPrivate);
+  self->priv = ges_overlay_clip_get_instance_private (self);
 }

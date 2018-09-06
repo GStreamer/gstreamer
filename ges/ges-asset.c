@@ -271,6 +271,7 @@ initable_iface_init (GInitableIface * initable_iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESAsset, ges_asset, G_TYPE_OBJECT,
+    G_ADD_PRIVATE (GESAsset)
     G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, async_initable_iface_init)
     G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
@@ -406,7 +407,6 @@ void
 ges_asset_class_init (GESAssetClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GESAssetPrivate));
 
   object_class->get_property = ges_asset_get_property;
   object_class->set_property = ges_asset_set_property;
@@ -444,8 +444,7 @@ ges_asset_class_init (GESAssetClass * klass)
 void
 ges_asset_init (GESAsset * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_ASSET, GESAssetPrivate);
+  self->priv = ges_asset_get_instance_private (self);
 
   self->priv->state = ASSET_INITIALIZING;
   self->priv->proxied_asset_id = NULL;

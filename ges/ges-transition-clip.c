@@ -194,6 +194,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 
 G_DEFINE_TYPE_WITH_CODE (GESTransitionClip,
     ges_transition_clip, GES_TYPE_BASE_TRANSITION_CLIP,
+    G_ADD_PRIVATE (GESTransitionClip)
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
@@ -250,8 +251,6 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
   GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTransitionClipPrivate));
-
   object_class->get_property = ges_transition_clip_get_property;
   object_class->set_property = ges_transition_clip_set_property;
 
@@ -278,8 +277,7 @@ static void
 ges_transition_clip_init (GESTransitionClip * self)
 {
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRANSITION_CLIP, GESTransitionClipPrivate);
+  self->priv = ges_transition_clip_get_instance_private (self);
 
   self->vtype = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
   self->priv->vtype_name = NULL;

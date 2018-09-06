@@ -43,8 +43,6 @@
 #define VERSION "0.2"
 #define DOUBLE_VERSION 0.2
 
-G_DEFINE_TYPE (GESPitiviFormatter, ges_pitivi_formatter, GES_TYPE_FORMATTER);
-
 #undef GST_CAT_DEFAULT
 GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 #define GST_CAT_DEFAULT ges_pitivi_formatter_debug
@@ -93,6 +91,10 @@ struct _GESPitiviFormatterPrivate
   GHashTable *saving_source_table;
   guint nb_sources;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESPitiviFormatter, ges_pitivi_formatter,
+    GES_TYPE_FORMATTER);
+
 
 static void
 list_table_destroyer (gpointer key, gpointer value, void *unused)
@@ -714,7 +716,6 @@ ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
 
   object_class = G_OBJECT_CLASS (klass);
   formatter_klass = GES_FORMATTER_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GESPitiviFormatterPrivate));
 
   formatter_klass->can_load_uri = pitivi_can_load_uri;
   formatter_klass->save_to_uri = NULL;
@@ -731,8 +732,7 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
 {
   GESPitiviFormatterPrivate *priv;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_PITIVI_FORMATTER, GESPitiviFormatterPrivate);
+  self->priv = ges_pitivi_formatter_get_instance_private (self);
 
   priv = self->priv;
 

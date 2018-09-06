@@ -30,8 +30,6 @@
 
 #include <gst/controller/gstdirectcontrolbinding.h>
 
-G_DEFINE_TYPE (GESAudioTransition, ges_audio_transition, GES_TYPE_TRANSITION);
-
 struct _GESAudioTransitionPrivate
 {
   /* these enable volume interpolation. Unlike video, both inputs are adjusted
@@ -47,6 +45,8 @@ enum
   PROP_0,
 };
 
+G_DEFINE_TYPE_WITH_PRIVATE (GESAudioTransition, ges_audio_transition,
+    GES_TYPE_TRANSITION);
 
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
@@ -78,8 +78,6 @@ ges_audio_transition_class_init (GESAudioTransitionClass * klass)
   GObjectClass *object_class;
   GESTrackElementClass *toclass;
 
-  g_type_class_add_private (klass, sizeof (GESAudioTransitionPrivate));
-
   object_class = G_OBJECT_CLASS (klass);
   toclass = GES_TRACK_ELEMENT_CLASS (klass);
 
@@ -96,8 +94,7 @@ static void
 ges_audio_transition_init (GESAudioTransition * self)
 {
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_AUDIO_TRANSITION, GESAudioTransitionPrivate);
+  self->priv = ges_audio_transition_get_instance_private (self);
 }
 
 static void

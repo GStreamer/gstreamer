@@ -45,8 +45,6 @@ GST_DEBUG_CATEGORY_STATIC (nlecomposition_debug);
 #define _do_init              \
   GST_DEBUG_CATEGORY_INIT (nlecomposition_debug,"nlecomposition", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Composition");
 #define nle_composition_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (NleComposition, nle_composition, NLE_TYPE_OBJECT,
-    _do_init);
 
 enum
 {
@@ -208,6 +206,10 @@ struct _NleCompositionPrivate
 static guint _signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *nleobject_properties[NLEOBJECT_PROP_LAST];
+
+G_DEFINE_TYPE_WITH_CODE (NleComposition, nle_composition, NLE_TYPE_OBJECT,
+    G_ADD_PRIVATE (NleComposition)
+    _do_init);
 
 #define OBJECT_IN_ACTIVE_SEGMENT(comp,element)      \
   ((NLE_OBJECT_START(element) < comp->priv->current_stack_stop) &&  \
@@ -970,8 +972,6 @@ nle_composition_class_init (NleCompositionClass * klass)
   gstbin_class = (GstBinClass *) klass;
   nleobject_class = (NleObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (NleCompositionPrivate));
-
   gst_element_class_set_static_metadata (gstelement_class,
       "GNonLin Composition", "Filter/Editor", "Combines NLE objects",
       "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>,"
@@ -1044,8 +1044,7 @@ nle_composition_init (NleComposition * comp)
   GST_OBJECT_FLAG_SET (comp, NLE_OBJECT_SOURCE);
   GST_OBJECT_FLAG_SET (comp, NLE_OBJECT_COMPOSITION);
 
-  priv = G_TYPE_INSTANCE_GET_PRIVATE (comp, NLE_TYPE_COMPOSITION,
-      NleCompositionPrivate);
+  priv = nle_composition_get_instance_private (comp);
   priv->objects_start = NULL;
   priv->objects_stop = NULL;
 

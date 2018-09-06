@@ -37,8 +37,6 @@
 #include "ges-audio-test-source.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTestClip, ges_test_clip, GES_TYPE_SOURCE_CLIP);
-
 #define DEFAULT_VOLUME 1.0
 #define DEFAULT_VPATTERN GES_VIDEO_TEST_PATTERN_SMPTE
 
@@ -58,6 +56,8 @@ enum
   PROP_FREQ,
   PROP_VOLUME,
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESTestClip, ges_test_clip, GES_TYPE_SOURCE_CLIP);
 
 static GESTrackElement
     * ges_test_clip_create_track_element (GESClip * clip, GESTrackType type);
@@ -116,8 +116,6 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTestClipPrivate));
-
   object_class->get_property = ges_test_clip_get_property;
   object_class->set_property = ges_test_clip_set_property;
 
@@ -168,8 +166,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
 static void
 ges_test_clip_init (GESTestClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TEST_CLIP, GESTestClipPrivate);
+  self->priv = ges_test_clip_get_instance_private (self);
 
   self->priv->freq = 0;
   self->priv->volume = 0;

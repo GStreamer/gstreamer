@@ -64,7 +64,7 @@ struct _GESLauncherPrivate
   ParsedOptions parsed_options;
 };
 
-G_DEFINE_TYPE (GESLauncher, ges_launcher, G_TYPE_APPLICATION);
+G_DEFINE_TYPE_WITH_PRIVATE (GESLauncher, ges_launcher, G_TYPE_APPLICATION);
 
 static const gchar *HELP_SUMMARY =
     "ges-launch-1.0 creates a multimedia timeline and plays it back,\n"
@@ -825,14 +825,12 @@ ges_launcher_class_init (GESLauncherClass * klass)
   G_APPLICATION_CLASS (klass)->local_command_line = _local_command_line;
   G_APPLICATION_CLASS (klass)->startup = _startup;
   G_APPLICATION_CLASS (klass)->shutdown = _shutdown;
-  g_type_class_add_private (klass, sizeof (GESLauncherPrivate));
 }
 
 static void
 ges_launcher_init (GESLauncher * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_LAUNCHER, GESLauncherPrivate);
+  self->priv = ges_launcher_get_instance_private (self);
   self->priv->parsed_options.track_types =
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
 }

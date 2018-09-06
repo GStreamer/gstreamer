@@ -35,12 +35,13 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-G_DEFINE_TYPE (GESTrackElementAsset, ges_track_element_asset, GES_TYPE_ASSET);
-
 struct _GESTrackElementAssetPrivate
 {
   GESTrackType type;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESTrackElementAsset, ges_track_element_asset,
+    GES_TYPE_ASSET);
 
 static void
 _get_property (GObject * object, guint property_id,
@@ -77,8 +78,6 @@ ges_track_element_asset_class_init (GESTrackElementAssetClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTrackElementAssetPrivate));
-
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
 
@@ -101,8 +100,7 @@ ges_track_element_asset_init (GESTrackElementAsset * self)
 {
   GESTrackElementAssetPrivate *priv;
 
-  priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK_ELEMENT_ASSET, GESTrackElementAssetPrivate);
+  priv = self->priv = ges_track_element_asset_get_instance_private (self);
 
   priv->type = GES_TRACK_TYPE_UNKNOWN;
 

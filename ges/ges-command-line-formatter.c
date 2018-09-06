@@ -32,7 +32,7 @@ struct _GESCommandLineFormatterPrivate
 };
 
 
-G_DEFINE_TYPE (GESCommandLineFormatter, ges_command_line_formatter,
+G_DEFINE_TYPE_WITH_PRIVATE (GESCommandLineFormatter, ges_command_line_formatter,
     GES_TYPE_FORMATTER);
 
 static gboolean
@@ -514,21 +514,14 @@ fail:
 }
 
 static void
-ges_command_line_formatter_init (GESCommandLineFormatter *
-    ges_command_line_formatter)
+ges_command_line_formatter_init (GESCommandLineFormatter * formatter)
 {
-  ges_command_line_formatter->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (ges_command_line_formatter,
-      GES_TYPE_COMMAND_LINE_FORMATTER, GESCommandLineFormatterPrivate);
-
-  /* TODO: Add initialization code here */
+  formatter->priv = ges_command_line_formatter_get_instance_private (formatter);
 }
 
 static void
 ges_command_line_formatter_finalize (GObject * object)
 {
-  /* TODO: Add deinitalization code here */
-
   G_OBJECT_CLASS (ges_command_line_formatter_parent_class)->finalize (object);
 }
 
@@ -537,8 +530,6 @@ ges_command_line_formatter_class_init (GESCommandLineFormatterClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESFormatterClass *formatter_klass = GES_FORMATTER_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESCommandLineFormatterPrivate));
 
   object_class->finalize = ges_command_line_formatter_finalize;
 

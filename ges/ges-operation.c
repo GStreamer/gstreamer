@@ -28,20 +28,19 @@
 #include "ges-track-element.h"
 #include "ges-operation.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESOperation, ges_operation, GES_TYPE_TRACK_ELEMENT);
-
 struct _GESOperationPrivate
 {
   /* Dummy variable */
   void *nothing;
 };
 
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESOperation, ges_operation,
+    GES_TYPE_TRACK_ELEMENT);
+
 static void
 ges_operation_class_init (GESOperationClass * klass)
 {
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESOperationPrivate));
 
   track_class->nleobject_factorytype = "nleoperation";
 }
@@ -49,6 +48,5 @@ ges_operation_class_init (GESOperationClass * klass)
 static void
 ges_operation_init (GESOperation * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_OPERATION, GESOperationPrivate);
+  self->priv = ges_operation_get_instance_private (self);
 }

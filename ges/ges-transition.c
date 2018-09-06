@@ -28,24 +28,23 @@
 #include <ges/ges.h>
 #include "ges-internal.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESTransition, ges_transition, GES_TYPE_OPERATION);
-
 struct _GESTransitionPrivate
 {
   /*  Dummy variable */
   void *nothing;
 };
 
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESTransition, ges_transition,
+    GES_TYPE_OPERATION);
+
 
 static void
 ges_transition_class_init (GESTransitionClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESTransitionPrivate));
 }
 
 static void
 ges_transition_init (GESTransition * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRANSITION, GESTransitionPrivate);
+  self->priv = ges_transition_get_instance_private (self);
 }

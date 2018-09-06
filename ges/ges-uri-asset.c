@@ -48,10 +48,6 @@ initable_iface_init (GInitableIface * initable_iface)
   initable_iface->init = NULL;
 }
 
-G_DEFINE_TYPE_WITH_CODE (GESUriClipAsset, ges_uri_clip_asset,
-    GES_TYPE_CLIP_ASSET,
-    G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
-
 /* TODO: We should monitor files here, and add some way of reporting changes
  * to user
  */
@@ -83,6 +79,9 @@ struct _GESUriSourceAssetPrivate
   const gchar *uri;
 };
 
+G_DEFINE_TYPE_WITH_CODE (GESUriClipAsset, ges_uri_clip_asset,
+    GES_TYPE_CLIP_ASSET, G_ADD_PRIVATE (GESUriClipAsset)
+    G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
 
 static void
 ges_uri_clip_asset_get_property (GObject * object, guint property_id,
@@ -192,7 +191,6 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   GstClockTime timeout;
   const gchar *timeout_str;
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GESUriClipAssetPrivate));
 
   object_class->get_property = ges_uri_clip_asset_get_property;
   object_class->set_property = ges_uri_clip_asset_set_property;
@@ -273,8 +271,7 @@ ges_uri_clip_asset_init (GESUriClipAsset * self)
 {
   GESUriClipAssetPrivate *priv;
 
-  priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_URI_CLIP_ASSET, GESUriClipAssetPrivate);
+  priv = self->priv = ges_uri_clip_asset_get_instance_private (self);
 
   priv->info = NULL;
   priv->duration = GST_CLOCK_TIME_NONE;
@@ -662,7 +659,7 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
  * by #GESUriClipAsset-s.
  */
 
-G_DEFINE_TYPE (GESUriSourceAsset, ges_uri_source_asset,
+G_DEFINE_TYPE_WITH_PRIVATE (GESUriSourceAsset, ges_uri_source_asset,
     GES_TYPE_TRACK_ELEMENT_ASSET);
 
 static GESExtractable *
@@ -708,8 +705,6 @@ _extract (GESAsset * asset, GError ** error)
 static void
 ges_uri_source_asset_class_init (GESUriSourceAssetClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESUriSourceAssetPrivate));
-
   GES_ASSET_CLASS (klass)->extract = _extract;
 }
 
@@ -718,8 +713,7 @@ ges_uri_source_asset_init (GESUriSourceAsset * self)
 {
   GESUriSourceAssetPrivate *priv;
 
-  priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAssetPrivate);
+  priv = self->priv = ges_uri_source_asset_get_instance_private (self);
 
   priv->sinfo = NULL;
   priv->parent_asset = NULL;

@@ -151,7 +151,7 @@ video_overlay_init (gpointer g_iface, gpointer g_iface_data)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESPipeline, ges_pipeline,
-    GST_TYPE_PIPELINE,
+    GST_TYPE_PIPELINE, G_ADD_PRIVATE (GESPipeline)
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY, video_overlay_init));
 
 static void
@@ -283,8 +283,6 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESPipelinePrivate));
-
   GST_DEBUG_CATEGORY_INIT (ges_pipeline_debug, "gespipeline",
       GST_DEBUG_FG_YELLOW, "ges pipeline");
 
@@ -368,8 +366,7 @@ static void
 ges_pipeline_init (GESPipeline * self)
 {
   GST_INFO_OBJECT (self, "Creating new 'playsink'");
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_PIPELINE, GESPipelinePrivate);
+  self->priv = ges_pipeline_get_instance_private (self);
 
   self->priv->playsink =
       gst_element_factory_make ("playsink", "internal-sinks");

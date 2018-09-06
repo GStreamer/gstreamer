@@ -39,11 +39,6 @@
 static void ges_meta_container_interface_init
     (GESMetaContainerInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE (GESLayer, ges_layer,
-    G_TYPE_INITIALLY_UNOWNED, G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, NULL)
-    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
-        ges_meta_container_interface_init));
-
 struct _GESLayerPrivate
 {
   /*< private > */
@@ -77,6 +72,12 @@ enum
 };
 
 static guint ges_layer_signals[LAST_SIGNAL] = { 0 };
+
+G_DEFINE_TYPE_WITH_CODE (GESLayer, ges_layer,
+    G_TYPE_INITIALLY_UNOWNED, G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, NULL)
+    G_ADD_PRIVATE (GESLayer)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
+        ges_meta_container_interface_init));
 
 /* GObject standard vmethods */
 static void
@@ -150,8 +151,6 @@ ges_layer_class_init (GESLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESLayerPrivate));
-
   object_class->get_property = ges_layer_get_property;
   object_class->set_property = ges_layer_set_property;
   object_class->dispose = ges_layer_dispose;
@@ -213,8 +212,7 @@ ges_layer_class_init (GESLayerClass * klass)
 static void
 ges_layer_init (GESLayer * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_LAYER, GESLayerPrivate);
+  self->priv = ges_layer_get_instance_private (self);
 
   self->priv->priority = 0;
   self->priv->auto_transition = FALSE;

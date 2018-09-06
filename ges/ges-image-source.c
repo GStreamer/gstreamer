@@ -33,7 +33,6 @@
 #include "ges-track-element.h"
 #include "ges-image-source.h"
 
-G_DEFINE_TYPE (GESImageSource, ges_image_source, GES_TYPE_VIDEO_SOURCE);
 
 struct _GESImageSourcePrivate
 {
@@ -47,6 +46,8 @@ enum
   PROP_URI
 };
 
+G_DEFINE_TYPE_WITH_PRIVATE (GESImageSource, ges_image_source,
+    GES_TYPE_VIDEO_SOURCE);
 static void
 ges_image_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -152,8 +153,6 @@ ges_image_source_class_init (GESImageSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESImageSourcePrivate));
-
   object_class->get_property = ges_image_source_get_property;
   object_class->set_property = ges_image_source_set_property;
   object_class->dispose = ges_image_source_dispose;
@@ -174,8 +173,7 @@ ges_image_source_class_init (GESImageSourceClass * klass)
 static void
 ges_image_source_init (GESImageSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_IMAGE_SOURCE, GESImageSourcePrivate);
+  self->priv = ges_image_source_get_instance_private (self);
 }
 
 /**

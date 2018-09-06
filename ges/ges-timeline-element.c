@@ -52,11 +52,6 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->set_asset = extractable_set_asset;
 }
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineElement, ges_timeline_element,
-    G_TYPE_INITIALLY_UNOWNED,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
-    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
-
 enum
 {
   PROP_0,
@@ -106,6 +101,11 @@ typedef struct
   GParamSpec *arg;
   GESTimelineElement *self;
 } EmitDeepNotifyInIdleData;
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineElement, ges_timeline_element,
+    G_TYPE_INITIALLY_UNOWNED, G_ADD_PRIVATE (GESTimelineElement)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
 
 static void
 _set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
@@ -297,8 +297,7 @@ _child_prop_handler_free (ChildPropHandler * handler)
 static void
 ges_timeline_element_init (GESTimelineElement * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_ELEMENT, GESTimelineElementPrivate);
+  self->priv = ges_timeline_element_get_instance_private (self);
 
   self->priv->serialize = TRUE;
 
@@ -312,8 +311,6 @@ static void
 ges_timeline_element_class_init (GESTimelineElementClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTimelineElementPrivate));
 
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;

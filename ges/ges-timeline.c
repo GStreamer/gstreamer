@@ -59,12 +59,6 @@ static void ges_extractable_interface_init (GESExtractableInterface * iface);
 static void ges_meta_container_interface_init
     (GESMetaContainerInterface * iface);
 
-G_DEFINE_TYPE_WITH_CODE (GESTimeline, ges_timeline, GST_TYPE_BIN,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
-    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
-        ges_meta_container_interface_init));
-
-
 GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ges_timeline_debug
@@ -253,6 +247,12 @@ enum
   COMMITED,
   LAST_SIGNAL
 };
+
+G_DEFINE_TYPE_WITH_CODE (GESTimeline, ges_timeline, GST_TYPE_BIN,
+    G_ADD_PRIVATE (GESTimeline)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
+        ges_meta_container_interface_init));
 
 static GstBinClass *parent_class;
 
@@ -477,8 +477,6 @@ ges_timeline_class_init (GESTimelineClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstBinClass *bin_class = GST_BIN_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESTimelinePrivate));
-
   GST_DEBUG_CATEGORY_INIT (ges_timeline_debug, "gestimeline",
       GST_DEBUG_FG_YELLOW, "ges timeline");
 
@@ -660,8 +658,7 @@ ges_timeline_init (GESTimeline * self)
 {
   GESTimelinePrivate *priv = self->priv;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE, GESTimelinePrivate);
+  self->priv = ges_timeline_get_instance_private (self);
 
   priv = self->priv;
   self->layers = NULL;

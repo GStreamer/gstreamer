@@ -55,13 +55,14 @@
 #include "ges-audio-source.h"
 #include "ges-layer.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESAudioSource, ges_audio_source, GES_TYPE_SOURCE);
-
 struct _GESAudioSourcePrivate
 {
   GstElement *capsfilter;
   GESTrack *current_track;
 };
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESAudioSource, ges_audio_source,
+    GES_TYPE_SOURCE);
 
 static void
 _sync_element_to_layer_property_float (GESTrackElement * trksrc,
@@ -187,8 +188,6 @@ ges_audio_source_class_init (GESAudioSourceClass * klass)
   GESTrackElementClass *track_class = GES_TRACK_ELEMENT_CLASS (klass);
   GESAudioSourceClass *audio_source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESAudioSourcePrivate));
-
   gobject_class->dispose = ges_audio_source_dispose;
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_audio_source_create_element;
@@ -198,6 +197,5 @@ ges_audio_source_class_init (GESAudioSourceClass * klass)
 static void
 ges_audio_source_init (GESAudioSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_AUDIO_SOURCE, GESAudioSourcePrivate);
+  self->priv = ges_audio_source_get_instance_private (self);
 }

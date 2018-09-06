@@ -37,14 +37,15 @@
 /* TODO Add a GCancellable somewhere in the API */
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESFormatter, ges_formatter,
-    G_TYPE_INITIALLY_UNOWNED, G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
-
 struct _GESFormatterPrivate
 {
   gpointer nothing;
 };
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESFormatter, ges_formatter,
+    G_TYPE_INITIALLY_UNOWNED, G_ADD_PRIVATE (GESFormatter)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static void ges_formatter_dispose (GObject * object);
 static gboolean default_can_load_uri (GESFormatter * dummy_instance,
@@ -113,8 +114,6 @@ ges_formatter_class_init (GESFormatterClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESFormatterPrivate));
-
   object_class->dispose = ges_formatter_dispose;
 
   klass->can_load_uri = default_can_load_uri;
@@ -134,8 +133,7 @@ ges_formatter_class_init (GESFormatterClass * klass)
 static void
 ges_formatter_init (GESFormatter * object)
 {
-  object->priv = G_TYPE_INSTANCE_GET_PRIVATE (object,
-      GES_TYPE_FORMATTER, GESFormatterPrivate);
+  object->priv = ges_formatter_get_instance_private (object);
   object->project = NULL;
 }
 

@@ -31,10 +31,6 @@
 
 #include <string.h>
 
-#define _GET_PRIV(o) (G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_CONTAINER, GESContainerPrivate))
-
-G_DEFINE_ABSTRACT_TYPE (GESContainer, ges_container, GES_TYPE_TIMELINE_ELEMENT);
-
 GST_DEBUG_CATEGORY_STATIC (ges_container_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ges_container_debug
@@ -94,6 +90,9 @@ enum
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESContainer, ges_container,
+    GES_TYPE_TIMELINE_ELEMENT);
 
 /************************
  *   Private  methods   *
@@ -425,8 +424,6 @@ ges_container_class_init (GESContainerClass * klass)
   GST_DEBUG_CATEGORY_INIT (ges_container_debug, "gescontainer",
       GST_DEBUG_FG_YELLOW, "ges container");
 
-  g_type_class_add_private (klass, sizeof (GESContainerPrivate));
-
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;
   object_class->dispose = _dispose;
@@ -494,7 +491,7 @@ ges_container_class_init (GESContainerClass * klass)
 static void
 ges_container_init (GESContainer * self)
 {
-  self->priv = _GET_PRIV (self);
+  self->priv = ges_container_get_instance_private (self);
 
   /* FIXME, check why default was GST_SECOND? (before the existend of
    * ges-container)

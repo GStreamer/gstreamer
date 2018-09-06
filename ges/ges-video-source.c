@@ -88,13 +88,15 @@
 #include "gstframepositioner.h"
 
 #define parent_class ges_video_source_parent_class
-G_DEFINE_ABSTRACT_TYPE (GESVideoSource, ges_video_source, GES_TYPE_SOURCE);
 
 struct _GESVideoSourcePrivate
 {
   GstFramePositioner *positioner;
   GstElement *capsfilter;
 };
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESVideoSource, ges_video_source,
+    GES_TYPE_SOURCE);
 
 /* TrackElement VMethods */
 
@@ -228,8 +230,6 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
   GESVideoSourceClass *video_source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESVideoSourcePrivate));
-
   element_class->set_priority = _set_priority;
   element_class->lookup_child = _lookup_child;
 
@@ -241,8 +241,7 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
 static void
 ges_video_source_init (GESVideoSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_VIDEO_SOURCE, GESVideoSourcePrivate);
+  self->priv = ges_video_source_get_instance_private (self);
   self->priv->positioner = NULL;
   self->priv->capsfilter = NULL;
 }

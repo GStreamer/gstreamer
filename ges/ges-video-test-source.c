@@ -28,15 +28,15 @@
 #include "ges-track-element.h"
 #include "ges-video-test-source.h"
 
-G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source,
-    GES_TYPE_VIDEO_SOURCE);
-
 #define DEFAULT_VPATTERN GES_VIDEO_TEST_PATTERN_SMPTE
 
 struct _GESVideoTestSourcePrivate
 {
   GESVideoTestPattern pattern;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTestSource, ges_video_test_source,
+    GES_TYPE_VIDEO_SOURCE);
 
 static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
 
@@ -45,16 +45,13 @@ ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
 {
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESVideoTestSourcePrivate));
-
   source_class->create_source = ges_video_test_source_create_source;
 }
 
 static void
 ges_video_test_source_init (GESVideoTestSource * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_VIDEO_TEST_SOURCE, GESVideoTestSourcePrivate);
+  self->priv = ges_video_test_source_get_instance_private (self);
 
   self->priv->pattern = DEFAULT_VPATTERN;
 }

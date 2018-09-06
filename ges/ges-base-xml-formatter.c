@@ -26,8 +26,6 @@ GST_DEBUG_CATEGORY_STATIC (base_xml_formatter);
 #define GST_CAT_DEFAULT base_xml_formatter
 
 #define parent_class ges_base_xml_formatter_parent_class
-G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
-    GES_TYPE_FORMATTER);
 
 #define _GET_PRIV(o)\
   (((GESBaseXmlFormatter*) o)->priv)
@@ -159,6 +157,9 @@ enum
 };
 static guint signals[LAST_SIGNAL];
 */
+
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseXmlFormatter,
+    ges_base_xml_formatter, GES_TYPE_FORMATTER);
 
 static GMarkupParseContext *
 create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
@@ -373,8 +374,7 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
 {
   GESBaseXmlFormatterPrivate *priv;
 
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_BASE_XML_FORMATTER, GESBaseXmlFormatterPrivate);
+  self->priv = ges_base_xml_formatter_get_instance_private (self);
 
   priv = self->priv;
 
@@ -405,7 +405,6 @@ ges_base_xml_formatter_class_init (GESBaseXmlFormatterClass * self_class)
   GESFormatterClass *formatter_klass = GES_FORMATTER_CLASS (self_class);
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class, sizeof (GESBaseXmlFormatterPrivate));
   object_class->dispose = _dispose;
   object_class->finalize = _finalize;
 

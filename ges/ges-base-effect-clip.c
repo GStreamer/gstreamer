@@ -30,26 +30,22 @@
 #include "ges-internal.h"
 #include "ges-types.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESBaseEffectClip, ges_base_effect_clip,
-    GES_TYPE_OPERATION_CLIP);
-
 struct _GESBaseEffectClipPrivate
 {
   void *nothing;
 };
 
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseEffectClip, ges_base_effect_clip,
+    GES_TYPE_OPERATION_CLIP);
 
 static void
 ges_base_effect_clip_class_init (GESBaseEffectClipClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESBaseEffectClipPrivate));
-
 }
 
 static void
 ges_base_effect_clip_init (GESBaseEffectClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_BASE_EFFECT_CLIP, GESBaseEffectClipPrivate);
+  self->priv = ges_base_effect_clip_get_instance_private (self);
 
 }

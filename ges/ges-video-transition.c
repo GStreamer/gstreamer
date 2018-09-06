@@ -31,7 +31,6 @@
 #include <gst/controller/gstdirectcontrolbinding.h>
 
 #define parent_class ges_video_transition_parent_class
-G_DEFINE_TYPE (GESVideoTransition, ges_video_transition, GES_TYPE_TRANSITION);
 
 static inline void
 ges_video_transition_set_border_internal (GESVideoTransition * self,
@@ -83,6 +82,9 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
+G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTransition, ges_video_transition,
+    GES_TYPE_TRANSITION);
+
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
 static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
@@ -133,8 +135,6 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
   GObjectClass *object_class;
   GESTrackElementClass *toclass;
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESVideoTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
 
@@ -189,8 +189,7 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
 static void
 ges_video_transition_init (GESVideoTransition * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_VIDEO_TRANSITION, GESVideoTransitionPrivate);
+  self->priv = ges_video_transition_get_instance_private (self);
 
   self->priv->crossfade_control_source = NULL;
   self->priv->smpte_control_source = NULL;

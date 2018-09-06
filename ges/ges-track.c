@@ -35,9 +35,6 @@
 #include "ges-video-track.h"
 #include "ges-audio-track.h"
 
-G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
-
 static GstStaticPadTemplate ges_track_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -100,6 +97,11 @@ enum
 static guint ges_track_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *properties[ARG_LAST];
+
+G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
+    G_ADD_PRIVATE (GESTrack)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
+
 
 static void composition_duration_cb (GstElement * composition, GParamSpec * arg
     G_GNUC_UNUSED, GESTrack * obj);
@@ -562,8 +564,6 @@ ges_track_class_init (GESTrackClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GESTrackPrivate));
-
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (ges_track_change_state);
 
   object_class->get_property = ges_track_get_property;
@@ -682,8 +682,7 @@ ges_track_class_init (GESTrackClass * klass)
 static void
 ges_track_init (GESTrack * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TRACK, GESTrackPrivate);
+  self->priv = ges_track_get_instance_private (self);
 
   self->priv->composition = gst_element_factory_make ("nlecomposition", NULL);
   self->priv->capsfilter = gst_element_factory_make ("capsfilter", NULL);

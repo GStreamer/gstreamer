@@ -41,7 +41,7 @@ enum
   PROP_0,
 };
 
-G_DEFINE_TYPE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
+G_DEFINE_TYPE_WITH_PRIVATE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
 
 static void
 ges_source_clip_get_property (GObject * object, guint property_id,
@@ -74,8 +74,6 @@ ges_source_clip_class_init (GESSourceClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESSourceClipPrivate));
-
   object_class->get_property = ges_source_clip_get_property;
   object_class->set_property = ges_source_clip_set_property;
   object_class->finalize = ges_source_clip_finalize;
@@ -84,6 +82,5 @@ ges_source_clip_class_init (GESSourceClipClass * klass)
 static void
 ges_source_clip_init (GESSourceClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_SOURCE_CLIP, GESSourceClipPrivate);
+  self->priv = ges_source_clip_get_instance_private (self);
 }

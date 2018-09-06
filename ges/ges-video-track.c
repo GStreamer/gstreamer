@@ -31,9 +31,7 @@ struct _GESVideoTrackPrivate
   gpointer nothing;
 };
 
-#define GES_VIDEO_TRACK_GET_PRIVATE(o)  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_VIDEO_TRACK, GESVideoTrackPrivate))
-
-G_DEFINE_TYPE (GESVideoTrack, ges_video_track, GES_TYPE_TRACK);
+G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTrack, ges_video_track, GES_TYPE_TRACK);
 
 static void
 _sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
@@ -124,8 +122,6 @@ ges_video_track_class_init (GESVideoTrackClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 /*   GESTrackClass *parent_class = GES_TRACK_CLASS (klass);
  */
-
-  g_type_class_add_private (klass, sizeof (GESVideoTrackPrivate));
 
   object_class->finalize = ges_video_track_finalize;
 

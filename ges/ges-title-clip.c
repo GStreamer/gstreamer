@@ -34,8 +34,6 @@
 #include "ges-title-source.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTitleClip, ges_title_clip, GES_TYPE_SOURCE_CLIP);
-
 #define DEFAULT_TEXT ""
 #define DEFAULT_FONT_DESC "Serif 36"
 #define GES_TITLE_CLIP_VALIGN_TYPE (ges_title_clip_valign_get_type())
@@ -58,6 +56,8 @@ enum
   PROP_XPOS,
   PROP_YPOS,
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (GESTitleClip, ges_title_clip, GES_TYPE_SOURCE_CLIP);
 
 static GESTrackElement
     * ges_title_clip_create_track_element (GESClip * clip, GESTrackType type);
@@ -149,8 +149,6 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
       GES_TIMELINE_ELEMENT_CLASS (klass);
   GESClipClass *clip_class = GES_CLIP_CLASS (klass);
   GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GESTitleClipPrivate));
 
   object_class->get_property = ges_title_clip_get_property;
   object_class->set_property = ges_title_clip_set_property;
@@ -280,8 +278,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
 static void
 ges_title_clip_init (GESTitleClip * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TITLE_CLIP, GESTitleClipPrivate);
+  self->priv = ges_title_clip_get_instance_private (self);
 
   GES_TIMELINE_ELEMENT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */

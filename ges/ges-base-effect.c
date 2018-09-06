@@ -31,23 +31,21 @@
 #include "ges-track-element.h"
 #include "ges-base-effect.h"
 
-G_DEFINE_ABSTRACT_TYPE (GESBaseEffect, ges_base_effect, GES_TYPE_OPERATION);
-
 struct _GESBaseEffectPrivate
 {
   void *nothing;
 };
 
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseEffect, ges_base_effect,
+    GES_TYPE_OPERATION);
+
 static void
 ges_base_effect_class_init (GESBaseEffectClass * klass)
 {
-  g_type_class_add_private (klass, sizeof (GESBaseEffectPrivate));
 }
 
 static void
 ges_base_effect_init (GESBaseEffect * self)
 {
-  self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GES_TYPE_BASE_EFFECT,
-      GESBaseEffectPrivate);
+  self->priv = ges_base_effect_get_instance_private (self);
 }
