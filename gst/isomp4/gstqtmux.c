@@ -6153,9 +6153,7 @@ gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
           g_assert (qtpad);
           if (qtpad->trak) {
             /* https://developer.apple.com/library/mac/#documentation/QuickTime/QTFF/QTFFChap4/qtff4.html */
-            qtpad->trak->mdia.mdhd.language_code =
-                (iso_code[0] - 0x60) * 0x400 + (iso_code[1] - 0x60) * 0x20 +
-                (iso_code[2] - 0x60);
+            qtpad->trak->mdia.mdhd.language_code = language_code (iso_code);
           }
         }
         g_free (code);

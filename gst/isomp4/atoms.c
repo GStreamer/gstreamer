@@ -1154,8 +1154,7 @@ atom_mdhd_init (AtomMDHD * mdhd)
   /* tempting as it may be to simply 0-initialize,
    * that will have the demuxer (correctly) come up with 'eng' as language
    * so explicitly specify undefined instead */
-  mdhd->language_code =
-      ('u' - 0x60) * 0x400 + ('n' - 0x60) * 0x20 + ('d' - 0x60);
+  mdhd->language_code = language_code ("und");
   mdhd->quality = 0;
 }
 
