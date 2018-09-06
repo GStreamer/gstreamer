@@ -327,7 +327,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
   /* If the TrackElement is an effect:
    *  - We add it on top of the list of TrackEffect
-   *  - We put all TrackObject present in the TimelineObject
+   *  - We put all TrackElements present in the Clip
    *    which are not BaseEffect on top of them
    * FIXME: Let the full control over priorities to the user
    */
@@ -368,8 +368,21 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 static gboolean
 _remove_child (GESContainer * container, GESTimelineElement * element)
 {
-  if (GES_IS_BASE_EFFECT (element))
+  if (GES_IS_BASE_EFFECT (element)) {
+    GList *tmp;
+    GESChildrenControlMode mode = container->children_control_mode;
+
+    GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
+
+    container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
+    tmp = g_list_find (GES_CONTAINER_CHILDREN (container), element);
+    for (tmp = tmp->next; tmp; tmp = tmp->next) {
+      ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
+          GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) - 1);
+    }
+    container->children_control_mode = mode;
     GES_CLIP (container)->priv->nb_effects--;
+  }
 
   GST_FIXME_OBJECT (container, "We should set other children prios");
 

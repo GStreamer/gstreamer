@@ -166,3 +166,32 @@ class TestTrackElements(unittest.TestCase):
         audio_source = test_clip.find_track_element(None, GES.AudioSource)
         self.assertFalse(audio_source is None)
         self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)
+
+    def check_effects(self, clip, expected_effects, expected_indexes):
+        effects = clip.get_top_effects()
+        self.assertEqual(effects, expected_effects)
+        self.assertEqual([clip.get_top_effect_index(effect) for effect in effects], expected_indexes)
+
+    def test_effects_priority(self):
+        timeline = GES.Timeline.new_audio_video()
+        self.assertEqual(len(timeline.get_tracks()), 2)
+        layer = timeline.append_layer()
+
+        test_clip = GES.TestClip()
+        self.assertEqual(test_clip.get_children(True), [])
+        self.assertTrue(layer.add_clip(test_clip))
+
+        effect1 = GES.Effect.new("agingtv")
+        test_clip.add(effect1)
+        self.check_effects(test_clip, [effect1], [0])
+
+        test_clip.set_top_effect_index(effect1, 1)
+        self.check_effects(test_clip, [effect1], [0])
+        test_clip.set_top_effect_index(effect1, 10)
+        self.check_effects(test_clip, [effect1], [0])
+
+        effect2 = GES.Effect.new("dicetv")
+        test_clip.add(effect2)
+
+        test_clip.remove(effect1)
+        self.check_effects(test_clip, [effect2], [0])
