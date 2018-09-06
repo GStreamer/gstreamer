@@ -128,7 +128,8 @@ static GstFlowReturn gst_flv_mux_write_eos (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_write_header (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_rewrite_header (GstFlvMux * mux);
 static gboolean gst_flv_mux_are_all_pads_eos (GstFlvMux * mux);
-
+static GstFlowReturn gst_flv_mux_update_src_caps (GstAggregator * aggregator,
+    GstCaps * caps, GstCaps ** ret);
 
 static GstFlowReturn
 gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
@@ -239,6 +240,8 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
   gstaggregator_class->flush = GST_DEBUG_FUNCPTR (gst_flv_mux_flush);
   gstaggregator_class->get_next_time =
       GST_DEBUG_FUNCPTR (gst_flv_mux_get_next_time);
+  gstaggregator_class->update_src_caps =
+      GST_DEBUG_FUNCPTR (gst_flv_mux_update_src_caps);
 
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &videosink_templ, GST_TYPE_FLV_MUX_PAD);
@@ -1241,8 +1244,10 @@ gst_flv_mux_put_buffer_in_streamheader (GValue * streamheader,
   g_value_unset (&value);
 }
 
-static GstFlowReturn
-gst_flv_mux_write_header (GstFlvMux * mux)
+static GstCaps *
+gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
+    GstBuffer ** metadata_buf, GstBuffer ** video_codec_data_buf,
+    GstBuffer ** audio_codec_data_buf)
 {
   GstBuffer *header, *metadata;
   GstBuffer *video_codec_data, *audio_codec_data;
@@ -1250,31 +1255,6 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   GstStructure *structure;
   GValue streamheader = { 0 };
   GList *l;
-  GstFlowReturn ret;
-
-  /* if not streaming, check if downstream is seekable */
-  if (!mux->streamable) {
-    gboolean seekable;
-    GstQuery *query;
-
-    query = gst_query_new_seeking (GST_FORMAT_BYTES);
-    if (gst_pad_peer_query (mux->srcpad, query)) {
-      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
-      GST_INFO_OBJECT (mux, "downstream is %sseekable", seekable ? "" : "not ");
-    } else {
-      /* have to assume seeking is supported if query not handled downstream */
-      GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
-      seekable = FALSE;
-    }
-    if (!seekable) {
-      mux->streamable = TRUE;
-      g_object_notify (G_OBJECT (mux), "streamable");
-      GST_WARNING_OBJECT (mux, "downstream is not seekable, but "
-          "streamable=false. Will ignore that and create streamable output "
-          "instead");
-    }
-    gst_query_unref (query);
-  }
 
   header = gst_flv_mux_create_header (mux);
   metadata = gst_flv_mux_create_metadata (mux, TRUE);
@@ -1329,6 +1309,70 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set_value (structure, "streamheader", &streamheader);
   g_value_unset (&streamheader);
+
+  if (header_buf) {
+    *header_buf = header;
+  } else {
+    gst_buffer_unref (header);
+  }
+
+  if (metadata_buf) {
+    *metadata_buf = metadata;
+  } else {
+    gst_buffer_unref (metadata);
+  }
+
+  if (video_codec_data_buf) {
+    *video_codec_data_buf = video_codec_data;
+  } else if (video_codec_data) {
+    gst_buffer_unref (video_codec_data);
+  }
+
+  if (audio_codec_data_buf) {
+    *audio_codec_data_buf = audio_codec_data;
+  } else if (audio_codec_data) {
+    gst_buffer_unref (audio_codec_data);
+  }
+
+  return caps;
+}
+
+static GstFlowReturn
+gst_flv_mux_write_header (GstFlvMux * mux)
+{
+  GstBuffer *header, *metadata;
+  GstBuffer *video_codec_data, *audio_codec_data;
+  GstCaps *caps;
+  GstFlowReturn ret;
+
+  header = metadata = video_codec_data = audio_codec_data = NULL;
+
+  /* if not streaming, check if downstream is seekable */
+  if (!mux->streamable) {
+    gboolean seekable;
+    GstQuery *query;
+
+    query = gst_query_new_seeking (GST_FORMAT_BYTES);
+    if (gst_pad_peer_query (mux->srcpad, query)) {
+      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+      GST_INFO_OBJECT (mux, "downstream is %sseekable", seekable ? "" : "not ");
+    } else {
+      /* have to assume seeking is supported if query not handled downstream */
+      GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
+      seekable = FALSE;
+    }
+    if (!seekable) {
+      mux->streamable = TRUE;
+      g_object_notify (G_OBJECT (mux), "streamable");
+      GST_WARNING_OBJECT (mux, "downstream is not seekable, but "
+          "streamable=false. Will ignore that and create streamable output "
+          "instead");
+    }
+    gst_query_unref (query);
+  }
+
+  caps = gst_flv_mux_prepare_src_caps (mux,
+      &header, &metadata, &video_codec_data, &audio_codec_data);
 
   gst_aggregator_set_src_caps (GST_AGGREGATOR_CAST (mux), caps);
 
@@ -1815,4 +1859,15 @@ gst_flv_mux_get_next_time (GstAggregator * aggregator)
 wait_for_data:
   GST_OBJECT_UNLOCK (aggregator);
   return GST_CLOCK_TIME_NONE;
+}
+
+static GstFlowReturn
+gst_flv_mux_update_src_caps (GstAggregator * aggregator,
+    GstCaps * caps, GstCaps ** ret)
+{
+  GstFlvMux *mux = GST_FLV_MUX (aggregator);
+
+  *ret = gst_flv_mux_prepare_src_caps (mux, NULL, NULL, NULL, NULL);
+
+  return GST_FLOW_OK;
 }
