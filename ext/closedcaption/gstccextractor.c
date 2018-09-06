@@ -250,23 +250,20 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
     GST_DEBUG_OBJECT (filter, "Creating new caption pad");
     switch (meta->caption_type) {
       case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-        caption_caps =
-            gst_caps_from_string ("closedcaption/x-cea-608,format=(string)raw");
+        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
+            "format", G_TYPE_STRING, "raw", NULL);
         break;
       case GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW:
-        caption_caps =
-            gst_caps_from_string
-            ("closedcaption/x-cea-608,format=(string)cc_data");
+        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
+            "format", G_TYPE_STRING, "cc_data", NULL);
         break;
       case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-        caption_caps =
-            gst_caps_from_string
-            ("closedcaption/x-cea-708,format=(string)cc_data");
+        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
+            "format", G_TYPE_STRING, "cc_data", NULL);
         break;
       case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-        caption_caps =
-            gst_caps_from_string ("closedcaption/x-cea-708,format=(string)cdp");
-        break;
+        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
+            "format", G_TYPE_STRING, "cdp", NULL);
       default:
         break;
     }
