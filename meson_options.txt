@@ -119,6 +119,7 @@ option('resindvd', type : 'feature', value : 'auto', description : 'Resin DVD pl
 option('rsvg', type : 'feature', value : 'auto', description : 'SVG overlayer and image decoder plugin')
 option('rtmp', type : 'feature', value : 'auto', description : 'RTMP video network source and sink plugin')
 option('sbc', type : 'feature', value : 'auto', description : 'SBC bluetooth audio codec plugin')
+option('sctp', type : 'feature', value : 'auto', description : 'SCTP plugin')
 option('shm', type : 'feature', value : 'auto', description : 'Shared memory source/sink plugin')
 option('smoothstreaming', type : 'feature', value : 'auto', description : 'Microsoft Smooth Streaming demuxer plugin')
 option('soundtouch', type : 'feature', value : 'auto', description : 'Audio pitch controller & BPM detection plugin')

@@ -27,6 +27,7 @@
 #define __GST_SCTP_SEND_META_H__
 
 #include <gst/gst.h>
+#include <gst/sctp/sctp-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -52,8 +53,11 @@ struct _GstSctpSendMeta
   guint32 pr_param;
 };
 
+GST_SCTP_API
 GType gst_sctp_send_meta_api_get_type (void);
+GST_SCTP_API
 const GstMetaInfo *gst_sctp_send_meta_get_info (void);
+GST_SCTP_API
 GstSctpSendMeta *gst_sctp_buffer_add_send_meta (GstBuffer * buffer,
     guint32 ppid, gboolean ordered, GstSctpSendMetaPartiallyReliability pr,
     guint32 pr_param);
