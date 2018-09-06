@@ -6073,6 +6073,11 @@ gst_qt_mux_caption_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
       (SampleTableEntry *) atom_trak_set_caption_type (qtpad->trak,
       qtmux->context, timescale, fourcc_entry);
 
+  /* Initialize caption track language code to 0 unless something else is
+   * specified. Without this, Final Cut considers it "non-standard"
+   */
+  qtpad->trak->mdia.mdhd.language_code = 0;
+
   gst_object_unref (qtmux);
   return TRUE;
 
