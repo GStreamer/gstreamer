@@ -6,7 +6,7 @@ speex_sources = [
 
 speex_dep = dependency('speex', version : '>=1.1.6', required : false)
 windows_args = []
-if host_system == 'windows'
+if host_machine.system() == 'windows'
   windows_args = ['-DWIN32']
 endif
 
