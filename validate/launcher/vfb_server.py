@@ -46,12 +46,11 @@ class Xvfb(VirtualFrameBufferServer):
         self._logsfile = None
         self._command = "Xvfb %s -screen 0 1920x1080x24" % self.display_id
 
-    def _check_is_up(self, timeout=60):
-        """ Check if the xvfb is up, running a simple test based on wget. """
+    def _check_is_up(self, timeout=3, assume_true=True):
+        """ Check if the xvfb is up, running a simple test based on xset. """
         start = time.time()
         while True:
             try:
-                cdisplay = os.environ.get("DISPLAY", None)
                 os.environ["DISPLAY"] = self.display_id
                 subprocess.check_output(["xset", "q"],
                                         stderr=self._logsfile)
@@ -59,6 +58,13 @@ class Xvfb(VirtualFrameBufferServer):
                 return True
             except subprocess.CalledProcessError:
                 pass
+            except FileNotFoundError:
+                if assume_true:
+                    print('WARNING: xset not preset on the system,'
+                        ' just wait for %s seconds and hope for the best.'
+                        ' (this is what xvfb-run itself does anyway.)' % timeout)
+                    time.sleep(timeout)
+                return assume_true
 
             if time.time() - start > timeout:
                 return False
@@ -69,7 +75,7 @@ class Xvfb(VirtualFrameBufferServer):
         """ Start xvfb in a subprocess """
         self._logsfile = open(os.path.join(self.options.logsdir,
                                            "xvfb.logs"), 'w+')
-        if self._check_is_up(timeout=2):
+        if self._check_is_up(assume_true=False):
             print("xvfb already running")
             return (True, None)
 
