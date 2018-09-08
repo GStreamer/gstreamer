@@ -1950,15 +1950,16 @@ class ScenarioManager(Loggable):
         for section in config.sections():
             if scenario_paths:
                 for scenario_path in scenario_paths:
-                    if mfile is None:
-                        name = section
-                        path = scenario_path
-                    elif section in scenario_path:
-                        # The real name of the scenario is:
-                        # filename.REALNAME.scenario
-                        name = scenario_path.replace(mfile + ".", "").replace(
-                            "." + self.FILE_EXTENSION, "")
-                        path = scenario_path
+                    if section in os.path.splitext(os.path.basename(scenario_path))[0]:
+                        if mfile is None:
+                            name = section
+                            path = scenario_path
+                        else:
+                            # The real name of the scenario is:
+                            # filename.REALNAME.scenario
+                            name = scenario_path.replace(mfile + ".", "").replace(
+                                "." + self.FILE_EXTENSION, "")
+                            path = scenario_path
             else:
                 name = section
                 path = None
