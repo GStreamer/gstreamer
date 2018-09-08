@@ -1304,12 +1304,14 @@ no_state_recalc:
     s = (GstStructure *) gst_message_get_structure (msg);
     gst_structure_get (s, "bin.old.context", GST_TYPE_CONTEXT, &context, NULL);
     gst_structure_remove_field (s, "bin.old.context");
-    gst_element_post_message (GST_ELEMENT_CAST (bin), msg);
+    /* Keep the msg around while we still need access to the context_type */
+    gst_element_post_message (GST_ELEMENT_CAST (bin), gst_message_ref (msg));
 
     /* lock to avoid losing a potential write */
     GST_OBJECT_LOCK (bin);
     replacement =
         gst_element_get_context_unlocked (GST_ELEMENT_CAST (bin), context_type);
+    gst_message_unref (msg);
 
     if (replacement) {
       /* we got the context set from GstElement::set_context */
