@@ -30,12 +30,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GssimPriv GssimPriv;
+typedef struct _GssimPrivate GssimPrivate;
 
 typedef struct {
   GstObject parent;
 
-  GssimPriv *priv;
+  GssimPrivate *priv;
 } Gssim;
 
 typedef struct {

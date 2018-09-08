@@ -39,17 +39,13 @@ typedef struct _SSimWindowCache
   gfloat element_summ;
 } SSimWindowCache;
 
-/*  *INDENT-OFF* */
-G_DEFINE_TYPE (Gssim, gssim, GST_TYPE_OBJECT)
-/*  *INDENT-ON* */
-
 enum
 {
   PROP_FIRST_PROP = 1,
   N_PROPS
 };
 
-struct _GssimPriv
+struct _GssimPrivate
 {
   gint width;
   gint height;
@@ -67,6 +63,9 @@ struct _GssimPriv
   GstVideoInfo in_info, out_info;
 };
 
+/*  *INDENT-OFF* */
+G_DEFINE_TYPE_WITH_PRIVATE (Gssim, gssim, GST_TYPE_OBJECT)
+/*  *INDENT-ON* */
 
 static void
 gssim_calculate_mu (Gssim * self, guint8 * buf)
@@ -430,14 +429,12 @@ gssim_class_init (GssimClass * klass)
   oclass->get_property = gssim_get_property;
   oclass->set_property = gssim_set_property;
   oclass->finalize = gssim_finalize;
-
-  g_type_class_add_private (klass, sizeof (GssimPriv));
 }
 
 static void
 gssim_init (Gssim * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, GSSIM_TYPE, GssimPriv);
+  self->priv = gssim_get_instance_private (self);
 
   self->priv->windowsize = 11;
   self->priv->windowtype = 1;
