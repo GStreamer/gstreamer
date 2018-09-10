@@ -1,5 +1,6 @@
 project('gstwebrtc-demo', 'c',
   meson_version : '>= 0.48',
+  license: 'BSD-2-Clause',
   default_options : [ 'warning_level=1',
                       'buildtype=debug' ])
 
@@ -24,5 +25,15 @@ libsoup_dep = dependency('libsoup-2.4', version : '>=2.48',
 json_glib_dep = dependency('json-glib-1.0',
     fallback : ['json-glib', 'json_glib_dep'])
 
+
+py3_mod = import('python3')
+py3 = py3_mod.find_python()
+
+py3_version = py3_mod.language_version()
+if py3_version.version_compare('< 3.6')
+  error('Could not find a sufficient python version required: 3.6, found {}'.format(py3_version))
+endif
+
 subdir('multiparty-sendrecv')
+subdir('signalling')
 subdir('sendrecv')

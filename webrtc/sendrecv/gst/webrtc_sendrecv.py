@@ -23,6 +23,8 @@ webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.googl
  queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload=96 ! sendrecv.
 '''
 
+from websockets.version import version as wsv
+
 class WebRTCClient:
     def __init__(self, id_, peer_id, server):
         self.id_ = id_
@@ -32,10 +34,11 @@ class WebRTCClient:
         self.peer_id = peer_id
         self.server = server or 'wss://webrtc.nirbheek.in:8443'
 
+
     async def connect(self):
         sslctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
         self.conn = await websockets.connect(self.server, ssl=sslctx)
-        await self.conn.send('HELLO %d' % our_id)
+        await self.conn.send('HELLO %d' % self.id_)
 
     async def setup_call(self):
         await self.conn.send('SESSION {}'.format(self.peer_id))
@@ -46,6 +49,7 @@ class WebRTCClient:
         msg = json.dumps({'sdp': {'type': 'offer', 'sdp': text}})
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self.conn.send(msg))
+        loop.close()
 
     def on_offer_created(self, promise, _, __):
         promise.wait()
@@ -64,6 +68,7 @@ class WebRTCClient:
         icemsg = json.dumps({'ice': {'candidate': candidate, 'sdpMLineIndex': mlineindex}})
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self.conn.send(icemsg))
+        loop.close()
 
     def on_incoming_decodebin_stream(self, _, pad):
         if not pad.has_current_caps():
@@ -113,7 +118,7 @@ class WebRTCClient:
         self.webrtc.connect('pad-added', self.on_incoming_stream)
         self.pipe.set_state(Gst.State.PLAYING)
 
-    async def handle_sdp(self, message):
+    def handle_sdp(self, message):
         assert (self.webrtc)
         msg = json.loads(message)
         if 'sdp' in msg:
@@ -133,6 +138,11 @@ class WebRTCClient:
             sdpmlineindex = ice['sdpMLineIndex']
             self.webrtc.emit('add-ice-candidate', sdpmlineindex, candidate)
 
+    def close_pipeline(self):
+        self.pipe.set_state(Gst.State.NULL)
+        self.pipe = None
+        self.webrtc = None
+
     async def loop(self):
         assert self.conn
         async for message in self.conn:
@@ -142,10 +152,17 @@ class WebRTCClient:
                 self.start_pipeline()
             elif message.startswith('ERROR'):
                 print (message)
+                self.close_pipeline()
                 return 1
             else:
-                await self.handle_sdp(message)
+                self.handle_sdp(message)
+        self.close_pipeline()
         return 0
+
+    async def stop(self):
+        if self.conn:
+            await self.conn.close()
+        self.conn = None
 
 
 def check_plugins():
@@ -168,6 +185,7 @@ if __name__=='__main__':
     args = parser.parse_args()
     our_id = random.randrange(10, 10000)
     c = WebRTCClient(our_id, args.peerid, args.server)
-    asyncio.get_event_loop().run_until_complete(c.connect())
-    res = asyncio.get_event_loop().run_until_complete(c.loop())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(c.connect())
+    res = loop.run_until_complete(c.loop())
     sys.exit(res)
