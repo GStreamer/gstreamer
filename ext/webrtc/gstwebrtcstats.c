@@ -40,8 +40,8 @@ _init_debug (void)
   static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (gst_webrtc_stats_debug, "webrtcice", 0,
-        "webrtcice");
+    GST_DEBUG_CATEGORY_INIT (gst_webrtc_stats_debug, "webrtcstats", 0,
+        "webrtcstats");
     g_once_init_leave (&_init, 1);
   }
 }
