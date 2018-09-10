@@ -41,6 +41,10 @@ typedef struct _GstWebRTCNiceTransport GstWebRTCNiceTransport;
 typedef struct _GstWebRTCNiceTransportClass GstWebRTCNiceTransportClass;
 typedef struct _GstWebRTCNiceTransportPrivate GstWebRTCNiceTransportPrivate;
 
+typedef struct _GstWebRTCSCTPTransport GstWebRTCSCTPTransport;
+typedef struct _GstWebRTCSCTPTransportClass GstWebRTCSCTPTransportClass;
+typedef struct _GstWebRTCSCTPTransportPrivate GstWebRTCSCTPTransportPrivate;
+
 typedef struct _TransportStream TransportStream;
 typedef struct _TransportStreamClass TransportStreamClass;
 

@@ -23,6 +23,7 @@
 #include <gst/sdp/sdp.h>
 #include "fwd.h"
 #include "gstwebrtcice.h"
+#include "transportstream.h"
 
 G_BEGIN_DECLS
 
@@ -37,7 +38,9 @@ typedef enum
   GST_WEBRTC_BIN_ERROR_INVALID_STATE,
   GST_WEBRTC_BIN_ERROR_BAD_SDP,
   GST_WEBRTC_BIN_ERROR_FINGERPRINT,
-} GstWebRTCJSEPSDPError;
+  GST_WEBRTC_BIN_ERROR_SCTP_FAILURE,
+  GST_WEBRTC_BIN_ERROR_DATA_CHANNEL_FAILURE,
+} GstWebRTCError;
 
 GType gst_webrtc_bin_pad_get_type(void);
 #define GST_TYPE_WEBRTC_BIN_PAD            (gst_webrtc_bin_pad_get_type())
@@ -107,6 +110,13 @@ struct _GstWebRTCBinPrivate
   GArray *transceivers;
   GArray *session_mid_map;
   GArray *transports;
+  GArray *data_channels;
+  /* list of data channels we've received a sctp stream for but no data
+   * channel protocol for */
+  GArray *pending_data_channels;
+
+  GstWebRTCSCTPTransport *sctp_transport;
+  TransportStream *data_channel_transport;
 
   GstWebRTCICE *ice;
   GArray *ice_stream_map;
@@ -115,7 +125,6 @@ struct _GstWebRTCBinPrivate
   /* peerconnection variables */
   gboolean is_closed;
   gboolean need_negotiation;
-  gpointer sctp_transport;      /* FIXME */
 
   /* peerconnection helper thread for promises */
   GMainContext *main_context;

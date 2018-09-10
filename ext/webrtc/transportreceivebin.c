@@ -25,23 +25,24 @@
 #include "utils.h"
 
 /*
- * ,----------------------------transport_receive_%u-----------------------------,
- * ;       (rtp)                                                                 ;
- * ;  ,---nicesrc----,  ,-capsfilter-,  ,----dtlssrtpdec----,      ,--funnel--,  ;
- * ;  ;          src o--o sink   src o--o sink      rtp_src o------o sink_0   ;  ;
- * ;  '--------------'  '------------'  ;                   ;      ;      src o--o rtp_src
- * ;                                    ;          rtcp_src o-, ,--o sink_1   ;  ;
- * ;                                    '-------------------' ; ;  '----------'  ;
- * ;                                                          ; ;  ,--funnel--,  ;
- * ;                                                          '-+--o sink_0   ;  ;
- * ;                                                          ,-'  ;      src o--o rtcp_src
- * ;       (rtcp)                                             ;  ,-o sink_1   ;  ;
- * ;  ,---nicesrc----,  ,-capsfilter-,  ,----dtlssrtpdec----, ;  ; '----------'  ;
- * ;  ;          src o--o sink   src o--o sink      rtp_src o-'  ;               ;
- * ;  '--------------'  '------------'  ;                   ;    ;               ;
- * ;                                    ;          rtcp_src o----'               ;
- * ;                                    '-------------------'                    ;
- * '-----------------------------------------------------------------------------'
+ * ,----------------------------transport_receive_%u----------------------------,
+ * ;     (rtp/data)                                                             ;
+ * ;  ,---nicesrc----,  ,-capsfilter-,  ,---dtlssrtpdec---,       ,--funnel--,  ;
+ * ;  ;          src o--o sink   src o--o sink    rtp_src o-------o sink_0   ;  ;
+ * ;  '--------------'  '------------'  ;                 ;       ;      src o--o rtp_src
+ * ;                                    ;        rtcp_src o---, ,-o sink_1   ;  ;
+ * ;                                    ;                 ;   ; ; '----------'  ;
+ * ;                                    ;        data_src o-, ; ; ,--funnel--,  ;
+ * ;                                    '-----------------' ; '-+-o sink_0   ;  ;
+ * ;                                    ,---dtlssrtpdec---, ; ,-' ;      src o--o rtcp_src
+ * ;       (rtcp)                       ;         rtp_src o-+-' ,-o sink_1   ;  ;
+ * ;  ,---nicesrc----,  ,-capsfilter-,  ;                 ; ;   ; '----------'  ;
+ * ;  ;          src o--o sink   src o--o sink   rtcp_src o-+---' ,--funnel--,  ;
+ * ;  '--------------'  '------------'  ;                 ; '-----o sink_0   ;  ;
+ * ;                                    ;        data_src o-,     ;      src o--o data_src
+ * ;                                    '-----------------' '-----o sink_1   ;  ;
+ * ;                                                              '----------'  ;
+ * '----------------------------------------------------------------------------'
  *
  * Do we really wnat to be *that* permissive in what we accept?
  *
@@ -69,6 +70,12 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_src",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp"));
+
+static GstStaticPadTemplate data_sink_template =
+GST_STATIC_PAD_TEMPLATE ("data_src",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
 
 enum
 {
@@ -336,6 +343,21 @@ transport_receive_bin_constructed (GObject * object)
   gst_element_add_pad (GST_ELEMENT (receive), ghost);
   gst_object_unref (pad);
 
+  /* create funnel for data_src */
+  funnel = gst_element_factory_make ("funnel", NULL);
+  gst_bin_add (GST_BIN (receive), funnel);
+  if (!gst_element_link_pads (receive->stream->transport->dtlssrtpdec,
+          "data_src", funnel, "sink_0"))
+    g_warn_if_reached ();
+  if (!gst_element_link_pads (receive->stream->rtcp_transport->dtlssrtpdec,
+          "data_src", funnel, "sink_1"))
+    g_warn_if_reached ();
+
+  pad = gst_element_get_static_pad (funnel, "src");
+  ghost = gst_ghost_pad_new ("data_src", pad);
+  gst_element_add_pad (GST_ELEMENT (receive), ghost);
+  gst_object_unref (pad);
+
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
@@ -350,6 +372,8 @@ transport_receive_bin_class_init (TransportReceiveBinClass * klass)
   gst_element_class_add_static_pad_template (element_class, &rtp_sink_template);
   gst_element_class_add_static_pad_template (element_class,
       &rtcp_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &data_sink_template);
 
   gst_element_class_set_metadata (element_class, "WebRTC Transport Receive Bin",
       "Filter/Network/WebRTC", "A bin for webrtc connections",

@@ -27,9 +27,11 @@
 /*
  *           ,------------------------transport_send_%u-------------------------,
  *           ;                          ,-----dtlssrtpenc---,                   ;
- *  rtp_sink o--------------------------o rtp_sink_0        ;  ,---nicesink---, ;
- *           ;                          ;               src o--o sink         ; ;
- *           ;   ,--outputselector--, ,-o rtcp_sink_0       ;  '--------------' ;
+ * data_sink o--------------------------o data_sink         ;                   ;
+ *           ;                          ;                   ;  ,---nicesink---, ;
+ *  rtp_sink o--------------------------o rtp_sink_0    src o--o sink         ; ;
+ *           ;                          ;                   ;  '--------------' ;
+ *           ;   ,--outputselector--, ,-o rtcp_sink_0       ;                   ;
  *           ;   ;            src_0 o-' '-------------------'                   ;
  * rtcp_sink ;---o sink             ;   ,----dtlssrtpenc----,  ,---nicesink---, ;
  *           ;   ;            src_1 o---o rtcp_sink_0   src o--o sink         ; ;
@@ -60,6 +62,12 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp"));
+
+static GstStaticPadTemplate data_sink_template =
+GST_STATIC_PAD_TEMPLATE ("data_sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
 
 enum
 {
@@ -422,6 +430,16 @@ transport_send_bin_constructed (GObject * object)
   gst_element_add_pad (GST_ELEMENT (send), ghost);
   gst_object_unref (pad);
 
+  /* push the data stream onto the RTP dtls element */
+  templ = _find_pad_template (transport->dtlssrtpenc,
+      GST_PAD_SINK, GST_PAD_REQUEST, "data_sink");
+  pad = gst_element_request_pad (transport->dtlssrtpenc, templ, "data_sink",
+      NULL);
+
+  ghost = gst_ghost_pad_new ("data_sink", pad);
+  gst_element_add_pad (GST_ELEMENT (send), ghost);
+  gst_object_unref (pad);
+
   /* RTCP */
   transport = send->stream->rtcp_transport;
   /* Do the common init for the context struct */
@@ -509,6 +527,8 @@ transport_send_bin_class_init (TransportSendBinClass * klass)
   gst_element_class_add_static_pad_template (element_class, &rtp_sink_template);
   gst_element_class_add_static_pad_template (element_class,
       &rtcp_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &data_sink_template);
 
   gst_element_class_set_metadata (element_class, "WebRTC Transport Send Bin",
       "Filter/Network/WebRTC", "A bin for webrtc connections",

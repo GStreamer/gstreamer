@@ -28,6 +28,8 @@
 #include "utils.h"
 #include "webrtcsdp.h"
 #include "webrtctransceiver.h"
+#include "webrtcdatachannel.h"
+#include "sctptransport.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,8 +52,8 @@
 /*
  * This webrtcbin implements the majority of the W3's peerconnection API and
  * implementation guide where possible. Generating offers, answers and setting
- * local and remote SDP's are all supported.  To start with, only the media
- * interface has been implemented (no datachannel yet).
+ * local and remote SDP's are all supported.  Both media descriptions and
+ * descriptions involving data channels are supported.
  *
  * Each input/output pad is equivalent to a Track in W3 parlance which are
  * added/removed from the bin.  The number of requested sink pads is the number
@@ -70,7 +72,6 @@
  * LS groups
  * bundling
  * setting custom DTLS certificates
- * data channel
  *
  * seperate session id's from mlineindex properly
  * how to deal with replacing a input/output track/stream
@@ -101,6 +102,32 @@ _have_nice_elements (GstWebRTCBin * webrtc)
   } else {
     GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
         ("%s", "libnice elements are not available"));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_have_sctp_elements (GstWebRTCBin * webrtc)
+{
+  GstPluginFeature *feature;
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "sctpdec");
+  if (feature) {
+    gst_object_unref (feature);
+  } else {
+    GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
+        ("%s", "sctp elements are not available"));
+    return FALSE;
+  }
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "sctpenc");
+  if (feature) {
+    gst_object_unref (feature);
+  } else {
+    GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
+        ("%s", "sctp elements are not available"));
     return FALSE;
   }
 
@@ -273,7 +300,8 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element"););
+        "webrtcbin element");
+    );
 
 static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
     GstWebRTCBinPad * pad);
@@ -303,6 +331,8 @@ enum
   ADD_TRANSCEIVER_SIGNAL,
   GET_TRANSCEIVERS_SIGNAL,
   ADD_TURN_SERVER_SIGNAL,
+  CREATE_DATA_CHANNEL_SIGNAL,
+  ON_DATA_CHANNEL_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -522,6 +552,47 @@ _find_pad (GstWebRTCBin * webrtc, gconstpointer data, FindPadFunc func)
   GST_OBJECT_UNLOCK (webrtc);
 
   return NULL;
+}
+
+typedef gboolean (*FindDataChannelFunc) (GstWebRTCDataChannel * p1,
+    gconstpointer data);
+
+static GstWebRTCDataChannel *
+_find_data_channel (GstWebRTCBin * webrtc, gconstpointer data,
+    FindDataChannelFunc func)
+{
+  int i;
+
+  for (i = 0; i < webrtc->priv->data_channels->len; i++) {
+    GstWebRTCDataChannel *channel =
+        g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
+        i);
+
+    if (func (channel, data))
+      return channel;
+  }
+
+  return NULL;
+}
+
+static gboolean
+data_channel_match_for_id (GstWebRTCDataChannel * channel, gint * id)
+{
+  return channel->id == *id;
+}
+
+static GstWebRTCDataChannel *
+_find_data_channel_for_id (GstWebRTCBin * webrtc, gint id)
+{
+  GstWebRTCDataChannel *channel;
+
+  channel = _find_data_channel (webrtc, &id,
+      (FindDataChannelFunc) data_channel_match_for_id);
+
+  GST_TRACE_OBJECT (webrtc,
+      "Found data channel %" GST_PTR_FORMAT " for id %i", channel, id);
+
+  return channel;
 }
 
 static void
@@ -1415,7 +1486,6 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
 {
   GstWebRTCDTLSTransport *transport;
   TransportStream *ret;
-  gchar *pad_name;
 
   /* FIXME: how to parametrize the sender and the receiver */
   ret = transport_stream_new (webrtc, session_id);
@@ -1439,6 +1509,44 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
         G_CALLBACK (_on_dtls_transport_notify_state), webrtc);
   }
 
+  GST_TRACE_OBJECT (webrtc,
+      "Create transport %" GST_PTR_FORMAT " for session %u", ret, session_id);
+
+  return ret;
+}
+
+static gboolean
+_message_media_is_datachannel (const GstSDPMessage * msg, guint media_id)
+{
+  const GstSDPMedia *media;
+
+  if (!msg)
+    return FALSE;
+
+  if (gst_sdp_message_medias_len (msg) <= media_id)
+    return FALSE;
+
+  media = gst_sdp_message_get_media (msg, media_id);
+
+  if (g_strcmp0 (gst_sdp_media_get_media (media), "application") != 0)
+    return FALSE;
+
+  if (gst_sdp_media_formats_len (media) != 1)
+    return FALSE;
+
+  if (g_strcmp0 (gst_sdp_media_get_format (media, 0),
+          "webrtc-datachannel") != 0)
+    return FALSE;
+
+  return TRUE;
+}
+
+static TransportStream *
+_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
+{
+  TransportStream *ret = _create_transport_channel (webrtc, session_id);
+  gchar *pad_name;
+
   gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->send_bin));
   gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->receive_bin));
 
@@ -1456,13 +1564,215 @@ _create_transport_channel (GstWebRTCBin * webrtc, guint session_id)
 
   g_array_append_val (webrtc->priv->transports, ret);
 
-  GST_TRACE_OBJECT (webrtc,
-      "Create transport %" GST_PTR_FORMAT " for session %u", ret, session_id);
-
   gst_element_sync_state_with_parent (GST_ELEMENT (ret->send_bin));
   gst_element_sync_state_with_parent (GST_ELEMENT (ret->receive_bin));
 
   return ret;
+}
+
+/* this is called from the webrtc thread with the pc lock held */
+static void
+_on_data_channel_ready_state (GstWebRTCDataChannel * channel,
+    GParamSpec * pspec, GstWebRTCBin * webrtc)
+{
+  GstWebRTCDataChannelState ready_state;
+  guint i;
+
+  g_object_get (channel, "ready-state", &ready_state, NULL);
+
+  if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
+    gboolean found = FALSE;
+
+    for (i = 0; i < webrtc->priv->pending_data_channels->len; i++) {
+      GstWebRTCDataChannel *c;
+
+      c = g_array_index (webrtc->priv->pending_data_channels,
+          GstWebRTCDataChannel *, i);
+      if (c == channel) {
+        found = TRUE;
+        g_array_remove_index (webrtc->priv->pending_data_channels, i);
+        break;
+      }
+    }
+    if (found == FALSE) {
+      GST_FIXME_OBJECT (webrtc, "Received open for unknown data channel");
+      return;
+    }
+
+    g_array_append_val (webrtc->priv->data_channels, channel);
+
+    g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL], 0,
+        gst_object_ref (channel));
+  }
+}
+
+static void
+_link_data_channel_to_sctp (GstWebRTCBin * webrtc,
+    GstWebRTCDataChannel * channel)
+{
+  if (webrtc->priv->sctp_transport && !channel->sctp_transport) {
+    gint id;
+
+    g_object_get (channel, "id", &id, NULL);
+
+    if (webrtc->priv->sctp_transport->association_established && id != -1) {
+      gchar *pad_name;
+
+      gst_webrtc_data_channel_set_sctp_transport (channel,
+          webrtc->priv->sctp_transport);
+      pad_name = g_strdup_printf ("sink_%u", id);
+      if (!gst_element_link_pads (channel->appsrc, "src",
+              channel->sctp_transport->sctpenc, pad_name))
+        g_warn_if_reached ();
+      g_free (pad_name);
+    }
+  }
+}
+
+static void
+_on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
+    GstWebRTCBin * webrtc)
+{
+  GstWebRTCDataChannel *channel;
+  guint stream_id;
+  GstPad *sink_pad;
+
+  if (sscanf (GST_PAD_NAME (pad), "src_%u", &stream_id) != 1)
+    return;
+
+  PC_LOCK (webrtc);
+  channel = _find_data_channel_for_id (webrtc, stream_id);
+  if (!channel) {
+    channel = g_object_new (GST_TYPE_WEBRTC_DATA_CHANNEL, NULL);
+    channel->id = stream_id;
+    channel->webrtcbin = webrtc;
+
+    gst_bin_add (GST_BIN (webrtc), channel->appsrc);
+    gst_bin_add (GST_BIN (webrtc), channel->appsink);
+
+    gst_element_sync_state_with_parent (channel->appsrc);
+    gst_element_sync_state_with_parent (channel->appsink);
+
+    _link_data_channel_to_sctp (webrtc, channel);
+
+    g_array_append_val (webrtc->priv->pending_data_channels, channel);
+  }
+
+  g_signal_connect (channel, "notify::ready-state",
+      G_CALLBACK (_on_data_channel_ready_state), webrtc);
+
+  sink_pad = gst_element_get_static_pad (channel->appsink, "sink");
+  if (gst_pad_link (pad, sink_pad) != GST_PAD_LINK_OK)
+    GST_WARNING_OBJECT (channel, "Failed to link sctp pad %s with channel %"
+        GST_PTR_FORMAT, GST_PAD_NAME (pad), channel);
+  gst_object_unref (sink_pad);
+  PC_UNLOCK (webrtc);
+}
+
+static void
+_on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
+    GstWebRTCBin * webrtc)
+{
+  GstWebRTCSCTPTransportState state;
+
+  g_object_get (sctp, "state", &state, NULL);
+
+  if (state == GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED) {
+    int i;
+
+    PC_LOCK (webrtc);
+    GST_DEBUG_OBJECT (webrtc, "SCTP association established");
+
+    for (i = 0; i < webrtc->priv->data_channels->len; i++) {
+      GstWebRTCDataChannel *channel;
+
+      channel =
+          g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
+          i);
+
+      _link_data_channel_to_sctp (webrtc, channel);
+
+      if (!channel->negotiated && !channel->opened)
+        gst_webrtc_data_channel_start_negotiation (channel);
+    }
+    PC_UNLOCK (webrtc);
+  }
+}
+
+static TransportStream *
+_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
+{
+  if (!webrtc->priv->data_channel_transport) {
+    TransportStream *stream = _create_transport_channel (webrtc, session_id);
+    GstWebRTCSCTPTransport *sctp_transport;
+    int i;
+
+    webrtc->priv->data_channel_transport = stream;
+
+    g_object_set (stream, "rtcp-mux", TRUE, NULL);
+
+    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->send_bin));
+    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->receive_bin));
+
+    if (!(sctp_transport = webrtc->priv->sctp_transport)) {
+      sctp_transport = gst_webrtc_sctp_transport_new ();
+      sctp_transport->transport =
+          g_object_ref (webrtc->priv->data_channel_transport->transport);
+      sctp_transport->webrtcbin = webrtc;
+
+      gst_bin_add (GST_BIN (webrtc), sctp_transport->sctpdec);
+      gst_bin_add (GST_BIN (webrtc), sctp_transport->sctpenc);
+    }
+
+    g_signal_connect (sctp_transport->sctpdec, "pad-added",
+        G_CALLBACK (_on_sctpdec_pad_added), webrtc);
+    g_signal_connect (sctp_transport, "notify::state",
+        G_CALLBACK (_on_sctp_state_notify), webrtc);
+
+    if (!gst_element_link_pads (GST_ELEMENT (stream->receive_bin), "data_src",
+            GST_ELEMENT (sctp_transport->sctpdec), "sink"))
+      g_warn_if_reached ();
+
+    if (!gst_element_link_pads (GST_ELEMENT (sctp_transport->sctpenc), "src",
+            GST_ELEMENT (stream->send_bin), "data_sink"))
+      g_warn_if_reached ();
+
+    for (i = 0; i < webrtc->priv->data_channels->len; i++) {
+      GstWebRTCDataChannel *channel;
+
+      channel =
+          g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
+          i);
+
+      _link_data_channel_to_sctp (webrtc, channel);
+    }
+
+    gst_element_sync_state_with_parent (GST_ELEMENT (stream->send_bin));
+    gst_element_sync_state_with_parent (GST_ELEMENT (stream->receive_bin));
+
+    if (!webrtc->priv->sctp_transport) {
+      gst_element_sync_state_with_parent (GST_ELEMENT
+          (sctp_transport->sctpdec));
+      gst_element_sync_state_with_parent (GST_ELEMENT
+          (sctp_transport->sctpenc));
+    }
+
+    g_array_append_val (webrtc->priv->transports, stream);
+
+    webrtc->priv->sctp_transport = sctp_transport;
+  }
+
+  return webrtc->priv->data_channel_transport;
+}
+
+static TransportStream *
+_create_transport_stream (GstWebRTCBin * webrtc, guint session_id,
+    gboolean is_datachannel)
+{
+  if (is_datachannel)
+    return _create_data_channel_transports (webrtc, session_id);
+  else
+    return _create_rtp_transport_channel (webrtc, session_id);
 }
 
 static guint
@@ -1797,7 +2107,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
       /* FIXME: bundle */
       item = _find_transport_for_session (webrtc, media_idx);
       if (!item)
-        item = _create_transport_channel (webrtc, media_idx);
+        item = _create_transport_stream (webrtc, media_idx, FALSE);
       webrtc_transceiver_set_transport (WEBRTC_TRANSCEIVER (trans), item);
     }
 
@@ -1871,6 +2181,58 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
       gst_sdp_message_add_media (ret, &media);
     else
       gst_sdp_media_uninit (&media);
+  }
+
+  /* add data channel support */
+  if (webrtc->priv->data_channels->len > 0) {
+    GstSDPMedia media = { 0, };
+    gchar *ufrag, *pwd, *sdp_mid;
+
+    gst_sdp_media_init (&media);
+    /* mandated by JSEP */
+    gst_sdp_media_add_attribute (&media, "setup", "actpass");
+
+    /* FIXME: only needed when restarting ICE */
+    _generate_ice_credentials (&ufrag, &pwd);
+    gst_sdp_media_add_attribute (&media, "ice-ufrag", ufrag);
+    gst_sdp_media_add_attribute (&media, "ice-pwd", pwd);
+    g_free (ufrag);
+    g_free (pwd);
+
+    gst_sdp_media_set_media (&media, "application");
+    gst_sdp_media_set_port_info (&media, 9, 0);
+    gst_sdp_media_set_proto (&media, "UDP/DTLS/SCTP");
+    gst_sdp_media_add_connection (&media, "IN", "IP4", "0.0.0.0", 0, 0);
+    gst_sdp_media_add_format (&media, "webrtc-datachannel");
+
+    sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (&media),
+        webrtc->priv->media_counter++);
+    gst_sdp_media_add_attribute (&media, "mid", sdp_mid);
+    g_free (sdp_mid);
+
+    /* FIXME: negotiate this properly */
+    gst_sdp_media_add_attribute (&media, "sctp-port", "5000");
+
+    _create_data_channel_transports (webrtc, webrtc->priv->transceivers->len);
+    {
+      gchar *cert, *fingerprint, *val;
+
+      g_object_get (webrtc->priv->sctp_transport->transport, "certificate",
+          &cert, NULL);
+
+      fingerprint =
+          _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
+      g_free (cert);
+      val =
+          g_strdup_printf ("%s %s",
+          _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
+      g_free (fingerprint);
+
+      gst_sdp_media_add_attribute (&media, "fingerprint", val);
+      g_free (val);
+    }
+
+    gst_sdp_message_add_media (ret, &media);
   }
 
   /* FIXME: pre-emptively setup receiving elements when needed */
@@ -2045,7 +2407,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
     gst_sdp_media_new (&media);
     gst_sdp_media_set_port_info (media, 9, 0);
-    gst_sdp_media_set_proto (media, "UDP/TLS/RTP/SAVPF");
     gst_sdp_media_add_connection (media, "IN", "IP4", "0.0.0.0", 0, 0);
 
     {
@@ -2060,6 +2421,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
     offer_media =
         (GstSDPMedia *) gst_sdp_message_get_media (pending_remote->sdp, i);
+
     for (j = 0; j < gst_sdp_media_attributes_len (offer_media); j++) {
       const GstSDPAttribute *attr =
           gst_sdp_media_get_attribute (offer_media, j);
@@ -2071,154 +2433,216 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
       }
     }
 
-    offer_caps = gst_caps_new_empty ();
-    for (j = 0; j < gst_sdp_media_formats_len (offer_media); j++) {
-      guint pt = atoi (gst_sdp_media_get_format (offer_media, j));
-      GstCaps *caps;
-
-      caps = gst_sdp_media_get_caps_from_media (offer_media, pt);
-
-      /* gst_sdp_media_get_caps_from_media() produces caps with name
-       * "application/x-unknown" which will fail intersection with
-       * "application/x-rtp" caps so mangle the returns caps to have the
-       * correct name here */
-      for (k = 0; k < gst_caps_get_size (caps); k++) {
-        GstStructure *s = gst_caps_get_structure (caps, k);
-        gst_structure_set_name (s, "application/x-rtp");
-      }
-
-      gst_caps_append (offer_caps, caps);
-    }
-
-    for (j = 0; j < webrtc->priv->transceivers->len; j++) {
-      GstCaps *trans_caps;
-
-      rtp_trans =
-          g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-          j);
-      trans_caps = _find_codec_preferences (webrtc, rtp_trans, GST_PAD_SINK, j);
-
-      GST_TRACE_OBJECT (webrtc, "trying to compare %" GST_PTR_FORMAT
-          " and %" GST_PTR_FORMAT, offer_caps, trans_caps);
-
-      /* FIXME: technically this is a little overreaching as some fields we
-       * we can deal with not having and/or we may have unrecognized fields
-       * that we cannot actually support */
-      if (trans_caps) {
-        answer_caps = gst_caps_intersect (offer_caps, trans_caps);
-        if (answer_caps && !gst_caps_is_empty (answer_caps)) {
-          GST_LOG_OBJECT (webrtc,
-              "found compatible transceiver %" GST_PTR_FORMAT
-              " for offer media %u", trans, i);
-          if (trans_caps)
-            gst_caps_unref (trans_caps);
-          break;
-        } else {
-          if (answer_caps) {
-            gst_caps_unref (answer_caps);
-            answer_caps = NULL;
-          }
-          if (trans_caps)
-            gst_caps_unref (trans_caps);
-          rtp_trans = NULL;
-        }
-      } else {
-        rtp_trans = NULL;
-      }
-    }
-
-    if (rtp_trans) {
-      answer_dir = rtp_trans->direction;
-      g_assert (answer_caps != NULL);
-    } else {
-      /* if no transceiver, then we only receive that stream and respond with
-       * the exact same caps */
-      /* FIXME: how to validate that subsequent elements can actually receive
-       * this payload/format */
-      answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
-      answer_caps = gst_caps_ref (offer_caps);
-    }
-
-    if (!rtp_trans) {
-      trans = _create_webrtc_transceiver (webrtc, answer_dir, i);
-      rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
-    } else {
-      trans = WEBRTC_TRANSCEIVER (rtp_trans);
-    }
-
-    if (!trans->do_nack) {
-      answer_caps = gst_caps_make_writable (answer_caps);
-      for (k = 0; k < gst_caps_get_size (answer_caps); k++) {
-        GstStructure *s = gst_caps_get_structure (answer_caps, k);
-        gst_structure_remove_fields (s, "rtcp-fb-nack", NULL);
-      }
-    }
-
-    gst_sdp_media_set_media_from_caps (answer_caps, media);
-
-    _get_rtx_target_pt_and_ssrc_from_caps (answer_caps, &target_pt,
-        &target_ssrc);
-
-    original_target_pt = target_pt;
-
-    _media_add_fec (media, trans, offer_caps, &target_pt);
-    if (trans->do_nack) {
-      _media_add_rtx (media, trans, offer_caps, target_pt, target_ssrc);
-      if (target_pt != original_target_pt)
-        _media_add_rtx (media, trans, offer_caps, original_target_pt,
-            target_ssrc);
-    }
-
-    if (answer_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY)
-      _media_add_ssrcs (media, answer_caps, webrtc,
-          WEBRTC_TRANSCEIVER (rtp_trans));
-
-    gst_caps_unref (answer_caps);
-    answer_caps = NULL;
-
-    /* set the new media direction */
-    offer_dir = _get_direction_from_media (offer_media);
-    answer_dir = _intersect_answer_directions (offer_dir, answer_dir);
-    if (answer_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE) {
-      GST_WARNING_OBJECT (webrtc, "Could not intersect offer direction with "
-          "transceiver direction");
-      goto rejected;
-    }
-    _media_replace_direction (media, answer_dir);
-
     /* set the a=setup: attribute */
     offer_setup = _get_dtls_setup_from_media (offer_media);
     answer_setup = _intersect_dtls_setup (offer_setup);
     if (answer_setup == GST_WEBRTC_DTLS_SETUP_NONE) {
-      GST_WARNING_OBJECT (webrtc, "Could not intersect offer direction with "
+      GST_WARNING_OBJECT (webrtc, "Could not intersect offer setup with "
           "transceiver direction");
       goto rejected;
     }
     _media_replace_setup (media, answer_setup);
 
-    /* FIXME: bundle! */
-    if (!trans->stream) {
-      TransportStream *item = _find_transport_for_session (webrtc, i);
-      if (!item)
-        item = _create_transport_channel (webrtc, i);
-      webrtc_transceiver_set_transport (trans, item);
-    }
-    /* set the a=fingerprint: for this transport */
-    g_object_get (trans->stream->transport, "certificate", &cert, NULL);
+    if (g_strcmp0 (gst_sdp_media_get_media (offer_media), "application") == 0) {
+      int sctp_port;
 
-    {
-      gchar *fingerprint, *val;
+      if (gst_sdp_media_formats_len (offer_media) != 1) {
+        GST_WARNING_OBJECT (webrtc, "Could not find a format in the m= line "
+            "for webrtc-datachannel");
+        goto rejected;
+      }
+      if (g_strcmp0 (gst_sdp_media_get_format (offer_media, 0),
+              "webrtc-datachannel") != 0) {
+        GST_WARNING_OBJECT (webrtc,
+            "format field of data channel m= line "
+            "is not \'webrtc-datachannel\'");
+        goto rejected;
+      }
+      sctp_port = _get_sctp_port_from_media (offer_media);
+      if (sctp_port == -1) {
+        GST_WARNING_OBJECT (webrtc, "media does not contain a sctp port");
+        goto rejected;
+      }
 
-      fingerprint =
-          _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
-      g_free (cert);
-      val =
-          g_strdup_printf ("%s %s",
-          _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
-      g_free (fingerprint);
+      /* XXX: older browsers will produce a different SDP format for data
+       * channel that is currently not parsed correctly */
+      gst_sdp_media_set_proto (media, "UDP/DTLS/SCTP");
 
-      gst_sdp_media_add_attribute (media, "fingerprint", val);
-      g_free (val);
+      gst_sdp_media_set_media (media, "application");
+      gst_sdp_media_set_port_info (media, 9, 0);
+      gst_sdp_media_add_format (media, "webrtc-datachannel");
+
+      /* FIXME: negotiate this properly on renegotiation */
+      gst_sdp_media_add_attribute (media, "sctp-port", "5000");
+
+      _create_data_channel_transports (webrtc, i);
+
+      {
+        gchar *cert, *fingerprint, *val;
+
+        g_object_get (webrtc->priv->sctp_transport->transport, "certificate",
+            &cert, NULL);
+
+        fingerprint =
+            _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
+        g_free (cert);
+        val =
+            g_strdup_printf ("%s %s",
+            _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
+        g_free (fingerprint);
+
+        gst_sdp_media_add_attribute (media, "fingerprint", val);
+        g_free (val);
+      }
+    } else if (g_strcmp0 (gst_sdp_media_get_media (offer_media), "audio") == 0
+        || g_strcmp0 (gst_sdp_media_get_media (offer_media), "video") == 0) {
+      gst_sdp_media_set_proto (media, "UDP/TLS/RTP/SAVPF");
+
+      offer_caps = gst_caps_new_empty ();
+      for (j = 0; j < gst_sdp_media_formats_len (offer_media); j++) {
+        guint pt = atoi (gst_sdp_media_get_format (offer_media, j));
+        GstCaps *caps;
+
+        caps = gst_sdp_media_get_caps_from_media (offer_media, pt);
+
+        /* gst_sdp_media_get_caps_from_media() produces caps with name
+         * "application/x-unknown" which will fail intersection with
+         * "application/x-rtp" caps so mangle the returns caps to have the
+         * correct name here */
+        for (k = 0; k < gst_caps_get_size (caps); k++) {
+          GstStructure *s = gst_caps_get_structure (caps, k);
+          gst_structure_set_name (s, "application/x-rtp");
+        }
+
+        gst_caps_append (offer_caps, caps);
+      }
+
+      for (j = 0; j < webrtc->priv->transceivers->len; j++) {
+        GstCaps *trans_caps;
+
+        rtp_trans =
+            g_array_index (webrtc->priv->transceivers,
+            GstWebRTCRTPTransceiver *, j);
+        trans_caps =
+            _find_codec_preferences (webrtc, rtp_trans, GST_PAD_SINK, j);
+
+        GST_TRACE_OBJECT (webrtc, "trying to compare %" GST_PTR_FORMAT
+            " and %" GST_PTR_FORMAT, offer_caps, trans_caps);
+
+        /* FIXME: technically this is a little overreaching as some fields we
+         * we can deal with not having and/or we may have unrecognized fields
+         * that we cannot actually support */
+        if (trans_caps) {
+          answer_caps = gst_caps_intersect (offer_caps, trans_caps);
+          if (answer_caps && !gst_caps_is_empty (answer_caps)) {
+            GST_LOG_OBJECT (webrtc,
+                "found compatible transceiver %" GST_PTR_FORMAT
+                " for offer media %u", trans, i);
+            if (trans_caps)
+              gst_caps_unref (trans_caps);
+            break;
+          } else {
+            if (answer_caps) {
+              gst_caps_unref (answer_caps);
+              answer_caps = NULL;
+            }
+            if (trans_caps)
+              gst_caps_unref (trans_caps);
+            rtp_trans = NULL;
+          }
+        } else {
+          rtp_trans = NULL;
+        }
+      }
+
+      if (rtp_trans) {
+        answer_dir = rtp_trans->direction;
+        g_assert (answer_caps != NULL);
+      } else {
+        /* if no transceiver, then we only receive that stream and respond with
+         * the exact same caps */
+        /* FIXME: how to validate that subsequent elements can actually receive
+         * this payload/format */
+        answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+        answer_caps = gst_caps_ref (offer_caps);
+      }
+
+      if (!rtp_trans) {
+        trans = _create_webrtc_transceiver (webrtc, answer_dir, i);
+        rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
+      } else {
+        trans = WEBRTC_TRANSCEIVER (rtp_trans);
+      }
+
+      if (!trans->do_nack) {
+        answer_caps = gst_caps_make_writable (answer_caps);
+        for (k = 0; k < gst_caps_get_size (answer_caps); k++) {
+          GstStructure *s = gst_caps_get_structure (answer_caps, k);
+          gst_structure_remove_fields (s, "rtcp-fb-nack", NULL);
+        }
+      }
+
+      gst_sdp_media_set_media_from_caps (answer_caps, media);
+
+      _get_rtx_target_pt_and_ssrc_from_caps (answer_caps, &target_pt,
+          &target_ssrc);
+
+      original_target_pt = target_pt;
+
+      _media_add_fec (media, trans, offer_caps, &target_pt);
+      if (trans->do_nack) {
+        _media_add_rtx (media, trans, offer_caps, target_pt, target_ssrc);
+        if (target_pt != original_target_pt)
+          _media_add_rtx (media, trans, offer_caps, original_target_pt,
+              target_ssrc);
+      }
+
+      if (answer_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY)
+        _media_add_ssrcs (media, answer_caps, webrtc,
+            WEBRTC_TRANSCEIVER (rtp_trans));
+
+      gst_caps_unref (answer_caps);
+      answer_caps = NULL;
+
+      /* set the new media direction */
+      offer_dir = _get_direction_from_media (offer_media);
+      answer_dir = _intersect_answer_directions (offer_dir, answer_dir);
+      if (answer_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE) {
+        GST_WARNING_OBJECT (webrtc, "Could not intersect offer direction with "
+            "transceiver direction");
+        goto rejected;
+      }
+      _media_replace_direction (media, answer_dir);
+
+      /* FIXME: bundle! */
+      if (!trans->stream) {
+        TransportStream *item = _find_transport_for_session (webrtc, i);
+        if (!item)
+          item = _create_transport_stream (webrtc, i, FALSE);
+        webrtc_transceiver_set_transport (trans, item);
+      }
+      /* set the a=fingerprint: for this transport */
+      g_object_get (trans->stream->transport, "certificate", &cert, NULL);
+
+      {
+        gchar *fingerprint, *val;
+
+        fingerprint =
+            _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
+        g_free (cert);
+        val =
+            g_strdup_printf ("%s %s",
+            _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
+        g_free (fingerprint);
+
+        gst_sdp_media_add_attribute (media, "fingerprint", val);
+        g_free (val);
+      }
+
+      gst_caps_unref (offer_caps);
+    } else {
+      GST_WARNING_OBJECT (webrtc, "unknown m= line media name");
+      goto rejected;
     }
 
     if (0) {
@@ -2230,8 +2654,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     }
     gst_sdp_message_add_media (ret, media);
     gst_sdp_media_free (media);
-
-    gst_caps_unref (offer_caps);
   }
 
   /* FIXME: can we add not matched transceivers? */
@@ -2410,7 +2832,7 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
     /* FIXME: bundle */
     item = _find_transport_for_session (webrtc, pad->mlineindex);
     if (!item)
-      item = _create_transport_channel (webrtc, pad->mlineindex);
+      item = _create_transport_stream (webrtc, pad->mlineindex, FALSE);
     webrtc_transceiver_set_transport (trans, item);
   }
 
@@ -2454,7 +2876,7 @@ _connect_output_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
     /* FIXME: bundle */
     item = _find_transport_for_session (webrtc, pad->mlineindex);
     if (!item)
-      item = _create_transport_channel (webrtc, pad->mlineindex);
+      item = _create_transport_stream (webrtc, pad->mlineindex, FALSE);
     webrtc_transceiver_set_transport (trans, item);
   }
 
@@ -2512,10 +2934,9 @@ _filter_sdp_fields (GQuark field_id, const GValue * value,
 static void
 _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     const GstSDPMessage * sdp, guint media_idx,
-    GstWebRTCRTPTransceiver * rtp_trans)
+    TransportStream * stream, GstWebRTCRTPTransceiver * rtp_trans)
 {
   WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
-  TransportStream *stream = trans->stream;
   GstWebRTCRTPTransceiverDirection prev_dir = rtp_trans->current_direction;
   GstWebRTCRTPTransceiverDirection new_dir;
   const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
@@ -2532,14 +2953,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
       g_free (rtp_trans->mid);
       rtp_trans->mid = g_strdup (attr->value);
     }
-  }
-
-  if (!stream) {
-    /* FIXME: find an existing transport for e.g. bundle/reconfiguration */
-    stream = _find_transport_for_session (webrtc, media_idx);
-    if (!stream)
-      stream = _create_transport_channel (webrtc, media_idx);
-    webrtc_transceiver_set_transport (trans, stream);
   }
 
   {
@@ -2725,6 +3138,121 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   }
 }
 
+/* must be called with the pc lock held */
+static gint
+_generate_data_channel_id (GstWebRTCBin * webrtc)
+{
+  gboolean is_client;
+  gint new_id = -1, max_channels = 0;
+
+  if (webrtc->priv->sctp_transport) {
+    g_object_get (webrtc->priv->sctp_transport, "max-channels", &max_channels,
+        NULL);
+  }
+  if (max_channels <= 0) {
+    max_channels = 65534;
+  }
+
+  g_object_get (webrtc->priv->sctp_transport->transport, "client", &is_client,
+      NULL);
+
+  /* TODO: a better search algorithm */
+  do {
+    GstWebRTCDataChannel *channel;
+
+    new_id++;
+
+    if (new_id < 0 || new_id >= max_channels) {
+      /* exhausted id space */
+      GST_WARNING_OBJECT (webrtc, "Could not find a suitable "
+          "data channel id (max %i)", max_channels);
+      return -1;
+    }
+
+    /* client must generate even ids, server must generate odd ids */
+    if (new_id % 2 == ! !is_client)
+      continue;
+
+    channel = _find_data_channel_for_id (webrtc, new_id);
+    if (!channel)
+      break;
+  } while (TRUE);
+
+  return new_id;
+}
+
+static void
+_update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
+    const GstSDPMessage * sdp, guint media_idx, TransportStream * stream)
+{
+  const GstSDPMedia *local_media, *remote_media;
+  GstWebRTCDTLSSetup local_setup, remote_setup, new_setup;
+  TransportReceiveBin *receive;
+  int local_port, remote_port;
+  guint64 local_max_size, remote_max_size, max_size;
+  int i;
+
+  local_media =
+      gst_sdp_message_get_media (webrtc->current_local_description->sdp,
+      media_idx);
+  remote_media =
+      gst_sdp_message_get_media (webrtc->current_remote_description->sdp,
+      media_idx);
+
+  local_setup = _get_dtls_setup_from_media (local_media);
+  remote_setup = _get_dtls_setup_from_media (remote_media);
+  new_setup = _get_final_setup (local_setup, remote_setup);
+  if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE)
+    return;
+
+  /* data channel is always rtcp-muxed to avoid generating ICE candidates
+   * for RTCP */
+  g_object_set (stream, "rtcp-mux", TRUE, "dtls-client",
+      new_setup == GST_WEBRTC_DTLS_SETUP_ACTIVE, NULL);
+
+  local_port = _get_sctp_port_from_media (local_media);
+  remote_port = _get_sctp_port_from_media (local_media);
+  if (local_port == -1 || remote_port == -1)
+    return;
+
+  if (0 == (local_max_size =
+          _get_sctp_max_message_size_from_media (local_media)))
+    local_max_size = G_MAXUINT64;
+  if (0 == (remote_max_size =
+          _get_sctp_max_message_size_from_media (remote_media)))
+    remote_max_size = G_MAXUINT64;
+  max_size = MIN (local_max_size, remote_max_size);
+
+  webrtc->priv->sctp_transport->max_message_size = max_size;
+
+  g_object_set (webrtc->priv->sctp_transport->sctpdec, "local-sctp-port",
+      local_port, NULL);
+  g_object_set (webrtc->priv->sctp_transport->sctpenc, "remote-sctp-port",
+      remote_port, NULL);
+
+  for (i = 0; i < webrtc->priv->data_channels->len; i++) {
+    GstWebRTCDataChannel *channel;
+
+    channel =
+        g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *, i);
+
+    if (channel->id == -1)
+      channel->id = _generate_data_channel_id (webrtc);
+    if (channel->id == -1)
+      GST_ELEMENT_WARNING (webrtc, RESOURCE, NOT_FOUND,
+          ("%s", "Failed to generate an identifier for a data channel"), NULL);
+
+    if (webrtc->priv->sctp_transport->association_established
+        && !channel->negotiated && !channel->opened) {
+      _link_data_channel_to_sctp (webrtc, channel);
+      gst_webrtc_data_channel_start_negotiation (channel);
+    }
+  }
+
+  receive = TRANSPORT_RECEIVE_BIN (stream->receive_bin);
+  transport_receive_bin_set_receive_state (receive, RECEIVE_STATE_PASS);
+}
+
 static gboolean
 _find_compatible_unassociated_transceiver (GstWebRTCRTPTransceiver * p1,
     gconstpointer data)
@@ -2745,6 +3273,7 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
+    TransportStream *stream;
     GstWebRTCRTPTransceiver *trans;
 
     /* skip rejected media */
@@ -2753,24 +3282,41 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
     trans = _find_transceiver_for_sdp_media (webrtc, sdp->sdp, i);
 
+    stream = _find_transport_for_session (webrtc, i);
+    if (!stream) {
+      stream = _create_transport_stream (webrtc, i,
+          _message_media_is_datachannel (sdp->sdp, i));
+      if (trans)
+        webrtc_transceiver_set_transport ((WebRTCTransceiver *) trans, stream);
+    }
+
     if (source == SDP_LOCAL && sdp->type == GST_WEBRTC_SDP_TYPE_OFFER && !trans) {
       GST_ERROR ("State mismatch.  Could not find local transceiver by mline.");
       return FALSE;
     } else {
-      if (trans) {
-        _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, trans);
+      if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0 ||
+          g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+        if (trans) {
+          _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
+              trans);
+        } else {
+          trans = _find_transceiver (webrtc, NULL,
+              (FindTransceiverFunc) _find_compatible_unassociated_transceiver);
+          /* XXX: default to the advertised direction in the sdp for new
+           * transceviers.  The spec doesn't actually say what happens here, only
+           * that calls to setDirection will change the value.  Nothing about
+           * a default value when the transceiver is created internally */
+          if (!trans)
+            trans =
+                GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
+                    _get_direction_from_media (media), i));
+          _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
+              trans);
+        }
+      } else if (_message_media_is_datachannel (sdp->sdp, i)) {
+        _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream);
       } else {
-        trans = _find_transceiver (webrtc, NULL,
-            (FindTransceiverFunc) _find_compatible_unassociated_transceiver);
-        /* XXX: default to the advertised direction in the sdp for new
-         * transceviers.  The spec doesn't actually say what happens here, only
-         * that calls to setDirection will change the value.  Nothing about
-         * a default value when the transceiver is created internally */
-        if (!trans)
-          trans =
-              GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
-                  _get_direction_from_media (media), i));
-        _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, trans);
+        GST_ERROR_OBJECT (webrtc, "Unknown media type in SDP at index %u", i);
       }
     }
   }
@@ -2982,8 +3528,6 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     g_free (to);
   }
 
-  /* TODO: necessary data channel modifications */
-
   if (sd->sdp->type == GST_WEBRTC_SDP_TYPE_ROLLBACK) {
     /* FIXME:
      * If the mid value of an RTCRtpTransceiver was set to a non-null value 
@@ -3001,8 +3545,8 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   }
 
   if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
-    GList *tmp;
     gboolean prev_need_negotiation = webrtc->priv->need_negotiation;
+    GList *tmp;
 
     /* media modifications */
     _update_transceivers_from_sdp (webrtc, sd->source, sd->sdp);
@@ -3040,7 +3584,9 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
       /* FIXME: bundle */
       item = _find_transport_for_session (webrtc, i);
       if (!item)
-        item = _create_transport_channel (webrtc, i);
+        item =
+            _create_transport_stream (webrtc, i,
+            _message_media_is_datachannel (sd->sdp->sdp, i));
 
       _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
       gst_webrtc_ice_set_local_credentials (webrtc->priv->ice,
@@ -3060,7 +3606,9 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
       /* FIXME: bundle */
       item = _find_transport_for_session (webrtc, i);
       if (!item)
-        item = _create_transport_channel (webrtc, i);
+        item =
+            _create_transport_stream (webrtc, i,
+            _message_media_is_datachannel (sd->sdp->sdp, i));
 
       _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
       gst_webrtc_ice_set_remote_credentials (webrtc->priv->ice,
@@ -3372,6 +3920,130 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   gst_pad_store_sticky_event (gpad, *event);
 
   return TRUE;
+}
+
+static GstWebRTCDataChannel *
+gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
+    GstStructure * init_params)
+{
+  gboolean ordered;
+  gint max_packet_lifetime;
+  gint max_retransmits;
+  const gchar *protocol;
+  gboolean negotiated;
+  gint id;
+  GstWebRTCPriorityType priority;
+  GstWebRTCDataChannel *ret;
+  gint max_channels = 65534;
+
+  g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), NULL);
+  g_return_val_if_fail (label != NULL, NULL);
+  g_return_val_if_fail (strlen (label) <= 65535, NULL);
+  g_return_val_if_fail (webrtc->priv->is_closed != TRUE, NULL);
+
+  if (!init_params
+      || !gst_structure_get_boolean (init_params, "ordered", &ordered))
+    ordered = TRUE;
+  if (!init_params
+      || !gst_structure_get_int (init_params, "max-packet-lifetime",
+          &max_packet_lifetime))
+    max_packet_lifetime = -1;
+  if (!init_params
+      || !gst_structure_get_boolean (init_params, "max-retransmits",
+          &max_retransmits))
+    max_retransmits = -1;
+  /* both retransmits and lifetime cannot be set */
+  g_return_val_if_fail ((max_packet_lifetime == -1)
+      || (max_retransmits == -1), NULL);
+
+  if (!init_params
+      || !(protocol = gst_structure_get_string (init_params, "protocol")))
+    protocol = "";
+  g_return_val_if_fail (strlen (protocol) <= 65535, NULL);
+
+  if (!init_params
+      || !gst_structure_get_boolean (init_params, "negotiated", &negotiated))
+    negotiated = FALSE;
+  if (!negotiated || !init_params
+      || !gst_structure_get_int (init_params, "id", &id))
+    id = -1;
+  if (negotiated)
+    g_return_val_if_fail (id != -1, NULL);
+  g_return_val_if_fail (id < 65535, NULL);
+
+  if (!init_params
+      || !gst_structure_get_enum (init_params, "priority",
+          GST_TYPE_WEBRTC_PRIORITY_TYPE, (gint *) & priority))
+    priority = GST_WEBRTC_PRIORITY_TYPE_LOW;
+
+  /* FIXME: clamp max-retransmits and max-packet-lifetime */
+
+  if (webrtc->priv->sctp_transport) {
+    /* Let transport be the connection's [[SctpTransport]] slot.
+     *
+     * If the [[DataChannelId]] slot is not null, transport is in 
+     * connected state and [[DataChannelId]] is greater or equal to the
+     * transport's [[MaxChannels]] slot, throw an OperationError.
+     */
+    g_object_get (webrtc->priv->sctp_transport, "max-channels", &max_channels,
+        NULL);
+
+    g_return_val_if_fail (id <= max_channels, NULL);
+  }
+
+  if (!_have_nice_elements (webrtc) || !_have_dtls_elements (webrtc) ||
+      !_have_sctp_elements (webrtc))
+    return NULL;
+
+  PC_LOCK (webrtc);
+  /* check if the id has been used already */
+  if (id != -1) {
+    GstWebRTCDataChannel *channel = _find_data_channel_for_id (webrtc, id);
+    if (channel) {
+      GST_ELEMENT_WARNING (webrtc, LIBRARY, SETTINGS,
+          ("Attempting to add a data channel with a duplicate ID: %i", id),
+          NULL);
+      PC_UNLOCK (webrtc);
+      return NULL;
+    }
+  } else if (webrtc->current_local_description
+      && webrtc->current_remote_description && webrtc->priv->sctp_transport
+      && webrtc->priv->sctp_transport->transport) {
+    /* else we can only generate an id if we're configured already.  The other
+     * case for generating an id is on sdp setting */
+    id = _generate_data_channel_id (webrtc);
+    if (id == -1) {
+      GST_ELEMENT_WARNING (webrtc, RESOURCE, NOT_FOUND,
+          ("%s", "Failed to generate an identifier for a data channel"), NULL);
+      PC_UNLOCK (webrtc);
+      return NULL;
+    }
+  }
+
+  ret = g_object_new (GST_TYPE_WEBRTC_DATA_CHANNEL, "label", label,
+      "ordered", ordered, "max-packet-lifetime", max_packet_lifetime,
+      "max-retransmits", max_retransmits, "protocol", protocol,
+      "negotiated", negotiated, "id", id, "priority", priority, NULL);
+
+  if (ret) {
+    gst_bin_add (GST_BIN (webrtc), ret->appsrc);
+    gst_bin_add (GST_BIN (webrtc), ret->appsink);
+
+    gst_element_sync_state_with_parent (ret->appsrc);
+    gst_element_sync_state_with_parent (ret->appsink);
+
+    ret = gst_object_ref (ret);
+    ret->webrtcbin = webrtc;
+    g_array_append_val (webrtc->priv->data_channels, ret);
+    _link_data_channel_to_sctp (webrtc, ret);
+    if (webrtc->priv->sctp_transport &&
+        webrtc->priv->sctp_transport->association_established
+        && !ret->negotiated)
+      gst_webrtc_data_channel_start_negotiation (ret);
+  }
+
+  PC_UNLOCK (webrtc);
+  return ret;
 }
 
 /* === rtpbin signal implementations === */
@@ -4001,6 +4673,8 @@ gst_webrtc_bin_dispose (GObject * object)
     g_array_free (webrtc->priv->ice_stream_map, TRUE);
   webrtc->priv->ice_stream_map = NULL;
 
+  g_clear_object (&webrtc->priv->sctp_transport);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -4016,6 +4690,14 @@ gst_webrtc_bin_finalize (GObject * object)
   if (webrtc->priv->transceivers)
     g_array_free (webrtc->priv->transceivers, TRUE);
   webrtc->priv->transceivers = NULL;
+
+  if (webrtc->priv->data_channels)
+    g_array_free (webrtc->priv->data_channels, TRUE);
+  webrtc->priv->data_channels = NULL;
+
+  if (webrtc->priv->pending_data_channels)
+    g_array_free (webrtc->priv->pending_data_channels, TRUE);
+  webrtc->priv->pending_data_channels = NULL;
 
   if (webrtc->priv->pending_ice_candidates)
     g_array_free (webrtc->priv->pending_ice_candidates, TRUE);
@@ -4313,6 +4995,16 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_TYPE_NONE, 1, GST_TYPE_WEBRTC_RTP_TRANSCEIVER);
 
   /**
+   * GstWebRTCBin::on-data-channel:
+   * @object: the #GstWebRtcBin
+   * @candidate: the new #GstWebRTCDataChannel
+   */
+  gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL] =
+      g_signal_new ("on-data-channel", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 1, GST_TYPE_WEBRTC_DATA_CHANNEL);
+
+  /**
    * GstWebRTCBin::add-transceiver:
    * @object: the #GstWebRtcBin
    * @direction: the direction of the new transceiver
@@ -4351,6 +5043,33 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_add_turn_server), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
+
+  /*
+   * GstWebRTCBin::create-data-channel:
+   * @object: the #GstWebRtcBin
+   * @label: the label for the data channel
+   * @options: a #GstStructure of options for creating the data channel
+   *
+   * The options dictionary is the same format as the RTCDataChannelInit
+   * members outlined https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit and
+   * and reproduced below
+   *
+   *  ordered               G_TYPE_BOOLEAN        Whether the channal will send data with guarenteed ordering
+   *  max-packet-lifetime   G_TYPE_INT            The time in milliseconds to attempt transmitting unacknowledged data. -1 for unset
+   *  max-retransmits       G_TYPE_INT            The number of times data will be attempted to be transmitted without acknowledgement before dropping
+   *  protocol              G_TYPE_STRING         The subprotocol used by this channel
+   *  negotiated            G_TYPE_BOOLEAN        Whether the created data channel should not perform in-band chnanel announcment.  If %TRUE, then application must negotiate the channel itself and create the corresponding channel on the peer with the same id.
+   *  id                    G_TYPE_INT            Override the default identifier selection of this channel
+   *  priority              GST_TYPE_WEBRTC_PRIORITY_TYPE   The priority to use for this channel
+   *
+   * Returns: a new data channel object
+   */
+  gst_webrtc_bin_signals[CREATE_DATA_CHANNEL_SIGNAL] =
+      g_signal_new_class_handler ("create-data-channel",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_webrtc_bin_create_data_channel), NULL, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_WEBRTC_DATA_CHANNEL, 2,
+      G_TYPE_STRING, GST_TYPE_STRUCTURE);
 }
 
 static void
@@ -4403,6 +5122,15 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   webrtc->priv->transports = g_array_new (FALSE, TRUE, sizeof (gpointer));
   g_array_set_clear_func (webrtc->priv->transports,
       (GDestroyNotify) _transport_free);
+
+  webrtc->priv->data_channels = g_array_new (FALSE, TRUE, sizeof (gpointer));
+  g_array_set_clear_func (webrtc->priv->data_channels,
+      (GDestroyNotify) _deref_and_unref);
+
+  webrtc->priv->pending_data_channels =
+      g_array_new (FALSE, TRUE, sizeof (gpointer));
+  g_array_set_clear_func (webrtc->priv->pending_data_channels,
+      (GDestroyNotify) _deref_and_unref);
 
   webrtc->priv->session_mid_map =
       g_array_new (FALSE, TRUE, sizeof (SessionMidItem));

@@ -4,6 +4,7 @@ webrtc_sources = [
   'gstwebrtcstats.c',
   'icestream.c',
   'nicetransport.c',
+  'sctptransport.c',
   'gstwebrtcbin.c',
   'transportreceivebin.c',
   'transportsendbin.c',
@@ -11,6 +12,7 @@ webrtc_sources = [
   'utils.c',
   'webrtcsdp.c',
   'webrtctransceiver.c',
+  'webrtcdatachannel.c',
 ]
 
 libnice_dep = dependency('nice', version : '>=0.1.14', required : get_option('webrtc'),
@@ -22,7 +24,7 @@ if libnice_dep.found()
     webrtc_sources,
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
     include_directories : [configinc],
-    dependencies : [libnice_dep, gstbase_dep, gstsdp_dep, gstwebrtc_dep],
+    dependencies : [libnice_dep, gstbase_dep, gstsdp_dep, gstapp_dep, gstwebrtc_dep, gstsctp_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

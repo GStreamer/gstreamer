@@ -264,4 +264,57 @@ typedef enum /*< underscore_name=gst_webrtc_fec_type >*/
   GST_WEBRTC_FEC_TYPE_ULP_RED,
 } GstWebRTCFECType;
 
+/**
+ * GstWebRTCSCTPTransportState:
+ * GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW: new
+ * GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING: connecting
+ * GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED: connected
+ * GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED: closed
+ *
+ * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate">http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate</ulink>
+ */
+typedef enum /*< underscore_name=gst_webrtc_sctp_transport_state >*/
+{
+  GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW,
+  GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING,
+  GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED,
+  GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED,
+} GstWebRTCSCTPTransportState;
+
+/**
+ * GstWebRTCPriorityType:
+ * GST_WEBRTC_PRIORITY_TYPE_VERY_LOW: very-low
+ * GST_WEBRTC_PRIORITY_TYPE_LOW: low
+ * GST_WEBRTC_PRIORITY_TYPE_MEDIUM: medium
+ * GST_WEBRTC_PRIORITY_TYPE_HIGH: high
+ *
+ * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype">http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype</ulink>
+ */
+typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
+{
+  GST_WEBRTC_PRIORITY_TYPE_VERY_LOW = 1,
+  GST_WEBRTC_PRIORITY_TYPE_LOW,
+  GST_WEBRTC_PRIORITY_TYPE_MEDIUM,
+  GST_WEBRTC_PRIORITY_TYPE_HIGH,
+} GstWebRTCPriorityType;
+
+/**
+ * GstWebRTCDataChannelState:
+ * GST_WEBRTC_DATA_CHANNEL_STATE_NEW: new
+ * GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING: connection
+ * GST_WEBRTC_DATA_CHANNEL_STATE_OPEN: open
+ * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING: closing
+ * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
+ *
+ * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate">http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate</ulink>
+ */
+typedef enum /*< underscore_name=gst_webrtc_data_channel_state >*/
+{
+  GST_WEBRTC_DATA_CHANNEL_STATE_NEW,
+  GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING,
+  GST_WEBRTC_DATA_CHANNEL_STATE_OPEN,
+  GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING,
+  GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED,
+} GstWebRTCDataChannelState;
+
 #endif /* __GST_WEBRTC_FWD_H__ */

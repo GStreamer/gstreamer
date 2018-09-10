@@ -714,3 +714,38 @@ _generate_ice_credentials (gchar ** ufrag, gchar ** password)
         ice_credential_chars[g_random_int_range (0,
             strlen (ice_credential_chars))];
 }
+
+int
+_get_sctp_port_from_media (const GstSDPMedia * media)
+{
+  int sctpmap = -1, i;
+
+  for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+
+    if (g_strcmp0 (attr->key, "sctp-port") == 0) {
+      return atoi (attr->value);
+    } else if (g_strcmp0 (attr->key, "sctpmap") == 0) {
+      sctpmap = atoi (attr->value);
+    }
+  }
+
+  if (sctpmap >= 0)
+    GST_LOG ("no sctp-port attribute in media");
+  return sctpmap;
+}
+
+guint64
+_get_sctp_max_message_size_from_media (const GstSDPMedia * media)
+{
+  int i;
+
+  for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+
+    if (g_strcmp0 (attr->key, "max-message-size") == 0)
+      return atoi (attr->value);
+  }
+
+  return 65536;
+}
