@@ -44,7 +44,6 @@ struct _GstWasapiSink
   IAudioClient *client;
   IAudioRenderClient *render_client;
   HANDLE event_handle;
-  HANDLE thread_priority_handle;
   /* Client was reset, so it needs to be started again */
   gboolean client_needs_restart;
 

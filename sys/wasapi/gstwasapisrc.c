@@ -496,9 +496,6 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
       (self)->ringbuffer, self->positions);
 
-  /* Increase the thread priority to reduce glitches */
-  self->thread_priority_handle = gst_wasapi_util_set_thread_characteristics ();
-
   res = TRUE;
 beach:
   /* unprepare() is not called if prepare() fails, but we want it to be, so call
@@ -515,12 +512,6 @@ gst_wasapi_src_unprepare (GstAudioSrc * asrc)
   GstWasapiSrc *self = GST_WASAPI_SRC (asrc);
 
   CoUninitialize ();
-
-  if (self->thread_priority_handle != NULL) {
-    gst_wasapi_util_revert_thread_characteristics
-        (self->thread_priority_handle);
-    self->thread_priority_handle = NULL;
-  }
 
   if (self->client != NULL) {
     IAudioClient_Stop (self->client);
