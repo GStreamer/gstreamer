@@ -17,7 +17,7 @@ vorbisidec_sources = [
 
 vorbis_dep = dependency('vorbis', version : '>=1.0', required : get_option('vorbis'))
 vorbisenc_dep = dependency('vorbisenc', version : '>=1.0', required : get_option('vorbis'))
-vorbisidec_dep = dependency('vorbisidec', required : get_option('vorbis'))
+vorbisidec_dep = dependency('vorbisidec', required : get_option('tremor'))
 
 if vorbis_dep.found() or vorbisidec_dep.found()
   if cc.has_header_symbol('vorbis/codec.h', 'vorbis_synthesis_restart')
@@ -43,6 +43,8 @@ if vorbis_dep.found()
 endif
 
 if vorbisidec_dep.found()
+  # NOTE: This plugin is only useful if your device does not support hardware
+  # floating point and needs integer ops for performance reasons.
   gstivorbisdec = library('gstivorbisdec',
     vorbisidec_sources,
     c_args : gst_plugins_base_args + ['-DTREMOR'],
