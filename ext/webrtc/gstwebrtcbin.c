@@ -81,6 +81,58 @@ static void _update_need_negotiation (GstWebRTCBin * webrtc);
 #define GST_CAT_DEFAULT gst_webrtc_bin_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+static gboolean
+_have_nice_elements (GstWebRTCBin * webrtc)
+{
+  GstPluginFeature *feature;
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "nicesrc");
+  if (feature) {
+    gst_object_unref (feature);
+  } else {
+    GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
+        ("%s", "libnice elements are not available"));
+    return FALSE;
+  }
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "nicesink");
+  if (feature) {
+    gst_object_unref (feature);
+  } else {
+    GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
+        ("%s", "libnice elements are not available"));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_have_dtls_elements (GstWebRTCBin * webrtc)
+{
+  GstPluginFeature *feature;
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "dtlsdec");
+  if (feature) {
+    gst_object_unref (feature);
+  } else {
+    GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
+        ("%s", "dtls elements are not available"));
+    return FALSE;
+  }
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), "dtlsenc");
+  if (feature) {
+    gst_object_unref (feature);
+  } else {
+    GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, NULL,
+        ("%s", "dtls elements are not available"));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 GQuark
 gst_webrtc_bin_error_quark (void)
 {
@@ -3750,29 +3802,8 @@ gst_webrtc_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:{
-      GstElement *nice;
-      if (!webrtc->rtpbin) {
-        /* FIXME: is this the right thing for a missing plugin? */
-        GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, (NULL),
-            ("%s", "rtpbin element is not available"));
+      if (!_have_nice_elements (webrtc) || !_have_dtls_elements (webrtc))
         return GST_STATE_CHANGE_FAILURE;
-      }
-      nice = gst_element_factory_make ("nicesrc", NULL);
-      if (!nice) {
-        /* FIXME: is this the right thing for a missing plugin? */
-        GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, (NULL),
-            ("%s", "libnice elements are not available"));
-        return GST_STATE_CHANGE_FAILURE;
-      }
-      gst_object_unref (nice);
-      nice = gst_element_factory_make ("nicesink", NULL);
-      if (!nice) {
-        /* FIXME: is this the right thing for a missing plugin? */
-        GST_ELEMENT_ERROR (webrtc, CORE, MISSING_PLUGIN, (NULL),
-            ("%s", "libnice elements are not available"));
-        return GST_STATE_CHANGE_FAILURE;
-      }
-      gst_object_unref (nice);
       _update_need_negotiation (webrtc);
       break;
     }
@@ -3819,26 +3850,10 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
 {
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (element);
   GstWebRTCBinPad *pad = NULL;
-  GstPluginFeature *feature;
   guint serial;
 
-  feature = gst_registry_lookup_feature (gst_registry_get (), "nicesrc");
-  if (feature) {
-    gst_object_unref (feature);
-  } else {
-    GST_ELEMENT_ERROR (element, CORE, MISSING_PLUGIN, NULL,
-        ("%s", "libnice elements are not available"));
+  if (!_have_nice_elements (webrtc) || !_have_dtls_elements (webrtc))
     return NULL;
-  }
-
-  feature = gst_registry_lookup_feature (gst_registry_get (), "nicesink");
-  if (feature) {
-    gst_object_unref (feature);
-  } else {
-    GST_ELEMENT_ERROR (element, CORE, MISSING_PLUGIN, NULL,
-        ("%s", "libnice elements are not available"));
-    return NULL;
-  }
 
   if (templ->direction == GST_PAD_SINK ||
       g_strcmp0 (templ->name_template, "sink_%u") == 0) {
