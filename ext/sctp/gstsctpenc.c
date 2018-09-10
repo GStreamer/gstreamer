@@ -336,22 +336,16 @@ gst_sctp_enc_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
-
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->need_segment = self->need_stream_start_caps = TRUE;
       gst_data_queue_set_flushing (self->outbound_sctp_packet_queue, FALSE);
-      gst_pad_start_task (self->src_pad,
-          (GstTaskFunction) gst_sctp_enc_srcpad_loop, self->src_pad, NULL);
       res = configure_association (self);
       break;
-
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       sctpenc_cleanup (self);
       break;
-
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
@@ -360,6 +354,23 @@ gst_sctp_enc_change_state (GstElement * element, GstStateChange transition)
 
   if (res)
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_pad_start_task (self->src_pad,
+          (GstTaskFunction) gst_sctp_enc_srcpad_loop, self->src_pad, NULL);
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
