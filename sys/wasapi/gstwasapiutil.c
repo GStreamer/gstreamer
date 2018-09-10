@@ -106,16 +106,6 @@ static struct
 
 static int windows_major_version = 0;
 
-static struct
-{
-  HMODULE dll;
-  gboolean tried_loading;
-
-    HANDLE (WINAPI * AvSetMmThreadCharacteristics) (LPCSTR, LPDWORD);
-    BOOL (WINAPI * AvRevertMmThreadCharacteristics) (HANDLE);
-} gst_wasapi_avrt_tbl = {
-0};
-
 gboolean
 gst_wasapi_util_have_audioclient3 (void)
 {
@@ -955,51 +945,4 @@ gst_wasapi_util_initialize_audioclient3 (GstElement * self,
 
   *ret_devicep_frames = devicep_frames;
   return TRUE;
-}
-
-static gboolean
-gst_wasapi_util_init_thread_priority (void)
-{
-  if (gst_wasapi_avrt_tbl.tried_loading)
-    return gst_wasapi_avrt_tbl.dll != NULL;
-
-  if (!gst_wasapi_avrt_tbl.dll)
-    gst_wasapi_avrt_tbl.dll = LoadLibrary (TEXT ("avrt.dll"));
-
-  if (!gst_wasapi_avrt_tbl.dll) {
-    GST_WARNING ("Failed to set thread priority, can't find avrt.dll");
-    gst_wasapi_avrt_tbl.tried_loading = TRUE;
-    return FALSE;
-  }
-
-  gst_wasapi_avrt_tbl.AvSetMmThreadCharacteristics =
-      GetProcAddress (gst_wasapi_avrt_tbl.dll, "AvSetMmThreadCharacteristicsA");
-  gst_wasapi_avrt_tbl.AvRevertMmThreadCharacteristics =
-      GetProcAddress (gst_wasapi_avrt_tbl.dll,
-      "AvRevertMmThreadCharacteristics");
-
-  gst_wasapi_avrt_tbl.tried_loading = TRUE;
-
-  return TRUE;
-}
-
-HANDLE
-gst_wasapi_util_set_thread_characteristics (void)
-{
-  DWORD taskIndex = 0;
-
-  if (!gst_wasapi_util_init_thread_priority ())
-    return NULL;
-
-  return gst_wasapi_avrt_tbl.AvSetMmThreadCharacteristics (TEXT ("Pro Audio"),
-      &taskIndex);
-}
-
-void
-gst_wasapi_util_revert_thread_characteristics (HANDLE handle)
-{
-  if (!gst_wasapi_util_init_thread_priority ())
-    return;
-
-  gst_wasapi_avrt_tbl.AvRevertMmThreadCharacteristics (handle);
 }

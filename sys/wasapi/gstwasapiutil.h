@@ -114,8 +114,4 @@ gboolean gst_wasapi_util_initialize_audioclient3 (GstElement * element,
     WAVEFORMATEX * format, gboolean low_latency, gboolean loopback,
     guint * ret_devicep_frames);
 
-HANDLE gst_wasapi_util_set_thread_characteristics (void);
-
-void gst_wasapi_util_revert_thread_characteristics (HANDLE handle);
-
 #endif /* __GST_WASAPI_UTIL_H__ */

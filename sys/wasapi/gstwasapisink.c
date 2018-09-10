@@ -561,9 +561,6 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
       (self)->ringbuffer, self->positions);
 
-  /* Increase the thread priority to reduce glitches */
-  self->thread_priority_handle = gst_wasapi_util_set_thread_characteristics ();
-
   res = TRUE;
 
 beach:
@@ -581,12 +578,6 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
   CoUninitialize ();
-
-  if (self->thread_priority_handle != NULL) {
-    gst_wasapi_util_revert_thread_characteristics
-        (self->thread_priority_handle);
-    self->thread_priority_handle = NULL;
-  }
 
   if (self->client != NULL) {
     IAudioClient_Stop (self->client);
@@ -614,7 +605,8 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   GST_OBJECT_LOCK (self);
   if (self->client_needs_restart) {
     hr = IAudioClient_Start (self->client);
-    HR_FAILED_AND (hr, IAudioClient::Start, GST_OBJECT_UNLOCK (self); goto beach);
+    HR_FAILED_AND (hr, IAudioClient::Start, GST_OBJECT_UNLOCK (self);
+        goto beach);
     self->client_needs_restart = FALSE;
   }
   GST_OBJECT_UNLOCK (self);
@@ -636,8 +628,8 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
      * GetBuffer will error out */
     if (can_frames != have_frames) {
       GST_ERROR_OBJECT (self,
-        "Need at %i frames to write for exclusive mode, but got %i",
-        can_frames, have_frames);
+          "Need at %i frames to write for exclusive mode, but got %i",
+          can_frames, have_frames);
       written_len = -1;
       goto beach;
     }
