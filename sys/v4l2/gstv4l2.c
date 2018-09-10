@@ -127,6 +127,8 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
   struct v4l2_capability vcap;
   guint32 device_caps;
 
+  GST_DEBUG ("Probing devices");
+
   it = gst_v4l2_iterator_new ();
 
   while (gst_v4l2_iterator_next (it)) {
