@@ -47,6 +47,7 @@
 #include "gstv4l2sink.h"
 #include "gstv4l2radio.h"
 #include "gstv4l2videodec.h"
+#include "gstv4l2fwhtenc.h"
 #include "gstv4l2h263enc.h"
 #include "gstv4l2h264enc.h"
 #include "gstv4l2mpeg4enc.h"
@@ -185,6 +186,10 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
       gst_v4l2_video_dec_register (plugin, basename, it->device_path,
           sink_caps, src_caps);
     } else if (gst_v4l2_is_video_enc (sink_caps, src_caps, NULL)) {
+      if (gst_v4l2_is_fwht_enc (sink_caps, src_caps))
+        gst_v4l2_fwht_enc_register (plugin, basename, it->device_path,
+            sink_caps, src_caps);
+
       if (gst_v4l2_is_h264_enc (sink_caps, src_caps))
         gst_v4l2_h264_enc_register (plugin, basename, it->device_path,
             sink_caps, src_caps);
