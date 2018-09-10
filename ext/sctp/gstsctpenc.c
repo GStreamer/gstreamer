@@ -421,11 +421,15 @@ gst_sctp_enc_request_new_pad (GstElement * element, GstPadTemplate * template,
   sctpenc_pad->stream_id = stream_id;
   sctpenc_pad->ppid = DEFAULT_SCTP_PPID;
 
-  get_config_from_caps (caps, &sctpenc_pad->ordered, &sctpenc_pad->reliability,
-      &sctpenc_pad->reliability_param, &new_ppid, &is_new_ppid);
+  if (caps) {
+    get_config_from_caps (caps, &sctpenc_pad->ordered,
+        &sctpenc_pad->reliability, &sctpenc_pad->reliability_param, &new_ppid,
+        &is_new_ppid);
 
-  if (is_new_ppid)
-    sctpenc_pad->ppid = new_ppid;
+    if (is_new_ppid)
+      sctpenc_pad->ppid = new_ppid;
+  }
+
   sctpenc_pad->flushing = FALSE;
 
   if (!gst_pad_set_active (new_pad, TRUE))
