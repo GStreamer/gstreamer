@@ -50,6 +50,7 @@
 #include "gstv4l2fwhtenc.h"
 #include "gstv4l2h263enc.h"
 #include "gstv4l2h264enc.h"
+#include "gstv4l2jpegenc.h"
 #include "gstv4l2mpeg4enc.h"
 #include "gstv4l2vp8enc.h"
 #include "gstv4l2vp9enc.h"
@@ -200,6 +201,10 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 
       if (gst_v4l2_is_h263_enc (sink_caps, src_caps))
         gst_v4l2_h263_enc_register (plugin, basename, it->device_path,
+            sink_caps, src_caps);
+
+      if (gst_v4l2_is_jpeg_enc (sink_caps, src_caps))
+        gst_v4l2_jpeg_enc_register (plugin, basename, it->device_path,
             sink_caps, src_caps);
 
       if (gst_v4l2_is_vp8_enc (sink_caps, src_caps))
