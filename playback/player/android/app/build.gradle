@@ -29,7 +29,7 @@ android {
                 targets "gstplayer"
 
                 // All archs except MIPS and MIPS64 are supported
-                abiFilters  'armeabi', 'armeabi-v7a', 'arm64-v8a', 'x86'
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
                 // x86_64 abis disabled because of https://bugzilla.gnome.org/show_bug.cgi?id=795454
             }
         }
@@ -50,12 +50,14 @@ android {
 }
 
 afterEvaluate {
-    compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
-    compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
+    if (project.hasProperty('compileDebugJavaWithJavac'))
+        project.compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
+    if (project.hasProperty('compileReleaseJavaWithJavac'))
+        project.compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.1.1'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:23.1.1'
 }
