@@ -3205,11 +3205,13 @@ gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
 {
   GstVideoColorimetry ci;
   static const GstVideoColorimetry ci_likely_jpeg = {
-      GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
-      GST_VIDEO_TRANSFER_UNKNOWN, GST_VIDEO_COLOR_PRIMARIES_UNKNOWN };
+    GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
+    GST_VIDEO_TRANSFER_UNKNOWN, GST_VIDEO_COLOR_PRIMARIES_UNKNOWN
+  };
   static const GstVideoColorimetry ci_jpeg = {
-      GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
-      GST_VIDEO_TRANSFER_SRGB, GST_VIDEO_COLOR_PRIMARIES_BT709 };
+    GST_VIDEO_COLOR_RANGE_0_255, GST_VIDEO_COLOR_MATRIX_BT601,
+    GST_VIDEO_TRANSFER_SRGB, GST_VIDEO_COLOR_PRIMARIES_BT709
+  };
 
   if (!gst_video_colorimetry_from_string (&ci, color))
     return FALSE;
