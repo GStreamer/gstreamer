@@ -381,6 +381,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
 
     /* If the decoder stop command succeeded, just wait until processing is
      * finished */
+    GST_DEBUG_OBJECT (self, "Waiting for decoder stop");
     GST_OBJECT_LOCK (task);
     while (GST_TASK_STATE (task) == GST_TASK_STARTED)
       GST_TASK_WAIT (task);

@@ -274,6 +274,7 @@ gst_v4l2_video_enc_finish (GstVideoEncoder * encoder)
     GstTask *task = encoder->srcpad->task;
 
     /* Wait for the task to be drained */
+    GST_DEBUG_OBJECT (self, "Waiting for encoder stop");
     GST_OBJECT_LOCK (task);
     while (GST_TASK_STATE (task) == GST_TASK_STARTED)
       GST_TASK_WAIT (task);
