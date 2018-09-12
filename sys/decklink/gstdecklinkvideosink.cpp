@@ -853,6 +853,21 @@ gst_decklink_video_sink_stop (GstDecklinkVideoSink * self)
 }
 
 static void
+_wait_for_stop_notify (GstDecklinkVideoSink *self)
+{
+  bool active = false;
+
+  self->output->output->IsScheduledPlaybackRunning (&active);
+  while (active) {
+    /* cause sometimes decklink stops without notifying us... */
+    guint64 wait_time = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
+    if (!g_cond_wait_until (&self->output->cond, &self->output->lock, wait_time))
+      GST_WARNING_OBJECT (self, "Failed to wait for stop notification");
+    self->output->output->IsScheduledPlaybackRunning (&active);
+  }
+}
+
+static void
 gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
 {
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (element);
@@ -923,10 +938,7 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
       return;
     }
     // Wait until scheduled playback actually stopped
-    do {
-      g_cond_wait (&self->output->cond, &self->output->lock);
-      self->output->output->IsScheduledPlaybackRunning (&active);
-    } while (active);
+    _wait_for_stop_notify (self);
   }
 
   GST_DEBUG_OBJECT (self,
@@ -986,13 +998,9 @@ gst_decklink_video_sink_stop_scheduled_playback (GstDecklinkVideoSink * self)
             res));
     ret = GST_STATE_CHANGE_FAILURE;
   } else {
-    bool active = false;
 
     // Wait until scheduled playback actually stopped
-    do {
-      g_cond_wait (&self->output->cond, &self->output->lock);
-      self->output->output->IsScheduledPlaybackRunning (&active);
-    } while (active);
+    _wait_for_stop_notify (self);
   }
   if (start_time > 0)
     self->scheduled_stop_time = start_time;
