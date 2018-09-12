@@ -3454,13 +3454,18 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
       has_gap = (qtpad->first_ts > (qtmux->first_ts + qtpad->dts_adjustment));
 
       if (has_gap) {
-        GstClockTime diff;
+        GstClockTime diff, trak_lateness;
 
         diff = qtpad->first_ts - (qtmux->first_ts + qtpad->dts_adjustment);
         lateness = gst_util_uint64_scale_round (diff,
             qtmux->timescale, GST_SECOND);
+        /* Allow up to 1 trak timescale unit of lateness, Such a small
+         * timestamp/duration can't be represented by the trak-specific parts
+         * of the headers anyway, so it's irrelevantly small */
+        trak_lateness = gst_util_uint64_scale (diff,
+            atom_trak_get_timescale (qtpad->trak), GST_SECOND);
 
-        if (lateness > 0) {
+        if (lateness > 0 && trak_lateness > 0) {
           GST_DEBUG_OBJECT (qtmux,
               "Pad %s is a late stream by %" GST_TIME_FORMAT,
               GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (diff));
