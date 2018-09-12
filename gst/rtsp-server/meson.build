@@ -3,6 +3,7 @@ rtsp_server_sources = [
   'rtsp-auth.c',
   'rtsp-client.c',
   'rtsp-context.c',
+  'rtsp-latency-bin.c',
   'rtsp-media.c',
   'rtsp-media-factory.c',
   'rtsp-media-factory-uri.c',

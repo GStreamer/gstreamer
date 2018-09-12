@@ -42,6 +42,7 @@
 #endif
 
 #include "rtsp-onvif-media.h"
+#include "rtsp-latency-bin.h"
 
 struct GstRTSPOnvifMediaPrivate
 {
@@ -251,6 +252,7 @@ gboolean
 gst_rtsp_onvif_media_collect_backchannel (GstRTSPOnvifMedia * media)
 {
   GstElement *element, *backchannel_bin = NULL;
+  GstElement *latency_bin;
   GstPad *pad = NULL;
   gboolean ret = FALSE;
 
@@ -265,11 +267,28 @@ gst_rtsp_onvif_media_collect_backchannel (GstRTSPOnvifMedia * media)
   if (!backchannel_bin)
     goto out;
 
-  pad = gst_element_get_static_pad (backchannel_bin, "sink");
+  /* We don't want the backchannel element, which is a receiver, to affect
+   * latency on the complete pipeline. That's why we remove it from the
+   * pipeline and add it to a @GstRTSPLatencyBin which will prevent it from
+   * messing up pipelines latency. The extra reference is needed so that it
+   * is not freed in case the pipeline holds the the only ref to it.
+   *
+   * TODO: a more generic solution should be implemented in
+   * gst_rtsp_media_collect_streams() where all receivers are encapsulated
+   * in a @GstRTSPLatencyBin in cases when there are senders too. */
+  gst_object_ref (backchannel_bin);
+  gst_bin_remove (GST_BIN (element), backchannel_bin);
+
+  latency_bin = gst_rtsp_latency_bin_new (backchannel_bin);
+  g_assert (latency_bin);
+
+  gst_bin_add (GST_BIN (element), latency_bin);
+
+  pad = gst_element_get_static_pad (latency_bin, "sink");
   if (!pad)
     goto out;
 
-  gst_rtsp_media_create_stream (GST_RTSP_MEDIA (media), backchannel_bin, pad);
+  gst_rtsp_media_create_stream (GST_RTSP_MEDIA (media), latency_bin, pad);
   ret = TRUE;
 
 out:

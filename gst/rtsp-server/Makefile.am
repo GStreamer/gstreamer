@@ -31,6 +31,7 @@ c_sources = \
 	rtsp-params.c \
 	rtsp-sdp.c \
 	rtsp-thread-pool.c \
+	rtsp-latency-bin.c \
 	rtsp-media.c \
 	rtsp-media-factory.c \
 	rtsp-media-factory-uri.c \
