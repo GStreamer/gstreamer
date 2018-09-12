@@ -751,7 +751,7 @@ gst_decklink_audio_sink_open (GstBaseSink * bsink)
 {
   GstDecklinkAudioSink *self = GST_DECKLINK_AUDIO_SINK_CAST (bsink);
 
-  GST_DEBUG_OBJECT (self, "Stopping");
+  GST_DEBUG_OBJECT (self, "Starting");
 
   self->output =
       gst_decklink_acquire_nth_output (self->device_number,
