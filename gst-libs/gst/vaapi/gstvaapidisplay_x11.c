@@ -180,10 +180,7 @@ gst_vaapi_display_x11_close_display (GstVaapiDisplay * display)
     priv->x11_display = NULL;
   }
 
-  if (priv->display_name) {
-    g_free (priv->display_name);
-    priv->display_name = NULL;
-  }
+  g_clear_pointer (&priv->display_name, g_free);
 }
 
 static void

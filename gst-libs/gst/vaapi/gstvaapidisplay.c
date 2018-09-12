@@ -846,11 +846,8 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
       klass->close_display (display);
   }
 
-  g_free (priv->display_name);
-  priv->display_name = NULL;
-
-  g_free (priv->vendor_string);
-  priv->vendor_string = NULL;
+  g_clear_pointer (&priv->display_name, g_free);
+  g_clear_pointer (&priv->vendor_string, g_free);
 
   gst_vaapi_display_replace (&priv->parent, NULL);
 }

@@ -194,25 +194,10 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
   GstVaapiDisplayWaylandPrivate *const priv =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
 
-  if (priv->output) {
-    wl_output_destroy (priv->output);
-    priv->output = NULL;
-  }
-
-  if (priv->shell) {
-    wl_shell_destroy (priv->shell);
-    priv->shell = NULL;
-  }
-
-  if (priv->compositor) {
-    wl_compositor_destroy (priv->compositor);
-    priv->compositor = NULL;
-  }
-
-  if (priv->registry) {
-    wl_registry_destroy (priv->registry);
-    priv->registry = NULL;
-  }
+  g_clear_pointer (&priv->output, wl_output_destroy);
+  g_clear_pointer (&priv->shell, wl_shell_destroy);
+  g_clear_pointer (&priv->compositor, wl_compositor_destroy);
+  g_clear_pointer (&priv->registry, wl_registry_destroy);
 
   if (priv->wl_display) {
     if (!priv->use_foreign_display)
@@ -220,10 +205,7 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
     priv->wl_display = NULL;
   }
 
-  if (priv->display_name) {
-    g_free (priv->display_name);
-    priv->display_name = NULL;
-  }
+  g_clear_pointer (&priv->display_name, g_free);
 }
 
 static gboolean

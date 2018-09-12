@@ -95,10 +95,7 @@ frame_state_free (FrameState * frame)
   }
   gst_vaapi_video_pool_replace (&frame->surface_pool, NULL);
 
-  if (frame->callback) {
-    wl_callback_destroy (frame->callback);
-    frame->callback = NULL;
-  }
+  g_clear_pointer (&frame->callback, wl_callback_destroy);
   g_slice_free (FrameState, frame);
 }
 
@@ -337,20 +334,9 @@ gst_vaapi_window_wayland_destroy (GstVaapiWindow * window)
   if (priv->event_queue)
     wl_display_roundtrip_queue (wl_display, priv->event_queue);
 
-  if (priv->shell_surface) {
-    wl_shell_surface_destroy (priv->shell_surface);
-    priv->shell_surface = NULL;
-  }
-
-  if (priv->surface) {
-    wl_surface_destroy (priv->surface);
-    priv->surface = NULL;
-  }
-
-  if (priv->event_queue) {
-    wl_event_queue_destroy (priv->event_queue);
-    priv->event_queue = NULL;
-  }
+  g_clear_pointer (&priv->shell_surface, wl_shell_surface_destroy);
+  g_clear_pointer (&priv->surface, wl_surface_destroy);
+  g_clear_pointer (&priv->event_queue, wl_event_queue_destroy);
 
   gst_poll_free (priv->poll);
 

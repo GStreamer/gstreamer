@@ -304,15 +304,8 @@ gst_vaapi_display_drm_close_display (GstVaapiDisplay * display)
     priv->drm_device = -1;
   }
 
-  if (priv->device_path) {
-    g_free (priv->device_path);
-    priv->device_path = NULL;
-  }
-
-  if (priv->device_path_default) {
-    g_free (priv->device_path_default);
-    priv->device_path_default = NULL;
-  }
+  g_clear_pointer (&priv->device_path, g_free);
+  g_clear_pointer (&priv->device_path_default, g_free);
 }
 
 static gboolean
