@@ -958,7 +958,6 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
 
   self->output->started = TRUE;
   self->output->clock_restart = TRUE;
-  self->output->clock_offset = self->scheduled_stop_time;
 
   // Need to unlock to get the clock time
   g_mutex_unlock (&self->output->lock);
@@ -1002,8 +1001,6 @@ gst_decklink_video_sink_stop_scheduled_playback (GstDecklinkVideoSink * self)
     // Wait until scheduled playback actually stopped
     _wait_for_stop_notify (self);
   }
-  if (start_time > 0)
-    self->scheduled_stop_time = start_time;
   self->internal_base_time = GST_CLOCK_TIME_NONE;
   self->external_base_time = GST_CLOCK_TIME_NONE;
   g_mutex_unlock (&self->output->lock);
