@@ -65,7 +65,7 @@ We will now look at some examples in the next sections.
 
 ```
 .----------.    .----------.
-| faksesrc |    | fakesink |
+| fakesrc  |    | fakesink |
 |         src->sink        |
 '----------'    '----------'
 
@@ -90,12 +90,12 @@ this:
 
   - Alternatively, since the sync message is called in the thread
     context, you can use thread `ENTER`/`LEAVE` notifications to change the
-    priority or scheduling pollicy of the current thread.
+    priority or scheduling policy of the current thread.
 
 In a first step we need to implement a custom `GstTaskPool` that we can
 configure on the task. Below is the implementation of a `GstTaskPool`
 subclass that uses pthreads to create a `SCHED_RR` real-time thread. Note
-that creating real-time threads might require extra priveleges.
+that creating real-time threads might require extra privileges.
 
 ``` c
 #include <pthread.h>
