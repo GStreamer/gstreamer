@@ -773,7 +773,7 @@ gst_file_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
 
     GST_DEBUG_OBJECT (sink,
         "Queueing buffer list of %u bytes (%u buffers) at offset %"
-        G_GSIZE_FORMAT, size, num_buffers,
+        G_GUINT64_FORMAT, size, num_buffers,
         sink->current_pos + sink->current_buffer_size);
 
     for (i = 0; i < num_buffers; ++i)
@@ -828,7 +828,7 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   } else if (n_mem > 0) {
     GST_DEBUG_OBJECT (filesink,
         "Queueing buffer of %" G_GSIZE_FORMAT " bytes at offset %"
-        G_GSIZE_FORMAT, gst_buffer_get_size (buffer),
+        G_GUINT64_FORMAT, gst_buffer_get_size (buffer),
         filesink->current_pos + filesink->current_buffer_size);
 
     filesink->current_buffer_size += gst_buffer_get_size (buffer);
