@@ -1,191 +1,93 @@
 GStreamer documentation notes
 
-IMPORTANT
-=========
-
-Please make sure you've read and understood everything in this file
-before you try changing documentation.
-
-Some of the docbook-related bits in this README might be out of date now that
-quite a bit of the documentation has moved into the gst-docs repository.
-
 OVERVIEW
 ========
 
-GStreamer has two sets of documentation that we maintain:
-* API references, using gtk-doc (gstreamer, gstreamer-libs)
+Our documentation uses hotdoc, you should usually refer to the
+[hotdoc documentation](http://hotdoc.github.io/).
+
+GStreamer has two sets of documentation but both are controlled and aggregated in
+the `gst-docs` module:
+
+* API references, using hotdoc (gstreamer, gstreamer-libs) - maintained
+  in each GStreamer modules repository
 * FAQ / Application Development Manual / Plugin Writer's Guide / Tutorials -
   these are maintained in markdown format and live in the gst-docs repository.
 
-DOCBOOK NOTES
-=============
+To build the full documentation you should make sure to have `hotdoc` installed and
+build [gst-build](https://cgit.freedesktop.org/gstreamer/gst-build/) configuring it with:
 
-OK, I've grown so tired of having to coax the docs to build every time I
-get round to it that I've decided to note down some of the things that
-are important to know.
+```
+meson -Ddoc=enabled build/
+```
 
-OVERVIEW
---------
-* Our documentation should all be Docbook/XML.  No SGML.
-* The source for the documentation is:
-  - one or more .xml files, with the main one being gstreamer-(whatever).xml
-  - image files
-    - in .svg
-    - in .png (and maybe others)
-* We want to generate docs in HTML, PS and PDF
-* We want to use xml to to generate these
+And building the documentation:
 
-CONVENTIONS
------------
-We stick to some simple conventions for writing docbook documentation.
-* id names:
-  - all id's start with chapter-, part-, section-, or misc-
-  - verify this is the case by looking at the generated file names in html/
-  - sections should also include the chapter name;
-    for example in a chapter called chapter-example, a section would be
-    called section-example-hello-world
+```
+ninja -C build/ subprojects/gst-docs/GStreamer-doc`, this will result in two documentation sets:
+```
 
-HOW IMAGES ARE HANDLED
-----------------------
-* the format of images used is:
-  - PNG for html
-  - EPS for ps
-  - PDF for pdf
+This will generate two outputs:
 
-* images may need to be converted from their source format to the end format
-
-* a file called image.entities is generated that provides two entities:
-  &image; and &IMAGE;
-  &image; is the file extension (png, ps, pdf)
-* all generated images will be put in images/
-
-HOW THE BUILD WORKS FOR EACH FORMAT
------------------------------------
-* HTML:
-  - xmlto html gstreamer-whatever.xml should produce the html docs.
-  - We do this in the html subdir of the doc builddir.
-  - images are copied to (builddir)/html/images
-  - PNGS should be set to all of the png's referenced for html, both
-    already there and auto-generated
-
-* PS :
-  - images are converted to .ps files in EPS format.  Generated images are
-    put in images/
-  - xmlto ps gstreamer-whatever.xml generates the ps file
-
-* PDF :
-  There are two ways:
-  - ps2pdf is the easiest
-  - we specify ps, PS as the image type, but using xmlto the build will fail
-    because it uses ps2pdf internally and it fails to generate the images
-    By hand-generating .pdf images before xmlto we can make the build succeed.
-    (This is why image-pdf has file ext pdf but type EPS; this tricks xmlto in
-     doing the right thing)
-    xmlto pdf gstreamer-whatever.xml generates pdf (but seems to fail on the
-    FAQ, so for now we use ps2pdf)
+  - the html in `build/subprojects/gst-docs/GStreamer-doc/html`
+  - the [devhelp](https://wiki.gnome.org/Apps/Devhelp) in `build/subprojects/gst-docs/GStreamer-doc/devhelp`
 
 HOW THE BUILD SYSTEM IS SET UP
 ------------------------------
-* make all should build html, ps, and pdf
-* html is built in a subdir, with the png/ps images copied there
-* ps and pdf are built in the current dir, in one file
+Hotdoc build targets are generated for each documentation 'components' (ie. hotdoc
+subprojects). This includes libraries documentation and one target per GStreamer plugin.
+
+One can build a specific documentation target by explicitely building the target,
+for example to build the GStreamer core library documentation (adapt the paths if you
+are using `gst-build`):
+
+    ninja docs/libgstreamer-doc
+
+Then the documentation will be avalaible in `docs/libgstreamer-doc/html/`.
 
 SPELL CHECKING
 --------------
-* with aspell
-  * aspell -b -c --mode=sgml --lang=en <file>.xml
-    unfortunately the curses-ui of aspell (0.50.5) has problems with the xml tags
 
+FILL ME.
 
-GTK-DOC NOTES
+HOTDOC NOTES
 =============
 
 * files under revision control:
-  - Makefile.am
-  - gstreamer-sections.txt
-    describes which symbols later appear on one api-doc page
-    configure which symbols are shown/invisible/private
-  - gstreamer.types
-    the types file lists all get_type() functions that register the GObject types
-  - gstreamer-docs.sgml
-    defines the overall structure of the api documentation
-  - tmpl/
-    - only add the file to CVS if you have at least filled the short description
-      (filename corresponds to the <FILE> tag in the sections file)
-    - document as much as possible in the source (*.c files)
+  - sitemap.txt: defines the overall structure of the documentation
+  - gst_plugins_cache.json: Automatically generated information about plugins
 
 * what to do when adding a new piece of API:
-  - add both an entity and use the entity in gstreamer-docs.sgml
-  - add a new <SECTION> to gstreamer-sections.txt in the correct alphabetical
-    position related to the other sections (so that it is easier to locate)
-  - add all documented symbols to gstreamer-sections.txt in the proper section
-    (default),<SUBSECTION Standard>,<SUBSECTION Private>
-  - document at least the Short_Description in tmpl/.sgml
-  - document symbols where they are defined, so that when one changes the
-    definition, the chaces are good that docs are updated.
-    - document functions, signals in the .c files
-    - document structs, typedefs, enums in the .h files
-
-* checklist:
-  - make sure *-sections.txt has a <TITLE> set for each <FILE>
-  - add only *one* <TITLE> to each file, when you have multiple classes in one
-    source-file, create one <FILE> section for each class
-  - the <TITLE> *must* be named like the type of the GType, when it gets
-    registered (otherwise gtkdoc introspection fails)
-  - for clarity name the <FILE> like the <TITLE>, but all lowercase
+  - Just let hotdoc generate the documentation and decide where to put it
+  - Make sure to add a `SECTION` documentation section in the file where
+    the documentation should land (hotdoc will use that to create its
+    "smart index" and list symbols from other files that should land
+    on that page in that section.
+  - document functions, signals in the .c files
+  - document structs, typedefs, enums in the .h files
 
 * what to do when trying to improve the docs
   - compare the output of
     grep "_get_type" gstreamer-sections.txt | sort
     with the types in XXX.types to detect entries that
     are maybe missing
-  - gtk docs does not warns about empty member docs!, run
+  - hotdoc does not warns about empty member docs!, run
     find . -name "*.[c,h]" -exec egrep -Hn "^ +\* +@.*: *$" {} \;
     in the project root to find them
-  - gtk docs does not warns about empty Returns: docs!, run
+  - hotdoc does not warns about empty Returns: docs!, run
     find . -name "*.[c,h]" -exec egrep -Hn "^ +\* +@Returns: *$" {} \;
     in the project root to find them
 
-* what happens during a gtk-doc build ?
-  - Scan step:
-    - based on a $(MODULE).types file:
-      - gtkdoc-scangobj creates a gtkdoc-scan binary
-        - using CC, LD, CFLAGS, LDFLAGS env var
-        - using --type-init-func and --module parameters
-        - gtkdoc-scan creates
-          - $MODULE.signals.new
-          - $MODULE.hierarchy.new
-          - $MODULE.interfaces.new
-          - $MODULE.prerequisites.new
-          - $MODULE.args.new
-        - generated source and objects get deleted
-        - gtkdoc-scangobj merges changes into the original files
-    - gtkdoc-scan
-      - extracts decls of functions, macros, enums, structs, unions from headers
-      - generates
-        - $MODULE-decl.txt
-        - $MODULE-decl-list.txt
-      - $MODULE-decl-list.txt then should get copied to $MODULE-sections.txt
-    - scan-build.stamp gets created
-  
-  - Template generation step:
-    - gtkdoc-mktmpl --module=$MODULE
-      - reads in tmpl/*.sgml
-      - moves them to tmpl/*.sgml.bak
-      - recreates tmpl/*.sgml according to $MODULE-sections.txt
-      - moves unused stuff to $MODULE-unused.txt
-    - tmpl-build.stamp gets generated
+* what happens during a hotdoc build ?
+  - Read the GIR and scan the sources files for the docstrings and
+    generate the documentation laying out pages the way they are documented.
+  - The meson build definition is set in a way that makes it so all plugins
+    in `plugins_doc` are introspected and documented
 
-* Possible errors and how to fix them
-  - Warning: multiple "IDs" for constraint linkend: gst-tag-register.
-    - check if gst_tag_register is listed more than once in -sections.txt
-
-STYLE GUIDE FOR GTK-DOC
+STYLE GUIDE FOR HOTDOC
 =======================
 - this is in addition to gtk-doc's style-guide.txt
 
-- when documenting signals, use "the #Gst..." for the object receiving the
-  signal; no trailing dot, and no "that received the signal"
 - function/macro descriptions are descriptive, not imperative
   ie, it uses the third person verb
 - synopsis and description should have most-used/application functions at the
@@ -201,165 +103,38 @@ STYLE GUIDE FOR GTK-DOC
     "Caller owns returned value" for other types (iterators, ..)
   - we do this because, in contrast with GLib/GTK, we are more explicit
     about threadsafety and related issues
-- link to signals from the description like this:
-  * The <link linkend="GstBin-element-added">element-added</link> signal
 
 WEBSITE DOCUMENTATION
 =====================
 
-Updating the online documentation is pretty simple.
-Make sure that you
-a) have a working freedesktop.org account
-b) $HOME/.ssh/config set up so that it has the right User for the Host
-   (for example, I have:
-Host freedesktop.org
-  User thomasvs
-c) verify this works by doing ssh freedesktop.org and being logged in without
-   a password prompt
-d) have verified your changes build documentation locally.
-
-Then, after updating any of the docs, run "make upload" from that directory.
-Or, run "make upload" from this (docs) directory.
+Updating the online documentation is done from with the `gst-docs` repository
 
 DOCUMENTING ELEMENTS
 ====================
-As of september 2005 we have some system to document plugins and elements
-in the various plugin packages.
-
-- in a submodule, docs go in docs/plugins
-- template can be copied from gst-plugins-base
-- to add plugins documentation:
-  - create docs/plugins
-  - create Makefile.am and friends, add to configure.ac
-  - create docs/version.entities.in, add to configure.ac
-  - in docs/plugins:
-    - create $(module)-plugins.types with #include <gst/gst.h>
-    - run make
-    - edit the -docs.sgml
-    - add to cvs:
-      cvs add *-plugins-docs.sgml *-plugins.args *-plugins.hierarchy *-plugins.interfaces *-plugins.prerequisites *-plugins.signals *-plugins.types inspect-build.stamp inspect.stamp scanobj-build.stamp
-      cvs add inspect
-      cvs add inspect/*.xml
-    - Additional types can be added to the documentation by placing them in
-      the .types file like this:
-        type:GstPlayBaseBin
-      This is useful for documenting plugin-private types that implement
-      signals or properties. The GType is looked up by name after all the
-      element classes have been printed - so this is only useful for types
-      that are created as a consequence of loading plugins and registering
-      the element(s).
+A hotdoc plugin is provided by GStreamer to document GStreamer plugins.
 
 - to add a plugin to be documented:
-  - make sure inspect/ has generated a inspect/plugin-xxx.xml file for it.
-    - if it has not, make sure you have pygst installed and run 'make update'.
-      and add it to CVS.
-  - add an xi:include in -docs.sgml in the Plugins chapter for that plugin
-
+  - make sure the plugin is added to the `plugins_doc` variable in meson
 - to add an element to be documented:
-  - add an xi:include in the Elements chapter for the element
-    in the main -docs.sgml
-  - add a section for it in -sections.txt with
-      <SECTION>
-      <FILE>element-(element)</FILE>
-      <TITLE>(element)</TITLE>
-      GstXxx
-      <SUBSECTION Standard>
-      GstXxxClass
-      GST_XXX
-      GST_XXX_CLASS
-      GST_IS_XXX
-      GST_IS_XXX_CLASS
-      GST_TYPE_XXX
-      gst_xxx_get_type
-      </SECTION>
   - add a gtk-doc section to the source code like:
 /**
  * SECTION:element-multifdsink
 
-  and fill it with documentation about the element, preferably inside
-  a <refsect2> docbook container.
+  and fill it with documentation about the element
   - add an example:
-    - either a few pipelines, inside <programlisting>
-    - or a piece of code:
-      - create an example program (element)-example.c in the plugin dir
-      - add the full path (starting with $(top_srcdir)) for this example
-        to the EXAMPLE_CFILES variable in Makefile.am
-      - add an xinclude of a file named "element-(element)-example.xml"
-        to the docbook documentation piece in the element source code
-  - add the header to EXTRA_HFILES in Makefile.am to be able to document
-    signals and args; in that case, the object struct needs to be in
-    -sections.txt outside of the Standard Subsection (which is annoying,
-    but ...)
-    (FIXME: are we sure we can both do the xinclude from the tmpl/ sgml,
-     as well as an override from the source itself ? maybe we should just
-     make sure the xinclude is in the source itself instead ?)
-  - if the plugin has no public header, don't add the c-file, add entries to the
-    -overrides.txt file (see playbin docs in plugins-base).
-  - to rebuild the docs, do:
-    make clean
-    make update
-    make
-  - examples will only show up using gtk-doc 1.4 or later - it relies on
-    merging stuff from .sgml with inline docs.  We might want to change
-    this to only get stuff from the source.
-  - you need to commit resulting files to git:
-    - changes to *.signals and *.args
-    - new files for your plugin created in inspect/
-  - if you get this warning:
-    " Documentation in template xxx for ./tmpl/element-yyy:Short_Description
-      being overridden by inline comments"
-    per-default the description from the GST_ELEMENT_DETAILS is put to the
-    Short_Description. This warning mean you have a different one in the section
-    docs as "@short_description:".
-
-- the plugin-doc-list on the gstreamer homepage is updated along with other
-  web site updates.
-
-- maintainer tricks:
-  - in gst-plugins-foo/docs/plugins/, run
-        make check-inspected-versions
-    to show plugins whose inspect information is not up-to-date (which is
-    usually either because they have been moved to a different module or
-    because they are not built on the maintainer's machine for some reason).
-    Whether it really makes sense to update the version number is debatable
-    (after all, the inspected information may be outdated and things may have
-    changed, in which case it would be bad to change the version number)
-  - find files that have docs
-    for file in `find . -name "*.c" -exec grep -l " * SECTION:element-" {} \; | sort`; do if [ -e ${file/.c/.h} ]; then echo ${file/.c/.h}; else echo "no header for $file"; fi; done
-    for file in `find . -name "*.cc" -exec grep -l " * SECTION:element-" {} \; | sort`; do if [ -e ${file/.cc/.h} ]; then echo ${file/.cc/.h}; else echo "no header for $file"; fi; done
-    - add those .h files to EXTRA_HFILES in Makefile.am
-  - update gst-plugins-xxx-docs.sgml
-    cd docs/plugins
-    ls -1 xml/plugin-*.xml | sort | sed -e "s/\(.*\)/    \<xi:include href=\"\1\" \/\>/"
-    ls -1 xml/element-*.xml | grep -v -- "-details.xml" | sort | sed -e "s/\(.*\)/    \<xi:include href=\"\1\" \/\>/"
-    - maybe we can generate these lists after "make update" and just xi:include
-      them in gst-plugins-xxx-docs.sgml. They should be committed to the vcs.
-
-- possible errors:
-  - "multiple constraints for linkend ID":
-    check if each section in -sections.txt actually starts and ends with
-    <SECTION> and </SECTION>
-  - if a plugin does not show up:
-    - check inspect/plugin-xxx.xml and tmpl/elements-
-
-RANDOM THINGS I'VE LEARNED
-==========================
-
-* for clean builddir != srcdir separation, I wanted to use xmlto --searchpath
-  so the source xml could find the built entity file.
-  But xmlto --searchpath is (right now) for TeX input, not xml input.
-  xsltproc has a --path option (that xmlto doesn't use yet), but it
-  resolves single files to $(specified_path)/$(srcdir)/$(file)
-  For now, we need to hack around it by copying xml to the build dir.
+    - either a few pipelines, inside a codeblock
+    - or a piece of code inside a codeblock or in `tests/examples/(pluginname)`
+  - to build the doc for a plugin, do:
+    `ninja docs/(pluginname)-doc`
 
 
 DEVHELP INTEGRATION
 -------------------
 Check https://wiki.gnome.org/Apps/Devhelp
 It's a really nice development app allowing you to look up API stuff
-from various gtk-doc'd libraries.  GStreamer is one of these ;)
+from various hotdoc/gtk-doc'd libraries.  GStreamer is one of these ;)
 
-gtk-doc generates both html API docs and the matching .devhelp(2) books.
+hotdoc generates both html API docs and the matching .devhelp(2) books.
 
 IMAGES
 ------
