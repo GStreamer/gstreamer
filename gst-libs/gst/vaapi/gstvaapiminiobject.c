@@ -23,12 +23,7 @@
 #include <string.h>
 #include "gstvaapiminiobject.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_mini_object_ref
-#undef gst_vaapi_mini_object_unref
-#undef gst_vaapi_mini_object_replace
-
-void
+static void
 gst_vaapi_mini_object_free (GstVaapiMiniObject * object)
 {
   const GstVaapiMiniObjectClass *const klass = object->object_class;
@@ -109,6 +104,22 @@ gst_vaapi_mini_object_new0 (const GstVaapiMiniObjectClass * object_class)
 }
 
 /**
+ * gst_vaapi_mini_object_ref_internal:
+ * @object: a #GstVaapiMiniObject
+ *
+ * Atomically increases the reference count of the given @object by one.
+ * This is an internal function that does not do any run-time type check.
+ *
+ * Returns: The same @object argument
+ */
+static inline GstVaapiMiniObject *
+gst_vaapi_mini_object_ref_internal (GstVaapiMiniObject * object)
+{
+  g_atomic_int_inc (&object->ref_count);
+  return object;
+}
+
+/**
  * gst_vaapi_mini_object_ref:
  * @object: a #GstVaapiMiniObject
  *
@@ -122,6 +133,22 @@ gst_vaapi_mini_object_ref (GstVaapiMiniObject * object)
   g_return_val_if_fail (object != NULL, NULL);
 
   return gst_vaapi_mini_object_ref_internal (object);
+}
+
+/**
+ * gst_vaapi_mini_object_unref_internal:
+ * @object: a #GstVaapiMiniObject
+ *
+ * Atomically decreases the reference count of the @object by one. If
+ * the reference count reaches zero, the object will be free'd.
+ *
+ * This is an internal function that does not do any run-time type check.
+ */
+static inline void
+gst_vaapi_mini_object_unref_internal (GstVaapiMiniObject * object)
+{
+  if (g_atomic_int_dec_and_test (&object->ref_count))
+    gst_vaapi_mini_object_free (object);
 }
 
 /**

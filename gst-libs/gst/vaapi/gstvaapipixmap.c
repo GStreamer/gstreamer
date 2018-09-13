@@ -33,11 +33,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_pixmap_ref
-#undef gst_vaapi_pixmap_unref
-#undef gst_vaapi_pixmap_replace
-
 static inline GstVaapiPixmap *
 gst_vaapi_pixmap_new_internal (const GstVaapiPixmapClass * pixmap_class,
     GstVaapiDisplay * display)
@@ -73,7 +68,7 @@ gst_vaapi_pixmap_new (const GstVaapiPixmapClass * pixmap_class,
   /* ERRORS */
 error:
   {
-    gst_vaapi_pixmap_unref_internal (pixmap);
+    gst_vaapi_pixmap_unref (pixmap);
     return NULL;
   }
 }
@@ -97,7 +92,7 @@ gst_vaapi_pixmap_new_from_native (const GstVaapiPixmapClass * pixmap_class,
   /* ERRORS */
 error:
   {
-    gst_vaapi_pixmap_unref_internal (pixmap);
+    gst_vaapi_pixmap_unref (pixmap);
     return NULL;
   }
 }
@@ -113,7 +108,7 @@ error:
 GstVaapiPixmap *
 gst_vaapi_pixmap_ref (GstVaapiPixmap * pixmap)
 {
-  return gst_vaapi_pixmap_ref_internal (pixmap);
+  return gst_vaapi_object_ref (GST_VAAPI_OBJECT (pixmap));
 }
 
 /**
@@ -126,7 +121,7 @@ gst_vaapi_pixmap_ref (GstVaapiPixmap * pixmap)
 void
 gst_vaapi_pixmap_unref (GstVaapiPixmap * pixmap)
 {
-  gst_vaapi_pixmap_unref_internal (pixmap);
+  gst_vaapi_object_unref (GST_VAAPI_OBJECT (pixmap));
 }
 
 /**
@@ -142,7 +137,8 @@ void
 gst_vaapi_pixmap_replace (GstVaapiPixmap ** old_pixmap_ptr,
     GstVaapiPixmap * new_pixmap)
 {
-  gst_vaapi_pixmap_replace_internal (old_pixmap_ptr, new_pixmap);
+  gst_vaapi_object_replace ((GstVaapiObject **) (old_pixmap_ptr),
+      GST_VAAPI_OBJECT (new_pixmap));
 }
 
 /**

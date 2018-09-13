@@ -34,11 +34,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_texture_ref
-#undef gst_vaapi_texture_unref
-#undef gst_vaapi_texture_replace
-
 #define GST_VAAPI_TEXTURE_ORIENTATION_FLAGS \
   (GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED | \
    GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)
@@ -171,7 +166,7 @@ gst_vaapi_texture_new_wrapped (GstVaapiDisplay * display, guint id,
 GstVaapiTexture *
 gst_vaapi_texture_ref (GstVaapiTexture * texture)
 {
-  return gst_vaapi_texture_ref_internal (texture);
+  return gst_vaapi_object_ref (GST_VAAPI_OBJECT (texture));
 }
 
 /**
@@ -184,7 +179,7 @@ gst_vaapi_texture_ref (GstVaapiTexture * texture)
 void
 gst_vaapi_texture_unref (GstVaapiTexture * texture)
 {
-  gst_vaapi_texture_unref_internal (texture);
+  gst_vaapi_object_unref (GST_VAAPI_OBJECT (texture));
 }
 
 /**
@@ -200,7 +195,8 @@ void
 gst_vaapi_texture_replace (GstVaapiTexture ** old_texture_ptr,
     GstVaapiTexture * new_texture)
 {
-  gst_vaapi_texture_replace_internal (old_texture_ptr, new_texture);
+  gst_vaapi_object_replace ((GstVaapiObject **) (old_texture_ptr),
+      GST_VAAPI_OBJECT (new_texture));
 }
 
 /**

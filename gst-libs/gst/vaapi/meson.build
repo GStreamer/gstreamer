@@ -221,7 +221,7 @@ endif
 
 gstlibvaapi = static_library('gstlibvaapi-@0@'.format(api_version),
   gstlibvaapi_sources,
-  c_args : gstreamer_vaapi_args + ['-DIN_LIBGSTVAAPI_CORE', '-DGST_USE_UNSTABLE_API', '-DGST_VAAPI_VERSION_ID="@0@"'.format(gst_version)],
+  c_args : gstreamer_vaapi_args + [ '-DGST_USE_UNSTABLE_API', '-DGST_VAAPI_VERSION_ID="@0@"'.format(gst_version)],
   include_directories: [configinc, libsinc],
   dependencies : gstlibvaapi_deps,
 )

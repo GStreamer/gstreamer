@@ -135,31 +135,6 @@ gst_vaapi_window_vpp_convert_internal (GstVaapiWindow * window,
 void
 gst_vaapi_window_class_init (GstVaapiWindowClass * klass);
 
-/* Inline reference counting for core libgstvaapi library */
-#ifdef IN_LIBGSTVAAPI_CORE
-#define gst_vaapi_window_ref_internal(window) \
-    ((gpointer)gst_vaapi_object_ref(GST_VAAPI_OBJECT(window)))
-
-#define gst_vaapi_window_unref_internal(window) \
-    gst_vaapi_object_unref(GST_VAAPI_OBJECT(window))
-
-#define gst_vaapi_window_replace_internal(old_window_ptr, new_window) \
-    gst_vaapi_object_replace((GstVaapiObject **)(old_window_ptr), \
-        GST_VAAPI_OBJECT(new_window))
-
-#undef  gst_vaapi_window_ref
-#define gst_vaapi_window_ref(window) \
-    gst_vaapi_window_ref_internal((window))
-
-#undef  gst_vaapi_window_unref
-#define gst_vaapi_window_unref(window) \
-    gst_vaapi_window_unref_internal((window))
-
-#undef  gst_vaapi_window_replace
-#define gst_vaapi_window_replace(old_window_ptr, new_window) \
-    gst_vaapi_window_replace_internal((old_window_ptr), (new_window))
-#endif
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_WINDOW_PRIV_H */

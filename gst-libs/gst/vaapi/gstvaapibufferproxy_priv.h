@@ -87,31 +87,6 @@ G_GNUC_INTERNAL
 guint
 to_GstVaapiBufferMemoryType (guint va_type);
 
-/* Inline reference counting for core libgstvaapi library */
-#ifdef IN_LIBGSTVAAPI_CORE
-#define gst_vaapi_buffer_proxy_ref_internal(proxy) \
-  ((gpointer) gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (proxy)))
-
-#define gst_vaapi_buffer_proxy_unref_internal(proxy) \
-    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (proxy))
-
-#define gst_vaapi_buffer_proxy_replace_internal(old_proxy_ptr, new_proxy) \
-    gst_vaapi_mini_object_replace ((GstVaapiMiniObject **)(old_proxy_ptr), \
-        GST_VAAPI_MINI_OBJECT (new_proxy))
-
-#undef  gst_vaapi_buffer_proxy_ref
-#define gst_vaapi_buffer_proxy_ref(proxy) \
-    gst_vaapi_buffer_proxy_ref_internal ((proxy))
-
-#undef  gst_vaapi_buffer_proxy_unref
-#define gst_vaapi_buffer_proxy_unref(proxy) \
-    gst_vaapi_buffer_proxy_unref_internal ((proxy))
-
-#undef  gst_vaapi_buffer_proxy_replace
-#define gst_vaapi_buffer_proxy_replace(old_proxy_ptr, new_proxy) \
-    gst_vaapi_buffer_proxy_replace_internal ((old_proxy_ptr), (new_proxy))
-#endif
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_BUFFER_PROXY_PRIV_H */

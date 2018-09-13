@@ -36,11 +36,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_window_ref
-#undef gst_vaapi_window_unref
-#undef gst_vaapi_window_replace
-
 static void
 gst_vaapi_window_ensure_size (GstVaapiWindow * window)
 {
@@ -175,7 +170,7 @@ gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
   /* ERRORS */
 error:
   {
-    gst_vaapi_window_unref_internal (window);
+    gst_vaapi_window_unref (window);
     return NULL;
   }
 }
@@ -259,7 +254,7 @@ gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height)
 GstVaapiWindow *
 gst_vaapi_window_ref (GstVaapiWindow * window)
 {
-  return gst_vaapi_window_ref_internal (window);
+  return (GstVaapiWindow *) gst_vaapi_object_ref (GST_VAAPI_OBJECT (window));
 }
 
 /**
@@ -272,7 +267,7 @@ gst_vaapi_window_ref (GstVaapiWindow * window)
 void
 gst_vaapi_window_unref (GstVaapiWindow * window)
 {
-  gst_vaapi_window_unref_internal (window);
+  gst_vaapi_object_unref (GST_VAAPI_OBJECT (window));
 }
 
 /**
@@ -288,7 +283,8 @@ void
 gst_vaapi_window_replace (GstVaapiWindow ** old_window_ptr,
     GstVaapiWindow * new_window)
 {
-  gst_vaapi_window_replace_internal (old_window_ptr, new_window);
+  gst_vaapi_object_replace ((GstVaapiObject **) (old_window_ptr),
+      GST_VAAPI_OBJECT (new_window));
 }
 
 /**

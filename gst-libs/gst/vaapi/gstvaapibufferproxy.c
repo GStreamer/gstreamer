@@ -30,11 +30,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_buffer_proxy_ref
-#undef gst_vaapi_buffer_proxy_unref
-#undef gst_vaapi_buffer_proxy_replace
-
 guint
 from_GstVaapiBufferMemoryType (guint type)
 {
@@ -185,7 +180,7 @@ gst_vaapi_buffer_proxy_new (guintptr handle, guint type, gsize size,
 error_unsupported_mem_type:
   {
     GST_ERROR ("unsupported buffer type (%d)", proxy->type);
-    gst_vaapi_buffer_proxy_unref_internal (proxy);
+    gst_vaapi_buffer_proxy_unref (proxy);
     return NULL;
   }
 #else
@@ -225,13 +220,13 @@ gst_vaapi_buffer_proxy_new_from_object (GstVaapiObject * object,
 error_unsupported_mem_type:
   {
     GST_ERROR ("unsupported buffer type (%d)", proxy->type);
-    gst_vaapi_buffer_proxy_unref_internal (proxy);
+    gst_vaapi_buffer_proxy_unref (proxy);
     return NULL;
   }
 error_acquire_handle:
   {
     GST_ERROR ("failed to acquire the underlying VA buffer handle");
-    gst_vaapi_buffer_proxy_unref_internal (proxy);
+    gst_vaapi_buffer_proxy_unref (proxy);
     return NULL;
   }
 #else
@@ -252,7 +247,8 @@ gst_vaapi_buffer_proxy_ref (GstVaapiBufferProxy * proxy)
 {
   g_return_val_if_fail (proxy != NULL, NULL);
 
-  return gst_vaapi_buffer_proxy_ref_internal (proxy);
+  return (GstVaapiBufferProxy *)
+      gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (proxy));
 }
 
 /**
@@ -267,7 +263,7 @@ gst_vaapi_buffer_proxy_unref (GstVaapiBufferProxy * proxy)
 {
   g_return_if_fail (proxy != NULL);
 
-  gst_vaapi_buffer_proxy_unref_internal (proxy);
+  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (proxy));
 }
 
 /**
@@ -285,7 +281,8 @@ gst_vaapi_buffer_proxy_replace (GstVaapiBufferProxy ** old_proxy_ptr,
 {
   g_return_if_fail (old_proxy_ptr != NULL);
 
-  gst_vaapi_buffer_proxy_replace_internal (old_proxy_ptr, new_proxy);
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (old_proxy_ptr),
+      GST_VAAPI_MINI_OBJECT (new_proxy));
 }
 
 /**

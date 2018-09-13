@@ -195,40 +195,6 @@ gpointer
 gst_vaapi_object_new (const GstVaapiObjectClass * klass,
     GstVaapiDisplay * display);
 
-/* Inline reference counting for core libgstvaapi library */
-#ifdef IN_LIBGSTVAAPI_CORE
-static inline gpointer
-gst_vaapi_object_ref_internal (gpointer object)
-{
-  return gst_vaapi_mini_object_ref (object);
-}
-
-static inline void
-gst_vaapi_object_unref_internal (gpointer object)
-{
-  gst_vaapi_mini_object_unref (object);
-}
-
-static inline void
-gst_vaapi_object_replace_internal (gpointer old_object_ptr, gpointer new_object)
-{
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_object_ptr,
-      new_object);
-}
-
-#undef  gst_vaapi_object_ref
-#define gst_vaapi_object_ref(object) \
-  gst_vaapi_object_ref_internal ((object))
-
-#undef  gst_vaapi_object_unref
-#define gst_vaapi_object_unref(object) \
-  gst_vaapi_object_unref_internal ((object))
-
-#undef  gst_vaapi_object_replace
-#define gst_vaapi_object_replace(old_object_ptr, new_object) \
-  gst_vaapi_object_replace_internal ((old_object_ptr), (new_object))
-#endif
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_OBJECT_PRIV_H */

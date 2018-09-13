@@ -157,52 +157,6 @@ void
 gst_vaapi_mini_object_replace (GstVaapiMiniObject ** old_object_ptr,
     GstVaapiMiniObject * new_object);
 
-#ifdef IN_LIBGSTVAAPI_CORE
-#undef  gst_vaapi_mini_object_ref
-#define gst_vaapi_mini_object_ref(object) \
-  gst_vaapi_mini_object_ref_internal (object)
-
-#undef  gst_vaapi_mini_object_unref
-#define gst_vaapi_mini_object_unref(object) \
-  gst_vaapi_mini_object_unref_internal (object)
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_mini_object_free (GstVaapiMiniObject * object);
-
-/**
- * gst_vaapi_mini_object_ref_internal:
- * @object: a #GstVaapiMiniObject
- *
- * Atomically increases the reference count of the given @object by one.
- * This is an internal function that does not do any run-time type check.
- *
- * Returns: The same @object argument
- */
-static inline GstVaapiMiniObject *
-gst_vaapi_mini_object_ref_internal (GstVaapiMiniObject * object)
-{
-  g_atomic_int_inc (&object->ref_count);
-  return object;
-}
-
-/**
- * gst_vaapi_mini_object_unref_internal:
- * @object: a #GstVaapiMiniObject
- *
- * Atomically decreases the reference count of the @object by one. If
- * the reference count reaches zero, the object will be free'd.
- *
- * This is an internal function that does not do any run-time type check.
- */
-static inline void
-gst_vaapi_mini_object_unref_internal (GstVaapiMiniObject * object)
-{
-  if (g_atomic_int_dec_and_test (&object->ref_count))
-    gst_vaapi_mini_object_free (object);
-}
-#endif
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_MINI_OBJECT_H */

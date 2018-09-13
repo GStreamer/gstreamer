@@ -108,31 +108,6 @@ GstVaapiPixmap *
 gst_vaapi_pixmap_new_from_native(const GstVaapiPixmapClass *pixmap_class,
     GstVaapiDisplay *display, gpointer native_pixmap);
 
-/* Inline reference counting for core libgstvaapi library */
-#ifdef IN_LIBGSTVAAPI_CORE
-#define gst_vaapi_pixmap_ref_internal(pixmap) \
-    ((gpointer)gst_vaapi_object_ref(GST_VAAPI_OBJECT(pixmap)))
-
-#define gst_vaapi_pixmap_unref_internal(pixmap) \
-    gst_vaapi_object_unref(GST_VAAPI_OBJECT(pixmap))
-
-#define gst_vaapi_pixmap_replace_internal(old_pixmap_ptr, new_pixmap) \
-    gst_vaapi_object_replace((GstVaapiObject **)(old_pixmap_ptr), \
-        GST_VAAPI_OBJECT(new_pixmap))
-
-#undef  gst_vaapi_pixmap_ref
-#define gst_vaapi_pixmap_ref(pixmap) \
-    gst_vaapi_pixmap_ref_internal((pixmap))
-
-#undef  gst_vaapi_pixmap_unref
-#define gst_vaapi_pixmap_unref(pixmap) \
-    gst_vaapi_pixmap_unref_internal((pixmap))
-
-#undef  gst_vaapi_pixmap_replace
-#define gst_vaapi_pixmap_replace(old_pixmap_ptr, new_pixmap) \
-    gst_vaapi_pixmap_replace_internal((old_pixmap_ptr), (new_pixmap))
-#endif
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_PIXMAP_PRIV_H */

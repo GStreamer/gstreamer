@@ -36,11 +36,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_object_ref
-#undef gst_vaapi_object_unref
-#undef gst_vaapi_object_replace
-
 static void
 gst_vaapi_object_finalize (GstVaapiObject * object)
 {
@@ -114,7 +109,7 @@ gst_vaapi_object_new (const GstVaapiObjectClass * klass,
 gpointer
 gst_vaapi_object_ref (gpointer object)
 {
-  return gst_vaapi_object_ref_internal (object);
+  return gst_vaapi_mini_object_ref (object);
 }
 
 /**
@@ -127,7 +122,7 @@ gst_vaapi_object_ref (gpointer object)
 void
 gst_vaapi_object_unref (gpointer object)
 {
-  gst_vaapi_object_unref_internal (object);
+  gst_vaapi_mini_object_unref (object);
 }
 
 /**
@@ -142,7 +137,8 @@ gst_vaapi_object_unref (gpointer object)
 void
 gst_vaapi_object_replace (gpointer old_object_ptr, gpointer new_object)
 {
-  gst_vaapi_object_replace_internal (old_object_ptr, new_object);
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_object_ptr,
+      new_object);
 }
 
 /**

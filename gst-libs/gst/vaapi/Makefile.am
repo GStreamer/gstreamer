@@ -21,7 +21,6 @@ noinst_LTLIBRARIES += libgstvaapi-wayland.la
 endif
 
 libgstvaapi_cflags =				\
-	-DIN_LIBGSTVAAPI_CORE			\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	-I$(top_builddir)/gst-libs		\
