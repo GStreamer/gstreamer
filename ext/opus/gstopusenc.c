@@ -877,12 +877,12 @@ gst_opus_enc_get_sink_template_caps (void)
        * treated as a set of individual mono channels */
       s = gst_structure_copy (s2);
       gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
-          GST_TYPE_BITMASK, 0x0, NULL);
+          GST_TYPE_BITMASK, G_GUINT64_CONSTANT(0), NULL);
       gst_caps_append_structure (caps, s);
 
       s = gst_structure_copy (s1);
       gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
-          GST_TYPE_BITMASK, 0x0, NULL);
+          GST_TYPE_BITMASK, G_GUINT64_CONSTANT(0), NULL);
       gst_caps_append_structure (caps, s);
     }
 
