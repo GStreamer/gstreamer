@@ -70,7 +70,7 @@
  * assert sending payload type matches the stream
  * reconfiguration (of anything)
  * LS groups
- * bundling
+ * balanced bundle policy
  * setting custom DTLS certificates
  *
  * seperate session id's from mlineindex properly
@@ -351,6 +351,7 @@ enum
   PROP_PENDING_REMOTE_DESCRIPTION,
   PROP_STUN_SERVER,
   PROP_TURN_SERVER,
+  PROP_BUNDLE_POLICY,
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -1542,27 +1543,31 @@ _message_media_is_datachannel (const GstSDPMessage * msg, guint media_id)
 }
 
 static TransportStream *
-_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
+_get_or_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
 {
-  TransportStream *ret = _create_transport_channel (webrtc, session_id);
+  TransportStream *ret;
   gchar *pad_name;
 
-  gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->send_bin));
-  gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->receive_bin));
+  ret = _find_transport_for_session (webrtc, session_id);
 
-  pad_name = g_strdup_printf ("recv_rtcp_sink_%u", ret->session_id);
-  if (!gst_element_link_pads (GST_ELEMENT (ret->receive_bin), "rtcp_src",
-          GST_ELEMENT (webrtc->rtpbin), pad_name))
-    g_warn_if_reached ();
-  g_free (pad_name);
+  if (!ret) {
+    ret = _create_transport_channel (webrtc, session_id);
+    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->send_bin));
+    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->receive_bin));
+    g_array_append_val (webrtc->priv->transports, ret);
 
-  pad_name = g_strdup_printf ("send_rtcp_src_%u", ret->session_id);
-  if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
-          GST_ELEMENT (ret->send_bin), "rtcp_sink"))
-    g_warn_if_reached ();
-  g_free (pad_name);
+    pad_name = g_strdup_printf ("recv_rtcp_sink_%u", ret->session_id);
+    if (!gst_element_link_pads (GST_ELEMENT (ret->receive_bin), "rtcp_src",
+            GST_ELEMENT (webrtc->rtpbin), pad_name))
+      g_warn_if_reached ();
+    g_free (pad_name);
 
-  g_array_append_val (webrtc->priv->transports, ret);
+    pad_name = g_strdup_printf ("send_rtcp_src_%u", ret->session_id);
+    if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
+            GST_ELEMENT (ret->send_bin), "rtcp_sink"))
+      g_warn_if_reached ();
+    g_free (pad_name);
+  }
 
   gst_element_sync_state_with_parent (GST_ELEMENT (ret->send_bin));
   gst_element_sync_state_with_parent (GST_ELEMENT (ret->receive_bin));
@@ -1700,19 +1705,25 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
 }
 
 static TransportStream *
-_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
+_get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
 {
   if (!webrtc->priv->data_channel_transport) {
-    TransportStream *stream = _create_transport_channel (webrtc, session_id);
+    TransportStream *stream;
     GstWebRTCSCTPTransport *sctp_transport;
     int i;
+
+    stream = _find_transport_for_session (webrtc, session_id);
+
+    if (!stream) {
+      stream = _create_transport_channel (webrtc, session_id);
+      gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->send_bin));
+      gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->receive_bin));
+      g_array_append_val (webrtc->priv->transports, stream);
+    }
 
     webrtc->priv->data_channel_transport = stream;
 
     g_object_set (stream, "rtcp-mux", TRUE, NULL);
-
-    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->send_bin));
-    gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->receive_bin));
 
     if (!(sctp_transport = webrtc->priv->sctp_transport)) {
       sctp_transport = gst_webrtc_sctp_transport_new ();
@@ -1757,8 +1768,6 @@ _create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
           (sctp_transport->sctpenc));
     }
 
-    g_array_append_val (webrtc->priv->transports, stream);
-
     webrtc->priv->sctp_transport = sctp_transport;
   }
 
@@ -1766,13 +1775,13 @@ _create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
 }
 
 static TransportStream *
-_create_transport_stream (GstWebRTCBin * webrtc, guint session_id,
+_get_or_create_transport_stream (GstWebRTCBin * webrtc, guint session_id,
     gboolean is_datachannel)
 {
   if (is_datachannel)
-    return _create_data_channel_transports (webrtc, session_id);
+    return _get_or_create_data_channel_transports (webrtc, session_id);
   else
-    return _create_rtp_transport_channel (webrtc, session_id);
+    return _get_or_create_rtp_transport_channel (webrtc, session_id);
 }
 
 static guint
@@ -1989,7 +1998,8 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
 /* based off https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-18#section-5.2.1 */
 static gboolean
 sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
-    GstWebRTCRTPTransceiver * trans, GstWebRTCSDPType type, guint media_idx)
+    GstWebRTCRTPTransceiver * trans, GstWebRTCSDPType type, guint media_idx,
+    GString * bundled_mids, guint bundle_idx, gboolean bundle_only)
 {
   /* TODO:
    * rtp header extensions
@@ -2013,18 +2023,27 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
       || trans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE)
     return FALSE;
 
-  gst_sdp_media_set_port_info (media, 9, 0);
+  gst_sdp_media_set_port_info (media, bundle_only ? 0 : 9, 0);
   gst_sdp_media_set_proto (media, "UDP/TLS/RTP/SAVPF");
   gst_sdp_media_add_connection (media, "IN", "IP4", "0.0.0.0", 0, 0);
+
+  if (bundle_only) {
+    gst_sdp_media_add_attribute (media, "bundle-only", NULL);
+  }
+
+  /* FIXME: negotiate this */
+  /* FIXME: when bundle_only, these should not be added:
+   * https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-52#section-7.1.3
+   * However, this causes incompatibilities with current versions
+   * of the major browsers */
+  gst_sdp_media_add_attribute (media, "rtcp-mux", "");
+  gst_sdp_media_add_attribute (media, "rtcp-rsize", NULL);
 
   direction =
       _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
       trans->direction);
   gst_sdp_media_add_attribute (media, direction, "");
   g_free (direction);
-  /* FIXME: negotiate this */
-  gst_sdp_media_add_attribute (media, "rtcp-mux", "");
-  gst_sdp_media_add_attribute (media, "rtcp-rsize", NULL);
 
   if (type == GST_WEBRTC_SDP_TYPE_OFFER) {
     caps = _find_codec_preferences (webrtc, trans, GST_PAD_SINK, media_idx);
@@ -2104,10 +2123,11 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
     if (!trans->sender->transport) {
       TransportStream *item;
-      /* FIXME: bundle */
-      item = _find_transport_for_session (webrtc, media_idx);
-      if (!item)
-        item = _create_transport_stream (webrtc, media_idx, FALSE);
+
+      item =
+          _get_or_create_transport_stream (webrtc,
+          bundled_mids ? bundle_idx : media_idx, FALSE);
+
       webrtc_transceiver_set_transport (WEBRTC_TRANSCEIVER (trans), item);
     }
 
@@ -2136,6 +2156,9 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   GstSDPMessage *ret;
   int i;
   gchar *str;
+  GString *bundled_mids = NULL;
+  gchar *bundle_ufrag = NULL;
+  gchar *bundle_pwd = NULL;
 
   gst_sdp_message_new (&ret);
 
@@ -2155,11 +2178,24 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   gst_sdp_message_add_attribute (ret, "msid-semantic", str);
   g_free (str);
 
+  if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE) {
+    bundled_mids = g_string_new ("BUNDLE");
+  } else if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT) {
+    bundled_mids = g_string_new ("BUNDLE");
+  }
+
+  if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE) {
+    _generate_ice_credentials (&bundle_ufrag, &bundle_pwd);
+  }
+
   /* for each rtp transceiver */
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *trans;
     GstSDPMedia media = { 0, };
     gchar *ufrag, *pwd;
+    gboolean bundle_only = bundled_mids
+        && webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE
+        && i != 0;
 
     trans =
         g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
@@ -2170,50 +2206,77 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     gst_sdp_media_add_attribute (&media, "setup", "actpass");
 
     /* FIXME: only needed when restarting ICE */
-    _generate_ice_credentials (&ufrag, &pwd);
+    if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_NONE) {
+      _generate_ice_credentials (&ufrag, &pwd);
+    } else {
+      ufrag = g_strdup (bundle_ufrag);
+      pwd = g_strdup (bundle_pwd);
+    }
+
     gst_sdp_media_add_attribute (&media, "ice-ufrag", ufrag);
     gst_sdp_media_add_attribute (&media, "ice-pwd", pwd);
     g_free (ufrag);
     g_free (pwd);
 
     if (sdp_media_from_transceiver (webrtc, &media, trans,
-            GST_WEBRTC_SDP_TYPE_OFFER, i))
+            GST_WEBRTC_SDP_TYPE_OFFER, i, bundled_mids, 0, bundle_only)) {
+      if (bundled_mids) {
+        const gchar *mid = gst_sdp_media_get_attribute_val (&media, "mid");
+
+        g_assert (mid);
+        g_string_append_printf (bundled_mids, " %s", mid);
+      }
       gst_sdp_message_add_media (ret, &media);
-    else
+    } else {
       gst_sdp_media_uninit (&media);
+    }
   }
 
   /* add data channel support */
   if (webrtc->priv->data_channels->len > 0) {
     GstSDPMedia media = { 0, };
     gchar *ufrag, *pwd, *sdp_mid;
+    gboolean bundle_only = bundled_mids
+        && webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE
+        && webrtc->priv->transceivers->len != 0;
 
     gst_sdp_media_init (&media);
     /* mandated by JSEP */
     gst_sdp_media_add_attribute (&media, "setup", "actpass");
 
     /* FIXME: only needed when restarting ICE */
-    _generate_ice_credentials (&ufrag, &pwd);
+    if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_NONE) {
+      _generate_ice_credentials (&ufrag, &pwd);
+    } else {
+      ufrag = g_strdup (bundle_ufrag);
+      pwd = g_strdup (bundle_pwd);
+    }
     gst_sdp_media_add_attribute (&media, "ice-ufrag", ufrag);
     gst_sdp_media_add_attribute (&media, "ice-pwd", pwd);
     g_free (ufrag);
     g_free (pwd);
 
     gst_sdp_media_set_media (&media, "application");
-    gst_sdp_media_set_port_info (&media, 9, 0);
+    gst_sdp_media_set_port_info (&media, bundle_only ? 0 : 9, 0);
     gst_sdp_media_set_proto (&media, "UDP/DTLS/SCTP");
     gst_sdp_media_add_connection (&media, "IN", "IP4", "0.0.0.0", 0, 0);
     gst_sdp_media_add_format (&media, "webrtc-datachannel");
 
+    if (bundle_only)
+      gst_sdp_media_add_attribute (&media, "bundle-only", NULL);
+
     sdp_mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (&media),
         webrtc->priv->media_counter++);
     gst_sdp_media_add_attribute (&media, "mid", sdp_mid);
+    if (bundled_mids)
+      g_string_append_printf (bundled_mids, " %s", sdp_mid);
     g_free (sdp_mid);
 
     /* FIXME: negotiate this properly */
     gst_sdp_media_add_attribute (&media, "sctp-port", "5000");
 
-    _create_data_channel_transports (webrtc, webrtc->priv->transceivers->len);
+    _get_or_create_data_channel_transports (webrtc,
+        bundled_mids ? 0 : webrtc->priv->transceivers->len);
     {
       gchar *cert, *fingerprint, *val;
 
@@ -2234,6 +2297,19 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
     gst_sdp_message_add_media (ret, &media);
   }
+
+  if (bundled_mids) {
+    gchar *mids = g_string_free (bundled_mids, FALSE);
+
+    gst_sdp_message_add_attribute (ret, "group", mids);
+    g_free (mids);
+  }
+
+  if (bundle_ufrag)
+    g_free (bundle_ufrag);
+
+  if (bundle_pwd)
+    g_free (bundle_pwd);
 
   /* FIXME: pre-emptively setup receiving elements when needed */
 
@@ -2352,6 +2428,54 @@ _get_rtx_target_pt_and_ssrc_from_caps (GstCaps * answer_caps, gint * target_pt,
   gst_structure_get_uint (s, "ssrc", target_ssrc);
 }
 
+static gboolean
+_parse_bundle (GstWebRTCBin * webrtc, GstSDPMessage * sdp, GStrv * bundled)
+{
+  const gchar *group;
+  gboolean ret = FALSE;
+
+  group = gst_sdp_message_get_attribute_val (sdp, "group");
+
+  if (group && g_str_has_prefix (group, "BUNDLE ")) {
+    *bundled = g_strsplit (group + strlen ("BUNDLE "), " ", 0);
+
+    if (!(*bundled)[0]) {
+      GST_ERROR_OBJECT (webrtc,
+          "Invalid format for BUNDLE group, expected at least one mid (%s)",
+          group);
+      goto done;
+    }
+  } else {
+    ret = TRUE;
+    goto done;
+  }
+
+  ret = TRUE;
+
+done:
+  return ret;
+}
+
+static gboolean
+_get_bundle_index (GstSDPMessage * sdp, GStrv bundled, guint * idx)
+{
+  gboolean ret = FALSE;
+  guint i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (sdp, i);
+    const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
+
+    if (!g_strcmp0 (mid, bundled[0])) {
+      *idx = i;
+      ret = TRUE;
+      break;
+    }
+  }
+
+  return ret;
+}
+
 static GstSDPMessage *
 _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 {
@@ -2359,11 +2483,33 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   const GstWebRTCSessionDescription *pending_remote =
       webrtc->pending_remote_description;
   guint i;
+  GStrv bundled = NULL;
+  guint bundle_idx = 0;
+  GString *bundled_mids = NULL;
+  gchar *bundle_ufrag = NULL;
+  gchar *bundle_pwd = NULL;
 
   if (!webrtc->pending_remote_description) {
     GST_ERROR_OBJECT (webrtc,
         "Asked to create an answer without a remote description");
     return NULL;
+  }
+
+  if (!_parse_bundle (webrtc, pending_remote->sdp, &bundled))
+    goto out;
+
+  if (bundled) {
+    if (!_get_bundle_index (pending_remote->sdp, bundled, &bundle_idx)) {
+      GST_ERROR_OBJECT (webrtc, "Bundle tag is %s but no media found matching",
+          bundled[0]);
+      goto out;
+    }
+
+    if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE) {
+      bundled_mids = g_string_new ("BUNDLE");
+    }
+
+    _generate_ice_credentials (&bundle_ufrag, &bundle_pwd);
   }
 
   gst_sdp_message_new (&ret);
@@ -2388,9 +2534,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (pending_remote->sdp); i++) {
-    /* FIXME:
-     * bundle policy
-     */
     GstSDPMedia *media = NULL;
     GstSDPMedia *offer_media;
     GstWebRTCRTPTransceiver *rtp_trans = NULL;
@@ -2404,23 +2547,33 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     gint target_pt = -1;
     gint original_target_pt = -1;
     guint target_ssrc = 0;
+    gboolean bundle_only;
+
+    offer_media =
+        (GstSDPMedia *) gst_sdp_message_get_media (pending_remote->sdp, i);
+    bundle_only = _media_has_attribute_key (offer_media, "bundle-only");
 
     gst_sdp_media_new (&media);
-    gst_sdp_media_set_port_info (media, 9, 0);
+    if (bundle_only && webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_NONE)
+      gst_sdp_media_set_port_info (media, 0, 0);
+    else
+      gst_sdp_media_set_port_info (media, 9, 0);
     gst_sdp_media_add_connection (media, "IN", "IP4", "0.0.0.0", 0, 0);
 
     {
       /* FIXME: only needed when restarting ICE */
       gchar *ufrag, *pwd;
-      _generate_ice_credentials (&ufrag, &pwd);
+      if (!bundled) {
+        _generate_ice_credentials (&ufrag, &pwd);
+      } else {
+        ufrag = g_strdup (bundle_ufrag);
+        pwd = g_strdup (bundle_pwd);
+      }
       gst_sdp_media_add_attribute (media, "ice-ufrag", ufrag);
       gst_sdp_media_add_attribute (media, "ice-pwd", pwd);
       g_free (ufrag);
       g_free (pwd);
     }
-
-    offer_media =
-        (GstSDPMedia *) gst_sdp_message_get_media (pending_remote->sdp, i);
 
     for (j = 0; j < gst_sdp_media_attributes_len (offer_media); j++) {
       const GstSDPAttribute *attr =
@@ -2475,7 +2628,15 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
       /* FIXME: negotiate this properly on renegotiation */
       gst_sdp_media_add_attribute (media, "sctp-port", "5000");
 
-      _create_data_channel_transports (webrtc, i);
+      _get_or_create_data_channel_transports (webrtc,
+          bundled_mids ? bundle_idx : i);
+
+      if (bundled_mids) {
+        const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
+
+        g_assert (mid);
+        g_string_append_printf (bundled_mids, " %s", mid);
+      }
 
       {
         gchar *cert, *fingerprint, *val;
@@ -2614,11 +2775,18 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
       }
       _media_replace_direction (media, answer_dir);
 
-      /* FIXME: bundle! */
       if (!trans->stream) {
-        TransportStream *item = _find_transport_for_session (webrtc, i);
-        if (!item)
-          item = _create_transport_stream (webrtc, i, FALSE);
+        TransportStream *item;
+
+        if (bundled_mids) {
+          const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
+          item = _get_or_create_transport_stream (webrtc, bundle_idx, FALSE);
+
+          g_assert (mid);
+          g_string_append_printf (bundled_mids, " %s", mid);
+        } else {
+          item = _get_or_create_transport_stream (webrtc, i, FALSE);
+        }
         webrtc_transceiver_set_transport (trans, item);
       }
       /* set the a=fingerprint: for this transport */
@@ -2656,10 +2824,27 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     gst_sdp_media_free (media);
   }
 
+  if (bundled_mids) {
+    gchar *mids = g_string_free (bundled_mids, FALSE);
+
+    gst_sdp_message_add_attribute (ret, "group", mids);
+    g_free (mids);
+  }
+
+  if (bundle_ufrag)
+    g_free (bundle_ufrag);
+
+  if (bundle_pwd)
+    g_free (bundle_pwd);
+
   /* FIXME: can we add not matched transceivers? */
 
   /* XXX: only true for the initial offerer */
   g_object_set (webrtc->priv->ice, "controller", FALSE, NULL);
+
+out:
+  if (bundled)
+    g_strfreev (bundled);
 
   return ret;
 }
@@ -2793,6 +2978,8 @@ static GstPad *
 _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 {
 /*
+ * Not-bundle case:
+ *
  * ,-------------------------webrtcbin-------------------------,
  * ;                                                           ;
  * ;          ,-------rtpbin-------,   ,--transport_send_%u--, ;
@@ -2804,6 +2991,22 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
  * ;          '--------------------'                           ;
  * '--------------------- -------------------------------------'
  */
+
+/*
+ * Bundle case:
+ * ,--------------------------------webrtcbin--------------------------------,
+ * ;                                                                         ;
+ * ;                        ,-------rtpbin-------,   ,--transport_send_%u--, ;
+ * ;                        ;    send_rtp_src_%u o---o rtp_sink            ; ;
+ * ;                        ;                    ;   ;                     ; ;
+ * ;                        ;   send_rtcp_src_%u o---o rtcp_sink           ; ;
+ * ; sink_%u ,---funnel---, ;                    ;   '---------------------' ;
+ * o---------o sink_%u    ; ;                    ;                           ;
+ * ; sink_%u ;        src o-o send_rtp_sink_%u   ;                           ;
+ * o---------o sink_%u    ; ;                    ;                           ;
+ * ;         '------------' '--------------------'                           ;
+ * '-------------------------------------------------------------------------'
+ */
   GstPadTemplate *rtp_templ;
   GstPad *rtp_sink;
   gchar *pad_name;
@@ -2813,34 +3016,38 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 
   GST_INFO_OBJECT (pad, "linking input stream %u", pad->mlineindex);
 
-  rtp_templ =
-      _find_pad_template (webrtc->rtpbin, GST_PAD_SINK, GST_PAD_REQUEST,
-      "send_rtp_sink_%u");
-  g_assert (rtp_templ);
-
-  pad_name = g_strdup_printf ("send_rtp_sink_%u", pad->mlineindex);
-  rtp_sink =
-      gst_element_request_pad (webrtc->rtpbin, rtp_templ, pad_name, NULL);
-  g_free (pad_name);
-  gst_ghost_pad_set_target (GST_GHOST_PAD (pad), rtp_sink);
-  gst_object_unref (rtp_sink);
-
   trans = WEBRTC_TRANSCEIVER (pad->trans);
 
-  if (!trans->stream) {
-    TransportStream *item;
-    /* FIXME: bundle */
-    item = _find_transport_for_session (webrtc, pad->mlineindex);
-    if (!item)
-      item = _create_transport_stream (webrtc, pad->mlineindex, FALSE);
-    webrtc_transceiver_set_transport (trans, item);
-  }
+  g_assert (trans->stream);
 
-  pad_name = g_strdup_printf ("send_rtp_src_%u", pad->mlineindex);
-  if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
-          GST_ELEMENT (trans->stream->send_bin), "rtp_sink"))
-    g_warn_if_reached ();
-  g_free (pad_name);
+  if (!webrtc->rtpfunnel) {
+    rtp_templ =
+        _find_pad_template (webrtc->rtpbin, GST_PAD_SINK, GST_PAD_REQUEST,
+        "send_rtp_sink_%u");
+    g_assert (rtp_templ);
+
+    pad_name = g_strdup_printf ("send_rtp_sink_%u", pad->mlineindex);
+    rtp_sink =
+        gst_element_request_pad (webrtc->rtpbin, rtp_templ, pad_name, NULL);
+    g_free (pad_name);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), rtp_sink);
+    gst_object_unref (rtp_sink);
+
+    pad_name = g_strdup_printf ("send_rtp_src_%u", pad->mlineindex);
+    if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
+            GST_ELEMENT (trans->stream->send_bin), "rtp_sink"))
+      g_warn_if_reached ();
+    g_free (pad_name);
+  } else {
+    gchar *pad_name = g_strdup_printf ("sink_%u", pad->mlineindex);
+    GstPad *funnel_sinkpad =
+        gst_element_get_request_pad (webrtc->rtpfunnel, pad_name);
+
+    gst_ghost_pad_set_target (GST_GHOST_PAD (pad), funnel_sinkpad);
+
+    g_free (pad_name);
+    gst_object_unref (funnel_sinkpad);
+  }
 
   gst_element_sync_state_with_parent (GST_ELEMENT (trans->stream->send_bin));
 
@@ -2848,8 +3055,9 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
 }
 
 /* output pads are receiving elements */
-static GstWebRTCBinPad *
-_connect_output_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
+static void
+_connect_output_stream (GstWebRTCBin * webrtc,
+    TransportStream * stream, guint session_id)
 {
 /*
  * ,------------------------webrtcbin------------------------,
@@ -2864,31 +3072,16 @@ _connect_output_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
  * '---------------------------------------------------------'
  */
   gchar *pad_name;
-  WebRTCTransceiver *trans;
 
-  g_return_val_if_fail (pad->trans != NULL, NULL);
+  GST_INFO_OBJECT (webrtc, "linking output stream %u", session_id);
 
-  GST_INFO_OBJECT (pad, "linking output stream %u", pad->mlineindex);
-
-  trans = WEBRTC_TRANSCEIVER (pad->trans);
-  if (!trans->stream) {
-    TransportStream *item;
-    /* FIXME: bundle */
-    item = _find_transport_for_session (webrtc, pad->mlineindex);
-    if (!item)
-      item = _create_transport_stream (webrtc, pad->mlineindex, FALSE);
-    webrtc_transceiver_set_transport (trans, item);
-  }
-
-  pad_name = g_strdup_printf ("recv_rtp_sink_%u", pad->mlineindex);
-  if (!gst_element_link_pads (GST_ELEMENT (trans->stream->receive_bin),
+  pad_name = g_strdup_printf ("recv_rtp_sink_%u", session_id);
+  if (!gst_element_link_pads (GST_ELEMENT (stream->receive_bin),
           "rtp_src", GST_ELEMENT (webrtc->rtpbin), pad_name))
     g_warn_if_reached ();
   g_free (pad_name);
 
-  gst_element_sync_state_with_parent (GST_ELEMENT (trans->stream->receive_bin));
-
-  return pad;
+  gst_element_sync_state_with_parent (GST_ELEMENT (stream->receive_bin));
 }
 
 typedef struct
@@ -2934,7 +3127,8 @@ _filter_sdp_fields (GQuark field_id, const GValue * value,
 static void
 _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     const GstSDPMessage * sdp, guint media_idx,
-    TransportStream * stream, GstWebRTCRTPTransceiver * rtp_trans)
+    TransportStream * stream, GstWebRTCRTPTransceiver * rtp_trans,
+    GStrv bundled, guint bundle_idx, gboolean * should_connect_bundle_stream)
 {
   WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
   GstWebRTCRTPTransceiverDirection prev_dir = rtp_trans->current_direction;
@@ -2979,6 +3173,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     local_dir = _get_direction_from_media (local_media);
     remote_dir = _get_direction_from_media (remote_media);
     new_dir = _get_final_direction (local_dir, remote_dir);
+
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE)
       return;
 
@@ -2992,8 +3187,10 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
       GST_DEBUG_OBJECT (webrtc, "mapping sdp media level attributes to caps");
       gst_sdp_media_attributes_to_caps (media, global_caps);
 
-      /* clear the ptmap */
-      g_array_set_size (stream->ptmap, 0);
+      if (!bundled) {
+        /* clear the ptmap */
+        g_array_set_size (stream->ptmap, 0);
+      }
 
       len = gst_sdp_media_formats_len (media);
       for (i = 0; i < len; i++) {
@@ -3046,38 +3243,34 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
       gst_caps_unref (global_caps);
     }
 
-    new_rtcp_mux = _media_has_attribute_key (local_media, "rtcp-mux")
-        && _media_has_attribute_key (remote_media, "rtcp-mux");
-    new_rtcp_rsize = _media_has_attribute_key (local_media, "rtcp-rsize")
-        && _media_has_attribute_key (remote_media, "rtcp-rsize");
+    if (prev_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
+        && prev_dir != new_dir) {
+      GST_FIXME_OBJECT (webrtc, "implement transceiver direction changes");
+      return;
+    }
 
-    {
-      GObject *session;
-      g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
-          media_idx, &session);
-      if (session) {
-        g_object_set (session, "rtcp-reduced-size", new_rtcp_rsize, NULL);
-        g_object_unref (session);
+    if (!bundled || bundle_idx == media_idx) {
+      new_rtcp_mux = _media_has_attribute_key (local_media, "rtcp-mux")
+          && _media_has_attribute_key (remote_media, "rtcp-mux");
+      new_rtcp_rsize = _media_has_attribute_key (local_media, "rtcp-rsize")
+          && _media_has_attribute_key (remote_media, "rtcp-rsize");
+
+      {
+        GObject *session;
+        g_signal_emit_by_name (webrtc->rtpbin, "get-internal-session",
+            media_idx, &session);
+        if (session) {
+          g_object_set (session, "rtcp-reduced-size", new_rtcp_rsize, NULL);
+          g_object_unref (session);
+        }
       }
+
+      g_object_set (stream, "rtcp-mux", new_rtcp_mux, NULL);
     }
   }
 
-  if (prev_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
-      && prev_dir != new_dir) {
-    GST_FIXME_OBJECT (webrtc, "implement transceiver direction changes");
-    return;
-  }
-
-  /* FIXME: bundle! */
-  g_object_set (stream, "rtcp-mux", new_rtcp_mux, NULL);
-
   if (new_dir != prev_dir) {
-    TransportReceiveBin *receive;
-
     GST_TRACE_OBJECT (webrtc, "transceiver direction change");
-
-    /* FIXME: this may not always be true. e.g. bundle */
-    g_assert (media_idx == stream->session_id);
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY ||
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
@@ -3098,8 +3291,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         _connect_input_stream (webrtc, pad);
         _add_pad (webrtc, pad);
       }
-      g_object_set (stream, "dtls-client",
-          new_setup == GST_WEBRTC_DTLS_SETUP_ACTIVE, NULL);
     }
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY ||
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
@@ -3116,22 +3307,36 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
             "creating new receive pad for transceiver %" GST_PTR_FORMAT, trans);
         pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, media_idx);
         pad->trans = gst_object_ref (rtp_trans);
-        _connect_output_stream (webrtc, pad);
+
+        if (!trans->stream) {
+          TransportStream *item;
+
+          item =
+              _get_or_create_transport_stream (webrtc,
+              bundled ? bundle_idx : media_idx, FALSE);
+          webrtc_transceiver_set_transport (trans, item);
+        }
+
+        if (!bundled)
+          _connect_output_stream (webrtc, trans->stream, media_idx);
+        else
+          *should_connect_bundle_stream = TRUE;
         /* delay adding the pad until rtpbin creates the recv output pad
          * to ghost to so queries/events travel through the pipeline correctly
          * as soon as the pad is added */
         _add_pad_to_list (webrtc, pad);
       }
-      g_object_set (stream, "dtls-client",
-          new_setup == GST_WEBRTC_DTLS_SETUP_ACTIVE, NULL);
+
+      transport_receive_bin_set_receive_state (stream->receive_bin,
+          RECEIVE_STATE_PASS);
+    } else if (!bundled) {
+      transport_receive_bin_set_receive_state (stream->receive_bin,
+          RECEIVE_STATE_DROP);
     }
 
-    receive = TRANSPORT_RECEIVE_BIN (stream->receive_bin);
-    if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY ||
-        new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV)
-      transport_receive_bin_set_receive_state (receive, RECEIVE_STATE_PASS);
-    else
-      transport_receive_bin_set_receive_state (receive, RECEIVE_STATE_DROP);
+    if (!bundled || bundle_idx == media_idx)
+      g_object_set (stream, "dtls-client",
+          new_setup == GST_WEBRTC_DTLS_SETUP_ACTIVE, NULL);
 
     rtp_trans->mline = media_idx;
     rtp_trans->current_direction = new_dir;
@@ -3265,40 +3470,111 @@ _find_compatible_unassociated_transceiver (GstWebRTCRTPTransceiver * p1,
   return TRUE;
 }
 
+static void
+_connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
+{
+  gchar *pad_name;
+  GstPad *queue_srcpad;
+  GstPad *rtp_sink;
+  TransportStream *stream = _find_transport_for_session (webrtc, session_id);
+  GstElement *queue;
+
+  g_assert (stream);
+
+  if (webrtc->rtpfunnel)
+    goto done;
+
+  webrtc->rtpfunnel = gst_element_factory_make ("rtpfunnel", NULL);
+  gst_bin_add (GST_BIN (webrtc), webrtc->rtpfunnel);
+  gst_element_sync_state_with_parent (webrtc->rtpfunnel);
+
+  queue = gst_element_factory_make ("queue", NULL);
+  gst_bin_add (GST_BIN (webrtc), queue);
+  gst_element_sync_state_with_parent (queue);
+
+  gst_element_link (webrtc->rtpfunnel, queue);
+
+  queue_srcpad = gst_element_get_static_pad (queue, "src");
+
+  pad_name = g_strdup_printf ("send_rtp_sink_%d", session_id);
+  rtp_sink = gst_element_get_request_pad (webrtc->rtpbin, pad_name);
+  g_free (pad_name);
+  gst_pad_link (queue_srcpad, rtp_sink);
+  gst_object_unref (queue_srcpad);
+  gst_object_unref (rtp_sink);
+
+  pad_name = g_strdup_printf ("send_rtp_src_%d", session_id);
+  if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
+          GST_ELEMENT (stream->send_bin), "rtp_sink"))
+    g_warn_if_reached ();
+  g_free (pad_name);
+
+done:
+  return;
+}
+
 static gboolean
 _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     GstWebRTCSessionDescription * sdp)
 {
   int i;
+  gboolean ret = FALSE;
+  GStrv bundled = NULL;
+  guint bundle_idx = 0;
+  gboolean should_connect_bundle_stream = FALSE;
+  TransportStream *bundle_stream = NULL;
+
+  if (!_parse_bundle (webrtc, sdp->sdp, &bundled))
+    goto done;
+
+  if (bundled) {
+
+    if (!_get_bundle_index (sdp->sdp, bundled, &bundle_idx)) {
+      GST_ERROR_OBJECT (webrtc, "Bundle tag is %s but no media found matching",
+          bundled[0]);
+      goto done;
+    }
+
+    bundle_stream = _get_or_create_transport_stream (webrtc, bundle_idx,
+        _message_media_is_datachannel (sdp->sdp, bundle_idx));
+
+    g_array_set_size (bundle_stream->ptmap, 0);
+
+    _connect_rtpfunnel (webrtc, bundle_idx);
+  }
 
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
     TransportStream *stream;
     GstWebRTCRTPTransceiver *trans;
+    guint transport_idx;
 
     /* skip rejected media */
     if (gst_sdp_media_get_port (media) == 0)
       continue;
 
+    if (bundled)
+      transport_idx = bundle_idx;
+    else
+      transport_idx = i;
+
     trans = _find_transceiver_for_sdp_media (webrtc, sdp->sdp, i);
 
-    stream = _find_transport_for_session (webrtc, i);
-    if (!stream) {
-      stream = _create_transport_stream (webrtc, i,
-          _message_media_is_datachannel (sdp->sdp, i));
-      if (trans)
-        webrtc_transceiver_set_transport ((WebRTCTransceiver *) trans, stream);
-    }
+    stream = _get_or_create_transport_stream (webrtc, transport_idx,
+        _message_media_is_datachannel (sdp->sdp, transport_idx));
+
+    if (trans)
+      webrtc_transceiver_set_transport ((WebRTCTransceiver *) trans, stream);
 
     if (source == SDP_LOCAL && sdp->type == GST_WEBRTC_SDP_TYPE_OFFER && !trans) {
       GST_ERROR ("State mismatch.  Could not find local transceiver by mline.");
-      return FALSE;
+      goto done;
     } else {
       if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0 ||
           g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
         if (trans) {
           _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
-              trans);
+              trans, bundled, bundle_idx, &should_connect_bundle_stream);
         } else {
           trans = _find_transceiver (webrtc, NULL,
               (FindTransceiverFunc) _find_compatible_unassociated_transceiver);
@@ -3306,12 +3582,13 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
            * transceviers.  The spec doesn't actually say what happens here, only
            * that calls to setDirection will change the value.  Nothing about
            * a default value when the transceiver is created internally */
-          if (!trans)
+          if (!trans) {
             trans =
                 GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
                     _get_direction_from_media (media), i));
+          }
           _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
-              trans);
+              trans, bundled, bundle_idx, &should_connect_bundle_stream);
         }
       } else if (_message_media_is_datachannel (sdp->sdp, i)) {
         _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream);
@@ -3321,7 +3598,17 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     }
   }
 
-  return TRUE;
+  if (should_connect_bundle_stream) {
+    g_assert (bundle_stream);
+    _connect_output_stream (webrtc, bundle_stream, bundle_idx);
+  }
+
+  ret = TRUE;
+
+done:
+  if (bundled)
+    g_strfreev (bundled);
+  return ret;
 }
 
 static void
@@ -3388,6 +3675,9 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 {
   GstWebRTCSignalingState new_signaling_state = webrtc->signaling_state;
   GError *error = NULL;
+  GStrv bundled = NULL;
+  guint bundle_idx = 0;
+  guint i;
 
   {
     gchar *state = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
@@ -3412,6 +3702,17 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   if (webrtc->priv->is_closed) {
     GST_WARNING_OBJECT (webrtc, "we are closed");
     goto out;
+  }
+
+  if (!_parse_bundle (webrtc, sd->sdp->sdp, &bundled))
+    goto out;
+
+  if (bundled) {
+    if (!_get_bundle_index (sd->sdp->sdp, bundled, &bundle_idx)) {
+      GST_ERROR_OBJECT (webrtc, "Bundle tag is %s but no media found matching",
+          bundled[0]);
+      goto out;
+    }
   }
 
   switch (sd->sdp->type) {
@@ -3553,6 +3854,13 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
     for (tmp = webrtc->priv->pending_sink_transceivers; tmp; tmp = tmp->next) {
       GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (tmp->data);
+      const GstSDPMedia *media;
+
+      media = gst_sdp_message_get_media (sd->sdp->sdp, pad->mlineindex);
+      /* skip rejected media */
+      /* FIXME: arrange for an appropriate flow return */
+      if (gst_sdp_media_get_port (media) == 0)
+        continue;
 
       _connect_input_stream (webrtc, pad);
       gst_pad_remove_probe (GST_PAD (pad), pad->block_id);
@@ -3574,58 +3882,58 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     }
   }
 
-  if (sd->source == SDP_LOCAL) {
-    int i;
+  for (i = 0; i < gst_sdp_message_medias_len (sd->sdp->sdp); i++) {
+    gchar *ufrag, *pwd;
+    TransportStream *item;
 
-    for (i = 0; i < gst_sdp_message_medias_len (sd->sdp->sdp); i++) {
-      gchar *ufrag, *pwd;
-      TransportStream *item;
+    item =
+        _get_or_create_transport_stream (webrtc, bundled ? bundle_idx : i,
+        _message_media_is_datachannel (sd->sdp->sdp, bundled ? bundle_idx : i));
 
-      /* FIXME: bundle */
-      item = _find_transport_for_session (webrtc, i);
-      if (!item)
-        item =
-            _create_transport_stream (webrtc, i,
-            _message_media_is_datachannel (sd->sdp->sdp, i));
+    if (sd->source == SDP_REMOTE) {
+      const GstSDPMedia *media = gst_sdp_message_get_media (sd->sdp->sdp, i);
+      guint j;
 
-      _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
+      for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
+        const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+
+        if (g_strcmp0 (attr->key, "ssrc") == 0) {
+          GStrv split = g_strsplit (attr->value, " ", 0);
+          guint32 ssrc;
+
+          if (split[0] && sscanf (split[0], "%u", &ssrc) && split[1]
+              && g_str_has_prefix (split[1], "cname:")) {
+            SsrcMapItem ssrc_item;
+
+            ssrc_item.media_idx = i;
+            ssrc_item.ssrc = ssrc;
+            g_array_append_val (item->remote_ssrcmap, ssrc_item);
+          }
+          g_strfreev (split);
+        }
+      }
+    }
+
+    if (bundled && bundle_idx != i)
+      continue;
+
+    _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
+
+    if (sd->source == SDP_LOCAL)
       gst_webrtc_ice_set_local_credentials (webrtc->priv->ice,
           item->stream, ufrag, pwd);
-      g_free (ufrag);
-      g_free (pwd);
-    }
-  }
-
-  if (sd->source == SDP_REMOTE) {
-    int i;
-
-    for (i = 0; i < gst_sdp_message_medias_len (sd->sdp->sdp); i++) {
-      gchar *ufrag, *pwd;
-      TransportStream *item;
-
-      /* FIXME: bundle */
-      item = _find_transport_for_session (webrtc, i);
-      if (!item)
-        item =
-            _create_transport_stream (webrtc, i,
-            _message_media_is_datachannel (sd->sdp->sdp, i));
-
-      _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
+    else
       gst_webrtc_ice_set_remote_credentials (webrtc->priv->ice,
           item->stream, ufrag, pwd);
-      g_free (ufrag);
-      g_free (pwd);
-    }
+    g_free (ufrag);
+    g_free (pwd);
   }
 
-  {
-    int i;
-    for (i = 0; i < webrtc->priv->ice_stream_map->len; i++) {
-      IceStreamItem *item =
-          &g_array_index (webrtc->priv->ice_stream_map, IceStreamItem, i);
+  for (i = 0; i < webrtc->priv->ice_stream_map->len; i++) {
+    IceStreamItem *item =
+        &g_array_index (webrtc->priv->ice_stream_map, IceStreamItem, i);
 
-      gst_webrtc_ice_gather_candidates (webrtc->priv->ice, item->stream);
-    }
+    gst_webrtc_ice_gather_candidates (webrtc->priv->ice, item->stream);
   }
 
   if (webrtc->current_local_description && webrtc->current_remote_description) {
@@ -3642,6 +3950,9 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   }
 
 out:
+  if (bundled)
+    g_strfreev (bundled);
+
   PC_UNLOCK (webrtc);
   gst_promise_reply (sd->promise, NULL);
   PC_LOCK (webrtc);
@@ -3777,7 +4088,6 @@ _on_ice_candidate (GstWebRTCICE * ice, guint session_id,
 {
   IceCandidateItem *item = g_new0 (IceCandidateItem, 1);
 
-  /* FIXME: bundle support */
   item->mlineindex = session_id;
   item->candidate = g_strdup (candidate);
 
@@ -4062,6 +4372,8 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
     WebRTCTransceiver *trans;
     TransportStream *stream;
     GstWebRTCBinPad *pad;
+    guint media_idx = 0;
+    guint i;
 
     if (sscanf (new_pad_name, "recv_rtp_src_%u_%u_%u", &session_id, &ssrc,
             &pt) != 3) {
@@ -4073,8 +4385,18 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
     if (!stream)
       g_warn_if_reached ();
 
-    /* FIXME: bundle! */
-    rtp_trans = _find_transceiver_for_mline (webrtc, session_id);
+    media_idx = session_id;
+
+    for (i = 0; i < stream->remote_ssrcmap->len; i++) {
+      SsrcMapItem *item =
+          &g_array_index (stream->remote_ssrcmap, SsrcMapItem, i);
+      if (item->ssrc == ssrc) {
+        media_idx = item->media_idx;
+        break;
+      }
+    }
+
+    rtp_trans = _find_transceiver_for_mline (webrtc, media_idx);
     if (!rtp_trans)
       g_warn_if_reached ();
     trans = WEBRTC_TRANSCEIVER (rtp_trans);
@@ -4591,6 +4913,13 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
     case PROP_TURN_SERVER:
       g_object_set_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
       break;
+    case PROP_BUNDLE_POLICY:
+      if (g_value_get_enum (value) == GST_WEBRTC_BUNDLE_POLICY_BALANCED) {
+        GST_ERROR_OBJECT (object, "Balanced bundle policy not implemented yet");
+      } else {
+        webrtc->bundle_policy = g_value_get_enum (value);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4648,6 +4977,9 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
     case PROP_STUN_SERVER:
     case PROP_TURN_SERVER:
       g_object_get_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
+      break;
+    case PROP_BUNDLE_POLICY:
+      g_value_set_enum (value, webrtc->bundle_policy);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4825,6 +5157,14 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           GST_TYPE_WEBRTC_ICE_GATHERING_STATE,
           GST_WEBRTC_ICE_GATHERING_STATE_NEW,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_BUNDLE_POLICY,
+      g_param_spec_enum ("bundle-policy", "Bundle Policy",
+          "The policy to apply for bundling",
+          GST_TYPE_WEBRTC_BUNDLE_POLICY,
+          GST_WEBRTC_BUNDLE_POLICY_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:

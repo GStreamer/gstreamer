@@ -83,6 +83,7 @@ struct _GstWebRTCBin
   GstBin                            parent;
 
   GstElement                       *rtpbin;
+  GstElement                       *rtpfunnel;
 
   GstWebRTCSignalingState           signaling_state;
   GstWebRTCICEGatheringState        ice_gathering_state;
@@ -93,6 +94,8 @@ struct _GstWebRTCBin
   GstWebRTCSessionDescription      *pending_local_description;
   GstWebRTCSessionDescription      *current_remote_description;
   GstWebRTCSessionDescription      *pending_remote_description;
+
+  GstWebRTCBundlePolicy             bundle_policy;
 
   GstWebRTCBinPrivate              *priv;
 };

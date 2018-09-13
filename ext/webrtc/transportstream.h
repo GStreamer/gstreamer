@@ -37,6 +37,12 @@ typedef struct
   GstCaps *caps;
 } PtMapItem;
 
+typedef struct
+{
+  guint32 ssrc;
+  guint media_idx;
+} SsrcMapItem;
+
 struct _TransportStream
 {
   GstObject                 parent;
@@ -54,6 +60,7 @@ struct _TransportStream
   GstWebRTCDTLSTransport   *rtcp_transport;
 
   GArray                   *ptmap;                  /* array of PtMapItem's */
+  GArray                   *remote_ssrcmap;         /* array of SsrcMapItem's */
 };
 
 struct _TransportStreamClass

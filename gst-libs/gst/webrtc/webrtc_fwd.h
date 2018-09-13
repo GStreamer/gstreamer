@@ -321,4 +321,22 @@ typedef enum /*< underscore_name=gst_webrtc_data_channel_state >*/
   GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED,
 } GstWebRTCDataChannelState;
 
+/**
+ * GstWebRTCBundlePolicy:
+ * GST_WEBRTC_BUNDLE_POLICY_NONE: none
+ * GST_WEBRTC_BUNDLE_POLICY_BALANCED: balanced
+ * GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT: max-compat
+ * GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE: max-bundle
+ *
+ * See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+ * for more information.
+ */
+typedef enum /*<underscore_name=gst_webrtc_bundle_policy>*/
+{
+  GST_WEBRTC_BUNDLE_POLICY_NONE,
+  GST_WEBRTC_BUNDLE_POLICY_BALANCED,
+  GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT,
+  GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE,
+} GstWebRTCBundlePolicy;
+
 #endif /* __GST_WEBRTC_FWD_H__ */

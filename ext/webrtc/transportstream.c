@@ -128,6 +128,7 @@ transport_stream_finalize (GObject * object)
   TransportStream *stream = TRANSPORT_STREAM (object);
 
   g_array_free (stream->ptmap, TRUE);
+  g_array_free (stream->remote_ssrcmap, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -238,6 +239,7 @@ transport_stream_init (TransportStream * stream)
 {
   stream->ptmap = g_array_new (FALSE, TRUE, sizeof (PtMapItem));
   g_array_set_clear_func (stream->ptmap, (GDestroyNotify) clear_ptmap_item);
+  stream->remote_ssrcmap = g_array_new (FALSE, TRUE, sizeof (SsrcMapItem));
 }
 
 TransportStream *
