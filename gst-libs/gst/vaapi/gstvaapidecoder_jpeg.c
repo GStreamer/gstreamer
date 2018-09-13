@@ -27,7 +27,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include <gst/codecparsers/gstjpegparser.h>
 #include "gstvaapicompat.h"
 #include "gstvaapidecoder_jpeg.h"

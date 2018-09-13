@@ -28,7 +28,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapidisplay_x11.h"

@@ -26,7 +26,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include <gst/base/gstbitreader.h>
 #include <gst/codecparsers/gstmpeg4parser.h>
 #include "gstvaapidecoder_mpeg4.h"

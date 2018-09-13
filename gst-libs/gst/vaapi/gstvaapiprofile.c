@@ -28,7 +28,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include <gst/gstbuffer.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiprofile.h"

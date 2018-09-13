@@ -24,7 +24,6 @@
 
 #define _GNU_SOURCE 1           /* RTLD_DEFAULT */
 #include "sysdeps.h"
-#include <string.h>
 #include <math.h>
 #include <dlfcn.h>
 #include "gstvaapiutils_glx.h"

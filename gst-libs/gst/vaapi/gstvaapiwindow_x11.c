@@ -28,7 +28,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include <X11/Xatom.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiwindow_x11.h"

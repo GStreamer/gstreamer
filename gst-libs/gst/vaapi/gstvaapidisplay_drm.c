@@ -27,7 +27,6 @@
 
 #define _GNU_SOURCE
 #include "sysdeps.h"
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <libudev.h>

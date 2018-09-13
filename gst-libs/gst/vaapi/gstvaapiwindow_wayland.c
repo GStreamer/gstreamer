@@ -27,7 +27,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiwindow_wayland.h"
 #include "gstvaapiwindow_priv.h"

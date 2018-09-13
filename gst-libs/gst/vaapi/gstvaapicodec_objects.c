@@ -23,7 +23,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include <gst/vaapi/gstvaapicontext.h>
 #include "gstvaapicodec_objects.h"
 #include "gstvaapidecoder_priv.h"

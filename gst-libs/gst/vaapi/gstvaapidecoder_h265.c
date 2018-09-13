@@ -26,7 +26,6 @@
  */
 
 #include "sysdeps.h"
-#include <string.h>
 #include <math.h>
 #include <gst/base/gstadapter.h>
 #include <gst/codecparsers/gsth265parser.h>
