@@ -35,24 +35,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiObject GstVaapiObject;
 
-/**
- * GST_VAAPI_OBJECT_DISPLAY:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
- */
-#define GST_VAAPI_OBJECT_DISPLAY(object) \
-  gst_vaapi_object_get_display (GST_VAAPI_OBJECT (object))
-
-/**
- * GST_VAAPI_OBJECT_ID:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the #GstVaapiID contained in @object.
- */
-#define GST_VAAPI_OBJECT_ID(object) \
-  gst_vaapi_object_get_id (GST_VAAPI_OBJECT (object))
-
 gpointer
 gst_vaapi_object_ref (gpointer object);
 

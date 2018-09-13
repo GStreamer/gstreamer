@@ -178,7 +178,8 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
   GstVaapiSurfaceProxy *const proxy =
       gst_vaapi_video_meta_get_surface_proxy (vmeta);
   GstVaapiSurface *const surface = gst_vaapi_surface_proxy_get_surface (proxy);
-  GstVaapiDisplay *const dpy = GST_VAAPI_OBJECT_DISPLAY (surface);
+  GstVaapiDisplay *const dpy =
+      gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface));
   GstVaapiTexture *texture = NULL;
 
   if (!gst_vaapi_display_has_opengl (dpy))
@@ -186,7 +187,8 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
 
   if (meta_texture->texture
       /* Check whether VA display changed */
-      && GST_VAAPI_OBJECT_DISPLAY (meta_texture->texture) == dpy
+      && gst_vaapi_object_get_display
+      (GST_VAAPI_OBJECT (meta_texture->texture)) == dpy
       /* Check whether texture id changed */
       && (gst_vaapi_texture_get_id (meta_texture->texture) == texture_id[0])) {
     texture = meta_texture->texture;

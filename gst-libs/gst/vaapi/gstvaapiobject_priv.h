@@ -71,7 +71,6 @@ G_PASTE(t_n,_class) (void)                                      \
  * Macro that evaluates to the #GstVaapiID contained in @object.
  * This is an internal macro that does not do any run-time type checks.
  */
-#undef  GST_VAAPI_OBJECT_ID
 #define GST_VAAPI_OBJECT_ID(object) \
   (GST_VAAPI_OBJECT (object)->object_id)
 
@@ -82,7 +81,6 @@ G_PASTE(t_n,_class) (void)                                      \
  * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
  * This is an internal macro that does not do any run-time type check.
  */
-#undef  GST_VAAPI_OBJECT_DISPLAY
 #define GST_VAAPI_OBJECT_DISPLAY(object) \
   (GST_VAAPI_OBJECT (object)->display)
 
