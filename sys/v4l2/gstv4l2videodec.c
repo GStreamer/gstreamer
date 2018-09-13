@@ -1085,6 +1085,8 @@ G_STMT_START { \
     SET_META ("FWHT");
   } else if (gst_structure_has_name (s, "video/x-h264")) {
     SET_META ("H264");
+  } else if (gst_structure_has_name (s, "video/x-h265")) {
+    SET_META ("H265");
   } else if (gst_structure_has_name (s, "video/x-wmv")) {
     SET_META ("VC1");
   } else if (gst_structure_has_name (s, "video/x-vp8")) {

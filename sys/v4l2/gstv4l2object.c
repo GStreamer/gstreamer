@@ -173,6 +173,7 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_H264, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_H264_NO_SC, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_H264_MVC, FALSE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_HEVC, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_H263, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG1, FALSE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG2, FALSE, GST_V4L2_CODEC},
@@ -1438,6 +1439,11 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
           "stream-format", G_TYPE_STRING, "avc", "alignment",
           G_TYPE_STRING, "au", NULL);
       break;
+    case V4L2_PIX_FMT_HEVC:    /* H.265 */
+      structure = gst_structure_new ("video/x-h265",
+          "stream-format", G_TYPE_STRING, "byte-stream", "alignment",
+          G_TYPE_STRING, "au", NULL);
+      break;
     case V4L2_PIX_FMT_VC1_ANNEX_G:
     case V4L2_PIX_FMT_VC1_ANNEX_L:
       structure = gst_structure_new ("video/x-wmv",
@@ -1816,6 +1822,8 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         fourcc = V4L2_PIX_FMT_H264_NO_SC;
       else
         fourcc = V4L2_PIX_FMT_H264;
+    } else if (g_str_equal (mimetype, "video/x-h265")) {
+      fourcc = V4L2_PIX_FMT_HEVC;
     } else if (g_str_equal (mimetype, "video/x-vp8")) {
       fourcc = V4L2_PIX_FMT_VP8;
     } else if (g_str_equal (mimetype, "video/x-vp9")) {
