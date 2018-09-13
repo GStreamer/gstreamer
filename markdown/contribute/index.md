@@ -224,7 +224,7 @@ in the current directory. Attach these files to a bug report in bugzilla.
 Please make sure your patches are as terse and precise as possible. Do not
 include 'clean-ups' or non-functional changes, since they distract from the
 real changes and make things harder to review, and also lower the chances that
-the patch will still apply cleanly to the lastest version in git. If you feel
+the patch will still apply cleanly to the latest version in git. If you feel
 there are things to clean up, please submit the clean-ups as a separate patch
 that does not contain any functional changes.
 

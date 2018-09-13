@@ -19,8 +19,8 @@ GStreamer plugins. We will first talk about the lowlevel `GstMemory`
 object that manages access to a piece of memory and then continue with
 one of it's main users, the `GstBuffer`, which is used to exchange data
 between plugins and with the application. We will also discuss the `GstMeta`.
-This object can be placed on buffers to provide extra info about it an
-dits memory. We will also discuss the `GstBufferPool`, which allows to
+This object can be placed on buffers to provide extra info about it and
+its memory. We will also discuss the `GstBufferPool`, which allows to
 more-efficiently manage buffers of the same size.
 
 To conclude this chapter we will take a look at the `GST_QUERY_ALLOCATION`

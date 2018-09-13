@@ -107,7 +107,7 @@ liking, and work from there.
 > ![Information](images/icons/emoticons/information.png)
 > **64-bit Users**
 >
->Use `%GSTREAMER_ROOT_X86_64%` if you have installed GStreamer binaries for 64-bit platforms. Both GStreamer binariess (32 and 64-bit) can be installed simultaneously, and hence the separate environment variables.
+>Use `%GSTREAMER_ROOT_X86_64%` if you have installed GStreamer binaries for 64-bit platforms. Both GStreamer binaries (32 and 64-bit) can be installed simultaneously, and hence the separate environment variables.
 >
 >Make sure you select the Solution Configuration that matches GStreamer that you have installed: `Win32` for 32 bits or `x64` for 64 bits.
 >

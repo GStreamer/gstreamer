@@ -90,7 +90,7 @@ The existing `STREAM_STATUS` message will be further defined and implemented in
     a pad, the message source will contain the owner as well. The idea
     is that the application should be able to see from the element/pad
     what function this thread has in the context of the application and
-    configure the thread appropriatly.
+    configure the thread appropriately.
 
   - **`object`**: `G_TYPE`, `GstTask/GThread`: A `GstTask/GThread` controlling
     this streaming thread.
