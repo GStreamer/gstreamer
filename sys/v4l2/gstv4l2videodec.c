@@ -129,24 +129,11 @@ gst_v4l2_video_dec_open (GstVideoDecoder * decoder)
   if (gst_caps_is_empty (self->probed_sinkcaps))
     goto no_encoded_format;
 
-  self->probed_srccaps = gst_v4l2_object_probe_caps (self->v4l2capture,
-      gst_v4l2_object_get_raw_caps ());
-
-  if (gst_caps_is_empty (self->probed_srccaps))
-    goto no_raw_format;
-
   return TRUE;
 
 no_encoded_format:
   GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
       (_("Decoder on device %s has no supported input format"),
-          self->v4l2output->videodev), (NULL));
-  goto failure;
-
-
-no_raw_format:
-  GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-      (_("Decoder on device %s has no supported output format"),
           self->v4l2output->videodev), (NULL));
   goto failure;
 
@@ -274,6 +261,13 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
 
   ret = gst_v4l2_object_set_format (self->v4l2output, state->caps, &error);
 
+  gst_caps_replace (&self->probed_srccaps, NULL);
+  self->probed_srccaps = gst_v4l2_object_probe_caps (self->v4l2capture,
+      gst_v4l2_object_get_raw_caps ());
+
+  if (gst_caps_is_empty (self->probed_srccaps))
+    goto no_raw_format;
+
   if (ret)
     self->input_state = gst_video_codec_state_ref (state);
   else
@@ -281,6 +275,12 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
 
 done:
   return ret;
+
+no_raw_format:
+  GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+      (_("Decoder on device %s has no supported output format"),
+          self->v4l2output->videodev), (NULL));
+  return GST_FLOW_ERROR;
 }
 
 static gboolean
@@ -641,8 +641,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     gst_structure_remove_field (st, "format");
 
     /* Probe currently available pixel formats */
-    available_caps = gst_v4l2_object_probe_caps (self->v4l2capture, NULL);
-    available_caps = gst_caps_make_writable (available_caps);
+    available_caps = gst_caps_copy (self->probed_srccaps);
     GST_DEBUG_OBJECT (self, "Available caps: %" GST_PTR_FORMAT, available_caps);
 
     /* Replace coded size with visible size, we want to negotiate visible size
