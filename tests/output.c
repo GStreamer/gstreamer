@@ -21,7 +21,6 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <string.h>
 #include <gst/gst.h>
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>

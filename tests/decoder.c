@@ -21,7 +21,6 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <string.h>
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>
 #include <gst/vaapi/gstvaapidecoder_mpeg2.h>

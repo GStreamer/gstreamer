@@ -23,7 +23,6 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <string.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include "decoder.h"
 #include "output.h"
