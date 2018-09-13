@@ -72,15 +72,26 @@ void
 gst_vaapi_parser_frame_append_unit(GstVaapiParserFrame *frame,
     GstVaapiDecoderUnit *unit);
 
-#define gst_vaapi_parser_frame_ref(frame) \
-    gst_vaapi_mini_object_ref(GST_VAAPI_MINI_OBJECT(frame))
+static inline GstVaapiParserFrame *
+gst_vaapi_parser_frame_ref (GstVaapiParserFrame * frame)
+{
+  return (GstVaapiParserFrame *)
+      gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (frame));
+}
 
-#define gst_vaapi_parser_frame_unref(frame) \
-    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(frame))
+static inline void
+gst_vaapi_parser_frame_unref (GstVaapiParserFrame * frame)
+{
+  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (frame));
+}
 
-#define gst_vaapi_parser_frame_replace(old_frame_p, new_frame)          \
-    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)(old_frame_p), \
-        (GstVaapiMiniObject *)(new_frame))
+static inline void
+gst_vaapi_parser_frame_replace(GstVaapiParserFrame * old_frame_p,
+    GstVaapiParserFrame * new_frame)
+{
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_frame_p,
+      (GstVaapiMiniObject *) new_frame);
+}
 
 G_END_DECLS
 
