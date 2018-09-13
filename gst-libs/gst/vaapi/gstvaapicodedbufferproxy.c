@@ -106,7 +106,7 @@ gst_vaapi_coded_buffer_proxy_new_from_pool (GstVaapiCodedBufferPool * pool)
 
   proxy->destroy_func = NULL;
   proxy->user_data_destroy = NULL;
-  proxy->pool = gst_vaapi_video_pool_ref (pool);
+  proxy->pool = gst_vaapi_video_pool_ref (GST_VAAPI_VIDEO_POOL (pool));
   proxy->buffer = gst_vaapi_video_pool_get_object (proxy->pool);
 #if USE_H264_FEI_ENCODER
   proxy->mv = NULL;

@@ -35,11 +35,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-/* Ensure those symbols are actually defined in the resulting libraries */
-#undef gst_vaapi_video_pool_ref
-#undef gst_vaapi_video_pool_unref
-#undef gst_vaapi_video_pool_replace
-
 #define GST_VAAPI_VIDEO_POOL_GET_CLASS(obj) \
   gst_vaapi_video_pool_get_class (GST_VAAPI_VIDEO_POOL (obj))
 
@@ -90,7 +85,8 @@ gst_vaapi_video_pool_finalize (GstVaapiVideoPool * pool)
 GstVaapiVideoPool *
 gst_vaapi_video_pool_ref (GstVaapiVideoPool * pool)
 {
-  return gst_vaapi_video_pool_ref_internal (pool);
+  return (GstVaapiVideoPool *)
+      gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (pool));
 }
 
 /**
@@ -103,7 +99,7 @@ gst_vaapi_video_pool_ref (GstVaapiVideoPool * pool)
 void
 gst_vaapi_video_pool_unref (GstVaapiVideoPool * pool)
 {
-  gst_vaapi_video_pool_unref_internal (pool);
+  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool));
 }
 
 /**
@@ -119,7 +115,8 @@ void
 gst_vaapi_video_pool_replace (GstVaapiVideoPool ** old_pool_ptr,
     GstVaapiVideoPool * new_pool)
 {
-  gst_vaapi_video_pool_replace_internal (old_pool_ptr, new_pool);
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (old_pool_ptr),
+      GST_VAAPI_MINI_OBJECT (new_pool));
 }
 
 /**

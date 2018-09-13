@@ -79,30 +79,6 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_video_pool_finalize (GstVaapiVideoPool * pool);
 
-/* Internal aliases */
-
-#define gst_vaapi_video_pool_ref_internal(pool) \
-  ((gpointer)gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (pool)))
-
-#define gst_vaapi_video_pool_unref_internal(pool) \
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (pool))
-
-#define gst_vaapi_video_pool_replace_internal(old_pool_ptr, new_pool) \
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **)(old_pool_ptr),  \
-      GST_VAAPI_MINI_OBJECT (new_pool))
-
-#undef  gst_vaapi_video_pool_ref
-#define gst_vaapi_video_pool_ref(pool) \
-  gst_vaapi_video_pool_ref_internal ((pool))
-
-#undef  gst_vaapi_video_pool_unref
-#define gst_vaapi_video_pool_unref(pool) \
-   gst_vaapi_video_pool_unref_internal ((pool))
-
-#undef  gst_vaapi_video_pool_replace
-#define gst_vaapi_video_pool_replace(old_pool_ptr, new_pool) \
-    gst_vaapi_video_pool_replace_internal ((old_pool_ptr), (new_pool))
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_POOL_PRIV_H */

@@ -164,7 +164,7 @@ gst_vaapi_surface_proxy_new_from_pool (GstVaapiSurfacePool * pool)
 
   proxy->parent = NULL;
   proxy->destroy_func = NULL;
-  proxy->pool = gst_vaapi_video_pool_ref (pool);
+  proxy->pool = gst_vaapi_video_pool_ref (GST_VAAPI_VIDEO_POOL (pool));
   proxy->surface = gst_vaapi_video_pool_get_object (proxy->pool);
   if (!proxy->surface)
     goto error;
