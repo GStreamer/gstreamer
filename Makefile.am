@@ -1,5 +1,3 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 if BUILD_EXTERNAL
 SUBDIRS_EXT = ext
 else
@@ -12,14 +10,12 @@ SUBDIRS = 			\
 	gst sys $(SUBDIRS_EXT) 	\
 	tools 			\
 	tests 			\
-	docs			\
 	po 			\
 	common 			\
 	m4
 
 DIST_SUBDIRS = 			\
 	pkgconfig		\
-	docs			\
 	gst-libs		\
 	gst sys ext		\
 	tools 			\
@@ -79,7 +75,6 @@ CRUFT_FILES = \
 
 CRUFT_DIRS = \
 	$(top_srcdir)/docs/design \
-	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/ext/gio \
 	$(top_srcdir)/gst/gdp \
 	$(top_srcdir)/sys/v4l \

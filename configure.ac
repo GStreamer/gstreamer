@@ -1,7 +1,5 @@
 AC_PREREQ([2.69])
 
-dnl please read gstreamer/docs/random/autotools before changing this file
-
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
@@ -156,10 +154,6 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for gobject-introspection
 GOBJECT_INTROSPECTION_CHECK([1.31.1])
-
-dnl check for documentation tools
-GTK_DOC_CHECK([1.12])
-AG_GST_PLUGIN_DOCS([1.12])
 
 dnl *** checks for libraries ***
 
@@ -1040,10 +1034,6 @@ tests/examples/playrec/Makefile
 tests/files/Makefile
 tests/icles/Makefile
 tests/icles/playback/Makefile
-docs/Makefile
-docs/libs/Makefile
-docs/plugins/Makefile
-docs/version.entities
 po/Makefile.in
 common/Makefile
 common/m4/Makefile
