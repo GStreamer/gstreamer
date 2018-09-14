@@ -52,10 +52,6 @@
 typedef gintptr EGLAttrib;
 #endif
 
-#if !GST_GL_HAVE_EGLUINT64KHR
-typedef guint64 EGLuint64KHR;
-#endif
-
 GST_GL_API
 const gchar *   gst_egl_get_error_string             (EGLint err);
 
