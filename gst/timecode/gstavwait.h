@@ -84,6 +84,7 @@ struct _GstAvWait
   gboolean dropping;
   gboolean recording;
   gboolean was_recording;
+  gint must_send_end_message;
 
   GCond cond;
   GMutex mutex;

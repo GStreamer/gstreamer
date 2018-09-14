@@ -100,6 +100,15 @@ enum
 #define DEFAULT_TARGET_RUNNING_TIME GST_CLOCK_TIME_NONE
 #define DEFAULT_MODE MODE_TIMECODE
 
+/* flags for self->must_send_end_message */
+enum
+{
+  END_MESSAGE_NORMAL = 0,
+  END_MESSAGE_STREAM_ENDED = 1,
+  END_MESSAGE_VIDEO_PUSHED = 2,
+  END_MESSAGE_AUDIO_PUSHED = 4
+};
+
 static void gst_avwait_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_avwait_get_property (GObject * object,
@@ -322,6 +331,7 @@ gst_avwait_change_state (GstElement * element, GstStateChange transition)
       self->audio_eos_flag = FALSE;
       self->video_flush_flag = FALSE;
       self->audio_flush_flag = FALSE;
+      self->must_send_end_message = END_MESSAGE_NORMAL;
       g_mutex_unlock (&self->mutex);
     default:
       break;
@@ -700,6 +710,7 @@ gst_avwait_asink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
       g_mutex_lock (&self->mutex);
       self->audio_eos_flag = TRUE;
+      self->must_send_end_message = END_MESSAGE_NORMAL;
       g_cond_signal (&self->audio_cond);
       g_mutex_unlock (&self->mutex);
       break;
@@ -738,6 +749,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GstVideoTimeCode *tc = NULL;
   GstVideoTimeCodeMeta *tc_meta;
   gboolean retry = FALSE;
+  gboolean ret = GST_FLOW_OK;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   if (timestamp == GST_CLOCK_TIME_NONE) {
@@ -805,8 +817,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
                 self->vsegment.position);
             if (self->recording) {
               self->audio_running_time_to_end_at = self->running_time_to_end_at;
-              gst_avwait_send_element_message (self, TRUE,
-                  self->running_time_to_end_at);
+              self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
             }
           }
           gst_buffer_unref (inbuf);
@@ -868,7 +879,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           && running_time <= self->running_time_to_end_at) {
         /* We just stopped recording: synchronise the audio */
         self->audio_running_time_to_end_at = running_time;
-        gst_avwait_send_element_message (self, TRUE, running_time);
+        self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
       } else if (running_time < self->running_time_to_wait_for
           && self->running_time_to_wait_for != GST_CLOCK_TIME_NONE) {
         self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
@@ -921,10 +932,33 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     self->was_recording = self->recording;
   g_cond_signal (&self->cond);
   g_mutex_unlock (&self->mutex);
-  if (inbuf)
-    return gst_pad_push (self->vsrcpad, inbuf);
-  else
-    return GST_FLOW_OK;
+  if (inbuf) {
+    GST_WARNING_OBJECT (self, "Pass video buffer ending at %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf) +
+            GST_BUFFER_DURATION (inbuf)));
+    ret = gst_pad_push (self->vsrcpad, inbuf);
+  }
+  g_mutex_lock (&self->mutex);
+  if (self->must_send_end_message & END_MESSAGE_AUDIO_PUSHED) {
+    self->must_send_end_message = END_MESSAGE_NORMAL;
+    g_mutex_unlock (&self->mutex);
+    gst_avwait_send_element_message (self, TRUE,
+        self->audio_running_time_to_end_at);
+  } else if (self->must_send_end_message & END_MESSAGE_STREAM_ENDED) {
+    if (self->audio_eos_flag) {
+      self->must_send_end_message = END_MESSAGE_NORMAL;
+      g_mutex_unlock (&self->mutex);
+      gst_avwait_send_element_message (self, TRUE,
+          self->audio_running_time_to_end_at);
+    } else {
+      self->must_send_end_message |= END_MESSAGE_VIDEO_PUSHED;
+      g_mutex_unlock (&self->mutex);
+    }
+  } else {
+    g_mutex_unlock (&self->mutex);
+  }
+
+  return ret;
 }
 
 /*
@@ -955,6 +989,10 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GstClockTime duration;
   GstClockTime running_time_at_end = GST_CLOCK_TIME_NONE;
   gint asign, vsign = 1, esign = 1;
+  GstFlowReturn ret = GST_FLOW_OK;
+  /* Make sure the video thread doesn't send the element message before we
+   * actually call gst_pad_push */
+  gboolean send_element_message = FALSE;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   if (timestamp == GST_CLOCK_TIME_NONE) {
@@ -1072,15 +1110,42 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     inbuf =
         gst_audio_buffer_clip (inbuf, &asegment2, self->ainfo.rate,
         self->ainfo.bpf);
+    if (self->must_send_end_message & END_MESSAGE_STREAM_ENDED) {
+      send_element_message = TRUE;
+    }
   } else {
     /* Programming error? Shouldn't happen */
     g_assert_not_reached ();
   }
   g_mutex_unlock (&self->mutex);
-  if (inbuf)
-    return gst_pad_push (self->asrcpad, inbuf);
-  else
-    return GST_FLOW_OK;
+  if (inbuf) {
+    GstClockTime new_duration =
+        gst_util_uint64_scale (gst_buffer_get_size (inbuf) / self->ainfo.bpf,
+        GST_SECOND, self->ainfo.rate);
+    GstClockTime new_running_time_at_end =
+        gst_segment_to_running_time (&self->asegment, GST_FORMAT_TIME,
+        self->asegment.position + new_duration);
+    GST_WARNING_OBJECT (self, "Pass audio buffer ending at %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (new_running_time_at_end));
+    ret = gst_pad_push (self->asrcpad, inbuf);
+  }
+  if (send_element_message) {
+    g_mutex_lock (&self->mutex);
+    if ((self->must_send_end_message & END_MESSAGE_VIDEO_PUSHED) ||
+        self->video_eos_flag) {
+      self->must_send_end_message = END_MESSAGE_NORMAL;
+      g_mutex_unlock (&self->mutex);
+      gst_avwait_send_element_message (self, TRUE,
+          self->audio_running_time_to_end_at);
+    } else if (self->must_send_end_message & END_MESSAGE_STREAM_ENDED) {
+      self->must_send_end_message |= END_MESSAGE_AUDIO_PUSHED;
+      g_mutex_unlock (&self->mutex);
+    } else {
+      g_assert_not_reached ();
+    }
+  }
+  send_element_message = FALSE;
+  return ret;
 }
 
 static GstIterator *
