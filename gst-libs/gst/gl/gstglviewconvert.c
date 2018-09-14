@@ -124,12 +124,14 @@ gst_gl_stereo_downmix_mode_get_type (void)
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS,
-          "Dubois optimised Green-Magenta anaglyph", "green-magenta-dubois"},
+            "GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS",
+          "green-magenta-dubois"},
       {GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS,
-            "Dubois optimised Red-Cyan anaglyph",
+            "GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS",
           "red-cyan-dubois"},
       {GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS,
-          "Dubois optimised Amber-Blue anaglyph", "amber-blue-dubois"},
+            "GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS",
+          "amber-blue-dubois"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
