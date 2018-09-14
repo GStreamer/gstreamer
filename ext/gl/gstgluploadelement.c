@@ -232,21 +232,9 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
   if (!upload->upload)
     return GST_FLOW_NOT_NEGOTIATED;
 
-again:
   ret = gst_gl_upload_perform_with_buffer (upload->upload, buffer, outbuf);
   if (ret == GST_GL_UPLOAD_RECONFIGURE) {
-    GstPad *sinkpad = GST_BASE_TRANSFORM_SINK_PAD (bt);
-    GstCaps *incaps = gst_pad_get_current_caps (sinkpad);
-    GST_DEBUG_OBJECT (bt,
-        "Failed to upload with curren caps -- reconfiguring.");
-    /* Note: gst_base_transform_reconfigure_src() cannot be used here.
-     * Reconfiguring must be synchronous to avoid dropping the current
-     * buffer */
-    gst_pad_send_event (sinkpad, gst_event_new_caps (incaps));
-    if (!gst_pad_needs_reconfigure (GST_BASE_TRANSFORM_SRC_PAD (bt))) {
-      GST_DEBUG_OBJECT (bt, "Retry uploading with new caps");
-      goto again;
-    }
+    gst_base_transform_reconfigure_src (bt);
     return GST_FLOW_OK;
   }
 
