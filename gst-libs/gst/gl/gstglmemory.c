@@ -1433,13 +1433,8 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
   else
     views = 1;
 
-  if (n_wrapped_pointers == views)
-    n_mem = 1;
-
-  /* Sanity check for the code below; there should be as many pointers as the
-   * number of memory we are going to create */
   g_return_val_if_fail (!wrapped_data
-      || n_mem * views == n_wrapped_pointers, FALSE);
+      || views * n_mem != n_wrapped_pointers, FALSE);
 
   for (v = 0; v < views; v++) {
     for (i = 0; i < n_mem; i++) {
