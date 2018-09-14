@@ -487,12 +487,6 @@ struct DmabufUpload
   GstEGLImage *eglimage[GST_VIDEO_MAX_PLANES];
   GstBuffer *outbuf;
   GstGLVideoAllocationParams *params;
-  guint n_mem;
-
-  gboolean direct;
-  GstVideoInfo out_info;
-  /* only used for pointer comparision */
-  gpointer out_caps;
 };
 
 static GstStaticCaps _dma_buf_upload_caps =
@@ -566,13 +560,12 @@ _dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
 static GQuark
 _eglimage_quark (gint plane)
 {
-  static GQuark quark[5] = { 0 };
+  static GQuark quark[4] = { 0 };
   static const gchar *quark_str[] = {
     "GstGLDMABufEGLImage0",
     "GstGLDMABufEGLImage1",
     "GstGLDMABufEGLImage2",
     "GstGLDMABufEGLImage3",
-    "GstGLDMABufEGLImage",
   };
 
   if (!quark[plane])
@@ -601,13 +594,12 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
 {
   struct DmabufUpload *dmabuf = impl;
   GstVideoInfo *in_info = &dmabuf->upload->priv->in_info;
-  GstVideoInfo *out_info = in_info;
   guint n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
   GstVideoMeta *meta;
   guint n_mem;
+  guint mems_idx[GST_VIDEO_MAX_PLANES];
+  gsize mems_skip[GST_VIDEO_MAX_PLANES];
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  gsize offset[GST_VIDEO_MAX_PLANES];
-  gint fd[GST_VIDEO_MAX_PLANES];
   guint i;
 
   n_mem = gst_buffer_n_memory (buffer);
@@ -641,20 +633,11 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     }
   }
 
-  if (dmabuf->direct) {
-    if (out_caps != dmabuf->out_caps) {
-      dmabuf->out_caps = out_caps;
-      if (!gst_video_info_from_caps (&dmabuf->out_info, out_caps))
-        return FALSE;
-    }
-    out_info = &dmabuf->out_info;
-  }
-
   if (dmabuf->params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) dmabuf->params);
   if (!(dmabuf->params =
           gst_gl_video_allocation_params_new_wrapped_gl_handle (dmabuf->
-              upload->context, NULL, out_info, -1, NULL,
+              upload->context, NULL, &dmabuf->upload->priv->in_info, -1, NULL,
               GST_GL_TEXTURE_TARGET_2D, 0, NULL, NULL, NULL)))
     return FALSE;
 
@@ -662,56 +645,41 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   for (i = 0; i < n_planes; i++) {
     guint plane_size;
     guint length;
-    guint mem_idx;
-    gsize mem_skip;
 
     plane_size = gst_gl_get_plane_data_size (in_info, NULL, i);
 
     if (!gst_buffer_find_memory (buffer, in_info->offset[i], plane_size,
-            &mem_idx, &length, &mem_skip))
+            &mems_idx[i], &length, &mems_skip[i]))
       return FALSE;
 
     /* We can't have more then one dmabuf per plane */
     if (length != 1)
       return FALSE;
 
-    mems[i] = gst_buffer_peek_memory (buffer, mem_idx);
+    mems[i] = gst_buffer_peek_memory (buffer, mems_idx[i]);
 
     /* And all memory found must be dmabuf */
     if (!gst_is_dmabuf_memory (mems[i]))
       return FALSE;
-
-    offset[i] = mems[i]->offset + mem_skip;
-    fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
   }
 
-  if (dmabuf->direct)
-    dmabuf->n_mem = 1;
-  else
-    dmabuf->n_mem = n_planes;
-
   /* Now create an EGLImage for each dmabufs */
-  for (i = 0; i < dmabuf->n_mem; i++) {
-    gint cache_id = dmabuf->direct ? 4 : i;
-
+  for (i = 0; i < n_planes; i++) {
     /* check if one is cached */
-    dmabuf->eglimage[i] = _get_cached_eglimage (mems[i], cache_id);
+    dmabuf->eglimage[i] = _get_cached_eglimage (mems[i], i);
     if (dmabuf->eglimage[i])
       continue;
 
     /* otherwise create one and cache it */
-    if (dmabuf->direct)
-      dmabuf->eglimage[i] =
-          gst_egl_image_from_dmabuf_direct (dmabuf->upload->context, fd, offset,
-          in_info);
-    else
-      dmabuf->eglimage[i] = gst_egl_image_from_dmabuf (dmabuf->upload->context,
-          fd[i], in_info, i, offset[i]);
+    dmabuf->eglimage[i] =
+        gst_egl_image_from_dmabuf (dmabuf->upload->context,
+        gst_dmabuf_memory_get_fd (mems[i]), in_info, i,
+        mems[i]->offset + mems_skip[i]);
 
     if (!dmabuf->eglimage[i])
       return FALSE;
 
-    _set_cached_eglimage (mems[i], dmabuf->eglimage[i], cache_id);
+    _set_cached_eglimage (mems[i], dmabuf->eglimage[i], i);
   }
 
   return TRUE;
@@ -737,7 +705,7 @@ _dma_buf_upload_perform_gl_thread (GstGLContext * context,
   /* FIXME: buffer pool */
   dmabuf->outbuf = gst_buffer_new ();
   gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params, NULL,
-      (gpointer *) dmabuf->eglimage, dmabuf->n_mem);
+      (gpointer *) dmabuf->eglimage, gst_buffer_n_memory (dmabuf->outbuf));
   gst_object_unref (allocator);
 }
 
@@ -777,92 +745,6 @@ static const UploadMethod _dma_buf_upload = {
   &_dma_buf_upload_caps,
   &_dma_buf_upload_new,
   &_dma_buf_upload_transform_caps,
-  &_dma_buf_upload_accept,
-  &_dma_buf_upload_propose_allocation,
-  &_dma_buf_upload_perform,
-  &_dma_buf_upload_free
-};
-
-/* a variant of the DMABuf uploader that relies on HW color convertion instead
- * of shaders */
-
-static gpointer
-_direct_dma_buf_upload_new (GstGLUpload * upload)
-{
-  struct DmabufUpload *dmabuf = _dma_buf_upload_new (upload);
-  dmabuf->direct = TRUE;
-  gst_video_info_init (&dmabuf->out_info);
-  return dmabuf;
-}
-
-static GstCaps *
-_direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
-    GstPadDirection direction, GstCaps * caps)
-{
-  GstCapsFeatures *passthrough =
-      gst_caps_features_from_string
-      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-  GstCaps *ret;
-
-  if (direction == GST_PAD_SINK) {
-    gint i, n;
-    GstCaps *tmp;
-
-    ret =
-        _set_caps_features_with_passthrough (caps,
-        GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
-
-    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
-
-    n = gst_caps_get_size (ret);
-    for (i = 0; i < n; i++) {
-      GstStructure *s = gst_caps_get_structure (ret, i);
-
-      gst_structure_remove_fields (s, "chroma-site", NULL);
-      gst_structure_remove_fields (s, "colorimetry", NULL);
-    }
-    tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
-    gst_caps_unref (ret);
-    ret = tmp;
-  } else {
-    gint i, n;
-    GstCaps *tmp;
-    GValue formats = G_VALUE_INIT;
-    gchar *format_str = g_strdup (GST_GL_MEMORY_VIDEO_FORMATS_STR);
-
-    ret =
-        _set_caps_features_with_passthrough (caps,
-        GST_CAPS_FEATURE_MEMORY_DMABUF, passthrough);
-    tmp =
-        _set_caps_features_with_passthrough (caps,
-        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
-    gst_caps_append (ret, tmp);
-
-    g_value_init (&formats, GST_TYPE_LIST);
-    gst_value_deserialize (&formats, format_str);
-    gst_caps_set_value (ret, "format", &formats);
-    g_free (format_str);
-    g_value_unset (&formats);
-
-    n = gst_caps_get_size (ret);
-    for (i = 0; i < n; i++) {
-      GstStructure *s = gst_caps_get_structure (ret, i);
-
-      gst_structure_remove_fields (s, "texture-target", NULL);
-    }
-  }
-
-  gst_caps_features_free (passthrough);
-
-  return ret;
-}
-
-static const UploadMethod _direct_dma_buf_upload = {
-  "DirectDmabuf",
-  0,
-  &_dma_buf_upload_caps,
-  &_direct_dma_buf_upload_new,
-  &_direct_dma_buf_upload_transform_caps,
   &_dma_buf_upload_accept,
   &_dma_buf_upload_propose_allocation,
   &_dma_buf_upload_perform,
@@ -1655,7 +1537,6 @@ static const UploadMethod _directviv_upload = {
 
 static const UploadMethod *upload_methods[] = { &_gl_memory_upload,
 #if GST_GL_HAVE_DMABUF
-  &_direct_dma_buf_upload,
   &_dma_buf_upload,
 #endif
 #if GST_GL_HAVE_VIV_DIRECTVIV
