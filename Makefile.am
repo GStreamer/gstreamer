@@ -1,5 +1,3 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 # note: keep in sync with configure.ac
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
@@ -8,7 +6,6 @@ aclocal_DATA = gst-element-check-1.0.m4
 
 SUBDIRS = pkgconfig \
 	gst libs plugins tests \
-	docs \
 	po \
 	m4 \
 	common \
@@ -21,7 +18,6 @@ endif
 # These are all the possible subdirs
 DIST_SUBDIRS = pkgconfig \
 	gst libs plugins tools tests \
-	docs \
 	po \
 	m4 \
 	common \
@@ -186,8 +182,7 @@ CRUFT_DIRS = \
 	$(top_builddir)/tests/examples/queue \
 	$(top_builddir)/tests/examples/typefind \
 	$(top_builddir)/gst/tmp-introspect* \
-	$(top_builddir)/libs/gst/*/tmp-introspect* \
-	$(top_srcdir)/docs/plugins/tmpl
+	$(top_builddir)/libs/gst/*/tmp-introspect*
 
 include $(top_srcdir)/common/cruft.mak
 

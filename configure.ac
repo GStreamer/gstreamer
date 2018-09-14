@@ -457,10 +457,6 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for gobject-introspection
 GOBJECT_INTROSPECTION_CHECK([1.31.1])
 
-dnl check for documentation tools
-GTK_DOC_CHECK([1.12])
-AG_GST_PLUGIN_DOCS([1.12])
-
 dnl *** checks for libraries ***
 
 dnl check for libm, for sin()
@@ -1126,12 +1122,6 @@ tests/examples/streams/Makefile
 tools/Makefile
 common/Makefile
 common/m4/Makefile
-docs/Makefile
-docs/gst/Makefile
-docs/gst/gstreamer.types
-docs/libs/Makefile
-docs/plugins/Makefile
-docs/version.entities
 m4/Makefile
 pkgconfig/Makefile
 stamp.h
@@ -1166,8 +1156,6 @@ Configuration
 	Compiler                   : ${CC}
 	Package name               : ${GST_PACKAGE_NAME}
 	Package origin             : ${GST_PACKAGE_ORIGIN}
-
-	API Documentation          : ${enable_gtk_doc}
 
 	Debug logging              : ${enable_gst_debug}
 	Tracing subsystem hooks    : ${enable_gst_tracer_hooks}

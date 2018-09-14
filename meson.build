@@ -530,16 +530,6 @@ endif
 
 configure_file(output : 'config.h', configuration : cdata)
 
-if build_machine.system() == 'windows'
-  message('Disabling gtk-doc while building on Windows')
-else
-  if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
-    subdir('docs')
-  else
-    message('Not building documentation as gtk-doc was not found')
-  endif
-endif
-
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
 
 install_data('gst-element-check-1.0.m4', install_dir : join_paths(get_option('datadir'), 'aclocal'))
