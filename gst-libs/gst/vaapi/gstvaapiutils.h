@@ -25,7 +25,6 @@
 #ifndef GST_VAAPI_UTILS_H
 #define GST_VAAPI_UTILS_H
 
-#include "config.h"
 #include <glib.h>
 #include <va/va.h>
 
