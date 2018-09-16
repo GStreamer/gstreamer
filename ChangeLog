@@ -1,3 +1,40 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:42:48 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.14.3
+
+2018-08-22 15:56:18 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: wait for flush complete and buffers being released when flushing
+	  When flusing we should wait for OMX to send the flush command complete event
+	  AND all ports being released.
+	  We were stopping as soon as one of those condition was met.
+	  Fix a race between FillThisBufferDone/EmptyBufferDone and the flush
+	  EventCmdComplete messages. The OMX implementation is supposed to release
+	  its buffers before posting the EventCmdComplete event but the ordering
+	  isn't guaranteed as the FillThisBufferDone/EmptyBufferDone and
+	  EventHandler callbacks can be called from different threads (cf 2.7
+	  'Thread Safety' in the spec).
+	  Only wait for buffers currently used by OMX as some buffers may not be
+	  in the pending queue because they are held downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789475
+
+2018-08-22 15:52:23 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: factor out should_wait_until_flushed()
+	  No semantic change. Makes the code easier to understand and I'm about to
+	  change the waiting condition.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789475
+
 === release 1.14.2 ===
 
 2018-07-20 01:09:29 +0100  Tim-Philipp Müller <tim@centricular.com>
