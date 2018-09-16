@@ -1,3 +1,64 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:33:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.14.3
+
+2018-09-05 21:49:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* tests/check/python/test_clip.py:
+	  clip: Resync priorities when removing an effect
+	  When removing a top effect in the list of top effects, other
+	  effects priorities need to take that into account to avoid
+	  holes in the indices.
+
+2018-07-29 16:20:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  formatter: Fix mixup in variable check
+
+2018-07-28 14:29:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Bump format version
+	  Previous commit makes the format not forward compat.
+
+2018-07-28 12:16:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	* ges/ges-transition-clip.c:
+	* ges/ges-xml-formatter.c:
+	* tests/check/python/test_clip.py:
+	  formatter: Serialize Transition border and invert properties
+	  Marking them as children properties and properly allow serializing
+	  clips children properties.
+	  This doesn't handle several TrackElement of a same type with
+	  different property values but this require more worked already
+	  marked as fixme to allow specifying full path of elements in the
+	  children properties API.
+	  See https://gitlab.gnome.org/GNOME/pitivi/issues/1687
+
+2018-07-27 22:11:33 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Compute relocation URIs in missing-uri signal
+	  Until know we were doing it outside of the signal and subclasses didn't
+	  have a chance to know that some assets was relocated.
+	  This is required so that Pitivi can handle proxy delation and relocated
+	  assets.
+	  Required for https://gitlab.gnome.org/GNOME/pitivi/issues/2203
+
 === release 1.14.2 ===
 
 2018-07-20 01:06:53 +0100  Tim-Philipp Müller <tim@centricular.com>
