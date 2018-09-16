@@ -1,3 +1,53 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:41:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.14.3
+
+2018-09-16 16:41:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2018-08-31 20:48:13 -0500  Matteo Valdina <matteo.valdina@gmail.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapidecode: sets return value in failure case.
+	  In gst_vaapidecode_handle_frame, when there is a decode error
+	  there is a code path the returns an uninitialized value.
+	  Bugzilla: https://bugzilla.gnome.org/show_bug.cgi?id=797006
+
+2018-08-30 18:56:40 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: lock at extracting available image formates
+	  When running several vaapi elements at the concurrently, at
+	  initialization, there is a race condition when extractin the avaible
+	  formats for images and subpictures.
+	  This patch add a lock when the those arrays are filled.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797039
+
+2018-08-16 16:28:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* meson.build:
+	  meson: Unify required version to 0.40.1
+
+2018-04-20 11:50:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/base/meson.build:
+	* gst-libs/gst/vaapi/meson.build:
+	  meson: fix miscellaneous meson warnings
+	  WARNING: Passed invalid keyword argument "rqeuired".
+	  gst-libs/gst/base/meson.build:11: WARNING: Passed invalid keyword argument "version".
+	  gst-libs/gst/base/meson.build:11: WARNING: Passed invalid keyword argument "soversion".
+	  gst-libs/gst/vaapi/meson.build:223: WARNING: Passed invalid keyword argument "version".
+	  gst-libs/gst/vaapi/meson.build:223: WARNING: Passed invalid keyword argument "soversion".
+
 === release 1.14.2 ===
 
 2018-07-20 01:08:58 +0100  Tim-Philipp Müller <tim@centricular.com>
