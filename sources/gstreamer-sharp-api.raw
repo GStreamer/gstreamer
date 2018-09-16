@@ -12688,7 +12688,7 @@
       <constant value="-1" ctype="gint" gtype="gint" name="VALUE_LESS_THAN"/>
       <constant value="2" ctype="gint" gtype="gint" name="VALUE_UNORDERED"/>
       <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR"/>
-      <constant value="2" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
+      <constant value="3" ctype="gint" gtype="gint" name="VERSION_MICRO"/>
       <constant value="14" ctype="gint" gtype="gint" name="VERSION_MINOR"/>
       <constant value="0" ctype="gint" gtype="gint" name="VERSION_NANO"/>
     </object>
@@ -16141,7 +16141,7 @@
           <parameter name="caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
-          <parameter name="_ret" type="GstCaps**">
+          <parameter allow-none="1" name="_ret" type="GstCaps**" owned="true" pass_as="out">
             <warning>missing glib:type-name</warning>
           </parameter>
         </parameters>
@@ -18734,6 +18734,20 @@
           <parameter allow-none="1" name="prob" type="GstTypeFindProbability" owned="true" pass_as="out"/>
         </parameters>
       </method>
+      <method name="TypeFindHelperGetRangeFull" cname="gst_type_find_helper_get_range_full" shared="true" version="1.14.3">
+        <return-type type="GstFlowReturn"/>
+        <parameters>
+          <parameter name="obj" type="GstObject*"/>
+          <parameter allow-none="1" name="parent" type="GstObject*"/>
+          <parameter scope="call" name="func" type="GstTypeFindHelperGetRangeFunction"/>
+          <parameter name="size" type="guint64"/>
+          <parameter allow-none="1" name="extension" type="const-gchar*"/>
+          <parameter name="caps" type="GstCaps**" owned="true" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter allow-none="1" name="prob" type="GstTypeFindProbability" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
     </object>
     <object name="Constants" cname="GstBaseConstants" opaque="true">
       <constant value="2" ctype="gint" gtype="gint" name="BASE_PARSE_FLAG_DRAINING"/>
@@ -20566,7 +20580,7 @@
       <constant value="online-service" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_ONLINE_SERVICE"/>
       <constant value="storage-editing" ctype="gchar*" gtype="gchar*" name="ENCODING_CATEGORY_STORAGE_EDITING"/>
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MAJOR"/>
-      <constant value="2" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
+      <constant value="3" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MICRO"/>
       <constant value="14" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_MINOR"/>
       <constant value="0" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO"/>
     </object>

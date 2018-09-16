@@ -779,14 +779,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int UpdateSrcCapsNativeDelegate (IntPtr inst, IntPtr caps, IntPtr _ret);
+		delegate int UpdateSrcCapsNativeDelegate (IntPtr inst, IntPtr caps, out IntPtr _ret);
 
-		static int UpdateSrcCaps_cb (IntPtr inst, IntPtr caps, IntPtr _ret)
+		static int UpdateSrcCaps_cb (IntPtr inst, IntPtr caps, out IntPtr _ret)
 		{
 			try {
 				Aggregator __obj = GLib.Object.GetObject (inst, false) as Aggregator;
 				Gst.FlowReturn __result;
-				__result = __obj.OnUpdateSrcCaps (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), _ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (_ret, typeof (Gst.Caps), false));
+				Gst.Caps my_ret;
+				__result = __obj.OnUpdateSrcCaps (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), out my_ret);
+				_ret = my_ret == null ? IntPtr.Zero : my_ret.Handle;
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -796,21 +798,23 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.Aggregator), ConnectionMethod="OverrideUpdateSrcCaps")]
-		protected virtual Gst.FlowReturn OnUpdateSrcCaps (Gst.Caps caps, Gst.Caps _ret)
+		protected virtual Gst.FlowReturn OnUpdateSrcCaps (Gst.Caps caps, out Gst.Caps _ret)
 		{
-			return InternalUpdateSrcCaps (caps, _ret);
+			return InternalUpdateSrcCaps (caps, out _ret);
 		}
 
-		private Gst.FlowReturn InternalUpdateSrcCaps (Gst.Caps caps, Gst.Caps _ret)
+		private Gst.FlowReturn InternalUpdateSrcCaps (Gst.Caps caps, out Gst.Caps _ret)
 		{
 			UpdateSrcCapsNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("update_src_caps"));
 				unmanaged = (UpdateSrcCapsNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(UpdateSrcCapsNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			int __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle, _ret == null ? IntPtr.Zero : _ret.Handle);
+			IntPtr native__ret;
+			int __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle, out native__ret);
+			_ret = native__ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (native__ret, typeof (Gst.Caps), true);
 			return (Gst.FlowReturn) __result;
 		}
 

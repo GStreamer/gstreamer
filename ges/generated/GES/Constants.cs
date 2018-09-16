@@ -24,7 +24,7 @@ namespace GES {
 		public const int PADDING = 4;
 		public const int PADDING_LARGE = 20;
 		public const int VERSION_MAJOR = 1;
-		public const int VERSION_MICRO = 2;
+		public const int VERSION_MICRO = 3;
 		public const int VERSION_MINOR = 14;
 		public const int VERSION_NANO = 0;
 #endregion
