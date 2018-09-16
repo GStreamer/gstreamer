@@ -1,3 +1,43 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:21:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.14.3
+
+2018-09-16 16:21:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2018-08-16 13:17:58 +0200  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Set bit depth for x264 ≥ 153
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796975
+
+2018-08-16 16:33:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* meson.build:
+	  meson: Unify required version to 0.40.1
+
 === release 1.14.2 ===
 
 2018-07-20 00:56:13 +0100  Tim-Philipp Müller <tim@centricular.com>
