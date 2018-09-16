@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
-AC_INIT([GStreamer Base Plug-ins],[1.14.2],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-base])
+AC_INIT([GStreamer Base Plug-ins],[1.14.3],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-base])
 
 AG_GST_INIT
 
@@ -56,10 +56,10 @@ dnl      1.2.5 => 205
 dnl      1.10.9 (who knows) => 1009
 dnl
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 1402, 0, 1402)
+AS_LIBTOOL(GST, 1403, 0, 1403)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.14.2
+GST_REQ=1.14.3
 
 dnl *** autotools stuff ****
 
