@@ -1,3 +1,20 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:31:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.14.3
+
+2018-08-16 16:28:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* meson.build:
+	  meson: Unify required version to 0.40.1
+
 === release 1.14.2 ===
 
 2018-07-20 01:05:51 +0100  Tim-Philipp Müller <tim@centricular.com>

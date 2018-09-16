@@ -5,13 +5,13 @@ GSTREAMER 1.14 RELEASE NOTES
 
 GStreamer 1.14.0 was originally released on 19 March 2018.
 
-The latest bug-fix release in the 1.14 series is 1.14.1 and was released
-on 17 May 2018.
+The latest bug-fix release in the 1.14 series is 1.14.3 and was released
+on 16 September 2018.
 
 See https://gstreamer.freedesktop.org/releases/1.14/ for the latest
 version of this document.
 
-_Last updated: Thursday 17 May 2018, 12:00 UTC (log)_
+_Last updated: Sunday 16 September 2018, 13:00 UTC (log)_
 
 
 Introduction
@@ -1390,6 +1390,101 @@ For a full list of bugfixes see Bugzilla. Note that this is not the full
 list of changes. For the full list of changes please refer to the GIT
 logs or ChangeLogs of the particular modules.
 
+1.14.3
+
+The third 1.14 bug-fix release (1.14.3) was released on 16 September
+2018.
+
+This release only contains bugfixes and it should be safe to update from
+1.14.x.
+
+Highlighted bugfixes in 1.14.3
+
+-   opusenc: fix crash on 32-bit platforms
+-   compositor: fix major buffer leak when doing crossfading on some but
+    not all pads
+-   wasapi: various fixes for wasapisrc and wasapisink regressions
+-   x264enc: Set bit depth to fix “This build of x264 requires 8-bit
+    depth. Rebuild to…” runtime errors with x264 version ≥ 153
+-   audioaggregator, audiomixer: caps negotiation fixes
+-   input-selector: latency handling fixes
+-   playbin, playsink: audio visualization support fixes
+-   dashdemux: fix possible crash if stream is neither isobmff nor
+    isoff_ondemand profile
+-   opencv: Fix build for opencv >= 3.4.2
+-   h265parse: miscellaneous fixes backported from h264parse
+-   pads: fix changing of pad offsets from inside pad probes
+-   pads: ensure that pads are blocked for IDLE probes if they are
+    called from the streaming thread too
+
+Other noteworthy bugfixes in 1.14.3
+
+-   queries: Set default values for position and duration query results
+-   segment: make gst_segment_position_from_running_time_full() handle
+    positions before the segment properly
+-   aggregator: annotate GstAggregatorClass::update_src_caps for
+    bindings
+-   aggregator: Don’t leak peer pad of inactive pads when (not)
+    forwarding QoS events to them
+-   baseparse: avg_bitrate calculation critical warning fix
+-   typefind: improved flow return handling in pull mode, flushing is
+    not an error
+-   gl: Don’t steal callers reference when setting non-floating elements
+    via properties
+-   gl: Also don’t leak floating references to elements set via
+    properties
+-   tagdemux: Properly propagate gst_pad_pull_range() errors
+-   aacparse: fix codec_data buffer leak
+-   rtpgstpay: Add support for force-keyunit events
+-   rtpL8pay: don’t try to modify a read-only structure
+-   rtpvp8pay, rtpvp9pay, rtpopuspay: Fix VP8/VP9/OPUS dual encoding
+    name handling
+-   rtp payloaders: Use running_time instead of PTS for config-interval
+    calculations
+-   qtdemux: Don’t assert in prefill mode if a track has no samples at
+    all
+-   qmlgl: Ensure GL headers are included
+-   v4l2src: fix first input used is always used next times
+-   v4l2object: Only offer MMAP/DMABUF pool
+-   v4l2object: stop V4L2 from zeroing extended colorimetry for
+    non-mplane
+-   v4l2object: improve colorspace handling for JPEG sources
+-   splitmuxsink: fix handling of repeated timestamps and a leak if sink
+    pads are not released explicitly
+-   player: Set default position and duration value to
+    GST_CLOCK_TIME_NONE
+-   videoaggregator: Make sure to hold object lock while iterating sink
+    pads
+-   audiobuffersplit: improve resync handling and compensate better for
+    accumulated errors
+-   kmssink: add support for Xilinx DRM Driver, mxsfb-drm driver and the
+    Allwinner DRM driver (sun4i-drm)
+-   rsvg: Also accept </svg:svg> as ending tag
+-   ges: project: Compute relocation URIs in missing-uri signal
+-   ges: formatter: Serialize Transition border and invert properties
+-   ges: clip: Resync priorities when removing an effect
+
+Contributors to 1.14.3
+
+Christoph Reiter, Devarsh Thakkar, Edward Hervey, Gary Bisson, Iñigo
+Huguet, Jan Alexander Steffens (heftig), Jan Schmidt, Jerome Laheurte,
+Marcos Kintschner, Mathieu Duponchelle, Matthew Waters, Michael Olbrich,
+Nicolas Dufresne, Nirbheek Chauhan, Paul Kocialkowski, Philippe Normand,
+Philipp Zabel, Roland Jon, Sebastian Dröge, Seungha Yang, Thibault
+Saunier, Tim-Philipp Müller, Yuji Kuwabara, and many others. Thank you
+all.
+
+List of bugs fixed in 1.14.3
+
+For a full list of bugfixes see Bugzilla. Note that this is not the full
+list of changes. For the full list of changes please refer to the GIT
+logs or ChangeLogs of the particular modules.
+
+1.14.4 (future)
+
+The fourth 1.14 bug-fix release (1.14.4) is scheduled to be released
+around October 2018.
+
 
 Known Issues
 
@@ -1413,8 +1508,8 @@ unstable development version leading up to the stable 1.16 release. The
 development of 1.15/1.16 will happen in the git master branch.
 
 The plan for the 1.16 development cycle is yet to be confirmed, but it
-is expected that feature freeze will be around August 2018 followed by
-several 1.15 pre-releases and the new 1.16 stable release in September.
+is expected that feature freeze will be around September 2018 followed
+by several 1.15 pre-releases and the new 1.16 stable release in October.
 
 1.16 will be backwards-compatible to the stable 1.14, 1.12, 1.10, 1.8,
 1.6, 1.4, 1.2 and 1.0 release series.
