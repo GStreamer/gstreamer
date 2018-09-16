@@ -66564,11 +66564,11 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstH265Parse::config-interval</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3600</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,3600]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>VPS SPS PPS Send Interval</NICK>
-<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -72837,7 +72837,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.60.0"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.61.0"</DEFAULT>
 </ARG>
 
 <ARG>
