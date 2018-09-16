@@ -1,3 +1,25 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:30:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.14.3
+
+2018-09-16 16:30:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2018-08-16 16:28:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* meson.build:
+	  meson: Unify required version to 0.40.1
+
 === release 1.14.2 ===
 
 2018-07-20 01:04:22 +0100  Tim-Philipp Müller <tim@centricular.com>
