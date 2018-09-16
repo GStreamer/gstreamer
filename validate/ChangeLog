@@ -1,3 +1,33 @@
+=== release 1.14.3 ===
+
+2018-09-16 16:36:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.14.3
+
+2018-09-07 15:59:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/vfb_server.py:
+	  validate:launcher: Just wait for a while before considering Xvfb is ready if xset is not present
+	  This is what xvfb-run so let's consider it good enough
+
+2018-08-16 16:28:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* meson.build:
+	  meson: Unify required version to 0.40.1
+
+2018-07-10 13:16:36 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/reporters.py:
+	  validate: Use 'skipped' keyword in xunit xml
+	  It was always meant to be 'skipped' to be 100% compatible with xunit
+	  xsl.
+	  Makes jenkins happy again
+
 === release 1.14.2 ===
 
 2018-07-20 01:07:44 +0100  Tim-Philipp Müller <tim@centricular.com>
