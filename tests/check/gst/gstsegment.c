@@ -888,7 +888,7 @@ GST_START_TEST (segment_full)
   fail_unless_equals_int (pos, 190);
 
   /* Test a non-1.0 rate that lands right before the segment, but still +ve */
-  segment.rate = 1.1;
+  segment.rate = 2.0;
   segment.start = 100;
   segment.offset = 0;
   segment.stop = 500;
@@ -897,11 +897,11 @@ GST_START_TEST (segment_full)
   segment.time = 10000;
   fail_unless (gst_segment_position_from_running_time_full (&segment,
           GST_FORMAT_TIME, 140, &pos) == 1);
-  fail_unless (pos == 89);
+  fail_unless (pos == 80);
   /* And now one that should give a position < 0 */
   fail_unless (gst_segment_position_from_running_time_full (&segment,
           GST_FORMAT_TIME, 0, &pos) == -1);
-  fail_unless (pos == 65);
+  fail_unless (pos == 200);
 
   /* Test a non-1.0 negative rate that lands right after the (reversed) segment, but still +ve position */
   segment.rate = -2.0;
