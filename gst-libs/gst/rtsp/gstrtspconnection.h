@@ -137,6 +137,10 @@ GstRTSPResult      gst_rtsp_connection_send           (GstRTSPConnection *conn, 
                                                        GTimeVal *timeout);
 
 GST_RTSP_API
+GstRTSPResult      gst_rtsp_connection_send_messages  (GstRTSPConnection *conn, GstRTSPMessage *messages, guint n_messages,
+                                                       GTimeVal *timeout);
+
+GST_RTSP_API
 GstRTSPResult      gst_rtsp_connection_receive        (GstRTSPConnection *conn, GstRTSPMessage *message,
                                                        GTimeVal *timeout);
 
@@ -311,6 +315,12 @@ GstRTSPResult      gst_rtsp_watch_write_data         (GstRTSPWatch *watch,
 GST_RTSP_API
 GstRTSPResult      gst_rtsp_watch_send_message       (GstRTSPWatch *watch,
                                                       GstRTSPMessage *message,
+                                                      guint *id);
+
+GST_RTSP_API
+GstRTSPResult      gst_rtsp_watch_send_messages      (GstRTSPWatch *watch,
+                                                      GstRTSPMessage *messages,
+                                                      guint n_messages,
                                                       guint *id);
 
 GST_RTSP_API

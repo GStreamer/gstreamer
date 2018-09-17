@@ -1840,6 +1840,7 @@ gst_rtsp_connection_write
 gst_rtsp_connection_poll
 
 gst_rtsp_connection_send
+gst_rtsp_connection_send_messages
 gst_rtsp_connection_receive
 
 gst_rtsp_connection_next_timeout
@@ -1892,6 +1893,7 @@ gst_rtsp_watch_unref
 gst_rtsp_watch_attach
 gst_rtsp_watch_reset
 gst_rtsp_watch_send_message
+gst_rtsp_watch_send_messages
 gst_rtsp_watch_write_data
 gst_rtsp_watch_get_send_backlog
 gst_rtsp_watch_set_send_backlog
