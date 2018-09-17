@@ -157,7 +157,7 @@ _gst_egl_image_copy (GstMiniObject * obj)
  * @image: the image to wrap
  * @format: the #GstGLFormat
  * @user_data: user data
- * @user_data_destroy: called when @user_data is no longer needed
+ * @user_data_destroy: (destroy user_data): called when @user_data is no longer needed
  *
  * Returns: a new #GstEGLImage wrapping @image
  */
