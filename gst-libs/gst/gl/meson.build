@@ -890,7 +890,7 @@ if build_gstgl
   gen_sources = []
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
-      sources : gl_sources + gir_gl_headers,
+      sources : gl_sources + gir_gl_headers + gl_x11_headers + gl_wayland_headers + gl_win32_headers + gl_cocoa_headers + gl_egl_headers,
       namespace : 'GstGL',
       nsversion : api_version,
       identifier_prefix : 'Gst',
