@@ -2480,12 +2480,12 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   buffer = gst_sample_get_buffer (sample);
   buffer_list = gst_sample_get_buffer_list (sample);
 
-  /* We will get one message-sent notification per message,
-   * i.e. per buffer that is actually sent out */
+  /* We will get one message-sent notification per buffer or
+   * complete buffer-list. We handle each buffer-list as a unit */
   if (buffer)
     n_messages += 1;
   if (buffer_list)
-    n_messages += gst_buffer_list_length (buffer_list);
+    n_messages += 1;
 
   is_rtp = (idx == 0);
 

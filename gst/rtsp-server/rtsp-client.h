@@ -62,6 +62,27 @@ typedef gboolean (*GstRTSPClientSendFunc)      (GstRTSPClient *client,
                                                 gpointer user_data);
 
 /**
+ * GstRTSPClientSendMessagesFunc:
+ * @client: a #GstRTSPClient
+ * @messages: #GstRTSPMessage
+ * @n_messages: number of messages
+ * @close: close the connection
+ * @user_data: user data when registering the callback
+ *
+ * This callback is called when @client wants to send @messages. When @close is
+ * %TRUE, the connection should be closed when the message has been sent.
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.16
+ */
+typedef gboolean (*GstRTSPClientSendMessagesFunc)      (GstRTSPClient *client,
+                                                        GstRTSPMessage *messages,
+                                                        guint n_messages,
+                                                        gboolean close,
+                                                        gpointer user_data);
+
+/**
  * GstRTSPClient:
  *
  * The client object represents the connection and its state with a client.
@@ -194,6 +215,12 @@ void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GstRTSPClientSendFunc func,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
+
+GST_RTSP_SERVER_API
+void                  gst_rtsp_client_set_send_messages_func (GstRTSPClient *client,
+                                                              GstRTSPClientSendMessagesFunc func,
+                                                              gpointer user_data,
+                                                              GDestroyNotify notify);
 
 GST_RTSP_SERVER_API
 GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,

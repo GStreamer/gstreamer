@@ -118,6 +118,8 @@ gst_rtsp_client_attach
 
 GstRTSPClientSendFunc
 gst_rtsp_client_set_send_func
+GstRTSPClientSendMessagesFunc
+gst_rtsp_client_set_send_messages_func
 
 gst_rtsp_client_handle_message
 gst_rtsp_client_send_message
