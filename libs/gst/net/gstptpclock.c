@@ -947,6 +947,8 @@ send_delay_req_timeout (PtpPendingSync * sync)
   header.type = TYPE_EVENT;
   header.size = 44;
 
+  GST_TRACE ("Sending delay_req to domain %u", sync->domain);
+
   gst_byte_writer_init_with_data (&writer, delay_req, 44, FALSE);
   gst_byte_writer_put_uint8_unchecked (&writer, PTP_MESSAGE_TYPE_DELAY_REQ);
   gst_byte_writer_put_uint8_unchecked (&writer, 2);
@@ -1022,8 +1024,10 @@ send_delay_req (PtpDomainData * domain, PtpPendingSync * sync)
   GSource *timeout_source;
 
   if (domain->last_delay_req != 0
-      && domain->last_delay_req + domain->min_delay_req_interval > now)
+      && domain->last_delay_req + domain->min_delay_req_interval > now) {
+    GST_TRACE ("Too soon to send new DELAY_REQ");
     return FALSE;
+  }
 
   domain->last_delay_req = now;
   sync->delay_req_seqnum = domain->last_delay_req_seqnum++;
@@ -1064,12 +1068,17 @@ update_ptp_time (PtpDomainData * domain, PtpPendingSync * sync)
   GstClockTime max_discont, estimated_ptp_time_min, estimated_ptp_time_max;
   gboolean now_synced;
 #endif
-
 #ifdef USE_ONLY_SYNC_WITH_DELAY
   GstClockTime mean_path_delay;
+#endif
 
-  if (sync->delay_req_send_time_local == GST_CLOCK_TIME_NONE)
+  GST_TRACE ("Updating PTP time");
+
+#ifdef USE_ONLY_SYNC_WITH_DELAY
+  if (sync->delay_req_send_time_local == GST_CLOCK_TIME_NONE) {
+    GST_TRACE ("Not updating - no delay_req sent");
     return;
+  }
 
   /* IEEE 1588 11.3 */
   mean_path_delay =
@@ -1428,8 +1437,10 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
   PtpPendingSync *sync = NULL;
 
   /* Don't consider messages with the alternate master flag set */
-  if ((msg->flag_field & 0x0100))
+  if ((msg->flag_field & 0x0100)) {
+    GST_TRACE ("Ignoring sync message with alternate-master flag");
     return;
+  }
 
   for (l = domain_data; l; l = l->next) {
     PtpDomainData *tmp = l->data;
@@ -1509,6 +1520,7 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
 
   if ((msg->flag_field & 0x0200)) {
     /* Wait for FOLLOW_UP */
+    GST_TRACE ("Waiting for FOLLOW_UP msg");
   } else {
     sync->sync_send_time_remote =
         PTP_TIMESTAMP_TO_GST_CLOCK_TIME (msg->message_specific.
@@ -1546,9 +1558,13 @@ handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
   PtpDomainData *domain = NULL;
   PtpPendingSync *sync = NULL;
 
+  GST_TRACE ("Processing FOLLOW_UP message");
+
   /* Don't consider messages with the alternate master flag set */
-  if ((msg->flag_field & 0x0100))
+  if ((msg->flag_field & 0x0100)) {
+    GST_TRACE ("Ignoring FOLLOW_UP with alternate-master flag");
     return;
+  }
 
   for (l = domain_data; l; l = l->next) {
     PtpDomainData *tmp = l->data;
@@ -1559,14 +1575,18 @@ handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
     }
   }
 
-  if (!domain)
+  if (!domain) {
+    GST_TRACE ("No domain match for FOLLOW_UP msg");
     return;
+  }
 
   /* If we have a master clock, ignore this message if it's not coming from there */
   if (domain->have_master_clock
       && compare_clock_identity (&domain->master_clock_identity,
-          &msg->source_port_identity) != 0)
+          &msg->source_port_identity) != 0) {
+    GST_TRACE ("FOLLOW_UP msg not from out master. Ignoring");
     return;
+  }
 
   /* Check if we know about this one */
   for (l = domain->pending_syncs.head; l; l = l->next) {
@@ -1578,12 +1598,16 @@ handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
     }
   }
 
-  if (!sync)
+  if (!sync) {
+    GST_TRACE ("Ignoring FOLLOW_UP with no pending SYNC");
     return;
+  }
 
   /* Got a FOLLOW_UP for this already */
-  if (sync->sync_send_time_remote != GST_CLOCK_TIME_NONE)
+  if (sync->sync_send_time_remote != GST_CLOCK_TIME_NONE) {
+    GST_TRACE ("Got repeat FOLLOW_UP. Ignoring");
     return;
+  }
 
   if (sync->sync_recv_time_local >= receive_time) {
     GST_ERROR ("Got bogus follow up in domain %u: %" GST_TIME_FORMAT " > %"
@@ -1718,8 +1742,10 @@ handle_ptp_message (PtpMessage * msg, GstClockTime receive_time)
 {
   /* Ignore our own messages */
   if (msg->source_port_identity.clock_identity == ptp_clock_id.clock_identity &&
-      msg->source_port_identity.port_number == ptp_clock_id.port_number)
+      msg->source_port_identity.port_number == ptp_clock_id.port_number) {
+    GST_TRACE ("Ignoring our own message");
     return;
+  }
 
   switch (msg->message_type) {
     case PTP_MESSAGE_TYPE_ANNOUNCE:
