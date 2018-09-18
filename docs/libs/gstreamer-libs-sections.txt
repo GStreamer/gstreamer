@@ -172,7 +172,7 @@ gst_trigger_control_source_get_type
 <SECTION>
 <FILE>gstadapter</FILE>
 <TITLE>GstAdapter</TITLE>
-<INCLUDE>gst/base/adapter.h</INCLUDE>
+<INCLUDE>gst/base/base.h.h</INCLUDE>
 GstAdapter
 gst_adapter_new
 gst_adapter_clear
@@ -269,7 +269,7 @@ gst_aggregator_pad_get_type
 <SECTION>
 <FILE>gstbaseparse</FILE>
 <TITLE>GstBaseParse</TITLE>
-<INCLUDE>gst/base/gstbaseparse.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstBaseParse
 GstBaseParseClass
 
@@ -323,7 +323,7 @@ gst_base_parse_frame_get_type
 <SECTION>
 <FILE>gstbasesrc</FILE>
 <TITLE>GstBaseSrc</TITLE>
-<INCLUDE>gst/base/gstbasesrc.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstBaseSrc
 GstBaseSrcClass
 GstBaseSrcFlags
@@ -368,7 +368,7 @@ gst_base_src_get_type
 <SECTION>
 <FILE>gstbasesink</FILE>
 <TITLE>GstBaseSink</TITLE>
-<INCLUDE>gst/base/gstbasesink.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstBaseSink
 GstBaseSinkClass
 
@@ -430,7 +430,7 @@ gst_base_sink_get_type
 <SECTION>
 <FILE>gstbasetransform</FILE>
 <TITLE>GstBaseTransform</TITLE>
-<INCLUDE>gst/base/gstbasetransform.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstBaseTransform
 GstBaseTransformClass
 
@@ -473,7 +473,7 @@ gst_base_transform_get_type
 <SECTION>
 <FILE>gstbitreader</FILE>
 <TITLE>GstBitReader</TITLE>
-<INCLUDE>gst/base/gstbitreader.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstBitReader
 
 GST_BIT_READER_INIT
@@ -576,7 +576,7 @@ GST_BIT_WRITER
 <SECTION>
 <FILE>gstbytereader</FILE>
 <TITLE>GstByteReader</TITLE>
-<INCLUDE>gst/base/gstbytereader.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstByteReader
 
 GST_BYTE_READER_INIT
@@ -734,7 +734,7 @@ g_memdup
 <SECTION>
 <FILE>gstbytewriter</FILE>
 <TITLE>GstByteWriter</TITLE>
-<INCLUDE>gst/base/gstbytewriter.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstByteWriter
 
 gst_byte_writer_new
@@ -829,7 +829,7 @@ GST_BYTE_WRITER
 <SECTION>
 <FILE>gstcollectpads</FILE>
 <TITLE>GstCollectPads</TITLE>
-<INCLUDE>gst/base/gstcollectpads.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstCollectPads
 GstCollectData
 
@@ -905,7 +905,7 @@ gst_collect_pads_get_type
 <SECTION>
 <FILE>gstflowcombiner</FILE>
 <TITLE>GstFlowCombiner</TITLE>
-<INCLUDE>gst/base/gstflowcombiner.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstFlowCombiner
 gst_flow_combiner_new
 gst_flow_combiner_free
@@ -926,7 +926,7 @@ gst_flow_combiner_get_type
 <SECTION>
 <FILE>gstpushsrc</FILE>
 <TITLE>GstPushSrc</TITLE>
-<INCLUDE>gst/base/gstpushsrc.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstPushSrc
 GstPushSrcClass
 <SUBSECTION Standard>
@@ -943,7 +943,7 @@ gst_push_src_get_type
 <SECTION>
 <FILE>gsttypefindhelper</FILE>
 <TITLE>GstTypeFindHelper</TITLE>
-<INCLUDE>gst/base/gsttypefindhelper.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 gst_type_find_helper
 gst_type_find_helper_for_buffer
 gst_type_find_helper_for_buffer_with_extension
@@ -958,7 +958,7 @@ gst_type_find_helper_get_range
 <SECTION>
 <FILE>gstdataqueue</FILE>
 <TITLE>GstDataQueue</TITLE>
-<INCLUDE>gst/base/gstdataqueue.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstDataQueue
 GstDataQueueSize
 GstDataQueueCheckFullFunction
@@ -992,7 +992,7 @@ gst_data_queue_get_type
 <SECTION>
 <FILE>gstqueuearray</FILE>
 <TITLE>GstQueueArray</TITLE>
-<INCLUDE>gst/base/gstqueuearray.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstQueueArray
 gst_queue_array_new
 gst_queue_array_free
