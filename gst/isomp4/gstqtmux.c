@@ -3033,6 +3033,47 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
     qtmux->timescale = suggested_timescale;
   }
 
+  /* Set width/height of any closed caption tracks to that of the first
+   * video track */
+  {
+    guint video_width = 0, video_height = 0;
+    GSList *walk;
+
+    for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
+      GstCollectData *cdata = (GstCollectData *) walk->data;
+      GstQTPad *qpad = (GstQTPad *) cdata;
+
+      if (!qpad->trak)
+        continue;
+
+      /* Not closed caption */
+      if (qpad->trak->mdia.hdlr.handler_type != FOURCC_clcp)
+        continue;
+
+      if (video_width == 0 || video_height == 0) {
+        GSList *walk2;
+
+        for (walk2 = qtmux->sinkpads; walk2; walk2 = g_slist_next (walk2)) {
+          GstCollectData *cdata2 = (GstCollectData *) walk2->data;
+          GstQTPad *qpad2 = (GstQTPad *) cdata2;
+
+          if (!qpad2->trak)
+            continue;
+
+          /* not video */
+          if (!qpad2->trak->mdia.minf.vmhd)
+            continue;
+
+          video_width = qpad2->trak->tkhd.width;
+          video_height = qpad2->trak->tkhd.height;
+        }
+      }
+
+      qpad->trak->tkhd.width = video_width << 16;
+      qpad->trak->tkhd.height = video_height << 16;
+    }
+  }
+
   /* initialize our moov recovery file */
   if (qtmux->moov_recov_file_path) {
     gst_qt_mux_prepare_moov_recovery (qtmux);
