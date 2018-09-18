@@ -53,7 +53,7 @@
 GST_DEBUG_CATEGORY (gstomx_debug);
 #define GST_CAT_DEFAULT gstomx_debug
 
-GST_DEBUG_CATEGORY_STATIC (OMX_PERFORMANCE);
+GST_DEBUG_CATEGORY_STATIC (OMX_API_TRACE);
 
 /* Macros used to log result of OMX calls. Use the requested debug level if the
  * operation succeeded and GST_LEVEL_ERROR if not.
@@ -608,24 +608,24 @@ omx_event_to_debug_struct (OMX_EVENTTYPE event,
 }
 
 static void
-log_omx_performance_event (GstOMXComponent * comp, OMX_EVENTTYPE event,
+log_omx_api_trace_event (GstOMXComponent * comp, OMX_EVENTTYPE event,
     guint32 data1, guint32 data2, gpointer event_data)
 {
   GstStructure *s;
 
   /* Don't bother creating useless structs if not needed */
-  if (gst_debug_category_get_threshold (OMX_PERFORMANCE) < GST_LEVEL_DEBUG)
+  if (gst_debug_category_get_threshold (OMX_API_TRACE) < GST_LEVEL_DEBUG)
     return;
 
   s = omx_event_to_debug_struct (event, data1, data2, event_data);
   if (!s) {
-    GST_CAT_WARNING_OBJECT (OMX_PERFORMANCE, comp->parent,
+    GST_CAT_WARNING_OBJECT (OMX_API_TRACE, comp->parent,
         "invalid event 0x%08x Data1 %u Data2 %u EventData %p", event, data1,
         data2, event_data);
     return;
   }
 
-  GST_CAT_DEBUG_OBJECT (OMX_PERFORMANCE, comp->parent, "%" GST_PTR_FORMAT, s);
+  GST_CAT_DEBUG_OBJECT (OMX_API_TRACE, comp->parent, "%" GST_PTR_FORMAT, s);
 
   gst_structure_free (s);
 }
@@ -636,7 +636,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
 {
   GstOMXComponent *comp = (GstOMXComponent *) pAppData;
 
-  log_omx_performance_event (comp, eEvent, nData1, nData2, pEventData);
+  log_omx_api_trace_event (comp, eEvent, nData1, nData2, pEventData);
 
   switch (eEvent) {
     case OMX_EventCmdComplete:
@@ -797,13 +797,13 @@ gst_omx_buffer_unmap (GstOMXBuffer * buffer)
 }
 
 static void
-log_omx_performance_buffer (GstOMXComponent * comp, const gchar * event,
+log_omx_api_trace_buffer (GstOMXComponent * comp, const gchar * event,
     GstOMXBuffer * buf)
 {
   GstStructure *s;
 
   /* Don't bother creating useless structs if not needed */
-  if (gst_debug_category_get_threshold (OMX_PERFORMANCE) < GST_LEVEL_TRACE)
+  if (gst_debug_category_get_threshold (OMX_API_TRACE) < GST_LEVEL_TRACE)
     return;
 
   if (buf) {
@@ -834,7 +834,7 @@ log_omx_performance_buffer (GstOMXComponent * comp, const gchar * event,
     s = gst_structure_new_empty (event);
   }
 
-  GST_CAT_TRACE_OBJECT (OMX_PERFORMANCE, comp->parent, "%" GST_PTR_FORMAT, s);
+  GST_CAT_TRACE_OBJECT (OMX_API_TRACE, comp->parent, "%" GST_PTR_FORMAT, s);
 
   gst_structure_free (s);
 }
@@ -869,7 +869,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   msg->content.buffer_done.buffer = pBuffer;
   msg->content.buffer_done.empty = OMX_TRUE;
 
-  log_omx_performance_buffer (comp, "EmptyBufferDone", buf);
+  log_omx_api_trace_buffer (comp, "EmptyBufferDone", buf);
   GST_LOG_OBJECT (comp->parent, "%s port %u emptied buffer %p (%p)",
       comp->name, buf->port->index, buf, buf->omx_buf->pBuffer);
 
@@ -908,7 +908,7 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   msg->content.buffer_done.buffer = pBuffer;
   msg->content.buffer_done.empty = OMX_FALSE;
 
-  log_omx_performance_buffer (comp, "FillBufferDone", buf);
+  log_omx_api_trace_buffer (comp, "FillBufferDone", buf);
   GST_LOG_OBJECT (comp->parent, "%s port %u filled buffer %p (%p)", comp->name,
       buf->port->index, buf, buf->omx_buf->pBuffer);
 
@@ -1103,23 +1103,23 @@ omx_command_to_debug_struct (OMX_COMMANDTYPE cmd,
 }
 
 static void
-log_omx_performance_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
+log_omx_api_trace_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
     guint32 param, gpointer cmd_data)
 {
   GstStructure *s;
 
   /* Don't bother creating useless structs if not needed */
-  if (gst_debug_category_get_threshold (OMX_PERFORMANCE) < GST_LEVEL_DEBUG)
+  if (gst_debug_category_get_threshold (OMX_API_TRACE) < GST_LEVEL_DEBUG)
     return;
 
   s = omx_command_to_debug_struct (cmd, param, cmd_data);
   if (!s) {
-    GST_CAT_WARNING_OBJECT (OMX_PERFORMANCE, comp->parent,
+    GST_CAT_WARNING_OBJECT (OMX_API_TRACE, comp->parent,
         "invalid command 0x%08x Param %u CmdData %p", cmd, param, cmd_data);
     return;
   }
 
-  GST_CAT_DEBUG_OBJECT (OMX_PERFORMANCE, comp->parent, "%" GST_PTR_FORMAT, s);
+  GST_CAT_DEBUG_OBJECT (OMX_API_TRACE, comp->parent, "%" GST_PTR_FORMAT, s);
 
   gst_structure_free (s);
 }
@@ -1130,7 +1130,7 @@ gst_omx_component_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
 {
   OMX_ERRORTYPE err;
 
-  log_omx_performance_send_command (comp, cmd, param, cmd_data);
+  log_omx_api_trace_send_command (comp, cmd, param, cmd_data);
   err = OMX_SendCommand (comp->handle, cmd, param, cmd_data);
 
   return err;
@@ -1803,10 +1803,10 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   buf->used = TRUE;
 
   if (port->port_def.eDir == OMX_DirInput) {
-    log_omx_performance_buffer (comp, "EmptyThisBuffer", buf);
+    log_omx_api_trace_buffer (comp, "EmptyThisBuffer", buf);
     err = OMX_EmptyThisBuffer (comp->handle, buf->omx_buf);
   } else {
-    log_omx_performance_buffer (comp, "FillThisBuffer", buf);
+    log_omx_api_trace_buffer (comp, "FillThisBuffer", buf);
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
   DEBUG_IF_OK (comp->parent, err, "Released buffer %p to %s port %u: %s "
@@ -2609,7 +2609,7 @@ gst_omx_port_populate_unlocked (GstOMXPort * port)
        */
       gst_omx_buffer_reset (buf);
 
-      log_omx_performance_buffer (comp, "FillThisBuffer", buf);
+      log_omx_api_trace_buffer (comp, "FillThisBuffer", buf);
       err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
 
       if (err != OMX_ErrorNone) {
@@ -3419,7 +3419,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gstomx_debug, "omx", 0, "gst-omx");
   GST_DEBUG_CATEGORY_INIT (gst_omx_video_debug_category, "omxvideo", 0,
       "gst-omx-video");
-  GST_DEBUG_CATEGORY_INIT (OMX_PERFORMANCE, "OMX_PERFORMANCE", 0,
+  GST_DEBUG_CATEGORY_INIT (OMX_API_TRACE, "OMX_API_TRACE", 0,
       "gst-omx performace");
 
   gst_omx_buffer_data_quark = g_quark_from_static_string ("GstOMXBufferData");
