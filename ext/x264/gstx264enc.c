@@ -1582,7 +1582,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.i_bitdepth = GST_VIDEO_INFO_COMP_DEPTH (info, 0);
 #endif
   encoder->x264param.i_csp =
-      gst_x264_enc_gst_to_x264_video_format (info->finfo->format, NULL);
+      gst_x264_enc_gst_to_x264_video_format (info->finfo->format,
+      &encoder->x264_nplanes);
   if (info->fps_d == 0 || info->fps_n == 0) {
     /* No FPS so must use VFR
      * This raises latency apparently see http://mewiki.project357.com/wiki/X264_Encoding_Suggestions */
@@ -2378,7 +2379,7 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
   x264_picture_t pic_in;
   gint i_nal, i;
   FrameData *fdata;
-  gint nplanes = 0;
+  gint nplanes = encoder->x264_nplanes;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     goto not_inited;
@@ -2393,8 +2394,7 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
   if (!fdata)
     goto invalid_frame;
 
-  pic_in.img.i_csp =
-      gst_x264_enc_gst_to_x264_video_format (info->finfo->format, &nplanes);
+  pic_in.img.i_csp = encoder->x264param.i_csp;
   pic_in.img.i_plane = nplanes;
   for (i = 0; i < nplanes; i++) {
     pic_in.img.plane[i] = GST_VIDEO_FRAME_COMP_DATA (&fdata->vframe, i);

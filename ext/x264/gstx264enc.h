@@ -123,6 +123,9 @@ struct _GstX264Enc
   const gchar *peer_profile;
   gboolean peer_intra_profile;
   gint peer_level_idc;
+
+  /* cached values to set x264_picture_t */
+  gint x264_nplanes;
 };
 
 struct _GstX264EncClass
