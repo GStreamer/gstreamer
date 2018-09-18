@@ -408,15 +408,14 @@ gst_rtp_funnel_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
-gst_rtp_funnel_dispose (GObject * object)
+gst_rtp_funnel_finalize (GObject * object)
 {
   GstRtpFunnel *funnel = GST_RTP_FUNNEL_CAST (object);
 
-  g_assert (GST_ELEMENT_CAST (object)->numsinkpads == 0);
   gst_caps_unref (funnel->srccaps);
   g_hash_table_destroy (funnel->ssrc_to_pad);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -425,7 +424,7 @@ gst_rtp_funnel_class_init (GstRtpFunnelClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_funnel_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rtp_funnel_finalize);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_rtp_funnel_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_rtp_funnel_set_property);
   gstelement_class->request_new_pad =
