@@ -1,7 +1,6 @@
-# FIXME - Add other missing examples!
-#subdir('clutter')
-#subdir('cocoa')
+subdir('clutter')
+# FIXME: subdir('cocoa')
 subdir('generic')
 subdir('gtk', if_found : gtk_dep)
-#subdir('qt')
+# FIXME: subdir('qt')
 subdir('sdl')
