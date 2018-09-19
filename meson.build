@@ -94,6 +94,12 @@ if glib_asserts.disabled() or (glib_asserts.auto() and not gst_version_is_dev)
   add_project_arguments('-DG_DISABLE_ASSERT', language: 'c')
 endif
 
+glib_checks = get_option('glib-checks')
+if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
+  message('Disabling GLib checks')
+  add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
+endif
+
 cdata = configuration_data()
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
