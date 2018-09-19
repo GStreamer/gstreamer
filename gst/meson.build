@@ -1,2 +1,5 @@
 subdir('rtsp-server')
-subdir('rtsp-sink')
+
+if not get_option('rtspclientsink').disabled()
+  subdir('rtsp-sink')
+endif

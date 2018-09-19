@@ -1,3 +1,6 @@
+# Feature options for plugins with no external deps
+option('rtspclientsink', type : 'feature', value : 'auto')
+
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true,
        description : 'Build the examples')

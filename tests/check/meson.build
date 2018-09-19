@@ -23,13 +23,16 @@ rtsp_server_tests = [
   'gst/media',
   'gst/permissions',
   'gst/rtspserver',
-  'gst/rtspclientsink',
   'gst/sessionmedia',
   'gst/sessionpool',
   'gst/stream',
   'gst/threadpool',
   'gst/token',
 ]
+
+if not get_option('rtspclientsink').disabled()
+  rtsp_server_tests += ['gst/rtspclientsink']
+endif
 
 foreach test_name : rtsp_server_tests
     env = environment()
