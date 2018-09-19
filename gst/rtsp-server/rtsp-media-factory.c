@@ -350,6 +350,7 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_MAX_MCAST_TTL:
       g_value_set_uint (value,
           gst_rtsp_media_factory_get_max_mcast_ttl (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -403,6 +404,7 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_MAX_MCAST_TTL:
       gst_rtsp_media_factory_set_max_mcast_ttl (factory,
           g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
