@@ -18,7 +18,7 @@
 <SECTION>
 <FILE>gstargbcontrolbinding</FILE>
 <TITLE>GstARGBControlBinding</TITLE>
-<INCLUDE>libs/controller/controller.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 gst_argb_control_binding_new
 <SUBSECTION Standard>
 GstARGBControlBinding
@@ -35,7 +35,7 @@ gst_argb_control_binding_get_type
 <SECTION>
 <FILE>gstdirectcontrolbinding</FILE>
 <TITLE>GstDirectControlBinding</TITLE>
-<INCLUDE>libs/controller/controller.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 gst_direct_control_binding_new
 gst_direct_control_binding_new_absolute
 <SUBSECTION Standard>
@@ -55,7 +55,7 @@ gst_direct_control_binding_get_type
 <SECTION>
 <FILE>gstproxycontrolbinding</FILE>
 <TITLE>GstProxyControlBinding</TITLE>
-<INCLUDE>libs/controller/controller.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 gst_proxy_control_binding_new
 <SUBSECTION Standard>
 GstProxyControlBinding
@@ -74,7 +74,7 @@ gst_proxy_control_binding_get_type
 <SECTION>
 <FILE>gsttimedvaluecontrolsource</FILE>
 <TITLE>GstTimedValueControlSource</TITLE>
-<INCLUDE>libs/controller/controller.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 GstTimedValueControlSource
 GstControlPoint
 gst_timed_value_control_source_find_control_point_iter
@@ -106,7 +106,7 @@ gst_control_point_get_type
 <SECTION>
 <FILE>gstinterpolationcontrolsource</FILE>
 <TITLE>GstInterpolationControlSource</TITLE>
-<INCLUDE>libs/controller/controller.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 GstInterpolationControlSource
 GstInterpolationMode
 gst_interpolation_control_source_new
@@ -128,7 +128,7 @@ gst_interpolation_mode_get_type
 <SECTION>
 <FILE>gstlfocontrolsource</FILE>
 <TITLE>GstLFOControlSource</TITLE>
-<INCLUDE>libs/controller/gstlfocontrolsource.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 GstLFOControlSource
 GstLFOWaveform
 gst_lfo_control_source_new
@@ -150,7 +150,7 @@ gst_lfo_waveform_get_type
 <SECTION>
 <FILE>gsttriggercontrolsource</FILE>
 <TITLE>GstTriggerControlSource</TITLE>
-<INCLUDE>libs/controller/controller.h</INCLUDE>
+<INCLUDE>gst/controller/controller.h</INCLUDE>
 GstTriggerControlSource
 gst_trigger_control_source_new
 GST_TYPE_TRIGGER_WAVEFORM
@@ -172,7 +172,7 @@ gst_trigger_control_source_get_type
 <SECTION>
 <FILE>gstadapter</FILE>
 <TITLE>GstAdapter</TITLE>
-<INCLUDE>gst/base/base.h.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstAdapter
 gst_adapter_new
 gst_adapter_clear
@@ -520,7 +520,7 @@ GST_BIT_READER
 <SECTION>
 <FILE>gstbitwriter</FILE>
 <TITLE>GstBitWriter</TITLE>
-<INCLUDE>gst/base/gstbitwriter.h</INCLUDE>
+<INCLUDE>gst/base/base.h</INCLUDE>
 GstBitWriter
 
 gst_bit_writer_new
@@ -1021,7 +1021,7 @@ gst_queue_array_drop_struct
 <SECTION>
 <FILE>gstnetaddressmeta</FILE>
 <TITLE>GstNetAddressMeta</TITLE>
-<INCLUDE>gst/net/gstnetaddressmeta.h</INCLUDE>
+<INCLUDE>gst/net/net.h</INCLUDE>
 GstNetAddressMeta
 gst_buffer_add_net_address_meta
 gst_buffer_get_net_address_meta
@@ -1036,7 +1036,7 @@ gst_net_address_meta_api_get_type
 <SECTION>
 <FILE>gstnetcontrolmessagemeta</FILE>
 <TITLE>GstNetControlMessageMeta</TITLE>
-<INCLUDE>gst/net/gstnetcontrolmessagemeta.h</INCLUDE>
+<INCLUDE>gst/net/net.h</INCLUDE>
 GstNetControlMessageMeta
 gst_buffer_add_net_control_message_meta
 gst_buffer_get_net_control_message_meta
@@ -1051,7 +1051,7 @@ gst_net_control_message_meta_api_get_type
 <SECTION>
 <FILE>gstnetclientclock</FILE>
 <TITLE>GstNetClientClock</TITLE>
-<INCLUDE>gst/net/gstnet.h</INCLUDE>
+<INCLUDE>gst/net/net.h</INCLUDE>
 GstNetClientClock
 GstNtpClock
 gst_net_client_clock_new
@@ -1079,7 +1079,7 @@ gst_ntp_clock_get_type
 <SECTION>
 <FILE>gstnettimepacket</FILE>
 <TITLE>GstNetTimePacket</TITLE>
-<INCLUDE>gst/net/gstnet.h</INCLUDE>
+<INCLUDE>gst/net/net.h</INCLUDE>
 GstNetTimePacket
 GST_NET_TIME_PACKET_SIZE
 gst_net_time_packet_new
@@ -1098,7 +1098,7 @@ socklen_t
 <SECTION>
 <FILE>gstnettimeprovider</FILE>
 <TITLE>GstNetTimeProvider</TITLE>
-<INCLUDE>gst/net/gstnet.h</INCLUDE>
+<INCLUDE>gst/net/net.h</INCLUDE>
 GstNetTimeProvider
 gst_net_time_provider_new
 <SUBSECTION Standard>
@@ -1151,7 +1151,7 @@ gst_ptp_clock_get_type
 <SECTION>
 <FILE>gstcheck</FILE>
 <TITLE>GstCheck</TITLE>
-<INCLUDE>gst/check/gstcheck.h</INCLUDE>
+<INCLUDE>gst/check/check.h</INCLUDE>
 GST_START_TEST
 GST_END_TEST
 
@@ -1257,7 +1257,7 @@ START_TEST
 <SECTION>
 <FILE>gstcheckbufferstraw</FILE>
 <TITLE>GstBufferStraw</TITLE>
-<INCLUDE>gst/check/gstbufferstraw.h</INCLUDE>
+<INCLUDE>gst/check/check.h</INCLUDE>
 gst_buffer_straw_start_pipeline
 gst_buffer_straw_get_buffer
 gst_buffer_straw_stop_pipeline
@@ -1266,7 +1266,7 @@ gst_buffer_straw_stop_pipeline
 <SECTION>
 <FILE>gstcheckconsistencychecker</FILE>
 <TITLE>GstStreamConsistency</TITLE>
-<INCLUDE>gst/check/gstconsistencychecker.h</INCLUDE>
+<INCLUDE>gst/check/check.h</INCLUDE>
 GstStreamConsistency
 gst_consistency_checker_new
 gst_consistency_checker_reset
@@ -1403,7 +1403,7 @@ GstHarnessPrivate
 <SECTION>
 <FILE>gsttestclock</FILE>
 <TITLE>GstTestClock</TITLE>
-<INCLUDE>gst/check/gsttestclock.h</INCLUDE>
+<INCLUDE>gst/check/check.h</INCLUDE>
 GstTestClock
 GstTestClockClass
 gst_test_clock_new
