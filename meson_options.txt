@@ -1,11 +1,14 @@
+# Common feature options
+option('examples', type : 'feature', value : 'auto', yield : true,
+       description : 'Build the examples')
+option('tests', type : 'feature', value : 'auto', yield : true,
+       description : 'Build and enable unit tests')
 option('introspection', type : 'feature', value : 'auto', yield : true,
        description : 'Generate gobject-introspection bindings')
+
+# Common options
 option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
 option('package-origin', type : 'string',
        value : 'Unknown package origin', yield : true,
        description : 'package origin URL to use in plugins')
-option('tests', type : 'feature', value : 'auto', yield : true,
-       description : 'Build and enable unit tests')
-option('examples', type : 'feature', value : 'auto', yield : true,
-       description : 'Build the examples')
