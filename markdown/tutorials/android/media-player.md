@@ -922,7 +922,7 @@ static void gst_native_finalize (JNIEnv* env, jobject thiz) {
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
-  const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
+  const gchar *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
   GST_DEBUG ("Setting URI to %s", char_uri);
   if (data->target_state >= GST_STATE_READY)
     gst_element_set_state (data->pipeline, GST_STATE_READY);
@@ -1063,7 +1063,7 @@ the playing URI (in this tutorial the URI never changes, but it could):
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
-  const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
+  const gchar *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
   GST_DEBUG ("Setting URI to %s", char_uri);
   if (data->target_state >= GST_STATE_READY)
     gst_element_set_state (data->pipeline, GST_STATE_READY);
