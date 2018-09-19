@@ -27,7 +27,7 @@
 
 typedef struct _GstValidateOverride GstValidateOverride;
 typedef struct _GstValidateOverrideClass GstValidateOverrideClass;
-typedef struct _GstValidateOverridePriv GstValidateOverridePriv;
+typedef struct _GstValidateOverridePrivate GstValidateOverridePrivate;
 
 
 #include <gst/validate/gst-validate-report.h>
@@ -71,7 +71,7 @@ struct _GstValidateOverride
   GstValidateOverrideElementAddedHandler element_added_handler;
 
   /*<private>*/
-  GstValidateOverridePriv *priv;
+  GstValidateOverridePrivate *priv;
 };
 
 GST_VALIDATE_API

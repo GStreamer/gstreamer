@@ -55,9 +55,6 @@
 #include <gst/validate/gst-validate-override-registry.h>
 #include <gst/validate/gst-validate-pipeline-monitor.h>
 
-#define GST_VALIDATE_SCENARIO_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
-
 #define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
 #define GST_VALIDATE_SCENARIO_DIRECTORY "scenarios"
 
@@ -222,8 +219,8 @@ _reporter_iface_init (GstValidateReporterInterface * iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
-    GST_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER,
-        _reporter_iface_init));
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstValidateScenario)
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init));
 
 /* GstValidateAction implementation */
 static GType _gst_validate_action_type = 0;
@@ -3111,8 +3108,6 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GstValidateScenarioPrivate));
-
   object_class->dispose = gst_validate_scenario_dispose;
   object_class->finalize = gst_validate_scenario_finalize;
 
@@ -3156,7 +3151,7 @@ static void
 gst_validate_scenario_init (GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv =
-      GST_VALIDATE_SCENARIO_GET_PRIVATE (scenario);
+      gst_validate_scenario_get_instance_private (scenario);
 
   priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
   priv->segment_start = 0;

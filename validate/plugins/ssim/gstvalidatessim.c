@@ -125,13 +125,13 @@
 #define SSIM_SAVING_ERROR g_quark_from_static_string ("validatessim::saving-error")
 #define MONITOR_DATA g_quark_from_static_string ("validate-ssim-monitor-data")
 
-typedef struct _ValidateSsimOverridePriv ValidateSsimOverridePriv;
+typedef struct _ValidateSsimOverridePrivate ValidateSsimOverridePrivate;
 
 typedef struct
 {
   GstValidateOverride parent;
 
-  ValidateSsimOverridePriv *priv;
+  ValidateSsimOverridePrivate *priv;
 
 } ValidateSsimOverride;
 
@@ -154,21 +154,7 @@ free_frame (Frame * frame)
   g_free (frame->path);
 }
 
-
-static GType validate_ssim_override_get_type (void);
-
-#define VALIDATE_SSIM_OVERRIDE_TYPE (validate_ssim_override_get_type ())
-#define VALIDATE_SSIM_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), VALIDATE_SSIM_OVERRIDE_TYPE, ValidateSsimOverride))
-#define VALIDATE_SSIM_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), VALIDATE_SSIM_OVERRIDE_TYPE, ValidateSsimOverrideClass))
-#define IS_VALIDATE_SSIM_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VALIDATE_SSIM_OVERRIDE_TYPE))
-#define IS_VALIDATE_SSIM_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), VALIDATE_SSIM_OVERRIDE_TYPE))
-#define VALIDATE_SSIM_OVERRIDE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), VALIDATE_SSIM_OVERRIDE_TYPE, ValidateSsimOverrideClass))
-
-/*  *INDENT-OFF* */
-G_DEFINE_TYPE (ValidateSsimOverride, validate_ssim_override, GST_TYPE_VALIDATE_OVERRIDE)
-/*  *INDENT-ON* */
-
-struct _ValidateSsimOverridePriv
+struct _ValidateSsimOverridePrivate
 {
   gchar *outdir;
   gchar *result_outdir;
@@ -192,6 +178,22 @@ struct _ValidateSsimOverridePriv
   GstVideoFormat ref_format;
   const gchar *ref_ext;
 };
+
+
+
+static GType validate_ssim_override_get_type (void);
+
+#define VALIDATE_SSIM_OVERRIDE_TYPE (validate_ssim_override_get_type ())
+#define VALIDATE_SSIM_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), VALIDATE_SSIM_OVERRIDE_TYPE, ValidateSsimOverride))
+#define VALIDATE_SSIM_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), VALIDATE_SSIM_OVERRIDE_TYPE, ValidateSsimOverrideClass))
+#define IS_VALIDATE_SSIM_OVERRIDE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), VALIDATE_SSIM_OVERRIDE_TYPE))
+#define IS_VALIDATE_SSIM_OVERRIDE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), VALIDATE_SSIM_OVERRIDE_TYPE))
+#define VALIDATE_SSIM_OVERRIDE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), VALIDATE_SSIM_OVERRIDE_TYPE, ValidateSsimOverrideClass))
+
+/*  *INDENT-OFF* */
+G_DEFINE_TYPE_WITH_PRIVATE (ValidateSsimOverride, validate_ssim_override,
+    GST_TYPE_VALIDATE_OVERRIDE)
+/*  *INDENT-ON* */
 
 static void
 runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
@@ -413,7 +415,7 @@ fail:
 static void
 _finalize (GObject * object)
 {
-  ValidateSsimOverridePriv *priv = VALIDATE_SSIM_OVERRIDE (object)->priv;
+  ValidateSsimOverridePrivate *priv = VALIDATE_SSIM_OVERRIDE (object)->priv;
 
   if (priv->converter)
     gst_video_converter_free (priv->converter);
@@ -458,16 +460,12 @@ validate_ssim_override_class_init (ValidateSsimOverrideClass * klass)
           "The ValidateSSim plugin could not save PNG file",
           "The ValidateSSim plugin could not save PNG file",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
-
-  g_type_class_add_private (klass, sizeof (ValidateSsimOverridePriv));
 }
 
 static void
 validate_ssim_override_init (ValidateSsimOverride * self)
 {
-  self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, VALIDATE_SSIM_OVERRIDE_TYPE,
-      ValidateSsimOverridePriv);
+  self->priv = validate_ssim_override_get_instance_private (self);
 
   self->priv->needs_reconfigure = TRUE;
   self->priv->frames = g_array_new (TRUE, TRUE, sizeof (Frame));
@@ -480,7 +478,7 @@ _set_videoconvert (ValidateSsimOverride * o,
 {
   GstCaps *caps;
   GstVideoFormat format;
-  ValidateSsimOverridePriv *priv = o->priv;
+  ValidateSsimOverridePrivate *priv = o->priv;
   GstPad *pad =
       GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
           (pad_monitor)));
@@ -585,7 +583,7 @@ static gboolean
 _should_dump_buffer (ValidateSsimOverride * self,
     GstValidatePadMonitor * pad_monitor, GstClockTime position)
 {
-  ValidateSsimOverridePriv *priv = self->priv;
+  ValidateSsimOverridePrivate *priv = self->priv;
 
   if (!GST_CLOCK_TIME_IS_VALID (priv->recurrence))
     return TRUE;
@@ -654,7 +652,7 @@ _handle_buffer (GstValidateOverride * override,
   Frame iframe;
 
   ValidateSsimOverride *o = VALIDATE_SSIM_OVERRIDE (override);
-  ValidateSsimOverridePriv *priv = o->priv;
+  ValidateSsimOverridePrivate *priv = o->priv;
 
   GstClockTime running_time, position;
 

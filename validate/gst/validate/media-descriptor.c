@@ -23,12 +23,15 @@
 #include <string.h>
 #include "media-descriptor.h"
 
+struct _GstValidateMediaDescriptorPrivate
+{
+  gpointer dummy;
+};
+
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstValidateMediaDescriptor,
     gst_validate_media_descriptor, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstValidateMediaDescriptor)
     G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
-
-#define GST_VALIDATE_MEDIA_DESCRIPTOR_GET_PRIVATE(o)\
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR, GstValidateMediaDescriptorPrivate))
 
 static inline void
 free_tagnode (GstValidateMediaTagNode * tagnode)
@@ -125,11 +128,6 @@ gboolean
   return TRUE;
 }
 
-struct _GstValidateMediaDescriptorPrivate
-{
-  gpointer dummy;
-};
-
 enum
 {
   PROP_0,
@@ -199,8 +197,6 @@ gst_validate_media_descriptor_class_init (GstValidateMediaDescriptorClass *
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class,
-      sizeof (GstValidateMediaDescriptorPrivate));
   object_class->dispose =
       (void (*)(GObject * object)) gst_validate_media_descriptor_dispose;
   object_class->finalize =

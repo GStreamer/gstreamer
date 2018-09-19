@@ -113,7 +113,8 @@ typedef struct _PatternLevel
   } G_STMT_END
 
 #define gst_validate_runner_parent_class parent_class
-G_DEFINE_TYPE (GstValidateRunner, gst_validate_runner, GST_TYPE_TRACER);
+G_DEFINE_TYPE_WITH_PRIVATE (GstValidateRunner, gst_validate_runner,
+    GST_TYPE_TRACER);
 
 /* signals */
 enum
@@ -413,8 +414,6 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
   gobject_class->get_property = gst_validate_runner_get_property;
   gobject_class->constructor = gst_validate_runner_constructor;
 
-  g_type_class_add_private (klass, sizeof (GstValidateRunnerPrivate));
-
   properties[PROP_PARAMS] =
       g_param_spec_string ("params", "Params", "Extra configuration parameters",
       NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
@@ -437,9 +436,7 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
 static void
 gst_validate_runner_init (GstValidateRunner * runner)
 {
-  runner->priv = G_TYPE_INSTANCE_GET_PRIVATE (runner, GST_TYPE_VALIDATE_RUNNER,
-      GstValidateRunnerPrivate);
-  g_mutex_init (&runner->priv->mutex);
+  runner->priv = gst_validate_runner_get_instance_private (runner);
 
   runner->priv->reports_by_type = g_hash_table_new (g_direct_hash,
       g_direct_equal);

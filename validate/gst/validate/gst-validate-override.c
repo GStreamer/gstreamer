@@ -41,10 +41,7 @@
 
 /*  *INDENT-OFF* */
 
-G_DEFINE_TYPE_WITH_CODE (GstValidateOverride, gst_validate_override,
-    GST_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL))
-
-struct _GstValidateOverridePriv
+struct _GstValidateOverridePrivate
 {
   GHashTable *level_override;
 };
@@ -55,6 +52,10 @@ enum
   PROP_RUNNER,
   PROP_LAST
 };
+
+G_DEFINE_TYPE_WITH_CODE (GstValidateOverride, gst_validate_override,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstValidateOverride)
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL))
 
 /*  *INDENT-ON* */
 
@@ -108,8 +109,6 @@ gst_validate_override_class_init (GstValidateOverrideClass * klass)
 
   oclass->finalize = gst_validate_override_finalize;
 
-  g_type_class_add_private (klass, sizeof (GstValidateOverridePriv));
-
   oclass->get_property = _get_property;
   oclass->set_property = _set_property;
 
@@ -123,8 +122,7 @@ gst_validate_override_class_init (GstValidateOverrideClass * klass)
 static void
 gst_validate_override_init (GstValidateOverride * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GST_TYPE_VALIDATE_OVERRIDE, GstValidateOverridePriv);
+  self->priv = gst_validate_override_get_instance_private (self);
 
   self->priv->level_override = g_hash_table_new (g_direct_hash, g_direct_equal);
 }

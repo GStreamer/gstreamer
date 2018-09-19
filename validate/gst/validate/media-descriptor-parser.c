@@ -22,16 +22,6 @@
 #include "media-descriptor-parser.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GstValidateMediaDescriptorParser,
-    gst_validate_media_descriptor_parser, GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR);
-
-enum
-{
-  PROP_0,
-  PROP_PATH,
-  N_PROPERTIES
-};
-
 struct _GstValidateMediaDescriptorParserPrivate
 {
   gchar *xmlpath;
@@ -39,6 +29,16 @@ struct _GstValidateMediaDescriptorParserPrivate
   gboolean in_stream;
   gchar *xmlcontent;
   GMarkupParseContext *parsecontext;
+};
+
+G_DEFINE_TYPE_WITH_PRIVATE (GstValidateMediaDescriptorParser,
+    gst_validate_media_descriptor_parser, GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR);
+
+enum
+{
+  PROP_0,
+  PROP_PATH,
+  N_PROPERTIES
 };
 
 /* Private methods  and callbacks */
@@ -391,9 +391,8 @@ gst_validate_media_descriptor_parser_init (GstValidateMediaDescriptorParser *
 {
   GstValidateMediaDescriptorParserPrivate *priv;
 
-  parser->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (parser,
-      GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_PARSER,
-      GstValidateMediaDescriptorParserPrivate);
+  parser->priv = priv =
+      gst_validate_media_descriptor_parser_get_instance_private (parser);
 
   priv->xmlpath = NULL;
 }
@@ -404,8 +403,6 @@ static void
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class,
-      sizeof (GstValidateMediaDescriptorParserPrivate));
   object_class->dispose = (void (*)(GObject * object)) dispose;
   object_class->finalize = (void (*)(GObject * object)) finalize;
   object_class->get_property = get_property;

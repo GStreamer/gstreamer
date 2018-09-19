@@ -35,12 +35,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstValidateSsimPriv GstValidateSsimPriv;
+typedef struct _GstValidateSsimPrivate GstValidateSsimPrivate;
 
 typedef struct {
   GstObject parent;
 
-  GstValidateSsimPriv *priv;
+  GstValidateSsimPrivate *priv;
 } GstValidateSsim;
 
 typedef struct {

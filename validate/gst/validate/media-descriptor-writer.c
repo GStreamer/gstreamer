@@ -23,7 +23,17 @@
 #include "media-descriptor-writer.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GstValidateMediaDescriptorWriter,
+struct _GstValidateMediaDescriptorWriterPrivate
+{
+  GstElement *pipeline;
+  GstCaps *raw_caps;
+  GMainLoop *loop;
+
+  GList *parsers;
+  GstValidateMediaDescriptorWriterFlags flags;
+};
+
+G_DEFINE_TYPE_WITH_PRIVATE (GstValidateMediaDescriptorWriter,
     gst_validate_media_descriptor_writer, GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR);
 
 #define STR_APPEND(arg, nb_white)  \
@@ -42,16 +52,6 @@ enum
   PROP_0,
   PROP_PATH,
   N_PROPERTIES
-};
-
-struct _GstValidateMediaDescriptorWriterPrivate
-{
-  GstElement *pipeline;
-  GstCaps *raw_caps;
-  GMainLoop *loop;
-
-  GList *parsers;
-  GstValidateMediaDescriptorWriterFlags flags;
 };
 
 static void
@@ -95,9 +95,8 @@ gst_validate_media_descriptor_writer_init (GstValidateMediaDescriptorWriter *
   GstValidateMediaDescriptorWriterPrivate *priv;
 
 
-  writer->priv = priv = G_TYPE_INSTANCE_GET_PRIVATE (writer,
-      GST_TYPE_VALIDATE_MEDIA_DESCRIPTOR_WRITER,
-      GstValidateMediaDescriptorWriterPrivate);
+  writer->priv = priv =
+      gst_validate_media_descriptor_writer_get_instance_private (writer);
 
   writer->priv->parsers =
       gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_TYPE_PARSER,
@@ -110,8 +109,6 @@ static void
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
 
-  g_type_class_add_private (self_class,
-      sizeof (GstValidateMediaDescriptorWriterPrivate));
   object_class->finalize = (void (*)(GObject * object)) finalize;
   object_class->get_property = get_property;
   object_class->set_property = set_property;

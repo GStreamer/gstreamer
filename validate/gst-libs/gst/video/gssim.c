@@ -39,12 +39,6 @@ typedef struct _SSimWindowCache
   gfloat element_summ;
 } SSimWindowCache;
 
-enum
-{
-  PROP_FIRST_PROP = 1,
-  N_PROPS
-};
-
 struct _GssimPrivate
 {
   gint width;
@@ -66,6 +60,12 @@ struct _GssimPrivate
 /*  *INDENT-OFF* */
 G_DEFINE_TYPE_WITH_PRIVATE (Gssim, gssim, GST_TYPE_OBJECT)
 /*  *INDENT-ON* */
+
+enum
+{
+  PROP_FIRST_PROP = 1,
+  N_PROPS
+};
 
 static void
 gssim_calculate_mu (Gssim * self, guint8 * buf)

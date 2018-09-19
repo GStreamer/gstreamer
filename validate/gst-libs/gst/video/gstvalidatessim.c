@@ -41,9 +41,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define GENERAL_INPUT_ERROR g_quark_from_static_string ("ssim::general-file-error")
 #define WRONG_FORMAT g_quark_from_static_string ("ssim::wrong-format")
 
-G_DEFINE_TYPE_WITH_CODE (GstValidateSsim, gst_validate_ssim,
-    GST_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
-
 enum
 {
   PROP_FIRST_PROP = 1,
@@ -58,16 +55,7 @@ typedef struct
   GstVideoInfo out_info;
 } SSimConverterInfo;
 
-static void
-ssim_convert_info_free (SSimConverterInfo * info)
-{
-  if (info->converter)
-    gst_video_converter_free (info->converter);
-
-  g_slice_free (SSimConverterInfo, info);
-}
-
-struct _GstValidateSsimPriv
+struct _GstValidateSsimPrivate
 {
   gint width;
   gint height;
@@ -85,6 +73,18 @@ struct _GstValidateSsimPriv
   GHashTable *ref_frames_cache;
 };
 
+G_DEFINE_TYPE_WITH_CODE (GstValidateSsim, gst_validate_ssim,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstValidateSsim)
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
+
+static void
+ssim_convert_info_free (SSimConverterInfo * info)
+{
+  if (info->converter)
+    gst_video_converter_free (info->converter);
+
+  g_slice_free (SSimConverterInfo, info);
+}
 
 static gboolean
 gst_validate_ssim_convert (GstValidateSsim * self, SSimConverterInfo * info,
@@ -945,8 +945,6 @@ gst_validate_ssim_class_init (GstValidateSsimClass * klass)
   oclass->dispose = gst_validate_ssim_dispose;
   oclass->finalize = gst_validate_ssim_finalize;
 
-  g_type_class_add_private (klass, sizeof (GstValidateSsimPriv));
-
   g_once (&_once, _register_issues, NULL);
 
   g_object_class_install_property (oclass, PROP_RUNNER,
@@ -959,9 +957,7 @@ gst_validate_ssim_class_init (GstValidateSsimClass * klass)
 static void
 gst_validate_ssim_init (GstValidateSsim * self)
 {
-  self->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (self, GST_VALIDATE_SSIM_TYPE,
-      GstValidateSsimPriv);
+  self->priv = gst_validate_ssim_get_instance_private (self);
 
   self->priv->ssim = gssim_new ();
   self->priv->ref_frames_cache = g_hash_table_new_full (g_str_hash,
