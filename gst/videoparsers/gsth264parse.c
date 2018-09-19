@@ -567,6 +567,7 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
             sei.payload.recovery_point.exact_match_flag,
             sei.payload.recovery_point.broken_link_flag,
             sei.payload.recovery_point.changing_slice_group_idc);
+        h264parse->keyframe = TRUE;
         break;
 
         /* Additional messages that are not innerly useful to the
