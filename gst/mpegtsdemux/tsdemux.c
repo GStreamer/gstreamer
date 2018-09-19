@@ -3051,10 +3051,13 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       GST_TIME_FORMAT, (buffer_list ? "list" : ""), GST_TIME_ARGS (stream->pts),
       GST_TIME_ARGS (stream->dts));
 
-  if (GST_CLOCK_TIME_IS_VALID (stream->dts))
-    base->out_segment.position = stream->dts;
-  else if (GST_CLOCK_TIME_IS_VALID (stream->pts))
-    base->out_segment.position = stream->pts;
+  if (GST_CLOCK_TIME_IS_VALID (stream->dts)) {
+    if (stream->dts > base->out_segment.position)
+      base->out_segment.position = stream->dts;
+  } else if (GST_CLOCK_TIME_IS_VALID (stream->pts)) {
+    if (stream->pts > base->out_segment.position)
+      base->out_segment.position = stream->pts;
+  }
 
   if (buffer) {
     res = gst_pad_push (stream->pad, buffer);
