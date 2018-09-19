@@ -31,9 +31,9 @@ option('gtk_doc', type : 'feature', value : 'auto', yield : true, description : 
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
-       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases')
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
 option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases')
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
 
 # Common options
 option('package-name', type : 'string', yield : true,
