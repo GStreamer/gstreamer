@@ -137,7 +137,7 @@ gst_gl_video_mixer_blend_function_get_type (void)
         "One Minus Constant Color", "one-minus-contant-color"},
     {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_ALPHA, "Constant Alpha",
         "constant-alpha"},
-    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR,
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_ALPHA,
         "One Minus Constant Alpha", "one-minus-contant-alpha"},
     {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE,
         "Source Alpha Saturate", "src-alpha-saturate"},
