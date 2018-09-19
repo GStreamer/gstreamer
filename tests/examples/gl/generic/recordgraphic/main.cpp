@@ -17,6 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#if defined(_MSC_VER)
+# include <windows.h>
+#endif
 
 #include <GL/gl.h>
 #if defined(__WIN32__) || defined(_WIN32)
