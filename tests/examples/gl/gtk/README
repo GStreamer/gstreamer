@@ -24,4 +24,4 @@ change the videooverlay window while the stream is playing.
 
 --- How to build the GTK examples ---
 
-Using autotools or using tests/examples/gtk/gtk.sln
+Using autotools or Meson.
