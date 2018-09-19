@@ -137,13 +137,13 @@ gst_vaapi_utils_h265_get_profile (guint8 profile_idc)
   GstVaapiProfile profile;
 
   switch (profile_idc) {
-    case GST_H265_PROFILE_MAIN:
+    case GST_H265_PROFILE_IDC_MAIN:
       profile = GST_VAAPI_PROFILE_H265_MAIN;
       break;
-    case GST_H265_PROFILE_MAIN_10:
+    case GST_H265_PROFILE_IDC_MAIN_10:
       profile = GST_VAAPI_PROFILE_H265_MAIN10;
       break;
-    case GST_H265_PROFILE_MAIN_STILL_PICTURE:
+    case GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE:
       profile = GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
       break;
     default:
