@@ -518,6 +518,34 @@ _nal_name (GstH265NalUnitType nal_type)
 }
 #endif
 
+static void
+gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
+{
+  GstH265SEIMessage sei;
+  GstH265Parser *nalparser = h265parse->nalparser;
+  GstH265ParserResult pres;
+  GArray *messages;
+  guint i;
+
+  pres = gst_h265_parser_parse_sei (nalparser, nalu, &messages);
+  if (pres != GST_H265_PARSER_OK)
+    GST_WARNING_OBJECT (h265parse, "failed to parse one or more SEI message");
+
+  /* Even if pres != GST_H265_PARSER_OK, some message could have been parsed and
+   * stored in messages.
+   */
+  for (i = 0; i < messages->len; i++) {
+    sei = g_array_index (messages, GstH265SEIMessage, i);
+    switch (sei.payloadType) {
+      case GST_H265_SEI_BUF_PERIOD:
+      case GST_H265_SEI_PIC_TIMING:
+        /* FIXME */
+        break;
+    }
+  }
+  g_array_free (messages, TRUE);
+}
+
 /* caller guarantees 2 bytes of nal payload */
 static gboolean
 gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
@@ -641,7 +669,9 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         return FALSE;
 
       h265parse->header |= TRUE;
-      /*Fixme: parse sei messages */
+
+      gst_h265_parse_process_sei (h265parse, nalu);
+
       /* mark SEI pos */
       if (h265parse->sei_pos == -1) {
         if (h265parse->transform)
