@@ -2500,7 +2500,6 @@ gst_preset_get_type
 <SECTION>
 <FILE>gstprotection</FILE>
 <TITLE>GstProtectionMeta</TITLE>
-<INCLUDE>gst/gstprotection.h</INCLUDE>
 GstProtectionMeta
 gst_buffer_add_protection_meta
 gst_buffer_get_protection_meta
