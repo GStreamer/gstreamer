@@ -289,7 +289,7 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
       g_param_spec_enum ("blend-function-dst-alpha",
           "Blend Function Destination Alpha",
-          "Blend Function for Destiniation Alpha",
+          "Blend Function for Destination Alpha",
           GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
           DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
@@ -690,7 +690,7 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
       PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
       g_param_spec_enum ("blend-function-dst-alpha",
           "Blend Function Destination Alpha",
-          "Blend Function for Destiniation Alpha",
+          "Blend Function for Destination Alpha",
           GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
           DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
