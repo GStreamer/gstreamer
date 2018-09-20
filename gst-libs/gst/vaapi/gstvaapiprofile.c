@@ -132,6 +132,10 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
   {GST_VAAPI_PROFILE_H265_MAIN10, VAProfileHEVCMain10,
       "video/x-h265", "main-10"},
 #endif
+#if VA_CHECK_VERSION(1,2,0)
+  {GST_VAAPI_PROFILE_H265_MAIN_422_10, VAProfileHEVCMain422_10,
+      "video/x-h265", "main-422-10"},
+#endif
 #if VA_CHECK_VERSION(0,38,0)
   {GST_VAAPI_PROFILE_VP9_0, VAProfileVP9Profile0,
       "video/x-vp9", "profile0"},
@@ -330,6 +334,8 @@ gst_vaapi_profile_from_codec_data_h265 (GstBuffer * buffer)
       return GST_VAAPI_PROFILE_H265_MAIN10;
     case 3:
       return GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
+    case 4:
+      return GST_VAAPI_PROFILE_H265_MAIN_422_10;
   }
   return 0;
 }

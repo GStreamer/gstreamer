@@ -1053,8 +1053,7 @@ get_profile (GstVaapiDecoderH265 * decoder, GstH265SPS * sps, guint dpb_size)
   GstVaapiProfile profile, profiles[3];
   guint i, n_profiles = 0;
 
-  profile =
-      gst_vaapi_utils_h265_get_profile (sps->profile_tier_level.profile_idc);
+  profile = gst_vaapi_utils_h265_get_profile (sps);
   if (!profile) {
     /* HACK: This is a work-around to identify some main profile streams having wrong profile_idc.
      * There are some wrongly encoded main profile streams(eg: ENTP_C_LG_3.bin) which doesn't

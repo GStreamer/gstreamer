@@ -131,6 +131,8 @@ typedef enum {
  *   H.265 main 10 profile [A.3.3]
  * @GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE:
  *   H.265 main still picture profile [A.3.4]
+ * @GST_VAAPI_PROFILE_H265_MAIN_422_10:
+ *   H.265 main still picture profile [A.3.5]
  * @GST_VAAPI_PROFILE_VP9_0:
  *   VP9 prfile 0, bitdepth=8, 420
  * @GST_VAAPI_PROFILE_VP9_1:
@@ -175,6 +177,7 @@ typedef enum {
     GST_VAAPI_PROFILE_H265_MAIN10           = GST_VAAPI_MAKE_PROFILE(H265,2),
     GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE =
                                                GST_VAAPI_MAKE_PROFILE(H265,3),
+    GST_VAAPI_PROFILE_H265_MAIN_422_10        = GST_VAAPI_MAKE_PROFILE(H265,4),
     GST_VAAPI_PROFILE_VP9_0                   = GST_VAAPI_MAKE_PROFILE(VP9,1),
     GST_VAAPI_PROFILE_VP9_1                   = GST_VAAPI_MAKE_PROFILE(VP9,2),
     GST_VAAPI_PROFILE_VP9_2                   = GST_VAAPI_MAKE_PROFILE(VP9,3),

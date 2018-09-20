@@ -275,6 +275,35 @@ gst_vaapi_video_format_get_score (GstVideoFormat format)
 }
 
 /**
+ * gst_vaapi_video_format_from_chroma:
+ * @chroma_type: a #GstVaapiChromaType
+ *
+ * Returns the "preferred" pixel format that matches with
+ * @chroma_type.
+ *
+ * Returns: the preferred pixel format for @chroma_type
+ **/
+GstVideoFormat
+gst_vaapi_video_format_from_chroma (guint chroma_type)
+{
+  switch (chroma_type) {
+    case GST_VAAPI_CHROMA_TYPE_YUV422:
+      return GST_VIDEO_FORMAT_YUY2;
+    case GST_VAAPI_CHROMA_TYPE_YUV400:
+      return GST_VIDEO_FORMAT_GRAY8;
+    case GST_VAAPI_CHROMA_TYPE_YUV420:
+    case GST_VAAPI_CHROMA_TYPE_RGB32:  /* GstVideoGLTextureUploadMeta */
+      return GST_VIDEO_FORMAT_NV12;
+    case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
+      return GST_VIDEO_FORMAT_P010_10LE;
+    case GST_VAAPI_CHROMA_TYPE_YUV444:
+      return GST_VIDEO_FORMAT_AYUV;
+    default:
+      return GST_VIDEO_FORMAT_UNKNOWN;
+  }
+}
+
+/**
  * gst_vaapi_video_format_get_best_native:
  * @format: a #GstVideoFormat
  *
@@ -293,17 +322,5 @@ gst_vaapi_video_format_get_best_native (GstVideoFormat format)
     return GST_VIDEO_FORMAT_NV12;
 
   chroma_type = gst_vaapi_video_format_get_chroma_type (format);
-  switch (chroma_type) {
-    case GST_VAAPI_CHROMA_TYPE_YUV422:
-      return GST_VIDEO_FORMAT_YUY2;
-    case GST_VAAPI_CHROMA_TYPE_YUV400:
-      return GST_VIDEO_FORMAT_GRAY8;
-    case GST_VAAPI_CHROMA_TYPE_YUV420:
-    case GST_VAAPI_CHROMA_TYPE_RGB32:  /* GstVideoGLTextureUploadMeta */
-      return GST_VIDEO_FORMAT_NV12;
-    case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
-      return GST_VIDEO_FORMAT_P010_10LE;
-    default:
-      return GST_VIDEO_FORMAT_UNKNOWN;
-  };
+  return gst_vaapi_video_format_from_chroma (chroma_type);
 }

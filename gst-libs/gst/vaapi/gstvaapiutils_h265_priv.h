@@ -63,7 +63,7 @@ typedef struct {
 /* Returns GstVaapiProfile from H.265 profile_idc value */
 G_GNUC_INTERNAL
 GstVaapiProfile
-gst_vaapi_utils_h265_get_profile (guint8 profile_idc);
+gst_vaapi_utils_h265_get_profile (GstH265SPS * sps);
 
 /* Returns H.265 profile_idc value from GstVaapiProfile */
 G_GNUC_INTERNAL

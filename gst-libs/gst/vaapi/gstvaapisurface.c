@@ -340,6 +340,20 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
   if (!surface)
     return NULL;
 
+  /* first try a recent version of vaCreateSurface, and later use as
+   * fallback its old version */
+#if VA_CHECK_VERSION(0,34,0)
+  {
+    GstVideoInfo vi;
+    GstVideoFormat surface_format;
+
+    surface_format = gst_vaapi_video_format_from_chroma (chroma_type);
+    gst_video_info_set_format (&vi, surface_format, width, height);
+
+    if (gst_vaapi_surface_create_full (surface, &vi, 0))
+      return surface;
+  }
+#endif
   if (!gst_vaapi_surface_create (surface, chroma_type, width, height))
     goto error;
   return surface;

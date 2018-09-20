@@ -1253,51 +1253,70 @@ no_valid_gl_display:
 #endif
 }
 
+static GArray *
+extract_allowed_surface_formats (GstVaapiDisplay * display, GArray * formats)
+{
+  guint i;
+  GArray *out_formats;
+
+  out_formats =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), formats->len);
+  if (!out_formats)
+    return NULL;
+
+  for (i = 0; i < formats->len; i++) {
+    const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
+    GstVaapiChromaType chroma_type;
+    GstVaapiSurface *surface;
+    GstVaapiImage *image;
+
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+    chroma_type = gst_vaapi_video_format_get_chroma_type (format);
+    if (chroma_type == 0)
+      continue;
+    surface = gst_vaapi_surface_new (display, chroma_type, 64, 64);
+    if (!surface)
+      continue;
+    image = gst_vaapi_image_new (display, format, 64, 64);
+    if (!image) {
+      gst_vaapi_object_unref (surface);
+      continue;
+    }
+
+    if (gst_vaapi_surface_put_image (surface, image))
+      g_array_append_val (out_formats, format);
+
+    gst_vaapi_object_unref (image);
+    gst_vaapi_object_unref (surface);
+  }
+
+  if (out_formats->len == 0) {
+    g_array_unref (out_formats);
+    return NULL;
+  }
+  return out_formats;
+}
+
 static gboolean
 ensure_allowed_raw_caps (GstVaapiPluginBase * plugin)
 {
   GArray *formats, *out_formats;
-  GstVaapiSurface *surface;
   GstVaapiDisplay *display;
-  guint i;
   GstCaps *out_caps;
   gboolean ret = FALSE;
 
   if (plugin->allowed_raw_caps)
     return TRUE;
 
-  out_formats = formats = NULL;
-  surface = NULL;
-
+  out_formats = NULL;
   display = gst_object_ref (plugin->display);
   formats = gst_vaapi_display_get_image_formats (display);
   if (!formats)
     goto bail;
-
-  out_formats =
-      g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), formats->len);
+  out_formats = extract_allowed_surface_formats (display, formats);
   if (!out_formats)
     goto bail;
-
-  surface =
-      gst_vaapi_surface_new (display, GST_VAAPI_CHROMA_TYPE_YUV420, 64, 64);
-  if (!surface)
-    goto bail;
-
-  for (i = 0; i < formats->len; i++) {
-    const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
-    GstVaapiImage *image;
-
-    if (format == GST_VIDEO_FORMAT_UNKNOWN)
-      continue;
-    image = gst_vaapi_image_new (display, format, 64, 64);
-    if (!image)
-      continue;
-    if (gst_vaapi_surface_put_image (surface, image))
-      g_array_append_val (out_formats, format);
-    gst_vaapi_object_unref (image);
-  }
-
   out_caps = gst_vaapi_video_format_new_template_caps_from_list (out_formats);
   if (!out_caps)
     goto bail;
@@ -1311,8 +1330,6 @@ bail:
     g_array_unref (formats);
   if (out_formats)
     g_array_unref (out_formats);
-  if (surface)
-    gst_vaapi_object_unref (surface);
   gst_object_unref (display);
 
   return ret;

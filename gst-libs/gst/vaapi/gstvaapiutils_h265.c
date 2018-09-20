@@ -132,11 +132,11 @@ gst_vaapi_utils_h265_get_profile_score (GstVaapiProfile profile)
 
 /** Returns GstVaapiProfile from H.265 profile_idc value */
 GstVaapiProfile
-gst_vaapi_utils_h265_get_profile (guint8 profile_idc)
+gst_vaapi_utils_h265_get_profile (GstH265SPS * sps)
 {
   GstVaapiProfile profile;
 
-  switch (profile_idc) {
+  switch (sps->profile_tier_level.profile_idc) {
     case GST_H265_PROFILE_IDC_MAIN:
       profile = GST_VAAPI_PROFILE_H265_MAIN;
       break;
@@ -146,6 +146,19 @@ gst_vaapi_utils_h265_get_profile (guint8 profile_idc)
     case GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE:
       profile = GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE;
       break;
+    case GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION:
+      if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 0
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0
+          && sps->profile_tier_level.lower_bit_rate_constraint_flag == 1) {
+        profile = GST_VAAPI_PROFILE_H265_MAIN_422_10;
+        break;
+      }
     default:
       g_debug ("unsupported profile_idc value");
       profile = GST_VAAPI_PROFILE_UNKNOWN;
@@ -169,6 +182,9 @@ gst_vaapi_utils_h265_get_profile_idc (GstVaapiProfile profile)
       break;
     case GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE:
       profile_idc = GST_H265_PROFILE_MAIN_STILL_PICTURE;
+      break;
+    case GST_VAAPI_PROFILE_H265_MAIN_422_10:
+      profile_idc = GST_H265_PROFILE_MAIN_422_10;
       break;
     default:
       g_debug ("unsupported GstVaapiProfile value");
