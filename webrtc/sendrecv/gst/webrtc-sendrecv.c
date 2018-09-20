@@ -443,20 +443,19 @@ static void
 on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     GBytes * message, gpointer user_data)
 {
-  gsize size;
-  gchar *text, *data;
+  gchar *text;
 
   switch (type) {
     case SOUP_WEBSOCKET_DATA_BINARY:
       g_printerr ("Received unknown binary message, ignoring\n");
-      g_bytes_unref (message);
       return;
-    case SOUP_WEBSOCKET_DATA_TEXT:
-      data = g_bytes_unref_to_data (message, &size);
+    case SOUP_WEBSOCKET_DATA_TEXT: {
+      gsize size;
+      const gchar *data = g_bytes_get_data (message, &size);
       /* Convert to NULL-terminated string */
       text = g_strndup (data, size);
-      g_free (data);
       break;
+    }
     default:
       g_assert_not_reached ();
   }
