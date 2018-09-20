@@ -110,7 +110,6 @@ struct _GstOMXVideoDecClass
 
   gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
   gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
-  GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoCodecFrame *frame);
 };
 
 GType gst_omx_video_dec_get_type (void);
