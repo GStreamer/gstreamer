@@ -680,7 +680,11 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   /* switch depending on packet type */
   if ((gst_ogg_packet_data (packet))[0] & 1) {
+    gboolean have_all_headers;
+
     GST_LOG_OBJECT (vd, "storing header for later analyzis");
+
+    /* An identification packet starts a new set of headers */
     if (vd->pending_headers && (gst_ogg_packet_data (packet))[0] == 0x01) {
       GST_DEBUG_OBJECT (vd,
           "got new identification header packet, discarding old pending headers");
@@ -689,9 +693,29 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
       vd->pending_headers = NULL;
     }
 
-    vd->pending_headers =
-        g_list_append (vd->pending_headers, gst_buffer_ref (buffer));
-    result = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
+    /* if we have more than 3 headers with the new one and the new one is the
+     * type header, we can initialize the decoder now */
+    have_all_headers = g_list_length (vd->pending_headers) >= 2
+        && (gst_ogg_packet_data (packet))[0] == 0x05;
+
+    if (!vd->pending_headers && (gst_ogg_packet_data (packet))[0] != 0x01) {
+      if (vd->initialized) {
+        GST_DEBUG_OBJECT (vd,
+            "Got another non-identification header after initialization, ignoring");
+      } else {
+        GST_WARNING_OBJECT (vd,
+            "First header was not a identification header, dropping");
+      }
+      result = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
+    } else {
+      vd->pending_headers =
+          g_list_append (vd->pending_headers, gst_buffer_ref (buffer));
+      result = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
+    }
+
+    if (result == GST_FLOW_OK && have_all_headers) {
+      result = check_pending_headers (vd);
+    }
   } else {
     GstClockTime timestamp, duration;
 
