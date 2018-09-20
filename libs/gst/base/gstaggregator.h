@@ -359,4 +359,9 @@ GstClockTime    gst_aggregator_simple_get_next_time (GstAggregator              
 
 G_END_DECLS
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAggregator, gst_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAggregatorPad, gst_object_unref)
+#endif
+
 #endif /* __GST_AGGREGATOR_H__ */
