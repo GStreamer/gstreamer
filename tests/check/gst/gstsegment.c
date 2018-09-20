@@ -977,6 +977,21 @@ GST_START_TEST (segment_full)
   fail_unless (gst_segment_position_from_running_time_full (&segment,
           GST_FORMAT_TIME, 75, &pos) == -1);
   fail_unless (pos == 300);     /* Actually -300 */
+
+  /* Test for running time conversion with stop == -1, where
+   * calculations should use the duration instead */
+  segment.rate = -2.0;
+  segment.start = 100;
+  segment.offset = 0;
+  segment.stop = -1;
+  segment.duration = 200;
+  segment.position = 40;
+  segment.base = 100;
+  segment.time = 10000;
+
+  fail_unless (gst_segment_to_running_time_full (&segment, GST_FORMAT_TIME,
+          150, &rt) == 1);
+  fail_unless (rt == 175);
 }
 
 GST_END_TEST;
