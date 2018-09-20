@@ -640,9 +640,8 @@ gst_element_get_index (GstElement * element)
  * Adds a pad (link point) to @element. @pad's parent will be set to @element;
  * see gst_object_set_parent() for refcounting information.
  *
- * Pads are not automatically activated so elements should perform the needed
- * steps to activate the pad in case this pad is added in the PAUSED or PLAYING
- * state. See gst_pad_set_active() for more information about activating pads.
+ * Pads are automatically activated when added in the PAUSED or PLAYING
+ * state.
  *
  * The pad and the element should be unlocked when calling this function.
  *
@@ -685,9 +684,6 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   /* check for active pads */
   if (!active && (GST_STATE (element) > GST_STATE_READY ||
           GST_STATE_NEXT (element) == GST_STATE_PAUSED)) {
-    g_warning ("adding inactive pad '%s' to running element '%s', you need to "
-        "use gst_pad_set_active(pad,TRUE) before adding it.",
-        GST_STR_NULL (pad_name), GST_ELEMENT_NAME (element));
     gst_pad_set_active (pad, TRUE);
   }
 
