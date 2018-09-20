@@ -416,7 +416,7 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     const GValue *val = gst_structure_get_value (s, "codec_data");
 
     if (val)
-      pad->codec_data = gst_buffer_ref (gst_value_get_buffer (val));
+      gst_buffer_replace (&pad->codec_data, gst_value_get_buffer (val));
   }
 
   gst_object_unref (mux);
@@ -557,7 +557,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
     const GValue *val = gst_structure_get_value (s, "codec_data");
 
     if (val)
-      pad->codec_data = gst_buffer_ref (gst_value_get_buffer (val));
+      gst_buffer_replace (&pad->codec_data, gst_value_get_buffer (val));
   }
 
   gst_object_unref (mux);
