@@ -2811,6 +2811,8 @@ gst_matroska_demux_parse_tracks (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   DEBUG_ELEMENT_STOP (demux, ebml, "Tracks", ret);
 
   demux->tracks_parsed = TRUE;
+  GST_DEBUG_OBJECT (demux, "signaling no more pads");
+  gst_element_no_more_pads (GST_ELEMENT (demux));
 
   return ret;
 }
@@ -4855,8 +4857,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                     GST_TIME_ARGS (demux->common.segment.duration));
               }
             }
-            GST_DEBUG_OBJECT (demux, "signaling no more pads");
-            gst_element_no_more_pads (GST_ELEMENT (demux));
+
             /* send initial segment - we wait till we know the first
                incoming timestamp, so we can properly set the start of
                the segment. */
