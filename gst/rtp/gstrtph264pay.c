@@ -806,6 +806,20 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   gst_buffer_extract (paybuf, 0, &nalHeader, 1);
   nalType = nalHeader & 0x1f;
 
+  /* These payload type are reserved for STAP-A, STAP-B, MTAP16, and MTAP24
+   * as internally used NAL types */
+  switch (nalType) {
+    case 24:
+    case 25:
+    case 26:
+    case 27:
+      GST_WARNING_OBJECT (rtph264pay, "Ignoring reserved NAL TYPE=%d", nalType);
+      gst_buffer_unref (paybuf);
+      return GST_FLOW_OK;
+    default:
+      break;
+  }
+
   GST_DEBUG_OBJECT (rtph264pay, "Processing Buffer with NAL TYPE=%d", nalType);
 
   /* should set src caps before pushing stuff,
