@@ -60,7 +60,11 @@ function setError(text) {
 function resetVideo() {
     // Release the webcam and mic
     if (local_stream_promise)
-        local_stream_promise.then(stream => { stream.stop(); });
+        local_stream_promise.then(stream => {
+            if (stream) {
+                stream.getTracks().forEach(function (track) { track.stop(); });
+            }
+        });
 
     // Reset the video element and stop showing the last received frame
     var videoElement = getVideoElement();
