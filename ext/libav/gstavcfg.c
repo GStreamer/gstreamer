@@ -461,96 +461,91 @@ gst_ffmpeg_cfg_get_property (AVCodecContext * refcontext, GValue * value,
     GParamSpec * pspec)
 {
   const AVOption *opt;
+  int res = -1;
 
   opt = g_param_spec_get_qdata (pspec, avoption_quark);
 
-  if (!opt) {
+  if (!opt)
     return FALSE;
-  }
 
-  if (opt) {
-    int res = -1;
-
-    switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
-      case G_TYPE_INT:
-      {
-        int64_t val;
-        if ((res = av_opt_get_int (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-          g_value_set_int (value, val);
-        break;
-      }
-      case G_TYPE_INT64:
-      {
-        int64_t val;
-        if ((res = av_opt_get_int (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-          g_value_set_int64 (value, val);
-        break;
-      }
-      case G_TYPE_UINT64:
-      {
-        int64_t val;
-        if ((res = av_opt_get_int (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-          g_value_set_uint64 (value, val);
-        break;
-      }
-      case G_TYPE_DOUBLE:
-      {
-        gdouble val;
-        if ((res = av_opt_get_double (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-          g_value_set_double (value, val);
-        break;
-      }
-      case G_TYPE_FLOAT:
-      {
-        gdouble val;
-        if ((res = av_opt_get_double (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-          g_value_set_float (value, (gfloat) val);
-        break;
-      }
-      case G_TYPE_STRING:
-      {
-        uint8_t *val;
-        if ((res = av_opt_get (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN | AV_OPT_ALLOW_NULL, &val) >= 0)) {
-          g_value_set_string (value, (gchar *) val);
-        }
-        break;
-      }
-      case G_TYPE_BOOLEAN:
-      {
-        int64_t val;
-        if ((res = av_opt_get_int (refcontext, opt->name,
-                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-          g_value_set_boolean (value, val ? TRUE : FALSE);
-        break;
-      }
-      default:
-        if (G_IS_PARAM_SPEC_ENUM (pspec)) {
-          int64_t val;
-
-          if ((res = av_opt_get_int (refcontext, opt->name,
-                      AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-            g_value_set_enum (value, val);
-        } else if (G_IS_PARAM_SPEC_FLAGS (pspec)) {
-          int64_t val;
-
-          if ((res = av_opt_get_int (refcontext, opt->name,
-                      AV_OPT_SEARCH_CHILDREN, &val) >= 0))
-            g_value_set_flags (value, val);
-        } else {                /* oops, bit lazy we don't cover this case yet */
-          g_critical ("%s does not yet support type %s", GST_FUNCTION,
-              g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
-        }
+  switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
+    case G_TYPE_INT:
+    {
+      int64_t val;
+      if ((res = av_opt_get_int (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+        g_value_set_int (value, val);
+      break;
     }
-    return res >= 0;
+    case G_TYPE_INT64:
+    {
+      int64_t val;
+      if ((res = av_opt_get_int (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+        g_value_set_int64 (value, val);
+      break;
+    }
+    case G_TYPE_UINT64:
+    {
+      int64_t val;
+      if ((res = av_opt_get_int (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+        g_value_set_uint64 (value, val);
+      break;
+    }
+    case G_TYPE_DOUBLE:
+    {
+      gdouble val;
+      if ((res = av_opt_get_double (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+        g_value_set_double (value, val);
+      break;
+    }
+    case G_TYPE_FLOAT:
+    {
+      gdouble val;
+      if ((res = av_opt_get_double (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+        g_value_set_float (value, (gfloat) val);
+      break;
+    }
+    case G_TYPE_STRING:
+    {
+      uint8_t *val;
+      if ((res = av_opt_get (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN | AV_OPT_ALLOW_NULL, &val) >= 0)) {
+        g_value_set_string (value, (gchar *) val);
+      }
+      break;
+    }
+    case G_TYPE_BOOLEAN:
+    {
+      int64_t val;
+      if ((res = av_opt_get_int (refcontext, opt->name,
+                  AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+        g_value_set_boolean (value, val ? TRUE : FALSE);
+      break;
+    }
+    default:
+      if (G_IS_PARAM_SPEC_ENUM (pspec)) {
+        int64_t val;
+
+        if ((res = av_opt_get_int (refcontext, opt->name,
+                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+          g_value_set_enum (value, val);
+      } else if (G_IS_PARAM_SPEC_FLAGS (pspec)) {
+        int64_t val;
+
+        if ((res = av_opt_get_int (refcontext, opt->name,
+                    AV_OPT_SEARCH_CHILDREN, &val) >= 0))
+          g_value_set_flags (value, val);
+      } else {                  /* oops, bit lazy we don't cover this case yet */
+        g_critical ("%s does not yet support type %s", GST_FUNCTION,
+            g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
+      }
   }
 
-  return TRUE;
+  return res >= 0;
 }
 
 void
