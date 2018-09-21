@@ -40,6 +40,7 @@ enum AppState {
 
 static GMainLoop *loop;
 static GstElement *pipe1, *webrtc1;
+static GObject *send_channel, *receive_channel;
 
 static SoupWebsocketConnection *ws_conn = NULL;
 static enum AppState app_state = 0;
@@ -274,6 +275,54 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
 #define RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload="
 #define RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8,payload="
 
+static void
+data_channel_on_error (GObject * dc, gpointer user_data)
+{
+  cleanup_and_quit_loop ("Data channel error", 0);
+}
+
+static void
+data_channel_on_open (GObject * dc, gpointer user_data)
+{
+  GBytes *bytes = g_bytes_new ("data", strlen("data"));
+  g_print ("data channel opened\n");
+  g_signal_emit_by_name (dc, "send-string", "Hi! from GStreamer");
+  g_signal_emit_by_name (dc, "send-data", bytes);
+  g_bytes_unref (bytes);
+}
+
+static void
+data_channel_on_close (GObject * dc, gpointer user_data)
+{
+  cleanup_and_quit_loop ("Data channel closed", 0);
+}
+
+static void
+data_channel_on_message_string (GObject * dc, gchar *str, gpointer user_data)
+{
+  g_print ("Received data channel message: %s\n", str);
+}
+
+static void
+connect_data_channel_signals (GObject * data_channel)
+{
+  g_signal_connect (data_channel, "on-error", G_CALLBACK (data_channel_on_error),
+      NULL);
+  g_signal_connect (data_channel, "on-open", G_CALLBACK (data_channel_on_open),
+      NULL);
+  g_signal_connect (data_channel, "on-close", G_CALLBACK (data_channel_on_close),
+      NULL);
+  g_signal_connect (data_channel, "on-message-string", G_CALLBACK (data_channel_on_message_string),
+      NULL);
+}
+
+static void
+on_data_channel (GstElement * webrtc, GObject * data_channel, gpointer user_data)
+{
+  connect_data_channel_signals (data_channel);
+  receive_channel = data_channel;
+}
+
 static gboolean
 start_pipeline (void)
 {
@@ -306,6 +355,17 @@ start_pipeline (void)
    * added by us too, see on_server_message() */
   g_signal_connect (webrtc1, "on-ice-candidate",
       G_CALLBACK (send_ice_candidate_message), NULL);
+  g_signal_emit_by_name (webrtc1, "create-data-channel", "channel", NULL,
+      &send_channel);
+  if (send_channel) {
+    g_print ("Created data channel\n");
+    connect_data_channel_signals (send_channel);
+  } else {
+    g_print ("Could not create data channel, is usrsctp available?\n");
+  }
+
+  g_signal_connect (webrtc1, "on-data-channel", G_CALLBACK (on_data_channel),
+      NULL);
   /* Incoming streams will be exposed via this signal */
   g_signal_connect (webrtc1, "pad-added", G_CALLBACK (on_incoming_stream),
       pipe1);

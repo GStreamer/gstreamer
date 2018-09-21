@@ -20,6 +20,7 @@ var default_constraints = {video: true, audio: true};
 
 var connect_attempts = 0;
 var peer_connection;
+var send_channel;
 var ws_conn;
 // Promise for local stream after constraints are approved by the user
 var local_stream_promise;
@@ -234,6 +235,41 @@ function errorUserMediaHandler() {
     setError("Browser doesn't support getUserMedia!");
 }
 
+const handleDataChannelOpen = (event) =>{
+    console.log("dataChannel.OnOpen", event);
+};
+
+const handleDataChannelMessageReceived = (event) =>{
+    console.log("dataChannel.OnMessage:", event, event.data.type);
+
+    setStatus("Received data channel message");
+    if (typeof event.data === 'string' || event.data instanceof String) {
+        console.log('Incoming string message: ' + event.data);
+        textarea = document.getElementById("text")
+        textarea.value = textarea.value + '\n' + event.data
+    } else {
+        console.log('Incoming data message');
+    }
+    send_channel.send("Hi! (from browser)");
+};
+
+const handleDataChannelError = (error) =>{
+    console.log("dataChannel.OnError:", error);
+};
+
+const handleDataChannelClose = (event) =>{
+    console.log("dataChannel.OnClose", event);
+};
+
+function onDataChannel(event) {
+    setStatus("Data channel created");
+    let receiveChannel = event.channel;
+    receiveChannel.onopen = handleDataChannelOpen;
+    receiveChannel.onmessage = handleDataChannelMessageReceived;
+    receiveChannel.onerror = handleDataChannelError;
+    receiveChannel.onclose = handleDataChannelClose;
+}
+
 function createCall(msg) {
     // Reset connection attempts because we connected successfully
     connect_attempts = 0;
@@ -241,6 +277,12 @@ function createCall(msg) {
     console.log('Creating RTCPeerConnection');
 
     peer_connection = new RTCPeerConnection(rtc_configuration);
+    send_channel = peer_connection.createDataChannel('label', null);
+    send_channel.onopen = handleDataChannelOpen;
+    send_channel.onmessage = handleDataChannelMessageReceived;
+    send_channel.onerror = handleDataChannelError;
+    send_channel.onclose = handleDataChannelClose;
+    peer_connection.ondatachannel = onDataChannel;
     peer_connection.onaddstream = onRemoteStreamAdded;
     /* Send our video/audio to the other peer */
     local_stream_promise = getLocalStream().then((stream) => {
