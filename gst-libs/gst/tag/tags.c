@@ -497,7 +497,7 @@ beach:
  * In GStreamer, image tags are #GstSample<!-- -->s containing the raw image
  * data, with the sample caps describing the content type of the image
  * (e.g. image/jpeg, image/png, text/uri-list). The sample info may contain
- * an additional 'image-type' field of #GST_TYPE_TAG_IMAGE_TYPE to describe
+ * an additional 'image-type' field of #GstTagImageType to describe
  * the type of image (front cover, back cover etc.). #GST_TAG_PREVIEW_IMAGE
  * tags should not carry an image type, their type is already indicated via
  * the special tag name.

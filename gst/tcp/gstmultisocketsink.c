@@ -366,7 +366,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    *
    * @gstmultisocketsink still holds a handle to @socket so it is possible to call
    * the get-stats signal from this callback. For the same reason it is
-   * not safe to close() and reuse @socket in this callback.
+   * not safe to `close()` and reuse @socket in this callback.
    */
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
@@ -383,7 +383,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    *
    * In this callback, @gstmultisocketsink has removed all the information
    * associated with @socket and it is therefore not possible to call get-stats
-   * with @socket. It is however safe to close() and reuse @fd in the callback.
+   * with @socket. It is however safe to `close()` and reuse @fd in the callback.
    */
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_SOCKET_REMOVED] =
       g_signal_new ("client-socket-removed", G_TYPE_FROM_CLASS (klass),

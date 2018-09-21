@@ -202,7 +202,7 @@ gst_gl_sink_bin_class_init (GstGLSinkBinClass * klass)
 
   /**
    * GstGLSinkBin::create-element:
-   * @object: the #GstGLSinkBin
+   * @object: the #glsinkbin
    *
    * Will be emitted when we need the processing element/s that this bin will use
    *

@@ -106,11 +106,11 @@ GstVideoInterlaceMode  gst_video_interlace_mode_from_string  (const gchar * mode
  * @GST_VIDEO_MULTIVIEW_MODE_MULTIVIEW_FRAME_BY_FRAME: Multiple
  * independent views are provided in separate frames in sequence.
  * This method only applies to raw video buffers at the moment.
- * Specific view identification is via the #GstVideoMultiviewMeta
+ * Specific view identification is via the `GstVideoMultiviewMeta`
  * and #GstVideoMeta(s) on raw video buffers.
  * @GST_VIDEO_MULTIVIEW_MODE_SEPARATED: Multiple views are
  * provided as separate #GstMemory framebuffers attached to each
- * #GstBuffer, described by the #GstVideoMultiviewMeta
+ * #GstBuffer, described by the `GstVideoMultiviewMeta`
  * and #GstVideoMeta(s)
  *
  * All possible stereoscopic 3D and multiview representations.

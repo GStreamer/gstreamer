@@ -1380,8 +1380,7 @@ no_func:
  *
  * Vertically combine @width pixels in the lines in @src_lines to @dest.
  * @dest is the location of the target line at @dest_offset and
- * @srcs are the input lines for @dest_offset, as obtained with
- * gst_video_scaler_get_info().
+ * @srcs are the input lines for @dest_offset.
  */
 void
 gst_video_scaler_vertical (GstVideoScaler * scale, GstVideoFormat format,

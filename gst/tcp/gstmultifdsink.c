@@ -336,7 +336,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    *
    * @gstmultifdsink still holds a handle to @fd so it is possible to call
    * the get-stats signal from this callback. For the same reason it is
-   * not safe to close() and reuse @fd in this callback.
+   * not safe to `close()` and reuse @fd in this callback.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
@@ -353,7 +353,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    *
    * In this callback, @gstmultifdsink has removed all the information
    * associated with @fd and it is therefore not possible to call get-stats
-   * with @fd. It is however safe to close() and reuse @fd in the callback.
+   * with @fd. It is however safe to `close()` and reuse @fd in the callback.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_FD_REMOVED] =
       g_signal_new ("client-fd-removed", G_TYPE_FROM_CLASS (klass),

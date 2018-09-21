@@ -736,16 +736,16 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
    * #GstElementFactory that can be used to handle the given @caps. For each of
    * those factories, this signal is emitted.
    *
-   * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
+   * The signal handler should return a #GstAutoplugSelectResult enum
    * value indicating what ParseBin should do next.
    *
-   * A value of #GST_AUTOPLUG_SELECT_TRY will try to autoplug an element from
+   * A value of #GstAutoplugSelectResult::try will try to autoplug an element from
    * @factory.
    *
-   * A value of #GST_AUTOPLUG_SELECT_EXPOSE will expose @pad without plugging
+   * A value of #GstAutoplugSelectResult::expose will expose @pad without plugging
    * any element to it.
    *
-   * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
+   * A value of #GstAutoplugSelectResult::skip will skip @factory and move to the
    * next factory.
    *
    * >   The signal handler will not be invoked if any of the previously
@@ -754,9 +754,9 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
    * >   GST_AUTOPLUG_SELECT_TRY from one signal handler, handlers that get
    * >   registered next (again, if any) can override that decision.
    *
-   * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
+   * Returns: a #GstAutoplugSelectResult that indicates the required
    * operation. the default handler will always return
-   * #GST_AUTOPLUG_SELECT_TRY.
+   * #GstAutoplugSelectResult::try.
    */
   gst_parse_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
@@ -789,7 +789,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
       GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
-   * GstParseBin::drained
+   * GstParseBin::drained:
    * @bin: The ParseBin
    *
    * This signal is emitted once ParseBin has finished parsing all the data.
@@ -813,7 +813,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstParseBin::expose-all-streams
+   * GstParseBin::expose-all-streams:
    *
    * Expose streams of unknown type.
    *
@@ -829,7 +829,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstParseBin2::connection-speed
+   * GstParseBin2::connection-speed:
    *
    * Network connection speed in kbps (0 = unknownw)
    */
@@ -838,8 +838,6 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
           "Network connection speed in kbps (0 = unknown)",
           0, G_MAXUINT64 / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-
 
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_parse_bin_autoplug_continue);

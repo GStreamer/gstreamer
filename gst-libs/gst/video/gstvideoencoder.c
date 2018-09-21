@@ -26,7 +26,6 @@
  * SECTION:gstvideoencoder
  * @title: GstVideoEncoder
  * @short_description: Base class for video encoders
- * @see_also:
  *
  * This base class is for video encoders turning raw video into
  * encoded video data.

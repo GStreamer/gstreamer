@@ -64,7 +64,7 @@
  *
  */
 
-/**
+/*
  * Global design
  *
  * 1) From sink pad to elementary streams (GstParseBin)

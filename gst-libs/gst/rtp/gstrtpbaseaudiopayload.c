@@ -42,7 +42,7 @@
  * To use this base class, your child element needs to call either
  * gst_rtp_base_audio_payload_set_frame_based() or
  * gst_rtp_base_audio_payload_set_sample_based(). This is usually done in the
- * element's _init() function. Then, the child element must call either
+ * element's `_init()` function. Then, the child element must call either
  * gst_rtp_base_audio_payload_set_frame_options(),
  * gst_rtp_base_audio_payload_set_sample_options() or
  * gst_rtp_base_audio_payload_set_samplebits_options. Since

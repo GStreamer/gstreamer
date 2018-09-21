@@ -462,7 +462,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodeBin::expose-all-streams
+   * GstURIDecodeBin::expose-all-streams:
    *
    * Expose streams of unknown type.
    *
@@ -478,7 +478,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodeBin::ring-buffer-max-size
+   * GstURIDecodeBin::ring-buffer-max-size:
    *
    * The maximum size of the ring buffer in kilobytes. If set to 0, the ring
    * buffer is disabled. Default is 0.
@@ -602,16 +602,16 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * #GstElementFactory that can be used to handle the given @caps. For each of
    * those factories, this signal is emitted.
    *
-   * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
+   * The signal handler should return a #GstAutoplugSelectResult enum
    * value indicating what decodebin should do next.
    *
-   * A value of #GST_AUTOPLUG_SELECT_TRY will try to autoplug an element from
+   * A value of #GstAutoplugSelectResult::try will try to autoplug an element from
    * @factory.
    *
-   * A value of #GST_AUTOPLUG_SELECT_EXPOSE will expose @pad without plugging
+   * A value of #GstAutoplugSelectResult::expose will expose @pad without plugging
    * any element to it.
    *
-   * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
+   * A value of #GstAutoplugSelectResult::skip will skip @factory and move to the
    * next factory.
    *
    * >   The signal handler will not be invoked if any of the previously
@@ -620,9 +620,9 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * >   GST_AUTOPLUG_SELECT_TRY from one signal handler, handlers that get
    * >   registered next (again, if any) can override that decision.
    *
-   * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
+   * Returns: a #GstAutoplugSelectResult that indicates the required
    * operation. The default handler will always return
-   * #GST_AUTOPLUG_SELECT_TRY.
+   * #GstAutoplugSelectResult::try.
    */
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),

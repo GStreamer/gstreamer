@@ -617,14 +617,14 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           reconfigure), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
       0, G_TYPE_NONE);
   /**
-   * GstPlaySink::convert-sample
+   * GstPlaySink::convert-sample:
    * @playsink: a #GstPlaySink
    * @caps: the target format of the sample
    *
    * Action signal to retrieve the currently playing video sample in the format
    * specified by @caps.
    * If @caps is %NULL, no conversion will be performed and this function is
-   * equivalent to the #GstPlaySink::sample property.
+   * equivalent to the #GstPlaySink:sample property.
    *
    * Returns: a #GstSample of the current video sample converted to #caps.
    * The caps in the sample will describe the final layout of the buffer data.

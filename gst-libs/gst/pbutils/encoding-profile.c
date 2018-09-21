@@ -696,7 +696,7 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
 /**
  * gst_encoding_profile_set_enabled:
  * @profile: a #GstEncodingProfile
- * @enabled: %FALSE to disable #profile, %TRUE to enable it
+ * @enabled: %FALSE to disable @profile, %TRUE to enable it
  *
  * Set whether the profile should be used or not.
  *

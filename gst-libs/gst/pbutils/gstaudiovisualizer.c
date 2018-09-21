@@ -29,7 +29,7 @@
  * changes).
  *
  * It also provides several background shading effects. These effects are
- * applied to a previous picture before the render() implementation can draw a
+ * applied to a previous picture before the `render()` implementation can draw a
  * new frame.
  */
 

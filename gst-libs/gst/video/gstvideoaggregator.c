@@ -243,8 +243,8 @@ gst_video_aggregator_pad_init (GstVideoAggregatorPad * vaggpad)
  * Checks if the pad currently has a buffer queued that is going to be used
  * for the current output frame.
  *
- * This must only be called from the aggregate_frames() virtual method,
- * or from the prepare_frame() virtual method of the aggregator pads.
+ * This must only be called from the #GstVideoAggregatorClass::aggregate_frames virtual method,
+ * or from the #GstVideoAggregatorPadClass::prepare_frame virtual method of the aggregator pads.
  *
  * Returns: %TRUE if the pad has currently a buffer queued
  */
@@ -263,10 +263,10 @@ gst_video_aggregator_pad_has_current_buffer (GstVideoAggregatorPad * pad)
  * Returns the currently queued buffer that is going to be used
  * for the current output frame.
  *
- * This must only be called from the aggregate_frames() virtual method,
- * or from the prepare_frame() virtual method of the aggregator pads.
+ * This must only be called from the #GstVideoAggregatorClass::aggregate_frames virtual method,
+ * or from the #GstVideoAggregatorPadClass::prepare_frame virtual method of the aggregator pads.
  *
- * The return value is only valid until aggregate_frames() or prepare_frames()
+ * The return value is only valid until #GstVideoAggregatorClass::aggregate_frames or #GstVideoAggregatorPadClass::prepare_frame
  * returns.
  *
  * Returns: (transfer none): The currently queued buffer
@@ -286,10 +286,10 @@ gst_video_aggregator_pad_get_current_buffer (GstVideoAggregatorPad * pad)
  * Returns the currently prepared video frame that has to be aggregated into
  * the current output frame.
  *
- * This must only be called from the aggregate_frames() virtual method,
- * or from the prepare_frame() virtual method of the aggregator pads.
+ * This must only be called from the #GstVideoAggregatorClass::aggregate_frames virtual method,
+ * or from the #GstVideoAggregatorPadClass::prepare_frame virtual method of the aggregator pads.
  *
- * The return value is only valid until aggregate_frames() or prepare_frames()
+ * The return value is only valid until #GstVideoAggregatorClass::aggregate_frames or #GstVideoAggregatorPadClass::prepare_frame
  * returns.
  *
  * Returns: (transfer none): The currently prepared video frame

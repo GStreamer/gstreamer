@@ -2596,7 +2596,7 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  * %FALSE and will try to update as much state as possible. The new state can
  * then be retrieved and refined with gst_video_converter_get_config().
  *
- * Look at the #GST_VIDEO_CONVERTER_OPT_* fields to check valid configuration
+ * Look at the `GST_VIDEO_CONVERTER_OPT_*` fields to check valid configuration
  * option and values.
  *
  * Returns: %TRUE when @config could be set.

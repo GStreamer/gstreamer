@@ -970,7 +970,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin:ring-buffer-max-size
+   * GstPlayBin:ring-buffer-max-size:
    *
    * The maximum size of the ring buffer in bytes. If set to 0, the ring
    * buffer is disabled. Default 0.
@@ -1043,7 +1043,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstPlayBin::video-changed
+   * GstPlayBin::video-changed:
    * @playbin: a #GstPlayBin
    *
    * This signal is emitted whenever the number or order of the video
@@ -1079,7 +1079,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, audio_changed), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
-   * GstPlayBin::text-changed
+   * GstPlayBin::text-changed:
    * @playbin: a #GstPlayBin
    *
    * This signal is emitted whenever the number or order of the text
@@ -1098,7 +1098,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstPlayBin::video-tags-changed
+   * GstPlayBin::video-tags-changed:
    * @playbin: a #GstPlayBin
    * @stream: stream index with changed tags
    *
@@ -1116,7 +1116,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
-   * GstPlayBin::audio-tags-changed
+   * GstPlayBin::audio-tags-changed:
    * @playbin: a #GstPlayBin
    * @stream: stream index with changed tags
    *
@@ -1134,7 +1134,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
-   * GstPlayBin::text-tags-changed
+   * GstPlayBin::text-tags-changed:
    * @playbin: a #GstPlayBin
    * @stream: stream index with changed tags
    *
@@ -1192,7 +1192,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
-   * GstPlayBin::get-video-tags
+   * GstPlayBin::get-video-tags:
    * @playbin: a #GstPlayBin
    * @stream: a video stream number
    *
@@ -1208,7 +1208,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_video_tags), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::get-audio-tags
+   * GstPlayBin::get-audio-tags:
    * @playbin: a #GstPlayBin
    * @stream: an audio stream number
    *
@@ -1224,7 +1224,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_audio_tags), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::get-text-tags
+   * GstPlayBin::get-text-tags:
    * @playbin: a #GstPlayBin
    * @stream: a text stream number
    *
@@ -1240,14 +1240,14 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::convert-sample
+   * GstPlayBin::convert-sample:
    * @playbin: a #GstPlayBin
    * @caps: the target format of the frame
    *
    * Action signal to retrieve the currently playing video frame in the format
    * specified by @caps.
    * If @caps is %NULL, no conversion will be performed and this function is
-   * equivalent to the #GstPlayBin::sample property.
+   * equivalent to the #GstPlayBin:sample property.
    *
    * Returns: a #GstSample of the current video frame converted to #caps.
    * The caps on the sample will describe the final layout of the buffer data.
@@ -1261,7 +1261,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   /**
-   * GstPlayBin::get-video-pad
+   * GstPlayBin::get-video-pad:
    * @playbin: a #GstPlayBin
    * @stream: a video stream number
    *
@@ -1278,7 +1278,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_video_pad), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::get-audio-pad
+   * GstPlayBin::get-audio-pad:
    * @playbin: a #GstPlayBin
    * @stream: an audio stream number
    *
@@ -1295,7 +1295,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_audio_pad), NULL, NULL,
       g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::get-text-pad
+   * GstPlayBin::get-text-pad:
    * @playbin: a #GstPlayBin
    * @stream: a text stream number
    *
