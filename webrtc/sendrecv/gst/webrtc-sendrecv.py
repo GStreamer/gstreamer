@@ -148,8 +148,20 @@ class WebRTCClient:
         return 0
 
 
+def check_plugins():
+    needed = ["opus", "vpx", "nice", "webrtc", "dtls", "srtp", "rtp",
+              "rtpmanager", "videotestsrc", "audiotestsrc"]
+    missing = list(filter(lambda p: Gst.Registry.get().find_plugin(p) is None, needed))
+    if len(missing):
+        print('Missing gstreamer plugins:', missing)
+        return False
+    return True
+
+
 if __name__=='__main__':
     Gst.init(None)
+    if not check_plugins():
+        sys.exit(1)
     parser = argparse.ArgumentParser()
     parser.add_argument('peerid', help='String ID of the peer to connect to')
     parser.add_argument('--server', help='Signalling server to connect to, eg "wss://127.0.0.1:8443"')
