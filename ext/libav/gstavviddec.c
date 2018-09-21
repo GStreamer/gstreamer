@@ -1800,14 +1800,12 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   if (!packet.size)
     goto done;
 
-  if (frame) {
-    /* save reference to the timing info */
-    ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
-    ffmpegdec->picture->reordered_opaque = (gint64) frame->system_frame_number;
+  /* save reference to the timing info */
+  ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
+  ffmpegdec->picture->reordered_opaque = (gint64) frame->system_frame_number;
 
-    GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d",
-        frame->system_frame_number);
-  }
+  GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d",
+      frame->system_frame_number);
 
   /* This might call into get_buffer() from another thread,
    * which would cause a deadlock. Release the lock here
