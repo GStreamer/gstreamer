@@ -325,10 +325,30 @@ gst_rtp_mp4g_depay_reset (GstRtpMP4GDepay * rtpmp4gdepay)
 }
 
 static void
+gst_rtp_mp4g_depay_push_outbuf (GstRtpMP4GDepay * rtpmp4gdepay,
+    GstBuffer * outbuf, guint AU_index)
+{
+  gboolean discont = FALSE;
+
+  if (AU_index != rtpmp4gdepay->next_AU_index) {
+    GST_DEBUG_OBJECT (rtpmp4gdepay, "discont, expected AU_index %u",
+        rtpmp4gdepay->next_AU_index);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    discont = TRUE;
+  }
+
+  GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing %sAU_index %u",
+      discont ? "" : "expected ", AU_index);
+
+  gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
+  gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
+  rtpmp4gdepay->next_AU_index = AU_index + 1;
+}
+
+static void
 gst_rtp_mp4g_depay_flush_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 {
   GstBuffer *outbuf;
-  gboolean discont = FALSE;
   guint AU_index;
 
   while ((outbuf = g_queue_pop_head (rtpmp4gdepay->packets))) {
@@ -336,21 +356,7 @@ gst_rtp_mp4g_depay_flush_queue (GstRtpMP4GDepay * rtpmp4gdepay)
 
     GST_DEBUG_OBJECT (rtpmp4gdepay, "next available AU_index %u", AU_index);
 
-    if (rtpmp4gdepay->next_AU_index != AU_index) {
-      GST_DEBUG_OBJECT (rtpmp4gdepay, "discont, expected AU_index %u",
-          rtpmp4gdepay->next_AU_index);
-      discont = TRUE;
-    }
-
-    if (discont) {
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-      discont = FALSE;
-    }
-
-    GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing AU_index %u", AU_index);
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
-    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
-    rtpmp4gdepay->next_AU_index = AU_index + 1;
+    gst_rtp_mp4g_depay_push_outbuf (rtpmp4gdepay, outbuf, AU_index);
   }
 }
 
@@ -369,9 +375,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
 
     /* we received the expected packet, push it and flush as much as we can from
      * the queue */
-    gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
-    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
-    rtpmp4gdepay->next_AU_index++;
+    gst_rtp_mp4g_depay_push_outbuf (rtpmp4gdepay, outbuf, AU_index);
 
     while ((outbuf = g_queue_peek_head (rtpmp4gdepay->packets))) {
       AU_index = GST_BUFFER_OFFSET (outbuf);
@@ -379,13 +383,8 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
       GST_DEBUG_OBJECT (rtpmp4gdepay, "next available AU_index %u", AU_index);
 
       if (rtpmp4gdepay->next_AU_index == AU_index) {
-        GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing expected AU_index %u",
-            AU_index);
         outbuf = g_queue_pop_head (rtpmp4gdepay->packets);
-        gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
-        gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay),
-            outbuf);
-        rtpmp4gdepay->next_AU_index++;
+        gst_rtp_mp4g_depay_push_outbuf (rtpmp4gdepay, outbuf, AU_index);
       } else {
         GST_DEBUG_OBJECT (rtpmp4gdepay, "waiting for next AU_index %u",
             rtpmp4gdepay->next_AU_index);
