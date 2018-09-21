@@ -12,7 +12,7 @@ SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc codecparsers \
 
 noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
 DIST_SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc \
-	codecparsers insertbin mpegts wayland opencv video audio player isoff webrtc
+	codecparsers insertbin mpegts wayland opencv video audio player isoff sctp webrtc
 
 adaptivedemux: uridownloader
 
