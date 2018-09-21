@@ -43,7 +43,7 @@ typedef struct _GstGLWindowWin32Class   GstGLWindowWin32Class;
 struct _GstGLWindowWin32 {
   /*< private >*/
   GstGLWindow parent;
-  
+
   HWND internal_win_id;
   HWND parent_win_id;
   HDC device;

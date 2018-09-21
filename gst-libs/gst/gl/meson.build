@@ -636,7 +636,6 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
     gl_includes += [compat_includes]
     gl_platform_deps += gdi_dep
     gl_sources += [
-      'win32/win32_message_source.c',
       'win32/gstglwindow_win32.c',
       'win32/gstglwindow_win32.c',
       'win32/gstglcontext_wgl.c',
