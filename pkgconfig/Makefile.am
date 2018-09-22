@@ -20,10 +20,8 @@ pcverfiles_uninstalled = \
 	gstreamer-bad-audio-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc
 
-if USE_SCTP
 pcverfiles += gstreamer-sctp-@GST_API_VERSION@.pc
 pcverfiles_uninstalled += gstreamer-sctp-@GST_API_VERSION@-uninstalled.pc
-endif
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
