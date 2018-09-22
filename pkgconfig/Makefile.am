@@ -6,6 +6,7 @@ pcverfiles =  \
 	gstreamer-insertbin-@GST_API_VERSION@.pc \
 	gstreamer-mpegts-@GST_API_VERSION@.pc \
 	gstreamer-player-@GST_API_VERSION@.pc \
+	gstreamer-sctp-@GST_API_VERSION@.pc \
 	gstreamer-webrtc-@GST_API_VERSION@.pc \
 	gstreamer-bad-audio-@GST_API_VERSION@.pc \
 	gstreamer-bad-video-@GST_API_VERSION@.pc
@@ -16,12 +17,10 @@ pcverfiles_uninstalled = \
 	gstreamer-insertbin-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-mpegts-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-player-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-sctp-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-webrtc-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-audio-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-bad-video-@GST_API_VERSION@-uninstalled.pc
-
-pcverfiles += gstreamer-sctp-@GST_API_VERSION@.pc
-pcverfiles_uninstalled += gstreamer-sctp-@GST_API_VERSION@-uninstalled.pc
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 

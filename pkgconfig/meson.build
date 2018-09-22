@@ -30,6 +30,7 @@ pkg_libs = [
   'mpegts',
   'player',
   'plugins-bad',
+  'sctp',
   'webrtc',
 ]
 
