@@ -12425,6 +12425,7 @@ static gboolean
 qtdemux_update_streams (GstQTDemux * qtdemux)
 {
   GList *iter, *next;
+  g_assert (qtdemux->streams_aware);
 
   /* At below, figure out which stream in active_streams has identical stream-id
    * with that of in old_streams. If there is matching stream-id,
@@ -12449,8 +12450,7 @@ qtdemux_update_streams (GstQTDemux * qtdemux)
 
     qtdemux->n_streams++;
 
-    if (qtdemux->streams_aware
-        && (tmp = _stream_in_list (qtdemux->old_streams, stream)) != NULL
+    if ((tmp = _stream_in_list (qtdemux->old_streams, stream)) != NULL
         && QTDEMUX_STREAM (tmp->data)->pad) {
       QtDemuxStream *oldstream = QTDEMUX_STREAM (tmp->data);
 
