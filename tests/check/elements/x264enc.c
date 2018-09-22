@@ -35,36 +35,35 @@ static GstPad *mysrcpad, *mysinkpad;
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
 
-#define MPEG_CAPS_STRING "video/x-h264, " \
+#define H264_CAPS_STRING "video/x-h264, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
+
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VIDEO_CAPS_STRING));
+
 static GstElement *
 setup_x264enc (const gchar * profile, const gchar * stream_format,
     const gchar * input_format)
 {
-  GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (MPEG_CAPS_STRING));
-
-  GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (VIDEO_CAPS_STRING));
+  GstPadTemplate *sink_tmpl;
   GstElement *x264enc;
-  gchar *caps_str;
   GstCaps *caps;
 
   GST_DEBUG ("setup_x264enc");
 
-  caps_str = g_strdup_printf ("%s, profile = (string) %s, "
-      "stream-format = (string) %s", MPEG_CAPS_STRING, profile, stream_format);
-  sinktemplate.static_caps.string = caps_str;
+  caps = gst_caps_from_string (H264_CAPS_STRING);
+  gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile,
+      "stream-format", G_TYPE_STRING, stream_format, NULL);
+  sink_tmpl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+  gst_caps_unref (caps);
 
   x264enc = gst_check_setup_element ("x264enc");
   mysrcpad = gst_check_setup_src_pad (x264enc, &srctemplate);
-  mysinkpad = gst_check_setup_sink_pad (x264enc, &sinktemplate);
+  mysinkpad = gst_check_setup_sink_pad_from_template (x264enc, sink_tmpl);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -72,8 +71,7 @@ setup_x264enc (const gchar * profile, const gchar * stream_format,
   gst_caps_set_simple (caps, "format", G_TYPE_STRING, input_format, NULL);
   gst_check_setup_events (mysrcpad, x264enc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
-
-  g_free (caps_str);
+  gst_object_unref (sink_tmpl);
 
   return x264enc;
 }
