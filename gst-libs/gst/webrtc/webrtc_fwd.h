@@ -28,7 +28,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_WEBRTC_API
-#define GST_WEBRTC_API GST_EXPORT
+# ifdef BUILDING_GST_WEBRTC
+#  define GST_WEBRTC_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_WEBRTC_API GST_API_IMPORT
+# endif
 #endif
 
 #include <gst/webrtc/webrtc-enumtypes.h>

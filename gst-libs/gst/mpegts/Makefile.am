@@ -28,6 +28,7 @@ nodist_libgstmpegts_@GST_API_VERSION@include_HEADERS = \
 libgstmpegts_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
+	-DBUILDING_GST_MPEGTS \
 	$(GST_CFLAGS)
 
 libgstmpegts_@GST_API_VERSION@_la_LIBADD = \

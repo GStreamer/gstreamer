@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_URI_DOWNLOADER_API
-#define GST_URI_DOWNLOADER_API GST_EXPORT
+# ifdef BUILDING_GST_URI_DOWNLOADER
+#  define GST_URI_DOWNLOADER_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_URI_DOWNLOADER_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_URI_DOWNLOADER_PRELUDE_H__ */

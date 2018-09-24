@@ -34,6 +34,7 @@ install_headers(codecparser_headers, subdir : 'gstreamer-1.0/gst/codecparsers')
 
 cp_args = [
   '-DGST_USE_UNSTABLE_API',
+  '-DBUILDING_GST_CODEC_PARSERS',
   '-Dvp8_norm=gst_codecparsers_vp8_norm',
   '-Dvp8dx_start_decode=gst_codecparsers_vp8dx_start_decode',
   '-Dvp8dx_bool_decoder_fill=gst_codecparsers_vp8dx_bool_decoder_fill',

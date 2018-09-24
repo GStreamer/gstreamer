@@ -38,6 +38,7 @@ nodist_libgstwebrtc_@GST_API_VERSION@include_HEADERS = $(built_headers)
 libgstwebrtc_@GST_API_VERSION@_la_CFLAGS = \
 	-I$(top_builddir)/gst-libs \
 	-I$(top_srcdir)/gst-libs \
+	-DBUILDING_GST_WEBRTC \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \

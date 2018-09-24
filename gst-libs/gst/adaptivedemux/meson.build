@@ -1,6 +1,6 @@
 gstadaptivedemux = library('gstadaptivedemux-' + api_version,
   'gstadaptivedemux.c',
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_ADAPTIVE_DEMUX'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

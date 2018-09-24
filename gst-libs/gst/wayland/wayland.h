@@ -30,7 +30,11 @@
 #include <wayland-client.h>
 
 #ifndef GST_WAYLAND_API
-#define GST_WAYLAND_API GST_EXPORT
+# ifdef BUILDING_GST_WAYLAND
+#  define GST_WAYLAND_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_WAYLAND_API GST_API_IMPORT
+# endif
 #endif
 
 G_BEGIN_DECLS

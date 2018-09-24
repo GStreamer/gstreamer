@@ -26,6 +26,9 @@
  * Provides useful functions for parsing JPEG images
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 #include <stdlib.h>

@@ -12,7 +12,7 @@ install_headers(urid_headers, subdir : 'gstreamer-1.0/gst/uridownloader')
 
 gsturidownloader = library('gsturidownloader-' + api_version,
   urid_sources,
-  c_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_URI_DOWNLOADER'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

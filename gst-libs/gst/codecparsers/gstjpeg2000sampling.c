@@ -24,6 +24,9 @@
  * @short_description: Manage JPEG 2000 sampling and colorspace fields
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstjpeg2000sampling.h"
 

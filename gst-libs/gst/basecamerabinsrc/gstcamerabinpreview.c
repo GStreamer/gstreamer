@@ -26,6 +26,10 @@
  * #GstCameraBinVideo.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 #include <gst/glib-compat-private.h>

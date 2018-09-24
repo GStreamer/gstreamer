@@ -12,6 +12,7 @@ libgsturidownloader_@GST_API_VERSION@include_HEADERS = \
 libgsturidownloader_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
+	-DBUILDING_GST_URI_DOWNLOADER \
 	$(GST_CFLAGS)
 
 libgsturidownloader_@GST_API_VERSION@_la_LIBADD = \

@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_VIDEO_BAD_API
-#define GST_VIDEO_BAD_API GST_EXPORT
+# ifdef BUILDING_GST_VIDEO_BAD
+#  define GST_VIDEO_BAD_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_VIDEO_BAD_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_VIDEO_BAD_PRELUDE_H__ */

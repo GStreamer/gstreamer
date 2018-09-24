@@ -20,6 +20,7 @@ install_headers(mpegts_headers, subdir : 'gstreamer-1.0/gst/mpegts')
 
 mpegts_enums = gnome.mkenums_simple('gstmpegts-enumtypes',
   sources : mpegts_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/mpegts/mpegts-prelude.h>',
   decorator : 'GST_MPEGTS_API',
   install_header: true,
@@ -31,7 +32,7 @@ gen_sources = [mpegtsenumtypes_h]
 
 gstmpegts = library('gstmpegts-' + api_version,
   mpegts_sources, mpegts_enums,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_MPEGTS'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

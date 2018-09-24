@@ -7,6 +7,7 @@ libgstsctp_1_0_la_SOURCES = \
 libgstsctp_1_0_la_CFLAGS = \
     -I$(top_srcdir)/gst-libs \
     -I$(top_builddir)/gst-libs \
+    -DBUILDING_GST_SCTP \
     $(GST_PLUGINS_BASE_CFLAGS) \
     $(GST_BASE_CFLAGS) \
     $(GST_CFLAGS)

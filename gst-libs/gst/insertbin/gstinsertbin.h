@@ -34,7 +34,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_INSERT_BIN_API
-#define GST_INSERT_BIN_API GST_EXPORT
+# ifdef BUILDING_GST_INSERT_BIN
+#  define GST_INSERT_BIN_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_INSERT_BIN_API GST_API_IMPORT
+# endif
 #endif
 
 G_BEGIN_DECLS

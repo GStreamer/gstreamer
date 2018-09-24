@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_ADAPTIVE_DEMUX_API
-#define GST_ADAPTIVE_DEMUX_API GST_EXPORT
+# ifdef BUILDING_GST_ADAPTIVE_DEMUX
+#  define GST_ADAPTIVE_DEMUX_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_ADAPTIVE_DEMUX_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_ADAPTIVE_DEMUX_PRELUDE_H__ */

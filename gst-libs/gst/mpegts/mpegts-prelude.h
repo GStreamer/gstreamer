@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_MPEGTS_API
-#define GST_MPEGTS_API GST_EXPORT
+# ifdef BUILDING_GST_MPEGTS
+#  define GST_MPEGTS_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_MPEGTS_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_MPEGTS_PRELUDE_H__ */

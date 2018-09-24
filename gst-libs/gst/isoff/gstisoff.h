@@ -31,7 +31,11 @@
 G_BEGIN_DECLS
 
 #ifndef GST_ISOFF_API
-#define GST_ISOFF_API GST_EXPORT
+# ifdef BUILDING_GST_ISOFF
+#  define GST_ISOFF_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_ISOFF_API GST_API_IMPORT
+# endif
 #endif
 
 typedef enum {

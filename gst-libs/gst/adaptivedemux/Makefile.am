@@ -14,6 +14,7 @@ libgstadaptivedemux_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
+	-DBUILDING_GST_ADAPTIVE_DEMUX \
 	$(GST_CFLAGS)
 libgstadaptivedemux_@GST_API_VERSION@_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-$(GST_API_VERSION).la \

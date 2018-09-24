@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_PHOTOGRAPHY_API
-#define GST_PHOTOGRAPHY_API GST_EXPORT
+# ifdef BUILDING_GST_PHOTOGRAPHY
+#  define GST_PHOTOGRAPHY_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_PHOTOGRAPHY_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_PHOTOGRAPHY_PRELUDE_H__ */

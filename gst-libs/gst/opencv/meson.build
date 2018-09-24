@@ -13,7 +13,7 @@ opencv_dep = dependency('opencv', version : '>= 3.0.0', required : get_option('o
 if opencv_dep.found()
   gstopencv = library('gstopencv-' + api_version,
     opencv_sources,
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + ['-DBUILDING_GST_OPENCV'],
     include_directories : [configinc, libsinc],
     version : libversion,
     soversion : soversion,

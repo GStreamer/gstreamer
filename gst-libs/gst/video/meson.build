@@ -10,7 +10,7 @@ install_headers(badvideo_headers, subdir : 'gstreamer-1.0/gst/video')
 
 gstbadvideo = library('gstbadvideo-' + api_version,
   badvideo_sources,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_VIDEO_BAD'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

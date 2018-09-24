@@ -9,6 +9,7 @@ libgstinsertbin_@GST_API_VERSION@include_HEADERS = gstinsertbin.h
 
 libgstinsertbin_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
+	-DBUILDING_GST_INSERT_BIN \
 	$(GST_CFLAGS)
 
 libgstinsertbin_@GST_API_VERSION@_la_LIBADD = \

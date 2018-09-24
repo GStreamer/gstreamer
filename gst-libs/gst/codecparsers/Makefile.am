@@ -26,6 +26,7 @@ libgstcodecparsers_@GST_API_VERSION@include_HEADERS = \
 libgstcodecparsers_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
+	-DBUILDING_GST_CODEC_PARSERS \
 	$(GST_CFLAGS) \
 	-Dvp8_norm=gst_codecparsers_vp8_norm \
 	-Dvp8dx_start_decode=gst_codecparsers_vp8dx_start_decode \

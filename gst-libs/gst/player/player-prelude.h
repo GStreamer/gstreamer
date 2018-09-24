@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_PLAYER_API
-#define GST_PLAYER_API GST_EXPORT
+# ifdef BUILDING_GST_PLAYER
+#  define GST_PLAYER_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_PLAYER_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_PLAYER_PRELUDE_H__ */

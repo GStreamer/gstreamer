@@ -27,6 +27,7 @@ webrtc_enumtypes_headers = [
 
 webrtc_enums = gnome.mkenums_simple('webrtc-enumtypes',
   sources : webrtc_enumtypes_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   header_prefix : '#include <gst/webrtc/webrtc_fwd.h>',
   decorator: 'GST_WEBRTC_API',
   install_header: true,
@@ -41,7 +42,7 @@ gstwebrtc_dependencies = [gstbase_dep, gstsdp_dep]
 
 gstwebrtc = library('gstwebrtc-' + api_version,
   webrtc_sources, gstwebrtc_c, gstwebrtc_h,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WEBRTC'],
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,

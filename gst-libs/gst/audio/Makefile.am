@@ -11,6 +11,7 @@ nodist_libgstbadaudio_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstbadaudio_@GST_API_VERSION@_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API \
+	-DBUILDING_GST_AUDIO_BAD \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_builddir)/gst-libs \
 	$(GST_CFLAGS) $(ORC_CFLAGS) \

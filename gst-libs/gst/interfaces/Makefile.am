@@ -34,6 +34,7 @@ nodist_libgstphotography_@GST_API_VERSION@_la_SOURCES = 	\
 
 libgstphotography_@GST_API_VERSION@_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API \
+	-DBUILDING_GST_PHOTOGRAPHY \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_CFLAGS)
 libgstphotography_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) 

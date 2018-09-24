@@ -27,6 +27,9 @@
  * non-interleaved (planar) audio buffers. Before using, an audio format
  * must be configured with gst_planar_audio_adapter_configure()
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "gstplanaraudioadapter.h"
 

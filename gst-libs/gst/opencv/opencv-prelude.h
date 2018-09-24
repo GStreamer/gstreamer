@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_OPENCV_API
-#define GST_OPENCV_API GST_EXPORT
+# ifdef BUILDING_GST_OPENCV
+#  define GST_OPENCV_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_OPENCV_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_OPENCV_PRELUDE_H__ */

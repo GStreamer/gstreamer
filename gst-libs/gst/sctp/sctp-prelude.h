@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_SCTP_API
-#define GST_SCTP_API GST_EXPORT
+# ifdef BUILDING_GST_SCTP
+#  define GST_SCTP_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_SCTP_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_SCTP_PRELUDE_H__ */

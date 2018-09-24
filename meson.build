@@ -32,6 +32,8 @@ plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 
+cdata = configuration_data()
+
 if cc.get_id() == 'msvc'
   # Ignore several spurious warnings for things gstreamer does very commonly
   # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
@@ -61,12 +63,17 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 # Symbol visibility
-if cc.has_argument('-fvisibility=hidden')
+if cc.get_id() == 'msvc'
+  export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
+  export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  export_define = 'extern'
 endif
-if cxx.has_argument('-fvisibility=hidden')
-  add_project_arguments('-fvisibility=hidden', language: 'cpp')
-endif
+
+# Passing this through the command line would be too messy
+cdata.set('GST_API_EXPORT', export_define)
 
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
@@ -100,7 +107,6 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
 
-cdata = configuration_data()
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
   ['HAVE_FCNTL_H', 'fcntl.h'],
