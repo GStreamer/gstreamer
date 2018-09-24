@@ -45,6 +45,9 @@ G_BEGIN_DECLS
  * @GST_VAAPI_LEVEL_H264_L5: H.264 level 5.
  * @GST_VAAPI_LEVEL_H264_L5_1: H.264 level 5.1.
  * @GST_VAAPI_LEVEL_H264_L5_2: H.264 level 5.2.
+ * @GST_VAAPI_LEVEL_H264_L6: H.264 level 6.
+ * @GST_VAAPI_LEVEL_H264_L6_1: H.264 level 6.1.
+ * @GST_VAAPI_LEVEL_H264_L6_2: H.264 level 6.2.
  *
  * The set of all levels for #GstVaapiLevelH264.
  */
@@ -66,6 +69,9 @@ typedef enum {
   GST_VAAPI_LEVEL_H264_L5,
   GST_VAAPI_LEVEL_H264_L5_1,
   GST_VAAPI_LEVEL_H264_L5_2,
+  GST_VAAPI_LEVEL_H264_L6,
+  GST_VAAPI_LEVEL_H264_L6_1,
+  GST_VAAPI_LEVEL_H264_L6_2,
 } GstVaapiLevelH264;
 
 /* Returns a relative score for the supplied GstVaapiProfile */

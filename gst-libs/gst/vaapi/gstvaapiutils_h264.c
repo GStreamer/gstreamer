@@ -70,6 +70,9 @@ static const struct map gst_vaapi_h264_level_map[] = {
   { GST_VAAPI_LEVEL_H264_L5,    "5"     },
   { GST_VAAPI_LEVEL_H264_L5_1,  "5.1"   },
   { GST_VAAPI_LEVEL_H264_L5_2,  "5.2"   },
+  { GST_VAAPI_LEVEL_H264_L6,    "6"     },
+  { GST_VAAPI_LEVEL_H264_L6_1,  "6.1"   },
+  { GST_VAAPI_LEVEL_H264_L6_2,  "6.2"   },
   { 0, NULL }
 /* *INDENT-ON* */
 };
@@ -95,6 +98,9 @@ static const GstVaapiH264LevelLimits gst_vaapi_h264_level_limits[] = {
   { GST_VAAPI_LEVEL_H264_L5,    50,   589824,  22080, 110400, 135000, 135000, 2 },
   { GST_VAAPI_LEVEL_H264_L5_1,  51,   983040,  36864, 184320, 240000, 240000, 2 },
   { GST_VAAPI_LEVEL_H264_L5_2,  52,  2073600,  36864, 184320, 240000, 240000, 2 },
+  { GST_VAAPI_LEVEL_H264_L6,    60,  4177920, 139264, 696320, 240000, 240000, 2 },
+  { GST_VAAPI_LEVEL_H264_L6_1,  61,  8355840, 139264, 696320, 480000, 480000, 2 },
+  { GST_VAAPI_LEVEL_H264_L6_2,  62, 16711680, 139264, 696320, 800000, 800000, 2 },
   { 0, }
 };
 /* *INDENT-ON* */
@@ -322,7 +328,7 @@ not_found:
 const gchar *
 gst_vaapi_utils_h264_get_level_string (GstVaapiLevelH264 level)
 {
-  if (level < GST_VAAPI_LEVEL_H264_L1 || level > GST_VAAPI_LEVEL_H264_L5_2)
+  if (level < GST_VAAPI_LEVEL_H264_L1 || level > GST_VAAPI_LEVEL_H264_L6_2)
     return NULL;
   return gst_vaapi_h264_level_map[level - GST_VAAPI_LEVEL_H264_L1].name;
 }
@@ -331,7 +337,7 @@ gst_vaapi_utils_h264_get_level_string (GstVaapiLevelH264 level)
 const GstVaapiH264LevelLimits *
 gst_vaapi_utils_h264_get_level_limits (GstVaapiLevelH264 level)
 {
-  if (level < GST_VAAPI_LEVEL_H264_L1 || level > GST_VAAPI_LEVEL_H264_L5_2)
+  if (level < GST_VAAPI_LEVEL_H264_L1 || level > GST_VAAPI_LEVEL_H264_L6_2)
     return NULL;
   return &gst_vaapi_h264_level_limits[level - GST_VAAPI_LEVEL_H264_L1];
 }
