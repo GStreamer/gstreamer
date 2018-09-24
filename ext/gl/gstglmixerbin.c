@@ -178,11 +178,10 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
-      g_param_spec_int64 ("latency", "Buffer latency",
+      g_param_spec_uint64 ("latency", "Buffer latency",
           "Additional latency in live mode to allow upstream "
           "to take longer to produce buffers for the current "
-          "position", 0,
-          (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
+          "position (in nanoseconds)", 0, G_MAXUINT64,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
