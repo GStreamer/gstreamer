@@ -27,6 +27,9 @@
  * output silence. Useful for testing pipelines, or to fill gaps in an audio
  * track.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-track-element.h"

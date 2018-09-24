@@ -22,6 +22,9 @@
  *
  * NOTE: This is for internal use exclusively
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-auto-transition.h"
 #include "ges-internal.h"

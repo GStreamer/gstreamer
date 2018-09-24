@@ -23,6 +23,9 @@
  * @title: GESBaseTransitionClip
  * @short_description: Base classes for transitions
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ges/ges.h>
 #include "ges-internal.h"

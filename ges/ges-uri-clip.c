@@ -26,6 +26,9 @@
  * Represents all the output streams from a particular uri. It is assumed that
  * the URI points to a file of some type.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-uri-clip.h"

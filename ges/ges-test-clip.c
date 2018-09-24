@@ -28,6 +28,9 @@
  * You can use the ges_asset_request_simple API to create an Asset
  * capable of extracting GESTestClip-s
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-test-clip.h"

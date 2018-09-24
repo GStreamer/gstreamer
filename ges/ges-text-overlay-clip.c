@@ -25,6 +25,9 @@
  *
  * Renders text onto the next lower priority stream using textrender.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-text-overlay-clip.h"

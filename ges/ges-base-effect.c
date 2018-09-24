@@ -23,6 +23,9 @@
  * @short_description: adds an effect to a stream in a GESSourceClip or a
  * GESLayer
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <glib/gprintf.h>
 

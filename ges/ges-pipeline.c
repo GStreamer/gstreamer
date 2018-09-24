@@ -27,6 +27,9 @@
  * in a simple fashion.
  * Its usage is inspired by the 'playbin' element from gst-plugins-base.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>

@@ -31,6 +31,9 @@
  * should be instaciated to group the various #GESTimelineElement passed
  * in parametter.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-group.h"
 #include "ges.h"

@@ -26,6 +26,9 @@
  * it is mostly used to get information about the #GESTrackType-s the objects extracted
  * from it can potentialy create #GESTrackElement for.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-clip-asset.h"
 

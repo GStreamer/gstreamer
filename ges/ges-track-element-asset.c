@@ -23,6 +23,9 @@
  * @title: GESTrackElementAsset
  * @short_description: A GESAsset subclass specialized in GESTrackElement extraction
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-track-element-asset.h"
 

@@ -26,6 +26,9 @@
  * as priority. A GESTimelineElement can have a parent object which will be
  * responsible for controlling its timing properties.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-utils.h"
 #include "ges-timeline-element.h"

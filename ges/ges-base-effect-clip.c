@@ -25,6 +25,9 @@
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ges/ges.h>
 #include "ges-internal.h"

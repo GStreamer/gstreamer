@@ -23,6 +23,9 @@
  * @title: GESOperation
  * @short_description: Base Class for effects and overlays
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-track-element.h"

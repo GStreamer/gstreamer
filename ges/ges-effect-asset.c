@@ -24,6 +24,9 @@
  * This is internal, and implementation details, so we are not showing it in the
  * documentation
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-effect-asset.h"
 #include "ges-track-element.h"

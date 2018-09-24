@@ -23,6 +23,9 @@
  * @title: GESVideoUriSource
  * @short_description: outputs a single video stream from a given file
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/pbutils/missing-plugins.h>
 

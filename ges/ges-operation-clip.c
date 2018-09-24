@@ -25,6 +25,9 @@
  *
  * Operations are any kind of object that both outputs AND consumes data.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges.h"
 #include "ges-internal.h"

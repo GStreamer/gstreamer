@@ -27,6 +27,10 @@
  *
  * Deprecated: 1.0
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#undef VERSION
+#endif
 
 #include <libxml/xmlreader.h>
 #include <libxml/tree.h>
@@ -41,7 +45,7 @@
 #include <ges/ges.h>
 
 /* The Pitivi etree formatter is 0.1 we set GES one to 0.2 */
-#define VERSION "0.2"
+//#define VERSION "0.2"
 #define DOUBLE_VERSION 0.2
 
 #undef GST_CAT_DEFAULT

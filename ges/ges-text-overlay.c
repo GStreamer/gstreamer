@@ -24,6 +24,9 @@
  * @short_description: render text onto another video stream in a GESLayer
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-track-element.h"

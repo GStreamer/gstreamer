@@ -23,6 +23,9 @@
  * @title: GESAudioTransition
  * @short_description: implements audio crossfade transition
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-track-element.h"

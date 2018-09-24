@@ -23,6 +23,9 @@
  * @title: GESVideoTransition
  * @short_description: implements video crossfade transition
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ges/ges.h>
 #include "ges-internal.h"

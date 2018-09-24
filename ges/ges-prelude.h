@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GES_API
-#define GES_API GST_EXPORT
+# ifdef BUILDING_GES
+#  define GES_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GES_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_GES_PRELUDE_H__ */

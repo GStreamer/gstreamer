@@ -25,6 +25,10 @@
  * Outputs the video stream from a given image sequence. The start frame
  * chosen will be determined by the in-point property on the track element.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include "ges-internal.h"

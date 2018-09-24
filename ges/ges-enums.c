@@ -23,6 +23,9 @@
  * @title: GES Enumerations
  * @short_description: Various enums for the Gstreamer Editing Services
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-enums.h"
 #include "ges-internal.h"

@@ -30,6 +30,10 @@
  * its container, like the start position, the inpoint, the duration and the
  * priority.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "ges-internal.h"
 #include "ges-extractable.h"
 #include "ges-track-element.h"

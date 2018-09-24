@@ -23,6 +23,9 @@
  * @short_description: adds an effect build from a parse-launch style
  * bin description to a stream in a GESSourceClip or a GESLayer
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-extractable.h"

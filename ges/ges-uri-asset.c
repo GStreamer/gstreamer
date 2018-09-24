@@ -28,6 +28,10 @@
  * let you get information about the medias. Also, the tags found in the media file are
  * set as Metadatas of the Asser.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <errno.h>
 #include <gst/pbutils/pbutils.h>
 #include "ges.h"

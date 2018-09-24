@@ -27,6 +27,9 @@
  *
  * Contains the compatible TrackElement(s).
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-track.h"

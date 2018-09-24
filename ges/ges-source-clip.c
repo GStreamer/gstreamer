@@ -23,6 +23,9 @@
  * @title: GESSourceClip
  * @short_description: Base Class for sources of a GESLayer
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-clip.h"

@@ -28,6 +28,9 @@
  * chosen will be determined by the in-point property on the track element. For
  * image files, do not set the in-point property.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-track-element.h"

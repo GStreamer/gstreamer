@@ -29,6 +29,9 @@ glib_req = '>= 2.40.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
+
+cdata = configuration_data()
+
 # Ignore several spurious warnings for things gstreamer does very commonly
 # If a warning is completely useless and spammy, use '/wdXXXX' to suppress it
 # If a warning is harmless but hard to fix, use '/woXXXX' so it's shown once
@@ -47,16 +50,23 @@ if cc.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 # Symbol visibility
-if cc.has_argument('-fvisibility=hidden')
+if cc.get_id() == 'msvc'
+  export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
+  export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  export_define = 'extern'
 endif
+
+# Passing this through the command line would be too messy
+cdata.set('GST_API_EXPORT', export_define)
 
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
 endif
 
-cdata = configuration_data()
 cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-editing-services"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))

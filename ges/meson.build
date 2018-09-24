@@ -160,7 +160,7 @@ libges = library('ges-1.0', ges_sources, parser,
     version : libversion,
     soversion : soversion,
     darwin_versions : osxversion,
-    c_args : [ges_c_args],
+    c_args : [ges_c_args] + ['-DBUILDING_GES'],
     include_directories : [configinc],
     install : true,
     dependencies : libges_deps)

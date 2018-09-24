@@ -23,6 +23,9 @@
  * @title: GESAudioUriSource
  * @short_description: outputs a single audio stream from a given file
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-utils.h"
 #include "ges-internal.h"

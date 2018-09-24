@@ -30,6 +30,9 @@
  * Transitions, which change from one source to another over time, are
  * not considered overlays.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-operation-clip.h"

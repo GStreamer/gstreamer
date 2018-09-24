@@ -22,6 +22,9 @@
  * @title: GESVideoTrack
  * @short_description: A standard GESTrack for raw video
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-video-track.h"
 #include "ges-smart-video-mixer.h"

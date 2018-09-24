@@ -24,6 +24,9 @@
  * @short_description: base class for audio and video transitions
  *
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ges/ges.h>
 #include "ges-internal.h"

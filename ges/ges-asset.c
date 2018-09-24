@@ -82,6 +82,9 @@
  * ges_asset_request_async(). All the #GESAssets are cached and thus any asset that has already
  * been created can be requested again without overhead.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges.h"
 #include "ges-internal.h"

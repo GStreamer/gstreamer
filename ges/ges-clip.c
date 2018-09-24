@@ -31,6 +31,9 @@
  * Keeps a reference to the #GESTrackElement(s) it created and
  * sets/updates their properties.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-clip.h"
 #include "ges.h"

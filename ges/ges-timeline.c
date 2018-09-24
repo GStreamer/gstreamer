@@ -40,6 +40,9 @@
  * Note that any change you make in the timeline will not actually be taken
  * into account until you call the #ges_timeline_commit method.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-project.h"

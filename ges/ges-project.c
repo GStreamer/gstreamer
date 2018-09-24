@@ -44,6 +44,10 @@
  * a set of signals. Also it handles problem such as missing files/missing
  * #GstElement and lets you try to recover from those.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "ges.h"
 #include "ges-internal.h"
 

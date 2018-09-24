@@ -25,6 +25,10 @@
  *
  * FIXME: Long description needed
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "ges-asset.h"
 #include "ges-internal.h"
 #include "ges-extractable.h"

@@ -36,6 +36,9 @@
  * that this value can be changed after creation and the GESExtractable.asset value
  * will be updated when needed.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ges/ges.h>
 #include "ges-internal.h"

@@ -30,6 +30,9 @@
  * priorities of individual Clips. Two layers should not have the
  * same priority within a given timeline.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-internal.h"
 #include "ges-layer.h"

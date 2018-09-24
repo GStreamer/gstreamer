@@ -24,6 +24,9 @@
  * @short_description: Base Class for objects responsible for controlling other
  * GESTimelineElement-s
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "ges-container.h"
 #include "ges.h"
