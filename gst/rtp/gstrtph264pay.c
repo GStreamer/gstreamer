@@ -893,10 +893,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-    /* only set the marker bit on packets containing access units */
-    if (IS_ACCESS_UNIT (nalType) && end_of_au) {
-      gst_rtp_buffer_set_marker (&rtp, 1);
-    }
+    /* Mark the end of a frame */
+    gst_rtp_buffer_set_marker (&rtp, end_of_au);
 
     /* timestamp the outbuffer */
     GST_BUFFER_PTS (outbuf) = pts;
@@ -964,9 +962,10 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
         GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
         end = 1;
       }
-      if (IS_ACCESS_UNIT (nalType)) {
-        gst_rtp_buffer_set_marker (&rtp, end && end_of_au);
-      }
+
+      /* If it's the last fragment and the end of this au, mark the end of
+       * slice */
+      gst_rtp_buffer_set_marker (&rtp, end_of_au);
 
       /* FU indicator */
       payload[0] = (nalHeader & 0x60) | 28;
@@ -1124,9 +1123,10 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* If we're at the end of the buffer, then we're at the end of the
        * access unit
        */
-      if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU
-          && size - nal_len <= nal_length_size) {
-        end_of_au = TRUE;
+      if (size - nal_len <= nal_length_size) {
+        if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU ||
+            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+          end_of_au = TRUE;
       }
 
       paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset,
@@ -1266,9 +1266,12 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
        * actually payload the NAL so we can know if the current NAL is
        * the last one of an access unit or not if we are in bytestream mode
        */
-      if ((rtph264pay->alignment == GST_H264_ALIGNMENT_AU || buffer == NULL) &&
-          i == nal_queue->len - 1)
-        end_of_au = TRUE;
+      if (i == nal_queue->len - 1) {
+        if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU ||
+            buffer == NULL ||
+            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+          end_of_au = TRUE;
+      }
       paybuf = gst_adapter_take_buffer (rtph264pay->adapter, size);
       g_assert (paybuf);
 
