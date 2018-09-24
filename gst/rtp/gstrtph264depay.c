@@ -944,6 +944,9 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     else
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
+    if (marker)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
+
     gst_rtp_base_depayload_push (depayload, outbuf);
   }
 
@@ -1040,8 +1043,8 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     /* at least one byte header with type */
     header_len = 1;
 
-    GST_DEBUG_OBJECT (rtph264depay, "NRI %d, Type %d", nal_ref_idc,
-        nal_unit_type);
+    GST_DEBUG_OBJECT (rtph264depay, "NRI %d, Type %d %s", nal_ref_idc,
+        nal_unit_type, marker ? "marker" : "");
 
     /* If FU unit was being processed, but the current nal is of a different
      * type.  Assume that the remote payloader is buggy (didn't set the end bit
