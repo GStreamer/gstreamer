@@ -25,7 +25,11 @@
 #include <gst/gst.h>
 
 #ifndef GST_RTSP_SERVER_API
-#define GST_RTSP_SERVER_API GST_EXPORT
+# ifdef BUILDING_GST_RTSP_SERVER
+#  define GST_RTSP_SERVER_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_RTSP_SERVER_API GST_API_IMPORT
+# endif
 #endif
 
 #endif /* __GST_RTSP_SERVER_PRELUDE_H__ */

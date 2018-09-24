@@ -45,6 +45,9 @@
  *
  * Last reviewed on 2013-07-16 (1.0.0)
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <string.h>
 

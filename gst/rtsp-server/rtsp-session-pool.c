@@ -39,6 +39,9 @@
  *
  * Last reviewed on 2013-07-11 (1.0.0)
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "rtsp-session-pool.h"
 

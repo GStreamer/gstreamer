@@ -30,14 +30,24 @@ plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
 
+cdata = configuration_data()
+
 if cc.has_link_argument('-Wl,-Bsymbolic-functions')
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
 endif
 
 # Symbol visibility
-if cc.has_argument('-fvisibility=hidden')
+if cc.get_id() == 'msvc'
+  export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
+  export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  export_define = 'extern'
 endif
+
+# Passing this through the command line would be too messy
+cdata.set('GST_API_EXPORT', export_define)
 
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
@@ -68,7 +78,6 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
 
-cdata = configuration_data()
 cdata.set_quoted('GETTEXT_PACKAGE', 'gst-rtsp-server-1.0')
 cdata.set_quoted('PACKAGE', 'gst-rtsp-server')
 cdata.set_quoted('VERSION', gst_version)
