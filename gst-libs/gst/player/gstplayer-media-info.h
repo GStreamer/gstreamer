@@ -241,16 +241,14 @@ const gchar*  gst_player_media_info_get_container_format (const GstPlayerMediaIn
 GST_PLAYER_API
 GstSample*    gst_player_media_info_get_image_sample (const GstPlayerMediaInfo *info);
 
-#ifndef GST_REMOVE_DEPRECATED
-GST_DEPRECATED_FOR(gst_player_media_info_get_video_streams)
+GST_PLAYER_DEPRECATED_FOR(gst_player_media_info_get_video_streams)
 GList*        gst_player_get_video_streams    (const GstPlayerMediaInfo *info);
 
-GST_DEPRECATED_FOR(gst_player_media_info_get_audio_streams)
+GST_PLAYER_DEPRECATED_FOR(gst_player_media_info_get_audio_streams)
 GList*        gst_player_get_audio_streams    (const GstPlayerMediaInfo *info);
 
-GST_DEPRECATED_FOR(gst_player_media_info_get_subtitle_streams)
+GST_PLAYER_DEPRECATED_FOR(gst_player_media_info_get_subtitle_streams)
 GList*        gst_player_get_subtitle_streams (const GstPlayerMediaInfo *info);
-#endif
 
 G_END_DECLS
 
