@@ -58109,6 +58109,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstWaylandSink::fullscreen</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fullscreen</NICK>
+<BLURB>Whether the surface should be made fullscreen .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPyramidSegment::level</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[1,4]</RANGE>
@@ -58746,6 +58756,16 @@
 <NICK>Transport</NICK>
 <BLURB>Use configured transport.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAvdtpSrc::transport-volume</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 127</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport volume</NICK>
+<BLURB>Volume of the transport (only valid if transport is acquired).</BLURB>
+<DEFAULT>127</DEFAULT>
 </ARG>
 
 <ARG>
@@ -66564,11 +66584,11 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstH265Parse::config-interval</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3600</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,3600]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>VPS SPS PPS Send Interval</NICK>
-<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<BLURB>Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -68507,7 +68527,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>Mode for mono downmixed output</NICK>
 <BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
-<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+<DEFAULT>GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS</DEFAULT>
 </ARG>
 
 <ARG>
@@ -71811,6 +71831,36 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstKMSSink::connector-properties</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connector Properties</NICK>
+<BLURB>Additionnal properties for the connector.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::plane-properties</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connector Plane</NICK>
+<BLURB>Additionnal properties for the plane.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstKMSSink::restore-crtc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Restore CRTC mode</NICK>
+<BLURB>When enabled and CRTC was set with a new mode, previous CRTC mode willbe restored when going to NULL state.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBs2b::fcut</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[300,2000]</RANGE>
@@ -72371,6 +72421,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstAudioBufferSplit::gapless</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gapless</NICK>
+<BLURB>Insert silence/drop samples instead of creating a discontinuity.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioMixMatrix::channel-mask</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -72478,6 +72538,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>End timecode (object)</NICK>
 <BLURB>Timecode to end at in timecode mode (object).</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAvWait::recording</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Recording state</NICK>
+<BLURB>Whether the element is stopped or recording. If set to FALSE, all buffers will be dropped regardless of settings.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -72857,7 +72927,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.57.0"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.61.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73126,7 +73196,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>TURN Server</NICK>
-<BLURB>The TURN server of the form turn(s)://username:password@host:port.</BLURB>
+<BLURB>The TURN server of the form turn(s)://username:password@host:port. This is a convenience property, use #GstWebRTCBin::add-turn-server if you wish to use multiple TURN servers.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -73168,5 +73238,207 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Stream types</NICK>
 <BLURB>String describing the stream types to expose, eg. "video+audio".</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraUndistort::alpha</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixels</NICK>
+<BLURB>Show all pixels (1), only valid ones (0) or something in between.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraUndistort::settings</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Settings</NICK>
+<BLURB>Camera correction parameters (opaque string of serialized OpenCV objects).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraUndistort::undistort</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Apply camera corrections</NICK>
+<BLURB>Apply camera corrections.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::aspect-ratio</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect Ratio</NICK>
+<BLURB>The aspect ratio.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::board-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Board Height</NICK>
+<BLURB>The board height in number of items.</BLURB>
+<DEFAULT>9</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::board-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Board Width</NICK>
+<BLURB>The board width in number of items.</BLURB>
+<DEFAULT>9</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::center-principal-point</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Center Principal Point</NICK>
+<BLURB>Fix the principal point at the center.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::corner-sub-pixel</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Corner Sub Pixel</NICK>
+<BLURB>Improve corner detection accuracy for chessboard.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::delay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delay</NICK>
+<BLURB>Sampling periodicity in ms.</BLURB>
+<DEFAULT>350</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::frame-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Count</NICK>
+<BLURB>The number of frames to use from the input for calibration.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::pattern</NAME>
+<TYPE>GstCameraCalibrationPattern</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Calibration Pattern</NICK>
+<BLURB>One of the chessboard, circles, or asymmetric circle pattern.</BLURB>
+<DEFAULT>Chessboard</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::settings</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Settings</NICK>
+<BLURB>Camera correction parameters (opaque string of serialized OpenCV objects).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::show-corners</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Show Corners</NICK>
+<BLURB>Show corners.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::square-size</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Square Size</NICK>
+<BLURB>The size of a square in your defined unit (point, millimeter, etc.).</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::use-fisheye</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Fisheye</NICK>
+<BLURB>Use fisheye camera model for calibration.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraCalibrate::zero-tangent-distorsion</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Zero Tangent Distorsion</NICK>
+<BLURB>Assume zero tangential distortion.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCeaCcOverlay::font-desc</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>font description</NICK>
+<BLURB>Pango font description of font to be used for rendering.
+See documentation of pango_font_description_from_string for syntax.
+this will override closed caption stream specified font style/pen size.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCeaCcOverlay::service-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,63]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>service-number</NICK>
+<BLURB>Service number. Service 1 is designated as the Primary Caption Service, Service 2 is the Secondary Language Service.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCeaCcOverlay::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>Whether to render the text string.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCeaCcOverlay::window-h-pos</NAME>
+<TYPE>GstCeaCcOverlayWinHPos</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>window-h-pos</NICK>
+<BLURB>Window's Horizontal position.</BLURB>
+<DEFAULT>center</DEFAULT>
 </ARG>
 

@@ -176,7 +176,10 @@ GObject
               GstRotate
               GstSquare
             GstLcms
+            GstLine21Decoder
             GstOpencvVideoFilter
+              GstCameraCalibrate
+              GstCameraUndistort
               GstCvDilateErode
                 GstCvDilate
                 GstCvErode
@@ -246,6 +249,8 @@ GObject
           RsnDvdBin
         GstBz2dec
         GstBz2enc
+        GstCCExtractor
+        GstCeaCcOverlay
         GstChopMyData
         GstCompare
         GstDVBSubOverlay
@@ -285,6 +290,7 @@ GObject
           GstRtpAsfPay
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
+        GstSFDec
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
@@ -329,11 +335,15 @@ GObject
         GstAggregatorPad
           GstMXFMuxPad
           GstVideoAggregatorPad
-            GstCompositorPad
             GstGLBaseMixerPad
               GstGLMixerPad
                 GstGLStereoMixPad
                 GstGLVideoMixerPad
+            GstVideoAggregatorConvertPad
+              GstCompositorPad
+        GstProxyPad
+          GstGhostPad
+            GstWebRTCBinPad
       GstPadTemplate
       GstPlugin
       GstPluginFeature
@@ -345,6 +355,7 @@ GObject
       GstRegistry
       GstTask
       GstTaskPool
+      GstWebRTCDataChannel
       GstWebRTCRTPTransceiver
   GstColorBalanceChannel
   GstEncodingProfile

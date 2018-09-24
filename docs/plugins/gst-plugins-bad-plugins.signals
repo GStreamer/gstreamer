@@ -833,3 +833,36 @@ GstWebRTCSessionDescription *arg1
 GstPromise *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstWebRTCBin::add-turn-server</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+gchar *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::create-data-channel</NAME>
+<RETURNS>GstWebRTCDataChannel*</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+gchar *arg1
+GstStructure *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::on-data-channel</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstWebRTCDataChannel *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstWebRTCBin::on-new-transceiver</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+GstWebRTCRTPTransceiver *arg1
+</SIGNAL>
+

@@ -14,7 +14,7 @@
       <longname>DVB bin</longname>
       <class>Source/Bin/Video</class>
       <description>Access descramble and split DVB streams</description>
-      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;
+      <author>Alessandro Decina &lt;alessandro.d@gmail.com&gt;
 Reynaldo H. Verdejo Pinochet &lt;reynaldo@osg.samsung.com&gt;</author>
       <pads>
         <caps>
