@@ -2354,18 +2354,38 @@ gst_gl_view_convert_get_output (GstGLViewConvert * viewconvert,
 
   outbuf = priv->primary_out;
   if (outbuf) {
+    GstVideoOverlayCompositionMeta *composition_meta;
+
     gst_buffer_copy_into (outbuf, priv->primary_in,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     GST_BUFFER_FLAG_SET (outbuf,
         GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE |
         GST_VIDEO_BUFFER_FLAG_MULTIPLE_VIEW);
+
+    composition_meta =
+        gst_buffer_get_video_overlay_composition_meta (priv->primary_in);
+    if (composition_meta) {
+      GST_DEBUG ("found video overlay composition meta, applying on output.");
+      gst_buffer_add_video_overlay_composition_meta
+          (outbuf, composition_meta->overlay);
+    }
   }
 
   if (priv->auxilliary_out) {
+    GstVideoOverlayCompositionMeta *composition_meta;
+
     gst_buffer_copy_into (priv->auxilliary_out,
         priv->primary_out, GST_BUFFER_COPY_FLAGS, 0, -1);
     GST_BUFFER_FLAG_UNSET (priv->auxilliary_out,
         GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE);
+
+    composition_meta =
+        gst_buffer_get_video_overlay_composition_meta (priv->primary_out);
+    if (composition_meta) {
+      GST_DEBUG ("found video overlay composition meta, applying on output.");
+      gst_buffer_add_video_overlay_composition_meta
+          (priv->auxilliary_out, composition_meta->overlay);
+    }
   }
   priv->primary_out = NULL;
 
