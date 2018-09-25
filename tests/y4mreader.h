@@ -19,7 +19,8 @@
  * Boston, MA 02110-1301 USA
  */
 
-#include "gst/vaapi/sysdeps.h"
+#include <glib.h>
+#include <stdio.h>
 #include <gst/vaapi/gstvaapiimage.h>
 
 typedef struct _Y4MReader Y4MReader;
