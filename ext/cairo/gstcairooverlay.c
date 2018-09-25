@@ -188,6 +188,130 @@ gst_cairo_overlay_set_info (GstVideoFilter * vfilter, GstCaps * in_caps,
   return TRUE;
 }
 
+/* Copy from video-overlay-composition.c */
+static void
+gst_video_overlay_rectangle_premultiply_0 (GstVideoFrame * frame)
+{
+  int i, j;
+  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+    guint8 *line;
+
+    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
+    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+      int a = line[0];
+      line[1] = line[1] * a / 255;
+      line[2] = line[2] * a / 255;
+      line[3] = line[3] * a / 255;
+      line += 4;
+    }
+  }
+}
+
+/* Copy from video-overlay-composition.c */
+static void
+gst_video_overlay_rectangle_premultiply_3 (GstVideoFrame * frame)
+{
+  int i, j;
+  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+    guint8 *line;
+
+    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
+    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+      int a = line[3];
+      line[0] = line[0] * a / 255;
+      line[1] = line[1] * a / 255;
+      line[2] = line[2] * a / 255;
+      line += 4;
+    }
+  }
+}
+
+/* Copy from video-overlay-composition.c */
+static void
+gst_video_overlay_rectangle_premultiply (GstVideoFrame * frame)
+{
+  gint alpha_offset;
+
+  alpha_offset = GST_VIDEO_FRAME_COMP_POFFSET (frame, 3);
+  switch (alpha_offset) {
+    case 0:
+      gst_video_overlay_rectangle_premultiply_0 (frame);
+      break;
+    case 3:
+      gst_video_overlay_rectangle_premultiply_3 (frame);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+/* Copy from video-overlay-composition.c */
+static void
+gst_video_overlay_rectangle_unpremultiply_0 (GstVideoFrame * frame)
+{
+  int i, j;
+  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+    guint8 *line;
+
+    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
+    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+      int a = line[0];
+      if (a) {
+        line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
+        line[2] = MIN ((line[2] * 255 + a / 2) / a, 255);
+        line[3] = MIN ((line[3] * 255 + a / 2) / a, 255);
+      }
+      line += 4;
+    }
+  }
+}
+
+/* Copy from video-overlay-composition.c */
+static void
+gst_video_overlay_rectangle_unpremultiply_3 (GstVideoFrame * frame)
+{
+  int i, j;
+  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+    guint8 *line;
+
+    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
+    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+      int a = line[3];
+      if (a) {
+        line[0] = MIN ((line[0] * 255 + a / 2) / a, 255);
+        line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
+        line[2] = MIN ((line[2] * 255 + a / 2) / a, 255);
+      }
+      line += 4;
+    }
+  }
+}
+
+/* Copy from video-overlay-composition.c */
+static void
+gst_video_overlay_rectangle_unpremultiply (GstVideoFrame * frame)
+{
+  gint alpha_offset;
+
+  alpha_offset = GST_VIDEO_FRAME_COMP_POFFSET (frame, 3);
+  switch (alpha_offset) {
+    case 0:
+      gst_video_overlay_rectangle_unpremultiply_0 (frame);
+      break;
+    case 3:
+      gst_video_overlay_rectangle_unpremultiply_3 (frame);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
 static GstFlowReturn
 gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     GstVideoFrame * frame)
@@ -223,7 +347,9 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
         cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
         GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame));
   } else {
-    /* FIXME: Need to pre-multiply the alpha in case of ARGB32 */
+    if (format == CAIRO_FORMAT_ARGB32)
+      gst_video_overlay_rectangle_premultiply (frame);
+
     surface =
         cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
             0), format, GST_VIDEO_FRAME_WIDTH (frame),
@@ -284,7 +410,8 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     /* TODO: Put as meta on the buffer */
   } else {
     cairo_surface_destroy (surface);
-    /* FIXME: Need to un-premultiply the alpha in case of ARGB32 */
+    if (format == CAIRO_FORMAT_ARGB32)
+      gst_video_overlay_rectangle_unpremultiply (frame);
   }
 
   return GST_FLOW_OK;
