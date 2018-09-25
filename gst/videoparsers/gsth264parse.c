@@ -221,7 +221,6 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   /* done parsing; reset state */
   h264parse->current_off = -1;
 
-  h264parse->picture_start = FALSE;
   h264parse->update_caps = FALSE;
   h264parse->idr_pos = -1;
   h264parse->sei_pos = -1;
@@ -232,7 +231,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->bidirectional = FALSE;
   h264parse->header = FALSE;
   h264parse->frame_start = FALSE;
-  h264parse->aud_insert = TRUE;
+  h264parse->aud_insert = FALSE;
   h264parse->have_sps_in_frame = FALSE;
   h264parse->have_pps_in_frame = FALSE;
   gst_adapter_clear (h264parse->frame_out);
@@ -1047,6 +1046,10 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
               GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS))
         return FALSE;
 
+      /* This is similar to the GOT_SLICE state, but is only reset when the
+       * AU is complete. This is used to keep track of AU */
+      h264parse->picture_start = TRUE;
+
       /* don't need to parse the whole slice (header) here */
       if (*(nalu->data + nalu->offset + nalu->header_bytes) & 0x80) {
         /* means first_mb_in_slice == 0 */
@@ -1120,7 +1123,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       pres = gst_h264_parser_parse_nal (nalparser, nalu);
       if (pres != GST_H264_PARSER_OK)
         return FALSE;
-      h264parse->aud_insert = FALSE;
+      h264parse->aud_needed = FALSE;
       break;
     default:
       /* drop anything before the initial SPS */
@@ -1152,24 +1155,12 @@ static inline gboolean
 gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
     guint size, GstH264NalUnit * nalu)
 {
-  gboolean complete;
-  GstH264ParserResult parse_res;
   GstH264NalUnitType nal_type = nalu->type;
-  GstH264NalUnit nnalu;
-
-  GST_DEBUG_OBJECT (h264parse, "parsing collected nal");
-  parse_res = gst_h264_parser_identify_nalu_unchecked (h264parse->nalparser,
-      data, nalu->offset + nalu->size, size, &nnalu);
-
-  if (parse_res != GST_H264_PARSER_OK)
-    return FALSE;
+  gboolean complete;
 
   /* determine if AU complete */
-  GST_LOG_OBJECT (h264parse, "nal type: %d %s", nal_type, _nal_name (nal_type));
-  /* coded slice NAL starts a picture,
-   * i.e. other types become aggregated in front of it */
-  h264parse->picture_start |= (nal_type == GST_H264_NAL_SLICE ||
-      nal_type == GST_H264_NAL_SLICE_DPA || nal_type == GST_H264_NAL_SLICE_IDR);
+  GST_LOG_OBJECT (h264parse, "next nal type: %d %s (picture started %i)",
+      nal_type, _nal_name (nal_type), h264parse->picture_start);
 
   /* consider a coded slices (IDR or not) to start a picture,
    * (so ending the previous one) if first_mb_in_slice == 0
@@ -1178,21 +1169,21 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
    * but in practice it works in sane cases, needs not much parsing,
    * and also works with broken frame_num in NAL
    * (where spec-wise would fail) */
-  nal_type = nnalu.type;
   complete = h264parse->picture_start && ((nal_type >= GST_H264_NAL_SEI &&
           nal_type <= GST_H264_NAL_AU_DELIMITER) ||
       (nal_type >= 14 && nal_type <= 18));
 
-  GST_LOG_OBJECT (h264parse, "next nal type: %d %s", nal_type,
-      _nal_name (nal_type));
   /* first_mb_in_slice == 0 considered start of frame */
-  if (nnalu.size > nnalu.header_bytes)
+  if (nalu->size > nalu->header_bytes)
     complete |= h264parse->picture_start && (nal_type == GST_H264_NAL_SLICE
         || nal_type == GST_H264_NAL_SLICE_DPA
         || nal_type == GST_H264_NAL_SLICE_IDR) &&
-        (nnalu.data[nnalu.offset + nnalu.header_bytes] & 0x80);
+        (nalu->data[nalu->offset + nalu->header_bytes] & 0x80);
 
   GST_LOG_OBJECT (h264parse, "au complete: %d", complete);
+
+  if (complete)
+    h264parse->picture_start = FALSE;
 
   return complete;
 }
@@ -1234,6 +1225,10 @@ gst_h264_parse_handle_frame_packetized (GstBaseParse * parse,
 
   parse_res = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
       map.data, 0, map.size, nl, &nalu);
+
+  /* there is no AUD in AVC, always enable insertion, the pre_push function
+   * will only add it once, and will only add it for byte-stream output. */
+  h264parse->aud_insert = TRUE;
 
   while (parse_res == GST_H264_PARSER_OK) {
     GST_DEBUG_OBJECT (h264parse, "AVC nal offset %d", nalu.offset + nalu.size);
@@ -1313,7 +1308,6 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
   GstH264ParserResult pres;
   gint framesize;
   GstFlowReturn ret;
-  gboolean au_complete;
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (frame->buffer,
               GST_BUFFER_FLAG_DISCONT))) {
@@ -1357,6 +1351,16 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
   current_off = h264parse->current_off;
   if (current_off < 0)
     current_off = 0;
+
+  /* The parser is being drain, but no new data was added, just prentend this
+   * AU is complete */
+  if (drain && current_off == size) {
+    GST_DEBUG_OBJECT (h264parse, "draining with no new data");
+    nalu.size = 0;
+    nalu.offset = current_off;
+    goto end;
+  }
+
   g_assert (current_off < size);
   GST_DEBUG_OBJECT (h264parse, "last parse position %d", current_off);
 
@@ -1411,6 +1415,13 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
             nalu.offset, nalu.size);
         break;
       case GST_H264_PARSER_NO_NAL_END:
+        /* In NAL alignment, assume the NAL is complete */
+        if (h264parse->in_align == GST_H264_PARSE_ALIGN_NAL ||
+            h264parse->in_align == GST_H264_PARSE_ALIGN_AU) {
+          nonext = TRUE;
+          nalu.size = size - nalu.offset;
+          break;
+        }
         GST_DEBUG_OBJECT (h264parse, "not a complete nal found at offset %u",
             nalu.offset);
         /* if draining, accept it as complete nal */
@@ -1452,7 +1463,6 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         if (current_off == 0) {
           GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
           *skipsize = nalu.offset;
-          h264parse->aud_needed = TRUE;
           goto skip;
         } else {
           GST_DEBUG_OBJECT (h264parse, "terminating au");
@@ -1469,18 +1479,13 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (h264parse, "%p complete nal found. Off: %u, Size: %u",
         data, nalu.offset, nalu.size);
 
-    if (!nonext) {
-      /* expect at least 3 bytes start_code, and 1 bytes NALU header.
-       * the length of the NALU payload can be zero.
-       * (e.g. EOS/EOB placed at the end of an AU.) */
-      if (nalu.offset + nalu.size + 3 + 1 > size) {
-        GST_DEBUG_OBJECT (h264parse, "not enough data for next NALU");
-        if (drain) {
-          GST_DEBUG_OBJECT (h264parse, "but draining anyway");
-          nonext = TRUE;
-        } else {
-          goto more;
-        }
+    if (gst_h264_parse_collect_nal (h264parse, data, size, &nalu)) {
+      h264parse->aud_needed = TRUE;
+      /* complete current frame, if it exist */
+      if (current_off > 0) {
+        nalu.size = 0;
+        nalu.offset = nalu.sc_offset;
+        break;
       }
     }
 
@@ -1489,34 +1494,43 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
           "broken/invalid nal Type: %d %s, Size: %u will be dropped",
           nalu.type, _nal_name (nalu.type), nalu.size);
       *skipsize = nalu.size;
-      h264parse->aud_needed = TRUE;
       goto skip;
     }
 
-    /* Judge whether or not to insert AU Delimiter in case of byte-stream
-     * If we're in the middle of au, we don't need to insert aud.
-     * Otherwise, we honor the result in gst_h264_parse_process_nal.
-     * Note that this should be done until draining if it's happening.
-     */
-    if (h264parse->align == GST_H264_PARSE_ALIGN_NAL && !h264parse->aud_needed)
-      h264parse->aud_insert = FALSE;
-
-    if (nonext)
-      break;
-
-    /* if no next nal, we know it's complete here */
-    au_complete = gst_h264_parse_collect_nal (h264parse, data, size, &nalu);
-
-    if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
-      h264parse->aud_needed = au_complete;
-      break;
+    /* Make sure the next buffer will contain an AUD */
+    if (h264parse->aud_needed) {
+      h264parse->aud_insert = TRUE;
+      h264parse->aud_needed = FALSE;
     }
 
-    if (au_complete)
+    /* if no next nal, we reached the end of this buffer */
+    if (nonext) {
+      /* If there is a marker flag, or input is AU, we know this is complete */
+      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_MARKER) ||
+          h264parse->in_align == GST_H264_PARSE_ALIGN_AU) {
+        break;
+      }
+
+      /* or if we are draining */
+      if (drain || h264parse->align == GST_H264_PARSE_ALIGN_NAL)
+        break;
+
+      current_off = nalu.offset + nalu.size;
+      goto more;
+    }
+
+    /* If the output is NAL, we are done */
+    if (h264parse->align == GST_H264_PARSE_ALIGN_NAL)
       break;
 
     GST_DEBUG_OBJECT (h264parse, "Looking for more");
     current_off = nalu.offset + nalu.size;
+
+    /* expect at least 3 bytes start_code, and 1 bytes NALU header.
+     * the length of the NALU payload can be zero.
+     * (e.g. EOS/EOB placed at the end of an AU.) */
+    if (size - current_off < 4)
+      goto more;
   }
 
 end:
@@ -2991,6 +3005,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* In case of byte-stream, insert au delimiter by default
    * if it doesn't exist */
   if (h264parse->aud_insert && h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    GST_DEBUG_OBJECT (h264parse, "Inserting AUD into the stream.");
     if (h264parse->align == GST_H264_PARSE_ALIGN_AU) {
       GstMemory *mem =
           gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (guint8 *) au_delim,
