@@ -121,12 +121,60 @@ G_DEFINE_TYPE (GstCairoOverlay, gst_cairo_overlay, GST_TYPE_VIDEO_FILTER);
 
 enum
 {
+  PROP_0,
+  PROP_DRAW_ON_TRANSPARENT_SURFACE,
+};
+
+#define DEFAULT_DRAW_ON_TRANSPARENT_SURFACE (FALSE)
+
+enum
+{
   SIGNAL_DRAW,
   SIGNAL_CAPS_CHANGED,
   N_SIGNALS
 };
 
 static guint gst_cairo_overlay_signals[N_SIGNALS];
+
+static void
+gst_cairo_overlay_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (object);
+
+  GST_OBJECT_LOCK (overlay);
+
+  switch (property_id) {
+    case PROP_DRAW_ON_TRANSPARENT_SURFACE:
+      overlay->draw_on_transparent_surface = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (overlay);
+}
+
+static void
+gst_cairo_overlay_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (object);
+
+  GST_OBJECT_LOCK (overlay);
+
+  switch (property_id) {
+    case PROP_DRAW_ON_TRANSPARENT_SURFACE:
+      g_value_set_boolean (value, overlay->draw_on_transparent_surface);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (overlay);
+}
 
 static gboolean
 gst_cairo_overlay_set_info (GstVideoFilter * vfilter, GstCaps * in_caps,
@@ -148,6 +196,7 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
   cairo_surface_t *surface;
   cairo_t *cr;
   cairo_format_t format;
+  gboolean draw_on_transparent_surface = overlay->draw_on_transparent_surface;
 
   switch (GST_VIDEO_FRAME_FORMAT (frame)) {
     case GST_VIDEO_FORMAT_ARGB:
@@ -169,10 +218,18 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     }
   }
 
-  surface =
-      cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
-          0), format, GST_VIDEO_FRAME_WIDTH (frame),
-      GST_VIDEO_FRAME_HEIGHT (frame), GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0));
+  if (draw_on_transparent_surface) {
+    surface =
+        cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+        GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame));
+  } else {
+    /* FIXME: Need to pre-multiply the alpha in case of ARGB32 */
+    surface =
+        cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
+            0), format, GST_VIDEO_FRAME_WIDTH (frame),
+        GST_VIDEO_FRAME_HEIGHT (frame), GST_VIDEO_FRAME_PLANE_STRIDE (frame,
+            0));
+  }
 
   if (G_UNLIKELY (!surface))
     return GST_FLOW_ERROR;
@@ -188,7 +245,47 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
       NULL);
 
   cairo_destroy (cr);
-  cairo_surface_destroy (surface);
+
+  if (draw_on_transparent_surface) {
+    guint size;
+    GstBuffer *surface_buffer;
+    GstVideoOverlayRectangle *rect;
+    GstVideoOverlayComposition *composition;
+    gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
+    gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    size =
+        cairo_image_surface_get_height (surface) *
+        cairo_image_surface_get_stride (surface);
+    stride[0] = cairo_image_surface_get_stride (surface);
+
+    /* Create a GstVideoOverlayComposition for blending, this handles
+     * pre-multiplied alpha correctly */
+    surface_buffer =
+        gst_buffer_new_wrapped_full (0, cairo_image_surface_get_data (surface),
+        size, 0, size, surface, (GDestroyNotify) cairo_surface_destroy);
+    gst_buffer_add_video_meta_full (surface_buffer, GST_VIDEO_FRAME_FLAG_NONE,
+        (G_BYTE_ORDER ==
+            G_LITTLE_ENDIAN ? GST_VIDEO_FORMAT_BGRA : GST_VIDEO_FORMAT_ARGB),
+        GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame), 1,
+        offset, stride);
+    rect =
+        gst_video_overlay_rectangle_new_raw (surface_buffer, 0, 0,
+        GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame),
+        GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+    gst_buffer_unref (surface_buffer);
+    composition = gst_video_overlay_composition_new (rect);
+    gst_video_overlay_rectangle_unref (rect);
+
+    g_assert (gst_video_overlay_composition_blend (composition, frame));
+
+    gst_video_overlay_composition_unref (composition);
+
+    /* TODO: Put as meta on the buffer */
+  } else {
+    cairo_surface_destroy (surface);
+    /* FIXME: Need to un-premultiply the alpha in case of ARGB32 */
+  }
 
   return GST_FLOW_OK;
 }
@@ -198,12 +295,27 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
 {
   GstVideoFilterClass *vfilter_class;
   GstElementClass *element_class;
+  GObjectClass *gobject_class;
 
   vfilter_class = (GstVideoFilterClass *) klass;
   element_class = (GstElementClass *) klass;
+  gobject_class = (GObjectClass *) klass;
 
   vfilter_class->set_info = gst_cairo_overlay_set_info;
   vfilter_class->transform_frame_ip = gst_cairo_overlay_transform_frame_ip;
+
+  gobject_class->set_property = gst_cairo_overlay_set_property;
+  gobject_class->get_property = gst_cairo_overlay_get_property;
+
+  g_object_class_install_property (gobject_class,
+      PROP_DRAW_ON_TRANSPARENT_SURFACE,
+      g_param_spec_boolean ("draw-on-transparent-surface",
+          "Draw on transparent surface",
+          "Let the draw signal work on a transparent surface "
+          "and blend the results with the video at a later time",
+          DEFAULT_DRAW_ON_TRANSPARENT_SURFACE,
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCairoOverlay::draw:
