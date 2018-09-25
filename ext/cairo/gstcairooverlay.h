@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
 
 #include <cairo.h>
 #include <cairo-gobject.h>
@@ -44,17 +43,18 @@ typedef struct _GstCairoOverlay GstCairoOverlay;
 typedef struct _GstCairoOverlayClass GstCairoOverlayClass;
 
 struct _GstCairoOverlay {
-  GstVideoFilter video_filter;
+  GstBaseTransform parent;
 
   /* properties */
   gboolean draw_on_transparent_surface;
 
   /* state */
+  GstVideoInfo info;
   gboolean attach_compo_to_buffer;
 };
 
 struct _GstCairoOverlayClass {
-  GstVideoFilterClass video_filter_class;
+  GstBaseTransformClass parent_class;
 };
 
 GType gst_cairo_overlay_get_type (void);

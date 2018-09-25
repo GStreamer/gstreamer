@@ -117,7 +117,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (TEMPLATE_CAPS)
     );
 
-G_DEFINE_TYPE (GstCairoOverlay, gst_cairo_overlay, GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCairoOverlay, gst_cairo_overlay, GST_TYPE_BASE_TRANSFORM);
 
 enum
 {
@@ -211,10 +211,13 @@ gst_cairo_overlay_query (GstBaseTransform * trans, GstPadDirection direction,
 }
 
 static gboolean
-gst_cairo_overlay_set_info (GstVideoFilter * vfilter, GstCaps * in_caps,
-    GstVideoInfo * in_info, GstCaps * out_caps, GstVideoInfo * out_info)
+gst_cairo_overlay_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
+    GstCaps * out_caps)
 {
-  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (vfilter);
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (trans);
+
+  if (!gst_video_info_from_caps (&overlay->info, in_caps))
+    return FALSE;
 
   g_signal_emit (overlay, gst_cairo_overlay_signals[SIGNAL_CAPS_CHANGED], 0,
       in_caps, NULL);
@@ -347,16 +350,16 @@ gst_video_overlay_rectangle_unpremultiply (GstVideoFrame * frame)
 }
 
 static GstFlowReturn
-gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
-    GstVideoFrame * frame)
+gst_cairo_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
-  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (vfilter);
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (trans);
+  GstVideoFrame frame;
   cairo_surface_t *surface;
   cairo_t *cr;
   cairo_format_t format;
   gboolean draw_on_transparent_surface = overlay->draw_on_transparent_surface;
 
-  switch (GST_VIDEO_FRAME_FORMAT (frame)) {
+  switch (GST_VIDEO_INFO_FORMAT (&overlay->info)) {
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_BGRA:
       format = CAIRO_FORMAT_ARGB32;
@@ -371,23 +374,33 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     default:
     {
       GST_WARNING ("No matching cairo format for %s",
-          gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (frame)));
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&overlay->info)));
       return GST_FLOW_ERROR;
     }
+  }
+
+  /* If we need to map the buffer writable, do so */
+  if (!draw_on_transparent_surface || !overlay->attach_compo_to_buffer) {
+    if (!gst_video_frame_map (&frame, &overlay->info, buf, GST_MAP_READWRITE)) {
+      return GST_FLOW_ERROR;
+    }
+  } else {
+    frame.buffer = NULL;
   }
 
   if (draw_on_transparent_surface) {
     surface =
         cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-        GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame));
+        GST_VIDEO_INFO_WIDTH (&overlay->info),
+        GST_VIDEO_INFO_HEIGHT (&overlay->info));
   } else {
     if (format == CAIRO_FORMAT_ARGB32)
-      gst_video_overlay_rectangle_premultiply (frame);
+      gst_video_overlay_rectangle_premultiply (&frame);
 
     surface =
-        cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (frame,
-            0), format, GST_VIDEO_FRAME_WIDTH (frame),
-        GST_VIDEO_FRAME_HEIGHT (frame), GST_VIDEO_FRAME_PLANE_STRIDE (frame,
+        cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA (&frame,
+            0), format, GST_VIDEO_FRAME_WIDTH (&frame),
+        GST_VIDEO_FRAME_HEIGHT (&frame), GST_VIDEO_FRAME_PLANE_STRIDE (&frame,
             0));
   }
 
@@ -401,8 +414,7 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
   }
 
   g_signal_emit (overlay, gst_cairo_overlay_signals[SIGNAL_DRAW], 0,
-      cr, GST_BUFFER_PTS (frame->buffer), GST_BUFFER_DURATION (frame->buffer),
-      NULL);
+      cr, GST_BUFFER_PTS (buf), GST_BUFFER_DURATION (buf), NULL);
 
   cairo_destroy (cr);
 
@@ -427,19 +439,19 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     gst_buffer_add_video_meta_full (surface_buffer, GST_VIDEO_FRAME_FLAG_NONE,
         (G_BYTE_ORDER ==
             G_LITTLE_ENDIAN ? GST_VIDEO_FORMAT_BGRA : GST_VIDEO_FORMAT_ARGB),
-        GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame), 1,
-        offset, stride);
+        GST_VIDEO_INFO_WIDTH (&overlay->info),
+        GST_VIDEO_INFO_HEIGHT (&overlay->info), 1, offset, stride);
     rect =
         gst_video_overlay_rectangle_new_raw (surface_buffer, 0, 0,
-        GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame),
+        GST_VIDEO_INFO_WIDTH (&overlay->info),
+        GST_VIDEO_INFO_HEIGHT (&overlay->info),
         GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
     gst_buffer_unref (surface_buffer);
 
     if (overlay->attach_compo_to_buffer) {
       GstVideoOverlayCompositionMeta *composition_meta;
 
-      composition_meta =
-          gst_buffer_get_video_overlay_composition_meta (frame->buffer);
+      composition_meta = gst_buffer_get_video_overlay_composition_meta (buf);
       if (composition_meta) {
         GstVideoOverlayComposition *merged_composition =
             gst_video_overlay_composition_copy (composition_meta->overlay);
@@ -450,20 +462,23 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
       } else {
         composition = gst_video_overlay_composition_new (rect);
         gst_video_overlay_rectangle_unref (rect);
-        gst_buffer_add_video_overlay_composition_meta (frame->buffer,
-            composition);
+        gst_buffer_add_video_overlay_composition_meta (buf, composition);
         gst_video_overlay_composition_unref (composition);
       }
     } else {
       composition = gst_video_overlay_composition_new (rect);
       gst_video_overlay_rectangle_unref (rect);
-      gst_video_overlay_composition_blend (composition, frame);
+      gst_video_overlay_composition_blend (composition, &frame);
       gst_video_overlay_composition_unref (composition);
     }
   } else {
     cairo_surface_destroy (surface);
     if (format == CAIRO_FORMAT_ARGB32)
-      gst_video_overlay_rectangle_unpremultiply (frame);
+      gst_video_overlay_rectangle_unpremultiply (&frame);
+  }
+
+  if (frame.buffer) {
+    gst_video_frame_unmap (&frame);
   }
 
   return GST_FLOW_OK;
@@ -472,19 +487,16 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
 static void
 gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
 {
-  GstVideoFilterClass *vfilter_class;
   GstBaseTransformClass *btrans_class;
   GstElementClass *element_class;
   GObjectClass *gobject_class;
 
-  vfilter_class = (GstVideoFilterClass *) klass;
   btrans_class = (GstBaseTransformClass *) klass;
   element_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
-  vfilter_class->set_info = gst_cairo_overlay_set_info;
-  vfilter_class->transform_frame_ip = gst_cairo_overlay_transform_frame_ip;
-
+  btrans_class->set_caps = gst_cairo_overlay_set_caps;
+  btrans_class->transform_ip = gst_cairo_overlay_transform_ip;
   btrans_class->query = gst_cairo_overlay_query;
 
   gobject_class->set_property = gst_cairo_overlay_set_property;
