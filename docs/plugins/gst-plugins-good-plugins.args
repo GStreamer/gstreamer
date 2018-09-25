@@ -22639,6 +22639,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMatroskaDemux::max-backtrack-distance</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum backtrack distance</NICK>
+<BLURB>Maximum backtrack distance in seconds when seeking without and index in pull mode and search for a keyframe (0 = disable backtracking).</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSoupHttpClientSink::automatic-redirect</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

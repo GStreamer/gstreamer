@@ -791,6 +791,13 @@ GstElement *arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstSplitMuxSink::split-after</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSplitMuxSrc::format-location</NAME>
 <RETURNS>GStrv</RETURNS>
 <FLAGS>l</FLAGS>
