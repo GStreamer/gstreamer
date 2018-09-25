@@ -2403,8 +2403,6 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
     GST_LOG_OBJECT (h264parse, "no frame data ->  0 duration");
     *out_dur = 0;
     goto exit;
-  } else {
-    *out_ts = upstream;
   }
 
   if (!sps) {
