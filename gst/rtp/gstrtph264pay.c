@@ -820,7 +820,9 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       break;
   }
 
-  GST_DEBUG_OBJECT (rtph264pay, "Processing Buffer with NAL TYPE=%d", nalType);
+  GST_DEBUG_OBJECT (rtph264pay,
+      "Processing Buffer with NAL TYPE=%d %" GST_TIME_FORMAT,
+      nalType, GST_TIME_ARGS (pts));
 
   /* should set src caps before pushing stuff,
    * and if we did not see enough SPS/PPS, that may not be the case */
@@ -1046,8 +1048,6 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     rtph264pay->discont = GST_BUFFER_IS_DISCONT (buffer);
     GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   } else {
-    dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
-    pts = gst_adapter_prev_pts (rtph264pay->adapter, NULL);
     if (buffer) {
       if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
         if (gst_adapter_available (rtph264pay->adapter) == 0)
@@ -1069,13 +1069,13 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
           delayed_discont = TRUE;
       }
 
-      if (!GST_CLOCK_TIME_IS_VALID (dts))
-        dts = GST_BUFFER_DTS (buffer);
-      if (!GST_CLOCK_TIME_IS_VALID (pts))
-        pts = GST_BUFFER_PTS (buffer);
-
       gst_adapter_push (rtph264pay->adapter, buffer);
     }
+
+    /* We want to use the first TS used to construct the following NAL */
+    dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
+    pts = gst_adapter_prev_pts (rtph264pay->adapter, NULL);
+
     size = gst_adapter_available (rtph264pay->adapter);
     /* Nothing to do here if the adapter is empty, e.g. on EOS */
     if (size == 0)
