@@ -2738,7 +2738,8 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
   switch (GST_QUERY_TYPE (query)) {
     default:
       if (GST_QUERY_IS_SERIALIZED (query)) {
-        GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received query %p", query);
+        GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+            "received query %" GST_PTR_FORMAT, query);
         /* serialized events go in the queue. We need to be certain that we
          * don't cause deadlocks waiting for the query return value. We check if
          * the queue is empty (nothing is blocking downstream and the query can
