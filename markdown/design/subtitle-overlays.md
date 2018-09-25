@@ -138,7 +138,7 @@ Multiple possible solutions come to mind:
     downstream with the overlay data, or one could attach the overlay
     data directly to the video buffers in some way.
     
-    Sending inline events has the advantage that is is fairly
+    Sending inline events has the advantage that is fairly
     transparent to any elements between the overlay element and the
     video sink: if an effects plugin creates a new video buffer for the
     output, nothing special needs to be done to maintain the subtitle

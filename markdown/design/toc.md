@@ -222,5 +222,5 @@ loops, …).
 
 API wise there is some overlap between: - exposing multiple audio/video
 tracks as pads or as ToC editions. For ToC editions, we have the
-TocSelect event. - exposing subtitles as a sparse stream or as as ToC
+TocSelect event. - exposing subtitles as a sparse stream or as ToC
 sequence of markers with labels

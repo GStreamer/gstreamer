@@ -193,9 +193,9 @@ GStreamer using the regular build process:
 
 Cerbero can be used to cross-compile GStreamer to other platforms like
 Android or Windows. You only need to use a configuration file that sets
-the target platform, but we also provide a set of of pre-defined
+the target platform, but we also provide a set of pre-defined
 configuration files for the supported platforms (you will find them in
-the `config` folder with the `.cbc` extension
+the `config` folder with the `.cbc` extension.
 
 #### Android
 
