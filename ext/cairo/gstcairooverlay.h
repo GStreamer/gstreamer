@@ -45,7 +45,12 @@ typedef struct _GstCairoOverlayClass GstCairoOverlayClass;
 
 struct _GstCairoOverlay {
   GstVideoFilter video_filter;
+
+  /* properties */
   gboolean draw_on_transparent_surface;
+
+  /* state */
+  gboolean attach_compo_to_buffer;
 };
 
 struct _GstCairoOverlayClass {

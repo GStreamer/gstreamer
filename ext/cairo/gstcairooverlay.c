@@ -177,6 +177,40 @@ gst_cairo_overlay_get_property (GObject * object, guint property_id,
 }
 
 static gboolean
+gst_cairo_overlay_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
+{
+  GstCairoOverlay *overlay = GST_CAIRO_OVERLAY (trans);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+    {
+      /* We're always running in passthrough mode, which means that
+       * basetransform just passes through ALLOCATION queries and
+       * never ever calls BaseTransform::decide_allocation().
+       *
+       * We hook into the query handling for that reason
+       */
+      overlay->attach_compo_to_buffer = FALSE;
+
+      if (!GST_BASE_TRANSFORM_CLASS (gst_cairo_overlay_parent_class)->query
+          (trans, direction, query)) {
+        return FALSE;
+      }
+
+      overlay->attach_compo_to_buffer = gst_query_find_allocation_meta (query,
+          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
+
+      return TRUE;
+    }
+    default:
+      return
+          GST_BASE_TRANSFORM_CLASS (gst_cairo_overlay_parent_class)->query
+          (trans, direction, query);
+  }
+}
+
+static gboolean
 gst_cairo_overlay_set_info (GstVideoFilter * vfilter, GstCaps * in_caps,
     GstVideoInfo * in_info, GstCaps * out_caps, GstVideoInfo * out_info)
 {
@@ -400,14 +434,32 @@ gst_cairo_overlay_transform_frame_ip (GstVideoFilter * vfilter,
         GST_VIDEO_FRAME_WIDTH (frame), GST_VIDEO_FRAME_HEIGHT (frame),
         GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
     gst_buffer_unref (surface_buffer);
-    composition = gst_video_overlay_composition_new (rect);
-    gst_video_overlay_rectangle_unref (rect);
 
-    g_assert (gst_video_overlay_composition_blend (composition, frame));
+    if (overlay->attach_compo_to_buffer) {
+      GstVideoOverlayCompositionMeta *composition_meta;
 
-    gst_video_overlay_composition_unref (composition);
-
-    /* TODO: Put as meta on the buffer */
+      composition_meta =
+          gst_buffer_get_video_overlay_composition_meta (frame->buffer);
+      if (composition_meta) {
+        GstVideoOverlayComposition *merged_composition =
+            gst_video_overlay_composition_copy (composition_meta->overlay);
+        gst_video_overlay_composition_add_rectangle (merged_composition, rect);
+        gst_video_overlay_composition_unref (composition_meta->overlay);
+        composition_meta->overlay = merged_composition;
+        gst_video_overlay_rectangle_unref (rect);
+      } else {
+        composition = gst_video_overlay_composition_new (rect);
+        gst_video_overlay_rectangle_unref (rect);
+        gst_buffer_add_video_overlay_composition_meta (frame->buffer,
+            composition);
+        gst_video_overlay_composition_unref (composition);
+      }
+    } else {
+      composition = gst_video_overlay_composition_new (rect);
+      gst_video_overlay_rectangle_unref (rect);
+      gst_video_overlay_composition_blend (composition, frame);
+      gst_video_overlay_composition_unref (composition);
+    }
   } else {
     cairo_surface_destroy (surface);
     if (format == CAIRO_FORMAT_ARGB32)
@@ -421,15 +473,19 @@ static void
 gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
 {
   GstVideoFilterClass *vfilter_class;
+  GstBaseTransformClass *btrans_class;
   GstElementClass *element_class;
   GObjectClass *gobject_class;
 
   vfilter_class = (GstVideoFilterClass *) klass;
+  btrans_class = (GstBaseTransformClass *) klass;
   element_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
   vfilter_class->set_info = gst_cairo_overlay_set_info;
   vfilter_class->transform_frame_ip = gst_cairo_overlay_transform_frame_ip;
+
+  btrans_class->query = gst_cairo_overlay_query;
 
   gobject_class->set_property = gst_cairo_overlay_set_property;
   gobject_class->get_property = gst_cairo_overlay_get_property;
