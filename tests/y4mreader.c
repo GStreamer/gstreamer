@@ -19,8 +19,8 @@
  * Boston, MA 02110-1301 USA
  */
 
+#include "gst/vaapi/sysdeps.h"
 #include "y4mreader.h"
-#include <string.h>
 
 /* format documentation:
  * http://wiki.multimedia.cx/index.php?title=YUV4MPEG2 */
