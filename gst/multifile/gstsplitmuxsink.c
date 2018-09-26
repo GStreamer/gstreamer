@@ -85,6 +85,8 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_debug);
 
 static void split_now (GstSplitMuxSink * splitmux);
 static void split_after (GstSplitMuxSink * splitmux);
+static void split_at_running_time (GstSplitMuxSink * splitmux,
+    GstClockTime split_time);
 
 enum
 {
@@ -132,6 +134,7 @@ enum
   SIGNAL_FORMAT_LOCATION_FULL,
   SIGNAL_SPLIT_NOW,
   SIGNAL_SPLIT_AFTER,
+  SIGNAL_SPLIT_AT_RUNNING_TIME,
   SIGNAL_MUXER_ADDED,
   SIGNAL_SINK_ADDED,
   SIGNAL_LAST
@@ -433,6 +436,32 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           split_after), NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   /**
+   * GstSplitMuxSink::split-now:
+   * @splitmux: the #GstSplitMuxSink
+   *
+   * When called by the user, this action signal splits the video file (and
+   * begins a new one) as soon as the given running time is reached. If this
+   * action signal is called multiple times, running times are queued up and
+   * processed in the order they were given.
+   *
+   * Note that this is prone to race conditions, where said running time is
+   * reached and surpassed before we had a chance to split. The file will
+   * still split immediately, but in order to make sure that the split doesn't
+   * happen too late, it is recommended to call this action signal from
+   * something that will prevent further buffers from flowing into
+   * splitmuxsink before the split is completed, such as a pad probe before
+   * splitmuxsink.
+   *
+   *
+   * Since: 1.16
+   */
+  signals[SIGNAL_SPLIT_AT_RUNNING_TIME] =
+      g_signal_new ("split-at-running-time", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
+          split_at_running_time), NULL, NULL, NULL, G_TYPE_NONE, 1,
+      G_TYPE_UINT64);
+
+  /**
    * GstSplitMuxSink::muxer-added:
    * @splitmux: the #GstSplitMuxSink
    * @muxer: the newly added muxer element
@@ -456,6 +485,7 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
 
   klass->split_now = split_now;
   klass->split_after = split_after;
+  klass->split_at_running_time = split_at_running_time;
 }
 
 static void
@@ -487,6 +517,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
   splitmux->split_requested = FALSE;
   splitmux->do_split_next_gop = FALSE;
+  splitmux->times_to_split = gst_queue_array_new_for_struct (8, 8);
 }
 
 static void
@@ -543,6 +574,9 @@ gst_splitmux_sink_finalize (GObject * object)
 
   if (splitmux->threshold_timecode_str)
     g_free (splitmux->threshold_timecode_str);
+
+  if (splitmux->times_to_split)
+    gst_queue_array_free (splitmux->times_to_split);
 
   g_free (splitmux->location);
 
@@ -1835,10 +1869,16 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   guint64 thresh_bytes;
   GstClockTime thresh_time;
   gboolean check_robust_muxing;
+  GstClockTime time_to_split = GST_CLOCK_TIME_NONE;
+  GstClockTime *ptr_to_time;
 
   GST_OBJECT_LOCK (splitmux);
   thresh_bytes = splitmux->threshold_bytes;
   thresh_time = splitmux->threshold_time;
+  ptr_to_time = (GstClockTime *)
+      gst_queue_array_peek_head_struct (splitmux->times_to_split);
+  if (ptr_to_time)
+    time_to_split = *ptr_to_time;
   check_robust_muxing = splitmux->use_robust_muxing
       && splitmux->muxer_has_reserved_props;
   GST_OBJECT_UNLOCK (splitmux);
@@ -1850,6 +1890,25 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   /* User told us to split now */
   if (g_atomic_int_get (&(splitmux->do_split_next_gop)) == TRUE)
     return TRUE;
+
+  /* User told us to split at this running time */
+  if (splitmux->reference_ctx->in_running_time > time_to_split) {
+    GST_OBJECT_LOCK (splitmux);
+    /* Dequeue running time */
+    gst_queue_array_pop_head_struct (splitmux->times_to_split);
+    /* Empty any running times after this that are past now */
+    ptr_to_time = gst_queue_array_peek_head_struct (splitmux->times_to_split);
+    while (ptr_to_time) {
+      time_to_split = *ptr_to_time;
+      if (splitmux->reference_ctx->in_running_time <= time_to_split) {
+        break;
+      }
+      gst_queue_array_pop_head_struct (splitmux->times_to_split);
+      ptr_to_time = gst_queue_array_peek_head_struct (splitmux->times_to_split);
+    }
+    GST_OBJECT_UNLOCK (splitmux);
+    return TRUE;
+  }
 
   if (thresh_bytes > 0 && queued_bytes > thresh_bytes)
     return TRUE;                /* Would overrun byte limit */
@@ -2984,6 +3043,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_SPLITMUX_LOCK (splitmux);
+      gst_queue_array_clear (splitmux->times_to_split);
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_STOPPED;
       splitmux->input_state = SPLITMUX_INPUT_STATE_STOPPED;
       /* Wake up any blocked threads */
@@ -3071,4 +3131,27 @@ static void
 split_after (GstSplitMuxSink * splitmux)
 {
   g_atomic_int_set (&(splitmux->split_requested), TRUE);
+}
+
+static void
+split_at_running_time (GstSplitMuxSink * splitmux, GstClockTime split_time)
+{
+  gboolean send_keyframe_requests;
+
+  GST_SPLITMUX_LOCK (splitmux);
+  gst_queue_array_push_tail_struct (splitmux->times_to_split, &split_time);
+  send_keyframe_requests = splitmux->send_keyframe_requests;
+  GST_SPLITMUX_UNLOCK (splitmux);
+
+  if (send_keyframe_requests) {
+    GstEvent *ev =
+        gst_video_event_new_upstream_force_key_unit (split_time, TRUE, 0);
+    GST_INFO_OBJECT (splitmux, "Requesting next keyframe at %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (split_time));
+    if (!gst_pad_push_event (splitmux->reference_ctx->sinkpad, ev)) {
+      GST_WARNING_OBJECT (splitmux,
+          "Could not request keyframe at %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (split_time));
+    }
+  }
 }

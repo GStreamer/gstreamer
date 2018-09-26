@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/base/base.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_SPLITMUX_SINK               (gst_splitmux_sink_get_type())
@@ -173,6 +174,7 @@ struct _GstSplitMuxSink
 
   gboolean split_requested;
   gboolean do_split_next_gop;
+  GstQueueArray *times_to_split;
 
   /* Async finalize options */
   gboolean async_finalize;
@@ -189,6 +191,7 @@ struct _GstSplitMuxSinkClass
   /* actions */
   void     (*split_now)   (GstSplitMuxSink * splitmux);
   void     (*split_after) (GstSplitMuxSink * splitmux);
+  void     (*split_at_running_time)   (GstSplitMuxSink * splitmux, GstClockTime split_time);
 };
 
 G_END_DECLS
