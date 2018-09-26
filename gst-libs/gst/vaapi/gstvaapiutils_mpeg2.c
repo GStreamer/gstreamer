@@ -25,6 +25,9 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils_mpeg2_priv.h"
 
+#define DEBUG 1
+#include "gstvaapidebug.h"
+
 struct map
 {
   guint value;
@@ -124,7 +127,7 @@ gst_vaapi_utils_mpeg2_get_profile (guint8 profile_idc)
       profile = GST_VAAPI_PROFILE_MPEG2_HIGH;
       break;
     default:
-      g_debug ("unsupported profile_idc value");
+      GST_DEBUG ("unsupported profile_idc value");
       profile = GST_VAAPI_PROFILE_UNKNOWN;
       break;
   }
@@ -148,7 +151,7 @@ gst_vaapi_utils_mpeg2_get_profile_idc (GstVaapiProfile profile)
       profile_idc = GST_MPEG_VIDEO_PROFILE_HIGH;
       break;
     default:
-      g_debug ("unsupported GstVaapiProfile value");
+      GST_DEBUG ("unsupported GstVaapiProfile value");
       profile_idc = 0;
       break;
   }
@@ -185,7 +188,7 @@ gst_vaapi_utils_mpeg2_get_level (guint8 level_idc)
     if (llp->level_idc == level_idc)
       return llp->level;
   }
-  g_debug ("unsupported level_idc value");
+  GST_DEBUG ("unsupported level_idc value");
   return (GstVaapiLevelMPEG2) 0;
 }
 
@@ -253,7 +256,7 @@ gst_vaapi_utils_mpeg2_get_chroma_type (guint chroma_format_idc)
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
       break;
     default:
-      g_debug ("unsupported chroma_format_idc value");
+      GST_DEBUG ("unsupported chroma_format_idc value");
       chroma_type = (GstVaapiChromaType) 0;
       break;
   }
@@ -277,7 +280,7 @@ gst_vaapi_utils_mpeg2_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       chroma_format_idc = GST_MPEG_VIDEO_CHROMA_444;
       break;
     default:
-      g_debug ("unsupported GstVaapiChromaType value");
+      GST_DEBUG ("unsupported GstVaapiChromaType value");
       chroma_format_idc = 1;
       break;
   }

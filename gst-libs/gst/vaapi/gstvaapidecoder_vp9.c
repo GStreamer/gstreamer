@@ -182,7 +182,7 @@ get_profile (guint profile_idc)
       profile = GST_VAAPI_PROFILE_VP9_3;
       break;
     default:
-      g_debug ("unsupported profile_idc value");
+      GST_DEBUG ("unsupported profile_idc value");
       profile = GST_VAAPI_PROFILE_UNKNOWN;
       break;
   }
