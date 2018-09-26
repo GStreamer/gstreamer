@@ -1083,6 +1083,7 @@ data/bash-completion/helpers/gst
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
+libs/gst/helpers/libgstreamer-gdb.py
 gst/parse/Makefile
 gst/printf/Makefile
 libs/Makefile

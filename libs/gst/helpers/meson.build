@@ -124,3 +124,24 @@ if have_ptp
       helpers_install_dir, with_ptp_helper_permissions,
       setcap.found() ? setcap.path() : '')
 endif
+
+install_data(['gst_gdb.py', 'glib_gobject_helper.py'],
+  install_dir : join_paths(get_option('datadir'), 'glib-2.0', 'gdb'))
+
+gdbconf = configuration_data()
+gdbconf.set('GST_API_VERSION', apiversion)
+gdbconf.set('DATADIR', '@0@/@1@'.format(get_option('prefix'), get_option('datadir')))
+
+if host_system != 'windows'
+  # XXX: We add a leading './' because prefix is an absolute path and we
+  # need it to be a relative path so that join_paths appends it to the end.
+  gdb_install_dir = join_paths(get_option('datadir'), 'gdb', 'auto-load', './' + get_option('prefix'), get_option('libdir'))
+else
+  # FIXME: Cannot install on Windows because the path will contain a drive
+  # letter and colons are not allowed in paths.
+  gdb_install_dir = disabler()
+endif
+configure_file(input : 'libgstreamer-gdb.py.in',
+  output : 'libgstreamer-@0@.so.@1@-gdb.py'.format(apiversion, libversion),
+  install_dir : gdb_install_dir,
+  configuration : gdbconf)

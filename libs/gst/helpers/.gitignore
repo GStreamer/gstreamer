@@ -1,4 +1,5 @@
 gst-plugin-scanner
 gst-completion-helper
 gst-ptp-helper
+libgstreamer-gdb.py
 *.o
