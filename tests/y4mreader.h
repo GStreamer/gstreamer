@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301 USA
  */
 
-#include <glib.h>
+#include <gst/gst.h>
 #include <stdio.h>
 #include <gst/vaapi/gstvaapiimage.h>
 

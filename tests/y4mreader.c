@@ -20,8 +20,7 @@
  */
 
 #include "y4mreader.h"
-
-#include <stdio.h>
+#include <string.h>
 
 /* format documentation:
  * http://wiki.multimedia.cx/index.php?title=YUV4MPEG2 */
