@@ -37,14 +37,8 @@
 
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 
-#include "gstglcontext.h"
-#include "gstglframebuffer.h"
-#include "gstglmemory.h"
-#include "gstglshader.h"
-#include "gstglshaderstrings.h"
-#include "gstglsl.h"
+#include "gl.h"
 #include "gstglsl_private.h"
-#include "gstglslstage.h"
 #include "gstglutils_private.h"
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
@@ -2017,6 +2011,7 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
   gint in_views, out_views;
   GstVideoMultiviewMode in_mode;
   GstVideoMultiviewMode out_mode;
+  GstGLSyncMeta *sync_meta;
 
   out_width = GST_VIDEO_INFO_WIDTH (&viewconvert->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&viewconvert->out_info);
@@ -2149,6 +2144,18 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
   }
   priv->n_out_tex = out_views;
 
+  if (priv->primary_in) {
+    if ((sync_meta = gst_buffer_get_gl_sync_meta (priv->primary_in))) {
+      gst_gl_sync_meta_wait (sync_meta, context);
+    }
+  }
+
+  if (priv->auxilliary_in) {
+    if ((sync_meta = gst_buffer_get_gl_sync_meta (priv->auxilliary_in))) {
+      gst_gl_sync_meta_wait (sync_meta, context);
+    }
+  }
+
   GST_LOG_OBJECT (viewconvert, "multiview splitting to textures:%p,%p,%p,%p "
       "dimensions:%ux%u, from textures:%p,%p,%p,%p dimensions:%ux%u",
       priv->out_tex[0], priv->out_tex[1],
@@ -2198,6 +2205,17 @@ out:
   if (!res) {
     gst_buffer_replace (&priv->primary_out, NULL);
     gst_buffer_replace (&priv->auxilliary_out, NULL);
+  }
+
+  if (priv->primary_out) {
+    if ((sync_meta = gst_buffer_add_gl_sync_meta (context, priv->primary_out)))
+      gst_gl_sync_meta_set_sync_point (sync_meta, context);
+  }
+
+  if (priv->auxilliary_out) {
+    if ((sync_meta =
+            gst_buffer_add_gl_sync_meta (context, priv->auxilliary_out)))
+      gst_gl_sync_meta_set_sync_point (sync_meta, context);
   }
 
   priv->result = res;
