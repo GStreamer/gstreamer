@@ -808,7 +808,7 @@ gst_webrtc_data_channel_send_data (GstWebRTCDataChannel * channel,
     }
 
     buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, data, size,
-        0, size, bytes, (GDestroyNotify) g_bytes_unref);
+        0, size, g_bytes_ref (bytes), (GDestroyNotify) g_bytes_unref);
     ppid = DATA_CHANNEL_PPID_WEBRTC_BINARY;
   }
 
