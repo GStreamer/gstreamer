@@ -974,7 +974,11 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
 
       descriptor = gst_mpegts_descriptor_from_registration ("AC-3",
           add_info, 6);
+      g_ptr_array_add (pmt_stream->descriptors, descriptor);
 
+      descriptor =
+          gst_mpegts_descriptor_from_custom (GST_MTS_DESC_AC3_AUDIO_STREAM,
+          add_info, 6);
       g_ptr_array_add (pmt_stream->descriptors, descriptor);
 
       break;
