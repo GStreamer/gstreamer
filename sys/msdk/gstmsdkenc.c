@@ -1096,6 +1096,7 @@ gst_msdkenc_get_surface_from_pool (GstMsdkEnc * thiz, GstBufferPool * pool,
   return msdk_surface;
 }
 
+#ifndef _WIN32
 static gboolean
 import_dmabuf_to_msdk_surface (GstMsdkEnc * thiz, GstBuffer * buf,
     MsdkSurface * msdk_surface)
@@ -1156,6 +1157,7 @@ import_dmabuf_to_msdk_surface (GstMsdkEnc * thiz, GstBuffer * buf,
 
   return TRUE;
 }
+#endif
 
 static MsdkSurface *
 gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
