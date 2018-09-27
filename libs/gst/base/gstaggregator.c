@@ -2370,6 +2370,11 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           "position (in nanoseconds)", 0, G_MAXUINT64,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAggregator:min-upstream-latency:
+   *
+   * Since: 1.16
+   */
   g_object_class_install_property (gobject_class, PROP_MIN_UPSTREAM_LATENCY,
       g_param_spec_uint64 ("min-upstream-latency", "Buffer latency",
           "When sources with a higher latency are expected to be plugged "
