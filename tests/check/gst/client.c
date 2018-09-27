@@ -927,7 +927,7 @@ GST_END_TEST;
 GST_START_TEST (test_client_multicast_transport_specific_no_address_in_pool)
 {
   expected_transport = "RTP/AVP;multicast;destination=234.252.0.3;"
-      "ttl=1;port=6000-6001;mode=\"PLAY\"";
+      "ttl=1;port=10002-10004;mode=\"PLAY\"";
   multicast_transport_specific ();
   expected_transport = NULL;
 }
