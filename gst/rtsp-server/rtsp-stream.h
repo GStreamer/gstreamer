@@ -199,6 +199,11 @@ gboolean          gst_rtsp_stream_get_rtpinfo      (GstRTSPStream *stream,
                                                     GstClockTime *running_time);
 
 GST_RTSP_SERVER_API
+gboolean          gst_rtsp_stream_get_rates        (GstRTSPStream * stream,
+                                                    gdouble * rate,
+                                                    gdouble * applied_rate);
+
+GST_RTSP_SERVER_API
 GstCaps *         gst_rtsp_stream_get_caps         (GstRTSPStream *stream);
 
 GST_RTSP_SERVER_API

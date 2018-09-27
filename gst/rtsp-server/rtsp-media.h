@@ -388,12 +388,23 @@ gboolean              gst_rtsp_media_seek_full        (GstRTSPMedia *media,
                                                        GstSeekFlags flags);
 
 GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_seek_full_with_rate (GstRTSPMedia *media,
+                                                          GstRTSPTimeRange *range,
+                                                          GstSeekFlags flags,
+                                                          gdouble rate);
+
+GST_RTSP_SERVER_API
 GstClockTimeDiff      gst_rtsp_media_seekable         (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
 gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media,
                                                        gboolean play,
                                                        GstRTSPRangeUnit unit);
+
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_get_rates        (GstRTSPMedia * media,
+                                                       gdouble * rate,
+                                                       gdouble * applied_rate);
 
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state,

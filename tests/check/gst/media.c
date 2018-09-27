@@ -60,6 +60,8 @@ GST_START_TEST (test_media_seek)
   GstRTSPThreadPool *pool;
   GstRTSPThread *thread;
   GstRTSPTransport *transport;
+  gdouble rate = 0;
+  gdouble applied_rate = 0;
 
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
@@ -98,9 +100,30 @@ GST_START_TEST (test_media_seek)
 
   str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=5-"));
+  g_free (str);
+
+  /* seeking without rate should result in rate == 1.0 */
+  fail_unless (gst_rtsp_media_seek (media, range));
+  fail_unless (gst_rtsp_media_get_rates (media, &rate, &applied_rate));
+  fail_unless (rate == 1.0);
+  fail_unless (applied_rate == 1.0);
+
+  /* seeking with rate set to 1.5 should result in rate == 1.5 */
+  fail_unless (gst_rtsp_media_seek_full_with_rate (media, range,
+          GST_SEEK_FLAG_NONE, 1.5));
+  fail_unless (gst_rtsp_media_get_rates (media, &rate, &applied_rate));
+  fail_unless (rate == 1.5);
+  fail_unless (applied_rate == 1.0);
+
+  /* seeking with rate set to -2.0 should result in rate == -2.0 */
+  fail_unless (gst_rtsp_range_parse ("npt=5-10", &range) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_media_seek_full_with_rate (media, range,
+          GST_SEEK_FLAG_NONE, -2.0));
+  fail_unless (gst_rtsp_media_get_rates (media, &rate, &applied_rate));
+  fail_unless (rate == -2.0);
+  fail_unless (applied_rate == 1.0);
 
   gst_rtsp_range_free (range);
-  g_free (str);
 
   fail_unless (gst_rtsp_media_unprepare (media));
   g_object_unref (media);

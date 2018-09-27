@@ -4128,6 +4128,70 @@ no_stats:
 }
 
 /**
+ * gst_rtsp_stream_get_rates:
+ * @stream: a #GstRTSPStream
+ * @rate: (allow-none): the configured rate
+ * @applied_rate: (allow-none): the configured applied_rate
+ *
+ * Retrieve the current rate and/or applied_rate.
+ *
+ * Returns: %TRUE if rate and/or applied_rate could be determined.
+ * Since: 1.18
+ */
+gboolean
+gst_rtsp_stream_get_rates (GstRTSPStream * stream, gdouble * rate,
+    gdouble * applied_rate)
+{
+  GstRTSPStreamPrivate *priv;
+  GstEvent *event;
+  const GstSegment *segment;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  if (!rate && !applied_rate) {
+    GST_WARNING_OBJECT (stream, "rate and applied_rate are both NULL");
+    return FALSE;
+  }
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+
+  if (!priv->send_rtp_sink)
+    goto no_rtp_sink_pad;
+
+  event = gst_pad_get_sticky_event (priv->send_rtp_sink, GST_EVENT_SEGMENT, 0);
+  if (!event)
+    goto no_sticky_event;
+
+  gst_event_parse_segment (event, &segment);
+  if (rate)
+    *rate = segment->rate;
+  if (applied_rate)
+    *applied_rate = segment->applied_rate;
+
+  gst_event_unref (event);
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
+
+/* ERRORS */
+no_rtp_sink_pad:
+  {
+    GST_WARNING_OBJECT (stream, "no send_rtp_sink pad yet");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+no_sticky_event:
+  {
+    GST_WARNING_OBJECT (stream, "no segment event on send_rtp_sink pad");
+    g_mutex_unlock (&priv->lock);
+    return FALSE;
+  }
+
+}
+
+/**
  * gst_rtsp_stream_get_caps:
  * @stream: a #GstRTSPStream
  *
