@@ -20,7 +20,7 @@ msdk_sources = [
   'gstmsdkvp8enc.c',
   'gstmsdkvc1dec.c',
   'msdk.c',
-  'msdk-enum.c',
+  'msdk-enums.c',
   'gstmsdkvpputil.c',
 ]
 
