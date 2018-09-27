@@ -329,10 +329,6 @@ gst_tag_demux_set_src_caps (GstTagDemux * tagdemux, GstCaps * new_caps)
 
   if (old_caps == NULL || !gst_caps_is_equal (new_caps, old_caps)) {
     GstEvent *event;
-    guint group_id;
-    gboolean have_group_id;
-    gchar *stream_id = gst_pad_create_stream_id (tagdemux->priv->srcpad,
-        GST_ELEMENT_CAST (tagdemux), NULL);
 
     gst_caps_replace (&tagdemux->priv->src_caps, new_caps);
 
@@ -342,23 +338,16 @@ gst_tag_demux_set_src_caps (GstTagDemux * tagdemux, GstCaps * new_caps)
     event =
         gst_pad_get_sticky_event (tagdemux->priv->sinkpad,
         GST_EVENT_STREAM_START, 0);
-    if (event) {
-      if (gst_event_parse_group_id (event, &group_id))
-        have_group_id = TRUE;
-      else
-        have_group_id = FALSE;
-      gst_event_unref (event);
-    } else {
-      have_group_id = TRUE;
-      group_id = gst_util_group_id_next ();
+    if (!event) {
+      gchar *stream_id = gst_pad_create_stream_id (tagdemux->priv->srcpad,
+          GST_ELEMENT_CAST (tagdemux), NULL);
+      GST_DEBUG_OBJECT (tagdemux, "Creating new STREAM_START event");
+      event = gst_event_new_stream_start (stream_id);
+      g_free (stream_id);
+      gst_event_set_group_id (event, gst_util_group_id_next ());
     }
-
-    event = gst_event_new_stream_start (stream_id);
-    if (have_group_id)
-      gst_event_set_group_id (event, group_id);
-
     gst_pad_push_event (tagdemux->priv->srcpad, event);
-    g_free (stream_id);
+
     gst_pad_set_caps (tagdemux->priv->srcpad, tagdemux->priv->src_caps);
   } else {
     /* Caps never changed */
