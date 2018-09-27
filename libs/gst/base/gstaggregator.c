@@ -333,6 +333,8 @@ struct _GstAggregatorPrivate
   GstClockTime sub_latency_min; /* protected by src_lock */
   GstClockTime sub_latency_max; /* protected by src_lock */
 
+  GstClockTime upstream_latency_min;    /* protected by src_lock */
+
   /* aggregate */
   GstClockID aggregate_id;      /* protected by src_lock */
   GMutex src_lock;
@@ -366,6 +368,7 @@ typedef struct
 } EventData;
 
 #define DEFAULT_LATENCY              0
+#define DEFAULT_MIN_UPSTREAM_LATENCY              0
 #define DEFAULT_START_TIME_SELECTION GST_AGGREGATOR_START_TIME_SELECTION_ZERO
 #define DEFAULT_START_TIME           (-1)
 
@@ -373,6 +376,7 @@ enum
 {
   PROP_0,
   PROP_LATENCY,
+  PROP_MIN_UPSTREAM_LATENCY,
   PROP_START_TIME_SELECTION,
   PROP_START_TIME,
   PROP_LAST
@@ -1742,6 +1746,16 @@ gst_aggregator_query_latency_unlocked (GstAggregator * self, GstQuery * query)
     return FALSE;
   }
 
+  if (self->priv->upstream_latency_min > min) {
+    GstClockTimeDiff diff =
+        GST_CLOCK_DIFF (min, self->priv->upstream_latency_min);
+
+    min += diff;
+    if (GST_CLOCK_TIME_IS_VALID (max)) {
+      max += diff;
+    }
+  }
+
   if (min > max && GST_CLOCK_TIME_IS_VALID (max)) {
     GST_ELEMENT_WARNING (self, CORE, CLOCK, (NULL),
         ("Impossible to configure latency: max %" GST_TIME_FORMAT " < min %"
@@ -2265,6 +2279,11 @@ gst_aggregator_set_property (GObject * object, guint prop_id,
     case PROP_LATENCY:
       gst_aggregator_set_latency_property (agg, g_value_get_uint64 (value));
       break;
+    case PROP_MIN_UPSTREAM_LATENCY:
+      SRC_LOCK (agg);
+      agg->priv->upstream_latency_min = g_value_get_uint64 (value);
+      SRC_UNLOCK (agg);
+      break;
     case PROP_START_TIME_SELECTION:
       agg->priv->start_time_selection = g_value_get_enum (value);
       break;
@@ -2286,6 +2305,11 @@ gst_aggregator_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LATENCY:
       g_value_set_uint64 (value, gst_aggregator_get_latency_property (agg));
+      break;
+    case PROP_MIN_UPSTREAM_LATENCY:
+      SRC_LOCK (agg);
+      g_value_set_uint64 (value, agg->priv->upstream_latency_min);
+      SRC_UNLOCK (agg);
       break;
     case PROP_START_TIME_SELECTION:
       g_value_set_enum (value, agg->priv->start_time_selection);
@@ -2346,6 +2370,16 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           "position (in nanoseconds)", 0, G_MAXUINT64,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MIN_UPSTREAM_LATENCY,
+      g_param_spec_uint64 ("min-upstream-latency", "Buffer latency",
+          "When sources with a higher latency are expected to be plugged "
+          "in dynamically after the aggregator has started playing, "
+          "this allows overriding the minimum latency reported by the "
+          "initial source(s). This is only taken into account when superior "
+          "to the reported minimum latency.",
+          0, G_MAXUINT64,
+          DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
       g_param_spec_enum ("start-time-selection", "Start Time Selection",
           "Decides which start time is output",
@@ -2403,6 +2437,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
+  self->priv->upstream_latency_min = DEFAULT_MIN_UPSTREAM_LATENCY;
   self->priv->latency = DEFAULT_LATENCY;
   self->priv->start_time_selection = DEFAULT_START_TIME_SELECTION;
   self->priv->start_time = DEFAULT_START_TIME;
