@@ -1097,6 +1097,33 @@ error:
   return GST_H265_PARSER_ERROR;
 }
 
+static GstH265ParserResult
+gst_h265_parser_parse_recovery_point (GstH265Parser * parser,
+    GstH265RecoveryPoint * rp, NalReader * nr)
+{
+  GstH265SPS *const sps = parser->last_sps;
+  gint32 max_pic_order_cnt_lsb;
+
+  GST_DEBUG ("parsing \"Recovery point\"");
+  if (!sps || !sps->valid) {
+    GST_WARNING ("didn't get the associated sequence paramater set for the "
+        "current access unit");
+    goto error;
+  }
+
+  max_pic_order_cnt_lsb = pow (2, (sps->log2_max_pic_order_cnt_lsb_minus4 + 4));
+  READ_SE_ALLOWED (nr, rp->recovery_poc_cnt, -max_pic_order_cnt_lsb / 2,
+      max_pic_order_cnt_lsb - 1);
+  READ_UINT8 (nr, rp->exact_match_flag, 1);
+  READ_UINT8 (nr, rp->broken_link_flag, 1);
+
+  return GST_H265_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Recovery point\"");
+  return GST_H265_PARSER_ERROR;
+}
+
 /******** API *************/
 
 /**
@@ -2280,6 +2307,10 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
         /* size not set; might depend on emulation_prevention_three_byte */
         res = gst_h265_parser_parse_pic_timing (parser,
             &sei->payload.pic_timing, nr);
+        break;
+      case GST_H265_SEI_RECOVERY_POINT:
+        res = gst_h265_parser_parse_recovery_point (parser,
+            &sei->payload.recovery_point, nr);
         break;
       default:
         /* Just consume payloadSize bytes, which does not account for
