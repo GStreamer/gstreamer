@@ -30,7 +30,9 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include "gstmsdksystemmemory.h"
 

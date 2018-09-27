@@ -30,9 +30,11 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _WIN32
 #include <unistd.h>
-#include <stdlib.h>
 #include <va/va.h>
+#endif
+#include <stdlib.h>
 #include "gstmsdkvideomemory.h"
 #include "gstmsdkallocator.h"
 
