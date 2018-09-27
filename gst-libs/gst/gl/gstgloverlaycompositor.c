@@ -639,8 +639,9 @@ gst_gl_overlay_compositor_add_caps (GstCaps * caps)
 
   for (i = 0; i < gst_caps_get_size (composition_caps); i++) {
     GstCapsFeatures *f = gst_caps_get_features (composition_caps, i);
-    gst_caps_features_add (f,
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    if (!gst_caps_features_is_any (f))
+      gst_caps_features_add (f,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   }
 
   caps = gst_caps_merge (composition_caps, caps);
