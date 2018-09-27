@@ -52,6 +52,7 @@ libgstopengl_la_SOURCES = \
 	gstgldeinterlace.c \
 	gltestsrc.c \
 	gstgltestsrc.c \
+	gstgloverlaycompositorelement.c \
 	gstglutils.c
 
 noinst_HEADERS = \
@@ -75,6 +76,7 @@ noinst_HEADERS = \
 	gstglviewconvert.h \
 	gltestsrc.h \
 	gstgltestsrc.h \
+	gstgloverlaycompositorelement.h \
 	gstglutils.h
 
 # full opengl required

@@ -44,6 +44,7 @@ opengl_sources = [
   'gstgldeinterlace.c',
   'gltestsrc.c',
   'gstgltestsrc.c',
+  'gstgloverlaycompositor.c',
   'gstglutils.c'
 ]
 
