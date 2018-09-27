@@ -68,6 +68,7 @@ struct input_chain
   GstGhostPad *ghost_pad;
   GstElement *upload;
   GstElement *in_convert;
+  GstElement *in_overlay;
   GstPad *mixer_pad;
 };
 
@@ -89,6 +90,12 @@ _free_input_chain (struct input_chain *chain)
     gst_element_set_state (chain->in_convert, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (chain->self), chain->in_convert);
     chain->in_convert = NULL;
+  }
+
+  if (chain->in_overlay) {
+    gst_element_set_state (chain->in_overlay, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (chain->self), chain->in_overlay);
+    chain->in_overlay = NULL;
   }
 
   if (chain->mixer_pad) {
@@ -291,16 +298,21 @@ _create_input_chain (GstGLMixerBin * self, struct input_chain *chain,
 
   chain->upload = gst_element_factory_make ("glupload", NULL);
   chain->in_convert = gst_element_factory_make ("glcolorconvert", NULL);
+  chain->in_overlay = gst_element_factory_make ("gloverlaycompositor", NULL);
 
   res &= gst_bin_add (GST_BIN (self), chain->in_convert);
+  res &= gst_bin_add (GST_BIN (self), chain->in_overlay);
   res &= gst_bin_add (GST_BIN (self), chain->upload);
 
-  pad = gst_element_get_static_pad (chain->in_convert, "src");
+  pad = gst_element_get_static_pad (chain->in_overlay, "src");
   if (gst_pad_link (pad, mixer_pad) != GST_PAD_LINK_OK) {
     gst_object_unref (pad);
     return FALSE;
   }
   gst_object_unref (pad);
+  res &=
+      gst_element_link_pads (chain->in_convert, "src", chain->in_overlay,
+      "sink");
   res &=
       gst_element_link_pads (chain->upload, "src", chain->in_convert, "sink");
 
@@ -332,6 +344,7 @@ _create_input_chain (GstGLMixerBin * self, struct input_chain *chain,
 
   gst_element_sync_state_with_parent (chain->upload);
   gst_element_sync_state_with_parent (chain->in_convert);
+  gst_element_sync_state_with_parent (chain->in_overlay);
 
   return TRUE;
 }
