@@ -537,6 +537,14 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
   for (i = 0; i < messages->len; i++) {
     sei = g_array_index (messages, GstH265SEIMessage, i);
     switch (sei.payloadType) {
+      case GST_H265_SEI_RECOVERY_POINT:
+        GST_LOG_OBJECT (h265parse, "recovery point found: %u %u %u",
+            sei.payload.recovery_point.recovery_poc_cnt,
+            sei.payload.recovery_point.exact_match_flag,
+            sei.payload.recovery_point.broken_link_flag);
+        h265parse->keyframe = TRUE;
+        break;
+
       case GST_H265_SEI_BUF_PERIOD:
       case GST_H265_SEI_PIC_TIMING:
         /* FIXME */
