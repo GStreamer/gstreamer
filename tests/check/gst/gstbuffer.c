@@ -905,6 +905,23 @@ GST_START_TEST (test_writable_memory)
 
 GST_END_TEST;
 
+GST_START_TEST (test_wrapped_bytes)
+{
+  GBytes *bytes = g_bytes_new_static (ro_memory, sizeof (ro_memory));
+  GstBuffer *buf;
+  GstMemory *mem;
+
+  buf = gst_buffer_new_wrapped_bytes (bytes);
+
+  /* the memory should not be writable */
+  mem = gst_buffer_peek_memory (buf, 0);
+  fail_unless (GST_MEMORY_IS_READONLY (mem));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -929,6 +946,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_fill);
   tcase_add_test (tc_chain, test_parent_buffer_meta);
   tcase_add_test (tc_chain, test_writable_memory);
+  tcase_add_test (tc_chain, test_wrapped_bytes);
 
   return s;
 }

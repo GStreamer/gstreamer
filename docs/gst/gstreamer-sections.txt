@@ -193,6 +193,7 @@ GST_BUFFER_IS_DISCONT
 gst_buffer_new
 gst_buffer_new_allocate
 gst_buffer_new_wrapped
+gst_buffer_new_wrapped_bytes
 gst_buffer_new_wrapped_full
 
 gst_buffer_ref

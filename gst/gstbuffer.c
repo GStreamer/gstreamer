@@ -979,6 +979,33 @@ gst_buffer_new_wrapped (gpointer data, gsize size)
 }
 
 /**
+ * gst_buffer_new_wrapped_bytes:
+ * @bytes: (transfer none): a #GBytes to wrap
+ *
+ * Creates a new #GstBuffer that wraps the given @bytes. The data inside
+ * @bytes cannot be %NULL and the resulting buffer will be marked as read only.
+ *
+ * MT safe.
+ *
+ * Returns: (transfer full): a new #GstBuffer wrapping @bytes
+ *
+ * Since: 1.16
+ */
+GstBuffer *
+gst_buffer_new_wrapped_bytes (GBytes * bytes)
+{
+  guint8 *bytes_data;
+  gsize size;
+
+  g_return_val_if_fail (bytes != NULL, NULL);
+  bytes_data = (guint8 *) g_bytes_get_data (bytes, &size);
+  g_return_val_if_fail (bytes_data != NULL, NULL);
+
+  return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, bytes_data,
+      size, 0, size, g_bytes_ref (bytes), (GDestroyNotify) g_bytes_unref);
+}
+
+/**
  * gst_buffer_n_memory:
  * @buffer: a #GstBuffer.
  *

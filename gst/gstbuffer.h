@@ -297,6 +297,8 @@ GstBuffer * gst_buffer_new_wrapped_full    (GstMemoryFlags flags, gpointer data,
                                             GDestroyNotify notify);
 GST_API
 GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
+GST_API
+GstBuffer * gst_buffer_new_wrapped_bytes   (GBytes * bytes);
 
 /* memory blocks */
 
