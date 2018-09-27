@@ -40,6 +40,13 @@ GST_BASE_API
 void            gst_queue_array_free      (GstQueueArray * array);
 
 GST_BASE_API
+void            gst_queue_array_set_clear_func (GstQueueArray *array,
+                                                GDestroyNotify clear_func);
+
+GST_BASE_API
+void            gst_queue_array_clear     (GstQueueArray * array);
+
+GST_BASE_API
 gpointer        gst_queue_array_pop_head  (GstQueueArray * array);
 
 GST_BASE_API

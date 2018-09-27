@@ -996,6 +996,8 @@ gst_data_queue_get_type
 GstQueueArray
 gst_queue_array_new
 gst_queue_array_free
+gst_queue_array_set_clear_func
+gst_queue_array_clear
 gst_queue_array_get_length
 gst_queue_array_pop_head
 gst_queue_array_peek_head

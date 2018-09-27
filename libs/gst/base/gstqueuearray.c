@@ -47,6 +47,7 @@ struct _GstQueueArray
   guint length;
   guint elt_size;
   gboolean struct_array;
+  GDestroyNotify clear_func;
 };
 
 /**
@@ -76,6 +77,7 @@ gst_queue_array_new_for_struct (gsize struct_size, guint initial_size)
   array->tail = 0;
   array->length = 0;
   array->struct_array = TRUE;
+  array->clear_func = NULL;
   return array;
 }
 
@@ -112,8 +114,66 @@ void
 gst_queue_array_free (GstQueueArray * array)
 {
   g_return_if_fail (array != NULL);
+  gst_queue_array_clear (array);
   g_free (array->array);
   g_slice_free (GstQueueArray, array);
+}
+
+/**
+ * gst_queue_array_set_clear_func: (skip)
+ * @array: a #GstQueueArray object
+ * @clear_func: a function to clear an element of @array
+ *
+ * Sets a function to clear an element of @array.
+ *
+ * The @clear_func will be called when an element in the array
+ * data segment is removed and when the array is freed and data
+ * segment is deallocated as well. @clear_func will be passed a
+ * pointer to the element to clear, rather than the element itself.
+ *
+ * Note that in contrast with other uses of #GDestroyNotify
+ * functions, @clear_func is expected to clear the contents of
+ * the array element it is given, but not free the element itself.
+ *
+ * Since: 1.16
+ */
+void
+gst_queue_array_set_clear_func (GstQueueArray * array,
+    GDestroyNotify clear_func)
+{
+  g_return_if_fail (array != NULL);
+  array->clear_func = clear_func;
+}
+
+/**
+ * gst_queue_array_clear: (skip)
+ * @array: a #GstQueueArray object
+ *
+ * Clears queue @array and frees all memory associated to it.
+ *
+ * Since: 1.16
+ */
+void
+gst_queue_array_clear (GstQueueArray * array)
+{
+  g_return_if_fail (array != NULL);
+
+  if (array->clear_func != NULL) {
+    guint i, pos;
+
+    for (i = 0; i < array->length; i++) {
+      pos = (i + array->head) % array->size;
+      if (array->struct_array)
+        array->clear_func (array->array + pos * array->elt_size);
+      else
+        array->clear_func (*(gpointer *) (array->array +
+                pos * array->elt_size));
+    }
+  }
+
+  array->head = 0;
+  array->tail = 0;
+  array->length = 0;
 }
 
 /**
