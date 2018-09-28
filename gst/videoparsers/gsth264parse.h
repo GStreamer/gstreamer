@@ -116,6 +116,7 @@ struct _GstH264Parse
   gboolean do_ts;
 
   gboolean discont;
+  gboolean marker;
 
   /* frame parsing */
   /*guint last_nal_pos;*/
