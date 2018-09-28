@@ -91,7 +91,6 @@ static gboolean gst_shm_src_unlock_stop (GstBaseSrc * bsrc);
 static GstStateChangeReturn gst_shm_src_change_state (GstElement * element,
     GstStateChange transition);
 
-static void gst_shm_pipe_inc (GstShmPipe * pipe);
 static void gst_shm_pipe_dec (GstShmPipe * pipe);
 
 // static guint gst_shm_src_signals[LAST_SIGNAL] = { 0 };
@@ -255,6 +254,7 @@ gst_shm_src_start_reading (GstShmSrc * self)
 
   self->pipe = gstpipe;
 
+  self->unlocked = FALSE;
   gst_poll_set_flushing (self->poll, FALSE);
 
   gst_poll_fd_init (&self->pollfd);
@@ -268,12 +268,17 @@ gst_shm_src_start_reading (GstShmSrc * self)
 static void
 gst_shm_src_stop_reading (GstShmSrc * self)
 {
+  GstShmPipe *pipe;
+
   GST_DEBUG_OBJECT (self, "Stopping %p", self);
 
-  if (self->pipe) {
-    gst_shm_pipe_dec (self->pipe);
-    self->pipe = NULL;
+  GST_OBJECT_LOCK (self);
+  pipe = self->pipe;
+  self->pipe = NULL;
+  GST_OBJECT_UNLOCK (self);
 
+  if (pipe) {
+    gst_shm_pipe_dec (pipe);
     gst_poll_remove_fd (self->poll, &self->pollfd);
   }
 
@@ -322,44 +327,57 @@ static GstFlowReturn
 gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstShmSrc *self = GST_SHM_SRC (psrc);
+  GstShmPipe *pipe;
   gchar *buf = NULL;
   int rv = 0;
   struct GstShmBuffer *gsb;
 
+  GST_DEBUG_OBJECT (self, "Stopping %p", self);
+
+  GST_OBJECT_LOCK (self);
+  pipe = self->pipe;
+  if (!pipe) {
+    GST_OBJECT_UNLOCK (self);
+    return GST_FLOW_FLUSHING;
+  } else {
+    pipe->use_count++;
+  }
+  GST_OBJECT_UNLOCK (self);
+
   do {
     if (gst_poll_wait (self->poll, GST_CLOCK_TIME_NONE) < 0) {
       if (errno == EBUSY)
-        return GST_FLOW_FLUSHING;
+        goto flushing;
       GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
           ("Poll failed on fd: %s", strerror (errno)));
-      return GST_FLOW_ERROR;
+      goto error;
     }
 
     if (self->unlocked)
-      return GST_FLOW_FLUSHING;
+      goto flushing;
 
     if (gst_poll_fd_has_closed (self->poll, &self->pollfd)) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
           ("Control socket has closed"));
-      return GST_FLOW_ERROR;
+      goto error;
     }
 
     if (gst_poll_fd_has_error (self->poll, &self->pollfd)) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
           ("Control socket has error"));
-      return GST_FLOW_ERROR;
+      goto error;
     }
 
     if (gst_poll_fd_can_read (self->poll, &self->pollfd)) {
       buf = NULL;
       GST_LOG_OBJECT (self, "Reading from pipe");
       GST_OBJECT_LOCK (self);
-      rv = sp_client_recv (self->pipe->pipe, &buf);
+      rv = sp_client_recv (pipe->pipe, &buf);
       GST_OBJECT_UNLOCK (self);
       if (rv < 0) {
         GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
             ("Error reading control data: %d", rv));
-        return GST_FLOW_ERROR;
+        goto error;
       }
     }
   } while (buf == NULL);
@@ -368,13 +386,19 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   gsb = g_slice_new0 (struct GstShmBuffer);
   gsb->buf = buf;
-  gsb->pipe = self->pipe;
-  gst_shm_pipe_inc (self->pipe);
+  gsb->pipe = pipe;
 
   *outbuf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
       buf, rv, 0, rv, gsb, free_buffer);
 
   return GST_FLOW_OK;
+
+error:
+  gst_shm_pipe_dec (pipe);
+  return GST_FLOW_ERROR;
+flushing:
+  gst_shm_pipe_dec (pipe);
+  return GST_FLOW_FLUSHING;
 }
 
 static GstStateChangeReturn
@@ -385,9 +409,10 @@ gst_shm_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      if (gst_base_src_is_live (GST_BASE_SRC (element)))
+      if (gst_base_src_is_live (GST_BASE_SRC (element))) {
         if (!gst_shm_src_start_reading (self))
           return GST_STATE_CHANGE_FAILURE;
+      }
     default:
       break;
   }
@@ -398,8 +423,10 @@ gst_shm_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (gst_base_src_is_live (GST_BASE_SRC (element)))
+      if (gst_base_src_is_live (GST_BASE_SRC (element))) {
+        gst_shm_src_unlock (GST_BASE_SRC (element));
         gst_shm_src_stop_reading (self);
+      }
     default:
       break;
   }
@@ -427,18 +454,6 @@ gst_shm_src_unlock_stop (GstBaseSrc * bsrc)
   gst_poll_set_flushing (self->poll, FALSE);
 
   return TRUE;
-}
-
-static void
-gst_shm_pipe_inc (GstShmPipe * pipe)
-{
-  g_return_if_fail (pipe);
-  g_return_if_fail (pipe->src);
-  g_return_if_fail (pipe->use_count > 0);
-
-  GST_OBJECT_LOCK (pipe->src);
-  pipe->use_count++;
-  GST_OBJECT_UNLOCK (pipe->src);
 }
 
 static void
