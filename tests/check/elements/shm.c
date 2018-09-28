@@ -169,6 +169,66 @@ GST_START_TEST (test_shm_alloc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_shm_live)
+{
+  GstElement *producer, *consumer;
+  GstElement *src, *sink;
+  gchar *socket_path = NULL;
+  GstStateChangeReturn state_res;
+  GstSample *sample = NULL;
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  g_object_set (src, "sizetype", 2, NULL);
+
+  sink = gst_element_factory_make ("shmsink", NULL);
+  g_object_set (sink, "socket-path", "shm-unit-test", "wait-for-connection",
+      FALSE, NULL);
+
+  producer = gst_pipeline_new ("producer-pipeline");
+  gst_bin_add_many (GST_BIN (producer), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+
+  state_res = gst_element_set_state (producer, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
+
+  g_object_get (sink, "socket-path", &socket_path, NULL);
+  fail_unless (socket_path != NULL);
+
+  src = gst_element_factory_make ("shmsrc", NULL);
+  sink = gst_element_factory_make ("appsink", NULL);
+  g_object_set (src, "is-live", TRUE, NULL);
+  g_object_set (sink, "async", FALSE, "enable-last-sample", FALSE, NULL);
+
+  consumer = gst_pipeline_new ("consumer-pipeline");
+  gst_bin_add_many (GST_BIN (consumer), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+
+  g_object_set (src, "socket-path", socket_path, NULL);
+
+  state_res = gst_element_set_state (consumer, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
+
+  /* wait for preroll */
+  state_res = gst_element_get_state (consumer, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (state_res == GST_STATE_CHANGE_SUCCESS);
+
+  g_signal_emit_by_name (sink, "pull-sample", &sample);
+  gst_sample_unref (sample);
+
+  state_res = gst_element_set_state (consumer, GST_STATE_NULL);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
+
+  state_res = gst_element_set_state (producer, GST_STATE_NULL);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE);
+
+  gst_object_unref (consumer);
+  gst_object_unref (producer);
+
+  g_free (socket_path);
+}
+
+GST_END_TEST;
+
 static Suite *
 shm_suite (void)
 {
@@ -179,6 +239,10 @@ shm_suite (void)
   tcase_add_checked_fixture (tc, setup_shm, NULL);
   tcase_add_test (tc, test_shm_sysmem_alloc);
   tcase_add_test (tc, test_shm_alloc);
+  suite_add_tcase (s, tc);
+
+  tc = tcase_create ("shm2");
+  tcase_add_test (tc, test_shm_live);
   suite_add_tcase (s, tc);
 
   return s;
