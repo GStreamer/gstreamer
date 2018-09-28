@@ -2142,7 +2142,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     if (G_UNLIKELY (modified || h264parse->update_caps)) {
       GstVideoInterlaceMode imode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
       gint width, height;
-      GstClockTime latency;
+      GstClockTime latency = 0;
 
       const gchar *caps_mview_mode = NULL;
       GstVideoMultiviewMode mview_mode = h264parse->multiview_mode;
@@ -2216,12 +2216,17 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
             &h264parse->parsed_fps_d);
         gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse), fps_num,
             fps_den, 0, 0);
-        if (fps_num > 0) {
+
+        /* If we know the frame duration, and if we are not in one of the zero
+         * latency pattern, add one frame of latency */
+        if (fps_num > 0 && h264parse->in_align != GST_H264_PARSE_ALIGN_AU &&
+            !(h264parse->in_align == GST_H264_PARSE_ALIGN_NAL &&
+                h264parse->align == GST_H264_PARSE_ALIGN_NAL)) {
           latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
-          gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
-              latency);
         }
 
+        gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
+            latency);
       }
 
       /* upstream overrides or uses sps info */
