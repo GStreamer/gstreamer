@@ -288,8 +288,8 @@ gst_buffer_add_video_meta (GstBuffer * buffer,
  * @width: the width
  * @height: the height
  * @n_planes: number of planes
- * @offset: offset of each plane
- * @stride: stride of each plane
+ * @offset: (array fixed-size=4): offset of each plane
+ * @stride: (array fixed-size=4): stride of each plane
  *
  * Attaches GstVideoMeta metadata to @buffer with the given parameters.
  *
