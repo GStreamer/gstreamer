@@ -173,6 +173,9 @@ static GstCaps *gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext
 static GstCaps
     * gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     subtitlecontext, const gchar * codec_id, gpointer data, guint size);
+static const gchar *gst_matroska_track_encryption_algorithm_name (gint val);
+static const gchar *gst_matroska_track_encryption_cipher_mode_name (gint val);
+static const gchar *gst_matroska_track_encoding_scope_name (gint val);
 
 /* stream methods */
 static void gst_matroska_demux_reset (GstElement * element);
@@ -359,12 +362,13 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
   GstMapInfo map;
   gpointer data;
   gsize size;
+  GstBuffer *out_buf = buf;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
 
   GST_DEBUG ("decoding buffer %p", buf);
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_buffer_map (out_buf, &map, GST_MAP_READ);
   data = map.data;
   size = map.size;
 
@@ -372,15 +376,53 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 
   if (gst_matroska_decode_data (context->encodings, &data, &size,
           GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME, FALSE)) {
-    gst_buffer_unmap (buf, &map);
-    gst_buffer_unref (buf);
-    return gst_buffer_new_wrapped (data, size);
+    gst_buffer_unmap (out_buf, &map);
+    if (data != map.data) {
+      gst_buffer_unref (out_buf);
+      out_buf = gst_buffer_new_wrapped (data, size);
+    }
   } else {
     GST_DEBUG ("decode data failed");
-    gst_buffer_unmap (buf, &map);
-    gst_buffer_unref (buf);
+    gst_buffer_unmap (out_buf, &map);
+    gst_buffer_unref (out_buf);
     return NULL;
   }
+  /* Encrypted stream */
+  if (context->protection_info) {
+
+    GstStructure *info_protect = gst_structure_copy (context->protection_info);
+    gboolean encrypted = FALSE;
+
+    gst_buffer_map (out_buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
+
+    if (gst_matroska_parse_protection_meta (&data, &size, info_protect,
+            &encrypted)) {
+      gst_buffer_unmap (out_buf, &map);
+      if (data != map.data) {
+        GstBuffer *tmp_buf = out_buf;
+        out_buf =
+            gst_buffer_copy_region (tmp_buf, GST_BUFFER_COPY_ALL,
+            gst_buffer_get_size (tmp_buf) - size, size);
+        gst_buffer_unref (tmp_buf);
+        if (encrypted)
+          gst_buffer_add_protection_meta (out_buf, info_protect);
+        else
+          gst_structure_free (info_protect);
+      } else {
+        gst_structure_free (info_protect);
+      }
+    } else {
+      GST_WARNING ("Adding protection metadata failed");
+      gst_buffer_unmap (out_buf, &map);
+      gst_buffer_unref (out_buf);
+      gst_structure_free (info_protect);
+      return NULL;
+    }
+  }
+
+  return out_buf;
 }
 
 static void
@@ -630,6 +672,8 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
   context->dts_only = FALSE;
   context->intra_only = FALSE;
   context->tags = gst_tag_list_new_empty ();
+  g_queue_init (&context->protection_event_queue);
+  context->protection_info = NULL;
 
   GST_DEBUG_OBJECT (demux, "Parsing a TrackEntry (%d tracks parsed so far)",
       demux->common.num_streams);
@@ -1465,6 +1509,31 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
   } else if (context->stream_headers != NULL) {
     gst_matroska_demux_add_stream_headers_to_caps (demux,
         context->stream_headers, caps);
+  }
+
+  if (context->encodings) {
+    GstMatroskaTrackEncoding *enc;
+    guint i;
+
+    for (i = 0; i < context->encodings->len; i++) {
+      enc = &g_array_index (context->encodings, GstMatroskaTrackEncoding, i);
+      if (enc->type == GST_MATROSKA_ENCODING_ENCRYPTION /* encryption */ ) {
+        GstStructure *s = gst_caps_get_structure (caps, 0);
+        if (!gst_structure_has_name (s, "application/x-webm-enc")) {
+          gst_structure_set (s, "original-media-type", G_TYPE_STRING,
+              gst_structure_get_name (s), NULL);
+          gst_structure_set (s, "encryption-algorithm", G_TYPE_STRING,
+              gst_matroska_track_encryption_algorithm_name (enc->enc_algo),
+              NULL);
+          gst_structure_set (s, "encoding-scope", G_TYPE_STRING,
+              gst_matroska_track_encoding_scope_name (enc->scope), NULL);
+          gst_structure_set (s, "cipher-mode", G_TYPE_STRING,
+              gst_matroska_track_encryption_cipher_mode_name
+              (enc->enc_cipher_mode), NULL);
+          gst_structure_set_name (s, "application/x-webm-enc");
+        }
+      }
+    }
   }
 
   context->caps = caps;
@@ -4185,6 +4254,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     gboolean delta_unit = FALSE;
     guint64 duration = 0;
     gint64 lace_time = 0;
+    GstEvent *protect_event;
 
     stream = g_ptr_array_index (demux->common.src, stream_num);
 
@@ -4203,6 +4273,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
     } else {
       lace_time = GST_CLOCK_TIME_NONE;
+    }
+    /* Send the GST_PROTECTION event */
+    while ((protect_event = g_queue_pop_head (&stream->protection_event_queue))) {
+      GST_TRACE_OBJECT (demux, "pushing protection event for stream %d:%s",
+          stream->index, GST_STR_NULL (stream->name));
+      gst_pad_push_event (stream->pad, protect_event);
     }
 
     /* need to refresh segment info ASAP */
@@ -5350,6 +5426,9 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
         }
         case GST_MATROSKA_ID_POSITION:
         case GST_MATROSKA_ID_ENCRYPTEDBLOCK:
+          /* The WebM doesn't support the EncryptedBlock element.
+           * The Matroska spec doesn't give us more detail, how to parse this element,
+           * for example the field TransformID isn't specified yet.*/
         case GST_MATROSKA_ID_SILENTTRACKS:
           GST_DEBUG_OBJECT (demux,
               "Skipping Cluster subelement 0x%x - ignoring", id);
@@ -6913,6 +6992,37 @@ gst_matroska_demux_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static const gchar *
+gst_matroska_track_encryption_algorithm_name (gint val)
+{
+  GEnumValue *en;
+  GEnumClass *enum_class =
+      g_type_class_ref (MATROSKA_TRACK_ENCRYPTION_ALGORITHM_TYPE);
+  en = g_enum_get_value (G_ENUM_CLASS (enum_class), val);
+  return en ? en->value_nick : NULL;
+}
+
+static const gchar *
+gst_matroska_track_encryption_cipher_mode_name (gint val)
+{
+  GEnumValue *en;
+  GEnumClass *enum_class =
+      g_type_class_ref (MATROSKA_TRACK_ENCRYPTION_CIPHER_MODE_TYPE);
+  en = g_enum_get_value (G_ENUM_CLASS (enum_class), val);
+  return en ? en->value_nick : NULL;
+}
+
+static const gchar *
+gst_matroska_track_encoding_scope_name (gint val)
+{
+  GEnumValue *en;
+  GEnumClass *enum_class =
+      g_type_class_ref (MATROSKA_TRACK_ENCODING_SCOPE_TYPE);
+
+  en = g_enum_get_value (G_ENUM_CLASS (enum_class), val);
+  return en ? en->value_nick : NULL;
 }
 
 gboolean

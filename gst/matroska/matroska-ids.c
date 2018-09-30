@@ -351,5 +351,78 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   if (track->stream_headers)
     gst_buffer_list_unref (track->stream_headers);
 
+  g_queue_foreach (&track->protection_event_queue, (GFunc) gst_event_unref,
+      NULL);
+  g_queue_clear (&track->protection_event_queue);
+
+  if (track->protection_info)
+    gst_structure_free (track->protection_info);
+
   g_free (track);
+}
+
+GType
+matroska_track_encryption_algorithm_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue types[] = {
+    {GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_NONE, "Not encrypted",
+        "None"},
+    {GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_DES, "DES encryption algorithm",
+        "DES"},
+    {GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_3DES, "3DES encryption algorithm",
+        "3DES"},
+    {GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_TWOFISH,
+        "TwoFish encryption algorithm", "TwoFish"},
+    {GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_BLOWFISH,
+        "BlowFish encryption algorithm", "BlowFish"},
+    {GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_AES, "AES encryption algorithm",
+        "AES"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("MatroskaTrackEncryptionAlgorithm", types);
+  }
+  return type;
+}
+
+GType
+matroska_track_encryption_cipher_mode_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue types[] = {
+    {GST_MATROSKA_TRACK_ENCRYPTION_CIPHER_MODE_NONE, "Not defined",
+        "None"},
+    {GST_MATROSKA_TRACK_ENCRYPTION_CIPHER_MODE_CTR, "CTR encryption mode",
+        "CTR"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("MatroskaTrackEncryptionCipherMode", types);
+  }
+  return type;
+}
+
+GType
+matroska_track_encoding_scope_get_type (void)
+{
+  static GType type = 0;
+
+  static const GEnumValue types[] = {
+    {GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME, "Encoding scope frame", "frame"},
+    {GST_MATROSKA_TRACK_ENCODING_SCOPE_CODEC_DATA, "Encoding scope codec data",
+        "codec-data"},
+    {GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING,
+        "Encoding scope next content", "next-content"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("MatroskaTrackEncodingScope", types);
+  }
+  return type;
 }

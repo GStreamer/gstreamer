@@ -120,6 +120,9 @@ typedef struct _GstMatroskaReadCommon {
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
 gboolean gst_matroska_decode_data (GArray * encodings, gpointer * data_out,
     gsize * size_out, GstMatroskaTrackEncodingScope scope, gboolean free);
+gboolean
+gst_matroska_parse_protection_meta (gpointer * data_out, gsize * size_out,
+    GstStructure * info_protect, gboolean * encrypted);
 gint gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
     gpointer user_data);
 GstMatroskaIndex * gst_matroska_read_common_do_index_seek (

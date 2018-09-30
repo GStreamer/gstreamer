@@ -175,6 +175,9 @@
 #define GST_MATROSKA_ID_CONTENTSIGKEYID            0x47E4
 #define GST_MATROSKA_ID_CONTENTSIGALGO             0x47E5
 #define GST_MATROSKA_ID_CONTENTSIGHASHALGO         0x47E6
+/* Added in WebM spec */
+#define GST_MATROSKA_ID_CONTENTENCAESSETTINGS      0x47E7
+#define GST_MATROSKA_ID_AESSETTINGSCIPHERMODE      0x47E8
 
 /* ID in the CUEs master */
 #define GST_MATROSKA_ID_POINTENTRY                 0xBB
@@ -516,6 +519,17 @@ typedef enum {
   GST_MATROSKA_STEREO_MODE_FBF_RL      = 0xE
 } GstMatroskaStereoMode;
 
+typedef enum {
+  GST_MATROSKA_ENCODING_COMPRESSION = 0x00,
+  GST_MATROSKA_ENCODING_ENCRYPTION  = 0x01
+} GstMatroskaEncodingType;
+
+/* WebM spec */
+typedef enum {
+  GST_MATROSKA_BLOCK_ENCRYPTED   = 0x01,
+  GST_MATROSKA_BLOCK_PARTITIONED = 0x02
+} GstMatroskaEncryptedBlockFlags;
+
 typedef struct _GstMatroskaTrackContext GstMatroskaTrackContext;
 
 /* TODO: check if all fields are used */
@@ -548,6 +562,11 @@ struct _GstMatroskaTrackContext {
   guint64       codec_delay;
 
   gboolean      set_discont; /* TRUE = set DISCONT flag on next buffer */
+
+  /* Queue to save the GST_PROTECTION events which will be sent before the first source buffer */
+  GQueue         protection_event_queue;
+  /* Protection information structure which will be added in protection metadata for each encrypted buffer */
+  GstStructure * protection_info;
 
   /* Stream header buffer, to put into caps and send before any other buffers */
   GstBufferList * stream_headers;
@@ -654,12 +673,44 @@ typedef enum {
   GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING = (1<<2)
 } GstMatroskaTrackEncodingScope;
 
+#define MATROSKA_TRACK_ENCODING_SCOPE_TYPE (matroska_track_encoding_scope_get_type())
+GType matroska_track_encoding_scope_get_type (void);
+
 typedef enum {
   GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_ZLIB = 0,
   GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_BZLIB = 1,
   GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_LZO1X = 2,
   GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_HEADERSTRIP = 3
 } GstMatroskaTrackCompressionAlgorithm;
+
+/* The encryption algorithm used. The value '0' means that the contents
+ * have not been encrypted but only signed.
+ * Predefined values: 1 - DES; 2 - 3DES; 3 - Twofish; 4 - Blowfish; 5 - AES.
+ * WebM only supports a value of 5 (AES).
+ */
+typedef enum {
+  GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_NONE     = 0,
+  GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_DES      = 1,
+  GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_3DES     = 2,
+  GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_TWOFISH  = 3,
+  GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_BLOWFISH = 4,
+  GST_MATROSKA_TRACK_ENCRYPTION_ALGORITHM_AES      = 5
+} GstMatroskaTrackEncryptionAlgorithm;
+
+#define MATROSKA_TRACK_ENCRYPTION_ALGORITHM_TYPE (matroska_track_encryption_algorithm_get_type())
+GType matroska_track_encryption_algorithm_get_type (void);
+
+/* Defined only in WebM spec.
+ * The cipher mode used in the encryption. Predefined values: 1 - CTR
+ */
+typedef enum {
+  GST_MATROSKA_TRACK_ENCRYPTION_CIPHER_MODE_NONE    = 0,
+  GST_MATROSKA_TRACK_ENCRYPTION_CIPHER_MODE_CTR     = 1
+} GstMatroskaTrackEncryptionCipherMode;
+
+#define MATROSKA_TRACK_ENCRYPTION_CIPHER_MODE_TYPE (matroska_track_encryption_cipher_mode_get_type())
+GType matroska_track_encryption_cipher_mode_get_type (void);
+
 
 typedef struct _GstMatroskaTrackEncoding {
   guint   order;
@@ -668,6 +719,8 @@ typedef struct _GstMatroskaTrackEncoding {
   guint   comp_algo : 2;
   guint8 *comp_settings;
   guint   comp_settings_length;
+  guint   enc_algo  : 3;
+  guint   enc_cipher_mode : 2;
 } GstMatroskaTrackEncoding;
 
 gboolean gst_matroska_track_init_video_context    (GstMatroskaTrackContext ** p_context);
