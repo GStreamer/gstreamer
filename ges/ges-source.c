@@ -55,7 +55,7 @@ _pad_added_cb (GstElement * element, GstPad * srcpad, GstPad * sinkpad)
     srccaps = gst_pad_query_caps (srcpad, NULL);
     sinkcaps = gst_pad_query_caps (sinkpad, NULL);
 
-    GST_ERROR_OBJECT (element, "Could not link source with "
+    GST_WARNING_OBJECT (element, "Could not link source with "
         "conversion bin: %s (srcpad caps %" GST_PTR_FORMAT
         " sinkpad caps: %" GST_PTR_FORMAT ")",
         gst_pad_link_get_name (res), srccaps, sinkcaps);

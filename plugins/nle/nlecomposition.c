@@ -2923,6 +2923,43 @@ _set_real_eos_seqnum_from_seek (NleComposition * comp, GstEvent * event)
   return TRUE;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static gboolean
+_print_stack (GNode * node, gpointer res)
+{
+  NleObject *obj = NLE_OBJECT (node->data);
+
+  g_string_append_printf ((GString *) res,
+      "%*s [s=%" GST_TIME_FORMAT " - d=%" GST_TIME_FORMAT "] prio=%d\n",
+      g_node_depth (node) * 4, GST_OBJECT_NAME (obj),
+      GST_TIME_ARGS (NLE_OBJECT_START (obj)),
+      GST_TIME_ARGS (NLE_OBJECT_STOP (obj)), obj->priority);
+
+  return FALSE;
+}
+#endif
+
+static void
+_dump_stack (NleComposition * comp, GNode * stack)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  GString *res;
+
+  if (gst_debug_category_get_threshold (nlecomposition_debug) < GST_LEVEL_INFO)
+    return;
+
+  res = g_string_new (NULL);
+  g_string_append_printf (res, " ====> dumping stack [%" GST_TIME_FORMAT " - %"
+      GST_TIME_FORMAT "]:\n",
+      GST_TIME_ARGS (comp->priv->current_stack_start),
+      GST_TIME_ARGS (comp->priv->current_stack_stop));
+  g_node_traverse (stack, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1, _print_stack, res);
+
+  GST_INFO_OBJECT (comp, "%s", res->str);
+  g_string_free (res, TRUE);
+#endif
+}
+
 /*
  * update_pipeline:
  * @comp: The #NleComposition
@@ -3026,6 +3063,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
+    _dump_stack (comp, stack);
     _deactivate_stack (comp, _have_to_flush_downstream (update_reason));
     _relink_new_stack (comp, stack, toplevel_seek);
   }
