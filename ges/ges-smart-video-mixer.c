@@ -350,6 +350,7 @@ static void
 ges_smart_mixer_constructed (GObject * obj)
 {
   GstPad *pad;
+  GstElement *identity;
 
   GESSmartMixer *self = GES_SMART_MIXER (obj);
   gchar *cname = g_strdup_printf ("%s-compositor", GST_OBJECT_NAME (self));
@@ -358,9 +359,17 @@ ges_smart_mixer_constructed (GObject * obj)
       gst_element_factory_create (ges_get_compositor_factory (), cname);
   g_free (cname);
   g_object_set (self->mixer, "background", 1, NULL);
-  gst_bin_add (GST_BIN (self), self->mixer);
 
-  pad = gst_element_get_static_pad (self->mixer, "src");
+  /* See https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/310 */
+  GST_FIXME ("Stop dropping allocation query when it is not required anymore.");
+  identity = gst_element_factory_make ("identity", NULL);
+  g_object_set (identity, "drop-allocation", TRUE, NULL);
+  g_assert (identity);
+
+  gst_bin_add_many (GST_BIN (self), self->mixer, identity, NULL);
+  gst_element_link (self->mixer, identity);
+
+  pad = gst_element_get_static_pad (identity, "src");
   self->srcpad = gst_ghost_pad_new ("src", pad);
   gst_pad_set_active (self->srcpad, TRUE);
   gst_object_unref (pad);
