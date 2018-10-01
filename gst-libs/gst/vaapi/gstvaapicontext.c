@@ -133,9 +133,13 @@ context_ensure_surfaces (GstVaapiContext * context)
   GstVaapiSurface *surface;
   guint i;
 
+  if (!ensure_formats (context))
+    return FALSE;
+
   for (i = context->surfaces->len; i < num_surfaces; i++) {
-    surface = gst_vaapi_surface_new (GST_VAAPI_OBJECT_DISPLAY (context),
-        cip->chroma_type, cip->width, cip->height);
+    surface =
+        gst_vaapi_surface_new_from_formats (GST_VAAPI_OBJECT_DISPLAY (context),
+        cip->chroma_type, cip->width, cip->height, context->formats);
     if (!surface)
       return FALSE;
     gst_vaapi_surface_set_parent_context (surface, context);
