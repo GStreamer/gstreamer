@@ -1175,6 +1175,22 @@ gst_opus_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-overlaycomposition</FILE>
+<TITLE>overlaycomposition</TITLE>
+GstOverlayComposition
+<SUBSECTION Standard>
+GstOverlayCompositionClass
+GST_OVERLAY_COMPOSITION
+GST_OVERLAY_COMPOSITION_CAST
+GST_IS_OVERLAY_COMPOSITION
+GST_OVERLAY_COMPOSITION_CLASS
+GST_IS_OVERLAY_COMPOSITION_CLASS
+GST_TYPE_OVERLAY_COMPOSITION
+<SUBSECTION Private>
+gst_overlay_composition_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-parsebin</FILE>
 <TITLE>parsebin</TITLE>
 GstParseBin

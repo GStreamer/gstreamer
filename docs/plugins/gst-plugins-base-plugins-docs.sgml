@@ -90,6 +90,7 @@
     <xi:include href="xml/element-ogmvideoparse.xml" />
     <xi:include href="xml/element-opusdec.xml" />
     <xi:include href="xml/element-opusenc.xml" />
+    <xi:include href="xml/element-overlaycomposition.xml" />
     <xi:include href="xml/element-parsebin.xml" />
     <xi:include href="xml/element-playbin.xml" />
     <xi:include href="xml/element-playbin3.xml" />
@@ -146,6 +147,7 @@
     <xi:include href="xml/plugin-ogg.xml" />
     <xi:include href="xml/plugin-opus.xml" />
     <xi:include href="xml/plugin-opengl.xml" />
+    <xi:include href="xml/plugin-overlaycomposition.xml" />
     <xi:include href="xml/plugin-pango.xml" />
     <xi:include href="xml/plugin-playback.xml" />
     <xi:include href="xml/plugin-rawparse.xml" />

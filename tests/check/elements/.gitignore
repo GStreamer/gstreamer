@@ -27,6 +27,7 @@ videoconvert
 videoscale
 videoscale-[1-6]
 vorbistag
+overlaycomposition
 playbin
 playbin-compressed
 playbin-complex

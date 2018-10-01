@@ -9,6 +9,7 @@ if build_gstgl
   subdir('gl')
 endif
 subdir('overlay')
+subdir('overlaycomposition')
 subdir('playback')
 subdir('playrec')
 subdir('seek')

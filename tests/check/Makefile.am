@@ -220,6 +220,12 @@ else
 check_audioresample =
 endif
 
+if USE_PLUGIN_OVERLAYCOMPOSITION
+check_overlaycomposition = elements/overlaycomposition
+else
+check_overlaycomposition =
+endif
+
 if HAVE_CXX
 cxx_checks = libs/gstlibscpp
 else
@@ -271,6 +277,7 @@ check_PROGRAMS = \
 	$(check_gl) \
 	$(check_ogg) \
 	$(check_opus) \
+	$(check_overlaycomposition) \
 	$(check_pango) \
 	$(check_playback) \
 	$(check_rawparse) \
@@ -747,6 +754,16 @@ elements_volume_CFLAGS = \
 	$(GST_CONTROLLER_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
+
+elements_overlaycomposition_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+elements_overlaycomposition_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
 
 elements_vorbisdec_LDADD = \
 	$(LDADD) \

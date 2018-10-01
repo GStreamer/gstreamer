@@ -43,6 +43,7 @@ base_tests = [
   [ 'elements/multifdsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
   # FIXME: multisocketsink test on windows/msvc
   [ 'elements/multisocketsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
+  [ 'elements/overlaycomposition.c' ],
   [ 'elements/playbin.c' ],
   [ 'elements/playbin-complex.c', not ogg_dep.found() ],
   [ 'elements/playsink.c' ],

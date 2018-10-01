@@ -501,6 +501,7 @@ AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(encoding)
 AG_GST_CHECK_PLUGIN(videoconvert)
 AG_GST_CHECK_PLUGIN(gio)
+AG_GST_CHECK_PLUGIN(overlaycomposition)
 AG_GST_CHECK_PLUGIN(playback)
 AG_GST_CHECK_PLUGIN(audioresample)
 AG_GST_CHECK_PLUGIN(rawparse)
@@ -924,6 +925,7 @@ gst/audiotestsrc/Makefile
 gst/encoding/Makefile
 gst/videoconvert/Makefile
 gst/gio/Makefile
+gst/overlaycomposition/Makefile
 gst/pbtypes/Makefile
 gst/playback/Makefile
 gst/rawparse/Makefile
@@ -1027,6 +1029,7 @@ tests/examples/gl/gtk/filtervideooverlay/Makefile
 tests/examples/gl/cocoa/Makefile
 tests/examples/gl/sdl/Makefile
 tests/examples/overlay/Makefile
+tests/examples/overlaycomposition/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile
 tests/examples/playback/Makefile
