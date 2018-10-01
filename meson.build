@@ -100,6 +100,11 @@ if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
 endif
 
+# Don't export any symbols from static ffmpeg libraries
+if cc.has_link_argument('-Wl,--exclude-libs=ALL')
+  add_project_link_arguments('-Wl,--exclude-libs=ALL', language: 'c')
+endif
+
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
