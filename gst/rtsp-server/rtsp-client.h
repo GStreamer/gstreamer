@@ -107,6 +107,9 @@ struct _GstRTSPClient {
  *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
  * @params_get: get parameters. This function should also initialize the
  *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
+ * @make_path_from_uri: called to create path from uri.
+ * @adjust_play_mode: called to give the application the possibility to adjust
+ *    the range, seek flags, and/or rate. Since 1.18
  * @tunnel_http_response: called when a response to the GET request is about to
  *   be sent for a tunneled connection. The response can be modified. Since: 1.4
  *
@@ -125,7 +128,11 @@ struct _GstRTSPClientClass {
   GstRTSPResult   (*params_set) (GstRTSPClient *client, GstRTSPContext *ctx);
   GstRTSPResult   (*params_get) (GstRTSPClient *client, GstRTSPContext *ctx);
   gchar *         (*make_path_from_uri) (GstRTSPClient *client, const GstRTSPUrl *uri);
-
+  GstRTSPStatusCode (*adjust_play_mode) (GstRTSPClient * client,
+                                         GstRTSPContext * context,
+                                         GstRTSPTimeRange ** range,
+                                         GstSeekFlags * flags,
+                                         gdouble * rate);
   /* signals */
   void     (*closed)                  (GstRTSPClient *client);
   void     (*new_session)             (GstRTSPClient *client, GstRTSPSession *session);
@@ -162,7 +169,7 @@ struct _GstRTSPClientClass {
   GstRTSPStatusCode (*pre_record_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-16];
+  gpointer _gst_reserved[GST_PADDING_LARGE-17];
 };
 
 GST_RTSP_SERVER_API

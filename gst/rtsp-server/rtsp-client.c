@@ -1730,6 +1730,83 @@ make_base_url (GstRTSPClient * client, GstRTSPUrl * url, const gchar * path)
   return result;
 }
 
+static GstRTSPStatusCode
+setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
+    GstRTSPRangeUnit * unit)
+{
+  gchar *str;
+  GstRTSPResult res;
+  GstRTSPTimeRange *range = NULL;
+  gdouble rate = 1.0;
+  GstSeekFlags flags = GST_SEEK_FLAG_NONE;
+  GstRTSPClientClass *klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  GstRTSPStatusCode status;
+
+  /* parse the range header if we have one */
+  res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_RANGE, &str, 0);
+  if (res == GST_RTSP_OK) {
+    gchar *seek_style = NULL;
+
+    res = gst_rtsp_range_parse (str, &range);
+    if (res != GST_RTSP_OK)
+      goto parse_range_failed;
+
+    *unit = range->unit;
+
+    /* parse seek style header, if present */
+    res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_SEEK_STYLE,
+        &seek_style, 0);
+
+    if (res == GST_RTSP_OK) {
+      if (g_strcmp0 (seek_style, "RAP") == 0)
+        flags = GST_SEEK_FLAG_ACCURATE;
+      else if (g_strcmp0 (seek_style, "CoRAP") == 0)
+        flags = GST_SEEK_FLAG_KEY_UNIT;
+      else if (g_strcmp0 (seek_style, "First-Prior") == 0)
+        flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_BEFORE;
+      else if (g_strcmp0 (seek_style, "Next") == 0)
+        flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_AFTER;
+      else
+        GST_FIXME_OBJECT (client, "Add support for seek style %s", seek_style);
+    }
+  }
+
+  /* give the application a chance to tweak range, flags, or rate */
+  if (klass->adjust_play_mode != NULL) {
+    status = klass->adjust_play_mode (client, ctx, &range, &flags, &rate);
+    if (status != GST_RTSP_STS_OK)
+      goto adjust_play_mode_failed;
+  }
+
+  /* now do the seek with the seek options */
+  (void) gst_rtsp_media_seek_full_with_rate (ctx->media, range, flags, rate);
+  if (range != NULL)
+    gst_rtsp_range_free (range);
+
+  if (gst_rtsp_media_get_status (ctx->media) == GST_RTSP_MEDIA_STATUS_ERROR)
+    goto seek_failed;
+
+  return GST_RTSP_STS_OK;
+
+parse_range_failed:
+  {
+    GST_ERROR ("client %p: failed parsing range header", client);
+    return GST_RTSP_STS_BAD_REQUEST;
+  }
+adjust_play_mode_failed:
+  {
+    GST_ERROR ("client %p: sub class returned bad code (%d)", client, status);
+    if (range != NULL)
+      gst_rtsp_range_free (range);
+    return status;
+  }
+seek_failed:
+  {
+    GST_ERROR ("client %p: seek failed", client);
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+  }
+}
+
 static gboolean
 handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
@@ -1740,8 +1817,6 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPStatusCode code;
   GstRTSPUrl *uri;
   gchar *str;
-  GstRTSPTimeRange *range;
-  GstRTSPResult res;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
   gchar *path, *rtpinfo;
@@ -1799,38 +1874,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!gst_rtsp_media_unsuspend (media))
     goto unsuspend_failed;
 
-  /* parse the range header if we have one */
-  res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_RANGE, &str, 0);
-  if (res == GST_RTSP_OK) {
-    if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
-      GstRTSPMediaStatus media_status;
-      GstSeekFlags flags = 0;
-
-      if (gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_SEEK_STYLE,
-              &seek_style, 0)) {
-        if (g_strcmp0 (seek_style, "RAP") == 0)
-          flags = GST_SEEK_FLAG_ACCURATE;
-        else if (g_strcmp0 (seek_style, "CoRAP") == 0)
-          flags = GST_SEEK_FLAG_KEY_UNIT;
-        else if (g_strcmp0 (seek_style, "First-Prior") == 0)
-          flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_BEFORE;
-        else if (g_strcmp0 (seek_style, "Next") == 0)
-          flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_AFTER;
-        else
-          GST_FIXME_OBJECT (client, "Add support for seek style %s",
-              seek_style);
-      }
-
-      /* we have a range, seek to the position */
-      unit = range->unit;
-      gst_rtsp_media_seek_full (media, range, flags);
-      gst_rtsp_range_free (range);
-
-      media_status = gst_rtsp_media_get_status (media);
-      if (media_status == GST_RTSP_MEDIA_STATUS_ERROR)
-        goto seek_failed;
-    }
-  }
+  code = setup_play_mode (client, ctx, &unit);
+  if (code != GST_RTSP_STS_OK)
+    goto invalid_mode;
 
   /* grab RTPInfo from the media now */
   rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia);
@@ -1918,10 +1964,10 @@ unsuspend_failed:
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     return FALSE;
   }
-seek_failed:
+invalid_mode:
   {
     GST_ERROR ("client %p: seek failed", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_response (client, code, ctx);
     return FALSE;
   }
 unsupported_mode:
