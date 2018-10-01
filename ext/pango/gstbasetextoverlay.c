@@ -1668,24 +1668,16 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
 
-    overlay->composition = gst_video_overlay_composition_new (rectangle);
-    gst_video_overlay_rectangle_unref (rectangle);
-
     if (overlay->upstream_composition) {
-      guint num_overlays =
-          gst_video_overlay_composition_n_rectangles
-          (overlay->upstream_composition);
-      guint i;
-
-      for (i = 0; i < num_overlays; i++) {
-        GstVideoOverlayRectangle *rectangle;
-        rectangle =
-            gst_video_overlay_composition_get_rectangle
-            (overlay->upstream_composition, i);
-        gst_video_overlay_composition_add_rectangle (overlay->composition,
-            rectangle);
-      }
+      overlay->composition =
+          gst_video_overlay_composition_copy (overlay->upstream_composition);
+      gst_video_overlay_composition_add_rectangle (overlay->composition,
+          rectangle);
+    } else {
+      overlay->composition = gst_video_overlay_composition_new (rectangle);
     }
+
+    gst_video_overlay_rectangle_unref (rectangle);
 
   } else if (overlay->composition) {
     gst_video_overlay_composition_unref (overlay->composition);
