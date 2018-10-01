@@ -874,11 +874,11 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
      * the format ourselves and thus would have to drop the overlays.
      * Otherwise we should prefer what downstream wants here.
      */
-    peercaps = gst_pad_peer_query_caps (overlay->srcpad, NULL);
-    caps_has_meta = gst_caps_can_intersect (peercaps, overlay_caps);
+    peercaps = gst_pad_peer_query_caps (overlay->srcpad, overlay_caps);
+    caps_has_meta = !gst_caps_is_empty (peercaps);
     gst_caps_unref (peercaps);
 
-    GST_DEBUG ("caps have overlay meta %d", caps_has_meta);
+    GST_DEBUG_OBJECT (overlay, "caps have overlay meta %d", caps_has_meta);
   }
 
   if (upstream_has_meta || caps_has_meta) {
@@ -902,7 +902,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
     alloc_has_meta = gst_query_find_allocation_meta (query,
         GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, &alloc_index);
 
-    GST_DEBUG ("sink alloc has overlay meta %d", alloc_has_meta);
+    GST_DEBUG_OBJECT (overlay, "sink alloc has overlay meta %d",
+        alloc_has_meta);
 
     if (alloc_has_meta) {
       const GstStructure *params;
@@ -911,7 +912,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
       if (params) {
         if (gst_structure_get (params, "width", G_TYPE_UINT, &width,
                 "height", G_TYPE_UINT, &height, NULL)) {
-          GST_DEBUG ("received window size: %dx%d", width, height);
+          GST_DEBUG_OBJECT (overlay, "received window size: %dx%d", width,
+              height);
           g_assert (width != 0 && height != 0);
         }
       }
@@ -962,9 +964,6 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   gst_caps_unref (overlay_caps);
   gst_caps_unref (caps);
 
-  if (!ret)
-    gst_pad_mark_reconfigure (overlay->srcpad);
-
   return ret;
 
 no_format:
@@ -981,9 +980,8 @@ gst_base_text_overlay_can_handle_caps (GstCaps * incaps)
 {
   gboolean ret;
   GstCaps *caps;
-  static GstStaticCaps static_caps = GST_STATIC_CAPS (BASE_TEXT_OVERLAY_CAPS);
 
-  caps = gst_static_caps_get (&static_caps);
+  caps = gst_static_caps_get (&sw_template_caps);
   ret = gst_caps_is_subset (incaps, caps);
   gst_caps_unref (caps);
 
@@ -1439,9 +1437,6 @@ gst_base_text_overlay_get_videosink_caps (GstPad * pad,
   GstPad *srcpad = overlay->srcpad;
   GstCaps *peer_caps = NULL, *caps = NULL, *overlay_filter = NULL;
 
-  if (G_UNLIKELY (!overlay))
-    return gst_pad_get_pad_template_caps (pad);
-
   if (filter) {
     /* filter caps + composition feature + filter caps
      * filtered by the software caps. */
@@ -1501,9 +1496,6 @@ gst_base_text_overlay_get_src_caps (GstPad * pad, GstBaseTextOverlay * overlay,
 {
   GstPad *sinkpad = overlay->video_sinkpad;
   GstCaps *peer_caps = NULL, *caps = NULL, *overlay_filter = NULL;
-
-  if (G_UNLIKELY (!overlay))
-    return gst_pad_get_pad_template_caps (pad);
 
   if (filter) {
     /* duplicate filter caps which contains the composition into one version
