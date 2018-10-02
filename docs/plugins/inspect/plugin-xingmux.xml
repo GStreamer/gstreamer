@@ -3,7 +3,7 @@
   <description>Add XING tags to mpeg audio files</description>
   <filename>../../gst/xingmux/.libs/libgstxingmux.so</filename>
   <basename>libgstxingmux.so</basename>
-  <version>1.14.3</version>
+  <version>1.14.4</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
