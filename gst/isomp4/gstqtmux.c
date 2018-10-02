@@ -3495,7 +3495,7 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
       has_gap = (qtpad->first_ts > (qtmux->first_ts + qtpad->dts_adjustment));
 
       if (has_gap) {
-        GstClockTime diff, trak_lateness;
+        GstClockTime diff, trak_lateness, one_percent_of_frame_duration = 0;
 
         diff = qtpad->first_ts - (qtmux->first_ts + qtpad->dts_adjustment);
         lateness = gst_util_uint64_scale_round (diff,
@@ -3506,7 +3506,17 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
         trak_lateness = gst_util_uint64_scale (diff,
             atom_trak_get_timescale (qtpad->trak), GST_SECOND);
 
-        if (lateness > 0 && trak_lateness > 0) {
+        /* If the lateness is less than 1% of the (video) frame duration, we
+         * just allow it. It's usually irrelevantly small anyway, and having
+         * such a short edit list of -1 might break other cases (e.g. in
+         * prefill mode it will just error out for no real reason) */
+        if (qtpad->expected_sample_duration_n != 0) {
+          one_percent_of_frame_duration =
+              gst_util_uint64_scale (qtpad->expected_sample_duration_d,
+              GST_SECOND, 100 * qtpad->expected_sample_duration_n);
+        }
+
+        if (lateness > one_percent_of_frame_duration && trak_lateness > 0) {
           GST_DEBUG_OBJECT (qtmux,
               "Pad %s is a late stream by %" GST_TIME_FORMAT,
               GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (diff));
