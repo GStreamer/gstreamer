@@ -1480,10 +1480,44 @@ For a full list of bugfixes see Bugzilla. Note that this is not the full
 list of changes. For the full list of changes please refer to the GIT
 logs or ChangeLogs of the particular modules.
 
-1.14.4 (future)
+1.14.4
 
-The fourth 1.14 bug-fix release (1.14.4) is scheduled to be released
-around October 2018.
+The fourth 1.14 bug-fix release (1.14.4) was released on 2 October 2018.
+
+This release only contains bugfixes and it should be safe to update from
+1.14.x.
+
+Highlighted bugfixes in 1.14.4
+
+-   glviewconvert: wait and set the gl sync meta on buffers
+-   glviewconvert: Copy composition meta from the primary buffer to both
+    outputs
+-   glcolorconvert: Don’t copy overlay composition meta over to NULL
+    outbufs
+-   matroskademux: add functionality needed for MSE use case fixing
+    youtube playback in epiphany/webkit-gtk
+-   msdk: fix build on windows
+-   opusenc: fix another crash on 32-bit x86 on windows (alignment issue
+    in SSE optimisations)
+-   osxaudio: add support for parsing more channel layouts
+-   tagdemux: Use upstream GST_EVENT_STREAM_START (and stream-id) if
+    present
+-   vorbisdec: fix header handling regression: init decoder immediately
+    once we have headers
+-   wasapisink: recover from low buffer levels in shared mode
+-   fix GstSegment unit test which would fail on some 32-bit x86 CPUs
+
+Contributors to 1.14.4
+
+Alicia Boya García, Christoph Reiter, Edward Hervey, Jan Schmidt,
+Matthew Waters, Nicola Murino, Nicolas Dufresne, Sebastian Dröge,
+Tim-Philipp Müller, Wangfei, and many others. Thank you all.
+
+List of bugs fixed in 1.14.4
+
+For a full list of bugfixes see Bugzilla. Note that this is not the full
+list of changes. For the full list of changes please refer to the GIT
+logs or ChangeLogs of the particular modules.
 
 
 Known Issues

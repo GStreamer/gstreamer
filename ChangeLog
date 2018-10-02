@@ -1,3 +1,28 @@
+=== release 1.14.4 ===
+
+2018-10-02 23:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.14.4
+
+2018-10-02 23:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2018-10-01 16:13:29 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Don't export symbols from linked static libraries
+	  We don't want to export any symbols from the ffmpeg static libraries
+	  we link to when building inside Cerbero. In the Autotools build, we
+	  pass -export-symbols-regex to libtool which ensures this for us.
+
 === release 1.14.3 ===
 
 2018-09-16 16:30:18 +0100  Tim-Philipp Müller <tim@centricular.com>
