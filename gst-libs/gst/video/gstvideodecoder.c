@@ -287,6 +287,15 @@
 GST_DEBUG_CATEGORY (videodecoder_debug);
 #define GST_CAT_DEFAULT videodecoder_debug
 
+/* properties */
+#define DEFAULT_QOS                 TRUE
+
+enum
+{
+  PROP_0,
+  PROP_QOS,
+};
+
 struct _GstVideoDecoderPrivate
 {
   /* FIXME introduce a context ? */
@@ -370,6 +379,7 @@ struct _GstVideoDecoderPrivate
   gboolean output_state_changed;
 
   /* QoS properties */
+  gboolean do_qos;
   gdouble proportion;           /* OBJECT_LOCK */
   GstClockTime earliest_time;   /* OBJECT_LOCK */
   GstClockTime qos_frame_duration;      /* OBJECT_LOCK */
@@ -412,6 +422,10 @@ static void gst_video_decoder_init (GstVideoDecoder * dec,
     GstVideoDecoderClass * klass);
 
 static void gst_video_decoder_finalize (GObject * object);
+static void gst_video_decoder_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_video_decoder_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec);
 
 static gboolean gst_video_decoder_setcaps (GstVideoDecoder * dec,
     GstCaps * caps);
@@ -523,6 +537,8 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
     g_type_class_adjust_private_offset (klass, &private_offset);
 
   gobject_class->finalize = gst_video_decoder_finalize;
+  gobject_class->get_property = gst_video_decoder_get_property;
+  gobject_class->set_property = gst_video_decoder_set_property;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_video_decoder_change_state);
@@ -535,6 +551,21 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
   klass->sink_query = gst_video_decoder_sink_query_default;
   klass->src_query = gst_video_decoder_src_query_default;
   klass->transform_meta = gst_video_decoder_transform_meta_default;
+
+  /**
+   * GstVideoDecoder:qos:
+   *
+   * If set to %TRUE the decoder will handle QoS events received
+   * from downstream elements.
+   * This includes dropping output frames which are detected as late
+   * using the metrics reported by those events.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_QOS,
+      g_param_spec_boolean ("qos", "Quality of Service",
+          "Handle Quality-of-Service events from downstream",
+          DEFAULT_QOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -581,6 +612,9 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
   decoder->priv->output_adapter = gst_adapter_new ();
   decoder->priv->packetized = TRUE;
   decoder->priv->needs_format = FALSE;
+
+  /* properties */
+  decoder->priv->do_qos = DEFAULT_QOS;
 
   decoder->priv->min_latency = 0;
   decoder->priv->max_latency = 0;
@@ -781,6 +815,38 @@ gst_video_decoder_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_video_decoder_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVideoDecoderPrivate *priv = GST_VIDEO_DECODER (object)->priv;
+
+  switch (property_id) {
+    case PROP_QOS:
+      g_value_set_boolean (value, priv->do_qos);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_decoder_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoDecoderPrivate *priv = GST_VIDEO_DECODER (object)->priv;
+
+  switch (property_id) {
+    case PROP_QOS:
+      priv->do_qos = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
 }
 
 /* hard == FLUSH, otherwise discont */
@@ -3129,7 +3195,7 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
   }
 
   /* Is buffer too late (QoS) ? */
-  if (GST_CLOCK_TIME_IS_VALID (priv->earliest_time)
+  if (priv->do_qos && GST_CLOCK_TIME_IS_VALID (priv->earliest_time)
       && GST_CLOCK_TIME_IS_VALID (cstart)) {
     GstClockTime deadline =
         gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
