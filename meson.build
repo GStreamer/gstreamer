@@ -1,5 +1,5 @@
 project('gst-plugins-ugly', 'c',
-  version : '1.14.3',
+  version : '1.14.4',
   meson_version : '>= 0.40.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
