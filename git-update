@@ -41,7 +41,7 @@ def update_subprojects(manifest, no_interaction=False):
             # that will always fail.
             ret = git('-C', repo_dir, 'rev-parse', '--symbolic-full-name', 'HEAD')
             if ret.strip() == 'HEAD':
-                revision = git('rev-parse', 'HEAD').strip()
+                revision = git('-C', repo_dir, 'rev-parse', 'HEAD').strip()
         if not update_repo(repo_name, repo_dir, revision, no_interaction):
             return False
 
