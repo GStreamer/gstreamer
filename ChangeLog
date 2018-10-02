@@ -1,3 +1,15 @@
+=== release 1.14.4 ===
+
+2018-10-02 23:13:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.14.4
+
 === release 1.14.3 ===
 
 2018-09-16 16:37:41 +0100  Tim-Philipp Müller <tim@centricular.com>
