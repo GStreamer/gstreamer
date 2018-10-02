@@ -2812,34 +2812,14 @@ gst_video_decoder_release_frame (GstVideoDecoder * dec,
   gst_video_codec_frame_unref (frame);
 }
 
-/**
- * gst_video_decoder_drop_frame:
- * @dec: a #GstVideoDecoder
- * @frame: (transfer full): the #GstVideoCodecFrame to drop
- *
- * Similar to gst_video_decoder_finish_frame(), but drops @frame in any
- * case and posts a QoS message with the frame's details on the bus.
- * In any case, the frame is considered finished and released.
- *
- * Returns: a #GstFlowReturn, usually GST_FLOW_OK.
- */
-GstFlowReturn
-gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
+/* called with STREAM_LOCK */
+static void
+gst_video_decoder_post_qos_drop (GstVideoDecoder * dec, GstClockTime timestamp)
 {
-  GstClockTime stream_time, jitter, earliest_time, qostime, timestamp;
+  GstClockTime stream_time, jitter, earliest_time, qostime;
   GstSegment *segment;
   GstMessage *qos_msg;
   gdouble proportion;
-
-  GST_LOG_OBJECT (dec, "drop frame %p", frame);
-
-  GST_VIDEO_DECODER_STREAM_LOCK (dec);
-
-  gst_video_decoder_prepare_finish_frame (dec, frame, TRUE);
-
-  GST_DEBUG_OBJECT (dec, "dropping frame %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (frame->pts));
-
   dec->priv->dropped++;
 
   /* post QoS message */
@@ -2848,7 +2828,6 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
   earliest_time = dec->priv->earliest_time;
   GST_OBJECT_UNLOCK (dec);
 
-  timestamp = frame->pts;
   segment = &dec->output_segment;
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment = &dec->input_segment;
@@ -2863,6 +2842,32 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
   gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
       dec->priv->processed, dec->priv->dropped);
   gst_element_post_message (GST_ELEMENT_CAST (dec), qos_msg);
+}
+
+/**
+ * gst_video_decoder_drop_frame:
+ * @dec: a #GstVideoDecoder
+ * @frame: (transfer full): the #GstVideoCodecFrame to drop
+ *
+ * Similar to gst_video_decoder_finish_frame(), but drops @frame in any
+ * case and posts a QoS message with the frame's details on the bus.
+ * In any case, the frame is considered finished and released.
+ *
+ * Returns: a #GstFlowReturn, usually GST_FLOW_OK.
+ */
+GstFlowReturn
+gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
+{
+  GST_LOG_OBJECT (dec, "drop frame %p", frame);
+
+  GST_VIDEO_DECODER_STREAM_LOCK (dec);
+
+  gst_video_decoder_prepare_finish_frame (dec, frame, TRUE);
+
+  GST_DEBUG_OBJECT (dec, "dropping frame %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (frame->pts));
+
+  gst_video_decoder_post_qos_drop (dec, frame->pts);
 
   /* now free the frame */
   gst_video_decoder_release_frame (dec, frame);
@@ -3129,11 +3134,12 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     GstClockTime deadline =
         gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
     if (GST_CLOCK_TIME_IS_VALID (deadline) && deadline < priv->earliest_time) {
-      GST_DEBUG_OBJECT (decoder,
+      GST_WARNING_OBJECT (decoder,
           "Dropping frame due to QoS. start:%" GST_TIME_FORMAT " deadline:%"
           GST_TIME_FORMAT " earliest_time:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (start), GST_TIME_ARGS (deadline),
           GST_TIME_ARGS (priv->earliest_time));
+      gst_video_decoder_post_qos_drop (decoder, cstart);
       gst_buffer_unref (buf);
       priv->discont = TRUE;
       goto done;
