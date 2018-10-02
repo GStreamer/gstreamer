@@ -1,3 +1,27 @@
+=== release 1.14.4 ===
+
+2018-10-02 23:14:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.14.4
+
+2018-10-02 23:14:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2018-09-19 10:16:36 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_h265.c:
+	  libs: dec: h265: fix the macros used for IDC profile
+	  profile_idc flag in SPS only indicate the IDC profile, which may
+	  need some other flags together to get the real profile.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797160
+
 === release 1.14.3 ===
 
 2018-09-16 16:41:00 +0100  Tim-Philipp Müller <tim@centricular.com>
