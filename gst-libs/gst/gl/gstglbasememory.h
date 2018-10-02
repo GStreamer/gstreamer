@@ -29,12 +29,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * GST_GL_BASE_MEMORY_ERROR:
- *
- * Error domain for GStreamer's GL memory module. Errors in this domain will be
- * from the #GstGLBaseMemoryError enumeration
- */
 #define GST_TYPE_GL_BASE_MEMORY (gst_gl_base_memory_get_type())
 GST_GL_API
 GType gst_gl_base_memory_get_type(void);
@@ -54,6 +48,12 @@ GType gst_gl_base_memory_allocator_get_type(void);
 
 GST_GL_API
 GQuark gst_gl_base_memory_error_quark (void);
+/**
+ * GST_GL_BASE_MEMORY_ERROR:
+ *
+ * Error domain for GStreamer's GL memory module. Errors in this domain will be
+ * from the #GstGLBaseMemoryError enumeration
+ */
 #define GST_GL_BASE_MEMORY_ERROR (gst_gl_base_memory_error_quark ())
 
 /**

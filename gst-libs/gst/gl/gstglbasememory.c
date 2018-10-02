@@ -55,7 +55,7 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstGLBaseMemory, gst_gl_base_memory);
 GQuark
 gst_gl_base_memory_error_quark (void)
 {
-  return g_quark_from_static_string ("gst-gl-base-buffer-error-quark");
+  return g_quark_from_static_string ("gst-gl-base-memory-error-quark");
 }
 
 static gboolean
