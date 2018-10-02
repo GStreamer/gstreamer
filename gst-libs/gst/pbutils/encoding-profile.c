@@ -774,7 +774,7 @@ void
 gst_encoding_profile_set_restriction (GstEncodingProfile * profile,
     GstCaps * restriction)
 {
-  g_return_if_fail (GST_IS_CAPS (restriction));
+  g_return_if_fail (restriction == NULL || GST_IS_CAPS (restriction));
   g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
 
   if (profile->restriction)
