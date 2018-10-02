@@ -52,7 +52,7 @@ _init_debug (void)
 GQuark
 gst_glsl_error_quark (void)
 {
-  return g_quark_from_static_string ("gst-glsl-error");
+  return g_quark_from_static_string ("gst-glsl-error-quark");
 }
 
 struct glsl_version_string
