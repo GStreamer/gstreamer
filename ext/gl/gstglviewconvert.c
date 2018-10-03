@@ -154,7 +154,7 @@ gst_gl_view_convert_element_class_init (GstGLViewConvertElementClass * klass)
   g_object_class_install_property (gobject_class, PROP_OUTPUT_DOWNMIX_MODE,
       g_param_spec_enum ("downmix-mode", "Mode for mono downmixed output",
           "Output anaglyph type to generate when downmixing to mono",
-          GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_DOWNMIX,
+          GST_TYPE_GL_STEREO_DOWNMIX, DEFAULT_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

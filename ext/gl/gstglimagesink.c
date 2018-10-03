@@ -283,7 +283,7 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
       g_param_spec_enum ("output-multiview-downmix-mode",
           "Mode for mono downmixed output",
           "Output anaglyph type to generate when downmixing to mono",
-          GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_MULTIVIEW_DOWNMIX,
+          GST_TYPE_GL_STEREO_DOWNMIX, DEFAULT_MULTIVIEW_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_video_overlay_install_properties (gobject_class, PROP_BIN_LAST);
@@ -694,7 +694,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       g_param_spec_enum ("output-multiview-downmix-mode",
           "Mode for mono downmixed output",
           "Output anaglyph type to generate when downmixing to mono",
-          GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_MULTIVIEW_DOWNMIX,
+          GST_TYPE_GL_STEREO_DOWNMIX, DEFAULT_MULTIVIEW_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_video_overlay_install_properties (gobject_class, PROP_LAST);

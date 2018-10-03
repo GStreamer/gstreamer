@@ -77,7 +77,7 @@ gst_mview_widget_class_init (GstMViewWidgetClass * klass)
       g_param_spec_enum ("downmix-mode",
           "Mode for mono downmixed output",
           "Output anaglyph type to generate when downmixing to mono",
-          GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_DOWNMIX,
+          GST_TYPE_GL_STEREO_DOWNMIX, DEFAULT_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -159,8 +159,7 @@ sync_downmix (GstMViewWidget * mv)
 {
   mv->synching = TRUE;
   gtk_combo_box_set_active_id (GTK_COMBO_BOX (mv->downmix_combo),
-      enum_value_to_nick (GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE,
-          mv->downmix_mode));
+      enum_value_to_nick (GST_TYPE_GL_STEREO_DOWNMIX, mv->downmix_mode));
   mv->synching = FALSE;
 }
 
@@ -235,8 +234,7 @@ gst_mview_widget_constructed (GObject * o)
   gtk_grid_attach (g, w, 2, 1, 1, 1);
 
   if (mv->is_output) {
-    mv->downmix_combo = w =
-        combo_box_from_enum (GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE);
+    mv->downmix_combo = w = combo_box_from_enum (GST_TYPE_GL_STEREO_DOWNMIX);
     gtk_grid_attach (g, w, 1, 2, 3, 1);
     sync_downmix (mv);
     g_signal_connect (G_OBJECT (w), "changed",

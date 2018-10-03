@@ -4533,7 +4533,7 @@ gst_gl_view_convert_perform
 gst_gl_view_convert_reset
 gst_gl_view_convert_set_context
 <SUBSECTION Standard>
-GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE
+GST_TYPE_GL_STEREO_DOWNMIX
 gst_gl_stereo_downmix_mode_get_type
 GST_IS_GL_VIEW_CONVERT
 GST_IS_GL_VIEW_CONVERT_CLASS
