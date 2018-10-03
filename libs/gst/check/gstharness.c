@@ -1038,7 +1038,10 @@ gst_harness_teardown (GstHarness * h)
     gst_harness_teardown (h->src_harness);
   }
 
+  HARNESS_LOCK (h);
   gst_object_replace ((GstObject **) & priv->sink_forward_pad, NULL);
+  HARNESS_UNLOCK (h);
+
   if (h->sink_harness) {
     gst_harness_teardown (h->sink_harness);
   }
@@ -2413,8 +2416,8 @@ gst_harness_src_push_event (GstHarness * h)
 static gboolean
 forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
 {
-  GstHarness *h = user_data;
-  return gst_pad_push_event (h->priv->sink_forward_pad, gst_event_ref (*ev));
+  GstPad *fwdpad = user_data;
+  return gst_pad_push_event (fwdpad, gst_event_ref (*ev));
 }
 
 /**
@@ -2446,8 +2449,15 @@ gst_harness_add_sink_harness (GstHarness * h, GstHarness * sink_harness)
   }
   h->sink_harness = sink_harness;
   gst_harness_set_forward_pad (h, h->sink_harness->srcpad);
-  if (priv->forwarding && h->sinkpad)
-    gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, h);
+  HARNESS_LOCK (h);
+  if (priv->forwarding && h->sinkpad && h->priv->sink_forward_pad) {
+    GstPad *fwdpad = gst_object_ref (h->priv->sink_forward_pad);
+    HARNESS_UNLOCK (h);
+    gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, fwdpad);
+    gst_object_unref (fwdpad);
+  } else {
+    HARNESS_UNLOCK (h);
+  }
   gst_harness_set_forwarding (h->sink_harness, priv->forwarding);
 }
 
