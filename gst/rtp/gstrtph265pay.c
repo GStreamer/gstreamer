@@ -1134,16 +1134,13 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     dts = GST_BUFFER_DTS (buffer);
     GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   } else {
+    if (buffer)
+      gst_adapter_push (rtph265pay->adapter, buffer);
+
+    /* We want to use the first TS used to construct the following NAL */
     dts = gst_adapter_prev_dts (rtph265pay->adapter, NULL);
     pts = gst_adapter_prev_pts (rtph265pay->adapter, NULL);
-    if (buffer) {
-      if (!GST_CLOCK_TIME_IS_VALID (dts))
-        dts = GST_BUFFER_DTS (buffer);
-      if (!GST_CLOCK_TIME_IS_VALID (pts))
-        pts = GST_BUFFER_PTS (buffer);
 
-      gst_adapter_push (rtph265pay->adapter, buffer);
-    }
     size = gst_adapter_available (rtph265pay->adapter);
     /* Nothing to do here if the adapter is empty, e.g. on EOS */
     if (size == 0)
