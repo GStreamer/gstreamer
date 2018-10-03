@@ -35,10 +35,6 @@ G_BEGIN_DECLS
 #define GST_IS_GL_VIEW_CONVERT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_VIEW_CONVERT))
 #define GST_GL_VIEW_CONVERT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_VIEW_CONVERT,GstGLViewConvertClass))
 
-#define GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE gst_gl_stereo_downmix_mode_get_type()
-GST_GL_API
-GType gst_gl_stereo_downmix_mode_get_type (void);
-
 /**
  * GstGLStereoDownmix:
  * @GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS: Dubois optimised Green-Magenta anaglyph
@@ -47,12 +43,15 @@ GType gst_gl_stereo_downmix_mode_get_type (void);
  *
  * Output anaglyph type to generate when downmixing to mono
  */
-enum _GstGLStereoDownmix {
+typedef enum _GstGLStereoDownmix {
   GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS,
   GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS,
   GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS,
-};
-typedef enum _GstGLStereoDownmix GstGLStereoDownmix;
+} GstGLStereoDownmix;
+
+#ifndef GST_DISABLE_DEPRECATED
+#define GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE GST_TYPE_GL_STEREO_DOWNMIX
+#endif
 
 /**
  * GstGLViewConvert:

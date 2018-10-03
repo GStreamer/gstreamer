@@ -111,30 +111,6 @@ static void gst_gl_view_convert_finalize (GObject * object);
 static void _do_view_convert (GstGLContext * context,
     GstGLViewConvert * viewconvert);
 
-GType
-gst_gl_stereo_downmix_mode_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
-      {GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS,
-            "GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS",
-          "green-magenta-dubois"},
-      {GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS,
-            "GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS",
-          "red-cyan-dubois"},
-      {GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS,
-            "GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS",
-          "amber-blue-dubois"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_enum_register_static ("GstGLStereoDownmix", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
 /* *INDENT-OFF* */
 /* These match the order and number of DOWNMIX_ANAGLYPH_* modes */
 static GLfloat downmix_matrices[][2][9] = {
@@ -286,7 +262,7 @@ gst_gl_view_convert_class_init (GstGLViewConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_OUTPUT_DOWNMIX_MODE,
       g_param_spec_enum ("downmix-mode", "Mode for mono downmixed output",
           "Output anaglyph type to generate when downmixing to mono",
-          GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE, DEFAULT_DOWNMIX,
+          GST_TYPE_GL_STEREO_DOWNMIX, DEFAULT_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

@@ -23,7 +23,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gst/video/video-info.h>
-#include <gst/gl/gstglviewconvert.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 

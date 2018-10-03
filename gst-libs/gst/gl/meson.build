@@ -875,8 +875,19 @@ if build_gstgl
     install_dir : get_option('libdir') + '/gstreamer-1.0/include/gst/gl',
     configuration : glconf)
 
+  gl_enums = gnome.mkenums_simple('gl-enumtypes',
+    sources : gir_gl_headers,
+    body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
+    header_prefix : '#include <gst/gl/gl-prelude.h>',
+    decorator : 'GST_GL_API',
+    install_header: true,
+    install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/gl'))
+  gl_enumtypes_c = gl_enums[0]
+  gl_enumtypes_h = gl_enums[1]
+  gen_sources = [gl_enumtypes_h]
+
   gstgl = library('gstgl-' + api_version,
-    gl_sources,
+    gl_sources, gl_enumtypes_c, gl_enumtypes_h,
     c_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
     objc_args : gst_plugins_base_args + gl_cpp_args + gl_objc_args + ['-DBUILDING_GST_GL'],
     include_directories : [configinc, libsinc, gl_includes],
@@ -886,10 +897,9 @@ if build_gstgl
     install : true,
     dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
                     gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps])
-  gen_sources = []
   if build_gir
     gl_gir = gnome.generate_gir(gstgl,
-      sources : gl_sources + gir_gl_headers + gl_x11_headers + gl_wayland_headers + gl_win32_headers + gl_cocoa_headers + gl_egl_headers,
+      sources : gl_sources + [gl_enumtypes_h] + [gl_enumtypes_c] + gir_gl_headers + gl_x11_headers + gl_wayland_headers + gl_win32_headers + gl_cocoa_headers + gl_egl_headers,
       namespace : 'GstGL',
       nsversion : api_version,
       identifier_prefix : 'Gst',
