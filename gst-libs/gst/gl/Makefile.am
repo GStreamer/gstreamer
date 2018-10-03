@@ -179,6 +179,7 @@ built_sources = gl-enumtypes.c
 built_headers = gl-enumtypes.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
+nodist_libgstgl_@GST_API_VERSION@include_HEADERS = $(built_headers)
 nodist_libgstgl_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
