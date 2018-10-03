@@ -640,9 +640,6 @@ gst_av1_enc_process (GstAV1Enc * encoder)
 
       if ((pkt->data.frame.flags & AOM_FRAME_IS_DROPPABLE) != 0)
         GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DROPPABLE);
-      if ((pkt->data.frame.flags & AOM_FRAME_IS_INVISIBLE) != 0)
-        GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DECODE_ONLY);
-
 
       ret = gst_video_encoder_finish_frame (video_encoder, frame);
       if (ret != GST_FLOW_OK)
