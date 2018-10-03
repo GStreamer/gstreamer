@@ -49,7 +49,8 @@ static guint32 gst_gl_gbm_find_crtc_id_for_encoder (GstGLDisplayGBM *
 static guint32 gst_gl_gbm_find_crtc_id_for_connector (GstGLDisplayGBM *
     display_gbm);
 
-static gboolean gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm);
+static gboolean gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm,
+    const gchar * drm_connector_name);
 static void gst_gl_display_gbm_shutdown_drm (GstGLDisplayGBM * display_gbm);
 
 static gboolean gst_gl_display_gbm_setup_gbm (GstGLDisplayGBM * display_gbm);
@@ -140,7 +141,8 @@ gst_gl_gbm_find_crtc_id_for_connector (GstGLDisplayGBM * display_gbm)
 
 
 static gboolean
-gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
+gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm, const gchar *
+    drm_connector_name)
 {
   int i;
 
@@ -168,8 +170,12 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
       drmModeConnector *candidate_connector =
           drmModeGetConnector (display_gbm->drm_fd,
           display_gbm->drm_mode_resources->connectors[i]);
-      const gchar *candidate_name =
-          gst_gl_gbm_get_name_for_drm_connector (candidate_connector);
+      gchar *candidate_name;
+
+      candidate_name = g_strdup_printf ("%s-%i",
+          gst_gl_gbm_get_name_for_drm_connector (candidate_connector),
+          candidate_connector->connector_type_id);
+
       GST_DEBUG ("Found DRM connector #%d \"%s\" with ID %" G_GUINT32_FORMAT, i,
           candidate_name, candidate_connector->connector_id);
 
@@ -179,14 +185,34 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
        * connector. Just loop instead. */
       if (connected_connector != NULL) {
         drmModeFreeConnector (candidate_connector);
+        g_free (candidate_name);
         continue;
       }
 
+      if (drm_connector_name != NULL) {
+        if (g_ascii_strcasecmp (drm_connector_name, candidate_name) != 0) {
+          drmModeFreeConnector (candidate_connector);
+          g_free (candidate_name);
+          continue;
+        }
+      }
+
       if (candidate_connector->connection == DRM_MODE_CONNECTED) {
-        GST_DEBUG ("Picking DRM connector #%d because it is connected", i);
+        if (drm_connector_name != NULL)
+          GST_DEBUG ("Picking DRM connector #%d because it is connected and "
+              "has a matching name \"%s\"", i, candidate_name);
+        else
+          GST_DEBUG ("Picking DRM connector #%d because it is connected", i);
         connected_connector = candidate_connector;
-      } else
+        g_free (candidate_name);
+        break;
+      } else {
+        if (drm_connector_name != NULL)
+          GST_WARNING ("DRM connector #%d has a matching name \"%s\" but is "
+              "not connected; not picking it", i, candidate_name);
         drmModeFreeConnector (candidate_connector);
+        g_free (candidate_name);
+      }
     }
 
     if (connected_connector == NULL) {
@@ -389,10 +415,12 @@ gst_gl_display_gbm_new (void)
   int drm_fd = -1;
   GstGLDisplayGBM *display;
   const gchar *drm_node_name;
+  const gchar *drm_connector_name;
 
   _init_debug ();
 
   drm_node_name = g_getenv ("GST_GL_GBM_DRM_DEVICE");
+  drm_connector_name = g_getenv ("GST_GL_GBM_DRM_CONNECTOR");
 
   if (drm_node_name != NULL) {
     GST_DEBUG ("attempting to open device %s (specified by the "
@@ -416,7 +444,12 @@ gst_gl_display_gbm_new (void)
   display = g_object_new (GST_TYPE_GL_DISPLAY_GBM, NULL);
   display->drm_fd = drm_fd;
 
-  if (!gst_gl_display_gbm_setup_drm (display)) {
+  if (drm_connector_name != NULL) {
+    GST_DEBUG ("GST_GL_GBM_DRM_CONNECTOR variable set to value \"%s\"; "
+        "will use this name to match connector(s) against", drm_connector_name);
+  }
+
+  if (!gst_gl_display_gbm_setup_drm (display, drm_connector_name)) {
     GST_WARNING ("Failed to initialize DRM");
   }
 
