@@ -897,6 +897,7 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
     gboolean send_ps;
     GstRTPBuffer rtp = { NULL };
     guint size;
+    gboolean marker;
 
     paybuf = g_ptr_array_index (paybufs, i);
 
@@ -905,6 +906,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
       gst_buffer_unref (paybuf);
       continue;
     }
+
+    marker = GST_BUFFER_FLAG_IS_SET (paybuf, GST_BUFFER_FLAG_MARKER);
 
     size = gst_buffer_get_size (paybuf);
     gst_buffer_extract (paybuf, 0, nalHeader, 2);
@@ -1000,12 +1003,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
 
       gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-      /* only set the marker bit on packets containing access units */
-      if (i == paybufs->len - 1
-          && rtph265pay->alignment == GST_H265_ALIGNMENT_AU
-          && IS_ACCESS_UNIT (nalType)) {
-        gst_rtp_buffer_set_marker (&rtp, 1);
-      }
+      /* Mark the end of a frame */
+      gst_rtp_buffer_set_marker (&rtp, marker);
 
       /* timestamp the outbuffer */
       GST_BUFFER_PTS (outbuf) = pts;
@@ -1069,12 +1068,9 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
         payload[0] = (nalHeader[0] & 0x81) | (49 << 1);
         payload[1] = nalHeader[1];
 
-        /* set the marker bit on the last packet of an access unit */
-        if (IS_ACCESS_UNIT (nalType)) {
-          gst_rtp_buffer_set_marker (&rtp,
-              end && i == paybufs->len - 1
-              && rtph265pay->alignment == GST_H265_ALIGNMENT_AU);
-        }
+        /* If it's the last fragment and the end of this au, mark the end of
+         * slice */
+        gst_rtp_buffer_set_marker (&rtp, marker);
 
         /* FU Header */
         payload[2] = (start << 7) | (end << 6) | (nalType & 0x3f);
@@ -1197,6 +1193,16 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
           nal_len);
       g_ptr_array_add (paybufs, paybuf);
 
+      /* If we're at the end of the buffer, then we're at the end of the
+       * access unit
+       */
+      GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
+      if (size - nal_len <= nal_length_size) {
+        if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU ||
+            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+          GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
+      }
+
       data += nal_len;
       offset += nal_len;
       size -= nal_len;
@@ -1292,14 +1298,19 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
         for (; size > 1 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
-      /* FIXME: We need to wait until the next packet or EOS to
-       * actually payload the NAL so we can know if the current NAL is
-       * the last one of an access unit or not if we are in bytestream mode
-       */
-
       paybuf = gst_adapter_take_buffer (rtph265pay->adapter, size);
       g_assert (paybuf);
       g_ptr_array_add (paybufs, paybuf);
+
+      /* If it's the last nal unit we have in non-bytestream mode, we can
+       * assume it's the end of an access-unit */
+      GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
+      if (i == nal_queue->len - 1) {
+        if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU ||
+            buffer == NULL ||
+            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+          GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
+      }
 
       /* move to next NAL packet */
       /* Skips the trailing zeros */
