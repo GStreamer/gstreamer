@@ -160,32 +160,41 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
    * finally sent to, and typically connects to some form of display, like an
    * HDMI TV, an LVDS panel etc. */
   {
-    drmModeConnector *connector = NULL;
+    drmModeConnector *connected_connector = NULL;
 
     GST_DEBUG ("Checking %d DRM connector(s)",
         display_gbm->drm_mode_resources->count_connectors);
     for (i = 0; i < display_gbm->drm_mode_resources->count_connectors; ++i) {
-      connector = drmModeGetConnector (display_gbm->drm_fd,
+      drmModeConnector *candidate_connector =
+          drmModeGetConnector (display_gbm->drm_fd,
           display_gbm->drm_mode_resources->connectors[i]);
+      const gchar *candidate_name =
+          gst_gl_gbm_get_name_for_drm_connector (candidate_connector);
       GST_DEBUG ("Found DRM connector #%d \"%s\" with ID %" G_GUINT32_FORMAT, i,
-          gst_gl_gbm_get_name_for_drm_connector (connector),
-          connector->connector_id);
+          candidate_name, candidate_connector->connector_id);
 
-      if (connector->connection == DRM_MODE_CONNECTED) {
-        GST_DEBUG ("DRM connector #%d is connected", i);
-        break;
+      /* If we already picked a connector, and connected_connector is therefore
+       * non-NULL, then are just printing information about the other connectors
+       * for logging purposes by now, so don't actually do anything with this
+       * connector. Just loop instead. */
+      if (connected_connector != NULL) {
+        drmModeFreeConnector (candidate_connector);
+        continue;
       }
 
-      drmModeFreeConnector (connector);
-      connector = NULL;
+      if (candidate_connector->connection == DRM_MODE_CONNECTED) {
+        GST_DEBUG ("Picking DRM connector #%d because it is connected", i);
+        connected_connector = candidate_connector;
+      } else
+        drmModeFreeConnector (candidate_connector);
     }
 
-    if (connector == NULL) {
+    if (connected_connector == NULL) {
       GST_ERROR ("No connected DRM connector found");
       goto cleanup;
     }
 
-    display_gbm->drm_mode_connector = connector;
+    display_gbm->drm_mode_connector = connected_connector;
   }
 
   /* Check out what modes are supported by the chosen connector,
@@ -194,6 +203,7 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
   {
     int selected_mode_index = -1;
     int selected_mode_area = -1;
+    gboolean preferred_mode_found = FALSE;
 
     GST_DEBUG ("Checking %d DRM mode(s) from selected connector",
         display_gbm->drm_mode_connector->count_modes);
@@ -215,14 +225,15 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
           current_mode->vscan, current_mode->vrefresh,
           (current_mode->type & DRM_MODE_TYPE_PREFERRED) ? TRUE : FALSE);
 
-      if ((current_mode->type & DRM_MODE_TYPE_PREFERRED) ||
-          (current_mode_area > selected_mode_area)) {
+      if (!preferred_mode_found
+          && ((current_mode->type & DRM_MODE_TYPE_PREFERRED)
+              || (current_mode_area > selected_mode_area))) {
         display_gbm->drm_mode_info = current_mode;
         selected_mode_area = current_mode_area;
         selected_mode_index = i;
 
         if (current_mode->type & DRM_MODE_TYPE_PREFERRED)
-          break;
+          preferred_mode_found = TRUE;
       }
     }
 
@@ -231,7 +242,8 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
       goto cleanup;
     }
 
-    GST_DEBUG ("Selected DRM mode #%d", selected_mode_index);
+    GST_DEBUG ("Selected DRM mode #%d (is preferred: %d)", selected_mode_index,
+        preferred_mode_found);
   }
 
   /* Find an encoder that is attached to the chosen connector. Also find the
@@ -245,34 +257,36 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm)
    * used by the DRM to refer to the CRTC universally. (We need the CRTC
    * information for page flipping and DRM scanout framebuffer configuration.) */
   {
-    drmModeEncoder *encoder = NULL;
+    drmModeEncoder *selected_encoder = NULL;
 
     GST_DEBUG ("Checking %d DRM encoder(s)",
         display_gbm->drm_mode_resources->count_encoders);
     for (i = 0; i < display_gbm->drm_mode_resources->count_encoders; ++i) {
-      encoder = drmModeGetEncoder (display_gbm->drm_fd,
+      drmModeEncoder *candidate_encoder =
+          drmModeGetEncoder (display_gbm->drm_fd,
           display_gbm->drm_mode_resources->encoders[i]);
 
       GST_DEBUG ("Found DRM encoder #%d \"%s\"", i,
-          gst_gl_gbm_get_name_for_drm_encoder (encoder));
+          gst_gl_gbm_get_name_for_drm_encoder (candidate_encoder));
 
-      if (encoder->encoder_id == display_gbm->drm_mode_connector->encoder_id) {
+      if ((selected_encoder == NULL) &&
+          (candidate_encoder->encoder_id ==
+              display_gbm->drm_mode_connector->encoder_id)) {
+        selected_encoder = candidate_encoder;
         GST_DEBUG ("DRM encoder #%d corresponds to selected DRM connector "
             "-> selected", i);
-        break;
-      }
-      drmModeFreeEncoder (encoder);
-      encoder = NULL;
+      } else
+        drmModeFreeEncoder (candidate_encoder);
     }
 
-    if (encoder == NULL) {
+    if (selected_encoder == NULL) {
       GST_DEBUG ("No encoder found; searching for CRTC ID in the connector");
       display_gbm->crtc_id =
           gst_gl_gbm_find_crtc_id_for_connector (display_gbm);
     } else {
       GST_DEBUG ("Using CRTC ID from selected encoder");
-      display_gbm->crtc_id = encoder->crtc_id;
-      drmModeFreeEncoder (encoder);
+      display_gbm->crtc_id = selected_encoder->crtc_id;
+      drmModeFreeEncoder (selected_encoder);
     }
 
     if (display_gbm->crtc_id == INVALID_CRTC) {

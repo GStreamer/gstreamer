@@ -26,7 +26,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_gl_gbm_debug);
 #define GST_CAT_DEFAULT gst_gl_gbm_debug
 
-
 const gchar *
 gst_gl_gbm_get_name_for_drm_connector (drmModeConnector * connector)
 {
@@ -54,7 +53,7 @@ gst_gl_gbm_get_name_for_drm_connector (drmModeConnector * connector)
     case DRM_MODE_CONNECTOR_9PinDIN:
       return "9-Pin DIN";
     case DRM_MODE_CONNECTOR_DisplayPort:
-      return "DisplayPort";
+      return "DP";
     case DRM_MODE_CONNECTOR_HDMIA:
       return "HDMI-A";
     case DRM_MODE_CONNECTOR_HDMIB:
@@ -67,6 +66,8 @@ gst_gl_gbm_get_name_for_drm_connector (drmModeConnector * connector)
       return "Virtual";
     case DRM_MODE_CONNECTOR_DSI:
       return "DSI";
+    case DRM_MODE_CONNECTOR_DPI:
+      return "DPI";
     default:
       return "<unknown>";
   }
