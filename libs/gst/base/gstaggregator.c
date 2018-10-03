@@ -2373,6 +2373,12 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   /**
    * GstAggregator:min-upstream-latency:
    *
+   * Force minimum upstream latency (in nanoseconds). When sources with a
+   * higher latency are expected to be plugged in dynamically after the
+   * aggregator has started playing, this allows overriding the minimum
+   * latency reported by the initial source(s). This is only taken into
+   * account when larger than the actually reported minimum latency.
+   *
    * Since: 1.16
    */
   g_object_class_install_property (gobject_class, PROP_MIN_UPSTREAM_LATENCY,
@@ -2380,8 +2386,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
           "When sources with a higher latency are expected to be plugged "
           "in dynamically after the aggregator has started playing, "
           "this allows overriding the minimum latency reported by the "
-          "initial source(s). This is only taken into account when superior "
-          "to the reported minimum latency.",
+          "initial source(s). This is only taken into account when larger "
+          "than the actually reported minimum latency. (nanoseconds)",
           0, G_MAXUINT64,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
