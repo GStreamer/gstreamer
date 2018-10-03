@@ -58,9 +58,9 @@ static void print_pad_templates_information (GstElementFactory * factory) {
       g_print ("    Availability: Always\n");
     else if (padtemplate->presence == GST_PAD_SOMETIMES)
       g_print ("    Availability: Sometimes\n");
-    else if (padtemplate->presence == GST_PAD_REQUEST) {
+    else if (padtemplate->presence == GST_PAD_REQUEST)
       g_print ("    Availability: On request\n");
-    } else
+    else
       g_print ("    Availability: UNKNOWN!!!\n");
 
     if (padtemplate->static_caps.string) {
