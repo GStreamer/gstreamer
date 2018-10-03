@@ -2339,7 +2339,7 @@ discard:
  * No ownership is taken of @nal */
 static GstFlowReturn
 gst_h265_parse_push_codec_buffer (GstH265Parse * h265parse, GstBuffer * nal,
-    GstClockTime ts)
+    GstBuffer * buffer)
 {
   GstMapInfo map;
 
@@ -2348,7 +2348,13 @@ gst_h265_parse_push_codec_buffer (GstH265Parse * h265parse, GstBuffer * nal,
       map.data, map.size);
   gst_buffer_unmap (nal, &map);
 
-  GST_BUFFER_TIMESTAMP (nal) = ts;
+  if (h265parse->discont) {
+    GST_BUFFER_FLAG_SET (nal, GST_BUFFER_FLAG_DISCONT);
+    h265parse->discont = FALSE;
+  }
+
+  GST_BUFFER_PTS (nal) = GST_BUFFER_PTS (buffer);
+  GST_BUFFER_DTS (nal) = GST_BUFFER_DTS (buffer);
   GST_BUFFER_DURATION (nal) = 0;
 
   return gst_pad_push (GST_BASE_PARSE_SRC_PAD (h265parse), nal);
@@ -2462,7 +2468,6 @@ gst_h265_parse_handle_vps_sps_pps_nals (GstH265Parse * h265parse,
   GstBuffer *codec_nal;
   gint i;
   gboolean send_done = FALSE;
-  GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   if (h265parse->have_vps_in_frame && h265parse->have_sps_in_frame
       && h265parse->have_pps_in_frame) {
@@ -2476,21 +2481,21 @@ gst_h265_parse_handle_vps_sps_pps_nals (GstH265Parse * h265parse,
     for (i = 0; i < GST_H265_MAX_VPS_COUNT; i++) {
       if ((codec_nal = h265parse->vps_nals[i])) {
         GST_DEBUG_OBJECT (h265parse, "sending VPS nal");
-        gst_h265_parse_push_codec_buffer (h265parse, codec_nal, timestamp);
+        gst_h265_parse_push_codec_buffer (h265parse, codec_nal, buffer);
         send_done = TRUE;
       }
     }
     for (i = 0; i < GST_H265_MAX_SPS_COUNT; i++) {
       if ((codec_nal = h265parse->sps_nals[i])) {
         GST_DEBUG_OBJECT (h265parse, "sending SPS nal");
-        gst_h265_parse_push_codec_buffer (h265parse, codec_nal, timestamp);
+        gst_h265_parse_push_codec_buffer (h265parse, codec_nal, buffer);
         send_done = TRUE;
       }
     }
     for (i = 0; i < GST_H265_MAX_PPS_COUNT; i++) {
       if ((codec_nal = h265parse->pps_nals[i])) {
         GST_DEBUG_OBJECT (h265parse, "sending PPS nal");
-        gst_h265_parse_push_codec_buffer (h265parse, codec_nal, timestamp);
+        gst_h265_parse_push_codec_buffer (h265parse, codec_nal, buffer);
         send_done = TRUE;
       }
     }
