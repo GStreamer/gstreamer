@@ -2065,7 +2065,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       gint fps_num = h265parse->fps_num;
       gint fps_den = h265parse->fps_den;
       gint width, height;
-      GstClockTime latency;
+      GstClockTime latency = 0;
 
       caps = gst_caps_copy (sink_caps);
 
@@ -2088,7 +2088,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
         gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
 
       /* but not necessarily or reliably this */
-      if (fps_num > 0 && fps_den > 0) {
+      if (fps_den > 0) {
         GstStructure *s2;
         GstClockTime val;
 
@@ -2102,7 +2102,15 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             fps_num, fps_den, 0, 0);
         val = sps->profile_tier_level.interlaced_source_flag ? GST_SECOND / 2 :
             GST_SECOND;
-        latency = gst_util_uint64_scale (val, fps_den, fps_num);
+
+        /* If we know the frame duration, and if we are not in one of the zero
+         * latency pattern, add one frame of latency */
+        if (fps_num > 0 &&
+            h265parse->in_align != GST_H265_PARSE_ALIGN_AU &&
+            !(h265parse->in_align == GST_H265_PARSE_ALIGN_NAL &&
+                h265parse->align == GST_H265_PARSE_ALIGN_NAL))
+          latency = gst_util_uint64_scale (val, fps_den, fps_num);
+
         gst_base_parse_set_latency (GST_BASE_PARSE (h265parse), latency,
             latency);
       }
