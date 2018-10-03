@@ -100,6 +100,7 @@ struct _GstH265Parse
   GstH265TimeCode time_code;
 
   gboolean discont;
+  gboolean marker;
 
   /* frame parsing */
   gint idr_pos, sei_pos;
