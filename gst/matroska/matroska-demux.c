@@ -376,10 +376,12 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 
   if (gst_matroska_decode_data (context->encodings, &data, &size,
           GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME, FALSE)) {
-    gst_buffer_unmap (out_buf, &map);
     if (data != map.data) {
+      gst_buffer_unmap (out_buf, &map);
       gst_buffer_unref (out_buf);
       out_buf = gst_buffer_new_wrapped (data, size);
+    } else {
+      gst_buffer_unmap (out_buf, &map);
     }
   } else {
     GST_DEBUG ("decode data failed");
@@ -399,11 +401,12 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 
     if (gst_matroska_parse_protection_meta (&data, &size, info_protect,
             &encrypted)) {
-      gst_buffer_unmap (out_buf, &map);
       if (data != map.data) {
-        GstBuffer *tmp_buf = out_buf;
-        out_buf =
-            gst_buffer_copy_region (tmp_buf, GST_BUFFER_COPY_ALL,
+        GstBuffer *tmp_buf;
+
+        gst_buffer_unmap (out_buf, &map);
+        tmp_buf = out_buf;
+        out_buf = gst_buffer_copy_region (tmp_buf, GST_BUFFER_COPY_ALL,
             gst_buffer_get_size (tmp_buf) - size, size);
         gst_buffer_unref (tmp_buf);
         if (encrypted)
@@ -411,6 +414,7 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
         else
           gst_structure_free (info_protect);
       } else {
+        gst_buffer_unmap (out_buf, &map);
         gst_structure_free (info_protect);
       }
     } else {
@@ -2705,10 +2709,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * would be determined again when parsing, but anyway ... */
   seeksegment.duration = demux->common.segment.duration;
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
-  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
-  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  after = !!(flags & GST_SEEK_FLAG_SNAP_AFTER);
+  before = !!(flags & GST_SEEK_FLAG_SNAP_BEFORE);
 
   /* always do full update if flushing,
    * otherwise problems might arise downstream with missing keyframes etc */

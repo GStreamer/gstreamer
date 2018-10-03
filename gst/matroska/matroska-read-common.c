@@ -2043,6 +2043,8 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     const gchar *matroska_tagname;
     const gchar *gstreamer_tagname;
   }
+
+  /* *INDENT-OFF* */
   tag_conv[] = {
     {
       /* The following list has the _same_ order as the one in Matroska spec. Please, don't mess it up. */
@@ -2177,11 +2179,14 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     GST_MATROSKA_TAG_ID_LICENSE, GST_TAG_LICENSE}, {    /* The license applied to the content (like Creative Commons variants). */
     GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}
   };
+  /* *INDENT-ON* */
   static const struct
   {
     const gchar *matroska_tagname;
     const gchar *gstreamer_tagname;
   }
+
+  /* *INDENT-OFF* */
   child_tag_conv[] = {
     {
     "TITLE/SORT_WITH=", GST_TAG_TITLE_SORTNAME}, {
@@ -2198,6 +2203,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     "LICENSE/URL=", GST_TAG_LICENSE_URI}, {
     "LICENSE/URL=", GST_TAG_LICENSE_URI}
   };
+  /* *INDENT-ON* */
   GstFlowReturn ret;
   guint32 id;
   gchar *value = NULL;
