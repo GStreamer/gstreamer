@@ -49,3 +49,6 @@ pass=qual
 cabac=true
 dct8x8=true
 bframes=2
+
+[Zero Latency]
+tune=zerolatency
