@@ -43,7 +43,7 @@ G_BEGIN_DECLS
  *
  * Output anaglyph type to generate when downmixing to mono
  */
-typedef enum _GstGLStereoDownmix {
+typedef enum {
   GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS,
   GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS,
   GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS,
