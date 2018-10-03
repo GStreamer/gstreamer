@@ -50,7 +50,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.16
  */
-#define GST_PROTECTION_UNSPECIFIED_SYSTEM_ID "unspecified.gstreamer.org"
+#define GST_PROTECTION_UNSPECIFIED_SYSTEM_ID "unspecified-system-id"
 
 typedef struct _GstProtectionMeta GstProtectionMeta;
 /**
