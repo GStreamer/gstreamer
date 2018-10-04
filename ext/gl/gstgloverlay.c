@@ -530,11 +530,7 @@ gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
   gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", overlay->alpha);
 
   gl->Enable (GL_BLEND);
-  if (gl->BlendFuncSeparate)
-    gl->BlendFuncSeparate (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
-        GL_ONE_MINUS_SRC_ALPHA);
-  else
-    gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   gl->BlendEquation (GL_FUNC_ADD);
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
