@@ -179,6 +179,8 @@ built_sources = gl-enumtypes.c
 built_headers = gl-enumtypes.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
+CLEANFILES = $(BUILT_SOURCES)
+
 nodist_libgstgl_@GST_API_VERSION@include_HEADERS = $(built_headers)
 nodist_libgstgl_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
@@ -243,5 +245,5 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
-CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
