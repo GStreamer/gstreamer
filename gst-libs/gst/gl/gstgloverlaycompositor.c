@@ -354,7 +354,6 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
 
   flags = gst_video_overlay_rectangle_get_flags (overlay->rectangle);
 
-  flags = 0;
   if (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA) {
     alpha_flags = GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
   } else if (!overlay->context->gl_vtable->BlendFuncSeparate) {
@@ -717,7 +716,6 @@ gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
       GstVideoOverlayFormatFlags flags;
 
       flags = gst_video_overlay_rectangle_get_flags (overlay->rectangle);
-      flags = 0;
 
       if (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA
           || !gl->BlendFuncSeparate) {
