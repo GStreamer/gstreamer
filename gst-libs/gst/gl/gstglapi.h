@@ -38,7 +38,7 @@ G_BEGIN_DECLS
  * @GST_GL_API_GLES2: OpenGL ES 2.x and 3.x
  * @GST_GL_API_ANY: Any OpenGL API
  */
-typedef enum {
+typedef enum /*< underscore_name=gst_gl_api >*/ {
   GST_GL_API_NONE = 0,
   GST_GL_API_OPENGL = (1 << 0),
   GST_GL_API_OPENGL3 = (1 << 1),
