@@ -349,10 +349,26 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
   GstVideoMeta *vmeta;
   GstVideoFrame *comp_frame;
   GstVideoFrame gl_frame;
+  GstVideoOverlayFormatFlags flags;
+  GstVideoOverlayFormatFlags alpha_flags;
+
+  flags = gst_video_overlay_rectangle_get_flags (overlay->rectangle);
+
+  flags = 0;
+  if (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA) {
+    alpha_flags = GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
+  } else if (!overlay->context->gl_vtable->BlendFuncSeparate) {
+    GST_FIXME_OBJECT (overlay, "No separate blend mode function, "
+        "cannot perform correct blending of unmultipled alpha in OpenGL. "
+        "Software converting");
+    alpha_flags = GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
+  } else {
+    alpha_flags = 0;
+  }
 
   comp_buffer =
       gst_video_overlay_rectangle_get_pixels_unscaled_argb (overlay->rectangle,
-      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+      alpha_flags);
 
   comp_frame = g_slice_new (GstVideoFrame);
 
@@ -448,8 +464,7 @@ enum
 #define DEFAULT_YINVERT                 FALSE
 
 G_DEFINE_TYPE_WITH_CODE (GstGLOverlayCompositor, gst_gl_overlay_compositor,
-    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLOverlayCompositor);
-    DEBUG_INIT);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLOverlayCompositor); DEBUG_INIT);
 
 static void gst_gl_overlay_compositor_finalize (GObject * object);
 static void gst_gl_overlay_compositor_set_property (GObject * object,
@@ -692,7 +707,6 @@ gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
     GList *l;
 
     gl->Enable (GL_BLEND);
-    gl->BlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     gst_gl_shader_use (compositor->shader);
     gl->ActiveTexture (GL_TEXTURE0);
@@ -700,6 +714,18 @@ gst_gl_overlay_compositor_draw_overlays (GstGLOverlayCompositor * compositor)
 
     for (l = compositor->overlays; l != NULL; l = l->next) {
       GstGLCompositionOverlay *overlay = (GstGLCompositionOverlay *) l->data;
+      GstVideoOverlayFormatFlags flags;
+
+      flags = gst_video_overlay_rectangle_get_flags (overlay->rectangle);
+      flags = 0;
+
+      if (flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA
+          || !gl->BlendFuncSeparate) {
+        gl->BlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      } else {
+        gl->BlendFuncSeparate (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+            GL_ONE_MINUS_SRC_ALPHA);
+      }
       gst_gl_composition_overlay_draw (overlay, compositor->shader);
     }
 
