@@ -1897,18 +1897,23 @@ webrtcbin_suite (void)
 {
   Suite *s = suite_create ("webrtcbin");
   TCase *tc = tcase_create ("general");
-  GstPluginFeature *nicesrc, *nicesink;
+  GstPluginFeature *nicesrc, *nicesink, *dtlssrtpdec, *dtlssrtpenc;
+  GstPluginFeature *sctpenc, *sctpdec;
   GstRegistry *registry;
 
   registry = gst_registry_get ();
   nicesrc = gst_registry_lookup_feature (registry, "nicesrc");
   nicesink = gst_registry_lookup_feature (registry, "nicesink");
+  dtlssrtpenc = gst_registry_lookup_feature (registry, "dtlssrtpenc");
+  dtlssrtpdec = gst_registry_lookup_feature (registry, "dtlssrtpdec");
+  sctpenc = gst_registry_lookup_feature (registry, "sctpenc");
+  sctpdec = gst_registry_lookup_feature (registry, "sctpdec");
 
   tcase_add_test (tc, test_sdp_no_media);
   tcase_add_test (tc, test_no_nice_elements_request_pad);
   tcase_add_test (tc, test_no_nice_elements_state_change);
   tcase_add_test (tc, test_session_stats);
-  if (nicesrc && nicesink) {
+  if (nicesrc && nicesink && dtlssrtpenc && dtlssrtpdec) {
     tcase_add_test (tc, test_audio);
     tcase_add_test (tc, test_audio_video);
     tcase_add_test (tc, test_media_direction);
@@ -1918,19 +1923,38 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_add_recvonly_transceiver);
     tcase_add_test (tc, test_recvonly_sendonly);
     tcase_add_test (tc, test_payload_types);
-    tcase_add_test (tc, test_data_channel_create);
-    tcase_add_test (tc, test_data_channel_remote_notify);
-    tcase_add_test (tc, test_data_channel_transfer_string);
-    tcase_add_test (tc, test_data_channel_transfer_data);
-    tcase_add_test (tc, test_data_channel_create_after_negotiate);
-    tcase_add_test (tc, test_data_channel_low_threshold);
-    tcase_add_test (tc, test_data_channel_max_message_size);
+    if (sctpenc && sctpdec) {
+      tcase_add_test (tc, test_data_channel_create);
+      tcase_add_test (tc, test_data_channel_remote_notify);
+      tcase_add_test (tc, test_data_channel_transfer_string);
+      tcase_add_test (tc, test_data_channel_transfer_data);
+      tcase_add_test (tc, test_data_channel_create_after_negotiate);
+      tcase_add_test (tc, test_data_channel_low_threshold);
+      tcase_add_test (tc, test_data_channel_max_message_size);
+    } else {
+      GST_WARNING ("Some required elements were not found. "
+          "All datachannel are disabled. sctpenc %p, sctpdec %p", sctpenc,
+          sctpdec);
+    }
+  } else {
+    GST_WARNING ("Some required elements were not found. "
+        "All media tests are disabled. nicesrc %p, nicesink %p, "
+        "dtlssrtpenc %p, dtlssrtpdec %p", nicesrc, nicesink, dtlssrtpenc,
+        dtlssrtpdec);
   }
 
   if (nicesrc)
     gst_object_unref (nicesrc);
   if (nicesink)
     gst_object_unref (nicesink);
+  if (dtlssrtpdec)
+    gst_object_unref (dtlssrtpdec);
+  if (dtlssrtpenc)
+    gst_object_unref (dtlssrtpenc);
+  if (sctpenc)
+    gst_object_unref (sctpenc);
+  if (sctpdec)
+    gst_object_unref (sctpdec);
 
   suite_add_tcase (s, tc);
 
