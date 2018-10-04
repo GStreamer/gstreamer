@@ -50,7 +50,8 @@ c_sources = \
 	rtsp-onvif-media-factory.c \
 	rtsp-onvif-media.c
 
-noinst_HEADERS = 
+noinst_HEADERS = \
+	rtsp-latency-bin.h
 
 lib_LTLIBRARIES = \
 	libgstrtspserver-@GST_API_VERSION@.la
