@@ -80,6 +80,7 @@ video_mkenum_headers = [
   'video-converter.h',
   'video-dither.h',
   'video-info.h',
+  'video-overlay-composition.h',
   'video-resampler.h',
   'video-scaler.h',
   'video-tile.h',
