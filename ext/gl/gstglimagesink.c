@@ -2250,7 +2250,14 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     if (gl_sink->ignore_alpha) {
       gl->BlendColor (0.0, 0.0, 0.0, alpha);
-      gl->BlendFunc (GL_SRC_ALPHA, GL_CONSTANT_COLOR);
+      if (gl->BlendFuncSeparate) {
+        gl->BlendFuncSeparate (GL_SRC_ALPHA, GL_CONSTANT_COLOR, GL_ONE,
+            GL_ONE_MINUS_SRC_ALPHA);
+      } else {
+        /* we don't have separate blend modes, perform something close to
+         * correct instead */
+        gl->BlendFunc (GL_SRC_ALPHA, GL_CONSTANT_COLOR);
+      }
       gl->BlendEquation (GL_FUNC_ADD);
       gl->Enable (GL_BLEND);
     }
