@@ -1074,6 +1074,12 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         esign, GST_TIME_ARGS (running_time_at_end));
     gst_buffer_unref (inbuf);
     inbuf = NULL;
+    if (current_running_time >= self->audio_running_time_to_end_at &&
+        (self->must_send_end_message & END_MESSAGE_STREAM_ENDED) &&
+        !(self->must_send_end_message & END_MESSAGE_AUDIO_PUSHED)) {
+      send_element_message = TRUE;
+    }
+
   } else if (gst_avwait_compare_guint64_with_signs (esign, running_time_at_end,
           1, self->audio_running_time_to_wait_for) >= 0
       && gst_avwait_compare_guint64_with_signs (esign, running_time_at_end, 1,
