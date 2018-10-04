@@ -1378,6 +1378,19 @@ configure_display_from_info (GstGLImageSink * glimage_sink,
   return TRUE;
 }
 
+static gboolean
+_mview_modes_are_equal (GstVideoMultiviewMode a, GstVideoMultiviewMode b)
+{
+  if (a == b)
+    return TRUE;
+  if (a == GST_VIDEO_MULTIVIEW_MODE_NONE && b == GST_VIDEO_MULTIVIEW_MODE_MONO)
+    return TRUE;
+  if (a == GST_VIDEO_MULTIVIEW_MODE_MONO && b == GST_VIDEO_MULTIVIEW_MODE_NONE)
+    return TRUE;
+
+  return FALSE;
+}
+
 /* Called with GST_GLIMAGE_SINK lock held, to
  * copy in_info to out_info and update out_caps */
 static gboolean
@@ -1397,7 +1410,7 @@ update_output_format (GstGLImageSink * glimage_sink)
 
   mv_mode = GST_VIDEO_INFO_MULTIVIEW_MODE (&glimage_sink->in_info);
 
-  if (glimage_sink->mview_output_mode != mv_mode) {
+  if (!_mview_modes_are_equal (glimage_sink->mview_output_mode, mv_mode)) {
     /* Input is multiview, and output wants a conversion - configure 3d converter now,
      * otherwise defer it until either the caps or the 3D output mode changes */
     gst_video_multiview_video_info_change_mode (out_info,
