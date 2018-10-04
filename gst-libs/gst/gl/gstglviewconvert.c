@@ -2393,3 +2393,15 @@ done:
   *outbuf_ptr = outbuf;
   return ret;
 }
+
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+GST_GL_API GType gst_gl_stereo_downmix_mode_get_type (void);
+#endif
+
+GType
+gst_gl_stereo_downmix_mode_get_type (void)
+{
+  return gst_gl_stereo_downmix_get_type ();
+}
+#endif

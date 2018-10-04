@@ -51,6 +51,9 @@ typedef enum {
 
 #ifndef GST_DISABLE_DEPRECATED
 #define GST_TYPE_GL_STEREO_DOWNMIX_MODE_TYPE GST_TYPE_GL_STEREO_DOWNMIX
+
+GST_GL_API
+GType gst_gl_stereo_downmix_mode_get_type (void);
 #endif
 
 /**
