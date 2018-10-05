@@ -4476,6 +4476,7 @@ gst_webrtc_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:{
       if (!_have_nice_elements (webrtc) || !_have_dtls_elements (webrtc))
         return GST_STATE_CHANGE_FAILURE;
+      _start_thread (webrtc);
       _update_need_negotiation (webrtc);
       break;
     }
@@ -4500,6 +4501,9 @@ gst_webrtc_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       webrtc->priv->running = FALSE;
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      _stop_thread (webrtc);
       break;
     default:
       break;
@@ -4662,8 +4666,6 @@ static void
 gst_webrtc_bin_dispose (GObject * object)
 {
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (object);
-
-  _stop_thread (webrtc);
 
   if (webrtc->priv->ice)
     gst_object_unref (webrtc->priv->ice);
@@ -5109,8 +5111,6 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   webrtc->priv = gst_webrtc_bin_get_instance_private (webrtc);
   g_mutex_init (PC_GET_LOCK (webrtc));
   g_cond_init (PC_GET_COND (webrtc));
-
-  _start_thread (webrtc);
 
   webrtc->rtpbin = _create_rtpbin (webrtc);
   gst_bin_add (GST_BIN (webrtc), webrtc->rtpbin);
