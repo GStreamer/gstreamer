@@ -66,6 +66,8 @@ struct _GstFlvMuxPad
   GstClockTime last_timestamp;
   gint64 pts;
   gint64 dts;
+
+  gboolean info_changed;
 };
 
 typedef struct _GstFlvMuxPadClass {
@@ -96,6 +98,8 @@ typedef struct _GstFlvMux {
   guint64 byte_count;
   guint64 duration;
   gint64 first_timestamp;
+
+  gboolean sent_header;
 } GstFlvMux;
 
 typedef struct _GstFlvMuxClass {
