@@ -46,6 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 #define REQUIRED_POOL_MAX_BUFFERS       32
 #define DEFAULT_STRIDE_ALIGN            31
 #define DEFAULT_ALLOC_PARAM             { 0, DEFAULT_STRIDE_ALIGN, 0, 0, }
+#define DEFAULT_THREAD_TYPE             0
 
 enum
 {
@@ -56,6 +57,7 @@ enum
   PROP_DEBUG_MV,
   PROP_MAX_THREADS,
   PROP_OUTPUT_CORRUPT,
+  PROP_THREAD_TYPE,
   PROP_LAST
 };
 
@@ -142,6 +144,27 @@ gst_ffmpegviddec_skipframe_get_type (void)
   }
 
   return ffmpegdec_skipframe_type;
+}
+
+static const GFlagsValue ffmpegdec_thread_types[] = {
+  {0x0, "Auto", "auto"},
+  {0x1, "Frame", "frame"},
+  {0x2, "Slice", "slice"},
+  {0, NULL, NULL},
+};
+
+#define GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE (gst_ffmpegviddec_thread_type_get_type())
+static GType
+gst_ffmpegviddec_thread_type_get_type (void)
+{
+  static GType ffmpegdec_thread_type_type = 0;
+
+  if (!ffmpegdec_thread_type_type) {
+    ffmpegdec_thread_type_type =
+        g_flags_register_static ("GstLibAVVidDecThreadType",
+        ffmpegdec_thread_types);
+  }
+  return ffmpegdec_thread_type_type;
 }
 
 static void
@@ -240,6 +263,11 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
             "Maximum number of worker threads to spawn. (0 = auto)",
             0, G_MAXINT, DEFAULT_MAX_THREADS,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_THREAD_TYPE,
+        g_param_spec_flags ("thread-type", "Thread type",
+            "Multithreading methods to use",
+            GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE,
+            DEFAULT_THREAD_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
   viddec_class->set_format = gst_ffmpegviddec_set_format;
@@ -271,6 +299,7 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
   ffmpegdec->output_corrupt = DEFAULT_OUTPUT_CORRUPT;
+  ffmpegdec->thread_type = DEFAULT_THREAD_TYPE;
 
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec));
   gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
@@ -489,17 +518,21 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
    * supports it) */
   ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
-  {
+  if (ffmpegdec->max_threads == 0) {
+    if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
+      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+    else
+      ffmpegdec->context->thread_count = 0;
+  } else
+    ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+
+  if (ffmpegdec->thread_type) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Use requested thread type 0x%x",
+        ffmpegdec->thread_type);
+    ffmpegdec->context->thread_type = ffmpegdec->thread_type;
+  } else {
     GstQuery *query;
     gboolean is_live;
-
-    if (ffmpegdec->max_threads == 0) {
-      if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
-        ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
-      else
-        ffmpegdec->context->thread_count = 0;
-    } else
-      ffmpegdec->context->thread_count = ffmpegdec->max_threads;
 
     query = gst_query_new_latency ();
     is_live = FALSE;
@@ -2255,6 +2288,9 @@ gst_ffmpegviddec_set_property (GObject * object,
     case PROP_OUTPUT_CORRUPT:
       ffmpegdec->output_corrupt = g_value_get_boolean (value);
       break;
+    case PROP_THREAD_TYPE:
+      ffmpegdec->thread_type = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2285,6 +2321,9 @@ gst_ffmpegviddec_get_property (GObject * object,
       break;
     case PROP_OUTPUT_CORRUPT:
       g_value_set_boolean (value, ffmpegdec->output_corrupt);
+      break;
+    case PROP_THREAD_TYPE:
+      g_value_set_flags (value, ffmpegdec->thread_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
