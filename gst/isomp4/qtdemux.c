@@ -581,8 +581,8 @@ static void gst_qtdemux_stream_clear (QtDemuxStream * stream);
 static void gst_qtdemux_remove_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
 static GstFlowReturn qtdemux_prepare_streams (GstQTDemux * qtdemux);
-static void qtdemux_do_allocation (GstQTDemux * qtdemux,
-    QtDemuxStream * stream);
+static void qtdemux_do_allocation (QtDemuxStream * stream,
+    GstQTDemux * qtdemux);
 static gboolean gst_qtdemux_activate_segment (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 seg_idx, GstClockTime offset);
 static gboolean gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux,
@@ -6114,7 +6114,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   gst_qtdemux_stream_check_and_change_stsd_index (qtdemux, stream);
   if (stream->new_caps) {
     gst_qtdemux_configure_stream (qtdemux, stream);
-    qtdemux_do_allocation (qtdemux, stream);
+    qtdemux_do_allocation (stream, qtdemux);
   }
 
   /* If we're doing a keyframe-only trickmode, only push keyframes on video streams */
@@ -8007,7 +8007,7 @@ qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
 }
 
 static void
-qtdemux_do_allocation (GstQTDemux * qtdemux, QtDemuxStream * stream)
+qtdemux_do_allocation (QtDemuxStream * stream, GstQTDemux * qtdemux)
 {
 /* FIXME: This can only reliably work if demuxers have a
  * separate streaming thread per srcpad. This should be
@@ -12622,7 +12622,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
   }
 
   for (iter = qtdemux->active_streams; iter; iter = g_list_next (iter)) {
-    qtdemux_do_allocation (qtdemux, QTDEMUX_STREAM (iter->data));
+    qtdemux_do_allocation (QTDEMUX_STREAM (iter->data), qtdemux);
   }
 
   qtdemux->need_segment = TRUE;
