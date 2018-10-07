@@ -198,7 +198,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
         GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) \"I420\", "
+        "format = (string) { I420, Y42B, Y444, YV12 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 4, MAX ], "
         "height = (int) [ 4, MAX ]")
@@ -382,6 +382,7 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
 
   av1enc->keyframe_dist = 30;
   av1enc->cpu_used = DEFAULT_CPU_USED;
+  av1enc->format = AOM_IMG_FMT_I420;
 
   av1enc->aom_cfg.rc_dropframe_thresh = DEFAULT_DROP_FRAME;
   av1enc->aom_cfg.rc_resize_mode = DEFAULT_RESIZE_MODE;
@@ -404,7 +405,7 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->aom_cfg.g_timebase.num = DEFAULT_TIMEBASE_N;
   av1enc->aom_cfg.g_timebase.den = DEFAULT_TIMEBASE_D;
   av1enc->aom_cfg.g_bit_depth = DEFAULT_BIT_DEPTH;
-  av1enc->aom_cfg.g_input_bit_depth = (int) DEFAULT_BIT_DEPTH;
+  av1enc->aom_cfg.g_input_bit_depth = (unsigned int) DEFAULT_BIT_DEPTH;
 
   g_mutex_init (&av1enc->encoder_lock);
 }
@@ -552,6 +553,54 @@ gst_av1_enc_get_downstream_profile (GstAV1Enc * av1enc)
   return profile;
 }
 
+static void
+gst_av1_enc_adjust_profile (GstAV1Enc * av1enc, GstVideoFormat format)
+{
+  guint depth = av1enc->aom_cfg.g_bit_depth;
+  guint profile = av1enc->aom_cfg.g_profile;
+  gboolean update = FALSE;
+
+  switch (profile) {
+    case 0:
+      if (depth < 12 && format == GST_VIDEO_FORMAT_Y444) {
+        profile = 1;
+        update = TRUE;
+      } else if (depth == 12 || format == GST_VIDEO_FORMAT_Y42B) {
+        profile = 2;
+        update = TRUE;
+      }
+      break;
+    case 1:
+      if (depth == 12 || format == GST_VIDEO_FORMAT_Y42B) {
+        profile = 2;
+        update = TRUE;
+      } else if (depth < 12 && format == GST_VIDEO_FORMAT_I420) {
+        profile = 0;
+        update = TRUE;
+      }
+      break;
+    case 2:
+      if (depth < 12) {
+        if (format == GST_VIDEO_FORMAT_Y444) {
+          profile = 1;
+          update = TRUE;
+        } else if (format == GST_VIDEO_FORMAT_I420) {
+          profile = 0;
+          update = TRUE;
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (update) {
+    GST_INFO_OBJECT (av1enc, "profile updated to %d from %d",
+        profile, av1enc->aom_cfg.g_profile);
+    av1enc->aom_cfg.g_profile = profile;
+  }
+}
+
 static gboolean
 gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 {
@@ -590,6 +639,18 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   av1enc->aom_cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
   /* TODO: do more configuration including bit_depth config */
+
+  av1enc->format =
+      gst_video_format_to_av1_img_format (GST_VIDEO_INFO_FORMAT (info));
+
+  if (av1enc->aom_cfg.g_bit_depth != DEFAULT_BIT_DEPTH) {
+    av1enc->aom_cfg.g_input_bit_depth = av1enc->aom_cfg.g_bit_depth;
+    if (av1enc->aom_cfg.g_bit_depth > 8)
+      av1enc->format |= AOM_IMG_FMT_HIGHBITDEPTH;
+  }
+
+  /* Adjust profile according to format and bit-depth */
+  gst_av1_enc_adjust_profile (av1enc, GST_VIDEO_INFO_FORMAT (info));
 
   GST_DEBUG_OBJECT (av1enc, "Calling encoder init with config:");
   gst_av1_enc_debug_encoder_cfg (&av1enc->aom_cfg);
@@ -672,7 +733,7 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame vframe;
 
-  if (!aom_img_alloc (&raw, AOM_IMG_FMT_I420, av1enc->aom_cfg.g_w,
+  if (!aom_img_alloc (&raw, av1enc->format, av1enc->aom_cfg.g_w,
           av1enc->aom_cfg.g_h, 1)) {
     GST_ERROR_OBJECT (encoder, "Failed to initialize encoder");
     return FALSE;

@@ -23,6 +23,19 @@
 
 #include "gstav1utils.h"
 
+typedef struct
+{
+  enum aom_img_fmt aom_format;
+  GstVideoFormat gst_format;
+} AomImageFormat;
+
+static const AomImageFormat img_formats[] = {
+  {AOM_IMG_FMT_YV12, GST_VIDEO_FORMAT_YV12},
+  {AOM_IMG_FMT_I420, GST_VIDEO_FORMAT_I420},
+  {AOM_IMG_FMT_I422, GST_VIDEO_FORMAT_Y42B},
+  {AOM_IMG_FMT_I444, GST_VIDEO_FORMAT_Y444},
+};
+
 const char *
 gst_av1_get_error_name (aom_codec_err_t status)
 {
@@ -48,4 +61,17 @@ gst_av1_get_error_name (aom_codec_err_t status)
     default:
       return "unknown";
   }
+}
+
+gint
+gst_video_format_to_av1_img_format (GstVideoFormat format)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (img_formats); i++)
+    if (img_formats[i].gst_format == format)
+      return img_formats[i].aom_format;
+
+  GST_WARNING ("av1 img format not found");
+  return -1;
 }
