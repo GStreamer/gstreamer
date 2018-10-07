@@ -470,7 +470,7 @@ if get_option('default_library') == 'static'
 endif
 
 # Used in gst/parse/meson.build and below
-python3 = import('python3').find_python()
+python3 = import('python').find_installation()
 
 bashcomp_option = get_option('bash-completion')
 bashcomp_dep = dependency('bash-completion', version : '>= 2.0', required : bashcomp_option)
