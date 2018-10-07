@@ -446,6 +446,8 @@ struct _QtDemuxStream
   guint32 protection_scheme_version;
   gpointer protection_scheme_info;      /* specific to the protection scheme */
   GQueue protection_scheme_event_queue;
+
+  gint ref_count;               /* atomic */
 };
 
 /* Contains properties and cryptographic info for a set of samples from a
@@ -576,7 +578,7 @@ static GstCaps *qtdemux_generic_caps (GstQTDemux * qtdemux,
 static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 n);
 static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
-static void gst_qtdemux_stream_free (QtDemuxStream * stream);
+static void gst_qtdemux_stream_unref (QtDemuxStream * stream);
 static void gst_qtdemux_stream_clear (QtDemuxStream * stream);
 static void gst_qtdemux_remove_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
@@ -1988,6 +1990,7 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->stream_tags = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
   g_queue_init (&stream->protection_scheme_event_queue);
+  stream->ref_count = 1;
   return stream;
 }
 
@@ -2153,9 +2156,9 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   if (hard) {
     qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
     g_list_free_full (qtdemux->active_streams,
-        (GDestroyNotify) gst_qtdemux_stream_free);
+        (GDestroyNotify) gst_qtdemux_stream_unref);
     g_list_free_full (qtdemux->old_streams,
-        (GDestroyNotify) gst_qtdemux_stream_free);
+        (GDestroyNotify) gst_qtdemux_stream_unref);
     qtdemux->active_streams = NULL;
     qtdemux->old_streams = NULL;
     qtdemux->n_streams = 0;
@@ -2625,26 +2628,27 @@ gst_qtdemux_stream_reset (QtDemuxStream * stream)
   stream->stsd_entries_length = 0;
 }
 
-
 static void
-gst_qtdemux_stream_free (QtDemuxStream * stream)
+gst_qtdemux_stream_unref (QtDemuxStream * stream)
 {
-  gst_qtdemux_stream_reset (stream);
-  gst_tag_list_unref (stream->stream_tags);
-  if (stream->pad) {
-    GstQTDemux *demux = stream->demux;
-    gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
-    gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
+  if (g_atomic_int_dec_and_test (&stream->ref_count)) {
+    gst_qtdemux_stream_reset (stream);
+    gst_tag_list_unref (stream->stream_tags);
+    if (stream->pad) {
+      GstQTDemux *demux = stream->demux;
+      gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
+      gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
+    }
+    g_free (stream->stream_id);
+    g_free (stream);
   }
-  g_free (stream->stream_id);
-  g_free (stream);
 }
 
 static void
 gst_qtdemux_remove_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
   qtdemux->active_streams = g_list_remove (qtdemux->active_streams, stream);
-  gst_qtdemux_stream_free (stream);
+  gst_qtdemux_stream_unref (stream);
   qtdemux->n_streams--;
 }
 
@@ -10247,7 +10251,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           "found, assuming preview image or something; skipping track",
           stream->duration, stream->timescale, qtdemux->duration,
           qtdemux->timescale);
-      gst_qtdemux_stream_free (stream);
+      gst_qtdemux_stream_unref (stream);
       return TRUE;
     }
   }
@@ -10344,7 +10348,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (stsd_len < 24) {
     /* .. but skip stream with empty stsd produced by some Vivotek cameras */
     if (stream->subtype == FOURCC_vivo) {
-      gst_qtdemux_stream_free (stream);
+      gst_qtdemux_stream_unref (stream);
       return TRUE;
     } else {
       goto corrupt_file;
@@ -12235,13 +12239,13 @@ corrupt_file:
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     if (stream)
-      gst_qtdemux_stream_free (stream);
+      gst_qtdemux_stream_unref (stream);
     return FALSE;
   }
 error_encrypted:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECRYPT, (NULL), (NULL));
-    gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_unref (stream);
     return FALSE;
   }
 samples_failed:
@@ -12250,7 +12254,7 @@ segments_failed:
     /* we posted an error already */
     /* free stbl sub-atoms */
     gst_qtdemux_stbl_free (stream);
-    gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_unref (stream);
     return FALSE;
   }
 existing_stream:
@@ -12263,7 +12267,7 @@ unknown_stream:
   {
     GST_INFO_OBJECT (qtdemux, "unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
-    gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_unref (stream);
     return TRUE;
   }
 }
@@ -12524,7 +12528,7 @@ qtdemux_update_streams (GstQTDemux * qtdemux)
         return FALSE;
 
       qtdemux->old_streams = g_list_remove (qtdemux->old_streams, oldstream);
-      gst_qtdemux_stream_free (oldstream);
+      gst_qtdemux_stream_unref (oldstream);
     } else {
       GstTagList *list;
 
@@ -12559,7 +12563,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     }
 
     g_list_free_full (qtdemux->old_streams,
-        (GDestroyNotify) gst_qtdemux_stream_free);
+        (GDestroyNotify) gst_qtdemux_stream_unref);
     qtdemux->old_streams = NULL;
 
     return GST_FLOW_OK;
@@ -12602,7 +12606,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     }
 
     qtdemux->old_streams = g_list_remove (qtdemux->old_streams, stream);
-    gst_qtdemux_stream_free (stream);
+    gst_qtdemux_stream_unref (stream);
   }
 
   /* check if we should post a redirect in case there is a single trak
