@@ -1026,7 +1026,6 @@ tests/examples/gl/gtk/filternovideooverlay/Makefile
 tests/examples/gl/gtk/filtervideooverlay/Makefile
 tests/examples/gl/cocoa/Makefile
 tests/examples/gl/sdl/Makefile
-tests/examples/gl/clutter/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile

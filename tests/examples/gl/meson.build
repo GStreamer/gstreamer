@@ -1,4 +1,3 @@
-subdir('clutter')
 # FIXME: subdir('cocoa')
 subdir('generic')
 subdir('gtk', if_found : gtk_dep)
