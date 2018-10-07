@@ -75,10 +75,9 @@ struct _GstQTDemux {
   GMutex expose_lock;
 
   /* list of QtDemuxStream */
-  GList *active_streams;
-  GList *old_streams;
+  GPtrArray *active_streams;
+  GPtrArray *old_streams;
 
-  gint     n_streams;
   gint     n_video_streams;
   gint     n_audio_streams;
   gint     n_sub_streams;
