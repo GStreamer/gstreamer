@@ -17889,26 +17889,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstStereo::active</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>active</NICK>
-<BLURB>active.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstStereo::stereo</NAME>
-<TYPE>gfloat</TYPE>
-<RANGE>[0,1]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>stereo</NICK>
-<BLURB>stereo.</BLURB>
-<DEFAULT>0.1</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>MpegTSParse::pat-info</NAME>
 <TYPE>GValueArray</TYPE>
 <RANGE></RANGE>

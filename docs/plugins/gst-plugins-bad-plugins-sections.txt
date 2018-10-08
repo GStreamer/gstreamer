@@ -3491,22 +3491,6 @@ gst_srtp_enc_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-stereo</FILE>
-<TITLE>stereo</TITLE>
-GstStereo
-<SUBSECTION Standard>
-GstStereoClass
-GST_STEREO
-GST_STEREO_CAST
-GST_IS_STEREO
-GST_STEREO_CLASS
-GST_IS_STEREO_CLASS
-GST_TYPE_STEREO
-<SUBSECTION Private>
-gst_stereo_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-stretch</FILE>
 <TITLE>stretch</TITLE>
 GstStretch

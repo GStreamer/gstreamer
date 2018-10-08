@@ -137,7 +137,6 @@ GObject
               ladspa-sine-so-sine-faac
               ladspa-sine-so-sine-fcaa
             GstOFA
-            GstStereo
           GstAudioMixMatrix
           GstBayer2RGB
           GstDebugSpy

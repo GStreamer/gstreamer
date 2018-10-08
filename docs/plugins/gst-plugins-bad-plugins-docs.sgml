@@ -235,7 +235,6 @@
     <xi:include href="xml/element-srtenc.xml" />
     <xi:include href="xml/element-srtpdec.xml" />
     <xi:include href="xml/element-srtpenc.xml" />
-    <xi:include href="xml/element-stereo.xml" />
     <xi:include href="xml/element-stretch.xml" />
     <xi:include href="xml/element-synaescope.xml" />
     <xi:include href="xml/element-teletextdec.xml" />
@@ -397,7 +396,6 @@
     <xi:include href="xml/plugin-spandsp.xml" />
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-srtp.xml" />
-    <xi:include href="xml/plugin-stereo.xml" />
     <xi:include href="xml/plugin-subenc.xml" />
     <xi:include href="xml/plugin-teletext.xml" />
     <xi:include href="xml/plugin-timecode.xml" />
