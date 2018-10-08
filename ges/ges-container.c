@@ -465,7 +465,7 @@ ges_container_class_init (GESContainerClass * klass)
    */
   ges_container_signals[CHILD_REMOVED_SIGNAL] =
       g_signal_new ("child-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESContainerClass, child_removed),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESContainerClass, child_removed),
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GES_TYPE_TIMELINE_ELEMENT);
 

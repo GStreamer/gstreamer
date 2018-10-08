@@ -369,18 +369,6 @@ static gboolean
 _remove_child (GESContainer * container, GESTimelineElement * element)
 {
   if (GES_IS_BASE_EFFECT (element)) {
-    GList *tmp;
-    GESChildrenControlMode mode = container->children_control_mode;
-
-    GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
-
-    container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
-    tmp = g_list_find (GES_CONTAINER_CHILDREN (container), element);
-    for (tmp = tmp->next; tmp; tmp = tmp->next) {
-      ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
-          GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) - 1);
-    }
-    container->children_control_mode = mode;
     GES_CLIP (container)->priv->nb_effects--;
   }
 
@@ -404,6 +392,28 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
 {
   g_signal_handlers_disconnect_by_func (element, _child_priority_changed_cb,
       container);
+
+  if (GES_IS_BASE_EFFECT (element)) {
+    GList *tmp;
+    guint32 priority;
+    GESChildrenControlMode mode = container->children_control_mode;
+
+    GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
+
+    container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
+    tmp = GES_CONTAINER_CHILDREN (container);
+    priority =
+        ges_timeline_element_get_priority (GES_TIMELINE_ELEMENT (element));
+    for (; tmp; tmp = tmp->next) {
+      if (ges_timeline_element_get_priority (GES_TIMELINE_ELEMENT (tmp->data)) >
+          priority) {
+        ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
+            GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) - 1);
+      }
+    }
+
+    container->children_control_mode = mode;
+  }
 
   _compute_height (container);
 }

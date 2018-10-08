@@ -37,6 +37,7 @@ GES.init()
 
 
 class TestGroup(common.GESSimpleTimelineTest):
+
     def testCopyGroup(self):
         clip1 = GES.TestClip.new()
         clip1.props.duration = 10

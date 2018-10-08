@@ -30,6 +30,8 @@ Gst.init(None)  # noqa
 from gi.repository import GES  # noqa
 GES.init()
 
+from . import common  # noqa
+
 import unittest  # noqa
 
 
@@ -137,7 +139,7 @@ class TestTitleClip(unittest.TestCase):
                             children2[1].props.priority)
 
 
-class TestTrackElements(unittest.TestCase):
+class TestTrackElements(common.GESTest):
 
     def test_add_to_layer_with_effect_remove_add(self):
         timeline = GES.Timeline.new_audio_video()
@@ -167,31 +169,58 @@ class TestTrackElements(unittest.TestCase):
         self.assertFalse(audio_source is None)
         self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)
 
-    def check_effects(self, clip, expected_effects, expected_indexes):
-        effects = clip.get_top_effects()
-        self.assertEqual(effects, expected_effects)
-        self.assertEqual([clip.get_top_effect_index(effect) for effect in effects], expected_indexes)
-
     def test_effects_priority(self):
         timeline = GES.Timeline.new_audio_video()
-        self.assertEqual(len(timeline.get_tracks()), 2)
         layer = timeline.append_layer()
 
-        test_clip = GES.TestClip()
-        self.assertEqual(test_clip.get_children(True), [])
-        self.assertTrue(layer.add_clip(test_clip))
+        test_clip = GES.TestClip.new()
+        layer.add_clip(test_clip)
+        self.assert_effects(test_clip)
 
         effect1 = GES.Effect.new("agingtv")
         test_clip.add(effect1)
-        self.check_effects(test_clip, [effect1], [0])
+        self.assert_effects(test_clip, effect1)
 
         test_clip.set_top_effect_index(effect1, 1)
-        self.check_effects(test_clip, [effect1], [0])
+        self.assert_effects(test_clip, effect1)
         test_clip.set_top_effect_index(effect1, 10)
-        self.check_effects(test_clip, [effect1], [0])
+        self.assert_effects(test_clip, effect1)
 
         effect2 = GES.Effect.new("dicetv")
         test_clip.add(effect2)
+        self.assert_effects(test_clip, effect1, effect2)
 
         test_clip.remove(effect1)
-        self.check_effects(test_clip, [effect2], [0])
+        self.assert_effects(test_clip, effect2)
+
+    def test_signal_order_when_removing_effect(self):
+        timeline = GES.Timeline.new_audio_video()
+        layer = timeline.append_layer()
+
+        test_clip = GES.TestClip.new()
+        layer.add_clip(test_clip)
+        self.assert_effects(test_clip)
+
+        effect1 = GES.Effect.new("agingtv")
+        test_clip.add(effect1)
+        effect2 = GES.Effect.new("dicetv")
+        test_clip.add(effect2)
+        self.assert_effects(test_clip, effect1, effect2)
+
+        mainloop = common.create_main_loop()
+
+        signals = []
+
+        def handler_cb(*args):
+            signals.append(args[-1])
+
+        test_clip.connect("child-removed", handler_cb, "child-removed")
+        effect2.connect("notify::priority", handler_cb, "notify::priority")
+        test_clip.remove(effect1)
+        test_clip.disconnect_by_func(handler_cb)
+        effect2.disconnect_by_func(handler_cb)
+        self.assert_effects(test_clip, effect2)
+
+        mainloop.run(until_empty=True)
+
+        self.assertEqual(signals, ["child-removed", "notify::priority"])
