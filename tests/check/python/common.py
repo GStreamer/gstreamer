@@ -38,15 +38,17 @@ def create_main_loop():
     mainloop = GLib.MainLoop()
     timed_out = False
 
-    def quit_cb(unused):
+    def timeout_cb(unused):
         nonlocal timed_out
         timed_out = True
         mainloop.quit()
 
-    def run(timeout_seconds=5):
+    def run(timeout_seconds=5, until_empty=False):
         source = GLib.timeout_source_new_seconds(timeout_seconds)
-        source.set_callback(quit_cb)
+        source.set_callback(timeout_cb)
         source.attach()
+        if until_empty:
+            GLib.idle_add(mainloop.quit)
         GLib.MainLoop.run(mainloop)
         source.destroy()
         if timed_out:
@@ -81,6 +83,7 @@ def create_project(with_group=False, saved=False):
 
 
 class GESTest(unittest.TestCase):
+
     def _log(self, func, format, *args):
         string = format
         if args:
@@ -105,8 +108,27 @@ class GESTest(unittest.TestCase):
     def error(self, format, *args):
         self._log(Gst.error, format, *args)
 
+    def check_clip_values(self, clip, start, in_point, duration):
+        for elem in [clip] + clip.get_children(False):
+            self.check_element_values(elem, start, in_point, duration)
+
+    def check_element_values(self, element, start, in_point, duration):
+        self.assertEqual(element.props.start, start, element)
+        self.assertEqual(element.props.in_point, in_point, element)
+        self.assertEqual(element.props.duration, duration, element)
+
+    def assert_effects(self, clip, *effects):
+        # Make sure there are no other effects.
+        self.assertEqual(set(clip.get_top_effects()), set(effects))
+
+        # Make sure their order is correct.
+        indexes = [clip.get_top_effect_index(effect)
+                   for effect in effects]
+        self.assertEqual(indexes, list(range(len(effects))))
+
 
 class GESSimpleTimelineTest(GESTest):
+
     def __init__(self, *args):
         self.track_types = [GES.TrackType.AUDIO, GES.TrackType.VIDEO]
         super(GESSimpleTimelineTest, self).__init__(*args)
@@ -117,9 +139,9 @@ class GESSimpleTimelineTest(GESTest):
             self.assertIn(
                 track_type, [GES.TrackType.AUDIO, GES.TrackType.VIDEO])
             if track_type == GES.TrackType.AUDIO:
-                self.timeline.add_track(GES.AudioTrack.new())
+                self.assertTrue(self.timeline.add_track(GES.AudioTrack.new()))
             else:
-                self.timeline.add_track(GES.VideoTrack.new())
+                self.assertTrue(self.timeline.add_track(GES.VideoTrack.new()))
 
         self.assertEqual(len(self.timeline.get_tracks()),
                          len(self.track_types))
@@ -130,15 +152,7 @@ class GESSimpleTimelineTest(GESTest):
         clip.props.start = start
         clip.props.in_point = in_point
         clip.props.duration = duration
-        self.layer.add_clip(clip)
+        self.assertTrue(self.layer.add_clip(clip))
 
         return clip
 
-    def check_clip_values(self, clip, start, in_point, duration):
-        for elem in [clip] + clip.get_children(False):
-            self.check_element_values(elem, start, in_point, duration)
-
-    def check_element_values(self, element, start, in_point, duration):
-        self.assertEqual(element.props.start, start, element)
-        self.assertEqual(element.props.in_point, in_point, element)
-        self.assertEqual(element.props.duration, duration, element)
