@@ -352,6 +352,7 @@ gst_shm_sink_init (GstShmSink * self)
 {
   g_cond_init (&self->cond);
   self->size = DEFAULT_SIZE;
+  self->unlock = FALSE;
   self->wait_for_connection = DEFAULT_WAIT_FOR_CONNECTION;
   self->perms = DEFAULT_PERMS;
 
@@ -670,6 +671,11 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gsize written_bytes;
 
   GST_OBJECT_LOCK (self);
+  if (self->unlock) {
+    GST_OBJECT_UNLOCK (self);
+    return GST_FLOW_FLUSHING;
+  }
+
   while (self->wait_for_connection && !self->clients) {
     g_cond_wait (&self->cond, GST_OBJECT_GET_LOCK (self));
     if (self->unlock) {
