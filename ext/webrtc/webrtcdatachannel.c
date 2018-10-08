@@ -46,8 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define gst_webrtc_data_channel_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCDataChannel, gst_webrtc_data_channel,
     GST_TYPE_OBJECT, GST_DEBUG_CATEGORY_INIT (gst_webrtc_data_channel_debug,
-        "webrtcdatachannel", 0, "webrtcdatachannel");
-    );
+        "webrtcdatachannel", 0, "webrtcdatachannel"););
 
 enum
 {
@@ -844,7 +843,8 @@ gst_webrtc_data_channel_send_string (GstWebRTCDataChannel * channel,
   GstBuffer *buffer;
   GstFlowReturn ret;
 
-  g_return_if_fail (!channel->negotiated && channel->opened);
+  if (!channel->negotiated)
+    g_return_if_fail (channel->opened);
   g_return_if_fail (channel->sctp_transport != NULL);
 
   if (!str) {
@@ -893,6 +893,28 @@ gst_webrtc_data_channel_send_string (GstWebRTCDataChannel * channel,
   }
 }
 
+static void
+_on_sctp_notify_state_unlocked (GObject * sctp_transport,
+    GstWebRTCDataChannel * channel)
+{
+  GstWebRTCSCTPTransportState state;
+
+  g_object_get (sctp_transport, "state", &state, NULL);
+  if (state == GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED) {
+    if (channel->negotiated)
+      _channel_enqueue_task (channel, (ChannelTask) _emit_on_open, NULL, NULL);
+  }
+}
+
+static void
+_on_sctp_notify_state (GObject * sctp_transport, GParamSpec * pspec,
+    GstWebRTCDataChannel * channel)
+{
+  GST_OBJECT_LOCK (channel);
+  _on_sctp_notify_state_unlocked (sctp_transport, channel);
+  GST_OBJECT_UNLOCK (channel);
+}
+
 void
 gst_webrtc_data_channel_set_sctp_transport (GstWebRTCDataChannel * channel,
     GstWebRTCSCTPTransport * sctp)
@@ -907,9 +929,13 @@ gst_webrtc_data_channel_set_sctp_transport (GstWebRTCDataChannel * channel,
   gst_object_replace ((GstObject **) & channel->sctp_transport,
       GST_OBJECT (sctp));
 
-  if (sctp)
+  if (sctp) {
     g_signal_connect (sctp, "stream-reset", G_CALLBACK (_on_sctp_reset_stream),
         channel);
+    g_signal_connect (sctp, "notify::state", G_CALLBACK (_on_sctp_notify_state),
+        channel);
+    _on_sctp_notify_state_unlocked (G_OBJECT (sctp), channel);
+  }
   GST_OBJECT_UNLOCK (channel);
 }
 

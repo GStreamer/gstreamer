@@ -1993,6 +1993,83 @@ GST_START_TEST (test_data_channel_max_message_size)
 
 GST_END_TEST;
 
+static void
+_on_ready_state_notify (GObject * channel, GParamSpec * pspec,
+    struct test_webrtc *t)
+{
+  gint *n_ready = t->data_channel_data;
+  GstWebRTCDataChannelState ready_state;
+
+  g_object_get (channel, "ready-state", &ready_state, NULL);
+
+  if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
+    if (++(*n_ready) >= 2)
+      test_webrtc_signal_state (t, STATE_CUSTOM);
+  }
+}
+
+GST_START_TEST (test_data_channel_pre_negotiated)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GObject *channel1 = NULL, *channel2 = NULL;
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  GstStructure *s;
+  gint n_ready = 0;
+
+  t->on_negotiation_needed = NULL;
+  t->offer_data = &offer;
+  t->on_offer_created = validate_sdp;
+  t->answer_data = &answer;
+  t->on_answer_created = validate_sdp;
+  t->on_ice_candidate = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
+  s = gst_structure_new ("application/data-channel", "negotiated",
+      G_TYPE_BOOLEAN, TRUE, "id", G_TYPE_INT, 1, NULL);
+
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", s,
+      &channel1);
+  g_assert_nonnull (channel1);
+  g_signal_emit_by_name (t->webrtc2, "create-data-channel", "label", s,
+      &channel2);
+  g_assert_nonnull (channel2);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  test_webrtc_create_offer (t, t->webrtc1);
+  test_webrtc_wait_for_answer_error_eos (t);
+  fail_unless (t->state == STATE_ANSWER_CREATED);
+
+  t->data_channel_data = &n_ready;
+
+  g_signal_connect (channel1, "notify::ready-state",
+      G_CALLBACK (_on_ready_state_notify), t);
+  g_signal_connect (channel2, "notify::ready-state",
+      G_CALLBACK (_on_ready_state_notify), t);
+
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_webrtc_signal_state (t, STATE_NEW);
+
+  have_data_channel_transfer_string (t, t->webrtc1, channel1, channel2);
+
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+
+  g_object_unref (channel1);
+  g_object_unref (channel2);
+  gst_structure_free (s);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -2032,6 +2109,7 @@ webrtcbin_suite (void)
       tcase_add_test (tc, test_data_channel_create_after_negotiate);
       tcase_add_test (tc, test_data_channel_low_threshold);
       tcase_add_test (tc, test_data_channel_max_message_size);
+      tcase_add_test (tc, test_data_channel_pre_negotiated);
     } else {
       GST_WARNING ("Some required elements were not found. "
           "All datachannel are disabled. sctpenc %p, sctpdec %p", sctpenc,
