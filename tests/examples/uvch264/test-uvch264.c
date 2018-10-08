@@ -520,6 +520,10 @@ main (int argc, char *argv[])
   GError *error = NULL;
   int i;
 
+  /* FIXME: add support for Gdk Wayland backend, code currently assumes X11 */
+  if (g_getenv ("GDK_BACKEND") == NULL)
+    g_setenv ("GDK_BACKEND", "x11", TRUE);
+
   gtk_init (&argc, &argv);
   gst_init (&argc, &argv);
 
