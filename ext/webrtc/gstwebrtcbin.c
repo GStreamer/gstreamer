@@ -5146,4 +5146,7 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
       g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
   g_array_set_clear_func (webrtc->priv->pending_ice_candidates,
       (GDestroyNotify) _clear_ice_candidate_item);
+
+  /* we start off closed until we move to READY */
+  webrtc->priv->is_closed = TRUE;
 }

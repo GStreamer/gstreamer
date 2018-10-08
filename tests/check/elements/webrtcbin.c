@@ -643,10 +643,16 @@ GST_START_TEST (test_sdp_no_media)
 
   /* check that a no stream connection creates 0 media sections */
 
+  t->on_negotiation_needed = NULL;
   t->offer_data = GUINT_TO_POINTER (0);
   t->on_offer_created = _count_num_sdp_media;
   t->answer_data = GUINT_TO_POINTER (0);
   t->on_answer_created = _count_num_sdp_media;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -700,11 +706,17 @@ GST_START_TEST (test_audio)
   /* check that a single stream connection creates the associated number
    * of media sections */
 
+  t->on_negotiation_needed = NULL;
   t->offer_data = GUINT_TO_POINTER (1);
   t->on_offer_created = _count_num_sdp_media;
   t->answer_data = GUINT_TO_POINTER (1);
   t->on_answer_created = _count_num_sdp_media;
   t->on_ice_candidate = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -742,11 +754,17 @@ GST_START_TEST (test_audio_video)
   /* check that a dual stream connection creates the associated number
    * of media sections */
 
+  t->on_negotiation_needed = NULL;
   t->offer_data = GUINT_TO_POINTER (2);
   t->on_offer_created = _count_num_sdp_media;
   t->answer_data = GUINT_TO_POINTER (2);
   t->on_answer_created = _count_num_sdp_media;
   t->on_ice_candidate = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -842,11 +860,17 @@ GST_START_TEST (test_media_direction)
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
+  t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
   t->on_offer_created = validate_sdp;
   t->answer_data = &answer;
   t->on_answer_created = validate_sdp;
   t->on_ice_candidate = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -896,6 +920,7 @@ GST_START_TEST (test_payload_types)
   GstWebRTCRTPTransceiver *trans;
   GArray *transceivers;
 
+  t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
   t->on_offer_created = validate_sdp;
   t->on_ice_candidate = NULL;
@@ -908,6 +933,11 @@ GST_START_TEST (test_payload_types)
   g_object_set (trans, "fec-type", GST_WEBRTC_FEC_TYPE_ULP_RED, "do-nack", TRUE,
       NULL);
   g_array_unref (transceivers);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -954,11 +984,17 @@ GST_START_TEST (test_media_setup)
 
   /* check the default dtls setup negotiation values */
 
+  t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
   t->on_offer_created = validate_sdp;
   t->answer_data = &answer;
   t->on_answer_created = validate_sdp;
   t->on_ice_candidate = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1276,8 +1312,14 @@ GST_START_TEST (test_session_stats)
 
   /* test that the stats generated without any streams are sane */
 
+  t->on_negotiation_needed = NULL;
   t->on_offer_created = NULL;
   t->on_answer_created = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1350,6 +1392,7 @@ GST_START_TEST (test_add_recvonly_transceiver)
   /* add a transceiver that will only receive an opus stream and check that
    * the created offer is marked as recvonly */
 
+  t->on_negotiation_needed = NULL;
   t->on_pad_added = _pad_added_fakesink;
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1371,6 +1414,11 @@ GST_START_TEST (test_add_recvonly_transceiver)
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1397,6 +1445,7 @@ GST_START_TEST (test_recvonly_sendonly)
   /* add a transceiver that will only receive an opus stream and check that
    * the created offer is marked as recvonly */
 
+  t->on_negotiation_needed = NULL;
   t->on_pad_added = _pad_added_fakesink;
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1429,6 +1478,11 @@ GST_START_TEST (test_recvonly_sendonly)
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1505,6 +1559,11 @@ GST_START_TEST (test_data_channel_create)
   t->on_answer_created = validate_sdp;
   t->on_ice_candidate = NULL;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
   g_assert_nonnull (channel);
@@ -1560,6 +1619,11 @@ GST_START_TEST (test_data_channel_remote_notify)
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
   g_assert_nonnull (channel);
@@ -1567,8 +1631,10 @@ GST_START_TEST (test_data_channel_remote_notify)
   g_signal_connect (channel, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 
-  gst_element_set_state (t->webrtc1, GST_STATE_PLAYING);
-  gst_element_set_state (t->webrtc2, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1628,6 +1694,11 @@ GST_START_TEST (test_data_channel_transfer_string)
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_string;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
   g_assert_nonnull (channel);
@@ -1635,8 +1706,10 @@ GST_START_TEST (test_data_channel_transfer_string)
   g_signal_connect (channel, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 
-  gst_element_set_state (t->webrtc1, GST_STATE_PLAYING);
-  gst_element_set_state (t->webrtc2, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1703,6 +1776,11 @@ GST_START_TEST (test_data_channel_transfer_data)
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_data;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
   g_assert_nonnull (channel);
@@ -1710,8 +1788,10 @@ GST_START_TEST (test_data_channel_transfer_data)
   g_signal_connect (channel, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 
-  gst_element_set_state (t->webrtc1, GST_STATE_PLAYING);
-  gst_element_set_state (t->webrtc2, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1754,6 +1834,11 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_create_data_channel;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "prev-label", NULL,
       &channel);
   g_assert_nonnull (channel);
@@ -1761,8 +1846,10 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
   g_signal_connect (channel, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 
-  gst_element_set_state (t->webrtc1, GST_STATE_PLAYING);
-  gst_element_set_state (t->webrtc2, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1808,6 +1895,11 @@ GST_START_TEST (test_data_channel_low_threshold)
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_check_low_threshold_emitted;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
   g_assert_nonnull (channel);
@@ -1815,8 +1907,10 @@ GST_START_TEST (test_data_channel_low_threshold)
   g_signal_connect (channel, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 
-  gst_element_set_state (t->webrtc1, GST_STATE_PLAYING);
-  gst_element_set_state (t->webrtc2, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
@@ -1874,13 +1968,20 @@ GST_START_TEST (test_data_channel_max_message_size)
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_large_data;
 
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
   g_assert_nonnull (channel);
   t->data_channel_data = channel;
 
-  gst_element_set_state (t->webrtc1, GST_STATE_PLAYING);
-  gst_element_set_state (t->webrtc2, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
   test_webrtc_create_offer (t, t->webrtc1);
 
