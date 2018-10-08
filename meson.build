@@ -515,7 +515,7 @@ gst_plugins_bad_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
 
-python3 = import('python3').find_python()
+python3 = import('python').find_installation()
 
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
