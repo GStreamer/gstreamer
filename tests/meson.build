@@ -6,4 +6,5 @@ if host_system != 'windows'
 endif
 if not get_option('examples').disabled()
   subdir('examples')
+  subdir('icles')
 endif
