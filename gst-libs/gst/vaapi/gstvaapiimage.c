@@ -97,8 +97,9 @@ vaapi_image_is_linear (const VAImage * va_image)
       data_size = 2 * (width * height + 2 * width2 * height2);
       break;
     default:
-      g_error ("FIXME: incomplete formats %" GST_FOURCC_FORMAT,
+      GST_ERROR ("FIXME: incomplete formats %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (va_image->format.fourcc));
+      data_size = G_MAXUINT;
       break;
   }
   return va_image->data_size == data_size;

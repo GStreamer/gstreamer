@@ -31,6 +31,9 @@
 #include <gobject/gvaluecollector.h>
 #include "gstvaapivalue.h"
 
+#define DEBUG 1
+#include "gstvaapidebug.h"
+
 static gpointer
 default_copy_func (gpointer data)
 {
@@ -185,7 +188,7 @@ build_enum_subset_values_from_mask (GstVaapiEnumSubset * subset, guint32 mask)
   /* ERRORS */
 error_invalid_num_values:
   {
-    g_error ("invalid number of static values for `%s'", subset->type_name);
+    GST_ERROR ("invalid number of static values for `%s'", subset->type_name);
     return FALSE;
   }
 }
