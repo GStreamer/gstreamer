@@ -304,12 +304,18 @@ if build_gstgl
   endforeach
 endif
 
-zlib_dep = dependency('zlib', fallback: ['zlib', 'zlib_dep'])
+zlib_dep = dependency('zlib', required : false)
+if not zlib_dep.found()
+  zlib_dep = cc.find_library('z', required : false)
+  if not zlib_dep.found()
+    zlib_dep = subproject('zlib').get_variable('zlib_dep')
+  endif
+endif
+cdata.set('HAVE_ZLIB', true)
+
 glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
-
-cdata.set('HAVE_ZLIB', zlib_dep.found())
 
 gst_plugins_good_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
