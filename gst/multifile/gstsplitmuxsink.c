@@ -1198,6 +1198,33 @@ calculate_next_max_timecode (GstSplitMuxSink * splitmux,
     next_max_tc_time =
         day_in_ns - cur_tc_time + target_tc_time +
         splitmux->fragment_start_time;
+
+    if (cur_tc->config.flags | GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME &&
+        cur_tc->config.fps_d == 1001) {
+      /* Checking fps_d is probably unneeded, but better safe than sorry
+       * (e.g. someone accidentally set a flag) */
+      guint frames_of_daily_jam;
+      /* We have around 2.6 frames of offset per day for 29.97 FPS and 5.2
+       * frames for 59.94 FPS. Must subtract those if the day is wrapping
+       * around. We'll just round them down */
+      switch (cur_tc->config.fps_n) {
+        case 30000:
+          frames_of_daily_jam = 2;
+          break;
+        case 60000:
+          frames_of_daily_jam = 5;
+          break;
+        default:
+          GST_WARNING_OBJECT (splitmux,
+              "The day is wrapping around for an unknown drop-frame frame rate %d/%d. There is likely to be an offset because of daily jam in the fragment duration.",
+              cur_tc->config.fps_n, cur_tc->config.fps_d);
+          frames_of_daily_jam = 0;
+          break;
+      }
+      next_max_tc_time -=
+          gst_util_uint64_scale (frames_of_daily_jam * GST_SECOND,
+          cur_tc->config.fps_d, cur_tc->config.fps_n);
+    }
   }
   GST_INFO_OBJECT (splitmux, "Next max TC time: %" GST_TIME_FORMAT
       " from ref TC: %" GST_TIME_FORMAT, GST_TIME_ARGS (next_max_tc_time),
