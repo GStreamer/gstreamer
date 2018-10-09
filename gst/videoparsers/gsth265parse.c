@@ -839,7 +839,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       gst_h265_parse_process_sei (h265parse, nalu);
 
       /* mark SEI pos */
-      if (h265parse->sei_pos == -1) {
+      if (nal_type == GST_H265_NAL_PREFIX_SEI && h265parse->sei_pos == -1) {
         if (h265parse->transform)
           h265parse->sei_pos = gst_adapter_available (h265parse->frame_out);
         else
