@@ -180,7 +180,13 @@ endforeach
 
 configinc = include_directories('.')
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
-subdir('ext/libav/')
+pkgconfig = import('pkgconfig')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+if get_option('default_library') == 'shared'
+  # If we don't build static plugins there is no need to generate pc files
+  plugins_pkgconfig_install_dir = disabler()
+endif
+subdir('ext/libav')
 
 python3 = import('python').find_installation()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
