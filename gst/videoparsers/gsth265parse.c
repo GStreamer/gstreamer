@@ -188,7 +188,6 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   /* done parsing; reset state */
   h265parse->current_off = -1;
 
-  h265parse->picture_start = FALSE;
   h265parse->update_caps = FALSE;
   h265parse->idr_pos = -1;
   h265parse->sei_pos = -1;
@@ -876,6 +875,10 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
               GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS))
         return FALSE;
 
+      /* This is similar to the GOT_SLICE state, but is only reset when the
+       * AU is complete. This is used to keep track of AU */
+      h265parse->picture_start = TRUE;
+
       pres = gst_h265_parser_parse_slice_hdr (nalparser, nalu, &slice);
 
       if (pres == GST_H265_PARSER_OK) {
@@ -988,46 +991,34 @@ static inline gboolean
 gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
     guint size, GstH265NalUnit * nalu)
 {
-  gboolean complete;
-  GstH265ParserResult parse_res;
   GstH265NalUnitType nal_type = nalu->type;
-  GstH265NalUnit nnalu;
-
-  GST_DEBUG_OBJECT (h265parse, "parsing collected nal");
-  parse_res = gst_h265_parser_identify_nalu_unchecked (h265parse->nalparser,
-      data, nalu->offset + nalu->size, size, &nnalu);
-
-  if (parse_res != GST_H265_PARSER_OK)
-    return FALSE;
+  gboolean complete;
 
   /* determine if AU complete */
-  GST_LOG_OBJECT (h265parse, "nal type: %d %s", nal_type, _nal_name (nal_type));
-  /* coded slice NAL starts a picture,
-   * i.e. other types become aggregated in front of it */
-  h265parse->picture_start |= ((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
-          && nal_type <= GST_H265_NAL_SLICE_RASL_R)
-      || GST_H265_IS_NAL_TYPE_IRAP (nal_type));
+  GST_LOG_OBJECT (h265parse, "next nal type: %d %s (picture started %i)",
+      nal_type, _nal_name (nal_type), h265parse->picture_start);
 
   /* consider a coded slices (IRAP or not) to start a picture,
    * (so ending the previous one) if first_slice_segment_in_pic_flag == 1*/
-  nal_type = nnalu.type;
   complete = h265parse->picture_start && ((nal_type >= GST_H265_NAL_VPS
           && nal_type <= GST_H265_NAL_AUD)
       || nal_type == GST_H265_NAL_PREFIX_SEI || (nal_type >= 41
           && nal_type <= 44) || (nal_type >= 48 && nal_type <= 55));
 
-  GST_LOG_OBJECT (h265parse, "next nal type: %d %s", nal_type,
-      _nal_name (nal_type));
-  if (nnalu.size > nnalu.header_bytes) {
-    /* Any VCL Nal unit with first_slice_segment_in_pic_flag == 1 considered start of frame */
+  /* Any VCL Nal unit with first_slice_segment_in_pic_flag == 1 considered start of frame */
+  if (nalu->size > nalu->header_bytes) {
     complete |= h265parse->picture_start
         && (((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
                 && nal_type <= GST_H265_NAL_SLICE_RASL_R)
             || GST_H265_IS_NAL_TYPE_IRAP (nal_type))
-        && (nnalu.data[nnalu.offset + 2] & 0x80));
+        && (nalu->data[nalu->offset + 2] & 0x80));
   }
 
   GST_LOG_OBJECT (h265parse, "au complete: %d", complete);
+
+  if (complete)
+    h265parse->picture_start = FALSE;
+
   return complete;
 }
 
@@ -1175,12 +1166,24 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
     GST_LOG_OBJECT (h265parse, "resuming frame parsing");
   }
 
-  drain = GST_BASE_PARSE_DRAINING (parse);
+  /* Always consume the entire input buffer when in_align == ALIGN_AU */
+  drain = GST_BASE_PARSE_DRAINING (parse)
+      || h265parse->in_align == GST_H265_PARSE_ALIGN_AU;
   nonext = FALSE;
 
   current_off = h265parse->current_off;
   if (current_off < 0)
     current_off = 0;
+
+  /* The parser is being drain, but no new data was added, just prentend this
+   * AU is complete */
+  if (drain && current_off == size) {
+    GST_DEBUG_OBJECT (h265parse, "draining with no new data");
+    nalu.size = 0;
+    nalu.offset = current_off;
+    goto end;
+  }
+
   g_assert (current_off < size);
   GST_DEBUG_OBJECT (h265parse, "last parse position %d", current_off);
 
@@ -1218,6 +1221,13 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
             nalu.offset, nalu.size);
         break;
       case GST_H265_PARSER_NO_NAL_END:
+        /* In NAL alignment, assume the NAL is complete */
+        if (h265parse->in_align == GST_H265_PARSE_ALIGN_NAL ||
+            h265parse->in_align == GST_H265_PARSE_ALIGN_AU) {
+          nonext = TRUE;
+          nalu.size = size - nalu.offset;
+          break;
+        }
         GST_DEBUG_OBJECT (h265parse, "not a complete nal found at offset %u",
             nalu.offset);
         /* if draining, accept it as complete nal */
@@ -1272,21 +1282,12 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (h265parse, "%p complete nal found. Off: %u, Size: %u",
         data, nalu.offset, nalu.size);
 
-    /* simulate no next nal if none needed */
-    nonext = nonext || (h265parse->align == GST_H265_PARSE_ALIGN_NAL);
-
-    if (!nonext) {
-      /* expect at least 3 bytes start_code, and 2 bytes NALU header.
-       * the length of the NALU payload can be zero.
-       * (e.g. EOS/EOB placed at the end of an AU.) */
-      if (nalu.offset + nalu.size + 3 + 2 > size) {
-        GST_DEBUG_OBJECT (h265parse, "not enough data for next NALU");
-        if (drain) {
-          GST_DEBUG_OBJECT (h265parse, "but draining anyway");
-          nonext = TRUE;
-        } else {
-          goto more;
-        }
+    if (gst_h265_parse_collect_nal (h265parse, data, size, &nalu)) {
+      /* complete current frame, if it exist */
+      if (current_off > 0) {
+        nalu.size = 0;
+        nalu.offset = nalu.sc_offset;
+        break;
       }
     }
 
@@ -1298,15 +1299,33 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
       goto skip;
     }
 
-    if (nonext)
-      break;
+    if (nonext) {
+      /* If there is a marker flag, or input is AU, we know this is complete */
+      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_MARKER) ||
+          h265parse->in_align == GST_H265_PARSE_ALIGN_AU) {
+        break;
+      }
 
-    /* if no next nal, we know it's complete here */
-    if (gst_h265_parse_collect_nal (h265parse, data, size, &nalu))
+      /* or if we are draining or producing NALs */
+      if (drain || h265parse->align == GST_H265_PARSE_ALIGN_NAL)
+        break;
+
+      current_off = nalu.offset + nalu.size;
+      goto more;
+    }
+
+    /* If the output is NAL, we are done */
+    if (h265parse->align == GST_H265_PARSE_ALIGN_NAL)
       break;
 
     GST_DEBUG_OBJECT (h265parse, "Looking for more");
     current_off = nalu.offset + nalu.size;
+
+    /* expect at least 3 bytes start_code, and 2 bytes NALU header.
+     * the length of the NALU payload can be zero.
+     * (e.g. EOS/EOB placed at the end of an AU.) */
+    if (G_UNLIKELY (size - current_off < 5))
+      goto more;
   }
 
 end:
@@ -2932,6 +2951,8 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       h265parse->split_packetized = TRUE;
     h265parse->packetized = TRUE;
   }
+
+  h265parse->in_align = align;
 
   return TRUE;
 

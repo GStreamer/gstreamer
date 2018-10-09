@@ -67,6 +67,7 @@ struct _GstH265Parse
 
   /* state */
   GstH265Parser *nalparser;
+  guint in_align;
   guint state;
   guint align;
   guint format;
