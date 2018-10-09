@@ -279,10 +279,7 @@ gst_shm_src_stop_reading (GstShmSrc * self)
 
   if (pipe) {
     gst_shm_pipe_dec (pipe);
-    gst_poll_remove_fd (self->poll, &self->pollfd);
   }
-
-  gst_poll_fd_init (&self->pollfd);
   gst_poll_set_flushing (self->poll, TRUE);
 }
 
@@ -473,6 +470,10 @@ gst_shm_pipe_dec (GstShmPipe * pipe)
 
   if (pipe->pipe)
     sp_client_close (pipe->pipe);
+
+  gst_poll_remove_fd (pipe->src->poll, &pipe->src->pollfd);
+  gst_poll_fd_init (&pipe->src->pollfd);
+
   GST_OBJECT_UNLOCK (pipe->src);
 
   gst_object_unref (pipe->src);
