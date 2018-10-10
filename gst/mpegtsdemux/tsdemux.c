@@ -230,10 +230,8 @@ struct _TSDemuxStream
     "video/mpeg, " \
       "mpegversion = (int) { 1, 2, 4 }, " \
       "systemstream = (boolean) FALSE; " \
-    "video/x-h264,stream-format=(string)byte-stream," \
-      "alignment=(string)nal;" \
-    "video/x-h265,stream-format=(string)byte-stream," \
-      "alignment=(string)nal;" \
+    "video/x-h264,stream-format=(string)byte-stream;" \
+    "video/x-h265,stream-format=(string)byte-stream;" \
     "video/x-dirac;" \
     "video/x-cavs;" \
     "video/x-wmv," \
@@ -1497,8 +1495,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         case DRF_ID_HEVC:
           is_video = TRUE;
           caps = gst_caps_new_simple ("video/x-h265",
-              "stream-format", G_TYPE_STRING, "byte-stream",
-              "alignment", G_TYPE_STRING, "nal", NULL);
+              "stream-format", G_TYPE_STRING, "byte-stream", NULL);
           break;
         case DRF_ID_KLVA:
           sparse = TRUE;
@@ -1518,8 +1515,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       if (program->program_number == 10510 && bstream->pid == 3401) {
         is_video = TRUE;
         caps = gst_caps_new_simple ("video/x-h264",
-            "stream-format", G_TYPE_STRING, "byte-stream",
-            "alignment", G_TYPE_STRING, "nal", NULL);
+            "stream-format", G_TYPE_STRING, "byte-stream", NULL);
       }
       break;
     case ST_HDV_AUX_V:
@@ -1560,14 +1556,12 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case GST_MPEGTS_STREAM_TYPE_VIDEO_H264:
       is_video = TRUE;
       caps = gst_caps_new_simple ("video/x-h264",
-          "stream-format", G_TYPE_STRING, "byte-stream",
-          "alignment", G_TYPE_STRING, "nal", NULL);
+          "stream-format", G_TYPE_STRING, "byte-stream", NULL);
       break;
     case GST_MPEGTS_STREAM_TYPE_VIDEO_HEVC:
       is_video = TRUE;
       caps = gst_caps_new_simple ("video/x-h265",
-          "stream-format", G_TYPE_STRING, "byte-stream",
-          "alignment", G_TYPE_STRING, "nal", NULL);
+          "stream-format", G_TYPE_STRING, "byte-stream", NULL);
       break;
     case GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K:
       is_video = TRUE;
