@@ -1308,6 +1308,13 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
       goto skip;
     }
 
+    /* Do not push immediatly if we don't have all headers. This ensure that
+     * our caps are complete, avoiding a renegotiation */
+    if (h265parse->align == GST_H265_PARSE_ALIGN_NAL &&
+        !GST_H265_PARSE_STATE_VALID (h265parse,
+            GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS))
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_QUEUE;
+
     if (nonext) {
       /* If there is a marker flag, or input is AU, we know this is complete */
       if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_MARKER) ||
