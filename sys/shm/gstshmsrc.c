@@ -94,8 +94,6 @@ static GstStateChangeReturn gst_shm_src_change_state (GstElement * element,
 static void gst_shm_pipe_inc (GstShmPipe * pipe);
 static void gst_shm_pipe_dec (GstShmPipe * pipe);
 
-// static guint gst_shm_src_signals[LAST_SIGNAL] = { 0 };
-
 static void
 gst_shm_src_class_init (GstShmSrcClass * klass)
 {
