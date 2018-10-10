@@ -769,7 +769,6 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, host);
-  add_auth_header (conn, msg);
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
@@ -851,7 +850,6 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
       "Sun, 9 Jan 1972 00:00:00 GMT");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_LENGTH, "32767");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, host);
-  add_auth_header (conn, msg);
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
