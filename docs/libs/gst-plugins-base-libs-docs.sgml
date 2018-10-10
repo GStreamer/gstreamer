@@ -110,6 +110,7 @@
         <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
         <filename>-lgstrtp-&GST_API_VERSION;</filename> to the library flags.
       </para>
+      <xi:include href="xml/gstrtpmeta.xml" />
       <xi:include href="xml/gstrtpbaseaudiopayload.xml" />
       <xi:include href="xml/gstrtpbasedepayload.xml" />
       <xi:include href="xml/gstrtpbasepayload.xml" />

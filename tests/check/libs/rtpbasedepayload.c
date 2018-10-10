@@ -23,8 +23,8 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-#include <gst/rtp/gstrtpbuffer.h>
-#include <gst/rtp/gstrtpbasedepayload.h>
+#include <gst/check/gstharness.h>
+#include <gst/rtp/rtp.h>
 
 #define DEFAULT_CLOCK_RATE (42)
 
@@ -317,22 +317,14 @@ validate_event (guint index, const gchar * name, const gchar * field, ...)
   va_end (var_args);
 }
 
-#define push_rtp_buffer(state, field, ...) \
-	push_rtp_buffer_full ((state), GST_FLOW_OK, (field), __VA_ARGS__)
-#define push_rtp_buffer_fails(state, error, field, ...) \
-        push_rtp_buffer_full ((state), (error), (field), __VA_ARGS__)
-
 static void
-push_rtp_buffer_full (State * state, GstFlowReturn expected,
-    const gchar * field, ...)
+rtp_buffer_set_valist (GstBuffer * buf, const gchar * field, va_list var_args,
+    gboolean * extra_ref_)
 {
-  GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
   GstRTPBuffer rtp = { NULL };
   gboolean mapped = FALSE;
   gboolean extra_ref = FALSE;
-  va_list var_args;
 
-  va_start (var_args, field);
   while (field) {
     if (!g_strcmp0 (field, "pts")) {
       GstClockTime pts = va_arg (var_args, GstClockTime);
@@ -366,13 +358,18 @@ push_rtp_buffer_full (State * state, GstFlowReturn expected,
         gst_rtp_buffer_set_ssrc (&rtp, ssrc);
       } else if (!g_strcmp0 (field, "extra-ref")) {
         extra_ref = va_arg (var_args, gboolean);
+        if (extra_ref_)
+          *extra_ref_ = extra_ref;
+      } else if (!g_strcmp0 (field, "csrc")) {
+        guint idx = va_arg (var_args, guint);
+        guint csrc = va_arg (var_args, guint);
+        gst_rtp_buffer_set_csrc (&rtp, idx, csrc);
       } else {
         fail ("test cannot set unknown buffer field '%s'", field);
       }
     }
     field = va_arg (var_args, const gchar *);
   }
-  va_end (var_args);
 
   if (mapped) {
     gst_rtp_buffer_unmap (&rtp);
@@ -380,6 +377,34 @@ push_rtp_buffer_full (State * state, GstFlowReturn expected,
 
   if (extra_ref)
     gst_buffer_ref (buf);
+}
+
+static void
+rtp_buffer_set (GstBuffer * buf, const gchar * field, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, field);
+  rtp_buffer_set_valist (buf, field, var_args, NULL);
+  va_end (var_args);
+}
+
+#define push_rtp_buffer(state, field, ...) \
+    push_rtp_buffer_full ((state), GST_FLOW_OK, (field), __VA_ARGS__)
+#define push_rtp_buffer_fails(state, error, field, ...) \
+    push_rtp_buffer_full ((state), (error), (field), __VA_ARGS__)
+
+static void
+push_rtp_buffer_full (State * state, GstFlowReturn expected,
+    const gchar * field, ...)
+{
+  GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  va_list var_args;
+  gboolean extra_ref = FALSE;
+
+  va_start (var_args, field);
+  rtp_buffer_set_valist (buf, field, var_args, &extra_ref);
+  va_end (var_args);
 
   fail_unless_equals_int (gst_pad_push (state->srcpad, buf), expected);
 
@@ -388,7 +413,7 @@ push_rtp_buffer_full (State * state, GstFlowReturn expected,
 }
 
 #define push_buffer(state, field, ...) \
-	push_buffer_full ((state), GST_FLOW_OK, (field), __VA_ARGS__)
+    push_buffer_full ((state), GST_FLOW_OK, (field), __VA_ARGS__)
 
 static void
 push_buffer_full (State * state, GstFlowReturn expected,
@@ -1237,7 +1262,64 @@ GST_START_TEST (rtp_base_depayload_clock_base_test)
   destroy_depayloader (state);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST
+/* basedepayloader has a property source-info that will add
+ * GstRTPSourceMeta to the output buffer with RTP source information, such as
+ * SSRC and CSRCs. The is useful for letting downstream know about the origin
+ * of the stream. */
+GST_START_TEST (rtp_base_depayload_source_info_test)
+{
+  GstHarness *h;
+  GstRtpDummyDepay *depay;
+  GstBuffer *buffer;
+  GstRTPSourceMeta *meta;
+  guint seq = 0;
+
+  depay = rtp_dummy_depay_new ();
+  h = gst_harness_new_with_element (GST_ELEMENT_CAST (depay), "sink", "src");
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+
+  /* Property enabled should always add meta, also when there is only SSRC and
+   * no CSRC. */
+  g_object_set (depay, "source-info", TRUE, NULL);
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+  rtp_buffer_set (buffer, "seq", seq++, "ssrc", 0x11, NULL);
+  buffer = gst_harness_push_and_pull (h, buffer);
+  fail_unless ((meta = gst_buffer_get_rtp_source_meta (buffer)));
+  fail_unless (meta->ssrc_valid);
+  fail_unless_equals_int (meta->ssrc, 0x11);
+  fail_unless_equals_int (meta->csrc_count, 0);
+  gst_buffer_unref (buffer);
+
+  /* Both SSRC and CSRC should be added to the meta */
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 2);
+  rtp_buffer_set (buffer, "seq", seq++, "ssrc", 0x11, "csrc", 0, 0x22,
+      "csrc", 1, 0x33, NULL);
+  buffer = gst_harness_push_and_pull (h, buffer);
+  fail_unless ((meta = gst_buffer_get_rtp_source_meta (buffer)));
+  fail_unless (meta->ssrc_valid);
+  fail_unless_equals_int (meta->ssrc, 0x11);
+  fail_unless_equals_int (meta->csrc_count, 2);
+  fail_unless_equals_int (meta->csrc[0], 0x22);
+  fail_unless_equals_int (meta->csrc[1], 0x33);
+  gst_buffer_unref (buffer);
+
+  /* Property disabled should never add meta */
+  g_object_set (depay, "source-info", FALSE, NULL);
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+  rtp_buffer_set (buffer, "seq", seq++, "ssrc", 0x11, NULL);
+  buffer = gst_harness_push_and_pull (h, buffer);
+  fail_if (gst_buffer_get_rtp_source_meta (buffer));
+  gst_buffer_unref (buffer);
+
+  g_object_unref (depay);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
+static Suite *
 rtp_basepayloading_suite (void)
 {
   Suite *s = suite_create ("rtp_base_depayloading_test");
@@ -1264,6 +1346,8 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_play_scale_test);
   tcase_add_test (tc_chain, rtp_base_depayload_play_speed_test);
   tcase_add_test (tc_chain, rtp_base_depayload_clock_base_test);
+
+  tcase_add_test (tc_chain, rtp_base_depayload_source_info_test);
 
   return s;
 }

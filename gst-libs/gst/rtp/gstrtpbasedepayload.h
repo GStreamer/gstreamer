@@ -120,6 +120,13 @@ GstFlowReturn   gst_rtp_base_depayload_push       (GstRTPBaseDepayload *filter, 
 GST_RTP_API
 GstFlowReturn   gst_rtp_base_depayload_push_list  (GstRTPBaseDepayload *filter, GstBufferList *out_list);
 
+GST_RTP_API
+gboolean        gst_rtp_base_depayload_is_source_info_enabled  (GstRTPBaseDepayload * depayload);
+
+GST_RTP_API
+void            gst_rtp_base_depayload_set_source_info_enabled (GstRTPBaseDepayload * depayload,
+                                                                gboolean enable);
+
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPBaseDepayload, gst_object_unref)

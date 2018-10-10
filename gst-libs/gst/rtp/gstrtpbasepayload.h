@@ -172,6 +172,22 @@ GST_RTP_API
 GstFlowReturn   gst_rtp_base_payload_push_list          (GstRTPBasePayload *payload,
                                                          GstBufferList *list);
 
+GST_RTP_API
+GstBuffer *     gst_rtp_base_payload_allocate_output_buffer (GstRTPBasePayload * payload,
+                                                             guint payload_len, guint8 pad_len,
+                                                             guint8 csrc_count);
+
+GST_RTP_API
+void            gst_rtp_base_payload_set_source_info_enabled (GstRTPBasePayload * payload,
+                                                              gboolean enable);
+
+GST_RTP_API
+gboolean        gst_rtp_base_payload_is_source_info_enabled (GstRTPBasePayload * payload);
+
+GST_RTP_API
+guint           gst_rtp_base_payload_get_source_count (GstRTPBasePayload * payload,
+                                                       GstBuffer * buffer);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPBasePayload, gst_object_unref)
 #endif

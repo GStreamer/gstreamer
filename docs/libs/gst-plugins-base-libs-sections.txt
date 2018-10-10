@@ -1374,6 +1374,9 @@ GST_RTP_BASE_DEPAYLOAD_SRCPAD
 gst_rtp_base_depayload_push
 gst_rtp_base_depayload_push_list
 
+gst_rtp_base_depayload_is_source_info_enabled
+gst_rtp_base_depayload_set_source_info_enabled
+
 <SUBSECTION Standard>
 GstRTPBaseDepayloadPrivate
 GST_TYPE_RTP_BASE_DEPAYLOAD
@@ -1404,6 +1407,11 @@ gst_rtp_base_payload_push
 gst_rtp_base_payload_push_list
 gst_rtp_base_payload_set_options
 gst_rtp_base_payload_set_outcaps
+
+gst_rtp_base_payload_allocate_output_buffer
+gst_rtp_base_payload_get_source_count
+gst_rtp_base_payload_is_source_info_enabled
+gst_rtp_base_payload_set_source_info_enabled
 <SUBSECTION Standard>
 GST_TYPE_RTP_BASE_PAYLOAD
 GST_RTP_BASE_PAYLOAD
@@ -1412,6 +1420,23 @@ GST_RTP_BASE_PAYLOAD_GET_CLASS
 GST_IS_RTP_BASE_PAYLOAD
 GST_IS_RTP_BASE_PAYLOAD_CLASS
 gst_rtp_base_payload_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstrtpmeta</FILE>
+<INCLUDE>gst/rtp/rtp.h</INCLUDE>
+GstRTPSourceMeta
+gst_buffer_add_rtp_source_meta
+gst_buffer_get_rtp_source_meta
+gst_rtp_source_meta_append_csrc
+gst_rtp_source_meta_get_info
+gst_rtp_source_meta_get_source_count
+gst_rtp_source_meta_set_ssrc
+GST_RTP_SOURCE_META_MAX_CSRC_COUNT
+<SUBSECTION Standard>
+gst_rtp_source_meta_api_get_type
+GST_RTP_SOURCE_META_API_TYPE
+GST_RTP_SOURCE_META_INFO
 </SECTION>
 
 <SECTION>

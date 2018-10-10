@@ -30,6 +30,7 @@
 #include <gst/rtp/gstrtpbaseaudiopayload.h>
 #include <gst/rtp/gstrtpbasepayload.h>
 #include <gst/rtp/gstrtpbasedepayload.h>
+#include <gst/rtp/gstrtpmeta.h>
 #include <gst/rtp/gstrtp-enumtypes.h>
 
 #endif /* __GST_RTP_H__ */

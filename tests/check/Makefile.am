@@ -245,6 +245,7 @@ check_PROGRAMS = \
 	libs/rtp \
 	libs/rtpbasedepayload \
 	libs/rtpbasepayload \
+	libs/rtpmeta \
 	libs/rtsp \
 	libs/rtspconnection \
 	libs/sdp \
@@ -578,6 +579,13 @@ libs_rtpbasedepayload_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_rtpbasedepayload_LDADD = \
+	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+
+libs_rtpmeta_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_rtpmeta_LDADD = \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 

@@ -23,8 +23,8 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-#include <gst/rtp/gstrtpbuffer.h>
-#include <gst/rtp/gstrtpbasepayload.h>
+#include <gst/check/gstharness.h>
+#include <gst/rtp/rtp.h>
 
 #define DEFAULT_CLOCK_RATE (42)
 #define BUFFER_BEFORE_LIST (10)
@@ -121,7 +121,9 @@ gst_rtp_dummy_pay_handle_buffer (GstRTPBasePayload * pay, GstBuffer * buffer)
     }
   }
 
-  paybuffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+  paybuffer =
+      gst_rtp_base_payload_allocate_output_buffer (GST_RTP_BASE_PAYLOAD (pay),
+      0, 0, 0);
 
   GST_BUFFER_PTS (paybuffer) = GST_BUFFER_PTS (buffer);
   GST_BUFFER_OFFSET (paybuffer) = GST_BUFFER_OFFSET (buffer);
@@ -444,20 +446,11 @@ validate_buffers_received (guint received_buffers)
 }
 
 static void
-validate_buffer (guint index, const gchar * field, ...)
+validate_buffer_valist (GstBuffer * buf, const gchar * field, va_list var_args)
 {
-  GstBuffer *buf;
   GstRTPBuffer rtp = { NULL };
   gboolean mapped = FALSE;
-  va_list var_args;
 
-  fail_if (index >= g_list_length (buffers));
-  buf = GST_BUFFER (g_list_nth_data (buffers, index));
-  fail_if (buf == NULL);
-
-  GST_TRACE ("%" GST_PTR_FORMAT, buf);
-
-  va_start (var_args, field);
   while (field) {
     if (!g_strcmp0 (field, "pts")) {
       GstClockTime pts = va_arg (var_args, GstClockTime);
@@ -489,17 +482,51 @@ validate_buffer (guint index, const gchar * field, ...)
       } else if (!g_strcmp0 (field, "ssrc")) {
         guint32 ssrc = va_arg (var_args, guint);
         fail_unless_equals_int (gst_rtp_buffer_get_ssrc (&rtp), ssrc);
+      } else if (!g_strcmp0 (field, "csrc")) {
+        guint idx = va_arg (var_args, guint);
+        guint csrc = va_arg (var_args, guint);
+        fail_unless_equals_int (gst_rtp_buffer_get_csrc (&rtp, idx), csrc);
+      } else if (!g_strcmp0 (field, "csrc-count")) {
+        guint csrc_count = va_arg (var_args, guint);
+        fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (&rtp),
+            csrc_count);
       } else {
         fail ("test cannot validate unknown buffer field '%s'", field);
       }
     }
     field = va_arg (var_args, const gchar *);
   }
-  va_end (var_args);
 
   if (mapped) {
     gst_rtp_buffer_unmap (&rtp);
   }
+}
+
+static void
+validate_buffer1 (GstBuffer * buf, const gchar * field, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, field);
+  validate_buffer_valist (buf, field, var_args);
+  va_end (var_args);
+}
+
+static void
+validate_buffer (guint index, const gchar * field, ...)
+{
+  GstBuffer *buf;
+  va_list var_args;
+
+  fail_if (index >= g_list_length (buffers));
+  buf = GST_BUFFER (g_list_nth_data (buffers, index));
+  fail_if (buf == NULL);
+
+  GST_TRACE ("%" GST_PTR_FORMAT, buf);
+
+  va_start (var_args, field);
+  validate_buffer_valist (buf, field, var_args);
+  va_end (var_args);
 }
 
 static void
@@ -1775,6 +1802,59 @@ GST_START_TEST (rtp_base_payload_property_stats_test)
 
 GST_END_TEST;
 
+/* basepayloader has a property source-info that makes it aware of RTP
+ * source information passed as GstRTPSourceMeta on the input buffers. All
+ * sources found in the meta will be added to the list of CSRCs in the RTP
+ * header. A useful scenario for this is, for instance, to signal which
+ * sources contributed to a mixed audio stream. */
+GST_START_TEST (rtp_base_payload_property_source_info_test)
+{
+  GstHarness *h;
+  GstRtpDummyPay *pay;
+  GstBuffer *buffer;
+  guint csrc_count = 2;
+  const guint32 csrc[] = { 0x11, 0x22 };
+  const guint32 ssrc = 0x33;
+
+  pay = rtp_dummy_pay_new ();
+  h = gst_harness_new_with_element (GST_ELEMENT_CAST (pay), "sink", "src");
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+
+  /* Input buffer has no meta, payloader should not add CSRC */
+  g_object_set (pay, "source-info", TRUE, NULL);
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+  buffer = gst_harness_push_and_pull (h, buffer);
+  validate_buffer1 (buffer, "csrc-count", 0, NULL);
+  fail_if (gst_buffer_get_rtp_source_meta (buffer));
+  gst_buffer_unref (buffer);
+
+  /* Input buffer has meta, payloader should add CSRC */
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+  fail_unless (gst_buffer_add_rtp_source_meta (buffer, &ssrc, csrc,
+          csrc_count));
+  buffer = gst_harness_push_and_pull (h, buffer);
+  /* The meta SSRC should be added as the last contributing source */
+  validate_buffer1 (buffer, "csrc-count", 3, "csrc", 0, csrc[0],
+      "csrc", 1, csrc[1], "csrc", 2, ssrc, NULL);
+  fail_if (gst_buffer_get_rtp_source_meta (buffer));
+  gst_buffer_unref (buffer);
+
+  /* When property is disabled, the meta should be ignored and no CSRC
+   * added. */
+  g_object_set (pay, "source-info", FALSE, NULL);
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+  fail_unless (gst_buffer_add_rtp_source_meta (buffer, NULL, csrc, csrc_count));
+  buffer = gst_harness_push_and_pull (h, buffer);
+  validate_buffer1 (buffer, "csrc-count", 0, NULL);
+  fail_if (gst_buffer_get_rtp_source_meta (buffer));
+  gst_buffer_unref (buffer);
+
+  g_object_unref (pay);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /* push a single buffer to the payloader which should successfully payload it
  * into an RTP packet. besides the payloaded RTP packet there should be the
  * three events initial events: stream-start, caps and segment. because of that
@@ -1878,6 +1958,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_payload_property_perfect_rtptime_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_ptime_multiple_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_stats_test);
+  tcase_add_test (tc_chain, rtp_base_payload_property_source_info_test);
 
   tcase_add_test (tc_chain, rtp_base_payload_framerate_attribute);
   tcase_add_test (tc_chain, rtp_base_payload_max_framerate_attribute);

@@ -3,6 +3,7 @@ rtp_sources = [
   'gstrtcpbuffer.c',
   'gstrtppayloads.c',
   'gstrtphdrext.c',
+  'gstrtpmeta.c',
   'gstrtpbaseaudiopayload.c',
   'gstrtpbasepayload.c',
   'gstrtpbasedepayload.c'
@@ -16,6 +17,7 @@ rtp_headers = [
   'gstrtpbuffer.h',
   'gstrtpdefs.h',
   'gstrtphdrext.h',
+  'gstrtpmeta.h',
   'gstrtppayloads.h',
   'rtp-prelude.h',
   'rtp.h',

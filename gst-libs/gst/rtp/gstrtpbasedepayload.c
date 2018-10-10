@@ -30,6 +30,7 @@
 #endif
 
 #include "gstrtpbasedepayload.h"
+#include "gstrtpmeta.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpbasedepayload_debug);
 #define GST_CAT_DEFAULT (rtpbasedepayload_debug)
@@ -57,6 +58,9 @@ struct _GstRTPBaseDepayloadPrivate
   GstCaps *last_caps;
   GstEvent *segment_event;
   guint32 segment_seqnum;       /* Note: this is a GstEvent seqnum */
+
+  gboolean source_info;
+  GstBuffer *input_buffer;
 };
 
 /* Filter signals and args */
@@ -66,10 +70,13 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SOURCE_INFO FALSE
+
 enum
 {
   PROP_0,
   PROP_STATS,
+  PROP_SOURCE_INFO,
   PROP_LAST
 };
 
@@ -183,6 +190,18 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
       g_param_spec_boxed ("stats", "Statistics", "Various statistics",
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTPBaseDepayload:source-info:
+   *
+   * Add RTP source information found in RTP header as meta to output buffer.
+   *
+   * Since: 1.16
+   **/
+  g_object_class_install_property (gobject_class, PROP_SOURCE_INFO,
+      g_param_spec_boolean ("source-info", "RTP source information",
+          "Add RTP source information as buffer meta",
+          DEFAULT_SOURCE_INFO, G_PARAM_READWRITE));
+
   gstelement_class->change_state = gst_rtp_base_depayload_change_state;
 
   klass->packet_lost = gst_rtp_base_depayload_packet_lost;
@@ -231,6 +250,7 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->dts = -1;
   priv->pts = -1;
   priv->duration = -1;
+  priv->source_info = DEFAULT_SOURCE_INFO;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 }
@@ -442,6 +462,8 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
     filter->need_newsegment = FALSE;
   }
 
+  priv->input_buffer = in;
+
   if (process_rtp_packet_func != NULL) {
     out_buf = process_rtp_packet_func (filter, &rtp);
     gst_rtp_buffer_unmap (&rtp);
@@ -458,6 +480,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   }
 
   gst_buffer_unref (in);
+  priv->input_buffer = NULL;
 
   return ret;
 
@@ -727,6 +750,30 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   return event;
 }
 
+static void
+add_rtp_source_meta (GstBuffer * outbuf, GstBuffer * rtpbuf)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstRTPSourceMeta *meta;
+  guint32 ssrc;
+
+  if (!gst_rtp_buffer_map (rtpbuf, GST_MAP_READ, &rtp))
+    return;
+
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+  meta = gst_buffer_add_rtp_source_meta (outbuf, &ssrc, NULL, 0);
+  if (meta != NULL) {
+    gint i;
+    gint csrc_count = gst_rtp_buffer_get_csrc_count (&rtp);
+    for (i = 0; i < csrc_count; i++) {
+      guint32 csrc = gst_rtp_buffer_get_csrc (&rtp, i);
+      gst_rtp_source_meta_append_csrc (meta, &csrc, 1);
+    }
+  }
+
+  gst_rtp_buffer_unmap (&rtp);
+}
+
 static gboolean
 set_headers (GstBuffer ** buffer, guint idx, GstRTPBaseDepayload * depayload)
 {
@@ -758,6 +805,9 @@ set_headers (GstBuffer ** buffer, guint idx, GstRTPBaseDepayload * depayload)
   priv->pts = GST_CLOCK_TIME_NONE;
   priv->dts = GST_CLOCK_TIME_NONE;
   priv->duration = GST_CLOCK_TIME_NONE;
+
+  if (priv->source_info && priv->input_buffer)
+    add_rtp_source_meta (*buffer, priv->input_buffer);
 
   return TRUE;
 }
@@ -959,7 +1009,15 @@ static void
 gst_rtp_base_depayload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstRTPBaseDepayload *depayload;
+
+  depayload = GST_RTP_BASE_DEPAYLOAD (object);
+
   switch (prop_id) {
+    case PROP_SOURCE_INFO:
+      gst_rtp_base_depayload_set_source_info_enabled (depayload,
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -979,8 +1037,44 @@ gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
       g_value_take_boxed (value,
           gst_rtp_base_depayload_create_stats (depayload));
       break;
+    case PROP_SOURCE_INFO:
+      g_value_set_boolean (value,
+          gst_rtp_base_depayload_is_source_info_enabled (depayload));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+/**
+ * gst_rtp_base_depayload_set_source_info_enabled:
+ * @depayload: a #GstRTPBaseDepayload
+ * @enable: whether to add meta about RTP sources to buffer
+ *
+ * Enable or disable adding #GstRTPSourceMeta to depayloaded buffers.
+ *
+ * Since: 1.16
+ **/
+void
+gst_rtp_base_depayload_set_source_info_enabled (GstRTPBaseDepayload * depayload,
+    gboolean enable)
+{
+  depayload->priv->source_info = enable;
+}
+
+/**
+ * gst_rtp_base_depayload_is_source_info_enabled:
+ * @depayload: a #GstRTPBaseDepayload
+ *
+ * Queries whether #GstRTPSourceMeta will be added to depayloaded buffers.
+ *
+ * Returns: %TRUE if source-info is enabled.
+ *
+ * Since: 1.16
+ **/
+gboolean
+gst_rtp_base_depayload_is_source_info_enabled (GstRTPBaseDepayload * depayload)
+{
+  return depayload->priv->source_info;
 }
