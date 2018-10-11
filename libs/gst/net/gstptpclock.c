@@ -2371,8 +2371,9 @@ gst_ptp_clock_ensure_domain_clock (GstPtpClock * self)
       for (l = domain_clocks; l; l = l->next) {
         PtpDomainData *clock_data = l->data;
 
-        if (clock_data->domain == self->priv->domain
-            && clock_data->last_ptp_time != 0) {
+        if (clock_data->domain == self->priv->domain &&
+            clock_data->have_master_clock && clock_data->last_ptp_time != 0) {
+          GST_DEBUG ("Switching domain clock on domain %d", clock_data->domain);
           self->priv->domain_clock = clock_data->domain_clock;
           got_clock = TRUE;
           break;
