@@ -1363,6 +1363,477 @@ gst_omx_component_get_last_error_string (GstOMXComponent * comp)
   return gst_omx_error_to_string (gst_omx_component_get_last_error (comp));
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static const gchar *
+omx_index_type_to_str (OMX_INDEXTYPE index)
+{
+  switch (index) {
+    case OMX_IndexComponentStartUnused:
+      return "OMX_IndexComponentStartUnused";
+    case OMX_IndexParamPriorityMgmt:
+      return "OMX_IndexParamPriorityMgmt";
+    case OMX_IndexParamAudioInit:
+      return "OMX_IndexParamAudioInit";
+    case OMX_IndexParamImageInit:
+      return "OMX_IndexParamImageInit";
+    case OMX_IndexParamVideoInit:
+      return "OMX_IndexParamVideoInit";
+    case OMX_IndexParamOtherInit:
+      return "OMX_IndexParamOtherInit";
+    case OMX_IndexParamNumAvailableStreams:
+      return "OMX_IndexParamNumAvailableStreams";
+    case OMX_IndexParamActiveStream:
+      return "OMX_IndexParamActiveStream";
+    case OMX_IndexParamSuspensionPolicy:
+      return "OMX_IndexParamSuspensionPolicy";
+    case OMX_IndexParamComponentSuspended:
+      return "OMX_IndexParamComponentSuspended";
+    case OMX_IndexConfigCapturing:
+      return "OMX_IndexConfigCapturing";
+    case OMX_IndexConfigCaptureMode:
+      return "OMX_IndexConfigCaptureMode";
+    case OMX_IndexAutoPauseAfterCapture:
+      return "OMX_IndexAutoPauseAfterCapture";
+    case OMX_IndexParamContentURI:
+      return "OMX_IndexParamContentURI";
+    case OMX_IndexParamCustomContentPipe:
+      return "OMX_IndexParamCustomContentPipe";
+    case OMX_IndexParamDisableResourceConcealment:
+      return "OMX_IndexParamDisableResourceConcealment";
+    case OMX_IndexConfigMetadataItemCount:
+      return "OMX_IndexConfigMetadataItemCount";
+    case OMX_IndexConfigContainerNodeCount:
+      return "OMX_IndexConfigContainerNodeCount";
+    case OMX_IndexConfigMetadataItem:
+      return "OMX_IndexConfigMetadataItem";
+    case OMX_IndexConfigCounterNodeID:
+      return "OMX_IndexConfigCounterNodeID";
+    case OMX_IndexParamMetadataFilterType:
+      return "OMX_IndexParamMetadataFilterType";
+    case OMX_IndexParamMetadataKeyFilter:
+      return "OMX_IndexParamMetadataKeyFilter";
+    case OMX_IndexConfigPriorityMgmt:
+      return "OMX_IndexConfigPriorityMgmt";
+    case OMX_IndexParamStandardComponentRole:
+      return "OMX_IndexParamStandardComponentRole";
+    case OMX_IndexPortStartUnused:
+      return "OMX_IndexPortStartUnused";
+    case OMX_IndexParamPortDefinition:
+      return "OMX_IndexParamPortDefinition";
+    case OMX_IndexParamCompBufferSupplier:
+      return "OMX_IndexParamCompBufferSupplier";
+    case OMX_IndexReservedStartUnused:
+      return "OMX_IndexReservedStartUnused";
+    case OMX_IndexAudioStartUnused:
+      return "OMX_IndexAudioStartUnused";
+    case OMX_IndexParamAudioPortFormat:
+      return "OMX_IndexParamAudioPortFormat";
+    case OMX_IndexParamAudioPcm:
+      return "OMX_IndexParamAudioPcm";
+    case OMX_IndexParamAudioAac:
+      return "OMX_IndexParamAudioAac";
+    case OMX_IndexParamAudioRa:
+      return "OMX_IndexParamAudioRa";
+    case OMX_IndexParamAudioMp3:
+      return "OMX_IndexParamAudioMp3";
+    case OMX_IndexParamAudioAdpcm:
+      return "OMX_IndexParamAudioAdpcm";
+    case OMX_IndexParamAudioG723:
+      return "OMX_IndexParamAudioG723";
+    case OMX_IndexParamAudioG729:
+      return "OMX_IndexParamAudioG729";
+    case OMX_IndexParamAudioAmr:
+      return "OMX_IndexParamAudioAmr";
+    case OMX_IndexParamAudioWma:
+      return "OMX_IndexParamAudioWma";
+    case OMX_IndexParamAudioSbc:
+      return "OMX_IndexParamAudioSbc";
+    case OMX_IndexParamAudioMidi:
+      return "OMX_IndexParamAudioMidi";
+    case OMX_IndexParamAudioGsm_FR:
+      return "OMX_IndexParamAudioGsm_FR";
+    case OMX_IndexParamAudioMidiLoadUserSound:
+      return "OMX_IndexParamAudioMidiLoadUserSound";
+    case OMX_IndexParamAudioG726:
+      return "OMX_IndexParamAudioG726";
+    case OMX_IndexParamAudioGsm_EFR:
+      return "OMX_IndexParamAudioGsm_EFR";
+    case OMX_IndexParamAudioGsm_HR:
+      return "OMX_IndexParamAudioGsm_HR";
+    case OMX_IndexParamAudioPdc_FR:
+      return "OMX_IndexParamAudioPdc_FR";
+    case OMX_IndexParamAudioPdc_EFR:
+      return "OMX_IndexParamAudioPdc_EFR";
+    case OMX_IndexParamAudioPdc_HR:
+      return "OMX_IndexParamAudioPdc_HR";
+    case OMX_IndexParamAudioTdma_FR:
+      return "OMX_IndexParamAudioTdma_FR";
+    case OMX_IndexParamAudioTdma_EFR:
+      return "OMX_IndexParamAudioTdma_EFR";
+    case OMX_IndexParamAudioQcelp8:
+      return "OMX_IndexParamAudioQcelp8";
+    case OMX_IndexParamAudioQcelp13:
+      return "OMX_IndexParamAudioQcelp13";
+    case OMX_IndexParamAudioEvrc:
+      return "OMX_IndexParamAudioEvrc";
+    case OMX_IndexParamAudioSmv:
+      return "OMX_IndexParamAudioSmv";
+    case OMX_IndexParamAudioVorbis:
+      return "OMX_IndexParamAudioVorbis";
+    case OMX_IndexConfigAudioMidiImmediateEvent:
+      return "OMX_IndexConfigAudioMidiImmediateEvent";
+    case OMX_IndexConfigAudioMidiControl:
+      return "OMX_IndexConfigAudioMidiControl";
+    case OMX_IndexConfigAudioMidiSoundBankProgram:
+      return "OMX_IndexConfigAudioMidiSoundBankProgram";
+    case OMX_IndexConfigAudioMidiStatus:
+      return "OMX_IndexConfigAudioMidiStatus";
+    case OMX_IndexConfigAudioMidiMetaEvent:
+      return "OMX_IndexConfigAudioMidiMetaEvent";
+    case OMX_IndexConfigAudioMidiMetaEventData:
+      return "OMX_IndexConfigAudioMidiMetaEventData";
+    case OMX_IndexConfigAudioVolume:
+      return "OMX_IndexConfigAudioVolume";
+    case OMX_IndexConfigAudioBalance:
+      return "OMX_IndexConfigAudioBalance";
+    case OMX_IndexConfigAudioChannelMute:
+      return "OMX_IndexConfigAudioChannelMute";
+    case OMX_IndexConfigAudioMute:
+      return "OMX_IndexConfigAudioMute";
+    case OMX_IndexConfigAudioLoudness:
+      return "OMX_IndexConfigAudioLoudness";
+    case OMX_IndexConfigAudioEchoCancelation:
+      return "OMX_IndexConfigAudioEchoCancelation";
+    case OMX_IndexConfigAudioNoiseReduction:
+      return "OMX_IndexConfigAudioNoiseReduction";
+    case OMX_IndexConfigAudioBass:
+      return "OMX_IndexConfigAudioBass";
+    case OMX_IndexConfigAudioTreble:
+      return "OMX_IndexConfigAudioTreble";
+    case OMX_IndexConfigAudioStereoWidening:
+      return "OMX_IndexConfigAudioStereoWidening";
+    case OMX_IndexConfigAudioChorus:
+      return "OMX_IndexConfigAudioChorus";
+    case OMX_IndexConfigAudioEqualizer:
+      return "OMX_IndexConfigAudioEqualizer";
+    case OMX_IndexConfigAudioReverberation:
+      return "OMX_IndexConfigAudioReverberation";
+    case OMX_IndexConfigAudioChannelVolume:
+      return "OMX_IndexConfigAudioChannelVolume";
+    case OMX_IndexImageStartUnused:
+      return "OMX_IndexImageStartUnused";
+    case OMX_IndexParamImagePortFormat:
+      return "OMX_IndexParamImagePortFormat";
+    case OMX_IndexParamFlashControl:
+      return "OMX_IndexParamFlashControl";
+    case OMX_IndexConfigFocusControl:
+      return "OMX_IndexConfigFocusControl";
+    case OMX_IndexParamQFactor:
+      return "OMX_IndexParamQFactor";
+    case OMX_IndexParamQuantizationTable:
+      return "OMX_IndexParamQuantizationTable";
+    case OMX_IndexParamHuffmanTable:
+      return "OMX_IndexParamHuffmanTable";
+    case OMX_IndexConfigFlashControl:
+      return "OMX_IndexConfigFlashControl";
+    case OMX_IndexVideoStartUnused:
+      return "OMX_IndexVideoStartUnused";
+    case OMX_IndexParamVideoPortFormat:
+      return "OMX_IndexParamVideoPortFormat";
+    case OMX_IndexParamVideoQuantization:
+      return "OMX_IndexParamVideoQuantization";
+    case OMX_IndexParamVideoFastUpdate:
+      return "OMX_IndexParamVideoFastUpdate";
+    case OMX_IndexParamVideoBitrate:
+      return "OMX_IndexParamVideoBitrate";
+    case OMX_IndexParamVideoMotionVector:
+      return "OMX_IndexParamVideoMotionVector";
+    case OMX_IndexParamVideoIntraRefresh:
+      return "OMX_IndexParamVideoIntraRefresh";
+    case OMX_IndexParamVideoErrorCorrection:
+      return "OMX_IndexParamVideoErrorCorrection";
+    case OMX_IndexParamVideoVBSMC:
+      return "OMX_IndexParamVideoVBSMC";
+    case OMX_IndexParamVideoMpeg2:
+      return "OMX_IndexParamVideoMpeg2";
+    case OMX_IndexParamVideoMpeg4:
+      return "OMX_IndexParamVideoMpeg4";
+    case OMX_IndexParamVideoWmv:
+      return "OMX_IndexParamVideoWmv";
+    case OMX_IndexParamVideoRv:
+      return "OMX_IndexParamVideoRv";
+    case OMX_IndexParamVideoAvc:
+      return "OMX_IndexParamVideoAvc";
+    case OMX_IndexParamVideoH263:
+      return "OMX_IndexParamVideoH263";
+    case OMX_IndexParamVideoProfileLevelQuerySupported:
+      return "OMX_IndexParamVideoProfileLevelQuerySupported";
+    case OMX_IndexParamVideoProfileLevelCurrent:
+      return "OMX_IndexParamVideoProfileLevelCurrent";
+    case OMX_IndexConfigVideoBitrate:
+      return "OMX_IndexConfigVideoBitrate";
+    case OMX_IndexConfigVideoFramerate:
+      return "OMX_IndexConfigVideoFramerate";
+    case OMX_IndexConfigVideoIntraVOPRefresh:
+      return "OMX_IndexConfigVideoIntraVOPRefresh";
+    case OMX_IndexConfigVideoIntraMBRefresh:
+      return "OMX_IndexConfigVideoIntraMBRefresh";
+    case OMX_IndexConfigVideoMBErrorReporting:
+      return "OMX_IndexConfigVideoMBErrorReporting";
+    case OMX_IndexParamVideoMacroblocksPerFrame:
+      return "OMX_IndexParamVideoMacroblocksPerFrame";
+    case OMX_IndexConfigVideoMacroBlockErrorMap:
+      return "OMX_IndexConfigVideoMacroBlockErrorMap";
+    case OMX_IndexParamVideoSliceFMO:
+      return "OMX_IndexParamVideoSliceFMO";
+    case OMX_IndexConfigVideoAVCIntraPeriod:
+      return "OMX_IndexConfigVideoAVCIntraPeriod";
+    case OMX_IndexConfigVideoNalSize:
+      return "OMX_IndexConfigVideoNalSize";
+    case OMX_IndexCommonStartUnused:
+      return "OMX_IndexCommonStartUnused";
+    case OMX_IndexParamCommonDeblocking:
+      return "OMX_IndexParamCommonDeblocking";
+    case OMX_IndexParamCommonSensorMode:
+      return "OMX_IndexParamCommonSensorMode";
+    case OMX_IndexParamCommonInterleave:
+      return "OMX_IndexParamCommonInterleave";
+    case OMX_IndexConfigCommonColorFormatConversion:
+      return "OMX_IndexConfigCommonColorFormatConversion";
+    case OMX_IndexConfigCommonScale:
+      return "OMX_IndexConfigCommonScale";
+    case OMX_IndexConfigCommonImageFilter:
+      return "OMX_IndexConfigCommonImageFilter";
+    case OMX_IndexConfigCommonColorEnhancement:
+      return "OMX_IndexConfigCommonColorEnhancement";
+    case OMX_IndexConfigCommonColorKey:
+      return "OMX_IndexConfigCommonColorKey";
+    case OMX_IndexConfigCommonColorBlend:
+      return "OMX_IndexConfigCommonColorBlend";
+    case OMX_IndexConfigCommonFrameStabilisation:
+      return "OMX_IndexConfigCommonFrameStabilisation";
+    case OMX_IndexConfigCommonRotate:
+      return "OMX_IndexConfigCommonRotate";
+    case OMX_IndexConfigCommonMirror:
+      return "OMX_IndexConfigCommonMirror";
+    case OMX_IndexConfigCommonOutputPosition:
+      return "OMX_IndexConfigCommonOutputPosition";
+    case OMX_IndexConfigCommonInputCrop:
+      return "OMX_IndexConfigCommonInputCrop";
+    case OMX_IndexConfigCommonOutputCrop:
+      return "OMX_IndexConfigCommonOutputCrop";
+    case OMX_IndexConfigCommonDigitalZoom:
+      return "OMX_IndexConfigCommonDigitalZoom";
+    case OMX_IndexConfigCommonOpticalZoom:
+      return "OMX_IndexConfigCommonOpticalZoom";
+    case OMX_IndexConfigCommonWhiteBalance:
+      return "OMX_IndexConfigCommonWhiteBalance";
+    case OMX_IndexConfigCommonExposure:
+      return "OMX_IndexConfigCommonExposure";
+    case OMX_IndexConfigCommonContrast:
+      return "OMX_IndexConfigCommonContrast";
+    case OMX_IndexConfigCommonBrightness:
+      return "OMX_IndexConfigCommonBrightness";
+    case OMX_IndexConfigCommonBacklight:
+      return "OMX_IndexConfigCommonBacklight";
+    case OMX_IndexConfigCommonGamma:
+      return "OMX_IndexConfigCommonGamma";
+    case OMX_IndexConfigCommonSaturation:
+      return "OMX_IndexConfigCommonSaturation";
+    case OMX_IndexConfigCommonLightness:
+      return "OMX_IndexConfigCommonLightness";
+    case OMX_IndexConfigCommonExclusionRect:
+      return "OMX_IndexConfigCommonExclusionRect";
+    case OMX_IndexConfigCommonDithering:
+      return "OMX_IndexConfigCommonDithering";
+    case OMX_IndexConfigCommonPlaneBlend:
+      return "OMX_IndexConfigCommonPlaneBlend";
+    case OMX_IndexConfigCommonExposureValue:
+      return "OMX_IndexConfigCommonExposureValue";
+    case OMX_IndexConfigCommonOutputSize:
+      return "OMX_IndexConfigCommonOutputSize";
+    case OMX_IndexParamCommonExtraQuantData:
+      return "OMX_IndexParamCommonExtraQuantData";
+    case OMX_IndexConfigCommonFocusRegion:
+      return "OMX_IndexConfigCommonFocusRegion";
+    case OMX_IndexConfigCommonFocusStatus:
+      return "OMX_IndexConfigCommonFocusStatus";
+    case OMX_IndexConfigCommonTransitionEffect:
+      return "OMX_IndexConfigCommonTransitionEffect";
+    case OMX_IndexOtherStartUnused:
+      return "OMX_IndexOtherStartUnused";
+    case OMX_IndexParamOtherPortFormat:
+      return "OMX_IndexParamOtherPortFormat";
+    case OMX_IndexConfigOtherPower:
+      return "OMX_IndexConfigOtherPower";
+    case OMX_IndexConfigOtherStats:
+      return "OMX_IndexConfigOtherStats";
+    case OMX_IndexTimeStartUnused:
+      return "OMX_IndexTimeStartUnused";
+    case OMX_IndexConfigTimeScale:
+      return "OMX_IndexConfigTimeScale";
+    case OMX_IndexConfigTimeClockState:
+      return "OMX_IndexConfigTimeClockState";
+    case OMX_IndexConfigTimeActiveRefClock:
+      return "OMX_IndexConfigTimeActiveRefClock";
+    case OMX_IndexConfigTimeCurrentMediaTime:
+      return "OMX_IndexConfigTimeCurrentMediaTime";
+    case OMX_IndexConfigTimeCurrentWallTime:
+      return "OMX_IndexConfigTimeCurrentWallTime";
+    case OMX_IndexConfigTimeCurrentAudioReference:
+      return "OMX_IndexConfigTimeCurrentAudioReference";
+    case OMX_IndexConfigTimeCurrentVideoReference:
+      return "OMX_IndexConfigTimeCurrentVideoReference";
+    case OMX_IndexConfigTimeMediaTimeRequest:
+      return "OMX_IndexConfigTimeMediaTimeRequest";
+    case OMX_IndexConfigTimeClientStartTime:
+      return "OMX_IndexConfigTimeClientStartTime";
+    case OMX_IndexConfigTimePosition:
+      return "OMX_IndexConfigTimePosition";
+    case OMX_IndexConfigTimeSeekMode:
+      return "OMX_IndexConfigTimeSeekMode";
+    case OMX_IndexKhronosExtensions:
+      return "OMX_IndexKhronosExtensions";
+    case OMX_IndexVendorStartUnused:
+      return "OMX_IndexVendorStartUnused";
+    case OMX_IndexMax:
+      return "OMX_IndexMax";
+    default:
+      break;
+  }
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  switch ((OMX_ALG_INDEXTYPE) index) {
+    case OMX_ALG_IndexVendorComponentStartUnused:
+      return "OMX_ALG_IndexVendorComponentStartUnused";
+    case OMX_ALG_IndexParamReportedLatency:
+      return "OMX_ALG_IndexParamReportedLatency";
+    case OMX_ALG_IndexParamPreallocation:
+      return "OMX_ALG_IndexParamPreallocation";
+    case OMX_ALG_IndexVendorPortStartUnused:
+      return "OMX_ALG_IndexVendorPortStartUnused";
+    case OMX_ALG_IndexPortParamBufferMode:
+      return "OMX_ALG_IndexPortParamBufferMode";
+    case OMX_ALG_IndexParamVendorVideoStartUnused:
+      return "OMX_ALG_IndexParamVendorVideoStartUnused";
+    case OMX_ALG_IndexParamVideoHevc:
+      return "OMX_ALG_IndexParamVideoHevc";
+    case OMX_ALG_IndexParamVideoVp9:
+      return "OMX_ALG_IndexParamVideoVp9";
+    case OMX_ALG_IndexParamVideoGopControl:
+      return "OMX_ALG_IndexParamVideoGopControl";
+    case OMX_ALG_IndexParamVideoSlices:
+      return "OMX_ALG_IndexParamVideoSlices";
+    case OMX_ALG_IndexParamVideoSceneChangeResilience:
+      return "OMX_ALG_IndexParamVideoSceneChangeResilience";
+    case OMX_ALG_IndexParamVideoPrefetchBuffer:
+      return "OMX_ALG_IndexParamVideoPrefetchBuffer";
+    case OMX_ALG_IndexParamVideoCodedPictureBuffer:
+      return "OMX_ALG_IndexParamVideoCodedPictureBuffer";
+    case OMX_ALG_IndexParamVideoQuantizationControl:
+      return "OMX_ALG_IndexParamVideoQuantizationControl";
+    case OMX_ALG_IndexParamVideoQuantizationExtension:
+      return "OMX_ALG_IndexParamVideoQuantizationExtension";
+    case OMX_ALG_IndexParamVideoScalingList:
+      return "OMX_ALG_IndexParamVideoScalingList";
+    case OMX_ALG_IndexParamVideoDecodedPictureBuffer:
+      return "OMX_ALG_IndexParamVideoDecodedPictureBuffer";
+    case OMX_ALG_IndexParamVideoInternalEntropyBuffers:
+      return "OMX_ALG_IndexParamVideoInternalEntropyBuffers";
+    case OMX_ALG_IndexParamVideoLowBandwidth:
+      return "OMX_ALG_IndexParamVideoLowBandwidth";
+    case OMX_ALG_IndexParamVideoAspectRatio:
+      return "OMX_ALG_IndexParamVideoAspectRatio";
+    case OMX_ALG_IndexParamVideoSubframe:
+      return "OMX_ALG_IndexParamVideoSubframe";
+    case OMX_ALG_IndexParamVideoInstantaneousDecodingRefresh:
+      return "OMX_ALG_IndexParamVideoInstantaneousDecodingRefresh";
+    case OMX_ALG_IndexParamVideoMaxBitrate:
+      return "OMX_ALG_IndexParamVideoMaxBitrate";
+    case OMX_ALG_IndexParamVideoFillerData:
+      return "OMX_ALG_IndexParamVideoFillerData";
+    case OMX_ALG_IndexParamVideoBufferMode:
+      return "OMX_ALG_IndexParamVideoBufferMode";
+    case OMX_ALG_IndexParamVideoInterlaceFormatCurrent:
+      return "OMX_ALG_IndexParamVideoInterlaceFormatCurrent";
+    case OMX_ALG_IndexParamVideoLongTerm:
+      return "OMX_ALG_IndexParamVideoLongTerm";
+    case OMX_ALG_IndexParamVideoLookAhead:
+      return "OMX_ALG_IndexParamVideoLookAhead";
+    case OMX_ALG_IndexConfigVendorVideoStartUnused:
+      return "OMX_ALG_IndexConfigVendorVideoStartUnused";
+    case OMX_ALG_IndexConfigVideoInsertInstantaneousDecodingRefresh:
+      return "OMX_ALG_IndexConfigVideoInsertInstantaneousDecodingRefresh";
+    case OMX_ALG_IndexConfigVideoGroupOfPictures:
+      return "OMX_ALG_IndexConfigVideoGroupOfPictures";
+    case OMX_ALG_IndexConfigVideoRegionOfInterest:
+      return "OMX_ALG_IndexConfigVideoRegionOfInterest";
+    case OMX_ALG_IndexConfigVideoNotifySceneChange:
+      return "OMX_ALG_IndexConfigVideoNotifySceneChange";
+    case OMX_ALG_IndexConfigVideoInsertLongTerm:
+      return "OMX_ALG_IndexConfigVideoInsertLongTerm";
+    case OMX_ALG_IndexConfigVideoUseLongTerm:
+      return "OMX_ALG_IndexConfigVideoUseLongTerm";
+    case OMX_ALG_IndexVendorCommonStartUnused:
+      return "OMX_ALG_IndexVendorCommonStartUnused";
+    case OMX_ALG_IndexParamCommonSequencePictureModeCurrent:
+      return "OMX_ALG_IndexParamCommonSequencePictureModeCurrent";
+    case OMX_ALG_IndexParamCommonSequencePictureModeQuerySupported:
+      return "OMX_ALG_IndexParamCommonSequencePictureModeQuerySupported";
+    case OMX_ALG_IndexParamVideoTwoPass:
+      return "OMX_ALG_IndexParamVideoTwoPass";
+    case OMX_ALG_IndexParamVideoColorPrimaries:
+      return "OMX_ALG_IndexParamVideoColorPrimaries";
+    case OMX_ALG_IndexParamVideoSkipFrame:
+      return "OMX_ALG_IndexParamVideoSkipFrame";
+    case OMX_ALG_IndexConfigVideoNotifyResolutionChange:
+      return "OMX_ALG_IndexConfigVideoNotifyResolutionChange";
+    case OMX_ALG_IndexConfigVideoInsertPrefixSEI:
+      return "OMX_ALG_IndexConfigVideoInsertPrefixSEI";
+    case OMX_ALG_IndexConfigVideoInsertSuffixSEI:
+      return "OMX_ALG_IndexConfigVideoInsertSuffixSEI";
+    case OMX_ALG_IndexConfigVideoQuantizationParameterTable:
+      return "OMX_ALG_IndexConfigVideoQuantizationParameterTable";
+    case OMX_ALG_IndexMaxEnum:
+      return "OMX_ALG_IndexMaxEnum";
+  }
+#endif
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  /* Not part of the enum in OMX_IndexAlg.h */
+  if (index == OMX_ALG_IndexParamVideoInterlaceFormatSupported)
+    return "OMX_ALG_IndexParamVideoInterlaceFormatSupported";
+#endif
+
+  return NULL;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
+
+static void
+log_omx_api_trace_call (GstOMXComponent * comp, const gchar * function,
+    OMX_INDEXTYPE index, GstDebugLevel level)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  GstStructure *s;
+  const gchar *index_name;
+
+  /* Don't bother creating useless structs if not needed */
+  if (gst_debug_category_get_threshold (OMX_API_TRACE) < level)
+    return;
+
+  index_name = omx_index_type_to_str (index);
+  if (!index_name) {
+    GST_CAT_WARNING_OBJECT (OMX_API_TRACE, comp->parent,
+        "unknown call of %s with index 0x%08x", function, index);
+    return;
+  }
+
+  s = gst_structure_new (function, "index", G_TYPE_STRING, index_name, NULL);
+  GST_CAT_LEVEL_LOG (OMX_API_TRACE, level, comp->parent, "%" GST_PTR_FORMAT, s);
+  gst_structure_free (s);
+#endif /* GST_DISABLE_GST_DEBUG */
+}
+
 /* comp->lock must be unlocked while calling this */
 OMX_ERRORTYPE
 gst_omx_component_get_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
@@ -1375,6 +1846,7 @@ gst_omx_component_get_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
 
   GST_DEBUG_OBJECT (comp->parent, "Getting %s parameter at index 0x%08x",
       comp->name, index);
+  log_omx_api_trace_call (comp, "GetParameter", index, GST_LEVEL_LOG);
   err = OMX_GetParameter (comp->handle, index, param);
   DEBUG_IF_OK (comp->parent, err, "Got %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
@@ -1394,6 +1866,8 @@ gst_omx_component_set_parameter (GstOMXComponent * comp, OMX_INDEXTYPE index,
 
   GST_DEBUG_OBJECT (comp->parent, "Setting %s parameter at index 0x%08x",
       comp->name, index);
+
+  log_omx_api_trace_call (comp, "SetParameter", index, GST_LEVEL_DEBUG);
   err = OMX_SetParameter (comp->handle, index, param);
   DEBUG_IF_OK (comp->parent, err, "Set %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
@@ -1413,6 +1887,7 @@ gst_omx_component_get_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
 
   GST_DEBUG_OBJECT (comp->parent, "Getting %s configuration at index 0x%08x",
       comp->name, index);
+  log_omx_api_trace_call (comp, "GetConfig", index, GST_LEVEL_LOG);
   err = OMX_GetConfig (comp->handle, index, config);
   DEBUG_IF_OK (comp->parent, err, "Got %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
@@ -1432,6 +1907,7 @@ gst_omx_component_set_config (GstOMXComponent * comp, OMX_INDEXTYPE index,
 
   GST_DEBUG_OBJECT (comp->parent, "Setting %s configuration at index 0x%08x",
       comp->name, index);
+  log_omx_api_trace_call (comp, "SetConfig", index, GST_LEVEL_DEBUG);
   err = OMX_SetConfig (comp->handle, index, config);
   DEBUG_IF_OK (comp->parent, err, "Set %s parameter at index 0x%08x: %s "
       "(0x%08x)", comp->name, index, gst_omx_error_to_string (err), err);
