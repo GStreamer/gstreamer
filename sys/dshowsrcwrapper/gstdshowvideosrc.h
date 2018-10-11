@@ -55,6 +55,9 @@ struct _GstDshowVideoSrc
   /* device friendly name */
   gchar *device_name;
 
+  /* device index */
+  gint device_index;
+
   /* list of caps created from the list of supported media types of the dshow capture filter */
   GstCaps *caps;
 

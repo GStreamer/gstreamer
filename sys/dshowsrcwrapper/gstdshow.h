@@ -84,7 +84,7 @@ gboolean gst_dshow_find_filter (CLSID input_majortype, CLSID input_subtype,
 /* get the dshow device path from device friendly name. 
 If friendly name is not set, it will return the first available device */
 gchar *gst_dshow_getdevice_from_devicename (const GUID * device_category,
-    gchar ** device_name);
+    gchar ** device_name, gint * device_index);
 
 /* show the capture filter property page (generally used to setup the device). the page is modal*/
 gboolean gst_dshow_show_propertypage (IBaseFilter * base_filter);

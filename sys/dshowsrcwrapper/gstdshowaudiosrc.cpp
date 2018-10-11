@@ -48,8 +48,11 @@ enum
 {
   PROP_0,
   PROP_DEVICE,
-  PROP_DEVICE_NAME
+  PROP_DEVICE_NAME,
+  PROP_DEVICE_INDEX
 };
+
+#define DEFAULT_PROP_DEVICE_INDEX 0
 
 
 static void gst_dshowaudiosrc_dispose (GObject * gobject);
@@ -122,6 +125,13 @@ gst_dshowaudiosrc_class_init (GstDshowAudioSrcClass * klass)
           "Human-readable name of the sound device", NULL,
           static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
+  g_object_class_install_property
+      (gobject_class, PROP_DEVICE_INDEX,
+      g_param_spec_int ("device-index", "Device index",
+          "Index of the enumerated audio device", 0, G_MAXINT,
+          DEFAULT_PROP_DEVICE_INDEX,
+          static_cast < GParamFlags > (G_PARAM_READWRITE)));
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -138,6 +148,7 @@ gst_dshowaudiosrc_init (GstDshowAudioSrc * src)
 {
   src->device = NULL;
   src->device_name = NULL;
+  src->device_index = DEFAULT_PROP_DEVICE_INDEX;
   src->audio_cap_filter = NULL;
   src->dshow_fakesink = NULL;
   src->media_filter = NULL;
@@ -224,6 +235,11 @@ gst_dshowaudiosrc_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_DEVICE_INDEX:
+    {
+      src->device_index = g_value_get_int (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -254,7 +270,7 @@ gst_dshowaudiosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 
   src->device =
       gst_dshow_getdevice_from_devicename (&CLSID_AudioInputDeviceCategory,
-      &src->device_name);
+      &src->device_name, &src->device_index);
   if (!src->device) {
     GST_ERROR ("No audio device found.");
     return NULL;

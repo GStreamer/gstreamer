@@ -291,7 +291,7 @@ clean:
 
 gchar *
 gst_dshow_getdevice_from_devicename (const GUID * device_category,
-    gchar ** device_name)
+    gchar ** device_name, gint * device_index)
 {
   gchar *ret = NULL;
   ICreateDevEnum *devices_enum = NULL;
@@ -300,6 +300,7 @@ gst_dshow_getdevice_from_devicename (const GUID * device_category,
   HRESULT hres = S_FALSE;
   ULONG fetched;
   gboolean bfound = FALSE;
+  gint devidx = -1;
 
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
       IID_ICreateDevEnum, (void **) &devices_enum);
@@ -333,14 +334,18 @@ gst_dshow_getdevice_from_devicename (const GUID * device_category,
             g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
             wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
 
-        if (!*device_name) {
+        devidx++;
+        GST_DEBUG ("Found device idx=%d: %s", devidx, friendly_name);
+
+        if (!*device_name && devidx == *device_index) {
           *device_name = g_strdup (friendly_name);
         }
 
-        if (_stricmp (*device_name, friendly_name) == 0) {
+        if (*device_name && _stricmp (*device_name, friendly_name) == 0) {
           WCHAR *wszDisplayName = NULL;
           hres = moniker->GetDisplayName (NULL, NULL, &wszDisplayName);
           if (hres == S_OK && wszDisplayName) {
+            *device_index = devidx;
             ret = g_utf16_to_utf8 ((const gunichar2 *) wszDisplayName,
                 wcslen (wszDisplayName), NULL, NULL, NULL);
             CoTaskMemFree (wszDisplayName);

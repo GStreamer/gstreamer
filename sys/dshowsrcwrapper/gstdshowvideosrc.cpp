@@ -68,8 +68,11 @@ enum
 {
   PROP_0,
   PROP_DEVICE,
-  PROP_DEVICE_NAME
+  PROP_DEVICE_NAME,
+  PROP_DEVICE_INDEX
 };
+
+#define DEFAULT_PROP_DEVICE_INDEX 0
 
 
 static void gst_dshowvideosrc_dispose (GObject * gobject);
@@ -141,7 +144,14 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL,
+          "Human-readable name of the video device", NULL,
+          static_cast < GParamFlags > (G_PARAM_READWRITE)));
+
+  g_object_class_install_property
+      (gobject_class, PROP_DEVICE_INDEX,
+      g_param_spec_int ("device-index", "Device index",
+          "Index of the enumerated video device", 0, G_MAXINT,
+          DEFAULT_PROP_DEVICE_INDEX,
           static_cast < GParamFlags > (G_PARAM_READWRITE)));
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
@@ -161,6 +171,7 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src)
 {
   src->device = NULL;
   src->device_name = NULL;
+  src->device_index = DEFAULT_PROP_DEVICE_INDEX;
   src->video_cap_filter = NULL;
   src->dshow_fakesink = NULL;
   src->media_filter = NULL;
@@ -292,6 +303,11 @@ gst_dshowvideosrc_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_DEVICE_INDEX:
+    {
+      src->device_index = g_value_get_int (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -319,15 +335,21 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
     return gst_caps_ref (src->caps);
   }
 
+  /* device will be used first, then device-name, then device-index */
   if (!src->device) {
+    GST_DEBUG_OBJECT (src, "No device set, will enumerate to match device-name or device-index");
+
     src->device =
         gst_dshow_getdevice_from_devicename (&CLSID_VideoInputDeviceCategory,
-        &src->device_name);
+        &src->device_name, &src->device_index);
     if (!src->device) {
       GST_ERROR ("No video device found.");
       return NULL;
     }
   }
+
+  GST_DEBUG_OBJECT (src, "Opening device-index=%d, device-name='%s', device='%s'",
+      src->device_index, src->device_name, src->device);
 
   unidevice =
       g_utf8_to_utf16 (src->device, strlen (src->device), NULL, NULL, NULL);
