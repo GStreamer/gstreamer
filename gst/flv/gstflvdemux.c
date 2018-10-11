@@ -723,6 +723,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   GstCaps *caps = NULL, *old_caps;
   gboolean ret = FALSE;
   guint adjusted_rate = rate;
+  guint adjusted_channels = channels;
   GstEvent *event;
   gchar *stream_id;
 
@@ -783,6 +784,16 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
               adjusted_rate);
         } else {
           adjusted_rate = rate;
+        }
+
+        adjusted_channels =
+            gst_codec_utils_aac_get_channels (map.data, map.size);
+
+        if (adjusted_channels && (channels != adjusted_channels)) {
+          GST_LOG_OBJECT (demux, "Ajusting AAC channels %d -> %d", channels,
+              adjusted_channels);
+        } else {
+          adjusted_channels = channels;
         }
       }
       gst_buffer_unmap (demux->audio_codec_data, &map);
@@ -866,7 +877,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   }
 
   gst_caps_set_simple (caps, "rate", G_TYPE_INT, adjusted_rate,
-      "channels", G_TYPE_INT, channels, NULL);
+      "channels", G_TYPE_INT, adjusted_channels, NULL);
 
   if (demux->audio_codec_data) {
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
