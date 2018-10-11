@@ -401,11 +401,14 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
               GstCaps *caps =
                   gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin);
               if (caps) {
+                GST_DEBUG_OBJECT (src, "Caps supported by device: %" GST_PTR_FORMAT, caps);
                 gst_caps_append (src->caps, caps);
               } else {
                 caps = gst_dshowvideosrc_getcaps_from_enum_mediatypes (src, capture_pin);
-                if (caps)
+                if (caps) {
+                  GST_DEBUG_OBJECT (src, "Caps supported by device: %" GST_PTR_FORMAT, caps);
                   gst_caps_append (src->caps, caps);
+                }
               }
             }
           }
@@ -650,6 +653,8 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
             (GstCapturePinMediaType *) type_pin_mediatype->data;
         gchar *caps_string = NULL;
         gchar *src_caps_string = NULL;
+
+        GST_DEBUG_OBJECT (src, "Default: %dx%d@%d", pin_mediatype->defaultWidth, pin_mediatype->defaultHeight, pin_mediatype->defaultFPS);
 
         /* retrieve the desired video size */
         VIDEOINFOHEADER *video_info = NULL;
