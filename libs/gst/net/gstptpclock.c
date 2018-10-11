@@ -1595,7 +1595,7 @@ handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
   if (domain->have_master_clock
       && compare_clock_identity (&domain->master_clock_identity,
           &msg->source_port_identity) != 0) {
-    GST_TRACE ("FOLLOW_UP msg not from out master. Ignoring");
+    GST_TRACE ("FOLLOW_UP msg not from current clock master. Ignoring");
     return;
   }
 
@@ -1758,6 +1758,8 @@ handle_ptp_message (PtpMessage * msg, GstClockTime receive_time)
     return;
   }
 
+  GST_TRACE ("Message type %d receive_time %" GST_TIME_FORMAT,
+      msg->message_type, GST_TIME_ARGS (receive_time));
   switch (msg->message_type) {
     case PTP_MESSAGE_TYPE_ANNOUNCE:
       handle_announce_message (msg, receive_time);
