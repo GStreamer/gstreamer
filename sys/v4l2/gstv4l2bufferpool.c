@@ -611,7 +611,7 @@ wrong_config:
 }
 
 static GstFlowReturn
-gst_v4l2_buffer_pool_resurect_buffer (GstV4l2BufferPool * pool)
+gst_v4l2_buffer_pool_resurrect_buffer (GstV4l2BufferPool * pool)
 {
   GstBufferPoolAcquireParams params = { 0 };
   GstBuffer *buffer = NULL;
@@ -652,9 +652,9 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
       if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
         /* For captures, we need to enqueue buffers before we start streaming,
          * so the driver don't underflow immediatly. As we have put then back
-         * into the base class queue, resurect them, then releasing will queue
+         * into the base class queue, resurrect them, then releasing will queue
          * them back. */
-        while (gst_v4l2_buffer_pool_resurect_buffer (pool) == GST_FLOW_OK)
+        while (gst_v4l2_buffer_pool_resurrect_buffer (pool) == GST_FLOW_OK)
           continue;
       }
 
@@ -888,7 +888,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
     pool->group_released_handler =
         g_signal_connect_swapped (pool->vallocator, "group-released",
-        G_CALLBACK (gst_v4l2_buffer_pool_resurect_buffer), pool);
+        G_CALLBACK (gst_v4l2_buffer_pool_resurrect_buffer), pool);
     ret = gst_v4l2_buffer_pool_streamon (pool);
   }
 
@@ -1336,7 +1336,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
   GST_DEBUG_OBJECT (pool, "acquire");
 
-  /* If this is being called to resurect a lost buffer */
+  /* If this is being called to resurrect a lost buffer */
   if (params && params->flags & GST_V4L2_BUFFER_POOL_ACQUIRE_FLAG_RESURRECT) {
     ret = pclass->acquire_buffer (bpool, buffer, params);
     goto done;
@@ -1779,7 +1779,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
             /* If we have no more buffer, and can allocate it time to do so */
             if (num_queued == 0) {
               if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
-                ret = gst_v4l2_buffer_pool_resurect_buffer (pool);
+                ret = gst_v4l2_buffer_pool_resurrect_buffer (pool);
                 if (ret == GST_FLOW_OK)
                   goto done;
               }
@@ -1790,7 +1790,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
               GstBuffer *copy;
 
               if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
-                ret = gst_v4l2_buffer_pool_resurect_buffer (pool);
+                ret = gst_v4l2_buffer_pool_resurrect_buffer (pool);
                 if (ret == GST_FLOW_OK)
                   goto done;
               }
