@@ -1199,8 +1199,8 @@ calculate_next_max_timecode (GstSplitMuxSink * splitmux,
         day_in_ns - cur_tc_time + target_tc_time +
         splitmux->fragment_start_time;
 
-    if (cur_tc->config.flags | GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME &&
-        cur_tc->config.fps_d == 1001) {
+    if ((cur_tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) &&
+        (cur_tc->config.fps_d == 1001)) {
       /* Checking fps_d is probably unneeded, but better safe than sorry
        * (e.g. someone accidentally set a flag) */
       guint frames_of_daily_jam;
