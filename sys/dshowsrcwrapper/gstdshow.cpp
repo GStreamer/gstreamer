@@ -24,6 +24,9 @@
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
 
+GST_DEBUG_CATEGORY_EXTERN (dshowsrcwrapper_debug);
+#define GST_CAT_DEFAULT dshowsrcwrapper_debug
+
 const GUID MEDIASUBTYPE_I420
     = { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
     0x71}

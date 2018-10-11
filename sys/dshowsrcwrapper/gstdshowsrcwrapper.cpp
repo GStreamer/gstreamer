@@ -26,6 +26,9 @@
 #include "gstdshowaudiosrc.h"
 #include "gstdshowvideosrc.h"
 
+GST_DEBUG_CATEGORY (dshowsrcwrapper_debug);
+#define GST_CAT_DEFAULT dshowsrcwrapper_debug
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -34,6 +37,9 @@ plugin_init (GstPlugin * plugin)
       !gst_element_register (plugin, "dshowvideosrc",
           GST_RANK_NONE, GST_TYPE_DSHOWVIDEOSRC))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (dshowsrcwrapper_debug, "dshowsrcwrapper", 0,
+      "DirectShow source wrapper");
 
   return TRUE;
 }
