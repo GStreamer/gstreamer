@@ -36,26 +36,25 @@ namespace GstreamerSharp
 			ghostPad.SetActive (true);
 			bin.AddPad (ghostPad);
 
-			// Start playing 
+			// Configure the equalizer
+			equalizer["band1"] = (double)-24.0;
+			equalizer["band2"] = (double)-24.0;
+
+			// Set playbin's audio sink to be our sink bin
+			pipeline["audio-sink"] = bin;
+
+			// Start playing
 			var ret = pipeline.SetState (State.Playing);
 			if (ret == StateChangeReturn.Failure) {
 				Console.WriteLine ("Unable to set the pipeline to the playing state.");
 				return;
 			}
 
-
-			// Configure the equalizer
-			equalizer ["band1"] = (double)-24.0;
-			equalizer ["band2"] = (double)-24.0;
-
-			// Set playbin's audio sink to be our sink bin
-			pipeline ["audio-sink"] = bin;
-
-			// Wait until error or EOS 
+			// Wait until error or EOS
 			var bus = pipeline.Bus;
 			var msg = bus.TimedPopFiltered (Constants.CLOCK_TIME_NONE, MessageType.Error | MessageType.Eos);
 
-			// Free resources 
+			// Free resources
 			pipeline.SetState (State.Null);
 		}
 	}
