@@ -111,7 +111,6 @@ gboolean                gst_element_register                    (GstPlugin *plug
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE: Elements handling image media types
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE: Elements handling subtitle media types
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_METADATA: Elements handling metadata media types
- * @GST_ELEMENT_FACTORY_TYPE_MEDIA_HARDWARE: Elements interacting with hardware devices, you may need to put the element in "READY" state to test if the hardware is present in the system (Since 1.16)
  *
  * The type of #GstElementFactory to filter.
  *
@@ -143,7 +142,7 @@ typedef guint64 GstElementFactoryListType;
 #define  GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE    ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 51))
 #define  GST_ELEMENT_FACTORY_TYPE_MEDIA_SUBTITLE ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 52))
 #define  GST_ELEMENT_FACTORY_TYPE_MEDIA_METADATA ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 53))
-#define  GST_ELEMENT_FACTORY_TYPE_MEDIA_HARDWARE ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 54))
+
 /**
  * GST_ELEMENT_FACTORY_TYPE_ANY: (value 562949953421311) (type GstElementFactoryListType)
  *
@@ -210,7 +209,17 @@ typedef guint64 GstElementFactoryListType;
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_IMAGE           "Image"
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_SUBTITLE        "Subtitle"
 #define GST_ELEMENT_FACTORY_KLASS_MEDIA_METADATA        "Metadata"
-#define GST_ELEMENT_FACTORY_KLASS_MEDIA_HARDWARE        "Hardware"
+
+/**
+ * GST_ELEMENT_FACTORY_KLASS_HARDWARE:
+ *
+ * Elements interacting with hardware devices should specify this classifier in
+ * their metadata. You may need to put the element in "READY" state to test if
+ * the hardware is present in the system.
+ *
+ * Since: 1.16
+ */
+#define GST_ELEMENT_FACTORY_KLASS_HARDWARE              "Hardware"
 
 GST_API
 gboolean      gst_element_factory_list_is_type      (GstElementFactory *factory,
