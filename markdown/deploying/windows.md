@@ -64,7 +64,7 @@ need to deploy.
 If you are building your installer using one of the Professional
 editions of [Visual
 Studio](http://www.microsoft.com/visualstudio/en-us/products/2010-editions/professional/overview)
-or [WiX](http://wix.sf.net) you can take advantage of pre-packaged
+or [WiX](http://wixtoolset.org) you can take advantage of pre-packaged
 [Merge
 Modules](http://msdn.microsoft.com/en-us/library/windows/desktop/aa369820\(v=vs.85\).aspx).
 GStreamer is divided in packages, which roughly take care of

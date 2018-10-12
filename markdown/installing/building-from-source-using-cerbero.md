@@ -7,8 +7,7 @@
 The GStreamer build system provides bootstrapping facilities for all
 platforms, but it still needs a minimum base to bootstrap:
 
--   python > 2.6 and python's `argparse` module, which is already
-    included in python2.7.
+-   python >= 3.5
 -   git
 
 ### Windows users
@@ -19,21 +18,38 @@ Cerbero can take control.
 
 You need to install the following programs:
 
--   [Python 2.7]
--   [Git] (Select the install option "Checkout as-is, Commit as-is" and
-    install it in a path without spaces, eg: c:\Git)
+-   [Python 3.5+]
+    * First page of the installer
+     - Check "Add Python 3.x to PATH"
+     - Click "Customize installation"
+    * Second page, check "pip"
+    * Third page, select:
+     - Install for all users
+     - Associate files with Python
+     - Add Python to environment variables
+     - Customize install location: C:\Python3
+-   [Git]
+    * Select the install option "Checkout as-is, Commit as-is"
+    * Ensure that git is installed in PATH, but no other tools are
 -   [Msys/MinGW] (Install it with all the options enabled)
 -   [CMake] (Select the option "Add CMake in system path for the
     current user")
 -   [Yasm] (Download the win32 or win64 version for your platform, name
     it `yasm.exe`, and place it in your MinGW `bin` directory,
     typically, `C:\MinGW\bin`)
--   [WiX 3.5]
--   [Microsoft SDK 7.1] (Install the SDK samples and the Visual C++
-    Compilers, required to build the DirectShow base classes. Might need
-    installing the .NET 4 Framework first if the SDK installer doesn't
-    find it)
--   [Windows Driver Kit 7.1.0]
+-   [WiX 3.11.1]
+
+Several packages that have Meson build files are now built by default with
+Visual Studio, so you need to install Visual Studio 2015 or newer in the
+default location. The Visual Studio Community build which is free for
+open-source use can be installed at:
+
+  * https://visualstudio.microsoft.com/vs/older-downloads/
+
+You should add the cerbero git directory to the list of excluded folders in your
+anti-virus, or you will get random build failures when Autotools does file
+operations such as renames and deletions. It will also slow your build by
+about 3-4x.
 
 Your user ID can't have spaces (eg: John Smith). Paths with spaces are
 not correctly handled in the build system and msys uses the user ID for
@@ -42,19 +58,11 @@ the home folder.
 Cerbero must be run in the MinGW shell, which is accessible from the
 main menu once MinGW is installed.
 
-The last step is making `python` and `git` available from the shell, for
-which you will need to create a `.profile` file. Issue this command from
-within the MinGW shell:
-
-`echo "export PATH=\"\$PATH:/c/Python27:/c/Git/bin\"" >> ~/.profile`
-
-Using the appropriate paths to where you installed `python` and `git`
-
 (Note that inside the shell, / is mapped to c:\Mingw\msys\1.0 )
 
-### OS X users
+### macOS users
 
-To use cerbero on OS X you need to install the "Command Line Tools" from
+To use cerbero on macOS you need to install the "Command Line Tools" from
 XCode. They are available from the "Preferences" dialog under
 "Downloads".
 
@@ -228,14 +236,12 @@ To cross compile for iOS from OS X, use the configuration file
     cerbero -c config/cross-ios-universal.cbc <command>
 
   [Warning]: images/icons/emoticons/warning.png
-  [Python 2.7]: http://www.python.org/getit/releases/2.7/
-  [Git]: http://code.google.com/p/msysgit/downloads/list?q=full+installer+official+git
+  [Python 3.5+]: https://www.python.org/downloads/
+  [Git]: https://github.com/git-for-windows/git/releases/latest
   [Msys/MinGW]: https://sourceforge.net/projects/mingw/files/Installer/mingw-get-inst/
   [CMake]: http://www.cmake.org/cmake/resources/software.htm
   [Yasm]: http://yasm.tortall.net/Download.html
-  [WiX 3.5]: http://wix.codeplex.com/releases/view/60102
-  [Microsoft SDK 7.1]: http://www.microsoft.com/en-us/download/details.aspx?id=8279
-  [Windows Driver Kit 7.1.0]: http://msdn.microsoft.com/en-us/windows/hardware/hh852365
+  [WiX 3.11.1]: https://github.com/wixtoolset/wix3/releases/tag/wix3111rtm
   [XCode]: https://developer.apple.com/devcenter/ios/index.action#downloads
   [here]: http://www.freedesktop.org/software/gstreamer-sdk/cerbero.cbc.template
   [Installing GStreamer]: installing/index.md
