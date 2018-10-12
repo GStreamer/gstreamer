@@ -531,11 +531,11 @@ gst_vaapi_context_reset (GstVaapiContext * context,
   if (reset_config)
     context_destroy (context);
 
+  if (reset_config && !(config_create (context) && context_create (context)))
+    return FALSE;
   if (reset_surfaces && !context_create_surfaces (context))
     return FALSE;
   else if (grow_surfaces && !context_ensure_surfaces (context))
-    return FALSE;
-  if (reset_config && !(config_create (context) && context_create (context)))
     return FALSE;
   return TRUE;
 }
