@@ -165,7 +165,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API MPEG-2 encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       GST_PLUGIN_DESC, "Guangxin Xu <guangxin.xu@intel.com>");
 
   /* sink pad */

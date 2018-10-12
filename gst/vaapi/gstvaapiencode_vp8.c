@@ -161,7 +161,7 @@ gst_vaapiencode_vp8_class_init (GstVaapiEncodeVP8Class * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API VP8 encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 

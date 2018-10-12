@@ -423,7 +423,7 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API H265 encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 

@@ -1497,7 +1497,7 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 
   element_class->set_context = gst_vaapi_base_set_context;
   gst_element_class_set_static_metadata (element_class, longname,
-      "Codec/Decoder/Video", description,
+      "Codec/Decoder/Video/Hardware", description,
       "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
       "Halley Zhao <halley.zhao@intel.com>, "
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, "

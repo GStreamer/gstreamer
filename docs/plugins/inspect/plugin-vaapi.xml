@@ -12,7 +12,7 @@
     <element>
       <name>vaapidecodebin</name>
       <longname>VA-API Decode Bin</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Decoder/Video/Hardware</class>
       <description>A VA-API based bin with a decoder and a postprocessor</description>
       <author>Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, Victor Jaquez &lt;victorx.jaquez@intel.com&gt;</author>
       <pads>
@@ -33,7 +33,7 @@
     <element>
       <name>vaapih264dec</name>
       <longname>VA-API H264 decoder</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Decoder/Video/Hardware</class>
       <description>A VA-API based H264 video decoder</description>
       <author>Gwenole Beauchesne &lt;gwenole.beauchesne@intel.com&gt;, Halley Zhao &lt;halley.zhao@intel.com&gt;, Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, Wind Yuan &lt;feng.yuan@intel.com&gt;</author>
       <pads>
@@ -54,7 +54,7 @@
     <element>
       <name>vaapih264enc</name>
       <longname>VA-API H264 encoder</longname>
-      <class>Codec/Encoder/Video</class>
+      <class>Codec/Encoder/Video/Hardware</class>
       <description>A VA-API based H264 video encoder</description>
       <author>Wind Yuan &lt;feng.yuan@intel.com&gt;</author>
       <pads>
@@ -75,7 +75,7 @@
     <element>
       <name>vaapijpegdec</name>
       <longname>VA-API JPEG decoder</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Decoder/Video/Hardware</class>
       <description>A VA-API based JPEG video decoder</description>
       <author>Gwenole Beauchesne &lt;gwenole.beauchesne@intel.com&gt;, Halley Zhao &lt;halley.zhao@intel.com&gt;, Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, Wind Yuan &lt;feng.yuan@intel.com&gt;</author>
       <pads>
@@ -96,7 +96,7 @@
     <element>
       <name>vaapimpeg2dec</name>
       <longname>VA-API MPEG2 decoder</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Decoder/Video/Hardware</class>
       <description>A VA-API based MPEG2 video decoder</description>
       <author>Gwenole Beauchesne &lt;gwenole.beauchesne@intel.com&gt;, Halley Zhao &lt;halley.zhao@intel.com&gt;, Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, Wind Yuan &lt;feng.yuan@intel.com&gt;</author>
       <pads>
@@ -174,7 +174,7 @@
     <element>
       <name>vaapivc1dec</name>
       <longname>VA-API VC1 decoder</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Decoder/Video/Hardware</class>
       <description>A VA-API based VC1 video decoder</description>
       <author>Gwenole Beauchesne &lt;gwenole.beauchesne@intel.com&gt;, Halley Zhao &lt;halley.zhao@intel.com&gt;, Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, Wind Yuan &lt;feng.yuan@intel.com&gt;</author>
       <pads>

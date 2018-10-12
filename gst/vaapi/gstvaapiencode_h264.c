@@ -602,7 +602,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API H264 encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       GST_PLUGIN_DESC, "Wind Yuan <feng.yuan@intel.com>");
 
   /* sink pad */

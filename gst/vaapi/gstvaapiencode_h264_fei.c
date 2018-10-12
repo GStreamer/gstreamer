@@ -523,7 +523,7 @@ gst_vaapiencode_h264_fei_class_init (GstVaapiEncodeH264FeiClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API H264 FEI Advanced encoder (Experimental)",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com> ,"
       "Yi A Wang <yi.a.wang@intel.com>");

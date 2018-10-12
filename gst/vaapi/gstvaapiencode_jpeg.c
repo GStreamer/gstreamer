@@ -161,7 +161,7 @@ gst_vaapiencode_jpeg_class_init (GstVaapiEncodeJpegClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API JPEG encoder",
-      "Codec/Encoder/Image",
+      "Codec/Encoder/Image/Hardware",
       GST_PLUGIN_DESC,
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
