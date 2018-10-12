@@ -34,14 +34,9 @@ GST_DEBUG_CATEGORY_STATIC (dshowvideosrc_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, format=(string) { "
-        GST_VIDEO_NE(BGR)  ", "
-        GST_VIDEO_NE(I420) ", "
-        GST_VIDEO_NE(YUY2) ", "
-        GST_VIDEO_NE(UYVY) " }, "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE ", "
-        "framerate = " GST_VIDEO_FPS_RANGE "; "
+    GST_STATIC_CAPS (
+        GST_VIDEO_CAPS_MAKE ("{ I420, BGR, YUY2, UYVY, BGRx, BGR16, BGR15, "
+                             "GRAY8 }") "; "
 
         "video/x-dv, "
         "format= (string) DVSD, "
