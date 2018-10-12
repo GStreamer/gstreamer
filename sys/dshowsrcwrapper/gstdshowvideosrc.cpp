@@ -89,6 +89,8 @@ static GstCaps *gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
     GstBuffer ** buf);
 
+static gboolean gst_dshowvideosrc_create_capture_filter(GstDshowVideoSrc * src);
+
 /*utils*/
 static GstCaps *gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc *
     src, IPin * pin);
@@ -319,16 +321,39 @@ gst_dshowvideosrc_get_property (GObject * object, guint prop_id,
 static GstCaps *
 gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 {
+  GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (basesrc);
+  GstCaps *caps;
+
+  if (src->caps) {
+    caps = gst_caps_ref (src->caps);
+  } else {
+    caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (src));
+  }
+
+  if (caps) {
+    GstCaps *filtcaps;
+
+    if (filter) {
+      filtcaps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    } else {
+      filtcaps = gst_caps_ref (caps);
+    }
+    gst_caps_unref (caps);
+
+    return filtcaps;
+  }
+
+  return NULL;
+}
+
+static gboolean
+gst_dshowvideosrc_create_capture_filter(GstDshowVideoSrc * src)
+{
   HRESULT hres = S_OK;
   IBindCtx *lpbc = NULL;
   IMoniker *videom;
   DWORD dwEaten;
-  GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (basesrc);
   gunichar2 *unidevice = NULL;
-
-  if (src->caps) {
-    return gst_caps_ref (src->caps);
-  }
 
   /* device will be used first, then device-name, then device-index */
   if (!src->device) {
@@ -339,7 +364,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
         &src->device_name, &src->device_index);
     if (!src->device) {
       GST_ERROR ("No video device found.");
-      return NULL;
+      return FALSE;
     }
   }
 
@@ -362,6 +387,8 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
       lpbc->Release ();
     }
   }
+
+  g_free (unidevice);
 
   if (!src->caps) {
     src->caps = gst_caps_new_empty ();
@@ -415,21 +442,7 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
     }
   }
 
-  g_free (unidevice);
-
-  if (src->caps) {
-    GstCaps *caps;
-
-    if (filter) {
-      caps = gst_caps_intersect_full (filter, src->caps, GST_CAPS_INTERSECT_FIRST);
-    } else {
-      caps = gst_caps_ref (src->caps);
-    }
-
-    return caps;
-  }
-
-  return NULL;
+  return TRUE;
 }
 
 static GstStateChangeReturn
@@ -480,6 +493,8 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   HRESULT hres = S_FALSE;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
   
+  gst_dshowvideosrc_create_capture_filter (src);
+
   /*
   The filter graph now is created via the IGraphBuilder Interface   
   Code added to build upstream filters, needed for USB Analog TV Tuners / DVD Maker, based on AMCap code.
