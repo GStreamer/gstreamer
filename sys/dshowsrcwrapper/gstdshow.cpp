@@ -338,11 +338,12 @@ gst_dshow_getdevice_from_devicename (const GUID * device_category,
         GST_DEBUG ("Found device idx=%d: device-name='%s'",
             devidx, friendly_name);
 
-        if (!*device_name && devidx == *device_index) {
+        if ((!*device_name || !**device_name) && devidx == *device_index) {
+          g_free (*device_name);
           *device_name = g_strdup (friendly_name);
         }
 
-        if (*device_name && _stricmp (*device_name, friendly_name) == 0) {
+        if ((*device_name && **device_name) && _stricmp (*device_name, friendly_name) == 0) {
           WCHAR *wszDisplayName = NULL;
           hres = moniker->GetDisplayName (NULL, NULL, &wszDisplayName);
           if (hres == S_OK && wszDisplayName) {

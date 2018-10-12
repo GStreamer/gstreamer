@@ -280,23 +280,21 @@ gst_dshowvideosrc_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:
     {
-      if (src->device) {
-        g_free (src->device);
-        src->device = NULL;
-      }
-      if (g_value_get_string (value)) {
-        src->device = g_strdup (g_value_get_string (value));
+      const gchar *device = g_value_get_string (value);
+      g_free (src->device);
+      src->device = NULL;
+      if (device && strlen (device) != 0) {
+        src->device = g_value_dup_string (value);
       }
       break;
     }
     case PROP_DEVICE_NAME:
     {
-      if (src->device_name) {
-        g_free (src->device_name);
-        src->device_name = NULL;
-      }
-      if (g_value_get_string (value)) {
-        src->device_name = g_strdup (g_value_get_string (value));
+      const gchar *device_name = g_value_get_string (value);
+      g_free (src->device_name);
+      src->device_name = NULL;
+      if (device_name && strlen (device_name) != 0) {
+        src->device_name = g_value_dup_string (value);
       }
       break;
     }
@@ -356,9 +354,10 @@ gst_dshowvideosrc_create_capture_filter(GstDshowVideoSrc * src)
   gunichar2 *unidevice = NULL;
 
   /* device will be used first, then device-name, then device-index */
-  if (!src->device) {
+  if (!src->device || src->device[0] == '\0') {
     GST_DEBUG_OBJECT (src, "No device set, will enumerate to match device-name or device-index");
 
+    g_free (src->device);
     src->device =
         gst_dshow_getdevice_from_devicename (&CLSID_VideoInputDeviceCategory,
         &src->device_name, &src->device_index);
