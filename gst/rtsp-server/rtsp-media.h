@@ -417,6 +417,9 @@ void                  gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media,
 GST_RTSP_SERVER_API
 gboolean              gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports);
 
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_is_receive_only (GstRTSPMedia * media);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPMedia, gst_object_unref)
 #endif

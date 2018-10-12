@@ -1730,9 +1730,97 @@ make_base_url (GstRTSPClient * client, GstRTSPUrl * url, const gchar * path)
   return result;
 }
 
+/* Check if the given header of type double is present and, if so,
+ * put it's value in the supplied variable.
+ */
+static GstRTSPStatusCode
+parse_header_value_double (GstRTSPClient * client, GstRTSPContext * ctx,
+    GstRTSPHeaderField header, gboolean * present, gdouble * value)
+{
+  GstRTSPResult res;
+  gchar *str;
+  gchar *end;
+
+  res = gst_rtsp_message_get_header (ctx->request, header, &str, 0);
+  if (res == GST_RTSP_OK) {
+    *value = g_ascii_strtod (str, &end);
+    if (end == str)
+      goto parse_header_failed;
+
+    GST_DEBUG ("client %p: got '%s', value %f", client,
+        gst_rtsp_header_as_text (header), *value);
+    *present = TRUE;
+  } else {
+    *present = FALSE;
+  }
+
+  return GST_RTSP_STS_OK;
+
+parse_header_failed:
+  {
+    GST_ERROR ("client %p: failed parsing '%s' header", client,
+        gst_rtsp_header_as_text (header));
+    return GST_RTSP_STS_BAD_REQUEST;
+  }
+}
+
+/* Parse scale and speed headers, if present, and set the rate to
+ * (rate * scale * speed) */
+static GstRTSPStatusCode
+parse_scale_and_speed (GstRTSPClient * client, GstRTSPContext * ctx,
+    gboolean * scale_present, gboolean * speed_present, gdouble * rate)
+{
+  gdouble scale = 1.0;
+  gdouble speed = 1.0;
+  GstRTSPStatusCode status;
+
+  GST_DEBUG ("got rate %f", *rate);
+
+  status = parse_header_value_double (client, ctx, GST_RTSP_HDR_SCALE,
+      scale_present, &scale);
+  if (status != GST_RTSP_STS_OK)
+    return status;
+
+  if (scale_present) {
+    GST_DEBUG ("got Scale %f", scale);
+    if (scale == 0)
+      goto bad_scale_value;
+    *rate *= scale;
+  }
+
+  GST_DEBUG ("rate after parsing Scale %f", *rate);
+
+  status = parse_header_value_double (client, ctx, GST_RTSP_HDR_SPEED,
+      speed_present, &speed);
+  if (status != GST_RTSP_STS_OK)
+    return status;
+
+  if (speed_present) {
+    GST_DEBUG ("got Speed %f", speed);
+    if (speed <= 0)
+      goto bad_speed_value;
+    *rate *= speed;
+  }
+
+  GST_DEBUG ("rate after parsing Speed %f", *rate);
+
+  return status;
+
+bad_scale_value:
+  {
+    GST_ERROR ("client %p: bad 'Scale' header value (%f)", client, scale);
+    return GST_RTSP_STS_BAD_REQUEST;
+  }
+bad_speed_value:
+  {
+    GST_ERROR ("client %p: bad 'Speed' header value (%f)", client, speed);
+    return GST_RTSP_STS_BAD_REQUEST;
+  }
+}
+
 static GstRTSPStatusCode
 setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
-    GstRTSPRangeUnit * unit)
+    GstRTSPRangeUnit * unit, gboolean * scale_present, gboolean * speed_present)
 {
   gchar *str;
   GstRTSPResult res;
@@ -1740,7 +1828,7 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
   gdouble rate = 1.0;
   GstSeekFlags flags = GST_SEEK_FLAG_NONE;
   GstRTSPClientClass *klass = GST_RTSP_CLIENT_GET_CLASS (client);
-  GstRTSPStatusCode status;
+  GstRTSPStatusCode rtsp_status_code;
 
   /* parse the range header if we have one */
   res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_RANGE, &str, 0);
@@ -1771,10 +1859,21 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
     }
   }
 
+  /* check for scale and/or speed headers
+   * we will set the seek rate to (speed * scale) and let the media decide
+   * the resulting scale and speed. in the response we will use rate and applied
+   * rate from the resulting segment as values for the speed and scale headers
+   * respectively */
+  rtsp_status_code = parse_scale_and_speed (client, ctx, scale_present,
+      speed_present, &rate);
+  if (rtsp_status_code != GST_RTSP_STS_OK)
+    goto scale_speed_failed;
+
   /* give the application a chance to tweak range, flags, or rate */
   if (klass->adjust_play_mode != NULL) {
-    status = klass->adjust_play_mode (client, ctx, &range, &flags, &rate);
-    if (status != GST_RTSP_STS_OK)
+    rtsp_status_code =
+        klass->adjust_play_mode (client, ctx, &range, &flags, &rate);
+    if (rtsp_status_code != GST_RTSP_STS_OK)
       goto adjust_play_mode_failed;
   }
 
@@ -1793,12 +1892,20 @@ parse_range_failed:
     GST_ERROR ("client %p: failed parsing range header", client);
     return GST_RTSP_STS_BAD_REQUEST;
   }
-adjust_play_mode_failed:
+scale_speed_failed:
   {
-    GST_ERROR ("client %p: sub class returned bad code (%d)", client, status);
     if (range != NULL)
       gst_rtsp_range_free (range);
-    return status;
+    GST_ERROR ("client %p: failed parsing Scale or Speed headers", client);
+    return rtsp_status_code;
+  }
+adjust_play_mode_failed:
+  {
+    GST_ERROR ("client %p: sub class returned bad code (%d)", client,
+        rtsp_status_code);
+    if (range != NULL)
+      gst_rtsp_range_free (range);
+    return rtsp_status_code;
   }
 seek_failed:
   {
@@ -1824,6 +1931,10 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *seek_style = NULL;
   GstRTSPStatusCode sig_result;
   GPtrArray *transports;
+  gboolean scale_present;
+  gboolean speed_present;
+  gdouble rate;
+  gdouble applied_rate;
 
   if (!(session = ctx->session))
     goto no_session;
@@ -1874,7 +1985,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!gst_rtsp_media_unsuspend (media))
     goto unsuspend_failed;
 
-  code = setup_play_mode (client, ctx, &unit);
+  code = setup_play_mode (client, ctx, &unit, &scale_present, &speed_present);
   if (code != GST_RTSP_STS_OK)
     goto invalid_mode;
 
@@ -1898,6 +2009,23 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   str = gst_rtsp_media_get_range_string (media, TRUE, unit);
   if (str)
     gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RANGE, str);
+
+  if (!gst_rtsp_media_is_receive_only (media)) {
+    /* the scale and speed headers must always be added if they were present in
+     * the request. however, even if they were not, we still add them if
+     * applied_rate or rate deviate from the "normal", i.e. 1.0 */
+    if (!gst_rtsp_media_get_rates (media, &rate, &applied_rate))
+      goto get_rates_error;
+    g_assert (rate != 0 && applied_rate != 0);
+
+    if (scale_present || applied_rate != 1.0)
+      gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_SCALE,
+          g_strdup_printf ("%1.3f", applied_rate));
+
+    if (speed_present || rate != 1.0)
+      gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_SPEED,
+          g_strdup_printf ("%1.3f", rate));
+  }
 
   send_message (client, ctx, ctx->response, FALSE);
 
@@ -1974,6 +2102,12 @@ unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support PLAY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    return FALSE;
+  }
+get_rates_error:
+  {
+    GST_ERROR ("client %p: failed obtaining rate and applied_rate", client);
+    send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
     return FALSE;
   }
 }

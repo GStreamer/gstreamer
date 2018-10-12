@@ -732,25 +732,6 @@ default_create_rtpbin (GstRTSPMedia * media)
   return rtpbin;
 }
 
-static gboolean
-is_receive_only (GstRTSPMedia * media)
-{
-  GstRTSPMediaPrivate *priv = media->priv;
-  gboolean recive_only = TRUE;
-  guint i;
-
-  for (i = 0; i < priv->streams->len; i++) {
-    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
-    if (gst_rtsp_stream_is_sender (stream) ||
-        !gst_rtsp_stream_is_receiver (stream)) {
-      recive_only = FALSE;
-      break;
-    }
-  }
-
-  return recive_only;
-}
-
 /* must be called with state lock */
 static void
 check_seekable (GstRTSPMedia * media)
@@ -759,7 +740,7 @@ check_seekable (GstRTSPMedia * media)
   GstRTSPMediaPrivate *priv = media->priv;
 
   /* Update the seekable state of the pipeline in case it changed */
-  if (is_receive_only (media)) {
+  if (gst_rtsp_media_is_receive_only (media)) {
     /* TODO: Seeking for "receive-only"? */
     priv->seekable = -1;
   } else {
@@ -2984,8 +2965,9 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       GST_DEBUG ("%p: went from %s to %s (pending %s)", media,
           gst_element_state_get_name (old), gst_element_state_get_name (new),
           gst_element_state_get_name (pending));
-      if (priv->no_more_pads_pending == 0 && is_receive_only (media) &&
-          old == GST_STATE_READY && new == GST_STATE_PAUSED) {
+      if (priv->no_more_pads_pending == 0
+          && gst_rtsp_media_is_receive_only (media) && old == GST_STATE_READY
+          && new == GST_STATE_PAUSED) {
         GST_INFO ("%p: went to PAUSED, prepared now", media);
         collect_media_stats (media);
 
@@ -3459,7 +3441,7 @@ start_prepare (GstRTSPMedia * media)
     g_object_set_data (G_OBJECT (elem), "gst-rtsp-dynpay-handlers", handlers);
   }
 
-  if (priv->nb_dynamic_elements == 0 && is_receive_only (media)) {
+  if (priv->nb_dynamic_elements == 0 && gst_rtsp_media_is_receive_only (media)) {
     /* If we are receive_only (RECORD), do not try to preroll, to avoid
      * a second ASYNC state change failing */
     priv->is_live = TRUE;
@@ -4286,7 +4268,7 @@ default_unsuspend (GstRTSPMedia * media)
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
-      if (is_receive_only (media))
+      if (gst_rtsp_media_is_receive_only (media))
         break;
       if (media_streams_blocking (media)) {
         gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
@@ -4712,4 +4694,29 @@ gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
+}
+
+/**
+ * gst_rtsp_media_is_receive_only:
+ *
+ * Returns: %TRUE if @media is receive-only, %FALSE otherwise.
+ * Since: 1.18
+ */
+gboolean
+gst_rtsp_media_is_receive_only (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  gboolean receive_only = TRUE;
+  guint i;
+
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    if (gst_rtsp_stream_is_sender (stream) ||
+        !gst_rtsp_stream_is_receiver (stream)) {
+      receive_only = FALSE;
+      break;
+    }
+  }
+
+  return receive_only;
 }
