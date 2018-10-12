@@ -313,7 +313,25 @@ static void
 gst_dshowvideosrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstDshowVideoSrc *src;
 
+  g_return_if_fail (GST_IS_DSHOWVIDEOSRC (object));
+  src = GST_DSHOWVIDEOSRC (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_value_set_string (value, src->device);
+      break;
+    case PROP_DEVICE_NAME:
+      g_value_set_string (value, src->device_name);
+      break;
+    case PROP_DEVICE_INDEX:
+      g_value_set_int (value, src->device_index);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstCaps *
