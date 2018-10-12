@@ -1439,10 +1439,12 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   }
 
   READ_UINT8 (&nr, vps->max_layer_id, 6);
-  CHECK_ALLOWED_MAX (vps->max_layer_id, 0);
+  /* shall allow 63 */
+  CHECK_ALLOWED_MAX (vps->max_layer_id, 63);
 
   READ_UE_MAX (&nr, vps->num_layer_sets_minus1, 1023);
-  CHECK_ALLOWED_MAX (vps->num_layer_sets_minus1, 0);
+  /* allowd range is 0 to 1023 */
+  CHECK_ALLOWED_MAX (vps->num_layer_sets_minus1, 1023);
 
   for (i = 1; i <= vps->num_layer_sets_minus1; i++)
     for (j = 0; j <= vps->max_layer_id; j++)
@@ -1459,11 +1461,16 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
       READ_UE_MAX (&nr, vps->num_ticks_poc_diff_one_minus1, G_MAXUINT32 - 1);
 
     READ_UE_MAX (&nr, vps->num_hrd_parameters, 1024);
-    CHECK_ALLOWED_MAX (vps->num_hrd_parameters, 1);
+    /* allowd range is
+     * 0 to vps_num_layer_sets_minus1 + 1 */
+    CHECK_ALLOWED_MAX (vps->num_hrd_parameters, vps->num_layer_sets_minus1 + 1);
 
     if (vps->num_hrd_parameters) {
       READ_UE_MAX (&nr, vps->hrd_layer_set_idx, 1023);
-      CHECK_ALLOWED_MAX (vps->hrd_layer_set_idx, 0);
+      /* allowd range is
+       * ( vps_base_layer_internal_flag ? 0 : 1 ) to vps_num_layer_sets_minus1
+       */
+      CHECK_ALLOWED_MAX (vps->hrd_layer_set_idx, vps->num_layer_sets_minus1);
 
       if (!gst_h265_parse_hrd_parameters (&vps->hrd_params, &nr,
               vps->cprms_present_flag, vps->max_sub_layers_minus1))
