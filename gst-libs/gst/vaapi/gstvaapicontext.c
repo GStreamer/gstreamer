@@ -320,10 +320,14 @@ config_create (GstVaapiContext * context)
         if (!context_get_attribute (context, attrib->type, &value))
           goto cleanup;
         roi_config = (VAConfigAttribValEncROI *) & value;
-        if (roi_config->bits.num_roi_regions != config->roi_num_supported ||
-            VA_ROI_RC_QP_DELTA_SUPPORT (roi_config) == 0) {
-          GST_ERROR ("Mismatched ROI support: number of regions supported: %d"
-              " ROI delta QP: %d", roi_config->bits.num_roi_regions,
+        if (roi_config->bits.num_roi_regions != config->roi_num_supported) {
+          GST_ERROR ("Mismatched ROI support: number of regions supported: %d",
+              roi_config->bits.num_roi_regions);
+          goto cleanup;
+        }
+        if (config->rc_mode != GST_VAAPI_RATECONTROL_CQP
+            && VA_ROI_RC_QP_DELTA_SUPPORT (roi_config) == 0) {
+          GST_ERROR ("Mismatched ROI support:  ROI delta QP: %d",
               VA_ROI_RC_QP_DELTA_SUPPORT (roi_config));
           goto cleanup;
         }
