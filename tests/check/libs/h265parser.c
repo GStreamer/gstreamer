@@ -32,6 +32,13 @@ unsigned char slice_eos_slice_eob[] = {
   0x00, 0x00, 0x00, 0x01, 0x4a, 0x01,
 };
 
+static const guint8 h265_vps_with_nonzero_max_layer_id[] = {
+  0x00, 0x00, 0x00, 0x01, 0x40, 0x01, 0x0c, 0x01,
+  0xff, 0xff, 0x01, 0x60, 0x00, 0x00, 0x03, 0x00,
+  0xb0, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00,
+  0x5d, 0xac, 0x59
+};
+
 GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
 {
   GstH265ParserResult res;
@@ -312,6 +319,53 @@ GST_START_TEST (test_h265_format_range_profiles_partial_match)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_parse_vps)
+{
+  /* Parsing non-zero vps_max_layer_id in VPS
+   * https://bugzilla.gnome.org/show_bug.cgi?id=797279 */
+  GstH265Parser *parser;
+  GstH265NalUnit nalu;
+  GstH265ParserResult res;
+  GstH265VPS vps;
+  GstH265Profile profile;
+
+  parser = gst_h265_parser_new ();
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_vps_with_nonzero_max_layer_id, 0,
+      sizeof (h265_vps_with_nonzero_max_layer_id), &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_VPS);
+
+  res = gst_h265_parser_parse_vps (parser, &nalu, &vps);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+
+  assert_equals_int (vps.id, 0);
+  assert_equals_int (vps.max_layers_minus1, 0);
+  assert_equals_int (vps.max_sub_layers_minus1, 0);
+  assert_equals_int (vps.temporal_id_nesting_flag, 1);
+
+  profile = gst_h265_profile_tier_level_get_profile (&vps.profile_tier_level);
+
+  assert_equals_int (profile, GST_H265_PROFILE_MAIN);
+  assert_equals_int (vps.sub_layer_ordering_info_present_flag, 1);
+
+  assert_equals_int (vps.max_dec_pic_buffering_minus1[0], 1);
+  assert_equals_int (vps.max_num_reorder_pics[0], 0);
+  assert_equals_int (vps.max_latency_increase_plus1[0], 0);
+
+  assert_equals_int (vps.max_layer_id, 5);
+  assert_equals_int (vps.num_layer_sets_minus1, 0);
+
+  assert_equals_int (vps.timing_info_present_flag, 0);
+  assert_equals_int (vps.vps_extension, 0);
+
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -326,6 +380,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_base_profiles_compat);
   tcase_add_test (tc_chain, test_h265_format_range_profiles_exact_match);
   tcase_add_test (tc_chain, test_h265_format_range_profiles_partial_match);
+  tcase_add_test (tc_chain, test_h265_parse_vps);
 
   return s;
 }
