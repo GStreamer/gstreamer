@@ -517,6 +517,8 @@ struct _GstH265HRDParams
 /**
  * GstH265VPS:
  * @id: vps id
+ * @base_layer_internal_flag and @base_layer_available_flag:
+ *   specify availability of base layer
  * @max_layers_minus1: should be zero, but can be other values in future
  * @max_sub_layers_minus1:specifies the maximum number of temporal sub-layers
  * @temporal_id_nesting_flag: specifies whether inter prediction is
@@ -555,6 +557,9 @@ struct _GstH265HRDParams
 struct _GstH265VPS {
   guint8 id;
 
+  guint8 base_layer_internal_flag;
+  guint8 base_layer_available_flag;
+
   guint8 max_layers_minus1;
   guint8 max_sub_layers_minus1;
   guint8 temporal_id_nesting_flag;
@@ -576,9 +581,10 @@ struct _GstH265VPS {
   guint32 num_ticks_poc_diff_one_minus1;
 
   guint16 num_hrd_parameters;
+
+  /* FIXME: following HRD related info should be an array */
   guint16 hrd_layer_set_idx;
   guint8 cprms_present_flag;
-
   GstH265HRDParams hrd_params;
 
   guint8 vps_extension;

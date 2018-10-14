@@ -1400,9 +1400,8 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
 
   READ_UINT8 (&nr, vps->id, 4);
 
-  /* skip reserved_three_2bits */
-  if (!nal_reader_skip (&nr, 2))
-    goto error;
+  READ_UINT8 (&nr, vps->base_layer_internal_flag, 1);
+  READ_UINT8 (&nr, vps->base_layer_available_flag, 1);
 
   READ_UINT8 (&nr, vps->max_layers_minus1, 6);
   READ_UINT8 (&nr, vps->max_sub_layers_minus1, 3);
@@ -1446,9 +1445,13 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   /* allowd range is 0 to 1023 */
   CHECK_ALLOWED_MAX (vps->num_layer_sets_minus1, 1023);
 
-  for (i = 1; i <= vps->num_layer_sets_minus1; i++)
-    for (j = 0; j <= vps->max_layer_id; j++)
+  for (i = 1; i <= vps->num_layer_sets_minus1; i++) {
+    for (j = 0; j <= vps->max_layer_id; j++) {
+      /* layer_id_included_flag[i][j] */
+      /* FIXME: need to parse this when we can support parsing multi-layer info. */
       nal_reader_skip (&nr, 1);
+    }
+  }
 
   READ_UINT8 (&nr, vps->timing_info_present_flag, 1);
 
@@ -1474,6 +1477,31 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
 
       if (!gst_h265_parse_hrd_parameters (&vps->hrd_params, &nr,
               vps->cprms_present_flag, vps->max_sub_layers_minus1))
+        goto error;
+    }
+
+    /* FIXME: VPS can have multiple hrd parameters, and therefore hrd_params
+     * should be an array (like Garray). But it also requires new _clear()
+     * method for free the array in GstH265VPS whenever gst_h265_parse_vps()
+     * is called. Need to work for multi-layer related parsing supporting
+     *
+     * FIXME: Following code is just work around to find correct
+     * vps_extension position */
+
+    /* skip the first parsed one above */
+    for (i = 1; i < vps->num_hrd_parameters; i++) {
+      guint16 hrd_layer_set_idx;
+      guint8 cprms_present_flag;
+      GstH265HRDParams hrd_params;
+
+      READ_UE_MAX (&nr, hrd_layer_set_idx, 1023);
+      CHECK_ALLOWED_MAX (hrd_layer_set_idx, vps->num_layer_sets_minus1);
+
+      /* need parsing if (i > 1) */
+      READ_UINT8 (&nr, cprms_present_flag, 1);
+
+      if (!gst_h265_parse_hrd_parameters (&hrd_params, &nr,
+              cprms_present_flag, vps->max_sub_layers_minus1))
         goto error;
     }
   }
