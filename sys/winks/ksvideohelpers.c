@@ -164,10 +164,16 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid,
     GST_WARNING ("Unsupported video format ARGB4444");
   } else if (memcmp (&subtype_guid.Data2, &MEDIASUBTYPE_FOURCC.Data2,
           sizeof (subtype_guid) - sizeof (subtype_guid.Data1)) == 0) {
-    guint8 *p = (guint8 *) & subtype_guid.Data1;
-    gchar *format = g_strdup_printf ("%c%c%c%c", p[0], p[1], p[2], p[3]);
-    structure = gst_structure_new ("video/x-raw", "format",
-        G_TYPE_STRING, format, NULL);
+    guint32 fourcc = subtype_guid.Data1;
+    gchar *format =
+        g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+    if (GST_STR_FOURCC (format) == GST_MAKE_FOURCC ('Y', '1', '6', ' ')) {
+      structure = gst_structure_new ("video/x-raw", "format",
+          G_TYPE_STRING, "GRAY16_LE", NULL);
+    } else {
+      structure = gst_structure_new ("video/x-raw", "format",
+          G_TYPE_STRING, format, NULL);
+    }
     g_free (format);
   } else if (IsEqualGUID (&subtype_guid, &MEDIASUBTYPE_dvsd)) {
     if (IsEqualGUID (&format_guid, &FORMAT_DvInfo)) {
