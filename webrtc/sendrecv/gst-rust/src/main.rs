@@ -316,6 +316,7 @@ fn add_video_source(pipeline: &gst::Pipeline, webrtcbin: &gst::Element) -> Resul
     let vp8enc = gst::ElementFactory::make("vp8enc", None).unwrap();
 
     videotestsrc.set_property_from_str("pattern", "ball");
+    videotestsrc.set_property("is-live", &true).unwrap();
     vp8enc.set_property("deadline", &1i64).unwrap();
 
     let rtpvp8pay = gst::ElementFactory::make("rtpvp8pay", None).unwrap();
@@ -355,6 +356,7 @@ fn add_audio_source(pipeline: &gst::Pipeline, webrtcbin: &gst::Element) -> Resul
     let queue3 = gst::ElementFactory::make("queue", None).unwrap();
 
     audiotestsrc.set_property_from_str("wave", "red-noise");
+    audiotestsrc.set_property("is-live", &true).unwrap();
 
     pipeline.add_many(&[
         &audiotestsrc,
@@ -430,6 +432,7 @@ impl AppControl {
         pipeline.add(&webrtcbin)?;
 
         webrtcbin.set_property_from_str("stun-server", STUN_SERVER);
+        webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         add_video_source(&pipeline, &webrtcbin)?;
         add_audio_source(&pipeline, &webrtcbin)?;
