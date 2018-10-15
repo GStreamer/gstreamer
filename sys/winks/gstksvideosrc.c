@@ -299,8 +299,13 @@ gst_ks_video_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
+    {
+      const gchar *device_path = g_value_get_string (value);
       g_free (priv->device_path);
-      priv->device_path = g_value_dup_string (value);
+      priv->device_path = NULL;
+      if (device_path && strlen (device_path) != 0)
+        priv->device_path = g_value_dup_string (value);
+    }
       break;
     case PROP_DEVICE_NAME:
     {
