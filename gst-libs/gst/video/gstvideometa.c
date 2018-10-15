@@ -227,12 +227,12 @@ default_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
   /* ERRORS */
 no_memory:
   {
-    GST_DEBUG ("plane %u, no memory at offset %" G_GSIZE_FORMAT, plane, offset);
+    GST_ERROR ("plane %u, no memory at offset %" G_GSIZE_FORMAT, plane, offset);
     return FALSE;
   }
 cannot_map:
   {
-    GST_DEBUG ("cannot map memory range %u-%u", idx, length);
+    GST_ERROR ("cannot map memory range %u-%u", idx, length);
     return FALSE;
   }
 }
