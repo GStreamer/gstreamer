@@ -76,13 +76,15 @@ $ gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstrea
 
 > The python version requires at least version 1.14.2 of gstreamer and its plugins.
 
+#### Running the Rust version
+
+* Install a recent Rust toolchain, e.g. via [rustup](https://rustup.rs/).
+* Run `cargo build` for building the executable.
+* Run `cargo run -- --peer-id=ID` with the `id` from the browser. You will see state changes and an SDP exchange.
+
 With all versions, you will see a bouncing ball + hear red noise in the browser, and your browser's webcam + mic in the gst app.
 
 You can pass a --server argument to all versions, for example `--server=wss://127.0.0.1:8443`.
-
-<!---
-TODO: Port to Rust.
--->
 
 ### multiparty-sendrecv: Multiparty audio conference with N peers
 
