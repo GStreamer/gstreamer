@@ -799,6 +799,113 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
   return (level != NULL && profile != NULL);
 }
 
+/* forked from gsth265parse.c */
+typedef struct
+{
+  const gchar *profile;
+
+  guint8 profile_idc;
+  guint8 max_14bit_constraint_flag;
+  guint8 max_12bit_constraint_flag;
+  guint8 max_10bit_constraint_flag;
+  guint8 max_8bit_constraint_flag;
+  guint8 max_422chroma_constraint_flag;
+  guint8 max_420chroma_constraint_flag;
+  guint8 max_monochrome_constraint_flag;
+  guint8 intra_constraint_flag;
+  guint8 one_picture_only_constraint_flag;
+  guint8 lower_bit_rate_constraint_flag;
+
+  /* Tie breaker if more than one profiles are matching */
+  guint priority;
+} GstH265FormatRangeExtensionProfile;
+
+typedef struct
+{
+  const GstH265FormatRangeExtensionProfile *profile;
+  guint extra_constraints;
+} FormatRangeExtensionProfileMatch;
+
+static gint
+sort_fre_profile_matches (FormatRangeExtensionProfileMatch * a,
+    FormatRangeExtensionProfileMatch * b)
+{
+  gint d;
+
+  d = a->extra_constraints - b->extra_constraints;
+  if (d)
+    return d;
+
+  return b->profile->priority - a->profile->priority;
+}
+
+static const GstH265FormatRangeExtensionProfile h265_ext_profiles[] = {
+  /* FIXME 2.0: Consider ':' seperated subsampling notation for consistency
+   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/merge_requests/23
+   */
+  /* *INDENT-OFF* */
+  /* Rec. ITU-T H.265 Table A.2 format range extensions profiles */
+  {"monochrome",                    4, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0},
+  {"monochrome-10",                 4, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1},
+  {"monochrome-12",                 4, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 2},
+  {"monochrome-16",                 4, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 3},
+  {"main-12",                       4, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 4},
+  {"main-422-10",                   4, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 5},
+  {"main-422-12",                   4, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 6},
+  {"main-444",                      4, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 7},
+  {"main-444-10",                   4, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 8},
+  {"main-444-12",                   4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 9},
+  {"main-intra",                    4, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 10},
+  {"main-10-intra",                 4, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 11},
+  {"main-12-intra",                 4, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 12},
+  {"main-422-10-intra",             4, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 13},
+  {"main-422-12-intra",             4, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 14},
+  {"main-444-intra",                4, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 15},
+  {"main-444-10-intra",             4, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 16},
+  {"main-444-12-intra",             4, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 17},
+  {"main-444-16-intra",             4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 18},
+  {"main-444-still-picture",        4, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 19},
+  {"main-444-16-still-picture",     4, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 20},
+
+  /* Rec. ITU-T H.265 Table A.3 high throughput profiles */
+  {"high-throughput-444",           5, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 21},
+  {"high-throughput-444-10",        5, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 22},
+  {"high-throughput-444-14",        5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 23},
+  {"high-throughput-444-16-intra",  5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 24},
+
+  /* Rec. ITU-T H.265 Table A.5 screen content coding extensions profiles */
+  {"screen-extended-main",          9, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 25},
+  {"screen-extended-main-10",       9, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 26},
+  {"screen-extended-main-444",      9, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 27},
+  {"screen-extended-main-444-10",   9, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 28},
+  /* identical to screen-extended-main-444 */
+  {"screen-extended-high-throughput-444",
+                                    9, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 29},
+  /* identical to screen-extended-main-444-10 */
+  {"screen-extended-high-throughput-444-10",
+                                    9, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 30},
+  {"screen-extended-high-throughput-444-14",
+                                    9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 31},
+
+  /* Rec. ITU-T H.265 G.11.1 Multiview Main profile */
+  {"multiview-main",                6, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 32},
+
+  /* Rec. ITU-T H.265 H.11.1 */
+  {"scalable-main",                 7, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 33},
+  {"scalable-main-10",              7, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 34},
+
+  /* Rec. ITU-T H.265 Table H.4 scalable range extensions profiles */
+  {"scalable-monochrome",          10, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 35},
+  {"scalable-monochrome-12",       10, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 36},
+  {"scalable-monochrome-16",       10, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 37},
+  {"scalable-main-444",            10, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 38},
+
+  /* Rec. ITU-T H.265 I.11.1 3D Main profile */
+  {"3d-main",                       8, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 39},
+
+  /* *INDENT-ON* */
+};
+
 /**
  * gst_codec_utils_h265_get_profile:
  * @profile_tier_level: (array length=len): Pointer to the profile_tier_level
@@ -819,7 +926,7 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
  * * Bit 41    - general_interlaced_source_flag
  * * Bit 42    - general_non_packed_constraint_flag
  * * Bit 43    - general_frame_only_constraint_flag
- * * Bit 44:87 - general_reserved_zero_44bits
+ * * Bit 44:87 - See below
  * * Bit 88:95 - general_level_idc
  *
  * Returns: The profile as a const string, or %NULL if there is an error.
@@ -831,6 +938,10 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
 {
   const gchar *profile = NULL;
   gint profile_idc;
+  guint i;
+  guint8 profile_compatibility_flags[32] = { 0, };
+  GList *cand = NULL;
+  GstBitReader br = GST_BIT_READER_INIT (profile_tier_level, len);
 
   g_return_val_if_fail (profile_tier_level != NULL, NULL);
 
@@ -847,8 +958,207 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
     profile = "main-10";
   else if (profile_idc == 3)
     profile = "main-still-picture";
-  else
+
+  if (len > 4) {
+    if (!gst_bit_reader_skip (&br, 8))
+      return NULL;
+
+    for (i = 0; i < 32; i++) {
+      if (!gst_bit_reader_get_bits_uint8 (&br, &profile_compatibility_flags[i],
+              1))
+        return NULL;
+    }
+  }
+
+  if (!profile) {
+    if (profile_compatibility_flags[1])
+      profile = "main";
+    else if (profile_compatibility_flags[2])
+      profile = "main-10";
+    else if (profile_compatibility_flags[3])
+      profile = "main-still-picture";
+  }
+
+  if (profile)
+    return profile;
+
+  if (profile_idc >= 4 && profile_idc <= 10 && len >= 11) {
+    GstH265FormatRangeExtensionProfile ext_profile = { 0, };
+
+    /*
+     * Bit 40 - general_progressive_source_flag
+     * Bit 41 - general_interlaced_source_flag
+     * Bit 42 - general_non_packed_constraint_flag
+     * Bit 43 - general_frame_only_constraint_flag
+     */
+    if (!gst_bit_reader_skip (&br, 4))
+      return NULL;
+
+    /* Range extensions
+     * profile_idc
+     *   4 : Format range extensions profiles
+     *   5 : High throughput profiles
+     *   6 : Multiview main profile
+     *   7 : Scalable main profiles
+     *   8 : 3D Main profile
+     *   9 : Screen content coding extensions profiles
+     *  10 : Scalable format range extensions profiles
+     *
+     * Bit 44 - general_max_12bit_constraint_flag
+     * Bit 45 - general_max_10bit_constraint_flag
+     * Bit 46 - general_max_8bit_constraint_flag
+     * Bit 47 - general_max_422chroma_constraint_flag
+     * Bit 48 - general_max_420chroma_constraint_flag
+     * Bit 49 - general_max_monochrome_constraint_flag
+     * Bit 50 - general_intra_constraint_flag
+     * Bit 51 - general_one_picture_only_constraint_flag
+     * Bit 52 - general_lower_bit_rate_constraint_flag
+     */
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.max_12bit_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.max_10bit_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.max_8bit_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.max_422chroma_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.max_420chroma_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.max_monochrome_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.intra_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.one_picture_only_constraint_flag, 1))
+      return NULL;
+
+    if (!gst_bit_reader_get_bits_uint8 (&br,
+            &ext_profile.lower_bit_rate_constraint_flag, 1))
+      return NULL;
+
+    if (profile_idc == 5 || profile_idc == 9 || profile_idc == 10 ||
+        profile_compatibility_flags[5] || profile_compatibility_flags[9] ||
+        profile_compatibility_flags[10]) {
+      /* Bit 53 - general_max_14bit_constraint_flag */
+      if (!gst_bit_reader_get_bits_uint8 (&br,
+              &ext_profile.max_14bit_constraint_flag, 1))
+        return NULL;
+    }
+
+    ext_profile.profile_idc = profile_idc;
+
+    for (i = 0; i < G_N_ELEMENTS (h265_ext_profiles); i++) {
+      GstH265FormatRangeExtensionProfile p = h265_ext_profiles[i];
+      guint extra_constraints = 0;
+      FormatRangeExtensionProfileMatch *m;
+
+      /* Filter out all the profiles having constraints not satisified by
+       * @ext_profile.
+       * Then pick the one having the least extra contraints. This allow us
+       * to match the closet profile if bitstream contains not standard
+       * constraints. */
+      if (p.max_14bit_constraint_flag != ext_profile.max_14bit_constraint_flag) {
+        if (p.max_14bit_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.max_12bit_constraint_flag != ext_profile.max_12bit_constraint_flag) {
+        if (p.max_12bit_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.max_10bit_constraint_flag != ext_profile.max_10bit_constraint_flag) {
+        if (p.max_10bit_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.max_8bit_constraint_flag != ext_profile.max_8bit_constraint_flag) {
+        if (p.max_8bit_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.max_422chroma_constraint_flag !=
+          ext_profile.max_422chroma_constraint_flag) {
+        if (p.max_422chroma_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.max_420chroma_constraint_flag !=
+          ext_profile.max_420chroma_constraint_flag) {
+        if (p.max_420chroma_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.max_monochrome_constraint_flag !=
+          ext_profile.max_monochrome_constraint_flag) {
+        if (p.max_monochrome_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.intra_constraint_flag != ext_profile.intra_constraint_flag) {
+        if (p.intra_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.one_picture_only_constraint_flag !=
+          ext_profile.one_picture_only_constraint_flag) {
+        if (p.one_picture_only_constraint_flag)
+          continue;
+        extra_constraints++;
+      }
+
+      if (p.lower_bit_rate_constraint_flag
+          && !ext_profile.lower_bit_rate_constraint_flag)
+        continue;
+
+      /* choose one if profile index and all flags are matched */
+      if (extra_constraints == 0 &&
+          (p.profile_idc == ext_profile.profile_idc
+              || profile_compatibility_flags[p.profile_idc])) {
+        profile = p.profile;
+        break;
+      }
+
+      m = g_new0 (FormatRangeExtensionProfileMatch, 1);
+      m->profile = &h265_ext_profiles[i];
+      m->extra_constraints = extra_constraints;
+      cand = g_list_prepend (cand, m);
+    }
+
+    if (!profile && cand) {
+      FormatRangeExtensionProfileMatch *m;
+
+      cand = g_list_sort (cand, (GCompareFunc) sort_fre_profile_matches);
+      m = cand->data;
+      profile = m->profile->profile;
+    }
+  } else
     profile = NULL;
+
+  if (cand)
+    g_list_free_full (cand, g_free);
 
   return profile;
 }
