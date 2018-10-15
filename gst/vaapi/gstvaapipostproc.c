@@ -1714,8 +1714,8 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   element_class->set_context = gst_vaapi_base_set_context;
   gst_element_class_set_static_metadata (element_class,
       "VA-API video postprocessing",
-      "Filter/Converter/Video;Filter/Converter/Video/Scaler;"
-      "Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
+      "Filter/Converter/Video/Hardware;Filter/Converter/Video/Scaler/Hardware;"
+      "Filter/Effect/Video/Hardware;Filter/Effect/Video/Deinterlace/Hardware",
       GST_PLUGIN_DESC, "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
   /* sink pad */
