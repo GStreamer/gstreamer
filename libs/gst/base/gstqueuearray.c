@@ -607,7 +607,8 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   /* simple case actual_idx == first item */
   if (actual_idx == first_item_index) {
     /* clear current head position if needed */
-    gst_queue_array_clear_idx (array, idx);
+    if (p_struct == NULL)
+      gst_queue_array_clear_idx (array, idx);
 
     /* move the head plus one */
     array->head++;
@@ -619,7 +620,8 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   /* simple case idx == last item */
   if (actual_idx == last_item_index) {
     /* clear current tail position if needed */
-    gst_queue_array_clear_idx (array, idx);
+    if (p_struct == NULL)
+      gst_queue_array_clear_idx (array, idx);
 
     /* move tail minus one, potentially wrapping */
     array->tail = (array->tail - 1 + array->size) % array->size;
@@ -630,7 +632,8 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   /* non-wrapped case */
   if (first_item_index < last_item_index) {
     /* clear idx if needed */
-    gst_queue_array_clear_idx (array, idx);
+    if (p_struct == NULL)
+      gst_queue_array_clear_idx (array, idx);
 
     g_assert (first_item_index < actual_idx && actual_idx < last_item_index);
     /* move everything beyond actual_idx one step towards zero in array */
@@ -648,7 +651,8 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
 
   if (actual_idx < last_item_index) {
     /* clear idx if needed */
-    gst_queue_array_clear_idx (array, idx);
+    if (p_struct == NULL)
+      gst_queue_array_clear_idx (array, idx);
 
     /* actual_idx is before last_item_index, move data towards zero */
     memmove (array->array + elt_size * actual_idx,
@@ -663,7 +667,8 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
 
   if (actual_idx > first_item_index) {
     /* clear idx if needed */
-    gst_queue_array_clear_idx (array, idx);
+    if (p_struct == NULL)
+      gst_queue_array_clear_idx (array, idx);
 
     /* actual_idx is after first_item_index, move data to higher indices */
     memmove (array->array + elt_size * (first_item_index + 1),
