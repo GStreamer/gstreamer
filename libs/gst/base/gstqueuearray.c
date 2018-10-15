@@ -145,6 +145,21 @@ gst_queue_array_set_clear_func (GstQueueArray * array,
   array->clear_func = clear_func;
 }
 
+static void
+gst_queue_array_clear_idx (GstQueueArray * array, guint idx)
+{
+  guint pos;
+
+  if (!array->clear_func)
+    return;
+
+  pos = (idx + array->head) % array->size;
+  if (array->struct_array)
+    array->clear_func (array->array + pos * array->elt_size);
+  else
+    array->clear_func (*(gpointer *) (array->array + pos * array->elt_size));
+}
+
 /**
  * gst_queue_array_clear: (skip)
  * @array: a #GstQueueArray object
@@ -159,15 +174,10 @@ gst_queue_array_clear (GstQueueArray * array)
   g_return_if_fail (array != NULL);
 
   if (array->clear_func != NULL) {
-    guint i, pos;
+    guint i;
 
     for (i = 0; i < array->length; i++) {
-      pos = (i + array->head) % array->size;
-      if (array->struct_array)
-        array->clear_func (array->array + pos * array->elt_size);
-      else
-        array->clear_func (*(gpointer *) (array->array +
-                pos * array->elt_size));
+      gst_queue_array_clear_idx (array, i);
     }
   }
 
@@ -575,13 +585,14 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
     gpointer p_struct)
 {
   int first_item_index, last_item_index;
+  guint actual_idx;
   guint elt_size;
 
   g_return_val_if_fail (array != NULL, FALSE);
-  idx = (array->head + idx) % array->size;
+  actual_idx = (array->head + idx) % array->size;
 
   g_return_val_if_fail (array->length > 0, FALSE);
-  g_return_val_if_fail (idx < array->size, FALSE);
+  g_return_val_if_fail (actual_idx < array->size, FALSE);
 
   elt_size = array->elt_size;
 
@@ -591,10 +602,13 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   last_item_index = (array->tail - 1 + array->size) % array->size;
 
   if (p_struct != NULL)
-    memcpy (p_struct, array->array + elt_size * idx, elt_size);
+    memcpy (p_struct, array->array + elt_size * actual_idx, elt_size);
 
-  /* simple case idx == first item */
-  if (idx == first_item_index) {
+  /* simple case actual_idx == first item */
+  if (actual_idx == first_item_index) {
+    /* clear current head position if needed */
+    gst_queue_array_clear_idx (array, idx);
+
     /* move the head plus one */
     array->head++;
     array->head %= array->size;
@@ -603,7 +617,10 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   }
 
   /* simple case idx == last item */
-  if (idx == last_item_index) {
+  if (actual_idx == last_item_index) {
+    /* clear current tail position if needed */
+    gst_queue_array_clear_idx (array, idx);
+
     /* move tail minus one, potentially wrapping */
     array->tail = (array->tail - 1 + array->size) % array->size;
     array->length--;
@@ -612,11 +629,14 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
 
   /* non-wrapped case */
   if (first_item_index < last_item_index) {
-    g_assert (first_item_index < idx && idx < last_item_index);
-    /* move everything beyond idx one step towards zero in array */
-    memmove (array->array + elt_size * idx,
-        array->array + elt_size * (idx + 1),
-        (last_item_index - idx) * elt_size);
+    /* clear idx if needed */
+    gst_queue_array_clear_idx (array, idx);
+
+    g_assert (first_item_index < actual_idx && actual_idx < last_item_index);
+    /* move everything beyond actual_idx one step towards zero in array */
+    memmove (array->array + elt_size * actual_idx,
+        array->array + elt_size * (actual_idx + 1),
+        (last_item_index - actual_idx) * elt_size);
     /* tail might wrap, ie if tail == 0 (and last_item_index == size) */
     array->tail = (array->tail - 1 + array->size) % array->size;
     array->length--;
@@ -626,11 +646,14 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
   /* only wrapped cases left */
   g_assert (first_item_index > last_item_index);
 
-  if (idx < last_item_index) {
-    /* idx is before last_item_index, move data towards zero */
-    memmove (array->array + elt_size * idx,
-        array->array + elt_size * (idx + 1),
-        (last_item_index - idx) * elt_size);
+  if (actual_idx < last_item_index) {
+    /* clear idx if needed */
+    gst_queue_array_clear_idx (array, idx);
+
+    /* actual_idx is before last_item_index, move data towards zero */
+    memmove (array->array + elt_size * actual_idx,
+        array->array + elt_size * (actual_idx + 1),
+        (last_item_index - actual_idx) * elt_size);
     /* tail should not wrap in this case! */
     g_assert (array->tail > 0);
     array->tail--;
@@ -638,11 +661,14 @@ gst_queue_array_drop_struct (GstQueueArray * array, guint idx,
     return TRUE;
   }
 
-  if (idx > first_item_index) {
-    /* idx is after first_item_index, move data to higher indices */
+  if (actual_idx > first_item_index) {
+    /* clear idx if needed */
+    gst_queue_array_clear_idx (array, idx);
+
+    /* actual_idx is after first_item_index, move data to higher indices */
     memmove (array->array + elt_size * (first_item_index + 1),
         array->array + elt_size * first_item_index,
-        (idx - first_item_index) * elt_size);
+        (actual_idx - first_item_index) * elt_size);
     array->head++;
     /* head should not wrap in this case! */
     g_assert (array->head < array->size);
