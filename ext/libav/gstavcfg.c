@@ -298,8 +298,8 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
       case AV_OPT_TYPE_INT64:
         /* ffmpeg expresses all ranges with doubles, this is sad */
         pspec = g_param_spec_int64 (name, name, help,
-            (gint64) (min == (gdouble) INT64_MIN ? INT64_MIN : min),
-            (gint64) (max == (gdouble) INT64_MAX ? INT64_MAX : max),
+            (min == (gdouble) INT64_MIN ? INT64_MIN : (gint64) min),
+            (max == (gdouble) INT64_MAX ? INT64_MAX : (gint64) max),
             opt->default_val.i64, G_PARAM_READWRITE);
         g_object_class_install_property (gobject_class, prop_id++, pspec);
         break;
