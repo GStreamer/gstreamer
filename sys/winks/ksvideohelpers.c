@@ -466,7 +466,7 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
           if (IsEqualGUID (&range->MajorFormat, &MEDIATYPE_Video)
               || IsEqualGUID (&range->MajorFormat, &MEDIATYPE_Interleaved)) {
             KsVideoMediaType *entry;
-            gpointer src_vscc, src_format;
+            gpointer src_vscc = NULL, src_format = NULL;
             GstStructure *media_structure;
 
             entry = g_new0 (KsVideoMediaType, 1);
