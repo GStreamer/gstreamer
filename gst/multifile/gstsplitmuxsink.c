@@ -835,37 +835,31 @@ calculate_next_max_timecode (GstSplitMuxSink * splitmux,
   } else {
     GstClockTime day_in_ns = 24 * 60 * 60 * GST_SECOND;
 
-    next_max_tc_time =
-        day_in_ns - cur_tc_time + target_tc_time +
-        splitmux->fragment_start_time;
-
     if ((cur_tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) &&
         (cur_tc->config.fps_d == 1001)) {
       /* Checking fps_d is probably unneeded, but better safe than sorry
        * (e.g. someone accidentally set a flag) */
-      guint frames_of_daily_jam;
-      /* We have around 2.6 frames of offset per day for 29.97 FPS and 5.2
-       * frames for 59.94 FPS. Must subtract those if the day is wrapping
-       * around. We'll just round them down */
-      switch (cur_tc->config.fps_n) {
-        case 30000:
-          frames_of_daily_jam = 2;
-          break;
-        case 60000:
-          frames_of_daily_jam = 5;
-          break;
-        default:
-          GST_WARNING_OBJECT (splitmux,
-              "The day is wrapping around for an unknown drop-frame frame rate %d/%d. There is likely to be an offset because of daily jam in the fragment duration.",
-              cur_tc->config.fps_n, cur_tc->config.fps_d);
-          frames_of_daily_jam = 0;
-          break;
-      }
-      next_max_tc_time -=
-          gst_util_uint64_scale (frames_of_daily_jam * GST_SECOND,
-          cur_tc->config.fps_d, cur_tc->config.fps_n);
+      GstVideoTimeCode *tc_for_offset;
+
+      /* Here, the duration of the 24:00:00;00 timecode isn't exactly one day,
+       * but slightly less. Calculate that duration from a fake timecode. The
+       * problem is that 24:00:00;00 isn't a valid timecode, so the workaround
+       * is to add one frame to 23:59:59;29 */
+      tc_for_offset =
+          gst_video_time_code_new (cur_tc->config.fps_n, cur_tc->config.fps_d,
+          NULL, cur_tc->config.flags, 23, 59, 59,
+          cur_tc->config.fps_n / cur_tc->config.fps_d, 0);
+      day_in_ns =
+          gst_video_time_code_nsec_since_daily_jam (tc_for_offset) +
+          gst_util_uint64_scale (GST_SECOND, cur_tc->config.fps_d,
+          cur_tc->config.fps_n);
+      gst_video_time_code_free (tc_for_offset);
     }
+    next_max_tc_time =
+        day_in_ns - cur_tc_time + target_tc_time +
+        splitmux->fragment_start_time;
   }
+
   GST_INFO_OBJECT (splitmux, "Next max TC time: %" GST_TIME_FORMAT
       " from ref TC: %" GST_TIME_FORMAT, GST_TIME_ARGS (next_max_tc_time),
       GST_TIME_ARGS (cur_tc_time));
