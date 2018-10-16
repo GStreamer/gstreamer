@@ -795,6 +795,7 @@ GST_START_TEST (test_pipeline_processing_deadline_no_queue)
   fail_unless (g_error_matches (gerror, GST_CORE_ERROR, GST_CORE_ERROR_CLOCK));
   gst_message_unref (msg);
   gst_object_unref (bus);
+  g_clear_error (&gerror);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
