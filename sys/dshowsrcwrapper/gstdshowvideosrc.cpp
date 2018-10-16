@@ -89,13 +89,12 @@ static GstCaps *gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 static GstFlowReturn gst_dshowvideosrc_create (GstPushSrc * psrc,
     GstBuffer ** buf);
 
-static gboolean gst_dshowvideosrc_create_capture_filter(GstDshowVideoSrc * src);
-
 /*utils*/
-static GstCaps *gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc *
-    src, IPin * pin);
-static GstCaps *gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc *
-    src, IPin * pin);
+GstCaps *gst_dshowvideosrc_getcaps_from_streamcaps (IPin * pin,
+    GList ** pins_mediatypes);
+GstCaps *gst_dshowvideosrc_getcaps_from_enum_mediatypes (IPin * pin,
+    GList ** pins_mediatypes);
+
 static gboolean gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size,
     gpointer src_object, GstClockTime duration);
 
@@ -362,104 +361,62 @@ gst_dshowvideosrc_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
   return NULL;
 }
 
-static gboolean
-gst_dshowvideosrc_create_capture_filter(GstDshowVideoSrc * src)
+GstCaps *
+gst_dshowvideosrc_getcaps_from_capture_filter (IBaseFilter * filter,
+    GList ** pins_mediatypes)
 {
-  HRESULT hres = S_OK;
-  IBindCtx *lpbc = NULL;
-  IMoniker *videom;
-  DWORD dwEaten;
-  gunichar2 *unidevice = NULL;
+  IPin *capture_pin = NULL;
+  IEnumPins *enumpins = NULL;
+  HRESULT hres;
+  GstCaps *caps;
 
-  /* device will be used first, then device-name, then device-index */
-  if (!src->device || src->device[0] == '\0') {
-    GST_DEBUG_OBJECT (src, "No device set, will enumerate to match device-name or device-index");
+  g_assert (filter);
 
-    g_free (src->device);
-    src->device =
-        gst_dshow_getdevice_from_devicename (&CLSID_VideoInputDeviceCategory,
-        &src->device_name, &src->device_index);
-    if (!src->device) {
-      GST_ERROR ("No video device found.");
-      return FALSE;
-    }
-  }
+  caps = gst_caps_new_empty ();
 
-  GST_DEBUG_OBJECT (src, "Opening device-index=%d, device-name='%s', device='%s'",
-      src->device_index, src->device_name, src->device);
-
-  unidevice =
-      g_utf8_to_utf16 (src->device, strlen (src->device), NULL, NULL, NULL);
-
-  if (!src->video_cap_filter) {
-    hres = CreateBindCtx (0, &lpbc);
-    if (SUCCEEDED (hres)) {
+  /* get the capture pins supported types */
+  hres = filter->EnumPins (&enumpins);
+  if (SUCCEEDED (hres)) {
+    while (enumpins->Next (1, &capture_pin, NULL) == S_OK) {
+      IKsPropertySet *pKs = NULL;
       hres =
-          MkParseDisplayName (lpbc, (LPCOLESTR) unidevice, &dwEaten, &videom);
-      if (SUCCEEDED (hres)) {
-        hres = videom->BindToObject (lpbc, NULL, IID_IBaseFilter,
-            (LPVOID *) & src->video_cap_filter);
-        videom->Release ();
-      }
-      lpbc->Release ();
-    }
-  }
+          capture_pin->QueryInterface (IID_IKsPropertySet, (LPVOID *) & pKs);
+      if (SUCCEEDED (hres) && pKs) {
+        DWORD cbReturned;
+        GUID pin_category;
+        RPC_STATUS rpcstatus;
 
-  g_free (unidevice);
-
-  if (!src->caps) {
-    src->caps = gst_caps_new_empty ();
-  }
-
-  if (src->video_cap_filter && gst_caps_is_empty (src->caps)) {
-    /* get the capture pins supported types */
-    IPin *capture_pin = NULL;
-    IEnumPins *enumpins = NULL;
-    HRESULT hres;
-
-    hres = src->video_cap_filter->EnumPins (&enumpins);
-    if (SUCCEEDED (hres)) {
-      while (enumpins->Next (1, &capture_pin, NULL) == S_OK) {
-        IKsPropertySet *pKs = NULL;
         hres =
-            capture_pin->QueryInterface (IID_IKsPropertySet, (LPVOID *) & pKs);
-        if (SUCCEEDED (hres) && pKs) {
-          DWORD cbReturned;
-          GUID pin_category;
-          RPC_STATUS rpcstatus;
+            pKs->Get (AMPROPSETID_Pin,
+            AMPROPERTY_PIN_CATEGORY, NULL, 0, &pin_category, sizeof (GUID),
+            &cbReturned);
 
-          hres =
-              pKs->Get (AMPROPSETID_Pin,
-              AMPROPERTY_PIN_CATEGORY, NULL, 0, &pin_category, sizeof (GUID),
-              &cbReturned);
-
-          /* we only want capture pins */
-          if (UuidCompare (&pin_category, (UUID *) & PIN_CATEGORY_CAPTURE,
-                  &rpcstatus) == 0) {
-            {
-              GstCaps *caps =
-                  gst_dshowvideosrc_getcaps_from_streamcaps (src, capture_pin);
-              if (caps) {
-                GST_DEBUG_OBJECT (src, "Caps supported by device: %" GST_PTR_FORMAT, caps);
-                gst_caps_append (src->caps, caps);
-              } else {
-                caps = gst_dshowvideosrc_getcaps_from_enum_mediatypes (src, capture_pin);
-                if (caps) {
-                  GST_DEBUG_OBJECT (src, "Caps supported by device: %" GST_PTR_FORMAT, caps);
-                  gst_caps_append (src->caps, caps);
-                }
-              }
+        /* we only want capture pins */
+        if (UuidCompare (&pin_category, (UUID *) & PIN_CATEGORY_CAPTURE,
+                &rpcstatus) == 0) {
+          GstCaps *caps2;
+          caps2 = gst_dshowvideosrc_getcaps_from_streamcaps (capture_pin,
+              pins_mediatypes);
+          if (caps2) {
+            gst_caps_append (caps, caps2);
+          } else {
+            caps2 = gst_dshowvideosrc_getcaps_from_enum_mediatypes (
+                capture_pin, pins_mediatypes);
+            if (caps2) {
+              gst_caps_append (caps, caps2);
             }
           }
-          pKs->Release ();
         }
-        capture_pin->Release ();
+        pKs->Release ();
       }
-      enumpins->Release ();
+      capture_pin->Release ();
     }
+    enumpins->Release ();
   }
 
-  return TRUE;
+  GST_DEBUG ("Device supports these caps: %" GST_PTR_FORMAT, caps);
+
+  return caps;
 }
 
 static GstStateChangeReturn
@@ -509,8 +466,40 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
 {
   HRESULT hres = S_FALSE;
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
-  
-  gst_dshowvideosrc_create_capture_filter (src);
+  DshowDeviceEntry *device_entry;
+  IMoniker *moniker = NULL;
+
+  device_entry = gst_dshow_select_device (&CLSID_VideoInputDeviceCategory,
+      src->device, src->device_name, src->device_index);
+  if (device_entry == NULL) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Failed to find device"), (NULL));
+    return FALSE;
+  }
+
+  g_free (src->device);
+  g_free (src->device_name);
+  src->device = g_strdup (device_entry->device);
+  src->device_name = g_strdup (device_entry->device_name);
+  src->device_index = device_entry->device_index;
+  moniker = device_entry->moniker;
+  device_entry->moniker = NULL;
+  gst_dshow_device_entry_free (device_entry);
+
+  src->video_cap_filter = gst_dshow_create_capture_filter (moniker);
+  moniker->Release ();
+  if (src->video_cap_filter == NULL) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
+        ("Failed to create capture filter for device"), (NULL));
+    return FALSE;
+  }
+
+  src->caps = gst_dshowvideosrc_getcaps_from_capture_filter (
+      src->video_cap_filter, (GList**)&src->pins_mediatypes);
+  if (gst_caps_is_empty (src->caps)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
+        ("Failed to get any caps from devce"), (NULL));
+    return FALSE;
+  }
 
   /*
   The filter graph now is created via the IGraphBuilder Interface   
@@ -600,6 +589,9 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
   return TRUE;
 
 error:
+  GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
+     ("Failed to build filter graph"), (NULL));
+
   if (src->dshow_fakesink) {
     src->dshow_fakesink->Release ();
     src->dshow_fakesink = NULL;
@@ -858,7 +850,12 @@ gst_dshowvideosrc_stop (GstBaseSrc * bsrc)
     g_free (src->device);
     src->device = NULL;
   }
-  
+
+  if (src->video_cap_filter) {
+    src->video_cap_filter->Release ();
+    src->video_cap_filter = NULL;
+  }
+
   return TRUE;
 }
 
@@ -912,8 +909,8 @@ gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   return GST_FLOW_OK;
 }
 
-static GstCaps *
-gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
+GstCaps *
+gst_dshowvideosrc_getcaps_from_streamcaps (IPin * pin, GList ** pins_mediatypes)
 {
   GstCaps *caps = NULL;
   HRESULT hres = S_OK;
@@ -981,8 +978,9 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
       }
 
       if (mediacaps) {
-        src->pins_mediatypes =
-            g_list_append (src->pins_mediatypes, pin_mediatype);
+        if (pins_mediatypes != NULL) {
+          *pins_mediatypes = g_list_append (*pins_mediatypes, pin_mediatype);
+        }
         gst_caps_append (caps, mediacaps);
       } else {
         /* failed to convert dshow caps */
@@ -1001,8 +999,8 @@ gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc * src, IPin * pin)
   return caps;
 }
 
-static GstCaps *
-gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc * src, IPin * pin)
+GstCaps *
+gst_dshowvideosrc_getcaps_from_enum_mediatypes (IPin * pin, GList ** pins_mediatypes)
 {
   GstCaps *caps = NULL;
   IEnumMediaTypes *enum_mediatypes = NULL;
@@ -1036,8 +1034,9 @@ gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc * src, IPin * p
 	}
 
     if (mediacaps) {
-      src->pins_mediatypes =
-          g_list_append (src->pins_mediatypes, pin_mediatype);
+      if (pins_mediatypes != NULL) {
+        *pins_mediatypes = g_list_append (*pins_mediatypes, pin_mediatype);
+      }
       gst_caps_append (caps, mediacaps);
     } else {
       /* failed to convert dshow caps */

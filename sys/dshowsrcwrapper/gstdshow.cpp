@@ -23,9 +23,16 @@
 
 #include "gstdshow.h"
 #include "gstdshowfakesink.h"
+#include "gstdshowvideosrc.h"
 
 GST_DEBUG_CATEGORY_EXTERN (dshowsrcwrapper_debug);
 #define GST_CAT_DEFAULT dshowsrcwrapper_debug
+
+gchar *
+wchar_to_gchar (WCHAR * w)
+{
+  return g_utf16_to_utf8 ((const gunichar2 *) w, wcslen (w), NULL, NULL, NULL);
+}
 
 const GUID MEDIASUBTYPE_I420
     = { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
@@ -238,9 +245,7 @@ gst_dshow_find_filter (CLSID input_majortype, CLSID input_subtype,
 
       hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
       if (hres == S_OK && varFriendlyName.bstrVal) {
-        friendly_name =
-            g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
-            wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
+        friendly_name = wchar_to_gchar (varFriendlyName.bstrVal);
         if (friendly_name)
           _strupr (friendly_name);
         SysFreeString (varFriendlyName.bstrVal);
@@ -288,6 +293,196 @@ clean:
   return ret;
 }
 
+void
+gst_dshow_device_entry_free (DshowDeviceEntry * entry)
+{
+  if (entry) {
+    g_free (entry->device);
+    entry->device = NULL;
+    g_free (entry->device_name);
+    entry->device_name = NULL;
+    if (entry->caps) {
+      gst_caps_unref (entry->caps);
+      entry->caps = NULL;
+    }
+    if (entry->moniker) {
+      entry->moniker->Release ();
+      entry->moniker = NULL;
+    }
+  }
+}
+
+void
+gst_dshow_device_list_free (GList * devices)
+{
+  GList *cur;
+
+  for (cur = devices; cur != NULL; cur = cur->next)
+    gst_dshow_device_entry_free ((DshowDeviceEntry *) cur->data);
+
+  g_list_free (devices);
+}
+
+GList *
+gst_dshow_enumerate_devices (const GUID * device_category, gboolean getcaps)
+{
+  GList *result = NULL;
+  ICreateDevEnum *devices_enum = NULL;
+  IEnumMoniker *enum_moniker = NULL;
+  IMoniker *moniker = NULL;
+  HRESULT hres = S_FALSE;
+  ULONG fetched;
+  gint devidx = -1;
+
+  hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
+      IID_ICreateDevEnum, (void **) &devices_enum);
+  if (hres != S_OK) {
+    GST_ERROR ("Failed to create System Device Enumerator");
+    goto clean;
+  }
+
+  hres = devices_enum->CreateClassEnumerator (*device_category,
+      &enum_moniker, 0);
+  if (hres != S_OK || !enum_moniker) {
+    GST_ERROR ("Failed to create audio/video class device enumerator");
+    goto clean;
+  }
+
+  enum_moniker->Reset ();
+
+  while (enum_moniker->Next (1, &moniker, &fetched) == S_OK) {
+    IPropertyBag *property_bag = NULL;
+    hres = moniker->BindToStorage (NULL, NULL, IID_IPropertyBag,
+        (void **) &property_bag);
+    if (SUCCEEDED (hres) && property_bag) {
+      VARIANT varFriendlyName;
+      VariantInit (&varFriendlyName);
+
+      hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
+      if (hres == S_OK && varFriendlyName.bstrVal) {
+        gchar *friendly_name = wchar_to_gchar (varFriendlyName.bstrVal);
+
+        devidx++;
+        GST_DEBUG ("Found device idx=%d: device-name='%s'",
+            devidx, friendly_name);
+
+        WCHAR *wszDisplayName = NULL;
+        hres = moniker->GetDisplayName (NULL, NULL, &wszDisplayName);
+        if (hres == S_OK && wszDisplayName) {
+          DshowDeviceEntry *entry = g_new0 (DshowDeviceEntry, 1);
+          gchar *device_path = NULL;
+          GstCaps *caps = NULL;
+
+          device_path = wchar_to_gchar (wszDisplayName);
+          CoTaskMemFree (wszDisplayName);
+
+          /* getting caps can be slow, so make it optional when enumerating */
+          if (getcaps) {
+            IBindCtx *lpbc = NULL;
+            hres = CreateBindCtx (0, &lpbc);
+            if (SUCCEEDED (hres)) {
+              IBaseFilter *video_cap_filter = NULL;
+              hres = moniker->BindToObject (lpbc, NULL, IID_IBaseFilter,
+                (LPVOID *) & video_cap_filter);
+              if (video_cap_filter) {
+                caps = gst_dshowvideosrc_getcaps_from_capture_filter (video_cap_filter, NULL);
+                video_cap_filter->Release ();
+              }
+              lpbc->Release ();
+            }
+          }
+
+          entry->device = device_path;
+          entry->device_name = friendly_name;
+          entry->device_index = devidx;
+          entry->caps = caps;
+          entry->moniker = moniker;
+          moniker = NULL;
+          result = g_list_append (result, entry);
+        } else {
+          g_free (friendly_name);
+        }
+        SysFreeString (varFriendlyName.bstrVal);
+      }
+      property_bag->Release ();
+    }
+    if (moniker) {
+      moniker->Release ();
+    }
+  }
+
+clean:
+  if (enum_moniker) {
+    enum_moniker->Release ();
+  }
+
+  if (devices_enum) {
+    devices_enum->Release ();
+  }
+
+  return result;
+}
+
+DshowDeviceEntry *
+gst_dshow_select_device (const GUID * device_category,
+    const gchar * device, const gchar * device_name, const gint device_index)
+{
+  GList *devices = NULL;
+  GList *item = NULL;
+  DshowDeviceEntry *selected = NULL;
+
+  GST_DEBUG ("Trying to select device-index=%d, device-name='%s', device='%s'",
+    device_index, device_name, device);
+
+  devices = gst_dshow_enumerate_devices (&CLSID_VideoInputDeviceCategory, FALSE);
+
+  for (item = devices; item != NULL; item = item->next) {
+    DshowDeviceEntry *entry = (DshowDeviceEntry *) item->data;
+
+    /* device will be used first, then device-name, then device-index */
+    if (device && g_strcmp0 (device, entry->device) == 0) {
+      selected = entry;
+      break;
+    } else if (device_name && g_strcmp0 (device_name, entry->device_name) == 0) {
+      selected = entry;
+      break;
+    } else if (device_index == entry->device_index) {
+      selected = entry;
+      break;
+    }
+  }
+
+  if (selected) {
+    devices = g_list_remove (devices, selected);
+    GST_DEBUG ("Selected device-index=%d, device-name='%s', device='%s'",
+      selected->device_index, selected->device_name, selected->device);
+  } else {
+    GST_DEBUG ("No matching device found");
+  }
+
+  gst_dshow_device_list_free (devices);
+
+  return selected;
+}
+
+IBaseFilter *
+gst_dshow_create_capture_filter (IMoniker *moniker)
+{
+  HRESULT hres = S_OK;
+  IBindCtx *lpbc = NULL;
+  IBaseFilter *video_cap_filter = NULL;
+
+  g_assert (moniker != NULL);
+
+  hres = CreateBindCtx (0, &lpbc);
+  if (SUCCEEDED (hres)) {
+    hres = moniker->BindToObject (lpbc, NULL, IID_IBaseFilter,
+        (LPVOID *) & video_cap_filter);
+    lpbc->Release ();
+  }
+
+  return video_cap_filter;
+}
 
 gchar *
 gst_dshow_getdevice_from_devicename (const GUID * device_category,
@@ -305,14 +500,14 @@ gst_dshow_getdevice_from_devicename (const GUID * device_category,
   hres = CoCreateInstance (CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
       IID_ICreateDevEnum, (void **) &devices_enum);
   if (hres != S_OK) {
-    /*error */
+    GST_ERROR ("Failed to create System Device Enumerator");
     goto clean;
   }
 
   hres = devices_enum->CreateClassEnumerator (*device_category,
       &enum_moniker, 0);
   if (hres != S_OK || !enum_moniker) {
-    /*error */
+    GST_ERROR ("Failed to create audio/video class device enumerator");
     goto clean;
   }
 
@@ -330,9 +525,7 @@ gst_dshow_getdevice_from_devicename (const GUID * device_category,
 
       hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
       if (hres == S_OK && varFriendlyName.bstrVal) {
-        gchar *friendly_name =
-            g_utf16_to_utf8 ((const gunichar2 *) varFriendlyName.bstrVal,
-            wcslen (varFriendlyName.bstrVal), NULL, NULL, NULL);
+        gchar *friendly_name = wchar_to_gchar (varFriendlyName.bstrVal);
 
         devidx++;
         GST_DEBUG ("Found device idx=%d: device-name='%s'",
@@ -343,13 +536,13 @@ gst_dshow_getdevice_from_devicename (const GUID * device_category,
           *device_name = g_strdup (friendly_name);
         }
 
-        if ((*device_name && **device_name) && _stricmp (*device_name, friendly_name) == 0) {
+        if ((*device_name && **device_name)
+            && _stricmp (*device_name, friendly_name) == 0) {
           WCHAR *wszDisplayName = NULL;
           hres = moniker->GetDisplayName (NULL, NULL, &wszDisplayName);
           if (hres == S_OK && wszDisplayName) {
             *device_index = devidx;
-            ret = g_utf16_to_utf8 ((const gunichar2 *) wszDisplayName,
-                wcslen (wszDisplayName), NULL, NULL, NULL);
+            ret = wchar_to_gchar (wszDisplayName);
             CoTaskMemFree (wszDisplayName);
           }
           bfound = TRUE;

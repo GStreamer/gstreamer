@@ -100,5 +100,10 @@ struct _GstDshowVideoSrcClass
 
 GType gst_dshowvideosrc_get_type (void);
 
+
+GstCaps * gst_dshowvideosrc_getcaps_from_capture_filter (IBaseFilter * filter,
+    GList ** pins_mediatypes);
+
+
 G_END_DECLS
 #endif /* __GST_DSHOWVIDEOSRC_H__ */
