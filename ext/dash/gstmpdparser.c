@@ -4021,7 +4021,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       GST_DEBUG ("No useful SegmentList node for the current Representation");
       /* here we should have a single segment for each representation, whose URL is encoded in the baseURL element */
       if (!gst_mpd_client_add_media_segment (stream, NULL, 1, 0, 0,
-              PeriodEnd - PeriodStart, 0, PeriodEnd - PeriodStart)) {
+              PeriodEnd - PeriodStart, PeriodStart, PeriodEnd - PeriodStart)) {
         return FALSE;
       }
     } else {
@@ -4036,14 +4036,22 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
       /* build segment list */
       i = stream->cur_segment_list->MultSegBaseType->startNumber;
       start = 0;
-      start_time = 0;
+      start_time = PeriodStart;
 
       GST_LOG ("Building media segment list using a SegmentList node");
       if (stream->cur_segment_list->MultSegBaseType->SegmentTimeline) {
         GstSegmentTimelineNode *timeline;
         GstSNode *S;
         GList *list;
+        GstClockTime presentationTimeOffset;
+        GstSegmentBaseType *segbase;
 
+        segbase = stream->cur_segment_list->MultSegBaseType->SegBaseType;
+        presentationTimeOffset =
+            gst_util_uint64_scale (segbase->presentationTimeOffset, GST_SECOND,
+            segbase->timescale);
+        GST_LOG ("presentationTimeOffset = %" G_GUINT64_FORMAT,
+            presentationTimeOffset);
         timeline = stream->cur_segment_list->MultSegBaseType->SegmentTimeline;
         for (list = g_queue_peek_head_link (&timeline->S); list;
             list = g_list_next (list)) {
@@ -4058,7 +4066,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
 
           if (S->t > 0) {
             start = S->t;
-            start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
+            start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale)
+                + PeriodStart - presentationTimeOffset;
           }
 
           if (!SegmentURL) {
@@ -4115,8 +4124,15 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
         return FALSE;
       }
     } else {
+      GstClockTime presentationTimeOffset;
       GstMultSegmentBaseType *mult_seg =
           stream->cur_seg_template->MultSegBaseType;
+
+      presentationTimeOffset =
+          gst_util_uint64_scale (mult_seg->SegBaseType->presentationTimeOffset,
+          GST_SECOND, mult_seg->SegBaseType->timescale);
+      GST_LOG ("presentationTimeOffset = %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (presentationTimeOffset));
       /* build segment list */
       i = mult_seg->startNumber;
       start = 0;
@@ -4143,7 +4159,8 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
           duration = gst_util_uint64_scale (S->d, GST_SECOND, timescale);
           if (S->t > 0) {
             start = S->t;
-            start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale);
+            start_time = gst_util_uint64_scale (S->t, GST_SECOND, timescale)
+                + PeriodStart - presentationTimeOffset;
           }
 
           if (!gst_mpd_client_add_media_segment (stream, NULL, i, S->r, start,
@@ -4170,13 +4187,12 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
         GstMediaSegment *media_segment =
             g_ptr_array_index (stream->segments, n);
         if (media_segment) {
-          if (media_segment->start + media_segment->duration >
-              PeriodEnd - PeriodStart) {
-            GstClockTime stop = PeriodEnd - PeriodStart;
+          if (media_segment->start + media_segment->duration > PeriodEnd) {
+            GstClockTime stop = PeriodEnd;
             if (n < stream->segments->len - 1) {
               GstMediaSegment *next_segment =
                   g_ptr_array_index (stream->segments, n + 1);
-              if (next_segment && next_segment->start < PeriodEnd - PeriodStart)
+              if (next_segment && next_segment->start < PeriodEnd)
                 stop = next_segment->start;
             }
             media_segment->duration =
@@ -5015,6 +5031,11 @@ gst_mpd_client_get_last_fragment_timestamp_end (GstMpdClient * client,
     *ts = stream_period->start + stream_period->duration;
   } else {
     segment_idx = gst_mpd_client_get_segments_counts (client, stream) - 1;
+    if (segment_idx >= stream->segments->len) {
+      GST_WARNING ("Segment index %d is outside of segment list of length %d",
+          segment_idx, stream->segments->len);
+      return FALSE;
+    }
     currentChunk = g_ptr_array_index (stream->segments, segment_idx);
 
     if (currentChunk->repeat >= 0) {
@@ -5979,14 +6000,18 @@ gst_mpd_client_get_next_segment_availability_start_time (GstMpdClient * client,
 {
   GstDateTime *availability_start_time, *rv;
   gint seg_idx;
-  GstStreamPeriod *stream_period;
   GstMediaSegment *segment;
   GstClockTime segmentEndTime;
+  const GstStreamPeriod *stream_period;
+  GstClockTime period_start = 0;
 
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (stream != NULL, NULL);
 
   stream_period = gst_mpdparser_get_stream_period (client);
+  if (stream_period && stream_period->period) {
+    period_start = stream_period->start;
+  }
 
   seg_idx = stream->segment_index;
 
@@ -6001,35 +6026,21 @@ gst_mpd_client_get_next_segment_availability_start_time (GstMpdClient * client,
           g_ptr_array_index (stream->segments, seg_idx + 1);
       segmentEndTime = next_segment->start;
     } else {
-      const GstStreamPeriod *stream_period;
-      stream_period = gst_mpdparser_get_stream_period (client);
-      segmentEndTime = stream_period->start + stream_period->duration;
+      g_return_val_if_fail (stream_period != NULL, NULL);
+      segmentEndTime = period_start + stream_period->duration;
     }
   } else {
     GstClockTime seg_duration;
     seg_duration = gst_mpd_client_get_segment_duration (client, stream, NULL);
     if (seg_duration == 0)
       return NULL;
-    segmentEndTime = (1 + seg_idx) * seg_duration;
+    segmentEndTime = period_start + (1 + seg_idx) * seg_duration;
   }
 
   availability_start_time = gst_mpd_client_get_availability_start_time (client);
   if (availability_start_time == NULL) {
     GST_WARNING_OBJECT (client, "Failed to get availability_start_time");
     return NULL;
-  }
-
-  if (stream_period && stream_period->period) {
-    GstDateTime *t =
-        gst_mpd_client_add_time_difference (availability_start_time,
-        stream_period->start / GST_USECOND);
-    gst_date_time_unref (availability_start_time);
-    availability_start_time = t;
-
-    if (availability_start_time == NULL) {
-      GST_WARNING_OBJECT (client, "Failed to offset availability_start_time");
-      return NULL;
-    }
   }
 
   rv = gst_mpd_client_add_time_difference (availability_start_time,

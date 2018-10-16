@@ -839,6 +839,97 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplate)
 GST_END_TEST;
 
 /*
+ * Test parsing Period SegmentTemplate attributes where a
+ * presentationTimeOffset attribute has been specified
+ *
+ */
+GST_START_TEST (dash_mpdparser_period_segmentTemplateWithPresentationTimeOffset)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period start=\"PT1M\" duration=\"PT40S\">"
+      "    <AdaptationSet"
+      "      bitstreamSwitching=\"false\""
+      "      mimeType=\"video/mp4\""
+      "      contentType=\"video\">"
+      "      <SegmentTemplate media=\"$RepresentationID$/TestMedia-$Time$.mp4\""
+      "                     index=\"$RepresentationID$/TestIndex.mp4\""
+      "                     timescale=\"100\""
+      "                     presentationTimeOffset=\"6000\""
+      "                     initialization=\"$RepresentationID$/TestInitialization\""
+      "                     bitstreamSwitching=\"true\">"
+      "        <SegmentTimeline>"
+      "          <S d=\"400\" r=\"9\" t=\"100\"/>"
+      "        </SegmentTimeline></SegmentTemplate>"
+      "      <Representation bandwidth=\"95866\" frameRate=\"90000/3600\""
+      "        id=\"vrep\" /></AdaptationSet></Period></MPD>";
+
+  gboolean ret;
+  GList *adaptationSets;
+  GstAdaptationSetNode *adapt_set;
+  GstActiveStream *activeStream;
+  GstMediaFragmentInfo fragment;
+  GstClockTime expectedDuration;
+  GstClockTime expectedTimestamp;
+  GstMpdClient *mpdclient;
+  GstPeriodNode *periodNode;
+  GstSegmentTemplateNode *segmentTemplate;
+
+  mpdclient = gst_mpd_client_new ();
+  ret = gst_mpd_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  ret =
+      gst_mpd_client_setup_media_presentation (mpdclient, GST_CLOCK_TIME_NONE,
+      -1, NULL);
+  assert_equals_int (ret, TRUE);
+
+  periodNode =
+      (GstPeriodNode *) g_list_nth_data (mpdclient->mpd_node->Periods, 0);
+  fail_if (periodNode == NULL);
+
+  /* get the list of adaptation sets of the first period */
+  adaptationSets = gst_mpd_client_get_adaptation_sets (mpdclient);
+  fail_if (adaptationSets == NULL);
+
+  /* setup streaming from the first adaptation set */
+  adapt_set = (GstAdaptationSetNode *) g_list_nth_data (adaptationSets, 0);
+  fail_if (adapt_set == NULL);
+  ret = gst_mpd_client_setup_streaming (mpdclient, adapt_set);
+  assert_equals_int (ret, TRUE);
+  activeStream = gst_mpdparser_get_active_stream_by_index (mpdclient, 0);
+  fail_if (activeStream == NULL);
+
+  segmentTemplate = adapt_set->SegmentTemplate;
+  fail_if (segmentTemplate == NULL);
+  assert_equals_string (segmentTemplate->media,
+      "$RepresentationID$/TestMedia-$Time$.mp4");
+  assert_equals_string (segmentTemplate->index,
+      "$RepresentationID$/TestIndex.mp4");
+  assert_equals_string (segmentTemplate->initialization,
+      "$RepresentationID$/TestInitialization");
+  assert_equals_string (segmentTemplate->bitstreamSwitching, "true");
+
+  ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
+  assert_equals_int (ret, TRUE);
+  expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 4, 0);
+  /* start = Period@start + S@t - presentationTimeOffset */
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 1, 0);
+  assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
+  assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
+  /* the $Time$ expansion uses the @t value, without including
+     Period@start or presentationTimeOffset */
+  assert_equals_string (fragment.uri, "/vrep/TestMedia-100.mp4");
+  gst_media_fragment_info_clear (&fragment);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test parsing Period SegmentTemplate MultipleSegmentBaseType attributes
  *
  */
@@ -5882,6 +5973,8 @@ dash_suite (void)
       dash_mpdparser_period_segmentList_multipleSegmentBaseType_bitstreamSwitching);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_segmentList_segmentURL);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_period_segmentTemplate);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_period_segmentTemplateWithPresentationTimeOffset);
   tcase_add_test (tc_simpleMPD,
       dash_mpdparser_period_segmentTemplate_multipleSegmentBaseType);
   tcase_add_test (tc_simpleMPD,
