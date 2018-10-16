@@ -235,7 +235,7 @@ typedef enum
 #define GST_STREAM_ERROR    gst_stream_error_quark ()
 
 /**
- * GST_ERROR_SYSTEM:
+ * GST_ERROR_SYSTEM: (skip):
  *
  * Builds a string using errno describing the previously failed system
  * call.  To be used as the debug argument in #GST_ELEMENT_ERROR.
