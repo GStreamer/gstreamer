@@ -5839,6 +5839,45 @@ GST_START_TEST (dash_mpdparser_duration)
 GST_END_TEST;
 
 /*
+ * Test parsing duration attributes that are corner-cases of
+ * ISO8601 durations, such as hours greater than 24.
+ *
+ * The values of the Year, Month, Day, Hour and Minutes components
+ * are not restricted but allow an arbitrary unsigned integer,
+ * i.e., an integer that conforms to the pattern [0-9]+..
+ * Similarly, the value of the Seconds component allows an arbitrary
+ * unsigned decimal.
+ */
+GST_START_TEST (dash_mpdparser_unusual_durations)
+{
+  GstMPDPeriodNode *periodNode;
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period id=\"TestId\""
+      "          start=\"PT51H10M30S\""
+      "          duration=\"PT123M20S\""
+      "          bitstreamSwitching=\"true\"></Period></MPD>";
+
+  gboolean ret;
+  GstMPDClient2 *mpdclient = gst_mpd_client2_new ();
+
+  ret = gst_mpd_client2_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstMPDPeriodNode *) mpdclient->mpd_root_node->Periods->data;
+  assert_equals_uint64 (periodNode->start,
+      duration_to_ms (0, 0, 2, 3, 10, 30, 0));
+  assert_equals_uint64 (periodNode->duration,
+      duration_to_ms (0, 0, 0, 2, 3, 20, 0));
+
+  gst_mpd_client2_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * Test that the maximum_segment_duration correctly implements the
  * rules in the DASH specification
  */
@@ -6516,6 +6555,7 @@ dash_suite (void)
 
   tcase_add_test (tc_duration, dash_mpdparser_duration);
   tcase_add_test (tc_duration, dash_mpdparser_maximum_segment_duration);
+  tcase_add_test (tc_duration, dash_mpdparser_unusual_durations);
 
   suite_add_tcase (s, tc_simpleMPD);
   suite_add_tcase (s, tc_complexMPD);
