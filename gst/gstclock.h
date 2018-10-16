@@ -213,7 +213,7 @@ G_STMT_START {                                                    \
 
 /* timestamp debugging macros */
 /**
- * GST_TIME_FORMAT:
+ * GST_TIME_FORMAT: (skip):
  *
  * A string that can be used in printf-like format strings to display a
  * #GstClockTime value in h:m:s format.  Use GST_TIME_ARGS() to construct
@@ -226,7 +226,7 @@ G_STMT_START {                                                    \
  */
 #define GST_TIME_FORMAT "u:%02u:%02u.%09u"
 /**
- * GST_TIME_ARGS:
+ * GST_TIME_ARGS: (skip):
  * @t: a #GstClockTime
  *
  * Format @t for the #GST_TIME_FORMAT format string. Note: @t will be
@@ -242,7 +242,7 @@ G_STMT_START {                                                    \
         GST_CLOCK_TIME_IS_VALID (t) ? \
         (guint) (((GstClockTime)(t)) % GST_SECOND) : 999999999
 /**
- * GST_STIME_FORMAT:
+ * GST_STIME_FORMAT: (skip):
  *
  * A string that can be used in printf-like format strings to display a signed
  * #GstClockTimeDiff or #gint64 value in h:m:s format.  Use GST_TIME_ARGS() to
@@ -257,7 +257,7 @@ G_STMT_START {                                                    \
  */
 #define GST_STIME_FORMAT "c%" GST_TIME_FORMAT
 /**
- * GST_STIME_ARGS:
+ * GST_STIME_ARGS: (skip):
  * @t: a #GstClockTimeDiff or #gint64
  *
  * Format @t for the #GST_STIME_FORMAT format string. Note: @t will be

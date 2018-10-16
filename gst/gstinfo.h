@@ -271,7 +271,7 @@ struct _GstDebugCategory {
 #endif /* ifndef GST_FUNCTION */
 
 /**
- * GST_PTR_FORMAT:
+ * GST_PTR_FORMAT: (skip):
  *
  * printf format type used to debug GStreamer types. You can use this in
  * combination with GStreamer's debug logging system as well as the functions
@@ -287,7 +287,7 @@ struct _GstDebugCategory {
 #define GST_PTR_FORMAT     "p\aA"
 
 /**
- * GST_SEGMENT_FORMAT:
+ * GST_SEGMENT_FORMAT: (skip):
  *
  * printf format type used to debug GStreamer segments. You can use this in
  * combination with GStreamer's debug logging system as well as the functions
