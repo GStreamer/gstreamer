@@ -18,6 +18,7 @@ base_tests = [
   [ 'libs/rtp.c' ],
   [ 'libs/rtpbasedepayload.c' ],
   [ 'libs/rtpbasepayload.c' ],
+  [ 'libs/rtpmeta.c' ],
   [ 'libs/rtsp.c' ],
   [ 'libs/sdp.c' ],
   [ 'libs/tag.c' ],
