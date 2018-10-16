@@ -255,6 +255,9 @@ rtp_source_reset (RTPSource * src)
   src->bye_reason = NULL;
   src->sent_bye = FALSE;
   g_hash_table_remove_all (src->reported_in_sr_of);
+  g_queue_foreach (src->retained_feedback, (GFunc) gst_buffer_unref, NULL);
+  g_queue_clear (src->retained_feedback);
+  src->last_rtptime = -1;
 
   src->stats.cycles = -1;
   src->stats.jitter = 0;
@@ -294,7 +297,6 @@ rtp_source_init (RTPSource * src)
   src->clock_rate = -1;
   src->packets = g_queue_new ();
   src->seqnum_offset = -1;
-  src->last_rtptime = -1;
 
   src->retained_feedback = g_queue_new ();
   src->nacks = g_array_new (FALSE, FALSE, sizeof (guint32));

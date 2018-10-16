@@ -1270,6 +1270,7 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* downstream is now releasing the dataflow and we can join. */
       join_rtcp_thread (rtpsession);
+      rtp_session_reset (rtpsession->priv->session);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

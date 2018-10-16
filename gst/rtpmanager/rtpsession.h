@@ -334,6 +334,7 @@ GType rtp_session_get_type (void);
 
 /* create and configure */
 RTPSession*     rtp_session_new           (void);
+void            rtp_session_reset                  (RTPSession *sess);
 void            rtp_session_set_callbacks          (RTPSession *sess,
 		                                    RTPSessionCallbacks *callbacks,
                                                     gpointer user_data);

@@ -1061,6 +1061,47 @@ rtp_session_new (void)
 }
 
 /**
+ * rtp_session_reset:
+ * @sess: an #RTPSession
+ *
+ * Reset the sources of @sess.
+ */
+void
+rtp_session_reset (RTPSession * sess)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  /* remove all sources */
+  g_hash_table_remove_all (sess->ssrcs[sess->mask_idx]);
+  sess->total_sources = 0;
+  sess->stats.sender_sources = 0;
+  sess->stats.internal_sender_sources = 0;
+  sess->stats.internal_sources = 0;
+  sess->stats.active_sources = 0;
+
+  sess->generation = 0;
+  sess->first_rtcp = TRUE;
+  sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
+  sess->last_rtcp_check_time = GST_CLOCK_TIME_NONE;
+  sess->last_rtcp_send_time = GST_CLOCK_TIME_NONE;
+  sess->last_rtcp_interval = GST_CLOCK_TIME_NONE;
+  sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
+  sess->scheduled_bye = FALSE;
+
+  /* reset session stats */
+  sess->stats.bye_members = 0;
+  sess->stats.nacks_dropped = 0;
+  sess->stats.nacks_sent = 0;
+  sess->stats.nacks_received = 0;
+
+  sess->is_doing_ptp = TRUE;
+
+  g_list_free_full (sess->conflicting_addresses,
+      (GDestroyNotify) rtp_conflicting_address_free);
+  sess->conflicting_addresses = NULL;
+}
+
+/**
  * rtp_session_set_callbacks:
  * @sess: an #RTPSession
  * @callbacks: callbacks to configure
