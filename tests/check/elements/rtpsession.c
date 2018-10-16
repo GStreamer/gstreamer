@@ -1239,6 +1239,113 @@ GST_START_TEST (test_send_rtcp_when_signalled)
 
 GST_END_TEST;
 
+static void
+validate_sdes_priv (GstBuffer * buf, const char *name_ref, const char *value)
+{
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket pkt;
+
+  fail_unless (gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp));
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &pkt));
+
+  do {
+    if (gst_rtcp_packet_get_type (&pkt) == GST_RTCP_TYPE_SDES) {
+      fail_unless (gst_rtcp_packet_sdes_first_entry (&pkt));
+
+      do {
+        GstRTCPSDESType type;
+        guint8 len;
+        guint8 *data;
+
+        fail_unless (gst_rtcp_packet_sdes_get_entry (&pkt, &type, &len, &data));
+
+        if (type == GST_RTCP_SDES_PRIV) {
+          char *name = g_strndup ((const gchar *) &data[1], data[0]);
+          len -= data[0] + 1;
+          data += data[0] + 1;
+
+          fail_unless_equals_int (len, strlen (value));
+          fail_unless (!strncmp (value, (char *) data, len));
+          fail_unless_equals_string (name, name_ref);
+          g_free (name);
+          goto sdes_done;
+        }
+      } while (gst_rtcp_packet_sdes_next_entry (&pkt));
+
+      g_assert_not_reached ();
+    }
+  } while (gst_rtcp_packet_move_to_next (&pkt));
+
+  g_assert_not_reached ();
+
+sdes_done:
+
+  fail_unless (gst_rtcp_buffer_unmap (&rtcp));
+
+}
+
+GST_START_TEST (test_change_sent_sdes)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  gboolean ret;
+  GstFlowReturn res;
+
+  /* verify the RTCP thread has not started */
+  fail_unless_equals_int (0, gst_test_clock_peek_id_count (h->testclock));
+  /* and that no RTCP has been pushed */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->rtcp_h));
+
+  g_object_set (h->internal_session, "sdes",
+      gst_structure_new ("application/x-rtp-source-sdes",
+          "other", G_TYPE_STRING, "first", NULL), NULL);
+
+  /* then ask explicitly to send RTCP */
+  g_signal_emit_by_name (h->internal_session,
+      "send-rtcp-full", GST_SECOND, &ret);
+  /* this is FALSE due to no next RTCP check time */
+  fail_unless (ret == FALSE);
+
+  /* "crank" and verify RTCP now was sent */
+  session_harness_crank_clock (h);
+  buf = session_harness_pull_rtcp (h);
+  fail_unless (buf);
+  validate_sdes_priv (buf, "other", "first");
+  gst_buffer_unref (buf);
+
+  /* Change the SDES */
+  g_object_set (h->internal_session, "sdes",
+      gst_structure_new ("application/x-rtp-source-sdes",
+          "other", G_TYPE_STRING, "second", NULL), NULL);
+
+  /* Send an RTP packet */
+  buf = generate_test_buffer (22, 10000);
+  res = session_harness_send_rtp (h, buf);
+  fail_unless_equals_int (GST_FLOW_OK, res);
+
+  /* "crank" enough to ensure a RTCP packet has been produced ! */
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+  session_harness_crank_clock (h);
+
+  /* and verify RTCP now was sent with new SDES */
+  buf = session_harness_pull_rtcp (h);
+  validate_sdes_priv (buf, "other", "second");
+  gst_buffer_unref (buf);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -1262,6 +1369,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_receive_pli_no_sender_ssrc);
   tcase_add_test (tc_chain, test_dont_send_rtcp_while_idle);
   tcase_add_test (tc_chain, test_send_rtcp_when_signalled);
+  tcase_add_test (tc_chain, test_change_sent_sdes);
   return s;
 }
 

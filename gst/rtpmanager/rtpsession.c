@@ -1349,6 +1349,12 @@ rtp_session_get_sdes_struct (RTPSession * sess)
   return result;
 }
 
+static void
+source_set_sdes (const gchar * key, RTPSource * source, GstStructure * sdes)
+{
+  rtp_source_set_sdes_struct (source, gst_structure_copy (sdes));
+}
+
 /**
  * rtp_session_set_sdes_struct:
  * @sess: an #RTSPSession
@@ -1366,6 +1372,9 @@ rtp_session_set_sdes_struct (RTPSession * sess, const GstStructure * sdes)
   if (sess->sdes)
     gst_structure_free (sess->sdes);
   sess->sdes = gst_structure_copy (sdes);
+
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) source_set_sdes, sess->sdes);
   RTP_SESSION_UNLOCK (sess);
 }
 
