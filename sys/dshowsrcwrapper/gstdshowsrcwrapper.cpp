@@ -25,6 +25,7 @@
 
 #include "gstdshowaudiosrc.h"
 #include "gstdshowvideosrc.h"
+#include "dshowdeviceprovider.h"
 
 GST_DEBUG_CATEGORY (dshowsrcwrapper_debug);
 #define GST_CAT_DEFAULT dshowsrcwrapper_debug
@@ -32,14 +33,18 @@ GST_DEBUG_CATEGORY (dshowsrcwrapper_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (dshowsrcwrapper_debug, "dshowsrcwrapper", 0,
+      "DirectShow source wrapper");
+
   if (!gst_element_register (plugin, "dshowaudiosrc",
           GST_RANK_NONE, GST_TYPE_DSHOWAUDIOSRC) ||
       !gst_element_register (plugin, "dshowvideosrc",
           GST_RANK_NONE, GST_TYPE_DSHOWVIDEOSRC))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (dshowsrcwrapper_debug, "dshowsrcwrapper", 0,
-      "DirectShow source wrapper");
+  if (!gst_device_provider_register (plugin, "dshowdeviceprovider",
+    GST_RANK_PRIMARY, GST_TYPE_DSHOW_DEVICE_PROVIDER))
+    return FALSE;
 
   return TRUE;
 }

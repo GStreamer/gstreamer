@@ -41,6 +41,8 @@ LINK_DIRECTORIES(
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMALE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
 
 ADD_LIBRARY(libgstdshowsrcwrapper SHARED
+  dshowdeviceprovider.cpp
+  dshowdeviceprovider.h
   gstdshow.cpp
   gstdshow.h
   gstdshowfakesink.cpp
