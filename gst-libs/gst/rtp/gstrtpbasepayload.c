@@ -1244,6 +1244,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
   /* set ssrc, payload type, seq number, caps and rtptime */
   if (is_list) {
     gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj), set_headers, &data);
+    /* sequence number has increased more if this was a buffer list */
+    payload->seqnum = data.seqnum - 1;
   } else {
     GstBuffer *buf = GST_BUFFER_CAST (obj);
     set_headers (&buf, 0, &data);
