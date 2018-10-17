@@ -3289,7 +3289,6 @@ gst_matroska_read_common_reset (GstElement * element,
       if (context->pad != NULL)
         gst_element_remove_pad (element, context->pad);
 
-      gst_caps_replace (&context->caps, NULL);
       gst_matroska_track_free (context);
     }
     g_ptr_array_free (ctx->src, TRUE);

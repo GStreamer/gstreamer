@@ -335,6 +335,7 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   g_free (track->language);
   g_free (track->codec_priv);
   g_free (track->codec_state);
+  gst_caps_replace (&track->caps, NULL);
 
   if (track->encodings != NULL) {
     int i;
