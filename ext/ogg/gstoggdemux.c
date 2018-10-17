@@ -252,6 +252,19 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   ogg = GST_OGG_DEMUX (parent);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      GstOggPad *ogg_pad = GST_OGG_PAD (pad);
+
+      gst_query_parse_position (query, &format, NULL);
+      /* can only get position in time */
+      if (format != GST_FORMAT_TIME)
+        goto wrong_format;
+
+      gst_query_set_position (query, format, ogg_pad->position);
+      break;
+    }
     case GST_QUERY_DURATION:
     {
       GstFormat format;
@@ -385,7 +398,7 @@ done:
   /* ERRORS */
 wrong_format:
   {
-    GST_DEBUG_OBJECT (ogg, "only query duration on TIME is supported");
+    GST_DEBUG_OBJECT (ogg, "only query position/duration on TIME is supported");
     res = FALSE;
     goto done;
   }
