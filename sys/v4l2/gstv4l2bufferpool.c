@@ -650,12 +650,14 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_DMABUF:
     case GST_V4L2_IO_DMABUF_IMPORT:
       if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
+        guint i;
+
         /* For captures, we need to enqueue buffers before we start streaming,
          * so the driver don't underflow immediatly. As we have put then back
          * into the base class queue, resurrect them, then releasing will queue
          * them back. */
-        while (gst_v4l2_buffer_pool_resurrect_buffer (pool) == GST_FLOW_OK)
-          continue;
+        for (i = 0; i < pool->num_allocated; i++)
+          gst_v4l2_buffer_pool_resurrect_buffer (pool);
       }
 
       if (obj->ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
@@ -791,6 +793,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
       count = gst_v4l2_allocator_start (pool->vallocator, min_buffers,
           V4L2_MEMORY_MMAP);
+      pool->num_allocated = count;
 
       if (count < GST_V4L2_MIN_BUFFERS) {
         min_buffers = count;
