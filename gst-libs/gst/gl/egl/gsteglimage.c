@@ -637,13 +637,19 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
       break;
   }
   g_free (formats);
-  if (i == num_formats)
+  if (i == num_formats) {
+    GST_DEBUG ("driver does not support importing fourcc %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fourcc));
     return FALSE;
+  }
 
   ret = gst_eglQueryDmaBufModifiersEXT (egl_display, fourcc, 0, NULL, NULL,
       &num_modifiers);
-  if (!ret || num_modifiers == 0)
+  if (!ret || num_modifiers == 0) {
+    GST_DEBUG ("driver does not report modifiers for fourcc %"
+        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
     return FALSE;
+  }
 
   modifiers = g_new (EGLuint64KHR, num_modifiers);
   external_only = g_new (EGLBoolean, num_modifiers);
@@ -658,12 +664,18 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
 
   for (i = 0; i < num_modifiers; ++i) {
     if (modifiers[i] == DRM_FORMAT_MOD_LINEAR) {
+      if (external_only[i]) {
+        GST_DEBUG ("driver only supports external import of fourcc %"
+            GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      }
       ret = !external_only[i];
       g_free (modifiers);
       g_free (external_only);
       return ret;
     }
   }
+  GST_DEBUG ("driver only supports non-linear import of fourcc %"
+      GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   g_free (modifiers);
   g_free (external_only);
   return FALSE;
