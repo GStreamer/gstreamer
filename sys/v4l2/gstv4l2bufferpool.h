@@ -79,6 +79,7 @@ struct _GstV4l2BufferPool
   guint min_latency;         /* number of buffers we will hold */
   guint max_latency;         /* number of buffers we can hold */
   guint num_queued;          /* number of buffers queued in the driver */
+  guint num_allocated;       /* number of buffers allocated */
   guint copy_threshold;      /* when our pool runs lower, start handing out copies */
 
   gboolean streaming;
