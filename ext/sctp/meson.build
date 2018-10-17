@@ -9,8 +9,13 @@ if get_option('sctp').disabled()
   subdir_done()
 endif
 
+sctp_platform_deps = []
+
 sctp_dep = cc.find_library('usrsctp', required : get_option('sctp').enabled())
 sctp_header = cc.has_header('usrsctp.h')
+if host_system == 'windows'
+  sctp_platform_deps += [cc.find_library('ws2_32')]
+endif
 
 if get_option('sctp').enabled()
   if not sctp_dep.found() or not sctp_header
@@ -23,7 +28,7 @@ if sctp_dep.found() and sctp_header
     sctp_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [sctp_dep, gst_dep, gstbase_dep, gstsctp_dep],
+    dependencies : [sctp_dep, gst_dep, gstbase_dep, gstsctp_dep, sctp_platform_deps],
     install : true,
     install_dir : plugins_install_dir,
   )
