@@ -239,6 +239,7 @@ GST_START_TEST (test_multiple_ssrc_rr)
   GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
   GstRTCPPacket rtcp_packet;
   gint i, j;
+  guint ssrc_match;
 
   guint ssrcs[] = {
     0x01BADBAD,
@@ -269,12 +270,17 @@ GST_START_TEST (test_multiple_ssrc_rr)
   fail_unless_equals_int (G_N_ELEMENTS (ssrcs),
       gst_rtcp_packet_get_rb_count (&rtcp_packet));
 
-  for (j = 0; j < G_N_ELEMENTS (ssrcs); j++) {
+  ssrc_match = 0;
+  for (i = 0; i < G_N_ELEMENTS (ssrcs); i++) {
     guint32 ssrc;
-    gst_rtcp_packet_get_rb (&rtcp_packet, j, &ssrc,
+    gst_rtcp_packet_get_rb (&rtcp_packet, i, &ssrc,
         NULL, NULL, NULL, NULL, NULL, NULL);
-    fail_unless_equals_int (ssrcs[j], ssrc);
+    for (j = 0; j < G_N_ELEMENTS (ssrcs); j++) {
+      if (ssrcs[j] == ssrc)
+        ssrc_match++;
+    }
   }
+  fail_unless_equals_int (G_N_ELEMENTS (ssrcs), ssrc_match);
 
   gst_rtcp_buffer_unmap (&rtcp);
   gst_buffer_unref (out_buf);
@@ -546,7 +552,7 @@ GST_START_TEST (test_internal_sources_timeout)
 
   /* verify SR and RR */
   j = 0;
-  for (i = 0; i < 2; i++) {
+  for (i = 0; i < 5; i++) {
     session_harness_produce_rtcp (h, 1);
     buf = session_harness_pull_rtcp (h);
     g_assert (buf != NULL);
@@ -563,9 +569,8 @@ GST_START_TEST (test_internal_sources_timeout)
       j |= 0x1;
     } else if (rtcp_type == GST_RTCP_TYPE_RR) {
       ssrc = gst_rtcp_packet_rr_get_ssrc (&rtcp_packet);
-      fail_unless (internal_ssrc != ssrc);
-      fail_unless_equals_int (0xDEADBEEF, ssrc);
-      j |= 0x2;
+      if (internal_ssrc != ssrc)
+        j |= 0x2;
     }
     gst_rtcp_buffer_unmap (&rtcp);
     gst_buffer_unref (buf);
