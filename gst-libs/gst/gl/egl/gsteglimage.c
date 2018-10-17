@@ -582,8 +582,7 @@ _drm_direct_fourcc_from_info (GstVideoInfo * info)
 }
 
 static gboolean
-_gst_egl_image_check_dmabuf_direct (GstGLContext * context,
-    GstVideoInfo * in_info)
+_gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
 {
   EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
   GstGLDisplayEGL *display_egl;
@@ -614,17 +613,16 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context,
       (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
   gst_object_unref (display_egl);
 
-  ret = gst_eglQueryDmaBufModifiersEXT (egl_display,
-      _drm_direct_fourcc_from_info (in_info), 0, NULL, NULL, &num_modifiers);
+  ret = gst_eglQueryDmaBufModifiersEXT (egl_display, fourcc, 0, NULL, NULL,
+      &num_modifiers);
   if (!ret || num_modifiers == 0)
     return FALSE;
 
   modifiers = g_new (EGLuint64KHR, num_modifiers);
   external_only = g_new (EGLBoolean, num_modifiers);
 
-  ret = gst_eglQueryDmaBufModifiersEXT (egl_display,
-      _drm_direct_fourcc_from_info (in_info), num_modifiers, modifiers,
-      external_only, &num_modifiers);
+  ret = gst_eglQueryDmaBufModifiersEXT (egl_display, fourcc, num_modifiers,
+      modifiers, external_only, &num_modifiers);
   if (!ret || num_modifiers == 0) {
     g_free (modifiers);
     g_free (external_only);
@@ -670,6 +668,7 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
 
   EGLImageKHR img;
   guint n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+  gint fourcc;
   gint i;
   gboolean with_modifiers;
 
@@ -682,7 +681,11 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
   guintptr attribs[41];         /* 6 + 10 * 3 + 4 + 1 */
   gint atti = 0;
 
-  if (!_gst_egl_image_check_dmabuf_direct (context, in_info))
+  fourcc = _drm_direct_fourcc_from_info (in_info);
+  if (fourcc == -1)
+    return NULL;
+
+  if (!_gst_egl_image_check_dmabuf_direct (context, fourcc))
     return NULL;
 
   with_modifiers = gst_gl_context_check_feature (context,
@@ -697,7 +700,7 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
   attribs[atti++] = EGL_HEIGHT;
   attribs[atti++] = GST_VIDEO_INFO_HEIGHT (in_info);
   attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
-  attribs[atti++] = _drm_direct_fourcc_from_info (in_info);
+  attribs[atti++] = fourcc;
 
   /* first plane */
   {
