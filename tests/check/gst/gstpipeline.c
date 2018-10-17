@@ -24,6 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/gst.h>
+#include <gst/check/gsttestclock.h>
 
 #define WAIT_TIME (300 * GST_MSECOND)
 
@@ -668,7 +669,6 @@ GST_START_TEST (test_pipeline_processing_deadline)
   GstElement *pipeline, *fakesrc, *queue, *fakesink;
   GstState state;
   GstClock *clock;
-  GstClockID id;
   gint64 position;
   GstQuery *q;
   gboolean live;
@@ -676,10 +676,13 @@ GST_START_TEST (test_pipeline_processing_deadline)
   GstBus *bus;
   GstMessage *msg;
 
+  clock = gst_test_clock_new ();
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   queue = gst_element_factory_make ("queue", "queue");
   fakesink = gst_element_factory_make ("fakesink", "fakesink");
+
+  gst_pipeline_use_clock (GST_PIPELINE (pipeline), clock);
 
   /* no more than 100 buffers per second */
   g_object_set (fakesrc, "do-timestamp", TRUE, "format", GST_FORMAT_TIME,
@@ -706,14 +709,14 @@ GST_START_TEST (test_pipeline_processing_deadline)
   fail_unless (max >= min);
   gst_query_unref (q);
 
-  /* Wait for 50 msecs */
-  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
-  fail_unless (clock != NULL);
-  id = gst_clock_new_single_shot_id (clock,
-      gst_element_get_base_time (pipeline) + 50 * GST_MSECOND);
-  gst_clock_id_wait (id, NULL);
-  gst_clock_id_unref (id);
-  gst_object_unref (clock);
+  /* Wait for time to reach 50 msecs */
+  for (;;) {
+    gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (clock), NULL);
+    if (gst_test_clock_get_next_entry_time (GST_TEST_CLOCK (clock)) >
+        50 * GST_MSECOND)
+      break;
+    gst_test_clock_crank (GST_TEST_CLOCK (clock));
+  }
 
   /* We waited 50ms, but the position should be now < 40ms */
   fail_unless (gst_element_query_position (fakesink, GST_FORMAT_TIME,
@@ -752,6 +755,7 @@ GST_START_TEST (test_pipeline_processing_deadline)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   gst_object_unref (pipeline);
+  gst_object_unref (clock);
 }
 
 GST_END_TEST;
