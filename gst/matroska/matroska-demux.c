@@ -2888,6 +2888,7 @@ gst_matroska_demux_update_tracks (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         if (!gst_caps_is_equal (old_track->caps, new_track->caps)) {
           gst_pad_set_caps (new_track->pad, new_track->caps);
         }
+        gst_caps_replace (&old_track->caps, NULL);
 
         if (!gst_tag_list_is_equal (old_track->tags, new_track->tags)) {
           GST_DEBUG_OBJECT (old_track->pad, "Sending tags %p: %"
