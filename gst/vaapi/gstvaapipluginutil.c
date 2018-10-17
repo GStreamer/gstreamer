@@ -132,9 +132,7 @@ gst_vaapi_create_display_from_handle (GstVaapiDisplayType display_type,
   }
   return NULL;
 }
-#endif
 
-#if USE_GST_GL_HELPERS
 static GstVaapiDisplayType
 gst_vaapi_get_display_type_from_gl (GstGLDisplayType gl_display_type,
     GstGLPlatform gl_platform)
@@ -171,7 +169,6 @@ static GstVaapiDisplayType
 gst_vaapi_get_display_type_from_gl_env (void)
 {
   const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
-  const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
 
   if (!gl_window_type) {
 #if USE_X11 && GST_GL_HAVE_WINDOW_X11
@@ -191,13 +188,17 @@ gst_vaapi_get_display_type_from_gl_env (void)
     return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
 #endif
 #if USE_EGL
-  if (g_strcmp0 (gl_platform_type, "egl") == 0)
-    return GST_VAAPI_DISPLAY_TYPE_EGL;
+  {
+    const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
+    if (g_strcmp0 (gl_platform_type, "egl") == 0)
+      return GST_VAAPI_DISPLAY_TYPE_EGL;
+  }
 #endif
 
   return GST_VAAPI_DISPLAY_TYPE_ANY;
 }
 
+#if USE_EGL
 static gint
 gst_vaapi_get_gles_version_from_gl_api (GstGLAPI gl_api)
 {
@@ -219,27 +220,27 @@ static guintptr
 gst_vaapi_get_egl_handle_from_gl_display (GstGLDisplay * gl_display)
 {
   guintptr egl_handle = 0;
-
-#if USE_EGL && GST_GL_HAVE_PLATFORM_EGL
   GstGLDisplayEGL *egl_display;
+
   egl_display = gst_gl_display_egl_from_gl_display (gl_display);
   if (egl_display) {
     egl_handle = gst_gl_display_get_handle (GST_GL_DISPLAY (egl_display));
     gst_object_unref (egl_display);
   }
-#endif
   return egl_handle;
 }
+#endif /* USE_EGL */
 
 static GstVaapiDisplay *
 gst_vaapi_create_display_from_egl (GstGLDisplay * gl_display,
     GstGLContext * gl_context, GstVaapiDisplayType display_type,
     gpointer native_display)
 {
+  GstVaapiDisplay *display = NULL;
+#if USE_EGL
   GstGLAPI gl_api;
   gint gles_version;
   guintptr egl_handler;
-  GstVaapiDisplay *display = NULL;
 
   gl_api = gst_gl_context_get_gl_api (gl_context);
   gles_version = gst_vaapi_get_gles_version_from_gl_api (gl_api);
@@ -268,7 +269,7 @@ gst_vaapi_create_display_from_egl (GstGLDisplay * gl_display,
     gst_vaapi_display_egl_set_gl_context (GST_VAAPI_DISPLAY_EGL (display),
         GSIZE_TO_POINTER (gst_gl_context_get_gl_context (gl_context)));
   }
-
+#endif
   return display;
 }
 #endif /* USE_GST_GL_HELPERS */
