@@ -586,20 +586,26 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
 {
   EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
   GstGLDisplayEGL *display_egl;
+  EGLint *formats;
+  EGLint num_formats;
   EGLuint64KHR *modifiers;
   EGLBoolean *external_only;
   int num_modifiers;
   gboolean ret;
   int i;
 
+  EGLBoolean (*gst_eglQueryDmaBufFormatsEXT) (EGLDisplay dpy,
+      EGLint max_formats, EGLint * formats, EGLint * num_formats);
   EGLBoolean (*gst_eglQueryDmaBufModifiersEXT) (EGLDisplay dpy,
       int format, int max_modifiers, EGLuint64KHR * modifiers,
       EGLBoolean * external_only, int *num_modifiers);
 
+  gst_eglQueryDmaBufFormatsEXT =
+      gst_gl_context_get_proc_address (context, "eglQueryDmaBufFormatsEXT");
   gst_eglQueryDmaBufModifiersEXT =
       gst_gl_context_get_proc_address (context, "eglQueryDmaBufModifiersEXT");
 
-  if (!gst_eglQueryDmaBufModifiersEXT)
+  if (!gst_eglQueryDmaBufFormatsEXT || !gst_eglQueryDmaBufModifiersEXT)
     return FALSE;
 
   display_egl = gst_gl_display_egl_from_gl_display (context->display);
@@ -612,6 +618,27 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
   egl_display =
       (EGLDisplay) gst_gl_display_get_handle (GST_GL_DISPLAY (display_egl));
   gst_object_unref (display_egl);
+
+  ret = gst_eglQueryDmaBufFormatsEXT (egl_display, 0, NULL, &num_formats);
+  if (!ret || num_formats == 0)
+    return FALSE;
+
+  formats = g_new (EGLint, num_formats);
+
+  ret = gst_eglQueryDmaBufFormatsEXT (egl_display, num_formats, formats,
+      &num_formats);
+  if (!ret || num_formats == 0) {
+    g_free (formats);
+    return FALSE;
+  }
+
+  for (i = 0; i < num_formats; i++) {
+    if (formats[i] == fourcc)
+      break;
+  }
+  g_free (formats);
+  if (i == num_formats)
+    return FALSE;
 
   ret = gst_eglQueryDmaBufModifiersEXT (egl_display, fourcc, 0, NULL, NULL,
       &num_modifiers);
