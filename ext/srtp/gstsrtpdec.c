@@ -98,7 +98,7 @@
  *
  * ## Example pipelines
  * |[
- * gst-launch-1.0 udpsrc port=5004 caps='application/x-srtp, payload=(int)8, ssrc=(uint)1356955624, srtp-key=(buffer)012345678901234567890123456789012345678901234567890123456789, srtp-cipher=(string)aes-128-icm, srtp-auth=(string)hmac-sha1-80, srtcp-cipher=(string)aes-128-icm, srtcp-auth=(string)hmac-sha1-80, roc=(uint)0' !  srtpdec ! rtppcmadepay ! alawdec ! pulsesink
+ * gst-launch-1.0 udpsrc port=5004 caps='application/x-srtp, payload=(int)8, ssrc=(uint)1356955624, srtp-key=(buffer)012345678901234567890123456789012345678901234567890123456789, srtp-cipher=(string)aes-128-icm, srtp-auth=(string)hmac-sha1-80, srtcp-cipher=(string)aes-128-icm, srtcp-auth=(string)hmac-sha1-80' !  srtpdec ! rtppcmadepay ! alawdec ! pulsesink
  * ]| Receive PCMA SRTP packets through UDP using caps to specify
  * master key and protection.
  * |[
@@ -835,7 +835,6 @@ gst_srtp_dec_sink_setcaps (GstPad * pad, GstObject * parent,
   ps = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_has_field_typed (ps, "ssrc", G_TYPE_UINT) &&
-      gst_structure_has_field_typed (ps, "roc", G_TYPE_UINT) &&
       gst_structure_has_field_typed (ps, "srtp-cipher", G_TYPE_STRING) &&
       gst_structure_has_field_typed (ps, "srtp-auth", G_TYPE_STRING) &&
       gst_structure_has_field_typed (ps, "srtcp-cipher", G_TYPE_STRING) &&
