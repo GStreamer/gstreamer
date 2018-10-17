@@ -76,6 +76,7 @@ struct _GstSrtpEnc
   guint rtp_auth;
   guint rtcp_cipher;
   guint rtcp_auth;
+  GstBuffer *mki;
 
   srtp_t session;
   gboolean first_session;
