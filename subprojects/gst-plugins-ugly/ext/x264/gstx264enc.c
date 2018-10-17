@@ -1930,7 +1930,7 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
   x264_nal_t *nal;
   int i_nal;
   int header_return;
-  gint sps_ni = 0;
+  gint i;
   guint8 *sps;
   GstStructure *s;
   const gchar *profile;
@@ -1946,13 +1946,20 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
     return FALSE;
   }
 
-  /* old x264 returns SEI, SPS and PPS, newer one has SEI last */
-  if (i_nal == 3 && nal[sps_ni].i_type != 7)
-    sps_ni = 1;
+  sps = NULL;
+  for (i = 0; i < i_nal; i++) {
+    if (nal[i].i_type == NAL_SPS) {
+      sps = nal[i].p_payload + 4;
+      /* skip NAL unit type */
+      sps++;
+    }
+  }
 
-  sps = nal[sps_ni].p_payload + 4;
-  /* skip NAL unit type */
-  sps++;
+  if (!sps) {
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x264 header failed."),
+        ("x264_encoder_headers did not return SPS"));
+    return FALSE;
+  }
 
   gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
 
@@ -2016,9 +2023,10 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   int header_return;
   int i_size;
   int nal_size;
+  gint i;
   guint8 *buffer, *sps;
   gulong buffer_size;
-  gint sei_ni = 2, sps_ni = 0, pps_ni = 1;
+  gint sei_ni, sps_ni, pps_ni;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return NULL;
@@ -2033,25 +2041,31 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
     return NULL;
   }
 
-  /* old x264 returns SEI, SPS and PPS, newer one has SEI last */
-  if (i_nal == 3 && nal[sps_ni].i_type != 7) {
-    sei_ni = 0;
-    sps_ni = 1;
-    pps_ni = 2;
+  sei_ni = sps_ni = pps_ni = -1;
+  for (i = 0; i < i_nal; i++) {
+    if (nal[i].i_type == NAL_SEI) {
+      sei_ni = i;
+    } else if (nal[i].i_type == NAL_SPS) {
+      sps_ni = i;
+    } else if (nal[i].i_type == NAL_PPS) {
+      pps_ni = i;
+    }
   }
 
   /* x264 is expected to return an SEI (some identification info),
    * and SPS and PPS */
-  if (i_nal != 3 || nal[sps_ni].i_type != 7 || nal[pps_ni].i_type != 8 ||
+  if (sps_ni == -1 || pps_ni == -1 ||
       nal[sps_ni].i_payload < 4 || nal[pps_ni].i_payload < 1) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, (NULL),
         ("Unexpected x264 header."));
     return NULL;
   }
 
-  GST_MEMDUMP ("SEI", nal[sei_ni].p_payload, nal[sei_ni].i_payload);
   GST_MEMDUMP ("SPS", nal[sps_ni].p_payload, nal[sps_ni].i_payload);
   GST_MEMDUMP ("PPS", nal[pps_ni].p_payload, nal[pps_ni].i_payload);
+  if (sei_ni != -1) {
+    GST_MEMDUMP ("SEI", nal[sei_ni].p_payload, nal[sei_ni].i_payload);
+  }
 
   /* nal payloads with emulation_prevention_three_byte, and some header data */
   buffer_size = (nal[sps_ni].i_payload + nal[pps_ni].i_payload) * 4 + 100;
