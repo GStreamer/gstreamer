@@ -104,6 +104,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
+#include <gst/base/gstbytereader.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -1924,6 +1925,72 @@ gst_x264_enc_close_encoder (GstX264Enc * encoder)
   encoder->vtable = NULL;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static void
+gst_x264_enc_parse_sei_userdata_unregistered (GstX264Enc * encoder,
+    guint8 * sei, guint len, guint8 * uuid)
+{
+  GstByteReader br;
+  guint32 payloadType;
+  guint32 payloadSize;
+  guint8 payload_type_byte, payload_size_byte, payload_uuid;
+  gint i = 0;
+  guint8 *sei_msg_payload;
+  guint remaining, payload_size;
+
+  gst_byte_reader_init (&br, sei, len);
+
+  payloadType = 0;
+  do {
+    if (!gst_byte_reader_get_uint8 (&br, &payload_type_byte)) {
+      goto failed;
+    }
+    payloadType += payload_type_byte;
+  } while (payload_type_byte == 0xff);
+
+  payloadSize = 0;
+  do {
+    if (!gst_byte_reader_get_uint8 (&br, &payload_size_byte)) {
+      goto failed;
+    }
+    payloadSize += payload_size_byte;
+  } while (payload_size_byte == 0xff);
+
+  remaining = gst_byte_reader_get_remaining (&br);
+  payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
+
+  /* SEI_USER_DATA_UNREGISTERED */
+  if (payloadType != 5) {
+    goto failed;
+  }
+
+  GST_INFO_OBJECT (encoder,
+      "SEI message received: payloadType = %u, payloadSize = %u bits",
+      payloadType, payload_size);
+
+  /* check uuid_iso_iec_11578 */
+  for (i = 0; i < 16; i++) {
+    if (!gst_byte_reader_get_uint8 (&br, &payload_uuid)) {
+      goto failed;
+    }
+    if (uuid[i] != payload_uuid)
+      goto failed;
+  }
+  payload_size -= 16;
+
+  sei_msg_payload = g_malloc (payload_size + 1);
+  memcpy (sei_msg_payload, sei + gst_byte_reader_get_pos (&br), payload_size);
+  sei_msg_payload[payload_size] = 0;
+  GST_INFO_OBJECT (encoder, "Using x264_encoder info: %s", sei_msg_payload);
+  g_free (sei_msg_payload);
+
+  return;
+
+failed:
+  GST_WARNING_OBJECT (encoder, "error parsing \"sei_userdata_unregistered\"");
+}
+#endif /* GST_DISABLE_GST_DEBUG */
+
 static gboolean
 gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
 {
@@ -1952,6 +2019,28 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
       sps = nal[i].p_payload + 4;
       /* skip NAL unit type */
       sps++;
+    } else if (nal[i].i_type == NAL_SEI) {
+#ifndef GST_DISABLE_GST_DEBUG
+      guint8 *sei = NULL;
+      guint skip_bytes = 0;
+      /* x264 uses hardcoded value for the sei userdata uuid. */
+      guint8 x264_uuid[16] = {
+        0xdc, 0x45, 0xe9, 0xbd, 0xe6, 0xd9, 0x48, 0xb7,
+        0x96, 0x2c, 0xd8, 0x20, 0xd9, 0x23, 0xee, 0xef
+      };
+      if (encoder->current_byte_stream ==
+          GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM) {
+        skip_bytes = nal[i].b_long_startcode ? 4 : 3;
+      } else {
+        skip_bytes = 4;
+      }
+      sei = nal[i].p_payload + skip_bytes;
+      /* skip NAL unit type */
+      sei++;
+
+      gst_x264_enc_parse_sei_userdata_unregistered (encoder, sei,
+          nal[i].i_payload - (skip_bytes + 1), x264_uuid);
+#endif /* GST_DISABLE_GST_DEBUG */
     }
   }
 
