@@ -181,6 +181,7 @@ struct _GstRTSPStreamPrivate
   GHashTable *ptmap;
 
   GstRTSPPublishClockMode publish_clock_mode;
+  GMainContext *watch_context;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -297,6 +298,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
       NULL, (GDestroyNotify) gst_caps_unref);
   priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_caps_unref);
+  priv->watch_context = NULL;
 }
 
 typedef struct _UdpClientAddrInfo UdpClientAddrInfo;
@@ -375,6 +377,9 @@ gst_rtsp_stream_finalize (GObject * obj)
 
   g_hash_table_unref (priv->keys);
   g_hash_table_destroy (priv->ptmap);
+
+  if (priv->watch_context)
+    g_main_context_unref (priv->watch_context);
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
@@ -4327,12 +4332,37 @@ mcast_error:
   }
 }
 
+static gboolean
+cb_send_tcp_message (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  gint idx = -1;
+  gint i;
+
+  g_mutex_lock (&priv->lock);
+
+  /* iterate from 1 and down, so we prioritize RTCP over RTP */
+  for (i = 1; i >= 0; i--) {
+    if (priv->have_buffer[i]) {
+      /* send message */
+      idx = i;
+      break;
+    }
+  }
+
+  if (idx != -1)
+    send_tcp_message (stream, idx);
+  g_mutex_unlock (&priv->lock);
+  return G_SOURCE_REMOVE;
+}
+
 static void
 on_message_sent (gpointer user_data)
 {
   GstRTSPStream *stream = user_data;
   GstRTSPStreamPrivate *priv = stream->priv;
   gint idx = -1;
+  GSource *idle_src;
 
   GST_DEBUG_OBJECT (stream, "message send complete");
 
@@ -4357,9 +4387,24 @@ on_message_sent (gpointer user_data)
     }
   }
 
-  if (idx != -1)
-    send_tcp_message (stream, idx);
-
+  if (idx != -1) {
+    /* When appsink running this callback we want to send as much as we can
+     * But when idle callback or watch callback is running we will first
+     * queue an idle probe. This so we prevent a loop to occur were callback
+     * is sending more data that then call the callback that sends more data
+     * and so on. If the loop occur then it will starve out handling off
+     * other events that are handled by watch's context. */
+    if (priv->watch_context && g_main_context_is_owner (priv->watch_context)) {
+      /* underlaying layer is running this callback */
+      idle_src = g_idle_source_new ();
+      g_source_set_callback (idle_src, (GSourceFunc) cb_send_tcp_message,
+          g_object_ref (stream), g_object_unref);
+      g_source_attach (idle_src, priv->watch_context);
+    } else {
+      /* appsink is running this callback */
+      send_tcp_message (stream, idx);
+    }
+  }
   g_mutex_unlock (&priv->lock);
 
   return;
@@ -5727,4 +5772,29 @@ gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_stream_set_watch_context:
+ * @stream: a #GstRTSPStream
+ * @context: a #GMainContext
+ *
+ * Sets stream private watch_context.
+ *
+ */
+void
+gst_rtsp_stream_set_watch_context (GstRTSPStream * stream,
+    GMainContext * context)
+{
+  GstRTSPStreamPrivate *priv;
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->watch_context != NULL) {
+    g_main_context_unref (priv->watch_context);
+    priv->watch_context = NULL;
+  }
+  if (context)
+    priv->watch_context = g_main_context_ref (context);
+  g_mutex_unlock (&priv->lock);
 }

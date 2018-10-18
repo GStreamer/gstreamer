@@ -2533,6 +2533,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     g_object_ref (trans);
     add_data_seq (client, ct->interleaved.min);
     add_data_seq (client, ct->interleaved.max);
+    gst_rtsp_stream_set_watch_context (stream, priv->watch_context);
   }
 
   /* create and serialize the server transport */

@@ -126,7 +126,7 @@ gst_rtsp_latency_bin_set_property (GObject * object, guint propid,
   switch (propid) {
     case PROP_ELEMENT:
       if (!gst_rtsp_latency_bin_add_element (latency_bin,
-          g_value_get_object (value))) {
+              g_value_get_object (value))) {
         GST_WARNING_OBJECT (latency_bin, "Could not add the element");
       }
       break;
@@ -199,8 +199,7 @@ set_target_failed:
 
 
 static gboolean
-gst_rtsp_latency_bin_element_query (GstElement * element,
-    GstQuery * query)
+gst_rtsp_latency_bin_element_query (GstElement * element, GstQuery * query)
 {
   gboolean ret = TRUE;
 
@@ -215,8 +214,8 @@ gst_rtsp_latency_bin_element_query (GstElement * element,
       break;
     default:
       ret =
-          GST_ELEMENT_CLASS (gst_rtsp_latency_bin_parent_class)->query (
-              GST_ELEMENT (element), query);
+          GST_ELEMENT_CLASS (gst_rtsp_latency_bin_parent_class)->query
+          (GST_ELEMENT (element), query);
       break;
   }
 
@@ -224,8 +223,7 @@ gst_rtsp_latency_bin_element_query (GstElement * element,
 }
 
 static gboolean
-gst_rtsp_latency_bin_element_event (GstElement * element,
-    GstEvent * event)
+gst_rtsp_latency_bin_element_event (GstElement * element, GstEvent * event)
 {
   gboolean ret = TRUE;
 
@@ -239,9 +237,9 @@ gst_rtsp_latency_bin_element_event (GstElement * element,
       gst_event_unref (event);
       break;
     default:
-      ret = GST_ELEMENT_CLASS (
-              gst_rtsp_latency_bin_parent_class)->send_event (
-              GST_ELEMENT (element), event);
+      ret =
+          GST_ELEMENT_CLASS (gst_rtsp_latency_bin_parent_class)->send_event
+          (GST_ELEMENT (element), event);
       break;
   }
 
@@ -302,8 +300,8 @@ gst_rtsp_latency_bin_message_handler (GstBin * bin, GstMessage * message)
       break;
     }
     default:
-      GST_BIN_CLASS (gst_rtsp_latency_bin_parent_class)->handle_message (
-              bin, message);
+      GST_BIN_CLASS (gst_rtsp_latency_bin_parent_class)->handle_message (bin,
+          message);
       break;
   }
 }
