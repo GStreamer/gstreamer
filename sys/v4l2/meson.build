@@ -15,6 +15,7 @@ v4l2_sources = [
   'gstv4l2fwhtenc.c',
   'gstv4l2h263enc.c',
   'gstv4l2h264enc.c',
+  'gstv4l2h265enc.c',
   'gstv4l2jpegenc.c',
   'gstv4l2mpeg4enc.c',
   'gstv4l2vidorient.c',
