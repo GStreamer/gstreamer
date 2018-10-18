@@ -220,7 +220,10 @@ gst_wl_buffer_force_release_and_unref (GstWlBuffer * self)
 void
 gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface)
 {
-  g_return_if_fail (self->used_by_compositor == FALSE);
+  if (self->used_by_compositor) {
+    GST_DEBUG_OBJECT (self, "buffer used by compositor %p", self->gstbuffer);
+    return;
+  }
 
   wl_surface_attach (surface, self->wlbuffer, 0, 0);
 
