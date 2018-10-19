@@ -936,9 +936,6 @@ gst_v4l2_allocator_clear_dmabufin (GstV4l2Allocator * allocator,
     GST_LOG_OBJECT (allocator, "[%i] clearing DMABUF import, fd %i plane %d",
         group->buffer.index, mem->dmafd, i);
 
-    if (mem->dmafd >= 0)
-      close (mem->dmafd);
-
     /* Update memory */
     mem->mem.maxsize = 0;
     mem->mem.offset = 0;
@@ -1078,8 +1075,7 @@ gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
 
     size = gst_memory_get_sizes (dma_mem[i], &offset, &maxsize);
 
-    if ((dmafd = dup (gst_dmabuf_memory_get_fd (dma_mem[i]))) < 0)
-      goto dup_failed;
+    dmafd = gst_dmabuf_memory_get_fd (dma_mem[i]);
 
     GST_LOG_OBJECT (allocator, "[%i] imported DMABUF as fd %i plane %d",
         group->buffer.index, dmafd, i);
@@ -1122,12 +1118,6 @@ n_mem_missmatch:
 not_dmabuf:
   {
     GST_ERROR_OBJECT (allocator, "Memory %i is not of DMABUF", i);
-    return FALSE;
-  }
-dup_failed:
-  {
-    GST_ERROR_OBJECT (allocator, "Failed to dup DMABUF descriptor: %s",
-        g_strerror (errno));
     return FALSE;
   }
 }
