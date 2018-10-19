@@ -190,7 +190,6 @@ struct _GstRTSPSrc {
   GstTask         *task;
   GRecMutex        stream_rec_lock;
   GstSegment       segment;
-  guint32          segment_seqnum;
   gboolean         running;
   gboolean         need_range;
   gboolean         skip;
