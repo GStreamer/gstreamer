@@ -1500,7 +1500,6 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   } else {
     qtdemux->push_seek_stop = original_stop;
   }
-  qtdemux->segment_seqnum = seqnum;
   GST_OBJECT_UNLOCK (qtdemux);
 
   /* BYTE seek event */
