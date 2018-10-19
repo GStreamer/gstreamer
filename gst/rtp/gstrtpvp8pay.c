@@ -531,6 +531,7 @@ gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
       if (!gst_value_can_intersect (&default_value, value))
         encoding_name = "VP8-DRAFT-IETF-01";
     }
+    gst_caps_unref (src_caps);
   }
 
   gst_rtp_base_payload_set_options (payload, "video", TRUE,
