@@ -397,6 +397,7 @@ enum
   PROP_INTERLEAVE_BYTES,
   PROP_INTERLEAVE_TIME,
   PROP_MAX_RAW_AUDIO_DRIFT,
+  PROP_START_GAP_THRESHOLD,
 };
 
 /* some spare for header size as well */
@@ -420,6 +421,7 @@ enum
 #define DEFAULT_INTERLEAVE_BYTES 0
 #define DEFAULT_INTERLEAVE_TIME 250*GST_MSECOND
 #define DEFAULT_MAX_RAW_AUDIO_DRIFT 40 * GST_MSECOND
+#define DEFAULT_START_GAP_THRESHOLD 0
 
 static void gst_qt_mux_finalize (GObject * object);
 
@@ -647,6 +649,11 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds",
           0, G_MAXUINT64, DEFAULT_MAX_RAW_AUDIO_DRIFT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_START_GAP_THRESHOLD,
+      g_param_spec_uint64 ("start-gap-threshold", "Start Gap Threshold",
+          "Threshold for creating an edit list for gaps at the start in nanoseconds",
+          0, G_MAXUINT64, DEFAULT_START_GAP_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
@@ -818,6 +825,7 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
   qtmux->interleave_bytes = DEFAULT_INTERLEAVE_BYTES;
   qtmux->interleave_time = DEFAULT_INTERLEAVE_TIME;
   qtmux->max_raw_audio_drift = DEFAULT_MAX_RAW_AUDIO_DRIFT;
+  qtmux->start_gap_threshold = DEFAULT_START_GAP_THRESHOLD;
 
   /* always need this */
   qtmux->context =
@@ -3495,28 +3503,19 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
       has_gap = (qtpad->first_ts > (qtmux->first_ts + qtpad->dts_adjustment));
 
       if (has_gap) {
-        GstClockTime diff, trak_lateness, one_percent_of_frame_duration = 0;
+        GstClockTime diff, trak_lateness;
 
         diff = qtpad->first_ts - (qtmux->first_ts + qtpad->dts_adjustment);
         lateness = gst_util_uint64_scale_round (diff,
             qtmux->timescale, GST_SECOND);
+
         /* Allow up to 1 trak timescale unit of lateness, Such a small
          * timestamp/duration can't be represented by the trak-specific parts
          * of the headers anyway, so it's irrelevantly small */
         trak_lateness = gst_util_uint64_scale (diff,
             atom_trak_get_timescale (qtpad->trak), GST_SECOND);
 
-        /* If the lateness is less than 1% of the (video) frame duration, we
-         * just allow it. It's usually irrelevantly small anyway, and having
-         * such a short edit list of -1 might break other cases (e.g. in
-         * prefill mode it will just error out for no real reason) */
-        if (qtpad->expected_sample_duration_n != 0) {
-          one_percent_of_frame_duration =
-              gst_util_uint64_scale (qtpad->expected_sample_duration_d,
-              GST_SECOND, 100 * qtpad->expected_sample_duration_n);
-        }
-
-        if (lateness > one_percent_of_frame_duration && trak_lateness > 0) {
+        if (trak_lateness > 0 && diff > qtmux->start_gap_threshold) {
           GST_DEBUG_OBJECT (qtmux,
               "Pad %s is a late stream by %" GST_TIME_FORMAT,
               GST_PAD_NAME (qtpad->collect.pad), GST_TIME_ARGS (diff));
@@ -6442,6 +6441,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_MAX_RAW_AUDIO_DRIFT:
       g_value_set_uint64 (value, qtmux->max_raw_audio_drift);
       break;
+    case PROP_START_GAP_THRESHOLD:
+      g_value_set_uint64 (value, qtmux->start_gap_threshold);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -6532,6 +6534,9 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_MAX_RAW_AUDIO_DRIFT:
       qtmux->max_raw_audio_drift = g_value_get_uint64 (value);
+      break;
+    case PROP_START_GAP_THRESHOLD:
+      qtmux->start_gap_threshold = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

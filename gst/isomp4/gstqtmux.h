@@ -289,6 +289,8 @@ struct _GstQTMux
 
   gboolean reserved_prefill;
 
+  GstClockTime start_gap_threshold;
+
   /* for request pad naming */
   guint video_pads, audio_pads, subtitle_pads, caption_pads;
 };
