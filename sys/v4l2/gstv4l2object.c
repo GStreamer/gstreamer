@@ -3583,13 +3583,18 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (is_mplane && format.fmt.pix_mp.num_planes != n_v4l_planes)
     goto invalid_planes;
 
-  if ((is_mplane && format.fmt.pix_mp.field != field)
-      || format.fmt.pix.field != field)
+  /* used to check colorimetry and interlace mode fields presence */
+  s = gst_caps_get_structure (caps, 0);
+
+  if (!gst_v4l2_object_get_interlace_mode (format.fmt.pix.field,
+          &info.interlace_mode))
     goto invalid_field;
+  if (gst_structure_has_field (s, "interlace-mode")) {
+    if (format.fmt.pix.field != field)
+      goto invalid_field;
+  }
 
   gst_v4l2_object_get_colorspace (&format, &info.colorimetry);
-
-  s = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_field (s, "colorimetry")) {
     if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry,
             gst_structure_get_string (s, "colorimetry")))
