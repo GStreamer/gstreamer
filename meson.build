@@ -1,6 +1,6 @@
 project('All GStreamer modules', 'c',
   version : '1.15.0.1',
-  meson_version : '>= 0.47.0',
+  meson_version : '>= 0.48.0',
   default_options : ['buildtype=debugoptimized'])
 
 gst_version = '>= @0@'.format(meson.project_version())
@@ -30,55 +30,20 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
   endif
 endif
 
-libav_opt = get_option('libav')
-libav_deps = [dependency('libavfilter', version: '>= 7.16.100',
-              fallback: ['FFmpeg', 'libavfilter_dep'], required: libav_opt)]
-if libav_deps[0].found() and libav_deps[0].type_name() != 'internal'
-  cc = meson.get_compiler('c')
-  check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
-  #if LIBAVCODEC_VERSION_MICRO >= 100
-  /* FFmpeg uses 100+ as its micro version */
-  #else
-  #error libav provider should be FFmpeg
-  #endif'''
-  if not cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'whether libav is provided by FFmpeg')
-    message('WARNING: gst-libav not built as ffmpeg n3.1.2 not found on the system')
-    libav_deps += [disabler()]
-  endif
-endif
-
-if add_languages('cs', required : get_option('sharp'))
-  sharp_deps = []
-else
-  sharp_deps = [disabler()]
-endif
-
-python_opt = get_option('python')
-vaapi_opt = get_option('vaapi')
-devtools_opt = get_option('devtools')
-ges_opt = get_option('ges')
 subprojects = {
     'gstreamer': {},
     'gst-plugins-base': {},
     'gst-plugins-good': {},
     'gst-plugins-bad': { 'option': get_option('bad') },
     'gst-plugins-ugly': { 'option': get_option('ugly') },
-    'gst-python': {
-      'option': python_opt,
-      'dependencies': [dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_dep'], required : python_opt)]
-    },
+    'gst-python': { 'option': get_option('python') },
     'gst-omx': { 'option': get_option('omx'), },
-    'gst-libav': { 'option': get_option('libav'), 'dependencies': libav_deps},
-    'gstreamer-vaapi': {
-      'option': vaapi_opt,
-      'dependencies': [dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : vaapi_opt)]
-    },
-    'gst-devtools': {
-      'option': devtools_opt
-    },
-    'gst-editing-services': { 'option': ges_opt, 'dependencies': [dependency('libxml-2.0', required : ges_opt)] },
+    'gst-libav': { 'option': get_option('libav') },
+    'gstreamer-vaapi': { 'option': get_option('vaapi') },
+    'gst-devtools': { 'option': get_option('devtools') },
+    'gst-editing-services': { 'option': get_option('ges') },
     'gst-rtsp-server': { 'option': get_option('rtsp_server') },
-    'gstreamer-sharp': { 'option': get_option('sharp'), 'dependencies': sharp_deps },
+    'gstreamer-sharp': { 'option': get_option('sharp') },
 }
 
 python3 = import('python3').find_python()
@@ -98,27 +63,15 @@ endif
 
 subprojects_names = []
 foreach project_name, build_infos: subprojects
-    build = true
-    if build_infos.has_key('option')
-      build = not build_infos.get('option').disabled()
-      if build
-        foreach dep: build_infos.get('dependencies', [])
-          if dep.found() == false
-            warning('@0@ dependency @1@ not found - NOT BUILDING'.format(project_name, dep))
-            build = false
-          endif
-        endforeach
-      endif
-    endif
-
-    if build
-      subprojects_names += [project_name]
-      subproject(project_name, version: gst_version)
-      cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
-      if cmdres.returncode() == 0
+  is_required = build_infos.get('option', true)
+  subproj = subproject(project_name, version: gst_version, required: is_required)
+  if subproj.found()
+    subprojects_names += [project_name]
+    cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
+    if cmdres.returncode() == 0
         message('Created symlink to ' + project_name)
-      endif
     endif
+  endif
 endforeach
 
 foreach custom_subproj: get_option('custom_subprojects').split(',')

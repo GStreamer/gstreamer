@@ -40,4 +40,5 @@ subprojects/zlib/
 subprojects/openh264/
 subprojects/pygobject/
 subprojects/pycairo/
+subprojects/json-glib/
 prefix/
