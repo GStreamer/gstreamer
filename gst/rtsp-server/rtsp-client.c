@@ -767,6 +767,14 @@ gst_rtsp_client_finalize (GObject * obj)
 
   clean_cached_media (client, TRUE);
 
+  if (priv->rtsp_ctrl_timeout_id != 0) {
+    GST_DEBUG ("Killing leftover timeout GSource for client %p", client);
+    g_source_destroy (g_main_context_find_source_by_id (priv->watch_context,
+            priv->rtsp_ctrl_timeout_id));
+    priv->rtsp_ctrl_timeout_id = 0;
+    priv->rtsp_ctrl_timeout_cnt = 0;
+  }
+
   g_free (priv->server_ip);
   g_mutex_clear (&priv->lock);
   g_mutex_clear (&priv->send_lock);
