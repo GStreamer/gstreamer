@@ -586,7 +586,7 @@ GST_START_TEST (test_video_caps_change_streamable)
   a_caps1 =
       gst_caps_from_string
       ("audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, "
-      "rate=(int)44100, channels=(int)2, codec_data=(buffer)1208");
+      "rate=(int)44100, channels=(int)1, codec_data=(buffer)1208");
 
   v_caps1 = gst_caps_from_string ("video/x-h264, stream-format=(string)avc, "
       "codec_data=(buffer)0142c00cffe1000b6742c00c95a7201e1108d401000468ce3c80");
@@ -694,7 +694,7 @@ GST_START_TEST (test_audio_caps_change_streamable)
   a_caps1 =
       gst_caps_from_string
       ("audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, "
-      "rate=(int)44100, channels=(int)2, codec_data=(buffer)1208");
+      "rate=(int)44100, channels=(int)1, codec_data=(buffer)1208");
 
   v_caps1 = gst_caps_from_string ("video/x-h264, stream-format=(string)avc, "
       "codec_data=(buffer)0142c00cffe1000b6742c00c95a7201e1108d401000468ce3c80");
@@ -731,7 +731,7 @@ GST_START_TEST (test_audio_caps_change_streamable)
   a_caps2 =
       gst_caps_from_string
       ("audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, "
-      "rate=(int)22050, channels=(int)2, codec_data=(buffer)1388");
+      "rate=(int)22050, channels=(int)1, codec_data=(buffer)1388");
 
   gst_harness_set_src_caps (a_src, gst_caps_ref (a_caps2));
 
