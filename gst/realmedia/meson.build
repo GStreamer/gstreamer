@@ -22,3 +22,4 @@ gstrmdemux = library('gstrealmedia',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstrmdemux, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstrmdemux]

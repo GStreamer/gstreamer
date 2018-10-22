@@ -58,7 +58,7 @@ typedef struct {
   guint16                 len;      /* save this so we can skip unknown IDs  */
 } AsfPayloadExtension;
 
-/**
+/*
  * 3D Types for Media play
  */
 enum _GstASF3DMode

@@ -18,4 +18,5 @@ if a52_dep.found() and have_a52_h
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(a52dec, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [a52dec]
 endif

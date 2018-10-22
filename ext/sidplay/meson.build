@@ -21,6 +21,7 @@ if have_sidplay
     install : true,
     install_dir : plugins_install_dir)
   pkgconfig.generate(gstsid, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstsid]
 elif get_option('sidplay').enabled()
   error('sidplay plugin enabled but dependencies not found')
 endif

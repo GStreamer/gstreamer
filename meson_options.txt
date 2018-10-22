@@ -35,3 +35,5 @@ option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
 option('package-origin', type : 'string', value : 'Unknown package origin', yield: true,
        description : 'package origin URL to use in plugins')
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')

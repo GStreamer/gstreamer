@@ -1,7 +1,5 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 SUBDIRS = \
-	gst-libs gst ext docs m4 tests common pkgconfig po
+	gst-libs gst ext m4 tests common pkgconfig po
 	
 EXTRA_DIST = \
 	depcomp \
@@ -47,7 +45,6 @@ CRUFT_FILES = \
 
 CRUFT_DIRS = \
 	$(top_builddir)/tests/check/pipelines \
-	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/ext/mpg123/ \
 	$(top_srcdir)/ext/lame/ \
 	$(top_srcdir)/ext/twolame/ \

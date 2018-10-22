@@ -121,10 +121,6 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check if the compiler supports do while(0) macros
 AG_GST_CHECK_DOWHILE_MACROS
 
-dnl check for documentation tools
-GTK_DOC_CHECK([1.12])
-AG_GST_PLUGIN_DOCS([1.12])
-
 dnl *** checks for libraries ***
 
 dnl check for libm, for sin()
@@ -420,9 +416,6 @@ ext/dvdread/Makefile
 ext/mpeg2dec/Makefile
 ext/sidplay/Makefile
 ext/x264/Makefile
-docs/Makefile
-docs/plugins/Makefile
-docs/version.entities
 tests/Makefile
 tests/check/Makefile
 tests/files/Makefile
