@@ -81,6 +81,14 @@ gst_control_point_free (GstControlPoint * cp)
   g_slice_free (GstControlPoint, cp);
 }
 
+/**
+ * gst_control_point_copy:
+ * @cp: The control point to copy
+ *
+ * Copies a #GstControlPoint
+ *
+ * Returns: A copy of @cp
+ */
 GstControlPoint *
 gst_control_point_copy (GstControlPoint * cp)
 {

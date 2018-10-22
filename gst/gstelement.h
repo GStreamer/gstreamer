@@ -1016,6 +1016,13 @@ GST_API
 void                    gst_element_lost_state          (GstElement * element);
 
 
+/**
+ * GstElementCallAsyncFunc:
+ * @element: The #GstElement this function has been called against
+ * @user_data: Data passed in the function where that callback has been passed
+ *
+ * Callback prototype used in #gst_element_call_async
+ */
 typedef void          (*GstElementCallAsyncFunc)        (GstElement * element,
                                                          gpointer     user_data);
 GST_API
