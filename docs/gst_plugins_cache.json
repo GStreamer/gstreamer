@@ -1,0 +1,669 @@
+{
+    "nle": {
+        "description": "GStreamer Non Linear Engine",
+        "elements": {
+            "nlecomposition": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>, Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>, Thibault Saunier <tsaunier@gnome.org>",
+                "description": "Combines NLE objects",
+                "hierarchy": [
+                    "NleComposition",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin Composition",
+                "name": "nlecomposition",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "active": {
+                        "blurb": "Use this object in the NleComposition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "caps": {
+                        "blurb": "Caps used to filter/choose the output stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "ANY",
+                        "type-name": "GstCaps",
+                        "writable": true
+                    },
+                    "duration": {
+                        "blurb": "Outgoing duration (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "0",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "expandable": {
+                        "blurb": "Expand to the full duration of the container composition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "inpoint": {
+                        "blurb": "The media start position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "media-duration-factor": {
+                        "blurb": "The relative rate caused by this object",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "1.79769e+308",
+                        "min": "0.01",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "hotdoc-fixed-default": true,
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "priority": {
+                        "blurb": "The priority of the object (0 = highest priority)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "start": {
+                        "blurb": "The start position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "stop": {
+                        "blurb": "The stop position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": false
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "commit": {
+                        "args": [
+                            "gboolean"
+                        ],
+                        "retval": "gboolean"
+                    },
+                    "commited": {
+                        "args": [
+                            "gboolean"
+                        ],
+                        "retval": "void"
+                    },
+                    "query-position": {
+                        "args": [],
+                        "retval": "guint64"
+                    }
+                }
+            },
+            "nleoperation": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>",
+                "description": "Encapsulates filters/effects for use with NLE Objects",
+                "hierarchy": [
+                    "NleOperation",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin Operation",
+                "name": "nleoperation",
+                "pad-templates": {
+                    "sink%%d": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "active": {
+                        "blurb": "Use this object in the NleComposition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "caps": {
+                        "blurb": "Caps used to filter/choose the output stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "ANY",
+                        "type-name": "GstCaps",
+                        "writable": true
+                    },
+                    "duration": {
+                        "blurb": "Outgoing duration (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "0",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "expandable": {
+                        "blurb": "Expand to the full duration of the container composition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "inpoint": {
+                        "blurb": "The media start position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "media-duration-factor": {
+                        "blurb": "The relative rate caused by this object",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "1.79769e+308",
+                        "min": "0.01",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "hotdoc-fixed-default": true,
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "priority": {
+                        "blurb": "The priority of the object (0 = highest priority)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "sinks": {
+                        "blurb": "Number of input sinks (-1 for automatic handling)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "start": {
+                        "blurb": "The start position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "stop": {
+                        "blurb": "The stop position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": false
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "commit": {
+                        "args": [
+                            "gboolean"
+                        ],
+                        "retval": "gboolean"
+                    },
+                    "input-priority-changed": {
+                        "args": [
+                            "GstPad",
+                            "guint"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            },
+            "nlesource": {
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>",
+                "description": "Manages source elements",
+                "hierarchy": [
+                    "NleSource",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin Source",
+                "name": "nlesource",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "active": {
+                        "blurb": "Use this object in the NleComposition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "caps": {
+                        "blurb": "Caps used to filter/choose the output stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "ANY",
+                        "type-name": "GstCaps",
+                        "writable": true
+                    },
+                    "duration": {
+                        "blurb": "Outgoing duration (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "0",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "expandable": {
+                        "blurb": "Expand to the full duration of the container composition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "inpoint": {
+                        "blurb": "The media start position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "media-duration-factor": {
+                        "blurb": "The relative rate caused by this object",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "1.79769e+308",
+                        "min": "0.01",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "hotdoc-fixed-default": true,
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "priority": {
+                        "blurb": "The priority of the object (0 = highest priority)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "start": {
+                        "blurb": "The start position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "stop": {
+                        "blurb": "The stop position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": false
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "commit": {
+                        "args": [
+                            "gboolean"
+                        ],
+                        "retval": "gboolean"
+                    }
+                }
+            },
+            "nleurisource": {
+                "author": "Edward Hervey <bilboed@bilboed.com>",
+                "description": "High-level URI Source element",
+                "hierarchy": [
+                    "NleURISource",
+                    "NleSource",
+                    "NleObject",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor",
+                "long-name": "GNonLin URI Source",
+                "name": "nleurisource",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "active": {
+                        "blurb": "Use this object in the NleComposition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "caps": {
+                        "blurb": "Caps used to filter/choose the output stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "ANY",
+                        "type-name": "GstCaps",
+                        "writable": true
+                    },
+                    "duration": {
+                        "blurb": "Outgoing duration (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "0",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "expandable": {
+                        "blurb": "Expand to the full duration of the container composition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "inpoint": {
+                        "blurb": "The media start position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "media-duration-factor": {
+                        "blurb": "The relative rate caused by this object",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "1.79769e+308",
+                        "min": "0.01",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "hotdoc-fixed-default": true,
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "priority": {
+                        "blurb": "The priority of the object (0 = highest priority)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "start": {
+                        "blurb": "The start position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "stop": {
+                        "blurb": "The stop position relative to the parent (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": false
+                    },
+                    "uri": {
+                        "blurb": "Uri of the file to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "commit": {
+                        "args": [
+                            "gboolean"
+                        ],
+                        "retval": "gboolean"
+                    },
+                    "no-more-pads": {
+                        "args": [],
+                        "retval": "void"
+                    },
+                    "pad-added": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    },
+                    "pad-removed": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            }
+        },
+        "filename": "libgstnle.so",
+        "license": "LGPL",
+        "package": "GStreamer Editing Services",
+        "source": "gst-editing-services",
+        "url": "Unknown package origin"
+    }
+}

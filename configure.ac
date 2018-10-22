@@ -114,12 +114,6 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for gobject-introspection
 GOBJECT_INTROSPECTION_CHECK([0.9.6])
 
-dnl check for documentation tools
-AG_GST_DOCBOOK_CHECK
-GTK_DOC_CHECK([1.3])
-AS_PATH_PYTHON([2.1])
-AG_GST_PLUGIN_DOCS([1.3],[2.1])
-
 dnl check for pygobject
 AC_SUBST(PYGOBJECT_REQ, 3.0)
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
@@ -417,9 +411,6 @@ examples/c/Makefile
 tests/validate/Makefile
 tests/validate/scenarios/Makefile
 tools/Makefile
-docs/Makefile
-docs/version.entities
-docs/libs/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-editing-services.pc
 pkgconfig/gst-editing-services-uninstalled.pc

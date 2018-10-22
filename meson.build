@@ -1,6 +1,6 @@
 project('gst-editing-services', 'c',
   version : '1.17.0.1',
-  meson_version : '>= 0.47',
+  meson_version : '>= 0.48',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -180,6 +180,7 @@ subdir('tools')
 subdir('pkgconfig')
 subdir('tests')
 subdir('examples')
+subdir('docs')
 
 override_detector = '''
 import sys
@@ -223,16 +224,6 @@ endif
 if pygi_override_dir != ''
   message('pygobject overrides directory ' + pygi_override_dir)
   subdir('bindings/python')
-endif
-
-if build_machine.system() == 'windows'
-  message('Disabling gtk-doc while building on Windows')
-else
-  if find_program('gtkdoc-scan', required : get_option('gtk_doc')).found()
-    subdir('docs')
-  else
-    message('Not building documentation as gtk-doc was not found')
-  endif
 endif
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

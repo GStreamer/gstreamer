@@ -1,11 +1,106 @@
-docconf = configuration_data()
+build_hotdoc = false
 
-docconf.set('GST_API_VERSION', apiversion)
-docconf.set('VERSION', gst_version)
-docconf.set('PLUGINDIR', '@0@/lib/gstreamer-1.0'.format(get_option('prefix')))
+if meson.is_cross_build()
+    if get_option('doc').enabled()
+        error('Documentation enabled but building the doc while cross building is not supported yet.')
+    endif
 
-version_entities = configure_file(input : 'version.entities.in',
-  output : 'version.entities',
-  configuration : docconf)
+    message('Documentation not built as building it while cross building is not supported yet.')
+    subdir_done()
+endif
 
-subdir('libs')
+required_hotdoc_extensions = ['gi-extension', 'gst-extension']
+if gst_dep.type_name() == 'internal'
+    gst_proj = subproject('gstreamer')
+    plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
+else
+    plugins_cache_generator = find_program(join_paths(gst_dep.get_pkgconfig_variable('libexecdir'), 'gstreamer-' + apiversion, 'gst-plugins-doc-cache-generator'))
+endif
+
+plugins_cache = join_paths(meson.current_source_dir(), 'gst_plugins_cache.json')
+
+if plugins_cache_generator.found()
+    plugins_doc_dep = custom_target('editing-services-doc-cache',
+        build_by_default: true,
+        command: [plugins_cache_generator, plugins_cache, '@OUTPUT@', '@INPUT@'],
+        input: plugins,
+        output: 'gst_plugins_cache.json',
+    )
+else
+    warning('GStreamer plugin inspector for documentation not found, can\'t update the cache')
+endif
+
+hotdoc_p = find_program('hotdoc', required: get_option('doc'))
+if not hotdoc_p.found()
+    message('Hotdoc not found, not building the documentation')
+    subdir_done()
+endif
+
+hotdoc = import('hotdoc')
+foreach extension: required_hotdoc_extensions
+    if not hotdoc.has_extensions(extension)
+        if get_option('doc').enabled()
+            error('Documentation enabled but gi-extension missing')
+        endif
+
+        message('@0@ extensions not found, not building documentation requiring it'.format(extension))
+    endif
+endforeach
+
+if not build_gir
+    if get_option('doc').enabled()
+        error('Documentation enabled but introspection not built.')
+    endif
+
+    message('Introspection not built, can\'t build the documentation')
+    subdir_done()
+endif
+
+build_hotdoc = true
+ges_excludes = []
+foreach f: ['gesmarshal.*',
+            'ges-internal.*',
+            'ges-auto-transition.*',
+            'ges-structured-interface.*',
+            'ges-structure-parser.*',
+            'ges-version.h',
+            'ges-smart-*',
+            'ges-command-line-formatter.*',
+            'ges-base-xml-formatter.h',
+            'gstframepositioner.*',
+            'lex.priv_ges_parse_yy.c',
+            'ges-parse-lex.[c]']
+    ges_excludes += [join_paths(meson.current_source_dir(), '..', '..', 'ges', f)]
+endforeach
+
+hotdoc = import('hotdoc')
+libs_doc = [hotdoc.generate_doc('gst-editing-services',
+    project_version: apiversion,
+    extra_assets: [join_paths(meson.current_source_dir(), 'images')],
+    gi_c_sources: ges_sources + ges_headers,
+    gi_c_source_roots: [join_paths(meson.current_source_dir(), '../ges/')],
+    gi_sources: [ges_gir[0].full_path()],
+    gi_c_source_filters: ges_excludes,
+    sitemap: 'sitemap.txt',
+    index: 'index.md',
+    gi_index: 'index.md',
+    gi_smart_index: true,
+    gi_order_generated_subpages: true,
+    dependencies: [ges_dep],
+    disable_incremental_build: true,
+)]
+
+plugins_doc = [hotdoc.generate_doc('nle',
+    project_version: apiversion,
+    extra_assets: [join_paths(meson.current_source_dir(), 'images')],
+    sitemap: 'nle-sitemap.txt',
+    index: 'nle-index.md',
+    dependencies: [nle],
+    disable_incremental_build: true,
+    gst_order_generated_subpages: true,
+    gst_index: 'nle-index.md',
+    gst_c_sources: ['../../plugins/nle/*.[ch]'],
+    gst_smart_index: true,
+    gst_cache_file: plugins_cache,
+    gst_plugin_name: 'nle',
+)]
