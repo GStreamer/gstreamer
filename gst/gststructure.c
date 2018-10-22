@@ -2102,7 +2102,7 @@ gst_structure_new_from_string (const gchar * string)
 }
 
 /**
- * gst_structure_from_string:
+ * gst_structure_from_string: (constructor):
  * @string: a string representation of a #GstStructure.
  * @end: (out) (allow-none) (transfer none) (skip): pointer to store the end of the string in.
  *
