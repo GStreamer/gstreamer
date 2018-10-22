@@ -96,10 +96,6 @@ AM_PROG_CC_C_O
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
-dnl check for documentation tools
-GTK_DOC_CHECK([1.12])
-AG_GST_PLUGIN_DOCS([1.12])
-
 dnl *** checks for libraries ***
 
 dnl check for libm, for sin()
@@ -473,9 +469,6 @@ ext/Makefile
 ext/libav/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
-docs/Makefile
-docs/plugins/Makefile
-docs/version.entities
 tests/Makefile
 tests/check/Makefile
 tests/files/Makefile

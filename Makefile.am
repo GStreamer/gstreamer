@@ -1,6 +1,4 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
-COMMON_SUBDIRS = ext docs common tests
+COMMON_SUBDIRS = ext common tests
 SUBDIRS = $(LIBAV_SUBDIRS) $(COMMON_SUBDIRS) pkgconfig
 DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs pkgconfig
 
@@ -43,9 +41,6 @@ CRUFT_FILES = \
 	$(top_builddir)/common/m4/ltsugar.m4 \
 	$(top_builddir)/common/m4/ltversion.m4 \
 	$(top_builddir)/common/m4/lt~obsolete.m4
-
-CRUFT_DIRS = \
-	$(top_srcdir)/docs/plugins/tmpl
 
 include $(top_srcdir)/common/cruft.mak
 
