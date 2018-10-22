@@ -3740,6 +3740,13 @@ _priv_gst_element_cleanup (void)
   }
 }
 
+/**
+ * gst_make_element_message_details:
+ * @name: Name of the first field to set
+ * @...: variable arguments in the same form as #GstStructure
+ *
+ * Create a #GstStructure to be used with #gst_element_message_full_with_details
+ */
 GstStructure *
 gst_make_element_message_details (const char *name, ...)
 {

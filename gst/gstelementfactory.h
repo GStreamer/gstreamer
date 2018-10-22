@@ -120,6 +120,11 @@ gboolean                gst_element_register                    (GstPlugin *plug
  * matching the specified media types will be selected.
  */
 
+/**
+ * GstElementFactoryListType:
+ *
+ * A type defining the type of an element factory.
+ */
 typedef guint64 GstElementFactoryListType;
 
 #define  GST_ELEMENT_FACTORY_TYPE_DECODER        ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 0))

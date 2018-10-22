@@ -57,6 +57,12 @@ GST_CHECK_API GList * buffers;
 GST_CHECK_API GMutex check_mutex;
 GST_CHECK_API GCond check_cond;
 
+/**
+ * GstCheckABIStruct:
+ * @name: The name of the structure
+ * @size: The current size of a structure
+ * @abi_size: The reference size of the structure
+ */
 typedef struct
 {
   const char *name;
@@ -65,6 +71,12 @@ typedef struct
 }
 GstCheckABIStruct;
 
+/**
+ * GstCheckLogFilter:
+ *
+ * Opaque structure containing data about a log filter
+ * function.
+ */
 typedef struct _GstCheckLogFilter GstCheckLogFilter;
 
 /**

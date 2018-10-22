@@ -265,6 +265,12 @@ gst_util_get_object_array (GObject * object, const gchar * name,
  * double conversion is not defined/implemented.
  */
 
+/**
+ * gst_util_guint64_to_gdouble:
+ * @value: The #guint64 value to convert to double
+ *
+ * Returns: @value casted to #gdouble
+ */
 gdouble
 gst_util_guint64_to_gdouble (guint64 value)
 {
@@ -274,6 +280,12 @@ gst_util_guint64_to_gdouble (guint64 value)
     return (gdouble) ((gint64) value);
 }
 
+/**
+ * gst_util_gdouble_to_guint64:
+ * @value: The #gdouble value to convert guint64 double
+ *
+ * Returns: @value casted to #guint64
+ */
 guint64
 gst_util_gdouble_to_guint64 (gdouble value)
 {

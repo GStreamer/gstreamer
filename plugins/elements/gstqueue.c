@@ -383,7 +383,7 @@ gst_queue_class_init (GstQueueClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstQueue:flush-on-eos
+   * queue:flush-on-eos:
    *
    * Discard all data in the queue when an EOS event is received, and pass
    * on the EOS event as soon as possible (instead of waiting until all

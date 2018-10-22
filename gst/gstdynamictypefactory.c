@@ -141,6 +141,13 @@ gst_dynamic_type_factory_create (GstRegistry * registry,
   return factory;
 }
 
+/**
+ * gst_dynamic_type_register:
+ * @plugin: The #GstPlugin to register @dyn_type for
+ * @type: The #GType to register dynamically
+ *
+ * Registers a new #GstDynamicTypeFactory in the registry
+ */
 gboolean
 gst_dynamic_type_register (GstPlugin * plugin, GType dyn_type)
 {

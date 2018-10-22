@@ -41,6 +41,11 @@ typedef struct _GstTracerClass GstTracerClass;
 #define GST_TRACER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_TRACER,GstTracerClass))
 #define GST_TRACER_CAST(obj)       ((GstTracer *)(obj))
 
+/**
+ * GstTracer:
+ *
+ * The opaque GstTracer instance structure
+ */
 struct _GstTracer {
   GstObject        parent;
   /*< private >*/
