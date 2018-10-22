@@ -313,6 +313,8 @@ struct _GstQTMux
 
   GstClockTime start_gap_threshold;
 
+  gboolean force_create_timecode_trak;
+
   /* for request pad naming */
   guint video_pads, audio_pads, subtitle_pads, caption_pads;
 };

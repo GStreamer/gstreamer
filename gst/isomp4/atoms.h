@@ -103,9 +103,10 @@ typedef enum _AtomsTreeFlavor
 typedef struct _AtomsContext
 {
   AtomsTreeFlavor flavor;
+  gboolean force_create_timecode_trak;
 } AtomsContext;
 
-AtomsContext* atoms_context_new  (AtomsTreeFlavor flavor);
+AtomsContext* atoms_context_new  (AtomsTreeFlavor flavor, gboolean force_create_timecode_trak);
 void          atoms_context_free (AtomsContext *context);
 
 #define METADATA_DATA_FLAG 0x0
@@ -324,6 +325,12 @@ typedef struct _AtomGMHD
   AtomTMCD *tmcd;
 
 } AtomGMHD;
+
+typedef struct _AtomNMHD
+{
+  Atom header;
+  guint32 flags;
+} AtomNMHD;
 
 typedef struct _AtomURL
 {
@@ -600,6 +607,7 @@ typedef struct _AtomMINF
   AtomSMHD *smhd;
   AtomHMHD *hmhd;
   AtomGMHD *gmhd;
+  AtomNMHD *nmhd;
 
   AtomHDLR *hdlr;
   AtomDINF dinf;

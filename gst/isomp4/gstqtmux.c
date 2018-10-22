@@ -368,6 +368,7 @@ enum
   PROP_INTERLEAVE_TIME,
   PROP_MAX_RAW_AUDIO_DRIFT,
   PROP_START_GAP_THRESHOLD,
+  PROP_FORCE_CREATE_TIMECODE_TRAK,
 };
 
 /* some spare for header size as well */
@@ -392,6 +393,7 @@ enum
 #define DEFAULT_INTERLEAVE_TIME 250*GST_MSECOND
 #define DEFAULT_MAX_RAW_AUDIO_DRIFT 40 * GST_MSECOND
 #define DEFAULT_START_GAP_THRESHOLD 0
+#define DEFAULT_FORCE_CREATE_TIMECODE_TRAK FALSE
 
 static void gst_qt_mux_finalize (GObject * object);
 
@@ -635,6 +637,13 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Threshold for creating an edit list for gaps at the start in nanoseconds",
           0, G_MAXUINT64, DEFAULT_START_GAP_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class,
+      PROP_FORCE_CREATE_TIMECODE_TRAK,
+      g_param_spec_boolean ("force-create-timecode-trak",
+          "Force Create Timecode Trak",
+          "Create a timecode trak even in unsupported flavors",
+          DEFAULT_FORCE_CREATE_TIMECODE_TRAK,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
@@ -855,10 +864,12 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
   qtmux->interleave_time = DEFAULT_INTERLEAVE_TIME;
   qtmux->max_raw_audio_drift = DEFAULT_MAX_RAW_AUDIO_DRIFT;
   qtmux->start_gap_threshold = DEFAULT_START_GAP_THRESHOLD;
+  qtmux->force_create_timecode_trak = DEFAULT_FORCE_CREATE_TIMECODE_TRAK;
 
   /* always need this */
   qtmux->context =
-      atoms_context_new (gst_qt_mux_map_format_to_flavor (qtmux_klass->format));
+      atoms_context_new (gst_qt_mux_map_format_to_flavor (qtmux_klass->format),
+      qtmux->force_create_timecode_trak);
 
   /* internals to initial state */
   gst_qt_mux_reset (qtmux, TRUE);
@@ -2862,7 +2873,8 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
   }
   GST_OBJECT_UNLOCK (qtmux);
 
-  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT ||
+      qtmux->force_create_timecode_trak) {
     /* For the first sample check/update timecode as needed. We do that before
      * all actual samples as the code in gst_qt_mux_add_buffer() does it with
      * initial buffer directly, not with last_buf */
@@ -3660,7 +3672,8 @@ gst_qt_mux_update_timecode (GstQTMux * qtmux, GstQTMuxPad * qtpad)
   guint64 offset = qtpad->tc_pos;
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
 
-  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT &&
+      !qtmux->force_create_timecode_trak)
     return GST_FLOW_OK;
 
   g_assert (qtpad->tc_pos != -1);
@@ -4496,7 +4509,8 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTMuxPad * pad,
   if (!pad->trak->is_video)
     return ret;
 
-  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT &&
+      !qtmux->force_create_timecode_trak)
     return ret;
 
   if (buf == NULL || (pad->tc_trak != NULL && pad->tc_pos == -1))
@@ -6654,6 +6668,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_START_GAP_THRESHOLD:
       g_value_set_uint64 (value, qtmux->start_gap_threshold);
       break;
+    case PROP_FORCE_CREATE_TIMECODE_TRAK:
+      g_value_set_boolean (value, qtmux->force_create_timecode_trak);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -6747,6 +6764,11 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_START_GAP_THRESHOLD:
       qtmux->start_gap_threshold = g_value_get_uint64 (value);
+      break;
+    case PROP_FORCE_CREATE_TIMECODE_TRAK:
+      qtmux->force_create_timecode_trak = g_value_get_boolean (value);
+      qtmux->context->force_create_timecode_trak =
+          qtmux->force_create_timecode_trak;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

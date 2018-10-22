@@ -54,10 +54,11 @@
  * Creates a new AtomsContext for the given flavor.
  */
 AtomsContext *
-atoms_context_new (AtomsTreeFlavor flavor)
+atoms_context_new (AtomsTreeFlavor flavor, gboolean force_create_timecode_trak)
 {
   AtomsContext *context = g_new0 (AtomsContext, 1);
   context->flavor = flavor;
+  context->force_create_timecode_trak = force_create_timecode_trak;
   return context;
 }
 
@@ -491,6 +492,34 @@ atom_gmhd_free (AtomGMHD * gmhd)
 {
   atom_gmhd_clear (gmhd);
   g_free (gmhd);
+}
+
+static void
+atom_nmhd_init (AtomNMHD * nmhd)
+{
+  atom_header_set (&nmhd->header, FOURCC_nmhd, 0, 0);
+  nmhd->flags = 0;
+}
+
+static void
+atom_nmhd_clear (AtomNMHD * nmhd)
+{
+  atom_clear (&nmhd->header);
+}
+
+static AtomNMHD *
+atom_nmhd_new (void)
+{
+  AtomNMHD *nmhd = g_new0 (AtomNMHD, 1);
+  atom_nmhd_init (nmhd);
+  return nmhd;
+}
+
+static void
+atom_nmhd_free (AtomNMHD * nmhd)
+{
+  atom_nmhd_clear (nmhd);
+  g_free (nmhd);
 }
 
 static void
@@ -1128,6 +1157,10 @@ atom_minf_clear_handlers (AtomMINF * minf)
   if (minf->gmhd) {
     atom_gmhd_free (minf->gmhd);
     minf->gmhd = NULL;
+  }
+  if (minf->nmhd) {
+    atom_nmhd_free (minf->nmhd);
+    minf->nmhd = NULL;
   }
 }
 
@@ -1955,6 +1988,21 @@ atom_gmhd_copy_data (AtomGMHD * gmhd, guint8 ** buffer, guint64 * size,
   return original_offset - *offset;
 }
 
+static guint64
+atom_nmhd_copy_data (AtomNMHD * nmhd, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_copy_data (&nmhd->header, buffer, size, offset)) {
+    return 0;
+  }
+  prop_copy_uint32 (nmhd->flags, buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return original_offset - *offset;
+}
+
 static gboolean
 atom_url_same_file_flag (AtomURL * url)
 {
@@ -2618,6 +2666,10 @@ atom_minf_copy_data (AtomMINF * minf, guint8 ** buffer, guint64 * size,
     }
   } else if (minf->gmhd) {
     if (!atom_gmhd_copy_data (minf->gmhd, buffer, size, offset)) {
+      return 0;
+    }
+  } else if (minf->nmhd) {
+    if (!atom_nmhd_copy_data (minf->nmhd, buffer, size, offset)) {
       return 0;
     }
   }
@@ -4076,24 +4128,36 @@ atom_trak_set_timecode_type (AtomTRAK * trak, AtomsContext * context,
     guint32 trak_timescale, GstVideoTimeCode * tc)
 {
   SampleTableEntryTMCD *ste;
-  AtomGMHD *gmhd = trak->mdia.minf.gmhd;
 
-  if (context->flavor != ATOMS_TREE_FLAVOR_MOV) {
+  if (context->flavor != ATOMS_TREE_FLAVOR_MOV &&
+      !context->force_create_timecode_trak) {
     return NULL;
   }
 
+
+  if (context->flavor == ATOMS_TREE_FLAVOR_MOV) {
+    AtomGMHD *gmhd = trak->mdia.minf.gmhd;
+
+    gmhd = atom_gmhd_new ();
+    gmhd->gmin.graphics_mode = 0x0040;
+    gmhd->gmin.opcolor[0] = 0x8000;
+    gmhd->gmin.opcolor[1] = 0x8000;
+    gmhd->gmin.opcolor[2] = 0x8000;
+    gmhd->tmcd = atom_tmcd_new ();
+    gmhd->tmcd->tcmi.text_size = 12;
+    gmhd->tmcd->tcmi.font_name = g_strdup ("Chicago");  /* Pascal string */
+
+    trak->mdia.minf.gmhd = gmhd;
+  } else if (context->force_create_timecode_trak) {
+    AtomNMHD *nmhd = trak->mdia.minf.nmhd;
+    /* MOV files use GMHD, other files use NMHD */
+
+    nmhd = atom_nmhd_new ();
+    trak->mdia.minf.nmhd = nmhd;
+  } else {
+    return NULL;
+  }
   ste = atom_trak_add_timecode_entry (trak, context, trak_timescale, tc);
-
-  gmhd = atom_gmhd_new ();
-  gmhd->gmin.graphics_mode = 0x0040;
-  gmhd->gmin.opcolor[0] = 0x8000;
-  gmhd->gmin.opcolor[1] = 0x8000;
-  gmhd->gmin.opcolor[2] = 0x8000;
-  gmhd->tmcd = atom_tmcd_new ();
-  gmhd->tmcd->tcmi.text_size = 12;
-  gmhd->tmcd->tcmi.font_name = g_strdup ("Chicago");    /* Pascal string */
-
-  trak->mdia.minf.gmhd = gmhd;
   trak->is_video = FALSE;
   trak->is_h264 = FALSE;
 
