@@ -21,7 +21,7 @@ env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
 env.set('GST_STATE_IGNORE_ELEMENTS', '')
 env.set('CK_DEFAULT_TIMEOUT', '20')
 env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
-if not meson.is_subproject()
+if gst_dep.type_name() == 'pkgconfig'
   env.append('GST_PLUGIN_PATH_1_0', gst_dep.get_pkgconfig_variable('pluginsdir'))
 endif
 
