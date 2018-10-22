@@ -43,11 +43,11 @@
  * Encoding profiles can be created at runtime by the application or loaded
  * from (and saved to) file using the #GstEncodingTarget API.
  *
- * # Defining a GstEncodingProfile as a string
+ * ## Defining a GstEncodingProfile as a string
  *
- * ## Serialized encoding profile formats
+ * ### Serialized encoding profile formats
  *
- * ## Using encoders and muxer element factory name:
+ * #### Using encoders and muxer element factory name:
  *
  * |[
  *   muxer_factory_name:video_encoder_factory_name:audio_encoder_factory_name
@@ -61,7 +61,7 @@
  *   webmmux:vp8enc:vorbisenc
  * ]|
  *
- * ## Define the encoding profile in a generic way using caps:
+ * #### Define the encoding profile in a generic way using caps:
  *
  * |[
  *   muxer_source_caps:video_encoder_source_caps:audio_encoder_source_caps
@@ -78,7 +78,7 @@
  * It is possible to mix caps and element type names so you can specify a specific
  * video encoder while using caps for other encoders/muxer.
  *
- * ## Advanced encoding format serialization features:
+ * ### Advanced encoding format serialization features:
  *
  * You can also set the preset name of the encoding profile using the
  * caps+preset_name syntax as in:
@@ -160,7 +160,9 @@
  *   /path/to/target.gep:profilename
  * ]|
  *
- * # Example: Creating a profile
+ * ## Examples
+ *
+ * ### Creating a profile
  *
  * |[<!-- language="c" -->
  * #include <gst/pbutils/encoding-profile.h>
@@ -192,7 +194,7 @@
  *
  * ]|
  *
- * # Example: Using an encoder preset with a profile
+ * ### Example: Using an encoder preset with a profile
  *
  * |[ <!-- language="c" -->
  * #include <gst/pbutils/encoding-profile.h>
@@ -234,7 +236,7 @@
  *
  * ]|
  *
- * # Example: Listing categories, targets and profiles
+ * ### Listing categories, targets and profiles
  *
  * |[ <!-- language="C" -->
  * #include <gst/pbutils/encoding-profile.h>
@@ -265,63 +267,6 @@
  *
  * ...
  * ]|
- *
- * # Encoding Target
- *
- * On top of the notion of profiles, we implement the notion of EncodingTarget.
- * Encoding Targets are basically a higher level of abstraction to define formats
- * for specific target types. Those can define several GstEncodingProfiles with
- * different names, for example one for transcoding in full HD, another one for
- * low res, etc.. which are defined in the same encoding target.
- *
- * Basically if you wan to encode a stream to send it to, say, youtube you should
- * have a Youtube encoding target defined in the "online-service" category.
- *
- * ## Encoding target serialization format
- *
- * Encoding targets are serialized in a KeyFile like files.
- *
- * |[
- * [GStreamer Encoding Target]
- * name : <name>
- * category : <category>
- * \description : <description> #translatable
- *
- * [profile-<profile1name>]
- * name : <name>
- * \description : <description> #optional
- * format : <format>
- * preset : <preset>
- *
- * [streamprofile-<id>]
- * parent : <encodingprofile.name>[,<encodingprofile.name>..]
- * \type : <type> # "audio", "video", "text"
- * format : <format>
- * preset : <preset>
- * restriction : <restriction>
- * presence : <presence>
- * pass : <pass>
- * variableframerate : <variableframerate>
- * ]|
- *
- * # Location of encoding target files
- *
- * $GST_DATADIR/gstreamer-GST_API_VERSION/encoding-profile
- * $HOME/gstreamer-GST_API_VERSION/encoding-profile
- *
- * There also is a GST_ENCODING_TARGET_PATH environment variable
- * defining a list of folder containing encoding target files.
- *
- * ## Naming convention
- *
- * |[
- *   $(target.category)/$(target.name).gep
- * ]|
- *
- * # Naming restrictions:
- *
- *  * lowercase ASCII letter for the first character
- *  * Same for all other characters + numerics + hyphens
  */
 
 #ifdef HAVE_CONFIG_H
