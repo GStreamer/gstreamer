@@ -19,11 +19,11 @@
 
 /**
  * SECTION:element-rademux
+ * @title: rademux
  *
  * Demuxes/parses a RealAudio (.ra) file or stream into compressed audio.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=interview.ra ! rademux ! avdec_real_288 ! audioconvert ! audioresample ! autoaudiosink
  * ]| Read a RealAudio file and decode it and output it to the soundcard using
@@ -32,7 +32,7 @@
  * gst-launch-1.0 souphttpsrc location=http://www.example.org/interview.ra ! rademux ! ac3parse ! a52dec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Stream RealAudio data containing AC3 (dnet) compressed audio and decode it
  * and output it to the soundcard.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

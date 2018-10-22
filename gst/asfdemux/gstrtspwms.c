@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-rtspwms
+ * @title: rtspwms
  *
  * A WMS RTSP extension
  */

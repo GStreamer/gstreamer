@@ -19,38 +19,29 @@
 
 /**
  * SECTION:element-cdiocddasrc
+ * @title: cdiocddasrc
  * @see_also: GstCdParanoiaSrc, GstAudioCdSrc
  *
- * <refsect2>
- * <para>
  * cdiocddasrc reads and extracts raw audio from Audio CDs. It can operate
  * in one of two modes:
- * <itemizedlist>
- *  <listitem><para>
- *    treat each track as a separate stream, counting time from the start
+ *
+ *  * treat each track as a separate stream, counting time from the start
  *    of the track to the end of the track and posting EOS at the end of
  *    a track, or
- *  </para></listitem>
- *  <listitem><para>
- *    treat the entire disc as one stream, counting time from the start of
+ *  * treat the entire disc as one stream, counting time from the start of
  *    the first track to the end of the last track, posting EOS only at
  *    the end of the last track.
- *  </para></listitem>
- * </itemizedlist>
- * </para>
- * <para>
+ *
  * With a recent-enough version of libcdio, the element will extract
  * CD-TEXT if this is supported by the CD-drive and CD-TEXT information
  * is available on the CD. The information will be posted on the bus in
  * form of a tag message.
- * </para>
- * <para>
+ *
  * When opened, the element will also calculate a CDDB disc ID and a
  * MusicBrainz disc ID, which applications can use to query online
  * databases for artist/title information. These disc IDs will also be
  * posted on the bus as part of the tag messages.
- * </para>
- * <para>
+ *
  * cdiocddasrc supports the GstUriHandler interface, so applications can use
  * playbin with cdda://&lt;track-number&gt; URIs for playback (they will have
  * to connect to playbin's notify::source signal and set the device on the
@@ -58,16 +49,15 @@
  * Applications should use seeks in "track" format to switch between different
  * tracks of the same CD (passing a new cdda:// URI to playbin involves opening
  * and closing the CD device, which is much slower).
- * </para>
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ *
+ * ## Example launch line
+ *
+ * |[
  * gst-launch-1.0 cdiocddasrc track=5 device=/dev/cdrom ! audioconvert ! vorbisenc ! oggmux ! filesink location=track5.ogg
- * </programlisting>
+ * ]|
  * This pipeline extracts track 5 of the audio CD and encodes it into an
  * Ogg/Vorbis file.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

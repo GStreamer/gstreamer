@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-rtspreal
+ * @title: rtspreal
  *
  * A RealMedia RTSP extension
  */

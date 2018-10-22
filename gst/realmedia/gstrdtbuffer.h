@@ -26,8 +26,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-/** 
+/**
  * GstRDTType:
  * @GST_RDT_TYPE_INVALID:
  * @GST_RDT_TYPE_ASMACTION:
@@ -63,7 +62,7 @@ typedef enum
 /**
  * GST_RDT_IS_DATA_TYPE:
  * @t: the #GstRDTType to check
- * 
+ *
  * Check if @t is a data packet type.
  */
 #define GST_RDT_IS_DATA_TYPE(t) ((t) < 0xff00)
@@ -75,14 +74,14 @@ typedef struct _GstRDTPacket GstRDTPacket;
  * @buffer: pointer to RDT buffer
  * @offset: offset of packet in buffer data
  *
- * Data structure that points to a packet at @offset in @buffer. 
+ * Data structure that points to a packet at @offset in @buffer.
  * The size of the structure is made public to allow stack allocations.
  */
 struct _GstRDTPacket
-{ 
+{
   GstBuffer   *buffer;
   guint        offset;
-  
+
   /*< private >*/
   GstRDTType   type;         /* type of current packet */
   guint16      length;       /* length of current packet in bytes */

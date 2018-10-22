@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-x264enc
+ * @title: x264enc
  * @see_also: faac
  *
  * This element encodes raw video into H264 compressed data,
@@ -49,21 +50,19 @@
  * applied, followed by the user-set properties, fast first pass restrictions and
  * finally the profile restrictions.
  *
- * <note>Some settings, including the default settings, may lead to quite
- * some latency (i.e. frame buffering) in the encoder. This may cause problems
- * with pipeline stalling in non-trivial pipelines, because the encoder latency
- * is often considerably higher than the default size of a simple queue
- * element. Such problems are caused by one of the queues in the other
- * non-x264enc streams/branches filling up and blocking upstream. They can
- * be fixed by relaxing the default time/size/buffer limits on the queue
- * elements in the non-x264 branches, or using a (single) multiqueue element
- * for all branches. Also see the last example below. You can also work around
- * this problem by setting the tune=zerolatency property, but this will affect
- * overall encoding quality so may not be appropriate for your use case.
- * </note>
+ * > Some settings, including the default settings, may lead to quite
+ * > some latency (i.e. frame buffering) in the encoder. This may cause problems
+ * > with pipeline stalling in non-trivial pipelines, because the encoder latency
+ * > is often considerably higher than the default size of a simple queue
+ * > element. Such problems are caused by one of the queues in the other
+ * > non-x264enc streams/branches filling up and blocking upstream. They can
+ * > be fixed by relaxing the default time/size/buffer limits on the queue
+ * > elements in the non-x264 branches, or using a (single) multiqueue element
+ * > for all branches. Also see the last example below. You can also work around
+ * > this problem by setting the tune=zerolatency property, but this will affect
+ * > overall encoding quality so may not be appropriate for your use case.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! x264enc qp-min=18 ! \
  *   avimux ! filesink location=videotestsrc.avi
@@ -92,7 +91,7 @@
  * specific settings are needed in this case to avoid pipeline stalling.
  * Depending on goals and context, other approaches are possible, e.g.
  * tune=zerolatency might be configured, or queue sizes increased.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

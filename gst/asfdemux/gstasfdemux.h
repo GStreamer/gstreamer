@@ -28,7 +28,7 @@
 #include "asfheaders.h"
 
 G_BEGIN_DECLS
-  
+
 #define GST_TYPE_ASF_DEMUX \
   (gst_asf_demux_get_type())
 #define GST_ASF_DEMUX(obj) \
@@ -70,7 +70,7 @@ enum _GstASF3DMode
   GST_ASF_3D_SIDE_BY_SIDE_HALF_RL = 0x02,
   GST_ASF_3D_TOP_AND_BOTTOM_HALF_LR = 0x03,
   GST_ASF_3D_TOP_AND_BOTTOM_HALF_RL = 0x04,
-  GST_ASF_3D_DUAL_STREAM = 0x0D,                  /**< Full format*/
+  GST_ASF_3D_DUAL_STREAM = 0x0D,                  /*< Full format*/
 };
 
 typedef struct
@@ -140,7 +140,7 @@ typedef struct
 
   /* extended stream properties (optional) */
   AsfStreamExtProps  ext_props;
-  
+
   gboolean     inspect_payload;
 } AsfStream;
 
@@ -231,7 +231,7 @@ struct _GstASFDemux {
   GstClockTime         sidx_interval;    /* interval between entries in ns */
   guint                sidx_num_entries; /* number of index entries        */
   AsfSimpleIndexEntry *sidx_entries;     /* packet number for each entry   */
-  
+
   GSList              *other_streams;    /* remember streams that are in header but have unknown type */
 
   /* For reverse playback */

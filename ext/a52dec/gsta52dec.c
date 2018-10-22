@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-a52dec
+ * @title: a52dec
  *
  * Dolby Digital (AC-3) audio decoder.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 dvdreadsrc title=1 ! mpegpsdemux ! a52dec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Play audio part of a dvd title.
  * |[
  * gst-launch-1.0 filesrc location=abc.ac3 ! ac3parse ! a52dec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Decode and play a stand alone AC-3 file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -44,6 +44,7 @@
 
 /**
  * SECTION:element-rdtmanager
+ * @title: rdtmanager
  * @see_also: GstRtspSrc
  *
  * A simple RTP session manager used internally by rtspsrc.
