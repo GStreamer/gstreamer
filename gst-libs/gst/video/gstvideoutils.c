@@ -18,6 +18,11 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gstvideoutils
+ * @title: GstVideoCodecFrame
+ * @short_description: Structures and enumerations to represented encoded frames.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

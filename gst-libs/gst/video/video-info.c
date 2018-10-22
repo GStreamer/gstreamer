@@ -19,6 +19,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:video-info
+ * @title: GstVideoInfo
+ * @short_description: Structures and enumerations to describe raw images
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

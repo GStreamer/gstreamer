@@ -16,6 +16,11 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:plugin-playback
+ * short_description: Set of elements to create dynamic pipelines (or part of it) to play
+ * media files.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

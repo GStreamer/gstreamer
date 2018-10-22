@@ -323,7 +323,7 @@ struct _GstVideoInfo {
   /* Union preserves padded struct size for backwards compat
    * Consumer code should use the accessor macros for fields */
   union {
-    struct {
+    struct { /* < skip > */
       GstVideoMultiviewMode     multiview_mode;
       GstVideoMultiviewFlags    multiview_flags;
       GstVideoFieldOrder        field_order;
