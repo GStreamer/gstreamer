@@ -32,7 +32,7 @@ gstapp = library('gstapp-@0@'.format(api_version),
 
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/app/app.h' ]
-  app_gen_sources += [gnome.generate_gir(gstapp,
+  app_gir = gnome.generate_gir(gstapp,
     sources : app_sources + app_headers + [gstapp_c] + [gstapp_h],
     namespace : 'GstApp',
     nsversion : api_version,
@@ -43,7 +43,9 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : [gst_dep, gst_base_dep]
-  )]
+  )
+
+  app_gen_sources += app_gir
 endif
 
 app_dep = declare_dependency(link_with: gstapp,

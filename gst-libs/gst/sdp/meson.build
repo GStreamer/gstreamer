@@ -23,7 +23,7 @@ gstsdp = library('gstsdp-@0@'.format(api_version),
 sdp_gen_sources  = []
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/sdp/sdp.h' ]
-  sdp_gen_sources += [gnome.generate_gir(gstsdp,
+  sdp_gir = gnome.generate_gir(gstsdp,
     sources : gst_sdp_sources + gst_sdp_headers,
     namespace : 'GstSdp',
     nsversion : api_version,
@@ -34,7 +34,9 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : rtsp_deps
-  )]
+  )
+
+  sdp_gen_sources += [sdp_gir]
 endif
 
 sdp_dep = declare_dependency(link_with: gstsdp,

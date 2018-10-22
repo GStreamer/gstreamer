@@ -138,7 +138,7 @@ gstvideo = library('gstvideo-@0@'.format(api_version),
 
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/video/video.h' ]
-  video_gen_sources += [gnome.generate_gir(gstvideo,
+  video_gir = gnome.generate_gir(gstvideo,
     sources : video_sources + video_headers + [gstvideo_c] + [gstvideo_h],
     namespace : 'GstVideo',
     nsversion : api_version,
@@ -149,7 +149,8 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstvideo_deps
-  )]
+  )
+  video_gen_sources += [video_gir]
 endif
 
 video_dep = declare_dependency(link_with : gstvideo,

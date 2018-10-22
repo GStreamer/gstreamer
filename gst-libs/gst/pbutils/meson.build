@@ -63,7 +63,7 @@ pbutils = library('gstpbutils-@0@'.format(api_version),
 pbutils_gen_sources = [gstpbutils_h, gst_pbutils_version_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/pbutils/pbutils.h' ]
-  pbutils_gen_sources += [gnome.generate_gir(pbutils,
+  pbutils_gir = gnome.generate_gir(pbutils,
     sources : pbutils_sources + pbutils_headers + [gstpbutils_h, gst_pbutils_version_h],
     namespace : 'GstPbutils',
     nsversion : api_version,
@@ -74,7 +74,8 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstpbutils_deps
-  )]
+  )
+  pbutils_gen_sources += [pbutils_gir]
 endif
 
 pbutils_dep = declare_dependency(link_with : pbutils,

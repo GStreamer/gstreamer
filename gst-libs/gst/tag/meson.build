@@ -93,7 +93,7 @@ gsttag = library('gsttag-@0@'.format(api_version),
 
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/tag/tag.h' ]
-  tag_gen_sources += [gnome.generate_gir(gsttag,
+  tag_gir = gnome.generate_gir(gsttag,
     sources : tag_sources + tag_headers + [gsttag_h] + [gsttag_c],
     namespace : 'GstTag',
     nsversion : api_version,
@@ -104,7 +104,8 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : tag_deps
-  )]
+  )
+  tag_gen_sources += [tag_gir]
 endif
 
 tag_dep = declare_dependency(link_with: gsttag,

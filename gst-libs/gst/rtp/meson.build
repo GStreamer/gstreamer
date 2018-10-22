@@ -49,7 +49,7 @@ gst_rtp = library('gstrtp-@0@'.format(api_version),
 rtp_gen_sources = [gstrtp_enum_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/rtp/rtp.h' ]
-  rtp_gen_sources += [gnome.generate_gir(gst_rtp,
+  rtp_gir = gnome.generate_gir(gst_rtp,
     sources : rtp_sources + rtp_headers + [gstrtp_enum_c] + [gstrtp_enum_h],
     namespace : 'GstRtp',
     nsversion : api_version,
@@ -60,7 +60,9 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstrtp_deps
-  )]
+  )
+
+  rtp_gen_sources += [rtp_gir]
 endif
 
 

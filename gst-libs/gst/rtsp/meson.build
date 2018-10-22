@@ -54,7 +54,7 @@ gst_rtsp = library('gstrtsp-@0@'.format(api_version),
 rtsp_gen_sources = [gstrtsp_h]
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/rtsp/rtsp.h' ]
-  rtsp_gen_sources += [gnome.generate_gir(gst_rtsp,
+  rtsp_gir = gnome.generate_gir(gst_rtsp,
     sources : rtsp_sources + rtsp_headers + [gstrtsp_c] + [gstrtsp_h],
     namespace : 'GstRtsp',
     nsversion : api_version,
@@ -65,7 +65,8 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstrtsp_deps + [sdp_dep]
-  )]
+  )
+  rtsp_gen_sources += [rtsp_gir]
 endif
 
 rtsp_dep = declare_dependency(link_with : gst_rtsp,

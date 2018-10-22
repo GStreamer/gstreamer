@@ -153,7 +153,7 @@ gstaudio = library('gstaudio-@0@'.format(api_version),
 
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/audio/audio.h' ]
-  audio_gen_sources += [gnome.generate_gir(gstaudio,
+  audio_gir = gnome.generate_gir(gstaudio,
     sources : audio_src + audio_headers + [gstaudio_c] + [gstaudio_h],
     namespace : 'GstAudio',
     nsversion : api_version,
@@ -164,7 +164,8 @@ if build_gir
     install : true,
     extra_args : gst_gir_extra_args,
     dependencies : gstaudio_deps
-  )]
+  )
+  audio_gen_sources += [audio_gir]
 endif
 
 audio_dep = declare_dependency(link_with : gstaudio,
