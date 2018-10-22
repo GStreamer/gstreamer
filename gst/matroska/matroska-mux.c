@@ -28,18 +28,18 @@
 
 /**
  * SECTION:element-matroskamux
+ * @title: matroskamux
  *
  * matroskamux muxes different input streams into a Matroska file.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/mp3 ! mpegaudioparse ! matroskamux name=mux ! filesink location=test.mkv  filesrc location=/path/to/theora.ogg ! oggdemux ! theoraparse ! mux.
  * ]| This pipeline muxes an MP3 file and a Ogg Theora video into a Matroska file.
  * |[
  * gst-launch-1.0 -v audiotestsrc num-buffers=100 ! audioconvert ! vorbisenc ! matroskamux ! filesink location=test.mka
  * ]| This pipeline muxes a 440Hz sine wave encoded with the Vorbis codec into a Matroska file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,15 +19,15 @@
 
 /**
  * SECTION:element-flvdemux
+ * @title: flvdemux
  *
  * flvdemux demuxes an FLV file into the different contained streams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/flv ! flvdemux ! audioconvert ! autoaudiosink
  * ]| This pipeline demuxes an FLV file and outputs the contained raw audio streams.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

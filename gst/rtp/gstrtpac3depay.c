@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-rtpac3depay
+ * @title: rtpac3depay
  * @see_also: rtpac3pay
  *
  * Extract AC3 audio from RTP packets according to RFC 4184.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc4184.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)AC3, payload=(int)96' ! rtpac3depay ! a52dec ! pulsesink
  * ]| This example pipeline will depayload and decode an RTP AC3 stream. Refer to
  * the rtpac3pay example to create the RTP stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

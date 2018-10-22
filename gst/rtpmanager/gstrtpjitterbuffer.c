@@ -30,6 +30,7 @@
 
 /**
  * SECTION:element-rtpjitterbuffer
+ * @title: rtpjitterbuffer
  *
  * This element reorders and removes duplicate RTP packets as they are received
  * from a network source.
@@ -88,14 +89,13 @@
  *
  * This element will automatically be used inside rtpbin.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 rtspsrc location=rtsp://192.168.1.133:8554/mpeg1or2AudioVideoTest ! rtpjitterbuffer ! rtpmpvdepay ! mpeg2dec ! xvimagesink
  * ]| Connect to a streaming server and decode the MPEG video. The jitterbuffer is
  * inserted into the pipeline to smooth out network jitter and to reorder the
  * out-of-order RTP packets.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -798,64 +798,14 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * Various jitterbuffer statistics. This property returns a GstStructure
    * with name application/x-rtp-jitterbuffer-stats with the following fields:
    *
-   * <itemizedlist>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;num-pushed&quot;</classname>:
-   *   the number of packets pushed out.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;num-lost&quot;</classname>:
-   *   the number of packets considered lost.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;num-late&quot;</classname>:
-   *   the number of packets arriving too late.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;num-duplicates&quot;</classname>:
-   *   the number of duplicate packets.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;rtx-count&quot;</classname>:
-   *   the number of retransmissions requested.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;rtx-success-count&quot;</classname>:
-   *   the number of successful retransmissions.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #gdouble
-   *   <classname>&quot;rtx-per-packet&quot;</classname>:
-   *   average number of RTX per packet.
-   *   </para>
-   * </listitem>
-   * <listitem>
-   *   <para>
-   *   #guint64
-   *   <classname>&quot;rtx-rtt&quot;</classname>:
-   *   average round trip time per RTX.
-   *   </para>
-   * </listitem>
-   * </itemizedlist>
+   * * #guint64 `num-pushed`: the number of packets pushed out.
+   * * #guint64 `num-lost`: the number of packets considered lost.
+   * * #guint64 `num-late`: the number of packets arriving too late.
+   * * #guint64 `num-duplicates`: the number of duplicate packets.
+   * * #guint64 `rtx-count`: the number of retransmissions requested.
+   * * #guint64 `rtx-success-count`: the number of successful retransmissions.
+   * * #gdouble `rtx-per-packet`: average number of RTX per packet.
+   * * #guint64 `rtx-rtt`: average round trip time per RTX.
    *
    * Since: 1.4
    */

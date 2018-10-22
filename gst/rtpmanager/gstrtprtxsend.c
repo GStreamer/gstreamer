@@ -23,9 +23,10 @@
 
 /**
  * SECTION:element-rtprtxsend
+ * @title: rtprtxsend
  *
  * See #GstRtpRtxReceive for examples
- * 
+ *
  * The purpose of the sender RTX object is to keep a history of RTP packets up
  * to a configurable limit (max-size-time or max-size-packets). It will listen
  * for upstream custom retransmission events (GstRTPRetransmissionRequest) that

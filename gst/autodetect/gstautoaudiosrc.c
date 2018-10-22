@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-autoaudiosrc
+ * @title: autoaudiosrc
  * @see_also: autovideosrc, alsasrc, osssrc
  *
  * autoaudiosrc is an audio source that automatically detects an appropriate
@@ -28,12 +29,11 @@
  * that have <quote>Source</quote> and <quote>Audio</quote> in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m autoaudiosrc ! audioconvert ! audioresample ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

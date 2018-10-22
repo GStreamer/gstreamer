@@ -26,16 +26,16 @@
 
 /**
  * SECTION:element-quarktv
+ * @title: quarktv
  *
  * QuarkTV disolves moving objects. It picks up pixels from
  * the last frames randomly.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! quarktv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of quarktv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

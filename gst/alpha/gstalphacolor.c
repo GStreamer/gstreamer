@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-alphacolor
+ * @title: alphacolor
  *
  * The alphacolor element does memory-efficient (in-place) colourspace
  * conversion from RGBA to AYUV or AYUV to RGBA while preserving the

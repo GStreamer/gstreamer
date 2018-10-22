@@ -59,7 +59,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H264\"")
-        /** optional parameters **/
+    /* optional parameters */
     /* "profile-level-id = (string) ANY, " */
     /* "max-mbps = (string) ANY, " */
     /* "max-fs = (string) ANY, " */

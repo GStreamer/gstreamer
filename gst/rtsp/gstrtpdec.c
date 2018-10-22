@@ -43,6 +43,7 @@
 
 /**
  * SECTION:element-rtpdec
+ * @title: rtpdec
  *
  * A simple RTP session manager used internally by rtspsrc.
  */
@@ -241,7 +242,7 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
    * GstRTPDec::on-new-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of a new SSRC that entered @session.
    */
@@ -254,7 +255,7 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
    * GstRTPDec::on-ssrc_collision:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify when we have an SSRC collision
    */
@@ -267,7 +268,7 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
    * GstRTPDec::on-ssrc_validated:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of a new SSRC that became validated.
    */
@@ -281,7 +282,7 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
    * GstRTPDec::on-bye-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that became inactive because of a BYE packet.
    */
@@ -294,7 +295,7 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
    * GstRTPDec::on-bye-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that has timed out because of BYE
    */
@@ -307,7 +308,7 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
    * GstRTPDec::on-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that has timed out
    */

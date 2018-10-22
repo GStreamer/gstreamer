@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-mulawdec
+ * @title: mulawdec
  *
  * This element decodes mulaw audio. Mulaw coding is also known as G.711.
  */

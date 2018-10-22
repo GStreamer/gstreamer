@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-smptealpha
+ * @title: smptealpha
  *
  * smptealpha can accept an I420 or AYUV video stream. An alpha channel is added
  * using an effect specific SMPTE mask in the I420 input case. In the AYUV case,
@@ -33,19 +34,17 @@
  * A higher presision will create a mask with smoother gradients in order to
  * avoid banding.
  *
- * <refsect2>
- * <title>Sample pipelines</title>
- * <para>
+ * ## Sample pipelines
+ *
  * Here is a pipeline to demonstrate the smpte transition :
- * <programlisting>
+ * |[
  * gst-launch-1.0 -v videotestsrc ! smptealpha border=20000 type=44
  * position=0.5 ! videomixer ! videoconvert ! ximagesink
- * </programlisting>
+ * ]|
  * This shows a midway bowtie-h transition a from a videotestsrc to a
  * transparent image. The edges of the transition are smoothed with a
  * 20000 big border.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

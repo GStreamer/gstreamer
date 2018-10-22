@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-rtph261depay
+ * @title: rtph261depay
  * @see_also: rtph261pay
  *
  * Extract encoded H.261 video frames from RTP packets according to RFC 4587.
@@ -29,13 +30,12 @@
  * aggregates the extracted stream until a complete frame is received before
  * it pushes it downstream.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 udpsrc caps='application/x-rtp, payload=31' ! rtph261depay ! avdec_h261 ! autovideosink
  * ]| This example pipeline will depayload and decode an RTP H.261 video stream.
  * Refer to the rtph261pay example to create the RTP stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

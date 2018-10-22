@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-multiudpsink
+ * @title: multiudpsink
  * @see_also: udpsink, multifdsink
  *
  * multiudpsink is a network sink that sends UDP packets to multiple

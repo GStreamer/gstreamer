@@ -47,6 +47,7 @@
 
 /**
  * SECTION:element-qtmux
+ * @title: qtmux
  * @short_description: Muxer for quicktime(.mov) files
  *
  * This element merges streams (audio and video) into QuickTime(.mov) files.
@@ -108,13 +109,12 @@
  * a fixed sample size (such as raw audio and Prores Video) and that don't
  * have reordered samples.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 v4l2src num-buffers=500 ! video/x-raw,width=320,height=240 ! videoconvert ! qtmux ! filesink location=video.mov
  * ]|
  * Records a video stream captured from a v4l2 device and muxes it into a qt file.
- * </refsect2>
+ *
  */
 
 /*

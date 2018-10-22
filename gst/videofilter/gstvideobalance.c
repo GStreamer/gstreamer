@@ -26,16 +26,16 @@
 
 /**
  * SECTION:element-videobalance
+ * @title: videobalance
  *
  * Adjusts brightness, contrast, hue, saturation on a video stream.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! videobalance saturation=0.0 ! videoconvert ! ximagesink
  * ]| This pipeline converts the image to black and white by setting the
  * saturation to 0.0.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

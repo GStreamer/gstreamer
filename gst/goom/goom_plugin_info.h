@@ -43,7 +43,7 @@ typedef struct {
 
 #define STATES_MAX_NB 128
 
-/**
+/*
  * Gives informations about the sound.
  */
 struct _SOUND_INFO {
@@ -86,7 +86,7 @@ struct _SOUND_INFO {
 };
 
 
-/**
+/*
  * Allows FXs to know the current state of the plugin.
  */
 struct _PLUGIN_INFO {
@@ -109,21 +109,21 @@ struct _PLUGIN_INFO {
 	int nbVisuals;
 	VisualFX **visuals; /* pointers on all the visual fx */
 
-	/** The known FX */
+	/* The known FX */
 	VisualFX convolve_fx;
 	VisualFX star_fx;
 	VisualFX zoomFilter_fx;
 	VisualFX tentacles_fx;
 	VisualFX ifs_fx;
 
-	/** image buffers */
+	/* image buffers */
 	guint32 *pixel;
 	guint32 *back;
 	Pixel *p1, *p2;
 	Pixel *conv;
   Pixel *outputBuf;
 
-	/** state of goom */
+	/* state of goom */
 	guint32 cycle;
 	GoomState states[STATES_MAX_NB];
 	int statesNumber;
@@ -131,16 +131,16 @@ struct _PLUGIN_INFO {
 
 	GoomState *curGState;
 
-	/** effet de ligne.. */
+	/* effet de ligne.. */
 	GMLine *gmline1;
 	GMLine *gmline2;
 
-	/** sinus table */
+	/* sinus table */
 	int sintable[0x10000];
 
 	/* INTERNALS */
 	
-	/** goom_update internals.
+	/* goom_update internals.
 	 * I took all static variables from goom_update and put them here.. for the moment.
 	 */
 	struct {

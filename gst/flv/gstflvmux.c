@@ -23,15 +23,15 @@
 
 /**
  * SECTION:element-flvmux
+ * @title: flvmux
  *
  * flvmux muxes different streams into an FLV file.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v flvmux name=mux ! filesink location=test.flv  audiotestsrc samplesperbuffer=44100 num-buffers=10 ! faac ! mux.  videotestsrc num-buffers=250 ! video/x-raw,framerate=25/1 ! x264enc ! mux.
  * ]| This pipeline encodes a test audio and video stream and muxes both into an FLV file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

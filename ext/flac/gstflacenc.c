@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-flacenc
+ * @title: flacenc
  * @see_also: #GstFlacDec
  *
  * flacenc encodes FLAC streams.
@@ -25,8 +26,7 @@
  * is a Free Lossless Audio Codec. FLAC audio can directly be written into
  * a file, or embedded into containers such as oggmux or matroskamux.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc num-buffers=100 ! flacenc ! filesink location=beep.flac
  * ]| Encode a short sine wave into FLAC
@@ -36,7 +36,7 @@
  * |[
  * gst-launch-1.0 cdparanoiasrc track=5 ! queue ! audioconvert ! flacenc ! filesink location=track5.flac
  * ]| Rip track 5 of an audio CD and encode it losslessly to a FLAC file
- * </refsect2>
+ *
  */
 
 /* TODO: - We currently don't handle discontinuities in the stream in a useful

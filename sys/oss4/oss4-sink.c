@@ -18,17 +18,17 @@
  */
 /**
  * SECTION:element-oss4sink
+ * @title: oss4sink
  *
  * This element lets you output sound using the Open Sound System (OSS)
  * version 4.
- * 
+ *
  * Note that you should almost always use generic audio conversion elements
  * like audioconvert and audioresample in front of an audiosink to make sure
  * your pipeline works under all circumstances (those conversion elements will
  * act in passthrough-mode if no conversion is necessary).
- * 
- * <refsect2>
- * <title>Example pipelines</title>
+ *
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v audiotestsrc ! audioconvert ! volume volume=0.1 ! oss4sink
  * ]| will output a sine wave (continuous beep sound) to your sound card (with
@@ -37,7 +37,7 @@
  * gst-launch-1.0 -v filesrc location=music.ogg ! decodebin ! audioconvert ! audioresample ! oss4sink
  * ]| will play an Ogg/Vorbis audio file and output it using the Open Sound System
  * version 4.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

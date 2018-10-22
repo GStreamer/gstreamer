@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:element-rtpdtmfdepay
+ * @title: rtpdtmfdepay
  * @see_also: rtpdtmfsrc, rtpdtmfmux
  *
  * This element takes RTP DTMF packets and produces sound. It also emits a

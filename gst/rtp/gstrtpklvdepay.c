@@ -20,18 +20,18 @@
 
 /**
  * SECTION:element-rtpklvdepay
+ * @title: rtpklvdepay
  * @see_also: rtpklvpay
  *
  * Extract KLV metadata from RTP packets according to RFC 6597.
  * For detailed information see: http://tools.ietf.org/html/rfc6597
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 udpsrc caps='application/x-rtp, media=(string)application, clock-rate=(int)90000, encoding-name=(string)SMPTE336M' ! rtpklvdepay ! fakesink dump=true
  * ]| This example pipeline will depayload an RTP KLV stream and display
  * a hexdump of the KLV data on stdout.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

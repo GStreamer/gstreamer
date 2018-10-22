@@ -20,18 +20,18 @@
 
 /**
  * SECTION:element-rtpklvpay
+ * @title: rtpklvpay
  * @see_also: rtpklvdepay
  *
  * Payloads KLV metadata into RTP packets according to RFC 6597.
  * For detailed information see: http://tools.ietf.org/html/rfc6597
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 filesrc location=video-with-klv.ts ! tsdemux ! rtpklvpay ! udpsink
  * ]| This example pipeline will payload an RTP KLV stream extracted from an
  * MPEG-TS stream and send it via UDP to an RTP receiver.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

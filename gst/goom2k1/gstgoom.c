@@ -21,18 +21,18 @@
 
 /**
  * SECTION:element-goom2k1
+ * @title: goom2k1
  * @see_also: goom, synaesthesia
  *
  * Goom2k1 is an audio visualisation element. It creates warping structures
  * based on the incoming audio signal. Goom2k1 is the older version of the
  * visualisation. Also available is goom2k4, with a different look.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v audiotestsrc ! goom2k1 ! videoconvert ! xvimagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

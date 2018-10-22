@@ -34,6 +34,7 @@
 
 /**
  * SECTION:element-audiochebband
+ * @title: audiochebband
  *
  * Attenuates all frequencies outside (bandpass) or inside (bandreject) of a frequency
  * band. The number of poles and the ripple parameter control the rolloff.
@@ -51,19 +52,16 @@
  *
  * As a special case, a Chebyshev type 1 filter with no ripple is a Butterworth filter.
  *
- * <note>
- * Be warned that a too large number of poles can produce noise. The most poles are possible with
- * a cutoff frequency at a quarter of the sampling rate.
- * </note>
+ * > Be warned that a too large number of poles can produce noise. The most poles are possible with
+ * > a cutoff frequency at a quarter of the sampling rate.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc freq=1500 ! audioconvert ! audiochebband mode=band-pass lower-frequency=1000 upper-frequency=6000 poles=4 ! audioconvert ! alsasink
  * gst-launch-1.0 filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiochebband mode=band-reject lower-frequency=1000 upper-frequency=4000 ripple=0.2 ! audioconvert ! alsasink
  * gst-launch-1.0 audiotestsrc wave=white-noise ! audioconvert ! audiochebband mode=band-pass lower-frequency=1000 upper-frequency=4000 type=2 ! audioconvert ! alsasink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

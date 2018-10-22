@@ -24,12 +24,12 @@
 
 /**
  * SECTION:element-v4l2sink
+ * @title: v4l2sink
  *
  * v4l2sink can be used to display video to v4l2 devices (screen overlays
  * provided by the graphics hardware, tv-out, etc)
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 videotestsrc ! v4l2sink device=/dev/video1
  * ]| This pipeline displays a test pattern on /dev/video1
@@ -45,7 +45,7 @@
  * original video frame geometry so that the box can be drawn to the correct
  * position. This also handles borders correctly, limiting coordinates to the
  * image area
- * </refsect2>
+ *
  */
 
 

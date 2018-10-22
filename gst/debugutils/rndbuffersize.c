@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-rndbuffersize
+ * @title: rndbuffersize
  *
  * This element pulls buffers with random sizes from the source.
  */

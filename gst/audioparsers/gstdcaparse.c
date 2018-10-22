@@ -19,17 +19,17 @@
 
 /**
  * SECTION:element-dcaparse
+ * @title: dcaparse
  * @short_description: DCA (DTS Coherent Acoustics) parser
  * @see_also: #GstAmrParse, #GstAACParse, #GstAc3Parse
  *
  * This is a DCA (DTS Coherent Acoustics) parser.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=abc.dts ! dcaparse ! dtsdec ! audioresample ! audioconvert ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 /* TODO:

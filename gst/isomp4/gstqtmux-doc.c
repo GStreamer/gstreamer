@@ -47,6 +47,7 @@
 
 /**
  * SECTION:element-mp4mux
+ * @title: mp4mux
  * @short_description: Muxer for ISO MPEG-4 (.mp4) files
  *
  * This element merges streams (audio and video) into ISO MPEG-4 (.mp4) files.
@@ -81,20 +82,20 @@
  * #GstMp4Mux:streamable allows foregoing to add index metadata (at the end of
  * file).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 gst-launch-1.0 v4l2src num-buffers=50 ! queue ! x264enc ! mp4mux ! filesink location=video.mp4
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into H.264
  * and muxes it into an mp4 file.
- * </refsect2>
+ *
  */
 
 /* ============================= 3gppmux ==================================== */
 
 /**
  * SECTION:element-3gppmux
+ * @title: 3gppmux
  * @short_description: Muxer for 3GPP (.3gp) files
  *
  * This element merges streams (audio and video) into 3GPP (.3gp) files.
@@ -129,14 +130,12 @@
  * #Gst3GPPMux:streamable allows foregoing to add index metadata (at the end of
  * file).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! ffenc_h263 ! 3gppmux ! filesink location=video.3gp
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into H.263
  * and muxes it into an 3gp file.
- * </refsect2>
  *
  * Documentation last reviewed on 2011-04-21
  */
@@ -145,6 +144,7 @@
 
 /**
  * SECTION:element-mj2mux
+ * @title: mj2mux
  * @short_description: Muxer for Motion JPEG-2000 (.mj2) files
  *
  * This element merges streams (audio and video) into MJ2 (.mj2) files.
@@ -179,14 +179,12 @@
  * #GstMJ2Mux:streamable allows foregoing to add index metadata (at the end of
  * file).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into JPEG-2000
  * and muxes it into an mj2 file.
- * </refsect2>
  *
  * Documentation last reviewed on 2011-04-21
  */
@@ -195,6 +193,7 @@
 
 /**
  * SECTION:element-ismlmux
+ * @title: ismlmux
  * @short_description: Muxer for ISML smooth streaming (.isml) files
  *
  * This element merges streams (audio and video) into MJ2 (.mj2) files.
@@ -229,14 +228,12 @@
  * #GstISMLMux:streamable allows foregoing to add index metadata (at the end of
  * file).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into JPEG-2000
  * and muxes it into an mj2 file.
- * </refsect2>
  *
  * Documentation last reviewed on 2011-04-21
  */

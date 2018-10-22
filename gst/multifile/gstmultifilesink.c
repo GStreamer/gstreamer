@@ -25,6 +25,7 @@
  */
 /**
  * SECTION:element-multifilesink
+ * @title: multifilesink
  * @see_also: #GstFileSrc
  *
  * Write incoming data to a series of sequentially-named files.
@@ -41,77 +42,25 @@
  * be substituted with the index for each filename.
  *
  * If the #GstMultiFileSink:post-messages property is %TRUE, it sends an application
- * message named
- * <classname>&quot;GstMultiFileSink&quot;</classname> after writing each
- * buffer.
+ * message named `GstMultiFileSink` after writing each buffer.
  *
  * The message's structure contains these fields:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #gchar *
- *   <classname>&quot;filename&quot;</classname>:
- *   the filename where the buffer was written.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #gint
- *   <classname>&quot;index&quot;</classname>:
- *   the index of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;timestamp&quot;</classname>:
- *   the timestamp of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;stream-time&quot;</classname>:
- *   the stream time of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;running-time&quot;</classname>:
- *   the running_time of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #GstClockTime
- *   <classname>&quot;duration&quot;</classname>:
- *   the duration of the buffer.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #guint64
- *   <classname>&quot;offset&quot;</classname>:
- *   the offset of the buffer that triggered the message.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #guint64
- *   <classname>&quot;offset-end&quot;</classname>:
- *   the offset-end of the buffer that triggered the message.
- *   </para>
- * </listitem>
- * </itemizedlist>
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * * #gchar *`filename`: the filename where the buffer was written.
+ * * #gint `index`: index of the buffer.
+ * * #GstClockTime `timestamp`: the timestamp of the buffer.
+ * * #GstClockTime `stream-time`: the stream time of the buffer.
+ * * #GstClockTime running-time`: the running_time of the buffer.
+ * * #GstClockTime `duration`: the duration of the buffer.
+ * * #guint64 `offset`: the offset of the buffer that triggered the message.
+ * * #guint64 `offset-end`: the offset-end of the buffer that triggered the message.
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! multifilesink
  * gst-launch-1.0 videotestsrc ! multifilesink post-messages=true location="frame%d"
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,16 +22,16 @@
 
 /**
  * SECTION:element-deinterlace
+ * @title: deinterlace
  *
  * deinterlace deinterlaces interlaced video frames to progressive video frames.
  * For this different algorithms can be selected which will be described later.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/file ! decodebin ! videoconvert ! deinterlace ! videoconvert ! autovideosink
  * ]| This pipeline deinterlaces a video file with the default deinterlacing options.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -526,69 +526,18 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * the "method" child via the #GstChildProxy interface and
    * setting the appropiate properties on it.
    *
-   * <itemizedlist>
-   * <listitem>
-   * <para>
-   * tomsmocomp
-   * Motion Adaptive: Motion Search
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * greedyh
-   * Motion Adaptive: Advanced Detection
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * greedyl
-   * Motion Adaptive: Simple Detection
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * vfir
-   * Blur vertical
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * linear
-   * Linear interpolation
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * linearblend
-   * Linear interpolation in time domain.  Any motion causes significant
-   * ghosting, so this method should not be used.
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * scalerbob
-   * Double lines
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * weave
-   * Weave.  Bad quality, do not use.
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * weavetff
-   * Progressive: Top Field First.  Bad quality, do not use.
-   * </para>
-   * </listitem>
-   * <listitem>
-   * <para>
-   * weavebff
-   * Progressive: Bottom Field First.  Bad quality, do not use.
-   * </para>
-   * </listitem>
-   * </itemizedlist>
+   * * tomsmocomp  Motion Adaptive: Motion Search
+   * * greedyh Motion Adaptive: Advanced Detection
+   * * greedyl Motion Adaptive: Simple Detection
+   * * vfir Blur vertical
+   * * linear Linear interpolation
+   * * linearblend Linear interpolation in time domain.
+   *   Any motion causes significant ghosting, so this
+   *   method should not be used.
+   * * scalerbob Double lines
+   * * weave Weave. Bad quality, do not use.
+   * * weavetff Progressive: Top Field First.  Bad quality, do not use.
+   * * weavebff Progressive: Bottom Field First.  Bad quality, do not use.
    */
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method",

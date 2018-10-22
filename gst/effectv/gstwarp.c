@@ -35,15 +35,15 @@
 
 /**
  * SECTION:element-warptv
+ * @title: warptv
  *
  * WarpTV does realtime goo'ing of the video input.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! warptv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of warptv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

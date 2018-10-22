@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-speexdec
+ * @title: speexdec
  * @see_also: speexenc, oggdemux
  *
  * This element decodes a Speex stream to raw integer audio.
@@ -27,13 +28,12 @@
  * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=speex.ogg ! oggdemux ! speexdec ! audioconvert ! audioresample ! alsasink
  * ]| Decode an Ogg/Speex file. To create an Ogg/Speex file refer to the
  * documentation of speexenc.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

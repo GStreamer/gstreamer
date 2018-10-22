@@ -20,21 +20,22 @@
  */
 /**
  * SECTION:element-videobox
+ * @title: videobox
  * @see_also: #GstVideoCrop
  *
  * This plugin crops or enlarges the image. It takes 4 values as input, a
  * top, bottom, left and right offset. Positive values will crop that much
  * pixels from the respective border of the image, negative values will add
- * that much pixels. When pixels are added, you can specify their color. 
+ * that much pixels. When pixels are added, you can specify their color.
  * Some predefined colors are usable with an enum property.
- * 
+ *
  * The plugin is alpha channel aware and will try to negotiate with a format
  * that supports alpha channels first. When alpha channel is active two
  * other properties, alpha and border_alpha can be used to set the alpha
  * values of the inner picture and the border respectively. an alpha value of
  * 0.0 means total transparency, 1.0 is opaque.
- * 
- * The videobox plugin has many uses such as doing a mosaic of pictures, 
+ *
+ * The videobox plugin has many uses such as doing a mosaic of pictures,
  * letterboxing video, cutting out pieces of video, picture in picture, etc..
  *
  * Setting autocrop to true changes the behavior of the plugin so that
@@ -42,11 +43,11 @@
  * input and output dimensions, the crop values are selected so that the
  * smaller frame is effectively centered in the larger frame.  This
  * involves either cropping or padding.
- * 
+ *
  * If you use autocrop there is little point in setting the other
  * properties manually because they will be overriden if the caps change,
  * but nothing stops you from doing so.
- * 
+ *
  * Sample pipeline:
  * |[
  * gst-launch-1.0 videotestsrc ! videobox autocrop=true ! \

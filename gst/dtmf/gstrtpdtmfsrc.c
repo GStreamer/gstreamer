@@ -25,6 +25,7 @@
 
 /**
  * SECTION:element-rtpdtmfsrc
+ * @title: rtpdtmfsrc
  * @see_also: dtmfsrc, rtpdtmfdepay, rtpdtmfmux
  *
  * The RTPDTMFSrc element generates RTP DTMF (RFC 2833) event packets on request
@@ -97,7 +98,7 @@
  * RTPDTMFSrc element inside the pipeline) about the start of an RTP DTMF named
  * event '1' of volume -25 dBm0:
  *
- * <programlisting>
+ * |[
  * structure = gst_structure_new ("dtmf-event",
  *                    "type", G_TYPE_INT, 1,
  *                    "number", G_TYPE_INT, 1,
@@ -106,7 +107,7 @@
  *
  * event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, structure);
  * gst_element_send_event (pipeline, event);
- * </programlisting>
+ * ]|
  *
  * When a DTMF tone actually starts or stop, a "dtmf-event-processed"
  * element #GstMessage with the same fields as the "dtmf-event"

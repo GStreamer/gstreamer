@@ -31,6 +31,7 @@
 
 /**
  * SECTION:element-dvdemux
+ * @title: dvdemux
  *
  * dvdemux splits raw DV into its audio and video components. The audio will be
  * decoded raw samples and the video will be encoded DV video.
@@ -38,12 +39,11 @@
  * This element can operate in both push and pull mode depending on the
  * capabilities of the upstream peer.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.dv ! dvdemux name=demux ! queue ! audioconvert ! alsasink demux. ! queue ! dvdec ! xvimagesink
  * ]| This pipeline decodes and renders the raw DV stream to an audio and a videosink.
- * </refsect2>
+ *
  */
 
 /* DV output has two modes, normal and wide. The resolution is the same in both

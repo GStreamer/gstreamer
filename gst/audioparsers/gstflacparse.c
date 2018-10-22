@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-flacparse
+ * @title: flacparse
  * @see_also: flacdec, oggdemux, vorbisparse
  *
  * The flacparse element will parse the header packets of the FLAC
@@ -37,15 +38,13 @@
  * which allows you to (for example) remux an ogg/flac or convert a native FLAC
  * format file to an ogg bitstream.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=sine.flac ! flacparse ! identity \
  *            ! oggmux ! filesink location=sine-remuxed.ogg
  * ]| This pipeline converts a native FLAC format file to an ogg bitstream.
  * It also illustrates that the streamheader is set in the caps, and that each
  * buffer has the timestamp, duration, offset, and offset_end set.
- * </refsect2>
  *
  */
 

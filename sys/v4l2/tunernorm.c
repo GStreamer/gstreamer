@@ -27,15 +27,14 @@
 
 /**
  * SECTION:gsttunernorm
+ * @title: TunErnorm.h
  * @short_description: Encapsulates information about the data format(s)
  * for a #GstTunerChannel.
  *
- * <refsect2>
- * <para>The #GstTunerNorm object is created by an element implementing the
+ * The #GstTunerNorm object is created by an element implementing the
  * #GstTuner interface and encapsulates the selection of a capture/output format
  * for a selected #GstTunerChannel.
- * </para>
- * </refsect2>
+ *
  */
 
 enum

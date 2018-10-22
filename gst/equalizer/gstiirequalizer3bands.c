@@ -19,16 +19,16 @@
 
 /**
  * SECTION:element-equalizer-3bands
+ * @title: equalizer-3bands
  *
  * The 3-band equalizer element allows to change the gain of a low frequency,
  * medium frequency and high frequency band.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-3bands band1=6.0 ! alsasink
  * ]| This raises the volume of the 2nd band, which is at 1110 Hz, by 6 db.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

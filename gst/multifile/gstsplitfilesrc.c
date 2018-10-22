@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-splitfilesrc
+ * @title: splitfilesrc
  * @see_also: #GstFileSrc, #GstMultiFileSrc
  *
  * Reads data from multiple files, presenting those files as one continuous
@@ -29,15 +30,14 @@
  * (and expects) shell-style wildcards (but only for the filename, not for
  * directories). The results will be sorted.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ...
  * ]| Plays the different parts as if they were one single MPEG file.
  * |[
  * gst-launch-1.0 playbin uri="splitfile://path/to/foo.avi.*"
  * ]| Plays the different parts as if they were one single AVI file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-rtpac3pay
+ * @title: rtpac3pay
  * @see_also: rtpac3depay
  *
  * Payload AC3 audio into RTP packets according to RFC 4184.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc4184.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v audiotestsrc ! avenc_ac3 ! rtpac3pay ! udpsink
  * ]| This example pipeline will encode and payload AC3 stream. Refer to
  * the rtpac3depay example to depayload and decode the RTP stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

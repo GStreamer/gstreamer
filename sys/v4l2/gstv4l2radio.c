@@ -21,19 +21,19 @@
 
 /**
  * SECTION:element-v4l2radio
+ * @title: v4l2radio
  *
  * v4l2radio can be used to control radio device
  * and to tune it to different radiostations.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 v4l2radio device=/dev/radio0 frequency=101200000
  * gst-launch-1.0 alsasrc device=hw:1 ! audioconvert ! audioresample ! alsasink
  * ]|
  * First pipeline tunes the radio device /dev/radio0 to station 101.2 MHz,
  * second pipeline connects digital audio out (hw:1) to default sound card.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

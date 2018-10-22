@@ -21,17 +21,17 @@
  */
 /**
  * SECTION:element-ac3parse
+ * @title: ac3parse
  * @short_description: AC3 parser
  * @see_also: #GstAmrParse, #GstAACParse
  *
  * This is an AC3 parser.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=abc.ac3 ! ac3parse ! a52dec ! audioresample ! audioconvert ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 /* TODO:

@@ -21,14 +21,14 @@
 
 /**
  * SECTION:element-wavparse
+ * @title: wavparse
  *
  * Parse a .wav file into raw or compressed audio.
  *
  * Wavparse supports both push and pull mode operations, making it possible to
  * stream from a network source.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=sine.wav ! wavparse ! audioconvert ! alsasink
  * ]| Read a wav file and output to the soundcard using the ALSA element. The
@@ -36,7 +36,7 @@
  * |[
  * gst-launch-1.0 gnomevfssrc location=http://www.example.org/sine.wav ! queue ! wavparse ! audioconvert ! alsasink
  * ]| Stream data from a network url.
- * </refsect2>
+ *
  */
 
 /*

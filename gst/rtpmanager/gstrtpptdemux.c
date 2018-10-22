@@ -1,4 +1,4 @@
-/* 
+/*
  * RTP Demux element
  *
  * Copyright (C) 2005 Nokia Corporation.
@@ -25,27 +25,27 @@
 
 /**
  * SECTION:element-rtpptdemux
+ * @title: rtpptdemux
  *
  * rtpptdemux acts as a demuxer for RTP packets based on the payload type of
  * the packets. Its main purpose is to allow an application to easily receive
  * and decode an RTP stream with multiple payload types.
- * 
+ *
  * For each payload type that is detected, a new pad will be created and the
  * #GstRtpPtDemux::new-payload-type signal will be emitted. When the payload for
  * the RTP stream changes, the #GstRtpPtDemux::payload-type-change signal will be
  * emitted.
- * 
+ *
  * The element will try to set complete and unique application/x-rtp caps
  * on the output pads based on the result of the #GstRtpPtDemux::request-pt-map
  * signal.
- * 
- * <refsect2>
- * <title>Example pipelines</title>
+ *
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 udpsrc caps="application/x-rtp" ! rtpptdemux ! fakesink
  * ]| Takes an RTP stream and send the RTP packets with the first detected
  * payload type to fakesink, discarding the other payload types.
- * </refsect2>
+ *
  */
 
 /*
@@ -99,8 +99,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_pt_demux_debug);
  */
 struct _GstRtpPtDemuxPad
 {
-  GstPad *pad;        /**< pointer to the actual pad */
-  gint pt;             /**< RTP payload-type attached to pad */
+  GstPad *pad;        /*< pointer to the actual pad */
+  gint pt;             /*< RTP payload-type attached to pad */
   gboolean newcaps;
 };
 

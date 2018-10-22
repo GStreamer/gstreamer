@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-rtpsession
+ * @title: rtpsession
  * @see_also: rtpjitterbuffer, rtpbin, rtpptdemux, rtpssrcdemux
  *
  * The RTP session manager models participants with unique SSRC in an RTP
@@ -27,23 +28,16 @@
  * functionality can be activated.
  *
  * The session manager currently implements RFC 3550 including:
- * <itemizedlist>
- *   <listitem>
- *     <para>RTP packet validation based on consecutive sequence numbers.</para>
- *   </listitem>
- *   <listitem>
- *     <para>Maintainance of the SSRC participant database.</para>
- *   </listitem>
- *   <listitem>
- *     <para>Keeping per participant statistics based on received RTCP packets.</para>
- *   </listitem>
- *   <listitem>
- *     <para>Scheduling of RR/SR RTCP packets.</para>
- *   </listitem>
- *   <listitem>
- *     <para>Support for multiple sender SSRC.</para>
- *   </listitem>
- * </itemizedlist>
+ *
+ *   * RTP packet validation based on consecutive sequence numbers.
+ *
+ *   * Maintainance of the SSRC participant database.
+ *
+ *   * Keeping per participant statistics based on received RTCP packets.
+ *
+ *   * Scheduling of RR/SR RTCP packets.
+ *
+ *   * Support for multiple sender SSRC.
  *
  * The rtpsession will not demux packets based on SSRC or payload type, nor will
  * it correct for packet reordering and jitter. Use #GstRtpsSrcDemux,
@@ -75,8 +69,7 @@
  * mapping. One can clear the cached values with the #GstRtpSession::clear-pt-map
  * signal.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink rtpsession .recv_rtp_src ! rtptheoradepay ! theoradec ! xvimagesink
  * ]| Receive theora RTP packets from port 5000 and send them to the depayloader,
@@ -105,7 +98,7 @@
  * correctly because the second udpsink will not preroll correctly (no RTCP
  * packets are sent in the PAUSED state). Applications should manually set and
  * keep (see gst_element_set_locked_state()) the RTCP udpsink to the PLAYING state.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

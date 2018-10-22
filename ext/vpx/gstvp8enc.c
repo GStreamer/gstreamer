@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:element-vp8enc
+ * @title: vp8enc
  * @see_also: vp8dec, webmmux, oggmux
  *
  * This element encodes raw video into a VP8 stream.
@@ -37,13 +38,12 @@
  * for explanation, examples for useful encoding parameters and more details
  * on the encoding parameters.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! vp8enc ! webmmux ! filesink location=videotestsrc.webm
  * ]| This example pipeline will encode a test video source to VP8 muxed in an
  * WebM container.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

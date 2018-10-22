@@ -20,19 +20,19 @@
  */
 /**
  * SECTION:element-taginject
+ * @title: taginject
  *
  * Element that injects new metadata tags, but passes incoming data through
  * unmodified.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 audiotestsrc num-buffers=100 ! taginject tags="title=testsrc,artist=gstreamer" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set title and artist
  * |[
  * gst-launch-1.0 audiotestsrc num-buffers=100 ! taginject tags="keywords=\{\"testone\",\"audio\"\},title=\"audio\ testtone\"" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set keywords and title demonstrating quoting of special chars and handling lists
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

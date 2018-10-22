@@ -22,21 +22,21 @@
 
 /**
  * SECTION:element-rglimiter
+ * @title: rglimiter
  * @see_also: #GstRgVolume
  *
  * This element applies signal compression/limiting to raw audio data.  It
  * performs strict hard limiting with soft-knee characteristics, using a
  * threshold of -6 dB.  This type of filter is mentioned in the proposed <ulink
  * url="http://replaygain.org">ReplayGain standard</ulink>.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=filename.ext ! decodebin ! audioconvert \
  *            ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter \
  *            ! audioconvert ! audioresample ! alsasink
  * ]|Playback of a file
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

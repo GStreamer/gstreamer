@@ -20,20 +20,20 @@
 
 /**
  * SECTION:element-dvdec
+ * @title: dvdec
  *
  * dvdec decodes DV video into raw video. The element expects a full DV frame
  * as input, which is 120000 bytes for NTSC and 144000 for PAL video.
  *
  * This element can perform simple frame dropping with the #GstDVDec:drop-factor
- * property. Setting this property to a value N > 1 will only decode every 
+ * property. Setting this property to a value N > 1 will only decode every
  * Nth frame.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.dv ! dvdemux name=demux ! dvdec ! xvimagesink
  * ]| This pipeline decodes and renders the raw DV stream to a videosink.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

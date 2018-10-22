@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-smokedec
+ * @title: smokedec
  *
  * Decodes images in smoke format.
  */

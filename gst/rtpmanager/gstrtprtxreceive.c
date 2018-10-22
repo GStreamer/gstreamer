@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-rtprtxreceive
+ * @title: rtprtxreceive
  * @see_also: rtprtxsend, rtpsession, rtpjitterbuffer
  *
  * rtprtxreceive listens to the retransmission events from the
@@ -45,7 +46,8 @@
  * rtpbin instead, with its #GstRtpBin::request-aux-sender and
  * #GstRtpBin::request-aux-receiver signals. See #GstRtpBin.
  *
- * # Example pipelines
+ * ## Example pipelines
+ *
  * |[
  * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
  *     audiotestsrc is-live=true ! opusenc ! rtpopuspay pt=96 ! \
@@ -58,6 +60,7 @@
  *         sync=false async=false
  * ]| Send audio stream through port 5000 (5001 and 5002 are just the rtcp
  * link with the receiver)
+ *
  * |[
  * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
  *     udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)48000,encoding-name=(string)OPUS,payload=(int)96" ! \
@@ -69,7 +72,8 @@
  *     rtpsession.send_rtcp_src ! \
  *         udpsink host="127.0.0.1" port=5001 sync=false async=false \
  *     udpsrc port=5002 ! rtpsession.recv_rtcp_sink
- * ]| Receive audio stream from port 5000 (5001 and 5002 are just the rtcp
+ * ]|
+ * Receive audio stream from port 5000 (5001 and 5002 are just the rtcp
  * link with the sender)
  *
  * In this example we can see a simple streaming of an OPUS stream with some
@@ -102,7 +106,8 @@
  *     udpsrc port=5001 ! rtpsession.recv_rtcp_sink \
  *     rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5002 \
  *         sync=false async=false
- * ]| Send two audio streams to port 5000.
+ * ]|
+ * Send two audio streams to port 5000.
  * |[
  * gst-launch-1.0 rtpsession name=rtpsession rtp-profile=avpf \
  *     udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)48000,encoding-name=(string)OPUS,payload=(int)97" ! \
@@ -117,7 +122,8 @@
  *     udpsrc port=5002 ! rtpsession.recv_rtcp_sink \
  *     rtpsession.send_rtcp_src ! udpsink host="127.0.0.1" port=5001 \
  *         sync=false async=false
- * ]| Receive two audio streams from port 5000.
+ * ]|
+ * Receive two audio streams from port 5000.
  *
  * In this example we are streaming two streams of the same type through the
  * same port. They, however, are using a different SSRC (ssrc is randomly

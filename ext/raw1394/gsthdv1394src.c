@@ -18,18 +18,18 @@
  */
 /**
  * SECTION:element-hdv1394src
+ * @title: hdv1394src
  *
  * Read MPEG-TS data from firewire port.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 hdv1394src ! queue ! decodebin name=d ! queue ! xvimagesink d. ! queue ! alsasink
  * ]| captures from the firewire port and plays the streams.
  * |[
  * gst-launch-1.0 hdv1394src ! queue ! filesink location=mydump.ts
  * ]| capture to a disk file
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

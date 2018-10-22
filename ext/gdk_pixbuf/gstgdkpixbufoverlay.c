@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-gdkpixbufoverlay
+ * @title: gdkpixbufoverlay
  *
  * The gdkpixbufoverlay element overlays an image loaded from file onto
  * a video stream.
@@ -32,14 +33,13 @@
  *
  * Negative offsets are also not yet supported.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! gdkpixbufoverlay location=image.png ! autovideosink
  * ]|
  * Overlays the image in image.png onto the test video picture produced by
  * videotestsrc.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

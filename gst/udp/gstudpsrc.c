@@ -24,6 +24,7 @@
 
 /**
  * SECTION:element-udpsrc
+ * @title: udpsrc
  * @see_also: udpsink, multifdsink
  *
  * udpsrc is a network source that reads UDP packets from the network.
@@ -65,19 +66,13 @@
  * type URIs.
  *
  * If the #GstUDPSrc:timeout property is set to a value bigger than 0, udpsrc
- * will generate an element message named
- * <classname>&quot;GstUDPSrcTimeout&quot;</classname>
+ * will generate an element message named `GstUDPSrcTimeout`
  * if no data was received in the given timeout.
+ * 
  * The message's structure contains one field:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #guint64
- *   <classname>&quot;timeout&quot;</classname>: the timeout in microseconds that
- *   expired when waiting for data.
- *   </para>
- * </listitem>
- * </itemizedlist>
+ *
+ * * #guint64 `timeout`: the timeout in microseconds that expired when waiting for data.
+ *
  * The message is typically used to detect that no UDP arrives in the receiver
  * because it is blocked by a firewall.
  *
@@ -87,8 +82,7 @@
  * with the #GstUDPSrc:close-socket property, in which case the
  * application is responsible for closing the file descriptor.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v udpsrc ! fakesink dump=1
  * ]| A pipeline to read from the default port and dump the udp packets.
@@ -101,7 +95,7 @@
  * |[
  * gst-launch-1.0 -v udpsrc port=0 ! fakesink
  * ]| read udp packets from a free port.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

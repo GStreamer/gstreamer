@@ -27,13 +27,13 @@
 
 /**
  * SECTION:element-rtpmux
+ * @title: rtpmux
  * @see_also: rtpdtmfmux
  *
  * The rtp muxer takes multiple RTP streams having the same clock-rate and
  * muxes into a single stream with a single SSRC.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 rtpmux name=mux ! udpsink host=127.0.0.1 port=8888        \
  *              alsasrc ! alawenc ! rtppcmapay !                        \
@@ -45,7 +45,7 @@
  * In this example, an audio stream is captured from ALSA and another is
  * generated, both are encoded into different payload types and muxed together
  * so they can be sent on the same port.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

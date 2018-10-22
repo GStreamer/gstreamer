@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-breakmydata
+ * @title: breakmydata
  *
  * This element modifies the contents of the buffer it is passed randomly
  * according to the parameters set.

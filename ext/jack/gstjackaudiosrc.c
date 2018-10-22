@@ -42,34 +42,34 @@
 
 /**
  * SECTION:element-jackaudiosrc
+ * @title: jackaudiosrc
  * @see_also: #GstAudioBaseSrc, #GstAudioRingBuffer
  *
  * A Src that inputs data from Jack ports.
- * 
- * It will create N Jack ports named in_&lt;name&gt;_&lt;num&gt; where 
+ *
+ * It will create N Jack ports named in_&lt;name&gt;_&lt;num&gt; where
  * &lt;name&gt; is the element name and &lt;num&gt; is starting from 1.
  * Each port corresponds to a gstreamer channel.
- * 
+ *
  * The samplerate as exposed on the caps is always the same as the samplerate of
  * the jack server.
- * 
+ *
  * When the #GstJackAudioSrc:connect property is set to auto, this element
- * will try to connect each input port to a random physical jack output pin. 
- * 
+ * will try to connect each input port to a random physical jack output pin.
+ *
  * When the #GstJackAudioSrc:connect property is set to none, the element will
  * accept any number of output channels and will create (but not connect) an
  * input port for each channel.
- * 
+ *
  * The element will generate an error when the Jack server is shut down when it
  * was PAUSED or PLAYING. This element does not support dynamic rate and buffer
  * size changes at runtime.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 jackaudiosrc connect=0 ! jackaudiosink connect=0
  * ]| Get audio input into gstreamer from jack.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

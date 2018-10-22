@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-aspectratiocrop
+ * @title: aspectratiocrop
  * @see_also: #GstVideoCrop
  *
  * This element crops video frames to a specified #GstAspectRatioCrop:aspect-ratio.
@@ -26,12 +27,11 @@
  * If the aspect-ratio is already correct, the element will operate
  * in pass-through mode.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! video/x-raw,height=640,width=480 ! aspectratiocrop aspect-ratio=16/9 ! ximagesink
  * ]| This pipeline generates a videostream in 4/3 and crops it to 16/9.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,21 +19,18 @@
  */
 /**
  * SECTION:element-y4menc
+ * @title: y4menc
  *
- * <refsect2>
- * <para>
  * Creates a YU4MPEG2 raw video stream as defined by the mjpegtools project.
- * </para>
- * <title>Example launch line</title>
- * <para>
+ *
+ * ## Example launch line
+ *
  * (write everything in one line, without the backslash characters)
- * <programlisting>
+ * |[
  * gst-launch-1.0 videotestsrc num-buffers=250 \
  * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! y4menc ! filesink location=test.yuv
- * </programlisting>
- * </para>
- * </refsect2>
+ * ]|
  *
  */
 

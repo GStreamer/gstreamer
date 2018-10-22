@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-rtpL24depay
+ * @title: rtpL24depay
  * @see_also: rtpL24pay
  *
  * Extract raw audio from RTP packets according to RFC 3190, section 4.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc3190.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)L24, encoding-params=(string)1, channels=(int)1, payload=(int)96' ! rtpL24depay ! pulsesink
  * ]| This example pipeline will depayload an RTP raw audio stream. Refer to
  * the rtpL24pay example to create the RTP stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

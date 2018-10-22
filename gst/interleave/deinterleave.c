@@ -32,20 +32,20 @@
 
 /**
  * SECTION:element-deinterleave
+ * @title: deinterleave
  * @see_also: interleave
  *
  * Splits one interleaved multichannel audio stream into many mono audio streams.
- * 
+ *
  * This element handles all raw audio formats and supports changing the input caps as long as
  * all downstream elements can handle the new caps and the number of channels and the channel
  * positions stay the same. This restriction will be removed in later versions by adding or
  * removing some source pads as required.
- * 
+ *
  * In most cases a queue and an audioconvert element should be added after each source pad
  * before further processing of the audio data.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=/path/to/file.mp3 ! decodebin ! audioconvert ! "audio/x-raw,channels=2 ! deinterleave name=d  d.src_0 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel1.ogg  d.src_1 ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=channel2.ogg
  * ]| Decodes an MP3 file and encodes the left and right channel into separate
@@ -55,7 +55,7 @@
  * ]| Decodes and deinterleaves a Stereo MP3 file into separate channels and
  * then interleaves the channels again to a WAV file with the channel with the
  * channels exchanged.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -186,7 +186,7 @@ gst_deinterleave_class_init (GstDeinterleaveClass * klass)
 
   /**
    * GstDeinterleave:keep-positions
-   * 
+   *
    * Keep positions: When enable the caps on the output buffers will
    * contain the original channel positions. This can be used to correctly
    * interleave the output again later but can also lead to unwanted effects

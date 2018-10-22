@@ -33,15 +33,15 @@
 
 /**
  * SECTION:element-matroskademux
+ * @title: matroskademux
  *
  * matroskademux demuxes a Matroska file into the different contained streams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/mkv ! matroskademux ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
  * ]| This pipeline demuxes a Matroska file and outputs the contained Vorbis audio.
- * </refsect2>
+ *
  */
 
 

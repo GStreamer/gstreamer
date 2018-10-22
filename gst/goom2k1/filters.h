@@ -22,7 +22,7 @@ struct ZoomFilterData
   int middleY;
   char reverse;
   char mode;
-        /** @since June 2001 */
+        /* @since June 2001 */
   int hPlaneEffect;
   int vPlaneEffect;
   char noisify;

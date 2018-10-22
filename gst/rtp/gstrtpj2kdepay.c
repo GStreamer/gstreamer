@@ -20,6 +20,7 @@
 
  /**
  * SECTION:element-rtpj2kdepay
+ * @title: rtpj2kdepay
  *
  * Depayload an RTP-payloaded JPEG 2000 image into RTP packets according to RFC 5371
  * and RFC 5372.

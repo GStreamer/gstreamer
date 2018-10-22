@@ -27,20 +27,17 @@
 
 /**
  * SECTION:gsttunerchannel
+ * @title: GstTunerChannel
  * @short_description: A channel from an element implementing the #GstTuner
  * interface.
  *
- * <refsect2>
- * <para>The #GstTunerChannel object is provided by an element implementing
+ * The #GstTunerChannel object is provided by an element implementing
  * the #GstTuner interface.
- * </para>
- * <para>
+ *
  * GstTunerChannel provides a name and flags to determine the type and
  * capabilities of the channel. If the GST_TUNER_CHANNEL_FREQUENCY flag is
  * set, then the channel also information about the minimum and maximum
  * frequency, and range of the reported signal strength.
- * </para>
- * </refsect2>
  */
 
 enum

@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-smokeenc
+ * @title: smokeenc
  *
  * Encodes images in smoke format.
  */

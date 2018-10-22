@@ -23,12 +23,12 @@
 
 /**
  * SECTION:element-v4l2src
+ * @title: v4l2src
  *
  * v4l2src can be used to capture video from v4l2 devices, like webcams and tv
  * cards.
  *
- * <refsect2>
- * <title>Example launch lines</title>
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 v4l2src ! xvimagesink
  * ]| This pipeline shows the video captured from /dev/video0 tv card and for
@@ -37,7 +37,6 @@
  * gst-launch-1.0 v4l2src ! jpegdec ! xvimagesink
  * ]| This pipeline shows the video captured from a webcam that delivers jpeg
  * images.
- * </refsect2>
  *
  * Since 1.14, the use of libv4l2 has been disabled due to major bugs in the
  * emulation layer. To enable usage of this library, set the environment

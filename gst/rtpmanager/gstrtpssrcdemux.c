@@ -21,21 +21,21 @@
 
 /**
  * SECTION:element-rtpssrcdemux
+ * @title: rtpssrcdemux
  *
  * rtpssrcdemux acts as a demuxer for RTP packets based on the SSRC of the
  * packets. Its main purpose is to allow an application to easily receive and
  * decode an RTP stream with multiple SSRCs.
- * 
+ *
  * For each SSRC that is detected, a new pad will be created and the
- * #GstRtpSsrcDemux::new-ssrc-pad signal will be emitted. 
- * 
- * <refsect2>
- * <title>Example pipelines</title>
+ * #GstRtpSsrcDemux::new-ssrc-pad signal will be emitted.
+ *
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 udpsrc caps="application/x-rtp" ! rtpssrcdemux ! fakesink
  * ]| Takes an RTP stream and send the RTP packets with the first detected SSRC
  * to fakesink, discarding the other SSRCs.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-autovideosink
+ * @title: autovideosink
  * @see_also: autoaudiosink, ximagesink, xvimagesink, sdlvideosink
  *
  * autovideosink is a video sink that automatically detects an appropriate
@@ -27,12 +28,11 @@
  * that have <quote>Sink</quote> and <quote>Video</quote> in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m videotestsrc ! autovideosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

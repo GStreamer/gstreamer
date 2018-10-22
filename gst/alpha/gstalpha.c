@@ -22,7 +22,8 @@
 
 /**
  * SECTION:element-alpha
- * 
+ * @title: alpha
+ *
  * The alpha element adds an alpha channel to a video stream. The values
  * of the alpha channel can be either be set to a constant or can be
  * dynamically calculated via chroma keying, e.g. blue can be set as

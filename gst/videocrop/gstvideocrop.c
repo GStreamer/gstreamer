@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-videocrop
+ * @title: videocrop
  * @see_also: #GstVideoBox
  *
  * This element crops video frames, meaning it can remove parts of the
@@ -36,15 +37,14 @@
  * Note that no special efforts are made to handle chroma-subsampled formats
  * in the case of odd-valued cropping and compensate for sub-unit chroma plane
  * shifts for such formats in the case where the #GstVideoCrop:left or
- * #GstVideoCrop:top property is set to an odd number. This doesn't matter for 
+ * #GstVideoCrop:top property is set to an odd number. This doesn't matter for
  * most use cases, but it might matter for yours.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! videocrop top=42 left=1 right=4 bottom=0 ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 
 /* TODO:

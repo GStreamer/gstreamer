@@ -21,18 +21,17 @@
  */
 /**
  * SECTION:element-wavenc
+ * @title: wavenc
  *
  * Format an audio stream into the wav format.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 cdparanoiasrc mode=continuous ! queue ! audioconvert ! wavenc ! filesink location=cd.wav
  * ]| Rip a whole audio CD into a single wav file, with the track table written into a CUE sheet inside the file
  * |[
  * gst-launch-1.0 cdparanoiasrc track=5 ! queue ! audioconvert ! wavenc ! filesink location=track5.wav
  * ]| Rip track 5 of an audio CD into a single wav file containing unencoded raw audio samples.
- * </refsect2>
  *
  */
 #ifdef HAVE_CONFIG_H

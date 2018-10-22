@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:element-flxdec
+ * @title: flxdec
  *
  * This element decodes fli/flc/flx-video into raw video
  */

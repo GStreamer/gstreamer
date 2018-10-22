@@ -27,12 +27,12 @@
 
 /**
  * SECTION:element-avimux
+ * @title: avimux
  *
  * Muxes raw or compressed audio and/or video streams into an AVI file.
  *
- * <refsect2>
- * <title>Example launch lines</title>
- * <para>(write everything in one line, without the backslash characters)</para>
+ * ## Example launch lines
+ * (write everything in one line, without the backslash characters)
  * |[
  * gst-launch-1.0 videotestsrc num-buffers=250 \
  * ! 'video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)25/1' \
@@ -53,7 +53,7 @@
  * ]| This will create an .AVI file containing the same test video and sound
  * as above, only that both streams will be compressed this time. This will
  * only work if you have the necessary encoder elements installed of course.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

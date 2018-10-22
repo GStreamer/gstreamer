@@ -26,16 +26,16 @@
 
 /**
  * SECTION:element-agingtv
+ * @title: agingtv
  *
  * AgingTV ages a video stream in realtime, changes the colors and adds
  * scratches and dust.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! agingtv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of agingtv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

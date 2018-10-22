@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-splitmuxsrc
+ * @title: splitmuxsrc
  * @short_description: Split Demuxer bin that recombines files created by
  * the splitmuxsink element.
  *
@@ -31,15 +32,14 @@
  * streams in each file part at the demuxed elementary level, rather than
  * as a single larger bytestream.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 splitmuxsrc location=video*.mov ! decodebin ! xvimagesink
  * ]| Demux each file part and output the video stream as one continuous stream
  * |[
  * gst-launch-1.0 playbin uri="splitmux://path/to/foo.mp4.*"
  * ]| Play back a set of files created by splitmuxsink
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

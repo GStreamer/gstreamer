@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-oss4src
+ * @title: oss4src
  *
  * This element lets you record sound using the Open Sound System (OSS)
  * version 4.
- * 
- * <refsect2>
- * <title>Example pipelines</title>
+ *
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v oss4src ! queue ! audioconvert ! vorbisenc ! oggmux ! filesink location=mymusic.ogg
  * ]| will record sound from your sound card using OSS4 and encode it to an
  * Ogg/Vorbis file (this will only work if your mixer settings are right
  * and the right inputs areenabled etc.)
- * </refsect2>
+ *
  */
 
 /* FIXME: make sure we're not doing ioctls from the app thread (e.g. via the

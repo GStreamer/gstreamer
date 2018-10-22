@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-rtpamrdepay
+ * @title: rtpamrdepay
  * @see_also: rtpamrpay
  *
  * Extract AMR audio from RTP packets according to RFC 3267.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc3267.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1, payload=(int)96' ! rtpamrdepay ! amrnbdec ! pulsesink
  * ]| This example pipeline will depayload and decode an RTP AMR stream. Refer to
  * the rtpamrpay example to create the RTP stream.
- * </refsect2>
+ *
  */
 
 /*

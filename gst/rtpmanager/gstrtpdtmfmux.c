@@ -27,6 +27,7 @@
 
 /**
  * SECTION:element-rtpdtmfmux
+ * @title: rtpdtmfmux
  * @see_also: rtpdtmfsrc, dtmfsrc, rtpmux
  *
  * The RTP "DTMF" Muxer muxes multiple RTP streams into a valid RTP

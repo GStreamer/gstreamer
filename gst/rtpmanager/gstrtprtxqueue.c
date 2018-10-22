@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-rtprtxqueue
+ * @title: rtprtxqueue
  *
  * rtprtxqueue maintains a queue of transmitted RTP packets, up to a
  * configurable limit (see #GstRTPRtxQueue::max-size-time,
@@ -45,13 +46,16 @@
  * See also #GstRtpRtxSend, #GstRtpRtxReceive
  *
  * # Example pipelines
+ *
  * |[
  * gst-launch-1.0 rtpbin name=b rtp-profile=avpf \
  *    audiotestsrc is-live=true ! opusenc ! rtpopuspay pt=96 ! rtprtxqueue ! b.send_rtp_sink_0 \
  *    b.send_rtp_src_0 ! identity drop-probability=0.01 ! udpsink host="127.0.0.1" port=5000 \
  *    udpsrc port=5001 ! b.recv_rtcp_sink_0 \
  *    b.send_rtcp_src_0 ! udpsink host="127.0.0.1" port=5002 sync=false async=false
- * ]| Sender pipeline
+ * ]|
+ * Sender pipeline
+ *
  * |[
  * gst-launch-1.0 rtpbin name=b rtp-profile=avpf do-retransmission=true \
  *    udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)48000,encoding-name=(string)OPUS,payload=(int)96" ! \
@@ -59,7 +63,8 @@
  *    b. ! rtpopusdepay ! opusdec ! audioconvert ! audioresample ! autoaudiosink \
  *    udpsrc port=5002 ! b.recv_rtcp_sink_0 \
  *    b.send_rtcp_src_0 ! udpsink host="127.0.0.1" port=5001 sync=false async=false
- * ]| Receiver pipeline
+ * ]|
+ * Receiver pipeline
  */
 
 #ifdef HAVE_CONFIG_H

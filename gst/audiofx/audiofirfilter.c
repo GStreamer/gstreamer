@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-audiofirfilter
+ * @title: audiofirfilter
  *
  * audiofirfilter implements a generic audio <ulink url="http://en.wikipedia.org/wiki/Finite_impulse_response">FIR filter</ulink>. Before usage the
  * "kernel" property has to be set to the filter kernel that should be
@@ -37,12 +38,11 @@
  * "rate-changed" signal can be used. This should be done for most
  * FIR filters as they're depending on the sampling rate.
  *
- * <refsect2>
- * <title>Example application</title>
- * <informalexample><programlisting language="C">
+ * ## Example application
+ * <programlisting language="C">
  * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/audiofx/firfilter-example.c" />
- * </programlisting></informalexample>
- * </refsect2>
+ * ]|
+ *
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray

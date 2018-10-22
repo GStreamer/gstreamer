@@ -26,15 +26,15 @@
  */
 /**
  * SECTION:element-videoflip
+ * @title: videoflip
  *
  * Flips and rotates video.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! videoflip method=clockwise ! videoconvert ! ximagesink
  * ]| This pipeline flips the test image 90 degrees clockwise.
- * </refsect2>
+ *
  */
 
 

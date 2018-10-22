@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-ximagesrc
+ * @title: ximagesrc
  *
  * This element captures your X Display and creates raw RGB video.  It uses
  * the XDamage extension if available to only capture areas of the screen that
@@ -27,12 +28,11 @@
  * available to also capture your mouse pointer.  By default it will fixate to
  * 25 frames per second.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 ximagesrc ! video/x-raw,framerate=5/1 ! videoconvert ! theoraenc ! oggmux ! filesink location=desktop.ogg
  * ]| Encodes your X display to an Ogg theora video at 5 frames per second.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

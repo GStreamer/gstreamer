@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-rtph261pay
+ * @title: rtph261pay
  * @see_also: rtph261depay
  *
  * Payload encoded H.261 video frames into RTP packets according to RFC 4587.
@@ -35,13 +36,12 @@
  * encoder does not produce a continuous bit-stream but the decoder requires
  * it.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc ! avenc_h261 ! rtph261pay ! udpsink
  * ]| This will encode a test video and payload it. Refer to the rtph261depay
  * example to depayload and play the RTP stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

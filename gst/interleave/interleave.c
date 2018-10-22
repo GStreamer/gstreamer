@@ -30,22 +30,22 @@
 
 /**
  * SECTION:element-interleave
+ * @title: interleave
  * @see_also: deinterleave
  *
  * Merges separate mono inputs into one interleaved stream.
- * 
+ *
  * This element handles all raw floating point sample formats and all signed integer sample formats. The first
  * caps on one of the sinkpads will set the caps of the output so usually an audioconvert element should be
  * placed before every sinkpad of interleave.
- * 
+ *
  * It's possible to change the number of channels while the pipeline is running by adding or removing
  * some of the request pads but this will change the caps of the output buffers. Changing the input
  * caps is _not_ supported yet.
- * 
+ *
  * The channel number of every sinkpad in the out can be retrieved from the "channel" property of the pad.
- * 
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src_0 ! queue ! audioconvert ! i.sink_1    d.src_1 ! queue ! audioconvert ! i.sink_0
  * ]| Decodes and deinterleaves a Stereo MP3 file into separate channels and
@@ -57,7 +57,7 @@
  * channel-masks defined in the sink pads ensures a sane mapping of the mono
  * streams into the stereo stream. NOTE: the proper way to map channels in
  * code is by using the channel-positions property of the interleave element.
- * </refsect2>
+ *
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
@@ -376,7 +376,7 @@ gst_interleave_class_init (GstInterleaveClass * klass)
 
   /**
    * GstInterleave:channel-positions
-   * 
+   *
    * Channel positions: This property controls the channel positions
    * that are used on the src caps. The number of elements should be
    * the same as the number of sink pads and the array should contain
@@ -400,7 +400,7 @@ gst_interleave_class_init (GstInterleaveClass * klass)
 
   /**
    * GstInterleave:channel-positions-from-input
-   * 
+   *
    * Channel positions from input: If this property is set to %TRUE the channel
    * positions will be taken from the input caps if valid channel positions for
    * the output can be constructed from them. If this is set to %TRUE setting the

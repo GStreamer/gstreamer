@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-scaletempo
+ * @title: scaletempo
  *
  * Scale tempo while maintaining pitch
  * (WSOLA-like technique with cross correlation)
@@ -27,9 +28,8 @@
  *
  * Use Sceletempo to apply playback rates without the chipmunk effect.
  *
- * <refsect2>
- * <title>Example pipelines</title>
- * <para>
+ * ## Example pipelines
+ *
  * |[
  * filesrc location=media.ext ! decodebin name=d \
  *     d. ! queue ! audioconvert ! audioresample ! scaletempo ! audioconvert ! audioresample ! autoaudiosink \
@@ -54,8 +54,7 @@
  * correlation (roughly a dot-product).  Scaletempo consumes most of its CPU
  * cycles here. One can use the #GstScaletempo:search propery to tune how far
  * the algoritm looks.
- * </para>
- * </refsect2>
+ *
  */
 
 /*

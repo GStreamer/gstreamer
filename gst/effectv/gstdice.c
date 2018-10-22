@@ -28,6 +28,7 @@
 
 /**
  * SECTION:element-dicetv
+ * @title: dicetv
  *
  * DiceTV 'dices' the screen up into many small squares, each defaulting
  * to a size of 16 pixels by 16 pixels.. Each square is rotated randomly
@@ -36,12 +37,11 @@
  * counterclockwise). The direction of each square normally remains
  * consistent between each frame.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! dicetv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of dicetv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

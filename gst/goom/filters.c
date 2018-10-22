@@ -150,14 +150,14 @@ typedef struct _ZOOM_FILTER_FX_WRAPPER_DATA
   int mustInitBuffers;
   int interlace_start;
 
-    /** modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
+    /* modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
   int buffratio;
   int *firedec;
 
-    /** modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
+    /* modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
   int precalCoef[BUFFPOINTNB][BUFFPOINTNB];
 
-    /** calculatePXandPY statics */
+    /* calculatePXandPY statics */
   int wave;
   int wavesp;
 
@@ -509,7 +509,7 @@ c_zoom (Pixel * expix1, Pixel * expix2, unsigned int prevX, unsigned int prevY,
   }
 }
 
-/** generate the water fx horizontal direction buffer */
+/* generate the water fx horizontal direction buffer */
 static void
 generateTheWaterFXHorizontalDirectionBuffer (PluginInfo * goomInfo,
     ZoomFilterFXWrapperData * data)
@@ -558,13 +558,12 @@ generateTheWaterFXHorizontalDirectionBuffer (PluginInfo * goomInfo,
 
 
 
-/**
-* Main work for the dynamic displacement map.
+/*
+ * Main work for the dynamic displacement map.
  * 
  * Reads data from pix1, write to pix2.
  *
  * Useful datas for this FX are stored in ZoomFilterData.
- * 
  * If you think that this is a strange function name, let me say that a long time ago,
  *  there has been a slow version and a gray-level only one. Then came these function,
  *  fast and workin in RGB colorspace ! nice but it only was applying a zoom to the image.
@@ -583,7 +582,7 @@ zoomFilterFastRGB (PluginInfo * goomInfo, Pixel * pix1, Pixel * pix2,
   if (!BVAL (data->enabled_bp))
     return;
 
-    /** changement de taille **/
+    /* changement de taille */
   if ((data->prevX != resx) || (data->prevY != resy)) {
     data->prevX = resx;
     data->prevY = resy;
@@ -609,7 +608,7 @@ zoomFilterFastRGB (PluginInfo * goomInfo, Pixel * pix1, Pixel * pix2,
   if (data->interlace_start != -2)
     zf = NULL;
 
-    /** changement de config **/
+    /* changement de config */
   if (zf) {
     data->reverse = zf->reverse;
     data->general_speed = (float) (zf->vitesse - 128) / 128.0f;
@@ -786,7 +785,7 @@ zoomFilterVisualFXWrapper_init (struct _VISUAL_FX *_this, PluginInfo * info)
   data->hPlaneEffect = 0;
   data->noisify = 2;
 
-    /** modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
+    /* modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
   data->buffratio = 0;
   data->firedec = 0;
 
@@ -800,7 +799,7 @@ zoomFilterVisualFXWrapper_init (struct _VISUAL_FX *_this, PluginInfo * info)
   _this->params = &data->params;
   _this->fx_data = (void *) data;
 
-    /** modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
+    /* modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
   generatePrecalCoef (data->precalCoef);
 }
 

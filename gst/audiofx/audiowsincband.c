@@ -32,6 +32,7 @@
 
 /**
  * SECTION:element-audiowsincband
+ * @title: audiowsincband
  *
  * Attenuates all frequencies outside (bandpass) or inside (bandreject) of a frequency
  * band. The length parameter controls the rolloff, the window parameter
@@ -42,14 +43,13 @@
  * a much better rolloff when using a larger kernel size and almost linear phase. The only
  * disadvantage is the much slower execution time with larger kernels.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc freq=1500 ! audioconvert ! audiowsincband mode=band-pass lower-frequency=3000 upper-frequency=10000 length=501 window=blackman ! audioconvert ! alsasink
  * gst-launch-1.0 filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsincband mode=band-reject lower-frequency=59 upper-frequency=61 length=10001 window=hamming ! audioconvert ! alsasink
  * gst-launch-1.0 audiotestsrc wave=white-noise ! audioconvert ! audiowsincband mode=band-pass lower-frequency=1000 upper-frequency=2000 length=31 ! audioconvert ! alsasink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

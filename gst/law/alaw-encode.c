@@ -18,6 +18,7 @@
  */
 /**
  * SECTION:element-alawenc
+ * @title: alawenc
  *
  * This element encode alaw audio. Alaw coding is also known as G.711.
  */

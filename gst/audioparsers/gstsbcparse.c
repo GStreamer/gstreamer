@@ -23,6 +23,7 @@
 
 /**
  * SECTION:element-sbcparse
+ * @title: sbcparse
  * @see_also: sbcdec, sbcenc
  *
  * The sbcparse element will parse a bluetooth SBC audio stream into

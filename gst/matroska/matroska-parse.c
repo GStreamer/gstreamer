@@ -33,15 +33,15 @@
 
 /**
  * SECTION:element-matroskaparse
+ * @title: matroskaparse
  *
  * matroskaparse parsees a Matroska file into the different contained streams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=/path/to/mkv ! matroskaparse ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
  * ]| This pipeline parsees a Matroska file and outputs the contained Vorbis audio.
- * </refsect2>
+ *
  */
 
 

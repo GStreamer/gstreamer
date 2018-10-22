@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-autovideosrc
+ * @title: autovideosrc
  * @see_also: autoaudiosrc, v4l2src, v4lsrc
  *
  * autovideosrc is a video src that automatically detects an appropriate
@@ -28,12 +29,11 @@
  * that have <quote>Source</quote> and <quote>Video</quote> in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m autovideosrc ! xvimagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

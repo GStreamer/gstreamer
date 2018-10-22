@@ -23,13 +23,13 @@
 
 /**
  * SECTION:element-pulsesink
+ * @title: pulsesink
  * @see_also: pulsesrc
  *
  * This element outputs audio to a
  * <ulink href="http://www.pulseaudio.org">PulseAudio sound server</ulink>.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
  * ]| Play an Ogg/Vorbis file.
@@ -40,7 +40,7 @@
  * gst-launch-1.0 -v audiotestsrc ! pulsesink stream-properties="props,media.title=test"
  * ]| Play a sine wave and set a stream property. The property can be checked
  * with "pactl list".
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,12 +19,13 @@
 
 /**
  * SECTION:element-cairooverlay
+ * @title: cairooverlay
  *
  * cairooverlay renders an overlay using a application provided render function.
  *
  * The full example can be found in tests/examples/cairo/cairo_overlay.c
- * <refsect2>
- * <title>Example code</title>
+ *
+ * ## Example code
  * |[
  *
  * #include &lt;gst/gst.h&gt;
@@ -37,7 +38,7 @@
  *   int width;
  *   int height;
  * } CairoOverlayState;
- * 
+ *
  * ...
  *
  * static void
@@ -50,7 +51,7 @@
  * }
  *
  * static void
- * draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp, 
+ * draw_overlay (GstElement * overlay, cairo_t * cr, guint64 timestamp,
  *   guint64 duration, gpointer user_data)
  * {
  *   CairoOverlayState *s = (CairoOverlayState *)user_data;
@@ -66,7 +67,7 @@
  *   cairo_move_to (cr, 0, 0);
  *   cairo_curve_to (cr, 0,-30, -50,-30, -50,0);
  *   cairo_curve_to (cr, -50,30, 0,35, 0,60 );
- *   cairo_curve_to (cr, 0,35, 50,30, 50,0 ); *  
+ *   cairo_curve_to (cr, 0,35, 50,30, 50,0 ); *
  *   cairo_curve_to (cr, 50,-30, 0,-30, 0,0 );
  *   cairo_set_source_rgba (cr, 0.9, 0.0, 0.1, 0.7);
  *   cairo_fill (cr);
@@ -78,12 +79,12 @@
  *
  * g_signal_connect (cairo_overlay, &quot;draw&quot;, G_CALLBACK (draw_overlay),
  *   overlay_state);
- * g_signal_connect (cairo_overlay, &quot;caps-changed&quot;, 
+ * g_signal_connect (cairo_overlay, &quot;caps-changed&quot;,
  *   G_CALLBACK (prepare_overlay), overlay_state);
  * ...
  *
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -538,7 +539,7 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
    * @cr: Cairo context to draw to.
    * @timestamp: Timestamp (see #GstClockTime) of the current buffer.
    * @duration: Duration (see #GstClockTime) of the current buffer.
-   * 
+   *
    * This signal is emitted when the overlay should be drawn.
    */
   gst_cairo_overlay_signals[SIGNAL_DRAW] =
@@ -555,7 +556,7 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
    * GstCairoOverlay::caps-changed:
    * @overlay: Overlay element emitting the signal.
    * @caps: The #GstCaps of the element.
-   * 
+   *
    * This signal is emitted when the caps of the element has changed.
    */
   gst_cairo_overlay_signals[SIGNAL_CAPS_CHANGED] =

@@ -725,7 +725,7 @@ ifs_update (PluginInfo * goomInfo, Pixel * data, Pixel * back, int increment,
       | (col[ROUGE] << (ROUGE * 8));
 }
 
-/** VISUAL_FX WRAPPER FOR IFS */
+/* VISUAL_FX WRAPPER FOR IFS */
 
 static void
 ifs_vfx_apply (VisualFX * _this, Pixel * src, Pixel * dest,

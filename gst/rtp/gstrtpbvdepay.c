@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-rtpbvdepay
+ * @title: rtpbvdepay
  * @see_also: rtpbvpay
  *
  * Extract BroadcomVoice audio from RTP packets according to RFC 4298.

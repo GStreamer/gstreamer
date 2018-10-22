@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-apedemux
+ * @title: apedemux
  *
  * apedemux accepts data streams with APE tags at the start or at the end
  * (or both). The mime type of the data between the tag blocks is detected
@@ -33,14 +34,13 @@
  * wavparse or musepackdec, can operate on files containing APE tag
  * information.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -t filesrc location=file.mpc ! apedemux ! fakesink
  * ]| This pipeline should read any available APE tag information and output it.
  * The contents of the file inside the APE tag regions should be detected, and
  * the appropriate mime type set on buffers produced from apedemux.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

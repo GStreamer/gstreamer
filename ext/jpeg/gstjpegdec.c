@@ -22,15 +22,15 @@
 
 /**
  * SECTION:element-jpegdec
+ * @title: jpegdec
  *
  * Decodes jpeg images.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=mjpeg.avi ! avidemux !  queue ! jpegdec ! videoconvert ! videoscale ! autovideosink
  * ]| The above pipeline decode the mjpeg stream and renders it to the screen.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

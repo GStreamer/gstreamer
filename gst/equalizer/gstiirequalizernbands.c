@@ -20,31 +20,30 @@
 
 /**
  * SECTION:element-equalizer-nbands
+ * @title: equalizer-nbands
  *
  * The n-band equalizer element is a fully parametric equalizer. It allows to
  * select between 1 and 64 bands and has properties on each band to change
  * the center frequency, band width and gain.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-nbands num-bands=15 band5::gain=6.0 ! alsasink
  * ]| This make the equalizer use 15 bands and raises the volume of the 5th band by 6 db.
- * </refsect2>
- * <refsect2>
- * <title>Example code</title>
+ *
+ * ## Example code
  * |[
  * #include &lt;gst/gst.h&gt;
- * 
+ *
  * ...
  * typedef struct {
  *   gfloat freq;
  *   gfloat width;
  *   gfloat gain;
  * } GstEqualizerBandState;
- * 
+ *
  * ...
- * 
+ *
  *   GstElement *equalizer;
  *   GObject *band;
  *   gint i;
@@ -55,14 +54,14 @@
  *     {6000.0, 1000.0,   6.0},
  *     {3000.0,  120.0,   2.0}
  *   };
- * 
+ *
  * ...
- * 
+ *
  *   equalizer = gst_element_factory_make ("equalizer-nbands", "equalizer");
  *   g_object_set (G_OBJECT (equalizer), "num-bands", 5, NULL);
- * 
+ *
  * ...
- * 
+ *
  *   for (i = 0; i &lt; 5; i++) {
  *     band = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
  *     g_object_set (G_OBJECT (band), "freq", state[i].freq,
@@ -70,10 +69,10 @@
  * 	"gain", state[i].gain);
  *     g_object_unref (G_OBJECT (band));
  *   }
- * 
+ *
  * ...
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

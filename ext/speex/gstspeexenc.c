@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-speexenc
+ * @title: speexenc
  * @see_also: speexdec, oggmux
  *
  * This element encodes audio as a Speex stream.
@@ -26,12 +27,11 @@
  * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 audiotestsrc num-buffers=100 ! speexenc ! oggmux ! filesink location=beep.ogg
  * ]| Encode an Ogg/Speex file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-pushfilesrc
+ * @title: pushfilesrc
  * @see_also: filesrc
  *
  * This element is only useful for debugging purposes. It implements an URI
@@ -28,13 +29,12 @@
  * connection with the playbin element (which creates a source based on the
  * URI passed).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m playbin uri=pushfile:///home/you/some/file.ogg
  * ]| This plays back the given file using playbin, with the demuxer operating
  * push-based.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

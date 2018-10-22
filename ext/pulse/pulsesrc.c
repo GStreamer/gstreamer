@@ -21,17 +21,17 @@
 
 /**
  * SECTION:element-pulsesrc
+ * @title: pulsesrc
  * @see_also: pulsesink
  *
  * This element captures audio from a
  * <ulink href="http://www.pulseaudio.org">PulseAudio sound server</ulink>.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v pulsesrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
  * ]| Record from a sound card using pulseaudio and encode to Ogg/Vorbis.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

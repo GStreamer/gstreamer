@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-audioiirfilter
+ * @title: audioiirfilter
  *
  * audioiirfilter implements a generic audio <ulink url="http://en.wikipedia.org/wiki/Infinite_impulse_response">IIR filter</ulink>. Before usage the
  * "a" and "b" properties have to be set to the filter coefficients that
@@ -33,12 +34,11 @@
  * "rate-changed" signal can be used. This should be done for most
  * IIR filters as they're depending on the sampling rate.
  *
- * <refsect2>
- * <title>Example application</title>
- * <informalexample><programlisting language="C">
+ * ## Example application
+ * <programlisting language="C">
  * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/audiofx/iirfilter-example.c" />
- * </programlisting></informalexample>
- * </refsect2>
+ * ]|
+ *
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray

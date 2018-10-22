@@ -18,12 +18,12 @@
  */
 /**
  * SECTION:element-cacasink
+ * @title: cacasink
  * @see_also: #GstAASink
  *
  * Displays video as color ascii art.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * CACA_GEOMETRY=160x60 CACA_FONT=5x7 gst-launch-1.0 filesrc location=test.avi ! decodebin ! videoconvert ! cacasink
  * ]| This pipeline renders a video to ascii art into a separate window using a
@@ -31,7 +31,7 @@
  * |[
  * CACA_DRIVER=ncurses gst-launch-1.0 filesrc location=test.avi ! decodebin ! videoconvert ! cacasink
  * ]| This pipeline renders a video to ascii art into the current terminal.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

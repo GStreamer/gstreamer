@@ -30,16 +30,16 @@
 
 /**
  * SECTION:element-rippletv
+ * @title: rippletv
  *
  * RippleTV does ripple mark effect on the video input. The ripple is caused
  * by motion or random rain drops.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! rippletv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of rippletv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

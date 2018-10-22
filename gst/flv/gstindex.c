@@ -22,6 +22,7 @@
 
 /**
  * SECTION:gstindex
+ * @title: GstIndex
  * @short_description: Generate indexes on objects
  * @see_also: #GstIndexFactory
  *
@@ -702,11 +703,9 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
  * to a string. That string will be used to register or look up an id
  * in the index.
  *
- * <note>
- * The caller must not hold @writer's #GST_OBJECT_LOCK, as the default
- * resolver may call functions that take the object lock as well, and
- * the lock is not recursive.
- * </note>
+ * > The caller must not hold @writer's #GST_OBJECT_LOCK, as the default
+ * > resolver may call functions that take the object lock as well, and
+ * > the lock is not recursive.
  *
  * Returns: TRUE if the writer would be mapped to an id.
  */

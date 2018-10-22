@@ -27,6 +27,7 @@
 
 /**
  * SECTION:element-dtmfsrc
+ * @title: dtmfsrc
  * @see_also: rtpdtmsrc, rtpdtmfmuxx
  *
  * The DTMFSrc element generates DTMF (ITU-T Q.23 Specification) tone packets on request
@@ -99,7 +100,7 @@
  * DTMFSrc element inside the pipeline) about the start of a DTMF named
  * event '1' of volume -25 dBm0:
  *
- * <programlisting>
+ * |[
  * structure = gst_structure_new ("dtmf-event",
  *                    "type", G_TYPE_INT, 1,
  *                    "number", G_TYPE_INT, 1,
@@ -108,7 +109,7 @@
  *
  * event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, structure);
  * gst_element_send_event (pipeline, event);
- * </programlisting>
+ * ]|
  *
  * When a DTMF tone actually starts or stop, a "dtmf-event-processed"
  * element #GstMessage with the same fields as the "dtmf-event"

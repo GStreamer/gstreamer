@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-splitmuxsink
+ * @title: splitmuxsink
  * @short_description: Muxer wrapper for splitting output stream by size or time
  *
  * This element wraps a muxer and a sink, and starts a new file when the mux
@@ -45,8 +46,7 @@
  * muxer-factory and sink-factory properties are used to construct the new
  * objects, together with muxer-properties and sink-properties.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -e v4l2src num-buffers=500 ! video/x-raw,width=320,height=240 ! videoconvert ! queue ! timeoverlay ! x264enc key-int-max=10 ! h264parse ! splitmuxsink location=video%02d.mov max-size-time=10000000000 max-size-bytes=1000000
  * ]|
@@ -60,7 +60,6 @@
  * Records a video stream captured from a v4l2 device and muxer it into
  * streamable Matroska files, splitting as needed to limit size/duration to 10
  * seconds. Each file will finalize asynchronously.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

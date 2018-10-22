@@ -20,6 +20,7 @@
 
 /**
  * SECTION:element-auparse
+ * @title: auparse
  *
  * Parses .au files mostly originating from sun os based computers.
  */

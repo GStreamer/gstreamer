@@ -19,11 +19,11 @@
 
 /**
  * SECTION:element-webmmux
+ * @title: webmmux
  *
  * webmmux muxes VP8 video and Vorbis audio streams into a WebM file.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 webmmux name=mux ! filesink location=newfile.webm         \
  *   uridecodebin uri=file:///path/to/somefile.ogv name=demux                \
@@ -35,7 +35,7 @@
  *   videotestsrc num-buffers=250 ! video/x-raw,framerate=25/1 ! videoconvert ! vp8enc ! queue ! mux.video_0 \
  *   audiotestsrc samplesperbuffer=44100 num-buffers=10 ! audio/x-raw,rate=44100 ! vorbisenc ! queue ! mux.audio_0
  * ]| This pipeline muxes a test video and a sine wave into a WebM file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

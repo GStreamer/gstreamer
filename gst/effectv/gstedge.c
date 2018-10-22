@@ -26,16 +26,16 @@
 
 /**
  * SECTION:element-edgetv
+ * @title: edgetv
  *
  * EdgeTV detects edges and display it in good old low resolution
  * computer way.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! edgetv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of edgetv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-rganalysis
+ * @title: rganalysis
  * @see_also: #GstRgVolume
  *
  * This element analyzes raw audio sample data in accordance with the proposed
@@ -33,7 +34,7 @@
  * posted on the message bus with a tag message.  The EOS event is forwarded as
  * normal afterwards.  Result tag lists at least contain the tags
  * #GST_TAG_TRACK_GAIN, #GST_TAG_TRACK_PEAK and #GST_TAG_REFERENCE_LEVEL.
- * 
+ *
  * Because the generated metadata tags become available at the end of streams,
  * downstream muxer and encoder elements are normally unable to save them in
  * their output since they generally save metadata in the file header.
@@ -42,9 +43,8 @@
  * needed for album processing (see #GstRgAnalysis:num-tracks property) since
  * the album gain and peak values need to be associated with all tracks of an
  * album, not just the last one.
- * 
- * <refsect2>
- * <title>Example launch lines</title>
+ *
+ * ## Example launch lines
  * |[
  * gst-launch-1.0 -t audiotestsrc wave=sine num-buffers=512 ! rganalysis ! fakesink
  * ]| Analyze a simple test waveform
@@ -56,21 +56,18 @@
  * gst-launch-1.0 -t gnomevfssrc location=http://replaygain.hydrogenaudio.org/ref_pink.wav \
  *     ! wavparse ! rganalysis ! fakesink
  * ]| Analyze the pink noise reference file
- * <para>
+ *
  * The above launch line yields a result gain of +6 dB (instead of the expected
  * +0 dB).  This is not in error, refer to the #GstRgAnalysis:reference-level
  * property documentation for more information.
- * </para>
- * </refsect2>
- * <refsect2>
- * <title>Acknowledgements</title>
- * <para>
+ *
+ * ## Acknowledgements
+ *
  * This element is based on code used in the <ulink
  * url="http://sjeng.org/vorbisgain.html">vorbisgain</ulink> program and many
  * others.  The relevant parts are copyrighted by David Robinson, Glen Sawyer
  * and Frank Klemm.
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -169,7 +166,7 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
    * GstRgAnalysis:num-tracks:
    *
    * Number of remaining album tracks.
-   * 
+   *
    * Analyzing several streams sequentially and assigning them a common result
    * gain is known as "album processing".  If this gain is used during playback
    * (by switching to "album mode"), all tracks of an album receive the same

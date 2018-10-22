@@ -26,17 +26,17 @@
 
 /**
  * SECTION:element-optv
+ * @title: optv
  *
  * Traditional black-white optical animation is now resurrected as a
  * real-time video effect. Input images are binarized and combined with
  * various optical pattern.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! optv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of optv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

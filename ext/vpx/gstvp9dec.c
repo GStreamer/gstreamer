@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:element-vp9dec
+ * @title: vp9dec
  * @see_also: vp9enc, matroskademux
  *
  * This element decodes VP9 streams into raw video.
@@ -29,12 +30,11 @@
  * </ulink>. It's the successor of On2 VP3, which was the base of the
  * Theora video codec.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v filesrc location=videotestsrc.webm ! matroskademux ! vp9dec ! videoconvert ! videoscale ! autovideosink
  * ]| This example pipeline will decode a WebM stream and decodes the VP9 video.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

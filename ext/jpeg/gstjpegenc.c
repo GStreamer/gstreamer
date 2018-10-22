@@ -20,16 +20,16 @@
  */
 /**
  * SECTION:element-jpegenc
+ * @title: jpegenc
  *
  * Encodes jpeg images.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 videotestsrc num-buffers=50 ! video/x-raw, framerate='(fraction)'5/1 ! jpegenc ! avimux ! filesink location=mjpeg.avi
  * ]| a pipeline to mux 5 JPEG frames per second into a 10 sec. long motion jpeg
  * avi.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

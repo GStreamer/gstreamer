@@ -20,17 +20,17 @@
 
 /**
  * SECTION:element-imagefreeze
+ * @title: imagefreeze
  *
  * The imagefreeze element generates a still frame video stream from
  * the input. It duplicates the first frame with the framerate requested
  * by downstream, allows seeking and answers queries.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v filesrc location=some.png ! decodebin ! imagefreeze ! autovideosink
  * ]| This pipeline shows a still frame stream of a PNG file.
- * </refsect2>
+ *
  */
 
 /* This is based on the imagefreeze element from PiTiVi:

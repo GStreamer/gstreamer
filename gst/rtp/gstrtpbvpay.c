@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-rtpbvpay
+ * @title: rtpbvpay
  * @see_also: rtpbvdepay
  *
  * Payload BroadcomVoice audio into RTP packets according to RFC 4298.

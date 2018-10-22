@@ -19,16 +19,17 @@
 
 /**
  * SECTION:element-rtpstreamdepay
+ * @title: rtpstreamdepay
  *
  * Implements stream depayloading of RTP and RTCP packets for connection-oriented
  * transport protocols according to RFC4571.
- * <refsect2>
- * <title>Example launch line</title>
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! "audio/x-raw,rate=48000" ! vorbisenc ! rtpvorbispay config-interval=1 ! rtpstreampay ! tcpserversink port=5678
  * gst-launch-1.0 tcpclientsrc port=5678 host=127.0.0.1 do-timestamp=true ! "application/x-rtp-stream,media=audio,clock-rate=48000,encoding-name=VORBIS" ! rtpstreamdepay ! rtpvorbisdepay ! decodebin ! audioconvert ! audioresample ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

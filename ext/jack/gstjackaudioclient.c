@@ -494,7 +494,7 @@ gst_jack_audio_connection_remove_client (GstJackAudioConnection * conn,
  * Get the jack client connection for @id and @server. Connections to the same
  * @id and @server will receive the same physical Jack client connection and
  * will therefore be scheduled in the same process callback.
- * 
+ *
  * Returns: a #GstJackAudioClient.
  */
 GstJackAudioClient *

@@ -20,19 +20,17 @@
 
 /**
  * SECTION:element-avisubtitle
+ * @title: avisubtitle
  *
- * <refsect2>
- * <para>
  * Parses the subtitle stream from an avi file.
- * </para>
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ *
+ * ## Example launch line
+ *
+ * |[
  * gst-launch-1.0 filesrc location=subtitle.avi ! avidemux name=demux ! queue ! avisubtitle ! subparse ! textoverlay name=overlay ! videoconvert ! autovideosink demux. ! queue ! decodebin ! overlay.
- * </programlisting>
+ * ]|
  * This plays an avi file with a video and subtitle stream.
- * </para>
- * </refsect2>
+ *
  */
 
 /* example of a subtitle chunk in an avi file

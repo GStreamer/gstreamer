@@ -21,18 +21,18 @@
  */
 /**
  * SECTION:element-mpegaudioparse
+ * @title: mpegaudioparse
  * @short_description: MPEG audio parser
  * @see_also: #GstAmrParse, #GstAACParse
  *
  * Parses and frames mpeg1 audio streams. Provides seeking.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.mp3 ! mpegaudioparse ! mpg123audiodec
  *  ! audioconvert ! audioresample ! autoaudiosink
  * ]|
- * </refsect2>
+ *
  */
 
 /* FIXME: we should make the base class (GstBaseParse) aware of the

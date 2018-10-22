@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:element-pngenc
+ * @title: pngenc
  *
  * Encodes png images.
  */

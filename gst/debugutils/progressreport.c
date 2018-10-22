@@ -22,6 +22,7 @@
 
 /**
  * SECTION:element-progressreport
+ * @title: progressreport
  *
  * The progressreport element can be put into a pipeline to report progress,
  * which is done by doing upstream duration and position queries in regular
@@ -53,15 +54,14 @@
  * is in reference to an internal point of a pipeline and not the pipeline as
  * a whole).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -m filesrc location=foo.ogg ! decodebin ! progressreport update-freq=1 ! audioconvert ! audioresample ! autoaudiosink
  * ]| This shows a progress query where a duration is available.
  * |[
  * gst-launch-1.0 -m audiotestsrc ! progressreport update-freq=1 ! audioconvert ! autoaudiosink
  * ]| This shows a progress query where no duration is available.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

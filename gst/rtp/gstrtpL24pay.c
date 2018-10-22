@@ -19,18 +19,18 @@
 
 /**
  * SECTION:element-rtpL24pay
+ * @title: rtpL24pay
  * @see_also: rtpL24depay
  *
  * Payload raw 24-bit audio into RTP packets according to RFC 3190, section 4.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc3190.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v audiotestsrc ! audioconvert ! rtpL24pay ! udpsink
  * ]| This example pipeline will payload raw audio. Refer to
  * the rtpL24depay example to depayload and play the RTP stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

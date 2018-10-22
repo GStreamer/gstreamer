@@ -26,10 +26,11 @@
 
 /**
  * SECTION:element-radioactv
+ * @title: radioactv
  *
  * RadioacTV does *NOT* detect a radioactivity. It detects a difference
  * from previous frame and blurs it.
- * 
+ *
  * RadioacTV has 4 mode, normal, strobe1, strobe2 and trigger.
  * In trigger mode, effect appears only when the trigger property is %TRUE.
  *
@@ -37,12 +38,11 @@
  * current frame and previous frame dropped, while strobe2 mode uses the difference from
  * previous frame displayed. The effect of strobe2 is stronger than strobe1.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! radioactv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of radioactv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

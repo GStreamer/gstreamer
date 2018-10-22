@@ -42,17 +42,17 @@
 
 /**
  * SECTION:element-revtv
+ * @title: revtv
  *
  * RevTV acts like a video waveform monitor for each line of video
  * processed. This creates a pseudo 3D effect based on the brightness
  * of the video along each line.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! revtv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of revtv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

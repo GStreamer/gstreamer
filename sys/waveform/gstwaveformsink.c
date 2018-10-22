@@ -21,6 +21,7 @@
 
 /**
  * SECTION:element-waveformsink
+ * @title: waveformsink
  *
  * This element lets you output sound using the Windows WaveForm API.
  *
@@ -29,8 +30,7 @@
  * your pipeline works under all circumstances (those conversion elements will
  * act in passthrough-mode if no conversion is necessary).
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 -v audiotestsrc ! audioconvert ! volume volume=0.1 ! waveformsink
  * ]| will output a sine wave (continuous beep sound) to your sound card (with
@@ -38,7 +38,7 @@
  * |[
  * gst-launch-1.0 -v filesrc location=music.ogg ! decodebin ! audioconvert ! audioresample ! waveformsink
  * ]| will play an Ogg/Vorbis audio file and output it.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

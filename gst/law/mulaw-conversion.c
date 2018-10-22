@@ -59,7 +59,7 @@ mulaw_encode (gint16 * in, guint8 * out, gint numsamples)
 
   for (i = 0; i < numsamples; i++) {
     sample = in[i];
-      /** get the sample into sign-magnitude **/
+      /* get the sample into sign-magnitude */
     sign = (sample >> 8) & 0x80;        /* set aside the sign */
     if (sign != 0) {
       sample = -sample;         /* get magnitude */
@@ -69,7 +69,7 @@ mulaw_encode (gint16 * in, guint8 * out, gint numsamples)
     if (((guint16) sample) > CLIP)
       sample = CLIP;            /* clip the magnitude */
 
-      /** convert from 16 bit linear to ulaw **/
+      /* convert from 16 bit linear to ulaw */
     sample = sample + BIAS;
     exponent = exp_lut[(sample >> 7) & 0xFF];
     mantissa = (sample >> (exponent + 3)) & 0x0F;

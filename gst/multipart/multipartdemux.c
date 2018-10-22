@@ -22,10 +22,11 @@
 
 /**
  * SECTION:element-multipartdemux
+ * @title: multipartdemux
  * @see_also: #GstMultipartMux
  *
- * MultipartDemux uses the Content-type field of incoming buffers to demux and 
- * push data to dynamic source pads. Most of the time multipart streams are 
+ * MultipartDemux uses the Content-type field of incoming buffers to demux and
+ * push data to dynamic source pads. Most of the time multipart streams are
  * sequential JPEG frames generated from a live source such as a network source
  * or a camera.
  *
@@ -37,13 +38,12 @@
  * be configured specifically with the #GstMultipartDemux:boundary property
  * otherwise it will be autodetected.
  *
- * <refsect2>
- * <title>Sample pipelines</title>
+ * ## Sample pipelines
  * |[
  * gst-launch-1.0 filesrc location=/tmp/test.multipart ! multipartdemux ! image/jpeg,framerate=\(fraction\)5/1 ! jpegparse ! jpegdec ! videoconvert ! autovideosink
  * ]| a simple pipeline to demux a multipart file muxed with #GstMultipartMux
  * containing JPEG frames.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

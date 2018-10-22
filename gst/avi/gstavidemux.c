@@ -22,21 +22,21 @@
 
 /**
  * SECTION:element-avidemux
+ * @title: avidemux
  *
  * Demuxes an .avi file into raw or compressed audio and/or video streams.
  *
  * This element supports both push and pull-based scheduling, depending on the
  * capabilities of the upstream elements.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.avi ! avidemux name=demux  demux.audio_00 ! decodebin ! audioconvert ! audioresample ! autoaudiosink   demux.video_00 ! queue ! decodebin ! videoconvert ! videoscale ! autovideosink
  * ]| Play (parse and decode) an .avi file and try to output it to
  * an automatically detected soundcard and videosink. If the AVI file contains
  * compressed audio or video data, this will only work if you have the
  * right decoder elements/plugins installed.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

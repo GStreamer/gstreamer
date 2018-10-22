@@ -21,18 +21,18 @@
 
 /**
  * SECTION:element-shout2send
+ * @title: shout2send
  *
  * shout2send pushes a media stream to an Icecast server
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 uridecodebin uri=file:///path/to/audiofile ! audioconvert ! vorbisenc ! oggmux ! shout2send mount=/stream.ogg port=8000 username=source password=somepassword ip=server_IP_address_or_hostname
  * ]| This pipeline demuxes, decodes, re-encodes and re-muxes an audio
  * media file into oggvorbis and sends the resulting stream to an Icecast
  * server. Properties mount, port, username and password are all server-config
  * dependent.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

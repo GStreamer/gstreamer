@@ -21,17 +21,17 @@
 
 /**
  * SECTION:element-monoscope
+ * @title: monoscope
  * @see_also: goom
  *
  * Monoscope is an audio visualisation element. It creates a coloured
  * curve of the audio signal like on an oscilloscope.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v audiotestsrc ! audioconvert ! monoscope ! videoconvert ! ximagesink
  * ]|
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

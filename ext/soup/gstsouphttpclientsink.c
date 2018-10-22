@@ -18,20 +18,20 @@
  */
 /**
  * SECTION:element-gstsouphttpclientsink
+ * @title: gstsouphttpclientsink
  *
  * The souphttpclientsink element sends pipeline data to an HTTP server
  * using HTTP PUT commands.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=300 ! theoraenc ! oggmux !
  *   souphttpclientsink location=http://server/filename.ogv
  * ]|
- * 
+ *
  * This example encodes 10 seconds of video and sends it to the HTTP
  * server "server" using HTTP PUT commands.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

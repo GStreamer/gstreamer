@@ -26,7 +26,7 @@
 
 #if 1
 /* ndef COLOR_BGRA */
-/** position des composantes **/
+/* position des composantes */
     #define BLEU 0
     #define VERT 1
     #define ROUGE 2

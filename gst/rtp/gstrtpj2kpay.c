@@ -19,6 +19,7 @@
 
  /**
  * SECTION:element-rtpj2kpay
+ * @title: rtpj2kpay
  *
  * Payload encode JPEG 2000 images into RTP packets according to RFC 5371
  * and RFC 5372.
@@ -29,7 +30,6 @@
  * units" and constructs the RTP packet header followed by the JPEG 2000
  * codestream. A "packetization unit" is defined as either a JPEG 2000 main header,
  * a JPEG 2000 tile-part header, or a JPEG 2000 packet.
- *
  *
  */
 

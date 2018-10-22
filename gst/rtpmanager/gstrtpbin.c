@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-rtpbin
+ * @title: rtpbin
  * @see_also: rtpjitterbuffer, rtpsession, rtpptdemux, rtpssrcdemux
  *
  * RTP bin combines the functions of #GstRtpSession, #GstRtpSsrcDemux,
@@ -85,8 +86,7 @@
  * and 1 or more sink_\%u pads. A session will be made for each sink_\%u pad
  * when the corresponding recv_rtp_sink_\%u pad is requested on #GstRtpBin.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
  * |[
  * gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
  *     rtpbin ! rtptheoradepay ! theoradec ! xvimagesink
@@ -131,7 +131,7 @@
  * synchronisation.
  * Send RTCP reports for session 0 on port 5005 and RTCP reports for session 1
  * on port 5007.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

@@ -29,21 +29,21 @@
 
 /**
  * SECTION:element-qtdemux
+ * @title: qtdemux
  *
  * Demuxes a .mov file into raw or compressed audio and/or video streams.
  *
  * This element supports both push and pull-based scheduling, depending on the
  * capabilities of the upstream elements.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=test.mov ! qtdemux name=demux  demux.audio_0 ! queue ! decodebin ! audioconvert ! audioresample ! autoaudiosink   demux.video_0 ! queue ! decodebin ! videoconvert ! videoscale ! autovideosink
  * ]| Play (parse and decode) a .mov file and try to output it to
  * an automatically detected soundcard and videosink. If the MOV file contains
  * compressed audio or video data, this will only work if you have the
  * right decoder elements/plugins installed.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

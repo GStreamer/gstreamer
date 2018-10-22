@@ -19,6 +19,7 @@
  */
 /**
  * SECTION:element-pngdec
+ * @title: pngdec
  *
  * Decodes png images. If there is no framerate set on sink caps, it sends EOS
  * after the first picture.

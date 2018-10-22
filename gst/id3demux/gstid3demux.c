@@ -21,11 +21,12 @@
 
 /**
  * SECTION:element-id3demux
+ * @title: id3demux
  *
  * id3demux accepts data streams with either (or both) ID3v2 regions at the
  * start, or ID3v1 at the end. The mime type of the data between the tag blocks
  * is detected using typefind functions, and the appropriate output mime type
- * set on outgoing buffers. 
+ * set on outgoing buffers.
  *
  * The element is only able to read ID3v1 tags from a seekable stream, because
  * they are at the end of the stream. That is, when get_range mode is supported
@@ -36,14 +37,13 @@
  * This id3demux element replaced an older element with the same name which
  * relied on libid3tag from the MAD project.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=file.mp3 ! id3demux ! fakesink -t
  * ]| This pipeline should read any available ID3 tag information and output it.
  * The contents of the file inside the ID3 tag regions should be detected, and
  * the appropriate mime type set on buffers produced from id3demux.
- * </refsect2>
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

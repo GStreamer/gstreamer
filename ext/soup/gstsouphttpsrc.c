@@ -14,6 +14,7 @@
 
 /**
  * SECTION:element-souphttpsrc
+ * @title: souphttpsrc
  *
  * This plugin reads data from a remote location specified by a URI.
  * Supported protocols are 'http', 'https'.
@@ -33,8 +34,7 @@
  * need to use the #ICYDemux element as follow-up element to extract the Icecast
  * metadata and to determine the underlying media type.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v souphttpsrc location=https://some.server.org/index.html
  *     ! filesink location=/home/joe/server.html
@@ -64,7 +64,7 @@
  * These are used by the mime/multipart demultiplexer to emit timestamps
  * on the JPEG-encoded video frame buffers. This allows the Matroska
  * multiplexer to timestamp the frames in the resulting file.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

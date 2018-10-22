@@ -20,6 +20,7 @@
  */
 /**
  * SECTION:element-multifilesrc
+ * @title: multifilesrc
  * @see_also: #GstFileSrc
  *
  * Reads buffers from sequentially named files. If used together with an image
@@ -30,15 +31,14 @@
  *
  * File names are created by replacing "\%d" with the index using printf().
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 multifilesrc location="img.%04d.png" index=0 caps="image/png,framerate=\(fraction\)12/1" ! \
  *     pngdec ! videoconvert ! videorate ! theoraenc ! oggmux ! \
  *     filesink location="images.ogg"
  * ]| This pipeline creates a video file "images.ogg" by joining multiple PNG
  * files named img.0000.png, img.0001.png, etc.
- * </refsect2>
+ *
 */
 
 #ifdef HAVE_CONFIG_H

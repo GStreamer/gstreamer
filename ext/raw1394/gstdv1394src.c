@@ -21,16 +21,16 @@
  */
 /**
  * SECTION:element-dv1394src
+ * @title: dv1394src
  *
  * Read DV (digital video) data from firewire port.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 dv1394src ! queue ! dvdemux name=d ! queue ! dvdec ! xvimagesink d. ! queue ! alsasink
  * ]| This pipeline captures from the firewire port and displays it (might need
  * format converters for audio/video).
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

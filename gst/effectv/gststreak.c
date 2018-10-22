@@ -30,15 +30,15 @@
 
 /**
  * SECTION:element-streaktv
+ * @title: streaktv
  *
  * StreakTV makes after images of moving objects.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! streaktv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of streaktv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

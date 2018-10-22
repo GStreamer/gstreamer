@@ -24,15 +24,15 @@
 
 /**
  * SECTION:element-shagadelictv
+ * @title: shagadelictv
  *
  * Oh behave, ShagedelicTV makes images shagadelic!
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 -v videotestsrc ! shagadelictv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of shagadelictv on a test stream.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

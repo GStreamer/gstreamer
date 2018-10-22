@@ -35,10 +35,10 @@ struct _ZOOM_FILTER_DATA
 	int     middleX, middleY;  /* milieu de l'effet */
 	char    reverse;           /* inverse la vitesse */
 	char    mode;              /* type d'effet � appliquer (cf les #define) */
-	/** @since June 2001 */
+	/* @since June 2001 */
 	int     hPlaneEffect;      /* deviation horitontale */
 	int     vPlaneEffect;      /* deviation verticale */
-	/** @since April 2002 */
+	/* @since April 2002 */
 	int     waveEffect;        /* applique une "surcouche" de wave effect */
 	int     hypercosEffect;    /* applique une "surcouche de hypercos effect */
 
