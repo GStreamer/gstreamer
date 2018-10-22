@@ -48,3 +48,5 @@ gstvaapi = library('gstvaapi',
   install : true,
   install_dir : plugins_install_dir,
 )
+
+plugins = [gstvaapi]

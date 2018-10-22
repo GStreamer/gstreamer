@@ -34,10 +34,6 @@ m4_define([wayland_api_version], [1.11.0])
 # VA-API minimum version number
 m4_define([va_api_version],     [0.39.0])
 
-# gtk-doc version number
-# XXX: introspection annotations require gtk-doc >= 1.12
-m4_define([gtkdoc_version], [1.12])
-
 AC_PREREQ([2.69])
 AC_INIT([GStreamer VA-API Plug-ins], [gst_vaapi_version],
   [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],
@@ -85,7 +81,6 @@ GST_REQ=gst_version
 GST_PBREQ=gst_plugins_base_version
 GST_PBADREQ=gst_plugins_bad_version
 WAYLAND_REQ=wayland_api_version
-GTKDOC_REQ=gtkdoc_version
 
 dnl *** required versions of VA-API stuff ***
 VAAPI_REQ=va_api_version
@@ -167,10 +162,6 @@ AC_PROG_CC_STDC
 
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
-
-dnl check for documentation tools
-GTK_DOC_CHECK([$GTKDOC_REQ])
-AG_GST_PLUGIN_DOCS([$GTKDOC_REQ])
 
 dnl *** checks for libraries ***
 dnl check for libm, for sin() etc.
@@ -744,10 +735,6 @@ AC_CONFIG_FILES([
     common/Makefile
     common/m4/Makefile
     m4/Makefile
-    docs/Makefile
-    docs/version.entities
-    docs/plugins/Makefile
-    docs/plugins/gstreamer-vaapi-plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile

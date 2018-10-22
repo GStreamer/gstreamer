@@ -1,6 +1,6 @@
 project('gstreamer-vaapi', 'c',
   version : '1.17.0.1',
-  meson_version : '>= 0.47.0',
+  meson_version : '>= 0.48.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -163,6 +163,7 @@ subdir('gst')
 if not get_option('examples').disabled()
   subdir('tests')
 endif
+subdir('docs')
 
 python3 = import('python').find_installation()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')

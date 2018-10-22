@@ -6,9 +6,7 @@ else
 SUBDIRS_TESTS =
 endif
 
-SUBDIRS = gst-libs gst $(SUBDIRS_TESTS) m4 common docs
-
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+SUBDIRS = gst-libs gst $(SUBDIRS_TESTS) m4 common
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = \
