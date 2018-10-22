@@ -1,0 +1,10 @@
+index.md
+	gst-validate.md
+	gst-validate-transcoding.md
+	gst-validate-media-check.md
+	gst-validate-launcher.md
+	gst-validate-scenarios.md
+	gst-validate-environment-variables.md
+	gi-index
+	plugins/index.md
+		plugins/ssim.md

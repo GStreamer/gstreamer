@@ -77,7 +77,7 @@ gstvalidatetracer = library('gstvalidatetracer',
 validate_gen_sources = []
 if build_gir
     gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
-    validate_gen_sources = [gnome.generate_gir(gstvalidate,
+    validate_gir = gnome.generate_gir(gstvalidate,
             sources : gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
             nsversion : '1.0',
             namespace : 'GstValidate',
@@ -93,7 +93,8 @@ if build_gir
             install : true,
             dependencies : [gst_dep, gstbase_dep, glib_dep, gio_dep, gst_pbutils_dep],
             extra_args : gst_validate_gir_extra_args,
-    )]
+    )
+    validate_gen_sources += [validate_gir]
 endif
 
 validate_dep = declare_dependency(link_with : gstvalidate,

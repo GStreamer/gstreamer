@@ -27,16 +27,6 @@ subdir('gst')
 subdir('gst-libs')
 subdir('launcher')
 subdir('tools')
-if build_machine.system() == 'windows'
-  message('Disabling gtk-doc while building on Windows')
-else
-  gtkdoc = find_program('gtkdoc-scan', required : get_option('gtk_doc'))
-  if gtkdoc.found()
-    subdir('docs')
-  else
-    message('Not building documentation as gtk-doc was not found')
-  endif
-endif
 subdir('pkgconfig')
 if not get_option('tests').disabled()
   subdir('tests')

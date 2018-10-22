@@ -1,5 +1,3 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 SUBDIRS = 	\
 	common 	\
 	data	\
@@ -9,7 +7,6 @@ SUBDIRS = 	\
 	launcher \
 	tools 	\
 	pkgconfig 	\
-	docs    \
 	tests    \
 	po
 

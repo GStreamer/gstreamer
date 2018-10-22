@@ -38,6 +38,16 @@ GST_VALIDATE_API
 GType           gst_validate_report_get_type (void);
 #define GST_TYPE_VALIDATE_REPORT (gst_validate_report_get_type ())
 
+/**
+ * GstValidateDebugFlags:
+ * GST_VALIDATE_FATAL_DEFAULT:
+ * GST_VALIDATE_FATAL_ISSUES:
+ * GST_VALIDATE_FATAL_WARNINGS:
+ * GST_VALIDATE_FATAL_CRITICALS:
+ * GST_VALIDATE_PRINT_ISSUES:
+ * GST_VALIDATE_PRINT_WARNINGS:
+ * GST_VALIDATE_PRINT_CRITICALS:
+ */
 typedef enum {
   GST_VALIDATE_FATAL_DEFAULT = 0,
   GST_VALIDATE_FATAL_ISSUES = 1 << 0,
@@ -48,6 +58,9 @@ typedef enum {
   GST_VALIDATE_PRINT_CRITICALS = 1 << 5
 } GstValidateDebugFlags;
 
+/**
+ * GstValidateReportLevel:
+ */
 typedef enum {
   GST_VALIDATE_REPORT_LEVEL_CRITICAL,
   GST_VALIDATE_REPORT_LEVEL_WARNING,

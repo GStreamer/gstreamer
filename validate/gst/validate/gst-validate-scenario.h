@@ -40,6 +40,14 @@ G_BEGIN_DECLS
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
 typedef struct _GstValidateActionParameter GstValidateActionParameter;
 
+/**
+ * GstValidateActionReturn:
+ * GST_VALIDATE_EXECUTE_ACTION_ERROR:
+ * GST_VALIDATE_EXECUTE_ACTION_OK:
+ * GST_VALIDATE_EXECUTE_ACTION_ASYNC:
+ * GST_VALIDATE_EXECUTE_ACTION_INTERLACED:
+ * GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
+ */
 typedef enum
 {
   GST_VALIDATE_EXECUTE_ACTION_ERROR,

@@ -56,6 +56,9 @@ typedef struct {
 
 } GstValidateMediaDescriptorWriterClass;
 
+/**
+ * GstValidateMediaDescriptorWriterFlags
+ */
 typedef enum
 {
     GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NONE         = 1 << 0,

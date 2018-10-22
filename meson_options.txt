@@ -10,3 +10,5 @@ option('tests', type : 'feature', value : 'auto', yield : true,
        description : 'Build and enable unit tests')
 option('nls', type : 'feature', value : 'auto', yield: true,
        description : 'Enable native language support (translations)')
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')

@@ -1,2 +1,0 @@
-subdir('validate')
-# subdir('launcher')

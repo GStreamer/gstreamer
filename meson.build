@@ -1,6 +1,6 @@
 project('gst-devtools', 'c',
   version : '1.17.0.1',
-  meson_version : '>= 0.47',
+  meson_version : '>= 0.48',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
@@ -141,6 +141,7 @@ if get_option('default_library') == 'shared'
   plugins_pkgconfig_install_dir = disabler()
 endif
 
+plugins = []
 i18n = import('i18n')
 
 python_mod = import('python')
@@ -153,5 +154,6 @@ endif
 if get_option('debug_viewer')
   subdir('debug-viewer')
 endif
+subdir('docs')
 
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')

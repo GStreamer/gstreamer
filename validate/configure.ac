@@ -106,14 +106,6 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for gobject-introspection
 GOBJECT_INTROSPECTION_CHECK([0.6.3])
 
-dnl check for documentation tools
-AG_GST_DOCBOOK_CHECK
-GTK_DOC_CHECK([1.3])
-
-
-AC_CHECK_PROG(enable_sphinx_doc, sphinx-build, yes, no)
-AM_CONDITIONAL(HAVE_SPHINHX, test ! "x$enable_sphinx_doc" = "xno")
-
 dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
@@ -352,11 +344,6 @@ tools/Makefile
 launcher/Makefile
 launcher/apps/Makefile
 launcher/testsuites/Makefile
-docs/Makefile
-docs/version.entities
-docs/validate/Makefile
-docs/plugins/Makefile
-docs/launcher/Makefile
 ])
 AC_OUTPUT
 
