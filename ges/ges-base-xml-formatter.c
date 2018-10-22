@@ -348,12 +348,11 @@ _dispose (GObject * object)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
 
-  g_clear_pointer (&priv->assetid_pendingclips,
-      (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->containers, (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->clipid_pendings, (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->tracks, (GDestroyNotify) g_hash_table_unref);
-  g_clear_pointer (&priv->layers, (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->assetid_pendingclips, g_hash_table_unref);
+  g_clear_pointer (&priv->containers, g_hash_table_unref);
+  g_clear_pointer (&priv->clipid_pendings, g_hash_table_unref);
+  g_clear_pointer (&priv->tracks, g_hash_table_unref);
+  g_clear_pointer (&priv->layers, g_hash_table_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
