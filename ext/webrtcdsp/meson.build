@@ -22,4 +22,5 @@ if webrtc_dep.found() and gnustl_dep.found()
     override_options : ['cpp_std=c++11'],
   )
   pkgconfig.generate(gstwebrtcdsp, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstwebrtcdsp]
 endif

@@ -32,4 +32,5 @@ if openjpeg_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstopenjpeg, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstopenjpeg]
 endif

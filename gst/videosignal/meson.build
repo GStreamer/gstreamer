@@ -14,3 +14,4 @@ gstvideosignal = library('gstvideosignal',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstvideosignal, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstvideosignal]

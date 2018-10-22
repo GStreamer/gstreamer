@@ -19,4 +19,5 @@ if faad_dep.found() and have_faad_2_7
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstfaad, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstfaad]
 endif

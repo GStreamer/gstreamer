@@ -1,4 +1,4 @@
-codecparser_sources = [
+codecparser_sources = files([
   'gstjpeg2000sampling.c',
   'gstjpegparser.c',
   'gstmpegvideoparser.c',
@@ -15,7 +15,7 @@ codecparser_sources = [
   'dboolhuff.c',
   'vp8utils.c',
   'gstmpegvideometa.c',
-]
+])
 codecparser_headers = [
   'codecparsers-prelude.h',
   'gstmpegvideoparser.h',

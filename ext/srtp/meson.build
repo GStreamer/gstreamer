@@ -38,4 +38,5 @@ if srtp_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstsrtp, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstsrtp]
 endif

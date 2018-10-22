@@ -95,5 +95,6 @@ if msdk_deps_found
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstmsdktag, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstmsdktag]
   have_msdk = true
 endif

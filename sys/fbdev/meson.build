@@ -21,4 +21,5 @@ if have_fb_h
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstfbdevsink, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstfbdevsink]
 endif

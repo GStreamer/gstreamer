@@ -11,3 +11,4 @@ gstvideoframe_audiolevel = library('gstvideoframe_audiolevel',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstvideoframe_audiolevel, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstvideoframe_audiolevel]

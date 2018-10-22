@@ -27,3 +27,4 @@ gstmxf = library('gstmxf',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstmxf, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstmxf]

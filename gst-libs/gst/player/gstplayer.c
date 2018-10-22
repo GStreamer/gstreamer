@@ -23,6 +23,8 @@
  * SECTION:gstplayer
  * @title: GstPlayer
  * @short_description: Player
+ * @symbols:
+ * - GstPlayer
  *
  */
 

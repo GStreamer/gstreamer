@@ -13,4 +13,5 @@ if voaac_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstbz2, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstbz2]
 endif

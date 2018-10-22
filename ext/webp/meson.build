@@ -16,4 +16,5 @@ if webp_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstwebp, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstwebp]
 endif

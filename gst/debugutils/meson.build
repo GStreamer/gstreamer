@@ -20,3 +20,4 @@ gstdebugutilsbad = library('gstdebugutilsbad',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstdebugutilsbad, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstdebugutilsbad]

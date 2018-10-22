@@ -61,4 +61,5 @@ if have_hls_crypto
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gsthls, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gsthls]
 endif

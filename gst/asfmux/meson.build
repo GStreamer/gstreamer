@@ -15,3 +15,4 @@ gstasfmux = library('gstasfmux',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstasfmux, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstasfmux]

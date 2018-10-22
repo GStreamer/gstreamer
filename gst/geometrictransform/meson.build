@@ -30,3 +30,4 @@ gstgeometrictransform = library('gstgeometrictransform',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstgeometrictransform, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstgeometrictransform]

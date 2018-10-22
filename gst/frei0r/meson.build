@@ -14,3 +14,4 @@ gstfrei0r = library('gstfrei0r',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstfrei0r, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstfrei0r]

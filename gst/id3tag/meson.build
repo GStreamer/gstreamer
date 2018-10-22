@@ -12,3 +12,4 @@ gstid3tag = library('gstid3tag',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstid3tag, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstid3tag]

@@ -50,6 +50,47 @@
  * @title: Base MPEG-TS sections
  * @short_description: Sections for ITU H.222.0 | ISO/IEC 13818-1
  * @include: gst/mpegts/mpegts.h
+ * @symbols:
+ * - GST_MPEGTS_SECTION_TYPE
+ * - GstMpegtsSection
+ * - GstMpegtsSectionTableID
+ * - GstMpegtsSectionType
+ * - gst_message_new_mpegts_section
+ * - gst_message_parse_mpegts_section
+ * - gst_mpegts_section_send_event
+ * - gst_event_parse_mpegts_section
+ * - gst_mpegts_section_packetize
+ * - gst_mpegts_section_new
+ * - gst_mpegts_section_ref
+ * - gst_mpegts_section_unref
+ * - GstMpegtsPatProgram
+ * - gst_mpegts_section_get_pat
+ * - gst_mpegts_pat_new
+ * - gst_mpegts_pat_program_new
+ * - gst_mpegts_section_from_pat
+ * - GstMpegtsPMT
+ * - GstMpegtsPMTStream
+ * - GstMpegtsStreamType
+ * - gst_mpegts_section_get_pmt
+ * - gst_mpegts_pmt_new
+ * - gst_mpegts_pmt_stream_new
+ * - gst_mpegts_section_from_pmt
+ * - gst_mpegts_section_get_tsdt
+ * - gst_mpegts_section_get_cat
+ * - GST_TYPE_MPEGTS_SECTION_TABLE_ID
+ * - GST_TYPE_MPEGTS_SECTION_TYPE
+ * - GST_TYPE_MPEGTS_SECTION_DVB_TABLE_ID
+ * - GST_MPEGTS_SECTION
+ * - GST_TYPE_MPEGTS_STREAM_TYPE
+ * - GST_TYPE_MPEGTS_PMT
+ * - GST_TYPE_MPEGTS_PMT_STREAM
+ * - GST_TYPE_MPEGTS_SECTION
+ * - gst_mpegts_section_table_id_get_type
+ * - gst_mpegts_section_type_get_type
+ * - gst_mpegts_pmt_get_type
+ * - gst_mpegts_pmt_stream_get_type
+ * - gst_mpegts_section_get_type
+ * - gst_mpegts_stream_type_get_type
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
  * and other specifications mentioned in the documentation.

@@ -11,3 +11,4 @@ gstadpcmdec = library('gstadpcmdec',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstadpcmdec, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstadpcmdec]

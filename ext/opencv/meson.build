@@ -109,6 +109,7 @@ if opencv_found
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstopencv, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstopencv]
 elif get_option('opencv').enabled()
   error('OpenCV support enabled but required dependencies were not found.')
 endif

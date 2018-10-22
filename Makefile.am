@@ -1,12 +1,10 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 SUBDIRS = \
 	gst-libs gst sys ext pkgconfig \
-	m4 common docs tests po tools
+	m4 common tests po tools
 
 DIST_SUBDIRS = \
 	gst gst-libs sys ext pkgconfig \
-	m4 common docs tests po tools
+	m4 common tests po tools
 
 EXTRA_DIST = \
 	depcomp \
@@ -46,7 +44,6 @@ CRUFT_FILES = \
 	$(top_builddir)/gst-plugins-bad.spec \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
-	$(top_builddir)/docs/plugins/xml/plugin-sdp.xml \
 	$(top_builddir)/ext/alsaspdif/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/gtk/.libs/libgstgtksink.so \
 	$(top_builddir)/ext/gtk/.libs/libgstgtk.so \
@@ -102,7 +99,6 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/icles/equalizer-test
 
 CRUFT_DIRS = \
-	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/audiomixer \

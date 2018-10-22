@@ -13,3 +13,4 @@ gstmpedpsdemux = library('gstmpegpsdemux',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstmpedpsdemux, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstmpedpsdemux]

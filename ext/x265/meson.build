@@ -9,4 +9,5 @@ if x265_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstx265, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstx265]
 endif

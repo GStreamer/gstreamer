@@ -95,3 +95,6 @@ Build
 # Meson
 /build
 /subprojects
+
+# hotdoc
+docs/hotdoc/libs/generated_sitemap.txt

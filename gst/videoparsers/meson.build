@@ -22,3 +22,4 @@ gstvideoparsersbad = library('gstvideoparsersbad',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstvideoparsersbad, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstvideoparsersbad]

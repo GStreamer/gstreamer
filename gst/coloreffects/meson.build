@@ -13,3 +13,4 @@ gstcoloreffects = library('gstcoloreffects',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstcoloreffects, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstcoloreffects]

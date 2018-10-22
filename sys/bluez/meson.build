@@ -27,4 +27,5 @@ if bluez_dep.found() and gio_unix_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstbluez, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstbluez]
 endif

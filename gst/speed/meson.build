@@ -11,3 +11,4 @@ gstspeed = library('gstspeed',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstspeed, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstspeed]
