@@ -25,6 +25,13 @@
  * @title: GstElement
  * @short_description: Abstract base class for all pipeline elements
  * @see_also: #GstElementFactory, #GstPad
+ * @symbols:
+ * - GST_ELEMENT_METADATA_LONGNAME
+ * - GST_ELEMENT_METADATA_KLASS
+ * - GST_ELEMENT_METADATA_DESCRIPTION
+ * - GST_ELEMENT_METADATA_AUTHOR
+ * - GST_ELEMENT_METADATA_DOC_URI
+ * - GST_ELEMENT_METADATA_ICON_NAME
  *
  * GstElement is the abstract base class needed to construct an element that
  * can be used in a GStreamer pipeline. Please refer to the plugin writers

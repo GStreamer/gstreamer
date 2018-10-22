@@ -22,9 +22,9 @@
 /**
  * SECTION:element-capsfilter
  * @title: capsfilter
+ * @short_description: enforce limitations on the data format
  *
- * The element does not modify data as such, but can enforce limitations on the
- * data format.
+ * The element does not modify data as such, but can enforce limitations on the data format.
  *
  * ## Example launch line
  * |[

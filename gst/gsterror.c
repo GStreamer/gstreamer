@@ -22,6 +22,12 @@
  * @title: GstError
  * @short_description: Categorized error messages
  * @see_also: #GstMessage
+ * @symbols:
+ * - gst_error_get_message
+ * - gst_stream_error_quark
+ * - gst_core_error_quark
+ * - gst_resource_error_quark
+ * - gst_library_error_quark
  *
  * GStreamer elements can throw non-fatal warnings and fatal errors.
  * Higher-level elements and applications can programmatically filter

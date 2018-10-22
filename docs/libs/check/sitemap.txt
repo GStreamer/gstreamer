@@ -1,0 +1,2 @@
+gi-index
+	gstcheck.h

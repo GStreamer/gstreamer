@@ -31,7 +31,7 @@
 /*
  * This is a kind of hacky way to make all the tools use the same version code.
  * If anyone knows a less hacky way to get this done, feel free to implement it.
- * 
+ *
  * It also includes all the files that all the tools require.
  */
 

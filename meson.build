@@ -1,6 +1,6 @@
 project('gstreamer', 'c',
   version : '1.17.0.1',
-  meson_version : '>= 0.47',
+  meson_version : '>= 0.48',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -521,6 +521,7 @@ endif
 subdir('pkgconfig')
 subdir('tests')
 subdir('data')
+subdir('docs')
 
 # xgettext is optional (on Windows for instance)
 if find_program('xgettext', required : get_option('nls')).found()
@@ -529,7 +530,5 @@ if find_program('xgettext', required : get_option('nls')).found()
 endif
 
 configure_file(output : 'config.h', configuration : cdata)
-
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
-
 install_data('gst-element-check-1.0.m4', install_dir : join_paths(get_option('datadir'), 'aclocal'))

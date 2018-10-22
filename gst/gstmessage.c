@@ -3050,8 +3050,8 @@ gst_message_parse_streams_selected (GstMessage * message,
  * such as bitrate statistics for the given location.
  *
  * By default, message recipients should treat entries in the order they are
- * stored. The recipient should therefore try entry #0 first, and if this
- * entry is not acceptable or working, try entry #1 etc. Senders must make
+ * stored. The recipient should therefore try entry \#0 first, and if this
+ * entry is not acceptable or working, try entry \#1 etc. Senders must make
  * sure that they add entries in this order. However, recipients are free to
  * ignore the order and pick an entry that is "best" for them. One example
  * would be a recipient that scans the entries for the one with the highest
