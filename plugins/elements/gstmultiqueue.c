@@ -1566,8 +1566,6 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
     if (GST_CLOCK_TIME_IS_VALID (btime)) {
       if (end && GST_BUFFER_DURATION_IS_VALID (buf))
         btime += GST_BUFFER_DURATION (buf);
-      if (btime > segment->stop)
-        btime = segment->stop;
       time = my_segment_to_running_time (segment, btime);
     }
   } else if (GST_IS_BUFFER_LIST (object)) {
@@ -1583,8 +1581,6 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
       if (GST_CLOCK_TIME_IS_VALID (btime)) {
         if (end && GST_BUFFER_DURATION_IS_VALID (buf))
           btime += GST_BUFFER_DURATION (buf);
-        if (btime > segment->stop)
-          btime = segment->stop;
         time = my_segment_to_running_time (segment, btime);
         if (!end)
           goto done;
