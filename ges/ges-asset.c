@@ -1340,7 +1340,7 @@ ges_asset_request_finish (GAsyncResult * res, GError ** error)
 
 /**
  * ges_list_assets:
- * @filter: Type of assets to list, #GES_TYPE_EXTRACTABLE  will list
+ * @filter: Type of assets to list, `GES_TYPE_EXTRACTABLE`  will list
  * all assets
  *
  * List all @asset filtering per filter as defined by @filter.

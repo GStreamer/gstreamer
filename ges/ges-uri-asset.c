@@ -467,8 +467,7 @@ ges_uri_clip_asset_get_duration (GESUriClipAsset * self)
 
 /**
  * ges_uri_clip_asset_is_image:
- * @self: a #indent: Standard input:311: Error:Unexpected end of file
-GESUriClipAsset
+ * @self: a #GESUriClipAsset
  *
  * Gets Whether the file represented by @self is an image or not
  *

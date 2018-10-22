@@ -18,6 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION: ges.h
+ * @title: Initialization
+ * @short_description: GStreamer editing services initialization functions
+ *
+ * GES needs to be initialized after GStreamer itself. This section
+ * contains the various functions to do so.
+ */
 /* TODO
  * Add a deinit function
  *

@@ -23,7 +23,7 @@
  * @short_description: A GESAsset that is used to manage projects
  *
  * The #GESProject is used to control a set of #GESAsset and is a
- * #GESAsset with #GES_TYPE_TIMELINE as @extractable_type itself. That
+ * #GESAsset with `GES_TYPE_TIMELINE` as @extractable_type itself. That
  * means that you can extract #GESTimeline from a project as followed:
  *
  * |[
@@ -824,7 +824,7 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
  * @project: A #GESProject
  * @asset: (transfer none): A #GESAsset to add to @project
  *
- * Adds a #Asset to @project, the project will keep a reference on
+ * Adds a #GESAsset to @project, the project will keep a reference on
  * @asset.
  *
  * Returns: %TRUE if the asset could be added %FALSE it was already
@@ -901,7 +901,7 @@ ges_project_get_asset (GESProject * project, const gchar * id,
 /**
  * ges_project_list_assets:
  * @project: A #GESProject
- * @filter: Type of assets to list, #GES_TYPE_EXTRACTABLE will list
+ * @filter: Type of assets to list, `GES_TYPE_EXTRACTABLE` will list
  * all assets
  *
  * List all @asset contained in @project filtering per extractable_type

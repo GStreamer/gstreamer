@@ -111,10 +111,10 @@ ges_track_element_asset_init (GESTrackElementAsset * self)
 
 /**
  * ges_track_element_asset_set_track_type:
- * @asset: A #GESAssetObject
+ * @asset: A #GESAsset
  * @type: A #GESTrackType
  *
- * Set the #GESAssetTrackType the #GESTrackElement extracted from @self
+ * Set the #GESTrackType the #GESTrackElement extracted from @self
  * should get into
  */
 void
@@ -128,7 +128,7 @@ ges_track_element_asset_set_track_type (GESTrackElementAsset * asset,
 
 /**
  * ges_track_element_asset_get_track_type:
- * @asset: A #GESAssetObject
+ * @asset: A #GESAsset
  *
  * Get the GESAssetTrackType the #GESTrackElement extracted from @self
  * should get into

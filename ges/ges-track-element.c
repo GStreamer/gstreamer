@@ -827,7 +827,7 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 
 /**
  * ges_track_element_get_all_control_bindings
- * @trackelement: The #TrackElement from which to get all set bindings
+ * @trackelement: The #GESTrackElement from which to get all set bindings
  *
  * Returns: (element-type gchar* GstControlBinding)(transfer none): A
  * #GHashTable containing all property_name: GstControlBinding

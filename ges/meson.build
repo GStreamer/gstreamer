@@ -126,8 +126,8 @@ ges_headers = [
 ]
 
 if libxml_dep.found()
-  ges_sources += ['ges-pitivi-formatter.c']
-  ges_headers += ['ges-pitivi-formatter.h']
+  ges_sources += files(['ges-pitivi-formatter.c'])
+  ges_headers += files(['ges-pitivi-formatter.h'])
 endif
 
 version_data = configuration_data()
