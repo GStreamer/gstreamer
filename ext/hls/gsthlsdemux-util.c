@@ -170,7 +170,7 @@ handle_pat (GstHLSTSReader * r, const guint8 * data, guint size)
     guint program_num = GST_READ_UINT16_BE (data);
     guint val = GST_READ_UINT16_BE (data + 2) & 0x1fff;
     if (program_num != 0) {
-      GST_DEBUG ("  program %04x: pmt_pid : %04x\n", program_num, val);
+      GST_DEBUG ("  program %04x: pmt_pid : %04x", program_num, val);
       r->pmt_pid = val;
       return TRUE;
     }
