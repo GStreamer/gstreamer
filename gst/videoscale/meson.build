@@ -11,3 +11,4 @@ gstvideoscale = library('gstvideoscale',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstvideoscale, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstvideoscale]

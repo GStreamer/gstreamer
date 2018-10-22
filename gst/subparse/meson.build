@@ -16,3 +16,4 @@ gstsubparse = library('gstsubparse',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstsubparse, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstsubparse]

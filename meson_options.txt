@@ -69,7 +69,6 @@ option('xvideo', type : 'feature', value : 'auto', description : 'X11 XVideo xvi
 option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('tools', type : 'feature', value : 'auto', yield : true)
-option('gtk_doc', type : 'feature', value : 'auto', yield : true, description : 'Build API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
@@ -85,3 +84,5 @@ option('package-name', type : 'string', yield : true,
        description : 'package name to use in plugins')
 option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
        description : 'package origin URL to use in plugins')
+option('doc', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable documentation.')

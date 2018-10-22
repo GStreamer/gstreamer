@@ -27,3 +27,4 @@ gstvolume = library('gstvolume', 'gstvolume.c', orc_c, orc_h,
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstvolume, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstvolume]

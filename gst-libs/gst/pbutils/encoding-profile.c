@@ -22,6 +22,11 @@
  * SECTION:encoding-profile
  * @title: GstEncodingProfile
  * @short_description: Encoding profile library
+ * @symbols:
+ * - GstEncodingProfile
+ * - GstEncodingContainerProfile
+ * - GstEncodingVideoProfile
+ * - GstEncodingAudioProfile
  *
  * Functions to create and handle encoding profiles.
  *

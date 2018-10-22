@@ -37,8 +37,8 @@
  * set up a correct cropping region if the dimensions are not multiples of 16
  * pixels.
  *
- * To control the quality of the encoding, the #GstTheoraEnc::bitrate and
- * #GstTheoraEnc::quality properties can be used. These two properties are
+ * To control the quality of the encoding, the #GstTheoraEnc:bitrate and
+ * #GstTheoraEnc:quality properties can be used. These two properties are
  * mutualy exclusive. Setting the bitrate property will produce a constant
  * bitrate (CBR) stream while setting the quality property will produce a
  * variable bitrate (VBR) stream.
@@ -704,7 +704,7 @@ theora_enc_init_buffer (th_ycbcr_buffer buf, GstVideoFrame * frame)
   GstVideoInfo vinfo;
   guint i;
 
-  /* According to Theora developer Timothy Terriberry, the Theora 
+  /* According to Theora developer Timothy Terriberry, the Theora
    * encoder will not use memory outside of pic_width/height, even when
    * the frame size is bigger. The values outside this region will be encoded
    * to default values.

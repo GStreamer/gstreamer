@@ -40,6 +40,7 @@ if vorbis_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstvorbis, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstvorbis]
 endif
 
 if vorbisidec_dep.found()
@@ -55,4 +56,5 @@ if vorbisidec_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstivorbisdec, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstivorbisdec]
 endif
