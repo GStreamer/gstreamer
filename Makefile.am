@@ -1,5 +1,3 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 if BUILD_EXAMPLES
 SUBDIRS_EXAMPLES = examples
 else
@@ -16,16 +14,14 @@ SUBDIRS = \
 	gst \
 	common \
 	pkgconfig \
-	docs \
 	$(SUBDIRS_EXAMPLES) \
 	$(SUBDIRS_TESTS)
 
-DIST_SUBDIRS = gst common pkgconfig docs examples tests
+DIST_SUBDIRS = gst common pkgconfig examples tests
 
 EXTRA_DIST = \
 	ChangeLog autogen.sh depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	docs/design/gst-rtp-server-design \
 	gst-rtsp-server.doap \
 	$(shell find "$(top_srcdir)" -type f -name meson.build ! -path "$(top_srcdir)/$(PACKAGE_TARNAME)-*" ) \
 	meson_options.txt

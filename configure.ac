@@ -131,10 +131,6 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for gobject-introspection
 GOBJECT_INTROSPECTION_CHECK([1.31.1])
 
-dnl check for documentation tools
-AG_GST_DOCBOOK_CHECK
-GTK_DOC_CHECK([1.12])
-
 dnl *** checks for libraries ***
 
 dnl check for pthreads
@@ -352,9 +348,6 @@ tests/check/Makefile
 pkgconfig/Makefile
 pkgconfig/gstreamer-rtsp-server.pc
 pkgconfig/gstreamer-rtsp-server-uninstalled.pc
-docs/Makefile
-docs/version.entities
-docs/libs/Makefile
 ])
 AC_OUTPUT
 

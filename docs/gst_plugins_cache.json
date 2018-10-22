@@ -1,0 +1,452 @@
+{
+    "rtspclientsink": {
+        "description": "RTSP client sink element",
+        "elements": {
+            "rtspclientsink": {
+                "author": "Jan Schmidt <jan@centricular.com>",
+                "description": "Send data over the network via RTSP RECORD(RFC 2326)",
+                "hierarchy": [
+                    "GstRTSPClientSink",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Network",
+                "long-name": "RTSP RECORD client",
+                "name": "rtspclientsink",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "stream_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "debug": {
+                        "blurb": "Dump request and response messages to stdout",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "do-rtsp-keep-alive": {
+                        "blurb": "Send RTSP keep alive packets, disable for old incompatible server.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Amount of ms to buffer",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "2000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "location": {
+                        "blurb": "Location of the RTSP url to read",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "multicast-iface": {
+                        "blurb": "The network interface on which to join the multicast group",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "rtspclientsink0",
+                        "hotdoc-fixed-default": true,
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "ntp-time-source": {
+                        "blurb": "NTP time source for RTCP packets",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "ntp (0)",
+                        "enum": true,
+                        "type-name": "GstRTSPClientSinkNtpTimeSource",
+                        "values": [
+                            {
+                                "desc": "NTP time based on realtime clock",
+                                "name": "ntp",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "UNIX time based on realtime clock",
+                                "name": "unix",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Running time based on pipeline clock",
+                                "name": "running-time",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Pipeline clock time",
+                                "name": "clock-time",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "port-range": {
+                        "blurb": "Client port range that can be used to receive RTCP data, eg. 3000-3005 (NULL = no restrictions)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "profiles": {
+                        "blurb": "Allowed RTSP profiles",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "avp",
+                        "type-name": "GstRTSPProfile",
+                        "values": [
+                            {
+                                "desc": "GST_RTSP_PROFILE_UNKNOWN",
+                                "name": "unknown",
+                                "value": "0x00000000"
+                            },
+                            {
+                                "desc": "GST_RTSP_PROFILE_AVP",
+                                "name": "avp",
+                                "value": "0x00000001"
+                            },
+                            {
+                                "desc": "GST_RTSP_PROFILE_SAVP",
+                                "name": "savp",
+                                "value": "0x00000002"
+                            },
+                            {
+                                "desc": "GST_RTSP_PROFILE_AVPF",
+                                "name": "avpf",
+                                "value": "0x00000004"
+                            },
+                            {
+                                "desc": "GST_RTSP_PROFILE_SAVPF",
+                                "name": "savpf",
+                                "value": "0x00000008"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "protocols": {
+                        "blurb": "Allowed lower transport protocols",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "tcp+udp-mcast+udp",
+                        "type-name": "GstRTSPLowerTrans",
+                        "values": [
+                            {
+                                "desc": "GST_RTSP_LOWER_TRANS_UNKNOWN",
+                                "name": "unknown",
+                                "value": "0x00000000"
+                            },
+                            {
+                                "desc": "GST_RTSP_LOWER_TRANS_UDP",
+                                "name": "udp",
+                                "value": "0x00000001"
+                            },
+                            {
+                                "desc": "GST_RTSP_LOWER_TRANS_UDP_MCAST",
+                                "name": "udp-mcast",
+                                "value": "0x00000002"
+                            },
+                            {
+                                "desc": "GST_RTSP_LOWER_TRANS_TCP",
+                                "name": "tcp",
+                                "value": "0x00000004"
+                            },
+                            {
+                                "desc": "GST_RTSP_LOWER_TRANS_HTTP",
+                                "name": "http",
+                                "value": "0x00000010"
+                            },
+                            {
+                                "desc": "GST_RTSP_LOWER_TRANS_TLS",
+                                "name": "tls",
+                                "value": "0x00000020"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "proxy": {
+                        "blurb": "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "proxy-id": {
+                        "blurb": "HTTP proxy URI user id for authentication",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "proxy-pw": {
+                        "blurb": "HTTP proxy URI user password for authentication",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "retry": {
+                        "blurb": "Max number of retries when allocating RTP ports.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "20",
+                        "max": "65535",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "rtp-blocksize": {
+                        "blurb": "RTP package size to suggest to server (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "65536",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "rtx-time": {
+                        "blurb": "Amount of ms to buffer for retransmission. 0 disables retransmission",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "500",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "sdes": {
+                        "blurb": "The SDES items of this session",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstStructure",
+                        "writable": true
+                    },
+                    "tcp-timeout": {
+                        "blurb": "Fail after timeout microseconds on TCP connections (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "timeout": {
+                        "blurb": "Retry TCP transport after UDP timeout microseconds (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "5000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "tls-database": {
+                        "blurb": "TLS database with anchor certificate authorities used to validate the server certificate",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GTlsDatabase",
+                        "writable": true
+                    },
+                    "tls-interaction": {
+                        "blurb": "A GTlsInteraction object to prompt the user for password or certificate",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GTlsInteraction",
+                        "writable": true
+                    },
+                    "tls-validation-flags": {
+                        "blurb": "TLS certificate validation flags used to validate the server certificate",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "validate-all",
+                        "type-name": "GTlsCertificateFlags",
+                        "values": [
+                            {
+                                "desc": "G_TLS_CERTIFICATE_UNKNOWN_CA",
+                                "name": "unknown-ca",
+                                "value": "0x00000001"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_BAD_IDENTITY",
+                                "name": "bad-identity",
+                                "value": "0x00000002"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_NOT_ACTIVATED",
+                                "name": "not-activated",
+                                "value": "0x00000004"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_EXPIRED",
+                                "name": "expired",
+                                "value": "0x00000008"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_REVOKED",
+                                "name": "revoked",
+                                "value": "0x00000010"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_INSECURE",
+                                "name": "insecure",
+                                "value": "0x00000020"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_GENERIC_ERROR",
+                                "name": "generic-error",
+                                "value": "0x00000040"
+                            },
+                            {
+                                "desc": "G_TLS_CERTIFICATE_VALIDATE_ALL",
+                                "name": "validate-all",
+                                "value": "0x0000007f"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "udp-buffer-size": {
+                        "blurb": "Size of the kernel UDP receive buffer in bytes, 0=default",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "524288",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "udp-reconnect": {
+                        "blurb": "Reconnect to the server if RTSP connection is closed when doing UDP",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "user-agent": {
+                        "blurb": "The User-Agent string to send to the server",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "GStreamer/1.15.0.1",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "user-id": {
+                        "blurb": "RTSP location URI user id for authentication",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "user-pw": {
+                        "blurb": "RTSP location URI user password for authentication",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "accept-certificate": {
+                        "args": [
+                            "GTlsConnection",
+                            "GTlsCertificate",
+                            "GTlsCertificateFlags"
+                        ],
+                        "retval": "gboolean"
+                    },
+                    "handle-request": {
+                        "args": [
+                            "gpointer",
+                            "gpointer"
+                        ],
+                        "retval": "void"
+                    },
+                    "new-manager": {
+                        "args": [
+                            "GstElement"
+                        ],
+                        "retval": "void"
+                    },
+                    "new-payloader": {
+                        "args": [
+                            "GstElement"
+                        ],
+                        "retval": "void"
+                    },
+                    "request-rtcp-key": {
+                        "args": [
+                            "guint"
+                        ],
+                        "retval": "GstCaps"
+                    }
+                }
+            }
+        },
+        "filename": "libgstrtspclientsink.so",
+        "license": "LGPL",
+        "package": "GStreamer RTSP Server Library git",
+        "source": "gst-rtsp-server",
+        "url": "Unknown package origin"
+    }
+}
