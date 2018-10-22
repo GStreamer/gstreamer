@@ -24,6 +24,7 @@
  */
 /**
  * SECTION:gst-validate-scenario
+ * @title: GstValidateScenario
  * @short_description: A GstValidateScenario represents a set of actions to be executed on a pipeline.
  *
  * A #GstValidateScenario represents the scenario that will be executed on a #GstPipeline.
@@ -604,7 +605,6 @@ _check_scenario_is_done (GstValidateScenario * scenario)
  *          parameter.
  * @name: The name of the parameter for which to retrieve a time
  * @retval: (out): The return value for the wanted time
- *
  *
  * Get a time value for the @name parameter of an action. This
  * method should be called to retrieve and compute a timed value of a given

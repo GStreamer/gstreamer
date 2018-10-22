@@ -21,6 +21,7 @@
  */
 /**
  * SECTION:gst-validate-reporter
+ * @title: GstValidateReporter
  * @short_description: A #GInterface that allows #GObject to be used as originator of
  * issues in the GstValidate reporting system
  */

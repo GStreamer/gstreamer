@@ -53,6 +53,7 @@ static GstValidateRunner *first_runner = NULL;
 
 /**
  * SECTION:gst-validate-runner
+ * @title: GstValidateRunner
  * @short_description: Class that runs Gst Validate tests for a pipeline
  *
  * Allows you to test a pipeline within GstValidate. It is the object where
@@ -74,6 +75,7 @@ static GstValidateRunner *first_runner = NULL;
  *  gst_object_unref (runner);
  *  gst_object_unref (monitor);
  * ]|
+ *
  */
 
 struct _GstValidateRunnerPrivate

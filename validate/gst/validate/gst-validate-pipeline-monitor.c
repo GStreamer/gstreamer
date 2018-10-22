@@ -39,6 +39,7 @@ static gboolean output_is_tty = TRUE;
 
 /**
  * SECTION:gst-validate-pipeline-monitor
+ * @title: GstValidatePipelineMonitor
  * @short_description: Class that wraps a #GstPipeline for Validate checks
  *
  * TODO

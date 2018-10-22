@@ -23,6 +23,7 @@
 
 /**
  * SECTION:gst-validate-monitor-factory
+ * @title: GstValidateMonitorFactory
  * @short_description: Lets you start monitoring a #GstObject with GstValidate
  *
  * To start monitoring and thus run GstValidate tests on a #GstPipeline, the only thing to

@@ -22,6 +22,7 @@
  */
 /**
  * SECTION:validate
+ * @title: Initialization
  * @short_description: Initialize GstValidate
  */
 

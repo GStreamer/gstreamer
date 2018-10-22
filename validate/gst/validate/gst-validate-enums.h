@@ -23,6 +23,11 @@
 #define __GST_VALIDATE_ENUMS_H__
 
 /**
+ * SECTION: gst-validate-enums.h
+ * @title: GstValidate enums
+ */
+
+/**
  * GstValidateReportingDetails:
  * @GST_VALIDATE_SHOW_NONE: No debugging level specified or desired. Used to deactivate
  *  debugging output.
