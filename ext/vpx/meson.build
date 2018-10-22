@@ -61,6 +61,7 @@ if vpx_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstvpx, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstvpx]
 
   install_data(sources: ['GstVP8Enc.prs'], install_dir: presetdir)
 endif

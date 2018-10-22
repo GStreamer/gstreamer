@@ -7,3 +7,4 @@ gstauparse = library('gstauparse',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstauparse, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstauparse]

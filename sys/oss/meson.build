@@ -25,11 +25,11 @@ if not oss_option.disabled()
 endif
 
 if have_oss
-  library('gstossaudio',
+  plugins += [library('gstossaudio',
     'gstossaudio.c', 'gstosshelper.c', 'gstosssink.c', 'gstosssrc.c',
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, gstbase_dep],
     install : true,
-    install_dir : plugins_install_dir)
+    install_dir : plugins_install_dir)]
 endif

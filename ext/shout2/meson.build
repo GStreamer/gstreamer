@@ -12,4 +12,5 @@ if shout2_dep.found()
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstshout2, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstshout2]
 endif

@@ -28,3 +28,4 @@ gstgoom = library('gstgoom',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstgoom, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstgoom]

@@ -99,8 +99,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_pt_demux_debug);
  */
 struct _GstRtpPtDemuxPad
 {
-  GstPad *pad;        /*< pointer to the actual pad */
-  gint pt;             /*< RTP payload-type attached to pad */
+  GstPad *pad;                  /*< pointer to the actual pad */
+  gint pt;                      /*< RTP payload-type attached to pad */
   gboolean newcaps;
 };
 

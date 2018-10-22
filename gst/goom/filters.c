@@ -150,14 +150,14 @@ typedef struct _ZOOM_FILTER_FX_WRAPPER_DATA
   int mustInitBuffers;
   int interlace_start;
 
-    /* modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
+  /* modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
   int buffratio;
   int *firedec;
 
-    /* modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
+  /* modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
   int precalCoef[BUFFPOINTNB][BUFFPOINTNB];
 
-    /* calculatePXandPY statics */
+  /* calculatePXandPY statics */
   int wave;
   int wavesp;
 
@@ -582,7 +582,7 @@ zoomFilterFastRGB (PluginInfo * goomInfo, Pixel * pix1, Pixel * pix2,
   if (!BVAL (data->enabled_bp))
     return;
 
-    /* changement de taille */
+  /* changement de taille */
   if ((data->prevX != resx) || (data->prevY != resy)) {
     data->prevX = resx;
     data->prevY = resy;
@@ -608,7 +608,7 @@ zoomFilterFastRGB (PluginInfo * goomInfo, Pixel * pix1, Pixel * pix2,
   if (data->interlace_start != -2)
     zf = NULL;
 
-    /* changement de config */
+  /* changement de config */
   if (zf) {
     data->reverse = zf->reverse;
     data->general_speed = (float) (zf->vitesse - 128) / 128.0f;
@@ -785,7 +785,7 @@ zoomFilterVisualFXWrapper_init (struct _VISUAL_FX *_this, PluginInfo * info)
   data->hPlaneEffect = 0;
   data->noisify = 2;
 
-    /* modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
+  /* modif by jeko : fixedpoint : buffration = (16:16) (donc 0<=buffration<=2^16) */
   data->buffratio = 0;
   data->firedec = 0;
 
@@ -799,7 +799,7 @@ zoomFilterVisualFXWrapper_init (struct _VISUAL_FX *_this, PluginInfo * info)
   _this->params = &data->params;
   _this->fx_data = (void *) data;
 
-    /* modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
+  /* modif d'optim by Jeko : precalcul des 4 coefs resultant des 2 pos */
   generatePrecalCoef (data->precalCoef);
 }
 

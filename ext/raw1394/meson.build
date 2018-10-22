@@ -12,11 +12,11 @@ if raw1394_dep.found() and iec61883_dep.found() and avc1394_dep.found()
 endif
 
 if have_1394
-  library('gst1394',
+  plugins += [library('gst1394',
     'gst1394.c', 'gst1394probe.c', 'gstdv1394src.c', 'gsthdv1394src.c', 'gst1394clock.c',
     c_args : gst_plugins_good_args + ['-DHAVE_LIBIEC61883'],
     include_directories : [configinc, libsinc],
     dependencies : [gstvideo_dep, gstbase_dep, raw1394_dep, avc1394_dep, iec61883_dep],
     install : true,
-    install_dir : plugins_install_dir)
+    install_dir : plugins_install_dir)]
 endif

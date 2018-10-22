@@ -26,3 +26,4 @@ gstrtpmanager = library('gstrtpmanager',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstrtpmanager, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstrtpmanager]

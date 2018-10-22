@@ -1,9 +1,6 @@
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
-
 ALWAYS_SUBDIRS =		\
 	gst sys ext 		\
 	tests			\
-	docs			\
 	po			\
 	common			\
 	m4			\
@@ -56,7 +53,6 @@ CRUFT_FILES = \
 	$(top_builddir)/win32/common/config.h-new \
 	$(top_builddir)/common/shave \
 	$(top_builddir)/common/shave-libtool \
-	$(top_builddir)/docs/plugins/xml/plugin-shout2send.xml \
 	$(top_builddir)/ext/pulse/.libs/libgstpulse.so \
 	$(top_builddir)/ext/soup/.libs/libgstsouphttpsrc.so \
 	$(top_builddir)/gst/median/.libs/*.{so,dll,DLL,dylib} \
@@ -70,7 +66,6 @@ CRUFT_FILES = \
 	$(top_builddir)/sys/waveform/.libs/libgstwaveformsink.{dll,DLL}
 
 CRUFT_DIRS = \
-	$(top_srcdir)/docs/plugins/tmpl \
 	$(top_srcdir)/gst/median \
 	$(top_srcdir)/gst/qtdemux \
 	$(top_srcdir)/gst/quicktime \

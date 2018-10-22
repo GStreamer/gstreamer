@@ -136,10 +136,6 @@ AG_GST_CHECK_DOWHILE_MACROS
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
-dnl check for documentation tools
-GTK_DOC_CHECK([1.12])
-AG_GST_PLUGIN_DOCS([1.12])
-
 dnl *** checks for libraries ***
 
 dnl check for libm, for sin()
@@ -1316,9 +1312,6 @@ tests/icles/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
-docs/Makefile
-docs/plugins/Makefile
-docs/version.entities
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-good-uninstalled.pc
 )

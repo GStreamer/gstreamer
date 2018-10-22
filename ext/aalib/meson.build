@@ -14,12 +14,14 @@ endif
 if have_aalib
   libaa_dep = cc.find_library('aa', required : aalib_option)
   if libaa_dep.found()
-    library('gstaasink', 'gstaasink.c',
+    gstaasink = library('gstaasink', 'gstaasink.c',
       c_args : gst_plugins_good_args,
       link_args : noseh_link_args,
       include_directories : [configinc],
       dependencies : [gstvideo_dep, gstbase_dep, libaa_dep],
       install : true,
-      install_dir : plugins_install_dir)
+      install_dir : plugins_install_dir
+    )
+    plugins += [gstaasink]
   endif
 endif
