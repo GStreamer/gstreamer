@@ -2908,7 +2908,7 @@ gst_queue2_dequeue_on_eos (GstQueue2 * queue, GstQueue2ItemType * item_type)
 static GstFlowReturn
 gst_queue2_push_one (GstQueue2 * queue)
 {
-  GstFlowReturn result = queue->srcresult;
+  GstFlowReturn result;
   GstMiniObject *data;
   GstQueue2ItemType item_type;
 
@@ -2917,6 +2917,7 @@ gst_queue2_push_one (GstQueue2 * queue)
     goto no_item;
 
 next:
+  result = queue->srcresult;
   STATUS (queue, queue->srcpad, "We have something dequeud");
   g_atomic_int_set (&queue->downstream_may_block,
       item_type == GST_QUEUE2_ITEM_TYPE_BUFFER ||
