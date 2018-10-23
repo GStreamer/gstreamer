@@ -25,10 +25,10 @@ GSTREAMER_MODULES: List[str] = [
 
 MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <remote fetch="%s" name="user"/>
+  <remote fetch="{}" name="user"/>
   <remote fetch="https://gitlab.freedesktop.org/gstreamer/" name="gstreamer"/>
   <remote fetch="git://anongit.freedesktop.org/gstreamer/" name="origin"/>
-%s
+{}
 </manifest>"""
 
 
@@ -36,6 +36,7 @@ def request(path: str) -> Dict[str, str]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': os.environ["CI_JOB_TOKEN"]}
 
     return requests.get('https://gitlab.gnome.org/api/v4/' + path, headers=gitlab_header).json()
+
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     # Shouldn't be needed.
     remote: str = "git://anongit.freedesktop.org/gstreamer/"
     projects: str = ''
-    project_template: str = '  <project name="%s" remote="%s" revision="%s" />\n'
+    project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
     user_remote: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
@@ -98,7 +99,7 @@ if __name__ == "__main__":
 
         if not revision:
             revision = 'master'
-        projects += project_template % (module, remote, revision)
+        projects += project_template.format(module, remote, revision)
 
     with open('manifest.xml', mode='w') as manifest:
-        print(MANIFEST_TEMPLATE % (user_remote, projects), file=manifest)
+        print(MANIFEST_TEMPLATE.format(user_remote, projects), file=manifest)
