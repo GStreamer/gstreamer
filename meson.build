@@ -71,8 +71,7 @@ subprojects = {
       'dependencies': [dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : vaapi_opt)]
     },
     'gst-devtools': {
-      'option': devtools_opt,
-      'dependencies': [dependency('json-glib-1.0', required: devtools_opt)],
+      'option': devtools_opt
     },
     'gst-editing-services': { 'option': ges_opt, 'dependencies': [dependency('libxml-2.0', required : ges_opt)] },
     'gst-rtsp-server': { 'option': get_option('rtsp_server') },
