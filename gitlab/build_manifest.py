@@ -4,8 +4,10 @@ import os
 import requests
 import sys
 
+from typing import Dict, Tuple, List
 
-GSTREAMER_MODULES = [
+GSTREAMER_MODULES: List[str] = [
+    # 'orc',
     'gst-build',
     'gstreamer',
     'gst-plugins-base',
@@ -21,7 +23,7 @@ GSTREAMER_MODULES = [
     'gst-rtsp-server'
 ]
 
-MANIFEST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
+MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <remote fetch="%s" name="user"/>
   <remote fetch="https://gitlab.freedesktop.org/gstreamer/" name="gstreamer"/>
@@ -30,13 +32,13 @@ MANIFEST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
-def request(path):
-    gitlab_header = {'JOB_TOKEN': os.environ["CI_JOB_TOKEN"]}
+def request(path: str) -> Dict[str, str]:
+    gitlab_header: Dict[str, str] = {'JOB_TOKEN': os.environ["CI_JOB_TOKEN"]}
 
     return requests.get('https://gitlab.gnome.org/api/v4/' + path, headers=gitlab_header).json()
 
 
-def find_repository_sha(module, branchname):
+def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
     for project in request('projects?search=' + module):
         if project['name'] != module:
             continue
@@ -67,19 +69,19 @@ def find_repository_sha(module, branchname):
     return 'origin', 'master'
 
 if __name__ == "__main__":
-    user_namespace = os.environ['CI_PROJECT_NAMESPACE']
-    project_name = os.environ['CI_PROJECT_NAME']
-    branchname = os.environ['CI_COMMIT_REF_NAME']
+    user_namespace: str = os.environ['CI_PROJECT_NAMESPACE']
+    project_name: str = os.environ['CI_PROJECT_NAME']
+    branchname: str = os.environ['CI_COMMIT_REF_NAME']
 
-    useful_namespaces = ['gstreamer']
+    useful_namespaces: List[str] = ['gstreamer']
     if branchname != 'master':
         useful_namespaces.append(user_namespace)
 
     # Shouldn't be needed.
-    remote = "git://anongit.freedesktop.org/gstreamer/"
-    projects = ''
-    project_template = '  <project name="%s" remote="%s" revision="%s" />\n'
-    user_remote = os.path.dirname(os.environ['CI_PROJECT_URL'])
+    remote: str = "git://anongit.freedesktop.org/gstreamer/"
+    projects: str = ''
+    project_template: str = '  <project name="%s" remote="%s" revision="%s" />\n'
+    user_remote: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
     for module in GSTREAMER_MODULES:
         print("Checking %s:" % module, end=' ')
 
