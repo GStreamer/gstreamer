@@ -5,6 +5,7 @@ import requests
 import sys
 
 from typing import Dict, Tuple, List
+from urllib.parse import urlparse
 
 GSTREAMER_MODULES: List[str] = [
     # 'orc',
@@ -34,9 +35,9 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 
 def request(path: str) -> Dict[str, str]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': os.environ["CI_JOB_TOKEN"]}
+    base_url: str = urlparse(os.environ('CI_PROJECT_URL')).hostname
 
-    return requests.get('https://gitlab.gnome.org/api/v4/' + path, headers=gitlab_header).json()
-
+    return requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header).json()
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
