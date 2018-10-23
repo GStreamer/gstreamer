@@ -59,6 +59,9 @@ def test_get_hostname():
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
+    # FIXME: This does global search query in the whole gitlab instance.
+    # It has been working so far by a miracle. It should be limited only to
+    # the current namespace instead.
     for project in request('projects?search=' + module):
         if project['name'] != module:
             continue
