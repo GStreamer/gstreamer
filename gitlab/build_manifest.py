@@ -47,21 +47,23 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
             # print("No 'namespace' in: %s - ignoring?" % project, file=sys.stderr)
             continue
 
+        id = project['id']
         if project['namespace']['name'] in useful_namespaces:
             if project['namespace']['name'] == user_namespace:
                 # If we have a branch with same name, use it.
-                for branch in request('%s/repository/branches' % project['id']):
+                for branch in request(f"{id}/repository/branches"):
                     if branch['name'] == branchname:
-                        print("%s/%s" % (project['namespace']['name'], branchname))
+                        name = project['namespace']['name']
+                        print(f"{name}/{branchname}")
 
                         return 'user', branch['commit']['id']
             else:
-                for branch in request('%s/repository/branches"' % project['id']):
+                for branch in request(f"{id}/repository/branches"):
                     if branch['name'] == branchname:
-                        print("gstreamer/%s" % (branchname))
+                        print(f"gstreamer/{branchname}")
                         return 'gstreamer', branch['commit']['id']
 
-                branch, = request('%s/repository/branches?search=master' % project['id'])
+                branch, = request(f"{id}/repository/branches?search=master")
                 print('gstreamer/master')
                 return 'gstreamer', branch.attributes['commit']['id']
 
@@ -83,14 +85,14 @@ if __name__ == "__main__":
     project_template: str = '  <project name="%s" remote="%s" revision="%s" />\n'
     user_remote: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
     for module in GSTREAMER_MODULES:
-        print("Checking %s:" % module, end=' ')
+        print(f"Checking {module}:", end=' ')
 
-        remote = "origin"
+        remote = 'origin'
         revision = None
         if module == project_name:
             revision = os.environ['CI_COMMIT_SHA']
-            remote = "user"
-            print("%s/%s" % (user_namespace, branchname))
+            remote = 'user'
+            print(f"{user_namespace}/{branchname}")
         else:
             remote, revision = find_repository_sha(module, branchname)
 
