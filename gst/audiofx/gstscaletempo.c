@@ -748,6 +748,27 @@ gst_scaletempo_query (GstBaseTransform * trans, GstPadDirection direction,
 
   if (direction == GST_PAD_SRC) {
     switch (GST_QUERY_TYPE (query)) {
+      case GST_QUERY_SEGMENT:
+      {
+        GstFormat format;
+        gint64 start, stop;
+
+        format = scaletempo->out_segment.format;
+
+        start =
+            gst_segment_to_stream_time (&scaletempo->out_segment, format,
+            scaletempo->out_segment.start);
+        if ((stop = scaletempo->out_segment.stop) == -1)
+          stop = scaletempo->out_segment.duration;
+        else
+          stop =
+              gst_segment_to_stream_time (&scaletempo->out_segment, format,
+              stop);
+
+        gst_query_set_segment (query, scaletempo->out_segment.rate, format,
+            start, stop);
+        return TRUE;
+      }
       case GST_QUERY_LATENCY:{
         GstPad *peer;
 
