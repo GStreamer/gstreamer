@@ -68,12 +68,12 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
             continue
 
         id = project['id']
-        if project['namespace']['name'] in useful_namespaces:
-            if project['namespace']['name'] == user_namespace:
+        if project['namespace']['path'] in useful_namespaces:
+            if project['namespace']['path'] == user_namespace:
                 # If we have a branch with same name, use it.
                 for branch in request(f"{id}/repository/branches"):
                     if branch['name'] == branchname:
-                        name = project['namespace']['name']
+                        name = project['namespace']['path']
                         print(f"{name}/{branchname}")
 
                         return 'user', branch['commit']['id']
