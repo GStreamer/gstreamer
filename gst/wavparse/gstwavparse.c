@@ -2748,6 +2748,25 @@ gst_wavparse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SEGMENT:
+    {
+      GstFormat format;
+      gint64 start, stop;
+
+      format = wav->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&wav->segment, format,
+          wav->segment.start);
+      if ((stop = wav->segment.stop) == -1)
+        stop = wav->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&wav->segment, format, stop);
+
+      gst_query_set_segment (query, wav->segment.rate, format, start, stop);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
