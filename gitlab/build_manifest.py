@@ -33,11 +33,17 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
-def request(path: str) -> Dict[str, str]:
-    gitlab_header: Dict[str, str] = {'JOB_TOKEN': os.environ["CI_JOB_TOKEN"]}
-    base_url: str = get_hostname(os.environ['CI_PROJECT_URL'])
+def request_raw(path: str, token: str, project_url: str) -> Dict[str, str]:
+    gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
+    base_url: str = get_hostname(project_url)
 
     return requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header).json()
+
+
+def request(path: str) -> Dict[str, str]:
+    token = os.environ["CI_JOB_TOKEN"]
+    project_url = os.environ['CI_PROJECT_URL']
+    return request_raw(path, token, project_url)
 
 
 def get_hostname(url: str) -> str:
