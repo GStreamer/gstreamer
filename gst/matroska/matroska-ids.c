@@ -59,6 +59,8 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   video_context->fourcc = 0;
   video_context->default_fps = 0.0;
   video_context->earliest_time = GST_CLOCK_TIME_NONE;
+  video_context->dirac_unit = NULL;
+  video_context->earliest_time = GST_CLOCK_TIME_NONE;
   video_context->multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
   video_context->multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
   video_context->colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
@@ -93,6 +95,8 @@ gst_matroska_track_init_audio_context (GstMatroskaTrackContext ** p_context)
   (*p_context)->type = GST_MATROSKA_TRACK_TYPE_AUDIO;
   audio_context->channels = 1;
   audio_context->samplerate = 8000;
+  audio_context->bitdepth = 16;
+  audio_context->wvpk_block_index = 0;
   return TRUE;
 }
 
@@ -116,7 +120,9 @@ gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context)
   *p_context = (GstMatroskaTrackContext *) subtitle_context;
 
   (*p_context)->type = GST_MATROSKA_TRACK_TYPE_SUBTITLE;
+  subtitle_context->check_utf8 = TRUE;
   subtitle_context->invalid_utf8 = FALSE;
+  subtitle_context->check_markup = TRUE;
   subtitle_context->seen_markup_tag = FALSE;
   return TRUE;
 }
