@@ -35,9 +35,21 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 
 def request(path: str) -> Dict[str, str]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': os.environ["CI_JOB_TOKEN"]}
-    base_url: str = urlparse(os.environ('CI_PROJECT_URL')).hostname
+    base_url: str = get_hostname(os.environ['CI_PROJECT_URL'])
 
     return requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header).json()
+
+
+def get_hostname(url: str) -> str:
+    return urlparse(url).hostname
+
+
+def test_get_hostname():
+    gitlab = 'https://gitlab.com/example/a_project'
+    assert get_hostname(gitlab) == 'gitlab.com'
+
+    fdo = 'https://gitlab.freedesktop.org/example/a_project'
+    assert get_hostname(fdo) == 'gitlab.freedesktop.org'
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
