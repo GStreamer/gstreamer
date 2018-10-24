@@ -3198,6 +3198,11 @@ gst_player_pause (GstPlayer * self)
 static void
 gst_player_stop_internal (GstPlayer * self, gboolean transient)
 {
+  /* directly return if we're already stopped */
+  if (self->current_state <= GST_STATE_READY &&
+      self->target_state <= GST_STATE_READY)
+    return;
+
   GST_DEBUG_OBJECT (self, "Stop (transient %d)", transient);
 
   tick_cb (self);
