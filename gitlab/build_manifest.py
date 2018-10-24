@@ -75,6 +75,9 @@ def test_get_project_branch():
     assert fourteen is not None
     assert fourteen['name'] == '1.14'
 
+    failure = get_project_branch(id, 'why-would-anyone-chose-this-branch-name')
+    assert failure is None
+
 
 # Documentation: https://docs.gitlab.com/ce/api/projects.html#list-user-projects
 def search_user_namespace(user: str, project: str) -> Dict[str, str]:
