@@ -122,37 +122,29 @@ def test_get_hostname():
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
-    # FIXME: This does global search query in the whole gitlab instance.
-    # It has been working so far by a miracle. It should be limited only to
-    # the current namespace instead.
-    for project in request('projects?search=' + module):
-        if project['name'] != module:
-            continue
+    project = search_user_namespace(os.environ["GITLAB_USER_LOGIN"], module)
 
-        if 'namespace' not in project:
-            # print("No 'namespace' in: %s - ignoring?" % project, file=sys.stderr)
-            continue
-
+    if project:
         id = project['id']
-        if project['namespace']['path'] in useful_namespaces:
-            if project['namespace']['path'] == user_namespace:
-                # If we have a branch with same name, use it.
-                branch = get_project_branch(id, branchname)
-                if branch is not None:
-                    name = project['namespace']['path']
-                    print(f"{name}/{branchname}")
+        # If we have a branch with same name, use it.
+        branch = get_project_branch(id, branchname)
+        if branch is not None:
+            name = project['namespace']['path']
+            print(f"{name}/{branchname}")
 
-                    return 'user', branch['commit']['id']
-            else:
-                branch = get_project_branch(id, branchname)
-                if branch is not None:
-                    print(f"gstreamer/{branchname}")
-                    return 'gstreamer', branch['commit']['id']
+            return 'user', branch['commit']['id']
+    # This won't work until gstreamer migrates to gitlab
+    else:
+        id = 'FIXME: query the gstreamer group in fd.o'
+        branch = get_project_branch(id, branchname)
+        if branch is not None:
+            print(f"gstreamer/{branchname}")
+            return 'gstreamer', branch['commit']['id']
 
-                branch = get_project_branch(id, 'master')
-                if branch is not None:
-                    print('gstreamer/master')
-                    return 'gstreamer', branch.attributes['commit']['id']
+        branch = get_project_branch(id, 'master')
+        if branch is not None:
+            print('gstreamer/master')
+            return 'gstreamer', branch.attributes['commit']['id']
 
     print('origin/master')
     return 'origin', 'master'
