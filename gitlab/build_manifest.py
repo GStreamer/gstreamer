@@ -133,6 +133,9 @@ if __name__ == "__main__":
     projects: str = ''
     project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
     user_remote: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
+    if not user_remote.endswith('/'):
+        user_remote += '/'
+
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
 
