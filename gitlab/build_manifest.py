@@ -6,6 +6,7 @@ import sys
 
 from typing import Dict, Tuple, List
 from urllib.parse import urlparse
+# from pprint import pprint
 
 GSTREAMER_MODULES: List[str] = [
     # 'orc',
@@ -46,6 +47,30 @@ def request(path: str) -> Dict[str, str]:
     return request_raw(path, token, project_url)
 
 
+def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
+    path = f"projects/{project_id}/repository/branches?search={name}"
+    resp: List[Dict[str, str]] = request(path)
+
+    if resp is None:
+        return None
+
+    return resp[0]
+
+
+def test_get_project_branch():
+    id = 1353
+    os.environ["CI_JOB_TOKEN"] = "xxxxxxxxxxxxxxxxxxxx"
+    os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
+
+    twelve = get_project_branch(id, '1.12')
+    assert twelve is not None
+    assert twelve['name'] == '1.12'
+
+    fourteen = get_project_branch(id, '1.14')
+    assert fourteen is not None
+    assert fourteen['name'] == '1.14'
+
+
 def get_hostname(url: str) -> str:
     return urlparse(url).hostname
 
@@ -74,21 +99,22 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
         if project['namespace']['path'] in useful_namespaces:
             if project['namespace']['path'] == user_namespace:
                 # If we have a branch with same name, use it.
-                for branch in request(f"{id}/repository/branches"):
-                    if branch['name'] == branchname:
-                        name = project['namespace']['path']
-                        print(f"{name}/{branchname}")
+                branch = get_project_branch(id, branchname)
+                if branch is not None:
+                    name = project['namespace']['path']
+                    print(f"{name}/{branchname}")
 
-                        return 'user', branch['commit']['id']
+                    return 'user', branch['commit']['id']
             else:
-                for branch in request(f"{id}/repository/branches"):
-                    if branch['name'] == branchname:
-                        print(f"gstreamer/{branchname}")
-                        return 'gstreamer', branch['commit']['id']
+                branch = get_project_branch(id, branchname)
+                if branch is not None:
+                    print(f"gstreamer/{branchname}")
+                    return 'gstreamer', branch['commit']['id']
 
-                branch, = request(f"{id}/repository/branches?search=master")
-                print('gstreamer/master')
-                return 'gstreamer', branch.attributes['commit']['id']
+                branch = get_project_branch(id, 'master')
+                if branch is not None:
+                    print('gstreamer/master')
+                    return 'gstreamer', branch.attributes['commit']['id']
 
     print('origin/master')
     return 'origin', 'master'
