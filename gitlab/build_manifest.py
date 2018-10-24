@@ -34,14 +34,14 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
-def request_raw(path: str, token: str, project_url: str) -> Dict[str, str]:
+def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
 
     return requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header).json()
 
 
-def request(path: str) -> Dict[str, str]:
+def request(path: str) -> List[Dict[str, str]]:
     token = os.environ["CI_JOB_TOKEN"]
     project_url = os.environ['CI_PROJECT_URL']
     return request_raw(path, token, project_url)
@@ -51,9 +51,14 @@ def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
     path = f"projects/{project_id}/repository/branches?search={name}"
     resp: List[Dict[str, str]] = request(path)
 
-    if resp is None:
+    if not resp:
+        return None
+    if not resp[0]:
         return None
 
+    # Not sure if there will be any edge cases where it returns more than one
+    # so lets see if anyone complains
+    assert len(resp) == 1
     return resp[0]
 
 
@@ -69,6 +74,39 @@ def test_get_project_branch():
     fourteen = get_project_branch(id, '1.14')
     assert fourteen is not None
     assert fourteen['name'] == '1.14'
+
+
+# Documentation: https://docs.gitlab.com/ce/api/projects.html#list-user-projects
+def search_user_namespace(user: str, project: str) -> Dict[str, str]:
+    path = f"/users/{user}/projects?search={project}"
+    resp: List[Dict[str, str]] = request(path)
+
+    if not resp:
+        return None
+    if not resp[0]:
+        return None
+
+    # Not sure if there will be any edge cases where it returns more than one
+    # so lets see if anyone complains
+    assert len(resp) == 1
+    return resp[0]
+
+
+def test_search_user_namespace():
+    os.environ["CI_JOB_TOKEN"] = "xxxxxxxxxxxxxxxxxxxx"
+    os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/alatiera/gst-plugins-good"
+    user = "alatiera"
+
+    gst = search_user_namespace("alatiera", "gstreamer")
+    assert gst is not None
+    assert gst['path'] == 'gstreamer'
+
+    gst_good = search_user_namespace("alatiera", "gst-plugins-good")
+    assert gst_good is not None
+    assert gst_good['path'] == 'gst-plugins-good'
+
+    res = search_user_namespace("alatiera", "404-project-not-found")
+    assert res is None
 
 
 def get_hostname(url: str) -> str:
