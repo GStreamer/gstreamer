@@ -179,6 +179,27 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
     return 'origin', 'master'
 
 
+def test_find_repository_sha():
+    os.environ["CI_JOB_TOKEN"] = "xxxxxxxxxxxxxxxxxxxx"
+    os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
+    os.environ["GITLAB_USER_LOGIN"] = "alatiera"
+
+    # This should find the repository in the user namespace
+    remote, git_ref = find_repository_sha("gst-plugins-good", "1.2")
+    assert remote == "user"
+    assert git_ref == "08ab260b8a39791e7e62c95f4b64fd5b69959325"
+
+    # This should fallback to upstream master branch since no matching branch was found
+    remote, git_ref = find_repository_sha("gst-plugins-good", "totally-valid-branch-name")
+    assert remote == "origin"
+    assert git_ref == "master"
+
+    # This should fallback to upstream master branch since no repository was found
+    remote, git_ref = find_repository_sha("totally-valid-project-name", "1.2")
+    assert remote == "origin"
+    assert git_ref == "master"
+
+
 if __name__ == "__main__":
     projects: str = ''
     project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
