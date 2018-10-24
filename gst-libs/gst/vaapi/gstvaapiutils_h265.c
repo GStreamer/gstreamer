@@ -317,7 +317,10 @@ gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
       break;
     case 2:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
+      if (luma_bit_depth == 8)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
+      else if (luma_bit_depth > 8)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
       break;
     case 3:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;

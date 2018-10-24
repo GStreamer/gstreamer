@@ -407,6 +407,11 @@ to_GstVaapiChromaType (guint va_rt_format)
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
       break;
 #endif
+#if VA_CHECK_VERSION(1,2,0)
+    case VA_RT_FORMAT_YUV422_10:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
+      break;
+#endif
     default:
       chroma_type = 0;
       break;
@@ -453,6 +458,11 @@ from_GstVaapiChromaType (guint chroma_type)
 #if VA_CHECK_VERSION(0,38,1)
     case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
       format = VA_RT_FORMAT_YUV420_10BPP;
+      break;
+#endif
+#if VA_CHECK_VERSION(1,2,0)
+    case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
+      format = VA_RT_FORMAT_YUV422_10;
       break;
 #endif
     default:
