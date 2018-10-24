@@ -175,9 +175,9 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
 if __name__ == "__main__":
     projects: str = ''
     project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
-    user_remote: str = os.path.dirname(CI_PROJECT_URL)
-    if not user_remote.endswith('/'):
-        user_remote += '/'
+    user_remote_url: str = os.path.dirname(CI_PROJECT_URL)
+    if not user_remote_url.endswith('/'):
+        user_remote_url += '/'
 
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
@@ -196,4 +196,4 @@ if __name__ == "__main__":
         projects += project_template.format(module, remote, revision)
 
     with open('manifest.xml', mode='w') as manifest:
-        print(MANIFEST_TEMPLATE.format(user_remote, projects), file=manifest)
+        print(MANIFEST_TEMPLATE.format(user_remote_url, projects), file=manifest)
