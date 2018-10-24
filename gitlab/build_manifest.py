@@ -56,8 +56,12 @@ CURRENT_BRANCH: str = os.environ['CI_COMMIT_REF_NAME']
 def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
+    resp = requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header)
 
-    return requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header).json()
+    if not resp.ok:
+        return None
+
+    return resp.json()
 
 
 def request(path: str) -> List[Dict[str, str]]:
@@ -96,6 +100,9 @@ def test_get_project_branch():
 
     failure = get_project_branch(id, 'why-would-anyone-chose-this-branch-name')
     assert failure is None
+
+    failure2 = get_project_branch("invalid-id", '1.12')
+    assert failure2 is None
 
 
 # Documentation: https://docs.gitlab.com/ce/api/projects.html#list-user-projects
