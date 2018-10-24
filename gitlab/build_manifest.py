@@ -34,6 +34,25 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
+# Predefined variables by Gitlab-CI
+# Documentation: https://docs.gitlab.com/ce/ci/variables/README.html#predefined-variables-environment-variables
+#
+# mock: "alatiera"
+GITLAB_USER_LOGIN: str = os.environ["GITLAB_USER_LOGIN"]
+# mock: "xxxxxxxxxxxxxxxxxxxx"
+CI_TOKEN: str = os.environ["CI_JOB_TOKEN"]
+# mock: "https://gitlab.freedesktop.org/gstreamer/gstreamer"
+CI_PROJECT_URL: str = os.environ['CI_PROJECT_URL']
+# mock: gstreamer
+CI_PROJECT_NAME: str = os.environ['CI_PROJECT_NAME']
+# mock: gstreamer
+CI_PROJECT_NAMESPACE: str = os.environ['CI_PROJECT_NAMESPACE']
+# mock: 5947ff970e3ae86b589f31772ca3c50240898710
+CI_COMMIT_SHA: str = os.environ['CI_COMMIT_SHA']
+# mock: "foobar/a-branch-name"
+CURRENT_BRANCH: str = os.environ['CI_COMMIT_REF_NAME']
+
+
 def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
@@ -42,8 +61,8 @@ def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]
 
 
 def request(path: str) -> List[Dict[str, str]]:
-    token = os.environ["CI_JOB_TOKEN"]
-    project_url = os.environ['CI_PROJECT_URL']
+    token = CI_TOKEN
+    project_url = CI_PROJECT_URL
     return request_raw(path, token, project_url)
 
 
@@ -125,7 +144,7 @@ def test_get_hostname():
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
-    project = search_user_namespace(os.environ["GITLAB_USER_LOGIN"], module)
+    project = search_user_namespace(GITLAB_USER_LOGIN, module)
 
     if project:
         id = project['id']
@@ -152,20 +171,11 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
     print('origin/master')
     return 'origin', 'master'
 
+
 if __name__ == "__main__":
-    user_namespace: str = os.environ['CI_PROJECT_NAMESPACE']
-    project_name: str = os.environ['CI_PROJECT_NAME']
-    branchname: str = os.environ['CI_COMMIT_REF_NAME']
-
-    useful_namespaces: List[str] = ['gstreamer']
-    if branchname != 'master':
-        useful_namespaces.append(user_namespace)
-
-    # Shouldn't be needed.
-    remote: str = "git://anongit.freedesktop.org/gstreamer/"
     projects: str = ''
     project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
-    user_remote: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
+    user_remote: str = os.path.dirname(CI_PROJECT_URL)
     if not user_remote.endswith('/'):
         user_remote += '/'
 
@@ -174,12 +184,12 @@ if __name__ == "__main__":
 
         remote = 'origin'
         revision = None
-        if module == project_name:
-            revision = os.environ['CI_COMMIT_SHA']
+        if module == CI_PROJECT_NAME:
+            revision = CI_COMMIT_SHA
             remote = 'user'
-            print(f"{user_namespace}/{branchname}")
+            print(f"{CI_PROJECT_NAMESPACE}/{CURRENT_BRANCH}")
         else:
-            remote, revision = find_repository_sha(module, branchname)
+            remote, revision = find_repository_sha(module, CURRENT_BRANCH)
 
         if not revision:
             revision = 'master'
