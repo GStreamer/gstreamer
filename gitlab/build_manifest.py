@@ -204,9 +204,6 @@ if __name__ == "__main__":
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
         remote, revision = find_repository_sha(module, CURRENT_BRANCH)
-
-        if not revision:
-            revision = 'master'
         projects += project_template.format(module, remote, revision)
 
     with open('manifest.xml', mode='w') as manifest:
