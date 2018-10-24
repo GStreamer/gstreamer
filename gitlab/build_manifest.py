@@ -43,12 +43,6 @@ GITLAB_USER_LOGIN: str = os.environ["GITLAB_USER_LOGIN"]
 CI_TOKEN: str = os.environ["CI_JOB_TOKEN"]
 # mock: "https://gitlab.freedesktop.org/gstreamer/gstreamer"
 CI_PROJECT_URL: str = os.environ['CI_PROJECT_URL']
-# mock: gstreamer
-CI_PROJECT_NAME: str = os.environ['CI_PROJECT_NAME']
-# mock: gstreamer
-CI_PROJECT_NAMESPACE: str = os.environ['CI_PROJECT_NAMESPACE']
-# mock: 5947ff970e3ae86b589f31772ca3c50240898710
-CI_COMMIT_SHA: str = os.environ['CI_COMMIT_SHA']
 # mock: "foobar/a-branch-name"
 CURRENT_BRANCH: str = os.environ['CI_COMMIT_REF_NAME']
 
@@ -209,15 +203,7 @@ if __name__ == "__main__":
 
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
-
-        remote = 'origin'
-        revision = None
-        if module == CI_PROJECT_NAME:
-            revision = CI_COMMIT_SHA
-            remote = 'user'
-            print(f"{CI_PROJECT_NAMESPACE}/{CURRENT_BRANCH}")
-        else:
-            remote, revision = find_repository_sha(module, CURRENT_BRANCH)
+        remote, revision = find_repository_sha(module, CURRENT_BRANCH)
 
         if not revision:
             revision = 'master'
