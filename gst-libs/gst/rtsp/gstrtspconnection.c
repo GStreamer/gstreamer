@@ -3747,7 +3747,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     guint *ids;
     gsize bytes_to_write, bytes_written;
     guint n_vectors, n_memories, n_ids, drop_messages;
-    gint i, j, k, l;
+    gint i, j, l, n_mmap;
     GstRTSPSerializedMessage *msg;
 
     /* if this connection was already closed, stop now */
@@ -3821,7 +3821,8 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     if (ids)
       memset (ids, 0, sizeof (guint) * (n_ids + 1));
 
-    for (i = 0, j = 0, k = 0, l = 0, bytes_to_write = 0; i < n_messages; i++) {
+    for (i = 0, j = 0, n_mmap = 0, l = 0, bytes_to_write = 0; i < n_messages;
+        i++) {
       msg = gst_queue_array_peek_nth_struct (watch->messages, i);
 
       if (msg->data_offset < msg->data_size) {
@@ -3842,33 +3843,32 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
       } else if (msg->body_buffer) {
         guint m, n;
         guint offset = 0;
-
         n = gst_buffer_n_memory (msg->body_buffer);
         for (m = 0; m < n; m++) {
           GstMemory *mem = gst_buffer_peek_memory (msg->body_buffer, m);
           guint off;
 
           /* Skip all memories we already wrote */
-          if (offset + mem->size < msg->body_offset) {
+          if (offset + mem->size <= msg->body_offset) {
             offset += mem->size;
             continue;
           }
 
-          if (offset < msg->body_offset) {
+          if (offset < msg->body_offset)
             off = msg->body_offset - offset;
-          } else {
-            offset += mem->size;
+          else
             off = 0;
-          }
+
+          offset += mem->size;
 
           g_assert (off < mem->size);
 
-          gst_memory_map (mem, &map_infos[k], GST_MAP_READ);
-          vectors[j].buffer = map_infos[k].data + off;
-          vectors[j].size = map_infos[k].size - off;
+          gst_memory_map (mem, &map_infos[n_mmap], GST_MAP_READ);
+          vectors[j].buffer = map_infos[n_mmap].data + off;
+          vectors[j].size = map_infos[n_mmap].size - off;
           bytes_to_write += vectors[j].size;
 
-          k++;
+          n_mmap++;
           j++;
         }
       }
@@ -3882,8 +3882,8 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     /* First unmap all memories here, this simplifies the code below
      * as we don't have to skip all memories that were already written
      * before */
-    for (k = 0; k < n_memories; k++) {
-      gst_memory_unmap (map_infos[k].memory, &map_infos[k]);
+    for (i = 0; i < n_mmap; i++) {
+      gst_memory_unmap (map_infos[i].memory, &map_infos[i]);
     }
 
     if (bytes_written == bytes_to_write) {
@@ -3902,31 +3902,30 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
       watch->messages_bytes -= bytes_written;
     } else if (bytes_written > 0) {
       /* not done, let's skip all messages that were sent already and free them */
-      for (i = 0, k = 0, drop_messages = 0; i < n_messages; i++) {
+      for (i = 0, drop_messages = 0; i < n_messages; i++) {
         msg = gst_queue_array_peek_nth_struct (watch->messages, i);
 
         if (bytes_written >= 0) {
-          if (bytes_written >= msg->data_size) {
+          if (bytes_written >= msg->data_size - msg->data_offset) {
             guint body_size;
 
             /* all data of this message is sent, check body and otherwise
              * skip the whole message for next time */
+            bytes_written -= (msg->data_size - msg->data_offset);
             msg->data_offset = msg->data_size;
-            bytes_written -= msg->data_size;
 
             if (msg->body_data) {
               body_size = msg->body_data_size;
-
             } else if (msg->body_buffer) {
               body_size = gst_buffer_get_size (msg->body_buffer);
             } else {
               body_size = 0;
             }
 
-            if (bytes_written >= body_size) {
+            if (bytes_written + msg->body_offset >= body_size) {
               /* body written, drop this message */
+              bytes_written -= body_size - msg->body_offset;
               msg->body_offset = body_size;
-              bytes_written -= body_size;
               drop_messages++;
 
               if (msg->id) {
@@ -3936,7 +3935,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
 
               gst_rtsp_serialized_message_clear (msg);
             } else {
-              msg->body_offset = bytes_written;
+              msg->body_offset += bytes_written;
               bytes_written = 0;
             }
           } else {
