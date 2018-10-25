@@ -34,19 +34,6 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
-# Predefined variables by Gitlab-CI
-# Documentation: https://docs.gitlab.com/ce/ci/variables/README.html#predefined-variables-environment-variables
-#
-# mock: "alatiera"
-GITLAB_USER_LOGIN: str = os.environ["GITLAB_USER_LOGIN"]
-# mock: "xxxxxxxxxxxxxxxxxxxx"
-CI_TOKEN: str = os.environ["CI_JOB_TOKEN"]
-# mock: "https://gitlab.freedesktop.org/gstreamer/gstreamer"
-CI_PROJECT_URL: str = os.environ['CI_PROJECT_URL']
-# mock: "foobar/a-branch-name"
-CURRENT_BRANCH: str = os.environ['CI_COMMIT_REF_NAME']
-
-
 def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
@@ -60,8 +47,10 @@ def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]
 
 
 def request(path: str) -> List[Dict[str, str]]:
-    token = CI_TOKEN
-    project_url = CI_PROJECT_URL
+    # mock: "xxxxxxxxxxxxxxxxxxxx"
+    token: str = os.environ["CI_JOB_TOKEN"]
+    # mock: "https://gitlab.freedesktop.org/gstreamer/gstreamer"
+    project_url: str = os.environ['CI_PROJECT_URL']
     return request_raw(path, token, project_url)
 
 
@@ -176,7 +165,8 @@ def test_get_hostname():
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
-    project = search_user_namespace(GITLAB_USER_LOGIN, module)
+    user_login: str = os.environ["GITLAB_USER_LOGIN"]
+    project = search_user_namespace(user_login, module)
 
     # Find a fork in the User's namespace
     if project:
@@ -233,13 +223,14 @@ def test_find_repository_sha():
 if __name__ == "__main__":
     projects: str = ''
     project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
-    user_remote_url: str = os.path.dirname(CI_PROJECT_URL)
+    user_remote_url: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
     if not user_remote_url.endswith('/'):
         user_remote_url += '/'
 
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
-        remote, revision = find_repository_sha(module, CURRENT_BRANCH)
+        current_branch: str = os.environ['CI_COMMIT_REF_NAME']
+        remote, revision = find_repository_sha(module, current_branch)
         projects += project_template.format(module, remote, revision)
 
     with open('manifest.xml', mode='w') as manifest:
