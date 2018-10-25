@@ -61,8 +61,10 @@ def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
     url: str = f"https://{base_url}/api/v4/{path}"
+    print(f"GET {url}")
     resp = requests.get(url, headers=gitlab_header)
 
+    print(f"Request returned: {resp.status_code}")
     if not resp.ok:
         return None
 
@@ -92,6 +94,7 @@ def request_wrap(path: str) -> List[Dict[str, str]]:
 
 
 def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
+    print(f"Searching for {name} branch in project {project_id}")
     path = f"projects/{project_id}/repository/branches?search={name}"
     return request_wrap(path)
 
@@ -119,6 +122,7 @@ def test_get_project_branch():
 
 # Documentation: https://docs.gitlab.com/ce/api/projects.html#list-user-projects
 def search_user_namespace(user: str, project: str) -> Dict[str, str]:
+    print(f"Searching for {project} project in @{user} user's namespace")
     path = f"/users/{user}/projects?search={project}"
     return request_wrap(path)
 
@@ -142,6 +146,7 @@ def test_search_user_namespace():
 
 # Documentation: https://docs.gitlab.com/ee/api/search.html#group-search-api
 def search_group_namespace(group_id: str, project: str) -> Dict[str, str]:
+    print(f"Searching for {project} project in @{group_id} group namespace")
     path = f"groups/{group_id}/search?scope=projects&search={project}"
     return request_wrap(path)
 
@@ -191,31 +196,37 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
     # Find a fork in the User's namespace
     if project:
         id = project['id']
+        print(f"User project found, id: {id}")
         # If we have a branch with same name, use it.
         branch = get_project_branch(id, branchname)
         if branch is not None:
-            name = project['namespace']['path']
-            print(f"{name}/{branchname}")
+            path = project['namespace']['path']
+            print("Found mathcing branch in user's namespace")
+            print(f"{path}/{branchname}")
 
             return 'user', branch['commit']['id']
+        print(f"Did not found user branch named {branchname}")
 
     # This won't work until gstreamer migrates to gitlab
     # Else check the upstream gstreamer repository
     project = search_group_namespace('gstreamer', module)
     if project:
+        print(f"Project found in Gstreamer upstream, id: {id}")
         id = project['id']
         # If we have a branch with same name, use it.
         branch = get_project_branch(id, branchname)
         if branch is not None:
+            print("Found matching branch in upstream gst repo")
             print(f"gstreamer/{branchname}")
             return 'gstreamer', branch['commit']['id']
 
         branch = get_project_branch(id, 'master')
         if branch is not None:
+            # print("Falling back to master branch in upstream repo")
             print('gstreamer/master')
             return 'gstreamer', branch.attributes['commit']['id']
 
-    print('origin/master')
+    print('Falling back to origin/master')
     return 'origin', 'master'
 
 
