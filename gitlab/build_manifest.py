@@ -34,6 +34,29 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
+# Basically, pytest will happily let a test mutate a variable, and then run
+# the next tests one the same environment without reset the vars.
+def preserve_ci_vars(func):
+    """Preserve the original CI Variable values"""
+    def wrapper():
+        try:
+            token = os.environ["CI_JOB_TOKEN"]
+            url = os.environ["CI_PROJECT_URL"]
+            user = os.environ["GITLAB_USER_LOGIN"]
+        except KeyError:
+            token = "invalid"
+            url = "invalid"
+            user = ""
+
+        func()
+
+        os.environ["CI_JOB_TOKEN"] = token
+        os.environ["CI_PROJECT_URL"] = url
+        os.environ["GITLAB_USER_LOGIN"] = user
+
+    return wrapper
+
+
 def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
@@ -73,6 +96,7 @@ def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
     return request_wrap(path)
 
 
+@preserve_ci_vars
 def test_get_project_branch():
     id = 1353
     os.environ["CI_JOB_TOKEN"] = "xxxxxxxxxxxxxxxxxxxx"
@@ -99,6 +123,7 @@ def search_user_namespace(user: str, project: str) -> Dict[str, str]:
     return request_wrap(path)
 
 
+@preserve_ci_vars
 def test_search_user_namespace():
     os.environ["CI_JOB_TOKEN"] = "xxxxxxxxxxxxxxxxxxxx"
     os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/alatiera/gst-plugins-good"
@@ -121,10 +146,18 @@ def search_group_namespace(group_id: str, project: str) -> Dict[str, str]:
     return request_wrap(path)
 
 
+@preserve_ci_vars
 def test_search_group_namespace():
     import pytest
     try:
-        os.environ["CI_TOKEN"]
+        instance = get_hostname(os.environ['CI_PROJECT_URL'])
+        # This tests need to authenticate with the gitlab instace,
+        # and its hardcoded to check for the gitlab-org which exists
+        # on gitlab.com
+        # This can be changed to a gstreamer once its migrated to gitlab.fd.o
+        if instance != "gitlab.freedesktop.org":
+            # too lazy to use a different error
+            raise KeyError
     except KeyError:
         pytest.skip("Need to be authenticated with gitlab to succed")
 
@@ -186,6 +219,7 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
     return 'origin', 'master'
 
 
+@preserve_ci_vars
 def test_find_repository_sha():
     os.environ["CI_JOB_TOKEN"] = "xxxxxxxxxxxxxxxxxxxx"
     os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
