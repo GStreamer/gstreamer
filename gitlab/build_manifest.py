@@ -50,7 +50,8 @@ CURRENT_BRANCH: str = os.environ['CI_COMMIT_REF_NAME']
 def request_raw(path: str, token: str, project_url: str) -> List[Dict[str, str]]:
     gitlab_header: Dict[str, str] = {'JOB_TOKEN': token }
     base_url: str = get_hostname(project_url)
-    resp = requests.get(f"https://{base_url}/api/v4/" + path, headers=gitlab_header)
+    url: str = f"https://{base_url}/api/v4/{path}"
+    resp = requests.get(url, headers=gitlab_header)
 
     if not resp.ok:
         return None
@@ -131,6 +132,36 @@ def test_search_user_namespace():
     res = search_user_namespace("alatiera", "404-project-not-found")
     assert res is None
 
+# Documentation: https://docs.gitlab.com/ee/api/search.html#group-search-api
+def search_group_namespace(group_id: str, project: str) -> Dict[str, str]:
+    path = f"groups/{group_id}/search?scope=projects&search={project}"
+    resp: List[Dict[str, str]] = request(path)
+
+    if not resp:
+        return None
+    if not resp[0]:
+        return None
+
+    return resp[0]
+
+
+def test_search_group_namespace():
+    import pytest
+    try:
+        os.environ["CI_TOKEN"]
+    except KeyError:
+        pytest.skip("Need to be authenticated with gitlab to succed")
+
+    os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gstreamer"
+    group = "gstreamer"
+
+    lab = search_group_namespace(group, "gstreamer")
+    assert lab is not None
+    assert lab['path'] == 'gstreamer'
+
+    res = search_user_namespace(group, "404-project-not-found")
+    assert res is None
+
 
 def get_hostname(url: str) -> str:
     return urlparse(url).hostname
@@ -147,6 +178,7 @@ def test_get_hostname():
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
     project = search_user_namespace(GITLAB_USER_LOGIN, module)
 
+    # Find a fork in the User's namespace
     if project:
         id = project['id']
         # If we have a branch with same name, use it.
@@ -156,9 +188,13 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
             print(f"{name}/{branchname}")
 
             return 'user', branch['commit']['id']
+
     # This won't work until gstreamer migrates to gitlab
-    else:
-        id = 'FIXME: query the gstreamer group in fd.o'
+    # Else check the upstream gstreamer repository
+    project = search_group_namespace('gstreamer', module)
+    if project:
+        id = project['id']
+        # If we have a branch with same name, use it.
         branch = get_project_branch(id, branchname)
         if branch is not None:
             print(f"gstreamer/{branchname}")
