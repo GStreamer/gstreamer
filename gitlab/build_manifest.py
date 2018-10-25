@@ -54,8 +54,7 @@ def request(path: str) -> List[Dict[str, str]]:
     return request_raw(path, token, project_url)
 
 
-def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
-    path = f"projects/{project_id}/repository/branches?search={name}"
+def request_wrap(path: str) -> List[Dict[str, str]]:
     resp: List[Dict[str, str]] = request(path)
 
     if not resp:
@@ -67,6 +66,11 @@ def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
     # so lets see if anyone complains
     assert len(resp) == 1
     return resp[0]
+
+
+def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
+    path = f"projects/{project_id}/repository/branches?search={name}"
+    return request_wrap(path)
 
 
 def test_get_project_branch():
@@ -92,17 +96,7 @@ def test_get_project_branch():
 # Documentation: https://docs.gitlab.com/ce/api/projects.html#list-user-projects
 def search_user_namespace(user: str, project: str) -> Dict[str, str]:
     path = f"/users/{user}/projects?search={project}"
-    resp: List[Dict[str, str]] = request(path)
-
-    if not resp:
-        return None
-    if not resp[0]:
-        return None
-
-    # Not sure if there will be any edge cases where it returns more than one
-    # so lets see if anyone complains
-    assert len(resp) == 1
-    return resp[0]
+    return request_wrap(path)
 
 
 def test_search_user_namespace():
@@ -124,14 +118,7 @@ def test_search_user_namespace():
 # Documentation: https://docs.gitlab.com/ee/api/search.html#group-search-api
 def search_group_namespace(group_id: str, project: str) -> Dict[str, str]:
     path = f"groups/{group_id}/search?scope=projects&search={project}"
-    resp: List[Dict[str, str]] = request(path)
-
-    if not resp:
-        return None
-    if not resp[0]:
-        return None
-
-    return resp[0]
+    return request_wrap(path)
 
 
 def test_search_group_namespace():
