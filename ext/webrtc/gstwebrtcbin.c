@@ -2155,7 +2155,6 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 {
   GstSDPMessage *ret;
   int i;
-  gchar *str;
   GString *bundled_mids = NULL;
   gchar *bundle_ufrag = NULL;
   gchar *bundle_pwd = NULL;
@@ -2172,11 +2171,6 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   gst_sdp_message_set_session_name (ret, "-");
   gst_sdp_message_add_time (ret, "0", "0", NULL);
   gst_sdp_message_add_attribute (ret, "ice-options", "trickle");
-
-  /* https://tools.ietf.org/html/draft-ietf-mmusic-msid-05#section-3 */
-  str = g_strdup_printf ("WMS %s", GST_OBJECT (webrtc)->name);
-  gst_sdp_message_add_attribute (ret, "msid-semantic", str);
-  g_free (str);
 
   if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE) {
     bundled_mids = g_string_new ("BUNDLE");
