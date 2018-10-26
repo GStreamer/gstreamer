@@ -2150,6 +2150,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   return TRUE;
 }
 
+/* TODO: use the options argument */
 static GstSDPMessage *
 _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 {
@@ -2470,6 +2471,7 @@ _get_bundle_index (GstSDPMessage * sdp, GStrv bundled, guint * idx)
   return ret;
 }
 
+/* TODO: use the options argument */
 static GstSDPMessage *
 _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 {
