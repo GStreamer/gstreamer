@@ -841,19 +841,19 @@ gst_type_find_get_extension (GstTypeFindElement * typefind, GstPad * pad)
   /* ERRORS */
 peer_query_failed:
   {
-    GST_WARNING_OBJECT (typefind, "failed to query peer uri");
+    GST_INFO_OBJECT (typefind, "failed to query peer uri");
     gst_query_unref (query);
     return NULL;
   }
 no_uri:
   {
-    GST_WARNING_OBJECT (typefind, "could not parse the peer uri");
+    GST_INFO_OBJECT (typefind, "could not parse the peer uri");
     gst_query_unref (query);
     return NULL;
   }
 no_extension:
   {
-    GST_WARNING_OBJECT (typefind, "could not find uri extension in %s", uri);
+    GST_INFO_OBJECT (typefind, "could not find uri extension in %s", uri);
     gst_query_unref (query);
     g_free (uri);
     return NULL;
