@@ -63,7 +63,10 @@ subprojects = {
     'gst-plugins-good': {},
     'gst-plugins-bad': { 'option': get_option('bad') },
     'gst-plugins-ugly': { 'option': get_option('ugly') },
-    'gst-python': { 'option': python_opt, 'dependencies': [dependency('pygobject-3.0', required : python_opt)] },
+    'gst-python': {
+      'option': python_opt,
+      'dependencies': [dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_dep'], required : python_opt)]
+    },
     'gst-omx': { 'option': get_option('omx'), },
     'gst-libav': { 'option': get_option('libav'), 'dependencies': libav_deps},
     'gstreamer-vaapi': {

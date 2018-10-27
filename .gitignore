@@ -38,4 +38,6 @@ subprojects/libunwind/
 subprojects/proxy-libintl/
 subprojects/zlib/
 subprojects/openh264/
+subprojects/pygobject/
+subprojects/pycairo/
 prefix/
