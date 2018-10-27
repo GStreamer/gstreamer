@@ -2,24 +2,33 @@ install_subdir('GstDebugViewer', install_dir: python3.sysconfig_path('purelib'),
     exclude_files: ['__init__.py'])
 message('Installing in ' + python3.sysconfig_path('purelib'))
 
-# Desktop launcher and description file.
-desktop_file = i18n.merge_file(
-  input: 'org.freedesktop.GstDebugViewer.desktop.in',
-  output: 'org.freedesktop.GstDebugViewer.desktop',
-  type: 'desktop',
-  po_dir: 'po',
-  install: true,
-  install_dir: join_paths(get_option('datadir'), 'applications'),
-)
+if find_program('msgfmt', required : get_option('nls')).found()
+  # Desktop launcher and description file.
+  desktop_file = i18n.merge_file(
+    input: 'org.freedesktop.GstDebugViewer.desktop.in',
+    output: 'org.freedesktop.GstDebugViewer.desktop',
+    type: 'desktop',
+    po_dir: 'po',
+    install: true,
+    install_dir: join_paths(get_option('datadir'), 'applications'),
+  )
 
-# Appdata file.
-appdata_file = i18n.merge_file(
-  input: 'org.freedesktop.GstDebugViewer.appdata.xml.in',
-  output: 'org.freedesktop.GstDebugViewer.appdata.xml',
-  po_dir: 'po',
-  install: true,
-  install_dir: join_paths(get_option('datadir'), 'metainfo'),
-)
+  # Appdata file.
+  appdata_file = i18n.merge_file(
+    input: 'org.freedesktop.GstDebugViewer.appdata.xml.in',
+    output: 'org.freedesktop.GstDebugViewer.appdata.xml',
+    po_dir: 'po',
+    install: true,
+    install_dir: join_paths(get_option('datadir'), 'metainfo'),
+  )
+else
+  install_data('org.freedesktop.GstDebugViewer.desktop.in',
+    rename: 'org.freedesktop.GstDebugViewer.desktop',
+    install_dir: join_paths(get_option('datadir'), 'applications'))
+  install_data('org.freedesktop.GstDebugViewer.appdata.xml.in',
+    rename: 'org.freedesktop.GstDebugViewer.appdata.xml',
+    install_dir: join_paths(get_option('datadir'), 'metainfo'))
+endif
 
 cdata = configuration_data()
 cdata.set('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
