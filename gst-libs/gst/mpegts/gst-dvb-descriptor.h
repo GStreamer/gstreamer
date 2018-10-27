@@ -287,9 +287,16 @@ struct _GstMpegtsCableDeliverySystemDescriptor
   GstMpegtsDVBCodeRate               fec_inner;
 };
 
+#define GST_TYPE_MPEGTS_DVB_CABLE_DELIVERY_SYSTEM_DESCRIPTOR ( gst_mpegts_dvb_cable_system_delivery_descriptor_get_type())
+
+GST_MPEGTS_API
+GType gst_mpegts_dvb_cable_delivery_system_descriptor_get_type (void);
+
 GST_MPEGTS_API
 gboolean gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegtsDescriptor *descriptor,
 							    GstMpegtsCableDeliverySystemDescriptor *res);
+GST_MPEGTS_API
+void gst_mpegts_dvb_cable_delivery_system_descriptor_free (GstMpegtsCableDeliverySystemDescriptor * source);
 
 /* GST_MTS_DESC_DVB_BOUQUET_NAME (0x47) */
 

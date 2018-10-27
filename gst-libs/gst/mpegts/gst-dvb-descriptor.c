@@ -293,8 +293,29 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegtsDescriptor
   return TRUE;
 }
 
-
 /* GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM (0x44) */
+static GstMpegtsCableDeliverySystemDescriptor
+    * _gst_mpegts_dvb_cable_delivery_system_descriptor_copy
+    (GstMpegtsCableDeliverySystemDescriptor * source)
+{
+  GstMpegtsCableDeliverySystemDescriptor *copy;
+
+  copy = g_slice_dup (GstMpegtsCableDeliverySystemDescriptor, source);
+
+  return copy;
+}
+
+void gst_mpegts_dvb_cable_delivery_system_descriptor_free
+    (GstMpegtsCableDeliverySystemDescriptor * source)
+{
+  g_slice_free (GstMpegtsCableDeliverySystemDescriptor, source);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsCableDeliverySystemDescriptor,
+    gst_mpegts_dvb_cable_delivery_system_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_cable_delivery_system_descriptor_copy,
+    (GFreeFunc) gst_mpegts_dvb_cable_delivery_system_descriptor_free);
+
 /**
  * gst_mpegts_descriptor_parse_cable_delivery_system:
  * @descriptor: a %GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM #GstMpegtsDescriptor
