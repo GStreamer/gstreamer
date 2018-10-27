@@ -263,6 +263,9 @@ gst_flac_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
     gst_adapter_clear (flacdec->adapter);
   }
 
+  FLAC__stream_decoder_reset (flacdec->decoder);
+  flacdec->got_headers = FALSE;
+
   num = gst_value_array_get_size (headers);
   for (i = 0; i < num; ++i) {
     const GValue *header_val;
