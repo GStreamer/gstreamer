@@ -489,6 +489,11 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
           metadata->data.stream_info.sample_rate,
           metadata->data.stream_info.channels, position);
 
+      gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (flacdec),
+          &flacdec->info);
+
+      gst_audio_decoder_negotiate (GST_AUDIO_DECODER (flacdec));
+
       GST_DEBUG_OBJECT (flacdec, "blocksize: min=%u, max=%u",
           flacdec->min_blocksize, flacdec->max_blocksize);
       GST_DEBUG_OBJECT (flacdec, "sample rate: %u, channels: %u",
