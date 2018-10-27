@@ -322,6 +322,7 @@ gst_flv_mux_reset (GstElement * element)
   mux->duration = GST_CLOCK_TIME_NONE;
   mux->new_tags = FALSE;
   mux->first_timestamp = GST_CLOCK_STIME_NONE;
+  mux->last_dts = 0;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
   mux->sent_header = FALSE;
@@ -1145,6 +1146,19 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     dts = pad->dts / GST_MSECOND;
   }
 
+  /* We prevent backwards timestamps because they confuse librtmp,
+   * it expects timestamps to go forward not only inside one stream, but
+   * also between the audio & video streams.
+   */
+  if (dts < mux->last_dts) {
+    GST_WARNING_OBJECT (pad, "Got backwards dts! (%" GST_TIME_FORMAT
+        " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (dts),
+        GST_TIME_ARGS (mux->last_dts));
+    dts = mux->last_dts;
+  }
+  mux->last_dts = dts;
+
+
   /* Be safe in case TS are buggy */
   if (pts > dts)
     cts = pts - dts;
@@ -1189,6 +1203,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   data[1] = ((size - 11 - 4) >> 16) & 0xff;
   data[2] = ((size - 11 - 4) >> 8) & 0xff;
   data[3] = ((size - 11 - 4) >> 0) & 0xff;
+
 
   GST_WRITE_UINT24_BE (data + 4, dts);
   data[7] = (((guint) dts) >> 24) & 0xff;
