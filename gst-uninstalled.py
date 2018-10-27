@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import pathlib
 
 from distutils.sysconfig import get_python_lib
 
@@ -112,9 +113,29 @@ def get_subprocess_env(options, gst_version):
     presets = set()
     encoding_targets = set()
     pkg_dirs = set()
+    python_dirs = set()
     if '--installed' in subprocess.check_output(meson + ['introspect', '-h']).decode():
         installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
+            installpath_parts = pathlib.Path(installpath).parts
+            path_parts = pathlib.Path(path).parts
+
+            # We want to add all python modules to the PYTHONPATH
+            # in a manner consistent with the way they would be imported:
+            # For example if the source path /home/meh/foo/bar.py
+            # is to be installed in /usr/lib/python/site-packages/foo/bar.py,
+            # we want to add /home/meh to the PYTHONPATH.
+            # This will only work for projects where the paths to be installed
+            # mirror the installed directory layout, for example if the path
+            # is /home/meh/baz/bar.py and the install path is
+            # /usr/lib/site-packages/foo/bar.py , we will not add anything
+            # to PYTHONPATH, but the current approach works with pygobject
+            # and gst-python at least.
+            if 'site-packages' in installpath_parts:
+                install_subpath = os.path.join(*installpath_parts[installpath_parts.index('site-packages') + 1:])
+                if path.endswith(install_subpath):
+                    python_dirs.add(path[:len (install_subpath) * -1])
+
             if path.endswith('.prs'):
                 presets.add(os.path.dirname(path))
             elif path.endswith('.gep'):
@@ -138,6 +159,9 @@ def get_subprocess_env(options, gst_version):
                                                          'subprojects',
                                                          'gst-plugins-good',
                                                          'pkgconfig'))
+
+    for python_dir in python_dirs:
+        prepend_env_var(env, 'PYTHONPATH', python_dir)
 
     mesonpath = os.path.join(SCRIPTDIR, "meson")
     if os.path.join(mesonpath):
