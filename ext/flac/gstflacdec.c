@@ -633,10 +633,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     GST_DEBUG_OBJECT (flacdec, "Negotiating %d Hz @ %d channels", sample_rate,
         channels);
 
-    memcpy (chanpos, channel_positions[flacdec->info.channels - 1],
-        sizeof (chanpos));
-    gst_audio_channel_positions_to_valid_order (chanpos,
-        flacdec->info.channels);
+    memcpy (chanpos, channel_positions[channels - 1], sizeof (chanpos));
+    gst_audio_channel_positions_to_valid_order (chanpos, channels);
     gst_audio_info_set_format (&flacdec->info,
         gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, gdepth),
         sample_rate, channels, chanpos);
