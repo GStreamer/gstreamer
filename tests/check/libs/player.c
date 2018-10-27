@@ -1701,28 +1701,31 @@ player_suite (void)
   tcase_add_test (tc_general, test_set_and_get_uri);
   tcase_add_test (tc_general, test_set_and_get_position_update_interval);
 
+  /* Skip playback tests for now.
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=787374 */
+
 #ifdef HAVE_VALGRIND
   if (RUNNING_ON_VALGRIND) {
   } else
 #endif
   {
-    tcase_add_test (tc_general, test_play_position_update_interval);
+    tcase_skip_broken_test (tc_general, test_play_position_update_interval);
   }
-  tcase_add_test (tc_general, test_play_audio_eos);
-  tcase_add_test (tc_general, test_play_audio_video_eos);
-  tcase_add_test (tc_general, test_play_error_invalid_uri);
-  tcase_add_test (tc_general, test_play_error_invalid_uri_and_play);
+  tcase_skip_broken_test (tc_general, test_play_audio_eos);
+  tcase_skip_broken_test (tc_general, test_play_audio_video_eos);
+  tcase_skip_broken_test (tc_general, test_play_error_invalid_uri);
+  tcase_skip_broken_test (tc_general, test_play_error_invalid_uri_and_play);
   tcase_skip_broken_test (tc_general, test_play_media_info);
-  tcase_add_test (tc_general, test_play_stream_disable);
-  tcase_add_test (tc_general, test_play_stream_switch_audio);
-  tcase_add_test (tc_general, test_play_stream_switch_subtitle);
-  tcase_add_test (tc_general, test_play_error_invalid_external_suburi);
-  tcase_add_test (tc_general, test_play_external_suburi);
-  tcase_add_test (tc_general, test_play_forward_rate);
-  tcase_add_test (tc_general, test_play_backward_rate);
-  tcase_add_test (tc_general, test_play_audio_video_seek_done);
-  tcase_add_test (tc_general, test_restart);
-  tcase_add_test (tc_general, test_user_agent);
+  tcase_skip_broken_test (tc_general, test_play_stream_disable);
+  tcase_skip_broken_test (tc_general, test_play_stream_switch_audio);
+  tcase_skip_broken_test (tc_general, test_play_stream_switch_subtitle);
+  tcase_skip_broken_test (tc_general, test_play_error_invalid_external_suburi);
+  tcase_skip_broken_test (tc_general, test_play_external_suburi);
+  tcase_skip_broken_test (tc_general, test_play_forward_rate);
+  tcase_skip_broken_test (tc_general, test_play_backward_rate);
+  tcase_skip_broken_test (tc_general, test_play_audio_video_seek_done);
+  tcase_skip_broken_test (tc_general, test_restart);
+  tcase_skip_broken_test (tc_general, test_user_agent);
 
   suite_add_tcase (s, tc_general);
 
