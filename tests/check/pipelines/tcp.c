@@ -205,9 +205,27 @@ GST_END_TEST;
 GST_START_TEST (test_that_tcpserversink_and_tcpclientsrc_are_symmetrical)
 {
   SymmetryTest st = { 0 };
+  GstElement *serversink = gst_check_setup_element ("tcpserversink");
+  guint timeout = 100;
 
-  symmetry_test_setup (&st, gst_check_setup_element ("tcpserversink"),
+  symmetry_test_setup (&st, serversink,
       gst_check_setup_element ("tcpclientsrc"));
+
+  /* Wait for the client to *actually* be connected before doing the
+   * test.  The socket connection from the client might very well
+   * succeed, but that doesn't mean the server has accepted it yet. If
+   * we don't wait for the server to have accepted the connection, we
+   * would end up dropping the buffer (because no one is "connected")
+   * and the receiving side would wait forever. */
+  while (timeout) {
+    guint handles;
+    g_object_get (serversink, "num-handles", &handles, NULL);
+    if (handles > 0)
+      break;
+    /* Wait for 10ms to see if client connected */
+    g_usleep (G_USEC_PER_SEC / 100);
+    timeout--;
+  }
 
   symmetry_test_assert_passthrough (&st,
       gst_buffer_new_wrapped (g_strdup ("hello"), 5));
