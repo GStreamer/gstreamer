@@ -563,6 +563,16 @@ if get_option('default_library') == 'shared'
   # If we don't build static plugins there is no need to generate pc files
   plugins_pkgconfig_install_dir = disabler()
 endif
+pkgconfig_variables = ['exec_prefix=${prefix}',
+    'toolsdir=${exec_prefix}/bin',
+    'pluginsdir=${libdir}/gstreamer-1.0',
+    'datarootdir=${prefix}/share',
+    'datadir=${datarootdir}',
+    'girdir=${datadir}/gir-1.0',
+    'typelibdir=${libdir}/girepository-1.0',
+    'libexecdir=${prefix}/libexec',
+    'pluginscannerdir=${libexecdir}/gstreamer-1.0']
+pkgconfig_subdirs = ['gstreamer-1.0']
 
 subdir('gst')
 subdir('libs')
@@ -570,7 +580,6 @@ subdir('plugins')
 if not get_option('tools').disabled()
   subdir('tools')
 endif
-subdir('pkgconfig')
 subdir('tests')
 subdir('data')
 subdir('docs')

@@ -35,6 +35,14 @@ gst_net = library('gstnet-@0@'.format(apiversion),
   dependencies : [gio_dep, gst_base_dep],
 )
 
+pkgconfig.generate(gst_net,
+  libraries : [libgst],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-net-1.0',
+  description : 'Network-enabled GStreamer plug-ins and clocking',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/net/net.h' ]
   gst_net_gir = gnome.generate_gir(gst_net,
@@ -57,3 +65,5 @@ gst_net_dep = declare_dependency(link_with : gst_net,
   include_directories : [libsinc],
   sources: gst_net_gen_sources,
   dependencies : [gst_base_dep])
+
+meson.override_dependency('gstreamer-net-1.0', gst_net_dep)

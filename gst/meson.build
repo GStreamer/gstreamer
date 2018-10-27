@@ -250,6 +250,14 @@ libgst = library('gstreamer-1.0', gst_sources,
                    + platform_deps,
 )
 
+pkgconfig.generate(libgst,
+  libraries : [glib_dep, gobject_dep],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-1.0',
+  description : 'Streaming media framework',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + ['--c-include=gst/gst.h']
   if meson.is_subproject()
@@ -288,3 +296,5 @@ gst_dep = declare_dependency(link_with : libgst,
   # Everything that uses libgst needs this built to compile
   sources : gst_gen_sources,
 )
+
+meson.override_dependency('gstreamer-1.0', gst_dep)

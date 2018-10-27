@@ -48,6 +48,14 @@ gst_controller = library('gstcontroller-@0@'.format(apiversion),
   dependencies : [gobject_dep, glib_dep, mathlib, gst_dep],
 )
 
+pkgconfig.generate(gst_controller,
+  libraries : [libgst],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-controller-1.0',
+  description : 'Dynamic parameter control for GStreamer elements',
+)
+
 if build_gir
   gst_gir_extra_args = gir_init_section + [ '--c-include=gst/controller/controller.h' ]
   gst_controller_gir = gnome.generate_gir(gst_controller,
@@ -70,3 +78,5 @@ gst_controller_dep = declare_dependency(link_with : gst_controller,
   include_directories : [libsinc],
   sources: gst_controller_gen_sources,
   dependencies : [gst_dep])
+
+meson.override_dependency('gstreamer-controller-1.0', gst_controller_dep)

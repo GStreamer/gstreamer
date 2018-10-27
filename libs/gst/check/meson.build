@@ -48,6 +48,14 @@ gst_check = library('gstcheck-@0@'.format(apiversion),
   dependencies : [gobject_dep, glib_dep, gst_dep],
 )
 
+pkgconfig.generate(gst_check,
+  libraries : [libgst],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  name : 'gstreamer-check-1.0',
+  description : 'Unit testing helper library for GStreamer modules',
+)
+
 gst_check_gen_sources = []
 
 if build_gir
@@ -72,3 +80,5 @@ gst_check_dep = declare_dependency(link_with : gst_check,
   include_directories : [libsinc],
   dependencies : [gst_dep],
   sources : gst_check_gen_sources)
+
+meson.override_dependency('gstreamer-check-1.0', gst_check_dep)
