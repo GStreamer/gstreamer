@@ -93,7 +93,6 @@
 #include <string.h>
 
 #include "compositor.h"
-#include "compositorpad.h"
 
 #ifdef DISABLE_ORC
 #define orc_memset memset
