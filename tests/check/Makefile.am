@@ -232,6 +232,7 @@ VALGRIND_TESTS_DISABLE = \
 #            actually looks at the data and doesn't like randomness
 noinst_PROGRAMS = \
 	pipelines/streamheader \
+	$(check_mssdemux) \
 	$(check_dash_demux) \
 	$(check_ipcpipeline) \
 	$(check_neon)
@@ -247,7 +248,6 @@ check_PROGRAMS = \
 	$(check_voamrwbenc) \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
-	$(check_mssdemux) \
 	$(check_ofa)        \
 	$(check_kate)  \
 	$(check_opencv) \

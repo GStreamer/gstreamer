@@ -43,7 +43,6 @@ base_tests = [
   [['elements/mpeg4videoparse.c'], false, [libparser_dep]],
   [['elements/mpegtsmux.c']],
   [['elements/mpegvideoparse.c'], false, [libparser_dep]],
-  [['elements/mssdemux.c', 'elements/test_http_src.c', 'elements/adaptive_demux_engine.c', 'elements/adaptive_demux_common.c'], not xml28_dep.found(), [xml28_dep]],
   [['elements/mxfdemux.c']],
   [['elements/mxfmux.c']],
   [['elements/netsim.c']],
