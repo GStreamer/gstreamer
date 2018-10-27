@@ -56,7 +56,7 @@ typedef struct _GstCompositorPad GstCompositorPad;
 typedef struct _GstCompositorPadClass GstCompositorPadClass;
 
 /**
- * GstcompositorBackground:
+ * GstCompositorBackground:
  * @COMPOSITOR_BACKGROUND_CHECKER: checker pattern background
  * @COMPOSITOR_BACKGROUND_BLACK: solid color black background
  * @COMPOSITOR_BACKGROUND_WHITE: solid color white background
@@ -71,6 +71,28 @@ typedef enum
   COMPOSITOR_BACKGROUND_WHITE,
   COMPOSITOR_BACKGROUND_TRANSPARENT,
 } GstCompositorBackground;
+
+/**
+ * GstCompositorOperator:
+ * @COMPOSITOR_OPERATOR_SOURCE: Copy the source over the destination,
+ *                              without the destination pixels.
+ * @COMPOSITOR_OPERATOR_OVER: Blend the source over the destination.
+ * @COMPOSITOR_OPERATOR_ADD: Similar to over but add the source and
+ *                           destination alpha. Requires output with alpha
+ *                           channel.
+ *
+ * The different blending operators that can be used by compositor.
+ *
+ * See https://www.cairographics.org/operators/ for some explanation and
+ * visualizations.
+ *
+ */
+typedef enum
+{
+  COMPOSITOR_OPERATOR_SOURCE,
+  COMPOSITOR_OPERATOR_OVER,
+  COMPOSITOR_OPERATOR_ADD,
+} GstCompositorOperator;
 
 /**
  * GstCompositor:
@@ -105,9 +127,8 @@ struct _GstCompositorPad
   gint xpos, ypos;
   gint width, height;
   gdouble alpha;
-  gdouble crossfade;
 
-  gboolean crossfaded;
+  GstCompositorOperator op;
 };
 
 struct _GstCompositorPadClass

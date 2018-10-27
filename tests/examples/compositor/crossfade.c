@@ -21,8 +21,7 @@
 /**
  * Simple crossfade example using the compositor element.
  *
- * Takes a list of uri/path to video files and crossfade them
- * for 10 seconds and returns.
+ * Takes two video files and crossfades them for 10 seconds and returns.
  */
 
 #include <stdlib.h>
@@ -34,7 +33,6 @@ typedef struct
 {
   GstElement *compositor;
   guint z_order;
-  gboolean is_last;
 } VideoInfo;
 
 static gchar *
@@ -51,24 +49,23 @@ _pad_added_cb (GstElement * decodebin, GstPad * pad, VideoInfo * info)
 {
   GstPad *sinkpad =
       gst_element_get_request_pad (GST_ELEMENT (info->compositor), "sink_%u");
+  GstControlSource *control_source;
+  gboolean is_last = info->z_order == 1;
 
-  if (!info->is_last) {
-    GstControlSource *control_source;
+  control_source = gst_interpolation_control_source_new ();
 
-    control_source = gst_interpolation_control_source_new ();
+  gst_util_set_object_arg (G_OBJECT (sinkpad), "operator",
+      info->z_order == 0 ? "source" : "add");
+  gst_object_add_control_binding (GST_OBJECT (sinkpad),
+      gst_direct_control_binding_new_absolute (GST_OBJECT (sinkpad), "alpha",
+          control_source));
 
-    g_object_set (sinkpad, "crossfade-ratio", 1.0, NULL);
-    gst_object_add_control_binding (GST_OBJECT (sinkpad),
-        gst_direct_control_binding_new_absolute (GST_OBJECT (sinkpad),
-            "crossfade-ratio", control_source));
+  g_object_set (control_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
-    g_object_set (control_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
-
-    gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
-        (control_source), 0, 1.0);
-    gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
-        (control_source), 10 * GST_SECOND, 0.0);
-  }
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
+      (control_source), 0, is_last ? 0.0 : 1.0);
+  gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
+      (control_source), 10 * GST_SECOND, is_last ? 1.0 : 0.0);
   g_object_set (sinkpad, "zorder", info->z_order, NULL);
 
   gst_pad_link (pad, sinkpad);
@@ -84,8 +81,8 @@ main (int argc, char *argv[])
   GstElement *compositor, *sink, *pipeline;
   GstBus *bus;
 
-  if (argc < 2) {
-    g_error ("At least 1 valid video file paths/urls need to " "be provided");
+  if (argc != 3) {
+    g_error ("Need to provide 2 input videos");
     return -1;
   }
 
@@ -101,7 +98,7 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (pipeline), compositor, sink, NULL);
   g_assert (gst_element_link (compositor, sink));
 
-  for (i = 1; i < argc; i++) {
+  for (i = 1; i < 3; i++) {
     gchar *uri = ensure_uri (argv[i]);
     VideoInfo *info = g_malloc0 (sizeof (VideoInfo));
     GstElement *uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
@@ -111,7 +108,6 @@ main (int argc, char *argv[])
 
     info->compositor = compositor;
     info->z_order = i - 1;
-    info->is_last = (i == (argc - 1)) && (argc > 2);
     g_signal_connect (uridecodebin, "pad-added", (GCallback) _pad_added_cb,
         info);
 

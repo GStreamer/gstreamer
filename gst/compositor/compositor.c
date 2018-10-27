@@ -122,12 +122,32 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
 static void gst_compositor_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
 
+#define GST_TYPE_COMPOSITOR_OPERATOR (gst_compositor_operator_get_type())
+static GType
+gst_compositor_operator_get_type (void)
+{
+  static GType compositor_operator_type = 0;
+
+  static const GEnumValue compositor_operator[] = {
+    {COMPOSITOR_OPERATOR_SOURCE, "Source", "source"},
+    {COMPOSITOR_OPERATOR_OVER, "Over", "over"},
+    {COMPOSITOR_OPERATOR_ADD, "Add", "add"},
+    {0, NULL, NULL},
+  };
+
+  if (!compositor_operator_type) {
+    compositor_operator_type =
+        g_enum_register_static ("GstCompositorOperator", compositor_operator);
+  }
+  return compositor_operator_type;
+}
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_WIDTH  0
 #define DEFAULT_PAD_HEIGHT 0
 #define DEFAULT_PAD_ALPHA  1.0
-#define DEFAULT_PAD_CROSSFADE_RATIO  0.0
+#define DEFAULT_PAD_OPERATOR COMPOSITOR_OPERATOR_OVER
 enum
 {
   PROP_PAD_0,
@@ -136,7 +156,7 @@ enum
   PROP_PAD_WIDTH,
   PROP_PAD_HEIGHT,
   PROP_PAD_ALPHA,
-  PROP_PAD_CROSSFADE_RATIO,
+  PROP_PAD_OPERATOR,
 };
 
 G_DEFINE_TYPE (GstCompositorPad, gst_compositor_pad,
@@ -164,8 +184,8 @@ gst_compositor_pad_get_property (GObject * object, guint prop_id,
     case PROP_PAD_ALPHA:
       g_value_set_double (value, pad->alpha);
       break;
-    case PROP_PAD_CROSSFADE_RATIO:
-      g_value_set_double (value, pad->crossfade);
+    case PROP_PAD_OPERATOR:
+      g_value_set_enum (value, pad->op);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -199,10 +219,10 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
     case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
       break;
-    case PROP_PAD_CROSSFADE_RATIO:
-      pad->crossfade = g_value_get_double (value);
+    case PROP_PAD_OPERATOR:
+      pad->op = g_value_get_enum (value);
       gst_video_aggregator_pad_set_needs_alpha (GST_VIDEO_AGGREGATOR_PAD (pad),
-          pad->crossfade > 0.0);
+          pad->op == COMPOSITOR_OPERATOR_ADD);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -319,7 +339,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
       GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
 
   if (cpad->alpha == 0.0) {
-    GST_DEBUG_OBJECT (vagg, "Pad has alpha 0.0, not converting frame");
+    GST_DEBUG_OBJECT (pad, "Pad has alpha 0.0, not converting frame");
     goto done;
   }
 
@@ -327,25 +347,16 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
       GST_VIDEO_INFO_WIDTH (&vagg->info), GST_VIDEO_INFO_HEIGHT (&vagg->info));
 
   if (frame_rect.w == 0 || frame_rect.h == 0) {
-    GST_DEBUG_OBJECT (vagg, "Resulting frame is zero-width or zero-height "
+    GST_DEBUG_OBJECT (pad, "Resulting frame is zero-width or zero-height "
         "(w: %i, h: %i), skipping", frame_rect.w, frame_rect.h);
     goto done;
   }
 
   GST_OBJECT_LOCK (vagg);
-  /* Check if we are crossfading the pad one way or another */
-  l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad);
-  if ((l->prev && GST_COMPOSITOR_PAD (l->prev->data)->crossfade > 0.0) ||
-      (GST_COMPOSITOR_PAD (pad)->crossfade > 0.0)) {
-    GST_DEBUG_OBJECT (pad, "Is being crossfaded with previous pad");
-    l = NULL;
-  } else {
-    l = l->next;
-  }
-
   /* Check if this frame is obscured by a higher-zorder frame
    * TODO: Also skip a frame if it's obscured by a combination of
    * higher-zorder frames */
+  l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad)->next;
   for (; l; l = l->next) {
     GstVideoRectangle frame2_rect;
     GstVideoAggregatorPad *pad2 = l->data;
@@ -468,10 +479,10 @@ gst_compositor_pad_class_init (GstCompositorPadClass * klass)
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PAD_CROSSFADE_RATIO,
-      g_param_spec_double ("crossfade-ratio", "Crossfade ratio",
-          "The crossfade ratio to use while crossfading with the following pad",
-          0.0, 1.0, DEFAULT_PAD_CROSSFADE_RATIO,
+  g_object_class_install_property (gobject_class, PROP_PAD_OPERATOR,
+      g_param_spec_enum ("operator", "Operator",
+          "Blending operator to use for blending this pad over the previous ones",
+          GST_TYPE_COMPOSITOR_OPERATOR, DEFAULT_PAD_OPERATOR,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   vaggpadclass->prepare_frame =
@@ -487,7 +498,7 @@ gst_compositor_pad_init (GstCompositorPad * compo_pad)
   compo_pad->xpos = DEFAULT_PAD_XPOS;
   compo_pad->ypos = DEFAULT_PAD_YPOS;
   compo_pad->alpha = DEFAULT_PAD_ALPHA;
-  compo_pad->crossfade = DEFAULT_PAD_CROSSFADE_RATIO;
+  compo_pad->op = DEFAULT_PAD_OPERATOR;
 }
 
 
@@ -818,137 +829,6 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
   return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
 
-/* Fills frame with transparent pixels if @nframe is NULL otherwise copy @frame
- * properties and fill @nframes with transparent pixels */
-static GstFlowReturn
-gst_compositor_fill_transparent (GstCompositor * self, GstVideoFrame * frame,
-    GstVideoFrame * nframe)
-{
-  guint plane, num_planes, height, i;
-
-  if (nframe) {
-    GstBuffer *cbuffer = gst_buffer_copy_deep (frame->buffer);
-
-    if (!gst_video_frame_map (nframe, &frame->info, cbuffer, GST_MAP_WRITE)) {
-      GST_WARNING_OBJECT (self, "Could not map output buffer");
-      gst_buffer_unref (cbuffer);
-      return GST_FLOW_ERROR;
-    }
-
-    /* the last reference is owned by the frame and released once the frame
-     * is unmapped. We leak it if we don't unref here */
-    gst_buffer_unref (cbuffer);
-  } else {
-    nframe = frame;
-  }
-
-  num_planes = GST_VIDEO_FRAME_N_PLANES (nframe);
-  for (plane = 0; plane < num_planes; ++plane) {
-    guint8 *pdata;
-    gsize rowsize, plane_stride;
-
-    pdata = GST_VIDEO_FRAME_PLANE_DATA (nframe, plane);
-    plane_stride = GST_VIDEO_FRAME_PLANE_STRIDE (nframe, plane);
-    rowsize = GST_VIDEO_FRAME_COMP_WIDTH (nframe, plane)
-        * GST_VIDEO_FRAME_COMP_PSTRIDE (nframe, plane);
-    height = GST_VIDEO_FRAME_COMP_HEIGHT (nframe, plane);
-    for (i = 0; i < height; ++i) {
-      memset (pdata, 0, rowsize);
-      pdata += plane_stride;
-    }
-  }
-
-  return GST_FLOW_OK;
-}
-
-/* WITH GST_OBJECT_LOCK !!
- * Returns: %TRUE if outframe is allready ready to be used as we are using
- * a transparent background and all pads have already been crossfaded
- * %FALSE otherwise
- */
-static gboolean
-gst_compositor_crossfade_frames (GstCompositor * self, GstVideoFrame * outframe)
-{
-  GList *l;
-  gboolean all_crossfading = FALSE;
-  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (self);
-
-  if (self->background == COMPOSITOR_BACKGROUND_TRANSPARENT) {
-
-    all_crossfading = TRUE;
-    for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next) {
-      GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (l->data);
-
-      if (compo_pad->crossfade == 0.0 && l->next &&
-          GST_COMPOSITOR_PAD (l->next->data)->crossfade == 0.0) {
-        all_crossfading = FALSE;
-
-        break;
-      }
-    }
-  }
-
-  for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next) {
-    GstVideoAggregatorPad *pad = l->data;
-    GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (pad);
-    GstVideoAggregatorPadClass *pad_class =
-        GST_VIDEO_AGGREGATOR_PAD_GET_CLASS (compo_pad);
-    GstVideoFrame *prepared_frame =
-        gst_video_aggregator_pad_get_prepared_frame (pad);
-
-    if (compo_pad->crossfade > 0.0 && prepared_frame) {
-      gfloat alpha = compo_pad->crossfade * compo_pad->alpha;
-      GstVideoAggregatorPad *npad = l->next ? l->next->data : NULL;
-      GstVideoFrame *next_prepared_frame;
-      GstVideoFrame nframe;
-
-      next_prepared_frame =
-          npad ? gst_video_aggregator_pad_get_prepared_frame (npad) : NULL;
-
-      if (!all_crossfading) {
-        gst_compositor_fill_transparent (self, outframe, &nframe);
-      } else {
-        nframe = *outframe;
-      }
-
-      self->overlay (prepared_frame,
-          compo_pad->crossfaded ? 0 : compo_pad->xpos,
-          compo_pad->crossfaded ? 0 : compo_pad->ypos,
-          alpha, &nframe, COMPOSITOR_BLEND_MODE_ADDITIVE);
-
-      if (npad && next_prepared_frame) {
-        GstCompositorPad *next_compo_pad = GST_COMPOSITOR_PAD (npad);
-
-        alpha = (1.0 - compo_pad->crossfade) * next_compo_pad->alpha;
-        self->overlay (next_prepared_frame, next_compo_pad->xpos,
-            next_compo_pad->ypos, alpha, &nframe,
-            COMPOSITOR_BLEND_MODE_ADDITIVE);
-
-        /* Replace frame with current frame */
-        pad_class->clean_frame (npad, vagg, next_prepared_frame);
-        if (!all_crossfading)
-          *next_prepared_frame = nframe;
-        next_compo_pad->crossfaded = TRUE;
-
-        /* Frame is now consumed, clean it up */
-        pad_class->clean_frame (pad, vagg, prepared_frame);
-      } else {
-        GST_LOG_OBJECT (self, "Simply fading out as no following pad found");
-        pad_class->clean_frame (pad, vagg, prepared_frame);
-        if (!all_crossfading)
-          *prepared_frame = nframe;
-        compo_pad->crossfaded = TRUE;
-      }
-    }
-  }
-
-  if (all_crossfading)
-    for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
-      GST_COMPOSITOR_PAD (l->data)->crossfaded = FALSE;
-
-  return all_crossfading;
-}
-
 static GstFlowReturn
 gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
 {
@@ -978,28 +858,57 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
       self->fill_color (outframe, 240, 128, 128);
       break;
     case COMPOSITOR_BACKGROUND_TRANSPARENT:
-      gst_compositor_fill_transparent (self, outframe, NULL);
+    {
+      guint i, plane, num_planes, height;
+
+      num_planes = GST_VIDEO_FRAME_N_PLANES (outframe);
+      for (plane = 0; plane < num_planes; ++plane) {
+        guint8 *pdata;
+        gsize rowsize, plane_stride;
+
+        pdata = GST_VIDEO_FRAME_PLANE_DATA (outframe, plane);
+        plane_stride = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, plane);
+        rowsize = GST_VIDEO_FRAME_COMP_WIDTH (outframe, plane)
+            * GST_VIDEO_FRAME_COMP_PSTRIDE (outframe, plane);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, plane);
+        for (i = 0; i < height; ++i) {
+          memset (pdata, 0, rowsize);
+          pdata += plane_stride;
+        }
+      }
       /* use overlay to keep background transparent */
       composite = self->overlay;
       break;
+    }
   }
 
   GST_OBJECT_LOCK (vagg);
-  /* First mix the crossfade frames as required */
-  if (!gst_compositor_crossfade_frames (self, outframe)) {
-    for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
-      GstVideoAggregatorPad *pad = l->data;
-      GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (pad);
-      GstVideoFrame *prepared_frame =
-          gst_video_aggregator_pad_get_prepared_frame (pad);
+  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    GstVideoAggregatorPad *pad = l->data;
+    GstCompositorPad *compo_pad = GST_COMPOSITOR_PAD (pad);
+    GstVideoFrame *prepared_frame =
+        gst_video_aggregator_pad_get_prepared_frame (pad);
+    GstCompositorBlendMode blend_mode = COMPOSITOR_BLEND_MODE_OVER;
 
-      if (prepared_frame != NULL) {
-        composite (prepared_frame,
-            compo_pad->crossfaded ? 0 : compo_pad->xpos,
-            compo_pad->crossfaded ? 0 : compo_pad->ypos, compo_pad->alpha,
-            outframe, COMPOSITOR_BLEND_MODE_NORMAL);
-        compo_pad->crossfaded = FALSE;
-      }
+    switch (compo_pad->op) {
+      case COMPOSITOR_OPERATOR_SOURCE:
+        blend_mode = COMPOSITOR_OPERATOR_SOURCE;
+        break;
+      case COMPOSITOR_OPERATOR_OVER:
+        blend_mode = COMPOSITOR_OPERATOR_OVER;
+        break;
+      case COMPOSITOR_OPERATOR_ADD:
+        blend_mode = COMPOSITOR_OPERATOR_ADD;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    if (prepared_frame != NULL) {
+      composite (prepared_frame,
+          compo_pad->xpos,
+          compo_pad->ypos, compo_pad->alpha, outframe, blend_mode);
     }
   }
   GST_OBJECT_UNLOCK (vagg);

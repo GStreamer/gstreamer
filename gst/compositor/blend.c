@@ -100,32 +100,46 @@ _overlay_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
 { \
   s_alpha = MIN (255, s_alpha); \
   switch (mode) { \
-    case COMPOSITOR_BLEND_MODE_NORMAL:\
+    case COMPOSITOR_BLEND_MODE_SOURCE:\
+      compositor_orc_source_##name (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+        break;\
+    case COMPOSITOR_BLEND_MODE_OVER:\
       compositor_orc_overlay_##name (dest, dest_stride, src, src_stride, \
         s_alpha, src_width, src_height); \
         break;\
-    case COMPOSITOR_BLEND_MODE_ADDITIVE:\
+    case COMPOSITOR_BLEND_MODE_ADD:\
       compositor_orc_overlay_##name##_addition (dest, dest_stride, src, src_stride, \
         s_alpha, src_width, src_height); \
         break;\
   }\
 }
 
-#define BLEND_A32_LOOP_WITH_MODE(name)			\
+#define BLEND_A32_LOOP(name) \
 static inline void \
 _blend_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
     gint src_width, gint src_stride, gint dest_stride, guint s_alpha, \
     GstCompositorBlendMode mode) \
 { \
   s_alpha = MIN (255, s_alpha); \
-  compositor_orc_blend_##name (dest, dest_stride, src, src_stride, \
-    s_alpha, src_width, src_height); \
+  switch (mode) { \
+    case COMPOSITOR_BLEND_MODE_SOURCE:\
+      compositor_orc_source_##name (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+        break;\
+    case COMPOSITOR_BLEND_MODE_OVER:\
+    case COMPOSITOR_BLEND_MODE_ADD:\
+      /* both modes are the same for opaque background */ \
+      compositor_orc_blend_##name (dest, dest_stride, src, src_stride, \
+        s_alpha, src_width, src_height); \
+        break;\
+  }\
 }
 
 OVERLAY_A32_LOOP (argb);
 OVERLAY_A32_LOOP (bgra);
-BLEND_A32_LOOP_WITH_MODE (argb);
-BLEND_A32_LOOP_WITH_MODE (bgra);
+BLEND_A32_LOOP (argb);
+BLEND_A32_LOOP (bgra);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 BLEND_A32 (argb, blend, _blend_loop_argb);
@@ -223,10 +237,15 @@ A32_COLOR (ayuv, FALSE, 24, 16, 8, 0);
 inline static void \
 _blend_##format_name (const guint8 * src, guint8 * dest, \
     gint src_stride, gint dest_stride, gint src_width, gint src_height, \
-    gdouble src_alpha) \
+    gdouble src_alpha, GstCompositorBlendMode mode) \
 { \
   gint i; \
   gint b_alpha; \
+  \
+  /* in source mode we just have to copy over things */ \
+  if (mode == COMPOSITOR_BLEND_MODE_SOURCE) { \
+    src_alpha = 1.0; \
+  } \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
@@ -324,7 +343,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      src_alpha); \
+      src_alpha, mode); \
   \
   b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 1); \
   b_dest = GST_VIDEO_FRAME_COMP_DATA (destframe, 1); \
@@ -340,7 +359,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      src_alpha); \
+      src_alpha, mode); \
   \
   b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 2); \
   b_dest = GST_VIDEO_FRAME_COMP_DATA (destframe, 2); \
@@ -356,7 +375,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      src_alpha); \
+      src_alpha, mode); \
 }
 
 #define PLANAR_YUV_FILL_CHECKER(format_name, format_enum, MEMSET) \
@@ -468,10 +487,15 @@ PLANAR_YUV_FILL_COLOR (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 inline static void \
 _blend_##format_name (const guint8 * src, guint8 * dest, \
     gint src_stride, gint dest_stride, gint src_width, gint src_height, \
-    gdouble src_alpha) \
+    gdouble src_alpha, GstCompositorBlendMode mode) \
 { \
   gint i; \
   gint b_alpha; \
+  \
+  /* in source mode we just have to copy over things */ \
+  if (mode == COMPOSITOR_BLEND_MODE_SOURCE) { \
+    src_alpha = 1.0; \
+  } \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
@@ -569,7 +593,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      src_alpha); \
+      src_alpha, mode); \
   \
   b_src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 1); \
   b_dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 1); \
@@ -585,7 +609,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
       b_dest + comp_xpos * 2 + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, 2 * src_comp_width, src_comp_height, \
-      src_alpha); \
+      src_alpha, mode); \
 }
 
 #define NV_YUV_FILL_CHECKER(format_name, MEMSET)        \
@@ -711,6 +735,12 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   } \
   \
   dest = dest + bpp * xpos + (ypos * dest_stride); \
+  \
+  /* in source mode we just have to copy over things */ \
+  if (mode == COMPOSITOR_BLEND_MODE_SOURCE) { \
+    src_alpha = 1.0; \
+  } \
+  \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
     GST_INFO ("Fast copy (alpha == 0.0)"); \
@@ -880,6 +910,12 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   } \
   \
   dest = dest + 2 * xpos + (ypos * dest_stride); \
+  \
+  /* in source mode we just have to copy over things */ \
+  if (mode == COMPOSITOR_BLEND_MODE_SOURCE) { \
+    src_alpha = 1.0; \
+  } \
+  \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
     GST_INFO ("Fast copy (alpha == 0.0)"); \
