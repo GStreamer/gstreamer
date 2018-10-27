@@ -29,12 +29,18 @@
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
+#define DEFAULT_PAGER "less"
+
 #include "tools.h"
 #include <gst/gst_private.h>    /* for internal Factories */
 
 #include <string.h>
 #include <locale.h>
 #include <glib/gprintf.h>
+#ifdef G_OS_UNIX
+#   include <unistd.h>
+#   include <sys/wait.h>
+#endif
 
 static char *_name = NULL;
 static int indent = 0;
@@ -1679,6 +1685,79 @@ print_all_plugin_automatic_install_info (void)
   gst_plugin_list_free (orig_plugins);
 }
 
+#ifdef G_OS_UNIX
+static void
+redirect_stdout (void)
+{
+  int pipefd[2];
+  pid_t child_id;
+
+  if (pipe (pipefd) == -1) {
+    g_printerr (_("Error creating pipe: %s\n"), g_strerror (errno));
+    exit (-1);
+  }
+
+  child_id = fork ();
+  if (child_id == -1) {
+    g_printerr (_("Error forking: %s\n"), g_strerror (errno));
+    exit (-1);
+  }
+
+  if (child_id == 0) {
+    char **argv;
+    const char *pager;
+    int ret;
+
+    pager = g_getenv ("PAGER");
+    if (pager == NULL)
+      pager = DEFAULT_PAGER;
+    argv = g_strsplit (pager, " ", 0);
+
+    /* child process */
+    close (pipefd[1]);
+    dup2 (pipefd[0], STDIN_FILENO);
+    close (pipefd[0]);
+
+    ret = execvp (argv[0], argv);
+    g_strfreev (argv);
+    if (ret == -1) {
+      /* No less? Let's just dump everything to stdout then */
+      char buffer[1024];
+
+      do {
+        int bytes_written;
+
+        if ((ret = read (STDIN_FILENO, buffer, sizeof (buffer))) == -1) {
+          if (errno == EINTR || errno == EAGAIN) {
+            continue;
+          }
+
+          g_printerr (_("Error reading from console: %s\n"),
+              g_strerror (errno));
+          exit (-1);
+        }
+
+        do {
+          bytes_written = write (STDOUT_FILENO, buffer, ret);
+        } while (bytes_written == -1 && (errno == EINTR || errno == EAGAIN));
+
+        if (bytes_written < 0) {
+          g_printerr (_("Error writing to console: %s\n"), g_strerror (errno));
+          exit (-1);
+        }
+      } while (ret > 0);
+
+      exit (0);
+    }
+  } else {
+    close (pipefd[0]);
+    dup2 (pipefd[1], STDOUT_FILENO);
+    close (pipefd[1]);
+    close (STDIN_FILENO);
+  }
+}
+#endif
+
 int
 main (int argc, char *argv[])
 {
@@ -1752,6 +1831,12 @@ main (int argc, char *argv[])
   g_option_context_free (ctx);
 #else
   gst_init (&argc, &argv);
+#endif
+
+#ifdef G_OS_UNIX
+  if (isatty (STDOUT_FILENO)) {
+    redirect_stdout ();
+  }
 #endif
 
   gst_tools_print_version ();
@@ -1864,6 +1949,12 @@ main (int argc, char *argv[])
       }
     }
   }
+
+#ifdef G_OS_UNIX
+  /* So that the pipe we create in redirect_stdout() is closed */
+  close (STDOUT_FILENO);
+  wait (NULL);
+#endif
 
   return 0;
 }
