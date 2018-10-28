@@ -255,6 +255,7 @@ struct _GstPlaySink
   gboolean volume_changed;      /* volume/mute changed while no audiochain */
   gboolean mute_changed;        /* ... has been created yet */
   gint64 av_offset;
+  gint64 text_offset;
   GstPlaySinkSendEventMode send_event_mode;
   gboolean force_aspect_ratio;
 
@@ -340,6 +341,7 @@ enum
   PROP_VIS_PLUGIN,
   PROP_SAMPLE,
   PROP_AV_OFFSET,
+  PROP_TEXT_OFFSET,
   PROP_VIDEO_SINK,
   PROP_AUDIO_SINK,
   PROP_TEXT_SINK,
@@ -394,6 +396,7 @@ static void notify_mute_cb (GObject * object, GParamSpec * pspec,
     GstPlaySink * playsink);
 
 static void update_av_offset (GstPlaySink * playsink);
+static void update_text_offset (GstPlaySink * playsink);
 
 static gboolean gst_play_sink_do_reconfigure (GstPlaySink * playsink);
 
@@ -515,6 +518,19 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   g_object_class_install_property (gobject_klass, PROP_AV_OFFSET,
       g_param_spec_int64 ("av-offset", "AV Offset",
           "The synchronisation offset between audio and video in nanoseconds",
+          G_MININT64, G_MAXINT64, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPlaySink:text-offset:
+   *
+   * Control the synchronisation offset between the text and video streams.
+   * Positive values make the text ahead of the video and negative values make
+   * the text go behind the video.
+   */
+  g_object_class_install_property (gobject_klass, PROP_TEXT_OFFSET,
+      g_param_spec_int64 ("text-offset", "Text Offset",
+          "The synchronisation offset between text and video in nanoseconds",
           G_MININT64, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -3865,6 +3881,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     }
   }
   update_av_offset (playsink);
+  update_text_offset (playsink);
   do_async_done (playsink);
   GST_PLAY_SINK_UNLOCK (playsink);
 
@@ -4031,6 +4048,47 @@ gst_play_sink_get_av_offset (GstPlaySink * playsink)
 
   GST_PLAY_SINK_LOCK (playsink);
   result = playsink->av_offset;
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return result;
+}
+
+static void
+update_text_offset (GstPlaySink * playsink)
+{
+  gint64 text_offset;
+  GstPlayTextChain *tchain;
+
+  text_offset = playsink->text_offset;
+  tchain = (GstPlayTextChain *) playsink->textchain;
+
+  if (tchain) {
+    if (tchain->sink) {
+      g_object_set (tchain->sink, "ts-offset", text_offset, NULL);
+    } else if (tchain->overlay) {
+      g_object_set (tchain->overlay, "subtitle-ts-offset", text_offset, NULL);
+    }
+  } else {
+    GST_LOG_OBJECT (playsink, "no text chain");
+  }
+}
+
+void
+gst_play_sink_set_text_offset (GstPlaySink * playsink, gint64 text_offset)
+{
+  GST_PLAY_SINK_LOCK (playsink);
+  playsink->text_offset = text_offset;
+  update_text_offset (playsink);
+  GST_PLAY_SINK_UNLOCK (playsink);
+}
+
+gint64
+gst_play_sink_get_text_offset (GstPlaySink * playsink)
+{
+  gint64 result;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  result = playsink->text_offset;
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return result;
@@ -5089,6 +5147,9 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
     case PROP_AV_OFFSET:
       gst_play_sink_set_av_offset (playsink, g_value_get_int64 (value));
       break;
+    case PROP_TEXT_OFFSET:
+      gst_play_sink_set_text_offset (playsink, g_value_get_int64 (value));
+      break;
     case PROP_VIDEO_FILTER:
       gst_play_sink_set_filter (playsink, GST_PLAY_SINK_TYPE_VIDEO,
           g_value_get_object (value));
@@ -5171,6 +5232,9 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AV_OFFSET:
       g_value_set_int64 (value, gst_play_sink_get_av_offset (playsink));
+      break;
+    case PROP_TEXT_OFFSET:
+      g_value_set_int64 (value, gst_play_sink_get_text_offset (playsink));
       break;
     case PROP_VIDEO_FILTER:
       g_value_take_object (value, gst_play_sink_get_filter (playsink,

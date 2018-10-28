@@ -98,6 +98,9 @@ gchar *          gst_play_sink_get_subtitle_encoding  (GstPlaySink *playsink);
 void             gst_play_sink_set_av_offset  (GstPlaySink *playsink, gint64 av_offset);
 gint64           gst_play_sink_get_av_offset  (GstPlaySink *playsink);
 
+void             gst_play_sink_set_text_offset  (GstPlaySink *playsink, gint64 text_offset);
+gint64           gst_play_sink_get_text_offset  (GstPlaySink *playsink);
+
 GstSample *      gst_play_sink_get_last_sample (GstPlaySink * playsink);
 GstSample *      gst_play_sink_convert_sample  (GstPlaySink * playsink, GstCaps * caps);
 
