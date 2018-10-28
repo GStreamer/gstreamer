@@ -30,6 +30,7 @@
 #include <gmodule.h>
 
 #include "gst-validate-report.h"
+#include "gst-validate-reporter.h"
 #include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
 #include "gst-validate-monitor.h"
@@ -175,9 +176,9 @@ static void
 {
   GstValidateOverrideRegistryNameEntry *entry;
   GList *iter;
-  gchar *name;
+  const gchar *name;
 
-  name = gst_validate_monitor_get_element_name (monitor);
+  name = gst_validate_reporter_get_name (GST_VALIDATE_REPORTER (monitor));
   for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
     entry = iter->data;
     if (g_regex_match_simple (entry->name, name, 0, 0)) {
@@ -186,8 +187,6 @@ static void
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }
-
-  g_free (name);
 }
 
 static void
