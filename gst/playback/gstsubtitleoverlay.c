@@ -76,7 +76,8 @@ enum
   PROP_0,
   PROP_SILENT,
   PROP_FONT_DESC,
-  PROP_SUBTITLE_ENCODING
+  PROP_SUBTITLE_ENCODING,
+  PROP_SUBTITLE_TS_OFFSET
 };
 
 #define gst_subtitle_overlay_parent_class parent_class
@@ -719,6 +720,20 @@ gst_subtitle_overlay_set_fps (GstSubtitleOverlay * self)
   g_object_set (self->parser, "video-fps", self->fps_n, self->fps_d, NULL);
 }
 
+static void
+_update_subtitle_offset (GstSubtitleOverlay * self)
+{
+  if (self->parser) {
+    GstPad *srcpad = gst_element_get_static_pad (self->parser, "src");
+    GST_DEBUG_OBJECT (self, "setting subtitle offset to %" G_GINT64_FORMAT,
+        self->subtitle_ts_offset);
+    gst_pad_set_offset (srcpad, -self->subtitle_ts_offset);
+    gst_object_unref (srcpad);
+  } else {
+    GST_LOG_OBJECT (self, "no parser, subtitle offset can't be updated");
+  }
+}
+
 static const gchar *
 _get_silent_property (GstElement * element, gboolean * invert)
 {
@@ -1303,6 +1318,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GST_DEBUG_OBJECT (self, "Everything worked, unblocking pads");
   unblock_video (self);
   unblock_subtitle (self);
+  _update_subtitle_offset (self);
   do_async_done (self);
 
 out:
@@ -1490,6 +1506,12 @@ gst_subtitle_overlay_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, self->encoding);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
       break;
+    case PROP_SUBTITLE_TS_OFFSET:
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      g_value_set_int64 (value, self->subtitle_ts_offset);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1551,6 +1573,13 @@ gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
         g_object_set (self->parser, "subtitle-encoding", self->encoding, NULL);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
       break;
+    case PROP_SUBTITLE_TS_OFFSET:
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      self->subtitle_ts_offset = g_value_get_int64 (value);
+      _update_subtitle_offset (self);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1587,6 +1616,12 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
           "If not set, the GST_SUBTITLE_ENCODING environment variable will "
           "be checked for an encoding to use. If that is not set either, "
           "ISO-8859-15 will be assumed.", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SUBTITLE_TS_OFFSET,
+      g_param_spec_int64 ("subtitle-ts-offset", "Subtitle Timestamp Offset",
+          "The synchronisation offset between text and video in nanoseconds",
+          G_MININT64, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &srctemplate);
