@@ -1,4 +1,5 @@
 prefix=@prefix@
+libexecdir=@libexecdir@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_API_VERSION@
