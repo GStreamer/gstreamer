@@ -1,6 +1,6 @@
 project('gst-python', 'c', 'cpp',
   version : '1.15.0.1',
-  meson_version : '>= 0.40.0',
+  meson_version : '>= 0.46.0',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
@@ -21,7 +21,6 @@ gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
 gmodule_dep = dependency('gmodule-2.0')
 pygobject_dep = dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_dep'], version : '>= 3.8')
-python_dep = dependency('python3')
 
 pymod = import('python')
 python = pymod.find_installation(get_option('python'))
@@ -36,27 +35,13 @@ message('python_abi_flags = @0@'.format(python_abi_flags))
 message('pylib_loc = @0@'.format(pylib_loc))
 
 pygi_override_dir = get_option('pygi-overrides-dir')
-if pygi_override_dir == ''
-    cres = run_command(python, '-c','''
-import os, sys, gi.overrides
-paths = gi.overrides.__path__
-prefix = os.path.abspath(sys.argv[1])
-for path in paths:
-    path = os.path.abspath(path)
-    if os.path.commonprefix([path, prefix]) == prefix:
-        print(path)
-        exit(0)
-exit(1)
-''', get_option('prefix'))
 
-    if cres.returncode() != 0
-        error('Could not detect PyGObject overrides location' + cres.stdout() + cres.stderr())
-    endif
-    pygi_override_dir = cres.stdout().strip()
-    if cres.stderr() != ''
-        message(cres.stderr())
-    endif
+if pygi_override_dir == ''
+  pygi_override_dir = python.get_install_dir(
+    subdir : join_paths('gi', 'overrides')
+  )
 endif
+
 message('pygobject overrides directory = @0@'.format(pygi_override_dir))
 
 pylib_suffix = 'so'
