@@ -172,7 +172,7 @@ typedef struct
   gboolean handled;
   gboolean marshalled;
 
-  GHook **called_probes;
+  gulong *called_probes;
   guint n_called_probes;
   guint called_probes_size;
   gboolean retry;
@@ -3472,7 +3472,7 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
    * if we're actually calling probes a second time */
   if (data->retry) {
     for (i = 0; i < data->n_called_probes; i++) {
-      if (data->called_probes[i] == hook) {
+      if (data->called_probes[i] == hook->hook_id) {
         GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
             "hook %lu already called", hook->hook_id);
         return;
@@ -3485,17 +3485,17 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
     if (data->called_probes_size > N_STACK_ALLOCATE_PROBES) {
       data->called_probes_size *= 2;
       data->called_probes =
-          g_renew (GHook *, data->called_probes, data->called_probes_size);
+          g_renew (gulong, data->called_probes, data->called_probes_size);
     } else {
-      GHook **tmp = data->called_probes;
+      gulong *tmp = data->called_probes;
 
       data->called_probes_size *= 2;
-      data->called_probes = g_new (GHook *, data->called_probes_size);
+      data->called_probes = g_new (gulong, data->called_probes_size);
       memcpy (data->called_probes, tmp,
-          N_STACK_ALLOCATE_PROBES * sizeof (GHook *));
+          N_STACK_ALLOCATE_PROBES * sizeof (gulong));
     }
   }
-  data->called_probes[data->n_called_probes++] = hook;
+  data->called_probes[data->n_called_probes++] = hook->hook_id;
 
   flags = hook->flags >> G_HOOK_FLAG_USER_SHIFT;
   type = info->type;
@@ -3691,7 +3691,7 @@ do_probe_callbacks (GstPad * pad, GstPadProbeInfo * info,
   ProbeMarshall data;
   guint cookie;
   gboolean is_block;
-  GHook *called_probes[N_STACK_ALLOCATE_PROBES];
+  gulong called_probes[N_STACK_ALLOCATE_PROBES];
 
   data.pad = pad;
   data.info = info;
