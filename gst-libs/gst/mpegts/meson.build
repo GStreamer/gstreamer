@@ -46,7 +46,7 @@ if build_gir
     namespace : 'GstMpegts',
     nsversion : api_version,
     identifier_prefix : 'GstMpegts',
-    symbol_prefix : 'gst_mpegts', #FIXME ['gst_mpegts', 'gst'],
+    symbol_prefix : ['gst_mpegts', 'gst'],
     export_packages : 'gstreamer-mpegts-1.0',
     includes : ['Gst-1.0'],
     install : true,
