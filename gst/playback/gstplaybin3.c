@@ -564,6 +564,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
   PROP_AV_OFFSET,
+  PROP_TEXT_OFFSET,
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_FORCE_ASPECT_RATIO,
   PROP_AUDIO_FILTER,
@@ -899,6 +900,18 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
   g_object_class_install_property (gobject_klass, PROP_AV_OFFSET,
       g_param_spec_int64 ("av-offset", "AV Offset",
           "The synchronisation offset between audio and video in nanoseconds",
+          G_MININT64, G_MAXINT64, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlayBin3:text-offset:
+   *
+   * Control the synchronisation offset between the text and video streams.
+   * Positive values make the text ahead of the video and negative values make
+   * the text go behind the video.
+   */
+  g_object_class_install_property (gobject_klass, PROP_TEXT_OFFSET,
+      g_param_spec_int64 ("text-offset", "Text Offset",
+          "The synchronisation offset between text and video in nanoseconds",
           G_MININT64, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -1822,6 +1835,10 @@ gst_play_bin3_set_property (GObject * object, guint prop_id,
       gst_play_sink_set_av_offset (playbin->playsink,
           g_value_get_int64 (value));
       break;
+    case PROP_TEXT_OFFSET:
+      gst_play_sink_set_text_offset (playbin->playsink,
+          g_value_get_int64 (value));
+      break;
     case PROP_RING_BUFFER_MAX_SIZE:
       playbin->ring_buffer_max_size = g_value_get_uint64 (value);
       if (playbin->curr_group) {
@@ -2024,6 +2041,10 @@ gst_play_bin3_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_AV_OFFSET:
       g_value_set_int64 (value,
           gst_play_sink_get_av_offset (playbin->playsink));
+      break;
+    case PROP_TEXT_OFFSET:
+      g_value_set_int64 (value,
+          gst_play_sink_get_text_offset (playbin->playsink));
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       g_value_set_uint64 (value, playbin->ring_buffer_max_size);
