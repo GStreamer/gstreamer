@@ -75,7 +75,6 @@ def get_subprocess_env(options, gst_version):
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                          'lib', 'girepository-1.0'))
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'))
-    setup_python_env(options, env)
 
     meson = get_meson()
     targets_s = subprocess.check_output(meson + ['introspect', options.builddir, '--targets'])
@@ -174,44 +173,6 @@ def get_subprocess_env(options, gst_version):
 def in_venv():
     return (hasattr(sys, 'real_prefix') or
             (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
-
-def setup_python_env(options, env):
-    some_overrides_built = False
-    for override_path in [os.path.join("subprojects", "gst-editing-services", "bindings", "python", "gi", "overrides"),
-                          os.path.join("subprojects", "gst-python", "gi", "overrides")]:
-        if os.path.exists(os.path.join(SCRIPTDIR, override_path)):
-            some_overrides_built = True
-        else:
-            continue
-
-        prepend_env_var(env, "PYGOBJECT_OVERRIDES_PATH", os.path.join(SCRIPTDIR, override_path))
-        prepend_env_var(env, "PYGOBJECT_OVERRIDES_PATH", os.path.join(options.builddir, override_path))
-
-    if not some_overrides_built:
-        return
-
-    if in_venv ():
-        sitepackages = get_python_lib()
-    else:
-        sitepackages = site.getusersitepackages()
-
-    usercustomize = os.path.join(
-        subprocess.check_output([sys.executable, '-c', 'import site; print(site.USER_SITE)'],
-        env={"PYTHONUSERBASE": PREFIX_DIR}).decode().strip("\n"), "usercustomize.py")
-
-    custom_user_sitepackage = os.path.dirname(usercustomize)
-    os.makedirs(custom_user_sitepackage, exist_ok=True)
-    with open(usercustomize, "w") as f:
-         f.write("""import os
-import gi.overrides
-
-for override_path in os.environ.get("PYGOBJECT_OVERRIDES_PATH", "").split(os.pathsep):
-    gi.overrides.__path__.insert(0, override_path)
-""")
-
-    env["PYTHONUSERBASE"] = PREFIX_DIR
-    if sitepackages:
-        prepend_env_var(env, "PYTHONPATH", sitepackages)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gstreamer-uninstalled")
