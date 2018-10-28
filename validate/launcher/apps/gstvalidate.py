@@ -156,7 +156,7 @@ class FakeMediaDescriptor(MediaDescriptor):
 class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
     def __init__(self, name, test_manager, pipeline_template=None,
-                 pipelines_descriptions=None, valid_scenarios=[]):
+                 pipelines_descriptions=None, valid_scenarios=None):
         """
         @name: The name of the generator
         @pipeline_template: A template pipeline to be used to generate actual pipelines
@@ -170,6 +170,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
         @valid_scenarios: A list of scenario name that can be used with that generator
         """
+        valid_scenarios = valid_scenarios or []
         GstValidateTestsGenerator.__init__(self, name, test_manager)
         self._pipeline_template = pipeline_template
         self._pipelines_descriptions = []
@@ -185,7 +186,14 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         self._valid_scenarios = valid_scenarios
 
     @classmethod
-    def from_json(self, test_manager, json_file):
+    def from_json(cls, test_manager, json_file, extra_data=None):
+        """
+        :param json_file: Path to a JSON file containing pipeline tests.
+        :param extra_data: Variables available for interpolation in validate
+        configs and scenario actions.
+        """
+        if extra_data is None:
+            extra_data = {}
         with open(json_file, 'r') as f:
             descriptions = json.load(f)
 
@@ -193,27 +201,55 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         pipelines_descriptions = []
         for test_name, defs in descriptions.items():
             tests_definition = {'name': test_name, 'pipeline': defs['pipeline']}
+            test_private_dir = os.path.join(test_manager.options.privatedir,
+                                            name, test_name)
+
+            config_file = None
+            if 'config' in defs:
+                os.makedirs(test_private_dir, exist_ok=True)
+                config_file = os.path.join(test_private_dir,
+                                           test_name + '.config')
+                with open(config_file, 'w') as f:
+                    f.write(cls._format_config_template(extra_data,
+                            '\n'.join(defs['config']) + '\n', test_name))
+
             scenarios = []
-            for scenario in defs['scenarios']:
+            for scenario in defs.get('scenarios', []):
                 if isinstance(scenario, str):
+                    # Path to a scenario file
                     scenarios.append(scenario)
                 else:
+                    # Dictionary defining a new scenario in-line
                     scenario_name = scenario_file = scenario['name']
                     actions = scenario.get('actions')
                     if actions:
-                        scenario_dir = os.path.join(
-                            test_manager.options.privatedir, name, test_name)
+                        os.makedirs(test_private_dir, exist_ok=True)
                         scenario_file = os.path.join(
-                            scenario_dir, scenario_name + '.scenario')
-                        os.makedirs(scenario_dir, exist_ok=True)
+                            test_private_dir, scenario_name + '.scenario')
                         with open(scenario_file, 'w') as f:
-                            f.write('\n'.join(actions) + '\n')
+                            f.write('\n'.join(action % extra_data for action in actions) + '\n')
                     scenarios.append(scenario_file)
-            tests_definition['extra_data'] = {'scenarios': scenarios}
+            tests_definition['extra_data'] = {'scenarios': scenarios, 'config_file': config_file}
             tests_definition['pipeline_data'] = {"config_path": os.path.dirname(json_file)}
             pipelines_descriptions.append(tests_definition)
 
         return GstValidatePipelineTestsGenerator(name, test_manager, pipelines_descriptions=pipelines_descriptions)
+
+    @classmethod
+    def _format_config_template(cls, extra_data, config_text, test_name):
+        # Variables available for interpolation inside config blocks.
+
+        extra_vars = extra_data.copy()
+
+        if 'validate-flow-expectations-dir' in extra_vars and \
+                'validate-flow-actual-results-dir' in extra_vars:
+            expectations_dir = os.path.join(extra_vars['validate-flow-expectations-dir'],
+                                            test_name.replace('.', os.sep))
+            actual_results_dir = os.path.join(extra_vars['validate-flow-actual-results-dir'],
+                                              test_name.replace('.', os.sep))
+            extra_vars['validateflow'] = "validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"" % (expectations_dir, actual_results_dir)
+
+        return config_text % extra_vars
 
     def get_fname(self, scenario, protocol=None, name=None):
         if name is None:
@@ -245,7 +281,16 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             extra_data = description.get('extra_data', {})
             pipeline_data = description.get('pipeline_data', {})
 
-            for scenario in extra_data.get('scenarios', scenarios):
+            if 'scenarios' in extra_data:
+                # A pipeline description can override the default scenario set.
+                # The pipeline description may specify an empty list of
+                # scenarios, in which case one test will be generated with no
+                # scenario.
+                scenarios_to_iterate = extra_data['scenarios'] or [None]
+            else:
+                scenarios_to_iterate = scenarios
+
+            for scenario in scenarios_to_iterate:
                 if isinstance(scenario, str):
                     scenario = self.test_manager.scenarios_manager.get_scenario(
                         scenario)
@@ -255,7 +300,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     continue
 
                 if self.test_manager.options.mute:
-                    needs_clock = scenario.needs_clock_sync()
+                    needs_clock = scenario.needs_clock_sync() \
+                        if scenario else False
                     audiosink = self.get_fakesink_for_media_type(
                         "audio", needs_clock)
                     videosink = self.get_fakesink_for_media_type(
@@ -272,15 +318,17 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
                 expected_failures = extra_data.get("expected-failures")
                 extra_env_vars = extra_data.get("extra_env_vars")
-                self.add_test(GstValidateLaunchTest(fname,
-                                                    self.test_manager.options,
-                                                    self.test_manager.reporter,
-                                                    pipeline_desc,
-                                                    scenario=scenario,
-                                                    media_descriptor=mediainfo,
-                                                    expected_failures=expected_failures,
-                                                    extra_env_variables=extra_env_vars)
-                              )
+                test = GstValidateLaunchTest(fname,
+                                             self.test_manager.options,
+                                             self.test_manager.reporter,
+                                             pipeline_desc,
+                                             scenario=scenario,
+                                             media_descriptor=mediainfo,
+                                             expected_failures=expected_failures,
+                                             extra_env_variables=extra_env_vars)
+                if extra_data.get('config_file'):
+                    test.add_validate_config(extra_data['config_file'])
+                self.add_test(test)
 
 
 class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
@@ -377,7 +425,10 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
     def __init__(self, name, test_manager, mixer, media_type, converter="",
-                 num_sources=3, mixed_srcs={}, valid_scenarios=[]):
+                 num_sources=3, mixed_srcs=None, valid_scenarios=None):
+        mixed_srcs = mixed_srcs or {}
+        valid_scenarios = valid_scenarios or []
+
         pipe_template = "%(mixer)s name=_mixer !  " + \
             converter + " ! %(sink)s "
         self.converter = converter

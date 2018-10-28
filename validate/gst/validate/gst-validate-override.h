@@ -90,6 +90,9 @@ GST_VALIDATE_API
 GstValidateOverride *    gst_validate_override_new (void);
 
 void               gst_validate_override_free (GstValidateOverride * override);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstValidateOverride, gst_validate_override_free)
+
 GST_VALIDATE_API
 void               gst_validate_override_change_severity (GstValidateOverride * override, GstValidateIssueId issue_id, GstValidateReportLevel new_level);
 GST_VALIDATE_API

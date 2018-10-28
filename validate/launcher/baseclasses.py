@@ -1520,10 +1520,11 @@ class _TestsLauncher(Loggable):
         for testsuite in self.options.testsuites:
             loaded = False
             wanted_test_manager = None
-            if hasattr(testsuite, "TEST_MANAGER"):
-                wanted_test_manager = testsuite.TEST_MANAGER
-                if not isinstance(wanted_test_manager, list):
-                    wanted_test_manager = [wanted_test_manager]
+            # TEST_MANAGER has been set in _load_testsuites()
+            assert hasattr(testsuite, "TEST_MANAGER")
+            wanted_test_manager = testsuite.TEST_MANAGER
+            if not isinstance(wanted_test_manager, list):
+                wanted_test_manager = [wanted_test_manager]
 
             for tester in self.testers:
                 if wanted_test_manager is not None and \
@@ -1763,11 +1764,8 @@ class _TestsLauncher(Loggable):
         return True
 
     def _run_tests(self):
-        cur_test_num = 0
-
         if not self.all_tests:
-            all_tests = self.list_tests()
-            self.all_tests = all_tests
+            self.all_tests = self.list_tests()
         self.total_num_tests = len(self.all_tests)
         if not sys.stdout.isatty():
             printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
@@ -1806,8 +1804,8 @@ class _TestsLauncher(Loggable):
                 current_test_num += 1
                 res = test.test_end()
                 self.reporter.after_test(test)
-                if res != Result.PASSED and (self.options.forever or
-                                             self.options.fatal_error):
+                if res != Result.PASSED and (self.options.forever
+                                             or self.options.fatal_error):
                     return False
                 if self.start_new_job(tests_left):
                     jobs_running += 1

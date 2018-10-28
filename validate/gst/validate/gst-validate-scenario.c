@@ -2507,6 +2507,248 @@ _execute_emit_signal (GstValidateScenario * scenario,
   return TRUE;
 }
 
+typedef GstFlowReturn (*ChainWrapperFunction) (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer, gpointer * user_data, gboolean * remove_wrapper);
+
+typedef struct _ChainWrapperFunctionData
+{
+  GstPadChainFunction wrapped_chain_func;
+  gpointer wrapped_chain_data;
+  GDestroyNotify wrapped_chain_notify;
+  ChainWrapperFunction wrapper_function;
+  gpointer wrapper_function_user_data;
+} ChainWrapperFunctionData;
+
+static GstFlowReturn
+_pad_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  ChainWrapperFunctionData *data = pad->chaindata;
+  GstFlowReturn ret;
+  gboolean remove_wrapper = FALSE;
+
+  pad->chainfunc = data->wrapped_chain_func;
+  pad->chaindata = data->wrapped_chain_data;
+  pad->chainnotify = data->wrapped_chain_notify;
+
+  ret = data->wrapper_function (pad, parent, buffer,
+      data->wrapper_function_user_data, &remove_wrapper);
+
+  if (!remove_wrapper) {
+    /* The chain function may have changed during the calling (e.g. if it was
+     * a nested wrapper that decided to remove itself) so we need to update the
+     * wrapped function just in case. */
+    data->wrapped_chain_func = pad->chainfunc;
+    data->wrapped_chain_data = pad->chaindata;
+    data->wrapped_chain_notify = pad->chainnotify;
+
+    /* Restore the wrapper as chain function */
+    pad->chainfunc = _pad_chain_wrapper;
+    pad->chaindata = data;
+    pad->chainnotify = g_free;
+  } else
+    g_free (data);
+
+  return ret;
+}
+
+static void
+wrap_pad_chain_function (GstPad * pad, ChainWrapperFunction new_function,
+    gpointer user_data)
+{
+  ChainWrapperFunctionData *data = g_new (ChainWrapperFunctionData, 1);
+  data->wrapped_chain_func = pad->chainfunc;
+  data->wrapped_chain_data = pad->chaindata;
+  data->wrapped_chain_notify = pad->chainnotify;
+  data->wrapper_function = new_function;
+  data->wrapper_function_user_data = user_data;
+
+  pad->chainfunc = _pad_chain_wrapper;
+  pad->chaindata = data;
+  pad->chainnotify = g_free;
+}
+
+static GstFlowReturn
+appsrc_push_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer,
+    gpointer * user_data, gboolean * remove_wrapper)
+{
+  GstValidateAction *action = (GstValidateAction *) user_data;
+  GstFlowReturn ret = pad->chainfunc (pad, parent, buffer);
+  gst_validate_action_set_done (action);
+  *remove_wrapper = TRUE;
+  return ret;
+}
+
+static gboolean
+structure_get_uint64_permissive (const GstStructure * structure,
+    const gchar * fieldname, guint64 * dest)
+{
+  const GValue *original;
+  GValue transformed = G_VALUE_INIT;
+
+  original = gst_structure_get_value (structure, fieldname);
+  if (!original)
+    return FALSE;
+
+  g_value_init (&transformed, G_TYPE_UINT64);
+  if (!g_value_transform (original, &transformed))
+    return FALSE;
+
+  *dest = g_value_get_uint64 (&transformed);
+  g_value_unset (&transformed);
+  return TRUE;
+}
+
+static gint
+_execute_appsrc_push (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstElement *target;
+  gchar *file_name;
+  gchar *file_contents;
+  gsize file_length;
+  GError *error = NULL;
+  GstBuffer *buffer;
+  guint64 offset = 0;
+  guint64 size = -1;
+  gint push_buffer_ret;
+
+  target = _get_target_element (scenario, action);
+  if (target == NULL) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "No element found for action: %s", structure_string);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  file_name =
+      g_strdup (gst_structure_get_string (action->structure, "file-name"));
+  if (file_name == NULL) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Missing file-name property: %s", structure_string);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  structure_get_uint64_permissive (action->structure, "offset", &offset);
+  structure_get_uint64_permissive (action->structure, "size", &size);
+
+  g_file_get_contents (file_name, &file_contents, &file_length, &error);
+  if (error != NULL) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not open file for action: %s. Error: %s", structure_string,
+        error->message);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, file_contents,
+      file_length, offset, (size == -1 ? file_length : size), NULL, g_free);
+
+  {
+    const GValue *caps_value;
+    caps_value = gst_structure_get_value (action->structure, "caps");
+    if (caps_value)
+      g_object_set (target, "caps", gst_value_get_caps (caps_value), NULL);
+  }
+
+  /* We temporarily override the peer pad chain function to finish the action
+   * once the buffer chain actually ends. */
+  {
+    GstPad *appsrc_pad = gst_element_get_static_pad (target, "src");
+    GstPad *peer_pad = gst_pad_get_peer (appsrc_pad);
+    if (!peer_pad) {
+      gchar *structure_string = gst_structure_to_string (action->structure);
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Action failed, pad not linked: %s", structure_string);
+      g_free (structure_string);
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    }
+
+    wrap_pad_chain_function (peer_pad, appsrc_push_chain_wrapper, action);
+
+    gst_object_unref (appsrc_pad);
+    gst_object_unref (peer_pad);
+  }
+
+  g_signal_emit_by_name (target, "push-buffer", buffer, &push_buffer_ret);
+  if (push_buffer_ret != GST_FLOW_OK) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "push-buffer signal failed in action: %s", structure_string);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  g_free (file_name);
+  gst_object_unref (target);
+  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+}
+
+static gint
+_execute_appsrc_eos (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GstElement *target;
+  gint eos_ret;
+
+  target = _get_target_element (scenario, action);
+  if (target == NULL) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "No element found for action: %s", structure_string);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  g_signal_emit_by_name (target, "end-of-stream", &eos_ret);
+  if (eos_ret != GST_FLOW_OK) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Failed to emit end-of-stream signal for action: %s", structure_string);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  gst_object_unref (target);
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
+static gint
+_execute_flush (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GstElement *target;
+  GstEvent *event;
+  gboolean reset_time = TRUE;
+
+  target = _get_target_element (scenario, action);
+  if (target == NULL) {
+    gchar *structure_string = gst_structure_to_string (action->structure);
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "No element found for action: %s", structure_string);
+    g_free (structure_string);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  gst_structure_get_boolean (action->structure, "reset-time", &reset_time);
+
+  event = gst_event_new_flush_start ();
+  if (!gst_element_send_event (target, event)) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "FLUSH_START event was not handled");
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  event = gst_event_new_flush_stop (reset_time);
+  if (!gst_element_send_event (target, event)) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "FLUSH_STOP event was not handled");
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
 static GstValidateExecuteActionReturn
 _execute_disable_plugin (GstValidateScenario * scenario,
     GstValidateAction * action)
@@ -4677,6 +4919,79 @@ init_scenarios (void)
         {NULL}
       }),
       "Emits a signal to an element in the pipeline",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("appsrc-push", _execute_appsrc_push,
+      ((GstValidateActionParameter [])
+      {
+        {
+          .name = "target-element-name",
+          .description = "The name of the appsrc to push data on",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {
+          .name = "file-name",
+          .description = "Relative path to a file whose contents will be pushed as a buffer",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {
+          .name = "offset",
+          .description = "Offset within the file where the buffer will start",
+          .mandatory = FALSE,
+          .types = "uint64"
+        },
+        {
+          .name = "size",
+          .description = "Number of bytes from the file that will be pushed as a buffer",
+          .mandatory = FALSE,
+          .types = "uint64"
+        },
+        {
+          .name = "caps",
+          .description = "Caps for the buffer to be pushed",
+          .mandatory = FALSE,
+          .types = "caps"
+        },
+        {NULL}
+      }),
+      "Queues a buffer from an appsrc and waits for it to be handled by downstream elements in the same streaming thread.",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("appsrc-eos", _execute_appsrc_eos,
+      ((GstValidateActionParameter [])
+      {
+        {
+          .name = "target-element-name",
+          .description = "The name of the appsrc to emit EOS on",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {NULL}
+      }),
+      "Queues a EOS event in an appsrc.",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("flush", _execute_flush,
+      ((GstValidateActionParameter [])
+      {
+        {
+          .name = "target-element-name",
+          .description = "The name of the appsrc to flush on",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {
+          .name = "reset-time",
+          .description = "Whether the flush should reset running time",
+          .mandatory = FALSE,
+          .types = "boolean",
+          .def = "TRUE"
+        },
+        {NULL}
+      }),
+      "Sends FLUSH_START and FLUSH_STOP events.",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("disable-plugin", _execute_disable_plugin,
