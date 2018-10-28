@@ -9,7 +9,6 @@ pygioverrides_PYTHON = Gst.py GstPbutils.py
 pygioverridesexecdir = $(PYGI_OVERRIDES_DIR)
 
 EXTRA_DIST = \
-	__init__.py \
 	meson.build \
 	Gst.py \
 	GstPbutils.py
@@ -27,7 +26,7 @@ _gi_gst_la_LDFLAGS = $(common_ldflags)
 # source tree; Python does not accept the extensions and modules in different
 # paths
 build_pylinks:
-	for f in $(pygioverrides_PYTHON) __init__.py; do \
+	for f in $(pygioverrides_PYTHON); do \
 	    [ -e $(builddir)/$$f ] || $(LN_S) -f $(srcdir)/$$f $(builddir)/$$f; \
 	done
 
