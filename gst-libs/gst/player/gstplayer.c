@@ -67,6 +67,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_player_debug);
 #define DEFAULT_RATE 1.0
 #define DEFAULT_POSITION_UPDATE_INTERVAL_MS 100
 #define DEFAULT_AUDIO_VIDEO_OFFSET 0
+#define DEFAULT_SUBTITLE_VIDEO_OFFSET 0
 
 GQuark
 gst_player_error_quark (void)
@@ -116,6 +117,7 @@ enum
   PROP_VIDEO_MULTIVIEW_MODE,
   PROP_VIDEO_MULTIVIEW_FLAGS,
   PROP_AUDIO_VIDEO_OFFSET,
+  PROP_SUBTITLE_VIDEO_OFFSET,
   PROP_LAST
 };
 
@@ -410,6 +412,11 @@ gst_player_class_init (GstPlayerClass * klass)
   param_specs[PROP_AUDIO_VIDEO_OFFSET] =
       g_param_spec_int64 ("audio-video-offset", "Audio Video Offset",
       "The synchronisation offset between audio and video in nanoseconds",
+      G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  param_specs[PROP_SUBTITLE_VIDEO_OFFSET] =
+      g_param_spec_int64 ("subtitle-video-offset", "Text Video Offset",
+      "The synchronisation offset between text and video in nanoseconds",
       G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
@@ -734,6 +741,9 @@ gst_player_set_property (GObject * object, guint prop_id,
     case PROP_AUDIO_VIDEO_OFFSET:
       g_object_set_property (G_OBJECT (self->playbin), "av-offset", value);
       break;
+    case PROP_SUBTITLE_VIDEO_OFFSET:
+      g_object_set_property (G_OBJECT (self->playbin), "text-offset", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -830,6 +840,9 @@ gst_player_get_property (GObject * object, guint prop_id,
     }
     case PROP_AUDIO_VIDEO_OFFSET:
       g_object_get_property (G_OBJECT (self->playbin), "av-offset", value);
+      break;
+    case PROP_SUBTITLE_VIDEO_OFFSET:
+      g_object_get_property (G_OBJECT (self->playbin), "text-offset", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4344,6 +4357,46 @@ gst_player_set_audio_video_offset (GstPlayer * self, gint64 offset)
 
   g_object_set (self, "audio-video-offset", offset, NULL);
 }
+
+/**
+ * gst_player_get_subtitle_video_offset:
+ * @player: #GstPlayer instance
+ *
+ * Retrieve the current value of subtitle-video-offset property
+ *
+ * Returns: The current value of subtitle-video-offset in nanoseconds
+ *
+ * Since 1.16
+ */
+gint64
+gst_player_get_subtitle_video_offset (GstPlayer * self)
+{
+  gint64 val = 0;
+
+  g_return_val_if_fail (GST_IS_PLAYER (self), DEFAULT_SUBTITLE_VIDEO_OFFSET);
+
+  g_object_get (self, "subtitle-video-offset", &val, NULL);
+
+  return val;
+}
+
+/**
+ * gst_player_set_subtitle_video_offset:
+ * @player: #GstPlayer instance
+ * @offset: #gint64 in nanoseconds
+ *
+ * Sets subtitle-video-offset property by value of @offset
+ *
+ * Since 1.16
+ */
+void
+gst_player_set_subtitle_video_offset (GstPlayer * self, gint64 offset)
+{
+  g_return_if_fail (GST_IS_PLAYER (self));
+
+  g_object_set (self, "subtitle-video-offset", offset, NULL);
+}
+
 
 #define C_ENUM(v) ((gint) v)
 #define C_FLAGS(v) ((guint) v)

@@ -250,6 +250,13 @@ void         gst_player_set_audio_video_offset        (GstPlayer    * player,
                                                        gint64 offset);
 
 GST_PLAYER_API
+gint64       gst_player_get_subtitle_video_offset        (GstPlayer    * player);
+
+GST_PLAYER_API
+void         gst_player_set_subtitle_video_offset        (GstPlayer    * player,
+                                                          gint64 offset);
+
+GST_PLAYER_API
 gboolean       gst_player_set_config                  (GstPlayer * player,
                                                        GstStructure * config);
 
