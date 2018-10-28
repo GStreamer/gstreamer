@@ -13,8 +13,11 @@ You should get meson through your package manager or using:
 
   $ pip3 install --user meson
 
-You should get `ninja` using your package manager or downloading it from
-[here](https://github.com/ninja-build/ninja/releases).
+If you are building on Windows, do not use the Meson MSI installer since it is
+experimental and will likely not work.
+
+You should get `ninja` using your package manager or download the [official
+release](https://github.com/ninja-build/ninja/releases) and put it in your PATH.
 
 ### Build GStreamer and its modules
 
