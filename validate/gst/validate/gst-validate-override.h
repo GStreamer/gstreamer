@@ -56,6 +56,7 @@ struct _GstValidateOverrideClass
   gboolean (*can_attach)(GstValidateOverride * override,
       GstValidateMonitor * monitor);
 
+  void (*attached)(GstValidateOverride * override);
 };
 
 struct _GstValidateOverride
@@ -126,6 +127,9 @@ void               gst_validate_override_set_element_added_handler (GstValidateO
 
 GST_VALIDATE_API
 gboolean           gst_validate_override_can_attach (GstValidateOverride * override, GstValidateMonitor *monitor);
+
+GST_VALIDATE_API
+void           gst_validate_override_attached (GstValidateOverride * override);
 
 G_END_DECLS
 

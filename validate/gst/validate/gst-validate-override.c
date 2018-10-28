@@ -321,3 +321,12 @@ gst_validate_override_can_attach (GstValidateOverride * override,
 
   return TRUE;
 }
+
+void
+gst_validate_override_attached (GstValidateOverride * override)
+{
+  GstValidateOverrideClass *klass = GST_VALIDATE_OVERRIDE_GET_CLASS (override);
+
+  if (klass->attached)
+    klass->attached (override);
+}
