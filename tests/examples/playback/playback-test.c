@@ -113,6 +113,7 @@ typedef struct
   GtkWidget *ringbuffer_maxsize_entry, *connection_speed_entry;
   GtkWidget *av_offset_entry, *subtitle_encoding_entry;
   GtkWidget *subtitle_fontdesc_button;
+  GtkWidget *text_offset_entry;
 
   GtkWidget *seek_format_combo, *seek_position_label, *seek_duration_label;
   GtkWidget *seek_start_label, *seek_stop_label;
@@ -208,6 +209,7 @@ static void ringbuffer_maxsize_activate_cb (GtkEntry * entry,
     PlaybackApp * app);
 static void connection_speed_activate_cb (GtkEntry * entry, PlaybackApp * app);
 static void av_offset_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void text_offset_activate_cb (GtkEntry * entry, PlaybackApp * app);
 static void subtitle_encoding_activate_cb (GtkEntry * entry, PlaybackApp * app);
 
 /* pipeline construction */
@@ -769,6 +771,7 @@ play_cb (GtkButton * button, PlaybackApp * app)
       connection_speed_activate_cb (GTK_ENTRY (app->connection_speed_entry),
           app);
       av_offset_activate_cb (GTK_ENTRY (app->av_offset_entry), app);
+      text_offset_activate_cb (GTK_ENTRY (app->text_offset_entry), app);
       subtitle_encoding_activate_cb (GTK_ENTRY (app->subtitle_encoding_entry),
           app);
     }
@@ -2589,21 +2592,38 @@ subtitle_fontdesc_cb (GtkFontButton * button, PlaybackApp * app)
   g_free (text);
 }
 
+static gboolean
+text_to_gint64 (const gchar * text, gint64 * result)
+{
+  if (text != NULL && *text != '\0') {
+    gchar *endptr;
+
+    *result = g_ascii_strtoll (text, &endptr, 10);
+    return (endptr != text && *result != G_MAXINT64 && *result != G_MININT64);
+  }
+  return FALSE;
+}
+
 static void
 av_offset_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
+  gint64 v;
 
   text = gtk_entry_get_text (entry);
-  if (text != NULL && *text != '\0') {
-    gint64 v;
-    gchar *endptr;
+  if (text_to_gint64 (text, &v))
+    g_object_set (app->pipeline, "av-offset", v, NULL);
+}
 
-    v = g_ascii_strtoll (text, &endptr, 10);
-    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
-      g_object_set (app->pipeline, "av-offset", v, NULL);
-    }
-  }
+static void
+text_offset_activate_cb (GtkEntry * entry, PlaybackApp * app)
+{
+  const gchar *text;
+  gint64 v;
+
+  text = gtk_entry_get_text (entry);
+  if (text_to_gint64 (text, &v))
+    g_object_set (app->pipeline, "text-offset", v, NULL);
 }
 
 static void
@@ -3298,6 +3318,16 @@ create_ui (PlaybackApp * app)
     g_signal_connect (app->av_offset_entry, "activate",
         G_CALLBACK (av_offset_activate_cb), app);
     gtk_grid_attach (GTK_GRID (boxes3), app->av_offset_entry, 4, 3, 1, 1);
+
+    label = gtk_label_new ("Subtitle offset");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 5, 2, 1, 1);
+    app->text_offset_entry = gtk_entry_new ();
+    g_signal_connect (app->text_offset_entry, "activate",
+        G_CALLBACK (text_offset_activate_cb), app);
+    gtk_entry_set_text (GTK_ENTRY (app->text_offset_entry), "0");
+    g_signal_connect (app->text_offset_entry, "activate",
+        G_CALLBACK (text_offset_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->text_offset_entry, 5, 3, 1, 1);
 
     label = gtk_label_new ("Subtitle Encoding");
     gtk_grid_attach (GTK_GRID (boxes3), label, 0, 4, 1, 1);
