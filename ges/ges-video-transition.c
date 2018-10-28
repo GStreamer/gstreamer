@@ -350,6 +350,7 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   mixer = ges_smart_mixer_new (NULL);
   GES_SMART_MIXER (mixer)->disable_zorder_alpha = TRUE;
+  g_object_set (GES_SMART_MIXER (mixer)->mixer, "background", 3, NULL); /* transparent */
   gst_bin_add (GST_BIN (topbin), mixer);
 
   priv->mixer_sinka =
@@ -361,7 +362,9 @@ ges_video_transition_create_element (GESTrackElement * object)
       mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, &priv->smpte,
       priv, &priv->mixer_ghostb);
   g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
+  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinka), "operator", "source");
   g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
+  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinkb), "operator", "add");
 
   fast_element_link (mixer, priv->positioner);
   fast_element_link (priv->positioner, oconv);
@@ -385,9 +388,9 @@ ges_video_transition_create_element (GESTrackElement * object)
   /* set up interpolation */
 
   priv->fade_out_control_source =
-      set_interpolation (GST_OBJECT (priv->mixer_sinka), priv, "alpha");
+      set_interpolation (GST_OBJECT (priv->mixer_ghosta), priv, "alpha");
   priv->fade_in_control_source =
-      set_interpolation (GST_OBJECT (priv->mixer_sinkb), priv, "alpha");
+      set_interpolation (GST_OBJECT (priv->mixer_ghostb), priv, "alpha");
   priv->smpte_control_source =
       set_interpolation (GST_OBJECT (priv->smpte), priv, "position");
   priv->mixer = gst_object_ref (mixer);

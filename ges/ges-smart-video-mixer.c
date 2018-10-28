@@ -22,6 +22,76 @@
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
 
+G_DECLARE_FINAL_TYPE (GESSmartMixerPad, ges_smart_mixer_pad, GES,
+    SMART_MIXER_PAD, GstGhostPad);
+struct _GESSmartMixerPad
+{
+  GstGhostPad parent;
+
+  gdouble alpha;
+  GstSegment segment;
+};
+
+enum
+{
+  PROP_PAD_0,
+  PROP_PAD_ALPHA,
+};
+
+static void
+ges_smart_mixer_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GESSmartMixerPad *pad = GES_SMART_MIXER_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_ALPHA:
+      g_value_set_double (value, pad->alpha);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+ges_smart_mixer_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GESSmartMixerPad *pad = GES_SMART_MIXER_PAD (object);
+
+  switch (prop_id) {
+    case PROP_PAD_ALPHA:
+      pad->alpha = g_value_get_double (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+G_DEFINE_TYPE (GESSmartMixerPad, ges_smart_mixer_pad, GST_TYPE_GHOST_PAD);
+
+static void
+ges_smart_mixer_pad_init (GESSmartMixerPad * self)
+{
+  gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
+}
+
+static void
+ges_smart_mixer_pad_class_init (GESSmartMixerPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->get_property = ges_smart_mixer_pad_get_property;
+  gobject_class->set_property = ges_smart_mixer_pad_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_PAD_ALPHA,
+      g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
+          1.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+}
+
 G_DEFINE_TYPE (GESSmartMixer, ges_smart_mixer, GST_TYPE_BIN);
 
 #define GET_LOCK(obj) (&((GESSmartMixer*)(obj))->lock)
@@ -88,9 +158,10 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
    added in the video sources' bin */
 static GstPadProbeReturn
 parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
-    GESSmartMixer * self)
+    GESSmartMixerPad * ghost)
 {
   GstFramePositionerMeta *meta;
+  GESSmartMixer *self = GES_SMART_MIXER (GST_OBJECT_PARENT (ghost));
 
   meta =
       (GstFramePositionerMeta *) gst_buffer_get_meta ((GstBuffer *) info->data,
@@ -104,6 +175,34 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
   if (!self->disable_zorder_alpha) {
     g_object_set (mixer_pad, "alpha", meta->alpha,
         "zorder", meta->zorder, NULL);
+  } else {
+    gint64 stream_time;
+    gdouble transalpha;
+
+    GST_OBJECT_LOCK (ghost);
+    if (ghost->segment.format == GST_FORMAT_UNDEFINED) {
+      const GstSegment *seg;
+      GstEvent *segev;
+
+      GST_OBJECT_UNLOCK (ghost);
+      segev = gst_pad_get_sticky_event (GST_PAD (ghost), GST_EVENT_SEGMENT, 0);
+      gst_event_parse_segment (segev, &seg);
+      gst_event_unref (segev);
+      GST_OBJECT_LOCK (ghost);
+
+      ghost->segment = *seg;
+
+    }
+
+    stream_time = gst_segment_to_stream_time (&ghost->segment, GST_FORMAT_TIME,
+        GST_BUFFER_PTS (info->data));
+    GST_OBJECT_UNLOCK (ghost);
+
+    if (GST_CLOCK_TIME_IS_VALID (stream_time))
+      gst_object_sync_values (GST_OBJECT (ghost), stream_time);
+
+    g_object_get (ghost, "alpha", &transalpha, NULL);
+    g_object_set (mixer_pad, "alpha", meta->alpha * transalpha, NULL);
   }
 
   g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
@@ -150,7 +249,10 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
 
   gst_bin_add (GST_BIN (self), infos->bin);
-  ghost = gst_ghost_pad_new (NULL, tmpghost);
+  ghost = g_object_new (ges_smart_mixer_pad_get_type (), "name", name,
+      "direction", GST_PAD_DIRECTION (tmpghost), NULL);
+  gst_ghost_pad_construct (GST_GHOST_PAD (ghost));
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), tmpghost);
   gst_pad_set_active (ghost, TRUE);
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
     goto could_not_add;
@@ -164,7 +266,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   infos->probe_id =
       gst_pad_add_probe (infos->mixer_pad, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) parse_metadata, self, NULL);
+      (GstPadProbeCallback) parse_metadata, ghost, NULL);
 
   LOCK (self);
   g_hash_table_insert (self->pads_infos, ghost, infos);
