@@ -13,7 +13,7 @@ option('custom_subprojects', type : 'string', value : '', description : 'Comma-s
 
 # Common options, automatically inherited by subprojects
 option('examples', type : 'feature', value : 'auto', description : 'Build examples')
-option('gtk_doc', type : 'feature', value : 'auto', description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
 option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', description : 'Enable Optimized Inner Loop Runtime Compiler')
+option('doc', type : 'feature', value : 'auto', description : 'Generate API documentation with hotdoc')
