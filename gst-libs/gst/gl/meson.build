@@ -281,11 +281,8 @@ gl_include_header = '''
 
 # convoluted way of getting at the subproject taking into account the wrap-mode
 # so we don't download a subproject unless allowed
-# FIXME: dependency() needs a valid name to attempt to find otherwise meson
-# short-circuits and will always fail and never look into the fallback
-# subproject. https://github.com/mesonbuild/meson/issues/3754
-gl_header_dep = dependency('gl-headers-not-findable', method : 'pkg-config',
-    fallback : ['gl-headers', 'gl_headers_dummy_dep'], required : false)
+gl_header_dep = dependency('', fallback : ['gl-headers', 'gl_headers_dummy_dep'],
+    required : false)
 if gl_header_dep.type_name() == 'internal'
   # this will only contain the includes of headers that are not found
   compat_includes = subproject('gl-headers').get_variable('compatibility_includes')
@@ -627,10 +624,10 @@ endif
 if need_platform_wgl != 'no' and need_win_win32 != 'no'
   gdi_dep = cc.find_library('gdi32', required : false)
   # FIXME: Revert back to has_header once it gains prefix support
-  wglext_h = cc.has_header_symbol('GL/wglext.h', 'WGL_WGLEXT_VERSION',
-                                  prefix : '''#include <windows.h>
-                                              #include <GL/gl.h>''',
-                                  include_directories : compat_includes)
+  wglext_h = cc.has_header('GL/wglext.h',
+                           prefix : '''#include <windows.h>
+                                       #include <GL/gl.h>''',
+                           include_directories : compat_includes)
 
   if wglext_h and gdi_dep.found() and gl_dep.found()
     gl_includes += [compat_includes]
