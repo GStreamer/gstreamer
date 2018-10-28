@@ -15,7 +15,7 @@ curl_sources = [
 curl_dep = dependency('libcurl', version : '>= 7.35.0', required : get_option('curl'))
 
 if curl_dep.found()
-  ssh_dep = dependency('libssh2', version : '>= 1.4.3', required : false)
+  ssh_dep = dependency('libssh2', version : '>= 1.4.3', required : get_option('curl-ssh2'))
   cdata.set('HAVE_SSH2', ssh_dep.found())
 
   gstcurl = library('gstcurl',
