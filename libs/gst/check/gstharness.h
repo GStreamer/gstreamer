@@ -257,7 +257,7 @@ GstClockTime gst_harness_query_latency (GstHarness * h);
 GST_CHECK_API
 void         gst_harness_set_upstream_latency (GstHarness * h, GstClockTime latency);
 
-/* allocator and allocation params */
+/* allocation query parameters */
 
 GST_CHECK_API
 void         gst_harness_set_propose_allocator (GstHarness                * h,
@@ -268,6 +268,11 @@ GST_CHECK_API
 void         gst_harness_get_allocator         (GstHarness          * h,
                                                 GstAllocator       ** allocator,
                                                 GstAllocationParams * params);
+
+GST_CHECK_API
+void         gst_harness_add_propose_allocation_meta (GstHarness                * h,
+                                                      GType                       api,
+                                                      const GstStructure        * params);
 
 /* src-harness */
 

@@ -1347,6 +1347,8 @@ gst_harness_set_upstream_latency
 gst_harness_set_propose_allocator
 gst_harness_get_allocator
 
+gst_harness_add_propose_allocation_meta
+
 gst_harness_add_src
 gst_harness_add_src_harness
 gst_harness_add_src_parse

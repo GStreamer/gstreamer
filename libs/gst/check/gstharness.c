@@ -147,6 +147,19 @@ static GstStaticPadTemplate hsinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+typedef struct
+{
+  GType api;
+  GstStructure *params;
+} ProposeMeta;
+
+static void
+propose_meta_clear (ProposeMeta * meta)
+{
+  if (meta->params)
+    gst_structure_free (meta->params);
+}
+
 struct _GstHarnessPrivate
 {
   gchar *element_sinkpad_name;
@@ -178,6 +191,8 @@ struct _GstHarnessPrivate
   GstAllocationParams allocation_params;
   GstAllocator *propose_allocator;
   GstAllocationParams propose_allocation_params;
+
+  GArray *propose_allocation_metas;
 
   gboolean blocking_push_mode;
   GCond blocking_push_cond;
@@ -389,6 +404,15 @@ gst_harness_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         g_assert_cmpuint (0, ==, size);
         gst_query_add_allocation_param (query,
             priv->propose_allocator, &priv->propose_allocation_params);
+
+        if (priv->propose_allocation_metas) {
+          guint i;
+          for (i = 0; i < priv->propose_allocation_metas->len; i++) {
+            ProposeMeta *meta =
+                &g_array_index (priv->propose_allocation_metas, ProposeMeta, i);
+            gst_query_add_allocation_meta (query, meta->api, meta->params);
+          }
+        }
 
         GST_DEBUG_OBJECT (pad, "proposing allocation %" GST_PTR_FORMAT,
             priv->propose_allocator);
@@ -1051,6 +1075,9 @@ gst_harness_teardown (GstHarness * h)
   gst_object_replace ((GstObject **) & priv->propose_allocator, NULL);
   gst_object_replace ((GstObject **) & priv->allocator, NULL);
   gst_object_replace ((GstObject **) & priv->pool, NULL);
+
+  if (priv->propose_allocation_metas)
+    g_array_unref (priv->propose_allocation_metas);
 
   /* if we hold the last ref, set to NULL */
   if (gst_harness_element_unref (h) == 0) {
@@ -2159,6 +2186,38 @@ gst_harness_set_propose_allocator (GstHarness * h, GstAllocator * allocator,
     priv->propose_allocator = allocator;
   if (params)
     priv->propose_allocation_params = *params;
+}
+
+/**
+ * gst_harness_add_propose_allocation_meta:
+ * @h: a #GstHarness
+ * @api: a metadata API
+ * @params: (allow-none) (transfer none): API specific parameters
+ *
+ * Add api with params as one of the supported metadata API to propose when
+ * receiving an allocation query.
+ *
+ * MT safe.
+ *
+ * Since: 1.16
+ */
+void
+gst_harness_add_propose_allocation_meta (GstHarness * h, GType api,
+    const GstStructure * params)
+{
+  GstHarnessPrivate *priv = h->priv;
+  ProposeMeta meta;
+
+  meta.api = api;
+  meta.params = params ? gst_structure_copy (params) : NULL;
+
+  if (!priv->propose_allocation_metas) {
+    priv->propose_allocation_metas =
+        g_array_new (FALSE, FALSE, sizeof (ProposeMeta));
+    g_array_set_clear_func (priv->propose_allocation_metas,
+        (GDestroyNotify) propose_meta_clear);
+  }
+  g_array_append_val (priv->propose_allocation_metas, meta);
 }
 
 /**
