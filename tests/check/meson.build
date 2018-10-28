@@ -1,5 +1,5 @@
-# FIXME: use dependency('valgrind') once we have a method to get the includes
-if cc.has_header('valgrind/valgrind.h')
+valgrind_dep = dependency('valgrind', required: false).partial_dependency(compile_args : true)
+if valgrind_dep.found()
   cdata.set('HAVE_VALGRIND', 1)
 endif
 
@@ -158,7 +158,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
 # FIXME: check, also + PTHREAD_CFLAGS
 test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
   gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
-  gstapp_dep, gio_dep] + glib_deps
+  gstapp_dep, gio_dep, valgrind_dep] + glib_deps
 
 # FIXME: add valgrind suppression common/gst.supp gst-plugins-good.supp
 foreach t : good_tests
