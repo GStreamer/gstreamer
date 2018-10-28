@@ -208,7 +208,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) \"" GST_AUDIO_NE (S16) "\", "
-        "rate = " GST_AUDIO_RATE_RANGE ", " "channels = (int) 1")
+        "rate = " GST_AUDIO_RATE_RANGE ", " "channels = (int) 1, "
+        "layout = (string)interleaved")
     );
 
 #define parent_class gst_dtmf_src_parent_class
