@@ -52,7 +52,7 @@ def main ():
     try:
         import GstDebugViewer
     except ImportError as exc:
-        print >> sys.stderr, str (exc)
+        print(str (exc), file=sys.stderr)
         sys.exit (1)
     else:
         if installed:
