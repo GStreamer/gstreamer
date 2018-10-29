@@ -210,8 +210,8 @@ gst_validate_monitor_constructor (GType type, guint n_construct_params,
     }
   }
 
-  gst_validate_override_registry_attach_overrides (monitor);
   gst_validate_monitor_setup (monitor);
+  gst_validate_override_registry_attach_overrides (monitor);
 
   target = gst_validate_monitor_get_target (monitor);
   g_object_set_data ((GObject *) target, "validate-monitor", monitor);
