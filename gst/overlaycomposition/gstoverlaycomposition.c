@@ -121,6 +121,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstoverlaycomposition.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_overlay_composition_debug);
