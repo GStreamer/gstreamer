@@ -2635,15 +2635,15 @@ media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
 static void
 stream_unblock (GstRTSPStream * stream, GstRTSPMedia * media)
 {
-  gst_rtsp_stream_unblock_linked (stream);
+  gst_rtsp_stream_set_blocked (stream, FALSE);
 }
 
 static void
-media_unblock_linked (GstRTSPMedia * media)
+media_unblock (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
 
-  GST_DEBUG ("media %p unblocking linked streams", media);
+  GST_DEBUG ("media %p unblocking streams", media);
   /* media is not blocked any longer, as it contains active streams,
    * streams that are complete */
   priv->blocked = FALSE;
@@ -4393,8 +4393,8 @@ default_unsuspend (GstRTSPMedia * media)
         gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
         /* at this point the media pipeline has been updated and contain all
          * specific transport parts: all active streams contain at least one sink
-         * element and it's safe to unblock any blocked streams that are active */
-        media_unblock_linked (media);
+         * element and it's safe to unblock all blocked streams */
+        media_unblock (media);
       } else {
         /* streams are not blocked and media is suspended from PAUSED */
         gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
@@ -4414,8 +4414,8 @@ default_unsuspend (GstRTSPMedia * media)
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
       /* at this point the media pipeline has been updated and contain all
        * specific transport parts: all active streams contain at least one sink
-       * element and it's safe to unblock any blocked streams that are active */
-      media_unblock_linked (media);
+       * element and it's safe to unblock all blocked streams */
+      media_unblock (media);
       if (!start_preroll (media))
         goto start_failed;
 
@@ -4507,7 +4507,7 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
     } else {
       if (state == GST_STATE_PLAYING)
         /* make sure pads are not blocking anymore when going to PLAYING */
-        media_unblock_linked (media);
+        media_unblock (media);
 
       if (state == GST_STATE_PAUSED) {
         set_state_ret = set_state (media, state);
