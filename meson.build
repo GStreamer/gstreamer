@@ -186,6 +186,8 @@ if get_option('default_library') == 'shared'
 endif
 
 plugins = []
+pkgconfig_subdirs = ['gstreamer-1.0']
+
 subdir('gst')
 if not get_option('tests').disabled()
   subdir('tests')
@@ -193,7 +195,6 @@ endif
 if not get_option('examples').disabled()
   subdir('examples')
 endif
-subdir('pkgconfig')
 subdir('docs')
 
 # Set release date
