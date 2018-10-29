@@ -30,6 +30,9 @@ else
   msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
 endif
 
+have_msdk = false
+msdk_dep = []
+
 msdk_option = get_option('msdk')
 if msdk_option.disabled()
   subdir_done()
@@ -40,9 +43,6 @@ msdk_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELME
 if msdk_root == '' and msdk_option.enabled()
   error('msdk plugin enabled but Intel Media SDK not found: neither INTELMEDIASDKROOT nor MFX_HOME were set')
 endif
-
-have_msdk = false
-msdk_dep = []
 
 if msdk_root != ''
   msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64', msdk_root + '/lib64']
