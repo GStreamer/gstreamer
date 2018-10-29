@@ -38,11 +38,6 @@ check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
 libav_deps_type_name = ''
 
 foreach dep: libav_deps
-  message('type name: @0@'.format(dep.type_name()))
-endforeach
-
-foreach dep: libav_deps
-  message('[@0@] / [@1@]'.format(libav_deps_type_name, dep.type_name()))
   if libav_deps_type_name != '' and dep.type_name() != libav_deps_type_name
     error('Libav deps must be either all internal or all external')
   endif
