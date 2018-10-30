@@ -1951,6 +1951,7 @@ main (int argc, char *argv[])
   }
 
 #ifdef G_OS_UNIX
+  fflush (stdout);
   /* So that the pipe we create in redirect_stdout() is closed */
   close (STDOUT_FILENO);
   wait (NULL);
