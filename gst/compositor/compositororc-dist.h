@@ -89,6 +89,8 @@ void compositor_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const
 void compositor_orc_overlay_argb_addition (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 void compositor_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 void compositor_orc_overlay_bgra_addition (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_source_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void compositor_orc_source_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 
 #ifdef __cplusplus
 }
