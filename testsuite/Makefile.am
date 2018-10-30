@@ -1,6 +1,11 @@
 # Don't try to use wildcards to replace the list of tests below.
 # http://www.gnu.org/software/automake/manual/automake.html#Wildcards
 # Keep this list sorted!
+
+TEST_ENVIRONMENT = \
+	GST_OVERRIDE_SRC_PATH="$(abs_top_srcdir)/gi/overrides" \
+	GST_OVERRIDE_BUILD_PATH="$(abs_top_builddir)/gi/overrides"
+
 tests =	\
 	test_gst.py \
 	test_types.py
@@ -20,10 +25,10 @@ clean-local:
 	rm -rf *.pyc *.pyo
 
 check-local:
-	$(PYTHON) $(srcdir)/runtests.py $(tests)
+	$(TEST_ENVIRONMENT) $(PYTHON) $(srcdir)/runtests.py $(tests)
 
 %.check: %
-	$(PYTHON) $(srcdir)/runtests.py $*
+	$(TEST_ENVIRONMENT) $(PYTHON) $(srcdir)/runtests.py $*
 %.forever: %
 	$(srcdir)/cleanup.py
 	@while true; do \

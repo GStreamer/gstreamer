@@ -25,11 +25,10 @@ if runcmd.returncode() != 0
     error('Could not configure testsuite config file.' + runcmd.stderr())
 endif
 
-gi_dir = join_paths(pygi_override_dir, '..', '..')
-
 foreach i: tests
     test_name = i.get(0)
     env = environment()
-    env.prepend('PYTHONPATH', [gi_dir, gi_overrides_build_dir])
+    env.set('GST_OVERRIDE_SRC_PATH', join_paths (meson.current_source_dir(), '..', 'gi', 'overrides'))
+    env.set('GST_OVERRIDE_BUILD_PATH', join_paths (meson.current_build_dir(), '..', 'gi', 'overrides'))
     test(test_name, python, args: [runtests, i.get(1)], env: env)
 endforeach

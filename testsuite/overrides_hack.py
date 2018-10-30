@@ -1,32 +1,28 @@
 import os
-import gi.overrides
+import sys
+import imp
 
-try:
-    import mesonconfig
-except ImportError:
-    mesonconfig = None
-    pass
+class GstOverrideImport:
+    def find_module(self, fullname, path=None):
+        if fullname in ('gi.overrides.Gst', 'gi.overrides._gi_gst'):
+            return self
+        return None
 
-FILE = os.path.realpath(__file__)
-if not gi.overrides.__path__[0].endswith("gst-python/gi/overrides"):
-    local_overrides = None
-    # our overrides don't take precedence, let's fix it
-    for i, path in enumerate(gi.overrides.__path__):
-        if path.endswith("gst-python/gi/overrides"):
-            local_overrides = path
+    def load_module(self, name):
+        if name in sys.modules:
+            return sys.modules[name]
 
-    if local_overrides:
-        gi.overrides.__path__.remove(local_overrides)
-    else:
-        local_overrides = os.path.abspath(os.path.join(FILE, "../", "../", "gi", "overrides"))
+        fp, pathname, description = imp.find_module(name.split('.')[-1], [
+            os.environ.get('GST_OVERRIDE_SRC_PATH'),
+            os.environ.get('GST_OVERRIDE_BUILD_PATH'),
+        ])
 
-    gi.overrides.__path__.insert(0, local_overrides)
+        try:
+            module = imp.load_module(name, fp, pathname, description)
+        finally:
+            if fp:
+                fp.close()
+        sys.modules[name] = module
+        return module
 
-if mesonconfig:
-    gi.overrides.__path__.insert(0, os.path.abspath(os.path.join(mesonconfig.path, "gi", "overrides")))
-# Execute previously set sitecustomize.py script if it existed
-if os.environ.get("GST_ENV"):
-    old_sitecustomize = os.path.join(os.path.dirname(__file__),
-                                    "old.sitecustomize.gstuninstalled.py")
-    if os.path.exists(old_sitecustomize):
-        exec(compile(open(old_sitecustomize).read(), old_sitecustomize, 'exec'))
+sys.meta_path.insert(0, GstOverrideImport())
