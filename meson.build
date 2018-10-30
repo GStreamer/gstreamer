@@ -36,6 +36,7 @@ subprojects = {
     'gst-plugins-good': {},
     'gst-plugins-bad': { 'option': get_option('bad') },
     'gst-plugins-ugly': { 'option': get_option('ugly') },
+    'pygobject': { 'option': get_option('python') },
     'gst-python': { 'option': get_option('python') },
     'gst-omx': { 'option': get_option('omx'), },
     'gst-libav': { 'option': get_option('libav') },
