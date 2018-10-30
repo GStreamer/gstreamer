@@ -107,9 +107,6 @@ def request_wrap(path: str) -> List[Dict[str, str]]:
     if not resp[0]:
         return None
 
-    # Not sure if there will be any edge cases where it returns more than one
-    # so lets see if anyone complains
-    assert len(resp) == 1
     return resp[0]
 
 
