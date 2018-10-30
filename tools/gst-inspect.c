@@ -29,7 +29,7 @@
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
-#define DEFAULT_PAGER "less"
+#define DEFAULT_PAGER "less -F"
 
 #include "tools.h"
 #include <gst/gst_private.h>    /* for internal Factories */
