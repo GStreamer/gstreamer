@@ -2015,7 +2015,7 @@ restart:
     if (last_impl != upload->priv->method_impl) {
       GstCaps *caps = gst_gl_upload_transform_caps (upload, upload->context,
           GST_PAD_SINK, upload->priv->in_caps, NULL);
-      if (!gst_caps_is_equal (upload->priv->out_caps, caps)) {
+      if (!gst_caps_is_subset (caps, upload->priv->out_caps)) {
         gst_buffer_replace (&outbuf, NULL);
         ret = GST_GL_UPLOAD_RECONFIGURE;
       }
