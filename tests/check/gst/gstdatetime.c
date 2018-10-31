@@ -87,15 +87,16 @@ GST_START_TEST (test_GstDateTime_new_from_unix_epoch_local_time)
   tm.tm_year = 70;
   tm.tm_mday = 1;
   tm.tm_mon = 0;
-  tm.tm_hour = 0;
+  tm.tm_hour = 1;
   tm.tm_min = 0;
   tm.tm_sec = 0;
   t = mktime (&tm);
+  fail_unless (t != -1);
   dt = gst_date_time_new_from_unix_epoch_local_time (t);
   assert_equals_int (gst_date_time_get_year (dt), 1970);
   assert_equals_int (gst_date_time_get_month (dt), 1);
   assert_equals_int (gst_date_time_get_day (dt), 1);
-  assert_equals_int (gst_date_time_get_hour (dt), 0);
+  assert_equals_int (gst_date_time_get_hour (dt), 1);
   assert_equals_int (gst_date_time_get_minute (dt), 0);
   assert_equals_int (gst_date_time_get_second (dt), 0);
   gst_date_time_unref (dt);
