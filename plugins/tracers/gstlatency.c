@@ -23,7 +23,14 @@
  * @short_description: log processing latency stats
  *
  * A tracing module that determines src-to-sink latencies by injecting custom
- * events at sources and process them at sinks.
+ * events at sources and process them at sinks. This elements supports tracing
+ * the entire pipeline latency and per element latency. By default, only
+ * pipeline latency is traced. The 'flags' parameter can be used to enabled
+ * element tracing.
+ *
+ * ```
+ * GST_TRACERS="latency(flags=pipeline+element)" GST_DEBUG=GST_TRACER:7 ./...
+ * ```
  */
 /* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later
  * we fan-out with tee and have two sinks, each sink would get all two events,
@@ -135,7 +142,8 @@ log_element_latency (const GstStructure * data, GstElement * element,
 }
 
 static void
-send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
+send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
+    guint64 ts)
 {
   GstPad *peer_pad = GST_PAD_PEER (pad);
 
@@ -145,7 +153,8 @@ send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
     gchar *pad_name;
     GstEvent *latency_probe;
 
-    if (GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) {
+    if (self->flags & GST_LATENCY_TRACER_FLAG_PIPELINE &&
+        GST_OBJECT_FLAG_IS_SET (parent, GST_ELEMENT_FLAG_SOURCE)) {
       pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (pad));
 
       GST_DEBUG ("%s: Sending latency event", pad_name);
@@ -158,15 +167,17 @@ send_latency_probe (GstElement * parent, GstPad * pad, guint64 ts)
       gst_pad_push_event (pad, latency_probe);
     }
 
-    GST_DEBUG ("%s_%s: Sending sub-latency event", GST_DEBUG_PAD_NAME (pad));
+    if (self->flags & GST_LATENCY_TRACER_FLAG_ELEMENT) {
+      GST_DEBUG ("%s_%s: Sending sub-latency event", GST_DEBUG_PAD_NAME (pad));
 
-    pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (peer_pad));
-    latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new_id (sub_latency_probe_id,
-            latency_probe_pad, G_TYPE_STRING, pad_name,
-            latency_probe_ts, G_TYPE_UINT64, ts, NULL));
-    gst_pad_push_event (pad, latency_probe);
-    g_free (pad_name);
+      pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (peer_pad));
+      latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new_id (sub_latency_probe_id,
+              latency_probe_pad, G_TYPE_STRING, pad_name,
+              latency_probe_ts, G_TYPE_UINT64, ts, NULL));
+      gst_pad_push_event (pad, latency_probe);
+      g_free (pad_name);
+    }
   }
 }
 
@@ -202,21 +213,23 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
 }
 
 static void
-do_push_buffer_pre (GstTracer * self, guint64 ts, GstPad * pad)
+do_push_buffer_pre (GstTracer * tracer, guint64 ts, GstPad * pad)
 {
+  GstLatencyTracer *self = (GstLatencyTracer *) tracer;
   GstElement *parent = get_real_pad_parent (pad);
 
-  send_latency_probe (parent, pad, ts);
+  send_latency_probe (self, parent, pad, ts);
   calculate_latency (parent, pad, ts);
 }
 
 static void
-do_pull_range_pre (GstTracer * self, guint64 ts, GstPad * pad)
+do_pull_range_pre (GstTracer * tracer, guint64 ts, GstPad * pad)
 {
+  GstLatencyTracer *self = (GstLatencyTracer *) tracer;
   GstPad *peer_pad = GST_PAD_PEER (pad);
   GstElement *parent = get_real_pad_parent (peer_pad);
 
-  send_latency_probe (parent, peer_pad, ts);
+  send_latency_probe (self, parent, peer_pad, ts);
 }
 
 static void
@@ -313,8 +326,54 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
 /* tracer class */
 
 static void
+gst_latency_tracer_constructed (GObject * object)
+{
+  GstLatencyTracer *self = GST_LATENCY_TRACER (object);
+  gchar *params, *tmp;
+  GstStructure *params_struct = NULL;
+
+  g_object_get (self, "params", &params, NULL);
+
+  if (!params)
+    return;
+
+  tmp = g_strdup_printf ("latency,%s", params);
+  params_struct = gst_structure_from_string (tmp, NULL);
+  g_free (tmp);
+
+  /* Read the flags if available */
+  if (params_struct) {
+    const gchar *flags = gst_structure_get_string (params_struct, "flags");
+
+    self->flags = 0;
+
+    if (flags) {
+      GStrv split = g_strsplit (flags, "+", -1);
+      gint i;
+
+      for (i = 0; split[i]; i++) {
+        if (g_str_equal (split[i], "pipeline"))
+          self->flags |= GST_LATENCY_TRACER_FLAG_PIPELINE;
+        else if (g_str_equal (split[i], "element"))
+          self->flags |= GST_LATENCY_TRACER_FLAG_ELEMENT;
+        else
+          GST_WARNING ("Invalid latency tracer flags %s", split[i]);
+      }
+
+      g_strfreev (split);
+    }
+  }
+
+  g_free (params);
+}
+
+static void
 gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->constructed = gst_latency_tracer_constructed;
+
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
   sub_latency_probe_id = g_quark_from_static_string ("sub_latency_probe.id");
   latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
@@ -374,6 +433,9 @@ static void
 gst_latency_tracer_init (GstLatencyTracer * self)
 {
   GstTracer *tracer = GST_TRACER (self);
+
+  /* only trace pipeline latency by default */
+  self->flags = GST_LATENCY_TRACER_FLAG_PIPELINE;
 
   /* in push mode, pre/post will be called before/after the peer chain
    * function has been called. For this reaosn, we only use -pre to avoid
