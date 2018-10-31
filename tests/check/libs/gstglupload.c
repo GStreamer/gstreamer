@@ -264,7 +264,7 @@ GST_START_TEST (test_upload_data)
   GstCaps *in_caps, *out_caps;
   GstBuffer *inbuf, *outbuf;
   GstMapInfo map_info;
-  gboolean res;
+  gint res;
   gint i = 0;
 
   in_caps = gst_caps_from_string ("video/x-raw,format=RGBA,"
@@ -278,7 +278,7 @@ GST_START_TEST (test_upload_data)
       0, WIDTH * HEIGHT * 4, NULL, NULL);
 
   res = gst_gl_upload_perform_with_buffer (upload, inbuf, &outbuf);
-  fail_if (res == FALSE, "Failed to upload buffer");
+  fail_unless (res == GST_GL_UPLOAD_DONE, "Failed to upload buffer");
   fail_unless (GST_IS_BUFFER (outbuf));
 
   res = gst_buffer_map (outbuf, &map_info, GST_MAP_READ | GST_MAP_GL);
@@ -319,7 +319,7 @@ GST_START_TEST (test_upload_gl_memory)
   GstVideoInfo in_info;
   GstMapInfo map_info;
   gint i = 0;
-  gboolean res;
+  gint res;
 
   base_mem_alloc =
       GST_GL_BASE_MEMORY_ALLOCATOR (gst_allocator_find
