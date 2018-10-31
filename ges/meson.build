@@ -181,7 +181,7 @@ if build_gir
         nsversion : apiversion,
         identifier_prefix : 'GES',
         symbol_prefix : 'ges',
-        export_packages : 'ges-1.0',
+        export_packages : 'gst-editing-services-1.0',
         includes : ['Gst-1.0', 'GstPbutils-1.0', 'GstVideo-1.0', 'Gio-2.0', 'GObject-2.0'],
         install : true,
         dependencies : libges_deps,
