@@ -1282,11 +1282,28 @@ gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegtsDescriptor *
 }
 
 /* GST_MTS_DESC_DVB_CONTENT (0x54) */
+
+static GstMpegtsContent *
+_gst_mpegts_content_copy (GstMpegtsContent * source)
+{
+  GstMpegtsContent *copy;
+
+  copy = g_slice_dup (GstMpegtsContent, source);
+
+  return copy;
+}
+
 static void
 _gst_mpegts_content_free (GstMpegtsContent * content)
 {
   g_slice_free (GstMpegtsContent, content);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsContent,
+    gst_mpegts_content,
+    (GBoxedCopyFunc) _gst_mpegts_content_copy,
+    (GFreeFunc) _gst_mpegts_content_free);
+
 
 /**
  * gst_mpegts_descriptor_parse_dvb_content:

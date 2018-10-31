@@ -612,9 +612,15 @@ struct _GstMpegtsContent
   guint8 user_byte;
 };
 
+#define GST_TYPE_MPEGTS_CONTENT (gst_mpegts_content_get_type ())
+
+GST_MPEGTS_API
+GType gst_mpegts_content_get_type (void);
+
 GST_MPEGTS_API
 gboolean gst_mpegts_descriptor_parse_dvb_content (const GstMpegtsDescriptor *
 	descriptor, GPtrArray ** content);
+
 
 /* GST_MTS_DESC_DVB_PARENTAL_RATING (0x55) */
 typedef struct _GstMpegtsDVBParentalRatingItem GstMpegtsDVBParentalRatingItem;
