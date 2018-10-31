@@ -139,7 +139,6 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-timeline-element.h \
 	ges-container.h \
 	ges-effect-asset.h \
-	ges-smart-adder.h \
 	ges-utils.h \
 	ges-group.h \
 	ges-version.h
@@ -150,6 +149,7 @@ noinst_HEADERS = \
 	ges-structured-interface.h \
 	ges-structure-parser.h \
 	ges-smart-video-mixer.h \
+	ges-smart-adder.h \
 	gstframepositioner.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \

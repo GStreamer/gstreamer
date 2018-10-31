@@ -73,6 +73,7 @@
 #include <ges/ges-video-transition.h>
 #include <ges/ges-audio-transition.h>
 #include <ges/ges-base-effect.h>
+#include <ges/ges-effect-asset.h>
 #include <ges/ges-effect.h>
 #include <ges/ges-formatter.h>
 #include <ges/ges-pitivi-formatter.h>
