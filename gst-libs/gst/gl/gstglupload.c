@@ -848,7 +848,9 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
 
     g_value_init (&formats, GST_TYPE_LIST);
     gst_value_deserialize (&formats, format_str);
-    gst_caps_set_value (ret, "format", &formats);
+    tmp = gst_caps_copy (ret);
+    gst_caps_set_value (tmp, "format", &formats);
+    gst_caps_append (ret, tmp);
     g_free (format_str);
     g_value_unset (&formats);
 
