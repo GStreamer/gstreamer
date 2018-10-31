@@ -892,13 +892,13 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
 
     switch (compo_pad->op) {
       case COMPOSITOR_OPERATOR_SOURCE:
-        blend_mode = COMPOSITOR_OPERATOR_SOURCE;
+        blend_mode = COMPOSITOR_BLEND_MODE_SOURCE;
         break;
       case COMPOSITOR_OPERATOR_OVER:
-        blend_mode = COMPOSITOR_OPERATOR_OVER;
+        blend_mode = COMPOSITOR_BLEND_MODE_OVER;
         break;
       case COMPOSITOR_OPERATOR_ADD:
-        blend_mode = COMPOSITOR_OPERATOR_ADD;
+        blend_mode = COMPOSITOR_BLEND_MODE_ADD;
         break;
       default:
         g_assert_not_reached ();
