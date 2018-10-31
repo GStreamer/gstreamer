@@ -140,7 +140,7 @@ def test_get_project_branch():
 # Documentation: https://docs.gitlab.com/ce/api/projects.html#list-user-projects
 def search_user_namespace(user: str, project: str) -> Dict[str, str]:
     print(f"Searching for {project} project in @{user} user's namespace")
-    path = f"/users/{user}/projects?search={project}"
+    path = f"users/{user}/projects?search={project}"
     return request_wrap(path)
 
 
