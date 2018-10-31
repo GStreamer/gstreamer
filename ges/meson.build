@@ -122,7 +122,6 @@ ges_headers = [
     'ges-timeline-element.h',
     'ges-container.h',
     'ges-effect-asset.h',
-    'ges-smart-adder.h',
     'ges-utils.h',
     'ges-group.h'
 ]
