@@ -95,7 +95,7 @@ get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
   g_return_val_if_fail (parser != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
   g_return_val_if_fail (anc != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
 
-  while (parser->offset < parser->work_data_size + SMALLEST_ANC_SIZE) {
+  while (parser->offset + SMALLEST_ANC_SIZE < parser->work_data_size) {
     guint8 DID, SDID, DC;
     guint i;
 
@@ -116,7 +116,7 @@ get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
     SDID = data[parser->offset + 4] & 0xff;
     DC = data[parser->offset + 5] & 0xff;
     /* Check if we have enough room to get the User Data */
-    if (parser->offset >= parser->work_data_size + SMALLEST_ANC_SIZE + DC)
+    if (parser->offset + SMALLEST_ANC_SIZE + DC >= parser->work_data_size)
       goto not_enough_data;
 
     /* We found a valid ANC \o/ */
@@ -155,7 +155,7 @@ get_ancillary_8 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
   g_return_val_if_fail (parser != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
   g_return_val_if_fail (anc != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
 
-  while (parser->offset < parser->work_data_size + SMALLEST_ANC_SIZE) {
+  while (parser->offset + SMALLEST_ANC_SIZE < parser->work_data_size) {
     guint8 DID, SDID, DC;
     guint i;
 
@@ -171,7 +171,7 @@ get_ancillary_8 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
     SDID = data[parser->offset + 4];
     DC = data[parser->offset + 5];
     /* Check if we have enough room to get the User Data */
-    if (parser->offset >= parser->work_data_size + SMALLEST_ANC_SIZE + DC)
+    if (parser->offset + SMALLEST_ANC_SIZE + DC >= parser->work_data_size)
       goto not_enough_data;
 
     /* We found a valid ANC \o/ */
