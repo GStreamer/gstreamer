@@ -25,6 +25,7 @@
 G_BEGIN_DECLS
 
 #include "rtsp-server-prelude.h"
+#include "rtsp-server-object.h"
 #include "rtsp-session-pool.h"
 #include "rtsp-session.h"
 #include "rtsp-media.h"
@@ -44,7 +45,6 @@ G_BEGIN_DECLS
 #include "rtsp-sdp.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-params.h"
-#include "rtsp-server-object.h"
 
 #include "rtsp-onvif-client.h"
 #include "rtsp-onvif-media-factory.h"

@@ -17,12 +17,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_RTSP_SERVER_H__
-#define __GST_RTSP_SERVER_H__
+#ifndef __GST_RTSP_SERVER_OBJECT_H__
+#define __GST_RTSP_SERVER_OBJECT_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+typedef struct _GstRTSPServer GstRTSPServer;
+typedef struct _GstRTSPServerClass GstRTSPServerClass;
+typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
 
 #include "rtsp-server-prelude.h"
 #include "rtsp-session-pool.h"
@@ -43,10 +47,6 @@ G_BEGIN_DECLS
 #include "rtsp-sdp.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-params.h"
-
-typedef struct _GstRTSPServer GstRTSPServer;
-typedef struct _GstRTSPServerClass GstRTSPServerClass;
-typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
 
 #define GST_TYPE_RTSP_SERVER              (gst_rtsp_server_get_type ())
 #define GST_IS_RTSP_SERVER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_SERVER))
@@ -202,4 +202,4 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPServer, gst_object_unref)
 
 G_END_DECLS
 
-#endif /* __GST_RTSP_SERVER_H__ */
+#endif /* __GST_RTSP_SERVER_OBJECT_H__ */
