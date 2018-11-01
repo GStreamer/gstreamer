@@ -35,6 +35,11 @@
 typedef struct GstRTSPOnvifClientClass GstRTSPOnvifClientClass;
 typedef struct GstRTSPOnvifClient GstRTSPOnvifClient;
 
+/**
+ * GstRTSPOnvifClient:
+ *
+ * Since: 1.14
+ */
 struct GstRTSPOnvifClientClass
 {
   GstRTSPClientClass parent;

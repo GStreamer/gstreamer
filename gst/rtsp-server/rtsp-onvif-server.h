@@ -35,6 +35,11 @@
 typedef struct GstRTSPOnvifServerClass GstRTSPOnvifServerClass;
 typedef struct GstRTSPOnvifServer GstRTSPOnvifServer;
 
+/**
+ * GstRTSPOnvifServer:
+ *
+ * Since: 1.14
+ */
 struct GstRTSPOnvifServerClass
 {
   GstRTSPServerClass parent;
