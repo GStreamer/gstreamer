@@ -36,6 +36,11 @@ typedef struct GstRTSPOnvifMediaClass GstRTSPOnvifMediaClass;
 typedef struct GstRTSPOnvifMedia GstRTSPOnvifMedia;
 typedef struct GstRTSPOnvifMediaPrivate GstRTSPOnvifMediaPrivate;
 
+/**
+ * GstRTSPOnvifMedia:
+ *
+ * Since: 1.14
+ */
 struct GstRTSPOnvifMediaClass
 {
   GstRTSPMediaClass parent;
