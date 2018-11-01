@@ -836,18 +836,37 @@ extract_cc_from_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
 
       while (gst_video_vbi_parser_get_ancillary (self->vbiparser,
               &gstanc) == GST_VIDEO_VBI_PARSER_RESULT_OK) {
-        if (GST_VIDEO_ANCILLARY_DID16 (&gstanc) ==
-            GST_VIDEO_ANCILLARY_DID16_S334_EIA_708) {
-          GST_DEBUG_OBJECT (self,
-              "Adding CEA-708 CDP meta to buffer for line %d", fi);
-          GST_MEMDUMP_OBJECT (self, "CDP", gstanc.data, gstanc.data_count);
-          gst_buffer_add_video_caption_meta (*buffer,
-              GST_VIDEO_CAPTION_TYPE_CEA708_CDP, gstanc.data,
-              gstanc.data_count);
-          found = TRUE;
-          self->last_cc_vbi_line = fi;
-          break;
+        switch (GST_VIDEO_ANCILLARY_DID16 (&gstanc)) {
+          case GST_VIDEO_ANCILLARY_DID16_S334_EIA_708:
+            GST_DEBUG_OBJECT (self,
+                "Adding CEA-708 CDP meta to buffer for line %d", fi);
+            GST_MEMDUMP_OBJECT (self, "CDP", gstanc.data, gstanc.data_count);
+            gst_buffer_add_video_caption_meta (*buffer,
+                GST_VIDEO_CAPTION_TYPE_CEA708_CDP, gstanc.data,
+                gstanc.data_count);
+
+            break;
+          case GST_VIDEO_ANCILLARY_DID16_S334_EIA_608:
+            GST_DEBUG_OBJECT (self,
+                "Adding CEA-608 meta to buffer for line %d", fi);
+            GST_MEMDUMP_OBJECT (self, "CEA608", gstanc.data, gstanc.data_count);
+            /* The first byte actually contains the field and line offset but
+             * for CEA608-in-CEA708 we can't store the line offset, and it's
+             * generally not needed
+             */
+            gstanc.data[0] = (gstanc.data[0] & 0x80) ? 0xFD : 0xFC;
+            gst_buffer_add_video_caption_meta (*buffer,
+                GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW, gstanc.data,
+                gstanc.data_count);
+            break;
+          default:
+            /* otherwise continue looking */
+            continue;
         }
+
+        found = TRUE;
+        self->last_cc_vbi_line = fi;
+        break;
       }
     }
 
