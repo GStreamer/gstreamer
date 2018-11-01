@@ -18,6 +18,10 @@ rtsp_server_sources = [
   'rtsp-stream-transport.c',
   'rtsp-thread-pool.c',
   'rtsp-token.c',
+  'rtsp-onvif-server.c',
+  'rtsp-onvif-client.c',
+  'rtsp-onvif-media-factory.c',
+  'rtsp-onvif-media.c',
 ]
 
 rtsp_server_headers = [
@@ -47,6 +51,7 @@ rtsp_server_headers = [
   'rtsp-onvif-media-factory.h',
   'rtsp-onvif-media.h',
 ]
+
 install_headers(rtsp_server_headers, subdir : 'gstreamer-1.0/gst/rtsp-server')
 
 gst_rtsp_server_deps = [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep]
