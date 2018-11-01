@@ -24,6 +24,7 @@ base_tests = [
   [ 'libs/sdp.c' ],
   [ 'libs/tag.c' ],
   [ 'libs/video.c' ],
+  [ 'libs/videoanc.c' ],
   [ 'libs/videoencoder.c' ],
   [ 'libs/videodecoder.c' ],
   [ 'libs/videotimecode.c' ],

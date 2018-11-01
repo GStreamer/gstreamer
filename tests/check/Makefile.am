@@ -257,6 +257,7 @@ check_PROGRAMS = \
 	libs/sdp \
 	libs/tag \
 	libs/video \
+	libs/videoanc \
 	libs/videodecoder \
 	libs/videoencoder \
 	libs/videotimecode \
@@ -833,6 +834,16 @@ libs_video_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_video_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_videoanc_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_videoanc_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)

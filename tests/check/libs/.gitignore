@@ -36,6 +36,7 @@ sdp
 tag
 utils
 video
+videoanc
 videodecoder
 videoencoder
 videotimecode
