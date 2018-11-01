@@ -42,6 +42,10 @@ rtsp_server_headers = [
   'rtsp-server.h',
   'rtsp-server-object.h',
   'rtsp-server-prelude.h',
+  'rtsp-onvif-server.h',
+  'rtsp-onvif-client.h',
+  'rtsp-onvif-media-factory.h',
+  'rtsp-onvif-media.h',
 ]
 install_headers(rtsp_server_headers, subdir : 'gstreamer-1.0/gst/rtsp-server')
 
