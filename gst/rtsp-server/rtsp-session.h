@@ -20,7 +20,7 @@
 #include <gst/gst.h>
 
 #include <gst/rtsp/gstrtsptransport.h>
-#include "rtsp-server.h" /* for GST_RTSP_SERVER_DEPRECATED_FOR */
+#include "rtsp-server-prelude.h" /* for GST_RTSP_SERVER_DEPRECATED_FOR */
 
 #ifndef __GST_RTSP_SESSION_H__
 #define __GST_RTSP_SESSION_H__

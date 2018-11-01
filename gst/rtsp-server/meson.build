@@ -40,6 +40,7 @@ rtsp_server_headers = [
   'rtsp-token.h',
   'rtsp-client.h',
   'rtsp-server.h',
+  'rtsp-server-object.h',
   'rtsp-server-prelude.h',
 ]
 install_headers(rtsp_server_headers, subdir : 'gstreamer-1.0/gst/rtsp-server')
