@@ -59,7 +59,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rtsp-server.h"
+#include "rtsp-context.h"
+#include "rtsp-server-object.h"
 #include "rtsp-client.h"
 
 #define GST_RTSP_SERVER_GET_LOCK(server)  (&(GST_RTSP_SERVER_CAST(server)->priv->lock))

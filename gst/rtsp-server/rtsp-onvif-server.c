@@ -35,6 +35,7 @@
 #include "config.h"
 #endif
 
+#include "rtsp-context.h"
 #include "rtsp-onvif-server.h"
 #include "rtsp-onvif-client.h"
 

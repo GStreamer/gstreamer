@@ -24,19 +24,6 @@
 
 G_BEGIN_DECLS
 
-/* Do *not* use these defines outside of rtsp-server. Use G_DEPRECATED instead. */
-#ifdef GST_DISABLE_DEPRECATED
-#define GST_RTSP_SERVER_DEPRECATED GST_RTSP_SERVER_API
-#define GST_RTSP_SERVER_DEPRECATED_FOR(f) GST_RTSP_SERVER_API
-#else
-#define GST_RTSP_SERVER_DEPRECATED G_DEPRECATED GST_RTSP_SERVER_API
-#define GST_RTSP_SERVER_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GST_RTSP_SERVER_API
-#endif
-
-typedef struct _GstRTSPServer GstRTSPServer;
-typedef struct _GstRTSPServerClass GstRTSPServerClass;
-typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
-
 #include "rtsp-server-prelude.h"
 #include "rtsp-session-pool.h"
 #include "rtsp-session.h"
@@ -57,158 +44,12 @@ typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
 #include "rtsp-sdp.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-params.h"
+#include "rtsp-server-object.h"
 
-#define GST_TYPE_RTSP_SERVER              (gst_rtsp_server_get_type ())
-#define GST_IS_RTSP_SERVER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_SERVER))
-#define GST_IS_RTSP_SERVER_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RTSP_SERVER))
-#define GST_RTSP_SERVER_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTSP_SERVER, GstRTSPServerClass))
-#define GST_RTSP_SERVER(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_RTSP_SERVER, GstRTSPServer))
-#define GST_RTSP_SERVER_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_RTSP_SERVER, GstRTSPServerClass))
-#define GST_RTSP_SERVER_CAST(obj)         ((GstRTSPServer*)(obj))
-#define GST_RTSP_SERVER_CLASS_CAST(klass) ((GstRTSPServerClass*)(klass))
-
-/**
- * GstRTSPServer:
- *
- * This object listens on a port, creates and manages the clients connected to
- * it.
- */
-struct _GstRTSPServer {
-  GObject      parent;
-
-  /*< private >*/
-  GstRTSPServerPrivate *priv;
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-/**
- * GstRTSPServerClass:
- * @create_client: Create, configure a new GstRTSPClient
- *          object that handles the new connection on @socket. The default
- *          implementation will create a GstRTSPClient and will configure the
- *          mount-points, auth, session-pool and thread-pool on the client.
- * @client_connected: emitted when a new client connected.
- *
- * The RTSP server class structure
- */
-struct _GstRTSPServerClass {
-  GObjectClass  parent_class;
-
-  GstRTSPClient * (*create_client)      (GstRTSPServer *server);
-
-  /* signals */
-  void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
-
-  /*< private >*/
-  gpointer         _gst_reserved[GST_PADDING_LARGE];
-};
-
-GST_RTSP_SERVER_API
-GType                 gst_rtsp_server_get_type             (void);
-
-GST_RTSP_SERVER_API
-GstRTSPServer *       gst_rtsp_server_new                  (void);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_address          (GstRTSPServer *server, const gchar *address);
-
-GST_RTSP_SERVER_API
-gchar *               gst_rtsp_server_get_address          (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_service          (GstRTSPServer *server, const gchar *service);
-
-GST_RTSP_SERVER_API
-gchar *               gst_rtsp_server_get_service          (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
-
-GST_RTSP_SERVER_API
-gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-int                   gst_rtsp_server_get_bound_port       (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
-
-GST_RTSP_SERVER_API
-GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_mount_points     (GstRTSPServer *server, GstRTSPMountPoints *mounts);
-
-GST_RTSP_SERVER_API
-GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
-
-GST_RTSP_SERVER_API
-GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-void                  gst_rtsp_server_set_thread_pool      (GstRTSPServer *server, GstRTSPThreadPool *pool);
-
-GST_RTSP_SERVER_API
-GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
-                                                            const gchar * ip, gint port,
-                                                            const gchar *initial_buffer);
-
-GST_RTSP_SERVER_API
-gboolean              gst_rtsp_server_io_func              (GSocket *socket, GIOCondition condition,
-                                                            GstRTSPServer *server);
-
-GST_RTSP_SERVER_API
-GSocket *             gst_rtsp_server_create_socket        (GstRTSPServer *server,
-                                                            GCancellable  *cancellable,
-                                                            GError **error);
-
-GST_RTSP_SERVER_API
-GSource *             gst_rtsp_server_create_source        (GstRTSPServer *server,
-                                                            GCancellable * cancellable,
-                                                            GError **error);
-
-GST_RTSP_SERVER_API
-guint                 gst_rtsp_server_attach               (GstRTSPServer *server,
-                                                            GMainContext *context);
-
-/**
- * GstRTSPServerClientFilterFunc:
- * @server: a #GstRTSPServer object
- * @client: a #GstRTSPClient in @server
- * @user_data: user data that has been given to gst_rtsp_server_client_filter()
- *
- * This function will be called by the gst_rtsp_server_client_filter(). An
- * implementation should return a value of #GstRTSPFilterResult.
- *
- * When this function returns #GST_RTSP_FILTER_REMOVE, @client will be removed
- * from @server.
- *
- * A return value of #GST_RTSP_FILTER_KEEP will leave @client untouched in
- * @server.
- *
- * A value of #GST_RTSP_FILTER_REF will add @client to the result #GList of
- * gst_rtsp_server_client_filter().
- *
- * Returns: a #GstRTSPFilterResult.
- */
-typedef GstRTSPFilterResult (*GstRTSPServerClientFilterFunc)  (GstRTSPServer *server,
-                                                               GstRTSPClient *client,
-                                                               gpointer user_data);
-
-GST_RTSP_SERVER_API
-GList *                gst_rtsp_server_client_filter    (GstRTSPServer *server,
-                                                         GstRTSPServerClientFilterFunc func,
-                                                         gpointer user_data);
-
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTSPServer, gst_object_unref)
-#endif
+#include "rtsp-onvif-client.h"
+#include "rtsp-onvif-media-factory.h"
+#include "rtsp-onvif-media.h"
+#include "rtsp-onvif-server.h"
 
 G_END_DECLS
 

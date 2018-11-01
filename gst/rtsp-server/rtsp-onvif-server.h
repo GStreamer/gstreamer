@@ -21,7 +21,7 @@
 #define __GST_RTSP_ONVIF_SERVER_H__
 
 #include <gst/gst.h>
-#include "rtsp-server.h"
+#include "rtsp-server-object.h"
 
 #define GST_TYPE_RTSP_ONVIF_SERVER              (gst_rtsp_onvif_server_get_type ())
 #define GST_IS_RTSP_ONVIF_SERVER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_ONVIF_SERVER))

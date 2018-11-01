@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPContext GstRTSPContext;
 
 #include "rtsp-server-prelude.h"
-#include "rtsp-server.h"
+#include "rtsp-server-object.h"
 #include "rtsp-media.h"
 #include "rtsp-media-factory.h"
 #include "rtsp-session-media.h"

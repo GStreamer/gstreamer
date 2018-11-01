@@ -18,6 +18,7 @@ public_headers = \
 		rtsp-token.h \
 		rtsp-client.h \
 		rtsp-server.h \
+		rtsp-server-object.h \
 		rtsp-server-prelude.h \
 		rtsp-onvif-server.h \
 		rtsp-onvif-client.h \
