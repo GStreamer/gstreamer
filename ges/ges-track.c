@@ -37,6 +37,7 @@
 
 G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
+#define CHECK_THREAD(track) g_assert(track->priv->valid_thread == g_thread_self())
 
 static GstStaticPadTemplate ges_track_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -80,6 +81,8 @@ struct _GESTrackPrivate
 
   /* Virtual method to create GstElement that fill gaps */
   GESCreateElementForGapFunc create_element_for_gaps;
+
+  GThread *valid_thread;
 };
 
 enum
@@ -684,6 +687,7 @@ ges_track_init (GESTrack * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK, GESTrackPrivate);
+  self->priv->valid_thread = g_thread_self ();
 
   self->priv->composition = gst_element_factory_make ("nlecomposition", NULL);
   self->priv->capsfilter = gst_element_factory_make ("capsfilter", NULL);
@@ -788,6 +792,7 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
   gint i;
 
   g_return_if_fail (GES_IS_TRACK (track));
+  CHECK_THREAD (track);
 
   GST_DEBUG ("track:%p, caps:%" GST_PTR_FORMAT, track, caps);
   g_return_if_fail (GST_IS_CAPS (caps));
@@ -818,6 +823,7 @@ ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
   GESTrackPrivate *priv;
 
   g_return_if_fail (GES_IS_TRACK (track));
+  CHECK_THREAD (track);
 
   GST_DEBUG ("track:%p, restriction caps:%" GST_PTR_FORMAT, track, caps);
   g_return_if_fail (GST_IS_CAPS (caps));
@@ -850,8 +856,12 @@ void
 ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
 {
   guint i;
-  GstCaps *new_restriction_caps = gst_caps_copy (self->priv->restriction_caps);
+  GstCaps *new_restriction_caps;
 
+  g_return_if_fail (GES_IS_TRACK (self));
+  CHECK_THREAD (self);
+
+  new_restriction_caps = gst_caps_copy (self->priv->restriction_caps);
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstStructure *new = gst_caps_get_structure (caps, i);
 
@@ -878,6 +888,7 @@ void
 ges_track_set_mixing (GESTrack * track, gboolean mixing)
 {
   g_return_if_fail (GES_IS_TRACK (track));
+  CHECK_THREAD (track);
 
   if (!track->priv->mixing_operation) {
     GST_DEBUG_OBJECT (track, "Track will be set to mixing = %d", mixing);
@@ -927,6 +938,7 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+  CHECK_THREAD (track);
 
   GST_DEBUG ("track:%p, object:%p", track, object);
 
@@ -993,6 +1005,7 @@ ges_track_get_elements (GESTrack * track)
   GList *ret = NULL;
 
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+  CHECK_THREAD (track);
 
   g_sequence_foreach (track->priv->trackelements_by_start,
       (GFunc) add_trackelement_to_list_foreach, &ret);
@@ -1022,6 +1035,7 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+  CHECK_THREAD (track);
 
   priv = track->priv;
 
@@ -1056,6 +1070,7 @@ const GstCaps *
 ges_track_get_caps (GESTrack * track)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+  CHECK_THREAD (track);
 
   return track->priv->caps;
 }
@@ -1072,6 +1087,7 @@ const GESTimeline *
 ges_track_get_timeline (GESTrack * track)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+  CHECK_THREAD (track);
 
   return track->priv->timeline;
 }
@@ -1111,6 +1127,7 @@ gboolean
 ges_track_commit (GESTrack * track)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  CHECK_THREAD (track);
 
   track_resort_and_fill_gaps (track);
 
@@ -1133,6 +1150,7 @@ ges_track_set_create_element_for_gap_func (GESTrack * track,
     GESCreateElementForGapFunc func)
 {
   g_return_if_fail (GES_IS_TRACK (track));
+  CHECK_THREAD (track);
 
   track->priv->create_element_for_gaps = func;
 }

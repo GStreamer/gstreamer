@@ -87,6 +87,8 @@ GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
         g_thread_self());         \
   } G_STMT_END
 
+#define CHECK_THREAD(timeline) g_assert(timeline->priv->valid_thread == g_thread_self())
+
 typedef struct TrackObjIters
 {
   GSequenceIter *iter_start;
@@ -211,6 +213,8 @@ struct _GESTimelinePrivate
   /* For ges_timeline_commit_sync */
   GMutex commited_lock;
   GCond commited_cond;
+
+  GThread *valid_thread;
 };
 
 /* private structure to contain our track-related information */
@@ -697,6 +701,7 @@ ges_timeline_init (GESTimeline * self)
 
   g_rec_mutex_init (&priv->dyn_mutex);
   g_mutex_init (&priv->commited_lock);
+  priv->valid_thread = g_thread_self ();
 }
 
 /* Private methods */
@@ -2945,6 +2950,9 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
 GList *
 ges_timeline_get_groups (GESTimeline * timeline)
 {
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  CHECK_THREAD (timeline);
+
   return timeline->priv->groups;
 }
 
@@ -2963,6 +2971,9 @@ ges_timeline_append_layer (GESTimeline * timeline)
 {
   guint32 priority;
   GESLayer *layer;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  CHECK_THREAD (timeline);
 
   layer = ges_layer_new ();
   priority = g_list_length (timeline->layers);
@@ -2988,6 +2999,10 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
 {
   gboolean auto_transition;
   GList *objects, *tmp;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+  CHECK_THREAD (timeline);
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
@@ -3068,6 +3083,10 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
 {
   GList *layer_objects, *tmp;
 
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+  CHECK_THREAD (timeline);
+
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
   if (G_UNLIKELY (!g_list_find (timeline->layers, layer))) {
@@ -3127,6 +3146,10 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
   TrackPrivate *tr_priv;
   GList *tmp;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  CHECK_THREAD (timeline);
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
@@ -3219,6 +3242,7 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  CHECK_THREAD (timeline);
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
@@ -3290,6 +3314,8 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 {
   GList *tmp;
 
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+
   LOCK_DYN (timeline);
   for (tmp = timeline->priv->priv_tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
@@ -3349,6 +3375,7 @@ GList *
 ges_timeline_get_tracks (GESTimeline * timeline)
 {
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  CHECK_THREAD (timeline);
 
   return g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
 }
@@ -3367,6 +3394,9 @@ GList *
 ges_timeline_get_layers (GESTimeline * timeline)
 {
   GList *tmp, *res = NULL;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  CHECK_THREAD (timeline);
 
   for (tmp = timeline->layers; tmp; tmp = g_list_next (tmp)) {
     res = g_list_insert_sorted (res, gst_object_ref (tmp->data),
@@ -3465,6 +3495,8 @@ ges_timeline_commit (GESTimeline * timeline)
 {
   gboolean ret;
 
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+
   LOCK_DYN (timeline);
   ret = ges_timeline_commit_unlocked (timeline);
   UNLOCK_DYN (timeline);
@@ -3508,6 +3540,8 @@ ges_timeline_commit_sync (GESTimeline * timeline)
   gboolean ret;
   gboolean wait_for_signal;
 
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+
   /* Let's make sure our state is stable */
   gst_element_get_state (GST_ELEMENT (timeline), NULL, NULL,
       GST_CLOCK_TIME_NONE);
@@ -3549,6 +3583,7 @@ GstClockTime
 ges_timeline_get_duration (GESTimeline * timeline)
 {
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
+  CHECK_THREAD (timeline);
 
   return timeline->priv->duration;
 }
@@ -3565,7 +3600,8 @@ ges_timeline_get_duration (GESTimeline * timeline)
 gboolean
 ges_timeline_get_auto_transition (GESTimeline * timeline)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), 0);
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  CHECK_THREAD (timeline);
 
   return timeline->priv->auto_transition;
 }
@@ -3586,6 +3622,7 @@ ges_timeline_set_auto_transition (GESTimeline * timeline,
   GESLayer *layer;
 
   g_return_if_fail (GES_IS_TIMELINE (timeline));
+  CHECK_THREAD (timeline);
 
   timeline->priv->auto_transition = auto_transition;
   g_object_notify (G_OBJECT (timeline), "auto-transition");
@@ -3611,6 +3648,7 @@ GstClockTime
 ges_timeline_get_snapping_distance (GESTimeline * timeline)
 {
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
+  CHECK_THREAD (timeline);
 
   return timeline->priv->snapping_distance;
 
@@ -3629,6 +3667,7 @@ ges_timeline_set_snapping_distance (GESTimeline * timeline,
     GstClockTime snapping_distance)
 {
   g_return_if_fail (GES_IS_TIMELINE (timeline));
+  CHECK_THREAD (timeline);
 
   timeline->priv->snapping_distance = snapping_distance;
 }
@@ -3648,6 +3687,7 @@ ges_timeline_get_element (GESTimeline * timeline, const gchar * name)
   GESTimelineElement *ret;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  CHECK_THREAD (timeline);
 
   ret = g_hash_table_lookup (timeline->priv->all_elements, name);
 
@@ -3686,6 +3726,7 @@ ges_timeline_is_empty (GESTimeline * timeline)
   gpointer key, value;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  CHECK_THREAD (timeline);
 
   if (g_hash_table_size (timeline->priv->all_elements) == 0)
     return TRUE;
@@ -3717,6 +3758,9 @@ ges_timeline_get_layer (GESTimeline * timeline, guint priority)
 {
   GList *tmp;
   GESLayer *layer = NULL;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
+  CHECK_THREAD (timeline);
 
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GESLayer *tmp_layer = GES_LAYER (tmp->data);
@@ -3756,6 +3800,7 @@ ges_timeline_paste_element (GESTimeline * timeline,
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
+  CHECK_THREAD (timeline);
 
   element_class = GES_TIMELINE_ELEMENT_GET_CLASS (element);
   copied_from = ges_timeline_element_get_copied_from (element);
