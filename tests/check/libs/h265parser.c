@@ -19,6 +19,86 @@
 #include <gst/check/gstcheck.h>
 #include <gst/codecparsers/gsth265parser.h>
 
+unsigned char slice_eos_slice_eob[] = {
+  0x00, 0x00, 0x00, 0x01, 0x26, 0x01, 0xaf, 0x06, 0xb8, 0x63, 0xef, 0x3a,
+  0x7f, 0x3e, 0x53, 0xff, 0xff, 0xf2, 0x4a, 0xef, 0xff, 0xfe, 0x6a, 0x5d,
+  0x60, 0xbc, 0xf8, 0x29, 0xeb, 0x9c, 0x4a, 0xb5, 0xcc, 0x76, 0x30, 0xa0,
+  0x7c, 0xd3, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x19, 0x30,
+  0x00, 0x00, 0x00, 0x01, 0x48, 0x01,
+  0x00, 0x00, 0x00, 0x01, 0x26, 0x01, 0xaf, 0x06, 0xb8, 0x63, 0xef, 0x3a,
+  0x7f, 0x3e, 0x53, 0xff, 0xff, 0xf2, 0x4a, 0xef, 0xff, 0xfe, 0x6a, 0x5d,
+  0x60, 0xbc, 0xf8, 0x29, 0xeb, 0x9c, 0x4a, 0xb5, 0xcc, 0x76, 0x30, 0xa0,
+  0x7c, 0xd3, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x19, 0x30,
+  0x00, 0x00, 0x00, 0x01, 0x4a, 0x01,
+};
+
+GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GstH265Parser *const parser = gst_h265_parser_new ();
+  const guint8 *buf = slice_eos_slice_eob;
+  guint n, buf_size = sizeof (slice_eos_slice_eob);
+
+  res = gst_h265_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SLICE_IDR_W_RADL);
+  assert_equals_int (nalu.size, 43);
+
+  n = nalu.offset + nalu.size;
+  buf += n;
+  buf_size -= n;
+
+  res = gst_h265_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_EOS);
+  assert_equals_int (nalu.size, 2);
+
+  n = nalu.offset + nalu.size;
+  buf += n;
+  buf_size -= n;
+
+  res = gst_h265_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SLICE_IDR_W_RADL);
+  assert_equals_int (nalu.size, 43);
+
+  n = nalu.offset + nalu.size;
+  buf += n;
+  buf_size -= n;
+
+  res = gst_h265_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_EOB);
+  assert_equals_int (nalu.size, 2);
+
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_parse_slice_6bytes)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GstH265Parser *const parser = gst_h265_parser_new ();
+  const guint8 *buf = slice_eos_slice_eob;
+
+  res = gst_h265_parser_identify_nalu (parser, buf, 0, 6, &nalu);
+
+  assert_equals_int (res, GST_H265_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H265_NAL_SLICE_IDR_W_RADL);
+  assert_equals_int (nalu.size, 2);
+
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_h265_base_profiles)
 {
   GstH265ProfileTierLevel ptl;
@@ -240,6 +320,8 @@ h265parser_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_h265_parse_slice_eos_slice_eob);
+  tcase_add_test (tc_chain, test_h265_parse_slice_6bytes);
   tcase_add_test (tc_chain, test_h265_base_profiles);
   tcase_add_test (tc_chain, test_h265_base_profiles_compat);
   tcase_add_test (tc_chain, test_h265_format_range_profiles_exact_match);
