@@ -67912,11 +67912,11 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 
 <ARG>
 <NAME>GstGLMixerBin::latency</NAME>
-<TYPE>gint64</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer latency</NICK>
-<BLURB>Additional latency in live mode to allow upstream to take longer to produce buffers for the current position.</BLURB>
+<BLURB>Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -73198,6 +73198,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>TURN Server</NICK>
 <BLURB>The TURN server of the form turn(s)://username:password@host:port. This is a convenience property, use #GstWebRTCBin::add-turn-server if you wish to use multiple TURN servers.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::bundle-policy</NAME>
+<TYPE>GstWebRTCBundlePolicy</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bundle Policy</NICK>
+<BLURB>The policy to apply for bundling.</BLURB>
+<DEFAULT>GST_WEBRTC_BUNDLE_POLICY_NONE</DEFAULT>
 </ARG>
 
 <ARG>
