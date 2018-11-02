@@ -1387,7 +1387,7 @@ not_found:
  */
 void
 ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
-    GParamSpec * pspec, GValue * value)
+    GParamSpec * pspec, const GValue * value)
 {
   ChildPropHandler *handler;
   GESTimelineElementClass *klass;
@@ -1401,7 +1401,7 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   g_assert (klass->set_child_property);
-  klass->set_child_property (self, handler->child, pspec, value);
+  klass->set_child_property (self, handler->child, pspec, (GValue *) value);
 
   return;
 
@@ -1428,7 +1428,7 @@ not_found:
  */
 gboolean
 ges_timeline_element_set_child_property (GESTimelineElement * self,
-    const gchar * property_name, GValue * value)
+    const gchar * property_name, const GValue * value)
 {
   GParamSpec *pspec;
   GESTimelineElementClass *klass;
@@ -1441,7 +1441,7 @@ ges_timeline_element_set_child_property (GESTimelineElement * self,
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   g_assert (klass->set_child_property);
-  klass->set_child_property (self, child, pspec, value);
+  klass->set_child_property (self, child, pspec, (GValue *) value);
 
   gst_object_unref (child);
   g_param_spec_unref (pspec);
