@@ -224,6 +224,34 @@ gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
+static GstCaps *
+create_caps_from_caption_type (GstVideoCaptionType caption_type)
+{
+  GstCaps *caption_caps = NULL;
+
+  switch (caption_type) {
+    case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
+          "format", G_TYPE_STRING, "raw", NULL);
+      break;
+    case GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
+          "format", G_TYPE_STRING, "cc_data", NULL);
+      break;
+    case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
+          "format", G_TYPE_STRING, "cc_data", NULL);
+      break;
+    case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
+          "format", G_TYPE_STRING, "cdp", NULL);
+    default:
+      break;
+  }
+
+  return caption_caps;
+}
+
 static GstFlowReturn
 gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
     GstVideoCaptionMeta * meta)
@@ -236,37 +264,11 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
   GST_DEBUG_OBJECT (filter, "Handling meta");
 
   /* Check if the meta type matches the configured one */
-  if (filter->captionpad != NULL && meta->caption_type != filter->caption_type) {
-    GST_ERROR_OBJECT (filter,
-        "GstVideoCaptionMeta type changed, Not handled currently");
-    flow = GST_FLOW_NOT_NEGOTIATED;
-    goto out;
-  }
-
   if (filter->captionpad == NULL) {
-    GstCaps *caption_caps = NULL;
+    GstCaps *caption_caps = create_caps_from_caption_type (meta->caption_type);
     GstEvent *stream_event;
 
     GST_DEBUG_OBJECT (filter, "Creating new caption pad");
-    switch (meta->caption_type) {
-      case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
-            "format", G_TYPE_STRING, "raw", NULL);
-        break;
-      case GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW:
-        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
-            "format", G_TYPE_STRING, "cc_data", NULL);
-        break;
-      case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
-            "format", G_TYPE_STRING, "cc_data", NULL);
-        break;
-      case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-        caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
-            "format", G_TYPE_STRING, "cdp", NULL);
-      default:
-        break;
-    }
     if (caption_caps == NULL) {
       GST_ERROR_OBJECT (filter, "Unknown/invalid caption type");
       return GST_FLOW_NOT_NEGOTIATED;
@@ -307,6 +309,19 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
     if ((event = gst_pad_get_sticky_event (filter->srcpad, GST_EVENT_TAG, 0)))
       gst_pad_push_event (filter->captionpad, event);
 
+    filter->caption_type = meta->caption_type;
+  } else if (meta->caption_type != filter->caption_type) {
+    GstCaps *caption_caps = create_caps_from_caption_type (meta->caption_type);
+
+    GST_DEBUG_OBJECT (filter, "Caption type changed from %d to %d",
+        filter->caption_type, meta->caption_type);
+    if (caption_caps == NULL) {
+      GST_ERROR_OBJECT (filter, "Unknown/invalid caption type");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+
+    gst_pad_set_caps (filter->captionpad, caption_caps);
+    gst_caps_unref (caption_caps);
 
     filter->caption_type = meta->caption_type;
   }
@@ -323,7 +338,6 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
   /* We don't really care about the flow return */
   flow = gst_pad_push (filter->captionpad, outbuf);
 
-out:
   /* Set flow return on pad and return combined value */
   return gst_flow_combiner_update_pad_flow (filter->combiner,
       filter->captionpad, flow);
