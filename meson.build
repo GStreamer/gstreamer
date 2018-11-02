@@ -503,6 +503,15 @@ if bashcomp_dep.found()
   endif
 endif
 
+plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
+
+pkgconfig = import('pkgconfig')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+if get_option('default_library') == 'shared'
+  # If we don't build static plugins there is no need to generate pc files
+  plugins_pkgconfig_install_dir = disabler()
+endif
+
 subdir('gst')
 subdir('libs')
 subdir('plugins')

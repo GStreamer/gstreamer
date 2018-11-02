@@ -31,5 +31,6 @@ gst_elements = library('gstcoreelements',
   include_directories : [configinc],
   dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
   install : true,
-  install_dir : join_paths(get_option('libdir'), 'gstreamer-1.0'),
+  install_dir : plugins_install_dir,
 )
+pkgconfig.generate(gst_elements, install_dir : plugins_pkgconfig_install_dir)

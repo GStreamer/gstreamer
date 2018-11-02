@@ -21,6 +21,6 @@ gst_tracers = library('gstcoretracers',
   include_directories : [configinc],
   dependencies : [gst_dep],
   install : true,
-  install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
+  install_dir : plugins_install_dir,
 )
-
+pkgconfig.generate(gst_tracers, install_dir : plugins_pkgconfig_install_dir)
