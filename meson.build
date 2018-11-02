@@ -68,6 +68,9 @@ x11_dep = dependency('x11', required: false)
 xrandr_dep = dependency('xrandr', required: false)
 xrender_dep = dependency('xrender', required: false)
 
+# some of the examples can use GTK+-3
+gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : get_option('examples'))
+
 GLES_VERSION_MASK = gl_dep.found() ? 1 : 0
 if glesv2_dep.found()
   if (cc.has_header('GLES2/gl2.h', dependencies: glesv2_dep) and
@@ -182,7 +185,9 @@ libsinc = include_directories('gst-libs')
 
 subdir('gst-libs')
 subdir('gst')
-#subdir('tests')
+if not get_option('examples').disabled()
+  subdir('tests')
+endif
 
 python3 = import('python3').find_python()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
