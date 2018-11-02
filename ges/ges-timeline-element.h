@@ -285,7 +285,7 @@ ges_timeline_element_set_child_property_valist      (GESTimelineElement * self,
 GES_API void
 ges_timeline_element_set_child_property_by_pspec    (GESTimelineElement * self,
                                                      GParamSpec * pspec,
-                                                     GValue * value);
+                                                     const GValue * value);
 GES_API
 void ges_timeline_element_set_child_properties     (GESTimelineElement * self,
                                                      const gchar * first_property_name,
@@ -294,7 +294,7 @@ void ges_timeline_element_set_child_properties     (GESTimelineElement * self,
 GES_API
 gboolean ges_timeline_element_set_child_property   (GESTimelineElement *self,
                                                     const gchar *property_name,
-                                                    GValue * value);
+                                                    const GValue * value);
 
 GES_API
 gboolean ges_timeline_element_get_child_property   (GESTimelineElement *self,

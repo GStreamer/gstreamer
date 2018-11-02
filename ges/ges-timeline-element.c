@@ -1382,7 +1382,7 @@ not_found:
  */
 void
 ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
-    GParamSpec * pspec, GValue * value)
+    GParamSpec * pspec, const GValue * value)
 {
   ChildPropHandler *handler;
 
@@ -1393,7 +1393,7 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
   if (!handler)
     goto not_found;
 
-  g_object_set_property (handler->child, pspec->name, value);
+  g_object_set_property (handler->child, pspec->name, (GValue *) value);
 
   return;
 
@@ -1420,7 +1420,7 @@ not_found:
  */
 gboolean
 ges_timeline_element_set_child_property (GESTimelineElement * self,
-    const gchar * property_name, GValue * value)
+    const gchar * property_name, const GValue * value)
 {
   GParamSpec *pspec;
   GObject *child;
@@ -1430,7 +1430,7 @@ ges_timeline_element_set_child_property (GESTimelineElement * self,
   if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
     goto not_found;
 
-  g_object_set_property (child, pspec->name, value);
+  g_object_set_property (child, pspec->name, (GValue *) value);
 
   gst_object_unref (child);
   g_param_spec_unref (pspec);
