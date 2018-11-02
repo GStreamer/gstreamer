@@ -23,6 +23,7 @@ base_tests = [
   [['elements/autovideoconvert.c']],
   [['elements/avwait.c']],
   [['elements/camerabin.c']],
+  [['elements/ccextractor.c']],
   [['elements/compositor.c']],
   [['elements/curlhttpsink.c'], not curl_dep.found(), [curl_dep]],
   [['elements/curlfilesink.c'], not curl_dep.found(), [curl_dep]],
