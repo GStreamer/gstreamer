@@ -203,6 +203,7 @@ if __name__ == "__main__":
     if not args:
         if os.name is 'nt':
             args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
+            args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
         if "bash" in args[0]:
