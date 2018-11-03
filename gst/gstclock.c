@@ -256,7 +256,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   entry->_clock = clock;
 #endif
 #endif
-  g_weak_ref_init (&entry->ABI.clock, clock);
+  g_weak_ref_init (&entry->ABI.abi.clock, clock);
   entry->type = type;
   entry->time = time;
   entry->interval = interval;
@@ -362,7 +362,7 @@ _gst_clock_id_free (GstClockID id)
   if (entry->destroy_data)
     entry->destroy_data (entry->user_data);
 
-  g_weak_ref_clear (&entry->ABI.clock);
+  g_weak_ref_clear (&entry->ABI.abi.clock);
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
@@ -536,7 +536,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
-  clock = g_weak_ref_get (&entry->ABI.clock);
+  clock = g_weak_ref_get (&entry->ABI.abi.clock);
   if (G_UNLIKELY (clock == NULL))
     goto invalid_entry;
 
@@ -620,7 +620,7 @@ gst_clock_id_wait_async (GstClockID id,
 
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
-  clock = g_weak_ref_get (&entry->ABI.clock);
+  clock = g_weak_ref_get (&entry->ABI.abi.clock);
   if (G_UNLIKELY (clock == NULL))
     goto invalid_entry;
 
@@ -685,7 +685,7 @@ gst_clock_id_unschedule (GstClockID id)
   g_return_if_fail (id != NULL);
 
   entry = (GstClockEntry *) id;
-  clock = g_weak_ref_get (&entry->ABI.clock);
+  clock = g_weak_ref_get (&entry->ABI.abi.clock);
   if (G_UNLIKELY (clock == NULL))
     goto invalid_entry;
 
@@ -1400,7 +1400,7 @@ gst_clock_id_get_clock (GstClockID id)
   g_return_val_if_fail (id != NULL, NULL);
 
   entry = (GstClockEntry *) id;
-  return g_weak_ref_get (&entry->ABI.clock);
+  return g_weak_ref_get (&entry->ABI.abi.clock);
 }
 
 /**
@@ -1430,7 +1430,7 @@ gst_clock_id_uses_clock (GstClockID id, GstClock * clock)
   g_return_val_if_fail (clock != NULL, FALSE);
 
   entry = (GstClockEntry *) id;
-  entry_clock = g_weak_ref_get (&entry->ABI.clock);
+  entry_clock = g_weak_ref_get (&entry->ABI.abi.clock);
   if (entry_clock == clock)
     ret = TRUE;
 

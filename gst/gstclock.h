@@ -412,7 +412,9 @@ struct _GstClockEntry {
   /*< private >*/
   union {
     gpointer _gst_reserved[GST_PADDING];
-    GWeakRef clock;
+    struct {
+      GWeakRef clock;
+    } abi;
   } ABI;
 };
 
