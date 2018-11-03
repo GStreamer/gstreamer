@@ -2203,8 +2203,10 @@ _d3d_create_internal_window (GstD3DVideoSink * sink)
 typedef struct
 {
   GstD3DVideoSink *sink;
-  gboolean running;
+  gboolean error;
   HWND hWnd;
+  GMutex lock;
+  GCond cond;
 } D3DInternalWindowDat;
 
 static gpointer
@@ -2221,14 +2223,19 @@ d3d_internal_window_thread (D3DInternalWindowDat * dat)
       g_thread_self ());
 
   /* Create internal window */
+  g_mutex_lock (&dat->lock);
   hWnd = _d3d_create_internal_window (sink);
   if (!hWnd) {
     GST_ERROR_OBJECT (sink, "Failed to create internal window");
+    dat->error = TRUE;
+    g_cond_signal (&dat->cond);
+    g_mutex_unlock (&dat->lock);
     goto end;
   }
 
   dat->hWnd = hWnd;
-  dat->running = TRUE;
+  g_cond_signal (&dat->cond);
+  g_mutex_unlock (&dat->lock);
 
   /*
    * Internal window message loop
@@ -2252,30 +2259,46 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
 {
   GThread *thread;
   D3DInternalWindowDat dat;
-  gulong timeout_interval = 10000;      /* 10 ms interval */
-  gulong intervals = (10000000 / timeout_interval);     /* 10 secs */
   gulong i;
+  gint64 end_time;
+  gboolean timeout = FALSE;
 
   dat.sink = sink;
-  dat.running = FALSE;
+  dat.error = FALSE;
   dat.hWnd = 0;
+  g_mutex_init (&dat.lock);
+  g_cond_init (&dat.cond);
 
+  g_mutex_lock (&dat.lock);
   thread =
       g_thread_new ("d3dvideosink-window-thread",
       (GThreadFunc) d3d_internal_window_thread, &dat);
   if (!thread) {
+    g_mutex_unlock (&dat.lock);
     GST_ERROR ("Failed to created internal window thread");
-    return 0;
+    goto clear;
   }
 
   sink->internal_window_thread = thread;
 
+  end_time = g_get_monotonic_time () + 10 * G_TIME_SPAN_SECOND;
   /* Wait 10 seconds for window proc loop to start up */
-  for (i = 0; dat.running == FALSE && i < intervals; i++) {
-    g_usleep (timeout_interval);
+  while (!dat.error && !dat.hWnd) {
+    if (!g_cond_wait_until (&dat.cond, &dat.lock, end_time)) {
+      timeout = TRUE;
+      break;
+    }
   }
+  g_mutex_unlock (&dat.lock);
 
-  GST_DEBUG_OBJECT (sink, "Created window: %p (intervals: %lu)", dat.hWnd, i);
+  GST_DEBUG_OBJECT (sink, "Created window: %p (error: %d, timeout: %d)",
+      dat.hWnd, dat.error, timeout);
+
+clear:
+  {
+    g_mutex_clear (&dat.lock);
+    g_cond_clear (&dat.cond);
+  }
 
   return dat.hWnd;
 }
