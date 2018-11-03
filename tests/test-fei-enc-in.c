@@ -279,7 +279,8 @@ outputs_to_file (GstBuffer * buffer, FILE * file)
   size_t written;
   gboolean ret = FALSE;
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ))
+    return FALSE;
 
   if (info.size <= 0 || !info.data)
     return FALSE;
