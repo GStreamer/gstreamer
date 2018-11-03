@@ -60,6 +60,7 @@ struct _GstD3DVideoSink
   GstVideoRectangle  render_rect;
 
   GRecMutex    lock;
+  GThread *internal_window_thread;
 
   /* Properties */
   gboolean           force_aspect_ratio;
