@@ -1208,6 +1208,12 @@ d3d_stop (GstD3DVideoSink * sink)
 
   /* Release D3D resources */
   d3d_set_window_handle (sink, 0, FALSE);
+
+  if (sink->internal_window_thread) {
+    g_thread_join (sink->internal_window_thread);
+    sink->internal_window_thread = NULL;
+  }
+
   return TRUE;
 }
 
@@ -2261,6 +2267,8 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
     GST_ERROR ("Failed to created internal window thread");
     return 0;
   }
+
+  sink->internal_window_thread = thread;
 
   /* Wait 10 seconds for window proc loop to start up */
   for (i = 0; dat.running == FALSE && i < intervals; i++) {
