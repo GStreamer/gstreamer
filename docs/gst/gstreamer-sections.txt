@@ -667,6 +667,8 @@ gst_clock_wait_for_sync
 gst_clock_is_synced
 gst_clock_set_synced
 gst_clock_id_get_time
+gst_clock_id_get_clock
+gst_clock_id_uses_clock
 gst_clock_id_wait
 gst_clock_id_wait_async
 gst_clock_id_unschedule

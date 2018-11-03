@@ -1389,6 +1389,8 @@ gst_clock_get_master (GstClock * clock)
  *     underlying clock has been freed.  Unref after usage.
  *
  * MT safe.
+ *
+ * Since: 1.16
  */
 GstClock *
 gst_clock_id_get_clock (GstClockID id)
@@ -1405,7 +1407,7 @@ gst_clock_id_get_clock (GstClockID id)
  * gst_clock_id_uses_clock:
  * @id: a #GstClockID to check
  * @clock: a #GstClock to compare against
- * 
+ *
  * This function returns whether @id uses @clock as the underlying clock.
  * @clock can be NULL, in which case the return value indicates whether
  * the underlying clock has been freed.  If this is the case, the @id is
@@ -1414,6 +1416,8 @@ gst_clock_id_get_clock (GstClockID id)
  * Returns: whether the clock @id uses the same underlying #GstClock @clock.
  *
  * MT safe.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_clock_id_uses_clock (GstClockID id, GstClock * clock)
@@ -1423,6 +1427,7 @@ gst_clock_id_uses_clock (GstClockID id, GstClock * clock)
   gboolean ret = FALSE;
 
   g_return_val_if_fail (id != NULL, FALSE);
+  g_return_val_if_fail (clock != NULL, FALSE);
 
   entry = (GstClockEntry *) id;
   entry_clock = g_weak_ref_get (&entry->ABI.clock);
