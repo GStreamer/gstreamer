@@ -669,6 +669,30 @@ gst_mini_object_unref (GstMiniObject * mini_object)
 }
 
 /**
+ * gst_clear_mini_object: (skip)
+ * @object_ptr: a pointer to a #GstMiniObject reference
+ *
+ * Clears a reference to a #GstMiniObject.
+ *
+ * @object_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing.
+ * Otherwise, the reference count of the object is decreased using
+ * gst_mini_object_unref() and the pointer is set to %NULL.
+ *
+ * A macro is also included that allows this function to be used without
+ * pointer casts.
+ *
+ * Since: 1.16
+ **/
+#undef gst_clear_mini_object
+void
+gst_clear_mini_object (volatile GstMiniObject ** object_ptr)
+{
+  g_clear_pointer (object_ptr, gst_mini_object_unref);
+}
+
+/**
  * gst_mini_object_replace:
  * @olddata: (inout) (transfer full) (nullable): pointer to a pointer to a
  *     mini-object to be replaced
