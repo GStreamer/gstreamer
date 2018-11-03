@@ -249,8 +249,12 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
       "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
 
   entry->refcount = 1;
+#ifndef GST_REMOVE_DEPRECATED
 #ifndef GST_DISABLE_DEPRECATED
   entry->clock = clock;
+#else
+  entry->_clock = clock;
+#endif
 #endif
   g_weak_ref_init (&entry->ABI.clock, clock);
   entry->type = type;

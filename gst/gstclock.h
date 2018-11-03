@@ -392,8 +392,12 @@ typedef enum {
 struct _GstClockEntry {
   gint                  refcount;
   /*< protected >*/
+#ifndef GST_REMOVE_DEPRECATED
 #ifndef GST_DISABLE_DEPRECATED
   GstClock              *clock;
+#else
+  gpointer               _clock;
+#endif
 #endif
   GstClockEntryType      type;
   GstClockTime           time;
