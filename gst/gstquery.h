@@ -254,6 +254,25 @@ gst_query_unref (GstQuery * q)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (q));
 }
 
+/**
+ * gst_clear_query: (skip)
+ * @query_ptr: a pointer to a #GstQuery reference
+ *
+ * Clears a reference to a #GstQuery.
+ *
+ * @query_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the query is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+static inline void
+gst_clear_query (GstQuery ** query_ptr)
+{
+  gst_clear_mini_object (query_ptr);
+}
+
 /* copy query */
 /**
  * gst_query_copy:
