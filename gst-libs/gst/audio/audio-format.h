@@ -200,7 +200,7 @@ typedef enum
  */
 typedef void (*GstAudioFormatUnpack)         (const GstAudioFormatInfo *info,
                                               GstAudioPackFlags flags, gpointer dest,
-                                              const gpointer data, gint length);
+                                              gconstpointer data, gint length);
 /**
  * GstAudioFormatPack:
  * @info: a #GstAudioFormatInfo
@@ -215,7 +215,7 @@ typedef void (*GstAudioFormatUnpack)         (const GstAudioFormatInfo *info,
  * and will be packed into @data.
  */
 typedef void (*GstAudioFormatPack)           (const GstAudioFormatInfo *info,
-                                              GstAudioPackFlags flags, const gpointer src,
+                                              GstAudioPackFlags flags, gconstpointer src,
                                               gpointer data, gint length);
 
 /**
