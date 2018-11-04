@@ -557,6 +557,11 @@ gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (parent);
   gboolean result;
 
+  /* Always forward RECONFIGURE events upstream */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_RECONFIGURE) {
+    return gst_pad_push_event (typefind->sink, event);
+  }
+
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
     GST_LOG_OBJECT (typefind, "Still typefinding. Not passing event upstream");
