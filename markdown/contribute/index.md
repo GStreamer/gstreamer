@@ -105,6 +105,11 @@ After completing the common steps:
   is too long and only contains fill words at the beginning, the important
   information will be cut off and not show up in the list view or mail client.
 
+- Please enable the "Allow commits from members who can merge to the target branch"
+  checkbox when submitting merge requests as otherwise maintainers might
+  request you to rebase your Merge Request multiple times even if no manual
+  changes are required.
+
 - Make liberal use of the reference syntax available to help cross-linking
   different issues and merge requests. e.g. `#100` references issue 100 in the
   current module. `!100` references merge request 100 in the current project.
