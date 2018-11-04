@@ -93,6 +93,25 @@ gst_buffer_list_unref (GstBufferList * list)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (list));
 }
 
+/**
+ * gst_clear_buffer_list: (skip)
+ * @list_ptr: a pointer to a #GstBufferList reference
+ *
+ * Clears a reference to a #GstBufferList.
+ *
+ * @list_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the list is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+static inline void
+gst_clear_buffer_list (GstBufferList ** list_ptr)
+{
+  gst_clear_mini_object (list_ptr);
+}
+
 /* copy */
 /**
  * gst_buffer_list_copy:
