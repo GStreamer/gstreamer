@@ -450,6 +450,25 @@ gst_event_unref (GstEvent * event)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (event));
 }
 
+/**
+ * gst_clear_event: (skip)
+ * @event_ptr: a pointer to a #GstEvent reference
+ *
+ * Clears a reference to a #GstEvent.
+ *
+ * @event_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the event is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+static inline void
+gst_clear_event (GstEvent ** event_ptr)
+{
+  gst_clear_mini_object (event_ptr);
+}
+
 /* copy event */
 /**
  * gst_event_copy:
