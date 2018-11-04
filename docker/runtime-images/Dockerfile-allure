@@ -1,0 +1,9 @@
+FROM anapsix/alpine-java:latest
+
+# Get the allure test report framework
+RUN export ALLURE_VERSION=2.7.0 && \
+    wget "https://bintray.com/qameta/generic/download_file?file_path=io%2Fqameta%2Fallure%2Fallure%2F2.7.0%2Fallure-${ALLURE_VERSION}.zip" -O allure.zip
+    unzip allure.zip && \
+    mv allure-${ALLURE_VERSION} /opt/allure && \
+    chmod +x /opt/allure/bin/allure && \
+    rm allure.zip
