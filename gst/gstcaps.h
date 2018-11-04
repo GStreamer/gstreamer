@@ -223,6 +223,25 @@ gst_caps_unref (GstCaps * caps)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (caps));
 }
 
+/**
+ * gst_clear_caps: (skip)
+ * @caps_ptr: a pointer to a #GstCaps reference
+ *
+ * Clears a reference to a #GstCaps.
+ *
+ * @caps_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the caps is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+static inline void
+gst_clear_caps (GstCaps ** caps_ptr)
+{
+  gst_clear_mini_object (caps_ptr);
+}
+
 /* copy caps */
 GST_API
 GstCaps * gst_caps_copy (const GstCaps * caps);
