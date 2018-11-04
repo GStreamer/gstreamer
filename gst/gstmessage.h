@@ -379,6 +379,25 @@ gst_message_unref (GstMessage * msg)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (msg));
 }
 
+/**
+ * gst_clear_message: (skip)
+ * @msg_ptr: a pointer to a #GstMessage reference
+ *
+ * Clears a reference to a #GstMessage.
+ *
+ * @msg_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the message is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+static inline void
+gst_clear_message (GstMessage ** msg_ptr)
+{
+  gst_clear_mini_object (msg_ptr);
+}
+
 /* copy message */
 /**
  * gst_message_copy:
