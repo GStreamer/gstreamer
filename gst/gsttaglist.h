@@ -482,6 +482,25 @@ gst_tag_list_unref (GstTagList * taglist)
 }
 
 /**
+ * gst_clear_tag_list: (skip)
+ * @taglist_ptr: a pointer to a #GstTagList reference
+ *
+ * Clears a reference to a #GstTagList.
+ *
+ * @taglist_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the taglist is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.16
+ */
+static inline void
+gst_clear_tag_list (GstTagList ** taglist_ptr)
+{
+  gst_clear_mini_object (taglist_ptr);
+}
+
+/**
  * gst_tag_list_copy:
  * @taglist: a #GstTagList.
  *
