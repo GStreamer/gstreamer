@@ -183,6 +183,13 @@ libges = library('ges-1.0', ges_sources, parser, ges_resources,
     install : true,
     dependencies : libges_deps)
 
+pkgconfig.generate(libges,
+  libraries : [gst_dep, gstbase_dep, gstpbutils_dep, gstcontroller_dep],
+  subdirs : pkgconfig_subdirs,
+  name : 'gst-editing-services-1.0',
+  description : 'GStreamer Editing Services',
+)
+
 ges_gen_sources = []
 if build_gir
     ges_gir_extra_args = gir_init_section + [ '--c-include=ges/ges.h' ]
@@ -215,3 +222,5 @@ ges_dep = declare_dependency(link_with : libges,
   sources : ges_gen_sources,
   dependencies : libges_deps,
 )
+
+meson.override_dependency('gst-editing-services-1.0', ges_dep)

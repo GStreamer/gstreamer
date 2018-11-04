@@ -243,13 +243,15 @@ foreach extra_arg : warning_flags
 endforeach
 
 python3 = import('python').find_installation()
+pkgconfig = import('pkgconfig')
+pkgconfig_subdirs = ['gstreamer-1.0']
+
 configinc = include_directories('.')
 subdir('ges')
 subdir('plugins')
 if not get_option('tools').disabled()
   subdir('tools')
 endif
-subdir('pkgconfig')
 subdir('tests')
 if not get_option('examples').disabled()
   subdir('examples')
