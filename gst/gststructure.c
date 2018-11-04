@@ -395,6 +395,30 @@ gst_structure_free (GstStructure * structure)
 }
 
 /**
+ * gst_clear_structure: (skip)
+ * @structure_ptr: a pointer to a #GstStructure reference
+ *
+ * Clears a reference to a #GstStructure.
+ *
+ * @structure_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing.
+ * Otherwise, the structure is free'd using gst_structure_free() and the
+ * pointer is set to %NULL.
+ *
+ * A macro is also included that allows this function to be used without
+ * pointer casts.
+ *
+ * Since: 1.16
+ **/
+#undef gst_clear_structure
+void
+gst_clear_structure (volatile GstStructure ** structure_ptr)
+{
+  g_clear_pointer (structure_ptr, gst_structure_free);
+}
+
+/**
  * gst_structure_get_name:
  * @structure: a #GstStructure
  *
