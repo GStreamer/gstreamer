@@ -1,5 +1,5 @@
 [wrap-git]
 directory=gst-omx
-url=https://anongit.freedesktop.org/git/gstreamer/gst-omx.git
-push-url=ssh://git.freedesktop.org/git/gstreamer/gst-omx
+url=https://gitlab.freedesktop.org/gstreamer/gst-omx.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gst-omx.git
 revision=master
