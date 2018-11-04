@@ -120,6 +120,13 @@ gir_init_section = [ '--add-init-section=' + \
 ges_c_args = ['-DHAVE_CONFIG_H', '-DG_LOG_DOMAIN="GES"']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
+pkgconfig = import('pkgconfig')
+plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+if get_option('default_library') == 'shared'
+  # If we don't build static plugins there is no need to generate pc files
+  plugins_pkgconfig_install_dir = disabler()
+endif
+
 if gst_dep.type_name() == 'internal'
   gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
