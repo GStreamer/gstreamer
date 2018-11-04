@@ -1,0 +1,25 @@
+FROM base/devel:latest
+
+ENV LANG=en_US.UTF-8
+ENV GST_BUILD_PATH="/gst-build/"
+ENV GST_VALIDATE_OUTPUT="/validate-output"
+ENV GST_VALIDATE_TESTSUITES="$GST_VALIDATE_OUTPUT/gst-integration-testsuites"
+ENV GST_BUILD_MESON_ARGS="-Dpython=disabled -Dlibav=enabled -Dugly=enabled -Dbad=enabled -Ddevtools=enabled -Dges=enabled -Drtsp_server=enabled -Domx=disabled -Dvaapi=disabled -Dsharp=enabled"
+ENV PATH="/usr/lib/ccache/bin/:${PATH}"
+
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
+
+RUN pacman -Sy --noconfirm python3 libxml2 libxslt cmake libyaml git make nodejs ninja clang llvm flex python-gobject gstreamer gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav gst-editing-services python-pip npm json-glib gobject-introspection wget mono unzip glib2-docs xorg-xset xorg-server-xvfb ccache
+RUN pip install --upgrade git+https://github.com/hotdoc/hotdoc.git@gst git+https://github.com/hotdoc/hotdoc_c_extension.git@gst git+https://github.com/thiblahute/meson.git@hotdoc
+
+RUN mkdir $GST_VALIDATE_OUTPUT && \
+    git clone https://anongit.freedesktop.org/git/gstreamer/gst-integration-testsuites.git $GST_VALIDATE_TESTSUITES && \
+    cd $GST_VALIDATE_TESTSUITES/medias/ && \
+    python get_files.py defaults/
+
+# get gst-build and make all subprojects available
+RUN git clone git://anongit.freedesktop.org/gstreamer/gst-build $GST_BUILD_PATH && \
+    cd $GST_BUILD_PATH && \
+    meson build/ $GST_BUILD_MESON_ARGS
+
+RUN rm -Rf /var/cache/pacman/
