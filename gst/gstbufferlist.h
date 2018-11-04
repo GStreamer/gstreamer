@@ -130,6 +130,53 @@ gst_buffer_list_copy (const GstBufferList * list)
 }
 
 /**
+ * gst_buffer_list_replace:
+ * @old_list: (inout) (transfer full) (nullable): pointer to a pointer to a
+ *     #GstBufferList to be replaced.
+ * @new_list: (transfer none) (allow-none): pointer to a #GstBufferList that
+ *     will replace the buffer list pointed to by @old_list.
+ *
+ * Modifies a pointer to a #GstBufferList to point to a different
+ * #GstBufferList. The modification is done atomically (so this is useful for
+ * ensuring thread safety in some cases), and the reference counts are updated
+ * appropriately (the old buffer list is unreffed, the new is reffed).
+ *
+ * Either @new_list or the #GstBufferList pointed to by @old_list may be %NULL.
+ *
+ * Returns: %TRUE if @new_list was different from @old_list
+ *
+ * Since: 1.16
+ */
+static inline gboolean
+gst_buffer_list_replace (GstBufferList **old_list, GstBufferList *new_list)
+{
+  return gst_mini_object_replace ((GstMiniObject **) old_list,
+      (GstMiniObject *) new_list);
+}
+
+/**
+ * gst_buffer_list_take:
+ * @old_list: (inout) (transfer full): pointer to a pointer to a #GstBufferList
+ *     to be replaced.
+ * @new_list: (transfer full) (allow-none): pointer to a #GstBufferList
+ *     that will replace the bufferlist pointed to by @old_list.
+ *
+ * Modifies a pointer to a #GstBufferList to point to a different
+ * #GstBufferList. This function is similar to gst_buffer_list_replace() except
+ * that it takes ownership of @new_list.
+ *
+ * Returns: %TRUE if @new_list was different from @old_list
+ *
+ * Since: 1.16
+ */
+static inline gboolean
+gst_buffer_list_take (GstBufferList **old_list, GstBufferList *new_list)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_list,
+      (GstMiniObject *) new_list);
+}
+
+/**
  * gst_buffer_list_is_writable:
  * @list: a #GstBufferList
  *
