@@ -25,8 +25,8 @@ RTSP server library based on GStreamer
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-rtsp-server"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-rtsp-server"/>
+     <location rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server"/>
+     <browse rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server"/>
    </GitRepository>
 </repository>
 
