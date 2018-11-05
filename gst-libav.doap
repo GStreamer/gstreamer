@@ -27,8 +27,8 @@ colorspace conversion elements.
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-libav"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-libav"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-libav"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-libav"/>
    </GitRepository>
  </repository>
 
