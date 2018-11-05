@@ -19,6 +19,8 @@ zvbi_headers = \
 libgstclosedcaption_la_SOURCES = \
 	$(zvbi_sources) \
 	$(zvbi_headers) \
+	gstcccombiner.c \
+	gstcccombiner.h \
 	gstccextractor.c \
 	gstccextractor.h \
 	gstcea708decoder.c \
@@ -45,5 +47,6 @@ libgstclosedcaption_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
 	gstccextractor.h \
+	gstcccombiner.h \
 	gstline21dec.h \
 	$(zvbi_headers)
