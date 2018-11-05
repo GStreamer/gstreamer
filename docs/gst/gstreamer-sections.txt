@@ -391,10 +391,13 @@ gst_buffer_list_remove
 
 gst_buffer_list_ref
 gst_buffer_list_unref
+gst_clear_buffer_list
 gst_buffer_list_copy
 gst_buffer_list_copy_deep
 gst_buffer_list_is_writable
 gst_buffer_list_make_writable
+gst_buffer_list_replace
+gst_buffer_list_take
 
 GstBufferListFunc
 gst_buffer_list_foreach
@@ -491,6 +494,7 @@ gst_caps_truncate
 gst_caps_fixate
 gst_caps_ref
 gst_caps_unref
+gst_clear_caps
 <SUBSECTION Standard>
 GST_CAPS
 GST_IS_CAPS
@@ -1646,6 +1650,7 @@ gst_message_type_to_quark
 gst_message_type_get_name
 gst_message_ref
 gst_message_unref
+gst_clear_message
 gst_message_copy
 gst_message_get_structure
 gst_message_writable_structure
@@ -1655,6 +1660,7 @@ gst_message_set_seqnum
 gst_message_has_name
 gst_message_is_writable
 gst_message_replace
+gst_message_take
 
 gst_message_new_eos
 gst_message_new_error
@@ -1814,6 +1820,7 @@ gst_mini_object_init
 
 gst_mini_object_ref
 gst_mini_object_unref
+gst_clear_mini_object
 
 gst_mini_object_weak_ref
 gst_mini_object_weak_unref
@@ -1880,6 +1887,7 @@ gst_object_has_as_ancestor
 gst_object_has_ancestor
 gst_object_ref
 gst_object_unref
+gst_clear_object
 gst_object_ref_sink
 gst_object_replace
 gst_object_get_path_string
@@ -2541,10 +2549,12 @@ gst_query_type_to_quark
 
 gst_query_ref
 gst_query_unref
+gst_clear_query
 gst_query_copy
 gst_query_make_writable
 gst_query_is_writable
 gst_query_replace
+gst_query_take
 gst_query_writable_structure
 
 gst_query_new_custom
@@ -3050,8 +3060,11 @@ gst_tag_list_is_equal
 gst_tag_list_copy
 gst_tag_list_ref
 gst_tag_list_unref
+gst_clear_tag_list
 gst_tag_list_is_writable
 gst_tag_list_make_writable
+gst_tag_list_replace
+gst_tag_list_take
 gst_tag_list_insert
 gst_tag_list_merge
 gst_tag_list_get_tag_size
