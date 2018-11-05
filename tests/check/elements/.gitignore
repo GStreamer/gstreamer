@@ -6,6 +6,7 @@ autoconvert
 autovideoconvert
 avwait
 camerabin
+cccombiner
 ccextractor
 compositor
 curlfilesink

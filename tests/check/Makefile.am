@@ -41,9 +41,9 @@ check_assrender =
 endif
 
 if USE_PANGO
-check_ccextractor = elements/ccextractor
+check_closedcaption = elements/cccombiner elements/ccextractor
 else
-check_ccextractor =
+check_closedcaption =
 endif
 
 if USE_DASH
@@ -246,7 +246,7 @@ noinst_PROGRAMS = \
 check_PROGRAMS = \
 	generic/states \
 	$(check_assrender) \
-	$(check_ccextractor) \
+	$(check_closedcaption) \
 	$(check_dash) \
 	$(check_dtls) \
 	$(check_faac)  \
@@ -457,6 +457,9 @@ elements_camerabin_LDADD = \
         $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) \
         $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin_SOURCES = elements/camerabin.c
+
+elements_cccombiner_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_cccombiner_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
 
 elements_ccextractor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_ccextractor_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
