@@ -457,6 +457,28 @@ gst_message_replace (GstMessage **old_message, GstMessage *new_message)
   return gst_mini_object_replace ((GstMiniObject **) old_message, (GstMiniObject *) new_message);
 }
 
+/**
+ * gst_message_take:
+ * @old_message: (inout) (transfer full): pointer to a pointer to a #GstMessage
+ *     to be replaced.
+ * @new_message: (transfer full) (allow-none): pointer to a #GstMessage that
+ *     will replace the message pointed to by @old_message.
+ *
+ * Modifies a pointer to a #GstMessage to point to a different #GstMessage. This
+ * function is similar to gst_message_replace() except that it takes ownership
+ * of @new_message.
+ *
+ * Returns: %TRUE if @new_message was different from @old_message
+ *
+ * Since: 1.16
+ */
+static inline gboolean
+gst_message_take (GstMessage **old_message, GstMessage *new_message)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_message,
+      (GstMiniObject *) new_message);
+}
+
 
 /* custom messages */
 
