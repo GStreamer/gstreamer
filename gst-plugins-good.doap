@@ -27,8 +27,8 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-good"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-good"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-plugins-good"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-good"/>
    </GitRepository>
  </repository>
 
