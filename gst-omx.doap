@@ -26,8 +26,8 @@ a basic collection of elements
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-omx"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-omx"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-omx"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-omx"/>
    </GitRepository>
  </repository>
 
