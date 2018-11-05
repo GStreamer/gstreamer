@@ -47,8 +47,8 @@
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-devtools"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-devtools/"/>
+     <location rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-devtools"/>
+     <browse rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-devtools/"/>
    </GitRepository>
  </repository>
 
