@@ -716,6 +716,7 @@ openssl_poll (GstDtlsConnection * self)
 
   log_state (self, "poll: before handshake");
 
+  ERR_clear_error ();
   ret = SSL_do_handshake (self->priv->ssl);
 
   log_state (self, "poll: after handshake");
