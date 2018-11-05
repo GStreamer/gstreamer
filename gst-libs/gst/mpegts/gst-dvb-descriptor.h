@@ -1,7 +1,7 @@
 /*
- * gstmpegtsdescriptor.h - 
+ * gstmpegtsdescriptor.h -
  * Copyright (C) 2013 Edward Hervey
- * 
+ *
  * Authors:
  *   Edward Hervey <edward@collabora.com>
  *
@@ -243,7 +243,7 @@ struct _GstMpegtsSatelliteDeliverySystemDescriptor
 {
   guint32                            frequency;
   gfloat                             orbital_position;
-  gboolean                           west_east; 
+  gboolean                           west_east;
   GstMpegtsSatellitePolarizationType polarization;
 
   GstMpegtsSatelliteRolloff          roll_off;

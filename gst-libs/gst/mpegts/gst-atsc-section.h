@@ -1,7 +1,7 @@
 /*
- * mpegtspacketizer.h - 
+ * mpegtspacketizer.h -
  * Copyright (C) 2013 Edward Hervey
- * 
+ *
  * Authors:
  *   Edward Hervey <edward@collabora.com>
  *

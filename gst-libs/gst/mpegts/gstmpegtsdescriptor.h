@@ -1,7 +1,7 @@
 /*
- * gstmpegtsdescriptor.h - 
+ * gstmpegtsdescriptor.h -
  * Copyright (C) 2013 Edward Hervey
- * 
+ *
  * Authors:
  *   Edward Hervey <edward@collabora.com>
  *
@@ -233,7 +233,7 @@ typedef enum {
   GST_MTS_DESC_ISDB_CONTENT_AVAILABILITY        = 0xde,
   /* ... */
   GST_MTS_DESC_ISDB_SERVICE_GROUP               = 0xe0
-  
+
 } GstMpegtsISDBDescriptorType;
 
 typedef struct _GstMpegtsDescriptor GstMpegtsDescriptor;

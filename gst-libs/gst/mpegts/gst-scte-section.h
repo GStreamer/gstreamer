@@ -100,4 +100,3 @@ typedef enum {
 G_END_DECLS
 
 #endif  /* GST_SCTE_SECTION_H */
-

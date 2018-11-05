@@ -1,7 +1,7 @@
 /*
- * mpegtspacketizer.h - 
+ * mpegtspacketizer.h -
  * Copyright (C) 2013 Edward Hervey
- * 
+ *
  * Authors:
  *   Edward Hervey <edward@collabora.com>
  *
@@ -63,15 +63,15 @@ GType gst_mpegts_section_get_type (void);
  */
 typedef enum {
   GST_MPEGTS_SECTION_UNKNOWN           = 0,
-  GST_MPEGTS_SECTION_PAT, 
-  GST_MPEGTS_SECTION_PMT, 
-  GST_MPEGTS_SECTION_CAT, 
+  GST_MPEGTS_SECTION_PAT,
+  GST_MPEGTS_SECTION_PMT,
+  GST_MPEGTS_SECTION_CAT,
   GST_MPEGTS_SECTION_TSDT,
-  GST_MPEGTS_SECTION_EIT, 
-  GST_MPEGTS_SECTION_NIT, 
-  GST_MPEGTS_SECTION_BAT, 
-  GST_MPEGTS_SECTION_SDT, 
-  GST_MPEGTS_SECTION_TDT, 
+  GST_MPEGTS_SECTION_EIT,
+  GST_MPEGTS_SECTION_NIT,
+  GST_MPEGTS_SECTION_BAT,
+  GST_MPEGTS_SECTION_SDT,
+  GST_MPEGTS_SECTION_TDT,
   GST_MPEGTS_SECTION_TOT,
   GST_MPEGTS_SECTION_ATSC_TVCT,
   GST_MPEGTS_SECTION_ATSC_CVCT,
@@ -114,7 +114,7 @@ typedef enum {
 
   /* Unset */
   GST_MTS_TABLE_ID_UNSET = 0xFF
-  
+
 } GstMpegtsSectionTableID;
 
 typedef gboolean (*GstMpegtsPacketizeFunc) (GstMpegtsSection *section);

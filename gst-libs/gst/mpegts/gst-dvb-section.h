@@ -1,7 +1,7 @@
 /*
- * mpegtspacketizer.h - 
+ * mpegtspacketizer.h -
  * Copyright (C) 2013 Edward Hervey
- * 
+ *
  * Authors:
  *   Edward Hervey <edward@collabora.com>
  *
@@ -64,7 +64,7 @@ typedef enum {
   GST_MTS_TABLE_ID_CONTAINER				= 0x75,
   GST_MTS_TABLE_ID_RELATED_CONTENT			= 0x76,
   GST_MTS_TABLE_ID_CONTENT_IDENTIFIER			= 0x77,
-  
+
   /* EN 301 192 (DVB specification for data broadcasting) */
   GST_MTS_TABLE_ID_MPE_FEC				= 0x78,
 
@@ -73,7 +73,7 @@ typedef enum {
 
   /* TS 102 772 (DVB-SH Multi-Protocol Encapsulation) */
   GST_MTS_TABLE_ID_MPE_IFEC				= 0x7A,
-  
+
   /* EN 300 468 (DVB) v 1.12.1 */
   GST_MTS_TABLE_ID_DISCONTINUITY_INFORMATION		= 0x7E,
   GST_MTS_TABLE_ID_SELECTION_INFORMATION		= 0x7F,
