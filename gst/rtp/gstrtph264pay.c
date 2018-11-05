@@ -35,9 +35,10 @@
 #include "gstrtputils.h"
 
 
-#define IDR_TYPE_ID  5
-#define SPS_TYPE_ID  7
-#define PPS_TYPE_ID  8
+#define IDR_TYPE_ID    5
+#define SPS_TYPE_ID    7
+#define PPS_TYPE_ID    8
+#define FU_A_TYPE_ID   28
 
 GST_DEBUG_CATEGORY_STATIC (rtph264pay_debug);
 #define GST_CAT_DEFAULT (rtph264pay_debug)
@@ -969,7 +970,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       gst_rtp_buffer_set_marker (&rtp, end && end_of_au);
 
       /* FU indicator */
-      payload[0] = (nal_header & 0x60) | 28;
+      payload[0] = (nal_header & 0x60) | FU_A_TYPE_ID;
 
       /* FU Header */
       payload[1] = (start << 7) | (end << 6) | (nal_header & 0x1f);
