@@ -897,19 +897,16 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     gboolean delta_unit, gboolean discont, guint8 nal_header)
 {
   GstRtpH264Pay *rtph264pay;
-  GstFlowReturn ret;
-  guint payload_len, mtu;
+  guint mtu, size, payload_len, pos;
   GstBuffer *outbuf;
   guint8 *payload;
   GstBufferList *list = NULL;
   GstRTPBuffer rtp = { NULL };
-  guint size = gst_buffer_get_size (paybuf);
-
-  guint fragment_size;
-  int ii = 0, start = 1, end = 0, pos = 0;
+  int ii = 0, start = 1, end = 0;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (rtph264pay);
+  size = gst_buffer_get_size (paybuf);
 
   if (gst_rtp_buffer_calc_packet_len (size, 0, 0) <= mtu) {
     /* We don't need to fragment this packet */
@@ -919,27 +916,23 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
         end_of_au, delta_unit, discont);
   }
 
-  GST_DEBUG_OBJECT (basepayload,
-      "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
-
-  pos++;
+  /* Start at the NALU payload */
+  pos = 1;
   size--;
 
-  ret = GST_FLOW_OK;
-
-  GST_DEBUG_OBJECT (basepayload, "Using FU-A fragmentation for data size=%d",
-      size);
+  GST_DEBUG_OBJECT (basepayload,
+      "using FU-A fragmentation for NAL Unit: datasize=%u mtu=%u", size, mtu);
 
   /* We keep 2 bytes for FU indicator and FU Header */
   payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
-
   list = gst_buffer_list_new_sized ((size / payload_len) + 1);
 
   while (end == 0) {
-    fragment_size = size < payload_len ? size : payload_len;
+    guint fragment_size = size < payload_len ? size : payload_len;
+
     GST_DEBUG_OBJECT (basepayload,
-        "Inside  FU-A fragmentation fragment_size=%d iteration=%d", fragment_size,
-        ii);
+        "creating FU-A packet fragment_size=%u iteration=%d",
+        fragment_size, ii);
 
     /* use buffer lists
      * create buffer without payload containing only the RTP header
@@ -953,7 +946,6 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     payload = gst_rtp_buffer_get_payload (&rtp);
 
     if (fragment_size == size) {
-      GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
       end = 1;
     }
 
@@ -989,16 +981,17 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     /* add the buffer to the buffer list */
     gst_buffer_list_add (list, outbuf);
 
-
     size -= fragment_size;
     pos += fragment_size;
     ii++;
     start = 0;
   }
 
-  ret = gst_rtp_base_payload_push_list (basepayload, list);
+  GST_DEBUG_OBJECT (rtph264pay,
+      "sending FU-A fragments: n=%d datasize=%u mtu=%u", ii, size, mtu);
+
   gst_buffer_unref (paybuf);
-  return ret;
+  return gst_rtp_base_payload_push_list (basepayload, list);
 }
 
 static GstFlowReturn
