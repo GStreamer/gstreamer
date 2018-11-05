@@ -28,8 +28,8 @@ might be widely known to present patent problems.
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-ugly"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-ugly"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly"/>
    </GitRepository>
  </repository>
 
