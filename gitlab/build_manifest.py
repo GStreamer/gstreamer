@@ -99,21 +99,21 @@ def request(path: str) -> List[Dict[str, str]]:
     return request_raw(path, headers, project_url)
 
 
-def request_wrap(path: str) -> List[Dict[str, str]]:
-    resp: List[Dict[str, str]] = request(path)
-
-    if not resp:
-        return None
-    if not resp[0]:
-        return None
-
-    return resp[0]
-
-
 def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
     print(f"Searching for {name} branch in project {project_id}")
     path = f"projects/{project_id}/repository/branches?search={name}"
-    return request_wrap(path)
+    results = request(path)
+
+    if not results:
+        return None
+
+    # The api returns a list of projects that match the search
+    # we want the exact match, which might not be the first on the list
+    for project_res in results:
+        if project_res["name"] == name:
+            return project_res
+
+    return None
 
 
 @preserve_ci_vars
@@ -141,7 +141,18 @@ def test_get_project_branch():
 def search_user_namespace(user: str, project: str) -> Dict[str, str]:
     print(f"Searching for {project} project in @{user} user's namespace")
     path = f"users/{user}/projects?search={project}"
-    return request_wrap(path)
+    results = request(path)
+
+    if not results:
+        return None
+
+    # The api returns a list of projects that match the search
+    # we want the exact match, which might not be the first on the list
+    for project_res in results:
+        if project_res["path"] == project:
+            return project_res
+
+    return None
 
 
 @preserve_ci_vars
@@ -165,7 +176,7 @@ def test_search_user_namespace():
 def search_group_namespace(group_id: str, project: str) -> Dict[str, str]:
     print(f"Searching for {project} project in @{group_id} group namespace")
     path = f"groups/{group_id}/search?scope=projects&search={project}"
-    return request_wrap(path)
+    return request(path)
 
 
 @preserve_ci_vars
