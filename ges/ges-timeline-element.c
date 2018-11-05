@@ -929,7 +929,7 @@ ges_timeline_element_get_priority (GESTimelineElement * self)
  *
  * Returns: %TRUE if @priority could be set.
  */
-void
+gboolean
 ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
 {
   GESTimelineElementClass *klass;

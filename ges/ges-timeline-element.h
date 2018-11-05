@@ -218,7 +218,7 @@ GES_API
 gboolean ges_timeline_element_set_start              (GESTimelineElement *self, GstClockTime start);
 GES_API
 gboolean ges_timeline_element_set_inpoint            (GESTimelineElement *self, GstClockTime inpoint);
-gboolean
+GES_API
 gboolean ges_timeline_element_set_duration           (GESTimelineElement *self, GstClockTime duration);
 GES_API
 gboolean ges_timeline_element_set_max_duration       (GESTimelineElement *self, GstClockTime maxduration);
