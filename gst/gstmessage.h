@@ -395,7 +395,7 @@ gst_message_unref (GstMessage * msg)
 static inline void
 gst_clear_message (GstMessage ** msg_ptr)
 {
-  gst_clear_mini_object (msg_ptr);
+  gst_clear_mini_object ((GstMiniObject **) msg_ptr);
 }
 
 /* copy message */

@@ -109,7 +109,7 @@ gst_buffer_list_unref (GstBufferList * list)
 static inline void
 gst_clear_buffer_list (GstBufferList ** list_ptr)
 {
-  gst_clear_mini_object (list_ptr);
+  gst_clear_mini_object ((GstMiniObject **) list_ptr);
 }
 
 /* copy */

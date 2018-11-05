@@ -239,7 +239,7 @@ gst_caps_unref (GstCaps * caps)
 static inline void
 gst_clear_caps (GstCaps ** caps_ptr)
 {
-  gst_clear_mini_object (caps_ptr);
+  gst_clear_mini_object ((GstMiniObject **) caps_ptr);
 }
 
 /* copy caps */

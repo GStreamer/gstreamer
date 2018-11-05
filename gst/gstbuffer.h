@@ -458,7 +458,7 @@ gst_buffer_unref (GstBuffer * buf)
 static inline void
 gst_clear_buffer (GstBuffer ** buf_ptr)
 {
-  gst_clear_mini_object (buf_ptr);
+  gst_clear_mini_object ((GstMiniObject **) buf_ptr);
 }
 
 /* copy buffer */

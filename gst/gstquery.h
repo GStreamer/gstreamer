@@ -270,7 +270,7 @@ gst_query_unref (GstQuery * q)
 static inline void
 gst_clear_query (GstQuery ** query_ptr)
 {
-  gst_clear_mini_object (query_ptr);
+  gst_clear_mini_object ((GstMiniObject **) query_ptr);
 }
 
 /* copy query */

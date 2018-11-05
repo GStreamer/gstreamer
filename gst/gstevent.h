@@ -466,7 +466,7 @@ gst_event_unref (GstEvent * event)
 static inline void
 gst_clear_event (GstEvent ** event_ptr)
 {
-  gst_clear_mini_object (event_ptr);
+  gst_clear_mini_object ((GstMiniObject **) event_ptr);
 }
 
 /* copy event */

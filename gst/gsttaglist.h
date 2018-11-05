@@ -497,7 +497,7 @@ gst_tag_list_unref (GstTagList * taglist)
 static inline void
 gst_clear_tag_list (GstTagList ** taglist_ptr)
 {
-  gst_clear_mini_object (taglist_ptr);
+  gst_clear_mini_object ((GstMiniObject **) taglist_ptr);
 }
 
 /**
