@@ -1,5 +1,7 @@
 stages:
   - test
+  - "build runtime"
+  - "build base"
 
 test manifest:
   image: "fedora"
@@ -13,3 +15,52 @@ test manifest:
     reports:
       junit:
         - "junit.xml"
+
+.base:
+  image: "docker:stable"
+  services:
+    - docker:dind
+  variables:
+    # When using dind, it's wise to use the overlayfs driver for
+    # improved performance.
+    DOCKER_DRIVER: "overlay2"
+  script:
+    - export IMAGE="${CI_REGISTRY_IMAGE}/${ARCH}/${TAG}"
+    - export REF="${IMAGE}:${CI_COMMIT_SHA}"
+    - export LATEST="${IMAGE}:latest"
+
+    - docker build --pull -f ${DOCKERFILE} -t ${REF} ${CONTEXT_DIR}
+    - docker image tag ${REF} ${LATEST}
+
+    # Push the images
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
+        docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        docker push ${REF}
+        docker push ${LATEST}
+      fi
+  only:
+    changes:
+      - ".gitlab-ci.yml"
+      - "docker/**"
+      - "docker/*/**"
+
+
+fedora amd64 run:
+  stage: "build runtime"
+  variables:
+    ARCH: "amd64"
+    TAG: "fedora-runtime"
+    CONTEXT_DIR: "docker/runtime-images/"
+    DOCKERFILE: "docker/runtime-images/Dockerfile-fedora"
+  extends: .base
+
+fedora amd64 build:
+  stage: "build base"
+  variables:
+    ARCH: "amd64"
+    TAG: "fedora-build"
+    CONTEXT_DIR: "docker/build-base-images/"
+    DOCKERFILE: "docker/build-base-images/Dockerfile-fedora"
+  extends: .base
+
