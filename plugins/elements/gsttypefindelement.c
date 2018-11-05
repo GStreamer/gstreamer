@@ -221,9 +221,7 @@ gst_type_find_element_emit_have_type (GstTypeFindElement * typefind,
    * honored in all "have-type" signal handlers.
    */
   GST_OBJECT_LOCK (typefind);
-  if (typefind->caps)
-    gst_caps_unref (typefind->caps);
-  typefind->caps = gst_caps_ref (caps);
+  gst_caps_replace (&typefind->caps, caps);
   GST_OBJECT_UNLOCK (typefind);
 
   /* Only store the caps event at this point. We give signal handlers
@@ -340,15 +338,8 @@ gst_type_find_element_dispose (GObject * object)
 {
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (object);
 
-  if (typefind->adapter) {
-    g_object_unref (typefind->adapter);
-    typefind->adapter = NULL;
-  }
-
-  if (typefind->force_caps) {
-    gst_caps_unref (typefind->force_caps);
-    typefind->force_caps = NULL;
-  }
+  gst_clear_object (&typefind->adapter);
+  gst_clear_caps (&typefind->force_caps);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -367,9 +358,7 @@ gst_type_find_element_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FORCE_CAPS:
       GST_OBJECT_LOCK (typefind);
-      if (typefind->force_caps)
-        gst_caps_unref (typefind->force_caps);
-      typefind->force_caps = g_value_dup_boxed (value);
+      gst_caps_take (&typefind->force_caps, g_value_dup_boxed (value));
       GST_OBJECT_UNLOCK (typefind);
       break;
     default:
