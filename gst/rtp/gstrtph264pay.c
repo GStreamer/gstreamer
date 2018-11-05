@@ -738,6 +738,11 @@ gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
     gboolean delta_unit, gboolean discont);
 
 static GstFlowReturn
+gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
+    GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
+    gboolean delta_unit, gboolean discont, guint8 nal_header);
+
+static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GstRtpH264Pay * rtph264pay, GstClockTime dts, GstClockTime pts)
 {
@@ -796,12 +801,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   GstFlowReturn ret;
   guint8 nal_header;
   guint8 nal_type;
-  guint packet_len, payload_len, mtu;
-  GstBuffer *outbuf;
-  guint8 *payload;
-  GstBufferList *list = NULL;
+  guint packet_len, mtu;
   gboolean send_spspps;
-  GstRTPBuffer rtp = { NULL };
   guint size = gst_buffer_get_size (paybuf);
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
@@ -897,89 +898,111 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
         end_of_au, delta_unit, discont);
   } else {
     /* fragmentation Units FU-A */
-    guint fragment_size;
-    int ii = 0, start = 1, end = 0, pos = 0;
+    ret = gst_rtp_h264_pay_payload_nal_fragment (basepayload, paybuf, dts, pts,
+        end_of_au, delta_unit, discont, nal_header);
+  }
+  return ret;
+}
 
+static GstFlowReturn
+gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
+    GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
+    gboolean delta_unit, gboolean discont, guint8 nal_header)
+{
+  GstRtpH264Pay *rtph264pay;
+  GstFlowReturn ret;
+  guint payload_len, mtu;
+  GstBuffer *outbuf;
+  guint8 *payload;
+  GstBufferList *list = NULL;
+  GstRTPBuffer rtp = { NULL };
+  guint size = gst_buffer_get_size (paybuf);
+
+  guint fragment_size;
+  int ii = 0, start = 1, end = 0, pos = 0;
+
+  rtph264pay = GST_RTP_H264_PAY (basepayload);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtph264pay);
+
+  GST_DEBUG_OBJECT (basepayload,
+      "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
+
+  pos++;
+  size--;
+
+  ret = GST_FLOW_OK;
+
+  GST_DEBUG_OBJECT (basepayload, "Using FU-A fragmentation for data size=%d",
+      size);
+
+  /* We keep 2 bytes for FU indicator and FU Header */
+  payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
+
+  list = gst_buffer_list_new_sized ((size / payload_len) + 1);
+
+  while (end == 0) {
+    fragment_size = size < payload_len ? size : payload_len;
     GST_DEBUG_OBJECT (basepayload,
-        "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
+        "Inside  FU-A fragmentation fragment_size=%d iteration=%d", fragment_size,
+        ii);
 
-    pos++;
-    size--;
+    /* use buffer lists
+     * create buffer without payload containing only the RTP header
+     * (memory block at index 0) */
+    outbuf = gst_rtp_buffer_new_allocate (2, 0, 0);
 
-    ret = GST_FLOW_OK;
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-    GST_DEBUG_OBJECT (basepayload, "Using FU-A fragmentation for data size=%d",
-        size);
+    GST_BUFFER_DTS (outbuf) = dts;
+    GST_BUFFER_PTS (outbuf) = pts;
+    payload = gst_rtp_buffer_get_payload (&rtp);
 
-    /* We keep 2 bytes for FU indicator and FU Header */
-    payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
-
-    list = gst_buffer_list_new_sized ((size / payload_len) + 1);
-
-    while (end == 0) {
-      fragment_size = size < payload_len ? size : payload_len;
-      GST_DEBUG_OBJECT (basepayload,
-          "Inside  FU-A fragmentation fragment_size=%d iteration=%d", fragment_size,
-          ii);
-
-      /* use buffer lists
-       * create buffer without payload containing only the RTP header
-       * (memory block at index 0) */
-      outbuf = gst_rtp_buffer_new_allocate (2, 0, 0);
-
-      gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-
-      GST_BUFFER_DTS (outbuf) = dts;
-      GST_BUFFER_PTS (outbuf) = pts;
-      payload = gst_rtp_buffer_get_payload (&rtp);
-
-      if (fragment_size == size) {
-        GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
-        end = 1;
-      }
-
-      /* If it's the last fragment and the end of this au, mark the end of
-       * slice */
-      gst_rtp_buffer_set_marker (&rtp, end && end_of_au);
-
-      /* FU indicator */
-      payload[0] = (nal_header & 0x60) | FU_A_TYPE_ID;
-
-      /* FU Header */
-      payload[1] = (start << 7) | (end << 6) | (nal_header & 0x1f);
-
-      gst_rtp_buffer_unmap (&rtp);
-
-      /* insert payload memory block */
-      gst_rtp_copy_video_meta (rtph264pay, outbuf, paybuf);
-      gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
-          fragment_size);
-
-      if (!delta_unit)
-        /* Only the first packet sent should not have the flag */
-        delta_unit = TRUE;
-      else
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-      if (discont) {
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-        /* Only the first packet sent should have the flag */
-        discont = FALSE;
-      }
-
-      /* add the buffer to the buffer list */
-      gst_buffer_list_add (list, outbuf);
-
-
-      size -= fragment_size;
-      pos += fragment_size;
-      ii++;
-      start = 0;
+    if (fragment_size == size) {
+      GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
+      end = 1;
     }
 
-    ret = gst_rtp_base_payload_push_list (basepayload, list);
-    gst_buffer_unref (paybuf);
+    /* If it's the last fragment and the end of this au, mark the end of
+     * slice */
+    gst_rtp_buffer_set_marker (&rtp, end_of_au);
+
+    /* FU indicator */
+    payload[0] = (nal_header & 0x60) | FU_A_TYPE_ID;
+
+    /* FU Header */
+    payload[1] = (start << 7) | (end << 6) | (nal_header & 0x1f);
+
+    gst_rtp_buffer_unmap (&rtp);
+
+    /* insert payload memory block */
+    gst_rtp_copy_video_meta (rtph264pay, outbuf, paybuf);
+    gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
+        fragment_size);
+
+    if (!delta_unit)
+      /* Only the first packet sent should not have the flag */
+      delta_unit = TRUE;
+    else
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    if (discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      /* Only the first packet sent should have the flag */
+      discont = FALSE;
+    }
+
+    /* add the buffer to the buffer list */
+    gst_buffer_list_add (list, outbuf);
+
+
+    size -= fragment_size;
+    pos += fragment_size;
+    ii++;
+    start = 0;
   }
+
+  ret = gst_rtp_base_payload_push_list (basepayload, list);
+  gst_buffer_unref (paybuf);
   return ret;
 }
 
