@@ -25,8 +25,8 @@ GStreamer library for creating audio and video editors
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-editing-services"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-editing-services"/>
+     <location rdf:resource="https://gitlab.freedesktop.org/gstreamer/gst-editing-services"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-editing-services"/>
    </GitRepository>
  </repository>
 
