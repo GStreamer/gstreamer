@@ -33,6 +33,18 @@ def manifest_get_commits(manifest):
     return res
 
 
+def ensure_revision_if_necessary(repo_dir, revision):
+    """
+    Makes sure that @revision is set if the current repo is detached.
+    """
+    if not revision:
+        ret = git('-C', repo_dir, 'rev-parse', '--symbolic-full-name', 'HEAD')
+        if ret.strip() == 'HEAD':
+            revision = git('-C', repo_dir, 'rev-parse', 'HEAD').strip()
+
+    return revision
+
+
 def update_subprojects(repos_commits, no_interaction=False):
     subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
     for repo_name in os.listdir(subprojects_dir):
@@ -41,13 +53,6 @@ def update_subprojects(repos_commits, no_interaction=False):
             continue
 
         revision, args = repos_commits.get(repo_name, [None, []])
-        if not revision:
-            # If we're on a detached head because the revision= value in the
-            # wrap file is a commit, don't try to git pull --rebase because
-            # that will always fail.
-            ret = git('-C', repo_dir, 'rev-parse', '--symbolic-full-name', 'HEAD')
-            if ret.strip() == 'HEAD':
-                revision = git('-C', repo_dir, 'rev-parse', 'HEAD').strip()
         if not update_repo(repo_name, repo_dir, revision, no_interaction, args):
             return False
 
@@ -55,7 +60,7 @@ def update_subprojects(repos_commits, no_interaction=False):
 
 
 def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], recurse_i=0):
-    print("Updating %s..." % repo_name)
+    revision = ensure_revision_if_necessary(repo_dir, revision)
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
     try:
         if revision:
