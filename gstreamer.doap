@@ -33,8 +33,8 @@ hierarchy, and a set of media-agnostic core elements.
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gstreamer"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gstreamer"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gstreamer"/>
+     <browse rdf:resource="https://gitlab.freedesktop.org/gstreamer/gstreamer"/>
    </GitRepository>
  </repository>
 
