@@ -255,7 +255,7 @@ GST_API
 void		gst_object_unref		(gpointer object);
 
 GST_API
-void        gst_clear_object (volatile GstObject **object_ptr);
+void        gst_clear_object (GstObject **object_ptr);
 #define     gst_clear_object(object_ptr) g_clear_pointer ((object_ptr), gst_object_unref)
 
 GST_API

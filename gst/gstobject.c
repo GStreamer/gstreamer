@@ -314,7 +314,7 @@ gst_object_ref_sink (gpointer object)
  **/
 #undef gst_clear_object
 void
-gst_clear_object (volatile GstObject ** object_ptr)
+gst_clear_object (GstObject ** object_ptr)
 {
   g_clear_pointer (object_ptr, gst_object_unref);
 }

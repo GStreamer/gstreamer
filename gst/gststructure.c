@@ -413,7 +413,7 @@ gst_structure_free (GstStructure * structure)
  **/
 #undef gst_clear_structure
 void
-gst_clear_structure (volatile GstStructure ** structure_ptr)
+gst_clear_structure (GstStructure ** structure_ptr)
 {
   g_clear_pointer (structure_ptr, gst_structure_free);
 }

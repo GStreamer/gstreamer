@@ -235,7 +235,7 @@ GST_API
 void            gst_mini_object_unref		(GstMiniObject *mini_object);
 
 GST_API
-void        gst_clear_mini_object (volatile GstMiniObject **object_ptr);
+void        gst_clear_mini_object (GstMiniObject **object_ptr);
 #define     gst_clear_mini_object(object_ptr) g_clear_pointer ((object_ptr), gst_mini_object_unref)
 
 GST_API

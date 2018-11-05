@@ -687,7 +687,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
  **/
 #undef gst_clear_mini_object
 void
-gst_clear_mini_object (volatile GstMiniObject ** object_ptr)
+gst_clear_mini_object (GstMiniObject ** object_ptr)
 {
   g_clear_pointer (object_ptr, gst_mini_object_unref);
 }

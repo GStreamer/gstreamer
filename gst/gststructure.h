@@ -134,7 +134,7 @@ GST_API
 void                  gst_structure_free                 (GstStructure        * structure);
 
 GST_API
-void                  gst_clear_structure                (volatile GstStructure **structure_ptr);
+void                  gst_clear_structure                (GstStructure **structure_ptr);
 #define               gst_clear_structure(structure_ptr) g_clear_pointer ((structure_ptr), gst_structure_free)
 
 GST_API
