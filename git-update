@@ -33,13 +33,16 @@ def manifest_get_commits(manifest):
     return res
 
 
+def get_branch_name(repo_dir):
+    return git('-C', repo_dir, 'rev-parse', '--symbolic-full-name', 'HEAD').strip()
+
+
 def ensure_revision_if_necessary(repo_dir, revision):
     """
     Makes sure that @revision is set if the current repo is detached.
     """
     if not revision:
-        ret = git('-C', repo_dir, 'rev-parse', '--symbolic-full-name', 'HEAD')
-        if ret.strip() == 'HEAD':
+        if get_branch_name(repo_dir) == 'HEAD':
             revision = git('-C', repo_dir, 'rev-parse', 'HEAD').strip()
 
     return revision
@@ -64,9 +67,11 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], re
     git("config", "rebase.autoStash", "true", repository_path=repo_dir)
     try:
         if revision:
+            print("Checking out %s in %s" % (revision, repo_name))
             git("fetch", *fetch_args, repository_path=repo_dir)
             git("checkout", revision, repository_path=repo_dir)
         else:
+            print("Updating branch %s in %s" % (get_branch_name(repo_dir), repo_name))
             git("pull", "--rebase", repository_path=repo_dir)
         git("submodule", "update", repository_path=repo_dir)
     except Exception as e:
