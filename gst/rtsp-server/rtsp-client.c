@@ -4581,6 +4581,26 @@ gst_rtsp_client_send_message (GstRTSPClient * client, GstRTSPSession * session,
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_client_get_stream_transport:
+ *
+ * This is useful when providing a send function through
+ * gst_rtsp_client_set_send_func() when doing RTSP over TCP:
+ * the send function must call gst_rtsp_stream_transport_message_sent ()
+ * on the appropriate transport when data has been received for streaming
+ * to continue.
+ *
+ * Returns: (transfer none) (nullable): the #GstRTSPStreamTransport associated with @channel.
+ *
+ * Since: 1.18
+ */
+GstRTSPStreamTransport *
+gst_rtsp_client_get_stream_transport (GstRTSPClient * self, guint8 channel)
+{
+  return g_hash_table_lookup (self->priv->transports,
+      GINT_TO_POINTER ((gint) channel));
+}
+
 static gboolean
 do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
     guint n_messages, gboolean close, gpointer user_data)

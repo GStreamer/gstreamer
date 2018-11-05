@@ -272,6 +272,9 @@ GList *                gst_rtsp_client_session_filter    (GstRTSPClient *client,
                                                           GstRTSPClientSessionFilterFunc func,
                                                           gpointer user_data);
 
+GST_RTSP_SERVER_API
+GstRTSPStreamTransport * gst_rtsp_client_get_stream_transport (GstRTSPClient *client,
+                                                               guint8 channel);
 
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
