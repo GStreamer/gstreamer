@@ -722,23 +722,24 @@ openssl_poll (GstDtlsConnection * self)
 
   log_state (self, "poll: after handshake");
 
-  if (ret == 1) {
-    if (!self->priv->keys_exported) {
-      GST_INFO_OBJECT (self,
-          "handshake just completed successfully, exporting keys");
-      export_srtp_keys (self);
-    } else {
-      GST_INFO_OBJECT (self, "handshake is completed");
-    }
-    return;
-  } else {
-    if (ret == 0) {
+  switch (ret) {
+    case 1:
+      if (!self->priv->keys_exported) {
+        GST_INFO_OBJECT (self,
+            "handshake just completed successfully, exporting keys");
+        export_srtp_keys (self);
+      } else {
+        GST_INFO_OBJECT (self, "handshake is completed");
+      }
+      return;
+    case 0:
       GST_DEBUG_OBJECT (self, "do_handshake encountered EOF");
-    } else if (ret == -1) {
+      break;
+    case -1:
       GST_DEBUG_OBJECT (self, "do_handshake encountered BIO error");
-    } else {
+      break;
+    default:
       GST_DEBUG_OBJECT (self, "do_handshake returned %d", ret);
-    }
   }
 
   error = SSL_get_error (self->priv->ssl, ret);
