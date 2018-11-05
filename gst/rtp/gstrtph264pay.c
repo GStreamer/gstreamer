@@ -744,8 +744,9 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
 
 static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
-    GstRtpH264Pay * rtph264pay, GstClockTime dts, GstClockTime pts)
+    GstClockTime dts, GstClockTime pts, gboolean delta_unit, gboolean discont)
 {
+  GstRtpH264Pay *rtph264pay = GST_RTP_H264_PAY (basepayload);
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean sent_all_sps_pps = TRUE;
   guint i;
@@ -757,7 +758,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (rtph264pay, "inserting SPS in the stream");
     /* resend SPS */
     ret = gst_rtp_h264_pay_payload_nal (basepayload, gst_buffer_ref (sps_buf),
-        dts, pts, FALSE, FALSE, FALSE);
+        dts, pts, FALSE, delta_unit, discont);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_sps_pps = FALSE;
@@ -771,7 +772,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (rtph264pay, "inserting PPS in the stream");
     /* resend PPS */
     ret = gst_rtp_h264_pay_payload_nal (basepayload, gst_buffer_ref (pps_buf),
-        dts, pts, FALSE, FALSE, FALSE);
+        dts, pts, FALSE, TRUE, FALSE);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK) {
       sent_all_sps_pps = FALSE;
@@ -880,11 +881,16 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     GstFlowReturn ret;
 
     rtph264pay->send_spspps = FALSE;
-    ret = gst_rtp_h264_pay_send_sps_pps (basepayload, rtph264pay, dts, pts);
+
+    ret = gst_rtp_h264_pay_send_sps_pps (basepayload, dts, pts, delta_unit,
+        discont);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (paybuf);
       return ret;
     }
+
+    delta_unit = TRUE;
+    discont = FALSE;
   }
 
   return gst_rtp_h264_pay_payload_nal_fragment (basepayload, paybuf, dts, pts,
