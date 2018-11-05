@@ -676,14 +676,16 @@ ges_timeline_element_get_timeline (GESTimelineElement * self)
  *
  * Note that if the snapping-distance property of the timeline containing
  * @self is set, @self will properly snap to the edges around @start.
+ *
+ * Returns: %TRUE if @start could be set.
  */
-void
+gboolean
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
   GESTimelineElement *toplevel_container, *parent;
 
-  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -704,24 +706,26 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
         "container to have a negative start value");
 
     gst_object_unref (toplevel_container);
-    return;
+    return FALSE;
   }
 
   gst_object_unref (toplevel_container);
   if (klass->set_start) {
-    if (klass->set_start (self, start)) {
+    gboolean res = klass->set_start (self, start);
+    if (res) {
       self->start = start;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
     }
 
     GST_DEBUG_OBJECT (self, "New start: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
-    return;
+    return res;
   }
 
   GST_WARNING_OBJECT (self, "No set_start virtual method implementation"
       " on class %s. Can not set start %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (start));
+  return FALSE;
 }
 
 /**
@@ -731,14 +735,16 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
  *
  * Set the in-point, that is the moment at which the @self will start
  * outputting data from its contents.
+ *
+ * Returns: %TRUE if @inpoint could be set.
  */
-void
+gboolean
 ges_timeline_element_set_inpoint (GESTimelineElement * self,
     GstClockTime inpoint)
 {
   GESTimelineElementClass *klass;
 
-  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   GST_DEBUG_OBJECT (self, "current inpoint: %" GST_TIME_FORMAT
       " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
@@ -747,17 +753,20 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->set_inpoint) {
-    if (klass->set_inpoint (self, inpoint)) {
+    gboolean res = klass->set_inpoint (self, inpoint);
+    if (res) {
       self->inpoint = inpoint;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INPOINT]);
     }
 
-    return;
+    return res;
   }
 
   GST_DEBUG_OBJECT (self, "No set_inpoint virtual method implementation"
       " on class %s. Can not set inpoint %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (inpoint));
+
+  return FALSE;
 }
 
 /**
@@ -766,14 +775,16 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
  * @maxduration: the maximum duration in #GstClockTime
  *
  * Set the maximun duration of the object
+ *
+ * Returns: %TRUE if @maxduration could be set.
  */
-void
+gboolean
 ges_timeline_element_set_max_duration (GESTimelineElement * self,
     GstClockTime maxduration)
 {
   GESTimelineElementClass *klass;
 
-  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -784,11 +795,12 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
 
   if (klass->set_max_duration) {
     if (klass->set_max_duration (self, maxduration) == FALSE)
-      return;
+      return FALSE;
   }
 
   self->maxduration = maxduration;
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MAX_DURATION]);
+  return TRUE;
 }
 
 /**
@@ -800,14 +812,16 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
  *
  * Note that if the timeline snap-distance property of the timeline containing
  * @self is set, @self will properly snap to its neighboors.
+ *
+ * Returns: %TRUE if @duration could be set.
  */
-void
+gboolean
 ges_timeline_element_set_duration (GESTimelineElement * self,
     GstClockTime duration)
 {
   GESTimelineElementClass *klass;
 
-  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -817,17 +831,19 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
       GST_TIME_ARGS (duration));
 
   if (klass->set_duration) {
-    if (klass->set_duration (self, duration)) {
+    gboolean res = klass->set_duration (self, duration);
+    if (res) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
     }
 
-    return;
+    return res;
   }
 
   GST_WARNING_OBJECT (self, "No set_duration virtual method implementation"
       " on class %s. Can not set duration %" GST_TIME_FORMAT,
       G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (duration));
+  return FALSE;
 }
 
 /**
@@ -910,13 +926,15 @@ ges_timeline_element_get_priority (GESTimelineElement * self)
  * Deprecated: All priority management is done by GES itself now.
  * To set #GESEffect priorities #ges_clip_set_top_effect_index should
  * be used.
+ *
+ * Returns: %TRUE if @priority could be set.
  */
 void
 ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
 {
   GESTimelineElementClass *klass;
 
-  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -924,16 +942,19 @@ ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
       self->priority, priority);
 
   if (klass->set_priority) {
-    if (klass->set_priority (self, priority)) {
+    gboolean res = klass->set_priority (self, priority);
+    if (res) {
       self->priority = priority;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_PRIORITY]);
     }
-    return;
+
+    return res;
   }
 
   GST_WARNING_OBJECT (self, "No set_priority virtual method implementation"
       " on class %s. Can not set priority %d", G_OBJECT_CLASS_NAME (klass),
       priority);
+  return FALSE;
 }
 
 /**

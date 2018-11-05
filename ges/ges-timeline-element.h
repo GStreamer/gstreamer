@@ -215,15 +215,15 @@ gboolean ges_timeline_element_set_parent             (GESTimelineElement *self, 
 GES_API
 gboolean ges_timeline_element_set_timeline           (GESTimelineElement *self, GESTimeline *timeline);
 GES_API
-void ges_timeline_element_set_start                  (GESTimelineElement *self, GstClockTime start);
+gboolean ges_timeline_element_set_start              (GESTimelineElement *self, GstClockTime start);
 GES_API
-void ges_timeline_element_set_inpoint                (GESTimelineElement *self, GstClockTime inpoint);
+gboolean ges_timeline_element_set_inpoint            (GESTimelineElement *self, GstClockTime inpoint);
+gboolean
+gboolean ges_timeline_element_set_duration           (GESTimelineElement *self, GstClockTime duration);
 GES_API
-void ges_timeline_element_set_duration               (GESTimelineElement *self, GstClockTime duration);
+gboolean ges_timeline_element_set_max_duration       (GESTimelineElement *self, GstClockTime maxduration);
 GES_API
-void ges_timeline_element_set_max_duration           (GESTimelineElement *self, GstClockTime maxduration);
-GES_API
-void ges_timeline_element_set_priority               (GESTimelineElement *self, guint32 priority);
+gboolean ges_timeline_element_set_priority           (GESTimelineElement *self, guint32 priority);
 
 GES_API
 GstClockTime ges_timeline_element_get_start          (GESTimelineElement *self);
