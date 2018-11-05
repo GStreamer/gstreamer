@@ -897,7 +897,7 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     gboolean delta_unit, gboolean discont, guint8 nal_header)
 {
   GstRtpH264Pay *rtph264pay;
-  guint mtu, size, max_fragment_size, pos;
+  guint mtu, size, max_fragment_size, max_fragments, pos;
   GstBuffer *outbuf;
   guint8 *payload;
   GstBufferList *list = NULL;
@@ -925,14 +925,15 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
 
   /* We keep 2 bytes for FU indicator and FU Header */
   max_fragment_size = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
-  list = gst_buffer_list_new_sized ((size / max_fragment_size) + 1);
+  max_fragments = (size + max_fragment_size - 1) / max_fragment_size;
+  list = gst_buffer_list_new_sized (max_fragments);
 
   while (end == 0) {
     guint fragment_size = size < max_fragment_size ? size : max_fragment_size;
 
     GST_DEBUG_OBJECT (basepayload,
-        "creating FU-A packet fragment_size=%u iteration=%d",
-        fragment_size, ii);
+        "creating FU-A packet %d/%u, size %u",
+        ii + 1, max_fragments, fragment_size);
 
     /* use buffer lists
      * create buffer without payload containing only the RTP header
