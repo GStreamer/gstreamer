@@ -1012,7 +1012,6 @@ gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
     gboolean delta_unit, gboolean discont)
 {
   GstRtpH264Pay *rtph264pay;
-  GstFlowReturn ret;
   GstBuffer *outbuf;
   GstRTPBuffer rtp = { NULL };
 
@@ -1031,17 +1030,11 @@ gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
   GST_BUFFER_PTS (outbuf) = pts;
   GST_BUFFER_DTS (outbuf) = dts;
 
-  if (!delta_unit)
-    /* Only the first packet sent should not have the flag */
-    delta_unit = TRUE;
-  else
+  if (delta_unit)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  if (discont) {
+  if (discont)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-    /* Only the first packet sent should have the flag */
-    discont = FALSE;
-  }
 
   gst_rtp_buffer_unmap (&rtp);
 
@@ -1050,8 +1043,7 @@ gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
   outbuf = gst_buffer_append (outbuf, paybuf);
 
   /* push the buffer to the next element */
-  ret = gst_rtp_base_payload_push (basepayload, outbuf);
-  return ret;
+  return gst_rtp_base_payload_push (basepayload, outbuf);
 }
 
 static GstFlowReturn
