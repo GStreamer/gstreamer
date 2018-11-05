@@ -68,13 +68,13 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
-#define DEFAULT_CONFIG_INTERVAL		      0
+#define DEFAULT_CONFIG_INTERVAL         0
 
 enum
 {
   PROP_0,
   PROP_SPROP_PARAMETER_SETS,
-  PROP_CONFIG_INTERVAL
+  PROP_CONFIG_INTERVAL,
 };
 
 static void gst_rtp_h264_pay_finalize (GObject * object);
@@ -1091,7 +1091,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* now loop over all NAL units and put them in a packet
    * FIXME, we should really try to pack multiple NAL units into one RTP packet
-   * if we can, especially for the config packets that wont't cause decoder 
+   * if we can, especially for the config packets that wont't cause decoder
    * latency. */
   if (avc) {
     guint nal_length_size;
@@ -1177,10 +1177,10 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       size -= 3;
 
       /* use next_start_code() to scan buffer.
-       * next_start_code() returns the offset in data, 
+       * next_start_code() returns the offset in data,
        * starting from zero to the first byte of 0.0.0.1
-       * If no start code is found, it returns the value of the 
-       * 'size' parameter. 
+       * If no start code is found, it returns the value of the
+       * 'size' parameter.
        * data is unchanged by the call to next_start_code()
        */
       next = next_start_code (data, size);
