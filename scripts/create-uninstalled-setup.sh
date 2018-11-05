@@ -116,9 +116,9 @@ do
   fi
 
   if test "$GIT_ACCESS" = "ssh"; then
-    git clone $CLONE_OPTS $REF ssh://git.freedesktop.org/git/gstreamer/$m
+    git clone $CLONE_OPTS $REF git@gitlab.freedesktop.org:gstreamer/$m
   else
-    git clone $CLONE_OPTS $REF https://anongit.freedesktop.org/git/gstreamer/$m
+    git clone $CLONE_OPTS $REF https://gitlab.freedesktop.org/gstreamer/$m.git
   fi
 
   cd $m
