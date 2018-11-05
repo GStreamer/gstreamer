@@ -733,6 +733,11 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     gboolean delta_unit, gboolean discont);
 
 static GstFlowReturn
+gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
+    GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
+    gboolean delta_unit, gboolean discont);
+
+static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GstRtpH264Pay * rtph264pay, GstClockTime dts, GstClockTime pts)
 {
@@ -888,40 +893,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     /* will fit in one packet */
     GST_DEBUG_OBJECT (basepayload,
         "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
-
-    /* create buffer without payload containing only the RTP header
-     * (memory block at index 0) */
-    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
-
-    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-
-    /* Mark the end of a frame */
-    gst_rtp_buffer_set_marker (&rtp, end_of_au);
-
-    /* timestamp the outbuffer */
-    GST_BUFFER_PTS (outbuf) = pts;
-    GST_BUFFER_DTS (outbuf) = dts;
-
-    if (!delta_unit)
-      /* Only the first packet sent should not have the flag */
-      delta_unit = TRUE;
-    else
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-    if (discont) {
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-      /* Only the first packet sent should have the flag */
-      discont = FALSE;
-    }
-
-    gst_rtp_buffer_unmap (&rtp);
-
-    /* insert payload memory block */
-    gst_rtp_copy_video_meta (rtph264pay, outbuf, paybuf);
-    outbuf = gst_buffer_append (outbuf, paybuf);
-
-    /* push the buffer to the next element */
-    ret = gst_rtp_base_payload_push (basepayload, outbuf);
+    ret = gst_rtp_h264_pay_payload_nal_single (basepayload, paybuf, dts, pts,
+        end_of_au, delta_unit, discont);
   } else {
     /* fragmentation Units FU-A */
     guint fragment_size;
@@ -1007,6 +980,54 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     ret = gst_rtp_base_payload_push_list (basepayload, list);
     gst_buffer_unref (paybuf);
   }
+  return ret;
+}
+
+static GstFlowReturn
+gst_rtp_h264_pay_payload_nal_single (GstRTPBasePayload * basepayload,
+    GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
+    gboolean delta_unit, gboolean discont)
+{
+  GstRtpH264Pay *rtph264pay;
+  GstFlowReturn ret;
+  GstBuffer *outbuf;
+  GstRTPBuffer rtp = { NULL };
+
+  rtph264pay = GST_RTP_H264_PAY (basepayload);
+
+  /* create buffer without payload containing only the RTP header
+   * (memory block at index 0) */
+  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+
+  /* Mark the end of a frame */
+  gst_rtp_buffer_set_marker (&rtp, end_of_au);
+
+  /* timestamp the outbuffer */
+  GST_BUFFER_PTS (outbuf) = pts;
+  GST_BUFFER_DTS (outbuf) = dts;
+
+  if (!delta_unit)
+    /* Only the first packet sent should not have the flag */
+    delta_unit = TRUE;
+  else
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    /* Only the first packet sent should have the flag */
+    discont = FALSE;
+  }
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  /* insert payload memory block */
+  gst_rtp_copy_video_meta (rtph264pay, outbuf, paybuf);
+  outbuf = gst_buffer_append (outbuf, paybuf);
+
+  /* push the buffer to the next element */
+  ret = gst_rtp_base_payload_push (basepayload, outbuf);
   return ret;
 }
 
