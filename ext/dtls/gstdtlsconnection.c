@@ -733,7 +733,7 @@ openssl_poll (GstDtlsConnection * self)
     if (ret == 0) {
       GST_DEBUG_OBJECT (self, "do_handshake encountered EOF");
     } else if (ret == -1) {
-      GST_WARNING_OBJECT (self, "do_handshake encountered BIO error");
+      GST_DEBUG_OBJECT (self, "do_handshake encountered BIO error");
     } else {
       GST_DEBUG_OBJECT (self, "do_handshake returned %d", ret);
     }
