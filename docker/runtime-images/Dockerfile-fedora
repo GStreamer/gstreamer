@@ -1,5 +1,8 @@
 FROM fedora:29
 
+# install the config manager
+RUN dnf install -y dnf-plugins-core
+
 # Add rpmfusion repositories and install all build dependencies of GStreamer
 # and then remove the gst packages themselves
 RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
@@ -9,37 +12,49 @@ RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-fedora-29 && \
     dnf upgrade -y && \
     dnf install -y \
-       dnf-plugins-core \
-       json-glib \
-       libunwind \
-       opencv \
-       openjpeg2 \
-       procps-ng \
+        dnf-plugins-core \
+        git \
+        meson \
+        json-glib \
+        libnice \
+        libunwind \
+        openjpeg2 \
+        procps-ng \
+        x264 \
+        x264-libs \
+        python3-gobject \
+        python3-cairo \
+        ffmpeg \
+        ffmpeg-libs \
+        xorg-x11-server-utils \
+        xorg-x11-server-Xvfb \
     && \
     dnf install -y \
-       gstreamer1 \
-       gstreamer1-plugins-base \
-       gstreamer1-plugins-good \
-       gstreamer1-plugins-good-extras \
-       gstreamer1-plugins-ugly \
-       gstreamer1-plugins-ugly-free \
-       gstreamer1-plugins-bad-nonfree \
-       gstreamer1-plugins-bad-free \
-       gstreamer1-plugins-bad-free-extras \
-       gstreamer1-plugins-bad-freeworld \
-       gstreamer1-libav \
-       gstreamer1-rtsp-server  \
+        gstreamer1 \
+        gstreamer1-plugins-base \
+        gstreamer1-plugins-good \
+        gstreamer1-plugins-good-extras \
+        gstreamer1-plugins-ugly \
+        gstreamer1-plugins-ugly-free \
+        gstreamer1-plugins-bad-nonfree \
+        gstreamer1-plugins-bad-free \
+        gstreamer1-plugins-bad-free-extras \
+        gstreamer1-plugins-bad-freeworld \
+        gstreamer1-libav \
+        gstreamer1-rtsp-server  \
     && \
     rpm -e \
-       gstreamer1-plugins-good \
-       gstreamer1-plugins-good-extras \
-       gstreamer1-plugins-ugly \
-       gstreamer1-plugins-ugly-free \
-       gstreamer1-plugins-bad-nonfree \
-       gstreamer1-plugins-bad-free \
-       gstreamer1-plugins-bad-free-extras \
-       gstreamer1-plugins-bad-freeworld \
-       gstreamer1-rtsp-server \
-       gstreamer1-libav \
+        gstreamer1 \
+        gstreamer1-plugins-base \
+        gstreamer1-plugins-good \
+        gstreamer1-plugins-good-extras \
+        gstreamer1-plugins-ugly \
+        gstreamer1-plugins-ugly-free \
+        gstreamer1-plugins-bad-nonfree \
+        gstreamer1-plugins-bad-free \
+        gstreamer1-plugins-bad-free-extras \
+        gstreamer1-plugins-bad-freeworld \
+        gstreamer1-rtsp-server \
+        gstreamer1-libav \
     && \
     dnf clean all
