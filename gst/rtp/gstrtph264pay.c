@@ -798,15 +798,12 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     gboolean delta_unit, gboolean discont)
 {
   GstRtpH264Pay *rtph264pay;
-  GstFlowReturn ret;
-  guint8 nal_header;
-  guint8 nal_type;
-  guint packet_len, mtu;
+  guint8 nal_header, nal_type;
   gboolean send_spspps;
-  guint size = gst_buffer_get_size (paybuf);
+  guint size;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
-  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtph264pay);
+  size = gst_buffer_get_size (paybuf);
 
   gst_buffer_extract (paybuf, 0, &nal_header, 1);
   nal_type = nal_header & 0x1f;
@@ -827,8 +824,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   }
 
   GST_DEBUG_OBJECT (rtph264pay,
-      "Processing Buffer with NAL TYPE=%d %" GST_TIME_FORMAT,
-      nal_type, GST_TIME_ARGS (pts));
+      "payloading NAL Unit: datasize=%u type=%d pts=%" GST_TIME_FORMAT,
+      size, nal_type, GST_TIME_ARGS (pts));
 
   /* should set src caps before pushing stuff,
    * and if we did not see enough SPS/PPS, that may not be the case */
@@ -880,6 +877,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   if (send_spspps || rtph264pay->send_spspps) {
     /* we need to send SPS/PPS now first. FIXME, don't use the pts for
      * checking when we need to send SPS/PPS but convert to running_time first. */
+    GstFlowReturn ret;
+
     rtph264pay->send_spspps = FALSE;
     ret = gst_rtp_h264_pay_send_sps_pps (basepayload, rtph264pay, dts, pts);
     if (ret != GST_FLOW_OK) {
@@ -888,20 +887,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     }
   }
 
-  packet_len = gst_rtp_buffer_calc_packet_len (size, 0, 0);
-
-  if (packet_len < mtu) {
-    /* will fit in one packet */
-    GST_DEBUG_OBJECT (basepayload,
-        "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
-    ret = gst_rtp_h264_pay_payload_nal_single (basepayload, paybuf, dts, pts,
-        end_of_au, delta_unit, discont);
-  } else {
-    /* fragmentation Units FU-A */
-    ret = gst_rtp_h264_pay_payload_nal_fragment (basepayload, paybuf, dts, pts,
-        end_of_au, delta_unit, discont, nal_header);
-  }
-  return ret;
+  return gst_rtp_h264_pay_payload_nal_fragment (basepayload, paybuf, dts, pts,
+      end_of_au, delta_unit, discont, nal_header);
 }
 
 static GstFlowReturn
@@ -923,6 +910,14 @@ gst_rtp_h264_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (rtph264pay);
+
+  if (gst_rtp_buffer_calc_packet_len (size, 0, 0) <= mtu) {
+    /* We don't need to fragment this packet */
+    GST_DEBUG_OBJECT (rtph264pay,
+        "sending NAL Unit: datasize=%u mtu=%u", size, mtu);
+    return gst_rtp_h264_pay_payload_nal_single (basepayload, paybuf, dts, pts,
+        end_of_au, delta_unit, discont);
+  }
 
   GST_DEBUG_OBJECT (basepayload,
       "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
