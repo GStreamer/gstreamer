@@ -328,6 +328,30 @@ gst_query_replace (GstQuery **old_query, GstQuery *new_query)
   return gst_mini_object_replace ((GstMiniObject **) old_query, (GstMiniObject *) new_query);
 }
 
+/**
+ * gst_query_take:
+ * @old_query: (inout) (transfer full) (nullable): pointer to a
+ *     pointer to a #GstQuery to be stolen.
+ * @new_query: (allow-none) (transfer full): pointer to a #GstQuery that will
+ *     replace the query pointed to by @old_query.
+ *
+ * Modifies a pointer to a #GstQuery to point to a different #GstQuery. This
+ * function is similar to gst_query_replace() except that it takes ownership of
+ * @new_query.
+ *
+ * Either @new_query or the #GstQuery pointed to by @old_query may be %NULL.
+ *
+ * Returns: %TRUE if @new_query was different from @old_query
+ *
+ * Since: 1.16
+ */
+static inline gboolean
+gst_query_take (GstQuery **old_query, GstQuery *new_query)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_query,
+      (GstMiniObject *) new_query);
+}
+
 /* application specific query */
 
 GST_API
