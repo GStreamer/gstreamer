@@ -28,8 +28,8 @@ real live maintainer, or some actual wide use.
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-bad"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-bad"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-plugins-bad"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-bad"/>
    </GitRepository>
  </repository>
 
