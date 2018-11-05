@@ -172,38 +172,6 @@ def test_search_user_namespace():
     res = search_user_namespace("alatiera", "404-project-not-found")
     assert res is None
 
-# Documentation: https://docs.gitlab.com/ee/api/search.html#group-search-api
-def search_group_namespace(group_id: str, project: str) -> Dict[str, str]:
-    print(f"Searching for {project} project in @{group_id} group namespace")
-    path = f"groups/{group_id}/search?scope=projects&search={project}"
-    return request(path)
-
-
-@preserve_ci_vars
-def test_search_group_namespace():
-    import pytest
-    try:
-        instance = get_hostname(os.environ['CI_PROJECT_URL'])
-        # This tests need to authenticate with the gitlab instace,
-        # and its hardcoded to check for the gitlab-org which exists
-        # on gitlab.com
-        # This can be changed to a gstreamer once its migrated to gitlab.fd.o
-        if instance != "gitlab.freedesktop.org":
-            # too lazy to use a different error
-            raise KeyError
-    except KeyError:
-        pytest.skip("Need to be authenticated with gitlab to succed")
-
-    os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gstreamer"
-    group = "gstreamer"
-
-    lab = search_group_namespace(group, "gstreamer")
-    assert lab is not None
-    assert lab['path'] == 'gstreamer'
-
-    res = search_user_namespace(group, "404-project-not-found")
-    assert res is None
-
 
 def get_hostname(url: str) -> str:
     return urlparse(url).hostname
@@ -234,25 +202,6 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
 
             return 'user', branch['commit']['id']
         print(f"Did not found user branch named {branchname}")
-
-    # This won't work until gstreamer migrates to gitlab
-    # Else check the upstream gstreamer repository
-    project = search_group_namespace('gstreamer', module)
-    if project:
-        print(f"Project found in Gstreamer upstream, id: {id}")
-        id = project['id']
-        # If we have a branch with same name, use it.
-        branch = get_project_branch(id, branchname)
-        if branch is not None:
-            print("Found matching branch in upstream gst repo")
-            print(f"gstreamer/{branchname}")
-            return 'gstreamer', branch['commit']['id']
-
-        branch = get_project_branch(id, 'master')
-        if branch is not None:
-            # print("Falling back to master branch in upstream repo")
-            print('gstreamer/master')
-            return 'gstreamer', branch.attributes['commit']['id']
 
     print('Falling back to origin/master')
     return 'origin', 'master'
