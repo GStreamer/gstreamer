@@ -349,12 +349,13 @@ gst_cc_extractor_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstCCExtractor *filter = (GstCCExtractor *) parent;
   GstFlowReturn flow = GST_FLOW_OK;
   GstVideoCaptionMeta *cc_meta;
+  gpointer iter = NULL;
 
-  cc_meta = gst_buffer_get_video_caption_meta (buf);
-  if (cc_meta)
+  while ((cc_meta =
+          (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buf, &iter,
+              GST_VIDEO_CAPTION_META_API_TYPE)) && flow == GST_FLOW_OK) {
     flow = gst_cc_extractor_handle_meta (filter, buf, cc_meta);
-  else
-    GST_DEBUG_OBJECT (filter, "No CC meta on buffer");
+  }
 
   /* If there's an issue handling the CC, return immediately */
   if (flow != GST_FLOW_OK) {
