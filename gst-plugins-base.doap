@@ -29,8 +29,8 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <repository>
    <GitRepository>
-     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-base"/>
-     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-base"/>
+     <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gst-plugins-base"/>
+     <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gst-plugins-base"/>
    </GitRepository>
  </repository>
 
