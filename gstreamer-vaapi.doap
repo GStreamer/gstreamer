@@ -20,8 +20,8 @@
 
   <repository>
     <GitRepository>
-      <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gstreamer-vaapi"/>
-      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gstreamer-vaapi"/>
+      <location rdf:resource="git://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi"/>
+      <browse rdf:resource="http://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi"/>
     </GitRepository>
   </repository>
 
