@@ -529,29 +529,17 @@ d3d_calculate_buffer_size (GstVideoInfo * info, D3DLOCKED_RECT * lr,
 {
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_BGR:
-      offset[0] = 0;
-      stride[0] = lr->Pitch;
-      *size = lr->Pitch * GST_VIDEO_INFO_HEIGHT (info) * 3;
-      break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_RGBA:
-      offset[0] = 0;
-      stride[0] = lr->Pitch;
-      *size = lr->Pitch * GST_VIDEO_INFO_HEIGHT (info) * 4;
-      break;
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_RGB15:
-      offset[0] = 0;
-      stride[0] = lr->Pitch;
-      *size = lr->Pitch * GST_VIDEO_INFO_HEIGHT (info) * 2;
-      break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
       offset[0] = 0;
       stride[0] = lr->Pitch;
-      *size = lr->Pitch * GST_VIDEO_INFO_HEIGHT (info) * 2;
+      *size = lr->Pitch * GST_VIDEO_INFO_HEIGHT (info);
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
