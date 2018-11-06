@@ -1781,7 +1781,7 @@ parse_scale_and_speed (GstRTSPClient * client, GstRTSPContext * ctx,
   if (status != GST_RTSP_STS_OK)
     return status;
 
-  if (scale_present) {
+  if (*scale_present) {
     GST_DEBUG ("got Scale %f", scale);
     if (scale == 0)
       goto bad_scale_value;
@@ -1795,7 +1795,7 @@ parse_scale_and_speed (GstRTSPClient * client, GstRTSPContext * ctx,
   if (status != GST_RTSP_STS_OK)
     return status;
 
-  if (speed_present) {
+  if (*speed_present) {
     GST_DEBUG ("got Speed %f", speed);
     if (speed <= 0)
       goto bad_speed_value;
