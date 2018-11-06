@@ -782,6 +782,9 @@ create_session (GstRtpBin * rtpbin, gint id)
   if (!(storage = gst_element_factory_make ("rtpstorage", NULL)))
     goto no_storage;
 
+  /* need to sink the storage or otherwise signal handlers from bindings will
+   * take ownership of it and we don't own it anymore */
+  gst_object_ref_sink (storage);
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_STORAGE], 0, storage,
       id);
 
@@ -846,6 +849,10 @@ create_session (GstRtpBin * rtpbin, gint id)
   gst_bin_add (GST_BIN_CAST (rtpbin), sess->rtp_funnel);
   gst_bin_add (GST_BIN_CAST (rtpbin), sess->rtcp_funnel);
   gst_bin_add (GST_BIN_CAST (rtpbin), storage);
+
+  /* unref the storage again, the bin has a reference now and
+   * we don't need it anymore */
+  gst_object_unref (storage);
 
   GST_OBJECT_LOCK (rtpbin);
   target = GST_STATE_TARGET (rtpbin);
@@ -1850,12 +1857,19 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set (buffer, "max-ts-offset-adjustment",
       rtpbin->max_ts_offset_adjustment, NULL);
 
+  /* need to sink the jitterbufer or otherwise signal handlers from bindings will
+   * take ownership of it and we don't own it anymore */
+  gst_object_ref_sink (buffer);
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
       buffer, session->id, ssrc);
 
   if (!rtpbin->ignore_pt)
     gst_bin_add (GST_BIN_CAST (rtpbin), demux);
   gst_bin_add (GST_BIN_CAST (rtpbin), buffer);
+
+  /* unref the jitterbuffer again, the bin has a reference now and
+   * we don't need it anymore */
+  gst_object_unref (buffer);
 
   /* link stuff */
   if (demux)
