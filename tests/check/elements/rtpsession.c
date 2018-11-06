@@ -1288,6 +1288,7 @@ sdes_done:
 GST_START_TEST (test_change_sent_sdes)
 {
   SessionHarness *h = session_harness_new ();
+  GstStructure *s;
   GstBuffer *buf;
   gboolean ret;
   GstFlowReturn res;
@@ -1297,9 +1298,10 @@ GST_START_TEST (test_change_sent_sdes)
   /* and that no RTCP has been pushed */
   fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->rtcp_h));
 
-  g_object_set (h->internal_session, "sdes",
-      gst_structure_new ("application/x-rtp-source-sdes",
-          "other", G_TYPE_STRING, "first", NULL), NULL);
+  s = gst_structure_new ("application/x-rtp-source-sdes",
+          "other", G_TYPE_STRING, "first", NULL);
+  g_object_set (h->internal_session, "sdes", s , NULL);
+  gst_structure_free (s);
 
   /* then ask explicitly to send RTCP */
   g_signal_emit_by_name (h->internal_session,
@@ -1315,9 +1317,10 @@ GST_START_TEST (test_change_sent_sdes)
   gst_buffer_unref (buf);
 
   /* Change the SDES */
-  g_object_set (h->internal_session, "sdes",
-      gst_structure_new ("application/x-rtp-source-sdes",
-          "other", G_TYPE_STRING, "second", NULL), NULL);
+  s = gst_structure_new ("application/x-rtp-source-sdes",
+          "other", G_TYPE_STRING, "second", NULL);
+  g_object_set (h->internal_session, "sdes", s, NULL);
+  gst_structure_free (s);
 
   /* Send an RTP packet */
   buf = generate_test_buffer (22, 10000);
