@@ -69,7 +69,8 @@ def preserve_ci_vars(func):
 
 
 def request_raw(path: str, headers: Dict[str, str], project_url: str) -> List[Dict[str, str]]:
-    base_url: str = get_hostname(project_url)
+    # ex. base_url = "gitlab.freedesktop.org"
+    base_url: str = urlparse(project_url).hostname
     url: str = f"https://{base_url}/api/v4/{path}"
     print(f"GET {url}")
     print(f"Headers: {headers}")
@@ -175,18 +176,6 @@ def test_search_user_namespace():
 
     res = search_user_namespace("alatiera", "404-project-not-found")
     assert res is None
-
-
-def get_hostname(url: str) -> str:
-    return urlparse(url).hostname
-
-
-def test_get_hostname():
-    gitlab = 'https://gitlab.com/example/a_project'
-    assert get_hostname(gitlab) == 'gitlab.com'
-
-    fdo = 'https://gitlab.freedesktop.org/example/a_project'
-    assert get_hostname(fdo) == 'gitlab.freedesktop.org'
 
 
 def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, str]:
