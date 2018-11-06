@@ -42,7 +42,12 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#else
 #include <string.h>
+#include <errno.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_connection_debug);
 #define GST_CAT_DEFAULT gst_dtls_connection_debug
@@ -774,7 +779,19 @@ openssl_poll (GstDtlsConnection * self)
       GST_LOG_OBJECT (self, "SSL wants write");
       break;
     case SSL_ERROR_SYSCALL:{
-      GST_LOG_OBJECT (self, "SSL syscall error");
+      gchar message[1024] = "<unknown>";
+      gint syserror;
+#ifdef G_OS_WIN32
+      syserror = WSAGetLastError ();
+      FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM, NULL, syserror, 0, message,
+          sizeof message, NULL);
+#else
+      syserror = errno;
+      strerror_r (syserror, message, sizeof message);
+#endif
+      GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT,
+          syserror != 0 ? GST_LEVEL_WARNING : GST_LEVEL_LOG,
+          self, "SSL syscall error: errno %d: %s", syserror, message);
       break;
     }
     default:
