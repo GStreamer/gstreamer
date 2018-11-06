@@ -584,7 +584,10 @@ set_drm_property (gint fd, guint32 object, guint32 object_type,
     /* GstStructure parser limits the set of supported character, so we
      * replace the invalid characters with '-'. In DRM, this is generally
      * replacing spaces into '-'. */
-    g_strcanon (property->name, G_CSET_a_2_z G_CSET_A_2_Z G_CSET_DIGITS, '-');
+    g_strcanon (property->name, G_CSET_a_2_z G_CSET_A_2_Z G_CSET_DIGITS "_",
+        '-');
+
+    GST_LOG ("found property %s (looking for %s)", property->name, prop_name);
 
     if (!strcmp (property->name, prop_name)) {
       drmModeObjectSetProperty (fd, object, object_type,
