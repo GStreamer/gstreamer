@@ -32,6 +32,12 @@
 #include "gstvaapisurface.h"
 #include "video-format.h"
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+# define VIDEO_VA_ENDIANESS VA_MSB_FIRST
+#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define VIDEO_VA_ENDIANESS VA_LSB_FIRST
+#endif
+
 typedef struct
 {
   GstVideoFormat format;
@@ -39,47 +45,48 @@ typedef struct
   VAImageFormat va_format;
 } GstVideoFormatMap;
 
-#define DEF_YUV(FORMAT, FOURCC, ENDIAN, BPP, SUB)                       \
+#define DEF_YUV(FORMAT, FOURCC, BPP, SUB)                               \
   { G_PASTE(GST_VIDEO_FORMAT_,FORMAT),                                  \
     G_PASTE(GST_VAAPI_CHROMA_TYPE_YUV,SUB),                             \
-    { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, }, }
+    { VA_FOURCC FOURCC, VIDEO_VA_ENDIANESS, BPP, }, }
 
-#define DEF_RGB(FORMAT, FOURCC, ENDIAN, BPP, DEPTH, R,G,B,A)            \
+#define DEF_RGB(FORMAT, FOURCC, BPP, DEPTH, R,G,B,A)                    \
   { G_PASTE(GST_VIDEO_FORMAT_,FORMAT),                                  \
     G_PASTE(GST_VAAPI_CHROMA_TYPE_RGB,BPP),                             \
-    { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
+    { VA_FOURCC FOURCC, VIDEO_VA_ENDIANESS, BPP, DEPTH, R,G,B,A }, }
 
 /* Image formats, listed in HW order preference */
 /* *INDENT-OFF* */
 static const GstVideoFormatMap gst_vaapi_video_formats[] = {
-  DEF_YUV (NV12, ('N', 'V', '1', '2'), LSB, 12, 420),
-  DEF_YUV (YV12, ('Y', 'V', '1', '2'), LSB, 12, 420),
-  DEF_YUV (I420, ('I', '4', '2', '0'), LSB, 12, 420),
-  DEF_YUV (YUY2, ('Y', 'U', 'Y', '2'), LSB, 16, 422),
-  DEF_YUV (UYVY, ('U', 'Y', 'V', 'Y'), LSB, 16, 422),
-  DEF_YUV (Y210, ('Y', '2', '1', '0'), LSB, 32, 422_10BPP),
-  DEF_YUV (AYUV, ('A', 'Y', 'U', 'V'), LSB, 32, 444),
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  DEF_RGB (ARGB, ('A', 'R', 'G', 'B'), MSB, 32,
+  /* YUV formats */
+  DEF_YUV (NV12, ('N', 'V', '1', '2'), 12, 420),
+  DEF_YUV (YV12, ('Y', 'V', '1', '2'), 12, 420),
+  DEF_YUV (I420, ('I', '4', '2', '0'), 12, 420),
+  DEF_YUV (YUY2, ('Y', 'U', 'Y', '2'), 16, 422),
+  DEF_YUV (UYVY, ('U', 'Y', 'V', 'Y'), 16, 422),
+  DEF_YUV (Y210, ('Y', '2', '1', '0'), 32, 422_10BPP),
+  DEF_YUV (AYUV, ('A', 'Y', 'U', 'V'), 32, 444),
+  DEF_YUV (GRAY8, ('Y', '8', '0', '0'), 8, 400),
+  DEF_YUV (P010_10LE, ('P', '0', '1', '0'), 24, 420_10BPP),
+  /* RGB formats */
+  DEF_RGB (ARGB, ('A', 'R', 'G', 'B'), 32,
       32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
-  DEF_RGB (ABGR, ('A', 'B', 'G', 'R'), MSB, 32,
+  DEF_RGB (ABGR, ('A', 'B', 'G', 'R'), 32,
       32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000),
-  DEF_RGB (xRGB, ('X', 'R', 'G', 'B'), MSB, 32,
+  DEF_RGB (xRGB, ('X', 'R', 'G', 'B'), 32,
       24, 0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
-  DEF_RGB (xBGR, ('X', 'B', 'G', 'R'), MSB, 32,
+  DEF_RGB (xBGR, ('X', 'B', 'G', 'R'), 32,
       24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
-#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-  DEF_RGB (BGRA, ('B', 'G', 'R', 'A'), LSB, 32,
+  DEF_RGB (BGRA, ('B', 'G', 'R', 'A'), 32,
       32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
-  DEF_RGB (RGBA, ('R', 'G', 'B', 'A'), LSB, 32,
+  DEF_RGB (RGBA, ('R', 'G', 'B', 'A'), 32,
       32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000),
-  DEF_RGB (BGRx, ('B', 'G', 'R', 'X'), LSB, 32,
+  DEF_RGB (BGRx, ('B', 'G', 'R', 'X'), 32,
       24, 0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
-  DEF_RGB (RGBx, ('R', 'G', 'B', 'X'), LSB, 32,
+  DEF_RGB (RGBx, ('R', 'G', 'B', 'X'), 32,
       24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
-#endif
-  DEF_YUV (GRAY8, ('Y', '8', '0', '0'), LSB, 8, 400),
-  DEF_YUV (P010_10LE, ('P', '0', '1', '0'), LSB, 24, 420_10BPP),
+  DEF_RGB (ARGB, ('A', 'R', 'G', 'B'), 32,
+      32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
   {0,}
 };
 /* *INDENT-ON* */
