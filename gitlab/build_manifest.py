@@ -8,21 +8,25 @@ from typing import Dict, Tuple, List
 from urllib.parse import urlparse
 # from pprint import pprint
 
-GSTREAMER_MODULES: List[str] = [
-    # 'orc',
-    'gst-build',
-    'gstreamer',
-    'gst-plugins-base',
-    'gst-plugins-good',
-    'gst-plugins-bad',
-    'gst-plugins-ugly',
-    'gst-libav',
-    'gst-devtools',
-    'gst-docs',
-    'gst-editing-services',
-    'gst-omx',
-    'gst-python',
-    'gst-rtsp-server'
+# Each item is a Tuple of (project-path, project-id)
+# ex. https://gitlab.freedesktop.org/gstreamer/gst-build
+# has project path 'gst-build' and project-id '1342'
+# TODO: Named tuples are awesome
+GSTREAMER_MODULES: List[Tuple[str, int]] = [
+    # ('orc', 1360),
+    ('gst-build', 1342),
+    ('gstreamer', 1357),
+    ('gst-plugins-base', 1352),
+    ('gst-plugins-good', 1353),
+    ('gst-plugins-bad', 1351),
+    ('gst-plugins-ugly', 1354),
+    ('gst-libav', 1349),
+    ('gst-devtools', 1344),
+    ('gst-docs', 1345),
+    ('gst-editing-services', 1346),
+    ('gst-omx', 1350),
+    ('gst-python', 1355),
+    ('gst-rtsp-server', 1362),
 ]
 
 MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
@@ -185,9 +189,9 @@ def test_get_hostname():
     assert get_hostname(fdo) == 'gitlab.freedesktop.org'
 
 
-def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
+def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, str]:
     user_login: str = os.environ["GITLAB_USER_LOGIN"]
-    project = search_user_namespace(user_login, module)
+    project = search_user_namespace(user_login, module[0])
 
     # Find a fork in the User's namespace
     if project:
@@ -203,8 +207,24 @@ def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
             return 'user', branch['commit']['id']
         print(f"Did not found user branch named {branchname}")
 
-    print('Falling back to origin/master')
-    return 'origin', 'master'
+    # Check upstream project for a branch
+    branch = get_project_branch(module[1], branchname)
+    if branch is not None:
+        print("Found mathcing branch in upstream project")
+        print(f"gstreamer/{branchname}")
+        return 'gstreamer', branch['commit']['id']
+
+    # Fallback to using upstream master branch
+    branch = get_project_branch(module[1], 'master')
+    if branch is not None:
+        print("Falling back to master branch on upstream project")
+        print(f"gstreamer/master")
+        return 'gstreamer', branch['commit']['id']
+
+    # This should never occur given the upstream fallback above
+    print("If something reaches that point, please file a bug")
+    print("https://gitlab.freedesktop.org/gstreamer/gst-ci/issues")
+    assert False
 
 
 @preserve_ci_vars
@@ -214,19 +234,19 @@ def test_find_repository_sha():
     del os.environ["READ_PROJECTS_TOKEN"]
 
     # This should find the repository in the user namespace
-    remote, git_ref = find_repository_sha("gst-plugins-good", "1.2")
+    remote, git_ref = find_repository_sha(("gst-plugins-good", 1353), "1.2")
     assert remote == "user"
     assert git_ref == "08ab260b8a39791e7e62c95f4b64fd5b69959325"
 
     # This should fallback to upstream master branch since no matching branch was found
-    remote, git_ref = find_repository_sha("gst-plugins-good", "totally-valid-branch-name")
-    assert remote == "origin"
-    assert git_ref == "master"
+    remote, git_ref = find_repository_sha(("gst-plugins-good", 1353), "totally-valid-branch-name")
+    assert remote == "gstreamer"
 
     # This should fallback to upstream master branch since no repository was found
-    remote, git_ref = find_repository_sha("totally-valid-project-name", "1.2")
-    assert remote == "origin"
-    assert git_ref == "master"
+    remote, git_ref = find_repository_sha(("totally-valid-project-name", 42), "1.2")
+    assert remote == "gstreamer"
+    # This is now the sha of the last commit
+    # assert git_ref == "master"
 
 
 if __name__ == "__main__":
@@ -240,7 +260,7 @@ if __name__ == "__main__":
         print(f"Checking {module}:", end=' ')
         current_branch: str = os.environ['CI_COMMIT_REF_NAME']
         remote, revision = find_repository_sha(module, current_branch)
-        projects += project_template.format(module, remote, revision)
+        projects += project_template.format(module[0], remote, revision)
 
     with open('manifest.xml', mode='w') as manifest:
         print(MANIFEST_TEMPLATE.format(user_remote_url, projects), file=manifest)
