@@ -4400,6 +4400,7 @@ on_message_sent (gpointer user_data)
       g_source_set_callback (idle_src, (GSourceFunc) cb_send_tcp_message,
           g_object_ref (stream), g_object_unref);
       g_source_attach (idle_src, priv->watch_context);
+      g_source_unref (idle_src);
     } else {
       /* appsink is running this callback */
       send_tcp_message (stream, idx);
