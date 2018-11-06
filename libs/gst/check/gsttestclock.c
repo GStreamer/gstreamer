@@ -1035,6 +1035,55 @@ gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
 }
 
 /**
+ * gst_test_clock_timed_wait_for_multiple_pending_ids:
+ * @test_clock: #GstTestClock for which to await having enough pending clock
+ * @count: the number of pending clock notifications to wait for
+ * @timeout_ms: the timeout in milliseconds
+ * @pending_list: (out) (element-type Gst.ClockID) (transfer full) (allow-none): Address
+ *     of a #GList pointer variable to store the list of pending #GstClockIDs
+ *     that expired, or %NULL
+ *
+ * Blocks until at least @count clock notifications have been requested from
+ * @test_clock, or the timeout expires.
+ *
+ * MT safe.
+ *
+ * Returns: a @gboolean %TRUE if the waits have been registered, %FALSE if not.
+ * (Could be that it timed out waiting or that more waits than waits was found)
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_test_clock_timed_wait_for_multiple_pending_ids (GstTestClock * test_clock,
+    guint count, guint timeout_ms, GList ** pending_list)
+{
+  GstTestClockPrivate *priv;
+  gint64 timeout = g_get_monotonic_time () +
+      timeout_ms * (G_USEC_PER_SEC / 1000);
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), FALSE);
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
+  GST_OBJECT_LOCK (test_clock);
+
+  while (g_list_length (priv->entry_contexts) < count &&
+      g_get_monotonic_time () < timeout) {
+    g_cond_wait_until (&priv->entry_added_cond,
+        GST_OBJECT_GET_LOCK (test_clock), timeout);
+  }
+
+  if (pending_list)
+    *pending_list = gst_test_clock_get_pending_id_list_unlocked (test_clock);
+
+  ret = (g_list_length (priv->entry_contexts) == count);
+
+  GST_OBJECT_UNLOCK (test_clock);
+
+  return ret;
+}
+
+/**
  * gst_test_clock_process_id_list:
  * @test_clock: #GstTestClock for which to process the pending IDs
  * @pending_list: (element-type Gst.ClockID) (transfer none) (allow-none): List

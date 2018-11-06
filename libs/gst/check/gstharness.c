@@ -1364,30 +1364,15 @@ gst_harness_set_time (GstHarness * h, GstClockTime time)
  * MT safe.
  *
  * Returns: a @gboolean %TRUE if the waits have been registered, %FALSE if not.
- * (Could be that it timed out waiting or that more waits then waits was found)
+ * (Could be that it timed out waiting or that more waits than waits was found)
  *
  * Since: 1.6
  */
 gboolean
 gst_harness_wait_for_clock_id_waits (GstHarness * h, guint waits, guint timeout)
 {
-  GstTestClock *testclock = h->priv->testclock;
-  gint64 start_time;
-  gboolean ret;
-
-  start_time = g_get_monotonic_time ();
-  while (gst_test_clock_peek_id_count (testclock) < waits) {
-    gint64 time_spent;
-
-    g_usleep (G_USEC_PER_SEC / 1000);
-    time_spent = g_get_monotonic_time () - start_time;
-    if ((time_spent / G_USEC_PER_SEC) > timeout)
-      break;
-  }
-
-  ret = (waits == gst_test_clock_peek_id_count (testclock));
-
-  return ret;
+  return gst_test_clock_timed_wait_for_multiple_pending_ids (h->priv->testclock,
+      waits, timeout * 1000, NULL);
 }
 
 /**

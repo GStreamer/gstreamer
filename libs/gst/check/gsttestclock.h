@@ -122,6 +122,12 @@ void          gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_
                                                             GList       ** pending_list);
 
 GST_CHECK_API
+gboolean      gst_test_clock_timed_wait_for_multiple_pending_ids (GstTestClock * test_clock,
+                                                                  guint          count,
+                                                                  guint          timeout_ms,
+                                                                  GList       ** pending_list);
+
+GST_CHECK_API
 guint         gst_test_clock_process_id_list (GstTestClock * test_clock,
                                               const GList  * pending_list);
 
