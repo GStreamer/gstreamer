@@ -1768,7 +1768,8 @@ parse_header_failed:
  * (rate * scale * speed) */
 static GstRTSPStatusCode
 parse_scale_and_speed (GstRTSPClient * client, GstRTSPContext * ctx,
-    gboolean * scale_present, gboolean * speed_present, gdouble * rate)
+    gboolean * scale_present, gboolean * speed_present, gdouble * rate,
+    GstSeekFlags * flags)
 {
   gdouble scale = 1.0;
   gdouble speed = 1.0;
@@ -1786,6 +1787,9 @@ parse_scale_and_speed (GstRTSPClient * client, GstRTSPContext * ctx,
     if (scale == 0)
       goto bad_scale_value;
     *rate *= scale;
+
+    if (ABS (scale) != 1.0)
+      *flags |= GST_SEEK_FLAG_TRICKMODE;
   }
 
   GST_DEBUG ("rate after parsing Scale %f", *rate);
@@ -1865,7 +1869,7 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
    * rate from the resulting segment as values for the speed and scale headers
    * respectively */
   rtsp_status_code = parse_scale_and_speed (client, ctx, scale_present,
-      speed_present, &rate);
+      speed_present, &rate, &flags);
   if (rtsp_status_code != GST_RTSP_STS_OK)
     goto scale_speed_failed;
 
