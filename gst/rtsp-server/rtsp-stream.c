@@ -3495,7 +3495,7 @@ stats:
       goto no_stats;
 
     if (seq)
-      gst_structure_get_uint (stats, "seqnum", seq);
+      gst_structure_get_uint (stats, "seqnum-offset", seq);
 
     if (rtptime)
       gst_structure_get_uint (stats, "timestamp", rtptime);
