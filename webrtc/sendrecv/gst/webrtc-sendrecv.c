@@ -355,6 +355,9 @@ start_pipeline (void)
    * added by us too, see on_server_message() */
   g_signal_connect (webrtc1, "on-ice-candidate",
       G_CALLBACK (send_ice_candidate_message), NULL);
+
+  gst_element_set_state (pipe1, GST_STATE_READY);
+
   g_signal_emit_by_name (webrtc1, "create-data-channel", "channel", NULL,
       &send_channel);
   if (send_channel) {
