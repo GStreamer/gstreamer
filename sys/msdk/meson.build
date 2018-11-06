@@ -34,7 +34,7 @@ have_msdk = false
 msdk_dep = []
 
 if msdk_root != ''
-  msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64']
+  msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64', msdk_root + '/lib64']
   msdk_incdir = include_directories(msdk_root + '/include')
   msdk_lib = cxx.find_library('mfx', dirs: msdk_libdir, required: false)
   if host_machine.system() == 'windows'
