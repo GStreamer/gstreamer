@@ -150,11 +150,12 @@ do_pad_query_pre (GstTracer * self, guint64 ts, GstPad * pad, GstQuery * query)
 }
 
 static void
-do_pad_query_post (GstTracer * self, guint64 ts, GstPad * pad, gboolean res)
+do_pad_query_post (GstTracer * self, guint64 ts, GstPad * pad, GstQuery * query,
+    gboolean res)
 {
   do_log (GST_CAT_QUERY, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", query=%" GST_PTR_FORMAT
+      ", res=%d", GST_TIME_ARGS (ts), pad, query, res);
 }
 
 static void
@@ -186,11 +187,11 @@ do_element_query_pre (GstTracer * self, guint64 ts, GstElement * elem,
 
 static void
 do_element_query_post (GstTracer * self, guint64 ts, GstElement * elem,
-    gboolean res)
+    GstQuery * query, gboolean res)
 {
   do_log (GST_CAT_QUERY, GST_FUNCTION, (GObject *) elem,
-      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), elem, res);
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", query=%"
+      GST_PTR_FORMAT ", res=%d", GST_TIME_ARGS (ts), elem, query, res);
 }
 
 static void
