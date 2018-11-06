@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gst-ffmpeg
+url=https://gitlab.freedesktop.org/gstreamer/gst-ffmpeg.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gst-ffmpeg.git
+revision=master

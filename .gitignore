@@ -1,7 +1,7 @@
 *build*/
 gst-devtools
 gst-editing-services
-gst-libav
+gst-ffpeg
 gst-omx
 gst-plugins-bad
 gst-plugins-base
@@ -16,7 +16,7 @@ __pycache__
 meson/
 subprojects/gst-devtools/
 subprojects/gst-editing-services/
-subprojects/gst-libav/
+subprojects/gst-ffmpeg/
 subprojects/gst-omx/
 subprojects/gst-plugins-bad/
 subprojects/gst-plugins-base/

@@ -1,5 +1,5 @@
 option('python', type : 'feature', value : 'auto')
-option('libav', type : 'feature', value : 'auto')
+option('ffmpeg', type : 'feature', value : 'auto')
 option('ugly', type : 'feature', value : 'auto')
 option('bad', type : 'feature', value : 'auto')
 option('devtools', type : 'feature', value : 'auto')
