@@ -85,7 +85,7 @@ GST_END_TEST;
 #ifndef GST_REMOVE_DEPRECATED
 GST_START_TEST (test_gst_uri_construct)
 {
-  gchar *l;
+  gchar *l = NULL;
 
   /* URI with no protocol or empty protocol should return empty string */
   ASSERT_CRITICAL (l = gst_uri_construct (NULL, "/path/to/file"));

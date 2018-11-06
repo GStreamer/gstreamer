@@ -617,6 +617,10 @@ G_STMT_START {                                                  \
 #define THREAD_TEST_RUNNING()   (!!_gst_check_threads_running)
 
 /* additional assertions */
+
+#if GST_DISABLE_GLIB_CHECKS
+#define ASSERT_CRITICAL(code)
+#else
 #define ASSERT_CRITICAL(code)                                   \
 G_STMT_START {                                                  \
   _gst_check_expecting_log = TRUE;                              \
@@ -627,6 +631,7 @@ G_STMT_START {                                                  \
         "Expected g_critical, got nothing", NULL);              \
   _gst_check_expecting_log = FALSE;                             \
 } G_STMT_END
+#endif /* GST_DISABLE_GLIB_CHECKS */
 
 #define ASSERT_WARNING(code)                                    \
 G_STMT_START {                                                  \

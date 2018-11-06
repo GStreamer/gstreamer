@@ -949,6 +949,7 @@ GST_START_TEST (test_ghost_pads_src_link_unlink)
   fail_unless (unlinked_count2 == 0);
 
   /* this should fail with a critial */
+  dummy = NULL;
   ASSERT_CRITICAL (dummy = gst_ghost_pad_new ("ghostpad", srcpad));
   fail_unless (dummy == NULL);
   fail_unless (linked_count1 == 1);

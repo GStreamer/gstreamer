@@ -188,6 +188,7 @@ GST_START_TEST (test_from_string)
   gst_structure_free (structure);
 
   s = "0.10:decoder-video/mpeg, abc=(boolean)false";
+  structure = NULL;
   ASSERT_CRITICAL (structure = gst_structure_from_string (s, NULL));
   fail_unless (structure == NULL, "Could not get structure from string %s", s);
 
@@ -223,7 +224,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_to_string)
 {
-  GstStructure *st1;
+  GstStructure *st1 = NULL;
 
   ASSERT_CRITICAL (st1 = gst_structure_new_empty ("Foo\nwith-newline"));
   fail_unless (st1 == NULL);
@@ -426,6 +427,7 @@ GST_START_TEST (test_structure_new)
           ("0.10:decoder-video/mpeg")));
 
   /* make sure we bail out correctly in case of an error or if parsing fails */
+  s = NULL;
   ASSERT_CRITICAL (s = gst_structure_new ("^joo\nba\ndoo^",
           "abc", G_TYPE_BOOLEAN, FALSE, NULL));
   fail_unless (s == NULL);

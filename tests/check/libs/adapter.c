@@ -40,7 +40,7 @@ GST_START_TEST (test_peek1)
   GstBuffer *buffer;
   guint avail;
   GstMapInfo info;
-  const guint8 *data1, *data2, *idata;
+  const guint8 *data1 = NULL, *data2 = NULL, *idata = NULL;
 
   adapter = gst_adapter_new ();
   fail_if (adapter == NULL);

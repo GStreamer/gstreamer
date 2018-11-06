@@ -91,6 +91,28 @@
  */
 @GST_DISABLE_REGISTRY_DEFINE@
 
+/**
+ * GST_DISABLE_CAST_CHECKS:
+ *
+ * Disable run-time GObject cast checks
+ */
+#define GST_DISABLE_CAST_CHECKS @GST_DISABLE_CAST_CHECKS_DEFINE@
+
+/**
+ * GST_DISABLE_GLIB_ASSERTS:
+ *
+ * Disable GLib assertion
+ */
+#define GST_DISABLE_GLIB_ASSERTS @GST_DISABLE_GLIB_ASSERTS_DEFINE@
+
+/**
+ * GST_DISABLE_GLIB_CHECKS:
+ *
+ * Disable GLib checks such as API guards
+ */
+#define GST_DISABLE_GLIB_CHECKS @GST_DISABLE_GLIB_CHECKS_DEFINE@
+
+
 /* FIXME: test and document these! */
 /* Configures the use of external plugins */
 @GST_DISABLE_PLUGIN_DEFINE@

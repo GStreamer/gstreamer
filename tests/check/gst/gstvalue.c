@@ -2954,16 +2954,19 @@ GST_START_TEST (test_deserialize_int_range)
   str =
       g_strdup_printf ("foo/bar, range=[ 1, %" G_GINT64_FORMAT " ];",
       (gint64) G_MAXINT + 1);
+  s = NULL;
   ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
   g_free (str);
-  gst_structure_free (s);
+  if (s)
+    gst_structure_free (s);
   str =
       g_strdup_printf ("foo/bar, range=[ %" G_GINT64_FORMAT ", %"
       G_GINT64_FORMAT " ];", (gint64) G_MAXINT, (gint64) G_MAXINT + 1);
   ASSERT_CRITICAL (s = gst_structure_from_string (str, NULL));
   end = NULL;
   g_free (str);
-  gst_structure_free (s);
+  if (s)
+    gst_structure_free (s);
 
   /* check a valid int64_range deserialization. Those ranges need to
    * be explicit about their storage type. */
@@ -2985,10 +2988,13 @@ GST_START_TEST (test_deserialize_int_range)
   str =
       g_strdup_printf ("foo/bar, range=(gint64)[ 1, %" G_GUINT64_FORMAT " ];",
       (guint64) G_MAXINT64 + 1);
+  s = NULL;
   ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
-  fail_unless (*end == '\0');
-  gst_structure_free (s);
-  end = NULL;
+  if (s) {
+    fail_unless (*end == '\0');
+    gst_structure_free (s);
+    end = NULL;
+  }
   g_free (str);
 
   /* check invalid int64_range deserialization into a int64_range */
@@ -2997,7 +3003,8 @@ GST_START_TEST (test_deserialize_int_range)
       G_GUINT64_FORMAT " ];", (gint64) G_MAXINT, (guint64) G_MAXINT64 + 1);
   ASSERT_CRITICAL (s = gst_structure_from_string (str, NULL));
   g_free (str);
-  gst_structure_free (s);
+  if (s)
+    gst_structure_free (s);
 
   /* check invalid int64_range deserialization into a int_range */
   str =
@@ -3065,6 +3072,7 @@ GST_START_TEST (test_stepped_int_range_parsing)
     fail_unless (s != NULL);
     fail_unless (*end == '\0');
     gst_structure_free (s);
+    s = NULL;
     g_free (str);
   }
 
@@ -3072,7 +3080,8 @@ GST_START_TEST (test_stepped_int_range_parsing)
   for (n = 0; n < G_N_ELEMENTS (bad_ranges); ++n) {
     str = g_strdup_printf ("foo/bar, range=%s", bad_ranges[n]);
     ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
-    gst_structure_free (s);
+    if (s)
+      gst_structure_free (s);
     g_free (str);
   }
 }

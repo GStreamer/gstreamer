@@ -427,6 +427,7 @@ GST_START_TEST (test_fake_object_parentage)
   parent = gst_object_get_parent (object1);
   fail_if (parent != NULL, "GstFakeObject has parent");
   /* try to set a NULL parent, this should give a warning */
+  result = FALSE;
   ASSERT_CRITICAL (result = gst_object_set_parent (object1, NULL));
   fail_if (result, "GstFakeObject accepted NULL parent");
   /* try to set itself as parent, we expect a warning here */
