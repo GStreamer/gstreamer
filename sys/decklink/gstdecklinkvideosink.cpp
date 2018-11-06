@@ -808,7 +808,7 @@ gst_decklink_video_sink_close (GstBaseSink * bsink)
     g_mutex_lock (&self->output->lock);
     self->output->mode = NULL;
     self->output->video_enabled = FALSE;
-    if (self->output->start_scheduled_playback)
+    if (self->output->start_scheduled_playback && self->output->videosink)
       self->output->start_scheduled_playback (self->output->videosink);
     g_mutex_unlock (&self->output->lock);
 
