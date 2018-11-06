@@ -18,7 +18,7 @@ if openssl_dep.found() and libcrypto_dep.found()
     dtls_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gst_dep, libcrypto_dep, openssl_dep],
+    dependencies : [gst_dep, libcrypto_dep, openssl_dep] + winsock2,
     install : true,
     install_dir : plugins_install_dir,
   )
