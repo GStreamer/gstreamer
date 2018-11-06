@@ -1306,7 +1306,7 @@ d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
   }
 
   /* Determine texture filtering support. If it's supported for this format,
-   * use the filter type determined when we created the dev and checked the 
+   * use the filter type determined when we created the dev and checked the
    * dev caps.
    */
   hr = IDirect3D9_CheckDeviceFormat (klass->d3d.d3d,
