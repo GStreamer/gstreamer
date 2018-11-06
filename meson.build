@@ -39,7 +39,7 @@ subprojects = {
     'pygobject': { 'option': get_option('python') },
     'gst-python': { 'option': get_option('python') },
     'gst-omx': { 'option': get_option('omx'), },
-    'gst-ffmpeg': { 'option': get_option('ffmpeg') },
+    'gst-libav': { 'option': get_option('libav') },
     'gstreamer-vaapi': { 'option': get_option('vaapi') },
     'gst-devtools': { 'option': get_option('devtools') },
     'gst-editing-services': { 'option': get_option('ges') },
