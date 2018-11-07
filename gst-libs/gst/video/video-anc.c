@@ -34,7 +34,6 @@
  * present in Vertical Blanking Interval as well as Closed Caption.
  */
 
-
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
 static GstDebugCategory *
@@ -74,6 +73,8 @@ GstVideoVBIParser *
 gst_video_vbi_parser_copy (const GstVideoVBIParser * parser)
 {
   GstVideoVBIParser *res;
+
+  g_return_val_if_fail (parser != NULL, NULL);
 
   res = gst_video_vbi_parser_new (GST_VIDEO_INFO_FORMAT (&parser->info),
       parser->info.width);
@@ -219,6 +220,9 @@ GstVideoVBIParserResult
 gst_video_vbi_parser_get_ancillary (GstVideoVBIParser * parser,
     GstVideoAncillary * anc)
 {
+  g_return_val_if_fail (parser != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
+  g_return_val_if_fail (anc != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
+
   if (parser->bit16)
     return get_ancillary_16 (parser, anc);
   return get_ancillary_8 (parser, anc);
@@ -240,6 +244,8 @@ GstVideoVBIParser *
 gst_video_vbi_parser_new (GstVideoFormat format, guint32 pixel_width)
 {
   GstVideoVBIParser *parser;
+
+  g_return_val_if_fail (pixel_width > 0, NULL);
 
   switch (format) {
     case GST_VIDEO_FORMAT_v210:
@@ -287,10 +293,11 @@ gst_video_vbi_parser_new (GstVideoFormat format, guint32 pixel_width)
 void
 gst_video_vbi_parser_free (GstVideoVBIParser * parser)
 {
+  g_return_if_fail (parser != NULL);
+
   g_free (parser->work_data);
   g_free (parser);
 }
-
 
 static void
 convert_line_uyvy (GstVideoVBIParser * parser, const guint8 * data)
@@ -399,6 +406,9 @@ convert_line_v210 (GstVideoVBIParser * parser, const guint8 * data)
 void
 gst_video_vbi_parser_add_line (GstVideoVBIParser * parser, const guint8 * data)
 {
+  g_return_if_fail (parser != NULL);
+  g_return_if_fail (data != NULL);
+
   /* Reset offset */
   parser->offset = 0;
 
