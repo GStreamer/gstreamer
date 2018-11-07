@@ -32,7 +32,7 @@ typedef struct _GstVideoAncillary GstVideoAncillary;
  * GstVideoAncillary:
  * @DID: The Data Identifier
  * @SDID_block_number: The Secondary Data Identifier (if type 2) or the Data
- *                     Block Number (if type 2)
+ *                     Block Number (if type 1)
  * @data_count: The amount of data (in bytes) in @data (max 255 bytes)
  * @data: (array length=data_count): The user data content of the Ancillary packet.
  *    Does not contain the ADF, DID, SDID nor CS.
