@@ -68,6 +68,10 @@ struct _GstDecklinkVideoSink
   GstClockTime paused_start_time;       /* time we entered paused, used to track how long we are in paused while the clock is running */
 
   GstDecklinkOutput *output;
+
+  GstVideoVBIEncoder *vbiencoder;
+  GstVideoFormat anc_vformat;
+  gint caption_line;
 };
 
 struct _GstDecklinkVideoSinkClass
