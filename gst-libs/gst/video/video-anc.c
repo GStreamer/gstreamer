@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2018 Edward Hervey <edward@centricular.com>
+ * Copyright (C) 2018 Sebastian Dröge <sebastian@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -388,7 +389,7 @@ gst_video_vbi_parser_free (GstVideoVBIParser * parser)
 }
 
 static void
-convert_line_uyvy (GstVideoVBIParser * parser, const guint8 * data)
+convert_line_from_uyvy (GstVideoVBIParser * parser, const guint8 * data)
 {
   guint i;
   guint8 *y = parser->work_data;
@@ -430,7 +431,7 @@ gst_info_dump_mem16_line (gchar * linebuf, gsize linebuf_size,
 }
 
 static void
-convert_line_v210 (GstVideoVBIParser * parser, const guint8 * data)
+convert_line_from_v210 (GstVideoVBIParser * parser, const guint8 * data)
 {
   guint i;
   guint16 *y = (guint16 *) parser->work_data;
@@ -502,16 +503,336 @@ gst_video_vbi_parser_add_line (GstVideoVBIParser * parser, const guint8 * data)
 
   switch (GST_VIDEO_INFO_FORMAT (&parser->info)) {
     case GST_VIDEO_FORMAT_v210:
-      convert_line_v210 (parser, data);
+      convert_line_from_v210 (parser, data);
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      convert_line_uyvy (parser, data);
+      convert_line_from_uyvy (parser, data);
       break;
     default:
       GST_ERROR ("UNSUPPORTED FORMAT !");
       g_assert_not_reached ();
       break;
   }
+}
+
+struct _GstVideoVBIEncoder
+{
+  GstVideoInfo info;            /* format of the lines provided */
+  guint8 *work_data;            /* Converted line in planar 16bit format */
+  guint32 work_data_size;       /* Size in bytes of work_data */
+  guint offset;                 /* Current offset (in bytes) in work_data */
+  gboolean bit16;               /* Data is stored as 16bit if TRUE. Else 8bit(without parity) */
+};
+
+G_DEFINE_BOXED_TYPE (GstVideoVBIEncoder, gst_video_vbi_encoder,
+    (GBoxedCopyFunc) gst_video_vbi_encoder_copy,
+    (GBoxedFreeFunc) gst_video_vbi_encoder_free);
+
+GstVideoVBIEncoder *
+gst_video_vbi_encoder_copy (const GstVideoVBIEncoder * encoder)
+{
+  GstVideoVBIEncoder *res;
+
+  g_return_val_if_fail (encoder != NULL, NULL);
+
+  res = gst_video_vbi_encoder_new (GST_VIDEO_INFO_FORMAT (&encoder->info),
+      encoder->info.width);
+  if (res) {
+    memcpy (res->work_data, encoder->work_data, encoder->work_data_size);
+  }
+  return res;
+}
+
+/**
+ * gst_video_vbi_encoder_free:
+ * @encoder: a #GstVideoVBIEncoder
+ *
+ * Frees the @encoder.
+ *
+ * Since: 1.16
+ */
+void
+gst_video_vbi_encoder_free (GstVideoVBIEncoder * encoder)
+{
+  g_return_if_fail (encoder != NULL);
+
+  g_free (encoder->work_data);
+  g_free (encoder);
+}
+
+/**
+ * gst_video_vbi_encoder_new:
+ * @format: a #GstVideoFormat
+ * @pixel_width: The width in pixel to use
+ *
+ * Create a new #GstVideoVBIEncoder for the specified @format and @pixel_width.
+ *
+ * Since: 1.16
+ *
+ * Returns: The new #GstVideoVBIEncoder or %NULL if the @format and/or @pixel_width
+ * is not supported.
+ */
+GstVideoVBIEncoder *
+gst_video_vbi_encoder_new (GstVideoFormat format, guint32 pixel_width)
+{
+  GstVideoVBIEncoder *encoder;
+
+  g_return_val_if_fail (pixel_width > 0, NULL);
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_v210:
+      encoder = g_new0 (GstVideoVBIEncoder, 1);
+      encoder->bit16 = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      encoder = g_new0 (GstVideoVBIEncoder, 1);
+      encoder->bit16 = FALSE;
+      break;
+    default:
+      GST_WARNING ("Format not supported by GstVideoVBIEncoder");
+      return NULL;
+  }
+
+  gst_video_info_init (&encoder->info);
+  if (!gst_video_info_set_format (&encoder->info, format, pixel_width, 1)) {
+    GST_ERROR ("Could not create GstVideoInfo");
+    g_free (encoder);
+    return NULL;
+  }
+
+  /* Allocate the workspace which is going to be 2 * pixel_width big
+   *  2 : number of pixels per "component" (we only deal with 4:2:2)
+   * We use 1 or 2 bytes per pixel depending on whether we are internally
+   * working in 8 or 16bit */
+  encoder->work_data_size = 2 * pixel_width;
+  if (encoder->bit16)
+    encoder->work_data = g_malloc0 (encoder->work_data_size * 2);
+  else
+    encoder->work_data = g_malloc0 (encoder->work_data_size);
+  encoder->offset = 0;
+
+  return encoder;
+}
+
+#if G_GNUC_CHECK_VERSION(3,4)
+static inline guint
+parity (guint8 x)
+{
+  return __builtin_parity (x);
+}
+#else
+static guint
+parity (guint8 x)
+{
+  guint count = 0;
+
+  while (x) {
+    count += x & 1;
+    x >>= 1;
+  }
+
+  return count & 1;
+}
+#endif
+
+/* Odd/even parity in the upper two bits */
+#define SET_WITH_PARITY(buf, val) G_STMT_START { \
+  *(buf) = val; \
+    if (parity (val)) \
+      *(buf) |= 0x100; \
+    else \
+      *(buf) |= 0x200; \
+} G_STMT_END;
+
+/**
+ * gst_video_vbi_encoder_add_ancillary:
+ * @encoder: a #GstVideoVBIEncoder
+ * @composite: %TRUE if composite ADF should be created, component otherwise
+ * @DID: The Data Identifier
+ * @SDID_block_number: The Secondary Data Identifier (if type 2) or the Data
+ *                     Block Number (if type 1)
+ * @data_count: The amount of data (in bytes) in @data (max 255 bytes)
+ * @data: (array length=data_count): The user data content of the Ancillary packet.
+ *    Does not contain the ADF, DID, SDID nor CS.
+ *
+ * Stores Video Ancillary data, according to SMPTE-291M specification.
+ *
+ * Note that the contents of the data are always read as 8bit data (i.e. do not contain
+ * the parity check bits).
+ *
+ * Since: 1.16
+ *
+ * Returns: %TRUE if enough space was left in the current line, %FALSE
+ *          otherwise.
+ */
+gboolean
+gst_video_vbi_encoder_add_ancillary (GstVideoVBIEncoder * encoder,
+    gboolean composite, guint8 DID, guint8 SDID_block_number,
+    const guint8 * data, guint data_count)
+{
+  g_return_val_if_fail (encoder != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (data_count < 256, FALSE);
+
+  /* Doesn't fit into this line anymore */
+  if (encoder->offset + data_count + (composite ? 5 : 7) >
+      encoder->work_data_size)
+    return FALSE;
+
+  if (encoder->bit16) {
+    guint16 *work_data = ((guint16 *) encoder->work_data) + encoder->offset;
+    guint i = 0, j;
+    guint checksum = 0;
+
+    /* Write ADF */
+    if (composite) {
+      work_data[i] = 0x3fc;
+      i += 1;
+    } else {
+      work_data[i] = 0x000;
+      work_data[i + 1] = 0x3ff;
+      work_data[i + 2] = 0x3ff;
+      i += 3;
+    }
+
+    SET_WITH_PARITY (&work_data[i], DID);
+    SET_WITH_PARITY (&work_data[i + 1], SDID_block_number);
+    SET_WITH_PARITY (&work_data[i + 2], data_count);
+    i += 3;
+
+    for (j = 0; j < data_count; j++)
+      SET_WITH_PARITY (&work_data[i + j], data[j]);
+    i += data_count;
+
+    for (j = (composite ? 1 : 3); j < i; j++)
+      checksum += work_data[j];
+    checksum &= 0x1ff;
+    checksum |= (!(checksum >> 8)) << 9;
+
+    work_data[i] = checksum;
+    i += 1;
+
+    encoder->offset += i;
+  } else {
+    guint8 *work_data = ((guint8 *) encoder->work_data) + encoder->offset;
+    guint i = 0, j;
+    guint checksum = 0;
+
+    /* Write ADF */
+    if (composite) {
+      work_data[i] = 0xfc;
+      i += 1;
+    } else {
+      work_data[i] = 0x00;
+      work_data[i + 1] = 0xff;
+      work_data[i + 2] = 0xff;
+      i += 3;
+    }
+
+    work_data[i] = DID;
+    work_data[i + 1] = SDID_block_number;
+    work_data[i + 2] = data_count;
+    i += 3;
+
+    for (j = 0; j < data_count; j++)
+      work_data[i + j] = data[j];
+    i += data_count;
+
+    for (j = (composite ? 1 : 3); j < i; j++)
+      checksum += work_data[j];
+    checksum &= 0xff;
+
+    work_data[i] = checksum;
+    i += 1;
+
+    encoder->offset += i;
+  }
+
+  return TRUE;
+}
+
+static void
+convert_line_to_v210 (GstVideoVBIEncoder * encoder, guint8 * data)
+{
+  guint i;
+  const guint16 *y = (const guint16 *) encoder->work_data;
+  const guint16 *uv = y + encoder->info.width;
+  guint32 a, b, c, d;
+
+  /* Convert the line */
+  for (i = 0; i < encoder->info.width - 5; i += 6) {
+    a = ((uv[0] & 0x3ff) << 0)
+        | ((y[0] & 0x3ff) << 10)
+        | ((uv[1] & 0x3ff) << 20);
+    uv += 2;
+    y++;
+
+    b = ((y[0] & 0x3ff) << 0)
+        | ((uv[0] & 0x3ff) << 10)
+        | ((y[1] & 0x3ff) << 20);
+    y += 2;
+    uv++;
+
+    c = ((uv[0] & 0x3ff) << 0)
+        | ((y[0] & 0x3ff) << 10)
+        | ((uv[1] & 0x3ff) << 20);
+    uv += 2;
+    y++;
+
+    d = ((y[0] & 0x3ff) << 0)
+        | ((uv[0] & 0x3ff) << 10)
+        | ((y[1] & 0x3ff) << 20);
+    y += 2;
+    uv++;
+
+    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 0, a);
+    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 4, b);
+    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 8, c);
+    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 12, d);
+  }
+}
+
+static void
+convert_line_to_uyvy (GstVideoVBIEncoder * encoder, guint8 * data)
+{
+  guint i;
+  const guint8 *y = encoder->work_data;
+  const guint8 *uv = y + encoder->info.width;
+
+  for (i = 0; i < encoder->info.width - 3; i += 4) {
+    data[(i / 4) * 4 + 0] = *uv++;
+    data[(i / 4) * 4 + 1] = *y++;
+    data[(i / 4) * 4 + 2] = *uv++;
+    data[(i / 4) * 4 + 3] = *y++;
+  }
+}
+
+void
+gst_video_vbi_encoder_write_line (GstVideoVBIEncoder * encoder, guint8 * data)
+{
+  g_return_if_fail (encoder != NULL);
+  g_return_if_fail (data != NULL);
+
+  /* nothing to write? just exit early */
+  if (!encoder->offset)
+    return;
+
+  switch (GST_VIDEO_INFO_FORMAT (&encoder->info)) {
+    case GST_VIDEO_FORMAT_v210:
+      convert_line_to_v210 (encoder, data);
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      convert_line_to_uyvy (encoder, data);
+      break;
+    default:
+      GST_ERROR ("UNSUPPORTED FORMAT !");
+      g_assert_not_reached ();
+      break;
+  }
+
+  encoder->offset = 0;
+  memset (encoder->work_data, 0,
+      encoder->work_data_size * (encoder->bit16 ? 2 : 1));
 }
 
 /* Closed Caption Meta implementation *******************************************/

@@ -3535,6 +3535,13 @@ gst_video_vbi_parser_free
 gst_video_vbi_parser_add_line
 gst_video_vbi_parser_get_ancillary
 gst_video_vbi_parser_copy
+
+GstVideoVBIEncoder
+gst_video_vbi_encoder_new
+gst_video_vbi_encoder_free
+gst_video_vbi_encoder_add_ancillary
+gst_video_vbi_encoder_write_line
+gst_video_vbi_encoder_copy
 <SUBSECTION closedcaption>
 GstVideoCaptionType
 GstVideoCaptionMeta
@@ -3550,6 +3557,7 @@ gst_video_caption_meta_get_info
 GST_VIDEO_CAPTION_META_INFO
 gst_video_caption_meta_api_get_type
 gst_video_vbi_parser_get_type
+gst_video_vbi_encoder_get_type
 gst_video_ancillary_di_d16_get_type
 gst_video_ancillary_did_get_type
 gst_video_caption_type_get_type

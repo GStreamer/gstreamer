@@ -223,6 +223,39 @@ void               gst_video_vbi_parser_free (GstVideoVBIParser *parser);
 GST_VIDEO_API
 void		   gst_video_vbi_parser_add_line (GstVideoVBIParser *parser, const guint8 *data);
 
+/**
+ * GstVideoVBIEncoder:
+ *
+ * An encoder for writing ancillary data to the
+ * Vertical Blanking Interval lines of component signals.
+ *
+ * Since: 1.16
+ */
+
+typedef struct _GstVideoVBIEncoder GstVideoVBIEncoder;
+
+GST_VIDEO_API
+GType gst_video_vbi_encoder_get_type (void);
+
+GST_VIDEO_API
+GstVideoVBIEncoder *gst_video_vbi_encoder_new  (GstVideoFormat format, guint32 pixel_width);
+
+GST_VIDEO_API
+GstVideoVBIEncoder *gst_video_vbi_encoder_copy (const GstVideoVBIEncoder *encoder);
+
+GST_VIDEO_API
+void               gst_video_vbi_encoder_free  (GstVideoVBIEncoder *encoder);
+
+GST_VIDEO_API
+gboolean gst_video_vbi_encoder_add_ancillary   (GstVideoVBIEncoder *encoder,
+                                                gboolean            composite,
+                                                guint8              DID,
+                                                guint8              SDID_block_number,
+                                                const guint8       *data,
+                                                guint               data_count);
+
+GST_VIDEO_API
+void gst_video_vbi_encoder_write_line (GstVideoVBIEncoder *encoder, guint8 *data);
 
 G_END_DECLS
 
