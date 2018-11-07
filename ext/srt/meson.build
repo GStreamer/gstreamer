@@ -1,11 +1,8 @@
 srt_sources = [
   'gstsrt.c',
-  'gstsrtbasesrc.c',
-  'gstsrtclientsrc.c',
-  'gstsrtserversrc.c',
-  'gstsrtbasesink.c',
-  'gstsrtclientsink.c',
-  'gstsrtserversink.c',
+  'gstsrtobject.c',
+  'gstsrtsink.c',
+  'gstsrtsrc.c'
 ]
 srt_option = get_option('srt')
 if srt_option.disabled()
@@ -21,8 +18,13 @@ if not srt_dep.found() and srt_option.enabled()
 endif
 
 if srt_dep.found()
+  gstsrt_enums = gnome.mkenums_simple('gstsrt-enumtypes',
+    sources: ['gstsrt-enums.h'],
+    decorator : 'G_GNUC_INTERNAL',
+    install_header: false)
+
   gstsrt = library('gstsrt',
-    srt_sources,
+    srt_sources, gstsrt_enums,
     c_args : gst_plugins_bad_args,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
