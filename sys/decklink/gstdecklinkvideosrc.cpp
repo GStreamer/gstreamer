@@ -870,7 +870,14 @@ extract_cc_from_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
       }
     }
 
-    fi++;
+    /* If we didn't find it at the previous line, start again searching from
+     * line 1 onwards */
+    if (!found && (gint) self->last_cc_vbi_line != -1) {
+      self->last_cc_vbi_line = -1;
+      fi = 1;
+    } else {
+      fi++;
+    }
   }
 
   if (!found)
