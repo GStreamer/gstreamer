@@ -216,6 +216,129 @@ GST_START_TEST (parse_10bit)
 
 GST_END_TEST;
 
+GST_START_TEST (encode_8bit)
+{
+  GstVideoVBIParser *parser;
+  GstVideoVBIEncoder *encoder;
+  guint8 line[1440] = { 0, };
+  const guint8 data1[] = { 0x01, 0x02, 0x03, 0x04, 0x50, 0x60, 0x70, 0x80 };
+  const guint8 data2[] = { 0x04, 0x03, 0x02, 0x01 };
+  GstVideoAncillary vanc;
+
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, 720);
+  fail_unless (parser != NULL);
+
+  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_UYVY, 720);
+  fail_unless (encoder != NULL);
+
+  /* Write a single ADF packet and try to parse it back again */
+  fail_unless (gst_video_vbi_encoder_add_ancillary (encoder, FALSE, 0x23, 0x24,
+          data1, sizeof (data1)));
+  gst_video_vbi_encoder_write_line (encoder, line);
+
+  gst_video_vbi_parser_add_line (parser, line);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_OK);
+  fail_unless_equals_int (GST_VIDEO_ANCILLARY_DID16 (&vanc), 0x2324);
+  fail_unless_equals_int (vanc.data_count, 8);
+  fail_unless (memcmp (vanc.data, data1, sizeof (data1)) == 0);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_DONE);
+
+  /* Write two ADF packets now */
+  fail_unless (gst_video_vbi_encoder_add_ancillary (encoder, FALSE, 0x23, 0x24,
+          data1, sizeof (data1)));
+  fail_unless (gst_video_vbi_encoder_add_ancillary (encoder, FALSE, 0x33, 0x34,
+          data2, sizeof (data2)));
+  gst_video_vbi_encoder_write_line (encoder, line);
+
+  gst_video_vbi_parser_add_line (parser, line);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_OK);
+  fail_unless_equals_int (GST_VIDEO_ANCILLARY_DID16 (&vanc), 0x2324);
+  fail_unless_equals_int (vanc.data_count, 8);
+  fail_unless (memcmp (vanc.data, data1, sizeof (data1)) == 0);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_OK);
+  fail_unless_equals_int (GST_VIDEO_ANCILLARY_DID16 (&vanc), 0x3334);
+  fail_unless_equals_int (vanc.data_count, 4);
+  fail_unless (memcmp (vanc.data, data2, sizeof (data2)) == 0);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_DONE);
+
+  gst_video_vbi_encoder_free (encoder);
+  gst_video_vbi_parser_free (parser);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (encode_10bit)
+{
+  GstVideoVBIParser *parser;
+  GstVideoVBIEncoder *encoder;
+  guint8 line[1920] = { 0, };
+  const guint8 data1[] = { 0x01, 0x02, 0x03, 0x04, 0x50, 0x60, 0x70, 0x80 };
+  const guint8 data2[] = { 0x04, 0x03, 0x02, 0x01 };
+  GstVideoAncillary vanc;
+
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, 720);
+  fail_unless (parser != NULL);
+
+  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, 720);
+  fail_unless (encoder != NULL);
+
+  /* Write a single ADF packet and try to parse it back again */
+  fail_unless (gst_video_vbi_encoder_add_ancillary (encoder, FALSE, 0x23, 0x24,
+          data1, sizeof (data1)));
+  gst_video_vbi_encoder_write_line (encoder, line);
+
+  gst_video_vbi_parser_add_line (parser, line);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_OK);
+  fail_unless_equals_int (GST_VIDEO_ANCILLARY_DID16 (&vanc), 0x2324);
+  fail_unless_equals_int (vanc.data_count, 8);
+  fail_unless (memcmp (vanc.data, data1, sizeof (data1)) == 0);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_DONE);
+
+  /* Write two ADF packets now */
+  fail_unless (gst_video_vbi_encoder_add_ancillary (encoder, FALSE, 0x23, 0x24,
+          data1, sizeof (data1)));
+  fail_unless (gst_video_vbi_encoder_add_ancillary (encoder, FALSE, 0x33, 0x34,
+          data2, sizeof (data2)));
+  gst_video_vbi_encoder_write_line (encoder, line);
+
+  gst_video_vbi_parser_add_line (parser, line);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_OK);
+  fail_unless_equals_int (GST_VIDEO_ANCILLARY_DID16 (&vanc), 0x2324);
+  fail_unless_equals_int (vanc.data_count, 8);
+  fail_unless (memcmp (vanc.data, data1, sizeof (data1)) == 0);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_OK);
+  fail_unless_equals_int (GST_VIDEO_ANCILLARY_DID16 (&vanc), 0x3334);
+  fail_unless_equals_int (vanc.data_count, 4);
+  fail_unless (memcmp (vanc.data, data2, sizeof (data2)) == 0);
+
+  fail_unless_equals_int (gst_video_vbi_parser_get_ancillary (parser, &vanc),
+      GST_VIDEO_VBI_PARSER_RESULT_DONE);
+
+  gst_video_vbi_encoder_free (encoder);
+  gst_video_vbi_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoanc_suite (void)
 {
@@ -226,6 +349,9 @@ gst_videoanc_suite (void)
 
   tcase_add_test (tc, parse_8bit);
   tcase_add_test (tc, parse_10bit);
+
+  tcase_add_test (tc, encode_8bit);
+  tcase_add_test (tc, encode_10bit);
 
   return s;
 }
