@@ -90,6 +90,9 @@ struct _GstJpegDec {
   /* arrays for indirect decoding */
   gboolean idr_width_allocated;
   guchar *idr_y[16],*idr_u[16],*idr_v[16];
+  /* scratch buffer for direct decoding overflow */
+  guchar *scratch;
+  guint scratch_size;
   /* current (parsed) image size */
   guint    rem_img_len;
 };

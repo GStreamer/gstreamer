@@ -894,6 +894,12 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
     }
   }
 
+  if (height % (v_samp[0] * DCTSIZE) && (dec->scratch_size < stride[0])) {
+    g_free (dec->scratch);
+    dec->scratch = g_malloc (stride[0]);
+    dec->scratch_size = stride[0];
+  }
+
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
 
@@ -902,7 +908,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
       /* Y */
       line[0][j] = base[0] + (i + j) * stride[0];
       if (G_UNLIKELY (line[0][j] > last[0]))
-        line[0][j] = last[0];
+        line[0][j] = dec->scratch;
       /* U */
       if (v_samp[1] == v_samp[0]) {
         line[1][j] = base[1] + ((i + j) / 2) * stride[1];
@@ -910,7 +916,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
         line[1][j] = base[1] + ((i / 2) + j) * stride[1];
       }
       if (G_UNLIKELY (line[1][j] > last[1]))
-        line[1][j] = last[1];
+        line[1][j] = dec->scratch;
       /* V */
       if (v_samp[2] == v_samp[0]) {
         line[2][j] = base[2] + ((i + j) / 2) * stride[2];
@@ -918,7 +924,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, GstVideoFrame * frame,
         line[2][j] = base[2] + ((i / 2) + j) * stride[2];
       }
       if (G_UNLIKELY (line[2][j] > last[2]))
-        line[2][j] = last[2];
+        line[2][j] = dec->scratch;
     }
 
     lines = jpeg_read_raw_data (&dec->cinfo, line, v_samp[0] * DCTSIZE);
@@ -1554,6 +1560,10 @@ gst_jpeg_dec_stop (GstVideoDecoder * bdec)
   GstJpegDec *dec = (GstJpegDec *) bdec;
 
   gst_jpeg_dec_free_buffers (dec);
+
+  g_free (dec->scratch);
+  dec->scratch = NULL;
+  dec->scratch_size = 0;
 
   return TRUE;
 }
