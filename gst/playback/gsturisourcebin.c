@@ -602,7 +602,7 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, urisrc->high_watermark);
       break;
     case PROP_STATISTICS:
-      g_value_take_boxed (value, get_queue_statistics (dec));
+      g_value_take_boxed (value, get_queue_statistics (urisrc));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
