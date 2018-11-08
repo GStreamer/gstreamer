@@ -112,7 +112,7 @@ def get_subprocess_env(options, gst_version):
     presets = set()
     encoding_targets = set()
     pkg_dirs = set()
-    python_dirs = set()
+    python_dirs = set(["%s/subprojects/gstreamer/libs/gst/helpers/" % options.srcdir])
     if '--installed' in subprocess.check_output(meson + ['introspect', '-h']).decode():
         installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
