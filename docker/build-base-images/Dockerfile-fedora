@@ -56,10 +56,6 @@ RUN dnf builddep -y \
     export PATH="$PATH:/usr/local/lib/python3.6/site-packages"
 
 ENV GST_BUILD_PATH="/gst-build/"
-ENV GST_VALIDATE_OUTPUT="/validate-output"
-ENV GST_VALIDATE_TESTSUITES="$GST_VALIDATE_OUTPUT/gst-integration-testsuites"
-# FIXME Enabled gst-libav.
-ENV GST_BUILD_MESON_ARGS="-Dpython=disabled -Dlibav=disabled -Dugly=enabled -Dbad=enabled -Ddevtools=enabled -Dges=enabled -Drtsp_server=enabled -Domx=disabled -Dvaapi=disabled -Dsharp=disabled"
 
 # Configure git for various usage
 RUN git config --global user.email "gst-build@gstreamer.net" && git config --global user.name "Gstbuild Runner"
@@ -67,5 +63,5 @@ RUN git config --global user.email "gst-build@gstreamer.net" && git config --glo
 # get gst-build and make all subprojects available
 RUN git clone git://anongit.freedesktop.org/gstreamer/gst-build $GST_BUILD_PATH && \
     cd $GST_BUILD_PATH && \
-    meson build/ $GST_BUILD_MESON_ARGS && \
+    meson build/ && \
     rm -rf build/
