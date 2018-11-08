@@ -26,6 +26,18 @@
 #include "mpegts.h"
 #include "gstmpegts-private.h"
 
+#define DEFINE_STATIC_COPY_FUNCTION(type, name) \
+static type * _##name##_copy (type * source) \
+{ \
+  return g_slice_dup (type, source); \
+}
+
+#define DEFINE_STATIC_FREE_FUNCTION(type, name) \
+static void _##name##_free (type * source) \
+{ \
+  g_slice_free (type, source); \
+}
+
 /**
  * SECTION:gstmpegtsdescriptor
  * @title: Base MPEG-TS descriptors
@@ -1063,6 +1075,28 @@ gst_mpegts_descriptor_from_iso_639_language (const gchar * language)
 
   return descriptor;
 }
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsLogicalChannelDescriptor,
+    gst_mpegts_logical_channel_descriptor);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsLogicalChannelDescriptor,
+    gst_mpegts_logical_channel_descriptor);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsLogicalChannelDescriptor,
+    gst_mpegts_logical_channel_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_logical_channel_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_logical_channel_descriptor_free);
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsLogicalChannel,
+    gst_mpegts_logical_channel);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsLogicalChannel,
+    gst_mpegts_logical_channel);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsLogicalChannel,
+    gst_mpegts_logical_channel,
+    (GBoxedCopyFunc) _gst_mpegts_logical_channel_copy,
+    (GFreeFunc) _gst_mpegts_logical_channel_free);
 
 /**
  * gst_mpegts_descriptor_parse_logical_channel:
